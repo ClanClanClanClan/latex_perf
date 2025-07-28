@@ -1,0 +1,11 @@
+version=0.26.1
+margin=100
+break-cases=fit-or-vertical
+break-sequences=true
+cases-exp-indent=2
+doc-comments=before
+if-then-else=compact
+indicate-nested-or-patterns=unsafe-no
+let-and=compact
+sequence-style=separator
+type-decl=sparse

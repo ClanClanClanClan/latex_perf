@@ -1,0 +1,72 @@
+# LaTeX Perfectionist v25 - Git Ignore File
+
+# Build artifacts
+_build/
+.opam/
+*.vo
+*.vok
+*.vos
+*.glob
+*.aux
+.lia.cache
+.CoqMakefile.d
+.Makefile.coq.d
+.Makefile.d
+
+# Generated files
+Makefile.coq
+Makefile.conf
+
+# OCaml build artifacts
+*.cmi
+*.cmo
+*.cmx
+*.cma
+*.cmxa
+*.o
+*.a
+*.install
+.merlin
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.pytest_cache/
+.hypothesis/
+*.egg-info/
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Local development
+/local/
+/tmp/
+*.log
+*.temp
+*.bak
+*.backup
+*.old
+
+# v25 specific
+/archive/
+*.cache.pkl
+
+# Local configuration
+.env
+.envrc
+local.conf
+.cache/

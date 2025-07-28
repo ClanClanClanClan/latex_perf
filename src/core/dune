@@ -1,0 +1,32 @@
+(* Main library for LaTeX Perfectionist v25 core *)
+
+(library
+ (name latex_perfectionist_core)
+ (public_name latex-perfectionist.core)
+ (modules types version_vector orchestrator)
+ (libraries lwt lwt.unix))
+
+(* L0 Lexer sublibrary *)
+(library
+ (name layer0)
+ (public_name latex-perfectionist.layer0)
+ (modules l0_v25)
+ (libraries latex_perfectionist_core lexer_extracted))
+
+(* L1 Expander sublibrary *)
+(library
+ (name layer1)  
+ (public_name latex-perfectionist.layer1)
+ (modules l1_v25)
+ (libraries latex_perfectionist_core layer0 expander_extracted))
+
+(* Extracted libraries from Coq *)
+(library
+ (name lexer_extracted)
+ (modules :standard \ l0_v25 l1_v25 types version_vector orchestrator)
+ (flags (:standard -w -39-33)))
+
+(library
+ (name expander_extracted)
+ (modules ExpanderAlgorithm MacroCatalog)
+ (flags (:standard -w -39-33)))

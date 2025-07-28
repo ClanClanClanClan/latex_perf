@@ -1,0 +1,59 @@
+{
+  "corpus_analysis": {
+    "total_papers": 2846,
+    "quarantined_papers": 0,
+    "metadata_files": 2844,
+    "ground_truth_files": 101,
+    "total_tex_files": 4439,
+    "avg_tex_files_per_paper": 1.56,
+    "domain_distribution": {
+      "recent_arxiv": 2846
+    },
+    "file_size_distribution": {
+      "medium": 82,
+      "small": 55,
+      "large": 19
+    },
+    "compilation_success_rate": 0.8128772635814889,
+    "estimated_issue_distribution": {
+      "TYPO-001": 853,
+      "TYPO-002": 426,
+      "MATH-001": 711,
+      "MATH-002": 284,
+      "ENV-001": 569,
+      "REF-001": 1138,
+      "STYLE-001": 853,
+      "STRUCT-001": 142,
+      "CHAR-001": 426,
+      "ENC-001": 284
+    }
+  },
+  "quarantined_analysis": {
+    "total_quarantined": 0,
+    "issue_categories": {},
+    "compilation_failure_types": {},
+    "potential_validator_targets": [],
+    "value_assessment": {},
+    "sample_issues": []
+  },
+  "recommendations": [
+    "Use parallel processing for corpus validation"
+  ],
+  "testing_strategy": {
+    "parallel_processing": {
+      "recommended_workers": 8,
+      "batch_size": 100,
+      "estimated_time_minutes": 23.716666666666665
+    },
+    "issue_targeting": {
+      "high_value_rules": [],
+      "expected_issues": 5686,
+      "ground_truth_potential": 0
+    },
+    "resource_requirements": {
+      "memory_gb": 16,
+      "storage_gb": 284.6,
+      "processing_time_hours": 59.291666666666664
+    }
+  }
+}

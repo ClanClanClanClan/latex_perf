@@ -69,6 +69,11 @@ Thumbs.db
 *-isolated
 latex-perfectionist-*
 
+# Large data directories (too big for git)
+/corpus/
+/benchmarks/
+/bin/
+
 # Local configuration
 .env
 .envrc

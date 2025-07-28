@@ -65,6 +65,10 @@ Thumbs.db
 /archive/
 *.cache.pkl
 
+# Compiled binaries
+*-isolated
+latex-perfectionist-*
+
 # Local configuration
 .env
 .envrc

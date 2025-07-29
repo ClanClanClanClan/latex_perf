@@ -6,6 +6,12 @@
 
 open Lwt.Syntax
 
+(* Import modules *)
+module L0_v25 = Layer0.L0_v25
+module L1_v25 = Layer1.L1_v25
+module Orchestrator = Orchestrator_lib.Orchestrator
+module Types = Latex_perfectionist_core.Types
+
 let test_basic_lexing () =
   Printf.printf "\n=== Testing L0 Lexing ===\n";
   

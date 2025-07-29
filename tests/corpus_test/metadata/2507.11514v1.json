@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.11514v1",
+  "title": "Density of solutions for systems of forms",
+  "authors": [
+    "Amichai Lampert"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Let $K$ be a field of characteristic zero over which every diagonal form in\nsufficiently many variables admits a nontrivial solution. For example, $K$ may\nbe a totally imaginary number field or a finite extension of a $p$-adic field.\nSuppose $f_1,\\ldots,f_s$ are forms of degree $d$ over $K.$ Bik, Draisma and\nSnowden recently proved that there exists a constant $B = B(d,s,K)$ such that\nthe rational solutions to the system of equations $f_1=\\ldots=f_s = 0$ are\nZariski dense, as long as the Birch rank of $f_1,\\ldots,f_s$ is greater than\n$B.$ We establish an effective bound for this constant. Combined with results\nof Skinner, we obtain as a corollary a sufficient condition for the integer\nzeros of a system of forms over a number field to satisfy the Hardy-Littlewood\nasymptotic with a positive leading term. This corollary generalizes a seminal\nresult proved by Schmidt for the rational numbers.",
+  "submitted_date": "2025-07-15T17:35:50Z",
+  "download_date": "2025-07-16T00:34:09.583551",
+  "tex_files": [
+    "main.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 51282,
+  "line_count": 863,
+  "complexity_score": 44.98630000000001,
+  "features": {
+    "line_count": 863,
+    "char_count": 51282,
+    "word_count": 6154,
+    "file_size": 51282,
+    "tex_files": [
+      "main.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 57,
+    "align_envs": 15,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 24,
+    "inline_math": 522,
+    "display_math": 7,
+    "bracket_math": 51,
+    "straight_quotes": 0,
+    "single_quotes": 79,
+    "double_dollars": 7,
+    "british_spellings": 0,
+    "american_spellings": 8,
+    "includes": 0,
+    "packages": 6,
+    "newcommands": 34,
+    "citations": 119,
+    "references": 32,
+    "long_lines": 195,
+    "unicode_chars": 0,
+    "comments": 0,
+    "complexity_score": 44.98630000000001
+  },
+  "issues_found": {},
+  "compile_status": "failed"
+}

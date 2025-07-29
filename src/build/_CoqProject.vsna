@@ -1,0 +1,19 @@
+# LaTeX Perfectionist v24 - VSNA Coq Project Configuration
+
+-R src/coq/vsna ""
+-arg -w -arg -notation-overridden
+-arg -w -arg -redundant-canonical-projection
+-arg -w -arg -abstract-large-number
+
+# VSNA Core Modules
+src/coq/vsna/Core.v
+src/coq/vsna/DFA.v
+src/coq/vsna/VPA.v
+src/coq/vsna/SymbolTable.v
+src/coq/vsna/UVSNA.v
+src/coq/vsna/Compiler.v
+src/coq/vsna/Performance.v
+src/coq/vsna/Correctness.v
+
+# Extraction
+src/coq/extraction/Extract.v

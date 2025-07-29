@@ -1,0 +1,23 @@
+(test
+ (name test_l0_l1_integration)
+ (libraries latex_perfectionist_core layer0 layer1 orchestrator_lib lwt lwt.unix))
+
+(test
+ (name test_performance_accurate)
+ (libraries latex_perfectionist_core layer0 layer1 orchestrator_lib lwt lwt.unix))
+
+(test
+ (name test_integration_details)
+ (libraries latex_perfectionist_core layer0 layer1 orchestrator_lib lwt lwt.unix))
+
+(test
+ (name test_macro_catalog)
+ (libraries latex_perfectionist_core layer0 layer1 common_macros))
+
+(test
+ (name test_comprehensive_week1)
+ (libraries latex_perfectionist_core layer0 layer1 common_macros lwt lwt.unix))
+
+(test
+ (name test_validator_dsl)
+ (libraries latex_perfectionist_core layer0 layer1 common_macros lwt lwt.unix str))

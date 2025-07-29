@@ -1,0 +1,58 @@
+{
+  "arxiv_id": "2507.10965v1",
+  "title": "Convolutive sequences, I: Through the lens of integer partition\n  functions",
+  "authors": [
+    "Shane Chern",
+    "Dennis Eichhorn",
+    "Shishuo Fu",
+    "James A. Sellers"
+  ],
+  "categories": [
+    "math.CO"
+  ],
+  "abstract": "Motivated by the convolutive behavior of the counting function for partitions\nwith designated summands in which all parts are odd, we consider coefficient\nsequences $(a_n)_{n\\ge 0}$ of primitive eta-products that satisfy the generic\nconvolutive property\n  \\begin{align*}\n  \\sum_{n\\ge 0} a_{mn} q^n = \\left(\\sum_{n\\ge 0} a_n q^n\\right)^m\n  \\end{align*}\n  for a specific positive integer $m$. Given the results of an exhaustive\nsearch of the Online Encyclopedia of Integer Sequences for such sequences for\n$m$ up to $6$, we first focus on the case where $m=2$ with our attention mainly\npaid to the combinatorics of two $2$-convolutive sequences, featuring bijective\nproofs for both. For other $2$-convolutive sequences discovered in the OEIS, we\napply generating function manipulations to show their convolutivity. We also\ngive two examples of $3$-convolutive sequences. Finally, we discuss other\nconvolutive series that are not eta-products.",
+  "submitted_date": "2025-07-15T04:05:55Z",
+  "download_date": "2025-07-16T00:34:25.029378",
+  "tex_files": [
+    "CEFS_ExpMath.tex"
+  ],
+  "main_tex_file": "CEFS_ExpMath.tex",
+  "file_size": 56808,
+  "line_count": 1051,
+  "complexity_score": 43.6051,
+  "features": {
+    "line_count": 1051,
+    "char_count": 56808,
+    "word_count": 6488,
+    "file_size": 56808,
+    "tex_files": [
+      "CEFS_ExpMath.tex"
+    ],
+    "main_tex_file": "CEFS_ExpMath.tex",
+    "equations": 4,
+    "align_envs": 95,
+    "figures": 0,
+    "tables": 1,
+    "listings": 0,
+    "theorems": 21,
+    "inline_math": 368,
+    "display_math": 2,
+    "bracket_math": 2,
+    "straight_quotes": 3,
+    "single_quotes": 35,
+    "double_dollars": 2,
+    "british_spellings": 0,
+    "american_spellings": 16,
+    "includes": 0,
+    "packages": 34,
+    "newcommands": 20,
+    "citations": 72,
+    "references": 38,
+    "long_lines": 203,
+    "unicode_chars": 0,
+    "comments": 44,
+    "complexity_score": 43.6051
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

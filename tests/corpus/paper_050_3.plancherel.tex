@@ -1,0 +1,93 @@
+\noindent We continue in with the same notation as the previous section, such that $G$ is a connected semisimple algebraic group. From now on, we assume that $\tau$ is an irreducible $\lambda$-strongly acyclic representation of $G(\R)$, with $\lambda>0$ to be chosen later. The content of this section is an upper bound on the trace of the heat kernel in the $t$-aspect for large $t$. This will be used to bound certain orbital integrals in Section \ref{asymptotics}.
+
+\subsection{Induced operators}
+
+Let $(\pi,\mathcal{H}_\pi)$ be a unitary representation of $G(\R)$. For any $f\in \mathcal{C}(G(\R))$, the operator
+\begin{align*}
+    \pi(f) \coloneqq \int_{G(\R)} f(g)\pi(g)dg
+\end{align*}
+is a trace class operator on $\mathcal{H}_\pi$. If furthermore $f$ is left- and right $K$-finite, the operator is of finite rank.  We consider 
+\begin{align*}
+    \pi(H_t^{\tau,p}) \coloneqq \int_{G(\R)} \pi(g)\otimes H_t^{\tau,p}(g)dg
+\end{align*} 
+as a bounded operator acting on $\mathcal{H}_\pi\otimes \Lambda^p\mf{p}^*\otimes V_\tau$. Let $P$ be the orthogonal projection to the $K$-invariant subspace $(\mathcal{H}_\pi\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^K$. We note that as $\pi$ and $\nu_{\tau,p}$ are unitary, so is their tensor product, and thus $P$ has the form
+\begin{align*}
+    P = \int_K \pi(k)\otimes v_{\tau,p}(k) dk.
+\end{align*}
+Using the covariance property, one easily checks that
+\begin{align*}
+    P\circ \pi(H_t^{\tau,p}) = \pi(H_t^{\tau,p})\circ P = \pi(H_t^{\tau,p}).
+\end{align*}
+Following the argument of (\cite{BM}, Corollary $2.2$), we can then use (\ref{casimirglobal}) to get
+\begin{align}\label{heatcasimir}
+    \pi(H_t^{\tau,p}) = e^{-t(\tau(\Omega)-\pi_{\sigma,i\nu}(\Omega))} P.
+\end{align}
+We will need the following lemma.
+\begin{lem}\label{tracecommutes}
+    Let $(\pi,\mathcal{H}_\pi)$ be an admissible unitary representation of $G(\R)$, and let $A:\mathcal{H}_\pi\to \mathcal{H}_\pi$ be a bounded operator. Then $(A\otimes 1)\circ \pi(H_t^{\tau,p})$ is of trace class, and
+    \begin{align*}
+        \Tr \left((A\otimes 1)\circ \pi(H_t^{\tau,p})\right) = \Tr\left(A\circ \pi(h_t^{\tau,p})\right),
+    \end{align*}
+    Here, the $\Tr$ on the left-hand side is the trace over ${\mathcal{H}_\pi\otimes\Lambda^p\mf{p}^*\otimes V_\tau}$, while on the right-hand side it is the trace over $\mathcal{H}_\pi$. 
+\end{lem}
+
+\begin{proof}
+    By (\ref{heatcasimir}), we may restrict computing the trace of $(A\otimes 1)\circ \pi(H_t^{\tau,p})$ to computing it over $(\mathcal{H}_\pi\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^K$, and as $\pi$ was assumed admissible, this is finite-dimensional, thus the trace is well defined and finite. The equality now follows by arguing as in the proof of (\cite{BM}, Lemma $5.1$).
+\end{proof}
+
+\subsection{Application of the Plancherel formula}
+
+Let $P=MAN$ be a real standard parabolic subgroup of $G(\R)$. Let $\mf{a}$ be the Lie algebra of $A$. We denote by $\langle\cdot,\cdot\rangle$ the inner product on the real vector space $\mf{a}^*$ induced by the Killing form, and $||\cdot||$ its associated norm. Fix a restricted positive root system of $\mf{a}$ and let $\rho_{\mf{a}}$ denote their half sum. Let $(\sigma,W_\sigma)$ be a discrete series representation of $M$, i.e. an irreducible unitary subrepresentation of the left regular representation of $M$ on $L^2(M)$, and let $i\nu\in i\mf{a}^*$. We denote by $(\pi_{\sigma,i\nu},\mathcal{H}^{\sigma,i\nu})$ the induced \emph{principal series representation} of $G$, defined by
+\begin{align*}
+    \mathcal{H}^{\sigma,i\nu}=\lbrace f:G\to W_\sigma \mid f(gman) = a^{-(\nu+\rho_{\mf{a}})}\sigma(m)^{-1}f(g) \\
+    \:\forall g\in G(\R), man\in MAN,\:\: f|_{K}\in L^2(K,W_\sigma)&\rbrace, \\
+    (\pi_{\sigma,\nu}(g)f)(x) = f(g^{-1} x).\hspace{16.8em}
+\end{align*}
+This is an irreducible unitary representation of $G(\R)$, in particular admissible, and thus by Lemma \ref{tracecommutes}, we have
+\begin{align}\label{traceheat}
+    \Tr(\pi_{\sigma,\nu}(H_t^{\tau,p})\pi_{\sigma,\nu}(g)) = \Tr(\pi_{\sigma,\nu}(h_t^{\tau,p})\pi_{\sigma,\nu}(g)).
+\end{align}
+As in the lemma, the traces are over the appropriate spaces. Applying (\ref{heatcasimir}) to the above, we get that 
+\begin{align}\label{planchereltrace}
+    \Tr(\pi_{\sigma,\nu}(h_t^{\tau,p})\pi_{\sigma,\nu}(g)) = e^{-t(\tau(\Omega)-\pi_{\sigma,i\nu}(\Omega))} \Tr(\pi_{\sigma,i\nu}^K(g)),
+\end{align}
+where we by $\pi_{\sigma,i\nu}^K(g)$ denote the operator $P(\pi_{\sigma,i\nu}(g)\otimes \text{Id})P$ on $\mathcal{H}^{\sigma,i\nu}\otimes \Lambda^p\mf{p}^*\otimes V_\tau$, with $P$ the projection onto the $K$-fixed vectors. We consider this as an operator on $(\mathcal{H}^{\sigma,i\nu}\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^K$, as this subspace contains its image and it is $0$ elsewhere. This subspace is a finite-dimensional space, and by Frobenius reciprocity we have that
+\begin{align*}
+    \dim(\mathcal{H}^{\sigma,i\nu}\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^K = \dim(W_\sigma\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^{K_M},
+\end{align*}
+with $K_M\coloneqq K\cap M$. By virtue of being unitary, we have the inequality
+\begin{align}\label{dimupper}
+    |\Tr(\pi_{\sigma,i\nu}^K(g))|\leq \dim(W_\sigma\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^{K_M}.
+\end{align}
+With this bound established, we turn to the scalar appearing in (\ref{planchereltrace}). Define a constant $c(\sigma)$ by
+\begin{align*}
+    c(\sigma) \coloneqq \sigma(\Omega_M)-||\rho_{\mf{a}}||.
+\end{align*}
+Then we have that (see \cite{Knapp}, Proposition $8.22$)
+\begin{align*}
+    \pi_{\sigma,i\nu}(\Omega) = c(\sigma)-||\nu||^2.
+\end{align*}
+Assume that $\dim(\mathcal{H}^{\sigma,i\nu}\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^K\neq 0$. By the assumption that $\tau$ is $\lambda$-strongly acyclic, we immediately get that
+\begin{align*}
+    \tau(\Omega)-c(\sigma)\geq \lambda-||\nu||^2,
+\end{align*}
+and as this is true for all $\nu\in\mf{a}^*$, we get
+\begin{align}\label{gap}
+    \tau(\Omega)-c(\sigma)\geq \lambda.
+\end{align}
+
+\noindent Now we are ready to prove the large $t$ asymptotic for $h_t^{\tau,p}$. Using the Harish-Chandra Plancherel formula (see \cite{Olbrich}, Theorem $2.2$) and (\ref{traceheat}) we get that
+\begin{align*}
+    h_t^{\tau,p}(g) &= \sum_P\sum_{\sigma\in \hat{M}_d}\int_{\mf{a}^*}\Tr(\pi_{\sigma,i\nu}(h_t^{\tau,p})\pi(g^{-1}))p_\sigma(i\nu) d\nu \\
+    &=e^{-t(\tau(\Omega)-c(\sigma))}\sum_P\sum_{\sigma\in \hat{M}_d}\int_{\mf{a}^*} e^{-t||\nu||^2}\Tr(\pi_{\sigma,i\nu}^K(g))p_\sigma(i\nu) d\nu,
+\end{align*}
+where $p_\sigma:i\mf{a}^*\to [0,\infty)$ is the Plancherel density, an analytic function of polynomial growth. The first sum runs over $P=MAN$ real standard parabolic subgroups, and the second over discrete series representations of $M$ the Levi subgroup of $P$. Since the trace inside the integral on the right-hand side is bounded absolutely by $\dim(W_\sigma\otimes \Lambda^p\mf{p}^*\otimes V_\tau)^{K_M}$, and this is non-zero only for finitely many pairs $(P,\sigma)$ (see \cite{Olbrich}, Corollary $2.3$), we may take the double sum to be finite. Furthermore, which pairs contribute is governed solely by $\tau$ and $p$. 
+
+The latter integral is convergent and vanishing for $t\to\infty$, and so for $t\geq 1$ it may be bounded independently of $t$. Putting these observations together and applying (\ref{gap}), we get the following result.
+\begin{prop}\label{traceheatdecay}
+    Assume $t\geq 1$. Then there exists a constant $C>0$ only depending on $\tau$ and $p$ such that for any $g\in G(\R)$, we have
+    \begin{align*}
+        | h_t^{\tau,p}(g)|\leq C\,e^{-\lambda t}.
+    \end{align*}
+\end{prop}
+

@@ -1,0 +1,2250 @@
+\documentclass[11pt]{article}
+
+\usepackage[dvipsnames]{xcolor}
+\definecolor{SNSRed}{RGB}{183,42,58}
+\definecolor{SNSBlue}{RGB}{0,114,142}
+\definecolor{lilla}{RGB}{225,143,247}
+
+\usepackage{geometry}
+\usepackage{calc}
+\usepackage[colorlinks=true,hyperindex,linkcolor=SNSRed, pagebackref=false, citecolor=SNSBlue, urlcolor=lilla, pdfpagelabels]{hyperref}
+
+\usepackage{amsxtra}
+\usepackage{amscd}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{eucal}
+\usepackage{tikz-cd}
+\usepackage[matrix,arrow,curve]{xy}
+\usepackage{cleveref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+
+
+%%%%%% newcommands%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{Thm}{Theorem}[subsection]
+\newtheorem{Cor}[Thm]{Corollary}
+\newtheorem{Lem}[Thm]{Lemma}
+\newtheorem{Conj}[Thm]{Conjecture}
+\newtheorem{Prop}[Thm]{Proposition}
+\newtheorem{ThmS}{Theorem}[section]
+\newtheorem{CorS}[ThmS]{Corollary}
+\newtheorem{PropS}[ThmS]{Proposition}
+\newtheorem{LemS}[ThmS]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{Def}[Thm]{Definition}
+\newtheorem{DefS}[ThmS]{Definition}
+\newtheorem{Ex}[Thm]{Example}
+\newtheorem{cons}[ThmS]{Construction}
+\newtheorem{ExS}[ThmS]{Example}
+
+
+\theoremstyle{remark}
+\newtheorem{Rem}[Thm]{Remark}
+\newtheorem{RemS}[ThmS]{Remark}
+
+\newtheorem{conj}{Conjecture}
+
+%Commandsection
+\errorcontextlines=0
+\numberwithin{equation}{section}
+
+
+
+%Section titles that can be referenced
+\renewcommand{\sec}[2]{\section{#2}\label{S:#1}}
+\newcommand{\ssec}[2]{\subsection{#2}\label{SubS:#1}}
+\newcommand{\sssec}[2]{\subsubsection{#2}\label{SubSubS:#1}}
+
+
+% New environments for declarations that can be referenced
+\newenvironment{thm}[1]%
+    { \begin{Thm} \label{T:#1}}%
+    { \end{Thm} }
+\renewcommand{\th}[1]{\begin{thm}{#1} \sl }
+\renewcommand{\eth}{\end{thm} }
+
+\newenvironment{thms}[1]%
+    { \begin{ThmS} \label{T:#1}}%
+    { \end{ThmS} }
+\newcommand{\ths}[1]{\begin{thms}{#1} \sl }
+\newcommand{\eths}{\end{thms} }
+
+
+\newenvironment{lemma}[1]%
+    { \begin{Lem} \label{L:#1}}%
+    { \end{Lem} }
+\newcommand{\lem}[1]{\begin{lemma}{#1} \sl}
+\newcommand{\elem}{\end{lemma}}
+
+\newenvironment{lemmas}[1]%
+    { \begin{LemS} \label{L:#1}}%
+    { \end{LemS} }
+\newcommand{\lems}[1]{\begin{lemmas}{#1} \sl}
+\newcommand{\elems}{\end{lemmas}}
+
+
+\newenvironment{propos}[1]%
+    { \begin{Prop} \label{P:#1}}%
+    { \end{Prop} }
+\newcommand{\prop}[1]{\begin{propos}{#1}\sl }
+\newcommand{\eprop}{\end{propos}}
+
+\newenvironment{proposs}[1]%
+    { \begin{PropS} \label{P:#1}}%
+    { \end{PropS} }
+\newcommand{\props}[1]{\begin{proposs}{#1}\sl }
+\newcommand{\eprops}{\end{proposs}}
+
+\newenvironment{corol}[1]%
+    { \begin{Cor} \label{C:#1}}%
+    { \end{Cor} }
+\newcommand{\cor}[1]{\begin{corol}{#1} \sl }
+\newcommand{\ecor}{\end{corol}}
+
+\newenvironment{corols}[1]%
+    { \begin{CorS} \label{C:#1}}
+    { \end{CorS} }
+\newcommand{\cors}[1]{\begin{corols}{#1} \sl }
+\newcommand{\ecors}{\end{corols}}
+
+
+\newenvironment{defeni}[1]%
+    { \begin{Def} \label{D:#1}}%
+    { \end{Def} }
+\newcommand{\defe}[1]{\begin{defeni}{#1} }
+\newcommand{\edefe}{\end{defeni}}
+
+\newenvironment{defenis}[1]%
+    { \begin{DefS} \label{D:#1}}%
+    { \end{DefS} }
+\newcommand{\defes}[1]{\begin{defenis}{#1} }
+\newcommand{\edefes}{\end{defenis}}
+
+
+\newenvironment{remark}[1]%
+    { \begin{Rem} \label{R:#1}}%
+    { \end{Rem} }
+\newcommand{\rem}[1]{\begin{remark}{#1}}
+\newcommand{\erem}{\end{remark}}
+
+\newenvironment{remarks}[1]%
+    { \begin{RemS} \label{R:#1}}%
+    { \end{RemS} }
+\newcommand{\rems}[1]{\begin{remarks}{#1}}
+\newcommand{\erems}{\end{remarks}}
+
+
+\newenvironment{conjec}[1]%
+    { \begin{Conj} \label{Co:#1}}
+    { \end{Conj} }
+\renewcommand{\conj}[1]{\begin{conjec}{#1} \sl }
+\newcommand{\econj}{\end{conjec}}
+
+\newenvironment{example}[1]%
+    { \begin{Ex} \label{Exx:#1}}%
+    { \end{Ex} }
+\newcommand{\ex}[1]{\begin{example}{#1} }
+\newcommand{\eex}{\end{example}}
+
+\newenvironment{examples}[1]%
+    { \begin{ExS} \label{Exx:#1}}
+    { \end{ExS} }
+\newcommand{\exs}[1]{\begin{examples}{#1} }
+\newcommand{\eexs}{\end{examples}}
+
+
+\newcommand{\prf}{ \begin{proof} }
+\newcommand{\epr}{ \end{proof} }
+
+
+\emergencystretch=2cm
+
+
+
+
+
+
+%------------------------------------------------------------
+%------------------------ Miei comandi ----------------------
+%------------------------------------------------------------
+
+
+
+%------------------- Caratteri speciali ---------------------
+
+
+
+% Blackboard Bold
+
+\newcommand\Z{\mathbb{Z}}
+\newcommand\Q{\mathbb{Q}}
+\newcommand\R{\mathbb{R}}
+\newcommand\CC{\mathbb{C}}
+\newcommand\HH{\mathbb{H}}
+
+
+% Lettere greche
+
+\newcommand\alp{\alpha}     \newcommand\Alp{\Alpha}
+\newcommand\bet{\beta}
+\newcommand\gam{\gamma}     \newcommand\Gam{\Gamma}
+\newcommand\del{\delta}     \newcommand\Del{\Delta}
+\newcommand\eps{\varepsilon}
+\newcommand\zet{\zeta}
+\newcommand\tet{\theta}     \newcommand\Tet{\Theta}
+\newcommand\iot{\iota}
+\newcommand\kap{\kappa}
+\newcommand\lam{\lambda}    \newcommand\Lam{\Lambda}
+\newcommand\sig{\sigma}     \newcommand\Sig{\Sigma}
+\newcommand\vphi{\varphi}
+\newcommand\ome{\omega}     \newcommand\Ome{\Omega}
+
+
+% Fraktur
+
+\newcommand\frp{\mathfrak{p}}
+
+
+% Calligrafico
+
+\newcommand\calC{\mathcal{C}}
+\newcommand\calF{\mathcal{F}}
+\newcommand\calO{\mathcal{O}}
+\newcommand\calI{\mathcal{I}}
+\newcommand\calJ{\mathcal{J}}
+\newcommand\calL{\mathcal{L}}
+\newcommand\calG{\mathcal{G}}
+\newcommand\calX{\mathcal{X}}
+
+% Trattino in mathmode
+
+\mathchardef\mhyphen="2D
+
+
+%------------------------ Simboli ---------------------------
+
+
+\newcommand\pmeninf{p^{-\infty}}
+\DeclareMathOperator{\ten}{\otimes}
+\DeclareMathOperator{\im}{Im}
+
+\newcommand{\Gm}{\mathbb{G}_m}
+\newcommand{\Ga}{\mathbb{G}_a}
+\newcommand{\Fp}{\mathbb{F}_p}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\Qp}{\mathbb{Q}_p}
+\newcommand{\mup}{\mu_{p}}                                              % mu_p
+\newcommand{\mupn}{\mu_{p^n}}                                           % mu_{p^n}
+
+
+\DeclareMathOperator{\undis}{\coprod}
+\newcommand{\onto}[2][]{\xrightarrow[#1]{#2}\mathrel{\mkern-14mu}\rightarrow}           % mappa suriettiva
+\newcommand\xto[2]{\xrightarrow[#1]{#2}}
+\newcommand{\twoar}{\raisebox{-4pt}{$\rightarrow$}
+                \mathrel{\mkern-28mu}\raisebox{4pt}{$\rightarrow$}}                     % due frecce parallele
+\newcommand{\thrar}{\raisebox{-7pt}{$\rightarrow$}
+                \mathrel{\mkern-23mu}\rightarrow
+                \mathrel{\mkern-23mu}\raisebox{7pt}{$\rightarrow$}}                     % tre frecce parallele
+
+                
+\DeclareMathOperator{\Hom}{Hom}                                      % Hom
+\DeclareMathOperator{\rk}{rank}                                          % rango
+\DeclareMathOperator{\coker}{coker}
+\DeclareMathOperator{\op}{op}                                            % categoria opposta
+\DeclareMathOperator{\alg}{-Alg}                                         % categoria delle algebre
+\DeclareMathOperator{\sch}{Sch}                                          % categoria degli schemi
+\DeclareMathOperator{\Alb}{Alb}                                          % categoria degli schemi
+\DeclareMathOperator{\set}{Set}                                          % categoria degli insiemi
+\DeclareMathOperator{\D}{D}                                              % categoria derivata
+\DeclareMathOperator{\Tot}{Tot}                                          % complesso totale di un bicomplesso
+\DeclareMathOperator{\Cone}{Cone}                                        % cono in categoria derivata
+\DeclareMathOperator{\Ab}{\textit{Ab}}                                   % fasci abeliani su un sito
+\DeclareMathOperator{\Top}{\textit{Sh}}                                  % fasci abeliani su un sito
+\DeclareMathOperator{\Rgam}{\text{R}\Gamma}                              % derived sezioni globali        
+\DeclareMathOperator{\Spec}{Spec}                                        % spettro di un anello
+\newcommand{\W}{W}                                                       % vettori di Witt
+\newcommand{\K}{K}
+\DeclareMathOperator{\sub}{\subseteq}                                    % sottoinsieme
+\newcommand{\Ll}{L}                                                      % complesso cotangente
+\DeclareMathOperator{\Rlim}{Rlim}                                        % Rlim
+\DeclareMathOperator{\Rder}{\text{R}}                                    % derived sezioni globali        
+\DeclareMathOperator{\Rflat}{R\Gamma_{\textnormal{fppf}}}                % coomologia fppf
+\DeclareMathOperator{\Ret}{R\Gamma_{\textnormal{\'{e}t}}}                % coomologia étale
+\DeclareMathOperator{\RdR}{R\Gamma_{\textnormal{dR}}}                    % derived de Rham        
+\DeclareMathOperator{\Pic}{Pic}                                          % gruppo di Picard
+\DeclareMathOperator{\Br}{Br}                                            % gruppo di Brauer
+\DeclareMathOperator{\NS}{NS}
+\newcommand\Hflat[1]{H^{#1}_{\textnormal{fppf}}}                         % coomologia fppf
+\newcommand\Het[1]{H^{#1}_{\textnormal{\'{e}t}}}                         % coomologia étale
+\DeclareMathOperator{\qcoh}{QCoh}
+\newcommand\HdR[1]{H^{#1}_{\textnormal{dR}}}                             % coomologia di de Rham
+
+\DeclareMathOperator{\Acr}{\mathbb{A}_{cris}}                            % A_{cris}
+\DeclareMathOperator{\Ainf}{\mathbb{A}_{inf}}                            % A_{inf}
+\newcommand\perf[1]{#1^{\flat}}                                          % perfezione 
+\newcommand\coperf[1]{#1_{\textnormal{perf}}}                            % coperfezione
+\DeclareMathOperator{\Cris}{CRIS}                                        % sito cristallino grande (da fare!)
+\DeclareMathOperator{\cris}{Cris}                                        % sito cristallino piccolo (da fare!)
+\newcommand\Inf{\text{Inf}}                                             % sito infinitesimale
+\DeclareMathOperator{\Rcris}{R\Gamma_{cris}}                             % coomologia cristallina        
+\newcommand\ocris{\calO_{\textnormal{cris}}}                             % fascio strutturale cristallino
+\newcommand\oinf{\calO_{\textnormal{inf}}}                             % fascio strutturale cristallino
+\newcommand\icris{\calI_{\textnormal{cris}}}                             % PD-ideale canonico cristallino
+\DeclareMathOperator{\Nyg}{F_N^1}                                      % filtrazione di Nygaard
+\newcommand\Hcris[1]{H^{#1}_{\textnormal{cris}}}                         % coomologia cristallina
+\newcommand\Hinf[1]{H^{#1}_{\textnormal{inf}}}                         % coomologia infinitesimale
+\DeclareMathOperator{\Rinf}{R\Gamma_{inf}}                             % coomologia infinitesimale    
+\DeclareMathOperator{\Spf}{Spf}                                        % spettro formale di un anello
+
+
+
+
+
+
+
+\newcommand{\commentMar}[1]{\textcolor{red}{Marco: #1}}
+\newcommand{\commentLiv}[1]{\textcolor{blue}{Livia: #1}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{document}
+
+\title{Some applications of the Nygaard filtration and quasisyntomic descent in positive characteristic}
+\author{Livia Grammatica\footnote{Email: \textit{livia.grammatica@math.unistra.fr}\\
+Institut de Recherche Math\'{e}matique Avanc\'{e}e (IRMA), Universit\'{e} de Strasbourg, 7 rue Ren\'{e} Descartes, 67000 Strasbourg, France.}} 
+\date{\today}
+
+
+\maketitle
+
+\begin{abstract} This article gives an expository account of quasisyntomic descent and the Nygaard filtration in positive characteristic, complemented by several new applications to $p$-adic cohomology theories. The guiding result is a new approach to Illusie's comparison between fppf cohomology with $\Zp(1)$ coefficients and the slope $1$ part of crystalline cohomology. We follow work of Bhatt-Lurie, but give a more elementary presentation which does not rely on the formalism of $\infty$-categories. We then revisit Ogus' comparison theorem between infinitesimal cohomology and étale cohomology, and give new proofs of several results on fppf cohomology that were previously obtained with the de Rham-Witt complex. We also determine the action of multiplication-by-$n$ on the fppf cohomology of an abelian variety, answering a question of A. Skorobogatov to the author. This is an expanded version of the author's master thesis.
+\end{abstract}
+\tableofcontents
+\section{Introduction}
+
+Let $p$ be a prime number, $k$ a perfect field of characteristic $p$, $X$ a smooth and proper variety over $k$. Denote by $F$ the Frobenius acting on $\Hcris{i}(X/\W(k))$. Illusie was the first to prove the following comparison result.
+
+\ths{mainthm}(\cite[Théorème II.5.5]{illusiedrw})
+If $k$ is algebraically closed, there is a natural map
+\[
+\Hflat{i}(X,\Zp(1))\to \Hcris{i}(X/\W(k))^{F=p}
+\]
+which becomes an isomorphism after inverting $p$\footnote{In this paper $\Hflat{i}(X,\Zp(1))$ denotes the $i$-th cohomology group of $\Rlim_n\Rflat(X,\mupn)$, but work of Milne shows that under our hypotheses the projective system of abelian groups $\{\Hflat{i}(X,\mupn)\}_n$ is Mittag-Leffler, so that $\Hflat{i}(X,\Zp(1))=\varprojlim_n\Hflat{i}(X,\mupn)$. See \cite[p.627]{illusiedrw} for further details.}.
+
+\eths
+
+The first goal of this paper is to present a proof of \Cref{T:mainthm} using the more modern approach to $p$-adic cohomology theories pioneered by Bhatt, Morrow, Scholze, Lurie, Drinfeld et al. To this effects we follow closely section $7$ of the paper of Bhat-Lurie \cite{bhattlurie}. 
+
+Illusie's original proof relies on the theory of the de Rham-Witt complex as the main tool for studying crystalline cohomology. For a smooth $k$-scheme $X$, he defines a projective system $(\W_n\Ome^{\bullet}_X)_{n\ge1}$ of complexes of sheaves over $X$ with the property that the hypercohomology of $W_n\Ome^{\bullet}_X$ computes the crystalline cohomology of $X$ over $\W_n(k)$. The proof of \Cref{T:mainthm} is essentially differential in nature, relying on properties of the Cartier isomorphism.
+
+In Bhatt--Lurie's approach the focus is on the Nygaard filtration, and quasisyntomic descent is an essential tool to reduce statements to situations where cohomology can be described esplicitly. Bhatt--Lurie's paper relies heavily on the formalism of $\infty$-categories, and part of the originality of this work is to present their proof in a more elementary way. We thus hope to make it accessible to geometers familiar with the basic tools of homological algebra (cohomology of sheaves on a site and derived categories) and crystalline cohomology.
+
+In writing a detailed account of the techniques used in the proof we include a few applications of descent and the Nygaard filtrations, some new and some well-known. As a direct application of quasisyntomic descent we give a quick proof of a theorem of Ogus \cite{ogusinf} which identifies infinitesimal cohomology with the unit-root part of crystalline cohomology. Let $\Rinf(X/\W(k))$ denote the infinitesimal cohomology of $X$.
+
+\ths{}(\Cref{T:infmio}) If $k$ is a perfect field of characteristic $p$ and $X$ is a smooth scheme there is a natural isomorphism
+\begin{equation}\label{isoinf}
+\alpha_X:\Rinf(X/\W(k))\simeq\Rlim_F\Rcris(X/\W(k))
+\end{equation}
+where $F$ is the Frobenius acting on $\Rcris(X/\W(k))$.
+
+\eths
+
+We then turn our attention to the long exact sequence
+\[
+\cdots\to{\Hflat{i}(X,\Zp(1))}\to{\Nyg\Hcris{i}(X/\W(k))}\xto{}{F/p-1}{\Hcris{i}(X/\W(k))}\to{\Hflat{i+1}(X,\Zp(1))}\to\cdots
+\]
+coming from triangle \eqref{triangolomainthm}. By studying the properties of the Nygaard filtration, we are able to prove many properties of fppf cohomology that Illusie obtains with the theory of the de Rham-Witt complex. 
+
+We start with a general result on the structure of fppf cohomology groups.
+
+\ths{}(\Cref{T:finiteexponent}) For all $i\ge0$ the $\Zp$-module $\Hflat{i}(X,\Zp(1))$ is isomorphic to the direct sum of $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ with a free $\Zp$-module of rank $r=\rk_{\W(k)}\left(\Hcris{i}(X/\W(k))^{F=p}\right)$. Moreover, $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ is a $p$-group of finite $p$-exponent.
+\eths
+
+With different techniques one can get more precise results, namely that the group $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ is the extension of a finite group by the $k$-points of a unipotent affine group scheme. This is proved in \cite{illusieraynaud} and \cite{milnezeta} (see section $2$ of \cite{geissermotivic} or Appendix A of \cite{skorkunneth}). 
+
+For $i=1,2$ the groups $\Hflat{i}(X,\Zp(1))$ are in fact finite type $\Zp$-modules, but for $i=3$ the torsion subgroup can be infinite. We give an example of this phenomenon at the end of the article. That computation serves to underline the fact that the formalism presented here is also well-suited for doing explicit calculations. 
+ 
+Our last contribution is to identify a class of varieties, which we call straight varieties, for which fppf cohomology is completely determined by crystalline cohomology. These are essentially the varieties which satisfy the hypotheses of the Mazur-Ogus "Newton-above-Hodge" theorem \cite[Theorem 8.26]{berthelotogus}. Some examples of straight varieties are abelian varieties, complete intersections, and K3 surfaces. We end our analysis by determining the action of the multiplication-by-$n$ map on the fppf cohomology of an abelian variety.
+
+\props{}(\Cref{C:moltiplicazionen}) If $A$ is an abelian variety over an algebraically closed field $k$, the multiplication-by-$n$ map $[n]:A\to A$ acts as $n^{i}$ on $\Hflat{i+1}(A,\Zp(1))_{\text{tors}}$ and on $\Hflat{i}(X,\Zp(1))/\text{tors}$.
+\eprops
+
+Part of the motivation for studying fppf cohomology is that the groups $\Hflat{i}(X,\Zp(1))$, for $i=2,3$, are closely related to the $p$-torsion of the Brauer group of $X$ via the Kummer sequence. There is a short exact sequence
+\begin{equation}\label{brauer}
+0\to\Br(X)[p^{\infty}]_{\mathrm{div}}\to\Br(X)[p^{\infty}]\to\Hflat{3}(X,\Zp(1))_{\text{tors}}\to0,
+\end{equation}
+where $\Br(X)[p^{\infty}]$ is the union of the $\Br(X)[p^n]$, and $\Br(X)[p^{\infty}]_{\mathrm{div}}$ is its maximal divisible subgroup. Furthermore, $\Br(X)[p^{\infty}]_{\mathrm{div}}$ is isomorphic to $\left(\Qp/\Zp\right)^{a}$ where $a$ is equal to $\dim_{\Qp}\Hflat{2}(X,\Qp(1))-\rk\NS(X)$. A proof for the analogous statements in the $\ell$-adic setting can be found in \cite[Proposition 5.2.9]{ctsbrauer}. The upshot is then that $\Br(X)[p^{\infty}]$ is the direct sum of a divisible part and of a $p$-group of finite $p$-exponent. 
+
+It also follows that if $X$ is straight one can write down a formula for the $p$-torsion of the Brauer group exclusively in terms of crystalline cohomology - for abelian varieties in terms of its Dieudonné module. This will be exploited in a future paper joint with Alexei Skorobogatov and Yuan Yang.
+
+\subsection*{Sketch of the proof of \Cref{T:mainthm}} We briefly sketch the strategy of proof. If $X$ is a $k$-scheme, the Nygaard filtration is a filtration of crystalline cohomology $\Rcris(X/\W(k))$ in the derived category. For our purposes we only need the first piece of the Nygaard filtration, which by design sits in an exact triangle 
+\[
+\Nyg{}\Rcris(X/\W(k))\to\Rcris(X/\W(k))\to\Rgam(X,\calO_X)
+\]
+in $\D(\Zp)$, where the right-hand map is a natural augmentation map. Following Bhatt--Lurie we can construct a ``completed'' first Chern class
+\[
+\hat{c}_1:\Rflat(X,\Zp(1))\to\Nyg{}\Rcris(X/\W(k))
+\]
+extending the usual crystalline first Chern class. The composition
+\[
+\Rflat(X,\Zp(1))\xto{}{\hat{c}_1}\Nyg{}\Rcris(X/\W(k))\to\Rcris(X/\W(k))
+\]
+is then the map of \Cref{T:mainthm}.
+
+\ths{mainthmbl}(\cite[Theorem 7.3.5]{bhattlurie}, \Cref{T:triangololiscio}) If $X$ is a smooth scheme over the perfect field $k$, then
+\begin{equation}\label{triangolomainthm}
+\Rflat(X,\Zp(1))\xto{}{\hat{c}_1}\Nyg{}\Rcris(X/\W(k))\xto{}{F/p-1}\Rcris(X/\W(k))   
+\end{equation}
+is an exact triangle in $\D(\Zp)$.
+\eths
+
+At the end of \Cref{S:pruffa} we prove \Cref{T:mainthm} as an almost direct consequence of this result. \Cref{T:mainthmbl} itself goes back to the paper of Fontaine-Messing \cite{fontainemessing} where the syntomic topology is first introduced.
+
+The map $F/p-1$ is defined in \Cref{S:pruffa}. To prove \Cref{T:mainthmbl} we use cohomological descent: first we easily reduce to the case where $X=\Spec(R)$ is affine. The second step is to show that if $G$ is one of the three functors in \eqref{triangolomainthm}, $G$ satisfies descent along the map 
+\[
+\Spec(\coperf{R})\to\Spec(R),
+\]
+where $\coperf{R}=\varinjlim_{F_R}R$, or in other words that the natural map
+\[
+\xymatrix{G(\Spec(R))\ar[r]&\Tot\Bigl(G(\Spec(\coperf{R}))\ar[r]<1.5pt>\ar[r]<-1.5pt> & G(\Spec(\coperf{R}\otimes_R\coperf{R}))\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \dots\Bigr)}
+\]
+is an isomorphism in $\D(\Zp)$. By functoriality of triangle \eqref{triangolomainthm} this implies that it suffices to prove \Cref{T:mainthmbl} when $X=\Spec(A)$, where $A$ is one of $\coperf{R},\coperf{R}\otimes_R\coperf{R},$ etc. These are examples of what we call elementary quasiregular semiperfect (eqrsp) $\Fp$-algebras in \Cref{SubS:elqrsp}. The point is that crystalline cohomology of an eqrsp algebra $A$ is isomorphic to $\Acr(A)[0]$ and $\Acr(A)$ can be described very explicitly as a ring of power series. The Nygaard filtration and fppf cohomology are also explicit and concentrated in degree zero so in the end we have an exact sequence of abelian groups and we must show it is exact. This is proved as \Cref{T:triangolosemipft}.
+
+\subsection*{Outline of the article}
+
+In \Cref{S:prel} we present notation and results on crystalline cohomology which we will use throughout. We work with a version of the crystalline site which is slightly different from the usual, so we start by explaining the cohomology of sheaves in this setting. Then we explore in detail the crystalline cohomology of schemes of the form $\Spec(R)$, where $R$ is a semiperfect $\Fp$-algebra. 
+
+In \Cref{S:disc} we introduce a very light formalism for descent and show that crystalline cohomology satisfies descent along maps of the form $R\to\coperf{R}$ when $R$ is a Frobenius-smooth $\Fp$-algebra. This is a class of rings which includes smooth rings over a perfect field and more. We also give a proof of Ogus' theorem on infinitesimal cohomology.
+
+In \Cref{S:pruffa} we tackle the proof of the \Cref{T:mainthmbl} and deduce \Cref{T:mainthm}. Then in the final section we deduce some basic structure results on the groups $\Hflat{i}(X,\Zp(1))$. We also determine $\Hflat{i}(X,\Zp(1))$ in two simple cases, to illustrate how these techniques can be used for computations. 
+
+In the first four sections the only original result is the proof of Ogus' theorem. In \Cref{SubS:semipft} we take many ideas from \cite{drinfeldacris}, and \Cref{S:pruffa} is a rewriting of a portion of \cite[Section 7]{bhattlurie}. We have put effort in trying to present the results and arguments in an explicit and elementary way. Most of the results of \Cref{S:applicazioni} are well-known but as far as we are aware the proofs presented here do not appear in previous literature.
+
+\subsection*{Acknowledgements} This paper is an enlargement of my masters thesis at Sorbonne Université, which was done under the supervision of Marco D'Addezio. The topic and most of the results presented here have been suggested by him, and I thank him heartily for his encouragements, his interest in this work and for many enlightening discussions. Thanks are due to Alexei Skorobogatov for suggesting to think about \Cref{C:moltiplicazionen}, and to Mauro Porta for explaining \Cref{R:mauro}. I also benefited from helpful conversations with Yuan Yang and Emiliano Ambrosi on topics closely related to the content  of this paper. This project has received funding from the European Union’s Horizon Europe research
+and innovation programme under the Marie Skłodowska-Curie grant agreement n° 101126554.
+
+\subsection*{Conventions and notations}
+We fix the prime number $p$ throughout, and $k$ denotes a perfect field of characteristic $p$. Unless otherwise stated, all rings and schemes are $\Fp$-algebras and $\Fp$-schemes respectively. All schemes are assumed quasi-compact and separated for simplicity. 
+
+All divided power rings live over $(\Zp,(p))$, where $(p)$ is endowed with its unique divided power structure. All divided power envelopes are taken relative to $(\Zp,(p))$ 
+
+The $p$-typical Witt vectors are denoted by $\W(-)$, the Witt vectors of length $n$ by $W_n(-)$, and the Teichmüller representative of $a\in A$ by $[a]\in\W(A)$. Denote by $\sigma$ the Frobenius automorphism of $\W(k)$. Write $\K=\W(k)[1/p]$, and for a $\W(k)$-module $M$ write $M[1/p]=M\otimes_{\W(k)}\K$.
+
+If $R$ is an $\Fp$-algebra we write $F_R$ for the Frobenius morphism $x\mapsto x^p$, or even $F$ if confusion is unlikely. The inclusion of perfect $\Fp$-algebras into $\Fp$-algebras has both a right and a left adjoint, respectively the perfection $R \mapsto \perf{R}=\varprojlim_{F}R$ and the coperfection $R \mapsto \coperf{R}=\varinjlim_{F}R$. Elements of $\perf{R}$ are sequences $(\dotsc,c_1,c_0)$ of elements of $R$ such that $c_i=c_{i+1}^p$. 
+
+Given a site $\calC$ the associated topos is $\Top(\calC)$ and the category of abelian sheaves is $\Ab(\calC)$. We denote the final object of $\Top(\calC)$ by $*$.
+
+A thickening of schemes is a closed immersion $X\to Y$ which induces a homeomorphism $|X|\to |Y|$. Equivalently, a closed immersion whose sheaf of ideals is locally nilpotent (i.e. every local section on an open affine subscheme is nilpotent).
+
+If $G$ is a $p$-divisible abelian group let $T_p(G)=\varprojlim_n G[p^n]$ denote the $p$-adic Tate module of $G$.
+
+
+
+
+
+
+\sec{prel}{Crystalline cohomology}
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Crystalline cohomology ----------------------------------
+%--------------------------------------------------------------------------------------
+
+
+Crystalline cohomology was introduced by Grothendieck \cite{grothendieckinf} and developed by Berthelot \cite{berthelotcris} as a $p$-adic companion to $\ell$-adic cohomology. In this section we explain Bhatt--Lurie's setup for working with crystalline cohomology. 
+
+In \Cref{SubS:convenzionicris} we define a big fppf version of the crystalline site. It is slightly different from Berthelot's definition but gives the same cohomology groups. We also gather some properties of crystalline cohomology that we will use in later proofs. The following sections cover some less classical topics in crystalline cohomology: derived $p$-completeness and the crystalline cohomology of semiperfect rings. In \Cref{SubS:elqrsp} we introduce elementary quasiregular semiperfect algebras, which can be thought as contractible spaces for $p$-adic cohomologies. We work throughout in the derived category $\D(\Zp)$ where many constructions and statements become more natural.
+
+\ssec{convenzionicris}{The big and small crystalline site}
+
+The crystalline cohomology of an $\Fp$-scheme $X$ is usually defined as the cohomology of the structure sheaf on the small crystalline site. We briefly recall the definitions.
+
+\defe{}
+(1) The \textit{small crystalline site} of $X$ is the category $\cris(X/\Zp)$ whose objects are divided power thickenings $(V,T,\delta)$ with $V$ an open subscheme of $X$. A morphism $(V',T',\delta')\to(V,T,\delta)$ is a morphism of divided power pairs where $V'\to V$ is a morphism of $X$-schemes. A family of maps $\{(V_i,T_i,\delta_i)\to(V,T,\delta)\}$ is a covering if $\{T_i\to T\}$ is a Zariski cover and $V_i=T_i\times_TV$ for all $i$. 
+
+(2) The crystalline structure sheaf $\ocris$ is defined by $\ocris(V,T,\delta)=\Gam(T,\calO_T)$. 
+
+(3) The crystalline cohomology groups of $X$ are the cohomology groups of the complex $\Rgam(\cris(X/\Zp),\ocris)$. We will also denote it by $\Rcris(X/\Zp)$.
+
+\edefe
+
+The small crystalline site is intimately linked with the Zariski topology on $X$. This means that other cohomology groups which are of interest to us, such as $\Hflat{n}(X,\Zp(1))$, can not be obtained as the cohomology of sheaves on this site. This limitation can be overcome by working with the more flexible big crystalline 
+site, which we shall now define. While on the one hand it computes crystalline cohomology just like the small site, it has on the other hand many more sheaves to work with.
+
+\defe{}
+
+(1) The \textit{big crystalline site} of $X$ is denoted by $\Cris(X/\Zp)$. Its objects are divided power
+thickenings $(V,T,\delta)$ with $V$ an $X$-scheme. A morphism $(V',T',\delta')\to(V,T,\delta)$ is a 
+morphism of divided power pairs where $V'\to V$ is a morphism of $X$-schemes. A family of maps $\{(V_i,T_i,\delta_i)\to(V,T,\delta)\}$
+is a covering if $\{T_i\to T\}$ is a covering for the fppf topology and $V_i=T_i\times_T V$.
+
+(2) The structure sheaf is also denoted by $\ocris$, and is defined by $\ocris(V,T,\delta)=\Gam(T,\calO_T)$. 
+
+(3) Note that if we restrict the big crystalline site to an object $(V,T,\delta)$, we get the big fppf site of $T$. A sheaf $\calF$ is \textit{locally quasi-coherent} if it is quasi-coherent when restricted to any object $(V,T,\delta)$. For example, $\ocris$ is locally quasi-coherent, because $\ocris|_{(V,T,\delta)}=\calO_T$.
+
+\edefe
+
+The following proposition echoes the fact that the fppf cohomology of a quasi-coherent sheaf and its Zariski cohomology coincide.
+
+\prop{piattavzariski}
+
+Let $\calF$ be a locally quasi-coherent sheaf of modules on $\Cris(X/\Zp)$. The natural map 
+\[
+\Rgam(\Cris(X/\Zp),\calF)\to\Rgam(\cris(X/\Zp),\calF|_{\cris(X/\Zp)})
+\]
+is a quasi-isomorphism. In particular, the cohomology of $\Rcris(X/\Zp)$ can be computed as the cohomology of $\Rgam(\Cris(X,\Zp),\ocris)$.
+
+\eprop
+
+\prf
+
+By \cite[07IJ]{stacksproject} the inclusion $\cris(X/\Zp)\to\Cris(X/\Zp)$ induces a morphism of topoi $f:\Top(\Cris(X/\Zp))\to\Top(\cris(X/\Zp))$. Via the Leray spectral sequence of $f_{\*}$ we reduce to proving that $R^if_{*}\calF=0$ for $i>0$. For fixed $i$, the latter is the sheafification of $(V,T,\delta)\mapsto H^i((V,T,\delta),\calF|_{(V,T,\delta)})$. This is zero whenever $V$ (or $T$) is affine (see \cite[Tag 07JJ]{stacksproject}) and every object $(V,T,\delta)$ has a Zariski covering by affine divided power thickenings. Thus $R^if_{*}\calF=0$ and we are done.\epr
+
+\rem{}
+
+If $\calF$ is a sheaf on the big crystalline site we will sometimes write $\Rcris(X,\calF)$ for its cohomology.
+
+\erem
+
+Let $\calF$ be a sheaf on the big fppf site of $X$. We can form a sheaf $\calF_c$ on $\Cris(X/\Zp)$ by setting $\calF_c(V,T,\delta)=\calF(V)$. Usually we drop the subscript $c$ and write $\calF$ instead of $\calF_c$.
+
+\prop{crisvfppf}
+
+There is a canonical isomorphism $\Rcris(X,\calF_c)\simeq\Rflat(X,\calF)$. 
+
+\eprop
+
+\prf
+
+Consider the morphism of topoi $u: \Top(\Cris(X/\Zp))\to\Top((X)_{\text{fppf}})$ induced by $(X)_{\text{fppf}}\to\Cris(X/\Zp)$ $V\mapsto(V,V,0)$. For $i>0$, $R^if_{*}\calF_c$ is the sheafification of $V\mapsto H^i((V,V,0),\calF_c|_{(V,T,\delta)})$, which is $0$ as in the proof of \Cref{P:piattavzariski}. Given that $f_*\calF_c=\calF$ our statement follows from the Leray spectral sequence.\epr
+
+\ex{defnygaard}
+
+Applying \Cref{P:crisvfppf} to the fppf sheaf $\Ga$ we get an isomorphism $\Rcris(X,\Ga)\simeq\Rgam(X,\calO_X)$. There is a natural map of sheaves $\ocris\to\Ga$ which on $(V,T,\delta)$ corresponds to the surjection $\calO_T\onto{}{}\calO_V$, so in particular it is surjective. We call the kernel of this map $\icris$, and we shall denote by $\Nyg\Rcris(X/\Zp)$ the complex $\Rcris(X,\icris)$ and by $\Nyg H^n_{cris}(X/\Zp)$ its $n$-th cohomology. It is usually called (the first piece of) the Nygaard filtration. By construction we have an exact triangle
+\begin{equation}
+    \Nyg\Rcris(X/\Zp)\to\Rcris(X/\Zp)\to\Rgam(X,\calO_X)
+\end{equation}
+in $\D(\Z)$. The complex $\Rgam(X,\calO_X)$ is $p$-torsion so we find that the maps $\Nyg\Rcris(X/\Zp)\to\Rcris(X/\Zp)$ and $\Nyg\Hcris{i}(X/\Zp)\to\Hcris{i}(X/\Zp)$ become isomorphisms after inverting $p$.
+
+\eex
+
+\rem{notazionew}
+
+When $X$ is a $k$-scheme one usually defines the sites $\cris(X/\W(k))$ and $\Cris(X/\W(k))$, whose objects are divided power schemes $(V,T,\delta)$ with $V$ an $X$-scheme and $T$ over $\W(k)$. But if $V$ is a $k$-scheme and $V\subseteq T$ is a divided power thickening then $T$ has a unique structure of $\W(k)$-scheme. This is proved in \Cref{L:proprietauniversalewitt}. Thus we are justified in writing $\Rcris(X/\Zp)$ instead of $\Rcris(X/\W(k))$. When we need the $\W(k)$-module structure of crystalline cohomology we will revert to writing $\Rcris(X/\W(k))$. 
+
+\erem
+
+One can define for all $n\ge0$ the truncated crystalline site $\Cris(X/\W_n(\Fp))$ whose objects are the $(V,T)\in\Cris(X/\Zp)$ such that $p^n=0$ in $T$, and define the truncated crystalline cohomology $\Rcris(X/\W_n(\Fp))$ as the cohomology of the restriction of the structure sheaf. Then we have 
+\[
+\Gam(\Cris(X/\Zp),\ocris)=\varprojlim_n\Gam(\Cris(X/\W_m(\Fp)),\ocris)
+\]
+and thus
+\begin{equation}\label{limitecrisfinita}
+\Rcris(X/\Zp)=\Rlim_n\Rcris(X/\W_n(\Fp)).
+\end{equation}
+When $k$ is a $k$-scheme we may write $\Rcris(X/\W_n(k))$ instead of $\Rcris(X/\W_n(\Fp))$ to underline the $\W_n(k)$-module structure.
+
+\rem{}
+
+When $X=\Spec(A)$ is an affine scheme we may write $\Cris(A/\Zp)$, $\Rcris(A/\Zp)$, etc. instead of $\Cris(X/\Zp)$, $\Rcris(X/\Zp)$, etc.
+
+\erem
+
+We end with a couple of important results on crystalline cohomology which we will need to use later on. Namely, we mention the comparison with de Rham cohomology, the perfectness of crystalline cohomology for proper schemes, and the existence of a ``Verschiebung'' morphism.
+
+\prop{confrontoderham}
+Let $X$ be a smooth $k$-scheme. There is a canonical isomorphism
+\[
+\Rcris(X/\W(k))\otimes^L\Z/p\simeq\Rcris(X/\W_1(k))\simeq\RdR(X/k)
+\]
+\eprop
+
+\prf
+See the results in \cite[Tag 07MI]{stacksproject}.
+\epr
+
+\cor{torsionehuno}
+
+If $X$ is a smooth and proper $k$-scheme the $\W(k)$-module $\Hcris{1}(X/\W(k))$ is torsion-free.
+
+\ecor
+
+\prf
+
+\Cref{P:confrontoderham} gives a short exact sequence
+\[
+0\to\Hcris{0}(X/k)/p\to\HdR{0}(X/k)\to\Hcris{1}(X/k)[p]\to0.
+\]
+and the left-hand map is an isomorphism, so the right-hand group must be $0$.
+\epr
+
+We can be much more precise about $\Hcris{1}(X/\W(k))$. 
+
+\prop{crisabeliana}
+
+Let $A$ be an abelian variety. There is a canonical isomorphism of $\Hcris{1}(A/\W(k))$ with the Dieudonné module of $A[p^{\infty}]$. Thus $\Hcris{1}(A/\W(k))$ is a free $\W(k)$-module of rank $2\dim A$.
+
+\eprop
+
+\prf
+This is proved in \cite{mazurmessing}.
+\epr
+
+\prop{comparisonalbanese}
+Let $X$ be smooth and proper, and let $a_X:X\to\Alb_X$ be a canonical morphism to the Albanese variety. The pull-back 
+\[
+a_X^*:\Hcris{1}(\Alb_X/\W(k))\to\Hcris{1}(X/\W(k))
+\]
+is an isomorphism. 
+\eprop{}
+
+\prf
+See \cite[II.3.11.2]{illusiedrw}. We haven't found in the literature a proof that doesn't resort to the de Rham-Witt complex.\epr
+
+We will only need \Cref{P:comparisonalbanese} to use the Verschiebung $V$ on $\Hcris{1}(X)$, and to know that it acts compatibly with Verschiebung on de Rham cohomology, see \Cref{L:diagrammacrisderham}. The last fact we need is the finiteness of $\Hcris{i}(X/\W(k))$ when $X$ is proper.
+
+\prop{cristallinaperfetta}
+If $X$ is proper the complex $\Rcris(X/\W(k))$ is a perfect object of $\D(\W(k))$.
+\eprop
+
+\prf
+See \cite[Tag 07MX]{stacksproject}.
+\epr
+
+%\rem{}                             FILTRAZIONE DI NYGAARD
+
+%The complex $\Nyg\Rcris(X/\Zp)$ is the first term of the so-called Nygaard filtration of $\Rcris(X/\Zp)$. 
+%The $n$-th term is defined as $\Rcris(X,\icris^{[n]})$, where $\icris^{[n]}$ is the ideal of $\ocris$ 
+%generated locally by sections of the form $\gamma_{n_1}(x_1)\dotsb\gamma_{n_k}(x_k)$ where $x_i\in\icris$
+%and $n_1+\dots+n_k\ge n$. 
+
+%\erem
+
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Derived p-completeness ----------------------------------
+%--------------------------------------------------------------------------------------
+
+\ssec{derivedpcomplete}{Derived $p$-completeness} Derived $p$-completeness is the appropriate analogue of $p$-completeness in the derived category $\D(\Z)$. We only briefly discuss the definition and main results and refer to existing literature for the proofs. The key points are the existence of the derived $p$-completion (\Cref{L:derivedpcompletion}) and the derived Nakayama lemma (\Cref{L:derivednakayama}).
+
+\defe{derivedpcomplete}
+
+A complex $K\in\D(\Z)$ is $\textit{derived }p\textit{-complete}$ if the natural map $K\to\Rlim_n(K\ten^L_{\Z}\Z/p^n)$ is an isomorphism in $\D(\Z)$. The full subcategory of $\D(\Z)$ consisting of the derived $p$-complete objects will be denoted by $\D(\Zp)^{\wedge}$. It forms a triangulated subcategory of $\D(\Z)$.
+
+\edefe
+
+This definition does not quite agree with the classical one: it can be shown that if $M$ is an $\Zp$-module, then $M$ is $p$-complete in the usual sense if and only if $M[0]$ is derived $p$-complete and $\bigcap_np^nM=0$ (see \cite[Tag 091T]{stacksproject}).
+
+\lem{equivderivedpcomplete}
+
+Let $(K_n)$ be an inverse system of objects of $\D(\Z)$, and suppose that $p^n=0$ on $K_n$. The object $\Rlim_n\left(K_n\right)$ of $\D(\Z)$ is derived $p$-complete. In particular, for any $\Fp$-scheme $X$, $\Rcris(X/\Zp)$ is derived $p$-complete.
+
+\elem
+
+\prf
+
+The first assertion is \cite[Tag 091W]{stacksproject}. The second assertion follows from the first and \eqref{limitecrisfinita}.
+\epr
+
+\lem{derivedpcompletion}
+
+The inclusion $\D(\Zp)^{\wedge}\xhookrightarrow{}\D(\Z)$ has a left adjoint $K\mapsto K^{\wedge}$ given by $K^{\wedge}=\Rlim_n(K\ten^L_{\Z}\Z/p^n)$. We call $K^{\wedge}$ the derived $p$-completion of $K$.
+
+\elem
+
+\prf
+
+This is \cite[Tag 0923]{stacksproject}.
+\epr
+
+\ex{completamentoGm}
+
+For a scheme $X$ consider the complex $\Rflat(X,\Gm)\in\D(\Z)$. We compute its derived $p$-completion:
+\begin{align*}
+    \Rflat(X,\Gm)^{\wedge}&=\Rlim_n\left(\Rflat(X,\Gm)\ten^L_{\Z}Z/p^n\right)\\
+    &=\Rlim_n\Cone\left(\Rflat(X,\Gm)\xto{}{\cdot p^n}\Rflat(X,\Gm)\right)\\
+    &=\Rlim_n\Rflat(X,\mu_{p^n})[1]=\Rflat(X,\Zp(1))[1]
+\end{align*}
+Here we are writing $\Rflat(X,\Zp(1))$ for $\Rlim_n\Rflat(X,\mu_{p^n})$ as in the statement of \Cref{T:mainthm}. 
+
+One checks that if $K\in\D(\Z)$ the natural map $K\to K^{\wedge}$ induces isomorphisms
+\[
+K\otimes^L_{\Z}\Z/p^n\simeq K^{\wedge}\otimes^L_{\Z}\Z/p^n,
+\]
+so we have the natural identifications
+\[
+\Rflat(X,\Zp(1))\otimes^L_{\Z}\Z/p^n\simeq\Rflat(X,\mupn{}).
+\]
+\eex
+
+We end this section with a result known as the derived Nakayama lemma.
+
+\lem{derivednakayama}
+
+Let $f:K_1\to K_2$ be a morphism in the derived $p$-complete category. If $\overline{f}:K_1\ten^L_{\Z}\Fp\to K_2\ten^L_{\Z}\Fp$ is an isomorphism then $f$ is an isomorphism.
+
+\elem
+
+\prf
+
+See \cite[Tag 0G1U]{stacksproject}.
+\epr
+
+
+
+
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Semiperfect algebras ------------------------------------
+%--------------------------------------------------------------------------------------
+
+
+
+\ssec{semipft}{Semiperfect algebras and $\Acr$} 
+
+An $\Fp$-algebra $B$ is \textit{semiperfect} if the Frobenius morphism $F_B$ is surjective, and \textit{perfect} if $F_B$ is an isomorphism. The crystalline cohomology of semiperfect algebras enjoys a rather simple description. First we recall the universal property of Witt vectors.
+
+\lem{proprietauniversalewitt}
+
+Let $B$ be a perfect $\Fp$-algebra and $S$ a $p$-complete ring. Any map $f:B\to S/(p)$ lifts uniquely to $\overline{f}:\W(B)\to S$.
+
+\elem
+
+\prf
+
+First, we lift $f$ to a multiplicative map $f_1:B\to S$. The strategy is to mimic the usual construction of Teichmüller representatives as in \cite[II, Proposition 8]{corpslocaux}: fix $b\in B$, and for every $n$ fix $y_n\in S$ such that $y_n$ reduces to $b^{1/p^n}$ mod $p$. The sequence $y_n^{p^n}$ converges to some element of $S$ independent from the choice of the $y_n$. We set $f_1(b)=\lim_n\left(y_n^{p^n}\right)$ and $f_1$ is the desired multiplicative lift.
+
+To define $\overline{f}$, write $x\in\W(B)$ as $x=\sum_n[b_n]p^n$ and set $\overline{f}(x)=\sum_nf_1(b_n)p^n$. One proves as in \cite[II, Proposition 10]{corpslocaux} that $\overline{f}$ is a ring homomorphism. This settles the existence part, and uniqueness is clear from the proof.\epr
+
+
+\prop{Acris}
+
+If $B$ is semiperfect, recall that the ring $\Acr(B)$ is defined as the divided power envelope of the surjection $\W(\perf{B})\onto{} \perf{B}\onto{q} B$. Then $\Acr(B)/p^n\Acr(B)$ is the final object of $\Cris\left(B/\W_n(\Fp)\right)$.
+
+\eprop
+
+\prf 
+
+Let $(A,I)$ be is in $\Cris\left(B/\W_n(\Fp)\right)$, so we have a ring map $f:B\to A/I$ and $p^n=0$ in A. By \cite[Tag 07GR]{stacksproject} there is an integer $N$ such that $x^{p^N}=0$ for all $x\in I$. We show that $f$ lifts uniquely to a map $\Acr(B)\to A$.
+
+First, we claim that $f$ lifts uniquely to $f^{\flat}:\perf{B}\to A/p$: if $g,h$ are two such lifts then $g-h$ takes values in $I$, so if $x$ is an element of $\perf{B}$ we have $g(x)-h(x)=(g(x^{1/{p^N}})-h(x^{1/{p^N}}))^{p^N}=0$. Conversely, this gives a recipe for defining $f^{\flat}$ directly: if $x$ is in $\perf{B}$, let $a$ be a lift of $f(q(x^{1/{p^N}}))$ to $A/p$ and put $f^{\flat}(x)=a^{p^N}$. It is easy to check that this way we get a ring homomorphism lifting $f$.
+    
+Then, since $p^n=0$ in $A$, by \Cref{L:proprietauniversalewitt} we get a unique lift of $f^{\flat}$ to a map $\W(\perf{B})\to A$. This induces the desired unique map $\Acr(B)\to A$ lifting $f$, via the universal property of divided power envelopes.\epr
+
+\rem{ainf}
+
+The ring $\W(\perf{B})$ is usually denoted by $\Ainf(B)$, and the proof of \Cref{P:Acris} boils down to showing that it represents the final object in the infinitesimal site of $B/\Fp$.
+
+\erem
+
+
+\cor{cocrsp}
+
+For a semiperfect algebra $B$ the complex $\Rcris(B/\Zp)$ is quasi-isomorphic to $\Acr(B)[0]$. More generally, if $\calF$ is a locally quasi-coherent sheaf of modules on $\cris(B/\Zp)$, and $M_n$ is its value on $\Acr/p^n\Acr$, then $\Rcris(B,\calF)$ is quasi-isomorphic to $\Rlim M_n$.\qed
+
+\ecor
+
+
+
+
+
+
+%--------------------------------------------------------------------------------------
+%---------------------------------- Standard spqr -------------------------------------
+%--------------------------------------------------------------------------------------
+
+
+\ssec{elqrsp}{Elementary quasiregular semiperfect algebras}
+
+Let $R$ be a smooth $k$-algebra. In \Cref{S:disc} we show, loosely speaking, that the crystalline cohomology of $R$ can be recovered from the crystalline cohomology of $\coperf{R}$,$\coperf{R}\ten_R\coperf{R}$, $\coperf{R}\ten_R\coperf{R}\ten_R\coperf{R}$ etc. These $\Fp$-algebras are all semiperfect, so their crystalline cohomology is governed by the behaviour of the functor $\Acr$.
+
+The simplest example is when $R=A_n=k[x_1,\dotsc,x_n]$. If $B_n=\coperf{(A_n)}$ we can write 
+\[
+B_n=k[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}].
+\]
+and the tensor products $B_n\ten_{A_n}\dotsb\ten_{A_n}B_n$ are all isomorphic to rings of the form 
+\[
+B_n[t_1^{\pmeninf},\dotsc,t_m^{\pmeninf}]/(t_1,\dotsb,t_m),
+\]
+where $m$ equals $n$ times the number of factors in the product. 
+
+\defe{eqrsp}
+
+An $\Fp$-algebra is \textit{elementary quasiregular semiperfect} (\textit{eqrsp} for short) if it is isomorphic to $B[x_1^{\pmeninf},\dotsc,x_m^{\pmeninf}]/(x_1,\dotsb,x_m)$ for some perfect algebra $B$. An $\Fp$-scheme is \textit{locally eqrsp} if it has an affine covering $\{\Spec(B_i)\}$ where the $B_i$ are eqrsp.
+
+\edefe
+
+Eqrsp algebras are simple examples of quasiregular semiperfect algebras, see \Cref{D:spqr}. The point of this definition is that all of $\coperf{R},\coperf{R}\ten_R\coperf{R},$ etc. are eqrsp up to Zariski localization.
+
+\prop{modelloetale}
+
+(1) For any prime ideal $\frp$ of $R$, there exists $f\in R\setminus\frp$ and étale morphisms 
+\[
+B_n\ten_{A_n}\dotsb\ten_{A_n}B_n\to(\coperf{R}\ten_R\dotsb\ten_R\coperf{R})_f.\]
+
+(2) If $B$ is eqrsp and $B\to C$ is étale, then $C$ is eqrsp. In particular, all of the rings $(\coperf{R}\ten_R\dotsb\ten_R\coperf{R})_f$ are eqrsp.
+
+\eprop
+
+\prf
+
+(1) Since $(\coperf{R})_f=\coperf{(R_f)}$ we may reduce to $R=R_f$ and suppose that there is an étale map $A_n\to R$. Then $(A_n\xto{}{F}A_n)\ten_{A_n} R$ is isomorphic to $R\xto{}{F} R$ (see \cite[Tag 0F6W]{stacksproject}) so we get a map
+\[
+B_n\to\coperf{R}=(A_n\to R)\ten_{A_n}B_n
+\]
+which is étale. The case of arbitrary tensor products follows from this one.
+
+(2) We need to prove that if $A[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]/(x_1,\dotsc,x_n)\to C$ is étale and $A$ is a perfect ring then $C$ is eqrsp. Let 
+\[
+q:A[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]/(x_1,\dotsc,x_n)\onto{}A
+\]
+be the projection. If $I=\ker(q)$ then $B=C/IC$ is étale over $A$. Now both $C$ and $B[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]/(x_1,\dotsc,x_n)$ are étale over $A$ and reduce to $B$ mod $I$. But $q$ is a thickening, so by topological invariance of the étale site \cite[04DZ]{stacksproject} they are isomorphic. Moreover $B$ is perfect because it is étale over a perfect algebra, so $C$ is eqrsp.\epr
+
+We proceed to give a description of $\Acr$ (and thus of crystalline cohomology) for eqrsp $\Fp$-algebras. This is done in \cite[section 2.5]{drinfeldacris} and we follow Drinfeld's exposition very closely. Write $C=B[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]/(x_1,\dotsc,x_n)$ for some perfect algebra $B$ and set $I=(x_1,\dotsc,x_n)$ as an ideal of $B[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]$. Set $\Z_+[1/p]=\{\alpha\in\Z_+[1/p]\text{ s.t. }\alpha\ge0\}$ and, if $\alpha=(\alpha_1,\dotsc,\alpha_n)\in\Z_+[1/p]^n$, write $x^\alpha=x_1^{\alpha_1}\dotsm x_n^{\alpha_n}$.
+
+\prop{ainfspqr}
+
+(1) Consider the map $B[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]\to\perf{C}$ sending $x_i^{1/{p^n}}$ to $(\dotsc,x_i^{1/{p^{n+2}}},x_i^{1/{p^{n+1}}},x_i^{1/{p^n}})$. It induces an isomorphism between the $I$-adic completion of $B[x_1^{\pmeninf},\dotsc,x_n^{\pmeninf}]$ and $\perf{C}$, i.e. we can identify $\perf{C}$ with the ring of power series $\sum_{\alpha\in\Z_+[1/p]^n}a_{\alpha}x^{\alpha}$, $a_\alpha\in B$, such that for every $M>0$ the set $\{\alpha\le M\text{ s.t. }a_{\alpha}\ne 0\}$ is finite.
+
+(2) The ring $\W(\perf{C})$ is identified with the ring of power series $\sum_{\alpha\in\Z_+[1/p]^n}b_{\alpha}x^{\alpha}$, $b_{\alpha}\in \W(B)$, such that for every $M>0$ the set $\{\alpha\le M\text{ s.t. }p^n\text{ does not divide }b_{\alpha}\}$ is finite.
+
+\eprop
+
+\prf
+
+(1) We write the proof for $n=1$, the general case presents no significant difference. Set $x_1=x$. The kernel of $\perf{C}\onto{}{}C$ is the principal ideal generated by $a=(\dotsc,x^{1/{p^2}},x^{1/{p}},0)$ and clearly $\perf{C}$ is $a$-complete. Hence we get a map $f:B^{\wedge}[x^{\pmeninf}]\to\perf{C}$ extending the map in the statement, where $B^{\wedge}[x^{\pmeninf}]$ denotes the $x$-completion of $B[x^{\pmeninf}]$. Both the domain and codomain of $f$ are $x$-complete and $x$-torsion-free, so $f$ is an isomorphism if $f$ mod $x$ is an isomorphism. This holds because modulo $x$, $f$ reduces to the identity on $C$.
+
+(2) Let $R$ be the ring of formal series as in (2). By design $R$ is $p$-complete, $p$-torsion free and it reduces to $\perf{C}$ modulo $p$. Therefore $R\simeq\W(\perf{C})$.\epr
+
+
+For a real number $y\ge0$ let $(y!)_p$ be the largest power of $p$ dividing $\lfloor y\rfloor!$, and for $\alpha=(\alpha_1,\dotsc,\alpha_n)\in\Z_+[1/p]^n$ set $(\alpha!)_p=(\alpha_1!)_p\dotsm(\alpha_n!)_p$. Let $F$ denote the Frobenius endomorphism of both $\W(\perf{C})$ and $\Acr(C)$. Following up on the notation of \Cref{Exx:defnygaard} we write $\Nyg\Acr(C)$ for the kernel of $\Acr(C)\onto{}{}C$.
+
+
+\prop{acrisspqr}
+
+(1) We can identify $\Acr(C)$ with the ring of power series of the form 
+\begin{equation*}
+    \sum_{\alpha\in\Z_+[1/p]^n}b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p},\quad b_{\alpha}\in \W(B),
+\end{equation*} 
+such that for every $n>0$ the set $\{\alpha\text{ s.t. }p^n\text{ does not divide }b_{\alpha}\}$ is finite.
+
+(2) The Frobenius $F$ acts as 
+\[
+F\left(\sum_{\alpha\in\Z_+[1/p]^n}b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}\right)=\sum_{\alpha\in\Z_+[1/p]^n}F(b_{\alpha})\frac{((p\alpha)!)_p}{(\alpha!)_p}\frac{x^{p\alpha}}{((p\alpha)!)_p}.
+\] 
+Here $p\alpha=(p\alpha_1,\dots,p\alpha_n)$ and $\frac{((p\alpha)!)_p}{(\alpha!)_p}=p^{\lfloor\alpha\rfloor}=p^{\lfloor\alpha_1\rfloor+\dots+\lfloor\alpha_n\rfloor}$ is a nonnegative power of $p$.
+
+(3) The ideal $\Nyg\Acr(C)$ is the set of power series $\sum_{\alpha\in\Z_+[1/p]^n}b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}\in\Acr(C)$ such that $p$ divides $b_{\alpha}$ whenever $\alpha_i<1$ for all $i$.
+
+\eprop
+
+\prf
+
+(1) The kernel of $\W(\perf{C})\onto{}{}C$ is generated by $p$ and the power series $x_i$ for $1\le i\le n$. Let $S$ be the smallest subalgebra of $\W(\perf{C})[1/p]$ containing $\W(\perf{C})$ and the $x^m/m!$ for $n\ge1$. It can be checked readily that $S$ satisfies the universal property of the divided power envelope of $\W(\perf{C})\onto{}{}C$, using that the $x_i$ are algebraically independent in $\W(\perf{C})$. Its $p$-completion is the ring of power series of (1).
+
+(2) Observe that $F(x^{1/p})=x$, because $x^{1/p}\in\W(\perf{C})$ is the Teichmüller representative of $x^{1/p}\in C$. Thus $F(x^{\alpha})=x^{p\alpha}$ and the rest follows easily.
+
+(3) Point (1) tells us that $\Nyg\Acr(C)$ is the $p$-completion of the ideal of $S$ generated by $p$ and the $x_i^s/s!$ for $i=1,\dotsc,n$ and $s\ge1$, so (3) is another straightforward verification.\epr
+
+\cor{filn}
+
+The ideal $\Nyg\Acr(C)$ consists of the $a\in\Acr(C)$ for which $F(a)\in p\Acr(C)$.
+
+\ecor
+
+\prf
+
+A power series $\sum_{\alpha\in\Z_+[1/p]^n}b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}\in\Acr(C)$ is divisible by $p$ if and only if $p$ divides each one of its monomials, so we reduce to proving: $a=b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}$ is in $\Nyg\Acr(C)$ if and only if $p$ divides $F(a)$. We have computed $F(a)=F(b_{\alpha})p^{\lfloor\alpha\rfloor}\frac{x^{p\alpha}}{((p\alpha)!)_p}$, and we know that $p$ divides $\lfloor\alpha\rfloor$ if and only if $\alpha_i\ge1$ for some $i$. The result follows from the description of $\Nyg\Acr(C)$ given in \Cref{P:acrisspqr}.\epr
+
+\rem{}
+
+Let $D$ be a semiperfect algebra and call $S$ the divided power envelope of the surjection $W(\perf{D})\onto{}{}D$. The kernel of $S\onto{}{}D$ is generated by $p$ and the $[x]^n/n!$, where $n\ge1$ and $[x]$ is the Teichmüller representative of some $x\in\ker(\perf{D}\onto{}{}D)$. The Frobenius acts by sending $\frac{[x]^n}{n!}$ to $\frac{[x]^{pn}}{n!}=a\frac{[x]^{pn}}{(pn)!}$ where $a=\frac{(pn)!}{n!}$ is divisible by $p$, so it is always true that $F(\ker(\Acr(D)\onto{}{}D))\subseteq p\Acr(D)$. 
+
+\erem
+
+
+In the literature there is the notion of a quasiregular semiperfect $\Fp$-algebras, of which elementary quasiregular semiperfect algebras are very simple examples.
+
+
+\defe{spqr}
+
+An $\Fp$-algebra $B$ is \textit{quasiregular semiperfect} (\textit{qrsp} for short) if it is semiperfect and $ \Ll_{B/\Fp}$ is a flat $B$-algebra supported in (homological) degree $1$.
+
+\edefe
+
+\prop{spqr}
+
+(1) Being quasiregular semiperfect is an étale-local property.
+
+(2) The quotient of a perfect $\Fp$-algebra by a Koszul-regular sequence is quasiregular semiperfect. In particular, elementary quasiregular semiperfect algebras are quasiregular semiperfect.
+
+(3) The tensor products $\coperf{R}\ten_R\dotsb\ten_R\coperf{R}$ are quasiregular semiperfect.
+\eprop
+
+\prf
+
+(1) If $B\to C$ is étale, then $ \Ll_{C/\Fp}$ is quasi-isomorphic to $ \Ll_{B/\Fp}\ten_B^LC$, and 
+\[
+(B\xto{}{F}B)\ten_BC=(C\xto{}{F}C).
+\]
+Being surjective is an étale-local property for ring maps, and similarly for a complex to be flat and supported in degree $1$. Thus $C$ is qrsp if and only if $B$ is qrsp.
+
+(2) Such an algebra is semiperfect being a quotient of a perfect algebra. According to \cite[Tag 08SK]{stacksproject} if $I$ is an ideal of $A$ generated by a Koszul-regular sequence, then $ \Ll_{(A/I)/A}$ is flat and concentrated in degree $1$. If moreover $A$ is perfect then $ \Ll_{A/\Fp}=0$, because the Frobenius acts as $0$ and is an isomorphism, so $ \Ll_{(A/I)/A}= \Ll_{(A/I)/\Fp}$, and (2) follows.
+
+(3) Follows from (1), (2) and \Cref{P:modelloetale}.\epr
+
+Thus if $B$ is an eqrsp algebra it is qrsp and $L_{B/Fp}$ is perfect, or equivalently $H_{1}(L_{B/Fp})$ is a free $B$-module of finite type. This is not enough to characterize eqrsp algebas.
+
+\prop{}
+
+Suppose $p\ne2$ and let $R=\Fp[x^{\pmeninf}]/(x^2)$. Then $R$ is qrsp, $L_{R/\Fp}$ is perfect but $R$ is not eqrsp.
+
+\eprop
+
+\prf
+The algebra $R$ is the quotient of a perfect algebra by a regular element, so $L_{R/\Fp}$ is perfect and by \Cref{P:spqr} $R$ is qrsp. Suppose by contradiction that $R\simeq B[x_1^{\pmeninf},\dots,x_n^{\pmeninf}]/(x_1,\dots,x_n)$ for some perfect algebra $B$. Comparing the coperfection and the cotangent complexes, we see that $B=\Fp$ and $n=1$. So there exists an isomorphism $g:\Fp[y^{\pmeninf}]/(y)\simeq R$.
+
+Note that every nonzero element of $R$ can be written uniquely in the form $ux^{n}$ where $0\le n<2$ is a rational number of the form $l/p^m$, and $u$ is a unit of $R$. Set $a_n=g(y^{1/p^n})$ and write $a_1=u_1x^{n}$ as above. Since $a_1^p=0$ we must have $2/p\le n$. Moreover, each of the $a_n$ is of the form $x^{n/p^{n-1}}u_n$ with $u_n$ a unit of $R$, and the $u_n$ satisfy $u_n=(u_{n+1})^p$. 
+
+By injectivity of $g$ we must have $(a_n)^{p^n-1}<2$. This equates to $n<2p^{n-1}/(p^{n}-1)$. Passing to the limit we get $n\le2/p$, so in the end $n=2/p$.
+
+Any element of $k[y^{\pmeninf}]/(y)$ can be written uniquely in the form $vy^{n}$ where $0\le n<1$ is a rational number of the form $l/p^m$, and $v$ is a unit. Thus every element in the image of $g$ is of the form $ux^{2n}$ where the $u$ is a unit of $R$ and $n$ is as above. This implies that $x$ is not in the image of $g$, contradicting the assumption that $g$ is surjective. 
+
+\epr
+
+By mimicking the proof of \Cref{P:modelloetale}, one shows that if $R\to S$ is étale then $S\simeq l[x^{\pmeninf}]/(x^2)$ for some étale $\Fp$-algebra $l$. Then as for $R$ one shows that $S$ is not eqrsp, so $R$ is not even étale-locally eqrsp.
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Cohomological descent -----------------------------------
+%--------------------------------------------------------------------------------------
+
+\sec{disc}{Cohomological descent}
+
+Cohomological descent is a powerful extension of Grothendieck's descent theory for sheaves to derived categories. It is used to reduce constructions and statements about the cohomology of "general" spaces (schemes, varieties) to the same statement for a "nicer" class of spaces, where cohomology is easier to describe. Its origin can be traced back to Deligne's work where he uses descent to construct mixed Hodge structures for singular varieties, starting from Hodge structures of nonsingular ones, via iterated resolution of singularities. More recently it has been adopted by Scholze, Bhatt, Morrow, Lurie et al. as a foundational tool in $p$-adic cohomology theories. 
+
+In \Cref{SubS:generalitadiscesa} we present a very light formalism for cohomological descent, trading simplicity for flexibility. Then in \Cref{SubS:frobeniussmooth} we study a special case of quasisyntomic descent for crystalline cohomology, namely descent along the map $\coperf{X}=\varprojlim_{F_X}X\to X$. The main result is \Cref{T:discesafrobsmooth}. This will allow us to reduce statements about crystalline cohomology of smooth schemes to statements about $\Acr(R)$, where $R$ is an eqrsp algebra. The obvious advantage is that these rings are completely explicit. As a first application of this principle we give in \Cref{SubS:infinitesima} a short proof of a result of Ogus comparing infinitesimal cohomology with the unit-root part of crystalline cohomology.
+
+\ssec{generalitadiscesa}{Definition and examples}
+
+Cohomological descent is usually some incarnation of the \v{C}ech spectral sequence for cohomology. We will express it in a form that is not classical, but makes maps between spectral sequences easier to visualise.
+
+Let $\calC$ be a site and $K$ a sheaf of sets on $\calC$. The functor $\Ab(\calC)\to\Ab\quad\calF\mapsto\calF(K)=\text{Hom}_{\Top(\calC)}(K,\calF)$ is left exact, and we denote its right derived functor by $\Rgam(K,-)$. If $K$ is the final object in $\Top(\calC)$ then $\Rgam(K,-)=\Rgam(\calC,-)$ is the usual derived global sections functor. Similarly, if $K$ is representable by some $X\in\calC$ then $\Rgam(K,-)=\Rgam(X,-)$.
+
+\prop{discesacech}
+
+Let $K'\to K$ be a surjective map of sheaves on $\calC$ and fix $\calF\in\Ab(\calC)$. Write $K'_m=K'\times_K\dotsb\times_KK'$ for the $(m+1)$-fold product of $K'$ over K. The natural map
+%$$\Rgam(K,\calF)\to\Tot\Bigl(\Rgam(K',\calF)\twoar \Rgam(K'_1,\calF)\thrar \Rgam(K'_2,\calF)\dotsb \Bigr)$$
+$$
+\xymatrix{\Rgam(K,\calF)\ar[r]&\Tot\Bigl(\Rgam(K',\calF)\ar[r]<1.5pt>\ar[r]<-1.5pt> & \Rgam(K'_1,\calF)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \Rgam(K'_2,\calF)\dotsb\Bigr)}
+$$
+is an isomorphism in $\D(\Z)$.
+
+\eprop
+
+\rem{mauro}
+
+The totalization of a cosimplicial object in \textit{cochain complexes} 
+$$
+\xymatrix{A_0\ar[r]<1.5pt>\ar[r]<-1.5pt> & A_1\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & A_2\cdots}
+$$
+is defined as the totalization of the double complex that corresponds to it via the Dold-Kan correspondence. However taking the totalization of a cosimplicial object in the derived category is a much more subtle problem, as it is not clear that it can be lifted to an actual cosimplicial object in cochain complexes. The principal workarounds are working with the derived $\infty$-category where a version of Dold-Kan holds (see Theorem 1.2.4.1 in \cite{higheralgebra}), or with simplicial topoi as in \cite[Tag 09VI]{stacksproject}.
+
+Fortunately this will not be a problem in the situations we encounter: either $F(X)$ will be representable by a complex which is functorial in $X$, as is the case in \Cref{L:discesaaciclica}, or $F=\Rgam(-,\calF)$ for some sheaf $\calF$ on a site. In the latter situation let $\calF\to\calI^{\bullet}$ be an injective resolution. Then
+$$
+\xymatrix{\Tot\Bigl(F(U)\ar[r]<1.5pt>\ar[r]<-1.5pt> & F(U\times_X U)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & F(U\times_X U\times_X U)\dotsb\Bigr)}
+$$
+can be identified with the totalization of the double complex $\calI^p(U^q)$ where $U^q=U\times_X\dotsb\times_XU$, $q+1$ times.
+
+\erem
+
+\prf[Proof of Proposition 3.1.1]
+
+We need to check that the map induces an isomorphism upon taking cohomology. The cohomology of the left-hand side is simply $H^n(K,\calF)$. The complex on the right is the totalization of a double complex, so there is an $E_1$ spectral sequence converging to its cohomology. It is easy to see that $E_1^{p,q}=H^q(K'_p,\calF)$ and that the spectral sequence coincides with the spectral sequences of \cite[Tag 079Z]{stacksproject}, which converges to $H^{p+q}(K,\calF)$.
+
+One can also invoke \cite[Tag 0D8H]{stacksproject} with $E=\calF$ and the hypercovering being the \v{C}ech nerve of $K'\to K$.
+\epr
+
+Now we can give a simple definition of cohomological descent tailored to our purposes.
+
+\defe{}
+
+Let $S$ be a scheme and $F:(\sch/S)^{\op}\to\D_{\ge0}(\Z)$ a functor, and consider a map of $S$-schemes $f:U\to X$.
+We say that:
+
+(1) $F$ satisfies descent along the map $f$ if the natural map
+%$$F(X)\to\Tot\Bigl(F(U)\twoar F(U\times_X U)\thrar F(U\times_X U\times_X U)\dotsb \Bigr)$$
+$$
+\xymatrix{F(X)\ar[r]&\Tot\Bigl(F(U)\ar[r]<1.5pt>\ar[r]<-1.5pt> & F(U\times_X U)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & F(U\times_X U\times_X U)\dotsb\Bigr)}
+$$
+is an isomorphism in $\D(\Z)$. 
+
+(2) $F$ satisfies descent for the étale, fppf, syntomic topology if it satisfies descent along any map
+$f$ which is an étale, fppf, syntomic cover.
+
+(3) $F$ satisfies descent for the Zariski topology if it satisfies descent for maps of the form $\undis U_i\to X$ where $\{U_i\}$ is an open covering of $X$. 
+
+We give a similar definition in the affine case: let $A$ be a ring and $F:(A\alg)\to\D_{\ge0}(\Z)$ a functor.
+
+(1) $F$ satisfies descent along the map of $A$-algebras $B\to C$ if the natural map
+$$
+\xymatrix{F(B)\ar[r]&\Tot\Bigl(F(C)\ar[r]<1.5pt>\ar[r]<-1.5pt> & F(C\ten_BC)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & F(C\ten_BC\ten_BC)\dotsb\Bigr)}
+$$
+
+is an isomorphism in $\D(\Z)$.
+
+(2) $F$ satisfies descent for the étale, fppf, (quasi-)syntomic topology if it satisfies descent along any map of algebras which is an étale, fppf, (quasi-)syntomic etc. cover.
+
+\edefe{}
+
+
+The typical blueprint for a descent argument is as follows: we wish to show $F$ satisfies some property on a certain class of schemes. We first show that $F$ satisfies descent for the Zarisi topology and reduce the problem to affine schemes in this class. Then, if $\Spec(R)$ is such a scheme, we look for a map $f:R\to R'$ such that for $F(R'),F(R'\ten_RR'),\dotsc$ the property becomes easy to prove. If $F$ satisfies descent along $f$, with some luck we can infer the property for $R$ as well.
+
+
+The simplest application of \Cref{P:discesacech} is when $K,K'$ are representable sheaves and $K'\to K$ is a covering map in $\calC$.
+
+\cor{discesagm}
+
+Let $S$ be a scheme. The functor $\Ret(-,\Gm):(\sch/S)^{\op}\to\D(\Z)$ satisfies descent for the étale topology and for the fppf topology. 
+
+\ecor{}
+
+\prf
+
+The first statement is a direct application of \Cref{P:discesacech}. By a classical theorem of Grothendieck we have $\Ret(-,\Gm)=\Rflat(-,\Gm)$ (see \cite[Theorem 11.7]{brauer3}) so $\Ret(-,\Gm)$ also satisfies descent for the fppf topology.\epr
+
+An interesting feature of this formalism is that it gives a way of saying that a sheaf is totally acyclic.
+
+\lem{discesaaciclica}
+
+Let $\calF$ be an abelian sheaf on a site $\calC$, and suppose every covering of $\calC$ can be refined by a covering consisting of a single map (for example, $\calC$ is the small étale or fppf site over a scheme). If for every covering $Y\to X$ the map 
+$$
+\xymatrix{\calF(X)\ar[r]&\Tot\Bigl(\calF(Y)\ar[r]<1.5pt>\ar[r]<-1.5pt> & \calF(Y\times_X Y)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \calF(Y\times_X Y\times_X Y)\dotsb\Bigr)}
+$$
+is an isomorphism in $\D(\Z)$, then for every object $X\in\calC$ we have $H^i(X,\calF)=0$ for $i>0$.
+
+\elem
+
+\prf
+
+Call $E^{p,q}_{\bullet}$ the \v{C}ech spectral sequence relative to $Y\to X$. Our hypothesis is that $E_2^{p,0}$ is $\calF(X)$ for $p=0$ and $0$ for $p>0$. This implies that $H^1(X,\calF)$ injects into $H^1(Y,\calF)$, and this must hold for any covering $Y\to X$. But any cohomology class is locally trivial (see \cite[Tag 01FW]{stacksproject} for the precise statement), so $H^1(X,\calF)=0$. This holds for any $X\in\calC$.
+
+Looking at our spectral sequence once more, we now see that $H^2(X,\calF)$ injects into $H^2(Y,\calF)$ for any covering $Y\to X$. Arguing as above we see that $H^2(X,\calF)=0$ for all $X\in\calC$, and then similarly one proves that all higher $H^i$s are $0$.\epr
+
+For crystalline cohomology we consider different sheaves for $K,K'$. Let $U\to X$ be a morphism of $\Fp$-schemes. The presheaf $h_U:(V,T,\gamma)\mapsto\Hom_X(V,U)$ on $\Cris(X/\Fp)$ is a sheaf for the fppf topology, and if $\calF$ is a sheaf of abelian groups on $\Cris(X/\Zp)$ we have $\Rgam(h_U,\calF)=\Rgam(\Cris(U/\Zp),\calF|_U)$, see \cite[Tag 03F3]{stacksproject}. In particular $\Rgam(h_U,\ocris)=\Rcris(U/\Zp)$.
+
+\prop{discesaetalecris}
+
+The functor $\Rcris(-/\Zp):(\sch/\Fp)^{op}\to\D(\Zp)$ satisfies descent for the étale topology (thus also for the Zariski topology).
+
+\eprop
+
+\prf
+
+Let $X$ be an $\Fp$-scheme and $U\to X$ an étale covering. Following up on the previous discussion note that $h_{U\times_X\dotsb\times_XU}=h_U\times\dotsb\times h_U$, so it suffices to show that $h_U\to *$ is a surjective map of sheaves on $\Cris(X/\Zp)$, i.e. that for an object $(V,T,\gam)\in\Cris(X/\Zp)$ there is étale-locally a map to $h_U$. The projection $U\times_XV=V_U\to V\to V$ is an étale cover and $V\to T$ is a universal homeomorphism, so by topological invariance of the étale site \cite[Tag 04DZ]{stacksproject} there exists an étale $T$-scheme $T_U$ such that $T_U\times_T V=V_U$. Moreover, $T_U\to T$ is surjective because $V_U\to V$ is. Call $\delta$ the unique PD-structure on $(V_U,T_U)$ compatible with that of $(V,T)$, which exists by \cite[Tag 07H1]{stacksproject}. Then $(V_U,T_U,\delta)\to(V,T,\gamma)$ is an étale cover with a map to $h_U$.\epr
+
+
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Frobenius-smooth schemes --------------------------------
+%--------------------------------------------------------------------------------------
+
+
+
+
+\ssec{frobeniussmooth}{Frobenius-smooth schemes}
+
+Let $X$ be a smooth $k$-scheme. Our goal is to prove \Cref{T:discesafrobsmooth}, which states that crystalline cohomology satisfies descent along the faithfully flat map $\coperf{X}\to X$. This holds for a larger class of schemes, called Frobenius-smooth in \cite{drinfeldstacky}, which we briefly review following Drinfeld.
+
+\defe{pbase}
+
+(1) A \textit{finite} $p$-\textit{basis} of an $\Fp$-algebra $B$ is a finite set of elements $x_1,\dotsc,x_n$ such that each $b\in B$ can be written uniquely as a sum $\sum_{\alpha}b_{\alpha}x^{\alpha}$ where $\alpha$ ranges over $\{0,\dotsc,p-1\}^n$ and $b_{\alpha}\in B$.
+
+(2) A scheme $X$ is \textit{Frobenius-smooth} if every $x\in X$ has an affine neighbourhood $\Spec(B)$ with $B$ admitting a finite $p$-basis. An $\Fp$-algebra $B$ is Frobenius-smooth if $\Spec(B)$ is.
+
+\edefe
+
+Condition (1) says that $B$, considered as a $B$-module via the Frobenius, is free with basis $x_1^{\alpha_1}\dotsm x_n^{\alpha_n}$, as the $\alpha_i$ range over $\{0,\dotsc,p-1\}$. 
+
+\prop{frobsintomico}
+
+(\cite[Lemma 2.1.1]{drinfeldstacky}) The following are equivalent for an $\Fp$-scheme $X$:
+
+(1) $X$ is Frobenius-smooth
+
+(2) The Frobenius $F_X:X\to X$ is syntomic (i.e. flat, locally of finite presentation and the fibres are local complete intersection)
+
+\eprop
+
+\prf
+
+By the above observation, if (1) holds so does (2).
+
+Assume (2), and write $L_{X/X^p}$ for the cotangent complex of the morphism $F_X$. There is an exact triangle
+$$
+F_X^*\Ll_{X/\Fp}\to\Ll_{X/\Fp}\to\Ll_{X/X^p}
+$$
+in $\D(X)$ and the map $F_X^*\Ll_{X/\Fp}\to\Ll_{X/\Fp}$ is $0$ (\cite[Tag 0G5Z]{stacksproject}), so $L_{X/X^p}\simeq L_{X/\Fp}\oplus F_X^*L_{X/\Fp}[1]$. Because $F_X$ is syntomic, $L_{X/X^p}$ is a perfect complex with tor amplitude in $[-1,0]$ (\cite[Tag 08SL]{stacksproject}). Therefore $L_{X/\Fp}$ is perfect and supported in degree $0$, so $L_{X/\Fp}$ is quasi-isomorphic to $\Ome_{X/\Fp}$ set in degree $0$ and the latter is locally free of finite type. Then by \cite[Proposition 3.6]{pbasi} the scheme $X$ satisfies condition (1).\epr
+
+Some examples of rings admitting a finite $p$-basis are the spectrum of a field of finite type over $\Fp$, and  $\Spec(B[\![x_1,\dotsc,x_n]\!])$ for a perfect ring $B$. By \cite[Tag 0FW2]{stacksproject} the Frobenius morphism of a smooth scheme over a perfect ring is syntomic, so by \Cref{P:frobsintomico} those schemes are also Frobenius-smooth.
+
+In \cite{berthelotmessing} the authors study rings which have a non-necessarily finite $p$-basis. Using the results therein we can prove cohomological descent along the coperfection for Frobenius-smooth schemes.
+
+\th{discesafrobsmooth}
+
+(1) Let $R$ be a Frobenius-smooth $\Fp$-algebra. The functor $\Rcris(-/\Zp)$ satisfies descent along the map $R\to\coperf{R}$.
+
+(2) Let $X$ be a Frobenius-smooth $\Fp$-scheme. The functor $\Rcris(-/\Zp)$ satisfies descent along the map $\coperf{X}\to X$.
+
+\eth
+
+\rem{}
+
+Under this hypothesis the Frobenius $F_R$ is faithfully flat so $R\to\coperf{R}$ is a pro-fppf cover, but we do not expect that  crystalline cohomology satisfies descent along every pro-fppf cover.
+
+\erem
+
+
+\prf
+
+(1) It is enough to show that if $(A,I,\gam)$ is an element of $\Cris(R/\Zp)$, there is a faithfully flat cover $(B,J,\delta)\to(A,I,\gam)$ with $R\to B/J$ factoring through $R\to\coperf{R}$. We will take $J=IB$, and then by (\cite[Tag 07H1]{stacksproject}) $\delta$ will exist uniquely. So we reduce to the following problem: find a faithfully flat $A$-algebra $B$ such that the composition $R\to A/I\to B/IB$ factors through $R\to\coperf{R}$.
+
+We will use some deformation theory without proof. Namely, that for any $n$ there exists a lift $(R_n,F_n)$ of $(R,F_R)$ to $\W_n(k)$, or in other words there exists a flat $W_n(k)$-algebra $R_n$ with an endomorphism $F_n$ such that $(R_n\xto{}{F_n}R_n)\ten k=R\xto{}{F_R}R$. An explicit construction of the lift is given in \cite[Corollary 1.2.7]{berthelotmessing}.
+
+Suppose $p^n=0$ in $A$. We claim that $R\to A/I$ lifts to $R_n\to A$. If $R$ is smooth this boils down to a version of Hensel's lemma, because $I$ is locally nilpotent. The general case is handled by \cite[Proposition 1.2.6]{berthelotmessing}. Set $(\coperf{R})_n=\varinjlim_{F_n}(R_n)$. This is a lift of $\coperf{R}$ to $\W_n(\Fp)$ and $R_n\to(\coperf{R})_n$ is faithfully flat. Then $B=A\ten_{R_n}(\coperf{R})_n$ is the $A$-algebra we were looking for: is faithfully flat over $A$ and $B/IB=A/I\ten_{R}\coperf{R}$ so $R\to B/IB$ factors through $R\to\coperf{R}$.
+
+(2) Let $\{U_i\to X\}$ be a finite Zariski cover, and set $U=\undis U_i$. Then $h_U\to*$ is surjective by \Cref{P:discesaetalecris} and $h_{\coperf{U}}\to h_U$ is surjective by the proof of (1). Thus $h_{\coperf{U}}\to h_{\coperf{X}}\to*$ is surjective and $h_{\coperf{X}}\to*$ must be as well.\epr
+
+
+
+\rem{}
+
+The algebra in the proof of \Cref{T:discesafrobsmooth} becomes much clearer when $R=k[x_1,\dotsc,x_n]$. The map $R\to A/I$ corresponds to $n$ elements $a_1,\dotsc,a_n\in A/I$ and we seek a faithfully flat extension of $A$ whose reduction mod $I$ has all $p$-th power roots of the $a_i$. So we take lifts $b_i\in A$ of the $a_i$, corresponding to a lift $\W_n(k)[x_1,\dots,x_n]\to A$ of $R\to A/I$, and adjoin freely all $p$-th roots of the $b_i$, which is achieved by putting $B=A\ten_{\W_n(k)[x_1,\dotsc,x_n]}\W_n(k)[x_1^{\pmeninf},\dots,x_n^{\pmeninf}]$. 
+
+\erem
+
+
+\cor{discesaesplicita}
+
+Let $R$ be a smooth $k$-algebra. The maps
+\[
+\xymatrix{\Rcris(R/\Zp)\ar[r]&\Tot\Bigl(\Acr(\coperf{R})\ar[r]<1.5pt>\ar[r]<-1.5pt> & \Acr(\coperf{R}\ten_R\coperf{R})\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \dotsb\Bigr)}
+\]
+and
+\[
+\xymatrix{\Nyg\Rcris(R/\Zp)\ar[r]&\Tot\Bigl(\Nyg\Acr(\coperf{R})\ar[r]<1.5pt>\ar[r]<-1.5pt> & \Nyg\Acr(\coperf{R}\ten_R\coperf{R})\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \dotsb\Bigr)}
+\]
+are quasi-isomorphisms. Similar formulas hold for smooth $k$-schemes.\qed
+\ecor
+
+
+
+\rem{}
+
+Let us mention a result of Drinfeld \cite{drinfeldstacky} which fits in naturally with the discussion above.
+
+Let $\calC$ be the fibred category over $\Cris(X/\Zp)^{\text{op}}$ whose fibre over $(V,T,\delta)$ is $\qcoh(T)$, and morphisms $\calF'\to\calF$ over $f:(V',T',\delta')\to(V,T,\delta)$ are morphisms of quasi-coherent sheaves $\calF\to f_*(\calF')$. The category $\calC$ is a stack over the big crystalline site: this statement is no more and no less the fact that the fibred category of quasi-coherent sheaves over schemes form a stack for the fppf topology, see \cite[Theorem 4.23]{vistolidescent}.
+
+This means that we can define $\calC(h_U)$ for any scheme $U$ over $X$. Indeed, choose a surjective map of sheaves $\undis U_i\onto{}h_U$, where the $U_i$ are objects of $\Cris(X/\Zp)$, and define $\calC(h_U)$ as an equalizer
+$$
+\xymatrix{\calC(h_U)\ar[r]&\prod_i\calC(U_i)\ar[r]<1.5pt>\ar[r]<-1.5pt> & \prod_{i,j}\calC(U_i\times_{h_U} U_j)\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \prod_{i,j,k}\calC(U_i\times_{h_U} U_j\times_{h_U} U_k)}
+$$
+This is somewhat informal, to be rigorous one should understand such an equalizer as a suitable category of descent data as explained in \cite{vistolidescent}. Note that the products appearing in the sequence are all objects of $\Cris(X/\Zp)$, so this definition makes sense. The point of this construction is that $\calC(h_U)$ is equivalent to the 
+category of crystals over $U$.
+
+Now, suppose that $X$ is Frobenius-smooth. We have proven that $h_{\coperf{X}}\to*$ is surjective in $\Cris(X/\Zp)$, so by the stack property we have a similar equalizer diagram
+$$
+\xymatrix{\calC(*)\ar[r]&\calC(h_{\coperf{X}})\ar[r]<1.5pt>\ar[r]<-1.5pt> & \calC(h_{\coperf{X}\times_X\coperf{X}})\ar[r]\ar[r]<-3pt>\ar[r]<3pt> & \calC(h_{\coperf{X}\times_X\coperf{X}\times_X\coperf{X}})}
+$$
+
+A crystal on a semiperfect scheme $Y$ is a quasi-coherent sheaf on the $p$-adic formal scheme $\Acr(Y)$. Thus we get an equalizer diagram
+$$
+\xymatrixrowsep{-1pt}\xymatrixcolsep{3pt}\xymatrix{\calC(*)\ar[rr]& &\qcoh(W(\coperf{X}))\ar[rr]<1.5pt>\ar[rr]<-1.5pt> & & \qcoh(\Acr(\coperf{X}\times_X\coperf{X}))\\
+&&\ar[r]\ar[r]<-3pt>\ar[r]<3pt> &&\qcoh(\Acr(\coperf{X}\times_X\coperf{X}\times_X\coperf{X}))}
+$$
+
+
+
+Call $\calG$ the divided power completion of the subscheme $\coperf{X}\times_X\coperf{X}\subseteq\W(\coperf{X})\times\W(\coperf{X})$. Then Drinfeld checks that
+$$
+\xymatrix{\dotsb\Acr(\coperf{X}\times_X\coperf{X}\times_X\coperf{X})\ar[r]\ar[r]<3pt>\ar[r]<-3pt>&\Acr(\coperf{X}\times_X\coperf{X})\ar[r]<1.5pt>\ar[r]<-1.5pt>&\Acr(\coperf{X})}
+$$
+is the \v{C}ech nerve of $\calG$ acting on $W(\coperf{X})$, and it follows that $\calG$ is a flat and affine groupoid acting on $\Acr(\coperf{X})=\W(\coperf{X})$. The consequence of this observation is that pulling back crystals induces an equivalence of categories
+$$
+\calC(*)\simeq\qcoh\left(\left[W(\coperf{X})/\calG\right]\right)
+$$
+Moreover, our proof of \Cref{T:discesafrobsmooth} shows that if $\calF$ is a crystal on $X$ and $F$ is its pullback to $\calC(h_{\coperf{X}})=\qcoh(\W(\coperf{X}))$ then the natural map
+$$
+\Rgam(X,\calF)\to\Rgam([W(\coperf{X})/\calG],F)
+$$
+is an isomorphism. Indeed, coherent cohomology of a sheaf $M$ on a quotient stack $\calX=[A/H]$, with $H$ a flat and affine groupoid acting on $A$, is computed by the totalization of the cosimplicial complex
+$$
+\xymatrix{\Rgam(A,M|_{A})\ar[r]<-1.5pt>\ar[r]<1.5pt>&\Rgam(A\times_{\calX}A,M|_{A\times_{\calX}A})\ar[r]\ar[r]<3pt>\ar[r]<-3pt>&\Rgam(A\times_{\calX}A\times_{\calX}A,M|_{A\times_{\calX}A\times_{\calX}A})\dotsb}
+$$
+This is again just the \v{C}ech spectral sequence for the covering $A\to\calX$.
+
+\erem
+
+We end this section with an enhancement of \Cref{C:discesagm} which we will need in \Cref{S:pruffa}.
+
+\lem{discesaperfgm}
+
+Let $X$ be Frobenius-smooth. The functor $\Ret(-,\Gm)$ satisfies descent along the map $\coperf{X}\to X$.
+
+\elem
+
+\prf
+
+If $Y=\varprojlim_n Y_n$ where $(Y_n)_{n\ge1}$ is a projective limit of quasi-compact quasi-separated schemes with affine transition maps, then the natural map $\varinjlim_n\Ret(Y_n,\Gm)\to\Ret(Y,\Gm)$ is an isomorphism in $\D(\Z)$, see e.g. \cite[Lemma 3.3]{marcobrauer} for a proof. To conclude use \Cref{C:discesagm} and that filtered colimits commute with totalization. \epr
+
+
+\ssec{infinitesima}{Infinitesimal cohomology in positive characteristic} Infinitesimal cohomology was introduced by Grothendieck \cite{grothendieckinf} as a first attempt at defining a $p$-adic Weil cohomology theory. We briefly recall the definition.
+
+Let $S$ be any scheme, not necessarily over $\Fp$. If $X$ is an $S$-scheme, the objects of the infinitesimal site $\Inf(X/S)$ are pairs of $S$-schemes $(U,T)$ where $U$ is an open subscheme of $X$ and $U\subseteq T$ is a thickening with nilpotent ideal. A morphism $(U,T)\to (U',T')$ is an $S$-morphism of pairs where $U\to U'$ is an $X$-morphism (i.e. an open immersion). The infinitesimal site comes equipped with the structure sheaf $\oinf$ defined by $\oinf(U,T)=\calO_T(T)$. The infinitesimal cohomology of $X$ is the complex $\Rinf(X/S):=\Rgam\left(\Inf(X/S),\oinf\right)$ and its cohomology groups are denoted by $\Hinf{i}(X/S)$. In characteristic zero this recovers de Rham cohomology.
+
+\th{infinitesimacarzero}(\cite[Theorem 4.1]{grothendieckinf}) If $S$ is a $\Q$-scheme, and $X$ is a smooth $S$-scheme, then $\Hinf{i}(X)$ is canonically isomorphic to $\HdR{i}(X/S)$.
+\eth
+
+This result is remarkable as it gives a definition of de Rham cohomology without differential forms. In positive characteristic \Cref{T:infinitesimacarzero} does not hold anymore, and infinitesimal cohomology lacks many properties of ``nice'' cohomology theories such as a cycle class map. Ogus described it when $S=\Spec(\W(k))$, where $k$ is a perfect field of characteristic $p$. Recall that if $M$ is a finite type $\W(k)$-module, with a $\sigma$-linear endomorphism $F$, the unit-root part of $M$, denoted $M^0$, is the largest $F$-stable submodule where $F$ acts as an isomorphism. It can be identified with $\bigcap_nF^n(M)$.
+
+\th{infogus}(\cite[Theorem 4.9]{ogusinf})
+Let $k$ be a perfect field of characteristic $p$ and let $X$ be a proper smooth $k$-scheme. There is a natural isomorphism
+\[
+\Hinf{i}(X/\W(k))\simeq\Hcris{i}(X/\Zp)^0.
+\]
+which respects the action of Frobenius.
+\eth
+
+The map comes from a natural construction: there is a map from the infinitesimal site of $X$ to the crystalline site of $X$, which maps $(U,T)$ to the divided power envelope of the thickening $U\subseteq T$, and induces morphisms $\Hinf{i}(X/\W(k))\to\Hcris{i}(X/\W(k))$ for all $i$. If $k$ is algebraically closed, the unit-root part of $\Hcris{i}(X/\W(k))$ can be identified with $\Het{i}(X,\Zp)\otimes\W(k)$. This fact can easily be proved by descent, see \Cref{R:comparisonetale}, and \Cref{T:infogus} thus establishes an isomorphism between infinitesimal cohomology and étale cohomology with $\W(k)$ coefficients. We propose the following restatement of Ogus' theorem.
+
+\th{infmio}
+
+Let $k$ be a perfect field of characteristic $p$ and $X$ a smooth scheme. There is a natural isomorphism
+\begin{equation}\label{isoinf}
+\alpha_X:\Rinf(X/\W(k))\simeq\Rlim_F\Rcris(X/\W(k))
+\end{equation}
+in $\D(\Zp)$, where $F$ is the Frobenius acting on $\Rcris(X/\W(k))$.
+
+\eth
+
+We prove \Cref{T:infmio} via descent along the map $\coperf{X}\to X$. The first step is to consider the big fppf infinitesimal site as in \Cref{SubS:convenzionicris}. The properties of the construction are identical to the crystalline case, so we omit them. Then we have the following descent properties for $\Rinf(-/\W(k))$.
+
+\prop{discesainf}
+
+Let $X$ be a smooth $k$-scheme.
+\begin{enumerate}
+    \item The functor $\Rinf(-/\W(k))$ satisfies descent for the étale topology.
+    \item The functor $\Rinf(-/\W(k))$ satisfies descent along the map $\coperf{X}\to X$.
+\end{enumerate}
+
+\prf
+Point (1) is proved the same as \Cref{P:discesaetalecris}, and point (2) the same as \Cref{T:discesafrobsmooth}.
+\epr
+
+\eprop
+
+Now we can construct $\alpha_X$. Consider the commutative diagram
+\[\begin{tikzcd}
+	{\Rlim_F\Rinf(X/\W(k))} & {\Rlim_F\Rcris(X/\W(k))} \\
+	{\Rinf(X/\W(k))} & {\Rcris(X/\W(k))}
+	\arrow["a", from=1-1, to=1-2]
+	\arrow["q", from=1-1, to=2-1]
+	\arrow[from=1-2, to=2-2]
+	\arrow[from=2-1, to=2-2]
+\end{tikzcd}\]
+We claim that $q$ is a quasi-isomorphism, and in fact that $F$ acts as a quasi-isomorphism on $\Rinf(X/\W(k))$. Arguing by descent (\Cref{P:discesainf}) one can first reduce to a smooth affine $X$, and then to $X=\Spec(R)$ with $R$ eqrsp. There the result is trivial, because $\Rinf(X/\W(k))=\W(\perf{R})[0]$ by \Cref{R:ainf} and Frobenius is bijective on the Witt vectors of a perfect ring. So set $\alpha_X=a\circ q^{-1}$.
+
+\prf[Proof of Theorem 3.3.2]
+
+Arguing once more by descent we reduce to the case where $X=\Spec(C)$ with $C$ eqrsp, where we are left to show that the map
+\[
+\Ainf(C)\to\bigcap F^n\left(\Acr(C)\right),
+\]
+which is an inclusion, is an isomorphism. This is straightforward to check using the explicit descriptions of $\Ainf(R)$ and $\Acr(R)$ given in \Cref{P:ainfspqr} and \Cref{P:acrisspqr}: let $a=\sum b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}$ be an element lying in $F^n\Acr(R)$ for all $n$. Then each of the $b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}$ lies in this intersection, and it is easy to see it is equivalent to $(\alpha!)_p$ dividing $b_{\alpha}$, or in other words $b_{\alpha}\frac{x^{\alpha}}{(\alpha!)_p}\in\Ainf(C)$.
+\epr
+
+\prf[Proof of Theorem 3.3.1]
+Now $k$ is perfect and $X$ is a smooth and proper $k$-scheme. Let $M$ be a finitely generated module with a Frobenius-limear endomorphism $F$. We claim that $\Rder^1\lim_FM$ is zero, and that $\Rlim_FM[0]$ is the unit-root part of $M$ concentrated in degree zero. Indeed, 
+\[
+\Rlim_FM[0]\simeq\Rlim_F\Rlim_n\left(M/p^nM\right)\simeq\Rlim_n\Rlim_F(M/p^nM).
+\]
+For all $i$ the subgroup $F^i(M/p^nM)$ is a $\W(k)$-submodule of $M/p^nM$, and $M/p^nM$ is a finite length $\W(k)$-module, so $(M/p^nM,F)$ is a Mittag-Leffler system. Its limit is the unit-root part of $M/p^nM$, and for large enough $n$ this coincides with $M^0/p^nM^0$, so the claim follows.
+
+Thus taking cohomology in \eqref{isoinf} we get an isomorphism
+\[
+\Hinf{i}(X/\W(k))\simeq\bigcap_nF^n\left(\Hcris{i}(X/\W(k)\right)
+\]
+and the right hand side is the unit-root part of $\Hcris{i}(X/\W(k))$.
+\epr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\sec{pruffa}{Proof of \Cref{T:mainthm}}
+
+%--------------------------------------------------------------------------------------
+%---------------------------- Crystalline Chern class ---------------------------------
+%--------------------------------------------------------------------------------------
+
+
+%\ssec{}{The crystalline first Chern class} 
+
+In this section we prove \Cref{T:mainthmbl} by following the argument given in \cite[Section 7]{bhattlurie}. We repeat the statement in \Cref{T:triangololiscio}. After defining the maps that appear in the statement there is a quite formal descent step, and the bulk of the work is then showing that the statement remains true for an eqrsp $\Fp$-algebra. We do this in \Cref{T:triangolosemipft}. Once all of this is done \Cref{T:triangololiscio} follows with just a little more effort. We begin with a construction refining the crystalline first Chern class.
+
+
+\begin{cons}
+    
+Let $X$ be an $\Fp$-scheme. There is a short exact sequence of sheaves on $\Cris(X/\Zp)$:
+$$0\to(1+\icris)^{\times}\to\ocris^{\times}\to\Gm\to0$$ 
+which we view as a morphism $\Gm[-1]\to(1+\icris)^{\times}$ in the derived category of sheaves on $\Cris(X/\Zp)$. 
+
+Note that the ideal $\icris$ has a canonical PD-structure, so we can define a logarithm 
+\[
+\log:(1+\icris)^{\times}\to\icris \quad\quad 1+x\mapsto\sum_{n\ge1}(-1)^{n+1}\delta_n(x)(n-1)!
+\]
+where $(\delta_n)$ is the PD-structure of the test object. By composition we get a map $\Gm[-1]\to\icris$ in the derived category, and taking derived global sections a map $c_1:\Rflat(X,\Gm)[-1]\to\Nyg\Rcris(X/\Zp)$.
+
+
+
+\end{cons}
+
+
+By \Cref{L:derivedpcompletion} and \Cref{Exx:completamentoGm}, the map $c_1$ factors through the derived $p$-completion $\Rflat(X,\Gm)[-1]\to\Rflat(X,\Zp(1))$, yielding $\hat{c}_1:\Rflat(X,\Zp(1))\to\Nyg\Rcris(X/\Zp)$. The map comparing flat and crystalline cohomology in \Cref{T:mainthm} is the composition 
+\begin{equation}\label{comparisonmap}
+\Rflat(X,\Zp(1))\xto{}{\hat{c}_1}\Nyg{}\Rcris(X/\W(k))\to\Rcris(X/\W(k)).
+\end{equation}
+
+\exs{}
+
+Suppose $X=\Spec(C)$ where $C$ is semiperfect. On the level of $H^0$, $\hat{c}_1$ defines a map $T_p(C^{\times})\to\Nyg\Acr(C)$ which we shall now describe. The map $\Gm[-1]\to(1+\icris)^{\times}$ induces 
+\[
+\Gm[-1]\ten^L_{\Z}\Z/p^n=\mupn\to(1+\icris)^{\times}\ten^L_{\Z}\Z/p^n=(1+\icris)^{\times}/p^n(1+\icris)^{\times}.
+\]
+Taking cohomology and the derived limit gives 
+\[
+\Rflat(X,\Zp(1))\to\Rgam(X,(1+\icris)^{\times})\]
+and $\hat{c}_1$ is the composition of this map with 
+\[
+\Rgam(X,(1+\icris)^{\times})\xto{}{\log}\Rgam(X,\icris).
+\]
+
+The map $\mupn\to(1+\icris)^{\times}/p^n(1+\icris)^{\times}$ comes from the snake lemma applied to the diagram
+\[\begin{tikzcd}
+	0 & {(1+\icris)^{\times}} & {\ocris^{\times}} & \Gm & 0 \\
+	0 & {(1+\icris)^{\times}} & {\ocris^{\times}} & \Gm & 0
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-2, to=1-3]
+	\arrow["{p^n}", from=1-2, to=2-2]
+	\arrow[from=1-3, to=1-4]
+	\arrow["{p^n}", from=1-3, to=2-3]
+	\arrow[from=1-4, to=1-5]
+	\arrow["{p^n}", from=1-4, to=2-4]
+	\arrow[from=2-1, to=2-2]
+	\arrow[from=2-2, to=2-3]
+	\arrow[from=2-3, to=2-4]
+	\arrow[from=2-4, to=2-5]
+\end{tikzcd}\]
+On the level of global sections, $x\in\mupn(C^{\times})$ is sent to the class of $[y]^{p^n}$ where $y$ is any element of $\perf{C}$ lifting $x$. Hence $H^0(\hat{c}_1)$ maps $x\in T_p(C^{\times})$ to $\log([x])$, where we see $T_p(C^{\times})$ as a subset of $\perf{C}$.
+
+
+\eexs
+
+\begin{cons}\label{costruzionsfsup}
+
+Let $A$ be an eqrsp $k$-algebra. By virtue of \Cref{C:filn}, the map $\Nyg\Acr(A)\to\Acr(A)$ which maps $x$ to $F(x)/p-x$ is well-defined, so we obtain a map $F/p-1:\Nyg\Rcris(A/\Zp)\to\Rcris(A/\Zp)$. If $B$ is another eqrsp algebra with a map $f:A\to B$, the diagram 
+\[\begin{tikzcd}
+	{\Nyg\Rcris(A/\Zp)} & {\Rcris(A/\Zp)} \\
+	{\Nyg\Rcris(B/\Zp)} & {\Rcris(B/\Zp)}
+	\arrow["{F/p-1}", from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=1-2, to=2-2]
+	\arrow["{F/p-1}", from=2-1, to=2-2]
+\end{tikzcd}\]commutes. This allows Bhatt-Lurie to define the map $F/p-1:\Nyg\Rcris(X/\Zp)\to\Rcris(X/\Zp)$ for any smooth $k$-scheme $X$ via descent, i.e. as the map $\Tot(F/p-1)$ between the diagrams of \Cref{C:discesaesplicita}. However this procedure relies on the machinery of $\infty$-categories to guarantee that the map thus obtaines is canonical, and does not depend on a chosen covering of $X$.
+
+Instead, for a smooth $k$-scheme $X$ we will use the ideas of \Cref{S:disc} to write down canonical and functorial complexes representing $\Rcris(X/\Zp)$ and $\Nyg{}\Rcris(X/\Zp)$, and we will define $F/p-1$ as a map between these two complexes. If $\mathfrak{U}=(U_i)$ is a finite affine cover of $X$, let $\Acr(\mathfrak{U}_{\mathrm{perf}})$ denote the naive \v{C}ech complex 
+\[
+\bigoplus_i\Acr(\coperf{(U_i)})\to\bigoplus_{i,j}\Acr(\coperf{(U_i)}\times_X\coperf{(U_j)})\to\dots
+\]
+According to the \v{C}ech spectral sequence and \Cref{C:cocrsp}, this complex computes the crystalline cohomology of $X$. Denote by $\Acr(\coperf{X})$ the filtered colimit of the complexes $\Acr(\mathfrak{U}_{\mathrm{perf}})$, where there is a map for every cover refinement. The complex $\Acr(\coperf{X})$ is canonical, functorial in $X$ and computes $\Rcris(X/\Zp)$. 
+
+Define likewise $\Nyg{}\Acr(\coperf{\mathfrak{U}})$ and $\Nyg{}\Acr(\coperf{X})$. Then there is a canonical map of complexes
+\[
+F/p-1:\Nyg{}\Acr(\coperf{X})\to\Acr(\coperf{X})
+\]
+obtained from the maps $F/p-1$ for quasiregular semiperfect algebras. This then defines a canonical map $F/p-1:\Nyg{}\Rcris(X/\Zp)\to\Rcris(X/\Zp)$, which is functorial for maps $f:Y\to X$ between smooth schemes, or between an eqrsp $Y$ and a smooth $X$. 
+\end{cons}
+
+For a $k$-scheme $X$ which is either smooth or semiperfect consider the triangle
+\begin{equation}\label{triangolo}
+    \Rflat(X,\Zp(1))\xto{}{\hat{c}_1}\Nyg\Rcris(X/\Zp)\xto{}{F/p-1}\Rcris(X/\Zp)
+\end{equation}
+in $\D(\W(k))$.
+
+\ths{triangolosemipft}
+
+(\cite[Theorem 7.1.1]{bhattlurie}) Let $C$ be an eqrsp $\Fp$-algebra. The following hold:
+\begin{enumerate}
+    \item For $X=\Spec(C)$, the triangle \eqref{triangolo} reduces to the sequence of abelian groups
+    \begin{equation}\label{triangoloeqrsp}
+    0\to(1+J)^{\times}\xto{}{\log}\Nyg\Acr(C)\xto{}{F/p-1}\Acr(C)\to0,
+    \end{equation}
+    where $J=\ker(\perf{C}\onto{}{}C)$. In other words, the natural map 
+    $(1+J)^{\times}\to\Rflat(X,\Zp(1))$ is a quasi-isomorphism in $\D(\Z)$.
+
+    \item The sequence \eqref{triangoloeqrsp} is exact.
+\end{enumerate}
+
+\eths
+
+\prf
+
+First we prove that (1) follows from (2). We need to show that the complex $\Rflat(\Spec(C),\Zp(1))$ is concentrated in degree $0$. By the derived Nakayama Lemma (\Cref{L:derivednakayama}) it suffices to show this mod $p$, i.e. that $\mu_p(C)\to\Rflat(\Spec(C),\mup)$ is a quasi-isomorphism. Here we have used that $(1+J)^{\times}$ is isomorphic to $\simeq T_p(C^{\times})$, the $p$-adic Tate module of $C^{\times}$, so $(1+J)^{\times}$ is $\Zp$-flat, and $(1+J)^{\times}\ten^L_{\Zp}\Fp=(1+J)^{\times}/p=\mup(C)$. In other words, we must show that $\Hflat{i}(X,\mup)=0$ for $i>0$.
+
+The Kummer sequence $0\to\mup\to\Gm\xto{}{}\Gm\to0$ on the small étale site of $X$ is exact, because $C$ is semiperfect, so using the theorem of Grothendieck mentioned in \Cref{P:discesacech} we see that $\Hflat{i}(X,\mup)=\Het{i}(X,\mup)$ for all $i$. Thus we reduce to showing that $\Het{i}(X,\mup)=0$ for all $i>0$, and by \Cref{L:discesaaciclica} it suffices to show that the functor $\mu_p(-)$ satisfies descent along étale covers of eqrsp algebras (recall from \Cref{P:modelloetale} that an algebra which is étale over a eqrsp algebra is eqrsp). Of course, it is sufficient to show the same for the functor $T_p(-^{\times})$. But, assuming (2), the group $T_p(-^{\times})$ is the fibre of $\Nyg\Acr(-)\to\Acr(-)$. By \Cref{P:discesaetalecris} these two groups satisfy descent along étale covers of eqrsp algebras, so $T_p(-^{\times})$ does as well.
+
+Let us prove (2), i.e. that \eqref{triangoloeqrsp} is exact, in the case where $C=B[x^{\pmeninf}]/(x)$ for some perfect algebra $B$ - the proof adapts as is to the general case, it is only more tedious to keep track of all indices. All groups in the sequence are $p$-torsion-free and $p$-complete, so it is enough to show that \eqref{triangoloeqrsp} is exact mod $p$. Explicitly, we have a sequence
+\begin{equation}\label{triangolomodp}
+    0\to(1+J)^\times/p\xto{}{\overline{\log}}\Nyg\Acr(C)/p\xto{}{M}\Acr(C)/p\to0
+\end{equation}
+where
+\begin{enumerate}
+    \item[(i)] $(1+J)^\times/p$ is naturally identified with $(1+J)^{\times}/(1+\varphi(J))$. Any element
+    \item[] of $(1+J)^{\times}/(1+\varphi(J))$ can be written uniquely as $1+\sum b_{\alpha}x^{\alpha}$, where the sum is finite and runs over the $\alpha$ such that $1\le\alpha<p$
+    \item[(ii)] $\Nyg\Acr(C)/p$ is the free $B$-module with basis
+    $$\{px^{\alpha}\text{ s.t. }\lfloor\alpha\rfloor=0\}\cup\left\{\frac{x^{\alpha}}{(\alpha!)_p}\text{ s.t. }\lfloor\alpha\rfloor\ge1\right\}$$
+    \item[(iii)] $\Acr(C)/p$ is the free $B$-module with basis all $\frac{x^{\alpha}}{(\alpha!)_p}$
+    \item[(iv)] For all $x\in J$:
+    $$\log([1-x])=\sum_{d=1}^p(-1)^{d-1}\frac{[x]^d}{d}$$
+    in $\Acr(C)/p$.
+    \item[(v)] For all $b\in B$ and all $\alpha$:
+    $$M(bpx^{\alpha})=b^px^{p\alpha}\hspace{3.05cm}\text{if }\lfloor\alpha\rfloor=0$$
+    $$M\left(b\frac{x^{\alpha}}{(\alpha!)_p}\right)=\begin{cases}
+        b^p\frac{x^{p\alpha}}{(p\alpha!)}_p-b\frac{x^{\alpha}}{(\alpha!)}_p&\text{if }{\lfloor\alpha\rfloor}=1\\
+        -b\frac{x^{\alpha}}{(\alpha!)_p}&\text{if }{\lfloor\alpha\rfloor\ge2}
+    \end{cases}$$
+\end{enumerate}
+Points (i), (ii), (iii) and (v) are easily derived from the explicit descriptions of $\perf{C},\Acr(C)$ and $\Nyg\Acr(C)$ given in \Cref{SubS:elqrsp}. Point (iv) is true because the equality $[a+b]=[a]+[b]$ holds mod $p$.
+
+\textbf{Exactness on the left:} take $a=1+\sum b_{\alpha}x^{\alpha}$ in $(1+J)^{\times}/(1+\varphi(J))$. Suppose $a\ne1$ and let $\alpha_0$ be the smallest $\alpha$ such that $b_{\alpha}\ne0$. Then the coefficient in front of $\frac{x^{\alpha_0}}{(\alpha_0!)_p}$ for $\overline{\log}(a)$ is $b_{\alpha_0}$, which is nonzero by hypothesis. Therefore $a\notin\ker(\overline{\log})$ so $\overline{\log}$ is injective.
+
+
+\textbf{Exactness in the middle:} let $a\in\ker M$ and write it in the basis of (ii). Then the coefficients of $\frac{x^{\alpha}}{(\alpha!)_p}$ for $\alpha\ge2p$, and of $px^{\alpha}$ for $\alpha<1/p$, must be zero. This is clear from the formulae (v) describing $M$. Moreover, if for all $\alpha$ such that $\lfloor\alpha\rfloor\ge2$ the coefficient of $\frac{x^{\alpha}}{(\alpha!)p}$ is zero, then $a$ must be zero. So it suffices to check that the composition
+$$
+(1+J)^{\times}/(1+\varphi(J))\to\Nyg\Acr(C)\onto[]{}S
+$$
+is surjective, where $S$ is the free $B$-module with basis $\left\{\frac{x^{\alpha}}{(\alpha!)_p}\text{ s.t. }2\le\alpha<2p\right\}$.
+
+Let $a=1+\sum b_{\alpha}x^{\alpha}$ be in $(1+J)^{\times}/(1+\varphi(J))$. Then the coefficient in front of $\frac{x^{\alpha}}{p}$, for $p\le\alpha<2p$ is $b_{\alpha/p}^p$. Moreover, these are all zero if and only if $b_{\alpha}=0$ for $1\le\alpha<2$, iff $a\in(1+J^2)^{\times}/(1+\varphi(J))$. Thus we reduce to showing that the composition $$(1+J^2)^{\times}/(1+\varphi(J))\to(1+J)^{\times}/(1+\phi(J))\to S\onto[]{}\overline{S}$$ is surjective, where $\overline{S}$ is the free $B$-module with basis $\{x^{\alpha}\text{ s.t. }2\le\alpha<p\}$. 
+
+The point now is that there is a natural identification $J^2/\varphi(J)\simeq\overline{S}$ - where we view $J^2$ as a $B$-submodule of $\Acr(C)$ - and the resulting map $(1+J^2)^{\times}/(1+\varphi(J))\to J^2/\varphi(J)$ sends $1+x$ to $\sum_{d=1}^{p-1}(-1)^d\frac{x^d}{d}$. An explicit inverse of this map is given by $x\mapsto\sum_{d=1}^{p-1}\frac{x^d}{d!}$.
+
+\textbf{Exactness on the right:} let $b\in B$, $\alpha\in\Z[1/p]_+$, $a=b\frac{x^{\alpha}}{(\alpha!)_p}$, and let's prove that $a\in\im(M)$. If $\lfloor\alpha\rfloor\ge2$ then $M(-a)=a$ so $a\in\im(M)$. If $\lfloor\alpha\rfloor=0$ then $M(b^{1/p}px^{\alpha/p})=a$ so $a\in\im(M)$. Finally, if $\lfloor\alpha\rfloor=1$ then $M(a)+a=b^p\frac{x^{p\alpha}}{((p\alpha)!)_p}$ and the latter lies in $\im(M)$ because $\lfloor p\alpha\rfloor\ge2$. Thus in this case too $a\in\im(M)$. \epr
+
+\ths{triangololiscio}
+
+(\cite[Theorem 7.3.5]{bhattlurie}) If $X$ is smooth over a perfect field $k$ then triangle \eqref{triangolo} is exact.
+
+\eths
+
+\prf{}
+
+If all functors in \eqref{triangolo} satisfy descent along $Y\to X$, and $\eqref{triangolo}$ is exact for $Y,Y\times_XY,$ etc. then it is exact for $X$. By Zariski descent, \Cref{P:discesaetalecris} and \Cref{C:discesagm}, we thus reduce to an affine $X$. By descent along $\coperf{X}\to X$, \Cref{T:discesafrobsmooth} and \Cref{L:discesaperfgm}, we reduce to an eqrsp scheme. Then the result is true by \Cref{T:triangolosemipft}.
+\epr
+
+\begin{proof}[Proof of \Cref{T:mainthm}]
+
+Now $k$ is algebraically closed. We revert to writing $\Hcris{i}(X/\W(k))$ instead of $\Hcris{i}(X/\Zp)$ to highlight that we are dealing with $\W(k)$-modules. Let $X$ be smooth and proper. Taking cohomology of \eqref{triangolo} we get the exact sequence
+\begin{align*}
+    \Nyg&\Hcris{i-1}(X/\W(k))\xto{}{F/p-1}\Hcris{i-1}(X/\W(k))\to \Hflat{i}(X,\Zp(1))\to\dotsb\\
+    &\dotsb\to\Nyg\Hcris{i}(X/\W(k))\xto{}{F/p-1}\Hcris{i}(X/\W(k))
+\end{align*}
+We take as our comparison map the composition 
+\begin{equation*}
+\alpha_X:\Hflat{i}(X,\Zp(1))\xto{}{\hat{c}_1}\Nyg\Hcris{i}(X/W(k))\to\Hcris{i}(X/\W(k))
+\end{equation*}
+as in \eqref{comparisonmap}. In \Cref{Exx:defnygaard} we saw that the natural maps 
+$\Nyg\Hcris{i}(X/\W(k))\to\Hcris{i}(X/\W(k))$ become isomorphisms after inverting $p$, so we get the long exact sequence
+\[
+\dots\xto{}{F/p-1}\Hcris{i-1}(X/\W(k))[1/p]\to \Hflat{i}(X,\Qp(1))\xto{}{\alpha_X}\Hcris{i}(X/\W(k))[1/p]\xto{}{F/p-1}\dots
+\]
+Each of the maps $\Hcris{j}(X/\W(k))[1/p]\xto{}{F/p-1}\Hcris{j}(X/\W(k))[1/p]$ is surjective. This is an elementary lemma in the theory of isocrystals, see \cite[5.3 in II.5.A]{illusiedrw} (we use the properness of $X$ to the effect that the crystalline cohomology groups are finite-dimensional). Thus the sequence $$0\to \Hflat{i}(X,\Qp(1))\xto{}{\alpha_X}\Hcris{i}(X/\W(k))\xto{}{F/p-1}\Hcris{i}(X/\W(k))\to0$$ is exact, and $\alpha_X$ gives the desired isomorphism 
+\[
+\Hflat{i}(X,\Qp(1))\simeq\left(\Hcris{i}(X/\W(k))[1/p]\right)^{F=p}.
+\]
+\end{proof}
+
+\rems{comparisonetale}
+
+The same arguments apply to show that if $X$ is a smooth scheme over a perfect field $k$, there is an exact triangle
+\[
+\Ret(X,\Zp)\to\Rcris(X/\Zp)\xto{}{F-1}\Rcris(X/\Zp)
+\]
+where $\Ret(X,\Zp)=\Rlim_n\Ret(X,\Z/p^n)$. By descent one reduces to showing that if $C$ is eqrsp, the sequence
+\[
+0\to\Zp\to\Acr(C)\xto{}{F-1}\Acr(C)
+\]
+is exact, which is much easier than \Cref{T:triangolosemipft}. It follows that when $X$ is proper over the prefect field $k$ there is an isomorphism
+\[
+\Het{i}(X,\Zp)\simeq\Hcris{i}(X/\W(k))^{F=1}
+\]
+and $\Het{i}(X,\Zp)\otimes_{\Zp}\W(k)$ is isomorphic to the unit-root part of $\Hcris{i}(X/\W(k))$
+
+\erems
+
+\rems{}
+
+\Cref{T:discesafrobsmooth} and \Cref{T:triangolosemipft}, are proved in greater generality in \cite{bhattlurie}. Recall that a morphism of $\Fp$-algebras $f:A\to B$ is quasisyntomic if it is flat and $ \Ll_{B/A}$ has Tor-amplitude in $[-1,0]$. If $f$ is faithfully flat it is a quasysintomic cover, and an $\Fp$-algebra $A$ is quasisyntomic if $\Fp\to A$ is a quasisyntomic morphism. Frobenius-smooth algebras and eqrsp algebras are quasisyntomic, and if $A$ is Frobenius-smooth then the map $A\to\coperf{A}$ is a quasisyntomic cover. 
+
+Bhatt--Lurie prove (\cite[4.6.2]{bhattlurie}) that $\Rcris(-/\Zp)$ satisfies descent along quasisyntomic covers of quasisyntomic algebras. A quasisyntomic $\Fp$-algebra $A$ has a cover $A\to\coperf{A}$ such that all products $B,B\otimes_A B,\cdots$ are qrsp (\Cref{D:spqr}), and they prove that triangle \eqref{triangolo} is exact for qrsp algebras.
+
+These results are more general and more natural than the ones presented here, at the expense of being less elementary. The conceptual advantage in their approach is to consider the quasisyntomic topology as a Grothendieck topology for which crystalline cohomology satisfies descent, which is more satisfying than our ad hoc approach. Their formulation of descent in the derived category is made possible by working with the derived $\infty$-categories.
+
+\erems
+
+%--------------------------------------------------------------------------------------
+%---------------------------- fppf cohomology  ----------------------------------------
+%--------------------------------------------------------------------------------------
+
+\sec{applicazioni}{Applications to fppf cohomology}
+
+In this final section we give some applications of \Cref{T:triangololiscio} to the structure and properties of the groups $\Hflat{i}(X,\Zp(1))$. In \Cref{SubS:sezionefinitezza} we show that if $X$ is smooth and proper over $k$, and $k$ is algebraically closed, then the groups $\Hflat{i}(X,\Zp(1))$ are the direct sum of a finite free $\Zp$-module, and of a $p$-torsion group of finite $p$-exponent. This $p$-torsion group may be infinite but for $i=1,2$ it is always of finite type. In \Cref{SubS:straight} we show that when $X$ is sufficiently nice (e.g. an abelian variety) fppf cohomology is uniquely determined by crystalline cohomology. We use this to compute the action of the multiplication-by-$n$ map $[n]$ on the fppf cohomology of an abelian variety, a problem suggested to the author by A.Skorobogatov. In the end we show via two examples how the Nygaard filtration can be used to do explicit computations.
+
+Many of the results presented here are well-known: except for the action of $[n]$ on fppf cohomology, they appear in papers by Illusie \cite{illusiedrw}, Illusie-Raynaud \cite{illusieraynaud} and Milne \cite{milnezeta}, sometimes with more precise statements. But as far as the author knows the approach we take in this paper to prove them is new in the literature.
+
+For convenience we briefly recall the main properties of the Nygaard filtration and its relation to fppf cohomology. We suppose in this section that $k$ is algebraically closed. and that $X$ is a proper smooth variety over $k$. We will write $\Rcris(X)$ and $\Hcris{i}(X)$ for crystalline cohomology, omitting the coefficient ring $\W(k)$, as this should not create any confusion in what follows.
+
+By definition the Nygaard filtration sits in an exact triangle
+\begin{equation}\label{triangoloagain}
+\Nyg{}\Rcris(X)\to\Rcris(X)\to\Rgam(X,\calO_X)
+\end{equation}
+in $\D(\Zp)$. In other words, there is a long exact sequence
+\begin{equation}\label{sel2}
+	\cdots \to {H^{i-1}(X,\calO_X)} \to {\Nyg\Hcris{i}(X)} \to {\Hcris{i}(X)} \to {H^i(X,\calO_X)} \to \cdots
+\end{equation}
+where ${\Hcris{i}(X)} \to {H^i(X,\calO_X)}$ is the canonical projection, which factors as 
+\[
+\Hcris{i}(X)\to\HdR{i}(X/k)\to H^{i}(X,\calO_X).
+\]
+It follows from the definition that $\Nyg{}\Hcris{i}(X)[1/p]\simeq\Hcris{i}(X)[1/p]$. 
+
+The main result \Cref{T:triangololiscio} asserts that there is a long exact sequence:
+\begin{equation}\label{sel1}
+	\cdots\to{\Hflat{i}(X,\Zp(1))}\to{\Nyg\Hcris{i}(X)}\xto{}{F/p-1}{\Hcris{i}(X)}\to{\Hflat{i+1}(X,\Zp(1))}\to\cdots
+\end{equation}
+The maps $F/p-1$ are not $\W(k)$-linear, they are the difference of a $\sigma$-linear map $F/p$ and a linear map $1$, which is the canonical map $\Nyg\Hcris{i}(X)\to\Hcris{i}(X)$. By a standard fact in the theory of isocrystals, \cite[II.5.A.5.3]{illusiedrw}, the maps $F/p-1$ are surjective after inverting $p$, so in particular $\coker(F/p-1)$ is a $p$-torsion group.
+
+
+\ssec{sezionefinitezza}{Finiteness of fppf cohomology}
+
+We fix a smooth proper $k$-variety $X$. Our first objective is to prove the following result.
+
+\th{finiteexponent}
+
+For all $i\ge0$ the $\Zp$-module $\Hflat{i}(X,\Zp(1))$ is isomorphic to the direct sum of $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ with a free $\Zp$-module of rank $r=\rk_{\W(k)}\left(\Hcris{i}(X/\W(k))^{F=p}\right)$. Moreover, $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ is a $p$-group of finite $p$-exponent.
+
+\eth
+
+We break up the proof into smaller results.
+
+\lem{lemma1}
+    Let $i\ge0$. The torsion of $\ker\left(F/p-1:\Nyg\Hcris{i}(X)\to\Hcris{i}(X)\right)$ is a $p$-group of finite $p$-exponent.
+\elem
+
+\prf
+
+The torsion of $\ker\left(F/p-1:\Nyg\Hcris{i}(X)\to\Hcris{i}(X)\right)$ injects into the torsion subgroup of $\Nyg\Hcris{i}(X)$, which is a finite type $\W(k)$-module, and hence of finite $p$-exponent. This proves the first statement.\epr
+
+\lem{lemma2}
+    Let $i\ge0$. The torsion of $\coker\left(F/p-1:\Nyg\Hcris{i}(X)\to\Hcris{i}(X)\right)$
+    is a $p$-group of finite $p$-exponent. 
+\elem
+
+\prf
+
+We reduce the problem to one of semilinear algebra. The torsion of $\Nyg\Hcris{i}(X)$ and of $\Hcris{i}(X)$ is of finite $p$-exponent, so we may work modulo torsion. Then we are in the following situation: let $M$ be a finite free $\W(k)$-module with a $\sigma$-linear endomorphism $F$, and $N\subseteq M$ an $F$-stable submodule containing $pM$ such that $F(N)\subseteq pM$. We want to prove that the cokernel of $F/p-1:N\to M$ has finite $p$-exponent. It is enough to prove that $F/p-1:pM\to M$ has cokernel of finite $p$-exponent, or that $F-p:M\to M$ has cokernel of finite $p$-exponent. Upon replacing $M$ with a submodule of the same rank, we may suppose by the Dieudonné-Manin theorem that $M$ is a sum of modules $M_{s/r}=\W(k)^s$ where $F(x_1,\dots,x_r)=(x_2,\dots,x_{r-1},p^sx_1)$, and further reduce to a single such $M_{s/r}$ (here $r>0,s\ge0$ are coprime integers). Now we distinguish three cases.
+\begin{itemize}
+    \item[(1)]If $r=s=1$ then $F-p$ is surjective: $(F-p)(\lambda x_1)=x_1\left(p\sigma(\lambda)-\lambda\right)$ and $\lambda\mapsto p\sigma(\lambda)-\lambda$ is surjective onto $\W(k)$.
+    \item[(2)]If $s/r>1$ then $p^rM\subseteq\im(F-p)$: for $a\in p^rM$ the infinite sum $x=a+\sum_{i\ge1}F^i(a)/p^i$ converges in $M$ and $F(x)-px=a$.
+    \item[(3)]If $s/r<1$ then $p^rM\subseteq\im(F-p)$: for $a\in p^sM$ the infinite sum $x=\sum_{i\ge1}F^{-i}(p^{i-1}a)$ converges in $M$ and $F(x)-px=a$.
+\end{itemize}\epr
+We need one last technical lemma before tackling \Cref{T:finiteexponent}.
+
+\lem{lemmapdiv}
+
+Let $L_0\to L_1\to L_2\to\dots$ be an sequence of $\W(k)$-modules. If the $L_i$ are free of the same rank and the transition maps are injective but not surjective, the colimit $L=\varinjlim_nL_n$ contains a non-trivial $K$-vector space.
+
+\elem
+
+\prf
+
+We view the $L_i$ as strictly increasing sub-$\W(k)$-modules of the $K$-vector space $L_0[1/p]$, and $L$ as their union. Take a sequence $x_n$ of elements of $L_0$ such that each $x_n$ is not divisible by $p$ in $L_0$ but is divisible by $p^n$ in $L$. Such $x_n$ exist because the length of $L_i/L_0$ increases strictly with $i$. Let 
+\[
+E=\bigcap_m\text{Span}_K(\{x_n,n\ge m\}),
+\]
+i.e. for any $m>0$ there is a basis of $E$ made from a subset of $\{x_n,n\ge m\}$. This vector space is non-zero, and let $E_0=E\cap L_0$. Then for every $m>0$ the $\W(k)$-module $L$ contains $\{x_n/p^m,n\ge m\}$, so $L$ contains $1/p^mE_0$ and also their union which is the whole of $E$.\epr
+
+
+\prf[Proof of Theorem 5.1.1]
+For $i=0$ this is trivial. Fix $i\ge1$, let $r=\rk_{\W(k)}\left(\Hcris{i}(X)^{F=p}\right)$ and define $M$ by the short exact sequence
+\[
+0\to \Hflat{i}(X,\Zp(1))_{\text{tors}}\to\Hflat{i}(X,\Zp(1))\to M\to0,
+\]
+so that $M$ is a torsion-free $\Zp$-module. By \Cref{T:mainthm} $M[1/p]$ is isomorphic to $\Qp^r$, so if $M$ were not a finite type $\Zp$-module it would contain an infinite strictly increasing chain of finite free $\Zp$-submodules $L_0\subset L_1\subset\cdots\subset M$.  Their rank is bounded above by $r$, so by \Cref{L:lemmapdiv} $M$ must contain an element infinitely divisible by $p$. But $M$ injects into the free $\W(k)$-module $\Nyg\Hcris{i}(X)/\text{tors}$, so this yields a contradiction. Thus $M\simeq\Zp^r$ and the first part of the statement follows.
+
+It remains to prove that $M_{\text{tors}}$ is a $p$-group of finite $p$-exponent. It lies in a short exact sequence coming from \cref{sel2}:
+\[
+0\to\coker\left(F/p-1\right)\to M_{\text{tors}}\to\ker\left(F/p-1\right)_{\text{tors}}\to0
+\]
+where the first map is $F/p-1$ in degree $i-1$ and the second map is $F/p-1$ in degree $i$. Note that we have used that the cokernel of $F/p-1$ is torsion. To conclude it is enough to show that that $\ker\left(F/p-1\right)_{\text{tors}}$ is a finite $p$-group, and that $\coker\left(F/p-1\right)$ is a $p$-group with finite $p$-exponent. This is the content of \Cref{L:lemma1} and \Cref{L:lemma2} respectively.\epr
+
+Here is an immediate application to the $p$-torsion of the Brauer group.
+
+\cor{finitebrauer}
+
+The group $\Br(X)[p^{\infty}]$ is the direct sum of a divisible $p$-group of 
+the form $\left(\Qp/\Zp\right)^a$, where $a=\dim_{\Qp}\Hflat{2}(X,\Qp(1))-\rk\NS(X)$, 
+and of a $p$-group of finite $p$-exponent.
+
+\ecor
+
+\prf
+
+Follows from \eqref{brauer}.\epr
+
+\rem{unipotente}
+
+\Cref{T:finiteexponent} can be made much more precise: it can be shown that for all $i\ge0$, there is a short exact sequence
+\[
+0\to U_i(k)\to\Hflat{i}(X,\Zp(1))_{\text{tors}}\to F_i\to0
+\]
+where $F_i$ is a finite group and $U_i$ is a connected unipotent algebraic $k$-group. The dimension of $U_i$ is easily bounded by the sum of Hodge numbers $h^{0,i-1}+h^{0,i}$, see \cite[p.554]{artinssk3}, and can be computed in terms of invariants of the de Rham-Witt complex. See \cite[IV.3.3]{illusieraynaud} for a statement encompassing these facts. In particular, if $U_i$ is nonzero then $\Hflat{i}(X,\Zp(1))_{\text{tors}}$ is necessarily infinite. In \Cref{SubS:straight} we show that if $X=E\times E$ where $E$ is a supersingular elliptic curve, then $U_3\simeq\Ga$.
+
+The group $U_i(k)$ should in fact be thought as a quasi-algebraic group in the sense of Serre \cite{serrequasialg}. Then if we consider the $\W(k)$-modules $\Nyg{}\Hcris{i}(X)$ and $\Hcris{i}(X)$ as quasi-algebraic groups, and $F/p-1$ as a morphism of quasi-algebraic groups, we recover the quasi-algebraic group structure of $U_i(k)$ with our approach.
+\erem
+
+We end this section by showing that the groups $\Hflat{i}(X,\Zp(1))$ are finitely generated $\Zp$-modules when $i=1,2$.
+
+\lem{finitedegreeone}
+
+The group $\Hflat{1}(X,\Zp(1))$ is a $\Zp$-module of finite type.
+
+\elem
+
+\prf
+By \Cref{T:finiteexponent} it suffices to show that $\Hflat{1}(X,\Zp(1))$ is torsion-free. The sequence \eqref{sel1} shows that $\Hflat{1}(X,\Zp(1))$ is a subgroup of $\Nyg{}\Hcris{1}(X)$, and $\Nyg{}\Hcris{1}(X)$ is itself a subgroup of $\Hcris{1}(X)$ by \eqref{sel2}. The latter is torsion-free by \Cref{C:torsionehuno} so we are done.
+\epr
+
+The case $i=2$ requires more work, and we first recall some basic properties of de Rham cohomology in positive characteristic. By functoriality, the absolute Frobenius of $X$ induces a map
+\[
+F:\HdR{i}(X/k)\to\HdR{i}(X/k)
+\]
+which is semi-linear with respect to $k$. The first observation is that this $F$ factors through the augmentation $\HdR{i}(X/k)\to H^{i}(X,\calO_X)$, thus defining a map $\overline{F}:H^{i}(X,\calO_X)\to\HdR{i}(X/k)$. This is because the pullback of a differential form by the absolute Frobenius is zero. In other words, $\overline{F}$ comes from the map of complexes
+\[
+\calO_X[0]\to\Omega^{\bullet}_{X}
+\]
+given by the $p$-th power map in degree $0$. This last description makes it clear that $\overline{F}:H^0(X,\calO_X)\to\HdR{0}(X/k)$ is a ring homomorphism.
+
+This map can also be described as a natural map of the conjugate spectral sequence, via the Cartier isomorphism. 
+
+\lem{bordoconiugata}
+
+Let $E_2^{\bullet,\bullet}$ denote the second page of the conjugate spectral sequence converging to $\HdR{i}(X/k)$. The Cartier isomorphism provides an semi-linear isomorphism $H^i(X,\calO_X)\simeq E_2^{i,0}$, and the composition
+\begin{equation}\label{ultimaeq}
+H^i(X,\calO_X)\simeq E_2^{i,0}\to\HdR{i}(X/k)
+\end{equation}
+coincides with $\overline{F}$
+\elem
+
+\prf
+
+Recall that $E^{i,0}_2=H^i(X,\mathcal{H}^0)$, where $\mathcal{H}^0$ is the kernel of $d:\calO_X\to\Omega^1_X$. By construction of the conjugate spectral sequence, the map $E^{i,0}_2\to\HdR{i}(X/k)$ is induced by the map of complexes $\mathcal{H}^0[0]\to\Omega^{\bullet}_{X}$. The Cartier isomorphism states that $\calO_X\xto{}{F}\mathcal{H}^0$ is an isomorphism of sheaves, so the statement follows from the above description of $\overline{F}$. \epr
+\lem{comportamentofbar}
+
+The following hold:
+\begin{enumerate}
+    \item The map $\overline{F}:H^{1}(X,\calO_X)\to\HdR{1}(X/k)$ is injective,
+    \item If $\HdR{1}(X/k)\to H^1(X,\calO_X)$ is surjective and every global differential $1$-form is closed, then $\overline{F}:H^{2}(X,\calO_X)\to\HdR{2}(X/k)$ is injective.
+\end{enumerate}
+\elem
+
+\prf
+    Point (1) is true because trivially $E_2^{1,0}=E_{\infty}^{1,0}$. 
+    
+    In (2) we are assuming that 
+    \[
+    \dim_k\HdR{1}(X/k)=\dim_k H^{0}(X,\Omega^1_X)+\dim_k H^{1}(X,\calO_X),
+    \]
+    so by dimension counting we must have $E^{0,1}_2=E^{0,1}_{\infty}$ and $E^{1,0}_2=E^{1,0}_{\infty}$. Therefore the only differential involving $E^{2,0}_2$ is zero, i.e. $E^{2,0}_2=E^{2,0}_{\infty}$, which is what we needed to prove.
+\epr
+
+Let's look more closely at $\HdR{1}(X/k)$. Recall from \Cref{P:crisabeliana} and \Cref{P:comparisonalbanese} that there is a $\sigma^{-1}$-linear endomorphism $V$ of $\Hcris{1}(X)$ satisfying $F\circ V=V\circ F=p$.
+
+\lem{diagrammacrisderham}
+
+There is a commutative diagram
+\begin{equation}\label{diagrammacrisderham}
+    \begin{tikzcd}
+	{\Hcris{1}(X)} & {\Hcris{1}(X)} & {\Hcris{1}(X)} \\
+	{H^1(X,\calO_X)} & {\HdR{1}(X/k)} & {\HdR{1}(X/k)}
+	\arrow["F", from=1-1, to=1-2]
+	\arrow["{q_1}"', from=1-1, to=2-1]
+	\arrow["V", from=1-2, to=1-3]
+	\arrow["q"', from=1-2, to=2-2]
+	\arrow[from=1-3, to=2-3]
+	\arrow["{\overline{F}}", hook, from=2-1, to=2-2]
+	\arrow["V", from=2-2, to=2-3]
+\end{tikzcd}
+\end{equation}
+where $V:\HdR{1}(X/k)\to\HdR{1}(X/k)$ is $\sigma^{-1}$-linear and factors through $H^0(X,\Omega_X^1)_{d=0}$.
+\elem
+\prf
+Everything regarding the bottom row is proved in \cite{oda}. What is left to prove is the commutativity of the right-hand square. By \Cref{P:comparisonalbanese} one reduces to the case of an abelian variety $A$. Then \cite{oda} shows that $\HdR{1}(A/k)$ identifies with the Dieudonné module of $A[p]$ so the claim follows from \Cref{P:crisabeliana}.
+\epr
+
+\lem{nygverschiebung}
+We have the equality
+\[
+\Nyg{}\Hcris{1}(X)=V\left(\Hcris{1}(X)\right)
+\]
+\elem
+
+\prf
+The composition $\HdR{1}(X)\xto{}{V}\HdR{1}(X)\to H^1(X,\calO_X)$ is zero, so by diagram \eqref{diagrammacrisderham} we have the inclusion
+\[
+V\left(\Hcris{1}(X)\right)\subseteq\ker\left(\Hcris{1}(X)\to H^{1}(X,\calO_X)\right)=\Nyg{}\Hcris{1}(X).
+\]
+For the reverse inclusion, note that $V\left(\Hcris{1}(X)\right)$ is the set of $a\in\Hcris{1}(X)$ such that $p$ divides $F(a)$. This set contains $\Nyg{}\Hcris{1}(X)$, as can be seen from the existence of the map $F/p-1$.
+\epr
+
+\lem{fsupcoerente}
+
+For all $i$, the composition
+\begin{equation}\label{comp1}
+H^i(X,\calO_X)\to\Nyg{}\Hcris{i+1}(X)\xto{}{F/p-1}\Hcris{i+1}(X)
+\end{equation}
+coming from the sequences \eqref{sel1} and \eqref{sel2}, and the composition
+\begin{equation}\label{comp2}
+H^i(X,\calO_X)\xto{}{\overline{F}}\HdR{i}(X/k)\to\Hcris{i+1}(X)[p]\subseteq\Hcris{i+1}(X)
+\end{equation}
+coming from \Cref{P:confrontoderham}, are equal.
+\elem
+
+\prf
+Recall from \Cref{costruzionsfsup} that we first defined $F/p$ for eqrsp algebras, and then deduced its value for smooth schemes by descent. Thus, to compare $\overline{F}$ and $F/p$, we must make sense of the former for quasisyntomic schemes. 
+
+If $C$ is eqrsp, we see from tensoring the exact sequence
+\[
+0\to\Nyg{}\Acr(C)\to\Acr(C)\to C\to0
+\]
+with $\Z/p$ that $\Nyg{}\Acr(C)$ contains canonically a copy of $C$. Let $i:C\to\Nyg{}\Acr(C)/p$ denote this inclusion. In the notation of \Cref{P:acrisspqr}, $i$ is $B$-linear and maps $x^{\alpha}$ to $px^{\alpha}$. This map is canonical and functorial for maps between eqrsp algebras. Thus we may proceed as in \Cref{costruzionsfsup} and define a canonical map $i:\Rgam(X,\calO_X)\to\Nyg{}\Rcris(X)\otimes^L\Z/p$ for any smooth or eqrsp $X$. Now consider the diagram
+\[\begin{tikzcd}
+	{\Rgam(X,\calO_X)} \\
+	{\Nyg{}\Rcris(X)\otimes^L\Z/p} & {\Nyg{}\Rcris(X)[1]} & {\Nyg{}\Rcris(X)[1]} \\
+	{\Rcris(X)\otimes^L\Z/p} & {\Rcris(X)[1]} & {\Rcris(X)[1]}
+	\arrow["i"', from=1-1, to=2-1]
+	\arrow[from=1-1, to=2-2]
+	\arrow[from=2-1, to=2-2]
+	\arrow["{F/p}"', from=2-1, to=3-1]
+	\arrow["{\cdot p}", from=2-2, to=2-3]
+	\arrow["{F/p}"', from=2-2, to=3-2]
+	\arrow[from=2-3, to=3-3]
+	\arrow[from=3-1, to=3-2]
+	\arrow["{\cdot p}", from=3-2, to=3-3]
+\end{tikzcd}\]
+where the diagonal map comes from \eqref{triangoloagain}. By definition of $i$ it commutes when $X$ is eqrsp, so it also commutes for smooth $X$. If we let $\tilde{F}$ denote the composition of the two leftmost vertical maps, we are left to prove that for smooth $X$, the maps $\tilde{F}$ and $\overline{F}$ defined above coincide on cohomology. First we claim that the diagram
+\[\begin{tikzcd}
+	{\Rcris(X)\otimes^L\Z/p} && {\Rcris(X)\otimes^L\Z/p} \\
+	& {\Rgam(X,\calO_X)}
+	\arrow["F", from=1-1, to=1-3]
+	\arrow[from=1-1, to=2-2]
+	\arrow["{\tilde{F}}"', from=2-2, to=1-3]
+\end{tikzcd}\]
+commutes, where the unnamed map is the usual augmentation map. By descent it suffices to check this for an eqrsp algebra $C$. Using the description of $i$ given above, we see that $\tilde{F}:C\to\Acr(C)/p$ is Frobenius-linear and sends $x^{\alpha}$ to $x^{p\alpha}$, in the notation of \Cref{P:acrisspqr}. The projection $\Acr(C)/p\to C$, on the other hand, is $B$-linear, and maps $\frac{x^{\alpha}}{(\alpha!)_p}$ to $0$ if $\alpha\ge1$ and to $x^{\alpha}$ otherwise. Composing we get the Frobenius map described in \Cref{P:acrisspqr}, so the claim is proved. This description also shows that $\tilde{F}$ is a ring map for eqrsp algebras, therefore for smooth $X$ the map $H^0(\tilde{F})$ is also a ring map.
+
+Now let $Y$ be smooth. We have $\Rcris(Y)\otimes^L\Z/p\simeq\RdR(Y/k)$, and by Zariski descent we have $\overline{F}=\tilde{F}$ on cohomology for $Y$ provided we know it for any affine smooth scheme. So suppose that $Y$ is affine. Then, looking at $H^0$, which is the only relevant group, we get a commutative diagram
+\[\begin{tikzcd}
+	{\HdR{0}(Y/k)=R^p} && {R^p=\HdR{0}(Y/k)} \\
+	& R
+	\arrow["{x\mapsto x^p}", from=1-1, to=1-3]
+	\arrow[hook, from=1-1, to=2-2]
+	\arrow["{H^0(\tilde{F})}"', from=2-2, to=1-3]
+\end{tikzcd}\]
+But $H^0(\tilde{F})$ is a ring homomorphism, so it must be equal to the $p$-th power map since $R$ is reduced. Thus $H^0(\tilde{F})=H^0(\overline{F})$ and we are done.
+\epr
+
+\prop{finitedegreetwo}
+
+The group $\Hflat{2}(X,\Zp(1))$ is a $\Zp$-module of finite type.
+
+\eprop
+
+\prf
+
+We first prove that 
+\[
+F/p-1:\Nyg{}\Hcris{1}(X)\to\Hcris{1}(X)
+\]
+is surjective. Define $M_{<1}\subseteq\Hcris{1}(X)$ to be the set of elements on which $V$ is topologically nilpotent. Then if $a\in M_{<1}$ we have
+\[
+a=(F/p-1)(Va+V^2a+\dots),
+\]
+and the argument lies in $\Nyg{}\Hcris{1}(X)$ by \Cref{L:nygverschiebung}, so $M_{<1}$ is in the image of $F/p-1$. Denote by $M_1$ the quotient $\Hcris{1}(X)/{M_{<1}}$. This is a torsion-free $\W(k)$-module with induced maps $\overline{F}$ and $\overline{V}$. If we show that
+\begin{equation}\label{fsup}
+\overline{F}/p-1:\overline{V}(M_1)\to M_1
+\end{equation}
+is surjective, we are done. But by design $M_1$ has no non-trivial $\overline{V}$-topologically nilpotent elements. So by the Dieudonné-Manin classification it is pure of slope $1$, with a basis $a_i$ such that $\overline{F}(a_i)=pa_i$. It is now easy to check that \eqref{fsup} is surjective.
+
+It follows that 
+\[
+0\to\Hflat{2}(X,\Zp(1))\to\Nyg{}\Hcris{2}(X)\xto{}{F/p-1}\Hcris{2}(X)
+\]
+is exact. We have an exact sequence
+\[
+0\to L\to\Nyg{}\Hcris{2}(X)\to\Hcris{2}(X)
+\]
+where $L=\coker\left(q_1:\Hcris{1}(X)\to H^1(X,\calO_X)\right)$. Suppose we know that $F/p-1$ is injective on $L$. Then
+\[
+\Hflat{2}(X,\Zp(1))\subseteq\Hcris{2}(X)^{F=p},
+\]
+and the right-hand $\Zp$-module is of finite type by the Dieudonné-Manin classification, and we are done. So let us prove this fact.
+
+By \Cref{L:fsupcoerente}, we need to show that
+\[
+\overline{F}(H^1(X,\calO_X))\cap\ker\left(\HdR{1}(X/k)\to\Hcris{2}(X)[p]\right)=\overline{F}\left(\im(q_1)\right),
+\]
+and by \Cref{P:confrontoderham} we have
+\[
+\ker\left(\HdR{1}(X/k)\to\Hcris{2}(X)[p]\right)=\im\left(q:\Hcris{1}(X)\to\HdR{1}(X/k)\right).
+\]
+Go back to the commutative diagram \eqref{diagrammacrisderham}, and suppose $\overline{F}(a)=q(b)$. Then $V(b)$ maps to zero in $\HdR{1}(X/k)$, so $V(b)=pc$ for some $c\in\Hcris{1}(X)$, which means $b=F(c)$. Thus $\overline{F}(a)=q(F(c))=\overline{F}(q_1(a))$ and by injectivity of $\overline{F}$ we have $a=q_1(c)$. This is what we wanted to prove.
+\epr
+
+With a little more effort the proof of \Cref{P:finitedegreetwo} yields the following result of Illusie, see \cite[II.5.14]{illusiedrw}.
+
+\prop{}
+
+If $\Hcris{2}(X)$ is torsion-free and every global differential $1$-forms is closed, there is a short exact sequence
+\[
+0\to\Hflat{2}(X,\Zp(1))\to\Hcris{2}(X)\xto{}{F-p}\Hcris{2}(X).
+\]
+where the first map is the natural comparison map.
+\eprop
+
+\prf
+
+Keep the notation from the proof of \Cref{P:finitedegreetwo}. First we claim that $\Hcris{1}(X)\to H^1(X,\calO_X)$ is surjective. Indeed, the composition \eqref{comp2} is zero by hypothesis, so by \Cref{L:fsupcoerente} we have that $F/p-1$ is zero on $L=\coker\left(\Hcris{1}(X)\to H^1(X,\calO_X)\right)$. But we have proved that $F/p-1$ is injective on $L$, so $L=0$.
+
+Thus $\Nyg{}\Hcris{2}(X)\subseteq\Hcris{2}(X)$ and both groups are torsion-free. We have a commutative diagram
+\[\begin{tikzcd}
+	0 & {\Hflat{2}(X,\Zp(1))} & {\Nyg{}\Hcris{2}(X)} & {\Hcris{2}(X)} \\
+	0 & K & {\Hcris{2}(X)} & {\Hcris{2}(X)} \\
+	&& {H^2(X,\calO_X)} & {\HdR{2}(X/k)}
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-2, to=1-3]
+	\arrow["f"', from=1-2, to=2-2]
+	\arrow["{F/p-1}", from=1-3, to=1-4]
+	\arrow[hook, from=1-3, to=2-3]
+	\arrow["{\cdot p}"', from=1-4, to=2-4]
+	\arrow[from=2-1, to=2-2]
+	\arrow[from=2-2, to=2-3]
+	\arrow["{F-p}", from=2-3, to=2-4]
+	\arrow[from=2-3, to=3-3]
+	\arrow[from=2-4, to=3-4]
+	\arrow["{\overline{F}}", from=3-3, to=3-4]
+\end{tikzcd}\]
+with exact rows, with the two right-hand columns exact, and where all vertical maps are injective. We want to show that $f$ is surjective and an easy diagram chase shows that it is enough to show that $\overline{F}$ is injective. This is true by \Cref{L:comportamentofbar}.
+
+\epr
+
+\ssec{straight}{Straight varieties and abelian varieties} Now we want to single out a class of varieties for which the Nygaard filtration and fppf cohomology are determined uniquely by crystalline cohomology. In general these groups depend on crystalline cohomology \textit{and} its relation with de Rham cohomology, which can be quite subtle. We call these varieties straight, though they have surely appeared in previous literature with other names. Toward the end of this section we show how to explicitly compute the fppf cohomology of some very simple straight varieties, namely ordinary abelian varieties and products of supersingular elliptic curves. Here is the definition.
+
+\defe{}
+
+A variety $X$ is called \textit{straight} if it satisfies the following conditions:
+\begin{enumerate}
+    \item For all $i$ the group $\Hcris{i}(X)$ is torsion-free.
+    \item The Hodge-de Rham spectral sequence for $X$ degenerates at page $E_1$.
+\end{enumerate}
+
+\edefe
+
+Example of straight varieties are abelian varieties, K3 surfaces and complete intersections in projective space.
+
+Let $X$ be a straight variety. Condition (1) and \Cref{P:confrontoderham} imply that the maps $\Hcris{i}(X)\to\HdR{i}(X/k)$ are surjective, while condition (2) ensures that $\HdR{i}(X/k)\to H^{i}(X,\calO_X)$ is surjective. From the long exact sequence \eqref{sel2} it follows that
+\begin{equation}\label{nygker}
+\Nyg{}\Hcris{i}(X)=\ker\left(\Hcris{i}(X)\to H^i(X,\calO_X)\right)
+\end{equation}
+for all $i$, so $\Nyg\Hcris{i}(X)$ is torsion-free as well. 
+
+In \Cref{S:pruffa} we defined maps $F/p:\Nyg{}\Hcris{i}(X)\to\Hcris{i}(X)$. This implies that
+\[
+\Nyg{}\Hcris{i}(X)\subseteq F^{-1}(p\Hcris{i}(X))=\{a\in\Hcris{i}(X)\text{ s.t. }p|F(a)\},
+\]
+for all $i$, but in fact the reverse inclusion also holds true. This is a non-trivial fact which relies on a theorem by Mazur--Ogus.
+
+\prop{nygstraight}
+If $X$ is a straight variety we have
+\[
+\Nyg{}\Hcris{i}(X)=F^{-1}(p\Hcris{i}(X))=\{a\in\Hcris{i}(X)\text{ s.t. }p|F(a)\},
+\]
+for all $i$.
+\eprop
+
+\prf
+By Mazur-Ogus' theorem \cite[Theorem 8.26]{berthelotogus}, the image of the composition
+\[
+F^{-1}(p\Hcris{i}(X))\subseteq\Hcris{i}(X)\to\HdR{i}(X/k)
+\]
+is the first step of the Hodge filtration on $\HdR{i}(X/k)$. Thus the composition
+\[
+F^{-1}(p\Hcris{i}(X))\subseteq\ker\left(\Hcris{i}(X)\to H^i(X,\calO_X)\right)
+\]
+is $0$, so by \eqref{nygker} we have
+\[
+F^{-1}(p\Hcris{i}(X))\subseteq\Nyg{}\Hcris{i}(X),
+\]
+which is what we wanted to show.
+\epr
+
+In other words the Nygaard filtration is uniquely determined by the $F$-crystal $\Hcris{i}(X)$. Thus, for straight varieties, fppf cohomology with $\Zp(1)$ coefficients is uniquely determined by the $F$-crystal $\Hcris{i}(X)$. More precisely we have the following statement.
+
+\lem{fppfstraight}
+
+Let $X$ be a straight variety. For all $i\ge0$ we have a short exact sequence
+\[
+0\to\Hflat{i}(X,\Zp(1))/\text{tors}\to\Nyg{}\Hcris{i}(X)\xto{}{F/p-1}\Hcris{i}(X)\to\Hflat{i+1}(X,\Zp(1))_{\text{tors}}\to0.
+\]
+In particular the fppf cohomology of $X$ only depends on the crystalline cohomology of $X$ with its Frobenius structure.
+
+\elem
+
+\prf
+This follows from \eqref{sel1} and the the facts that $\Nyg{}\Hcris{1}(X)$ is torsion-free and that $\coker\left(F/p-1\right)$ is torsion. 
+\epr
+
+\cor{moltiplicazionen}
+
+Let $A$ be an abelian variety over $k$. The multiplication-by-$n$ map $[n]:A\to A$ acts as $n^{i}$ on $\Hflat{i+1}(A,\Zp(1))_{\text{tors}}$ and on $\Hflat{i}(X,\Zp(1))/\text{tors}$.
+
+\ecor
+
+\prf
+We know that $[n]$ acts as $n^i$ on $\Hcris{i}(A)$ and on $\Nyg{}\Hcris{i}(A)$, so the conclusion follows from \Cref{L:fppfstraight}.
+\epr
+
+In a future paper with A.Skorobogatov and Y.Yang we will use these techniques to study the $p$-torsion of the Brauer group of an abelian variety in more detail. We end this section with some computations of fppf cohomology in two simple cases.
+
+\vspace{.5em}
+\noindent\textbf{First computation.} Let $A$ be an ordinary abelian variety of dimension $g$ over $k$, i.e. $A[p](k)\simeq(\Z/p)^g$. It is well-known that $\Hcris{1}(A)$ has a basis $(x_1,\dots,x_g,y_1,\dots,y_g)$ such that $F(x_i)=x_i$ and $F(y_i)=py_i$. We compute the fppf cohomology of $A$.
+
+
+\prop{ordinaria}
+
+The following hold:
+\begin{itemize}
+    \item[(1)] The $\W(k)$-module $\Hcris{i}(A/\W(k))$ is free with basis the $x_I\wedge y_J$, where $I,J\subseteq\{1,\dots,g\}$ and $|I|+|J|=i$.
+    \item[(2)] The $\W(k)$-module $\Nyg\Hcris{i}(A/\W(k))$ is free with basis the $p^{\epsilon}x_I\wedge y_J$, where $I,J\subseteq\{1,\dots,g\}$, $|I|+|J|=i$, and $\epsilon=1$ if $J=\emptyset$, $\epsilon=0$ otherwise.
+    \item[(3)] The $\Zp$-module $\Hflat{i}(A,\Zp(1))$ is free of rank $g\cdot\binom{g}{i-1}$.\qed
+\end{itemize}
+
+\eprop
+
+\prf
+
+Statement (1) is the well-known identification
+\[
+\Hcris{i}(A)\simeq\wedge^i\Hcris{1}(A)
+\]
+Then (2) follows from (1) and \Cref{P:nygstraight}. 
+
+For (3), we compute $F/p-1$ on the system of generators of $\Nyg{}\Hcris{i}(X)$ we have found in (2). If $\lambda\in\W$,
+\[
+(F/p-1)(\lambda p^{\epsilon}x_I\wedge y_J)=(p^{|J|-1}\sigma(\lambda)-\lambda)x_I\wedge y_J.
+\]
+As $\lambda$ varies in $\W$, $(p^{|J|-1}\sigma(\lambda)-\lambda)$ covers the whole of $\W$, so $F/p-1$ is surjective. On the other hand $\ker\left(F/p-1\right)$ is a free $\Zp$-module with basis the $x_I\wedge y_J$ where $|J|=1$. From \Cref{L:fppfstraight} we get (3).
+\epr
+
+\vspace{.5em}
+\noindent\textbf{Second computation.} Let $E$ be a supersingular elliptic curve over $k$, i.e. $\Hcris{1}(E)$ is pure of slope $1/2$, and set $A=E\times_kE$. We will show that $\Hflat{3}(X,\Zp(1))$ is an infinite $p$-torsion group which can be identified with $k$. Referring back to \Cref{R:unipotente} this means that $U_3\simeq\Ga$. More general computations for abelian surfaces can be found in \cite[II.7.1]{illusiedrw}.
+
+A simple argument shows that $\Hcris{1}(E/\W(k))$ has a $\W(k)$-basis $(x,y)$ such that $F(x)=y$ and $F(y)=px$. Indeed we know that $\Hcris{1}(E/\W(k))[1/p]$ has a $\K$-basis $(a,b)$ such that $F(a)=b$ and $F(b)=pa$. We may take $a\in\Hcris{1}(E/\W(k))$ not divisible by $p$, and then $b=F(a)$ also lies in $\Hcris{1}(E/\W(k))$. If $b$ is not divisible by $p$, set $(x,y)=(a,b)$. Otherwise set $(x,y)=(b/p,a)$.Then $(x,y)$ has the desired property.
+
+By Künneth's formula, the $\W(k)$-module $\Hcris{2}(A/\W(k))$ has a basis $(a_1,a_2,b_1,b_2,c,d)$ such that
+\begin{enumerate}
+    \item $F(a_1)=p^2a_1,F(a_2)=p^2a_2$
+    \item $F(b_1)=b_2,F(b_2)=p^2b_1$
+    \item $F(c)=pc,F(d)=-pd$
+\end{enumerate}
+We may take for example $b_1=x\otimes x,b_2=y\otimes y$, then $c=(x\otimes y+y\otimes x)/2$ and $d=(x\otimes y-y\otimes x)/2$. Then by \Cref{P:nygstraight} the $\W(k)$-module $\Nyg\Hcris{2}(A/\W(k))$ is generated by $a_1,a_2,pb_1,b_2,c,d$.
+
+\prop{gruppoinifinito}
+
+The group $\Hflat{3}(A,\Zp(1))$ is torsion, infinite and isomorphic to $k$.
+
+\eprop
+
+\prf
+
+The rank of $\Hflat{3}(A,\Zp(1))$ is $0$ because $\Hcris{3}(A)$ is pure of slope $3/2$. Therefore $\Hflat{3}(A,\Zp(1))$ is torsion and we have
+\[
+\Hflat{3}(A,\Zp(1))_{\text{tors}}\simeq\coker\left(F/p-1:\Nyg\Hcris{2}(A/\Zp)\to\Hcris{2}(A/\Zp)\right)
+\]
+Let's determine the image of $f=F/p-1$: if $\lambda\in\W(k)$ we have:
+\begin{align*}
+f(\lambda a_1)=a_1\sigma(p\lambda-1)\\
+f(\lambda a_2)=a_2\sigma(p\lambda-1)\\
+f(\lambda pb_1)=\sigma(\lambda)b_2-\lambda pb_1\\
+f(\lambda b_2)=\sigma(\lambda)b_2-\lambda pb_1\\
+f(\lambda c)=c\sigma(\lambda-1)\\
+f(\lambda d)=d\sigma(\lambda-1)
+\end{align*}
+So the image of $f$ is contained in $\Nyg\Hcris{2}(A/\Zp)$ and it is easy to see that as $\lambda$ varies we get a set of generators of this group. Therefore $\coker\left(F/p-1\right)$ is isomorphic to $b_1\W(k)/p\W(k)\simeq k$.
+\epr
+The other cohomology groups read: 
+\[
+\Hflat{1}(A,\Zp(1))=0, \Hflat{2}(A,\Zp(1))\simeq \Zp^2, \Hflat{i}(A,\Zp(1))=0\text{ for }i>3,
+\]
+wich are all torsion-free. The computations for arbitrary products of supersingular elliptic curves are identical. We should mention that in \cite{yuanbrauer} the author computes $\Hflat{3}(X,\Zp(1))_{\text{tors}}$ for these varieties and many other using different techniques.
+
+
+
+
+
+
+\begin{thebibliography}{9999}
+
+%\bibitem[ArM77]{artinmazur}
+%Michael Artin, Barry Mazur.
+%\newblock Formal Groups Arising from Algebraic Varieties.
+%\newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~10, pages 87-131, 1977.    
+
+\bibitem[Art74]{artinssk3}
+Michael Artin.
+\newblock Supersingular K$3$ Surfaces.
+\newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~7, pages 543-567, 1974.
+
+\bibitem[Ber74]{berthelotcris}
+Pierre Berthelot.
+\newblock Cohomologie cristalline des sch\'{e}mas de caractéristique $p>0$.
+\newblock \textit{Lecture Notes in Mathematics}, volume~407, Springer, 1974.
+
+\bibitem[BeM07]{berthelotmessing}
+Pierre Berthelot and William Messing.
+\newblock Th{\'e}orie de Dieudonn{\'e} cristalline III.
+\newblock In {\em The Grothendieck Festschrift I}, volume~86 of 
+{\em Progress in Mathematics}, pages 173--247. Birkh{\"a}user, Boston, 2007
+
+\bibitem[BeO78]{berthelotogus}
+Pierre Berthelot and Arthur Ogus.
+\newblock Notes on crystalline cohomology.
+\newblock \textit{Mathematical Notes}, volume~21, Princeton University Press, 1978.
+
+\bibitem[BhL22]{bhattlurie}
+Bhargav Bhatt and Jacob Lurie.
+\newblock Absolute Prismatic Cohomology.
+\newblock 2022.
+\newblock \url{https://arxiv.org/abs/2201.06120}
+
+\bibitem[CTS21]{ctsbrauer}
+Jean-Louis Colliot-Thélène, Alexei Skorobogatov.
+\newblock The Brauer–Grothendieck Group.
+\newblock Springer, 2021
+
+\bibitem[D'Ad24]{marcobrauer}
+Marco D'Addezio.
+\newblock Boundedness of the p-primary torsion of the Brauer group of an abelian variety.
+\newblock In {\em Compositio Mathematica}, volume 160, pages 463-480, 2024.
+
+\bibitem[dASV22]{pbasi}
+Celia del Buey de Andrés, Diego Sulca, Orlando Villamayor.
+\newblock Differentiably simple rings and ring extensions defined by $p$-basis
+\newblock 2022.
+\newblock \url{https://arxiv.org/abs/2211.09125}
+
+\bibitem[Dem72]{demazure}
+Michel Demazure.
+\newblock Lectures on p-Divisible Groups.
+\newblock \textit{Lecture Notes in Mathematics}, volume~302, Springer, 2006.
+
+\bibitem[Dri20]{drinfeldacris}
+Vladimir Drinfeld.
+\newblock On a Theorem of Scholze-Weinstein.
+\newblock 2020.
+\newblock \url{https://arxiv.org/abs/1810.04292}
+
+\bibitem[Dri22]{drinfeldstacky}
+Vladimir Drinfeld.
+\newblock A stacky approach to crystals.
+\newblock 2022.
+\newblock \url{https://arxiv.org/abs/1810.11853}
+
+\bibitem[FoM87]{fontainemessing}
+Jean-Marc Fontaine and William Messing.
+\newblock $p$-adic periods and $p$-adic étale cohomology.
+\newblock In {\em Current trends in Arithmetical Algebraic Geometry}, volume~67 of {\em Contemporary Mathematics}, pages 179-207, American Mathematical Society, 1987.
+
+\bibitem[Gei17]{geissermotivic}
+Thomas H. Geisser.
+\newblock On the structure of etale motivic cohomology
+\newblock In {\em Journal of Pure and Applied Algebra}, volume 221, pages 1614-1628, 2017.
+
+\bibitem[Gro68a]{brauer3}
+Alexander Grothendieck.
+\newblock Le groupe de {B}rauer. {III}. {E}xemples et compl\'{e}ments.
+\newblock In {\em Dix expos\'{e}s sur la cohomologie des sch\'{e}mas}, volume~3
+of {\em Adv. Stud. Pure Math.}, pages 88-188. North-Holland, Amsterdam,
+1968.
+
+\bibitem[Gro68b]{grothendieckinf}
+Alexander Grothendieck.
+\newblock Crystals and the De Rham cohomology of schemes.
+\newblock In {\em Dix expos\'{e}s sur la cohomologie des sch\'{e}mas}, volume~3
+of {\em Adv. Stud. Pure Math.}, pages 88-188. North-Holland, Amsterdam,
+1968.
+
+\bibitem[Ill79]{illusiedrw}
+Luc Illusie.
+\newblock Complexe de de Rham-Witt et cohomologie cristalline.
+\newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~12,
+pages 501-661, 1979.
+
+\bibitem[IlR83]{illusieraynaud}
+Luc Illusie, Michel Raynaud.
+\newblock Les suites spectrales associées au complexe de de Rham-Witt
+\newblock In {\em Publications Mathématiques de l'IHES}, volume~57, pages 73-212, 1983.
+
+%\bibitem[Kat72]{katzcristalli}
+%Nicholas Katz.
+%\newblock Travaux de Dwork.
+%\newblock In {\em Séminaire Bourbaki 1971-1972}, exposé 409, pages 167-200.
+%\newblock \url{http://www.numdam.org/item/SB_1971-1972__14__167_0/}
+
+%\bibitem[LQ24]{liqin}
+%Zhenghui Li, Yanshuai Qin.
+%\newblock On p-torsions of geometric Brauer groups.
+%\newblock 2024.
+%\newblock \url{https://arxiv.org/abs/2406.19518}
+
+\bibitem[Lu17]{higheralgebra}
+Jacob Lurie.
+\newblock Higher Algebra.
+\newblock \url{https://people.math.harvard.edu/~lurie/papers/HA.pdf}, 2017.
+
+\bibitem[MaM74]{mazurmessing}
+Barry Mazur, William Messing.
+\newblock Universal Extensions and One Dimensional Crystalline Cohomology.
+\newblock \textit{Lecture Notes in Mathematics}, volume~370, Springer, 2006.
+
+
+%\bibitem[D'Ad24]{marcobrauer}
+%Marco D'Addezio.
+%\newblock Boundedness of the p-primary torsion of the Brauer group %of an abelian variety.
+%\newblock In {\em Compositio Mathematica}, volume 160, pages 463-480, 2024.
+
+%\bibitem[Mil]{milnemupn}
+%John Milne.
+%\newblock Duality in the Flat Cohomology of a Surface
+%newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~9,
+%pages 171-201, 1976.
+
+\bibitem[Mil86]{milnezeta}
+John Milne.
+\newblock Values of Zeta Functions of Varieties Over Finite Fields
+\newblock In {\em American Journal of Mathematics}, volume~108, pages 297-360, 1986.
+
+\bibitem[Oda69]{oda}
+Tadao Oda.
+\newblock The first de Rham cohomology group and Dieudonn\'{e} modules.
+\newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~2, pp. 63--135, 1969.
+\url{http://www.numdam.org/item/?id=ASENS_1969_4_2_1_63_0}
+
+\bibitem[Og75]{ogusinf}
+Arthur Ogus.
+\newblock Cohomology of the infinitesimal site.
+\newblock In {\em Annales scientifiques de l'École Normale Supérieure}, série~4, volume~8 (1975), pp. 173--247
+
+\bibitem[Ser60]{serrequasialg}
+Jean-Pierre Serre.
+\newblock Groupes proalg\'{e}briques.
+\newblock In {\em Publications Mathématiques de l'IHES}, volume~7, pages 5-67, 1960.
+
+\bibitem[Ser97]{corpslocaux}
+Jean-Pierre Serre.
+\newblock Corps locaux.
+\newblock In {\em Actualités scientifiques et industrielles}, volume 1296. Hermann Paris, Paris, 1997.
+
+\bibitem[Sko24]{skorkunneth}
+Alexei Skorobogatov.
+\newblock Boundedness of the p-primary torsion of the Brauer group of products of varieties. With an appendix by A. Petrov.
+\newblock 2024.
+\newblock \url{https://arxiv.org/abs/2404.19150}
+
+%\bibitem[SW]{scholzeweinstein}
+%Peter Scholze, Jared Weinstein.
+%\newblock Moduli of $p$-divisible groups.
+%\newblock 2013.
+%\url{https://arxiv.org/abs/1211.6357}
+
+\bibitem[Stacks]{stacksproject}
+The {Stacks Project Authors}.
+\newblock \textit{Stacks Project}.
+\newblock \url{https://stacks.math.columbia.edu}, 2024.
+
+\bibitem[Vis05]{vistolidescent}
+Angelo Vistoli.
+\newblock Notes on Grothendieck topologies, fibered categories and descent theory.
+\newblock Fundamental Algebraic Geometry.
+\newblock In {\em Mathematical Surveys and Monographs}, volume~123. American Mathematical Society, 
+Providence, RI, 2005.
+
+\bibitem[Yan24]{yuanbrauer}
+Yuan Yang.
+\newblock Remarks on $p$-primary torsion of the Brauer group.
+\newblock 2024.
+\url{https://arxiv.org/abs/2410.09969}
+
+\end{thebibliography}
+
+
+
+
+
+\end{document}

@@ -1,0 +1,1241 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{Badea_Grivaux_KazhdanED}{article}{}
+      \name{author}{2}{}{%
+        {{hash=c53009173e9c338d70de1466c79acc50}{%
+           family={Badea},
+           familyi={B\bibinitperiod},
+           given={Catalin},
+           giveni={C\bibinitperiod}}}%
+        {{hash=0285aecb951b47b20d79c007aa7ddd33}{%
+           family={Grivaux},
+           familyi={G\bibinitperiod},
+           given={Sophie},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{3aa79354b2270c9509445ad714e5a25b}
+      \strng{fullhash}{3aa79354b2270c9509445ad714e5a25b}
+      \strng{bibnamehash}{3aa79354b2270c9509445ad714e5a25b}
+      \strng{authorbibnamehash}{3aa79354b2270c9509445ad714e5a25b}
+      \strng{authornamehash}{3aa79354b2270c9509445ad714e5a25b}
+      \strng{authorfullhash}{3aa79354b2270c9509445ad714e5a25b}
+      \field{labelalpha}{BG17}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0022-1236}
+      \field{journaltitle}{J. Funct. Anal.}
+      \field{number}{6}
+      \field{title}{Kazhdan sets in groups and equidistribution properties}
+      \field{volume}{273}
+      \field{year}{2017}
+      \field{pages}{1931\bibrangedash 1969}
+      \range{pages}{39}
+      \verb{doi}
+      \verb 10.1016/j.jfa.2017.05.010
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.jfa.2017.05.010
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.jfa.2017.05.010
+      \endverb
+    \endentry
+    \entry{BeiglbockBergelsonFish}{article}{}
+      \name{author}{3}{}{%
+        {{hash=a8e994f3fd7fe1591d77ec5586597c04}{%
+           family={Beiglböck},
+           familyi={B\bibinitperiod},
+           given={Mathias},
+           giveni={M\bibinitperiod}}}%
+        {{hash=4dfd58bb9807cdbb1acecbfc1a4a08b7}{%
+           family={Bergelson},
+           familyi={B\bibinitperiod},
+           given={Vitaly},
+           giveni={V\bibinitperiod}}}%
+        {{hash=93046ad48a0b8cdfd2986bca66a1f6c7}{%
+           family={Fish},
+           familyi={F\bibinitperiod},
+           given={Alexander},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{411fab93fbbe977560da6dd04150b0fa}
+      \strng{fullhash}{411fab93fbbe977560da6dd04150b0fa}
+      \strng{bibnamehash}{411fab93fbbe977560da6dd04150b0fa}
+      \strng{authorbibnamehash}{411fab93fbbe977560da6dd04150b0fa}
+      \strng{authornamehash}{411fab93fbbe977560da6dd04150b0fa}
+      \strng{authorfullhash}{411fab93fbbe977560da6dd04150b0fa}
+      \field{labelalpha}{BBF10}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0001-8708}
+      \field{journaltitle}{Adv. Math.}
+      \field{number}{2}
+      \field{title}{Sumset phenomenon in countable amenable groups}
+      \field{volume}{223}
+      \field{year}{2010}
+      \field{pages}{416\bibrangedash 432}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1016/j.aim.2009.08.009
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.aim.2009.08.009
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.aim.2009.08.009
+      \endverb
+    \endentry
+    \entry{BergelsonFerreMoragues_ErgodicCorrespondence}{article}{}
+      \name{author}{2}{}{%
+        {{hash=4dfd58bb9807cdbb1acecbfc1a4a08b7}{%
+           family={Bergelson},
+           familyi={B\bibinitperiod},
+           given={Vitaly},
+           giveni={V\bibinitperiod}}}%
+        {{hash=0a5ba48f4a211ababc9cb896bbc498d1}{%
+           family={Ferré\bibnamedelima Moragues},
+           familyi={F\bibinitperiod\bibinitdelim M\bibinitperiod},
+           given={Andreu},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{216b80d4d4afc76ec02693ac426669a1}
+      \strng{fullhash}{216b80d4d4afc76ec02693ac426669a1}
+      \strng{bibnamehash}{216b80d4d4afc76ec02693ac426669a1}
+      \strng{authorbibnamehash}{216b80d4d4afc76ec02693ac426669a1}
+      \strng{authornamehash}{216b80d4d4afc76ec02693ac426669a1}
+      \strng{authorfullhash}{216b80d4d4afc76ec02693ac426669a1}
+      \field{labelalpha}{BF21}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0021-2172}
+      \field{journaltitle}{Israel J. Math.}
+      \field{number}{2}
+      \field{title}{An ergodic correspondence principle, invariant means and applications}
+      \field{volume}{245}
+      \field{year}{2021}
+      \field{pages}{921\bibrangedash 962}
+      \range{pages}{42}
+      \verb{doi}
+      \verb 10.1007/s11856-021-2233-y
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s11856-021-2233-y
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s11856-021-2233-y
+      \endverb
+    \endentry
+    \entry{BergelsonFurstenbergWeiss}{incollection}{}
+      \name{author}{3}{}{%
+        {{hash=4dfd58bb9807cdbb1acecbfc1a4a08b7}{%
+           family={Bergelson},
+           familyi={B\bibinitperiod},
+           given={Vitaly},
+           giveni={V\bibinitperiod}}}%
+        {{hash=f70023d4b63d7ad49836b9cd84df2f52}{%
+           family={Furstenberg},
+           familyi={F\bibinitperiod},
+           given={Hillel},
+           giveni={H\bibinitperiod}}}%
+        {{hash=77444d9660ae669cb6f9bed8fd275ea8}{%
+           family={Weiss},
+           familyi={W\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer, Berlin}%
+      }
+      \strng{namehash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \strng{fullhash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \strng{bibnamehash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \strng{authorbibnamehash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \strng{authornamehash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \strng{authorfullhash}{451bd88f7b57c20fdc4c82f26d2515bf}
+      \field{labelalpha}{BFW06}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Topics in discrete mathematics}
+      \field{series}{Algorithms Combin.}
+      \field{title}{Piecewise-{B}ohr sets of integers and combinatorial number theory}
+      \field{volume}{26}
+      \field{year}{2006}
+      \field{pages}{13\bibrangedash 37}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1007/3-540-33700-8_2
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/3-540-33700-8_2
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/3-540-33700-8_2
+      \endverb
+    \endentry
+    \entry{Bjorklund_ProductSetMeasured}{article}{}
+      \name{author}{1}{}{%
+        {{hash=2c3f06538d620845eecd79fc9d8431de}{%
+           family={Björklund},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{2c3f06538d620845eecd79fc9d8431de}
+      \strng{fullhash}{2c3f06538d620845eecd79fc9d8431de}
+      \strng{bibnamehash}{2c3f06538d620845eecd79fc9d8431de}
+      \strng{authorbibnamehash}{2c3f06538d620845eecd79fc9d8431de}
+      \strng{authornamehash}{2c3f06538d620845eecd79fc9d8431de}
+      \strng{authorfullhash}{2c3f06538d620845eecd79fc9d8431de}
+      \field{labelalpha}{Bjö18}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0143-3857}
+      \field{journaltitle}{Ergodic Theory Dynam. Systems}
+      \field{number}{8}
+      \field{title}{Product set phenomena for measured groups}
+      \field{volume}{38}
+      \field{year}{2018}
+      \field{pages}{2913\bibrangedash 2941}
+      \range{pages}{29}
+      \verb{doi}
+      \verb 10.1017/etds.2017.21
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1017/etds.2017.21
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1017/etds.2017.21
+      \endverb
+    \endentry
+    \entry{BjorklundFish_ApproxInvariance}{article}{}
+      \name{author}{2}{}{%
+        {{hash=2c3f06538d620845eecd79fc9d8431de}{%
+           family={Björklund},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=93046ad48a0b8cdfd2986bca66a1f6c7}{%
+           family={Fish},
+           familyi={F\bibinitperiod},
+           given={Alexander},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{fullhash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{bibnamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authorbibnamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authornamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authorfullhash}{313bcbff7d7089c4d7004a4030295a3c}
+      \field{extraname}{1}
+      \field{labelalpha}{BF19}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Discrete Anal.}
+      \field{title}{Approximate invariance for ergodic actions of amenable groups}
+      \field{year}{2019}
+      \field{pages}{Paper No. 6\bibrangessep 56}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.19086/da.8471
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.19086/da.8471
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.19086/da.8471
+      \endverb
+    \endentry
+    \entry{BjorklundFish_ProductSet}{article}{}
+      \name{author}{2}{}{%
+        {{hash=2c3f06538d620845eecd79fc9d8431de}{%
+           family={Björklund},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=93046ad48a0b8cdfd2986bca66a1f6c7}{%
+           family={Fish},
+           familyi={F\bibinitperiod},
+           given={Alexander},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{fullhash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{bibnamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authorbibnamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authornamehash}{313bcbff7d7089c4d7004a4030295a3c}
+      \strng{authorfullhash}{313bcbff7d7089c4d7004a4030295a3c}
+      \field{extraname}{2}
+      \field{labelalpha}{BF15}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0001-8708}
+      \field{journaltitle}{Adv. Math.}
+      \field{title}{Product set phenomena for countable groups}
+      \field{volume}{275}
+      \field{year}{2015}
+      \field{pages}{47\bibrangedash 113}
+      \range{pages}{67}
+      \verb{doi}
+      \verb 10.1016/j.aim.2015.02.005
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.aim.2015.02.005
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.aim.2015.02.005
+      \endverb
+    \endentry
+    \entry{BjorklundGriesmer_BohrTriple}{article}{}
+      \name{author}{2}{}{%
+        {{hash=2c3f06538d620845eecd79fc9d8431de}{%
+           family={Björklund},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=7ad2ab3caa9861eff384c36b88bc8c34}{%
+           family={Griesmer},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima T.},
+           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \strng{namehash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \strng{fullhash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \strng{bibnamehash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \strng{authorbibnamehash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \strng{authornamehash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \strng{authorfullhash}{6bfb23a80a15d5a35d1aa24ed8b91de6}
+      \field{labelalpha}{BG19}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1069-5869}
+      \field{journaltitle}{J. Fourier Anal. Appl.}
+      \field{number}{3}
+      \field{title}{Bohr sets in triple products of large sets in amenable groups}
+      \field{volume}{25}
+      \field{year}{2019}
+      \field{pages}{923\bibrangedash 936}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1007/s00041-018-9615-5
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00041-018-9615-5
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00041-018-9615-5
+      \endverb
+    \endentry
+    \entry{Boshernitzan_Homogeneous}{article}{}
+      \name{author}{1}{}{%
+        {{hash=d2f8199405e4968e5794dfc2fda77d0b}{%
+           family={Boshernitzan},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \strng{fullhash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \strng{bibnamehash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \strng{authorbibnamehash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \strng{authornamehash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \strng{authorfullhash}{d2f8199405e4968e5794dfc2fda77d0b}
+      \field{labelalpha}{Bos83}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0026-9255}
+      \field{journaltitle}{Monatsh. Math.}
+      \field{number}{3}
+      \field{title}{Homogeneously distributed sequences and {P}oincaré sequences of integers of sublacunary growth}
+      \field{volume}{96}
+      \field{year}{1983}
+      \field{pages}{173\bibrangedash 181}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1007/BF01605486
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/BF01605486
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/BF01605486
+      \endverb
+    \endentry
+    \entry{BKQW}{article}{}
+      \name{author}{4}{}{%
+        {{hash=d2f8199405e4968e5794dfc2fda77d0b}{%
+           family={Boshernitzan},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=3a601275e15c805de01e87b24c8b8fb4}{%
+           family={Kolesnik},
+           familyi={K\bibinitperiod},
+           given={Grigori},
+           giveni={G\bibinitperiod}}}%
+        {{hash=d59ddc7786f405abd903640974f3cc36}{%
+           family={Quas},
+           familyi={Q\bibinitperiod},
+           given={Anthony},
+           giveni={A\bibinitperiod}}}%
+        {{hash=5a4aaab4171ff8d1d185552db4c73fd9}{%
+           family={Wierdl},
+           familyi={W\bibinitperiod},
+           given={Máté},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{b15d0b1b2bdddcdc12bf3544f9033574}
+      \strng{fullhash}{69ec7b39cb804d142a4b883a4860a946}
+      \strng{bibnamehash}{b15d0b1b2bdddcdc12bf3544f9033574}
+      \strng{authorbibnamehash}{b15d0b1b2bdddcdc12bf3544f9033574}
+      \strng{authornamehash}{b15d0b1b2bdddcdc12bf3544f9033574}
+      \strng{authorfullhash}{69ec7b39cb804d142a4b883a4860a946}
+      \field{labelalpha}{Bos+05}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0021-7670}
+      \field{journaltitle}{J. Anal. Math.}
+      \field{title}{Ergodic averaging sequences}
+      \field{volume}{95}
+      \field{year}{2005}
+      \field{pages}{63\bibrangedash 103}
+      \range{pages}{41}
+      \verb{doi}
+      \verb 10.1007/BF02791497
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/BF02791497
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/BF02791497
+      \endverb
+    \endentry
+    \entry{Burckel_WAP_book}{book}{}
+      \name{author}{1}{}{%
+        {{hash=fc0f8f8eeb6690e6f6b849b3bc980524}{%
+           family={Burckel},
+           familyi={B\bibinitperiod},
+           given={R.\bibnamedelimi B.},
+           giveni={R\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Gordon}%
+        {Breach Science Publishers, New York-London-Paris}%
+      }
+      \strng{namehash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \strng{fullhash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \strng{bibnamehash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \strng{authorbibnamehash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \strng{authornamehash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \strng{authorfullhash}{fc0f8f8eeb6690e6f6b849b3bc980524}
+      \field{extraname}{1}
+      \field{labelalpha}{Bur70}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Weakly almost periodic functions on semigroups}
+      \field{year}{1970}
+      \field{pages}{ix+118}
+      \range{pages}{-1}
+    \endentry
+    \entry{Burckel_WAP_Thesis}{book}{}
+      \name{author}{1}{}{%
+        {{hash=49e3626ddea4d7bfbdbb1f3852d49146}{%
+           family={Burckel},
+           familyi={B\bibinitperiod},
+           given={Robert\bibnamedelima Bruce},
+           giveni={R\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {ProQuest LLC, Ann Arbor, MI}%
+      }
+      \strng{namehash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \strng{fullhash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \strng{bibnamehash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \strng{authorbibnamehash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \strng{authornamehash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \strng{authorfullhash}{49e3626ddea4d7bfbdbb1f3852d49146}
+      \field{extraname}{2}
+      \field{labelalpha}{Bur68}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Thesis (Ph.D.)--Yale University}
+      \field{title}{W{EAK} {ALMOST} {PERIODIC} {FUNCTIONS} {ON} {SEMIGROUPS}}
+      \field{year}{1968}
+      \field{pages}{126}
+      \range{pages}{1}
+      \verb{urlraw}
+      \verb http://gateway.proquest.com/openurl?url_ver=Z39.88-2004&rft_val_fmt=info:ofi/fmt:kev:mtx:dissertation&res_dat=xri:pqdiss&rft_dat=xri:pqdiss:6908326
+      \endverb
+      \verb{url}
+      \verb http://gateway.proquest.com/openurl?url_ver=Z39.88-2004&rft_val_fmt=info:ofi/fmt:kev:mtx:dissertation&res_dat=xri:pqdiss&rft_dat=xri:pqdiss:6908326
+      \endverb
+    \endentry
+    \entry{Conway_FunctionalAnalysis}{book}{}
+      \name{author}{1}{}{%
+        {{hash=ced6afb930e46916a73bfa9880ca41cb}{%
+           family={Conway},
+           familyi={C\bibinitperiod},
+           given={John\bibnamedelima B.},
+           giveni={J\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer-Verlag, New York}%
+      }
+      \strng{namehash}{ced6afb930e46916a73bfa9880ca41cb}
+      \strng{fullhash}{ced6afb930e46916a73bfa9880ca41cb}
+      \strng{bibnamehash}{ced6afb930e46916a73bfa9880ca41cb}
+      \strng{authorbibnamehash}{ced6afb930e46916a73bfa9880ca41cb}
+      \strng{authornamehash}{ced6afb930e46916a73bfa9880ca41cb}
+      \strng{authorfullhash}{ced6afb930e46916a73bfa9880ca41cb}
+      \field{labelalpha}{Con90}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{Second}
+      \field{isbn}{0-387-97245-5}
+      \field{series}{Graduate Texts in Mathematics}
+      \field{title}{A course in functional analysis}
+      \field{volume}{96}
+      \field{year}{1990}
+      \field{pages}{xvi+399}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1007/978-1-4757-4383-8
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/978-1-4757-4383-8
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/978-1-4757-4383-8
+      \endverb
+    \endentry
+    \entry{Eberlein_FS}{article}{}
+      \name{author}{1}{}{%
+        {{hash=a0534930b5349ae5ef191aee6ded9a32}{%
+           family={Eberlein},
+           familyi={E\bibinitperiod},
+           given={W.\bibnamedelimi F.},
+           giveni={W\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+      }
+      \strng{namehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{fullhash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{bibnamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authorbibnamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authornamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authorfullhash}{a0534930b5349ae5ef191aee6ded9a32}
+      \field{extraname}{1}
+      \field{labelalpha}{Ebe55}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9939,1088-6826}
+      \field{journaltitle}{Proc. Amer. Math. Soc.}
+      \field{title}{A note on {F}ourier-{S}tieltjes transforms}
+      \field{volume}{6}
+      \field{year}{1955}
+      \field{pages}{310\bibrangedash 312}
+      \range{pages}{3}
+      \verb{doi}
+      \verb 10.2307/2032365
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.2307/2032365
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.2307/2032365
+      \endverb
+    \endentry
+    \entry{Eberlein_AbstractErgodic}{article}{}
+      \name{author}{1}{}{%
+        {{hash=a0534930b5349ae5ef191aee6ded9a32}{%
+           family={Eberlein},
+           familyi={E\bibinitperiod},
+           given={W.\bibnamedelimi F.},
+           giveni={W\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+      }
+      \strng{namehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{fullhash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{bibnamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authorbibnamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authornamehash}{a0534930b5349ae5ef191aee6ded9a32}
+      \strng{authorfullhash}{a0534930b5349ae5ef191aee6ded9a32}
+      \field{extraname}{2}
+      \field{labelalpha}{Ebe49}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9947}
+      \field{journaltitle}{Trans. Amer. Math. Soc.}
+      \field{title}{Abstract ergodic theorems and weak almost periodic functions}
+      \field{volume}{67}
+      \field{year}{1949}
+      \field{pages}{217\bibrangedash 240}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.2307/1990424
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.2307/1990424
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.2307/1990424
+      \endverb
+    \endentry
+    \entry{Folland_CourseInAHA}{book}{}
+      \name{author}{1}{}{%
+        {{hash=3cda3c2620975d41afd056d0ac5a79b8}{%
+           family={Folland},
+           familyi={F\bibinitperiod},
+           given={Gerald\bibnamedelima B.},
+           giveni={G\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {CRC Press, Boca Raton, FL}%
+      }
+      \strng{namehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{fullhash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{bibnamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authorbibnamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authornamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authorfullhash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \field{extraname}{1}
+      \field{labelalpha}{Fol16}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{Second}
+      \field{isbn}{978-1-4987-2713-6}
+      \field{series}{Textbooks in Mathematics}
+      \field{title}{A course in abstract harmonic analysis}
+      \field{year}{2016}
+      \field{pages}{xiii+305 pp.+loose errata}
+      \range{pages}{-1}
+    \endentry
+    \entry{Folland_RealAnalysis}{book}{}
+      \name{author}{1}{}{%
+        {{hash=3cda3c2620975d41afd056d0ac5a79b8}{%
+           family={Folland},
+           familyi={F\bibinitperiod},
+           given={Gerald\bibnamedelima B.},
+           giveni={G\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {John Wiley \& Sons, Inc., New York}%
+      }
+      \strng{namehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{fullhash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{bibnamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authorbibnamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authornamehash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \strng{authorfullhash}{3cda3c2620975d41afd056d0ac5a79b8}
+      \field{extraname}{2}
+      \field{labelalpha}{Fol99}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{Second}
+      \field{isbn}{0-471-31716-0}
+      \field{note}{Modern techniques and their applications, A Wiley-Interscience Publication}
+      \field{series}{Pure and Applied Mathematics (New York)}
+      \field{title}{Real analysis}
+      \field{year}{1999}
+      \field{pages}{xvi+386}
+      \range{pages}{-1}
+    \endentry
+    \entry{Folner_Generalization}{article}{}
+      \name{author}{1}{}{%
+        {{hash=0c367c1c91db564749b94d132567d40c}{%
+           family={F{ø}lner},
+           familyi={F\bibinitperiod},
+           given={Erling},
+           giveni={E\bibinitperiod}}}%
+      }
+      \strng{namehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{fullhash}{0c367c1c91db564749b94d132567d40c}
+      \strng{bibnamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authorbibnamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authornamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authorfullhash}{0c367c1c91db564749b94d132567d40c}
+      \field{extraname}{1}
+      \field{labelalpha}{Føl54}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{extraalpha}{1}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0025-5521,1903-1807}
+      \field{journaltitle}{Math. Scand.}
+      \field{title}{Generalization of a theorem of {B}ogolioùboff to topological abelian groups. {W}ith an appendix on {B}anach mean values in non-abelian groups}
+      \field{volume}{2}
+      \field{year}{1954}
+      \field{pages}{5\bibrangedash 18}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.7146/math.scand.a-10389
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.7146/math.scand.a-10389
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.7146/math.scand.a-10389
+      \endverb
+    \endentry
+    \entry{Folner_NoteOnGeneralization}{article}{}
+      \name{author}{1}{}{%
+        {{hash=0c367c1c91db564749b94d132567d40c}{%
+           family={F{ø}lner},
+           familyi={F\bibinitperiod},
+           given={Erling},
+           giveni={E\bibinitperiod}}}%
+      }
+      \strng{namehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{fullhash}{0c367c1c91db564749b94d132567d40c}
+      \strng{bibnamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authorbibnamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authornamehash}{0c367c1c91db564749b94d132567d40c}
+      \strng{authorfullhash}{0c367c1c91db564749b94d132567d40c}
+      \field{extraname}{2}
+      \field{labelalpha}{Føl54}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{extraalpha}{2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0025-5521,1903-1807}
+      \field{journaltitle}{Math. Scand.}
+      \field{title}{Note on a generalization of a theorem of {B}ogolioùboff}
+      \field{volume}{2}
+      \field{year}{1954}
+      \field{pages}{224\bibrangedash 226}
+      \range{pages}{3}
+      \verb{doi}
+      \verb 10.7146/math.scand.a-10408
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.7146/math.scand.a-10408
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.7146/math.scand.a-10408
+      \endverb
+    \endentry
+    \entry{Godement}{article}{}
+      \name{author}{1}{}{%
+        {{hash=1d1866c8dc267199428fe67e249cca0e}{%
+           family={Godement},
+           familyi={G\bibinitperiod},
+           given={Roger},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{1d1866c8dc267199428fe67e249cca0e}
+      \strng{fullhash}{1d1866c8dc267199428fe67e249cca0e}
+      \strng{bibnamehash}{1d1866c8dc267199428fe67e249cca0e}
+      \strng{authorbibnamehash}{1d1866c8dc267199428fe67e249cca0e}
+      \strng{authornamehash}{1d1866c8dc267199428fe67e249cca0e}
+      \strng{authorfullhash}{1d1866c8dc267199428fe67e249cca0e}
+      \field{labelalpha}{God48}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9947,1088-6850}
+      \field{journaltitle}{Trans. Amer. Math. Soc.}
+      \field{title}{Les fonctions de type positif et la théorie des groupes}
+      \field{volume}{63}
+      \field{year}{1948}
+      \field{pages}{1\bibrangedash 84}
+      \range{pages}{84}
+      \verb{doi}
+      \verb 10.2307/1990636
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.2307/1990636
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.2307/1990636
+      \endverb
+    \endentry
+    \entry{Griesmer_SumsetsDenseSparse}{article}{}
+      \name{author}{1}{}{%
+        {{hash=7ad2ab3caa9861eff384c36b88bc8c34}{%
+           family={Griesmer},
+           familyi={G\bibinitperiod},
+           given={John\bibnamedelima T.},
+           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \strng{namehash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \strng{fullhash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \strng{bibnamehash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \strng{authorbibnamehash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \strng{authornamehash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \strng{authorfullhash}{7ad2ab3caa9861eff384c36b88bc8c34}
+      \field{labelalpha}{Gri12}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0021-2172}
+      \field{journaltitle}{Israel J. Math.}
+      \field{title}{Sumsets of dense sets and sparse sets}
+      \field{volume}{190}
+      \field{year}{2012}
+      \field{pages}{229\bibrangedash 252}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1007/s11856-012-0008-1
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s11856-012-0008-1
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s11856-012-0008-1
+      \endverb
+    \endentry
+    \entry{HindmanStrauss_DensityAndInvariant}{article}{}
+      \name{author}{2}{}{%
+        {{hash=2022cad6aaac3027b9eee2e8bbda84cf}{%
+           family={Hindman},
+           familyi={H\bibinitperiod},
+           given={Neil},
+           giveni={N\bibinitperiod}}}%
+        {{hash=e2d38aee0d416777aa03134561ee1ba3}{%
+           family={Strauss},
+           familyi={S\bibinitperiod},
+           given={Dona},
+           giveni={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{b133fda7fc9813345b381db0d2f565a7}
+      \strng{fullhash}{b133fda7fc9813345b381db0d2f565a7}
+      \strng{bibnamehash}{b133fda7fc9813345b381db0d2f565a7}
+      \strng{authorbibnamehash}{b133fda7fc9813345b381db0d2f565a7}
+      \strng{authornamehash}{b133fda7fc9813345b381db0d2f565a7}
+      \strng{authorfullhash}{b133fda7fc9813345b381db0d2f565a7}
+      \field{labelalpha}{HS09}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0166-8641,1879-3207}
+      \field{journaltitle}{Topology Appl.}
+      \field{number}{16}
+      \field{title}{Density and invariant means in left amenable semigroups}
+      \field{volume}{156}
+      \field{year}{2009}
+      \field{pages}{2614\bibrangedash 2628}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1016/j.topol.2009.04.016
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.topol.2009.04.016
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.topol.2009.04.016
+      \endverb
+    \endentry
+    \entry{Hopfensperger_WhenIsAMean}{article}{}
+      \name{author}{1}{}{%
+        {{hash=8abd54dcd90a5f3cc175e5645459cb06}{%
+           family={Hopfensperger},
+           familyi={H\bibinitperiod},
+           given={John},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \strng{fullhash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \strng{bibnamehash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \strng{authorbibnamehash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \strng{authornamehash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \strng{authorfullhash}{8abd54dcd90a5f3cc175e5645459cb06}
+      \field{labelalpha}{Hop21}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0166-8641,1879-3207}
+      \field{journaltitle}{Topology Appl.}
+      \field{title}{When is an invariant mean the limit of a {F}ølner net?}
+      \field{volume}{300}
+      \field{year}{2021}
+      \field{pages}{Paper No. 107755\bibrangessep 11}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1016/j.topol.2021.107755
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.topol.2021.107755
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.topol.2021.107755
+      \endverb
+    \endentry
+    \entry{Jin_SumsetPhenom}{article}{}
+      \name{author}{1}{}{%
+        {{hash=080640ba4e88b04d4eba3a978e0624d0}{%
+           family={Jin},
+           familyi={J\bibinitperiod},
+           given={Renling},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{080640ba4e88b04d4eba3a978e0624d0}
+      \strng{fullhash}{080640ba4e88b04d4eba3a978e0624d0}
+      \strng{bibnamehash}{080640ba4e88b04d4eba3a978e0624d0}
+      \strng{authorbibnamehash}{080640ba4e88b04d4eba3a978e0624d0}
+      \strng{authornamehash}{080640ba4e88b04d4eba3a978e0624d0}
+      \strng{authorfullhash}{080640ba4e88b04d4eba3a978e0624d0}
+      \field{labelalpha}{Jin02}
+      \field{sortinit}{J}
+      \field{sortinithash}{b2f54a9081ace9966a7cb9413811edb4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9939}
+      \field{journaltitle}{Proc. Amer. Math. Soc.}
+      \field{number}{3}
+      \field{title}{The sumset phenomenon}
+      \field{volume}{130}
+      \field{year}{2002}
+      \field{pages}{855\bibrangedash 861}
+      \range{pages}{7}
+      \verb{doi}
+      \verb 10.1090/S0002-9939-01-06088-9
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1090/S0002-9939-01-06088-9
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1090/S0002-9939-01-06088-9
+      \endverb
+    \endentry
+    \entry{JonesRosenblattTempelman_Ergodic}{article}{}
+      \name{author}{3}{}{%
+        {{hash=53c3ab17899031cb5fcab77b2ef2a850}{%
+           family={Jones},
+           familyi={J\bibinitperiod},
+           given={Roger},
+           giveni={R\bibinitperiod}}}%
+        {{hash=299faf5f7e800511c1504efd7ca8f5f3}{%
+           family={Rosenblatt},
+           familyi={R\bibinitperiod},
+           given={Joseph},
+           giveni={J\bibinitperiod}}}%
+        {{hash=8a634d6c54137a4ee0c80595e04aec7d}{%
+           family={Tempelman},
+           familyi={T\bibinitperiod},
+           given={Arkady},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \strng{fullhash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \strng{bibnamehash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \strng{authorbibnamehash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \strng{authornamehash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \strng{authorfullhash}{5250f234d454d7cadcb1a8a14ce01bae}
+      \field{labelalpha}{JRT94}
+      \field{sortinit}{J}
+      \field{sortinithash}{b2f54a9081ace9966a7cb9413811edb4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0019-2082}
+      \field{journaltitle}{Illinois J. Math.}
+      \field{number}{4}
+      \field{title}{Ergodic theorems for convolutions of a measure on a group}
+      \field{volume}{38}
+      \field{year}{1994}
+      \field{pages}{521\bibrangedash 553}
+      \range{pages}{33}
+      \verb{urlraw}
+      \verb http://projecteuclid.org/euclid.ijm/1256060991
+      \endverb
+      \verb{url}
+      \verb http://projecteuclid.org/euclid.ijm/1256060991
+      \endverb
+    \endentry
+    \entry{Kneser_SummenmengenLokalkompakten}{article}{}
+      \name{author}{1}{}{%
+        {{hash=6718d048286809e17f567f993c05841c}{%
+           family={Kneser},
+           familyi={K\bibinitperiod},
+           given={Martin},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{6718d048286809e17f567f993c05841c}
+      \strng{fullhash}{6718d048286809e17f567f993c05841c}
+      \strng{bibnamehash}{6718d048286809e17f567f993c05841c}
+      \strng{authorbibnamehash}{6718d048286809e17f567f993c05841c}
+      \strng{authornamehash}{6718d048286809e17f567f993c05841c}
+      \strng{authorfullhash}{6718d048286809e17f567f993c05841c}
+      \field{labelalpha}{Kne56}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0025-5874}
+      \field{journaltitle}{Math. Z.}
+      \field{title}{Summenmengen in lokalkompakten abelschen {G}ruppen}
+      \field{volume}{66}
+      \field{year}{1956}
+      \field{pages}{88\bibrangedash 110}
+      \range{pages}{23}
+      \verb{doi}
+      \verb 10.1007/BF01186598
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/BF01186598
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/BF01186598
+      \endverb
+    \endentry
+    \entry{Nair_PoincareI}{article}{}
+      \name{author}{1}{}{%
+        {{hash=e76885409e7e4ca0e27b8c2664a86bd7}{%
+           family={Nair},
+           familyi={N\bibinitperiod},
+           given={R.},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \strng{fullhash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \strng{bibnamehash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \strng{authorbibnamehash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \strng{authornamehash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \strng{authorfullhash}{e76885409e7e4ca0e27b8c2664a86bd7}
+      \field{labelalpha}{Nai98}
+      \field{sortinit}{N}
+      \field{sortinithash}{22369a73d5f88983a108b63f07f37084}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0019-3577}
+      \field{journaltitle}{Indag. Math. (N.S.)}
+      \field{number}{1}
+      \field{title}{On uniformly distributed sequences of integers and {P}oincaré recurrence}
+      \field{volume}{9}
+      \field{year}{1998}
+      \field{pages}{55\bibrangedash 63}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1016/S0019-3577(97)87567-2
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/S0019-3577(97)87567-2
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/S0019-3577(97)87567-2
+      \endverb
+    \endentry
+    \entry{Rudin_Fourier}{book}{}
+      \name{author}{1}{}{%
+        {{hash=33be2fc2739d3493c6d6cc5d56a4c41e}{%
+           family={Rudin},
+           familyi={R\bibinitperiod},
+           given={Walter},
+           giveni={W\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Interscience Publishers (a division of John Wiley \& Sons, Inc.), New York-London}%
+      }
+      \strng{namehash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \strng{fullhash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \strng{bibnamehash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \strng{authorbibnamehash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \strng{authornamehash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \strng{authorfullhash}{33be2fc2739d3493c6d6cc5d56a4c41e}
+      \field{labelalpha}{Rud62}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{series}{Interscience Tracts in Pure and Applied Mathematics}
+      \field{title}{Fourier analysis on groups}
+      \field{volume}{No. 12}
+      \field{year}{1962}
+      \field{pages}{ix+285}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1002/9781118165621
+      \endverb
+    \endentry
+    \entry{Steinhaus_SurLesDistances}{article}{}
+      \name{author}{1}{}{%
+        {{hash=13f733bd4fa4d39d4d91cb08ac855b31}{%
+           family={Steinhaus},
+           familyi={S\bibinitperiod},
+           given={Hugo},
+           giveni={H\bibinitperiod}}}%
+      }
+      \strng{namehash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \strng{fullhash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \strng{bibnamehash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \strng{authorbibnamehash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \strng{authornamehash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \strng{authorfullhash}{13f733bd4fa4d39d4d91cb08ac855b31}
+      \field{labelalpha}{Ste20}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Fundamenta Mathematicae}
+      \field{title}{Sur les distances des points dans les ensembles de mesure positive}
+      \field{volume}{1}
+      \field{year}{1920}
+      \field{pages}{93\bibrangedash 104}
+      \range{pages}{12}
+      \verb{urlraw}
+      \verb https://api.semanticscholar.org/CorpusID:117077933
+      \endverb
+      \verb{url}
+      \verb https://api.semanticscholar.org/CorpusID:117077933
+      \endverb
+    \endentry
+    \entry{Stromberg}{article}{}
+      \name{author}{1}{}{%
+        {{hash=501824064895dac303f45ca44dba236c}{%
+           family={Stromberg},
+           familyi={S\bibinitperiod},
+           given={Karl},
+           giveni={K\bibinitperiod}}}%
+      }
+      \strng{namehash}{501824064895dac303f45ca44dba236c}
+      \strng{fullhash}{501824064895dac303f45ca44dba236c}
+      \strng{bibnamehash}{501824064895dac303f45ca44dba236c}
+      \strng{authorbibnamehash}{501824064895dac303f45ca44dba236c}
+      \strng{authornamehash}{501824064895dac303f45ca44dba236c}
+      \strng{authorfullhash}{501824064895dac303f45ca44dba236c}
+      \field{labelalpha}{Str72}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9939,1088-6826}
+      \field{journaltitle}{Proc. Amer. Math. Soc.}
+      \field{title}{An elementary proof of {S}teinhaus's theorem}
+      \field{volume}{36}
+      \field{year}{1972}
+      \field{pages}{308}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.2307/2039082
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.2307/2039082
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.2307/2039082
+      \endverb
+    \endentry
+    \entry{Veech_Well}{article}{}
+      \name{author}{1}{}{%
+        {{hash=b32211ec429b80c59a20da98bf4c6e5d}{%
+           family={Veech},
+           familyi={V\bibinitperiod},
+           given={William\bibnamedelima A.},
+           giveni={W\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \strng{fullhash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \strng{bibnamehash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \strng{authorbibnamehash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \strng{authornamehash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \strng{authorfullhash}{b32211ec429b80c59a20da98bf4c6e5d}
+      \field{labelalpha}{Vee71}
+      \field{sortinit}{V}
+      \field{sortinithash}{afb52128e5b4dc4b843768c0113d673b}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9947,1088-6850}
+      \field{journaltitle}{Trans. Amer. Math. Soc.}
+      \field{title}{Well distributed sequences of integers}
+      \field{volume}{161}
+      \field{year}{1971}
+      \field{pages}{63\bibrangedash 70}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.2307/1995928
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.2307/1995928
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.2307/1995928
+      \endverb
+    \endentry
+    \entry{Weil2ndEd}{book}{}
+      \name{author}{1}{}{%
+        {{hash=f5987f3b70bd698e3c1139b23bb8026b}{%
+           family={Weil},
+           familyi={W\bibinitperiod},
+           given={André},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Hermann, Paris}%
+      }
+      \strng{namehash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \strng{fullhash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \strng{bibnamehash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \strng{authorbibnamehash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \strng{authornamehash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \strng{authorfullhash}{f5987f3b70bd698e3c1139b23bb8026b}
+      \field{labelalpha}{Wei51}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{2iéme ed.}
+      \field{series}{Actualités Sci. Indust}
+      \field{title}{L'intégration dans les groupes topologiques et ses applications}
+      \field{volume}{No. 869}
+      \field{year}{1951}
+      \field{pages}{162}
+      \range{pages}{1}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

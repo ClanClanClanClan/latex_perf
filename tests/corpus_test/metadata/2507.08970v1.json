@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.08970v1",
+  "title": "The modularity of an abelian variety",
+  "authors": [
+    "Jae-Hyun Yang"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We introduce the concept of the modularity of an abelian variety defined over\nthe rational number field extending the modularity of an elliptic curve. We\ndiscuss the modularity of an abelian variety over the rational number field. We\nconjecture that a simple abelian variety over the rational number field is\nmodular.",
+  "submitted_date": "2025-07-11T18:58:46Z",
+  "download_date": "2025-07-16T00:35:44.793691",
+  "tex_files": [
+    "Modularity-of-AV.tex"
+  ],
+  "main_tex_file": "Modularity-of-AV.tex",
+  "file_size": 39445,
+  "line_count": 841,
+  "complexity_score": 5.634100000000001,
+  "features": {
+    "line_count": 841,
+    "char_count": 38605,
+    "word_count": 3371,
+    "file_size": 39445,
+    "tex_files": [
+      "Modularity-of-AV.tex"
+    ],
+    "main_tex_file": "Modularity-of-AV.tex",
+    "equations": 3,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 334,
+    "display_math": 12,
+    "bracket_math": 0,
+    "straight_quotes": 6,
+    "single_quotes": 14,
+    "double_dollars": 12,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 1,
+    "newcommands": 79,
+    "citations": 26,
+    "references": 17,
+    "long_lines": 153,
+    "unicode_chars": 0,
+    "comments": 96,
+    "complexity_score": 5.634100000000001
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

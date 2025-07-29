@@ -1,0 +1,9 @@
+\documentclass{article}
+\begin{document}
+% Exponential expansion test - should be caught by token growth limits
+\newcommand{\expand}[1]{#1#1#1#1#1#1#1#1}
+\newcommand{\bomb}{\expand{\expand{\expand{X}}}}
+\section{Macro Expansion Test}
+Limited expansion: \expand{safe}
+% \bomb would cause exponential growth
+\end{document}

@@ -1,0 +1,57 @@
+{
+  "arxiv_id": "2507.09303v1",
+  "title": "The asymptotic Mahler measure of Gaussian periods",
+  "authors": [
+    "Gunther Cornelissen",
+    "David Hokken",
+    "Berend Ringeling"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We construct a sequence of cyclotomic integers (Gaussian periods) of\nparticularly small Mahler measure/height. We study the asymptotics of their\nMahler measure as a function of their conductor, to find that the growth rate\nis the (multivariate) Mahler measure of a family of log Calabi-Yau varieties of\nincreasing dimension. In turn, we study the asymptotics of some of these Mahler\nmeasures as the dimension increases, as well as properties of the associated\nalgebraic dynamical system. We describe computational experiments that suggest\nthat these cyclotomic integers realise the smallest non-zero logarithmic Mahler\nmeasure in the set of algebraic integers with cyclic Galois group of a given\nodd order. Finally, we discuss some precise conjectures that imply double\nlogarithmic growth for those Mahler measures as a function of that order. The\nproofs use ideas from the theory of quantitative equidistribution, reflexive\npolytopes and toric varieties, the theory of random walks, Bessel functions,\nclass field theory, and Linnik's constant.",
+  "submitted_date": "2025-07-12T14:43:46Z",
+  "download_date": "2025-07-16T00:35:25.548746",
+  "tex_files": [
+    "asymptoticMahler.tex"
+  ],
+  "main_tex_file": "asymptoticMahler.tex",
+  "file_size": 212899,
+  "line_count": 2804,
+  "complexity_score": 87.5304,
+  "features": {
+    "line_count": 2804,
+    "char_count": 212897,
+    "word_count": 28989,
+    "file_size": 212899,
+    "tex_files": [
+      "asymptoticMahler.tex"
+    ],
+    "main_tex_file": "asymptoticMahler.tex",
+    "equations": 117,
+    "align_envs": 32,
+    "figures": 7,
+    "tables": 10,
+    "listings": 4,
+    "theorems": 31,
+    "inline_math": 2326,
+    "display_math": 75,
+    "bracket_math": 55,
+    "straight_quotes": 19,
+    "single_quotes": 159,
+    "double_dollars": 75,
+    "british_spellings": 3,
+    "american_spellings": 9,
+    "includes": 3,
+    "packages": 18,
+    "newcommands": 31,
+    "citations": 346,
+    "references": 167,
+    "long_lines": 653,
+    "unicode_chars": 1,
+    "comments": 12,
+    "complexity_score": 87.5304
+  },
+  "issues_found": {},
+  "compile_status": "failed"
+}

@@ -1,0 +1,1902 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{AndruskiewitschAngiono}{article}{}
+      \name{author}{2}{}{%
+        {{hash=82324086363b15be27b3ed868dd0e130}{%
+           family={Andruskiewitsch},
+           familyi={A\bibinitperiod},
+           given={Nicolás},
+           giveni={N\bibinitperiod}}}%
+        {{hash=ec26e2fc9e7785e648c16a9b1f8b4165}{%
+           family={Angiono},
+           familyi={A\bibinitperiod},
+           given={Iván},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {World Scientific Pub Co Pte Ltd}%
+      }
+      \strng{namehash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \strng{fullhash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \strng{bibnamehash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \strng{authorbibnamehash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \strng{authornamehash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \strng{authorfullhash}{461607aec6b0d2b79d79773f6d5e0c5e}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Bulletin of Mathematical Sciences}
+      \field{month}{12}
+      \field{number}{3}
+      \field{title}{On finite dimensional Nichols algebras of diagonal type}
+      \field{volume}{7}
+      \field{year}{2017}
+      \field{pages}{353\bibrangedash 573}
+      \range{pages}{221}
+      \verb{doi}
+      \verb 10.1007/s13373-017-0113-x
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s13373-017-0113-x
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s13373-017-0113-x
+      \endverb
+    \endentry
+    \entry{BKPP}{book}{}
+      \name{author}{4}{}{%
+        {{hash=6721b317d53bb0bbf9fc60c8aff81780}{%
+           family={Bendel},
+           familyi={B\bibinitperiod},
+           given={Christopher\bibnamedelima P.},
+           giveni={C\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=3771c3ef05ec8b66920c844bb30d9e0b}{%
+           family={Nakano},
+           familyi={N\bibinitperiod},
+           given={Daniel\bibnamedelima K.},
+           giveni={D\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=e0fb5d67524ada61537a12c64a366aca}{%
+           family={Parshall},
+           familyi={P\bibinitperiod},
+           given={Brian\bibnamedelima J.},
+           giveni={B\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=0ed64b402c3dcb37ed3effa66261e47a}{%
+           family={Pillen},
+           familyi={P\bibinitperiod},
+           given={Cornelius},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{c686b3d2eb26202268cf8836db758252}
+      \strng{fullhash}{2e8a34fb7116038d819140e005b2edd4}
+      \strng{bibnamehash}{c686b3d2eb26202268cf8836db758252}
+      \strng{authorbibnamehash}{c686b3d2eb26202268cf8836db758252}
+      \strng{authornamehash}{c686b3d2eb26202268cf8836db758252}
+      \strng{authorfullhash}{2e8a34fb7116038d819140e005b2edd4}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{series}{Memoirs of the American Mathematical Society}
+      \field{title}{Cohomology for Quantum Groups via the Geometry of the Nullcone}
+      \field{volume}{229}
+      \field{year}{2013}
+      \field{pages}{93}
+      \range{pages}{1}
+    \endentry
+    \entry{BDPW}{unpublished}{}
+      \name{author}{4}{}{%
+        {{hash=4efcbdabf8f369c98d1589a30bab55af}{%
+           family={Bergström},
+           familyi={B\bibinitperiod},
+           given={Jonas},
+           giveni={J\bibinitperiod}}}%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+        {{hash=d74249c85cb736d949be4c0a3dca0a66}{%
+           family={Petersen},
+           familyi={P\bibinitperiod},
+           given={Dan},
+           giveni={D\bibinitperiod}}}%
+        {{hash=bec437336289c01d8546042fe4c9133f}{%
+           family={Westerland},
+           familyi={W\bibinitperiod},
+           given={Craig},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{f52264bbe27255f512d8c6b3518ed82f}
+      \strng{fullhash}{1f792e65eda52c233930c8d6fcee6ec9}
+      \strng{bibnamehash}{f52264bbe27255f512d8c6b3518ed82f}
+      \strng{authorbibnamehash}{f52264bbe27255f512d8c6b3518ed82f}
+      \strng{authornamehash}{f52264bbe27255f512d8c6b3518ed82f}
+      \strng{authorfullhash}{1f792e65eda52c233930c8d6fcee6ec9}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{\url{https://arxiv.org/abs/2302.07664}}
+      \field{title}{Hyperelliptic curves, the scanning map, and moments of families of quadratic {$L$}-functions}
+      \field{year}{2023}
+    \endentry
+    \entry{Bezrukavnikov1998}{book}{}
+      \name{author}{3}{}{%
+        {{hash=2c213d25dc93fba120b8b5d92744edcf}{%
+           family={Bezrukavnikov},
+           familyi={B\bibinitperiod},
+           given={Roman},
+           giveni={R\bibinitperiod}}}%
+        {{hash=e6297742c6a735986b229d76979e7677}{%
+           family={Finkelberg},
+           familyi={F\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=c8d570da3a47a267d15acf7f4573c0be}{%
+           family={Schechtman},
+           familyi={S\bibinitperiod},
+           given={Vadim},
+           giveni={V\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer Berlin Heidelberg}%
+      }
+      \strng{namehash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \strng{fullhash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \strng{bibnamehash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \strng{authorbibnamehash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \strng{authornamehash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \strng{authorfullhash}{1f1c38d2078e35b0311f5a9d64ccb66a}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9783540692317}
+      \field{issn}{1617-9692}
+      \field{journaltitle}{Lecture Notes in Mathematics}
+      \field{title}{Factorizable Sheaves and Quantum Groups}
+      \field{year}{1998}
+      \verb{doi}
+      \verb 10.1007/bfb0092343
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/BFb0092343
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/BFb0092343
+      \endverb
+    \endentry
+    \entry{BrubakerBumpFriedberg}{book}{}
+      \name{author}{3}{}{%
+        {{hash=87a38ec1f05ee977b971478351e6950d}{%
+           family={Brubaker},
+           familyi={B\bibinitperiod},
+           given={B.},
+           giveni={B\bibinitperiod}}}%
+        {{hash=5098ebe819a4c9e059e79d76e0a72512}{%
+           family={Bump},
+           familyi={B\bibinitperiod},
+           given={D.},
+           giveni={D\bibinitperiod}}}%
+        {{hash=049c8209090d7a1d7a69531a6fb698f7}{%
+           family={Friedberg},
+           familyi={F\bibinitperiod},
+           given={S.},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Princeton, NJ}%
+      }
+      \list{publisher}{1}{%
+        {Princeton University Press}%
+      }
+      \strng{namehash}{38627b04ff41724b6ade1ea9323a52ba}
+      \strng{fullhash}{38627b04ff41724b6ade1ea9323a52ba}
+      \strng{bibnamehash}{38627b04ff41724b6ade1ea9323a52ba}
+      \strng{authorbibnamehash}{38627b04ff41724b6ade1ea9323a52ba}
+      \strng{authornamehash}{38627b04ff41724b6ade1ea9323a52ba}
+      \strng{authorfullhash}{38627b04ff41724b6ade1ea9323a52ba}
+      \field{extraname}{1}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{series}{Ann. of Math. Studies}
+      \field{title}{Weyl Group Multiple {D}irichlet Series: Type {A} Combinatorial Theory}
+      \field{volume}{175}
+      \field{year}{2011}
+    \endentry
+    \entry{BrubakerThesis}{thesis}{}
+      \name{author}{1}{}{%
+        {{hash=3faf2e99872633c0f5e1e5c54f1c48ee}{%
+           family={Brubaker},
+           familyi={B\bibinitperiod},
+           given={Ben},
+           giveni={B\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {Brown University}%
+      }
+      \strng{namehash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \strng{fullhash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \strng{bibnamehash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \strng{authorbibnamehash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \strng{authornamehash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \strng{authorfullhash}{3faf2e99872633c0f5e1e5c54f1c48ee}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Analytic Continuation for Cubic Multiple {D}irichlet Series}
+      \field{type}{phdthesis}
+      \field{year}{2003}
+    \endentry
+    \entry{BrubakerBumpFriedberg2}{article}{}
+      \name{author}{3}{}{%
+        {{hash=3faf2e99872633c0f5e1e5c54f1c48ee}{%
+           family={Brubaker},
+           familyi={B\bibinitperiod},
+           given={Ben},
+           giveni={B\bibinitperiod}}}%
+        {{hash=0a0357b52de2f58e1e3ee5378363456a}{%
+           family={Bump},
+           familyi={B\bibinitperiod},
+           given={Daniel},
+           giveni={D\bibinitperiod}}}%
+        {{hash=e9e74eb063dbcbbd56e61afdb0ac8584}{%
+           family={Friedberg},
+           familyi={F\bibinitperiod},
+           given={Solomon},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \strng{fullhash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \strng{bibnamehash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \strng{authorbibnamehash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \strng{authornamehash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \strng{authorfullhash}{d95db2ed713e996fb7e1c25b1acd696c}
+      \field{extraname}{2}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0003-486X,1939-8980}
+      \field{journaltitle}{Ann. of Math. (2)}
+      \field{number}{2}
+      \field{title}{Weyl group multiple {D}irichlet series, {E}isenstein series and crystal bases}
+      \field{volume}{173}
+      \field{year}{2011}
+      \field{pages}{1081\bibrangedash 1120}
+      \range{pages}{40}
+      \verb{doi}
+      \verb 10.4007/annals.2011.173.2.13
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.4007/annals.2011.173.2.13
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.4007/annals.2011.173.2.13
+      \endverb
+    \endentry
+    \entry{BrubakerFriedbergHoffstein}{article}{}
+      \name{author}{3}{}{%
+        {{hash=3faf2e99872633c0f5e1e5c54f1c48ee}{%
+           family={Brubaker},
+           familyi={B\bibinitperiod},
+           given={Ben},
+           giveni={B\bibinitperiod}}}%
+        {{hash=e9e74eb063dbcbbd56e61afdb0ac8584}{%
+           family={Friedberg},
+           familyi={F\bibinitperiod},
+           given={Solomon},
+           giveni={S\bibinitperiod}}}%
+        {{hash=c4c174b1abf76a48a5a282277d8a6831}{%
+           family={Hoffstein},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \strng{fullhash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \strng{bibnamehash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \strng{authorbibnamehash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \strng{authornamehash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \strng{authorfullhash}{d916a6c56e3fcfe1e125e4a246e32a17}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0020-9910,1432-1297}
+      \field{journaltitle}{Invent. Math.}
+      \field{number}{1}
+      \field{title}{Cubic twists of {${\rm GL}(2)$} automorphic {$L$}-functions}
+      \field{volume}{160}
+      \field{year}{2005}
+      \field{pages}{31\bibrangedash 58}
+      \range{pages}{28}
+      \verb{doi}
+      \verb 10.1007/s00222-004-0398-8
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00222-004-0398-8
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00222-004-0398-8
+      \endverb
+    \endentry
+    \entry{BucurDiaconu}{article}{}
+      \name{author}{2}{}{%
+        {{hash=a46bf067bb0e30b86c31f825ddb17ec2}{%
+           family={Bucur},
+           familyi={B\bibinitperiod},
+           given={Alina},
+           giveni={A\bibinitperiod}}}%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \strng{fullhash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \strng{bibnamehash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \strng{authorbibnamehash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \strng{authornamehash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \strng{authorfullhash}{6bb03c6b09c2cef2398554fd75b96cdb}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1609-3321,1609-4514}
+      \field{journaltitle}{Mosc. Math. J.}
+      \field{number}{3}
+      \field{title}{Moments of quadratic {D}irichlet {$L$}-functions over rational function fields}
+      \field{volume}{10}
+      \field{year}{2010}
+      \field{pages}{485\bibrangedash 517\bibrangessep 661}
+      \range{pages}{34}
+      \verb{doi}
+      \verb 10.17323/1609-4514-2010-10-3-485-517
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.17323/1609-4514-2010-10-3-485-517
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.17323/1609-4514-2010-10-3-485-517
+      \endverb
+    \endentry
+    \entry{Chang}{unpublished}{}
+      \name{author}{1}{}{%
+        {{hash=ef2295ebf3d3a2705d1100d46aaf9e82}{%
+           family={Chang},
+           familyi={C\bibinitperiod},
+           given={Kevin},
+           giveni={K\bibinitperiod}}}%
+      }
+      \strng{namehash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \strng{fullhash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \strng{bibnamehash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \strng{authorbibnamehash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \strng{authornamehash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \strng{authorfullhash}{ef2295ebf3d3a2705d1100d46aaf9e82}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{arXiv:2306.10446 (version 2)}
+      \field{title}{{H}urwitz spaces, {N}ichols algebras, and {I}gusa zeta functions}
+      \field{year}{2023}
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2306.10446v2
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2306.10446v2
+      \endverb
+    \endentry
+    \entry{Chen}{unpublished}{}
+      \name{author}{1}{}{%
+        {{hash=57089cc411133fbbee9e94e7cdacc3fc}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Yanze},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \strng{fullhash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \strng{bibnamehash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \strng{authorbibnamehash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \strng{authornamehash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \strng{authorfullhash}{57089cc411133fbbee9e94e7cdacc3fc}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{arXiv:2411.13143 (version 2)}
+      \field{title}{{E}isenstein Series on Metaplectic Covers and Multiple {D}irichlet Series}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2411.13143
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2411.13143
+      \endverb
+    \endentry
+    \entry{ChintaGunnellsJAMS}{article}{}
+      \name{author}{2}{}{%
+        {{hash=178bdc2abd2b8c8f5794a36a8deade25}{%
+           family={Chinta},
+           familyi={C\bibinitperiod},
+           given={Gautam},
+           giveni={G\bibinitperiod}}}%
+        {{hash=024f830fa379459775d2a5576de47ef3}{%
+           family={Gunnells},
+           familyi={G\bibinitperiod},
+           given={Paul},
+           giveni={P\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Mathematical Society ({AMS})}%
+      }
+      \strng{namehash}{e298d44d6ff5404436b25edd37d20550}
+      \strng{fullhash}{e298d44d6ff5404436b25edd37d20550}
+      \strng{bibnamehash}{e298d44d6ff5404436b25edd37d20550}
+      \strng{authorbibnamehash}{e298d44d6ff5404436b25edd37d20550}
+      \strng{authornamehash}{e298d44d6ff5404436b25edd37d20550}
+      \strng{authorfullhash}{e298d44d6ff5404436b25edd37d20550}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of the American Mathematical Society}
+      \field{month}{7}
+      \field{number}{1}
+      \field{title}{Constructing Weyl group multiple Dirichlet series}
+      \field{volume}{23}
+      \field{year}{2009}
+      \field{pages}{189\bibrangedash 215}
+      \range{pages}{27}
+      \verb{doi}
+      \verb 10.1090/s0894-0347-09-00641-9
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1090/s0894-0347-09-00641-9
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1090/s0894-0347-09-00641-9
+      \endverb
+    \endentry
+    \entry{ChintaMohler}{article}{}
+      \name{author}{2}{}{%
+        {{hash=178bdc2abd2b8c8f5794a36a8deade25}{%
+           family={Chinta},
+           familyi={C\bibinitperiod},
+           given={Gautam},
+           giveni={G\bibinitperiod}}}%
+        {{hash=4e150eb8b4a6017b5e69bd98ffafc415}{%
+           family={Mohler},
+           familyi={M\bibinitperiod},
+           given={Joel\bibnamedelima B.},
+           giveni={J\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \strng{namehash}{0f2db2eb0350419901e04f731fadef5d}
+      \strng{fullhash}{0f2db2eb0350419901e04f731fadef5d}
+      \strng{bibnamehash}{0f2db2eb0350419901e04f731fadef5d}
+      \strng{authorbibnamehash}{0f2db2eb0350419901e04f731fadef5d}
+      \strng{authornamehash}{0f2db2eb0350419901e04f731fadef5d}
+      \strng{authorfullhash}{0f2db2eb0350419901e04f731fadef5d}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0065-1036,1730-6264}
+      \field{journaltitle}{Acta Arith.}
+      \field{number}{1}
+      \field{title}{Sums of {$L$}-functions over rational function fields}
+      \field{volume}{144}
+      \field{year}{2010}
+      \field{pages}{53\bibrangedash 68}
+      \range{pages}{16}
+      \verb{doi}
+      \verb 10.4064/aa144-1-4
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.4064/aa144-1-4
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.4064/aa144-1-4
+      \endverb
+    \endentry
+    \entry{ChintaOffen}{article}{}
+      \name{author}{2}{}{%
+        {{hash=178bdc2abd2b8c8f5794a36a8deade25}{%
+           family={Chinta},
+           familyi={C\bibinitperiod},
+           given={Gautam},
+           giveni={G\bibinitperiod}}}%
+        {{hash=b656d3b1b887b7d3ad35b487a69b3812}{%
+           family={Offen},
+           familyi={O\bibinitperiod},
+           given={Omer},
+           giveni={O\bibinitperiod}}}%
+      }
+      \strng{namehash}{ba0988c9be5d190e43007af9a311e3fa}
+      \strng{fullhash}{ba0988c9be5d190e43007af9a311e3fa}
+      \strng{bibnamehash}{ba0988c9be5d190e43007af9a311e3fa}
+      \strng{authorbibnamehash}{ba0988c9be5d190e43007af9a311e3fa}
+      \strng{authornamehash}{ba0988c9be5d190e43007af9a311e3fa}
+      \strng{authorfullhash}{ba0988c9be5d190e43007af9a311e3fa}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9327,1080-6377}
+      \field{journaltitle}{Amer. J. Math.}
+      \field{number}{2}
+      \field{title}{A metaplectic {C}asselman-{S}halika formula for {${\rm GL}_r$}}
+      \field{volume}{135}
+      \field{year}{2013}
+      \field{pages}{403\bibrangedash 441}
+      \range{pages}{39}
+      \verb{doi}
+      \verb 10.1353/ajm.2013.0013
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1353/ajm.2013.0013
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1353/ajm.2013.0013
+      \endverb
+    \endentry
+    \entry{Cuntz2018}{article}{}
+      \name{author}{1}{}{%
+        {{hash=df62a711feaac823b1db06b4c5022287}{%
+           family={Cuntz},
+           familyi={C\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier BV}%
+      }
+      \strng{namehash}{df62a711feaac823b1db06b4c5022287}
+      \strng{fullhash}{df62a711feaac823b1db06b4c5022287}
+      \strng{bibnamehash}{df62a711feaac823b1db06b4c5022287}
+      \strng{authorbibnamehash}{df62a711feaac823b1db06b4c5022287}
+      \strng{authornamehash}{df62a711feaac823b1db06b4c5022287}
+      \strng{authorfullhash}{df62a711feaac823b1db06b4c5022287}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0021-8693}
+      \field{journaltitle}{Journal of Algebra}
+      \field{month}{5}
+      \field{title}{On subsequences of quiddity cycles and {N}ichols algebras}
+      \field{volume}{502}
+      \field{year}{2018}
+      \field{pages}{315\bibrangedash 327}
+      \range{pages}{13}
+      \verb{doi}
+      \verb 10.1016/j.jalgebra.2018.01.028
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1016/j.jalgebra.2018.01.028
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1016/j.jalgebra.2018.01.028
+      \endverb
+    \endentry
+    \entry{David2021}{article}{}
+      \name{author}{3}{}{%
+        {{hash=4a9ab0b732fa711e644d46fff31309f2}{%
+           family={David},
+           familyi={D\bibinitperiod},
+           given={Chantal},
+           giveni={C\bibinitperiod}}}%
+        {{hash=2f5f9838e27368222c5690826ad71ab6}{%
+           family={Florea},
+           familyi={F\bibinitperiod},
+           given={Alexandra},
+           giveni={A\bibinitperiod}}}%
+        {{hash=c53c9d7ec4d8b21be4f13f73ef73fd8e}{%
+           family={Lalin},
+           familyi={L\bibinitperiod},
+           given={Matilde},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press (CUP)}%
+      }
+      \strng{namehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{fullhash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{bibnamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authorbibnamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authornamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authorfullhash}{09c650aa925a7641c734ef6502a4338b}
+      \field{extraname}{1}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{2050-5094}
+      \field{journaltitle}{Forum of Mathematics, Sigma}
+      \field{title}{Nonvanishing for cubic L-functions}
+      \field{volume}{9}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1017/fms.2021.62
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1017/fms.2021.62
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1017/fms.2021.62
+      \endverb
+    \endentry
+    \entry{David2025}{misc}{}
+      \name{author}{3}{}{%
+        {{hash=4a9ab0b732fa711e644d46fff31309f2}{%
+           family={David},
+           familyi={D\bibinitperiod},
+           given={Chantal},
+           giveni={C\bibinitperiod}}}%
+        {{hash=2f5f9838e27368222c5690826ad71ab6}{%
+           family={Florea},
+           familyi={F\bibinitperiod},
+           given={Alexandra},
+           giveni={A\bibinitperiod}}}%
+        {{hash=c53c9d7ec4d8b21be4f13f73ef73fd8e}{%
+           family={Lalin},
+           familyi={L\bibinitperiod},
+           given={Matilde},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {arXiv}%
+      }
+      \strng{namehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{fullhash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{bibnamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authorbibnamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authornamehash}{09c650aa925a7641c734ef6502a4338b}
+      \strng{authorfullhash}{09c650aa925a7641c734ef6502a4338b}
+      \field{extraname}{2}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Nonvanishing of {$L$}--functions associated to fixed order characters over function fields}
+      \field{year}{2025}
+      \verb{doi}
+      \verb 10.48550/ARXIV.2506.07815
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2506.07815
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2506.07815
+      \endverb
+      \keyw{Number Theory (math.NT),FOS: Mathematics,FOS: Mathematics,11M06,11M38,11R16,11R58}
+    \endentry
+    \entry{David2022}{article}{}
+      \name{author}{3}{}{%
+        {{hash=4a9ab0b732fa711e644d46fff31309f2}{%
+           family={David},
+           familyi={D\bibinitperiod},
+           given={Chantal},
+           giveni={C\bibinitperiod}}}%
+        {{hash=2f5f9838e27368222c5690826ad71ab6}{%
+           family={Florea},
+           familyi={F\bibinitperiod},
+           given={Alexandra},
+           giveni={A\bibinitperiod}}}%
+        {{hash=6bb7897d6aa0a033c83bbdbc516131af}{%
+           family={Lalín},
+           familyi={L\bibinitperiod},
+           given={Matilde},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Mathematical Sciences Publishers}%
+      }
+      \strng{namehash}{84d52c014ecad7552973d8b5a099d729}
+      \strng{fullhash}{84d52c014ecad7552973d8b5a099d729}
+      \strng{bibnamehash}{84d52c014ecad7552973d8b5a099d729}
+      \strng{authorbibnamehash}{84d52c014ecad7552973d8b5a099d729}
+      \strng{authornamehash}{84d52c014ecad7552973d8b5a099d729}
+      \strng{authorfullhash}{84d52c014ecad7552973d8b5a099d729}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1937-0652}
+      \field{journaltitle}{Algebra \& Number Theory}
+      \field{month}{8}
+      \field{number}{5}
+      \field{title}{The mean values of cubic {$L$}-functions over function fields}
+      \field{volume}{16}
+      \field{year}{2022}
+      \field{pages}{1259\bibrangedash 1326}
+      \range{pages}{68}
+      \verb{doi}
+      \verb 10.2140/ant.2022.16.1259
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.2140/ant.2022.16.1259
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.2140/ant.2022.16.1259
+      \endverb
+    \endentry
+    \entry{Diaconu2004}{article}{}
+      \name{author}{1}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media {LLC}}%
+      }
+      \strng{namehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{fullhash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{bibnamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authorbibnamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authornamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authorfullhash}{569796bbe9430bc72554f28f6bbc29b5}
+      \field{extraname}{1}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Inventiones mathematicae}
+      \field{month}{6}
+      \field{number}{3}
+      \field{title}{Mean square values of {H}ecke L-series formed with {$r$}-th order characters}
+      \field{volume}{157}
+      \field{year}{2004}
+      \field{pages}{635\bibrangedash 684}
+      \range{pages}{50}
+      \verb{doi}
+      \verb 10.1007/s00222-004-0363-6
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00222-004-0363-6
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00222-004-0363-6
+      \endverb
+    \endentry
+    \entry{Diaconu}{article}{}
+      \name{author}{1}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier BV}%
+      }
+      \strng{namehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{fullhash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{bibnamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authorbibnamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authornamehash}{569796bbe9430bc72554f28f6bbc29b5}
+      \strng{authorfullhash}{569796bbe9430bc72554f28f6bbc29b5}
+      \field{extraname}{2}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0022-314X}
+      \field{journaltitle}{Journal of Number Theory}
+      \field{month}{5}
+      \field{title}{On the third moment of {$L(\frac{1}{2}, \chi_d)$} {I}: The rational function field case}
+      \field{volume}{198}
+      \field{year}{2019}
+      \field{pages}{1\bibrangedash 42}
+      \range{pages}{42}
+      \verb{doi}
+      \verb 10.1016/j.jnt.2018.09.023
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1016/j.jnt.2018.09.023
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1016/j.jnt.2018.09.023
+      \endverb
+    \endentry
+    \entry{DiaconuGoldfeldHoffstein}{article}{}
+      \name{author}{3}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+        {{hash=0dd00ede505eb3b7e9f80806f1f8741d}{%
+           family={Goldfeld},
+           familyi={G\bibinitperiod},
+           given={Dorian},
+           giveni={D\bibinitperiod}}}%
+        {{hash=c4c174b1abf76a48a5a282277d8a6831}{%
+           family={Hoffstein},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{2011983c3b9f1b5e983d16477b5061c7}
+      \strng{fullhash}{2011983c3b9f1b5e983d16477b5061c7}
+      \strng{bibnamehash}{2011983c3b9f1b5e983d16477b5061c7}
+      \strng{authorbibnamehash}{2011983c3b9f1b5e983d16477b5061c7}
+      \strng{authornamehash}{2011983c3b9f1b5e983d16477b5061c7}
+      \strng{authorfullhash}{2011983c3b9f1b5e983d16477b5061c7}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0010-437X,1570-5846}
+      \field{journaltitle}{Compositio Math.}
+      \field{number}{3}
+      \field{title}{Multiple {D}irichlet series and moments of zeta and {$L$}-functions}
+      \field{volume}{139}
+      \field{year}{2003}
+      \field{pages}{297\bibrangedash 360}
+      \range{pages}{64}
+      \verb{doi}
+      \verb 10.1023/B:COMP.0000018137.38458.68
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1023/B:COMP.0000018137.38458.68
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1023/B:COMP.0000018137.38458.68
+      \endverb
+    \endentry
+    \entry{DiaconuPasol}{unpublished}{}
+      \name{author}{2}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+        {{hash=e3c35623a2565c0cd04b3dc615b23866}{%
+           family={Paşol},
+           familyi={P\bibinitperiod},
+           given={Vicentiu},
+           giveni={V\bibinitperiod}}}%
+      }
+      \strng{namehash}{c24f332fe2dcdd74c90916638901533e}
+      \strng{fullhash}{c24f332fe2dcdd74c90916638901533e}
+      \strng{bibnamehash}{c24f332fe2dcdd74c90916638901533e}
+      \strng{authorbibnamehash}{c24f332fe2dcdd74c90916638901533e}
+      \strng{authornamehash}{c24f332fe2dcdd74c90916638901533e}
+      \strng{authorfullhash}{c24f332fe2dcdd74c90916638901533e}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{\url{https://arxiv.org/abs/1808.09667}}
+      \field{title}{Moduli of Hyperelliptic Curves and Multiple {D}irichlet Series}
+      \field{year}{2018}
+    \endentry
+    \entry{DiaconuPasolPopa}{unpublished}{}
+      \name{author}{3}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+        {{hash=fe4b1688bff480d9a526ba8e485eb581}{%
+           family={Paşol},
+           familyi={P\bibinitperiod},
+           given={Vicenţiu},
+           giveni={V\bibinitperiod}}}%
+        {{hash=b410c42163274405df711f1da5db53a4}{%
+           family={Popa},
+           familyi={P\bibinitperiod},
+           given={Alexandru\bibnamedelima A.},
+           giveni={A\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \strng{fullhash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \strng{bibnamehash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \strng{authorbibnamehash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \strng{authornamehash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \strng{authorfullhash}{cdd2dba1ad0c29fc77f32af2b9b8eb32}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{math.NT}
+      \field{eprinttype}{arXiv}
+      \field{title}{Quadratic Weyl group multiple Dirichlet series of Type $D_{\scriptscriptstyle 4}^{\scriptscriptstyle (1)}$}
+      \field{year}{2023}
+      \verb{eprint}
+      \verb 2111.11062
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2111.11062
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2111.11062
+      \endverb
+    \endentry
+    \entry{DiaconuWhitehead}{article}{}
+      \name{author}{2}{}{%
+        {{hash=569796bbe9430bc72554f28f6bbc29b5}{%
+           family={Diaconu},
+           familyi={D\bibinitperiod},
+           given={Adrian},
+           giveni={A\bibinitperiod}}}%
+        {{hash=797a5ed959959ee49004f6502f0091a6}{%
+           family={Whitehead},
+           familyi={W\bibinitperiod},
+           given={Ian},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {European Mathematical Society - EMS - Publishing House GmbH}%
+      }
+      \strng{namehash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \strng{fullhash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \strng{bibnamehash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \strng{authorbibnamehash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \strng{authornamehash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \strng{authorfullhash}{20a6ac76f8931c762e86e4d625bd2ca0}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1435-9863}
+      \field{journaltitle}{Journal of the European Mathematical Society}
+      \field{month}{2}
+      \field{number}{6}
+      \field{title}{On the third moment of {$L(\frac{1}{2}, \chi_{d})$ {II}:} the number field case}
+      \field{volume}{23}
+      \field{year}{2021}
+      \field{pages}{2051\bibrangedash 2070}
+      \range{pages}{20}
+      \verb{doi}
+      \verb 10.4171/jems/1049
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.4171/JEMS/1049
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.4171/JEMS/1049
+      \endverb
+    \endentry
+    \entry{Drupieski2012}{article}{}
+      \name{author}{3}{}{%
+        {{hash=21b2b1df240f4f8160fbe4f79f6340e5}{%
+           family={Drupieski},
+           familyi={D\bibinitperiod},
+           given={Christopher\bibnamedelima M.},
+           giveni={C\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=3771c3ef05ec8b66920c844bb30d9e0b}{%
+           family={Nakano},
+           familyi={N\bibinitperiod},
+           given={Daniel\bibnamedelima K.},
+           giveni={D\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=7cf7606ddf958ba26a2c85720a170f59}{%
+           family={Ngo},
+           familyi={N\bibinitperiod},
+           given={Nham\bibnamedelima V.},
+           giveni={N\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media LLC}%
+      }
+      \strng{namehash}{6f63bd154599367e51914b261ff09fe4}
+      \strng{fullhash}{6f63bd154599367e51914b261ff09fe4}
+      \strng{bibnamehash}{6f63bd154599367e51914b261ff09fe4}
+      \strng{authorbibnamehash}{6f63bd154599367e51914b261ff09fe4}
+      \strng{authornamehash}{6f63bd154599367e51914b261ff09fe4}
+      \strng{authorfullhash}{6f63bd154599367e51914b261ff09fe4}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1531-586X}
+      \field{journaltitle}{Transformation Groups}
+      \field{month}{4}
+      \field{number}{2}
+      \field{title}{Cohomology for infinitesimal unipotent algebraic and quantum groups}
+      \field{volume}{17}
+      \field{year}{2012}
+      \field{pages}{393\bibrangedash 416}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1007/s00031-012-9181-x
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/s00031-012-9181-x
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/s00031-012-9181-x
+      \endverb
+    \endentry
+    \entry{FriedbergHoffsteinLieman}{article}{}
+      \name{author}{3}{}{%
+        {{hash=e9e74eb063dbcbbd56e61afdb0ac8584}{%
+           family={Friedberg},
+           familyi={F\bibinitperiod},
+           given={Solomon},
+           giveni={S\bibinitperiod}}}%
+        {{hash=c4c174b1abf76a48a5a282277d8a6831}{%
+           family={Hoffstein},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+        {{hash=b44cffa3aefea5802c8e9797608ae484}{%
+           family={Lieman},
+           familyi={L\bibinitperiod},
+           given={Daniel},
+           giveni={D\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media {LLC}}%
+      }
+      \strng{namehash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \strng{fullhash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \strng{bibnamehash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \strng{authorbibnamehash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \strng{authornamehash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \strng{authorfullhash}{9dbc1ca92beb9565bf88020c80c4e3d6}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Mathematische Annalen}
+      \field{month}{10}
+      \field{number}{2}
+      \field{title}{Double Dirichlet series and the {$n$}-th order twists of Hecke L-series}
+      \field{volume}{327}
+      \field{year}{2003}
+      \field{pages}{315\bibrangedash 338}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1007/s00208-003-0455-4
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00208-003-0455-4
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00208-003-0455-4
+      \endverb
+    \endentry
+    \entry{HFriedlander23}{article}{}
+      \name{author}{1}{}{%
+        {{hash=3e65732a569b9bf61c1b4b2e43ab595a}{%
+           family={Friedlander},
+           familyi={F\bibinitperiod},
+           given={Holley},
+           giveni={H\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier BV}%
+      }
+      \strng{namehash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \strng{fullhash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \strng{bibnamehash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \strng{authorbibnamehash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \strng{authornamehash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \strng{authorfullhash}{3e65732a569b9bf61c1b4b2e43ab595a}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0022-314X}
+      \field{journaltitle}{Journal of Number Theory}
+      \field{month}{12}
+      \field{title}{Twisted Weyl group multiple Dirichlet series over the rational function field}
+      \field{volume}{253}
+      \field{year}{2023}
+      \field{pages}{337\bibrangedash 367}
+      \range{pages}{31}
+      \verb{doi}
+      \verb 10.1016/j.jnt.2023.07.001
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1016/j.jnt.2023.07.001
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1016/j.jnt.2023.07.001
+      \endverb
+    \endentry
+    \entry{Gao2023}{article}{}
+      \name{author}{2}{}{%
+        {{hash=656b3ff4b37de857f99ac65a3f95c61b}{%
+           family={Gao},
+           familyi={G\bibinitperiod},
+           given={Peng},
+           giveni={P\bibinitperiod}}}%
+        {{hash=297fef58592a722afbd895b900621245}{%
+           family={Zhao},
+           familyi={Z\bibinitperiod},
+           given={Liangyi},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier BV}%
+      }
+      \strng{namehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{fullhash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{bibnamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authorbibnamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authornamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authorfullhash}{266f5d02b1ca4a917455fd6f23df5143}
+      \field{extraname}{1}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1071-5797}
+      \field{journaltitle}{Finite Fields and Their Applications}
+      \field{month}{1}
+      \field{title}{Moments of quadratic {D}irichlet {$L$}-functions over function fields}
+      \field{volume}{85}
+      \field{year}{2023}
+      \field{pages}{102113}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1016/j.ffa.2022.102113
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1016/j.ffa.2022.102113
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1016/j.ffa.2022.102113
+      \endverb
+    \endentry
+    \entry{Gao2025}{article}{}
+      \name{author}{2}{}{%
+        {{hash=656b3ff4b37de857f99ac65a3f95c61b}{%
+           family={Gao},
+           familyi={G\bibinitperiod},
+           given={Peng},
+           giveni={P\bibinitperiod}}}%
+        {{hash=297fef58592a722afbd895b900621245}{%
+           family={Zhao},
+           familyi={Z\bibinitperiod},
+           given={Liangyi},
+           giveni={L\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Centre pour la Communication Scientifique Directe (CCSD)}%
+      }
+      \strng{namehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{fullhash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{bibnamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authorbibnamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authornamehash}{266f5d02b1ca4a917455fd6f23df5143}
+      \strng{authorfullhash}{266f5d02b1ca4a917455fd6f23df5143}
+      \field{extraname}{2}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{2804-7370}
+      \field{journaltitle}{Hardy-Ramanujan Journal}
+      \field{month}{4}
+      \field{title}{Upper Bounds for Shifted Moments of Quadratic Dirichlet L-Functions over Function Fields}
+      \field{year}{2025}
+      \verb{doi}
+      \verb 10.46298/hrj.2025.14247
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.46298/hrj.2025.14247
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.46298/hrj.2025.14247
+      \endverb
+    \endentry
+    \entry{Vigre2010}{article}{}
+      \name{author}{1}{}{%
+        {{hash=4f29a3a915a716f25c97812f2f30f7c2}{%
+           family={{G}eorgia\bibnamedelimb {VIGRE}\bibnamedelimb algebra\bibnamedelima group},
+           familyi={G\bibinitperiod\bibinitdelim V\bibinitperiod\bibinitdelim a\bibinitperiod\bibinitdelim g\bibinitperiod},
+           given={University},
+           giveni={U\bibinitperiod},
+           prefix={of},
+           prefixi={o\bibinitperiod}}}%
+      }
+      \strng{namehash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \strng{fullhash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \strng{bibnamehash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \strng{authorbibnamehash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \strng{authornamehash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \strng{authorfullhash}{4f29a3a915a716f25c97812f2f30f7c2}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Proceedings of the American Mathematical Society}
+      \field{number}{1}
+      \field{title}{An analog of {K}ostant's theorem for the cohomology of quantum groups}
+      \field{volume}{138}
+      \field{year}{2010}
+      \field{pages}{85\bibrangedash 99}
+      \range{pages}{15}
+      \verb{urlraw}
+      \verb http://www.jstor.org/stable/40590596
+      \endverb
+      \verb{url}
+      \verb http://www.jstor.org/stable/40590596
+      \endverb
+    \endentry
+    \entry{Ginzburg1993}{article}{}
+      \name{author}{2}{}{%
+        {{hash=fd81af24de7d089fca02f6d0b3319d2d}{%
+           family={Ginzburg},
+           familyi={G\bibinitperiod},
+           given={Victor},
+           giveni={V\bibinitperiod}}}%
+        {{hash=0a673da905f7de3dc179f6f7e75d1143}{%
+           family={Kumar},
+           familyi={K\bibinitperiod},
+           given={Shrawan},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Duke University Press}%
+      }
+      \strng{namehash}{56d52352fd82fec657a912f3db2d9999}
+      \strng{fullhash}{56d52352fd82fec657a912f3db2d9999}
+      \strng{bibnamehash}{56d52352fd82fec657a912f3db2d9999}
+      \strng{authorbibnamehash}{56d52352fd82fec657a912f3db2d9999}
+      \strng{authornamehash}{56d52352fd82fec657a912f3db2d9999}
+      \strng{authorfullhash}{56d52352fd82fec657a912f3db2d9999}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0012-7094}
+      \field{journaltitle}{Duke Mathematical Journal}
+      \field{month}{1}
+      \field{number}{1}
+      \field{title}{Cohomology of quantum groups at roots of unity}
+      \field{volume}{69}
+      \field{year}{1993}
+      \verb{doi}
+      \verb 10.1215/s0012-7094-93-06909-8
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1215/S0012-7094-93-06909-8
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1215/S0012-7094-93-06909-8
+      \endverb
+    \endentry
+    \entry{GoldfeldHoffstein}{article}{}
+      \name{author}{2}{}{%
+        {{hash=0dd00ede505eb3b7e9f80806f1f8741d}{%
+           family={Goldfeld},
+           familyi={G\bibinitperiod},
+           given={Dorian},
+           giveni={D\bibinitperiod}}}%
+        {{hash=c4c174b1abf76a48a5a282277d8a6831}{%
+           family={Hoffstein},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \strng{fullhash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \strng{bibnamehash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \strng{authorbibnamehash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \strng{authornamehash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \strng{authorfullhash}{6e2d554b24a58ccacf5fcfc9101e5ac2}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0020-9910,1432-1297}
+      \field{journaltitle}{Invent. Math.}
+      \field{number}{2}
+      \field{title}{Eisenstein series of {${\frac12}$}-integral weight and the mean value of real {D}irichlet {$L$}-series}
+      \field{volume}{80}
+      \field{year}{1985}
+      \field{pages}{185\bibrangedash 208}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1007/BF01388603
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/BF01388603
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/BF01388603
+      \endverb
+    \endentry
+    \entry{HaseLiu24}{unpublished}{}
+      \name{author}{1}{}{%
+        {{hash=9dc69bc1f9eb9d52f82c30b8e2448e63}{%
+           family={Hase-Liu},
+           familyi={H\bibinithyphendelim L\bibinitperiod},
+           given={Matthew},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \strng{fullhash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \strng{bibnamehash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \strng{authorbibnamehash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \strng{authornamehash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \strng{authorfullhash}{9dc69bc1f9eb9d52f82c30b8e2448e63}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{\url{https://arxiv.org/abs/2405.18152}}
+      \field{title}{A geometric approach to functional equations for general multiple {D}irichlet series over function fields}
+      \field{year}{2024}
+    \endentry
+    \entry{HeckenbergerWeyl}{article}{}
+      \name{author}{1}{}{%
+        {{hash=88c8a717b528f1e69e1cca9bc4ee8dd1}{%
+           family={Heckenberger},
+           familyi={H\bibinitperiod},
+           given={I.},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media {LLC}}%
+      }
+      \strng{namehash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \strng{fullhash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \strng{bibnamehash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \strng{authorbibnamehash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \strng{authornamehash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \strng{authorfullhash}{88c8a717b528f1e69e1cca9bc4ee8dd1}
+      \field{extraname}{1}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Inventiones mathematicae}
+      \field{month}{12}
+      \field{number}{1}
+      \field{title}{The Weyl groupoid of a Nichols algebra of diagonal type}
+      \field{volume}{164}
+      \field{year}{2005}
+      \field{pages}{175\bibrangedash 188}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1007/s00222-005-0474-8
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00222-005-0474-8
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00222-005-0474-8
+      \endverb
+    \endentry
+    \entry{HeckenbergerClassification}{article}{}
+      \name{author}{1}{}{%
+        {{hash=19f879254bf786146e284bb631c9ec55}{%
+           family={Heckenberger},
+           familyi={H\bibinitperiod},
+           given={István},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier {BV}}%
+      }
+      \strng{namehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{fullhash}{19f879254bf786146e284bb631c9ec55}
+      \strng{bibnamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authorbibnamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authornamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authorfullhash}{19f879254bf786146e284bb631c9ec55}
+      \field{extraname}{2}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Advances in Mathematics}
+      \field{month}{1}
+      \field{number}{1}
+      \field{title}{Classification of arithmetic root systems}
+      \field{volume}{220}
+      \field{year}{2009}
+      \field{pages}{59\bibrangedash 124}
+      \range{pages}{66}
+      \verb{doi}
+      \verb 10.1016/j.aim.2008.08.005
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.aim.2008.08.005
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.aim.2008.08.005
+      \endverb
+    \endentry
+    \entry{HeckenbergerRank2}{article}{}
+      \name{author}{1}{}{%
+        {{hash=19f879254bf786146e284bb631c9ec55}{%
+           family={Heckenberger},
+           familyi={H\bibinitperiod},
+           given={István},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media {LLC}}%
+      }
+      \strng{namehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{fullhash}{19f879254bf786146e284bb631c9ec55}
+      \strng{bibnamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authorbibnamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authornamehash}{19f879254bf786146e284bb631c9ec55}
+      \strng{authorfullhash}{19f879254bf786146e284bb631c9ec55}
+      \field{extraname}{3}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Algebras and Representation Theory}
+      \field{month}{6}
+      \field{number}{2}
+      \field{title}{Rank 2 Nichols Algebras with Finite Arithmetic Root System}
+      \field{volume}{11}
+      \field{year}{2007}
+      \field{pages}{115\bibrangedash 132}
+      \range{pages}{18}
+      \verb{doi}
+      \verb 10.1007/s10468-007-9060-7
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s10468-007-9060-7
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s10468-007-9060-7
+      \endverb
+    \endentry
+    \entry{HeckenbergerYamabe}{article}{}
+      \name{author}{2}{}{%
+        {{hash=19f879254bf786146e284bb631c9ec55}{%
+           family={Heckenberger},
+           familyi={H\bibinitperiod},
+           given={István},
+           giveni={I\bibinitperiod}}}%
+        {{hash=6cf120224091f87f86c6792c0c59b5fb}{%
+           family={Yamane},
+           familyi={Y\bibinitperiod},
+           given={Hiroyuki},
+           giveni={H\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media LLC}%
+      }
+      \strng{namehash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \strng{fullhash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \strng{bibnamehash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \strng{authorbibnamehash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \strng{authornamehash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \strng{authorfullhash}{dfe4fd437d0c93bea83a466a00f739fe}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1432-1823}
+      \field{journaltitle}{Mathematische Zeitschrift}
+      \field{month}{7}
+      \field{number}{2}
+      \field{title}{A generalization of {C}oxeter groups, root systems, and {M}atsumoto’s theorem}
+      \field{volume}{259}
+      \field{year}{2007}
+      \field{pages}{255\bibrangedash 276}
+      \range{pages}{22}
+      \verb{doi}
+      \verb 10.1007/s00209-007-0223-3
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/s00209-007-0223-3
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/s00209-007-0223-3
+      \endverb
+    \endentry
+    \entry{Hoffstein}{article}{}
+      \name{author}{1}{}{%
+        {{hash=c4c174b1abf76a48a5a282277d8a6831}{%
+           family={Hoffstein},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{c4c174b1abf76a48a5a282277d8a6831}
+      \strng{fullhash}{c4c174b1abf76a48a5a282277d8a6831}
+      \strng{bibnamehash}{c4c174b1abf76a48a5a282277d8a6831}
+      \strng{authorbibnamehash}{c4c174b1abf76a48a5a282277d8a6831}
+      \strng{authornamehash}{c4c174b1abf76a48a5a282277d8a6831}
+      \strng{authorfullhash}{c4c174b1abf76a48a5a282277d8a6831}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Inventiones mathematicae}
+      \field{number}{1}
+      \field{title}{Theta functions on the {$n$}-fold metaplectic cover of {$SL (2)$} - the function field case.}
+      \field{volume}{107}
+      \field{year}{1992}
+      \field{pages}{61\bibrangedash 86}
+      \range{pages}{26}
+      \verb{urlraw}
+      \verb http://eudml.org/doc/143957
+      \endverb
+      \verb{url}
+      \verb http://eudml.org/doc/143957
+      \endverb
+      \keyw{metaplectic theta functions; -fold cover of SL(2); Fourier coefficients; Eisenstein series; residues; rational function field; Rankin-Selberg integral; biquadratic theta series}
+    \endentry
+    \entry{KapranovSchechtman}{article}{}
+      \name{author}{2}{}{%
+        {{hash=72e6505d6f5316f20a2a63cc95f96ae5}{%
+           family={Kapranov},
+           familyi={K\bibinitperiod},
+           given={Mikhail},
+           giveni={M\bibinitperiod}}}%
+        {{hash=c8d570da3a47a267d15acf7f4573c0be}{%
+           family={Schechtman},
+           familyi={S\bibinitperiod},
+           given={Vadim},
+           giveni={V\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {International Press of Boston}%
+      }
+      \strng{namehash}{ccea9e20b400fc193fba7d8f67625866}
+      \strng{fullhash}{ccea9e20b400fc193fba7d8f67625866}
+      \strng{bibnamehash}{ccea9e20b400fc193fba7d8f67625866}
+      \strng{authorbibnamehash}{ccea9e20b400fc193fba7d8f67625866}
+      \strng{authornamehash}{ccea9e20b400fc193fba7d8f67625866}
+      \strng{authorfullhash}{ccea9e20b400fc193fba7d8f67625866}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1558-8602}
+      \field{journaltitle}{Pure and Applied Mathematics Quarterly}
+      \field{number}{3}
+      \field{title}{Shuffle algebras and perverse sheaves}
+      \field{volume}{16}
+      \field{year}{2020}
+      \field{pages}{573\bibrangedash 657}
+      \range{pages}{85}
+      \verb{doi}
+      \verb 10.4310/pamq.2020.v16.n3.a9
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.4310/PAMQ.2020.v16.n3.a9
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.4310/PAMQ.2020.v16.n3.a9
+      \endverb
+    \endentry
+    \entry{McNamara}{article}{}
+      \name{author}{1}{}{%
+        {{hash=bcabb81c1b29e3472854d2d8c4a23563}{%
+           family={McNamara},
+           familyi={M\bibinitperiod},
+           given={Peter\bibnamedelima J.},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \strng{fullhash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \strng{bibnamehash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \strng{authorbibnamehash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \strng{authornamehash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \strng{authorfullhash}{bcabb81c1b29e3472854d2d8c4a23563}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0002-9947,1088-6850}
+      \field{journaltitle}{Trans. Amer. Math. Soc.}
+      \field{number}{4}
+      \field{title}{The metaplectic {C}asselman-{S}halika formula}
+      \field{volume}{368}
+      \field{year}{2016}
+      \field{pages}{2913\bibrangedash 2937}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1090/tran/6597
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1090/tran/6597
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1090/tran/6597
+      \endverb
+    \endentry
+    \entry{MPPRW}{unpublished}{}
+      \name{author}{4}{}{%
+        {{hash=d48cab7bc96cc274a2351bb3743315c5}{%
+           family={Miller},
+           familyi={M\bibinitperiod},
+           given={Jeremy},
+           giveni={J\bibinitperiod}}}%
+        {{hash=70c4c91b4087f0aba4317f4b9e09482f}{%
+           family={Patzt},
+           familyi={P\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod}}}%
+        {{hash=d74249c85cb736d949be4c0a3dca0a66}{%
+           family={Petersen},
+           familyi={P\bibinitperiod},
+           given={Dan},
+           giveni={D\bibinitperiod}}}%
+        {{hash=53ef82a1efc665566d50076ea26bdfa1}{%
+           family={Randal-Williams},
+           familyi={R\bibinithyphendelim W\bibinitperiod},
+           given={Oscar},
+           giveni={O\bibinitperiod}}}%
+      }
+      \strng{namehash}{2130a32af0e999ac49ca038a60d9031b}
+      \strng{fullhash}{c68d0578e3df0438a2f7dda650dcfd1c}
+      \strng{bibnamehash}{2130a32af0e999ac49ca038a60d9031b}
+      \strng{authorbibnamehash}{2130a32af0e999ac49ca038a60d9031b}
+      \strng{authornamehash}{2130a32af0e999ac49ca038a60d9031b}
+      \strng{authorfullhash}{c68d0578e3df0438a2f7dda650dcfd1c}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{\url{https://arxiv.org/abs/2402.00354}}
+      \field{title}{Uniform twisted homological stability}
+      \field{year}{2024}
+    \endentry
+    \entry{PatnaikPuskas}{article}{}
+      \name{author}{2}{}{%
+        {{hash=a498de95e1fe09545d2081f26bec8e7f}{%
+           family={Patnaik},
+           familyi={P\bibinitperiod},
+           given={Manish},
+           giveni={M\bibinitperiod}}}%
+        {{hash=cb20ce8f9d9ff9698f3c537613a5e6f5}{%
+           family={Puskás},
+           familyi={P\bibinitperiod},
+           given={Anna},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{505611b13e2fd8f567895b8441b4dc0a}
+      \strng{fullhash}{505611b13e2fd8f567895b8441b4dc0a}
+      \strng{bibnamehash}{505611b13e2fd8f567895b8441b4dc0a}
+      \strng{authorbibnamehash}{505611b13e2fd8f567895b8441b4dc0a}
+      \strng{authornamehash}{505611b13e2fd8f567895b8441b4dc0a}
+      \strng{authorfullhash}{505611b13e2fd8f567895b8441b4dc0a}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0001-8708,1090-2082}
+      \field{journaltitle}{Adv. Math.}
+      \field{title}{On {I}wahori-{W}hittaker functions for metaplectic groups}
+      \field{volume}{313}
+      \field{year}{2017}
+      \field{pages}{875\bibrangedash 914}
+      \range{pages}{40}
+      \verb{doi}
+      \verb 10.1016/j.aim.2017.04.005
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.aim.2017.04.005
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.aim.2017.04.005
+      \endverb
+    \endentry
+    \entry{Patterson}{article}{}
+      \name{author}{1}{}{%
+        {{hash=7eb6f0ff8cf9d6048ea60f431d65f12b}{%
+           family={Patterson},
+           familyi={P\bibinitperiod},
+           given={S.\bibnamedelimi J.},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press (CUP)}%
+      }
+      \strng{namehash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \strng{fullhash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \strng{bibnamehash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \strng{authorbibnamehash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \strng{authornamehash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \strng{authorfullhash}{7eb6f0ff8cf9d6048ea60f431d65f12b}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1469-509X}
+      \field{journaltitle}{Glasgow Mathematical Journal}
+      \field{month}{5}
+      \field{number}{2}
+      \field{title}{Note on a paper of {J}. {H}offstein}
+      \field{volume}{49}
+      \field{year}{2007}
+      \field{pages}{243\bibrangedash 255}
+      \range{pages}{13}
+      \verb{doi}
+      \verb 10.1017/s0017089507003540
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1017/S0017089507003540
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1017/S0017089507003540
+      \endverb
+    \endentry
+    \entry{Rosso1998}{article}{}
+      \name{author}{1}{}{%
+        {{hash=ee4809a8fcc05b13ce5ee54ef527b5a1}{%
+           family={Rosso},
+           familyi={R\bibinitperiod},
+           given={Marc},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Springer Science}%
+        {Business Media LLC}%
+      }
+      \strng{namehash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \strng{fullhash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \strng{bibnamehash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \strng{authorbibnamehash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \strng{authornamehash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \strng{authorfullhash}{ee4809a8fcc05b13ce5ee54ef527b5a1}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1432-1297}
+      \field{journaltitle}{Inventiones Mathematicae}
+      \field{month}{7}
+      \field{number}{2}
+      \field{title}{Quantum groups and quantum shuffles}
+      \field{volume}{133}
+      \field{year}{1998}
+      \field{pages}{399\bibrangedash 416}
+      \range{pages}{18}
+      \verb{doi}
+      \verb 10.1007/s002220050249
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/s002220050249
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/s002220050249
+      \endverb
+    \endentry
+    \entry{s-amds}{article}{}
+      \name{author}{1}{}{%
+        {{hash=946aa2dd05975de502a0e1b9bec14d6a}{%
+           family={Sawin},
+           familyi={S\bibinitperiod},
+           given={Will},
+           giveni={W\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier BV}%
+      }
+      \strng{namehash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \strng{fullhash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \strng{bibnamehash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \strng{authorbibnamehash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \strng{authornamehash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \strng{authorfullhash}{946aa2dd05975de502a0e1b9bec14d6a}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0022-314X}
+      \field{journaltitle}{Journal of Number Theory}
+      \field{month}{9}
+      \field{note}{\url{http://dx.doi.org/10.1016/j.jnt.2024.03.020}}
+      \field{title}{General multiple {D}irichlet series from perverse sheaves}
+      \field{volume}{262}
+      \field{year}{2024}
+      \field{pages}{408\bibrangedash 453}
+      \range{pages}{46}
+      \verb{doi}
+      \verb 10.1016/j.jnt.2024.03.020
+      \endverb
+    \endentry
+    \entry{WhiteheadTypeA}{article}{}
+      \name{author}{1}{}{%
+        {{hash=797a5ed959959ee49004f6502f0091a6}{%
+           family={Whitehead},
+           familyi={W\bibinitperiod},
+           given={Ian},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Wiley}%
+      }
+      \strng{namehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{fullhash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{bibnamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authorbibnamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authornamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authorfullhash}{797a5ed959959ee49004f6502f0091a6}
+      \field{extraname}{1}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1570-5846}
+      \field{journaltitle}{Compositio Mathematica}
+      \field{month}{11}
+      \field{number}{12}
+      \field{title}{Affine {W}eyl group multiple {D}irichlet series: type {$\widetilde{A}$}}
+      \field{volume}{152}
+      \field{year}{2016}
+      \field{pages}{2503\bibrangedash 2523}
+      \range{pages}{21}
+      \verb{doi}
+      \verb 10.1112/s0010437x16007715
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1112/S0010437X16007715
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1112/S0010437X16007715
+      \endverb
+    \endentry
+    \entry{WhiteheadThesis}{thesis}{}
+      \name{author}{1}{}{%
+        {{hash=797a5ed959959ee49004f6502f0091a6}{%
+           family={Whitehead},
+           familyi={W\bibinitperiod},
+           given={Ian},
+           giveni={I\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {Columbia University}%
+      }
+      \strng{namehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{fullhash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{bibnamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authorbibnamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authornamehash}{797a5ed959959ee49004f6502f0091a6}
+      \strng{authorfullhash}{797a5ed959959ee49004f6502f0091a6}
+      \field{extraname}{2}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Multiple {D}irichlet series for affine {W}eyl groups}
+      \field{type}{phdthesis}
+      \field{year}{2014}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

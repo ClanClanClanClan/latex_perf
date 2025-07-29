@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.10410v1",
+  "title": "Global pluripotential theory for adelic line bundles",
+  "authors": [
+    "Jackson S. Morrow"
+  ],
+  "categories": [
+    "math.AG"
+  ],
+  "abstract": "In this work, we relate recent work of Yuan--Zhang and Song on adelic line\nbundles over quasi-projective arithmetic varieties to recent advances in\npluripotential theory on global Berkovich spaces from Pille-Schneider. In\nparticular, we establish an equivalence between subcategories of adelic line\nbundles on quasi-projective varieties and line bundles on their Berkovich\nanalytifications equipped with a continuous plurisubharmonic metric. We also\nprovide several applications of this equivalence. For example, we generalize a\nconstruction of Pille-Schneider concerning families of Monge--Amp\\`ere measures\non analytifications of projective arithmetic varieties to the quasi-projective\nsetting. With this construction, we offer a new description of non-degenerate\nsubvarieties which involves Monge--Amp\\`ere measures over trivially valued\nfields. Finally, we define a Monge--Amp\\`ere measure on the analytification of\na quasi-projective arithmetic variety.",
+  "submitted_date": "2025-07-14T15:54:19Z",
+  "download_date": "2025-07-16T00:34:46.074683",
+  "tex_files": [
+    "GlobalPluripotentialAdelic.tex"
+  ],
+  "main_tex_file": "GlobalPluripotentialAdelic.tex",
+  "file_size": 147004,
+  "line_count": 2107,
+  "complexity_score": 55.2607,
+  "features": {
+    "line_count": 2107,
+    "char_count": 147004,
+    "word_count": 17264,
+    "file_size": 147004,
+    "tex_files": [
+      "GlobalPluripotentialAdelic.tex"
+    ],
+    "main_tex_file": "GlobalPluripotentialAdelic.tex",
+    "equations": 68,
+    "align_envs": 11,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 16,
+    "inline_math": 1617,
+    "display_math": 0,
+    "bracket_math": 63,
+    "straight_quotes": 3,
+    "single_quotes": 104,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 15,
+    "includes": 0,
+    "packages": 29,
+    "newcommands": 169,
+    "citations": 157,
+    "references": 73,
+    "long_lines": 613,
+    "unicode_chars": 0,
+    "comments": 180,
+    "complexity_score": 55.2607
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

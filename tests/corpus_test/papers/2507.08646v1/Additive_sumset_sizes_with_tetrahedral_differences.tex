@@ -1,0 +1,659 @@
+%Additive sumset sizes with tetrahedral differences
+%July 10, 2025 
+
+
+\documentclass{amsart}
+
+ 
+
+\usepackage{amsmath,amssymb,amsthm,latexsym}
+
+
+
+
+ 
+\newtheorem{theorem}{Theorem}
+\newcommand{\bt}{\begin{theorem}}
+\newcommand{\et}{\end{theorem}}
+\newtheorem{lemma}{Lemma}
+\newcommand{\bl}{\begin{lemma}}
+\newcommand{\el}{\end{lemma}}
+\newtheorem{corollary}{Corollary}
+\newcommand{\bc}{\begin{corollary}}
+\newcommand{\ec}{\end{corollary}}
+\newcommand{\bconj}{\begin{conjecture}}
+\newcommand{\econj}{\end{conjecture}}
+\newtheorem{problem}{Problem}
+\newcommand{\bprob}{\begin{problem}}
+\newcommand{\eprob}{\end{problem}}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\benum}{\begin{enumerate}}
+\newcommand{\eenum}{\end{enumerate}}
+\newcommand{\N}{\ensuremath{ \mathbf N }}
+\newcommand{\Z}{\ensuremath{\mathbf Z}}
+\newcommand{\Q}{\ensuremath{\mathbf Q}}
+\newcommand{\R}{\ensuremath{\mathbf R}}
+\newcommand{\Rn}{\ensuremath{\mathbf R^n}}
+\newcommand{\C}{\ensuremath{\mathbf C}}
+\newcommand{\mbA}{\ensuremath{ \mathbf A}}
+\newcommand{\mbB}{\ensuremath{ \mathbf B}}
+\newcommand{\mbC}{\ensuremath{ \mathbf C}}
+\newcommand{\mbF}{\ensuremath{ \mathbf F}}
+\newcommand{\PP}{\ensuremath{ \mathbf P}}
+
+
+\newcommand{\mca}{\ensuremath{ \mathcal A}}
+\newcommand{\mcb}{\ensuremath{ \mathcal B}}
+\newcommand{\mcc}{\ensuremath{ \mathcal C}}
+\newcommand{\mcd}{\ensuremath{ \mathcal D}}
+\newcommand{\mce}{\ensuremath{ \mathcal E}}
+\newcommand{\mcf}{\ensuremath{ \mathcal F}}
+\newcommand{\mcg}{\ensuremath{ \mathcal G}}
+\newcommand{\mch}{\ensuremath{ \mathcal H}}
+\newcommand{\mci}{\ensuremath{ \mathcal I}}
+\newcommand{\mcj}{\ensuremath{ \mathcal J}}
+\newcommand{\mck}{\ensuremath{ \mathcal K}}
+\newcommand{\mcl}{\ensuremath{ \mathcal L}}
+\newcommand{\mcm}{\ensuremath{ \mathcal M}}
+\newcommand{\mcn}{\ensuremath{ \mathcal N}}
+\newcommand{\mco}{\ensuremath{ \mathcal O}}
+\newcommand{\mcp}{\ensuremath{ \mathcal P}}
+\newcommand{\mcr}{\ensuremath{ \mathcal R}}
+\newcommand{\mcs}{\ensuremath{ \mathcal S}}
+\newcommand{\mct}{\ensuremath{ \mathcal T}}
+\newcommand{\mcu}{\ensuremath{ \mathcal U}}
+\newcommand{\mcv}{\ensuremath{ \mathcal V}}
+\newcommand{\mcw}{\ensuremath{ \mathcal W}}
+\newcommand{\mcx}{\ensuremath{ \mathcal X}}
+
+\newcommand{\mba}{\ensuremath{ \mathbf a}}
+\newcommand{\mbb}{\ensuremath{ \mathbf b}}
+\newcommand{\mbc}{\ensuremath{ \mathbf c}}
+\newcommand{\mbe}{\ensuremath{ \mathbf e}}
+\newcommand{\mbm}{\ensuremath{ \mathbf m}}
+\newcommand{\mbo}{\ensuremath{ \mathbf 0}}
+\newcommand{\mbu}{\ensuremath{ \mathbf u}}
+\newcommand{\mbv}{\ensuremath{ \mathbf v}}
+\newcommand{\mbw}{\ensuremath{ \mathbf w}}
+\newcommand{\mbx}{\ensuremath{ \mathbf x}}
+\newcommand{\mby}{\ensuremath{ \mathbf y}}
+\newcommand{\mbz}{\ensuremath{ \mathbf z}}
+
+
+\newcommand{\lex}{\ensuremath{\preceq_{\text{lex}}}}
+\newcommand{\slex}{\ensuremath{\prec_{\text{lex}}}}
+
+\newcommand{\glex}{\ensuremath{\succeq_{\text{lex}}}}
+\newcommand{\sglex}{\ensuremath{\succ_{\text{lex}}}}
+
+\DeclareMathOperator{\supp}{\text{supp}}
+\DeclareMathOperator{\card}{\text{card}}
+\DeclareMathOperator{\conv}{\text{conv}}
+\DeclareMathOperator{\diam}{\text{diam}}
+\DeclareMathOperator{\height}{\text{ht}}
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\kernel}{\text{kernel}}
+\DeclareMathOperator{\length}{length}
+\DeclareMathOperator{\orbit}{\text{orbit}}
+\DeclareMathOperator{\perm}{\text{perm}}
+\DeclareMathOperator{\rank}{\text{rank}}
+\DeclareMathOperator{\vol}{\text{vol}}
+
+\newcommand{\bmat}{\left(\begin{matrix}}
+\newcommand{\emat}{\end{matrix}\right)}
+\newcommand{\bsmallmat}{\left(\begin{smallmatrix}}
+\newcommand{\esmallmat}{\end{smallmatrix}\right)}
+\DeclareMathOperator{\qand}{\quad\text{and}\quad}
+\DeclareMathOperator{\qqand}{\qquad\text{and}\qquad}
+
+%\DeclareMathOperator{\supp}{\text{supp}}
+\DeclareMathOperator{\support}{\text{support}}
+\DeclareMathOperator{\image}{\text{image}}
+\DeclareMathOperator{\Perm}{\text{Perm}}
+\DeclareMathOperator{\Tet}{\text{Tet}}
+
+\DeclareMathOperator{\vectoran}{\left( \begin{matrix} a_1 \\ \vdots \\ a_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorbn}{\left( \begin{matrix} b_1 \\ \vdots \\ b_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorcn}{\left( \begin{matrix} c_1 \\ \vdots \\ c_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorrn}{\left( \begin{matrix} r_1 \\ \vdots \\ r_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorxn}{\left( \begin{matrix} x_1 \\ \vdots \\ x_n \end{matrix}\right)}
+\DeclareMathOperator{\vectoryn}{\left( \begin{matrix} y_1 \\ \vdots \\ y_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorzn}{\left( \begin{matrix} z_1 \\ \vdots \\ z_n \end{matrix}\right)}
+\DeclareMathOperator{\vectorxy}{\left( \begin{matrix} x \\ y \end{matrix} \right)}
+\DeclareMathOperator{\vectorxyz}{\left( \begin{matrix} x \\ y \\z \end{matrix} \right)}
+\DeclareMathOperator{\vectoram}{\left( \begin{matrix} a_1 \\ \vdots \\ a_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorbm}{\left( \begin{matrix} b_1 \\ \vdots \\ b_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorcm}{\left( \begin{matrix} c_1 \\ \vdots \\ c_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorrm}{\left( \begin{matrix} r_1 \\ \vdots \\ r_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorxm}{\left( \begin{matrix} x_1 \\ \vdots \\ x_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorym}{\left( \begin{matrix} y_1 \\ \vdots \\ y_m \end{matrix}\right)}
+\DeclareMathOperator{\vectorzm}{\left( \begin{matrix} z_1 \\ \vdots \\ z_m \end{matrix}\right)}
+
+\DeclareMathOperator{\vectorad}{\left( \begin{matrix} a_1 \\ \vdots \\ a_d \end{matrix}\right)}
+\DeclareMathOperator{\vectorbd}{\left( \begin{matrix} b_1 \\ \vdots \\ b_d \end{matrix}\right)}
+\DeclareMathOperator{\vectorcd}{\left( \begin{matrix} c_1 \\ \vdots \\ c_d \end{matrix}\right)}
+\DeclareMathOperator{\vectorrd}{\left( \begin{matrix} r_1 \\ \vdots \\ r_d \end{matrix}\right)}
+\DeclareMathOperator{\vectorxd}{\left( \begin{matrix} x_1 \\ \vdots \\ x_d \end{matrix}\right)}
+\DeclareMathOperator{\vectoryd}{\left( \begin{matrix} y_1 \\ \vdots \\ y_d \end{matrix}\right)}
+\DeclareMathOperator{\vectorzd}{\left( \begin{matrix} z_1 \\ \vdots \\ z_d \end{matrix}\right)}
+
+
+\DeclareMathOperator{\vectorch}{\left( \begin{matrix} c_1 \\ \vdots \\ c_h \end{matrix}\right)}
+\DeclareMathOperator{\vectorsmallch}{\left( \begin{smallmatrix} c_1 \\ \vdots \\ c_h\end{smallmatrix}\right)}
+
+
+\DeclareMathOperator{\vectorzero}{\left( \begin{matrix} 0 \\ \vdots \\ 0 \end{matrix} \right)}
+\DeclareMathOperator{\vectorone}{\left( \begin{matrix} 1 \\ \vdots \\ 1 \end{matrix} \right)}
+
+\DeclareMathOperator{\vectorsmallan}{\left( \begin{smallmatrix} a_1 \\ \vdots \\ a_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallbn}{\left( \begin{smallmatrix} b_1 \\ \vdots \\ b_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallcn}{\left( \begin{smallmatrix} c_1 \\ \vdots \\ c_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallrn}{\left( \begin{smallmatrix} r_1 \\ \vdots \\ r_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallun}{\left( \begin{smallmatrix} u_1 \\ \vdots \\ u_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallvn}{\left( \begin{smallmatrix} v_1 \\ \vdots \\ v_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallwn}{\left( \begin{smallmatrix} w_1 \\ \vdots \\ w_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallxn}{\left( \begin{smallmatrix} x_1 \\ \vdots \\ x_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallyn}{\left( \begin{smallmatrix} y_1 \\ \vdots \\ y_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallzn}{\left( \begin{smallmatrix} z_1 \\ \vdots \\ z_n \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallxy}{\left( \begin{smallmatrix} x \\ y \end{smallmatrix} \right)}
+\DeclareMathOperator{\vectorsmallxyz}{\left( \begin{smallmatrix} x \\ y \\z \end{smallmatrix} \right)}
+
+\DeclareMathOperator{\vectorsmallam}{\left( \begin{smallmatrix} a_1 \\ \vdots \\ a_m \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallbm}{\left( \begin{smallmatrix} b_1 \\ \vdots \\ b_m \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallcm}{\left( \begin{smallmatrix} c_1 \\ \vdots \\ c_m \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallrm}{\left( \begin{smallmatrix} r_1 \\ \vdots \\ r_m \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallxm}{\left( \begin{smallmatrix} x_1 \\ \vdots \\ x_m \end{smallmatrix}\right)}
+\DeclareMathOperator{\vectorsmallym}{\left( \begin{smallmatrix} y_1 \\ \vdots \\ y_m \end{smallmatrix}\right)}
+
+\DeclareMathOperator{\vectorsmallzero}{\left( \begin{smallmatrix} 0 \\ \vdots \\ 0 \end{smallmatrix} \right)}
+\DeclareMathOperator{\vectorsmallone}{\left( \begin{smallmatrix} 1 \\ \vdots \\ 1 \end{smallmatrix} \right)}
+
+\DeclareMathOperator{\vector02}{\left( \begin{smallmatrix} 0 \\ 0\end{smallmatrix} \right)}
+\DeclareMathOperator{\vector03}{\left( \begin{smallmatrix} 0 \\ 0 \\ 0 \end{smallmatrix} \right)}
+
+
+
+
+ \title[Tetrahedral differences]{Additive sumset sizes with tetrahedral differences} 
+\author{Melvyn B.  Nathanson}
+\address{Department of Mathematics\\Lehman College (CUNY)\\Bronx, NY 10468}
+\email{melvyn.nathanson@lehman.cuny.edu}
+
+\date{\today}
+
+
+\subjclass[2000]{11B13, 11B05, 11B75,  11P70, 11Y16, 11Y55}
+\keywords{Sumset, sumset size, popular sumset size, tetrahedral number, 
+additive number theory, combinatorial number theory}
+\thanks{Supported in part by  PSC-CUNY Research Award Program grant 66197-00 54.}
+
+\begin{document}
+ 
+
+\begin{abstract}
+Experimental calculations suggest that the $h$-fold sumset 
+sizes of 4-element sets of integers are concentrated at $h$ numbers 
+that are differences of tetrahedral numbers.  In this paper it is proved 
+that these ``popular'' sumset sizes exist and explicit $h$-adically defined 
+sets are constructed for each of these numbers. 
+\end{abstract}
+
+
+
+ \maketitle
+
+
+\section{The sumset size problem}
+The \emph{$h$-fold sum} of a set $A$ of integers is the set of all sums of $h$ 
+not necessarily distinct elements of $A$. 
+The core problem of additive number theory is to understand $h$-fold sumsets.  
+
+If $A$ is a finite set of $k$ integers, then $hA$ is a finite set and 
+\beq          \label{h-adic:basicIneq}
+h(k-1)+1 \leq |hA| \leq \binom{h+k-1}{k-1}.
+\eeq
+We have $|hA| = h(k-1)+1$ if and only if $A$ is an arithmetic progression of length $k$, 
+and $|hA| = \binom{h+k-1}{k-1}$ if and only if $A$ is a $B_h$-set, that is, a set 
+such that every integer in the sumset $hA$ has a unique representation 
+(up to permutation of the summands) as a sum of $h$ 
+not necessarily distinct elements of $A$. 
+
+The \emph{integer interval} defined by real numbers $u$ and $v$ is the set 
+\[
+[u,v] = \{n \in \Z: u \leq n \leq v\}.
+\]
+The \emph{integer part} of the real number $u$ is denoted $[u]$.
+
+Let $\mcr_{\Z}(h,k)$ be the set of $h$-fold sumset sizes of sets of size $k$, that is, 
+\[
+\mcr_{\Z}(h,k) = \left\{ |hA|:A\subseteq \Z \text{ and } |A|=k \right\}.
+\]
+Inequality~\eqref{h-adic:basicIneq} implies 
+\beq          \label{h-adic:basicSubset}
+\mcr_{\Z}(h,k)  \subseteq \left[ h(k-1)+1, \binom{h+k-1}{k-1} \right].
+\eeq
+
+Not every possible sumset size is actually the size of a sumset.  
+For example, relation~\eqref{h-adic:basicSubset} gives  
+\[
+\mcr_{\Z}(3,3)  \subseteq \left[ 7, 10 \right].
+\]
+We have 
+\[
+3\{0,1,2\} = \{0,1,2,3,4,5,6\} \qqand |3\{0,1,2\}| = 7
+\]
+\[
+3\{0,1,3\} = \{0,1,2,3,4,5,6,7,9\} \qqand |3\{0,1,3\}| = 9
+\]
+\[
+3\{0,1,4\} = \{0,1,2,3,4,5,6,8,9,12\} \qqand |3\{0,1,4\}| = 10 
+\]
+and so 
+\[
+ \{7,9,10\} \subseteq  \mcr_{\Z}(3,3).  
+\]
+However, there exists no set $A$ of integers 
+with $|A| = 3$ and $|3A|=8$ (Nathanson~\cite{nath25bb}).  
+Thus,  
+\[
+\mcr_{\Z}(3,3) = \{7,9,10\}.  
+\]
+
+This example motivates the following  problem: 
+For all positive integers $h$ and $k$, determine the full range 
+of sumset sizes of $h$-fold sums of sets of 
+$k$ integers, that is, compute the set $\mcr_{\Z}(h,k)$.\footnote{There is the 
+analogous problem in every additive abelian group or semigroup $G$:  Determine 
+the set $\mcr_{G}(h,k)$ of the sizes of $h$-fold sums of $k$-element subsets of $G$.}
+For all $h$ and $k$, we have 
+\[
+\mcr_{\Z}(h,1) =  \{1\} \qqand \mcr_{\Z}(1,k) =  \{k\}.
+\]
+Sets $A$ and $ B$ are \emph{affinely equivalent} if there exist numbers 
+$\lambda \neq 0$ and $\mu$ 
+such that $\lambda \ast A + B = \{\lambda a + \mu: a \in A\}$.  If $A$ and $B$ are affinely equivalent, 
+then $|hA| = |hB|$ for all positive integers $h$.  
+Every finite set $A$ of integers is affinely equivalent to a set $B$ with $\min B = 0$ 
+and $\gcd(B) = 1$.  In particular, every set of size 2 is affinely equivalent to the set $\{0,1\}$.
+It follows that 
+\[
+\mcr_{\Z}(h,2) =  \{h+1\}. 
+\]
+Erd\H os and Szemer\' edi~\cite{erdo-szem83} stated that 
+\[
+\mcr_{\Z}(2,k) = \left[ 2k-1, \binom{k+1}{2} \right].
+\]
+(A proof is in~\cite{nath25bb}.)  
+Thus, the unsolved problem is to determine $\mcr_{\Z}(h,k)$ 
+for $h \geq 3$ and $k \geq 3$. 
+
+A first step is to fix a positive integer $k$ and find the possible sizes 
+of $h$-fold sums of sets of size $k$.  
+Recall that the \emph{$j$th triangular number} 
+$f_2^j = \binom{j+1}{2}$ is the sum of the first $j$ positive integers. 
+The \emph{$j$th tetrahedral number} 
+$f_3^j = \binom{j+2}{3}$ is the sum of the first $j$ triangular numbers (Dickson~\cite{dick20}).  
+For $k = 3$, Nathanson~\cite{nath25bb} proved that 
+\[
+\mcr_{\Z}(h,3) = \left\{\binom{h+2}{2} - \binom{i_0+1}{2} : i_0 \in [0,h-1] \right\}.
+\]
+Thus, every sumset size of a 3-element set is 
+of the form $f_2^{h+1} -  f_2^{i_0}$,  
+that is, a difference of triangular numbers.
+For $k \geq 4$, the problem is still open.  
+Numerical experiments (Nathanson~\cite{nath25q} 
+and O'Bryant~\cite{obry25}) suggest that, for $k = 4$, 
+the ``most popular'' sumset sizes are the integers 
+\[
+f_3^{h+1} -  f_3^{i_0} = \binom{h+3}{3} - \binom{i_0+2}{3} 
+\]
+for $i_0 \in [0,h-1]$.    
+These are the differences between the tetrahedral 
+number  $f_3^{h+1}  = \binom{h+3}{3}$, 
+which is also the size of a 4-element $B_h$-set, 
+and the $h$ consecutive tetrahedral numbers 
+$f_3^{0} ,  f_3^{1} ,\ldots, f_3^{h-1}$. 
+It had been an open problem to decide if the  integers 
+$f_3^{h+1}  - f_3^{i_0}  $ are, indeed,    
+sumset sizes for all $h \geq 2$ and $i_0 \in [0,h-1]$.  
+The goal of this paper is to prove that these sumset sizes do exist 
+for all $h$ and $i_0$, that is, 
+\[
+\left\{\binom{h+3}{3} - \binom{i_0+2}{3} : i_0 \in [0,h-1] \right\} 
+\subseteq \mcr_{\Z}(h,4)
+\]
+and to construct explicit $h$-adically defined sets with 
+exactly these sumset sizes. 
+
+ For related work on sumset size problems in additive number theory, 
+ see~\cite{fox-krav-zhan25}--\cite{schi25}. 
+ 
+
+
+\section{A family of $h$-adic sets} 
+ 
+\bt             \label{h-adic:theorem:main} 
+For all $h \geq 2$ and  $i_0 \in [0,h-1]$, let 
+\[
+c = (h + 1 - i_0)(h+1). 
+\]
+The set  
+\begin{align*}
+A & = \{0,1,h+1,c\} 
+\end{align*}
+satisfies $|A|=4$ and 
+\[
+|hA| = \binom{h+3}{3} - \binom{i_0+2}{3}.
+\]
+\et
+
+
+\begin{proof}  
+The set 
+\[
+B  = \{0,1,h+1\}  
+\]
+is a $B_{h}$-set  and so $B$ is a $B_{h-i}$-set for all $i \in [0,h-1]$ and 
+\[
+|(h-i)B| = \binom{h-i+2}{2}.
+\]
+Let  $0B = \{0\}$. 
+
+We have 
+\begin{align*}
+A  = B \cup \{c\} & = \{0,1,h+1, (h+1-i_0)(h+1)\}.
+\end{align*} 
+The inequality $h+1-i_0 \geq 2$ implies $|A| = 4$.  
+
+If $i_0 = 0$, then $c = (h+1)^2$ and 
+\[
+A = \left\{ 0,1,h+1, (h+1)^2\right\}. 
+\]
+The uniqueness of $(h+1)$-adic representations implies that 
+$A$ is a $B_4$-set and so 
+\[
+|hA| = \binom{h+3}{3} = \binom{h+3}{3} - \binom{i_0+2}{3}.
+\]
+
+Let $i_0 \in [1,h-1]$.  
+We decompose the sumset $hA$ as follows:  
+\[
+hA  = \bigcup_{i=0}^{h} \left( (h-i)B+ic\right)  = \bigcup_{i=0}^{h} L_i 
+\]
+where 
+\begin{align}
+L_i   & = (h-i)B+ic        \nonumber  \\ 
+& = \bigcup_{j=0}^{h-i}\left(   (h-i-j)(h+1)  + [0,j] \right) + ic     \nonumber \\ 
+& = \bigcup_{j=0}^{h-i} \left(  (h+ (h-i_0)i-j) (h+1) + [0,j] \right).            \label{h-adic:Li}
+\end{align} 
+We have 
+\beq            \label{h-adic:Li-size}
+|L_i | = |(h-i)B+ic| = |(h-i)B| = \binom{h-i+2}{2}. 
+\eeq 
+
+The set $L_i$ is the union of $h-i+1$ pairwise 
+disjoint integer intervals whose smallest elements are multiples of $h+1$ 
+and whose lengths are at most $h$.  
+It follows that if $n \in L_i$ and $n = q(h+1) + r$ with $r \in [0,h]$, 
+then $q = h+ (h-i_0)i-j$ for some $j \in [0,h-i]$ and $r \in [0,j]$.
+Then $L_i$ contains the integer interval $q(h+1) + [0, j]$.
+
+For all $i \in [0,h-1]$, we have 
+\begin{align*} 
+\min\left(L_i\right)  & =  ic  <  (i+1)c  = \min\left( L_{i+1} \right)  
+\end{align*} 
+and 
+\begin{align*} 
+\max\left(L_i \right) & = (h-i)(h+1) + ic  \\
+& < (h-i-1)(h+1) + (i+1)c \\
+& = \max\left( L_{i+1} \right)  
+\end{align*} 
+and so the sets $L_i$ ``move to  the right'' as $i$ increases 
+from 0 to $h$. 
+Moreover, 
+\[
+\max\left( L_i \right) <  \min\left(L_{i+1} \right)  
+\]
+if and only if 
+\[
+ (h-i)(h+1)  + ic <  (i+1)c
+\]
+if and only if 
+\[
+i > h - \frac{c}{h+1} 
+\]
+if and only if 
+\[
+i \geq 1 + \left[  h - \frac{c}{h+1} \right] = i_0.  
+\]
+Thus, the sets $ L_i$ and $L_j$ are disjoint if $i_0 \leq i < j \leq h$ 
+and 
+\[
+\left| \bigcup_{i=i_0+1}^h L_i \right| = \sum_{i=i_0+1}^h  \left|  L_i \right| 
+= \sum_{i=i_0+1}^h  \binom{h-i+2}{2}. 
+\]
+Because the sets $L_i$ move to the right, we have 
+\[
+\left( \bigcup_{i=0}^{i_0} L_i  \right) \cap \left( \bigcup_{i=i_0+1}^h L_i \right) = \emptyset    
+\] 
+and 
+\begin{align}                   \label{h-adic:PartialSum}
+|hA| & = \left| \bigcup_{i=0}^h L_i \right| 
+= \left|  \bigcup_{i=0}^{i_0} L_i \right| + \left|  \bigcup_{i=i_0+1}^{h} L_i \right|  
+\nonumber  \\
+& = \left|  \bigcup_{i=0}^{i_0} L_i \right| +  \sum_{i=i_0+1}^h  \binom{h-i+2}{2}. \end{align}
+
+
+
+We shall compute $L_i \cap L_{i+t} $ for all $i \in [1,h-1]$ and $t \in [1,h-i]$.  
+Relation~\eqref{h-adic:Li} implies 
+\[
+L_{i+t} =  \bigcup_{j=0}^{h-i-t} \left(  (h+ (h-i_0)(i+t)-j) (h+1) + [0,j] \right).  
+\]
+We have $q(h+1) \in L_i \cap L_{i+t} $ if and only if there exist $j_0 \in [0,h-i]$ 
+and $j_t \in [0,h-i-t]$ such that 
+\[
+q = h+ (h-i_0)i-j_0 = h+ (h-i_0)(i+t)-j_t  
+\]
+if and only if 
+\begin{align*}
+j_0 & = j_t - (h-i_0)t \\
+&  \in [0,h-i] \cap [-(h-i_0)t, h-i - t - (h-i_0)t] \\ 
+& = [0,  h-i - t -(h - i_0)t].  
+\end{align*}
+It follows that 
+\beq           \label{h-adic:Lt-intersect}
+L_i \cap L_{i+t} = \bigcup_{j=0}^{h-i - t - (h - i_0)t} 
+\left(  (h+ (h-i_0)i-j) (h+1) + [0,j] \right) 
+\eeq
+and so 
+\begin{align*}
+\left|  L_i \cap L_{i+t}\right| 
+& = \left|  \bigcup_{j=0}^{h-i - t -(h -i_0)t} 
+\left(  (h+ (h-i_0)i-j) (h+1) + [0,j] \right)\right| \\ 
+& =  \sum_{j=0}^{h-i - t -(h -i_0)t} 
+\left| (h+ (h-i_0)i-j) (h+1) + [0,j] \right| \\
+& = \sum_{j=0}^{h-i - t - (h -i_0)t} (j+1) \\
+& = \binom{h-i - t - (h - i_0)t+2}{2}.
+\end{align*}
+In particular, 
+\beq                  \label{h-adic:L1-intersect}
+\left|  L_i \cap L_{i+1}\right| = \binom{i_0+1-i}{2}.
+\eeq
+Relation~\eqref{h-adic:Lt-intersect} also implies that, for $t \in [1,h-i]$,  
+\[
+L_i \setminus L_{i+t} = \bigcup_{j=h-i - t -(h - i_0)t +1}^{h-i}
+\left(  (h+ (h-i_0)i-j) (h+1) + [0,j] \right) 
+\]
+and so 
+\[
+L_i \setminus  L_{i+1} \subseteq L_i \setminus  L_{i+2} \subseteq \cdots \subseteq 
+L_i \setminus  L_{h}.
+ \]
+Therefore, 
+\begin{align*}
+L_i \setminus \left(\bigcup_{t = 1}^{i_0-i} L_{i+t} \right) 
+& = L_i \cap \left( \bigcup_{t = 1}^{i_0-i} L_{i+t} \right)^c 
+ = L_i \cap \left(\bigcap_{t = 1}^{i_0 -i} L_{i+t}^c \right) \\
+& = \bigcap_{t = 1}^{i_0 -i} \left( L_i \cap  L_{i+t}^c \right) 
+ = \bigcap_{t = 1}^{i_0 -i} \left( L_i \setminus  L_{i+t}  \right) \\
+&  = L_i \setminus  L_{i+1}.
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+The sets 
+\[
+L_i \setminus \left( \bigcup_{t = 1}^{i_0-i} L_{i+t} \right) 
+\]
+are pairwise disjoint for $i \in [0,i_0]$ and 
+\[
+ \bigcup_{i=0}^{i_0} L_i 
+ = L_{i_0} \cup  \bigcup_{i=0}^{i_0-1} \left( L_i \setminus \bigcup_{t = 1}^{i_0-i} L_{i+t}  \right).
+\]
+From~\eqref{h-adic:Li-size} and~\eqref{h-adic:L1-intersect}, we obtain  
+\begin{align*}        
+\left| \bigcup_{i=0}^{i_0} L_i \right| 
+& = | L_{i_0}| + \sum_{i=0}^{i_0-1}  \left|   L_i \setminus \bigcup_{t = 1}^{i_0-i} L_{i+t} \right| \\ 
+&  = | L_{i_0}| +  \sum_{i=0}^{i_0-1}  \left| L_i \setminus  L_{i+1}\right|  \\ 
+& =  | L_{i_0}| + \sum_{i=0}^{i_0-1} \left(\left| L_i \right|  -  \left| L_i \cap L_{i+1}\right| \right) \\
+&  = \sum_{i=0}^{i_0} \left| L_i \right|  
+ -  \sum_{i=0}^{i_0 -1}  \left| L_i \cap L_{i+1}\right| \\
+& = \sum_{i=0}^{i_0} \binom{h-i+2}{2} - \sum_{i=0}^{i_0-1}  \binom{i_0+1-i}{2}.
+\end{align*}
+Relation~\eqref{h-adic:PartialSum} gives 
+\begin{align*} 
+|hA| 
+& =  \left|  \bigcup_{i=0}^{i_0} L_i \right| +  \sum_{i=i_0+1}^h  \binom{h-i+2}{2} \\ 
+& =   \sum_{i=0}^h  \binom{h-i+2}{2} -  \sum_{i=0}^{i_0 -1}  \binom{i_0+1-i}{2} \\
+& =   \sum_{i=0}^h  \binom{ i+2}{2} -  \sum_{i=0}^{i_0-1}  \binom{i+2}{2} \\
+& =  \binom{ h+3}{3} - \binom{i_0+2}{3}. 
+\end{align*}
+This completes the proof. 
+ \end{proof}
+ 
+ 
+ 
+ 
+ 
+\section{Open problems} 
+\bprob
+This paper considers the special class of $h$-adically defined 4-element sets 
+\[
+A   = \{0,1,h+1,h^2+h+1-p \}
+\]
+with 
+\[
+p = 1 + (i_0-1)(h+1) 
+\] 
+and $i_0 \in [0,h-1]$.  
+It is of interest to compute, for all $h \geq 3$ and all $p\in [0,h^2-1\}$, 
+the $h$-fold sumset sizes of the sets  
+\[
+A = \{0,1,h+1,h^2+h+1-p\}. 
+\]
+\eprob
+
+\bprob
+For all $h \geq 3$, compute the set of $h$-fold sumset sizes of the sets 
+\[
+A = \{0,1,a,b\}
+\]
+for $2 \leq a \leq h$ and $a+1 \leq b \leq ha+1$.
+\eprob
+
+
+\bprob 
+A next step is to determine the popular sumset sizes of 5-element sets of integers.  
+The fundamental problem is to obtain a complete description 
+of the sumset size set $\mcr_{\Z}(h,k)$ 
+for all positive integers $h$ and $k$, 
+to explain the distribution of sumset sizes for fixed $h$ and $k$, 
+ and to understand why some numbers cannot be sumset sizes.  
+ A solution to this problem might be called the 
+\emph{Second Fundamental Theorem of Additive Number Theory}. 
+\eprob
+
+
+
+
+
+\begin{thebibliography}{99}
+
+\bibitem{dick20}
+Leonard Eugene Dickson, \emph{History of the Theory of Numbers}, 
+Volume II, 
+Carnegie Institute of Washington, 1920.
+Reprinted by Chelsea Publishing Company, New York, 1971.
+
+
+\bibitem{erdo-szem83}
+P. Erd\H os and E. Szemer\' edi, On sums and products of integers, in:
+Studies in Pure Mathematics, Birkh\" auser, Basel-Boston, 1983, pp. 213--218.
+
+\bibitem{fox-krav-zhan25}
+J. Fox, N. Kravitz, and S. Zhang,
+Finer control on relative sizes of iterated susmets,
+preprint, 2025. 
+
+
+\bibitem{hegy96}
+N. Hegyv{\' a}ri, 
+On representation problems in the additive number theory, 
+Acta Math. Hungar. 72 (1996), 35--44. 
+
+\bibitem{krav25}
+N. Kravitz, Relative sizes of iterated sumsets, 
+J. Number Theory 272 (2025), 113--128, 
+
+
+
+\bibitem{nath25aa}
+M.  B. Nathanson, Inverse problems for sumset sizes of finite sets of integers, 
+Fibonacci Quarterly (2025), to appear. 
+arXiv:2411.02365.
+
+\bibitem{nath25bb}
+M.  B. Nathanson, Problems in additive number theory, VI:  
+Sizes of sumsets of finite sets, 
+Acta Math. Hungar., to appear.
+arXiv:2411.02365, 2024.
+
+\bibitem{nath25cc}
+M.  B. Nathanson, 
+Explicit sumset sizes in additive number theory, \\
+arXiv: 2505.05329, 2025.
+
+\bibitem{nath25}
+M.  B. Nathanson, 
+Compression and complexity for sumset sizes in additive number theory,
+arXiv:2505.20998. 
+
+\bibitem{nath25q}
+M.  B. Nathanson, Triangular and tetrahedral number differences of sumset sizes 
+in additive number theory, 
+arXiv:2506.15015.
+
+
+\bibitem{obry25}
+K. O'Bryant, 
+On Nathanson's triangular number phenomenon, 
+arXiv:2506.20836. 
+
+\bibitem{peri-roto25}
+P. P\' eringuey and A. de Roton, 
+A note on iterated sumsets races,
+arXiv:2505.11233.  
+
+
+\bibitem{schi25}
+V. Schinina, On the sumset  of sets of size $k$, 
+arXiv:2505.07679.  
+
+
+\end{thebibliography}
+
+
+
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

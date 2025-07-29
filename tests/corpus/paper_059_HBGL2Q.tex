@@ -1,0 +1,1694 @@
+\documentclass[12pt]{article}
+\usepackage{amsfonts,amsmath,amsxtra}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage[matrix,arrow,curve]{xy}
+%\usepackage[active]{srcltx}
+
+\synctex=1
+
+
+\makeatletter
+\def\@seccntformat#1{\csname
+the#1\endcsname\enspace} \makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%           DEFINITIONS FOR "DRAFT" STYLE           %%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\hybrid{\topmargin 0pt      \oddsidemargin 0pt
+        \headheight 0pt \headsep 0pt
+        \textwidth 16.5cm
+        \textheight 23cm
+        \marginparwidth 0.0in
+        \parskip 5pt plus 1pt   \jot = 1.5ex}
+\catcode`\@=11
+\def\marginnote#1{}
+\newcount\hour
+\newcount\minute
+\newtoks\amorpm
+\hour=\time\divide\hour by60 \minute=\time{\multiply\hour by60
+\global\advance\minute by-\hour}
+\edef\standardtime{{\ifnum\hour<12 \global\amorpm={am}%
+        \else\global\amorpm={pm}\advance\hour by-12 \fi
+        \ifnum\hour=0 \hour=12 \fi
+      \number\hour:\ifnum\minute<10 0\fi\number\minute\the\amorpm}}
+\edef\militarytime{\number\hour:\ifnum\minute<10 0\fi\number\minute}
+
+\def\draftlabel#1{{\@bsphack\if@filesw {\let\thepage\relax
+   \xdef\@gtempa{\write\@auxout{\string
+      \newlabel{#1}{{\@currentlabel}{\thepage}}}}}\@gtempa
+   \if@nobreak \ifvmode\nobreak\fi\fi\fi\@esphack}
+        \gdef\@eqnlabel{#1}}
+\def\@eqnlabel{}
+\def\@vacuum{}
+\def\draftmarginnote#1{\marginpar{\raggedright\scriptsize\tt#1}}
+
+\def\draft{\oddsidemargin -0.1truein
+        \def\@oddfoot{\sl WLimit.tex \hfil
+        \rm\thepage\hfil\sl\today\quad\militarytime}
+        \let\@evenfoot\@oddfoot \overfullrule 3pt
+        \let\label=\draftlabel
+        \let\marginnote=\draftmarginnote
+\def\@eqnnum{{\rm (\theequation)}
+\rlap{\kern\marginparsep\tt\@eqnlabel}%
+\global\let\@eqnlabel\@vacuum}  }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%               END "DRAFT" DEFINITION          %%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                          EXTRA MATH FONTS                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newfont{\Bbbb}{msbm7 scaled 1\@ptsize00}
+\newcommand{\zs}{\raise-1pt\hbox{$\mbox{\Bbbb Z}$}}
+\newcommand{\rs}{\hbox{$\mbox{\Bbbb R}$}}
+
+\font\teneufm=cmmib10 scaled 1\@ptsize00 \font\seveneufm=cmmib7
+scaled 1\@ptsize00
+\font\fiveeufm=cmmib5  %scaled 1\@ptsize00
+\def\bfit#1{{\textfont1=\teneufm\scriptfont1=\seveneufm
+\scriptscriptfont1=\fiveeufm \mathchoice{
+\hbox{$\mathsurround=0pt\displaystyle#1$}}
+{\mathsurround=0pt\hbox{$\textstyle#1$}}
+{\hbox{$\mathsurround=0pt\scriptstyle#1$}}
+{\hbox{$\mathsurround=0pt\scriptscriptstyle#1$}}}}
+
+\def\rit#1{{\textfont1=\ten\scriptfont1=\sev
+\scriptscriptfont1=\fiv \mathchoice{
+\hbox{$\mathsurround=0pt\displaystyle#1$}}
+{\mathsurround=0pt\hbox{$\textstyle#1$}}
+{\hbox{$\mathsurround=0pt\scriptstyle#1$}}
+{\hbox{$\mathsurround=0pt\scriptscriptstyle#1$}}}}
+
+%%%%%%%%%THIS CAUSES EQUATIONS TO BE NUMBERED BY SECTIONS%%%%%%%%%%
+\def\numberbysection{\@addtoreset{equation}{section}
+        \def\theequation{\thesection.\arabic{equation}}}
+\numberbysection
+\newcommand{\sect}[1]{\setcounter{equation}{0}\section{#1}}
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\titlepage{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+     \else \newpage \fi \thispagestyle{empty}\c@page\z@
+\def\thefootnote{\fnsymbol{footnote}} }
+\def\endtitlepage{\if@restonecol\twocolumn \else  \fi
+        \def\thefootnote{\arabic{footnote}}
+        \setcounter{footnote}{0}}  %\c@footnote\z@ }
+\relax \hybrid
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\parskip=0.4em
+%
+\makeatletter
+\newdimen\normalarrayskip            % skip between lines
+\newdimen\minarrayskip               % minimal skip between lines
+\normalarrayskip\baselineskip \minarrayskip\jot
+\newif\ifold             \oldtrue            \def\new{\oldfalse}
+%
+\def\arraymode{\ifold\relax\else\displaystyle\fi}%mode of array enrties
+\def\eqnumphantom{\phantom{(\theequation)}} % ight phantom in eqnarray
+\def\@arrayskip{\ifold\baselineskip\z@\lineskip\z@
+     \else
+     \baselineskip\minarrayskip\lineskip1\baselineskip\fi}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\@arrayclassz{\ifcase \@lastchclass \@acolampacol \or
+\@ampacol \or \or \or \@addamp \or
+   \@acolampacol \or \@firstampfalse \@acol \fi
+\edef\@preamble{\@preamble
+  \ifcase \@chnum
+     \hfil$\relax\arraymode\@sharp$\hfil
+     \or $\relax\arraymode\@sharp$\hfil
+     \or \hfil$\relax\arraymode\@sharp$\fi}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\@array[#1]#2{\setbox\@arstrutbox=\hbox{\vrule
+     height\arraystretch \ht\strutbox
+     depth\arraystretch \dp\strutbox
+width\z@}\@mkpream{#2}\edef\@preamble{\halign \noexpand\@halignto
+\bgroup \tabskip\z@ \@arstrut \@preamble \tabskip\z@ \cr}%
+\let\@startpbox\@@startpbox \let\@endpbox\@@endpbox
+  \if #1t\vtop \else \if#1b\vbox \else \vcenter \fi\fi
+  \bgroup \let\par\relax
+  \let\@sharp##\let\protect\relax
+  \@arrayskip\@preamble}
+%
+%
+%  \eqnarray -> middle element in \displaystyle
+%
+%
+\def\eqnarray{\stepcounter{equation}%
+              \let\@currentlabel=\theequation
+              \global\@eqnswtrue
+              \global\@eqcnt\z@
+              \tabskip\@centering              %formulae  centering
+              \let\\=\@eqncr
+              $$%
+            \halign to \displaywidth  \bgroup
+             \eqnumphantom \@eqnsel
+      \hskip\@centering                               %right tab%
+    $\displaystyle  \tabskip\z@ {##}$%
+    &\global\@eqcnt\@ne \hskip 2\arraycolsep
+         $ \displaystyle  \arraymode{##}$\hfil
+    &\global\@eqcnt\tw@ \hskip 2\arraycolsep
+         $\displaystyle\tabskip\z@{##}$\hfil
+         \tabskip\@centering
+    &{##}\tabskip\z@\cr}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%  Mathbb font   %%%%%%%%%%%%%%%%%%%%%%%%
+\def\IA{\mathbb{A}}
+\def\IB{\mathbb{B}}
+\def\IC{\mathbb{C}}
+\def\ID{\mathbb{D}}
+\def\IE{\mathbb{E}}
+\def\IF{\mathbb{F}}
+\def\IG{\mathbb{G}}
+\def\IH{\mathbb{H}}
+\def\IK{\mathbb{K}}
+\def\IL{\mathbb{L}}
+\def\IM{\mathbb{M}}
+\def\IP{\mathbb{P}}
+\def\IQ{\mathbb{Q}}
+\def\IR{\mathbb{R}}
+\def\IZ{\mathbb{Z}}
+%%%%%%%%%%%%%%%%%%%%% Calligraphic letters  %%%%%%%%%%%%%%%%%%%%%
+\def\CA {\mathcal{A}}
+\def\CB {\mathcal{B}}
+\def\CC {\mathcal{C}}
+\def\CD {\mathcal{D}}
+\def\CE {\mathcal{E}}
+\def\CF {\mathcal{F}}
+\def\CG {\mathcal{G}}
+\def\CH {\mathcal{H}}
+\def\CI {\mathcal{I}}
+\def\CJ {\mathcal{J}}
+\def\CK {\mathcal{K}}
+\def\CL {\mathcal{L}}
+\def\CM {\mathcal{M}}
+\def\CN {\mathcal{N}}
+\def\CO {\mathcal{O}}
+\def\CP {\mathcal{P}}
+\def\CQ {\mathcal{Q}}
+\def\CR {\mathcal{R}}
+\def\CS {\mathcal{S}}
+\def\CT {\mathcal{T}}
+\def\CU {\mathcal{U}}
+\def\CV {\mathcal{V}}
+\def\CW {\mathcal{W}}
+\def\CX {\mathcal{X}}
+\def\CY {\mathcal{Y}}
+\def\CZ {\mathcal{Z}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    Frakture %%%%%%%%%%%%%%%%%%%%%%%%
+\def\fg{{\frak g}}
+\def\fb{{\frak b}}
+\def\fh{{\frak h}}
+\def\fH{{\frak H}}
+\def\fK{{\frak K}}
+\def\fk{{\frak k}}
+\def\fL{{\frak L}}
+\def\fn{{\frak n}}
+\def\fu{{\frak u}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% Greek letters %%%%%%%%%%%%%%%%%%%%%%%
+\def\t {{\theta}}
+\def\T {{\Theta}}
+\def\w {{\omega}}
+\def\a {{\alpha}}
+\def\b {{\beta}}
+\def\g {{\gamma}}
+\def\s {{\sigma}}
+\def\Si{{\Sigma}}
+\def\la{\lambda}
+\def\ve{\varepsilon}
+\def\e{\epsilon}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\balpha{{\bfit\alpha}}
+\def\bbeta{{\bfit\beta}}
+\def\bgamma{{\bfit\gamma}}
+\def\bnu{{\bfit\nu}}                      %Boldface Greek letters
+\def\bmu{{\bfit\mu}}
+\def\bo{{\bfit\omega}}
+\def\bphi{{\bfit\phi}}
+\def\blambda{{\bfit\lambda}}
+\def\brho{{\bfit\rho}}
+%%%%%%%%%%%%%%%%%%%%%%%%%% Derivatives  %%%%%%%%%%%%%%%%%%%%%%%%
+\def\pr {\partial}
+\def\apr {\overline {\partial }}
+%%%%%%%%%%%%%%%%%%%% Letters with bar %%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\ib{\bar{i}}
+\def\jb{\bar{j}}
+\def\ub{{\bar{u}}}
+\def\wb {\bar{w}}
+\def\zb {\bar{z}}
+\def\kb {\bar{k}}
+\def\Ab {\overline{A}}
+%%%%%%%%%%%%%%%%%%%% Letters with tilde %%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\wt{\widetilde}
+\def\wh{\widehat}
+\def\rhot {{\widetilde{\rho}}}
+\def\at{\tilde{a}}
+\def\bt{\tilde{b}}
+\def\lt{\tilde{l}}
+%%%%%%%%%%%%%%%%%%%%%%%%%% Underlined letters  %%%%%%%%%%%%%%%%%%%%%%%%
+\def\un{\underline{n}}
+\def\um{\underline{m}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Math symbols %%%%%%%%%%%%%%%%%%%%%%%
+\def\Ad{{\mathop{\rm Ad}}}
+\def\Arg{{\mathop{\rm Arg}}}
+\def\Aut{{\mathop{\rm Aut}}}
+\def\codim{{\mathop{\rm codim}}}
+\def\cok{{\rm cok}}
+\def\coker{{\mathop {\rm coker}}}
+\def\Ch{{\rm Ch}}
+\def\ch{{\rm ch}}
+\def\Det{{\rm Det}}
+\def\DET{{\rm DET}}
+\def\diag{{\rm diag}}
+\def\diff{{\rm diff}}
+\def\Diff{{\rm Diff}}
+\def\End{{\rm End}}
+\def\Id{{\rm Id}}
+\def\Fun{{\rm Fun}}
+\def\Hom{{\rm Hom}}
+\def\c{\cdot}
+\def\np{\nabla_{\partial}}
+\def\npb{\nabla_{\bar {\partial}}}
+\def\Ker{{\rm Ker}}
+\def\Lie{{\rm Lie}}
+\def\Mat{{\rm Mat}}
+\def\noi{\noindent}
+\def\nn{\nonumber}
+\def\pt{{\rm pt}}
+\def\rank{{\rm rank}}
+\def\Res{{\mathop{\rm Res}}}
+\def\Span{{\mathop{\rm span}}}
+\def\Sym{{\mathop{\rm Sym}}}
+\def\Td{{\rm Td}}
+\def\vol{{\rm vol}}
+\def\Vol{{\rm Vol}}
+\def\frak{\mathfrak}
+\def\ov {{\overline}}
+\def\tr{{\rm tr}\,}
+\def\Tr{{\rm Tr}\,}
+
+\def\gl{\mathfrak{gl}}
+\def\hgl{\mathfrak{hgl}}
+\def\ssl{\mathfrak{sl}}
+\def\ssp{\mathfrak{sp}}
+\def\hsp{\mathfrak{hsp}}
+\def\su{\mathfrak{su}}
+\def\<{\langle}
+\def\>{\rangle}
+\def\ov{\overline}
+
+\makeatletter
+\DeclareRobustCommand{\loplus}{\mathbin{\mathpalette\dog@lsemi{+}}}
+\DeclareRobustCommand{\roplus}{\mathbin{\mathpalette\dog@rsemi{+}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{te}{Theorem}[section]%Usage:\begin{te}Statement\end{te}
+\newtheorem{de}{Definition}[section]
+\newtheorem{prop}{Proposition}[section]           %  ETC ...
+\newtheorem{cor}{Corollary}[section]
+\newtheorem{lem}{Lemma}[section]
+\newtheorem{ex}{Example}[section]
+\newtheorem{rem}{Remark}[section]
+\newtheorem{conj}{Conjecture}[section]
+\newtheorem{prob}{Problem}[section]
+\newtheorem{quest}{Question}[section]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\cod{\operatorname{codim}}
+\newcommand\im{\operatorname{im}}
+\newcommand\id{\operatorname{id}}
+\newcommand\coim{\operatorname{coim}}
+\newcommand\rk{\operatorname{rank}}
+\newcommand\ann{\operatorname{ann}}
+\newcommand{\proof}{\noindent {\it Proof}. }
+%%%%%%%%%%%%%%%%%%%%%%SOME DEFINITIONS%%%%%%%%%%%%%%%
+\newcommand\bqa{\begin{eqnarray}}
+\newcommand\eqa{\end{eqnarray}}
+\def\be{\begin{eqnarray}\new\begin{array}{cc}}
+\def\ee{\end{array}\end{eqnarray}}
+\def\beq{\begin{equation}}
+\def\eeq{\end{equation}}
+\def\bse{\begin{subequations}}                %%%SUBEQUATIONS
+\def\ese{\end{subequations}}
+\def\bp{\begin{pmatrix}}
+\def\ep{\end{pmatrix}}
+\def\bel{\be\label}
+\def\h{\hbar}
+\def\i{\imath}
+\def\square{\hfill{\vrule height6pt width6pt            %Black
+depth1pt} \break \vspace{.01cm}}                        %square
+%%%%%%%%%%%%%%% New counters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcounter{pac}[section]
+\newcommand{\npa}{\addtocounter{pac}{1} \noindent {\bf
+\arabic{section}.\arabic{pac}}\,\,\,}
+\newcounter{pacc}[subsection]
+\newcommand{\npaa}{\addtocounter{pacc}{1} \noindent {\bf
+\arabic{section}.\arabic{subsection}.\arabic{pacc}}\,\,\,}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\mathsurround=2pt
+%\draft                             %SWITCH ON/OFF DRAFT VERSION%
+
+\setcounter{pac}{0} \setcounter{footnote}0
+%%%%%%%%%%%% Title page %%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{\bf Global $GL_2$ Hecke-Baxter operator}
+\author{A.A. Gerasimov, D.R. Lebedev and S.V. Oblezin}
+\date{\today}
+\maketitle
+
+\renewcommand{\abstractname}{}
+
+\begin{abstract}
+
+  \noindent {\bf Abstract}. We construct a global Hecke-Baxter
+  operator for integrable systems of arithmetic type associated with
+  the group $GL_2$. It is an
+  element of a global Hecke algebra associated with the double coset
+  space   $GL_2(\IZ)\backslash GL_2(\IR)/O_2$.   Eigenvalues
+  of the global Hecke-Baxter
+  operator  acting on the $GL_2$-Eisenstein series
+  are given by the   corresponding global $L$-factors. This construction generalizes
+  our previous construction of the Hecke-Baxter operators  over
+  local completions $\IR$ and $\IQ_p$ of the number field $\IQ$.
+  Presumably, zeroes of the corresponding global $L$-factors
+  should be subjected to an arithmetic version of the Bethe  ansatz
+  equations.
+\end{abstract}
+
+ \vspace{5mm}
+
+%\tableofcontents
+
+\section{Introduction}
+
+An interpretation of a wide class of integrable systems in terms of
+representation theory provides  important insights both into  theory
+of integrable systems and into representations theory
+allowing  transferring various techniques from one  area of research
+into the other. Among various examples we would like to mention the
+formalism of the Baxter operator \cite{Ba} which was properly placed in
+representation theory perspective using  Hecke
+algebras formalism in \cite{GLO08} (see also \cite{G}).
+We coin the term the Hecke-Baxter operator for a
+one-parameter family of element of the Hecke algebra reproducing Baxter operator
+of various quantum integrable systems.
+Starting with the case of spherical principles series
+representations of $GL_{\ell+1}(\IR)$ the construction of the
+Hecke-Baxter operator  is recently extended
+to general principle series representations of $GL_{\ell+1}(\IR)$
+  (for details see \cite{GLO25} and reference therein).  A remarkable fact is
+that the Hecke-Baxter operators  are directly related to
+the Archimedean $L$-factors attached to the corresponding
+representations of $GL_{\ell+1}(\IR)$. Precisely the Archimedean $L$-factors appear
+as eigenvalues of the Hecke-Baxter operators  acting on  the
+spherical and Whittaker functions given by specific matrix elements in the
+spherical principle series  representations.
+As a direct consequence  the local $L$-factors enter the integral
+representations of the Whittaker functions expressed via a version of the
+Gelfand-Tsetlin construction of irreducible representations of
+$GL_{\ell+1}(\IR)$ \cite{GKL}. Note that the $GL_{\ell+1}(\IR)$-Whittaker
+functions are eigenfunctions  of the
+quantum $GL_{\ell+1}(\IR)$-Toda chains,  one of the most well-studied
+finite-dimensional integrable systems. Actually  the Hecke-Baxter
+operator (depending on auxiliary parameter) provides an alternative
+formulation of the quantum Toda chain.
+Notice in this regard that an advantage of the Hecke algebra
+formulation of integrable systems  is in a unified treatment
+of both continues and discrete  symmetries of the systems.
+
+
+Not surprisingly,  proper counterpart of the Hecke-Baxter operator exists  in the case
+of representations theory over non-Archimedean fields. The case of
+spherical principle series representations of $GL_{\ell+1}(\IQ_p)$ was
+considered in \cite{GLO08} together with the
+corresponding integrable systems governing spherical and Whittaker
+functions over $\IQ_p$. Connection with local $L$-factors
+still holds in this case, and local non-Archimedean $L$-factors show up as eigenvalues
+of the non-Archimedean Hecke-Baxter operators  acting on
+$GL_{\ell+1}(\IQ_p)$-Whittaker functions.
+
+
+It is natural to expect that the Hecke-Baxter operator formalism may
+be further generalized to the case of (global) number fields.
+This is indeed so, and in this short note we consider one
+representative example  of the global Hecke-Baxter operator: we introduce
+a $GL_2$  Hecke-Baxter operator over compactification  $\overline{{\rm
+    Spec}(\IZ)}$ of ${\rm  Spec}(\IZ)$ acting on the non-ramified $GL_2$-automorphic
+functions (i.e. functions on the double coset $GL_2(\IZ)\backslash
+GL_2(\IR)/O_2$). The following result is proven in   Theorem \ref{TH1} in Section 4.
+The automorphic functions represented by  matrix elements
+of the spherical principle series $GL_2(\IR)$-representations are
+eigenfunctions of the proposed global Hecke-Baxter operator with the
+eigenvalues given by the corresponding global
+$L$-functions  generalizing the completed form of the Riemann zeta function $\zeta(s)$:
+ \be
+  \hat{\zeta}(s)\,=\,\zeta(s)\, \pi^{-\frac{s}{2}}\,\Gamma\Big(\frac{s}{2}\Big)\,.
+ \ee
+ This result complements the constructions of \cite{JL}.
+
+
+ Let us stress that in terms of quantum integrable systems we basically consider
+a hyperbolic billiard on upper half-plane modulo action of the
+modular group $PSL_2(\IZ)$. These  quantum systems are integrable and are
+deeply connected with the quantum
+$SL_2(\IR)$-Toda chains: harmonics of the quantum billiard
+eigenfunctions are given by solutions of the quantum Toda chain for
+integer coupling constants. On the other hand this quantum billiard
+is a generalization of the Euclidean billiard arsing in the tropical
+limit of the $SL_2(\IR)$-Toda chain  \cite{GL}. This provides an interesting
+number theoretic perspective on an interpretation of the tropical limit proposed in
+\cite{GL}.
+
+
+
+One curious  point worth mentioning is as follows.  In the case of
+the integrable systems with discrete spectrum,  the Baxter operator is instrumental in
+finding the spectrum given by common eigenvalues of quantum
+Hamiltonians. Precisely the eigenvalues of quantum Hamiltonian are
+expressed in a simple way through zeroes of the eigenvalues of the Baxter operators (considered as functions of an auxiliary parameter). In turn,
+ zeroes of the eigenvalues of the Baxter operator satisfy a set of
+ equations called the Baxter equations. Our interpretation of the global
+ $L$-functions as eigenvalues of the Hecke-Baxter operators points to
+ the problem of finding an  analog of the Baxter  equations in the
+ arithmetic setup. This might extend a traditional optics
+for looking at analogs of Riemann hypotheses for global $L$-functions as well as various conjectures on
+ the special values of global $L$-functions. This suggestion seems
+ close to  the Faddeev-Pavlov approach \cite{FP} to studying
+ analytic properties of the Riemann zeta-functions  via scattering
+ theory. This line of research seems still  worth to pursue.
+
+ Let us also note that
+ the   Hecke-Baxter operators (and more general elements of Hecke algebras) are
+examples of averaging operators that are ubiquitous in various areas of Mathematics
+and Physics. One interesting example of the averaging operator appears
+in  the  Kadanov approach to the renormalization (semi)group  in lattice
+quantum field theories  (see e.g. \cite{Ka}). Fixed points of the
+renormalization group flow corresponding to the eigenvalues of the Kadanov
+operators describe continuum limit of the lattice
+theory. The analogy between the constructions of \cite{Ka}  and this
+paper is very fruitful and will be considered in details  elsewhere.   As an
+obvious next step  we  are  going to generalize the results of
+this note to the global ramified  case for the groups $GL_{\ell+1}$  of higher ranks.
+
+
+
+{\it  Acknowledgements:} The research of S.V.O. is partially
+supported by the Beijing Natural Science Foundation grant IS24004.
+
+
+
+\section{Automorphic forms and global Hecke-Baxter operator:  $GL_1$ }
+
+
+In this Section we consider the almost trivial case of the Lie group $GL_1$. Our
+goal is to introduce  basic  elements of the construction to proceed in the following
+Sections with a more involved  case of $GL_2$.
+
+Let us define the non-ramified $GL_1$ automorphic functions  as
+functions on  $GL_1(\IR)$  invariant under the left action of
+$GL_1(\IZ)$ and right action of the orthogonal subgroup $O_1\subset
+GL_1(\IR)$ i.e. these functions may be considered as functions on
+the double coset space
+\be\label{Mone}
+\CM_1=GL_1(\IZ)\backslash GL_1(\IR)/O_1\,.
+\ee
+Note that $\CM_1$  is a $GL_1(\IZ)$-orbifold as $GL_1(\IZ)$
+acts trivially on the coset space $GL_1(\IR)/O_1$. We however are
+interested in the space of functions on $\CM_1$ and thus  might ignore this
+subtlety by  considering  functions on
+$GL_1(\IR)/O_1$ (invariant under trivial action of $GL_1(\IZ)$)
+as functions on $\CM_1$. Thus taking into account the identifications
+\be
+GL_1(\IR)\simeq \IR^*, \qquad GL_1(\IZ)\simeq \mu_2, \qquad O_1\simeq
+\mu_2\,,\qquad \mu_2=\{\pm 1\}\,.
+\ee
+the $GL_1$-automorphic functions may be identified with functions on
+$\IR_+=\IR^*/\mu_2$.
+
+The  double cosets space  \eqref{Mone} allows an interpretation as   a
+moduli  space of circles $S^1$ supplied with  $S^1$-invariant
+metrics. Indeed $\CM_1$ may be presented in the following factorized form
+\be\label{Mone1}
+\CM_1=GL_1(\IZ)\backslash GL_1(\IR)\times_{GL_1(\IR)} GL_1(\IR)/O_1\,.
+\ee
+The first factor $GL_1(\IZ)\backslash GL_1(\IR)$ should be identified with
+the space of lattices $L$ in $\IR$
+\be
+L=\{  nv|n\in \IZ\}, \qquad v\in \IR-\{0\}\,,
+\ee
+characterized by  non-zero real numbers $v$ with group
+$GL_1(\IZ)=\mu_2$ of automorphisms of $L$ acting by effectively
+changing the sign of $v$. By action of $GL_1(\IR)\simeq \IR^*$ any
+lattice may transformed   into the standard one $L=\IZ\subset \IR$.
+The second factor $GL_1(\IR)/O_1$ in \eqref{Mone1}
+is identified with the  space of constant
+metrics on $\IR$ with  $O_1$ being
+stabilizer of a reference metric.  From this description we  infer that
+the space \eqref{Mone} is  the moduli space of
+ $GL_1(\IR)$-equivalence classes of  pairs of lattices  and constant metrics
+on $\IR$ or equivalently as the moduli space of circles $S^1=\IR/\IZ$ supplied with
+constant metrics. Algebraically $\CM_1$ may be understood as a moduli
+space of rank one $\IZ$-modules $L$ supplied with a metric on its real
+extension $L\otimes_\IZ \IR$.  The interpretation of $\CM_1$ as moduli
+space metricized circles  provides us with a canonical
+coordinate on $\CM_1$ , the volume of the corresponding circle
+\be\label{VolC}
+|x|={\rm Vol}_h(\IR/L)\,.
+\ee
+Here $x$ is the canonical coordinate on $GL_1(\IR)=\IR^*$ identified
+with the moduli space of the oriented circles $S^1_{or}$ supplied with a constant
+metric $h$. Given  a pair $(S^1_{or},h)$
+we might consider corresponding volume one-form $\omega$ so that
+the coordinate $x$ would be a period of this form
+\be\label{VolC1}
+x=\int_{\IR/L}\omega\,.
+\ee
+
+We are interested in a particular bases in the
+space of $GL_1$-automorphic functions given by $GL_1$ analog of the Eisenstein
+functions. This bases may be defined precisely in various ways
+but having in mind  subsequent
+generalizations to the case of $GL_2$ we  construct these functions
+using  representation theory approach. Precisely we define $GL_1$
+Eisenstein functions   as  matrix elements of
+$GL_1(\IZ)$ and $O_1$ invariant vectors in unitary spherical principle series
+ representations $GL_1(\IR)$.
+Let $(\pi_\gamma,\CV_\gamma)$, $\gamma\in \IR$ be a  one-dimensional unitary spherical
+unitary representation of
+$GL_1(\IR)$, $\<\,,\,\>$ be the corresponding
+ Hermitian pairing  and  $v\in \CV_{\gamma}$ be such that
+$\<v,v\>=1$. By definition   spherical representations of
+$GL_1(\IR)\simeq \IR^*$ are  factored through homomorphysm $\IR^* \to
+\IR_+$ and are  given  by
+\be\label{RepGL1}
+\pi_\gamma:\,\,x\longrightarrow |x|^{\imath \gamma}\,, \qquad x\in \IR^*\,.
+\ee
+Consider the following matrix elements  in representation $(\pi_\gamma,\CV_\gamma)$
+\be \label{ME1}
+\psi_\gamma(x)=\<v,\pi_\gamma(x)\,v\>=|x|^{\imath \gamma}\,, \qquad
+x\in GL_1(\IR)\simeq \IR^*\,.
+\ee
+It is a $\mu_2$-invariant  function  on $GL_1(\IR)$ and
+thus $\psi_\gamma(x)$ is a lift of a function on $\CM_1=\IR_+$. Corresponding function
+on $\CM_1$ will be called  the $GL_1(\IR)$-Eisenstein series
+associated with the representation $(\pi_\gamma,\CV_\gamma)$.
+In the following we will consider
+interchangeably automorphic eigenfunctions as functions on $\CM_1$
+depending on $|x|$ or as $\mu_2$-invariant functions on $GL_1(\IR)$
+depending on $x$.
+
+The  $GL_1$-Eisenstein functions  may be defined also as
+eigenfunctions  of some operators. In the following we will be interested
+in characterization of the $GL_1$-Eisenstein functions  as common eigenfunctions
+of elements of the Hecke algebra associated with the space of double
+cosets (this formulation especially useful as
+takes into account the invariance under both  discrete and
+continues groups). Define the Hecke
+algebra associated with the double coset space  \eqref{Mone} as
+ a tensor product of two convolution algebras
+ $\CH(GL_1(\IQ),GL_1(\IZ))$ and $\CH(GL_1(\IR),O_1)$.
+Recall that Hecke algebra $\CH(G,K)$ associated with the pair
+$K\subset G$ is an associative algebra of the proper subset of
+$K$-biinvariant functions on $G$  under convolution. It is natural to
+consider the maximal subset of functions on $G$ such that the
+convolution operation is defined. In the case when $(G,K)$ is a
+Gelfand pair i.e. $K$ is a fixed point of an involution of $G$ the
+corresponding algebra is commutative. The power of the Hecke algebra
+formalism is in the fact that $\CH(G,K)$ in general is not a group
+algebra but replaces it in various representation theory
+constructions.
+
+The Hecke algebra $\CH(GL_1(\IR),O_1)$,
+the  algebra of $O_1$-biinvraint functions on $GL_1(\IR)$,  acts naturally
+on the functions on $GL_1(\IR)/O_1$   and in particular
+on the functions on double coset $\CM_1$ via convolution.   Note that
+it  does not take into account $\IZ$ (and thus $\IQ$) structure
+responsible for the lattice moduli space interpretation of $\CM_1$. To
+take into account this arithmetic structure we consider another Hecke
+algebra $\CH(GL_1(\IQ),GL_1(\IZ))$ which we identify with the
+convolution algebra of
+$GL_1(\IZ)$-biinvariant generalized function on $GL_1(\IR)$ with the support at
+$GL_1(\IQ)\subset GL_1(\IR)$. It is easy to verify that the algebras
+$\CH(GL_1(\IQ),GL_1(\IZ))$ and $\CH(GL_1(\IR),O_1)$
+ are (mutually) commutative associative algebras acting on
+functions on $\CM_1$ from the right and the left
+correspondingly. Note that in the considered case of $GL_1$ the Hecke algebras are
+actually groups algebras of the quotient groups $GL_1(\IQ)/GL_1(\IZ)$ and
+$GL_1(\IR)/O_1$.
+
+It is instructive to describe the $\CH(GL_1(\IQ),GL_1(\IZ))$-action
+ considering $\CM_1$ as a  moduli space of
+metricized circles. Given a lattice $L\subset\IR$, we can consider a
+sublattice $L_p\subset L$ of index $[L:L_p]=p$, and also we consider
+$L_{1/q}\subset\IR$, such that $L\subset L_{1/q}$ with
+$[L_{1/q}:L]=q$. Now we define, for any
+$p/q\in \IQ_+^*$, an operation $T_{p/q}$ on lattices by first taking
+$L\subset L_{1/q}$ such that
+$[L_{1/q}:L]=q$, and then considering a sublattice $L_{p/q}\subset
+L_{1/q}$ of index $[L_{1/q}:L_{p/q}]=p$. Thus we have the following
+operator acting on functions on the space of lattices:
+  \be
+   (T_{p/q}\cdot f)(L)\,
+   =\sum_{L\subset L_{1/q}\supset L_{p/q} }\,f(L_{p/q}),
+   \qquad
+   [L_{1/q}:L]=q, \quad [L_{1/q}:L_{p/q}]=p\,.
+  \ee
+ In terms of the functions of the coordinate $|x|\in \IR_+$ this
+reduces to a simple mupltiplication operation
+ \be
+  (T_{p/q}\cdot f)(|x|)=f(p/q\cdot |x|)\,.
+ \ee
+These operators obviously belongs to the algebra
+$\CH(GL_1(\IQ),GL_1(\IZ)$ and satisfy the following relations:
+ \be
+  T_{p_1/q_1}\circ T_{p_2/q_2}=T_{(p_1p_2)/(q_1q_2)}\,.
+ \ee
+Let us remark that the collection of operators $T_{p/q},\,p/q\in\IQ^*_+$
+provides a $GL_1$-analog of the modular tower structure arising in the case of
+$GL_2$.
+
+To construct  a meaningful generating function   we consider a
+multiplicative semigroup $\IZ_+\subset \IQ_+^*$. Corresponding
+elements of the Hecke algebra  $\CH(GL_1(\IQ),GL_1(\IZ)$
+act as follows
+ \be\label{Tn}
+  (T_n\cdot f)(L)=f(nL)\,,\qquad n\in \IZ_+\,,
+ \ee
+or equivalently, in terms of functions on $GL_1(\IR)$
+ \be\label{Tnx}
+  (T_n\cdot f)(x)=f(nx)\,,\qquad n\in \IZ_+\,, \qquad x\in \IR^*\,.
+ \ee
+These operators may be conveniently combined into  the generating series
+ \be\label{GenZ}
+  Q^{GL_1(\IZ)}_s\,=\sum_{n=1}^{\infty}\frac{1}{n^s} T_n\,.
+ \ee
+Its action on the functions of $x$ is given by
+ \be
+  (Q^{GL_1(\IZ)}_s\cdot f)(x)\,=\sum_{n=1}^{\infty} n^{-s}\,f(nx)\,.
+ \ee
+Now we consider a kind of generating functions for the elements of the
+Hecke algebra $\CH(GL_1(\IR),O_1)$ providing a
+proper analog for the generating function \eqref{GenZ}. Such
+generating functions  were introduced
+(for more general case of $GL_{\ell+1}(\IR)$) in \cite{GLO08}
+ under the name the Hecke-Baxter operator.  Precisely
+the $GL_1(\IR)$ Hecke-Baxter operator is the integral operator,
+ \be
+  (Q^{GL_1(\IR)}_s\cdot f)(x)\,
+  =\int\limits_{\IR^*}\!d\mu_{\IR^*}(y)\,\, |y|^s\,f(y^{-1}x)\,,\quad
+  d\mu_{\IR^*}(y)=e^{-\pi y^2}\,\frac{dy}{y}\,,
+ \ee
+acting by convolution with $O_1$-biinvariant function on $GL_1(\IR)$
+\be\label{ArKernel}
+Q^{GL_1(\IR)}_s(y)=|y|^s\,e^{-\pi y^2}\,.
+\ee
+In the following,  for brevity, we identify suitable functions on Lie groups, operators
+ obtained by the actions of these functions via convolution and
+ the corresponding integral kernels.
+
+
+
+\begin{prop} The matrix elements  \eqref{ME1}
+ \be\label{ME11}
+  \psi_{\gamma}(x)=\<v,\pi_{\gamma}(x)\,v\>=|x|^{\imath \gamma}\,,
+ \ee
+are common  eigen-functions of the operators $Q^{GL_1(\IZ)}_s$ and\,
+ $Q^{GL_1(\IR)}_s$:
+ \be
+  \bigl(Q^{GL_1(\IZ)}_s\cdot  \psi_{\gamma}\bigr)(x)\,
+  =\,\zeta(s-\imath \gamma)\, \psi_{\gamma}(x)\,,
+ \ee
+ \be
+  \bigl(Q^{GL_1(\IR)}_s\cdot  \psi_{\gamma}\bigr(x)\,
+  =\,L^{\IR}(s-\imath \gamma)\,\psi_{\gamma}(x)\,.
+ \ee
+The  eigenvalues are given by
+ \be
+  \zeta(s)=\sum_{n\in \IZ_+}\,\frac{1}{n^s}\,,\qquad
+  L^{\IR}(s)=\pi^{-s/2}\Gamma\left(\frac{s}{2}\right)\,,
+ \ee
+where we impose ${\rm Re}(s)>1$ for convergence.
+\end{prop}
+
+\proof Using
+ \be
+  (T_n\cdot \psi_{\gamma})(x)\,
+  =\,\psi_{\gamma}(nx)\,
+  =\,n^{\imath \gamma}\,
+  \psi_{\gamma}(x)\,,
+ \ee
+we indeed have
+ \be
+  \bigl(Q^{GL_1(\IZ)}_s\cdot  \psi_{\gamma}\bigr)(x)\,
+  =\left(\sum_{n\in\IZ_+}\frac{1}{n^{s-\imath \gamma}}\right)\,
+  \psi_{\gamma}(x)\,
+  =\,\zeta(s-\imath \gamma)\, \psi_{\gamma}(x)\,.
+ \ee
+The analogous statement for the  Archimedean Hecke-Baxter
+operator  $Q^{GL_1(\IR)}_s$ acting on matrix element \eqref{ME1} via
+ \be
+  \bigl(Q^{GL_1(\IR)}_s\cdot \psi_{\gamma}\bigr)(x)\,
+  =\int\limits_{\IR^*}\!\frac{dy}{y}\,\,|y|^s\,e^{-\pi y^2}\,
+  \psi_{\gamma}(y^{-1}x)\,
+  =\,\pi^{-\frac{s-\imath \gamma}{2}}\,
+  \Gamma\left(\frac{s-\imath \gamma}{2}\right)\,\psi_{\gamma}(x)\,,
+ \ee
+reduces basically to the integral representation of the
+Gamma-function.  $\Box$
+
+
+Now we introduce  main object of our considerations in this Section,
+global Hecke-Baxter operator $\wh{Q}_s$.
+
+\begin{de} The $GL_1$ global Hecke-Baxter operator is the operator
+  acting in the space of functions on
+  $GL_1(\IR)\simeq \IR^*$ via convolution with the   function
+ \be\label{GLB}
+  \wh{Q}^{GL_1}_s(x)\,
+  =\,\frac{1}{2}\,|x|^s\Big(\Theta(0|\imath
+  x^2)-1\Big)\,,\qquad x\in \IR^*\,,
+\ee
+where the theta-constant is given by
+ \be
+  \Theta(0|\tau)=\sum_{n\in \IZ} e^{\imath \pi \tau n^2}\,.
+ \ee
+\end{de}
+
+
+\begin{prop}  Consider the  matrix element \eqref{ME1}
+ \be \label{ME12}
+  \psi_{\gamma}(x)=\<v,\pi_{\gamma}(x)\,v\>=|x|^{\imath \gamma}\,,
+ \ee
+in the unitary spherical principle series representation
+$(\pi_\gamma,\CV_\gamma)$ of
+$GL_1(\IR)$. Define  completed zeta-function as follows
+ \be\label{ExtRM}
+  \hat{\zeta}(s)\,=\,\zeta(s)\,\pi^{-\frac{s}{2}}\,\Gamma\Big(\frac{s}{2}\Big)\,.
+ \ee
+Then the global Hecke-Baxter operator \eqref{GLB} acts on \eqref{ME12}
+via multiplication by a shifted completed zeta-function
+ \be\label{GL1act}
+  \bigl(\wh{Q}^{GL_1}_s\cdot \psi_\gamma\bigr)(x)\,
+  =\hat{\zeta}(s-\imath \gamma)\,\psi_\gamma(x)\,,\qquad{\rm Re}(s)>1\,.
+ \ee
+\end{prop}
+
+\proof We have
+ \be
+  \bigl(\wh{Q}^{GL_1}_s*\psi_\gamma\bigr)(x)\,
+  =\!\int\limits_{\IR^*}\frac{dy}{y}\,\, |y|^{s}\,\,\,\frac{1}{2}\Big(
+  \Theta(0|\imath  y^2)-1\Big)\,\psi_\gamma(y^{-1}x)\\
+  =\sum_{n\in \IZ_+}\,\int\limits_{\IR^*}\!\frac{dy}{y}\,|y|^{s}\,e^{-\pi |ny|^2}\,
+  |y|^{-\imath \gamma}\,\psi_\gamma(x)\,\\
+  =\,\pi^{-\frac{s-\imath \gamma}{2}}\,\Gamma\Big(\frac{s-\imath \gamma}{2}\Big)\,
+  \left(\sum_{n\in \IZ_+} \frac{1}{n^{s-\imath
+        \gamma}}\right)\,\,\psi_\gamma(x)\\
+        =\,\pi^{-\frac{s-\imath \gamma}{2}}\,\Gamma\Big(\frac{s-\imath \gamma}{2}\Big)\,
+  \zeta(s-\imath \gamma)\,\,\psi_\gamma(x)\,,
+\ee
+thus arriving at the required identity. $\Box$
+
+Let us notice that in the simple case of the trivial representation
+$(\pi_{\g=0},\CV_{\gamma=0})$ the identity
+\eqref{GL1act} reduces to the standard
+integral expression for the completed zeta-function:
+ \be
+  \hat{\zeta}(s)\,
+  =\sum_{n\in \IZ_+}\,\,\int\limits_{\IR_+}\frac{dt}{t}\,\,
+  t^{\frac{s}{2}}\,\,e^{-\pi tn^2}\,.
+ \ee
+
+The fundamental property of the completed  Riemann zeta-function
+\eqref{ExtRM} is the functional relation
+\be\label{FR1}
+\hat{\zeta}(1-s)=\hat{\zeta}(s)\,.
+\ee
+The  matrix elements \eqref{ME12} also respect an analogous
+reflection symmetry
+\be
+\psi_{-\gamma}(x^{\tau})=\psi_\gamma(x)\,,
+\ee
+where $x^{\tau}:=x^{-1}$ is the involution on the group
+$GL_1(\IR)$. Taking into account that matrix elements \eqref{ME12} are
+eigenfunctions of the Hecke-Baxter operator $\hat{Q}_s^{GL_1}$ with
+the eigenvalues expressed through completed zeta-function  one
+expects that the kernel of the Hecke-Baxter integral operator
+should also  satisfy a form of functional equation. Indeed we have the
+following relation
+\be\label{FR2}
+\wh{Q}^{GL_1}_{1-s}(x^\tau)+\frac{1}{2}|x^\tau|^{1-s}=
+\wh{Q}^{GL_1}_{s}(x)+\frac{1}{2}|x|^{s}\,,
+\ee
+where the terms $|x|^s$ compensate the correction terms
+entering the expression \eqref{GLB} of the kernel via theta-constant.
+The functional relation  \eqref{FR2} is a direct consequence of the
+modular properties of the theta-constant verified using the Poisson
+summation formula. Thus we have a deep connection between properties
+of the global Hecke-Baxter  operator and analytic properties of the
+completed  Riemann zeta-function.
+
+
+It is possible to interpolate between the global and Archimedean Hecke-Baxter
+operators via considering a $GL_1$-analog of the
+congruence (semi)groups. Let us introduce
+the following semigroup $\IZ_+^{(N)}\subset\IQ^*_+$:
+ \be
+  \IZ_+^{(N)}\,=\,\{\eta \in \IQ_+^*|\eta=1+Nm, \,m\in \IZ_+\}\,.
+ \ee
+Then the generating function of the elements of the Hecke
+algebra $\CH(GL_1(\IQ),GL_1(\IZ))$ reads
+ \be
+  Q^{GL_1(\IZ)}_{s,N}=\sum_{n=1}^{\infty} \frac{1}{(1+nN)^s}\,T_{1+nN}\,.
+ \ee
+Therefore the  modified kernel of the global Hecke-Baxter operator is
+given by
+ \be\label{GLBN}
+  \wh{Q}^{GL_1}_{s,N}(x)\,
+  =\,\frac{1}{2}\,|x|^s\,\,\Theta^{(N)}(0|\imath x^2)\,,\qquad x\in
+  \IR^*\,,\qquad N>1\,.
+ \ee
+Here
+\be
+\Theta^{(N)}(0|\tau)=\sum_{n\in \IZ} e^{\imath \pi \tau (1+Nn)^2}=
+e^{\imath \pi \tau }\,
+\sum_{n\in \IZ} e^{\imath \pi \tau N^2n^2+2\pi \imath Nn\tau}=
+e^{\imath \pi \tau }\,\Theta_{N^2}\Big(\frac{\tau}{N}\Big|\tau\Big)\,,
+\ee
+where the level $k$ theta function is defined by:
+ \be
+  \Theta_k(z|\tau)\,
+  =\sum_{n\in \IZ} e^{\imath \pi k\tau n^2+2\pi \imath knz}\,.
+ \ee
+Now it is easy to check that taking the limit $N\to+\infty$ the kernel \eqref{GLBN}
+of the modified global Hecke-Baxter operator   turns into the kernel
+\eqref{ArKernel} of the Archimedean Hecke-Baxter operator.  This
+provides a kind of regularization of the Archimedean  Hecke-Baxter
+operator.
+
+
+\section{$GL_2$-automorphic forms }
+
+In this Section we recall a  construction of the Eisenstein functions
+for $GL_2$ (for a review see e.g. \cite{ILP}).
+Let us start with  the  double coset space
+\be\label{Mtwo}
+\CM_2=GL_2(\IZ)\backslash GL_2(\IR)/O_2\,.
+\ee
+The space \eqref{Mtwo}, similar to  \eqref{Mone} in the previous Section
+ is an orbifold. We will define the space of functions on
+\eqref{Mtwo} as functions on $GL_2(\IR)/O_2$ invariant under left
+action of $GL_2(\IZ)$. The double coset space  $\CM_2$ allows
+interpretation as a moduli space of two-tori $T^2$ supplied with
+$T^2$-invariant metrics. Indeed it may  be identified with the space
+of pairs of lattices $L$   and a constant metrics $h$ in $\IR^2$
+modulo simulations action of $GL_2(\IR)$. Taking into account that
+any lattice in $\IR^2$ may be transformed by linear transformations
+into the standard one $\IZ^2\subset \IR^2$ we arrive at the
+identification of  $\CM_2$ with the moduli space of metricizes tori.
+Constant metric on $T^2$ defines a conformal metric, and therefore a
+complex structure, supplying $T^2$ with a structure of elliptic
+curve $E(\IC)$. As a result the space $\CM_2$ is naturally fibred
+over the moduli space $\CM_2^c$ of elliptic curves. The fiber of the
+projection $\CM_2\to \CM_2^c$ may be identified  with $\IR_+$
+supplied with the natural coordinate, the volume of
+$T^2=\IR^2/\IZ^2$ in the considered metric. In turn, the space
+$\CM_2^c$ of complex structures  has the double coset description as
+the upper complex half-plane \be\label{ISO12}
+\CH_+=PSL_2(\IR)/SO(2)\,, \ee modulo action of the discrete group
+$PSL_2(\IZ)$. In the standard linear coordinates on $\CH_+=\{\tau\in
+\IC|{\rm
+  Im}(\tau)>0\}$ the isomorphism \eqref{ISO12}
+may be described as  $SO_2$-projection of the following lift
+ \be
+  \tau=(\tau_1+\imath \tau_2)\in\CH_+ \longrightarrow
+  \frac{1}{\sqrt{\tau_2}}
+  \begin{pmatrix}  \tau_2 & \tau_1 \\ 0 & 1\end{pmatrix}\in
+  PSL_2(\IR)\,,
+ \ee
+while the left action of $PSL_2(\IZ)$ on $\CH_+$ is realized by  the
+fractional linear transformations.
+
+Now we introduce a special kind of $GL_2$-automorphic functions,
+the Eisenstein functions. The $GL_2$-Eisenstein functions are
+associated with  spherical principle
+series representations entering  the
+decomposition of the $GL_2(\IR)$-representation $L^2(GL_2(\IZ)\backslash GL_2(\IR))$
+acting from the right:
+ \be
+  \bigl(\pi(g)\cdot f\bigr)(\tilde{g})=f(\tilde{g}\cdot g),\qquad f\in
+  L^2(GL_2(\IZ)\backslash GL_2(\IR))\,.
+ \ee
+The irreducible components
+corresponding to spherical principle series representations are in one
+to one correspondence with the elements of
+$L^2(GL_2(\IZ)\backslash GL_2(\IR))$ invariant under the subgroup
+$O_2\subset GL_2(\IR)$.  This  correspondence   follows by  the uniqueness of
+spherical vectors in spherical principle series
+representations (see e.g. \cite{GGPS}).
+
+ Let $(\pi_\gamma,\CV_\gamma)$ be a unitary spherical principle
+series
+ representation  of $GL_2(\IR)$
+realized via induction from the Borel subgroup $B\subset GL_2(\IR)$
+(identified with the subgroup of  lower triangular matrices) via the
+spherical character of $B$
+ \be
+  \pi_{\g}={\rm Ind}_B^{GL_2(\IR)}\chi^B_\gamma,\quad
+  \chi^B_\gamma(b)=\prod_{j=1}^2 |b_{jj}|^{\imath \g_j-\rho_j}\,,\quad
+  \rho=\Big(\frac{1}{2},\,-\frac{1}{2}\Big)\,.
+ \ee
+Therefore the representation space $\CV_\gamma$
+ \be
+  \CV_{\g}=\bigl\{f\in\Fun(GL_2(\IR))\,:\quad
+  f(bg)=\chi^B_{\g}(b)\,f(g),\,\,b\in B\bigr\}\,,
+ \ee
+supports the right $GL_2(\IR)$-action. Using the Bruhat decomposition,
+the representation $(\pi_\gamma,\CV_\gamma)$ may be realized in the
+space of functions on $B\backslash GL_2(\IR)=\IP^1(\IR)$, which in
+turn can be identified with the compactification the (opposite)
+unipotent subgroup $N_+\subset GL_2(\IR)$:
+ \be
+  N_+\,=\,\Big\{n_x=\Big(
+  \begin{smallmatrix} 1&&x\\&&\\0 &&1\end{smallmatrix}\Big)\,\Big|
+                                                 \quad x\in\IR\Big\}\,.
+ \ee
+Explicitly, the $GL_2(\IR)$ action in $\CV_\gamma\subset
+L^2(B\backslash GL_2(\IR))$, for
+$g=\Big(\begin{smallmatrix}a&&b\\&&\\c&&d\end{smallmatrix}\Big)$, is
+given by
+ \be\label{TrRools}
+  [\pi_\gamma(g)\cdot f](x)\,=\,f(n_xg)\,
+ =\,|\det g|^{\imath\gamma_2+\frac{1}{2}}\,|a+xc|^{\imath (\gamma_1-\gamma_2)-1}\,
+  f\Big(\frac{b+xd}{a+xc}\Big)\,,
+ \ee
+providing the following $GL_2(\IR)$-action on $\IR P^1$:
+ \be\label{RLaction}
+  g\cdot x\,=\,\frac{b+xd}{a+xc}\,,\qquad
+  g=\Big(\begin{smallmatrix}a&&b\\&&\\c&&d\end{smallmatrix}\Big)\,.
+  \ee
+  The Hilbert space structure on the space of functions on $N_+$
+is defined via  the pairing
+ \be\label{PAIR}
+  \<\phi_1\,,\phi_2\>\,=\int\limits_{N_+}\!dn_x\,\ov{\phi_1(n_x)}\,\,\phi_2(n_x)\,.
+ \ee
+We  supply the  Hilbert space  $\CV_{\gamma}$ with a structure of
+the rigged Hilbert spaces $\CV_{\gamma}^{(t)}\subset
+\CV_{\gamma}\subset \CV_{\gamma}^{(g)}$ (the Gelfand triple) where
+$\CV_{\gamma}^{(t)}$ is the subspace of smooth test functions and
+$\CV_{\gamma}^{(g)}$ is the  space of generalized functions. The
+pairing \eqref{PAIR} extends to the duality between
+$\CV_{\gamma}^{(t)}$ and $\CV_{\gamma}^{(g)}$. We would like to
+represent the $GL_2$-Eisenstein functions in terms of matrix
+elements of the spherical principle series representations. As we
+will see the corresponding matrix elements are not well-defined for
+the unitary principle series and requires analytic continuation of
+the representation parameters $\gamma=(\gamma_1,\gamma_2)\in \IR^2$.
+In turn this implies a replacement of the structure of Hilbert space
+$\CV_\gamma$ by a pair of dual spaces. Thus we consider
+$\CV_{\gamma}^{(t)}$ and $\CV_{\gamma}^{(g)}$ to be the dual
+$GL_2(\IR)$-modules  with representation parameters having a small
+imaginary part. To construct matrix element representation of the
+Eisenstein functions we start with the  explicit construction
+$GL_2(\IZ)$- and $O_2$-invariant vectors. Let
+$\phi_{O_2}\in\CV_{\g}^{(t)}$ be the unique (up to normalization)
+spherical vector, i.e. vector invariant under the action of
+$O_2\subset GL_2(\IR)$ and let $\phi_{GL_2(\IZ)}$ be the unique (up
+to normalization) $GL_2(\IZ)$-invariant vector in $\CV_{\g}^{(g)}$.
+
+
+\begin{lem} In the representation $(\pi_\gamma,\CV_\gamma)$ given by \eqref{TrRools}
+  the $O_2$-invariant vector $\phi_{O_2}\in\CV_{\g}^{(t)}$ and
+the  $GL_2(\IZ)$-invariant vector $\phi_{GL_2(\IZ)}\in\CV_{\g}^{(g)}$
+may be chosen in the following form
+ \be\label{SphVect1}
+  \phi_{O_2}(x)\,
+  =\,(1+x^2)^{\frac{\imath(\gamma_1-\gamma_2)-1}{2}}\,,
+ \ee
+ \be \label{SphVect2}
+  \phi_{GL_2(\IZ)}(x)=\sum_{(m,n)\in \CP}\!\!
+  |n|^{-\imath(\gamma_1-\gamma_2)}\, \delta(m+nx)\,,
+  \ee
+  where
+ \be\label{Range}
+  \CP=\{ (m,n)\in \IZ^2-\{0\}|\,\, {\rm gcd}(m,n)=1,\, (m,n)\sim
+  (-m,-n)\}\,.
+ \ee
+\end{lem}
+
+\proof Elements of $O_2\subset GL_2(\IR)$
+may be written in the following form
+ \be
+  k=\begin{pmatrix} \cos \theta & (-1)^\epsilon \sin \theta
+    \\-\sin\theta &(-1)^\epsilon\,   \cos\theta
+  \end{pmatrix} \in O_2\,,\quad0\leq\theta<2\pi\,, \qquad \epsilon\in \{0,1\}\,.
+ \ee
+  By \eqref{RLaction}, a direct calculation gives
+  \be
+  1+(k\cdot x)^2\,
+  =\,1+\Big(\frac{(-1)^{\e}\sin\theta+x(-1)^{\e}\cos\theta}
+  {\cos\theta-x\sin\theta}\Big)^2\,.
+  \ee
+Taking into account $|\det k|=1$ we infer from \eqref{TrRools}
+  the $O_2$-invariance of the vector \eqref{SphVect1}.
+
+  Next,   we find a $GL_2(\IZ)$-invariant vector $\phi_{GL_2(\IZ)}$ by
+  solving the   following equation,
+ \be\nonumber
+  [\pi_\gamma(g)\cdot \phi_{GL_2(\IZ)}](x)\,
+  =\,\phi_{GL_2(\IZ)}(n_xg)\,=\,\phi_{GL_2(\IZ)}(n_x)\,,\qquad
+  g=\Big(\begin{smallmatrix}a&&b\\&&\\c&&d\end{smallmatrix}\Big)\in GL_2(\IZ)\,.
+ \ee
+The group $GL_2(\IZ)$ is generated by
+ \be
+  T=\Big(\begin{smallmatrix}1&&1\\&&\\0&&1\end{smallmatrix}\Big),\qquad
+  S=\Big(\begin{smallmatrix}0&&1\\&&\\1&&0\end{smallmatrix}\Big),\qquad
+  R=\Big(\begin{smallmatrix}-1&&0\\&&\\0&&1\end{smallmatrix}\Big)\,,
+ \ee
+so by \eqref{RLaction} each generator is acting in
+$\CV_\gamma\subset L^2(B\backslash GL_2(\IR))$ via
+ \be\label{GL2Zrel}
+  [\pi_{\g}(T)\,f](x)\,=\,f(x+1),\qquad
+  [\pi_{\g}(R)\,f](x)\,=\,f(-x),\\
+  \,[\pi_{\g}(S)\,f](x)\,=\,|x|^{\i(\g_1-\g_2)-1}\,f(x^{-1})\,.
+ \ee
+Considering the expression \eqref{SphVect2}, its $R$-invariance
+reduces to change $n\to -n$ of the summation variable, and the
+invariance under $T$ is compensated the change of the variable $m\to
+m-n$ (which does not spoil the condition $(m,n)=1$). To check the
+invariance under $S$ we take into account the following identity
+ \be
+  |x|^{\imath (\gamma_1-\gamma_2)-1}\, \delta(m+x^{-1}n)\,
+  =\,|x|^{\imath (\gamma_1-\gamma_2)}\, \delta(xm+n)\,
+  =\,\frac{|n|^{\imath (\gamma_1-\gamma_2)}}
+  {|m|^{\imath (\gamma_1-\gamma_2)}}\, \delta(xm+n)\,.
+ \ee
+This completes a verification of the required properties of
+\eqref{SphVect1} and \eqref{SphVect2}. $\Box$
+
+Now the Eisenstein automorphic function
+associated with $(\pi_\gamma,\CV_\gamma)$ is defined as a matrix  element
+\be \label{Autform}
+\Phi_{\gamma}(g)=\<\phi_{GL_2(\IZ)},\pi_\gamma(g) \phi_{O(2)}\>\,.
+\ee
+Note that $\Phi_{\gamma}(g)$ obviously  defines a function on the double coset $\CM_2$.
+Explicit realization  of the  principle series representation allows
+to obtain  explicit expression for the $GL_2$-automorphic
+form  \eqref{Autform}.
+
+
+\begin{prop} For the $GL_2$-Eisenstein function given by the matrix element \eqref{Autform}, the following series representation holds,
+  \be\label{Eisen}
+   \Phi_\gamma(g)=\<\phi_{GL_2(\IZ)}, \pi_\gamma(g)\, \phi_{O_2}\>\\
+   =\,|\det g|^{\imath \gamma_2+\frac{1}{2}}\!
+   \sum_{(n,m)\in\CP}\!
+  \bigl|(na+mc)^2+(nb+md))^2\bigr|^{\frac{\imath(\gamma_1-\gamma_2)-1}{2}}\,, \quad
+  g=\Big(\begin{smallmatrix}a&&b\\&&\\c&&d\end{smallmatrix}\Big)\,.
+ \ee
+provided ${\rm Im}(\g_1-\g_2)>\frac{1}{2}$ for convergence.
+\end{prop}
+
+\proof Using \eqref{SphVect1}, \eqref{SphVect2} and \eqref{TrRools} we
+have
+ \be
+  \Phi_{\gamma}(g)\,
+  =\,\<\phi_{GL_2(\IZ)},\,\pi_\gamma(g)\,\phi_{O_2}\>\,
+  =\!\int\limits_{N_+}\!dn_x\,\,\ov{\varphi_{GL_2(\IZ)}(n_x)}\,\,\phi_{O_2}(n_xg)\\
+  =\,|\det(g)|^{\i\g_2+\frac{1}{2}}\!\sum_{(n,m)\in\CP}
+  |n|^{\i(\g_1-\g_2)}\!
+  \int\limits_{\IR}\!dx\,\,\delta(m+xn)\\
+  \times\,\,\bigl|(a+xc)^2+(b+xd)^2\bigr|^{\frac{\i(\g_1-\g_2)-1}{2}}\\
+  =\,|\det(g)|^{\i\g_2+\frac{1}{2}}\!\sum_{(n,m)\in\CP}
+  |n|^{\i(\g_1-\g_2)-1}\,
+  \Big|\Big(a-\frac{mc}{n}\Big)^2+\Big(b-\frac{md}{n}\Big)^2
+  \Big|^{\frac{\i(\g_1-\g_2)-1}{2}}\,,
+%  =\,|\det(g)|^{\i\g_2+\frac{1}{2}}\!\sum_{(n,m)\in\CP}
+%  \bigl|(na-mc)^2+(nb-md)^2\bigr|^{\frac{\i(\g_1-\g_2)-1}{2}}
+
+ \ee
+which gives \eqref{Eisen} after changing the summation variable $m\mapsto-m$. $\Box$
+
+The Eisenstein functions are right $O_2$-invariant and thus are
+defined as functions of $GL_2(\IR)/O_2$ via a choice of a section of
+the projection $GL_2(\IR)\to GL_2(\IR)/O_2$. We chose the following
+section
+ \be\label{Param123}
+  g(x,y,t)=t^{\frac{1}{2}}y^{-\frac{1}{2}}\,\begin{pmatrix} y & x\\0&1\end{pmatrix}\in
+  GL_2(\IR)\,, \qquad x\in \IR, \quad t,y\in \IR_+\,.
+ \ee
+Evaluation  of the Eisenstein function of elements \eqref{Param123}
+gives
+ \be\label{EisenRed}
+  \Phi_\gamma(\tau,t)=t^{\imath(\gamma_1+\gamma_2)}\,\,
+  \sum_{(n,m)\in\CP}
+  \frac{({\rm Im}(\tau))^{\frac{\i(\g_2-\g_1)+1}{2}}}
+  {|m+n\tau|^{\i(\g_2-\g_1)+1}}\,,\qquad \tau=x+\imath y\,.
+ \ee
+The Eisenstein series may be written in a form that makes its
+$GL_2(\IZ)$-invariance obvious.
+
+\begin{lem} Let us define a subgroup $B(\IZ)\subset GL_2(\IZ)$ as
+  follows
+ \be
+  B(\IZ)=\Big\{g=\Big(\begin{smallmatrix}
+  (-1)^{\epsilon_1} && r \\&&\\
+  0 && (-1)^{\epsilon_2}\end{smallmatrix}\Big)\,\Big|\,\,
+  \epsilon_{1,2}\in\{0,1\}, r\in
+  \IZ\Big\}\,.
+ \ee
+Then we have the following coset decomposition
+ \be
+  GL_2(\IZ)=\bigsqcup_{(m,n)\in \CP}\,\,B(\IZ)\cdot \g_{(m,n)}\,,
+ \ee
+where
+ \be\label{gmn}
+  \g_{(m,n)}=\begin{pmatrix} k & l \\m & n\end{pmatrix}, \qquad
+  {\rm gcd}(m,n)=1\,\qquad m,n,k,l \in \IZ \,,
+ \ee
+where we take $k,l$ to be unique solutions of the equation
+ \be
+  |kn-ml|=1\,, \qquad 0\leq k<m\,.
+ \ee
+In the expression \eqref{gmn} we imply a fixed lift along  the projection
+$(\IZ^2-\{0\})\to (\IZ^2-\{0\})/\IZ_2$  of $(m,n)\in \CP$.
+ \end{lem}
+
+ \proof Taking into account the explicit form of the left action of
+ elements of $B(\IZ)$
+\be
+\begin{pmatrix} (-1)^{\epsilon_1} & r \\ 0
+  & (-1)^{\epsilon_2}\end{pmatrix}\cdot
+\begin{pmatrix} k & l \\ m & n \end{pmatrix}
+=\begin{pmatrix} (-1)^{\epsilon_1}k+rm  & (-1)^{\epsilon_1}l+rn \\
+ (-1)^{\epsilon_2}m & (-1)^{\epsilon_2} n \end{pmatrix}\,,
+\ee
+and determinant condition
+\be
+|kn-ml|=1\,,
+\ee
+we infer that the set of $B(\IZ)$-orbits is projected to $\CP$. Let us
+now check that  fibers of this projection allow transitive action of
+$B(\IZ)$. For  $m\neq 0$ one might  chose $m>0$ and $n\in \IZ-\{0\}$.
+Moreover we can chose $0<k<m$. Then for fixed $m$ and $n$ the
+elements $l$ and $k$ are uniquely defined as
+solution of the equation
+\be
+|kn-ml|=1\,, \qquad 0\leq k<m\,.
+\ee
+For $m=0$ we take $n\in \IZ_+$ and then from $|nk|=1$ derive that
+$n=1$. Thus we can take
+$k=1$ and $l=0$. This exhausts the set of representatives in the right
+$B(\IZ)$-cosets.  $\Box$
+
+
+\begin{prop} The Eisenstein function \eqref{EisenRed} allows the
+  following presentation
+ \be \label{EisenInv}
+  \Phi_\gamma(\tau,t)=t^{\imath(\gamma_1+\gamma_2)}\,\,
+  \sum_{\gamma\in B(\IZ)\backslash GL_2(\IZ)}
+  {\rm Im}(\gamma\cdot\tau)^{\frac{\i(\g_2-\g_1)+1}{2}}\,,
+ \ee
+where  the action of $GL_2(\IZ)$ is given by
+ \be
+  \gamma\cdot\tau\,
+  =\,\frac{a+b\tau}{c+d\tau},\qquad
+  \gamma=\Big(\begin{smallmatrix}
+  a&&b\\&&\\c&&d
+  \end{smallmatrix}\Big)\in GL_2(\IZ)\,.
+ \ee
+\end{prop}
+
+\proof In the summation we may chose the representatives
+\eqref{gmn}. Then the expression \eqref{EisenInv} follows from  the
+following simple identity
+ \be
+  {\rm Im}(\gamma_{(m,n)}\cdot \tau)\,
+  =\,\frac{{\rm Im}(\tau)}{|m+n\tau|^2}\,.
+ \ee
+This completes our proof. $\Box$
+
+
+
+\section{ Global $GL_2$ Hecke-Baxter operator}
+
+To construct global $GL_2$ Hecke-Baxter operator we start with the
+description of the elements of the Hecke  algebras
+$\CH(GL_2(\IQ),GL_2(\IZ))$  and $\CH(GL_2(\IR),O_2)$ acting on the
+space of the $GL_2$-automorphic forms, functions on $\CM_2$ (by
+convolutions form the right and form the left).  Taking into account
+the interpretation of  $\CM_2$ as space equivalence classes of
+lattices $L$ in $\IR^2$ we introduce the following  averaging
+operators $T_n$ as analogs of \eqref{Tn}
+ \be\label{HA1}
+  (T_n\cdot f)(L)=\sum_{[L:L']=n}\,f(L')\,,
+ \ee
+where the sum goes over sub-lattices $L'\subset L$ of index $n$.
+The double coset description of $\CM_2$ allows to rewrite
+the operators \eqref{HA1} as follows
+ \be\label{HA2}
+  (T_n\cdot f)(g)=\sum_{\gamma\in {SL_2(\IZ)\backslash\Mat}^{(n)}_2(\IZ)}\!
+  f(\gamma\cdot g)\,,
+ \ee
+where
+ \be\label{Matn}
+  \Mat^{(n)}_2(\IZ)\,
+  =\,\{\gamma\in {\rm Mat}_2(\IZ)|\det \gamma=n\}\,.
+ \ee
+This action may be written more explicitly using a specific choice of
+representatives of the coset space
+$SL_2(\IZ)\backslash\Mat^{(n)}_2(\IZ)$.
+
+\begin{lem} For $n\in\IZ_+$, the space $\Mat^{(n)}_2(\IZ)$ defined in \eqref{Matn} allows the following coset decomposition:
+ \be\label{Coset1}
+  \Mat^{(n)}_2(\IZ)\,
+  =\bigsqcup_{i=1}^{\s(n)}\,\,SL_2(\IZ)\,\alpha_i\,,
+ \ee
+where
+ \be\label{Cosetrep}
+  \alpha_i=\begin{pmatrix} a_i& b_i \\0 & d_i\end{pmatrix}, \qquad
+  a_i,b_i,d_i>0,\quad a_id_i=n, \quad 0\leq b_i<d_i\,,
+\ee
+and the number $\s(n)$ of the coset representatives
+$SL_2(\IZ)\backslash\Mat^{(n)}_2(\IZ)$ equals the positive divisors sum:
+ \be
+  \s(n)\,=\sum_{d|n}d\,.
+ \ee
+\end{lem}
+\proof See e.g. \cite{L}, Chapter II, \S1. $\Box$
+
+As a consequence of the previous Lemma we obtain the following
+presentation for the operators $T_n$
+\be
+  (T_n\cdot f)(g)\,
+  =\sum_{a,d>0\atop ad=n}\sum_{b=0}^{d-1}\!
+  f\Big(\,\Big(\begin{smallmatrix} a&&b\\&&\\0&&d\end{smallmatrix} \Big)g\Big)\,.
+ \ee
+Let us combine the operators $T_n$, $n\in \IZ_+$ into the  generating series
+ \be
+  Q^{GL_2(\IZ)}_s=\sum_{n=1}^\infty \frac{1}{n^{s+\frac{1}{2}}} T_n\,,
+ \ee
+acting on a function on the space of lattices $L\subset\IR^2$ in the
+following way
+ \be
+  (Q^{GL_2(\IZ)}_s\cdot f)(L)\,
+  =\sum_{L'\subset L}^\infty \frac{1}{[L:L']^{s+\frac{1}{2}}}\,f(L')\,,
+  \ee
+(note that  the shift $s\to s+\frac{1}{2}$ is a special case of the
+general expression $s+\frac{\ell}{2}$ for $GL_{\ell+1}$).
+Equivalently,
+ \be\label{HBZ0}
+  \bigl(Q^{SL_2(\IZ)}_s\cdot f\bigr)(g)\,
+  =\!\!\sum_{\a\in SL_2(\IZ)\backslash\Mat^*_2(\IZ)}\,\,
+  \frac{1}{|\det\a|^{s+\frac{1}{2}}} \,f(\alpha \cdot g)\,,
+ \ee
+where $\a$ runs through the set of $SL_2(\IZ)$-coset representatives
+\eqref{Cosetrep} of the space
+ \be
+  \Mat^*_2(\IZ)\,={\rm
+    Mat}_2(\IZ)\cap GL_2^+(\IQ)=\bigsqcup_{n\in \IZ_+} \Mat^{(n)}_2(\IZ)\,.
+ \ee
+One has an  analog of the Riemann zeta-function for $GL_2$:
+ \be
+\zeta^{GL_2}(s)=\sum_{\alpha\in  SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,
+\frac{1}{|\det  \alpha|^{s+\frac{1}{2}}}\,.
+\ee
+\begin{lem} The following identity holds
+\be\label{2Riem}
+\zeta^{GL_2}(s)=\sum_{\alpha\in SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,
+\frac{1}{|\det  \alpha|^{s+\frac{1}{2}}}=\zeta\left(s+\frac{1}{2}\right)\cdot
+\zeta\left(s-\frac{1}{2}\right)\,,
+\ee
+where $\zeta(s)$ is the Riemann zeta-function given by
+by
+\be
+\zeta(s)=\sum_{n=1}^{\infty} \,\frac{1}{n^s}\,, \qquad {\rm Re}(s)>1\,.
+\ee
+\end{lem}
+
+\proof Using the set of representatives for the coset we have
+\be
+\sum_{\alpha \in SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,
+\frac{1}{|\det  \alpha |^{s+\frac{1}{2}}}=\sum_{a,d>0 \atop 0\leq b<d}
+\frac{1}{a^{s+\frac{1}{2}}}\cdot
+\frac{1}{d^{s+\frac{1}{2}}}\,.
+\ee
+Summing over $b$ we obtain
+\be
+\sum_{\alpha \in SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,
+\frac{1}{|\det  \alpha|^{s+\frac{1}{2}}}=\sum_{a,d>0}\frac{1}{a^{s+\frac{1}{2}}}\cdot
+\frac{1}{d^{s-\frac{1}{2}}}=
+\zeta\left(s+\frac{1}{2}\right)\cdot \zeta\left(s-\frac{1}{2}\right)\,.
+\ee
+$\Box$
+
+Below we encounter a generalization of \eqref{2Riem}
+associated with   spherical principle series representations.  The
+following result is a direct consequence of the well-known expressions
+for action of the Hecke algebra generators $T_n$ \eqref{HA1} on the
+Eisenstein functions.
+
+ \begin{prop}\label{HBZ}
+The action of the operator $Q_s^{GL_2(\IZ)}$ on
+the  $GL_2$-Eisenstein functions \eqref{Eisen} associated with a
+spherical principle series representation $(\pi_\gamma,\CV_\gamma)$
+is given by
+ \be \label{Act456}
+  \bigl(Q_s^{GL_2(\IZ)}\cdot \Phi_\gamma\bigr)(g)\,
+  =\,\zeta^{GL_2}(s|\gamma)\,\,\Phi_\gamma(g)\,,
+ \ee
+ where
+ \be\label{CompGLzeta}
+ \zeta^{GL_2}(s|\gamma)=\zeta(s-\imath \gamma_1)\,
+ \zeta(s-\imath \gamma_2)\,.
+\ee
+\end{prop}
+
+\proof  Application of the Hecke-Baxter operator \eqref{HBZ0}  gives
+\be
+\bigl(Q_s^{GL_2(\IZ)}\cdot \Phi_\gamma\bigr)(g)
+=\sum_{\alpha \in SL_2(\IZ)
+  \backslash {\rm Mat}^*_2(\IZ)}\,
+\frac{1} {|\det \alpha |^{s+\frac{1}{2}}}\,\,
+\Phi_\gamma(\alpha \cdot g)\,.
+\ee
+Using the presentation  \eqref{Param123}, \eqref{EisenRed} we have
+ \be\nonumber
+  \bigl(Q_s^{GL_2(\IZ)}\cdot \Phi_\gamma\bigr)(\tau,t)\\
+  =\,t^{\imath(\gamma_1+\gamma_2)}\!\!\sum_{\alpha \in SL_2(\IZ)
+  \backslash {\rm Mat}^*_2(\IZ)} \,\,
+  \frac{|\det \alpha|^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}
+  {|\det\alpha |^{s+\frac{1}{2}}}\!\!
+  \sum_{\gamma\in B(\IZ)\backslash GL_2(\IZ)}\,\,
+  ({\rm Im}(\gamma\cdot\alpha\cdot\tau))^{\frac{\imath(\gamma_2-\gamma_1)+1}{2}}\,.
+ \ee
+We formally
+extend the summation domain in the first  sum
+ \be\nonumber
+  \bigl(Q_s^{GL_2(\IZ)}\cdot \Phi_\gamma\bigr)(\tau,t)\\
+  =\,\frac{t^{\imath(\gamma_1+\gamma_2)}}{|SL_2(\IZ)|\cdot |B(\IZ)|}
+  \!\!\sum_{\alpha \in {\rm Mat}^*_2(\IZ)} \,
+  \frac{|\det\alpha|^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}{|\det\alpha|^{s+\frac{1}{2}}}\!\!
+  \sum_{\gamma\in  GL_2(\IZ)}\,\,
+  ({\rm Im}(\gamma\cdot\alpha\cdot\tau))^{\frac{\imath(\gamma_2-\gamma_1)+1}{2}}\\
+  =\,\frac{t^{\imath(\gamma_1+\gamma_2)}}{|SL_2(\IZ)|\cdot |B(\IZ)|}\!\!
+  \sum_{\alpha \in {\rm Mat}^*_2(\IZ)} \,
+  \frac{|\det\alpha|^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}{|\det \alpha|^{s+\frac{1}{2}}}\!\!
+  \sum_{\gamma\in  GL_2(\IZ)}\,\,
+  ({\rm Im}(\alpha\cdot \gamma\cdot\tau))^{\frac{\imath(\gamma_2-\gamma_1)+1}{2}}\,.
+ \ee
+Let us split the summation domain using the right hand side analog
+of the decomposition \eqref{Coset1}
+  \be
+   {\rm Mat}^*_2(\IZ)\,=\,\bigsqcup_{n>0}\bigsqcup_i\,\,\tilde{\alpha}_i\,SL_2(\IZ)\,,
+ \ee
+to obtain \be\nonumber \bigl(Q_s^{GL_2(\IZ)}\cdot
+\Phi_\gamma\bigr)(\tau,t)\\=
+t^{\imath(\gamma_1+\gamma_2)}\,\,\sum_{\alpha \in
+  {\rm Mat}^*_2(\IZ)/SL_2(\IZ)}\,
+\frac{|\det \alpha|^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}
+{|\det \alpha |^{s+\frac{1}{2}}}\,\,
+\sum_{\gamma\in  B(\IZ)\backslash GL_2(\IZ)}\,\,
+({\rm Im}(\alpha \cdot \gamma\cdot
+\tau))^{\frac{\imath(\gamma_2-\gamma_1)+1}{2}}\,.
+\ee
+Now using the identity
+\be
+{\rm Im}(\alpha \cdot \gamma\cdot  z)=\frac{a}{d}\cdot
+{\rm Im}(\gamma\cdot  z)\,,
+\ee
+and the fact that $\det \alpha =ad$ for the considered representatives
+of the coset space  we obtain
+\be\nonumber
+\bigl(Q_s^{GL_2(\IZ)}\cdot \Phi_\gamma\bigr)(\tau,t)\\=
+t^{\imath(\gamma_1+\gamma_2)}\,\,
+\left(\sum_{a,d>0}\sum_{b=0}^{d-1}\,\,
+  \frac{a^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}
+  {a^{s-\frac{\imath(\gamma_2-\gamma_1)}{2}}}
+\frac{d^{\frac{\imath(\gamma_1+\gamma_2)}{2}}}
+  {d^{s+\frac{\imath(\gamma_2-\gamma_1)}{2}+1}}
+\right)
+\sum_{\gamma\in  B(\IZ)\backslash GL_2(\IZ)}\,\,
+({\rm Im}(\gamma\cdot\tau))^{\frac{\imath(\gamma_2-\gamma_1)+1}{2}}\,\\=
+\left(\sum_{a,d>0}\sum_{b=0}^{d-1}\,\,
+\frac{1}{a^{s-\imath\gamma_2}}
+\frac{1}{d^{s-\imath\gamma_1+1}}\right)\cdot
+\Phi_\gamma(\tau,t)\,.
+\ee
+Thus for the eigenvalue we have
+\be
+\sum_{a,d>0}\sum_{b=0}^{d-1}\,\,
+\frac{1}{a^{s-\imath\gamma_1}}
+\frac{1}{d^{s-\imath\gamma_2+1}}=
+\sum_{a,d>0}\,\,
+\frac{1}{a^{s-\imath\gamma_1}}
+\frac{1}{d^{s-\imath\gamma_2}}=
+\zeta(s-\imath \gamma_1)\, \zeta(s-\imath
+\gamma_2)\,.
+\ee
+This completes the proof.
+$\Box$
+
+The Archimedean counterpart of the one-parameter family
+$Q^{GL_2(\IZ)}_s$   of elements in \\$\CH(GL_2(\IQ),GL_2(\IZ)$
+given by \eqref{HBZ0} is the
+ $GL_2(\IR)$ Hecke-Baxter operator \cite{GLO08}:
+ \be
+  \bigl(Q^{GL_2(\IR)}_s\cdot f\bigr(g)\,
+  =\!\int\limits_{GL_2(\IR)}\!\! d\mu^G(\tilde{g})\,\, |\det
+  \tilde{g}|^{s+\frac{1}{2}} f(\tilde{g}^{-1}g)\,,\\
+  d\mu^G(\tilde{g})=e^{-\pi \Tr \tilde{g}^{\top}\tilde{g}}\,d\mu(\tilde{g})\,,
+ \ee
+acting by convolution with $O_2$-biinvariant function on $GL_2(\IR)$
+ \be\label{ArKernel2}
+  Q^{GL_2(\IR)}_s(g)=|\det g|^{s+\frac{1}{2}}\,e^{-\pi \Tr g^{\top}g}\,.
+ \ee
+Its action on the matrix element \eqref{Autform} (actually on any
+matrix element with the right $O_2$-invariant vector) was calculated in
+\cite{GLO08} and is given by
+ \be\label{Act123}
+  \bigl(Q^{GL_2(\IR)}_s\cdot \Phi_\gamma\bigr)(g)\,
+  =\,L^{GL_2(\IR)}(s|\gamma)\,
+  \Phi_\gamma(g)
+ \ee
+where
+ \be\label{GammaF}
+  L^{GL_2(\IR)}(s|\gamma)=
+  \prod_{j=1}^2 \pi^{-(s-\imath \gamma_j)/2}\,
+  \Gamma((s-\imath \gamma_j)/2)\,.
+ \ee
+
+Let us note that while the operator $Q_s^{GL_2(\IZ)}$ acts by
+convolution on the functions on the double coset space
+$GL_2(\IZ)\backslash GL_2(\IR)/O_2$ from the left the operator
+$Q_s^{O_2}$ acts by convolution on the functions on the double coset space
+$GL_2(\IZ)\backslash GL_2(\IR)/O_2$ from  the right. Still it is
+reasonable to consider its combination acting by simultaneous via
+left/right convolution. Let us  define  the following
+integral operator acting on $GL_2$-automorphic functions
+ \be\label{GHBO1}
+  \bigl(\wh{Q}^{GL_2}_s \bullet  \Phi\bigr)(g)\,
+  =\!\int\limits_{GL_2(\IR)}\!\!d\mu(h)\,\,\wh{Q}^{GL_2}_s(g,h)\,\,\Phi(h^{-1})\,,
+ \ee
+where the kernel of the integral operator is given by
+ \be\label{GHBO}
+  \wh{Q}^{GL_2}_s(g,h)=\,\,|\det g|^{s+\frac{1}{2}}\!\!
+  \sum_{\a\in SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,|\det h|^{s+\frac{1}{2}} \,
+  e^{-\pi\Tr(h^{\top}h
+  \,\alpha gg^{\top}\,\alpha^{\top})}\,,
+ \ee
+where sum goes over representatives \eqref{Cosetrep}.
+This operator is a global analog  (in the sense of arithmetic geometry
+of $\overline{{\rm Spec}(\IZ)}$) of the local
+ spherical Hecke-Baxter  operators considered above. Our previous
+ considerations may be summarized in the following form.
+
+\begin{te}\label{TH1}  The global Hecke-Baxter operator \eqref{GHBO1}
+  acts on the Eisenstein functions represented by matrix elements
+\eqref{Eisen} of the spherical principle series representation
+$(\pi_\gamma,\CV_\gamma)$ of $GL_2(\IR)$
+by multiplication on the corresponding global completed zeta-functions
+ \be\label{GlobalL}
+  \hat{\zeta}^{GL_2}(s|\gamma)\,
+  =\,\pi^{-\frac{s-\imath \gamma_j}{2}}\,
+  \Gamma\Big(\frac{s-\imath \gamma_j}{2}\Big)
+  \prod_{j=1}^2 \zeta(s-\imath \gamma_j)
+  \,.
+ \ee
+\end{te}
+
+\proof The action of $\wh{Q}^{GL_2}_s$ on \eqref{Eisen} is given by
+the following integral
+ \be\nonumber
+  \bigl(\wh{Q}^{GL_2}_s \bullet  \Phi_\gamma\bigr)(g)\\
+  =\,|\det g|^{s+\frac{1}{2}}\!\!\!\!
+  \sum_{\a\in SL_2(\IZ)\backslash {\rm Mat}^*_2(\IZ)}\,\,
+  \int\limits_{GL_2(\IR)}\!\!
+  d\mu(h)\,\,|\det h|^{s+\frac{1}{2}} \,
+  e^{-\pi\Tr(h^{\top}h\,\alpha gg^{\top}\,\alpha^{\top})} \,\,
+  \Phi_\gamma(h^{-1})\,.
+ \ee
+Using the change of integration variable $h\to h\alpha^{-1}g^{-1}$
+we obtain
+ \be
+  \bigl(\wh{Q}^{GL_2}_s \bullet  \Phi_\gamma\bigr)(g)\\
+  =\!\!\sum_{\a\in SL_2(\IZ)\backslash {\rm
+    Mat}^*_2(\IZ)}\,\,\int\limits_{GL_2(\IR)}\!\!d\mu(h)\,\,
+  \frac{|\det h|^{s+\frac{1}{2}}}{\det \alpha|^{s+\frac{1}{2}}}\,\,
+  e^{-\pi\Tr(h^{\top}h)}\,\,\Phi_\gamma(\alpha g h^{-1})\,.
+ \ee
+This is  a combination of
+$Q_s^{GL_2(\IZ)}$ and $Q_s^{GL_2(\IR)}$.  Therefore the required result
+follows from \eqref{Act456} and \eqref{Act123}. $\Box$
+
+There is global analog of representation \eqref{2Riem} that may be
+described as follows. Let us define  the $GL_2$-analog of the  theta
+constant as follows
+ \be\label{Theta2}
+  \Theta_{\alpha}(0|\imath gg^{\top})\,
+  =\,1\,+\!\sum_{\alpha \in  SL_2(\IZ)\backslash {\rm
+    Mat}_2^*(\IZ)}
+    e^{-\pi\Tr  gg^\top \alpha^\top\alpha}\,.
+ \ee
+Then the following expression for the global zeta-function \eqref{GlobalL}
+ for $\gamma=0$  holds
+ \be\label{ALL}
+  \hat{\zeta}^{GL_2}(s|0)\,=\!\int\limits_{GL_2(\IR)}\!\! d\mu(g)\,\,|\det g|^s\,
+  \Big(\Theta_{\alpha}(0|\imath gg^{\top})-1\Big)\,.
+ \ee
+Indeed substituting  \eqref{Theta2} into \eqref{ALL} and making the
+change of integration variable $g\to \alpha^{-1}g$ leads to
+factorization summation and integration. Thus  \eqref{ALL} reduces to the product of
+zeta-functions and Gamma-factor \eqref{GammaF} with $\gamma=0$. Note
+that the essential part of the integral kernel \eqref{GHBO} is
+expressed in terms of the following generalization of the classical theta
+constant
+ \be
+  \hat{\Theta}(0|A,B)\,
+  =\!\sum_{\a\in SL_2(\IZ)\backslash {\rm
+      Mat}^*_2(\IZ)}\!\!\!\!e^{-\pi\Tr\,A\alpha
+    B\alpha^{\top}}\,.
+ \ee
+where $A$ and $B$ are symmetric positive $(2\times 2)$-matrices. This
+kind of theta series is instrumental for the verification
+of the analog of the functional equation for the global $GL_2$
+Hecke-Baxter operator extending the relations \eqref{FR1} for $GL_1$.
+The functional equations for the global Hecke-Baxter operator are
+compatible with the  functional equations for the completed  $GL_2$ zeta-function
+\eqref{GlobalL}
+\be
+\hat{\zeta}^{GL_2}(1-s|-\gamma)=\hat{\zeta}^{GL_2}(s|\gamma)\,.
+\ee
+Similar functional equations hold (when supplied with the Cartan
+involution $g\to g^{\tau}=(g^{\top})^{-1}$ of $GL_2(\IR)$) for
+$GL_2$-Eisenstein function.
+
+As a final remark let us  note that in the case of $GL_2$ (as well
+as in the case of $GL_1$, see  Section 2) one might construct
+interpolation of the global and Archimedean Hecke-Baxter operators
+by considering congruence semigroups
+ \be
+  \Gamma(N)\,
+  =\,\Id\,+\,N\Mat_2(\IZ)\subset GL_2(\IZ)\,.
+ \ee
+This might be useful to compare this approach with the results by D.
+Kazhdan  \cite{Kaj}.
+
+
+
+
+
+
+\vspace{5mm}
+
+
+
+\begin{thebibliography}{15}
+\bibitem[Ba]{Ba}  R.J.~Baxter, Exactly solved models in statistical mechanics,
+Academic Press, 1982.
+
+
+\bibitem[FP]{FP} L.D. Faddeev, B.S. Pavlov,
+{\it Scattering theory and automorphic functions}, J. Soviet Math. 3 (1975) 522-548.
+
+
+\bibitem[GGPS]{GGPS} I.M. Gelfand, M.I. Graev, I.I. Pyatetskii-Shapiro,
+Representation theory and automorphic functions. Generalized functions,
+Vol. 6, AMS 2016.
+
+
+\bibitem[G]{G} A. Gerasimov, {\it Archimedean Langlands duality
+and exactly solvable quantum systems}, in Proc. ICM Seoul 2014, Vol.
+3, 1097--1121.
+
+\bibitem[GL]{GL} A.~Gerasimov, D.~Lebedev,
+  {\it Representation Theory over Tropical Semifield and Langlands
+    Duality},   Commun. Math. Phys., 320 (2013) 301--346;
+{\tt[arXiv:1011.2462]}.
+
+
+\bibitem[GKL]{GKL} A. Gerasimov, S. Kharchev, D. Lebedev,
+{\it Representation theory and quantum inverse scattering method:
+open Toda chain and hyperbolic Sutherland model}, Int. Math. Res.
+Notices 17 (2004) 823-854; {\tt[arXiv:math.QA/0204206]}.
+
+
+\bibitem[GLO08]{GLO08} A.~Gerasimov, D.~Lebedev, S.~Oblezin, {\it Baxter operator
+and Archimedean Hecke algebra}, Commun. Math. Phys. 284 (2008)
+867--896; {\tt [arXiv:0706.3476]}.
+
+
+
+\bibitem[GLO25]{GLO25} A. Gerasimov, D. Lebedev, S. Oblezin,
+  {\it The $GL_{\ell+1}(\mathbb{R})$ Hecke-Baxter operator: principal
+    series     representations}, {\tt[arXiv:2506.16708]}.
+
+
+\bibitem[ILP]{ILP} D.~Bump, J.W.~Cogdell, E.~de Shalit,
+D.~Gaitsgory, E.~Kowalski, S.S.~Kudla, An introduction to the
+Langlands program, Eds. J.~Bernstein, S.~Gelbart, Birkhauser 2004.
+
+
+\bibitem[JL]{JL} H.~Jacquet, R.~Langlands,
+ Automorphic forms on $GL(2)$, Springer Lect. Notes Math. 114,
+Springer, 1970.
+
+\bibitem[Ka]{Ka} L.P. Kadanoff, Statistical physics. Statics,
+    dynamics and renormalization, World Scientific, 2000.
+
+\bibitem[Kaj]{Kaj} D. Kajdan, {\it Arithmetic varieties and their
+fields of quasi-definition}, Actes Congr\'{e}s Intern. Math., 1970,
+Tome 2, 321--325.
+
+
+\bibitem[L]{L} S.Lang, Introduction to modular forms, Springer, 1976.
+
+\bibitem[W]{W} A.Weil, Basic number theory, Springer, 1995.
+
+
+
+\end{thebibliography}
+\noindent {\small {\bf A.A.G.} {\sl Laboratory for Quantum Field
+Theory
+and Information},\\
+\hphantom{xxxx} {\sl Institute for Information
+Transmission Problems, RAS, 127994, Moscow, Russia};\\
+\hphantom{xxxx} {\it E-mail address}: {\tt anton.a.gerasimov@gmail.com}}\\
+\noindent{\small {\bf D.R.L.} {\sl Laboratory for Quantum Field
+Theory
+and Information},\\
+\hphantom{xxxx}  {\sl Institute for Information
+Transmission Problems, RAS, 127994, Moscow, Russia};\\
+\hphantom{xxxx} {\it E-mail address}: {\tt lebedev.dm@gmail.com}}\\
+\noindent{\small {\bf S.V.O.} {\sl
+ Beijing Institute of Mathematical Sciences and Applications\,,\\
+\hphantom{xxxx} Huairou District, Beijing 101408, China};\\
+\hphantom{xxxx} {\it E-mail address}: {\tt oblezin@gmail.com}}
+
+
+\end{document}

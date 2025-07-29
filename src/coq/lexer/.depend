@@ -1,0 +1,3 @@
+Lexer.vo Lexer.glob Lexer.v.beautified Lexer.required_vo: Lexer.v 
+LexerProofs.vo LexerProofs.glob LexerProofs.v.beautified LexerProofs.required_vo: LexerProofs.v Lexer.vo
+LexerExtraction.vo LexerExtraction.glob LexerExtraction.v.beautified LexerExtraction.required_vo: LexerExtraction.v Lexer.vo

@@ -1,0 +1,17 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "v12.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "v12.bib"
+      }
+   ],
+   "version" : 2,
+   "texlive_version" : 2023,
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

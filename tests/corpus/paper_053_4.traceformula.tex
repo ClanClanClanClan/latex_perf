@@ -1,0 +1,190 @@
+
+\subsection{Review of the geometric side of the trace formula}\label{tracereview}
+
+Let $G$ be a reductive algebraic group over $\Q$ with $G(\R)$ noncompact. Fix a minimal parabolic subgroup $P_0$ of $G$ with a Levi decomposition $P_0=M_0 N_0$. For $\GL(n)$, we pick as minimal parabolic subgroup the subgroup of upper triangular matrices, with $M_0$ the diagonal matrices in $G$. We set $\mathcal{F}$ to be the set of parabolic subgroups of $G$ defined over $\Q$ containing $M_0$. We let $\mathcal{L}$ denote the set of subgroups in $G$ containing $M_0$ that are also Levi components of some group in $\mathcal{F}$. Furthermore, any $L\in\mathcal{L}$ is a reductive group, and for $M\in\mathcal{L}$ a Levi subgroup we shall denote by $\mathcal{L}^L(M)$ the set of Levi subgroups in $L$ containing $M$. Finally we will write $\mathcal{P}^L(M)$ for the set of parabolic subgroups of $L$ for which $M$ is a Levi component. If $L=G$, we drop the superscript and write $\mathcal{L}(M)$ and $\mathcal{P}(M)$.
+
+Let $\A_f$ be the finite adeles over $\Q$. Given $K_f\subset G(\A_f)$ an open compact subgroup, we can define the adelic Schwartz space $\mathcal{C}(G(\A)^1,K_f)$ as the space of smooth right $K_f$-invariant functions on $G(\A)^1$ all of whose derivatives lies in $L^1(G(\A)^1)$. We denote by $\mathcal{C}(G(\A)^1)$ the union of $\mathcal{C}(G(\A)^1,K_f)$ over all such $K_f$.
+
+For $f\in C_c^\infty(G(\A)^1)$, let $J_{\geo}(f)$ be the geometric side of the Arthur trace formula (see \cite{Arthur2}). This is a distribution with test function $f$. We give a very brief sketch of its construction (see \cite{Arthur0} for an excellent introduction). In essence, we wish to integrate the function
+\begin{align}\label{naivekernel}
+    K(x,y) = \sum_{\gamma\in G(\Q)}f(x^{-1}\gamma y), \qquad x\in G(\A)^1
+\end{align}
+over $G(\Q)\backslash G(\A)^1$. In our non-compact case however, this function is often not integrable, and lacks some of our desired properties. Correction terms must be added, and it turns out to be a good idea to add one for each parabolic subgroup. Let $P\in \mathcal{F}$ with canonical Levi decomposition $P=M_PN_P$, i.e. such that $M_P\in \mathcal{L}(M_0)$. We then define
+\begin{align*}
+    K_P(x,y)\coloneqq\int_{N_P(\A)} \sum_{\gamma\in M_P(\Q)}f(x^{-1}\gamma n y) dn, \qquad x,y\in G(\A)^1.
+\end{align*}
+From this, one constructs a kernel function $k^T(x,f)$ as a sum over standard parabolic subgroups and with a truncation parameter $T$ which serves as a replacement for the function (\ref{naivekernel}), see (\cite{Arthur2}) for a precise definition. One then defines $J^T(f)$ as the $G(\Q)\backslash G(\A)^1$-integral of $k^T(f,x)$. Finally, one picks a particular truncation parameter $T=T_0$ and defines $J(f)\coloneqq J^{T_0}(f)$. In the case of $G=\GL(n)$, the canonical choice is $T_0 = 0$. 
+
+Recall that any element of an algebraic group has a Jordan decomposition, i.e. for any $g\in G(k)$ with $k$ a perfect field, we have a decomposition $g=g_sg_u=g_ug_s$ with $g_s$ semisimple and $g_u$ unipotent. The terms \textit{semisimple} and \textit{unipotent} simply mean that their image has this property under some (equivalently, any) closed embedding $G\to \GL(n)$. Now, define an equivalence relation on $G(\Q)$: Say that two elements are equivalent if their semisimple parts are $G(\Q)$-conjugate to each other. Let $\mathcal{O}$ be the set of equivalence classes in $G(\Q)$. Then for $\mf{o}\subset \mathcal{O}$, one could also consider the function
+\begin{align}\label{classkernel}
+    K_{P,\mf{o}}(x,y)\coloneqq\int_{N_P(\A)} \sum_{\gamma\in M_P(\Q)\cap \mf{o}}f(x^{-1}\gamma n y) dn, \qquad x,y\in G(\A)^1.
+\end{align}
+From this, one can again construct a modified kernel function $k_{\mf{o}}(x,f)$ as above, and define another distribution with test function $f$ analogously that we will denote $J_\mf{o}(f)$ (\textit{loc. sit.}). We see that we have an equality
+\begin{align*}
+    K_P(x,y) = \sum_{\mf{o}\in\mathcal{O}}K_{P,\mf{o}}(x,y).
+\end{align*}
+This equality directly extends to the identity on kernel functions $k^T(f,x)=\sum_{\mf{o}\in \mathcal{O}}k^T_{\mf{o}}(f,x)$ once proper definitions are given. The content of the \emph{coarse geometric expansion} is the fact that the analogous identity holds true for the associated distributions. Precisely, it is the equality
+\begin{align}\label{coarsegeom}
+    J_{\geo}(f) = \sum_{\mf{o}\in\mathcal{O}}J_{\mf{o}}(f).
+\end{align}
+
+\noindent The coarse geometric expansion has been extended to the domain $\mathcal{C}(G(\A)^1,K_f)$ in (\cite{FL}), which will be important for our applications.
+
+We note that the distributions $J_{\mf{o}}(f)$ have a formulation in terms of integrals of $f(x^{-1}\gamma x)$, for $\gamma\in\mf{o}$ and $x\in G(\A)$ (e.g. \cite{Arthur5}, Theorem $8.1$). In particular, $J_{\mf{o}}(f)$ is non-zero only if the union of $G(\A)$-conjugacy classes of $\mf{o}$ intersects the support of $f$. This will be used in Section \ref{compactsub} to show that in some cases, only one particular class contribute.
+
+\subsection{Analytic torsion} We assume that $G$ is split over $\Q$, and let $K_f$ and $X(K_f)$ be defined as in Section \ref{arithmfd}, with $K_f$ neat. We denote by $h_t^{\tau,p}$ the trace of the heat kernel as defined in (\ref{trheat}). Set $1_{K_f}$ as the indicator function of $K_f$ on $G(\A_f)$, and define
+\begin{align*}
+    \chi_{K_f}\coloneqq\frac{1_{K_f}}{\vol(K_f)}.
+\end{align*} Then $h_t^{\tau,p}\otimes \chi_{K_f}\in \mathcal{C}(G(\A)^1,K_f)$. Following (\cite{MzM1}), we define the regularized trace of the heat operator as
+\begin{align*}
+    \Trreg\left(e^{-t\Delta_p(\tau)}\right)\coloneqq J_{\geo}\left(h_t^{\tau,p}\otimes \chi_{K_f}\right).
+\end{align*}
+
+If $X(K_f)$ is compact, the heat operator is of trace class, and the regularized trace defined above is then equal to the usual trace. We define the associated spectral zeta functions as in the compact case (\ref{zeta}). Absolute convergence and existence of meromorphic continuation was shown in (\cite{MzM1}). Analytic torsion of $X(K_f)$ is then defined by
+\begin{align}\label{torsion}
+    \log T_{X(K_f)}(\tau) = \frac12\sum_{p=0}^d(-1)^p\;p\; \FP_{s=0}\left(\frac{\zeta_p(s,\tau)}{s}\right).
+\end{align}
+
+\subsection{Congruence quotients of $\GL(n)$ and $\SL(n)$}\label{congquot}
+
+In the same setup, assume now that $G=\GL(n)$ or $G=\SL(n)$. Recall that if $K_f$ is neat, $X(K_f)$ is a locally symmetric manifold of finite volume. This assumption is true in the primary setting of this paper that we now explain. Let $N\in\N$, $N\geq 3$ and define 
+\begin{align*}
+    K(N)\coloneqq\prod_p K_p\left(p^{\nu_p(N)}\right) \subset \GL(n,\A_f),
+\end{align*}
+where $K_p(p^e)$ is the kernel of the canonical map $\GL(n,\Z_p)\to \GL(n,\Z/p^e\Z)$. Then $K(N)$ is an open compact subgroup of $\GL(n,\A_f)$. We further define $K'(N)$ to be the completely analogous subgroup for $\SL(n)$. We now set $Y(N)$ to be the adelic symmetric space for $\GL(n)$ associated to $K(N)$ as in (\ref{adelicsym}), and similarly let $X(N)$ be the space for $\SL(n)$ associated to $K'(N)$.
+
+It follows from Section \ref{arithmfd} that $X(N)\cong \Gamma(N)\backslash \SL(n,\R)/\SO(n)$ with $\Gamma(N)$ the standard principal congruence subgroup of $\SL(n,\Z)$ of level $N$, and also that $Y(N)$ is a disjoint union of $\phi(N)$ many copies of $X(N)$. Thus, it is reasonable to also call $N$ the level of the subgroup $K(N)$. In particular, we get
+\begin{align}\label{volglsl}
+    \vol(Y(N)) = \phi(N)\vol(X(N)).
+\end{align}
+We can consider the associated analytic torsion as defined in (\ref{torsion}) in both of these settings. As one would hope for, by (\cite{MzM2}, ($11.5$)) we have
+\begin{align}\label{torsionglsl}
+    \log T_{Y(N)}(\tau) = \phi(N)\log T_{X(N)}(\tau).
+\end{align}
+Combining (\ref{volglsl}), (\ref{torsionglsl}) and (\ref{l2torsion}), we see that Theorem \ref{mytheorem} is equivalent to the following.
+\begin{thm}\label{glmytheorem}
+    Assume $\tau$ is a $\lambda$-strongly acyclic representation of $\GL(n,\R)^1$, for a certain $\lambda$ depending only on $n$. Then there exists some $a>0$ such that
+    $$\log T_{Y(N)}(\tau) = \log T_{Y(N)}^{(2)}(\tau)+O(\vol(Y(N))N^{-(n-1)}\log(N)^a)$$
+    as $N$ tends to infinity.
+\end{thm}
+\noindent The remainder of the paper is essentially a proof of this theorem. 
+
+
+\subsection{Compactification of the test function}\label{compactsub}
+
+\noindent We continue with the same setup, and assume that $G=\GL(n)$ and $K_f=K(N)$, $N\geq 3$. Let $r(g)=d(K,gK)$ be the geodesic distance of $g\in G(\R)^1$ from the identity on $\Tilde{X}=G(\R)^1/K$. We will often write $d(I,g)$ for the same expression. Let $\phi_R:G(\R)^1\to [0,1]$ be a smooth function identically $1$ on $B(R)=\lbrace g\in G(\R)^1\mid r(g)< R\rbrace$ and identically $0$ outside $B(R+\epsilon)$ for some small $\epsilon>0$. We now define
+\begin{align*}
+    h_{t,R}^{\tau,p}(g)\coloneqq \phi_R(g)h_t^{\tau,p}(g).
+\end{align*}
+
+\noindent In a moment, we will need this small lemma on this distance function.
+
+\begin{lem}\label{distancebound}
+    Let $||\cdot||$ denote the Frobenius norm on $\GL(n,\R)$. Then
+    \begin{align*}
+        r(g) \geq \log ||g||, \quad \forall g\in G(\R)^1.
+    \end{align*}
+\end{lem}
+
+\begin{proof}
+    By (\cite{bridsonhaefliger}, II. Corollary 10.42(2)), we have that $d(I,e^X) = ||X||$ for $X$ a symmetric matrix. Further, by the basic inequality $e^{||X||}\geq ||e^X||$, we see that
+\begin{align*}
+    d(I,e^X)\geq \log||e^X||.
+\end{align*}
+Since both the metric and the Frobenius norm are invariant under multiplication by orthogonal matrices, this inequality holds when replacing $e^X$ with any $g\in G(\R)^1$, using the Cartan decomposition $G(\R)^1=KAK$ with $A$ the set of diagonal matrices in $G(\R)^1$.
+\end{proof}
+
+\noindent Let $J_{\unip}$ denote the distribution defined in Section \ref{tracereview} associated to the equivalence class of elements with semisimple part being the identity, i.e. the unipotent elements. Replacing $h_t^{\tau,p}$ with $h_{t,R}^{\tau,p}$ allows us to reduce the geometric side of the Arthur trace formula to only the unipotent contribution, if we keep $R$ small relative to the level $N$. This is the content of the following theorem.
+
+\begin{prop}\label{compactunip}
+    For $N$ large enough and $R\leq C_n\log N$, the constant $C_n>0$ only depending on $n$, we have that
+    \begin{align*}
+        J_{\geo}(h_{t,R}^{\tau,p}\otimes\chi_{{X(N)}}) = J_{\unip}(h_{t,R}^{\tau,p}\otimes\chi_{{X(N)}}).
+    \end{align*}
+\end{prop}
+
+\begin{proof}
+\noindent  In the coarse geometric expansion of the Arthur trace formula (\ref{coarsegeom}), we are summing distributions indexed over the equivalence classes in $G(\Q)$. For our test function $f$, we wish to pick $R$ such that $J_{\mf{o}}(f)=0$ for any $\mf{o}$ not the unipotent class. As explained at the end of Section \ref{tracereview}, for this it is sufficient to show that the $G(\A)$-conjugacy classes of $\mf{o}$ does not intersect the support of $f$.
+
+Our test function $f=h^{\tau,d}_{t,R}\otimes \chi_{K(N)}$ has its support inside $B_R K(N)\subset G(\A)$. We will pick $R$ such that for any $\gamma$ with semisimiple part $\gamma_{ss}\neq I$ in $G(\Q)$, every conjugate lies outside the support. Take such a $\gamma$, and let $g = x^{-1}\gamma x$ for some $x\in G(\A)$. Write $g=g_\infty\prod_pg_p$ and assume $\prod_pg_p\in K(N)$. We will then pick $R$ such that $g_\infty\notin B_R$.
+
+Let $q(x)\in\Q[x]$ be the characteristic polynomial of $\gamma-I$. Note that by conjugation invariance, this is also the characteristic polynomial of $g_\nu-I$ for all places $\nu$. As $\gamma$ is not unipotent by assumption, this polynomial has a non-leading, non-zero coefficient, say for the degree $k$ term, $0\leq k\leq n-1$. Recall that this polynomial is $q(x)=\det(xI-(g_\nu-I))$. Then for every prime $p$ this coefficient, call it $a_k$, satisfies
+\begin{align*}
+    \nu_p(a_k) \geq (n-k)\cdot\nu_p(N),
+\end{align*}
+since it is a sum of products of $n-k$ elements of $p^{\nu_p(N)}\Z_p$, as $g_p$ lies in $K_p(p^{\nu_p(N)})$. In particular, it is integral, and as it is non-zero we get that $|a_k|\geq N^{n-k}$. This implies that at least one of the entries of $g_\infty-I$ has norm greater than $c_n N$, for some constant $c_n>0$ only depending on $n$, and this in turn implies the same lower bound on the Frobenius norm of $g_\infty-I$. Applying Lemma \ref{distancebound}, we get that there exists some $C_n>0$ such that
+$$r(g_\infty)=d(I,g_\infty)\geq \log||g_\infty||\geq C_n\log N$$
+for $N$ large enough, only depending on $n$. The last inequality is just using the reverse triangle inequality on our lower bound on $||g_\infty-I||$. Thus, it is clear that picking $R\leq C_n\log N$, we have that $g_\infty\notin B_R$ as desired.
+\end{proof}
+
+\noindent We must ensure that in replacing $h_t^{\tau,p}$ with its compactification, we can control the change in the trace formula. This was shown in (\cite{MzM2}):
+
+\begin{prop}[\cite{MzM2}, Proposition $7.2$]\label{compactdiff}
+    There exists constants $C_1,C_2,C_3>0$ such that
+    \begin{align*}
+        \big\vert J_{\spec}(h_t^{\tau,p}\otimes\chi_{{X_N}})-J_{\spec}(h_{t,R}^{\tau,p}\otimes\chi_{{X_N}}))\big\vert\leq C_3 e^{-C_1 R^2/t+C_2t}\vol(Y(N))
+    \end{align*}
+    for all $t>0$, $R\geq 1$ and $N\in\N$.
+\end{prop}
+
+\noindent It is in controlling this error term that we need to vary $R$ with $N$. The specifics will be discussed in Section \ref{dance}. Importantly, we may pick $C_1,C_2$ independent of the representation $\tau$. 
+
+
+
+
+\subsection{The fine geometric expansion}
+
+By the coarse geometric expansion (\ref{coarsegeom}), Proposition \ref{compactunip} and Proposition \ref{compactdiff}, when analyzing $\Trreg(e^{-t\Delta_p(\tau)})$ we may restrict our attention to $J_{\unip}(h^{\tau,p}_{t,R}\otimes\chi_{K(N)})$. This distribution can be expressed as a finite sum of weighted orbital integrals with certain global coefficients, known as the fine geometric expansion (\cite{Arthur4}, Corollary $8.3$). First we need a bit of notation.
+
+Let $S$ be a finite set of primes containing $\infty$, and set $\Q_S=\prod_{\nu\in S}\Q_\nu$ and $\Q^S=\prod_{\nu\notin S}'\Q_\nu$, with $\prod'$ the usual restricted product. We define $G(\Q_S)^1 \coloneqq G(\Q_S)\cap G(\A)^1$, and write $C_c^\infty(G(\Q_S)^1)$ for the space of functions $C_c^\infty(G(\Q_S))$ restricted to $G(\Q_S)^1$.
+
+Given $M\in \mathcal{L}$, denote by $\mathcal{U}_M(\Q)$ the finite set of conjugacy classes of unipotent elements of $M(\Q)$. Assume $f=f_S\otimes 1_{K^S}$, with $f_S\in C_c^\infty(G(\Q_S)^1)$ and $1_{K^S}$ the characteristic function of the standard compact subgroup in $G(\Q^S)$.
+In the case of $\GL(n)$, as all orbits are stable, the fine geometric expansion can then be expressed as 
+\begin{align}\label{finegeom}
+    J_{\text{unip}}(f) = \sum_{M\in\mathcal{L}}\:\sum_{\mf{u}\in \mathcal{U}_M(\Q)}a^M(S,\mf{u})J_M(f_S,\mf{u}).
+\end{align}
+Here $J_M(f,\mf{u})$ is the weighted orbital integral associated to $(M,\mf{u})$ of $f$, and $a^M(S,\mf{u})$ are certain global coefficients. One finds the general definition of weighted orbital integrals in \cite{Arthur1} - we will express them in our specific situation in a moment. We will apply this to our test function $h^{\tau,p}_{t,R}\otimes \chi_{K(N)}$. We will by abuse of notation write $\chi_{K(N)}$ both for the normalised characteristic function of $K(N)$ in $G(\A_f)$ and in $G(\Q_{S(N)})$, where $S(N)=\lbrace p\text{ prime} : p\mid N\rbrace$. In this case, $a^M(S(N),\mf{u})$ depend on $N$ only by its prime divisors, and does not grow too quickly, as seen from the following lemma.
+
+\begin{lem}[\cite{Matz}]\label{coeffbound}
+    There exists $b,c>0$ such that for all $N$, $M$ and $\mf{u}$ we have
+    \begin{align*}
+        |a^M(S(N),\mf{u})|\leq c(1+\log N)^b.
+    \end{align*}
+\end{lem}
+
+\noindent To describe the weighted orbital integrals, we split them into archimedean and non-archimedean parts (see \cite{Arthur3}). Assume that $f=f_\infty\otimes f_{\text{fin}}$. For $L\in\mathcal{L}(M)$ and $Q=LV\in\mathcal{P}(L)$, define
+\begin{align}\label{subq}
+    f_{\infty,Q}(m) \coloneqq \delta_Q(m)^{\frac12}\int_{K_\infty}\int_{V(\R)}f_\infty(k^{-1}mvk)dv dk, \quad m\in M(\R).
+\end{align}
+Define $f_{\text{fin},Q}$ analogously. Then we have the expression
+\begin{align}\label{localparts}
+    J_M(f,\mf{u}) = \sum_{L_1,L_2\in\mathcal{L}(M)} d_M^G(L_1,L_2)J^{L_1}_M(f_{\infty,Q_1},\mf{u}_\infty)J_M^{L_2}(f_{\text{fin},Q_2},\mf{u}_{\text{fin}}).
+\end{align}
+Here $Q_i$ is some parabolic in $\mathcal{P}(L_i)$, and $\mf{u}_{\text{fin}}=(\mf{u}_p)_p$, where $\mf{u}_p$ the $M(\Q_p)$-conjugacy class of $\mf{u}$. Denote $\mf{u}_\infty$ analogously. The archimedean part is an integral of the form (see \cite{Arthur1})
+\begin{align*}
+    J^{L}_M(f_{\infty,Q},\mf{u}_\infty) = \int_{U(\R)}f_{\infty,Q}(u)\omega(u) du
+\end{align*}
+for a certain weight function $\omega$ depending on the class $\mf{u}$, as well as on $M$ and $L$. Here, $U=U_S$ is the unipotent radical of a semistandard parabolic subgroup $S=M_SU_S$ in $M$ such that $S$ is a Richardson parabolic for $\mf{u}$ in $M$. By splitting up the finite part further into local parts and computing explicitly, Matz and Müller showed the following lemma.
+\begin{lem}[\cite{MzM2},$(9.4)$]\label{localbound}
+There exist $c,d>0$ only depending on the group $G$ such that
+    \begin{align*}
+   \left\vert J_M^L(\chi_{{K(N)},Q},\mf{u}_{\text{fin}})\right\vert \leq c N^{-\dim^G_M \mf{u}/2}(\log N)^d\vol(K(N))^{-1}.
+\end{align*}
+\end{lem}
+
+\begin{rmk}
+    Unless $(M,\mf{u})=(G,\lbrace 1\rbrace)$, we have that $\frac{\dim^G_M \mf{u}}{2}\geq n-1$, and this is where the power saving in our main result comes from.
+\end{rmk}
+\noindent As the non-archimedean part does not see the variable $t$, nor does it see the representation $\tau$ or the radius $R$, we may focus on the integrals
+\begin{align}\label{inforbitcrude}
+    J^{L}_M(((h^{\tau,p}_{t,R})_Q,\mf{u}_\infty) = \int_{U(\R)}(h^{\tau,p}_{t,R})_Q(u)\omega(u) du.
+\end{align}
+Recalling the definition of $f_Q$, we may use that $h^{\tau,p}_{t,R}$ is bi-$K_\infty$-invariant, and letting $MV'\coloneqq M_SU_SV$ such that $V'$ is the unipotent radical of a Richardson parabolic for $\Ind_M^G(\mf{u})$ in $G$, we may rewrite this as
+\begin{align}\label{inforbit}
+    J^{L}_M(((h^{\tau,p}_{t,R})_Q,\mf{u}_\infty) = \int_{V'(\R)}h^{\tau,p}_{t,R}(v)\omega(v) dv.
+\end{align}
+
+\noindent This description will be used in the following section.
+
+
+

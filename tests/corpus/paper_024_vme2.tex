@@ -1,0 +1,360 @@
+% !TEX spellcheck = en_GB
+\magnification=1000
+\input itenn.tex
+\input option_keys
+\vsize=254truemm
+\voffset=-5truemm
+\dateheure
+\anglais
+%\optionparag=2
+\scriptscriptfont0=\fiverm
+\font\twelversfs=rsfs7 at 12pt
+    \font\tenrsfs=rsfs7 at 10pt
+    \font\ninersfs=rsfs7 at 9pt
+    \font\eightrsfs=rsfs7 at 8pt
+    \font\sevenrsfs=rsfs7
+    \font\sixrsfs=rsfs7 at 6pt
+    \font\fiversfs=rsfs7 at 5pt
+
+\newfam\rsfsfam\textfont\rsfsfam=\tenrsfs\scriptfont\rsfsfam=\sevenrsfs\scriptscriptfont\rsfsfam=\sixrsfs
+    \def\rsfs{\fam\rsfsfam\tenrsfs}%
+\def\I{{\scal I}}
+\def\J{{\scal J}}
+\def\ga{{\got a}}
+\def\gb{{\got b}}
+\def\gc{{\got c}}
+\def\gee{{\got e}}
+\def\gf{{\got f}}
+\def\gh{{\got h}}
+\def\gd{{\got d}}
+\def\gr{{\got r}}
+\def\gs{{\got s}}
+\def\gt{{\got t}}
+\def\gE{{\got E}}
+\def\gG{{\got G}}
+\def\gR{{\got R}}
+\def\gS{{\got S}}
+\def\gT{{\got T}}
+\def\gV{{\got V}}
+\def\gW{{\got W}}
+\def\gpp{{\got p}}
+\def\fmu{mul\-ti\-pli\-cative func\-tion}
+\def\fmus{mul\-ti\-pli\-cative func\-tions}
+\def\fad{fonc\-tion ad\-di\-tive}
+\def\fads{fonc\-tions ad\-di\-tives}
+\hautspages{G. Tenenbaum}{On effective mean-values of arithmetic functions}
+\vskip-3mm
+\titrecentre{On effective mean-values of arithmetic functions}
+\bigskip
+\centerline{GŽrald Tenenbaum}
+\smallskip
+{\leftskip110mm
+\obeylines
+\it To Krishna Alladi,
+inspired founder of
+The Ramanujan Journal
+\par }
+\bigskip
+{\eightpoint\leftskip1cm\rightskip1cm
+\noi{\bf Abstract.} Let $r,\,f$ be multiplicative functions with $r\geqslant 0$, $f$ is complex valued, $|f|\leqslant r$, and $r$ satisfies some standard growth hypotheses. Let $x$ be large, and assume that, for some real number~$\tau$, the quantities $r(p)-\re\{f(p)/p^{i\tau}\}$ are small in various appropriate average senses over the set of prime numbers not exceeding $x$. We derive from recent effective mean-value estimates an effective comparison theorem between the mean-values of $f$ and of $r$ on the set of integers~$\leqslant x$. We also provide effective estimates for certain weighted moments of additive functions and for sifted mean-values of non-negative multiplicative functions.
+ \PAR
+\medskip
+\noi
+{\bf Keywords:} Quantitative estimates, comparison theorems, multiplicative functions, effective mean-value estimates, Wirsing's theorem, H‡lasz' theorem, weighted distribution of additive functions, weighted moments of additive functions..\par
+\medskip
+\noi \bf 2020 Mathematics Subject Classification: \rm primary   11K65, 11N37; secondary 11N25, 11N60, 11N64.\par }
+\bigskip
+\medskip
+\paraun{Introduction}
+There is an abundant literature on estimates for mean-values multiplicative functions, usually appearing in the form of summatory functions
+$$M(x;f):=\sum_{n\leqslant x}f(n)\qquad (x\geqslant 1).$$
+One of the most useful class of results in this topic is that of {\it comparison theorems}, evaluating ratios $M(x;f)/M(x;r)$ where $r$ is a majorant of $|f|$. The first general theorems of this type are due to Wirsing \citer{Wi67} and Hal‡sz \citer{Ha68}, and we refer to \citer{Te17} for a more complete account of the literature.
+\par 
+This note is devoted to describing some consequences of  effective estimates of the above kind obtained in \citer{Te17} and which we now state. 
+\par 
+Let $\M(A,B)$ designate the class of those complex multiplicative functions $f$ satisfying 
+$$\max_{p}|f(p)|\leqslant A,\quad  \sum_{p,\,\nu\geqslant 2}{|f(p^\nu)|\log p^\nu\over p^\nu}\leqslant B,\eqdef{C0}
+$$
+where, here and in the sequel, the letter $p$ denotes a prime number. 
+Define furthermore $w_f:=1$ if $f$ is real, $w_f:=\dm$ if $f$ assumes some non real values, and write
+$$Z(x;f):=\sum_{p\leqslant x}{f(p)\over p}\cdot$$
+\par 
+The following two statements are established in \citer{Te17}.  
+\propt{cascv}{ (\citer{Te17})}{Let $$\eqalign{&\ga\in]0,\dm],\ \gb\in\,[\ga,1[,\  A\geqslant2\gb,\  B>0,\,
+x\geqslant \e^4,\, \varepsilon=\varepsilon_x\in\big]1/\sqrt{\log x}, \dm\big],\cr &\varrho=\varrho_x\in\,[2\gb,A],\
+\gpp:={\pi\varrho\over A},\ \beta:=1-{\sin\gpp\over \gpp},\quad\gh:={1-\gb\over \min(1,\varrho)-\gb}\cdot\cr}\eqdef{defpar}$$  
+Assume that the \fmus\    $f$, $r$, satisfy $r\in\M(A,B)$, $|f|\leqslant r$, and
+$$\leqalignno{\sum_{p\leqslant x}{r(p)-\re f(p)\over p}&\leqslant \ft12\beta\gb\log (1/\epsilon), &\eqdef{pqr}\cr
+\sum_{x^\varepsilon<p\leqslant y}{\{r(p)-\re f(p)\}^\gh\log p\over p}&\ll \varepsilon^{\delta_1\gh}\log y\qquad (x^\varepsilon<y\leqslant x), &\eqdef{cdpr1}\cr
+\sum_{p\leqslant y}{\{r(p)-\varrho\}\log p\over p}&\ll\varepsilon\log y\qquad 
+(x^{\epsilon}< y\leqslant x),&\eqdef{C2}\cr
+}$$ 
+where
+$\delta_1\in]0,\ft23\beta\gb]$. Then we have 
+$$M(x;f)={\e^{-\gamma\varrho}x\over \Gamma(\varrho)\log
+x}\bigg\{\prod_{p}\sum_{\pnu\leqslant 
+x} {f(p^\nu)\over p^\nu}+O\Big(\varepsilon^\delta\,\e^{Z(x;f)}\Big)\bigg\},\eqdef{moy}$$
+with $
+\delta:=w_f\delta_1$, and where
+the implicit constant in \eqref{moy} depends at most on $A$, $B$, $\ga$, 
+ $\gb$, and on the implicit constants in \eqref{cdpr1} and \eqref{C2}. }
+\medskip\goodbreak
+As noted in \citer{Te17}, hypothesis \eqref{cdpr1} is trivially  implied by the  condition
+$$\sum_{x^\varepsilon<p\leqslant x}{\{r(p)-\re f(p)\}^\gh\over p}\ll  \epsilon^{\delta_1\gh},\eqdef{cdpr}$$
+and, of course, also by the uniform bound 
+$$\max_{x^\varepsilon<p\leqslant x}\{r(p)-\re f(p)\}\ll \varepsilon^{\delta_1}.\eqdef{cdpr2}$$
+\par 
+We also quote from \citer{Te17} the remark that, while the assumptions of \ref{cascv} imply
+$$\prod_{p}\sum_{\pnu\leqslant 
+x} {f(p^\nu)\over p^\nu}\ll\e^{Z(x;f)},$$ 
+the two sides have the same order of magnitude if
+$$\min_{p,x}\Vbs{\sum_{0\leqslant \nu\leqslant (\log x)/\log p} {f(p^\nu)\over p^\nu}}\gg1.\eqdef{hypgen}$$
+Under this condition generically satisfied, formula \eqref{moy} becomes
+$$M(x;f)=\big\{1+O(\varepsilon^\delta)\big\}{\e^{-\gamma\varrho}x\over \Gamma(\varrho)\log
+x}\prod_{p}\sum_{\pnu\leqslant 
+x} {f(p^\nu)\over p^\nu}\cdot\eqdef{moy2}$$
+\par 
+For the next statement, we introduce the notation
+$$\beta_0=\beta_0(\gb,A):=1-{\sin(2\pi\gb/A)\over 2\pi\gb/A},\qquad  \delta_0(\gb)=\delta_0(\gb,A):=\ft13\gb\beta_0.\eqdef{delta0}$$\par 
+\vskip-5mm
+ \propt{fr}{ (\citer{Te17})}{Let $$\ga\in]0,\ft14], \quad\gb\in[\ga,\ft12[,  \quad A\geqslant 2\gb,\quad B>0, \quad  x\geqslant \e^4, \quad 1/\sqrt{\log x}<\varepsilon\leqslant \dm.$$ Assume that the \fmus\ $f$, $r$, such that \hbox{$r\in\M(2A,B)$}, $|f|\leqslant r$,  satisfy conditions \eqref{pqr}, \eqref{cdpr1} with $\gh:=(1-\gb)/\gb$, \eqref{cdpr} with $\gh=1$, and 
+$$\sum_{y<p\leqslant y^{1+\varepsilon_1}}{r(p)\log p\over p}\geqslant 4\gb\varepsilon_1\log y\qquad \big(\e^{1/\varepsilon_1}\leqslant y\leqslant x^{1/(1+\varepsilon_1)}\big)\eqdef{moyrp}$$
+where $\varepsilon_1:=\sqrt{\varepsilon}$. Assume furthermore that $\delta_1\in]0,\delta_0(\gb)] $. Then we have
+$$M(x;f)=M(x;r)\prod_{p}{\sum_{\pnu\leqslant x}f(\pnu)/\pnu\over \sum_{\pnu\leqslant x}r(\pnu)/\pnu}+O\bigg({x\,\varepsilon^{\delta}\e^{Z(x;r)-\gc Z(x;|f|-f)}\over \log x}\bigg)\eqdef{Mf/Mr}$$
+where $\delta:=w_f\delta_1$, $\gc:=\gb/A$. Moreover, the above formula persists without requiring \eqref{cdpr} to hold with $\gh=1$ provided $\min_{x^\varepsilon\leqslant p\leqslant x}r(p)\geqslant 4\gb$.
+The implicit constant in \eqref{Mf/Mr} depends at most on $A$, $B$, $\ga$ and $\gb$.}
+\bigskip 
+\bigskip
+\paraun{An effective comparison theorem of Wirsing type}
+\ref{fr} provides an estimate for $M(x;f)/M(x;r)$ when $r(p)-\re f(p)$ is small in suitable respects. However, under the assumption that, for suitable $\varrho>0$, we have $$\sum_{p\leqslant x}{\{r(p)-\varrho\}\log p\over p}=o\big(\log x\big),\eqdef{cW}$$ Wirsing's theorem \citer{Wi67} also provides, via partial summation,  an asymptotic formula for $M(x;f)$ whenever
+the condition 
+$$\sum_{p}{r(p)-\re\{f(p)/p^{i\tau}\}\over p}<\infty\eqdef{condcv}$$
+holds for some real number $\tau$, necessarily unique. A further extension has recently been established under condition \eqref{condcv} by Indlekofer \& Kaya \citer{IK25},  under the hypothesis that $r=r_1*r_2$, $r_1\geqslant 0$, $r_2\geqslant 0$, $r_1$~satisfies~\eqref{cW}, and the~$r_j$ have disjoint supports on the set of prime powers.
+\par \goodbreak
+While, both in the classical framework and in the setting considered in \citer{IK25}, the transition from $\tau=0$ to general $\tau$ is obtained through simple partial integration, the deduction is not straightforward when an effective estimate is aimed at. The following result, which is consequence of \ref{fr}, furnishes the desired extension under the much weaker hypothesis \eqref{moyrp}. For given $\tau\in\r$, we write $f_\tau(n):=f(n)/n^{i\tau}$ $(n\geqslant 1)$ and recall notation \eqref{delta0} for $\delta_0(\gb)$.
+\par \vskip-3mm
+\Propt{thWg}{Let $$\ga\in]0,\ft14], \quad\gb\in[\ga,\ft12[,  \quad A\geqslant 2\gb,\quad B>0, \quad x\geqslant \e^4, \quad 1/\sqrt{\log x}<\varepsilon\leqslant \dm,\quad\tau\in\r.$$ Assume that the \fmus\ $f$, $r$, with \hbox{$r\in\M(2A,B)$}, $|f|\leqslant r$,  are such that conditions \eqref{pqr}, \eqref{cdpr1} with $\gh:=(1-\gb)/\gb$, and \eqref{cdpr} with $\gh=1$ are satisfied with $f_\tau$ in place of $f$. Suppose furthermore that \eqref{moyrp} holds and
+that $\delta_1\in]0,\delta_0(\gb)] $. Then we have
+$$M(x;f)={x^{i\tau}M(x;r)\over 1+i\tau}\prod_{p}{\sum_{\pnu\leqslant x}f(\pnu)/p^{\nu(1+i\tau)}\over \sum_{\pnu\leqslant x}r(\pnu)/\pnu}+O\Big(\varepsilon^\delta M(x;r)\Big),\eqdef{Mf/Mr-g}$$
+where $\delta:=w_f\delta_1$.
+Moreover, the above formula persists without requiring \eqref{cdpr} to hold with $\gh=1$ provided $\min_{x^\varepsilon\leqslant p\leqslant x}r(p)\geqslant 4\gb$.
+The implicit constant in \eqref{Mf/Mr-g} depends at most on $A$, $B$, $\ga$, $\gb$ and~$\tau$.}
+\medskip
+For simplicity, we have omitted in the above statement the potential sharpening of the error term involving $Z(x;|f|-f)$ and appearing in \eqref{Mf/Mr}. With some extra care, it could be reinserted.
+\medskip
+\nid
+Without loss of generality, we may assume $\varepsilon$ arbitrarily small. Indeed, in the opposite circumstance the required estimate follows from the inequality $|f|\leqslant r$.\par 
+We may plainly also assume that $f(\pnu)=0$ whenever $\pnu>x$.\par 
+Our first aim is to show that
+$$M(z;r)\asymp {z\e^{Z(z;r)}\over \log z}\qquad (x^{2\varepsilon_1}<z\leqslant x).\eqdef{Mxras}$$
+The corresponding upper bound is standard and follows from \citer{HR79} or \citer{Sh80}.
+To establish the lower bound,  define $$\varepsilon_2:=\varepsilon\varepsilon_1=\varepsilon^{3/2},\quad\K:=\bigg[{\log (\varepsilon_2\log x)\over \log (1+\varepsilon_1)}, {\log_2x\over \log (1+\varepsilon_1)}-1\bigg]\cap\N,$$ and apply \eqref{moyrp} with $y=y_k:=\exp\{(1+\varepsilon_1)^k\}$ for $k\in\K$ to get
+$$\sum_{y_k<p\leqslant y_{k+1}}{r(p)\log p\over p}=\gb_k\varepsilon_1\log y_k\qquad \big(k\in\K\big), \eqdef{moylocrp}$$ 
+with $$4\gb\leqslant \gb_k\leqslant 2A+O\Big(\e^{-\sqrt{\log y_k}}\Big).$$
+\par 
+Then define $$s(p):=2\gb r(p)/\gb_k\quad \big(y_k<p\leqslant y_{k+1},\,\in\K\big), \quad s(p):=0\quad\Big(p\in[2,x]\sset\cup_{k\in\K}\,]y_k,y_{k+1}]\Big).\eqdef{defsp}$$ Thus $0\leqslant s(p)\leqslant \dm r(p)$ for all $p\leqslant x$. By summation, it follows that
+$$\sum_{p\leqslant y}{\{s(p)-2\gb\}\log p\over p}\ll\varepsilon_1\log y\qquad (x^{\varepsilon}<y\leqslant x).\eqdef{regs}$$  
+Now extend $s$ to an exponentially multiplicative function by putting $s(\pnu):=s(p)^\nu/\nu!$ $(\nu\geqslant 2)$, and  define an arithmetic function $t$ by the convolution formula $s*t=r$. One readily checks that $t\in\M(A_1,B_1)$ for suitable constants $A_1$, $B_1$ and we omit the corresponding details.
+\par 
+Write $r_1:=\mu^2r$, $s_1:=\mu^2s$, $t_1:=\mu^2t$, where $\mu$ designates the Mšbius function, so that $s_1*t_1=r_1\leqslant r$. For $x^{\varepsilon_1}< \xi\leqslant x$, and hence $\xi^{\varepsilon_1}>x^{\varepsilon}$, we may apply  \ref{cascv} to $(\xi,s_1,s_1,2\gb,\varepsilon_1,2\delta_1)$ in place of $(x,f,r,\varrho,\varepsilon,\delta)$: indeed, we check that $2\delta_1\leqslant 2\delta_0(\gb)=\ft23\beta\gb$ for $\beta$  defined by \eqref{defpar} with $\varrho=2\gb$, and $\varepsilon_1=\sqrt{\varepsilon}\geqslant 1/\sqrt{\log \xi}$. This yields
+$$M(\xi;s_1)\asymp{\xi\e^{Z(\xi;s)}\over \log \xi}\qquad (x^{\varepsilon_1}< \xi\leqslant x).$$
+ Therefore, for $x^{2\varepsilon_1}<z\leqslant x$, we have
+$$\eqalign{M(z;r)&\geqslant M(z;r_1)=\sum_{m\leqslant z}{t_1(m)\over m}M\Big({z\over m};s_1\Big)\cr&
+\gg\sum_{m\leqslant \sqrt{z}}{zt_1(m)\e^{Z(z/m;s)}\over m\log (2z/m)}\asymp {z\e^{Z(z;s)}\over \log z}\sum_{m\leqslant \sqrt{z}}{t_1(m)\over m}\cdot\cr}$$
+Now a standard manipulation resting on Rankin's method (see \eg\ \citer{Te16}) yields
+$$\sum_{m\leqslant \sqrt{z}}{t_1(m)\over m}\asymp \e^{Z(z;t)}.$$
+Appealing to the identity $Z(y;s)+Z(y;t)=Z(y;r)$ completes the proof of \eqref{Mxras}.
+\par \smallskip
+We now embark the proof of \eqref{Mf/Mr-g}. For $x^{2\varepsilon_1}<z\leqslant x$, and hence $z^{\varepsilon_1}>x^\varepsilon$, we have, by the assumptions of \ref{thWg},
+$$\leqalignno{
+\sum_{z^{\varepsilon_1}<p\leqslant y}{\{r(p)-\re f_\tau(p)\}^\gh\log p\over p}&\ll\varepsilon_1^{2\delta_1\gh}\log y\qquad (z^{\varepsilon_1}<y\leqslant z),&(1{\cdot}4)'\cr
+\sum_{z^{\varepsilon_1}<p\leqslant z}{\{r(p)-\re f_\tau(p)\}\over p}&\ll\varepsilon_1^{2\delta_1}. &(1{\cdot}7)'\cr}$$
+Therefore, we may apply \ref{fr} with $(z,r,f_\tau,\varepsilon_1,2\delta_1)$ in place of $(x,r,f,\varepsilon,\delta_1)$.
+Let $L_r(x;f)$ denote the product appearing on  the right-hand side of \eqref{Mf/Mr}. Applying  this formula for $f_\tau$  while taking \eqref{Mxras} into account, we see that
+$$M(z;f_\tau)=M(z;r)L_r(z;f_\tau)+O\big(\varepsilon^\delta M(z;r)\big)\qquad (x^{2\varepsilon_1}< z\leqslant x).$$
+Hence
+$$\eqalign{M(x;f)&=\int_1^xz^{i\tau}\d M(z;f_\tau)=x^{i\tau}M(x;f_\tau)-i\tau\int_1^xz^{i\tau-1}M(z;f_\tau)\d z\cr
+&=x^{i\tau}M(x;r)L_r(x;f_\tau)-i\tau\int_{\varepsilon x}^xz^{i\tau-1}M(z;r)L_r(z;f_\tau)\d z+O\big(\varepsilon^\delta M(x;r)\big),\cr}\eqdef{Mfr}$$
+where we  used, for $\xi=\varepsilon x$ and $\xi=x$, the bound
+$$\int_1^\xi{M(z;r)\over z}\d z\ll \int_1^\xi{\e^{Z(z;r)}\over \log 2z}\d z\ll{\xi\e^{Z(\xi;r)}\over \log 2\xi}\ll M(\xi;r).$$
+Now, observe that, by $(1{\cdot}7)'$, we have
+$$L_r(z;f_\tau)=L_r(x;f_\tau)\big\{1+O\big(\varepsilon^{\delta_1}\big)\big\}\qquad (x^{2\varepsilon_1}< z\leqslant x).$$
+Since $\delta=w_f\delta_1\leqslant \delta_1$, we infer that
+$$\int_{\varepsilon x}^xz^{i\tau-1}M(z;r)L_r(z;f_\tau)\d z=L_r(x;f_\tau)I(x)+O\big(\varepsilon^\delta M(x;r)\big).\eqdef{intML}$$
+with
+$$I(x):=\int_{\varepsilon x}^xz^{i\tau-1}M(z;r)\d z.\eqdef{Ix}$$
+\par 
+For $\varepsilon x\leqslant z\leqslant x$, we write
+$$M(z;r)=\sum_{m\leqslant z}t(m)M\Big({z\over m};s\Big)=S+R,\eqdef{decMyr}$$
+ where $S$ corresponds to the contribution of $m\leqslant \varepsilon z/x^{\varepsilon_1}$ and $R$ denotes the complementary sum.\goodbreak 
+ %Indeed, for $n\leqslant x^{\varepsilon_2}$, w have $s(n)=0$ unless $n=1$.
+Now, observing that $M(z/m;s)=1$ for $z/x^{\varepsilon_2}<m\leqslant z$, we have
+ $$\eqalign{R&\ll\sum_{\varepsilon z/x^{\varepsilon_1}<m\leqslant z/x^{\varepsilon_2}}{z|t(m)|\e^{Z(z/m;s)}\over m\log (z/m)}+\sum_{z/x^{\varepsilon_2}<m\leqslant z}{|t(m)|}\cr&\ll
+ \sum_{\varepsilon z/x^{\varepsilon_1}<m\leqslant z/x^{\varepsilon_2}}{z|t(m)|\{\log (z/m)\}^{2\gb-1}\over m(\varepsilon_2\log x)^{2\gb}}+ {z\e^{Z(z;t)}\over \log z}\cr&\ll\int_{\varepsilon z/x^{\varepsilon_1}}^{z/x^{\varepsilon_2}}{z\{\log (z/v)\}^{2\gb-1}\over v(\varepsilon_2\log x)^{2\gb}}\d O\Big({v\e^{Z(z;t)}\over \log z}\Big)+{z\e^{Z(z;t)}\over \log z}\ll{z(\varepsilon_1/\varepsilon_2)^{2\gb}\e^{Z(z;t)}\over \log z}\cr&\ll {z(\varepsilon_1/\varepsilon_2)^{2\gb}\e^{Z(x;r)-Z(z;s)}\over \log z}\ll M(z;r)\varepsilon_1^{2\gb}\ll \varepsilon^\delta M(z;r),\cr}\eqdef{majR}$$
+ where we used \eqref{defsp} in the form 
+ $$Z(z;s)=2\gb\log (1/\varepsilon_2)+O(1)\qquad (\sqrt{x}\leqslant z\leqslant x),\eqdef{Zys}$$  
+ together with the inequalities $\varepsilon_2^{2\gb}=\varepsilon^{3\gb}\leqslant \varepsilon^{9\delta_1}\leqslant \varepsilon^{\delta}$.
+ \par 
+ In the range $m\leqslant \varepsilon z/x^{\varepsilon_1}$, the bound~\eqref{regs} is a sufficient hypothesis to evaluate $M(z/m;s)$ by  \ref{cascv} with $(z/m,s,s,\varepsilon_1,2\delta_1)$ in place of $(x,r,f,\varepsilon,\delta)$. This furnishes, for a suitable quantity~$C_x\asymp1$, the estimate
+ $$M\Big({z\over m};s\Big)={\big\{1+O\big(\varepsilon^\delta\big)\big\}C_xz\over m(\varepsilon_2\log x)^{2\gb}}\Big(\log {z\over m}\Big)^{2\gb-1}\qquad \big(m\leqslant \varepsilon z/x^{\varepsilon_1},\,\varepsilon x\leqslant z\leqslant x\big),\eqdef{Mys}$$
+ where we took into account the fact that $Z(x^{\varepsilon_2};s)=0$.
+\par \goodbreak
+Therefore, in view of \eqref{Ix}, \eqref{decMyr} and \eqref{majR},
+$$I(x)=J(x)+O\big(\varepsilon^\delta M(x;r)\big)$$
+with
+$$\eqalign{J(x)&:=\int_{\varepsilon x}^x\sum_{m\leqslant \varepsilon z^{1-\varepsilon_1}}{C_xt(m){z^{i\tau}}\{\log (z/m)\}^{2\gb-1}\over m(\varepsilon_2\log x)^{2\gb}}\big\{1+O\big(\varepsilon^\delta\big)\big\}\d z\cr
+&=\sum_{m\leqslant \varepsilon x^{1-\varepsilon_1}}\int_{\varepsilon x}^x{C_xt(m){z^{i\tau}}\{\log (z/m)\}^{2\gb-1}\over m(\varepsilon_2\log x)^{2\gb}}\d z+R_1+R_2+R_3,\cr}\eqdef{Jx}$$
+and
+$$\eqalign{R_1&\ll \sum_{\varepsilon^2 x^{1-\varepsilon_1}<m\leqslant \varepsilon x^{1-\varepsilon_1}}\int_{m x^{\varepsilon_1}/\varepsilon}^x{|t(m)|(\varepsilon_1\log x)^{2\gb-1}\over m(\varepsilon_2\log x)^{2\gb}} \d z
+\ll \sum_{\varepsilon^2 x^{1-\varepsilon_1}<m\leqslant \varepsilon x^{1-\varepsilon_1}}{x|t(m)|(\varepsilon_1/_2)^{2\gb}\over m\varepsilon_1\log x}\cr
+&\ll {x(\varepsilon_1/\varepsilon_2)^{2\gb}\over\varepsilon_1\log x}\int_{\varepsilon^2x^{1-\varepsilon_1}}^{\varepsilon x^{1-\varepsilon_1}}{1\over v}\d O\Big({v\e^{Z(x;t)}\over \log x}\Big)\ll {x(\varepsilon_1/\varepsilon_2)^{2\gb}\e^{Z(x;t)}\log (1/\varepsilon)\over\varepsilon_1(\log x)^2}\cr&
+\ll {\varepsilon_1^{2\gb}\log (1/\varepsilon)x\e^{Z(x;r)}\over\varepsilon_1(\log x)^2}\ll {\varepsilon_1^{2\gb}\log (1/\varepsilon)x\e^{Z(x;r)}\over \log x}\ll
+\varepsilon^\delta M(x;r),\cr
+R_2&\ll\sum_{m\leqslant\sqrt{x}}{\varepsilon^\delta x|t(m)|\over m\varepsilon_2^{2\gb}\log x}\ll {\varepsilon^\delta x\e^{Z(x;t)}\over \varepsilon_2^{2\gb}\log x}={\varepsilon^\delta x\e^{Z(x;r)-Z(x,s)}\over \varepsilon_2^{2\gb}\log x}\asymp \varepsilon^\delta M(x;r),\cr
+R_3&:=\sum_{\sqrt{x}<m\leqslant \varepsilon x^{1-\varepsilon_1}}{\varepsilon^\delta x|t(m)|\{\log (x/m)\}^{2\gb-1}\over m(\varepsilon_2\log x)^{2\gb}}\ll{\varepsilon^\delta x\over (\varepsilon_2\log x)^{2\gb}}\int_{\sqrt{x}}^{x^{1-\varepsilon_2}}{(\log x/v)^{2\gb-1}\over v}\d O\Big({v\e^{Z(x;t)}\over \log x}\Big)\cr
+&\ll{\varepsilon^\delta x\e^{Z(x;t)}\over \varepsilon_2^{2\gb}\log x}\ll\varepsilon^\delta M(x;r).\cr}$$
+\par 
+To evaluate the main term appearing in the right-hand side of \eqref{Jx}, it is sufficient to observe that, by partial summation, we have, for $m\leqslant \varepsilon x^{1-\varepsilon_1},$
+$$\eqalign{\int_{\varepsilon x}^x{z^{i\tau}}\Big(\log {z\over m}\Big)^{2\gb-1}\d z&=\{1+O(\varepsilon)\}{x^{1+i\tau}\over 1+i\tau}\Big(\log {x\over m}\Big)^{2\gb-1}+O\Big(x\Big(\log {x\over m}\Big)^{2\gb-2}\Big)\cr&=\{1+O(\varepsilon)\}{x^{1+i\tau}\over 1+i\tau}\Big(\log {x\over m}\Big)^{2\gb-1}.\cr}$$
+Thus we can summarise our estimates as
+$$\eqalign{I(x)&=\sum_{m\leqslant \varepsilon x^{1-\varepsilon_1}}{C_xt(m)x^{1+i\tau}\{\log (x/m)\}^{2\gb-1}\over (1+i\tau)m(\varepsilon_2\log x)^{2\gb}}+O\Big(\varepsilon^\delta M(x;r)\Big)\cr
+&=\sum_{m\leqslant \varepsilon x^{1-\varepsilon_1}}{x^{i\tau}t(m)\over 1+i\tau}M\Big({x\over m};s\Big)+O\Big(\varepsilon^\delta M(x;r)\Big)={x^{i\tau}M(x;r)\over 1+i\tau}+O\Big(\varepsilon^\delta M(x;r)\Big)\cr}$$
+Carrying this back into \eqref{Mfr}, we obtain
+$$\eqalign{M(x;f)&={x^{i\tau}L_r(x;f_\tau)M(x;r)\over 1+i\tau}+O\Big(\varepsilon^\delta M(x;r)\Big),\cr}$$
+which coincides with \eqref{Mf/Mr-g}.\qed
+\medskip
+\medskip
+\paraun{Moments}
+Given a non negative multiplicative function $r\in\M(A,B)$ and a real additive function~$h$, let us consider the distribution function $z\mapsto F_x(z;h,r)$ of the random variable $h(n)$ on the set of integers not exceeding $x$ equipped with the measure   attributing to each integer~$n\leqslant x$ the weight $r(n)/M(x;r)$, viz.
+$$F_x(z;h,r):={1\over M(x;r)}\sum_{\di{n\leqslant x}{h(n)\leqslant z}}r(n)\qquad (z\in\r).$$
+\par 
+Put
+$$E_h(x;r):=\sum_{p\leqslant x}{r(p)h(p)\over p},\quad D_h(x;r)^2:=\sum_{p\leqslant x}{r(p)h(p)^2\over p},$$
+and denote by
+$\Phi(z):=\int_{-\infty}^z\e^{-u^2/2}\d u/\sqrt{2\pi}$
+the distribution function of the normal law.\par 
+\smallskip
+The following theorem is established in \citer{Te17} as a corollary of \ref{fr}. We write $$\mu_x=\mu(x;h,r):=\max_{p\leqslant x}{|h(p)|\over D_h(x;r)},\qquad \vartheta_x=\vartheta(x;h,r):=\mu_x+1/D_h(x;r),$$
+and note that $\vartheta_x\asymp \mu_x$ if $\max_{p\leqslant x}|h(p)|\gg1$.
+\vskip-2mm\goodbreak
+\propt{repad}{ (\citer{Te17})}{Let $A$, $B$,  denote positive constants. Let $x\geqslant 2$, $r\in\M(A,B)$, and let $h$ be a real additive function. Assume that:\smallskip \qquad {\rm(i)} \quad$\dsp\min_{\exp\sqrt{\log x}<p\leqslant x}r(p)\gg1$
+ \ ;\qquad {\rm(ii)} \quad $D_h(x;r)\gg1$;\par \smallskip
+\qquad {\rm(iii)}\quad $\mu_x\leqslant 1$;
+\qquad {\rm(iv)}\quad $\dsp\sum_{\pnu\leqslant x}\sum_{\nu\geqslant 2}{r(\pnu)|h(\pnu)|\log \pnu\over \pnu}\ll1.$\note{Due to a misprint, the factor $\log \pnu$ is missing in the corresponding hypothesis of \citeplus{Te17}{cor.\thinspace2.5}.}
+\par 
+Then 
+$$F_x\Big(E_h(x;r)+zD_h(x;r);h,r\Big)=\Phi(z)+O\big(\vartheta_x\big).\eqdef{apprep}$$
+}
+\par
+In this section, we apply the above result to evaluate, as $x\to\infty$, the weighted moments 
+$$G_m(x;r,h):={1\over M(x;r)}\sum_{n\leqslant x}r(n)\big\{h(n)-E_h(x;r)\big\}^m\qquad (m\geqslant 1).$$
+We denote by $\nu_m$ the $m$th integral moment of the normal law. 
+\par \vskip-2mm
+ 
+ \Propt{thmom}{Let $m\geqslant 1$ and let $h$ be a real strongly additive function. Under the hypotheses of~\ref{repad}, we have
+ $$G_m(x;r,h)=\nu_m+O\Big(\vartheta_x(\log 1/\vartheta_x)^{m/2}\Big).\eqdef{evalGm}$$
+}
+\rem The assumption that $h$ is strongly additive is not essential here but it simplifies the analysis. It could be relaxed by writing $h=h_1+h_2$, where $h_1$ (resp. $h_2$) is supported on the set of squarefree (resp. squareful) integers and making {\it ad hoc} hypotheses on the values $h(\pnu)$ for $\nu\geqslant 2$. 
+\medskip
+\nid To lighten the writing, put $E:=E_h(x;r)$, $D:=D_h(x;r)$. With the aim of applying \eqref{apprep}, we need an upper bound for the contribution to the left-hand side of \eqref{evalGm} of large values of $|h(n)-E|$.  For $\sigma\in\r$, $|\sigma|\leqslant 1/\mu_x$, Shiu's bound \citer{Sh80} furnishes, in view of \eqref{Mxras},
+$$\eqalign{\sum_{n\leqslant x}r(n)\e^{\sigma h(n)/D}&\ll x\prod_{p\leqslant x}\Big(1+{r(p)\e^{\sigma h(p)/D}-1\over p}\Big)\ll M(x;r)\exp\Big\{\sum_{p\leqslant x}{r(p)\{\e^{\sigma h(p)/D}-1\}\over p}\Big\}\cr
+&\ll M(x;r)\exp\bigg\{\sum_{p\leqslant x}{\sigma r(p)h(p)\over pD}+\sum_{p\leqslant x}{\sigma^2 r(p)h(p)^2\over pD^2}\bigg\}=M(x;r)\e^{\sigma E/D+\sigma^2}.\cr}$$
+Applying this for $\sigma=\pm t,$ $0\leqslant t\leqslant 1/\mu_x$, we get
+$$\sum_{n\leqslant x}r(n)\e^{t|h(n)-E|/D}\ll \e^{t^2} M(x;r),$$
+whence, selecting $t:=\sqrt{\log 1/\vartheta_x}$ and applying the above for $2t$,
+$$\eqalign{\sum_{\di{n\leqslant x}{|h(n)-E|>5tD}}r(n)|h(n)-E|^m&\leqslant \sum_{n\leqslant x}r(n) {m!D^m\over t^m}\e^{2t|h(n)-E|/D-5t^2}\cr&\ll M(x;r)D^m\e^{-t^2}=\vartheta_x D^mM(x;r).\cr}\eqdef{contgdsval}$$
+Now combining \eqref{contgdsval} and \eqref{apprep} yields
+$$\eqalign{G_m((x;r,h)&=\int_{-5t}^{5t}z^m\d\Big\{\Phi(z)+O\big(\vartheta_x\big)\Big\}+O\big(\vartheta_x\big)\cr
+&=\nu_m-{1\over \sqrt{2\pi}}\int_{|z|>5t}\e^{-z^2/2}\d z+O\big(t^m\vartheta_x)\big)=\nu_m+O\big(t^m\vartheta_x\big),\cr}$$
+as required.
+%$|h(n)-E|>2tD$ implies $|h_1(n)-E|>tD$ or $|h_2(n)|>tD$.
+%We have, fo a suitable constant $c>0$,
+%$$\eqalign{\sum_{\di{n\leqslant x}{|h_2(n)|>tD}}r(n)&\leqslant \sum_{\di{\pnu\leqslant x}{\nu\geqslant 2}}{r(\pnu)|h(\pnu)|\over tD}M\Big({x\over \pnu};r\Big)\ll \sum_{\di{\pnu\leqslant x}{\nu\geqslant 2}}{r(\pnu)|h(\pnu)|x\e^{Z(x/\pnu;r)}\over tD\pnu\log (2x/\pnu)}\cr&
+%\ll M(x;r)\sum_{\di{\pnu\leqslant x}{\nu\geqslant 2}}{r(\pnu)|h(\pnu)|\over tD\pnu}\Big\{{\log x\over \log (2x/\pnu)}\Big\}^{1-c}\ll {M(x;r)\over tD}\ll{\vartheta_xM(x;r)\over t},\cr}$$
+%in view of \eqref{Mxras} and conditions (i) and (iv).
+\qed
+\bigskip
+\medskip
+\paraun{Sifted mean-values}
+Given an arithmetic function $f$ and an integer $D$, put $f_D(n):=\1_{\{(n,D)=1\}}f(n)$. Moreover, if $f$ satisfies $\sum_{\nu\geqslant 0} |f(\pnu)|/\pnu <\infty$ for all primes $p$, define 
+$$W_f(n):=\prod_{p|n}\sum_{\nu\geqslant 0}{f(p^\nu)\over p^\nu}\qquad (n\geqslant 1),$$
+and denote by $P^+(n)$ the largest prime factor of an integer $n>1$, with the convention that $P^+(1)=1$.
+\par 
+In his paper \citer{El17}, Elliott indicates that the following effective estimate is Çprovided by combining the argument of Elliott \& Kish \citer{EK16b},  \citeplus{El17}{th. 2}, with that of  the  taxonomy section of Elliott \& Kish~\citer{EK16a}È:
+{\it Let $r$ denote a non-negative, exponentially  multiplicative function, satisfying, for suitable positive constants $A$, $\gb$, and $c_1$,
+$$\sup_pr(p)\leqslant A, \quad\sum_{w<p\leqslant v}{r(p)-\gb\over p}\geqslant -c_1\qquad (\ft32\leqslant w\leqslant v).\eqdef{cnE}$$
+Then, uniformly for  $x\geqslant 2$, $D\geqslant 1$, $P^+(D)\leqslant x$, we have
+$$M(x;r_D)=M(x;r)\bigg\{{1\over W_r(D)}+O\bigg({(\log_22D)^{1+A}\over (\log x)^{\gc}}\bigg)\Bigg\}\eqdef{faPE}$$
+where $\gc:=\gb^3/\{\gb^2+3456 A^2\}$ provided $\gb\leqslant 12\sqrt{2A}$.\note{The condition $P^+(D)\leqslant x$ is omitted in \citer{El17}. We reinserted it  since it does not involve any loss of generality.}}
+\par \goodbreak\smallskip
+The above statement can be directly compared with an almost immediate consequence of \ref{fr}. Put
+$$\beta=\beta(\gb,A):=1-{\sin(\pi\gb/A)\over \pi\gb/A},\qquad  \delta=\delta(\gb,A):=\ft1{12}\gb\beta,\eqdef{delta0+}$$
+and recall definition \eqref{C0} of the class $\M(A,B)$. Note that, if  $\gb\leqslant A$, we have $\beta\geqslant \gb^2/A^2$ by the product formula for $\sin(\pi z)/\pi z$, and hence $\delta\geqslant \gb^3/12 A^2$ .\par 
+\Propt{gD_GT}{Let $A>0$, $B>0$ and $r\in \M(A,B)$, $r\geqslant 0$, $x\geqslant e^4$. Assume that, for a suitable constant~$\gb$, $0<\gb\leqslant \min(1,A)$, and  $\eta_x:=(\log x)^{-1/4}$, we have
+$$\sum_{y<p\leqslant y^{1+\eta_x}}{r(p)\log p\over p}\geqslant \gb\eta_x\log y\qquad \big(\e^{1/\eta_x}\leqslant y\leqslant x^{1/(1+\eta_x)}\big).\eqdef{moygp}$$
+Then, we have, uniformly for $x\geqslant 2$, $D\geqslant 1$, $P^+(D)\leqslant x$,
+$$M(x;r_D)=M(x;r)\bigg\{{1+O(\chi)\over W_r(D)}+O\Big({1\over (\log x)^{\delta/2}}\Big)\bigg\},\eqdef{faGT}$$ where
+$\chi:=\1_{\{\log_23D>(\log x)^{\gb^2/17A^2}\}}$.}
+\par \medskip
+\rems (i) The restriction to exponentially multiplicative functions has been dropped.\par 
+(ii) Condition \eqref{moygp} is significantly less restrictive than \eqref{cnE}.
+\par 
+(iii) The error term of \eqref{faGT} is always smaller than that of \eqref{faPE} by a power of $\log x$.
+\medskip
+\nid We shall  apply \ref{fr} to the pair $(r,f)=(r,r_D)$, replacing $(A,\gb)$ by $(A/2,\gb/4)$, and selecting $\varepsilon:=1/\sqrt{\log x}$, so that $\varepsilon_1=\eta_x$. \par 
+First consider the case when $\log_23D\leqslant (\log x)^{\gb^3/17A^2}$.  We then have, for large $x$,
+$$\eqalign{\sum_{p|D}{r(p)\over p}\leqslant \log_33D+O(1)\leqslant {\gb^3\over 16A^2}\log_2x\leqslant \ft18\beta\gb\log (1/\varepsilon).\cr}$$
+Therefore, condition \eqref{pqr} holds for our modified parameters. To check that conditions \eqref{cdpr1} with $\gh:=(4-\gb)/\gb$, and  \eqref{cdpr} with $\gh=1$ are also fulfilled, we note that a well known estimate provides
+ $$\sum_{p|D}{\log p\over p}\ll \log_23D.$$
+We hence have
+$$\sum_{\di{x^\varepsilon<p\leqslant y}{p|D}}{\log p\over p}\ll (\log x)^{\gb^3/16A^2}\leqslant {\log y\over 
+(\log x)^{\frac12(1-\gb^3/8A^2)}}\leqslant {\log y\over (\log x)^{7/16}}\qquad (x^\varepsilon<y\leqslant x).$$
+Since, for $\gh:=(4-\gb)/\gb$, we have $7\gb/16\gh\geqslant\ft7{64}\gb\geqslant\frac1{24}\gb\geqslant \frac1{24}\beta \gb=\frac12\delta$, we see that \eqref{cdpr1}   holds for this value of $\gh$ and $\delta_1=\delta$.
+\par 
+Next,
+$$\sum_{\di{x^\varepsilon<p\leqslant y}{p|D}}{1\over p}\leqslant \sum_{p|D}{\log p\over p\sqrt{\log x}}\ll {1\over (\log x)^{\frac12(1-\gb^3/8A^2)}}\ll\varepsilon^{\delta},$$
+with a lot to spare, since $\delta\leqslant \frac1{12}$, $1-\gb^3/8A^2\geqslant \frac78$.  This shows that \eqref{cdpr} with $\gh=1$ is satisfied.
+\par\smallskip Applying \ref{fr} with the parameters defined above,  we get in the case under consideration
+$$M(x;r_D)=M(x;r)\Big\{{1\over W_r(D)}+O\Big({1\over (\log x)^{\delta/2}}\Big)\Big\},$$
+which is compatible with \eqref{faGT}.
+\par 
+If $\log_23D> (\log x)^{\gb^3/17A^2}$,  estimate \eqref{faGT} reduces to the Halberstam-Richert upper bound \citer{HR79}.
+\qed
+\goodbreak
+\par\medskip
+\bigskip\bigskip
+\centerline{\twelvebf References}\bigskip
+{\leftskip5mm\rightskip5mm\eightpoint{%\hang\noi
+\bibtem{El17} P.D.T.A Elliott, Multiplicative function mean values: asymptotic estimates, {\it Funct. Approx. Comment. Math. \bf56},\numero2 (2017),  217Ð238. \par 
+\bibtem{EK16a}  P.D.T.A Elliott \& J. Kish, Harmonic analysis on the positive rationals I: Basic results, {\it J. Math. Sci. Univ. Tokyo \bf23},\numero3 (2016),  569Ð614.\par 
+\bibtem{EK16b} P.D.T.A Elliott \& J. Kish, Harmonic analysis on the positive rationals II: Multiplicative functions and Maass forms, {\it J. Math. Sci. Univ. Tokyo \bf23},\numero3 (2016), 615Ð658. \par 
+\bibtem{Ha68} G. Hal‡sz, †ber die Mittelwerte multiplikativer zahlentheoretischer Funktionen,
+{\it Acad. Math. Acad. Sci. Hungar. \bf19} (1968), 365--403.\par 
+%\bibtem{Ha71} G. Hal‡sz, On the distribution of additive and the mean values of multiplicative
+%arithmetic functions, {\it Stud. Sci. Math. Hungar. \bf6} (1971), 211--233.\par
+\bibtem{HR79} H. Halberstam \& H.-E. Richert, On a result of R.R. Hall, {\it J. Number Theory \rm (1) \bf 11}
+(1979), 76--89.\par 
+%\bibtem{IKW01} K.-H. Indlekofer, I. K‡tai, \& R. Wagner, A comparative result for multiplicative functions, {\it Lith. Math. J. \bf 41}, \numero2 (2001), 143--157.\par 
+\bibtem{IK25} K.-H. Indlekofer \& E. Kaya, Estimates for multipliative functions, II, {\it Annales Univ. Sci. Budapest., Sect. Comp. \bf 58} (2025), 1-11.
+\bibtem{Sh80}
+P. Shiu, A Brun-Titschmarsh theorem for multiplicative functions, {\it J. Reine Angew. Math.} {\bf 313} (1980), 161--170.
+\par 
+%\bibtem{Te15} G. Tenenbaum, {\it Introduction to analytic and probabilistic number theory}, 3rd ed., Graduate Studies in Mathematics 163, Amer. Math. Soc. 2015.\par
+\bibtem{Te16} G. Tenenbaum, Fonctions multiplicatives, sommes d'exponentielles, et loi des grands nombres, {\it Indag. Math. \bf27} (2016), 590--600.
+\bibtem{Te17} G. Tenenbaum, Valeurs moyennes effectives de fonctions multiplicatives complexes, {\it Ramanujan J. \bf44}, \numero3 (2017), 641-701; Corrig. {\it ibid. \bf 51}, \numero1 (2020), 243-244.\par
+\bibtem{Wi67} E. Wirsing, Das asymptotische Verhalten von Summen \"uber multiplikative Funktionen
+II, {\it Acta Math. Acad. Sci. Hung. \bf 18} (1967), 411--467.
+
+\par }
+}
+\vskip 5mm
+{\sevenrm\baselineskip9pt
+G\'erald Tenenbaum\par
+Institut \'Elie Cartan\par 
+Universit\'e de Lorraine\par
+ BP 70239\par
+54506 Vand\oe uvre Cedex\par
+ France
+\smallskip
+e-mail : \seventt gerald.tenenbaum@univ-lorraine.fr\par}
+\end

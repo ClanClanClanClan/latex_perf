@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.11298v1",
+  "title": "Weakly distance-regular digraphs of diameter 2",
+  "authors": [
+    "Xiangli Wang",
+    "Yuefeng Yang"
+  ],
+  "categories": [
+    "math.CO"
+  ],
+  "abstract": "Weakly distance-regular digraphs is a directed version of distance-regular\ngraphs. In this paper, we characterize all weakly distance-regular digraphs of\ndiameter 2.",
+  "submitted_date": "2025-07-15T13:25:29Z",
+  "download_date": "2025-07-16T00:33:45.727951",
+  "tex_files": [
+    "wdrdg_of_diameter_2.tex"
+  ],
+  "main_tex_file": "wdrdg_of_diameter_2.tex",
+  "file_size": 47893,
+  "line_count": 505,
+  "complexity_score": 8.950499999999998,
+  "features": {
+    "line_count": 505,
+    "char_count": 47389,
+    "word_count": 5122,
+    "file_size": 47893,
+    "tex_files": [
+      "wdrdg_of_diameter_2.tex"
+    ],
+    "main_tex_file": "wdrdg_of_diameter_2.tex",
+    "equations": 1,
+    "align_envs": 9,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 10,
+    "inline_math": 800,
+    "display_math": 11,
+    "bracket_math": 1,
+    "straight_quotes": 0,
+    "single_quotes": 23,
+    "double_dollars": 11,
+    "british_spellings": 0,
+    "american_spellings": 5,
+    "includes": 0,
+    "packages": 12,
+    "newcommands": 10,
+    "citations": 126,
+    "references": 38,
+    "long_lines": 150,
+    "unicode_chars": 0,
+    "comments": 2,
+    "complexity_score": 8.950499999999998
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

@@ -1,0 +1,57 @@
+{
+  "arxiv_id": "2507.09979v1",
+  "title": "Global $GL_2$ Hecke-Baxter operator",
+  "authors": [
+    "Anton A. Gerasimov",
+    "Dmitry R. Lebedev",
+    "Sergey V. Oblezin"
+  ],
+  "categories": [
+    "math.RT"
+  ],
+  "abstract": "We construct a global Hecke-Baxter operator for integrable systems of\narithmetic type associated with the group $GL_2$. This is an element of a\nglobal Hecke algebra associated with the double coset space\n$GL_2(\\mathbb{Z})\\backslash GL_2(\\mathbb{R})/O_2$. Eigenvalues of the global\nHecke-Baxter operator acting on the $GL_2$-Eisenstein series are given by the\ncorresponding global $L$-factors. This construction generalizes our previous\nconstruction of the Hecke-Baxter operators over local completions $\\mathbb{R}$\nand $\\mathbb{Q}_p$ of the number field $\\mathbb{Q}$. Presumably, zeroes of the\ncorresponding global $L$-factors should be subjected to an arithmetic version\nof the Bethe ansatz equations.",
+  "submitted_date": "2025-07-14T06:53:19Z",
+  "download_date": "2025-07-16T00:35:09.448951",
+  "tex_files": [
+    "HBGL2Q.tex"
+  ],
+  "main_tex_file": "HBGL2Q.tex",
+  "file_size": 66062,
+  "line_count": 1695,
+  "complexity_score": 1.9695,
+  "features": {
+    "line_count": 1695,
+    "char_count": 66062,
+    "word_count": 6497,
+    "file_size": 66062,
+    "tex_files": [
+      "HBGL2Q.tex"
+    ],
+    "main_tex_file": "HBGL2Q.tex",
+    "equations": 1,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 410,
+    "display_math": 0,
+    "bracket_math": 0,
+    "straight_quotes": 4,
+    "single_quotes": 7,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 1,
+    "includes": 0,
+    "packages": 5,
+    "newcommands": 16,
+    "citations": 20,
+    "references": 54,
+    "long_lines": 53,
+    "unicode_chars": 0,
+    "comments": 43,
+    "complexity_score": 1.9695
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

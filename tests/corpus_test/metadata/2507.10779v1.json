@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.10779v1",
+  "title": "The $3$-sparsity of $X^n-1$ over finite fields, II",
+  "authors": [
+    "Kaimin Cheng"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Let $q$ be a prime power and $\\mathbb{F}_q$ the finite field with $q$\nelements. For a positive integer $n$, the polynomial $X^n - 1 \\in\n\\mathbb{F}_q[X]$ is termed $3$-sparse over $\\mathbb{F}_q$ if all its\nirreducible factors in $\\mathbb{F}_q[X]$ are either binomials or trinomials. In\n2021, Oliveira and Reis characterized all positive integers $n$ for which $X^n\n- 1$ is 3-sparse over $\\mathbb{F}_q$ when $q = 2$ and $q = 4$. Recently, the\nauthor provided a complete characterization for odd $q$. This paper extends the\ninvestigation to finite fields of even characteristic, fully determining all\n$n$ such that $X^n - 1$ is 3-sparse over $\\mathbb{F}_q$ for even $q$. This work\nresolves two open problems posed by Oliveira and Reis for even characteristic\ncase.",
+  "submitted_date": "2025-07-14T20:09:30Z",
+  "download_date": "2025-07-16T00:34:36.548538",
+  "tex_files": [
+    "main.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 32142,
+  "line_count": 537,
+  "complexity_score": 21.3537,
+  "features": {
+    "line_count": 537,
+    "char_count": 32138,
+    "word_count": 4472,
+    "file_size": 32142,
+    "tex_files": [
+      "main.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 27,
+    "align_envs": 8,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 460,
+    "display_math": 8,
+    "bracket_math": 26,
+    "straight_quotes": 0,
+    "single_quotes": 3,
+    "double_dollars": 8,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 9,
+    "newcommands": 90,
+    "citations": 59,
+    "references": 20,
+    "long_lines": 111,
+    "unicode_chars": 2,
+    "comments": 24,
+    "complexity_score": 21.3537
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.08601v1",
+  "title": "Counting the number of $2$-periodic integral points of a discrete\n  dynamical system with applications from arithmetic statistics, IV",
+  "authors": [
+    "Brian Kintu"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "In this follow-up paper, we inspect a surprising relationship between the set\nof $2$-periodic points of a polynomial map $\\varphi_{d, c}$ defined by\n$\\varphi_{d, c}(z) = z^d + c$ for all $c, z \\in \\mathbb{Z}$ and the coefficient\n$c$, where $d>2$ is an integer. As in the previous articles, we again wish to\nstudy here counting problems that are inspired by exciting advances of\nBhargava-Shankar-Tsimerman and their collaborators on $2$-torsion\npoint-counting in arithmetic statistics, and also by Hutz's conjecture and\nPanraksa's work on $2$-periodic point-counting in arithmetic dynamics. In doing\nso, we then first prove that for any given prime $p\\geq 3$, the average number\nof distinct $2$-periodic integral points of any polynomial map $\\varphi_{p, c}$\nmodulo $p$ is either zero or unbounded as $c$ tends to infinity. Furthermore,\ninspired by a conjecture of Hutz on $2$-periodic rational points of any\npolynomial map $\\varphi_{p-1, c}$ for any given prime $p\\geq 5$ in arithmetic\ndynamics, we then also prove that the average number of distinct $2$-periodic\nintegral points of any $\\varphi_{p-1, c}$ modulo $p$ is equal to $1$ or $2$ or\n$0$ as $c$ tends to infinity. Finally, as in the previous follow-up articles,\nwe then also apply here density and number field-counting results from\narithmetic statistics, and consequently obtain again several counting and\nstatistical results on the irreducible monic integer polynomials and on the\nalgebraic number fields arising naturally in our dynamical setting.",
+  "submitted_date": "2025-07-11T13:50:41Z",
+  "download_date": "2025-07-16T00:36:06.008356",
+  "tex_files": [
+    "main.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 81582,
+  "line_count": 465,
+  "complexity_score": 4.5965,
+  "features": {
+    "line_count": 465,
+    "char_count": 81582,
+    "word_count": 11702,
+    "file_size": 81582,
+    "tex_files": [
+      "main.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 6,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 1267,
+    "display_math": 0,
+    "bracket_math": 0,
+    "straight_quotes": 0,
+    "single_quotes": 33,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 10,
+    "includes": 0,
+    "packages": 15,
+    "newcommands": 1,
+    "citations": 197,
+    "references": 46,
+    "long_lines": 154,
+    "unicode_chars": 0,
+    "comments": 4,
+    "complexity_score": 4.5965
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

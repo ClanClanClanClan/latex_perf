@@ -1,0 +1,536 @@
+% ----------------------------------------------------------------
+% AMS-LaTeX Paper ************************************************
+% **** -----------------------------------------------------------
+\documentclass[10pt,reqno]{amsart}
+\usepackage{bbm}
+\usepackage{tabu}
+\usepackage{amsmath}
+\usepackage{mathrsfs}
+\usepackage{bm}
+\usepackage{amsfonts} %%% i.e. use 12pt type
+\textwidth=13.5cm %%% in the preamble; this will require
+%%% adjusting the layouot of some wide formulas
+\baselineskip=17pt %%% after \begin{document}
+%\documentclass{amsart}
+\usepackage{graphicx,latexsym,bm,amsmath,amssymb,verbatim,multicol,lscape}
+\usepackage{enumitem}
+\usepackage{makecell}
+
+% ----------------------------------------------------------------
+\vfuzz2pt % Don't report over-full v-boxes if over-edge is small
+\hfuzz2pt % Don't report over-full h-boxes if over-edge is small
+
+% THEOREMS -------------------------------------------------------
+\newtheorem{thm}{Theorem} [section]
+\newtheorem{prob}[thm]{Problem}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{fac}[thm]{Fact}
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\theoremstyle{remark}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{exa}[thm]{Example}
+\newtheorem{con}[thm]{Conjecture}
+
+
+\numberwithin{equation}{section}
+% MATH -----------------------------------------------------------
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\abs}[1]{\left\vert#1\right\vert}
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\Real}{\mathbb R}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\To}{\longrightarrow}
+\newcommand{\BX}{\mathbf{B}(X)}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\SSS}{\stackrel}
+%\renewcommand{\baselinestretch}{3}
+
+
+\newcommand{\fq}{{\mathbb F}_{q}}
+\newcommand{\fqr}{{\mathbb F}_{q^r}}
+\newcommand{\fqk}{{\mathbb F}_{q^k}}
+\newcommand{\fp}{{\mathbb F}_{p}}
+\newcommand{\fpn}{{\mathbb F}_{p^n}}
+\newcommand{\fqn}{{\mathbb F}_{q^n}}
+\newcommand{\fqd}{{\mathbb F}_{q^d}}
+\newcommand{\fqq}{{\mathbb F}_{q^2}}
+\newcommand{\fpp}{{\mathbb F}_{p^2}}
+\newcommand{\ftwo}{{\mathbb F}_{2}}
+\newcommand{\fth}{{\mathbb F}_{3}}
+\newcommand{\ftwon}{{\mathbb F}_{2^n}}
+\newcommand{\ftwom}{{\mathbb F}_{2^m}}
+\newcommand{\fntwo}{{\mathbb F}^{\, n}_{2}}
+\newcommand{\Fbar}{\overline{\mathbb F}}
+\newcommand{\barF}{\overline{\mathbb F}}
+\newcommand{\Gbar}{\overline{G}}
+\newcommand{\diff}{\partial}
+
+\newcommand{\fy}{{\mathbb F}[y]}
+\newcommand{\fxy}{{\mathbb F}[x,y]}
+\newcommand{\qxy}{{\mathbb Q}[x,y]}
+\newcommand{\fbxy}{{\overline{\mathbb F}}[x,y]}
+\newcommand{\dx}{\partial x}
+\newcommand{\dy}{\partial y}
+
+\newcommand{\N}{{\mathbb N}}
+\newcommand{\G}{{\mathcal G}}
+\newcommand{\M}{{\mathcal M}}
+\newcommand{\B}{{\mathcal B}}
+\newcommand{\Z}{{\mathbb Z}}
+\newcommand{\R}{{\mathbb R}}
+\newcommand{\F}{{\mathcal F}}
+\newcommand{\C}{{\mathbb C}}
+\newcommand{\K}{{\mathbb K}}
+\newcommand{\LL}{{\mathbb L}}
+\newcommand{\Q}{{\mathbb Q}}
+
+\newcommand{\fx}{{\mathbb F}[x]}
+\newcommand{\qx}{{\mathbb{Q}[x]}}
+\newcommand{\fqx}{{\mathbb F}_{q}[x]}
+\newcommand{\fqxy}{{\mathbb F}_{q}[x,y]}
+\newcommand{\fpoly}{{\mathbb F}[x_1, \dots, x_n]}
+\newcommand{\ftwopoly}{{\mathbb F}_{2}[x_1, \dots, x_n]}
+\newcommand{\fnpoly}{{\mathbb F}[x_1, \dots, x_{n-1}]}
+
+\newcommand{\bR}{{\mathbf R}}
+\newcommand{\bI}{{\mathbf I}}
+\newcommand{\bJ}{{\mathbf J}}
+\newcommand{\bx}{{\mathbf x}}
+\newcommand{\bi}{{\mathbf i}}
+\newcommand{\bj}{{\mathbf j}}
+\newcommand{\bu}{{\mathbf u}}
+\newcommand{\bv}{{\mathbf v}}
+\newcommand{\bw}{{\mathbf w}}
+
+\newcommand{\dft}{\mbox{DFT}}
+\newcommand{\idft}{\mbox{iDFT}}
+\newcommand{\Char}{\mbox{Char}}
+\newcommand{\Oh}{{\mathcal O}}
+\newcommand{\lt}{\mbox{lt}}
+\newcommand{\lm}{\mbox{lm}}
+\newcommand{\lc}{\mbox{lc}}
+\newcommand{\lcm}{\mbox{lcm}}
+\newcommand{\Ker}{\mbox{Ker}}
+\newcommand{\mdeg}{\mbox{mdeg}}
+\newcommand{\bdeg}{\mbox{bdeg}}
+\newcommand{\Span}{\mbox{Span}}
+\newcommand{\supp}{\mbox{supp}}
+\newcommand{\Supp}{\mbox{supp}}
+\newcommand{\prb}{\mbox{Prob}}
+\newcommand{\Res}{\mbox{Res}}
+\newcommand{\Tr}{\mbox{Tr}}
+\newcommand{\wt}{\mbox{wt}}
+\newcommand{\taylor}{\mbox{Taylor}}
+
+\newcommand{\bIbar}{\overline{{\mathbf I}}} %Nate Black added this
+\newcommand{\fbarpoly}{\overline{\mathbb F}[x_1, \dots, x_n]} % Nate Black added this
+
+\newcommand{\classP}{\mathcal{P}}
+\newcommand{\classNP}{\mathcal{NP}}
+\newcommand{\classCONP}{\mbox{co-}\mathcal{NP}}
+\newcommand{\classNPC}{\mathcal{NP}\textrm{-complete}}
+\newcommand{\classRP}{\mathcal{RP}}
+\newcommand{\perm}{\textrm{Perm}}
+
+\newcommand{\pf}{{\em Proof.\ }}
+\newcommand{\rmv}[1]{}
+
+\def\<{\left\langle}
+\def\>{\right\rangle}
+\def\lT{\vartriangleleft}
+\def\tbe{\textbf{e}}
+\def\sk{\textbf{s}_k}
+
+
+
+
+% ----------------------------------------------------------------
+\begin{document}
+
+\title[The $3$-sparsity of $X^n-1$]
+{The $3$-sparsity of $X^n-1$ over finite fields, II}%
+\author{Kaimin Cheng}
+%Address of record for the research reported here
+\address{School of Mathematics and Information, China West Normal University, Nanchong, 637002, P. R. China}
+\email{ckm20@126.com}
+%\author{Arne Winterhof}
+%    Address of record for the research reported here
+%\address{Johann Radon Institute for Computational and Applied Mathematics, Austrian Academy of Science, Linz 4040, Austria}
+%\email{arne.winterhof@oeaw.ac.at}
+%\thanks{This work was supported partially by the Natural Science Foundation of China (No. 12226335) and the China Scholarship Council Foundation(No. 202301010002).}
+\subjclass{Primary 11T06}%
+\keywords{Finite fields, cyclotomic polynomials, $3$-sparsity, irreducible factorization}
+%\subjclass[2010]{Primary 11P05}
+\date{\today}%zxzsasszxsmkht5rrfc  vasv
+%\dedicatory{}%
+%\commby{}%
+% ----------------------------------------------------------------
+\begin{abstract}
+Let $q$ be a prime power and $\mathbb{F}_q$ the finite field with $q$ elements. For a positive integer $n$, the polynomial $X^n - 1 \in \mathbb{F}_q[X]$ is termed \emph{3-sparse} over $\mathbb{F}_q$ if all its irreducible factors in $\mathbb{F}_q[X]$ are either binomials or trinomials. In 2021, Oliveira and Reis characterized all positive integers $n$ for which $X^n - 1$ is 3-sparse over $\mathbb{F}_q$ when $q = 2$ and $q = 4$. Recently, the author provided a complete characterization for odd $q$. This paper extends the investigation to finite fields of even characteristic, fully determining all $n$ such that $X^n - 1$ is 3-sparse over $\mathbb{F}_q$ for even $q$. This work resolves two open problems posed by Oliveira and Reis for even characteristic case.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+Let $q$ be a prime power and $\mathbb{F}_q$ the finite field of $q$ elements, with $\mathbb{F}_q^*$ its multiplicative group. The factorization of polynomials over $\mathbb{F}_q$ is a fundamental problem in finite field theory, with significant applications in coding theory \cite{[Ber68]} and cryptography \cite{[Len91]}. For a positive integer $n$, the polynomial $X^n - 1 \in \mathbb{F}_q[X]$ is of particular interest, as its irreducible factors correspond to cyclic codes of length $n$ over $\mathbb{F}_q$ \cite{[Van98]}. Thus, determining the irreducible factorization of $X^n - 1$ is of critical importance.
+
+The factorization of $X^n - 1$ has been a challenging problem studied extensively over decades. Notable contributions include \cite{[BGM93], [CLT13], [Mey96], [WW12]}, with more general results in \cite{[BRS19], [Gra23]}. A significant result by \cite{[BMOV15]} provides an explicit factorization of $X^n - 1$ over $\mathbb{F}_q$ when each prime factor of $n$ divides $q^2 - 1$. An intriguing property arises when all irreducible factors of $X^n - 1$ are either binomials or trinomials, leading to the definition of \emph{3-sparse} polynomials. Such a type of polynomials has important applications, for instance, for an efficient hardware implementation of feedback shift registers (see [1]). This prompts the question of identifying all positive integers $n$ for which $X^n - 1$ is 3-sparse over $\mathbb{F}_q$. In 2021, Oliveira and Reis \cite{[OR21]} characterized such $n$ for $q = 2$ and $q = 4$, posing the following problems:
+
+\begin{prob}\label{prob1.1}
+For any prime power $q$, determine all positive integers $n$ such that $X^n - 1$ is 3-sparse over $\mathbb{F}_q$.
+\end{prob}
+
+\begin{prob}\label{prob1.2}
+For any prime power $q$, prove or disprove that there are only finitely many primes $p$ such that $X^p - 1$ is 3-sparse over $\mathbb{F}_q$.
+\end{prob}
+
+Recently, the author \cite{[C25]} resolved Problems \ref{prob1.1} and \ref{prob1.2} for odd $q$ by showing that for any positive integer $n$ not divisible by $\text{Char}(\fq)$, the binomial $X^n-1$ is $3$-sparse over $\fq$ if and only if $\text{rad}(n)$ divides $q^2-1$, where $\text{rad}(n)$ is the product of distinct prime divisors of $n$ and $\text{Char}(\fq)$ is the characteristic of $\fq$. This paper focuses on the case of even characteristic, completing the characterization of 3-sparsity for $X^n - 1$ over $\mathbb{F}_q$. For coprime positive integers $a$ and $m$, let $\text{ord}_m(a)$ denote the multiplicative order of $a$ modulo $m$. The main result is stated as follows:
+
+\begin{thm}\label{thm1.3}
+Let $q = 2^e$ with $e$ a positive integer. For an odd positive integer $n$, the polynomial $X^n - 1$ is 3-sparse over $\mathbb{F}_q$ if and only if one of the following holds:
+\begin{enumerate}[label=(\alph*), left=0pt]
+    \item $\text{rad}(n)$ divides $q^2-1$.
+    \item $n=7^{k}n_1 $ for some positive integers $k$ and $n_1$ with $\text{rad}(n_1)\mid(q-1)$ when $e\equiv \pm1 \pmod{6}$.
+    \item $n=3\cdot 7^{k}n_2$ for some positive integers $k$ and $n_2$ with $3\nmid n_2$ and $\text{rad}(n_1)\mid(q-1)$ when $e\equiv \pm2 \pmod{6}$.
+\end{enumerate} 
+\end{thm}
+
+Theorem \ref{thm1.3} completely describes the 3-sparsity of $X^n - 1$ over finite fields of even characteristic, addressing Problem \ref{prob1.1} for even $q$. As a direct result of Theorem \ref{thm1.3}, we settle Problem \ref{prob1.2}:
+
+\begin{cor}\label{cor1.3}
+For any even prime power $q$, the polynomial $X^p - 1$ is 3-sparse over $\mathbb{F}_q$ for only finitely many primes $p$.
+\end{cor}
+
+The paper is organized as follows. Section 2 presents preliminary lemmas necessary for the proof of the main result. Section 3 provides the proof of Theorem \ref{thm1.3}.
+
+\section{Preliminary Lemmas}
+
+Let $q$ be a prime power and $\mathbb{F}_q$ the finite field with $q$ elements. For a positive integer $d$, the $d$-th cyclotomic polynomial over $\mathbb{F}_q$ is defined as:
+\[
+\Phi_d(X) = \prod_{\substack{i=1 \\ \gcd(i,d)=1}}^d (X - \xi^i),
+\]
+where $\xi$ is a primitive $d$-th root of unity. If $d$ is prime, then:
+\[
+\Phi_d(X) = X^{d-1} + X^{d-2} + \cdots + X + 1.
+\]
+For integers $a \geq 1$ and $b \geq 2$ with $\gcd(a, b) = 1$, let $\text{ord}_b(a)$ denote the multiplicative order of $a$ modulo $b$. The following lemmas are foundational:
+
+\begin{lem}\label{lem2.1}
+{\cite[Exercise 2.57]{[LN97]}} Let $r$ be a prime and $m, n, M$ be positive integers with $r\nmid M$. Then:
+$$\Phi_{mr^n}(X) = \Phi_{mr}(X^{r^{n-1}}),\ \Phi_{Mr}(X) =\frac{\Phi_M(X^r)}{\Phi_M(X)}.$$
+\end{lem}
+
+\begin{lem}\label{lem2.2}
+{\cite[Theorem 2.47]{[LN97]}} For a positive integer $n$,
+\[
+X^n - 1 = \prod_{d \mid n} \Phi_d(X).
+\]
+Moreover, $\Phi_d(X)$ factors into $\frac{\phi(d)}{\text{ord}_d(q)}$ distinct irreducible monic polynomials in $\mathbb{F}_q[X]$ of degree $\text{ord}_d(q)$, where $\phi$ is the Euler totient function.
+\end{lem}
+
+\begin{lem}\label{lem2.3}
+{\cite[Theorem 3.46]{[LN97]}} Let $f$ be an irreducible polynomial over $\mathbb{F}_q$ of degree $n$. Then $f$ factors into $d$ irreducible polynomials over $\mathbb{F}_{q^k}$ of degree $\frac{n}{d}$, where $d = \gcd(n, k)$.
+\end{lem}
+
+\begin{lem}\label{lem2.4}
+{\cite[Lemma 2.4]{[C25]}} Let $m_1, m_2 \geq 2$ be integers with $\gcd(m_1, m_2) = 1$. For any positive integer $a$ with $\gcd(m_1, a) = 1$ and $\gcd(m_2, a) = 1$,
+$$\text{ord}_{m_1 m_2}(a) = \lcm(\text{ord}_{m_1}(a), \text{ord}_{m_2}(a)).$$
+\end{lem}
+
+Employing mathematical induction, as established in Lemma 2.5 of \cite{[C25]}, we deduce the result, with the proof omitted for brevity:
+\begin{lem}\label{lem2.5}
+ Let $q$ be an even prime power, $k_1$ the $p$-adic valuation of $q - 1$, and $k_2$ the $p$-adic valuation of $q + 1$. For any nonnegative integer $k$,
+\[
+\text{ord}_{p^k}(q) = \begin{cases} 
+1, & \text{if } p \mid (q - 1) \text{ and } 1 \leq k \leq k_1, \\
+p^{k - k_1}, & \text{if } p \mid (q - 1) \text{ and } k > k_1, \\
+2, & \text{if } p \mid (q + 1) \text{ and } 1 \leq k \leq k_2, \\
+2 p^{k - k_2}, & \text{if } p \mid (q + 1) \text{ and } k > k_2.
+\end{cases}
+\]
+If $7 \nmid (q^2 - 1)$, then:
+\[
+\text{ord}_{7^k}(q) = 3 \cdot 7^{k-1}.
+\]
+\end{lem}
+
+\begin{lem}\label{lem2.6}
+{\cite[Theorem 3.39]{[LN97]}} Let $f(X)$ be a monic irreducible polynomial in $\mathbb{F}_q[X]$ of degree $m$, with root $\alpha \in \mathbb{F}_{q^m}$. For a positive integer $t$, let $G_t(X)$ be the characteristic polynomial of $\alpha^t \in \mathbb{F}_{q^m}$ over $\mathbb{F}_q$. Then:
+\[
+G_t(X^t) = (-1)^{m(t+1)} \prod_{j=1}^t f(w_j X),
+\]
+where $w_1, \ldots, w_t$ are the $t$-th roots of unity over $\mathbb{F}_q$, counted with multiplicity.
+\end{lem}
+
+\begin{lem}\label{lem2.7}
+{\cite[Lemma 2]{[BMOV15]}} Let $m$ and $n$ be positive integers, and $a \in \mathbb{F}_q^*$ of order $M$ in $\mathbb{F}_q^*$. Then $X^m - a$ divides $X^n - 1$ if and only if $m M \mid n$.
+\end{lem}
+
+\begin{lem}\label{lem2.8}
+Let $q$ be an even prime power such that $7 \nmid (q^2 - 1)$, and let $\Phi_{7^k}(X) \in \mathbb{F}_q[X]$ be the $7^k$-th cyclotomic polynomial for a positive integer $k$. Then $\Phi_{7^k}(X)$ has the irreducible factorization over $\mathbb{F}_q$:
+\[
+\Phi_{7^k}(X) = (X^{3 \cdot 7^{k-1}} + X^{7^{k-1}} + 1)(X^{3 \cdot 7^{k-1}} + X^{2 \cdot 7^{k-1}} + 1).
+\]
+\end{lem}
+
+\begin{proof}
+Let $q = 2^e$ for a positive integer $e$. Since $\Phi_{7^k}(X) \in \mathbb{F}_2[X]$, we first consider its factorization over $\mathbb{F}_2$. The cyclotomic polynomial $\Phi_7(X)$ factors as:
+\[
+\Phi_7(X) = (X^3 + X + 1)(X^3 + X^2 + 1).
+\]
+Since $7 \nmid (q^2 - 1)$, we have $\gcd(e, 3) = 1$. By Lemma \ref{lem2.3}, this factorization holds over $\mathbb{F}_q$. By Lemma \ref{lem2.1},
+\[
+\Phi_{7^k}(X) = \Phi_7(X^{7^{k-1}}) = (X^{3 \cdot 7^{k-1}} + X^{7^{k-1}} + 1)(X^{3 \cdot 7^{k-1}} + X^{2 \cdot 7^{k-1}} + 1).
+\]
+By Lemmas \ref{lem2.2} and \ref{lem2.5}, $\Phi_{7^k}(X)$ splits into irreducible polynomials over $\mathbb{F}_q$ of degree $3 \cdot 7^{k-1}$. Thus, the above is the irreducible factorization, as required.
+\end{proof}
+
+\section{Proof of Theorem \ref{thm1.3}}
+
+In this section, we present the proof of Theorem \ref{thm1.3}.
+
+\begin{proof}[Proof of Theorem \ref{thm1.3}]
+Let $q = 2^e$ for some positive integer $e$. We establish the theorem by proving both necessity and sufficiency.
+
+\textbf{Necessity.} The case $n=1$ is trivial. For $n \geq 2$, assume $X^n - 1$ is 3-sparse over $\mathbb{F}_q$, meaning its irreducible factors are binomials or trinomials. Let $p$ be a prime divisor of $n$. We show that if $e \equiv 0 \pmod{3}$, then $p \mid (q^2 - 1)$, and if $e \not\equiv 0 \pmod{3}$, then $p \mid (q^2 - 1)$ or $p = 7$. Since $q^2 - 1$ is divisible by 3, we assume $p > 3$ henceforth.
+
+Suppose $p \nmid (q^2 - 1)$. We aim to derive a contradiction if $e \equiv 0 \pmod{3}$, and show $p = 7$ if $e \not\equiv 0 \pmod{3}$. Since $X^p - 1$ divides $X^n - 1$, it is 3-sparse. By Lemma \ref{lem2.2}, the cyclotomic polynomial $\Phi_p(X)$ divides $X^p - 1$, so its irreducible factors are binomials or trinomials. First, $\Phi_p(X)$ has no binomial factors. Suppose $\Phi_p(X)$ has a factor $X^m - a$, where $1 \leq m \leq p-1$ and $a \in \mathbb{F}_q^*$. By Lemma \ref{lem2.7}, $m M \mid p$, where $M$ is the order of $a$ in $\mathbb{F}_q^*$. Since $M \mid (q - 1)$ and $p \nmid (q^2 - 1)$, we have $M = m = 1$, implying $X - 1 \mid \Phi_p(X)$, a contradiction. Thus, $\Phi_p(X)$ factors as:
+\begin{equation}\label{c3-1}
+\Phi_p(X) = \prod_{i=1}^{(p-1)/t} (X^t + a_i X^{k_i} + b_i),
+\end{equation}
+where $a_i, b_i \in \mathbb{F}_q^*$, $1 \leq k_i < t$, and $t = \text{ord}_p(q)$. Each factor is an irreducible trinomial. Since $\Phi_p(X) = X^{p-1} + \cdots + X + 1$, comparing the coefficient of $X$ in \eqref{c3-1} implies $\Phi_p(X)$ has an irreducible factor $X^t + a X + b$, with $a, b \in \mathbb{F}_q^*$. Let $\xi$ be a root of $X^t + a X + b$, a primitive $p$-th root of unity in $\mathbb{F}_{q^t}$. Since $p > 3$, $\xi^3$ is also a primitive $p$-th root of unity. Let $g_3(X)$ be the minimal polynomial of $\xi^3$ over $\mathbb{F}_q$, of degree $t$. It is an irreducible factor of $\Phi_p(X)$, hence an irreducible trinomial over $\mathbb{F}_q$.
+
+By Lemma \ref{lem2.6}, the characteristic polynomial $G_3(X)$ of $\xi^3$ satisfies:
+\[
+G_3(X^3) = X^{3t} + c_{2t+1} X^{2t+1} + c_{2t} X^{2t} + c_{t+2} X^{t+2} + c_{t+1} X^{t+1} + c_t X^t + a^3 X^3 + b^3,
+\]
+where:
+\[
+c_{2t+1} = a(w^{2t+1} + w^{t+2} + 1), \quad c_{2t} = b(w^{2t} + w^t + 1), \quad c_{t+2} = a^2(w^{2t+1} + w^{t+2} + 1),
+\]
+\[
+c_{t+1} = ab w (w^{2t} + w^{2t-1} + w^{t+1} + w^{t-1} + w + 1), \quad c_t = b^2(w^{2t} + w^t + 1),
+\]
+and $w$ is a primitive cubic root of unity. We compute:
+\[
+(c_{2t+1}, c_{2t}, c_{t+2}, c_{t+1}, c_t) = \begin{cases} 
+(0, b, 0, 0, b^2), & \text{if } t \equiv 0 \pmod{3}, \\
+(a, 0, a^2, 0, 0), & \text{if } t \equiv 1 \pmod{3}, \\
+(0, 0, 0, ab, 0), & \text{if } t \equiv 2 \pmod{3}.
+\end{cases}
+\]
+Thus:
+\begin{align}\label{c3-2}
+G_3(X) =
+\begin{cases} 
+X^t + b X^{2t/3} + b^2 X^{t/3} + a^3 X + b^3, & \text{if } t \equiv 0 \pmod{3}, \\
+X^t + a X^{(2t+1)/3} + a^2 X^{(t+2)/3} + a^3 X + b^3, & \text{if } t \equiv 1 \pmod{3}, \\
+X^t + ab X^{(t+1)/3} + a^3 X + b^3, & \text{if } t \equiv 2 \pmod{3}.
+\end{cases}
+\end{align}
+Since $g_3(X)$ divides $G_3(X)$ and both have degree $t$, we have $g_3(X) = G_3(X)$. As $p \nmid (q^2 - 1)$, $t \geq 3$. Since $g_3(X)$ is a trinomial, it follows that $t = 3$ and:
+\[
+g_3(X) = X^3 + b X^2 + b^3.
+\]
+We consider two cases:
+
+\textbf{Case 1: $e \equiv 0 \pmod{3}$.} Observe:
+\begin{align}\label{c3-3}
+g_3(X) = b^3 \left( (X/b)^3 + (X/b)^2 + 1 \right) = b^3 g(X/b),
+\end{align}
+where $g(X) = X^3 + X^2 + 1$. Since $g_3(X)$ is irreducible over $\mathbb{F}_q$, so is $g(X)$. However, $g(X)$ is irreducible over $\mathbb{F}_2$, and since $3 \mid e$, Lemma \ref{lem2.3} implies $g(X)$ factors into three linear polynomials over $\mathbb{F}_q$, a contradiction.
+
+\textbf{Case 2: $e \not\equiv 0 \pmod{3}$.} We claim $p = 7$. Since $7 \nmid (q^2 - 1)$, Lemma \ref{lem2.8} gives the irreducible factorization of $\Phi_7(X)$ over $\mathbb{F}_q$:
+\[
+\Phi_7(X) = (X^3 + X + 1)(X^3 + X^2 + 1).
+\]
+Let $\gamma$ be a root of $g(X)=X^3 + X^2 + 1$, a primitive $7$-th root of unity. From \eqref{c3-3}, $g_3(X) = b^3 g(X/b)$, and $\xi^3$ is a root of $g_3(X)$. Thus, $\theta := \xi^3 / b$ is a conjugate of $\gamma$ over $\mathbb{F}_q$, hence a primitive $7$-th root of unity. Since $\xi^3, \theta, b \in \mathbb{F}_{q^3}^*$, and $|b|$ divides $q-1$ while $|\theta| = 7$, with $7 \nmid (q-1)$, we have $\gcd(|b|, |\theta|) = 1$. Thus:
+\[
+p = |\xi^3| = |b \theta| = |b| \cdot |\theta| = 7 |b|,
+\]
+implying $p = 7$, as required.
+
+For $e \not\equiv 0 \pmod{3}$, we prove:
+\begin{itemize}
+    \item If $e \equiv \pm 2 \pmod{6}$, then $X^{63} - 1$ is not 3-sparse over $\mathbb{F}_q$.
+    \item For a prime $p$ with $p \mid (q + 1)$, $X^{7p} - 1$ is not 3-sparse over $\mathbb{F}_q$.
+\end{itemize}
+For the first, let $q = 2^e$ with $e \equiv \pm 2 \pmod{6}$, so $e = 2t$ with $\gcd(t, 3) = 1$. With the assistance of a computer, the irreducible factors of $\Phi_{63}(X)$ over $\mathbb{F}_4$ are given by:
+$$X^3 + X^2 + X + w, X^3 + X^2 + X + w + 1, X^3 + X^2 + w X + w + 1,$$
+$$X^3 + X^2 + (w + 1) X + w,  X^3 + w X^2 + X + w + 1,  X^3 + w X^2 + w X + w,$$
+$$X^3 + w X^2 + (w + 1) X + w,  X^3 + w X^2 + (w + 1) X + w + 1, X^3 + (w + 1) X^2 + X + w,$$
+$$X^3 + (w + 1) X^2 + w X + w,  X^3 + (w + 1) X^2 + w X + w + 1, X^3 + (w + 1) X^2 + (w + 1) X + w + 1,$$
+where $w$ is a primitive element of $\mathbb{F}_4$. Since $\mathbb{F}_q$ is an extension of $\mathbb{F}_4$ of degree $t$, Lemma \ref{lem2.3} implies these factors remain irreducible over $\mathbb{F}_q$. Thus, $X^{63} - 1$ is not 3-sparse, as all factors are quadrinomials.
+
+For the second, let $p \mid (q + 1)$. We show $\Phi_{7p}(X)$ has an irreducible factor over $\mathbb{F}_q$ that is neither a binomial nor a trinomial. If $p = 3$, the irreducible factorization of $\Phi_{21}(X)$ over $\mathbb{F}_2$ is:
+\begin{align}\label{c3-4}
+\Phi_{21}(X) = (X^6 + X^4 + X^2 + X + 1)(X^6 + X^5 + X^4 + X^2 + 1).
+\end{align}
+Since $e \not\equiv 0 \pmod{3}$, $\gcd(6, e) = 1$, and by Lemma \ref{lem2.3}, \eqref{c3-4} holds over $\mathbb{F}_q$, so $X^{21} - 1$ is not 3-sparse. For $p > 3$ with $p \mid (q + 1)$, $p \neq 7$. Suppose all irreducible factors of $\Phi_{7p}(X)$ are binomials or trinomials. By Lemmas \ref{lem2.4} and \ref{lem2.5}, all factors have degree 6. From Lemma \ref{lem2.1},
+$$\Phi_7(X^p) = \Phi_{7p}(X) \Phi_7(X).$$
+This implies that $\Phi_{7p}(X)$ has the term $X$. Then $\Phi_{7p}(X)$ must have an irreducible factor $X^6 + a X + b$ for some $a, b \in \mathbb{F}_q^*$. Let $\xi$ be a root of $X^6 + a X + b$. Then, from \eqref{c3-2}, the minimal polynomial of $\xi^3$ over $\mathbb{F}_q$ is:
+\[
+g_3(X) = X^6 + b X^4 + b^2 X^2 + a^3 X + b^3,
+\]
+an irreducible factor of $\Phi_{7p}(X)$, which is neither a binomial nor a trinomial. Thus, $X^{7p} - 1$ is not 3-sparse over $\mathbb{F}_q$.
+
+This completes the proof of necessity.
+
+\textbf{Sufficiency.} For $n = 1$, $X - 1$ is 3-sparse. For $n \geq 2$ satisfying condition (a), (b), or (c), we show that $\Phi_d(X)$ factors into binomials or trinomials for all divisors $d \geq 2$ of $n$.
+
+\textbf{Case 1: }$n$ satisfies Condition (a). For a divisor $d \geq 2$ of $n$, write $d = p_1^{f_1} \cdots p_k^{f_k}$ for some primes $p_1, \ldots, p_k$ with each $p_i\mid (q^2-1)$, and for some positive integers $f_1, \ldots, f_k$. Let $v_i$ be the $p_i$-adic valuation of $q^2 - 1$. We consider:
+
+\textbf{Subcase 1-1:} $f_i \leq v_i$ for all $i$. By Lemmas \ref{lem2.4} and \ref{lem2.5},
+\[
+\text{ord}_d(q) = \lcm(\text{ord}_{p_1^{f_1}}(q), \ldots, \text{ord}_{p_k^{f_k}}(q)) = 1 \text{ or } 2.
+\]
+By Lemma \ref{lem2.2}, $\Phi_d(X)$ factors into irreducible polynomials over $\mathbb{F}_q$ of degree 1 or 2, which are binomials or trinomials.
+
+\textbf{Subcase 1-2:} $f_i > v_i$ for some $i$. Suppose there are $u$ indices $1 \leq i_1 < \cdots < i_u \leq k$ such that $f_{i_j} > v_{i_j}$ for $1 \leq j \leq u$. Write $d = p_{i_1}^{f_{i_1}} \cdots p_{i_u}^{f_{i_u}} D$ and $d_0 = p_{i_1}^{v_{i_1}} \cdots p_{i_u}^{v_{i_u}} D$. By Lemma \ref{lem2.1},
+\begin{align}\label{c3-5}
+\Phi_{d_0 p_{i_1}^{f_{i_1} - v_{i_1}}}(X) = \Phi_{d_0}(X^{p_{i_1}^{f_{i_1} - v_{i_1}}}) = \prod_i (X^{t_0 p_{i_1}^{f_{i_1} - v_{i_1}}} + a_i X^{k_i p_{i_1}^{f_{i_1} - v_{i_1}}} + b_i),
+\end{align}
+where $\prod_i (X^{t_0} + a_i X^{k_i} + b_i)$ is the irreducible factorization of $\Phi_{d_0}(X)$ over $\mathbb{F}_q$, with $t_0 = \text{ord}_{d_0}(q)$ from Subcase 1-1. By Lemmas \ref{lem2.4} and \ref{lem2.5},
+\[
+\text{ord}_{d_0 p_{i_1}^{f_{i_1} - v_{i_1}}}(q) = p_{i_1}^{f_{i_1} - v_{i_1}} t_0.
+\]
+Thus, \eqref{c3-5} is the irreducible factorization of $\Phi_{d_0 p_{i_1}^{f_{i_1} - v_{i_1}}}(X)$. Iterating this process, the irreducible factorization of $\Phi_d(X)$ over $\mathbb{F}_q$ is:
+\[
+\Phi_d(X) = \prod_i (X^{t_0 p_{i_1}^{f_{i_1} - v_{i_1}} \cdots p_{i_u}^{f_{i_u} - v_{i_u}}} + a_i X^{k_i p_{i_1}^{f_{i_1} - v_{i_1}} \cdots p_{i_u}^{f_{i_u} - v_{i_u}}} + b_i).
+\]
+Thus, $\Phi_d(X)$ factors into irreducible binomials or trinomials over $\mathbb{F}_q$.
+
+\textbf{Case 2:} $n$ satisfies Condition (b). Let $e\equiv \pm 1 \pmod{6}$, so $7 \nmid (q^2 - 1)$ and $3\nmid (q-1)$. For a divisor $d \geq 2$ of $n$, if $7 \nmid d$, the result follows from Case 1. If $7 \mid d$, consider:
+
+\textbf{Subcase 2-1:}  $d = 7^h$ for some positive integer $h$. By Lemma \ref{lem2.8}, $\Phi_d(X)$ factors into trinomials.
+
+\textbf{Subcase 2-2: }$d = 7^h p_1^{f_1} \cdots p_s^{f_s}$ for primes $p_1, \ldots, p_s$ with $p_i \mid (q - 1)$ and positive integers $h, f_1, \ldots, f_s$. First, assume $f_i \leq v_i$, where $v_i$ is the $p_i$-adic valuation of $q - 1$. Let $d_1 = 7 p_1^{f_1} \cdots p_s^{f_s}$. By Lemmas \ref{lem2.4} and \ref{lem2.5},
+$$\text{ord}_{p_1^{f_1} \cdots p_s^{f_s}}(q) = 1, \quad \text{ord}_{d_1}(q) = 3.$$
+By Lemma \ref{lem2.2}, $\Phi_{d_1}(X)$ factors into irreducible polynomials of degree 3, and $\Phi_{p_1^{f_1} \cdots p_s^{f_s}}(X)$ factors into linear polynomials. Assume their irreducible factorizations are:
+\[
+\Phi_{p_1^{f_1} \cdots p_s^{f_s}}(X) = \prod_{\alpha \in R} (X + \alpha), \quad \Phi_{d_1}(X) = \prod_{a, b, c} (X^3 + a X^2 + b X + c),
+\]
+where $R$ is the set of primitive $(p_1^{f_1} \cdots p_s^{f_s})$-th roots of unity. By Lemma \ref{lem2.1},
+\[
+\prod_{\alpha \in R} (X^7 + \alpha) = \prod_{a, b, c} (X^3 + a X^2 + b X + c) \cdot \prod_{\alpha \in R} (X + \alpha).
+\]
+By uniqueness of factorization, for any $\beta \in R$, there exist unique $\alpha \in R$ and $a_i, b_i, c_i \in \mathbb{F}_q$ ($i=1,2$) such that:
+\begin{align}\label{c3-6}
+X^7 + \beta = (X^3 + a_1 X^2 + b_1 X + c_1)(X^3 + a_2 X^2 + b_2 X + c_2)(X + \alpha).
+\end{align}
+Comparing coefficients in \eqref{c3-6} yields:
+\begin{align*}
+\begin{cases}
+a_1 + a_2 + \alpha = 0,\\
+(a_1 + a_2) \alpha + b_1 + b_2 + a_1 a_2 = 0,\\
+(b_1 + b_2) \alpha + a_1 a_2 \alpha + a_1 b_2 + b_1 a_2 + c_1 c_2 = 0,\\
+(c_1 + c_2 + a_1 b_2 + b_1 a_2) \alpha + a_1 c_2 + c_1 a_2 + b_1 b_2 = 0,\\
+(a_1 c_2 + c_1 a_2) \alpha + b_1 b_2 \alpha + b_1 c_2 + b_2 c_1 = 0,\\
+(b_1 c_2 + b_2 c_1) \alpha + c_1 c_2 = 0,
+\end{cases}
+\end{align*}
+implying $\beta = \alpha^7$. Thus:
+\[
+X^7 - \beta = X^7 - \alpha^7 = \alpha^7 (X/\alpha - 1) \Phi_7(X/\alpha).
+\]
+By Lemma \ref{lem2.8},
+\[
+X^7 - \beta = (X + \alpha)(X^3 + \alpha^2 X + \alpha^3)(X^3 + \alpha X^2 + \alpha^3).
+\]
+Thus, $\Phi_{d_1}(X)$ has the irreducible factorization over $\mathbb{F}_q$:
+\[
+\Phi_{d_1}(X) = \prod_{\alpha \in R} (X^3 + \alpha^2 X + \alpha^3)(X^3 + \alpha X^2 + \alpha^3).
+\]
+By Lemma \ref{lem2.1},
+\begin{align}\label{c3-7}
+\Phi_d(X) = \Phi_{d_1}(X^{7^{h-1}}) = \prod_{\alpha \in R} (X^{3 \cdot 7^{h-1}} + \alpha^2 X^{7^{h-1}} + \alpha^3)(X^{3 \cdot 7^{h-1}} + \alpha X^{2 \cdot 7^{h-1}} + \alpha^3).
+\end{align}
+By Lemmas \ref{lem2.4} and \ref{lem2.5}, $\text{ord}_d(q) = 3 \cdot 7^{h-1}$. By Lemma \ref{lem2.2}, $\Phi_d(X)$ factors into irreducible polynomials of degree $3 \cdot 7^{h-1}$, so \eqref{c3-7} is the irreducible factorization of $\Phi_d(X)$ over $\mathbb{F}_q$.
+
+If $f_i > v_i$ for some $i$, suppose there are $u$ indices $1 \leq i_1 < \cdots < i_u \leq s$ such that $f_{i_j} > v_{i_j}$. Write $d = 7^h p_{i_1}^{f_{i_1}} \cdots p_{i_u}^{f_{i_u}} D$ and $d_2 = 7^h p_{i_1}^{v_{i_1}} \cdots p_{i_u}^{v_{i_u}} D$. From \eqref{c3-7},
+\begin{align}\label{c3-8}
+\Phi_{d_2}(X) = \prod_{\alpha \in R_1} (X^{3 \cdot 7^{h-1}} + \alpha^2 X^{7^{h-1}} + \alpha^3)(X^{3 \cdot 7^{h-1}} + \alpha X^{2 \cdot 7^{h-1}} + \alpha^3),
+\end{align}
+where $R_1$ is the set of primitive $(p_{i_1}^{v_{i_1}} \cdots p_{i_u}^{v_{i_u}} D)$-th roots of unity. Since:
+\[
+\Phi_d(X) = \Phi_{d_2 p_{i_1}^{f_{i_1} - v_{i_1}} \cdots p_{i_u}^{f_{i_u} - v_{i_u}}}(X) = \Phi_{d_2}(X^{p_{i_1}^{f_{i_1} - v_{i_1}} \cdots p_{i_u}^{f_{i_u} - v_{i_u}}}),
+\]
+the factorization of $\Phi_d(X)$ follows from \eqref{c3-8}. Note that each $p_i\ne 3$. It follows from Lemmas \ref{lem2.4} and \ref{lem2.5} that $\text{ord}_d(q) = 3 \cdot 7^{h-1} p_{i_1}^{f_{i_1} - v_{i_1}} \cdots p_{i_u}^{f_{i_u} - v_{i_u}}$, which, by Lemma \ref{lem2.2}, is the degree of each irreducible factors. So, the factorization of $\Phi_d(X)$ is the irreducible factorization over $\mathbb{F}_q$.
+
+Thus, each irreducible factor of $\Phi_d(X)$ is a trinomial.
+
+\textbf{Case 3:} $n$ satisfies Condition (c). Let $e\equiv \pm 2 \pmod{6}$, so $7 \nmid (q^2 - 1)$ and $3\mid (q-1)$. For a divisor $d \geq 2$ of $n$, if $7 \nmid d$, the result follows from Case 1. If $7 \mid d$ but $3\nmid d$, the result follows from Case 2. If $21\mid d$, then we can write $d=7^hp_1p_2^{f_2}\cdots p_s^{f_s}$ for some primes $p_2,\dots,p_s>3$ with each $p_i\mid (q-1)$, $p_1=3$ and positive integers $h,f_2,\dots,f_s$. Following the proof of Case 2, we have that all irreducible factors of $\Phi_d(X)$ are trinomials.
+
+This completes the proof of sufficiency, and thus Theorem \ref{thm1.3}.
+\end{proof}
+
+
+
+
+\section*{Conflict of Interest}
+The author declares that there is no conflict of interest.
+
+\section*{acknowledgment}
+%The author expresses gratitude to the anonymous referees for their insightful and valuable comments, which significantly enhanced the paper's presentation.
+
+This work was conducted during the author’s academic visit to RICAM, Austrian Academy of Sciences. The author sincerely thanks Professor Arne Winterhof at RICAM for his thorough review of the manuscript and for offering invaluable suggestions.
+
+This research was partially supported by the China Scholarship Council Fund (Grant No.\ 202301010002) and the Scientific Research Innovation Team Project of China West Normal University (Grant No.\ KCXTD2024-7).
+
+
+
+
+
+
+
+
+
+
+
+
+% use section* for acknowledgment
+%\section*{Acknowledgment}
+%
+
+\begin{thebibliography}{99}
+
+\bibitem{[Ber68]} E. R. Berlekamp, \textit{Algebraic Coding Theory}, McGraw-Hill, New York, 1968.
+
+\bibitem{[Ber82]} E. R. Berlekamp, Bit-Serial Reed-Solomon encoders. IEEE Trans. Inf. Theory \textbf{28} (1982), 869–874.
+
+\bibitem{[Bey77]} F. R. Beyl, Cyclic subgroups of the prime residue group, Amer. Math. Monthly \textbf{84} (1977), 46-48.
+
+\bibitem{[BGM93]} I. F. Blake, S. Gao, R. C. Mullin, Explicit factorization of $x^{2^k} + 1$ over $\mathbb{F}_p$ with $p \equiv 3$ (mod 4), Appl. Algebra Eng. Commun. Comput. \textbf{4} (1993), 89-94.
+
+\bibitem{[BRS19]} F. E. Brochero-Martinez, L. Reis, L. Silva-Jesus, Factorization of composed polynomials and applications, Discret. Math. \textbf{342} (2019), 111603.
+
+\bibitem{[BMOV15]} F. E. Brochero-Martinez, C.R. Giraldo Vergara, L. de Oliveira, Explicit factorization of $x^{n} - 1 \in \mathbb{F}_q[x]$, Des. Codes Cryptogr. \textbf{77} (2015), 277-286.
+
+\bibitem{[C25]} K. Cheng, The $3$-sparsity of $X^n-1$ over finite fields, arXiv:2507.06655v2, 2025.
+
+\bibitem{[CLT13]} B. Chen, L. Li, R. Tuerhong, Explicit factorization of $x^{2^m p^n} - 1$ over a finite field, Finite Fields Appl. \textbf{24} (2013), 95-104.
+
+\bibitem{[Gra23]} A. M. Graner, Closed formulas for the factorization of $X^n - 1$, the $n$-th cyclotomic polynomial, $X^n - a$ and $f(X^n)$ over a finite field for arbitrary positive integers $n$,  arXiv:2306.11183, 2023.
+
+\bibitem{[HPT11]} B. Hanson, D. Panario, D. Thomson, Swan-like results for binomials and trinomials over finite fields of odd characteristic, Des. Codes Cryptogr. \textbf{61} (2011), 273-283.
+
+\bibitem{[Len91]} H. W. Lenstra Jr., On the Chor-Rivest knapsack cryptosystem, J. Cryptol. \textbf{3} (1991), 149-155.
+
+\bibitem{[LN97]} R. Lidl, H. Niederreiter, \textit{Finite Fields}, Encyclopedia of Mathematics and Its Applications, vol. 20, Addison-Wesley, 1997.
+
+\bibitem{[Mey96]} H. Meyn, Factorization of the cyclotomic polynomials $x^{2^n} + 1$ over finite fields, Finite Fields Appl. \textbf{2} (1996), 439-442.
+
+\bibitem{[OR21]} D. Oliveira, L. Reis, On polynomials $x^n-1$ over binary fields whose irreducible factors are binomials and trinomials, Finite Fields Appl. \textbf{73} (2021), 101837.
+
+\bibitem{[Van98]} J. H. Van Lint, \textit{Introduction to Coding Theory}, 3rd ed., Graduate Texts in Mathematics, vol. 86, Springer, New York, 1998.
+
+\bibitem{[vZG01]} J. von zur Gathen, Irreducible trinomials over finite fields, in \textit{Proceedings of the 2001 International Symposium on Symbolic and Algebraic Computation}, 2001 Jul 1, pp. 332-336.
+
+\bibitem{[WW12]} L. Wang, Q. Wang, On explicit factors of cyclotomic polynomials over finite fields, Des. Codes Cryptogr. \textbf{63} (2012), 87-104.
+
+\end{thebibliography}
+
+\end{document}

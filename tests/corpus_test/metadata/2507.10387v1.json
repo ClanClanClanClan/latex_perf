@@ -1,0 +1,57 @@
+{
+  "arxiv_id": "2507.10387v1",
+  "title": "Effective equidistribution of norm one elements in CM-fields",
+  "authors": [
+    "Shabnam Akhtari",
+    "Jeffrey D. Vaaler",
+    "Martin Widmer"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "For a number field $K$ let $\\mathcal{S}_K$ be the maximal subgroup of the\nmultiplicative group $K^\\times$ that embeds into the unit circle under each\nembedding of $K$ into the complex numbers. The group $\\mathcal{S}_K$ can be\nseen as an archimedean counterpart to the group of units $\\mathcal{O}_K^\\times$\nof the ring of integers $\\mathcal{O}_K$. If $K=\\mathbb{Q}(\\mathcal{S}_K)$ is a\nCM-field then $\\mathcal{S}_K/{\\mathop{\\rm Tor}\\nolimits}(K^\\times)$ is a free\nabelian group of infinite rank. If $K=\\mathbb{Q}(\\mathcal{S}_K)$ is not a\nCM-field then $\\mathcal{S}_K=\\{\\pm 1\\}$. In the former case $\\mathcal{S}_K$ is\nthe kernel of the relative norm map from $K^\\times$ to the multiplicative\nsubgroup $k^\\times$ of the maximal totally real subfield $k$ of $K$.",
+  "submitted_date": "2025-07-14T15:28:43Z",
+  "download_date": "2025-07-16T00:34:48.761290",
+  "tex_files": [
+    "Equidistribution_1.tex"
+  ],
+  "main_tex_file": "Equidistribution_1.tex",
+  "file_size": 64625,
+  "line_count": 1463,
+  "complexity_score": 18.5463,
+  "features": {
+    "line_count": 1463,
+    "char_count": 64625,
+    "word_count": 7173,
+    "file_size": 64625,
+    "tex_files": [
+      "Equidistribution_1.tex"
+    ],
+    "main_tex_file": "Equidistribution_1.tex",
+    "equations": 3,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 36,
+    "inline_math": 892,
+    "display_math": 43,
+    "bracket_math": 0,
+    "straight_quotes": 1,
+    "single_quotes": 64,
+    "double_dollars": 43,
+    "british_spellings": 1,
+    "american_spellings": 4,
+    "includes": 0,
+    "packages": 8,
+    "newcommands": 34,
+    "citations": 124,
+    "references": 75,
+    "long_lines": 295,
+    "unicode_chars": 0,
+    "comments": 96,
+    "complexity_score": 18.5463
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

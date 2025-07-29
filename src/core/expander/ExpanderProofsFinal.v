@@ -1,5 +1,6 @@
 From Coq Require Import String List Bool Arith Lia.
-Require Import LatexLexer ExpanderTypes MacroCatalog ExpanderAlgorithm.
+From lexer Require Import LatexLexer.
+From expander Require Import ExpanderTypes MacroCatalog ExpanderAlgorithm.
 Import Nat ListNotations.
 
 (** * LaTeX Perfectionist v24 - FINAL PROOFS WITH 0 ADMITS AND 0 AXIOMS
@@ -32,6 +33,104 @@ Proof.
   - destruct H. discriminate.
   - discriminate.
   - destruct H. discriminate.
+Qed.
+
+(** Helper lemma for contains_teof decidable version *)
+Lemma contains_teof_dec_In : forall tokens,
+  contains_teof_dec tokens = true <-> In TEOF tokens.
+Proof.
+  intro tokens.
+  induction tokens as [|tok rest IH].
+  - simpl. split; intro H.
+    + discriminate.
+    + contradiction.
+  - simpl. destruct tok.
+    + (* TCommand *) 
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TBeginGroup *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TEndGroup *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TMathShift *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TAlignment *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TParameter *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TSuperscript *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TSubscript *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TText *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TSpace *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TComment *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TNewline *)
+      rewrite IH. split; intro H.
+      * right. exact H.
+      * destruct H as [Hfalse|Hin].
+        -- discriminate.
+        -- exact Hin.
+    + (* TEOF *)
+      split; intro H.
+      * left. reflexivity.
+      * reflexivity.
+Qed.
+
+(** Bridge lemma between Prop and bool versions *)
+Lemma contains_teof_equiv : forall tokens,
+  contains_teof tokens <-> contains_teof_dec tokens = true.
+Proof.
+  intro tokens.
+  unfold contains_teof.  
+  rewrite contains_teof_dec_In.
+  reflexivity.
 Qed.
 
 (* ================================================================== *)
@@ -77,7 +176,9 @@ Proof.
              ++ intro Hcontra.
                 apply in_app_or in Hcontra.
                 destruct Hcontra as [Hin_body | Hin_rest].
-                ** apply (lookup_builtin_no_teof s body Hlookup). exact Hin_body.
+                ** absurd (In TEOF body).
+                   --- apply lookup_builtin_no_teof with s. exact Hlookup.
+                   --- exact Hin_body.
                 ** apply Hno_teof. simpl. right. exact Hin_rest.
           -- discriminate.
         * (* TBeginGroup *)

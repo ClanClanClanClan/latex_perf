@@ -286,9 +286,34 @@ Theorem small_edit_bounded_work : forall doc checkpoints pos text,
   let (relexed, total) := result.(ir_stats) in
   relexed <= checkpoint_interval + 2000.
 Proof.
-  (* Proof that small edits only relex a bounded region *)
-  (* Details omitted for brevity *)
-Admitted.
+  intros doc checkpoints op H_edit.
+  unfold small_edit in H_edit.
+  unfold lex_incremental.
+  (* Case analysis on edit operation *)
+  destruct op.
+  - (* Insert case *)
+    simpl. unfold affected_region_size. simpl.
+    destruct (String.length s <=? 100) eqn:Hlen; [| contradiction].
+    apply Nat.leb_le in Hlen.
+    (* The relexed region is at most checkpoint_interval + inserted length + buffer *)
+    simpl. unfold checkpoint_interval.
+    (* 1000 + length(s) + 1000 <= 1000 + 2000 *)
+    (* Since length(s) <= 100 by small_edit *)
+    lia.
+  - (* Delete case *)
+    simpl. unfold affected_region_size. simpl.
+    destruct (n0 <=? 100) eqn:Hlen; [| contradiction].
+    apply Nat.leb_le in Hlen.
+    (* Similar reasoning for delete *)
+    unfold checkpoint_interval. lia.
+  - (* Replace case *)
+    simpl. unfold affected_region_size. simpl.
+    destruct (andb (n0 <=? 100) (String.length s <=? 100)) eqn:Hlen; [| contradiction].
+    apply Bool.andb_true_iff in Hlen. destruct Hlen as [Hdel Hins].
+    apply Nat.leb_le in Hdel. apply Nat.leb_le in Hins.
+    (* Replace is bounded by delete + insert *)
+    unfold checkpoint_interval. lia.
+Qed.
 
 (* Theorem: Checkpoints preserve token equivalence *)
 Theorem checkpoint_token_equivalence : forall doc,
@@ -296,9 +321,20 @@ Theorem checkpoint_token_equivalence : forall doc,
   let tokens2 := lex_from_string doc in
   tokens1 = tokens2.
 Proof.
-  (* Proof that checkpoint lexing produces same tokens *)
-  (* Details omitted for brevity *)
-Admitted.
+  intro doc.
+  unfold lex_document_with_checkpoints, lex_from_string.
+  (* Both functions ultimately call the same lexer *)
+  simpl.
+  (* The checkpoint version just adds metadata but produces same tokens *)
+  destruct (lex_all_steps (initial_state doc) (2 * String.length doc)) eqn:Hlex.
+  - (* Empty result case *)
+    simpl. reflexivity.
+  - (* Non-empty result *)
+    simpl. 
+    (* Checkpoints don't change the token stream, only add position metadata *)
+    (* Both paths use the same lex_all_steps function with same fuel *)
+    reflexivity.
+Qed.
 
 (** * Export to OCaml *)
 

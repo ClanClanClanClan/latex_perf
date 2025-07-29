@@ -9,14 +9,14 @@
 open Lwt.Syntax
 
 (* Layer modules *)
-module L0 = L0_v25
-module L1 = L1_v25
-module VV = Version_vector
+module L0 = Layer0.L0_v25
+module L1 = Layer1.L1_v25
+module VV = Latex_perfectionist_core.Version_vector
 
 (* Snapshot storage for each layer *)
 type layer_snapshots = {
-  mutable l0_tokens : (L0.l0_cache_key * Types.token array) list;
-  mutable l1_expanded : (L1.l1_cache_key * Types.token array) list;
+  mutable l0_tokens : (L0.l0_cache_key * Latex_perfectionist_core.Types.token array) list;
+  mutable l1_expanded : (L1.l1_cache_key * Latex_perfectionist_core.Types.token array) list;
   (* L2-L4 to be added *)
 }
 
@@ -41,7 +41,7 @@ let publish_deltas deltas =
   ) deltas
 
 (* Process a single edit *)
-let process_edit bytes =
+let rec process_edit bytes =
   let start = Unix.gettimeofday () in
   
   (* Begin transaction *)
@@ -68,12 +68,12 @@ let process_edit bytes =
   ) in
   
   match l0_result with
-  | Error (severity, msg) ->
+  | Error (_severity, msg) ->
       (* Handle L0 error *)
-      let action = VV.handle_layer_error tx VV.L0 VV.Fatal msg in
+      let _action = VV.handle_layer_error tx VV.L0 VV.Fatal msg in
       Lwt.return (Error (`L0_error msg))
       
-  | Ok (tokens, l0_key, l0_state) ->
+  | Ok (tokens, l0_key, _l0_state) ->
       (* L1: Expansion *)
       let* l1_result = Lwt.return (
         try
@@ -88,7 +88,15 @@ let process_edit bytes =
           let (expanded_delta, new_l1_state) = L1.expand_delta ~fuel ~env:l1_env delta in
           
           (* Compute L1 cache key *)
-          let l1_key = { L1.l0 = l0_key; fuel_left = fuel - new_l1_state.L1.fuel_consumed } in
+          let token_hash = 
+            Array.fold_left (fun acc tok -> 
+              acc * 31 + Hashtbl.hash tok
+            ) 0 tokens in
+          let l1_key = { 
+            L1.l0 = l0_key; 
+            fuel_left = fuel - new_l1_state.L1.fuel_consumed;
+            token_hash;
+          } in
           
           (* Record delta *)
           VV.record_delta tx VV.L1 (l1_key, expanded_delta.L1.expanded);
@@ -99,13 +107,13 @@ let process_edit bytes =
       ) in
       
       let* final_result = match l1_result with
-      | Error (severity, msg) ->
+      | Error (_severity, msg) ->
           (* Handle L1 error *)
-          let action = VV.handle_layer_error tx VV.L1 VV.Warn msg in
+          let _action = VV.handle_layer_error tx VV.L1 VV.Warn msg in
           (* Continue with unexpanded tokens *)
           Lwt.return (Ok tokens)
           
-      | Ok (expanded_tokens, l1_key) ->
+      | Ok (expanded_tokens, _l1_key) ->
           Lwt.return (Ok expanded_tokens)
       in
       

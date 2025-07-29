@@ -1,5 +1,8 @@
 From Coq Require Import String List Bool.
+Require Import lexer.LatexLexer.
 Require Import ExpanderTypes MacroCatalog ExpanderAlgorithm.
+Import ListNotations.
+Open Scope string_scope.
 
 (** * LaTeX Perfectionist v24 - Expander Tests
     

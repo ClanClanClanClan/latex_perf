@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.09991v1",
+  "title": "On quadratic character sums over quartics",
+  "authors": [
+    "Bogdan Nica"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We obtain transformation formulas for quadratic character sums with quartic\nand cubic polynomial arguments.",
+  "submitted_date": "2025-07-14T07:19:11Z",
+  "download_date": "2025-07-16T00:35:06.602814",
+  "tex_files": [
+    "transform.tex"
+  ],
+  "main_tex_file": "transform.tex",
+  "file_size": 29623,
+  "line_count": 542,
+  "complexity_score": 19.0042,
+  "features": {
+    "line_count": 542,
+    "char_count": 29623,
+    "word_count": 3265,
+    "file_size": 29623,
+    "tex_files": [
+      "transform.tex"
+    ],
+    "main_tex_file": "transform.tex",
+    "equations": 6,
+    "align_envs": 49,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 217,
+    "display_math": 0,
+    "bracket_math": 6,
+    "straight_quotes": 0,
+    "single_quotes": 6,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 1,
+    "includes": 0,
+    "packages": 2,
+    "newcommands": 21,
+    "citations": 49,
+    "references": 30,
+    "long_lines": 107,
+    "unicode_chars": 0,
+    "comments": 11,
+    "complexity_score": 19.0042
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

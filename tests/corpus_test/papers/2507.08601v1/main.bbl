@@ -1,0 +1,148 @@
+\begin{thebibliography}{10}
+
+\bibitem{Ada}
+D.~Adam and Y.~Fares.
+\newblock On two affine-like dynamical systems in a local field.
+\newblock {\em J. Number Theory. 132}, 132, (2012), 2892-2906.
+
+\bibitem{detto}
+R~L. Benedetto.
+\newblock Preperiodic points of polynomials over global fields.
+\newblock {\em J. Reine Angew. Math.}, 608:123--153, 2007.
+
+\bibitem{Ts}
+M.~Bhargava, A.~Shankar, T.~Taniguchi, F.~Thorne, J.~Tsimerman, and Y.~Zhao.
+\newblock Bounds on 2-torsion in class groups of number fields and integral points on elliptic curves.
+\newblock {\em Journal of the Amer. Math. Soc.}, Vol. 33(4), (2020), pp. 1087-1099.
+
+\bibitem{sch1}
+M.~Bhargava, A.~Shankar, and X.~Wang.
+\newblock Squarefree values of polynomial discriminants {I}.
+\newblock {\em Invent. Math.}, Vol. 228, (2022), pp. 1-37.
+
+\bibitem{Call}
+G~S. Call and S~W. Goldstine.
+\newblock Canonical heights on projective space.
+\newblock {\em J. Number Theory}, 63(2):211--243, 1997.
+
+\bibitem{Dev}
+Robert~L. Devaney.
+\newblock {\em An introduction to chaotic dynamical systems}.
+\newblock Addison-Wesley Studies in Nonlinearity. Addison-Wesley Publishing Company, Advanced Book Program, Redwood City, CA, second edition, 1989.
+
+\bibitem{Doyle}
+J~R. Doyle, X.~Faber, and D.~Krumm.
+\newblock Preperiodic points for quadratic polynomials over quadratic fields.
+\newblock {\em New York J. Math.}, 20:507--605, 2014.
+
+\bibitem{Shalom1}
+S.~Eliahou and Y.~Fares.
+\newblock Poonen's conjecture and {R}amsey numbers.
+\newblock {\em Discrete Appl. Math.}, 209:102--106, 2016.
+
+\bibitem{Shalom2}
+S.~Eliahou and Y.~Fares.
+\newblock Some results on the {F}lynn-{P}oonen-{S}chaefer conjecture.
+\newblock {\em Canadian Math. Bull.}, 65(3):598-611, 2022.
+
+\bibitem{lem}
+R.~J. Lemke Oliver~and F.~Thorne.
+\newblock Upper bounds on number fields of given degree and bounded discriminant.
+\newblock {\em Duke Math. J.}, Vol. 171, No. 15, (2022), pp. 1-11.
+
+\bibitem{Flynn}
+E.~V. Flynn, Bjorn Poonen, and Edward~F. Schaefer.
+\newblock Cycles of quadratic polynomials and rational points on a genus-{$2$} curve.
+\newblock {\em Duke Math. J.}, 90(3):435--463, 1997.
+
+\bibitem{ho}
+W.~Ho, A.~Shankar, and I.~Varma.
+\newblock Odd degree number fields with odd class number.
+\newblock {\em Duke Math. Journal.}, Vol. 167(5), (2018), pp. 1-53.
+
+\bibitem{Hutz}
+B.~Hutz.
+\newblock Determination of all rational preperiodic points for morphisms of {PN}.
+\newblock {\em Math. Comp.}, 84(291):289--308, 2015.
+
+\bibitem{Ingram}
+B.~Hutz and P.~Ingram.
+\newblock On {P}oonen's conjecture concerning rational preperiodic points of quadratic maps.
+\newblock {\em Rocky Mountain J. Math.}, 43(1):193--204, 2013.
+
+\bibitem{BK33}
+B.~Kintu.
+\newblock {\em Counting the number of 2-periodic $\mathbb{Z}_{p}$- and $\mathbb{F}_{p}[t]$-points of a discrete dynamical system with applications from arithmetic statistics, VI}.
+\newblock In preparation.
+
+\bibitem{BK22}
+B.~Kintu.
+\newblock {\em Counting the number of 2-periodic $\mathcal{O}_{K}$-points of a discrete dynamical system with applications from arithmetic statistics, V}.
+\newblock In preparation.
+
+\bibitem{BK1}
+B.~Kintu.
+\newblock {\em Counting the number of integral fixed points of a discrete dynamical system with applications from arithmetic statistics, I}.
+\newblock https://arxiv.org/abs/2501.04026, pp. 1-14.
+
+\bibitem{BK3}
+B.~Kintu.
+\newblock {\em Counting the number of $\mathbb{Z}_{p}$- and $\mathbb{F}_{p}[t]$-fixed points of a discrete dynamical system with applications from arithmetic statistics, III}.
+\newblock https://arxiv.org/pdf/2505.24565, pp. 1-25.
+
+\bibitem{Ma}
+J.-P. Massias and G.~Robin.
+\newblock Bornes effectives pour certaines fonctions concernant les nombres premiers.
+\newblock {\em Journal Th. Nombres de Bordeaux}, Vol. 8, (1996), 215–242.
+
+\bibitem{mor}
+P.~Morton.
+\newblock Arithmetic properties of periodic points of quadratic maps. {II}.
+\newblock {\em Acta Arith.}, 87(2):89--102, 1998.
+
+\bibitem{Morton}
+P.~Morton and J~H. Silverman.
+\newblock Rational periodic points of rational functions.
+\newblock {\em Internat. Math. Res. Notices}, (2):97--110, 1994.
+
+\bibitem{Narkie1}
+W.~Narkiewicz.
+\newblock Cycle-lengths of a class of monic binomials.
+\newblock {\em Functiones et Approximatio}, 42.2(suppl. 2):S65--S70, (2010), 163-168.
+
+\bibitem{Narkie}
+W.~Narkiewicz.
+\newblock On a class of monic binomials.
+\newblock {\em Proc. Steklov Inst. Math.}, 280(suppl. 2):S65--S70, 2013.
+
+\bibitem{North}
+D.~G. Northcott.
+\newblock Periodic points on an algebraic variety.
+\newblock {\em Ann. of Math. (2)}, 51:167--177, 1950.
+
+\bibitem{par2}
+C.~Panraksa.
+\newblock Rational periodic points of $x^d + c$ and fermat-catalan equations.
+\newblock {\em Internat. J. of Number Theory.}, 18(05):1111--1129, 2022.
+
+\bibitem{Poonen}
+B.~Poonen.
+\newblock The classification of rational preperiodic points of quadratic polynomials over {${\bf Q}$}: a refined conjecture.
+\newblock {\em Math. Z.}, 228(1):11--29, 1998.
+
+\bibitem{Sia}
+A.~Siad.
+\newblock {\em Monogenic fields with odd class number Part {II}: even degree}.
+\newblock https://arxiv.org/pdf/2011.08842, pp. 1-49.
+
+\bibitem{Stoll}
+M.~Stoll.
+\newblock Rational 6-cycles under iteration of quadratic polynomials.
+\newblock {\em LMS J. Comput. Math.}, 11:367--380, 2008.
+
+\bibitem{Russo}
+R.~Walde and P.~Russo.
+\newblock Rational periodic points of the quadratic function {$Q_c(x)=x^2+c$}.
+\newblock {\em Amer. Math. Monthly}, 101(4):318--331, 1994.
+
+\end{thebibliography}

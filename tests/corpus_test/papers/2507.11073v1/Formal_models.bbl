@@ -1,0 +1,299 @@
+\begin{thebibliography}{10}
+
+\bibitem{Andreatta-Gasbarri}
+F.~Andreatta and C.~Gasbarri.
+\newblock The canonical subgroup for families of abelian varieties.
+\newblock {\em Compositio Math.}, 143:566--602, 2007.
+
+\bibitem{Ardakov-Wadsley}
+K.~Ardakov and S.~Wadsley.
+\newblock {$\widehat{\mathcal{D}}$}-modules on rigid analytic spaces {I}.
+\newblock {\em Journal f{\"u}r die reine und angewandte Mathematik},
+  747:221--275, 2019.
+
+\bibitem{AGV}
+J.~Ayoub, M.~Gallauer, and A.~Vezzani.
+\newblock The six-functor formalism for rigid analytic motives.
+\newblock {\em Forum of Mathematics, Sigma}, 10(e61):1--182, 2022.
+
+\bibitem{Berkovich}
+V.~Berkovich.
+\newblock {\em Spectral Theory and Analytic Geometry over Non-Archimedean
+  Fields}, volume~33 of {\em Surveys and Monographs}.
+\newblock Amer. Math. Soc., Providence, 1990.
+
+\bibitem{Berthelot96}
+P.~Berthelot.
+\newblock Cohomologie rigide et cohomologie rigide {\`a} supports propres.
+\newblock Preprint 96-03, Institut de Recherche Math. de Rennes, 1996.
+
+\bibitem{BhattNotes}
+B.~Bhatt.
+\newblock Lecture notes for a class on perfectoid spaces.
+\newblock Available at
+  http://www-personal.umich.edu/~bhattb/teaching/mat679w17/lectures.pdf, 2017.
+
+\bibitem{Bhatt}
+B.~Bhatt.
+\newblock On the direct summand conjecture and its derived variant.
+\newblock {\em Inventiones mathematicae}, 212(2):297--317, 2018.
+
+\bibitem{Bhatt-Hansen}
+B.~Bhatt and D.~Hansen.
+\newblock The six functors for {Z}ariski-constructible sheaves in rigid
+  geometry.
+\newblock {\em Compositio Math.}, 158(2):437--482, 2022.
+
+\bibitem{BMS}
+B.~Bhatt, M.~Morrow, and P.~Scholze.
+\newblock Integral $p$-adic {H}odge theory.
+\newblock {\em Publ. Math. IH{\'E}S}, 128:219--397, 2018.
+
+\bibitem{Bijakowski-Pilloni-Stroh}
+S.~Bijakowski, V.~Pilloni, and B.~Stroh.
+\newblock Classicit{\'e} de formes modulaires surconvergentes.
+\newblock {\em Annals of Math. (2)}, 183(3):975--1014, 2016.
+
+\bibitem{Bosch-Goertz}
+S.~Bosch and U.~G{\"o}rtz.
+\newblock Coherent modules and their descent on relative rigid spaces.
+\newblock {\em Journal f{\"u}r die reine und angewandte Mathematik},
+  495:119--134, 1998.
+
+\bibitem{BGR}
+S.~Bosch, U.~G{\"u}ntzer, and R.~Remmert.
+\newblock {\em Non-Archimedean analysis. A systematic approach to
+  rigid-analytic geometry}, volume 261 of {\em Grundlehren der Math. Wiss.}
+\newblock Springer-Verlag, Berlin, 1984.
+
+\bibitem{BL1}
+S.~Bosch and W.~L{\"u}tkebohmert.
+\newblock Formal and rigid geometry {I}. {R}igid spaces.
+\newblock {\em Math. Ann.}, 295:291--317, 1993.
+
+\bibitem{Bosch-Xarles}
+S.~Bosch and X.~Xarles.
+\newblock Component groups of {N}{\'e}ron models via rigid uniformization.
+\newblock {\em Math. Ann.}, 306:459--486, 1996.
+
+\bibitem{BV}
+K.~Buzzard and A.~Verberkmoes.
+\newblock Stably uniform affinoids are sheafy.
+\newblock {\em Journal f{\"u}r die reine und angewandte Mathematik},
+  740:25--39, 2018.
+
+\bibitem{CS17}
+A.~Caraiani and P.~Scholze.
+\newblock On the generic part of the cohomology of compact unitary {S}himura
+  varieties.
+\newblock {\em Annals of Mathematics (2)}, 186(3):649--766, 2017.
+
+\bibitem{ConradDescent}
+B.~Conrad.
+\newblock Descent for coherent sheaves on rigid-analytic spaces.
+\newblock Available at http://math.stanford.edu/~conrad/papers/cohdescent.pdf.
+
+\bibitem{Conrad06-3}
+B.~Conrad.
+\newblock Higher-level canonical subgroups in abelian varieties.
+\newblock preprint, 2006.
+
+\bibitem{Conrad06-2}
+B.~Conrad.
+\newblock Modular curves and rigid-analytic spaces.
+\newblock {\em Pure {A}ppl. Math. Q.}, 2(1), 2006.
+
+\bibitem{Conrad07}
+B.~Conrad.
+\newblock Deligne's notes on {N}agata compactifications.
+\newblock {\em Journal of the Ramanujan Mathematical Society}, 22:205--257,
+  2007.
+
+\bibitem{ConradNotes}
+B.~Conrad.
+\newblock Number theory learning seminar on adic and perfectoid spaces.
+\newblock Available at http://math.stanford.edu/~conrad/Perfseminar/Notes/,
+  2015.
+
+\bibitem{Stacks}
+A.~J. de~Jong~et al.
+\newblock {\em Stacks Project}.
+\newblock http://stacks.math.columbia.edu, 2025.
+
+\bibitem{Fargues22}
+L.~Fargues.
+\newblock Tokyo {L}ectures on the {G}eometry of {D}iamonds.
+\newblock Available at
+  https://webusers.imj-prg.fr/~laurent.fargues/smfDiamants.pdf, 2022.
+
+\bibitem{FK}
+K.~Fujiwara and F.~Kato.
+\newblock {\em Foundations of Rigid Geometry I}, volume~7 of {\em EMS
+  Monographs in Mathematics}.
+\newblock European Math. Soc., 2018.
+
+\bibitem{Gleason22}
+I.~Gleason.
+\newblock Specialization maps for {S}cholze's category of diamonds.
+\newblock Preprint, available at https://arxiv.org/abs/2012.05483, 2022.
+
+\bibitem{EGAIa}
+A.~Grothendieck and J.~Dieudonn{\'e}.
+\newblock {\'E}l{\'e}ments de g{\'e}om{\'e}trie alg{\'e}brique. {I}. {L}e
+  langage des sch{\'e}mas.
+\newblock {\em Publ. Math. IH{\'E}S}, 4, 1960.
+
+\bibitem{EGAIb}
+A.~Grothendieck and J.~Dieudonn{\'e}.
+\newblock {\em {\'E}l{\'e}ments de g{\'e}om{\'e}trie alg{\'e}brique. I. Le
+  langage des sch{\'e}mas}, volume 166.
+\newblock Springer-Verlag, Berlin-Heidelberg, second edition, 1971.
+
+\bibitem{Gubler98}
+W.~Gubler.
+\newblock Local heights of subvarieties over non-{A}rchimedean fields.
+\newblock {\em Journal f{\"u}r die reine und angewandte Mathematik},
+  498:61--113, 1998.
+
+\bibitem{Gubler-Kuennemann17}
+W.~Gubler and K.~K{\"u}nnemann.
+\newblock A tropical approach to nonarchimedean {A}rakelov theory.
+\newblock {\em Algebra Number Theory}, 11(1):77--180, 2017.
+
+\bibitem{Harbater94}
+D.~Harbater.
+\newblock Abhyankar's conjecture on {G}alois groups over curves.
+\newblock {\em Inventiones mathematicae}, 117(1):1--25, 1994.
+
+\bibitem{HL00}
+U.~Hartl and W.~L{\"u}tkebohmert.
+\newblock On rigid-analytic {P}icard varieties.
+\newblock {\em Journal f{\"u}r die reine und angewandte Mathematik},
+  528:101--148, 2000.
+
+\bibitem{Huber0}
+R.~Huber.
+\newblock Bewertungsspektrum und rigide {Geometrie}.
+\newblock {\em Regensburger Math. Schriften}, 23, 1993.
+
+\bibitem{Huber2}
+R.~Huber.
+\newblock A generalization of formal schemes and rigid-analytic varieties.
+\newblock {\em Math. Z.}, 217:513--551, 1994.
+
+\bibitem{Huber3}
+R.~Huber.
+\newblock {\em {\'E}tale cohomology of rigid analytic varieties and adic
+  spaces}, volume E30 of {\em Aspects of Mathematics}.
+\newblock Friedr. Vieweg \& Sohn, Braunschweig, 1996.
+
+\bibitem{Kedlaya17}
+K.S. Kedlaya.
+\newblock Sheaves, stacks and shtukas.
+\newblock In {\em Perfectoid {S}paces: {L}ectures from the 2017 Arizona Winter
+  School}, volume 242 of {\em Mathematical Surveys and Monographs}, pages
+  58--205. Amer. Math. Soc., 2019.
+
+\bibitem{Kedlaya-Liu}
+K.S. Kedlaya and R.~Liu.
+\newblock {\em Relative $p$-adic {H}odge theory: Foundations}, volume 371.
+\newblock Ast{\'e}risque, 2015.
+
+\bibitem{Kisin-Lai}
+M.~Kisin and K.~F. Lai.
+\newblock Overconvergent {H}ilbert modular forms.
+\newblock {\em Amer. J. Math.}, 127(4):735--783, 2005.
+
+\bibitem{Loeser-Sebag}
+F.~Loeser and J.~Sebag.
+\newblock Motivic integration of smooth rigid varieties and invariants of
+  singularities.
+\newblock {\em Duke Mathematical Journal}, 119(2):315--344, 2003.
+
+\bibitem{L90}
+W.~L{\"u}tkebohmert.
+\newblock Formal-algebraic and rigid-analytic geometry.
+\newblock {\em Math. Ann.}, 286:341--371, 1990.
+
+\bibitem{Luetkebohmert}
+W.~L{\"u}tkebohmert.
+\newblock {\em Rigid {G}eometry of {C}urves and {T}heir {J}acobians}, volume~61
+  of {\em Ergebnisse der Mathematik und Ihrer Grenzgebiete 3. Folge}.
+\newblock Springer-Verlag, Berlin, 2016.
+
+\bibitem{Mihara}
+T.~Mihara.
+\newblock On {T}ate's acyclicity and uniformity of {B}erkovich spectra and adic
+  spectra.
+\newblock {\em Israel Journal of Mathematics}, 216(1):61--105, 2016.
+
+\bibitem{Nakazato-Shimomoto22}
+K.~Nakazato and K.~Shimomoto.
+\newblock Finite {\'e}tale extensions of {T}ate rings and decompletion of
+  perfectoid algebras.
+\newblock {\em Journal of Algebra}, 589:114--158, 2022.
+
+\bibitem{Nicaise-Sebag}
+J.~Nicaise and J.~Sebag.
+\newblock Motivic {S}erre invariants, ramification, and the analytic {M}ilnor
+  fiber.
+\newblock {\em Inventiones mathematicae}, 168(1):133--173, 2007.
+
+\bibitem{Pilloni20}
+V.~Pilloni.
+\newblock Higher coherent cohomology and $p$-adic modular forms of singular
+  weight.
+\newblock {\em Duke Mathematical Journal}, 169:1647--1807, 2020.
+
+\bibitem{Pilloni-Stroh16}
+V.~Pilloni and B.~Stroh.
+\newblock Cohomologie coh{\'e}rente et repr{\'e}sentations {G}aloisiennes.
+\newblock {\em Ann. Math. Qu{\'e}bec}, 40:167--202, 2016.
+
+\bibitem{RaynaudReport}
+M.~Raynaud.
+\newblock G{\'e}om{\'e}trie analytique rigide d'apr{\`e}s {T}ate, {K}iehl,...
+\newblock {\em M{\'e}m. Soc. Math. Fr.}, 39-40:319--327, 1974.
+
+\bibitem{Raynaud94}
+M.~Raynaud.
+\newblock Rev{\^e}tements de la droite affine en caracteristique $p>0$ et
+  conjecture d'{A}bhyankar.
+\newblock {\em Inventiones mathematicae}, 116:425--462, 1994.
+
+\bibitem{Scholze}
+P.~Scholze.
+\newblock Perfectoid spaces.
+\newblock {\em Publ. Math. IH{\'E}S}, 116:245--313, 2012.
+
+\bibitem{Scholze15}
+P.~Scholze.
+\newblock On torsion in the cohomology of locally symmetric varieties.
+\newblock {\em Annals of Mathematics (2)}, 182(3):945--1066, 2015.
+
+\bibitem{SW13}
+P.~Scholze and J.~Weinstein.
+\newblock Moduli of $p$-divisible groups.
+\newblock {\em Cambridge Journal of Mathematics}, 1(2), 2013.
+
+\bibitem{Tate}
+J.~Tate.
+\newblock Rigid analytic spaces.
+\newblock {\em Inventiones mathematicae}, 12(4):257--289, 1971.
+
+\bibitem{Temkin11}
+M.~Temkin.
+\newblock Relative {R}iemann-{Z}ariski spaces.
+\newblock {\em Israel Journal of Mathematics}, 185:1--42, 2011.
+
+\bibitem{Zavyalov22}
+B.~Zavyalov.
+\newblock Sheafiness of strongly rigid-noetherian {H}uber pairs.
+\newblock {\em Math. Ann.}, 2022.
+
+\bibitem{Zavyalov24}
+B.~Zavyalov.
+\newblock Mod-$p$ {P}oincar{\'e} duality in $p$-adic analytic geometry.
+\newblock arXiv preprint, available at https://arxiv.org/pdf/2111.01830, 2024.
+
+\end{thebibliography}

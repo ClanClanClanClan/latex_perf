@@ -1,0 +1,427 @@
+{
+  "rule_id": "TYPO-002",
+  "total_documents": 5,
+  "documents_processed": 5,
+  "total_issues": 29,
+  "would_change_count": 1,
+  "suspected_false_positives": 0,
+  "execution_time_s": 0.014871835708618164,
+  "results": [
+    {
+      "rule_id": "TYPO-002",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/conclusion.tex",
+      "document_hash": "7bb3ad8b0416428a22f2cd5c139e660b",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 0.10704994201660156,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 1334,
+        "line_count": 7,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-002",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/intro.tex",
+      "document_hash": "eddf8b40e8a69bdbb67e453c69b342f2",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 10.046958923339844,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 9616,
+        "line_count": 40,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-002",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/main.tex",
+      "document_hash": "285c1e98e58997e740175b69a161071a",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 9.83119010925293,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 4644,
+        "line_count": 188,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-002",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/task_diversity.tex",
+      "document_hash": "6761c69568fe4b9ab233d065f1125208",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 10.009765625,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 8851,
+        "line_count": 50,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-002",
+      "document_path": "corpus/demo_corpus/papers/2507.06217v1/ZTF_LSSTComCam.tex",
+      "document_hash": "8d10bff3863d2e5504bdbc77b6e361ea",
+      "issues_found": [
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 85,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 85,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 85,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 85,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 149,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 164,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 172,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 172,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 172,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 181,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 181,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 183,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 188,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 195,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 202,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 209,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 216,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 287,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 288,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 292,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 301,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 306,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 306,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 313,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 318,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 323,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 404,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 404,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        },
+        {
+          "type": "TYPO-002",
+          "level": 3,
+          "line": 404,
+          "message": "Use proper ellipsis (\u2026) instead of three dots (...)"
+        }
+      ],
+      "fixes_proposed": [
+        {
+          "start": 5092,
+          "end": 5095,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 5520,
+          "end": 5523,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 5540,
+          "end": 5543,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 5683,
+          "end": 5686,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 11763,
+          "end": 11766,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 13298,
+          "end": 13301,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 14498,
+          "end": 14501,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 14505,
+          "end": 14508,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 14839,
+          "end": 14842,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 15332,
+          "end": 15335,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 15481,
+          "end": 15484,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 15623,
+          "end": 15626,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 16011,
+          "end": 16014,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 16685,
+          "end": 16688,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 17229,
+          "end": 17232,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 17708,
+          "end": 17711,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 18337,
+          "end": 18340,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 21467,
+          "end": 21470,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 21635,
+          "end": 21638,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 21909,
+          "end": 21912,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 22922,
+          "end": 22925,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 23440,
+          "end": 23443,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 23505,
+          "end": 23508,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 23999,
+          "end": 24002,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 24554,
+          "end": 24557,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 24821,
+          "end": 24824,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 30066,
+          "end": 30069,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 30085,
+          "end": 30088,
+          "replacement": "\u2026"
+        },
+        {
+          "start": 30106,
+          "end": 30109,
+          "replacement": "\u2026"
+        }
+      ],
+      "would_change": true,
+      "execution_time_ms": 14.115095138549805,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 30327,
+        "line_count": 413,
+        "rule_version": "unknown"
+      }
+    }
+  ],
+  "performance_metrics": {
+    "avg_execution_time_ms": 8.822011947631836,
+    "max_execution_time_ms": 14.115095138549805,
+    "min_execution_time_ms": 0.10704994201660156,
+    "avg_document_size": 10954.4,
+    "documents_with_issues": 1,
+    "documents_with_violations": 0,
+    "context_detector_metrics": {
+      "cache_size": 0,
+      "cache_hit_rate": 0,
+      "avg_detection_time_ms": 0,
+      "documents_processed": 0
+    }
+  },
+  "failure_clusters": []
+}

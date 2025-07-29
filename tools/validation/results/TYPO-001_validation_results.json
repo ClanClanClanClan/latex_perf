@@ -1,0 +1,15 @@
+{
+  "rule_id": "TYPO-001",
+  "validation_date": "2025-07-09T21:49:12.154550",
+  "result": {
+    "rule_id": "TYPO-001",
+    "precision": 1.0,
+    "recall": 1.0,
+    "performance_ms": 0.00762939453125,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "total_tests": 8,
+    "passed": true
+  },
+  "passed_production_gates": true
+}

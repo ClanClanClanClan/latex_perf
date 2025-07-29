@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.10780v1",
+  "title": "Primes in Arithmetic Progressions to Large Moduli and Siegel Zeroes",
+  "authors": [
+    "Thomas Wright"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Let $\\chi$ be a Dirichlet character mod $D$ with $L(s,\\chi)$ its associated\n$L$-function, and let $\\psi(x,q,a)$ be Chebyshev's prime-counting function for\nprimes congruent to $a$ modulo $q$. We that under the assumption of an\nexceptional character $\\chi$ with $L(1,\\chi)=o\\left((\\log D)^{-5}\\right)$, for\nany $q<x^{\\frac 23-\\varepsilon}$, the asymptotic\n$$\\psi(x,q,a)=\\frac{\\psi(x)}{\\phi(q)}\\left(1-\\chi\\left(\\frac{aD}{(D,q)}\\right)+o(1)\\right)$$\nholds for almost all $a$ with $(a,q)=1$. We also find that for any fixed $a$,\nthe above holds for almost all $q<x^{\\frac 23-\\varepsilon}$ with $(a,q)=1$.\nPrevious prime equidistribution results under the assumption of Siegel zeroes\n(by Friedlander-Iwaniec and the current author) have found that the above\nasymptotic holds either for all $a$ and $q$ or on average over a range of $q$\n(i.e. for the Elliott-Halberstam conjecture), but only under the assumption\nthat $q<x^{\\theta}$ where $\\theta=\\frac{30}{59}$ or $\\frac{16}{31}$,\nrespectively.",
+  "submitted_date": "2025-07-14T20:10:12Z",
+  "download_date": "2025-07-16T00:34:33.542924",
+  "tex_files": [
+    "f-i_7-14.tex"
+  ],
+  "main_tex_file": "f-i_7-14.tex",
+  "file_size": 57570,
+  "line_count": 694,
+  "complexity_score": 16.669400000000003,
+  "features": {
+    "line_count": 694,
+    "char_count": 56860,
+    "word_count": 5804,
+    "file_size": 57570,
+    "tex_files": [
+      "f-i_7-14.tex"
+    ],
+    "main_tex_file": "f-i_7-14.tex",
+    "equations": 0,
+    "align_envs": 29,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 19,
+    "inline_math": 629,
+    "display_math": 95,
+    "bracket_math": 0,
+    "straight_quotes": 7,
+    "single_quotes": 165,
+    "double_dollars": 95,
+    "british_spellings": 0,
+    "american_spellings": 4,
+    "includes": 1,
+    "packages": 2,
+    "newcommands": 2,
+    "citations": 92,
+    "references": 32,
+    "long_lines": 246,
+    "unicode_chars": 11,
+    "comments": 43,
+    "complexity_score": 16.669400000000003
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

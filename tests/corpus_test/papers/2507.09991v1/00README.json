@@ -1,0 +1,11 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "transform.tex"
+      }
+   ],
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

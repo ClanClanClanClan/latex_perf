@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.08662v1",
+  "title": "Functional equations of axiomatic multiple Dirichlet series, Weyl\n  groupoids, and quantum algebra",
+  "authors": [
+    "Will Sawin",
+    "Ian Whitehead"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We prove functional equations for multiple Dirichlet series defined by a\ncollection of five geometric axioms. We find functional equations of two types:\none modeled on the functional equations of Dirichlet $L$-functions, and another\nmodeled on the functional equations of Kubota $L$-series with Gauss sums as\ncoefficients. These functional equations generate groupoid structures, which we\nrelate to the Weyl groupoids of arithmetic root systems. From the known\nclassification of arithmetic root systems, we obtain a complete classification\nof multiple Dirichlet series which can be used to compute moments of\n$L$-functions via established analytic techniques. Our classification includes\nall moments of $L$-functions which have appeared in the multiple Dirichlet\nseries literature previously, alongside some new moments. Finally, we give\napplications of our functional equations to quantum algebra, specifically the\ncohomology of Nichols algebras.",
+  "submitted_date": "2025-07-11T15:02:36Z",
+  "download_date": "2025-07-16T00:35:52.050185",
+  "tex_files": [
+    "main.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 446151,
+  "line_count": 3668,
+  "complexity_score": 188.66679999999997,
+  "features": {
+    "line_count": 3668,
+    "char_count": 446150,
+    "word_count": 57963,
+    "file_size": 446151,
+    "tex_files": [
+      "main.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 329,
+    "align_envs": 9,
+    "figures": 1,
+    "tables": 1,
+    "listings": 0,
+    "theorems": 45,
+    "inline_math": 4707,
+    "display_math": 23,
+    "bracket_math": 202,
+    "straight_quotes": 4,
+    "single_quotes": 761,
+    "double_dollars": 23,
+    "british_spellings": 0,
+    "american_spellings": 49,
+    "includes": 0,
+    "packages": 10,
+    "newcommands": 34,
+    "citations": 512,
+    "references": 179,
+    "long_lines": 1354,
+    "unicode_chars": 1,
+    "comments": 228,
+    "complexity_score": 188.66679999999997
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

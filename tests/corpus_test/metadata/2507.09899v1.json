@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.09899v1",
+  "title": "On pairs of consecutive sequences with the same radicals",
+  "authors": [
+    "Noah Lebowitz-Lockard"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Let $(m, n, k)$ be a tuple of integers with the property that if $i \\leq k$,\nthen $m + i$ and $n + i$ have the same radical. Using a result on the abc\nConjecture, we bound $k$ from above, improving a result of Balasubramanian,\nShorey, and Waldschmidt. We also bound the number of pairs $(m, n)$ for which\n$m < n \\leq x$ and $m(m + 1) \\cdots (m + k - 1))$ and $n(n + 1) \\cdots (n +\n\\ell - 1)$ have the same radical and the number of pairs for which $m + i$ and\n$n + i$ have the same radical for all $i < k$.",
+  "submitted_date": "2025-07-14T04:08:33Z",
+  "download_date": "2025-07-16T00:35:12.714150",
+  "tex_files": [
+    "Radicals_v71025.tex"
+  ],
+  "main_tex_file": "Radicals_v71025.tex",
+  "file_size": 15957,
+  "line_count": 185,
+  "complexity_score": 11.6185,
+  "features": {
+    "line_count": 185,
+    "char_count": 15957,
+    "word_count": 2603,
+    "file_size": 15957,
+    "tex_files": [
+      "Radicals_v71025.tex"
+    ],
+    "main_tex_file": "Radicals_v71025.tex",
+    "equations": 22,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 1,
+    "inline_math": 187,
+    "display_math": 0,
+    "bracket_math": 22,
+    "straight_quotes": 3,
+    "single_quotes": 4,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 2,
+    "newcommands": 0,
+    "citations": 21,
+    "references": 5,
+    "long_lines": 60,
+    "unicode_chars": 0,
+    "comments": 0,
+    "complexity_score": 11.6185
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

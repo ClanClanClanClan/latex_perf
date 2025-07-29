@@ -1,6 +1,8 @@
 From Coq Require Import String List Bool Arith Lia.
-Require Import LatexLexer ExpanderTypes MacroCatalog ExpanderAlgorithm.
+Require Import lexer.LatexLexer.
+Require Import ExpanderTypes MacroCatalog ExpanderAlgorithm.
 Import Nat ListNotations.
+Open Scope string_scope.
 
 (** * LaTeX Perfectionist v24 - Performance Limit Validation
     

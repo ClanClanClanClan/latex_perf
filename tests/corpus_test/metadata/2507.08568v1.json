@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.08568v1",
+  "title": "Some applications of the Nygaard filtration and quasisyntomic descent in\n  positive characteristic",
+  "authors": [
+    "Livia Grammatica"
+  ],
+  "categories": [
+    "math.AG"
+  ],
+  "abstract": "This article gives an expository account of quasisyntomic descent and the\nNygaard filtration in positive characteristic, complemented by several new\napplications to $p$-adic cohomology theories. The guiding result is a new\napproach to Illusie's comparison between fppf cohomology with $\\mathbb{Z}_p(1)$\ncoefficients and the slope $1$ part of crystalline cohomology. We follow work\nof Bhatt-Lurie, but give a more elementary presentation which does not rely on\nthe formalism of $\\infty$-categories. We then revisit Ogus' comparison theorem\nbetween infinitesimal cohomology and \\'etale cohomology, and give new proofs of\nseveral results on fppf cohomology that were previously obtained with the de\nRham-Witt complex. We also determine the action of multiplication-by-$n$ on the\nfppf cohomology of an abelian variety, answering a question of A. Skorobogatov\nto the author. This is an expanded version of the author's master thesis.",
+  "submitted_date": "2025-07-11T13:12:44Z",
+  "download_date": "2025-07-16T00:36:09.692085",
+  "tex_files": [
+    "main.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 135112,
+  "line_count": 2250,
+  "complexity_score": 54.475,
+  "features": {
+    "line_count": 2250,
+    "char_count": 135026,
+    "word_count": 15648,
+    "file_size": 135112,
+    "tex_files": [
+      "main.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 93,
+    "align_envs": 3,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 1,
+    "inline_math": 1834,
+    "display_math": 24,
+    "bracket_math": 74,
+    "straight_quotes": 62,
+    "single_quotes": 102,
+    "double_dollars": 24,
+    "british_spellings": 1,
+    "american_spellings": 10,
+    "includes": 0,
+    "packages": 16,
+    "newcommands": 97,
+    "citations": 78,
+    "references": 37,
+    "long_lines": 470,
+    "unicode_chars": 84,
+    "comments": 75,
+    "complexity_score": 54.475
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

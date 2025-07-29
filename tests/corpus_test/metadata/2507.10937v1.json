@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.10937v1",
+  "title": "Characterization of matchable sets and subspaces via Dyson transforms",
+  "authors": [
+    "Mohsen Aliabadi",
+    "Jozsef Losonczy"
+  ],
+  "categories": [
+    "math.CO"
+  ],
+  "abstract": "A matching from a finite subset $A$ of an abelian group $G$ to another subset\n$B$ is a bijection $f : A \\to B$ such that $a f(a) \\notin A$ for all $a \\in A$.\nThe study of matchings began in the 1990s and was motivated by a conjecture of\nE. K. Wakeford on canonical forms for homogeneous polynomials. The theory was\nlater extended to the linear-algebraic setting of vector subspaces over field\nextensions, and then to matroids. In this paper, we investigate the existence\nand structure of matchings in both abelian groups and field extensions. Using\nDyson's $e$-transform, a tool from additive combinatorics, along with a linear\nanalogue which is introduced in this paper, we establish characterization\ntheorems for matchable sets and subspaces. Several applications are given to\ndemonstrate the effectiveness of these theorems as standalone tools.\nThroughout, we highlight the parallels between the group-theoretic and\nlinear-algebraic perspectives.",
+  "submitted_date": "2025-07-15T03:02:50Z",
+  "download_date": "2025-07-16T00:34:28.168414",
+  "tex_files": [
+    "Matchings.tex"
+  ],
+  "main_tex_file": "Matchings.tex",
+  "file_size": 58059,
+  "line_count": 953,
+  "complexity_score": 41.7953,
+  "features": {
+    "line_count": 953,
+    "char_count": 58051,
+    "word_count": 10343,
+    "file_size": 58059,
+    "tex_files": [
+      "Matchings.tex"
+    ],
+    "main_tex_file": "Matchings.tex",
+    "equations": 63,
+    "align_envs": 11,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 7,
+    "inline_math": 40,
+    "display_math": 0,
+    "bracket_math": 63,
+    "straight_quotes": 1,
+    "single_quotes": 16,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 21,
+    "newcommands": 40,
+    "citations": 102,
+    "references": 23,
+    "long_lines": 185,
+    "unicode_chars": 4,
+    "comments": 9,
+    "complexity_score": 41.7953
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

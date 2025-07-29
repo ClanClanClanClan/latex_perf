@@ -1,0 +1,145 @@
+# LaTeX Perfectionist Default Configuration
+# This is the default configuration used when no other config is specified
+
+[metadata]
+spec_version = "6.2.0"
+profile = "article"
+created = "2025-01-03"
+
+[document]
+# LaTeX engine to use
+engine = "lualatex"
+document_class = "article"
+language = ["en-GB"]
+zero_warnings = false
+deterministic = true
+accessibility = "basic"
+submission = false
+
+[build]
+# Build system configuration
+cache_dir = ".lp-cache"
+externalize_tikz = false
+makeindex = false
+glossaries = false
+shell_escape_ok = ["tikzexternalize", "minted"]
+fail_on_warnings = false
+
+[rules.math]
+# Mathematical environment rules
+normalize_environments = true
+scriptstyle_depth = 2
+raisebox_ex = 0.2
+allow_displaybreaks = 2
+kerning_metrics = false
+mathml_required = false
+entropy_threshold = 2.5
+
+[rules.orthography]
+# Typography and orthography rules
+curly_quotes = true
+en_dash_ranges = true
+normalize_dashes = true
+normalize_ellipsis = true
+oxford_comma = true
+inclusive_language = true
+
+[rules.bibliography]
+# Bibliography validation rules
+style = "numeric-comp"
+require_doi = false
+require_url = false
+title_case = "sentence"
+verify_crossref = false
+require_orcid = false
+iso_months = true
+ror_required = false
+local_doi_cache = ".doi-mirror.sqlite"
+
+[rules.structure]
+# Document structure rules
+validate_hierarchy = true
+check_toc_depth = false
+require_labels = false
+check_list_generation = true
+check_duplicates = false
+
+[rules.floats]
+# Float placement and formatting
+validate_placement = true
+validate_captions = true
+validate_references = true
+check_proximity = false
+allowed_placement = "tbp"
+discouraged_placement = "h"
+caption_min_words = 10
+min_count_for_list = 3
+
+[rules.tables]
+# Table formatting rules
+validate_formatting = true
+require_booktabs = false
+prohibit_vertical_rules = false
+max_rows = 50
+
+[rules.graphics]
+# Graphics and accessibility rules
+validate_graphics = true
+validate_colors = true
+check_quality = false
+auto_add_alt = false
+caption_min_words = 15
+min_resolution = 150
+colour_profile = "screen"
+contrast_ratio_min = 3.0
+
+[rules.accessibility]
+# Accessibility compliance rules
+check_structure = true
+require_packages = false
+pdf_ua = false
+alt_text_mandatory = false
+tagged_pdf = false
+
+[rules.punctuation]
+# Punctuation and typography rules
+abbreviations = ["etc.", "i.e.", "e.g.", "cf.", "vs."]
+tie_words = ["Figure", "Table", "Section", "Chapter", "Equation"]
+tie_languages = ["en"]
+detect_abbreviations = false
+detect_extended_abbreviations = false
+normalize_all_periods = false
+
+[rules.unicode]
+# Unicode normalization rules
+normalize_nfc = true
+
+[rules.readability]
+# Readability analysis rules
+analyze_sentences = false
+max_sentence_length = 35
+avg_sentence_limit = 24
+
+[severity]
+# Default severity levels for all rules
+# Can be overridden per rule or rule category
+default = "warning"
+
+# Specific rule severity overrides
+# "math.*" = "error"
+# "orthography.curly_quotes" = "warning"
+# "bibliography.*" = "info"
+
+[execution]
+# Rule execution configuration
+max_iterations = 3
+parallel = false
+max_workers = 4
+fail_fast = false
+max_performance_impact = "high"
+
+[output]
+# Output format configuration
+sarif = false
+signed_artifacts = false
+sbom = false

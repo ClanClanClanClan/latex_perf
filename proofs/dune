@@ -1,3 +1,0 @@
-(coq.theory
- (name LaTeXPerfectionist)
- (package latex-perfectionist))

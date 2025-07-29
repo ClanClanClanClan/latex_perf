@@ -1,0 +1,11 @@
+\documentclass{article}
+\begin{document}
+\section{Scope Test}
+{Local scope}
+{\newcommand{\localcmd}{Local}}
+% \localcmd should not be available here
+Global content.
+{Nested {scope {test}}}
+\section{After Scopes}
+Content continues normally.
+\end{document}

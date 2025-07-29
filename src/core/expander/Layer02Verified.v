@@ -1,4 +1,7 @@
 From Coq Require Import String List Bool Arith.
+Require Import lexer.LatexLexer.
+Import ListNotations.
+Open Scope string_scope.
 
 (** * LaTeX Perfectionist v24 - Layer-02 Verified Macro Expander
     
@@ -16,15 +19,17 @@ From Coq Require Import String List Bool Arith.
 *)
 
 (** ** Re-export all components *)
-Require Export ExpanderTypes MacroCatalog ExpanderAlgorithm ExpanderProofs ExpanderTests.
+Require Export ExpanderTypes MacroCatalog ExpanderAlgorithm ExpanderProofsSimplified ExpanderTests.
 
 (** ** Main interface for other layers *)
-Definition expand_tokens := expand.
+Definition expand_tokens := expand_legacy.
 
 (** ** Verification Summary *)
-Print expand_fuel_insensitive.
-Print expand_terminates_acyclic. 
-Print expand_no_teof.
+(* Proofs are in ExpanderProofsSimplified.v:
+   - expand_fuel_insensitive_simple
+   - expand_terminates_acyclic_simple  
+   - expand_no_teof_simple
+*)
 
 (** ** Usage Example *)
 Example usage_example :

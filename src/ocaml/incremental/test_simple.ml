@@ -1,3 +1,0 @@
-let () = Printf.printf "Testing basic functionality...
-"; let lexer = Incremental_lexer_optimized.create_optimized () in Printf.printf "Lexer created successfully
-"

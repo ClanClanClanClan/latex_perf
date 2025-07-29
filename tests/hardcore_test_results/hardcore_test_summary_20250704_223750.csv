@@ -1,5 +1,0 @@
-Suite,Success,Tests_Run,Tests_Passed,Success_Rate,Duration_Seconds,Memory_Peak_MB,CPU_Time_Seconds
-chaos_tests,True,0,0,0.000,0.021,22.750,0.022
-mathematical_tests,True,0,0,0.000,0.176,23.344,0.186
-punctuation_tests,True,0,0,0.000,0.229,24.359,0.247
-universal_framework,True,359,294,0.819,2.197,108.953,2.213

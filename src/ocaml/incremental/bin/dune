@@ -1,4 +1,0 @@
-(executable
- (public_name latex_perfectionist_benchmark)
- (name benchmark)
- (libraries latex_perfectionist_incremental unix str))

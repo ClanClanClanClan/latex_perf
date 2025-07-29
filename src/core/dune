@@ -1,0 +1,49 @@
+; Main library for LaTeX Perfectionist v25 core
+
+(library
+ (name latex_perfectionist_core)
+ (public_name latex-perfectionist.core)
+ (modules types version_vector validator_patterns validator_examples ground_truth dsl_compiler)
+ (libraries lwt lwt.unix str))
+
+; Lexer stub library
+(library
+ (name lexer_stub)
+ (public_name latex-perfectionist.lexer-stub)
+ (modules lexer_stub)
+ (libraries latex_perfectionist_core))
+
+; Common macros library
+(library
+ (name common_macros)
+ (public_name latex-perfectionist.common-macros)
+ (modules common_macros)
+ (libraries latex_perfectionist_core))
+
+; Expander stub library  
+(library
+ (name expander_stub)
+ (public_name latex-perfectionist.expander-stub)
+ (modules expander_stub)
+ (libraries latex_perfectionist_core common_macros))
+
+; L0 Lexer sublibrary
+(library
+ (name layer0)
+ (public_name latex-perfectionist.layer0)
+ (modules l0_v25)
+ (libraries latex_perfectionist_core lexer_stub))
+
+; L1 Expander sublibrary
+(library
+ (name layer1)  
+ (public_name latex-perfectionist.layer1)
+ (modules l1_v25)
+ (libraries latex_perfectionist_core layer0 expander_stub))
+
+; Orchestrator library
+(library
+ (name orchestrator_lib)
+ (public_name latex-perfectionist.orchestrator)
+ (modules orchestrator)
+ (libraries latex_perfectionist_core layer0 layer1 lwt lwt.unix))

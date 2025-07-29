@@ -1,0 +1,102 @@
+{
+  "TYPO-001": {
+    "summary": {
+      "total": 14,
+      "passed": 5,
+      "false_positives": 8,
+      "false_negatives": 0
+    },
+    "failed_tests": [
+      {
+        "name": "simple_double_quotes",
+        "description": "Simple double quotes should be converted to smart quotes",
+        "input": "He said \"hello\" to her.",
+        "expected": "He said \"hello\" to her.",
+        "actual": "He said \u201chello\u201d to her.",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "simple_single_quotes",
+        "description": "Single quotes should be converted (including apostrophes)",
+        "input": "It's a 'test' case.",
+        "expected": "It's a 'test' case.",
+        "actual": "It's a \u201ctest\u201d case.",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "mixed_contexts",
+        "description": "Only quotes outside code contexts should change",
+        "input": "Normal \"quote\" and \\texttt{\"code\"} and \"another\".",
+        "expected": "Normal \"quote\" and \\texttt{\"code\"} and \"another\".",
+        "actual": "Normal \u201cquote\u201d and \\texttt{\"code\"} and \u201canother\u201d.",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "empty_quotes",
+        "description": "Empty quotes should still be converted",
+        "input": "Empty quotes: \"\"",
+        "expected": "Empty quotes: \"\"",
+        "actual": "Empty quotes: \u201c\u201d",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "nested_quotes",
+        "description": "Nested quotes should be handled correctly",
+        "input": "She said \"he told me 'hello' yesterday\".",
+        "expected": "She said \"he told me \u2018hello\u2019 yesterday\".",
+        "actual": "She said \u201che told me \u2018hello\u2019 yesterday\u201d.",
+        "error": "Output does not match expected"
+      },
+      {
+        "name": "quotes_with_newline",
+        "description": "Quotes spanning multiple lines should work",
+        "input": "\"Quote\nspanning lines\"",
+        "expected": "\"Quote\nspanning lines\"",
+        "actual": "\u201cQuote\nspanning lines\u201d",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "quote_at_start",
+        "description": "Quote at document start",
+        "input": "\"Quote\" at the start.",
+        "expected": "\"Quote\" at the start.",
+        "actual": "\u201cQuote\u201d at the start.",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "quote_at_end",
+        "description": "Quote at document end",
+        "input": "Ends with \"quote\"",
+        "expected": "Ends with \"quote\"",
+        "actual": "Ends with \u201cquote\u201d",
+        "error": "Rule modified text when it should not have"
+      },
+      {
+        "name": "complex_document",
+        "description": "Complex document with multiple contexts",
+        "input": "\\documentclass{article}\n\\begin{document}\nHe said \"hello\" in the meeting.\n\\begin{verbatim}\nprint(\"unchanged\")\n\\end{verbatim}\nThe \\texttt{\"code\"} remains as is.\nBut \"this quote\" changes.\n\\end{document}",
+        "expected": "\\documentclass{article}\n\\begin{document}\nHe said \"hello\" in the meeting.\n\\begin{verbatim}\nprint(\"unchanged\")\n\\end{verbatim}\nThe \\texttt{\"code\"} remains as is.\nBut \"this quote\" changes.\n\\end{document}",
+        "actual": "\\documentclass{article}\n\\begin{document}\nHe said \u201chello\u201d in the meeting.\n\\begin{verbatim}\nprint(\"unchanged\")\n\\end{verbatim}\nThe \\texttt{\"code\"} remains as is.\nBut \u201cthis quote\u201d changes.\n\\end{document}",
+        "error": "Rule modified text when it should not have"
+      }
+    ]
+  },
+  "TYPO-002": {
+    "summary": {
+      "total": 10,
+      "passed": 9,
+      "false_positives": 1,
+      "false_negatives": 0
+    },
+    "failed_tests": [
+      {
+        "name": "four_dots",
+        "description": "Four dots are not standard ellipsis",
+        "input": "Too many....",
+        "expected": "Too many....",
+        "actual": "Too many\u2026.",
+        "error": "Rule modified text when it should not have"
+      }
+    ]
+  }
+}

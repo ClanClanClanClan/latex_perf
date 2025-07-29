@@ -1,0 +1,57 @@
+{
+  "arxiv_id": "2507.11226v1",
+  "title": "Self-reverse labelings of distance magic graphs",
+  "authors": [
+    "Petr Kov\u00e1\u0159",
+    "Ksenija Rozman",
+    "Primo\u017e \u0160parl"
+  ],
+  "categories": [
+    "math.CO"
+  ],
+  "abstract": "A graph is distance magic if it admits a bijective labeling of its vertices\nby integers from $1$ up to the order of the graph in such a way that the sum of\nthe labels of all the neighbors of a vertex is independent of a given vertex.\nWe introduce the concept of a self-reverse distance magic labeling of a regular\ngraph which allows for a more compact description of the graph and the labeling\nin terms of the corresponding quotient graph. We show that the members of\nseveral known infinite families of tetravalent distance magic graphs admit such\nlabelings. We present a novel general construction producing a new distance\nmagic graph from two existing ones. Using it we show that for each integer $n\n\\geq 6$, except for the odd integers up to $19$, there exists a connected\ntetravalent graph of order $n$ admitting a self-reverse distance magic\nlabeling. We also determine all connected tetravalent graphs up to order $30$\nadmitting a self-reverse distance magic labeling. The obtained data suggests a\nnumber of natural interesting questions giving several possibilities for future\nresearch.",
+  "submitted_date": "2025-07-15T11:57:13Z",
+  "download_date": "2025-07-16T00:33:58.762027",
+  "tex_files": [
+    "On_self-reverse_labelings_of_distance_magic_graphs_submitted.tex"
+  ],
+  "main_tex_file": "On_self-reverse_labelings_of_distance_magic_graphs_submitted.tex",
+  "file_size": 120903,
+  "line_count": 1503,
+  "complexity_score": 9.6003,
+  "features": {
+    "line_count": 1503,
+    "char_count": 120903,
+    "word_count": 18094,
+    "file_size": 120903,
+    "tex_files": [
+      "On_self-reverse_labelings_of_distance_magic_graphs_submitted.tex"
+    ],
+    "main_tex_file": "On_self-reverse_labelings_of_distance_magic_graphs_submitted.tex",
+    "equations": 3,
+    "align_envs": 0,
+    "figures": 9,
+    "tables": 1,
+    "listings": 0,
+    "theorems": 9,
+    "inline_math": 1177,
+    "display_math": 9,
+    "bracket_math": 0,
+    "straight_quotes": 0,
+    "single_quotes": 304,
+    "double_dollars": 9,
+    "british_spellings": 0,
+    "american_spellings": 2,
+    "includes": 0,
+    "packages": 13,
+    "newcommands": 21,
+    "citations": 131,
+    "references": 34,
+    "long_lines": 227,
+    "unicode_chars": 0,
+    "comments": 138,
+    "complexity_score": 9.6003
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

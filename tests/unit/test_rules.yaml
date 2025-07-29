@@ -1,0 +1,21 @@
+- id: "TEST-001"
+  description: "Missing backslash before command"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Stable
+  owner: "@test"
+  fix: null
+- id: "TEST-002"
+  description: "Unmatched begin environment"
+  precondition: L2_Ast
+  default_severity: Error
+  maturity: Stable
+  owner: "@test"
+  fix: null
+- id: "TEST-003"
+  description: "Undefined reference to label"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@test"
+  fix: null

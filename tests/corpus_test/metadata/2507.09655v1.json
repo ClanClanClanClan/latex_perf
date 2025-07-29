@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.09655v1",
+  "title": "Beyond endoscopy for $\\mathsf{GL}_2$ over $\\mathbb{Q}$ with ramification\n  2: bounds towards the Ramanujan conjecture",
+  "authors": [
+    "Yuhao Cheng"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We continue generalizing Altu\\u{g}'s work on $\\mathsf{GL}_2$ over\n$\\mathbb{Q}$ in the unramified setting for \\emph{Beyond Endoscopy} to the\nramified case where ramification occurs at $S=\\{\\infty,q_1,\\dots,q_r\\}$ with\n$2\\in S$, after generalizing the first step. We establish a new proof of the\n$1/4$ bound towards the Ramanujan conjecture for the trace of the cuspidal part\nin the ramified case, which is also provided by adapting Altu\\u{g}'s original\napproach. The proof proceeds in three stages: First, we estimate the\ncontributions from the non-elliptic parts of the trace formula. Then, we apply\nthe main result from our the previous work to isolate the $1$-dimensional\nrepresentations within the elliptic part. Finally, we employ technical analytic\nestimates to bound the remainder terms in the elliptic part.",
+  "submitted_date": "2025-07-13T14:40:56Z",
+  "download_date": "2025-07-16T00:35:18.825277",
+  "tex_files": [
+    "beyond_endoscopy_with_ramification_2.tex"
+  ],
+  "main_tex_file": "beyond_endoscopy_with_ramification_2.tex",
+  "file_size": 183107,
+  "line_count": 2983,
+  "complexity_score": 212.99830000000003,
+  "features": {
+    "line_count": 2983,
+    "char_count": 180124,
+    "word_count": 13872,
+    "file_size": 183107,
+    "tex_files": [
+      "beyond_endoscopy_with_ramification_2.tex"
+    ],
+    "main_tex_file": "beyond_endoscopy_with_ramification_2.tex",
+    "equations": 334,
+    "align_envs": 60,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 47,
+    "inline_math": 1518,
+    "display_math": 0,
+    "bracket_math": 281,
+    "straight_quotes": 7,
+    "single_quotes": 205,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 1,
+    "includes": 0,
+    "packages": 16,
+    "newcommands": 146,
+    "citations": 73,
+    "references": 121,
+    "long_lines": 742,
+    "unicode_chars": 1,
+    "comments": 6,
+    "complexity_score": 212.99830000000003
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

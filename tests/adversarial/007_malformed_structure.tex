@@ -1,0 +1,12 @@
+\documentclass{article}
+\begin{document}
+\section{Malformed Structure Test
+% Missing closing brace - should be handled gracefully
+\subsection{Unclosed Environment}
+\begin{itemize}
+\item First item
+\item Second item
+% Missing \end{itemize} - but document continues
+\section{Recovery Test}
+System should recover from malformed structure.
+\end{document}

@@ -1,0 +1,1 @@
+"""LaTeX Perfectionist scripts package."""

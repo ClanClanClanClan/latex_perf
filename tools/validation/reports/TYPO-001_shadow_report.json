@@ -1,0 +1,200 @@
+{
+  "rule_id": "TYPO-001",
+  "total_documents": 5,
+  "documents_processed": 5,
+  "total_issues": 8,
+  "would_change_count": 3,
+  "suspected_false_positives": 0,
+  "execution_time_s": 0.04228496551513672,
+  "results": [
+    {
+      "rule_id": "TYPO-001",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/task_diversity.tex",
+      "document_hash": "6761c69568fe4b9ab233d065f1125208",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 12.862920761108398,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 8851,
+        "line_count": 50,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-001",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/main.tex",
+      "document_hash": "285c1e98e58997e740175b69a161071a",
+      "issues_found": [],
+      "fixes_proposed": [],
+      "would_change": false,
+      "execution_time_ms": 15.773773193359375,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 4644,
+        "line_count": 188,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-001",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/conclusion.tex",
+      "document_hash": "7bb3ad8b0416428a22f2cd5c139e660b",
+      "issues_found": [
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 3,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        }
+      ],
+      "fixes_proposed": [
+        {
+          "start": 586,
+          "end": 588,
+          "replacement": "\u201c\u201d"
+        }
+      ],
+      "would_change": true,
+      "execution_time_ms": 30.179977416992188,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 1334,
+        "line_count": 7,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-001",
+      "document_path": "corpus/demo_corpus/papers/2507.06219v1/intro.tex",
+      "document_hash": "eddf8b40e8a69bdbb67e453c69b342f2",
+      "issues_found": [
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 15,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        }
+      ],
+      "fixes_proposed": [
+        {
+          "start": 1899,
+          "end": 1901,
+          "replacement": "\u201c\u201d"
+        }
+      ],
+      "would_change": true,
+      "execution_time_ms": 39.591073989868164,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 9616,
+        "line_count": 40,
+        "rule_version": "unknown"
+      }
+    },
+    {
+      "rule_id": "TYPO-001",
+      "document_path": "corpus/demo_corpus/papers/2507.06217v1/ZTF_LSSTComCam.tex",
+      "document_hash": "8d10bff3863d2e5504bdbc77b6e361ea",
+      "issues_found": [
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 25,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        },
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 29,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        },
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 33,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        },
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 46,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        },
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 50,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        },
+        {
+          "type": "TYPO-001",
+          "level": 3,
+          "line": 91,
+          "message": "Use proper curly quotes instead of straight ASCII quotes"
+        }
+      ],
+      "fixes_proposed": [
+        {
+          "start": 636,
+          "end": 650,
+          "replacement": "\u201cPruzhinskaya\u201d"
+        },
+        {
+          "start": 895,
+          "end": 907,
+          "replacement": "\u201cLavrukhina\u201d"
+        },
+        {
+          "start": 1151,
+          "end": 1163,
+          "replacement": "\u201cSemenikhin\u201d"
+        },
+        {
+          "start": 1901,
+          "end": 1913,
+          "replacement": "\u201cKrushinsky\u201d"
+        },
+        {
+          "start": 2156,
+          "end": 2165,
+          "replacement": "\u201cGangler\u201d"
+        },
+        {
+          "start": 6472,
+          "end": 9884,
+          "replacement": "\u201cs engineering camera, used for testing and validating the observatory systems prior to the installation of the full LSST Camera \\citep{2024SPIE13096E..1SR,lange:hal-04775095}. Its focal plane consists of a single raft with a $3 \\times 3$ mosaic of $4\\mathrm{K} \\times 4\\mathrm{K}$ ITL science sensors, totaling 144 million pixels. It shares the same plate scale as the LSSTCam (0.2 arcsec/pixel) and covers a field of view of $40 \\times 40$ arcmin. Observations with LSSTComCam were conducted at the end of 2024. For the Science Pipelines commissioning campaign, seven target fields were selected\\footnote{\\url{https://sitcomtn-149.lsst.io/}}. These fields cover a total area of approximately 15 square degrees. The photometric data from 1791 LSSTComCam exposures formed the Rubin Data Preview 1 (DP1) dataset~\\citep{RTN-095}. Among the seven LSSTComCam target fields, four overlap with the ZTF footprint (see Table~\\ref{tab:fields}). Figure~\\ref{fig:map} shows the spatial footprint of these selected fields overlaid on ZTF coverage.\n\nIn what follows, data selection is described in Section \\ref{sec:data}; the algorithm used for anomaly search is given in Section \\ref{sec:methods}; a summary of our findings is shown in Section \\ref{sec:results} and our conclusions are discussed in Section \\ref{sec:conclusions}.\n\n\n\\begin{table*}[h!]\n\\centering\n\\caption{Coordinates, radii and names of selected LSSTComCam fields. \\textbf{N} is number of ZTF objects within the footprint of these fields.}\n\\begin{center}\n\\begin{tabular}{llllll}\n\\hline\n\\textbf{Field Code} & \\textbf{Field Name} & \\textbf{RA (deg)} & \\textbf{Dec (deg)} & \\textbf{Radius (deg)} & \\textbf{N} \\\\\n\\hline\nRubin SV 38 7     & Low Ecliptic Latitude Field       & 37.86  & $+6.98$   & 0.7 & 6758  \\\\\nECDFS             & Extended Chandra Deep Field South & 53.13  & $-28.10$  & 0.6 & 546    \\\\\nRubin SV 95 $-25$ & Low Galactic Latitude Field       & 95.00  & $-25.00$  & 0.5 & 10649 \\\\\nSeagull           & Seagull Nebula                    & 106.23 & $-10.51$  & 0.5 & 24480 \\\\\n\\hline\n\\end{tabular}\n\\end{center}\n\\label{tab:fields}\n\\end{table*}\n\n\n\\section{Data}\n\\label{sec:data}\n\nWe used data from the latest ZTF data release (DR23),  covering the time range of $58178 \\leq \\mathrm{MJD} \\leq 60125$, which corresponds to March 2018 through June 2023~\\citep{Bellm_2019}. From this dataset, we selected only $zr$-band light curves that satisfy the quality flag criterion \\texttt{catflags = 0}, holding at least 100 detections and overlapping with Rubin commissionning fields.\n\nFeature extraction from ZTF light curves was performed using the \\texttt{light-curve}\\footnote{\\url{https://github.com/light-curve/light-curve-python}} package, a time-series feature extraction tool developed as part of the SNAD pipeline~\\citep{2021MNRAS.502.5147M,lcpaper}. The resulting dataset contains 47 statistical features per object; the full list of features and the feature-extracted dataset are available on-line\\footnote{\\url{https://snad.space/features/}}.\n\nLSSTComCam covers a significantly smaller area than a single ZTF observation field of view of 47 square degrees. Therefore, from the ZTF fields overlapping with a corresponding LSSTComCam target field, we extracted objects likely to also be observed by Rubin. However, the employed LSSTComCam observation strategy involved a complex pattern of random translational and rotational dithers around each field\u201d"
+        }
+      ],
+      "would_change": true,
+      "execution_time_ms": 41.48602485656738,
+      "context_violations": [],
+      "suspicious_patterns": [],
+      "metadata": {
+        "document_size": 30327,
+        "line_count": 413,
+        "rule_version": "unknown"
+      }
+    }
+  ],
+  "performance_metrics": {
+    "avg_execution_time_ms": 27.9787540435791,
+    "max_execution_time_ms": 41.48602485656738,
+    "min_execution_time_ms": 12.862920761108398,
+    "avg_document_size": 10954.4,
+    "documents_with_issues": 3,
+    "documents_with_violations": 0,
+    "context_detector_metrics": {
+      "cache_size": 0,
+      "cache_hit_rate": 0,
+      "avg_detection_time_ms": 0,
+      "documents_processed": 0
+    }
+  },
+  "failure_clusters": []
+}

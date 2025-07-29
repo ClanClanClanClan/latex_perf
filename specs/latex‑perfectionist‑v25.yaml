@@ -1,0 +1,275 @@
+# ======================================================================
+#  latex‑perfectionist‑v25.yaml           (stand‑alone master specification)
+# ======================================================================
+
+metadata:
+  project           : "latex-perfectionist"
+  revision          : "v25"
+  previous_revision : "v24‑R3"
+  commit_id         : "TBD‑on‑tag"
+  spec_generated    : "2025‑08‑01T00:00:00Z"
+
+# ----------------------------------------------------------------------
+#  0 · Road‑map  (quality‑first, time‑flexible, Moon‑shots in v26)
+# ----------------------------------------------------------------------
+roadmap:
+  milestones:
+    - quarter: Q1‑Q2 Y1
+      name   : "L1 proof completion + Tactical optimiser"
+      deliverables:
+        - Layer‑1 proof set               # expand_fuel_insensitive, ...
+        - Tactical bundle T‑1 … T‑5
+        - Validator count ≥ 200
+      user_value: "blazing‑fast lexical + post‑expansion lint"
+
+    - quarter: Q3‑Q4 Y1
+      name   : "Layer‑2 PEG parser + 70 % validator coverage"
+      deliverables:
+        - L2 parser (PEG) + parse_sound proof
+        - 380 validators (Phase 1, 1½, 2)
+      user_value: "structural rules with formal backing"
+
+    - quarter: Q1‑Q2 Y2
+      name   : "Layer‑3 interpreter + Strategic bundle"
+      deliverables:
+        - L3 semantic core + interp_preserves_tokens proof
+        - Strategic bundle S‑1, S‑2
+        - 480 validators total
+      user_value: "live cross‑ref & complexity alarm"
+
+    - quarter: Q3‑Q4 Y2
+      name   : "Full v25 compliance"
+      deliverables:
+        - 542 validators proven
+        - Proof‑carrying plug‑in API (S‑3)
+        - GPU cold‑start prototype (S‑4) *optional‑proof*
+        - CI translation‑validation with pdfTeX oracle
+      user_value: "enterprise‑grade zero‑FP guarantee"
+
+    - quarter: Y3 (buffer)
+      name   : "Refinement & backlog"
+      deliverables:
+        - debt‑cleanup admits = 0
+        - performance p95 single‑char < 1 ms on 3 MB
+        - documentation & hardening
+      user_value: "rock‑solid v25 LTS"
+
+# ----------------------------------------------------------------------
+#  1 · LaTeX 𝜖 v25 contract  (unchanged ≃ v24‑R3 except notes)
+# ----------------------------------------------------------------------
+latex_epsilon:
+  classes          : { permitted: ["article","amsart","amsbook"]   }
+  packages         : { permitted: [...]                           }  # identical list
+  macros:
+    allowed_primitives : ["\\newcommand","\\renewcommand"]
+    constraints        :
+      - optional_args   = 0
+      - acyclic_bodies  = true
+      - no_conditionals = true
+      - no_loop_primitives = true
+    fuel_limits:
+      token_growth : 8_192
+      macro_calls  : 512
+  verbatim_handling:
+    token_type     : "TVerbatim"
+    lexer_behavior : "merge region into single token"
+  engine:
+    binary         : "pdfTeX 1.40.26"
+    container_sha256: "b68d…"
+  fallback:
+    on_perimeter_violation: "classic TeX compile"
+    ui_badge: "yellow_shield"
+
+# ----------------------------------------------------------------------
+#  2 · Verified layer stack  (v25 targets highlighted)
+# ----------------------------------------------------------------------
+layers:
+  - id: L0
+    name : "Lexer"
+    iface: "bytes → list<token>"
+    proofs:
+      - lexer_deterministic        # done
+      - incremental_equiv          # NEW (StreamChunk)
+  - id: L1
+    name : "Macro‑expander"
+    iface: "fuel × token list → option token list"
+    proofs:
+      - expand_fuel_insensitive    # to finish
+      - expand_terminates_acyclic
+      - expand_no_teof
+  - id: L2
+    name : "PEG parser"
+    iface: "token list → ast"
+    proofs:
+      - parse_sound
+  - id: L3
+    name : "Reference interpreter"
+    iface: "ast → semantic_state"
+    proofs:
+      - interp_preserves_tokens
+  - id: L4
+    name : "Validation engine"
+    iface: "semantic_state → list<issue>"
+    proofs: []                     # per‑rule proofs live in rules tree
+
+# ----------------------------------------------------------------------
+#  3 · Layer‑internal innovation files (NEW in v25)
+# ----------------------------------------------------------------------
+files:
+  coq/lexer/StreamChunk.v           : "lex one chunk" primitive
+  coq/lexer/StateCodec.v            : encode/decode lexer_state
+  coq/lexer/CheckpointTheory.v      : checkpoint semantics
+  coq/lexer/IncrementalCorrect.v    : line‑table incremental proof
+  coq/vsna/UVSNA.v                  : unified state machine (existing)
+  coq/vsna/UVSNA_CARC.v             : CARC classification (existing)
+  ocaml/runtime/incremental_lexer.ml: checkpoint cache + LRU
+  ocaml/runtime/hash_xx_simd.c      : SIMD xxHash (T‑3)
+  python/tests/fuzz_equiv.py        : 10 M edit fuzz tester
+
+# ----------------------------------------------------------------------
+#  4 · Validation phases & rule counts (unchanged numerically)
+# ----------------------------------------------------------------------
+phases:
+  - { idx: 1,   name: "Lexical",         rule_count: 72 }
+  - { idx: 1.5, name: "Post‑expansion",  rule_count: 80 }
+  - { idx: 2,   name: "Structural",      rule_count: 200 }
+  - { idx: 3,   name: "Semantic",        rule_count: 150 }
+  - { idx: 4,   name: "Style",           rule_count: 40 }
+
+# ----------------------------------------------------------------------
+#  5 · Proof inventory (v25)
+# ----------------------------------------------------------------------
+proof_targets:
+  mandatory:
+    - lexer_deterministic                # done
+    - incremental_equiv                  # StreamChunk proof
+    - encode_injective                   # appendix A
+    - expand_fuel_insensitive
+    - expand_terminates_acyclic
+    - expand_no_teof
+    - parse_sound
+    - interp_preserves_tokens
+    - line_algo_correct                  # IncrementalCorrect
+  optional:
+    - gpu_equiv_kernel                   # S‑4 research
+    - plugin_safety                      # S‑3 minimal lemma
+
+# ----------------------------------------------------------------------
+#  6 · Tactical bundle  (T‑1 … T‑5)  – timelines inside roadmap
+# ----------------------------------------------------------------------
+tactical_bundle:
+  T‑1: prehashed_shared_cache :
+        impl : ocaml/runtime/checkpoint_cache.ml
+        proof: none (runtime only)
+  T‑2: adaptive_chunk_size :
+        proof: StreamChunk variable‑length corollary (15 LOC)
+  T‑3: simd_xxhash_zero_copy :
+        proof: none (implementation detail)
+  T‑4: snapshot_diff_api :
+        interface: python/ide_adapter.py
+  T‑5: early_exit_delete :
+        lemma : delete_neutral_preserves_state  (12 LOC)
+
+# ----------------------------------------------------------------------
+#  7 · Strategic bundle (S‑1 … S‑4)
+# ----------------------------------------------------------------------
+strategic_bundle:
+  S‑1: macro_time_instrumentation :
+        coq_file : coq/expander/MacroTime.v
+        proof    : macro_time_transparent  (50 LOC)
+  S‑2: live_cross_reference_index :
+        ocaml    : runtime/live_index.ml
+        proof    : none (uses interpreter invariants)
+  S‑3: proof_carrying_plugin_api :
+        coq_api  : coq/plugin/PluginAPI.v
+        lemma    : plugin_safety           (60 LOC)
+  S‑4: gpu_cold_start_prototype :
+        status   : experimental, proof optional
+
+# ----------------------------------------------------------------------
+#  8 · Performance targets (v25 hardened)
+# ----------------------------------------------------------------------
+performance:
+  cold_start_3mb_doc_ms      : 300      # with adaptive chunk + cache
+  single_char_edit_ms_p95    : 1        # 3 MB doc
+  paragraph_paste_20_lines   : 24       # 3 MB doc
+  memory_footprint_3mb_doc   : "< 50 MB"
+  corpus_throughput_papers_s : "≥ 25"
+
+# ----------------------------------------------------------------------
+#  9 · CI pipeline  (free‑tier friendly)
+# ----------------------------------------------------------------------
+ci_pipeline:
+  image           : "alpine:3.19 + Coq 8.20 + OCaml 5.2"
+  steps:
+    - build_coq            : "dune build @check"
+    - run_fuzz_equiv       : "python3 python/tests/fuzz_equiv.py -n 2e6"
+    - run_corpus_subset    : "python3 corpus/run_subset.py --limit 200"
+    - bench                : "python3 python/tests/perf_bench.py --quick"
+    - pdftex_validation    : "docker run pdftex-oracle ... (nightly)"
+  long_running     : self‑hosted runner overnight (full corpus, long proofs)
+
+# ----------------------------------------------------------------------
+# 10 · Verification promise matrix (v25)
+# ----------------------------------------------------------------------
+verification_promises:
+  - property : "incremental‑vs‑batch equivalence"
+    guarantee: "Proof incremental_equiv"
+    layers   : ["L0"]
+  - property : "macro expansion fuel sound"
+    guarantee: "Proof expand_fuel_insensitive"
+    layers   : ["L1"]
+  - property : "post‑expansion validators 0 FP"
+    guarantee: "Per‑rule proof + macro fuel"
+    layers   : ["L0","L1"]
+  - property : "structural / semantic accuracy ≤ 0.1 % FP"
+    guarantee: "Proof parse_sound, interp_preserves_tokens"
+    layers   : ["L2","L3"]
+  - property : "plugin safety"
+    guarantee: "Proof plugin_safety (optional)"
+    layers   : ["PluginAPI"]
+
+# ----------------------------------------------------------------------
+# 11 · Risk & mitigation  (solo‑dev, high quality)
+# ----------------------------------------------------------------------
+risk_matrix:
+  - risk : "proof fatigue"
+    mitigation: "alternate coding / proving; use CoqHammer"
+  - risk : "Coq version drift"
+    mitigation: "pin toolchain; upgrade once per year with script"
+  - risk : "performance regression"
+    mitigation: "CI perf bench; fail on >10 % regression"
+  - risk : "pdfTeX oracle mismatch"
+    mitigation: "token normaliser; manual triage weekly"
+  - risk : "cache corruption"
+    mitigation: "downloadable 'batch cross‑check' button in IDE"
+
+# ----------------------------------------------------------------------
+# 12 · Appendix – Formal objects (full statements)
+# ----------------------------------------------------------------------
+appendix:
+  A_encode_injective:
+    statement : |
+      Lemma encode_injective :
+        ∀ s₁ s₂, encode_state s₁ = encode_state s₂ → s₁ = s₂.
+    proof_ref : "coq/lexer/StateCodec.v"
+
+  B_state_machine_diagram_ascii:
+    diagram  : |
+      (Initial)
+         │ read '\'
+         ▼
+      +---------+
+      | Command |──┐
+      +---------+  │  other char
+         │ \n     ▼
+         ▼     +-------+
+      Comment  | Text  |
+         ▲     +-------+
+         │ '%'          ▲
+         └──────────────┘
+      (Math mode sub‑graph elided – see doc/VSNA_state.pdf)
+
+# ======================================================================
+#  End of latex‑perfectionist‑v25.yaml
+# ======================================================================

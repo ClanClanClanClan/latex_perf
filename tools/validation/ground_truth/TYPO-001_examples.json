@@ -1,0 +1,114 @@
+{
+  "rule_id": "TYPO-001",
+  "created_date": "2025-07-09T21:49:12.149535",
+  "examples": [
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "This is a \"quoted text\" example.",
+      "expected_matches": [
+        {
+          "start": 10,
+          "end": 23,
+          "text": "\"quoted text\""
+        }
+      ],
+      "expected_fixes": [
+        {
+          "start": 10,
+          "end": 23,
+          "replacement": "\u201cquoted text\u201d"
+        }
+      ],
+      "context": "normal_text",
+      "description": "Simple straight quotes in normal text",
+      "should_match": true
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "This uses 'single quotes' in text.",
+      "expected_matches": [
+        {
+          "start": 10,
+          "end": 25,
+          "text": "'single quotes'"
+        }
+      ],
+      "expected_fixes": [
+        {
+          "start": 10,
+          "end": 25,
+          "replacement": "\u2018single quotes\u2019"
+        }
+      ],
+      "context": "normal_text",
+      "description": "Single straight quotes in normal text",
+      "should_match": true
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "\\begin{verbatim}\"quoted text\"\\end{verbatim}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "verbatim_environment",
+      "description": "Quotes inside verbatim environment",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "\\begin{equation}x = \"value\"\\end{equation}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "math_environment",
+      "description": "Quotes inside math environment",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "\\texttt{\"code\"}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "code_context",
+      "description": "Quotes in code formatting",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "\\LaTeX{} braces are {not quotes}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "latex_braces",
+      "description": "LaTeX braces should not be treated as quotes",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "Nested \"quotes with 'inner' quotes\"",
+      "expected_matches": [
+        {
+          "start": 7,
+          "end": 40,
+          "text": "\"quotes with 'inner' quotes\""
+        }
+      ],
+      "expected_fixes": [
+        {
+          "start": 7,
+          "end": 40,
+          "replacement": "\u201cquotes with \u2018inner\u2019 quotes\u201d"
+        }
+      ],
+      "context": "nested_quotes",
+      "description": "Nested quotes handling",
+      "should_match": true
+    },
+    {
+      "rule_id": "TYPO-001",
+      "input_text": "Text with \"unclosed quote at end",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "unclosed_quote",
+      "description": "Unclosed quotes should not match",
+      "should_match": false
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "arxiv_id": "2507.11295v1",
+  "title": "Multidimensional statistics for finite orbits of generalised continued\n  fractions",
+  "authors": [
+    "Val\u00e9rie Berth\u00e9",
+    "Stephen Cantrell",
+    "Jungwon Lee",
+    "Mark Pollicott"
+  ],
+  "categories": [
+    "math.DS"
+  ],
+  "abstract": "We statistically compare the relationships between frequencies of digits in\ncontinued fraction expansions of typical rational points in the unit interval\nand higher dimensional generalisations. This takes the form of a Large\nDeviation and Central Limit Theorem, including multidimensional results for\nrandom vectors. These results apply to classical multidimensional continued\nfraction transformations including Brun's algorithm and the Jacobi--Perron\nalgorithm, and more generally for maps satisfying mild contraction hypothesis\non the inverse branches. We prove in particular that the finite trajectories\ncapture the generic ergodic behaviour of infinite trajectories.",
+  "submitted_date": "2025-07-15T13:20:59Z",
+  "download_date": "2025-07-16T00:34:15.965762",
+  "tex_files": [
+    "MultidimCLT.tex"
+  ],
+  "main_tex_file": "MultidimCLT.tex",
+  "file_size": 89177,
+  "line_count": 1339,
+  "complexity_score": 73.1839,
+  "features": {
+    "line_count": 1339,
+    "char_count": 89174,
+    "word_count": 12364,
+    "file_size": 89177,
+    "tex_files": [
+      "MultidimCLT.tex"
+    ],
+    "main_tex_file": "MultidimCLT.tex",
+    "equations": 125,
+    "align_envs": 5,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 22,
+    "inline_math": 898,
+    "display_math": 23,
+    "bracket_math": 117,
+    "straight_quotes": 5,
+    "single_quotes": 83,
+    "double_dollars": 23,
+    "british_spellings": 9,
+    "american_spellings": 4,
+    "includes": 0,
+    "packages": 2,
+    "newcommands": 1,
+    "citations": 155,
+    "references": 45,
+    "long_lines": 387,
+    "unicode_chars": 3,
+    "comments": 81,
+    "complexity_score": 73.1839
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

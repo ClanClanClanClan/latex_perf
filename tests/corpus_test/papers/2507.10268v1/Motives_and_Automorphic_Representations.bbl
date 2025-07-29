@@ -1,0 +1,273 @@
+\begin{thebibliography}{10}
+
+\bibitem{Ander}
+{\sc Anderson, G.~W.}
+\newblock Cyclotomy and an extension of the {T}aniyama group.
+\newblock {\em Compositio Math. 57}, 2 (1986), 153--217.
+
+\bibitem{Andre1}
+{\sc Andr{\'e}, Y.}
+\newblock Une introduction aux motifs (motifs purs, motifs mixtes,
+  p{\'e}riodes).
+\newblock In {\em Panoramas et Synthèses\/} (2004).
+
+\bibitem{Ar2}
+{\sc Arthur, J.}
+\newblock A note on the automorphic {L}anglands group.
+\newblock vol.~45. 2002, pp.~466--482.
+\newblock Dedicated to Robert V.\ Moody.
+
+\bibitem{Ar3}
+{\sc Arthur, J.}
+\newblock {\em The endoscopic classification of representations}, vol.~61 of
+  {\em American Mathematical Society Colloquium Publications}.
+\newblock American Mathematical Society, Providence, RI, 2013.
+\newblock Orthogonal and symplectic groups.
+
+\bibitem{N14}
+{\sc Arthur, J.~G.}
+\newblock Structure on universal groups.
+\newblock In preparation.
+
+\bibitem{N1}
+{\sc Arthur, J.~G.}
+\newblock The work of {R}obert {L}anglands.
+\newblock In {\em The {A}bel {P}rize 2018--2022}. Springer, Cham, 2024,
+  pp.~31--230.
+
+\bibitem{N2}
+{\sc Arthur, J.~G.}
+\newblock On {U}niversal {G}alois {G}roups, 2025.
+\newblock To appear.
+
+\bibitem{AGIKMS}
+{\sc Atobe, H., Gan, W.~T., Ichino, A., Kaletha, T., Mínguez, A., and Shin,
+  S.~W.}
+\newblock Local intertwining relations and co-tempered $a$-packets of classical
+  groups, 2024.
+
+\bibitem{BSV}
+{\sc Ben-Zvi, D., Sakellaridis, Y., and Venkatesh, A.}
+\newblock Relative langlands duality, 2024.
+
+\bibitem{N4}
+{\sc Borel, A., and Harish-Chandra}.
+\newblock Arithmetic subgroups of algebraic groups.
+\newblock {\em Bull. Amer. Math. Soc. 67\/} (1961), 579--583.
+
+\bibitem{BJ}
+{\sc Borel, A., and Jaquet, H.}
+\newblock Automorphic forms and automorphic representations.
+\newblock In {\em Automorphic Forms, Representations and L-functions}, vol.~33
+  part 1 of {\em Symposium in Pure Mathematics}. American Mathematical Society,
+  1979, pp.~189--202.
+
+\bibitem{B2c}
+{\sc Brown, F.}
+\newblock Notes on motivic periods.
+\newblock {\em Commun. Number Theory Phys. 11}, 3 (2017), 557--655.
+
+\bibitem{BD}
+{\sc Brylinski, J.-L., and Deligne, P.}
+\newblock Central extensions of reductive groups by {$\bold K_2$}.
+\newblock {\em Publ. Math. Inst. Hautes \'Etudes Sci.}, 94 (2001), 5--85.
+
+\bibitem{BG}
+{\sc Buzzard, K., and Gee, T.}
+\newblock The conjectural connections between automorphic representations and
+  {G}alois representations.
+\newblock In {\em Automorphic forms and {G}alois representations. {V}ol. 1},
+  vol.~414 of {\em London Math. Soc. Lecture Note Ser.} Cambridge Univ. Press,
+  Cambridge, 2014, pp.~135--187.
+
+\bibitem{C}
+{\sc Clozel, L.}
+\newblock Motifs et formes automorphes: applications du principe de
+  fonctorialit\'e.
+\newblock In {\em Automorphic forms, {S}himura varieties, and {$L$}-functions,
+  {V}ol.\ {I} ({A}nn {A}rbor, {MI}, 1988)}, vol.~10 of {\em Perspect. Math.}
+  Academic Press, Boston, MA, 1990, pp.~77--159.
+
+\bibitem{CR}
+{\sc Clozel, L., and Rajan, C.}
+\newblock Solvable base change.
+\newblock {\em Journal für die reine und angewandte Mathematik\/} (06 2020).
+
+\bibitem{N15}
+{\sc Deligne, P.}
+\newblock Letter to {M}algrange, 1976.
+
+\bibitem{FJ}
+{\sc Fresan, J., and Jossen, P.}
+\newblock Exponential motives.
+\newblock preprint.
+
+\bibitem{GGW}
+{\sc Gan, W.~T., Gao, F., and Weissman, M.~H.}
+\newblock L-groups and the {L}anglands program for covering groups: a
+  historical introduction, 2017.
+
+\bibitem{N10}
+{\sc Godement, R., and Jacquet, H.}
+\newblock {\em Zeta functions of simple algebras}, vol.~Vol. 260 of {\em
+  Lecture Notes in Mathematics}.
+\newblock Springer-Verlag, Berlin-New York, 1972.
+
+\bibitem{G}
+{\sc Grothendieck, A.}
+\newblock Standard conjectures on algebraic cycles.
+\newblock In {\em Algebraic {G}eometry ({I}nternat. {C}olloq., {T}ata {I}nst.
+  {F}und. {R}es., {B}ombay, 1968)}, vol.~4 of {\em Tata Inst. Fundam. Res.
+  Stud. Math.} Tata Inst. Fund. Res., Bombay, 1969, pp.~193--199.
+
+\bibitem{N3}
+{\sc Harish-Chandra}.
+\newblock Automorphic forms on a semisimple {L}ie group.
+\newblock {\em Proc. Nat. Acad. Sci. U.S.A. 45\/} (1959), 570--573.
+
+\bibitem{N7}
+{\sc Hecke, E.}
+\newblock Eine neue {A}rt von {Z}etafunktionen und ihre {B}eziehungen zur
+  {V}erteilung der {P}rimzahlen.
+\newblock {\em Math. Z. 6}, 1-2 (1920), 11--51.
+
+\bibitem{N8}
+{\sc Hecke, E.}
+\newblock \"uber {M}odulfunktionen und die {D}irichletschen {R}eihen mit
+  {E}ulerscher {P}roduktentwicklung. {I}.
+\newblock {\em Math. Ann. 114}, 1 (1937), 1--28.
+
+\bibitem{H}
+{\sc Huber, A., and M\"uller-Stach, S.}
+\newblock {\em Periods and {N}ori motives}, vol.~65 of {\em Ergebnisse der
+  Mathematik und ihrer Grenzgebiete. 3. Folge. A Series of Modern Surveys in
+  Mathematics [Results in Mathematics and Related Areas. 3rd Series. A Series
+  of Modern Surveys in Mathematics]}.
+\newblock Springer, Cham, 2017.
+\newblock With contributions by Benjamin Friedrich and Jonas von Wangenheim.
+
+\bibitem{N9}
+{\sc Jacquet, H., and Langlands, R.~P.}
+\newblock {\em Automorphic forms on {${\rm GL}(2)$}}, vol.~Vol. 114 of {\em
+  Lecture Notes in Mathematics}.
+\newblock Springer-Verlag, Berlin-New York, 1970.
+
+\bibitem{KO}
+{\sc Kottwitz, R.~E.}
+\newblock Stable trace formula: cuspidal tempered terms.
+\newblock {\em Duke Math. J. 51}, 3 (1984), 611--650.
+
+\bibitem{N6}
+{\sc langlands, R.}
+\newblock Letter to {A}. {W}eil, 1967.
+
+\bibitem{L2}
+{\sc Langlands, R.~P.}
+\newblock Problems in the theory of automorphic forms.
+\newblock In {\em Lectures in {M}odern {A}nalysis and {A}pplications, {III}},
+  vol.~Vol. 170 of {\em Lecture Notes in Math.} Springer, Berlin-New York,
+  1970, pp.~18--61.
+
+\bibitem{N5}
+{\sc Langlands, R.~P.}
+\newblock {\em On the functional equations satisfied by {E}isenstein series},
+  vol.~Vol. 544 of {\em Lecture Notes in Mathematics}.
+\newblock Springer-Verlag, Berlin-New York, 1976.
+
+\bibitem{L4}
+{\sc Langlands, R.~P.}
+\newblock Automorphic representations, {S}himura varieties, and motives. {E}in
+  {M}\"archen.
+\newblock In {\em Automorphic forms, representations and {$L$}-functions
+  ({P}roc. {S}ympos. {P}ure {M}ath., {O}regon {S}tate {U}niv., {C}orvallis,
+  {O}re., 1977), {P}art 2}, vol.~XXXIII of {\em Proc. Sympos. Pure Math.} Amer.
+  Math. Soc., Providence, RI, 1979, pp.~205--246.
+
+\bibitem{L5}
+{\sc Langlands, R.~P.}
+\newblock On the notion of an automorphic representation: A supplement to the
+  proceeding paper.
+\newblock In {\em Automorphic forms, representations and {$L$}-functions
+  ({P}roc. {S}ympos. {P}ure {M}ath., {O}regon {S}tate {U}niv., {C}orvallis,
+  {O}re., 1977), {P}art 2}, vol.~XXXIII of {\em Proc. Sympos. Pure Math.} Amer.
+  Math. Soc., Providence, RI, 1979, pp.~203--208.
+
+\bibitem{N12}
+{\sc Langlands, R.~P.}
+\newblock {\em Les d\'ebuts d'une formule des traces stable}, vol.~13 of {\em
+  Publications Math\'ematiques de l'Universit\'e{} Paris VII [Mathematical
+  Publications of the University of Paris VII]}.
+\newblock Universit\'e{} de Paris VII, U.E.R. de Math\'ematiques, Paris, 1983.
+
+\bibitem{N13}
+{\sc Langlands, R.~P.}
+\newblock On the classification of irreducible representations of real
+  algebraic groups.
+\newblock In {\em Representation theory and harmonic analysis on semisimple
+  {L}ie groups}, vol.~31 of {\em Math. Surveys Monogr.} Amer. Math. Soc.,
+  Providence, RI, 1989, pp.~101--170.
+
+\bibitem{WL2}
+{\sc Li, W.-W.}
+\newblock Arthur packets for metaplectic groups, 2024.
+
+\bibitem{WL1}
+{\sc Li, W.-W.}
+\newblock Stabilization of the trace formula for metaplectic groups, 2024.
+
+\bibitem{Mo}
+{\sc Mok, C.~P.}
+\newblock Endoscopic classification of representations of quasi-split unitary
+  groups.
+\newblock {\em Mem. Amer. Math. Soc. 235}, 1108 (2015), vi+248.
+
+\bibitem{N}
+{\sc Nekov\'a\v~r, J.}
+\newblock Be\u ilinson's conjectures.
+\newblock In {\em Motives ({S}eattle, {WA}, 1991)}, vol.~55, Part 1 of {\em
+  Proc. Sympos. Pure Math.} Amer. Math. Soc., Providence, RI, 1994,
+  pp.~537--570.
+
+\bibitem{R}
+{\sc Saavedra~Rivano, N.}
+\newblock {\em Cat\'egories {T}annakiennes}, vol.~Vol. 265 of {\em Lecture
+  Notes in Mathematics}.
+\newblock Springer-Verlag, Berlin-New York, 1972.
+
+\bibitem{Se1}
+{\sc Serre, J.-P.}
+\newblock {\em Abelian {$l$}-adic representations and elliptic curves},
+  second~ed.
+\newblock Advanced Book Classics. Addison-Wesley Publishing Company, Advanced
+  Book Program, Redwood City, CA, 1989.
+\newblock With the collaboration of Willem Kuyk and John Labute.
+
+\bibitem{Se2}
+{\sc Serre, J.-P.}
+\newblock Propri\'et\'es conjecturales des groupes de {G}alois motiviques et
+  des repr\'esentations {$l$}-adiques.
+\newblock In {\em Motives ({S}eattle, {WA}, 1991)}, vol.~55, Part 1 of {\em
+  Proc. Sympos. Pure Math.} Amer. Math. Soc., Providence, RI, 1994,
+  pp.~377--400.
+
+\bibitem{T}
+{\sc Tate, J.}
+\newblock Number theoretic background.
+\newblock In {\em Automorphic forms, representations and {$L$}-functions
+  ({P}roc. {S}ympos. {P}ure {M}ath., {O}regon {S}tate {U}niv., {C}orvallis,
+  {O}re., 1977), {P}art 2}, vol.~XXXIII of {\em Proc. Sympos. Pure Math.} Amer.
+  Math. Soc., Providence, RI, 1979, pp.~3--26.
+
+\bibitem{N11}
+{\sc Weil, A.}
+\newblock Sur la th\'eorie du corps de classes.
+\newblock In {\em S\'eminaire {B}ourbaki, {V}ol.\ 2}. Soc. Math. France, Paris,
+  1995, pp.~Exp. No. 83, 313--315.
+
+\bibitem{MW}
+{\sc Weissman, M.~H.}
+\newblock A comparison of {L}-groups for covers of split reductive groups.
+\newblock No.~398. 2018, pp.~277--286.
+\newblock L-groups and the Langlands program for covering groups.
+
+\end{thebibliography}

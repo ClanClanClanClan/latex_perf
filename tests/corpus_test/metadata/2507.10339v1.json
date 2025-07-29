@@ -1,0 +1,73 @@
+{
+  "arxiv_id": "2507.10339v1",
+  "title": "Asymptotics of analytic torsion for congruence quotients of\n  $\\operatorname{SL}(n,\\mathbb{R})/\\operatorname{SO}(n)$",
+  "authors": [
+    "Tim Berland"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "In this paper we prove a sharpened asymptotic for the growth of analytic\ntorsion of congruence quotients of\n$\\operatorname{SL}(n,\\mathbb{R})/\\operatorname{SO}(n)$ in terms of the volume.\nThe result is based on a new bound on the trace of the heat kernel in this\nsetting, allowing control of the large time behaviour of certain orbital\nintegrals, as well as a careful analysis of error terms. The result requires\nthe existence of $\\lambda$-strongly acyclic representations, which we define\nand show exists in plenitude for any $\\lambda$. The motivation is possible\napplications to torsion in the cohomology of arithmetic groups, although the\nconnection in this setting is as of yet conjectural.",
+  "submitted_date": "2025-07-14T14:44:57Z",
+  "download_date": "2025-07-16T00:34:52.001716",
+  "tex_files": [
+    "7.conclusion.tex",
+    "_1.abstract.tex",
+    "1.definitions.tex",
+    "main.tex",
+    "5.asymptotics.tex",
+    "3.plancherel.tex",
+    "2.representations.tex",
+    "A.appendix.tex",
+    "4.traceformula.tex",
+    "0.introduction.tex"
+  ],
+  "main_tex_file": "main.tex",
+  "file_size": 3805,
+  "line_count": 149,
+  "complexity_score": 2.8148999999999997,
+  "features": {
+    "line_count": 149,
+    "char_count": 3805,
+    "word_count": 171,
+    "file_size": 3805,
+    "tex_files": [
+      "7.conclusion.tex",
+      "_1.abstract.tex",
+      "1.definitions.tex",
+      "main.tex",
+      "5.asymptotics.tex",
+      "3.plancherel.tex",
+      "2.representations.tex",
+      "A.appendix.tex",
+      "4.traceformula.tex",
+      "0.introduction.tex"
+    ],
+    "main_tex_file": "main.tex",
+    "equations": 0,
+    "align_envs": 0,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 2,
+    "display_math": 0,
+    "bracket_math": 0,
+    "straight_quotes": 0,
+    "single_quotes": 0,
+    "double_dollars": 0,
+    "british_spellings": 1,
+    "american_spellings": 0,
+    "includes": 9,
+    "packages": 3,
+    "newcommands": 50,
+    "citations": 0,
+    "references": 7,
+    "long_lines": 3,
+    "unicode_chars": 0,
+    "comments": 2,
+    "complexity_score": 2.8148999999999997
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

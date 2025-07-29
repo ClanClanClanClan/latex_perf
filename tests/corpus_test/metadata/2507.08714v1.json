@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.08714v1",
+  "title": "The Zsiflaw--Legeis theorem for arbitrary bases",
+  "authors": [
+    "Gautami Bhowmik",
+    "Yuta Suzuki"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "In this paper, we prove analogues of the Dirichlet theorem on arithmetic\nprogressions and the Siegel--Walfisz theorem for the digital reverses of primes\nfor arbitrary bases, which the authors obtained in the previous paper but only\nfor large bases. The proof is based on a generalization of the result of\nMartin--Mauduit--Rivat (2014) on the exponential sums over primes with the\nso-called ``digital'' functions.",
+  "submitted_date": "2025-07-11T16:15:38Z",
+  "download_date": "2025-07-16T00:35:48.221090",
+  "tex_files": [
+    "TelhciridArbitraryBaseArXiv.tex"
+  ],
+  "main_tex_file": "TelhciridArbitraryBaseArXiv.tex",
+  "file_size": 120047,
+  "line_count": 4884,
+  "complexity_score": 159.2384,
+  "features": {
+    "line_count": 4884,
+    "char_count": 120047,
+    "word_count": 9736,
+    "file_size": 120047,
+    "tex_files": [
+      "TelhciridArbitraryBaseArXiv.tex"
+    ],
+    "main_tex_file": "TelhciridArbitraryBaseArXiv.tex",
+    "equations": 260,
+    "align_envs": 43,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 31,
+    "inline_math": 605,
+    "display_math": 0,
+    "bracket_math": 157,
+    "straight_quotes": 1,
+    "single_quotes": 36,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 4,
+    "includes": 0,
+    "packages": 22,
+    "newcommands": 25,
+    "citations": 23,
+    "references": 155,
+    "long_lines": 155,
+    "unicode_chars": 0,
+    "comments": 235,
+    "complexity_score": 159.2384
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

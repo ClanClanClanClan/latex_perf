@@ -1,0 +1,9 @@
+\documentclass{article}
+\begin{document}
+% Test circular macro references - should be detected
+\newcommand{\cmdA}{\cmdB test}
+\newcommand{\cmdB}{\cmdA test}
+\section{Circular Reference Test}
+% \cmdA would cause infinite loop if not detected
+Normal content without circular calls.
+\end{document}

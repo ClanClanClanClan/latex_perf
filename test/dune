@@ -1,0 +1,4 @@
+; Test executable
+(executable
+ (name test_basic)
+ (libraries latex_perfectionist_core layer0 layer1))

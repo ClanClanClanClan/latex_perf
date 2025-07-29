@@ -1,0 +1,841 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%
+%%%%%%%%
+%%%%%%%%                                The Modularity of an Abelian Variety
+%%%%%%%%
+%%%%%%%%                                             by Jae-Hyun Yang
+%%%%%%%%
+%%%%%%%%                                           first draft: June 2024
+%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\documentclass[11pt]{amsart}
+%\usepackage{amsmath,amsfonts,amssymb,mathrsfs}
+\usepackage{amssymb,mathrsfs}
+%\usepackage[draft]{Mytheorems}
+%\usepackage{Mytheorems}
+\setlength{\unitlength}{1cm} \setlength{\topmargin}{0.1in}
+\setlength{\textheight}{8.4in} \setlength{\textwidth}{6in}
+\setlength{\oddsidemargin}{0.1in}
+\setlength{\evensidemargin}{0.1in}
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{problem}[theorem]{Problem}
+%\newtheorem{proof}{Proof}[section]
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\renewcommand{\thetheorem}{\thesection.\arabic{theorem}}
+
+
+
+
+
+
+\title{The Modularity of an Abelian Variety}
+
+
+\begin{document}
+
+
+\author{Jae-Hyun Yang}
+%\date{June 13 (Thursday), 2024}
+
+
+\address{Yang Institute for Advanced Study
+%\newline\indent
+%Hyundai 41 Tower, No. 1905
+%\newline\indent
+%293 Mokdongdong-ro, Yangcheon-gu
+\newline\indent
+Seoul 07989, Korea
+\vskip 2mm
+and
+\vskip 2mm
+%}
+%\address{
+Department of Mathematics
+\newline\indent
+Inha University
+\newline\indent
+Incheon 22212, Korea}
+
+\email{jhyang@inha.ac.kr\ \ or\ \ yangsiegel@naver.com}
+
+
+
+
+
+
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{lemma}{Lemma}[section]
+%\newtheorem{proposition}{Proposition}[section]
+%\newtheorem{remark}{Remark}[section]
+%\newtheorem{definition}{Definition}[section]
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\renewcommand{\thetheorem}{\thesection.\arabic{theorem}}
+\renewcommand{\thelemma}{\thesection.\arabic{lemma}}
+\newcommand{\BR}{\mathbb R}
+\newcommand{\BQ}{\mathbb Q}
+\newcommand{\BF}{\mathbb F}
+\newcommand{\BT}{\mathbb T}
+\newcommand{\BM}{\mathbb M}
+\newcommand{\bn}{\bf n}
+\def\charf {\mbox{{\text 1}\kern-.24em {\text l}}}
+\newcommand{\BC}{\mathbb C}
+\newcommand{\BZ}{\mathbb Z}
+
+\thanks{\noindent{Subject Classification:} Primary 14Kxx, 14G35, 11F46, 11F80\\
+\indent Keywords and phrases: modularity, abelian varieties, Siegel modular variety, Siegel modular forms,
+Galois
+\newline \indent
+representation, zeta functions}
+
+
+
+
+
+
+\begin{abstract}
+We introduce the concept of the modularity of an abelian variety defined over the rational number field
+extending the modularity of an elliptic curve. We discuss the modularity of an abelian variety over $\BQ$. We conjecture that a simple abelian variety over $\BQ$ is modular. The detailed article will appear later.
+\end{abstract}
+
+
+
+\maketitle
+
+
+%\tableofcontents
+\newcommand\tr{\triangleright}
+\newcommand\al{\alpha}
+\newcommand\be{\beta}
+\newcommand\g{\gamma}
+\newcommand\gh{\Cal G^J}
+\newcommand\G{\Gamma}
+\newcommand\de{\delta}
+\newcommand\e{\epsilon}
+\newcommand\z{\zeta}
+%\newcommand\th{\theta}
+\newcommand\vth{\vartheta}
+\newcommand\vp{\varphi}
+%\newcommand\r{\rho}
+\newcommand\om{\omega}
+\newcommand\p{\pi}
+\newcommand\la{\lambda}
+\newcommand\lb{\lbrace}
+\newcommand\lk{\lbrack}
+\newcommand\rb{\rbrace}
+\newcommand\rk{\rbrack}
+\newcommand\s{\sigma}
+\newcommand\w{\wedge}
+\newcommand\fgj{{\frak g}^J}
+\newcommand\lrt{\longrightarrow}
+\newcommand\lmt{\longmapsto}
+\newcommand\lmk{(\lambda,\mu,\kappa)}
+\newcommand\Om{\Omega}
+\newcommand\ka{\kappa}
+\newcommand\ba{\backslash}
+\newcommand\ph{\phi}
+\newcommand\M{{\Cal M}}
+\newcommand\bA{\bold A}
+\newcommand\bH{\bold H}
+\newcommand\D{\Delta}
+
+\newcommand\Hom{\text{Hom}}
+\newcommand\cP{\Cal P}
+
+\newcommand\cH{\Cal H}
+
+\newcommand\pa{\partial}
+
+\newcommand\pis{\pi i \sigma}
+\newcommand\sd{\,\,{\vartriangleright}\kern -1.0ex{<}\,}
+\newcommand\wt{\widetilde}
+\newcommand\fg{\frak g}
+\newcommand\fk{\frak k}
+\newcommand\fp{\frak p}
+\newcommand\fs{\frak s}
+\newcommand\fh{\frak h}
+\newcommand\Cal{\mathcal}
+
+\newcommand\fn{{\frak n}}
+\newcommand\fa{{\frak a}}
+\newcommand\fm{{\frak m}}
+\newcommand\fq{{\frak q}}
+\newcommand\CP{{\mathcal P}_n}
+\newcommand\Hnm{{\mathbb H}_n \times {\mathbb C}^{(m,n)}}
+\newcommand\BD{\mathbb D}
+\newcommand\BH{\mathbb H}
+\newcommand\CCF{{\mathcal F}_n}
+\newcommand\CM{{\mathcal M}}
+\newcommand\Gnm{\Gamma_{n,m}}
+%\newcommand\Hgh{{\mathbb H}_{g,h}}
+\newcommand\Cmn{{\mathbb C}^{(m,n)}}
+\newcommand\Yd{{{\partial}\over {\partial Y}}}
+\newcommand\Vd{{{\partial}\over {\partial V}}}
+
+\newcommand\Ys{Y^{\ast}}
+\newcommand\Vs{V^{\ast}}
+\newcommand\LO{L_{\Omega}}
+\newcommand\fac{{\frak a}_{\mathbb C}^{\ast}}
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%                                        Section 1. The Modularity of an Elliptic Curve
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{section}{{\bf The Modularity of an Elliptic Curve}}
+\setcounter{equation}{0}
+\vskip 3mm
+We set $\G_1:=SL(2,\BZ)$. For a positive integer $N$, we let $\G (N),\ \G_1 (N)$ and
+$\G_0 (N)$ be the congruence subgroups of $\G_1$ such that $\G (N)\subset \G_1(N)
+\subset \G_0 (N)\subset \G_1.$ We refer to \cite[pp.\,13--14,\,p.\,21]{Di-S}
+for the precise definitions and properties of $\G (N),\ \G_1 (N)$ and $\G_0 (N)$.
+Let $\BH_1$ be the Poincar{\'e} upper half plance. The quotient
+\begin{equation*}
+  Y_1(N):=\G_1(N)\ba \BH_1 \ ({\rm resp}.\  Y_0(N):=\G_0(N)\ba \BH_1)
+\end{equation*}
+be the complex manifold which has a natural model $Y_1(N)/\BQ$ (resp. $Y_0(N)/\BQ$).
+We let $X_1(N)$ (resp. $X_0(N)$) be the smooth projective curve which contains
+$Y_1(N)$ (resp. $Y_0(N)$) as a dense Zariski open subset (cf.\,see \cite[pp.\,45--60]{Di-S}).
+
+\vskip 3mm
+Let $S_k(N)$ be the space of cusp forms of weight $k\geq 1$ and level $N\geq 1$.
+Here $k$ and $N$ be positive integers. We recall that
+if $f\in S_k(N)$, it satisfies the following properties\,:
+\vskip 2mm
+(C1) $f((a\tau+b)(c\tau+d)^{-1})=(c\tau+d)^k f(\tau)$ for all
+$\begin{pmatrix}
+   a & b \\
+   c & d
+ \end{pmatrix}\in \G_1(N)$ and $\tau\in \BH_1$;
+\vskip 2mm
+(C2) $| f(\tau)|^2 ({\rm Im}\,\tau)^k$ is bounded in $\BH_1$ and
+\vskip 2mm
+(C3) the Fourier expansion of $f(\tau)$ is given by
+$$ f(\tau)=\sum_{n=1}^{\infty} a_n (f)\, q^n,\quad {\rm where}\ q=e^{2\pi i\tau}.$$
+
+We define the $L$-series of $f\in S_k(N)$ to be
+$$ L(f,s):=\sum_{n=1}^{\infty} a_n (f)\,n^{-s}.$$
+
+\vskip 2mm
+For each prime $p\!\not| N$, we recall that the Hecke operator $T_p:S_k(N)\lrt S_k(N)$ is
+defined by
+\begin{equation*}
+  (T_pf)(\tau)=p^{-1}\sum_{i=0}^{p-1} f\left(\frac{\tau+i}{p}\right)
+  +p^{k-1} f\left(\frac{ap\tau+b}{cp\tau+d}\right), \quad f\in S_k (N)
+\end{equation*}
+for any $\begin{pmatrix}
+   a & b \\
+   c & d
+ \end{pmatrix}\in \G_1$ with $c\equiv 0\,({\rm mod}\,N)$ and $d\equiv p\,({\rm mod}\,N)$.
+We refer to \cite[p.\,844]{BCDT} or \cite[pp.\,170--171]{Di-S} for more detail. The Hecke
+operators $T_p\,(p\!\!\not| N)$ can be simultaneously diagonalized on $S_k (N)$ and
+a simultaneous eigenvector a {\it Hecke\ eigenform} or simply an {\sf eigenform}.
+
+\vskip 2mm
+Let $\lambda$ be a place of the algebraic closure $\bar \BQ$ of $\BQ$ in $\BC$ lying over
+a rational integer $\ell$ and ${\bar \BQ}_\lambda$ denote the algebraic closure of $\BQ_\ell$
+via $\lambda$. Let $G_\BQ:={\rm Gal}({\bar \BQ}/\BQ)$ be the absolute Galois group of $\BQ$.
+It is well known that if $f\in S_k (N)$ is a normalized eigenform with
+$a_1(f)=1$, then there exists a unique continuous irreducible Galois representation
+\begin{equation*}
+  \rho_{f,\lambda}:G_\BQ\lrt GL(2,{\bar \BQ}_\lambda)
+\end{equation*}
+such that $\rho_{f,\lambda}$ is unramified at $p$ for all primes $p\!\!\not| \,\ell N$ and
+\begin{equation*}
+  {\rm Tr}\left(\rho_{f,\lambda}({\rm Frob}_p)\right)= a_p(f)\quad {\rm for\ any\ prime}\
+p\!\!\not| \, \ell N.
+\end{equation*}
+The existence of $\rho_{f,\lambda}$ is due to Shimura if $k=2$ \cite{Sh2}, due to Deligne if
+$k>2$ \cite{De} and due to Deligne and Serre if $k=1$ \cite{D-S}. We see that $\rho_{f,\lambda}$ is
+odd in the sense that $\det \rho_{f,\lambda}$ of complex conjugation is -1. Moreover
+$\rho_{f,\lambda}$ is potentially semi-stable at $\ell$ in the sense of Fontaine \cite{F-M}.
+
+\vskip 3mm
+We may choose a conjugate of $\rho_{f,\lambda}$ which is valued in
+$GL(2,{\mathcal O}_{\bar{\BQ}_\lambda})$ and reducing modulo the maximal ideal and
+semi-simplyfing yields an irreducible continuous representation
+\begin{equation*}
+{\overline \rho}_{f,\lambda}:G_\BQ\lrt GL(2,\overline{\mathbb F}_\ell)
+\end{equation*}
+which, up to isomorphism, does not depend on the choice of conjugate of $\rho_{f,\lambda}$.
+
+\begin{definition}\label{def:1.1}
+Let
+$$\rho: G_\BQ\lrt GL(2,\bar{\BQ}_\ell)$$
+be an irreducible continuous Galois representation which is unramified outside finitely
+many primes and for which the restriction of $\rho$ to a decomposition group at $\ell$ is
+potentially semi-stable at $\ell$ in the sense of Fontaine. Then $\rho$ is called
+${\sf modular}$ if $\rho$ is equivalent to $\rho_{f,\lambda}$
+(denoted $\rho\sim \rho_{f,\lambda}$) for some normalized eigenform $f$ and some place
+$\lambda | \ell.$
+\end{definition}
+
+\begin{definition}\label{1.2}
+Let
+$${\overline\rho}: G_\BQ\lrt GL(2,\overline{\mathbb F}_\ell)$$
+be a two-dimensional irreducible continuous representation of $G_\BQ$.
+Then ${\overline\rho}$ is called
+${\sf modular}$ if ${\overline\rho}\sim {\overline\rho}_{f,\lambda}$
+for some normalized eigenform $f$ and some place $\lambda | \ell.$
+\end{definition}
+
+\vskip 3mm
+Let $E$ be an elliptic curve over $\BQ$. We define
+\begin{equation*}
+  a_p(E):=p+1-|E({\mathbb F}_p)| \quad {\rm for\ a\ prime}\ p.
+\end{equation*}
+The $L$-function $L(E,s)$ of $E$ is defined by the product of the local $L$-factors
+\begin{equation*}
+  L(E,s):=\prod_{p|D}\left( \frac{1}{1-a_p(E)p^{-s}}\right)
+  \prod_{p\not| D}\left( \frac{1}{1-a_p(E)\,p^{-s}+p^{1-2s}}\right).
+\end{equation*}
+Then $L(E,s)$ converges absolutely for ${\rm Re}\,s> \frac{3}{2}$ and extends to
+an entire function by \cite{BCDT}.
+\begin{definition}\label{1.3}
+An elliptic curve $E$ over $\BQ$ is called
+${\sf modular}$ if there exists a Hecke eigenform $f\in S_2(N)$ such that
+\begin{equation*}
+  L(E,s)=L(f,s).
+\end{equation*}
+\end{definition}
+Let $E$ be an elliptic curve over $\BQ$ with its conductor $N(E)$.
+Let $$\rho_{E,\ell}:G_\BQ \lrt GL(2,\bar{\BQ}_\ell)$$
+be the $\ell$-adic representation of $G_\BQ$ with the Tate module
+$T_\ell (E)$ as its representation space. Let
+\begin{equation*}
+  J_1(N):=\Omega^1(X_1(N))^{\vee}/H_1(X_1(N),\BZ)\cong S_2(\G_1(N))^{\vee}/H_1(X_1(N),\BZ)
+\end{equation*}
+be the Jacobian variety of the modular curve $X_1(N)$. Here $\Omega^1(X_1(N))$
+denotes the complex vector space of holomorphic 1-forms on $X_1(N)$ and $W^{\vee}$
+denotes the dual space of a complex vector space $W$.
+It is known that the following statements are equivalent\,:
+\vskip 2mm
+(a) $E$ is modular.
+\vskip 2mm
+(b) There is a non-constant holomorphic mapping $X_1(N)\lrt E(\BC)$ for some
+positive \par
+\ \ \ \ \ \ integer $N$.
+\vskip 2mm
+(c) There is a non-constant holomorphic mapping $J_1(N)\lrt E(\BC)$ for some positive \par
+\ \ \ \ \ \,integer $N$.
+\vskip 2mm
+(d) $\rho_{E,\ell}$ is modular for a prime $\ell$.
+
+\vskip 3mm
+The above statements have been called the Taniyama-Shimura conjecture. We refer to
+\cite{Sh3} for the historical story of this conjecture.
+The implication (a)\,$\Longrightarrow$\,(b) follows from a construction of Shimura\,\cite{Sh2}
+and a theorem of Faltings\,\cite{F}. The implication (b)\,$\Longrightarrow$\,(d) is due to
+Mazur\,\cite{MA}. The implication (d)\,$\Longrightarrow$\,(a) follows from a theorem of
+Carayol\,\cite{C}. The implication (c)\,$\Longrightarrow$\,(b) is obvious. Wiles\,\cite{TW,W}
+proved that a semistable eliptic curve over $\BQ$ is modular by proving the statement (d).
+Thereafter Breuil, Conrad, Diamond and Taylor\,\cite{BCDT} proved that every eliptic curve
+over $\BQ$ is modular.
+
+\vskip 3mm
+Serre \cite{S} conjectured the following\,:
+\vskip 2mm\noindent
+{\bf Serre's\ Modularity\ Conjecture\,:} Let $\overline{\rho}:G_\BQ\lrt GL(2,{\mathbb F})$ be a two-dimensional
+absolutely irreducible, continuous, odd representation of $G_\BQ$. Here $\mathbb F$ is a finite
+field of characteristic $p$. Then $\overline{\rho}$ is modular, i.e., arises from (with respect to
+some fixed embedding $\imath:\overline{\BQ}\hookrightarrow \overline{\BQ_p})$ a newform $f$ of
+some weight $k\geq 2$ and level $N$ prime to $p$.
+
+\vskip 3mm
+In 2009, Khare and Wintenberger \cite{K-W1, K-W2} proved that Serre's Modularity Conjecture is true.
+
+
+
+
+
+\end{section}
+
+\vskip 10mm
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%              Section 2. The Modularity of an Abelian Variety
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{section}{{\bf The Modularity of an Abelian Variety}}
+\setcounter{equation}{0}
+\vskip 2mm
+Let $G:=Sp(2g,\BR)$ and $K=U(g).$
+Let
+$$\BH_g:=\{\,\Omega\in\BC^{(g,g)}\,|\ \Omega=\,{}^t\Omega,\ \,{\rm{Im}}\,\Omega>0\ \}$$
+be the Siegel upper half plane of degree $g$.
+Then $G$ acts on ${\mathbb H}_g$ transitively by
+
+\begin{equation*}
+  \alpha\cdot \Omega=(A\Omega+B)(C\Omega+D)^{-1},
+\end{equation*}
+where $\alpha=\begin{pmatrix}
+           A & B \\
+           C & D
+         \end{pmatrix}\in G$ and $\Omega\in \BH_g.$
+The stabilizer of the action (2.1) at $iI_g$ is
+
+\begin{equation*}
+  \left\{ \begin{pmatrix} \,A & B \\ -B & A \end{pmatrix} \Big| \ A+iB\in U(g)\,\right\}
+  \cong U(g).
+\end{equation*}
+Thus we get the biholomorphic map
+\begin{equation*}
+G/K \lrt \BH_g, \qquad \alpha K \mapsto \alpha\!\cdot\! iI_g,  \quad \alpha\in G.
+\end{equation*}
+It is known that $\BH_g$ is an Einstein-K{\"a}hler Hermitian symmetric space.
+
+\vskip 3mm
+Let $\G_g:=Sp(2g,\BZ)$ be the Siegel modular group of degree $g$.
+For a positive integer $N$, we let
+\begin{equation*}
+  \G_g(N):=\left\{ \g\in \G_g\,|\ \g\equiv I_{2g}\ ({\rm{mod}}\,N)\,\right\}
+\end{equation*}
+be the the principal congruence subgroup of $\G_g$ of level $N$. Let
+\begin{equation*}
+  \G_{g,0}(N):=\left\{ \g\in \G_g\,\big|\ \g=\begin{pmatrix}
+                                       A & B \\
+                                       C & D
+                                     \end{pmatrix},\quad C\equiv 0\ ({\rm{mod}}\,N)\,\right\}
+\end{equation*}
+and
+\begin{equation*}
+  \G_{g,1}(N):=\left\{ \g\in \G_g\,\big| \
+  \g=\begin{pmatrix}
+      A & B \\
+      C & D
+     \end{pmatrix}\equiv \begin{pmatrix}
+      I_g & * \\
+      0 & I_g
+     \end{pmatrix}\ ({\rm{mod}}\,N)\,\right\}
+\end{equation*}
+be the congruence subgroups of Level $N$. Then we have the relation
+\begin{equation*}
+  \G_g (N)\subset \G_{g,1} (N)\subset \G_{g,0} (N)\subset \G_g.
+\end{equation*}
+
+\begin{definition}\label{def (2.1)}
+Let $\G$ be a congruence subgroup of $\G_g$ and let $k$ be a nonnegative integer $k$.
+A function $F:\BH_g\lrt \BC$ is called a
+$\sf{Siegel\ modular\ form}$ of degree $g$ and weight $k$ with respect to $\G$
+if it satisfies the following conditions\,:
+\vskip 2mm
+{\sf{(S1)}} $F(\Om)$ is holomorphic on $\BH_g$\,;
+\vskip 2mm
+{\sf{(S2)}} $F(\g\cdot \Om)=(C\Om+D)^k F(\Om)$ \ \ for all
+$\g=\begin{pmatrix}
+      A & B \\
+      C & D
+     \end{pmatrix}\in \G$ and $\Om\in \BH_g$\,;
+\vskip 2mm
+{\sf{(S3)}} $F(\Om)$ is bounded in any domain $Y\geq Y_0 > 0$ in the case $g=1$.
+\end{definition}
+We denote the space of all Sigel modular forms of degree $g$ and weight $k$
+with respect to $\G$ by $[\G,k]$.
+\vskip 2mm
+We define the so-called $\sf{Siegel\ operator}$
+\begin{equation*}
+  \Phi_g: [\G_g,k]\lrt [\G_{g-1},k]
+\end{equation*}
+by
+\begin{equation*}
+  (\Phi_g(F))(\Om_1):=\lim_{t\lrt\infty}
+  F  \begin{pmatrix}
+      \Om_1 & 0 \\
+      0 & i\,t
+     \end{pmatrix},\quad \Om_1\in \BH_{g-1}.
+\end{equation*}
+Then $\Phi_g$ is a well-defined linear mapping (cf,\,\cite[pp.\,187--189]{M}).
+A Siegel modular form $F\in [\G_g,k]$ is called a $\sf{Siegel\ cusp\ form}$ if
+$\Phi_g(F)=0$\,(cf.\,\cite[p.\,198]{M}). We denote by $[\G_g,k]_0$
+the space of all Siegel cusp forms in $[\G_g,k]$.
+
+\vskip 3mm
+Let $\G$ be a congruence subgroup of $\G_g$. If $F\in [\G,k]$, then $F$ has
+a Fourier expansion
+\begin{equation*}
+  F(\Om)=\sum_{T} a(T;F)\,e^{2\pi i\,{\rm Tr}(T\Om)},
+\end{equation*}
+where $T$ runs through all $g\times g$ half-integral semi-positive symmetric matrices.
+Here ${\rm Tr}(M)$ denotes the trace of a square matrix $M$.
+Following the Hecke's method, Maass\,\cite[pp.\,202--210]{M} associated with
+$F(\Om)$ the Dirichlet series
+\begin{equation*}
+D(F,s):=\sum_{\{ T \}}\frac{a(T;F)}{\varepsilon (T)}\,(\det T)^{-s},
+\end{equation*}
+where the summation indicates that $T$ runs through a complete set of representatives
+of the sets
+$$
+\left\{ \, T[U]\,|\ U \ \rm{unimodular}\,\right\}, \ T>0
+$$
+and $\varepsilon (T)$ denotes the number of unimodular matrices $U$ which satisfy
+the equation $T[U]=T.$ We note that the numbers $\varepsilon (T)$ are finite.
+
+\begin{definition}\label{def:2.2}
+Let $F$ be a nonzero Siegel Hecke eigenform in $[\G_g,k]_0$. Let
+$\alpha_{p,0},\alpha_{p,1},\cdots,\alpha_{p,g}$ be the $p$-Satake parameters of $F$ at
+a prime $p$. We define the $\sf{local\ spinor\ zeta\ function}$ $Z_{F,p}(t)$ of $F$ at $p$
+by
+$$
+Z_{F,p}(t):=(1-\alpha_{p,0}\,t)\sum_{r=1}^g\sum_{1\leq i_1<\cdots < i_r\leq g}
+(1-\alpha_{p,0}\alpha_{p,i_1}\cdots\alpha_{p,i_r}\,t).
+$$
+The $\sf{spinor\ zeta\ function}$ $Z_{F}(s)$ of $F$ is defined to be the following function
+\begin{equation*}
+Z_{F}(s):=\sum_{p:{\rm prime}} Z_{F,p}(p^{-s})^{-1},\quad {\rm Re}\,s \gg 0.
+\end{equation*}
+Secondly one has the so-called $\sf{standard\ zeta\ function}$ $D_{F}(s)$ of a Siegel Hecke
+eigenform $F$ in $[\G_g,k]_0$ defined by
+\begin{equation*}
+D_{F}(s):=\sum_{p:{\rm prime}} D_{F,p}(p^{-s})^{-1},\quad {\rm Re}\,s \gg 0,
+\end{equation*}
+where
+$$
+D_{F,p}(t)=(1-t) \sum_{i=1}^g (1-\alpha_{p,i}\,t)(1-\alpha_{p,i}^{-1}\,t).
+$$
+We refer to \cite[p.\,249]{Y}.
+\end{definition}
+
+\begin{remark}\label{rk:2.3}
+(1) If $g=1$, the spinor zeta function $Z_f(s)$ of a Hecke eigenform $f$ in $S_k(\G_1)$
+is nothing but the Hecke $L$-function $L(f,s)$ of $f$.
+\vskip 2mm\noindent
+(2) If $g=1$, the standard zeta function $D_f(s)$ of a Hecke eigenform
+$f(\tau)=\sum_{n=1}^{\infty} a(n)\,e^{2\pi i n\tau}$ in $S_k(\G_1)$ has the following equation
+$$
+D_f(s-k+1)=\sum_{p:{\rm prime}}(1+p^{k-s-1})^{-1}\cdot\sum_{n=1}^{\infty} a(n^2)\,n^{-s}.
+$$
+\end{remark}
+
+\vskip 3mm
+Let $A$ be a $g$-dimensional simple abelian variety defined over $\BQ$. For a prime $\ell$, we set
+\begin{equation*}
+  A[\ell^n]:=\{ \, x\in A(\overline{\BQ})\,|\ \ell^n\cdot x=0\,\}.
+\end{equation*}
+Then $A[\ell^n]\cong (\BZ/\ell^n \BZ)^g\times (\BZ/\ell^n \BZ)^g$\,(cf.\,\cite{MU}). Then the
+Tate module of $A$ is given by
+\begin{equation*}
+  T_{\ell}(A):=\lim_{\longleftarrow} A[\ell^n]\cong \BZ_\ell^g\times \BZ_\ell^g
+  \cong \BZ_{\ell}^{2g}.
+\end{equation*}
+Therefore we have the $2g$-dimensional $\ell$-adic Galois representation of $G_\BQ$
+\begin{equation*}
+\rho_{A,\ell}:G_\BQ\lrt GL(2g,\BZ_\ell)\subset GL(2g,\BQ_\ell).
+\end{equation*}
+
+\begin{definition}\label{def:2.4}
+A $2g$-dimensional $\ell$-adic Galois representation $\rho$ of $G_\BQ$ given by
+$$
+\rho:G_\BQ\lrt GL(2g,\BZ_\ell)\subset GL(2g,\BQ_\ell)
+$$
+is called $\sf{modular}$ if there is a Siegel Hecke eigenform $F(\Om)\in [\G_{g,0}(N), g+1]_0$
+of weight $g+1$ with respect to $\G_{g,0}(N)$ such that
+\begin{equation*}
+  {\rm Tr}\left( \rho({\rm Frob}_p)\right)=a(pI_g;F)\quad {\rm and}\quad
+  \det \left( \rho({\rm Frob}_p)\right)=p^g\quad {\rm for\ any\ prime}\ p\not|\, \ell N,
+\end{equation*}
+where
+\begin{equation*}
+  F(\Om)=\sum_{T} a(T;F)\,e^{2\pi i\,{\rm Tr}(T\Om)}
+\end{equation*}
+is a Fourier expansion of $F(\Om)$.
+\end{definition}
+
+\begin{definition}\label{def:2.5}
+Let $A$ be a $g$-dimensional simple abelian variety defined over $\BQ$ and let $\ell$ be a prime.
+ For a prime $p$, we let
+\begin{equation*}
+  L_p(A,s):=\left\{ \det\left( I_{2g}-p^{-s}\cdot
+  \rho_{A,\ell}({\rm Frob}_p)\big|_{T_{\ell}(A)}\right)\right\}^{-1}
+\end{equation*}
+be the local $L$-function of $A$ at $p$. We define the $L$-function $L(A,s)$ of $A$ by
+\begin{equation*}
+  L(A,s)=\prod_{p:\,{\rm prime}}L_p(A,s).
+\end{equation*}
+\end{definition}
+
+\begin{definition}\label{def:2.6}
+Let $A$ be a $g$-dimensional simple abelian variety defined over $\BQ$.
+$A$ is called $\sf{modular}$ if there exists a Siegel Hecke eigenform
+$F(\Om)\in [\G_{g,0}(N), g+1]_0$
+of weight $g+1$ with respect to $\G_{g,0}(N)$ such that
+\begin{equation*}
+  L(A,s)=D(F,s),\ Z_F(s)\ {\rm or}\ D_F(s).
+\end{equation*}
+\end{definition}
+\vskip 3mm
+For two positive integers $g$ and $N$, we let
+\begin{equation*}
+ {\mathcal A}_{g,0}(N):=\G_{g,0}(N)\ba \BH_g
+\end{equation*}
+be the Siegel modular variety of level structure $N$ and let
+${\mathcal A}_{g,0}^{\rm tor}(N)$ be a smooth toroidal compactification of
+${\mathcal A}_{g,0}(N)$\,(cf.\,\cite{AMRT, F-C}). We denote by
+\begin{equation*}
+ \Omega^i \left( {\mathcal A}_{g,0}^{\rm tor}(N)\right), \quad 0\leq i\leq \frac{g(g+1)}{2}
+\end{equation*}
+the complex vector space of holomorphic $i$-forms on ${\mathcal A}_{g,0}^{\rm tor}(N)$.
+The Jacobian variety ${\rm Jac}\left( {\mathcal A}_{g,0}^{\rm tor}(N) \right)$ of
+${\mathcal A}_{g,0}^{\rm tor}(N)$
+is defined to be the abelian variety
+\begin{equation}\label{(2.1)}
+ {{\rm Jac}}({\mathcal A}_{g,0}^{\rm tor}(N)):=\Omega^{\nu}
+ \left( {\mathcal A}_{g,0}^{\rm tor}(N) \right)^{\vee}
+ / H_\nu \left( {\mathcal A}_{g,0}^{\rm tor}(N),\BZ \right),\qquad \nu=\frac{g(g+1)}{2}.
+\end{equation}
+The geometric genus of ${\mathcal A}_{g,0}^{\rm tor}(N)$ is the dimension of
+the Jacobian variety ${\rm Jac}\left( {\mathcal A}_{g,0}^{\rm tor}(N) \right)$.
+It is known that the following two vector spaces are isomprphic\,:
+\begin{equation}\label{(2.2)}
+ [\G_{g,0}(N),g+1]_0\cong \Omega^{\nu}
+ \left( {\mathcal A}_{g,0}^{\rm tor}(N) \right),\qquad \nu=\frac{g(g+1)}{2}.
+\end{equation}
+More precisely, for a coordinate $\Omega=(\omega_{ij})\in \BH_g$, we let
+\begin{equation*}
+  \omega_0:=d\omega_{11}\wedge d\omega_{12}\wedge d\omega_{13}\wedge \cdots \wedge
+  d\omega_{gg}
+\end{equation*}
+be a holomorphic $\nu$-form on $\BH_g$. If $\omega=F(\Om)\,\omega_0$ is a $\G_{g,0}(N)$-invariant
+holomorphic form on $\BH_g$,
+then
+\begin{equation*}
+F(\g\cdot \Om)=\det (C\Om+D)^{g+1}F(\Om)
+\end{equation*}
+for all $\g=\begin{pmatrix}
+              A & B \\
+              C & D
+            \end{pmatrix}\in \G_{g,0}(N)$ and $\Om\in\BH_g.$ Thus
+$F\in [\G_{g,0}(N),g+1].$ It was shown by Freitag\,\cite{Fr} that $\om$ can be extended
+to a holomorphic $\nu$-form on ${\mathcal A}_{g,0}^{\rm tor}(N)$ if and only if $F$ is
+a cusp form in $[\G_{g,0}(N),g+1]_0.$ Indeed, the mapping
+\begin{equation*}
+[\G_{g,0}(N),g+1]_0 \lrt \Omega^{\nu}
+ \left( {\mathcal A}_{g,0}^{\rm tor}(N) \right),\qquad F\mapsto F\,\omega_0
+\end{equation*}
+is an isomorphism as complex vector spaces. We observe that if
+$\om_k:=G(\Om)\, \om_0^{\otimes k}$ is a $\G_{g,0}(N)$-invariant
+holomorphic form on $\BH_g$ of degree $k\nu$, then $G(\Om)\in [\G_{g,0}(N),k(g+1)]_0$
+is a cusp form of weight $k(g+1).$
+\vskip 3mm
+Therefore according to \eqref{(2.1)} and \eqref{(2.2)}, we have
+\begin{equation}\label{(2.3)}
+{{\rm Jac}}({\mathcal A}_{g,0}^{\rm tor}(N))
+ \cong [\G_{g,0}(N),g+1]_0^{\vee}
+ / H_\nu \left( {\mathcal A}_{g,0}^{\rm tor}(N),\BZ \right),\qquad \nu=\frac{g(g+1)}{2}.
+\end{equation}
+If there is no confusion, we simply set
+$$
+J_{g,0}(N):= {{\rm Jac}}({\mathcal A}_{g,0}^{\rm tor}(N)).
+$$
+
+\vskip 3mm
+We propose the following conjectures.
+\vskip 2mm \noindent
+\begin{conjecture}\label{conj:2.7}
+%{\bf Conjecture 2.1.}
+A simple abelian variety of dimesion $g$ defined over $\BQ$ is modular.
+\end{conjecture}
+\vskip 3mm
+\noindent
+\begin{conjecture}\label{conj:2.8}
+%{\bf Conjecture 2.2.}
+Let A be a simple abelian variety of dimesion $g$ defined over $\BQ$.
+The following statements are equivalent\,:
+\vskip 2mm
+{\sf{(MAV1)}} $A$ is modular.
+\vskip 1mm
+{\sf{(MAV2)}} There exists a non-constant holomorphic mapping
+${\mathcal A}_{g,0}^{\rm tor}(N)\lrt A$ for some
+\par
+\ \ \ \ \ \ \ \ \ \ \ positive integer $N$.
+\vskip 1mm
+{\sf{(MAV3)}} There exists a non-constant holomorphic mapping
+$J_{g,0}(N)\lrt A$ for some
+\par
+\ \ \ \ \ \ \ \ \ \ \ positive integer $N$.
+\vskip 1mm
+{\sf{(MAV4)}} $\rho_{A,\ell}$ is modular for any prime $\ell$.
+\end{conjecture}
+
+\vskip 3mm
+We propose the following problems.
+\vskip 2mm \noindent
+\begin{problem}\label{prob:2.9}
+%{\bf Problem 2.1.}
+Let $F\in [\G_{g,0}(N),g+1]_0$ be a Siegel Hecke eigenform of weight $g+1$.
+Associate to $F$ a $2g$-dimensional continuous irreducible Galois representation
+of $G_\BQ$.
+\end{problem}
+
+\vskip 2mm \noindent
+\begin{problem}\label{prob:2.10}
+%{\bf Problem 2.2.}
+Let $k$ be a positive integer.
+Let $F\in [\G_{g,0}(N),k]_0$ be a Siegel Hecke eigenform of weight $k$.
+Associate to $F$ a $2g$-dimensional continuous irreducible Galois representation
+of $G_\BQ$.
+\end{problem}
+
+\begin{remark}\label{rk:2.11}
+As mentioned in Section 1, in the case $g=1$, to a Hecke eigenform of weight $k\geq 1$, Shimura, Deligne and Serre associated a two-dimensional continuous irreducible Galois representation. For the case
+$g=2$, Taylor\,\cite{T1,T2} tried to associate the four dimensional continuous Galois representation
+of $G_\BQ$ to a Siegel Hecke eigenform of small weight. But he did not specify the precise weight.
+\end{remark}
+
+\end{section}
+
+\vskip 5mm
+\begin{thebibliography}{99}
+
+\bibitem{AMRT} A. Ash, D. Mumford, M. Rapoport and Y.-S. Tai, {\em Smooth Compactifications of Locally Symmetric Varieties. With the Collaboration of Peter Scholze}, 2nd ed. Cambridge Math. Library, Cambridge Univ. Press, Cambridge (2010).
+
+\bibitem{BCDT} C.\,Breuil, B.\,Conrad, F.\,Diamond and R.\,Taylor,
+{\em On the modularity of elliptic curves over $\mathbb Q$: wild 3-adic exercises},
+J. Amer. Math. Soc., {\bf 14}\,(2001), no.\,2, 843--939.
+
+\bibitem{C} H. Carayol, {\em Sur les repr{\' e}sentations $\ell$-adiques
+associ{\'e}es aux formes modulaires de Hilbert}, Ann. Sci. {\'E}c. Norm. Sup.
+{\bf 19}\,(1986), 409--468.
+
+\bibitem{De} P. Deligne, {\em Formes modulaires et repr{\' e}sentations $\ell$-adiques},
+Lecture Notes in Math. {\bf 179}, Springer-Verlag (1971), 89--138.
+
+\bibitem{D-S} P. Deligne and J.-P. Serre, {\em Formes modulaires de poids 1},
+Ann. Sci. Ec. Norm. Sup. {\bf 7}\,(1974), 507--530.
+
+\bibitem{Di-S} F.\,Diamond and J.\,Shurman, {\em A First Course in Modular Forms},
+Graduate Texts in Mathematics {\bf 228}, Springer (2005).
+
+\bibitem{F} G. Faltings, {\em Endlichkeitss{\"a}tze f{\"u}r abelsche Variet{\"a}ten
+{\" u}ber Zahlk{\"o}rpern}, Inv. Math. {\bf 73}\,(1983), 349--366.
+
+\bibitem{F-C} G. Faltings and C.-L. Chai, {\em Degeneration of abelian varieties}, Ergebnisse der Math.
+{\bf 22}, Springer-Verlag, Berlin-Heidelberg-New York (1990).
+
+\bibitem{F-M} J.-M. Fontaine and B. Mazur, {\em Geometric Galois representations},
+in Elliptic Curves, Modular Forms and Fermat's Last Theorem (Hong Kong,\,1993),
+International Press\,(1995), 41--78.
+
+\bibitem{Fr} E. Freitag, {\em Siegelsche Modulfunktionen}, Grundlehren de mathematischen Wissenschaften {\bf 55}, Springer-Verlag, Berlin-Heidelberg-New York (1983).
+
+\bibitem{K-W1} C. Khare and J.-P. Wintenberger, {\em Serre's modularity conjecture. I.},
+Inv. Math. {\bf 178}\,(2009), no.\,3, 485--504.
+
+\bibitem{K-W2} C. Khare and J.-P. Wintenberger, {\em Serre's modularity conjecture. II.},
+Inv. Math. {\bf 178}\,(2009), no.\,3, 505--586.
+
+\bibitem{M} H. Maass, {\em Siegel modular forms and Dirichlet series,} Lecture Notes in Math. {\bf 216}, Springer-Verlag, Berlin-Heidelberg-New York (1971).
+
+\bibitem{MA} B. Mazur, {\em Number theory as gadfly}, Amer. Math. Monthly
+{\bf 98}\,(1991), 593--610.
+
+\bibitem{MU} D. Mumford, {\em Abelian Varieties}, Published for TIFR\,(Bombay), Oxford
+University Press, Reprinted in 1985.
+
+\bibitem{S} J.-P. Serre, {\em Sur les repr{\' e}sentations modulaires de degr{\'e} de
+${\rm Gal}(\bar{\BQ} /\BQ)$}, Duke Math. J. {\bf 54}\,(1987), 179--230.
+
+%\bibitem{Sh1} G. Shimura, {\em On elliptic curves with complex multiplication as factors
+%of the Jacobians of modular function fields}, Nagoya Math. J. {\bf 43}\,(1971), 199--208.
+
+\bibitem{Sh2} G. Shimura, {\em Introduction to the Arithmetic Theory of Automorphic
+Functions}, Princeton Univ. Press, Princeton (1971).
+
+\bibitem{Sh3} G. Shimura, {\em Yutaka Taniyama and his time: Very personal recollections,}
+Bull. London Math. Soc., {\bf 21} (1989), 186--196.
+
+\bibitem{T1} R. Taylor, {\em Galois Representations Associated to Siegel Modular Forms
+of Low Weight}, Duke Math. J. {\bf 63}\,(1991), 281--332.
+
+\bibitem{T2} R. Taylor, {\em On the $\ell$-adic cohomology of Siegel threefolds},
+Inv. math. {\bf 114}\,(1993), 289--310.
+
+\bibitem{TW} R. Taylor and A. Wiles, {\em Ring-theoretic properties of certain Hecke
+algebras}, Ann. Math., {\bf 141}\,(1995), no.\,3, 553--572.
+
+\bibitem{W} A. Wiles, {\em Modular elliptic curves and Fermat's Last Theorem},
+Ann. Math., {\bf 141}\,(1995), no.\,3, 443--551.
+
+\bibitem{Y} J.-H. Yang, {\em Theory of the Siegel modular variety}, Number Theory and
+Applications, Proc. International Conferences on Number Theory and Cryptography, edited by
+S.\,D. Adhikari and B. Ramakrishnan, Hindustan Book Agency, New Delhi (2009), 219--278.
+ISBN: 978-81-85931-97-5..
+
+\end{thebibliography}
+
+\end{document} 

@@ -1,0 +1,124 @@
+\providecommand{\bysame}{\leavevmode\hbox to3em{\hrulefill}\thinspace}
+\providecommand{\MR}{\relax\ifhmode\unskip\space\fi MR }
+% \MRhref is called by the amsart/book/proc definition of \MR.
+\providecommand{\MRhref}[2]{%
+  \href{http://www.ams.org/mathscinet-getitem?mr=#1}{#2}
+}
+\providecommand{\href}[2]{#2}
+\begin{thebibliography}{AGMY20}
+
+\bibitem[AGMY20]{AGMY}
+A.~Ash, P.~E. Gunnells, M~McConnell, and D.~Yasaki, \emph{On the growth of torsion in the cohomology of arithmetic groups}, J. Inst. Math. Jussieu \textbf{19} (2020), no.~2, 537--569.
+
+\bibitem[Art78]{Arthur2}
+J.~Arthur, \emph{A trace formula for reductive groups. {I}. {T}erms associated to classes in {$G(\Q)$}}, Duke Math. J. \textbf{45} (1978), no.~4, 911--952.
+
+\bibitem[Art81]{Arthur3}
+\bysame, \emph{The trace formula in invariant form}, Ann. of Math. \textbf{114} (1981), no.~1, 1--74.
+
+\bibitem[Art85]{Arthur4}
+\bysame, \emph{A measure on the unipotent variety}, Canad. J. Math. \textbf{37} (1985), no.~5, 1--74.
+
+\bibitem[Art86]{Arthur5}
+\bysame, \emph{On a family of distributions obtained from orbits}, Canad. J. Math. \textbf{38} (1986), 179–214.
+
+\bibitem[Art88]{Arthur1}
+\bysame, \emph{The local behavior of weighted orbital integrals}, Duke Math. J. \textbf{56} (1988), no.~2, 223–293.
+
+\bibitem[Art05]{Arthur0}
+\bysame, \emph{An introduction to the trace formula}, Clay Mathematics Proceedings \textbf{4} (2005), 1--264.
+
+\bibitem[Ash92]{Ash}
+A~Ash, \emph{Galois representations attached to mod {$p$} cohomology of {$\operatorname{GL}(n, \mathbb{Z})$}}, Duke Math. J. \textbf{65} (1992), no.~2, 235--255.
+
+\bibitem[BH99]{bridsonhaefliger}
+M.~R. Bridson and A.~Haefliger, \emph{Metric spaces of non-positive curvature}, 2. ed., Springer-Verlag, Berlin Heidelberg, 1999.
+
+\bibitem[BLLS12]{BLLS}
+N.~Bergeron, P.~Linnell, W.~L{\"u}ck, and R.~Sauer, \emph{On the growth of betti numbers in p-adic analytic towers}, Groups, Geometry, and Dynamics \textbf{8} (2012), no.~2, 1--264.
+
+\bibitem[BM83]{BM}
+D.~Barbasch and H.~Moscovici, \emph{{$L^2$}-index and the trace formula}, J. Funct. An \textbf{52} (1983), no.~2, 151--201.
+
+\bibitem[BV13]{BV}
+N.~Bergeron and A.~Venkatesh, \emph{The asymtotic growth of torsion homology for arithmetic groups}, J. Inst. Math. Jussieu \textbf{12} (2013), no.~2, 391--447.
+
+\bibitem[BW00]{BW}
+A.~Borel and N.~Wallach, \emph{Continuous cohomology, discrete subgroups, and representations of reductive groups, second edition. mathematical surveys and monographs, {\emph{vol. 67}}}, American Mathematical Society, Providence, RI, 2000.
+
+\bibitem[Che79]{Cheeger}
+J.~Cheeger, \emph{Analytic torsion and the heat equation}, Ann. of Math. \textbf{109} (1979), no.~2, 259--322.
+
+\bibitem[FL16]{FL}
+T.~Finis and E.~Lapid, \emph{On the continuity of the geometric side of the trace formula}, Acta Math. Vietnam \textbf{41} (2016), no.~3, 425--455.
+
+\bibitem[Fra35]{Franz}
+W.~Franz, \emph{{\"U}ber die torsion einer {\"u}berdeckung}, J. f{\"u}r die reine und angew. Math. \textbf{173} (1935), 245–253.
+
+\bibitem[Kna01]{Knapp}
+A.~W. Knapp, \emph{Representation theory of semisimple groups (princeton university press}, Princeton University Press, 2001.
+
+\bibitem[Lot92]{Lott}
+J.~Lott, \emph{Heat kernels on covering spaces and topological invariants}, J. Differential Geom. \textbf{7} (1992), 471–510.
+
+\bibitem[L{\"u}c94]{Lück1}
+W.~L{\"u}ck, \emph{Approximating {$L^2$}-invariants by their finite-dimensional analogues}, Geom. Funct. Anal. \textbf{4} (1994), no.~4, 455–481.
+
+\bibitem[L{\"u}c16]{Lück2}
+\bysame, \emph{Survey on approximating {$L^2$}-invariants by their classical counterparts: Betti numbers, torsion invariants and homological growth.}, EMSS \textbf{3} (2016), 269--344.
+
+\bibitem[Mat92]{Mathai}
+V.~Mathai, \emph{{$L^2$}-analytic torsion}, J. Funct. Anal. \textbf{107} (1992), no.~2, 369--386.
+
+\bibitem[Mat15]{Matz}
+J.~Matz, \emph{Bounds for global coefficients in the fine geometric expansion of arthur’s trace formula for {$\GL(n)$}}, Israel J. Math. \textbf{205} (2015), no.~1, 337--396.
+
+\bibitem[Mia80]{Miatello}
+R.~J. Miatello, \emph{The minakshisundaram–pleijel coefficients for the vector-valued heat kernel on compact locally symmetric spaces of negative curvature}, Trans. Amer. Math. Soc. \textbf{260} (1980), no.~1, 1--33.
+
+\bibitem[MM63]{MM}
+Y.~Matsushima and S.~Murakami, \emph{On vector bundle valued harmonic forms and automorphic forms on symmetric riemannian manifolds}, Ann. of Math. \textbf{78} (1963), no.~2, 365--416.
+
+\bibitem[MM17]{MzM1}
+J.~Matz and W.~M{\"u}ller, \emph{Analytic torsion of arithmetic quotients of the symmetric space {$\SL(n, \R)/\SO(n)$}}, Geom. Funct. Anal. \textbf{27} (2017), no.~6, 1378–1449.
+
+\bibitem[MM20]{MzM2}
+\bysame, \emph{Approximation of {$L^{2}$}-analytic torsion for arithmetic quotients of the symmetric space $\operatorname{SL}(n,\mathbb{R})/\operatorname{SO}(n)$}, J. Inst. Math. Jussieu \textbf{19} (2020), no.~2, 307--350.
+
+\bibitem[MM23]{MzM3}
+\bysame, \emph{Analytic torsion for arithmetic locally symmetric manifolds and approximation of {$L^2$}-torsion}, J. Funct. Anal. \textbf{284} (2023), no.~1, [109727].
+
+\bibitem[MP13]{MP}
+W.~M{\"u}ller and J.~Pfaff, \emph{Analytic torsion and {$L^2$}-torsion of compact locally symmetric manifolds}, J. Differential Geom. \textbf{95} (2013), no.~1, 71--119.
+
+\bibitem[MR20]{MR1}
+W.~M{\"u}ller and F.~Rochon, \emph{Analytic torsion and reidemeister torsion on hyperbolic manifolds with cusps}, Geom. Funct. Anal. \textbf{30} (2020), 910--954.
+
+\bibitem[MR24]{MR3}
+\bysame, \emph{On the growth of torsion in the cohomology of some {$\Q$}-rank one groups}, Preprint. arXiv:2401.14205. (2024).
+
+\bibitem[M{\"u}l78]{Müller1}
+W.~M{\"u}ller, \emph{Analytic torsion and {$R$}-torsion of {R}iemannian manifolds}, Adv. Math. \textbf{28} (1978), no.~3, 233–305.
+
+\bibitem[M{\"u}l93]{Müller2}
+\bysame, \emph{Analytic torsion and {$R$}-torsion for unimodular representations}, J. Amer. Math. Soc. \textbf{6} (1993), no.~3, 233–305.
+
+\bibitem[Olb02]{Olbrich}
+M.~Olbrich, \emph{{$L^2$}-invariants of locally symmetric spaces}, Doc. Math. \textbf{7} (2002), no.~1, 219--237.
+
+\bibitem[Rai19]{Raimbault}
+J.~Raimbault, \emph{{ASYMPTOTICS OF ANALYTIC TORSION FOR HYPERBOLIC THREE-MANIFOLDS}}, {Comment. Math. Helv.} \textbf{94} (2019), no.~3, 459--531.
+
+\bibitem[Rei35]{Reidemeister}
+K.~Reidemeister, \emph{Homotopieringe und linsenr{\"a}ume}, Abh. Math. Sem. Univ. Hamburg \textbf{11} (1935), no.~1, 102–109.
+
+\bibitem[RS71]{RS}
+D.~B. Ray and I.~M. Singer, \emph{{$R$}-torsion and the laplacian on riemannian manifolds}, Advances in Math. \textbf{7} (1971), 145–210.
+
+\bibitem[Sch15]{Scholze}
+P.~Scholze, \emph{On torsion in the cohomology of locally symmetric varieties}, Ann. of Math. \textbf{182} (2015), no.~3, 945--1066.
+
+\bibitem[Zag06]{Zagier}
+D.~Zagier, \emph{The mellin transform and other useful analytic techniques. appendix to e. zeidler, quantum field theory i: Basics in mathematics and physics. a bridge between mathematicians and physicists}, 2 ed., Springer-Verlag, Berlin-Heidelberg-New York, 2006.
+
+\end{thebibliography}

@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.10020v1",
+  "title": "Some New Congruences and Partition-Theoretic Interpretations for the\n  Coefficients of Some Rogers-Ramanujan Type Identities",
+  "authors": [
+    "Sabi Biswas",
+    "Nipen Saikia"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Ramanujan listed several q-series identities in his lost notebook. The most\nwell\n  known q-series identities are the Rogers-Ramanujan type identities which are\nfirst discovered\n  by Rogers and then rediscovered by Ramanujan. In this paper, we give\npartition-theoretic\n  interpretations of some of the Rogers-Ramanujan type identities using\noverpartition and\n  colour partition of positive integers, and prove infinite families of\ncongruences modulo powers\n  of 2.",
+  "submitted_date": "2025-07-14T07:58:13Z",
+  "download_date": "2025-07-16T00:35:03.825505",
+  "tex_files": [
+    "Rogers-Ramanujan-identities.tex"
+  ],
+  "main_tex_file": "Rogers-Ramanujan-identities.tex",
+  "file_size": 42237,
+  "line_count": 683,
+  "complexity_score": 47.16830000000001,
+  "features": {
+    "line_count": 683,
+    "char_count": 41555,
+    "word_count": 3654,
+    "file_size": 42237,
+    "tex_files": [
+      "Rogers-Ramanujan-identities.tex"
+    ],
+    "main_tex_file": "Rogers-Ramanujan-identities.tex",
+    "equations": 73,
+    "align_envs": 7,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 12,
+    "inline_math": 350,
+    "display_math": 23,
+    "bracket_math": 1,
+    "straight_quotes": 0,
+    "single_quotes": 3,
+    "double_dollars": 23,
+    "british_spellings": 8,
+    "american_spellings": 6,
+    "includes": 0,
+    "packages": 15,
+    "newcommands": 44,
+    "citations": 48,
+    "references": 94,
+    "long_lines": 193,
+    "unicode_chars": 0,
+    "comments": 2,
+    "complexity_score": 47.16830000000001
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

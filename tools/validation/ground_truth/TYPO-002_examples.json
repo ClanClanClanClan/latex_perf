@@ -1,0 +1,84 @@
+{
+  "rule_id": "TYPO-002",
+  "created_date": "2025-07-09T21:49:12.149836",
+  "examples": [
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "This has three dots...",
+      "expected_matches": [
+        {
+          "start": 19,
+          "end": 22,
+          "text": "..."
+        }
+      ],
+      "expected_fixes": [
+        {
+          "start": 19,
+          "end": 22,
+          "replacement": "\u2026"
+        }
+      ],
+      "context": "normal_text",
+      "description": "Three dots should become ellipsis",
+      "should_match": true
+    },
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "Wait...what happened?",
+      "expected_matches": [
+        {
+          "start": 4,
+          "end": 7,
+          "text": "..."
+        }
+      ],
+      "expected_fixes": [
+        {
+          "start": 4,
+          "end": 7,
+          "replacement": "\u2026"
+        }
+      ],
+      "context": "normal_text",
+      "description": "Ellipsis in middle of sentence",
+      "should_match": true
+    },
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "\\begin{verbatim}...\\end{verbatim}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "verbatim_environment",
+      "description": "Ellipsis in verbatim should not match",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "\\begin{equation}x + y + z = ...\\end{equation}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "math_environment",
+      "description": "Ellipsis in math environment should not match",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "\\texttt{...}",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "code_context",
+      "description": "Ellipsis in code formatting should not match",
+      "should_match": false
+    },
+    {
+      "rule_id": "TYPO-002",
+      "input_text": "File.ext",
+      "expected_matches": [],
+      "expected_fixes": [],
+      "context": "file_extension",
+      "description": "File extensions should not match",
+      "should_match": false
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "universal_framework": {
+    "enabled": true,
+    "priority": 1,
+    "timeout_minutes": 60,
+    "parameters": {
+      "verbose": false,
+      "quick_mode": false
+    }
+  },
+  "punctuation_tests": {
+    "enabled": true,
+    "priority": 2,
+    "timeout_minutes": 30
+  },
+  "mathematical_tests": {
+    "enabled": true,
+    "priority": 2,
+    "timeout_minutes": 30
+  },
+  "chaos_tests": {
+    "enabled": true,
+    "priority": 3,
+    "timeout_minutes": 45,
+    "parameters": {
+      "iterations": 1000
+    }
+  }
+}

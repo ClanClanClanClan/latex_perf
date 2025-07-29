@@ -1,0 +1,99 @@
+\providecommand{\bysame}{\leavevmode\hbox to3em{\hrulefill}\thinspace}
+\providecommand{\MR}{\relax\ifhmode\unskip\space\fi MR }
+% \MRhref is called by the amsart/book/proc definition of \MR.
+\providecommand{\MRhref}[2]{%
+  \href{http://www.ams.org/mathscinet-getitem?mr=#1}{#2}
+}
+\providecommand{\href}[2]{#2}
+\begin{thebibliography}{HPS79}
+
+\bibitem[Alt15]{altug2015}
+Salim~Ali Altu\u{g}, \emph{Beyond endoscopy via the trace formula: 1. {P}oisson
+  summation and isolation of special representations}, Compos. Math.
+  \textbf{151} (2015), no.~10, 1791--1820.
+
+\bibitem[Alt17]{altug2017}
+\bysame, \emph{Beyond endoscopy via the trace formula, {II}: {A}symptotic
+  expansions of {F}ourier transforms and bounds towards the {R}amanujan
+  conjecture}, Amer. J. Math. \textbf{139} (2017), no.~4, 863--913.
+
+\bibitem[BB13]{blomer2013role}
+Valentin Blomer and Farrell Brumley, \emph{The role of the {R}amanujan
+  conjecture in analytic number theory}, Bulletin of the American Mathematical
+  Society \textbf{50} (2013), no.~2, 267--320.
+
+\bibitem[Che25]{cheng2025}
+Yuhao Cheng, \emph{Beyond endoscopy for {$\GL_2$} over {$\QQ$} with
+  ramification: {Poisson} summation}, preprint (2025),
+  \texttt{ArXiv:2505.18967}.
+
+\bibitem[Del74]{deligne1974}
+Pierre Deligne, \emph{La conjecture de {Weil}. {I}}, Publications
+  Mathématiques de l'IHÉS \textbf{43} (1974), 273--307.
+
+\bibitem[Del80]{deligne1980}
+\bysame, \emph{La conjecture de {Weil}. {II}}, Publications Mathématiques de
+  l'IHÉS \textbf{52} (1980), 137--252.
+
+\bibitem[GH24]{getz2024}
+Jayce~R. Getz and Heekyoung Hahn, \emph{An introduction to automorphic
+  representations: with a view toward trace formulae}, Graduate Texts in
+  Mathematics, vol. 300, Springer, 2024.
+
+\bibitem[GJ79]{gelbart1979}
+Stephen Gelbart and Herv{\'e} Jacquet, \emph{Forms of {$\mathrm{GL}(2)$} from
+  the analytic point of view}, Automorphic forms, representations and
+  {$L$}-functions {P}art 1, Proc. Sympos. Pure Math., vol. XXXIII, Amer. Math.
+  Soc., Providence, RI, 1979, pp.~213--251.
+
+\bibitem[HPS79]{howe1979counterexample}
+R.~Howe and I.~I. Piatetski-Shapiro, \emph{A counterexample to the
+  ``generalized {R}amanujan conjecture''\ for (quasi-) split groups},
+  Automorphic forms, representations and {$L$}-functions , {P}art 1, Proc.
+  Sympos. Pure Math., vol. XXXIII, Amer. Math. Soc., Providence, RI, 1979,
+  pp.~315--322.
+
+\bibitem[JL70]{langlands1970}
+Herv{\'e} Jacquet and Robert~P. Langlands, \emph{Automorphic forms on
+  {$\mathrm{GL}(2)$}}, Lecture Notes in Mathematics, vol. 114, Springer-Verlag,
+  1970.
+
+\bibitem[Kna97]{knapp1997}
+Anthony~W Knapp, \emph{Theoretical aspects of the trace formula for {$GL(2)$}},
+  Proceedings of Symposia in Pure Mathematics, vol.~61, 1997, pp.~355--405.
+
+\bibitem[Kuz81]{kuznetsov1981}
+N~V Kuznecov, \emph{{P}etersson's conjecture for cusp forms of weight zero and
+  {L}innik's conjecture. sums of {K}loosterman sums}, Mathematics of the
+  USSR-Sbornik \textbf{39} (1981), no.~3, 299.
+
+\bibitem[Lan04]{langlands2004}
+Robert~P. Langlands, \emph{Beyond endoscopy}, Contributions to automorphic
+  forms, geometry, and number theory, Johns Hopkins Univ. Press, Baltimore, MD,
+  2004, pp.~611--697.
+
+\bibitem[Lan13]{langlands2013}
+\bysame, \emph{Singularit\'es et transfert}, Ann. Math. Qu\'e. \textbf{37}
+  (2013), no.~2, 173--253.
+
+\bibitem[MS04]{muller2004}
+Werner M\"uller and Brigit Spreh, \emph{Absolute convergence of the spectral
+  side of the {Arthur} trace formula for {$\mathrm{GL}_n$} (with appendix by
+  {E.M. Lapid})}, Geometric And Functional Analysis \textbf{14} (2004), no.~1,
+  58--93.
+
+\bibitem[Sar05]{sarnak2005}
+Peter Sarnak, \emph{Notes on the generalized {R}amanujan conjectures}, Harmonic
+  analysis, the trace formula, and {Shimura} varieties (James Arthur, David
+  Ellwood, and Robert Kottwitz, eds.), vol.~4, Citeseer, 2005, pp.~659--685.
+
+\bibitem[Ten15]{tenenbaum2015analytic}
+G{\'e}rald Tenenbaum, \emph{Introduction to analytic and probabilistic number
+  theory}, Graduate Studies in Mathematics, vol. 163, American Mathematical
+  Soc., 2015.
+
+\bibitem[Wei48]{weil1948}
+Andr\'e Weil, \emph{On some exponential sums}, Proc. Nat. Acad. Sci. U.S.A.
+  \textbf{34} (1948), 204--207.
+
+\end{thebibliography}

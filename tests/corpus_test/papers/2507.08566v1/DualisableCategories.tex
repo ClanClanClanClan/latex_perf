@@ -1,0 +1,129 @@
+\section{Dualisable modules}\label{Dualisable modules}
+In this chapter we will recall the notion of presentable dualisable modules. Following \Cite[Chapter 1]{ramzi2024dualizable}, we introduce the notion of atomically generated categories in order to state an alternative characterisation of dualisability due to Ramzi \Cite[Proposition 1.40]{ramzi2024dualizable}. We will barely give any proofs and refer to \Cite[Chapter 1]{ramzi2024dualizable} for a more thourough treatment.
+\begin{subsection}{Dualisable presentable categories}
+
+Let us recall the notion of a dualisable object in a symmetric monoidal category. 
+
+\begin{definition}
+Let $C$ be a symmetric monoidal category. An object $P\in C$ is called dualisable if there are an object $P^\vee$, called the dual of $P$ and morphisms 
+\[
+ev : P\otimes P^\vee \to 1  \space \space , \space  \ co :1 \to P\otimes P^\vee
+\]
+called the evaluation and coevaluation maps such there are homotopy coherent diagrams 
+
+\[\begin{tikzcd}
+	P & {P\otimes P^\vee \otimes P} & {P^\vee} & {P^\vee \otimes P \otimes P^\vee} \\
+	& P && {P^\vee}
+	\arrow["{co \otimes id_P}", from=1-1, to=1-2]
+	\arrow["{id_P}"', from=1-1, to=2-2]
+	\arrow["{id_P \otimes ev}", from=1-2, to=2-2]
+	\arrow["{id_{P^\vee}\otimes co}", from=1-3, to=1-4]
+	\arrow["{id_{P^\vee}}"', from=1-3, to=2-4]
+	\arrow["{ev \otimes id_{P^\vee}}", from=1-4, to=2-4]
+\end{tikzcd}\]
+We denote the full subcategory of $C$ spanned by the dualisable objects by  $C^{dlb}\subset C$.
+\end{definition}
+In the case of $C= \Pr_{st}^L$, there is the following description of dualisable objects due to Lurie.
+
+\begin{theorem}\Cite[Proposition D.7.3.1]{lurie2018spectral}\label{dlb in PrL}
+    Let $C\in \Pr_{st}^L$ be a stable presentable category. Then the following assertions are equivalent:
+    \begin{enumerate}
+\item $C$ is dualisable in $\Pr_{st}^L$.
+\item $C$ is a retract of a compactly generated stable category.
+\item There is an adjunction in $\Pr_{st}^L$
+\begin{equation*}
+\begin{tikzcd}
+C \arrow[r,shift left=.5ex,"F"]
+&
+D  \arrow[l,shift left=.5ex,"G"]
+\end{tikzcd}
+\end{equation*}
+with $D$ a compactly generated stable category such that $F$ is fully faithful and $G$ commutes with all colimits.
+    \end{enumerate}
+\end{theorem}
+
+
+
+\subsection{Dualisable modules in presentable categories}
+For the rest of this chapter let $E\in \CAlg(\PrL)$ be a commutative algebra object in $\PrL$. In the following subsection, we will be studying the category $\Mod_E(\PrL)$ and dualisable objects in it.  We will sometimes refer to an object of $\Mod_E(\PrL)$ as a presentable $E$-module.\\
+
+As a first step to understand dualisable objects in $\Mod_E(\PrL)$, we want to obtain an analogue of the characterisation given in \Cref{dlb in PrL}, generalising from the case $E=\Sp$ to a general $E\in \CAlg(\PrL)$. To achieve that we need to generalise the notion of compactly generated categories to incorporate this additional module structure.
+\begin{definition}\Cite[Definition 1.9]{ramzi2024dualizable}
+    Let $f : M \to N$ be a functor in $\Mod_E(\PrL)$ with right adjoint $f_R$. We call $f$ an internal left adjoint if $f_R$ commutes with colimits and is $E$-linear, that is if the canonical projection map 
+    \[
+    x \otimes f_R(n) \to f_R(x \otimes n)
+    \]
+is an equivalence for all $n\in N$ and all $x\in E$.
+\end{definition}
+We denote by $\Mod(E)^{dlb}$ the (non full) subcategory of $\Mod_E(\PrL)$ spanned by dualisable objects and $1$-morphisms given by internal left adjoints. 
+\begin{example}\Cite[Example 1.16]{ramzi2024dualizable}\label{examples of internal leftadjoint}
+Let $C\in \PrL$ and $A \to B$ be a map in $\CAlg(C)$, then the functor given by base change of algebras  $\Mod_A(C)\to \Mod_B(C)$ is an internal left adjoint.
+\end{example}
+
+The following notion generalises the notion of compact objects in $\PrL$.
+\begin{definition}\Cite[Definition 1.22]{ramzi2024dualizable}
+ Let $M\in \Mod_E(\PrL)$. An object $x\in M$ is called $E$-atomic (or just atomic, if $E$ is clear from the context) if the functor $x \otimes(-) :E \to M$ is an internal left adjoint.  
+\end{definition}
+We see that if $E=\Sp$ is the category of spectra the $\Sp$-atomic objects in $\Mod_{\Sp}(\PrL)\cong \Pr_{st}^L$ are exactly the compact objects. Following \Cite{ramzi2024dualizable}, we now introduce the following generalization of compactly generated categories.
+
+\begin{definition}\Cite[Definition 1.27]{ramzi2024dualizable}
+    An $E$-module $M\in \Mod_E(\PrL)$ is called $E$-atomically generated if the smallest full sub-$E$-module of $M$ closed under colimits and containing the atomics of $M$ is $M$ itself.
+\end{definition}
+In the following we will make use of the notion of $E$-enriched categories, our main reference is \Cite{heine2023equivalence} and \Cite[Appendix C]{heyer20246}. For $M\in \Cat_E$ an $E$-enriched category, we denote by  $\widehat{\Cat}_E$  the category of large $E$-enriched categories. By \Cite[Theorem 1.2]{heine2023equivalence} there is a natural functor 
+\[
+\mu : \Mod_E(\PrL) \to  \widehat{\Cat}_E
+\]
+which is fully faithful on hom categories. 
+\begin{lemma}\Cite[Observation 1.28]{ramzi2024dualizable}
+An $E$-module $M\in \Mod_E(\PrL)$ is $E$-atomically generated  if and only if it is equivalent to a category of $E$-enriched presheafs  $P_{E}(M_0)$ for $M_0$ some $E$-enriched category.
+\end{lemma}
+$E$-atomically generated categories are thus generalisations of compactly generated categories. One crucial step in the proof of \Cref{dlb in PrL} is to show that compactly generated categories are dualisable in $\Pr_{st}^L$. The following Lemma due to Berman \Cite[Theorem 1.7]{berman2020enriched} shows that the analogous assertion is true for $E$-atomically generated modules in $\Mod_E(\PrL)$.
+\begin{lemma}\Cite[Proposition 1.40]{ramzi2024dualizable}
+ Any $E$-atomically generated module $M\in \Mod_E(\PrL)$ is dualisable in $\Mod_E(\PrL)$.
+\end{lemma}
+
+We now have all the necessary concepts to obtain a characterisation of dualisable objects in $\Mod_E(\PrL)$.
+\begin{theorem}\Cite[Theorem 1.49]{ramzi2024dualizable}\label{dlb relative in PrL}
+    Let $E\in \CAlg(\PrL)$ and  $C\in \Mod_E(\PrL)$ be a presentable $E$-module. Then the following assertions are equivalent:
+    \begin{enumerate}
+\item $C$ is dualisable in $\Mod_E(\PrL)$.
+\item $C$ is a retract of an  $E$-atomically generated category.
+\item There is an internally left adjoint fully faithful embedding $j : C \hookrightarrow D$ for some $E$-atomically generated category $D$.
+    \end{enumerate}
+\end{theorem}
+
+\subsection{Extension and restriction of modules}
+We end this chapter with a few lemmas on the behaviour of dualisable modules under extensions and restrictions of modules. 
+\begin{lemma}\label{tensor in Prl commutes with colimits}
+ Any morphism $g: V \to E$ in $\CAlg(\PrL)$ induces a functor $G_L\coloneq E \otimes_V (-): \Mod_V(\PrL) \to  \Mod_E(\PrL)$ which is symmetric monoidal and commutes with small colimits.  
+\end{lemma}
+\begin{proof}
+    The existence and symmetric monoidality of the functor $G_L$ as a functor in $\widehat{\Cat}$ is \Cite[Remark 4.5.3.2]{lurie2017higher}. We note that the cocartesian fibration $\Mod(\PrL) \to \CAlg(\PrL) \times  N(Fin_\ast)$ is presentable, in the sense that its classifying functor $\CAlg(\PrL) \times  N(Fin_\ast) \to \widehat{\Cat} $ factorises over $\PrL \subset \widehat{\Cat}$. The fact that $G_L$ commutes with small colimits follows since $ \otimes: \PrL \times \PrL \to \PrL $ commutes with small colimits in each variable separately.
+\end{proof}
+
+\begin{lemma}\label{tensor with dualisable object commmutes lim}
+Let $g: V \to E$ be a morphism in $\CAlg(\PrL)$. Assume $E$ is dualisable in $\Mod_V(\PrL)$. Then $G_L : \Mod_V(\PrL) \to  \Mod_E(\PrL)$ commutes with limits.
+\end{lemma}
+\begin{proof}
+Let $F: I \to \Mod_V(\PrL)$ be a limit diagram, then we have equivalences 
+\begin{align*}
+  E \otimes_V \lim_n F(n) &\cong \Fun^L_V(V, E \otimes_V \lim_n F(n)) \\
+  &\cong \Fun^L_V(E^\vee, \lim_n F(n)) \\
+  &\cong \lim_n\Fun^L_V(E^\vee, F(n)) \\
+   & \cong \lim_n E \otimes_V F(n).  
+\end{align*}
+\end{proof}
+
+
+
+\begin{lemma}\label{extensionrestriction}
+Let $g: V \to E$ be a morphism in $\CAlg(\PrL)$. The right adjoint $G_R$ of $G_L$ preserves dualisable objects if and only if $E$ is dualisable in $\Mod_V(\PrL)$. It reflects dualisable objects if $E$ is dualisable as a $E\otimes_V E$-module.
+\end{lemma}
+\begin{proof}
+The claim that $G_R$ preserves dualisable objects if and only if $E$ is dualisable in $\Mod_V(\PrL)$ follows by \Cite[Proposition 4.6.4.4. (8)]{lurie2017higher}. The second part follows by \Cite[Proposition 4.6.4.12 (6)]{lurie2017higher}.
+\end{proof}
+
+
+
+\end{subsection}
+

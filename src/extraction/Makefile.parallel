@@ -1,0 +1,155 @@
+# Makefile for Parallel Validator - LaTeX Perfectionist v24
+# Builds high-performance parallel validator with OCaml domains
+
+# OCaml compiler with domains support
+OCAML_VERSION = 5.0.0
+OCAMLC = ocamlfind ocamlc
+OCAMLOPT = ocamlfind ocamlopt
+OCAMLDEP = ocamlfind ocamldep
+
+# Coq configuration
+COQ_FLAGS = -R ../../src ""
+COQC = coqc $(COQ_FLAGS)
+
+# Build flags
+OCAML_FLAGS = -package unix -package str -linkpkg
+OCAML_OPT_FLAGS = -package unix -package str -linkpkg -O3
+
+# Source files
+COQ_FILES = ParallelValidator.v ParallelExtraction.v
+EXTRACTED_FILES = parallel_validator_core.ml parallel_validator_core.mli
+ML_FILES = parallel_validator.ml
+
+# Target executables
+TARGET = parallel_validator
+TARGET_OPT = parallel_validator_native
+
+# Default target
+all: $(TARGET_OPT)
+
+# Build optimized native version
+$(TARGET_OPT): $(EXTRACTED_FILES) $(ML_FILES)
+	@echo "Building optimized parallel validator..."
+	$(OCAMLOPT) $(OCAML_OPT_FLAGS) -o $@ $(EXTRACTED_FILES) $(ML_FILES)
+
+# Build bytecode version
+$(TARGET): $(EXTRACTED_FILES) $(ML_FILES)
+	@echo "Building bytecode parallel validator..."
+	$(OCAMLC) $(OCAML_FLAGS) -o $@ $(EXTRACTED_FILES) $(ML_FILES)
+
+# Extract from Coq
+$(EXTRACTED_FILES): $(COQ_FILES)
+	@echo "Extracting parallel validator from Coq..."
+	$(COQC) ParallelValidator.v
+	$(COQC) ParallelExtraction.v
+
+# Compile Coq files
+%.vo: %.v
+	@echo "Compiling Coq file: $<"
+	$(COQC) $<
+
+# Clean build artifacts
+clean:
+	rm -f *.vo *.vok *.vos *.glob *.aux
+	rm -f $(EXTRACTED_FILES)
+	rm -f $(TARGET) $(TARGET_OPT)
+	rm -f *.cmi *.cmo *.cmx *.o
+
+# Install dependencies
+install-deps:
+	@echo "Installing OCaml dependencies..."
+	opam install ocamlfind unix str
+
+# Performance test
+test-performance: $(TARGET_OPT)
+	@echo "Running performance tests..."
+	@if [ -f "../../corpus/papers/2507.07908v1/main.tex" ]; then \
+		./$(TARGET_OPT) --benchmark ../../corpus/papers/2507.07908v1/main.tex; \
+	else \
+		echo "Test file not found, skipping performance test"; \
+	fi
+
+# Batch test
+test-batch: $(TARGET_OPT)
+	@echo "Running batch test..."
+	@ls ../../corpus/papers/*/main.tex | head -5 | xargs ./$(TARGET_OPT)
+
+# Stream test
+test-stream: $(TARGET_OPT)
+	@echo "Running stream test..."
+	@if [ -f "../../corpus/papers/2507.07908v1/main.tex" ]; then \
+		./$(TARGET_OPT) --stream ../../corpus/papers/2507.07908v1/main.tex; \
+	else \
+		echo "Test file not found, skipping stream test"; \
+	fi
+
+# Build and test
+build-test: $(TARGET_OPT) test-performance test-batch test-stream
+
+# Check OCaml version
+check-ocaml:
+	@echo "Checking OCaml version..."
+	@ocaml -version
+	@echo "Checking for domains support..."
+	@ocaml -c -o /dev/null - <<< "let _ = Domain.spawn (fun () -> ())" 2>/dev/null && echo "Domains supported" || echo "Domains not supported"
+
+# Debug build
+debug: $(EXTRACTED_FILES) $(ML_FILES)
+	@echo "Building debug version..."
+	$(OCAMLC) $(OCAML_FLAGS) -g -o $(TARGET)_debug $(EXTRACTED_FILES) $(ML_FILES)
+
+# Profile build
+profile: $(EXTRACTED_FILES) $(ML_FILES)
+	@echo "Building profile version..."
+	$(OCAMLOPT) $(OCAML_OPT_FLAGS) -p -o $(TARGET)_profile $(EXTRACTED_FILES) $(ML_FILES)
+
+# Benchmark against sequential version
+benchmark: $(TARGET_OPT)
+	@echo "Benchmarking parallel vs sequential..."
+	@if [ -f "../test_enterprise_streaming_native" ]; then \
+		echo "Sequential version:"; \
+		time ../test_enterprise_streaming_native ../../corpus/papers/2507.07908v1/main.tex; \
+		echo "Parallel version:"; \
+		time ./$(TARGET_OPT) ../../corpus/papers/2507.07908v1/main.tex; \
+	else \
+		echo "Sequential version not found, building parallel only"; \
+		time ./$(TARGET_OPT) --benchmark ../../corpus/papers/2507.07908v1/main.tex; \
+	fi
+
+# Memory usage test
+memory-test: $(TARGET_OPT)
+	@echo "Testing memory usage..."
+	@if command -v valgrind >/dev/null 2>&1; then \
+		valgrind --tool=massif --massif-out-file=massif.out ./$(TARGET_OPT) ../../corpus/papers/2507.07908v1/main.tex; \
+		ms_print massif.out | head -20; \
+	else \
+		echo "Valgrind not available, skipping memory test"; \
+	fi
+
+# Dependency tracking
+depend: $(ML_FILES)
+	$(OCAMLDEP) $(ML_FILES) > .depend
+
+# Include dependencies
+-include .depend
+
+# Help
+help:
+	@echo "Available targets:"
+	@echo "  all          - Build optimized parallel validator"
+	@echo "  $(TARGET)    - Build bytecode version"
+	@echo "  $(TARGET_OPT) - Build native optimized version"
+	@echo "  clean        - Clean build artifacts"
+	@echo "  install-deps - Install OCaml dependencies"
+	@echo "  test-performance - Run performance benchmark"
+	@echo "  test-batch   - Run batch validation test"
+	@echo "  test-stream  - Run streaming validation test"
+	@echo "  build-test   - Build and run all tests"
+	@echo "  check-ocaml  - Check OCaml version and domains support"
+	@echo "  debug        - Build debug version"
+	@echo "  profile      - Build profile version"
+	@echo "  benchmark    - Benchmark against sequential version"
+	@echo "  memory-test  - Test memory usage with valgrind"
+	@echo "  help         - Show this help message"
+
+.PHONY: all clean install-deps test-performance test-batch test-stream build-test check-ocaml debug profile benchmark memory-test help depend

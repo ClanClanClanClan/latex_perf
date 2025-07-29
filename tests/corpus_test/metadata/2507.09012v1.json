@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.09012v1",
+  "title": "Explicit Bounds and Parallel Algorithms for Counting Multiply Gleeful\n  Numbers",
+  "authors": [
+    "Sara Moore",
+    "Jonathan P. Sorenson"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Let $k\\ge 1$ be an integer. A positive integer $n$ is $k$-\\textit{gleeful} if\n$n$ can be represented as the sum of $k$th powers of consecutive primes. For\nexample, $35=2^3+3^3$ is a $3$-gleeful number, and $195=5^2+7^2+11^2$ is\n$2$-gleeful. In this paper, we present some new results on $k$-gleeful numbers\nfor $k>1$.\n  First, we extend previous analytical work. For given values of $x$ and $k$,\nwe give explicit upper and lower bounds on the number of $k$-gleeful\nrepresentations of integers $n\\le x$.\n  Second, we describe and analyze two new, efficient parallel algorithms, one\ntheoretical and one practical, to generate all $k$-gleeful representations up\nto a bound $x$.\n  Third, we study integers that are multiply gleeful, that is, integers with\nmore than one representation as a sum of powers of consecutive primes,\nincluding both the same or different values of $k$. We give a simple heuristic\nmodel for estimating the density of multiply-gleeful numbers, we present\nempirical data in support of our heuristics, and offer some new conjectures.",
+  "submitted_date": "2025-07-11T20:36:49Z",
+  "download_date": "2025-07-16T00:35:42.127902",
+  "tex_files": [
+    "arxiv.tex"
+  ],
+  "main_tex_file": "arxiv.tex",
+  "file_size": 49686,
+  "line_count": 1355,
+  "complexity_score": 7.485500000000001,
+  "features": {
+    "line_count": 1355,
+    "char_count": 49686,
+    "word_count": 6085,
+    "file_size": 49686,
+    "tex_files": [
+      "arxiv.tex"
+    ],
+    "main_tex_file": "arxiv.tex",
+    "equations": 5,
+    "align_envs": 0,
+    "figures": 12,
+    "tables": 5,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 654,
+    "display_math": 85,
+    "bracket_math": 0,
+    "straight_quotes": 1,
+    "single_quotes": 38,
+    "double_dollars": 85,
+    "british_spellings": 0,
+    "american_spellings": 1,
+    "includes": 13,
+    "packages": 7,
+    "newcommands": 15,
+    "citations": 52,
+    "references": 27,
+    "long_lines": 78,
+    "unicode_chars": 0,
+    "comments": 228,
+    "complexity_score": 7.485500000000001
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

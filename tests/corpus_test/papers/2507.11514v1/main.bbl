@@ -1,0 +1,64 @@
+\begin{thebibliography}{10}
+
+\bibitem{AH}
+Tigran Ananyan and Melvin Hochster.
+\newblock Small subalgebras of polynomial rings and {S}tillman's conjecture.
+\newblock {\em J. Amer. Math. Soc.}, 33(1):291--309, 2020.
+
+\bibitem{BL}
+Benjamin {Baily} and Amichai {Lampert}.
+\newblock {Strength, partition rank and algebraic closure}.
+\newblock {\em arXiv e-prints}, page arXiv:2410.00248, September 2024.
+
+\bibitem{BDS}
+Arthur {Bik}, Jan {Draisma}, and Andrew {Snowden}.
+\newblock {Two improvements in Brauer's theorem on forms}.
+\newblock {\em arXiv e-prints}, page arXiv:2401.02067, January 2024.
+
+\bibitem{BDS-strength}
+Arthur Bik, Jan Draisma, and Andrew Snowden.
+\newblock The geometry of polynomial representations in positive characteristic.
+\newblock {\em Math. Z.}, 310(1):Paper No. 13, 39, 2025.
+
+\bibitem{Brauer}
+Richard Brauer.
+\newblock A note on systems of homogeneous algebraic equations.
+\newblock {\em Bull. Amer. Math. Soc.}, 51:749--755, 1945.
+
+\bibitem{Eisenbud}
+David Eisenbud.
+\newblock {\em Commutative algebra}, volume 150 of {\em Graduate Texts in Mathematics}.
+\newblock Springer-Verlag, New York, 1995.
+\newblock With a view toward algebraic geometry.
+
+\bibitem{Lee}
+Siu-lun~Alan {Lee}.
+\newblock {Birch's theorem in function fields}.
+\newblock {\em arXiv e-prints}, page arXiv:1109.4953, September 2011.
+
+\bibitem{LS}
+D.~B. Leep and W.~M. Schmidt.
+\newblock Systems of homogeneous equations.
+\newblock {\em Invent. Math.}, 71(3):539--549, 1983.
+
+\bibitem{Schmidt}
+Wolfgang~M. Schmidt.
+\newblock The density of integer points on homogeneous varieties.
+\newblock {\em Acta Math.}, 154(3-4):243--296, 1985.
+
+\bibitem{Skinner-HLS}
+C.~M. Skinner.
+\newblock Forms over number fields and weak approximation.
+\newblock {\em Compositio Math.}, 106(1):11--29, 1997.
+
+\bibitem{Skinner-phi}
+Christopher Skinner.
+\newblock Solvability of systems of diagonal equations over {$p$}-adic local fields.
+\newblock {\em Proc. Lond. Math. Soc. (3)}, 122(2):207--228, 2021.
+
+\bibitem{Wooley}
+Trevor~D. Wooley.
+\newblock On the local solubility of {D}iophantine systems.
+\newblock {\em Compositio Math.}, 111(2):149--165, 1998.
+
+\end{thebibliography}

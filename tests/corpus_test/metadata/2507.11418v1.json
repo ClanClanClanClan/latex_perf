@@ -1,0 +1,56 @@
+{
+  "arxiv_id": "2507.11418v1",
+  "title": "Murmurations using Petersson trace formula",
+  "authors": [
+    "Chan Ieong Kuan",
+    "Didier Lesesvre"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "We prove the murmuration phenomenon, which is a correlation between signs of\nfunctional equations and Fourier coefficients, in the case of modular forms in\nthe weight aspect. We in particular improve the range of visibility of\nmurmurations compared to previous results. This is the first approach to the\nmurmuration phenomenon using a relative trace formula, showing its robustness.",
+  "submitted_date": "2025-07-15T15:44:47Z",
+  "download_date": "2025-07-16T00:34:12.766669",
+  "tex_files": [
+    "murmurations_PTF.tex"
+  ],
+  "main_tex_file": "murmurations_PTF.tex",
+  "file_size": 33299,
+  "line_count": 438,
+  "complexity_score": 28.693800000000003,
+  "features": {
+    "line_count": 438,
+    "char_count": 33298,
+    "word_count": 4189,
+    "file_size": 33299,
+    "tex_files": [
+      "murmurations_PTF.tex"
+    ],
+    "main_tex_file": "murmurations_PTF.tex",
+    "equations": 43,
+    "align_envs": 17,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 0,
+    "inline_math": 230,
+    "display_math": 0,
+    "bracket_math": 27,
+    "straight_quotes": 0,
+    "single_quotes": 14,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 14,
+    "includes": 0,
+    "packages": 8,
+    "newcommands": 25,
+    "citations": 29,
+    "references": 20,
+    "long_lines": 134,
+    "unicode_chars": 1,
+    "comments": 57,
+    "complexity_score": 28.693800000000003
+  },
+  "issues_found": {},
+  "compile_status": "failed"
+}

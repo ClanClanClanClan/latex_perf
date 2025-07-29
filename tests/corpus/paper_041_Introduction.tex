@@ -1,0 +1,133 @@
+\section{Introduction}
+
+The motivating problem of this article is to understand for which class of analytic stacks the categorical Künneth formula holds. Let us briefly recall the classical Künneth formula in algebraic geometry. Let $X\to \Spec(k),\ W \to \Spec(k)$ be two quasi-compact and separated schemes over a field $k$,denote by $D_{qcoh}(X)$ the derived category of $X$ with quasi-coherent cohomology sheaves and by $R\Gamma(X,-): D_{qcoh}(X) \to D_{qcoh}(k)$ the derived functor of global sections. Then the Künneth formula states that the canonical morphism 
+\[
+R\Gamma(X,\mathcal{O}_X)\otimes_k R\Gamma(W,\mathcal{O}_W)\to R\Gamma(X\times_{\Spec(k)} W,\mathcal{O}_{X\times_{\Spec(k)}W} )
+\]
+is an equivalence. In fact, this equivalence can even be observed on the level of the derived categories of $X$ and $W$ as has been investigated by Ben-Zvi, Francis and Nadler in the context of derived algebraic geometry. For $X\to Z, \ W \to Z$ any maps of perfect derived stacks and denoting by $\QC(X)$ the derived $\infty$-category of quasi coherent sheaves on $X$, they show (cf. \Cite[Theorem 4.14]{ben2010integral}) that one obtains a categorical Künneth formula
+\begin{equation}\label{künnethforperfect}
+    \QC(X)\otimes_{\QC(Z)}\QC(W) \cong \QC(X\times_Z W).
+\end{equation}
+Here the tensor product on the left hand side is the relative Lurie-tensor product in $\PrL$, the $\infty$-category of presentable $\infty$-categories. Let us recall that a derived stack $X$ is called perfect if its diagonal morphism $\Delta_X : X \to X\times X$ is affine, the $\infty$-category of quasi-coherent sheaves $\QC(X)$ is compactly generated and compact and dualisable objects coincide in $\QC(X)$ (cf. \Cite[Proposition 3.9]{ben2010integral}). Using the formalism of higher traces, they show furthermore that the existence of such categorical Künneth formulas implies many classical statements such as versions of the Atiyah-Bott-Lefschetz and the Riemann-Roch theorem (cf. \Cite[Theorem 1.4]{ben2013nonlinear}). \\
+ The key idea of \Cite{ben2010integral} to prove \Cref{künnethforperfect} is to use that it is true for affine derived schemes, where it reduces to an abstract statement about $\infty$-categories of modules and to use descent of $\QC(-)$ for the general case. One difficulty arises due to the absence of a well-defined $6$-functor formalism for quasi-coherent sheaves, which they circumvent by showing proper base change and the projection formula for perfect stacks directly (cf. \Cite[Section 3.2]{ben2010integral}). \newline \\
+ The later problem has been resolved by the recent theory of condensed mathematics and the theory of analytic stacks by Clausen-Scholze (cf. \Cite{clausen2022condensed},\Cite{AnSt}) which provides a vast framework to study both topology and algebraic, complex and $p$-adic geometry. In particular, they construct a $6$-functor formalism $D_{qc}(-)$ on the $\infty$-category $\AnSt$ of analytic stacks which satisfies a strong descent condition which they call $!$-descent.
+Working in this generality, it becomes unnatural to impose the compact generatedness of $D_{qc}(-)$.  Moreover it become apparent in recent years that  there are many interesting $\infty$-categories such as the category of nuclear modules in condensed mathematics or categories of sheaves on locally compact Hausdorff spaces which are not compactly generated but which belong to a bigger class of presentable $\infty$-categories called dualisable categories.  The aim of this article is to show that the existence of a well-defined $6$-functor formalism with strong descent properties and the passage from compact-generated categories to dualisable categories yield strong generalizations of the results in \Cite{ben2010integral}. \\
+
+More precisely, we can describe our problem as follows.
+
+\begin{Problem}\label{motivationquestion}
+For which morphisms $X\to Z,\ W\to Z$  of analytic stacks is the natural morphism
+\begin{align}
+ D_{qc}(X)\otimes_{D_{qc}(Z)} D_{qc}(W) \to D_{qc}(X\times_Z W)
+\end{align}
+an equivalence?    
+\end{Problem}
+
+ 
+ 
+Many of our arguments can be formulated for arbitrary $6$-functor formalisms. Motivated by finding a replacement of the notion of "perfect stacks" for general $3$- (or $6$)-functor formalisms, we adopt a maximalist approach and introduce the following definition.
+
+\begin{definition}[\Cref{def.künneth6f}]
+Let $D: Corr(C,E) \to \PrL$ be a $6$-functor formalism and $f: X\to Z$ be a map in $E$. We call $f$ Künneth if for all morphisms $W\to Z$ in $C$ the natural morphism 
+\[D(X)\otimes_{D(Z)} D(W) \rightarrow D(X\times_Z W) \,, \, A\otimes B \mapsto p_X^*(A)\otimes p_W^*(B)
+\]
+is an equivalence, with $p_X : X \times_Z W \to X,\  p_W: X \times_Z W \to W$ the natural projection morphisms. We say $D$ satisfies Künneth for a class of morphisms $P\subset E$ if any  $f\in P$ is Künneth. We say $D$ satisfies Künneth if it satisfies Künneth for $P=E$.
+\end{definition}
+Note that for a general $6$-functor formalism there may be no non-trivial Künneth morphisms at all. For our applications to analytic stacks, we will be only concerned with the case where we start with a $3$-functor formalism $D_0: Corr(C_0,E_0) \to \PrL$ which already satisfies Künneth and consider its Kan extension to a $3$-functor formalism $D: Corr(C,E) \to \PrL$ on the category $C\coloneqq \Sh_{D_0}(C_0)$ of sheaves of anima on $C_0$ with respect to the $D_0$-topology, with $E$ an appropriate class of morphisms containing $E_0$ (see \Cite[Theorem 3.4.11]{heyer20246} for the precise conditions). \\
+As we show, the class of Künneth morphisms enjoys many permanence properties (see \Cref{dualisbe stable under compposition}, \Cref{dualisable stable under bc}, \Cref{dualisability is !-local on source}, \Cref{dualisability is !-local on target}, \Cref{def open immersion for D Cop}, \Cref{open immersion and closed immersions are Künneth}):
+
+\begin{proposition}\label{THM A}
+Let $D: Corr(C,E) \to \PrL$ be a $6$-functor formalism.
+\begin{enumerate}
+\item (composition) If $f: Y \to Z$ and $g: X \to Y$ are Künneth, then $f\circ g: X \to Z$ is Künneth.
+    \item (base change)  Let  $W \to Z$ be any morphism. If $f: Y \to Z$ is Künneth, then the base change $f': Y'\coloneqq Y\times_Z W \to W$ is Künneth.
+   \item (open immersions) If $D: Corr(C,E) \to \Pr_{st}^L$ is stable and  $g: X \to Y$ in $E$ is a $D$-open immersion, then $f$ is Künneth.
+    \item (locality on source) Let $g: X \to Y$ be any morphism in $E$. Let $(f_i: {X}_i\to X)_{i\in I}$ be a universal $!$-cover. If $g\circ f_{[n],i_\bullet} : X_{[n],i_\bullet}\coloneqq X_{i_0}\times_X ... \times_X X_{i_n} \to Y$ is Künneth for all $([n],i_\bullet)\in \Delta_I$, then $g$ is Künneth.
+    \item  (locality on target) Let $f: X \to Z$ be any morphism in $E$ and $(g_i: Z_i\to Z)_{i\in I}$ be a universal $!$-cover. Denote by  $f_{([n],i_\bullet)}: X_{([n],i_\bullet)}\coloneqq X \times_Z Z_{[n],i_\bullet} \to Z_{[n],i_\bullet}$ the base change of $f$ by $g_{[n],i_\bullet}: Z_{[n],i_\bullet} \to Z$. If $f_{[n],i_\bullet}$ is Künneth for all $([n],i_\bullet)\in \Delta_I$, then $f$ is Künneth.
+\end{enumerate}
+\end{proposition}
+
+Using these properties we show our main theorem (\Cref{Künnethextension-main corollary}, see \Cref{E' properties} for the notation). 
+
+ \begin{theorem}\label{intro thmA} 
+    Let $D: Corr(C,E) \to \PrL$ be a sheafy $6$-functor formalism on a subcanonical site $C$. Let $S\in C$ and assume that $D_S: ((C_E){{_{/S}}})^{op} \to \Mod_{D(S)}(\PrL)$ is symmetric monoidal. Then the extension $\tilde{D}_S: ((\Shv(C)_{\tilde{E}}){{_{/S}}})^{op}\to \Mod_{D(S)}(\PrL) $ is symmetric monoidal. The same is true if $S\in \Shv(C)$ has a representable diagonal $\Delta_S$ and a $!$-cover $U \to S$ with $U\in C$ and $D: Corr(C,E) \to \PrL$  is Künneth.
+\end{theorem}
+
+
+To formulate our first application, we introduce the following terminology (cf. \Cref{tannakian morphism}).
+\begin{definition}
+  Let $D: Corr(C,E)\to \CAlg(\PrL)$ be a $6$-functor formalism and $f: X \to S$ in $C$. We call $f$ Tannakian if the morphism induced by $D$
+  \[
+ \text{Hom}_{C_{/S}}(Y,X) \to \Fun_{D(S)}^{L,\otimes}(D(X),D(Y))
+  \]
+  is an equivalence for all $Y \in C_{/S}$.  We call $D$ Tannakian if all morphisms in $C$ are Tannakian.
+\end{definition}
+
+As a consequence of \Cref{intro thmA}, we prove the following Tannakian reconstruction result: 
+\begin{theorem}\Cref{tannakian lift}
+    Let $C$ be a subcanonical site and $D: Corr(C,E)\to \CAlg(\PrL)$ be a Tannakian sheafy $6$-functor formalism satisfying Künneth. Consider its extension \\ $D: Corr(\Shv(C),\tilde{E})\to \CAlg(\PrL)$. Let $f: X \to S$ be a morphism in $\tilde{E}$ and assume that there is a $!$-cover $g: S'\to S$ with $S'\in C$ and $g\in E_0$. Then $f$ is Tannakian.
+\end{theorem}
+
+We apply these results to the $6$-functor formalism  $\mathit{D}: Corr(\AnR, E) \to \PrL$ on the category $\AnR$ of analytic rings with $E$ the class of $!$-able maps (see  \Cref{$6$-functor formalism for analytic stacks} for a construction and the definition of $(D, \AnR,E)$). We show that $\mathit{D}: Corr(\AnR, E) \to \PrL$ is Künneth and Tannakian (\Cref{affinekünneth}) and obtain thus a partial answer to \Cref{motivationquestion}, using \Cref{intro thmA}.
+\begin{corollary}\label{künethgeneral for analyticstacks}
+Let $S\in \AnSt\coloneqq \Shv(\AnR))$ be an analytic stack with representable diagonal $\Delta_S$, and assume $S$ admits a $!$-cover $U \to S$ with $g: U \in \Aff$ an affine analytic stack and $g\in E_0$. Then any morphism of analytic stacks $X \to S$ in $\tilde{E}$ is Künneth and Tannakian.
+\end{corollary}
+
+Our interest in categorical Künneth formulas stems from finding an analogue of Drinfeld's lemma in the context of the $p$-adic local Langlands correspondence. Let us briefly recall the Drinfeld lemma in the $\ell$-adic setting (cf. \Cite[Chapter IV.7]{fargues2021geometrization}). Consider $E/\Q_p$ a finite extension, $k=\bar{\mathbb{F}}_q$ an algebraic closure of its residue field and $\Lambda=\bar{\Q}_{\ell}$. For $Y$ a small v-stack, consider the full subcategory $D_{dlb}(Y,\Lambda)\subset D_{et}(Y,\Lambda)$ of dualisable objects in the category of étale sheaves with coefficients in $\Lambda$ on $Y$. There is a small $v$-stack called $\Div_k^1$ whose significance comes from the fact that it "geometrises"  smooth $\Lambda$-representations of the Weil group $W_E$ of $E$  (cf. \Cite[Theorem V.1.1]{fargues2021geometrization}). Let $W$ be any small $v$-stack, the simplest instance of the Drinfeld lemma can then be phrased as an equivalence of categories
+\[
+D_{dlb}(\Div_k^1,\Lambda)\otimes_{D_{dlb}(\Spd(k),\Lambda)}D_{dlb}(W,\Lambda) \cong D_{dlb}(\Div_k^{1}\times_{\Spd(k)}W,\Lambda) 
+\]
+(cf. \Cite[Proposition 4.7.3]{fargues2021geometrization}). Note that the tensor product on the left hand side is the one induced from $\PrL$ on the category of idempotent complete stable $\infty$-categories.  \\
+In the $p$-adic setting there is currently no conjecture along the lines of \Cite[Conjecture I.10.2]{fargues2021geometrization}.  Motivated by understanding the properties of pro-étale $\Q_p$-cohomology on rigid spaces, 
+  Anschütz, Le Bras and Mann \Cite{anschütz20246functorformalismsolidquasicoherent} constructed recently a $6$-functor formalism $S \to D_{(0,\infty)}(S)\in \PrL$ on the category $\text{vStack}$ of small $v$-stacks, a variant of which might be a suitable category of coefficients for a $p$-adic Langlands correspondence. To support this claim, they introduce a small $v$-stack $\Div^1_E$ and show that it geometrises $(\varphi,\Gamma)$-modules on the Robba ring $\mathcal{R}_E$, where $\Gamma= \text{Gal}(E^{\cyc}/E)$. More precisely they show (\Cite[Proposition 6.3.15]{anschütz20246functorformalismsolidquasicoherent}) that the category of $(\varphi,\Gamma)$-modules on the $\mathcal{R}_E$ is contained fully faithfully in the category of dualisable objects in $D_{(0,\infty)}(\Div^1_E)$. A natural question from the context of a $p$-adic Langlands correspondence is thus whether the Drinfeld lemma holds in this setting, that is whether for $W$ any small $v$-stack we have an equivalence 
+\[
+ D_{(0,\infty)}({\Div}^1_{E}) \otimes_{D_{(0,\infty)}(\Spd(\mathbb{F}_q))} D_{(0,\infty)}(W) \cong D_{(0,\infty)}({\Div}^1_{E}\times_{\Spd(\mathbb{F}_q)}W).
+\]
+On $S=\Spa(R,R^+)$ an affinoid perfectoid space which admits a morphism of finite trg.dim to a totally disconnected perfectoid space, the category $D_{(0,\infty)}(S)\cong D_{\hat{\sld}}(Y_{(0,\infty,),S})$ is given by (cf. \Cite[Theorem 1.2.1]{anschütz20246functorformalismsolidquasicoherent}) the category of (modified) solid quasi-coherent sheaves on the analytic adic space
+\[
+Y_{(0,\infty),S}\coloneqq \Spa(W(R^+))\backslash V([\pi]p).
+\]
+Here $W(-)$ denotes the $p$-typical Witt vectors and $\pi\in R^+$ a pseudo-uniformiser. For simplicity, we will consider the case $E=\Q_p$ in the following but everything we say holds also for the a general finite extension $E$.
+
+In order to avoid dealing with modified solid sheaves, we will consider the analytic stack $\Div_{\mathbb{Q}_p}^{1,\ct}\coloneqq Y_{(0,\infty),\Div^1_{\mathbb{Q}_p}}$ and the category $D(Y_{(0,\infty),\Div^1_{\mathbb{Q}_p}})$ instead of $D_{(0,\infty)}({\Div}^1_{\mathbb{Q}_p})$. By $v$-descent one can evaluate $D_{(0,\infty)}({\Div}^1_{\mathbb{Q}_p})$ by taking a  $v$-cover $S_{\bullet}\to {\Div}^1_{\mathbb{Q}_p}$, giving an equivalence  $D_{(0,\infty)}({\Div}^1_{\mathbb{Q}_p})\cong \lim_{[n]\in \Delta}D_{\hat{\sld}}(Y_{(0,\infty,),S_n})$. This identifies, up to the modification of the solid structure, with the descent datum  given by the cover $Y_{(0,\infty,),S_{\bullet}} \to \Div_{\mathbb{Q}_p}^{1,\ct}$ for $D_{qc}(-)$.  One technical reason we prefer working with analytic stacks directly is  the existence of $!$-descent for $D_{qc}(-)$. Another advantage of working directly on the level of analytic stacks is that one can  "geometrise" various kinds of $p$-adic representations within a single category. For example, for $G$ a $p$-adic Lie group, one has the analytic stacks $G$, $G^{\la}$  given by sending a compact open $U\subset G$ to the algebras $C(U,\Q_p)$, $C^{\la}(U,\Q_p)$ of continuous functions or locally analytic respectively. Consequently, the categories $D_{qc}(\SpecAn(\Q_p) /G^?)$, $? \in \{ \ct, \la\}$ correspond to certain continuous (respectively locally analytic) $\Q_p$-representations of $G$.   We will use this freedom to consider also a locally analytic version of the stack $\Div_{\mathbb{Q}_p}^{1,\ct}$ which we denote by $\Div_{\mathbb{Q}_p}^{1,\la}$ (cf. \Cref{Drinfeld cont und la}). By \Cref{künethgeneral for analyticstacks} the categorical Künneth formula holds for all of them. 
+\begin{corollary}($p$-adic Drinfeld lemma)
+    Let $? \in \{\ct,\la \}$. Then the morphism $\Div_{\Q_p}^{1,?}\to \SpecAn(\Q_p)$ is Künneth. In other words, for any analytic stack $W \to \SpecAn(\Q_p)$ we have equivalences
+    \[
+    \mathit{D}_{qc}(\Div_{\Q_p}^{1,?})\otimes_{\mathit{D}_{qc}(\Q_p)}  \mathit{D}_{qc}(W) \cong \mathit{D}_{qc}( \Div_{\Q_p}^{1,?} \times_{\SpecAn(\Q_p)}W).
+    \]
+\end{corollary}
+
+The significance of Drinfeld's lemma in the $\ell$-adic setting of Fargues-Scholze lies in the construction of the spectral action (cf. \Cite[chapter VI, X]{fargues2021geometrization}). We hope that the above theorem will be useful to construct a spectral action in a $p$-adic (locally analytic) setting. \\
+
+After this preprint was in its final form, Montagnani and Pavia informed us that they also independently obtained similar results to ours following similar ideas.
+
+
+
+\subsection*{Outline}
+In \Cref{Dualisable modules} we will collect some facts on presentable categories and the categories of modules over a presentably symmetric monoidal category. We will be brief and introduce just enough notation and definitions to discuss the characterisation of dualisable objects in $\Mod_E(\PrL)$ for $E\in \CAlg(\PrL)$ a commutative algebra in $\PrL$ due to Ramzi (cf.\Cite{ramzi2024dualizable}). We refer to \Cite[Chapter 1]{ramzi2024dualizable} for a more detailed discussion. \\
+The main results of this paper are contained in \Cref{Künneth formulas for stacks}.  In \Cref{Künneth modules in $6$-functor formalisms} and \Cref{monoidal properties of Künneth} we introduce the notion of Künneth morphisms for arbitrary lax symmetric monoidal functors $D: C^{op} \to \PrL$ for a geometric setup $(C,E)$ and show first closure properties of Künneth maps.  In \Cref{Dualisable modules in $6$-functor formalisms} we recall the well known fact that for a $6$-functor formalism which satisfies Künneth, any morphism $X \to Y$ makes $D(X)\in \Mod_{D(Y)}(\PrL)$ into a dualisable module. In \Cref{Properties of Künneth morphisms} we recall the notion of $!$-descent and prove that the property of being Künneth is well behaved under descent. As an application, we prove a Tannakian lifting result in \Cref{Consequences: Tannakian lifting}. \\
+Finally, in \Cref{$6$-functor formalism for analytic stacks}  we recall the $6$-functor formalism of analytic stacks and give our examples of Künneth morphisms coming from the Drinfeld lemma in \Cref{Drinfelds section}. Our main reference for $6$-functor formalisms is \Cite{heyer20246}.
+
+\subsection*{Acknowledgments}
+I want to thank Johannes Anschütz, Arthur-César Le Bras and Stefano Morra for our discussions concerning the Drinfeld lemma and for their guidance as advisors of my thesis, Cédric Pépin for his proposition to investigate the question of descent for Künneth morphisms and Adam Dauser for clarifying the role of representable morphisms and suggesting a counterexample for Künneth morphisms for analytic stacks. A special thanks goes to Greg Andreychev for reading an early draft of this paper and Rubis Bachelette for all the discussions around this paper.
+
+\subsection{Notations and conventions}
+\begin{itemize}
+    \item We denote by $\PrL$ the (very large) $\infty$-category with objects presentable $\infty$-categories and morphisms colimit preserving functors. $\widehat{\Cat}$ denotes the $\infty$-category of large $\infty$-categories. We consider $\PrL$ as a symmetric monoidal $\infty$-category with respect to the Lurie-tensor product. 
+    \item 
+    We denote by $\Ani$ the $\infty$-category of spaces/anima and by $\Sp$ the $\infty$-category of spectra.
+
+    \item For $C$ a symmetric monoidal $\infty$-category we denote by $\CAlg(C)$ the $\infty$-category of commutative algebra objects in $C$ and by $\cCAlg(C)\coloneq \CAlg(C^{op})^{op}$ the $\infty$-category of cocommutative coalgebra objects in $C$. For $A\in \CAlg(C), B\in \cCAlg(C)$ we denote by $\Mod_A(C)$ the $\infty$-category of $A$-modules and by $\coMod_B(C)$ the $\infty$-category of $B$-comodules in $C$. We denote by $\Pr_{st}^L\coloneq\Mod_{\Sp}(\PrL)$ the $\infty$-category of stable presentable $\infty$-categories.
+
+    \item For $M,N \in \PrL$ we denote by $\Fun^L(M,N)$ the $\infty$-category of functors in $\PrL$. Similarly, for $E \in \CAlg(\PrL)$, $M,N \in \Mod_E(\PrL)$ we denote by  $\Fun_E^L(M,N)$ the $\infty$-category of functors in $\Mod_E(\PrL)$.  We denote the symmetric monoidal tensor product on $\Mod_E(\PrL)$ induced by the Lurie tensor product on $\PrL$ by $(-)\otimes_E (-)$ and for  $M,N \in \CAlg(\Mod_E(\PrL))$ we denote by $\Fun_E^{L,\otimes}(M,N)$ the mapping anima  in $\CAlg(\Mod_E(\PrL))$
+
+    \item For $E \in \CAlg(\PrL)$ we denote by $\Cat_E$ the category of $E$-enriched $\infty$-categories. For $M\in \Cat_E$ an $E$-enriched category, we denote by $P_{E}(M)$ the category of $E$-enriched presheaves \Cite[Definition C.2.8]{heyer20246}.
+
+    \item By "category" we will from now on mean $\infty$-category. We will refer to categories in which every inner horn has a unique filler as $1$-categories.
+
+    
+\end{itemize}  
+
+
+
+

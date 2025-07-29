@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.11285v1",
+  "title": "A remark on the $t$-intersecting Erd\u0151s-Ko-Rado theorem",
+  "authors": [
+    "William Linz"
+  ],
+  "categories": [
+    "math.CO"
+  ],
+  "abstract": "The $t$-intersecting Erd\\H{o}s-Ko-Rado theorem is the following statement: if\n$\\mathcal{F} \\subset \\binom{[n]}{k}$ is a $t$-intersecting family of sets and\n$n\\ge (t+1)(k-t+1)$, then $|\\mathcal{F}| \\le \\binom{n-t}{k-t}$. The first proof\nof this statement for all $t$ was a linear algebraic argument of Wilson.\nEarlier, Schrijver had proven the $t$-intersecting Erd\\H{o}s-Ko-Rado theorem\nfor sufficiently large $n$ by a seemingly different linear algebraic argument\nmotivated by Delsarte theory. In this note, we show that the approaches of\nSchrijver and Wilson are in fact equivalent.",
+  "submitted_date": "2025-07-15T13:07:03Z",
+  "download_date": "2025-07-16T00:33:48.464640",
+  "tex_files": [
+    "ekr_t_int_assoc_scheme.tex"
+  ],
+  "main_tex_file": "ekr_t_int_assoc_scheme.tex",
+  "file_size": 17230,
+  "line_count": 252,
+  "complexity_score": 16.925200000000004,
+  "features": {
+    "line_count": 252,
+    "char_count": 17230,
+    "word_count": 1808,
+    "file_size": 17230,
+    "tex_files": [
+      "ekr_t_int_assoc_scheme.tex"
+    ],
+    "main_tex_file": "ekr_t_int_assoc_scheme.tex",
+    "equations": 26,
+    "align_envs": 6,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 3,
+    "inline_math": 114,
+    "display_math": 0,
+    "bracket_math": 15,
+    "straight_quotes": 0,
+    "single_quotes": 28,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 3,
+    "newcommands": 12,
+    "citations": 24,
+    "references": 14,
+    "long_lines": 64,
+    "unicode_chars": 0,
+    "comments": 2,
+    "complexity_score": 16.925200000000004
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

@@ -1,0 +1,10 @@
+\documentclass{article}
+\begin{document}
+% Test command redefinition limits
+\newcommand{\testcmd}{Original}
+% \renewcommand{\testcmd}{Modified}  % Should be controlled
+\section{Redefinition Test}
+Command: \testcmd
+% Attempt to redefine core commands (should fail)
+% \renewcommand{\section}{HACKED}
+\end{document}

@@ -1,0 +1,13 @@
+\documentclass{article}
+% Test loading many packages - should respect LaTeX epsilon limits
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{biblatex}
+% Attempt to load non-whitelisted package (should fail)
+% \usepackage{verbatim}
+\begin{document}
+\section{Package Test}
+Using only whitelisted packages.
+\end{document}

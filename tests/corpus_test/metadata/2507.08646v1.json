@@ -1,0 +1,55 @@
+{
+  "arxiv_id": "2507.08646v1",
+  "title": "Additive sumset sizes with tetrahedral differences",
+  "authors": [
+    "Melvyn B. Nathanson"
+  ],
+  "categories": [
+    "math.NT"
+  ],
+  "abstract": "Experimental calculations suggest that the $h$-fold sumset sizes of 4-element\nsets of integers are concentrated at $h$ numbers that are differences of\ntetrahedral numbers. In this paper it is proved that these \"popular\" sumset\nsizes exist and explicit $h$-adically defined sets are constructed for each of\nthese numbers.",
+  "submitted_date": "2025-07-11T14:50:34Z",
+  "download_date": "2025-07-16T00:35:56.825602",
+  "tex_files": [
+    "Additive_sumset_sizes_with_tetrahedral_differences.tex"
+  ],
+  "main_tex_file": "Additive_sumset_sizes_with_tetrahedral_differences.tex",
+  "file_size": 24185,
+  "line_count": 659,
+  "complexity_score": 26.6659,
+  "features": {
+    "line_count": 659,
+    "char_count": 24185,
+    "word_count": 2732,
+    "file_size": 24185,
+    "tex_files": [
+      "Additive_sumset_sizes_with_tetrahedral_differences.tex"
+    ],
+    "main_tex_file": "Additive_sumset_sizes_with_tetrahedral_differences.tex",
+    "equations": 38,
+    "align_envs": 11,
+    "figures": 0,
+    "tables": 0,
+    "listings": 0,
+    "theorems": 2,
+    "inline_math": 144,
+    "display_math": 0,
+    "bracket_math": 37,
+    "straight_quotes": 1,
+    "single_quotes": 13,
+    "double_dollars": 0,
+    "british_spellings": 0,
+    "american_spellings": 0,
+    "includes": 0,
+    "packages": 1,
+    "newcommands": 68,
+    "citations": 9,
+    "references": 8,
+    "long_lines": 76,
+    "unicode_chars": 0,
+    "comments": 6,
+    "complexity_score": 26.6659
+  },
+  "issues_found": {},
+  "compile_status": "success"
+}

@@ -1,0 +1,11 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "genhts_albanese9.tex"
+      }
+   ],
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

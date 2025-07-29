@@ -1,0 +1,40 @@
+# LaTeX Perfectionist Docker Image
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install TeXLive (minimal for testing)
+RUN apt-get update && apt-get install -y \
+    texlive-latex-base \
+    texlive-latex-recommended \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -s /bin/bash perfectionist
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml poetry.lock ./
+COPY latex_perfectionist ./latex_perfectionist
+COPY README.md ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
+
+# Switch to non-root user
+USER perfectionist
+
+# Set entrypoint
+ENTRYPOINT ["python", "-m", "latex_perfectionist"]
+CMD ["--help"]

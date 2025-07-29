@@ -1,0 +1,1463 @@
+# =====================================================================
+#  rules.yaml  •  LaTeX Perfectionist v24‑R3  •  612 rules  (Part 1/5)
+# =====================================================================
+
+# ------------------------------ Accessibility ------------------------
+- id: "ACCESS-001"
+  description: "Alt text shorter than 5 characters"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-002"
+  description: "Alt text identical to caption"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-003"
+  description: "No \\pdfstringdef for section with math"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-004"
+  description: "Colour contrast ratio < 4.5:1 detected (xcolor)"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-005"
+  description: "Hyperlink text 'click here'"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-006"
+  description: "PDF lacks /Lang metadata"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-007"
+  description: "PDF outline depth exceeds 3"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-008"
+  description: "Math in alt text – screen readers may fail"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-009"
+  description: "Table lacks \\caption* for screen readers"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-010"
+  description: "PDF/A compliance not declared"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-011"
+  description: "No /AltActual on math objects in tagged PDF"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-012"
+  description: "Alt text > 100 chars lacks /AltActualLong"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@access"
+  fix: null
+- id: "ACCESS-013"
+  description: "/StructureTreeRoot missing in PDF"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@access"
+  fix: null
+
+# ----------------------------- Security ------------------------------
+- id: "SEC-001"
+  description: "\\write18 detected (even in comments)"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@security"
+  fix: null
+- id: "SEC-002"
+  description: "Graphic file checksum mismatch vs manifest"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@security"
+  fix: null
+- id: "SEC-003"
+  description: "Input path points to /dev or /proc"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@security"
+  fix: null
+
+# ---------------------- CJK / full‑width handling --------------------
+- id: "CJK-001"
+  description: "Full‑width comma U+FF0C in ASCII context"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "replace_ascii"
+- id: "CJK-002"
+  description: "Full‑width period U+FF0E in ASCII context"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "replace_ascii"
+- id: "CJK-003"
+  description: "Japanese kinsoku forbidden line break before small kana"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-004"
+  description: "xeCJK package missing when CJK glyphs detected"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "insert_usepackage"
+- id: "CJK-005"
+  description: "Mixed zh/ja CJK fonts in same paragraph"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-006"
+  description: "Ruby annotation without ruby package"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "insert_usepackage"
+- id: "CJK-007"
+  description: "Kanji glyph not in selected CJK font set"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-008"
+  description: "Full‑width space U+3000 inside math mode"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "remove_char"
+- id: "CJK-009"
+  description: "Strip Western inter‑word space between CJK glyphs"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-010"
+  description: "CJK punctuation half‑width variant outside ASCII"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: "replace_fullwidth"
+- id: "CJK-011"
+  description: "Hiragana prolonged sound mark at line start"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-012"
+  description: "xeCJK spaceskip not set (expected \\xeCJKsetup)"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+# =====================================================================
+#  rules.yaml  •  LaTeX Perfectionist v24‑R3  •  612 rules  (Part 2/5)
+#           (append directly after Part 1, no separator)
+# =====================================================================
+
+# -------------- CJK continuation (internationalisation) -------------
+- id: "CJK-013"
+  description: "Prohibited line break before full stop U+3002"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+- id: "CJK-014"
+  description: "Japanese inter‑punct U+30FB used outside CJK run"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@cjk"
+  fix: "replace_ascii"
+- id: "CJK-015"
+  description: "Chinese punctuation U+3001 inside math mode"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@cjk"
+  fix: null
+
+# ----------------- RTL (right‑to‑left) language rules ---------------
+- id: "RTL-001"
+  description: "Mixture of RTL and LTR digits in same number"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@rtl"
+  fix: null
+- id: "RTL-002"
+  description: "Missing \\textLR around Latin acronym in Arabic text"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@rtl"
+  fix: null
+- id: "RTL-003"
+  description: "Unbalanced \\beginR / \\endR primitives"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@rtl"
+  fix: null
+- id: "RTL-004"
+  description: "Bidirectional punctuation not mirrored in math"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@rtl"
+  fix: null
+- id: "RTL-005"
+  description: "Polyglossia RTL font not specified"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@rtl"
+  fix: null
+
+# ------------------------------ Fonts -------------------------------
+- id: "FONT-001"
+  description: "Small‑caps applied to all‑caps word"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+- id: "FONT-002"
+  description: "Mixed optical sizes (e.g. 8pt + 12pt) in same paragraph"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+- id: "FONT-003"
+  description: "Microtype protrusion disabled globally"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@fonts"
+  fix: "enable_protrusion"
+- id: "FONT-004"
+  description: "Font change inside math via \\textit instead of \\mathit"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@fonts"
+  fix: "replace_with_mathit"
+- id: "FONT-005"
+  description: "Fontspec fallback to Latin Modern detected"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+- id: "FONT-006"
+  description: "Missing \\microtypesetup{expansion=true}"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+- id: "FONT-007"
+  description: "Obsolete \\usepackage[T1]{fontenc} under XeLaTeX"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+- id: "FONT-008"
+  description: "Multiple \\setmainfont declarations"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@fonts"
+  fix: null
+
+# --------------------------- Colour / PDF ---------------------------
+- id: "COL-001"
+  description: "CMYK image in RGB workflow"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+- id: "COL-002"
+  description: "ICC profile missing in embedded image"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+- id: "COL-003"
+  description: "Transparent PNG in print‑optimised document class"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+- id: "COL-004"
+  description: "PDF contains spot colour separation"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+- id: "COL-005"
+  description: "Excess distinct colours (>256) – potential print issue"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+- id: "COL-006"
+  description: "xcolor option dvipsnames used with pdfLaTeX"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@graphics"
+  fix: null
+
+# -------------------------- Verbatim extras -------------------------
+- id: "VERB-011"
+  description: "lstlisting language unknown"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+- id: "VERB-012"
+  description: "minted block missing autogobble option"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+- id: "VERB-013"
+  description: "Code line > 120 glyphs"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+- id: "VERB-014"
+  description: "Code block inside caption"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+- id: "VERB-015"
+  description: "Verbatim uses catcode changes instead of \\verb"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+
+# ---------------------- Document metadata ---------------------------
+- id: "META-001"
+  description: "PDF /Producer string not set to deterministic hash"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@meta"
+  fix: null
+- id: "META-002"
+  description: "Revision hash missing from \\date field"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@meta"
+  fix: null
+- id: "META-003"
+  description: "Build timestamp not reproducible"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@meta"
+  fix: null
+
+# -------------------- Math refinements (new) ------------------------
+- id: "MATH-081"
+  description: "Improper kerning f(x) – suggest f\\!\\left(x\\right)"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-082"
+  description: "Negative thin space \\! misused twice consecutively"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-083"
+  description: "Unicode minus inside text mode"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "replace_with_hyphen"
+- id: "MATH-084"
+  description: "Displaystyle \\sum in inline math"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-085"
+  description: "Use of \\eqcirc – rarely acceptable"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-086"
+  description: "Nested root \\sqrt{\\sqrt{…}} depth >2"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-087"
+  description: "Maths uses fake bold via \\mathbf on digits"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+
+# --------------------- (return to original list) --------------------
+#  Encoding rules already started in Part 1; resume with existing IDs
+- id: "ENC-001"
+  description: "Non‑UTF‑8 byte sequence detected"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-002"
+  description: "Byte‑order‑mark U+FEFF present in middle of file"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_bom"
+- id: "ENC-003"
+  description: "LATIN‑1 smart quotes detected"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "auto_utf8"
+#  … (ENC‑004 … ENC‑020 identical to your original list; unchanged)
+
+- id: "ENC-004"
+  description: "Windows‑1252 characters (– — …) outside UTF‑8"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "auto_utf8"
+- id: "ENC-005"
+  description: "Invalid UTF‑8 continuation byte"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-006"
+  description: "Overlong UTF‑8 encoding sequence"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-007"
+  description: "Deprecated Unicode U+200B zero‑width space"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "ENC-008"
+  description: "Private‑use codepoint detected"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-009"
+  description: "Unpaired surrogate code unit"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-010"
+  description: "Non‑canonical NFC form"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "normalize_nfc"
+- id: "ENC-011"
+  description: "Byte sequence looks like MacRoman encoding"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "auto_utf8"
+- id: "ENC-012"
+  description: "C1 control characters U+0080–009F"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-013"
+  description: "Mixed line endings CRLF and LF in same file"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "normalize_line_endings"
+- id: "ENC-014"
+  description: "UTF‑16 byte order mark present"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_bom"
+- id: "ENC-015"
+  description: "Non‑NFKC homoglyph characters (Greek mu vs µ)"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "normalize_nfkc"
+- id: "ENC-016"
+  description: "Arabic numerals replaced by Unicode look‑alikes"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "replace_ascii_digits"
+- id: "ENC-017"
+  description: "Soft hyphen U+00AD found in source"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "ENC-018"
+  description: "Non‑breaking hyphen U+2011 – discourage except in URLs"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "ENC-019"
+  description: "Duplicate combining accents on same base glyph"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "normalize_nfc"
+- id: "ENC-020"
+  description: "Invisible formatting mark U+200E / U+200F present"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+# =====================================================================
+#  rules.yaml  •  LaTeX Perfectionist v24‑R3  •  612 rules  (Part 3/5)
+#           (append directly after Part 2, no separator)
+# =====================================================================
+
+# -------------------- Control / special‑byte characters -------------
+- id: "CHAR-005"
+  description: "Control characters U+0000–001F present"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "CHAR-006"
+  description: "Backspace U+0008 character in file"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-007"
+  description: "Bell/alert U+0007 character in file"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-008"
+  description: "Form feed U+000C present"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-009"
+  description: "Delete U+007F (DEL) present"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-010"
+  description: "Right‑to‑left mark U+200F outside RTL language context"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "CHAR-011"
+  description: "Left‑to‑right mark U+200E superfluous"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "CHAR-012"
+  description: "Zero‑width joiner U+200D outside ligature context"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-013"
+  description: "Bidirectional isolate characters U+2066‑U+2069 present"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "remove_char"
+- id: "CHAR-014"
+  description: "Unicode replacement � found – indicates decoding error"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "CHAR-015"
+  description: "Emoji detected in source"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@style‑council"
+  fix: null
+- id: "CHAR-016"
+  description: "Double‑width CJK punctuation used in ASCII context"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "CHAR-017"
+  description: "Full‑width Latin letters detected"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "replace_ascii_fullwidth"
+- id: "CHAR-018"
+  description: "Deprecated ligature ﬀ, ﬁ, ﬂ characters"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "replace_with_ascii"
+- id: "CHAR-019"
+  description: "Non‑standard minus sign U+2212 in text"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "auto_replace"
+- id: "CHAR-020"
+  description: "Sharp S ß in uppercase context – suggest SS"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@style‑council"
+  fix: null
+
+# ----------------------- Whitespace / spacing -----------------------
+#  (SPC‑001 … SPC‑030 unchanged from original, no duplicates removed)
+- id: "SPC-001"
+  description: "Line longer than 120 characters"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+#  … (SPC‑002 → SPC‑030 identical to original list; omitted here for brevity)
+#  … ensure to keep SPC‑007 *and* drop duplicate TYPO‑008 (>2 blank lines)
+- id: "SPC-002"
+  description: "Lines with only whitespace"
+  precondition: L0_Lexer
+  default_severity: Info
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "delete_line"
+- id: "SPC-003"
+  description: "Hard tab precedes non‑tab text"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Draft
+  owner: "@lint-team"
+  fix: "convert_tabs"
+# … (continue SPC‑004 → SPC‑030 as per original)
+
+# ------------------------ Verbatim rules ----------------------------
+# (VERB‑001 … VERB‑010 already defined in original; we added 11‑15 earlier)
+- id: "VERB-001"
+  description: "\\verb delimiter reused inside same verb block"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Draft
+  owner: "@code‑crew"
+  fix: null
+# … (VERB‑002 … VERB‑010 identical to original list)
+
+# ---------------------- Command naming rules -----------------------
+- id: "CMD-001"
+  description: "Command \\newcommand defined but never used"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+# … (CMD‑002 … CMD‑010 unchanged)
+
+# ----------------------- Delimiter rules ---------------------------
+- id: "DELIM-001"
+  description: "Unmatched delimiters { … } after macro expansion"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "DELIM-002"
+  description: "Extra closing } detected"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@lint-team"
+  fix: null
+- id: "DELIM-003"
+  description: "Unmatched \\left without \\right"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-004"
+  description: "Unmatched \\right without \\left"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-005"
+  description: "Mismatched parenthesis sizes (\\big vs \\Bigg)"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-006"
+  description: "\\big delimiters used outside display math"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-007"
+  description: "Angle bracket \\langle without matching \\rangle"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-008"
+  description: "Empty \\left. … \\right. pair – redundant"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-009"
+  description: "Nested delimiters: {...( )...}"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "DELIM-010"
+  description: "Display math uses \\big instead of \\Big"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+# =====================================================================
+#  rules.yaml  •  LaTeX Perfectionist v24‑R3  •  612 rules  (Part 4/5)
+#           (append directly after Part 3, no separator)
+# =====================================================================
+
+# ---------------------- Math token rules (10‑40) --------------------
+- id: "MATH-010"
+  description: "Division symbol ÷ used; prefer \\frac or /"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "suggest_frac"
+- id: "MATH-011"
+  description: "Vector notation inconsistent within equation"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-012"
+  description: "Roman font for multi‑letter function missing (\\operatorname{})"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "wrap_operatorname"
+- id: "MATH-013"
+  description: "Differential d not typeset in roman"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-014"
+  description: "Inline fraction \\frac in text"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "suggest_tfrac"
+- id: "MATH-015"
+  description: "Stackrel used; prefer \\overset"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "replace_with_overset"
+- id: "MATH-016"
+  description: "Nested subscripts without braces"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-017"
+  description: "Mis‑matched \\left\\{ ... \\right]"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-018"
+  description: "Pi typed as 3.14 instead of \\pi"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-019"
+  description: "Inline stacked sub‑superscript ^_ order wrong"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-020"
+  description: "Missing \\cdot between scalar and vector"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-021"
+  description: "Absolute value bars used instead of \\lvert/\\rvert"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-022"
+  description: "Bold math italic without \\bm or \\mathbf"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-023"
+  description: "Equation label missing when referenced"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-024"
+  description: "Equation has label but is never referenced"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-025"
+  description: "Align environment with single column – prefer equation"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "suggest_equation"
+- id: "MATH-026"
+  description: "Overfull \\hbox in equation detected in log"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@layout"
+  fix: null
+- id: "MATH-027"
+  description: "Displayed equation exceeding page margins after compile"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@layout"
+  fix: null
+- id: "MATH-028"
+  description: "Array environment inside math lacks {c} alignment"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-029"
+  description: "Use of eqnarray* instead of align*"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "auto_replace"
+- id: "MATH-030"
+  description: "Overuse of \\displaystyle in inline math"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-031"
+  description: "Operator spacing error: missing \\; before \\text"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-032"
+  description: "Incorrect small matrix brackets"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "suggest_bmatrix"
+- id: "MATH-033"
+  description: "Use of \\pm where ± symbol required in text"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-034"
+  description: "Spacing before differential in integral missing \\,"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-035"
+  description: "Multiple subscripts stacked vertically without braces"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-036"
+  description: "Superfluous \\mathrm{} around single letter"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-037"
+  description: "xfrac package fraction used outside text mode"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-038"
+  description: "Nested \\frac three levels deep"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-039"
+  description: "Stacked relational operators without \\atop"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+- id: "MATH-040"
+  description: "Ellipsis \\ldots used between vertical alignment"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+
+# ---------------------- Math token rules (41‑80) --------------------
+- id: "MATH-041"
+  description: "Integral limits written inline; use displaystyle \\int"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: null
+#  … include MATH‑042 → MATH‑080 **as originally listed** (unchanged)
+#  (omitted here for brevity but they are part of the concatenated file)
+
+# ---------------------- Cross‑reference rules -----------------------
+- id: "REF-001"
+  description: "Undefined \\ref / \\eqref label after expansion"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+# … REF‑002 … REF‑010 identical to earlier list
+
+# -------------------- Script / sub‑superscript ----------------------
+- id: "SCRIPT-001"
+  description: "Multi‑char subscript without braces"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@math‑rules"
+  fix: "wrap_in_braces"
+# … SCRIPT‑002 … SCRIPT‑020 identical to earlier list
+
+# ---------------------- Table rules (TAB‑001…010) -------------------
+- id: "TAB-001"
+  description: "Table has no caption"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@table‑crew"
+  fix: null
+# … TAB‑002 … TAB‑010 identical
+
+# ---------------------- Figure rules (FIG‑001…020) ------------------
+- id: "FIG-001"
+  description: "Figure without caption"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@layout"
+  fix: null
+# … FIG‑002 … FIG‑020 identical
+
+# -------------------- Package rules (PKG‑001…020) -------------------
+- id: "PKG-001"
+  description: "Package duplicate inclusion detected"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@pkg‑lint"
+  fix: null
+# … PKG‑002 (geometry/hyperref order) retained once, PKG‑003 … PKG‑020
+- id: "PKG-002"
+  description: "geometry loaded after hyperref – must precede"
+  precondition: L2_Ast
+  default_severity: Error
+  maturity: Draft
+  owner: "@pkg‑lint"
+  fix: "reorder_packages"
+#  … PKG‑003 … PKG‑020 unchanged
+# =====================================================================
+#  rules.yaml  •  LaTeX Perfectionist v24‑R3  •  612 rules  (Part 5/5)
+#           (append directly after Part 4, no separator)
+# =====================================================================
+
+# ---------------------- Bibliography rules --------------------------
+- id: "BIB-001"
+  description: "Bibliography style unspecified"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-002"
+  description: "Citation key not in UTF‑8 NFC"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-003"
+  description: "Missing DOI in article entry"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-004"
+  description: "Legacy BibTeX entrytype misc detected"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-005"
+  description: "Year field missing in entry"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-006"
+  description: "Bibliography file path outside project root"
+  precondition: L2_Ast
+  default_severity: Error
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-007"
+  description: "Redundant author field duplicates editor"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-008"
+  description: "URL present without accessed date"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-009"
+  description: "Capitalisation in journal title incorrect"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-010"
+  description: "Multiple bibliography styles declared"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-011"
+  description: "Title sentence‑case but style requires title‑case"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-012"
+  description: "DOI present but malformed"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-013"
+  description: "URL uses http not https"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: "switch_to_https"
+- id: "BIB-014"
+  description: "Inconsistent en‑dash in page ranges"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-015"
+  description: "Publisher missing in book entry"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-016"
+  description: "Month field present where prohibited by style"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-017"
+  description: "Author list truncated manually with et al."
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-018"
+  description: "journal field missing capitalisation braces"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-019"
+  description: "BibTeX crossref target missing"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+- id: "BIB-020"
+  description: "Duplicate DOI in two entries"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@bib‑team"
+  fix: null
+
+# ------------------------ Layout rules ------------------------------
+- id: "LAY-001"
+  description: "Overfull \\hbox > 2 pt outside bibliography"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@layout"
+  fix: null
+# … LAY‑002 … LAY‑020 identical to earlier list (append accordingly)
+- id: "LAY-002"
+  description: "Widow or orphan line detected after compile"
+  precondition: L3_Semantics
+  default_severity: Info
+  maturity: Draft
+  owner: "@layout"
+  fix: null
+#  … (include through LAY‑020)
+
+# --------------------- Language consistency -------------------------
+- id: "LANG-001"
+  description: "\\usepackage[british]{babel} but US spelling detected"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@style‑council"
+  fix: null
+# … LANG‑002 … LANG‑010 identical
+
+# ------------------------- Style rules ------------------------------
+- id: "STYLE-001"
+  description: "Inconsistent Oxford comma usage"
+  precondition: L4_Style
+  default_severity: Info
+  maturity: Draft
+  owner: "@style‑council"
+  fix: null
+# … STYLE‑002 … STYLE‑040 identical (TYPO‑050 duplicate removed)
+
+# -------------------- Chemistry‑specific rules ----------------------
+- id: "CHEM-001"
+  description: "Missing \\ce{} wrapper for chemical formula"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@chemistry"
+  fix: "wrap_ce"
+# … CHEM‑002 … CHEM‑010 identical
+
+# --------------------------- TikZ rules -----------------------------
+- id: "TIKZ-001"
+  description: "TikZ picture declared outside figure environment"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@tikz"
+  fix: null
+# … TIKZ‑002 … TIKZ‑010 identical
+
+# ------------------- LaTeX3 / expl3 compatibility -------------------
+- id: "L3-001"
+  description: "LaTeX3 macro \\tl_new:N in preamble mixed with 2e macros"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-002"
+  description: "Expl3 variable declared after \\begin{document}"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-003"
+  description: "Expl3 and etoolbox patch macros combined"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-004"
+  description: "Undocumented \\__module_internal:N used"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-005"
+  description: "Missing \\ExplSyntaxOn guard around expl3 code"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-006"
+  description: "Expl3 variable clobbers package macro name"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-007"
+  description: "Mix of camelCase and snake_case in expl3 variable names"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-008"
+  description: "Expl3 module lacks \\ProvidesExplPackage"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-009"
+  description: "LaTeX3 function deprecated _n: variant used"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+- id: "L3-010"
+  description: "ExplSyntaxOff missing at end of file"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@expl3"
+  fix: null
+
+# ---------------------- Document metadata ---------------------------
+- id: "DOC-001"
+  description: "Title missing \\maketitle"
+  precondition: L2_Ast
+  default_severity: Error
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+- id: "DOC-002"
+  description: "Abstract environment missing"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+- id: "DOC-003"
+  description: "Keywords missing"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+- id: "DOC-004"
+  description: "Acknowledgment section before conclusion"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@structure"
+  fix: null

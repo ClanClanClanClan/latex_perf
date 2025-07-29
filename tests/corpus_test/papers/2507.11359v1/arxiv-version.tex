@@ -1,0 +1,1766 @@
+\documentclass[11pt, letterpaper]{amsart}
+\usepackage{t1enc}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsthm}
+\usepackage{amsfonts}
+\usepackage{latexsym}
+\usepackage[dvips]{graphicx}
+%\usepackage{graphicx}
+\usepackage{float}
+\usepackage[natural]{xcolor}
+\usepackage{algpseudocode}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{xcolor}
+%\usepackage{showkeys}
+\usepackage[colorlinks,linkcolor=blue]{hyperref}
+\usepackage{lineno}
+\usepackage{setspace}
+\usepackage{fullpage}
+\usepackage{bm}
+\usepackage{lineno}
+\usepackage{indentfirst}
+\usepackage[letterpaper, margin=1in]{geometry} % 1-inch margins all around + Lettersize
+\usepackage{setspace}
+\singlespacing %single-space (between lines) format with ample spacing throughout 
+
+
+\usepackage{listings}
+\lstset{language=Matlab}
+\lstset{breaklines}
+\lstset{extendedchars=false}
+
+\usepackage[ruled, linesnumbered, vlined]{algorithm2e}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\SetKw{KwRet}{return}
+\lstset{language=Matlab}
+\lstset{breaklines}
+\lstset{extendedchars=false}
+
+\bibliographystyle{plain}
+\theoremstyle{plain}
+
+
+
+
+\numberwithin{equation}{section}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{theorem}[thm]{Theorem}
+\newtheorem{conjecture}[thm]{Conjecture}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{corollary}[thm]{Corollary}
+\newtheorem{proposition}[thm]{Proposition}
+\newtheorem{addendum}[thm]{Addendum}
+\newtheorem{variant}[thm]{Variant}
+%%%%%%%%%%%%%%%%%%%% Text roman %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{definition}
+\newtheorem{construction}[thm]{Construction}
+\newtheorem{notations}[thm]{Notations}
+\newtheorem{question}[thm]{Question}
+\newtheorem{problem}[thm]{Problem}
+\newtheorem{remark}[thm]{Remark}
+\newtheorem{remarks}[thm]{Remarks}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{claim}[thm]{Claim}
+\newtheorem{fact}[thm]{Fact}
+\newtheorem{assumption}[thm]{Assumption}
+\newtheorem{assumptions}[thm]{Assumptions}
+\newtheorem{properties}[thm]{Properties}
+\newtheorem{example}[thm]{Example}
+\newtheorem{comments}[thm]{Comments}
+\newtheorem{blank}[thm]{}
+\newtheorem{observation}[thm]{Observation}
+\newtheorem{defn-thm}[thm]{Definition-Theorem}
+
+\newcommand{\btheorem}{\begin{theorem}}
+	\newcommand{\etheorem}{\end{theorem}}
+\newcommand{\bconjecture}{\begin{conjecture}}
+	\newcommand{\econjecture}{\end{conjecture}}
+\newcommand{\bproposition}{\begin{proposition}}
+	\newcommand{\eproposition}{\end{proposition}}
+\newcommand{\bdefinition}{\begin{definition}}
+	\newcommand{\edefinition}{\end{definition}}
+\newcommand{\bcorollary}{\begin{corollary}}
+	\newcommand{\ecorollary}{\end{corollary}}
+\newcommand{\bproof}{\begin{proof}}
+	\newcommand{\eproof}{\end{proof}}
+\newcommand{\bclaim}{\begin{claim}}
+	\newcommand{\eclaim}{\end{claim}}
+\newcommand{\bquestion}{\begin{question}}
+	\newcommand{\equestion}{\end{question}}
+\newcommand{\bfact}{\begin{fact}}
+	\newcommand{\efact}{\end{fact}}
+\newcommand{\bremark}{\begin{remark}}
+	\newcommand{\eremark}{\end{remark}}
+\newcommand{\eexample}{\end{example}}
+\newcommand{\bexample}{\begin{example}}
+\newcommand{\la}{\langle}
+\newcommand{\elemma}{\end{lemma}}
+\newcommand{\blemma}{\begin{lemma}}
+\newcommand{\red}{\textcolor[rgb]{1.00,0.00,0.00}}
+\newcommand{\yel}{\textcolor[rgb]{0.00,0.00,1.00}}
+\newcommand{\green}{\textcolor[rgb]{0.00,1.00,0.00}}
+
+
+\newcommand{\beq}{\begin{equation}}
+	\newcommand{\eeq}{\end{equation}}
+
+\newcommand{\figcaption}[1]{\mycaption[]{#1}}
+\newcommand{\tabcaption}[1]{\mycaption[]{#1}}
+\newcommand{\head}[1]{\chapter[Lecture \##1]{}}
+\newcommand{\mathify}[1]{\ifmmode{#1}\else\mbox{$#1$}\fi}
+%\renewcommand{\Pr}[1]{\mathify{\mbox{Pr}\left[#1\right]}}
+%\newcommand{\Exp}[1]{\mathify{\mbox{Exp}\left[#1\right]}}
+\newcommand{\bigO}O
+\newcommand{\set}[1]{\mathify{\left\{ #1 \right\}}}
+\newcommand\card[1]{\left| #1 \right|}
+\newcommand\cardi[1]{| #1 |}
+\newcommand\tup[1]{\left\langle #1 \right\rangle}
+\newcommand\sett[2]{\left\{ \left. #1 \;\right\vert #2 \right\}}
+\newcommand\settright[2]{\left\{ #1 \;\left\vert\; #2 \right.\right\}}
+\def\half{\frac{1}{2}}
+
+% Coding theory addenda
+
+\newcommand{\enc}{{\sf Enc}}
+\newcommand{\dec}{{\sf Dec}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{{\rm Var}}
+\newcommand{\Z}{{\mathbb Z}}
+\newcommand{\C}{{\mathbb C}}
+\newcommand{\V}{{\mathbb V}}
+\newcommand{\N}{{\mathbb N}}
+\newcommand{\F}{{\mathbb F}}
+\newcommand{\calf}{{\mathcal F}}
+\newcommand{\calg}{{\mathcal G}}
+\newcommand{\calp}{{\mathcal P}}
+\newcommand{\integers}{{\mathbb Z}^{\geq 0}}
+\newcommand{\R}{{\mathbb R}}
+\newcommand{\Q}{{\cal Q}}
+\newcommand{\eqdef}{{\stackrel{\rm def}{=}}}
+\newcommand{\from}{{\leftarrow}}
+\newcommand{\vol}{{\rm Vol}}
+\newcommand{\poly}{{\rm poly}}
+\newcommand{\ip}[1]{{\langle #1 \rangle}}
+\newcommand{\wt}{{\rm wt}}
+\renewcommand{\vec}[1]{{\mathbf #1}}
+\newcommand{\mspan}{{\rm span}}
+\newcommand{\rs}{{\rm RS}}
+\newcommand{\RM}{{\rm RM}}
+\newcommand{\Had}{{\rm Had}}
+\newcommand{\calc}{{\cal C}}
+%\newcommand{\binom}[2]{{#1 \choose #2}}
+
+\newcommand{\fig}[4]{
+	\begin{figure}
+		\setlength{\epsfysize}{#2}
+		\vspace{3mm}
+		\centerline{\epsfbox{#4}}
+		\caption{#3} \label{#1}
+	\end{figure}
+}
+
+\newcommand{\ord}{{\rm ord}}
+
+\providecommand{\norm}[1]{\left\| #1 \right\|}
+\newcommand{\embed}{{\rm Embed}}
+\newcommand{\qembed}{\mbox{$q$-Embed}}
+\newcommand{\calh}{{\cal H}}
+\newcommand{\lp}{{\rm LP}}
+\newcommand{\remove}[1]{{}}
+
+\newcommand{\RR}{\mathbb{R}}
+
+\renewcommand{\algorithmicrequire}{\textbf{Data:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\renewcommand{\alglinenumber}[1]{\footnotesize #1}
+
+
+
+
+\begin{document}
+	%\linenumbers
+	%\noindent Remove first-line indentation
+%\begin{titlepage}
+    
+
+\title{Perfect Matchings in Random Sparsifications of Dense Hypergraphs}
+\author{Jie Han}
+\author{Jingwen Zhao}
+\address{School of Mathematics and Statistics and Center of Applied Mathematics, Beijing Institute of Technology, Beijing, China, 100081. 
+Email: {\tt \{han.jie|jingwen.zhao\}@bit.edu.cn}.}
+\maketitle
+
+\begin{abstract}
+The decision problem of perfect matchings in uniform hypergraphs is famously an NP-complete problem.
+It has been shown by Keevash--Knox--Mycroft [STOC, 2013] that for every $\varepsilon>0$, such decision problem restricted to $k$-uniform hypergraphs $H$ satisfying that every $(k-1)$-set of vertices is in at least $(1/k+\varepsilon)|H|$ edges is tractable, and the quantity $1/k$ is best possible.
+In this paper we study the existence of perfect matchings in the random $p$-sparsification of such $k$-uniform hypergraphs, that is, for $p=p(n)\in [0,1]$, every edge is kept with probability $p$ independent of others.
+As a consequence, we give a polynomial-time algorithm that with high probability solves the decision problem; we also derive effective bounds on the number of perfect matchings in such hypergraphs.
+At last, similar results are obtained for the $F$-factor problem in graphs.
+
+The key ingredients of the proofs are a strengthened partition lemma for the lattice-based absorption method, and the random redistribution method developed recently by Kelly, M\"uyesser and Pokrovskiy, based on the spread method.
+\end{abstract}
+%\end{titlepage}
+
+
+\section{Introduction}
+Matchings are fundamental objects in Graph Theory and have broad applications in other branches of Science and a variety of practical problems
+(e.g.\ the assignment of graduating medical students to their first hospital appointments\footnote{In 2012, the Nobel Memorial Prize in Economics was awarded to Shapley and Roth ``for the theory of stable allocations and the practice of market design."}).
+Applications of matchings in hypergraphs 
+include the `Santa Claus' allocation problem~\cite{santa_claus};
+they also offer a universal framework for many 
+important combinatorial problems, e.g.\ the Existence Conjecture 
+for designs (see \cite{Keevash_design, GKLO}) and
+Ryser's conjecture \cite{ryser} on transversals in Latin squares.
+
+    Given $k\ge 2$, a $k$-uniform hypergraph (or simply a \emph{$k$-graph}) is a hypergraph $H = (V(H), E(H))$ in which every edge $e \in E(H)$ has size exactly $k$.
+    A \emph{matching} $M$ in $H$ is a set of vertex-disjoint edges. 
+    A \emph{perfect matching} in $H$ is a matching that covers all the vertices of $H$.
+    
+    The question of determining the existence of perfect matchings in $k$-uniform hypergraphs is a fundamental question in combinatorics. 
+    Several well-known conjectures and problems, such as Ryser's conjecture and the existence of certain combinatorial designs, can be reduced to this type of problems. 
+    When $k=2$, Tutte \cite{tutte1947factorization} provided a complete characterization of graphs that contain a perfect matching in 1947, and Edmonds \cite{edmonds1965paths} gave a polynomial-time algorithm to determine whether a given graph contains one. 
+    However, for $k \ge 3$, the problem becomes \(\mathsf{NP}\)-complete, as shown by Karp \cite{karp2009reducibility}. 
+    Naturally, we aim to find sufficient conditions that guarantee the existence of perfect matchings. 
+    Among these, the most extensively studied is the minimum degree condition, commonly referred to as the Dirac-type problem.
+
+    As an important generalization of perfect matchings, the concept of \emph{$F$-factors} has received considerable attention in graph and hypergraph theory. 
+    Given two $k$-graphs $F$ and $H$, an \emph{$F$-packing} of $H$ is a collection of vertex-disjoint copies of $F$ in $H$. 
+    An \emph{$F$-factor}, or \emph{perfect \(F\)-packing}, is an $F$-packing that covers all vertices of $H$.
+    Hell and Kirkpatrick \cite{kirkpatrick1983complexity} showed that determining whether a graph $G$ contains a perfect $F$-packing is \(\mathsf{NP}\)-complete when $F$ has a component with at least three vertices.
+
+    %Let \(G\) be a graph and \(\mathcal{P}\) a graph property. Many results in graph theory are of the form “under certain conditions, \(G\) has property P\(\mathcal{P}\)”. Once such a result is established, it is natural to ask how strongly does G possess P? In other words, we want to determine the robustness of G with respect to P. 
+
+    Besides studying the containment of an \(F\)-factor, it is also interesting to ask how stable this property is. 
+    In other words, does the \(F\)-factor still exist if the graph is slightly changed? 
+    This leads to the study of the robustness of graph properties. 
+    There are several measures of robustness that were proposed so far.
+    For example, one can measure the robustness of Dirac graphs (i.e., graphs \(G\) with minimum degree at least \(\card{G}/2\)) with respect to perfect matchings by computing the number of perfect matchings that a Dirac graph must contain. 
+    Indeed, confirming a conjecture of S\'{a}rk\"{o}zy,  Selkow, and Szemer\'{e}di\cite{sarkozy2003number}, Cuckler and Kahn \cite{cuckler2009hamiltonian} proved that every Dirac graph contains at least \(n!/{(2+o(1))}^n\) perfect matchings.
+    
+    %Another measure is so called resilience, whose systematic study was initiated by Sudakov and Vu [32], and has been intensively studied afterwards, see, e.g.,. Roughly speaking, for monotone increasing graph properties, these measures compute the robustness in terms of the number of edges one must delete from \(G\) locally or globally in order to destroy the property \(\mathcal{P}\). 
+
+    
+    %While much of the existing work has focused on finding degree conditions that guarantee perfect matchings or $F$-factors, it is also important to understand how stable these structures are when the graph is perturbed. This leads to the study of the robustness of graph properties.  Among the various measures of robustness, we focus on the setting where one considers random subgraphs. Roughly speaking, for monotone increasing 
+
+    Another measure is the so called resilience. 
+    Roughly speaking, for monotone increasing graph properties, the resilience quantifies the robustness in terms of the number of edges one must delete from \(H\), locally or globally, in order to destroy the property \(\mathcal{P}\). 
+    For example, Krivelevich, Lee and Sudakov \cite{krivelevich2014robust} proved that for any Dirac graph \(H\), the random subgraph obtained by keeping each edge of \(H\) independently with probability \(p\) where \( p\ge C \log n/n\) (\(C\) is an absolute constant) \emph{asymptotically almost surely} (abbreviated a.a.s.) contains a perfect matching.
+    
+    In this work, we focus on the robustness of degree conditions that guarantee perfect matchings or $F$-packings in hypergraphs. 
+    While such conditions have traditionally been studied from a structural or algorithmic perspective (particularly in the context of making the decision problem polynomial-time solvable), we show that many of them also exhibit a form of robustness.
+    That is, they continue to guarantee the desired structures even under random perturbations, such as when passing to a random subgraph.
+    In particular, we identify the two settings in which the same minimum degree thresholds that make the problem tractable also lead to robust containment %the desired structures persist with high probability
+    in random subgraphs. 
+
+
+
+    
+    
+
+    \subsection{Perfect matchings in hypergraphs}
+
+    Given a $k$-graph $H$ and a subset $S\subseteq V(H)$ of size $d$, the \emph{degree} of $S$ in $H$, denoted by $\deg_H(S)$, is the number of edges in $H$ that contain $S$. 
+    The minimum $d$-degree $\delta_d(H)$ is the minimum of degree over all $d$-sets of $V(H)$.
+    
+    One of the central questions in the field is to determine the minimum $d$-degree threshold that guarantees the existence of a perfect matching.
+    In a landmark result, R{\"{o}}dl, Ruci{\'{n}}ski, and Szemer{\'{e}}di \cite{rodl2009perfect} showed that for all $k\ge 3$, \(d=k-1\), and sufficiently large $n$, this threshold is $n/2-k+C$, where $C\in \{3/2,2,5/2,3\}$ depends on the values of $n$ and $k$.
+    Naturally, one may ask whether the codegree condition can be relaxed while still allowing for a polynomial-time algorithm to decide whether a given $k$-graph $H$ contains a perfect matching.
+    To formalize this, let \(\mathbf{PM}\left(k,\delta\right)\) be the decision problem of determining whether a \(k\)-graph on \(n\in k\mathbb{N}\) vertices with \(\delta_{k-1}(H)\ge \delta n\) contains a perfect matching. 
+    It follows immediately from the result of R{\"{o}}dl, Ruci{\'{n}}ski, and Szemer{\'{e}}di \cite{rodl2009perfect} that \(\mathbf{PM}\left(k,1/2\right)\) is in \(\mathsf{P}\).
+    On the other hand, Szyma\'{n}ska \cite{szymanska2013complexity} showed that for any \(\delta<1/k\), the problem \(\mathbf{PM}(k, \delta)\) is \(\mathsf{NP}\)-complete, via a polynomial-time reduction from $\mathbf{PM}(k,0)$.
+    Karpi\'{n}ski, Ruci\'{n}ski and Szyma\'{n}ska \cite{karpinski2010computational} further proved that \(1/2\) is not the threshold for tractability: there exists an \(\varepsilon>0\) such that \(\mathbf{PM}\left(k,1/2-\varepsilon\right)\) is in \(\mathsf{P}\). 
+    Later, Keevash, Knox and Mycroft \cite{keevash2013polynomial} showed that \(\mathbf{PM}\left(k,\delta\right)\) is in \(\mathsf{P}\) for any \(\delta>1/k\).
+    %and finally, Han \cite{han2017decision} completely resolved the problem by proving that \(\mathbf{PM}(k,\delta)\) is in \(\mathsf{P}\) for all \(\delta \ge 1/k\).
+
+    \begin{theorem}[\cite{keevash2013polynomial}]\label{han-decision}
+        Fix \(k\ge 3\) and \(\gamma>0\). Let $H$ be an $n$-vertex $k$-graph with $\delta_{k-1}(H)\ge n/k+\gamma n$. 
+        Then there is an algorithm with running time $O(n^{{3k^2-8k}})$, which determines whether $H$ contains a perfect matching.
+    \end{theorem}
+
+    They indeed proved a stronger result that provides a polynomial-time algorithm that outputs either a perfect matching or a certificate that none exists.
+    Improvements on the minimum degree conditions were made in subsequent works \cite{han2017decision, han2020complexity}.
+    In this paper, we strengthen this line of work by establishing a robust version of the result. 
+    For any hypergraph \(H\) and \(0\le p\le 1\), let \(H_p\) be a spanning random subhypergraph of \(H\) obtained by choosing each edge \(e\in H\) with probability \(p\) independently at random.
+
+
+
+    \begin{theorem}
+    [Main result]
+    \label{algorithm-PM}
+       Fix \(k\ge 3\) and \(\gamma>0\), there exists $ C=C_{\ref{algorithm-PM}}(k,\gamma)>0 $ such that the following holds for all sufficiently large \( n \). Let $H$ be an $n$-vertex $k$-graph with $\delta_{k-1}(H)\ge n/k+\gamma n$. If \(p\ge C\log n/n^{k-1}\), then there exists a deterministic algorithm with running time $O(n^{2^{k-2}k+1})$ such that:
+        \begin{itemize}
+        \item If the algorithm accepts, then a.a.s.~$H_p$ contains a perfect matching;
+        \item If the algorithm rejects, then $H_p$ does not contain a perfect matching.
+        \end{itemize}
+    \end{theorem}
+
+
+    This result establishes a stronger, probabilistic guarantee concerning rather sparse random subgraphs of the original $k$-graph.
+    The assumptions are essentially best possible: if $p=o(\log n/n^{k-1})$ then $H_p$ a.a.s.~contain no perfect matching even for complete $k$-graph $H$; if $\delta_{k-1}(H) \le n/k - \gamma n$ then as mentioned above, Szyma\'nska's result implies that the decision problem for perfect matching in $H$ is $\mathsf{NP}$-complete.
+
+A natural and curious question is that given an instance of $H$ that has a perfect matching, what is the probability that the algorithm in Theorem~\ref{algorithm-PM} accepts $H_p$.
+We shall address this question after we introduce our algorithm Procedure~\ref{alg:perfect_matching} in Section 2.1.
+
+ Now we turn to perfect $F$-packings in graphs and state our second main result, Theorem \ref{main theorem-factor}, after some introduction and preparation.
+
+
+%    Our first main result is the following robust version of the characterization of perfect matchings under minimum codegree by Han \cite{han2017decision}.
+%     JH. Maybe leave it to a later version of this paper.
+%     \begin{theorem}\label{main theorem-PM}
+%         Fix an integer $ k\ge3 $. Suppose$$ 1/n\ll\beta\ll \mu\ll\gamma\ll1/k .$$
+%         There exists $ C=C_{\ref{main theorem-PM}}(k,\gamma)>0 $ such that the following holds for \(n\in k\mathbb{N}\) and \(p=p(n)\in [0,1]\) with \(p\ge C\log n/n^{k-1} \). 
+%         Let $H$ be a $k$-graph on $n$ vertices such that $\delta_{k-1}(H)\ge n/k+\gamma n$ with $ \mathcal{P} $ found by Lemma \ref{better partition of PM}. 
+%         If there exists a matching $ M_0 $ of size at most $k-1$ such that $ \vec{i}_{\mathcal{P}}(V(H)\setminus V(M_0))\in L_{\mathcal{P}}^{\mu}(H)$ and define $ H':=H-V(M) $, 
+%         %then there exists an $O_{\gamma}(1/n^{k-1})$-spread distribution on the set of perfect matchings in $H'$.
+%         then a.a.s.~$H_p'$ contains a perfect matching.
+%         Otherwise, if no such matching \(M_0\) exists, then $H$ does not contain perfect matching.
+%     \end{theorem}
+% %
+%     Note that \(p=C\log n/n^{k-1}\) is asymptotically optimal, since it is well known that a.a.s.~a random \(n\)-vertex \(k\)-graph \(\mathbb{G}^{(k)}\left(n,p\right)\) contains  \(\omega(1)\) isolated vertices if \(p\le \frac{(k-1)!\log n-\omega(1)}{n^{k-1}}\).
+%     Previously, Krivelevich, Lee, and Sudakov \cite{krivelevich2014robust} proved that for Dirac $k$-graphs, the threshold for the appearance of perfect matchings in random subgraphs is of order $\log n/n^{k-1}$. 
+%     We extend this result by showing that, under weaker minimum degree conditions, the same threshold holds for the random subgraph of $H'=H-V(M)$, where $H$ satisfies above divisibility conditions and $M$ is a carefully chosen matching of constant size. 
+%     This matching $M$ is necessary, as the weakened degree condition may force every perfect matching in $H$ to include certain specific edges.
+
+
+
+
+    
+
+    \subsection{Perfect packings in graphs}
+
+    The Hajnal-Szemer\'{e}di theorem states that every \(n\)-vertex graph with minimum degree at least \((1-1/r)n\) and \(r\mid n\) contains a \(K_r\)-factor, and this bound is tight. More generally, Alon and Yuster~\cite{alon1996h} proved the following theorem. Given a graph \(F\), let \(v_F\) denote its number of vertices, \(e_F\) its number of edges, and \(\chi (F)\) its chromatic number. Let \(M(n)\) be the time needed to multiply two $n$ by $n$ matrices with \(0,1\) entries. Determining $M(n)$ is a challenging problem in theoretic computer science, and the best known bound of $M(n) = O(n^{2.3728596})$ was obtained recently by Alman and Williams~\cite{alman2024refined}.
+
+    \begin{theorem}[\cite{alon1996h}]\label{alon-chromatic number}
+        For every \(\gamma>0\) and each graph \(F\) there exists an integer \(n_0=n_0(\gamma,F)\) such that every graph \(G\) whose order \(n>n_0\) is divisible by \(v_F\) and whose minimum degree is at least \(\left(1-1/\chi(F)+\gamma\right)n\) contains an \(F\)-factor. Moreover, there is an algorithm which finds such \(F\)-factor in time \(O(M(n))\).
+    \end{theorem}
+
+    Alon and Yuster also provided examples showing that the error term \(\gamma n\) cannot be completely omitted for some graphs, but they conjectured that it could be replaced by a constant depending only on \(H\). 
+    This conjecture was later proved by Koml\'{o}s, S\'{a}rk\"{o}zy and Szemer\'{e}di~\cite{komlos2001proof}.
+
+    \iffalse
+    \begin{theorem}[\cite{komlos2001proof}]\label{chromatic number}
+        For every graph \(F\) there exist integers \(C<v_F\) and \(n_0=n_0(\gamma,F)\) such that every graph \(G\) whose order \(n>n_0\) is divisible by \(v_F\) and whose minimum degree is at least \(\left(1-1/\chi(F)\right)n+C\) contains an \(F\)-factor. Moreover, there is an algorithm which finds such \(F\)-factor in time \(O(nM(n))\).
+    \end{theorem}
+    \fi
+    On the other hand, there are graphs for which the bound on the minimum degree can be significantly improved by replacing the chromatic number with a refined parameter known as the \emph{critical chromatic number}~\cite{cooley2007perfect}.
+    The \emph{critical chromatic number} \(\chi_{cr}(F)\) of a graph \(F\) is defined as \(\left(\chi(F)-1\right)v_F/\left(v_F-\sigma(F)\right)\), where \(\sigma(F)\) denotes the  minimum size of the smallest colour class in a colouring of \(F\) with \(\chi(H)\) colours. 
+    Note that \(\chi(F)-1<\chi_{cr}(F)\le \chi(F)\) and the equality holds if and only if every \(\chi(F)\)-colouring of \(F\) has equal colour class sizes. 
+    %If \(\chi_{cr}(F)=\chi(F)\), then we call \(F\) balanced, otherwise unbalanced. 
+    %Koml\'{o}s~\cite{komlos2000tiling} proved that for every \(\varepsilon>0\) and each graph \(F\) there exists an integer \(n_0 = n_0(\varepsilon,F)\) such that every graph \(G\) whose order \(n\ge n_0\) is divisible by \(v_F\) and whose minimum degree is at least \(\left(1-1/\chi_{cr}(F)\right)n\) contains an \(F\)-packing that covers all but at most \(\varepsilon n\) vertices.
+    %He also conjectured that the error term \(\varepsilon n\) can be replaced with a constant that only depends on \(F\).
+    Resolving a conjecture of Koml\'{o}s, Shokoufandeh and Zhao~\cite{shokoufandeh2003proof} showed the following result (stated here in a slightly weaker form).
+
+
+    
+    \begin{theorem}[\cite{shokoufandeh2003proof}]\label{critical chromatic number-alomst pefect F-factor}
+        For any $F$ there is an $n_0=n_0(F)$ so that if $G$ is a graph on $n\ge n_0$ vertices and minimum degree at least $\left(1-1/\chi_{cr}(F)\right)n$, then $G$ contains an $F$-packing that covers all but at most $5{v_F}^2$ vertices.
+    \end{theorem}
+
+
+    Given the two types of minimum degree thresholds discussed above, it is natural to consider the corresponding decision problem. 
+    Let \(\mathbf{Pack}(F, \delta)\) denote the problem of determining whether a graph \(G\) with minimum degree \(\delta(G)\ge\delta \card{G}\) contains an \(F\)-factor. 
+    As mentioned earlier, when \(F\) contains a component with at least three vertices, results of Hell and Kirkpatrick~\cite{kirkpatrick1983complexity} show that \(\mathbf{Pack}(F,0)\) is \(\mathsf{NP}\)-complete. 
+    More generally, K\"{u}hn and Osthus~\cite{KuehnOsthus2006} proved that \(\mathbf{Pack}(F,\delta)\) is \(\mathsf{NP}\)-complete for any \(\delta \in [0,1-1/\chi_{cr}(F))\), provided that \(F\) is either a clique of size at least \(3\) or a complete \(k\)-partite graph where \(k\ge 2\) and the second smallest vertex class has size at least \(2\). 
+    In contrast, Theorem~\ref{alon-chromatic number} implies that \(\mathbf{Pack}(F,\delta)\) is in \(\mathsf{P}\) for all \(\delta \in (1-1/\chi(F), 1]\). 
+    %However, for many graphs \(F\), our understanding of \(\mathbf{Pack}(F,\delta)\) remains limited in the range  \(\delta \in [1-1/\chi(F),1-1/\chi_{cr}(F))\). 
+    Recently, Han and Treglown~\cite{han2020complexity} provided a polynomial-time algorithm showing that \(\mathbf{Pack}(F,\delta)\) is in \(\mathsf{P}\) whenever \(\delta \in (1 - 1/\chi_{cr}(F),1]\), answering a question of Yuster negatively.
+
+    \begin{theorem}[\cite{han2020complexity}]\label{algorithm-factor}
+        Let \(F\) be an \(r\)-vertex \(k\)-chromatic graph. For every \(n\)-vertex graph \(G\) with minimum degree at least \(\delta n\), where \(\delta\in (1-1/\chi_{cr}(F), 1]\), there is an algorithm with running time \(O\left(n^{\max \{2^{r^{k-1}-1}r+1, r(2r-1)^r\}}\right)\), which determines whether \(G\) contains a perfect \(F\)-packing.
+    \end{theorem}
+
+    Theorem~\ref{algorithm-factor} can efficiently detect the divisibility obstructions when the minimum degree condition guarantees an \(F\)-packing that covers all but a constant number of vertices (as established in Theorem~\ref{critical chromatic number-alomst pefect F-factor}). 
+Similar to the perfect matching problem, it is natural to seek for a robust version of Theorem~\ref{algorithm-factor} similar to Theorem \ref{algorithm-PM}.
+Unfortunately, we are only able to prove partial result which we state below after some preparations.
+
+
+\subsection{\texorpdfstring{Partition, lattices and new result on $F$-packings}{Partition, lattices and new result on F-packings}}
+%new subsection
+
+The proofs in \cite{han2017decision} and \cite{han2020complexity} used a lattice-based absorbing method, which combines the absorbing technique with the concept of divisibility barriers, introduced in \cite{keevash2015geometric}. 
+    It was shown in \cite{keevash2015geometric} that a $k$-graph $H$ either contains a perfect matching or is structurally close to a family of lattice-based constructions known as divisibility barriers. 
+    To describe divisibility barriers in general, we begin with the following definition. 
+    In this paper, every partition has an implicit order on its parts. 
+
+    \begin{definition}
+    [Partition, index vector and lattice]
+        Let \(H=\left(V,E\right)\) be an \(n\)-vertex \(k\)-graph, and let \(\mathcal{P}=\{V_1,\dots,V_d\}\) be a partition of \(V\). 
+        Let \(F\) be an \(r\)-vertex \(k\)-graph. The \emph{index vector} \(\vec{i}_{\mathcal{P}}(S)\in \mathbb{Z}^d \) of a subset \(S\subseteq V\) with respect to \(\mathcal{P}\) is the vector whose coordinates are the size of intersection of \(S\) with each part of \(\mathcal{P}\), namely, \(\vec{i}_{\mathcal{P}}(S)|_i=\card{S\cap V_i}\) for \(i\in [d]\), where \(\vec{v}|_i\) is defined as the \(i\)th digit of \(\vec{v}\). 
+        Then for any \(\mu >0\), 
+        \begin{enumerate}[label=(L\arabic*)]
+            \item \(I_{\mathcal{P},F}^{\mu}(H)\) denotes the set of \(\vec{i}\in \mathbb{Z}^d\) such that \(H\) contains at least \(\mu n^r\) copies of \(F\) with index vector \(\vec{i}\);
+            \item \(L_{\mathcal{P},F}^{\mu}(H)\) denotes the lattice (that is, the additive subgroup) in \(\mathbb{Z}^d\) generated \(I_{\mathcal{P},F}^{\mu}(H)\).
+        \end{enumerate}
+    \end{definition}
+    
+    We call a copy of \(F\) \emph{\(\mu\)-robust} if its index vector $\vec{i}\in I_{\mathcal{P}}^{\mu}(H)$.
+    For each vertex $ v\in V(H) $, let $ F^{\mu}_{\mathcal{P}}(v) $ be the collection of \(r\)-sets that contain $v$ and span at least one \(\mu\)-robust copy of \(F\). 
+    When \(F\) is a single edge, we abbreviate these as \(I_{\mathcal{P}}^{\mu}(H)\), \(L_{\mathcal{P}}^{\mu}(H)\), and \( E^{\mu}_{\mathcal{P}}(v) \), respectively. 
+    
+    \iffalse
+    The simplest example of such a barrier is given by the following construction, which appears as one of the two extremal examples in \cite{rodl2009perfect}.
+    
+    \begin{construction}
+        Let \(X\) and \(Y\) be disjoint sets such that \(\card{X\cup Y}=n\) and \(\card{X}\) is odd, and let \(H\) be the \(k\)-graph on \(X\cup Y\) whose edges are all \(k\)-sets which intersect \(X\) in an even number of vertices.
+    \end{construction}
+
+    To describe divisibility barriers in general, we make the following definition. 
+    In this paper, every partition has an implicit order on its parts. 
+    \fi
+
+    %To apply the absorbing method, we first require a suitable partition, which is provided by the following lemma. Before stating it, we introduce several key definitions. 
+    Now we give some basic definitions for the absorbing method.
+    We use the reachability arguments introduced by Lo and Markstr\"{o}m \cite{lo2015f}. 
+    We say that two vertices \(u\) and \(v\) in \(V(H)\) are \((F,\beta,i)\)-\emph{reachable} in \(H\) if there are at least \(\beta n^{ir - 1}\) \((ir-1)\)-sets \(S\) such that both \( H[S\cup\{u\}] \) and \( H[S\cup\{v\}] \) have perfect \(F\)-packings. 
+    We refer to such a set \(S\) as a \emph{reachable} \((ir-1)\)\emph{-set for \( u \) and \( v \)}.
+    We say a vertex set \( U \subseteq V(H) \) is \((F, \beta,i)\)\emph{-closed} in \( H \) if any two vertices \( u,v\in U \) are \((F,\beta,i)\)-reachable in \( H \). In a similar way, we define a set to be \((\beta,i)\)\emph{-closed} when \( F \) is the single-edge \( k \)-graph.
+    
+
+
+    Now we state a strengthened version of the standard partition lemma (such as Lemmas \ref{reachabel set} and \ref{good parition-F}). 
+    While previous versions guarantee two structural properties, namely \ref{item:pack1} and \ref{item:pack3}, our version additionally establishes condition \ref{item:pack2}. 
+    This refinement is not required in earlier applications, but it becomes crucial for proving our robustness result.
+    Throughout the paper, we write \(\alpha\ll \beta\ll\gamma\) to mean that there exist increasing functions \(f\) and \(g\) such that, given \(\gamma\), any choice of \(\beta\le f(\gamma)\) and \( \alpha\le f(\beta) \) ensures the validity of all calculations in the proof.
+    Moreover, when we have variable of form $1/C$ in the hierarchy, $C$ is always assumed to be a positive integer.
+    
+%More specifically, Han and Treglown constructed a partition (Lemma~\ref{good parition-F}) that underpins the development of their absorbing lemma. In analogy with the perfect matching setting discussed earlier, we establish a stronger partition lemma in the context of \(F\)-factors to derive a robust result.
+%We first present a partition lemma that constructs a partition with crucial properties for the existence of $F$-factors.
+    
+    \begin{lemma}
+    [Partition lemma for $F$-factors]
+    \label{better partition of packing}
+        Let $ 1/n\ll \beta\ll\mu\ll\varepsilon\ll\gamma\ll 1/r,1/k$. 
+        Let $F$ be an $r$-vertex $k$-chromatic graph and $h:=r^{k-1}$. 
+        For each $n$-vertex graph with $\delta(G)\ge (1-1/{\chi}_{cr}(F)+\gamma)n$, we find a partition $\mathcal{P}=\{V_1,\dots,V_d\}$ of $ V(G) $ in time $O(n^{2^{h-1}k+1})$ satisfying the following properties:
+	\begin{enumerate}[label=(F\arabic*)]
+        \item each part of $ \mathcal{P} $ has size at least $ (1/r+\gamma/3)n $;\label{item:pack1}
+        \item for each $ i\in[d] $, $ V_i $ is $ (F,\beta,r2^h+2) $-closed in $ G $;\label{item:pack3}
+        \item for each vertex $ v\in V(G) $, $ \card{F^{\mu}_{\mathcal{P}}(v)}\ge \varepsilon n^{r-1} $.\label{item:pack2}
+        \end{enumerate}
+    \end{lemma}
+
+Now we are ready to state our result for $F$-factors. 
+For a graph \(G\) with at least two vertices, define \(d_1(G):=e_G/(v_G-1)\) and \(m_1(G):=\max_{G'\subseteq G:v_{G'}>1}d_1(G')\). 
+A graph \(F\) is \emph{strictly \(1\)-balanced} if \(d_1(F')<d_1(F)\) for every \(F' \subsetneq F\).
+%\(1\)-\emph{balanced} if \(d_1(F')\le d_1(F)\) for every \(F'\subseteq F\) and 
+
+    \begin{theorem}
+    [Robustness of $F$-factors]
+    \label{main theorem-factor}
+		Let $k,r,n\ge 2$ be integers and $\varepsilon,\mu,\beta,\gamma >0$ where 
+        \[ 1/n\ll\beta\ll \mu\ll \varepsilon\ll\gamma\ll1/r,1/k. \]
+        There exists $ C=C_{\ref{main theorem-factor}}(k,r,\gamma)>0 $ such that the following holds. 
+        Let $F$ be an $r$-vertex \(k\)-chromatic graph, and $G$ an $n$-vertex graph such that $\delta(G)\ge (1-1/{\chi}_{cr}(F)+\gamma )n$ with $ r\mid n $ and $ \mathcal{P} $ found by Lemma \ref{better partition of packing}.
+        If there exists an $F$-packing $ M_0 $ of size at most $\binom{2r-2}{r}$ such that $ \vec{i}_{\mathcal{P}}(V(G)\setminus V(M_0))\in L_{\mathcal{P},F}^{\mu}(G) $, and let $ G':=G-V(M_0) $, 
+        %then there exists an $O{\gamma}(1/n^{1/m_1(G)})$-spread distribution on the set of $F$-factors in $H'$.
+        then a.a.s.~$G_p'$ contains an $F$-factor provided that \(p\ge Cn^{-1/m_1(F)}\log n\).
+        In particular, if \(F\) is strictly \(1\)-balanced, then a.a.s.~$G_p'$ contains an $F$-factor provided \(p\ge Cn^{-1/m_1(F)}{\log}^{1/e_F} n\).
+        Otherwise, if no such $F$-packing $ M_0 $ exists, then $G$ has no \( F \)-factor.
+    \end{theorem}
+
+A special case of Theorem \ref{main theorem-factor} is when $M_0=\emptyset$, and then it says that the $p$-random sparsification of $G$ a.a.s.~contains an $F$-factor (see Theorem~\ref{main theorem} for a stronger result).
+For the general case, obviously the existence of such $M_0$ can be tested in time $O(n^{r\binom{2r-2}{r}})$.
+The difficulty for upgrading Theorem \ref{main theorem-factor} to a result similar to Theorem \ref{algorithm-PM} is that checking the existence of such $M_0$ may destroy the randomness of $G_p$ and we shall expand on this in the remark section.
+
+For strictly \(1\)-balanced \(F\), Johansson, Kahn, and Vu \cite{johansson2008factors} proved that the threshold for the appearance of an \(F\)-factor in the binomial random graph is \( \Theta\left(n^{-1/m_1(F)}{\log}^{1/e_F} n\right)\). 
+Hence, the assumptions on $p$ in Theorem \ref{main theorem-factor} is optimal up to a constant factor for strictly \(1\)-balanced $F$.
+
+    
+
+    \subsection{Spread method and the main technical result}
+    
+    To prove Theorems \ref{algorithm-PM} and \ref{main theorem-factor}, we use the so-called \textit{spread} method, which was introduced by Talagrand and used by Frankston, Kahn, Narayanan, and Park~\cite{frankston2021thresholds} to resolve a conjecture of Talagrand. 
+    %Although the stronger Kahn-Kalai conjecture~\cite{kahn2007thresholds} was later proved in full by Park and Pham~\cite{park2024proof}, the fractional version suffices for our purposes. 
+    A key contribution of Talagrand's conjecture is the established connection between so-called \emph{spread measure} and threshold in random graph theory. 
+    As a consequence, the task of establishing a robustness result reduces to proving the existence of a probability measure with good spread over the desired substructures. 
+    Roughly speaking, this means that the probability measure selects edges of \(\mathcal{H}\) such that no specific subset of edges is overly likely to appear in an edge of \(\mathcal{H}\). 
+    In other words, the distribution avoids concentrating too much weight on any particular edge set. This notion is formalized as follows.
+
+    \begin{definition}
+        Let \(q\in [0,1]\). Let \(\mathcal{H}\) be a hypergraph on vertex set $V$, and let \(\mu\) be a probability distribution on \(\mathcal{H}\). We say that \(\mu\) is \(q\)-\emph{spread} if for every set \(S\subseteq  V\):
+        \[\mu(S):=\mu \left(\{A\in \mathcal{H}:S\subseteq A\}\right)\le q^{\card{S}}.\]
+    \end{definition}
+     In our context, we are primarily concerned with such hypergraph \(\mathcal{H}\) where \(V:=E(H)\) for some host hypergraph \(H\), and \(\mathcal{H}\) denotes the collection of \(F\)-factors in \(H\).
+
+
+    Now we are ready to state our main technical result, which is a general structural theorem that serves as a robust version of the main result (Theorem~\ref{structural theorem}) from~\cite{han2020complexity}, strengthened via the spread-based framework described earlier. 
+    Let \(k, \ell \in \mathbb{N}\) where \(\ell \le k-1\). Let \(F\) be an \(r\)-vertex \(k\)-graph and \(D \in \mathbb{N}\). Define \(\delta(F,\ell,D)\) to be the smallest number \(\delta\) such that every \(k\)-graph \(H\) on \(n\) vertices with \(\delta_{\ell}(H) \ge (\delta + o(1))\binom{n - \ell}{k - \ell}\) contains an \(F\)-packing covering all but at most \(D\) vertices. 
+    We write \(\delta(k,\ell,D)\) for \(\delta(F,\ell,D)\) when \(F\) is a single edge. 
+
+     \begin{theorem}
+     [Main technical result]\label{main theorem}
+         Let $k,\ell\in \mathbb{N}$ and let $F$ be an $r$-vertex $k$-graph. 
+         Define $C'',t,n\in\mathbb{N}$ and $\alpha,\beta,\mu,\gamma,\eta,\varepsilon,c>0$ where
+\[ \alpha,\eta\ll 1/C''\ll\beta,\mu\ll\gamma,\varepsilon,c,1/k,1/\ell,1/r,1/t.
+\]
+         Then the following holds for sufficiently large \(n\in r\mathbb{N}\). Let $H$ be a $k$-graph on $n\ge n_0$ vertices, and let $\mathcal{P}=\{V_1,\dots,V_d\}$ be a partition of $ V(H)$. 
+         Suppose that 
+      \begin{enumerate}[label=(\roman*)]
+             \item for all but at most $\alpha\binom{n}{\ell}$ $\ell$-sets $S$, $\deg_H(S)\ge (\delta(F,\ell,5r^2)+ \gamma)\binom{n-\ell}{k-\ell}$;\label{item:main-degree}
+             \item for every $i\in [d]$, all but $\eta\binom{\card{V_i}}{2}$ of the pairs $\{u,v\}\subseteq V_i$ are $(F,\beta,t)$-reachable in $H$ and $\card{V_i}\ge cn$;\label{item:main-good partition}
+             \item for every $ v\in V(H) $, $ \card{F^{\mu}_{\mathcal{P}}(v)}\ge \varepsilon n^{r-1} $.\label{item:main-robust edges}
+         \end{enumerate}
+         If $\vec{i}_{ \mathcal{P}}(V(H))\in L_{ \mathcal{P},F}^{\mu}(H)$, then there exists a $(C''/n^{1/m_1(F)})$-spread distribution on the set of $F$-factors in $H'$. 
+         Moreover, if \(p\ge K_{\ref{FKNP}}C''\log n/n^{1/m_1(F)} \), then a.a.s.~$H_p$ contains an $F$-factor.
+     \end{theorem} 
+
+
+    
+    At last, this randomized construction framework enables us to derive a quantitative enumeration result. 
+     For a \(k\)-uniform \(n\)-vertex hypergraph \(H\) with minimum codegree \(\delta_{k-1}(H)\ge\delta n\) for some \(\delta > 1/2\), several results have established that \(H\) contains at least \((\varepsilon n)^{\frac{k-1}{k}n}\) perfect matchings; see, for example, \cite{glock2021counting, kang2024perfect, pham2022toolkit}. 
+     The current best known result, due to Ferber, Hardiman and Mond \cite{ferber2023counting}, proves the number of perfect matchings in such \(H\) is at least \(\Phi(K_n^k)\cdot \left(\frac{1}{2}+o(1)\right)^{n/k}\), where \(\Phi(K_n^k)\) is the number of perfect matchings in the complete \(k\)-graph on \(n\) vertices. 
+     In this paper, we obtain a similar counting result under the weaker degree condition \(\delta >1/k\): either \(H\) contains no perfect matching, or it contains many of them. 
+     We note that our result is optimal up to the value of $\varepsilon$.
+     %Although the constant factor in our bound may not be optimal, the exponential order is best possible.
+
+
+     \begin{corollary}\label{count result-Pm}
+        For $ k\ge 3 $, any $ \gamma > 0 $, there exists $\varepsilon>0$ such that the following holds for sufficiently large integer $n$. 
+        For any $k$-graph $H$ with $\delta_{k-1}(H)\ge n/k+\gamma n$, $H$ contains either no perfect matching or at least $(\varepsilon n)^{\frac{k-1}{k}n}$ perfect matchings.
+    \end{corollary}
+    
+    We also obtain a corresponding result for \(F\)-factor.
+
+    \begin{corollary}\label{count result-packing}
+    For $ r\ge 2 $, any $ \gamma > 0 $, there exists $\varepsilon>0$ such that the following holds for sufficiently large integer $n$. 
+    For any $r$-vertex graph $F$ and any $n$-vertex graph $G$ with $\delta(G)\ge (1-1/{\chi}_{cr}(F)+\gamma )n$, $G$ contains either no $F$-factor or at least $(\varepsilon n)^{\frac{e_F}{rm_1(F)}n}$ $F$-factors.
+    \end{corollary}
+
+
+\subsection{Related works}
+%\red{Should move recent results here.}
+
+As mentioned above, the minimum degree conditions forcing $F$-factors in graphs are well understood, and the same question for hypergraphs remain a highly challenging problem, even for perfect matchings.
+On the other hand, the problem for near-perfect packings is slightly easier.
+Nevertheless, we collect the results we need on $\delta(F, k-1, D)$ here.
+\begin{theorem}
+\cite{shokoufandeh2003proof, han2015near} %han14-CPC
+\label{thm:deltaFD}
+For every graph $F$, $\delta(F, 1, 5v_F^2)=1-1/\chi_{cr}(F)$.
+For $k\ge 3$, $\delta(k, k-1, k)=1/k$.
+\end{theorem}
+
+For perfect matchings in $k$-graphs, the minimum degree conditions in Theorem \ref{han-decision} has been improved in subsequent works \cite{han2017decision, han2020finding}.
+Keevash, Knox and Mycroft also proposed a conjecture for perfect matchings under minimum $\ell$-degree conditions for $\ell < k-1$, and this has been verified for $\ell\ge 0.4k$ in \cite{han2020complexity, gan2025keevash}.%Gan-Han
+
+Since the work of Krivelevich, Lee and Sudakov (on Hamilton cycles), robust-type results have been proved for cliques factors \cite{allen2024robust, pham2022toolkit}, hypergraph perfect matchings \cite{pham2022toolkit}, bounded-degree spanning trees \cite{pham2022toolkit}, $F$-factors \cite{kelly2024optimal}, and power of Hamilton cycles \cite{joos2023robust}. We remark that all of these results focus on minimum degree conditions as sufficient conditions, while in our result the minimum degree conditions are significantly lower. 
+%Joos-Lang 
+
+
+
+\section{Proof ideas and an algorithm}
+
+
+\subsection{Algorithm and proof outline for Theorem \ref{algorithm-PM}}
+Theorem \ref{algorithm-PM} is obtained by combining our main structural Theorem \ref{main theorem} with ideas from \cite{han2017decision}. 
+The work in~\cite{han2017decision} provides a necessary and sufficient condition for the existence of a perfect matching in a $k$-graph under a given minimum codegree condition. 
+    %Theorem \ref{main theorem} ensures that when we verify this condition, the partial revelation of edges (i.e.~the loss of some randomness in the random subgraph) has only a negligible effect on the final outcome.  
+For this we also need a similar partition lemma for perfect matchings.
+	
+    \begin{lemma}
+    [Partition lemma for perfect matchings]
+    \label{better partition of PM}
+		Let $ 1/n\ll \beta\ll\mu\ll\varepsilon\ll\gamma\ll1/k $, where $ k\ge 3 $ is an integer. 
+        Then for each $k$-graph $ H $ on $ n $ vertices with $ \delta_{k-1}(H)\ge n/k+\gamma n $, we find a partition $\mathcal{P}=\{V_1,\dots,V_d\}$ of $ V(H) $ in time $O(n^{2^{k-2}k+1})$ satisfying the following properties:
+		
+        \begin{enumerate}[label=(P\arabic*)]
+            \item each part of $ \mathcal{P} $ has size at least $ (1/k+\gamma/3)n $;\label{item:P1}
+            \item for each $ i\in[d] $, $ V_i $ is $ (\beta,k2^k+2) $-closed in $ H $;\label{item:P3}
+            \item for each vertex $ v\in V(H) $, $ \card{E^{\mu}_{\mathcal{P}}(v)}\ge \varepsilon n^{k-1} $.\label{item:P2}
+        \end{enumerate}	
+    \end{lemma}
+
+    Now we are ready to present our algorithm for Theorem \ref{algorithm-PM} (see Procedure \ref{alg:perfect_matching}).
+
+\begin{procedure}[h]
+\caption{PerfectMatching()}
+\label{alg:perfect_matching}
+\SetKwInOut{Input}{Data}
+\SetKwInOut{output}{output}
+\Input{An $ n $-vertex $ k $-graph $ H $ such that $ \delta_{k-1}(H) \ge n/k+\gamma n $ and $k\mid n$.}
+\Output{a.a.s.~$H_p$  has a perfect matching or none at all.}
+\mbox{Choose constants $ 1/n_0 \ll \eta \ll 1/C'' \ll \beta\ll \mu \ll \varepsilon\ll \gamma \ll 1/k $. Set \(p\ge K_{\ref{FKNP}}C''\log n/n^{k-1}\).}
+
+\If{$n<n_0$}
+{Check whether $H_p$ has a perfect matching by brute force search and halt with appropriate output.}
+
+Apply Lemma \ref{better partition of PM} to find a partition $ \mathcal{P} $ of $ V(H) $ and $ L^{\mu}_{\mathcal{P}}(H) $.
+
+\For{\mbox{every $q'\le k-1$ and set of $r$-vectors $\vec{V}=\{\vec{v_1},\dots, \vec{v_{q'}}\}$ with $ {\vec{i}}_{\mathcal{P}}(V(H))-\sum_{j\in [q']}\vec{v_j}\in L^{\mu}_{\mathcal{P}}(H)$}}
+{Let $\vec{V}^{\eta}:=\vec{V}\setminus I_{\mathcal P}^{\eta}(H)$.
+
+\If{ $H_p$ contains a matching $M'$ with $\vec{i}_{\mathcal{P}}(V(M'))= \sum_{\vec{v}\in \vec{V}^\eta}\vec{v}$}
+{Output ``a.a.s.~a perfect matching exists.'' and halt.}}
+
+Output ``no perfect matching'' and halt.
+\end{procedure}
+
+\iffalse
+\begin{algorithm}
+\renewcommand{\thealgorithm}{}
+\caption{PerfectMatching}
+\label{alg:perfect_matching}
+\begin{algorithmic}[1]
+\Require An $ n $-vertex $ k $-graph $ H $ such that $ \delta_{k-1}(H) \ge n/k+\gamma n $ and $k\mid n$.
+\Ensure a.a.s.~$H_p$  has a perfect matching or none at all.
+\State Choose constants $ 1/n_0 \ll \eta \ll 1/C \ll \beta, \mu \ll \gamma \ll 1/k $. 
+\If{$n<n_0$}
+{Check whether $H_p$ has a perfect matching by brute force search and halt with appropriate output.}
+\EndIf
+\State Apply Lemma \ref{better partition of PM} to find a partition $ \mathcal{P} $ of $ V(H) $ and $ L^{\mu}_{\mathcal{P}}(H) $.
+Set $q=|Q(\mathcal P, L_{\mathcal P}^{\mu}(H))|$.
+%\If{there exists }
+\red{
+\For{every $q'\le q$ and set of $r$-vectors $\vec{V}=\{\vec{v_1},\dots, \vec{v_{q'}}\}$ with $ {\vec{i}}_{\mathcal{P}}(V(H)) - \sum_{j\in [q']}\vec{v_j} \in L^{\mu}_{\mathcal{P}}(H) $}
+\State Let $\vec{V}^{\eta}:=\vec{V}\setminus I_{\mathcal P}^{\eta}(H)$
+    %     \State Output ``a.a.s.\ a perfect matching exists.'' and halt.
+    % \Else
+        % \For{every $e\in M^{\eta}$} 
+        % \If{$e\notin H_p$}
+        %    \State Output ``no perfect matching'' and halt.
+        % \EndIf
+        % \EndFor
+        % \State Output ``a.a.s.\ a perfect matching exists.'' and halt.
+    \If{ $H_p$ contains a matching $M'$ with $\vec{i}_{\mathcal{P}}(V(M'))= \sum_{\vec{v}\in \vec{V}^\eta}\vec{v}$} 
+        \State Output ``a.a.s.~a perfect matching exists.'' and halt.
+    \EndIf
+    \EndFor}
+%\Else
+\State Output ``no perfect matching'' and halt.
+%\EndIf
+\end{algorithmic}
+\end{algorithm}
+\fi
+
+
+
+Suppose we apply Lemma \ref{better partition of PM} and obtain a partition $\mathcal P$ and the lattice $ L^{\mu}_{\mathcal{P}}(H) $.
+The algorithm for decision problem of perfect matchings in $H$ (e.g. in \cite{han2017decision}) searches for all possible matchings $M$ of size at most $k-1$ such that $\vec{i}_{\mathcal P}(V(H)\setminus V(M))\in L^{\mu}_{\mathcal{P}}(H)$ (and it is shown that this is sufficient).
+Such searches are deterministic and clearly can be done in polynomial time.
+In our problem, we need to proceed the search in $H_p$.
+If no such $M$ is found in $H_p$, then we can conclude that $H_p$ has no perfect matching.
+However, if one such $M$ is found in $H_p$, we cannot argue as in the dense case by just showing $H-V(M)$ has a perfect matching.
+The reason is, we may have checked quite many edges of $H_p$, and after we checked them, they lost their randomness and revealed as non-edges.
+That is to say, we need to work with the $p$-random sparsification of $H-V(M)$ with a small set of edges removed.
+To overcome this issue, we choose a small variable $\eta$ and do the following
+\begin{itemize}
+    \item We do not check $\eta$-robust edges, as a.a.s.~$H_p$ contains many such edges. In particular, we can find a constant-sized matching of such edges.
+    \item We check the non-$\eta$-robust edges, and argue that losing these edges will not quantitatively affect the properties of $H$ too much (that is, the reduced properties still allow us to apply Theorem \ref{main theorem}).
+\end{itemize}
+For the second bullet point, the new property \ref{item:P2} of the partition lemma is crucial.
+Then the proof of Theorem \ref{algorithm-PM} reduces to prove the correctness of Procedure \ref{alg:perfect_matching} and estimate its running time.
+
+Now we can address the question on the acceptance probability of our algorithm, when the input is a $k$-graph with at least one perfect matching.
+The relevant quantity is the number of matchings in $H$ with index vector $\vec{V}^\eta$.
+For instance, if there is a matching $M$ such that $\vec{i}_{\mathcal P}(V(H)\setminus V(M))\in L^{\mu}_{\mathcal{P}}(H)$ such that all edges of $M$ are $\eta$-robust, then in the algorithm line 6 one can take $\vec{V}^\eta=\emptyset$ and on line 7 take $M'=\emptyset$, and thus the algorithm has a positive output.
+Therefore, we have the following corollary by standard concentration results.
+\begin{corollary}
+For $\gamma>0$ and $k\ge 3$, an $n$-vertex $k$-graph $H$ with $\delta_{k-1}(H)\ge n/k+\gamma n$ and a partition found by Lemma~\ref{better partition of PM}.
+\begin{itemize}
+    \item If there exists $\vec{V}^\eta$ as defined on line 6 of Procedure~\ref{alg:perfect_matching} such that $H$ contains $\omega(p^{-1})$ edges with index vector $\vec{v}$ for each $\vec{v}\in \vec{V}^\eta$, then Procedure~\ref{alg:perfect_matching} a.a.s.~accepts $H_p$;
+    \item If for every choice of $\vec{V}^\eta$, there exists $\vec{v}\in \vec{V}^\eta$ such that $H$ contains $o(p^{-1})$ edges with index vector $\vec{v}$, then Procedure~\ref{alg:perfect_matching} a.a.s.~rejects $H_p$. \qed
+\end{itemize}
+\end{corollary}
+
+
+\subsection{Proof ideas for Theorem \ref{main theorem}}
+
+The main tool for the proof of Theorem \ref{main theorem} is the spread method.
+For this we first state a celebrated result of Frankston, Kahn, Narayanan and Park \cite{frankston2021thresholds}, conjectured by Talagrand.
+
+    \begin{theorem}[\cite{frankston2021thresholds}]\label{FKNP}
+        There exists a constant $ K=K_{\ref{FKNP}}>0 $ such that for any \(\ell\)-uniform, \(q\)-spread hypergraph \(\mathcal{H}\) on \(V\), a uniformly random \((Kq\log \ell)\)-element subset of \(V\) a.a.s.~contains an edge in \(\mathcal{H}\).
+    \end{theorem}
+
+    While Theorem~\ref{FKNP} reduces the problem to constructing a probability measure with good spread, achieving this on non-complete host graphs remains technically challenging. To address this, for our work we adopt the \emph{randomized embedding algorithm} $G\hookrightarrow H$ proposed by Kelly, M\"{u}yesser, and Pokrovskiy \cite{kelly2024optimal}. The central concept in their method is the following notion of \emph{vertex spread}.
+
+    \begin{definition}
+        Let \(X\) and \(Y\) be finite sets, and let \(\mu\) be a probability distribution over injection \(\phi : X\rightarrow Y\). For \(q\in [0,1]\), we say that \(\mu\) is \(q\)-vertex-spread if for every two sequences of distinct vertices \(x_1,\dots, x_s\in X\) and \(y_1,\dots, y_s\in Y\), \[\mu \left(\{\phi: \phi(x_i)=y_i\text{ for all } i\in [s]\}\right)\le q^s.\]
+    \end{definition}
+
+    Based on this notion, they constructed a distribution with provably good spread properties, stated in the result below. 
+    A hypergraph embedding \(\phi:G\hookrightarrow H\) of a hypergraph \(G\) into a hypergraph \(H\) is an injective map \(\phi:V(G)\hookrightarrow V(H)\) that maps edges of \(G\) to edges of \(H\), so there is an embedding of \(G\) into \(H\) if and only if \(H\) contains a subgraph isomorphic to \(G\). 
+
+    \begin{proposition}[\cite{kelly2024optimal}]\label{vertex to edge}
+        For every $C,k,\Delta>0$, there exists $C'=C_{\ref{vertex to edge}}(C,k,\Delta)>0$ such that the following holds for all sufficiently large $n$. Let $H$ and $G$ be $n$-vertex $k$-graphs. If there is a $(C/n)$-vertex-spread distribution on embeddings $G\hookrightarrow H$ and $\Delta(G)\le \Delta$, then there is a $(C'/n^{1/m_1(G)})$-spread distribution on subgraphs of $H$ which are isomorphic to $G$.
+    \end{proposition}
+
+    
+
+     We now briefly outline the proof of Theorem~\ref{main theorem}; the full proof is presented in Section~\ref{spreadness frm vertex spreadness}. 
+     By Proposition~\ref{vertex to edge}, it suffices to construct a $(C/n)$-vertex-spread distribution on embeddings $G\hookrightarrow H$, where $G$ consists of \(n/r\) disjoint copies of \(F\), that is, a perfect \(F\)-packing. 
+     We begin by randomly partitioning \(V(H)\) into constant-sized clusters \(U_1,\dots,U_m\) such that each cluster inherits the minimum degree condition and partition properties from \(H\). 
+     This is achieved via the \emph{random redistribution} argument introduced by~\cite{kelly2024optimal}. Although the global structure of \(H\) satisfies only approximate conditions, this step ensures that each \(U_i\) has exact degree conditions and a locally good partition. 
+     We then aim to apply the general structural theorem (Theorem~\ref{structural theorem}) from~\cite{han2020complexity} on each cluster to find a perfect $F$-packing in \(H[U_i]\). 
+     However, this theorem requires, in addition to the degree and partition conditions, certain divisibility properties, which a cluster \(U_i\) may not initially satisfy. 
+     To address this, we slightly adjust each \(U_i\) by moving a few vertices from adjacent cluster to ensure the required divisibility condition. 
+     Condition~\ref{item:main-robust edges} plays a crucial role in enabling this adjustment.
+     %; indeed, without it, controlling the divisibility condition within each cluster would not be possible. 
+     Let \(U_i'\) denote the modified cluster, and applying the structural theorem to it gives a perfect $F$-packing \(M_i\) in \(H[U_i']\). 
+     Taking the union of all such packings yields a perfect \(F\)-packing in \(H\). 
+     Finally, since each cluster is sufficiently small, the probability that a fixed vertex falls in any given cluster is at most \(C/n\).
+     This yields a \((C/n)\)-vertex-spread distribution on embeddings \(G \hookrightarrow H\). 
+     
+     
+
+    The rest of the paper is organized as follows. 
+    In the next section, we introduce a series of basic preliminaries that will be used throughout the paper. 
+    In Section~\ref{partition lemma}, we prove the partition lemmas~\ref{better partition of PM} and~\ref{better partition of packing}. 
+    Section~\ref{random clustering lemma} is devoted to the proof of our main tool -- the random clustering lemma. 
+    In Section~\ref{spreadness frm vertex spreadness}, we prove the main technical result (Theorem~\ref{main theorem}). 
+    Section~\ref{sec:remaining theorems} presents the proofs of the remaining results, including the main algorithmic result (Theorem~\ref{algorithm-PM}), the robustness of \(F\)-factor (Theorem~\ref{main theorem-factor}), and two enumeration results (Corollary~\ref{count result-Pm} and \ref{count result-packing}).
+    We give some concluding remarks and questions at the end. 
+
+	\section{Preliminaries}\label{Preliminaries}
+
+     We need the following concentration inequality due to McDiarmid \cite{mcdiarmid1989method}, whose present formulation can be found in \cite{liebenau2023asymptotic}.
+ 
+	\begin{lemma}[\cite{liebenau2023asymptotic}]\label{hypergeometric}
+	    Let $c>0$ and let $f$ be a function defined on the set of subsets of some set $U$ such that $|f(U_1)-f(U_2)|\le c$ whenever $|U_1|=|U_2|=m$ and $|U_1\cap U_2|=m-1.$ Let $A$ be a uniformly random $m$-subset of $U$. Then for any $\alpha>0$ we have \[\mathbb{P}\big[|f(A)-\mathbb{E}[f(A)]|\ge \alpha c\sqrt{m}\big]\le 2\exp{(-2\alpha^2)}.\]
+	\end{lemma}
+
+    We prove the following easy consequences of the McDiarmid inequality.
+
+
+        \begin{lemma}\label{all robust edges}
+               Let $0< \gamma'<\gamma<1$ and $1/n,1/\ell\ll 1/r,\gamma-\gamma'$. Let $F$ be an $r$-vertex $k$-graph, and let $H$ be an $n$-vertex $k$-graph with vertex set $V$ and a partition $\mathcal{P}$ of $V$. Suppose that the number of copies $F'$ of $F$ with $\vec{i}_{\mathcal{P}}(V(F'))=\vec{v}$ is at least $\gamma n^r $. If $A\subseteq V$ is a vertex set of size $\ell$ chosen uniformly at random, then with probability at most $2\exp{(-\ell(\gamma-\gamma')^2/2)}$, $H[A]$ contains fewer than $\gamma' \ell^r $ copies of $F$ with index vector $\vec{v}$.
+        \end{lemma}
+        \begin{proof}
+             We verify the assumptions of Lemma~\ref{hypergeometric}. 
+             Let $f:\binom{V}{\ell}\rightarrow\mathbb{R}$ be defined as the number of copies $F'$ in \(H[X]\) of $F$ with index vector \(\vec{v}\) for each $X\in \binom{V}{\ell}$, and set $\varepsilon=(\gamma-\gamma')/(2\gamma)<1/2$. 
+             Note that $|f(X_1)-f(X_2)|\le {\ell}^{r-1}$ for any $X_1,X_2\in \binom{V}{\ell}$ with $|X_1\cap X_2|=\ell-1$. 
+             Given a copy $F'$ of $F$ with index vector $\vec{v}$, the probability that $F'$ is contained in $H[A]$ is at least $\frac{\binom{n-r}{\ell-r}}{\binom{n}{\ell}}\ge (1-\varepsilon)\frac{{\ell}^{r}}{n^{r}}$, where we used $1/n,1/\ell\ll 1/r,\gamma-\gamma'$. 
+             So by linearity of expectation we have $\mathbb{E}[f(A)]\ge \gamma(1-\varepsilon){\ell}^r=\frac{\gamma+\gamma'}{2}{\ell}^{r}$. 
+             Let $E$ be the event that there are fewer than $\gamma' \ell^r$ copies of $F$ with index vector $\vec{v}$ in \(H[A]\). We apply Lemma \ref{hypergeometric} with $c={\ell}^{r-1}, m=\ell$ and $\alpha=\sqrt{\ell}(\gamma-\gamma')/2$, and get that $\mathbb{P}\left[E\right]\le 2\exp{\left(-\ell(\gamma-\gamma')^2/2\right)}$, as desired.
+        \end{proof}
+
+        For a vertex \(v\in V(H)\), a subset $Y\subseteq V(H)$, and a partition $\mathcal{P}$ of $V(H)$, we define $F^{\mu}_{\mathcal{P}}(v, Y):=\{R\in F^{\mu}_{\mathcal{P}}(v):R\setminus \{v\}\subseteq Y\}$ to be the collection of \(r\)-sets that span at least one \(\mu\)-robust copy of \(F\), contain $ v $, and have all other vertices lying entirely within \(Y\). 
+        %all copies of $F$ in $ H $ with index vector $\vec{i}\in I_{\mathcal{P}}^{\mu}(H)$ that contain $ v $, with the remaining vertices lying entirely within \(Y\). 
+
+
+        \begin{lemma}\label{robust edges}
+               Let $0< \gamma'<\gamma<1$ and $1/n,1/\ell\ll 1/r,\gamma-\gamma'$. Let $F$ be an $r$-vertex $k$-graph, and let $H$ be an $n$-vertex $k$-graph with vertex set $V$ and a partition $\mathcal{P}$ of $V$ satisfying $ \card{F^{\mu}_{\mathcal{P}}(v)}\ge \gamma n^{r-1} $ for each $v\in V$.
+               If $A\subseteq V$ is a vertex set of size $\ell$ chosen uniformly at random, then for every $v\in V$ we have \[\mathbb{P}\left[|F^{\mu}_{\mathcal{P}}(v,A)|<\gamma'{\ell}^{r-1 }\right]\le 2\exp{\left(-\ell(\gamma-\gamma')^2/2\right)}.\]
+        \end{lemma}
+        \begin{proof}
+                For every vertex $v\in V,$ let $f_{v}:\binom{V}{\ell}\rightarrow\mathbb{R}$ be defined by $f_{v}(X)=
+                |F^{\mu}_{\mathcal{P}}(v,X)|$ for each $X\in \binom{V}{\ell}$, and set $\varepsilon=(\gamma-\gamma')/(2\gamma)<1/2$. 
+                Note that $|f_v(X_1)-f_v(X_2)|\le {\ell}^{r-2}$ for any $X_1,X_2\in \binom{V}{\ell}$ with $|X_1\cap X_2|=\ell-1$. By linearity of expectation we have
+            \begin{equation*}
+                \begin{aligned}
+                    \mathbb{E}[f_{v}(A)]
+                    &=\sum_{F'\in F^{\mu}_{\mathcal{P}}(v)}\mathbb{P}\left[\left(V(F')\setminus \{v\}\right)\subseteq A \right]\ge\sum_{F'\in F^{\mu}_{\mathcal{P}}(v)} \frac{\binom{n-(r-1)}{\ell-(r-1)}}{\binom{n}{\ell}}\\
+                    &\ge\gamma{n}^{r-1}(1-\varepsilon)\frac{{\ell}^{r-1}}{n^{r-1}}\\
+                    &\ge \gamma(1-\varepsilon){\ell}^{r-1}=\frac{\gamma+\gamma'}{2}{\ell}^{r-1}.
+                \end{aligned}
+            \end{equation*}
+            We can then apply Lemma \ref{hypergeometric} with $c={\ell}^{r-2}, m=\ell$ and $\alpha=\sqrt{\ell}(\gamma-\gamma')/2$, and get that
+            $\mathbb{P}\left[|F^{\mu}_{\mathcal{P}}(v,A)|<\gamma'{\ell}^{r-1}\right]\le 2\exp{(-\ell(\gamma-\gamma')^2/2)}$, as desired.
+        \end{proof}
+
+    
+    \begin{lemma}\label{almost perfect reachability}
+        Let $0<\beta'<\beta<1$ and $1/n,1/\ell\ll 1/r,\beta-\beta'$. Let $F$ be an $r$-vertex $k$-graph, and let $H$ be an $n$-vertex $k$-graph with vertex set $V$. Consider the vertex set  $U\subseteq V$ where all but $\eta\binom{\card{U}}{2}$ of the pairs are $(F,\beta,t)$-reachable.
+        Let $A$ be a uniformly random subset of $\ell$ vertices of $G$. Then with probability at least $1-\binom{\ell}{2}\left(\eta+2e^{-{(\beta-\beta')}^2\ell/2}\right)$, the random set $U\cap A$ is $(F,\beta',t)$-closed in $H[A]$.
+    \end{lemma}
+
+    \begin{proof}
+        Let $W$ be the collection of pairs of vertices that are not $(F,\beta,t)$-reachable in $H$. 
+        We will prove that for every $u,v\in U\cap A$, 
+\[\mathbb{P}\big[\text{$u$ and }v\text{ are not }(F,\beta/2,t)\text{-reachable in }H[A]\big]\le \eta+2e^{-{(\beta-\beta')}^2\ell/2},
+        \] 
+        then the desired result will follow from the union bound.
+        
+        First, note that for \(u,v\in A\), the probability of the event $\{u,v\}\in W$ is at most $\eta$. 
+        Now, condition on the event that \(u,v\in A\) and \(\{u,v\}\in W\). Let $A_{u,v}$ be the number of $(F,\beta,t)$-reachable sets $S\subseteq A$ for $u$ and $v$. 
+        Set $\varepsilon=(\beta-\beta')/(2\beta)<1/2$. 
+        Note that making any "swap" to our subset $A$ (that is, exchanging any element with an element outside this subset) affects $A_{u,v}$ by at most ${\ell}^{tr-2}$.
+        Given an $(F,\beta,t)$-reachable set $S$, the probability that $S$ is contained in $A$ is at least $\frac{\binom{n-2-(tr-1)}{\ell-2-(tr-1)}}{\binom{n-2}{\ell-2}}\ge (1-\varepsilon)\frac{{\ell}^{tr-1}}{n^{tr-1}}$, where we used $1/n,1/\ell\ll 1/r,\beta-\beta'$.
+        So, by linearity of expectation we have $\mathbb{E}[A_{u,v}]\ge \beta n^{tr-1}\cdot(1-\varepsilon)\frac{{\ell}^{tr-1}}{n^{tr-1}}=\frac{\beta+\beta'}{2}{\ell}^{tr-1}$.
+        We can then apply Lemma \ref{hypergeometric} with $c={\ell}^{tr-2}, m=\ell$ and $\alpha=\sqrt{\ell}(\beta-\beta')/2$, and get that the probability that the number of $(F,\beta,t)$-reachable sets $S\subseteq A$ for $u$ and $v$ is at most $\beta'{\ell}^{tr-1}$ is at most $2e^{-\frac{(\beta-\beta')^2}{2}\ell}$.
+\end{proof}
+
+    \begin{lemma}[\cite{ferber2022dirac}]\label{almost perfect codegree}
+        Let $0<\gamma'<\gamma<1$. Consider an $n$-vertex $k$-graph G where all but $\alpha\binom{n}{d}$ of the $d$-sets have degree at least $(\delta+\gamma)\binom{n-d}{k-d}$. Let $A$ be a uniformly random subset of $\ell\ge 2d$ vertices of $G$. Then with probability at least $1-\binom{\ell}{d}\left(\alpha+e^{-(\gamma-\gamma')^2\ell/4}\right)$, the random induced subgraph $G[A]$ has minimum $d$-degree at least $(\delta+\gamma')\binom{\ell-d}{k-d}$.
+    \end{lemma}
+
+    We will also use a result due to McDiarmid, as presented in Chapter 16.2 of the textbook by Molloy and Reed~\cite{molloy2002graph}. In this context, a \emph{choice} refers to the position that a particular element is mapped to in a permutation.
+
+    \begin{lemma}[McDiarmid's inequality for random permutations]\label{McDiarmid's inequality}
+	    Let X be a non-negative random variable determined by a random permutation $\pi$ of $[n]$ such that the following holds for some $c,r>0$:
+        \begin{enumerate}
+            \item Interchanging two elements of $\pi$ can affect the value of $X$ by at most $c$.
+            \item For any $s$, if $X\ge s$ then there is a set of at most $rs$ choices whose outcomes certify that $X\ge s.$
+        \end{enumerate}
+        Then, for any $0\le t\le \mathbb{E}[X]$,$$\mathbb{P}\big[|X-\mathbb{E}[X]|\ge t+60c\sqrt{r\mathbb{E}[X]}\le 4\exp{(-t^2/(8c^2r\mathbb{E}[X]))}\big].$$
+    \end{lemma}
+
+    Finally, we need a weaker version of results in \cite{pham2022toolkit}.
+        
+    \begin{lemma}[\cite{pham2022toolkit}]\label{spread-PM}
+        There exists an absolute constant $C_{\ref{spread-PM}}$ with the following property. If $G$ is a balanced bipartite graph on $2n$ vertices with $\delta(G)\ge 3n/4$, then there exists a $(C_{\ref{spread-PM}}/n)$-spread distribution on perfect matchings of $G$.
+    \end{lemma}
+
+    
+
+        
+
+
+    %\begin{lemma}\label{Hamilton cycle}
+        %There exists an absolute constant $C_{\ref{Hamilton %cycle}}$ with the following property. If $G$ is a graph %with $\delta(G)\ge 3n/4$ and $e(G)\ge (1-C_{\ref{Hamilton %cycle}})\binom{n}{2}$, then there exists a %$(C_{\ref{Hamilton cycle}}/n)$-vertex-spread distribution %on Hamilton cycles of $G$.
+    %\end{lemma}
+        
+
+
+    
+    
+    \section{Partition lemma}\label{partition lemma}
+
+    In this section, we prove Lemmas \ref{better partition of PM} and \ref{better partition of packing}. 
+    For this we first introduce some useful notation and collect several auxiliary results.
+
+    We denote by \(K_k^{(k)}(r_1,\dots,r_k)\) the complete \(k\)-partite \(k\)-graph with parts of sizes \(r_1, \ldots, r_k\). If \(r_i=r\) for all \(1\le i\le k\), we simply write \(K_k^{(k)}(r)\). 
+    For any \(S\subseteq V(H)\), let \(N(S):=\{T\subseteq V(H)\setminus S:T\cup S\in E(H)\}\), and for simplicity, we write \(N(x)\) for \(N(\{x\})\).
+
+We need the following (simple) result of Lo and Markstr\"om for verifying the 1-reachability property.
+    
+    \begin{lemma}[\cite{lo2015f}]\label{alpha good}
+    Let $k,r\ge 2$ be integers and let $\alpha>0$. There exists a constant $\eta=\eta(k,r,\alpha)$ such that the following holds for sufficiently large $n$. 
+    Let \(H\) be an \(n\)-vertex \(k\)-graph. 
+    Then any two vertices \(u,v\in V(H)\) are $(K_k^{(k)}(r),\eta,1)$-reachable to each other if the number of \((k-1)\)-sets \(S\in N(u)\cap N(v)\) with \(\card{N(S)}\ge \alpha n\) is at least \(\alpha \binom{n}{k-1}\).
+    \end{lemma}
+
+We also require the following simple property of reachability.
+The fact is clear as we can add copies of $F$ vertex disjoint with the existing reachable sets to enlarge the reachable sets, at the price of getting a smaller $\beta$.
+
+    \begin{fact}\label{fact:i-reachable}
+         Let $k,r\ge 2$ be integers and let \(F\) be an \(r\)-vertex \(k\)-graph. Let \(i\ge 1\) be an integer and \(\beta,\eta>0\). Then there exists \(\beta'=\beta'(r,i,\beta,\eta)\) such that the following holds for sufficiently large \(n\). 
+         Let \(H\) be an \(n\)-vertex \(k\)-graph that contains at least \(\eta n^r\) copies of \(F\). Then any two vertices \(u,v\in V(H)\) that are \((F,\beta,i)\)-reachable are also \((F,\beta',i+1)\)-reachable. \qed
+    \end{fact}
+    % \begin{proof}
+    %     Suppose that \(u,v\) are \((F,\beta,i)\)-reachable in \(H\). Then there exist at least \(\beta n^{ir-1}\) \((ir-1)\)-sets such that \(H[S\cup \{u\}]\) and \(H[S\cup \{v\}]\) have perfect \(F\)-packings. 
+    %     Fix one such \((ir-1)\)-set \(S\). Consider \(r\)-sets \(R\) disjoint from \(S\cup \{u,v\}\) such that \(H[R]\) contains a copy of \(F\). The number of such \(r\)-sets is at least \(\eta n^r-(ir+1)n^{r-1}\ge \eta n^r/2\). Note that for each such \(R\), the union \(S\cup T\) is a reachable \(\left((i+1)r-1\right)\) set for \(u\) and \(v\). Moreover, there are at least \(\frac{\beta n^{ir-1}\cdot \eta n^r/2}{\binom{(i+1)r-1}{r}}=\frac{\eta\beta}{2\binom{(i+1)r-1}{r}}n^{(i+1)r-1}\) such choices for \(S\cup T\). 
+    %     Set \(\beta'=\frac{\eta\beta}{2\binom{(i+1)r-1}{r}}\). 
+    %     Then \(u\) and \(v\) are \((F,\beta',i+1)\)-reachable in \(H\). 
+    % \end{proof}
+
+    The next tool is a supersaturation result of Erd\H{o}s.
+
+\begin{proposition}[\cite{erdos1964extremal}]\label{supersaturation}
+Let $\eta>0$, $k,d\in\mathbb{N}$ and let $K:=K_k^{(k)}(a_1,\dots,a_k)$ be the complete $k$-partite $k$-graph with $a_1\ge\cdots\ge a_k$ vertices in each class. 
+There exists $0<\mu\ll\eta$ such that the following holds for sufficiently large $n$. 
+Let $H$ be a $k$-graph on $n$ vertices with a vertex partition $V_1\cup\cdots \cup V_d$ and consider not necessarily distinct $i_1,\dots,i_k\in [d]$. 
+Suppose $H$ contains at least $\eta n^k$ edges $e=\{v_1,\dots,v_k\}$ such that $v_1\in V_{i_1},\dots,v_k \in V_{i_k}$. Then $H$ contains at least $\mu n^{a_1+\cdots+a_k}$ copies of $K$ whose $j$th part is contained in $V_{i_j}$ for all $j \in [k]$.
+\end{proposition}
+
+As mentioned in the introduction, compared to earlier versions, our partition lemmas have one additional structural property. 
+To capture this in a unified framework, we prove the following slightly more general theorem. 
+For convenience, we introduce some definitions  and notation that will be used throughout the paper. 
+
+For any \(\vec{v} = \{v_1, \ldots, v_d\} \in \mathbb{Z}^d\), let \(|\vec{v}| := \sum_{i=1}^d v_i\). We say that \(\vec{v} \in \mathbb{Z}^d\) is an \(r\)-\emph{vector} if it has non-negative coordinates and \(|\vec{v}| = r\). We write \(\vec{u}_j\) for the `unit' \(1\)-vector that is \(1\) in coordinate \(j\) and \(0\) in all other coordinates. Given a partition \(\mathcal{P}\) of \(d\) parts, we write \(L^d_{\text{max}}\) for the lattice generated by all \(r\)-vectors, that is, \(L^d_{\text{max}} := \{\mathbf{v} \in \mathbb{Z}^d : r \text{ divides } |\mathbf{v}|\}.\) Note that \(\card{L^d_{\text{max}}}= \binom{r+d-1}{r}\).
+
+Let \(\beta, c>0\) and \(t\in\mathbb{N}\). A partition \(\mathcal{P}=\{V_1,\ldots,V_d\}\) of \(V(H)\) is \((F,\beta,t,c)\)-\emph{good} if \(V_i\) is \((F,\beta,t)\)-closed and \(\card{V_i}\ge cn\) for all \(i\in [d]\). 
+
+
+	
+\begin{lemma}\label{better partition}
+Let $k,r,t\ge 2$ be integers and $\alpha,\beta,\mu,c,c'>0$ where $\mu\ll \alpha,1/r,1/d$ and $c'<c$.
+There exist $\beta'$ and $\varepsilon$ such that the following holds for sufficiently large integer $n$. %$0<\varepsilon\ll c-c'$. c-c'>\varepsilon/r
+Let $F$ be a $k$-partite $k$-graph of order $r$. 
+For any $n$-vertex $k$-graph $H$ with an $(F,\beta,t,c)$-good vertex partition $\mathcal{P}=\{U_1,\dots,U_d\}$, suppose for every vertex $v\in V(H)$, the number of $(k-1)$-sets $S\in N(v)$ with $|N(S)|\ge \alpha n$ is at least $\alpha\binom{n}{k-1}$. Then in time $O(n^{\max\{r,k+1\}})$ we can find an $(F,\beta',2tr+2,c')$-good partition $\mathcal{P}'$ of $V(H)$ such that for every vertex $v\in V(H)$, $ \card{F^{\mu/2}_{\mathcal{P}'}(v)}\ge \varepsilon n^{r-1} $.
+\end{lemma}
+
+\begin{proof}
+%[Proof of Lemma~\ref{better partition}]
+Take $\varepsilon\le c-c'$ and choose constants satisfying the following hierarchy 
+\[
+1/n\ll\mu\ll\varepsilon\ll\eta_1,\eta_2\ll\alpha\quad \text{and} \quad  1/n\ll \beta'\ll\beta_1\ll\beta,\mu,\eta_1,\eta_2,c'.
+\]      
+Let $K(F)\supseteq F$ be a complete $k$-partite $k$-graph on $r$ vertices (take an arbitrary one if there are more than one choices). 
+Then there exist integers  $a_1\ge\cdots\ge a_k$ such that $K(F)=K_k^{(k)}(a_1,\cdots,a_k)$. 
+We first claim that for every vertex \(v\in V(H)\), there exist at least $\eta_1 n^{r-1}$ $(r-1)$-sets $R$ in $H$ such that $H[R\cup \{v\}]$ contains a copy of $K(F)$. 
+To see this, duplicate $v$ and denote the resulting graph by $H'$. 
+By Lemma~\ref{alpha good}, $v$ and its duplicate $v'$ are $(K(F),1,\eta_1)$-reachable in \(H'\), which indeed implies the claim. 
+ 
+Let $ U_0 $ be the set of all vertices $v$ such that there are at most $2\varepsilon n^{r-1}$ \((r-1)\)-sets \(R\) such that \(H[R\cup\{v\}]\) contains a copy of \(F\) with $\vec{i}_{\mathcal{P}}(R)\in I_{\mathcal{P},F}^{\mu}(H)$, i.e., \(\card{F_{\mathcal{P}}^{\mu}(v)}\le 2\varepsilon n^{r-1}\).
+%copies $K$ of $K(F)$ containing $v$ with $\vec{i}_{\mathcal{P}}(K)\in I_{\mathcal{P},F}^{\mu}(H)$. 
+Note that for each \(v\in U_0\), the vertex \(v\) lies in at least \(\eta_1 n^{r-1}/2\) copies of \(F\) whose index vector is not in \(I_{\mathcal{P},F}^{\mu}(H)\), yielding
+\[
+|U_0|\le\frac{r\binom{r+d-1}{r}\mu n^r}{\eta_1n^{r-1}/2}\le (r+d)^{r}\mu n/\eta_1 <\varepsilon n,
+\]
+as $\mu\ll\varepsilon,\eta_1, 1/r,1/d$. 
+To prove the lemma, we shall move every vertex of $ U_0 $ greedily to some $ U_i $ for $ i\in[d] $. 
+
+%In this paragraph we describe how to move vertices of $U_0$, and for convenience, throughout this paragraph, we abuse the notation and use $\mathcal P$ to denote all intermediate vertex partitions of $H$.
+\begin{claim}
+\label{clm:vvi}
+For every vertex $v\in U_0$, there exists $\vec{v}\in I_{\mathcal P, F}^{\mu}(H)$ and $i\in [d]$ such that there are $\eta_2 n^{r-1}/r!$ \((r-1)\)-sets \(R\) with index vector $\vec{v}-\vec{u}_i$ for which \(H[R\cup \{v\}]\) contains a copy of \(F\).
+%$H$ contains at least $\eta_2 n^{r-1}$ copies of $F$ each of which contains $v$ and has index vector $\vec{v}-\vec{u}_i$ after removing $v$.
+\end{claim}
+
+\begin{proof}
+For every vertex $ v\in U_0 $, by averaging, there exist at least $\alpha\binom{n}{k-1}/\binom{k+d-2}{k-1}\ge \frac{1}{(k+d)^{k-1}}\alpha n^{k-1}$ $(k-1)$-sets $S\in N(v)$ with same index vector $\vec{w}$ and $|N(S)|\ge \alpha n$. 
+Then there exist \(i\in [d]\) and at least 
+\[
+\frac{1}{kd}\cdot\frac{\alpha}{(k+d)^{k-1}}n^{k-1}\cdot\alpha n\ge \frac{\alpha^2} {(k+d)^{k+1}} n^k
+\]
+edges $e$ such that $e\cup\{v\}$ spans a copy of $K_k^{(k)}(2,1,\dots,1)$ and $\vec{i}_{\mathcal{P}}(e)=\vec{w}+\vec{u}_i$, which means that there exist indices $i_1,\dots,i_{k-1}\in[d]$ that are not necessarily distinct and $H$ contains at least ${\alpha}^2 n^{k}/(k+d)^{k+1}$ edges with vertex set $\{v_1,\dots,v_k\}$ such that $v_1\in U_{i_1},\dots,v_{k}\in U_{i_{k}}$, where \(i_k=i\), and $\{v_1,\dots,v_{k-1}\}\in N(v)$. 
+Note that by applying Proposition \ref{supersaturation} with $l_i:=a_i$ for each $i\in [k]$, we get that there are at least $\eta_2 n^r>\mu n^r$ copies of $K(F)$ in $H$, where the $ j $-th part is contained in $ U_{i_j} $ for all $ j \in [k] $. 
+This implies that these copies share the index vector $\vec{v}=\sum_{j\in [k]}a_{i_j}\vec{u}_{i_j}$, and $\vec{v}\in I^{\mu}_{\mathcal{P},F}(H)$. 
+Moreover, by applying Proposition \ref{supersaturation} with $l_i:=a_i$ for each $i\in [k-1]$ and $l_k:=a_k-1$, we conclude that $H$ contains at least $\eta_2 n^{r-1}$ copies of $K_k^{(k)}(a_1,\dots,a_{k-1},a_k-1)$ with index vector $\vec{v}-\vec{u}_i$ such that each such copy together with $v$ spans a copy of $K(F)$. Since at most \(r!\) copies of \(F\) can share the same \(r\)-set of vertices, this completes the proof of the claim.
+\end{proof}
+
+Now for each $v\in U_0$, we move $v$ to $U_i$ where the index $i\in [d]$ is given by Claim~\ref{clm:vvi} (choose any one if there are more than one such choices of $i\in [d]$). %and show that $|F^{\mu}_{\mathcal{P}}(v)|\ge \eta_2 {n}^{r-1} $.
+We proceed greedily until all vertices of $U_0$ are assigned to a new cluster.
+%Now, we add $ v $ to $ U_i $ (we add arbitrary it to an arbitrary $ U_i $ if there are more than one choices). 
+%At this moment, there are at least \(\eta_2n^{r-1}\) robust copies of \(K(F)\) (and thus \(F\)) containing v within \(U_i\). 
+
+Denote the resulting partition of $ V(H) $ by $\mathcal P'= \{V_1,\dots,V_d\} $. 
+Note that $ |V_i|\ge |U_i|-|U_0|\ge c'n $. 
+Now we show that the process above will not decrease the number of robust copies for each vertex significantly. 
+We claim that \(I_{\mathcal{P},F}^{\mu}(H)\subseteq I_{\mathcal{P'},F}^{\mu/2}(H)\).
+Indeed, since moving any vertex in $U_0$ decreases the number of ``robust copies'' of $F$ by at most $r!\cdot2\varepsilon{n}^{r-1}$ (that is, turning robust copies to non-robust ones) and by \(\card{U_0}\le (r+d)^{r}\mu n/\eta_1\), for every $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$, there exists at least $\mu n^r-r!\cdot2\varepsilon n^{r-1}|U_0|\ge \mu n^r/2 $ copies $F'$ of $F$ with $\vec{i}_{\mathcal{P'}}(V(F'))=\vec{v}$, which implies $\vec{v}\in I_{\mathcal{P'},F}^{\mu/2}(H)$. 
+Then, for every $v\in V(H)\setminus U_0$, we have $\cardi{F^{\mu/2}_{\mathcal{P'}}(v)}\ge \cardi{F^{\mu}_{\mathcal{P}}(v)}-|U_0|\binom{n}{r-2}\ge 2\varepsilon n^{r-1}-\varepsilon n\binom{n}{r-2}\ge\varepsilon n^{r-1}$; for $v\in U_0$, $\cardi{F^{\mu/2}_{\mathcal{P'}}(v)}\ge (\eta_2 n^{r-1}/r!)-|U_0|\binom{n}{r-2}\ge \varepsilon n^{r-1}.$
+So we have $\cardi{F^{\mu/2}_{\mathcal{P'}}(v)}\ge \varepsilon n^{r-1} \text{ for every } v\in V(H)$
+% \begin{equation}
+% \label{eq:Fv}
+% \cardi{F^{\mu/2}_{\mathcal{P'}}(v)}\ge \varepsilon n^{r-1} \text{ for every } v\in V(H)
+% \end{equation}
+and it remains to verify the reachability.
+
+
+Finally, we verify the reachability. Note that we only need to verify for pairs of \(u,v\) with at least one of them in \(U_0\). All index vectors mentioned below are with respect to \(\mathcal{P}\).
+\begin{enumerate}
+\item For each \(\ell\in [d]\), any $ v\in V_\ell\cap U_0 $ and $ u\in V_\ell\setminus U_0 $ are $ (F,\beta_1,tr+1) $-reachable in $ H $.  
+%\textcolor{blue}{Indeed, by~\eqref{eq:Fv} and averaging, there exist $\vec{w}\in I^{\mu/2}_{\mathcal{P}',F}(H)$ such that at least $ (r+d)^{-r}\varepsilon n^{r-1}$ $(r-1)$-sets $ R=\{v_1,\dots,v_{r-1}\} $ with index vector $\vec{w}-\vec{u}_\ell$ such that $ R\cup \{v\}$ spans a copy of $F$. 
+%Since \(\vec{w}\in I^{\mu/2}_{\mathcal{P}',F}(H)\), there are at least $ (\mu/2) n^r$ copies of $F$, each with index vector \(\vec{w}\).}
+Indeed, by Claim~\ref{clm:vvi} and our process, there exist $\vec{v}\in I_{\mathcal P, F}^{\mu}(H)$ such that $H$ contains \(\eta_2 n^{r-1}/r!\) \((r-1)\)-sets \(R=\{v_1,\dots,v_{r-1}\} \), each having index vector \(\vec{v}-\vec{u}_{\ell}\) with respect to \(\mathcal{P}\), such that \(R\cup \{v\}\) spans a copy of \(F\). Since \(\vec{v}\in I_{\mathcal P, F}^{\mu}(H)\), there are at least \(\mu n^r\) copies of of $F$, each with index vector \(\vec{v}\). 
+Fix one such copy of $F$ with vertex set $\{w, w_1,\dots, w_{r-1}\}$, and without loss of generality, we may assume that $ v_i $ and $ w_i $ are in the same part of $\mathcal{P}$ for all $ i\in[k-1] $ and $ w\in U_\ell $. 
+Since each part of \(\mathcal{P}\) is $ (F,\beta,t) $-closed in $ H $, there exist $\beta n^{tr-1}$ reachable $ (tr-1) $-sets \(S_i\) for $ v_i $ and $ w_i $ for all $ i\in [r-1]$, and $\beta n^{tr-1}$ reachable $ (tr-1) $-sets \(S_0\) for $ u $ and $ w $. 
+Let \(S:=\left(\bigcup_{i\in [r-1]}\left(\{v_i\}\cup S_i\cup \{w_i\}\right)\right)\cup S_0\cup \{w\}\). 
+Observe that if \(\card{S}=tr^2+r-1\), that is, the sets are all disjoint, then both \(H[S\cup \{v\}]\) and \(H[S\cup \{u\}]\) have a perfect \(F\)-packing. 
+Hence there are at least
+\[
+\frac{(\eta_2n^{r-1}/r!)\cdot\mu n^r \cdot{(\beta n^{tr-1})}^r-(tr^2+r)n^{tr^2+r-2}}{(tr^2+r-1)!}\ge \beta_1 n^{tr^2+r-1}
+\]
+reachable $ (tr^2+r-1) $-sets for $ v $ and $ u $.
+            
+\item For each \(\ell\in [d]\), any $ v_1,v_2\in V_\ell\cap U_0 $ are $ (F,\beta',2tr+2) $-reachable in \(H\). 
+Indeed, note that there are at least $\card{V_{\ell}\setminus U_0}\ge cn-\varepsilon n\ge c'n $ vertices $w$ \((F,\beta_1,tr+1)\) reachable to both \(v_1\) and \(v_2\), at least $\beta_1n^{tr^2+r-1}$ $ (tr^2+r-1) $-reachable sets $S_i$ for $v_i$ and $w$ for $ i=1,2 $. Let \(S=S_1\cup \{w\}\cup S_2\) and if \(\card{S}=2tr^2+2r-1\), then \(H[\{v_1\}\cup S]\) and \(H[S\cup \{v_2\}]\) have perfect \(F\)-packings. 
+Hence there are at least
+\[
+\dfrac{ (c'n)\cdot(\beta_1n^{tr^2+r-1})^2-(2tr^2+2r)n^{2tr^2+2r-2}}{(2tr^2+2r-1)!} \ge \beta' n^{2tr^2+2r-1} 
+\]
+reachable $ (2tr^2+2r-1) $-sets for $ v_1 $ and $ v_2 $. 
+\end{enumerate} 
+Note that there are at least \(\eta_1 n^{r-1}\cdot n/r\) copies of \(F\). Then, by Fact \ref{fact:i-reachable} and the choice of \(\beta'\), each $ V_{\ell} $ is $ (F,\beta',2tr+2) $-closed in $H$.
+
+
+We estimate the running time as follows. 
+First, we compute $ I_{\mathcal{P},F}^{\mu}(H)$ by checking each $r$-set $S\subseteq V(H)$ to determine whether it spans a copy of \(F\), and if so, recording its index vector \(\vec{i}_{\mathcal{P}}(S)\). 
+This involves listing all possible sets of at most $\binom{r}{k}$ edges on \(S\), and computing part sizes with respect to $\mathcal{P}$, which takes constant time. 
+Since there are $O(n^r)$ such subsets, the total runtime is $O(n^r)$. 
+Next, we determine the set $U_0$ by calculating, for every vertex $v\in V(H)$, the number of copies $K$ of $K(F)$ that contain $v$ and satisfy $\vec{i}_{\mathcal{P}}(K)\in I_{\mathcal{P},F}^{\mu}(H)$, which takes time $O(n^r)$. 
+        %First, we find $ I_{\mathcal{P},F}^{\mu}(H)$ by identifying $\vec{i}_{\mathcal{P}}(F')$ for every copy \(F'\) of \(F\), which takes time $O(n^r)$.  
+        %Next, we determine the set $U_0$ by calculating, for every vertex $v\in V(H)$, the number of copies $K$ of $K(F)$ that contain this vertex and satisfy $\vec{i}_{\mathcal{P}}(K)\in I_{\mathcal{P},F}^{\mu}(H)$. 
+        %Note that detecting whether any $(r-1)$-set $R$ satisfies the aforementioned property involves listing every set of at most $\binom{r}{k}$ edges on them and computing the sizes of intersections of $R$ with each part of $\mathcal{P}$ for verification. This verification step takes constant time.
+        %Thus, the overall time for this step is $O(n^r)$.
+After constructing $U_0$, for each vertex $v\in U_0$, we identify the set $N'(v)$ of $ (k-1) $-sets in $ N(v) $ that share the same index vector and have at least $ \frac{1}{(k+d)^{k-1}}\alpha n^{k-1} $ such tuples, in total time $ O(n^k) $. 
+Subsequently, for every $ v \in U_0 $, we determine the index $i=i(v)$ as in Claim~\ref{clm:vvi} in constant time. 
+This requires time $O(n^{k+1})$.
+Finally, we move vertices \(v\) of $U_0$ to $U_1,\dots,U_d$ based on Claim~\ref{clm:vvi}, which can be done in time $O(n)$.
+In summary, the overall time complexity for finding such a partition $\mathcal{P}'$ is $O(n^{\max\{r,k+1\}})$.
+\end{proof}
+
+For the rest of this section, we use Lemma~\ref{better partition} to derive Lemmas~\ref{better partition of PM} and~\ref{better partition of packing}.
+
+    \subsection{Perfect matching}
+
+    We will use the following result in the proof of Lemma \ref{better partition of PM}, which is derived by combining Proposition 3.7 and Lemma 3.8 from~\cite{han2017decision}.
+    
+\begin{lemma}\cite{han2017decision}\label{reachabel set}
+        Let $ 1/n\ll \beta\ll\gamma\ll1/k $, where $ k\ge 3 $ is an integer. For each $k$-graph $ H $ on $ n $ vertices with $ \delta_{k-1}(H)\ge n/k+
+        \gamma n $, in time $ O(n^{2^{k-2}k+1})$, we can find a $ (\beta,2^{k-1},1/k+\gamma/2)$-good partition $\mathcal{P}$ of \(V(H)\).
+    \end{lemma}
+
+Now we are ready to prove Lemma~\ref{better partition of PM}.
+
+\begin{proof}[Proof of Lemma~\ref{better partition of PM}]
+Suppose $ 1/n\ll \beta\ll\mu\ll\varepsilon\ll\gamma\ll1/k $. Let $ H $ be a $ k $-graph on $ n $ vertices satisfying $\delta_{k-1}(H)\ge n/k+\gamma n$ with $\mathcal{P}=\{U_1,\dots,U_d\} $ found by Lemma \ref{reachabel set}.
+Note that $\delta_{1}(H)\ge (1/k+\gamma) \binom{n}{k-1}$. Applying Lemma \ref{better partition} with $\alpha=1/k+\gamma$, $c=1/k+\gamma/2$, $c'=1/k+\gamma/3$, $t=2^{k-1}$, $r=k$ and $F$ being a single edge, in time $O(n^{k+1})$ we obtain a desired partition $\mathcal{P}'=\{V_1,\dots,V_d\} $.
+\end{proof}
+
+
+\subsection{Perfect packing}
+
+In this subsection we prove Lemma~\ref{better partition of packing}, and we need slightly more preparation. Let $F$ be an $r$-vertex $k$-chromatic graph. 
+ By the definition of ${\chi}_{cr}(F)$, we have \[\frac{1}{{\chi}_{cr}(F)}=\frac{r-\sigma(F)}{(k-1)r}\le \frac{r-1}{(k-1)r}.\] 
+ We can obtain the desired partition by applying the following variant of Lemma \ref{better partition}, which can be easily derived from the original version by defining a $k$-graph $G'$ where each $k$-set forms a hyperedge if and only if it spans a copy of $K_k$ in $G$. 
+ For any vertex $u\in V(H)$, let $W(u)$ denote the collection of $(k-1)$-sets $S\subseteq N(v)$ such that $S$ spans a clique in $H$. 
+ For a set $T\subseteq V(H)$, $N(T):=\bigcap _{v\in T}N(v)$.
+
+\begin{lemma}\label{variant of better partition}
+Let $k,r,t\ge 2$ be integers and $\alpha,\beta,\mu,c,c'>0$ where $\mu\ll \alpha,1/r,1/d$ and $c'<c$.
+There exist $\beta'$ and $\varepsilon$ such that the following holds for sufficiently large integer $n$. 
+Let $F$ be a $k$-chromatic graph on $r$ vertices. 
+For any $n$-vertex graph $H$, if there exists an $(F,\beta,t,c)$-good partition $\mathcal{P}=\{U_1,\dots,U_d\}$ of $ V(H)$ and for every vertex $v\in V(H)$, the number of $(k-1)$-sets $S\in W(v)$ with $|N(S)|\ge \alpha n$ is at least $\alpha\binom{n}{k-1}$, then in time $O(n^{\max\{r,k+1\}})$ we can find an $(F,\beta',2tr+2,c')$-good partition $\mathcal{P}'$ of $V(H)$ such that for every vertex $v\in V(H)$, $ \card{F^{\mu}_{\mathcal{P'}}(v)}\ge \varepsilon n^{r-1} $. \qed
+\end{lemma}
+    
+The following lemma provides a good partition, similar to the perfect matching case.
+
+\begin{lemma}[\cite{han2020complexity}]\label{good parition-F}
+Let $k,r,n\ge 2$ be integers and $\gamma,\beta >0$ where $ 1/n\ll \beta\ll\gamma\ll 1/r,1/k$. 
+Let $F$ be an $r$-vertex $k$-chromatic graph and $h:=r^{k-1}$. 
+For each $n$-vertex graph $H$ with $\delta(H)\ge (1-1/{\chi}_{cr}(F)+\gamma)n$, in time $O(n^{2^{h-1}r+1})$ we can find an $(F,\beta,2^{h-1},1/r+\gamma/2)$-good partition $\mathcal{P}$ of $ V(H)$.
+\end{lemma}
+
+We now combine these two lemmas and prove Lemma~\ref{better partition of packing}.
+\begin{proof}[Proof of Lemma~\ref{better partition of packing}]
+Suppose $ 1/n\ll\beta\ll \mu\ll\varepsilon\ll\gamma\ll1/r,1/k$.
+Applying Lemma \ref{good parition-F} to $H$, we obtain an $(F,\beta,2^{h-1},1/r+\gamma/2)$-good partition $\mathcal{P}=\{V_1,\dots,V_d\}$ of $ V(H)$ in time $O(n^{2^{h-1}r+1})$, where $h=r^{k-1}$.
+Since $\delta(H)\ge (1-1/{\chi}_{cr}(F)+\gamma)n$, simple counting shows that for every $(k-1)$-set $S$, $|N(S)|\ge (1/r+(k-1)\gamma)n$. 
+This implies that for every vertex $v\in V(H)$, $|W(v)|\ge \binom{n}{k-1}/h$. 
+Therefore, by Lemma \ref{variant of better partition} applied with $\alpha=1/h$, $c=1/r+\gamma/2$, $c'=1/r+\gamma/3$, and $t=2^{h-1}$, we obtain an $(F,\beta',r2^h+2,1/r+\gamma/3)$-good partition $\mathcal{P}'$ such that for every vertex $v\in V(H)$, $ \card{F^{\mu}_{\mathcal{P'}}(v)}\ge \varepsilon n^{r-1} $, in time $O(n^{\max\{r,k+1\}})$.
+\end{proof}
+    
+\section{Random clustering lemma}\label{random clustering lemma}
+
+Our main tool for the proof of Theorem~\ref{main theorem} is Lemma~\ref{random cluster}, which is proved by the random clustering method of Kelly, M\"{u}yesser and Pokrovskiy~\cite{kelly2024optimal}, and we use it to construct a probability distribution over the desired subgraphs with good spread. For $Y\subseteq V(H)$ and a partition $\mathcal{P}$ of $V(H)$, we define the projection of $\mathcal{P}$ on $Y$ as  $\mathcal{P}^Y:=\{W\cap Y:W\in \mathcal{P}\}$.
+    
+Now we are ready to state the main result of this section, which says that we can partition the vertex set of a dense $k$-graph $H$ randomly, so that all parts inherit the properties of $H$, and in particular, the probability that a vertex is in a specific part is at most $O(1/n)$.
+Note that to be applicable in the proof of Theorem~\ref{main theorem} (assumption \ref{item:main-good partition} therein), we do not assume that the partition is a good partition -- we allow a small fraction of the pairs of vertices in the same part to be not reachable.
+
+\begin{lemma}\label{random cluster}
+Let $k,\ell\in \mathbb{N}$ and let $F$ be an $r$-vertex $k$-graph.
+Define $d,q,s,t,C,n\in \mathbb{N}$ and $\alpha,\beta,\mu,\gamma,\eta,\varepsilon,c>0$ where $1/n\ll \alpha,\eta\ll1/C'\ll 1/C\ll \beta,\mu,\gamma,\varepsilon,c,1/k,1/\ell,1/r,1/d,1/q \le 1$, and $r\mid n$, $r\mid C$. 
+Let $H$ be an $n$-vertex $k$-graph such that all but at most $\alpha \binom{n}{\ell}$ $\ell$-sets have degree at least $(\delta+\gamma)\binom{n-\ell}{k-\ell}$, and let $\mathcal{P}=\{V_1,\dots,V_d\}$ be a partition of $V(H)$, satisfying the following properties:
+\begin{enumerate}[label=(P\arabic*)]
+\item for every $i\in [d]$, all but $\eta\binom{\card{V_i}}{2}$ of the pairs $\{u,v\}\subseteq V_i$ are $(F,\beta,t)$-reachable in $H$ and $\card{V_i}\ge cn$;
+\item for every $ v\in V(H) $, $ \card{F^{\mu}_{\mathcal{P}}(v)}\ge \varepsilon{n}^{r-1}$.
+\end{enumerate}
+Then there exists a random partition $\mathcal{U}=\{U_1,U_2,\dots,U_m\}$ of $V(H)$ with the following properties:
+\begin{enumerate}[label=(R\arabic*)]
+\item for every $2\le i\le m$, we have $\card{U_1}$ equals $(C-1)C$ plus the remainder when $n$ is divided by $(C-1)C$, and $|U_i|=C$; for every $i\in[m]$ and $j\in [d] $, $|U_i\cap V_j|\ge c|U_i|/2$;\label{item:(R1)}
+
+    \item for every $2\le i\le m$, there exists a set $T_i\subseteq U_i$ with $|T_i\cap V_j|=rq$ for each $j\in[d]$ and a set $L_i\subseteq U_i\setminus T_i$ of size $r$ such that $\vec{i}_{\mathcal{P}}(L_i)\in I_{\mathcal{P},F}^{\mu}(H)$ and $H[L_i]$ contains a copy of $F$, denoted by $F_i$; let \(L_1=\emptyset\); moreover, for every \(2\le i\le m\) and every vertex $v\in T_{i}$, we have $\card{F^{\mu}_{\mathcal{P}}(v, U_{i-1})}\ge \varepsilon{\card{U_{i-1}}}^{r-1}/2 $;\label{item:(R-robust)}
+            
+\item for every $i\in[m]$, $\delta_{\ell}(H[U_i\setminus L_i])\ge \left(\delta+\gamma/2\right)\binom{|U_i\setminus L_i|-\ell}{k-\ell}$, and for every $j\in[d]$, $V_j\cap (U_i\setminus L_i)$ is $(F,\beta/2,t)$-closed in $H[U_i\setminus L_i]$;\label{item:(R-degree)}
+            
+\item for every $i\in [m]$, 
+%and $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$, we have $\vec{v}\in I_{ \mathcal{P}^{U_i\setminus L_i},F}^{\mu/2}(H[U_i\setminus L_i])$ 
+$I_{\mathcal{P},F}^{\mu}(H)\subseteq I_{ \mathcal{P}^{U_i\setminus L_i},F}^{\mu/2}(H[U_i\setminus L_i])$;\label{item:(R4)}
+            
+\item for every set of distinct vertices $y_1,\dots,y_s\in V(H)$ and every function $f:[s]\rightarrow[m]$, \label{item:(R5)}
+\[\mathbb{P}\big[y_i\in U_{f(i)}\text{ for each }i\in[s]\big]\le \Big({\frac{C'}{n}}\Big)^s. 
+\]
+\end{enumerate}
+\end{lemma}
+
+Now let us explain the properties of the random partition $U_i$ found by Lemma~\ref{random cluster}.
+First,~\ref{item:(R5)} reflects the probability of the location of the vertices, which is exactly what we want for getting the vertex-spread.
+The other properties together are designated so that we could find an $F$-factor in each cluster $U_i$: the size of the clusters must be a multiple of $r$, every part must inherit the minimum degree of $H$, and the reachability property and the robust-lattice structure should also be inherited.
+Additional complexities come from the redistribution step, where a small portion of the clusters failing to have these properties will be broken into vertices and distributed randomly to the good ones.
+In that step it is possible but rather complicated or tedious to show that the new cluster is closed.
+Here an easier fix is to put the newly added vertex in a robust copy of $F$, with vertex set denoted by $L_i$, and then state our reachability and lattice properties only for $U_i\setminus L_i$.
+Moreover, in~\ref{item:(R-robust)} we include small sets $T_i\subseteq U_i$, which will be used to correct the divisibility in the proof of Theorem~\ref{main theorem} -- when $\vec{i}_{\mathcal P^{U_i\setminus L_i}}(U_i')$ is not in $L_{\mathcal P^{U_i\setminus L_i}}^{\mu/2}(H[U_i\setminus L_i])$ where $U_i
+'$ denotes the current $i$-th cluster, we will add a subset of $T_{i+1}$ to $U_i'$ so that the new index vector does belong to the lattice, which allows us to build an $F$-factor in the $i$-th cluster.
+Then this correction can be done in a recursive manner.
+%, until the last one would not need a correction.
+
+Before presenting the full proof, we outline the key ideas behind it. The argument is based on the random redistribution technique introduced in~\cite{kelly2024optimal}, and we modify their framework to suit our setting by adjusting both the technical assumptions and the properties we aim to achieve. 
+We begin with randomly partitioning \(V(H)\) into clusters \(U_1',\dots,U_m'\). 
+This initial partition is, in a sense, already ``close" to the one required in Lemma~\ref{random cluster}: the fifth condition is satisfied, and the remaining conditions are violated by only a small number of clusters. 
+We refer to a cluster \(U_i'\) as \emph{bad} if it violates any of the required properties stated in the lemma. 
+Following the idea of~\cite{kelly2024optimal}, we then randomly redistribute the vertices from the bad clusters into the good ones in a way that preserves the key structural properties of the latter. 
+    
+For the remainder of this section, fix 
+\[
+1/n\ll \alpha,\eta\ll1/C'\ll 1/C\ll \beta,\mu,\gamma,\varepsilon,c,1/k,1/\ell,1/r,1/d\le 1
+\]
+where $r\mid n$ and $r\mid C$ as in Lemma \ref{random cluster}. 
+Let $C_1$ be $(C-1)C$ plus the remainder when $n$ is divided by $(C-1)C$. Let $W_1:=[C_1]$, and for $i\ge2$, let $W_i:=[C_1+(C-1)(i-1)]\setminus{\cup_{j=1}^{i-1}W_j}=[C_1+(C-1)(i-2)+1,C_1+(C-1)(i-1)].$ 
+Note that $\{W_1,\dots,W_m\}$ is a partition of $[n]$ for $m:=(n-C_1)/(C-1)+1$. 
+Let $H$ be a $k$-graph with vertex set $V:=\{v_1,\dots,v_n\}$ such that all but at most $\alpha \binom{n}{\ell}$ $\ell$-sets have degree at least $(\delta+\gamma)\binom{n-\ell}{k-\ell}$, and let $\mathcal{P}=\{V_1,\dots,V_d\}$ be a partition of $V$ as described in Lemma~\ref{random cluster}. 
+    Let $\pi:[n]\rightarrow[n]$ be a uniformly random permutation of $[n]$, and let $U_i':=\{v_j:\pi(j)\in W_i\}.$ 
+    
+    To prepare for the proof of Lemma~\ref{random cluster}, we begin by establishing a sequence of auxiliary lemmas, all under the assumptions of Lemma~\ref{random cluster}. 
+    Each lemma verifies a specific aspect of the desired structure, and together they provide the framework needed for the random redistribution argument to succeed. 
+    While these lemmas address the individual components, the complete proof will be presented at the end of this section.
+
+The following lemma ensures that the second part of \ref{item:(R1)} holds.
+Let $ C^*:=|U_i'|$, that is, $C^*=C_1$ if $i=1$ and $C^*=C-1$ if $i>1$.
+So $C^*\ge C-1\ge C/2$. 
+Note that Lemmas~\ref{size of random cluster}--\ref{U_1} are under the assumptions of Lemma~\ref{random cluster}.
+    
+\begin{lemma}\label{size of random cluster}
+Let $E_1$ be the event that the following hold: 
+\begin{itemize}
+\item For at least  $\left(1-\exp{(-c^2C/20)}\right)m$ indices $i\in\{2,\dots,m\}$, we have $|V_j\cap U_i'|\ge 2c\card{U_i'}/3$ for all \(j\in [d]\);
+\item The same holds for \(U_1'\), i.e., $|V_j\cap U_1'|\ge 2c\card{U_1'}/3$ for all \(j\in [d]\).
+\end{itemize} 
+Then, $\mathbb{P}\left[E_1\right]\ge 99/100$.
+    \end{lemma}
+
+\begin{proof}
+Note that for every $j\in[d]$, $ \card{V_j}\ge cn$  as stated in Lemma \ref{random cluster}.
+        Let $f_j:\binom{V}{C^*}\rightarrow\mathbb{R}$ be defined by $f_j(X)=|V_j\cap X|$ for each $X\in \binom{V}{C^*}$. Note that $|f_j(X_1)-f_j(X_2)|\le 1$ for any $X_1,X_2\in \binom{V}{C^*}$ with $|X_1\cap X_2|=C^*-1$. 
+        By linearity of expectation, $\mathbb{E}[f_j(U_i')]=\sum_{v\in V_j}\mathbb{P}\big[v\in U_i'\big]=|V_j|\cdot\frac{\binom{n-1}{\card{U_i'}-1}}{\binom{n}{\card{U_i'}}}\ge c\card{U_i'}$ for every $i\in[m]$. 
+        We can then apply Lemma \ref{hypergeometric} with $c=1, m=C^*$ and $\alpha=c\sqrt{C^*}/3$, and get that for $i\in [m]$ and $j\in [d]$
+\[\mathbb{P}\left[f_j(U_i')=|V_j\cap U_i'|<2c|U_i'|/3\right]\le 2\exp{(-2c^2C^*/9)}\le \exp{(-c^2C/10)}.
+\]
+It follows that, with probability at most \(\exp{(-c^2C/10)}d\), there exists some \(j\in [d]\) such that $|V_j\cap U_1'|<2c|U_1'|/3$. 
+        On the other hand, let $X$ denote the number of indices \(i\in \{2,\dots,m\}\) such that $|V_j\cap U_i'|<2c|U_i'|/3$ for some $j\in [d]$. 
+Then by linearity of expectation, $\mathbb{E}[X]\le \exp{(-c^2C/10)}dm.$ 
+By Markov's inequality, $\mathbb{P}\big[X>\exp{(-c^2C/20)}m\big]\le \exp{(-c^2C/20)}d.$ 
+        Combining this with the probability bound for \(U_1'\), we obtain the desired conclusion.
+    \end{proof}
+
+
+    To ensure condition~\ref{item:(R-robust)}, we next establish two lemmas that address its key components. 
+    %Lemma \ref{robust edge of random cluster d(v)} sures that there are many good clusters to the vertex from bad cluster can be added in the random redistribution step. 
+Lemma~\ref{robust edge of random cluster d(v)} ensures that, at the random redistribution stage, each vertex has many good clusters into which it can be added.     
+
+    \begin{lemma}\label{robust edge of random cluster d(v)}
+        Let $E_2$ be the event that for every vertex $v\in V$, there are at least $(1-1/C^2)m$ indices \(i\in \{2,\dots,m\}\) such that $|F^{\mu}_{\mathcal{P}}(v,U_i')|\ge 2\varepsilon{\card{U_i'}}^{r-1}/3$. Then, $\mathbb{P}\left[E_2\right]\ge 99/100$.
+    \end{lemma}
+    
+\begin{proof}
+Note that for each vertex $ v\in V(H) $, $ |F^{\mu}_{\mathcal{P}}(v)|\ge \varepsilon{n}^{r-1} $  as stated in Lemma \ref{random cluster}. 
+For every vertex $v\in V$ and $i\in[m]$, by Lemma \ref{robust edges} with $U_i'$ playing the role of $A$, we have
+\begin{equation}
+\label{eq:FPvU}
+\mathbb{P}\left[|F^{\mu}_{\mathcal{P}}(v,U_i')|<2\varepsilon{\card{U_i'}}^{r-1}/3\right]\le 2\exp{\left(-\varepsilon^2 C/20\right)}.
+\end{equation}
+%(C-1)/18\ge C/20
+Let $X_v$ denote the number of random sets $U_i'$ such that $|F^{\mu}_{\mathcal{P}}(v,U_i')|\ge {2\varepsilon}{\card{U_i'}}^{r-1}/3$. 
+By linearity of expectation, we have $\mathbb{E}[X_v]\ge \left(1-2\exp{\left(-\varepsilon^2 C/20\right)}\right)m.$ 
+        Note that interchanging two elements of $\pi$ can affect the value of $X_v$ by at most 2 and if $X_v\ge x$, this can be certified by at most $2C^2x$ choices of the random permutation. 
+        Therefore, by Lemma \ref{McDiarmid's inequality} applied with $c=2$, $r=2C^2$, and $t=m/C^3$, we have
+\[\mathbb{P}\big[X_v<(1-1/C^2)m\big]\le 4\exp{\Big(-\frac{{(m/C^3)}^2}{64C^2m}\Big)}\le \exp{(-n/C^{10})}.\]
+By the union bound, we have that $X_v\ge (1-1/C^2)m$ for every vertex $v\in V$ with probability at least 99/100, as desired.
+\end{proof}
+    
+Lemma~\ref{robust edge of random cluster d(i)} guarantees that most clusters admit many vertices that can be added while preserving the desired properties.
+%Together with Lemma~\ref{robust edge of random cluster d(v)}, 
+
+\begin{lemma}\label{robust edge of random cluster d(i)}
+Let $E_3$ be the event that for all but at most $\exp{\left(-\varepsilon^2 C/100\right)}m$ indices $i\in\{2,\dots,m\}$, there are at least $\left(1-\exp{\left(-\varepsilon^2 C/50\right)}\right)n$ vertices $v\in V$ such that $|F^{\mu}_{\mathcal{P}}(v,U_i')|\ge 2\varepsilon{\card{U_i'}}^{r-1}/3$. 
+Then, $\mathbb{P}\left[E_3\right]\ge 99/100$.
+\end{lemma}
+\begin{proof}
+Call $v$ \emph{bad} for $U_i'$ if $|F^{\mu}_{\mathcal{P}}(v,U_i')|<2\varepsilon{\card{U_i'}}^{r-1}/3$. 
+For any $U_i'$, by Lemma \ref{robust edges} and linearity of expectation, we have $\mathbb{E}\big[|\{v\in V: v\text{ is bad for }U_i'\}|\big]\le 2\exp{\left(-\varepsilon^2 C/20\right)}n$. 
+Then, for any $U_i'$, we have $\mathbb{P}\big[\{|v\in V: v\text{ is bad for }U_i'\}|\ge \exp{\left(-\varepsilon^2 C/50\right)}n\big]\le 2\exp{\left(-\varepsilon^2 C/50\right)}$ by Markov's inequality. 
+Let $X$ be the number of $i\in [2,m]$ such that $|\{v\in V: v\text{ is bad for }U_i'\}|\ge \exp{\left(-\varepsilon^2 C/50\right)}n$. 
+        By linearity of expectation, $\mathbb{E}[X]\le 2\exp{\left(-\varepsilon^2 C/50\right)}m$. 
+        By Markov's inequality, $\mathbb{P}[X\ge\exp{\left(-\varepsilon^2 C/100\right)}m]\le 2\exp{\left(-\varepsilon^2 C/100\right)}\le 1/100$, as $C$ is sufficiently large, implying the desired statement.
+    \end{proof}
+ 
+The following lemma is crucial for establishing conclusion \ref{item:(R-degree)} of the theorem.
+        
+\begin{lemma}\label{codegree and reachable set of random cluster}
+Let $E_4$ be the event that the following hold for all but at most
+\[
+\left(\exp{\left(-\gamma^2 C/200\right)}+\exp{\left(-\beta^2 C/200\right)}\right)m
+\]
+indices \(i\in \{2,\dots,m\}\) and for $i=1$: $\delta_{\ell}(H[U_i'])\ge (\delta+2\gamma/3)\binom{|U_i'|-\ell}{k-\ell}$, and $V_j\cap U_i'$ is $(F,2\beta/3,t)$-closed in $H[U_i']$ for all $j\in[d]$.
+% \begin{itemize}
+% \item For all but at most $\left(\exp{\left(-\gamma^2 C/200\right)}+\exp{\left(-\beta^2 C/200\right)}\right)m$ indices \(i\in \{2,\dots,m\}\), we have $\delta_{\ell}(H[U_i'])\ge (\delta+2\gamma/3)\binom{|U_i'|-\ell}{k-\ell}$, and $V_j\cap U_i'$ is $(F,2\beta/3,t)$-closed in $H[U_i']$ for all $j\in[d]$;
+%                 \item And the same holds for \(U_1'\).
+%             \end{itemize} 
+Then, $\mathbb{P}\left[E_4\right]\ge 99/100$.
+\end{lemma}
+\begin{proof}
+Fix $i\in [m]$.
+By Lemma \ref{almost perfect codegree}, we have
+\[
+\mathbb{P}\left[\delta_{\ell}(H[U_i'])<(\delta+2\gamma/3)\binom{\card{U_i'}-\ell}{k-\ell}\right]\le \binom{C^*}{\ell}\left(\alpha+\exp{\left(-\gamma^2C^*/36\right)}\right)\le \exp{\left(-\gamma^2C/100\right)}
+\]
+and by Lemma \ref{almost perfect reachability} and the union bound, we have
+\begin{align*}
+\mathbb{P}\Big[\exists j\in[d],V_j\cap U_i'\text{ is not }(F,2\beta/3,t)\text{-closed in }H[U_i']\Big]\\
+\le d\binom{C^*}{2}\left(\eta+2\exp{(-\beta^2C^*/18)}\right)\le \exp{\left(-\beta^2C/100\right)},
+\end{align*}
+as $\alpha,\eta\ll 1/C^*\ll\beta,\gamma,1/\ell,1/d.$ 
+In particular, the above two inequalities hold for \(U_1'\). 
+           
+On the other hand, let $X_1$ be the number of indices $i\in\{2,\dots,m\}$ such that \(\delta_{\ell}(H[U_i'])< (\delta+2\gamma/3)\binom{|U_i'|-\ell}{k-\ell}\), 
+and then $\mathbb{E}[X]\le \exp{(-\gamma^2C/100)}m.$ 
+By Markov's inequality, we have
+\[
+\mathbb{P}[X_1\ge\exp{\left(-\gamma^2 C/200\right)}m]\le \exp{\left(-\gamma^2 C/200\right)}.
+\]
+Similarly, let $X_2$ be the number of indices $i\in\{2,\dots,m\}$ for which there exists \(j\in [d]\) such that $V_j\cap U_i'$ is not  $(F,2\beta/3,t)$-closed in $H[U_i']$. 
+Thus, we have $\mathbb{P}[X_2\ge\exp{\left(-\beta^2 C/200\right)}m]\le \exp{\left(-\beta^2 C/200\right)}.$ 
+By the union bound, we get $\mathbb{P}\left[E_4\right]\ge 1-2\exp{\left(-\gamma^2 C/200\right)}-2\exp{\left(-\beta^2 C/200\right)}\ge 99/100$, as desired.
+\end{proof}
+
+The next lemma will be used in the proof of \ref{item:(R4)}, providing a key probabilistic bound. 
+        
+\begin{lemma}\label{index vector of random cluster}
+Let $E_5$ be the event that the following hold for at least $\left(1-\exp{(-\mu^2C/50)}\right)m$ indices $i\in\{2,\dots,m\}$ and for $i=1$:
+every $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ satisfies $\vec{v}\in I_{\mathcal{P}^{U_i'},F}^{2\mu/3}(H[U_i'])$. 
+Then, $\mathbb{P}\left[E_5\right]\ge 99/100$.
+\end{lemma}
+\begin{proof}
+%Fix $i\in [m]$.
+%For every $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$, let $f_{\vec{v}}:\binom{V}{C^*}\rightarrow\mathbb{R}$ be defined by the number of copies $F'$ in $H[X]$ of $F$ with $\vec{i}_{\mathcal{P}}(V(F'))=\vec{v}$ for each $X\in \binom{V}{C^*}$. Note that $|f_{\vec{v}}(X_1)-f_{\vec{v}}(X_2)|\le (C{^*})^{r-1}$ for any $X_1,X_2\in \binom{V}{C^*}$ with $|X_1\cap X_2|=C^*-1$. Fix $i\in [m]$. Given a copy $F'$ of $F$ with index vector $\vec{v}$, the probability that $F'$ is contained in $U_i'$ is at least $\frac{\binom{n-r}{|U_i'|-r}}{\binom{n}{|U_i'|}}\ge \frac{3{|U_i'|}^r}{4 n^r}.$ So by linearity of expectation we have $\mathbb{E}[f_{\vec{v}}(U_i')]\ge 3\mu {\card{U_i'}}^r/4$. We can then apply Lemma \ref{hypergeometric} with $c=(C^*)^{r-1}, m=C^*$ and $\alpha=\mu\sqrt{C^*}/12$, and get that for every $i\in[m]$, 
+%\[\mathbb{P}\left[f_{\vec{v}}(U_i')<2\mu {|U_i'|}^r/3\right]\le 2\exp{(-\mu^2C^*/144)}\le 2\exp{(-\mu^2C/200)}.\]
+For every $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ and $i\in[m]$, we say that $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ is \emph{bad} for $U_i'$ if $H[U_i']$ contains fewer than $2\mu {|U_i'|}^r/3$ copies of $F$ with index vector $\vec{v}$. 
+Since \( \mathcal{P}^{U_i'} \) is the restriction of \( \mathcal{P} \) to \( U_i' \), we have \(\vec{i}_{\mathcal{P}^{U_i'}}(S)=\vec{i}_{\mathcal{P}}(S)\) for any subset \(S\subseteq U_i'\). 
+It follows that if $\vec{v}$ is not bad for $U_i'$, then $\vec{v}\in I_{\mathcal{P}^{U_i'},F}^{2\mu/3}(H[U_i'])$. 
+
+Next, we estimate the probability that a fixed $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ is bad for some $U_i'$; by Lemma \ref{all robust edges} (with $U_i'$ playing the role of $A$), this probability is at most $2\exp{(-\mu^2C/20)}$. 
+Note that $\cardi{I_{\mathcal{P},F}^{\mu}(H)}\le \cardi{L_{\max}^d}\le \binom{r+d-1}{d}$.
+Then, by the union bound, the probability that there exists some \(\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)\) bad for \(U_1'\) is at most \[2\exp{(-\mu^2C/20)}\binom{r+d-1}{d}\le \exp{(-\mu^2C/50)}.\] 
+On the other hand, let $X$ denote the number of indices \(i\in \{2,\dots,m\}\) for which there exists some $\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ that is bad for $U_i'$. 
+By linearity of expectation, $\mathbb{E}[X]\le 2\exp{(-\mu^2C/20)}\binom{r+d-1}{d}m.$ 
+By Markov's inequality, \[\mathbb{P}\big[X\ge\exp{(-\mu^2C/50)}m\big]\le 2\exp{(-\mu^2C/50)}\binom{r+d-1}{d}\le \exp{(-\mu^2C/100)}.\] 
+Combining this with the bound for \(U_1'\), and applying the union bound, we obtain the desired conclusion.
+\end{proof}
+
+We shall show that $U_1'$ satisfies the properties~\ref{item:(R1)}--\ref{item:(R4)} with $U_1=U_1'$. The next lemma is important for establishing that $U_1'$ satisfies \ref{item:(R-robust)}. 
+        For every \(i\in [m]\), choose some \(T_i \subseteq U_i'\) of size \(rqd\) as follows. Let \(\mathcal{T}_i\) denote the collection of all \(rqd\)-subsets \(T_i\subseteq U_i'\) such that \(\card{T_i\cap V_j}=rq\) for all \(j\in [d]\). 
+        \begin{itemize}
+            \item If \(\mathcal{T}_i\neq\emptyset\), then we fix \(T_i\in\mathcal{T}_i\) arbitrarily.
+            \item If \(\mathcal{T}_i=\emptyset\), then we choose any \(T_i\in\binom{U_i'}{rqd}\) arbitrarily.
+        \end{itemize} 
+        Given such a choice of \(T_1,\dots,T_m\), we consider an auxiliary digraph \(D=D(T_1,\dots,T_m)\) with vertex set \([m]\), where \((i,j)\in E(D)\) if for every vertex \(v\in T_i\), we have \(\card{F^{\mu}_{\mathcal{P}}(v, U_j')}\ge 2\varepsilon{\card{U_i'}}^{r-1}/3.\) 
+        Note that condition~\ref{item:(R-robust)} in Lemma~\ref{random cluster} requires that the sets \(T_i\) lie in \(\mathcal{T}_i\). Although it is possible that \(\mathcal{T}_i=\emptyset\) for some \(i\), Lemma~\ref{size of random cluster} implies that the number of such ``bad'' indices is small with high probability. In the proof of Lemma~\ref{random cluster}, we will reassign these bad clusters and retain only those \(U_i\) for which \(\mathcal{T}_i\neq\emptyset\), thereby ensuring that the final selection of \(T_i\) satisfies the desired condition. 
+ 
+
+\begin{lemma}\label{U_1}
+Let $E_6$ be the event that $U_1'$ satisfies $d_D^-(1)\ge (1-\exp{\left(-\varepsilon^2 C/50\right)})(m-1)$.%, and that there exists a copy $F_1$ of $F$ with $V(F_1)\subseteq U_1'\setminus T_1$ and $\vec{i}_{\mathcal{P}}(V(F_1))\in I_{\mathcal{P},F}^{\mu}(H)$. 
+Then, $\mathbb{P}\left[E_6\right]\ge 99/100$.
+\end{lemma}
+\begin{proof}
+Recall that for every \(v\in V\),~\eqref{eq:FPvU} says $\mathbb{P}\left[|F^{\mu}_{\mathcal{P}}(v,U_1')|<2\varepsilon{\card{U_i'}}^{r-1}/3\right]\le 2\exp{\left(-\varepsilon^2 C/20\right)}$. 
+This implies that for every \(i\in \{2,\dots,m\}\), \(\mathbb{P}\left[(i,1)\in E(D)\right]\ge 1-2\exp{\left(-\varepsilon^2 C/20\right)}rqd.\)
+By linearity of expectation, \(\mathbb{E}\left[d_D^-(1)\right]\ge \left(1-2\exp{\left(-\varepsilon^2 C/20\right)}rqd\right)\left(m-1\right)\). 
+Then by Markov's inequality, 
+\[
+\mathbb{P}\left[m-1-d_D^-(1)\ge \exp{\left(-\varepsilon^2 C/50\right)\left(m-1\right)}\right]\le 2\exp{\left(-\varepsilon^2 C/50\right)}rqd,
+\] implying the desired result.
+         \end{proof}
+           %Recall that $\mathbb{P}\big[\card{\{v\in V: v\text{ is bad for }U_1'\}}\ge \exp{\left(-\varepsilon^2 C/(20r^2)\right)}n\big]\le 2\exp{\left(-\varepsilon^2 C/(20r^2)\right)}$ by Lemma \ref{robust edge of random cluster d(i)}. Note that if there are at least $\left(1-\exp{\left(-\varepsilon^2 C/(20r^2)\right)}\right)n$ vertices $v$ such that $|F^{\mu}_{\mathcal{P}}(v,U_1')|\ge \frac{\varepsilon}{2}\binom{\card{U_i'}}{k-1}$, then there are at most $\frac{\exp{\left(-\varepsilon^2 C/(20r^2)\right)}n}{C/r}\le \exp{\left(-\varepsilon^2 C/(50r^2)\right)}(m-1)$ indices $i\in\{2,\dots,m\}$ such that for every $s$-set $T\subseteq U_i$ where $|T\cap V_l|\ge rq $ for each $l\in[d]$, there exists a vertex $v\in T$ such that $\card{F^{\mu}_{\mathcal{P}}(v, U_i)}< \frac{\varepsilon}{2}\binom{\card{U_1}}{r-1} $. This means that we can choose appropriate  $T_1,\dots,T_m$ such that the indegree of 1 in the digraph $D=D(T_1,\dots,T_m)$ is at least $(1-\exp{(-\varepsilon^2C/50)})(m-1)$. 
+            
+%Now choose a vertex \(u_1\in U_i'\setminus T_1\) arbitrarily,  and by~\eqref{eq:FPvU} we have $\mathbb{P}\left[|F^{\mu}_{\mathcal{P}}(u_1,U_1')|\ge 2\varepsilon{|U_1'|}^{r-1}/3\right]\ge 1-2\exp{\left(-\varepsilon^2 C/20\right)}$. Conditioning on \(|F^{\mu}_{\mathcal{P}}(u_1,U_1')|\ge 2\varepsilon{|U_1'|}^{r-1}/3\), we have at least $\frac{2\varepsilon}{3}C_1^{r-1}-s\binom{C_1}{r-2}\ge 1$ \(\mu\)-robust copy of $F$ with vertex set from $U_1'\setminus T_1$, as $C_1$ is sufficiently large. 
+%\(r\)-set \(R\in F^{\mu}_{\mathcal{P}}(u_1,U_1'\setminus T_i)\)
+
+            %Note that the number of copies $F'$ of $F$ with $\vec{i}_{\mathcal{P}}(F')\in I_{\mathcal{P},F}^{\mu}(H)$ is at least $\varepsilon \binom{n}{r-1}n/r\ge \varepsilon n^r/(2r!)$. Then, by Lemma \ref{all robust edges} with $U_1'$ playing the role of $A$, we have the probability that the number of copies $F'$ in $H[U_1']$ of $F$ with $\vec{i}_{\mathcal{P}}(F')\in I_{\mathcal{P},F}^{\mu}(H)$ is at most $\varepsilon {C_1}^r/(3r!)$ is at most $2\exp{\left(-{(\gamma/r!)}^2C_1/72\right)}$. Note that if the number of copies $F'$ in $H[U_1']$ of $F$ with $\vec{i}_{\mathcal{P}}(F')\in I_{\mathcal{P},F}^{\mu}(H)$ is at least $\varepsilon {C_1}^r/(3r!)$, then there are at least $\varepsilon {C_1}^r/(3r!)-s\binom{C_1}{r-1}\ge \varepsilon/4\binom{C_1-t}{r}\ge 1$ copies $F_1\subseteq U_1'\setminus T_1$ of $F$ with $\vec{i}_{\mathcal{P}}(F_1)\in I_{\mathcal{P},F}^{\mu}(H)$, since $s\ll C_1$.
+
+            %Therefore, by the union bound, we have $\mathbb{P}\left[E_6\right]\ge 1-2\exp{\left(-\varepsilon^2 C/50\right)}rqd-2\exp{\left(-\varepsilon^2 C/20\right)}\ge 99/100$.
+
+        We now proceed to prove Lemma~\ref{random cluster} by considering the distribution of \(U_1',\dots,U_m'\) conditioning on the events established in the previous lemmas, and then applying the random redistribution argument.
+
+ 
+\begin{proof}[Proof of Lemma~\ref{random cluster}]
+We condition on $E_1\cap \cdots\cap E_6$, which holds with probability at least $94/100$ by Lemmas \ref{size of random cluster}--\ref{U_1}. Note that $d_D^+(i)\ge(1-rqd/C^2)m $ for every $i\in [m]$ by Lemma \ref{robust edge of random cluster d(v)} assuming that \(E_2\) holds.
+
+        For each permutation $\pi:[n]\rightarrow [n]$, define a set of ``bad'' clusters $\mathcal{F}_{\pi}\subseteq\{U_2',\dots,U_m'\}$ which includes $U_i'$ if any of the following holds:
+
+
+        \begin{enumerate}[label=(A\arabic*)]
+            \item $|V_j\cap U_i'|<2c|U_i'|/3$ for some $j\in [d]$, \label{item:bad cluster-size}
+            \item $d_D^-(i)<(1-rqd/\sqrt{C})m$,\label{item:bad cluster-T_i}
+            \item $|F^{\mu}_{\mathcal{P}}(v,U_i')|$$< 2\varepsilon{|U_i'|}^{r-1}/3$ for at least $\exp{\left(-\varepsilon^2 C/50\right)}n$ vertices $v\in V$,\label{item:bad cluster-vertex}
+            \item $\delta_{\ell}(H[U_i'])<(\delta+2\gamma/3)\binom{|U_i'|-\ell}{k-\ell}$ or there exists $j\in[d]$ such that $V_j\cap U_i'$ is not $(F,2\beta/3,t)$-closed in $H[U_i']$, and \label{item:bad cluster-degree}
+            \item 
+            %$\vec{v}\in I_{\mathcal{P},F}^{\mu}(H)$ but $\vec{v}\notin I_{ \mathcal{P}^{U_i'},F}^{2\mu/3}(H[U_i']).$ 
+            \(I_{\mathcal{P},F}^{\mu}(H)\nsubseteq I_{ \mathcal{P}^{U_i'},F}^{2\mu/3}(H[U_i'])\).\label{item:bad cluster-index verctor}
+        \end{enumerate}
+        Let $m':=|U_2'\cup\dots\cup U_m'|/C,$ and note that $m'$ is a positive integer by the choice of $r$. We claim that if $\pi \in E_1\cap \cdots\cap E_6$, then $|\mathcal{F}_{\pi}|\le m-1-m'=m-1-(m-1)(C-1)/C=(m-1)/C$. Indeed, 
+        there are at most $\exp{(-c^2C/20)}m$ $U_i'\in \mathcal{F}_{\pi}$ of type \ref{item:bad cluster-size} by Lemma \ref{size of random cluster} assuming $\pi \in E_1$,  
+        at most $m/C^{3/2}$ $U_i'\in \mathcal{F}_{\pi}$ of type \ref{item:bad cluster-T_i} since $\sum_{i=1}^md_D^-(i)=\sum_{i=1}^md_D^+(i)\ge (1-rqd/C^2)m^2$ by Lemma \ref{robust edge of random cluster d(v)} assuming $\pi \in E_2$, 
+        at most $\exp{\left(-\varepsilon^2 C/100\right)}m$ $U_i'\in \mathcal{F}_{\pi}$ of type \ref{item:bad cluster-vertex} by Lemma \ref{robust edge of random cluster d(i)} assuming $\pi \in E_3$, 
+        at most $\left(\exp{\left(-\gamma^2 C/200\right)}+\exp{\left(-\beta^2 C/200\right)}\right)m$ $U_i'\in \mathcal{F}_{\pi}$ of type \ref{item:bad cluster-degree} by Lemma \ref{codegree and reachable set of random cluster} assuming $\pi \in E_4$,
+        and there are at most $\exp{(-\mu^2C/50)}m$ $U_i'\in \mathcal{F}_{\pi}$ of type \ref{item:bad cluster-index verctor} by Lemma \ref{index vector of random cluster} assuming $\pi \in E_5$.       
+Now we add arbitrary clusters to $\mathcal{F}_{\pi}$ to ensure $|\mathcal{F}_{\pi}|=(m-1)/C$.
+
+By possibly relabeling the sets $U_1',\dots,U_m'$, we may assume that $\mathcal{F}_{\pi}=\{U_i':i\in [m]\setminus [m+1-|\mathcal{F}_{\pi}|]\}$. 
+Now consider random sets $U_i'$ given by a random permutation $\pi$ conditioned on $E_1\cap \cdots\cap E_6$.
+
+Next, we define a bipartite graph $G_{\pi}$ between $A:=\bigcup_{U_i'\in \mathcal{F}_{\pi}} U_i'$ and $B:=\{U_2',\dots,U_m'\}\setminus \mathcal{F}_{\pi}$. 
+%Note that the former part is the set of all vertices in the ``bad clusters'' and the second part is the set of ``good cluster''. And 
+Note that by the choice of $m'$, we have $(m-1-m')(C-1)=m'$, which implies that both two parts have size $m'$. 
+We put an edge between $u\in A$ and $U_i'\in B$ if there exists a copy of $F$ in $H[(U_i'\setminus T_i)\cup\{u\}]$ containing $u$ and with index vector in $ I_{\mathcal{P},F}^{\mu}(H)$. 
+Conditioning on $E_2$, we have $d_{G_{\pi}}(v)\ge (1-1/C^2)m-|\mathcal{F}_{\pi}|\ge 3m'/4$ for all $v\in A$ as $s\ll C$. 
+Since all sets satisfying \ref{item:bad cluster-vertex} are in $\mathcal{F}_{\pi}$, for every $U_i'\in B$, we have $d_{G_{\pi}}(U_i')\ge m'-\exp{(\gamma^2C/50)}n\ge 3m'/4 $. 
+Thus, $\delta(G_{\pi})\ge 3m'/4$, and by Lemma \ref{spread-PM}, there is a $(C_{\ref{spread-PM}}/n)$-edge-spread distribution on perfect matchings of $G_{\pi}$.
+
+Now we define the random sets $U_i$ as follows. First, sample $\pi$ from the uniform distribution on permutations of $[n]$ conditioning on $E_1\cap \cdots\cap E_6$. Then, sample $M_{\pi}$ from the $(C_{\ref{spread-PM}}/m)$-edge-spread distribution on perfect matchings of $G_{\pi}$. For each $U_i'\in B$, let $u_i\in A$ be the vertex that it is assigned to in $M_{\pi}$, and define $U_i:=U_i'\cup \{u_i\}$. Let $U_1:=U_1'$, where \(u_1\) denotes an arbitrary vertex selected from \(U_1\). %(\(u_1\) is the vertex arbitrarily chosen in the proof of Lemma~\ref{U_1}).
+This concludes the algorithm that defines $\mathcal{U}:=\{U_1,\cdots, U_{m'+1}\}$ with $m$ in the lemma statement being $m'+1$. 
+Finally, we verify the properties \ref{item:(R1)}--\ref{item:(R5)} required by the theorem (Note that $U_1$ already satisfies \ref{item:(R1)}, \ref{item:(R-degree)} and \ref{item:(R4)}).
+
+\begin{enumerate}[label=(\arabic*)]
+\item For $i\ge 2$, we have $|U_i|=|U_i'|+1=C+1$, as required, and the second condition in \ref{item:(R1)} holds by the choice of $\mathcal{F}_{\pi}$ that contain all sets satisfying \ref{item:bad cluster-size}.
+            
+\item Now we explain \ref{item:(R-robust)}. Note that for \(i\in [m'+1]\), we have $|U_i'\cap V_j|\ge c|U_i|/2$ for all \(j\in [d]\), which implies that \(\mathcal{T}_i\neq \emptyset\). 
+Thus, all \(T_i\) satisfy the requirement in~\ref{item:(R-robust)}. 
+For the first property in \ref{item:(R-robust)}, we take $L_i\subseteq U_i\setminus T_i$ as follows: the case \(i=1\) is trivial since \(L_1=\emptyset\); for $i\ge 2$, we take $L_i=V(F_i)$ where $F_i$ is a copy of $F$ containing $u_i$ with $\vec{i}_{\mathcal{P}}(V(F_i))\in I_{\mathcal{P},F}^{\mu}(H)$ guaranteed by the definition of the edges of $G_{\pi}$.
+%For the first property in \ref{item:(R-robust)}, we take $L_i\subseteq U_i\setminus T_i$, a desired $r$-set that spans a copy of $F$ and with $\vec{i}_{\mathcal P}(L_i)\in I_{\mathcal P, F}^{\mu}(H)$ as follows: for $i=1$, the existence of $L_i$ guaranteed by the event $E_6$; for $i\ge 2$, we take $L_i=V(F_i)$ where $F_i$ is a copy of $F$ containing $u_i$ with $\vec{i}_{\mathcal{P}}(V(F_i))\in I_{\mathcal{P},F}^{\mu}(H)$ guaranteed by the definition of the edges of $G_{\pi}$. 
+Next, we verify the second half of~\ref{item:(R-robust)}.
+For $i=1$, $d_D^-(1)\ge (1-\exp{(\varepsilon^2C/50)})(m-1)$ because we condition on $E_6$, and for $i\in[2,m'+1]$, we have $d_D^-(i)\ge (1-rqd/\sqrt{C})m$ since these $U_i'$ are good sets and so satisfy the negation of \ref{item:bad cluster-T_i}. 
+            Let $D'$ be the subgraph of $D$ induced on the first $m'+1$ vertices, and then we have $d_{D'}^-(i)\ge m'-rqdm/\sqrt{C}\ge (m'+1)/2$. Note that for every $i\in [m'+1]$, $d_{D'}^+(i)\ge m'-rqdm/C^2\ge (m'+1)/2$.
+            Thus, $\delta^0(D')\ge \card{D'}/2$. By a theorem of Ghouila-Houri\cite{ghouila1960condition}, $D'$ contains a directed Hamilton cycle, which we may assume, without loss of generality, have edges \((i,i-1\)) for all \(2\le i\le m'+1\). 
+            Then by the definition of $D$ and the assumption, we have for every $2\le i\le m'+1$ and every vertex $v\in T_{i}$, $\card{F^{\mu}_{\mathcal{P}}(v, U_{i-1})}\ge \card{F^{\mu}_{\mathcal{P}}(v, U_{i-1}')}\ge 2\varepsilon{\card{U_{i-1}'}}^{r-1}/3\ge \varepsilon{\card{U_{i-1}}}^{r-1}/2.$
+
+            \item For $i\ge 2$, \ref{item:(R-degree)} holds by the choice of $\mathcal{F}_{\pi}$ that contain all sets satisfying \ref{item:bad cluster-degree} and \(C\) is sufficiently large.
+            
+            \item For $i\ge 2$, \ref{item:(R4)} holds by the choice of $\mathcal{F}_{\pi}$ that contain all sets satisfying \ref{item:bad cluster-index verctor} and  \(C\) is sufficiently large.
+            
+            \item Let $y_1,\dots,y_s\in V(H)$ and $f:[s]\rightarrow[m]$. For $i\in [s]$, let $D_i$ be the event that $y_i\in U_{f(i)}$, let $D_i^1$ be the event that $y_i\in U_{f(i)}'$, and let $D_i^2$ be the event that $y_i=u_{f_i}$. Note that 
+            \begin{equation}\label{union bound}
+                \bigcap_{i\in[s]}D_i=\bigcap_{i\in[s]}\left(D_i^1\cup D_i^2\right)=\bigcup_{S\subseteq [n]}\left(\bigcap_{i\in S}D_i^1\cap\bigcap_{i\in [s]\setminus S}D_i^2 \right).
+            \end{equation}
+            Next, we will estimate the probability that the event $\bigcap_{i\in S}D_i^1\cap\bigcap_{i\in [n]\setminus S}D_i^2$ holds. Note that $D_i^1$ is completely determined by the permutation $\pi$, and $D_i^2$ holds only if $y_i$ is matched to $U_i'$ by $M_{\pi}$. Then, for every $S\subseteq [n]$, we have
+\[
+\mathbb{P}\Big[\bigcap_{i\in S}D_i^1\Big]\le \Big(\frac{C^{2|S|}(n-|S|)!}{n!}\Big)/\mathbb{P}[E_1\cap\cdots \cap E_6]\le\frac{100}{94}\Big(\frac{eC^2}{n}\Big)^{|S|},
+\]
+            and for every $\pi'\in E_1\cap\cdots \cap E_6$, 
+\[
+\mathbb{P}\Big[\bigcap_{i\in [s]\setminus S}D_i^2|\pi=\pi'\Big]\le\Big(\frac{C_{\ref{spread-PM}}}{m'}\Big)^{s-|S|}.
+\]
+Therefore, for every $S\subseteq [n]$, as $C'$ is sufficiently large, we obtain that
+\[
+\mathbb{P}\Big[\bigcap_{i\in S}D_i^1\cap\bigcap_{i\in [s]\setminus S}D_i^2\Big]=\mathbb{P}\Big[\bigcap_{i\in S}D_i^1\Big]\mathbb{P}\Big[\bigcap_{i\in [s]\setminus S}D_i^2\Big|\bigcap_{\in S}D_i^1\Big]\le \frac{100}{94}\Big(\frac{eC^2}{n}\Big)^{|S|}\Big(\frac{C_{\ref{spread-PM}}}{m'}\Big)^{s-|S|}\le \Big({\frac{C'}{2n}}\Big)^s.
+\]
+            Finally, the result follows by (\ref{union bound}) and the union bound over the $2^s$ choices of $S\subseteq [s]$.
+        \end{enumerate}
+The proof is completed.
+    \end{proof}
+	 \section{Proof of Theorem~\ref{main theorem}}\label{spreadness frm vertex spreadness}
+
+In this section, we prove Theorem~\ref{main theorem}.
+%by using Proposition~\ref{vertex to edge} and the FKNP theorem. 
+First we introduce some definitions. 
+      
+Suppose \(L \subseteq L^{|\mathcal{P}|}_{\text{max}}\) is a lattice in \(\mathbb{Z}^{|\mathcal{P}|}\), where \(\mathcal{P}\) is a partition of a set \(V\). 
+The \emph{coset group} of \((\mathcal{P}, L)\) is \(Q = Q(\mathcal{P}, L):=L^{|\mathcal{P}|}_{\text{max}}/L\). 
+For any \(\vec{i}\in L^{|\mathcal{P}|}_{\text{max}}\), the \emph{residue} of \(\mathbf{i}\) in \(Q\) is \(R_Q(\mathbf{i}) := \mathbf{i} + L.\) 
+For any \(A \subseteq V\) of size divisible by \(r\), the \emph{residue} of \(A\) in \(Q\) is \(R_Q(A) := R_Q(\mathbf{i}_{\mathcal{P}}(A)).\) 
+     
+     Let \(q \in \mathbb{N}\). A (possibly empty) \(F\)-packing \(M\) in \(H\) of size at most \(q\) is a \(q\)-\emph{solution} for \((\mathcal{P}, L^{\mu}_{\mathcal{P}, F}(H))\) (in \(H\)) if \(\mathbf{i}_{\mathcal{P}}(V(H) \setminus V(M)) \in L^{\mu}_{\mathcal{P}, F}(H)\); we say that \((\mathcal{P}, L^{\mu}_{\mathcal{P}, F}(H))\) is \emph{\(q\)-soluble} if it has a \(q\)-solution. 
+     
+     %Consider \(k\)-graphs \(H\) in which the minimum degree condition guarantees an \(F\)-packing that covers all but a constant number of vertices. 
+     The following theorem from~\cite{han2020complexity} provides a necessary and sufficient condition for \(H\) to contain a perfect \(F\)-packing.
+     %, assuming that the associated coset group \(Q\) has bounded size.
+
+     \begin{theorem}[\cite{han2020complexity}]\label{structural theorem}
+         Let $k,\ell\in \mathbb{N}$ where $\ell\le k-1$ and let $F$ be an $r$-vertex $k$-graph. 
+         Define $D,q,t,n_0\in\mathbb{N}$ and $\beta,\mu,\gamma,c>0$ where
+         \[
+         1/n_0\ll\beta,\mu\ll\gamma,c,1/r,1/D,1/q,1/t.
+         \]
+         Let $H$ be a $k$-graph on $n\ge n_0$ vertices where $r$ divides $n$. 
+         Suppose that 
+         \begin{enumerate}[label=(\roman*)]
+             \item $\delta_{\ell}(H)\ge (\delta(F,\ell,D)+ \gamma)\binom{n-\ell}{k-\ell}$;\label{item:\romannumeral1}
+             \item $\mathcal{P}=\{V_1, \dots, V_d\}$ is an $(F,\beta,t,c)$-good partition of $V(H)$;\label{item:\romannumeral2}
+             \item $|Q(\mathcal{P},L_{\mathcal{P},F}^{\mu}(H))|\le q$.\label{item:\romannumeral3}
+         \end{enumerate}
+         Then $H$ contains an $F$-factor if and only if $(\mathcal{P},L^{\mu}_{\mathcal{P},F}(H))$ is $q$-soluble.
+     \end{theorem}
+
+    %One of the main tasks in~\cite{han2020complexity} is to determine whether the relevant coset groups are indeed bounded. 
+    For the value of $q$, it is easy to see a trivial upper bound \(|L_{\max}^{\card{\mathcal{P}}}|=\binom{d+r-1}{r}\), which suffices for the proof of our main technical result. 
+
+
+     \begin{proof}[Proof of Theorem~\ref{main theorem}]
+     
+         Suppose we have the constants satisfying the following hierarchy
+         \[1/n_0\ll \alpha,\eta\ll 1/C'' \ll1/C'\ll 1/C\ll \beta,\mu\ll \gamma,\varepsilon,c,1/k,1/\ell,1/r,1/d\le 1.\]
+         Let $n\ge n_0$ be a multiple of $r$, and
+         let the $k$-graph $G$ be an $F$-packing on $n$ vertices.
+         Let $H$ be an $n$-vertex $k$-graph satisfying the assumptions of the theorem.
+         The main task of this proof is to define $\psi:G\hookrightarrow H$, a random embedding of an $F$-factor in $H$, and we achieve it in a few steps.
+
+         \medskip
+         \textbf{Step 1: Sample random clusters.} Applying Lemma \ref{random cluster} with $q=\binom{d+r-1}{r}$, we obtain a random partition $\mathcal{U}=\{U_1,\dots,U_m\}$ of $V(H)$ that satisfies properties \ref{item:(R1)}--\ref{item:(R5)}.
+         
+         \medskip
+         \textbf{Step 2: Adjust the random partition.} 
+         %For each $i \in [m-1]$, by moving at most $rq$ vertices from the vertex set $T_{i+1}$ of the adjacent cluster, find a new partition $\mathcal{U}' = \{ U_1', \dots, U_m' \}$ such that $\vec{i}_{\mathcal{P}}(U_i') \in L_{\mathcal{P}, F}^{\mu}(H)$ for all $i \in [m]$, with $U_i' \subseteq U_i \cup T_{i+1}$ for \(i\in [m-1]\) and \(U_m'\subseteq U_m\).
+Our goal is to apply Theorem \ref{structural theorem} to each random cluster and obtain an $F$-factor in each of them.
+By \ref{item:(R1)} and \ref{item:(R-degree)}, it suffices to establish that each cluster is $q$-soluble.
+For this we adjust the partition by moving at most $rq$ vertices from the vertex set $T_{i+1}$ to $U_i$ so that the solubility condition is satisfied.
+Below we explain how this is achieved.
+
+We do this in an inductive manner.
+Let $i\in[m-1]$ and suppose we have corrected the first $i-1$ clusters, that is, the clusters $\{U_j':j<i\}$ satisfy $\vec{i}_{\mathcal{P}}(U_j')\in L_{\mathcal{P},F}^{\mu}(H)$ and $U_j'\subseteq U_j\cup T_{j+1}$.
+Let $J_i$ denote the set of vertices removed from $U_i$ in the previous step (they were added to $U_{i-1}'$). 
+%Consider $U_{i}$. 
+Now we consider the residues of the remaining set of vertices in the $i$-th cluster with respect to $\mathcal{P}$. 
+Note that $ \vec{i}_{\mathcal{P}}(V(H))\in L_{\mathcal{P},F}^{\mu}(H) $ and by the assumption, we have $ R_G(U_{i}\setminus J_i)+\sum_{j> i}R_G(U_{j})=\vec{0}+L_{\mathcal{P},F}^{\mu}(H) $. Suppose $ R_G(U_{i}\setminus J_i)=\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H) $ for some $\vec{v_0}\in L_{\max}^d$ and we get $ \sum_{j> i}R_G(U_{j})=-\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H) $.
+
+         \begin{claim}
+             There exists $r$-sets $ S_1,\dots,S_{d'}\subseteq  T_{i+1}$ for some $ d'\le q-1$ such that $$\sum_{j\in[d']}R_G(S_j)=-\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H).$$
+         \end{claim}
+    
+	\begin{proof}
+	    Fix any family of $r$-sets $ S_1,\dots,S_{h}\subseteq\bigcup_{j> i} U_{j}$ for $h\ge q$ that satisfies $\sum_{j\in[h]}R_G(S_j)=-\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H)$, consider $h+1$ partial sums $\sum_{j\in[h']}R_G(S_j)$ for $0\le h'\le h$. 
+        Since $|G(\mathcal{P},L_{\mathcal{P},F}^{\mu}(H)|\le q$, by the pigeonhole principle, there exists $j_1<j_2$ such that $\sum_{j_1\le j \le j_2}R_G(S_j)=\vec{0}+L_{\mathcal{P},F}^{\mu}(H)$. 
+        Then we delete them from the left hand side of the equation, and we repeat this process until there are at most $q-1$ $r$-sets left. 
+        By possibly relabeling the sets $ S_i$'s, we may assume that $\sum_{j\in[d']}R_G(S_j)=-\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H).$ Recall that the size of intersection of $T_{i+1}$ with each part of $\mathcal{P}$ is $rq$, then we can take disjoint $r$-sets $S_1',\dots,S_{d'}'\subseteq  T_{i+1}$ such that $\vec{i}_{\mathcal{P}}(S_j')=\vec{i}_{\mathcal{P}}(S_j)$ for all $j\in[d']$, which implies $\sum_{j\in[d']}R_G(S_j')=-\vec{v_0}+L_{\mathcal{P},F}^{\mu}(H)$. 
+	\end{proof}
+        So we have $\card{\bigcup_{i\in[d']} S_i }\le rq$ and $\sum_{i\in[d']}\vec{i}_{\mathcal{P}}(S_i)+\vec{i}_{\mathcal{P}}(U_{i}\setminus J_i)\in L_{\mathcal{P},F}^{\mu}(H)$. 
+        Let $U_{i}':=\bigcup_{i\in[d']} S_i \cup (U_{i}\setminus J_i)$, and we have $\vec{i}_{\mathcal{P}}(U_{i}')\in L_{\mathcal{P},F}^{\mu}(H)$. 
+        Finally let \(U_m':=U_{m}\setminus J_m\), then we get \(\vec{i}_{\mathcal{P}}(U_m')\in L_{\mathcal{P}, F}^{\mu}(H)\) as $\vec{i}_{\mathcal{P}}(V(H))\in L_{\mathcal{P},F}^{\mu}(H)$. 
+        %Hence, Step 2 can be executed for each $i\in [m]$.
+
+         \medskip
+         \textbf{Step 3: Find $F$-factor in each new cluster.} 
+         %For each $i\in [m]$, find an $F$-factor in $H[U_{i}']$. Label the vertices of $U_i'$ as $u_{i,1},\dots,u_{i,|U_i'|}$ such that $H[\{u_{i,(j-1)r+1},\dots,u_{i,jr}\}]\cong F$ for every $j\in [\card{U_i'}/r]$.
+
+        Let \(J_{m+1}:=\emptyset\). Then for every \(i\in [m]\), we have $U_i'=(U_i\setminus J_i)\cup J_{i+1}$, where $J_i\subseteq T_i$, $J_{i+1} \subseteq T_{i+1}$, and $|J_i|,|J_{i+1}|\leq rq$. 
+        Note that by \ref{item:(R-robust)}, for \(2\le i\le m\), $F_i$ is a copy of $F$ in $H[U_i']$ such that $\vec{i}_{\mathcal{P}}(V(F_i)) \in I_{\mathcal{P}, F}^{\mu}(H)$, and for every vertex $v \in J_{i}$, we have $\left| F^{\mu}_{\mathcal{P}}(v, U_{i-1}) \right| \geq \varepsilon{|U_{i-1}|}^{r-1}/2$.
+        Thus, we find an $F$-packing $M_1$ in $U_i'$: take $F_i$ (if \(i\ge 2\)) and for each vertex $v\in J_{i+1}$ (if \(i\le m-1\)), pick a copy $F_v$ of $F$ that contains $v$ and satisfies $\vec{i}_{\mathcal{P}}(V(F_v)) \in I_{\mathcal{P}, F}^{\mu}(H)$. 
+        The copies of $F$ can be choosen greedily, as $H[U_i']$ contains at least $\varepsilon{|U_i'|}^{r-1}/3$ such copies of $F$ for every vertex $v \in J_{i+1}$, and we have $|V(M_1)| \leq r + r^2q$.
+
+  
+        Next, consider the induced subgraph $H_i:=H[U_{i}'\setminus V(M_1))]$ and its partition $ \mathcal{P}_i:=\mathcal{P}^{H_i}$. 
+        Note that $|V(H_i)|\ge |U_i'|-rq-(r+r^2q)\ge |U_i'|-2r^2q$.
+        We claim that $H_i$ and $ \mathcal{P}^{H_i}$ satisfy the properties described in Theorem \ref{structural theorem}. By applying Theorem \ref{structural theorem} to $ H_i$ and $ \mathcal{P}^{H_i}$, we obtain an $F$-factor $ M_2 $ in $H_i$. 
+        Then $M_1\cup M_2$ is an $F$-factor of $H[U_i']$.
+
+        To establish the claim, we first show that $(\mathcal{P}_i,L^{\mu/3}_{\mathcal{P}_i,F}(H_i))$ is $0$-soluble, i.e.~that $\vec{i}_{ \mathcal{P}_i}(V(H_i))\in L_{ \mathcal{P}_i,F}^{\mu/3}(H_i) $. 
+        Indeed, observe that $ \vec{i}_{\mathcal{P}}(V(H_i))=\vec{i}_{\mathcal{P}}(U_{i}'\setminus V(M_1))\in L_{\mathcal{P},F}^{\mu}(H) $. 
+        By \ref{item:(R4)} and the definition of index vector, it follows that $\vec{i}_{ \mathcal{P}_i}(V(H_i))=\vec{i}_{\mathcal{P}}(V(H_i))\in L_{\mathcal{P},F}^{\mu}(H)\subseteq L_{ \mathcal{P}^{U_{i}\setminus L_i},F}^{\mu/2}(H[U_{i}\setminus L_i])$. 
+        %Since at most $rq$ of vertices were added to or removed from $U_{i}$ in Step 2 and \(\card{V(M_1)}\le r+r^2q\), 
+        Moreover, for every $\vec{v}\in I_{ \mathcal{P}^{U_{i}\setminus L_i}}^{\mu/2}(H[U_{i}\setminus L_i])$, there exist at least $\frac{\mu}{2}{|U_{i}\setminus L_i|}^r-2r^2q{\card{V(H_i)}}^{r-1}\ge \frac{\mu}{3}{|V(H_i)|}^{r}$ copies of $F$ in $H_i$ with index vector $\vec{v}$. Therefore, $\vec{v}\in I_{ \mathcal{P}_i,F}^{\mu/3}(H_i) $, which implies $L_{ \mathcal{P}^{U_{i}\setminus L_i},F}^{\mu/2}(H[U_{i}\setminus L_i])\subseteq L_{ \mathcal{P}_i,F}^{\mu/3}(H_i)$.
+        Therefore the claim is proved.
+  
+        Furthermore, $\card{Q(\mathcal{P}_i,L_{\mathcal{P}_i,F}^{\mu/3}(H_i))}\le q$ as $\mathcal P_i$ has $d$ parts. 
+        In addition, by \ref{item:(R-degree)} and that $C$ is sufficiently large, we have $\delta_{\ell}(H_i)\ge \delta_{\ell}(H[U_{i}\setminus L_i])-2r^2q\binom{C-\ell}{k-\ell}\ge (\delta(F,\ell,D)+\gamma/3)\binom{\card{V(H_i)}-\ell}{k-\ell} $.
+        Similarly, also by \ref{item:(R-degree)}, for every $j\in[d]$, $V_j\cap V(H_i)$ is $(F,\beta/3,t)$-closed in $H_i$ and $\card{V_j\cap V(H_i)}\ge c\card{V(H_i)}/3$. 
+
+        Therefore, for $i\in [m]$, each pair $(H_i, \mathcal P_i)$ satisfies the assumptions of Theorem \ref{structural theorem}, and thus has an $F$-factor.
+        The union of these $F$-factors form a (random) $F$-factor of $H$.
+
+
+        \medskip
+        \textbf{Defining $\psi$.} 
+        Now we are ready to define the random embedding function and conclude the proof.
+        Assume without loss of generality that $V(G)=[n]$ and $G[\{(j-1)r+1,\dots,jr\}]\cong F$ for every $j\in [n/r]$. For every $i\in [n]$, let $\psi(i):=u_{x,y}$ where $x$ is the largest integer such that $i>\sum_{j=1}^{x-1}|U_j'|$ and $y=i-\sum_{j=1}^{x-1}|U_j'|$.
+
+        To complete the proof, by Proposition \ref{vertex to edge}, it suffices to show that the random embedding $\psi$ is $(2C'/n)$-vertex-spread. Let $s\in [n]$. For every two sequences of distinct vertices $x_1,\dots,x_s\in [n]$ and $y_1,\dots,y_s\in V(H)$, we need to show that $\mathbb{P}[\psi(x_i)=y_i\text{ for }i\in[s]]\le {(2C'/n)}^s$.
+         
+        To that end, let $C_1=|U_1|$, $W_1:=[C_1]$, and for $i\ge2$, let $W_i:=[C_1+C(i-2)+1,C_1+C(i-1)]=[C_1+C(i-1)]\setminus\bigcup_{j=1}^{i-1}W_j$. 
+        %We refer to each $W_i$ as a "window". 
+        Let $w:[s]\rightarrow [m]$ where $w(i)$ be the unique index such that $x_i\in W_{w(i)}$. 
+        %We refer to $W_{w(i)}$ as "$x_i$'s window". 
+         
+        Recall that $\mathcal{U}=\{U_1,\dots,U_m\}$ is the collection of random sets. 
+        Since $U_{i}'\subseteq U_{i}\cup T_{i+1}$, the embedding $\psi$ induces injections between $W_{i}$ and $U_{i}\cup U_{i+1}$ for each $i\in [m]$. Hence, for every $s\in [n]$, $\psi(x_i)=y_i$ implies $y_i\in U_{w(i)}\cup U_{w(i)+1}$. 
+        Thus, by \ref{item:(R5)},
+        \[\mathbb{P}\left[\forall i\in[s],~\psi(x_i)=y_i\right]\le \mathbb{P}\left[\forall i\in[s],~y_i\in U_{w(i)}\cup U_{w(i)+1}\right]\le\left(\frac{2C'}{n}\right)^s,
+        \]
+        that is, the random embedding $\psi$ is $(2C'/n)$-vertex-spread.
+
+        By Proposition \ref{vertex to edge}, we conclude that there is a $(C''/n^{1/m_1(F)})$-spread distribution on subgraphs of $H$ which are isomorphic to $G$ (note that $m_1(F)=m_1(G)$).
+        The \emph{moreover} part of the theorem follows from Theorem \ref{FKNP}.
+        %Moreover, if $p\ge K_{\ref{FKNP}}C''\log n/n^{1/m_1(F)}$, then a.a.s.~$H_p$ contains an $F$-factor.
+        \end{proof}
+
+     
+     \section{Proof of the Remaining Theorems}\label{sec:remaining theorems}
+     In this section, we deduce Theorems~\ref{algorithm-PM}, and~\ref{main theorem-factor} as consequences of Theorem~\ref{main theorem}.
+
+     \subsection{Algorithm: proof of Theorem~\ref{algorithm-PM}}
+To reduce the time complexity, we present the following result whose proof is similar to that of Lemma 6.4 in~\cite{keevash2013polynomial} and is deferred to the appendix. We say that a set \(I\) of \(k\)-vectors is \emph{full} if for every \((k-1)\)-vector v there is some \( i\in[d]\) such that \(\vec{v}+\vec{u_i}\in I\). 
+\begin{lemma}\label{card-PM}
+    Suppose $k\ge 3$ and $L$ is a lattice in $\mathbb{Z}^{\mathcal{P}}$, where $\mathcal{P}$ is a partition of a set $V$. If $L$ contains a full set of $k$-vectors, then $\card{Q(\mathcal{P},L)}\le \card{\mathcal{P}}.$
+\end{lemma}
+The above lemma yields the following fact, which provides a tighter bound on the relevant coset group. 
+\begin{fact}\label{fact:coset group}
+    Fix an integer \(k\ge 3\). Suppose \(\mu \ll c,1/k\). Let \(H\) be a \(k\)-graph on \(n\) vertices such that \(\delta_{k-1}(H)\ge n/k\), and let \(\mathcal{P}\) be a partition of \(V(H)\) in which each part has size at least \(cn\). Then \(|Q(\mathcal{P},L_{\mathcal{P},F}^{\mu}(H))|\le \card{\mathcal{P}}\).
+\end{fact}
+\begin{proof}
+    By Lemma \ref{card-PM}, it suffices to show that $L_{\mathcal{P},F}^{\mu}(H))$ contains a full set of $k$-vectors. 
+    Fix any \((k-1)\)-vector \(\vec{v}\), and let \(\mathcal{P}=\{V_1,\dots,V_d\}\). Since there are at least \(\binom{\min_{i\in [d]}|V_i|}{k-1}\) \((k-1)\)-sets with index vector \(\vec{v}\) and \(\delta_{k-1}(H)\ge n/k\), the number of edges containing such a set is at least \(\frac{1}{k}\cdot \frac{n}{k}\cdot\binom{\min_{i\in [d]}|V_i|}{k-1}\ge \frac{1}{k}\cdot \frac{n}{k}\cdot\binom{cn}{k-1}\ge d\mu n^k\). By averaging, there exists \(i\in [d]\) such that at least \(\mu n^k\) edges with index vector \(\vec{v}+\vec{u}_i\). 
+\end{proof}
+
+We are now ready to prove Theorem \ref{algorithm-PM}.
+
+% \begin{algorithm}
+% \renewcommand{\thealgorithm}{}
+% \caption{PerfectMatching}
+% \label{alg:perfect_matching}
+
+% \begin{algorithmic}[1]
+% \Require An $ n $-vertex $ k $-graph $ H $ such that $ \delta_{k-1}(H) \ge n/k+\gamma n $ and $k\mid n$.
+% \Ensure a.a.s.~$H_p$  has a perfect matching or none at all.
+
+
+% \State Choose constants $ 1/n_0 \ll \eta \ll 1/C \ll \beta, \mu \ll \gamma \ll 1/k $. 
+% \If{$n<n_0$}
+% {Check whether $H_p$ has a perfect matching by brute force search and halt with appropriate output.}
+% \EndIf
+% \State Apply Lemma \ref{better partition of PM} to find a partition $ \mathcal{P} $ of $ V(H) $ and $ L^{\mu}_{\mathcal{P}}(H) $.
+% \red{Set $q=|Q(\mathcal P, L_{\mathcal P}^{\mu}(H))|$.}
+% %\If{there exists }
+% \red{
+% \For{every $q'\le q$ and set of $r$-vectors $\vec{V}=\{\vec{v_1},\dots, \vec{v_{q'}}\}$ with $ {\vec{i}}_{\mathcal{P}}(V(H)) - \sum_{j\in [q']}\vec{v_j} \in L^{\mu}_{\mathcal{P}}(H) $}
+% \State Let $\vec{V}^{\eta}:=\vec{V}\setminus I_{\mathcal P}^{\eta}(H)$
+%     %     \State Output ``a.a.s.\ a perfect matching exists.'' and halt.
+%     % \Else
+%         % \For{every $e\in M^{\eta}$} 
+%         % \If{$e\notin H_p$}
+%         %    \State Output ``no perfect matching'' and halt.
+%         % \EndIf
+%         % \EndFor
+%         % \State Output ``a.a.s.\ a perfect matching exists.'' and halt.
+%     \If{ $H_p$ contains a matching $M'$ with $\vec{i}_{\mathcal{P}}(V(M'))= \sum_{\vec{v}\in \vec{V}^\eta}\vec{v}$} 
+%         \State Output ``a.a.s.\ a perfect matching exists.'' and halt.
+%     \EndIf
+%     \EndFor}
+% %\Else
+% \State Output ``no perfect matching'' and halt.
+% %\EndIf
+
+% \end{algorithmic}
+% \end{algorithm}
+
+
+    \begin{proof}[Proof of Theorem~\ref{algorithm-PM}]
+We show correctness of Algorithm \ref{alg:perfect_matching} and estimate its running time. Set $t=k 2^k+2$ and \(q=\card{Q(\mathcal{P},L_{\mathcal{P},F}^{\mu}(H))}\).% Assume that \(p\ge K_{\ref{FKNP}} C_{\ref{main theorem}}\log n / n^{k-1}\).
+
+        First, we apply Lemma~\ref{better partition of PM} which finds $ \mathcal{P} $ satisfying \ref{item:P1}--\ref{item:P2} in time $O(n^{2^{k-2}k+1})$. 
+        %Note that \(\card{\mathcal{P}}\le k-1\), so $\card{Q(\mathcal{P},L_{\mathcal{P},F}^{\mu}(G))}\le\binom{2k-2}{k}.$ 
+        %We then check whether $(\mathcal{P},L^{\mu}_{\mathcal{P}}(H))$ is $\binom{2k-2}{k}$-soluble in $H$, which determines whether $H$ contains a perfect matching by Theorem \ref{structural theorem}. 
+Note that by Theorem \ref{structural theorem}, if $H_p$ does not contain any of the $q$-solutions of $H$, then $H_p$ contains no perfect matching.
+By line 5, for every set of $r$-vectors $\vec{V}=\{\vec{v_1},\dots, \vec{v_{q'}}\}$ with $ {\vec{i}}_{\mathcal{P}}(V(H)) - \sum_{j\in [q']}\vec{v_j} \in L^{\mu}_{\mathcal{P}}(H) $, we check if $H_p$ contains a matching with index vector $\sum_{j\in [q']}\vec{v_j}$.
+
+\begin{claim}
+For $\vec{v}\in I_{\mathcal P}^{\eta}(H)$, a.a.s.~$H_p$ contains a matching of size $qk$ with index vector of all edges equal to $\vec{v}$.
+\end{claim}
+
+\begin{proof}
+Let \(h=qk\), and randomly partition \(V(H)\) into \(h\) parts of nearly equal size \(U_1,\dots,U_h\). For every \(i\in [h]\), let \(X_i\) be the number of edges in \(H[U_i]\) with index vector \(\vec{v}\), and let \(Y_i\) be the number of such edges that appear in \(H_p\). It suffices to show that \(\mathbb{P}\left[\forall i\in [h],\ Y_i\ge 1\right]=1-o(1).\)
+
+By Lemma \ref{all robust edges} with \(U_i\) playing the role of \(A\), we have 
+\[
+\mathbb{P}[X_i<\frac{\eta}{2} \card{U_i}^k]\le \exp{\left(-\frac{{\eta}^2n}{10h}\right)}=o(1).
+\] 
+Conditioning on \(X_i\ge \frac{\eta}{2} \card{U_i}^k\), we have \(\mathbb{E}[Y_i]\ge \frac{\eta }{2}\card{U_i}^kp\), so by Chernoff's bound, \(\mathbb{P}[Y_i=0\mid X_i\ge \frac{\eta}{2} \card{U_i}^k]\le \exp{\left(-\frac{\eta\card{U_i}^kp}{4}\right)}=o(1).\) 
+Thus, we get $\mathbb{P}[Y_i=0]=o(1)$ and the claim follows by the union bound over all \(i\in[h]\).  
+%\red{For every \(\vec{v}\in I_{\mathcal P}^{\eta}(H)\), let \(X_{\vec{v}}\) be the number of edges in \(H_p\) with index vector \(\vec{v}\). If follows that \(\mathbb{E}[X_{\vec{v}}]\ge \eta n^k p\). Moreover, \(\mathbb{E}[X_{\vec{v}}]\le n^k p\). Thus, by Chernoff's inequality, we have \[\mathbb{P}[X_{\vec{v}}<qk]\le \exp{\left(-\frac{(\eta n^kp-qk)^2}{2n^kp}\right)}\le \exp{\left(-\frac{\eta^2n^kp}{2}+\eta qk\right)}\le \exp{\left(-\frac{\eta^2K_{\ref{FKNP}} C_{\ref{main theorem}}n\log n}{3}\right)}.\]}
+\end{proof}
+
+%Note that we do not need to check the $r$-vectors $\vec{v}\in I_{\mathcal P}^{\eta}(H)$, as if $H$ contains $\eta n^k$ such edges, by Chernoff's inequality, a.a.s.~$H_p$ ~contains a matching of size $qk$ with index vector of all edges equal to $\vec{v}$.
+By the claim, it suffices to check if $H$ contains a matching $M'$ with $\vec{i}_{\mathcal{P}}(V(M'))= \sum_{\vec{v}\in \vec{V}^\eta}\vec{v}$ -- we can a.a.s.~extend $M'$ to a desired matching because $|V(M)'|\le k|M'|$.
+If no such matching is found, on line 9 the algorithm terminates with negative output, and indeed $H_p$ has no perfect matching as it does not contain any $q$-solution.
+Otherwise, suppose the algorithm finds a matching $M'$.
+Note that $M'$ a.a.s.~can be extended to a matching $M$ with $ {\vec{i}}_{\mathcal{P}}(V(H)\setminus V(M)) \in L^{\mu}_{\mathcal{P}}(H) $ by the claim.
+Indeed, for every \(\vec{v}\in \vec{V}\cap I^{\eta}_{\mathcal{P}}(H)\), we expose exactly \(\eta n^k\) edges in \(H\) with index vector \(\vec{v}\) and by the claim, a.a.s~we find a matching of size \(qk\).
+Note that these edges have the property that given any set of $(q-1)k$ vertices in $H$, we can still find an edge disjoint from these vertices.
+Therefore we can construct $M$ from $M'$ greedily, and the probability of failure is $o(1)$ as there are constantly many such vectors.
+Now suppose we find such $M$ successfully and  
+it remains to show that a.a.s.~the remaining $k$-graph has a perfect matching. To this end, we shall verify that the assumptions \ref{item:main-degree}--\ref{item:main-robust edges} of Theorem\ref{main theorem} hold for the remaining $k$-graph. %To show the correctness of the algorithm, it remains to show that a.a.s.~the remaining $k$-graph has a perfect matching, for which we shall verify the assumptions \ref{item:main-degree}--\ref{item:main-robust edges} of Theorem \ref{main theorem}. 
+%\red{TO BE FINISHED.}
+
+{Recall that $\delta(k,k-1,k)=1/k$ by Theorem \ref{thm:deltaFD}.}
+%Note that the algorithm never reveals any $\eta$-robust edges of $H$, and may have revealed less than $\eta n^k$ edges for every \(\vec{v}\notin I_{\mathcal P}^{\eta}(H)\).
+Note that the algorithm never reveals any $\mu$-robust edges of $H$, and may have revealed at most $\eta n^k$ edges for every \(\vec{v}\notin I_{\mathcal P}^{\mu}(H)\).
+Let $E'$ be the set of these revealed edges.
+Indeed we need to work on the $k$-graph $H-V(M)$ with the edges of $E'$ removed, and let us denote this $k$-graph by $H'$.
+Note that $E'$ contains at most $\eta n^k |L_{\max}^{\card{\mathcal{P}}}|\le \eta (2kn)^k $ edges of $H-V(M)$ (possibly revealed as non-edges).
+As $\eta \ll 1/C\ll \gamma$, we get that at most $\frac{\eta (2kn)^k}{\gamma n/2}\le \sqrt\eta \binom n{k-1}$ $(k-1)$ sets $S$ satisfy that $\deg_{H'}(S)< n/k+\gamma n/2$, verifying \ref{item:main-degree}.
+Moreover, recall that all parts of $\mathcal P$ are $(\beta, t)$-closed, that is, for vertices $u, v$ from the same part of $\mathcal P$, there are at least $\beta n^{tk-1}$ reachable $(tk-1)$-sets for $u,v$.
+Note that at most $|E'|n^{tk-k}\le \eta (2k)^k n^{tk}$ $(tk)$-sets of vertices contain edges of $E'$.
+Note that for vertices $u, v$ and one of their reachable $(tk-1)$-sets $S$, $S$ may no longer be a reachable set in $H'$ only if $\{u\}\cup S$ or $\{v\}\cup S$ coincide with such a $(tk)$-set.
+Partition $\bigcup_{i\in [d]}\binom{V_i}{2}$ into $n$ stars, and we say a star loses a reachable set if any of its edges $uv$ loses a reachable set by passing from $H$ to $H'$.
+Then we see that there are at most $\frac{\eta (2k)^kn^{tk}}{\beta n^{tk-1}/2}\le \sqrt{\eta}n$ of the stars each losing at least $\beta n^{tk-1}/2$ reachable sets, where we used $\eta \ll 1/C\ll \beta$.
+Note that if a star loses less than $\beta n^{tk-1}/2$ reachable sets, all of its edges remain $(\beta/2,t)$-reachable in $H'$; otherwise, all edges of the star may become not $(\beta/2,t)$-reachable in $H'$.
+Therefore, all but at most $\sqrt{\eta}n^2\le \eta^{1/4}(n/k)^2$ of the pairs of vertices of each $V_i$ are $(\beta/2,t)$-reachable in $H'$, verifying \ref{item:main-good partition}.
+%at most $\frac{\eta (2k)^kn^{tk}}{\beta n^{tk-1}/2}n\le \sqrt{\eta}$ pairs $\{u,v\}$ from the same part of $\mathcal P$ become not $(\beta/2,t)$-reachable in $H'$. 
+Finally, since the exposed edges are not $\mu$-robust, this does not affect the condition \ref{item:P2}, verifying \ref{item:main-robust edges}. 
+
+Therefore, we can apply Theorem \ref{main theorem} with $\eta^{1/4}$ in place of $\eta$ and $\beta/2$ in place of $\beta$ to $H'$ and conclude that a.a.s.~$H_p'$ contains a perfect matching. 
+
+        %Specifically, for each matching $M$ of size at most $\binom{2k-2}{k}$ in $H$, we verify if $\vec{i}_{\mathcal{P}}(V(H)\setminus V(M))\in L_{\mathcal{P}}^{\mu}(H) $. 
+        %\textcolor{blue}{At the same time, we record the set of index vector of edges that form such matching \(M\), denoted by \(\vec{V}_M=\{\vec{i}_{\mathcal{P}}(e_1),\dots,\vec{i}_{\mathcal{P}}(e_t)\}\), where \(M=\{e_1,\dots,e_t\}\). 
+        %This step can be performed in time $O(n^{k\binom{2k-2}{k}})$.} 
+
+        % \textcolor{blue}{Note that we can classify the matchings according to their corresponding vector sets \(\vec{V}_M\). In the subsequent steps, it suffices to consider only one representative matching from each class. This eliminates the need to repeatedly verify equivalent matchings. 
+        % Moreover, the number of distinct types \(\vec{v}_M\) is at most \(2^{\card{L_{max}^{\card{\mathcal{P}}}}}\le 2^{\binom{2k-2}{k}}\), which reduces the overall time complexity.} 
+        
+        % \textcolor{blue}{By the proof of Theorem \ref{structural theorem} in \cite{han2020complexity}, every perfect matching in \(H\) must contain a $\binom{2k-2}{k}$-solution. It follows that if such an $M$ is found (line 3), we proceed to determine whether $M$ is present in $H_p$. 
+        % We test each edge in \(M\) in time \(O(n^k)\) to verify whether it has sufficiently many potential replacements; that is, whether there are at least \(\eta n^k\) edges in \(H\) that share the same index vector. 
+        % (Note that this step is performed in \(H\), and thus does not affect the randomness of \(H_p\).) 
+        % If every edge in \(M\) has sufficiently many replacements (line 5), then the probability of $M$ surviving in $H_p$ is $1-o(1)$. 
+        % Conditioning on the survival of \(M\), consider the remaining graph $H'=H-V(M)$. By applying Theorem \ref{main theorem} to \(H'\), a.a.s.~$H'_p$ contains a perfect matching. Then, a.a.s.~$H_p$ contains a perfect matching in this case.}  
+        %Let \(p\ge 2C\log n/n^{k-1}\), where \(C\) is the constant from Theorem~\ref{main theorem}. If such an $M$ is found, we proceed to determine whether $M$ is present in $H_p$. We test each edge in \(M\) in time \(O(n^k)\) to verify whether it has sufficiently many potential replacements; that is, whether there are at least \(\eta n^k\) edges in \(H\) that share the same index vector. (Note that this step is performed in \(H\), and thus does not affect the randomness of \(H_p\).) This implies that the probability of $M$ surviving in $H_{p/2}$ is $1-o(1)$. Subsequently, for the remaining graph $H'=H-V(M)$, by applying Theorem \ref{main theorem-PM}, a.a.s.~$H'_{p/2}$ contains a perfect matching. Note that \(H'_{p/2}\subseteq H'_p\), then a.a.s.~$H'_p$ contains a perfect matching in this case. 
+        
+        % Otherwise (line 7), we need to check whether the "bad edges" in $M$ survive in $H_p$, which takes time $O(n^{k})$.
+        % This step may reveal an edge set $E'$ in the random subgraph containing at most $\eta n^k \card{L_{max}^{\card{\mathcal{P}}}}\le \eta (2kn)^k $ edges, resulting in the loss of at most $\eta (2kn)^k$ edges. 
+        % However, due to $\eta\ll 1/C\ll \gamma,\beta$, both the minimum codegree and divisibility conditions remain nearly perfect, with at most $\frac{\eta (2kn)^k}{\gamma n/2}$ $(k-1)$ sets $S$ satisfy that $\deg_{H-E'}(S)< n/k+\gamma n/2$ and at most $\frac{\eta 2^kk^kn^{tk}}{\beta n^{tk-1}/2}n$ pairs $\{u,v\}$ that are not $(F,\beta/2,t)$-reachable in $H-E'$. 
+        % Moreover, since the exposed edges are non-robust, this does not affect the condition \ref{item:P2}. 
+        % Then if one such $M$ is found to exist, a.a.s.~there exists a perfect matching by applying Theorem \ref{main theorem} to $H-V(M)-E'$. Note that in this case, the probability of \(M\) surviving in \(H_p\) is \(1\). 
+        % Then a.a.s.~$H_p$ contains a perfect matching. 
+        
+For the running time, note that Lemma~\ref{better partition of PM} finds $ \mathcal{P} $ in time $O(n^{2^{k-2}k+1})$ and there are constantly many choices for the vector set $\vec{V}$ and for each of them the search takes time $O(n^{kq})=O(n^{k(k-1)})$ %$O(n^{kq})=O(n^{k\binom{2k-2}{k}})$
+which follows from \(q\le \card{\mathcal{P}}\le k-1\) by Fact~\ref{fact:coset group}. 
+Thus, the overall running time is $O(n^{2^{k-2}k+1})$. 
+%O(n^{k\binom{2k-2}{k}})$
+    \end{proof}
+
+    \subsection{Proof of Theorem~\ref{main theorem-factor} }
+    
+    % Next we prove Theorem~\ref{main theorem-PM} and \ref{main theorem-factor}.
+
+    % \begin{proof}[Proof of Theorem~\ref{main theorem-PM}]
+    %     To prove the theorem we consider two cases. 
+        
+    %     We first prove the second part of the theorem -- if \(H\) contains a perfect matching then $H$ contains a matching $M_0$ of size at most $k-1$ such that $ \vec{i}_{\mathcal{P}}(V(H)\setminus V(M_0))\in L_{\mathcal{P}}^{\mu}(H)$. 
+    %     Note that \(\card{\mathcal{P}}\le k-1\), by Fact~\ref{fact:coset group}, then $\card{Q(\mathcal{P},L_{\mathcal{P}}^{\mu}(G))}\le k-1.$  
+    %     It then follows from Theorem~\ref{structural theorem} that $(\mathcal{P},L^{\mu}_{\mathcal{P}}(G))$ is $(k-1)$-soluble, which implies the existence of a desired matching $M_0$. 
+    %     %Note that $L_{\mathcal{P}}^{\mu}(H)$ contains a full set of $k$-verctors. Then, by the result of~\cite{keevash2013polynomial}, we have $\card{Q(\mathcal{P},L_{\mathcal{P}}^{\mu}(H))}\le \card{\mathcal{P}}\le k.$  
+    %     %It then follows from Theorem~\ref{structural theorem} that $(\mathcal{P},L^{\mu}_{\mathcal{P}}(H))$ is $k$-soluble, as required.
+
+    %     Conversely, assume that there exists a matching \(M_0\) of size at most $k-1$ satisfying $ \vec{i}_{\mathcal{P}}(V(H)\setminus V(M_0))\in L_{\mathcal{P}}^{\mu}(H)$.  Let \(H':= H-V(M_0)\) and \(t=k2^k+2\).  Note that Theorem~\ref{thm:deltaFD} implies $\delta(k,k-1,k)\le 1/k$.
+    %     Since removing a constant number of vertices has small impact on the divisibility and the degree conditions, then, for every $(k-1)$-sets $S\subseteq V(H')$, $\deg_{H'}(S)\ge \delta_{k-1}(H)-k^2\ge \left(\delta(k,k-1,k)+\gamma/2\right)\card{V(H')}$, for every $i\in [d]$ and every two vertices $v,u\in V_i$, there are at least $\beta n^{tk-1}-k^2n^{tk-2}\ge \beta \card{V(H')}^{tk-1}/2$ reachable $(tk-1)$-sets, and for every $v\in V(H') $, $\card{E^{\mu}_{\mathcal{P}}\left(v, V(H')\right)}\ge \varepsilon{\card{V(H')}}^{k-1}/2$. 
+    %     So we can apply Theorem \ref{main theorem} to $H'$ with $\gamma/2, \beta/2, \varepsilon/2$ in place of $\gamma,\beta,\varepsilon$.
+    %     Noting that \(m_1(e)=\frac{1}{k-1}\), we obtain the desired conclusion.
+    % \end{proof}
+
+Now we prove Theorem~\ref{main theorem-factor}.
+    %With Theorem~\ref{main theorem} in hand, the proof of Theorem~\ref{main theorem-factor} follows a similar strategy to that of Theorem~\ref{main theorem-PM}. 
+    %However, in the case where \(F\) is strictly \(1\)-balanced, we require a more precise threshold. 
+    To have a more precise threshold for strictly 1-balanced $F$, we consider the spread properties of the \(F\)-complex of \(G\). 
+    For hypergraphs \(F\) and \(G\), the \(F\)-complex of \(G\), denoted by \(G_F \), is the \(\card{V(F)}\)-uniform multi-hypergraph with vertex set \(V(G)\) in which every copy of \(F\) in \(G\) corresponds to a distinct hyperedge of \(G_F\) on the same set of vertices. 
+    Note that \(G\) has an \(F\)-factor if and only if \(G_F\) contains a perfect matching. 
+    Let \( \mathbb{G}_F(n,p) \) denote the binomial random multi-hypergraph on \(n\) vertices where every edge of the \(F\)-complex of the complete hypergraph is included independently with probability \(p\). 
+
+    To prove Theorem \ref{main theorem-factor}, we need the following result of Riordan~\cite[Theorem 18]{riordan2022random}.
+
+    \begin{theorem}[\cite{riordan2022random}]\label{couple}
+        For every \(r\in \mathbb{N}\), there exists \( a=a_{\ref{couple}}(r) \) such that the following holds.
+        Let \(F\) be a fixed strictly 1-balanced graph. 
+        If \( p = p(n) \leq \log^{2}(n)/n^{1/m_1(F)} \), then, for some \( \pi = \pi(n) \sim ap^{e_F }\), there exists a coupling for \(G=\mathbb{G}\left(n,p\right)\) and \(G_F=\mathbb{G}_{F}(n,\pi)\) such that, a.a.s.~for every \(F\)-edge present in \(G_F\) the corresponding copy of F is present in G.
+    \end{theorem}
+
+Now we are ready to prove Theorem~\ref{main theorem-factor}.
+    \begin{proof}[Proof of Theorem~\ref{main theorem-factor}]
+         To prove the theorem we consider two cases. 
+         
+         We first prove the second part of the theorem -- if \(G\) contains an \(F\)-factor then $H$ contains an \(F\)-packing $M_0$ of size at most $\binom{2r-2}{r}$ such that $ \vec{i}_{\mathcal{P}}(V(G)\setminus V(M_0))\in L_{\mathcal{P},F}^{\mu}(G)$. 
+         Note that \(\card{\mathcal{P}}\le r-1\), so $\card{Q(\mathcal{P},L_{\mathcal{P},F}^{\mu}(G))}\le |L_{\max}^{\card{\mathcal{P}}}|\le\binom{2r-2}{r}.$ 
+         It then follows from Theorem~\ref{structural theorem} that $(\mathcal{P},L^{\mu}_{\mathcal{P},F}(G))$ is $\binom{2r-2}{r}$-soluble, which implies the existence of a desired $F$-packing.
+
+
+        Conversely, assume that there exists an \(F\)-packing \(M_0\) of size at most \(\binom{2r-2}{r}\) satisfying $ \vec{i}_{\mathcal{P}}(V(G)\setminus V(M_0))\in L_{\mathcal{P},F}^{\mu}(G)$. 
+        Let \(G':= G-V(M_0)\). 
+%        Note that Theorem \ref{critical chromatic number-alomst pefect F-factor} shows that $\delta(F,k-1,5r^2)\le 1-1/{\chi}_{cr}(F)$.
+Recall that $\delta(F,1,5r^2)=1-1/{\chi}_{cr}(F)$ by Theorem \ref{thm:deltaFD}.
+        Since by removing \(M_0\) we lose at most $\binom{2r-2}{r}r$ vertices, the minimum degree, the number of reachable sets between any two vertices and the number of robust copies containing any vertex only reduced by a small amount.
+        %, we still have $\delta(G')\ge \delta(G)-r\binom{2r-2}{r}\ge \left(\delta(F,k-1,5r^2)+\gamma/2\right)\card{V(G')}$. 
+        %Similarly for \ref{item:main-good partition} and \ref{item:main-robust edges}. 
+        So we can apply Theorem \ref{main theorem} to $H'$ with $\gamma/2, \beta/2, \varepsilon/2$ in place of $\gamma,\beta,\varepsilon$, and obtain a $\left(C_1/n^{1/m_1(F)}\right)$-spread distribution on the set of $F$-factors in $G'$, which implies that a.a.s.~$G_p'$ contains an $F$-factor if \(p\ge Cn^{-1/m_1(F)}\log n\).
+
+        We now turn to the case when \(F\) is strictly 1-balanced. It suffices to prove the result for \(p=Cn^{-1/m_1(F)}\log^{1/e_F}n\).
+        %In this setting, we are able to strengthen the general result proved above by leveraging theorem \ref{couple} of Riordan, which couple the random binomial hypergraph with the \(F\)-complex of the random binomial graph.  
+Denote the \(F\)-complex of \(G'\) by \(\mathcal{G}'\).
+As there is an $\left(C_1/n^{1/m_1(F)}\right)$-spread distribution $\lambda$ on the family of $F$-factors in $G'$, it gives rise to a \(\left(C_1^{e_F}/n^{r-1}\right)\)-spread distribution $\lambda'$ on the perfect matchings of \(\mathcal{G}'\). 
+Indeed, suppose $S$ is a matching of size $\ell$ in \(\mathcal{G}'\) (if $S$ does not form a matching then $\lambda'(S)=0$), then we have
+\[
+\lambda'(S) = \lambda(T)\le C_1^{e_F\cdot \ell} n^{-\frac{1}{m_1(F)}e_F\cdot \ell} = C_1^{e_F\cdot \ell} n^{-(r-1)\ell},
+\]
+where $T$ is the $F$-packing of size $\ell$ in $G$ corresponding to $S$ and we used $|T|=e_F\cdot \ell$ and $m_1(F)=e_F/(r-1)$.
+Therefore, Theorem \ref{FKNP} implies that a.a.s.~\(\mathcal{G}'_{\pi}\) contains a perfect matching if \(\pi\ge K_{\ref{FKNP}}C_1^{e_F}\log n/ n^{(r-1)}=ap^{e_F}\). Thus, by Theorem \ref{couple}, a.a.s.~\(G_p'\) contains an \(F\)-factor.
+\end{proof}
+
+    \subsection{The enumeration aspect}
+
+    Corollary~\ref{count result-Pm} and Corollary~\ref{count result-packing} follow directly from the fact below and Theorem \ref{main theorem}. 
+    Define \(\mathcal{M}(H)\) to be the set of perfect \(F\)-packings of \(H\). 
+    %If \(H\) satisfies the divisibility conditions described in Theorem~\ref{main theorem-PM} or Theorem~\ref{main theorem-factor} (i.e., there exists a matching \(M_0\) satisfying the required properties), then we can obtain a good spread in the subgraph \(H':=H-V(M_0)\). 
+    If \(H\) satisfies the divisibility conditions described in Theorem~\ref{structural theorem} (i.e., there exists a matching \(M_0\) satisfying the required properties), then we can obtain a good spread in the subgraph \(H':=H-V(M_0)\) by Theorem \ref{main theorem}.
+    By the fact below, it follows that \(
+    \card{\mathcal{M}(H')}\ge\left(\varepsilon (n-c)\right)^{\frac{e_F}{v_Fm_1(F)}(n-c)},\) where \(c\le v_F\binom{2v_F-2}{v_F}\) is a constant. 
+    Observe that every perfect \(F\)-packing \(M\) in \(H'\) can be extended to a perfect \(F\)-packing \(M \cup M_0\) in \(H\). 
+    Hence, \(\card{\mathcal{M}(H)}\ge\card{\mathcal{M}(H')}\ge (\varepsilon n/2)^{\frac{e_F}{v_F m_1(F)}n}\).
+    
+    \begin{fact}
+        Let \(F\) be an \(r\)-vertex \(k\)-graph, and \(H\) an \(n\)-vertex \(k\)-graph. If there is a \(\left(C/n^{1/m_1(F)}\right)\)-spread distribution on the set of $F$-factors in \(H\), then $H$ contains at least $(\varepsilon n)^{\frac{e_F}{rm_1(F)}n}$ $F$-factors for \(\varepsilon = C^{-1/m_1(F)}\).
+    \end{fact}
+    \begin{proof}
+        By assumption, we have a \(\left(C/n^{1/m_1(F)}\right)\)-spread distribution \(\textbf{M}\) on the set of \(F\)-factors in \(H\). 
+        Fix an \(F\)-factor \(M\in \mathcal{M}(H)\) consisting of  \(e_Fn/r\) edges. Since \(\textbf{M}\) is \(\left(C/n^{1/m_1(F)}\right)\)-spread, we have \(\mathbb{P}[\textbf{M}=M]\le (C/n^{1/m_1(F)})^{e_Fn/r}\). 
+        Thus, \[1=\sum_{M\in \mathcal{M}(H)}\mathbb{P}[\textbf{M}=M]\le \card{\mathcal{M}(H)}(C/n^{1/m_1(F)})^{e_Fn/r},\]
+        which implies \(\card{\mathcal{M}(H)}\ge (n^{m_1(F)}/C)^{e_Fn/r}= (\varepsilon n)^{\frac{e_F}{rm_1(F)}n}\), as desired. 
+    \end{proof}
+    
+    \section{Concluding remarks}\label{remark}
+    
+    In this paper, we established an algorithmic result (Theorem~\ref{algorithm-PM}) that guarantees, with high probability, the existence of a perfect matching in a random subgraph of \(H\) when the algorithm accepts, and the non-existence of such a matching when it rejects. 
+    %\textcolor{blue}{The overall time complexity of our algorithm is primarily determined by two components. The first is finding a suitable partition \(\mathcal{P}\) as required in Lemma \ref{better partition of PM}, which takes time $O(n^{2^{k-2}k+1})$. The second component involves verify if the solution exists, and its complexity is related to the size of the relevant coset group \(Q(\mathcal{P},L_{\mathcal{P}}^{\mu}(H))\). In our early analysis, we employed a trivial bound for \(Q(\mathcal{P},L_{\mathcal{P}}^{\mu}(H))\), resulting in a time complexity of $O(n^{k\binom{2k-2}{k}})$ for this step. Under that bound, the second component dominates the overall runtime. However, by the result of~\cite{keevash2013polynomial}, we have \(\card{Q(\mathcal{P},L_{\mathcal{P}}^{\mu}(H))}\le\card{\mathcal{P}}\le k-1\). With this tighter bound, the time needed for the second component can be substantially reduced, and the main contribution to the time complexity becomes the step of finding the partition \(\mathcal{P}\), which takes time $O(n^{2^{k-2}k+1})$. For example, when \(k=3\), the total time complexity becomes \(O(n^7)\). It remains an intriguing question whether the overall time complexity can be further improved.}
+    
+    While our algorithm relies on probabilistic techniques, it would be of great interest to develop a direct, deterministic algorithm for this problem. 
+    However, the random subgraph $H_p$ with \(p \approx C\log n/n^{k-1}\) is extremely sparse, with minimum degree \(\Omega(\log n)\), and most pairs of vertices have collective degree zero. 
+    This sparsity presents significant challenges for deterministic decision procedures. 
+    To the best of our knowledge, no result of this kind is currently known, and we leave this as an open question. 
+    
+    In contrast to the case of perfect mathcing, we are unable to obtain a similar algorithm as in Theorem \ref{algorithm-PM} for the setting of \(F\)-packings. 
+    If we follow the proof idea of Theorem \ref{algorithm-PM}, one may reveal many copies of \(F\) in the random subgraph to testify specific divisibility conditions. 
+    These revealed copies are non-robust (i.e.~at most $\eta n^r$ many). 
+    Although this exposure affects the degree and partition conditions only mildly, it may critically interfere with the third condition required by Theorem~\ref{main theorem}, namely, that each vertex may lose too many robust copies of \(F\). 
+    %This condition is essential for the theorem to hold and cannot be compensated for by other structural properties. 
+    %In particular, this robustness allows us to preserve enough structure to compensate for the loss of perfection in the degree and partition conditions.
+    The reason is that even though the revealed copies of \(F\) are non-robust, their edges may still overlap with robust ones, thereby reducing the total number of robust copies. 
+    In contrast, in the perfect matching setting, the exposure process only reveals individual edges and does not affect the collection of robust edges at any vertex. 
+    %As a result, all three structural conditions required for Theorem~\ref{main theorem} can be preserved in that setting, but not for general \(F\)-packings. 
+    
+    We note that while our main approach follows the  randomized algorithm of Kelly, M\"{u}yesser, and Pokrovskiy, we also explored alternative methods based on iterative absorption, as developed by Pham, Sah, Sawhney, and Simkin~\cite{pham2022toolkit}. 
+    While we think both approaches work, we chose to present the proof using the method of Kelly et al.~as it is conceptually simpler. 
+    %Therefore, for clarity and conciseness, we present in this paper the proof based on their construction. 
+
+    \bibliographystyle{abbrv}
+    \bibliography{arxiv-version}
+    
+    \appendix
+    \section{Proof of Lemma~\ref{card-PM}}
+    
+    Here we provide the full proof of Lemma~\ref{card-PM}. 
+    We first state a lemma analogous to Lemma 6.1 from~\cite{keevash2013polynomial}. For a vector \(\vec{v}\), we write \(\vec{v}(i)\) to denote its \(i\)th coordinate. 
+    \begin{lemma}\label{lem:full set}
+        Suppose $k\ge 3$, and let $L$ be a lattice in $\mathbb{Z}^{\mathcal{P}}$, where $\mathcal{P}$ is a partition of a set $V$ with \(\card{\mathcal{P}}=d\). If $L$ contains a full set of $k$-vectors, then 
+        \begin{enumerate}[label=(A\arabic*)]
+            \item for any \(i_1, i_2, i_3\in [d]\), there exists \(i_4\in [d]\) such that \(\vec{u}_{i_1}+\vec{u}_{i_2}-\vec{u}_{i_3}-\vec{u}_{i_4}\in L\),\label{item:A1}
+            \item for any \(\vec{v}\in L_{\max}^{d}\) and \(i\in [d]\), there exists \(j\in [d]\) such that \(\vec{v}-\vec{u}_{i}+\vec{u}_{j}\in L\).\label{item:A2}
+        \end{enumerate}
+    \end{lemma}
+    \begin{proof}
+        We first verify \ref{item:A1}. Fix arbitrary \(i_1, i_2, i_3\in [d]\), and choose an arbitrary \((k-3)\)-vector \(\vec{w}\). Since \(\vec{w}+\vec{u}_{i_1}+\vec{u}_{i_2}\) is a \((k-1)\)-vector and \(L\) contains a full set of \(k\)-vectors, there exists \(j\in [d]\) such that \(\vec{w}+\vec{u}_{i_1}+\vec{u}_{i_2}+\vec{u}_{j}\in L\). 
+        Similarly, there is \(i_4\in[d]\) such that \(\vec{w}+\vec{u}_{i_3}+\vec{u}_{j}+\vec{u}_{i_4}\in L\). 
+        Then  \(\vec{u}_{i_1}+\vec{u}_{i_2}-\vec{u}_{i_3}-\vec{u}_{i_4}\) is the difference of these two index vectors and hence lies in \(L\). 
+        
+        Now, we prove \ref{item:A2}. For any \(\vec{v}\in L_{\max}^{d}\), consider \(\vec{v'}\in L\) that minimises \(\sum_{i\in[d]}\left|{\vec{v}}(i)-{\vec{v'}}(i)\right|\) subject to \(\sum_{i\in [d]}{\vec{v}}(i)=\sum_{i\in [d]}{\vec{v'}}(i)\). We claim that  \(\sum_{i\in[d]}\left|{\vec{v}}(i)-{\vec{v'}}(i)\right|\le 2\). Indeed, if not there exist \(i_1,i_2,i_3\in [d]\) satisfying one of the following:
+        \begin{itemize}
+            \item \(i_1\neq i_2\), \({\vec{v}}(i_1)-{\vec{v'}}(i_1)>0\), \({\vec{v}}(i_2)-{\vec{v'}}(i_2)>0\) and \({\vec{v}}(i_3)-{\vec{v'}}(i_3)<0\),
+            \item \(i_1=i_2\), \({\vec{v}}(i_1)-{\vec{v'}}(i_1)>1\) and \({\vec{v}}(i_3)-{\vec{v'}}(i_3)<0\),
+            \item \(i_1\neq i_2\), \({\vec{v}}(i_1)-{\vec{v'}}(i_1)<0\), \({\vec{v}}(i_2)-{\vec{v'}}(i_2)<0\) and \({\vec{v}}(i_3)-{\vec{v'}}(i_3)>0\),
+            \item \(i_1=i_2\), \({\vec{v}}(i_1)-{\vec{v'}}(i_1)<-1\) and \({\vec{v}}(i_3)-{\vec{v'}}(i_3)>0\). 
+        \end{itemize}
+        In each case, by~\ref{item:A1}, we obtain \(\vec{w}:=\vec{u}_{i_1}+\vec{u}_{i_2}-\vec{u}_{i_3}-\vec{u}_{i_4}\in L\) for some \(i_4\in [d]\). Then either \(\vec{v'}+\vec{w}\) or \(\vec{v'}-\vec{w}\) contradicts the minimality of \(\vec{v'}\). 
+        Thus the claim holds, and we have \(\vec{v'}=\vec{v}-\vec{u}_{j_1}+\vec{u}_{j_2}\) for some \(j_1,j_2\in [d]\). For any \(i\in [d]\), by~\ref{item:A1} again, there is some \(j\in [d]\) such that \(\vec{u}_i+\vec{u}_{j_1}-\vec{u}_{j_2}-\vec{u}_{j}\in L\), denoted by \(\vec{w'}\). Then \(\vec{v}+\vec{u}_{i}-\vec{u}_{j}=\vec{v'}+\vec{w'}\in L\), as desired.
+    \end{proof}
+
+    
+
+
+    Now we present the proof of Lemma~\ref{card-PM}.
+    \begin{proof}
+        Fix any \((k-1)\)-vector \(\vec{w}\), and let \(d:=\card{\mathcal{P}}\). We claim that every coset \(\vec{v}+L\) of \(L\) in \(L_{\max}^{\mathcal{P}}\) contains an index vector \(\vec{w}+\vec{u}_i\) for some \(i\in [d]\). 
+        Indeed, since \(L\) contains a full set of \(k\)-vectors, there exists \(j\in [d]\) such that \(\vec{w}+\vec{u}_j\in L\). Moreover, by Lemma~\ref{lem:full set}\ref{item:A2}, we obtain \(-\vec{v}-\vec{u}_j+\vec{u}_i\in L\) for some \(i\in [d]\). 
+        Thus, \(\vec{w}+\vec{u}_i=\vec{v}+(-\vec{v}-\vec{u}_j+\vec{u}_i)+(\vec{w}+\vec{u}_j)\in \vec{v}+L\), as claimed. 
+        Therefore, \(\card{Q(\mathcal{P},L)}\le \card{\mathcal{P}}\).
+    \end{proof}
+	
+\end{document}
+

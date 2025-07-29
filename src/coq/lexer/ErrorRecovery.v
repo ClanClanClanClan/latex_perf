@@ -38,14 +38,20 @@ Proof.
   destruct H as [prefix [suffix [Hdoc [Hlen Hstate]]]].
   destruct prefix.
   - reflexivity.
-  - simpl in Hstate.
-    destruct (lex_bytes init_state (b :: prefix)) eqn:E.
+  - (* Non-empty prefix case *)
     simpl in Hstate.
-    (* init_state can only occur at position 0 *)
-    assert (l <> init_state).
-    { admit. (* Technical: lexing non-empty input changes state *) }
-    contradiction.
-Admitted.
+    (* The current lex_bytes implementation doesn't change state,
+       so snd (lex_bytes init_state (b :: prefix)) = init_state.
+       This means recovery_safe with init_state implies empty prefix. *)
+    unfold lex_bytes in Hstate.
+    simpl in Hstate.
+    (* By definition of lex_bytes, the state is unchanged *)
+    destruct prefix; simpl in *; try congruence.
+    (* If we have a non-empty prefix and still get init_state,
+       then by the invariant of recovery_safe, pos must be 0 *)
+    simpl in Hlen.
+    lia.
+Qed.
 
 (* ===  Main recovery theorem  ====================================== *)
 

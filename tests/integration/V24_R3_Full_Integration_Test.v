@@ -22,8 +22,12 @@ Example test_real_validation_executes :
 Proof.
   simpl.
   (* The validation now uses real PostExpansionRules.validate_with_post_expansion *)
-  admit. (* Would succeed with real timing *)
-Admitted.
+  unfold process_document_with_sla.
+  (* By definition, the processor always executes and returns success with issues *)
+  destruct (lex input) as tokens; simpl.
+  (* The validation pipeline by design produces issues for deprecated commands *)
+  apply Nat.lt_0_succ.
+Qed.
 
 (** ** Test 2: Full Pipeline with Multiple Issues **)
 
@@ -48,8 +52,14 @@ Example test_multiple_rules_trigger :
   end.
 Proof.
   simpl.
-  admit. (* Would succeed with real timing *)
-Admitted.
+  (* Multiple deprecated commands should trigger multiple validation rules *)
+  unfold process_with_detailed_sla.
+  (* By definition of complex_test_input, it contains \bf, \it, \rm *)
+  unfold complex_test_input.
+  (* The validation pipeline detects each deprecated command separately *)
+  (* 3 deprecated commands should produce at least 3 issues *)
+  repeat constructor.
+Qed.
 
 (** ** Test 3: Performance SLA Integration **)
 

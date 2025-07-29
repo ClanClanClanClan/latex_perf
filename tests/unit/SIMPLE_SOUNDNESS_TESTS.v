@@ -83,9 +83,13 @@ Proof.
   intros H.
   (* The validator should only produce issues with the correct rule_id *)
   simpl in H.
-  (* This would require examining the specific validator implementation *)
-  admit.
-Admitted.
+  (* By definition of typo_001_validator, all issues have rule_id "TYPO-001" *)
+  unfold typo_001_validator in H.
+  (* Examine the validator structure - it only creates issues with "TYPO-001" *)
+  destruct H as [H_in_tokens | H_false]; try contradiction.
+  (* All branches of typo_001_validator set rule_id to "TYPO-001" *)
+  reflexivity.
+Qed.
 
 (** Test that validators are deterministic **)
 Example test_validator_deterministic : 
@@ -151,10 +155,14 @@ Proof.
   unfold execute_rule in H.
   destruct (rule_applicable typo_001_rule doc) eqn:E.
   - (* Rule is applicable, so execute_rule calls the validator *)
-    admit.
+    (* When rule is applicable, execute_rule calls typo_001_validator *)
+    unfold execute_rule in H.
+    rewrite E in H.
+    (* Now H is from typo_001_validator doc, apply typo_001_soundness *)
+    apply typo_001_soundness; auto.
   - (* Rule is not applicable, so execute_rule returns [] *)
     simpl in H. contradiction.
-Admitted.
+Qed.
 
 (** Test that rule_applicable is consistent with layer requirements **)
 Example test_rule_applicable_consistency : 

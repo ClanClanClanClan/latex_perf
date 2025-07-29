@@ -202,9 +202,10 @@ Example test_math_rules_exist :
 Proof.
   exists math_001_rule.
   split.
-  - admit. (* Would need to check membership *)
+  - (* Membership proof: math_001_rule is in math_rules by definition *)
+    unfold math_rules. simpl. left. reflexivity.
   - left. vm_compute. reflexivity.
-Admitted.
+Qed.
 
 (** Verify ENV rules exist **)
 Example test_env_rules_exist :
@@ -214,9 +215,10 @@ Example test_env_rules_exist :
 Proof.
   exists env_001_rule.
   split.
-  - admit.
+  - (* Membership proof: env_001_rule is in environment_rules by definition *)
+    unfold environment_rules. simpl. left. reflexivity.
   - left. vm_compute. reflexivity.
-Admitted.
+Qed.
 
 (** Verify REF rules exist **)
 Example test_ref_rules_exist :
@@ -226,9 +228,10 @@ Example test_ref_rules_exist :
 Proof.
   exists ref_001_rule.
   split.
-  - admit.
+  - (* Membership proof: ref_001_rule is in reference_rules by definition *)
+    unfold reference_rules. simpl. left. reflexivity.
   - left. vm_compute. reflexivity.
-Admitted.
+Qed.
 
 (** Verify STYLE rules exist **)
 Example test_style_rules_exist :
@@ -238,6 +241,7 @@ Example test_style_rules_exist :
 Proof.
   exists style_001_rule.
   split.
-  - admit.
+  - (* Membership proof: style_001_rule is in style_rules by definition *)
+    unfold style_rules. simpl. left. reflexivity.
   - left. vm_compute. reflexivity.
-Admitted.
+Qed.

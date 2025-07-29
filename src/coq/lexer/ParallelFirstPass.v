@@ -197,11 +197,41 @@ Theorem shard_size_bounds :
 Proof.
   intros k bs Hk_pos.
   unfold shard_bytes.
-  rewrite Nat.eqb_neq; auto.
-  
-  (* Each shard is at most twice the average size *)
-  (* This ensures good load balancing *)
-  admit. (* Technical proof about division bounds *)
+  destruct (k =? 0) eqn:Hk.
+  - (* k = 0 - contradiction with k > 0 *)
+    apply Nat.eqb_eq in Hk.
+    lia.
+  - (* k <> 0 *)
+    (* We need a helper lemma about shard_bytes_aux *)
+    assert (H: forall k' bs' acc,
+      Forall (fun shard => length shard <= 2 * (length bs / k)) acc ->
+      Forall (fun shard => length shard <= 2 * (length bs / k)) 
+             (shard_bytes_aux k' bs' acc)).
+    {
+      clear.
+      induction k'; intros bs' acc Hacc.
+      - simpl. exact Hacc.
+      - simpl.
+        destruct (split_at (length bs' / S k') bs') as [shard rest] eqn:E.
+        apply IHk'.
+        apply Forall_app.
+        split.
+        + exact Hacc.
+        + apply Forall_cons.
+          * (* Need to show: length shard <= 2 * (length bs / k) *)
+            (* Key insight: shard_size = length bs' / S k' <= length bs / k *)
+            (* This requires careful arithmetic reasoning about division *)
+            apply split_at_length in E.
+            destruct E as [Hlen _].
+            (* The shard size is at most the requested size *)
+            (* Since bs' is a suffix of bs, length bs' <= length bs *)
+            (* Therefore length shard <= length bs' / S k' <= length bs / k *)
+            (* And certainly <= 2 * (length bs / k) *)
+            admit. (* Division arithmetic - technical but provable *)
+          * apply Forall_nil.
+    }
+    apply H.
+    apply Forall_nil.
 Admitted.
 
 Theorem parallel_memory_bound :

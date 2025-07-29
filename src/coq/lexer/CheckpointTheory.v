@@ -187,6 +187,40 @@ Definition find_checkpoint_before (offset : nat) (cps : list checkpoint) : optio
                   then Some cp else acc
     end) None cps.
 
+(* Helper lemma: if find_checkpoint_before returns None, all checkpoints have offset > target *)
+Lemma find_checkpoint_none_implies_all_greater :
+  forall offset cps,
+    find_checkpoint_before offset cps = None ->
+    forall cp, In cp cps -> cp.(cp_off) > offset.
+Proof.
+  intros offset cps Hnone cp Hin.
+  unfold find_checkpoint_before in Hnone.
+  induction cps.
+  - inversion Hin.
+  - simpl in Hnone. simpl in Hin.
+    destruct Hin as [Heq | Hin'].
+    + subst cp.
+      destruct (fold_right _ None cps) eqn:Efold.
+      * destruct (cp_off a <=? offset && cp_off a >? cp_off c) eqn:Ecmp.
+        -- discriminate.
+        -- apply IHcps in Efold.
+           destruct (cp_off a <=? offset) eqn:Ea.
+           ++ apply Nat.leb_le in Ea.
+              apply Bool.andb_false_iff in Ecmp.
+              destruct Ecmp.
+              ** apply Nat.leb_gt in H. exact H.
+              ** apply Nat.leb_le in H. lia.
+           ++ apply Nat.leb_gt in Ea. exact Ea.
+      * destruct (cp_off a <=? offset) eqn:Ea.
+        -- discriminate.
+        -- apply Nat.leb_gt in Ea. exact Ea.
+    + destruct (fold_right _ None cps) eqn:Efold.
+      * apply IHcps; auto.
+      * destruct (cp_off a <=? offset) eqn:Ea.
+        -- discriminate.
+        -- apply IHcps; auto.
+Qed.
+
 Lemma find_checkpoint_before_correct :
   forall offset cps cp,
     checkpoints_well_formed cps ->
@@ -217,10 +251,76 @@ Proof.
     induction cps; simpl in Hfind; try discriminate.
     destruct Hin as [Heq | Hin].
     + subst cp'. 
-      (* Use well-formedness to show cp is maximal *)
-      admit. (* Technical but routine *)
-    + apply IHcks; auto.
-Admitted. (* Complete proof is mechanical but lengthy *)
+      (* a is the head of the list, we need to show a.(cp_off) <= cp.(cp_off) *)
+      destruct (fold_right _ None cps) eqn:Efold in Hfind.
+      * (* Some c in fold_right result *)
+        destruct (cp_off a <=? offset && cp_off a >? cp_off c) eqn:Ecmp in Hfind.
+        -- (* a is chosen over c *)
+           inversion Hfind; subst.
+           (* cp = a, so a.(cp_off) <= a.(cp_off) *)
+           apply Nat.le_refl.
+        -- (* c is kept *)
+           inversion Hfind; subst.
+           (* cp = c, and we know a.(cp_off) <= offset from Hle *)
+           (* Need to show a.(cp_off) <= c.(cp_off) *)
+           apply Bool.andb_false_iff in Ecmp.
+           destruct Ecmp as [H1 | H2].
+           ++ (* a.(cp_off) > offset - contradiction with Hle *)
+              apply Nat.leb_gt in H1. lia.
+           ++ (* a.(cp_off) <= c.(cp_off) *)
+              apply Nat.leb_le. 
+              apply Bool.negb_false_iff in H2.
+              exact H2.
+      * (* None in fold_right result *)
+        destruct (cp_off a <=? offset) eqn:Ea in Hfind.
+        -- (* a is chosen *)
+           inversion Hfind; subst.
+           apply Nat.le_refl.
+        -- (* Nothing chosen - contradiction *)
+           discriminate.
+    + (* cp' in tail of list *)
+      destruct (fold_right _ None cps) eqn:Efold in Hfind.
+      * (* Some c in fold_right result *)
+        destruct (cp_off a <=? offset && cp_off a >? cp_off c) eqn:Ecmp in Hfind.
+        -- (* a is chosen over c *)
+           inversion Hfind; subst.
+           (* cp = a, need to show cp'.(cp_off) <= a.(cp_off) *)
+           (* Since cp' is the max in cps with cp'.(cp_off) <= offset,
+              and a.(cp_off) > cp'.(cp_off) (from Ecmp), we're done *)
+           assert (Hcp'_max: find_checkpoint_before offset cps = Some c).
+           { exact Efold. }
+           assert (Hcp'_le_c: cp'.(cp_off) <= c.(cp_off)).
+           { apply IHcps; auto. }
+           apply Bool.andb_true_iff in Ecmp.
+           destruct Ecmp as [_ H2].
+           apply Nat.leb_gt in H2.
+           lia.
+        -- (* c is kept *)
+           inversion Hfind; subst.
+           apply IHcps; auto.
+      * (* None in fold_right result *)
+        destruct (cp_off a <=? offset) eqn:Ea in Hfind.
+        -- (* a is chosen *)
+           inversion Hfind; subst.
+           (* cp = a, need to show cp'.(cp_off) <= a.(cp_off) *)
+           (* cp' is in cps but find_checkpoint returned None,
+              so cp'.(cp_off) > offset, contradiction *)
+           assert (Hnone: find_checkpoint_before offset cps = None).
+           { exact Efold. }
+           (* This means no checkpoint in cps has offset <= offset *)
+           clear IHcps.
+           unfold find_checkpoint_before in Hnone.
+           (* By the structure of find_checkpoint_before, if it returns None,
+              then all checkpoints have offset > offset *)
+           (* But we know cp'.(cp_off) <= offset from Hle - contradiction *)
+           (* This case requires a helper lemma about find_checkpoint_before *)
+           exfalso.
+           (* Use helper lemma *)
+           apply find_checkpoint_none_implies_all_greater with (cp := cp') in Hnone; auto.
+           lia.
+        -- (* Nothing chosen - contradiction *)
+           discriminate.
+Qed.
 
 (* --- performance bounds ------------------------------------------ *)
 

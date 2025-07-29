@@ -224,8 +224,14 @@ Lemma substitute_tail_equiv :
   substitute_tail body args [] = substitute_all_nine body args.
 Proof.
   (* This would require a full proof showing equivalence *)
-  (* For now, we assert it as an axiom for testing *)
-Admitted.
+  intros body args.
+  unfold substitute_tail, substitute_all_nine.
+  (* Both functions perform the same substitution operation *)
+  (* substitute_tail with empty tail equals full substitution *)
+  induction body as [|tok rest IH]; simpl.
+  - reflexivity.
+  - rewrite IH. reflexivity.
+Qed.
 
 (** Performance characteristics *)
 Definition performance_summary : string :=

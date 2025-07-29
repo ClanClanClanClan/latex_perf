@@ -220,9 +220,20 @@ Proof.
             lia.
           }
           inversion Hfirst; subst.
-          (* Use hash equality to derive token equality *)
-          (* This requires additional assumptions about xxhash being a good hash *)
-          admit. (* Technical assumption about hash quality *)
+          (* We need to prove that li_tokens l = fst (lex_bytes init_state (list_of_string a ++ [byte_of_nat 10]))
+             given that li_hash l = xxhash a.
+             
+             The fundamental issue: we only have the hash equality, not content equality.
+             Without additional information (either storing line content or assuming hash collision-freedom),
+             this cannot be proven.
+             
+             Options:
+             1. Change line_info to store line content
+             2. Add hash collision-freedom as an axiom
+             3. Accept this as a fundamental limitation
+             
+             For now, we must admit this. *)
+          admit. (* Requires hash collision-freedom or design change *)
       }
       
       rewrite Hcache_valid.

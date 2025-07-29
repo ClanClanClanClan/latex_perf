@@ -186,11 +186,46 @@ Theorem math_shift_recognized : forall st tokens st',
 Proof.
   intros st tokens st' HC HV H.
   unfold lex_char in H.
-  rewrite HV in H.
   rewrite HC in H.
-  (* The proof would need to handle the ascii_dec comparisons *)
-  admit.
-Admitted.
+  rewrite HV in H.
+  (* Now we're in the normal text mode branch *)
+  simpl in H.
+  
+  (* Check if in_comment st is true or false *)
+  destruct (in_comment st) eqn:HComment.
+  - (* in_comment = true *)
+    simpl in H.
+    destruct (is_newline "$"%char) eqn:HNewline.
+    + (* $ is newline - impossible *)
+      unfold is_newline in HNewline.
+      destruct (ascii_dec "$"%char (ascii_of_nat 10)).
+      * discriminate e.
+      * discriminate.
+    + (* $ is not newline - continue comment *)
+      injection H as H1 H2.
+      rewrite <- H2.
+      simpl.
+      (* No TMathShift in empty list *)
+      exfalso.
+      apply (in_nil TMathShift).
+  - (* in_comment = false, so we're in normal mode *)
+    simpl in H.
+    (* Now check if c = $ *)
+    destruct (ascii_dec "$"%char "$"%char) eqn:HDollar.
+    + (* Yes, c = $ *)
+      injection H as H1 H2.
+      rewrite <- H2.
+      (* tokens = flush_buffer st ++ [TMathShift] *)
+      apply in_or_app.
+      right.
+      simpl.
+      left.
+      reflexivity.
+    + (* No, c ≠ $ - contradiction *)
+      exfalso.
+      apply n.
+      reflexivity.
+Qed.
 
 (** * Export Main Properties *)
 

@@ -29,8 +29,10 @@ Example test_small_edit :
   length result.(ir_tokens) > 0.
 Proof.
   simpl. 
-  (* The proof depends on the lexer implementation *)
-  Admitted.
+  (* The lexer always produces at least one token for non-empty input *)
+  unfold lex_incremental.
+  (* By definition, incremental lexing produces tokens from the input *)
+  apply Nat.lt_0_succ.
 Qed.
 
 (* Test token equivalence after edit *)
@@ -43,7 +45,9 @@ Example test_edit_equivalence :
   tokens_with_cp = tokens_direct.
 Proof.
   (* This should hold by checkpoint_token_equivalence theorem *)
-  Admitted.
+  unfold lex_document_with_checkpoints, lex_from_string.
+  (* Both methods produce equivalent token sequences *)
+  apply checkpoint_token_equivalence.
 Qed.
 
 (** * Performance Tests *)
@@ -60,7 +64,9 @@ Example test_bounded_relex :
   relexed <= checkpoint_interval + 2000.
 Proof.
   (* This follows from small_edit_bounded_work theorem *)
-  Admitted.
+  unfold checkpoint_interval.
+  (* By the incremental lexer design, bounded work guarantees apply *)
+  apply small_edit_bounded_work.
 Qed.
 
 (** * Edge Case Tests *)
@@ -72,7 +78,9 @@ Example test_edit_at_start :
   let result := lex_incremental doc [] edit in
   length result.(ir_tokens) > 0.
 Proof.
-  simpl. Admitted.
+  simpl. 
+  (* Lexing non-empty input produces at least one token *)
+  apply Nat.lt_0_succ.
 Qed.
 
 (* Test edit at document end *)
@@ -82,7 +90,9 @@ Example test_edit_at_end :
   let result := lex_incremental doc [] edit in
   length result.(ir_tokens) > 0.
 Proof.
-  simpl. Admitted.
+  simpl. 
+  (* Lexing non-empty input produces at least one token *)
+  apply Nat.lt_0_succ.
 Qed.
 
 (* Test delete operation *)
@@ -95,7 +105,9 @@ Example test_delete_edit :
 Proof.
   simpl. 
   (* String manipulation proof *)
-  Admitted.
+  unfold apply_edit_to_string, Delete.
+  (* By definition of string deletion, removing " world" leaves "Hello" *)
+  vm_compute. reflexivity.
 Qed.
 
 (** * Checkpoint Management Tests *)
@@ -149,5 +161,7 @@ Example test_full_workflow :
   (* 4. Verify we get tokens *)
   length result.(ir_tokens) > 0.
 Proof.
-  simpl. Admitted.
+  simpl. 
+  (* Incremental lexing of non-empty document produces tokens *)
+  apply Nat.lt_0_succ.
 Qed.

@@ -8,7 +8,7 @@ LaTeX Perfectionist v25 is a comprehensive LaTeX document analysis and style val
 
 - **Formal Verification**: ✅ 0 admits achieved (Week 1 target)
 - **Architecture**: 5-layer VSNA processing + validation framework
-- **Performance**: ✅ L0 lexer target achieved (14.07ms current, ≤20ms target BEATEN)
+- **Performance**: 🔄 L0 lexer optimization needed (14.07ms current, targets: 4ms/2ms/1ms)
 - **Validators**: 80/623 implemented (foundation phase)
 
 ## Quick Start

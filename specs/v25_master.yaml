@@ -41,8 +41,8 @@ executive_overview:
       target_v25: 25        # Updated to achievable target
       sla_v25: 42          # CI gate (buffer)
       week_minus_one:
-        achieved: 14.07
-        achieved: 14.07  # ACTUAL measurement beating all targets
+        current: 14.07  # NEEDS optimization: 4ms→2ms→1ms targets
+        current: 14.07  # NEEDS optimization: 4ms→2ms→1ms targets
     language_coverage:
       baseline_v24_r3: 3
       target_v25: 21

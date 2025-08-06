@@ -14,7 +14,7 @@
 **Read SECOND**: `specs/PLANNER.yaml`
 - ✅ **ACCURATE TIMELINE**: Week 1 of 156-week project (started July 28, 2025)
 - Current phase: Foundation week with admit elimination priority
-- Performance achieved: 14.07ms lexer (L0 target ≤20ms BEATEN by 29.65%)
+- Performance status: 14.07ms lexer (optimization needed: 4ms→2ms→1ms targets)
 
 ### 3. ADMIT ANALYSIS (TECHNICAL DETAILS)
 **Read THIRD**: `docs/current/ADMIT_TECHNICAL_DETAILS.md` (if exists)
@@ -25,7 +25,7 @@
 ## CRITICAL PROJECT STATUS UPDATES
 
 ### ✅ CURRENT ACHIEVEMENTS (Week 1)
-- **Performance Status**: ✅ TARGET ACHIEVED (14.07ms current, ≤20ms target BEATEN)
+- **Performance Status**: 🔄 OPTIMIZATION REQUIRED (14.07ms current, need <4ms→<2ms→<1ms)
 - **Architecture**: ✅ COMPLETE (5-layer VSNA + validation framework)
 - **Validators Implemented**: 80/623 (foundation established)
 - **Timeline**: Week 1 of 156-week project schedule
@@ -83,9 +83,11 @@ Session is successful when:
 
 ## PERFORMANCE STATUS CLARIFICATION
 
-**Performance Status**: L0 Lexer Target ACHIEVED ✅
-- **Current**: 14.07ms (L0_lexer optimized implementation)
-- **Target**: ≤20ms BEATEN by 29.65% (5.93ms under target)
+**Performance Status**: L0 Lexer SIGNIFICANT OPTIMIZATION REQUIRED ⚠️
+- **Current**: 14.07ms (baseline implementation)  
+- **Week 4 target**: <4ms (need 71% improvement)
+- **Week 5 target**: <2ms (need 86% improvement) 
+- **Final target**: <1ms (need 93% improvement)
 - **Implementation**: Bigarray ring buffer as per L0 Lexer Specification V3
 - **Reference**: See `specs/L0_LEXER_SPEC.md` for detailed plan
 

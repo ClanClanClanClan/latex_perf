@@ -1,0 +1,129 @@
+name: Performance Gate - Week 5 (p95 < 2ms)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Cache OCaml build
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.opam
+          _build
+        key: ocaml-${{ runner.os }}-${{ hashFiles('*.opam', 'dune-project') }}
+    
+    - name: Install OCaml and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y opam m4 python3 python3-pip
+        opam init --auto-setup --yes --disable-sandboxing
+        eval $(opam env)
+        opam install -y dune ocaml-lsp-server
+    
+    - name: Check benchmark infrastructure
+      run: |
+        # Verify required files exist
+        if [ ! -f "tools/bench.py" ]; then
+          echo "❌ Performance harness missing: tools/bench.py"
+          exit 1
+        fi
+        
+        if [ ! -f "corpora/perf_smoke.tex" ]; then
+          echo "❌ Performance corpus missing: corpora/perf_smoke.tex"
+          exit 1
+        fi
+        
+        # Check corpus size (should be ~1.2MB, ~60k tokens)
+        CORPUS_SIZE=$(wc -c < corpora/perf_smoke.tex)
+        echo "Corpus size: $CORPUS_SIZE bytes"
+        
+        if [ "$CORPUS_SIZE" -lt 1000000 ]; then
+          echo "❌ Corpus too small: $CORPUS_SIZE < 1MB"
+          exit 1
+        fi
+        
+        echo "✅ Benchmark infrastructure complete"
+    
+    - name: Build performance test binaries
+      run: |
+        eval $(opam env)
+        dune build src/core/l0_lexer.exe test_l0_l1_integration.exe || {
+          echo "❌ Performance binary build failed"
+          exit 1
+        }
+        echo "✅ Binaries built successfully"
+    
+    - name: Run cold lexer throughput test
+      run: |
+        eval $(opam env)
+        echo "Testing raw lexer throughput..."
+        python3 tools/bench.py --scenario cold-lex --corpus perf_smoke --output cold-lex-results.json
+        
+        # Check if throughput meets requirements (target: 800+ MB/s)
+        THROUGHPUT=$(python3 -c "import json; print(json.load(open('cold-lex-results.json'))['throughput_mb_per_sec'])")
+        echo "Lexer throughput: ${THROUGHPUT} MB/s"
+    
+    - name: Run Week 5 performance gate test
+      run: |
+        eval $(opam env)
+        echo "Running Week 5 performance gate: edit-stream p95 < 2ms"
+        
+        # Run the critical Week 5 test
+        python3 tools/bench.py --scenario edit-stream --corpus perf_smoke --iterations 100 --output week5-gate.json
+        
+        # Parse results
+        GATE_PASSED=$(python3 -c "import json; print(json.load(open('week5-gate.json')).get('week5_gate_passed', False))")
+        P95_MS=$(python3 -c "import json; print(json.load(open('week5-gate.json'))['latency_p95_ms'])")
+        
+        echo "Edit stream p95 latency: ${P95_MS}ms"
+        
+        if [ "$GATE_PASSED" = "True" ]; then
+          echo "✅ Week 5 Performance Gate PASSED: ${P95_MS}ms < 2ms"
+        else
+          echo "❌ Week 5 Performance Gate FAILED: ${P95_MS}ms >= 2ms"
+          cat week5-gate.json
+          exit 1
+        fi
+    
+    - name: Run full pipeline performance test
+      run: |
+        eval $(opam env)
+        echo "Testing full L0->L1 pipeline..."
+        python3 tools/bench.py --scenario full-pipeline --corpus perf_smoke --output pipeline-results.json
+        
+        PIPELINE_MS=$(python3 -c "import json; result = json.load(open('pipeline-results.json')); print(result.get('elapsed_ms', 'N/A'))")
+        echo "Pipeline latency: ${PIPELINE_MS}ms"
+    
+    - name: Performance summary
+      run: |
+        echo "=== PERFORMANCE GATE SUMMARY ==="
+        echo "Week 5 Gate (p95 < 2ms): $(python3 -c "import json; print('✅ PASS' if json.load(open('week5-gate.json'))['week5_gate_passed'] else '❌ FAIL')")"
+        echo "Edit stream p95: $(python3 -c "import json; print(f\"{json.load(open('week5-gate.json'))['latency_p95_ms']:.2f}ms\")"))"
+        
+        # Optional: Check other metrics
+        if [ -f "cold-lex-results.json" ]; then
+          echo "Lexer throughput: $(python3 -c "import json; print(f\"{json.load(open('cold-lex-results.json'))['throughput_mb_per_sec']:.0f} MB/s\")")"
+        fi
+        
+        if [ -f "pipeline-results.json" ]; then
+          echo "Pipeline latency: $(python3 -c "import json; print(f\"{json.load(open('pipeline-results.json')).get('elapsed_ms', 'N/A')}ms\")")"
+        fi
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: |
+          week5-gate.json
+          cold-lex-results.json
+          pipeline-results.json

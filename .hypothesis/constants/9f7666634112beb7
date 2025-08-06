@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/expect_prob_brackets.py
+# hypothesis_version: 6.135.16
+
+[0.1, '$', '&', '*', '+', '-', '=', 'E', 'E(X)', 'E[X]', 'Ex', 'Exp', 'P', 'P(A)', 'P[A]', 'Pr', 'Prob', 'Var', 'Var(X)', 'Var[X]', '\\', '\\$[^$]*\\$', '\\$\\$[^$]*\\$\\$', '\\\\\\([^)]*\\\\\\)', '\\\\\\[[^\\]]*\\\\\\]', '\\\\texttt\\{[^}]*\\}', '\\\\verb\\|[^|]*\\|', '\\mathbb{E}(X + Y)', '\\mathbb{E}(X)', '\\mathbb{E}[X + Y]', '\\mathbb{E}[X]', '\\mathbb{E}_n(X_n)', '\\mathbb{E}_n[X_n]', '\\mathbb{P}(A \\cap B)', '\\mathbb{P}(A)', '\\mathbb{P}[A \\cap B]', '\\mathbb{P}[A]', '^', '_', '__main__', 'distribution', 'expectation', 'math', 'probability', 'random', 'variance', 'warning']

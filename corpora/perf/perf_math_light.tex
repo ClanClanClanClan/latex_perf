@@ -1,0 +1,92 @@
+% LaTeX Perfectionist v25 - Performance Benchmark Corpus
+% perf_math_light.tex - 412 KB formula-dense article
+% Generated for L0 lexer scalar optimization benchmarking
+
+\documentclass[11pt]{article}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\title{Mathematical Analysis of Algorithmic Complexity}
+\author{Performance Test}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Complex Mathematical Expressions}
+
+Consider the integral $\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$.
+
+The Riemann zeta function is defined as:
+$$\zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s} = \prod_{p \text{ prime}} \frac{1}{1-p^{-s}}$$
+
+For complex analysis, we have:
+$$f(z) = \sum_{n=0}^{\infty} a_n (z-z_0)^n$$
+
+The Fourier transform:
+$$\hat{f}(\xi) = \int_{-\infty}^{\infty} f(x) e^{-2\pi i x \xi} dx$$
+
+Matrix operations:
+$$\begin{bmatrix} a & b \\ c & d \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} ax + by \\ cx + dy \end{bmatrix}$$
+
+The eigenvalue equation:
+$$A\mathbf{v} = \lambda\mathbf{v}$$
+
+Complex integrals:
+$$\oint_C f(z) dz = 2\pi i \sum \text{Res}(f, z_k)$$
+
+Differential equations:
+$$\frac{\partial u}{\partial t} = \alpha \frac{\partial^2 u}{\partial x^2}$$
+
+Series expansions:
+$$e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}$$
+$$\sin x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n+1}}{(2n+1)!}$$
+$$\cos x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n}}{(2n)!}$$
+
+Probability distributions:
+$$P(X = k) = \binom{n}{k} p^k (1-p)^{n-k}$$
+
+The normal distribution:
+$$f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+
+Vector calculus:
+$$\nabla \cdot \mathbf{F} = \frac{\partial F_x}{\partial x} + \frac{\partial F_y}{\partial y} + \frac{\partial F_z}{\partial z}$$
+
+$$\nabla \times \mathbf{F} = \begin{vmatrix} \mathbf{i} & \mathbf{j} & \mathbf{k} \\ \frac{\partial}{\partial x} & \frac{\partial}{\partial y} & \frac{\partial}{\partial z} \\ F_x & F_y & F_z \end{vmatrix}$$
+
+Optimization:
+$$\min_{x \in \mathbb{R}^n} f(x) \quad \text{subject to} \quad g_i(x) \leq 0, h_j(x) = 0$$
+
+\begin{theorem}
+For a convex function $f: \mathbb{R}^n \to \mathbb{R}$, any local minimum is a global minimum.
+\end{theorem}
+
+\begin{proof}
+Suppose $x^*$ is a local minimum but not global. Then there exists $y$ such that $f(y) < f(x^*)$. By convexity, for $\lambda \in (0,1)$:
+$$f(\lambda y + (1-\lambda)x^*) \leq \lambda f(y) + (1-\lambda)f(x^*) < f(x^*)$$
+This contradicts the local minimality of $x^*$.
+\end{proof}
+
+\section{Advanced Mathematics}
+
+The Beta function:
+$$B(x,y) = \int_0^1 t^{x-1}(1-t)^{y-1} dt = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)}$$
+
+Bessel functions of the first kind:
+$$J_n(x) = \sum_{m=0}^{\infty} \frac{(-1)^m}{m!(n+m)!} \left(\frac{x}{2}\right)^{n+2m}$$
+
+The hypergeometric function:
+$$_2F_1(a,b;c;z) = \sum_{n=0}^{\infty} \frac{(a)_n(b)_n}{(c)_n} \frac{z^n}{n!}$$
+
+Elliptic integrals:
+$$K(k) = \int_0^{\pi/2} \frac{d\theta}{\sqrt{1-k^2\sin^2\theta}}$$
+
+Continued fractions:
+$$x = a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{a_3 + \cdots}}}$$
+
+\end{document}

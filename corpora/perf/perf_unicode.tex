@@ -1,0 +1,160 @@
+% Unicode-heavy LaTeX document for L0 lexer performance testing
+% Target: ~300KB with mixed Unicode content per L0_LEXER_SPEC.md
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{textgreek}
+
+\begin{document}
+
+\title{Unicode Mathematical Symbols and International Text}
+\author{Performance Test Generator}
+\date{\today}
+\maketitle
+
+\section{Greek Letters and Mathematical Symbols}
+
+The Greek alphabet in mathematics: Α α (alpha), Β β (beta), Γ γ (gamma), Δ δ (delta), Ε ε (epsilon), Ζ ζ (zeta), Η η (eta), Θ θ (theta), Ι ι (iota), Κ κ (kappa), Λ λ (lambda), Μ μ (mu), Ν ν (nu), Ξ ξ (xi), Ο ο (omicron), Π π (pi), Ρ ρ (rho), Σ σ ς (sigma), Τ τ (tau), Υ υ (upsilon), Φ φ (phi), Χ χ (chi), Ψ ψ (psi), Ω ω (omega).
+
+Mathematical operators: ± ∓ × ÷ ∞ ∂ ∇ ∆ ∑ ∏ ∫ ∮ √ ∛ ∜ ∝ ∀ ∃ ∄ ∈ ∉ ∋ ∌ ⊂ ⊃ ⊆ ⊇ ∪ ∩ ∧ ∨ ¬ ⇒ ⇔ ≡ ≠ ≤ ≥ ≪ ≫ ≈ ≅ ≃ ∼ ∝ ⊥ ∥ ∠ ∡ ∢ ⊕ ⊗ ⊙ ⌈ ⌉ ⌊ ⌋ ⟨ ⟩ ‖ ∅ ℵ ℶ ℷ ℸ
+
+Arrows: ← → ↑ ↓ ↔ ↕ ↖ ↗ ↘ ↙ ↚ ↛ ↜ ↝ ↞ ↟ ↠ ↡ ↢ ↣ ↤ ↥ ↦ ↧ ↨ ↩ ↪ ↫ ↬ ↭ ↮ ↯ ↰ ↱ ↲ ↳ ↴ ↵ ↶ ↷ ↸ ↹ ↺ ↻ ⇀ ⇁ ⇂ ⇃ ⇄ ⇅ ⇆ ⇇ ⇈ ⇉ ⇊ ⇋ ⇌ ⇍ ⇎ ⇏ ⇐ ⇑ ⇒ ⇓ ⇔ ⇕ ⇖ ⇗ ⇘ ⇙ ⇚ ⇛ ⇜ ⇝ ⇞ ⇟ ⇠ ⇡ ⇢ ⇣ ⇤ ⇥ ⇦ ⇧ ⇨ ⇩ ⇪
+
+\section{International Languages}
+
+\subsection{European Languages}
+
+French: La théorie des ensembles étudie les propriétés des collections d'objets mathématiques. Les ensembles peuvent être finis ou infinis, dénombrables ou non dénombrables. L'axiomatique de Zermelo-Fraenkel avec l'axiome du choix (ZFC) constitue la base moderne de cette théorie.
+
+German: Die Mengenlehre untersucht die Eigenschaften von Kollektionen mathematischer Objekte. Mengen können endlich oder unendlich, abzählbar oder überabzählbar sein. Das Zermelo-Fraenkel-Axiomensystem mit dem Auswahlaxiom (ZFC) bildet die moderne Grundlage dieser Theorie.
+
+Spanish: La teoría de conjuntos estudia las propiedades de las colecciones de objetos matemáticos. Los conjuntos pueden ser finitos o infinitos, numerables o no numerables. La axiomática de Zermelo-Fraenkel con el axioma de elección (ZFC) constituye la base moderna de esta teoría.
+
+Italian: La teoria degli insiemi studia le proprietà delle collezioni di oggetti matematici. Gli insiemi possono essere finiti o infiniti, numerabili o non numerabili. L'assiomatica di Zermelo-Fraenkel con l'assioma della scelta (ZFC) costituisce la base moderna di questa teoria.
+
+Portuguese: A teoria dos conjuntos estuda as propriedades das coleções de objetos matemáticos. Os conjuntos podem ser finitos ou infinitos, enumeráveis ou não enumeráveis. A axiomática de Zermelo-Fraenkel com o axioma da escolha (ZFC) constitui a base moderna desta teoria.
+
+Dutch: De verzamelingenleer bestudeert de eigenschappen van collecties van wiskundige objecten. Verzamelingen kunnen eindig of oneindig, aftelbaar of overaftelbaar zijn. Het Zermelo-Fraenkel axiomenstelsel met het keuzeaxioma (ZFC) vormt de moderne basis van deze theorie.
+
+\subsection{Nordic Languages}
+
+Swedish: Mängdläran studerar egenskaperna hos kollektioner av matematiska objekt. Mängder kan vara ändliga eller oändliga, räknebara eller icke-räknebara. Zermelo-Fraenkels axiomatik med urvalsaxiomet (ZFC) utgör den moderna grunden för denna teori.
+
+Norwegian: Mengdelære studerer egenskapene til kolleksjoner av matematiske objekter. Mengder kan være endelige eller uendelige, tellbare eller ikke-tellbare. Zermelo-Fraenkels aksiomatikk med utvalgsaksiomet (ZFC) utgjør det moderne grunnlaget for denne teorien.
+
+Danish: Mængdelære studerer egenskaberne ved kollektioner af matematiske objekter. Mængder kan være endelige eller uendelige, tællelige eller ikke-tællelige. Zermelo-Fraenkels aksiomatik med valgaksiomet (ZFC) udgør det moderne grundlag for denne teori.
+
+\subsection{Slavic Languages}
+
+Russian: Теория множеств изучает свойства коллекций математических объектов. Множества могут быть конечными или бесконечными, счётными или несчётными. Аксиоматика Цермело-Френкеля с аксиомой выбора (ZFC) составляет современную основу этой теории.
+
+Polish: Teoria mnogości bada właściwości kolekcji obiektów matematycznych. Zbiory mogą być skończone lub nieskończone, przeliczalne lub nieprzeliczalne. Aksjomatyka Zermelo-Fraenkela z aksjomatem wyboru (ZFC) stanowi współczesną podstawę tej teorii.
+
+Czech: Teorie množin studuje vlastnosti kolekcí matematických objektů. Množiny mohou být konečné nebo nekonečné, spočetné nebo nespočetné. Zermelova-Fraenkelova axiomatika s axiomem výběru (ZFC) tvoří moderní základ této teorie.
+
+\section{Mathematical Formulas with Unicode}
+
+Set operations: A ∪ B = {x : x ∈ A ∨ x ∈ B}, A ∩ B = {x : x ∈ A ∧ x ∈ B}, A \ B = {x : x ∈ A ∧ x ∉ B}
+
+Logic: ∀x ∈ ℝ, ∃y ∈ ℝ such that x < y. For any ε > 0, ∃δ > 0 such that |x - a| < δ ⟹ |f(x) - f(a)| < ε.
+
+Number systems: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ, where ℕ = {0, 1, 2, 3, ...}, ℤ = {..., -2, -1, 0, 1, 2, ...}, ℚ = {p/q : p, q ∈ ℤ, q ≠ 0}.
+
+Complex analysis: For z = x + iy ∈ ℂ, we have |z| = √(x² + y²), arg(z) = arctan(y/x), z* = x - iy.
+
+Integrals: ∫₋∞^∞ e^(-x²) dx = √π, ∮_γ f(z) dz = 2πi ∑ Res(f, zₖ), ∫∫∫_V f(x,y,z) dx dy dz
+
+Series: ∑_{n=1}^∞ 1/n² = π²/6, ∏_{p prime} (1 - p⁻ˢ)⁻¹ = ζ(s) for Re(s) > 1
+
+\section{Special Characters and Symbols}
+
+Currency: $ ¢ £ ¤ ¥ € ₹ ₽ ₿ ₡ ₢ ₣ ₤ ₥ ₦ ₧ ₨ ₩ ₪ ₫ € ₭ ₮ ₯ ₰ ₱ ₲ ₳ ₴ ₵ ₶ ₷ ₸ ₹ ₺ ₻ ₼ ₽ ₾ ₿
+
+Punctuation: ‹ › « » " " ' ' ‚ „ ‟ … – — ‐ ‑ ‒ – ‖ ‗ ' ' ‚ ‛ " " „ ‟ † ‡ • ‰ ‱ ′ ″ ‴ ‵ ‶ ‷ ‸ ‹ › ‼ ‽ ‾ ‿
+
+Diacritics: À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ð Ñ Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý Þ ß à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö ø ù ú û ü ý þ ÿ
+
+\section{Asian Scripts Sample}
+
+Chinese: 数学是研究数量、结构、变化以及空间等概念的一门学科。从历史上看，数学的发展源于计算、测量和对物体形状及运动的描述。数学的基本要素是逻辑和直觉、分析和构造、一般性和个别性。
+
+Japanese: 数学（すうがく）は、数量、構造、変化、空間を研究する学問である。数学は、算術、代数学、幾何学、解析学などの分野に分けられる。これらの分野は相互に関連し合っている。
+
+Korean: 수학은 수, 양, 구조, 공간, 변화 등의 개념을 다루는 학문이다. 수학은 논리와 추상화를 바탕으로 한 체계적인 학문이며, 다른 과학 분야의 기초가 된다.
+
+\section{More Mathematical Content}
+
+Topology: A topological space (X, τ) consists of a set X and a topology τ ⊆ P(X) such that:
+• ∅ ∈ τ and X ∈ τ
+• ⋃_{i∈I} U_i ∈ τ for any family {U_i}_{i∈I} ⊆ τ
+• ⋂_{i=1}^n U_i ∈ τ for any finite subfamily {U_i}_{i=1}^n ⊆ τ
+
+Measure Theory: Let (Ω, ℱ, μ) be a measure space. For any measurable function f: Ω → ℝ̄, the integral is defined as:
+∫_Ω f dμ = sup{∫_Ω s dμ : s simple, s ≤ f}
+
+Category Theory: A category 𝒞 consists of:
+• A class Ob(𝒞) of objects
+• For each pair A, B ∈ Ob(𝒞), a set Hom_𝒞(A, B) of morphisms
+• Composition ∘: Hom_𝒞(B, C) × Hom_𝒞(A, B) → Hom_𝒞(A, C)
+• Identity morphisms id_A ∈ Hom_𝒞(A, A)
+
+Satisfying associativity and identity laws.
+
+\section{Physics Symbols}
+
+Quantum mechanics: ℏ = h/(2π), where h is Planck's constant. The Schrödinger equation: iℏ ∂ψ/∂t = Ĥψ
+
+Thermodynamics: ΔS ≥ 0 for isolated systems, PV = nRT for ideal gases, dU = δQ - δW
+
+Electromagnetism: ∇ · E = ρ/ε₀, ∇ × B = μ₀J + μ₀ε₀ ∂E/∂t, F = qE + q(v × B)
+
+Relativity: E = mc², ds² = -c²dt² + dx² + dy² + dz², Gμν = 8πG/c⁴ Tμν
+
+\section{More Unicode Examples}
+
+Fractions: ½ ⅓ ¼ ⅕ ⅙ ⅐ ⅛ ⅑ ⅒ ⅔ ¾ ⅖ ⅗ ⅘ ⅚ ⅝ ⅞ ⅟
+
+Superscripts: ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ ⁱ
+
+Subscripts: ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₌ ₍ ₎ ₐ ₑ ₒ ₓ ₕ ₖ ₗ ₘ ₙ ₚ ₛ ₜ
+
+Geometric shapes: ○ ◯ ● ◦ ◉ ◎ ◍ □ ■ ▢ ▣ ▤ ▥ ▦ ▧ ▨ ▩ ◇ ◆ ◈ ◊ ◉ △ ▲ ▴ ▵ ▶ ▷ ▸ ▹ ► ▻ ▼ ▽ ▾ ▿ ◀ ◁ ◂ ◃ ◄ ◅ ♠ ♣ ♥ ♦ ♤ ♧ ♡ ♢
+
+Musical symbols: ♩ ♪ ♫ ♬ ♭ ♮ ♯ 𝄞 𝄢 𝄡 𝄟 𝄠 𝄪 𝄫
+
+Chess symbols: ♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟
+
+Zodiac: ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓
+
+Weather: ☀ ☁ ☂ ☃ ☄ ★ ☆ ☇ ☈ ☉ ☊ ☋ ☌ ☍ ☎ ☏ ☐ ☑ ☒ ☓ ☔ ☕ ☖ ☗ ☘ ☙ ☚ ☛ ☜ ☝ ☞ ☟ ☠ ☡ ☢ ☣ ☤ ☥ ☦ ☧ ☨ ☩ ☪ ☫ ☬ ☭ ☮ ☯ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷
+
+\section{Extended Mathematical Examples}
+
+Complex integrals around various contours with residue calculations:
+
+∮_{|z|=1} z^n dz = {2πi if n = -1; 0 otherwise}
+
+∮_{|z-a|=r} f(z)/(z-a)^{n+1} dz = 2πi/n! · f^{(n)}(a)
+
+Laurent series expansions:
+f(z) = ∑_{n=-∞}^∞ a_n (z-z₀)^n
+
+Power series with radius of convergence:
+R = 1/limsup_{n→∞} |a_n|^{1/n}
+
+Fourier transforms:
+F(ω) = ∫_{-∞}^∞ f(t) e^{-iωt} dt
+f(t) = 1/(2π) ∫_{-∞}^∞ F(ω) e^{iωt} dω
+
+Laplace transforms:
+L[f(t)] = ∫_0^∞ f(t) e^{-st} dt
+
+Special functions:
+Γ(z) = ∫_0^∞ t^{z-1} e^{-t} dt
+B(x,y) = ∫_0^1 t^{x-1} (1-t)^{y-1} dt = Γ(x)Γ(y)/Γ(x+y)
+ζ(s) = ∑_{n=1}^∞ 1/n^s = ∏_p (1-p^{-s})^{-1}
+
+\end{document}

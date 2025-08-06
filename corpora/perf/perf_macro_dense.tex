@@ -1,0 +1,192 @@
+% Macro-dense LaTeX document for L0 lexer performance testing
+% Target: ~412KB with heavy macro usage per L0_LEXER_SPEC.md
+
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+% Define lots of macros
+\newcommand{\vectorspace}[1]{\mathcal{V}_{#1}}
+\newcommand{\innerproduct}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\|#1\|}
+\newcommand{\abs}[1]{|#1|}
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\complex}{\mathbb{C}}
+\newcommand{\integer}{\mathbb{Z}}
+\newcommand{\natural}{\mathbb{N}}
+\newcommand{\rational}{\mathbb{Q}}
+\newcommand{\field}[1]{\mathbb{F}_{#1}}
+\newcommand{\group}[1]{\mathcal{G}_{#1}}
+\newcommand{\ring}[1]{\mathcal{R}_{#1}}
+\newcommand{\topology}[1]{\mathcal{T}_{#1}}
+\newcommand{\measure}[1]{\mu_{#1}}
+\newcommand{\probability}[1]{\mathbb{P}(#1)}
+\newcommand{\expectation}[1]{\mathbb{E}[#1]}
+\newcommand{\variance}[1]{\text{Var}(#1)}
+\newcommand{\covariance}[2]{\text{Cov}(#1, #2)}
+\newcommand{\derivative}[2]{\frac{d#1}{d#2}}
+\newcommand{\partialderivative}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\integral}[4]{\int_{#1}^{#2} #3 \, d#4}
+\newcommand{\doubleintegral}[6]{\iint_{#1} #2 \, d#3 \, d#4}
+\newcommand{\tripleintegral}[8]{\iiint_{#1} #2 \, d#3 \, d#4 \, d#5}
+\newcommand{\limit}[3]{\lim_{#1 \to #2} #3}
+\newcommand{\series}[3]{\sum_{#1}^{#2} #3}
+\newcommand{\product}[3]{\prod_{#1}^{#2} #3}
+\newcommand{\supremum}[1]{\sup #1}
+\newcommand{\infimum}[1]{\inf #1}
+\newcommand{\maximum}[1]{\max #1}
+\newcommand{\minimum}[1]{\min #1}
+
+\begin{document}
+
+\title{Macro-Dense Mathematical Analysis}
+\author{Performance Test Generator}
+\date{\today}
+\maketitle
+
+\section{Vector Spaces and Linear Algebra}
+
+Let \vectorspace{n} be an n-dimensional vector space over the field \field{p} where p is prime. For any vectors \(u, v \in \vectorspace{n}\), we define the inner product \innerproduct{u}{v} and the induced norm \norm{v} = \sqrt{\innerproduct{v}{v}}.
+
+The fundamental theorem states that every finite-dimensional vector space over \real{} has an orthonormal basis. This can be constructed using the Gram-Schmidt process:
+
+\begin{align}
+v_1' &= v_1 \\
+v_2' &= v_2 - \frac{\innerproduct{v_2}{v_1'}}{\norm{v_1'}^2} v_1' \\
+v_3' &= v_3 - \frac{\innerproduct{v_3}{v_1'}}{\norm{v_1'}^2} v_1' - \frac{\innerproduct{v_3}{v_2'}}{\norm{v_2'}^2} v_2'
+\end{align}
+
+\subsection{Measure Theory Applications}
+
+In measure theory, we study \(\sigma\)-algebras and measurable functions. Let \((\Omega, \mathcal{F}, \measure{\mu})\) be a measure space. For any measurable function \(f: \Omega \to \real{}\), the integral is defined as:
+
+\[\integral{-\infty}{\infty}{f(x)}{\measure{\mu}(x)} = \limit{n}{\infty}{\series{k=-n}{n}{\frac{k}{2^n} \measure{\mu}(\{x: \frac{k}{2^n} \leq f(x) < \frac{k+1}{2^n}\})}}\]
+
+This construction allows us to define probability measures \probability{A} for any event \(A \in \mathcal{F}\). The expectation \expectation{X} of a random variable X is:
+
+\[\expectation{X} = \integral{-\infty}{\infty}{x \, d\probability{X \leq x}}{x}\]
+
+\section{Differential and Integral Calculus}
+
+Consider a function \(f: \real{} \to \real{}\) that is differentiable. The derivative \derivative{f}{x} satisfies:
+
+\[\derivative{f}{x} = \limit{h}{0}{\frac{f(x+h) - f(x)}{h}}\]
+
+For multivariable functions \(g: \real{n} \to \real{}\), we have partial derivatives \partialderivative{g}{x_i} for each coordinate.
+
+\subsection{Integration Techniques}
+
+Single integrals: \integral{a}{b}{f(x)}{x}
+
+Double integrals: \doubleintegral{D}{f(x,y)}{x}{y}
+
+Triple integrals: \tripleintegral{V}{f(x,y,z)}{x}{y}{z}
+
+\section{Sequences and Series}
+
+The Fibonacci sequence is defined recursively:
+\begin{align}
+F_0 &= 0 \\
+F_1 &= 1 \\
+F_n &= F_{n-1} + F_{n-2} \quad \text{for } n \geq 2
+\end{align}
+
+The generating function for the Fibonacci sequence is:
+\[\series{n=0}{\infty}{F_n x^n} = \frac{x}{1 - x - x^2}\]
+
+This series converges for \(\abs{x} < \frac{\sqrt{5} - 1}{2}\), the reciprocal of the golden ratio.
+
+\section{Abstract Algebra}
+
+Let \group{G} be a group with operation \(*\) and identity element \(e\). For any elements \(a, b \in \group{G}\), we have:
+\begin{itemize}
+\item Closure: \(a * b \in \group{G}\)
+\item Associativity: \((a * b) * c = a * (b * c)\)
+\item Identity: \(a * e = e * a = a\)
+\item Inverse: For each \(a\), there exists \(a^{-1}\) such that \(a * a^{-1} = a^{-1} * a = e\)
+\end{itemize}
+
+Similarly, a ring \ring{R} has two operations: addition and multiplication, with distributivity relating them.
+
+\section{Topology}
+
+A topology \topology{X} on a set X is a collection of subsets (called open sets) satisfying:
+\begin{enumerate}
+\item \(\emptyset \in \topology{X}\) and \(X \in \topology{X}\)
+\item The union of any collection of open sets is open
+\item The intersection of finitely many open sets is open
+\end{enumerate}
+
+The closure of a set A, denoted \(\overline{A}\), is the smallest closed set containing A.
+
+\section{Complex Analysis}
+
+For functions \(f: \complex{} \to \complex{}\), we study holomorphic functions. A function is holomorphic at \(z_0\) if:
+\[\limit{h}{0}{\frac{f(z_0 + h) - f(z_0)}{h}}\]
+exists, where the limit is taken over all possible approaches in \complex{}.
+
+The Cauchy integral formula states:
+\[f(z_0) = \frac{1}{2\pi i} \oint_{\gamma} \frac{f(z)}{z - z_0} dz\]
+for any simple closed contour \(\gamma\) containing \(z_0\).
+
+\section{Statistics and Probability}
+
+For random variables X and Y, the covariance \covariance{X}{Y} measures linear dependence:
+\[\covariance{X}{Y} = \expectation{(X - \expectation{X})(Y - \expectation{Y})}\]
+
+The variance \variance{X} is the special case \covariance{X}{X}.
+
+For independent random variables, \(\covariance{X}{Y} = 0\), but the converse is not always true.
+
+\section{Optimization Theory}
+
+To find extrema of \(f: \real{n} \to \real{}\), we solve:
+\[\nabla f = 0\]
+where \(\nabla f = \left(\partialderivative{f}{x_1}, \ldots, \partialderivative{f}{x_n}\right)\).
+
+The Hessian matrix determines the nature of critical points:
+\[H_f = \begin{pmatrix}
+\frac{\partial^2 f}{\partial x_1^2} & \cdots & \frac{\partial^2 f}{\partial x_1 \partial x_n} \\
+\vdots & \ddots & \vdots \\
+\frac{\partial^2 f}{\partial x_n \partial x_1} & \cdots & \frac{\partial^2 f}{\partial x_n^2}
+\end{pmatrix}\]
+
+\section{Functional Analysis}
+
+In Banach spaces, every Cauchy sequence converges. For Hilbert spaces \(\mathcal{H}\), we additionally have an inner product \innerproduct{\cdot}{\cdot} inducing the norm.
+
+The Riesz representation theorem states that for every bounded linear functional \(F: \mathcal{H} \to \complex{}\), there exists a unique \(y \in \mathcal{H}\) such that:
+\[F(x) = \innerproduct{x}{y}\]
+for all \(x \in \mathcal{H}\).
+
+\section{Number Theory}
+
+The distribution of primes is described by the Prime Number Theorem:
+\[\limit{x}{\infty}{\frac{\pi(x)}{x/\ln(x)}} = 1\]
+where \(\pi(x)\) counts primes up to x.
+
+Euler's totient function \(\phi(n)\) counts integers coprime to n:
+\[\phi(n) = n \product{p|n}{}{}\left(1 - \frac{1}{p}\right)\]
+where the product is over all prime divisors p of n.
+
+\section{Graph Theory}
+
+For a graph \(G = (V, E)\) with vertex set V and edge set E, the adjacency matrix A has entries:
+\[A_{ij} = \begin{cases}
+1 & \text{if } (i,j) \in E \\
+0 & \text{otherwise}
+\end{cases}\]
+
+The number of walks of length k from vertex i to vertex j equals \((A^k)_{ij}\).
+
+\section{Information Theory}
+
+The Shannon entropy of a discrete random variable X is:
+\[H(X) = -\series{x}{}{\probability{X=x} \log_2 \probability{X=x}}\]
+
+For continuous variables, we use differential entropy:
+\[h(X) = -\integral{-\infty}{\infty}{f(x) \log_2 f(x)}{x}\]
+where f(x) is the probability density function.
+
+\end{document}

@@ -1,30 +1,25 @@
-(** Token equality decidability - LaTeX Perfectionist v25 *)
-
-From Coq Require Import Decidable.
-From Coq Require Import Ascii String.
-Require Import List.
+From Coq Require Import List Strings.String.
 Import ListNotations.
 
-(* Define token type locally to avoid import issues *)
-Inductive token : Type :=
-  | TChar : ascii -> token
-  | TCommand : string -> token
-  | TNewline : token
-  | TSpace : token
-  | TMath : token
-  | TComment : string -> token
-  | TBeginEnv : string -> token
-  | TEndEnv : string -> token
-  | TError : string -> token.
+(** * Token‑list equality after normalisation *)
 
-(** Token equality is decidable *)
-Theorem token_eq_decidable : forall (t1 t2 : token), {t1 = t2} + {t1 <> t2}.
-Proof.
-  decide equality.
-  - apply ascii_dec.
-  - apply string_dec.
-  - apply string_dec.
-  - apply string_dec.
-  - apply string_dec.
-  - apply string_dec.
-Qed.
+Record token : Type := mkTok { t_text : string }.
+
+Fixpoint render (ts : list token) : string :=
+  match ts with
+  | []          => EmptyString
+  | mkTok s :: r => append s (render r)
+  end.
+
+Definition token_equiv (a b : list token) : Prop :=
+  render a = render b.
+
+Lemma token_equiv_refl : forall t, token_equiv t t.
+Proof. unfold token_equiv; reflexivity. Qed.
+
+Lemma token_equiv_sym  : forall a b, token_equiv a b -> token_equiv b a.
+Proof. unfold token_equiv; intros; symmetry; assumption. Qed.
+
+Lemma token_equiv_trans :
+  forall a b c, token_equiv a b -> token_equiv b c -> token_equiv a c.
+Proof. unfold token_equiv; intros a b c Hab Hbc; rewrite Hab; exact Hbc. Qed.

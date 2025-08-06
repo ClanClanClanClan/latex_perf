@@ -1,128 +1,132 @@
 # CLAUDE.md - Mandatory Session Instructions
 
-**CRITICAL**: This file contains mandatory instructions for Claude Code sessions working on LaTeX Perfectionist v24. Updated for L1 completion and V1½ transition phase.
+**CRITICAL**: This file contains mandatory instructions for Claude Code sessions working on LaTeX Perfectionist v25. Updated for accurate Week 1 status.
 
 ## MANDATORY READING ORDER
 
-### 1. MASTER ARCHITECTURE (REQUIRED - START HERE)
-**Read FIRST**: `docs/MASTER_ARCHITECTURE.md`
-- Single source of truth for project architecture
-- Defines dual-layer system: VSNA processing layers vs Validation layers
-- ✅ Updated: L1 complete, V1½ rules next priority
-- Performance SLA clarification (42ms runtime target)
+### 1. PROJECT STATUS (CURRENT REALITY - READ FIRST)
+**Read FIRST**: `docs/current/ADMIT_ELIMINATION_COMPLETE_HANDOFF.md`
+- Single source of truth for current Week 1 admit elimination work
+- 0 admits remaining (target achieved)
+- Critical blocker analysis and solutions provided
 
-### 2. PROJECT STATUS (CURRENT WORK)
-**Read SECOND**: `docs/PROJECT_STATUS.md`  
-- ✅ L0 Lexer complete, ✅ L1 Expander complete
-- 🎯 **Current Phase**: V1½ Post-Expansion Rules development
-- Next steps and development priorities
-- Performance SLA achievement status
+### 2. PROJECT TIMELINE (ULTRACHECK - READ SECOND)  
+**Read SECOND**: `specs/PLANNER.yaml`
+- ✅ **ACCURATE TIMELINE**: Week 1 of 156-week project (started July 28, 2025)
+- Current phase: Foundation week with admit elimination priority
+- Performance achieved: 14.07ms lexer (L0 target ≤20ms BEATEN by 29.65%)
 
-### 3. LAYER SPECIFICATIONS (IMPLEMENTATION DETAILS)
-**Read THIRD**: `docs/LAYER_L1_SPECIFICATION.md`
-- ✅ **IMPLEMENTATION COMPLETE** - L1 fully verified
-- All success criteria achieved
-- Ready for V1½ post-expansion rule integration
+### 3. ADMIT ANALYSIS (TECHNICAL DETAILS)
+**Read THIRD**: `docs/current/ADMIT_TECHNICAL_DETAILS.md` (if exists)
+- Technical breakdown of admit elimination strategy
+- Proof strategies and blocking issues
+- Implementation dependencies
 
-### 4. IMPLEMENTATION GUIDANCE (NEXT PHASE)  
-**Read FOURTH**: `docs/IMPLEMENTATION_GUIDE.md`
-- Now applies to V1½ post-expansion rule development
-- V1 token rules parallel development
-- Testing strategies for rule pipeline
+## CRITICAL PROJECT STATUS UPDATES
 
-## CRITICAL UPDATES
+### ✅ CURRENT ACHIEVEMENTS (Week 1)
+- **Performance Status**: ✅ TARGET ACHIEVED (14.07ms current, ≤20ms target BEATEN)
+- **Architecture**: ✅ COMPLETE (5-layer VSNA + validation framework)
+- **Validators Implemented**: 80/623 (foundation established)
+- **Timeline**: Week 1 of 156-week project schedule
 
-### ✅ COMPLETED ACHIEVEMENTS
-- **L0 Verified Lexer**: ✅ COMPLETE (100% implemented, 0 axioms, 0 admits)
-- **L1 Verified Macro Expander**: ✅ COMPLETE (76 macros, 3 proofs, performance SLA exceeded)
-- **Performance SLA**: ✅ EXCEEDED (4.43ms vs 42ms target)
-- **Integration**: ✅ READY (L0→L1 pipeline functional)
+### 🎯 CURRENT PRIORITIES (Week 1 Focus)
+- **Admit Elimination**: ✅ COMPLETE (0 admits achieved)
+- **Proof Debt Management**: ≤10 temporary axioms allowed until Oct 31, 2025
+- **Foundation Solidification**: Get formal verification to 100%
 
-### 🎯 CURRENT PRIORITIES
-- **V1½ Post-Expansion Rules**: Ready to implement (~50 rules)
-- **V1 Token Rules**: Continue parallel development  
-- **Performance Integration**: Maintain 42ms SLA with rule pipeline
-
-### ❌ DO NOT ASSUME OLD STATUS  
-- **L1 Expander**: ✅ **COMPLETE** (not in-progress)
-- **V1½ Rules**: 🎯 **NEXT PRIORITY** (not waiting)
-- **Current Phase**: **Month 5** (V1½ Rules), not Month 3-4 (L1 Implementation)
+### ❌ DO NOT ASSUME OUTDATED STATUS  
+- **NOT v24**: This is v25-R0 (updated architecture)
+- **NOT L1 Complete**: We're in Week 1 foundations
+- **NOT V1½ Rules Phase**: Admits come first
+- **NOT Month 5**: This is Week 1 (August 2025)
 
 ## SESSION STARTUP CHECKLIST
 
 Before starting any development work:
 
-1. [ ] Read updated MASTER_ARCHITECTURE.md (reflects L1 completion)
-2. [ ] Read updated PROJECT_STATUS.md (V1½ priorities)  
-3. [ ] Understand current phase: **V1½ post-expansion rule development**
-4. [ ] Verify L0+L1 pipeline is complete and functional
-5. [ ] Check rule framework in `src/core/validation/`
+1. [ ] Understand we're in **Week 1 of 156-week v25 project**
+2. [ ] Read admit elimination handoff document completely
+3. [ ] Check current admit count: `grep -r "admit\|Admitted" src/`
+4. [ ] Verify build system: `make clean && make all`
+5. [ ] Focus on 0-admit goal, not new features
 
-## IMPLEMENTATION PRIORITIES (Current Session)
+## IMPLEMENTATION PRIORITIES (Week 1 Session)
 
-### PRIMARY GOAL: Begin V1½ Post-Expansion Rules
-- Create rule framework for post-expansion validation
-- Implement deprecated macro detection rules
-- Integrate with L1 expanded token stream
-- ~50 rules targeting macro expansion validation
+### PRIMARY GOAL: Foundation Development
+- Maintain 0-admit status throughout development  
+- Begin L2 parser planning (after L1 complete)
+- Continue formal verification work
+- Prepare for Week 5 Performance α gate
 
-### SECONDARY GOAL: Continue V1 Token Rules (Parallel)
-- Complete remaining token-level validation rules
-- Build on existing ValidationRules.v foundation
-- Focus on TYPO, DELIM, and advanced MATH rules
+### SUCCESS METRICS: Week 1 Gates
+- [x] Admits reduced to 0 ✅ ACHIEVED
+- [ ] Build system remains functional (`make all` succeeds)
+- [ ] No new axioms introduced (stay within 10 temporary limit)
+- [ ] Critical blockers identified and resolved
 
-### PERFORMANCE GOAL: Maintain SLA
-- Ensure rule pipeline maintains 42ms SLA
-- Optimize rule application for performance
-- Test with document corpus when ready (Month 6)
+### TIMELINE CONTEXT: 156-Week Schedule
+- **Week 1** (current): Foundation/admit elimination
+- **Week 5**: Performance α gate
+- **Week 10**: Proof β gate  
+- **Week 52**: L2 delivery
+- **Week 156**: GA release (July 26, 2028)
 
 ## SUCCESS METRICS
 
 Session is successful when:
-- [ ] V1½ rule framework created and functional
-- [ ] First batch of post-expansion rules implemented
-- [ ] Rules integrate with L1 expanded token stream
-- [ ] Performance SLA maintained with rules active
-- [ ] Foundation ready for full V1½ rule set completion
+- [x] Admit count: 0 admits ✅ ACHIEVED
+- [ ] Critical blocker solutions implemented or documented
+- [ ] Build system remains stable
+- [x] 0-admit goal maintained ✅ ACHIEVED
+- [ ] No regression in existing verified components
 
-## PERFORMANCE CLARIFICATION
+## PERFORMANCE STATUS CLARIFICATION
 
-**42ms SLA Target**: Document processing runtime ✅ ACHIEVED
-- Current: 4.43ms (9.5x under target)
-- Compilation time (4.3s L0 + 0.7s L1) is separate infrastructure concern
-- Focus: Maintain runtime SLA when adding rule processing
+**Performance Status**: L0 Lexer Target ACHIEVED ✅
+- **Current**: 14.07ms (L0_lexer optimized implementation)
+- **Target**: ≤20ms BEATEN by 29.65% (5.93ms under target)
+- **Implementation**: Bigarray ring buffer as per L0 Lexer Specification V3
+- **Reference**: See `specs/L0_LEXER_SPEC.md` for detailed plan
 
 ## CRITICAL WARNINGS
 
-### ❌ DO NOT USE YAML SPECIFICATIONS DIRECTLY
-The `latex‑perfectionist‑v24‑R3.yaml` file contains **contradictory** and **outdated** information. Always use the internal documentation hierarchy above.
+### ❌ DO NOT USE OUTDATED PROJECT ASSUMPTIONS
+- Old CLAUDE.md references may contain v24 or outdated L1 completion claims
+- Always verify current status against `specs/PLANNER.yaml` timeline
+- Week numbers are critical - we're in Week 1, not advanced phases
 
-### ❌ DO NOT CONFUSE LAYER NAMES
-- **"Layer-02"** in roadmap = **L1 Expander** (✅ COMPLETE)
-- **VSNA Processing Layers** (L0-L4) ≠ **Validation Layers** (V1-V4)
-- Current work is **V1½ Post-Expansion Rules** development
+### ❌ DO NOT CONFUSE VERSION TERMINOLOGY
+- **This is v25-R0** (not v24-R3)
+- **Week 1 of 156-week project** (started July 28, 2025)
+- **Current milestone**: 0-admit foundation, not feature development
 
 ## EMERGENCY FALLBACK
 
 If confusion arises:
-1. **STOP** and re-read updated `docs/MASTER_ARCHITECTURE.md`
-2. Check `docs/PROJECT_STATUS.md` for current V1½ phase status
-3. Remember: L1 is ✅ COMPLETE, focus is on V1½ rules
-4. Ask user for clarification if documentation conflicts persist
+1. **STOP** and re-read `specs/PLANNER.yaml` Section 14 (timeline)
+2. Check `docs/current/ADMIT_ELIMINATION_COMPLETE_HANDOFF.md` for technical status
+3. Remember: Week 1 = admit elimination, not advanced features
+4. Ask user for clarification if timeline/version conflicts persist
 
 ## PROJECT CONTEXT REMINDERS
 
-### What LaTeX Perfectionist v24 IS:
-- Complete formally verified LaTeX processing pipeline
-- VSNA architecture with 542 validation rules  
-- L0 Lexer (✅ complete) → L1 Expander (✅ complete) → L2-L4 (📅 planned)
-- V1½ Post-Expansion Rules (🎯 current priority)
-- Coq implementation with formal proofs, 0 axioms/admits
+### What LaTeX Perfectionist v25 IS:
+- 156-week project started July 28, 2025 (Week 1 current)
+- Target: 623 formally verified validation rules
+- Architecture: 5-layer VSNA processing + validation framework
+- Current: 80 validators implemented, 0 admits (goal achieved)
 
-### Current Implementation Status:
-- **L0**: ✅ COMPLETE (2,289 lines, 0 axioms/admits, deterministic proven)
-- **L1**: ✅ COMPLETE (1,847 lines, 76 macros, 3 proofs, 4.43ms performance)
-- **V1½**: 🎯 NEXT PRIORITY (~50 post-expansion validation rules)
-- **L2-L4**: 📅 FUTURE (months 7-12 per roadmap)
+### Current Week 1 Implementation Status:
+- **Foundation**: ✅ SOLID (architecture complete, performance optimization planned)  
+- **Admits**: ✅ COMPLETE (0 admits achieved)
+- **Timeline**: Week 1 of 156 (foundation/proof phase)
+- **Next Gate**: Week 5 Performance α (expected pass)
 
-This file reflects L1 completion and transition to V1½ rule development phase.
+This file reflects accurate Week 1 v25 status with admit elimination complete.
+
+# Important Instruction Reminders
+- Follow 0-admit policy: no new admits, eliminate existing ones
+- Performance optimization in progress, focus on formal verification
+- We're in foundation Week 1, not advanced development phases
+- Timeline matters: 156-week project, currently Week 1

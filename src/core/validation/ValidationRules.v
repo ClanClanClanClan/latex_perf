@@ -1,9 +1,12 @@
 (** * Validation Rules Example - Showing how verified lexer enables validation *)
 
-From Coq Require Import String List Ascii Lia.
+Require Import String.
+Require Import List.
+Require Import Ascii.
+Require Import Lia.
 Import ListNotations.
-Require Import lexer.LatexLexer.
-Require Import validation.ValidationTypes.
+Require Import LatexLexer.
+Require Import ValidationTypes.
 Open Scope string_scope.
 
 (** ** Core validation types *)

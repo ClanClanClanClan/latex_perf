@@ -1,4 +1,10 @@
-; Test executable
 (executable
- (name test_basic)
- (libraries latex_perfectionist_core layer0 layer1))
+ (public_name test_production_lexers)
+ (name test_production_lexers)
+ (modules test_production_lexers)
+ (libraries core data unix))
+
+(executable
+ (name test_track_a_real)
+ (modules test_track_a_real)
+ (libraries core data unix))

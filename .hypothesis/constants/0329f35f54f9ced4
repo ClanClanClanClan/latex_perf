@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/accessibility/alt_text_checker.py
+# hypothesis_version: 6.135.16
+
+[150, 250, '%.*description:', 'Alt text too short', 'BeginAccSupp', 'BeginAccSupp_simple', 'Placeholder alt text', 'SCfigure', 'Too generic', 'WCAG 1.1.1', '\\\\alttext\\{([^}]+)\\}', '^#\\d+$', '^\\d+$', '^chart$', '^diagram$', '^figure\\d*$', '^graph$', '^image\\d*$', '^img$', '^photo$', '^pic$', '^picture$', '^untitled', 'accessibility', 'accsupp', 'alt_option', 'alt_text_checker', 'alttext', 'axessibility', 'diagram of', 'error', 'figure', 'figure showing', 'graphic of', 'image of', 'includegraphics', 'includepdf', 'includesvg', 'info', 'pdfcomment', 'pdftooltip', 'photo of', 'picture', 'picture of', 'pspicture', 'separator|divider', 'tagpdf', 'tikz', 'tikzpicture', 'warning', 'wrapfigure']

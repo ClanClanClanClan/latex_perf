@@ -1,0 +1,4 @@
+(executables
+ (public_names debug baseline_trace)
+ (names debug baseline_trace)
+ (libraries core data unix))

@@ -1,46 +1,52 @@
--R src/core/lexer lexer
--R src/core/expander expander  
--R src/core/validation validation
--R src/core/performance performance
+-R proofs LaTeXPerfectionist.Proofs
+-R src/core/lexer LaTeXPerfectionist.Lexer
+-R src/core/expander LaTeXPerfectionist.Expander
+-R src/core/performance LaTeXPerfectionist.Performance
+-R src/core/validation LaTeXPerfectionist.Validation
+-R specs/rules LaTeXPerfectionist.Rules
 
-# Base lexer files (no dependencies)
+# Core proof infrastructure
+proofs/CoreProofs/TacticKernel.v
+proofs/Catcode.v
+proofs/CoreProofs/TokenEq.v
+proofs/CoreProofs/Whitespace.v
+proofs/CoreProofs/Brace.v
+proofs/CoreProofs/RegexUtf8.v
+proofs/CoreProofs/Detector.v
+proofs/CoreProofs/All.v
+proofs/Lexer.v
+
+# Lexer components
 src/core/lexer/LatexCatcodes.v
-src/core/lexer/LatexLexer.v
-
-# Lexer analysis and proofs
+src/core/lexer/v24r3/CoreLexer.v
 src/core/lexer/CatcodeAnalysis.v
-src/core/lexer/LatexLexerProofs.v
-
-# Incremental lexer
+src/core/lexer/LatexLexer.v
 src/core/lexer/IncrementalLatexLexer.v
+src/core/lexer/LatexLexerProofs.v
 src/core/lexer/IncrementalLexerExtraction.v
 
-# Legacy v24r3
-src/core/lexer/v24r3/CoreLexer.v
-
-# Expander core
+# Expander components
 src/core/expander/ExpanderTypes.v
 src/core/expander/MacroCatalog.v
 src/core/expander/ExpanderAlgorithm.v
-
-# Expander proofs
 src/core/expander/ExpanderProofsSimplified.v
 src/core/expander/ExpanderProofsFinal.v
-src/core/expander/ExpanderTests.v
-
-# Integration and verification
 src/core/expander/Layer02Verified.v
+src/core/expander/ExpanderTests.v
 src/core/expander/IntegrationTests.v
 src/core/expander/PerformanceTests.v
-
-# Validation system
-src/core/validation/ValidationTypes.v
-src/core/validation/ValidationRules.v
 
 # Performance monitoring
 src/core/performance/SLAMonitor.v
 src/core/performance/PerformanceIntegration.v
 src/core/performance/V15Integration.v
 
-# Extraction to OCaml
-src/core/extraction.v
+# Validation framework
+src/core/validation/ValidationTypes.v
+src/core/validation/ValidationRules.v
+
+# Rule specifications
+specs/rules/phase1/CommandRules.v
+specs/rules/phase1/TypoRules.v
+specs/rules/phase1/RuleTests.v
+specs/rules/phase1_5/PostExpansionRules.v

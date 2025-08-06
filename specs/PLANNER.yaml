@@ -1,0 +1,228 @@
+# planner_v25_full.yaml
+# SHA256 of *this* revision (UTF‑8, without YAML header comments):
+#   TODO‑REPLACE‑WITH‑AUTOGEN‑SHA256
+---
+metadata:
+  title: "LaTeX Perfectionist v25 – Unified Ground‑Truth Master Plan"
+  subtitle: "Comprehensive, formally‑verified, 623‑rule GA roadmap (Revision R0‑2025‑07‑28)"
+  version: "v25-R0"
+  author: "Solo Dev ‹your-handle›"
+  last_update_utc: "2025-07-31"
+  target_release: "2028-07-26"   # Week‑156 GA according to §14.1
+
+global_table_of_contents:
+  - "1. Executive Overview & Success Criteria"
+  - "2. Governance & Process (incl. Risk Register)"
+  - "3. Repository & Build Layout"
+  - "4. Five‑Layer Incremental Architecture (L0–L4)"
+  - "5. Cross‑Layer Consistency & Synchronisation Protocol"
+  - "6. Validator Framework (623 rules)"
+  - "7. Proof‑Automation & 0‑Admit Policy"
+  - "8. Performance Engineering Targets & Measurement Rules"
+  - "9. Multi‑Language & Cultural Adaptation (21 languages)"
+  - "10. Corpus & Ground‑Truth Strategy"
+  - "11. Security, Sandboxing & Supply‑Chain Security"
+  - "12. Distributed Proof‑Farm & CI/CD"
+  - "13. Development Workflow & Tooling"
+  - "14. Project Timeline & Milestones"
+  - "15. Appendices"
+
+sections:
+  - id: 1
+    title: "Executive Overview & Success Criteria"
+    body: |-
+      1  Executive Overview & Success Criteria
+
+      1.1  Vision Statement  
+      “Instant, provably‑correct feedback on any LaTeX source—within **1 ms p99** per keystroke, across **21 languages**, at **< 0.1 % false‑positive** rate.”
+
+      1.2  Key Numbers  (updated to Revision R0‑2025‑07‑28)
+
+      | Metric                               | Baseline (v24‑R3) | Target (v25) | Status (Week‑1) |
+      |--------------------------------------|-------------------|--------------|-----------------|
+      | Validators implemented               | 80 / 612          | **623 / 623**| 80              |
+      | p95 latency (60 k‑tokens)            | 420 ms            | **< 42 ms**  | 0.73 ms (synthetic) |
+      | Formal‑proof admits                  | 211               | **0**        | 0 ✅ achieved |
+      | Supported languages                  | 3                 | **21**       | 6 implemented |
+      | False‑positive rate                  | 3.2 %             | **≤ 0.1 %**  |  —  (initial) |
+
+      1.3  Three‑Year Trajectory (unchanged in scope, updated wording)
+
+      | Year | Thematic Goal                         | Cum. Validators | Distinct New Tech |
+      |------|---------------------------------------|-----------------|-------------------|
+      | Y1   | Foundation – infra, proofs, 180 rules | 180             | DSL + Proof lib   |
+      | Y2   | Acceleration – pattern mining         | 430             | Pattern‑miner v1  |
+      | Y3   | Completion – ML‑assisted generation   | 623             | ML‑generator v2   |
+
+      1.4  Critical Success Factors  
+        1. **Infrastructure First** – upfront tooling avoids long‑tail toil.  
+        2. **Pattern Families** – validate families once, auto‑prove leaves.  
+        3. **Formal Proof Automation** – Ltac²/ELPI tactics cut cost ×10.  
+        4. **Incremental Everything** – every layer O(Δ) after edits.  
+        5. **Corpus‑Driven** – 2 846 curated papers ensure zero regression.
+
+      1.5  Definition of Done (unchanged; mapped to Section 14 gates).
+
+  - id: 2
+    title: "Governance & Process (incl. Risk Register)"
+    body: |-
+      2  Governance & Process
+
+      2.1  Solo‑Developer Operating Model (kept; editorial fixes only).
+
+      2.2  Hard CI Gates (new in Revision R0)
+
+      | Gate            | CI Job | Condition to Merge into main |
+      |-----------------|--------|------------------------------|
+      | Zero‑Admit      | proof‑ci | admits == 0 **and** proof‑debt ≤ 10 |
+      | Performance     | perf‑ci  | p95 ≤ 1 ms on perf_smoke |
+      | Proof‑Debt Deadline | debt‑ci | after 2025‑10‑31 any @proof‑debt fails build |
+
+      2.3  Risk Register  (expanded to 28 rows; matches Appendix R)
+
+      | #  | Area | Risk Description                                       | P | I | Score | Mitigation / Contingency                             | Trigger Metric                    |
+      |----|------|--------------------------------------------------------|---|---|-------|------------------------------------------------------|-----------------------------------|
+      | T‑1 | Tech | Pattern‑mining produces over‑general rules ⇒ FP ↑     | M | H | 6 | Precision gate ≥ 95 %; manual review first 5 % output | FP rate > 0.3 % (nightly CI)      |
+      | T‑2 | Tech | Coq 8.20 upgrade breaks 400+ proofs                   | M | H | 6 | Pin image; bisect script; port branch               | failing proofs > 5                |
+      | T‑3 | Tech | Incremental parser falls back to O(n²) corner cases   | M | M | 4 | LL(2) audit; fuzz‑parser; perf gate                 | p99 parse > 8 ms                  |
+      | T‑4 | Tech | Unicode RTL segmentation bug                          | M | M | 4 | ICU test‑suite; RTL sample docs                     | RTL tests red                     |
+      | T‑5 | Tech | SIMD path mis‑detects CPU features on exotic ARM chips| L | M | 2 | Runtime CPUID guard; scalar fallback                | Crash “illegal instr”             |
+      | T‑6 | Tech | GPU cold‑start prototype starves CPU threads          | L | M | 2 | Opt‑in flag; watchdog abort if latency > 15 %       | Latency regression CI             |
+      | S‑1 | Sec  | FFI library (Hyperscan) CVE                           | M | M | 4 | Dependabot; seccomp; auto‑patch                     | New CVE matches lib ver           |
+      | S‑2 | Sec  | Supply‑chain attack via Coq opam pin                  | L | H | 3 | Pinned SHAs; reproducible nix lock‑file             | Hash mismatch on CI               |
+      | L‑1 | Legal| Upstream licence revoked / DMCA                       | L | H | 3 | Takedown pipeline; alt docs                         | DMCA notice                       |
+      | L‑2 | Legal| GDPR: accidental PII in corpus                        | M | M | 4 | PII scrub; encrypted audit log                      | pii_scan > 0 hits                 |
+      | Q‑1 | Qual | False‑positive spike after ML batch                   | M | H | 6 | Canary 5 %; auto‑rollback threshold FP > 0.2 %       | Canary alerts                     |
+      | Q‑2 | Qual | Proof debt resurfaces (Admitted added)                | M | M | 4 | CI gate; weekly debt chart                          | admits count > 0                  |
+      | Q‑3 | Qual | Validator overlaps conflict (fix ordering)            | L | M | 2 | no_overlapping_fixes theorem; integration test      | overlap test fail                 |
+      | O‑1 | Ops  | Proof‑farm outage (k8s cluster)                       | M | M | 4 | Fail‑over to GH‑hosted farm                         | Job timeout > 30 m                |
+      | O‑2 | Ops  | Disk‑space exhaustion from snapshots                  | M | L | 2 | LRU purge > 1 GB; alert at 80 %                     | df < 15 % free                    |
+      | O‑3 | Ops  | Proof cache mismatch ⇒ recompile storm                | L | M | 2 | Cache key inc. tactic hash; smoke‑test              | CI runtime > 20 m                 |
+      | O‑4 | Ops  | AWS S3 bucket permission drift                        | L | M | 2 | Terraform drift‑detect; weekly audit                | tf plan ≠ empty                   |
+      | B‑1 | Biz  | Solo‑developer burnout (> 4 weeks hiatus)             | M | H | 6 | 4‑week buffer; rotate tasks; sabbatical plan        | Velocity < 70 % 3 w               |
+      | B‑2 | Biz  | Funding gap for cloud compute                         | L | M | 2 | Pre‑pay credits; local fallback farm                | AWS credit < $500                 |
+      | R‑1 | Res  | Pattern‑mining research stagnates                     | L | H | 3 | Simpler heuristics; 10 % manual quota               | Validator throughput < 10/wk      |
+      | E‑1 | Eth  | Bias in NLP model penalises non‑EN dialects           | M | M | 4 | Lang‑balanced eval; fairness metrics                | Δ precision dialects > 5 pt       |
+      | P‑1 | Perf | AVX‑512 path slower on some Xeons                     | L | M | 2 | Runtime perf test; auto‑switch to AVX2              | Perf harness regression           |
+      | P‑2 | Perf | Cache‑thrash on > M docs                              | M | M | 4 | Sharded elder tries; memory cap toggle              | RSS > 300 MB                      |
+      | P‑3 | Perf | L4 NLP exceeds 12 ms budget on CJK                    | M | M | 4 | Jieba fast‑seg; rayon parallel                      | Profiling alert                   |
+      | X‑1 | Ext  | New TeX primitives in LuaTeX 2.0                      | L | M | 2 | Engine detect; fallback warnings                    | Regression test fail              |
+      | X‑2 | Ext  | File‑format changes in spaCy v5                       | M | L | 2 | Vendor wheel; pin v4.x                              | Import error                      |
+      | I‑1 | Inf  | GitHub CI minute budget exceeded                      | M | L | 2 | Self‑hosted runner; nightly heavy jobs              | GH minutes > 90 %                 |
+      | D‑1 | Doc  | Documentation backlog grows (tutorial stale)         | M | L | 2 | Docs sprint each milestone; lint                    | Docs coverage < 85 %              |
+
+      *(Scores: L = 1, M = 2, H = 3 ; Score = P×I)*
+
+  - id: 3
+    title: "Repository & Build Layout"
+    body: |-
+      3  Repository & Build Layout  (unchanged except for canonical _CoqProject and dune‑wrapped=false compatibility layer; mirrors Section 3 of master plan).
+
+      *See `repo/` tree description in §3 of the Unified Plan.*
+
+  - id: 4
+    title: "Five‑Layer Incremental Architecture (L0–L4)"
+    body: |-
+      4  Five‑Layer Incremental Architecture
+
+      Design unchanged; clarifications from the 87‑Q cycle added
+      (exact OCaml signatures → Appendix A; error‑propagation contract;
+      fuel guarantees → §7.4).
+
+  - id: 5
+    title: "Cross‑Layer Consistency & Synchronisation Protocol"
+    body: |-
+      5  Cross‑Layer Consistency & Synchronisation Protocol
+
+      Key points: version‑vector `{gen,parent_gen}`, atomic barrier on
+      publish, rollback child‑only, proof `snapshot_consistency` QED.
+
+  - id: 6
+    title: "Validator Framework (623 rules)"
+    body: |-
+      6  Validator Framework
+
+      • Manifest schema `{id,phase,provides,requires,conflicts}`  
+      • Static DAG built at start‑up; cycles abort.  
+      • Conflict‑resolution order = (severity, phase‑ordinal, id‑lex).  
+      • Proof `dag_acyclic` in *ValidatorGraphProofs.v*.  
+      • Execution schedule table moved to Appendix C.
+
+  - id: 7
+    title: "Proof‑Automation & 0‑Admit Policy"
+    body: |-
+      7  Proof‑Automation & 0‑Admit Policy
+
+      • **Zero admits** on *main* at all times.  
+      • Temporary `@proof‑debt(deadline="2025‑10‑31")` axioms ≤ 10.  
+      • Week‑1 status: 0 admits, 0 axioms – goal achieved ✅  
+      • Proof template catalogue (14 templates) – Appendix D.
+
+  - id: 8
+    title: "Performance Engineering Targets & Measurement Rules"
+    body: |-
+      8  Performance Engineering
+
+      SIMD kernels (AVX‑512 / NEON / scalar), SoA 64 B alignment,
+      runtime feature‑detect. Budget enforced by `perf‑ci` gate.
+
+  - id: 9
+    title: "Multi‑Language & Cultural Adaptation (21 languages)"
+    body: |-
+      9  Multi‑Language & Cultural Adaptation
+
+      6 language packs (en, fr, de, es, ja, zh) live; 15 stubs. Validators
+      parametrised by `lang_code`; fairness metrics track Δ‑precision.
+
+  - id: 10
+    title: "Corpus & Ground‑Truth Strategy"
+    body: |-
+      10  Corpus & Ground‑Truth Strategy
+
+      Strategy A‑plus, repo ≤ 200 MB, external corpora locked by
+      `corpora.lock`, ground‑truth YAML schema → Appendix F.
+
+  - id: 11
+    title: "Security, Sandboxing & Supply‑Chain Security"
+    body: |-
+      11  Security, Sandboxing & Supply‑Chain Security
+
+      Seccomp profile (`scripts/sandbox/seccomp.json`), SBOM via CycloneDX,
+      Cosign‑signed releases; see Section 11 of master plan.
+
+  - id: 12
+    title: "Distributed Proof‑Farm & CI/CD"
+    body: |-
+      12  Distributed Proof‑Farm & CI/CD
+
+      k8s Job template `infra/k8s/proof‑farm.yaml`; 128‑pod farm; Grafana
+      dashboards via OpenTelemetry. Pre‑commit hook blocks `.v` admits.
+
+  - id: 13
+    title: "Development Workflow & Tooling"
+    body: |-
+      13  Development Workflow & Tooling
+
+      VS Code + Coq‑LSP/OCaml‑LSP, `dune watch`, `make quick`, pre‑commit
+      hooks (format, lint, admit‑count, repo‑size).
+
+  - id: 14
+    title: "Project Timeline & Milestones"
+    body: |-
+      14  Project Timeline & Milestones
+
+      ISO‑Week‑0 = 2025‑07‑28, 156‑week schedule.  
+      **Hard gates:** Bootstrap (W‑1), Perf α (W‑5), Proof β (W‑10),
+      L2 delivered (W‑52), Style α (W‑78), Proof‑debt 0 (W‑130), GA (W‑156).  
+      Detailed week‑by‑week table lives in the textual plan §14.2.
+
+  - id: 15
+    title: "Appendices"
+    body: |-
+      15  Appendices
+
+      Authoritative list A – L (13 files) stored under `docs/`;
+      build targets: `make docs` (master), `make docs_bootstrap`
+      (essentials). CI guard checks exactly 13 `\appendix[A-L]` markers.
+
+# EOF

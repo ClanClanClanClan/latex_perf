@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/security/document_signing.py
+# hypothesis_version: 6.135.16
+
+[2048, 65537, '**/*.sig', '.bib', '.pdf', '.sig', '.tex', 'Document not found', 'DocumentSignature', 'Invalid signature', 'RSA-SHA256', 'default', 'r', 'rb', 'utf-8', 'w', 'wb']

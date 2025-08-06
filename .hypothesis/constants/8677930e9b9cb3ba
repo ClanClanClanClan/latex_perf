@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/math_env_normaliser.py
+# hypothesis_version: 6.135.16
+
+[160, 200, '$', '$$', '&', '*', '\\(', '\\)', '\\[', '\\\\\\\\(?![a-zA-Z])', '\\]', '\\label', 'aligned', 'array', 'cases', 'dd', 'display', 'dl', 'endenv', 'env', 'eqnarray', 'eqnarray*', 'equation', 'inline', 'lbrk', 'mathenv', 'pl', 'pr', 'rbrk', 'split', 'warning', '{', '|']

@@ -1,66 +1,52 @@
-# LaTeX Perfectionist v24 - Documentation Directory
+# LaTeX Perfectionist v25 - Documentation Directory
 
-**Current Documentation Only** - All outdated docs have been archived  
-**Last Cleaned**: 2025-07-21  
-
----
-
-## 🎯 START HERE FOR ANY SESSION
-
-**`QUICK_START_FUTURE_SESSIONS.md`** - Foolproof entry point for continuing work
+**Current v25 Implementation Documentation**  
+**Last Updated**: 2025-08-06 (Ultra-audit cleanup)
 
 ---
 
-## 📚 CORE DOCUMENTATION (Current & Canonical)
+## 🎯 PRIMARY v25 SPECIFICATIONS
 
-### Architecture & Specifications
-- **`MASTER_ARCHITECTURE.md`** - Single source of architectural truth
-- **`LAYER_L1_SPECIFICATION.md`** - Complete L1 Expander technical specification
-
-### Implementation & Progress  
-- **`IMPLEMENTATION_GUIDE.md`** - Step-by-step coding instructions
-- **`PROJECT_STATUS.md`** - Current progress dashboard and roadmap
-
-### Process Documentation
-- **`SPECIFICATION_CLARIFICATION_INTEGRATION.md`** - How all confusion was resolved
+See `/specs/` directory for all v25 specifications:
+- **`/specs/PLANNER.yaml`** - 156-week implementation plan (authoritative timeline)
+- **`/specs/v25_master.yaml`** - Full v25 specification
+- **`/specs/Bootstrap Skeleton.md`** - Core v25 architecture
 
 ---
 
-## ✅ DOCUMENTATION GUARANTEE
+## 📚 DOCUMENTATION STRUCTURE
 
-**All files in this directory are:**
-- ✅ Current and accurate as of 2025-07-21
-- ✅ Free from contradictions
-- ✅ Necessary for ongoing development
-- ✅ Maintained and up-to-date
+### /current/ - Active Development
+Documents related to current v25 implementation work and v24→v25 transition
 
-**All outdated, conflicting, or superseded documentation has been archived to:**
-- `../archive/deprecated_docs/` - Main deprecated docs
-- `../archive/deprecated_docs/historical_analysis/` - Analysis and planning docs
+### /developer/ - Technical References  
+API documentation and technical specifications (being updated for v25)
 
----
+### /handoff/ - Transition Documents
+v24→v25 transition and handoff documentation
 
-## 🚫 WHAT'S NOT HERE ANYMORE
+### /internal/ - Internal Planning
+Internal roadmaps and planning documents
 
-**Archived (don't use for current work):**
-- Project uncertainty analyses (all resolved)
-- Multiple contradictory architecture documents  
-- Historical session summaries
-- Deprecated quick start guides
-- Old planning and organizational documents
-- Corpus analysis and testing strategies
-- Implementation inventories and audit reports
+### /reports/ - Historical Reports
+Past audit reports and analyses (mix of v24/v25)
 
----
+### /technical/ - Technical Specifications
+Bridge implementations and technical details
 
-## 📖 READING ORDER FOR NEW SESSIONS
+### /testing/ - Test Strategies
+Testing and validation approaches
 
-1. **`QUICK_START_FUTURE_SESSIONS.md`** - Overview and entry point
-2. **`MASTER_ARCHITECTURE.md`** - Understand the system
-3. **`LAYER_L1_SPECIFICATION.md`** - Current work specifications  
-4. **`IMPLEMENTATION_GUIDE.md`** - How to implement
-5. **`PROJECT_STATUS.md`** - Where we are and what's next
+### /user/ - User Documentation
+Installation and usage guides (to be updated for v25)
 
 ---
 
-*This directory now contains only essential, current documentation for confident development.*
+## ⚠️ NOTE ON VERSIONS
+
+This is LaTeX Perfectionist v25 in **Week 1** of the 156-week development timeline. All v24 documentation has been archived to `/archive/v24-docs/`.
+
+For current project status, see:
+- `/docs/current/ADMIT_ELIMINATION_COMPLETE_HANDOFF.md` - Week 1 status
+- `/CLAUDE.md` - Session instructions and current priorities
+- `/specs/PLANNER.yaml` - Authoritative timeline

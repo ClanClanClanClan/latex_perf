@@ -1,8 +1,0 @@
-\documentclass{article}
-\begin{document}
-% Test deep nesting - should be caught by resource limits
-\newcommand{\deepnest}[1]{{\deepnest{#1}}}
-% This would cause infinite recursion if not properly handled
-\section{Deep Nesting Test}
-Normal content here.
-\end{document}

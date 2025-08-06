@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/scanner_pyltx.py
+# hypothesis_version: 6.135.16
+
+['$', '$$', 'align', 'align*', 'aligned', 'alignedat', 'array', 'display', 'env', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'gather', 'gather*', 'get_latex_nodes', 'inline', 'multline', 'multline*', 'nodelist']

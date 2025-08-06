@@ -1,0 +1,11 @@
+(lang dune 3.10)
+
+(context
+ (default
+  (name default)
+  (disable_dynamically_linked_foreign_archives true)
+  (merlin true)))
+
+(env
+ (_
+  (flags (:standard -w -26-27-32-33-69))))

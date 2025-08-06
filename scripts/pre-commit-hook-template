@@ -1,0 +1,57 @@
+#!/bin/bash
+# Bootstrap Compliance Pre-commit Hook
+# Install: cp scripts/pre-commit-hook-template .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+echo "🔒 Bootstrap Compliance Check (pre-commit)"
+
+# Check for prohibited content
+violations=0
+
+# Check for .vscode directories
+if find . -name '.vscode' -type d | grep -q .; then
+    echo "❌ ERROR: .vscode directories prohibited in Bootstrap repository"
+    echo "Found:"
+    find . -name '.vscode' -type d | head -3
+    violations=$((violations + 1))
+fi
+
+# Check for Python cache
+if find . -name '__pycache__' -type d | grep -q .; then
+    echo "❌ ERROR: Python cache directories prohibited"
+    echo "Run: find . -name '__pycache__' -type d -exec rm -rf {} +"
+    violations=$((violations + 1))
+fi
+
+# Check file size limits (20MB)
+large_files=$(find . -size +20M -type f | grep -v '.git')
+if [ -n "$large_files" ]; then
+    echo "❌ ERROR: Files >20MB prohibited (use external storage)"
+    echo "Found:"
+    echo "$large_files" | head -3
+    violations=$((violations + 1))
+fi
+
+# Check for development scripts in corpus root
+if [ -d "corpus" ]; then
+    scripts=$(find corpus -maxdepth 1 -type f \( -name '*.py' -o -name '*.sh' -o -name '*.ml' \))
+    if [ -n "$scripts" ]; then
+        echo "❌ ERROR: Development scripts prohibited in corpus root"
+        echo "Run: mkdir -p archive/corpus-tools && mv corpus/*.{py,sh,ml} archive/corpus-tools/"
+        violations=$((violations + 1))
+    fi
+fi
+
+if [ $violations -gt 0 ]; then
+    echo ""
+    echo "🔧 To fix violations automatically, run:"
+    echo "   ./scripts/bootstrap_cleanup.sh"
+    echo ""
+    echo "Then verify compliance:"
+    echo "   ./scripts/verify_compliance.sh"
+    echo ""
+    echo "Commit blocked due to Bootstrap compliance violations."
+    exit 1
+fi
+
+echo "✅ Bootstrap compliance check passed"
+exit 0

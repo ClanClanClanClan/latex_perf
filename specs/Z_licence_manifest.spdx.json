@@ -1,25 +1,29 @@
 {
   "SPDXID"       : "SPDXRef-DOCUMENT",
   "spdxVersion"  : "SPDX-2.3",
+
   "creationInfo" : {
-    "created"   : "2025-07-27T00:00:00Z",
-    "creators"  : [ "Tool: latex-perfectionist-licence-scan/1.2.0" ],
-    "licenseListVersion": "3.25"
+    "created"              : "2025-07-28T00:00:00Z",
+    "creators"             : [
+      "Tool: latex-perfectionist-licence-scan/1.3.1",
+      "Person: Solo Dev (solo-dev@example.com)"
+    ],
+    "licenseListVersion"   : "3.25"
   },
 
-  "name"         : "LaTeX Perfectionist v25 – Source Tree License Manifest",
+  "name"         : "LaTeX Perfectionist v25 – Source‑Tree Licence Manifest",
   "dataLicense"  : "CC0-1.0",
 
-  "documentNamespace" : "https://your-domain.example.com/spdx/v25",
+  "documentNamespace" : "https://your-domain.example.com/spdx/v25/R0-2025-07-28",
 
   "packages" : [
     {
       "name"            : "latex-perfectionist-core",
       "SPDXID"          : "SPDXRef-Pkg-Core",
-      "downloadLocation": "git+https://github.com/your-handle/latex-perfectionist@v25",
+      "downloadLocation": "git+https://github.com/your-handle/latex-perfectionist@v25.0.0",
       "licenseConcluded": "Apache-2.0",
       "licenseDeclared" : "Apache-2.0",
-      "copyrightText"   : "Copyright © 2023–2025 ‹your-handle›"
+      "copyrightText"   : "Copyright © 2023–2025 ‹your‑handle›"
     },
 
     {
@@ -28,70 +32,101 @@
       "downloadLocation": "https://github.com/intel/hyperscan/releases/tag/v5.4.0",
       "licenseConcluded": "BSD-3-Clause",
       "licenseDeclared" : "BSD-3-Clause",
-      "copyrightText"   : "Copyright © 2015–2024 Intel Corporation"
+      "copyrightText"   : "Copyright © 2015–2024 Intel Corporation"
     },
-
     {
       "name"            : "thirdparty-re2",
       "SPDXID"          : "SPDXRef-Pkg-RE2",
       "downloadLocation": "https://github.com/google/re2",
       "licenseConcluded": "BSD-3-Clause",
       "licenseDeclared" : "BSD-3-Clause",
-      "copyrightText"   : "Copyright © 2006–2024 Google LLC"
+      "copyrightText"   : "Copyright © 2006–2024 Google LLC"
     },
-
     {
-      "name"            : "thirdparty-ICU",
+      "name"            : "thirdparty-icu4c",
       "SPDXID"          : "SPDXRef-Pkg-ICU",
-      "downloadLocation": "https://github.com/unicode-org/icu",
+      "downloadLocation": "https://github.com/unicode-org/icu/releases/tag/release-75-1",
       "licenseConcluded": "Unicode-DFS-2016",
       "licenseDeclared" : "Unicode-DFS-2016",
-      "copyrightText"   : "© Unicode, Inc."
+      "copyrightText"   : "© Unicode, Inc."
     },
-
     {
       "name"            : "thirdparty-spaCy",
-      "SPDXID"          : "SPDXRef-Pkg-spaCy",
+      "SPDXID"          : "SPDXRef-Pkg-Spacy",
       "downloadLocation": "https://github.com/explosion/spaCy",
       "licenseConcluded": "MIT",
       "licenseDeclared" : "MIT",
-      "copyrightText"   : "© Explosion AI GmbH"
+      "copyrightText"   : "© Explosion AI GmbH"
     },
-
     {
       "name"            : "thirdparty-jieba",
       "SPDXID"          : "SPDXRef-Pkg-Jieba",
       "downloadLocation": "https://github.com/fxsjy/jieba",
       "licenseConcluded": "MIT",
       "licenseDeclared" : "MIT",
-      "copyrightText"   : "© Sun Junyi"
+      "copyrightText"   : "© Sun Junyi"
     },
-
+    {
+      "name"            : "thirdparty-hdbscan",
+      "SPDXID"          : "SPDXRef-Pkg-HDBSCAN",
+      "downloadLocation": "https://github.com/scikit-learn-contrib/hdbscan",
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared" : "BSD-3-Clause",
+      "copyrightText"   : "Copyright © 2014–2025 Leland McInnes et al."
+    },
+    {
+      "name"            : "thirdparty-pyo3",
+      "SPDXID"          : "SPDXRef-Pkg-PyO3",
+      "downloadLocation": "https://github.com/PyO3/pyo3",
+      "licenseConcluded": "Apache-2.0 OR MIT",
+      "licenseDeclared" : "Apache-2.0 OR MIT",
+      "copyrightText"   : "© 2014–2025 PyO3 Project Developers"
+    },
+    {
+      "name"            : "thirdparty-opentelemetry-rust",
+      "SPDXID"          : "SPDXRef-Pkg-OTel",
+      "downloadLocation": "https://github.com/open-telemetry/opentelemetry-rust",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared" : "Apache-2.0",
+      "copyrightText"   : "© OpenTelemetry Authors"
+    },
+    {
+      "name"            : "thirdparty-clickhouse",
+      "SPDXID"          : "SPDXRef-Pkg-ClickHouse",
+      "downloadLocation": "https://github.com/ClickHouse/ClickHouse",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared" : "Apache-2.0",
+      "copyrightText"   : "© 2016–2025 ClickHouse, Inc."
+    },
     {
       "name"            : "thirdparty-graalvm-ce",
       "SPDXID"          : "SPDXRef-Pkg-GraalVM",
-      "downloadLocation": "https://github.com/graalvm/graalvm-ce-builds/releases/tag/vm-22.3.2",
+      "downloadLocation": "https://github.com/graalvm/graalvm-ce-builds/releases/tag/vm-23.1.1",
       "licenseConcluded": "GPL-2.0-with-classpath-exception",
       "licenseDeclared" : "GPL-2.0-with-classpath-exception",
-      "copyrightText"   : "© Oracle and/or its affiliates"
+      "copyrightText"   : "© Oracle and/or its affiliates"
     }
   ],
 
-  "hasExtractedLicensingInfos": [
+  "hasExtractedLicensingInfos" : [
     {
-      "licenseId"   : "LicenseRef-arXiv-1.0",
-      "extractedText": "arXiv.org perpetual, non-exclusive license to distribute this text.",
-      "name"        : "arXiv Non-exclusive Distribution Licence 1.0"
+      "licenseId"    : "LicenseRef-arXiv-1.0",
+      "name"         : "arXiv Non‑exclusive Distribution Licence 1.0",
+      "extractedText": "arXiv.org perpetual, non‑exclusive licence to distribute this text."
     }
   ],
 
-  "relationships": [
+  "relationships" : [
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-Core" },
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-Hyperscan" },
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-RE2" },
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-ICU" },
-    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-spaCy" },
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-Spacy" },
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-Jieba" },
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-HDBSCAN" },
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-PyO3" },
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-OTel" },
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-ClickHouse" },
     { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Pkg-GraalVM" }
   ]
 }

@@ -1,0 +1,11 @@
+(coq.theory
+ (name CoreProofs)
+ (package latex-perfectionist)
+ (modules
+  Whitespace
+  TokenEq
+  RegexUtf8
+  Brace
+  Detector
+  TacticKernel
+  All))

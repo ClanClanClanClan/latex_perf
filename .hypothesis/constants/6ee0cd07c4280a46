@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/git/git_integration.py
+# hypothesis_version: 6.135.16
+
+[493, '*.tex', '--', '--cached', '--diff-filter=U', '--fail-on', '--format=%aN', '--in-place', '--name-only', '--oneline', '--porcelain', '--pretty=%H', '--show-current', '-1', '-L', '.bak', '.git', '.github', '.gitignore', '.tex', '<>', 'HEAD', 'HEAD^', 'HEAD^^', 'HEAD~1', 'HEAD~2', 'Invalid file path', 'Invalid line number', 'LaTeX Perfectionist', '^[a-zA-Z0-9._\\-/]+$', 'args', 'author', 'author ', 'author-mail ', 'author-time ', 'author_email', 'blame', 'branch', 'check', 'commit', 'commit-msg', 'diff', 'entry', 'error', 'fix', 'git', 'hooks', 'id', 'language', 'latex-perfectionist', 'line', 'log', 'ls-files', 'main', 'manual', 'name', 'post-merge', 'pre-commit', 'pre-push', 'python', 'repo', 'repos', 'require_serial', 'rev', 'stages', 'tex', 'timestamp', 'types', 'v6.2.0', 'workflows']

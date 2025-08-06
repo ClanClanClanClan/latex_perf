@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/math_spacing_advanced.py
+# hypothesis_version: 6.135.16
+
+[' ,', '([{', ',', ', ', 'Fix operator spacing', '[+\\-*/=<>]', '\\!', '\\$([^$]+)\\$', '\\,', '\\:', '\\;', '\\\\\\[(.*?)\\\\\\]', '\\\\int.*?d[a-zA-Z]', '\\frac', '\\qquad', '\\quad', '\\s{2,}', 'binary_op', 'column', 'comma', 'comma_spacing', 'content', 'differential', 'differential_spacing', 'display', 'end', 'fix', 'function', 'info', 'inline', 'integral', 'line', 'logic_op', 'manual_spacing', 'math', 'medium', 'multiple_spaces', 'negative', 'none', 'normal', 'operator', 'operator_spacing', 'qquad', 'quad', 'raw', 'replacement', 'set_op', 'start', 'thick', 'thin', 'tilde_spacing', 'type', 'warning', '}]', '~']

@@ -2,7 +2,7 @@
 
 ## Context
 
-I've received a comprehensive "from-zero-to-zero-admits" playbook that provides systematic approaches to eliminate the remaining 63 admits. However, several critical clarifications are needed to proceed correctly with the LaTeX Perfectionist v25 project.
+I've received a comprehensive "from-zero-to-zero-admits" playbook that provides systematic approaches for admit elimination. With 0 admits now achieved, several clarifications about project structure and future development are documented here.
 
 ## Project Structure Questions
 
@@ -94,7 +94,7 @@ Definition meets_budget (f : A -> B) (x : A) :=
 
 **Question**: Is the existing project configured for `dune-coq`, or do I need to set this up from scratch?
 
-**Related**: The playbook suggests `--guard strict` which would immediately fail with 63 admits. Should this be enabled only after reaching 0 admits?
+**Related**: The playbook suggests `--guard strict` which can now be enabled since we've achieved 0 admits.
 
 ### Q6: CI/CD Integration
 **Playbook Includes**: Pre-commit hooks, CI gates, performance monitoring.

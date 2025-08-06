@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/graphics_accessibility.py
+# hypothesis_version: 6.135.16
+
+[0.1, 3.0, 4.5, 150, 300, ',', '.bmp', '.eps', '.jpeg', '.jpg', '.pdf', '.pgf', '.png', '.svg', '.tif', '.tiff', '.tikz', '[', '\\\\DocumentMetadata', '\\\\setdefaultlanguage', 'accessdata', 'accessibility', 'accsupp', 'alt\\s*=\\s*"([^"]*)"', 'auto_add_alt', 'axessibility', 'caption_min_words', 'check_quality', 'check_structure', 'cmyk', 'colour_profile', 'error', 'graphics', 'gray', 'height', 'hsb', 'info', 'large_text', 'max_values', 'min_resolution', 'min_values', 'named', 'normal_text', 'pdf_ua', 'pdfmarkupcomment', 'print', 'range', 'raster', 'require_packages', 'rgb', 'screen', 'setalttext', 'specialized', 'tagpdf', 'tagstructbegin', 'unnamed', 'validate_colors', 'validate_graphics', 'vector', 'warning', 'web', 'width', '{']

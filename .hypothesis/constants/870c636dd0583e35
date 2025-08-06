@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/math_env_normaliser.py
+# hypothesis_version: 6.135.16
+
+['$', '(?<!\\\\\\\\)&', '*}', '\\[', '\\\\\\\\', '\\\\label\\{[^}]+\\}', '\\]', '\\begin{aligned}', '\\begin{array', '\\begin{eqnarray', '\\begin{equation', '\\begin{equation*}', '\\begin{equation}', '\\end{equation*}', '\\end{equation}', 'align', 'aligned', 'equation', 'equation*', 'equation+aligned', 'gather', 'inline', 'mathenv', 'warning']

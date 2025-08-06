@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/core/severity.py
+# hypothesis_version: 6.135.16
+
+[' | ', '*', 'Severity', 'SeverityConfig', 'accessibility', 'bibliography', 'blue', 'dim', 'document', 'error', 'float', 'general', 'info', 'math', 'off', 'profile', 'red', 'relaxed', 's', 'severity', 'strict', 'structure', 'style', 'submission', 'typography', 'warning', 'white', 'yellow', 'ℹ️', '⚠️', '✅ No issues found', '❌', '❓', '⭕']

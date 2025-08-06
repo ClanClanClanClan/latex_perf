@@ -1,0 +1,4 @@
+# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/core/profiles.py
+# hypothesis_version: 6.135.16
+
+[12.0, '  expansion=true,', '  kerning=true', '  protrusion=true,', '  tracking=true,', '% Float placement', '5mm', 'ProfileManager', 'ProfileType', '\\usepackage[', ']{microtype}', 'abbreviations', 'abstract', 'acknowledgements', 'allow_here', 'allowed_positions', 'appendices', 'article', 'bibliography', 'book', 'chapter_floats', 'colophon', 'copyright', 'dedication', 'deterministic', 'document', 'engine', 'epigraph', 'full_width', 'glossaries', 'glossary', 'graphicx', 'grid', 'half-title', 'hyperref', 'index', 'lecture', 'loa', 'lof', 'lot', 'lualatex', 'makeidx', 'makeindex', 'max_per_page', 'microtype', 'notation', 'passes', 'preface', 'profile', 'scrbook', 'series', 'tbp', 'tikz', 'tikz_externalize', 'title', 'toc', 'tocbibind']

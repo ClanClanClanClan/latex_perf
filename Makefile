@@ -38,4 +38,8 @@ test-perf: build-direct
 		src/core/l0_lexer_track_a_perfect.cmx src/core/l0_lexer.cmx perf_test.ml
 	@./perf_test
 
-.PHONY: build build-direct quick coq clean test-perf
+# Performance gate assessment (Week 4/5 targets)
+test-gates: build-direct
+	@./scripts/performance_gate_harness.py
+
+.PHONY: build build-direct quick coq clean test-perf test-gates

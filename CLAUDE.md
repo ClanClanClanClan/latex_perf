@@ -5,7 +5,7 @@
 ## MANDATORY READING ORDER
 
 ### 1. PROJECT STATUS (PERFORMANCE REALITY - READ FIRST)
-**Read FIRST**: `SINGLE_SOURCE_OF_TRUTH_PERFORMANCE.md`
+**Read FIRST**: `docs/archive/performance-investigation-2025-08/SINGLE_SOURCE_OF_TRUTH_PERFORMANCE.md`
 - **L0 PERFORMANCE**: 
   - Standard OCaml: 31.40ms ❌ (fails ≤20ms target)
   - With Flambda2: 17-18ms ✅ (meets ≤20ms target)
@@ -19,7 +19,7 @@
 - **Performance status**: ❌ L0 optimization required for target compliance
 
 ### 3. TECHNICAL REALITY (BUILD REQUIREMENTS)
-**Read THIRD**: `CRYSTAL_CLEAR_BUILD_REQUIREMENTS.md`
+**Read THIRD**: `docs/current/build/BUILD_REQUIREMENTS.md`
 - **Arena implementation**: ✅ Code complete and optimized
 - **Performance**: Depends on compiler:
   - Standard build: 31.40ms ❌
@@ -55,9 +55,9 @@ Before starting any development work:
 1. [ ] Understand **Performance depends on compiler**:
    - Standard OCaml: 31.40ms ❌
    - Flambda2: 17-18ms ✅
-2. [ ] Read `CRYSTAL_CLEAR_BUILD_REQUIREMENTS.md` completely
+2. [ ] Read `docs/current/build/BUILD_REQUIREMENTS.md` completely
 3. [ ] Check current admit count: `grep -r "admit\|Admitted" src/`
-4. [ ] Build with alternative system (./DUNE_ALTERNATIVE_BUILD.sh)
+4. [ ] Build with alternative system (./scripts/build/DUNE_ALTERNATIVE_BUILD.sh)
 5. [ ] Focus on Week 1 foundations and performance optimization
 
 ## IMPLEMENTATION PRIORITIES (Week 1)
@@ -99,7 +99,7 @@ Session is successful when:
 - **Standard OCaml**: 31.40ms ❌ (fails ≤20ms target)
 - **With Flambda2**: 17-18ms ✅ (MEETS ≤20ms target)
 - **Critical**: Must use OCaml 5.1.1+flambda2 compiler
-- **Testing**: Run `./FOOLPROOF_PERFORMANCE_TEST.sh` to verify
+- **Testing**: Run `./test/scripts/FOOLPROOF_PERFORMANCE_TEST.sh` to verify
 
 ## CRITICAL UPDATES
 
@@ -107,13 +107,15 @@ Session is successful when:
 - All false performance claims corrected
 - Arena implementation achieves 17-18ms with Flambda2
 - Performance targets MET with correct compiler
-- Single source of truth: `SINGLE_SOURCE_OF_TRUTH_PERFORMANCE.md`
+- Single source of truth: `docs/archive/performance-investigation-2025-08/SINGLE_SOURCE_OF_TRUTH_PERFORMANCE.md`
 
-### ✅ PROJECT ORGANIZATION PRISTINE
-- 85+ build artifacts removed from version control
-- All documentation properly organized
-- .gitignore updated to prevent future issues
-- Clean directory structure established
+### ✅ PROJECT ORGANIZATION PRISTINE (August 8, 2025)
+- **Root cleaned**: Only essential files remain (README, CLAUDE, Makefile)
+- **Tests organized**: All tests in `test/` with proper subdirectories
+- **Docs organized**: Clear hierarchy in `docs/` with index
+- **Scripts organized**: Build and cleanup scripts in `scripts/`
+- **Performance investigation archived**: All reports in `docs/archive/performance-investigation-2025-08/`
+- **.gitignore updated**: Prevents future build artifacts in root
 
 ## PROJECT CONTEXT
 
@@ -135,5 +137,5 @@ This file reflects accurate Week 1 status with honest performance numbers.
 # Important Instruction Reminders
 - Follow 0-admit policy: no new admits
 - L0 performance REQUIRES Flambda2 compiler (17-18ms achieved)
-- Use alternative build system (./DUNE_ALTERNATIVE_BUILD.sh)
+- Use alternative build system (./scripts/build/DUNE_ALTERNATIVE_BUILD.sh)
 - Project is in pristine organizational condition with honest documentation

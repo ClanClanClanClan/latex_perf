@@ -19,3 +19,13 @@ _manual_build/
 test/**/*
 !test/**/*.ml
 !test/**/*.mli
+!test/**/*.sh
+!test/**/README.md
+
+# Build artifacts in root (should not be there)
+/*.o
+/test_*
+/debug_*
+/standalone_*
+/*_test
+/*_debug

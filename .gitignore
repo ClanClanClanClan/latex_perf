@@ -9,3 +9,13 @@ _build/
 .cmx
 *.o
 *.tar.gz
+*.cmi
+*.cmx
+*.cma
+*.cmxa
+_manual_build/
+
+# Test executables
+test/**/*
+!test/**/*.ml
+!test/**/*.mli

@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc liblexer_track_b.a CMakeFiles/lexer_track_b.dir/c/arena/arena.c.o CMakeFiles/lexer_track_b.dir/c/scalar/lexer_scalar.c.o CMakeFiles/lexer_track_b.dir/c/simd/lexer_neon.c.o CMakeFiles/lexer_track_b.dir/c/feature_detect.c.o CMakeFiles/lexer_track_b.dir/c/lexer_main.c.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib liblexer_track_b.a

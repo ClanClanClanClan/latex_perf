@@ -2,10 +2,10 @@ From Coq Require Import String List.
 Require Import LatexLexer ExpanderTypes.
 Open Scope string_scope.
 
-(** * LaTeX Perfectionist v24 - Built-in Macro Catalog
+(** * LaTeX Perfectionist v25 - Built-in Macro Catalog
     
-    Complete catalog of 76 built-in macros as specified in LAYER_L1_SPECIFICATION.md.
-    These are the exact macros the L1 Expander must handle.
+    Complete catalog of 78 built-in macros (including display math [ and ]).
+    CRITICAL FIX: Added missing \[ and \] for display math support.
     
     Status: 0 axioms, 0 admits required
 *)
@@ -357,7 +357,20 @@ Definition propto_macro : macro_definition := {|
   is_builtin := true
 |}.
 
-(** ** Structural Macros (20) - Simplified for LaTeX ε *)
+(** ** Structural Macros (22) - Including display math *)
+(* CRITICAL FIX: Add missing display math macros *)
+Definition display_math_begin : macro_definition := {|
+  macro_name := "[";
+  macro_body := TText "⟨display-math-begin⟩" :: nil;
+  is_builtin := true
+|}.
+
+Definition display_math_end : macro_definition := {|
+  macro_name := "]";
+  macro_body := TText "⟨display-math-end⟩" :: nil;
+  is_builtin := true
+|}.
+
 Definition section_macro : macro_definition := {|
   macro_name := "section";
   macro_body := TText "⟨section⟩" :: nil;
@@ -567,7 +580,8 @@ Definition builtin_macros : list macro_definition :=
   infty_macro :: pm_macro :: mp_macro :: times_macro :: div_macro :: neq_macro ::
   leq_macro :: geq_macro :: approx_macro :: equiv_macro :: propto_macro ::
   
-  (* Structural (20) *)
+  (* Structural (22) - Updated count *)
+  display_math_begin :: display_math_end :: (* CRITICAL: Added missing display math *)
   section_macro :: subsection_macro :: subsubsection_macro :: paragraph_macro :: subparagraph_macro ::
   item_macro :: label_macro :: ref_macro :: cite_macro :: footnote_macro ::
   newpage_macro :: clearpage_macro :: tableofcontents_macro :: listoffigures_macro :: listoftables_macro ::

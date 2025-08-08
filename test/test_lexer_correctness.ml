@@ -1,6 +1,5 @@
 (* Comprehensive correctness test for L0 lexers *)
 
-open Core
 open Data
 
 let test_cases = [

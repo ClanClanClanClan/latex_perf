@@ -1,5 +1,7 @@
-;; Direct performance validation executable
+
+;; Standalone performance test
 (executable
- (public_name validate_l0_performance)
- (name validate_l0_performance)
- (libraries core data unix))
+ (public_name test_performance_standalone)
+ (name test_performance_standalone)
+ (modules test_performance_standalone)
+ (libraries core data))

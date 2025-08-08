@@ -69,11 +69,12 @@ if(HAVE_AVX2)
     add_definitions(-DHAVE_AVX2=1)
 endif()
 
-if(HAVE_AVX512)
-    list(APPEND SIMD_SOURCES c/simd/lexer_avx512.c c/simd/lexer_avx512.h) 
-    list(APPEND SIMD_FLAGS -mavx512f -mavx512bw)
-    add_definitions(-DHAVE_AVX512=1)
-endif()
+# Disable AVX512 for now - not implemented yet
+#if(HAVE_AVX512)
+#    list(APPEND SIMD_SOURCES c/simd/lexer_avx512.c c/simd/lexer_avx512.h) 
+#    list(APPEND SIMD_FLAGS -mavx512f -mavx512bw)
+#    add_definitions(-DHAVE_AVX512=1)
+#endif()
 
 if(HAVE_NEON)
     list(APPEND SIMD_SOURCES c/simd/lexer_neon.c c/simd/lexer_neon.h)
@@ -141,12 +142,13 @@ endif()
 
 # === BENCHMARKING ===
 
-add_executable(bench_track_b tests/bench_track_b.c ${ALL_SOURCES})
-target_compile_definitions(bench_track_b PRIVATE LEXER_PROFILE=1)
-if(SIMD_FLAGS)
-    target_compile_options(bench_track_b PRIVATE ${SIMD_FLAGS})
-endif()
-target_include_directories(bench_track_b PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/c)
+# Benchmark executable disabled until test file is created
+#add_executable(bench_track_b tests/bench_track_b.c ${ALL_SOURCES})
+#target_compile_definitions(bench_track_b PRIVATE LEXER_PROFILE=1)
+#if(SIMD_FLAGS)
+#    target_compile_options(bench_track_b PRIVATE ${SIMD_FLAGS})
+#endif()
+#target_include_directories(bench_track_b PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/c)
 
 # === INSTALLATION ===
 

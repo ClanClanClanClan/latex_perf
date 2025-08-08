@@ -42,7 +42,7 @@ let () =
   for i = Char.code 'A' to Char.code 'Z' do catcode_table.(i) <- 11 done
 
 (* Macro table for zero-allocation macro storage *)
-let macro_table = Hashtbl.create 1024
+let macro_table : (string, int) Hashtbl.t = Hashtbl.create 1024
 let macro_counter = ref 0
 let get_macro_id name =
   try Hashtbl.find macro_table name

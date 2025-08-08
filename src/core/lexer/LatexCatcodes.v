@@ -225,6 +225,55 @@ Proof.
   unfold is_letter. simpl. reflexivity.
 Qed.
 
+(** * SIMD Table Preparation (Week 2-3 Requirement) *)
+
+(* SIMD-optimized lookup table for catcode classification *)
+(* 256-entry table for ASCII characters - optimized for SIMD access *)
+Definition simd_catcode_table : list catcode :=
+  let ascii_range := seq 0 256 in
+  map (fun n => default_catcodes (ascii_of_nat n)) ascii_range.
+
+(* Pre-computed bitmask for special characters (for SIMD filtering) *)
+Definition special_char_bitmask : list bool :=
+  let ascii_range := seq 0 256 in
+  map (fun n => 
+    let c := ascii_of_nat n in
+    negb (catcode_beq (default_catcodes c) CatLetter || 
+          catcode_beq (default_catcodes c) CatOther)) ascii_range.
+
+(* Generate C-compatible lookup tables for SIMD optimization *)
+Definition generate_c_catcode_table : list nat :=
+  map (fun cc => 
+    match cc with
+    | CatEscape => 0 | CatBeginGroup => 1 | CatEndGroup => 2
+    | CatMathShift => 3 | CatAlignment => 4 | CatParameter => 6
+    | CatSuperscript => 7 | CatSubscript => 8 | CatSpace => 10
+    | CatLetter => 11 | CatOther => 12 | CatComment => 14
+    end) simd_catcode_table.
+
+(* SIMD table verification - ensure table matches function *)
+Theorem simd_table_correctness : forall n,
+  n < 256 -> 
+  nth n simd_catcode_table CatOther = default_catcodes (ascii_of_nat n).
+Proof.
+  intros n Hn.
+  unfold simd_catcode_table.
+  rewrite map_nth with (d := 0).
+  - rewrite seq_nth; [reflexivity | exact Hn].
+  - rewrite seq_length. exact Hn.
+Qed.
+
+(* Fast path optimization hint for C extension *)
+Definition is_fast_catcode (cc : catcode) : bool :=
+  match cc with
+  | CatLetter | CatOther | CatSpace => true
+  | _ => false
+  end.
+
+(* Performance hint: characters requiring slow path processing *)
+Definition needs_slow_path (c : ascii) : bool :=
+  negb (is_fast_catcode (default_catcodes c)).
+
 (** * Corpus Validation *)
 
 (* Escape characters are most frequent according to corpus *)
@@ -246,4 +295,20 @@ Proof.
   split. apply escape_catcode.
   split. apply begin_group_catcode.
   apply end_group_catcode.
+Qed.
+
+(* SIMD table validation - verify first few entries *)
+Example simd_table_validation :
+  nth 92 simd_catcode_table CatOther = CatEscape /\  (* backslash *)
+  nth 123 simd_catcode_table CatOther = CatBeginGroup /\ (* { *)
+  nth 97 simd_catcode_table CatOther = CatLetter.     (* 'a' *)
+Proof.
+  split.
+  - rewrite simd_table_correctness; [apply escape_catcode | lia].
+  split.
+  - rewrite simd_table_correctness; [apply begin_group_catcode | lia].
+  - rewrite simd_table_correctness; [| lia].
+    unfold default_catcodes.
+    repeat (try destruct (ascii_dec _ _); try discriminate).
+    unfold is_letter. simpl. reflexivity.
 Qed.

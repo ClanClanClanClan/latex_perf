@@ -51,7 +51,28 @@ if [[ "$1" == "build" || "$1" == "" ]]; then
         echo "✅ Build completed without issues"
         exit 0
     fi
+elif [[ "$1" == "exec" ]]; then
+    # For exec commands, build first then run directly
+    shift  # Remove 'exec'
+    target="$1"
+    shift  # Remove target
+    
+    echo "🔨 Building target: $target"
+    if $0 build "$target" >/dev/null 2>&1; then
+        # Find and run the executable
+        exe_path=$(find _build/default -name "${target%.exe}" -type f | head -1)
+        if [[ -n "$exe_path" && -x "$exe_path" ]]; then
+            echo "🚀 Running: $exe_path"
+            "$exe_path" "$@"
+        else
+            echo "❌ Could not find executable for $target"
+            exit 1
+        fi
+    else
+        echo "❌ Build failed for $target"
+        exit 1
+    fi
 else
-    # For non-build commands (clean, etc), run normally
+    # For other commands (clean, etc), run normally
     opam exec -- dune "$@"
 fi

@@ -1,6 +1,6 @@
 (library
  (public_name latex-perfectionist.core)
  (name core)
- (modules lexer_v25 l0_lexer_track_a_perfect l0_lexer)
+ (modules lexer_v25 l0_lexer_track_a_perfect l0_lexer_track_a_ultra l0_lexer_track_a_enhanced l0_lexer_track_a_ultra_v2 l0_lexer_track_a_simd l0_lexer catcode_simd_bridge)
  (libraries data unix)
  (flags (:standard -w -27-26-69-33-32)))

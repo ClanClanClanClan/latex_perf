@@ -1,0 +1,31 @@
+#!/bin/bash
+# LaTeX Perfectionist v25 - Pre-commit Hook
+# Prevents committing when organization issues exist
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo "🔍 Running pre-commit organization check..."
+
+# Run the organization check
+if ./scripts/check_organization.sh > /tmp/org-check.log 2>&1; then
+    echo -e "${GREEN}✅ Organization check passed!${NC}"
+    exit 0
+else
+    echo -e "${RED}❌ COMMIT BLOCKED: Organization issues found!${NC}"
+    echo ""
+    cat /tmp/org-check.log
+    echo ""
+    echo -e "${RED}Please fix the issues above before committing.${NC}"
+    echo "Run './scripts/check_organization.sh' for details."
+    echo ""
+    echo "Quick fixes:"
+    echo "  make clean                           # Remove build artifacts"
+    echo "  rm -rf _build .DS_Store             # Clean generated files"
+    echo "  find . -name '*.bak' -delete        # Remove backup files"
+    echo ""
+    echo "See docs/developer/ORGANIZATION_GUIDELINES.md for help."
+    exit 1
+fi

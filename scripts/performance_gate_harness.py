@@ -25,14 +25,14 @@ class PerformanceGateHarness:
         
     def build_lexer(self):
         """Build optimized lexer for testing"""
-        print("🔨 Building lexer...")
-        result = subprocess.run(['make', 'build'], 
+        print("🔨 Building lexer and performance test...")
+        result = subprocess.run(['make', 'test-perf'], 
                               cwd=self.repo_root, 
                               capture_output=True, text=True)
         if result.returncode != 0:
             print(f"❌ Build failed: {result.stderr}")
             return False
-        print("✅ Build successful")
+        print("✅ Build and initial perf test successful")
         return True
         
     def measure_performance(self, iterations=100):

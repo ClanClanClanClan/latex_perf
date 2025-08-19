@@ -20,15 +20,25 @@ echo ""
 echo "📦 PHASE 1: Building Data Library"
 echo "================================="
 
-cd src/data
-echo "🔨 Compiling data types..."
+# Check which directory structure we have
+if [ -d "src/data" ]; then
+    DATA_DIR="src/data"
+elif [ -d "data" ]; then
+    DATA_DIR="data"
+else
+    echo "❌ Error: Cannot find data directory (tried src/data and data/)"
+    exit 1
+fi
+
+cd "$DATA_DIR"
+echo "🔨 Compiling data types from $DATA_DIR..."
 
 # First compile interface files to generate .cmi files
 echo "  Compiling interfaces..."
-ocamlopt -I . -c location.mli
-ocamlopt -I . -c catcode.mli
-ocamlopt -I . -c chunk.mli
-ocamlopt -I . -c dlist.mli
+if [ -f "location.mli" ]; then ocamlopt -I . -c location.mli; fi
+if [ -f "catcode.mli" ]; then ocamlopt -I . -c catcode.mli; fi
+if [ -f "chunk.mli" ]; then ocamlopt -I . -c chunk.mli; fi
+if [ -f "dlist.mli" ]; then ocamlopt -I . -c dlist.mli; fi
 
 # Then compile implementation files
 echo "  Compiling implementations..."
@@ -38,61 +48,109 @@ ocamlopt -I . -c chunk.ml
 ocamlopt -I . -c dlist.ml
 ocamlopt -I . -c data.ml
 
-# Create data library archive
-ocamlopt -a -o ../../_manual_build/data.cmxa location.cmx catcode.cmx chunk.cmx dlist.cmx data.cmx
+# Create data library archive (handle both directory structures)
+if [ "$DATA_DIR" = "src/data" ]; then
+    ocamlopt -a -o ../../_manual_build/data.cmxa location.cmx catcode.cmx chunk.cmx dlist.cmx data.cmx
+    cd ../..
+else
+    ocamlopt -a -o ../_manual_build/data.cmxa location.cmx catcode.cmx chunk.cmx dlist.cmx data.cmx
+    cd ..
+fi
 
 echo "✅ Data library built successfully"
-
-cd ../..
 
 echo ""
 echo "🚀 PHASE 2: Building Core Library"
 echo "================================="
 
-cd src/core
-echo "🔨 Compiling core lexer implementations..."
+# Check which directory structure we have for core
+if [ -d "src/core" ]; then
+    CORE_DIR="src/core"
+    DATA_REL="../data"
+    BUILD_REL="../../_manual_build"
+elif [ -d "core" ]; then
+    CORE_DIR="core"
+    DATA_REL="../data"
+    BUILD_REL="../_manual_build"
+else
+    echo "❌ Error: Cannot find core directory (tried src/core and core/)"
+    exit 1
+fi
 
-# First compile interface files
-echo "  Compiling core interfaces..."
-ocamlopt -I . -I ../data -c lexer_v25.mli
-ocamlopt -I . -I ../data -c stream_state.mli
-ocamlopt -I . -I ../data -c tok_ring.mli
-ocamlopt -I . -I ../data -c l0_lexer.mli
+cd "$CORE_DIR"
+echo "🔨 Compiling core lexer implementations from $CORE_DIR..."
 
-# Then compile implementation files with explicit include paths
-echo "  Compiling core implementations..."
-ocamlopt -I . -I ../data -I ../../_manual_build -c lexer_v25.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c stream_state.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c tok_ring.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_perfect.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_enhanced.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_ultra.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_ultra_v2.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_arena.ml
+# Compile in dependency order
+echo "  Compiling core modules in dependency order..."
+
+# First lexer_v25 (base module)
+if [ -f "lexer_v25.mli" ]; then 
+    ocamlopt -I . -I "$DATA_REL" -c lexer_v25.mli
+fi
+ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c lexer_v25.ml
+
+# Then modules that depend on lexer_v25
+if [ -f "stream_state.mli" ]; then 
+    ocamlopt -I . -I "$DATA_REL" -c stream_state.mli
+fi
+ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c stream_state.ml
+
+if [ -f "tok_ring.mli" ]; then 
+    ocamlopt -I . -I "$DATA_REL" -c tok_ring.mli
+fi
+ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c tok_ring.ml
+
+# L0 lexer interface if it exists
+if [ -f "l0_lexer.mli" ]; then 
+    ocamlopt -I . -I "$DATA_REL" -c l0_lexer.mli
+fi
+
+# Check which track_a implementations exist
+if [ -f "l0_lexer_track_a_perfect.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer_track_a_perfect.ml
+fi
+if [ -f "l0_lexer_track_a_enhanced.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer_track_a_enhanced.ml
+fi
+if [ -f "l0_lexer_track_a_ultra.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer_track_a_ultra.ml
+fi
+if [ -f "l0_lexer_track_a_ultra_v2.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer_track_a_ultra_v2.ml
+fi
+if [ -f "l0_lexer_track_a_arena.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer_track_a_arena.ml
+fi
 
 # Skip SIMD for now due to complexity
 echo "⚠️  Skipping SIMD implementation (complex Track B dependencies)"
-# ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer_track_a_simd.ml
 
-ocamlopt -I . -I ../data -I ../../_manual_build -c catcode_simd_bridge.ml
-ocamlopt -I . -I ../data -I ../../_manual_build -c l0_lexer.ml
+if [ -f "catcode_simd_bridge.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c catcode_simd_bridge.ml
+fi
+if [ -f "l0_lexer.ml" ]; then
+    ocamlopt -I . -I "$DATA_REL" -I "$BUILD_REL" -c l0_lexer.ml
+fi
 
-# Create core library archive (without SIMD for now)
-ocamlopt -a -o ../../_manual_build/core.cmxa \
-  lexer_v25.cmx \
-  stream_state.cmx \
-  tok_ring.cmx \
-  l0_lexer_track_a_perfect.cmx \
-  l0_lexer_track_a_enhanced.cmx \
-  l0_lexer_track_a_ultra.cmx \
-  l0_lexer_track_a_ultra_v2.cmx \
-  l0_lexer_track_a_arena.cmx \
-  catcode_simd_bridge.cmx \
-  l0_lexer.cmx
+# Create core library archive (include what exists)
+echo "  Creating core library archive..."
+CMX_FILES=""
+for f in lexer_v25.cmx stream_state.cmx tok_ring.cmx l0_lexer_track_a_*.cmx catcode_simd_bridge.cmx l0_lexer.cmx; do
+    if [ -f "$f" ]; then
+        CMX_FILES="$CMX_FILES $f"
+    fi
+done
+
+ocamlopt -a -o "$BUILD_REL/core.cmxa" $CMX_FILES
 
 echo "✅ Core library built successfully"
 
-cd ../..
+# Return to project root
+if [ "$CORE_DIR" = "src/core" ]; then
+    cd ../..
+else
+    cd ..
+fi
 
 echo ""
 echo "🧪 PHASE 3: Building Performance Tests"

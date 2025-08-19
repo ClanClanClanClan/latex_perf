@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LaTeX Perfectionist v25r2 Macro Catalogue",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "macros"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "v25r2"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "counts": {
+      "type": "object"
+    },
+    "macros": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "mode",
+          "arity",
+          "safety",
+          "expansion"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z@]+$"
+          },
+          "mode": {
+            "enum": [
+              "math",
+              "text",
+              "any"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "arity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9
+          },
+          "safety": {
+            "enum": [
+              "pure"
+            ]
+          },
+          "side_effects": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "expansion": {
+            "type": "array"
+          },
+          "body": {
+            "type": "array"
+          },
+          "expand_in_math": {
+            "type": "boolean"
+          },
+          "expand_in_text": {
+            "type": "boolean"
+          },
+          "non_expandable": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "_legacy_single_token": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

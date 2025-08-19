@@ -1,0 +1,90 @@
+% LaTeX Perfectionist v25 - Edit Window Performance Corpus
+% edit_window_4kb.tex - 4KB edit-window simulation
+% Target: ~4096 bytes for edit-window performance testing (≤1ms P95)
+
+\documentclass[11pt]{article}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathtools}
+
+\begin{document}
+
+% Typical editing scenario: mixed content with formulas, text, and commands
+\section{Performance Analysis}
+
+Consider the computational complexity of lexical analysis over LaTeX documents. For a document of length $n$ with $k$ macro expansions, the time complexity is bounded by:
+
+\begin{equation}
+T(n,k) = O(n \log k) + O(k \cdot m_{\text{avg}})
+\end{equation}
+
+where $m_{\text{avg}}$ represents the average macro expansion length. In practice, this reduces to linear time $O(n)$ for most documents since $k \ll n$ and macro expansions are typically constant-sized.
+
+\subsection{Tokenization Patterns}
+
+The lexer processes several token categories:
+\begin{itemize}
+    \item \textbf{Control sequences}: Commands like \texttt{\textbackslash alpha}, \texttt{\textbackslash sum}, \texttt{\textbackslash int}
+    \item \textbf{Mathematics}: Inline $x^2 + y^2 = r^2$ and display formulas
+    \item \textbf{Text content}: Regular paragraph text with various punctuation
+    \item \textbf{Special characters}: \&, \%, \$, \#, \_, \{, \}, \textbackslash
+\end{itemize}
+
+\begin{align}
+\nabla \cdot \mathbf{E} &= \frac{\rho}{\epsilon_0} \\
+\nabla \cdot \mathbf{B} &= 0 \\
+\nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t} \\
+\nabla \times \mathbf{B} &= \mu_0 \left( \mathbf{J} + \epsilon_0 \frac{\partial \mathbf{E}}{\partial t} \right)
+\end{align}
+
+The performance characteristics of arena-based allocation show significant improvement over traditional malloc/free patterns. With pre-allocated buffers of size $A = 3n$ bytes, we eliminate per-token allocation overhead:
+
+\begin{equation}
+\text{Speedup} = \frac{T_{\text{malloc}}}{T_{\text{arena}}} = \frac{n \cdot t_{\text{alloc}} + n \cdot t_{\text{proc}}}{n \cdot t_{\text{proc}}} = 1 + \frac{t_{\text{alloc}}}{t_{\text{proc}}}
+\end{equation}
+
+For typical values where $t_{\text{alloc}} \approx 15\text{ns}$ and $t_{\text{proc}} \approx 5\text{ns}$, this yields a theoretical speedup of $4\times$. Empirical measurements confirm speedups between $2.5\times$ and $5.75\times$ depending on document characteristics.
+
+\subsection{Memory Layout Optimization}
+
+Token packing using 32-bit integers provides optimal cache utilization:
+
+\begin{verbatim}
+struct token_packed {
+    uint32_t data : 26;  // Position or content ref
+    uint32_t catcode : 6; // Category code (0-63)
+}
+\end{verbatim}
+
+This representation fits exactly in L1 cache lines (64 bytes = 16 tokens), enabling efficient vectorized processing. The catcode space maps to standard TeX categories:
+
+\begin{center}
+\begin{tabular}{cl}
+\hline
+Code & Category \\
+\hline
+0 & Escape character (\textbackslash) \\
+1 & Begin group (\{) \\
+2 & End group (\}) \\
+3 & Math shift (\$) \\
+4 & Alignment tab (\&) \\
+11 & Letter (a-z, A-Z) \\
+12 & Other character \\
+\hline
+\end{tabular}
+\end{center}
+
+Modern SIMD instructions (AVX2, NEON) can process multiple tokens simultaneously, achieving throughput rates exceeding $20$ GB/s on contemporary hardware. The performance bottleneck shifts from tokenization to higher-level parsing operations.
+
+\subsection{Benchmarking Methodology}
+
+Performance measurements use hardware timestamp counters (RDTSC) for sub-nanosecond precision. Test runs execute 100 iterations with statistical analysis:
+
+\begin{equation}
+\bar{t} = \frac{1}{n} \sum_{i=1}^{n} t_i, \quad \sigma = \sqrt{\frac{1}{n-1} \sum_{i=1}^{n} (t_i - \bar{t})^2}
+\end{equation}
+
+The P95 latency represents the 95th percentile: $P_{95} = \min\{t : F(t) \geq 0.95\}$ where $F(t)$ is the cumulative distribution function of measured latencies. This metric captures tail behavior critical for interactive editing responsiveness.
+
+Flambda2 compiler optimizations provide consistent $2\times$ performance improvement over standard OCaml compilation, primarily through aggressive inlining and closure optimization.
+
+\end{document}

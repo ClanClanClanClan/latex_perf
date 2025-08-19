@@ -1,0 +1,434 @@
+{
+  "catalog": {
+    "id": "macro_catalogue.argsafe",
+    "version": "v25-R1",
+    "policy": {
+      "profile": "latex-epsilon",
+      "notes": "Only expansion-safe, deterministic, side-effect-free macros allowed at L1."
+    },
+    "macros": [
+      {
+        "name": "textbf",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\bfseries $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textit",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\itshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "texttt",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\ttfamily $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textsf",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\sffamily $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textsc",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\scshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textmd",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mdseries $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textnormal",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\normalfont $1}"
+        },
+        "examples": [],
+        "notes": "Resets family/series/shape; safe in epsilon profile."
+      },
+      {
+        "name": "textrm",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\rmfamily $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textsl",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\slshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textup",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\upshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "emph",
+        "mode": "text",
+        "category": "emphasis",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\itshape $1}"
+        },
+        "examples": [],
+        "notes": "In TeX, \\emph toggles; in epsilon we model it as a pure wrapper using \\itshape."
+      },
+      {
+        "name": "mbox",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "mbox"
+        },
+        "examples": [],
+        "notes": "Represents a no-break box; handled as L1 builtin to avoid layout semantics here."
+      },
+      {
+        "name": "verb",
+        "mode": "text",
+        "category": "verbatim",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "verbatim-delim"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "verb"
+        },
+        "examples": [],
+        "notes": "Delimiter after \\verb is treated specially; expanded by L1 builtin verb handler."
+      },
+      {
+        "name": "verb*",
+        "mode": "text",
+        "category": "verbatim",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "verbatim-delim"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "verb_star"
+        },
+        "examples": [],
+        "notes": "Star variant shows spaces visibly; handled by builtin verb* handler."
+      },
+      {
+        "name": "textsuperscript",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "textsuperscript"
+        },
+        "examples": [],
+        "notes": "Rendered as a raised box in later layers; L1 records a semantic wrapper."
+      },
+      {
+        "name": "textsubscript",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "textsubscript"
+        },
+        "examples": [],
+        "notes": "Rendered as a lowered box in later layers; L1 records a semantic wrapper."
+      },
+      {
+        "name": "mathrm",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathrm{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathbf",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathbf{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathsf",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathsf{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathtt",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathtt{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathit",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathit{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathnormal",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\mathnormal{$1}}"
+        },
+        "examples": []
+      },
+      {
+        "name": "ensuremath",
+        "mode": "both",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math-or-text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "ensuremath"
+        },
+        "examples": [],
+        "notes": "If outside math, wraps in $...$; otherwise passes through. Implemented as L1 builtin."
+      }
+    ]
+  }
+}

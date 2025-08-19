@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/macro_catalogue.argsafe.schema.json",
+  "title": "L1 Argumentful Macro Catalogue (epsilon profile)",
+  "type": "object",
+  "required": [
+    "catalog"
+  ],
+  "properties": {
+    "catalog": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "policy",
+        "macros"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "policy": {
+          "type": "object",
+          "required": [
+            "profile"
+          ],
+          "properties": {
+            "profile": {
+              "const": "latex-epsilon"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        },
+        "macros": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "mode",
+              "category",
+              "epsilon_allowed",
+              "args",
+              "template"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "mode": {
+                "enum": [
+                  "text",
+                  "math",
+                  "both"
+                ]
+              },
+              "category": {
+                "enum": [
+                  "style",
+                  "emphasis",
+                  "verbatim",
+                  "mathstyle",
+                  "boxing"
+                ]
+              },
+              "epsilon_allowed": {
+                "const": true
+              },
+              "args": {
+                "type": "object",
+                "required": [
+                  "positional",
+                  "kinds",
+                  "optional"
+                ],
+                "properties": {
+                  "positional": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  },
+                  "kinds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "optional": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "template": {
+                "type": "object",
+                "oneOf": [
+                  {
+                    "required": [
+                      "kind",
+                      "body"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "inline"
+                      },
+                      "body": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "kind",
+                      "builtin"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "builtin"
+                      },
+                      "builtin": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

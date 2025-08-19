@@ -1,5 +1,3 @@
 (library
- (name data)
  (public_name latex-perfectionist.data)
- (modules location catcode chunk dlist)
- (synopsis "Core data types for LaTeX Perfectionist v25"))
+ (name data))

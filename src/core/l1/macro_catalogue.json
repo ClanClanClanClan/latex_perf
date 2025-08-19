@@ -1,0 +1,3068 @@
+{
+  "macros": [
+    {
+      "name": "AA",
+      "body": [
+        {
+          "TText": "Å"
+        }
+      ]
+    },
+    {
+      "name": "AE",
+      "body": [
+        {
+          "TText": "Æ"
+        }
+      ]
+    },
+    {
+      "name": "Bbbk",
+      "body": [
+        {
+          "TText": "𝕜"
+        }
+      ]
+    },
+    {
+      "name": "Box",
+      "body": [
+        {
+          "TText": "□"
+        }
+      ]
+    },
+    {
+      "name": "Bumpeq",
+      "body": [
+        {
+          "TOp": "≎"
+        }
+      ]
+    },
+    {
+      "name": "DH",
+      "body": [
+        {
+          "TText": "Ð"
+        }
+      ]
+    },
+    {
+      "name": "Delta",
+      "body": [
+        {
+          "TText": "Δ"
+        }
+      ]
+    },
+    {
+      "name": "Diamond",
+      "body": [
+        {
+          "TText": "◇"
+        }
+      ]
+    },
+    {
+      "name": "Downarrow",
+      "body": [
+        {
+          "TOp": "⇓"
+        }
+      ]
+    },
+    {
+      "name": "Gamma",
+      "body": [
+        {
+          "TText": "Γ"
+        }
+      ]
+    },
+    {
+      "name": "Im",
+      "body": [
+        {
+          "TText": "ℑ"
+        }
+      ]
+    },
+    {
+      "name": "L",
+      "body": [
+        {
+          "TText": "Ł"
+        }
+      ]
+    },
+    {
+      "name": "Lambda",
+      "body": [
+        {
+          "TText": "Λ"
+        }
+      ]
+    },
+    {
+      "name": "Leftarrow",
+      "body": [
+        {
+          "TOp": "⇐"
+        }
+      ]
+    },
+    {
+      "name": "Leftrightarrow",
+      "body": [
+        {
+          "TOp": "⇔"
+        }
+      ]
+    },
+    {
+      "name": "Longleftarrow",
+      "body": [
+        {
+          "TOp": "⟸"
+        }
+      ]
+    },
+    {
+      "name": "Longleftrightarrow",
+      "body": [
+        {
+          "TOp": "⟺"
+        }
+      ]
+    },
+    {
+      "name": "Longrightarrow",
+      "body": [
+        {
+          "TOp": "⟹"
+        }
+      ]
+    },
+    {
+      "name": "O",
+      "body": [
+        {
+          "TText": "Ø"
+        }
+      ]
+    },
+    {
+      "name": "OE",
+      "body": [
+        {
+          "TText": "Œ"
+        }
+      ]
+    },
+    {
+      "name": "Omega",
+      "body": [
+        {
+          "TText": "Ω"
+        }
+      ]
+    },
+    {
+      "name": "Phi",
+      "body": [
+        {
+          "TText": "Φ"
+        }
+      ]
+    },
+    {
+      "name": "Pi",
+      "body": [
+        {
+          "TText": "Π"
+        }
+      ]
+    },
+    {
+      "name": "Psi",
+      "body": [
+        {
+          "TText": "Ψ"
+        }
+      ]
+    },
+    {
+      "name": "Re",
+      "body": [
+        {
+          "TText": "ℜ"
+        }
+      ]
+    },
+    {
+      "name": "Rightarrow",
+      "body": [
+        {
+          "TOp": "⇒"
+        }
+      ]
+    },
+    {
+      "name": "Sigma",
+      "body": [
+        {
+          "TText": "Σ"
+        }
+      ]
+    },
+    {
+      "name": "Subset",
+      "body": [
+        {
+          "TOp": "⋐"
+        }
+      ]
+    },
+    {
+      "name": "Supset",
+      "body": [
+        {
+          "TOp": "⋑"
+        }
+      ]
+    },
+    {
+      "name": "TH",
+      "body": [
+        {
+          "TText": "Þ"
+        }
+      ]
+    },
+    {
+      "name": "Theta",
+      "body": [
+        {
+          "TText": "Θ"
+        }
+      ]
+    },
+    {
+      "name": "Uparrow",
+      "body": [
+        {
+          "TOp": "⇑"
+        }
+      ]
+    },
+    {
+      "name": "Updownarrow",
+      "body": [
+        {
+          "TOp": "⇕"
+        }
+      ]
+    },
+    {
+      "name": "Upsilon",
+      "body": [
+        {
+          "TText": "Υ"
+        }
+      ]
+    },
+    {
+      "name": "VDash",
+      "body": [
+        {
+          "TOp": "⊫"
+        }
+      ]
+    },
+    {
+      "name": "Vdash",
+      "body": [
+        {
+          "TOp": "⊩"
+        }
+      ]
+    },
+    {
+      "name": "Vvdash",
+      "body": [
+        {
+          "TOp": "⊪"
+        }
+      ]
+    },
+    {
+      "name": "Xi",
+      "body": [
+        {
+          "TText": "Ξ"
+        }
+      ]
+    },
+    {
+      "name": "aa",
+      "body": [
+        {
+          "TText": "å"
+        }
+      ]
+    },
+    {
+      "name": "ae",
+      "body": [
+        {
+          "TText": "æ"
+        }
+      ]
+    },
+    {
+      "name": "aleph",
+      "body": [
+        {
+          "TText": "ℵ"
+        }
+      ]
+    },
+    {
+      "name": "alpha",
+      "body": [
+        {
+          "TText": "α"
+        }
+      ]
+    },
+    {
+      "name": "angle",
+      "body": [
+        {
+          "TText": "∠"
+        }
+      ]
+    },
+    {
+      "name": "angstrom",
+      "body": [
+        {
+          "TText": "Å"
+        }
+      ]
+    },
+    {
+      "name": "approx",
+      "body": [
+        {
+          "TOp": "≈"
+        }
+      ]
+    },
+    {
+      "name": "ast",
+      "body": [
+        {
+          "TOp": "∗"
+        }
+      ]
+    },
+    {
+      "name": "backsimeq",
+      "body": [
+        {
+          "TOp": "⋍"
+        }
+      ]
+    },
+    {
+      "name": "because",
+      "body": [
+        {
+          "TText": "∵"
+        }
+      ]
+    },
+    {
+      "name": "beta",
+      "body": [
+        {
+          "TText": "β"
+        }
+      ]
+    },
+    {
+      "name": "beth",
+      "body": [
+        {
+          "TText": "ℶ"
+        }
+      ]
+    },
+    {
+      "name": "bigcap",
+      "body": [
+        {
+          "TOp": "⋂"
+        }
+      ]
+    },
+    {
+      "name": "bigcirc",
+      "body": [
+        {
+          "TText": "○"
+        }
+      ]
+    },
+    {
+      "name": "bigcup",
+      "body": [
+        {
+          "TOp": "⋃"
+        }
+      ]
+    },
+    {
+      "name": "bigodot",
+      "body": [
+        {
+          "TOp": "⨀"
+        }
+      ]
+    },
+    {
+      "name": "bigoplus",
+      "body": [
+        {
+          "TOp": "⨁"
+        }
+      ]
+    },
+    {
+      "name": "bigotimes",
+      "body": [
+        {
+          "TOp": "⨂"
+        }
+      ]
+    },
+    {
+      "name": "bigsqcup",
+      "body": [
+        {
+          "TOp": "⨆"
+        }
+      ]
+    },
+    {
+      "name": "bigstar",
+      "body": [
+        {
+          "TText": "★"
+        }
+      ]
+    },
+    {
+      "name": "biguplus",
+      "body": [
+        {
+          "TOp": "⨄"
+        }
+      ]
+    },
+    {
+      "name": "blacklozenge",
+      "body": [
+        {
+          "TText": "◆"
+        }
+      ]
+    },
+    {
+      "name": "blacksquare",
+      "body": [
+        {
+          "TText": "■"
+        }
+      ]
+    },
+    {
+      "name": "blacktriangle",
+      "body": [
+        {
+          "TText": "▲"
+        }
+      ]
+    },
+    {
+      "name": "blacktriangledown",
+      "body": [
+        {
+          "TText": "▼"
+        }
+      ]
+    },
+    {
+      "name": "blacktriangleleft",
+      "body": [
+        {
+          "TText": "◂"
+        }
+      ]
+    },
+    {
+      "name": "blacktriangleright",
+      "body": [
+        {
+          "TText": "▸"
+        }
+      ]
+    },
+    {
+      "name": "boxdot",
+      "body": [
+        {
+          "TOp": "⊡"
+        }
+      ]
+    },
+    {
+      "name": "boxminus",
+      "body": [
+        {
+          "TOp": "⊟"
+        }
+      ]
+    },
+    {
+      "name": "boxplus",
+      "body": [
+        {
+          "TOp": "⊞"
+        }
+      ]
+    },
+    {
+      "name": "boxtimes",
+      "body": [
+        {
+          "TOp": "⊠"
+        }
+      ]
+    },
+    {
+      "name": "bullet",
+      "body": [
+        {
+          "TOp": "∙"
+        }
+      ]
+    },
+    {
+      "name": "bumpeq",
+      "body": [
+        {
+          "TOp": "≏"
+        }
+      ]
+    },
+    {
+      "name": "cap",
+      "body": [
+        {
+          "TOp": "∩"
+        }
+      ]
+    },
+    {
+      "name": "cdot",
+      "body": [
+        {
+          "TOp": "⋅"
+        }
+      ]
+    },
+    {
+      "name": "cdots",
+      "body": [
+        {
+          "TText": "⋯"
+        }
+      ]
+    },
+    {
+      "name": "chi",
+      "body": [
+        {
+          "TText": "χ"
+        }
+      ]
+    },
+    {
+      "name": "circ",
+      "body": [
+        {
+          "TOp": "∘"
+        }
+      ]
+    },
+    {
+      "name": "circeq",
+      "body": [
+        {
+          "TOp": "≗"
+        }
+      ]
+    },
+    {
+      "name": "circlearrowleft",
+      "body": [
+        {
+          "TOp": "↺"
+        }
+      ]
+    },
+    {
+      "name": "circlearrowright",
+      "body": [
+        {
+          "TOp": "↻"
+        }
+      ]
+    },
+    {
+      "name": "clubsuit",
+      "body": [
+        {
+          "TText": "♣"
+        }
+      ]
+    },
+    {
+      "name": "coloneqq",
+      "body": [
+        {
+          "TOp": "≔"
+        }
+      ]
+    },
+    {
+      "name": "cong",
+      "body": [
+        {
+          "TOp": "≅"
+        }
+      ]
+    },
+    {
+      "name": "coprod",
+      "body": [
+        {
+          "TOp": "∐"
+        }
+      ]
+    },
+    {
+      "name": "cup",
+      "body": [
+        {
+          "TOp": "∪"
+        }
+      ]
+    },
+    {
+      "name": "curvearrowleft",
+      "body": [
+        {
+          "TOp": "↶"
+        }
+      ]
+    },
+    {
+      "name": "curvearrowright",
+      "body": [
+        {
+          "TOp": "↷"
+        }
+      ]
+    },
+    {
+      "name": "daleth",
+      "body": [
+        {
+          "TText": "ℸ"
+        }
+      ]
+    },
+    {
+      "name": "dashleftarrow",
+      "body": [
+        {
+          "TOp": "⇠"
+        }
+      ]
+    },
+    {
+      "name": "dashrightarrow",
+      "body": [
+        {
+          "TOp": "⇢"
+        }
+      ]
+    },
+    {
+      "name": "dashv",
+      "body": [
+        {
+          "TOp": "⊣"
+        }
+      ]
+    },
+    {
+      "name": "ddots",
+      "body": [
+        {
+          "TText": "⋱"
+        }
+      ]
+    },
+    {
+      "name": "degree",
+      "body": [
+        {
+          "TText": "°"
+        }
+      ]
+    },
+    {
+      "name": "delta",
+      "body": [
+        {
+          "TText": "δ"
+        }
+      ]
+    },
+    {
+      "name": "dh",
+      "body": [
+        {
+          "TText": "ð"
+        }
+      ]
+    },
+    {
+      "name": "diamondsuit",
+      "body": [
+        {
+          "TText": "♦"
+        }
+      ]
+    },
+    {
+      "name": "div",
+      "body": [
+        {
+          "TOp": "÷"
+        }
+      ]
+    },
+    {
+      "name": "doteq",
+      "body": [
+        {
+          "TOp": "≐"
+        }
+      ]
+    },
+    {
+      "name": "doteqdot",
+      "body": [
+        {
+          "TOp": "≑"
+        }
+      ]
+    },
+    {
+      "name": "downarrow",
+      "body": [
+        {
+          "TOp": "↓"
+        }
+      ]
+    },
+    {
+      "name": "downdownarrows",
+      "body": [
+        {
+          "TOp": "⇊"
+        }
+      ]
+    },
+    {
+      "name": "ell",
+      "body": [
+        {
+          "TText": "ℓ"
+        }
+      ]
+    },
+    {
+      "name": "emptyset",
+      "body": [
+        {
+          "TText": "∅"
+        }
+      ]
+    },
+    {
+      "name": "epsilon",
+      "body": [
+        {
+          "TText": "ε"
+        }
+      ]
+    },
+    {
+      "name": "eqcirc",
+      "body": [
+        {
+          "TOp": "≖"
+        }
+      ]
+    },
+    {
+      "name": "eqqcolon",
+      "body": [
+        {
+          "TOp": "≕"
+        }
+      ]
+    },
+    {
+      "name": "eqsim",
+      "body": [
+        {
+          "TOp": "≂"
+        }
+      ]
+    },
+    {
+      "name": "eqslantgtr",
+      "body": [
+        {
+          "TOp": "⪖"
+        }
+      ]
+    },
+    {
+      "name": "eqslantless",
+      "body": [
+        {
+          "TOp": "⪕"
+        }
+      ]
+    },
+    {
+      "name": "equiv",
+      "body": [
+        {
+          "TOp": "≡"
+        }
+      ]
+    },
+    {
+      "name": "eta",
+      "body": [
+        {
+          "TText": "η"
+        }
+      ]
+    },
+    {
+      "name": "fallingdotseq",
+      "body": [
+        {
+          "TOp": "≒"
+        }
+      ]
+    },
+    {
+      "name": "flat",
+      "body": [
+        {
+          "TText": "♭"
+        }
+      ]
+    },
+    {
+      "name": "frown",
+      "body": [
+        {
+          "TOp": "⌢"
+        }
+      ]
+    },
+    {
+      "name": "gamma",
+      "body": [
+        {
+          "TText": "γ"
+        }
+      ]
+    },
+    {
+      "name": "ge",
+      "body": [
+        {
+          "TOp": "≥"
+        }
+      ]
+    },
+    {
+      "name": "geq",
+      "body": [
+        {
+          "TOp": "≥"
+        }
+      ]
+    },
+    {
+      "name": "geqq",
+      "body": [
+        {
+          "TOp": "≧"
+        }
+      ]
+    },
+    {
+      "name": "geqslant",
+      "body": [
+        {
+          "TOp": "⩾"
+        }
+      ]
+    },
+    {
+      "name": "gg",
+      "body": [
+        {
+          "TOp": "≫"
+        }
+      ]
+    },
+    {
+      "name": "ggg",
+      "body": [
+        {
+          "TOp": "⋙"
+        }
+      ]
+    },
+    {
+      "name": "gimel",
+      "body": [
+        {
+          "TText": "ℷ"
+        }
+      ]
+    },
+    {
+      "name": "gtrapprox",
+      "body": [
+        {
+          "TOp": "⪆"
+        }
+      ]
+    },
+    {
+      "name": "gtrsim",
+      "body": [
+        {
+          "TOp": "≳"
+        }
+      ]
+    },
+    {
+      "name": "hbar",
+      "body": [
+        {
+          "TText": "ℏ"
+        }
+      ]
+    },
+    {
+      "name": "heartsuit",
+      "body": [
+        {
+          "TText": "♥"
+        }
+      ]
+    },
+    {
+      "name": "hookleftarrow",
+      "body": [
+        {
+          "TOp": "↩"
+        }
+      ]
+    },
+    {
+      "name": "hookrightarrow",
+      "body": [
+        {
+          "TOp": "↪"
+        }
+      ]
+    },
+    {
+      "name": "iiint",
+      "body": [
+        {
+          "TOp": "∭"
+        }
+      ]
+    },
+    {
+      "name": "iint",
+      "body": [
+        {
+          "TOp": "∬"
+        }
+      ]
+    },
+    {
+      "name": "imath",
+      "body": [
+        {
+          "TText": "ı"
+        }
+      ]
+    },
+    {
+      "name": "in",
+      "body": [
+        {
+          "TOp": "∈"
+        }
+      ]
+    },
+    {
+      "name": "infty",
+      "body": [
+        {
+          "TOp": "∞"
+        }
+      ]
+    },
+    {
+      "name": "int",
+      "body": [
+        {
+          "TOp": "∫"
+        }
+      ]
+    },
+    {
+      "name": "iota",
+      "body": [
+        {
+          "TText": "ι"
+        }
+      ]
+    },
+    {
+      "name": "jmath",
+      "body": [
+        {
+          "TText": "ȷ"
+        }
+      ]
+    },
+    {
+      "name": "kappa",
+      "body": [
+        {
+          "TText": "κ"
+        }
+      ]
+    },
+    {
+      "name": "l",
+      "body": [
+        {
+          "TText": "ł"
+        }
+      ]
+    },
+    {
+      "name": "lVert",
+      "body": [
+        {
+          "TDelim": "‖"
+        }
+      ]
+    },
+    {
+      "name": "lambda",
+      "body": [
+        {
+          "TText": "λ"
+        }
+      ]
+    },
+    {
+      "name": "langle",
+      "body": [
+        {
+          "TDelim": "⟨"
+        }
+      ]
+    },
+    {
+      "name": "lbag",
+      "body": [
+        {
+          "TDelim": "⟅"
+        }
+      ]
+    },
+    {
+      "name": "lbrace",
+      "body": [
+        {
+          "TDelim": "{"
+        }
+      ]
+    },
+    {
+      "name": "lbrack",
+      "body": [
+        {
+          "TDelim": "["
+        }
+      ]
+    },
+    {
+      "name": "lceil",
+      "body": [
+        {
+          "TDelim": "⌈"
+        }
+      ]
+    },
+    {
+      "name": "ldots",
+      "body": [
+        {
+          "TText": "…"
+        }
+      ]
+    },
+    {
+      "name": "le",
+      "body": [
+        {
+          "TOp": "≤"
+        }
+      ]
+    },
+    {
+      "name": "leadsto",
+      "body": [
+        {
+          "TOp": "⇝"
+        }
+      ]
+    },
+    {
+      "name": "leftarrow",
+      "body": [
+        {
+          "TOp": "←"
+        }
+      ]
+    },
+    {
+      "name": "leftarrowtail",
+      "body": [
+        {
+          "TOp": "↢"
+        }
+      ]
+    },
+    {
+      "name": "leftleftarrows",
+      "body": [
+        {
+          "TOp": "⇇"
+        }
+      ]
+    },
+    {
+      "name": "leftrightarrow",
+      "body": [
+        {
+          "TOp": "↔"
+        }
+      ]
+    },
+    {
+      "name": "leftrightarrows",
+      "body": [
+        {
+          "TOp": "⇆"
+        }
+      ]
+    },
+    {
+      "name": "leftrightharpoons",
+      "body": [
+        {
+          "TOp": "⇋"
+        }
+      ]
+    },
+    {
+      "name": "leftrightsquigarrow",
+      "body": [
+        {
+          "TOp": "↭"
+        }
+      ]
+    },
+    {
+      "name": "leftsquigarrow",
+      "body": [
+        {
+          "TOp": "↜"
+        }
+      ]
+    },
+    {
+      "name": "leq",
+      "body": [
+        {
+          "TOp": "≤"
+        }
+      ]
+    },
+    {
+      "name": "leqq",
+      "body": [
+        {
+          "TOp": "≦"
+        }
+      ]
+    },
+    {
+      "name": "leqslant",
+      "body": [
+        {
+          "TOp": "⩽"
+        }
+      ]
+    },
+    {
+      "name": "lessapprox",
+      "body": [
+        {
+          "TOp": "⪅"
+        }
+      ]
+    },
+    {
+      "name": "lesssim",
+      "body": [
+        {
+          "TOp": "≲"
+        }
+      ]
+    },
+    {
+      "name": "lfloor",
+      "body": [
+        {
+          "TDelim": "⌊"
+        }
+      ]
+    },
+    {
+      "name": "ll",
+      "body": [
+        {
+          "TOp": "≪"
+        }
+      ]
+    },
+    {
+      "name": "llangle",
+      "body": [
+        {
+          "TDelim": "⟪"
+        }
+      ]
+    },
+    {
+      "name": "llbracket",
+      "body": [
+        {
+          "TDelim": "⟦"
+        }
+      ]
+    },
+    {
+      "name": "llcorner",
+      "body": [
+        {
+          "TDelim": "⌞"
+        }
+      ]
+    },
+    {
+      "name": "lll",
+      "body": [
+        {
+          "TOp": "⋘"
+        }
+      ]
+    },
+    {
+      "name": "llparenthesis",
+      "body": [
+        {
+          "TDelim": "⦅"
+        }
+      ]
+    },
+    {
+      "name": "longleftarrow",
+      "body": [
+        {
+          "TOp": "⟵"
+        }
+      ]
+    },
+    {
+      "name": "longleftrightarrow",
+      "body": [
+        {
+          "TOp": "⟷"
+        }
+      ]
+    },
+    {
+      "name": "longmapsto",
+      "body": [
+        {
+          "TOp": "⟼"
+        }
+      ]
+    },
+    {
+      "name": "longrightarrow",
+      "body": [
+        {
+          "TOp": "⟶"
+        }
+      ]
+    },
+    {
+      "name": "longrightsquigarrow",
+      "body": [
+        {
+          "TOp": "⟿"
+        }
+      ]
+    },
+    {
+      "name": "looparrowleft",
+      "body": [
+        {
+          "TOp": "↫"
+        }
+      ]
+    },
+    {
+      "name": "looparrowright",
+      "body": [
+        {
+          "TOp": "↬"
+        }
+      ]
+    },
+    {
+      "name": "lozenge",
+      "body": [
+        {
+          "TText": "◊"
+        }
+      ]
+    },
+    {
+      "name": "lparen",
+      "body": [
+        {
+          "TDelim": "("
+        }
+      ]
+    },
+    {
+      "name": "lrcorner",
+      "body": [
+        {
+          "TDelim": "⌟"
+        }
+      ]
+    },
+    {
+      "name": "lvert",
+      "body": [
+        {
+          "TDelim": "|"
+        }
+      ]
+    },
+    {
+      "name": "mapsfrom",
+      "body": [
+        {
+          "TOp": "↤"
+        }
+      ]
+    },
+    {
+      "name": "mapsto",
+      "body": [
+        {
+          "TOp": "↦"
+        }
+      ]
+    },
+    {
+      "name": "measuredangle",
+      "body": [
+        {
+          "TText": "∡"
+        }
+      ]
+    },
+    {
+      "name": "mho",
+      "body": [
+        {
+          "TText": "℧"
+        }
+      ]
+    },
+    {
+      "name": "micro",
+      "body": [
+        {
+          "TText": "µ"
+        }
+      ]
+    },
+    {
+      "name": "models",
+      "body": [
+        {
+          "TOp": "⊧"
+        }
+      ]
+    },
+    {
+      "name": "mu",
+      "body": [
+        {
+          "TText": "μ"
+        }
+      ]
+    },
+    {
+      "name": "multimap",
+      "body": [
+        {
+          "TOp": "⊸"
+        }
+      ]
+    },
+    {
+      "name": "nLeftarrow",
+      "body": [
+        {
+          "TOp": "⇍"
+        }
+      ]
+    },
+    {
+      "name": "nLeftrightarrow",
+      "body": [
+        {
+          "TOp": "⇎"
+        }
+      ]
+    },
+    {
+      "name": "nRightarrow",
+      "body": [
+        {
+          "TOp": "⇏"
+        }
+      ]
+    },
+    {
+      "name": "nVDash",
+      "body": [
+        {
+          "TOp": "⊯"
+        }
+      ]
+    },
+    {
+      "name": "nVdash",
+      "body": [
+        {
+          "TOp": "⊮"
+        }
+      ]
+    },
+    {
+      "name": "nabla",
+      "body": [
+        {
+          "TText": "∇"
+        }
+      ]
+    },
+    {
+      "name": "natural",
+      "body": [
+        {
+          "TText": "♮"
+        }
+      ]
+    },
+    {
+      "name": "ncong",
+      "body": [
+        {
+          "TOp": "≇"
+        }
+      ]
+    },
+    {
+      "name": "ne",
+      "body": [
+        {
+          "TOp": "≠"
+        }
+      ]
+    },
+    {
+      "name": "nearrow",
+      "body": [
+        {
+          "TOp": "↗"
+        }
+      ]
+    },
+    {
+      "name": "neq",
+      "body": [
+        {
+          "TOp": "≠"
+        }
+      ]
+    },
+    {
+      "name": "nequiv",
+      "body": [
+        {
+          "TOp": "≢"
+        }
+      ]
+    },
+    {
+      "name": "ngeq",
+      "body": [
+        {
+          "TOp": "≱"
+        }
+      ]
+    },
+    {
+      "name": "ngtr",
+      "body": [
+        {
+          "TOp": "≯"
+        }
+      ]
+    },
+    {
+      "name": "ni",
+      "body": [
+        {
+          "TOp": "∋"
+        }
+      ]
+    },
+    {
+      "name": "nleftarrow",
+      "body": [
+        {
+          "TOp": "↚"
+        }
+      ]
+    },
+    {
+      "name": "nleftrightarrow",
+      "body": [
+        {
+          "TOp": "↮"
+        }
+      ]
+    },
+    {
+      "name": "nleq",
+      "body": [
+        {
+          "TOp": "≰"
+        }
+      ]
+    },
+    {
+      "name": "nless",
+      "body": [
+        {
+          "TOp": "≮"
+        }
+      ]
+    },
+    {
+      "name": "nmid",
+      "body": [
+        {
+          "TOp": "∤"
+        }
+      ]
+    },
+    {
+      "name": "notin",
+      "body": [
+        {
+          "TOp": "∉"
+        }
+      ]
+    },
+    {
+      "name": "notni",
+      "body": [
+        {
+          "TOp": "∌"
+        }
+      ]
+    },
+    {
+      "name": "nparallel",
+      "body": [
+        {
+          "TOp": "∦"
+        }
+      ]
+    },
+    {
+      "name": "nprec",
+      "body": [
+        {
+          "TOp": "⊀"
+        }
+      ]
+    },
+    {
+      "name": "npreceq",
+      "body": [
+        {
+          "TOp": "⋠"
+        }
+      ]
+    },
+    {
+      "name": "nrightarrow",
+      "body": [
+        {
+          "TOp": "↛"
+        }
+      ]
+    },
+    {
+      "name": "nsim",
+      "body": [
+        {
+          "TOp": "≁"
+        }
+      ]
+    },
+    {
+      "name": "nsubseteq",
+      "body": [
+        {
+          "TOp": "⊈"
+        }
+      ]
+    },
+    {
+      "name": "nsucc",
+      "body": [
+        {
+          "TOp": "⊁"
+        }
+      ]
+    },
+    {
+      "name": "nsucceq",
+      "body": [
+        {
+          "TOp": "⋡"
+        }
+      ]
+    },
+    {
+      "name": "nsupseteq",
+      "body": [
+        {
+          "TOp": "⊉"
+        }
+      ]
+    },
+    {
+      "name": "ntriangleleft",
+      "body": [
+        {
+          "TOp": "⋪"
+        }
+      ]
+    },
+    {
+      "name": "ntrianglelefteq",
+      "body": [
+        {
+          "TOp": "⋬"
+        }
+      ]
+    },
+    {
+      "name": "ntriangleright",
+      "body": [
+        {
+          "TOp": "⋫"
+        }
+      ]
+    },
+    {
+      "name": "ntrianglerighteq",
+      "body": [
+        {
+          "TOp": "⋭"
+        }
+      ]
+    },
+    {
+      "name": "nu",
+      "body": [
+        {
+          "TText": "ν"
+        }
+      ]
+    },
+    {
+      "name": "nvDash",
+      "body": [
+        {
+          "TOp": "⊭"
+        }
+      ]
+    },
+    {
+      "name": "nvdash",
+      "body": [
+        {
+          "TOp": "⊬"
+        }
+      ]
+    },
+    {
+      "name": "nwarrow",
+      "body": [
+        {
+          "TOp": "↖"
+        }
+      ]
+    },
+    {
+      "name": "o",
+      "body": [
+        {
+          "TText": "ø"
+        }
+      ]
+    },
+    {
+      "name": "odot",
+      "body": [
+        {
+          "TOp": "⊙"
+        }
+      ]
+    },
+    {
+      "name": "oe",
+      "body": [
+        {
+          "TText": "œ"
+        }
+      ]
+    },
+    {
+      "name": "ohm",
+      "body": [
+        {
+          "TText": "Ω"
+        }
+      ]
+    },
+    {
+      "name": "oint",
+      "body": [
+        {
+          "TOp": "∮"
+        }
+      ]
+    },
+    {
+      "name": "omega",
+      "body": [
+        {
+          "TText": "ω"
+        }
+      ]
+    },
+    {
+      "name": "omicron",
+      "body": [
+        {
+          "TText": "ο"
+        }
+      ]
+    },
+    {
+      "name": "ominus",
+      "body": [
+        {
+          "TOp": "⊖"
+        }
+      ]
+    },
+    {
+      "name": "oplus",
+      "body": [
+        {
+          "TOp": "⊕"
+        }
+      ]
+    },
+    {
+      "name": "oslash",
+      "body": [
+        {
+          "TOp": "⊘"
+        }
+      ]
+    },
+    {
+      "name": "otimes",
+      "body": [
+        {
+          "TOp": "⊗"
+        }
+      ]
+    },
+    {
+      "name": "owns",
+      "body": [
+        {
+          "TOp": "∋"
+        }
+      ]
+    },
+    {
+      "name": "parallel",
+      "body": [
+        {
+          "TOp": "∥"
+        }
+      ]
+    },
+    {
+      "name": "partial",
+      "body": [
+        {
+          "TOp": "∂"
+        }
+      ]
+    },
+    {
+      "name": "perp",
+      "body": [
+        {
+          "TOp": "⊥"
+        }
+      ]
+    },
+    {
+      "name": "phi",
+      "body": [
+        {
+          "TText": "φ"
+        }
+      ]
+    },
+    {
+      "name": "pi",
+      "body": [
+        {
+          "TText": "π"
+        }
+      ]
+    },
+    {
+      "name": "prec",
+      "body": [
+        {
+          "TOp": "≺"
+        }
+      ]
+    },
+    {
+      "name": "preceq",
+      "body": [
+        {
+          "TOp": "≼"
+        }
+      ]
+    },
+    {
+      "name": "precsim",
+      "body": [
+        {
+          "TOp": "≾"
+        }
+      ]
+    },
+    {
+      "name": "prod",
+      "body": [
+        {
+          "TOp": "∏"
+        }
+      ]
+    },
+    {
+      "name": "propto",
+      "body": [
+        {
+          "TOp": "∝"
+        }
+      ]
+    },
+    {
+      "name": "psi",
+      "body": [
+        {
+          "TText": "ψ"
+        }
+      ]
+    },
+    {
+      "name": "rVert",
+      "body": [
+        {
+          "TDelim": "‖"
+        }
+      ]
+    },
+    {
+      "name": "rangle",
+      "body": [
+        {
+          "TDelim": "⟩"
+        }
+      ]
+    },
+    {
+      "name": "rbag",
+      "body": [
+        {
+          "TDelim": "⟆"
+        }
+      ]
+    },
+    {
+      "name": "rbrace",
+      "body": [
+        {
+          "TDelim": "}"
+        }
+      ]
+    },
+    {
+      "name": "rbrack",
+      "body": [
+        {
+          "TDelim": "]"
+        }
+      ]
+    },
+    {
+      "name": "rceil",
+      "body": [
+        {
+          "TDelim": "⌉"
+        }
+      ]
+    },
+    {
+      "name": "rfloor",
+      "body": [
+        {
+          "TDelim": "⌋"
+        }
+      ]
+    },
+    {
+      "name": "rho",
+      "body": [
+        {
+          "TText": "ρ"
+        }
+      ]
+    },
+    {
+      "name": "rightarrow",
+      "body": [
+        {
+          "TOp": "→"
+        }
+      ]
+    },
+    {
+      "name": "rightarrowtail",
+      "body": [
+        {
+          "TOp": "↣"
+        }
+      ]
+    },
+    {
+      "name": "rightleftarrows",
+      "body": [
+        {
+          "TOp": "⇄"
+        }
+      ]
+    },
+    {
+      "name": "rightrightarrows",
+      "body": [
+        {
+          "TOp": "⇉"
+        }
+      ]
+    },
+    {
+      "name": "rightsquigarrow",
+      "body": [
+        {
+          "TOp": "⇝"
+        }
+      ]
+    },
+    {
+      "name": "risingdotseq",
+      "body": [
+        {
+          "TOp": "≓"
+        }
+      ]
+    },
+    {
+      "name": "rparen",
+      "body": [
+        {
+          "TDelim": ")"
+        }
+      ]
+    },
+    {
+      "name": "rrangle",
+      "body": [
+        {
+          "TDelim": "⟫"
+        }
+      ]
+    },
+    {
+      "name": "rrbracket",
+      "body": [
+        {
+          "TDelim": "⟧"
+        }
+      ]
+    },
+    {
+      "name": "rrparenthesis",
+      "body": [
+        {
+          "TDelim": "⦆"
+        }
+      ]
+    },
+    {
+      "name": "rvert",
+      "body": [
+        {
+          "TDelim": "|"
+        }
+      ]
+    },
+    {
+      "name": "searrow",
+      "body": [
+        {
+          "TOp": "↘"
+        }
+      ]
+    },
+    {
+      "name": "setminus",
+      "body": [
+        {
+          "TOp": "∖"
+        }
+      ]
+    },
+    {
+      "name": "sharp",
+      "body": [
+        {
+          "TText": "♯"
+        }
+      ]
+    },
+    {
+      "name": "sigma",
+      "body": [
+        {
+          "TText": "σ"
+        }
+      ]
+    },
+    {
+      "name": "sim",
+      "body": [
+        {
+          "TOp": "∼"
+        }
+      ]
+    },
+    {
+      "name": "simeq",
+      "body": [
+        {
+          "TOp": "≃"
+        }
+      ]
+    },
+    {
+      "name": "smile",
+      "body": [
+        {
+          "TOp": "⌣"
+        }
+      ]
+    },
+    {
+      "name": "spadesuit",
+      "body": [
+        {
+          "TText": "♠"
+        }
+      ]
+    },
+    {
+      "name": "sqrt",
+      "body": [
+        {
+          "TOp": "√"
+        }
+      ]
+    },
+    {
+      "name": "square",
+      "body": [
+        {
+          "TText": "□"
+        }
+      ]
+    },
+    {
+      "name": "ss",
+      "body": [
+        {
+          "TText": "ß"
+        }
+      ]
+    },
+    {
+      "name": "star",
+      "body": [
+        {
+          "TOp": "⋆"
+        }
+      ]
+    },
+    {
+      "name": "subset",
+      "body": [
+        {
+          "TOp": "⊂"
+        }
+      ]
+    },
+    {
+      "name": "subseteq",
+      "body": [
+        {
+          "TOp": "⊆"
+        }
+      ]
+    },
+    {
+      "name": "subsetneq",
+      "body": [
+        {
+          "TOp": "⊊"
+        }
+      ]
+    },
+    {
+      "name": "succ",
+      "body": [
+        {
+          "TOp": "≻"
+        }
+      ]
+    },
+    {
+      "name": "succeq",
+      "body": [
+        {
+          "TOp": "≽"
+        }
+      ]
+    },
+    {
+      "name": "succsim",
+      "body": [
+        {
+          "TOp": "≿"
+        }
+      ]
+    },
+    {
+      "name": "sum",
+      "body": [
+        {
+          "TOp": "∑"
+        }
+      ]
+    },
+    {
+      "name": "supset",
+      "body": [
+        {
+          "TOp": "⊃"
+        }
+      ]
+    },
+    {
+      "name": "supseteq",
+      "body": [
+        {
+          "TOp": "⊇"
+        }
+      ]
+    },
+    {
+      "name": "supsetneq",
+      "body": [
+        {
+          "TOp": "⊋"
+        }
+      ]
+    },
+    {
+      "name": "swarrow",
+      "body": [
+        {
+          "TOp": "↙"
+        }
+      ]
+    },
+    {
+      "name": "tau",
+      "body": [
+        {
+          "TText": "τ"
+        }
+      ]
+    },
+    {
+      "name": "textasciitilde",
+      "body": [
+        {
+          "TText": "~"
+        }
+      ]
+    },
+    {
+      "name": "textasteriskcentered",
+      "body": [
+        {
+          "TText": "⁎"
+        }
+      ]
+    },
+    {
+      "name": "textaustral",
+      "body": [
+        {
+          "TText": "₳"
+        }
+      ]
+    },
+    {
+      "name": "textbackslash",
+      "body": [
+        {
+          "TText": "\\"
+        }
+      ]
+    },
+    {
+      "name": "textbar",
+      "body": [
+        {
+          "TText": "|"
+        }
+      ]
+    },
+    {
+      "name": "textbullet",
+      "body": [
+        {
+          "TText": "•"
+        }
+      ]
+    },
+    {
+      "name": "textcedi",
+      "body": [
+        {
+          "TText": "₵"
+        }
+      ]
+    },
+    {
+      "name": "textcent",
+      "body": [
+        {
+          "TText": "¢"
+        }
+      ]
+    },
+    {
+      "name": "textcopyright",
+      "body": [
+        {
+          "TText": "©"
+        }
+      ]
+    },
+    {
+      "name": "textdagger",
+      "body": [
+        {
+          "TText": "†"
+        }
+      ]
+    },
+    {
+      "name": "textdaggerdbl",
+      "body": [
+        {
+          "TText": "‡"
+        }
+      ]
+    },
+    {
+      "name": "textdegree",
+      "body": [
+        {
+          "TText": "°"
+        }
+      ]
+    },
+    {
+      "name": "textdollar",
+      "body": [
+        {
+          "TText": "$"
+        }
+      ]
+    },
+    {
+      "name": "textdong",
+      "body": [
+        {
+          "TText": "₫"
+        }
+      ]
+    },
+    {
+      "name": "textdoubleprime",
+      "body": [
+        {
+          "TText": "″"
+        }
+      ]
+    },
+    {
+      "name": "textellipsis",
+      "body": [
+        {
+          "TText": "…"
+        }
+      ]
+    },
+    {
+      "name": "textemdash",
+      "body": [
+        {
+          "TText": "—"
+        }
+      ]
+    },
+    {
+      "name": "textendash",
+      "body": [
+        {
+          "TText": "–"
+        }
+      ]
+    },
+    {
+      "name": "textestimated",
+      "body": [
+        {
+          "TText": "℮"
+        }
+      ]
+    },
+    {
+      "name": "texteuro",
+      "body": [
+        {
+          "TText": "€"
+        }
+      ]
+    },
+    {
+      "name": "textflorin",
+      "body": [
+        {
+          "TText": "ƒ"
+        }
+      ]
+    },
+    {
+      "name": "textgreater",
+      "body": [
+        {
+          "TText": ">"
+        }
+      ]
+    },
+    {
+      "name": "textguarani",
+      "body": [
+        {
+          "TText": "₲"
+        }
+      ]
+    },
+    {
+      "name": "texthryvnia",
+      "body": [
+        {
+          "TText": "₴"
+        }
+      ]
+    },
+    {
+      "name": "textkip",
+      "body": [
+        {
+          "TText": "₭"
+        }
+      ]
+    },
+    {
+      "name": "textless",
+      "body": [
+        {
+          "TText": "<"
+        }
+      ]
+    },
+    {
+      "name": "textlira",
+      "body": [
+        {
+          "TText": "₤"
+        }
+      ]
+    },
+    {
+      "name": "textmanat",
+      "body": [
+        {
+          "TText": "₼"
+        }
+      ]
+    },
+    {
+      "name": "textmill",
+      "body": [
+        {
+          "TText": "₥"
+        }
+      ]
+    },
+    {
+      "name": "textminus",
+      "body": [
+        {
+          "TText": "−"
+        }
+      ]
+    },
+    {
+      "name": "textnaira",
+      "body": [
+        {
+          "TText": "₦"
+        }
+      ]
+    },
+    {
+      "name": "textnumero",
+      "body": [
+        {
+          "TText": "№"
+        }
+      ]
+    },
+    {
+      "name": "textonehalf",
+      "body": [
+        {
+          "TText": "½"
+        }
+      ]
+    },
+    {
+      "name": "textonequarter",
+      "body": [
+        {
+          "TText": "¼"
+        }
+      ]
+    },
+    {
+      "name": "textparagraph",
+      "body": [
+        {
+          "TText": "¶"
+        }
+      ]
+    },
+    {
+      "name": "textperiodcentered",
+      "body": [
+        {
+          "TText": "·"
+        }
+      ]
+    },
+    {
+      "name": "textpertenthousand",
+      "body": [
+        {
+          "TText": "‱"
+        }
+      ]
+    },
+    {
+      "name": "textperthousand",
+      "body": [
+        {
+          "TText": "‰"
+        }
+      ]
+    },
+    {
+      "name": "textpeso",
+      "body": [
+        {
+          "TText": "₱"
+        }
+      ]
+    },
+    {
+      "name": "textprime",
+      "body": [
+        {
+          "TText": "′"
+        }
+      ]
+    },
+    {
+      "name": "textquotedbl",
+      "body": [
+        {
+          "TText": "\""
+        }
+      ]
+    },
+    {
+      "name": "textquotesingle",
+      "body": [
+        {
+          "TText": "'"
+        }
+      ]
+    },
+    {
+      "name": "textregistered",
+      "body": [
+        {
+          "TText": "®"
+        }
+      ]
+    },
+    {
+      "name": "textruble",
+      "body": [
+        {
+          "TText": "₽"
+        }
+      ]
+    },
+    {
+      "name": "textrupee",
+      "body": [
+        {
+          "TText": "₹"
+        }
+      ]
+    },
+    {
+      "name": "textsection",
+      "body": [
+        {
+          "TText": "§"
+        }
+      ]
+    },
+    {
+      "name": "textsheqel",
+      "body": [
+        {
+          "TText": "₪"
+        }
+      ]
+    },
+    {
+      "name": "textsterling",
+      "body": [
+        {
+          "TText": "£"
+        }
+      ]
+    },
+    {
+      "name": "texttenge",
+      "body": [
+        {
+          "TText": "₸"
+        }
+      ]
+    },
+    {
+      "name": "textthreequarters",
+      "body": [
+        {
+          "TText": "¾"
+        }
+      ]
+    },
+    {
+      "name": "texttrademark",
+      "body": [
+        {
+          "TText": "™"
+        }
+      ]
+    },
+    {
+      "name": "texttripleprime",
+      "body": [
+        {
+          "TText": "‴"
+        }
+      ]
+    },
+    {
+      "name": "texttugrik",
+      "body": [
+        {
+          "TText": "₮"
+        }
+      ]
+    },
+    {
+      "name": "textturkishlira",
+      "body": [
+        {
+          "TText": "₺"
+        }
+      ]
+    },
+    {
+      "name": "textunderscore",
+      "body": [
+        {
+          "TText": "_"
+        }
+      ]
+    },
+    {
+      "name": "textwon",
+      "body": [
+        {
+          "TText": "₩"
+        }
+      ]
+    },
+    {
+      "name": "textyen",
+      "body": [
+        {
+          "TText": "¥"
+        }
+      ]
+    },
+    {
+      "name": "th",
+      "body": [
+        {
+          "TText": "þ"
+        }
+      ]
+    },
+    {
+      "name": "therefore",
+      "body": [
+        {
+          "TText": "∴"
+        }
+      ]
+    },
+    {
+      "name": "theta",
+      "body": [
+        {
+          "TText": "θ"
+        }
+      ]
+    },
+    {
+      "name": "times",
+      "body": [
+        {
+          "TOp": "×"
+        }
+      ]
+    },
+    {
+      "name": "triangle",
+      "body": [
+        {
+          "TText": "△"
+        }
+      ]
+    },
+    {
+      "name": "triangledown",
+      "body": [
+        {
+          "TText": "▽"
+        }
+      ]
+    },
+    {
+      "name": "triangleleft",
+      "body": [
+        {
+          "TOp": "◁"
+        }
+      ]
+    },
+    {
+      "name": "trianglelefteq",
+      "body": [
+        {
+          "TOp": "⊴"
+        }
+      ]
+    },
+    {
+      "name": "triangleq",
+      "body": [
+        {
+          "TOp": "≜"
+        }
+      ]
+    },
+    {
+      "name": "triangleright",
+      "body": [
+        {
+          "TOp": "▷"
+        }
+      ]
+    },
+    {
+      "name": "trianglerighteq",
+      "body": [
+        {
+          "TOp": "⊵"
+        }
+      ]
+    },
+    {
+      "name": "twoheadleftarrow",
+      "body": [
+        {
+          "TOp": "↞"
+        }
+      ]
+    },
+    {
+      "name": "twoheadrightarrow",
+      "body": [
+        {
+          "TOp": "↠"
+        }
+      ]
+    },
+    {
+      "name": "ulcorner",
+      "body": [
+        {
+          "TDelim": "⌜"
+        }
+      ]
+    },
+    {
+      "name": "uparrow",
+      "body": [
+        {
+          "TOp": "↑"
+        }
+      ]
+    },
+    {
+      "name": "updownarrow",
+      "body": [
+        {
+          "TOp": "↕"
+        }
+      ]
+    },
+    {
+      "name": "uplus",
+      "body": [
+        {
+          "TOp": "⊎"
+        }
+      ]
+    },
+    {
+      "name": "upsilon",
+      "body": [
+        {
+          "TText": "υ"
+        }
+      ]
+    },
+    {
+      "name": "upuparrows",
+      "body": [
+        {
+          "TOp": "⇈"
+        }
+      ]
+    },
+    {
+      "name": "urcorner",
+      "body": [
+        {
+          "TDelim": "⌝"
+        }
+      ]
+    },
+    {
+      "name": "vDash",
+      "body": [
+        {
+          "TOp": "⊨"
+        }
+      ]
+    },
+    {
+      "name": "varepsilon",
+      "body": [
+        {
+          "TText": "ϵ"
+        }
+      ]
+    },
+    {
+      "name": "varnothing",
+      "body": [
+        {
+          "TText": "∅"
+        }
+      ]
+    },
+    {
+      "name": "varphi",
+      "body": [
+        {
+          "TText": "ϕ"
+        }
+      ]
+    },
+    {
+      "name": "varpi",
+      "body": [
+        {
+          "TText": "ϖ"
+        }
+      ]
+    },
+    {
+      "name": "varrho",
+      "body": [
+        {
+          "TText": "ϱ"
+        }
+      ]
+    },
+    {
+      "name": "varsigma",
+      "body": [
+        {
+          "TText": "ς"
+        }
+      ]
+    },
+    {
+      "name": "vartheta",
+      "body": [
+        {
+          "TText": "ϑ"
+        }
+      ]
+    },
+    {
+      "name": "vdash",
+      "body": [
+        {
+          "TOp": "⊢"
+        }
+      ]
+    },
+    {
+      "name": "vdots",
+      "body": [
+        {
+          "TText": "⋮"
+        }
+      ]
+    },
+    {
+      "name": "vee",
+      "body": [
+        {
+          "TOp": "∨"
+        }
+      ]
+    },
+    {
+      "name": "wedge",
+      "body": [
+        {
+          "TOp": "∧"
+        }
+      ]
+    },
+    {
+      "name": "wp",
+      "body": [
+        {
+          "TText": "℘"
+        }
+      ]
+    },
+    {
+      "name": "xi",
+      "body": [
+        {
+          "TText": "ξ"
+        }
+      ]
+    },
+    {
+      "name": "zeta",
+      "body": [
+        {
+          "TText": "ζ"
+        }
+      ]
+    }
+  ]
+}

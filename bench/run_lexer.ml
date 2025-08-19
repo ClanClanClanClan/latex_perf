@@ -31,28 +31,7 @@ let percentile_of_list lst p =
 
 (* Lexer function wrappers *)
 let test_l0_lexer input =
-  let tokens = Core.Lexer_optimized_v25.tokenize_to_list input in
-  List.length tokens
-
-(* Unused lexer variants kept for reference *)
-let _test_l0_lexer_spec_exact input =
-  let tokens = Core.L0_lexer_track_a_simple.tokenize input in
-  List.length tokens
-
-let test_l0_lexer_track_a_simple input =
-  let tokens = Core.L0_lexer_track_a_simple.tokenize input in
-  List.length tokens
-
-let _test_l0_lexer_track_a_perfected input =
-  let tokens = Core.L0_lexer_track_a_perfect.tokenize input in
-  List.length tokens
-
-let _test_l0_lexer_track_a_ultra input =
-  let tokens = Core.L0_lexer_track_a_perfect.tokenize input in
-  List.length tokens
-
-let test_l0_lexer_track_a_final input =
-  let tokens = Core.L0_lexer_track_a_perfect.tokenize input in
+  let tokens = Lexer_optimized_v25.tokenize_to_list input in
   List.length tokens
 
 (* Benchmark a single lexer *)
@@ -140,9 +119,7 @@ let () =
   
   (* Lexers to test *)
   let lexers = [
-    ("L0_lexer_baseline", test_l0_lexer);
-    ("L0_lexer_track_a_simple", test_l0_lexer_track_a_simple);
-    ("L0_lexer_track_a_final", test_l0_lexer_track_a_final);
+    ("Lexer_optimized_v25", test_l0_lexer);
   ] in
   
   (* Run benchmarks *)

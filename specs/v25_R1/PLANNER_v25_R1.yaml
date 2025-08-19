@@ -1,0 +1,326 @@
+# planner_v25_full.yaml
+# SHA256 of *this* revision (UTF‑8, without YAML header comments):
+#   68d94432f3251f17613278a9db13fc2340e2988edd53711f286b0299382a03f3
+---
+metadata:
+  title: "LaTeX Perfectionist v25 – Unified Ground‑Truth Master Plan"
+  subtitle: "Comprehensive, formally‑verified, 623‑rule GA roadmap (Revision R1‑2025‑08‑04)"
+  version: "v25-R1"
+  author: "Solo Dev ‹your-handle›"
+  last_update_utc: "2025-08-04"
+  target_release: "2028-07-26"   # Week‑156 GA according to §14.1
+
+global_table_of_contents:
+  - "1. Executive Overview & Success Criteria"
+  - "2. Governance & Process (incl. Risk Register)"
+  - "3. Repository & Build Layout"
+  - "4. Five‑Layer Incremental Architecture (L0–L4)"
+  - "5. Cross‑Layer Consistency & Synchronisation Protocol"
+  - "6. Validator Framework (623 rules)"
+  - "7. Proof‑Automation & 0‑Admit Policy"
+  - "8. Performance Engineering Targets & Measurement Rules"
+  - "9. Multi‑Language & Cultural Adaptation (21 languages)"
+  - "10. Corpus & Ground‑Truth Strategy"
+  - "11. Security, Sandboxing & Supply‑Chain Security"
+  - "12. Distributed Proof‑Farm & CI/CD"
+  - "13. Development Workflow & Tooling"
+  - "14. Project Timeline & Milestones"
+  - "15. Appendices"
+
+sections:
+  - id: 1
+    title: "Executive Overview & Success Criteria"
+    body: |-
+      1  Executive Overview & Success Criteria
+
+      1.1  Vision Statement  
+      “Instant, provably‑correct feedback on any LaTeX source—within **1 ms p99** per keystroke, across **21 languages**, at **< 0.1 % false‑positive** rate.”
+
+      1.2  Key Numbers  (updated to Revision R1‑2025‑08‑04)
+
+      | Metric                                        | Baseline (v24‑R3) | Target (v25_R1)                                 | Status (Week‑1)                |
+      |-----------------------------------------------|-------------------|--------------------------------------------------|--------------------------------|
+      | Validators implemented                        | 80 / 623          | **623 / 623**                                    | 80                             |
+      | Full‑document p95 (1.1 MB perf_smoke_big)     | 420 ms            | **≤ 20 ms (Tier A scalar)**; **≤ 8 ms (Tier B)** | 8.36 ms scalar; 7.6 ms --simd  |
+      | Edit‑window p95 (80 KB)                       | n/a               | **≤ 3 ms**                                       | pending harness                |
+      | First‑token latency                           | n/a               | **≤ 350 µs**                                     | pending harness                |
+      | Formal‑proof admits                           | 211               | **0**                                            | 0 ✅ achieved                   |
+      | Supported languages                           | 3                 | **21**                                           | 6 implemented                  |
+      | False‑positive rate                           | 3.2 %             | **≤ 0.1 %**                                      |  —  (initial)                  |
+
+      *Bench figures from scalar‑optimised path and AVX2 prototype; see §8 and Appendix A.*
+
+      1.3  Three‑Year Trajectory (unchanged in scope, updated wording)
+
+      | Year | Thematic Goal                         | Cum. Validators | Distinct New Tech |
+      |------|---------------------------------------|-----------------|-------------------|
+      | Y1   | Foundation – infra, proofs, 180 rules | 180             | DSL + Proof lib   |
+      | Y2   | Acceleration – pattern mining         | 430             | Pattern‑miner v1  |
+      | Y3   | Completion – ML‑assisted generation   | 623             | ML‑generator v2   |
+
+      1.4  Critical Success Factors  
+        1. **Infrastructure First** – upfront tooling avoids long‑tail toil.  
+        2. **Pattern Families** – validate families once, auto‑prove leaves.  
+        3. **Formal Proof Automation** – Ltac²/ELPI tactics cut cost ×10.  
+        4. **Incremental Everything** – every layer O(Δ) after edits.  
+        5. **Corpus‑Driven** – 2 846 curated papers ensure zero regression.
+
+      1.5  Definition of Done (unchanged; mapped to Section 14 gates).
+
+  - id: 2
+    title: "Governance & Process (incl. Risk Register)"
+    body: |-
+      2  Governance & Process
+
+      2.1  Solo‑Developer Operating Model (kept; editorial fixes only).
+
+      2.2  Hard CI Gates (revised in Revision R1)
+
+      | Gate               | CI Job   | Condition to Merge into main                                                                 |
+      |--------------------|----------|-----------------------------------------------------------------------------------------------|
+      | Zero‑Admit         | proof‑ci | admits == 0 **and** proof‑debt ≤ 10                                                           |
+      | Performance (Tier A)| perf‑ci | **p95 ≤ 20 ms** on `perf_smoke_big.tex` **and** **p95 ≤ 3 ms** on 80 KB edit‑window harness |
+      | SIMD (Tier B, opt) | perf‑ci‑simd | informational only; feature‑flag `--simd` must never regress scalar results                |
+      | Proof‑Debt Deadline| debt‑ci  | after 2025‑10‑31 any `@proof‑debt` fails build                                                |
+
+      2.3  Risk Register (now canonicalised in Appendix R)
+
+      • Scope expanded to **31 rows** with tightened **Impact** scale, new **Residual** score and **Critical (Y/N)** flag.  
+      • Each item carries **Next review** (first business Monday monthly).  
+      • This plan includes a **summary only**; the diff‑friendly, canonical register lives in `governance/risk-register.md` (Appendix R).  
+      • CI badge turns 🔴 if any Residual ≥ 4.
+
+      | #   | Area | Risk (summary)                                        | P | I | Score | Residual | C |
+      |-----|------|--------------------------------------------------------|---|---|-------|----------|---|
+      | T‑1 | Tech | Pattern‑mining over‑generalises → FP↑                  | M | H | 6     | 3        | N |
+      | T‑2 | Tech | Coq 8.20 upgrade breaks proofs                         | M | H | 6     | 3        | N |
+      | T‑3 | Tech | Incremental parser O(n²) corners                       | M | M | 4     | 2        | N |
+      | T‑4 | Tech | Unicode RTL segmentation bug                           | M | M | 4     | 2        | N |
+      | T‑5 | Tech | SIMD feature mis‑detect on exotic ARM                  | L | M | 2     | 1        | N |
+      | T‑6 | Tech | GPU cold‑start prototype starves CPU                   | L | M | 2     | 1        | N |
+      | S‑1 | Sec  | FFI dep CVE                                            | M | M | 4     | 2        | Y |
+      | S‑2 | Sec  | Supply‑chain attack via `opam pin`                     | L | H | 3     | 2        | Y |
+      | L‑1 | Legal| Upstream licence revoked / DMCA                        | L | H | 3     | 2        | Y |
+      | L‑2 | Legal| GDPR: accidental PII in corpus                         | M | M | 4     | 2        | Y |
+      | C‑1 | Comp | Regulatory drift (EU AI Act)                            | L | M | 2     | 2        | Y |
+      | Q‑1 | Qual | FP spike after ML batch                                | M | H | 6     | 3        | N |
+      | Q‑2 | Qual | Proof debt resurfaces                                  | M | M | 4     | 2        | N |
+      | Q‑3 | Qual | Validator fix‑ordering overlap                          | L | M | 2     | 1        | N |
+      | O‑1 | Ops  | Proof‑farm outage                                      | M | M | 4     | 2        | N |
+      | O‑2 | Ops  | Disk‑space exhaustion                                  | M | L | 2     | 1        | N |
+      | O‑3 | Ops  | Proof‑cache mismatch                                   | L | M | 2     | 1        | N |
+      | O‑4 | Ops  | S3 permission drift                                    | L | M | 2     | 1        | N |
+      | O‑5 | Ops  | Backup/restore failure → data loss                     | L | H | 3     | 2        | Y |
+      | B‑1 | Biz  | Solo‑developer burnout                                 | M | H | 6     | 3        | N |
+      | B‑2 | Biz  | Funding gap for compute                                | L | M | 2     | 1        | N |
+      | B‑3 | Biz  | Key‑person outage ≥ 1 week                              | L | H | 3     | 2        | N |
+      | R‑1 | Res  | Pattern‑mining research stagnates                      | L | H | 3     | 2        | N |
+      | E‑1 | Eth  | Dialect bias in NLP                                    | M | M | 4     | 2        | Y |
+      | P‑1 | Perf | 2 ms target unrealistic                                | L | M | 2     | 1        | N |
+      | P‑2 | Perf | Cache‑thrash on > M docs                               | M | M | 4     | 2        | N |
+      | P‑3 | Perf | L4 NLP exceeds CJK budget                              | M | M | 4     | 2        | N |
+      | P‑4 | Perf | Domain parallelism < linear                             | M | M | 4     | 2        | N |
+      | P‑5 | Perf | Bigarray optimisations raise GC pressure               | L | M | 2     | 1        | N |
+      | X‑1 | Ext  | New TeX engine primitives in LuaTeX 2.0               | L | M | 2     | 1        | N |
+      | X‑2 | Ext  | spaCy v5 file‑format shifts                            | M | L | 2     | 1        | N |
+      | I‑1 | Inf  | GitHub Actions minutes exhausted                       | M | L | 2     | 1        | N |
+      | D‑1 | Doc  | Documentation backlog                                  | M | L | 2     | 1        | N |
+
+  - id: 3
+    title: "Repository & Build Layout"
+    body: |-
+      3  Repository & Build Layout  (unchanged except for canonical `_CoqProject` and `dune` `wrapped=false` compatibility layer; mirrors Section 3 of master plan).
+
+      **Perf corpora (new):**
+        • `corpora/perf/perf_smoke_big.tex` — **1 118 944 bytes** (≈ 1.1 MB), 6 370 lines.  
+        • `corpora/perf/perf_math_light.tex` — 412 KB.  
+        • `corpora/perf/perf_macro_dense.tex` — 680 KB.  
+        • `corpora/perf/perf_unicode.tex` — 515 KB.
+
+      *See `repo/` tree description in §3 of the Unified Plan.*
+
+  - id: 4
+    title: "Five‑Layer Incremental Architecture (L0–L4)"
+    body: |-
+      4  Five‑Layer Incremental Architecture
+
+      Design unchanged; clarifications from the 87‑Q cycle added
+      (exact OCaml signatures → Appendix A; error‑propagation contract;
+      fuel guarantees → §7.4).
+
+  - id: 5
+    title: "Cross‑Layer Consistency & Synchronisation Protocol"
+    body: |-
+      5  Cross‑Layer Consistency & Synchronisation Protocol
+
+      Key points: version‑vector `{gen,parent_gen}`, atomic barrier on
+      publish, rollback child‑only, proof `snapshot_consistency` QED.
+
+  - id: 6
+    title: "Validator Framework (623 rules)"
+    body: |-
+      6  Validator Framework
+
+      • Manifest schema `{id,phase,provides,requires,conflicts}`  
+      • Static DAG built at start‑up; cycles abort.  
+      • Conflict‑resolution order = (severity, phase‑ordinal, id‑lex).  
+      • Proof `dag_acyclic` in *ValidatorGraphProofs.v*.  
+      • Execution schedule table moved to Appendix C.
+
+  - id: 7
+    title: "Proof‑Automation & 0‑Admit Policy"
+    body: |-
+      7  Proof‑Automation & 0‑Admit Policy
+
+      • **Zero admits** on *main* at all times.  
+      • Temporary `@proof‑debt(deadline="2025‑10‑31")` axioms ≤ 10.  
+      • Week‑1 status: 0 admits, 0 axioms – goal achieved ✅  
+      • Proof template catalogue (14 templates) – Appendix D.
+
+  - id: 8
+    title: "Performance Engineering Targets & Measurement Rules"
+    body: |-
+      8  Performance Engineering
+
+      **Tiered targets (R1):**
+        • **Tier A (scalar, mandatory)** — p95 **≤ 20 ms** on 1.1 MB `perf_smoke_big.tex`; edit‑window p95 **≤ 3 ms** (80 KB).  
+        • **Tier B (SIMD, optional flag `--simd`)** — p95 **≤ 8 ms** on same corpus; must never regress scalar results.
+
+      **Measurement methodology:** `bench/run_lexer.ml` runs 5 warm‑ups + 50 measured iterations; report median/p95/p99 and throughput. Hardware baseline recorded per job.
+
+      **Specifications & budgets:**
+        • first‑token latency ≤ 350 µs; memory peak (tokens+arena) ≤ 2.0× source bytes.  
+        • whole‑pipeline p95 < 42 ms downstream budget preserved.
+
+      **Scalar optimisation techniques (mandatory path):**
+        – `Bytes.unsafe_get` to remove bounds checks; single‑pass state machine.  
+        – Output to `Bigarray.Array1` ring before list conversion.  
+        – Line/col tracking lazily recorded once per `\\n`.  
+        – **No allocation in the inner loop** (> 99 % tokens).  
+        – Incremental/dirty re‑lex window capped at **16 KiB**.
+
+      **SIMD + FFI add‑on (optional):**
+        – C kernel `c/lex_fast.c` with AVX2/AVX‑512 and NEON; scalar fallback.  
+        – Rust reference impl behind C API (via `cargo cc`) for maintainability.  
+        – OCaml binding via Ctypes; arena allocated by C and exposed as Bigarray.  
+        – Runtime feature‑detect; auto‑disable if slower than scalar.  
+        – Equivalence proof stub `Lexer_simd_equiv.v`; scalar proofs QED.
+
+      **Latest results (Ryzen 7950X, OCaml 5.2.0, `-O3 -flambda2`):**
+        | File               | Old (48 ms) | Scalar‑Opt (8.36 ms) | Speed‑up |
+        |--------------------|------------:|----------------------:|---------:|
+        | perf_smoke_big     | 48.1 ms     | 8.36 ms               | 5.75×    |
+        | perf_math_light    | 18.5 ms     | 6.9 ms                | 2.68×    |
+        | perf_macro_dense   | 27.2 ms     | 10.4 ms               | 2.61×    |
+        | perf_unicode       | 22.8 ms     | 8.7 ms                | 2.62×    |
+        SIMD prototype (AVX2, `--simd`) reaches **7.6 ms** on `perf_smoke_big` (informational).
+
+      **CI gates:** `perf‑ci` blocks if document p95 > 20 ms **or** edit‑window p95 > 3 ms on baseline runners. A separate `perf‑ci‑simd` job is advisory only.
+
+  - id: 9
+    title: "Multi‑Language & Cultural Adaptation (21 languages)"
+    body: |-
+      9  Multi‑Language & Cultural Adaptation
+
+      6 language packs (en, fr, de, es, ja, zh) live; 15 stubs. Validators
+      parametrised by `lang_code`; fairness metrics track Δ‑precision.
+
+  - id: 10
+    title: "Corpus & Ground‑Truth Strategy"
+    body: |-
+      10  Corpus & Ground‑Truth Strategy
+
+      Strategy A‑plus, repo ≤ 200 MB. External corpora locked by
+      `corpora.lock`. **Perf corpus switched to `perf_smoke_big.tex` (1 118 944 B).**
+      Ground‑truth YAML schema → Appendix F.
+
+  - id: 11
+    title: "Security, Sandboxing & Supply‑Chain Security"
+    body: |-
+      11  Security, Sandboxing & Supply‑Chain Security
+
+      Seccomp profile (`scripts/sandbox/seccomp.json`), SBOM via CycloneDX,
+      Cosign‑signed releases; see Section 11 of master plan.
+
+  - id: 12
+    title: "Distributed Proof‑Farm & CI/CD"
+    body: |-
+      12  Distributed Proof‑Farm & CI/CD
+
+      k8s Job template `infra/k8s/proof‑farm.yaml`; 128‑pod farm; Grafana
+      dashboards via OpenTelemetry. Pre‑commit hook blocks `.v` admits.
+
+  - id: 13
+    title: "Development Workflow & Tooling"
+    body: |-
+      13  Development Workflow & Tooling
+
+      VS Code + Coq‑LSP/OCaml‑LSP, `dune watch`, `make quick`, pre‑commit
+      hooks (format, lint, admit‑count, repo‑size).
+
+  - id: 14
+    title: "Project Timeline & Milestones"
+    body: |-
+      14  Project Timeline & Milestones
+
+      ISO‑Week‑0 = 2025‑07‑28, 156‑week schedule.  
+      **Hard gates:** Bootstrap (W‑1), Perf α (W‑5), Proof β (W‑10),
+      L2 delivered (W‑52), Style α (W‑78), Proof‑debt 0 (W‑130), GA (W‑156).  
+      Detailed week‑by‑week table lives in the textual plan §14.2.
+
+  - id: 15
+    title: "Appendices"
+    body: |-
+      15  Appendices
+
+      Authoritative list A – L (13 files) stored under `docs/`;
+      build targets: `make docs` (master), `make docs_bootstrap`
+      (essentials). CI guard checks exactly 13 `\appendix[A-L]` markers.
+      Risk Register (Appendix R) is maintained at `governance/risk-register.md`.
+
+appendix_and_build:
+  appendices:
+    authoritative: true
+    table:
+      - { id: "A", title: "Glossary & Notation", file: "appendix_A_glossary.tex", pages: 8 }
+      - { id: "B", title: "Layer Interfaces & Data‑Structures", file: "appendix_B_layer_interfaces.tex", pages: 93 }
+      - { id: "C", title: "Validator DSL & Generator", file: "appendix_C_validator_dsl.tex", pages: 47 }
+      - { id: "D", title: "Proof Template Catalogue", file: "appendix_D_proof_templates.tex", pages: 22 }
+      - { id: "E", title: "SIMD Implementation Notes", file: "appendix_E_simd_notes.tex", pages: 11 }
+      - { id: "F", title: "Internationalisation & Unicode Strategy", file: "appendix_F_i18n_unicode.tex", pages: 97 }
+      - { id: "G", title: "ML‑Assisted Pattern Pipeline & Extended Glossary", file: "appendix_G_ml_pipeline.tex", pages: 161 }
+      - { id: "H", title: "Advanced Proof‑Automation Cookbook", file: "appendix_H_proof_cookbook.tex", pages: 115 }
+      - { id: "I", title: "Incremental “Elder” Runtime Architecture", file: "appendix_I_elder_runtime.tex", pages: 72 }
+      - { id: "J", title: "Continuous‑Integration & Build Infrastructure", file: "appendix_J_ci_build.tex", pages: 14 }
+      - { id: "K", title: "Reproducibility Cookbook & Tool‑chain Pins", file: "appendix_K_reproducibility.tex", pages: 7 }
+      - { id: "L", title: "Road‑map & De‑scoped Ideas", file: "appendix_L_roadmap.tex", pages: 5 }
+  build_commands:
+    docs_all: "make docs         # → docs/v25_master.pdf"
+    docs_bootstrap: "make docs_bootstrap  # → docs/v25_bootstrap_essentials.pdf"
+  ci_guard:
+    workflow_file: ".github/workflows/ci.yml"
+    regex_check: "grep -E '^\\\\\\appendix[A-L]' docs/v25_master.pdf | wc -l == 13"
+
+build_automation:
+  ci_badges:
+    residual_risk: "turns red if any Residual ≥ 4 (see Risk Register)"
+  heatmap_script: "scripts/risk_heatmap.py"
+  ci_jobs:
+    - name: "proof‑ci"
+      purpose: "zero‑admit gate"
+    - name: "perf‑ci"
+      purpose: "Tier A p95 latency gate"
+    - name: "perf‑ci‑simd"
+      purpose: "Tier B SIMD (optional) informational gate"
+    - name: "sbom‑ci"
+      purpose: "security scanning"
+    - name: "milestone‑gate‑*"
+      purpose: "enforce milestone acceptance check‑lists"
+
+next_actions:
+  - "Tag repository as v25-R1-2025-08-04-ground-truth"
+  - "Open GitHub issue 'Week‑1 debt burn‑down' ✅ COMPLETE (0 admits)"
+  - "Switch all benches to perf_smoke_big & land edit‑window harness"
+  - "Start property‑based diff harness for SIMD vs scalar"
+
+# EOF

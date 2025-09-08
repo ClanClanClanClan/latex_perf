@@ -1,0 +1,15 @@
+let page_bytes                   = 4096
+let hedge_timer_ms_default       = 12
+let minor_heap_bytes             = 256 * 1024 * 1024  (* large to cover ephemeral *)
+let gc_space_overhead            = 10_000
+let gc_max_overhead              = 10_000
+let gc_full_major_budget_mb      = 256
+let worker_alloc_budget_mb       = 1_500
+let worker_major_cycles_budget   = 12
+let arenas_tokens_cap            = 3_000_000  (* 3M tokens ⇒ 48 MB for 4 int32 SoAs *)
+let service_sock_path            = "/tmp/l0_lex_svc.sock"
+let max_req_bytes                = 2 * 1024 * 1024
+let tail_trace_keep              = 100        (* keep slowest 100 service spans *)
+let tail_csv_path                = "tail_metrics.csv" (* metrics CSV output path *)
+let hdr_histogram_bucket_ms      = 1          (* presentation only; not for Pxx *)
+let require_simd_in_ci           = false      (* set true in CI *)

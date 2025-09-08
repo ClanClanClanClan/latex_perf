@@ -1,7 +1,0 @@
-
-;; Standalone performance test
-(executable
- (public_name test_performance_standalone)
- (name test_performance_standalone)
- (modules test_performance_standalone)
- (libraries core data))

@@ -1,0 +1,25 @@
+(library
+ (name l0_lexer)
+ (public_name latex-perfectionist.core.l0_lexer)
+ (modules config clock hedge_timer qos rusage simd_caps percentiles alloc_guard gc_prep pretouch arena ipc real_processor simd_processor metrics_logger worker broker service_bracket)
+ (libraries unix threads bigarray data)
+ (foreign_stubs
+  (language c)
+  (names clock_stubs hedge_timer_stubs qos_stubs pretouch_stubs rusage_stubs simd_caps_macos tokenizer_stubs simd_production_stubs))
+ (c_library_flags ("/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/core/l0_lexer/simd/libsimd_production.a")))
+
+(executable
+ (name main_service)
+ (modules main_service)
+ (libraries l0_lexer unix threads bigarray))
+
+(executable
+ (name main_service_enhanced)
+ (modules main_service_enhanced)
+ (libraries l0_lexer unix threads bigarray))
+
+(executable
+ (name test_integration)
+ (modules test_integration)
+ (libraries l0_lexer unix threads bigarray))
+

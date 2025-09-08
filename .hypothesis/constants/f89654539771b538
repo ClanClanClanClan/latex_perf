@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/math_canonical.py
-# hypothesis_version: 6.135.16
-
-['%', '(?<!\\\\)&', '*', '...', 'Vmatrix', '\\$\\$(.*?)\\$\\$', '\\\\\\((.*?)\\\\\\)', '\\\\\\[(.*?)\\\\\\]', '\\\\\\\\(?:\\[[^\\]]*\\])?', '\\\\label\\s*\\{[^}]+\\}', '\\\\nonumber|\\\\notag', 'align', 'align*', 'alignat', 'alignat*', 'aligned', 'alignedat', 'array', 'bmatrix', 'cases', 'dcases', 'displaymath', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'error', 'flalign', 'flalign*', 'gather', 'gather*', 'gathered', 'math', 'math_canonical', 'matrix', 'multline', 'multline*', 'pmatrix', 'rcases', 'split', 'vmatrix', 'warning']

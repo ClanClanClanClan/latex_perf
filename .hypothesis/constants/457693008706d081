@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/expect_prob_brackets.py
-# hypothesis_version: 6.135.16
-
-['\\\\mathbb\\{E\\}\\s*\\(', '\\\\mathbb\\{P\\}\\s*\\(', '\\mathbb{E}[', '\\mathbb{P}[', 'expect_brackets', 'math', 'prob_brackets', 'warning']

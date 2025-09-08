@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/hardcore_test_runner.py
-# hypothesis_version: 6.135.16
-
-[5000, '\nOptional files:', '$$ a = b $$', '$$ a=b $$', '$$ z \\label{eq:z} $$', '-', '--all', '--basic-only', '--level', '--no-integration', '--property', '--quick', '--verbose', '--verify', '-v', '=', 'Always Good Cases', 'Enhanced math tests', 'Enhanced normalizer', 'Preamble analyzer', 'Property-based tests', 'Should become inline', 'Show detailed output', '\\( x^2 \\)', '\\[ a \\]', '__main__', 'config.default.yaml', 'latex_perfectionist', 'preamble_analyzer.py', 'quick', 'rules', 'store_true', 'tests']

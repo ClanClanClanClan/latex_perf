@@ -1,5 +1,0 @@
-(executables
- (public_names run_lexer profile_lexer quick_test)
- (names run_lexer profile_lexer quick_test)
- (modules run_lexer profile_lexer quick_test)
- (libraries core data unix))

@@ -1,0 +1,144 @@
+Cleaning up old service...
+Starting fresh service for 100k test...
+Service started with PID 3579
+Waiting for service to be ready...
+
+Running 100000 sequential requests...
+  Error at request 359: Failure("EOF")
+  Error at request 360: Failure("EOF")
+  Error at request 361: Failure("EOF")
+  Error at request 362: Failure("EOF")
+  Error at request 363: Failure("EOF")
+  Error at request 364: Failure("EOF")
+  Error at request 365: Failure("EOF")
+  Error at request 366: Failure("EOF")
+  Error at request 367: Failure("EOF")
+  Error at request 368: Failure("EOF")
+  1000 / 100000 (261 req/s, est. 6.3 min remaining)
+  2000 / 100000 (393 req/s, est. 4.2 min remaining)
+  3000 / 100000 (516 req/s, est. 3.1 min remaining)
+  4000 / 100000 (583 req/s, est. 2.7 min remaining)
+  5000 / 100000 (639 req/s, est. 2.5 min remaining)
+  6000 / 100000 (715 req/s, est. 2.2 min remaining)
+  7000 / 100000 (779 req/s, est. 2.0 min remaining)
+  8000 / 100000 (832 req/s, est. 1.8 min remaining)
+  9000 / 100000 (881 req/s, est. 1.7 min remaining)
+ 10000 / 100000 (923 req/s, est. 1.6 min remaining)
+ 11000 / 100000 (961 req/s, est. 1.5 min remaining)
+ 12000 / 100000 (996 req/s, est. 1.5 min remaining)
+ 13000 / 100000 (1027 req/s, est. 1.4 min remaining)
+ 14000 / 100000 (1056 req/s, est. 1.4 min remaining)
+ 15000 / 100000 (1081 req/s, est. 1.3 min remaining)
+ 16000 / 100000 (1104 req/s, est. 1.3 min remaining)
+ 17000 / 100000 (1122 req/s, est. 1.2 min remaining)
+ 18000 / 100000 (1141 req/s, est. 1.2 min remaining)
+ 19000 / 100000 (1159 req/s, est. 1.2 min remaining)
+ 20000 / 100000 (1175 req/s, est. 1.1 min remaining)
+ 21000 / 100000 (1190 req/s, est. 1.1 min remaining)
+ 22000 / 100000 (1204 req/s, est. 1.1 min remaining)
+ 23000 / 100000 (1216 req/s, est. 1.1 min remaining)
+ 24000 / 100000 (1227 req/s, est. 1.0 min remaining)
+ 25000 / 100000 (1235 req/s, est. 1.0 min remaining)
+ 26000 / 100000 (1245 req/s, est. 1.0 min remaining)
+ 27000 / 100000 (1240 req/s, est. 1.0 min remaining)
+ 28000 / 100000 (1238 req/s, est. 1.0 min remaining)
+ 29000 / 100000 (1234 req/s, est. 1.0 min remaining)
+ 30000 / 100000 (1240 req/s, est. 0.9 min remaining)
+ 31000 / 100000 (1248 req/s, est. 0.9 min remaining)
+ 32000 / 100000 (1254 req/s, est. 0.9 min remaining)
+ 33000 / 100000 (1259 req/s, est. 0.9 min remaining)
+ 34000 / 100000 (1261 req/s, est. 0.9 min remaining)
+ 35000 / 100000 (1265 req/s, est. 0.9 min remaining)
+ 36000 / 100000 (1270 req/s, est. 0.8 min remaining)
+ 37000 / 100000 (1274 req/s, est. 0.8 min remaining)
+ 38000 / 100000 (1279 req/s, est. 0.8 min remaining)
+ 39000 / 100000 (1283 req/s, est. 0.8 min remaining)
+ 40000 / 100000 (1287 req/s, est. 0.8 min remaining)
+ 41000 / 100000 (1290 req/s, est. 0.8 min remaining)
+ 42000 / 100000 (1290 req/s, est. 0.7 min remaining)
+ 43000 / 100000 (1292 req/s, est. 0.7 min remaining)
+ 44000 / 100000 (1294 req/s, est. 0.7 min remaining)
+ 45000 / 100000 (1296 req/s, est. 0.7 min remaining)
+ 46000 / 100000 (1297 req/s, est. 0.7 min remaining)
+ 47000 / 100000 (1299 req/s, est. 0.7 min remaining)
+ 48000 / 100000 (1300 req/s, est. 0.7 min remaining)
+ 49000 / 100000 (1298 req/s, est. 0.7 min remaining)
+ 50000 / 100000 (1297 req/s, est. 0.6 min remaining)
+ 51000 / 100000 (1288 req/s, est. 0.6 min remaining)
+ 52000 / 100000 (1289 req/s, est. 0.6 min remaining)
+ 53000 / 100000 (1288 req/s, est. 0.6 min remaining)
+ 54000 / 100000 (1285 req/s, est. 0.6 min remaining)
+ 55000 / 100000 (1283 req/s, est. 0.6 min remaining)
+ 56000 / 100000 (1282 req/s, est. 0.6 min remaining)
+ 57000 / 100000 (1281 req/s, est. 0.6 min remaining)
+ 58000 / 100000 (1280 req/s, est. 0.5 min remaining)
+ 59000 / 100000 (1280 req/s, est. 0.5 min remaining)
+ 60000 / 100000 (1278 req/s, est. 0.5 min remaining)
+ 61000 / 100000 (1276 req/s, est. 0.5 min remaining)
+ 62000 / 100000 (1275 req/s, est. 0.5 min remaining)
+ 63000 / 100000 (1274 req/s, est. 0.5 min remaining)
+ 64000 / 100000 (1274 req/s, est. 0.5 min remaining)
+ 65000 / 100000 (1273 req/s, est. 0.5 min remaining)
+ 66000 / 100000 (1273 req/s, est. 0.4 min remaining)
+ 67000 / 100000 (1272 req/s, est. 0.4 min remaining)
+ 68000 / 100000 (1272 req/s, est. 0.4 min remaining)
+ 69000 / 100000 (1271 req/s, est. 0.4 min remaining)
+ 70000 / 100000 (1271 req/s, est. 0.4 min remaining)
+ 71000 / 100000 (1270 req/s, est. 0.4 min remaining)
+ 72000 / 100000 (1268 req/s, est. 0.4 min remaining)
+ 73000 / 100000 (1241 req/s, est. 0.4 min remaining)
+ 74000 / 100000 (1237 req/s, est. 0.4 min remaining)
+ 75000 / 100000 (1237 req/s, est. 0.3 min remaining)
+ 76000 / 100000 (1236 req/s, est. 0.3 min remaining)
+ 77000 / 100000 (1235 req/s, est. 0.3 min remaining)
+ 78000 / 100000 (1232 req/s, est. 0.3 min remaining)
+ 79000 / 100000 (1231 req/s, est. 0.3 min remaining)
+ 80000 / 100000 (1229 req/s, est. 0.3 min remaining)
+ 81000 / 100000 (1228 req/s, est. 0.3 min remaining)
+ 82000 / 100000 (1227 req/s, est. 0.2 min remaining)
+ 83000 / 100000 (1224 req/s, est. 0.2 min remaining)
+ 84000 / 100000 (1222 req/s, est. 0.2 min remaining)
+ 85000 / 100000 (1220 req/s, est. 0.2 min remaining)
+ 86000 / 100000 (1218 req/s, est. 0.2 min remaining)
+ 87000 / 100000 (1217 req/s, est. 0.2 min remaining)
+ 88000 / 100000 (1215 req/s, est. 0.2 min remaining)
+ 89000 / 100000 (1212 req/s, est. 0.2 min remaining)
+ 90000 / 100000 (1209 req/s, est. 0.1 min remaining)
+ 91000 / 100000 (1207 req/s, est. 0.1 min remaining)
+ 92000 / 100000 (1205 req/s, est. 0.1 min remaining)
+ 93000 / 100000 (1210 req/s, est. 0.1 min remaining)
+ 94000 / 100000 (1223 req/s, est. 0.1 min remaining)
+ 95000 / 100000 (1236 req/s, est. 0.1 min remaining)
+ 96000 / 100000 (1249 req/s, est. 0.1 min remaining)
+ 97000 / 100000 (1262 req/s, est. 0.0 min remaining)
+ 98000 / 100000 (1275 req/s, est. 0.0 min remaining)
+ 99000 / 100000 (1288 req/s, est. 0.0 min remaining)
+100000 / 100000 (1301 req/s, est. 0.0 min remaining)
+
+
+Completed in 76.9 seconds
+Successful requests: 358/100000 (errors: 99642)
+
+=== FINAL 100K RESULTS ===
+Samples: 358
+Errors: 99642
+
+LATENCY PERCENTILES:
+  Min:    5.767 ms
+  P50:    6.859 ms
+  Mean:   8.043 ms
+  P90:    11.708 ms
+  P95:    13.314 ms
+  P99:    21.639 ms
+  P99.9:  45.594 ms  ❌ FAIL
+  P99.99: 45.594 ms
+  Max:    45.594 ms
+
+THROUGHPUT:
+  4.7 requests/second
+
+TARGET REQUIREMENT: P99.9 ≤ 20ms
+ACTUAL P99.9: 45.594 ms
+STATUS: ❌ FAILS TARGET
+
+Service terminated.

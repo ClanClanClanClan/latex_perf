@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/scanner_pyltx.py
-# hypothesis_version: 6.135.16
-
-['$', '$$', '&', '\\\\', 'align', 'aligned', 'array', 'display', 'env', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'inline', 'nodelist', 'pos_end', 'split']

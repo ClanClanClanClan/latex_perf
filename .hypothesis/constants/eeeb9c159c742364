@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/dash_ranges.py
-# hypothesis_version: 6.135.16
-
-['(\\d+)-(\\d+)', 'Hyphen range', 'dash', 'en_dash_ranges', 'orthography', 'warning']

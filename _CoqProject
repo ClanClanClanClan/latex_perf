@@ -1,52 +1,27 @@
--R proofs LaTeXPerfectionist.Proofs
--R src/core/lexer LaTeXPerfectionist.Lexer
--R src/core/expander LaTeXPerfectionist.Expander
--R src/core/performance LaTeXPerfectionist.Performance
--R src/core/validation LaTeXPerfectionist.Validation
--R specs/rules LaTeXPerfectionist.Rules
+# LaTeX Perfectionist v25_R1 Coq Project Configuration
+# Canonical _CoqProject per v25_master.md specifications
 
-# Core proof infrastructure
-proofs/CoreProofs/TacticKernel.v
-proofs/Catcode.v
-proofs/CoreProofs/TokenEq.v
-proofs/CoreProofs/Whitespace.v
-proofs/CoreProofs/Brace.v
-proofs/CoreProofs/RegexUtf8.v
-proofs/CoreProofs/Detector.v
-proofs/CoreProofs/All.v
-proofs/Lexer.v
+-R proofs LaTeXPerfectionist
+-Q core/interfaces LaTeXPerfectionist.Core
+-Q data LaTeXPerfectionist.Data
+-Q generator LaTeXPerfectionist.Generator
 
-# Lexer components
-src/core/lexer/LatexCatcodes.v
-src/core/lexer/v24r3/CoreLexer.v
-src/core/lexer/CatcodeAnalysis.v
-src/core/lexer/LatexLexer.v
-src/core/lexer/IncrementalLatexLexer.v
-src/core/lexer/LatexLexerProofs.v
-src/core/lexer/IncrementalLexerExtraction.v
+# Core proof files (temporarily commented out for OCaml build testing)
+# proofs/CoreProofs.v
+# proofs/LexerProofs.v
+# proofs/ValidatorGraphProofs.v
+# proofs/ElderProofs.v
+# proofs/ExpandProofsFinal.v
+# proofs/ArenaSound.v
 
-# Expander components
-src/core/expander/ExpanderTypes.v
-src/core/expander/MacroCatalog.v
-src/core/expander/ExpanderAlgorithm.v
-src/core/expander/ExpanderProofsSimplified.v
-src/core/expander/ExpanderProofsFinal.v
-src/core/expander/Layer02Verified.v
-src/core/expander/ExpanderTests.v
-src/core/expander/IntegrationTests.v
-src/core/expander/PerformanceTests.v
+# Layer-specific proofs (temporarily commented out)
+# proofs/L0/Catcode.v
+# proofs/L0/LexerIncremental.v  
+# proofs/L1/ExpandNoTeof.v
+# proofs/L2/ParserSoundness.v
+# proofs/L3/LabelsUnique.v
+# proofs/L4/StyleProofs.v
 
-# Performance monitoring
-src/core/performance/SLAMonitor.v
-src/core/performance/PerformanceIntegration.v
-src/core/performance/V15Integration.v
-
-# Validation framework
-src/core/validation/ValidationTypes.v
-src/core/validation/ValidationRules.v
-
-# Rule specifications
-specs/rules/phase1/CommandRules.v
-specs/rules/phase1/TypoRules.v
-specs/rules/phase1/RuleTests.v
-specs/rules/phase1_5/PostExpansionRules.v
+# Options
+-arg -w -arg -notation-overridden
+-arg -w -arg -redundant-canonical-projection

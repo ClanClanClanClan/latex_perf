@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/nested_scripts.py
-# hypothesis_version: 6.135.16
-
-[0.1, '([_^])\\{', '*', '+', ',', '-', '/', '0.2', '<', '=', '>', '[α-ωΑ-Ω]', '\\', '\\\\', '\\\\[a-zA-Z]+', '\\\\mathbf', '\\\\mathit', '\\\\mathrm', '\\\\raisebox', '\\\\scriptscriptstyle', '\\\\text', '\\frac', '\\int', '\\prod', '\\sum', '^', '_', 'already_processed', 'brace_count', 'contains_,', 'contains_comma', 'contains_greek', 'contains_latex', 'greek_letters', 'has_nested', 'latex_commands', 'length', 'long_content', 'math', 'needs_raisebox', 'nested_braces', 'no_nesting', 'raisebox_ex', 'reason', 'subsup', 'warning', '{', '|', '}']

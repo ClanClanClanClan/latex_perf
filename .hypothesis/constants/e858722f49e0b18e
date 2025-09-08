@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/scanner_pyltx.py
-# hypothesis_version: 6.135.16
-
-['$', '$$', '0', 'Block', 'DEBUG_LATEX_PERF', 'align', 'align*', 'aligned', 'aligned*', 'display', 'env', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'gather', 'gather*', 'get_latex_nodes', 'inline', 'multline', 'multline*', 'nodelist', 'pos_end', 'scan_blocks', 'split']

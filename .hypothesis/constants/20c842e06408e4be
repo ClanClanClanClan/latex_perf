@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/double_periods.py
-# hypothesis_version: 6.135.16
-
-[0.1, '\'"()[]!?;:', '(?:', ')\\.{2,}(?!\\w)', '.', '..', '...', '\\.{2,}', '\\b[A-Z]\\.{2,}(?!\\w)', '\\b[a-z]\\.{2,}(?!\\w)', 'abbrev', 'abbreviations', 'all_multiple_periods', 'all_periods', 'basic_abbreviations', 'basic_abbrevs', 'citations', 'content', 'count', 'details', 'detect_abbreviations', 'end', 'extended_abbrevs', 'file_paths', 'latex_commands', 'punctuation', 'special_regions', 'start', 'urls', 'warning', '|']

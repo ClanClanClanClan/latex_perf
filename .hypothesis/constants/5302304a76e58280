@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/multilingual/__init__.py
-# hypothesis_version: 6.135.16
-
-['BabelValidator', 'HyphenationChecker', 'Language', 'LanguageDetector', 'LanguageRule']

@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/math_env_normaliser.py
-# hypothesis_version: 6.135.16
-
-['$', '$ → $', '$ → \\[', '$ → equation*', '$$', '%[^\\n]*', '&', '&=&', '*', '=', 'Vmatrix', '\\', '\\(', '\\( → $', '\\[', '\\[ → $', '\\[ → equation', '\\\\', '\\\\label\\s*\\{', '\\\\left\\s*[\\(\\[\\{|]', '\\\\right\\s*[\\)\\]\\}|]', '\\]', '\\begin{equation*}', '\\begin{equation}', '\\end{equation*}', '\\end{equation}', 'align', 'align*', 'alignat', 'alignat*', 'aligned', 'array', 'bmatrix', 'display', 'env', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'flalign', 'flalign*', 'gather', 'gather*', 'inline', 'mathenv', 'matrix', 'multline', 'multline*', 'pmatrix', 'q=r', 'split', 'vmatrix', 'warning', 'xalignat', 'xxalignat']

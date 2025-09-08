@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/scanner_pyltx.py
-# hypothesis_version: 6.135.16
-
-['$', '$$', 'align', 'align*', 'alignat', 'alignat*', 'aligned', 'array', 'array*', 'display', 'env', 'environmentname', 'eqnarray', 'eqnarray*', 'equation', 'equation*', 'flalign', 'flalign*', 'gather', 'gather*', 'ignore', 'inline', 'multline', 'multline*', 'n', 'nodelist', 'split', 'xalignat', 'xxalignat']

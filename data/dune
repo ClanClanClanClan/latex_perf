@@ -1,0 +1,5 @@
+(library
+ (name data)
+ (public_name latex-perfectionist.data)
+ (modules types)
+ (libraries unix bigarray))

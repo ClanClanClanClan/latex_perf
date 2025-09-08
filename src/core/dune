@@ -1,4 +1,0 @@
-(library
- (public_name latex-perfectionist.core)
- (name core)
- (libraries data unix))

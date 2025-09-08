@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/multilingual/babel_validator.py
-# hypothesis_version: 6.135.16
-
-['!', '"', ',', ':', ';', '?', 'LGR', 'T1', 'T2A', '\\\\foreignlanguage\\{', '\\\\selectlanguage\\{', '\\\\text[a-z]+\\{', 'acadian', 'arabic', 'austrian', 'babel', 'babel_options', 'babel_validator', 'canadien', 'chinese', 'default', 'direction', 'encoding', 'error', 'fontenc', 'fontspec', 'foreign', 'francais', 'french', 'german', 'greek', 'info', 'japanese', 'language', 'latin1', 'main', 'ngerman', 'options', 'other', 'otherlang', 'package', 'polutonikogreek', 'polyglossia', 'polyglossia_options', 'required_packages', 'rtl', 'russian', 'select', 'shorthand', 'shorthands', 'swissgerman', 'text', 'utf8', 'warning', 'xeCJK']

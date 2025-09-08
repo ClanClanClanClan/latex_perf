@@ -1,4 +1,0 @@
-# file: /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/latex_perfectionist/rules/preamble_analyzer.py
-# hypothesis_version: 6.135.16
-
-['$', '$$', ',', 'Bmatrix', 'Vmatrix', '\\[', '\\]', 'align', 'align*', 'alignat', 'alignat*', 'aligned', 'alignedat', 'amsmath', 'array', 'bmatrix', 'breqn', 'cases', 'cases*', 'ceqn', 'ceqn*', 'dcases', 'dcases*', 'def', 'delimiter_command', 'dgroup', 'dgroup*', 'display', 'display_bracket', 'display_dollar', 'dmath', 'dmath*', 'drcases', 'drcases*', 'dseries', 'dseries*', 'empheq', 'eqnarray', 'equation', 'equation*', 'flalign', 'flalign*', 'fleqn', 'fleqn*', 'gather', 'gather*', 'gathered', 'inline_dollar', 'lgathered', 'math', 'mathtools', 'matrix', 'multline', 'multline*', 'multlined', 'nccmath', 'newcommand', 'newenvironment', 'numcases', 'pmatrix', 'rcases', 'rcases*', 'renewcommand', 'renewenvironment', 'rgathered', 'smallmatrix', 'split', 'subnumcases', 'usepackage', 'vmatrix']

@@ -1,5 +1,4 @@
-open Unix
-open Percentiles_strict
+open Latex_parse_lib
 
 let read_file path =
   let ic = open_in_bin path in let len = in_channel_length ic in

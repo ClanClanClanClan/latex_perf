@@ -1,4 +1,9 @@
 (executable
+ (name ab_microbench)
+ (modules ab_microbench percentiles_strict)
+ (libraries unix latex_parse_lib))
+
+(executable
  (name run_service_bench_concurrent)
  (modules run_service_bench_concurrent percentiles_strict)
  (libraries unix threads latex_parse_lib))

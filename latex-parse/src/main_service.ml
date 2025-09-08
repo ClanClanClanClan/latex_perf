@@ -16,6 +16,15 @@ let sigchld_reaper _ =
   (try reap () with _ -> ())
 
 let run () =
+  (* --- SIMD guard: refuse to run scalar unless explicitly allowed --- *)
+  (try
+     let (cpu_ok, sym_ok, allow_scalar) = Simd_guard.require () in
+     if not (cpu_ok && sym_ok) && allow_scalar then
+       prerr_endline "[svc] WARNING: running in scalar fallback because L0_ALLOW_SCALAR=1"
+   with Failure msg ->
+     prerr_endline ("[svc] FATAL: "^msg); exit 2
+  );
+
   Sys.set_signal Sys.sigchld (Sys.Signal_handle sigchld_reaper);
   Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
 

@@ -2,11 +2,14 @@
  (name latex_parse_lib)
  (modules
   config clock hedge_timer mlock meminfo gc_prep pretouch arena ipc
-  real_processor worker broker service_bracket)
+  simd_guard real_processor worker broker service_bracket)
  (libraries unix threads)
  (foreign_stubs
   (language c)
-  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_production_stubs simd_tokenizer_impl)))
+  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs))
+ ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
+ (c_library_flags
+  (-Wl,-force_load,/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/core/l0_lexer/simd/libsimd_production.a)))
 
 (executable
  (name main_service)

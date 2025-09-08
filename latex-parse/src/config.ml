@@ -1,7 +1,8 @@
 let page_bytes                   = 4096
 
 (* Hedging *)
-let hedge_timer_ms_default       = 10
+let hedge_timer_ms_default       = 10    (* best result in your final 100k run *)
+let require_simd                 = true  (* refuse to start if SIMD missing unless L0_ALLOW_SCALAR=1 *)
 
 (* GC / rotation budgets (per worker, since last spawn) *)
 let minor_heap_bytes             = 256 * 1024 * 1024
@@ -29,5 +30,7 @@ let tail_trace_keep              = 100
 (* Pool: pick 2 cores (logical ids). macOS pinning is advisory. *)
 let pool_cores                   = [|0;1|]
 
-(* SIMD requirements *)
-let require_simd_in_ci = match Sys.getenv_opt "CI" with Some _ -> true | None -> false
+(* A+B microbench conservative invariants (simd_v2 spec) *)
+let ab_expected_tokens_min       = 900_000
+let ab_expected_tokens_max       = 1_050_000
+let ab_p999_target_ms            = 15.0

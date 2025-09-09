@@ -3,7 +3,7 @@ let pre_touch_bytes (b:bytes) ~page =
   let rec loop i = if i < n then (ignore (Bytes.unsafe_get b i); loop (i+page)) in loop 0
 
 let pre_touch_ba_1 (type a) (type b)
-  (ba : (a,b,Bigarray.c_layout) Bigarray.Array1.t)
+  (ba:(a,b,Bigarray.c_layout) Bigarray.Array1.t)
   ~(elem_bytes:int) ~(elems:int) ~(page:int) =
   let open Bigarray in
   let dim = Array1.dim ba in

@@ -5,6 +5,6 @@ external ht_wait2   : Unix.file_descr -> int -> int -> (int * int) = "ocaml_ht_w
 type t = { k: Unix.file_descr }
 let create () = { k = ht_create () }
 let arm t ~ns = ht_arm_ns t.k ns
-(* returns (timer_fired, ready_fd or -1) *)
-let wait_two (t : t) ~(fd1 : Unix.file_descr) ~(fd2 : Unix.file_descr) : (int * int) =
-  ht_wait2 t.k (Obj.magic fd1 : int) (Obj.magic fd2 : int)
+let wait_two t ~fd1 ~fd2 =
+  let (tf, which) = ht_wait2 t.k fd1 fd2 in
+  (tf, which)

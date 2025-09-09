@@ -17,14 +17,14 @@ let be32_get b off =
 
 let be64_put b off v =
   let open Int64 in
-  Bytes.set b (off+0) (Char.chr (to_int (logand (shift_right_logical v 56) 0xFFL)));
-  Bytes.set b (off+1) (Char.chr (to_int (logand (shift_right_logical v 48) 0xFFL)));
-  Bytes.set b (off+2) (Char.chr (to_int (logand (shift_right_logical v 40) 0xFFL)));
-  Bytes.set b (off+3) (Char.chr (to_int (logand (shift_right_logical v 32) 0xFFL)));
-  Bytes.set b (off+4) (Char.chr (to_int (logand (shift_right_logical v 24) 0xFFL)));
-  Bytes.set b (off+5) (Char.chr (to_int (logand (shift_right_logical v 16) 0xFFL)));
-  Bytes.set b (off+6) (Char.chr (to_int (logand (shift_right_logical v  8) 0xFFL)));
-  Bytes.set b (off+7) (Char.chr (to_int (logand v 0xFFL)))
+  Bytes.set b (off+0) (Char.chr (to_int (shift_right_logical v 56)));
+  Bytes.set b (off+1) (Char.chr (to_int (shift_right_logical v 48)));
+  Bytes.set b (off+2) (Char.chr (to_int (shift_right_logical v 40)));
+  Bytes.set b (off+3) (Char.chr (to_int (shift_right_logical v 32)));
+  Bytes.set b (off+4) (Char.chr (to_int (shift_right_logical v 24)));
+  Bytes.set b (off+5) (Char.chr (to_int (shift_right_logical v 16)));
+  Bytes.set b (off+6) (Char.chr (to_int (shift_right_logical v  8)));
+  Bytes.set b (off+7) (Char.chr (to_int v))
 
 let rec write_all fd b o l =
   if l=0 then () else
@@ -63,15 +63,13 @@ let write_req fd ~req_id ~(bytes:bytes) =
   let len = 4 + Bytes.length bytes in
   let p = Bytes.create len in
   be32_put p 0 (Bytes.length bytes); Bytes.blit bytes 0 p 4 (Bytes.length bytes);
-  write_header fd { ty=Req; req_id; len };
-  write_all fd p 0 len
+  write_header fd { ty=Req; req_id; len }; write_all fd p 0 len
 
 let write_resp fd ~req_id ~status ~n_tokens ~issues_len ~alloc_mb10 ~major_cycles =
   let p = Bytes.create 20 in
   be32_put p 0 status; be32_put p 4 n_tokens; be32_put p 8 issues_len;
   be32_put p 12 alloc_mb10; be32_put p 16 major_cycles;
-  write_header fd { ty=Resp; req_id; len=20 };
-  write_all fd p 0 20
+  write_header fd { ty=Resp; req_id; len=20 }; write_all fd p 0 20
 
 let write_cancel fd ~req_id = write_header fd { ty=Cancel; req_id; len=0 }
 

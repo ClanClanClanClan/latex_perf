@@ -6,7 +6,12 @@
  (libraries unix threads)
  (foreign_stubs
   (language c)
-  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs simd_production_stubs simd_tokenizer_impl)))
+  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs scalar_fallback))
+ ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
+ ;; TEMPORARILY DISABLED DUE TO _Caml_state SYMBOL COMPATIBILITY ISSUE
+ ;; (c_library_flags
+ ;;  (-Wl,-force_load,/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/core/l0_lexer/simd/libsimd_production.a))
+ )
 
 (executable
  (name main_service)

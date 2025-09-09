@@ -25,7 +25,7 @@ let reset_spawn_counters st =
 
 let alloc_mb_since_spawn st =
   let words = (words_total ()) -. st.words_at_spawn in
-  words *. (float_of_int Sys.word_size /. 8.0) /. 1.048_576
+  words *. (float Sys.word_size /. 8.0) /. 1.048_576
 
 let majors_since_spawn st =
   (major_collections ()) - st.majors_at_spawn
@@ -45,7 +45,7 @@ let update_and_log st =
   st.reqs <- st.reqs + 1;
   if st.reqs mod 1000 = 0 then begin
     let rss = Meminfo.rss_mb () in
-    let live_mb = (float_of_int (live_words ()) *. float_of_int Sys.word_size /. 8.0) /. 1.0e6 in
+    let live_mb = (float (live_words ()) *. float Sys.word_size /. 8.0) /. 1.0e6 in
     let alloc_mb = alloc_mb_since_spawn st in
     let majors   = majors_since_spawn st in
     Printf.eprintf "[worker] req=%d rss=%.1fMB live=%.1fMB alloc_since=%.0fMB majors_since=%d\n%!"
@@ -54,39 +54,32 @@ let update_and_log st =
 
 let handle_req st ~req_id (input:bytes) =
   st.cur_req <- Some req_id; st.cancelled <- false;
-
   Gc_prep.prepay ();
   Arena.swap st.arenas;
   let cur = Arena.current st.arenas in
-
   Pretouch.pre_touch_bytes input ~page:Config.page_bytes;
   let est_tokens = int_of_float (1.30 *. float (Bytes.length input)) in
   Pretouch.pre_touch_ba_1 cur.Arena.kinds  ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
   Pretouch.pre_touch_ba_1 cur.Arena.codes  ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
   Pretouch.pre_touch_ba_1 cur.Arena.offs   ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
   Pretouch.pre_touch_ba_1 cur.Arena.issues ~elem_bytes:4 ~elems:1024        ~page:Config.page_bytes;
-
-  (* Optional rare fault injection: L0_FAULT_MS=15 makes hedging provable *)
   (match Sys.getenv_opt "L0_FAULT_MS" with
-   | Some s -> let d = try int_of_string s with _ -> 0 in if d>0 && (Random.bits () land 1023 = 0) then Unix.sleepf (float d /. 1000.)
+   | Some s -> let d = try int_of_string s with _ -> 0 in if d>0 && (Random.bits () land 1023 = 0)
+               then Unix.sleepf (float d /. 1000.)
    | None -> ());
-
-  let (status, n_tokens, issues_len) =
-    Real_processor.run input cur
-  in
-
-  (* Emit response unless cancelled *)
-  let alloc_mb = alloc_mb_since_spawn st in
-  let alloc_mb10 = int_of_float (10.0 *. alloc_mb) in
+  let (status, n_tokens, issues_len) = Real_processor.run input cur in
+  let s = Gc.quick_stat () in
+  let words = s.minor_words +. s.major_words in
+  let bytes = words *. (float Sys.word_size /. 8.0) in
+  let alloc_mb10 = int_of_float (10.0 *. (bytes /. 1.048_576)) in
   let majors = majors_since_spawn st in
-
   (match st.cur_req with
    | Some id when not st.cancelled ->
        Ipc.write_resp st.fd ~req_id:id ~status ~n_tokens ~issues_len ~alloc_mb10 ~major_cycles:majors
    | _ -> ());
-
   st.cur_req <- None; st.cancelled <- false;
-  update_and_log st
+  update_and_log st;
+  if should_retire st then exit 0 else ()
 
 let start_loop fd ~core:_ =
   Mlock.init (); Gc_prep.init_gc ();
@@ -102,8 +95,7 @@ let start_loop fd ~core:_ =
         ensure_ibuf st (Bytes.length payload);
         Bytes.blit payload 0 st.ibuf 0 (Bytes.length payload);
         let view = Bytes.sub st.ibuf 0 (Bytes.length payload) in
-        handle_req st ~req_id:id view;
-        if should_retire st then exit 0 else loop ()
+        handle_req st ~req_id:id view; loop ()
     | Any_cancel id ->
         (match st.cur_req with Some cur when cur = id -> st.cancelled <- true | _ -> ());
         loop ()

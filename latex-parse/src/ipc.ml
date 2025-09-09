@@ -4,11 +4,15 @@ let u32_to_ty = function 1l->Req | 2l->Resp | 3l->Cancel | _->failwith "bad ty"
 type header = { ty:msg_ty; req_id:int64; len:int }
 let header_bytes = 16
 
+let[@inline] put_u8 b off v =
+  (* v may be any int; mask to 0..255 and avoid exceptions *)
+  Bytes.unsafe_set b off (Char.unsafe_chr (v land 0xFF))
+
 let be32_put b off v =
-  Bytes.set b off     (Char.chr ((v lsr 24) land 0xFF));
-  Bytes.set b (off+1) (Char.chr ((v lsr 16) land 0xFF));
-  Bytes.set b (off+2) (Char.chr ((v lsr  8) land 0xFF));
-  Bytes.set b (off+3) (Char.chr ( v        land 0xFF))
+  put_u8 b off     ((v lsr 24) land 0xFF);
+  put_u8 b (off+1) ((v lsr 16) land 0xFF);
+  put_u8 b (off+2) ((v lsr  8) land 0xFF);
+  put_u8 b (off+3) ( v         land 0xFF)
 let be32_get b off =
   ((Char.code (Bytes.get b off)) lsl 24)
   lor ((Char.code (Bytes.get b (off+1))) lsl 16)
@@ -17,24 +21,30 @@ let be32_get b off =
 
 let be64_put b off v =
   let open Int64 in
-  Bytes.set b (off+0) (Char.chr (to_int (shift_right_logical v 56)));
-  Bytes.set b (off+1) (Char.chr (to_int (shift_right_logical v 48)));
-  Bytes.set b (off+2) (Char.chr (to_int (shift_right_logical v 40)));
-  Bytes.set b (off+3) (Char.chr (to_int (shift_right_logical v 32)));
-  Bytes.set b (off+4) (Char.chr (to_int (shift_right_logical v 24)));
-  Bytes.set b (off+5) (Char.chr (to_int (shift_right_logical v 16)));
-  Bytes.set b (off+6) (Char.chr (to_int (shift_right_logical v  8)));
-  Bytes.set b (off+7) (Char.chr (to_int v))
+  put_u8 b (off+0) (to_int (shift_right_logical v 56));
+  put_u8 b (off+1) (to_int (shift_right_logical v 48));
+  put_u8 b (off+2) (to_int (shift_right_logical v 40));
+  put_u8 b (off+3) (to_int (shift_right_logical v 32));
+  put_u8 b (off+4) (to_int (shift_right_logical v 24));
+  put_u8 b (off+5) (to_int (shift_right_logical v 16));
+  put_u8 b (off+6) (to_int (shift_right_logical v  8));
+  put_u8 b (off+7) (to_int v)
 
 let rec write_all fd b o l =
   if l=0 then () else
-  let n = Unix.write fd b o l in
-  if n=0 then failwith "short write" else write_all fd b (o+n) (l-n)
+  try
+    let n = Unix.write fd b o l in
+    if n=0 then failwith "short write" else write_all fd b (o+n) (l-n)
+  with
+  | Unix.Unix_error (Unix.EINTR,_,_) -> write_all fd b o l
 
 let rec read_exact fd b o l =
   if l=0 then () else
-  let n = Unix.read fd b o l in
-  if n=0 then failwith "eof" else read_exact fd b (o+n) (l-n)
+  try
+    let n = Unix.read fd b o l in
+    if n=0 then failwith "eof" else read_exact fd b (o+n) (l-n)
+  with
+  | Unix.Unix_error (Unix.EINTR,_,_) -> read_exact fd b o l
 
 let write_header fd (h:header) =
   let b = Bytes.create header_bytes in

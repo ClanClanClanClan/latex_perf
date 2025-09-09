@@ -109,7 +109,7 @@ let drain_one_ready ~deadline_ns p =
   if Int64.sub (Clock.now ()) deadline_ns > 0L then
     failwith "Backpressure timeout: workers stuck inflight"
 
-type svc_result = { status:int; n_tokens:int; issues_len:int; origin:[`P|`H] }
+type svc_result = { status:int; n_tokens:int; issues_len:int; origin:[`P|`H]; hedge_fired: bool }
 
 let rescue_once p ~req_id ~(input:bytes) : svc_result =
   Array.iter (maybe_rotate p) p.workers;
@@ -119,7 +119,7 @@ let rescue_once p ~req_id ~(input:bytes) : svc_result =
   match Ipc.read_any w.fd with
   | Any_resp (rid, st, nt, iss, mb10, maj) when rid=req_id ->
       update_on_resp p w ~alloc_mb10:mb10 ~major:maj; maybe_rotate p w;
-      { status=st; n_tokens=nt; issues_len=iss; origin=`P }
+      { status=st; n_tokens=nt; issues_len=iss; origin=`P; hedge_fired=false }
   | Any_hup ->
       w.inflight <- false; maybe_rotate p w;
       failwith "broker: rescue failed (HUP)"
@@ -152,7 +152,7 @@ let hedged_call p ~(input:bytes) ~(hedge_ms:int) : svc_result =
       begin match Ipc.read_any primary.fd with
       | Any_resp (rid, st, nt, iss, mb10, maj) when rid=req_id ->
           update_on_resp p primary ~alloc_mb10:mb10 ~major:maj; maybe_rotate p primary;
-          { status=st; n_tokens=nt; issues_len=iss; origin=`P }
+          { status=st; n_tokens=nt; issues_len=iss; origin=`P; hedge_fired=false }
       | Any_hup ->
           primary.inflight <- false; maybe_rotate p primary;
           let sec = pick_secondary p primary in
@@ -160,7 +160,7 @@ let hedged_call p ~(input:bytes) ~(hedge_ms:int) : svc_result =
           begin match Ipc.read_any sec.fd with
           | Any_resp (rid, st, nt, iss, mb10, maj) when rid=req_id ->
               update_on_resp p sec ~alloc_mb10:mb10 ~major:maj; maybe_rotate p sec;
-              { status=st; n_tokens=nt; issues_len=iss; origin=`H }
+              { status=st; n_tokens=nt; issues_len=iss; origin=`H; hedge_fired=true }
           | Any_hup ->
               sec.inflight <- false; maybe_rotate p sec;
               rescue_once p ~req_id ~input
@@ -181,7 +181,7 @@ let hedged_call p ~(input:bytes) ~(hedge_ms:int) : svc_result =
           | Any_resp (rid, st, nt, iss, mb10, maj) when rid=req_id ->
               update_on_resp p primary ~alloc_mb10:mb10 ~major:maj; maybe_rotate p primary;
               Ipc.write_cancel sec.fd ~req_id; sec.inflight <- false;
-              { status=st; n_tokens=nt; issues_len=iss; origin=`P }
+              { status=st; n_tokens=nt; issues_len=iss; origin=`P; hedge_fired=true }
           | Any_hup ->
               primary.inflight <- false; maybe_rotate p primary; race ()
           | _ -> race ()
@@ -192,7 +192,7 @@ let hedged_call p ~(input:bytes) ~(hedge_ms:int) : svc_result =
               update_on_resp p sec ~alloc_mb10:mb10 ~major:maj; maybe_rotate p sec;
               Ipc.write_cancel primary.fd ~req_id; primary.inflight <- false;
               p.hedge_wins <- p.hedge_wins + 1;
-              { status=st; n_tokens=nt; issues_len=iss; origin=`H }
+              { status=st; n_tokens=nt; issues_len=iss; origin=`H; hedge_fired=true }
           | Any_hup ->
               sec.inflight <- false; maybe_rotate p sec; race ()
           | _ -> race ()

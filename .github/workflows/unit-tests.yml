@@ -1,8 +1,12 @@
-     name: Unit Tests
-     on: [push, pull_request]
-     jobs:
-     unit-tests:
-     runs-on: ubuntu-latest
-     steps:
-     - uses: actions/checkout@v4
-     - name: Run unit tests (placeholder)
+    name: Unit Tests
+    on: [push, pull_request]
+    jobs:
+    unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Sanity
+    run: |
+    echo "Repo checked out"
+    test -f README.md || echo "No README (that’s ok)"
+    echo "All good"

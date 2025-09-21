@@ -64,3 +64,8 @@ jobs:
       - name: Run L2 parser verb tests
         run: |
           ./_build/default/latex-parse/src/test_parser_l2_verb.exe
+      - name: Sanity
+        run: |
+          echo "Repo checked out"
+          test -f README.md || echo "No README (that's ok)"
+          echo "All good"

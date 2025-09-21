@@ -1,0 +1,11 @@
+[package]
+name = "elderd_rust_proxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread","macros","net","io-util","time"] }
+l0_lexer_client = { path = "../l0_lexer_client" }
+bytes = "1"
+anyhow = "1"
+rand = "0.8"

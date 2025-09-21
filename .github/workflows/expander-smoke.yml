@@ -1,0 +1,46 @@
+name: Expander Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  expander-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install deps
+        run: |
+          opam update -y
+          opam install -y dune yojson
+
+      - name: Build L1 simple expander test
+        run: |
+          bash scripts/enable_l1.sh || true
+          opam exec -- dune build core/l1_expander/simple_expander_test.exe
+
+      - name: Run expander test
+        run: |
+          ./_build/default/core/l1_expander/simple_expander_test.exe
+
+      - name: Build expander smoke (validators)
+        run: |
+          opam exec -- dune build core/l1_expander/expander_smoke.exe
+
+      - name: Run expander smoke and check JSON keys
+        run: |
+          OUT=$(./_build/default/core/l1_expander/expander_smoke.exe "Before \\textbf{A \\emph{B} C} after" core/l1_expander/catalogue.json)
+          echo "$OUT" | jq .expanded >/dev/null
+          echo "$OUT" | jq .validators >/dev/null
+
+      - name: Run expander unmatched braces smoke
+        run: |
+          OUT=$(./_build/default/core/l1_expander/expander_smoke.exe "\\section{A {nested" core/l1_expander/catalogue.json)
+          echo "$OUT" | jq '.validators.results[] | select(.id=="unmatched_braces")' >/dev/null

@@ -1,0 +1,58 @@
+name: Prometheus Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  prom-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          opam update -y
+          opam install -y dune
+
+      - name: Build service and smoke script
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe
+
+      - name: Start service with TCP metrics
+        run: |
+          L0_ALLOW_SCALAR=1 L0_PROM=1 L0_PROM_ADDR=127.0.0.1:9109 \
+            ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          sleep 1
+
+      - name: Curl metrics (TCP)
+        run: |
+          bash scripts/prom_smoke.sh tcp
+
+      - name: Stop service
+        if: always()
+        run: |
+          if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
+          pkill -f main_service || true
+
+      - name: Start service with UDS metrics
+        run: |
+          L0_ALLOW_SCALAR=1 L0_PROM=1 L0_PROM_UDS=/tmp/l0_prom.sock \
+            ./_build/default/latex-parse/src/main_service.exe & echo $! > service2.pid
+          sleep 1
+
+      - name: Curl metrics (UDS)
+        run: |
+          bash scripts/prom_smoke.sh uds
+
+      - name: Stop service (UDS)
+        if: always()
+        run: |
+          if [ -f service2.pid ]; then kill $(cat service2.pid) || true; fi
+          pkill -f main_service || true

@@ -1,0 +1,41 @@
+name: Proof CI (Coq)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  proof-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libgmp-dev pkg-config
+
+      - name: Install Coq toolchain
+        run: |
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune coq=8.18.0 coq-core=8.18.0
+
+      - name: Build proofs
+        run: |
+          opam exec -- dune build proofs
+
+      - name: Enforce zero admits and zero axioms
+        run: |
+          # No Admitted. or admit. (exclude archives and disabled files)
+          if grep -R -nE '\bAdmitted\.' proofs --exclude-dir=archive --exclude='*.disabled' || \
+             grep -R -nE '\badmit\.' proofs --exclude-dir=archive --exclude='*.disabled'; then
+            echo "[proof-gate] ERROR: admits found"; exit 1; fi
+          # No Axiom declarations (exclude archives and disabled files)
+          if grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then
+            echo "[proof-gate] ERROR: axioms found"; exit 1; fi

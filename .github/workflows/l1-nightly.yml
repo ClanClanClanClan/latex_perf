@@ -1,0 +1,96 @@
+name: L1 Nightly Smoke
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  l1-nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune yojson uutf
+
+      - name: Build service and REST
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Run service and REST
+        run: |
+          rm -f /tmp/l0_lex_svc.sock
+          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          sleep 0.5
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          sleep 0.5
+
+      - name: L1 smokes
+        run: |
+          bash scripts/smoke_rules_l1.sh
+
+      - name: L1 latency (expand)
+        run: |
+          bash scripts/latency_smoke_expand.sh 500 http://127.0.0.1:8080/expand?layer=l1 | tee /tmp/l1_latency.txt
+
+      - name: Upload L1 latencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: l1-expand-latencies
+          path: /tmp/latencies_ms.txt
+
+      - name: Generate L1 badge JSON
+        run: |
+          bash scripts/make_latency_badge.sh /tmp/latencies_ms.txt /tmp/latency_badge_l1.json
+          cat /tmp/latency_badge_l1.json
+
+      - name: Upload L1 badge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: l1-latency-badge
+          path: /tmp/latency_badge_l1.json
+
+      - name: Publish L1 badge to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public-badges
+        env:
+          GH_PAGES_PREP: |
+            mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
+        run: |
+          bash -lc "$GH_PAGES_PREP"
+
+      - name: Update README L1 badge block
+        run: |
+          awk -v badge='![L1 Expand Latency p95](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/'"$GITHUB_REPOSITORY"'/gh-pages/public-badges/expand_latency_l1.json)' '
+            BEGIN{inside=0}
+            /<!-- LAT_L1_BADGE_START -->/ {print; print badge; inside=1; next}
+            /<!-- LAT_L1_BADGE_END -->/ {print; inside=0; next}
+            inside==1 {next}
+            {print}
+          ' README.md > /tmp/README.l1 && mv /tmp/README.l1 README.md
+
+      - name: Commit README L1 badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update L1 expand latency badge"
+          file_pattern: README.md
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f rest_api_server || true
+          pkill -f main_service || true

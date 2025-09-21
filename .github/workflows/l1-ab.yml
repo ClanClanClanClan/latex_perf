@@ -1,0 +1,42 @@
+name: L1 Expander A/B (Opt-in)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  l1-ab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          opam update -y
+          opam install -y dune
+
+      - name: Enable L1 build
+        run: |
+          bash scripts/enable_l1.sh || true
+
+      - name: Build L1
+        run: |
+          opam exec -- dune build core/l1_expander
+
+      - name: Run A/B on 4KB sample (CSV)
+        run: |
+          ./_build/default/core/l1_expander/l1_ab_test.exe corpora/perf/edit_window_4kb.tex --csv l1_ab.csv
+
+      - name: Assert A/B equality
+        run: |
+          grep -E ',true$' l1_ab.csv >/dev/null
+
+      - name: Upload A/B CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: l1-ab-csv
+          path: l1_ab.csv

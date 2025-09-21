@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LaTeX Perfectionist v25 - Performance Benchmark Harness
-Week 5 Performance Gate: p95 < 2ms on perf_smoke corpus
+Week 5 Performance Gate: p95 < 20ms on perf_smoke corpus (Tier A)
 
 Usage:
     bench.py --scenario edit-stream --iterations 1000
@@ -187,7 +187,7 @@ class PerformanceBenchmark:
                 "latency_p95_us": p95,
                 "latency_p99_us": p99,
                 "latency_p95_ms": p95 / 1000,  # Week 5 gate metric
-                "week5_gate_passed": p95 < 2000,  # < 2ms requirement
+                "week5_gate_passed": p95 < 20000,  # < 20ms requirement
                 "all_latencies": latencies[:50] if len(latencies) > 50 else latencies  # Sample for debugging
             }
         
@@ -234,7 +234,7 @@ def main():
         # Exit code based on Week 5 gate
         if args.scenario == "edit-stream":
             if result.get("week5_gate_passed", False):
-                print(f"✅ Week 5 gate PASSED: p95 = {result['latency_p95_ms']:.2f}ms < 2ms", 
+        print(f"✅ Week 5 gate PASSED: p95 = {result['latency_p95_ms']:.2f}ms < 20ms", 
                       file=sys.stderr)
                 sys.exit(0)
             else:

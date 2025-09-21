@@ -7,6 +7,13 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+echo "🔧 Running pre-commit formatting (dune fmt)..."
+if command -v opam >/dev/null 2>&1; then
+  OPAMSWITCH=${OPAMSWITCH:-l0-testing} opam exec -- dune fmt || true
+else
+  echo "[pre-commit] opam not found; skipping dune fmt"
+fi
+
 echo "🔍 Running pre-commit organization check..."
 
 # Run the organization check

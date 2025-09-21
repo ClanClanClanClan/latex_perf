@@ -1,0 +1,14 @@
+name: Catalogue Compliance
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate catalogue
+        run: bash scripts/validate_catalogue.sh
+

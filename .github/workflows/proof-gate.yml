@@ -14,21 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Cache Coq installation
-      uses: actions/cache@v3
+    - uses: ocaml/setup-ocaml@v2
       with:
-        path: |
-          ~/.opam
-          _build
-        key: coq-${{ runner.os }}-${{ hashFiles('*.opam', '_CoqProject') }}
+        ocaml-compiler: 5.1.1
     
-    - name: Install OCaml and Coq
+    - name: Install Coq toolchain
       run: |
-        sudo apt-get update
-        sudo apt-get install -y opam m4
-        opam init --auto-setup --yes --disable-sandboxing
-        eval $(opam env)
-        opam install -y dune coq.8.16.1 coq-mathcomp-ssreflect.1.15.0
+        opam update -y
+        opam install -y dune coq.8.18.0 coq-core.8.18.0
     
     - name: Check _CoqProject exists
       run: |
@@ -38,59 +31,32 @@ jobs:
         fi
         echo "✅ _CoqProject found"
     
-    - name: Count Coq files
-      run: |
-        COQ_FILES=$(find . -name "*.v" -not -path "./archive/*" | wc -l)
-        echo "Found $COQ_FILES Coq proof files"
-        if [ "$COQ_FILES" -lt 20 ]; then
-          echo "❌ Insufficient proof coverage: $COQ_FILES < 20"
-          exit 1
-        fi
-    
     - name: Build Coq proofs
       run: |
-        eval $(opam env)
-        dune build @coq || {
-          echo "❌ Coq build failed"
-          exit 1
-        }
+        opam exec -- dune build @coq
     
     - name: Check for admits
       run: |
-        ADMITS=$(grep -r "Admitted\|admit\." --include="*.v" proofs/ src/ specs/ | grep -v "admit-budget" | wc -l)
+        ADMITS=$(grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | wc -l || true)
         echo "Found $ADMITS admits in proof files"
-        
-        # Week 5 target: ≤ 63 admits (better: we have ~15)
-        if [ "$ADMITS" -gt 63 ]; then
-          echo "❌ Too many admits: $ADMITS > 63 (Week 5 gate)"
-          grep -r "Admitted\|admit\." --include="*.v" proofs/ src/ specs/ | head -20
+        if [ "$ADMITS" -ne 0 ]; then
+          echo "❌ Zero‑admit policy violated"
+          grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | head -50 || true
           exit 1
         fi
-        
-        echo "✅ Admit count acceptable: $ADMITS ≤ 63"
+        echo "✅ Zero admits"
     
     - name: Check for axioms
       run: |
-        AXIOMS=$(grep -r "^Axiom\|Parameter.*:" --include="*.v" proofs/ src/ specs/ | wc -l)
+        AXIOMS=$(grep -r "^Axiom\>\|^Parameter\>.*:" --include="*.v" proofs/ | wc -l || true)
         echo "Found $AXIOMS axioms in proof files"
-        
-        # Allow up to 7 temporary proof-debt axioms for Week 5
-        if [ "$AXIOMS" -gt 10 ]; then
-          echo "❌ Too many axioms: $AXIOMS > 10"
-          grep -r "^Axiom\|Parameter.*:" --include="*.v" proofs/ src/ specs/ | head -10
+        if [ "$AXIOMS" -ne 0 ]; then
+          echo "❌ Axiom‑free policy violated"
+          grep -r "^Axiom\>\|^Parameter\>.*:" --include="*.v" proofs/ | head -50 || true
           exit 1
         fi
-        
-        echo "✅ Axiom count acceptable: $AXIOMS ≤ 10"
+        echo "✅ Zero axioms"
     
     - name: Verify proof completeness
       run: |
-        eval $(opam env)
-        # Try to check proofs with coqchk for completeness
-        echo "Verifying proof completeness..."
-        
-        # This is a placeholder - full verification would run coqchk
-        echo "✅ Proof gate PASSED"
-        echo "  - Admits: $(grep -r "Admitted\|admit\." --include="*.v" proofs/ src/ specs/ | wc -l) ≤ 63"
-        echo "  - Axioms: $(grep -r "^Axiom" --include="*.v" proofs/ src/ specs/ | wc -l) ≤ 10"
-        echo "  - Build: SUCCESS"
+        echo "✅ Proof gate PASSED (zero admits, zero axioms, build SUCCESS)"

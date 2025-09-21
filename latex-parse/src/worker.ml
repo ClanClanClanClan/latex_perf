@@ -1,5 +1,32 @@
 open Ipc
 
+(* Fault injection (env):
+   L0_FAULT_MS: integer milliseconds to sleep when triggered (default 0)
+   L0_FAULT_RATE_PPM: events per million (default 0)
+   L0_FAULT_PHASE: "pre" | "post" (default "pre")
+*)
+let fault_ms =
+  match Sys.getenv_opt "L0_FAULT_MS" with Some s -> max 0 (int_of_string s) | None -> 0
+let fault_rate_ppm =
+  match Sys.getenv_opt "L0_FAULT_RATE_PPM" with Some s -> max 0 (int_of_string s) | None -> 0
+let fault_phase =
+  match Sys.getenv_opt "L0_FAULT_PHASE" with
+  | Some "post" -> `Post
+  | _ -> `Pre
+
+let rng = ref 0x9e3779b9
+let rand_ppm () =
+  let x = !rng in
+  let x = x lxor (x lsl 13) in
+  let x = x lxor (x lsr 17) in
+  let x = x lxor (x lsl 5)  in
+  rng := x;
+  (x land 0x0F_FFFF) mod 1_000_000
+
+let maybe_fault () =
+  if fault_ms > 0 && fault_rate_ppm > 0 && rand_ppm () < fault_rate_ppm then
+    ignore (Unix.select [] [] [] (float fault_ms /. 1000.0))
+
 type stats = { mutable major_cycles : int }
 let stats = { major_cycles = 0 }
 
@@ -41,15 +68,19 @@ let ensure_ibuf st need =
 
 let _alarm = Gc.create_alarm (fun () -> stats.major_cycles <- stats.major_cycles + 1)
 
+(* CRITICAL FIX: Optimized monitoring for P99.9 performance *)
 let update_and_log st =
   st.reqs <- st.reqs + 1;
-  if st.reqs mod 1000 = 0 then begin
+  (* CRITICAL FIX: Ultra-reduced logging frequency to minimize P99.9 overhead *)
+  if st.reqs mod 5000 = 0 then begin  (* Reduced frequency to every 5k requests *)
     let rss = Meminfo.rss_mb () in
     let live_mb = (float (live_words ()) *. float Sys.word_size /. 8.0) /. 1.0e6 in
     let alloc_mb = alloc_mb_since_spawn st in
     let majors   = majors_since_spawn st in
     Printf.eprintf "[worker] req=%d rss=%.1fMB live=%.1fMB alloc_since=%.0fMB majors_since=%d\n%!"
-      st.reqs rss live_mb alloc_mb majors
+      st.reqs rss live_mb alloc_mb majors;
+    (* CRITICAL FIX: Remove all forced GC to prevent latency spikes *)
+    (* Let OCaml's automatic GC + prepay handle all collections for optimal P99.9 *)
   end
 
 let handle_req st ~req_id (input:bytes) =
@@ -57,17 +88,26 @@ let handle_req st ~req_id (input:bytes) =
   Gc_prep.prepay ();
   Arena.swap st.arenas;
   let cur = Arena.current st.arenas in
-  Pretouch.pre_touch_bytes input ~page:Config.page_bytes;
-  let est_tokens = int_of_float (1.30 *. float (Bytes.length input)) in
-  Pretouch.pre_touch_ba_1 cur.Arena.kinds  ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
-  Pretouch.pre_touch_ba_1 cur.Arena.codes  ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
-  Pretouch.pre_touch_ba_1 cur.Arena.offs   ~elem_bytes:4 ~elems:est_tokens ~page:Config.page_bytes;
-  Pretouch.pre_touch_ba_1 cur.Arena.issues ~elem_bytes:4 ~elems:1024        ~page:Config.page_bytes;
-  (match Sys.getenv_opt "L0_FAULT_MS" with
-   | Some s -> let d = try int_of_string s with _ -> 0 in if d>0 && (Random.bits () land 1023 = 0)
-               then Unix.sleepf (float d /. 1000.)
-   | None -> ());
+  (* CRITICAL FIX: Ultra-minimal pre-touching for P99.9 latency *)
+  let input_len = Bytes.length input in
+  (* Skip input pre-touching entirely to avoid page fault bursts *)
+  let est_tokens = int_of_float (1.10 *. float input_len) in  (* Minimal estimate *)
+  (* CRITICAL FIX: Ultra-minimal pre-touching - only touch first few pages *)
+  let touch_elems = min est_tokens 20000 in  (* Reduced cap to minimize page faults *)
+  (* Only touch the most critical arrays with minimal size *)
+  if touch_elems > 1000 then begin  (* Only for reasonably sized inputs *)
+    Pretouch.pre_touch_ba_1 cur.Arena.kinds  ~elem_bytes:4 ~elems:(min touch_elems 15000) ~page:Config.page_bytes;
+    Pretouch.pre_touch_ba_1 cur.Arena.codes  ~elem_bytes:4 ~elems:(min touch_elems 15000) ~page:Config.page_bytes;
+  end;
+  (* Skip issues array pre-touching to avoid overhead *)
+  (* Optional fault injection: pre-tokenize *)
+  (match fault_phase with `Pre -> maybe_fault () | `Post -> ());
+
+  (* SIMD Processing (real work) *)
   let (status, n_tokens, issues_len) = Real_processor.run input cur in
+
+  (* Optional fault injection: post-tokenize *)
+  (match fault_phase with `Post -> maybe_fault () | `Pre -> ());
   let s = Gc.quick_stat () in
   let words = s.minor_words +. s.major_words in
   let bytes = words *. (float Sys.word_size /. 8.0) in

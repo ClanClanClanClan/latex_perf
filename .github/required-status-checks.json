@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Proof CI (Coq) / proof-ci",
+    "Unicode Rules Smoke / unicode-smoke",
+    "L1 Rules Smoke / l1-smoke",
+    "Validators Pilot Smoke (CLI) / smoke-cli",
+    "REST Smoke Test / rest-smoke",
+    "Performance Gate CI / perf-ci",
+    "XXH64 SIMD Selfcheck / xxh-selfcheck",
+    "Unit Tests / unit-tests"
+  ]
+}

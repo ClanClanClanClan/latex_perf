@@ -18,7 +18,7 @@ echo ""
 
 # Check 1: Root directory files
 echo "📁 Checking root directory..."
-ALLOWED_ROOT_FILES="README.md CLAUDE.md DOCUMENTATION_INDEX.md LICENSE Makefile Makefile.coq.conf Makefile.robust _CoqProject dune dune-project dune-workspace latex-perfectionist.opam .gitignore .github .ocamlformat .gitmessage"
+ALLOWED_ROOT_FILES="README.md LICENSE Makefile _CoqProject dune-project latex-perfectionist.opam .gitignore .github .ocamlformat .gitmessage .claude _build archive core corpora data docs external_corpora generator latex-parse proofs specs scripts rust acceptance_gate.sh verify_percentiles"
 EXTRA_FILES=""
 
 for file in $(ls -a | grep -v "^\.$" | grep -v "^\.\.$" | grep -v "^\.git$" | grep -v "^\(src\|test\|docs\|build\|specs\|proofs\|scripts\|bench\|cli\|config\|corpora\|grammar\|rules_src\)$"); do
@@ -66,13 +66,13 @@ echo "🏗️  Checking layer separation..."
 LAYER_VIOLATIONS=""
 
 # Check for L1 references in L0
-if grep -r "L1_expander\|l1_expander" src/core/l0_lexer/ 2>/dev/null | grep -v "^Binary file"; then
+if grep -r "L1_expander\|l1_expander" core/l0_lexer/ 2>/dev/null | grep -v "^Binary file"; then
     LAYER_VIOLATIONS="${LAYER_VIOLATIONS}\n  L0 depends on L1"
     ((ERRORS++))
 fi
 
 # Check for L2 references in L1
-if grep -r "L2_parser\|l2_parser" src/core/l1_expander/ 2>/dev/null | grep -v "^Binary file"; then
+if grep -r "L2_parser\|l2_parser" core/l1_expander/ 2>/dev/null | grep -v "^Binary file"; then
     LAYER_VIOLATIONS="${LAYER_VIOLATIONS}\n  L1 depends on L2"
     ((ERRORS++))
 fi
@@ -88,9 +88,10 @@ echo ""
 echo "📚 Checking documentation index..."
 MISSING_DOCS=""
 
-# Check if major docs are in index
-for doc in README.md CLAUDE.md; do
-    if ! grep -q "$doc" DOCUMENTATION_INDEX.md 2>/dev/null; then
+# Check if major docs are in index (docs/PROJECT_INDEX.md)
+INDEX_FILE="docs/PROJECT_INDEX.md"
+for doc in README.md docs/BUILD_SYSTEM_GUIDE.md; do
+    if ! grep -q "$doc" "$INDEX_FILE" 2>/dev/null; then
         MISSING_DOCS="${MISSING_DOCS} $doc"
         ((WARNINGS++))
     fi
@@ -175,6 +176,6 @@ else
     echo "3. Delete or archive backup/temp files"
     echo "4. Fix any layer separation violations"
     echo ""
-    echo "See docs/developer/ORGANIZATION_GUIDELINES.md for details."
+    echo "See docs/PROJECT_INDEX.md for project structure and docs index."
     exit 1
 fi

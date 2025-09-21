@@ -1,0 +1,46 @@
+name: L1 Rules Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  l1-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune yojson uutf
+
+      - name: Build service and REST
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Run service and REST
+        run: |
+          rm -f /tmp/l0_lex_svc.sock
+          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          sleep 0.5
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          sleep 0.5
+
+      - name: L1 smokes
+        run: |
+          bash scripts/smoke_rules_l1.sh
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f rest_api_server || true
+          pkill -f main_service || true

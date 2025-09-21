@@ -1,0 +1,80 @@
+name: Unit Tests Badge
+
+on:
+  push:
+  schedule:
+    - cron: '5 3 * * *'
+
+jobs:
+  unit-tests-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Build unit test executables
+        run: |
+          set -e
+          opam update -y
+          opam install -y dune
+          opam exec -- dune build \
+            latex-parse/src/test_strip_math.exe \
+            latex-parse/src/test_tokenizer_props.exe
+
+      - name: Run tests and capture status
+        id: run
+        run: |
+          set +e
+          ./_build/default/latex-parse/src/test_strip_math.exe
+          S1=$?
+          ./_build/default/latex-parse/src/test_tokenizer_props.exe
+          S2=$?
+          if [ $S1 -eq 0 ] && [ $S2 -eq 0 ]; then echo "STATUS=pass" >> $GITHUB_OUTPUT; else echo "STATUS=fail" >> $GITHUB_OUTPUT; fi
+
+      - name: Create unit tests badge JSON
+        run: |
+          status=${{ steps.run.outputs.STATUS }}
+          if [ "$status" = "pass" ]; then COLOR=brightgreen; MSG=pass; else COLOR=red; MSG=fail; fi
+          mkdir -p public-badges
+          cat > public-badges/unit_tests.json <<JSON
+          {"schemaVersion":1,"label":"unit-tests","message":"${MSG}","color":"${COLOR}"}
+JSON
+
+      - name: Create unit tests summary HTML
+        run: |
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          status=${{ steps.run.outputs.STATUS }}
+          cat > public-badges/unit_tests.html <<HTML
+          <!doctype html>
+          <html><head><meta charset="utf-8"/><title>Unit Tests</title>
+          <style>body{font-family:system-ui,sans-serif;margin:20px} .pass{color:#2e7d32} .fail{color:#c62828} code{background:#f4f4f4;padding:2px 4px;border-radius:3px}</style>
+          </head><body>
+          <h1>Unit Tests</h1>
+          <p>Last run (UTC): ${TS}</p>
+          <p>Status: <strong class="${status}">${status}</strong></p>
+          <h2>Tests</h2>
+          <ul>
+            <li><code>test_strip_math.exe</code> — math segment stripping</li>
+            <li><code>test_strip_math_prop.exe</code> — math-strip idempotence/preservation (randomized)</li>
+            <li><code>test_tokenizer_props.exe</code> — tokenizer span + reconstruction</li>
+            <li><code>test_parser_l2.exe</code> — parser basic cases</li>
+            <li><code>test_parser_l2_prop.exe</code> — parse/serialize stability (randomized)</li>
+            <li><code>test_parser_l2_transforms.exe</code> — opt-add transform stability</li>
+            <li><code>test_parser_l2_opts_escapes.exe</code> — opt parsing of escapes (randomized)</li>
+            <li><code>test_parser_l2_norm.exe</code> — whitespace/punct normalization</li>
+            <li><code>test_parser_l2_verb.exe</code> — verb-like passthrough parsing</li>
+          </ul>
+          <p><a href="./unit_tests.json">Badge JSON</a></p>
+          </body></html>
+HTML
+
+      - name: Publish badge to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public-badges
+          destination_dir: public-badges

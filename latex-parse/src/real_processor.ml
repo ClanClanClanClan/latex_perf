@@ -17,9 +17,9 @@ let run (input:bytes) (out:Arena.buffers) : (int * int * int) =
     (* Clear the output buffer *)
     out.Arena.next_ix <- 0;
     
-    (* Create temporary arrays for SIMD tokenizer - it needs 6 arrays *)
-    let lines = Bigarray.Array1.create Bigarray.int32 Bigarray.c_layout max_tokens in
-    let cols = Bigarray.Array1.create Bigarray.int32 Bigarray.c_layout max_tokens in
+    (* Use pre-allocated temporary arrays from Arena to avoid memory churn *)
+    let lines = out.Arena.lines in
+    let cols = out.Arena.cols in
     
     (* Call existing high-performance SIMD tokenizer *)
     let token_count = real_simd_tokenize_soa input input_len 
@@ -29,15 +29,20 @@ let run (input:bytes) (out:Arena.buffers) : (int * int * int) =
     (* Update next_ix in output buffer *)
     out.Arena.next_ix <- token_count;
     
-    (* Count issues in the issues array *)
-    let issues_len = ref 0 in
-    for i = 0 to token_count - 1 do
-      if Int32.compare out.Arena.issues.{i} 0l <> 0 then
-        incr issues_len
-    done;
+    (* Count every issue entry up to the produced token count to preserve accuracy. *)
+    let issues_len =
+      let limit = min token_count max_tokens in
+      if limit <= 0 then 0 else begin
+        let count = ref 0 in
+        for i = 0 to limit - 1 do
+          if Int32.compare out.Arena.issues.{i} 0l <> 0 then incr count
+        done;
+        !count
+      end
+    in
     
     (* Return success with actual token count and issues *)
-    (0, token_count, !issues_len)
+    (0, token_count, issues_len)
   with 
   | exn -> 
     Printf.eprintf "SIMD tokenizer failed: %s\n" (Printexc.to_string exn);

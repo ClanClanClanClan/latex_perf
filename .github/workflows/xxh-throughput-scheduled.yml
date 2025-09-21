@@ -1,0 +1,45 @@
+name: SIMD Throughput Gate (Scheduled)
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  throughput:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Build bench
+        run: |
+          opam update -y
+          opam install -y dune
+          opam exec -- dune build latex-parse/bench/hash_throughput.exe
+
+      - name: Measure throughput
+        id: measure
+        env:
+          L0_USE_SIMD_XXH: "1"
+        run: |
+          ./_build/default/latex-parse/bench/hash_throughput.exe corpora/perf/perf_smoke_big.tex 50 --csv hash_throughput.csv || true
+          VAL=$(awk -F, '$1=="xxh64"{print $2}' hash_throughput.csv 2>/dev/null | tail -1)
+          ARCH=$(uname -m)
+          echo "val=$VAL" >> $GITHUB_OUTPUT
+          echo "arch=$ARCH" >> $GITHUB_OUTPUT
+
+      - name: Enforce per-arch thresholds
+        run: |
+          ARCH=${{ steps.measure.outputs.arch }}
+          VAL=${{ steps.measure.outputs.val }}
+          echo "[xxh-thru] arch=$ARCH measured=$VAL MB/s"
+          case "$ARCH" in
+            x86_64) MIN=1200 ;;
+            aarch64) MIN=700 ;;
+            *) MIN=0 ;;
+          esac
+          awk -v v="$VAL" -v m="$MIN" 'BEGIN{ if (v+0 >= m+0) exit 0; else exit 1 }' || (echo "[xxh-thru] FAIL: $VAL < $MIN on $ARCH" && exit 1)

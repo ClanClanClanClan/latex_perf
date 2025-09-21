@@ -6,21 +6,20 @@
 -Q data LaTeXPerfectionist.Data
 -Q generator LaTeXPerfectionist.Generator
 
-# Core proof files (temporarily commented out for OCaml build testing)
-# proofs/CoreProofs.v
-# proofs/LexerProofs.v
-# proofs/ValidatorGraphProofs.v
-# proofs/ElderProofs.v
-# proofs/ExpandProofsFinal.v
-# proofs/ArenaSound.v
+# Active proof set (baseline stub)
+proofs/CoreProofs.v
+proofs/Catcode.v
+proofs/Arena_safe.v
+proofs/LexerDeterminism.v
+proofs/LexerTotality.v
+proofs/LexerFaithfulStep.v
+proofs/LexerSoA.v
+proofs/LexerSmallstep.v
+proofs/LexerIncremental.v
+proofs/L0Smallstep.v
+proofs/L0SmallstepControl.v
 
-# Layer-specific proofs (temporarily commented out)
-# proofs/L0/Catcode.v
-# proofs/L0/LexerIncremental.v  
-# proofs/L1/ExpandNoTeof.v
-# proofs/L2/ParserSoundness.v
-# proofs/L3/LabelsUnique.v
-# proofs/L4/StyleProofs.v
+# Archived v25 proof drafts live under proofs/archive/
 
 # Options
 -arg -w -arg -notation-overridden

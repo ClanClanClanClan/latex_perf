@@ -1,0 +1,41 @@
+cases:
+  - file: corpora/lint/unicode/TYPO-031_mixed_dashes.tex
+    expect: ["TYPO-031"]
+    expect_msgs:
+      - "TYPO-031:Mixed dash styles detected (ASCII and Unicode)"
+  - file: corpora/lint/unicode/TYPO-032_prefer_unicode_dashes.tex
+    expect: ["TYPO-032"]
+    expect_msgs:
+      - "TYPO-032:Prefer Unicode dashes consistently; ASCII --/--- appear sporadically"
+  - file: corpora/lint/unicode/TYPO-033_mixed_ellipsis.tex
+    expect: ["TYPO-033"]
+    expect_msgs:
+      - "TYPO-033:Mixed ellipsis styles detected (Unicode and ASCII)"
+  - file: corpora/lint/unicode/TYPO-014_mixed_quotes.tex
+    expect: ["TYPO-014"]
+    expect_msgs:
+      - "TYPO-014:Inconsistent quotation mark style within text"
+  # Negative: paragraph-separated quotes should not trigger mixed-quotes
+  - file: corpora/lint/unicode/TYPO-014_paragraph_separated_quotes.tex
+    expect: []
+    forbid: ["TYPO-014"]
+  # Negative: paragraph-separated ellipsis styles should not trigger mixed-ellipsis
+  - file: corpora/lint/unicode/TYPO-033_paragraph_separated_ellipsis.tex
+    expect: []
+    forbid: ["TYPO-033"]
+  # Negative: dash mixing inside math only should not trigger
+  - file: corpora/lint/unicode/TYPO-031_dashes_in_math_only.tex
+    expect: []
+    forbid: ["TYPO-031", "TYPO-032"]
+  # Negative: quotes mixing inside math only should not trigger mixed-quotes or ASCII quote errors
+  - file: corpora/lint/unicode/TYPO-014_quotes_in_math_only.tex
+    expect: []
+    forbid: ["TYPO-014", "TYPO-001"]
+  # Negative: ellipsis mixing inside math only should not trigger
+  - file: corpora/lint/unicode/TYPO-033_ellipsis_in_math_only.tex
+    expect: []
+    forbid: ["TYPO-033", "TYPO-005"]
+  # Negative: paragraph-separated Unicode/ASCII dashes should not trigger mixed-dash/normalize
+  - file: corpora/lint/unicode/TYPO-031_paragraph_separated_dashes.tex
+    expect: []
+    forbid: ["TYPO-031", "TYPO-032"]

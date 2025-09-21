@@ -1,0 +1,34 @@
+{
+  "input": "corpora/perf/perf_smoke_big.tex",
+  "warmup": 512,
+  "runs": [
+    {
+      "iterations": 200,
+      "timestamp_utc": "2025-09-19T00:36:43Z",
+      "stats_ms": { "min": 1.972, "p50": 1.985, "p95": 2.066, "p99": 2.121, "p999": 2.121, "max": 2.389 }
+    },
+    {
+      "iterations": 200000,
+      "timestamp_utc": "2025-09-19T08:15:55Z",
+      "stats_ms": { "min": 2.509, "p50": 2.555, "p95": 2.729, "p99": 3.035, "p999": 5.107, "max": 21.314 }
+    },
+    {
+      "iterations": 500000,
+      "timestamp_utc": "2025-09-19T09:11:19Z",
+      "stats_ms": { "min": 2.503, "p50": 2.684, "p95": 2.947, "p99": 3.922, "p999": 8.529, "max": 136.175 }
+    },
+    {
+      "iterations": 1000000,
+      "timestamp_utc": "2025-09-19T09:49:52Z",
+      "stats_ms": { "min": 2.502, "p50": 2.707, "p95": 2.959, "p99": 3.990, "p999": 8.685, "max": 102.020 }
+    }
+  ],
+  "edit_window": {
+    "input": "corpora/perf/edit_window_4kb.tex",
+    "window_bytes": 4096,
+    "iterations": 5000,
+    "timestamp_utc": "2025-09-19T11:20:04Z",
+    "stats_ms": { "min": 0.009, "p50": 0.011, "p95": 0.017, "p99": 0.019, "p999": 0.020, "max": 0.031 }
+  },
+  "notes": "Measured via latex-parse/bench/ab_microbench.exe (warmup 512) and latex-parse/bench/edit_window_bench.exe (warmup 256)."
+}

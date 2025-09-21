@@ -1,0 +1,296 @@
+name: Nightly Performance (median-of-100)
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  perf-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          opam update -y
+          opam install -y dune
+
+      - name: Build project
+        run: |
+          opam exec -- dune build @all
+
+      - name: Run perf gates (capture status)
+        id: gates
+        run: |
+          set +e
+          opam exec -- bash scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100 | tee perf_gate.out
+          S1=$?
+          opam exec -- bash scripts/edit_window_gate.sh corpora/perf/edit_window_4kb.tex 2000 | tee -a perf_gate.out
+          S2=$?
+          # First-token gate (p95 <= 350 us)
+          opam exec -- bash scripts/first_token_gate.sh corpora/perf/edit_window_4kb.tex 2000 4096 | tee -a perf_gate.out
+          S3=$?
+          echo "s1=$S1" >> $GITHUB_OUTPUT
+          echo "s2=$S2" >> $GITHUB_OUTPUT
+          echo "s3=$S3" >> $GITHUB_OUTPUT
+          if [ $S1 -ne 0 ] || [ $S2 -ne 0 ] || [ $S3 -ne 0 ]; then echo "PERF_FAIL=1" >> $GITHUB_ENV; fi
+
+      - name: Create perf regression issue
+        if: env.PERF_FAIL == '1'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const sh = require('child_process');
+            function grep(re, s){ const m = s.match(re); return m ? m[1] : null; }
+            const body = fs.existsSync('perf_gate.out') ? fs.readFileSync('perf_gate.out','utf8') : '';
+            // Extract metrics
+            const medMatch = grep(/median-of-100 p95 = ([0-9.]+)/, body);
+            let MED = medMatch ? parseFloat(medMatch) : NaN;
+            let EWP95 = NaN, FTP95 = NaN;
+            try {
+              if (fs.existsSync('/tmp/edit_window_bench.csv')) {
+                const csv = fs.readFileSync('/tmp/edit_window_bench.csv','utf8').split(/\r?\n/)[1] || '';
+                const cols = csv.split(','); if (cols.length>=5) EWP95 = parseFloat(cols[3]);
+              }
+            } catch(e) {}
+            try {
+              if (fs.existsSync('/tmp/first_token_latency.csv')) {
+                const csv = fs.readFileSync('/tmp/first_token_latency.csv','utf8').split(/\r?\n/)[1] || '';
+                const cols = csv.split(','); if (cols.length>=5) FTP95 = parseFloat(cols[3]);
+              }
+            } catch(e) {}
+            // Thresholds
+            const T_MED = 20.0, T_EW = 1.2, T_FT = 350.0;
+            function over(val, thr){ if (!isFinite(val)) return 0; return Math.max(0, (val - thr)/thr); }
+            const oMed = over(MED, T_MED), oEw = over(EWP95, T_EW), oFt = over(FTP95, T_FT);
+            const maxOver = Math.max(oMed, oEw, oFt);
+            let severity = 'severity:minor';
+            if (maxOver >= 0.3) severity = 'severity:critical'; else if (maxOver >= 0.1) severity = 'severity:major';
+            const now = new Date().toISOString();
+            const title = `Perf regression detected (${now})`;
+            const details = `Full-doc p95 (med-100): ${MED||'n/a'} ms\nEdit-window p95: ${EWP95||'n/a'} ms\nFirst-token p95: ${FTP95||'n/a'} us`;
+            const bodyText = `Automated perf gate failure.\n\n${details}\n\nLog (perf_gate.out):\n\n\`\`\`\n${body}\n\`\`\`\n`;
+            const res = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: bodyText,
+              labels: ['perf-regression', severity]
+            });
+            core.notice(`Opened issue #${res.data.number} with ${severity}`);
+
+      - name: Slack notify (perf regression)
+        if: env.PERF_FAIL == '1'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
+            SUMMARY=$(sed -n '1,200p' perf_gate.out | sed 's/"/\"/g')
+            curl -s -X POST -H 'Content-type: application/json' \
+              --data "{\"text\": \"🚨 Perf regression detected in nightly.\nRepo: $GITHUB_REPOSITORY\nRun: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID\n\n\`${SUMMARY}\`\"}" \
+              "$SLACK_WEBHOOK_URL" || true
+          else
+            echo "[perf-nightly] SLACK_WEBHOOK_URL not set; skipping Slack notification"
+          fi
+
+      - name: Email notify (perf regression)
+        if: env.PERF_FAIL == '1'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Perf regression detected: ${{ github.repository }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          content_type: text/plain
+          body: |
+            Nightly performance regression detected.
+            Repo: ${{ github.repository }}
+            Run:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Gate output (perf_gate.out):
+            
+            ${{ steps.gates.outcome }}
+
+      - name: Fail job if gates failed
+        if: env.PERF_FAIL == '1'
+        run: exit 1
+
+      - name: Perf summary CSV
+        run: |
+          opam exec -- bash scripts/perf_summary.sh corpora/perf/perf_smoke_big.tex perf_summary.csv
+
+      - name: Hash throughput (SIMD xxh)
+        run: |
+          opam exec -- dune build latex-parse/bench/hash_throughput.exe
+          L0_XXH_SELFTEST=1 L0_USE_SIMD_XXH=1 opam exec -- ./_build/default/latex-parse/bench/hash_throughput.exe \
+            corpora/perf/perf_smoke_big.tex 50 --csv hash_throughput.csv || true
+
+      - name: Append job summary
+        run: |
+          {
+            echo "# Nightly Performance Summary";
+            MED=$(grep -E "\[gate\] median-of-100 p95 =" perf_gate.out | tail -1 | awk '{print $6}')
+            if [ -n "$MED" ]; then echo "- Full-doc p95 (median-of-100): ${MED} ms"; fi
+            ABP95=$(awk -F, '$1=="ab10k"{print $4}' perf_summary.csv 2>/dev/null || true)
+            EWP95=$(awk -F, '$1=="edit4k5k"{print $4}' perf_summary.csv 2>/dev/null || true)
+            if [ -n "$ABP95" ]; then echo "- A+B 10k p95: ${ABP95} ms"; fi
+            if [ -n "$EWP95" ]; then echo "- Edit-window 5k p95: ${EWP95} ms"; fi
+            FTP95=$(awk -F, 'NR==2{print $4}' /tmp/first_token_latency.csv 2>/dev/null || true)
+            if [ -n "$FTP95" ]; then echo "- First-token p95: ${FTP95} us"; fi
+            XXH=$(awk -F, '$1=="xxh64"{print $2}' hash_throughput.csv 2>/dev/null | tail -1)
+            if [ -n "$XXH" ]; then echo "- xxh64 throughput (SIMD lane if enabled): ${XXH} MB/s"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create badge JSON (perf)
+        run: |
+          MED=$(grep -E "\[gate\] median-of-100 p95 =" perf_gate.out | tail -1 | awk '{print $6}')
+          if [ -z "$MED" ]; then MED="n/a"; COLOR="lightgrey"; else
+            VAL=$(printf '%.0f' "$MED" 2>/dev/null || echo 999)
+            if [ "$VAL" -lt 8 ]; then COLOR=brightgreen; elif [ "$VAL" -lt 20 ]; then COLOR=yellow; else COLOR=orange; fi
+          fi
+          mkdir -p badges
+          cat > badges/perf.json <<JSON
+          {"schemaVersion":1,"label":"p95 (median-of-100)","message":"${MED} ms","color":"${COLOR}"}
+JSON
+
+      - name: Publish badge to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          git config user.email "actions@github.com"
+          git config user.name  "github-actions[bot]"
+          git fetch origin gh-pages || true
+          if git show-ref --quiet refs/remotes/origin/gh-pages; then
+            git checkout gh-pages
+            git pull origin gh-pages || true
+          else
+            git checkout --orphan gh-pages
+            rm -rf * .github specs core latex-parse proofs rust scripts docs corpora external_corpora data archive _build || true
+            mkdir -p badges
+          fi
+          mkdir -p badges data
+          cp -f ../badges/perf.json badges/perf.json || cp -f badges/perf.json badges/perf.json
+          # Rolling perf history (append)
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          ABP95=$(awk -F, '$1=="ab10k"{print $4}' ../perf_summary.csv 2>/dev/null | tail -1)
+          EWP95=$(awk -F, '$1=="edit4k5k"{print $4}' ../perf_summary.csv 2>/dev/null | tail -1)
+          FTP95=$(awk -F, 'NR==2{print $4}' /tmp/first_token_latency.csv 2>/dev/null || true)
+          XXH=$(awk -F, '$1=="xxh64"{print $2}' ../hash_throughput.csv 2>/dev/null | tail -1)
+          MED=$(grep -E "\[gate\] median-of-100 p95 =" ../perf_gate.out | tail -1 | awk '{print $6}')
+          python3 - <<PY
+import json
+entry = {"ts":"${TS}","full_doc_p95_med100_ms":"${MED}","ab10k_p95_ms":"${ABP95}","edit4k5k_p95_ms":"${EWP95}","first_token_p95_us":"${FTP95}","xxh64_mb_per_s":"${XXH}"}
+try:
+  with open('data/perf_history.json','r') as f:
+    hist = json.load(f)
+except Exception:
+  hist = []
+hist.append(entry)
+with open('data/perf_history.json','w') as f:
+  json.dump(hist, f)
+PY
+          # Generate sparkline svg for full-doc p95
+          python3 - <<'PY'
+import json, math
+from pathlib import Path
+try:
+  hist = json.load(open('data/perf_history.json','r'))
+except Exception:
+  hist = []
+vals = []
+for e in hist[-50:]:
+  try:
+    v = float(e.get('full_doc_p95_med100_ms','nan'))
+  except Exception:
+    v = float('nan')
+  if not math.isnan(v):
+    vals.append(v)
+if not vals:
+  vals = [0.0]
+w,h,px = 200, 30, 3
+vmin, vmax = min(vals), max(vals)
+if abs(vmax - vmin) < 1e-9:
+  vmax = vmin + 1.0
+def scale(i,v):
+  x = px + i*(w-2*px)/max(1,len(vals)-1)
+  y = h - px - (v-vmin)*(h-2*px)/(vmax-vmin)
+  return x,y
+pts = [scale(i,v) for i,v in enumerate(vals)]
+svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}' viewBox='0 0 {w} {h}'>
+  <polyline fill='none' stroke='#4caf50' stroke-width='2' points='{" ".join([f"{x:.1f},{y:.1f}" for x,y in pts])}'/>
+</svg>"""
+Path('badges').mkdir(exist_ok=True)
+open('badges/perf_spark.svg','w').write(svg)
+PY
+          # Create minimal index.html if missing (Chart.js)
+          if [ ! -f index.html ]; then
+            cat > index.html <<'HTML'
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Nightly Performance Trends</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style> body{font-family:system-ui, sans-serif; margin:20px;} canvas{max-width:900px;} </style>
+</head>
+<body>
+  <h1>Nightly Performance Trends</h1>
+  <p>Data from data/perf_history.json</p>
+  <canvas id="chart" height="120"></canvas>
+  <script>
+    async function run(){
+      const resp = await fetch('data/perf_history.json');
+      const hist = await resp.json();
+      const xs = hist.map(e => e.ts);
+      const y1 = hist.map(e => parseFloat(e.full_doc_p95_med100_ms||'NaN'));
+      const y2 = hist.map(e => parseFloat(e.ab10k_p95_ms||'NaN'));
+      const y3 = hist.map(e => parseFloat(e.edit4k5k_p95_ms||'NaN'));
+      const y4 = hist.map(e => parseFloat(e.xxh64_mb_per_s||'NaN'));
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: { labels: xs, datasets: [
+          {label: 'full-doc p95 (med-100) ms', data: y1, borderColor: 'green', yAxisID: 'y'},
+          {label: 'ab10k p95 ms', data: y2, borderColor: 'orange', yAxisID: 'y'},
+          {label: 'edit4k5k p95 ms', data: y3, borderColor: 'blue', yAxisID: 'y'},
+          {label: 'xxh64 MB/s', data: y4, borderColor: 'purple', yAxisID: 'y1'}
+        ]},
+        options: { responsive: true, scales: { y: { type:'linear', position:'left' }, y1: { type:'linear', position:'right' } } }
+      });
+    }
+    run();
+  </script>
+</body>
+</html>
+HTML
+          fi
+          git add badges/perf.json badges/perf_spark.svg data/perf_history.json index.html
+          git commit -m "chore(badge): update nightly perf badge" || true
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages || true
+
+      - name: Upload perf artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-nightly
+          path: |
+            perf_summary.csv
+            /tmp/ab_microbench_10k.csv
+            /tmp/edit_window_bench_5k.csv
+            perf_gate.out
+            hash_throughput.csv

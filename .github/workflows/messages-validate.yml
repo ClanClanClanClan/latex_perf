@@ -1,0 +1,15 @@
+name: Messages Validation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  messages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate messages (warn only)
+        run: |
+          bash scripts/validate_messages.sh || true

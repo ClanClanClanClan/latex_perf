@@ -1,0 +1,66 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Build unit test executables
+        run: |
+          opam update -y
+          opam install -y dune
+          opam exec -- dune build \
+            latex-parse/src/test_strip_math.exe \
+            latex-parse/src/test_tokenizer_props.exe \
+            latex-parse/src/test_parser_l2.exe \
+            latex-parse/src/test_strip_math_prop.exe \
+            latex-parse/src/test_parser_l2_prop.exe \
+            latex-parse/src/test_parser_l2_transforms.exe \
+            latex-parse/src/test_parser_l2_opts_escapes.exe \
+            latex-parse/src/test_parser_l2_norm.exe \
+            latex-parse/src/test_parser_l2_verb.exe
+
+      - name: Run strip_math unit tests
+        run: |
+          ./_build/default/latex-parse/src/test_strip_math.exe
+
+      - name: Run tokenizer property tests
+        run: |
+          ./_build/default/latex-parse/src/test_tokenizer_props.exe
+
+      - name: Run L2 parser tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2.exe
+
+      - name: Run math-strip property tests
+        run: |
+          ./_build/default/latex-parse/src/test_strip_math_prop.exe
+
+      - name: Run L2 parser property tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2_prop.exe
+
+      - name: Run L2 parser transform tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2_transforms.exe
+
+      - name: Run L2 parser opts escapes tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2_opts_escapes.exe
+
+      - name: Run L2 parser normalization tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2_norm.exe
+
+      - name: Run L2 parser verb tests
+        run: |
+          ./_build/default/latex-parse/src/test_parser_l2_verb.exe

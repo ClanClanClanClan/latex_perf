@@ -1,0 +1,45 @@
+name: XXH64 Throughput Gate (SIMD)
+
+on:
+  workflow_dispatch:
+    inputs:
+      gate:
+        description: "Enable gate (1 = enforce threshold)"
+        required: false
+        default: "0"
+      min_mbps:
+        description: "Minimum MB/s (SIMD)"
+        required: false
+        default: "1500"
+
+jobs:
+  xxh-throughput-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Build throughput bench
+        run: |
+          opam update -y
+          opam install -y dune
+          opam exec -- dune build latex-parse/bench/hash_throughput.exe
+
+      - name: Run SIMD throughput bench
+        env:
+          L0_USE_SIMD_XXH: "1"
+        run: |
+          ./_build/default/latex-parse/bench/hash_throughput.exe corpora/perf/perf_smoke_big.tex 50 --csv hash_throughput.csv || true
+          cat hash_throughput.csv || true
+
+      - name: Enforce threshold (optional)
+        if: ${{ github.event.inputs.gate == '1' }}
+        run: |
+          MIN=${{ github.event.inputs.min_mbps }}
+          VAL=$(awk -F, '$1=="xxh64"{print $2}' hash_throughput.csv 2>/dev/null | tail -1)
+          echo "[xxh-gate] min_mbps=${MIN} measured=${VAL}"
+          awk -v v="$VAL" -v m="$MIN" 'BEGIN{ if (v+0 >= m+0) exit 0; else exit 1 }' || (echo "[xxh-gate] FAIL" && exit 1)
+

@@ -2,11 +2,14 @@
  (name latex_parse_lib)
  (modules
   config clock hedge_timer mlock meminfo gc_prep pretouch arena ipc
-  simd_guard real_processor worker broker service_bracket)
- (libraries unix threads)
+  simd_guard real_processor worker broker service_bracket metrics_prometheus
+ fault_injection barrier fast_hash xxh64 service_payload catcode validators_context validators validators_metrics tokenizer_lite
+  unicode parser_l2)
+ (libraries unix threads str uutf)
  (foreign_stubs
   (language c)
-  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs scalar_fallback))
+  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs simd_production_stubs simd_tokenizer_fixed xxh64_simd_stubs)
+  (flags (:standard)))
  ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
  ;; TEMPORARILY DISABLED DUE TO _Caml_state SYMBOL COMPATIBILITY ISSUE
  ;; (c_library_flags
@@ -17,3 +20,68 @@
  (name main_service)
  (modules main_service)
  (libraries latex_parse_lib unix threads))
+
+(executable
+ (name test_simd_attestation)
+ (modules test_simd_attestation)
+ (libraries latex_parse_lib))
+
+(executable
+ (name test_fault_injection)
+ (modules test_fault_injection)
+ (libraries latex_parse_lib unix threads))
+
+(executable
+(name rest_api_server)
+(modules rest_api_server rest_simple_expander)
+(libraries latex_parse_lib unix threads str yojson))
+
+(executable
+ (name validators_cli)
+ (modules validators_cli)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_strip_math)
+ (modules test_strip_math)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_tokenizer_props)
+ (modules test_tokenizer_props)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2)
+ (modules test_parser_l2)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_strip_math_prop)
+ (modules test_strip_math_prop)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2_prop)
+ (modules test_parser_l2_prop)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2_transforms)
+ (modules test_parser_l2_transforms)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2_opts_escapes)
+ (modules test_parser_l2_opts_escapes)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2_norm)
+ (modules test_parser_l2_norm)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_parser_l2_verb)
+ (modules test_parser_l2_verb)
+ (libraries latex_parse_lib))

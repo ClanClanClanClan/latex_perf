@@ -1,0 +1,9 @@
+{
+  "strip_controls": ["textbf", "emph", "section"],
+  "bfseries_until_brace": true,
+  "controls": {
+    "section": { "arity": 1 },
+    "textbf": { "arity": 1 },
+    "emph": { "arity": 1 }
+  }
+}

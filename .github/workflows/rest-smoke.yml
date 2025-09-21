@@ -1,0 +1,59 @@
+name: REST Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rest-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dune and yojson
+        run: |
+          opam update -y
+          opam install -y dune yojson
+
+      - name: Build service and REST server
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Start service (UDS)
+        run: |
+          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          sleep 1
+
+      - name: Start REST server
+        run: |
+          ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 & echo $! > rest.pid
+          sleep 1
+
+      - name: REST smoke test
+        run: |
+          bash scripts/rest_smoke.sh
+
+      - name: Stop service to simulate outage
+        run: |
+          if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
+          sleep 1
+
+      - name: REST negative smoke (expect 503)
+        run: |
+          bash scripts/rest_smoke_negative.sh
+
+      - name: Stop servers
+        if: always()
+        run: |
+          if [ -f rest.pid ]; then kill $(cat rest.pid) || true; fi
+          if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
+          pkill -f rest_api_server || true
+          pkill -f main_service || true

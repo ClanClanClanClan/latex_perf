@@ -1,2 +1,1 @@
-external mlockall : unit -> unit = "ocaml_mlockall"
-let init () = try mlockall () with _ -> ()
+../../latex-parse/src/mlock.ml

@@ -1,25 +1,32 @@
+
 (library
  (name l0_lexer)
  (public_name latex-perfectionist.core.l0_lexer)
- (modules config clock hedge_timer qos rusage simd_caps percentiles alloc_guard gc_prep pretouch arena ipc real_processor simd_processor metrics_logger worker broker service_bracket)
- (libraries unix threads bigarray data)
+ (wrapped false)
+ (modules alloc_guard arena barrier broker catcode clock config fault_injection gc_prep
+         hedge_timer latex_parse_lib runtime_main_service meminfo metrics_prometheus mlock fast_hash
+         pretouch percentiles ipc simd_guard real_processor service_bracket worker)
+ (libraries unix threads data)
  (foreign_stubs
   (language c)
-  (names clock_stubs hedge_timer_stubs qos_stubs pretouch_stubs rusage_stubs simd_caps_macos tokenizer_stubs simd_production_stubs))
- (c_library_flags ("/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/core/l0_lexer/simd/libsimd_production.a")))
+  (names clock_stubs hedge_timer_stubs meminfo_stubs mlock_stubs simd_guard_stubs simd_production_stubs simd_tokenizer_fixed)))
 
 (executable
  (name main_service)
  (modules main_service)
- (libraries l0_lexer unix threads bigarray))
+ (libraries l0_lexer unix threads))
 
 (executable
  (name main_service_enhanced)
  (modules main_service_enhanced)
- (libraries l0_lexer unix threads bigarray))
+ (libraries l0_lexer unix threads))
 
 (executable
- (name test_integration)
- (modules test_integration)
- (libraries l0_lexer unix threads bigarray))
+ (name main)
+ (modules main)
+ (libraries l0_lexer unix threads))
 
+(executable
+ (name runtime_main_exe)
+ (modules runtime_main_exe)
+ (libraries l0_lexer unix threads))

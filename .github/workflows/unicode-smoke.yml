@@ -1,0 +1,49 @@
+name: Unicode Rules Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unicode-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq curl
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune yojson uutf
+
+      - name: Build service and REST
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Run service and REST
+        run: |
+          rm -f /tmp/l0_lex_svc.sock || true
+          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          sleep 0.5
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          sleep 0.5
+
+      - name: Unicode smokes
+        env:
+          L0_VALIDATORS: pilot
+        run: |
+          bash scripts/smoke_rules_unicode.sh http://127.0.0.1:8080/expand
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f rest_api_server || true
+          pkill -f main_service || true
+

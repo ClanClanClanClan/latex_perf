@@ -1,0 +1,11 @@
+(library
+ (name l1_expander)
+ (public_name latex-perfectionist.core.l1_expander)
+(modules expander l1_zero_copy_expansion load_catalogue check_catalogue l1_ab_api ab_driver)
+ (libraries l0_lexer data unix str yojson)
+ (flags (:standard -w -27-26)))
+
+(executable
+ (name l1_ab_test)
+ (modules ab_driver)
+ (libraries l1_expander unix str))

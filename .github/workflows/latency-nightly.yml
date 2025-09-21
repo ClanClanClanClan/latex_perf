@@ -1,0 +1,89 @@
+name: Latency Smoke Nightly (/expand)
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  latency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune yojson uutf
+
+      - name: Build service and REST
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Run service and REST (pilot + token-aware)
+        env:
+          L0_VALIDATORS: pilot
+          L0_TOKEN_AWARE: '1'
+        run: |
+          rm -f /tmp/l0_lex_svc.sock
+          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          sleep 0.5
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          sleep 0.5
+
+      - name: Latency smoke (/expand)
+        run: |
+          bash scripts/latency_smoke_expand.sh 500 | tee /tmp/latency_gate.txt
+          test -f /tmp/latencies_ms.txt
+
+      - name: Upload latency artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expand-latencies
+          path: /tmp/latencies_ms.txt
+
+      - name: Generate badge JSON
+        run: |
+          bash scripts/make_latency_badge.sh /tmp/latencies_ms.txt /tmp/latency_badge.json
+          cat /tmp/latency_badge.json
+
+      - name: Upload badge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latency-badge
+          path: /tmp/latency_badge.json
+
+      - name: Prepare badge publish dir
+        run: |
+          rm -rf public-badges
+          mkdir -p public-badges
+          cp /tmp/latency_badge.json public-badges/expand_latency.json
+
+      - name: Publish badge to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public-badges
+
+      - name: Update README badge block
+        run: |
+          bash scripts/update_readme_badge.sh
+
+      - name: Commit README badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update expand latency badge"
+          file_pattern: README.md
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f rest_api_server || true
+          pkill -f main_service || true

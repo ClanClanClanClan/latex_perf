@@ -1,0 +1,34 @@
+name: XXH64 SIMD Selfcheck
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  xxh-selfcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Build selfcheck bench
+        run: |
+          opam update -y
+          opam install -y dune
+          opam exec -- dune build latex-parse/bench/xxh_selfcheck.exe
+
+      - name: Run scalar vs SIMD selfcheck (small)
+        run: |
+          # Scalar baseline
+          ./_build/default/latex-parse/bench/xxh_selfcheck.exe 500 1024
+          # SIMD path (falls back to scalar if not available)
+          L0_USE_SIMD_XXH=1 ./_build/default/latex-parse/bench/xxh_selfcheck.exe 500 1024
+
+      - name: Run scalar vs SIMD selfcheck (medium)
+        run: |
+          ./_build/default/latex-parse/bench/xxh_selfcheck.exe 200 65536
+          L0_USE_SIMD_XXH=1 ./_build/default/latex-parse/bench/xxh_selfcheck.exe 200 65536
+

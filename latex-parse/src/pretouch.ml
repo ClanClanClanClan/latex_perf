@@ -1,6 +1,7 @@
 let pre_touch_bytes (b:bytes) ~page =
   let n = Bytes.length b in
-  let rec loop i = if i < n then (ignore (Bytes.unsafe_get b i); loop (i+page)) in loop 0
+  let step = min page 8192 in (* Cap step size to reduce variance *)
+  let rec loop i = if i < n then (ignore (Bytes.unsafe_get b i); loop (i+step)) in loop 0
 
 let pre_touch_ba_1 (type a) (type b)
   (ba:(a,b,Bigarray.c_layout) Bigarray.Array1.t)

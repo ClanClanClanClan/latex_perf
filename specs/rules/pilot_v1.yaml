@@ -1,0 +1,154 @@
+# Pilot L0 Rules — v1
+# This pilot is enabled in runtime when env var L0_VALIDATORS=pilot (or 1/true).
+# Note: Info-level rules are currently surfaced as Warning by the runtime.
+
+rules:
+  - id: "TYPO-001"
+    precondition: L0_Lexer
+    default_severity: Error
+    message: "ASCII straight quotes must be curly quotes"
+
+  - id: "TYPO-002"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Double hyphen -- should be en-dash –"
+
+  - id: "TYPO-003"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Triple hyphen --- should be em-dash —"
+
+  - id: "TYPO-004"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "TeX double back-tick ``…'' not allowed; use curly quotes"
+
+  - id: "TYPO-005"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Ellipsis typed as three periods ...; use \\dots"
+
+  - id: "TYPO-006"
+    precondition: L0_Lexer
+    default_severity: Error
+    message: "Tab character U+0009 forbidden"
+
+  - id: "TYPO-007"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Trailing spaces at end of line"
+
+  - id: "TYPO-008"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Multiple consecutive blank lines (>2) in source"
+
+  - id: "TYPO-009"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Non-breaking space ~ used incorrectly at line start"
+
+  - id: "TYPO-010"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Space before punctuation , . ; : ? !"
+
+  - id: "TYPO-011"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Multiple consecutive spaces in text"
+
+  - id: "TYPO-012"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Space before closing bracket ) ] }"
+
+  - id: "TYPO-013"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Consider non-breaking space after single-letter words"
+
+  - id: "TYPO-014"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Inconsistent quotation mark style within text"
+
+  - id: "TYPO-015"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "LaTeX command spacing may need adjustment"
+
+  - id: "TYPO-016"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Excessive exclamation marks, consider moderation"
+
+  - id: "TYPO-017"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Excessive question marks, consider moderation"
+
+  - id: "TYPO-018"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Double space after sentence punctuation"
+
+  - id: "TYPO-019"
+    precondition: L0_Lexer
+    default_severity: Info
+    message: "Leading spaces at start of line"
+
+  - id: "TYPO-020"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Consecutive commas ,, found"
+
+  - id: "TYPO-021"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Space after opening bracket ( [ {"
+
+  - id: "TYPO-022"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Missing space after punctuation"
+
+  - id: "TYPO-023"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Windows CR (\\r) line endings found"
+
+  - id: "TYPO-024"
+    precondition: L0_Lexer
+    default_severity: Error
+    message: "Control characters (U+0000–U+001F) present"
+
+  - id: "TYPO-025"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Space before closing quote"
+
+  - id: "TYPO-026"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Double period .. should be … or \\dots"
+
+  - id: "TYPO-027"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Multiple spaces before punctuation"
+
+  - id: "TYPO-028"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Space before percent sign %"
+
+  - id: "TYPO-029"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "Space after opening quote"
+
+  - id: "TYPO-030"
+    precondition: L0_Lexer
+    default_severity: Warning
+    message: "More than three hyphens detected (----)"

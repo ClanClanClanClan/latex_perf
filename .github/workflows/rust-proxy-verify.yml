@@ -1,0 +1,50 @@
+name: Rust Proxy Verify (evidence)
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  rust-proxy-verify:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dune and deps
+        run: |
+          opam update -y
+          opam install -y dune
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Build OCaml service and Rust proxy
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe
+          cargo build -p elderd_rust_proxy --release
+
+      - name: Run verify_r1 (proxy A/B perf gate)
+        run: |
+          make verify_r1 FILE=corpora/perf/perf_smoke_big.tex
+
+      - name: Upload verify artifacts (best-effort)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-proxy-verify
+          path: |
+            /tmp/ab_microbench_*.csv
+            /tmp/edit_window_bench_*.csv

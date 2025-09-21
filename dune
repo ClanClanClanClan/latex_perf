@@ -1,0 +1,4 @@
+(alias
+ (name simd)
+ (deps (alias_rec all)))
+

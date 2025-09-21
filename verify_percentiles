@@ -1,0 +1,102 @@
+#!/bin/bash
+set -euo pipefail
+
+FILE="${1:-/tmp/latencies_ms.txt}"
+
+if [[ ! -f "$FILE" ]]; then
+    echo "ERROR: File not found: $FILE"
+    exit 1
+fi
+
+# Get sample count
+N=$(wc -l < "$FILE" | tr -d ' ')
+
+if [[ $N -eq 0 ]]; then
+    echo "ERROR: Empty file"
+    exit 1
+fi
+
+# Sort the data
+sort -n "$FILE" > /tmp/sorted_perc.txt
+
+# Calculate percentile indices
+calc_idx() {
+    local n=$1
+    local p=$2
+    python3 - <<'PY' "$n" "$p"
+import math, sys
+n = int(sys.argv[1])
+p = float(sys.argv[2])
+if n <= 0:
+    print(1)
+    sys.exit(0)
+idx = math.ceil((p / 100.0) * n)
+idx = max(1, min(n, idx))
+print(idx)
+PY
+}
+
+# Get percentile values
+get_percentile() {
+    local idx=$1
+    sed -n "${idx}p" /tmp/sorted_perc.txt
+}
+
+echo "═══════════════════════════════════"
+echo " Latency Percentiles (N=$N)"
+echo "═══════════════════════════════════"
+
+if [[ $N -ge 2 ]]; then
+    MIN=$(head -1 /tmp/sorted_perc.txt)
+    MAX=$(tail -1 /tmp/sorted_perc.txt)
+    P50=$(get_percentile $(calc_idx "$N" 50))
+
+    printf " Min:     %8.3f ms\n" "$MIN"
+    printf " P50:     %8.3f ms\n" "$P50"
+    printf " Max:     %8.3f ms\n" "$MAX"
+fi
+
+if [[ $N -ge 20 ]]; then
+    P90=$(get_percentile $(calc_idx "$N" 90))
+    P95=$(get_percentile $(calc_idx "$N" 95))
+    printf " P90:     %8.3f ms\n" "$P90"
+    printf " P95:     %8.3f ms\n" "$P95"
+fi
+
+if [[ $N -ge 100 ]]; then
+    P99=$(get_percentile $(calc_idx "$N" 99))
+    printf " P99:     %8.3f ms\n" "$P99"
+fi
+
+if [[ $N -ge 1000 ]]; then
+    P999=$(get_percentile $(calc_idx "$N" 99.9))
+    printf " P99.9:   %8.3f ms\n" "$P999"
+fi
+
+if [[ $N -ge 10000 ]]; then
+    P9999=$(get_percentile $(calc_idx "$N" 99.99))
+    printf " P99.99:  %8.3f ms\n" "$P9999"
+fi
+
+echo "═══════════════════════════════════"
+
+# Performance gates
+if [[ $N -ge 100 ]]; then
+    P95=$(get_percentile $(calc_idx "$N" 95))
+    if (( $(echo "$P95 > 20" | bc -l) )); then
+        echo "⚠️  WARNING: P95 > 20ms threshold"
+    else
+        echo "✓ P95 ≤ 20ms"
+    fi
+fi
+
+if [[ $N -ge 1000 ]]; then
+    P999=$(get_percentile $(calc_idx "$N" 99.9))
+    if (( $(echo "$P999 > 40" | bc -l) )); then
+        echo "⚠️  WARNING: P99.9 > 40ms threshold"
+    else
+        echo "✓ P99.9 ≤ 40ms"
+    fi
+fi
+
+rm -f /tmp/sorted_perc.txt

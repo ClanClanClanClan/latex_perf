@@ -4,6 +4,8 @@
 (generate_opam_files true)
 (implicit_transitive_deps true)
 
+
+
 (package
  (name latex-perfectionist)
  (synopsis "LaTeX Perfectionist v25 bootstrap")
@@ -16,4 +18,3 @@
   (ppx_deriving  (>= 5.2))
   (angstrom      (>= 0.16))
   (uutf          (>= 1.0.3))))
-

@@ -1,7 +1,26 @@
 (library
  (name l1_expander)
  (public_name latex-perfectionist.core.l1_expander)
- (modules expander l1_zero_copy_expansion load_catalogue check_catalogue)
+ (modules expander l1_zero_copy_expansion load_catalogue check_catalogue l1_ab_api simple_expander catalogue_loader)
  (libraries l0_lexer data unix str yojson)
  (flags (:standard -w -27-26)))
 
+(executable
+ (name l1_ab_test)
+ (modules l1_ab_test)
+ (libraries l1_expander unix str))
+
+(test
+ (name simple_expander_test)
+ (modules simple_expander_test)
+ (libraries l1_expander))
+
+(executable
+ (name expander_smoke)
+ (modules expander_smoke)
+ (libraries l1_expander latex_parse_lib yojson unix str))
+
+(test
+ (name l1_integration_test)
+ (modules l1_integration_test)
+ (libraries l1_expander))

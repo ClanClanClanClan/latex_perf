@@ -1,0 +1,56 @@
+name: Rust Proxy Smoke (short)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust-proxy-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dune
+        run: |
+          opam update -y
+          opam install -y dune
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Build service and proxy
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe
+          cargo build -p elderd_rust_proxy --release
+
+      - name: Start service and proxy
+        run: |
+          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          sleep 1
+          ./target/release/elderd_rust_proxy & echo $! > proxy.pid
+          sleep 1
+
+      - name: Smoke 3 requests via proxy
+        run: |
+          python3 scripts/proxy_smoke.py
+
+      - name: Stop processes
+        if: always()
+        run: |
+          if [ -f proxy.pid ]; then kill $(cat proxy.pid) || true; fi
+          if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
+          pkill -f elderd_rust_proxy || true
+          pkill -f main_service || true
+

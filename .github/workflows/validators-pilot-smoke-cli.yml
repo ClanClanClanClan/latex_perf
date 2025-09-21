@@ -1,0 +1,32 @@
+name: Validators Pilot Smoke (CLI)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up OCaml and OPAM
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 5.1.1
+
+      - name: Install dependencies
+        run: |
+          opam repo add default https://opam.ocaml.org || true
+          opam update -y || true
+          opam install -y dune uutf
+
+      - name: Build CLI
+        run: |
+          opam exec -- dune build latex-parse/src/validators_cli.exe
+
+      - name: Run CLI pilot smoke
+        env:
+          L0_VALIDATORS: pilot
+        run: |
+          bash scripts/smoke_rules_pilot_cli.sh

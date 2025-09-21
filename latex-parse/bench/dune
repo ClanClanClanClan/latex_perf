@@ -1,7 +1,7 @@
-(executable
- (name run_service_bench_concurrent)
- (modules run_service_bench_concurrent percentiles_strict)
- (libraries unix threads latex_parse_lib))
+(library
+ (name bench_utils)
+ (modules percentiles_strict)
+ (libraries unix))
 
 (executable
  (name ipc_propcheck)
@@ -12,3 +12,52 @@
  (name time_selftest)
  (modules time_selftest)
  (libraries unix latex_parse_lib))
+
+(executable
+ (name ab_microbench)
+ (modules ab_microbench)
+ (libraries unix latex_parse_lib bench_utils))
+
+(executable
+ (name edit_window_bench)
+ (modules edit_window_bench)
+ (libraries unix latex_parse_lib bench_utils))
+
+(executable
+ (name edit_replay_bench)
+ (modules edit_replay_bench)
+ (libraries unix latex_parse_lib bench_utils str))
+
+(executable
+ (name first_token_latency)
+ (modules first_token_latency)
+ (libraries unix latex_parse_lib))
+
+(executable
+(name hash_throughput)
+(modules hash_throughput)
+(libraries unix latex_parse_lib))
+
+(alias
+ (name simd-hash)
+ (deps hash_throughput.exe))
+
+(test
+ (name catcode_selftest)
+ (modules catcode_selftest)
+ (libraries unix latex_parse_lib))
+
+(executable
+ (name xxh_selfcheck)
+ (modules xxh_selfcheck)
+ (libraries unix latex_parse_lib))
+
+(executable
+ (name run_service_bench_keepalive)
+ (modules run_service_bench_keepalive)
+ (libraries unix threads latex_parse_lib bench_utils))
+
+(executable
+ (name run_service_bench_concurrent)
+ (modules run_service_bench_concurrent)
+ (libraries unix threads latex_parse_lib bench_utils))

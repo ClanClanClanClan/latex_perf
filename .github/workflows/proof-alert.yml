@@ -1,0 +1,61 @@
+name: Proof Regression Alert
+
+on:
+  workflow_run:
+    workflows: ["Proof CI (Coq)"]
+    types: [completed]
+
+jobs:
+  alert:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open issue for proof regression
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const run = context.payload.workflow_run;
+            const title = `Proof regression: ${run.head_branch} @ ${run.head_sha.substring(0,7)}`;
+            const url = run.html_url;
+            const body = `Proof CI failed.\n\n- Branch: ${run.head_branch}\n- SHA: ${run.head_sha}\n- Run: ${url}\n\nPlease inspect the failing proof and fix admits/regressions.`;
+            const res = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['proof-regression']
+            });
+            core.notice(`Opened issue #${res.data.number}`);
+
+      - name: Slack notify (proof regression)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
+            BR=${{ github.event.workflow_run.head_branch }}
+            SHA=${{ github.event.workflow_run.head_sha }}
+            URL=${{ github.event.workflow_run.html_url }}
+            TXT="🚨 Proof regression in $GITHUB_REPOSITORY on ${BR} @ ${SHA:0:7}\nRun: ${URL}"
+            curl -s -X POST -H 'Content-type: application/json' --data "{\"text\": \"${TXT}\"}" "$SLACK_WEBHOOK_URL" || true
+          else
+            echo "[proof-alert] SLACK_WEBHOOK_URL not set; skipping Slack notification"
+          fi
+
+      - name: Email notify (proof regression)
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Proof regression: ${{ github.repository }} ${{ github.event.workflow_run.head_branch }} @ ${{ github.event.workflow_run.head_sha }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          content_type: text/plain
+          body: |
+            Proof CI failed.
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.event.workflow_run.head_branch }}
+            SHA: ${{ github.event.workflow_run.head_sha }}
+            Run: ${{ github.event.workflow_run.html_url }}

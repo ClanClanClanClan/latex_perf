@@ -1,0 +1,99 @@
+cases:
+  - file: corpora/l1/CMD-001_deprecated_after_expansion.tex
+    expect: ["CMD-001"]
+  - file: corpora/l1/CMD-003_deep_sectioning.tex
+    expect: ["CMD-003"]
+  - file: corpora/l1/MOD-001_mixed_bf_textbf.tex
+    expect: ["MOD-001"]
+    expect_msgs:
+      - "MOD-001:Legacy font commands (\\bf/\\it/...) present; prefer \\textbf/\\emph"
+  - file: corpora/l1/EXP-001_incomplete_expansion.tex
+    expect: ["EXP-001"]
+    expect_msgs:
+      - "EXP-001:Incomplete expansion: catalogue commands remain post-expansion"
+  - file: corpora/l1/MOD-002_mixed_bf_textbf_para.tex
+    expect: ["MOD-002", "EXP-001"]
+    expect_msgs:
+      - "MOD-002:Mixed legacy and modern bold commands in same paragraph"
+      - "EXP-001:Incomplete expansion: catalogue commands remain post-expansion"
+  - file: corpora/l1/MOD-003_mixed_it_textit_para.tex
+    expect: ["MOD-003"]
+    expect_msgs:
+      - "MOD-003:Mixed legacy and modern italic commands in same paragraph"
+  - file: corpora/l1/MOD-004_mixed_rm_textrm_para.tex
+    expect: ["MOD-004"]
+    expect_msgs:
+      - "MOD-004:Mixed legacy and modern roman commands in same paragraph"
+  - file: corpora/l1/MOD-005_mixed_tt_texttt_para.tex
+    expect: ["MOD-005"]
+    expect_msgs:
+      - "MOD-005:Mixed legacy and modern typewriter commands in same paragraph"
+  - file: corpora/l1/MOD-006_mixed_sf_textsf_para.tex
+    expect: ["MOD-006"]
+    expect_msgs:
+      - "MOD-006:Mixed legacy and modern sans-serif commands in same paragraph"
+  - file: corpora/l1/MOD-007_mixed_sc_textsc_para.tex
+    expect: ["MOD-007"]
+    expect_msgs:
+      - "MOD-007:Mixed legacy and modern small-caps commands in same paragraph"
+  - file: corpora/l1/MOD-008_mixed_bfseries_textbf_para.tex
+    expect: ["MOD-008"]
+    expect_msgs:
+      - "MOD-008:Mixed NFSS bfseries and inline \\textbf in same paragraph"
+  - file: corpora/l1/MOD-009_mixed_itshape_textit_para.tex
+    expect: ["MOD-009"]
+    expect_msgs:
+      - "MOD-009:Mixed NFSS itshape and inline \\textit/\\emph in same paragraph"
+  - file: corpora/l1/MOD-010_mixed_sffamily_textsf_para.tex
+    expect: ["MOD-010"]
+    expect_msgs:
+      - "MOD-010:Mixed NFSS sffamily and inline \\textsf in same paragraph"
+  - file: corpora/l1/MOD-011_mixed_ttfamily_texttt_para.tex
+    expect: ["MOD-011"]
+    expect_msgs:
+      - "MOD-011:Mixed NFSS ttfamily and inline \\texttt in same paragraph"
+  - file: corpora/l1/MOD-012_mixed_rmfamily_textrm_para.tex
+    expect: ["MOD-012"]
+    expect_msgs:
+      - "MOD-012:Mixed NFSS rmfamily and inline \\textrm in same paragraph"
+  - file: corpora/l1/MOD-013_mixed_scshape_textsc_para.tex
+    expect: ["MOD-013"]
+    expect_msgs:
+      - "MOD-013:Mixed NFSS scshape and inline \\textsc in same paragraph"
+  # Negative cases: paragraph-separated usage should not trigger mixed-paragraph rules
+  - file: corpora/l1/MOD-002_paragraph_separated_bf_textbf.tex
+    expect: []
+    forbid: ["MOD-002"]
+  - file: corpora/l1/MOD-003_paragraph_separated_it_textit.tex
+    expect: []
+    forbid: ["MOD-003"]
+  - file: corpora/l1/MOD-004_paragraph_separated_rm_textrm.tex
+    expect: []
+    forbid: ["MOD-004"]
+  - file: corpora/l1/MOD-005_paragraph_separated_tt_texttt.tex
+    expect: []
+    forbid: ["MOD-005"]
+  - file: corpora/l1/MOD-006_paragraph_separated_sf_textsf.tex
+    expect: []
+    forbid: ["MOD-006"]
+  - file: corpora/l1/MOD-007_paragraph_separated_sc_textsc.tex
+    expect: []
+    forbid: ["MOD-007"]
+  - file: corpora/l1/MOD-008_paragraph_separated_bfseries_textbf.tex
+    expect: ["MOD-020"]
+    forbid: ["MOD-008"]
+  - file: corpora/l1/MOD-009_paragraph_separated_itshape_textit.tex
+    expect: ["MOD-021"]
+    forbid: ["MOD-009"]
+  - file: corpora/l1/MOD-010_paragraph_separated_sffamily_textsf.tex
+    expect: ["MOD-023"]
+    forbid: ["MOD-010"]
+  - file: corpora/l1/MOD-011_paragraph_separated_ttfamily_texttt.tex
+    expect: ["MOD-024"]
+    forbid: ["MOD-011"]
+  - file: corpora/l1/MOD-012_paragraph_separated_rmfamily_textrm.tex
+    expect: ["MOD-022"]
+    forbid: ["MOD-012"]
+  - file: corpora/l1/MOD-013_paragraph_separated_scshape_textsc.tex
+    expect: []
+    forbid: ["MOD-013"]

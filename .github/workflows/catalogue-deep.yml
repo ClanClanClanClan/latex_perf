@@ -1,0 +1,29 @@
+name: Catalogue Deep Validation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  deep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate rules index
+        run: |
+          bash scripts/gen_rules_index.sh > /tmp/rules_index.json
+          test -s /tmp/rules_index.json
+      - name: Basic checks
+        run: |
+          cat /tmp/rules_index.json | jq -e 'type=="array" and length>=600' >/dev/null
+          # Unique IDs should equal total length
+          ids=$(cat /tmp/rules_index.json | jq -r '.[].id')
+          u=$(echo "$ids" | sort -u | wc -l | tr -d ' ')
+          l=$(echo "$ids" | wc -l | tr -d ' ')
+          if [[ "$u" != "$l" ]]; then echo "[deep] FAIL: duplicate IDs" >&2; exit 1; fi
+      - name: Upload rules index
+        uses: actions/upload-artifact@v4
+        with:
+          name: rules-index
+          path: /tmp/rules_index.json
+

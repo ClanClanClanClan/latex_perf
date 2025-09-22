@@ -6,17 +6,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install OCaml & opam
-        uses: ocaml/setup-ocaml@v2
+        uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
           opam-depext: false
-          system-packages: |
-            bubblewrap
-            g++-multilib
-            gcc-multilib
-            mercurial
-            musl-tools
-            rsync
       - name: Install ocamlformat
         run: |
           opam update -y
@@ -42,17 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install OCaml & opam
-        uses: ocaml/setup-ocaml@v2
+        uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
           opam-depext: false
-          system-packages: |
-            bubblewrap
-            g++-multilib
-            gcc-multilib
-            mercurial
-            musl-tools
-            rsync
       - name: Install dependencies
         run: opam install . --deps-only --with-test -y
       - name: Build

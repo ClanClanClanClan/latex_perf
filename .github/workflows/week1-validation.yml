@@ -10,38 +10,30 @@ on:
 jobs:
   coq-compilation:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup OCaml
-      uses: ocaml/setup-ocaml@v2
+      uses: ./.github/actions/setup-ocaml
       with:
         ocaml-compiler: 4.14.x
-        system-packages: |
-          bubblewrap
-          g++-multilib
-          gcc-multilib
-          mercurial
-          musl-tools
-          rsync
-        
         opam-depext: false
     - name: Install Coq
       run: |
         opam update
         opam install coq.8.18.0 coq-mathcomp-ssreflect.1.17.0
-        
+
     - name: Generate Makefile
       run: |
         eval $(opam env)
         coq_makefile -f _CoqProject -o CoqMakefile
-        
+
     - name: Compile Coq Files
       run: |
         eval $(opam env)
         make -f CoqMakefile -j2
-        
+
     - name: Verify Core Modules
       run: |
         eval $(opam env)
@@ -49,18 +41,18 @@ jobs:
         coqc -Q src/core Core src/data/catcode.v
         echo "Checking CoreProofs..."
         coqc -Q src/core Core src/core/CoreProofs.v
-        
+
   admit-audit:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Count Admits
       run: |
         ADMIT_COUNT=$(find src -name "*.v" -exec grep -c "admit\|Admitted" {} \; | awk '{sum += $1} END {print sum}')
         echo "Total admits found: $ADMIT_COUNT"
-        
+
         # Week 1 target: maintain ≤60 admits
         if [ "$ADMIT_COUNT" -gt 60 ]; then
           echo "❌ FAIL: Too many admits ($ADMIT_COUNT > 60)"
@@ -69,12 +61,12 @@ jobs:
         else
           echo "✅ PASS: Admit count within target ($ADMIT_COUNT ≤ 60)"
         fi
-        
+
     - name: Check for Axioms
       run: |
         AXIOM_COUNT=$(find src -name "*.v" -exec grep -c "Axiom" {} \; | awk '{sum += $1} END {print sum}')
         echo "Total axioms found: $AXIOM_COUNT"
-        
+
         if [ "$AXIOM_COUNT" -gt 0 ]; then
           echo "❌ FAIL: Axioms found ($AXIOM_COUNT)"
           echo "v25 specification requires zero axioms"
@@ -82,38 +74,30 @@ jobs:
         else
           echo "✅ PASS: No axioms found"
         fi
-        
+
   ocaml-compilation:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup OCaml
-      uses: ocaml/setup-ocaml@v2
+      uses: ./.github/actions/setup-ocaml
       with:
         ocaml-compiler: 4.14.x
-        system-packages: |
-          bubblewrap
-          g++-multilib
-          gcc-multilib
-          mercurial
-          musl-tools
-          rsync
-        
         opam-depext: false
     - name: Install Dependencies
       run: |
         opam update
         opam install dune core
-        
+
     - name: Create dune-project
       run: |
         cat > dune-project << EOF
         (lang dune 3.0)
         (package (name latex-perfectionist-v25))
         EOF
-        
+
     - name: Create OCaml dune file
       run: |
         mkdir -p src/data
@@ -122,18 +106,18 @@ jobs:
          (public_name latex-perfectionist-v25.data)
          (name latex_perfectionist_data))
         EOF
-        
+
     - name: Build OCaml Modules
       run: |
         eval $(opam env)
         dune build
-        
+
     - name: Test Catcode Module
       run: |
         eval $(opam env)
         cat > test_catcode.ml << 'EOF'
         open Latex_perfectionist_data.Catcode
-        
+
         let test_basic_catcodes () =
           let pdf_engine = PdfTeX in
           assert (has_catcode pdf_engine '\\' Escape);
@@ -141,38 +125,30 @@ jobs:
           assert (has_catcode pdf_engine '}' EndGroup);
           assert (has_catcode pdf_engine '$' MathShift);
           print_endline "✅ Basic catcode tests passed"
-          
+
         let test_coverage () =
           let pdf_engine = PdfTeX in
           assert (Properties.complete_coverage pdf_engine);
           print_endline "✅ Coverage test passed"
-          
+
         let () =
           test_basic_catcodes ();
           test_coverage ();
           print_endline "All catcode tests passed!"
         EOF
-        
+
         dune exec -- ocaml test_catcode.ml
-        
+
   performance-check:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup OCaml
-      uses: ocaml/setup-ocaml@v2
+      uses: ./.github/actions/setup-ocaml
       with:
         ocaml-compiler: 4.14.x
-        system-packages: |
-          bubblewrap
-          g++-multilib
-          gcc-multilib
-          mercurial
-          musl-tools
-          rsync
-        
         opam-depext: false
     - name: Basic Performance Test
       run: |
@@ -184,28 +160,28 @@ jobs:
         echo ""
         echo "Full performance testing will be implemented in Week 2"
         echo "✅ Performance framework ready"
-        
+
   documentation-check:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Check Documentation
       run: |
         echo "Checking Week 1 documentation requirements..."
-        
+
         # Check for required files
         [ -f "src/data/catcode.ml" ] && echo "✅ catcode.ml exists"
-        [ -f "src/data/catcode.v" ] && echo "✅ catcode.v exists"  
+        [ -f "src/data/catcode.v" ] && echo "✅ catcode.v exists"
         [ -f "src/core/CoreProofs.v" ] && echo "✅ CoreProofs.v exists"
         [ -f "CLAUDE_v25.md" ] && echo "✅ CLAUDE_v25.md exists"
-        
+
         # Check for Week 1 completeness markers
         if grep -q "Week 1.*complete\|Week 1.*COMPLETE" src/data/*.ml src/data/*.v src/core/*.v; then
           echo "✅ Week 1 completion markers found"
         else
           echo "⚠️  Week 1 completion markers not found"
         fi
-        
+
         echo "Documentation check complete"

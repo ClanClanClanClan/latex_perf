@@ -14,17 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-          system-packages: |
-            bubblewrap
-            g++-multilib
-            gcc-multilib
-            mercurial
-            musl-tools
-            rsync
-
           opam-depext: false
       - name: Install dune and yojson
         run: |

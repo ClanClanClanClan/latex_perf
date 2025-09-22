@@ -1,0 +1,78 @@
+name: Setup OCaml environment
+description: Install OCaml tooling while avoiding darcs package installation on Linux runners.
+author: Internal
+inputs:
+  ocaml-compiler:
+    description: OCaml compiler packages to install.
+    required: true
+  allow-prerelease-opam:
+    description: Forwarded to ocaml/setup-ocaml allow-prerelease-opam input.
+    required: false
+    default: "false"
+  opam-repositories:
+    description: Forwarded to ocaml/setup-ocaml opam-repositories input.
+    required: false
+    default: ""
+  opam-pin:
+    description: Forwarded to ocaml/setup-ocaml opam-pin input.
+    required: false
+    default: "true"
+  opam-depext:
+    description: Forwarded to ocaml/setup-ocaml opam-depext input.
+    required: false
+    default: "true"
+  opam-depext-flags:
+    description: Forwarded to ocaml/setup-ocaml opam-depext-flags input.
+    required: false
+    default: ""
+  opam-local-packages:
+    description: Forwarded to ocaml/setup-ocaml opam-local-packages input.
+    required: false
+    default: "*.opam"
+  opam-disable-sandboxing:
+    description: Forwarded to ocaml/setup-ocaml opam-disable-sandboxing input.
+    required: false
+    default: "false"
+  dune-cache:
+    description: Forwarded to ocaml/setup-ocaml dune-cache input.
+    required: false
+    default: "false"
+  cache-prefix:
+    description: Forwarded to ocaml/setup-ocaml cache-prefix input.
+    required: false
+    default: "v1"
+  github-token:
+    description: Forwarded to ocaml/setup-ocaml github-token input.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install system packages (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          bubblewrap \
+          g++-multilib \
+          gcc-multilib \
+          mercurial \
+          musl-tools \
+          rsync
+    - name: Setup OCaml toolchain
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: ${{ inputs.ocaml-compiler }}
+        allow-prerelease-opam: ${{ inputs.allow-prerelease-opam }}
+        opam-repositories: ${{ inputs.opam-repositories }}
+        opam-pin: ${{ inputs.opam-pin }}
+        opam-depext: ${{ inputs.opam-depext }}
+        opam-depext-flags: ${{ inputs.opam-depext-flags }}
+        opam-local-packages: ${{ inputs.opam-local-packages }}
+        opam-disable-sandboxing: ${{ inputs.opam-disable-sandboxing }}
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: ${{ inputs.cache-prefix }}
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+      env:
+        GITHUB_ACTIONS: ${{ runner.os == 'Linux' && 'false' || 'true' }}

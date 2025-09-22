@@ -60,6 +60,32 @@ runs:
           mercurial \
           musl-tools \
           rsync
+    - name: Filter darcs from privileged apt invocations (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        mkdir -p "$HOME/.github-tools"
+        cat <<'EOF' > "$HOME/.github-tools/sudo"
+#!/usr/bin/env bash
+if [[ "$1" == "apt-get" ]]; then
+  args=()
+  drop_next=false
+  install_seen=false
+  for arg in "$@"; do
+    if [[ "$arg" == "install" ]]; then
+      install_seen=true
+    fi
+    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then
+      continue
+    fi
+    args+=("$arg")
+  done
+  exec /usr/bin/sudo "${args[@]}"
+fi
+exec /usr/bin/sudo "$@"
+EOF
+        chmod +x "$HOME/.github-tools/sudo"
+        echo "$HOME/.github-tools" >> "$GITHUB_PATH"
     - name: Setup OCaml toolchain
       uses: ocaml/setup-ocaml@v2
       with:

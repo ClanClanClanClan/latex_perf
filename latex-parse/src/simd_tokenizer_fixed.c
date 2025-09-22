@@ -277,6 +277,15 @@ static size_t find_next_special_neon(const uint8_t *input, size_t start, size_t 
     
     return len;
 }
+#endif
+
+#ifndef USE_NEON
+static size_t find_next_special_neon(const uint8_t *input, size_t start, size_t len) {
+    (void)input;
+    (void)start;
+    return len;
+}
+#endif
 
 // Optimized SIMD tokenizer using NEON for scanning
 int tokenize_bytes_into_soa_simd_optimized(
@@ -300,11 +309,15 @@ int tokenize_bytes_into_soa_simd_optimized(
 
 // SIMD Attestation: OCaml-callable counter access functions
 uint64_t simd_get_avx2_blocks_processed(void) {
-    return 0;  // Not used in this ARM64/NEON implementation
+    return 0;
 }
 
 uint64_t simd_get_neon_blocks_processed(void) {
+#ifdef USE_NEON
     return atomic_load(&simd_neon_scans_performed);
+#else
+    return 0;
+#endif
 }
 
 uint64_t simd_get_scalar_bytes_processed(void) {
@@ -321,4 +334,3 @@ void simd_reset_attestation_counters(void) {
     atomic_store(&scalar_bytes_processed, 0);
     atomic_store(&total_tokenize_calls, 0);
 }
-#endif

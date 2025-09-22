@@ -99,5 +99,3 @@ runs:
         dune-cache: ${{ inputs.dune-cache }}
         cache-prefix: ${{ inputs.cache-prefix }}
         github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
-      env:
-        GITHUB_ACTIONS: ${{ runner.os == 'Linux' && 'false' || 'true' }}

@@ -18,7 +18,15 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 4.14.x
+        system-packages: |
+          bubblewrap
+          g++-multilib
+          gcc-multilib
+          mercurial
+          musl-tools
+          rsync
         
+        opam-depext: false
     - name: Install Coq
       run: |
         opam update
@@ -85,7 +93,15 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 4.14.x
+        system-packages: |
+          bubblewrap
+          g++-multilib
+          gcc-multilib
+          mercurial
+          musl-tools
+          rsync
         
+        opam-depext: false
     - name: Install Dependencies
       run: |
         opam update
@@ -149,7 +165,15 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 4.14.x
+        system-packages: |
+          bubblewrap
+          g++-multilib
+          gcc-multilib
+          mercurial
+          musl-tools
+          rsync
         
+        opam-depext: false
     - name: Basic Performance Test
       run: |
         eval $(opam env)

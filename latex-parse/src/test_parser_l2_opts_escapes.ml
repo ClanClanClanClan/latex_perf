@@ -1,7 +1,7 @@
 open Printf
 module P = Latex_parse_lib.Parser_l2
 
-let rand = Random.self_init
+let () = Random.self_init ()
 
 let letters n =
   let b = Buffer.create n in
@@ -57,4 +57,3 @@ let () =
     with _ -> (eprintf "[opts-esc] parse FAIL: %S\n%!" s; pass := false)
   done;
   if !pass then (printf "[opts-esc] PASS %d trials\n%!" trials; exit 0) else exit 1
-

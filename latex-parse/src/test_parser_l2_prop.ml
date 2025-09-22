@@ -1,6 +1,6 @@
 open Printf
 module P = Latex_parse_lib.Parser_l2
-let rand = Random.self_init
+let () = Random.self_init ()
 
 let letters n =
   let b = Buffer.create n in

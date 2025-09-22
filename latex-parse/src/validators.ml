@@ -65,56 +65,98 @@ let split_into_paragraphs (s:string) : (int * int) list =
   collect [] 0 0 0
 
 (* Math-aware stripper: remove $...$, \( ... \), \[ ... \], and common math environments *)
-let strip_math_segments (s:string) : string =
-  let b = Buffer.create (String.length s) in
-  let n = String.length s in
-  let i = ref 0 in
+let strip_math_segments (s : string) : string =
+  let len = String.length s in
+  let buf = Buffer.create len in
+  let math_envs =
+    [ "equation"; "equation*"; "align"; "align*"; "gather"; "gather*";
+      "multline"; "multline*"; "eqnarray"; "math"; "displaymath" ]
+  in
+  let is_math_env name = List.exists (String.equal name) math_envs in
+  let starts_with prefix idx =
+    let plen = String.length prefix in
+    idx + plen <= len && String.sub s idx plen = prefix
+  in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    (count (idx - 1) 0) land 1 = 1
+  in
+  let parse_begin idx =
+    let prefix = "\\begin{" in
+    if not (starts_with prefix idx) then None
+    else
+      let name_start = idx + String.length prefix in
+      let j = ref name_start in
+      while !j < len && String.unsafe_get s !j <> '}' do incr j done;
+      if !j >= len then None
+      else
+        let name = String.sub s name_start (!j - name_start) in
+        Some (name, !j + 1)
+  in
+  let rec skip_env name idx depth =
+    let end_prefix = "\\end{" ^ name ^ "}" in
+    let end_len = String.length end_prefix in
+    if idx >= len then len
+    else if (not (is_escaped idx)) && starts_with end_prefix idx then
+      if depth = 0 then idx + end_len else skip_env name (idx + end_len) (depth - 1)
+    else if (not (is_escaped idx)) && starts_with "\\begin{" idx then
+      match parse_begin idx with
+      | Some (inner, next_idx) when is_math_env inner ->
+          let after_inner = skip_env inner next_idx 0 in
+          skip_env name after_inner depth
+      | Some (_, next_idx) -> skip_env name next_idx depth
+      | None -> skip_env name (idx + 1) depth
+    else
+      skip_env name (idx + 1) depth
+  in
   let in_dollar = ref false in
   let in_paren = ref false in
   let in_brack = ref false in
-  let next_is a bch = (!i + 1 < n) && String.unsafe_get s !i = a && String.unsafe_get s (!i+1) = bch in
-  let starts_with_begin j =
-    j+6 < n && String.unsafe_get s j = '\\' && String.unsafe_get s (j+1) = 'b' && String.unsafe_get s (j+2) = 'e' && String.unsafe_get s (j+3) = 'g' && String.unsafe_get s (j+4) = 'i' && String.unsafe_get s (j+5) = 'n' && String.unsafe_get s (j+6) = '{'
-  in
-  let read_env_name j =
-    let k = ref (j+1) in
-    while !k < n && String.unsafe_get s !k <> '}' do incr k done;
-    if !k < n then (Some (String.sub s (j+1) (!k - (j+1))), !k+1) else (None, j+1)
-  in
-let is_math_env = function
-    | "equation" | "equation*" | "align" | "align*" | "gather" | "gather*" | "multline" | "multline*" | "eqnarray" | "math" | "displaymath" -> true
-    | _ -> false
-  in
-  let rec find_end_env name j =
-    if j+6+String.length name >= n then None else
-    if String.unsafe_get s j = '\\' && j+5+String.length name < n && String.unsafe_get s (j+1) = 'e' && String.unsafe_get s (j+2) = 'n' && String.unsafe_get s (j+3) = 'd' && String.unsafe_get s (j+4) = '{'
-       && String.sub s (j+5) (String.length name) = name && String.unsafe_get s (j+5+String.length name) = '}'
-    then Some (j+6+String.length name)
-    else find_end_env name (j+1)
-  in
-  while !i < n do
-    if (not !in_paren) && (not !in_brack) && (String.unsafe_get s !i = '$') && ( !i = 0 || String.unsafe_get s (!i-1) <> '\\') then (
-      in_dollar := not !in_dollar; incr i
-    ) else if (not !in_dollar) && (not !in_brack) && (not !in_paren) && next_is '\\' '(' then (
-      in_paren := true; i := !i + 2
-    ) else if !in_paren && next_is '\\' ')' then (
-      in_paren := false; i := !i + 2
-    ) else if (not !in_dollar) && (not !in_paren) && (not !in_brack) && next_is '\\' '[' then (
-      in_brack := true; i := !i + 2
-    ) else if !in_brack && next_is '\\' ']' then (
-      in_brack := false; i := !i + 2
-    ) else if (not !in_dollar) && (not !in_paren) && (not !in_brack) && starts_with_begin !i then (
-      let j = !i + 6 in
-      let (nm_opt, k1) = read_env_name j in
-      (match nm_opt with
-       | Some name when is_math_env name -> (match find_end_env name k1 with Some k2 -> i := k2 | None -> incr i)
-       | _ -> incr i)
+  let rec loop i =
+    if i >= len then ()
+    else if !in_dollar then
+      if (not (is_escaped i)) && s.[i] = '$' then (
+        in_dollar := false;
+        loop (i + 1)
+      ) else loop (i + 1)
+    else if !in_paren then
+      if (not (is_escaped i)) && starts_with "\\)" i then (
+        in_paren := false;
+        loop (i + 2)
+      ) else loop (i + 1)
+    else if !in_brack then
+      if (not (is_escaped i)) && starts_with "\\]" i then (
+        in_brack := false;
+        loop (i + 2)
+      ) else loop (i + 1)
+    else if (not (is_escaped i)) && s.[i] = '$' then (
+      in_dollar := true;
+      loop (i + 1)
+    ) else if (not (is_escaped i)) && starts_with "\\(" i then (
+      in_paren := true;
+      loop (i + 2)
+    ) else if (not (is_escaped i)) && starts_with "\\[" i then (
+      in_brack := true;
+      loop (i + 2)
+    ) else if (not (is_escaped i)) && starts_with "\\begin{" i then (
+      match parse_begin i with
+      | Some (name, after_begin) when is_math_env name ->
+          let next_i = skip_env name after_begin 0 in
+          loop next_i
+      | _ ->
+          Buffer.add_char buf s.[i];
+          loop (i + 1)
     ) else (
-      if (not !in_dollar) && (not !in_paren) && (not !in_brack) then Buffer.add_char b (String.unsafe_get s !i);
-      incr i
+      Buffer.add_char buf s.[i];
+      loop (i + 1)
     )
-  done;
-  Buffer.contents b
+  in
+  loop 0;
+  Buffer.contents buf
 
 (* Extract LaTeX command names from source using Tokenizer_lite *)
 let extract_command_names (s:string) : string list =

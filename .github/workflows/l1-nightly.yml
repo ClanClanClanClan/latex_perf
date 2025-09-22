@@ -15,7 +15,15 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: 5.1.1
+          system-packages: |
+            bubblewrap
+            g++-multilib
+            gcc-multilib
+            mercurial
+            musl-tools
+            rsync
 
+          opam-depext: false
       - name: Install dependencies
         run: |
           sudo apt-get update -y

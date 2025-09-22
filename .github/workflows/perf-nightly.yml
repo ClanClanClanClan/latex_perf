@@ -105,7 +105,7 @@ jobs:
           fi
 
       - name: Email notify (perf regression)
-        if: env.PERF_FAIL == '1'
+        if: env.PERF_FAIL == '1' && secrets.EMAIL_FROM
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
@@ -115,7 +115,6 @@ jobs:
           subject: "Perf regression detected: ${{ github.repository }}"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          content_type: text/plain
           body: |
             Nightly performance regression detected.
             Repo: ${{ github.repository }}

@@ -65,27 +65,26 @@ runs:
       shell: bash
       run: |
         mkdir -p "$HOME/.github-tools"
-        cat <<'EOF' > "$HOME/.github-tools/sudo"
-#!/usr/bin/env bash
-if [[ "$1" == "apt-get" ]]; then
-  args=()
-  drop_next=false
-  install_seen=false
-  for arg in "$@"; do
-    if [[ "$arg" == "install" ]]; then
-      install_seen=true
-    fi
-    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then
-      continue
-    fi
-    args+=("$arg")
-  done
-  exec /usr/bin/sudo "${args[@]}"
-fi
-exec /usr/bin/sudo "$@"
-EOF
+        {
+          printf '%s\n' '#!/usr/bin/env bash'
+          printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'
+          printf '%s\n' '  args=()'
+          printf '%s\n' '  install_seen=false'
+          printf '%s\n' '  for arg in "$@"; do'
+          printf '%s\n' '    if [[ "$arg" == "install" ]]; then'
+          printf '%s\n' '      install_seen=true'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'
+          printf '%s\n' '      continue'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    args+=("$arg")'
+          printf '%s\n' '  done'
+          printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'
+          printf '%s\n' 'fi'
+          printf '%s\n' 'exec /usr/bin/sudo "$@"'
+        } > "$HOME/.github-tools/sudo"
         chmod +x "$HOME/.github-tools/sudo"
-        echo "$HOME/.github-tools" >> "$GITHUB_PATH"
+        echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
     - name: Setup OCaml toolchain
       uses: ocaml/setup-ocaml@v2
       with:

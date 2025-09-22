@@ -43,6 +43,7 @@ jobs:
           fi
 
       - name: Email notify (proof regression)
+        if: secrets.EMAIL_FROM
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
@@ -52,7 +53,6 @@ jobs:
           subject: "Proof regression: ${{ github.repository }} ${{ github.event.workflow_run.head_branch }} @ ${{ github.event.workflow_run.head_sha }}"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          content_type: text/plain
           body: |
             Proof CI failed.
             Repo: ${{ github.repository }}

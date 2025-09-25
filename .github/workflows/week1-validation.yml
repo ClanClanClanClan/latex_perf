@@ -21,6 +21,8 @@ jobs:
         opam-depext: false
     - name: Install Coq
       run: |
+        opam repo add default https://opam.ocaml.org || true
+        opam repo add coq-released https://coq.inria.fr/opam/released || true
         opam update
         opam install coq.8.18.0 coq-mathcomp-ssreflect.1.17.0
 

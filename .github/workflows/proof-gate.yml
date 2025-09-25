@@ -20,8 +20,10 @@ jobs:
         opam-depext: false
     - name: Install Coq toolchain
       run: |
+        opam repo add default https://opam.ocaml.org || true
+        opam repo add coq-released https://coq.inria.fr/opam/released || true
         opam update -y
-        opam install -y dune coq.8.18.0 coq-core.8.18.0
+        opam install -y dune coq.8.18.0 coq-core.8.18.0 coq-mathcomp-ssreflect.1.17.0
 
     - name: Check _CoqProject exists
       run: |

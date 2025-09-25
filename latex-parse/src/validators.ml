@@ -221,10 +221,7 @@ let missing_section_title : rule =
     else None
   in { id = "missing_section_title"; run }
 
-let rules_basic : rule list =
-  match Sys.getenv_opt "L0_REQUIRE_DOCUMENTCLASS" with
-  | Some ("1"|"true"|"on") -> [ no_tabs; require_documentclass; unmatched_braces; missing_section_title ]
-  | _ -> [ no_tabs; unmatched_braces; missing_section_title ]
+let rules_basic : rule list = [ no_tabs; require_documentclass; unmatched_braces; missing_section_title ]
 
 (* Pilot L0 rules (IDs aligned with rules_v3.yaml). Info-level mapped to Warning. *)
 

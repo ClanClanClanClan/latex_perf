@@ -18,7 +18,8 @@ jobs:
         id: fmt
         run: |
           set -e
-          opam exec -- dune fmt --check
+          opam exec -- dune fmt
+          git diff --exit-code
       - name: Generate ocamlformat patch
         if: failure()
         run: |

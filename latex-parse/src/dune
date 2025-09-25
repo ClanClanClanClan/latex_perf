@@ -1,14 +1,45 @@
 (library
  (name latex_parse_lib)
  (modules
-  config clock hedge_timer mlock meminfo gc_prep pretouch arena ipc
-  simd_guard real_processor worker broker service_bracket metrics_prometheus
- fault_injection barrier fast_hash xxh64 service_payload catcode validators_context validators validators_metrics tokenizer_lite
-  unicode parser_l2)
+  config
+  clock
+  hedge_timer
+  mlock
+  meminfo
+  gc_prep
+  pretouch
+  arena
+  ipc
+  simd_guard
+  real_processor
+  worker
+  broker
+  service_bracket
+  metrics_prometheus
+  fault_injection
+  barrier
+  fast_hash
+  xxh64
+  service_payload
+  catcode
+  validators_context
+  validators
+  validators_metrics
+  tokenizer_lite
+  unicode
+  parser_l2)
  (libraries unix threads str uutf)
  (foreign_stubs
   (language c)
-  (names clock_stubs hedge_timer_stubs mlock_stubs meminfo_stubs simd_guard_stubs simd_production_stubs simd_tokenizer_fixed xxh64_simd_stubs)
+  (names
+   clock_stubs
+   hedge_timer_stubs
+   mlock_stubs
+   meminfo_stubs
+   simd_guard_stubs
+   simd_production_stubs
+   simd_tokenizer_fixed
+   xxh64_simd_stubs)
   (flags (:standard)))
  ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
  ;; TEMPORARILY DISABLED DUE TO _Caml_state SYMBOL COMPATIBILITY ISSUE
@@ -32,9 +63,9 @@
  (libraries latex_parse_lib unix threads))
 
 (executable
-(name rest_api_server)
-(modules rest_api_server rest_simple_expander)
-(libraries latex_parse_lib unix threads str yojson))
+ (name rest_api_server)
+ (modules rest_api_server rest_simple_expander)
+ (libraries latex_parse_lib unix threads str yojson))
 
 (executable
  (name validators_cli)

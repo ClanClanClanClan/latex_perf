@@ -13,7 +13,7 @@ jobs:
       - name: Install ocamlformat
         run: |
           opam update -y
-          opam install -y ocamlformat.0.26.2 dune
+          opam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0
       - name: Check formatting
         id: fmt
         run: |

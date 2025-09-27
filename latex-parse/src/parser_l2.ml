@@ -75,65 +75,96 @@ let rec parse_group s i n =
     | '}' -> (i+1, List.rev acc)
     | '{' -> let (j, g) = parse_group s (i+1) n in loop j (Group g :: acc)
     | '\\' ->
-        let j = i+1 in
-        let rec name k = if k < n && is_letter (String.unsafe_get s k) then name (k+1) else k in
+        let j = i + 1 in
+        let rec name k =
+          if k < n && is_letter (String.unsafe_get s k) then name (k + 1) else k
+        in
         let k = name j in
-        if k = j then (
+        if k = j then
           (* Escaped single char e.g. \{ or \] or \\ *)
-          if k < n then loop (k+1) (Word (String.make 1 (String.unsafe_get s k)) :: acc) else loop k acc
-        ) else (
-        let name_str = String.sub s j (k-j) in
-        let k = skip_spaces s k n in
-        (* \verb and \verb* passthrough (epsilon-safe): next char is delimiter, read until next delimiter (escape-aware) *)
-        if name_str = "verb" then (
-          let star = (k < n && String.unsafe_get s k = '*') in
-          let k = if star then k+1 else k in
-          if k < n then (
-            let delim = String.unsafe_get s k in
-            let j = ref (k+1) in
-            let buf = Buffer.create 16 in
-            let rec scan () =
-              if !j >= n then ()
-              else
-                let c = String.unsafe_get s !j in
-                if c = '\\' && !j + 1 < n then (Buffer.add_char buf c; incr j; Buffer.add_char buf (String.unsafe_get s !j); incr j; scan ())
-                else if c = delim then (incr j) else (Buffer.add_char buf c; incr j; scan ())
+          if k < n then
+            loop (k + 1) (Word (String.make 1 (String.unsafe_get s k)) :: acc)
+          else
+            loop k acc
+        else
+          let name_str = String.sub s j (k - j) in
+          let k = skip_spaces s k n in
+          (* \verb and \verb* passthrough (epsilon-safe): next char is delimiter, read until next delimiter (escape-aware) *)
+          if name_str = "verb" then (
+            let star = (k < n && String.unsafe_get s k = '*') in
+            let k = if star then k + 1 else k in
+            if k < n then (
+              let delim = String.unsafe_get s k in
+              let j = ref (k + 1) in
+              let buf = Buffer.create 16 in
+              let rec scan () =
+                if !j >= n then ()
+                else
+                  let c = String.unsafe_get s !j in
+                  if c = '\\' && !j + 1 < n then (
+                    Buffer.add_char buf c;
+                    incr j;
+                    Buffer.add_char buf (String.unsafe_get s !j);
+                    incr j;
+                    scan ()
+                  )
+                  else if c = delim then incr j
+                  else (
+                    Buffer.add_char buf c;
+                    incr j;
+                    scan ()
+                  )
+              in
+              scan ();
+              let opt_star = if star then [ "*" ] else [] in
+              loop !j (Cmd { name = name_str; opts = opt_star; args = [ Buffer.contents buf ] } :: acc)
+            ) else
+              loop k acc
+          ) else (
+            (* collect zero or more [opt] args (non-nested, escape-aware) *)
+            let rec collect_opts k acc =
+              if k < n && String.unsafe_get s k = '[' then (
+                let j = ref (k + 1) in
+                let buf = Buffer.create 16 in
+                let rec scan () =
+                  if !j >= n then ()
+                  else
+                    let c = String.unsafe_get s !j in
+                    if c = '\\' && !j + 1 < n then (
+                      Buffer.add_char buf c;
+                      incr j;
+                      Buffer.add_char buf (String.unsafe_get s !j);
+                      incr j;
+                      scan ()
+                    )
+                    else if c = ']' then incr j
+                    else (
+                      Buffer.add_char buf c;
+                      incr j;
+                      scan ()
+                    )
+                in
+                scan ();
+                let opt = Buffer.contents buf in
+                collect_opts !j (opt :: acc)
+              ) else
+                (k, List.rev acc)
             in
-            scan ();
-            let opt_star = if star then ["*"] else [] in
-            loop !j (Cmd {name=name_str; opts=opt_star; args=[Buffer.contents buf]} :: acc)
-          ) else loop k acc
-        ) else (
-        (* collect zero or more [opt] args (non-nested, escape-aware) *)
-        let rec collect_opts k acc =
-          if k < n && String.unsafe_get s k = '[' then
-            let j = ref (k+1) in
-            let buf = Buffer.create 16 in
-            let rec scan () =
-              if !j >= n then ()
+            let k, opts = collect_opts k [] in
+            let k = skip_spaces s k n in
+            (* collect zero or more {arg} (nested groups) *)
+            let rec collect_args k acc =
+              if k < n && String.unsafe_get s k = '{' then
+                let k', g = parse_group s (k + 1) n in
+                collect_args k' ((serialize g) :: acc)
               else
-                let c = String.unsafe_get s !j in
-                if c = '\\' && !j + 1 < n then (Buffer.add_char buf c; incr j; Buffer.add_char buf (String.unsafe_get s !j); incr j; scan ())
-                else if c = ']' then (incr j) else (Buffer.add_char buf c; incr j; scan ())
+                (k, List.rev acc)
             in
-            scan ();
-            let opt = Buffer.contents buf in
-            collect_opts !j (opt::acc)
-          else (k, List.rev acc)
-        in
-        let (k, opts) = collect_opts k [] in
-        let k = skip_spaces s k n in
-        (* collect zero or more {arg} (nested groups) *)
-        let rec collect_args k acc =
-          if k < n && String.unsafe_get s k = '{' then
-            let (k', g) = parse_group s (k+1) n in
-            collect_args k' ((serialize g)::acc)
-          else (k, List.rev acc)
-        in
-        let (k, args) = collect_args k [] in
-        loop k (Cmd {name=name_str; opts; args} :: acc))
+            let k, args = collect_args k [] in
+            loop k (Cmd { name = name_str; opts; args } :: acc)
+          )
     | c ->
-        let (j, w) = parse_word s i n in
+        let j, _w = parse_word s i n in
         if j>i then loop j (Word (String.sub s i (j-i)) :: acc)
         else loop (i+1) (Word (String.make 1 c) :: acc)
   and serialize nodes =

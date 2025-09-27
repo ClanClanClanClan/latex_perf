@@ -23,13 +23,15 @@ let check_reconstruct s =
   if not ok then eprintf "[tok-props] reconstruct failed for: %S -> %S\n%!" s s';
   ok
 
+let backslash = "\\"
+
 let samples = [
   "Simple words and spaces";
   "A -- dash and --- emdash";
   "\\command{arg} and text";
   "Quoted \"text\" 'here'";
   "Brackets ( [ { and } ] )";
-  "Math $a+b$ and \\\(c+d\\\) and \\\[e+f\\\]";
+  ("Math $a+b$ and " ^ backslash ^ "(c+d" ^ backslash ^ ") and " ^ backslash ^ "[e+f" ^ backslash ^ "]");
 ]
 
 let () =

@@ -2,7 +2,7 @@ open Printf
 module P = Latex_parse_lib.Parser_l2
 
 let cases = [
-  ("( space after ( and before ) )", "(space after ( and before))");
+  ("( space after ( and before ) )", "(space after (and before))");
   ("[ list , with , spaces ]", "[list, with, spaces]");
   ("word , punctuation ! and ?", "word, punctuation! and?");
   ("{ group } and ( punct : test )", "{group} and (punct: test)");
@@ -19,4 +19,3 @@ let () =
     with _ -> (eprintf "[parser-norm] parse FAIL: %S\n%!" inp; pass := false)
   ) cases;
   if !pass then (printf "[parser-norm] PASS %d cases\n%!" (List.length cases); exit 0) else exit 1
-

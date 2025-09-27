@@ -15,14 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-compiler: 5.1.1
-
+          ocaml-compiler: 4.14.1
+          opam-depext: false
       - name: Install dependencies
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Build project
         run: |
@@ -105,7 +106,7 @@ jobs:
           fi
 
       - name: Email notify (perf regression)
-        if: env.PERF_FAIL == '1'
+        if: env.PERF_FAIL == '1' && secrets.EMAIL_FROM
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
@@ -115,14 +116,13 @@ jobs:
           subject: "Perf regression detected: ${{ github.repository }}"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          content_type: text/plain
           body: |
             Nightly performance regression detected.
             Repo: ${{ github.repository }}
             Run:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
+
             Gate output (perf_gate.out):
-            
+
             ${{ steps.gates.outcome }}
 
       - name: Fail job if gates failed

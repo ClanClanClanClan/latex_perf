@@ -14,11 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-version: 5.1.1
-          opam-repository: https://github.com/ocaml/opam-repository.git
-
+          ocaml-compiler: 4.14.1
+          opam-repositories: |
+            default,https://github.com/ocaml/opam-repository.git
+          opam-depext: false
       - name: Install project dependencies
         run: |
           opam install . --deps-only --with-test --yes

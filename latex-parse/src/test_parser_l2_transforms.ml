@@ -2,7 +2,7 @@ open Printf
 
 module P = Latex_parse_lib.Parser_l2
 
-let rand = Random.self_init
+let () = Random.self_init ()
 
 let letters n =
   let b = Buffer.create n in
@@ -36,8 +36,12 @@ let gen_doc () =
 let serialize_nodes = P.serialize
 
 (* Simple transform: add a dummy empty optional arg [x] to commands lacking opts; remove later to compare. *)
+let dummy_opt = "__l2_dummy_opt__"
+
 let transform nodes =
-  let add_opt c = if c.P.opts = [] then {c with P.opts=["x"]} else c in
+  let add_opt c =
+    if c.P.opts = [] then { c with P.opts = [ dummy_opt ] } else c
+  in
   let rec go = function
     | [] -> []
     | P.Cmd c :: xs -> P.Cmd (add_opt c) :: go xs
@@ -46,13 +50,21 @@ let transform nodes =
   in go nodes
 
 let strip_dummy_opt s =
-  (* remove standalone [x] occurrences after commands *)
+  (* remove sentinel optional arguments introduced by transform *)
+  let target = "[" ^ dummy_opt ^ "]" in
+  let tlen = String.length target in
   let buf = Buffer.create (String.length s) in
   let n = String.length s in
   let i = ref 0 in
   while !i < n do
-    if !i+3 < n && String.sub s !i 3 = "[x]" then i := !i + 3 else (Buffer.add_char buf (String.unsafe_get s !i); incr i)
-  done; Buffer.contents buf
+    if !i + tlen <= n && String.sub s !i tlen = target then
+      i := !i + tlen
+    else (
+      Buffer.add_char buf (String.unsafe_get s !i);
+      incr i
+    )
+  done;
+  Buffer.contents buf
 
 let () =
   let trials = 100 in

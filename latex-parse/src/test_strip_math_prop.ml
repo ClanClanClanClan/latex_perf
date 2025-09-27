@@ -1,6 +1,6 @@
 open Printf
 
-let rand = Random.self_init
+let () = Random.self_init ()
 
 let gen_text () =
   let len = 1 + Random.int 6 in
@@ -52,4 +52,3 @@ let () =
     if String.trim got <> String.trim exp then (eprintf "[strip-prop] preserve FAIL: %S -> %S (exp %S)\n%!" s got exp; pass := false)
   done;
   if !pass then (printf "[strip-prop] PASS %d trials\n%!" 100; exit 0) else exit 1
-

@@ -11,10 +11,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up OCaml and OPAM
-        uses: ocaml/setup-ocaml@v2
+        uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-compiler: 5.1.1
-
+          ocaml-compiler: 4.14.1
+          opam-depext: false
       - name: Install system deps
         run: |
           sudo apt-get update -y
@@ -23,8 +23,9 @@ jobs:
       - name: Install Coq toolchain
         run: |
           opam repo add default https://opam.ocaml.org || true
+          opam repo add coq-released https://coq.inria.fr/opam/released || true
           opam update -y || true
-          opam install -y dune coq=8.18.0 coq-core=8.18.0
+          opam install -y dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0
 
       - name: Build proofs
         run: |

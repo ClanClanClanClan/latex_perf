@@ -35,7 +35,7 @@ jobs:
 
     - name: Build Coq proofs
       run: |
-        opam exec -- dune build @coq
+        opam exec -- dune build proofs
 
     - name: Check for admits
       run: |

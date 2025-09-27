@@ -52,10 +52,9 @@ let worker_task data results start_idx count barrier =
   done
 
 let () =
-  if Array.length Sys.argv < 4 then begin
+  if Array.length Sys.argv < 4 then (
     Printf.eprintf "usage: run_service_bench_concurrent FILE ITERS THREADS\n";
-    exit 2
-  end;
+    exit 2);
 
   let file = Sys.argv.(1) in
   let iters = int_of_string Sys.argv.(2) in
@@ -65,17 +64,20 @@ let () =
   let per_thread = iters / threads in
   let results = Array.make iters 0.0 in
 
-  Printf.printf "[concurrent] file=%s iters=%d threads=%d (new conn each)\n%!" file iters threads;
+  Printf.printf "[concurrent] file=%s iters=%d threads=%d (new conn each)\n%!"
+    file iters threads;
 
   (* Create barrier for synchronized start *)
   let barrier = Barrier.create () in
 
   (* Launch threads *)
-  let workers = Array.init threads (fun i ->
-    Thread.create (fun () ->
-      worker_task data results (i * per_thread) per_thread barrier
-    ) ()
-  ) in
+  let workers =
+    Array.init threads (fun i ->
+        Thread.create
+          (fun () ->
+            worker_task data results (i * per_thread) per_thread barrier)
+          ())
+  in
 
   (* Start all threads *)
   Thread.delay 0.01;
@@ -92,4 +94,6 @@ let () =
   let p50 = results.(Array.length results / 2) in
   let p99 = results.(int_of_float (0.99 *. float (Array.length results))) in
   if p99 > p50 *. 10.0 then
-    Printf.printf "[concurrent] WARNING: High variability p99=%.3fms >> p50=%.3fms\n%!" p99 p50
+    Printf.printf
+      "[concurrent] WARNING: High variability p99=%.3fms >> p50=%.3fms\n%!" p99
+      p50

@@ -5,4 +5,4 @@ type macro = string * token list
 
 let load file : macro list =
   (* Always fail to trigger fallback mechanism *)
-  raise (Sys_error ("Yojson not available - using fallback macros"))
+  raise (Sys_error "Yojson not available - using fallback macros")

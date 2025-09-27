@@ -4,29 +4,25 @@ open Printf
 
 (* Fault types that can be injected *)
 type fault_type =
-  | WorkerCrash of int         (* Crash worker N *)
-  | NetworkDelay of float       (* Add network delay in seconds *)
-  | MemoryPressure of int       (* Allocate N MB of memory *)
-  | CPUSpike of float           (* Consume CPU for N seconds *)
-  | IOBlock of float            (* Block I/O for N seconds *)
-  | RandomWorkerKill            (* Kill random worker *)
-  | BrokerOverload              (* Overwhelm broker with requests *)
+  | WorkerCrash of int (* Crash worker N *)
+  | NetworkDelay of float (* Add network delay in seconds *)
+  | MemoryPressure of int (* Allocate N MB of memory *)
+  | CPUSpike of float (* Consume CPU for N seconds *)
+  | IOBlock of float (* Block I/O for N seconds *)
+  | RandomWorkerKill (* Kill random worker *)
+  | BrokerOverload (* Overwhelm broker with requests *)
 
 (* Fault injection configuration *)
 type fault_config = {
-  enabled: bool;
-  probability: float;           (* 0.0 to 1.0 *)
-  faults: fault_type list;
-  seed: int option;
+  enabled : bool;
+  probability : float; (* 0.0 to 1.0 *)
+  faults : fault_type list;
+  seed : int option;
 }
 
 (* Global fault injection state *)
-let config = ref {
-  enabled = false;
-  probability = 0.0;
-  faults = [];
-  seed = None;
-}
+let config =
+  ref { enabled = false; probability = 0.0; faults = []; seed = None }
 
 (* Initialize random generator with optional seed *)
 let init_random seed_opt =
@@ -45,9 +41,9 @@ let inject_worker_crash worker_id =
   try
     Unix.kill worker_id Sys.sigkill;
     eprintf "[FAULT] Worker %d killed\n%!" worker_id
-  with Unix.Unix_error(err, _, _) ->
-    eprintf "[FAULT] Failed to kill worker %d: %s\n%!"
-      worker_id (Unix.error_message err)
+  with Unix.Unix_error (err, _, _) ->
+    eprintf "[FAULT] Failed to kill worker %d: %s\n%!" worker_id
+      (Unix.error_message err)
 
 (* Inject network delay *)
 let inject_network_delay delay_seconds =
@@ -80,7 +76,7 @@ let inject_cpu_spike duration =
 let inject_io_block duration =
   eprintf "[FAULT] Injecting I/O block for %.2fs\n%!" duration;
   (* Block on a pipe read that will timeout *)
-  let (read_fd, write_fd) = Unix.pipe () in
+  let read_fd, write_fd = Unix.pipe () in
   Unix.set_close_on_exec read_fd;
   Unix.set_close_on_exec write_fd;
 
@@ -93,22 +89,23 @@ let inject_io_block duration =
       try
         let buffer = Bytes.create 1 in
         ignore (Unix.read read_fd buffer 0 1)
-      with Unix.Unix_error(Unix.EAGAIN, _, _) -> ()
+      with Unix.Unix_error (Unix.EAGAIN, _, _) -> ()
     done
-  with _ -> ();
+  with _ ->
+    ();
 
-  Unix.close read_fd;
-  Unix.close write_fd;
-  eprintf "[FAULT] I/O block completed\n%!"
+    Unix.close read_fd;
+    Unix.close write_fd;
+    eprintf "[FAULT] I/O block completed\n%!"
 
 (* Kill a random worker from the pool *)
 let inject_random_worker_kill worker_pids =
   match worker_pids with
   | [] -> eprintf "[FAULT] No workers to kill\n%!"
   | pids ->
-    let idx = Random.int (List.length pids) in
-    let pid = List.nth pids idx in
-    inject_worker_crash pid
+      let idx = Random.int (List.length pids) in
+      let pid = List.nth pids idx in
+      inject_worker_crash pid
 
 (* Overwhelm broker with rapid requests *)
 let inject_broker_overload socket_path request_count =
@@ -157,7 +154,8 @@ let inject_fault fault_type =
     | CPUSpike duration -> inject_cpu_spike duration
     | IOBlock duration -> inject_io_block duration
     | RandomWorkerKill -> eprintf "[FAULT] Random kill requires worker list\n%!"
-    | BrokerOverload -> eprintf "[FAULT] Broker overload requires socket path\n%!"
+    | BrokerOverload ->
+        eprintf "[FAULT] Broker overload requires socket path\n%!"
 
 (* Configure fault injection *)
 let configure ~enabled ~probability ~faults ~seed =
@@ -172,61 +170,57 @@ let run_scenario scenario_name worker_pids socket_path =
 
   match scenario_name with
   | "worker_chaos" ->
-    (* Randomly kill workers during operation *)
-    configure ~enabled:true ~probability:0.1
-      ~faults:[RandomWorkerKill] ~seed:(Some 42);
-    for _ = 1 to 10 do
-      Thread.delay 1.0;
-      if should_inject_fault () then
-        inject_random_worker_kill worker_pids
-    done
-
+      (* Randomly kill workers during operation *)
+      configure ~enabled:true ~probability:0.1 ~faults:[ RandomWorkerKill ]
+        ~seed:(Some 42);
+      for _ = 1 to 10 do
+        Thread.delay 1.0;
+        if should_inject_fault () then inject_random_worker_kill worker_pids
+      done
   | "network_issues" ->
-    (* Simulate network delays *)
-    configure ~enabled:true ~probability:0.2
-      ~faults:[NetworkDelay 0.5] ~seed:(Some 42);
-    for _ = 1 to 20 do
-      Thread.delay 0.5;
-      inject_fault (NetworkDelay (Random.float 1.0))
-    done
-
+      (* Simulate network delays *)
+      configure ~enabled:true ~probability:0.2 ~faults:[ NetworkDelay 0.5 ]
+        ~seed:(Some 42);
+      for _ = 1 to 20 do
+        Thread.delay 0.5;
+        inject_fault (NetworkDelay (Random.float 1.0))
+      done
   | "resource_stress" ->
-    (* Memory and CPU pressure *)
-    configure ~enabled:true ~probability:0.3
-      ~faults:[MemoryPressure 100; CPUSpike 0.5] ~seed:(Some 42);
-    inject_fault (MemoryPressure 200);
-    Thread.delay 1.0;
-    inject_fault (CPUSpike 2.0)
-
+      (* Memory and CPU pressure *)
+      configure ~enabled:true ~probability:0.3
+        ~faults:[ MemoryPressure 100; CPUSpike 0.5 ]
+        ~seed:(Some 42);
+      inject_fault (MemoryPressure 200);
+      Thread.delay 1.0;
+      inject_fault (CPUSpike 2.0)
   | "broker_flood" ->
-    (* Overwhelm broker with requests *)
-    configure ~enabled:true ~probability:1.0
-      ~faults:[BrokerOverload] ~seed:(Some 42);
-    inject_broker_overload socket_path 1000
-
+      (* Overwhelm broker with requests *)
+      configure ~enabled:true ~probability:1.0 ~faults:[ BrokerOverload ]
+        ~seed:(Some 42);
+      inject_broker_overload socket_path 1000
   | "combined_chaos" ->
-    (* All faults combined *)
-    configure ~enabled:true ~probability:0.15
-      ~faults:[
-        WorkerCrash 0;
-        NetworkDelay 0.2;
-        MemoryPressure 50;
-        CPUSpike 0.1;
-        IOBlock 0.1
-      ] ~seed:(Some 42);
+      (* All faults combined *)
+      configure ~enabled:true ~probability:0.15
+        ~faults:
+          [
+            WorkerCrash 0;
+            NetworkDelay 0.2;
+            MemoryPressure 50;
+            CPUSpike 0.1;
+            IOBlock 0.1;
+          ]
+        ~seed:(Some 42);
 
-    for i = 1 to 100 do
-      Thread.delay 0.1;
-      let fault = List.nth !config.faults (Random.int 5) in
-      inject_fault fault;
+      for i = 1 to 100 do
+        Thread.delay 0.1;
+        let fault = List.nth !config.faults (Random.int 5) in
+        inject_fault fault;
 
-      (* Occasionally kill a worker *)
-      if i mod 20 = 0 && worker_pids <> [] then
-        inject_random_worker_kill worker_pids
-    done
-
-  | _ ->
-    eprintf "[FAULT] Unknown scenario: %s\n%!" scenario_name
+        (* Occasionally kill a worker *)
+        if i mod 20 = 0 && worker_pids <> [] then
+          inject_random_worker_kill worker_pids
+      done
+  | _ -> eprintf "[FAULT] Unknown scenario: %s\n%!" scenario_name
 
 (* Check if system recovered from faults *)
 let check_recovery socket_path =
@@ -255,13 +249,12 @@ let check_recovery socket_path =
 
     Unix.close sock;
 
-    if n = 4 then begin
+    if n = 4 then (
       eprintf "[FAULT] System recovered successfully ✓\n%!";
-      true
-    end else begin
+      true)
+    else (
       eprintf "[FAULT] System partially recovered\n%!";
-      false
-    end
+      false)
   with exn ->
     eprintf "[FAULT] System not recovered: %s\n%!" (Printexc.to_string exn);
     false
@@ -269,7 +262,10 @@ let check_recovery socket_path =
 (* Export for use in other modules *)
 let is_enabled () = !config.enabled
 let get_probability () = !config.probability
+
 let trigger_random_fault () =
   if should_inject_fault () && !config.faults <> [] then
-    let fault = List.nth !config.faults (Random.int (List.length !config.faults)) in
+    let fault =
+      List.nth !config.faults (Random.int (List.length !config.faults))
+    in
     inject_fault fault

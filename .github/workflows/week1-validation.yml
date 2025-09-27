@@ -26,6 +26,9 @@ jobs:
         opam update
         opam install coq.8.18.0 coq-mathcomp-ssreflect.1.17.0
 
+    - name: Remove generated opam file
+      run: rm -f latex-perfectionist.opam
+
     - name: Generate Makefile
       run: |
         eval $(opam env)

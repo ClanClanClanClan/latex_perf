@@ -17,9 +17,10 @@ jobs:
           opam-depext: false
       - name: Build unit test executables
         run: |
+          opam repo add default https://opam.ocaml.org || true
           set -e
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
           opam exec -- dune build \
             latex-parse/src/test_strip_math.exe \
             latex-parse/src/test_tokenizer_props.exe

@@ -20,8 +20,9 @@ jobs:
           opam-depext: false
       - name: Install dune
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1

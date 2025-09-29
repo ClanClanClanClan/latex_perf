@@ -1,0 +1,668 @@
+proof-check	Set up job	﻿2025-09-27T21:20:47.8832825Z Current runner version: '2.328.0'
+proof-check	Set up job	2025-09-27T21:20:47.8857937Z ##[group]Runner Image Provisioner
+proof-check	Set up job	2025-09-27T21:20:47.8858880Z Hosted Compute Agent
+proof-check	Set up job	2025-09-27T21:20:47.8859469Z Version: 20250912.392
+proof-check	Set up job	2025-09-27T21:20:47.8860066Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+proof-check	Set up job	2025-09-27T21:20:47.8860843Z Build Date: 2025-09-12T15:23:14Z
+proof-check	Set up job	2025-09-27T21:20:47.8861413Z ##[endgroup]
+proof-check	Set up job	2025-09-27T21:20:47.8861982Z ##[group]Operating System
+proof-check	Set up job	2025-09-27T21:20:47.8862553Z Ubuntu
+proof-check	Set up job	2025-09-27T21:20:47.8863132Z 24.04.3
+proof-check	Set up job	2025-09-27T21:20:47.8863562Z LTS
+proof-check	Set up job	2025-09-27T21:20:47.8864065Z ##[endgroup]
+proof-check	Set up job	2025-09-27T21:20:47.8864532Z ##[group]Runner Image
+proof-check	Set up job	2025-09-27T21:20:47.8865134Z Image: ubuntu-24.04
+proof-check	Set up job	2025-09-27T21:20:47.8865688Z Version: 20250922.53.1
+proof-check	Set up job	2025-09-27T21:20:47.8866666Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250922.53/images/ubuntu/Ubuntu2404-Readme.md
+proof-check	Set up job	2025-09-27T21:20:47.8868250Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250922.53
+proof-check	Set up job	2025-09-27T21:20:47.8869458Z ##[endgroup]
+proof-check	Set up job	2025-09-27T21:20:47.8871851Z ##[group]GITHUB_TOKEN Permissions
+proof-check	Set up job	2025-09-27T21:20:47.8874101Z Actions: write
+proof-check	Set up job	2025-09-27T21:20:47.8874627Z Attestations: write
+proof-check	Set up job	2025-09-27T21:20:47.8875122Z Checks: write
+proof-check	Set up job	2025-09-27T21:20:47.8875717Z Contents: write
+proof-check	Set up job	2025-09-27T21:20:47.8876222Z Deployments: write
+proof-check	Set up job	2025-09-27T21:20:47.8876747Z Discussions: write
+proof-check	Set up job	2025-09-27T21:20:47.8877504Z Issues: write
+proof-check	Set up job	2025-09-27T21:20:47.8878003Z Metadata: read
+proof-check	Set up job	2025-09-27T21:20:47.8878457Z Models: read
+proof-check	Set up job	2025-09-27T21:20:47.8879008Z Packages: write
+proof-check	Set up job	2025-09-27T21:20:47.8879480Z Pages: write
+proof-check	Set up job	2025-09-27T21:20:47.8880005Z PullRequests: write
+proof-check	Set up job	2025-09-27T21:20:47.8880553Z RepositoryProjects: write
+proof-check	Set up job	2025-09-27T21:20:47.8881299Z SecurityEvents: write
+proof-check	Set up job	2025-09-27T21:20:47.8881937Z Statuses: write
+proof-check	Set up job	2025-09-27T21:20:47.8882457Z ##[endgroup]
+proof-check	Set up job	2025-09-27T21:20:47.8884801Z Secret source: Actions
+proof-check	Set up job	2025-09-27T21:20:47.8885484Z Prepare workflow directory
+proof-check	Set up job	2025-09-27T21:20:47.9206792Z Prepare all required actions
+proof-check	Set up job	2025-09-27T21:20:47.9254132Z Getting action download info
+proof-check	Set up job	2025-09-27T21:20:48.3838448Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+proof-check	Set up job	2025-09-27T21:20:48.6632493Z Complete job name: proof-check
+proof-check	Run actions/checkout@v4	﻿2025-09-27T21:20:48.7363905Z ##[group]Run actions/checkout@v4
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7364997Z with:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7365707Z   repository: ClanClanClanClan/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7366719Z   token: ***
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7367151Z   ssh-strict: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7367749Z   ssh-user: git
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7368178Z   persist-credentials: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7368647Z   clean: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7369090Z   sparse-checkout-cone-mode: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7369748Z   fetch-depth: 1
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7370283Z   fetch-tags: false
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7370713Z   show-progress: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7371161Z   lfs: false
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7371576Z   submodules: false
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7372052Z   set-safe-directory: true
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.7373014Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8471737Z Syncing repository: ClanClanClanClan/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8473746Z ##[group]Getting Git version info
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8474548Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8475726Z [command]/usr/bin/git version
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8586476Z git version 2.51.0
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8614459Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8629376Z Temporarily overriding HOME='/home/runner/work/_temp/282b7399-4cf9-4761-a5fb-08e9ad9d1757' before making global git config changes
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8631929Z Adding repository directory to the temporary git global config as a safe directory
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8634764Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8673015Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8676546Z ##[group]Initializing the repository
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8680689Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8813107Z hint: Using 'master' as the name for the initial branch. This default branch name
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8814737Z hint: is subject to change. To configure the initial branch name to use in all
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8816055Z hint: of your new repositories, which will suppress this warning, call:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8816999Z hint:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8817898Z hint: 	git config --global init.defaultBranch <name>
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8819206Z hint:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8820103Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8821392Z hint: 'development'. The just-created branch can be renamed via this command:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8822293Z hint:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8822722Z hint: 	git branch -m <name>
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8823184Z hint:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8823808Z hint: Disable this message with "git config set advice.defaultBranchName false"
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8825128Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8830939Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8870841Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8872223Z ##[group]Disabling automatic garbage collection
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8875535Z [command]/usr/bin/git config --local gc.auto 0
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8911618Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8912438Z ##[group]Setting up auth
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8913206Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.8942260Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9344753Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9379442Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9628883Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9676100Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9677743Z ##[group]Fetching the repository
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:48.9685714Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6acf14e01b575831a3f54eac2db1be0f7c3d9421:refs/remotes/pull/4/merge
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5051912Z From https://github.com/ClanClanClanClan/latex_perf
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5053258Z  * [new ref]         6acf14e01b575831a3f54eac2db1be0f7c3d9421 -> pull/4/merge
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5084318Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5085321Z ##[group]Determining the checkout info
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5086579Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5093192Z [command]/usr/bin/git sparse-checkout disable
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5134944Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5164029Z ##[group]Checking out the ref
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5168545Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5589887Z Note: switching to 'refs/remotes/pull/4/merge'.
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5590954Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5591607Z You are in 'detached HEAD' state. You can look around, make experimental
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5593165Z changes and commit them, and you can discard any commits you make in this
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5594749Z state without impacting any branches by switching back to a branch.
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5595327Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5595687Z If you want to create a new branch to retain commits you create, you may
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5596535Z do so (now or later) by using -c with the switch command. Example:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5597031Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5597448Z   git switch -c <new-branch-name>
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5597839Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5598173Z Or undo this operation with:
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5599145Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5599460Z   git switch -
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5599741Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5600163Z Turn off this advice by setting config variable advice.detachedHead to false
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5600747Z 
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5601431Z HEAD is now at 6acf14e Merge 07895437ab0cede570fde751cb6861b9d97861e6 into 92bdfe28e9a19447735918ce6f6c8395415acf11
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5603596Z ##[endgroup]
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5669487Z [command]/usr/bin/git log -1 --format=%H
+proof-check	Run actions/checkout@v4	2025-09-27T21:20:49.5670452Z 6acf14e01b575831a3f54eac2db1be0f7c3d9421
+proof-check	Run /./.github/actions/setup-ocaml	﻿2025-09-27T21:20:49.5986277Z Prepare all required actions
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:49.5987094Z Getting action download info
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:49.8022333Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4617935Z ##[group]Run ./.github/actions/setup-ocaml
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4619126Z with:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4619899Z   ocaml-compiler: 4.14.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4620841Z   opam-depext: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4621793Z   allow-prerelease-opam: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4622813Z   opam-pin: true
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4623690Z   opam-local-packages: *.opam
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4624730Z   opam-disable-sandboxing: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4625779Z   dune-cache: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4626629Z   cache-prefix: v1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4627562Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4754768Z ##[group]Run sudo apt-get update
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4755911Z [36;1msudo apt-get update[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4756886Z [36;1msudo apt-get install -y \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4758081Z [36;1m  bubblewrap \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4759014Z [36;1m  g++-multilib \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4759908Z [36;1m  gcc-multilib \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4760778Z [36;1m  mercurial \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4761618Z [36;1m  musl-tools \[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4762451Z [36;1m  rsync[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4800723Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.4802023Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.6222186Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.6784272Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.7239823Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.7249386Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.7315798Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.7395413Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.8629294Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9090824Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1443 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9302173Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [282 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9338183Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [175 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9359152Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [15.3 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9372128Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1485 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9456466Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [299 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9485336Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9518040Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [31.0 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9533180Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1957 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:50.9630672Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [441 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0087195Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0099643Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0109873Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7076 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0119066Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [28.9 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0128779Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [11.0 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0138751Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1444 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0145508Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0153028Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0221555Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1171 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0285527Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [198 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0308143Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0317153Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [8744 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0325817Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [880 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0384703Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [195 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0773405Z Get:38 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [39.5 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0811602Z Get:39 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [57.1 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0854330Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.3 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0865437Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [18.0 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0873832Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1872 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.0983768Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [423 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.1018790Z Get:36 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:20:51.1033249Z Get:37 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [212 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:01.9951769Z Fetched 11.9 MB in 2s (7858 kB/s)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:02.7857710Z Reading package lists...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:02.8197069Z Reading package lists...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.0401450Z Building dependency tree...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.0408759Z Reading state information...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2328668Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2329720Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2330629Z The following additional packages will be installed:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2331691Z   g++-13-multilib gcc-13-multilib lib32asan8 lib32atomic1 lib32gcc-13-dev
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2333433Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-13-dev lib32ubsan1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2334448Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan8 libx32atomic1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2335541Z   libx32gcc-13-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2337860Z   libx32stdc++-13-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2346364Z Suggested packages:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2346967Z   lib32stdc++6-13-dbg libx32stdc++6-13-dbg
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2938006Z The following NEW packages will be installed:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2938998Z   bubblewrap g++-13-multilib g++-multilib gcc-13-multilib gcc-multilib
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2939981Z   lib32asan8 lib32atomic1 lib32gcc-13-dev lib32gomp1 lib32itm1 lib32quadmath0
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2944261Z   lib32stdc++-13-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2945598Z   libx32asan8 libx32atomic1 libx32gcc-13-dev libx32gcc-s1 libx32gomp1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2946617Z   libx32itm1 libx32quadmath0 libx32stdc++-13-dev libx32stdc++6 libx32ubsan1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.2948644Z   musl musl-dev musl-tools
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.3142719Z 0 upgraded, 29 newly installed, 0 to remove and 17 not upgraded.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.3143343Z Need to get 23.6 MB of archives.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.3143940Z After this operation, 94.1 MB of additional disk space will be used.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.3144541Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.4105413Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 bubblewrap amd64 0.9.0-1ubuntu0.1 [50.2 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.4944787Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-i386 amd64 2.39-0ubuntu8.6 [1447 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:03.7329984Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-x32 amd64 2.39-0ubuntu8.6 [2913 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.0540987Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-x32 amd64 2.39-0ubuntu8.6 [1637 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.2939570Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-s1 amd64 14.2.0-4ubuntu2~24.04 [78.5 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.3747869Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gomp1 amd64 14.2.0-4ubuntu2~24.04 [141 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.4559984Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gomp1 amd64 14.2.0-4ubuntu2~24.04 [145 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.5381462Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.6 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.6181905Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.8 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.6983666Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32atomic1 amd64 14.2.0-4ubuntu2~24.04 [8586 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.7787691Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32atomic1 amd64 14.2.0-4ubuntu2~24.04 [10.3 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:04.8589270Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32asan8 amd64 14.2.0-4ubuntu2~24.04 [2879 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:05.1893406Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32asan8 amd64 14.2.0-4ubuntu2~24.04 [2893 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:05.5063500Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1150 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:05.7446919Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++6 amd64 14.2.0-4ubuntu2~24.04 [778 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:05.9166810Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1169 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.0949643Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [227 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.1803714Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [157 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.2643877Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2380 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.5798863Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2190 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.8410574Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-multilib amd64 13.3.0-6ubuntu2~24.04 [878 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:06.9225123Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1150 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.1113233Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1086 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.3641428Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-multilib amd64 13.3.0-6ubuntu2~24.04 [890 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.4449770Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 gcc-multilib amd64 4:13.2.0-7ubuntu1 [1474 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.5261298Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 g++-multilib amd64 4:13.2.0-7ubuntu1 [884 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.6062039Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl amd64 1.2.4-2 [416 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.7691706Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-dev amd64 1.2.4-2 [616 kB]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:07.9382284Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-tools amd64 1.2.4-2 [5540 B]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.2403138Z Fetched 23.6 MB in 5s (5090 kB/s)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.3069938Z Selecting previously unselected package bubblewrap.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5574895Z (Reading database ... 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5575445Z (Reading database ... 5%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5575926Z (Reading database ... 10%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5576374Z (Reading database ... 15%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5576657Z (Reading database ... 20%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5576942Z (Reading database ... 25%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5577454Z (Reading database ... 30%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5577928Z (Reading database ... 35%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5578204Z (Reading database ... 40%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5578481Z (Reading database ... 45%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.5578754Z (Reading database ... 50%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:08.6851842Z (Reading database ... 55%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:09.2564146Z (Reading database ... 60%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:09.7676254Z (Reading database ... 65%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:10.2861141Z (Reading database ... 70%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:10.7837494Z (Reading database ... 75%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:11.3228360Z (Reading database ... 80%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:11.8981599Z (Reading database ... 85%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:12.5704696Z (Reading database ... 90%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2204643Z (Reading database ... 95%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2205159Z (Reading database ... 100%
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2205610Z (Reading database ... 214164 files and directories currently installed.)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2251093Z Preparing to unpack .../00-bubblewrap_0.9.0-1ubuntu0.1_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2288926Z Unpacking bubblewrap (0.9.0-1ubuntu0.1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2834940Z Selecting previously unselected package libc6-dev-i386.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2969119Z Preparing to unpack .../01-libc6-dev-i386_2.39-0ubuntu8.6_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.2980107Z Unpacking libc6-dev-i386 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.4054771Z Selecting previously unselected package libc6-x32.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.4188963Z Preparing to unpack .../02-libc6-x32_2.39-0ubuntu8.6_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.4284542Z Unpacking libc6-x32 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.5438409Z Selecting previously unselected package libc6-dev-x32.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.5574444Z Preparing to unpack .../03-libc6-dev-x32_2.39-0ubuntu8.6_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.5585729Z Unpacking libc6-dev-x32 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6195864Z Selecting previously unselected package libx32gcc-s1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6328459Z Preparing to unpack .../04-libx32gcc-s1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6340048Z Unpacking libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6577750Z Selecting previously unselected package lib32gomp1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6711261Z Preparing to unpack .../05-lib32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6722086Z Unpacking lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.6968914Z Selecting previously unselected package libx32gomp1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7103694Z Preparing to unpack .../06-libx32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7116341Z Unpacking libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7392650Z Selecting previously unselected package lib32itm1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7529562Z Preparing to unpack .../07-lib32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7540679Z Unpacking lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7781820Z Selecting previously unselected package libx32itm1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7915546Z Preparing to unpack .../08-libx32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.7925881Z Unpacking libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8176230Z Selecting previously unselected package lib32atomic1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8310687Z Preparing to unpack .../09-lib32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8322187Z Unpacking lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8566294Z Selecting previously unselected package libx32atomic1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8700056Z Preparing to unpack .../10-libx32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8714207Z Unpacking libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.8937904Z Selecting previously unselected package lib32asan8.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.9071621Z Preparing to unpack .../11-lib32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.9082733Z Unpacking lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.9756325Z Selecting previously unselected package libx32asan8.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.9895851Z Preparing to unpack .../12-libx32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:13.9909006Z Unpacking libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.0564208Z Selecting previously unselected package lib32ubsan1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.0701898Z Preparing to unpack .../13-lib32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.0715312Z Unpacking lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1115568Z Selecting previously unselected package libx32stdc++6.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1249477Z Preparing to unpack .../14-libx32stdc++6_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1260943Z Unpacking libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1635380Z Selecting previously unselected package libx32ubsan1.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1772905Z Preparing to unpack .../15-libx32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.1783558Z Unpacking libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2179112Z Selecting previously unselected package lib32quadmath0.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2313151Z Preparing to unpack .../16-lib32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2323430Z Unpacking lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2577984Z Selecting previously unselected package libx32quadmath0.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2713078Z Preparing to unpack .../17-libx32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2724428Z Unpacking libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.2974952Z Selecting previously unselected package lib32gcc-13-dev.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.3108755Z Preparing to unpack .../18-lib32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.3119818Z Unpacking lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.3763051Z Selecting previously unselected package libx32gcc-13-dev.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.3898621Z Preparing to unpack .../19-libx32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.3909501Z Unpacking libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.4484283Z Selecting previously unselected package gcc-13-multilib.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.4618289Z Preparing to unpack .../20-gcc-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.4632394Z Unpacking gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.4857627Z Selecting previously unselected package lib32stdc++-13-dev.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.4992872Z Preparing to unpack .../21-lib32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.5010711Z Unpacking lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.5629854Z Selecting previously unselected package libx32stdc++-13-dev.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.5763830Z Preparing to unpack .../22-libx32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.5779339Z Unpacking libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6317169Z Selecting previously unselected package g++-13-multilib.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6451107Z Preparing to unpack .../23-g++-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6468723Z Unpacking g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6702663Z Selecting previously unselected package gcc-multilib.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6838260Z Preparing to unpack .../24-gcc-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.6860270Z Unpacking gcc-multilib (4:13.2.0-7ubuntu1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7080694Z Selecting previously unselected package g++-multilib.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7215809Z Preparing to unpack .../25-g++-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7228588Z Unpacking g++-multilib (4:13.2.0-7ubuntu1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7439611Z Selecting previously unselected package musl:amd64.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7572821Z Preparing to unpack .../26-musl_1.2.4-2_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7583669Z Unpacking musl:amd64 (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.7969257Z Selecting previously unselected package musl-dev:amd64.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.8104332Z Preparing to unpack .../27-musl-dev_1.2.4-2_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.8114903Z Unpacking musl-dev:amd64 (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.8812787Z Selecting previously unselected package musl-tools.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.8948664Z Preparing to unpack .../28-musl-tools_1.2.4-2_amd64.deb ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.8959206Z Unpacking musl-tools (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9645500Z Setting up bubblewrap (0.9.0-1ubuntu0.1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9702953Z Setting up libc6-dev-i386 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9742922Z Setting up lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9803316Z Setting up lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9869390Z Setting up libc6-x32 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9920610Z Setting up libc6-dev-x32 (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9947779Z Setting up lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:14.9977193Z Setting up lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0006892Z Setting up libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0047083Z Setting up musl:amd64 (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0174660Z Setting up lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0202755Z Setting up libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0231535Z Setting up lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0259449Z Setting up libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0290208Z Setting up libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0320659Z Setting up libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0349326Z Setting up libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0376915Z Setting up musl-dev:amd64 (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0415330Z Setting up libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0445204Z Setting up libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0473677Z Setting up lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0530489Z Setting up musl-tools (1.2.4-2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0558102Z Setting up libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0586068Z Setting up gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0616194Z Setting up lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0659065Z Setting up gcc-multilib (4:13.2.0-7ubuntu1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0692564Z Setting up libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0725323Z Setting up g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0754698Z Setting up g++-multilib (4:13.2.0-7ubuntu1) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:15.0788607Z Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:21:18.0177521Z Processing triggers for man-db (2.12.0-4build2) ...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8333001Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8333939Z Running kernel seems to be up-to-date.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8334472Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8334613Z Restarting services...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8409549Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8410076Z Service restarts being deferred:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8413431Z  systemctl restart hosted-compute-agent.service
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8413792Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8414042Z No containers need to be restarted.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8414302Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8414473Z No user sessions are running outdated binaries.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8414791Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:34.8416463Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8780830Z ##[group]Run mkdir -p "$HOME/.github-tools"
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8781206Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8781465Z [36;1m{[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8781672Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8781993Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8782285Z [36;1m  printf '%s\n' '  args=()'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8782573Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8782854Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8783161Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8783477Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8783741Z [36;1m  printf '%s\n' '    fi'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8784055Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8784407Z [36;1m  printf '%s\n' '      continue'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8784651Z [36;1m  printf '%s\n' '    fi'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8784894Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8785143Z [36;1m  printf '%s\n' '  done'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8785405Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8785684Z [36;1m  printf '%s\n' 'fi'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8785927Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8786211Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8786472Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8786794Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8821554Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8821902Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8974720Z ##[group]Run ocaml/setup-ocaml@v2
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8974968Z with:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8975142Z   ocaml-compiler: 4.14.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8975367Z   allow-prerelease-opam: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8975596Z   opam-pin: true
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8975777Z   opam-depext: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8975977Z   opam-local-packages: *.opam
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8976208Z   opam-disable-sandboxing: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8976432Z   dune-cache: false
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8976608Z   cache-prefix: v1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8977086Z   github-token: ***
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8977553Z env:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8978626Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:35.8979760Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:36.0831511Z ##[group]Retrieve the opam cache
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.1622322Z ##[warning]Failed to restore: Cache service responded with 400
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.1625015Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.1627042Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.1627491Z ##[group]Install opam
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9613759Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9705908Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9708815Z Added opam to the path
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9709761Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9710404Z ##[group]Initialise the opam state
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:37.9735433Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.0005178Z Reading package lists...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.1974071Z Building dependency tree...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.1982129Z Reading state information...
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4064984Z bubblewrap is already the newest version (0.9.0-1ubuntu0.1).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4065706Z g++-multilib is already the newest version (4:13.2.0-7ubuntu1).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4066336Z gcc-multilib is already the newest version (4:13.2.0-7ubuntu1).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4066931Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4067752Z musl-tools is already the newest version (1.2.4-2).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4068299Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4068887Z 0 upgraded, 0 newly installed, 0 to remove and 17 not upgraded.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4101394Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4251338Z No configuration file found, using built-in defaults.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4254499Z Checking for available remotes: rsync and local, git, mercurial.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4255856Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4256403Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4433818Z [31m[ERROR][0m Sandboxing is not working on your platform ubuntu:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4435577Z         "~/.opam/opam-init/hooks/sandbox.sh build sh -c echo SUCCESS >$TMPDIR/opam-sandbox-check-out && cat $TMPDIR/opam-sandbox-check-out; rm -f $TMPDIR/opam-sandbox-check-out" exited with code 1 "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4438351Z Do you want to disable it?  Note that this will result in less secure package builds, so please ensure that you have some other isolation mechanisms in place (such as running within a container or virtual machine). [y/N] y
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4439801Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:38.4440669Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:41.9123903Z [[32mdefault[0m] Initialised
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:54.1566520Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:54.1567098Z User configuration:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:54.1607915Z   Updating ~/.bash_profile.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:54.1609170Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:54.1609807Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.3646565Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.3647729Z ##[group]Remove the opam repositories
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.3682547Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.4233616Z default
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.4263122Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.4873373Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.4874489Z ##[group]Initialise the opam repositories
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:22:55.4895720Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:31.7483141Z [[32mdefault[0m] Initialised
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.0634084Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.2974048Z ##[group]Install OCaml
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.2990843Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.5068275Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.5069505Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:43.5070616Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:47.6484297Z 
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:47.6485471Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.1812534Z [32m∗[0m installed [01mbase-bigarray[0m.base
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.1820695Z [32m∗[0m installed [01mbase-threads[0m.base
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.1828726Z [32m∗[0m installed [01mbase-unix[0m.base
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.1836369Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.3788600Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:23:50.8237012Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:26.3874060Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:26.4058331Z [32m∗[0m installed [01mocaml-config[0m.2
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:26.4576787Z [32m∗[0m installed [01mocaml[0m.4.14.1
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:26.8544622Z Done.
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:26.8551723Z # Run [01meval $(opam env)[0m to update the current shell environment
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.0702300Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.0703206Z ##[group]Save the opam cache
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.0725463Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.2847789Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.3898774Z Updating /home/runner/.opam/repo/repos-config
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.3899855Z Clearing repository cache
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.3934705Z Clearing cache of downloaded files
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:28.3968882Z Clearing logs
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:29.4774498Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.2691274Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0h1bYaAAAAAAOpsP9no96S6trpLjya9/yQlkzRURHRTA0MTYARWRnZQ==
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3445986Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3447041Z ##[group]Retrieve the opam download cache
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3765246Z ##[warning]Failed to restore: Cache service responded with 400
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3770705Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098765-26, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098765-26, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098765-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3773981Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3811011Z ##[group]Pin local packages
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:31.3822697Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.4968022Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6220126Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6223836Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6224819Z     [31merror[0m 23: Missing field 'maintainer'
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6225322Z   [33mwarning[0m 25: Missing field 'authors'
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6225761Z   [33mwarning[0m 35: Missing field 'homepage'
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6226225Z   [33mwarning[0m 36: Missing field 'bug-reports'
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:38.6242870Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#HEAD[0m (version [01mdev[0m)
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:39.7308205Z ##[endgroup]
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:39.7320048Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:39.7458840Z 2.1.6
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:39.7487746Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+proof-check	Run /./.github/actions/setup-ocaml	2025-09-27T21:26:39.7778316Z The OCaml toplevel, version 4.14.1
+proof-check	Install Coq toolchain	﻿2025-09-27T21:26:39.7916249Z ##[group]Run opam repo add default https://opam.ocaml.org || true
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7916755Z [36;1mopam repo add default https://opam.ocaml.org || true[0m
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7917199Z [36;1mopam repo add coq-released https://coq.inria.fr/opam/released || true[0m
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7917826Z [36;1mopam update -y[0m
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7938690Z [36;1mopam install -y dune coq.8.18.0 coq-core.8.18.0 coq-mathcomp-ssreflect.1.17.0[0m
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7975516Z shell: /usr/bin/bash -e {0}
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7975775Z env:
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7977361Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7978685Z   OPAMCLI: 2.0
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7978885Z   OPAMCOLOR: always
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7979096Z   OPAMERRLOGLEN: 0
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7979350Z   OPAMJOBS: 4
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7979549Z   OPAMPRECISETRACKING: 1
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7979786Z   OPAMSOLVERTIMEOUT: 1000
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7980010Z   OPAMYES: 1
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7980190Z   CLICOLOR_FORCE: 1
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.7980391Z ##[endgroup]
+proof-check	Install Coq toolchain	2025-09-27T21:26:39.8581436Z [31m[ERROR][0m Repository default is already set up and points to git+https://github.com/ocaml/opam-repository.git. To change that, use 'opam repository set-url default https://opam.ocaml.org'.
+proof-check	Install Coq toolchain	2025-09-27T21:26:42.6299354Z [[32mcoq-released[0m] Initialised
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.4549020Z [1;34m[NOTE][0m Repository coq-released has been added to the selections of switch /home/runner/work/latex_perf/latex_perf only.
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.4551102Z        Run `opam repository add coq-released --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.4552286Z 
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.7258579Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.7259197Z 
+proof-check	Install Coq toolchain	2025-09-27T21:26:44.7259545Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-check	Install Coq toolchain	2025-09-27T21:26:47.9804856Z [[32mcoq-released[0m] no changes from https://coq.inria.fr/opam/released
+proof-check	Install Coq toolchain	2025-09-27T21:26:49.3181258Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3187701Z The following actions will be performed:
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3189191Z   [32m∗[0m install [01mdune[0m                   3.20.2
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3190308Z   [32m∗[0m install [01mconf-pkg-config[0m        4      [required by zarith]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3191481Z   [32m∗[0m install [01mocamlfind[0m              1.9.8  [required by coq-core]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3192539Z   [32m∗[0m install [01mconf-gmp[0m               5      [required by zarith]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3193458Z   [32m∗[0m install [01mzarith[0m                 1.14   [required by coq-core]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3194275Z   [32m∗[0m install [01mcoq-core[0m               8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3195047Z   [32m∗[0m install [01mcoqide-server[0m          8.18.0 [required by coq]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3195903Z   [32m∗[0m install [01mcoq-stdlib[0m             8.18.0 [required by coq]
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3196641Z   [32m∗[0m install [01mcoq[0m                    8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3197719Z   [32m∗[0m install [01mcoq-mathcomp-ssreflect[0m 1.17.0
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3198492Z ===== [32m∗[0m 10 =====
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3200150Z 
+proof-check	Install Coq toolchain	2025-09-27T21:27:06.3201049Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-check	Install Coq toolchain	2025-09-27T21:27:08.8362260Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+proof-check	Install Coq toolchain	2025-09-27T21:27:08.9558286Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+proof-check	Install Coq toolchain	2025-09-27T21:27:08.9580409Z [32m∗[0m installed [01mconf-gmp[0m.5
+proof-check	Install Coq toolchain	2025-09-27T21:27:09.8782576Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:10.3740244Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:10.4255976Z [36m⬇[0m retrieved [01mcoq-mathcomp-ssreflect[0m.1.17.0  (https://github.com/math-comp/math-comp/archive/mathcomp-1.17.0.tar.gz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:10.9013708Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+proof-check	Install Coq toolchain	2025-09-27T21:27:11.2772217Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+proof-check	Install Coq toolchain	2025-09-27T21:27:11.3481147Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:11.5650641Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:12.4548580Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+proof-check	Install Coq toolchain	2025-09-27T21:27:15.2886929Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+proof-check	Install Coq toolchain	2025-09-27T21:27:18.8748878Z [32m∗[0m installed [01mzarith[0m.1.14
+proof-check	Install Coq toolchain	2025-09-27T21:27:39.0035986Z [32m∗[0m installed [01mdune[0m.3.20.2
+proof-check	Install Coq toolchain	2025-09-27T21:28:25.5107116Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:28:29.2842008Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:30:50.0992153Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:30:50.4994720Z [32m∗[0m installed [01mcoq[0m.8.18.0
+proof-check	Install Coq toolchain	2025-09-27T21:31:17.8898861Z [32m∗[0m installed [01mcoq-mathcomp-ssreflect[0m.1.17.0
+proof-check	Install Coq toolchain	2025-09-27T21:31:19.3518840Z Done.
+proof-check	Install Coq toolchain	2025-09-27T21:31:19.3525551Z # Run [01meval $(opam env)[0m to update the current shell environment
+proof-check	Check _CoqProject exists	﻿2025-09-27T21:31:20.7753558Z ##[group]Run if [ ! -f "_CoqProject" ]; then
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7753937Z [36;1mif [ ! -f "_CoqProject" ]; then[0m
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7754277Z [36;1m  echo "❌ _CoqProject file missing - Week 5 requirement"[0m
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7754599Z [36;1m  exit 1[0m
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7754784Z [36;1mfi[0m
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7754973Z [36;1mecho "✅ _CoqProject found"[0m
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7786733Z shell: /usr/bin/bash -e {0}
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7786971Z env:
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7788346Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7790079Z   OPAMCLI: 2.0
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7790402Z   OPAMCOLOR: always
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7790747Z   OPAMERRLOGLEN: 0
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7791072Z   OPAMJOBS: 4
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7791375Z   OPAMPRECISETRACKING: 1
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7791804Z   OPAMSOLVERTIMEOUT: 1000
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7792144Z   OPAMYES: 1
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7792409Z   CLICOLOR_FORCE: 1
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7792713Z ##[endgroup]
+proof-check	Check _CoqProject exists	2025-09-27T21:31:20.7844765Z ✅ _CoqProject found
+proof-check	Build Coq proofs	﻿2025-09-27T21:31:20.7868080Z ##[group]Run opam exec -- dune build proofs
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7868432Z [36;1mopam exec -- dune build proofs[0m
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7897181Z shell: /usr/bin/bash -e {0}
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7897632Z env:
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7898698Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7899805Z   OPAMCLI: 2.0
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7899983Z   OPAMCOLOR: always
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7900503Z   OPAMERRLOGLEN: 0
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7900686Z   OPAMJOBS: 4
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7900861Z   OPAMPRECISETRACKING: 1
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7901075Z   OPAMSOLVERTIMEOUT: 1000
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7901276Z   OPAMYES: 1
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7901436Z   CLICOLOR_FORCE: 1
+proof-check	Build Coq proofs	2025-09-27T21:31:20.7901616Z ##[endgroup]
+proof-check	Check for admits	﻿2025-09-27T21:31:21.6612617Z ##[group]Run ADMITS=$(grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | wc -l || true)
+proof-check	Check for admits	2025-09-27T21:31:21.6613612Z [36;1mADMITS=$(grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | wc -l || true)[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6614332Z [36;1mecho "Found $ADMITS admits in proof files"[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6614877Z [36;1mif [ "$ADMITS" -ne 0 ]; then[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6615356Z [36;1m  echo "❌ Zero‑admit policy violated"[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6616052Z [36;1m  grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | head -50 || true[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6616677Z [36;1m  exit 1[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6616995Z [36;1mfi[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6617557Z [36;1mecho "✅ Zero admits"[0m
+proof-check	Check for admits	2025-09-27T21:31:21.6655154Z shell: /usr/bin/bash -e {0}
+proof-check	Check for admits	2025-09-27T21:31:21.6655399Z env:
+proof-check	Check for admits	2025-09-27T21:31:21.6656458Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-check	Check for admits	2025-09-27T21:31:21.6657849Z   OPAMCLI: 2.0
+proof-check	Check for admits	2025-09-27T21:31:21.6658035Z   OPAMCOLOR: always
+proof-check	Check for admits	2025-09-27T21:31:21.6658227Z   OPAMERRLOGLEN: 0
+proof-check	Check for admits	2025-09-27T21:31:21.6658403Z   OPAMJOBS: 4
+proof-check	Check for admits	2025-09-27T21:31:21.6658587Z   OPAMPRECISETRACKING: 1
+proof-check	Check for admits	2025-09-27T21:31:21.6658797Z   OPAMSOLVERTIMEOUT: 1000
+proof-check	Check for admits	2025-09-27T21:31:21.6659000Z   OPAMYES: 1
+proof-check	Check for admits	2025-09-27T21:31:21.6659166Z   CLICOLOR_FORCE: 1
+proof-check	Check for admits	2025-09-27T21:31:21.6659345Z ##[endgroup]
+proof-check	Check for admits	2025-09-27T21:31:21.6732566Z Found 3 admits in proof files
+proof-check	Check for admits	2025-09-27T21:31:21.6733176Z ❌ Zero‑admit policy violated
+proof-check	Check for admits	2025-09-27T21:31:21.6749855Z proofs/archive/Catcode.v:    Per PLANNER.yaml Section 3.4: "All proofs scaffolded; target Y1-Q2 to eliminate Admitted."
+proof-check	Check for admits	2025-09-27T21:31:21.6751062Z proofs/archive/Lexer.v:  Note: Some proofs use 'Admitted' for brevity - full implementation
+proof-check	Check for admits	2025-09-27T21:31:21.6752219Z proofs/LexerSmallstep.v:   This is deliberately minimal and admit-free to keep CI zero-admit. *)
+proof-check	Check for admits	2025-09-27T21:31:21.6756841Z ##[error]Process completed with exit code 1.
+proof-check	Post Run /./.github/actions/setup-ocaml	﻿2025-09-27T21:31:21.6833918Z Post job cleanup.
+proof-check	Post Run actions/checkout@v4	﻿2025-09-27T21:31:21.6884646Z Post job cleanup.
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.7853275Z [command]/usr/bin/git version
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.7892131Z git version 2.51.0
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.7946383Z Temporarily overriding HOME='/home/runner/work/_temp/0404d6ea-7dd8-4f95-81f2-693d894ac9b2' before making global git config changes
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.7948077Z Adding repository directory to the temporary git global config as a safe directory
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.7953360Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8007788Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8035406Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8286059Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8309687Z http.https://github.com/.extraheader
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8323276Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+proof-check	Post Run actions/checkout@v4	2025-09-27T21:31:21.8355140Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+proof-check	Complete job	﻿2025-09-27T21:31:21.8699974Z Cleaning up orphan processes

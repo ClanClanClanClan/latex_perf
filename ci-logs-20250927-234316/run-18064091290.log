@@ -1,0 +1,1324 @@
+format	UNKNOWN STEP	﻿2025-09-27T19:38:49.9715893Z Current runner version: '2.328.0'
+format	UNKNOWN STEP	2025-09-27T19:38:49.9740248Z ##[group]Runner Image Provisioner
+format	UNKNOWN STEP	2025-09-27T19:38:49.9740998Z Hosted Compute Agent
+format	UNKNOWN STEP	2025-09-27T19:38:49.9741652Z Version: 20250912.392
+format	UNKNOWN STEP	2025-09-27T19:38:49.9742242Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+format	UNKNOWN STEP	2025-09-27T19:38:49.9742934Z Build Date: 2025-09-12T15:23:14Z
+format	UNKNOWN STEP	2025-09-27T19:38:49.9743532Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:49.9744100Z ##[group]Operating System
+format	UNKNOWN STEP	2025-09-27T19:38:49.9744623Z Ubuntu
+format	UNKNOWN STEP	2025-09-27T19:38:49.9745142Z 22.04.5
+format	UNKNOWN STEP	2025-09-27T19:38:49.9745643Z LTS
+format	UNKNOWN STEP	2025-09-27T19:38:49.9746061Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:49.9746593Z ##[group]Runner Image
+format	UNKNOWN STEP	2025-09-27T19:38:49.9747143Z Image: ubuntu-22.04
+format	UNKNOWN STEP	2025-09-27T19:38:49.9747656Z Version: 20250922.79.1
+format	UNKNOWN STEP	2025-09-27T19:38:49.9748797Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20250922.79/images/ubuntu/Ubuntu2204-Readme.md
+format	UNKNOWN STEP	2025-09-27T19:38:49.9750430Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20250922.79
+format	UNKNOWN STEP	2025-09-27T19:38:49.9751395Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:49.9753896Z ##[group]GITHUB_TOKEN Permissions
+format	UNKNOWN STEP	2025-09-27T19:38:49.9756191Z Actions: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9756763Z Attestations: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9757240Z Checks: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9757809Z Contents: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9758473Z Deployments: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9758986Z Discussions: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9759536Z Issues: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9760046Z Metadata: read
+format	UNKNOWN STEP	2025-09-27T19:38:49.9760494Z Models: read
+format	UNKNOWN STEP	2025-09-27T19:38:49.9761067Z Packages: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9761596Z Pages: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9762071Z PullRequests: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9762633Z RepositoryProjects: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9763206Z SecurityEvents: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9763869Z Statuses: write
+format	UNKNOWN STEP	2025-09-27T19:38:49.9764327Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:49.9766395Z Secret source: Actions
+format	UNKNOWN STEP	2025-09-27T19:38:49.9767102Z Prepare workflow directory
+format	UNKNOWN STEP	2025-09-27T19:38:50.0094540Z Prepare all required actions
+format	UNKNOWN STEP	2025-09-27T19:38:50.0132949Z Getting action download info
+format	UNKNOWN STEP	2025-09-27T19:38:50.3093115Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+format	UNKNOWN STEP	2025-09-27T19:38:50.5835131Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+format	UNKNOWN STEP	2025-09-27T19:38:50.8117264Z Complete job name: format
+format	UNKNOWN STEP	2025-09-27T19:38:50.8864154Z ##[group]Run actions/checkout@v4
+format	UNKNOWN STEP	2025-09-27T19:38:50.8864973Z with:
+format	UNKNOWN STEP	2025-09-27T19:38:50.8865387Z   repository: ClanClanClanClan/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:50.8866056Z   token: ***
+format	UNKNOWN STEP	2025-09-27T19:38:50.8866436Z   ssh-strict: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8866826Z   ssh-user: git
+format	UNKNOWN STEP	2025-09-27T19:38:50.8867214Z   persist-credentials: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8867653Z   clean: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8868049Z   sparse-checkout-cone-mode: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8868760Z   fetch-depth: 1
+format	UNKNOWN STEP	2025-09-27T19:38:50.8869150Z   fetch-tags: false
+format	UNKNOWN STEP	2025-09-27T19:38:50.8869551Z   show-progress: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8869951Z   lfs: false
+format	UNKNOWN STEP	2025-09-27T19:38:50.8870313Z   submodules: false
+format	UNKNOWN STEP	2025-09-27T19:38:50.8870734Z   set-safe-directory: true
+format	UNKNOWN STEP	2025-09-27T19:38:50.8871420Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:50.9980499Z Syncing repository: ClanClanClanClan/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:50.9982836Z ##[group]Getting Git version info
+format	UNKNOWN STEP	2025-09-27T19:38:50.9984222Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+format	UNKNOWN STEP	2025-09-27T19:38:50.9986158Z [command]/usr/bin/git version
+format	UNKNOWN STEP	2025-09-27T19:38:51.0062811Z git version 2.51.0
+format	UNKNOWN STEP	2025-09-27T19:38:51.0089956Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.0113635Z Temporarily overriding HOME='/home/runner/work/_temp/81c76cd2-2288-4abf-b88e-09effef621cc' before making global git config changes
+format	UNKNOWN STEP	2025-09-27T19:38:51.0116025Z Adding repository directory to the temporary git global config as a safe directory
+format	UNKNOWN STEP	2025-09-27T19:38:51.0120465Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:51.0155366Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+format	UNKNOWN STEP	2025-09-27T19:38:51.0159608Z ##[group]Initializing the repository
+format	UNKNOWN STEP	2025-09-27T19:38:51.0164345Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:51.0260455Z hint: Using 'master' as the name for the initial branch. This default branch name
+format	UNKNOWN STEP	2025-09-27T19:38:51.0262961Z hint: is subject to change. To configure the initial branch name to use in all
+format	UNKNOWN STEP	2025-09-27T19:38:51.0264532Z hint: of your new repositories, which will suppress this warning, call:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0265707Z hint:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0266517Z hint: 	git config --global init.defaultBranch <name>
+format	UNKNOWN STEP	2025-09-27T19:38:51.0267587Z hint:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0268769Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+format	UNKNOWN STEP	2025-09-27T19:38:51.0270338Z hint: 'development'. The just-created branch can be renamed via this command:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0271645Z hint:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0272341Z hint: 	git branch -m <name>
+format	UNKNOWN STEP	2025-09-27T19:38:51.0273118Z hint:
+format	UNKNOWN STEP	2025-09-27T19:38:51.0274171Z hint: Disable this message with "git config set advice.defaultBranchName false"
+format	UNKNOWN STEP	2025-09-27T19:38:51.0275939Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+format	UNKNOWN STEP	2025-09-27T19:38:51.0278920Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:51.0329395Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.0330635Z ##[group]Disabling automatic garbage collection
+format	UNKNOWN STEP	2025-09-27T19:38:51.0331584Z [command]/usr/bin/git config --local gc.auto 0
+format	UNKNOWN STEP	2025-09-27T19:38:51.0360192Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.0361573Z ##[group]Setting up auth
+format	UNKNOWN STEP	2025-09-27T19:38:51.0365701Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+format	UNKNOWN STEP	2025-09-27T19:38:51.0395806Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+format	UNKNOWN STEP	2025-09-27T19:38:51.0710333Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+format	UNKNOWN STEP	2025-09-27T19:38:51.0740221Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+format	UNKNOWN STEP	2025-09-27T19:38:51.0958397Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+format	UNKNOWN STEP	2025-09-27T19:38:51.0991350Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.0992026Z ##[group]Fetching the repository
+format	UNKNOWN STEP	2025-09-27T19:38:51.1009390Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d00dbc0e857bf893fdda045c17709c0fd5b9979e:refs/remotes/origin/fix-math-strip
+format	UNKNOWN STEP	2025-09-27T19:38:51.4601781Z From https://github.com/ClanClanClanClan/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:38:51.4603485Z  * [new ref]         d00dbc0e857bf893fdda045c17709c0fd5b9979e -> origin/fix-math-strip
+format	UNKNOWN STEP	2025-09-27T19:38:51.4632763Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.4633847Z ##[group]Determining the checkout info
+format	UNKNOWN STEP	2025-09-27T19:38:51.4635098Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.4640206Z [command]/usr/bin/git sparse-checkout disable
+format	UNKNOWN STEP	2025-09-27T19:38:51.4742718Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+format	UNKNOWN STEP	2025-09-27T19:38:51.4773594Z ##[group]Checking out the ref
+format	UNKNOWN STEP	2025-09-27T19:38:51.4775382Z [command]/usr/bin/git checkout --progress --force -B fix-math-strip refs/remotes/origin/fix-math-strip
+format	UNKNOWN STEP	2025-09-27T19:38:51.5218282Z Switched to a new branch 'fix-math-strip'
+format	UNKNOWN STEP	2025-09-27T19:38:51.5221170Z branch 'fix-math-strip' set up to track 'origin/fix-math-strip'.
+format	UNKNOWN STEP	2025-09-27T19:38:51.5228726Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:51.5262514Z [command]/usr/bin/git log -1 --format=%H
+format	UNKNOWN STEP	2025-09-27T19:38:51.5285267Z d00dbc0e857bf893fdda045c17709c0fd5b9979e
+format	UNKNOWN STEP	2025-09-27T19:38:51.5672960Z Prepare all required actions
+format	UNKNOWN STEP	2025-09-27T19:38:51.5674372Z Getting action download info
+format	UNKNOWN STEP	2025-09-27T19:38:51.7304380Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+format	UNKNOWN STEP	2025-09-27T19:38:52.5004918Z ##[group]Run ./.github/actions/setup-ocaml
+format	UNKNOWN STEP	2025-09-27T19:38:52.5005574Z with:
+format	UNKNOWN STEP	2025-09-27T19:38:52.5005884Z   ocaml-compiler: 4.14.1
+format	UNKNOWN STEP	2025-09-27T19:38:52.5006227Z   opam-depext: false
+format	UNKNOWN STEP	2025-09-27T19:38:52.5006565Z   allow-prerelease-opam: false
+format	UNKNOWN STEP	2025-09-27T19:38:52.5006911Z   opam-pin: true
+format	UNKNOWN STEP	2025-09-27T19:38:52.5007227Z   opam-local-packages: *.opam
+format	UNKNOWN STEP	2025-09-27T19:38:52.5007588Z   opam-disable-sandboxing: false
+format	UNKNOWN STEP	2025-09-27T19:38:52.5007935Z   dune-cache: false
+format	UNKNOWN STEP	2025-09-27T19:38:52.5008575Z   cache-prefix: v1
+format	UNKNOWN STEP	2025-09-27T19:38:52.5008888Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:52.5105045Z ##[group]Run sudo apt-get update
+format	UNKNOWN STEP	2025-09-27T19:38:52.5105520Z [36;1msudo apt-get update[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5105913Z [36;1msudo apt-get install -y \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5106355Z [36;1m  bubblewrap \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5106683Z [36;1m  g++-multilib \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5107017Z [36;1m  gcc-multilib \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5107340Z [36;1m  mercurial \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5107666Z [36;1m  musl-tools \[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5107996Z [36;1m  rsync[0m
+format	UNKNOWN STEP	2025-09-27T19:38:52.5139736Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+format	UNKNOWN STEP	2025-09-27T19:38:52.5140225Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:38:52.7321549Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+format	UNKNOWN STEP	2025-09-27T19:38:52.7795579Z Hit:6 https://packages.microsoft.com/repos/azure-cli jammy InRelease
+format	UNKNOWN STEP	2025-09-27T19:38:52.7797967Z Hit:2 http://azure.archive.ubuntu.com/ubuntu jammy InRelease
+format	UNKNOWN STEP	2025-09-27T19:38:52.7801000Z Get:7 https://packages.microsoft.com/ubuntu/22.04/prod jammy InRelease [3632 B]
+format	UNKNOWN STEP	2025-09-27T19:38:52.7819199Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:52.7876742Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:52.7909243Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.0717462Z Get:8 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main arm64 Packages [84.9 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.0944254Z Get:9 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main amd64 Packages [255 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.1609124Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2940 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.1770324Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [459 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.1781475Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 c-n-f Metadata [19.0 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.1805283Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [4562 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2056963Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [841 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2102512Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1228 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2166981Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [305 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2230970Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [29.5 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2624860Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.0 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.2636495Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [672 B]
+format	UNKNOWN STEP	2025-09-27T19:38:53.3904647Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2688 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4083474Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-security/main Translation-en [394 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4169704Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [13.9 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4184721Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [4413 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4466992Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted Translation-en [818 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4522029Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [997 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4585952Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe Translation-en [218 kB]
+format	UNKNOWN STEP	2025-09-27T19:38:53.4606212Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [22.1 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:05.0805672Z Fetched 20.7 MB in 3s (8162 kB/s)
+format	UNKNOWN STEP	2025-09-27T19:39:05.9234197Z Reading package lists...
+format	UNKNOWN STEP	2025-09-27T19:39:05.9831265Z Reading package lists...
+format	UNKNOWN STEP	2025-09-27T19:39:06.1713398Z Building dependency tree...
+format	UNKNOWN STEP	2025-09-27T19:39:06.1724147Z Reading state information...
+format	UNKNOWN STEP	2025-09-27T19:39:06.3204246Z mercurial is already the newest version (6.1.1-1ubuntu1).
+format	UNKNOWN STEP	2025-09-27T19:39:06.3205197Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+format	UNKNOWN STEP	2025-09-27T19:39:06.3205842Z The following additional packages will be installed:
+format	UNKNOWN STEP	2025-09-27T19:39:06.3206621Z   g++-11-multilib gcc-11-multilib lib32asan6 lib32atomic1 lib32gcc-11-dev
+format	UNKNOWN STEP	2025-09-27T19:39:06.3207691Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-11-dev lib32ubsan1
+format	UNKNOWN STEP	2025-09-27T19:39:06.3208702Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan6 libx32atomic1
+format	UNKNOWN STEP	2025-09-27T19:39:06.3209431Z   libx32gcc-11-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+format	UNKNOWN STEP	2025-09-27T19:39:06.3210762Z   libx32stdc++-11-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+format	UNKNOWN STEP	2025-09-27T19:39:06.3216715Z Suggested packages:
+format	UNKNOWN STEP	2025-09-27T19:39:06.3217119Z   lib32stdc++6-11-dbg libx32stdc++6-11-dbg
+format	UNKNOWN STEP	2025-09-27T19:39:06.3217455Z Recommended packages:
+format	UNKNOWN STEP	2025-09-27T19:39:06.3217660Z   linux-musl-dev
+format	UNKNOWN STEP	2025-09-27T19:39:06.3901134Z The following NEW packages will be installed:
+format	UNKNOWN STEP	2025-09-27T19:39:06.3902132Z   bubblewrap g++-11-multilib g++-multilib gcc-11-multilib gcc-multilib
+format	UNKNOWN STEP	2025-09-27T19:39:06.3902988Z   lib32asan6 lib32atomic1 lib32gcc-11-dev lib32gomp1 lib32itm1 lib32quadmath0
+format	UNKNOWN STEP	2025-09-27T19:39:06.3908552Z   lib32stdc++-11-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+format	UNKNOWN STEP	2025-09-27T19:39:06.3910067Z   libx32asan6 libx32atomic1 libx32gcc-11-dev libx32gcc-s1 libx32gomp1
+format	UNKNOWN STEP	2025-09-27T19:39:06.3911573Z   libx32itm1 libx32quadmath0 libx32stdc++-11-dev libx32stdc++6 libx32ubsan1
+format	UNKNOWN STEP	2025-09-27T19:39:06.3915531Z   musl musl-dev musl-tools
+format	UNKNOWN STEP	2025-09-27T19:39:06.4102895Z 0 upgraded, 29 newly installed, 0 to remove and 32 not upgraded.
+format	UNKNOWN STEP	2025-09-27T19:39:06.4103669Z Need to get 21.1 MB of archives.
+format	UNKNOWN STEP	2025-09-27T19:39:06.4104397Z After this operation, 93.4 MB of additional disk space will be used.
+format	UNKNOWN STEP	2025-09-27T19:39:06.4105220Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+format	UNKNOWN STEP	2025-09-27T19:39:06.4826931Z Get:2 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 bubblewrap amd64 0.6.1-1ubuntu0.1 [46.3 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.5104408Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-i386 amd64 2.35-0ubuntu3.11 [1445 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.6005308Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-x32 amd64 2.35-0ubuntu3.11 [2978 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.6894229Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-x32 amd64 2.35-0ubuntu3.11 [1632 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.7839400Z Get:6 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-s1 amd64 12.3.0-1ubuntu1~22.04.2 [54.0 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.8100208Z Get:7 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [133 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.8367365Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [127 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.8650800Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [32.0 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.8915099Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [30.2 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.9172183Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [8512 B]
+format	UNKNOWN STEP	2025-09-27T19:39:06.9437654Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [10.2 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:06.9694851Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2154 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.0506864Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2128 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.1336964Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [959 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.1885242Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++6 amd64 12.3.0-1ubuntu1~22.04.2 [682 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.2405657Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [963 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.2963659Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [244 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.3255813Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [156 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.3955716Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2339 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.4778847Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2106 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.5616134Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [880 B]
+format	UNKNOWN STEP	2025-09-27T19:39:07.5872304Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [989 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.6459562Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [906 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.7012246Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [894 B]
+format	UNKNOWN STEP	2025-09-27T19:39:07.7267534Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 gcc-multilib amd64 4:11.2.0-1ubuntu1 [1382 B]
+format	UNKNOWN STEP	2025-09-27T19:39:07.7528475Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 g++-multilib amd64 4:11.2.0-1ubuntu1 [854 B]
+format	UNKNOWN STEP	2025-09-27T19:39:07.7803169Z Get:28 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl amd64 1.2.2-4 [407 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.8322957Z Get:29 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-dev amd64 1.2.2-4 [605 kB]
+format	UNKNOWN STEP	2025-09-27T19:39:07.8874758Z Get:30 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-tools amd64 1.2.2-4 [5520 B]
+format	UNKNOWN STEP	2025-09-27T19:39:08.2462214Z Fetched 21.1 MB in 1s (14.2 MB/s)
+format	UNKNOWN STEP	2025-09-27T19:39:08.3152484Z Selecting previously unselected package bubblewrap.
+format	UNKNOWN STEP	2025-09-27T19:39:08.4311481Z (Reading database ... 
+format	UNKNOWN STEP	2025-09-27T19:39:08.4311876Z (Reading database ... 5%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4312211Z (Reading database ... 10%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4312482Z (Reading database ... 15%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4312679Z (Reading database ... 20%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4312990Z (Reading database ... 25%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4313356Z (Reading database ... 30%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4313696Z (Reading database ... 35%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4313984Z (Reading database ... 40%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4314172Z (Reading database ... 45%
+format	UNKNOWN STEP	2025-09-27T19:39:08.4314362Z (Reading database ... 50%
+format	UNKNOWN STEP	2025-09-27T19:39:09.0653068Z (Reading database ... 55%
+format	UNKNOWN STEP	2025-09-27T19:39:09.8452182Z (Reading database ... 60%
+format	UNKNOWN STEP	2025-09-27T19:39:10.5982206Z (Reading database ... 65%
+format	UNKNOWN STEP	2025-09-27T19:39:11.3390166Z (Reading database ... 70%
+format	UNKNOWN STEP	2025-09-27T19:39:12.1369175Z (Reading database ... 75%
+format	UNKNOWN STEP	2025-09-27T19:39:12.9392662Z (Reading database ... 80%
+format	UNKNOWN STEP	2025-09-27T19:39:13.7725891Z (Reading database ... 85%
+format	UNKNOWN STEP	2025-09-27T19:39:14.5992188Z (Reading database ... 90%
+format	UNKNOWN STEP	2025-09-27T19:39:15.5749360Z (Reading database ... 95%
+format	UNKNOWN STEP	2025-09-27T19:39:15.5749732Z (Reading database ... 100%
+format	UNKNOWN STEP	2025-09-27T19:39:15.5750158Z (Reading database ... 256283 files and directories currently installed.)
+format	UNKNOWN STEP	2025-09-27T19:39:15.5807397Z Preparing to unpack .../00-bubblewrap_0.6.1-1ubuntu0.1_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.5828061Z Unpacking bubblewrap (0.6.1-1ubuntu0.1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.6453238Z Selecting previously unselected package libc6-dev-i386.
+format	UNKNOWN STEP	2025-09-27T19:39:15.6615620Z Preparing to unpack .../01-libc6-dev-i386_2.35-0ubuntu3.11_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.6627177Z Unpacking libc6-dev-i386 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.7595849Z Selecting previously unselected package libc6-x32.
+format	UNKNOWN STEP	2025-09-27T19:39:15.7754757Z Preparing to unpack .../02-libc6-x32_2.35-0ubuntu3.11_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.7778001Z Unpacking libc6-x32 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.8997348Z Selecting previously unselected package libc6-dev-x32.
+format	UNKNOWN STEP	2025-09-27T19:39:15.9160649Z Preparing to unpack .../03-libc6-dev-x32_2.35-0ubuntu3.11_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.9171211Z Unpacking libc6-dev-x32 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.9675415Z Selecting previously unselected package libx32gcc-s1.
+format	UNKNOWN STEP	2025-09-27T19:39:15.9854584Z Preparing to unpack .../04-libx32gcc-s1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:15.9865308Z Unpacking libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.0089975Z Selecting previously unselected package lib32gomp1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.0249826Z Preparing to unpack .../05-lib32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.0267692Z Unpacking lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.0609198Z Selecting previously unselected package libx32gomp1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.0772280Z Preparing to unpack .../06-libx32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.0782941Z Unpacking libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1016619Z Selecting previously unselected package lib32itm1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.1175103Z Preparing to unpack .../07-lib32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1184849Z Unpacking lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1408384Z Selecting previously unselected package libx32itm1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.1567660Z Preparing to unpack .../08-libx32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1578366Z Unpacking libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1796131Z Selecting previously unselected package lib32atomic1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.1954744Z Preparing to unpack .../09-lib32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.1965801Z Unpacking lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.2230629Z Selecting previously unselected package libx32atomic1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.2391352Z Preparing to unpack .../10-libx32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.2402782Z Unpacking libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.2616111Z Selecting previously unselected package lib32asan6.
+format	UNKNOWN STEP	2025-09-27T19:39:16.2774095Z Preparing to unpack .../11-lib32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.2788398Z Unpacking lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.3275710Z Selecting previously unselected package libx32asan6.
+format	UNKNOWN STEP	2025-09-27T19:39:16.3436091Z Preparing to unpack .../12-libx32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.3445875Z Unpacking libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.3918431Z Selecting previously unselected package lib32ubsan1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.4079028Z Preparing to unpack .../13-lib32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.4089938Z Unpacking lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.4420972Z Selecting previously unselected package libx32stdc++6.
+format	UNKNOWN STEP	2025-09-27T19:39:16.4580350Z Preparing to unpack .../14-libx32stdc++6_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.4590012Z Unpacking libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.4898000Z Selecting previously unselected package libx32ubsan1.
+format	UNKNOWN STEP	2025-09-27T19:39:16.5058070Z Preparing to unpack .../15-libx32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.5067808Z Unpacking libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.5384946Z Selecting previously unselected package lib32quadmath0.
+format	UNKNOWN STEP	2025-09-27T19:39:16.5542841Z Preparing to unpack .../16-lib32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.5553294Z Unpacking lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.5810251Z Selecting previously unselected package libx32quadmath0.
+format	UNKNOWN STEP	2025-09-27T19:39:16.5969156Z Preparing to unpack .../17-libx32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.5979726Z Unpacking libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.6197952Z Selecting previously unselected package lib32gcc-11-dev.
+format	UNKNOWN STEP	2025-09-27T19:39:16.6356799Z Preparing to unpack .../18-lib32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.6366801Z Unpacking lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.6921304Z Selecting previously unselected package libx32gcc-11-dev.
+format	UNKNOWN STEP	2025-09-27T19:39:16.7081531Z Preparing to unpack .../19-libx32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.7091590Z Unpacking libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.7541258Z Selecting previously unselected package gcc-11-multilib.
+format	UNKNOWN STEP	2025-09-27T19:39:16.7701665Z Preparing to unpack .../20-gcc-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.7713073Z Unpacking gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.7904169Z Selecting previously unselected package lib32stdc++-11-dev.
+format	UNKNOWN STEP	2025-09-27T19:39:16.8064087Z Preparing to unpack .../21-lib32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.8074371Z Unpacking lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.8756192Z Selecting previously unselected package libx32stdc++-11-dev.
+format	UNKNOWN STEP	2025-09-27T19:39:16.8919677Z Preparing to unpack .../22-libx32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.8929164Z Unpacking libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.9500256Z Selecting previously unselected package g++-11-multilib.
+format	UNKNOWN STEP	2025-09-27T19:39:16.9661385Z Preparing to unpack .../23-g++-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.9671998Z Unpacking g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:16.9871906Z Selecting previously unselected package gcc-multilib.
+format	UNKNOWN STEP	2025-09-27T19:39:17.0029555Z Preparing to unpack .../24-gcc-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.0039324Z Unpacking gcc-multilib (4:11.2.0-1ubuntu1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.0237236Z Selecting previously unselected package g++-multilib.
+format	UNKNOWN STEP	2025-09-27T19:39:17.0393873Z Preparing to unpack .../25-g++-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.0404581Z Unpacking g++-multilib (4:11.2.0-1ubuntu1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.0601211Z Selecting previously unselected package musl:amd64.
+format	UNKNOWN STEP	2025-09-27T19:39:17.0757352Z Preparing to unpack .../26-musl_1.2.2-4_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.0769055Z Unpacking musl:amd64 (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.1273791Z Selecting previously unselected package musl-dev:amd64.
+format	UNKNOWN STEP	2025-09-27T19:39:17.1439900Z Preparing to unpack .../27-musl-dev_1.2.2-4_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.1450508Z Unpacking musl-dev:amd64 (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.2075696Z Selecting previously unselected package musl-tools.
+format	UNKNOWN STEP	2025-09-27T19:39:17.2236116Z Preparing to unpack .../28-musl-tools_1.2.2-4_amd64.deb ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.2245184Z Unpacking musl-tools (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.2938699Z Setting up bubblewrap (0.6.1-1ubuntu0.1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.2991589Z Setting up libc6-dev-i386 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3019216Z Setting up lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3045823Z Setting up lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3088962Z Setting up libc6-x32 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3131667Z Setting up libc6-dev-x32 (2.35-0ubuntu3.11) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3158754Z Setting up lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3186257Z Setting up libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3217469Z Setting up lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3247698Z Setting up musl:amd64 (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3291823Z Setting up lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3317371Z Setting up libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3343286Z Setting up lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3374959Z Setting up libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3400187Z Setting up libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3425201Z Setting up libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3451472Z Setting up musl-dev:amd64 (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3486828Z Setting up libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3513430Z Setting up libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3560533Z Setting up libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3587729Z Setting up musl-tools (1.2.2-4) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3615189Z Setting up libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3644919Z Setting up libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3682292Z Setting up lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3710037Z Setting up lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3737648Z Setting up gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3763322Z Setting up gcc-multilib (4:11.2.0-1ubuntu1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3790166Z Setting up g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3815894Z Setting up g++-multilib (4:11.2.0-1ubuntu1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:17.3850532Z Processing triggers for libc-bin (2.35-0ubuntu3.10) ...
+format	UNKNOWN STEP	2025-09-27T19:39:20.8014182Z Processing triggers for man-db (2.10.2-1) ...
+format	UNKNOWN STEP	2025-09-27T19:39:23.9960933Z NEEDRESTART-VER: 3.5
+format	UNKNOWN STEP	2025-09-27T19:39:25.0153154Z NEEDRESTART-KCUR: 6.8.0-1031-azure
+format	UNKNOWN STEP	2025-09-27T19:39:25.0153767Z NEEDRESTART-KEXP: 6.8.0-1031-azure
+format	UNKNOWN STEP	2025-09-27T19:39:25.0154231Z NEEDRESTART-KSTA: 1
+format	UNKNOWN STEP	2025-09-27T19:39:25.0154694Z NEEDRESTART-SVC: hosted-compute-agent.service
+format	UNKNOWN STEP	2025-09-27T19:39:26.3722885Z ##[group]Run mkdir -p "$HOME/.github-tools"
+format	UNKNOWN STEP	2025-09-27T19:39:26.3723216Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3723453Z [36;1m{[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3723670Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3723973Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3724252Z [36;1m  printf '%s\n' '  args=()'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3724508Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3724783Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3725075Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3725376Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3725622Z [36;1m  printf '%s\n' '    fi'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3725933Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3726256Z [36;1m  printf '%s\n' '      continue'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3726489Z [36;1m  printf '%s\n' '    fi'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3726717Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3726948Z [36;1m  printf '%s\n' '  done'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3727200Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3727474Z [36;1m  printf '%s\n' 'fi'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3727698Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3727962Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3728690Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3729025Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+format	UNKNOWN STEP	2025-09-27T19:39:26.3758345Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+format	UNKNOWN STEP	2025-09-27T19:39:26.3758665Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:26.3900367Z ##[group]Run ocaml/setup-ocaml@v2
+format	UNKNOWN STEP	2025-09-27T19:39:26.3900588Z with:
+format	UNKNOWN STEP	2025-09-27T19:39:26.3900760Z   ocaml-compiler: 4.14.1
+format	UNKNOWN STEP	2025-09-27T19:39:26.3900976Z   allow-prerelease-opam: false
+format	UNKNOWN STEP	2025-09-27T19:39:26.3901199Z   opam-pin: true
+format	UNKNOWN STEP	2025-09-27T19:39:26.3901381Z   opam-depext: false
+format	UNKNOWN STEP	2025-09-27T19:39:26.3901570Z   opam-local-packages: *.opam
+format	UNKNOWN STEP	2025-09-27T19:39:26.3901794Z   opam-disable-sandboxing: false
+format	UNKNOWN STEP	2025-09-27T19:39:26.3902002Z   dune-cache: false
+format	UNKNOWN STEP	2025-09-27T19:39:26.3902180Z   cache-prefix: v1
+format	UNKNOWN STEP	2025-09-27T19:39:26.3902631Z   github-token: ***
+format	UNKNOWN STEP	2025-09-27T19:39:26.3902817Z env:
+format	UNKNOWN STEP	2025-09-27T19:39:26.3903791Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	UNKNOWN STEP	2025-09-27T19:39:26.3904804Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:26.5683966Z ##[group]Retrieve the opam cache
+format	UNKNOWN STEP	2025-09-27T19:39:27.4329725Z ##[warning]Failed to restore: Cache service responded with 400
+format	UNKNOWN STEP	2025-09-27T19:39:27.4331427Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-
+format	UNKNOWN STEP	2025-09-27T19:39:27.4332769Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:27.4333110Z ##[group]Install opam
+format	UNKNOWN STEP	2025-09-27T19:39:28.1295350Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+format	UNKNOWN STEP	2025-09-27T19:39:28.1392787Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+format	UNKNOWN STEP	2025-09-27T19:39:28.1394722Z Added opam to the path
+format	UNKNOWN STEP	2025-09-27T19:39:28.1395344Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:28.1396172Z ##[group]Initialise the opam state
+format	UNKNOWN STEP	2025-09-27T19:39:28.1415187Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+format	UNKNOWN STEP	2025-09-27T19:39:28.1942440Z Reading package lists...
+format	UNKNOWN STEP	2025-09-27T19:39:28.3806080Z Building dependency tree...
+format	UNKNOWN STEP	2025-09-27T19:39:28.3816909Z Reading state information...
+format	UNKNOWN STEP	2025-09-27T19:39:28.5460766Z g++-multilib is already the newest version (4:11.2.0-1ubuntu1).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5461448Z gcc-multilib is already the newest version (4:11.2.0-1ubuntu1).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5461873Z mercurial is already the newest version (6.1.1-1ubuntu1).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5462265Z musl-tools is already the newest version (1.2.2-4).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5462684Z bubblewrap is already the newest version (0.6.1-1ubuntu0.1).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5463120Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+format	UNKNOWN STEP	2025-09-27T19:39:28.5463539Z 0 upgraded, 0 newly installed, 0 to remove and 32 not upgraded.
+format	UNKNOWN STEP	2025-09-27T19:39:28.5499607Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+format	UNKNOWN STEP	2025-09-27T19:39:28.5630826Z No configuration file found, using built-in defaults.
+format	UNKNOWN STEP	2025-09-27T19:39:28.5634152Z Checking for available remotes: rsync and local, git, mercurial.
+format	UNKNOWN STEP	2025-09-27T19:39:28.5635307Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+format	UNKNOWN STEP	2025-09-27T19:39:28.5635739Z 
+format	UNKNOWN STEP	2025-09-27T19:39:28.5859809Z 
+format	UNKNOWN STEP	2025-09-27T19:39:28.5860840Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:39:31.1381770Z [[32mdefault[0m] Initialised
+format	UNKNOWN STEP	2025-09-27T19:39:42.8097334Z 
+format	UNKNOWN STEP	2025-09-27T19:39:42.8097769Z User configuration:
+format	UNKNOWN STEP	2025-09-27T19:39:42.8221471Z   Updating ~/.bash_profile.
+format	UNKNOWN STEP	2025-09-27T19:39:42.8223597Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+format	UNKNOWN STEP	2025-09-27T19:39:42.8224287Z 
+format	UNKNOWN STEP	2025-09-27T19:39:44.0736896Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:44.0737626Z ##[group]Remove the opam repositories
+format	UNKNOWN STEP	2025-09-27T19:39:44.0782333Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+format	UNKNOWN STEP	2025-09-27T19:39:44.1320674Z default
+format	UNKNOWN STEP	2025-09-27T19:39:44.1350334Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+format	UNKNOWN STEP	2025-09-27T19:39:44.1969872Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:39:44.1970791Z ##[group]Initialise the opam repositories
+format	UNKNOWN STEP	2025-09-27T19:39:44.1992342Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+format	UNKNOWN STEP	2025-09-27T19:40:18.3102590Z [[32mdefault[0m] Initialised
+format	UNKNOWN STEP	2025-09-27T19:40:30.0549787Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:40:30.2187828Z ##[group]Install OCaml
+format	UNKNOWN STEP	2025-09-27T19:40:30.2201246Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+format	UNKNOWN STEP	2025-09-27T19:40:30.4225066Z 
+format	UNKNOWN STEP	2025-09-27T19:40:30.4226249Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:40:30.4227055Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+format	UNKNOWN STEP	2025-09-27T19:40:34.5434807Z 
+format	UNKNOWN STEP	2025-09-27T19:40:34.5436012Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:40:36.9881897Z [32m∗[0m installed [01mbase-bigarray[0m.base
+format	UNKNOWN STEP	2025-09-27T19:40:36.9887392Z [32m∗[0m installed [01mbase-threads[0m.base
+format	UNKNOWN STEP	2025-09-27T19:40:36.9914502Z [32m∗[0m installed [01mbase-unix[0m.base
+format	UNKNOWN STEP	2025-09-27T19:40:36.9922190Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+format	UNKNOWN STEP	2025-09-27T19:40:37.0799470Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+format	UNKNOWN STEP	2025-09-27T19:40:37.5428924Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:11.4334665Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+format	UNKNOWN STEP	2025-09-27T19:43:11.4521414Z [32m∗[0m installed [01mocaml-config[0m.2
+format	UNKNOWN STEP	2025-09-27T19:43:11.5227659Z [32m∗[0m installed [01mocaml[0m.4.14.1
+format	UNKNOWN STEP	2025-09-27T19:43:11.9299108Z Done.
+format	UNKNOWN STEP	2025-09-27T19:43:11.9304231Z # Run [01meval $(opam env)[0m to update the current shell environment
+format	UNKNOWN STEP	2025-09-27T19:43:13.2918595Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:43:13.2919554Z ##[group]Save the opam cache
+format	UNKNOWN STEP	2025-09-27T19:43:13.2939125Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+format	UNKNOWN STEP	2025-09-27T19:43:13.5033222Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:43:13.6152568Z Updating /home/runner/.opam/repo/repos-config
+format	UNKNOWN STEP	2025-09-27T19:43:13.6153092Z Clearing repository cache
+format	UNKNOWN STEP	2025-09-27T19:43:13.6189419Z Clearing cache of downloaded files
+format	UNKNOWN STEP	2025-09-27T19:43:13.6219773Z Clearing logs
+format	UNKNOWN STEP	2025-09-27T19:43:14.3999200Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+format	UNKNOWN STEP	2025-09-27T19:43:16.2587399Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0VD7YaAAAAADrcRyW9cNMSZDh2gECDOuzQ0hJMzBFREdFMDQxMABFZGdl
+format	UNKNOWN STEP	2025-09-27T19:43:16.3480733Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:43:16.3481635Z ##[group]Retrieve the opam download cache
+format	UNKNOWN STEP	2025-09-27T19:43:16.3821981Z ##[warning]Failed to restore: Cache service responded with 400
+format	UNKNOWN STEP	2025-09-27T19:43:16.3827137Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-49, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-49, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+format	UNKNOWN STEP	2025-09-27T19:43:16.3830747Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:43:16.3868504Z ##[group]Pin local packages
+format	UNKNOWN STEP	2025-09-27T19:43:16.3889110Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+format	UNKNOWN STEP	2025-09-27T19:43:23.2295471Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+format	UNKNOWN STEP	2025-09-27T19:43:23.3667706Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+format	UNKNOWN STEP	2025-09-27T19:43:23.3671293Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+format	UNKNOWN STEP	2025-09-27T19:43:23.3672406Z     [31merror[0m 23: Missing field 'maintainer'
+format	UNKNOWN STEP	2025-09-27T19:43:23.3672968Z   [33mwarning[0m 25: Missing field 'authors'
+format	UNKNOWN STEP	2025-09-27T19:43:23.3673519Z   [33mwarning[0m 35: Missing field 'homepage'
+format	UNKNOWN STEP	2025-09-27T19:43:23.3674056Z   [33mwarning[0m 36: Missing field 'bug-reports'
+format	UNKNOWN STEP	2025-09-27T19:43:23.3679911Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip[0m (version [01mdev[0m)
+format	UNKNOWN STEP	2025-09-27T19:43:24.6319320Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:43:24.6322755Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+format	UNKNOWN STEP	2025-09-27T19:43:24.6455378Z 2.1.6
+format	UNKNOWN STEP	2025-09-27T19:43:24.6476900Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+format	UNKNOWN STEP	2025-09-27T19:43:24.6750773Z The OCaml toplevel, version 4.14.1
+format	UNKNOWN STEP	2025-09-27T19:43:24.6896742Z ##[group]Run opam update -y
+format	UNKNOWN STEP	2025-09-27T19:43:24.6897188Z [36;1mopam update -y[0m
+format	UNKNOWN STEP	2025-09-27T19:43:24.6897728Z [36;1mopam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0[0m
+format	UNKNOWN STEP	2025-09-27T19:43:24.6934254Z shell: /usr/bin/bash -e {0}
+format	UNKNOWN STEP	2025-09-27T19:43:24.6934473Z env:
+format	UNKNOWN STEP	2025-09-27T19:43:24.6935436Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	UNKNOWN STEP	2025-09-27T19:43:24.6936461Z   OPAMCLI: 2.0
+format	UNKNOWN STEP	2025-09-27T19:43:24.6936632Z   OPAMCOLOR: always
+format	UNKNOWN STEP	2025-09-27T19:43:24.6936825Z   OPAMERRLOGLEN: 0
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937008Z   OPAMJOBS: 4
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937177Z   OPAMPRECISETRACKING: 1
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937373Z   OPAMSOLVERTIMEOUT: 1000
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937561Z   OPAMYES: 1
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937711Z   CLICOLOR_FORCE: 1
+format	UNKNOWN STEP	2025-09-27T19:43:24.6937912Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:43:24.9334048Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+format	UNKNOWN STEP	2025-09-27T19:43:24.9334555Z 
+format	UNKNOWN STEP	2025-09-27T19:43:24.9334893Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:43:28.5437041Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+format	UNKNOWN STEP	2025-09-27T19:43:45.0394722Z The following actions will be performed:
+format	UNKNOWN STEP	2025-09-27T19:43:45.0399543Z   [32m∗[0m install [01mocamlbuild[0m        0.16.1   [required by fpath, astring, uuseg]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0402468Z   [32m∗[0m install [01mcmdliner[0m          1.3.0    [required by ocamlformat]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0403255Z   [32m∗[0m install [01mconf-gmp[0m          5        [required by zarith]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0404082Z   [32m∗[0m install [01mconf-pkg-config[0m   4        [required by zarith]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0404959Z   [32m∗[0m install [01mocamlfind[0m         1.9.8    [required by coq-core]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0405826Z   [32m∗[0m install [01mdune[0m              3.20.2
+format	UNKNOWN STEP	2025-09-27T19:43:45.0406679Z   [32m∗[0m install [01mzarith[0m            1.14     [required by coq-core]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0407733Z   [32m∗[0m install [01mtopkg[0m             1.1.0    [required by fpath, astring, uuseg]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0408961Z   [32m∗[0m install [01mbase-bytes[0m        base     [required by ocp-indent]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0409924Z   [32m∗[0m install [01msexplib0[0m          v0.16.0  [required by base]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0410881Z   [32m∗[0m install [01mresult[0m            1.5      [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0411892Z   [32m∗[0m install [01mre[0m                1.14.0   [required by ocamlformat]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0413418Z   [32m∗[0m install [01mocaml-version[0m     4.0.1    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0414485Z   [32m∗[0m install [01mmenhirSdk[0m         20250912 [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0415408Z   [32m∗[0m install [01mmenhirLib[0m         20250912 [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0416341Z   [32m∗[0m install [01mmenhirCST[0m         20250912 [required by menhir]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0417245Z   [32m∗[0m install [01mfix[0m               20250919 [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0418390Z   [32m∗[0m install [01meither[0m            1.0.0    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0419389Z   [32m∗[0m install [01mdune-build-info[0m   3.20.2   [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0420348Z   [32m∗[0m install [01mcsexp[0m             1.5.2    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0421293Z   [32m∗[0m install [01mcamlp-streams[0m     5.0.1    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0422114Z   [32m∗[0m install [01mcoq-core[0m          8.18.0
+format	UNKNOWN STEP	2025-09-27T19:43:45.0423250Z   [32m∗[0m install [01muutf[0m              1.0.4    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0424152Z   [32m∗[0m install [01muucp[0m              17.0.0   [required by uuseg]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0425018Z   [32m∗[0m install [01mastring[0m           0.8.5    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0425659Z   [32m∗[0m install [01mocp-indent[0m        1.8.1    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0426153Z   [32m∗[0m install [01mmenhir[0m            20250912 [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0426611Z   [32m∗[0m install [01mdune-configurator[0m 3.20.2   [required by base]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0427041Z   [32m∗[0m install [01mcoqide-server[0m     8.18.0   [required by coq]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0427458Z   [32m∗[0m install [01mcoq-stdlib[0m        8.18.0   [required by coq]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0428649Z   [32m∗[0m install [01muuseg[0m             17.0.0   [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0429592Z   [32m∗[0m install [01mfpath[0m             0.7.3    [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0430547Z   [32m∗[0m install [01mbase[0m              v0.16.4  [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0431296Z   [32m∗[0m install [01mcoq[0m               8.18.0
+format	UNKNOWN STEP	2025-09-27T19:43:45.0432056Z   [32m∗[0m install [01mstdio[0m             v0.16.0  [required by ocamlformat-lib]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0432980Z   [32m∗[0m install [01mocamlformat-lib[0m   0.26.2   [required by ocamlformat]
+format	UNKNOWN STEP	2025-09-27T19:43:45.0433726Z   [32m∗[0m install [01mocamlformat[0m       0.26.2
+format	UNKNOWN STEP	2025-09-27T19:43:45.0434241Z ===== [32m∗[0m 37 =====
+format	UNKNOWN STEP	2025-09-27T19:43:45.0434460Z 
+format	UNKNOWN STEP	2025-09-27T19:43:45.0434933Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:43:45.3875607Z [36m⬇[0m retrieved [01mcamlp-streams[0m.5.0.1  (https://github.com/ocaml/camlp-streams/archive/v5.0.1.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:45.5206302Z [36m⬇[0m retrieved [01mbase[0m.v0.16.4  (https://github.com/janestreet/base/archive/refs/tags/v0.16.4.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:45.5759344Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+format	UNKNOWN STEP	2025-09-27T19:43:48.0145400Z [32m∗[0m installed [01mconf-gmp[0m.5
+format	UNKNOWN STEP	2025-09-27T19:43:48.0271838Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+format	UNKNOWN STEP	2025-09-27T19:43:48.0372600Z [36m⬇[0m retrieved [01mastring[0m.0.8.5  (https://erratique.ch/software/astring/releases/astring-0.8.5.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:48.0787781Z [36m⬇[0m retrieved [01mcmdliner[0m.1.3.0  (https://erratique.ch/software/cmdliner/releases/cmdliner-1.3.0.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:49.3879242Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:50.0109127Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+format	UNKNOWN STEP	2025-09-27T19:43:50.4054820Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+format	UNKNOWN STEP	2025-09-27T19:43:51.7867175Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+format	UNKNOWN STEP	2025-09-27T19:43:51.8381314Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:51.9230377Z [32m∗[0m installed [01mcmdliner[0m.1.3.0
+format	UNKNOWN STEP	2025-09-27T19:43:54.2124142Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:55.3329073Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (cached)
+format	UNKNOWN STEP	2025-09-27T19:43:55.9639735Z [36m⬇[0m retrieved [01mdune-build-info[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:56.0005392Z [36m⬇[0m retrieved [01meither[0m.1.0.0  (https://github.com/mirage/either/releases/download/1.0.0/either-1.0.0.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:56.5069808Z [36m⬇[0m retrieved [01mfpath[0m.0.7.3  (https://erratique.ch/software/fpath/releases/fpath-0.7.3.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:56.6905930Z [36m⬇[0m retrieved [01mfix[0m.20250919  (https://gitlab.inria.fr/fpottier/fix/-/archive/20250919/archive.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:57.3180715Z [36m⬇[0m retrieved [01mmenhir[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:57.5346905Z [36m⬇[0m retrieved [01mmenhirSdk[0m.20250912  (cached)
+format	UNKNOWN STEP	2025-09-27T19:43:57.8956272Z [36m⬇[0m retrieved [01mmenhirCST[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:57.9855405Z [36m⬇[0m retrieved [01mocaml-version[0m.4.0.1  (https://github.com/ocurrent/ocaml-version/releases/download/v4.0.1/ocaml-version-4.0.1.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:58.1469511Z [36m⬇[0m retrieved [01mmenhirLib[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:58.5271516Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:58.6804086Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:59.2474575Z [36m⬇[0m retrieved [01mocamlformat[0m.0.26.2  (https://github.com/ocaml-ppx/ocamlformat/releases/download/0.26.2/ocamlformat-0.26.2.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:59.4320641Z [36m⬇[0m retrieved [01mocp-indent[0m.1.8.1  (https://github.com/OCamlPro/ocp-indent/archive/1.8.1.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:43:59.6960693Z [36m⬇[0m retrieved [01mocamlformat-lib[0m.0.26.2  (https://github.com/ocaml-ppx/ocamlformat/releases/download/0.26.2/ocamlformat-0.26.2.tbz)
+format	UNKNOWN STEP	2025-09-27T19:43:59.9372183Z [36m⬇[0m retrieved [01mresult[0m.1.5  (https://github.com/janestreet/result/releases/download/1.5/result-1.5.tbz)
+format	UNKNOWN STEP	2025-09-27T19:44:00.0042038Z [36m⬇[0m retrieved [01mre[0m.1.14.0  (https://github.com/ocaml/ocaml-re/archive/refs/tags/1.14.0.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:44:00.0383760Z [36m⬇[0m retrieved [01msexplib0[0m.v0.16.0  (https://ocaml.janestreet.com/ocaml-core/v0.16/files/sexplib0-v0.16.0.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:44:00.2072783Z [36m⬇[0m retrieved [01mstdio[0m.v0.16.0  (https://ocaml.janestreet.com/ocaml-core/v0.16/files/stdio-v0.16.0.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:44:00.8249666Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+format	UNKNOWN STEP	2025-09-27T19:44:00.8435255Z [36m⬇[0m retrieved [01muuseg[0m.17.0.0  (https://erratique.ch/software/uuseg/releases/uuseg-17.0.0.tbz)
+format	UNKNOWN STEP	2025-09-27T19:44:01.3899486Z [36m⬇[0m retrieved [01muucp[0m.17.0.0  (https://erratique.ch/software/uucp/releases/uucp-17.0.0.tbz)
+format	UNKNOWN STEP	2025-09-27T19:44:01.4589382Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+format	UNKNOWN STEP	2025-09-27T19:44:01.4753133Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+format	UNKNOWN STEP	2025-09-27T19:44:03.8058815Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+format	UNKNOWN STEP	2025-09-27T19:44:03.8186445Z [32m∗[0m installed [01mbase-bytes[0m.base
+format	UNKNOWN STEP	2025-09-27T19:44:06.8179909Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+format	UNKNOWN STEP	2025-09-27T19:44:07.7358467Z [32m∗[0m installed [01mzarith[0m.1.14
+format	UNKNOWN STEP	2025-09-27T19:44:12.3158747Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+format	UNKNOWN STEP	2025-09-27T19:44:14.5171612Z [32m∗[0m installed [01muutf[0m.1.0.4
+format	UNKNOWN STEP	2025-09-27T19:44:15.0142954Z [32m∗[0m installed [01mastring[0m.0.8.5
+format	UNKNOWN STEP	2025-09-27T19:44:16.2334825Z [32m∗[0m installed [01mfpath[0m.0.7.3
+format	UNKNOWN STEP	2025-09-27T19:44:28.6342201Z [32m∗[0m installed [01mdune[0m.3.20.2
+format	UNKNOWN STEP	2025-09-27T19:44:29.6356003Z [32m∗[0m installed [01mcamlp-streams[0m.5.0.1
+format	UNKNOWN STEP	2025-09-27T19:44:29.6499496Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+format	UNKNOWN STEP	2025-09-27T19:44:30.7403237Z [32m∗[0m installed [01meither[0m.1.0.0
+format	UNKNOWN STEP	2025-09-27T19:44:30.7750559Z [32m∗[0m installed [01mdune-build-info[0m.3.20.2
+format	UNKNOWN STEP	2025-09-27T19:44:32.2913105Z [32m∗[0m installed [01mfix[0m.20250919
+format	UNKNOWN STEP	2025-09-27T19:44:32.9714292Z [32m∗[0m installed [01mmenhirCST[0m.20250912
+format	UNKNOWN STEP	2025-09-27T19:44:33.6533818Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+format	UNKNOWN STEP	2025-09-27T19:44:34.2686091Z [32m∗[0m installed [01mmenhirLib[0m.20250912
+format	UNKNOWN STEP	2025-09-27T19:44:34.5266296Z [32m∗[0m installed [01mmenhirSdk[0m.20250912
+format	UNKNOWN STEP	2025-09-27T19:44:34.9239984Z [32m∗[0m installed [01mocaml-version[0m.4.0.1
+format	UNKNOWN STEP	2025-09-27T19:44:37.3597518Z [32m∗[0m installed [01mocp-indent[0m.1.8.1
+format	UNKNOWN STEP	2025-09-27T19:44:41.0442427Z [32m∗[0m installed [01mre[0m.1.14.0
+format	UNKNOWN STEP	2025-09-27T19:44:41.3527188Z [32m∗[0m installed [01mresult[0m.1.5
+format	UNKNOWN STEP	2025-09-27T19:44:42.9365223Z [32m∗[0m installed [01msexplib0[0m.v0.16.0
+format	UNKNOWN STEP	2025-09-27T19:44:49.3452713Z [32m∗[0m installed [01muucp[0m.17.0.0
+format	UNKNOWN STEP	2025-09-27T19:44:55.0093539Z [32m∗[0m installed [01muuseg[0m.17.0.0
+format	UNKNOWN STEP	2025-09-27T19:45:02.2009538Z [32m∗[0m installed [01mbase[0m.v0.16.4
+format	UNKNOWN STEP	2025-09-27T19:45:03.0167536Z [32m∗[0m installed [01mstdio[0m.v0.16.0
+format	UNKNOWN STEP	2025-09-27T19:45:08.5089905Z [32m∗[0m installed [01mmenhir[0m.20250912
+format	UNKNOWN STEP	2025-09-27T19:45:25.9814783Z [32m∗[0m installed [01mocamlformat-lib[0m.0.26.2
+format	UNKNOWN STEP	2025-09-27T19:45:27.8623403Z [32m∗[0m installed [01mocamlformat[0m.0.26.2
+format	UNKNOWN STEP	2025-09-27T19:45:44.7330253Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+format	UNKNOWN STEP	2025-09-27T19:45:48.5655028Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+format	UNKNOWN STEP	2025-09-27T19:48:09.0290427Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+format	UNKNOWN STEP	2025-09-27T19:48:09.4532055Z [32m∗[0m installed [01mcoq[0m.8.18.0
+format	UNKNOWN STEP	2025-09-27T19:48:12.0170547Z Done.
+format	UNKNOWN STEP	2025-09-27T19:48:12.0174353Z 
+format	UNKNOWN STEP	2025-09-27T19:48:12.0175125Z [36m<><>[0m [01mocp-indent.1.8.1 installed successfully[0m [36m><><><><><><><><><><><><><><><><><>[0m
+format	UNKNOWN STEP	2025-09-27T19:48:12.0176382Z [32m=> [0mThis package requires additional configuration for use in editors. Install package 'user-setup', or manually:
+format	UNKNOWN STEP	2025-09-27T19:48:12.0177129Z 
+format	UNKNOWN STEP	2025-09-27T19:48:12.0177301Z    * for Emacs, add these lines to ~/.emacs:
+format	UNKNOWN STEP	2025-09-27T19:48:12.0177927Z      (add-to-list 'load-path "/home/runner/work/latex_perf/latex_perf/_opam/share/emacs/site-lisp")
+format	UNKNOWN STEP	2025-09-27T19:48:12.0182787Z      (require 'ocp-indent)
+format	UNKNOWN STEP	2025-09-27T19:48:12.0183010Z 
+format	UNKNOWN STEP	2025-09-27T19:48:12.0183145Z    * for Vim, add this line to ~/.vimrc:
+format	UNKNOWN STEP	2025-09-27T19:48:12.0183770Z      set rtp^="/home/runner/work/latex_perf/latex_perf/_opam/share/ocp-indent/vim"
+format	UNKNOWN STEP	2025-09-27T19:48:12.0184628Z # Run [01meval $(opam env)[0m to update the current shell environment
+format	UNKNOWN STEP	2025-09-27T19:48:13.3738840Z ##[group]Run set -e
+format	UNKNOWN STEP	2025-09-27T19:48:13.3739124Z [36;1mset -e[0m
+format	UNKNOWN STEP	2025-09-27T19:48:13.3739322Z [36;1mopam exec -- dune fmt[0m
+format	UNKNOWN STEP	2025-09-27T19:48:13.3739552Z [36;1mgit diff --exit-code[0m
+format	UNKNOWN STEP	2025-09-27T19:48:13.3766549Z shell: /usr/bin/bash -e {0}
+format	UNKNOWN STEP	2025-09-27T19:48:13.3766761Z env:
+format	UNKNOWN STEP	2025-09-27T19:48:13.3767705Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	UNKNOWN STEP	2025-09-27T19:48:13.3769403Z   OPAMCLI: 2.0
+format	UNKNOWN STEP	2025-09-27T19:48:13.3769577Z   OPAMCOLOR: always
+format	UNKNOWN STEP	2025-09-27T19:48:13.3769750Z   OPAMERRLOGLEN: 0
+format	UNKNOWN STEP	2025-09-27T19:48:13.3769916Z   OPAMJOBS: 4
+format	UNKNOWN STEP	2025-09-27T19:48:13.3770081Z   OPAMPRECISETRACKING: 1
+format	UNKNOWN STEP	2025-09-27T19:48:13.3770288Z   OPAMSOLVERTIMEOUT: 1000
+format	UNKNOWN STEP	2025-09-27T19:48:13.3770470Z   OPAMYES: 1
+format	UNKNOWN STEP	2025-09-27T19:48:13.3770627Z   CLICOLOR_FORCE: 1
+format	UNKNOWN STEP	2025-09-27T19:48:13.3770830Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:48:14.4198744Z Post job cleanup.
+format	UNKNOWN STEP	2025-09-27T19:48:14.4226681Z Post job cleanup.
+format	UNKNOWN STEP	2025-09-27T19:48:14.5817184Z ##[group]Save the opam download cache
+format	UNKNOWN STEP	2025-09-27T19:48:14.6001591Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+format	UNKNOWN STEP	2025-09-27T19:48:14.7171000Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0fj/YaAAAAAAq1hkA2CbWTIw4pNnYF0urQ0hJMzBFREdFMDIwOABFZGdl
+format	UNKNOWN STEP	2025-09-27T19:48:14.7208450Z ##[endgroup]
+format	UNKNOWN STEP	2025-09-27T19:48:14.7325277Z Post job cleanup.
+format	UNKNOWN STEP	2025-09-27T19:48:14.8295335Z [command]/usr/bin/git version
+format	UNKNOWN STEP	2025-09-27T19:48:14.8331948Z git version 2.51.0
+format	UNKNOWN STEP	2025-09-27T19:48:14.8376639Z Temporarily overriding HOME='/home/runner/work/_temp/eb97eec6-a3e3-4888-8e01-414014a75310' before making global git config changes
+format	UNKNOWN STEP	2025-09-27T19:48:14.8377888Z Adding repository directory to the temporary git global config as a safe directory
+format	UNKNOWN STEP	2025-09-27T19:48:14.8383341Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+format	UNKNOWN STEP	2025-09-27T19:48:14.8421003Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+format	UNKNOWN STEP	2025-09-27T19:48:14.8453818Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+format	UNKNOWN STEP	2025-09-27T19:48:14.8683345Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+format	UNKNOWN STEP	2025-09-27T19:48:14.8705627Z http.https://github.com/.extraheader
+format	UNKNOWN STEP	2025-09-27T19:48:14.8718631Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+format	UNKNOWN STEP	2025-09-27T19:48:14.8750587Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+format	UNKNOWN STEP	2025-09-27T19:48:14.9087778Z Cleaning up orphan processes
+build	UNKNOWN STEP	﻿2025-09-27T19:38:50.4065181Z Current runner version: '2.328.0'
+build	UNKNOWN STEP	2025-09-27T19:38:50.4089057Z ##[group]Runner Image Provisioner
+build	UNKNOWN STEP	2025-09-27T19:38:50.4089883Z Hosted Compute Agent
+build	UNKNOWN STEP	2025-09-27T19:38:50.4090520Z Version: 20250912.392
+build	UNKNOWN STEP	2025-09-27T19:38:50.4091180Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+build	UNKNOWN STEP	2025-09-27T19:38:50.4091861Z Build Date: 2025-09-12T15:23:14Z
+build	UNKNOWN STEP	2025-09-27T19:38:50.4092518Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:50.4093059Z ##[group]Operating System
+build	UNKNOWN STEP	2025-09-27T19:38:50.4093646Z Ubuntu
+build	UNKNOWN STEP	2025-09-27T19:38:50.4094091Z 22.04.5
+build	UNKNOWN STEP	2025-09-27T19:38:50.4094654Z LTS
+build	UNKNOWN STEP	2025-09-27T19:38:50.4095105Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:50.4095805Z ##[group]Runner Image
+build	UNKNOWN STEP	2025-09-27T19:38:50.4096479Z Image: ubuntu-22.04
+build	UNKNOWN STEP	2025-09-27T19:38:50.4096980Z Version: 20250922.79.1
+build	UNKNOWN STEP	2025-09-27T19:38:50.4098031Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20250922.79/images/ubuntu/Ubuntu2204-Readme.md
+build	UNKNOWN STEP	2025-09-27T19:38:50.4099640Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20250922.79
+build	UNKNOWN STEP	2025-09-27T19:38:50.4100590Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:50.4103082Z ##[group]GITHUB_TOKEN Permissions
+build	UNKNOWN STEP	2025-09-27T19:38:50.4105253Z Actions: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4106238Z Attestations: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4106791Z Checks: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4107367Z Contents: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4107964Z Deployments: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4108479Z Discussions: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4109073Z Issues: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4109575Z Metadata: read
+build	UNKNOWN STEP	2025-09-27T19:38:50.4110100Z Models: read
+build	UNKNOWN STEP	2025-09-27T19:38:50.4110591Z Packages: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4111142Z Pages: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4111663Z PullRequests: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4112246Z RepositoryProjects: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4112916Z SecurityEvents: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4113545Z Statuses: write
+build	UNKNOWN STEP	2025-09-27T19:38:50.4114114Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:50.4116297Z Secret source: Actions
+build	UNKNOWN STEP	2025-09-27T19:38:50.4117180Z Prepare workflow directory
+build	UNKNOWN STEP	2025-09-27T19:38:50.4436779Z Prepare all required actions
+build	UNKNOWN STEP	2025-09-27T19:38:50.4477950Z Getting action download info
+build	UNKNOWN STEP	2025-09-27T19:38:50.8270429Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+build	UNKNOWN STEP	2025-09-27T19:38:51.1735229Z Complete job name: build
+build	UNKNOWN STEP	2025-09-27T19:38:51.2494989Z ##[group]Run actions/checkout@v4
+build	UNKNOWN STEP	2025-09-27T19:38:51.2495998Z with:
+build	UNKNOWN STEP	2025-09-27T19:38:51.2496425Z   repository: ClanClanClanClan/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:51.2497091Z   token: ***
+build	UNKNOWN STEP	2025-09-27T19:38:51.2497467Z   ssh-strict: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2497857Z   ssh-user: git
+build	UNKNOWN STEP	2025-09-27T19:38:51.2498250Z   persist-credentials: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2498687Z   clean: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2499070Z   sparse-checkout-cone-mode: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2499528Z   fetch-depth: 1
+build	UNKNOWN STEP	2025-09-27T19:38:51.2499901Z   fetch-tags: false
+build	UNKNOWN STEP	2025-09-27T19:38:51.2500293Z   show-progress: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2500685Z   lfs: false
+build	UNKNOWN STEP	2025-09-27T19:38:51.2501044Z   submodules: false
+build	UNKNOWN STEP	2025-09-27T19:38:51.2501444Z   set-safe-directory: true
+build	UNKNOWN STEP	2025-09-27T19:38:51.2502067Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:51.3569654Z Syncing repository: ClanClanClanClan/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:51.3571421Z ##[group]Getting Git version info
+build	UNKNOWN STEP	2025-09-27T19:38:51.3572240Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+build	UNKNOWN STEP	2025-09-27T19:38:51.3573239Z [command]/usr/bin/git version
+build	UNKNOWN STEP	2025-09-27T19:38:51.3671325Z git version 2.51.0
+build	UNKNOWN STEP	2025-09-27T19:38:51.3697540Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:51.3713392Z Temporarily overriding HOME='/home/runner/work/_temp/0f7ec50e-399c-4be3-866d-0ec303bd03be' before making global git config changes
+build	UNKNOWN STEP	2025-09-27T19:38:51.3716071Z Adding repository directory to the temporary git global config as a safe directory
+build	UNKNOWN STEP	2025-09-27T19:38:51.3726962Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:51.3758828Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+build	UNKNOWN STEP	2025-09-27T19:38:51.3762959Z ##[group]Initializing the repository
+build	UNKNOWN STEP	2025-09-27T19:38:51.3767671Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:51.3900609Z hint: Using 'master' as the name for the initial branch. This default branch name
+build	UNKNOWN STEP	2025-09-27T19:38:51.3901739Z hint: is subject to change. To configure the initial branch name to use in all
+build	UNKNOWN STEP	2025-09-27T19:38:51.3902628Z hint: of your new repositories, which will suppress this warning, call:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3903513Z hint:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3904297Z hint: 	git config --global init.defaultBranch <name>
+build	UNKNOWN STEP	2025-09-27T19:38:51.3905245Z hint:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3906363Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+build	UNKNOWN STEP	2025-09-27T19:38:51.3907799Z hint: 'development'. The just-created branch can be renamed via this command:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3908853Z hint:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3909239Z hint: 	git branch -m <name>
+build	UNKNOWN STEP	2025-09-27T19:38:51.3909662Z hint:
+build	UNKNOWN STEP	2025-09-27T19:38:51.3910238Z hint: Disable this message with "git config set advice.defaultBranchName false"
+build	UNKNOWN STEP	2025-09-27T19:38:51.3911202Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+build	UNKNOWN STEP	2025-09-27T19:38:51.3918860Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:51.3951904Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:51.3952653Z ##[group]Disabling automatic garbage collection
+build	UNKNOWN STEP	2025-09-27T19:38:51.3955836Z [command]/usr/bin/git config --local gc.auto 0
+build	UNKNOWN STEP	2025-09-27T19:38:51.3983169Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:51.3983833Z ##[group]Setting up auth
+build	UNKNOWN STEP	2025-09-27T19:38:51.3989716Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	UNKNOWN STEP	2025-09-27T19:38:51.4018030Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	UNKNOWN STEP	2025-09-27T19:38:51.4360388Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	UNKNOWN STEP	2025-09-27T19:38:51.4390660Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	UNKNOWN STEP	2025-09-27T19:38:51.4633769Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build	UNKNOWN STEP	2025-09-27T19:38:51.4672094Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:51.4673285Z ##[group]Fetching the repository
+build	UNKNOWN STEP	2025-09-27T19:38:51.4692577Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d00dbc0e857bf893fdda045c17709c0fd5b9979e:refs/remotes/origin/fix-math-strip
+build	UNKNOWN STEP	2025-09-27T19:38:52.1427169Z From https://github.com/ClanClanClanClan/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:38:52.1428271Z  * [new ref]         d00dbc0e857bf893fdda045c17709c0fd5b9979e -> origin/fix-math-strip
+build	UNKNOWN STEP	2025-09-27T19:38:52.1456790Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:52.1457813Z ##[group]Determining the checkout info
+build	UNKNOWN STEP	2025-09-27T19:38:52.1459358Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:52.1464244Z [command]/usr/bin/git sparse-checkout disable
+build	UNKNOWN STEP	2025-09-27T19:38:52.1502297Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+build	UNKNOWN STEP	2025-09-27T19:38:52.1529738Z ##[group]Checking out the ref
+build	UNKNOWN STEP	2025-09-27T19:38:52.1532848Z [command]/usr/bin/git checkout --progress --force -B fix-math-strip refs/remotes/origin/fix-math-strip
+build	UNKNOWN STEP	2025-09-27T19:38:52.2027222Z Switched to a new branch 'fix-math-strip'
+build	UNKNOWN STEP	2025-09-27T19:38:52.2029372Z branch 'fix-math-strip' set up to track 'origin/fix-math-strip'.
+build	UNKNOWN STEP	2025-09-27T19:38:52.2038026Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:52.2074130Z [command]/usr/bin/git log -1 --format=%H
+build	UNKNOWN STEP	2025-09-27T19:38:52.2097922Z d00dbc0e857bf893fdda045c17709c0fd5b9979e
+build	UNKNOWN STEP	2025-09-27T19:38:52.2407839Z Prepare all required actions
+build	UNKNOWN STEP	2025-09-27T19:38:52.2408986Z Getting action download info
+build	UNKNOWN STEP	2025-09-27T19:38:52.4154287Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+build	UNKNOWN STEP	2025-09-27T19:38:53.9102583Z ##[group]Run ./.github/actions/setup-ocaml
+build	UNKNOWN STEP	2025-09-27T19:38:53.9102930Z with:
+build	UNKNOWN STEP	2025-09-27T19:38:53.9103145Z   ocaml-compiler: 4.14.1
+build	UNKNOWN STEP	2025-09-27T19:38:53.9103406Z   opam-depext: false
+build	UNKNOWN STEP	2025-09-27T19:38:53.9103867Z   allow-prerelease-opam: false
+build	UNKNOWN STEP	2025-09-27T19:38:53.9104139Z   opam-pin: true
+build	UNKNOWN STEP	2025-09-27T19:38:53.9104383Z   opam-local-packages: *.opam
+build	UNKNOWN STEP	2025-09-27T19:38:53.9104654Z   opam-disable-sandboxing: false
+build	UNKNOWN STEP	2025-09-27T19:38:53.9104911Z   dune-cache: false
+build	UNKNOWN STEP	2025-09-27T19:38:53.9105124Z   cache-prefix: v1
+build	UNKNOWN STEP	2025-09-27T19:38:53.9105350Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:53.9200162Z ##[group]Run sudo apt-get update
+build	UNKNOWN STEP	2025-09-27T19:38:53.9200561Z [36;1msudo apt-get update[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9200861Z [36;1msudo apt-get install -y \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9201226Z [36;1m  bubblewrap \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9201484Z [36;1m  g++-multilib \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9201721Z [36;1m  gcc-multilib \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9201957Z [36;1m  mercurial \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9202188Z [36;1m  musl-tools \[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9202405Z [36;1m  rsync[0m
+build	UNKNOWN STEP	2025-09-27T19:38:53.9233400Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	UNKNOWN STEP	2025-09-27T19:38:53.9233785Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:38:54.0289207Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+build	UNKNOWN STEP	2025-09-27T19:38:54.0611907Z Hit:2 http://azure.archive.ubuntu.com/ubuntu jammy InRelease
+build	UNKNOWN STEP	2025-09-27T19:38:54.0636303Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.0694191Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.0712779Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.1002547Z Hit:6 https://packages.microsoft.com/repos/azure-cli jammy InRelease
+build	UNKNOWN STEP	2025-09-27T19:38:54.1821833Z Get:7 https://packages.microsoft.com/ubuntu/22.04/prod jammy InRelease [3632 B]
+build	UNKNOWN STEP	2025-09-27T19:38:54.2718353Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2940 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3008874Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [459 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3074206Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 c-n-f Metadata [19.0 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3117691Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [4562 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3564983Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [841 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3626914Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1228 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3758718Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [305 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3766156Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [29.5 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3787512Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.0 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.3804278Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [672 B]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5397445Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2688 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5525812Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-security/main Translation-en [394 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5557287Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [13.9 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5596395Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [4413 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5830464Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted Translation-en [818 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5895767Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [997 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.5979237Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe Translation-en [218 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.6006620Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [22.1 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.6312382Z Get:26 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main arm64 Packages [84.9 kB]
+build	UNKNOWN STEP	2025-09-27T19:38:54.6412133Z Get:27 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main amd64 Packages [255 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:03.4173506Z Fetched 20.7 MB in 2s (8619 kB/s)
+build	UNKNOWN STEP	2025-09-27T19:39:04.2576143Z Reading package lists...
+build	UNKNOWN STEP	2025-09-27T19:39:04.3170305Z Reading package lists...
+build	UNKNOWN STEP	2025-09-27T19:39:04.4875350Z Building dependency tree...
+build	UNKNOWN STEP	2025-09-27T19:39:04.4886818Z Reading state information...
+build	UNKNOWN STEP	2025-09-27T19:39:04.6326030Z mercurial is already the newest version (6.1.1-1ubuntu1).
+build	UNKNOWN STEP	2025-09-27T19:39:04.6326881Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+build	UNKNOWN STEP	2025-09-27T19:39:04.6327865Z The following additional packages will be installed:
+build	UNKNOWN STEP	2025-09-27T19:39:04.6329013Z   g++-11-multilib gcc-11-multilib lib32asan6 lib32atomic1 lib32gcc-11-dev
+build	UNKNOWN STEP	2025-09-27T19:39:04.6330437Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-11-dev lib32ubsan1
+build	UNKNOWN STEP	2025-09-27T19:39:04.6332281Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan6 libx32atomic1
+build	UNKNOWN STEP	2025-09-27T19:39:04.6332954Z   libx32gcc-11-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+build	UNKNOWN STEP	2025-09-27T19:39:04.6333547Z   libx32stdc++-11-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+build	UNKNOWN STEP	2025-09-27T19:39:04.6337325Z Suggested packages:
+build	UNKNOWN STEP	2025-09-27T19:39:04.6337754Z   lib32stdc++6-11-dbg libx32stdc++6-11-dbg
+build	UNKNOWN STEP	2025-09-27T19:39:04.6338466Z Recommended packages:
+build	UNKNOWN STEP	2025-09-27T19:39:04.6338910Z   linux-musl-dev
+build	UNKNOWN STEP	2025-09-27T19:39:04.6813972Z The following NEW packages will be installed:
+build	UNKNOWN STEP	2025-09-27T19:39:04.6814778Z   bubblewrap g++-11-multilib g++-multilib gcc-11-multilib gcc-multilib
+build	UNKNOWN STEP	2025-09-27T19:39:04.6815913Z   lib32asan6 lib32atomic1 lib32gcc-11-dev lib32gomp1 lib32itm1 lib32quadmath0
+build	UNKNOWN STEP	2025-09-27T19:39:04.6817152Z   lib32stdc++-11-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+build	UNKNOWN STEP	2025-09-27T19:39:04.6818124Z   libx32asan6 libx32atomic1 libx32gcc-11-dev libx32gcc-s1 libx32gomp1
+build	UNKNOWN STEP	2025-09-27T19:39:04.6819486Z   libx32itm1 libx32quadmath0 libx32stdc++-11-dev libx32stdc++6 libx32ubsan1
+build	UNKNOWN STEP	2025-09-27T19:39:04.6820593Z   musl musl-dev musl-tools
+build	UNKNOWN STEP	2025-09-27T19:39:04.6983915Z 0 upgraded, 29 newly installed, 0 to remove and 32 not upgraded.
+build	UNKNOWN STEP	2025-09-27T19:39:04.6984533Z Need to get 21.1 MB of archives.
+build	UNKNOWN STEP	2025-09-27T19:39:04.6985064Z After this operation, 93.4 MB of additional disk space will be used.
+build	UNKNOWN STEP	2025-09-27T19:39:04.6985931Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+build	UNKNOWN STEP	2025-09-27T19:39:04.7883149Z Get:2 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 bubblewrap amd64 0.6.1-1ubuntu0.1 [46.3 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:04.8570898Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-i386 amd64 2.35-0ubuntu3.11 [1445 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.0562457Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-x32 amd64 2.35-0ubuntu3.11 [2978 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.3245722Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-x32 amd64 2.35-0ubuntu3.11 [1632 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.5251914Z Get:6 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-s1 amd64 12.3.0-1ubuntu1~22.04.2 [54.0 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.5927801Z Get:7 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [133 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.6613687Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [127 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.7339093Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [32.0 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.8021758Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [30.2 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:05.8703075Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [8512 B]
+build	UNKNOWN STEP	2025-09-27T19:39:05.9377970Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [10.2 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.0069986Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2154 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.2700953Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2128 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.4764354Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [959 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.6173277Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++6 amd64 12.3.0-1ubuntu1~22.04.2 [682 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.7536476Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [963 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.8908453Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [244 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:06.9596641Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [156 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:07.0296776Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2339 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:07.2441780Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2106 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:07.4572960Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [880 B]
+build	UNKNOWN STEP	2025-09-27T19:39:07.5249145Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [989 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:07.6612168Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [906 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:07.7971771Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [894 B]
+build	UNKNOWN STEP	2025-09-27T19:39:07.8645152Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 gcc-multilib amd64 4:11.2.0-1ubuntu1 [1382 B]
+build	UNKNOWN STEP	2025-09-27T19:39:07.9330756Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 g++-multilib amd64 4:11.2.0-1ubuntu1 [854 B]
+build	UNKNOWN STEP	2025-09-27T19:39:08.0015990Z Get:28 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl amd64 1.2.2-4 [407 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:08.1348400Z Get:29 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-dev amd64 1.2.2-4 [605 kB]
+build	UNKNOWN STEP	2025-09-27T19:39:08.2690867Z Get:30 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-tools amd64 1.2.2-4 [5520 B]
+build	UNKNOWN STEP	2025-09-27T19:39:08.5646232Z Fetched 21.1 MB in 4s (5904 kB/s)
+build	UNKNOWN STEP	2025-09-27T19:39:08.5886542Z Selecting previously unselected package bubblewrap.
+build	UNKNOWN STEP	2025-09-27T19:39:08.6275628Z (Reading database ... 
+build	UNKNOWN STEP	2025-09-27T19:39:08.6276025Z (Reading database ... 5%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6276307Z (Reading database ... 10%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6276526Z (Reading database ... 15%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6276723Z (Reading database ... 20%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6276932Z (Reading database ... 25%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6277128Z (Reading database ... 30%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6277347Z (Reading database ... 35%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6277546Z (Reading database ... 40%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6277740Z (Reading database ... 45%
+build	UNKNOWN STEP	2025-09-27T19:39:08.6277937Z (Reading database ... 50%
+build	UNKNOWN STEP	2025-09-27T19:39:08.8090807Z (Reading database ... 55%
+build	UNKNOWN STEP	2025-09-27T19:39:09.1014183Z (Reading database ... 60%
+build	UNKNOWN STEP	2025-09-27T19:39:09.4473692Z (Reading database ... 65%
+build	UNKNOWN STEP	2025-09-27T19:39:09.6581754Z (Reading database ... 70%
+build	UNKNOWN STEP	2025-09-27T19:39:09.9479253Z (Reading database ... 75%
+build	UNKNOWN STEP	2025-09-27T19:39:10.2514873Z (Reading database ... 80%
+build	UNKNOWN STEP	2025-09-27T19:39:10.5156425Z (Reading database ... 85%
+build	UNKNOWN STEP	2025-09-27T19:39:10.7108424Z (Reading database ... 90%
+build	UNKNOWN STEP	2025-09-27T19:39:11.0070085Z (Reading database ... 95%
+build	UNKNOWN STEP	2025-09-27T19:39:11.0070613Z (Reading database ... 100%
+build	UNKNOWN STEP	2025-09-27T19:39:11.0071336Z (Reading database ... 256283 files and directories currently installed.)
+build	UNKNOWN STEP	2025-09-27T19:39:11.0138622Z Preparing to unpack .../00-bubblewrap_0.6.1-1ubuntu0.1_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.0167999Z Unpacking bubblewrap (0.6.1-1ubuntu0.1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.0552358Z Selecting previously unselected package libc6-dev-i386.
+build	UNKNOWN STEP	2025-09-27T19:39:11.0709232Z Preparing to unpack .../01-libc6-dev-i386_2.35-0ubuntu3.11_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.0723383Z Unpacking libc6-dev-i386 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.1409369Z Selecting previously unselected package libc6-x32.
+build	UNKNOWN STEP	2025-09-27T19:39:11.1569774Z Preparing to unpack .../02-libc6-x32_2.35-0ubuntu3.11_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.1594881Z Unpacking libc6-x32 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.2679507Z Selecting previously unselected package libc6-dev-x32.
+build	UNKNOWN STEP	2025-09-27T19:39:11.2838481Z Preparing to unpack .../03-libc6-dev-x32_2.35-0ubuntu3.11_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.2848479Z Unpacking libc6-dev-x32 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.3395024Z Selecting previously unselected package libx32gcc-s1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.3553455Z Preparing to unpack .../04-libx32gcc-s1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.3565382Z Unpacking libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.3799408Z Selecting previously unselected package lib32gomp1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.3958236Z Preparing to unpack .../05-lib32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.3969568Z Unpacking lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.4219656Z Selecting previously unselected package libx32gomp1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.4372610Z Preparing to unpack .../06-libx32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.4384965Z Unpacking libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.4621052Z Selecting previously unselected package lib32itm1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.4779674Z Preparing to unpack .../07-lib32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.4791675Z Unpacking lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5016416Z Selecting previously unselected package libx32itm1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.5183304Z Preparing to unpack .../08-libx32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5194774Z Unpacking libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5417080Z Selecting previously unselected package lib32atomic1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.5571886Z Preparing to unpack .../09-lib32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5582992Z Unpacking lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5801580Z Selecting previously unselected package libx32atomic1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.5954320Z Preparing to unpack .../10-libx32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.5965084Z Unpacking libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.6183449Z Selecting previously unselected package lib32asan6.
+build	UNKNOWN STEP	2025-09-27T19:39:11.6340303Z Preparing to unpack .../11-lib32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.6352575Z Unpacking lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.6840727Z Selecting previously unselected package libx32asan6.
+build	UNKNOWN STEP	2025-09-27T19:39:11.6999148Z Preparing to unpack .../12-libx32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.7010125Z Unpacking libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.7550497Z Selecting previously unselected package lib32ubsan1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.7652266Z Preparing to unpack .../13-lib32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.7664873Z Unpacking lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.8004584Z Selecting previously unselected package libx32stdc++6.
+build	UNKNOWN STEP	2025-09-27T19:39:11.8161934Z Preparing to unpack .../14-libx32stdc++6_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.8174615Z Unpacking libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.8471116Z Selecting previously unselected package libx32ubsan1.
+build	UNKNOWN STEP	2025-09-27T19:39:11.8626853Z Preparing to unpack .../15-libx32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.8639428Z Unpacking libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.8976307Z Selecting previously unselected package lib32quadmath0.
+build	UNKNOWN STEP	2025-09-27T19:39:11.9129108Z Preparing to unpack .../16-lib32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.9151594Z Unpacking lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.9397847Z Selecting previously unselected package libx32quadmath0.
+build	UNKNOWN STEP	2025-09-27T19:39:11.9558242Z Preparing to unpack .../17-libx32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.9570048Z Unpacking libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.9791504Z Selecting previously unselected package lib32gcc-11-dev.
+build	UNKNOWN STEP	2025-09-27T19:39:11.9955738Z Preparing to unpack .../18-lib32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:11.9965369Z Unpacking lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.0473962Z Selecting previously unselected package libx32gcc-11-dev.
+build	UNKNOWN STEP	2025-09-27T19:39:12.0649831Z Preparing to unpack .../19-libx32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.0713147Z Unpacking libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.1169043Z Selecting previously unselected package gcc-11-multilib.
+build	UNKNOWN STEP	2025-09-27T19:39:12.1330686Z Preparing to unpack .../20-gcc-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.1342316Z Unpacking gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.1566595Z Selecting previously unselected package lib32stdc++-11-dev.
+build	UNKNOWN STEP	2025-09-27T19:39:12.1721229Z Preparing to unpack .../21-lib32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.1732745Z Unpacking lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.2456356Z Selecting previously unselected package libx32stdc++-11-dev.
+build	UNKNOWN STEP	2025-09-27T19:39:12.2617231Z Preparing to unpack .../22-libx32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.2628633Z Unpacking libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.3200237Z Selecting previously unselected package g++-11-multilib.
+build	UNKNOWN STEP	2025-09-27T19:39:12.3359452Z Preparing to unpack .../23-g++-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.3373241Z Unpacking g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.3581844Z Selecting previously unselected package gcc-multilib.
+build	UNKNOWN STEP	2025-09-27T19:39:12.3739941Z Preparing to unpack .../24-gcc-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.3752096Z Unpacking gcc-multilib (4:11.2.0-1ubuntu1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.3957731Z Selecting previously unselected package g++-multilib.
+build	UNKNOWN STEP	2025-09-27T19:39:12.4117280Z Preparing to unpack .../25-g++-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.4126713Z Unpacking g++-multilib (4:11.2.0-1ubuntu1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.4335186Z Selecting previously unselected package musl:amd64.
+build	UNKNOWN STEP	2025-09-27T19:39:12.4491049Z Preparing to unpack .../26-musl_1.2.2-4_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.4503060Z Unpacking musl:amd64 (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.5008422Z Selecting previously unselected package musl-dev:amd64.
+build	UNKNOWN STEP	2025-09-27T19:39:12.5164147Z Preparing to unpack .../27-musl-dev_1.2.2-4_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.5176528Z Unpacking musl-dev:amd64 (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.5821332Z Selecting previously unselected package musl-tools.
+build	UNKNOWN STEP	2025-09-27T19:39:12.5979743Z Preparing to unpack .../28-musl-tools_1.2.2-4_amd64.deb ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.5990978Z Unpacking musl-tools (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6469966Z Setting up bubblewrap (0.6.1-1ubuntu0.1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6527136Z Setting up libc6-dev-i386 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6555851Z Setting up lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6588008Z Setting up lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6615135Z Setting up libc6-x32 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6652071Z Setting up libc6-dev-x32 (2.35-0ubuntu3.11) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6681340Z Setting up lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6712455Z Setting up libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6742762Z Setting up lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6769579Z Setting up musl:amd64 (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6816240Z Setting up lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6844255Z Setting up libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6897090Z Setting up lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6924344Z Setting up libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6953689Z Setting up libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.6981058Z Setting up libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7008291Z Setting up musl-dev:amd64 (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7044669Z Setting up libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7074092Z Setting up libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7102903Z Setting up libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7131488Z Setting up musl-tools (1.2.2-4) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7160423Z Setting up libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7189876Z Setting up libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7218504Z Setting up lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7248770Z Setting up lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7277144Z Setting up gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7307400Z Setting up gcc-multilib (4:11.2.0-1ubuntu1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7333406Z Setting up g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7362841Z Setting up g++-multilib (4:11.2.0-1ubuntu1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:12.7393727Z Processing triggers for libc-bin (2.35-0ubuntu3.10) ...
+build	UNKNOWN STEP	2025-09-27T19:39:16.3995614Z Processing triggers for man-db (2.10.2-1) ...
+build	UNKNOWN STEP	2025-09-27T19:39:17.7466540Z NEEDRESTART-VER: 3.5
+build	UNKNOWN STEP	2025-09-27T19:39:18.0998126Z NEEDRESTART-KCUR: 6.8.0-1031-azure
+build	UNKNOWN STEP	2025-09-27T19:39:18.0998632Z NEEDRESTART-KEXP: 6.8.0-1031-azure
+build	UNKNOWN STEP	2025-09-27T19:39:18.0998976Z NEEDRESTART-KSTA: 1
+build	UNKNOWN STEP	2025-09-27T19:39:18.1002562Z NEEDRESTART-SVC: hosted-compute-agent.service
+build	UNKNOWN STEP	2025-09-27T19:39:19.4456411Z ##[group]Run mkdir -p "$HOME/.github-tools"
+build	UNKNOWN STEP	2025-09-27T19:39:19.4456886Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4457134Z [36;1m{[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4457337Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4457642Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4457930Z [36;1m  printf '%s\n' '  args=()'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4458182Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4458457Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4458754Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4459060Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4459308Z [36;1m  printf '%s\n' '    fi'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4459606Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4459939Z [36;1m  printf '%s\n' '      continue'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4460169Z [36;1m  printf '%s\n' '    fi'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4460393Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4460624Z [36;1m  printf '%s\n' '  done'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4460872Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4461133Z [36;1m  printf '%s\n' 'fi'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4461356Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4461611Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4462051Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4462355Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+build	UNKNOWN STEP	2025-09-27T19:39:19.4490941Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	UNKNOWN STEP	2025-09-27T19:39:19.4491262Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:19.4614186Z ##[group]Run ocaml/setup-ocaml@v2
+build	UNKNOWN STEP	2025-09-27T19:39:19.4614404Z with:
+build	UNKNOWN STEP	2025-09-27T19:39:19.4614578Z   ocaml-compiler: 4.14.1
+build	UNKNOWN STEP	2025-09-27T19:39:19.4614984Z   allow-prerelease-opam: false
+build	UNKNOWN STEP	2025-09-27T19:39:19.4615195Z   opam-pin: true
+build	UNKNOWN STEP	2025-09-27T19:39:19.4615376Z   opam-depext: false
+build	UNKNOWN STEP	2025-09-27T19:39:19.4615837Z   opam-local-packages: *.opam
+build	UNKNOWN STEP	2025-09-27T19:39:19.4616074Z   opam-disable-sandboxing: false
+build	UNKNOWN STEP	2025-09-27T19:39:19.4616283Z   dune-cache: false
+build	UNKNOWN STEP	2025-09-27T19:39:19.4616457Z   cache-prefix: v1
+build	UNKNOWN STEP	2025-09-27T19:39:19.4616921Z   github-token: ***
+build	UNKNOWN STEP	2025-09-27T19:39:19.4617104Z env:
+build	UNKNOWN STEP	2025-09-27T19:39:19.4618071Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	UNKNOWN STEP	2025-09-27T19:39:19.4619089Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:19.6400249Z ##[group]Retrieve the opam cache
+build	UNKNOWN STEP	2025-09-27T19:39:20.9783873Z ##[warning]Failed to restore: Cache service responded with 400
+build	UNKNOWN STEP	2025-09-27T19:39:20.9786129Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-
+build	UNKNOWN STEP	2025-09-27T19:39:20.9787565Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:20.9787920Z ##[group]Install opam
+build	UNKNOWN STEP	2025-09-27T19:39:21.9346492Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+build	UNKNOWN STEP	2025-09-27T19:39:21.9439157Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+build	UNKNOWN STEP	2025-09-27T19:39:21.9441560Z Added opam to the path
+build	UNKNOWN STEP	2025-09-27T19:39:21.9442447Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:21.9443078Z ##[group]Initialise the opam state
+build	UNKNOWN STEP	2025-09-27T19:39:21.9467541Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+build	UNKNOWN STEP	2025-09-27T19:39:21.9995357Z Reading package lists...
+build	UNKNOWN STEP	2025-09-27T19:39:22.1686423Z Building dependency tree...
+build	UNKNOWN STEP	2025-09-27T19:39:22.1697385Z Reading state information...
+build	UNKNOWN STEP	2025-09-27T19:39:22.3298477Z g++-multilib is already the newest version (4:11.2.0-1ubuntu1).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3299143Z gcc-multilib is already the newest version (4:11.2.0-1ubuntu1).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3299728Z mercurial is already the newest version (6.1.1-1ubuntu1).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3300260Z musl-tools is already the newest version (1.2.2-4).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3300796Z bubblewrap is already the newest version (0.6.1-1ubuntu0.1).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3301382Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+build	UNKNOWN STEP	2025-09-27T19:39:22.3301976Z 0 upgraded, 0 newly installed, 0 to remove and 32 not upgraded.
+build	UNKNOWN STEP	2025-09-27T19:39:22.3336627Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+build	UNKNOWN STEP	2025-09-27T19:39:22.3468439Z No configuration file found, using built-in defaults.
+build	UNKNOWN STEP	2025-09-27T19:39:22.3472183Z Checking for available remotes: rsync and local, git, mercurial.
+build	UNKNOWN STEP	2025-09-27T19:39:22.3473421Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+build	UNKNOWN STEP	2025-09-27T19:39:22.3474065Z 
+build	UNKNOWN STEP	2025-09-27T19:39:22.3696266Z 
+build	UNKNOWN STEP	2025-09-27T19:39:22.3697364Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+build	UNKNOWN STEP	2025-09-27T19:39:25.5480854Z [[32mdefault[0m] Initialised
+build	UNKNOWN STEP	2025-09-27T19:39:37.2158613Z 
+build	UNKNOWN STEP	2025-09-27T19:39:37.2159199Z User configuration:
+build	UNKNOWN STEP	2025-09-27T19:39:37.2209061Z   Updating ~/.bash_profile.
+build	UNKNOWN STEP	2025-09-27T19:39:37.2211692Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+build	UNKNOWN STEP	2025-09-27T19:39:37.2212302Z 
+build	UNKNOWN STEP	2025-09-27T19:39:38.4511027Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:38.4512022Z ##[group]Remove the opam repositories
+build	UNKNOWN STEP	2025-09-27T19:39:38.4534963Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+build	UNKNOWN STEP	2025-09-27T19:39:38.5081586Z default
+build	UNKNOWN STEP	2025-09-27T19:39:38.5110956Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+build	UNKNOWN STEP	2025-09-27T19:39:38.5741807Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:39:38.5742593Z ##[group]Initialise the opam repositories
+build	UNKNOWN STEP	2025-09-27T19:39:38.5757445Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+build	UNKNOWN STEP	2025-09-27T19:40:13.6854665Z [[32mdefault[0m] Initialised
+build	UNKNOWN STEP	2025-09-27T19:40:25.4346320Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:40:25.7066458Z ##[group]Install OCaml
+build	UNKNOWN STEP	2025-09-27T19:40:25.7081195Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+build	UNKNOWN STEP	2025-09-27T19:40:25.9106139Z 
+build	UNKNOWN STEP	2025-09-27T19:40:25.9107272Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+build	UNKNOWN STEP	2025-09-27T19:40:25.9108027Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+build	UNKNOWN STEP	2025-09-27T19:40:30.0109410Z 
+build	UNKNOWN STEP	2025-09-27T19:40:30.0110614Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+build	UNKNOWN STEP	2025-09-27T19:40:32.4479377Z [32m∗[0m installed [01mbase-bigarray[0m.base
+build	UNKNOWN STEP	2025-09-27T19:40:32.4484969Z [32m∗[0m installed [01mbase-threads[0m.base
+build	UNKNOWN STEP	2025-09-27T19:40:32.4511174Z [32m∗[0m installed [01mbase-unix[0m.base
+build	UNKNOWN STEP	2025-09-27T19:40:32.4518685Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+build	UNKNOWN STEP	2025-09-27T19:40:32.6797733Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+build	UNKNOWN STEP	2025-09-27T19:40:33.1497424Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:06.4822950Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+build	UNKNOWN STEP	2025-09-27T19:43:06.5006453Z [32m∗[0m installed [01mocaml-config[0m.2
+build	UNKNOWN STEP	2025-09-27T19:43:06.5703489Z [32m∗[0m installed [01mocaml[0m.4.14.1
+build	UNKNOWN STEP	2025-09-27T19:43:06.9601353Z Done.
+build	UNKNOWN STEP	2025-09-27T19:43:06.9607074Z # Run [01meval $(opam env)[0m to update the current shell environment
+build	UNKNOWN STEP	2025-09-27T19:43:08.3206796Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:43:08.3207368Z ##[group]Save the opam cache
+build	UNKNOWN STEP	2025-09-27T19:43:08.3227004Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+build	UNKNOWN STEP	2025-09-27T19:43:08.5268788Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:43:08.6344676Z Updating /home/runner/.opam/repo/repos-config
+build	UNKNOWN STEP	2025-09-27T19:43:08.6345778Z Clearing repository cache
+build	UNKNOWN STEP	2025-09-27T19:43:08.6403342Z Clearing cache of downloaded files
+build	UNKNOWN STEP	2025-09-27T19:43:08.6431704Z Clearing logs
+build	UNKNOWN STEP	2025-09-27T19:43:09.5947537Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+build	UNKNOWN STEP	2025-09-27T19:43:11.4447823Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0Tz7YaAAAAACztxu/cLWISYyxJc6dJy/bUEhYMzFFREdFMDIyMABFZGdl
+build	UNKNOWN STEP	2025-09-27T19:43:11.5213674Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:43:11.5214507Z ##[group]Retrieve the opam download cache
+build	UNKNOWN STEP	2025-09-27T19:43:11.5550004Z ##[warning]Failed to restore: Cache service responded with 400
+build	UNKNOWN STEP	2025-09-27T19:43:11.5556712Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-49, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-49, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18064091290-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+build	UNKNOWN STEP	2025-09-27T19:43:11.5559675Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:43:11.5590698Z ##[group]Pin local packages
+build	UNKNOWN STEP	2025-09-27T19:43:11.5605248Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+build	UNKNOWN STEP	2025-09-27T19:43:18.1831253Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+build	UNKNOWN STEP	2025-09-27T19:43:18.2996067Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+build	UNKNOWN STEP	2025-09-27T19:43:18.2999810Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+build	UNKNOWN STEP	2025-09-27T19:43:18.3001311Z     [31merror[0m 23: Missing field 'maintainer'
+build	UNKNOWN STEP	2025-09-27T19:43:18.3002047Z   [33mwarning[0m 25: Missing field 'authors'
+build	UNKNOWN STEP	2025-09-27T19:43:18.3002740Z   [33mwarning[0m 35: Missing field 'homepage'
+build	UNKNOWN STEP	2025-09-27T19:43:18.3003501Z   [33mwarning[0m 36: Missing field 'bug-reports'
+build	UNKNOWN STEP	2025-09-27T19:43:18.3010020Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip[0m (version [01mdev[0m)
+build	UNKNOWN STEP	2025-09-27T19:43:19.5420154Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:43:19.5432574Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+build	UNKNOWN STEP	2025-09-27T19:43:19.5569276Z 2.1.6
+build	UNKNOWN STEP	2025-09-27T19:43:19.5598379Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+build	UNKNOWN STEP	2025-09-27T19:43:19.5878293Z The OCaml toplevel, version 4.14.1
+build	UNKNOWN STEP	2025-09-27T19:43:19.6007443Z ##[group]Run opam install . --deps-only --with-test -y
+build	UNKNOWN STEP	2025-09-27T19:43:19.6007810Z [36;1mopam install . --deps-only --with-test -y[0m
+build	UNKNOWN STEP	2025-09-27T19:43:19.6037432Z shell: /usr/bin/bash -e {0}
+build	UNKNOWN STEP	2025-09-27T19:43:19.6037654Z env:
+build	UNKNOWN STEP	2025-09-27T19:43:19.6038627Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	UNKNOWN STEP	2025-09-27T19:43:19.6039680Z   OPAMCLI: 2.0
+build	UNKNOWN STEP	2025-09-27T19:43:19.6039855Z   OPAMCOLOR: always
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040035Z   OPAMERRLOGLEN: 0
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040203Z   OPAMJOBS: 4
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040368Z   OPAMPRECISETRACKING: 1
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040570Z   OPAMSOLVERTIMEOUT: 1000
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040764Z   OPAMYES: 1
+build	UNKNOWN STEP	2025-09-27T19:43:19.6040918Z   CLICOLOR_FORCE: 1
+build	UNKNOWN STEP	2025-09-27T19:43:19.6041077Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:43:19.8566928Z [1;34m[NOTE][0m Ignoring uncommitted changes in /home/runner/work/latex_perf/latex_perf (`--working-dir' not active).
+build	UNKNOWN STEP	2025-09-27T19:43:20.0062085Z [[32mlatex-perfectionist.dev[0m] synchronised (git+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip)
+build	UNKNOWN STEP	2025-09-27T19:43:24.4786999Z The following actions will be performed:
+build	UNKNOWN STEP	2025-09-27T19:43:24.4788532Z   [32m∗[0m install [01mocamlbuild[0m          0.16.1
+build	UNKNOWN STEP	2025-09-27T19:43:24.4789205Z   [32m∗[0m install [01mconf-gmp[0m            5
+build	UNKNOWN STEP	2025-09-27T19:43:24.4789962Z   [32m∗[0m install [01mconf-pkg-config[0m     4
+build	UNKNOWN STEP	2025-09-27T19:43:24.4791134Z   [32m∗[0m install [01mocamlfind[0m           1.9.8
+build	UNKNOWN STEP	2025-09-27T19:43:24.4792904Z   [32m∗[0m install [01mdune[0m                3.20.2
+build	UNKNOWN STEP	2025-09-27T19:43:24.4794203Z   [32m∗[0m install [01mzarith[0m              1.14
+build	UNKNOWN STEP	2025-09-27T19:43:24.4795908Z   [32m∗[0m install [01mtopkg[0m               1.1.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4797334Z   [32m∗[0m install [01myojson[0m              3.0.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4798502Z   [32m∗[0m install [01mstdlib-shims[0m        0.3.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4799491Z   [32m∗[0m install [01msexplib0[0m            v0.17.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4800548Z   [32m∗[0m install [01mppx_derivers[0m        1.2.1
+build	UNKNOWN STEP	2025-09-27T19:43:24.4801484Z   [32m∗[0m install [01mocaml-syntax-shims[0m  1.0.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4802521Z   [32m∗[0m install [01mocaml-compiler-libs[0m v0.12.4
+build	UNKNOWN STEP	2025-09-27T19:43:24.4803585Z   [32m∗[0m install [01mcsexp[0m               1.5.2
+build	UNKNOWN STEP	2025-09-27T19:43:24.4804544Z   [32m∗[0m install [01mcppo[0m                1.8.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4805744Z   [32m∗[0m install [01mcoq-core[0m            8.18.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4806618Z   [32m∗[0m install [01muutf[0m                1.0.4
+build	UNKNOWN STEP	2025-09-27T19:43:24.4807377Z   [32m∗[0m install [01mppxlib[0m              0.36.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4808390Z   [32m∗[0m install [01mdune-configurator[0m   3.20.2
+build	UNKNOWN STEP	2025-09-27T19:43:24.4810067Z   [32m∗[0m install [01mcoqide-server[0m       8.18.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4811067Z   [32m∗[0m install [01mcoq-stdlib[0m          8.18.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4812035Z   [32m∗[0m install [01mppx_deriving[0m        6.1.1
+build	UNKNOWN STEP	2025-09-27T19:43:24.4813004Z   [32m∗[0m install [01mbigstringaf[0m         0.10.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4813980Z   [32m∗[0m install [01mcoq[0m                 8.18.0
+build	UNKNOWN STEP	2025-09-27T19:43:24.4814996Z   [32m∗[0m install [01mangstrom[0m            0.16.1
+build	UNKNOWN STEP	2025-09-27T19:43:24.4815870Z ===== [32m∗[0m 25 =====
+build	UNKNOWN STEP	2025-09-27T19:43:24.4816108Z 
+build	UNKNOWN STEP	2025-09-27T19:43:24.4816626Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+build	UNKNOWN STEP	2025-09-27T19:43:24.6973782Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+build	UNKNOWN STEP	2025-09-27T19:43:27.2057568Z [32m∗[0m installed [01mconf-gmp[0m.5
+build	UNKNOWN STEP	2025-09-27T19:43:27.2075776Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+build	UNKNOWN STEP	2025-09-27T19:43:27.2297813Z [36m⬇[0m retrieved [01mangstrom[0m.0.16.1  (https://github.com/inhabitedtype/angstrom/archive/0.16.1.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:27.2740587Z [36m⬇[0m retrieved [01mbigstringaf[0m.0.10.0  (https://github.com/inhabitedtype/bigstringaf/archive/0.10.0.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:28.7673844Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:29.3971900Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+build	UNKNOWN STEP	2025-09-27T19:43:29.7897624Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+build	UNKNOWN STEP	2025-09-27T19:43:30.1846804Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+build	UNKNOWN STEP	2025-09-27T19:43:30.2291786Z [36m⬇[0m retrieved [01mcppo[0m.1.8.0  (https://github.com/ocaml-community/cppo/archive/v1.8.0.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:30.2404266Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:30.6889818Z [36m⬇[0m retrieved [01mocaml-compiler-libs[0m.v0.12.4  (https://github.com/janestreet/ocaml-compiler-libs/releases/download/v0.12.4/ocaml-compiler-libs-v0.12.4.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:31.1901453Z [36m⬇[0m retrieved [01mocaml-syntax-shims[0m.1.0.0  (https://github.com/ocaml-ppx/ocaml-syntax-shims/releases/download/1.0.0/ocaml-syntax-shims-1.0.0.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:32.5954462Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:33.6522776Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:33.7113964Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:33.7541105Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:34.2297097Z [36m⬇[0m retrieved [01mppx_deriving[0m.6.1.1  (https://github.com/ocaml-ppx/ppx_deriving/releases/download/v6.1.1/ppx_deriving-6.1.1.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:34.2600669Z [36m⬇[0m retrieved [01mppx_derivers[0m.1.2.1  (https://github.com/ocaml-ppx/ppx_derivers/archive/1.2.1.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:34.5216183Z [36m⬇[0m retrieved [01mppxlib[0m.0.36.0  (https://github.com/ocaml-ppx/ppxlib/releases/download/0.36.0/ppxlib-0.36.0.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:34.7887323Z [36m⬇[0m retrieved [01mstdlib-shims[0m.0.3.0  (https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:34.9196112Z [36m⬇[0m retrieved [01msexplib0[0m.v0.17.0  (https://github.com/janestreet/sexplib0/archive/refs/tags/v0.17.0.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:35.6119484Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:35.6673779Z [36m⬇[0m retrieved [01myojson[0m.3.0.0  (https://github.com/ocaml-community/yojson/releases/download/3.0.0/yojson-3.0.0.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:35.8339167Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+build	UNKNOWN STEP	2025-09-27T19:43:36.3767550Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+build	UNKNOWN STEP	2025-09-27T19:43:39.1897185Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+build	UNKNOWN STEP	2025-09-27T19:43:40.9840970Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+build	UNKNOWN STEP	2025-09-27T19:43:43.3711133Z [32m∗[0m installed [01mzarith[0m.1.14
+build	UNKNOWN STEP	2025-09-27T19:43:46.8988855Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+build	UNKNOWN STEP	2025-09-27T19:43:47.6886871Z [32m∗[0m installed [01muutf[0m.1.0.4
+build	UNKNOWN STEP	2025-09-27T19:44:01.9435987Z [32m∗[0m installed [01mdune[0m.3.20.2
+build	UNKNOWN STEP	2025-09-27T19:44:02.6617261Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+build	UNKNOWN STEP	2025-09-27T19:44:04.3782786Z [32m∗[0m installed [01mocaml-compiler-libs[0m.v0.12.4
+build	UNKNOWN STEP	2025-09-27T19:44:04.4108315Z [32m∗[0m installed [01mcppo[0m.1.8.0
+build	UNKNOWN STEP	2025-09-27T19:44:04.4727103Z [32m∗[0m installed [01mocaml-syntax-shims[0m.1.0.0
+build	UNKNOWN STEP	2025-09-27T19:44:04.7725098Z [32m∗[0m installed [01mppx_derivers[0m.1.2.1
+build	UNKNOWN STEP	2025-09-27T19:44:05.1321033Z [32m∗[0m installed [01mstdlib-shims[0m.0.3.0
+build	UNKNOWN STEP	2025-09-27T19:44:05.4938242Z [32m∗[0m installed [01msexplib0[0m.v0.17.0
+build	UNKNOWN STEP	2025-09-27T19:44:07.6539302Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+build	UNKNOWN STEP	2025-09-27T19:44:08.3944191Z [32m∗[0m installed [01myojson[0m.3.0.0
+build	UNKNOWN STEP	2025-09-27T19:44:08.7272623Z [32m∗[0m installed [01mbigstringaf[0m.0.10.0
+build	UNKNOWN STEP	2025-09-27T19:44:09.8507141Z [32m∗[0m installed [01mangstrom[0m.0.16.1
+build	UNKNOWN STEP	2025-09-27T19:44:32.9214698Z [32m∗[0m installed [01mppxlib[0m.0.36.0
+build	UNKNOWN STEP	2025-09-27T19:44:39.1402914Z [32m∗[0m installed [01mppx_deriving[0m.6.1.1
+build	UNKNOWN STEP	2025-09-27T19:45:03.2307117Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+build	UNKNOWN STEP	2025-09-27T19:45:06.8812097Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+build	UNKNOWN STEP	2025-09-27T19:47:26.3991590Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+build	UNKNOWN STEP	2025-09-27T19:47:26.8183727Z [32m∗[0m installed [01mcoq[0m.8.18.0
+build	UNKNOWN STEP	2025-09-27T19:47:28.7524004Z Done.
+build	UNKNOWN STEP	2025-09-27T19:47:28.7531984Z # Run [01meval $(opam env)[0m to update the current shell environment
+build	UNKNOWN STEP	2025-09-27T19:47:30.1080610Z ##[group]Run opam exec -- dune build @all
+build	UNKNOWN STEP	2025-09-27T19:47:30.1080945Z [36;1mopam exec -- dune build @all[0m
+build	UNKNOWN STEP	2025-09-27T19:47:30.1108548Z shell: /usr/bin/bash -e {0}
+build	UNKNOWN STEP	2025-09-27T19:47:30.1108760Z env:
+build	UNKNOWN STEP	2025-09-27T19:47:30.1109757Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	UNKNOWN STEP	2025-09-27T19:47:30.1110809Z   OPAMCLI: 2.0
+build	UNKNOWN STEP	2025-09-27T19:47:30.1110976Z   OPAMCOLOR: always
+build	UNKNOWN STEP	2025-09-27T19:47:30.1111163Z   OPAMERRLOGLEN: 0
+build	UNKNOWN STEP	2025-09-27T19:47:30.1111340Z   OPAMJOBS: 4
+build	UNKNOWN STEP	2025-09-27T19:47:30.1111519Z   OPAMPRECISETRACKING: 1
+build	UNKNOWN STEP	2025-09-27T19:47:30.1111734Z   OPAMSOLVERTIMEOUT: 1000
+build	UNKNOWN STEP	2025-09-27T19:47:30.1111936Z   OPAMYES: 1
+build	UNKNOWN STEP	2025-09-27T19:47:30.1112112Z   CLICOLOR_FORCE: 1
+build	UNKNOWN STEP	2025-09-27T19:47:30.1112281Z ##[endgroup]
+build	UNKNOWN STEP	2025-09-27T19:47:30.2199275Z [0;1mFile "core/l1_expander/dune", line 29, characters 24-39:[0m
+build	UNKNOWN STEP	2025-09-27T19:47:30.2200876Z 29 |  (libraries l1_expander latex_parse_lib yojson unix str))
+build	UNKNOWN STEP	2025-09-27T19:47:30.2201720Z                              ^^^^^^^^^^^^^^^
+build	UNKNOWN STEP	2025-09-27T19:47:30.2202594Z [1;31mError[0m: Library "latex_parse_lib" not found.
+build	UNKNOWN STEP	2025-09-27T19:47:30.2203239Z -> required by _build/default/core/l1_expander/expander_smoke.exe
+build	UNKNOWN STEP	2025-09-27T19:47:30.2203831Z -> required by alias core/l1_expander/all
+build	UNKNOWN STEP	2025-09-27T19:47:30.5909560Z [2m(cd _build/default && /home/runner/work/latex_perf/latex_perf/_opam/bin/ocamlc.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I core/l0_lexer/.l0_lexer.objs/byte -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I data/.data.objs/byte -no-alias-deps -opaque -o core/l0_lexer/.l0_lexer.objs/byte/metrics_prometheus.cmo -c -impl core/l0_lexer/metrics_prometheus.ml)[0m
+build	UNKNOWN STEP	2025-09-27T19:47:30.5931828Z [1mFile "core/l0_lexer/metrics_prometheus.ml", line 116, characters 2-36[0m:
+build	UNKNOWN STEP	2025-09-27T19:47:30.5932522Z 116 |   Validators_metrics.dump_prometheus oc;
+build	UNKNOWN STEP	2025-09-27T19:47:30.5933065Z         [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+build	UNKNOWN STEP	2025-09-27T19:47:30.5933625Z [1;31mError[0m: Unbound module Validators_metrics
+build	UNKNOWN STEP	2025-09-27T19:47:30.9644759Z [2m(cd _build/default/core/l0_lexer && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I ../../data -o simd_tokenizer_fixed.o -c simd_tokenizer_fixed.c)[0m
+build	UNKNOWN STEP	2025-09-27T19:47:30.9650022Z [1msimd_tokenizer_fixed.c:283:15:[0m [1;35mwarning: [0m‘[1mfind_next_special_neon[0m’ defined but not used [[1;35m-Wunused-function[0m]
+build	UNKNOWN STEP	2025-09-27T19:47:30.9651401Z   283 | static size_t [1;35mfind_next_special_neon[0m(const uint8_t *input, size_t start, size_t len) {
+build	UNKNOWN STEP	2025-09-27T19:47:30.9652304Z       |               [1;35m^~~~~~~~~~~~~~~~~~~~~~[0m
+build	UNKNOWN STEP	2025-09-27T19:47:31.0438988Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o simd_tokenizer_fixed.o -c simd_tokenizer_fixed.c)[0m
+build	UNKNOWN STEP	2025-09-27T19:47:31.0453389Z [1msimd_tokenizer_fixed.c:283:15:[0m [1;35mwarning: [0m‘[1mfind_next_special_neon[0m’ defined but not used [[1;35m-Wunused-function[0m]
+build	UNKNOWN STEP	2025-09-27T19:47:31.0455035Z   283 | static size_t [1;35mfind_next_special_neon[0m(const uint8_t *input, size_t start, size_t len) {
+build	UNKNOWN STEP	2025-09-27T19:47:31.0456181Z       |               [1;35m^~~~~~~~~~~~~~~~~~~~~~[0m
+build	UNKNOWN STEP	2025-09-27T19:47:31.0721702Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o xxh64_simd_stubs.o -c xxh64_simd_stubs.c)[0m
+build	UNKNOWN STEP	2025-09-27T19:47:31.0724400Z [1mxxh64_simd_stubs.c:[0m In function ‘[1mocaml_xxh64_simd[0m’:
+build	UNKNOWN STEP	2025-09-27T19:47:31.0725765Z [1mxxh64_simd_stubs.c:118:7:[0m [1;35mwarning: [0mvariable ‘[1mhas_simd[0m’ set but not used [[1;35m-Wunused-but-set-variable[0m]
+build	UNKNOWN STEP	2025-09-27T19:47:31.0726689Z   118 |   int [1;35mhas_simd[0m = 0;
+build	UNKNOWN STEP	2025-09-27T19:47:31.0727176Z       |       [1;35m^~~~~~~~[0m
+build	UNKNOWN STEP	2025-09-27T19:47:32.0567309Z [2m(cd _build/default && /home/runner/work/latex_perf/latex_perf/_opam/bin/ocamlopt.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -I latex-parse/bench/.catcode_selftest.eobjs/byte -I latex-parse/bench/.catcode_selftest.eobjs/native -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -I latex-parse/src/.latex_parse_lib.objs/byte -I latex-parse/src/.latex_parse_lib.objs/native -intf-suffix .ml -no-alias-deps -opaque -o latex-parse/bench/.catcode_selftest.eobjs/native/dune__exe__Catcode_selftest.cmx -c -impl latex-parse/bench/catcode_selftest.ml)[0m
+build	UNKNOWN STEP	2025-09-27T19:47:32.0571581Z [1mFile "latex-parse/bench/catcode_selftest.ml", line 9, characters 10-17[0m:
+build	UNKNOWN STEP	2025-09-27T19:47:32.0572204Z 9 |   let c = Catcode in
+build	UNKNOWN STEP	2025-09-27T19:47:32.0572608Z               [1;31m^^^^^^^[0m
+build	UNKNOWN STEP	2025-09-27T19:47:32.0573076Z [1;31mError[0m: Unbound constructor Catcode
+build	UNKNOWN STEP	2025-09-27T19:47:33.7932959Z ##[error]Process completed with exit code 1.
+build	UNKNOWN STEP	2025-09-27T19:47:33.8004983Z Post job cleanup.
+build	UNKNOWN STEP	2025-09-27T19:47:33.8051609Z Post job cleanup.
+build	UNKNOWN STEP	2025-09-27T19:47:33.8982461Z [command]/usr/bin/git version
+build	UNKNOWN STEP	2025-09-27T19:47:33.9017490Z git version 2.51.0
+build	UNKNOWN STEP	2025-09-27T19:47:33.9061350Z Temporarily overriding HOME='/home/runner/work/_temp/2d65828d-8284-40c4-bc9e-e941d991947e' before making global git config changes
+build	UNKNOWN STEP	2025-09-27T19:47:33.9062624Z Adding repository directory to the temporary git global config as a safe directory
+build	UNKNOWN STEP	2025-09-27T19:47:33.9074275Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+build	UNKNOWN STEP	2025-09-27T19:47:33.9108365Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	UNKNOWN STEP	2025-09-27T19:47:33.9140543Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	UNKNOWN STEP	2025-09-27T19:47:33.9363788Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	UNKNOWN STEP	2025-09-27T19:47:33.9383621Z http.https://github.com/.extraheader
+build	UNKNOWN STEP	2025-09-27T19:47:33.9395608Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+build	UNKNOWN STEP	2025-09-27T19:47:33.9424823Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	UNKNOWN STEP	2025-09-27T19:47:33.9743435Z Cleaning up orphan processes

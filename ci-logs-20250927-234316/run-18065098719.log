@@ -1,0 +1,658 @@
+proof-ci	Set up job	﻿2025-09-27T21:20:55.6020883Z Current runner version: '2.328.0'
+proof-ci	Set up job	2025-09-27T21:20:55.6044844Z ##[group]Runner Image Provisioner
+proof-ci	Set up job	2025-09-27T21:20:55.6045679Z Hosted Compute Agent
+proof-ci	Set up job	2025-09-27T21:20:55.6046465Z Version: 20250912.392
+proof-ci	Set up job	2025-09-27T21:20:55.6047101Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+proof-ci	Set up job	2025-09-27T21:20:55.6047760Z Build Date: 2025-09-12T15:23:14Z
+proof-ci	Set up job	2025-09-27T21:20:55.6048403Z ##[endgroup]
+proof-ci	Set up job	2025-09-27T21:20:55.6048987Z ##[group]Operating System
+proof-ci	Set up job	2025-09-27T21:20:55.6049558Z Ubuntu
+proof-ci	Set up job	2025-09-27T21:20:55.6050095Z 24.04.3
+proof-ci	Set up job	2025-09-27T21:20:55.6050543Z LTS
+proof-ci	Set up job	2025-09-27T21:20:55.6050995Z ##[endgroup]
+proof-ci	Set up job	2025-09-27T21:20:55.6051427Z ##[group]Runner Image
+proof-ci	Set up job	2025-09-27T21:20:55.6052082Z Image: ubuntu-24.04
+proof-ci	Set up job	2025-09-27T21:20:55.6052611Z Version: 20250922.53.1
+proof-ci	Set up job	2025-09-27T21:20:55.6053658Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250922.53/images/ubuntu/Ubuntu2404-Readme.md
+proof-ci	Set up job	2025-09-27T21:20:55.6055111Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250922.53
+proof-ci	Set up job	2025-09-27T21:20:55.6056456Z ##[endgroup]
+proof-ci	Set up job	2025-09-27T21:20:55.6060487Z ##[group]GITHUB_TOKEN Permissions
+proof-ci	Set up job	2025-09-27T21:20:55.6063655Z Actions: write
+proof-ci	Set up job	2025-09-27T21:20:55.6064635Z Attestations: write
+proof-ci	Set up job	2025-09-27T21:20:55.6065554Z Checks: write
+proof-ci	Set up job	2025-09-27T21:20:55.6066563Z Contents: write
+proof-ci	Set up job	2025-09-27T21:20:55.6067569Z Deployments: write
+proof-ci	Set up job	2025-09-27T21:20:55.6068452Z Discussions: write
+proof-ci	Set up job	2025-09-27T21:20:55.6069408Z Issues: write
+proof-ci	Set up job	2025-09-27T21:20:55.6070295Z Metadata: read
+proof-ci	Set up job	2025-09-27T21:20:55.6071167Z Models: read
+proof-ci	Set up job	2025-09-27T21:20:55.6072147Z Packages: write
+proof-ci	Set up job	2025-09-27T21:20:55.6073384Z Pages: write
+proof-ci	Set up job	2025-09-27T21:20:55.6074314Z PullRequests: write
+proof-ci	Set up job	2025-09-27T21:20:55.6075236Z RepositoryProjects: write
+proof-ci	Set up job	2025-09-27T21:20:55.6076579Z SecurityEvents: write
+proof-ci	Set up job	2025-09-27T21:20:55.6077643Z Statuses: write
+proof-ci	Set up job	2025-09-27T21:20:55.6078502Z ##[endgroup]
+proof-ci	Set up job	2025-09-27T21:20:55.6081759Z Secret source: Actions
+proof-ci	Set up job	2025-09-27T21:20:55.6082880Z Prepare workflow directory
+proof-ci	Set up job	2025-09-27T21:20:55.6486343Z Prepare all required actions
+proof-ci	Set up job	2025-09-27T21:20:55.6541399Z Getting action download info
+proof-ci	Set up job	2025-09-27T21:20:55.9308844Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+proof-ci	Set up job	2025-09-27T21:20:56.1665877Z Complete job name: proof-ci
+proof-ci	Run actions/checkout@v4	﻿2025-09-27T21:20:56.2437871Z ##[group]Run actions/checkout@v4
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2438715Z with:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2439145Z   repository: ClanClanClanClan/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2439841Z   token: ***
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2440228Z   ssh-strict: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2440629Z   ssh-user: git
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2441031Z   persist-credentials: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2441473Z   clean: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2441875Z   sparse-checkout-cone-mode: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2442354Z   fetch-depth: 1
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2442764Z   fetch-tags: false
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2443167Z   show-progress: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2443571Z   lfs: false
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2443933Z   submodules: false
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2444340Z   set-safe-directory: true
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.2444993Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3498007Z Syncing repository: ClanClanClanClan/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3499761Z ##[group]Getting Git version info
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3500475Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3501467Z [command]/usr/bin/git version
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3590946Z git version 2.51.0
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3616695Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3630363Z Temporarily overriding HOME='/home/runner/work/_temp/044fc32e-a571-425d-9dfc-d5f6eb418e2e' before making global git config changes
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3632051Z Adding repository directory to the temporary git global config as a safe directory
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3642052Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3675645Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3679362Z ##[group]Initializing the repository
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3683093Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3794236Z hint: Using 'master' as the name for the initial branch. This default branch name
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3795398Z hint: is subject to change. To configure the initial branch name to use in all
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3796578Z hint: of your new repositories, which will suppress this warning, call:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3797281Z hint:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3797917Z hint: 	git config --global init.defaultBranch <name>
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3798950Z hint:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3799580Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3801125Z hint: 'development'. The just-created branch can be renamed via this command:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3802471Z hint:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3803178Z hint: 	git branch -m <name>
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3804047Z hint:
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3805107Z hint: Disable this message with "git config set advice.defaultBranchName false"
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3807220Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3812742Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3848624Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3849820Z ##[group]Disabling automatic garbage collection
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3853562Z [command]/usr/bin/git config --local gc.auto 0
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3881807Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3883016Z ##[group]Setting up auth
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3889259Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.3920044Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4261815Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4294259Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4511771Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4544403Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4545641Z ##[group]Fetching the repository
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.4554668Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +07895437ab0cede570fde751cb6861b9d97861e6:refs/remotes/origin/fix-math-strip
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.7991317Z From https://github.com/ClanClanClanClan/latex_perf
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.7992809Z  * [new ref]         07895437ab0cede570fde751cb6861b9d97861e6 -> origin/fix-math-strip
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8022802Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8025476Z ##[group]Determining the checkout info
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8026913Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8031045Z [command]/usr/bin/git sparse-checkout disable
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8068924Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8096262Z ##[group]Checking out the ref
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8100331Z [command]/usr/bin/git checkout --progress --force -B fix-math-strip refs/remotes/origin/fix-math-strip
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8524743Z Switched to a new branch 'fix-math-strip'
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8528158Z branch 'fix-math-strip' set up to track 'origin/fix-math-strip'.
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8535504Z ##[endgroup]
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8570581Z [command]/usr/bin/git log -1 --format=%H
+proof-ci	Run actions/checkout@v4	2025-09-27T21:20:56.8592005Z 07895437ab0cede570fde751cb6861b9d97861e6
+proof-ci	Set up OCaml and OPAM	﻿2025-09-27T21:20:56.8882185Z Prepare all required actions
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:56.8882897Z Getting action download info
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.0180519Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4909863Z ##[group]Run ./.github/actions/setup-ocaml
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4910486Z with:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4910863Z   ocaml-compiler: 4.14.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4911328Z   opam-depext: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4911984Z   allow-prerelease-opam: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4912478Z   opam-pin: true
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4912906Z   opam-local-packages: *.opam
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4913412Z   opam-disable-sandboxing: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4913913Z   dune-cache: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4914319Z   cache-prefix: v1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.4914733Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5018332Z ##[group]Run sudo apt-get update
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5018970Z [36;1msudo apt-get update[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5019487Z [36;1msudo apt-get install -y \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5020043Z [36;1m  bubblewrap \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5020541Z [36;1m  g++-multilib \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5021008Z [36;1m  gcc-multilib \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5021454Z [36;1m  mercurial \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5021895Z [36;1m  musl-tools \[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5022318Z [36;1m  rsync[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5059091Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5059829Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.5827630Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6095478Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6111871Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6160641Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6167239Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6187990Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.6203240Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7237232Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1443 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7438599Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [282 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7472024Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [175 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7484718Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [15.3 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7492361Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1485 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7574765Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [299 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7600980Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7630814Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [31.0 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7643003Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1957 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.7750636Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [441 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8231638Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8239297Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8252992Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7076 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8259941Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [28.9 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8272612Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [11.0 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8282610Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1444 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8298501Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8318166Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8806786Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1171 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8871058Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [198 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8892571Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8905315Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [8744 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8912935Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [880 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.8962759Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [195 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9316124Z Get:38 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [39.5 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9421513Z Get:39 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [57.1 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9431532Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.3 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9444824Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [18.0 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9453665Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1872 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9552895Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [423 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9583682Z Get:36 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:20:57.9592415Z Get:37 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [212 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:06.2144712Z Fetched 11.9 MB in 1s (8687 kB/s)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:06.9272307Z Reading package lists...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:06.9592504Z Reading package lists...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.1209430Z Building dependency tree...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.1217134Z Reading state information...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2671244Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2672445Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2673417Z The following additional packages will be installed:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2674444Z   g++-13-multilib gcc-13-multilib lib32asan8 lib32atomic1 lib32gcc-13-dev
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2675484Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-13-dev lib32ubsan1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2679961Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan8 libx32atomic1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2680923Z   libx32gcc-13-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2681827Z   libx32stdc++-13-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2686408Z Suggested packages:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.2686964Z   lib32stdc++6-13-dbg libx32stdc++6-13-dbg
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3290777Z The following NEW packages will be installed:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3291538Z   bubblewrap g++-13-multilib g++-multilib gcc-13-multilib gcc-multilib
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3292347Z   lib32asan8 lib32atomic1 lib32gcc-13-dev lib32gomp1 lib32itm1 lib32quadmath0
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3294989Z   lib32stdc++-13-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3296114Z   libx32asan8 libx32atomic1 libx32gcc-13-dev libx32gcc-s1 libx32gomp1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3297078Z   libx32itm1 libx32quadmath0 libx32stdc++-13-dev libx32stdc++6 libx32ubsan1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3297983Z   musl musl-dev musl-tools
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3477722Z 0 upgraded, 29 newly installed, 0 to remove and 17 not upgraded.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3478365Z Need to get 23.6 MB of archives.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3478983Z After this operation, 94.1 MB of additional disk space will be used.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3479625Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.3903834Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 bubblewrap amd64 0.9.0-1ubuntu0.1 [50.2 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.4190344Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-i386 amd64 2.39-0ubuntu8.6 [1447 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.4966822Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-x32 amd64 2.39-0ubuntu8.6 [2913 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.6021666Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-x32 amd64 2.39-0ubuntu8.6 [1637 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.6810977Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-s1 amd64 14.2.0-4ubuntu2~24.04 [78.5 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.7076323Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gomp1 amd64 14.2.0-4ubuntu2~24.04 [141 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.7345694Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gomp1 amd64 14.2.0-4ubuntu2~24.04 [145 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.7622555Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.6 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.7884415Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.8 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.8148198Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32atomic1 amd64 14.2.0-4ubuntu2~24.04 [8586 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.8405821Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32atomic1 amd64 14.2.0-4ubuntu2~24.04 [10.3 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.8667376Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32asan8 amd64 14.2.0-4ubuntu2~24.04 [2879 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:07.9713902Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32asan8 amd64 14.2.0-4ubuntu2~24.04 [2893 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.1025822Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1150 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.1793144Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++6 amd64 14.2.0-4ubuntu2~24.04 [778 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.2326421Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1169 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.3056202Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [227 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.3351751Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [157 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.4043804Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2380 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.5037259Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2190 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.5873441Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-multilib amd64 13.3.0-6ubuntu2~24.04 [878 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.6130444Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1150 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.6746206Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1086 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.7493156Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-multilib amd64 13.3.0-6ubuntu2~24.04 [890 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.7758305Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 gcc-multilib amd64 4:13.2.0-7ubuntu1 [1474 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.8015585Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 g++-multilib amd64 4:13.2.0-7ubuntu1 [884 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.8280712Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl amd64 1.2.4-2 [416 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.8776509Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-dev amd64 1.2.4-2 [616 kB]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:08.9287826Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-tools amd64 1.2.4-2 [5540 B]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.2309423Z Fetched 23.6 MB in 2s (14.8 MB/s)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.2956592Z Selecting previously unselected package bubblewrap.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4382324Z (Reading database ... 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4383343Z (Reading database ... 5%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4383900Z (Reading database ... 10%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4384462Z (Reading database ... 15%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4385186Z (Reading database ... 20%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4385529Z (Reading database ... 25%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4385865Z (Reading database ... 30%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4386443Z (Reading database ... 35%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4386778Z (Reading database ... 40%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4387111Z (Reading database ... 45%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.4387441Z (Reading database ... 50%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:09.6294883Z (Reading database ... 55%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:10.4463600Z (Reading database ... 60%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:11.2043611Z (Reading database ... 65%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:11.9177873Z (Reading database ... 70%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:12.6198063Z (Reading database ... 75%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:13.4435409Z (Reading database ... 80%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:14.2832498Z (Reading database ... 85%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.1457496Z (Reading database ... 90%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.8797438Z (Reading database ... 95%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.8797994Z (Reading database ... 100%
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.8798504Z (Reading database ... 214164 files and directories currently installed.)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.8846274Z Preparing to unpack .../00-bubblewrap_0.9.0-1ubuntu0.1_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.8882065Z Unpacking bubblewrap (0.9.0-1ubuntu0.1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.9552756Z Selecting previously unselected package libc6-dev-i386.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.9754004Z Preparing to unpack .../01-libc6-dev-i386_2.39-0ubuntu8.6_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:15.9754678Z Unpacking libc6-dev-i386 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.0856655Z Selecting previously unselected package libc6-x32.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.0990566Z Preparing to unpack .../02-libc6-x32_2.39-0ubuntu8.6_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.1088536Z Unpacking libc6-x32 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.2227518Z Selecting previously unselected package libc6-dev-x32.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.2363455Z Preparing to unpack .../03-libc6-dev-x32_2.39-0ubuntu8.6_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.2373695Z Unpacking libc6-dev-x32 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.2969018Z Selecting previously unselected package libx32gcc-s1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3103556Z Preparing to unpack .../04-libx32gcc-s1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3114334Z Unpacking libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3339425Z Selecting previously unselected package lib32gomp1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3471937Z Preparing to unpack .../05-lib32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3481959Z Unpacking lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3712642Z Selecting previously unselected package libx32gomp1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3846046Z Preparing to unpack .../06-libx32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.3856977Z Unpacking libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4089753Z Selecting previously unselected package lib32itm1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4221888Z Preparing to unpack .../07-lib32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4233326Z Unpacking lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4448434Z Selecting previously unselected package libx32itm1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4580043Z Preparing to unpack .../08-libx32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4591187Z Unpacking libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4801767Z Selecting previously unselected package lib32atomic1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4931753Z Preparing to unpack .../09-lib32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.4942091Z Unpacking lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5153286Z Selecting previously unselected package libx32atomic1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5284272Z Preparing to unpack .../10-libx32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5297450Z Unpacking libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5504944Z Selecting previously unselected package lib32asan8.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5634035Z Preparing to unpack .../11-lib32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.5644884Z Unpacking lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.6279237Z Selecting previously unselected package libx32asan8.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.6411886Z Preparing to unpack .../12-libx32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.6420469Z Unpacking libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7030156Z Selecting previously unselected package lib32ubsan1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7164849Z Preparing to unpack .../13-lib32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7175001Z Unpacking lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7534631Z Selecting previously unselected package libx32stdc++6.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7668394Z Preparing to unpack .../14-libx32stdc++6_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.7678328Z Unpacking libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8028034Z Selecting previously unselected package libx32ubsan1.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8160043Z Preparing to unpack .../15-libx32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8170265Z Unpacking libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8527776Z Selecting previously unselected package lib32quadmath0.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8662822Z Preparing to unpack .../16-lib32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8673924Z Unpacking lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.8929105Z Selecting previously unselected package libx32quadmath0.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9062732Z Preparing to unpack .../17-libx32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9073497Z Unpacking libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9291687Z Selecting previously unselected package lib32gcc-13-dev.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9425253Z Preparing to unpack .../18-lib32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9435234Z Unpacking lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:16.9966663Z Selecting previously unselected package libx32gcc-13-dev.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0100932Z Preparing to unpack .../19-libx32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0111710Z Unpacking libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0648600Z Selecting previously unselected package gcc-13-multilib.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0783046Z Preparing to unpack .../20-gcc-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0793712Z Unpacking gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.0990035Z Selecting previously unselected package lib32stdc++-13-dev.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.1132644Z Preparing to unpack .../21-lib32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.1145106Z Unpacking lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.1789603Z Selecting previously unselected package libx32stdc++-13-dev.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.1925791Z Preparing to unpack .../22-libx32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.1935525Z Unpacking libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2419472Z Selecting previously unselected package g++-13-multilib.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2553783Z Preparing to unpack .../23-g++-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2562509Z Unpacking g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2754481Z Selecting previously unselected package gcc-multilib.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2887670Z Preparing to unpack .../24-gcc-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.2897877Z Unpacking gcc-multilib (4:13.2.0-7ubuntu1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3085467Z Selecting previously unselected package g++-multilib.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3219685Z Preparing to unpack .../25-g++-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3229308Z Unpacking g++-multilib (4:13.2.0-7ubuntu1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3424494Z Selecting previously unselected package musl:amd64.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3555444Z Preparing to unpack .../26-musl_1.2.4-2_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.3565855Z Unpacking musl:amd64 (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.4011401Z Selecting previously unselected package musl-dev:amd64.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.4142845Z Preparing to unpack .../27-musl-dev_1.2.4-2_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.4152827Z Unpacking musl-dev:amd64 (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.4856379Z Selecting previously unselected package musl-tools.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.4991622Z Preparing to unpack .../28-musl-tools_1.2.4-2_amd64.deb ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5002874Z Unpacking musl-tools (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5629958Z Setting up bubblewrap (0.9.0-1ubuntu0.1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5686617Z Setting up libc6-dev-i386 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5714026Z Setting up lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5741284Z Setting up lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5768972Z Setting up libc6-x32 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5817315Z Setting up libc6-dev-x32 (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5844282Z Setting up lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5871574Z Setting up lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5903152Z Setting up libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5931778Z Setting up musl:amd64 (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.5977739Z Setting up lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6005592Z Setting up libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6033830Z Setting up lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6063685Z Setting up libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6093295Z Setting up libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6121195Z Setting up libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6149662Z Setting up libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6176098Z Setting up musl-dev:amd64 (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6213555Z Setting up libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6239527Z Setting up libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6266399Z Setting up lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6291190Z Setting up musl-tools (1.2.4-2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6317728Z Setting up libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6342630Z Setting up gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6371650Z Setting up lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6398213Z Setting up gcc-multilib (4:13.2.0-7ubuntu1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6426370Z Setting up libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6453008Z Setting up g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6479225Z Setting up g++-multilib (4:13.2.0-7ubuntu1) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.6509275Z Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:21:17.7682041Z Processing triggers for man-db (2.12.0-4build2) ...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3113209Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3113799Z Running kernel seems to be up-to-date.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3114112Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3114219Z Restarting services...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3185751Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3186211Z Service restarts being deferred:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3189112Z  systemctl restart hosted-compute-agent.service
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3189480Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3189637Z No containers need to be restarted.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3189898Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3190013Z No user sessions are running outdated binaries.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3190225Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:51.3190415Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1171969Z ##[group]Run mkdir -p "$HOME/.github-tools"
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1172315Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1172547Z [36;1m{[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1172751Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1173054Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1173523Z [36;1m  printf '%s\n' '  args=()'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1173775Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1174032Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1174320Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1174639Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1174892Z [36;1m  printf '%s\n' '    fi'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1175197Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1175542Z [36;1m  printf '%s\n' '      continue'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1175778Z [36;1m  printf '%s\n' '    fi'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1176227Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1176483Z [36;1m  printf '%s\n' '  done'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1176738Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1176999Z [36;1m  printf '%s\n' 'fi'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1177233Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1177488Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1177738Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1178033Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1212217Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1212524Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1357154Z ##[group]Run ocaml/setup-ocaml@v2
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1357375Z with:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1357542Z   ocaml-compiler: 4.14.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1357763Z   allow-prerelease-opam: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1357975Z   opam-pin: true
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1358145Z   opam-depext: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1358336Z   opam-local-packages: *.opam
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1358553Z   opam-disable-sandboxing: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1358772Z   dune-cache: false
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1358940Z   cache-prefix: v1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1359383Z   github-token: ***
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1359572Z env:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1360513Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.1361518Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:52.3156880Z ##[group]Retrieve the opam cache
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.1022556Z ##[warning]Failed to restore: Cache service responded with 400
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.1024227Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-39, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.1025640Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.1026273Z ##[group]Install opam
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7666131Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7752839Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7754709Z Added opam to the path
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7755484Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7757764Z ##[group]Initialise the opam state
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.7848050Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.8106859Z Reading package lists...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.9657379Z Building dependency tree...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:53.9664187Z Reading state information...
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1357449Z bubblewrap is already the newest version (0.9.0-1ubuntu0.1).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1358129Z g++-multilib is already the newest version (4:13.2.0-7ubuntu1).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1358755Z gcc-multilib is already the newest version (4:13.2.0-7ubuntu1).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1359720Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1360255Z musl-tools is already the newest version (1.2.4-2).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1360799Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1361396Z 0 upgraded, 0 newly installed, 0 to remove and 17 not upgraded.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1396307Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1588816Z No configuration file found, using built-in defaults.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1592563Z Checking for available remotes: rsync and local, git, mercurial.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1593866Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1594628Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1765734Z [31m[ERROR][0m Sandboxing is not working on your platform ubuntu:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1768642Z         "~/.opam/opam-init/hooks/sandbox.sh build sh -c echo SUCCESS >$TMPDIR/opam-sandbox-check-out && cat $TMPDIR/opam-sandbox-check-out; rm -f $TMPDIR/opam-sandbox-check-out" exited with code 1 "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1771518Z Do you want to disable it?  Note that this will result in less secure package builds, so please ensure that you have some other isolation mechanisms in place (such as running within a container or virtual machine). [y/N] y
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1772897Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:54.1773604Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:22:57.0047323Z [[32mdefault[0m] Initialised
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:08.8607178Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:08.8607674Z User configuration:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:08.8657286Z   Updating ~/.bash_profile.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:08.8658667Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:08.8659372Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:09.9451447Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:09.9452075Z ##[group]Remove the opam repositories
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:09.9480614Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:10.0046949Z default
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:10.0074699Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:10.0702208Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:10.0703210Z ##[group]Initialise the opam repositories
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:10.0723616Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:45.0161631Z [[32mdefault[0m] Initialised
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.2765495Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.4502813Z ##[group]Install OCaml
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.4516928Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.6581876Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.6585879Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:23:56.6587155Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:00.7435864Z 
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:00.7437060Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.2340334Z [32m∗[0m installed [01mbase-bigarray[0m.base
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.2348024Z [32m∗[0m installed [01mbase-threads[0m.base
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.2355553Z [32m∗[0m installed [01mbase-unix[0m.base
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.2363002Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.3259568Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:24:03.7800976Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:38.1131669Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:38.1313406Z [32m∗[0m installed [01mocaml-config[0m.2
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:38.1824662Z [32m∗[0m installed [01mocaml[0m.4.14.1
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:38.5660807Z Done.
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:38.5665644Z # Run [01meval $(opam env)[0m to update the current shell environment
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:39.7811686Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:39.7812303Z ##[group]Save the opam cache
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:39.7831467Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:39.9923532Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:40.0964256Z Updating /home/runner/.opam/repo/repos-config
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:40.0964906Z Clearing repository cache
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:40.1000314Z Clearing cache of downloaded files
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:40.1059245Z Clearing logs
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:40.6819344Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.5059662Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0klbYaAAAAAAXXpYEaQFeT7Yx01Cai28+Q0hJMzBFREdFMDQxNwBFZGdl
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.5774956Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.5776137Z ##[group]Retrieve the opam download cache
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.6111188Z ##[warning]Failed to restore: Cache service responded with 400
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.6115774Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098719-50, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098719-50, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-18065098719-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-27-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.6118775Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.6166659Z ##[group]Pin local packages
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:42.6179957Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.3638983Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6174351Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6178039Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6178917Z     [31merror[0m 23: Missing field 'maintainer'
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6179348Z   [33mwarning[0m 25: Missing field 'authors'
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6179731Z   [33mwarning[0m 35: Missing field 'homepage'
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6180136Z   [33mwarning[0m 36: Missing field 'bug-reports'
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:49.6196532Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip[0m (version [01mdev[0m)
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:50.7047564Z ##[endgroup]
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:50.7059954Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:50.7194709Z 2.1.6
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:50.7225506Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+proof-ci	Set up OCaml and OPAM	2025-09-27T21:26:50.7495142Z The OCaml toplevel, version 4.14.1
+proof-ci	Install system deps	﻿2025-09-27T21:26:50.7637248Z ##[group]Run sudo apt-get update -y
+proof-ci	Install system deps	2025-09-27T21:26:50.7637559Z [36;1msudo apt-get update -y[0m
+proof-ci	Install system deps	2025-09-27T21:26:50.7637833Z [36;1msudo apt-get install -y libgmp-dev pkg-config[0m
+proof-ci	Install system deps	2025-09-27T21:26:50.7672755Z shell: /usr/bin/bash -e {0}
+proof-ci	Install system deps	2025-09-27T21:26:50.7672978Z env:
+proof-ci	Install system deps	2025-09-27T21:26:50.7673950Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-ci	Install system deps	2025-09-27T21:26:50.7675005Z   OPAMCLI: 2.0
+proof-ci	Install system deps	2025-09-27T21:26:50.7675351Z   OPAMCOLOR: always
+proof-ci	Install system deps	2025-09-27T21:26:50.7675538Z   OPAMERRLOGLEN: 0
+proof-ci	Install system deps	2025-09-27T21:26:50.7675714Z   OPAMJOBS: 4
+proof-ci	Install system deps	2025-09-27T21:26:50.7676016Z   OPAMPRECISETRACKING: 1
+proof-ci	Install system deps	2025-09-27T21:26:50.7676233Z   OPAMSOLVERTIMEOUT: 1000
+proof-ci	Install system deps	2025-09-27T21:26:50.7676418Z   OPAMYES: 1
+proof-ci	Install system deps	2025-09-27T21:26:50.7676581Z   CLICOLOR_FORCE: 1
+proof-ci	Install system deps	2025-09-27T21:26:50.7676748Z ##[endgroup]
+proof-ci	Install system deps	2025-09-27T21:26:50.8468046Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+proof-ci	Install system deps	2025-09-27T21:26:50.8757758Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+proof-ci	Install system deps	2025-09-27T21:26:50.8789491Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+proof-ci	Install system deps	2025-09-27T21:26:50.8793176Z Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+proof-ci	Install system deps	2025-09-27T21:26:50.8804070Z Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+proof-ci	Install system deps	2025-09-27T21:26:50.8813810Z Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
+proof-ci	Install system deps	2025-09-27T21:26:50.8866466Z Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+proof-ci	Install system deps	2025-09-27T21:26:52.0273509Z Reading package lists...
+proof-ci	Install system deps	2025-09-27T21:26:52.0625854Z Reading package lists...
+proof-ci	Install system deps	2025-09-27T21:26:52.2292324Z Building dependency tree...
+proof-ci	Install system deps	2025-09-27T21:26:52.2299885Z Reading state information...
+proof-ci	Install system deps	2025-09-27T21:26:52.4042273Z libgmp-dev is already the newest version (2:6.3.0+dfsg-2ubuntu6.1).
+proof-ci	Install system deps	2025-09-27T21:26:52.4042858Z pkg-config is already the newest version (1.8.1-2build1).
+proof-ci	Install system deps	2025-09-27T21:26:52.4043397Z 0 upgraded, 0 newly installed, 0 to remove and 17 not upgraded.
+proof-ci	Install Coq toolchain	﻿2025-09-27T21:26:52.4104600Z ##[group]Run opam repo add default https://opam.ocaml.org || true
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4105061Z [36;1mopam repo add default https://opam.ocaml.org || true[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4105478Z [36;1mopam repo add coq-released https://coq.inria.fr/opam/released || true[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4105840Z [36;1mopam update -y || true[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4106399Z [36;1mopam install -y dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4138923Z shell: /usr/bin/bash -e {0}
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4139159Z env:
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4140175Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4141260Z   OPAMCLI: 2.0
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4141447Z   OPAMCOLOR: always
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4141627Z   OPAMERRLOGLEN: 0
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4141851Z   OPAMJOBS: 4
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4142033Z   OPAMPRECISETRACKING: 1
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4142244Z   OPAMSOLVERTIMEOUT: 1000
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4142447Z   OPAMYES: 1
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4142609Z   CLICOLOR_FORCE: 1
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4142790Z ##[endgroup]
+proof-ci	Install Coq toolchain	2025-09-27T21:26:52.4722317Z [31m[ERROR][0m Repository default is already set up and points to git+https://github.com/ocaml/opam-repository.git. To change that, use 'opam repository set-url default https://opam.ocaml.org'.
+proof-ci	Install Coq toolchain	2025-09-27T21:26:55.0726667Z [[32mcoq-released[0m] Initialised
+proof-ci	Install Coq toolchain	2025-09-27T21:26:56.7660436Z [1;34m[NOTE][0m Repository coq-released has been added to the selections of switch /home/runner/work/latex_perf/latex_perf only.
+proof-ci	Install Coq toolchain	2025-09-27T21:26:56.7661808Z        Run `opam repository add coq-released --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+proof-ci	Install Coq toolchain	2025-09-27T21:26:56.7662569Z 
+proof-ci	Install Coq toolchain	2025-09-27T21:26:57.0269455Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+proof-ci	Install Coq toolchain	2025-09-27T21:26:57.0270822Z 
+proof-ci	Install Coq toolchain	2025-09-27T21:26:57.0271649Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:27:00.2489685Z [[32mcoq-released[0m] no changes from https://coq.inria.fr/opam/released
+proof-ci	Install Coq toolchain	2025-09-27T21:27:01.5055318Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0007502Z The following actions will be performed:
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0009375Z   [32m∗[0m install [01mdune[0m                   3.20.2
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0010523Z   [32m∗[0m install [01mconf-pkg-config[0m        4      [required by zarith]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0011661Z   [32m∗[0m install [01mocamlfind[0m              1.9.8  [required by coq-core]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0012690Z   [32m∗[0m install [01mconf-gmp[0m               5      [required by zarith]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0013587Z   [32m∗[0m install [01mzarith[0m                 1.14   [required by coq-core]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0014397Z   [32m∗[0m install [01mcoq-core[0m               8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0015182Z   [32m∗[0m install [01mcoqide-server[0m          8.18.0 [required by coq]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0016298Z   [32m∗[0m install [01mcoq-stdlib[0m             8.18.0 [required by coq]
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0017111Z   [32m∗[0m install [01mcoq[0m                    8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0017962Z   [32m∗[0m install [01mcoq-mathcomp-ssreflect[0m 1.17.0
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0018720Z ===== [32m∗[0m 10 =====
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0019784Z 
+proof-ci	Install Coq toolchain	2025-09-27T21:27:18.0020489Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+proof-ci	Install Coq toolchain	2025-09-27T21:27:20.4891208Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:20.6130027Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+proof-ci	Install Coq toolchain	2025-09-27T21:27:20.6151813Z [32m∗[0m installed [01mconf-gmp[0m.5
+proof-ci	Install Coq toolchain	2025-09-27T21:27:21.0621122Z [36m⬇[0m retrieved [01mcoq-mathcomp-ssreflect[0m.1.17.0  (https://github.com/math-comp/math-comp/archive/mathcomp-1.17.0.tar.gz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:21.4926928Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:22.1488950Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:22.5559578Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:22.9313793Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:23.0022803Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:23.1479066Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:24.0912246Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+proof-ci	Install Coq toolchain	2025-09-27T21:27:26.8787714Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+proof-ci	Install Coq toolchain	2025-09-27T21:27:30.1550724Z [32m∗[0m installed [01mzarith[0m.1.14
+proof-ci	Install Coq toolchain	2025-09-27T21:27:49.6377119Z [32m∗[0m installed [01mdune[0m.3.20.2
+proof-ci	Install Coq toolchain	2025-09-27T21:28:34.8038881Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:28:38.4179782Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:30:58.8867343Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:30:59.2773221Z [32m∗[0m installed [01mcoq[0m.8.18.0
+proof-ci	Install Coq toolchain	2025-09-27T21:31:25.9713644Z [32m∗[0m installed [01mcoq-mathcomp-ssreflect[0m.1.17.0
+proof-ci	Install Coq toolchain	2025-09-27T21:31:27.4036334Z Done.
+proof-ci	Install Coq toolchain	2025-09-27T21:31:27.4042985Z # Run [01meval $(opam env)[0m to update the current shell environment
+proof-ci	Build proofs	﻿2025-09-27T21:31:28.7993219Z ##[group]Run opam exec -- dune build proofs
+proof-ci	Build proofs	2025-09-27T21:31:28.7993560Z [36;1mopam exec -- dune build proofs[0m
+proof-ci	Build proofs	2025-09-27T21:31:28.8028598Z shell: /usr/bin/bash -e {0}
+proof-ci	Build proofs	2025-09-27T21:31:28.8028816Z env:
+proof-ci	Build proofs	2025-09-27T21:31:28.8029786Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-ci	Build proofs	2025-09-27T21:31:28.8030847Z   OPAMCLI: 2.0
+proof-ci	Build proofs	2025-09-27T21:31:28.8031025Z   OPAMCOLOR: always
+proof-ci	Build proofs	2025-09-27T21:31:28.8031199Z   OPAMERRLOGLEN: 0
+proof-ci	Build proofs	2025-09-27T21:31:28.8031575Z   OPAMJOBS: 4
+proof-ci	Build proofs	2025-09-27T21:31:28.8031749Z   OPAMPRECISETRACKING: 1
+proof-ci	Build proofs	2025-09-27T21:31:28.8031959Z   OPAMSOLVERTIMEOUT: 1000
+proof-ci	Build proofs	2025-09-27T21:31:28.8032154Z   OPAMYES: 1
+proof-ci	Build proofs	2025-09-27T21:31:28.8032309Z   CLICOLOR_FORCE: 1
+proof-ci	Build proofs	2025-09-27T21:31:28.8032477Z ##[endgroup]
+proof-ci	Enforce zero admits and zero axioms	﻿2025-09-27T21:31:29.6720183Z ##[group]Run # No Admitted. or admit. (exclude archives and disabled files)
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6720735Z [36;1m# No Admitted. or admit. (exclude archives and disabled files)[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6721263Z [36;1mif grep -R -nE '\bAdmitted\.' proofs --exclude-dir=archive --exclude='*.disabled' || \[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6721791Z [36;1m   grep -R -nE '\badmit\.' proofs --exclude-dir=archive --exclude='*.disabled'; then[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6722226Z [36;1m  echo "[proof-gate] ERROR: admits found"; exit 1; fi[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6722608Z [36;1m# No Axiom declarations (exclude archives and disabled files)[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6723067Z [36;1mif grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6723513Z [36;1m  echo "[proof-gate] ERROR: axioms found"; exit 1; fi[0m
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6757104Z shell: /usr/bin/bash -e {0}
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6757337Z env:
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6758362Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6759476Z   OPAMCLI: 2.0
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6759651Z   OPAMCOLOR: always
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6759842Z   OPAMERRLOGLEN: 0
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760012Z   OPAMJOBS: 4
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760190Z   OPAMPRECISETRACKING: 1
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760398Z   OPAMSOLVERTIMEOUT: 1000
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760594Z   OPAMYES: 1
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760751Z   CLICOLOR_FORCE: 1
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6760929Z ##[endgroup]
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6886990Z proofs/LexerSmallstep.v:2:   This is deliberately minimal and admit-free to keep CI zero-admit. *)
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6888344Z [proof-gate] ERROR: admits found
+proof-ci	Enforce zero admits and zero axioms	2025-09-27T21:31:29.6893598Z ##[error]Process completed with exit code 1.
+proof-ci	Post Set up OCaml and OPAM	﻿2025-09-27T21:31:29.6960211Z Post job cleanup.
+proof-ci	Post Run actions/checkout@v4	﻿2025-09-27T21:31:29.7008207Z Post job cleanup.
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.7940791Z [command]/usr/bin/git version
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.7976591Z git version 2.51.0
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8020722Z Temporarily overriding HOME='/home/runner/work/_temp/0938e012-949f-4918-8285-aa6a94acba49' before making global git config changes
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8021987Z Adding repository directory to the temporary git global config as a safe directory
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8027190Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8062285Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8095238Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8320052Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8340304Z http.https://github.com/.extraheader
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8353080Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+proof-ci	Post Run actions/checkout@v4	2025-09-27T21:31:29.8382827Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+proof-ci	Complete job	﻿2025-09-27T21:31:29.8711168Z Cleaning up orphan processes

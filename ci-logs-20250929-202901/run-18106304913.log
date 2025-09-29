@@ -1,0 +1,1337 @@
+format	Set up job	﻿2025-09-29T18:07:31.9546918Z Current runner version: '2.328.0'
+format	Set up job	2025-09-29T18:07:31.9570253Z ##[group]Runner Image Provisioner
+format	Set up job	2025-09-29T18:07:31.9571135Z Hosted Compute Agent
+format	Set up job	2025-09-29T18:07:31.9571681Z Version: 20250912.392
+format	Set up job	2025-09-29T18:07:31.9572313Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+format	Set up job	2025-09-29T18:07:31.9573108Z Build Date: 2025-09-12T15:23:14Z
+format	Set up job	2025-09-29T18:07:31.9573782Z ##[endgroup]
+format	Set up job	2025-09-29T18:07:31.9574311Z ##[group]Operating System
+format	Set up job	2025-09-29T18:07:31.9574807Z Ubuntu
+format	Set up job	2025-09-29T18:07:31.9575353Z 22.04.5
+format	Set up job	2025-09-29T18:07:31.9575787Z LTS
+format	Set up job	2025-09-29T18:07:31.9576213Z ##[endgroup]
+format	Set up job	2025-09-29T18:07:31.9576750Z ##[group]Runner Image
+format	Set up job	2025-09-29T18:07:31.9577292Z Image: ubuntu-22.04
+format	Set up job	2025-09-29T18:07:31.9577749Z Version: 20250922.79.1
+format	Set up job	2025-09-29T18:07:31.9578789Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20250922.79/images/ubuntu/Ubuntu2204-Readme.md
+format	Set up job	2025-09-29T18:07:31.9580156Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20250922.79
+format	Set up job	2025-09-29T18:07:31.9581318Z ##[endgroup]
+format	Set up job	2025-09-29T18:07:31.9583802Z ##[group]GITHUB_TOKEN Permissions
+format	Set up job	2025-09-29T18:07:31.9586145Z Actions: write
+format	Set up job	2025-09-29T18:07:31.9586663Z Attestations: write
+format	Set up job	2025-09-29T18:07:31.9587182Z Checks: write
+format	Set up job	2025-09-29T18:07:31.9587668Z Contents: write
+format	Set up job	2025-09-29T18:07:31.9588178Z Deployments: write
+format	Set up job	2025-09-29T18:07:31.9588749Z Discussions: write
+format	Set up job	2025-09-29T18:07:31.9589243Z Issues: write
+format	Set up job	2025-09-29T18:07:31.9589731Z Metadata: read
+format	Set up job	2025-09-29T18:07:31.9590187Z Models: read
+format	Set up job	2025-09-29T18:07:31.9590701Z Packages: write
+format	Set up job	2025-09-29T18:07:31.9591242Z Pages: write
+format	Set up job	2025-09-29T18:07:31.9591741Z PullRequests: write
+format	Set up job	2025-09-29T18:07:31.9592219Z RepositoryProjects: write
+format	Set up job	2025-09-29T18:07:31.9593146Z SecurityEvents: write
+format	Set up job	2025-09-29T18:07:31.9593799Z Statuses: write
+format	Set up job	2025-09-29T18:07:31.9594244Z ##[endgroup]
+format	Set up job	2025-09-29T18:07:31.9596279Z Secret source: Actions
+format	Set up job	2025-09-29T18:07:31.9596942Z Prepare workflow directory
+format	Set up job	2025-09-29T18:07:31.9910501Z Prepare all required actions
+format	Set up job	2025-09-29T18:07:31.9966971Z Getting action download info
+format	Set up job	2025-09-29T18:07:32.5212304Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+format	Set up job	2025-09-29T18:07:32.8165135Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+format	Set up job	2025-09-29T18:07:33.0039241Z Complete job name: format
+format	Run actions/checkout@v4	﻿2025-09-29T18:07:33.0711090Z ##[group]Run actions/checkout@v4
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0711935Z with:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0712352Z   repository: ClanClanClanClan/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0713255Z   token: ***
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0713632Z   ssh-strict: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0714004Z   ssh-user: git
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0714389Z   persist-credentials: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0714812Z   clean: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0715294Z   sparse-checkout-cone-mode: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0715757Z   fetch-depth: 1
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0716131Z   fetch-tags: false
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0716511Z   show-progress: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0716901Z   lfs: false
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0717244Z   submodules: false
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0717658Z   set-safe-directory: true
+format	Run actions/checkout@v4	2025-09-29T18:07:33.0718339Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1771865Z Syncing repository: ClanClanClanClan/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1774089Z ##[group]Getting Git version info
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1774822Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1775849Z [command]/usr/bin/git version
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1846347Z git version 2.51.0
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1871384Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1885230Z Temporarily overriding HOME='/home/runner/work/_temp/1d4b2d71-c810-49d3-806a-d5f683d965ed' before making global git config changes
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1887779Z Adding repository directory to the temporary git global config as a safe directory
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1889878Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1922567Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1925611Z ##[group]Initializing the repository
+format	Run actions/checkout@v4	2025-09-29T18:07:33.1929595Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2023944Z hint: Using 'master' as the name for the initial branch. This default branch name
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2025012Z hint: is subject to change. To configure the initial branch name to use in all
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2025990Z hint: of your new repositories, which will suppress this warning, call:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2026746Z hint:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2027238Z hint: 	git config --global init.defaultBranch <name>
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2027861Z hint:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2028433Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2029873Z hint: 'development'. The just-created branch can be renamed via this command:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2030714Z hint:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2031105Z hint: 	git branch -m <name>
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2031577Z hint:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2032201Z hint: Disable this message with "git config set advice.defaultBranchName false"
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2033465Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2040008Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2073694Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2074885Z ##[group]Disabling automatic garbage collection
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2078313Z [command]/usr/bin/git config --local gc.auto 0
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2107098Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2108327Z ##[group]Setting up auth
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2114687Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2144825Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2468266Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2498604Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2718482Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2754286Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2755009Z ##[group]Fetching the repository
+format	Run actions/checkout@v4	2025-09-29T18:07:33.2763023Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +81733f378884f06fc30671a9c24ad89d031a09bd:refs/remotes/pull/4/merge
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8288815Z From https://github.com/ClanClanClanClan/latex_perf
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8290819Z  * [new ref]         81733f378884f06fc30671a9c24ad89d031a09bd -> pull/4/merge
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8321371Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8322805Z ##[group]Determining the checkout info
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8324280Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8328515Z [command]/usr/bin/git sparse-checkout disable
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8368156Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8396775Z ##[group]Checking out the ref
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8400358Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8826089Z Note: switching to 'refs/remotes/pull/4/merge'.
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8828743Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8829703Z You are in 'detached HEAD' state. You can look around, make experimental
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8831252Z changes and commit them, and you can discard any commits you make in this
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8832787Z state without impacting any branches by switching back to a branch.
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8833501Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8834076Z If you want to create a new branch to retain commits you create, you may
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8835133Z do so (now or later) by using -c with the switch command. Example:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8835735Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8836166Z   git switch -c <new-branch-name>
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8837110Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8837423Z Or undo this operation with:
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8837887Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8838148Z   git switch -
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8838542Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8839139Z Turn off this advice by setting config variable advice.detachedHead to false
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8839948Z 
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8840830Z HEAD is now at 81733f3 Merge 4887232aba7d6b962bad0d84a547356f48bed82c into 92bdfe28e9a19447735918ce6f6c8395415acf11
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8844117Z ##[endgroup]
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8870647Z [command]/usr/bin/git log -1 --format=%H
+format	Run actions/checkout@v4	2025-09-29T18:07:33.8892392Z 81733f378884f06fc30671a9c24ad89d031a09bd
+format	Install OCaml & opam	﻿2025-09-29T18:07:33.9250073Z Prepare all required actions
+format	Install OCaml & opam	2025-09-29T18:07:33.9251456Z Getting action download info
+format	Install OCaml & opam	2025-09-29T18:07:34.1538124Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+format	Install OCaml & opam	2025-09-29T18:07:34.8167234Z ##[group]Run ./.github/actions/setup-ocaml
+format	Install OCaml & opam	2025-09-29T18:07:34.8168249Z with:
+format	Install OCaml & opam	2025-09-29T18:07:34.8168991Z   ocaml-compiler: 4.14.1
+format	Install OCaml & opam	2025-09-29T18:07:34.8169830Z   opam-depext: false
+format	Install OCaml & opam	2025-09-29T18:07:34.8170685Z   allow-prerelease-opam: false
+format	Install OCaml & opam	2025-09-29T18:07:34.8171561Z   opam-pin: true
+format	Install OCaml & opam	2025-09-29T18:07:34.8172353Z   opam-local-packages: *.opam
+format	Install OCaml & opam	2025-09-29T18:07:34.8173439Z   opam-disable-sandboxing: false
+format	Install OCaml & opam	2025-09-29T18:07:34.8174335Z   dune-cache: false
+format	Install OCaml & opam	2025-09-29T18:07:34.8175088Z   cache-prefix: v1
+format	Install OCaml & opam	2025-09-29T18:07:34.8175840Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:07:34.8369160Z ##[group]Run sudo apt-get update
+format	Install OCaml & opam	2025-09-29T18:07:34.8370267Z [36;1msudo apt-get update[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8371181Z [36;1msudo apt-get install -y \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8372112Z [36;1m  bubblewrap \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8373156Z [36;1m  g++-multilib \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8373997Z [36;1m  gcc-multilib \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8374833Z [36;1m  mercurial \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8375644Z [36;1m  musl-tools \[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8376426Z [36;1m  rsync[0m
+format	Install OCaml & opam	2025-09-29T18:07:34.8409079Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+format	Install OCaml & opam	2025-09-29T18:07:34.8410322Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:07:34.9412659Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+format	Install OCaml & opam	2025-09-29T18:07:34.9744278Z Hit:2 http://azure.archive.ubuntu.com/ubuntu jammy InRelease
+format	Install OCaml & opam	2025-09-29T18:07:34.9784852Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+format	Install OCaml & opam	2025-09-29T18:07:34.9898869Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+format	Install OCaml & opam	2025-09-29T18:07:34.9912902Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+format	Install OCaml & opam	2025-09-29T18:07:34.9956036Z Hit:6 https://packages.microsoft.com/repos/azure-cli jammy InRelease
+format	Install OCaml & opam	2025-09-29T18:07:35.0160928Z Get:7 https://packages.microsoft.com/ubuntu/22.04/prod jammy InRelease [3632 B]
+format	Install OCaml & opam	2025-09-29T18:07:35.1675137Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2939 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.1878787Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [459 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.1913569Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 c-n-f Metadata [19.0 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.1928320Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [4562 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2173173Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [841 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2274575Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1228 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2336288Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [305 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2365791Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [29.5 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2621242Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.0 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.2636598Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [672 B]
+format	Install OCaml & opam	2025-09-29T18:07:35.3935006Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2689 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4094536Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-security/main Translation-en [394 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4126886Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [13.9 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4142678Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [4413 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4370430Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted Translation-en [818 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4420230Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [997 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4480585Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe Translation-en [218 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4502239Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [22.1 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4944645Z Get:26 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main arm64 Packages [85.0 kB]
+format	Install OCaml & opam	2025-09-29T18:07:35.4991669Z Get:27 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main amd64 Packages [256 kB]
+format	Install OCaml & opam	2025-09-29T18:07:44.2301116Z Fetched 20.7 MB in 2s (8782 kB/s)
+format	Install OCaml & opam	2025-09-29T18:07:45.0971751Z Reading package lists...
+format	Install OCaml & opam	2025-09-29T18:07:45.1581417Z Reading package lists...
+format	Install OCaml & opam	2025-09-29T18:07:45.3401727Z Building dependency tree...
+format	Install OCaml & opam	2025-09-29T18:07:45.3412944Z Reading state information...
+format	Install OCaml & opam	2025-09-29T18:07:45.5005462Z mercurial is already the newest version (6.1.1-1ubuntu1).
+format	Install OCaml & opam	2025-09-29T18:07:45.5006343Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+format	Install OCaml & opam	2025-09-29T18:07:45.5007194Z The following additional packages will be installed:
+format	Install OCaml & opam	2025-09-29T18:07:45.5008236Z   g++-11-multilib gcc-11-multilib lib32asan6 lib32atomic1 lib32gcc-11-dev
+format	Install OCaml & opam	2025-09-29T18:07:45.5010308Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-11-dev lib32ubsan1
+format	Install OCaml & opam	2025-09-29T18:07:45.5013271Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan6 libx32atomic1
+format	Install OCaml & opam	2025-09-29T18:07:45.5014131Z   libx32gcc-11-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+format	Install OCaml & opam	2025-09-29T18:07:45.5014891Z   libx32stdc++-11-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+format	Install OCaml & opam	2025-09-29T18:07:45.5019667Z Suggested packages:
+format	Install OCaml & opam	2025-09-29T18:07:45.5020299Z   lib32stdc++6-11-dbg libx32stdc++6-11-dbg
+format	Install OCaml & opam	2025-09-29T18:07:45.5020850Z Recommended packages:
+format	Install OCaml & opam	2025-09-29T18:07:45.5021124Z   linux-musl-dev
+format	Install OCaml & opam	2025-09-29T18:07:45.5322791Z The following NEW packages will be installed:
+format	Install OCaml & opam	2025-09-29T18:07:45.5323914Z   bubblewrap g++-11-multilib g++-multilib gcc-11-multilib gcc-multilib
+format	Install OCaml & opam	2025-09-29T18:07:45.5324798Z   lib32asan6 lib32atomic1 lib32gcc-11-dev lib32gomp1 lib32itm1 lib32quadmath0
+format	Install OCaml & opam	2025-09-29T18:07:45.5327131Z   lib32stdc++-11-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+format	Install OCaml & opam	2025-09-29T18:07:45.5328104Z   libx32asan6 libx32atomic1 libx32gcc-11-dev libx32gcc-s1 libx32gomp1
+format	Install OCaml & opam	2025-09-29T18:07:45.5329419Z   libx32itm1 libx32quadmath0 libx32stdc++-11-dev libx32stdc++6 libx32ubsan1
+format	Install OCaml & opam	2025-09-29T18:07:45.5330283Z   musl musl-dev musl-tools
+format	Install OCaml & opam	2025-09-29T18:07:45.5490957Z 0 upgraded, 29 newly installed, 0 to remove and 38 not upgraded.
+format	Install OCaml & opam	2025-09-29T18:07:45.5491638Z Need to get 21.1 MB of archives.
+format	Install OCaml & opam	2025-09-29T18:07:45.5492222Z After this operation, 93.4 MB of additional disk space will be used.
+format	Install OCaml & opam	2025-09-29T18:07:45.5493120Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+format	Install OCaml & opam	2025-09-29T18:07:45.6529069Z Get:2 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 bubblewrap amd64 0.6.1-1ubuntu0.1 [46.3 kB]
+format	Install OCaml & opam	2025-09-29T18:07:45.7356057Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-i386 amd64 2.35-0ubuntu3.11 [1445 kB]
+format	Install OCaml & opam	2025-09-29T18:07:46.0537902Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-x32 amd64 2.35-0ubuntu3.11 [2978 kB]
+format	Install OCaml & opam	2025-09-29T18:07:46.7825794Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-x32 amd64 2.35-0ubuntu3.11 [1632 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.1020796Z Get:6 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-s1 amd64 12.3.0-1ubuntu1~22.04.2 [54.0 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.1840498Z Get:7 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [133 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.2681344Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [127 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.3590967Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [32.0 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.4445334Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [30.2 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.5253575Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [8512 B]
+format	Install OCaml & opam	2025-09-29T18:07:47.6066870Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [10.2 kB]
+format	Install OCaml & opam	2025-09-29T18:07:47.6877977Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2154 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.0042379Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2128 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.2784661Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [959 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.4467178Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++6 amd64 12.3.0-1ubuntu1~22.04.2 [682 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.6118320Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [963 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.8516324Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [244 kB]
+format	Install OCaml & opam	2025-09-29T18:07:48.9347182Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [156 kB]
+format	Install OCaml & opam	2025-09-29T18:07:49.0186721Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2339 kB]
+format	Install OCaml & opam	2025-09-29T18:07:49.4224434Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2106 kB]
+format	Install OCaml & opam	2025-09-29T18:07:49.6739798Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [880 B]
+format	Install OCaml & opam	2025-09-29T18:07:49.7557714Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [989 kB]
+format	Install OCaml & opam	2025-09-29T18:07:49.9227157Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [906 kB]
+format	Install OCaml & opam	2025-09-29T18:07:50.1017958Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [894 B]
+format	Install OCaml & opam	2025-09-29T18:07:50.1825529Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 gcc-multilib amd64 4:11.2.0-1ubuntu1 [1382 B]
+format	Install OCaml & opam	2025-09-29T18:07:50.2644806Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 g++-multilib amd64 4:11.2.0-1ubuntu1 [854 B]
+format	Install OCaml & opam	2025-09-29T18:07:50.3513260Z Get:28 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl amd64 1.2.2-4 [407 kB]
+format	Install OCaml & opam	2025-09-29T18:07:50.5049946Z Get:29 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-dev amd64 1.2.2-4 [605 kB]
+format	Install OCaml & opam	2025-09-29T18:07:50.6661481Z Get:30 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-tools amd64 1.2.2-4 [5520 B]
+format	Install OCaml & opam	2025-09-29T18:07:50.9611101Z Fetched 21.1 MB in 5s (4124 kB/s)
+format	Install OCaml & opam	2025-09-29T18:07:50.9850609Z Selecting previously unselected package bubblewrap.
+format	Install OCaml & opam	2025-09-29T18:07:51.0175674Z (Reading database ... 
+format	Install OCaml & opam	2025-09-29T18:07:51.0176109Z (Reading database ... 5%
+format	Install OCaml & opam	2025-09-29T18:07:51.0176504Z (Reading database ... 10%
+format	Install OCaml & opam	2025-09-29T18:07:51.0176894Z (Reading database ... 15%
+format	Install OCaml & opam	2025-09-29T18:07:51.0177265Z (Reading database ... 20%
+format	Install OCaml & opam	2025-09-29T18:07:51.0177933Z (Reading database ... 25%
+format	Install OCaml & opam	2025-09-29T18:07:51.0178309Z (Reading database ... 30%
+format	Install OCaml & opam	2025-09-29T18:07:51.0178674Z (Reading database ... 35%
+format	Install OCaml & opam	2025-09-29T18:07:51.0179043Z (Reading database ... 40%
+format	Install OCaml & opam	2025-09-29T18:07:51.0179406Z (Reading database ... 45%
+format	Install OCaml & opam	2025-09-29T18:07:51.0179780Z (Reading database ... 50%
+format	Install OCaml & opam	2025-09-29T18:07:51.2310662Z (Reading database ... 55%
+format	Install OCaml & opam	2025-09-29T18:07:51.5385588Z (Reading database ... 60%
+format	Install OCaml & opam	2025-09-29T18:07:51.8271469Z (Reading database ... 65%
+format	Install OCaml & opam	2025-09-29T18:07:52.0790410Z (Reading database ... 70%
+format	Install OCaml & opam	2025-09-29T18:07:52.3839805Z (Reading database ... 75%
+format	Install OCaml & opam	2025-09-29T18:07:52.6315634Z (Reading database ... 80%
+format	Install OCaml & opam	2025-09-29T18:07:52.8839290Z (Reading database ... 85%
+format	Install OCaml & opam	2025-09-29T18:07:53.1343043Z (Reading database ... 90%
+format	Install OCaml & opam	2025-09-29T18:07:53.4282634Z (Reading database ... 95%
+format	Install OCaml & opam	2025-09-29T18:07:53.4283191Z (Reading database ... 100%
+format	Install OCaml & opam	2025-09-29T18:07:53.4283882Z (Reading database ... 256283 files and directories currently installed.)
+format	Install OCaml & opam	2025-09-29T18:07:53.4336364Z Preparing to unpack .../00-bubblewrap_0.6.1-1ubuntu0.1_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.4367949Z Unpacking bubblewrap (0.6.1-1ubuntu0.1) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.4938909Z Selecting previously unselected package libc6-dev-i386.
+format	Install OCaml & opam	2025-09-29T18:07:53.5092981Z Preparing to unpack .../01-libc6-dev-i386_2.35-0ubuntu3.11_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.5103215Z Unpacking libc6-dev-i386 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.5697609Z Selecting previously unselected package libc6-x32.
+format	Install OCaml & opam	2025-09-29T18:07:53.5854709Z Preparing to unpack .../02-libc6-x32_2.35-0ubuntu3.11_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.5883088Z Unpacking libc6-x32 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.6927558Z Selecting previously unselected package libc6-dev-x32.
+format	Install OCaml & opam	2025-09-29T18:07:53.7083308Z Preparing to unpack .../03-libc6-dev-x32_2.35-0ubuntu3.11_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.7094212Z Unpacking libc6-dev-x32 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.7635331Z Selecting previously unselected package libx32gcc-s1.
+format	Install OCaml & opam	2025-09-29T18:07:53.7790705Z Preparing to unpack .../04-libx32gcc-s1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.7803074Z Unpacking libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.8031096Z Selecting previously unselected package lib32gomp1.
+format	Install OCaml & opam	2025-09-29T18:07:53.8187876Z Preparing to unpack .../05-lib32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.8199802Z Unpacking lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.8454533Z Selecting previously unselected package libx32gomp1.
+format	Install OCaml & opam	2025-09-29T18:07:53.8611886Z Preparing to unpack .../06-libx32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.8624312Z Unpacking libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.8872597Z Selecting previously unselected package lib32itm1.
+format	Install OCaml & opam	2025-09-29T18:07:53.9028182Z Preparing to unpack .../07-lib32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.9038974Z Unpacking lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.9281672Z Selecting previously unselected package libx32itm1.
+format	Install OCaml & opam	2025-09-29T18:07:53.9440567Z Preparing to unpack .../08-libx32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.9451998Z Unpacking libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:53.9689851Z Selecting previously unselected package lib32atomic1.
+format	Install OCaml & opam	2025-09-29T18:07:53.9844166Z Preparing to unpack .../09-lib32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:53.9854158Z Unpacking lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.0077540Z Selecting previously unselected package libx32atomic1.
+format	Install OCaml & opam	2025-09-29T18:07:54.0229791Z Preparing to unpack .../10-libx32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.0240280Z Unpacking libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.0447268Z Selecting previously unselected package lib32asan6.
+format	Install OCaml & opam	2025-09-29T18:07:54.0599802Z Preparing to unpack .../11-lib32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.0610654Z Unpacking lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.1110877Z Selecting previously unselected package libx32asan6.
+format	Install OCaml & opam	2025-09-29T18:07:54.1265816Z Preparing to unpack .../12-libx32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.1277052Z Unpacking libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.1753909Z Selecting previously unselected package lib32ubsan1.
+format	Install OCaml & opam	2025-09-29T18:07:54.1909530Z Preparing to unpack .../13-lib32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.1920523Z Unpacking lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.2277921Z Selecting previously unselected package libx32stdc++6.
+format	Install OCaml & opam	2025-09-29T18:07:54.2432284Z Preparing to unpack .../14-libx32stdc++6_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.2443411Z Unpacking libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.2747374Z Selecting previously unselected package libx32ubsan1.
+format	Install OCaml & opam	2025-09-29T18:07:54.2903416Z Preparing to unpack .../15-libx32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.2912938Z Unpacking libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.3244638Z Selecting previously unselected package lib32quadmath0.
+format	Install OCaml & opam	2025-09-29T18:07:54.3400656Z Preparing to unpack .../16-lib32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.3413172Z Unpacking lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.3672342Z Selecting previously unselected package libx32quadmath0.
+format	Install OCaml & opam	2025-09-29T18:07:54.3829922Z Preparing to unpack .../17-libx32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.3841979Z Unpacking libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.4073568Z Selecting previously unselected package lib32gcc-11-dev.
+format	Install OCaml & opam	2025-09-29T18:07:54.4229006Z Preparing to unpack .../18-lib32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.4238891Z Unpacking lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.4759716Z Selecting previously unselected package libx32gcc-11-dev.
+format	Install OCaml & opam	2025-09-29T18:07:54.4917167Z Preparing to unpack .../19-libx32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.4929343Z Unpacking libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.5375566Z Selecting previously unselected package gcc-11-multilib.
+format	Install OCaml & opam	2025-09-29T18:07:54.5533500Z Preparing to unpack .../20-gcc-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.5544436Z Unpacking gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.5737318Z Selecting previously unselected package lib32stdc++-11-dev.
+format	Install OCaml & opam	2025-09-29T18:07:54.5891004Z Preparing to unpack .../21-lib32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.5900024Z Unpacking lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.6685021Z Selecting previously unselected package libx32stdc++-11-dev.
+format	Install OCaml & opam	2025-09-29T18:07:54.6841360Z Preparing to unpack .../22-libx32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.6852239Z Unpacking libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.7392163Z Selecting previously unselected package g++-11-multilib.
+format	Install OCaml & opam	2025-09-29T18:07:54.7547960Z Preparing to unpack .../23-g++-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.7558036Z Unpacking g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.7750246Z Selecting previously unselected package gcc-multilib.
+format	Install OCaml & opam	2025-09-29T18:07:54.7907076Z Preparing to unpack .../24-gcc-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.7916851Z Unpacking gcc-multilib (4:11.2.0-1ubuntu1) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.8112686Z Selecting previously unselected package g++-multilib.
+format	Install OCaml & opam	2025-09-29T18:07:54.8303420Z Preparing to unpack .../25-g++-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.8313897Z Unpacking g++-multilib (4:11.2.0-1ubuntu1) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.8521438Z Selecting previously unselected package musl:amd64.
+format	Install OCaml & opam	2025-09-29T18:07:54.8674632Z Preparing to unpack .../26-musl_1.2.2-4_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.8684751Z Unpacking musl:amd64 (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.8961436Z Selecting previously unselected package musl-dev:amd64.
+format	Install OCaml & opam	2025-09-29T18:07:54.9114657Z Preparing to unpack .../27-musl-dev_1.2.2-4_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.9125887Z Unpacking musl-dev:amd64 (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:54.9742158Z Selecting previously unselected package musl-tools.
+format	Install OCaml & opam	2025-09-29T18:07:54.9897757Z Preparing to unpack .../28-musl-tools_1.2.2-4_amd64.deb ...
+format	Install OCaml & opam	2025-09-29T18:07:54.9908962Z Unpacking musl-tools (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0376789Z Setting up bubblewrap (0.6.1-1ubuntu0.1) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0432377Z Setting up libc6-dev-i386 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0471353Z Setting up lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0502913Z Setting up lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0531876Z Setting up libc6-x32 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0571468Z Setting up libc6-dev-x32 (2.35-0ubuntu3.11) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0601988Z Setting up lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0642624Z Setting up libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0670964Z Setting up lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0702230Z Setting up musl:amd64 (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0745809Z Setting up lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0773322Z Setting up libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0804972Z Setting up lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0832163Z Setting up libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0860161Z Setting up libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0888781Z Setting up libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0917510Z Setting up musl-dev:amd64 (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0957040Z Setting up libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.0984660Z Setting up libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1010046Z Setting up libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1037918Z Setting up musl-tools (1.2.2-4) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1069521Z Setting up libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1159873Z Setting up libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1189743Z Setting up lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1217112Z Setting up lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1247291Z Setting up gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1278338Z Setting up gcc-multilib (4:11.2.0-1ubuntu1) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1307843Z Setting up g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1336314Z Setting up g++-multilib (4:11.2.0-1ubuntu1) ...
+format	Install OCaml & opam	2025-09-29T18:07:55.1369996Z Processing triggers for libc-bin (2.35-0ubuntu3.10) ...
+format	Install OCaml & opam	2025-09-29T18:08:05.0865571Z Processing triggers for man-db (2.10.2-1) ...
+format	Install OCaml & opam	2025-09-29T18:08:06.4109634Z NEEDRESTART-VER: 3.5
+format	Install OCaml & opam	2025-09-29T18:08:06.8207903Z NEEDRESTART-KCUR: 6.8.0-1031-azure
+format	Install OCaml & opam	2025-09-29T18:08:06.8208297Z NEEDRESTART-KEXP: 6.8.0-1031-azure
+format	Install OCaml & opam	2025-09-29T18:08:06.8208527Z NEEDRESTART-KSTA: 1
+format	Install OCaml & opam	2025-09-29T18:08:08.2050550Z NEEDRESTART-SVC: hosted-compute-agent.service
+format	Install OCaml & opam	2025-09-29T18:08:08.2093950Z ##[group]Run mkdir -p "$HOME/.github-tools"
+format	Install OCaml & opam	2025-09-29T18:08:08.2094296Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2094536Z [36;1m{[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2094761Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2095064Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2095340Z [36;1m  printf '%s\n' '  args=()'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2095598Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2095860Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2096175Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2096487Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2096735Z [36;1m  printf '%s\n' '    fi'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2097038Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2097565Z [36;1m  printf '%s\n' '      continue'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2097803Z [36;1m  printf '%s\n' '    fi'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2098024Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2098260Z [36;1m  printf '%s\n' '  done'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2098512Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2098775Z [36;1m  printf '%s\n' 'fi'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2099009Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2099279Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2099540Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2099988Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+format	Install OCaml & opam	2025-09-29T18:08:08.2129373Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+format	Install OCaml & opam	2025-09-29T18:08:08.2129694Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:08.2284605Z ##[group]Run ocaml/setup-ocaml@v2
+format	Install OCaml & opam	2025-09-29T18:08:08.2285003Z with:
+format	Install OCaml & opam	2025-09-29T18:08:08.2285277Z   ocaml-compiler: 4.14.1
+format	Install OCaml & opam	2025-09-29T18:08:08.2285627Z   allow-prerelease-opam: false
+format	Install OCaml & opam	2025-09-29T18:08:08.2285994Z   opam-pin: true
+format	Install OCaml & opam	2025-09-29T18:08:08.2286286Z   opam-depext: false
+format	Install OCaml & opam	2025-09-29T18:08:08.2286610Z   opam-local-packages: *.opam
+format	Install OCaml & opam	2025-09-29T18:08:08.2286994Z   opam-disable-sandboxing: false
+format	Install OCaml & opam	2025-09-29T18:08:08.2287357Z   dune-cache: false
+format	Install OCaml & opam	2025-09-29T18:08:08.2287651Z   cache-prefix: v1
+format	Install OCaml & opam	2025-09-29T18:08:08.2288304Z   github-token: ***
+format	Install OCaml & opam	2025-09-29T18:08:08.2288613Z env:
+format	Install OCaml & opam	2025-09-29T18:08:08.2290265Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	Install OCaml & opam	2025-09-29T18:08:08.2292045Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:08.4066881Z ##[group]Retrieve the opam cache
+format	Install OCaml & opam	2025-09-29T18:08:09.3774643Z ##[warning]Failed to restore: Cache service responded with 400
+format	Install OCaml & opam	2025-09-29T18:08:09.3776642Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-
+format	Install OCaml & opam	2025-09-29T18:08:09.3778298Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:09.3778627Z ##[group]Install opam
+format	Install OCaml & opam	2025-09-29T18:08:10.6274484Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+format	Install OCaml & opam	2025-09-29T18:08:10.6385367Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+format	Install OCaml & opam	2025-09-29T18:08:10.6387439Z Added opam to the path
+format	Install OCaml & opam	2025-09-29T18:08:10.6388113Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:10.6388592Z ##[group]Initialise the opam state
+format	Install OCaml & opam	2025-09-29T18:08:10.6408668Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+format	Install OCaml & opam	2025-09-29T18:08:10.6928878Z Reading package lists...
+format	Install OCaml & opam	2025-09-29T18:08:10.8740110Z Building dependency tree...
+format	Install OCaml & opam	2025-09-29T18:08:10.8751200Z Reading state information...
+format	Install OCaml & opam	2025-09-29T18:08:11.0340706Z g++-multilib is already the newest version (4:11.2.0-1ubuntu1).
+format	Install OCaml & opam	2025-09-29T18:08:11.0341428Z gcc-multilib is already the newest version (4:11.2.0-1ubuntu1).
+format	Install OCaml & opam	2025-09-29T18:08:11.0342007Z mercurial is already the newest version (6.1.1-1ubuntu1).
+format	Install OCaml & opam	2025-09-29T18:08:11.0342754Z musl-tools is already the newest version (1.2.2-4).
+format	Install OCaml & opam	2025-09-29T18:08:11.0343269Z bubblewrap is already the newest version (0.6.1-1ubuntu0.1).
+format	Install OCaml & opam	2025-09-29T18:08:11.0343874Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+format	Install OCaml & opam	2025-09-29T18:08:11.0344469Z 0 upgraded, 0 newly installed, 0 to remove and 38 not upgraded.
+format	Install OCaml & opam	2025-09-29T18:08:11.0381421Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+format	Install OCaml & opam	2025-09-29T18:08:11.0521475Z No configuration file found, using built-in defaults.
+format	Install OCaml & opam	2025-09-29T18:08:11.0525431Z Checking for available remotes: rsync and local, git, mercurial.
+format	Install OCaml & opam	2025-09-29T18:08:11.0526565Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+format	Install OCaml & opam	2025-09-29T18:08:11.0526979Z 
+format	Install OCaml & opam	2025-09-29T18:08:11.0748055Z 
+format	Install OCaml & opam	2025-09-29T18:08:11.0749110Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+format	Install OCaml & opam	2025-09-29T18:08:14.6003267Z [[32mdefault[0m] Initialised
+format	Install OCaml & opam	2025-09-29T18:08:26.3610871Z 
+format	Install OCaml & opam	2025-09-29T18:08:26.3611328Z User configuration:
+format	Install OCaml & opam	2025-09-29T18:08:26.3850636Z   Updating ~/.bash_profile.
+format	Install OCaml & opam	2025-09-29T18:08:26.3853179Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+format	Install OCaml & opam	2025-09-29T18:08:26.3853873Z 
+format	Install OCaml & opam	2025-09-29T18:08:27.6104457Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:27.6105169Z ##[group]Remove the opam repositories
+format	Install OCaml & opam	2025-09-29T18:08:27.6138482Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+format	Install OCaml & opam	2025-09-29T18:08:27.6703809Z default
+format	Install OCaml & opam	2025-09-29T18:08:27.6738335Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+format	Install OCaml & opam	2025-09-29T18:08:27.7350716Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:08:27.7352006Z ##[group]Initialise the opam repositories
+format	Install OCaml & opam	2025-09-29T18:08:27.7371042Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+format	Install OCaml & opam	2025-09-29T18:09:49.6269746Z [[32mdefault[0m] Initialised
+format	Install OCaml & opam	2025-09-29T18:10:01.4321042Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:10:01.6830974Z ##[group]Install OCaml
+format	Install OCaml & opam	2025-09-29T18:10:01.6844375Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+format	Install OCaml & opam	2025-09-29T18:10:01.8896549Z 
+format	Install OCaml & opam	2025-09-29T18:10:01.8899389Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+format	Install OCaml & opam	2025-09-29T18:10:01.8900178Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+format	Install OCaml & opam	2025-09-29T18:10:06.0260135Z 
+format	Install OCaml & opam	2025-09-29T18:10:06.0261380Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	Install OCaml & opam	2025-09-29T18:10:08.4512305Z [32m∗[0m installed [01mbase-bigarray[0m.base
+format	Install OCaml & opam	2025-09-29T18:10:08.4518180Z [32m∗[0m installed [01mbase-threads[0m.base
+format	Install OCaml & opam	2025-09-29T18:10:08.4526237Z [32m∗[0m installed [01mbase-unix[0m.base
+format	Install OCaml & opam	2025-09-29T18:10:08.4534238Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+format	Install OCaml & opam	2025-09-29T18:10:08.5456023Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+format	Install OCaml & opam	2025-09-29T18:10:09.0224114Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+format	Install OCaml & opam	2025-09-29T18:12:37.4284767Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+format	Install OCaml & opam	2025-09-29T18:12:37.4465147Z [32m∗[0m installed [01mocaml-config[0m.2
+format	Install OCaml & opam	2025-09-29T18:12:37.5166814Z [32m∗[0m installed [01mocaml[0m.4.14.1
+format	Install OCaml & opam	2025-09-29T18:12:37.9193283Z Done.
+format	Install OCaml & opam	2025-09-29T18:12:37.9199269Z # Run [01meval $(opam env)[0m to update the current shell environment
+format	Install OCaml & opam	2025-09-29T18:12:39.2531378Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:12:39.2532130Z ##[group]Save the opam cache
+format	Install OCaml & opam	2025-09-29T18:12:39.2551449Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+format	Install OCaml & opam	2025-09-29T18:12:39.4610638Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+format	Install OCaml & opam	2025-09-29T18:12:39.5692963Z Updating /home/runner/.opam/repo/repos-config
+format	Install OCaml & opam	2025-09-29T18:12:39.5693598Z Clearing repository cache
+format	Install OCaml & opam	2025-09-29T18:12:39.5730862Z Clearing cache of downloaded files
+format	Install OCaml & opam	2025-09-29T18:12:39.5761253Z Clearing logs
+format	Install OCaml & opam	2025-09-29T18:12:40.3380742Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+format	Install OCaml & opam	2025-09-29T18:12:42.1403410Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0GszaaAAAAACmt6h8mgeoTJNaeQK+hullQlkzRURHRTA1MTcARWRnZQ==
+format	Install OCaml & opam	2025-09-29T18:12:42.2186214Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:12:42.2187631Z ##[group]Retrieve the opam download cache
+format	Install OCaml & opam	2025-09-29T18:12:42.2516675Z ##[warning]Failed to restore: Cache service responded with 400
+format	Install OCaml & opam	2025-09-29T18:12:42.2521035Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-56, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-56, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+format	Install OCaml & opam	2025-09-29T18:12:42.2525715Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:12:42.2558363Z ##[group]Pin local packages
+format	Install OCaml & opam	2025-09-29T18:12:42.2572279Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+format	Install OCaml & opam	2025-09-29T18:12:48.9083874Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+format	Install OCaml & opam	2025-09-29T18:12:49.0510798Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+format	Install OCaml & opam	2025-09-29T18:12:49.0514496Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+format	Install OCaml & opam	2025-09-29T18:12:49.0515593Z     [31merror[0m 23: Missing field 'maintainer'
+format	Install OCaml & opam	2025-09-29T18:12:49.0516132Z   [33mwarning[0m 25: Missing field 'authors'
+format	Install OCaml & opam	2025-09-29T18:12:49.0516684Z   [33mwarning[0m 35: Missing field 'homepage'
+format	Install OCaml & opam	2025-09-29T18:12:49.0517232Z   [33mwarning[0m 36: Missing field 'bug-reports'
+format	Install OCaml & opam	2025-09-29T18:12:49.0531365Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#HEAD[0m (version [01mdev[0m)
+format	Install OCaml & opam	2025-09-29T18:12:50.2836414Z ##[endgroup]
+format	Install OCaml & opam	2025-09-29T18:12:50.2850288Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+format	Install OCaml & opam	2025-09-29T18:12:50.3002672Z 2.1.6
+format	Install OCaml & opam	2025-09-29T18:12:50.3020025Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+format	Install OCaml & opam	2025-09-29T18:12:50.3289085Z The OCaml toplevel, version 4.14.1
+format	Install ocamlformat	﻿2025-09-29T18:12:50.3419086Z ##[group]Run opam update -y
+format	Install ocamlformat	2025-09-29T18:12:50.3419357Z [36;1mopam update -y[0m
+format	Install ocamlformat	2025-09-29T18:12:50.3419670Z [36;1mopam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0[0m
+format	Install ocamlformat	2025-09-29T18:12:50.3449321Z shell: /usr/bin/bash -e {0}
+format	Install ocamlformat	2025-09-29T18:12:50.3449543Z env:
+format	Install ocamlformat	2025-09-29T18:12:50.3450501Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	Install ocamlformat	2025-09-29T18:12:50.3470487Z   OPAMCLI: 2.0
+format	Install ocamlformat	2025-09-29T18:12:50.3470735Z   OPAMCOLOR: always
+format	Install ocamlformat	2025-09-29T18:12:50.3470930Z   OPAMERRLOGLEN: 0
+format	Install ocamlformat	2025-09-29T18:12:50.3471104Z   OPAMJOBS: 4
+format	Install ocamlformat	2025-09-29T18:12:50.3471295Z   OPAMPRECISETRACKING: 1
+format	Install ocamlformat	2025-09-29T18:12:50.3471496Z   OPAMSOLVERTIMEOUT: 1000
+format	Install ocamlformat	2025-09-29T18:12:50.3471684Z   OPAMYES: 1
+format	Install ocamlformat	2025-09-29T18:12:50.3471839Z   CLICOLOR_FORCE: 1
+format	Install ocamlformat	2025-09-29T18:12:50.3472010Z ##[endgroup]
+format	Install ocamlformat	2025-09-29T18:12:50.5846154Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+format	Install ocamlformat	2025-09-29T18:12:50.5847146Z 
+format	Install ocamlformat	2025-09-29T18:12:50.5847784Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	Install ocamlformat	2025-09-29T18:12:54.3778513Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+format	Install ocamlformat	2025-09-29T18:13:10.8617235Z The following actions will be performed:
+format	Install ocamlformat	2025-09-29T18:13:10.8622199Z   [32m∗[0m install [01mocamlbuild[0m        0.16.1   [required by fpath, astring, uuseg]
+format	Install ocamlformat	2025-09-29T18:13:10.8623345Z   [32m∗[0m install [01mcmdliner[0m          1.3.0    [required by ocamlformat]
+format	Install ocamlformat	2025-09-29T18:13:10.8626909Z   [32m∗[0m install [01mconf-gmp[0m          5        [required by zarith]
+format	Install ocamlformat	2025-09-29T18:13:10.8627758Z   [32m∗[0m install [01mconf-pkg-config[0m   4        [required by zarith]
+format	Install ocamlformat	2025-09-29T18:13:10.8628549Z   [32m∗[0m install [01mocamlfind[0m         1.9.8    [required by coq-core]
+format	Install ocamlformat	2025-09-29T18:13:10.8629256Z   [32m∗[0m install [01mdune[0m              3.20.2
+format	Install ocamlformat	2025-09-29T18:13:10.8629950Z   [32m∗[0m install [01mzarith[0m            1.14     [required by coq-core]
+format	Install ocamlformat	2025-09-29T18:13:10.8630804Z   [32m∗[0m install [01mtopkg[0m             1.1.0    [required by fpath, astring, uuseg]
+format	Install ocamlformat	2025-09-29T18:13:10.8631657Z   [32m∗[0m install [01mbase-bytes[0m        base     [required by ocp-indent]
+format	Install ocamlformat	2025-09-29T18:13:10.8632653Z   [32m∗[0m install [01msexplib0[0m          v0.16.0  [required by base]
+format	Install ocamlformat	2025-09-29T18:13:10.8633504Z   [32m∗[0m install [01mresult[0m            1.5      [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8634306Z   [32m∗[0m install [01mre[0m                1.14.0   [required by ocamlformat]
+format	Install ocamlformat	2025-09-29T18:13:10.8635138Z   [32m∗[0m install [01mocaml-version[0m     4.0.1    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8636003Z   [32m∗[0m install [01mmenhirSdk[0m         20250912 [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8636857Z   [32m∗[0m install [01mmenhirLib[0m         20250912 [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8637674Z   [32m∗[0m install [01mmenhirCST[0m         20250912 [required by menhir]
+format	Install ocamlformat	2025-09-29T18:13:10.8638422Z   [32m∗[0m install [01mfix[0m               20250919 [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8639220Z   [32m∗[0m install [01meither[0m            1.0.0    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8640093Z   [32m∗[0m install [01mdune-build-info[0m   3.20.2   [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8640963Z   [32m∗[0m install [01mcsexp[0m             1.5.2    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8641803Z   [32m∗[0m install [01mcamlp-streams[0m     5.0.1    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8642758Z   [32m∗[0m install [01mcoq-core[0m          8.18.0
+format	Install ocamlformat	2025-09-29T18:13:10.8643450Z   [32m∗[0m install [01muutf[0m              1.0.4    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8644642Z   [32m∗[0m install [01muucp[0m              17.0.0   [required by uuseg]
+format	Install ocamlformat	2025-09-29T18:13:10.8645425Z   [32m∗[0m install [01mastring[0m           0.8.5    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8646267Z   [32m∗[0m install [01mocp-indent[0m        1.8.1    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8647097Z   [32m∗[0m install [01mmenhir[0m            20250912 [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8647895Z   [32m∗[0m install [01mdune-configurator[0m 3.20.2   [required by base]
+format	Install ocamlformat	2025-09-29T18:13:10.8648662Z   [32m∗[0m install [01mcoqide-server[0m     8.18.0   [required by coq]
+format	Install ocamlformat	2025-09-29T18:13:10.8649491Z   [32m∗[0m install [01mcoq-stdlib[0m        8.18.0   [required by coq]
+format	Install ocamlformat	2025-09-29T18:13:10.8650290Z   [32m∗[0m install [01muuseg[0m             17.0.0   [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8651091Z   [32m∗[0m install [01mfpath[0m             0.7.3    [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8651899Z   [32m∗[0m install [01mbase[0m              v0.16.4  [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8652717Z   [32m∗[0m install [01mcoq[0m               8.18.0
+format	Install ocamlformat	2025-09-29T18:13:10.8653402Z   [32m∗[0m install [01mstdio[0m             v0.16.0  [required by ocamlformat-lib]
+format	Install ocamlformat	2025-09-29T18:13:10.8654232Z   [32m∗[0m install [01mocamlformat-lib[0m   0.26.2   [required by ocamlformat]
+format	Install ocamlformat	2025-09-29T18:13:10.8654924Z   [32m∗[0m install [01mocamlformat[0m       0.26.2
+format	Install ocamlformat	2025-09-29T18:13:10.8655393Z ===== [32m∗[0m 37 =====
+format	Install ocamlformat	2025-09-29T18:13:10.8659354Z 
+format	Install ocamlformat	2025-09-29T18:13:10.8659954Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+format	Install ocamlformat	2025-09-29T18:13:11.1656416Z [36m⬇[0m retrieved [01mcamlp-streams[0m.5.0.1  (https://github.com/ocaml/camlp-streams/archive/v5.0.1.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:11.5603011Z [36m⬇[0m retrieved [01mbase[0m.v0.16.4  (https://github.com/janestreet/base/archive/refs/tags/v0.16.4.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:11.6154564Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+format	Install ocamlformat	2025-09-29T18:13:14.0528705Z [32m∗[0m installed [01mconf-gmp[0m.5
+format	Install ocamlformat	2025-09-29T18:13:14.0668990Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+format	Install ocamlformat	2025-09-29T18:13:14.0766328Z [36m⬇[0m retrieved [01mastring[0m.0.8.5  (https://erratique.ch/software/astring/releases/astring-0.8.5.tbz)
+format	Install ocamlformat	2025-09-29T18:13:14.1170143Z [36m⬇[0m retrieved [01mcmdliner[0m.1.3.0  (https://erratique.ch/software/cmdliner/releases/cmdliner-1.3.0.tbz)
+format	Install ocamlformat	2025-09-29T18:13:15.5102968Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:16.1757781Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+format	Install ocamlformat	2025-09-29T18:13:16.5707641Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+format	Install ocamlformat	2025-09-29T18:13:17.9484000Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+format	Install ocamlformat	2025-09-29T18:13:18.0384162Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+format	Install ocamlformat	2025-09-29T18:13:18.0956518Z [32m∗[0m installed [01mcmdliner[0m.1.3.0
+format	Install ocamlformat	2025-09-29T18:13:20.8406294Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+format	Install ocamlformat	2025-09-29T18:13:21.9543833Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (cached)
+format	Install ocamlformat	2025-09-29T18:13:22.6070711Z [36m⬇[0m retrieved [01mdune-build-info[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+format	Install ocamlformat	2025-09-29T18:13:22.6396646Z [36m⬇[0m retrieved [01meither[0m.1.0.0  (https://github.com/mirage/either/releases/download/1.0.0/either-1.0.0.tbz)
+format	Install ocamlformat	2025-09-29T18:13:23.3655887Z [36m⬇[0m retrieved [01mfpath[0m.0.7.3  (https://erratique.ch/software/fpath/releases/fpath-0.7.3.tbz)
+format	Install ocamlformat	2025-09-29T18:13:23.6969975Z [36m⬇[0m retrieved [01mfix[0m.20250919  (https://gitlab.inria.fr/fpottier/fix/-/archive/20250919/archive.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:24.5841977Z [36m⬇[0m retrieved [01mmenhir[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:24.8185738Z [36m⬇[0m retrieved [01mmenhirSdk[0m.20250912  (cached)
+format	Install ocamlformat	2025-09-29T18:13:25.1504528Z [36m⬇[0m retrieved [01mocaml-version[0m.4.0.1  (https://github.com/ocurrent/ocaml-version/releases/download/v4.0.1/ocaml-version-4.0.1.tbz)
+format	Install ocamlformat	2025-09-29T18:13:25.2875398Z [36m⬇[0m retrieved [01mmenhirCST[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:25.6140114Z [36m⬇[0m retrieved [01mmenhirLib[0m.20250912  (https://gitlab.inria.fr/fpottier/menhir/-/archive/20250912/archive.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:25.7876365Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:25.8665772Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:26.4516881Z [36m⬇[0m retrieved [01mocp-indent[0m.1.8.1  (https://github.com/OCamlPro/ocp-indent/archive/1.8.1.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:26.8380348Z [36m⬇[0m retrieved [01mocamlformat[0m.0.26.2  (https://github.com/ocaml-ppx/ocamlformat/releases/download/0.26.2/ocamlformat-0.26.2.tbz)
+format	Install ocamlformat	2025-09-29T18:13:27.0356155Z [36m⬇[0m retrieved [01mocamlformat-lib[0m.0.26.2  (https://github.com/ocaml-ppx/ocamlformat/releases/download/0.26.2/ocamlformat-0.26.2.tbz)
+format	Install ocamlformat	2025-09-29T18:13:27.1654125Z [36m⬇[0m retrieved [01mre[0m.1.14.0  (https://github.com/ocaml/ocaml-re/archive/refs/tags/1.14.0.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:27.3691418Z [36m⬇[0m retrieved [01mresult[0m.1.5  (https://github.com/janestreet/result/releases/download/1.5/result-1.5.tbz)
+format	Install ocamlformat	2025-09-29T18:13:27.5563721Z [36m⬇[0m retrieved [01mstdio[0m.v0.16.0  (https://ocaml.janestreet.com/ocaml-core/v0.16/files/stdio-v0.16.0.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:27.6614584Z [36m⬇[0m retrieved [01msexplib0[0m.v0.16.0  (https://ocaml.janestreet.com/ocaml-core/v0.16/files/sexplib0-v0.16.0.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:28.4187192Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+format	Install ocamlformat	2025-09-29T18:13:28.5346331Z [36m⬇[0m retrieved [01muuseg[0m.17.0.0  (https://erratique.ch/software/uuseg/releases/uuseg-17.0.0.tbz)
+format	Install ocamlformat	2025-09-29T18:13:29.2910258Z [36m⬇[0m retrieved [01muucp[0m.17.0.0  (https://erratique.ch/software/uucp/releases/uucp-17.0.0.tbz)
+format	Install ocamlformat	2025-09-29T18:13:29.3083699Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+format	Install ocamlformat	2025-09-29T18:13:29.3202266Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+format	Install ocamlformat	2025-09-29T18:13:30.9348280Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+format	Install ocamlformat	2025-09-29T18:13:30.9469534Z [32m∗[0m installed [01mbase-bytes[0m.base
+format	Install ocamlformat	2025-09-29T18:13:33.6819619Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+format	Install ocamlformat	2025-09-29T18:13:34.5526653Z [32m∗[0m installed [01mzarith[0m.1.14
+format	Install ocamlformat	2025-09-29T18:13:38.9898914Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+format	Install ocamlformat	2025-09-29T18:13:40.8755540Z [32m∗[0m installed [01muutf[0m.1.0.4
+format	Install ocamlformat	2025-09-29T18:13:41.5636628Z [32m∗[0m installed [01mastring[0m.0.8.5
+format	Install ocamlformat	2025-09-29T18:13:42.9418558Z [32m∗[0m installed [01mfpath[0m.0.7.3
+format	Install ocamlformat	2025-09-29T18:13:54.7453368Z [32m∗[0m installed [01mdune[0m.3.20.2
+format	Install ocamlformat	2025-09-29T18:13:55.8475370Z [32m∗[0m installed [01mcamlp-streams[0m.5.0.1
+format	Install ocamlformat	2025-09-29T18:13:55.8668252Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+format	Install ocamlformat	2025-09-29T18:13:56.8168639Z [32m∗[0m installed [01meither[0m.1.0.0
+format	Install ocamlformat	2025-09-29T18:13:56.8569889Z [32m∗[0m installed [01mdune-build-info[0m.3.20.2
+format	Install ocamlformat	2025-09-29T18:13:58.3795450Z [32m∗[0m installed [01mfix[0m.20250919
+format	Install ocamlformat	2025-09-29T18:13:59.0664162Z [32m∗[0m installed [01mmenhirCST[0m.20250912
+format	Install ocamlformat	2025-09-29T18:13:59.6067251Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+format	Install ocamlformat	2025-09-29T18:14:00.3847163Z [32m∗[0m installed [01mmenhirLib[0m.20250912
+format	Install ocamlformat	2025-09-29T18:14:00.4153824Z [32m∗[0m installed [01mmenhirSdk[0m.20250912
+format	Install ocamlformat	2025-09-29T18:14:01.1314091Z [32m∗[0m installed [01mocaml-version[0m.4.0.1
+format	Install ocamlformat	2025-09-29T18:14:03.1807631Z [32m∗[0m installed [01mocp-indent[0m.1.8.1
+format	Install ocamlformat	2025-09-29T18:14:07.0115377Z [32m∗[0m installed [01mre[0m.1.14.0
+format	Install ocamlformat	2025-09-29T18:14:07.3561168Z [32m∗[0m installed [01mresult[0m.1.5
+format	Install ocamlformat	2025-09-29T18:14:08.8531169Z [32m∗[0m installed [01msexplib0[0m.v0.16.0
+format	Install ocamlformat	2025-09-29T18:14:18.3685342Z [32m∗[0m installed [01muucp[0m.17.0.0
+format	Install ocamlformat	2025-09-29T18:14:23.6301662Z [32m∗[0m installed [01muuseg[0m.17.0.0
+format	Install ocamlformat	2025-09-29T18:14:27.9927004Z [32m∗[0m installed [01mbase[0m.v0.16.4
+format	Install ocamlformat	2025-09-29T18:14:28.6353720Z [32m∗[0m installed [01mstdio[0m.v0.16.0
+format	Install ocamlformat	2025-09-29T18:14:33.9644003Z [32m∗[0m installed [01mmenhir[0m.20250912
+format	Install ocamlformat	2025-09-29T18:14:50.9331863Z [32m∗[0m installed [01mocamlformat-lib[0m.0.26.2
+format	Install ocamlformat	2025-09-29T18:14:52.7889093Z [32m∗[0m installed [01mocamlformat[0m.0.26.2
+format	Install ocamlformat	2025-09-29T18:15:10.2384285Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+format	Install ocamlformat	2025-09-29T18:15:13.9599683Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+format	Install ocamlformat	2025-09-29T18:17:33.3397236Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+format	Install ocamlformat	2025-09-29T18:17:33.7544290Z [32m∗[0m installed [01mcoq[0m.8.18.0
+format	Install ocamlformat	2025-09-29T18:17:36.2693303Z Done.
+format	Install ocamlformat	2025-09-29T18:17:36.2696779Z 
+format	Install ocamlformat	2025-09-29T18:17:36.2697654Z [36m<><>[0m [01mocp-indent.1.8.1 installed successfully[0m [36m><><><><><><><><><><><><><><><><><>[0m
+format	Install ocamlformat	2025-09-29T18:17:36.2699051Z [32m=> [0mThis package requires additional configuration for use in editors. Install package 'user-setup', or manually:
+format	Install ocamlformat	2025-09-29T18:17:36.2699991Z 
+format	Install ocamlformat	2025-09-29T18:17:36.2700203Z    * for Emacs, add these lines to ~/.emacs:
+format	Install ocamlformat	2025-09-29T18:17:36.2701141Z      (add-to-list 'load-path "/home/runner/work/latex_perf/latex_perf/_opam/share/emacs/site-lisp")
+format	Install ocamlformat	2025-09-29T18:17:36.2702074Z      (require 'ocp-indent)
+format	Install ocamlformat	2025-09-29T18:17:36.2702968Z 
+format	Install ocamlformat	2025-09-29T18:17:36.2703163Z    * for Vim, add this line to ~/.vimrc:
+format	Install ocamlformat	2025-09-29T18:17:36.2703975Z      set rtp^="/home/runner/work/latex_perf/latex_perf/_opam/share/ocp-indent/vim"
+format	Install ocamlformat	2025-09-29T18:17:36.2705131Z # Run [01meval $(opam env)[0m to update the current shell environment
+format	Check formatting	﻿2025-09-29T18:17:37.6541504Z ##[group]Run set -e
+format	Check formatting	2025-09-29T18:17:37.6541744Z [36;1mset -e[0m
+format	Check formatting	2025-09-29T18:17:37.6541930Z [36;1mopam exec -- dune fmt[0m
+format	Check formatting	2025-09-29T18:17:37.6542153Z [36;1mgit diff --exit-code[0m
+format	Check formatting	2025-09-29T18:17:37.6568787Z shell: /usr/bin/bash -e {0}
+format	Check formatting	2025-09-29T18:17:37.6569006Z env:
+format	Check formatting	2025-09-29T18:17:37.6569974Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+format	Check formatting	2025-09-29T18:17:37.6570993Z   OPAMCLI: 2.0
+format	Check formatting	2025-09-29T18:17:37.6571182Z   OPAMCOLOR: always
+format	Check formatting	2025-09-29T18:17:37.6571352Z   OPAMERRLOGLEN: 0
+format	Check formatting	2025-09-29T18:17:37.6571518Z   OPAMJOBS: 4
+format	Check formatting	2025-09-29T18:17:37.6571681Z   OPAMPRECISETRACKING: 1
+format	Check formatting	2025-09-29T18:17:37.6571884Z   OPAMSOLVERTIMEOUT: 1000
+format	Check formatting	2025-09-29T18:17:37.6572070Z   OPAMYES: 1
+format	Check formatting	2025-09-29T18:17:37.6572220Z   CLICOLOR_FORCE: 1
+format	Check formatting	2025-09-29T18:17:37.6572389Z ##[endgroup]
+format	Post Install OCaml & opam	﻿2025-09-29T18:17:38.5815917Z Post job cleanup.
+format	Post Install OCaml & opam	2025-09-29T18:17:38.5845382Z Post job cleanup.
+format	Post Install OCaml & opam	2025-09-29T18:17:38.7394367Z ##[group]Save the opam download cache
+format	Post Install OCaml & opam	2025-09-29T18:17:38.7575112Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+format	Post Install OCaml & opam	2025-09-29T18:17:38.8725690Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0Qs3aaAAAAAD2HjCb5LLIQZUN42P6TDdTQlkzRURHRTA1MTcARWRnZQ==
+format	Post Install OCaml & opam	2025-09-29T18:17:38.8759551Z ##[endgroup]
+format	Post Run actions/checkout@v4	﻿2025-09-29T18:17:38.8874448Z Post job cleanup.
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9828341Z [command]/usr/bin/git version
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9863125Z git version 2.51.0
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9912368Z Temporarily overriding HOME='/home/runner/work/_temp/6a08bf9f-6fd7-4188-960e-d6c63eff650d' before making global git config changes
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9913933Z Adding repository directory to the temporary git global config as a safe directory
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9918423Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9952686Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+format	Post Run actions/checkout@v4	2025-09-29T18:17:38.9985118Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+format	Post Run actions/checkout@v4	2025-09-29T18:17:39.0207446Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+format	Post Run actions/checkout@v4	2025-09-29T18:17:39.0228232Z http.https://github.com/.extraheader
+format	Post Run actions/checkout@v4	2025-09-29T18:17:39.0240176Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+format	Post Run actions/checkout@v4	2025-09-29T18:17:39.0270543Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+format	Complete job	﻿2025-09-29T18:17:39.0596585Z Cleaning up orphan processes
+build	Set up job	﻿2025-09-29T18:07:34.1299826Z Current runner version: '2.328.0'
+build	Set up job	2025-09-29T18:07:34.1326338Z ##[group]Runner Image Provisioner
+build	Set up job	2025-09-29T18:07:34.1327163Z Hosted Compute Agent
+build	Set up job	2025-09-29T18:07:34.1327797Z Version: 20250912.392
+build	Set up job	2025-09-29T18:07:34.1328409Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+build	Set up job	2025-09-29T18:07:34.1329079Z Build Date: 2025-09-12T15:23:14Z
+build	Set up job	2025-09-29T18:07:34.1329726Z ##[endgroup]
+build	Set up job	2025-09-29T18:07:34.1330227Z ##[group]Operating System
+build	Set up job	2025-09-29T18:07:34.1330791Z Ubuntu
+build	Set up job	2025-09-29T18:07:34.1331263Z 22.04.5
+build	Set up job	2025-09-29T18:07:34.1332067Z LTS
+build	Set up job	2025-09-29T18:07:34.1332540Z ##[endgroup]
+build	Set up job	2025-09-29T18:07:34.1333092Z ##[group]Runner Image
+build	Set up job	2025-09-29T18:07:34.1333676Z Image: ubuntu-22.04
+build	Set up job	2025-09-29T18:07:34.1334138Z Version: 20250922.79.1
+build	Set up job	2025-09-29T18:07:34.1335181Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20250922.79/images/ubuntu/Ubuntu2204-Readme.md
+build	Set up job	2025-09-29T18:07:34.1336664Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20250922.79
+build	Set up job	2025-09-29T18:07:34.1337907Z ##[endgroup]
+build	Set up job	2025-09-29T18:07:34.1340356Z ##[group]GITHUB_TOKEN Permissions
+build	Set up job	2025-09-29T18:07:34.1342889Z Actions: write
+build	Set up job	2025-09-29T18:07:34.1343549Z Attestations: write
+build	Set up job	2025-09-29T18:07:34.1344064Z Checks: write
+build	Set up job	2025-09-29T18:07:34.1344493Z Contents: write
+build	Set up job	2025-09-29T18:07:34.1345055Z Deployments: write
+build	Set up job	2025-09-29T18:07:34.1345516Z Discussions: write
+build	Set up job	2025-09-29T18:07:34.1346004Z Issues: write
+build	Set up job	2025-09-29T18:07:34.1346512Z Metadata: read
+build	Set up job	2025-09-29T18:07:34.1346999Z Models: read
+build	Set up job	2025-09-29T18:07:34.1347434Z Packages: write
+build	Set up job	2025-09-29T18:07:34.1347972Z Pages: write
+build	Set up job	2025-09-29T18:07:34.1348423Z PullRequests: write
+build	Set up job	2025-09-29T18:07:34.1348975Z RepositoryProjects: write
+build	Set up job	2025-09-29T18:07:34.1349589Z SecurityEvents: write
+build	Set up job	2025-09-29T18:07:34.1350190Z Statuses: write
+build	Set up job	2025-09-29T18:07:34.1350691Z ##[endgroup]
+build	Set up job	2025-09-29T18:07:34.1353053Z Secret source: Actions
+build	Set up job	2025-09-29T18:07:34.1353842Z Prepare workflow directory
+build	Set up job	2025-09-29T18:07:34.1805695Z Prepare all required actions
+build	Set up job	2025-09-29T18:07:34.1859806Z Getting action download info
+build	Set up job	2025-09-29T18:07:34.4645730Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+build	Set up job	2025-09-29T18:07:34.8435352Z Complete job name: build
+build	Run actions/checkout@v4	﻿2025-09-29T18:07:34.9148088Z ##[group]Run actions/checkout@v4
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9149021Z with:
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9149467Z   repository: ClanClanClanClan/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9150215Z   token: ***
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9150611Z   ssh-strict: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9151024Z   ssh-user: git
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9151451Z   persist-credentials: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9152142Z   clean: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9152575Z   sparse-checkout-cone-mode: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9153078Z   fetch-depth: 1
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9153484Z   fetch-tags: false
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9153904Z   show-progress: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9154324Z   lfs: false
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9154720Z   submodules: false
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9155170Z   set-safe-directory: true
+build	Run actions/checkout@v4	2025-09-29T18:07:34.9155901Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0275210Z Syncing repository: ClanClanClanClan/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0278344Z ##[group]Getting Git version info
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0279782Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0282102Z [command]/usr/bin/git version
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0350182Z git version 2.51.0
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0377021Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0392705Z Temporarily overriding HOME='/home/runner/work/_temp/4a2a9db7-a88c-4f4c-97a4-a4b1d798d093' before making global git config changes
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0395461Z Adding repository directory to the temporary git global config as a safe directory
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0398636Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0431073Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0435286Z ##[group]Initializing the repository
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0439815Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0546848Z hint: Using 'master' as the name for the initial branch. This default branch name
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0548664Z hint: is subject to change. To configure the initial branch name to use in all
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0550080Z hint: of your new repositories, which will suppress this warning, call:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0550901Z hint:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0551934Z hint: 	git config --global init.defaultBranch <name>
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0552635Z hint:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0553214Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0554155Z hint: 'development'. The just-created branch can be renamed via this command:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0554896Z hint:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0555422Z hint: 	git branch -m <name>
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0555928Z hint:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0557013Z hint: Disable this message with "git config set advice.defaultBranchName false"
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0558110Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0562268Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0595121Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0596368Z ##[group]Disabling automatic garbage collection
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0598470Z [command]/usr/bin/git config --local gc.auto 0
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0626898Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0628070Z ##[group]Setting up auth
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0632835Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	Run actions/checkout@v4	2025-09-29T18:07:35.0661540Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1000187Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1032742Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1253206Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1293455Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1294468Z ##[group]Fetching the repository
+build	Run actions/checkout@v4	2025-09-29T18:07:35.1304216Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +81733f378884f06fc30671a9c24ad89d031a09bd:refs/remotes/pull/4/merge
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5044619Z From https://github.com/ClanClanClanClan/latex_perf
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5046339Z  * [new ref]         81733f378884f06fc30671a9c24ad89d031a09bd -> pull/4/merge
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5076322Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5077107Z ##[group]Determining the checkout info
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5078540Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5083193Z [command]/usr/bin/git sparse-checkout disable
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5121119Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5148394Z ##[group]Checking out the ref
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5151566Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5576546Z Note: switching to 'refs/remotes/pull/4/merge'.
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5577476Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5578109Z You are in 'detached HEAD' state. You can look around, make experimental
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5579666Z changes and commit them, and you can discard any commits you make in this
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5581034Z state without impacting any branches by switching back to a branch.
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5581581Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5582182Z If you want to create a new branch to retain commits you create, you may
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5583071Z do so (now or later) by using -c with the switch command. Example:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5583558Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5583771Z   git switch -c <new-branch-name>
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5584354Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5584698Z Or undo this operation with:
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5585510Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5585703Z   git switch -
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5585950Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5586358Z Turn off this advice by setting config variable advice.detachedHead to false
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5586937Z 
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5587602Z HEAD is now at 81733f3 Merge 4887232aba7d6b962bad0d84a547356f48bed82c into 92bdfe28e9a19447735918ce6f6c8395415acf11
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5589820Z ##[endgroup]
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5620448Z [command]/usr/bin/git log -1 --format=%H
+build	Run actions/checkout@v4	2025-09-29T18:07:35.5641899Z 81733f378884f06fc30671a9c24ad89d031a09bd
+build	Install OCaml & opam	﻿2025-09-29T18:07:35.5940525Z Prepare all required actions
+build	Install OCaml & opam	2025-09-29T18:07:35.5941293Z Getting action download info
+build	Install OCaml & opam	2025-09-29T18:07:35.7423571Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+build	Install OCaml & opam	2025-09-29T18:07:36.2094603Z ##[group]Run ./.github/actions/setup-ocaml
+build	Install OCaml & opam	2025-09-29T18:07:36.2095685Z with:
+build	Install OCaml & opam	2025-09-29T18:07:36.2096375Z   ocaml-compiler: 4.14.1
+build	Install OCaml & opam	2025-09-29T18:07:36.2097207Z   opam-depext: false
+build	Install OCaml & opam	2025-09-29T18:07:36.2098059Z   allow-prerelease-opam: false
+build	Install OCaml & opam	2025-09-29T18:07:36.2098966Z   opam-pin: true
+build	Install OCaml & opam	2025-09-29T18:07:36.2099745Z   opam-local-packages: *.opam
+build	Install OCaml & opam	2025-09-29T18:07:36.2100706Z   opam-disable-sandboxing: false
+build	Install OCaml & opam	2025-09-29T18:07:36.2101653Z   dune-cache: false
+build	Install OCaml & opam	2025-09-29T18:07:36.2102552Z   cache-prefix: v1
+build	Install OCaml & opam	2025-09-29T18:07:36.2103304Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:36.2221263Z ##[group]Run sudo apt-get update
+build	Install OCaml & opam	2025-09-29T18:07:36.2222470Z [36;1msudo apt-get update[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2223372Z [36;1msudo apt-get install -y \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2224310Z [36;1m  bubblewrap \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2225171Z [36;1m  g++-multilib \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2226000Z [36;1m  gcc-multilib \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2226808Z [36;1m  mercurial \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2227588Z [36;1m  musl-tools \[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2228349Z [36;1m  rsync[0m
+build	Install OCaml & opam	2025-09-29T18:07:36.2260692Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install OCaml & opam	2025-09-29T18:07:36.2262388Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:36.3307827Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+build	Install OCaml & opam	2025-09-29T18:07:36.3609543Z Hit:2 http://azure.archive.ubuntu.com/ubuntu jammy InRelease
+build	Install OCaml & opam	2025-09-29T18:07:36.3627495Z Hit:6 https://packages.microsoft.com/repos/azure-cli jammy InRelease
+build	Install OCaml & opam	2025-09-29T18:07:36.3638418Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.3718009Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.3730935Z Get:7 https://packages.microsoft.com/ubuntu/22.04/prod jammy InRelease [3632 B]
+build	Install OCaml & opam	2025-09-29T18:07:36.3744023Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.5855106Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [2939 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6110490Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [459 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6144607Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 c-n-f Metadata [19.0 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6161584Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [4562 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6543239Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [841 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6714335Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1228 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6857083Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [305 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6899574Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [29.5 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6914576Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.0 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.6924017Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [672 B]
+build	Install OCaml & opam	2025-09-29T18:07:36.7785062Z Get:18 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main arm64 Packages [85.0 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.7854240Z Get:19 https://packages.microsoft.com/ubuntu/22.04/prod jammy/main amd64 Packages [256 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9263268Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 Packages [2689 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9569217Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-security/main Translation-en [394 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9604735Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [13.9 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9626550Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [4413 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9865403Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-security/restricted Translation-en [818 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9925725Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [997 kB]
+build	Install OCaml & opam	2025-09-29T18:07:36.9994798Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe Translation-en [218 kB]
+build	Install OCaml & opam	2025-09-29T18:07:37.0018299Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [22.1 kB]
+build	Install OCaml & opam	2025-09-29T18:07:45.6679349Z Fetched 20.7 MB in 2s (8599 kB/s)
+build	Install OCaml & opam	2025-09-29T18:07:46.5064571Z Reading package lists...
+build	Install OCaml & opam	2025-09-29T18:07:46.5654105Z Reading package lists...
+build	Install OCaml & opam	2025-09-29T18:07:46.7493746Z Building dependency tree...
+build	Install OCaml & opam	2025-09-29T18:07:46.7506984Z Reading state information...
+build	Install OCaml & opam	2025-09-29T18:07:46.9023677Z mercurial is already the newest version (6.1.1-1ubuntu1).
+build	Install OCaml & opam	2025-09-29T18:07:46.9024547Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+build	Install OCaml & opam	2025-09-29T18:07:46.9025009Z The following additional packages will be installed:
+build	Install OCaml & opam	2025-09-29T18:07:46.9025568Z   g++-11-multilib gcc-11-multilib lib32asan6 lib32atomic1 lib32gcc-11-dev
+build	Install OCaml & opam	2025-09-29T18:07:46.9026208Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-11-dev lib32ubsan1
+build	Install OCaml & opam	2025-09-29T18:07:46.9027313Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan6 libx32atomic1
+build	Install OCaml & opam	2025-09-29T18:07:46.9028217Z   libx32gcc-11-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+build	Install OCaml & opam	2025-09-29T18:07:46.9033224Z   libx32stdc++-11-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+build	Install OCaml & opam	2025-09-29T18:07:46.9041315Z Suggested packages:
+build	Install OCaml & opam	2025-09-29T18:07:46.9042138Z   lib32stdc++6-11-dbg libx32stdc++6-11-dbg
+build	Install OCaml & opam	2025-09-29T18:07:46.9116568Z Recommended packages:
+build	Install OCaml & opam	2025-09-29T18:07:46.9117327Z   linux-musl-dev
+build	Install OCaml & opam	2025-09-29T18:07:46.9399896Z The following NEW packages will be installed:
+build	Install OCaml & opam	2025-09-29T18:07:46.9401017Z   bubblewrap g++-11-multilib g++-multilib gcc-11-multilib gcc-multilib
+build	Install OCaml & opam	2025-09-29T18:07:46.9402264Z   lib32asan6 lib32atomic1 lib32gcc-11-dev lib32gomp1 lib32itm1 lib32quadmath0
+build	Install OCaml & opam	2025-09-29T18:07:46.9404528Z   lib32stdc++-11-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+build	Install OCaml & opam	2025-09-29T18:07:46.9405267Z   libx32asan6 libx32atomic1 libx32gcc-11-dev libx32gcc-s1 libx32gomp1
+build	Install OCaml & opam	2025-09-29T18:07:46.9406459Z   libx32itm1 libx32quadmath0 libx32stdc++-11-dev libx32stdc++6 libx32ubsan1
+build	Install OCaml & opam	2025-09-29T18:07:46.9408968Z   musl musl-dev musl-tools
+build	Install OCaml & opam	2025-09-29T18:07:46.9569877Z 0 upgraded, 29 newly installed, 0 to remove and 38 not upgraded.
+build	Install OCaml & opam	2025-09-29T18:07:46.9570705Z Need to get 21.1 MB of archives.
+build	Install OCaml & opam	2025-09-29T18:07:46.9571330Z After this operation, 93.4 MB of additional disk space will be used.
+build	Install OCaml & opam	2025-09-29T18:07:46.9572184Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+build	Install OCaml & opam	2025-09-29T18:07:47.0069965Z Get:2 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 bubblewrap amd64 0.6.1-1ubuntu0.1 [46.3 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.0351473Z Get:3 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-i386 amd64 2.35-0ubuntu3.11 [1445 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.1328412Z Get:4 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-x32 amd64 2.35-0ubuntu3.11 [2978 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.2756251Z Get:5 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev-x32 amd64 2.35-0ubuntu3.11 [1632 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.3889546Z Get:6 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-s1 amd64 12.3.0-1ubuntu1~22.04.2 [54.0 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.4170004Z Get:7 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [133 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.4471107Z Get:8 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gomp1 amd64 12.3.0-1ubuntu1~22.04.2 [127 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.4772397Z Get:9 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [32.0 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.5048449Z Get:10 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32itm1 amd64 12.3.0-1ubuntu1~22.04.2 [30.2 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.5312706Z Get:11 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [8512 B]
+build	Install OCaml & opam	2025-09-29T18:07:47.5584690Z Get:12 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32atomic1 amd64 12.3.0-1ubuntu1~22.04.2 [10.2 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.5888349Z Get:13 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2154 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.6792077Z Get:14 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32asan6 amd64 11.4.0-1ubuntu1~22.04.2 [2128 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.7769424Z Get:15 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [959 kB]
+build	Install OCaml & opam	2025-09-29T18:07:47.8691445Z Get:16 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++6 amd64 12.3.0-1ubuntu1~22.04.2 [682 kB]
+build	Install OCaml & opam	2025-09-29T18:07:48.4580058Z Get:17 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32ubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [963 kB]
+build	Install OCaml & opam	2025-09-29T18:07:48.7488770Z Get:18 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [244 kB]
+build	Install OCaml & opam	2025-09-29T18:07:48.8209057Z Get:19 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32quadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [156 kB]
+build	Install OCaml & opam	2025-09-29T18:07:48.9343986Z Get:20 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2339 kB]
+build	Install OCaml & opam	2025-09-29T18:07:49.0625535Z Get:21 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32gcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2106 kB]
+build	Install OCaml & opam	2025-09-29T18:07:49.1989681Z Get:22 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [880 B]
+build	Install OCaml & opam	2025-09-29T18:07:49.2366858Z Get:23 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 lib32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [989 kB]
+build	Install OCaml & opam	2025-09-29T18:07:49.7398738Z Get:24 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libx32stdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [906 kB]
+build	Install OCaml & opam	2025-09-29T18:07:49.9481144Z Get:25 http://azure.archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11-multilib amd64 11.4.0-1ubuntu1~22.04.2 [894 B]
+build	Install OCaml & opam	2025-09-29T18:07:49.9748740Z Get:26 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 gcc-multilib amd64 4:11.2.0-1ubuntu1 [1382 B]
+build	Install OCaml & opam	2025-09-29T18:07:50.0015877Z Get:27 http://azure.archive.ubuntu.com/ubuntu jammy/main amd64 g++-multilib amd64 4:11.2.0-1ubuntu1 [854 B]
+build	Install OCaml & opam	2025-09-29T18:07:50.0277305Z Get:28 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl amd64 1.2.2-4 [407 kB]
+build	Install OCaml & opam	2025-09-29T18:07:50.0799941Z Get:29 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-dev amd64 1.2.2-4 [605 kB]
+build	Install OCaml & opam	2025-09-29T18:07:50.1388356Z Get:30 http://azure.archive.ubuntu.com/ubuntu jammy/universe amd64 musl-tools amd64 1.2.2-4 [5520 B]
+build	Install OCaml & opam	2025-09-29T18:07:50.4324628Z Fetched 21.1 MB in 3s (6623 kB/s)
+build	Install OCaml & opam	2025-09-29T18:07:50.4552473Z Selecting previously unselected package bubblewrap.
+build	Install OCaml & opam	2025-09-29T18:07:50.4840556Z (Reading database ... 
+build	Install OCaml & opam	2025-09-29T18:07:50.4840951Z (Reading database ... 5%
+build	Install OCaml & opam	2025-09-29T18:07:50.4841183Z (Reading database ... 10%
+build	Install OCaml & opam	2025-09-29T18:07:50.4841405Z (Reading database ... 15%
+build	Install OCaml & opam	2025-09-29T18:07:50.4841612Z (Reading database ... 20%
+build	Install OCaml & opam	2025-09-29T18:07:50.4842029Z (Reading database ... 25%
+build	Install OCaml & opam	2025-09-29T18:07:50.4842419Z (Reading database ... 30%
+build	Install OCaml & opam	2025-09-29T18:07:50.4842786Z (Reading database ... 35%
+build	Install OCaml & opam	2025-09-29T18:07:50.4843390Z (Reading database ... 40%
+build	Install OCaml & opam	2025-09-29T18:07:50.4843589Z (Reading database ... 45%
+build	Install OCaml & opam	2025-09-29T18:07:50.4843794Z (Reading database ... 50%
+build	Install OCaml & opam	2025-09-29T18:07:50.6724300Z (Reading database ... 55%
+build	Install OCaml & opam	2025-09-29T18:07:50.9764793Z (Reading database ... 60%
+build	Install OCaml & opam	2025-09-29T18:07:51.2786037Z (Reading database ... 65%
+build	Install OCaml & opam	2025-09-29T18:07:51.5207442Z (Reading database ... 70%
+build	Install OCaml & opam	2025-09-29T18:07:51.8261391Z (Reading database ... 75%
+build	Install OCaml & opam	2025-09-29T18:07:52.0889157Z (Reading database ... 80%
+build	Install OCaml & opam	2025-09-29T18:07:52.3715343Z (Reading database ... 85%
+build	Install OCaml & opam	2025-09-29T18:07:52.5905700Z (Reading database ... 90%
+build	Install OCaml & opam	2025-09-29T18:07:52.8695019Z (Reading database ... 95%
+build	Install OCaml & opam	2025-09-29T18:07:52.8695475Z (Reading database ... 100%
+build	Install OCaml & opam	2025-09-29T18:07:52.8695961Z (Reading database ... 256283 files and directories currently installed.)
+build	Install OCaml & opam	2025-09-29T18:07:52.8748128Z Preparing to unpack .../00-bubblewrap_0.6.1-1ubuntu0.1_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:52.8777263Z Unpacking bubblewrap (0.6.1-1ubuntu0.1) ...
+build	Install OCaml & opam	2025-09-29T18:07:52.9126169Z Selecting previously unselected package libc6-dev-i386.
+build	Install OCaml & opam	2025-09-29T18:07:52.9280823Z Preparing to unpack .../01-libc6-dev-i386_2.35-0ubuntu3.11_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:52.9290970Z Unpacking libc6-dev-i386 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:52.9884327Z Selecting previously unselected package libc6-x32.
+build	Install OCaml & opam	2025-09-29T18:07:53.0040870Z Preparing to unpack .../02-libc6-x32_2.35-0ubuntu3.11_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.0061586Z Unpacking libc6-x32 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.1056519Z Selecting previously unselected package libc6-dev-x32.
+build	Install OCaml & opam	2025-09-29T18:07:53.1212278Z Preparing to unpack .../03-libc6-dev-x32_2.35-0ubuntu3.11_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.1222169Z Unpacking libc6-dev-x32 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.1709679Z Selecting previously unselected package libx32gcc-s1.
+build	Install OCaml & opam	2025-09-29T18:07:53.1864475Z Preparing to unpack .../04-libx32gcc-s1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.1873731Z Unpacking libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.2087548Z Selecting previously unselected package lib32gomp1.
+build	Install OCaml & opam	2025-09-29T18:07:53.2242866Z Preparing to unpack .../05-lib32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.2252690Z Unpacking lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.2476832Z Selecting previously unselected package libx32gomp1.
+build	Install OCaml & opam	2025-09-29T18:07:53.2630628Z Preparing to unpack .../06-libx32gomp1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.2641157Z Unpacking libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.2865952Z Selecting previously unselected package lib32itm1.
+build	Install OCaml & opam	2025-09-29T18:07:53.3020822Z Preparing to unpack .../07-lib32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.3030732Z Unpacking lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.3248282Z Selecting previously unselected package libx32itm1.
+build	Install OCaml & opam	2025-09-29T18:07:53.3399060Z Preparing to unpack .../08-libx32itm1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.3410584Z Unpacking libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.3626531Z Selecting previously unselected package lib32atomic1.
+build	Install OCaml & opam	2025-09-29T18:07:53.3779929Z Preparing to unpack .../09-lib32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.3790015Z Unpacking lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.4007686Z Selecting previously unselected package libx32atomic1.
+build	Install OCaml & opam	2025-09-29T18:07:53.4158320Z Preparing to unpack .../10-libx32atomic1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.4168449Z Unpacking libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.4368237Z Selecting previously unselected package lib32asan6.
+build	Install OCaml & opam	2025-09-29T18:07:53.4519481Z Preparing to unpack .../11-lib32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.4530314Z Unpacking lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.4996244Z Selecting previously unselected package libx32asan6.
+build	Install OCaml & opam	2025-09-29T18:07:53.5151941Z Preparing to unpack .../12-libx32asan6_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.5162931Z Unpacking libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.5626020Z Selecting previously unselected package lib32ubsan1.
+build	Install OCaml & opam	2025-09-29T18:07:53.5782166Z Preparing to unpack .../13-lib32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.5792137Z Unpacking lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.6130868Z Selecting previously unselected package libx32stdc++6.
+build	Install OCaml & opam	2025-09-29T18:07:53.6288254Z Preparing to unpack .../14-libx32stdc++6_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.6300407Z Unpacking libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.6683725Z Selecting previously unselected package libx32ubsan1.
+build	Install OCaml & opam	2025-09-29T18:07:53.6850214Z Preparing to unpack .../15-libx32ubsan1_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.6861385Z Unpacking libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.7179640Z Selecting previously unselected package lib32quadmath0.
+build	Install OCaml & opam	2025-09-29T18:07:53.7335243Z Preparing to unpack .../16-lib32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.7346355Z Unpacking lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.7584701Z Selecting previously unselected package libx32quadmath0.
+build	Install OCaml & opam	2025-09-29T18:07:53.7738854Z Preparing to unpack .../17-libx32quadmath0_12.3.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.7748181Z Unpacking libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.7956490Z Selecting previously unselected package lib32gcc-11-dev.
+build	Install OCaml & opam	2025-09-29T18:07:53.8107626Z Preparing to unpack .../18-lib32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.8117708Z Unpacking lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.8599810Z Selecting previously unselected package libx32gcc-11-dev.
+build	Install OCaml & opam	2025-09-29T18:07:53.8754581Z Preparing to unpack .../19-libx32gcc-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.8766109Z Unpacking libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.9229314Z Selecting previously unselected package gcc-11-multilib.
+build	Install OCaml & opam	2025-09-29T18:07:53.9385389Z Preparing to unpack .../20-gcc-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.9395871Z Unpacking gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:53.9585174Z Selecting previously unselected package lib32stdc++-11-dev.
+build	Install OCaml & opam	2025-09-29T18:07:53.9740249Z Preparing to unpack .../21-lib32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:53.9750226Z Unpacking lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.0365291Z Selecting previously unselected package libx32stdc++-11-dev.
+build	Install OCaml & opam	2025-09-29T18:07:54.0522570Z Preparing to unpack .../22-libx32stdc++-11-dev_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.0531994Z Unpacking libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1066175Z Selecting previously unselected package g++-11-multilib.
+build	Install OCaml & opam	2025-09-29T18:07:54.1225422Z Preparing to unpack .../23-g++-11-multilib_11.4.0-1ubuntu1~22.04.2_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1237545Z Unpacking g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1436392Z Selecting previously unselected package gcc-multilib.
+build	Install OCaml & opam	2025-09-29T18:07:54.1595553Z Preparing to unpack .../24-gcc-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1606249Z Unpacking gcc-multilib (4:11.2.0-1ubuntu1) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1801291Z Selecting previously unselected package g++-multilib.
+build	Install OCaml & opam	2025-09-29T18:07:54.1957394Z Preparing to unpack .../25-g++-multilib_4%3a11.2.0-1ubuntu1_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.1968382Z Unpacking g++-multilib (4:11.2.0-1ubuntu1) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.2167971Z Selecting previously unselected package musl:amd64.
+build	Install OCaml & opam	2025-09-29T18:07:54.2324038Z Preparing to unpack .../26-musl_1.2.2-4_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.2334905Z Unpacking musl:amd64 (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.2612197Z Selecting previously unselected package musl-dev:amd64.
+build	Install OCaml & opam	2025-09-29T18:07:54.2778246Z Preparing to unpack .../27-musl-dev_1.2.2-4_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.2788430Z Unpacking musl-dev:amd64 (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.3447349Z Selecting previously unselected package musl-tools.
+build	Install OCaml & opam	2025-09-29T18:07:54.3608097Z Preparing to unpack .../28-musl-tools_1.2.2-4_amd64.deb ...
+build	Install OCaml & opam	2025-09-29T18:07:54.3619215Z Unpacking musl-tools (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4111875Z Setting up bubblewrap (0.6.1-1ubuntu0.1) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4166051Z Setting up libc6-dev-i386 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4192786Z Setting up lib32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4221012Z Setting up lib32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4248892Z Setting up libc6-x32 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4285230Z Setting up libc6-dev-x32 (2.35-0ubuntu3.11) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4309470Z Setting up lib32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4334770Z Setting up libx32gomp1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4362374Z Setting up lib32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4387334Z Setting up musl:amd64 (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4430223Z Setting up lib32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4467017Z Setting up libx32quadmath0 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4497567Z Setting up lib32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4526623Z Setting up libx32atomic1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4552378Z Setting up libx32gcc-s1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4582900Z Setting up libx32itm1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4613888Z Setting up musl-dev:amd64 (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4650245Z Setting up libx32asan6 (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4677042Z Setting up libx32stdc++6 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4700835Z Setting up libx32ubsan1 (12.3.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4726716Z Setting up musl-tools (1.2.2-4) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4752457Z Setting up libx32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4782809Z Setting up libx32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4809909Z Setting up lib32gcc-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4838207Z Setting up lib32stdc++-11-dev (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4864858Z Setting up gcc-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4890001Z Setting up gcc-multilib (4:11.2.0-1ubuntu1) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4919392Z Setting up g++-11-multilib (11.4.0-1ubuntu1~22.04.2) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4947103Z Setting up g++-multilib (4:11.2.0-1ubuntu1) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.4978999Z Processing triggers for libc-bin (2.35-0ubuntu3.10) ...
+build	Install OCaml & opam	2025-09-29T18:07:54.5322053Z Processing triggers for man-db (2.10.2-1) ...
+build	Install OCaml & opam	2025-09-29T18:07:55.9207535Z NEEDRESTART-VER: 3.5
+build	Install OCaml & opam	2025-09-29T18:07:56.2869813Z NEEDRESTART-KCUR: 6.8.0-1031-azure
+build	Install OCaml & opam	2025-09-29T18:07:56.2870362Z NEEDRESTART-KEXP: 6.8.0-1031-azure
+build	Install OCaml & opam	2025-09-29T18:07:56.2870630Z NEEDRESTART-KSTA: 1
+build	Install OCaml & opam	2025-09-29T18:07:56.2870882Z NEEDRESTART-SVC: hosted-compute-agent.service
+build	Install OCaml & opam	2025-09-29T18:07:57.6756459Z ##[group]Run mkdir -p "$HOME/.github-tools"
+build	Install OCaml & opam	2025-09-29T18:07:57.6756829Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6757079Z [36;1m{[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6757290Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6757611Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6757902Z [36;1m  printf '%s\n' '  args=()'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6758161Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6758431Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6758748Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6759062Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6759320Z [36;1m  printf '%s\n' '    fi'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6759627Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6759964Z [36;1m  printf '%s\n' '      continue'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6760412Z [36;1m  printf '%s\n' '    fi'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6760650Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6760910Z [36;1m  printf '%s\n' '  done'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6761180Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6761458Z [36;1m  printf '%s\n' 'fi'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6761847Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6762133Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6762404Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6762868Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+build	Install OCaml & opam	2025-09-29T18:07:57.6791062Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install OCaml & opam	2025-09-29T18:07:57.6791456Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:57.6935865Z ##[group]Run ocaml/setup-ocaml@v2
+build	Install OCaml & opam	2025-09-29T18:07:57.6936101Z with:
+build	Install OCaml & opam	2025-09-29T18:07:57.6936283Z   ocaml-compiler: 4.14.1
+build	Install OCaml & opam	2025-09-29T18:07:57.6936508Z   allow-prerelease-opam: false
+build	Install OCaml & opam	2025-09-29T18:07:57.6936734Z   opam-pin: true
+build	Install OCaml & opam	2025-09-29T18:07:57.6936916Z   opam-depext: false
+build	Install OCaml & opam	2025-09-29T18:07:57.6937120Z   opam-local-packages: *.opam
+build	Install OCaml & opam	2025-09-29T18:07:57.6937348Z   opam-disable-sandboxing: false
+build	Install OCaml & opam	2025-09-29T18:07:57.6937570Z   dune-cache: false
+build	Install OCaml & opam	2025-09-29T18:07:57.6937748Z   cache-prefix: v1
+build	Install OCaml & opam	2025-09-29T18:07:57.6938249Z   github-token: ***
+build	Install OCaml & opam	2025-09-29T18:07:57.6938444Z env:
+build	Install OCaml & opam	2025-09-29T18:07:57.6939393Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	Install OCaml & opam	2025-09-29T18:07:57.6940447Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:57.8700946Z ##[group]Retrieve the opam cache
+build	Install OCaml & opam	2025-09-29T18:07:59.0861534Z ##[warning]Failed to restore: Cache service responded with 400
+build	Install OCaml & opam	2025-09-29T18:07:59.0863572Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-22.04-x86_64-ocaml_base_compiler_4_14_1-
+build	Install OCaml & opam	2025-09-29T18:07:59.0864961Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:59.0865294Z ##[group]Install opam
+build	Install OCaml & opam	2025-09-29T18:07:59.8684600Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+build	Install OCaml & opam	2025-09-29T18:07:59.8775938Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+build	Install OCaml & opam	2025-09-29T18:07:59.8777361Z Added opam to the path
+build	Install OCaml & opam	2025-09-29T18:07:59.8778157Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:07:59.8779031Z ##[group]Initialise the opam state
+build	Install OCaml & opam	2025-09-29T18:07:59.8801054Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+build	Install OCaml & opam	2025-09-29T18:07:59.9328133Z Reading package lists...
+build	Install OCaml & opam	2025-09-29T18:08:00.1103109Z Building dependency tree...
+build	Install OCaml & opam	2025-09-29T18:08:00.1114356Z Reading state information...
+build	Install OCaml & opam	2025-09-29T18:08:00.2704326Z g++-multilib is already the newest version (4:11.2.0-1ubuntu1).
+build	Install OCaml & opam	2025-09-29T18:08:00.2705211Z gcc-multilib is already the newest version (4:11.2.0-1ubuntu1).
+build	Install OCaml & opam	2025-09-29T18:08:00.2705689Z mercurial is already the newest version (6.1.1-1ubuntu1).
+build	Install OCaml & opam	2025-09-29T18:08:00.2706106Z musl-tools is already the newest version (1.2.2-4).
+build	Install OCaml & opam	2025-09-29T18:08:00.2706528Z bubblewrap is already the newest version (0.6.1-1ubuntu0.1).
+build	Install OCaml & opam	2025-09-29T18:08:00.2706988Z rsync is already the newest version (3.2.7-0ubuntu0.22.04.4).
+build	Install OCaml & opam	2025-09-29T18:08:00.2707441Z 0 upgraded, 0 newly installed, 0 to remove and 38 not upgraded.
+build	Install OCaml & opam	2025-09-29T18:08:00.2822282Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+build	Install OCaml & opam	2025-09-29T18:08:00.2961368Z No configuration file found, using built-in defaults.
+build	Install OCaml & opam	2025-09-29T18:08:00.2965018Z Checking for available remotes: rsync and local, git, mercurial.
+build	Install OCaml & opam	2025-09-29T18:08:00.2966630Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+build	Install OCaml & opam	2025-09-29T18:08:00.2967301Z 
+build	Install OCaml & opam	2025-09-29T18:08:00.3187380Z 
+build	Install OCaml & opam	2025-09-29T18:08:00.3188365Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+build	Install OCaml & opam	2025-09-29T18:08:03.3592911Z [[32mdefault[0m] Initialised
+build	Install OCaml & opam	2025-09-29T18:08:15.0957108Z 
+build	Install OCaml & opam	2025-09-29T18:08:15.0957536Z User configuration:
+build	Install OCaml & opam	2025-09-29T18:08:15.0960230Z   Updating ~/.bash_profile.
+build	Install OCaml & opam	2025-09-29T18:08:15.0963565Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+build	Install OCaml & opam	2025-09-29T18:08:15.0964086Z 
+build	Install OCaml & opam	2025-09-29T18:08:16.3123322Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:08:16.3125490Z ##[group]Remove the opam repositories
+build	Install OCaml & opam	2025-09-29T18:08:16.3165510Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+build	Install OCaml & opam	2025-09-29T18:08:16.3717766Z default
+build	Install OCaml & opam	2025-09-29T18:08:16.3754708Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+build	Install OCaml & opam	2025-09-29T18:08:16.4377582Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:08:16.4378553Z ##[group]Initialise the opam repositories
+build	Install OCaml & opam	2025-09-29T18:08:16.4395651Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+build	Install OCaml & opam	2025-09-29T18:08:50.7069699Z [[32mdefault[0m] Initialised
+build	Install OCaml & opam	2025-09-29T18:09:02.4471970Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:09:02.6121095Z ##[group]Install OCaml
+build	Install OCaml & opam	2025-09-29T18:09:02.6133618Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+build	Install OCaml & opam	2025-09-29T18:09:02.8154925Z 
+build	Install OCaml & opam	2025-09-29T18:09:02.8158117Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+build	Install OCaml & opam	2025-09-29T18:09:02.8158817Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+build	Install OCaml & opam	2025-09-29T18:09:06.8602933Z 
+build	Install OCaml & opam	2025-09-29T18:09:06.8604569Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+build	Install OCaml & opam	2025-09-29T18:09:09.3339100Z [32m∗[0m installed [01mbase-bigarray[0m.base
+build	Install OCaml & opam	2025-09-29T18:09:09.3344907Z [32m∗[0m installed [01mbase-threads[0m.base
+build	Install OCaml & opam	2025-09-29T18:09:09.3352327Z [32m∗[0m installed [01mbase-unix[0m.base
+build	Install OCaml & opam	2025-09-29T18:09:09.3359818Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+build	Install OCaml & opam	2025-09-29T18:09:09.4855104Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+build	Install OCaml & opam	2025-09-29T18:09:09.8872325Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+build	Install OCaml & opam	2025-09-29T18:11:36.4133052Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+build	Install OCaml & opam	2025-09-29T18:11:36.4313715Z [32m∗[0m installed [01mocaml-config[0m.2
+build	Install OCaml & opam	2025-09-29T18:11:36.5006556Z [32m∗[0m installed [01mocaml[0m.4.14.1
+build	Install OCaml & opam	2025-09-29T18:11:36.8923475Z Done.
+build	Install OCaml & opam	2025-09-29T18:11:36.8928652Z # Run [01meval $(opam env)[0m to update the current shell environment
+build	Install OCaml & opam	2025-09-29T18:11:38.2383471Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:11:38.2384127Z ##[group]Save the opam cache
+build	Install OCaml & opam	2025-09-29T18:11:38.2405327Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+build	Install OCaml & opam	2025-09-29T18:11:38.4428666Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+build	Install OCaml & opam	2025-09-29T18:11:38.5497251Z Updating /home/runner/.opam/repo/repos-config
+build	Install OCaml & opam	2025-09-29T18:11:38.5498580Z Clearing repository cache
+build	Install OCaml & opam	2025-09-29T18:11:38.5533216Z Clearing cache of downloaded files
+build	Install OCaml & opam	2025-09-29T18:11:38.5567168Z Clearing logs
+build	Install OCaml & opam	2025-09-29T18:11:39.3586966Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+build	Install OCaml & opam	2025-09-29T18:11:41.1932626Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>03cvaaAAAAADh1F5hkHO1Ra4k/2pCR9QrQ0hJMzBFREdFMDIxMABFZGdl
+build	Install OCaml & opam	2025-09-29T18:11:41.2711897Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:11:41.2712847Z ##[group]Retrieve the opam download cache
+build	Install OCaml & opam	2025-09-29T18:11:41.3047319Z ##[warning]Failed to restore: Cache service responded with 400
+build	Install OCaml & opam	2025-09-29T18:11:41.3055975Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-56, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-56, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304913-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+build	Install OCaml & opam	2025-09-29T18:11:41.3059664Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:11:41.3089605Z ##[group]Pin local packages
+build	Install OCaml & opam	2025-09-29T18:11:41.3105644Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+build	Install OCaml & opam	2025-09-29T18:11:47.9827278Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+build	Install OCaml & opam	2025-09-29T18:11:48.0818376Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+build	Install OCaml & opam	2025-09-29T18:11:48.0823144Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+build	Install OCaml & opam	2025-09-29T18:11:48.0824530Z     [31merror[0m 23: Missing field 'maintainer'
+build	Install OCaml & opam	2025-09-29T18:11:48.0825142Z   [33mwarning[0m 25: Missing field 'authors'
+build	Install OCaml & opam	2025-09-29T18:11:48.0825706Z   [33mwarning[0m 35: Missing field 'homepage'
+build	Install OCaml & opam	2025-09-29T18:11:48.0826258Z   [33mwarning[0m 36: Missing field 'bug-reports'
+build	Install OCaml & opam	2025-09-29T18:11:48.0840170Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#HEAD[0m (version [01mdev[0m)
+build	Install OCaml & opam	2025-09-29T18:11:49.3242349Z ##[endgroup]
+build	Install OCaml & opam	2025-09-29T18:11:49.3254134Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+build	Install OCaml & opam	2025-09-29T18:11:49.3387233Z 2.1.6
+build	Install OCaml & opam	2025-09-29T18:11:49.3417012Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+build	Install OCaml & opam	2025-09-29T18:11:49.3696802Z The OCaml toplevel, version 4.14.1
+build	Install dependencies	﻿2025-09-29T18:11:49.3827847Z ##[group]Run opam install . --deps-only --with-test -y
+build	Install dependencies	2025-09-29T18:11:49.3828241Z [36;1mopam install . --deps-only --with-test -y[0m
+build	Install dependencies	2025-09-29T18:11:49.3858086Z shell: /usr/bin/bash -e {0}
+build	Install dependencies	2025-09-29T18:11:49.3858318Z env:
+build	Install dependencies	2025-09-29T18:11:49.3859279Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	Install dependencies	2025-09-29T18:11:49.3860312Z   OPAMCLI: 2.0
+build	Install dependencies	2025-09-29T18:11:49.3860491Z   OPAMCOLOR: always
+build	Install dependencies	2025-09-29T18:11:49.3860672Z   OPAMERRLOGLEN: 0
+build	Install dependencies	2025-09-29T18:11:49.3860852Z   OPAMJOBS: 4
+build	Install dependencies	2025-09-29T18:11:49.3861030Z   OPAMPRECISETRACKING: 1
+build	Install dependencies	2025-09-29T18:11:49.3861245Z   OPAMSOLVERTIMEOUT: 1000
+build	Install dependencies	2025-09-29T18:11:49.3861438Z   OPAMYES: 1
+build	Install dependencies	2025-09-29T18:11:49.3861614Z   CLICOLOR_FORCE: 1
+build	Install dependencies	2025-09-29T18:11:49.3861959Z ##[endgroup]
+build	Install dependencies	2025-09-29T18:11:49.6364369Z [1;34m[NOTE][0m Ignoring uncommitted changes in /home/runner/work/latex_perf/latex_perf (`--working-dir' not active).
+build	Install dependencies	2025-09-29T18:11:49.8060045Z [[32mlatex-perfectionist.dev[0m] synchronised (git+file:///home/runner/work/latex_perf/latex_perf#HEAD)
+build	Install dependencies	2025-09-29T18:11:54.3685251Z The following actions will be performed:
+build	Install dependencies	2025-09-29T18:11:54.3686285Z   [32m∗[0m install [01mocamlbuild[0m          0.16.1
+build	Install dependencies	2025-09-29T18:11:54.3690138Z   [32m∗[0m install [01mconf-gmp[0m            5
+build	Install dependencies	2025-09-29T18:11:54.3690872Z   [32m∗[0m install [01mconf-pkg-config[0m     4
+build	Install dependencies	2025-09-29T18:11:54.3691552Z   [32m∗[0m install [01mocamlfind[0m           1.9.8
+build	Install dependencies	2025-09-29T18:11:54.3692567Z   [32m∗[0m install [01mdune[0m                3.20.2
+build	Install dependencies	2025-09-29T18:11:54.3693222Z   [32m∗[0m install [01mzarith[0m              1.14
+build	Install dependencies	2025-09-29T18:11:54.3693820Z   [32m∗[0m install [01mtopkg[0m               1.1.0
+build	Install dependencies	2025-09-29T18:11:54.3711130Z   [32m∗[0m install [01myojson[0m              3.0.0
+build	Install dependencies	2025-09-29T18:11:54.3711970Z   [32m∗[0m install [01mstdlib-shims[0m        0.3.0
+build	Install dependencies	2025-09-29T18:11:54.3712621Z   [32m∗[0m install [01msexplib0[0m            v0.17.0
+build	Install dependencies	2025-09-29T18:11:54.3713235Z   [32m∗[0m install [01mppx_derivers[0m        1.2.1
+build	Install dependencies	2025-09-29T18:11:54.3713847Z   [32m∗[0m install [01mocaml-syntax-shims[0m  1.0.0
+build	Install dependencies	2025-09-29T18:11:54.3714486Z   [32m∗[0m install [01mocaml-compiler-libs[0m v0.12.4
+build	Install dependencies	2025-09-29T18:11:54.3715071Z   [32m∗[0m install [01mcsexp[0m               1.5.2
+build	Install dependencies	2025-09-29T18:11:54.3715585Z   [32m∗[0m install [01mcppo[0m                1.8.0
+build	Install dependencies	2025-09-29T18:11:54.3716152Z   [32m∗[0m install [01mcoq-core[0m            8.18.0
+build	Install dependencies	2025-09-29T18:11:54.3716702Z   [32m∗[0m install [01muutf[0m                1.0.4
+build	Install dependencies	2025-09-29T18:11:54.3717262Z   [32m∗[0m install [01mppxlib[0m              0.36.0
+build	Install dependencies	2025-09-29T18:11:54.3717813Z   [32m∗[0m install [01mdune-configurator[0m   3.20.2
+build	Install dependencies	2025-09-29T18:11:54.3718328Z   [32m∗[0m install [01mcoqide-server[0m       8.18.0
+build	Install dependencies	2025-09-29T18:11:54.3718820Z   [32m∗[0m install [01mcoq-stdlib[0m          8.18.0
+build	Install dependencies	2025-09-29T18:11:54.3719360Z   [32m∗[0m install [01mppx_deriving[0m        6.1.1
+build	Install dependencies	2025-09-29T18:11:54.3719957Z   [32m∗[0m install [01mbigstringaf[0m         0.10.0
+build	Install dependencies	2025-09-29T18:11:54.3720530Z   [32m∗[0m install [01mcoq[0m                 8.18.0
+build	Install dependencies	2025-09-29T18:11:54.3721110Z   [32m∗[0m install [01mangstrom[0m            0.16.1
+build	Install dependencies	2025-09-29T18:11:54.3721604Z ===== [32m∗[0m 25 =====
+build	Install dependencies	2025-09-29T18:11:54.3722043Z 
+build	Install dependencies	2025-09-29T18:11:54.3722521Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+build	Install dependencies	2025-09-29T18:11:54.4411340Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+build	Install dependencies	2025-09-29T18:11:56.8922259Z [32m∗[0m installed [01mconf-gmp[0m.5
+build	Install dependencies	2025-09-29T18:11:56.8939229Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+build	Install dependencies	2025-09-29T18:11:56.9063218Z [36m⬇[0m retrieved [01mangstrom[0m.0.16.1  (https://github.com/inhabitedtype/angstrom/archive/0.16.1.tar.gz)
+build	Install dependencies	2025-09-29T18:11:56.9491652Z [36m⬇[0m retrieved [01mbigstringaf[0m.0.10.0  (https://github.com/inhabitedtype/bigstringaf/archive/0.10.0.tar.gz)
+build	Install dependencies	2025-09-29T18:11:58.2233069Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+build	Install dependencies	2025-09-29T18:11:58.8147665Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+build	Install dependencies	2025-09-29T18:11:59.2069015Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+build	Install dependencies	2025-09-29T18:11:59.5982797Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+build	Install dependencies	2025-09-29T18:11:59.6291117Z [36m⬇[0m retrieved [01mcppo[0m.1.8.0  (https://github.com/ocaml-community/cppo/archive/v1.8.0.tar.gz)
+build	Install dependencies	2025-09-29T18:11:59.6800376Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+build	Install dependencies	2025-09-29T18:11:59.9620738Z [36m⬇[0m retrieved [01mocaml-compiler-libs[0m.v0.12.4  (https://github.com/janestreet/ocaml-compiler-libs/releases/download/v0.12.4/ocaml-compiler-libs-v0.12.4.tbz)
+build	Install dependencies	2025-09-29T18:12:00.2475719Z [36m⬇[0m retrieved [01mocaml-syntax-shims[0m.1.0.0  (https://github.com/ocaml-ppx/ocaml-syntax-shims/releases/download/1.0.0/ocaml-syntax-shims-1.0.0.tbz)
+build	Install dependencies	2025-09-29T18:12:00.8981923Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+build	Install dependencies	2025-09-29T18:12:01.6860188Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+build	Install dependencies	2025-09-29T18:12:02.7782371Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+build	Install dependencies	2025-09-29T18:12:02.8333928Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+build	Install dependencies	2025-09-29T18:12:02.8652103Z [36m⬇[0m retrieved [01mppx_derivers[0m.1.2.1  (https://github.com/ocaml-ppx/ppx_derivers/archive/1.2.1.tar.gz)
+build	Install dependencies	2025-09-29T18:12:03.2132221Z [36m⬇[0m retrieved [01mppx_deriving[0m.6.1.1  (https://github.com/ocaml-ppx/ppx_deriving/releases/download/v6.1.1/ppx_deriving-6.1.1.tar.gz)
+build	Install dependencies	2025-09-29T18:12:03.4856848Z [36m⬇[0m retrieved [01mppxlib[0m.0.36.0  (https://github.com/ocaml-ppx/ppxlib/releases/download/0.36.0/ppxlib-0.36.0.tbz)
+build	Install dependencies	2025-09-29T18:12:03.5064204Z [36m⬇[0m retrieved [01msexplib0[0m.v0.17.0  (https://github.com/janestreet/sexplib0/archive/refs/tags/v0.17.0.tar.gz)
+build	Install dependencies	2025-09-29T18:12:03.5633653Z [36m⬇[0m retrieved [01mstdlib-shims[0m.0.3.0  (https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz)
+build	Install dependencies	2025-09-29T18:12:03.9423347Z [36m⬇[0m retrieved [01myojson[0m.3.0.0  (https://github.com/ocaml-community/yojson/releases/download/3.0.0/yojson-3.0.0.tbz)
+build	Install dependencies	2025-09-29T18:12:04.3833698Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+build	Install dependencies	2025-09-29T18:12:04.5251938Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+build	Install dependencies	2025-09-29T18:12:04.5832277Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+build	Install dependencies	2025-09-29T18:12:08.3602261Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+build	Install dependencies	2025-09-29T18:12:09.9957161Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+build	Install dependencies	2025-09-29T18:12:11.8647647Z [32m∗[0m installed [01mzarith[0m.1.14
+build	Install dependencies	2025-09-29T18:12:16.0264027Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+build	Install dependencies	2025-09-29T18:12:16.7908322Z [32m∗[0m installed [01muutf[0m.1.0.4
+build	Install dependencies	2025-09-29T18:12:30.9639988Z [32m∗[0m installed [01mdune[0m.3.20.2
+build	Install dependencies	2025-09-29T18:12:31.6269071Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+build	Install dependencies	2025-09-29T18:12:33.3293581Z [32m∗[0m installed [01mocaml-syntax-shims[0m.1.0.0
+build	Install dependencies	2025-09-29T18:12:33.3457246Z [32m∗[0m installed [01mcppo[0m.1.8.0
+build	Install dependencies	2025-09-29T18:12:33.3674928Z [32m∗[0m installed [01mocaml-compiler-libs[0m.v0.12.4
+build	Install dependencies	2025-09-29T18:12:33.6319346Z [32m∗[0m installed [01mppx_derivers[0m.1.2.1
+build	Install dependencies	2025-09-29T18:12:34.0662191Z [32m∗[0m installed [01mstdlib-shims[0m.0.3.0
+build	Install dependencies	2025-09-29T18:12:34.5583893Z [32m∗[0m installed [01msexplib0[0m.v0.17.0
+build	Install dependencies	2025-09-29T18:12:36.7414283Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+build	Install dependencies	2025-09-29T18:12:37.2022656Z [32m∗[0m installed [01myojson[0m.3.0.0
+build	Install dependencies	2025-09-29T18:12:37.7798379Z [32m∗[0m installed [01mbigstringaf[0m.0.10.0
+build	Install dependencies	2025-09-29T18:12:38.8306683Z [32m∗[0m installed [01mangstrom[0m.0.16.1
+build	Install dependencies	2025-09-29T18:13:02.5044390Z [32m∗[0m installed [01mppxlib[0m.0.36.0
+build	Install dependencies	2025-09-29T18:13:08.8813278Z [32m∗[0m installed [01mppx_deriving[0m.6.1.1
+build	Install dependencies	2025-09-29T18:13:32.3338877Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+build	Install dependencies	2025-09-29T18:13:36.3840430Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+build	Install dependencies	2025-09-29T18:15:56.1719774Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+build	Install dependencies	2025-09-29T18:15:56.5876585Z [32m∗[0m installed [01mcoq[0m.8.18.0
+build	Install dependencies	2025-09-29T18:15:58.5184188Z Done.
+build	Install dependencies	2025-09-29T18:15:58.5194020Z # Run [01meval $(opam env)[0m to update the current shell environment
+build	Build	﻿2025-09-29T18:15:59.8719058Z ##[group]Run opam exec -- dune build proofs
+build	Build	2025-09-29T18:15:59.8719418Z [36;1mopam exec -- dune build proofs[0m
+build	Build	2025-09-29T18:15:59.8719691Z [36;1mpushd latex-parse >/dev/null[0m
+build	Build	2025-09-29T18:15:59.8719957Z [36;1mopam exec -- dune build @install[0m
+build	Build	2025-09-29T18:15:59.8720346Z [36;1mopam exec -- dune install latex_parse --prefix "$OPAM_SWITCH_PREFIX" --profile release[0m
+build	Build	2025-09-29T18:15:59.8720739Z [36;1mpopd >/dev/null[0m
+build	Build	2025-09-29T18:15:59.8720946Z [36;1mpushd core >/dev/null[0m
+build	Build	2025-09-29T18:15:59.8721171Z [36;1mopam exec -- dune build @all[0m
+build	Build	2025-09-29T18:15:59.8721397Z [36;1mpopd >/dev/null[0m
+build	Build	2025-09-29T18:15:59.8749363Z shell: /usr/bin/bash -e {0}
+build	Build	2025-09-29T18:15:59.8749592Z env:
+build	Build	2025-09-29T18:15:59.8750566Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+build	Build	2025-09-29T18:15:59.8751926Z   OPAMCLI: 2.0
+build	Build	2025-09-29T18:15:59.8752113Z   OPAMCOLOR: always
+build	Build	2025-09-29T18:15:59.8752294Z   OPAMERRLOGLEN: 0
+build	Build	2025-09-29T18:15:59.8752471Z   OPAMJOBS: 4
+build	Build	2025-09-29T18:15:59.8752645Z   OPAMPRECISETRACKING: 1
+build	Build	2025-09-29T18:15:59.8752857Z   OPAMSOLVERTIMEOUT: 1000
+build	Build	2025-09-29T18:15:59.8753048Z   OPAMYES: 1
+build	Build	2025-09-29T18:15:59.8753215Z   CLICOLOR_FORCE: 1
+build	Build	2025-09-29T18:15:59.8753387Z ##[endgroup]
+build	Build	2025-09-29T18:16:00.7737825Z Entering directory '/home/runner/work/latex_perf/latex_perf'
+build	Build	2025-09-29T18:16:00.7956818Z Leaving directory '/home/runner/work/latex_perf/latex_perf'
+build	Build	2025-09-29T18:16:00.8243456Z [1;31mError[0m: Unknown package latex_parse!
+build	Build	2025-09-29T18:16:00.8260107Z ##[error]Process completed with exit code 1.
+build	Post Install OCaml & opam	﻿2025-09-29T18:16:00.8337905Z Post job cleanup.
+build	Post Run actions/checkout@v4	﻿2025-09-29T18:16:00.8387812Z Post job cleanup.
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9315280Z [command]/usr/bin/git version
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9356670Z git version 2.51.0
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9399077Z Temporarily overriding HOME='/home/runner/work/_temp/9e64bdc8-52de-4b23-a87e-7f4adbec2c95' before making global git config changes
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9400375Z Adding repository directory to the temporary git global config as a safe directory
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9405123Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9439475Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9471394Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9694661Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9715171Z http.https://github.com/.extraheader
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9727811Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+build	Post Run actions/checkout@v4	2025-09-29T18:16:00.9757746Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	Complete job	﻿2025-09-29T18:16:01.0077456Z Cleaning up orphan processes

@@ -6,7 +6,6 @@ let expect cond msg =
     exit 1)
 
 let test_basic () =
-  let c = Catcode in
   let ( = ) a b = a = b in
   expect (Catcode.classify_ascii (Char.code '\\') = 0) "\\ should be Escape (0)";
   expect (Catcode.classify_ascii (Char.code '{') = 1) "{ should be BeginGrp (1)";

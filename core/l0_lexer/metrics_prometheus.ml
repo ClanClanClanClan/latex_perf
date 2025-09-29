@@ -109,11 +109,6 @@ let dump_metrics oc =
     buckets;
   fprintf oc "l0_latency_ms_bucket{le=\"+Inf\"} %d\nl0_latency_ms_count %d\n"
     sum sum;
-  (* Validator metrics (if any) *)
-  fprintf oc
-    "# HELP validators_rule_hits_total rule evaluations\n\
-     # TYPE validators_rule_hits_total counter\n";
-  Validators_metrics.dump_prometheus oc;
   Mutex.unlock mu
 
 let serve () =

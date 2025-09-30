@@ -46,8 +46,7 @@ jobs:
         run: |
           opam exec -- dune build proofs
           pushd latex-parse >/dev/null
-          opam exec -- dune build @install
-          opam exec -- dune install latex_parse --prefix "$OPAM_SWITCH_PREFIX" --profile release
+          opam exec -- dune build
           popd >/dev/null
           pushd core >/dev/null
           opam exec -- dune build @all

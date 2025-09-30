@@ -27,16 +27,25 @@ async fn handle(uds: &Client, s: &mut TcpStream) -> anyhow::Result<()> {
     s.read_exact(&mut buf).await?;
 
     let t0 = Instant::now();
-    let resp = uds.tokenize(rand::random::<u64>(), &buf).await?;
+    let req_id = rand::random::<u64>();
+    let resp = uds.tokenize(req_id, &buf).await?;
 
-    let mut out = Vec::with_capacity(24);
-    out.extend_from_slice(&u32::to_be_bytes(20));
-    out.extend_from_slice(&u32::to_be_bytes(resp.status));
-    out.extend_from_slice(&u32::to_be_bytes(resp.tokens));
-    out.extend_from_slice(&u32::to_be_bytes(resp.issues));
-    out.extend_from_slice(&u32::to_be_bytes(resp.alloc_mb_x10));
-    out.extend_from_slice(&u32::to_be_bytes(resp.majors));
-    s.write_all(&out).await?;
+    let _ = (resp.alloc_mb_x10, resp.majors);
+
+    let mut header = [0u8; 16];
+    header[..4].copy_from_slice(&u32::to_be_bytes(2));
+    header[4..12].copy_from_slice(&u64::to_be_bytes(req_id));
+    let body_len = 13u32;
+    header[12..16].copy_from_slice(&u32::to_be_bytes(body_len));
+
+    let mut body = Vec::with_capacity(body_len as usize);
+    body.extend_from_slice(&u32::to_be_bytes(resp.status));
+    body.extend_from_slice(&u32::to_be_bytes(resp.tokens));
+    body.extend_from_slice(&u32::to_be_bytes(resp.issues));
+    body.push(if resp.origin == 0 { 1 } else { resp.origin });
+
+    s.write_all(&header).await?;
+    s.write_all(&body).await?;
     s.flush().await?;
 
     eprintln!("[proxy] {n}B in {:.3} ms", t0.elapsed().as_secs_f64() * 1e3);

@@ -8,4 +8,4 @@ tokio = { version = "1", features = ["rt-multi-thread","macros","net","io-util",
 l0_lexer_client = { path = "../l0_lexer_client" }
 bytes = "1"
 anyhow = "1"
-rand = "0.8"
+byteorder = "1"

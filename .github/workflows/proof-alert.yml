@@ -5,6 +5,12 @@ on:
     workflows: ["Proof CI (Coq)"]
     types: [completed]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   alert:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}

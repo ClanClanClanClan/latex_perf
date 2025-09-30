@@ -16,8 +16,21 @@ on:
       - '.latex-perfectionist.toml'
       - 'pyproject.toml'
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
+  skip:
+    if: ${{ hashFiles('pyproject.toml') == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No pyproject.toml detected; skipping LaTeX Perfectionist checks."
+
   check:
+    if: ${{ hashFiles('pyproject.toml') != '' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,16 +55,25 @@ jobs:
     - name: Install LaTeX Perfectionist
       run: |
         pip install --upgrade pip
-        pip install poetry
-        poetry install
+        pip install latex-perfectionist
 
     - name: Run LaTeX Perfectionist checks
       run: |
-        poetry run latex-perfectionist check \
+        mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
+        if [ ${#TEX_FILES[@]} -eq 0 ]; then
+          printf '{"version":"2.1.0","runs":[]}\n' > results.sarif
+          exit 0
+        fi
+        latex-perfectionist check \
           --output sarif \
           --output-file results.sarif \
           --fail-on warning \
-          $(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
+          "${TEX_FILES[@]}"
+        status=$?
+        if [ ! -f results.sarif ]; then
+          printf '{"version":"2.1.0","runs":[]}\n' > results.sarif
+        fi
+        exit $status
       continue-on-error: true
 
     - name: Upload SARIF results
@@ -63,10 +85,15 @@ jobs:
     - name: Generate summary report
       if: always()
       run: |
-        poetry run latex-perfectionist check \
-          --output json \
-          --output-file results.json \
-          $(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*") || true
+        mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
+        if [ ${#TEX_FILES[@]} -eq 0 ]; then
+          printf '{"summary":{"errors":0,"warnings":0,"info":0}}\n' > results.json
+        else
+          latex-perfectionist check \
+            --output json \
+            --output-file results.json \
+            "${TEX_FILES[@]}" || true
+        fi
 
         echo "## LaTeX Perfectionist Results" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -140,6 +167,7 @@ jobs:
           });
 
   security:
+    if: ${{ hashFiles('pyproject.toml') != '' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -152,15 +180,20 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install poetry
-        poetry install
+        pip install --upgrade pip
+        pip install latex-perfectionist
 
     - name: Generate SBOM
       run: |
-        poetry run latex-perfectionist sbom \
-          --format cyclonedx-json \
-          --output sbom.json \
-          main.tex || echo "{}" > sbom.json
+        mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
+        if [ ${#TEX_FILES[@]} -eq 0 ]; then
+          echo '{}' > sbom.json
+        else
+          latex-perfectionist sbom \
+            --format cyclonedx-json \
+            --output sbom.json \
+            "${TEX_FILES[@]}"
+        fi
 
     - name: Upload SBOM
       uses: actions/upload-artifact@v4

@@ -3,6 +3,12 @@ name: L1 Expander A/B (Opt-in)
 on:
   workflow_dispatch:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   l1-ab:
     runs-on: ubuntu-latest

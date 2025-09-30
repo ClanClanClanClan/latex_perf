@@ -1497,7 +1497,7 @@ let r_typo_033 : rule =
     let mixed =
       List.exists
         (fun (off, len) ->
-          let seg = String.sub s off len in
+          let seg = strip_math_segments (String.sub s off len) in
           Unicode.has_ellipsis_char seg && count_substring seg "..." > 0)
         (if paras = [] then [ (0, String.length s) ] else paras)
     in

@@ -1,5 +1,7 @@
+use byteorder::{BigEndian, ByteOrder};
 use tokio::{net::{TcpListener, TcpStream}, io::{AsyncReadExt, AsyncWriteExt}, time::Instant};
 use l0_lexer_client::Client;
+use std::io::ErrorKind;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
@@ -19,35 +21,62 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn handle(uds: &Client, s: &mut TcpStream) -> anyhow::Result<()> {
-    // Protocol here is illustrative: read 4-byte len + payload, write 4 + 20 bytes back.
-    let mut len_buf = [0u8; 4];
-    s.read_exact(&mut len_buf).await?;
-    let n = u32::from_be_bytes(len_buf) as usize;
-    let mut buf = vec![0u8; n];
-    s.read_exact(&mut buf).await?;
+    loop {
+        let mut hdr = [0u8; 16];
+        match s.read_exact(&mut hdr).await {
+            Ok(_) => {}
+            Err(e) if e.kind() == ErrorKind::UnexpectedEof => return Ok(()),
+            Err(e) => return Err(e.into()),
+        }
 
-    let t0 = Instant::now();
-    let req_id = rand::random::<u64>();
-    let resp = uds.tokenize(req_id, &buf).await?;
+        let msg_type = BigEndian::read_u32(&hdr[..4]);
+        if msg_type != 1 {
+            anyhow::bail!("unexpected message type {msg_type}");
+        }
+        let req_id = BigEndian::read_u64(&hdr[4..12]);
+        let n = BigEndian::read_u32(&hdr[12..16]) as usize;
 
-    let _ = (resp.alloc_mb_x10, resp.majors);
+        let mut buf = vec![0u8; n];
+        if n > 0 {
+            s.read_exact(&mut buf).await?;
+        }
 
-    let mut header = [0u8; 16];
-    header[..4].copy_from_slice(&u32::to_be_bytes(2));
-    header[4..12].copy_from_slice(&u64::to_be_bytes(req_id));
-    let body_len = 13u32;
-    header[12..16].copy_from_slice(&u32::to_be_bytes(body_len));
+        let t0 = Instant::now();
+        let resp = match uds.tokenize(req_id, &buf).await {
+            Ok(resp) => resp,
+            Err(e) => {
+                eprintln!("[proxy] tokenize error: {e}");
+                let mut header = [0u8; 16];
+                BigEndian::write_u32(&mut header[0..4], 2);
+                BigEndian::write_u64(&mut header[4..12], req_id);
+                BigEndian::write_u32(&mut header[12..16], 13);
+                let mut body = [0u8; 13];
+                BigEndian::write_u32(&mut body[0..4], 1);
+                BigEndian::write_u32(&mut body[4..8], 0);
+                BigEndian::write_u32(&mut body[8..12], 0);
+                body[12] = 0;
+                s.write_all(&header).await?;
+                s.write_all(&body).await?;
+                s.flush().await?;
+                continue;
+            }
+        };
 
-    let mut body = Vec::with_capacity(body_len as usize);
-    body.extend_from_slice(&u32::to_be_bytes(resp.status));
-    body.extend_from_slice(&u32::to_be_bytes(resp.tokens));
-    body.extend_from_slice(&u32::to_be_bytes(resp.issues));
-    body.push(if resp.origin == 0 { 1 } else { resp.origin });
+        let mut header = [0u8; 16];
+        BigEndian::write_u32(&mut header[0..4], 2);
+        BigEndian::write_u64(&mut header[4..12], req_id);
+        BigEndian::write_u32(&mut header[12..16], 13);
 
-    s.write_all(&header).await?;
-    s.write_all(&body).await?;
-    s.flush().await?;
+        let mut body = [0u8; 13];
+        BigEndian::write_u32(&mut body[0..4], resp.status);
+        BigEndian::write_u32(&mut body[4..8], resp.tokens);
+        BigEndian::write_u32(&mut body[8..12], resp.issues);
+        body[12] = if resp.origin == 0 { 1 } else { resp.origin };
 
-    eprintln!("[proxy] {n}B in {:.3} ms", t0.elapsed().as_secs_f64() * 1e3);
-    Ok(())
+        s.write_all(&header).await?;
+        s.write_all(&body).await?;
+        s.flush().await?;
+
+        eprintln!("[proxy] {n}B in {:.3} ms", t0.elapsed().as_secs_f64() * 1e3);
+    }
 }

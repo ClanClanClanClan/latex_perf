@@ -1,5 +1,3 @@
-open Yojson.Safe
-
 type control_policy = { arity : int }
 
 type config = {

@@ -1,5 +1,15 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   format:
     runs-on: ubuntu-22.04
@@ -47,9 +57,8 @@ jobs:
           opam exec -- dune build proofs
           pushd latex-parse >/dev/null
           opam exec -- dune build
+          opam exec -- dune install latex_parse --prefix "$OPAM_SWITCH_PREFIX" --profile release
           popd >/dev/null
-          pushd core >/dev/null
           opam exec -- dune build @all
-          popd >/dev/null
       - name: Test suite
         run: opam exec -- dune runtest || echo "no tests defined"

@@ -12,6 +12,12 @@ on:
         required: false
         default: "1500"
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   xxh-throughput-gate:
     runs-on: ubuntu-latest

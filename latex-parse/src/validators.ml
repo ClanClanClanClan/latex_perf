@@ -1342,73 +1342,23 @@ let r_typo_029 : rule =
   in
   { id = "TYPO-029"; run }
 
-(* L1 demo rule (CMD-001) — only runs for L1 via layer gating; no-op if
-   layer!=L1 *)
+(* CMD-001: Deprecated LaTeX commands present in the document *)
 let l1_cmd_001_rule : rule =
   let run s =
-    (* CMD-001: Command \newcommand defined but never used (L1_Expanded) *)
-    let defs = ref [] in
-    let n = String.length s in
-    let rec scan i =
-      if i >= n then ()
-      else if i + 11 <= n && String.sub s i 11 = "\\newcommand" then (
-        let j = ref (i + 11) in
-        while
-          !j < n
-          &&
-          let ch = String.unsafe_get s !j in
-          ch = ' ' || ch = '\n' || ch = '\t' || ch = '{'
-        do
-          incr j
-        done;
-        if !j < n && String.unsafe_get s !j = '\\' then (
-          let k = ref (!j + 1) in
-          while
-            !k < n
-            &&
-            let ch = String.unsafe_get s !k in
-            (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-          do
-            incr k
-          done;
-          let name = String.sub s (!j + 1) (!k - (!j + 1)) in
-          if name <> "" then defs := name :: !defs;
-          scan (!j + 1))
-        else scan (!j + 1))
-      else scan (i + 1)
-    in
-    scan 0;
-    let module T = Tokenizer_lite in
-    let toks = T.tokenize s in
-    let names_used =
+    let deprecated = [ "over"; "centerline"; "bf"; "it" ] in
+    let names = extract_command_names s in
+    let cnt =
       List.fold_left
-        (fun acc (t : T.tok) ->
-          match t.kind with
-          | T.Command ->
-              (* extract name following '\' from expanded text *)
-              let i = t.s + 1 in
-              let k = ref i in
-              while
-                !k < n
-                &&
-                let ch = String.unsafe_get s !k in
-                (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-              do
-                incr k
-              done;
-              if !k > i then String.sub s i (!k - i) :: acc else acc
-          | _ -> acc)
-        [] toks
+        (fun acc name ->
+          if List.exists (( = ) name) deprecated then acc + 1 else acc)
+        0 names
     in
-    let is_used name = List.exists (fun u -> u = name) names_used in
-    let unused = List.filter (fun d -> not (is_used d)) !defs in
-    let cnt = List.length unused in
     if cnt > 0 then
       Some
         {
           id = "CMD-001";
-          severity = Info;
-          message = "Command \\newcommand defined but never used";
+          severity = Warning;
+          message = "Deprecated LaTeX command: use modern equivalent";
           count = cnt;
         }
     else None
@@ -1417,58 +1367,20 @@ let l1_cmd_001_rule : rule =
 
 let l1_cmd_003_rule : rule =
   let run s =
-    (* CMD-003: User macro name clashes with package macro *)
-    let reserved =
-      [
-        "includegraphics";
-        "section";
-        "subsection";
-        "documentclass";
-        "hyperref";
-        "emph";
-        "textbf";
-      ]
+    let deep_sectioning = [ "paragraph"; "subparagraph"; "subsubsection" ] in
+    let names = extract_command_names s in
+    let cnt =
+      List.fold_left
+        (fun acc name ->
+          if List.exists (( = ) name) deep_sectioning then acc + 1 else acc)
+        0 names
     in
-    let clashes = ref 0 in
-    let n = String.length s in
-    let rec scan i =
-      if i >= n then ()
-      else if i + 11 <= n && String.sub s i 11 = "\\newcommand" then (
-        let j = ref (i + 11) in
-        while
-          !j < n
-          &&
-          let ch = String.unsafe_get s !j in
-          ch = ' ' || ch = '\n' || ch = '\t' || ch = '{'
-        do
-          incr j
-        done;
-        if !j < n && String.unsafe_get s !j = '\\' then (
-          let k = ref (!j + 1) in
-          while
-            !k < n
-            &&
-            let ch = String.unsafe_get s !k in
-            (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-          do
-            incr k
-          done;
-          let name =
-            if !k > !j + 1 then String.sub s (!j + 1) (!k - (!j + 1)) else ""
-          in
-          if name <> "" && List.exists (( = ) name) reserved then incr clashes;
-          scan (!j + 1))
-        else scan (!j + 1))
-      else scan (i + 1)
-    in
-    scan 0;
-    let cnt = !clashes in
     if cnt > 0 then
       Some
         {
           id = "CMD-003";
-          severity = Warning;
-          message = "User macro name clashes with package macro";
+          severity = Info;
+          message = "Deep sectioning level may affect readability";
           count = cnt;
         }
     else None

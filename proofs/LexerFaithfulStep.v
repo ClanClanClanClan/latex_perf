@@ -1,4 +1,4 @@
-From Coq Require Import List Arith.
+From Coq Require Import List Arith Lia.
 Import ListNotations.
 
 (* A small, faithful-shaped step relation for L0: consumes one input byte
@@ -24,14 +24,22 @@ Module L0F.
 
   Theorem step_deterministic : forall s s1 s2,
     step s s1 -> step s s2 -> s1 = s2.
-  Proof. intros s s1 s2 H1 H2; inversion H1; inversion H2; subst; reflexivity. Qed.
+  Proof.
+    intros [inp out] s1 s2 H1 H2.
+    destruct inp as [|b rest]; inversion H1.
+    inversion H1; inversion H2; subst; reflexivity.
+  Qed.
 
   Theorem step_progress : forall s,
-    s.(inp) <> [] -> exists s', step s s'.
+    s.(inp) <> [] ->
+    Forall (fun b => b < 256) s.(inp) ->
+    exists s', step s s'.
   Proof.
-    intros [i o] Hne. destruct i as [|b rest]; [contradiction|].
-    exists {| inp := rest; out := o ++ [classify b] |}. constructor; lia.
+    intros [i o] Hne Hall.
+    destruct i as [|b rest]; [contradiction|].
+    inversion Hall; subst.
+    exists {| inp := rest; out := o ++ [classify b] |}.
+    constructor; assumption.
   Qed.
 
 End L0F.
-

@@ -1,5 +1,5 @@
 (* A tiny small-step model to anchor determinism/totality statements for L0.
-   This is deliberately minimal and admit-free to keep CI zero-admit. *)
+   Deliberately minimal and free of manual admits so the CI stays clean. *)
 
 From Coq Require Import List String Arith Lia.
 Import ListNotations.

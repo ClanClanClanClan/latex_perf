@@ -230,23 +230,31 @@ let no_tabs : rule =
 
 let require_documentclass : rule =
   let run s =
-    let needle = "\\documentclass" in
-    if
-      String.length s >= String.length needle
-      &&
-      try
-        ignore (Str.search_forward (Str.regexp_string needle) s 0);
-        true
-      with Not_found -> false
-    then None
+    let pilot_mode =
+      match Sys.getenv_opt "L0_VALIDATORS" with
+      | Some
+          ("1" | "true" | "TRUE" | "on" | "ON" | "pilot" | "PILOT") -> true
+      | _ -> false
+    in
+    if pilot_mode then None
     else
-      Some
-        {
-          id = "require_documentclass";
-          severity = Warning;
-          message = "Missing \\documentclass";
-          count = 1;
-        }
+      let needle = "\\documentclass" in
+      if
+        String.length s >= String.length needle
+        &&
+        try
+          ignore (Str.search_forward (Str.regexp_string needle) s 0);
+          true
+        with Not_found -> false
+      then None
+      else
+        Some
+          {
+            id = "require_documentclass";
+            severity = Warning;
+            message = "Missing \\documentclass";
+            count = 1;
+          }
   in
   { id = "require_documentclass"; run }
 

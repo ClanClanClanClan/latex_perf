@@ -9,6 +9,10 @@
 (package
  (name latex-perfectionist)
  (synopsis "LaTeX Perfectionist v25 bootstrap")
+ (maintainers "Clan Maintainers <maintainers@clan.dev>")
+ (authors "Clan Labs")
+ (homepage "https://github.com/ClanClanClanClan/latex_perf")
+ (bug_reports "https://github.com/ClanClanClanClan/latex_perf/issues")
  (depends
   (ocaml         (and (>= 4.14.0) (< 5.0.0)))
   (dune          (>= 3.10))

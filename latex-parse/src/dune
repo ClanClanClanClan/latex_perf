@@ -1,5 +1,6 @@
 (library
  (name latex_parse_lib)
+ (public_name latex_parse)
  (modules
   config
   clock

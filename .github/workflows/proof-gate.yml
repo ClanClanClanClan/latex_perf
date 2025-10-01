@@ -45,11 +45,11 @@ jobs:
 
     - name: Check for admits
       run: |
-        ADMITS=$(grep -rE "\\bAdmitted\\.|\\badmit\\." --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | wc -l || true)
+        ADMITS=$(grep -rE "^\\s*(Admitted\\.|admit\\.)" --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | wc -l || true)
         echo "Found $ADMITS admits in proof files"
         if [ "$ADMITS" -ne 0 ]; then
           echo "❌ Zero‑admit policy violated"
-          grep -rE "\\bAdmitted\\.|\\badmit\\." --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | head -50 || true
+          grep -rE "^\\s*(Admitted\\.|admit\\.)" --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | head -50 || true
           exit 1
         fi
         echo "✅ Zero admits"

@@ -58,10 +58,21 @@ jobs:
         pip install latex-perfectionist
 
     - name: Run LaTeX Perfectionist checks
+      id: lint
       run: |
+        if [ ! -f pyproject.toml ]; then
+          printf '{"version":"2.1.0","runs":[]}\n' > results.sarif
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            echo "sarif_exists=true" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+        fi
         mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
         if [ ${#TEX_FILES[@]} -eq 0 ]; then
           printf '{"version":"2.1.0","runs":[]}\n' > results.sarif
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            echo "sarif_exists=true" >> "$GITHUB_OUTPUT"
+          fi
           exit 0
         fi
         latex-perfectionist check \
@@ -73,6 +84,13 @@ jobs:
         if [ ! -f results.sarif ]; then
           printf '{"version":"2.1.0","runs":[]}\n' > results.sarif
         fi
+        if [ -n "${GITHUB_OUTPUT:-}" ]; then
+          if [ -f results.sarif ]; then
+            echo "sarif_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sarif_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        fi
         exit $status
       continue-on-error: true
 
@@ -80,11 +98,15 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: results.sarif
-      if: always()
+      if: always() && steps.lint.outputs.sarif_exists == 'true'
 
     - name: Generate summary report
       if: always()
       run: |
+        if [ ! -f pyproject.toml ]; then
+          printf '{"summary":{"errors":0,"warnings":0,"info":0}}\n' > results.json
+          exit 0
+        fi
         mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
         if [ ${#TEX_FILES[@]} -eq 0 ]; then
           printf '{"summary":{"errors":0,"warnings":0,"info":0}}\n' > results.json
@@ -115,7 +137,7 @@ jobs:
 
     - name: Comment PR
       uses: actions/github-script@v7
-      if: github.event_name == 'pull_request' && always()
+      if: github.event_name == 'pull_request' && always() && steps.lint.outputs.sarif_exists == 'true'
       with:
         script: |
           const fs = require('fs');
@@ -185,6 +207,10 @@ jobs:
 
     - name: Generate SBOM
       run: |
+        if [ ! -f pyproject.toml ]; then
+          echo '{}' > sbom.json
+          exit 0
+        fi
         mapfile -t TEX_FILES < <(find . -name "*.tex" -not -path "./tests/*" -not -path "./.venv/*")
         if [ ${#TEX_FILES[@]} -eq 0 ]; then
           echo '{}' > sbom.json

@@ -41,7 +41,7 @@ jobs:
       - name: Build OCaml service and Rust proxy
         run: |
           opam exec -- dune build latex-parse/src/main_service.exe
-          cargo build -p elderd_rust_proxy --release
+          cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
       - name: Run verify_r1 (proxy A/B perf gate)
         run: |

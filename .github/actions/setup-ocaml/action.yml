@@ -90,7 +90,7 @@ runs:
       with:
         ocaml-compiler: ${{ inputs.ocaml-compiler }}
         allow-prerelease-opam: ${{ inputs.allow-prerelease-opam }}
-        opam-repositories: ${{ inputs.opam-repositories != '' && inputs.opam-repositories || 'default,https://opam.ocaml.org' }}
+        opam-repositories: ${{ inputs.opam-repositories }}
         opam-pin: ${{ inputs.opam-pin }}
         opam-depext: ${{ inputs.opam-depext }}
         opam-depext-flags: ${{ inputs.opam-depext-flags }}

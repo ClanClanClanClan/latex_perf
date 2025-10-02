@@ -26,7 +26,7 @@
 (executable
  (name expander_smoke)
  (modules expander_smoke)
- (libraries l1_expander latex_parse_lib yojson unix str))
+(libraries l1_expander latex_parse yojson unix str))
 
 (test
  (name l1_integration_test)

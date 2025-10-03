@@ -23,6 +23,8 @@ jobs:
       - name: Install ocamlformat
         run: |
           opam update -y
+          opam pin add -y cmdliner 1.3.0
+          opam pin add -y ocaml-version 3.5.0
           opam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0
       - name: Check formatting
         id: fmt

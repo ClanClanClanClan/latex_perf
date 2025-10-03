@@ -1,7 +1,11 @@
 use byteorder::{BigEndian, ByteOrder};
-use tokio::{net::{TcpListener, TcpStream}, io::{AsyncReadExt, AsyncWriteExt}, time::Instant};
 use l0_lexer_client::Client;
 use std::io::ErrorKind;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::{TcpListener, TcpStream},
+    time::Instant,
+};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {

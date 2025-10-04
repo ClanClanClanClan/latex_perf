@@ -4,28 +4,25 @@ import socket, struct, sys, time
 HOST = '127.0.0.1'
 PORT = 9123
 
-def be32(x):
+
+def be32(x: int) -> bytes:
     return struct.pack('>I', x)
 
-def be64(x):
-    return struct.pack('>Q', x)
 
-def request(sock, payload: bytes, typ: int = 1, req_id: int = 1):
-    hdr = be32(typ) + be64(req_id) + be32(len(payload))
-    sock.sendall(hdr + payload)
-    rh = sock.recv(16)
-    if len(rh) != 16:
-        raise RuntimeError('short response header')
-    r_type, r_req, r_len = struct.unpack('>I Q I', rh)
-    body = b''
-    while len(body) < r_len:
-        chunk = sock.recv(r_len - len(body))
+def recv_exact(sock: socket.socket, length: int) -> bytes:
+    data = bytearray()
+    while len(data) < length:
+        chunk = sock.recv(length - len(data))
         if not chunk:
-            break
-        body += chunk
-    if len(body) != r_len:
-        raise RuntimeError('short body')
-    return r_type, r_req, body
+            raise RuntimeError('short read')
+        data.extend(chunk)
+    return bytes(data)
+
+
+def request(sock: socket.socket, payload: bytes) -> bytes:
+    sock.sendall(be32(len(payload)) + payload)
+    (resp_len,) = struct.unpack('>I', recv_exact(sock, 4))
+    return recv_exact(sock, resp_len)
 
 def parse_status_payload(body: bytes):
     if len(body) == 13:
@@ -42,7 +39,7 @@ def parse_status_payload(body: bytes):
 def main():
     s = socket.create_connection((HOST, PORT), timeout=2.0)
     for i in range(3):
-        typ, rid, body = request(s, b" ", typ=1, req_id=i+1)
+        body = request(s, b" ")
         status, n_tokens, issues_len, origin = parse_status_payload(body)
         if status != 0:
             print(f"[proxy-smoke] request {i+1} returned status={status}, tokens={n_tokens}, issues_len={issues_len}, origin={origin}", file=sys.stderr)

@@ -12,7 +12,7 @@ inputs:
   opam-repositories:
     description: Forwarded to ocaml/setup-ocaml opam-repositories input.
     required: false
-    default: ""
+    default: "default:https://opam.ocaml.org"
   opam-pin:
     description: Forwarded to ocaml/setup-ocaml opam-pin input.
     required: false

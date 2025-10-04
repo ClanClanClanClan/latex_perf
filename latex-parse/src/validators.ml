@@ -180,35 +180,47 @@ let strip_math_segments (s : string) : string =
   loop 0;
   Buffer.contents buf
 
-(* Extract LaTeX command names from source using Tokenizer_lite *)
+(* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
+let command_tokens (s : string) : (string * int) list =
+  let module T = Tokenizer_lite in
+  let toks = T.tokenize s in
+  let n = String.length s in
+  List.rev
+  @@ List.fold_left
+       (fun acc (t : T.tok) ->
+         match t.kind with
+         | T.Command ->
+             let i = t.s + 1 in
+             let k = ref i in
+             while
+               !k < n
+               &&
+               let ch = String.unsafe_get s !k in
+               (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+             do
+               incr k
+             done;
+             if !k > i then
+               let name = String.sub s i (!k - i) in
+               (name, t.s) :: acc
+             else acc
+         | _ -> acc)
+       [] toks
+
+(* Extract LaTeX command names from source, combining context and token scan *)
 let extract_command_names (s : string) : string list =
-  (* Prefer per-request post_commands context if available (thread-local), else
-     fallback to token scan *)
   let ctx = Validators_context.get_post_commands () in
-  if ctx <> [] then
-    List.map (fun (pc : Validators_context.post_command) -> pc.name) ctx
+  let tokens = command_tokens s in
+  let token_names = List.map fst tokens in
+  if ctx = [] then token_names
   else
-    let module T = Tokenizer_lite in
-    let toks = T.tokenize s in
-    let n = String.length s in
-    List.rev
-    @@ List.fold_left
-         (fun acc (t : T.tok) ->
-           match t.kind with
-           | T.Command ->
-               let i = t.s + 1 in
-               let k = ref i in
-               while
-                 !k < n
-                 &&
-                 let ch = String.unsafe_get s !k in
-                 (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-               do
-                 incr k
-               done;
-               if !k > i then String.sub s i (!k - i) :: acc else acc
-           | _ -> acc)
-         [] toks
+    let ctx_names_rev =
+      List.fold_left
+        (fun acc (pc : Validators_context.post_command) ->
+          if List.exists (( = ) pc.name) acc then acc else pc.name :: acc)
+        [] ctx
+    in
+    List.rev_append ctx_names_rev token_names
 
 (* Basic validators (legacy) *)
 
@@ -1577,32 +1589,21 @@ let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
     ~(modern : string list) : bool =
   let paras = split_into_paragraphs s in
   let pcs = Validators_context.get_post_commands () in
-  let has_ctx = pcs <> [] in
-  let names = if has_ctx then [] else extract_command_names s in
-  let check_para off len =
-    if has_ctx then
-      let has_legacy =
-        List.exists
-          (fun (pc : Validators_context.post_command) ->
-            pc.s >= off
-            && pc.s < off + len
-            && List.exists (( = ) pc.name) legacy)
-          pcs
-      in
-      let has_modern =
-        List.exists
-          (fun (pc : Validators_context.post_command) ->
-            pc.s >= off
-            && pc.s < off + len
-            && List.exists (( = ) pc.name) modern)
-          pcs
-      in
-      has_legacy && has_modern
-    else
-      (* Fallback without spans: coarse check over entire text *)
-      List.exists (fun n -> List.exists (( = ) n) names) legacy
-      && List.exists (fun n -> List.exists (( = ) n) names) modern
+  let tokens = command_tokens s in
+  let matches set value = List.exists (( = ) value) set in
+  let ctx_has off len names =
+    List.exists
+      (fun (pc : Validators_context.post_command) ->
+        pc.s >= off && pc.s < off + len && matches names pc.name)
+      pcs
   in
+  let tokens_have off len names =
+    List.exists
+      (fun (name, pos) -> pos >= off && pos < off + len && matches names name)
+      tokens
+  in
+  let has_cmd off len names = ctx_has off len names || tokens_have off len names in
+  let check_para off len = has_cmd off len legacy && has_cmd off len modern in
   let ranges = if paras = [] then [ (0, String.length s) ] else paras in
   List.exists (fun (off, len) -> check_para off len) ranges
 

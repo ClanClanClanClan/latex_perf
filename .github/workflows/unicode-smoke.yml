@@ -13,6 +13,8 @@ concurrency:
 jobs:
   unicode-smoke:
     runs-on: ubuntu-latest
+    env:
+      L0_VALIDATORS: pilot
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +33,16 @@ jobs:
 
       - name: Build service and REST
         run: |
-          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+          eval "$(opam env)"
+          dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
 
       - name: Run service and REST
         run: |
+          eval "$(opam env)"
           rm -f /tmp/l0_lex_svc.sock || true
-          L0_VALIDATORS=pilot opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          L0_VALIDATORS=pilot ./_build/default/latex-parse/src/main_service.exe &
           sleep 0.5
-          L0_VALIDATORS=pilot opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          L0_VALIDATORS=pilot ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
           sleep 0.5
 
       - name: Unicode smokes

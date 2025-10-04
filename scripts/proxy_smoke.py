@@ -45,6 +45,7 @@ def main():
         typ, rid, body = request(s, b" ", typ=1, req_id=i+1)
         status, n_tokens, issues_len, origin = parse_status_payload(body)
         if status != 0:
+            print(f"[proxy-smoke] request {i+1} returned status={status}, tokens={n_tokens}, issues_len={issues_len}, origin={origin}", file=sys.stderr)
             raise SystemExit(f'status nonzero: {status}')
         if origin not in (1, 2):
             raise SystemExit(f'bad origin: {origin}')

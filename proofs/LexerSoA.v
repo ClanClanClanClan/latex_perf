@@ -71,7 +71,14 @@ Module L0SoA.
   Theorem step_deterministic : forall s s1 s2,
     step s s1 -> step s s2 -> s1 = s2.
   Proof.
-    intros s s1 s2 H1 H2; inversion H1; inversion H2; subst; reflexivity.
+    intros s s1 s2 H1 H2.
+    inversion H1; subst.
+    inversion H2; subst.
+    repeat match goal with
+           | H : {| inp := _; kinds := _; offs := _; codes := _ |} = _ |- _ =>
+               inversion H; subst; clear H
+           end.
+    reflexivity.
   Qed.
 
   (* Issues window locality *)

@@ -1,5 +1,4 @@
 open L1_expander
-
 module LP = L0_lexer.Latex_parse_lib
 open LP
 
@@ -28,10 +27,10 @@ let () =
                      ("id", `String r.id);
                      ( "severity",
                        `String
-                       (match r.severity with
-                       | Error -> "error"
-                       | Warning -> "warning"
-                       | Info -> "info") );
+                         (match r.severity with
+                         | Error -> "error"
+                         | Warning -> "warning"
+                         | Info -> "info") );
                      ("message", `String r.message);
                      ("count", `Int r.count);
                    ])

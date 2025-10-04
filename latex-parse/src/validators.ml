@@ -244,8 +244,7 @@ let require_documentclass : rule =
   let run s =
     let pilot_mode =
       match Sys.getenv_opt "L0_VALIDATORS" with
-      | Some
-          ("1" | "true" | "TRUE" | "on" | "ON" | "pilot" | "PILOT") -> true
+      | Some ("1" | "true" | "TRUE" | "on" | "ON" | "pilot" | "PILOT") -> true
       | _ -> false
     in
     if pilot_mode then None
@@ -1602,7 +1601,9 @@ let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
       (fun (name, pos) -> pos >= off && pos < off + len && matches names name)
       tokens
   in
-  let has_cmd off len names = ctx_has off len names || tokens_have off len names in
+  let has_cmd off len names =
+    ctx_has off len names || tokens_have off len names
+  in
   let check_para off len = has_cmd off len legacy && has_cmd off len modern in
   let ranges = if paras = [] then [ (0, String.length s) ] else paras in
   List.exists (fun (off, len) -> check_para off len) ranges

@@ -51,6 +51,22 @@ Module L0SoA.
     induction a as [|x xs IH]; intros b; simpl; [reflexivity|now rewrite IH].
   Qed.
 
+  Lemma issues_skipn_prefix : forall pre rest,
+    skipn (length pre) (issues_from (pre ++ rest)) = issues_from rest.
+  Proof.
+    induction pre as [|b pre IH]; intros rest; simpl.
+    - now rewrite skipn_O.
+    - now rewrite skipn_S, IH.
+  Qed.
+
+  Lemma issues_firstn_prefix : forall pre rest,
+    firstn (length pre) (issues_from (pre ++ rest)) = issues_from pre.
+  Proof.
+    induction pre as [|b pre IH]; intros rest; simpl.
+    - reflexivity.
+    - now rewrite firstn_cons, IH.
+  Qed.
+
   Lemma issues_length : forall i, length (issues_from i) = length i.
   Proof.
     induction i as [|b rest IH]; simpl; [reflexivity|now rewrite IH].
@@ -90,29 +106,29 @@ Module L0SoA.
     intros pre mid post.
     rewrite <- app_assoc.
     rewrite issues_app.
-    rewrite skipn_app.
-    rewrite firstn_app.
-    rewrite issues_length.
-    rewrite Nat.sub_diag; simpl.
-    now rewrite firstn_O, app_nil_l, Nat.sub_0_r.
+    rewrite issues_skipn_prefix with (pre := pre) (rest := mid ++ post).
+    rewrite issues_firstn_prefix with (pre := mid) (rest := post).
+    reflexivity.
   Qed.
 
   Lemma issues_prefix_invariance : forall pre mid post,
     firstn (length pre) (issues_from (pre ++ mid ++ post)) = issues_from pre.
   Proof.
     intros pre mid post.
-    rewrite <- app_assoc, issues_app.
-    rewrite firstn_app, issues_length, Nat.sub_diag; simpl.
-    now rewrite firstn_O, app_nil_r.
+    rewrite <- app_assoc.
+    rewrite issues_firstn_prefix with (pre := pre) (rest := mid ++ post).
+    reflexivity.
   Qed.
 
   Lemma issues_suffix_invariance : forall pre mid post,
     skipn (length pre + length mid) (issues_from (pre ++ mid ++ post)) = issues_from post.
   Proof.
     intros pre mid post.
-    rewrite <- app_assoc, issues_app.
-    rewrite skipn_app, issues_length, Nat.sub_diag; simpl.
-    now rewrite skipn_app, issues_length, Nat.sub_diag.
+    rewrite <- app_assoc.
+    rewrite Nat.add_comm.
+    rewrite issues_skipn_prefix with (pre := pre) (rest := mid ++ post).
+    rewrite issues_skipn_prefix with (pre := mid) (rest := post).
+    reflexivity.
   Qed.
 
   (* classify_kind result is always in 0..15 per mapping. *)

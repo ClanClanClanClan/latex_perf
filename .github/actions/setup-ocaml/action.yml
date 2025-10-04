@@ -10,9 +10,9 @@ inputs:
     required: false
     default: "false"
   opam-repositories:
-    description: Forwarded to ocaml/setup-ocaml opam-repositories input.
+    description: Optional comma-separated opam repositories (name,url pairs).
     required: false
-    default: "default,https://opam.ocaml.org"
+    default: ""
   opam-pin:
     description: Forwarded to ocaml/setup-ocaml opam-pin input.
     required: false
@@ -86,6 +86,22 @@ runs:
         chmod +x "$HOME/.github-tools/sudo"
         echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
     - name: Setup OCaml toolchain
+      if: inputs.opam-repositories == ''
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: ${{ inputs.ocaml-compiler }}
+        allow-prerelease-opam: ${{ inputs.allow-prerelease-opam }}
+        opam-pin: ${{ inputs.opam-pin }}
+        opam-depext: ${{ inputs.opam-depext }}
+        opam-depext-flags: ${{ inputs.opam-depext-flags }}
+        opam-local-packages: ${{ inputs.opam-local-packages }}
+        opam-disable-sandboxing: ${{ inputs.opam-disable-sandboxing }}
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: ${{ inputs.cache-prefix }}
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+
+    - name: Setup OCaml toolchain (custom repositories)
+      if: inputs.opam-repositories != ''
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: ${{ inputs.ocaml-compiler }}

@@ -56,8 +56,8 @@ jobs:
         run: opam install . --deps-only --with-test -y
       - name: Build
         run: |
-          coq_makefile -f _CoqProject -o CoqMakefile
-          make -f CoqMakefile -j2
+          opam exec -- coq_makefile -f _CoqProject -o CoqMakefile
+          opam exec -- make -f CoqMakefile -j2
           rm -f CoqMakefile CoqMakefile.conf .CoqMakefile.d
           pushd latex-parse >/dev/null
           opam exec -- dune build

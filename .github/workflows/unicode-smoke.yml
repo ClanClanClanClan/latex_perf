@@ -33,16 +33,14 @@ jobs:
 
       - name: Build service and REST
         run: |
-          eval "$(opam env)"
-          dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
 
       - name: Run service and REST
         run: |
-          eval "$(opam env)"
           rm -f /tmp/l0_lex_svc.sock || true
-          L0_VALIDATORS=pilot ./_build/default/latex-parse/src/main_service.exe &
+          opam exec -- env L0_VALIDATORS=pilot ./_build/default/latex-parse/src/main_service.exe &
           sleep 0.5
-          L0_VALIDATORS=pilot ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          opam exec -- env L0_VALIDATORS=pilot ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
           sleep 0.5
 
       - name: Unicode smokes

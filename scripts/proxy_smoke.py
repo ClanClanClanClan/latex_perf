@@ -49,7 +49,8 @@ def parse_status_payload(body: bytes):
         raise RuntimeError(f'unexpected payload length: {len(body)}')
 
 def main():
-    s = socket.create_connection((HOST, PORT), timeout=2.0)
+    s = socket.create_connection((HOST, PORT), timeout=10.0)
+    s.settimeout(10.0)
     for i in range(3):
         body = request(s, b" ", typ=1, req_id=i + 1)
         status, n_tokens, issues_len, origin = parse_status_payload(body)

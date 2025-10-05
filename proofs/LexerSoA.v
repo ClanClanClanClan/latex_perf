@@ -147,14 +147,18 @@ Module L0SoA.
   Qed.
 
   Theorem step_progress : forall s,
-    s.(inp) <> [] -> exists s', step s s'.
+    s.(inp) <> [] ->
+    Forall (fun b => b < 256) s.(inp) ->
+    exists s', step s s'.
   Proof.
-    intros [i ks os cs] Hne. destruct i as [|b rest]; [contradiction|].
+    intros [i ks os cs] Hne Hall.
+    destruct i as [|b rest]; [contradiction|].
+    inversion Hall; subst.
     exists {| inp := rest;
               kinds := ks ++ [classify_kind b];
               offs := os ++ [length ks];
               codes := cs ++ [classify_code b] |}.
-    constructor; lia.
+    constructor; assumption.
   Qed.
 
   (* Functional big-step to ease locality/spec proofs. *)

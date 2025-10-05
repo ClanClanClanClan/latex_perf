@@ -155,13 +155,17 @@ let run () =
       let doc_bytes_max = Latex_parse_lib.Config.max_req_bytes in
       let payload = Bytes.create payload_len in
       read_exact c payload 0 payload_len;
-      let req =
+      let req, used_prefix =
         if payload_len >= 4 then
           let announced = be32_get payload 0 in
-          if announced <= payload_len - 4 then Bytes.sub payload 4 announced
-          else Bytes.sub payload 4 (payload_len - 4)
-        else payload
+          if announced <= payload_len - 4 then
+            (Bytes.sub payload 4 announced, true)
+          else (payload, false)
+        else (payload, false)
       in
+      if not used_prefix then
+        Format.eprintf "[svc] len prefix ignored payload_len=%d sample=%s@."
+          payload_len (hex_prefix payload);
       if Bytes.length req > doc_bytes_max then raise Exit;
 
       let recv () = req in

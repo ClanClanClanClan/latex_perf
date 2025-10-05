@@ -180,9 +180,18 @@ Module L0SoA.
     run_from ks os cs (i1 ++ i2) =
     let '(ks1,os1,cs1) := run_from ks os cs i1 in run_from ks1 os1 cs1 i2.
   Proof.
-    induction i1 as [|b rest IH]; intros i2; simpl.
+    revert ks os cs.
+    induction i1 as [|b rest IH]; intros ks os cs i2; simpl.
     - reflexivity.
-    - rewrite IH. reflexivity.
+    - destruct (run_from (ks ++ [classify_kind b])
+                        (os ++ [length ks])
+                        (cs ++ [classify_code b]) rest) as [[ks1 os1] cs1] eqn:E.
+      specialize (IH (ks ++ [classify_kind b])
+                    (os ++ [length ks])
+                    (cs ++ [classify_code b]) i2).
+      rewrite E in IH.
+      rewrite IH.
+      reflexivity.
   Qed.
 
   Lemma run_from_props : forall ks os cs i ks' os' cs',

@@ -132,6 +132,7 @@ Module L0SoA.
     replace (issues_from (pre ++ mid ++ post))
       with (issues_from (pre ++ rest)) by (subst rest; rewrite app_assoc; reflexivity).
     rewrite Nat.add_comm.
+    rewrite <- skipn_skipn.
     rewrite issues_skipn_prefix with (pre := pre) (rest := rest).
     subst rest.
     rewrite issues_skipn_prefix with (pre := mid) (rest := post).

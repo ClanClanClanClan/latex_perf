@@ -143,14 +143,17 @@ let run () =
       if msg_type <> 1 then raise Exit;
       let req_id = be64_get hdr 4 in
       let payload_len = be32_get hdr 12 in
-      if payload_len < 4 then raise Exit;
       let doc_bytes_max = Latex_parse_lib.Config.max_req_bytes in
-      if payload_len - 4 > doc_bytes_max then raise Exit;
       let payload = Bytes.create payload_len in
       read_exact c payload 0 payload_len;
-      let doc_len = be32_get payload 0 in
-      if doc_len < 0 || doc_len > payload_len - 4 then raise Exit;
-      let req = Bytes.sub payload 4 doc_len in
+      let req =
+        if payload_len >= 4 then
+          let announced = be32_get payload 0 in
+          if announced <= payload_len - 4 then Bytes.sub payload 4 announced
+          else payload
+        else payload
+      in
+      if Bytes.length req > doc_bytes_max then raise Exit;
 
       let recv () = req in
       let last_result : Latex_parse_lib.Broker.svc_result option ref =

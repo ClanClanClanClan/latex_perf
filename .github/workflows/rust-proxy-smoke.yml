@@ -26,7 +26,10 @@ jobs:
           opam-depext: false
       - name: Disable opam sandboxing
         run: |
-          opam config set-sandboxing false || opam config set sandboxing-mode none
+          echo "OPAMNO_SANDBOXING=1" >> $GITHUB_ENV
+          opam config set sandboxing-mode none || \
+          opam config set-global sandboxing false || \
+          opam option set-sandboxing=false || true
       - name: Install dune
         run: |
           opam repo add default https://opam.ocaml.org || true

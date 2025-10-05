@@ -234,22 +234,59 @@ let check_recovery socket_path =
     (* Send health check *)
     let request = "HEALTH_CHECK" in
     let len = String.length request in
-    let header = Bytes.create 4 in
-    Bytes.set header 0 (char_of_int (len land 0xff));
-    Bytes.set header 1 (char_of_int ((len lsr 8) land 0xff));
-    Bytes.set header 2 (char_of_int ((len lsr 16) land 0xff));
-    Bytes.set header 3 (char_of_int ((len lsr 24) land 0xff));
+    let payload_len = 4 + len in
+    let payload = Bytes.create payload_len in
+    Bytes.set payload 0 (char_of_int ((len lsr 24) land 0xff));
+    Bytes.set payload 1 (char_of_int ((len lsr 16) land 0xff));
+    Bytes.set payload 2 (char_of_int ((len lsr 8) land 0xff));
+    Bytes.set payload 3 (char_of_int (len land 0xff));
+    Bytes.blit_string request 0 payload 4 len;
 
-    ignore (Unix.write sock header 0 4);
-    ignore (Unix.write sock (Bytes.of_string request) 0 len);
+    let header = Bytes.create 16 in
+    (* type = 1 *)
+    Bytes.set header 0 (char_of_int 0);
+    Bytes.set header 1 (char_of_int 0);
+    Bytes.set header 2 (char_of_int 0);
+    Bytes.set header 3 (char_of_int 1);
+    (* req id = 0 *)
+    for i = 4 to 11 do
+      Bytes.set header i (char_of_int 0)
+    done;
+    Bytes.set header 12 (char_of_int ((payload_len lsr 24) land 0xff));
+    Bytes.set header 13 (char_of_int ((payload_len lsr 16) land 0xff));
+    Bytes.set header 14 (char_of_int ((payload_len lsr 8) land 0xff));
+    Bytes.set header 15 (char_of_int (payload_len land 0xff));
 
-    (* Try to read response *)
-    let response_header = Bytes.create 4 in
-    let n = Unix.read sock response_header 0 4 in
+    let rec write_all buf ofs rem =
+      if rem > 0 then
+        let n = Unix.write sock buf ofs rem in
+        if n = 0 then failwith "short write" else write_all buf (ofs + n) (rem - n)
+    in
+    write_all header 0 16;
+    write_all payload 0 payload_len;
+
+    (* Try to read response (16-byte header + body) *)
+    let response_header = Bytes.create 16 in
+    let rec read_exact buf ofs rem =
+      if rem > 0 then
+        let n = Unix.read sock buf ofs rem in
+        if n = 0 then failwith "short read"
+        else read_exact buf (ofs + n) (rem - n)
+    in
+    read_exact response_header 0 16;
+    let resp_len =
+      (Char.code (Bytes.get response_header 12) lsl 24)
+      lor (Char.code (Bytes.get response_header 13) lsl 16)
+      lor (Char.code (Bytes.get response_header 14) lsl 8)
+      lor Char.code (Bytes.get response_header 15)
+    in
+    let resp_body = Bytes.create resp_len in
+    read_exact resp_body 0 resp_len;
+    ignore resp_body;
 
     Unix.close sock;
 
-    if n = 4 then (
+    if resp_len > 0 then (
       eprintf "[FAULT] System recovered successfully ✓\n%!";
       true)
     else (

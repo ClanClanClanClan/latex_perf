@@ -71,51 +71,102 @@ let connect_to_service () =
     Some sock
   with _ -> None
 
+let[@inline] put_u8 b off v =
+  Bytes.unsafe_set b off (Char.unsafe_chr (v land 0xFF))
+
+let[@inline] get_u8 b off = Char.code (Bytes.get b off)
+
+let be32_put b off v =
+  put_u8 b off ((v lsr 24) land 0xFF);
+  put_u8 b (off + 1) ((v lsr 16) land 0xFF);
+  put_u8 b (off + 2) ((v lsr 8) land 0xFF);
+  put_u8 b (off + 3) (v land 0xFF)
+
+let be32_get b off =
+  (get_u8 b off lsl 24)
+  lor (get_u8 b (off + 1) lsl 16)
+  lor (get_u8 b (off + 2) lsl 8)
+  lor get_u8 b (off + 3)
+
+let be64_put b off v =
+  let open Int64 in
+  put_u8 b (off + 0) (to_int (shift_right_logical v 56));
+  put_u8 b (off + 1) (to_int (shift_right_logical v 48));
+  put_u8 b (off + 2) (to_int (shift_right_logical v 40));
+  put_u8 b (off + 3) (to_int (shift_right_logical v 32));
+  put_u8 b (off + 4) (to_int (shift_right_logical v 24));
+  put_u8 b (off + 5) (to_int (shift_right_logical v 16));
+  put_u8 b (off + 6) (to_int (shift_right_logical v 8));
+  put_u8 b (off + 7) (to_int v)
+
+let be64_get b off =
+  let open Int64 in
+  let byte i = of_int (get_u8 b (off + i)) in
+  logor (shift_left (byte 0) 56)
+    (logor (shift_left (byte 1) 48)
+       (logor (shift_left (byte 2) 40)
+          (logor (shift_left (byte 3) 32)
+             (logor (shift_left (byte 4) 24)
+                (logor (shift_left (byte 5) 16)
+                   (logor (shift_left (byte 6) 8) (byte 7)))))))
+
+let rec read_exact fd buf ofs len =
+  if len = 0 then ()
+  else
+    match Unix.read fd buf ofs len with
+    | 0 -> failwith "short read"
+    | n -> read_exact fd buf (ofs + n) (len - n)
+
+let rec write_all fd buf ofs len =
+  if len = 0 then ()
+  else
+    match Unix.write fd buf ofs len with
+    | 0 -> failwith "short write"
+    | n -> write_all fd buf (ofs + n) (len - n)
+
+let req_counter = ref 0L
+
+let next_req_id () =
+  let id = !req_counter in
+  req_counter := Int64.succ id;
+  id
+
 (* Send request to SIMD service and get response *)
 let call_simd_service latex_content =
   match connect_to_service () with
   | None -> Error "Cannot connect to SIMD service"
   | Some service_sock -> (
+      let cleanup () = Unix.close service_sock in
       try
-        (* Send request with big-endian length header *)
         let len = String.length latex_content in
-        let header = Bytes.create 4 in
-        Bytes.set header 0 (char_of_int ((len lsr 24) land 0xff));
-        Bytes.set header 1 (char_of_int ((len lsr 16) land 0xff));
-        Bytes.set header 2 (char_of_int ((len lsr 8) land 0xff));
-        Bytes.set header 3 (char_of_int (len land 0xff));
-
-        ignore (Unix.write service_sock header 0 4);
-        ignore (Unix.write service_sock (Bytes.of_string latex_content) 0 len);
-
-        (* Read response header (big-endian length) *)
-        let response_header = Bytes.create 4 in
-        let n = Unix.read service_sock response_header 0 4 in
-        if n <> 4 then (
-          Unix.close service_sock;
-          Error "Invalid response from service (short header)")
+        if len > Latex_parse_lib.Config.max_req_bytes then
+          (cleanup (); Error "request too large")
         else
-          let be32 b off =
-            (int_of_char (Bytes.get b off) lsl 24)
-            lor (int_of_char (Bytes.get b (off + 1)) lsl 16)
-            lor (int_of_char (Bytes.get b (off + 2)) lsl 8)
-            lor int_of_char (Bytes.get b (off + 3))
-          in
-          let resp_len = be32 response_header 0 in
-          let response = Bytes.create resp_len in
-          let rec read_all pos remaining =
-            if remaining <= 0 then pos
-            else
-              let n = Unix.read service_sock response pos remaining in
-              if n = 0 then pos else read_all (pos + n) (remaining - n)
-          in
-          let total_read = read_all 0 resp_len in
-          Unix.close service_sock;
-          if total_read <> resp_len then
-            Error "Incomplete response from service"
-          else Ok (Bytes.sub response 0 resp_len)
+          let payload_len = 4 + len in
+          let payload = Bytes.create payload_len in
+          be32_put payload 0 len;
+          Bytes.blit_string latex_content 0 payload 4 len;
+          let req_id = next_req_id () in
+          let header = Bytes.create 16 in
+          be32_put header 0 1;
+          be64_put header 4 req_id;
+          be32_put header 12 payload_len;
+          write_all service_sock header 0 16;
+          write_all service_sock payload 0 payload_len;
+
+          let resp_header = Bytes.create 16 in
+          read_exact service_sock resp_header 0 16;
+          let msg_type = be32_get resp_header 0 in
+          let resp_id = be64_get resp_header 4 in
+          let resp_len = be32_get resp_header 12 in
+          if msg_type <> 2 || resp_id <> req_id then (
+            cleanup (); Error "invalid response header")
+          else
+            let response = Bytes.create resp_len in
+            read_exact service_sock response 0 resp_len;
+            cleanup (); Ok response
       with exn ->
-        Unix.close service_sock;
+        cleanup ();
         Error (sprintf "Service error: %s" (Printexc.to_string exn)))
 
 (* Handle /tokenize endpoint *)

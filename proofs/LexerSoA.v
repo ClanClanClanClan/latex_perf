@@ -56,7 +56,7 @@ Module L0SoA.
   Proof.
     induction pre as [|b pre IH]; intros rest; simpl.
     - reflexivity.
-    - exact IH.
+    - apply IH.
   Qed.
 
   Lemma issues_firstn_prefix : forall pre rest,

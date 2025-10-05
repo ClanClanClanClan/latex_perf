@@ -24,6 +24,43 @@ let rec write_all fd b o l =
 
 let () = Sys.set_signal Sys.sigpipe Sys.Signal_ignore
 
+let[@inline] put_u8 b off v =
+  Bytes.unsafe_set b off (Char.unsafe_chr (v land 0xFF))
+
+let be32_get b off =
+  (Char.code (Bytes.get b off) lsl 24)
+  lor (Char.code (Bytes.get b (off + 1)) lsl 16)
+  lor (Char.code (Bytes.get b (off + 2)) lsl 8)
+  lor Char.code (Bytes.get b (off + 3))
+
+let be32_put b off v =
+  put_u8 b off ((v lsr 24) land 0xFF);
+  put_u8 b (off + 1) ((v lsr 16) land 0xFF);
+  put_u8 b (off + 2) ((v lsr 8) land 0xFF);
+  put_u8 b (off + 3) (v land 0xFF)
+
+let be64_get b off =
+  let open Int64 in
+  let byte i = of_int (Char.code (Bytes.get b (off + i))) in
+  logor (shift_left (byte 0) 56)
+    (logor (shift_left (byte 1) 48)
+       (logor (shift_left (byte 2) 40)
+          (logor (shift_left (byte 3) 32)
+             (logor (shift_left (byte 4) 24)
+                (logor (shift_left (byte 5) 16)
+                   (logor (shift_left (byte 6) 8) (byte 7)))))))
+
+let be64_put b off v =
+  let open Int64 in
+  put_u8 b (off + 0) (to_int (shift_right_logical v 56));
+  put_u8 b (off + 1) (to_int (shift_right_logical v 48));
+  put_u8 b (off + 2) (to_int (shift_right_logical v 40));
+  put_u8 b (off + 3) (to_int (shift_right_logical v 32));
+  put_u8 b (off + 4) (to_int (shift_right_logical v 24));
+  put_u8 b (off + 5) (to_int (shift_right_logical v 16));
+  put_u8 b (off + 6) (to_int (shift_right_logical v 8));
+  put_u8 b (off + 7) (to_int v)
+
 let run () =
   let sock_path = Latex_parse_lib.Config.service_sock_path in
   unlink_if_exists sock_path;
@@ -94,17 +131,20 @@ let run () =
     (* keep-alive loop: many requests per connection *)
     let rec loop () =
       (* recv *)
-      let hdr = Bytes.create 4 in
-      (try read_exact c hdr 0 4 with _ -> raise Exit);
-      let len =
-        (Char.code (Bytes.get hdr 0) lsl 24)
-        lor (Char.code (Bytes.get hdr 1) lsl 16)
-        lor (Char.code (Bytes.get hdr 2) lsl 8)
-        lor Char.code (Bytes.get hdr 3)
-      in
-      if len <= 0 || len > Latex_parse_lib.Config.max_req_bytes then raise Exit;
-      let req = Bytes.create len in
-      read_exact c req 0 len;
+      let hdr = Bytes.create 16 in
+      (try read_exact c hdr 0 16 with _ -> raise Exit);
+      let msg_type = be32_get hdr 0 in
+      if msg_type <> 1 then raise Exit;
+      let req_id = be64_get hdr 4 in
+      let payload_len = be32_get hdr 12 in
+      if payload_len < 4 then raise Exit;
+      let doc_bytes_max = Latex_parse_lib.Config.max_req_bytes in
+      if payload_len - 4 > doc_bytes_max then raise Exit;
+      let payload = Bytes.create payload_len in
+      read_exact c payload 0 payload_len;
+      let doc_len = be32_get payload 0 in
+      if doc_len < 0 || doc_len > payload_len - 4 then raise Exit;
+      let req = Bytes.sub payload 4 doc_len in
 
       let recv () = req in
       let last_result : Latex_parse_lib.Broker.svc_result option ref =
@@ -149,12 +189,11 @@ let run () =
       in
       let send reply =
         let len = Bytes.length reply in
-        let rhdr = Bytes.create 4 in
-        Bytes.unsafe_set rhdr 0 (Char.unsafe_chr ((len lsr 24) land 0xFF));
-        Bytes.unsafe_set rhdr 1 (Char.unsafe_chr ((len lsr 16) land 0xFF));
-        Bytes.unsafe_set rhdr 2 (Char.unsafe_chr ((len lsr 8) land 0xFF));
-        Bytes.unsafe_set rhdr 3 (Char.unsafe_chr (len land 0xFF));
-        write_all c rhdr 0 4;
+        let rhdr = Bytes.create 16 in
+        be32_put rhdr 0 2;
+        be64_put rhdr 4 req_id;
+        be32_put rhdr 12 len;
+        write_all c rhdr 0 16;
         write_all c reply 0 len
       in
 

@@ -67,6 +67,15 @@ let be64_put b off v =
   put_u8 b (off + 6) (to_int (shift_right_logical v 8));
   put_u8 b (off + 7) (to_int v)
 
+let hex_prefix b =
+  let limit = min 16 (Bytes.length b) in
+  let buf = Buffer.create (limit * 3) in
+  for i = 0 to limit - 1 do
+    if i > 0 then Buffer.add_char buf ' ';
+    Buffer.add_string buf (Printf.sprintf "%02X" (Char.code (Bytes.get b i)))
+  done;
+  Buffer.contents buf
+
 let run () =
   let sock_path = Latex_parse_lib.Config.service_sock_path in
   unlink_if_exists sock_path;
@@ -150,7 +159,7 @@ let run () =
         if payload_len >= 4 then
           let announced = be32_get payload 0 in
           if announced <= payload_len - 4 then Bytes.sub payload 4 announced
-          else payload
+          else Bytes.sub payload 4 (payload_len - 4)
         else payload
       in
       if Bytes.length req > doc_bytes_max then raise Exit;
@@ -169,6 +178,8 @@ let run () =
           `Ok r
         with _ ->
           last_result := None;
+          Printf.eprintf "[svc] hedged_call exn len=%d sample=%s\n%!"
+            (Bytes.length req) (hex_prefix req);
           `Err
       in
       let put32 b off v =
@@ -179,14 +190,27 @@ let run () =
       in
       let format = function
         | `Ok r ->
-            let b = Bytes.create 13 in
-            put32 b 0 r.Latex_parse_lib.Broker.status;
-            put32 b 4 r.Latex_parse_lib.Broker.n_tokens;
-            put32 b 8 r.Latex_parse_lib.Broker.issues_len;
-            Bytes.unsafe_set b 12
-              (match r.Latex_parse_lib.Broker.origin with
+            let status = r.Latex_parse_lib.Broker.status in
+            let tokens = r.Latex_parse_lib.Broker.n_tokens in
+            let issues = r.Latex_parse_lib.Broker.issues_len in
+            let origin_char =
+              match r.Latex_parse_lib.Broker.origin with
               | `P -> Char.unsafe_chr 1
-              | `H -> Char.unsafe_chr 2);
+              | `H -> Char.unsafe_chr 2
+            in
+            if status <> 0 then
+              Printf.eprintf
+                "[svc] nonzero status=%d tokens=%d issues=%d origin=%c len=%d \
+                 sample=%s\n\
+                 %!"
+                status tokens issues
+                (if origin_char = Char.unsafe_chr 1 then 'P' else 'H')
+                (Bytes.length req) (hex_prefix req);
+            let b = Bytes.create 13 in
+            put32 b 0 status;
+            put32 b 4 tokens;
+            put32 b 8 issues;
+            Bytes.unsafe_set b 12 origin_char;
             b
         | `Err ->
             let b = Bytes.create 13 in

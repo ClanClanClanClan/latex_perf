@@ -178,7 +178,7 @@ let run () =
           `Ok r
         with _ ->
           last_result := None;
-          Printf.eprintf "[svc] hedged_call exn len=%d sample=%s\n%!"
+          Format.eprintf "[svc] hedged_call exn len=%d sample=%s@."
             (Bytes.length req) (hex_prefix req);
           `Err
       in
@@ -198,14 +198,13 @@ let run () =
               | `P -> Char.unsafe_chr 1
               | `H -> Char.unsafe_chr 2
             in
-            if status <> 0 then
-              Printf.eprintf
-                "[svc] nonzero status=%d tokens=%d issues=%d origin=%c len=%d \
-                 sample=%s\n\
-                 %!"
+            if status <> 0 then (
+              Format.eprintf
+                "[svc] nonzero status=%d tokens=%d issues=%d origin=%c len=%d "
                 status tokens issues
                 (if origin_char = Char.unsafe_chr 1 then 'P' else 'H')
-                (Bytes.length req) (hex_prefix req);
+                (Bytes.length req);
+              Format.eprintf "sample=%s@." (hex_prefix req));
             let b = Bytes.create 13 in
             put32 b 0 status;
             put32 b 4 tokens;

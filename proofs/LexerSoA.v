@@ -104,8 +104,11 @@ Module L0SoA.
     = issues_from mid.
   Proof.
     intros pre mid post.
-    rewrite (app_assoc pre mid post).
-    rewrite issues_skipn_prefix with (pre := pre) (rest := mid ++ post).
+    set (rest := mid ++ post).
+    replace (issues_from (pre ++ mid ++ post))
+      with (issues_from (pre ++ rest)) by (subst rest; rewrite app_assoc; reflexivity).
+    rewrite issues_skipn_prefix with (pre := pre) (rest := rest).
+    subst rest.
     rewrite issues_firstn_prefix with (pre := mid) (rest := post).
     reflexivity.
   Qed.
@@ -114,8 +117,10 @@ Module L0SoA.
     firstn (length pre) (issues_from (pre ++ mid ++ post)) = issues_from pre.
   Proof.
     intros pre mid post.
-    rewrite (app_assoc pre mid post).
-    rewrite issues_firstn_prefix with (pre := pre) (rest := mid ++ post).
+    set (rest := mid ++ post).
+    replace (issues_from (pre ++ mid ++ post))
+      with (issues_from (pre ++ rest)) by (subst rest; rewrite app_assoc; reflexivity).
+    rewrite issues_firstn_prefix with (pre := pre) (rest := rest).
     reflexivity.
   Qed.
 
@@ -123,9 +128,12 @@ Module L0SoA.
     skipn (length pre + length mid) (issues_from (pre ++ mid ++ post)) = issues_from post.
   Proof.
     intros pre mid post.
-    rewrite (app_assoc pre mid post).
+    set (rest := mid ++ post).
+    replace (issues_from (pre ++ mid ++ post))
+      with (issues_from (pre ++ rest)) by (subst rest; rewrite app_assoc; reflexivity).
     rewrite Nat.add_comm.
-    rewrite issues_skipn_prefix with (pre := pre) (rest := mid ++ post).
+    rewrite issues_skipn_prefix with (pre := pre) (rest := rest).
+    subst rest.
     rewrite issues_skipn_prefix with (pre := mid) (rest := post).
     reflexivity.
   Qed.

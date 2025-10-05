@@ -25,7 +25,8 @@ jobs:
           ocaml-compiler: 4.14.1
           opam-depext: false
       - name: Disable opam sandboxing
-        run: opam config set sandboxing-mode none
+        run: |
+          opam config set-sandboxing false || opam config set sandboxing-mode none
       - name: Install dune
         run: |
           opam repo add default https://opam.ocaml.org || true

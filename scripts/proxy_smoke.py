@@ -51,8 +51,10 @@ def parse_status_payload(body: bytes):
 def main():
     s = socket.create_connection((HOST, PORT), timeout=10.0)
     s.settimeout(10.0)
+    doc = b" "+b"test"
+    req_body = struct.pack('>I', len(doc)) + doc
     for i in range(3):
-        body = request(s, b" ", typ=1, req_id=i + 1)
+        body = request(s, req_body, typ=1, req_id=i + 1)
         status, n_tokens, issues_len, origin = parse_status_payload(body)
         if status != 0:
             print(f"[proxy-smoke] request {i+1} returned status={status}, tokens={n_tokens}, issues_len={issues_len}, origin={origin}", file=sys.stderr)

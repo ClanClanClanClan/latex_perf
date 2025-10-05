@@ -258,7 +258,8 @@ let check_recovery socket_path =
     let rec write_all buf ofs rem =
       if rem > 0 then
         let n = Unix.write sock buf ofs rem in
-        if n = 0 then failwith "short write" else write_all buf (ofs + n) (rem - n)
+        if n = 0 then failwith "short write"
+        else write_all buf (ofs + n) (rem - n)
     in
     write_all header 0 16;
     write_all payload 0 payload_len;

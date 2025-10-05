@@ -64,7 +64,7 @@ Module L0SoA.
   Proof.
     induction pre as [|b pre IH]; intros rest; simpl.
     - reflexivity.
-    - rewrite firstn_cons. now rewrite IH.
+    - simpl. f_equal. apply IH.
   Qed.
 
   Lemma issues_length : forall i, length (issues_from i) = length i.

@@ -42,12 +42,18 @@ let be32_put b off v =
 let be64_get b off =
   let open Int64 in
   let byte i = of_int (Char.code (Bytes.get b (off + i))) in
-  logor (shift_left (byte 0) 56)
-    (logor (shift_left (byte 1) 48)
-       (logor (shift_left (byte 2) 40)
-          (logor (shift_left (byte 3) 32)
-             (logor (shift_left (byte 4) 24)
-                (logor (shift_left (byte 5) 16)
+  logor
+    (shift_left (byte 0) 56)
+    (logor
+       (shift_left (byte 1) 48)
+       (logor
+          (shift_left (byte 2) 40)
+          (logor
+             (shift_left (byte 3) 32)
+             (logor
+                (shift_left (byte 4) 24)
+                (logor
+                   (shift_left (byte 5) 16)
                    (logor (shift_left (byte 6) 8) (byte 7)))))))
 
 let be64_put b off v =

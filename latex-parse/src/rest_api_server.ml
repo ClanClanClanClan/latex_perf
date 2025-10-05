@@ -102,12 +102,18 @@ let be64_put b off v =
 let be64_get b off =
   let open Int64 in
   let byte i = of_int (get_u8 b (off + i)) in
-  logor (shift_left (byte 0) 56)
-    (logor (shift_left (byte 1) 48)
-       (logor (shift_left (byte 2) 40)
-          (logor (shift_left (byte 3) 32)
-             (logor (shift_left (byte 4) 24)
-                (logor (shift_left (byte 5) 16)
+  logor
+    (shift_left (byte 0) 56)
+    (logor
+       (shift_left (byte 1) 48)
+       (logor
+          (shift_left (byte 2) 40)
+          (logor
+             (shift_left (byte 3) 32)
+             (logor
+                (shift_left (byte 4) 24)
+                (logor
+                   (shift_left (byte 5) 16)
                    (logor (shift_left (byte 6) 8) (byte 7)))))))
 
 let rec read_exact fd buf ofs len =
@@ -139,8 +145,9 @@ let call_simd_service latex_content =
       let cleanup () = Unix.close service_sock in
       try
         let len = String.length latex_content in
-        if len > Latex_parse_lib.Config.max_req_bytes then
-          (cleanup (); Error "request too large")
+        if len > Latex_parse_lib.Config.max_req_bytes then (
+          cleanup ();
+          Error "request too large")
         else
           let payload_len = 4 + len in
           let payload = Bytes.create payload_len in
@@ -160,11 +167,13 @@ let call_simd_service latex_content =
           let resp_id = be64_get resp_header 4 in
           let resp_len = be32_get resp_header 12 in
           if msg_type <> 2 || resp_id <> req_id then (
-            cleanup (); Error "invalid response header")
+            cleanup ();
+            Error "invalid response header")
           else
             let response = Bytes.create resp_len in
             read_exact service_sock response 0 resp_len;
-            cleanup (); Ok response
+            cleanup ();
+            Ok response
       with exn ->
         cleanup ();
         Error (sprintf "Service error: %s" (Printexc.to_string exn)))

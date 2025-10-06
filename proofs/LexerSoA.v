@@ -198,7 +198,7 @@ Module L0SoA.
     os_out = os ++ List.seq (length ks) (length i).
   Proof.
     intros ks0 os0 cs0 i ks_out os_out cs_out.
-    revert ks0 os0 cs0.
+    revert ks0 os0 cs0 ks_out os_out cs_out.
     induction i as [|b rest IH]; intros ks os cs ks_out os_out cs_out H; simpl in H.
     - inversion H; subst; repeat split; try reflexivity.
     - remember (ks ++ [classify_kind b]) as ks_acc.

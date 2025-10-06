@@ -190,21 +190,21 @@ Module L0SoA.
       exact IH.
   Qed.
 
-  Lemma run_from_props : forall ks os cs i ks' os' cs',
-    run_from ks os cs i = (ks', os', cs') ->
-    length ks' = length cs' /\ length os' = length ks' /\
-    ks' = ks ++ List.map classify_kind i /\
-    cs' = cs ++ List.map classify_code i /\
-    os' = os ++ List.seq (length ks) (length i).
+  Lemma run_from_props : forall ks os cs i ks_out os_out cs_out,
+    run_from ks os cs i = (ks_out, os_out, cs_out) ->
+    length ks_out = length cs_out /\ length os_out = length ks_out /\
+    ks_out = ks ++ List.map classify_kind i /\
+    cs_out = cs ++ List.map classify_code i /\
+    os_out = os ++ List.seq (length ks) (length i).
   Proof.
-    intros ks0 os0 cs0 i ks' os' cs'.
+    intros ks0 os0 cs0 i ks_out os_out cs_out.
     revert ks0 os0 cs0.
-    induction i as [|b rest IH]; intros ks os cs ks' os' cs' H; simpl in H.
+    induction i as [|b rest IH]; intros ks os cs ks_out os_out cs_out H; simpl in H.
     - inversion H; subst; repeat split; try reflexivity.
     - remember (ks ++ [classify_kind b]) as ks_acc.
       remember (os ++ [length ks]) as os_acc.
       remember (cs ++ [classify_code b]) as cs_acc.
-      specialize (IH ks_acc os_acc cs_acc ks' os' cs').
+      specialize (IH ks_acc os_acc cs_acc ks_out os_out cs_out).
       apply IH in H as (Hkc & Hos & Hks & Hcs & Hos'); subst ks_acc os_acc cs_acc.
       repeat split.
       + rewrite app_length in Hkc; simpl in Hkc; exact Hkc.

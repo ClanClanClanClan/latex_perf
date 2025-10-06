@@ -2,18 +2,8 @@
 import socket
 import struct
 import sys
-import time
-
 HOST = '127.0.0.1'
 PORT = 9123
-
-
-def be32(x: int) -> bytes:
-    return struct.pack('>I', x)
-
-
-def be64(x: int) -> bytes:
-    return struct.pack('>Q', x)
 
 
 def recv_exact(sock: socket.socket, length: int) -> bytes:
@@ -26,41 +16,36 @@ def recv_exact(sock: socket.socket, length: int) -> bytes:
     return bytes(data)
 
 
-def request(sock: socket.socket, payload: bytes, typ: int = 1, req_id: int = 1) -> bytes:
-    hdr = be32(typ) + be64(req_id) + be32(len(payload))
-    sock.sendall(hdr + payload)
+def request(sock: socket.socket, payload: bytes) -> tuple[int, int, int, int, int]:
+    sock.sendall(struct.pack('>I', len(payload)))
+    sock.sendall(payload)
 
-    rhdr = recv_exact(sock, 16)
-    r_type, r_req, r_len = struct.unpack('>I Q I', rhdr)
-    if r_type != 2 or r_req != req_id:
-        raise RuntimeError(f'unexpected response header type={r_type} req={r_req}')
-    return recv_exact(sock, r_len)
-
-def parse_status_payload(body: bytes):
-    if len(body) == 13:
-        status, n_tokens, issues_len = struct.unpack('>III', body[:12])
-        origin = body[12]
-        return status, n_tokens, issues_len, origin
-    elif len(body) == 20:
-        # Backward compatibility if a 20-byte variant appears (all u32)
-        status, n_tokens, issues_len, origin, _pad = struct.unpack('>IIIII', body)
-        return status, n_tokens, issues_len, origin & 0xFF
-    else:
-        raise RuntimeError(f'unexpected payload length: {len(body)}')
+    resp_len_bytes = recv_exact(sock, 4)
+    (resp_len,) = struct.unpack('>I', resp_len_bytes)
+    body = recv_exact(sock, resp_len)
+    if resp_len != 20:
+        raise RuntimeError(f'unexpected response length: {resp_len}')
+    return struct.unpack('>IIIII', body)
 
 def main():
-    s = socket.create_connection((HOST, PORT), timeout=10.0)
-    s.settimeout(10.0)
-    doc = b" "+b"test"
-    req_body = struct.pack('>I', len(doc)) + doc
-    for i in range(3):
-        body = request(s, req_body, typ=1, req_id=i + 1)
-        status, n_tokens, issues_len, origin = parse_status_payload(body)
-        if status != 0:
-            print(f"[proxy-smoke] request {i+1} returned status={status}, tokens={n_tokens}, issues_len={issues_len}, origin={origin}", file=sys.stderr)
-            raise SystemExit(f'status nonzero: {status}')
-        if origin not in (1, 2):
-            raise SystemExit(f'bad origin: {origin}')
+    doc = b" " + b"test"
+    payload = struct.pack('>I', len(doc)) + doc
+    try:
+        with socket.create_connection((HOST, PORT), timeout=10.0) as s:
+            s.settimeout(10.0)
+            for i in range(3):
+                status, tokens, issues, alloc, majors = request(s, payload)
+                if status != 0:
+                    print(
+                        f"[proxy-smoke] ERROR request={i+1} status={status} tokens={tokens} issues={issues} alloc_x10={alloc} majors={majors}",
+                        file=sys.stderr,
+                    )
+                    raise SystemExit(status or 1)
+                print(f"[proxy-smoke] request {i+1} status={status} tokens={tokens} issues={issues}")
+    except OSError as exc:
+        print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+
     print('[proxy-smoke] OK (3 requests, status=0)')
 
 if __name__ == '__main__':

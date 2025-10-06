@@ -52,9 +52,13 @@ jobs:
 
       - name: Start service and proxy
         run: |
-          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          rm -f /tmp/l0_lex_svc.sock
+          rm -f service.stdout service.stderr proxy.stdout proxy.stderr
+          L0_ALLOW_SCALAR=1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
+            1>service.stdout 2>service.stderr & echo $! > service.pid
           sleep 1
-          ./rust/target/release/elderd_rust_proxy & echo $! > proxy.pid
+          stdbuf -oL -eL ./rust/target/release/elderd_rust_proxy \
+            1>proxy.stdout 2>proxy.stderr & echo $! > proxy.pid
           sleep 1
 
       - name: Smoke 3 requests via proxy
@@ -68,3 +72,13 @@ jobs:
           if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
           pkill -f elderd_rust_proxy || true
           pkill -f main_service || true
+      - name: Upload service/proxy logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy-service-logs
+          path: |
+            service.stdout
+            service.stderr
+            proxy.stdout
+            proxy.stderr

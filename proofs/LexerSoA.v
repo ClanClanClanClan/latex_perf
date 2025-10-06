@@ -197,6 +197,8 @@ Module L0SoA.
     cs' = cs ++ List.map classify_code i /\
     os' = os ++ List.seq (length ks) (length i).
   Proof.
+    intros ks0 os0 cs0 i ks' os' cs'.
+    revert ks0 os0 cs0.
     induction i as [|b rest IH]; intros ks os cs ks' os' cs' H; simpl in H.
     - inversion H; subst; repeat split; try reflexivity.
     - remember (ks ++ [classify_kind b]) as ks1.

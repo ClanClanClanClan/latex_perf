@@ -201,11 +201,11 @@ Module L0SoA.
     revert ks0 os0 cs0.
     induction i as [|b rest IH]; intros ks os cs ks' os' cs' H; simpl in H.
     - inversion H; subst; repeat split; try reflexivity.
-    - remember (ks ++ [classify_kind b]) as ks1.
-      remember (os ++ [length ks]) as os1.
-      remember (cs ++ [classify_code b]) as cs1.
-      specialize (IH ks1 os1 cs1 ks' os' cs').
-      apply IH in H as (Hkc & Hos & Hks & Hcs & Hos'); subst ks1 os1 cs1.
+    - remember (ks ++ [classify_kind b]) as ks_acc.
+      remember (os ++ [length ks]) as os_acc.
+      remember (cs ++ [classify_code b]) as cs_acc.
+      specialize (IH ks_acc os_acc cs_acc ks' os' cs').
+      apply IH in H as (Hkc & Hos & Hks & Hcs & Hos'); subst ks_acc os_acc cs_acc.
       repeat split.
       + rewrite app_length in Hkc; simpl in Hkc; exact Hkc.
       + rewrite app_length in Hos; simpl in Hos; exact Hos.

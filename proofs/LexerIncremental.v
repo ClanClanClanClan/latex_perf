@@ -1,7 +1,7 @@
 (* LaTeX Perfectionist v25_R1 — Incremental Lexer Foundations (skeleton)
    Zero-admit lemmas to stage windowed determinism/progress proofs. *)
 
-Require Import List Arith Bool Lia.
+From Coq Require Import List Arith Bool Lia.
 Import ListNotations.
 Require Import ListWindow.
 Import ListWindow.
@@ -179,7 +179,7 @@ Proof.
   intros pre mid suf. unfold offsets_of.
   rewrite length_tokenize.
   replace (length (tokenize (pre ++ mid ++ suf))) with (length (pre ++ mid ++ suf)) by now rewrite length_tokenize.
-  rewrite app_length, app_length.
+  rewrite List.length_app, List.length_app.
   set (npre := length pre). set (nmid := length mid). set (nsuf := length suf).
   rewrite skipn_seq.
   rewrite firstn_seq.
@@ -325,7 +325,7 @@ Proof.
   intros. rewrite normalized_offsets_window.
   unfold offsets_of.
   rewrite length_tokenize.
-  rewrite app_length.
+  rewrite List.length_app.
   rewrite <- (seq_app 0 (length l) (length r)).
   now rewrite Nat.add_0_l.
 Qed.
@@ -339,7 +339,7 @@ Proof.
   unfold offsets_of.
   (* offsets_of (l ++ b :: r) = seq 0 (|l|+1+|r|) = seq 0 |l| ++ seq |l| (1+|r|) then shift rhs by 1 *)
   rewrite length_tokenize.
-  rewrite app_length. simpl.
+  rewrite List.length_app. simpl.
   rewrite <- (seq_app 0 (length l) (S (length r))).
   rewrite Nat.add_0_l.
   simpl.

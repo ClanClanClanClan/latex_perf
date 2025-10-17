@@ -2,7 +2,7 @@
    This is a faithful shape for a small-step semantics over bytes → tokens,
    using a simple classifier (b mod 16) as an abstraction of catcodes. *)
 
-Require Import List Arith Bool Lia.
+From Coq Require Import List Arith Bool Lia.
 Import ListNotations.
 Require Import ListWindow.
 Import ListWindow.
@@ -40,7 +40,7 @@ Definition classify (b:byte) : token :=
 Definition run (bs:list byte) : list token := map classify bs.
 
 Lemma length_run : forall bs, length (run bs) = length bs.
-Proof. intros; unfold run; now rewrite map_length. Qed.
+Proof. intros; unfold run; now rewrite List.length_map. Qed.
 
 Lemma firstn_length_append_token :
   forall (xs ys : list token),
@@ -286,8 +286,8 @@ Lemma offsets_window_equivalence : forall pre mid suf,
 Proof.
   intros pre mid suf. unfold offsets.
   rewrite length_run.
-  rewrite app_length.
-  rewrite app_length.
+  rewrite List.length_app.
+  rewrite List.length_app.
   rewrite skipn_seq, firstn_seq. now rewrite Nat.min_l by lia.
 Qed.
 

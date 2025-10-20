@@ -212,25 +212,25 @@ Module L0SoA.
       destruct IH as (Lk & Lc & Lo & HK & HC & HO).
       repeat split.
       + rewrite HK.
-        rewrite List.length_app with (l:=ks ++ [classify_kind b])
-                                     (l':=List.map classify_kind rest).
-        rewrite List.length_app with (l:=ks) (l':=[classify_kind b]).
+        rewrite app_length with (l:=ks ++ [classify_kind b])
+                               (l':=List.map classify_kind rest).
+        rewrite app_length with (l:=ks) (l':=[classify_kind b]).
         simpl.
-        rewrite List.length_map.
+        rewrite map_length.
         lia.
       + rewrite HC.
-        rewrite List.length_app with (l:=cs ++ [classify_code b])
-                                     (l':=List.map classify_code rest).
-        rewrite List.length_app with (l:=cs) (l':=[classify_code b]).
+        rewrite app_length with (l:=cs ++ [classify_code b])
+                               (l':=List.map classify_code rest).
+        rewrite app_length with (l:=cs) (l':=[classify_code b]).
         simpl.
-        rewrite List.length_map.
+        rewrite map_length.
         lia.
       + rewrite HO.
-        rewrite List.length_app with (l:=os ++ [length ks])
-                                     (l':=List.seq (length (ks ++ [classify_kind b])) (length rest)).
-        rewrite List.length_app with (l:=os) (l':=[length ks]).
+        rewrite app_length with (l:=os ++ [length ks])
+                               (l':=List.seq (length (ks ++ [classify_kind b])) (length rest)).
+        rewrite app_length with (l:=os) (l':=[length ks]).
         simpl.
-        rewrite List.length_seq.
+        rewrite seq_length.
         lia.
       + rewrite HK.
         rewrite <- app_assoc.
@@ -242,7 +242,7 @@ Module L0SoA.
         rewrite <- app_assoc.
         simpl. f_equal.
         replace (length (ks ++ [classify_kind b])) with (length ks + 1)
-          by (rewrite List.length_app; simpl; lia).
+          by (rewrite app_length; simpl; lia).
         replace (length ks + 1) with (S (length ks)) by lia.
         reflexivity.
   Qed.
@@ -278,7 +278,7 @@ Module L0SoA.
     - exact Hkc.
     - rewrite Hks.
       simpl.
-      rewrite List.length_map with (f:=classify_kind) (l:=i).
+      rewrite map_length.
       reflexivity.
   Qed.
 
@@ -402,7 +402,7 @@ Module L0SoA.
     rewrite <- Hlen_offs_pre.
     rewrite ListWindow.skipn_length_append.
     replace (length (mid ++ post)) with (length mid + length post)
-      by (rewrite List.length_app; reflexivity).
+      by (rewrite app_length; reflexivity).
     apply firstn_seq_prefix.
   Qed.
 
@@ -686,7 +686,7 @@ Module L0SoA.
     simpl.
     replace (length pre + length mid - length pre) with (length mid) by lia.
     replace (length (mid ++ post)) with (length mid + length post)
-      by (rewrite List.length_app; reflexivity).
+      by (rewrite app_length; reflexivity).
     rewrite List.skipn_seq.
     replace ((length mid + length post) - length mid) with (length post) by lia.
     (* Normalize subtracting base = len pre + len mid *)

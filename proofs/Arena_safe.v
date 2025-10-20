@@ -61,7 +61,7 @@ Proof.
     simpl.
     lia.
   - (* length data = size *)
-    rewrite List.length_app.
+    rewrite app_length.
     simpl.
     destruct H_valid as [_ H_len].
     rewrite H_len.

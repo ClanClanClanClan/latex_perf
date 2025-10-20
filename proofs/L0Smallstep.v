@@ -40,7 +40,7 @@ Definition classify (b:byte) : token :=
 Definition run (bs:list byte) : list token := map classify bs.
 
 Lemma length_run : forall bs, length (run bs) = length bs.
-Proof. intros; unfold run; now rewrite List.length_map. Qed.
+Proof. intros; unfold run; now rewrite map_length. Qed.
 
 Lemma firstn_length_append_token :
   forall (xs ys : list token),
@@ -286,8 +286,8 @@ Lemma offsets_window_equivalence : forall pre mid suf,
 Proof.
   intros pre mid suf. unfold offsets.
   rewrite length_run.
-  rewrite List.length_app.
-  rewrite List.length_app.
+  rewrite app_length.
+  rewrite app_length.
   rewrite skipn_seq, firstn_seq. now rewrite Nat.min_l by lia.
 Qed.
 

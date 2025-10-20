@@ -25,7 +25,7 @@ Definition run (bs:list byte) : list token := map classify bs.
 Definition state := (list byte * list token)%type.
 
 Lemma length_run : forall bs, length (run bs) = length bs.
-Proof. intros; unfold run; now rewrite List.length_map. Qed.
+Proof. intros; unfold run; now rewrite map_length. Qed.
 
 Inductive rstep : state -> state -> Prop :=
 | rstep_cons : forall b bs ts,

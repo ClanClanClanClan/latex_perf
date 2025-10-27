@@ -429,6 +429,22 @@ Module L0SoA.
     exact H.
   Qed.
 
+  Lemma skipn_seq : forall start len off,
+    skipn off (List.seq start len) = List.seq (start + off) (len - off).
+  Proof.
+    intros start len off.
+    revert start len.
+    induction off as [|off IH]; intros start len; simpl.
+    - now rewrite Nat.add_0_r, Nat.sub_0_r.
+    - destruct len as [|len]; simpl.
+      + reflexivity.
+      + rewrite IH with (start:=S start) (len:=len).
+        rewrite Nat.add_succ_l.
+        rewrite <- Nat.add_succ_comm.
+        replace (len - off) with (S len - S off) by lia.
+        reflexivity.
+  Qed.
+
   (* Normalized offsets window equivalence: window offsets, after subtracting the
      base (length of kinds before the window), are canonical seq 0..len-1. *)
   Lemma offs_window_mid_normalized : forall pre mid post,
@@ -687,7 +703,7 @@ Module L0SoA.
     replace (length pre + length mid - length pre) with (length mid) by lia.
     replace (length (mid ++ post)) with (length mid + length post)
       by (rewrite app_length; reflexivity).
-    rewrite List.skipn_seq.
+    rewrite skipn_seq.
     replace ((length mid + length post) - length mid) with (length post) by lia.
     (* Normalize subtracting base = len pre + len mid *)
     unfold base.

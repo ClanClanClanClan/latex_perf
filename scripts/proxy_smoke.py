@@ -29,7 +29,7 @@ def request(sock: socket.socket, payload: bytes) -> tuple[int, int, int, int, in
 
 def main():
     doc = b" " + b"test"
-    payload = struct.pack('>I', len(doc)) + doc
+    payload = doc
     try:
         with socket.create_connection((HOST, PORT), timeout=10.0) as s:
             s.settimeout(10.0)

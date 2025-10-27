@@ -1,7 +1,6 @@
 (library
  (name l0_lexer)
  (public_name latex-perfectionist.core.l0_lexer)
- (wrapped false)
  (modules
   alloc_guard
   arena

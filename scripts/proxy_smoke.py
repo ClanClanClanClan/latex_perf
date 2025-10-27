@@ -30,10 +30,10 @@ def request(sock: socket.socket, payload: bytes) -> tuple[int, int, int, int, in
 def main():
     doc = b" " + b"test"
     payload = doc
-    try:
-        with socket.create_connection((HOST, PORT), timeout=10.0) as s:
-            s.settimeout(10.0)
-            for i in range(3):
+    for i in range(3):
+        try:
+            with socket.create_connection((HOST, PORT), timeout=10.0) as s:
+                s.settimeout(10.0)
                 status, tokens, issues, alloc, majors = request(s, payload)
                 if status != 0:
                     print(
@@ -42,9 +42,9 @@ def main():
                     )
                     raise SystemExit(status or 1)
                 print(f"[proxy-smoke] request {i+1} status={status} tokens={tokens} issues={issues}")
-    except OSError as exc:
-        print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
-        raise SystemExit(1)
+        except OSError as exc:
+            print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
+            raise SystemExit(1)
 
     print('[proxy-smoke] OK (3 requests, status=0)')
 

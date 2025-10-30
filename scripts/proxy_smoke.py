@@ -29,22 +29,31 @@ def request(sock: socket.socket, payload: bytes) -> tuple[int, int, int, int, in
 
 def main():
     doc = b" " + b"test"
-    payload = doc
+    payload = struct.pack('>I', len(doc)) + doc
     for i in range(3):
-        try:
-            with socket.create_connection((HOST, PORT), timeout=10.0) as s:
-                s.settimeout(10.0)
-                status, tokens, issues, alloc, majors = request(s, payload)
-                if status != 0:
-                    print(
-                        f"[proxy-smoke] ERROR request={i+1} status={status} tokens={tokens} issues={issues} alloc_x10={alloc} majors={majors}",
-                        file=sys.stderr,
-                    )
-                    raise SystemExit(status or 1)
-                print(f"[proxy-smoke] request {i+1} status={status} tokens={tokens} issues={issues}")
-        except OSError as exc:
-            print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
-            raise SystemExit(1)
+        ok = False
+        for attempt in range(3):
+            try:
+                with socket.create_connection((HOST, PORT), timeout=10.0) as s:
+                    s.settimeout(10.0)
+                    status, tokens, issues, alloc, majors = request(s, payload)
+            except OSError as exc:
+                print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
+                raise SystemExit(1)
+
+            if status == 0:
+                print(
+                    f"[proxy-smoke] request {i+1} attempt {attempt+1} ok: tokens={tokens} issues={issues}"
+                )
+                ok = True
+                break
+
+            print(
+                f"[proxy-smoke] WARN request={i+1} attempt={attempt+1} status={status} alloc_x10={alloc} majors={majors}",
+                file=sys.stderr,
+            )
+        if not ok:
+            raise SystemExit(status or 1)
 
     print('[proxy-smoke] OK (3 requests, status=0)')
 

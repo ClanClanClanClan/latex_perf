@@ -1,5 +1,5 @@
 open L1_expander
-module LP = L0_lexer.Latex_parse_lib
+module LP = Latex_parse_lib
 open LP
 
 let () =

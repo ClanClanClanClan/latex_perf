@@ -40,19 +40,19 @@
 (executable
  (name main_service)
  (modules main_service)
- (libraries l0_lexer unix threads))
+ (libraries l0_lexer latex_parse_lib unix threads))
 
 (executable
  (name main_service_enhanced)
  (modules main_service_enhanced)
- (libraries l0_lexer unix threads))
+ (libraries l0_lexer latex_parse_lib unix threads))
 
 (executable
  (name main)
  (modules main)
- (libraries l0_lexer unix threads))
+ (libraries l0_lexer latex_parse_lib unix threads))
 
 (executable
  (name runtime_main_exe)
  (modules runtime_main_exe)
- (libraries l0_lexer unix threads))
+ (libraries l0_lexer latex_parse_lib unix threads))

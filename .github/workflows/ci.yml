@@ -47,6 +47,24 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - name: Show revision and entry points
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "GITHUB_SHA=${GITHUB_SHA}"
+          git rev-parse HEAD
+          git --no-pager log -1 --pretty=fuller --decorate
+          echo "--- entry points (core/l0_lexer) ---"
+          for f in core/l0_lexer/main.ml \
+                   core/l0_lexer/main_service.ml \
+                   core/l0_lexer/main_service_enhanced.ml \
+                   core/l0_lexer/runtime_main.ml \
+                   core/l0_lexer/runtime_main_exe.ml; do
+            if [ -f "${f}" ]; then
+              echo "[#] ${f}:"
+              sed -n '1p' "${f}"
+            fi
+          done
       - name: Install OCaml & opam
         uses: ./.github/actions/setup-ocaml
         with:
@@ -54,14 +72,27 @@ jobs:
           opam-depext: false
       - name: Install dependencies
         run: opam install . --deps-only --with-test -y
+      - name: Reset dune state
+        run: |
+          rm -rf _build
+          opam exec -- dune clean || true
       - name: Build
         run: |
+          set -euo pipefail
           opam exec -- coq_makefile -f _CoqProject -o CoqMakefile
           opam exec -- make -f CoqMakefile -j2
           rm -f CoqMakefile CoqMakefile.conf .CoqMakefile.d
           pushd latex-parse >/dev/null
           opam exec -- dune build
           popd >/dev/null
-          opam exec -- dune build @all
+          opam exec -- dune build @all --display=short 2>&1 | tee _build/dune-build.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Upload dune log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dune-build-log
+          path: _build/dune-build.log
+          if-no-files-found: ignore
       - name: Test suite
         run: opam exec -- dune runtest || echo "no tests defined"

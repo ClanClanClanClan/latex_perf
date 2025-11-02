@@ -21,18 +21,20 @@ let () =
         ( "validators",
           `List
             (List.map
-               (fun r ->
+               (fun (r : Validators.result) ->
+                 let open Validators in
+                 let { id; severity; message; count } = r in
                  `Assoc
                    [
-                     ("id", `String r.id);
-                     ( "severity",
-                       `String
-                         (match r.severity with
+                    ("id", `String id);
+                    ( "severity",
+                      `String
+                        (match severity with
                          | Error -> "error"
                          | Warning -> "warning"
                          | Info -> "info") );
-                     ("message", `String r.message);
-                     ("count", `Int r.count);
+                    ("message", `String message);
+                    ("count", `Int count);
                    ])
                results) );
       ]

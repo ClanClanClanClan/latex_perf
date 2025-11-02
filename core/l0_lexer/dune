@@ -1,58 +1,31 @@
 (library
  (name l0_lexer)
  (public_name latex-perfectionist.core.l0_lexer)
- (modules
-  alloc_guard
-  arena
-  barrier
-  broker
-  catcode
-  clock
-  config
-  fault_injection
-  gc_prep
-  hedge_timer
-  latex_parse_lib
-  runtime_main_service
-  meminfo
-  metrics_prometheus
-  mlock
-  fast_hash
-  pretouch
-  percentiles
-  ipc
-  simd_guard
-  real_processor
-  service_bracket
-  worker)
+ (wrapped false)
+ (modules alloc_guard arena barrier broker catcode clock config fault_injection gc_prep
+         hedge_timer latex_parse_lib runtime_main_service meminfo metrics_prometheus mlock fast_hash
+         pretouch percentiles ipc simd_guard real_processor service_bracket worker)
  (libraries unix threads data)
  (foreign_stubs
   (language c)
-  (names
-   clock_stubs
-   hedge_timer_stubs
-   meminfo_stubs
-   mlock_stubs
-   simd_guard_stubs
-   simd_production_stubs
-   simd_tokenizer_fixed)))
+  (names clock_stubs hedge_timer_stubs meminfo_stubs mlock_stubs simd_guard_stubs simd_production_stubs simd_tokenizer_fixed)))
 
 (executable
  (name main_service)
  (modules main_service)
- (libraries l0_lexer latex_parse_lib unix threads))
+ (libraries l0_lexer unix threads))
 
 (executable
  (name main_service_enhanced)
  (modules main_service_enhanced)
- (libraries l0_lexer latex_parse_lib unix threads))
+ (libraries l0_lexer unix threads))
 
 (executable
  (name main)
  (modules main)
- (libraries l0_lexer latex_parse_lib unix threads))
+ (libraries l0_lexer unix threads))
 
 (executable
  (name runtime_main_exe)
  (modules runtime_main_exe)
- (libraries l0_lexer latex_parse_lib unix threads))
+ (libraries l0_lexer unix threads))

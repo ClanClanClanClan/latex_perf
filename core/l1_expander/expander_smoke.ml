@@ -12,7 +12,7 @@ let () =
     else Catalogue_loader.default
   in
   let expanded = Simple_expander.expand_fix_with cfg inp in
-  let results = Validators.run_all expanded in
+  let results = Latex_parse_lib.Validators.run_all expanded in
   let open Yojson.Safe in
   let j =
     `Assoc

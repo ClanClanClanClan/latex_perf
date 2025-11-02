@@ -1,1 +1,1 @@
-let () = L0_lexer.Main_service.run ()
+let () = Latex_parse_lib.Main_service.run ()

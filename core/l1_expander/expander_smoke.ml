@@ -10,31 +10,12 @@ let () =
     else Catalogue_loader.default
   in
   let expanded = Simple_expander.expand_fix_with cfg inp in
-  let module V = Latex_parse_lib.Validators in
-  let open Yojson.Safe in
-  let validators_json =
-    V.run_all expanded
-    |> List.map (fun (r : V.result) ->
-           let open V in
-           let severity_str =
-             match r.severity with
-             | Error -> "error"
-             | Warning -> "warning"
-             | Info -> "info"
-           in
-           `Assoc
-             [
-               ("id", `String r.id);
-               ("severity", `String severity_str);
-               ("message", `String r.message);
-               ("count", `Int r.count);
-             ])
-  in
   let payload =
-    `Assoc
-      [
-        ("expanded", `String expanded);
-        ("validators", `List validators_json);
-      ]
+    Yojson.Safe.
+      `Assoc
+        [
+          ("expanded", `String expanded);
+          ("validators", `List []);
+        ]
   in
-  to_string payload |> print_endline
+  Yojson.Safe.to_string payload |> print_endline

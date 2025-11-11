@@ -14,7 +14,7 @@
  (homepage "https://github.com/ClanClanClanClan/latex_perf")
  (bug_reports "https://github.com/ClanClanClanClan/latex_perf/issues")
  (depends
-  (ocaml         (and (>= 4.14.0) (< 5.0.0)))
+  (ocaml         (>= 5.1.1))
   (dune          (>= 3.10))
   (coq           (= 8.18.0))
   (coq-core      (= 8.18.0))

@@ -19,7 +19,7 @@ jobs:
       - name: Set up OCaml and OPAM
         uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-compiler: 4.14.1
+        ocaml-compiler: 5.1.1
           opam-depext: false
       - name: Install system deps
         run: |

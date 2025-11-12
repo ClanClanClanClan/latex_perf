@@ -18,7 +18,7 @@ jobs:
 
       - uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-compiler: 4.14.1
+        ocaml-compiler: 5.1.1
           opam-depext: false
       - name: Build selfcheck bench
         run: |
@@ -38,4 +38,3 @@ jobs:
         run: |
           ./_build/default/latex-parse/bench/xxh_selfcheck.exe 200 65536
           L0_USE_SIMD_XXH=1 ./_build/default/latex-parse/bench/xxh_selfcheck.exe 200 65536
-

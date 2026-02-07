@@ -23,14 +23,7 @@ concurrency:
 
 
 jobs:
-  skip:
-    if: ${{ hashFiles('pyproject.toml') == '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "No pyproject.toml detected; skipping LaTeX Perfectionist checks."
-
   check:
-    if: ${{ hashFiles('pyproject.toml') != '' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,7 +38,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
@@ -189,7 +182,6 @@ jobs:
           });
 
   security:
-    if: ${{ hashFiles('pyproject.toml') != '' }}
     runs-on: ubuntu-latest
 
     steps:

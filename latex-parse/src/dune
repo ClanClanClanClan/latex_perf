@@ -45,7 +45,7 @@
  ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
  ;; TEMPORARILY DISABLED DUE TO _Caml_state SYMBOL COMPATIBILITY ISSUE
  ;; (c_library_flags
- ;;  (-Wl,-force_load,/Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Scripts/core/l0_lexer/simd/libsimd_production.a))
+ ;;  (-Wl,-force_load,<PROJECT_ROOT>/core/l0_lexer/simd/libsimd_production.a))
  )
 
 (executable

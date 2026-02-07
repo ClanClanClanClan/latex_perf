@@ -1,16 +1,17 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 1 of 156 - Bootstrap Phase Complete
-**Last Updated**: September 13, 2025
+**Status**: Week 10 of 156 - Q1 Gates Passed (Bootstrap, Perf alpha, Proof beta)
+**Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
-## 📋 Week 1 Status Summary
+## Current Status Summary
 
-Week 1 clean-up outcomes:
-- ✅ Repository and build hygiene: legacy OCaml/Coq drafts moved to `core/**` and `proofs/archive/`; modern build unblocks `latex-parse/`
-- ✅ Coq baseline restored with `proofs/CoreProofs.v` (0 admits, 0 axioms)
-- ✅ Performance harness retained (`latex-parse/bench`, `scripts/perf_gate.sh`)
-- 🔄 Rebuild L0 lexer + validator implementations on top of the refreshed runtime before re-running gates
+- 58 validators implemented (33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- 11 Coq proof files (1,998 lines), 0 admits, 0 axioms
+- Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
+- 23 CI workflows green
+- 3 gates passed: Bootstrap (W1), Perf alpha (W5), Proof beta (W10)
+- Next gate: L0-L1 QED (W26)
 
 ## 📁 Project Structure
 
@@ -59,14 +60,14 @@ specs/                          # Authoritative plans & rule catalogues
 | Performance snapshot | record p95 | p95 ≈ 2.73 ms (200 k iters), ≈ 2.96 ms (1 M iters) | `ab_microbench` on `perf_smoke_big` (see `core/l0_lexer/current_baseline_performance.json`) |
 | Performance gate | p95 < 20 ms (Tier A) | ✅ | `scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100` |
 | Edit-window p95 | < 1ms | ✅ | `scripts/edit_window_gate.sh corpora/perf/edit_window_4kb.tex 2000` (p95 ≈ 0.017 ms) |
-| Validators | 623 total | TODO | Implementation tracked in specs |
+| Validators | 623 total | 58 implemented (9.3%) | 33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy |
 
 ### Long-term Targets (Week 156 GA)
 | Metric | Target | Current | Progress |
 |--------|--------|---------|----------|
-| Validators | 623 | specs-only | 0% in repo |
-| Languages | 21 | specs-only | 0% in repo |
-| Edit-window p95 | < 1ms | pending | - |
+| Validators | 623 | 58 implemented | 9.3% |
+| Languages | 21 | 6 live + 15 stubbed | 29% |
+| Edit-window p95 | < 1ms | 0.017 ms | Exceeds target |
 | False-positive rate | < 0.1% | pending | - |
 
 ## 🛠️ Quick Commands Reference

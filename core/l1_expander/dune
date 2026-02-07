@@ -32,6 +32,8 @@
  (name l1_integration_test)
  (modules l1_integration_test)
  (libraries l1_expander)
+ (deps
+  (glob_files %{workspace_root}/corpora/l1/sample_*.tex))
  (action
   (chdir
    %{workspace_root}

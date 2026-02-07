@@ -118,7 +118,7 @@ jobs:
           fi
 
       - name: Email notify (perf regression)
-        if: ${{ env.PERF_FAIL == '1' && secrets.EMAIL_FROM != '' }}
+        if: env.PERF_FAIL == '1'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}

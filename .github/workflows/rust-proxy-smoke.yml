@@ -35,15 +35,15 @@ jobs:
       - name: Install dune
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
+          for attempt in 1 2 3; do
+            opam update -y && break
+            echo "[rust-proxy-smoke] opam update failed (attempt $attempt), retrying in 10s..."
+            sleep 10
+          done
           opam install -y . --deps-only --with-test
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build service and proxy
         run: |
@@ -54,9 +54,9 @@ jobs:
         run: |
           rm -f /tmp/l0_lex_svc.sock
           rm -f service.stdout service.stderr proxy.stdout proxy.stderr
-          L0_ALLOW_SCALAR=1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
+          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
             1>service.stdout 2>service.stderr & echo $! > service.pid
-          sleep 1
+          sleep 3
           stdbuf -oL -eL ./rust/target/release/elderd_rust_proxy \
             1>proxy.stdout 2>proxy.stderr & echo $! > proxy.pid
       - name: Wait for service readiness

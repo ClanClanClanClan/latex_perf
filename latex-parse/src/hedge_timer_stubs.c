@@ -50,40 +50,80 @@
 #else
   #include <sys/timerfd.h>
   #include <sys/epoll.h>
+  #include <errno.h>
+
+  /* Single timerfd created once in ht_create, re-armed in ht_arm_ns.
+     Previous implementation leaked a new timerfd on every arm() call,
+     corrupting the epoll set with stale expired timers. */
+  static int g_timer_fd = -1;
+
   CAMLprim value ocaml_ht_create(value unit){
-    int ep = epoll_create1(EPOLL_CLOEXEC); if (ep<0) uerror("epoll_create1", Nothing); return Val_int(ep);
+    int ep = epoll_create1(EPOLL_CLOEXEC);
+    if (ep < 0) uerror("epoll_create1", Nothing);
+    int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
+    if (tfd < 0) { close(ep); uerror("timerfd_create", Nothing); }
+    struct epoll_event ev = { .events = EPOLLIN, .data.fd = tfd };
+    if (epoll_ctl(ep, EPOLL_CTL_ADD, tfd, &ev) < 0) {
+      close(tfd); close(ep); uerror("epoll_ctl(timer)", Nothing);
+    }
+    g_timer_fd = tfd;
+    return Val_int(ep);
   }
   CAMLprim value ocaml_ht_arm_ns(value vep, value vns){
-    int ep = Int_val(vep); int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
-    if (tfd < 0) uerror("timerfd_create", Nothing);
-    struct itimerspec its = {0}; int64_t ns = Int64_val(vns);
-    its.it_value.tv_sec = ns/1000000000LL; its.it_value.tv_nsec = ns%1000000000LL;
-    if (timerfd_settime(tfd, 0, &its, NULL)<0) uerror("timerfd_settime", Nothing);
-    struct epoll_event ev = { .events = EPOLLIN, .data.fd = tfd };
-    if (epoll_ctl(ep, EPOLL_CTL_ADD, tfd, &ev) < 0) uerror("epoll_ctl(timer)", Nothing);
+    (void)vep;
+    int64_t ns = Int64_val(vns);
+    /* Drain any pending expiration before re-arming */
+    uint64_t expirations;
+    (void)read(g_timer_fd, &expirations, sizeof(expirations));
+    struct itimerspec its = {{0,0},{0,0}};
+    its.it_value.tv_sec  = ns / 1000000000LL;
+    its.it_value.tv_nsec = ns % 1000000000LL;
+    if (timerfd_settime(g_timer_fd, 0, &its, NULL) < 0)
+      uerror("timerfd_settime", Nothing);
     return Val_unit;
   }
   CAMLprim value ocaml_ht_wait2(value vep, value vfd1, value vfd2){
     CAMLparam3(vep, vfd1, vfd2);
-    int ep = Int_val(vep);
+    int ep  = Int_val(vep);
     int fd1 = Int_val(vfd1);
     int fd2 = Int_val(vfd2);
+    /* Use EPOLL_CTL_ADD; fall back to EPOLL_CTL_MOD on EEXIST
+       (fd may already be registered from a previous call). */
     struct epoll_event ev1 = { .events = EPOLLIN, .data.fd = fd1 };
     struct epoll_event ev2 = { .events = EPOLLIN, .data.fd = fd2 };
-    if (fd1 >= 0) epoll_ctl(ep, EPOLL_CTL_ADD, fd1, &ev1);
-    if (fd2 >= 0) epoll_ctl(ep, EPOLL_CTL_ADD, fd2, &ev2);
-    struct epoll_event out;
+    if (fd1 >= 0) {
+      if (epoll_ctl(ep, EPOLL_CTL_ADD, fd1, &ev1) < 0 && errno == EEXIST)
+        epoll_ctl(ep, EPOLL_CTL_MOD, fd1, &ev1);
+    }
+    if (fd2 >= 0) {
+      if (epoll_ctl(ep, EPOLL_CTL_ADD, fd2, &ev2) < 0 && errno == EEXIST)
+        epoll_ctl(ep, EPOLL_CTL_MOD, fd2, &ev2);
+    }
+    struct epoll_event out[3];
     caml_enter_blocking_section();
-      int n = epoll_wait(ep, &out, 1, -1);
+      int n = epoll_wait(ep, out, 3, -1);
     caml_leave_blocking_section();
-    if (n<0) uerror("epoll_wait", Nothing);
+    if (n < 0) uerror("epoll_wait", Nothing);
     int timer_fired = 0; int which = -1;
-    if (out.data.fd == fd1) which = fd1;
-    else if (out.data.fd == fd2) which = fd2;
-    else timer_fired = 1;
+    for (int i = 0; i < n; i++) {
+      if (out[i].data.fd == g_timer_fd) {
+        timer_fired = 1;
+        /* Drain timerfd so it does not fire again immediately */
+        uint64_t expirations;
+        (void)read(g_timer_fd, &expirations, sizeof(expirations));
+      } else if (fd1 >= 0 && out[i].data.fd == fd1) {
+        which = fd1;
+      } else if (fd2 >= 0 && out[i].data.fd == fd2) {
+        which = fd2;
+      }
+    }
+    /* Remove worker fds from epoll after each wait to avoid EEXIST
+       when workers rotate (new fd with same number). Timer stays. */
+    if (fd1 >= 0) epoll_ctl(ep, EPOLL_CTL_DEL, fd1, NULL);
+    if (fd2 >= 0) epoll_ctl(ep, EPOLL_CTL_DEL, fd2, NULL);
     value t = caml_alloc_tuple(2);
-    Store_field(t,0, Val_int(timer_fired));
-    Store_field(t,1, Val_int(which));
+    Store_field(t, 0, Val_int(timer_fired));
+    Store_field(t, 1, Val_int(which));
     CAMLreturn(t);
   }
 #endif

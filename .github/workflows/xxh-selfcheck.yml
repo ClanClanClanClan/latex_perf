@@ -23,7 +23,11 @@ jobs:
       - name: Build selfcheck bench
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
+          for attempt in 1 2 3; do
+            opam update -y && break
+            echo "[xxh-selfcheck] opam update failed (attempt $attempt), retrying in 10s..."
+            sleep 10
+          done
           opam install -y . --deps-only --with-test
           opam exec -- dune build latex-parse/bench/xxh_selfcheck.exe
 

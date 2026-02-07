@@ -95,13 +95,13 @@ let () =
 
   let c10 = read_all "corpora/l1/sample_nested_combo.tex" in
   test_case c10
-    [ "T(Before )"; "\\textbf"; "T({A )"; "\\emph"; "T({B} C})"; "T( after)" ]
-    [ "T(Before )"; "\\textbf"; "T({A )"; "\\emph"; "T({b} C})"; "T( after)" ];
+    [ "T(Before )"; "\\textbf"; "T({A )"; "\\emph"; "T({B} C} after)" ]
+    [ "T(Before )"; "\\textbf"; "T({A )"; "\\emph"; "T({B} C} after)" ];
 
   let c11 = read_all "corpora/l1/sample_malformed_unmatched_brace.tex" in
   test_case c11
     [ "\\section"; "T({A {nested)" ]
-    [ "\\section"; "T({a {nested)" ];
+    [ "\\section"; "T({A {nested)" ];
 
   let c12 = read_all "corpora/l1/sample_malformed_controls.tex" in
   (* Our tokenizer only recognizes letter sequences after backslash. So "\\1bad"

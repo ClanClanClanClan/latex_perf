@@ -31,4 +31,8 @@
 (test
  (name l1_integration_test)
  (modules l1_integration_test)
- (libraries l1_expander))
+ (libraries l1_expander)
+ (action
+  (chdir
+   %{workspace_root}
+   (run %{test}))))

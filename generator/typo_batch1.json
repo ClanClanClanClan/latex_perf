@@ -1,0 +1,104 @@
+{
+  "version": "0.1.0",
+  "rules": [
+    {
+      "id": "TYPO-034",
+      "description": "Spurious space before footnote command \\footnote",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Spurious space before \\footnote",
+      "pattern": {
+        "family": "count_substring",
+        "needle": " \\footnote"
+      }
+    },
+    {
+      "id": "TYPO-037",
+      "description": "Space before comma",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Space before comma",
+      "pattern": {
+        "family": "count_substring",
+        "needle": " ,"
+      }
+    },
+    {
+      "id": "TYPO-042",
+      "description": "Multiple consecutive question marks ??",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Multiple consecutive question marks",
+      "pattern": {
+        "family": "count_substring",
+        "needle": "??"
+      }
+    },
+    {
+      "id": "TYPO-048",
+      "description": "En-dash used as minus sign in text",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "En-dash character used where minus sign expected",
+      "pattern": {
+        "family": "custom",
+        "body": "fun s -> let s = strip_math_segments s in Unicode.count_en_dash s"
+      }
+    },
+    {
+      "id": "TYPO-051",
+      "description": "Figure space U+2009 used instead of \\thinspace macro",
+      "layer": "L0",
+      "severity": "Warning",
+      "message": "Thin space U+2009 found; prefer \\thinspace or \\, macro",
+      "pattern": {
+        "family": "count_substring",
+        "needle": "\u2009"
+      }
+    },
+    {
+      "id": "TYPO-052",
+      "description": "Unescaped < or > in text",
+      "layer": "L0",
+      "severity": "Warning",
+      "message": "Unescaped < or > in text; use \\textless / \\textgreater",
+      "pattern": {
+        "family": "custom",
+        "body": "fun s -> let s = strip_math_segments s in count_char s '<' + count_char s '>'"
+      }
+    },
+    {
+      "id": "TYPO-053",
+      "description": "Unicode leader dots U+22EF forbidden",
+      "layer": "L0",
+      "severity": "Warning",
+      "message": "Unicode midline ellipsis U+22EF found; use \\cdots instead",
+      "pattern": {
+        "family": "count_substring",
+        "needle": "\u22EF"
+      }
+    },
+    {
+      "id": "TYPO-055",
+      "description": "Consecutive thin-spaces prohibited",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Consecutive \\, thin-spaces detected; collapse into single space",
+      "pattern": {
+        "family": "count_substring",
+        "needle": "\\,\\,"
+      }
+    },
+    {
+      "id": "TYPO-061",
+      "description": "Unicode multiplication sign in text",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Unicode multiplication sign found; prefer \\times in math mode",
+      "pattern": {
+        "family": "count_substring_strip_math",
+        "needle": "\u00D7"
+      }
+    }
+  ]
+}

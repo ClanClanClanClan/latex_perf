@@ -1534,6 +1534,180 @@ let r_typo_033 : rule =
 
 let rules_pilot : rule list = rules_pilot @ [ r_typo_033 ]
 
+(* BEGIN VPD-generated validators v0.1.0 — DO NOT EDIT BELOW THIS LINE *)
+
+(* Spurious space before footnote command \footnote *)
+let r_typo_034 : rule =
+  let run s =
+    let cnt = count_substring s " \\footnote" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-034";
+          severity = Info;
+          message = "Spurious space before \\footnote";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-034"; run }
+
+(* Space before comma *)
+let r_typo_037 : rule =
+  let run s =
+    let cnt = count_substring s " ," in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-037";
+          severity = Info;
+          message = "Space before comma";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-037"; run }
+
+(* Multiple consecutive question marks ?? *)
+let r_typo_042 : rule =
+  let run s =
+    let cnt = count_substring s "??" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-042";
+          severity = Info;
+          message = "Multiple consecutive question marks";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-042"; run }
+
+(* En-dash used as minus sign in text *)
+let r_typo_048 : rule =
+  let run s =
+    let cnt =
+      (fun s ->
+        let s = strip_math_segments s in
+        Unicode.count_en_dash s)
+        s
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-048";
+          severity = Info;
+          message = "En-dash character used where minus sign expected";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-048"; run }
+
+(* Figure space U+2009 used instead of \thinspace macro *)
+let r_typo_051 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x80\x89" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-051";
+          severity = Warning;
+          message = "Thin space U+2009 found; prefer \\thinspace or \\, macro";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-051"; run }
+
+(* Unescaped < or > in text *)
+let r_typo_052 : rule =
+  let run s =
+    let cnt =
+      (fun s ->
+        let s = strip_math_segments s in
+        count_char s '<' + count_char s '>')
+        s
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-052";
+          severity = Warning;
+          message = "Unescaped < or > in text; use \\textless / \\textgreater";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-052"; run }
+
+(* Unicode leader dots U+22EF forbidden *)
+let r_typo_053 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x8b\xaf" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-053";
+          severity = Warning;
+          message = "Unicode midline ellipsis U+22EF found; use \\cdots instead";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-053"; run }
+
+(* Consecutive thin-spaces prohibited *)
+let r_typo_055 : rule =
+  let run s =
+    let cnt = count_substring s "\\,\\," in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-055";
+          severity = Info;
+          message =
+            "Consecutive \\, thin-spaces detected; collapse into single space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-055"; run }
+
+(* Unicode multiplication sign in text *)
+let r_typo_061 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let cnt = count_substring s "\xc3\x97" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-061";
+          severity = Info;
+          message =
+            "Unicode multiplication sign found; prefer \\times in math mode";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-061"; run }
+
+let rules_vpd_gen : rule list =
+  [
+    r_typo_034;
+    r_typo_037;
+    r_typo_042;
+    r_typo_048;
+    r_typo_051;
+    r_typo_052;
+    r_typo_053;
+    r_typo_055;
+    r_typo_061;
+  ]
+
+(* END VPD-generated validators *)
+
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =
   let run s =
@@ -1924,7 +2098,8 @@ let rules_l1 : rule list =
 
 let get_rules () : rule list =
   match Sys.getenv_opt "L0_VALIDATORS" with
-  | Some ("1" | "true" | "pilot" | "PILOT") -> rules_pilot @ rules_l1
+  | Some ("1" | "true" | "pilot" | "PILOT") ->
+      rules_pilot @ rules_vpd_gen @ rules_l1
   | _ -> rules_basic @ rules_l1
 
 let run_all (src : string) : result list =

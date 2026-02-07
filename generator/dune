@@ -1,0 +1,4 @@
+(executable
+ (name vpd_compile)
+ (modules vpd_compile vpd_types vpd_parse vpd_emit)
+ (libraries yojson))

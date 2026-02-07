@@ -54,7 +54,7 @@ jobs:
         run: |
           rm -f /tmp/l0_lex_svc.sock
           rm -f service.stdout service.stderr proxy.stdout proxy.stderr
-          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
+          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
             1>service.stdout 2>service.stderr & echo $! > service.pid
           sleep 3
           stdbuf -oL -eL ./rust/target/release/elderd_rust_proxy \

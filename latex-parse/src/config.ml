@@ -6,8 +6,13 @@ let hedge_timer_ms_default = 12
 let require_simd =
   true (* refuse to start if SIMD missing unless L0_ALLOW_SCALAR=1 *)
 
-(* GC settings revert to a roomy minor heap with gentler overheads. *)
-let minor_heap_bytes = 128 * 1024 * 1024
+(* GC settings revert to a roomy minor heap with gentler overheads. Override:
+   L0_MINOR_HEAP_MB=<int> reduces heap for constrained CI. *)
+let minor_heap_bytes =
+  match Sys.getenv_opt "L0_MINOR_HEAP_MB" with
+  | Some s -> (try max 1 (int_of_string s) with _ -> 128) * 1024 * 1024
+  | None -> 128 * 1024 * 1024
+
 let gc_space_overhead = 120
 let gc_max_overhead = 1_000
 let gc_full_major_budget_mb = 192

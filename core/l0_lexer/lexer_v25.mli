@@ -12,10 +12,7 @@ type token =
   | TEOF
 
 (* Located token with position information *)
-type located_token = {
-  token: token;
-  location: Data.Location.t;
-}
+type located_token = { token : token; location : Data.Location.t }
 
 (* Token constructors and utilities *)
 val token_to_string : token -> string

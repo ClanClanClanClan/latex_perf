@@ -34,9 +34,9 @@
  (libraries unix latex_parse_lib))
 
 (executable
-(name hash_throughput)
-(modules hash_throughput)
-(libraries unix latex_parse_lib))
+ (name hash_throughput)
+ (modules hash_throughput)
+ (libraries unix latex_parse_lib))
 
 (alias
  (name simd-hash)

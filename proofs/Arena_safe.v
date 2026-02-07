@@ -2,10 +2,8 @@
 (* LaTeX Perfectionist v25 - L0 Lexer Specification Section 6 *)
 (* Status: QED - No overlap, no use-after-free in OCaml side *)
 
-Require Import List.
-Require Import Arith.
-Require Import Lia.
-Require Import Logic.FunctionalExtensionality.
+From Coq Require Import List Arith Lia.
+From Coq Require Import Logic.FunctionalExtensionality.
 
 (* Arena model *)
 Record arena : Type := {
@@ -63,7 +61,7 @@ Proof.
     simpl.
     lia.
   - (* length data = size *)
-    rewrite length_app.
+    rewrite app_length.
     simpl.
     destruct H_valid as [_ H_len].
     rewrite H_len.

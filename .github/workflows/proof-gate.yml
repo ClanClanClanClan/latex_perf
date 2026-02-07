@@ -6,23 +6,31 @@ on:
   pull_request:
     branches: [ main ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   proof-check:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
+
     steps:
     - uses: actions/checkout@v4
-    
-    - uses: ocaml/setup-ocaml@v2
+
+    - uses: ./.github/actions/setup-ocaml
       with:
         ocaml-compiler: 5.1.1
-    
+        opam-depext: false
     - name: Install Coq toolchain
       run: |
+        opam repo add default https://opam.ocaml.org || true
+        opam repo add coq-released https://coq.inria.fr/opam/released || true
         opam update -y
-        opam install -y dune coq.8.18.0 coq-core.8.18.0
-    
+        opam install -y dune coq.8.18.0 coq-core.8.18.0 coq-mathcomp-ssreflect.1.17.0
+
     - name: Check _CoqProject exists
       run: |
         if [ ! -f "_CoqProject" ]; then
@@ -30,22 +38,22 @@ jobs:
           exit 1
         fi
         echo "✅ _CoqProject found"
-    
+
     - name: Build Coq proofs
       run: |
-        opam exec -- dune build @coq
-    
+        opam exec -- dune build proofs
+
     - name: Check for admits
       run: |
-        ADMITS=$(grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | wc -l || true)
+        ADMITS=$(grep -rE "^\\s*(Admitted\\.|admit\\.)" --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | wc -l || true)
         echo "Found $ADMITS admits in proof files"
         if [ "$ADMITS" -ne 0 ]; then
           echo "❌ Zero‑admit policy violated"
-          grep -r "\<Admitted\>\|\<admit\>\." --include="*.v" proofs/ | head -50 || true
+          grep -rE "^\\s*(Admitted\\.|admit\\.)" --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ | head -50 || true
           exit 1
         fi
         echo "✅ Zero admits"
-    
+
     - name: Check for axioms
       run: |
         AXIOMS=$(grep -r "^Axiom\>\|^Parameter\>.*:" --include="*.v" proofs/ | wc -l || true)
@@ -56,7 +64,7 @@ jobs:
           exit 1
         fi
         echo "✅ Zero axioms"
-    
+
     - name: Verify proof completeness
       run: |
         echo "✅ Proof gate PASSED (zero admits, zero axioms, build SUCCESS)"

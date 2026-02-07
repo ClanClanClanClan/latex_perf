@@ -83,21 +83,21 @@ int tokenize_bytes_into_soa_simd(
     while (pos < input_len && token_count < max_tokens) {
         // Find next special character using NEON
         size_t next_special = find_next_special_neon(input, pos, input_len);
-        
+
         // SIMD Attestation: Record NEON scan performed
         atomic_fetch_add(&simd_neon_scans_performed, 1);
-        
+
         // Process regular characters between current position and next special character
         while (pos < next_special && token_count < max_tokens) {
             uint8_t byte = input[pos];
             if (byte == 0) break;
-            
+
             int catcode = catcode_table[byte];
-            
+
             // Handle regular non-special characters more efficiently
             if (catcode != TOK_ESCAPE && catcode != TOK_BEGIN_GRP && catcode != TOK_END_GRP &&
                 catcode != TOK_MATH && catcode != TOK_COMMENT && catcode != TOK_NEWLINE) {
-                
+
                 // Regular token (letter, space, other)
                 if (token_count < max_tokens) {
                     kinds[token_count] = catcode;
@@ -112,24 +112,28 @@ int tokenize_bytes_into_soa_simd(
                 col_num++;
                 continue;
             }
-            
+
             // If we hit a special character before reaching next_special, break to handle it
             break;
         }
-        
+
         // Handle the special character found by NEON scanning
         if (pos < input_len && token_count < max_tokens) {
+            uint8_t byte = input[pos];
+            if (byte == 0) break;
+
+            int catcode = catcode_table[byte];
 #else
     // Fallback scalar processing for non-NEON platforms
     // SIMD Attestation: Record scalar processing
     atomic_fetch_add(&scalar_bytes_processed, input_len);
-    
+
     while (pos < input_len && token_count < max_tokens) {
-#endif
         uint8_t byte = input[pos];
         if (byte == 0) break;
         
         int catcode = catcode_table[byte];
+#endif
         
         switch (catcode) {
         case TOK_ESCAPE: {
@@ -208,10 +212,10 @@ int tokenize_bytes_into_soa_simd(
         }
         }
 #ifdef USE_NEON
-        } // Close the NEON special character handling block
-    }
+        }
 #endif
-    
+    }
+
     return token_count;
 }
 
@@ -273,6 +277,15 @@ static size_t find_next_special_neon(const uint8_t *input, size_t start, size_t 
     
     return len;
 }
+#endif
+
+#ifndef USE_NEON
+static size_t find_next_special_neon(const uint8_t *input, size_t start, size_t len) {
+    (void)input;
+    (void)start;
+    return len;
+}
+#endif
 
 // Optimized SIMD tokenizer using NEON for scanning
 int tokenize_bytes_into_soa_simd_optimized(
@@ -296,11 +309,15 @@ int tokenize_bytes_into_soa_simd_optimized(
 
 // SIMD Attestation: OCaml-callable counter access functions
 uint64_t simd_get_avx2_blocks_processed(void) {
-    return 0;  // Not used in this ARM64/NEON implementation
+    return 0;
 }
 
 uint64_t simd_get_neon_blocks_processed(void) {
+#ifdef USE_NEON
     return atomic_load(&simd_neon_scans_performed);
+#else
+    return 0;
+#endif
 }
 
 uint64_t simd_get_scalar_bytes_processed(void) {
@@ -317,4 +334,3 @@ void simd_reset_attestation_counters(void) {
     atomic_store(&scalar_bytes_processed, 0);
     atomic_store(&total_tokenize_calls, 0);
 }
-#endif

@@ -1,15 +1,7 @@
 open Unix
 
-type request = {
-  doc_len: int;
-  doc_content: bytes;
-}
-
-type response = {
-  token_count: int;
-  digest: int64;
-  process_ns: int64;
-}
+type request = { doc_len : int; doc_content : bytes }
+type response = { token_count : int; digest : int64; process_ns : int64 }
 
 let marshal_request req =
   let buf = Buffer.create (8 + Bytes.length req.doc_content) in
@@ -51,10 +43,10 @@ let send_all sock data =
 let recv_all sock len =
   let buf = Bytes.create len in
   let rec loop recvd =
-    if recvd < len then
+    if recvd < len then (
       let n = recv sock buf recvd (len - recvd) [] in
       if n = 0 then failwith "Connection closed";
-      loop (recvd + n)
+      loop (recvd + n))
   in
   loop 0;
   Bytes.to_string buf

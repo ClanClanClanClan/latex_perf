@@ -4,24 +4,32 @@ on:
   push:
   pull_request:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   unicode-smoke:
     runs-on: ubuntu-latest
+    env:
+      L0_VALIDATORS: pilot
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up OCaml and OPAM
-        uses: ocaml/setup-ocaml@v2
+        uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
       - name: Install dependencies
         run: |
           sudo apt-get update -y
           sudo apt-get install -y jq curl
           opam repo add default https://opam.ocaml.org || true
           opam update -y || true
-          opam install -y dune yojson uutf
+          opam install -y . --deps-only --with-test
 
       - name: Build service and REST
         run: |
@@ -30,14 +38,12 @@ jobs:
       - name: Run service and REST
         run: |
           rm -f /tmp/l0_lex_svc.sock || true
-          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
+          opam exec -- env L0_VALIDATORS=pilot ./_build/default/latex-parse/src/main_service.exe &
           sleep 0.5
-          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          opam exec -- env L0_VALIDATORS=pilot ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
           sleep 0.5
 
       - name: Unicode smokes
-        env:
-          L0_VALIDATORS: pilot
         run: |
           bash scripts/smoke_rules_unicode.sh http://127.0.0.1:8080/expand
 
@@ -46,4 +52,3 @@ jobs:
         run: |
           pkill -f rest_api_server || true
           pkill -f main_service || true
-

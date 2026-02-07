@@ -1,5 +1,10 @@
-use tokio::{net::{TcpListener, TcpStream}, io::{AsyncReadExt, AsyncWriteExt}, time::Instant};
 use l0_lexer_client::Client;
+use rand::random;
+use std::{io::ErrorKind, time::Instant};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::{TcpListener, TcpStream},
+};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
@@ -19,26 +24,71 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn handle(uds: &Client, s: &mut TcpStream) -> anyhow::Result<()> {
-    // Protocol here is illustrative: read 4-byte len + payload, write 4 + 20 bytes back.
-    let mut len_buf = [0u8; 4];
-    s.read_exact(&mut len_buf).await?;
-    let n = u32::from_be_bytes(len_buf) as usize;
-    let mut buf = vec![0u8; n];
-    s.read_exact(&mut buf).await?;
+    loop {
+        let mut len_buf = [0u8; 4];
+        match s.read_exact(&mut len_buf).await {
+            Ok(_) => {}
+            Err(e) if matches!(e.kind(), ErrorKind::UnexpectedEof | ErrorKind::ConnectionReset) => {
+                break;
+            }
+            Err(e) => return Err(e.into()),
+        }
 
-    let t0 = Instant::now();
-    let resp = uds.tokenize(rand::random::<u64>(), &buf).await?;
+        let n = u32::from_be_bytes(len_buf) as usize;
+        if n == 0 || n > 2 * 1024 * 1024 {
+            let mut out = Vec::with_capacity(24);
+            out.extend_from_slice(&u32::to_be_bytes(20));
+            out.extend_from_slice(&u32::to_be_bytes(1));
+            out.extend_from_slice(&u32::to_be_bytes(0));
+            out.extend_from_slice(&u32::to_be_bytes(0));
+            out.extend_from_slice(&u32::to_be_bytes(0));
+            out.extend_from_slice(&u32::to_be_bytes(0));
+            s.write_all(&out).await?;
+            s.flush().await?;
+            eprintln!("[proxy] reject size n={n}");
+            continue;
+        }
 
-    let mut out = Vec::with_capacity(24);
-    out.extend_from_slice(&u32::to_be_bytes(20));
-    out.extend_from_slice(&u32::to_be_bytes(resp.status));
-    out.extend_from_slice(&u32::to_be_bytes(resp.tokens));
-    out.extend_from_slice(&u32::to_be_bytes(resp.issues));
-    out.extend_from_slice(&u32::to_be_bytes(resp.alloc_mb_x10));
-    out.extend_from_slice(&u32::to_be_bytes(resp.majors));
-    s.write_all(&out).await?;
-    s.flush().await?;
+        let mut buf = vec![0u8; n];
+        s.read_exact(&mut buf).await?;
 
-    eprintln!("[proxy] {n}B in {:.3} ms", t0.elapsed().as_secs_f64() * 1e3);
+        let request_id = random::<u64>();
+        let t0 = Instant::now();
+        let resp = uds.tokenize(request_id, &buf).await;
+
+        match resp {
+            Ok(resp) => {
+                let mut out = Vec::with_capacity(24);
+                out.extend_from_slice(&u32::to_be_bytes(20));
+                out.extend_from_slice(&u32::to_be_bytes(resp.status));
+                out.extend_from_slice(&u32::to_be_bytes(resp.tokens));
+                out.extend_from_slice(&u32::to_be_bytes(resp.issues));
+                out.extend_from_slice(&u32::to_be_bytes(resp.alloc_mb_x10));
+                out.extend_from_slice(&u32::to_be_bytes(resp.majors));
+                s.write_all(&out).await?;
+                s.flush().await?;
+                eprintln!(
+                    "[proxy] ok {}B in {:.3} ms status={} tokens={}",
+                    n,
+                    t0.elapsed().as_secs_f64() * 1e3,
+                    resp.status,
+                    resp.tokens
+                );
+            }
+            Err(e) => {
+                let mut out = Vec::with_capacity(24);
+                out.extend_from_slice(&u32::to_be_bytes(20));
+                out.extend_from_slice(&u32::to_be_bytes(1));
+                out.extend_from_slice(&u32::to_be_bytes(0));
+                out.extend_from_slice(&u32::to_be_bytes(0));
+                out.extend_from_slice(&u32::to_be_bytes(0));
+                out.extend_from_slice(&u32::to_be_bytes(0));
+                s.write_all(&out).await?;
+                s.flush().await?;
+                eprintln!("[proxy] uds error for {}B: {}", n, e);
+            }
+        }
+    }
+
     Ok(())
 }

@@ -18,7 +18,13 @@ awk '
   /^[[:space:]]+precondition:/ { if (match($0, /precondition:[[:space:]]*([A-Za-z_]+)/, m)) pre=m[1] }
   /^[[:space:]]+default_severity:/ { if (match($0, /default_severity:[[:space:]]*([A-Za-z]+)/, m)) { sev=tolower(m[1]) } }
   /^[[:space:]]+owner:/ { if (match($0, /owner:[[:space:]]*"([^"]+)"/, m)) own=m[1] }
-  /^[[:space:]]+description:/ { if (match($0, /description:[[:space:]]*"(.*)"/, m)) { desc=m[1]; gsub(/"/, "\\\"", desc) } }
+  /^[[:space:]]+description:/ {
+    if (match($0, /description:[[:space:]]*"(.*)"/, m)) {
+      desc=m[1];
+      gsub(/\\/, "\\\\", desc);
+      gsub(/"/, "\\\"", desc);
+    }
+  }
   END { if (inrec==1 && id!="") { printf "{\"id\":\"%s\",\"precondition\":\"%s\",\"default_severity\":\"%s\",\"owner\":\"%s\",\"description\":\"%s\"}\n", id, pre, sev, own, desc } }
 ' "$YAML" > "$tmp"
 
@@ -28,4 +34,3 @@ while IFS= read -r line; do
   if [[ $nl -eq 0 ]]; then echo "  $line"; nl=1; else echo "  ,$line"; fi
 done < "$tmp"
 echo ']'
-

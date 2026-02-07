@@ -7,21 +7,36 @@ on:
   pull_request:
     branches: [ main ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   rust-proxy-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      OPAMNO_SANDBOXING: 1
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
+      - name: Disable opam sandboxing
+        run: |
+          echo "OPAMNO_SANDBOXING=1" >> $GITHUB_ENV
+          opam config set sandboxing-mode none || \
+          opam config set-global sandboxing false || \
+          opam option set-sandboxing=false || true
       - name: Install dune
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -33,18 +48,41 @@ jobs:
       - name: Build service and proxy
         run: |
           opam exec -- dune build latex-parse/src/main_service.exe
-          cargo build -p elderd_rust_proxy --release
+          cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
       - name: Start service and proxy
         run: |
-          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          rm -f /tmp/l0_lex_svc.sock
+          rm -f service.stdout service.stderr proxy.stdout proxy.stderr
+          L0_ALLOW_SCALAR=1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
+            1>service.stdout 2>service.stderr & echo $! > service.pid
           sleep 1
-          ./target/release/elderd_rust_proxy & echo $! > proxy.pid
-          sleep 1
+          stdbuf -oL -eL ./rust/target/release/elderd_rust_proxy \
+            1>proxy.stdout 2>proxy.stderr & echo $! > proxy.pid
+      - name: Wait for service readiness
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if python3 -c "
+          import socket, sys
+          try:
+            socket.create_connection(('127.0.0.1', 9123), timeout=0.5).close()
+          except OSError:
+            sys.exit(1)
+          "; then
+              echo "service ready on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Service on 9123 did not become ready" >&2
+          exit 1
 
       - name: Smoke 3 requests via proxy
         run: |
-          python3 scripts/proxy_smoke.py
+          set -euo pipefail
+          PYTHONUNBUFFERED=1 python3 scripts/proxy_smoke.py 2>&1 | tee proxy_smoke.log
+          test "${PIPESTATUS[0]}" -eq 0
 
       - name: Stop processes
         if: always()
@@ -53,4 +91,14 @@ jobs:
           if [ -f service.pid ]; then kill $(cat service.pid) || true; fi
           pkill -f elderd_rust_proxy || true
           pkill -f main_service || true
-
+      - name: Upload service/proxy logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy-service-logs
+          path: |
+            service.stdout
+            service.stderr
+            proxy.stdout
+            proxy.stderr
+            proxy_smoke.log

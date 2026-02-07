@@ -1,5 +1,4 @@
 module Catcode = Data.Types.Catcode
-
 include Catcode
 
 let of_int_opt = function
@@ -22,9 +21,6 @@ let of_int_opt = function
   | _ -> None
 
 let of_ascii_code code =
-  match of_int_opt code with
-  | Some cat -> cat
-  | None -> Other
+  match of_int_opt code with Some cat -> cat | None -> Other
 
-let classify_char ch =
-  of_ascii_code (Char.code ch)
+let classify_char ch = of_ascii_code (Char.code ch)

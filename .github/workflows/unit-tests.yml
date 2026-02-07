@@ -4,20 +4,27 @@ on:
   push:
   pull_request:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
       - name: Build unit test executables
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
           opam exec -- dune build \
             latex-parse/src/test_strip_math.exe \
             latex-parse/src/test_tokenizer_props.exe \

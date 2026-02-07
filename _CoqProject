@@ -10,6 +10,7 @@
 proofs/CoreProofs.v
 proofs/Catcode.v
 proofs/Arena_safe.v
+proofs/ListWindow.v
 proofs/LexerDeterminism.v
 proofs/LexerTotality.v
 proofs/LexerFaithfulStep.v

@@ -1,0 +1,509 @@
+performance-test	Set up job	﻿2025-09-29T18:14:25.0309454Z Current runner version: '2.328.0'
+performance-test	Set up job	2025-09-29T18:14:25.0332074Z ##[group]Runner Image Provisioner
+performance-test	Set up job	2025-09-29T18:14:25.0332829Z Hosted Compute Agent
+performance-test	Set up job	2025-09-29T18:14:25.0333366Z Version: 20250912.392
+performance-test	Set up job	2025-09-29T18:14:25.0333910Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+performance-test	Set up job	2025-09-29T18:14:25.0334545Z Build Date: 2025-09-12T15:23:14Z
+performance-test	Set up job	2025-09-29T18:14:25.0335048Z ##[endgroup]
+performance-test	Set up job	2025-09-29T18:14:25.0335597Z ##[group]Operating System
+performance-test	Set up job	2025-09-29T18:14:25.0336097Z Ubuntu
+performance-test	Set up job	2025-09-29T18:14:25.0336531Z 24.04.3
+performance-test	Set up job	2025-09-29T18:14:25.0337003Z LTS
+performance-test	Set up job	2025-09-29T18:14:25.0337398Z ##[endgroup]
+performance-test	Set up job	2025-09-29T18:14:25.0337841Z ##[group]Runner Image
+performance-test	Set up job	2025-09-29T18:14:25.0338364Z Image: ubuntu-24.04
+performance-test	Set up job	2025-09-29T18:14:25.0338823Z Version: 20250922.53.1
+performance-test	Set up job	2025-09-29T18:14:25.0339702Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250922.53/images/ubuntu/Ubuntu2404-Readme.md
+performance-test	Set up job	2025-09-29T18:14:25.0341297Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250922.53
+performance-test	Set up job	2025-09-29T18:14:25.0342349Z ##[endgroup]
+performance-test	Set up job	2025-09-29T18:14:25.0344655Z ##[group]GITHUB_TOKEN Permissions
+performance-test	Set up job	2025-09-29T18:14:25.0346758Z Actions: write
+performance-test	Set up job	2025-09-29T18:14:25.0347294Z Attestations: write
+performance-test	Set up job	2025-09-29T18:14:25.0347728Z Checks: write
+performance-test	Set up job	2025-09-29T18:14:25.0348180Z Contents: write
+performance-test	Set up job	2025-09-29T18:14:25.0348628Z Deployments: write
+performance-test	Set up job	2025-09-29T18:14:25.0349098Z Discussions: write
+performance-test	Set up job	2025-09-29T18:14:25.0349543Z Issues: write
+performance-test	Set up job	2025-09-29T18:14:25.0349998Z Metadata: read
+performance-test	Set up job	2025-09-29T18:14:25.0350430Z Models: read
+performance-test	Set up job	2025-09-29T18:14:25.0351305Z Packages: write
+performance-test	Set up job	2025-09-29T18:14:25.0351796Z Pages: write
+performance-test	Set up job	2025-09-29T18:14:25.0352234Z PullRequests: write
+performance-test	Set up job	2025-09-29T18:14:25.0352764Z RepositoryProjects: write
+performance-test	Set up job	2025-09-29T18:14:25.0353246Z SecurityEvents: write
+performance-test	Set up job	2025-09-29T18:14:25.0353862Z Statuses: write
+performance-test	Set up job	2025-09-29T18:14:25.0354299Z ##[endgroup]
+performance-test	Set up job	2025-09-29T18:14:25.0356263Z Secret source: Actions
+performance-test	Set up job	2025-09-29T18:14:25.0356957Z Prepare workflow directory
+performance-test	Set up job	2025-09-29T18:14:25.0700076Z Prepare all required actions
+performance-test	Set up job	2025-09-29T18:14:25.0737545Z Getting action download info
+performance-test	Set up job	2025-09-29T18:14:25.4264994Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+performance-test	Set up job	2025-09-29T18:14:25.5971363Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+performance-test	Set up job	2025-09-29T18:14:25.7553590Z Complete job name: performance-test
+performance-test	Run actions/checkout@v4	﻿2025-09-29T18:14:25.8300149Z ##[group]Run actions/checkout@v4
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8301100Z with:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8301522Z   repository: ClanClanClanClan/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8302219Z   token: ***
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8302563Z   ssh-strict: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8302923Z   ssh-user: git
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8303292Z   persist-credentials: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8303718Z   clean: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8304092Z   sparse-checkout-cone-mode: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8304546Z   fetch-depth: 1
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8304903Z   fetch-tags: false
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8305272Z   show-progress: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8305643Z   lfs: false
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8306008Z   submodules: false
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8306385Z   set-safe-directory: true
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.8307147Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9287502Z Syncing repository: ClanClanClanClan/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9289173Z ##[group]Getting Git version info
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9289825Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9290937Z [command]/usr/bin/git version
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9363092Z git version 2.51.0
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9384898Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9397498Z Temporarily overriding HOME='/home/runner/work/_temp/f08d5a77-eade-44a2-b9b9-a8c61e3c05b9' before making global git config changes
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9399192Z Adding repository directory to the temporary git global config as a safe directory
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9401762Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9433047Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9435990Z ##[group]Initializing the repository
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9439523Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9546018Z hint: Using 'master' as the name for the initial branch. This default branch name
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9547160Z hint: is subject to change. To configure the initial branch name to use in all
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9548024Z hint: of your new repositories, which will suppress this warning, call:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9548678Z hint:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9549338Z hint: 	git config --global init.defaultBranch <name>
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9550028Z hint:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9550517Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9551557Z hint: 'development'. The just-created branch can be renamed via this command:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9552193Z hint:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9552546Z hint: 	git branch -m <name>
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9552942Z hint:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9553578Z hint: Disable this message with "git config set advice.defaultBranchName false"
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9554504Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9558775Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9592422Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9593529Z ##[group]Disabling automatic garbage collection
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9597185Z [command]/usr/bin/git config --local gc.auto 0
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9619244Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9620247Z ##[group]Setting up auth
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9626282Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9650541Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9933742Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:25.9957549Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.0136221Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.0168222Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.0168981Z ##[group]Fetching the repository
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.0176197Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +81733f378884f06fc30671a9c24ad89d031a09bd:refs/remotes/pull/4/merge
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5930595Z From https://github.com/ClanClanClanClan/latex_perf
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5932250Z  * [new ref]         81733f378884f06fc30671a9c24ad89d031a09bd -> pull/4/merge
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5960165Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5961525Z ##[group]Determining the checkout info
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5962887Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.5968135Z [command]/usr/bin/git sparse-checkout disable
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6003678Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6026838Z ##[group]Checking out the ref
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6032264Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6344650Z Note: switching to 'refs/remotes/pull/4/merge'.
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6348105Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6349328Z You are in 'detached HEAD' state. You can look around, make experimental
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6352250Z changes and commit them, and you can discard any commits you make in this
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6354998Z state without impacting any branches by switching back to a branch.
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6356531Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6357604Z If you want to create a new branch to retain commits you create, you may
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6360123Z do so (now or later) by using -c with the switch command. Example:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6361668Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6362259Z   git switch -c <new-branch-name>
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6363600Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6364184Z Or undo this operation with:
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6365097Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6365584Z   git switch -
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6366295Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6367491Z Turn off this advice by setting config variable advice.detachedHead to false
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6369223Z 
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6371531Z HEAD is now at 81733f3 Merge 4887232aba7d6b962bad0d84a547356f48bed82c into 92bdfe28e9a19447735918ce6f6c8395415acf11
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6377538Z ##[endgroup]
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6381697Z [command]/usr/bin/git log -1 --format=%H
+performance-test	Run actions/checkout@v4	2025-09-29T18:14:26.6400619Z 81733f378884f06fc30671a9c24ad89d031a09bd
+performance-test	Run /./.github/actions/setup-ocaml	﻿2025-09-29T18:14:26.6732841Z Prepare all required actions
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:26.6734202Z Getting action download info
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:26.8584916Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5968534Z ##[group]Run ./.github/actions/setup-ocaml
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5968887Z with:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5969127Z   ocaml-compiler: 4.14.1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5969539Z   opam-repositories: default,https://github.com/ocaml/opam-repository.git
+performance-test	Run /./.github/actions/setup-ocaml	
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5969997Z   opam-depext: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5970250Z   allow-prerelease-opam: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5970513Z   opam-pin: true
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5970970Z   opam-local-packages: *.opam
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5971356Z   opam-disable-sandboxing: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5971620Z   dune-cache: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5971853Z   cache-prefix: v1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.5972078Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6070639Z ##[group]Run sudo apt-get update
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6071285Z [36;1msudo apt-get update[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6071672Z [36;1msudo apt-get install -y \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6072016Z [36;1m  bubblewrap \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6072284Z [36;1m  g++-multilib \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6072568Z [36;1m  gcc-multilib \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6072833Z [36;1m  mercurial \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6073119Z [36;1m  musl-tools \[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6073368Z [36;1m  rsync[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6097372Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6097774Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.6850688Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7306966Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7312053Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7313351Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7329933Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7381972Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.7398674Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9208374Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [57.3 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9401826Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [39.7 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9574895Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1443 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9646353Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [282 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9670016Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [175 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9692642Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [15.3 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9722243Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1485 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9805222Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [299 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9822202Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9846893Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [31.0 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9867851Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1957 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:27.9951474Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [441 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0422773Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0439277Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0458149Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [40.4 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0467066Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/main Translation-en [9208 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0474700Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7124 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0483302Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 c-n-f Metadata [368 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0492669Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [28.9 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0501660Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe Translation-en [17.5 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0508950Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [11.0 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0517127Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1444 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0527558Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0535716Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0623165Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1171 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.0687391Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [198 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1197549Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1209328Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [8744 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1222117Z Get:36 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [880 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1273617Z Get:37 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [195 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1292391Z Get:38 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.3 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1304170Z Get:39 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [18.0 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1317733Z Get:40 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1872 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1418605Z Get:41 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [423 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1449376Z Get:42 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:28.1459784Z Get:43 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [212 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:36.0504707Z Fetched 11.9 MB in 1s (8065 kB/s)
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:36.7742906Z Reading package lists...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:36.8041795Z Reading package lists...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:36.9671075Z Building dependency tree...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:36.9676569Z Reading state information...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1237078Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1237711Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1238261Z The following additional packages will be installed:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1239134Z   g++-13-multilib gcc-13-multilib lib32asan8 lib32atomic1 lib32gcc-13-dev
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1239808Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-13-dev lib32ubsan1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1251691Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan8 libx32atomic1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1252946Z   libx32gcc-13-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1253670Z   libx32stdc++-13-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1259057Z Suggested packages:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1259449Z   lib32stdc++6-13-dbg libx32stdc++6-13-dbg
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1637571Z The following NEW packages will be installed:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1638723Z   bubblewrap g++-13-multilib g++-multilib gcc-13-multilib gcc-multilib
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1639302Z   lib32asan8 lib32atomic1 lib32gcc-13-dev lib32gomp1 lib32itm1 lib32quadmath0
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1644079Z   lib32stdc++-13-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1644826Z   libx32asan8 libx32atomic1 libx32gcc-13-dev libx32gcc-s1 libx32gomp1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1645482Z   libx32itm1 libx32quadmath0 libx32stdc++-13-dev libx32stdc++6 libx32ubsan1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1647843Z   musl musl-dev musl-tools
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1805037Z 0 upgraded, 29 newly installed, 0 to remove and 18 not upgraded.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1805706Z Need to get 23.6 MB of archives.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1806279Z After this operation, 94.1 MB of additional disk space will be used.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.1806863Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.2489820Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 bubblewrap amd64 0.9.0-1ubuntu0.1 [50.2 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.3631786Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-i386 amd64 2.39-0ubuntu8.6 [1447 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.6562543Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-x32 amd64 2.39-0ubuntu8.6 [2913 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:37.9259962Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-x32 amd64 2.39-0ubuntu8.6 [1637 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.0983383Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-s1 amd64 14.2.0-4ubuntu2~24.04 [78.5 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.1535614Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gomp1 amd64 14.2.0-4ubuntu2~24.04 [141 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.2091364Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gomp1 amd64 14.2.0-4ubuntu2~24.04 [145 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.2645635Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.6 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.3182767Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.8 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.3724494Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32atomic1 amd64 14.2.0-4ubuntu2~24.04 [8586 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.4279607Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32atomic1 amd64 14.2.0-4ubuntu2~24.04 [10.3 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.4837601Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32asan8 amd64 14.2.0-4ubuntu2~24.04 [2879 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.7467210Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32asan8 amd64 14.2.0-4ubuntu2~24.04 [2893 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:38.9733384Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1150 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.1352847Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++6 amd64 14.2.0-4ubuntu2~24.04 [778 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.2528540Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1169 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.4195451Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [227 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.4778428Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [157 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.5340982Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2380 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.7599878Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2190 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:39.9767109Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-multilib amd64 13.3.0-6ubuntu2~24.04 [878 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.0312833Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1150 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.1868009Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1086 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.3458088Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-multilib amd64 13.3.0-6ubuntu2~24.04 [890 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.3999884Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 gcc-multilib amd64 4:13.2.0-7ubuntu1 [1474 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.4544888Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 g++-multilib amd64 4:13.2.0-7ubuntu1 [884 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.5091617Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl amd64 1.2.4-2 [416 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.6154961Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-dev amd64 1.2.4-2 [616 kB]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.7253464Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-tools amd64 1.2.4-2 [5540 B]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:40.9787367Z Fetched 23.6 MB in 4s (6640 kB/s)
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0005643Z Selecting previously unselected package bubblewrap.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0237985Z (Reading database ... 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0238429Z (Reading database ... 5%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0238769Z (Reading database ... 10%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0239069Z (Reading database ... 15%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0239264Z (Reading database ... 20%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0239447Z (Reading database ... 25%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0239636Z (Reading database ... 30%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0239829Z (Reading database ... 35%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0240020Z (Reading database ... 40%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0240202Z (Reading database ... 45%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0240389Z (Reading database ... 50%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.0659725Z (Reading database ... 55%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.3227000Z (Reading database ... 60%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.4803522Z (Reading database ... 65%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.7186936Z (Reading database ... 70%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:41.8905645Z (Reading database ... 75%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.1126772Z (Reading database ... 80%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.3670525Z (Reading database ... 85%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.6109759Z (Reading database ... 90%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.8746760Z (Reading database ... 95%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.8747302Z (Reading database ... 100%
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.8747727Z (Reading database ... 214164 files and directories currently installed.)
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.8793112Z Preparing to unpack .../00-bubblewrap_0.9.0-1ubuntu0.1_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.8813124Z Unpacking bubblewrap (0.9.0-1ubuntu0.1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.9136339Z Selecting previously unselected package libc6-dev-i386.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.9251281Z Preparing to unpack .../01-libc6-dev-i386_2.39-0ubuntu8.6_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:42.9262485Z Unpacking libc6-dev-i386 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.0060397Z Selecting previously unselected package libc6-x32.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.0174336Z Preparing to unpack .../02-libc6-x32_2.39-0ubuntu8.6_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.0217580Z Unpacking libc6-x32 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.0976678Z Selecting previously unselected package libc6-dev-x32.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1090102Z Preparing to unpack .../03-libc6-dev-x32_2.39-0ubuntu8.6_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1098397Z Unpacking libc6-dev-x32 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1518146Z Selecting previously unselected package libx32gcc-s1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1631004Z Preparing to unpack .../04-libx32gcc-s1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1637895Z Unpacking libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1805938Z Selecting previously unselected package lib32gomp1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1919602Z Preparing to unpack .../05-lib32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.1931518Z Unpacking lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2109432Z Selecting previously unselected package libx32gomp1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2222925Z Preparing to unpack .../06-libx32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2234427Z Unpacking libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2403054Z Selecting previously unselected package lib32itm1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2517700Z Preparing to unpack .../07-lib32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2528680Z Unpacking lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2688356Z Selecting previously unselected package libx32itm1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2799652Z Preparing to unpack .../08-libx32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2812825Z Unpacking libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.2970238Z Selecting previously unselected package lib32atomic1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3083249Z Preparing to unpack .../09-lib32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3093430Z Unpacking lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3253890Z Selecting previously unselected package libx32atomic1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3367581Z Preparing to unpack .../10-libx32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3379018Z Unpacking libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3534870Z Selecting previously unselected package lib32asan8.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3647826Z Preparing to unpack .../11-lib32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.3656316Z Unpacking lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4194463Z Selecting previously unselected package libx32asan8.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4307589Z Preparing to unpack .../12-libx32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4317145Z Unpacking libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4837702Z Selecting previously unselected package lib32ubsan1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4950601Z Preparing to unpack .../13-lib32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.4958782Z Unpacking lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5256390Z Selecting previously unselected package libx32stdc++6.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5369365Z Preparing to unpack .../14-libx32stdc++6_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5381031Z Unpacking libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5677483Z Selecting previously unselected package libx32ubsan1.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5790143Z Preparing to unpack .../15-libx32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.5798050Z Unpacking libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6083559Z Selecting previously unselected package lib32quadmath0.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6196098Z Preparing to unpack .../16-lib32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6205233Z Unpacking lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6385345Z Selecting previously unselected package libx32quadmath0.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6497743Z Preparing to unpack .../17-libx32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6506075Z Unpacking libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6662570Z Selecting previously unselected package lib32gcc-13-dev.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6774616Z Preparing to unpack .../18-lib32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.6783121Z Unpacking lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7200364Z Selecting previously unselected package libx32gcc-13-dev.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7312683Z Preparing to unpack .../19-libx32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7322671Z Unpacking libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7739875Z Selecting previously unselected package gcc-13-multilib.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7853485Z Preparing to unpack .../20-gcc-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.7861600Z Unpacking gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8003085Z Selecting previously unselected package lib32stdc++-13-dev.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8115655Z Preparing to unpack .../21-lib32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8123384Z Unpacking lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8594663Z Selecting previously unselected package libx32stdc++-13-dev.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8707489Z Preparing to unpack .../22-libx32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.8720177Z Unpacking libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9082717Z Selecting previously unselected package g++-13-multilib.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9196004Z Preparing to unpack .../23-g++-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9206253Z Unpacking g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9344493Z Selecting previously unselected package gcc-multilib.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9457966Z Preparing to unpack .../24-gcc-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9467605Z Unpacking gcc-multilib (4:13.2.0-7ubuntu1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9600241Z Selecting previously unselected package g++-multilib.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9712296Z Preparing to unpack .../25-g++-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9719821Z Unpacking g++-multilib (4:13.2.0-7ubuntu1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9861111Z Selecting previously unselected package musl:amd64.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9972167Z Preparing to unpack .../26-musl_1.2.4-2_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:43.9979737Z Unpacking musl:amd64 (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0188443Z Selecting previously unselected package musl-dev:amd64.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0301120Z Preparing to unpack .../27-musl-dev_1.2.4-2_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0309414Z Unpacking musl-dev:amd64 (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0713972Z Selecting previously unselected package musl-tools.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0829115Z Preparing to unpack .../28-musl-tools_1.2.4-2_amd64.deb ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.0836838Z Unpacking musl-tools (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1177789Z Setting up bubblewrap (0.9.0-1ubuntu0.1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1222406Z Setting up libc6-dev-i386 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1241437Z Setting up lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1261984Z Setting up lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1282095Z Setting up libc6-x32 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1316797Z Setting up libc6-dev-x32 (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1337330Z Setting up lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1357949Z Setting up lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1377150Z Setting up libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1397055Z Setting up musl:amd64 (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1430731Z Setting up lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1451711Z Setting up libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1472528Z Setting up lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1492302Z Setting up libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1512231Z Setting up libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1532376Z Setting up libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1551935Z Setting up libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1573279Z Setting up musl-dev:amd64 (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1601647Z Setting up libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1622069Z Setting up libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1641741Z Setting up lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1662120Z Setting up musl-tools (1.2.4-2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1682937Z Setting up libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1702718Z Setting up gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1728246Z Setting up lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1748137Z Setting up gcc-multilib (4:13.2.0-7ubuntu1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1768003Z Setting up libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1787406Z Setting up g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1806849Z Setting up g++-multilib (4:13.2.0-7ubuntu1) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.1832462Z Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:14:44.2089357Z Processing triggers for man-db (2.12.0-4build2) ...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3391184Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3391949Z Running kernel seems to be up-to-date.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3392185Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3392281Z Restarting services...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3447323Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3447726Z Service restarts being deferred:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3450892Z  systemctl restart hosted-compute-agent.service
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3451273Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3451432Z No containers need to be restarted.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3451693Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3451799Z No user sessions are running outdated binaries.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3451971Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:17.3452145Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1120695Z ##[group]Run mkdir -p "$HOME/.github-tools"
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1121243Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1121473Z [36;1m{[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1121694Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1121994Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1122271Z [36;1m  printf '%s\n' '  args=()'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1122515Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1122766Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1123053Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1123350Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1123602Z [36;1m  printf '%s\n' '    fi'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1123894Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1124205Z [36;1m  printf '%s\n' '      continue'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1124432Z [36;1m  printf '%s\n' '    fi'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1124657Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1124889Z [36;1m  printf '%s\n' '  done'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1125137Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1125395Z [36;1m  printf '%s\n' 'fi'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1125629Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1125877Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1126126Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1126420Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1147307Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1147625Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1259391Z ##[group]Run ocaml/setup-ocaml@v2
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1259627Z with:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1259806Z   ocaml-compiler: 4.14.1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1260014Z   allow-prerelease-opam: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1260368Z   opam-repositories: default,https://github.com/ocaml/opam-repository.git
+performance-test	Run /./.github/actions/setup-ocaml	
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1260717Z   opam-pin: true
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1261145Z   opam-depext: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1261341Z   opam-local-packages: *.opam
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1261569Z   opam-disable-sandboxing: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1261786Z   dune-cache: false
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1261975Z   cache-prefix: v1
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1262429Z   github-token: ***
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1262598Z env:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1263492Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.1264612Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:18.2927248Z ##[group]Retrieve the opam cache
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:19.4503092Z ##[warning]Failed to restore: Cache service responded with 400
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:19.4504794Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:19.4506386Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:19.4506708Z ##[group]Install opam
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4899341Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4960049Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4961959Z Added opam to the path
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4962520Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4962928Z ##[group]Initialise the opam state
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.4981639Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.5208784Z Reading package lists...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.6718019Z Building dependency tree...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.6724286Z Reading state information...
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8455043Z bubblewrap is already the newest version (0.9.0-1ubuntu0.1).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8455723Z g++-multilib is already the newest version (4:13.2.0-7ubuntu1).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8456181Z gcc-multilib is already the newest version (4:13.2.0-7ubuntu1).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8456713Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8457206Z musl-tools is already the newest version (1.2.4-2).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8457619Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8458104Z 0 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8485463Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8617021Z No configuration file found, using built-in defaults.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8619738Z Checking for available remotes: rsync and local, git, mercurial.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8620521Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8621065Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8754195Z [31m[ERROR][0m Sandboxing is not working on your platform ubuntu:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8755279Z         "~/.opam/opam-init/hooks/sandbox.sh build sh -c echo SUCCESS >$TMPDIR/opam-sandbox-check-out && cat $TMPDIR/opam-sandbox-check-out; rm -f $TMPDIR/opam-sandbox-check-out" exited with code 1 "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8756670Z Do you want to disable it?  Note that this will result in less secure package builds, so please ensure that you have some other isolation mechanisms in place (such as running within a container or virtual machine). [y/N] y
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8758190Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:20.8758603Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:23.1133488Z [[32mdefault[0m] Initialised
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:33.8342176Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:33.8342712Z User configuration:
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:33.8396711Z   Updating ~/.bash_profile.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:33.8397472Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:33.8397770Z 
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.3594054Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.3594804Z ##[group]Remove the opam repositories
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.3620350Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.4314946Z default
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.4339556Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5071978Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5073064Z ##[group]Initialise the opam repositories
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5090091Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add 51 t --all-switches --set-default
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5231574Z [31m[ERROR][0m Could not update repository "51": rsync failed
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5235869Z [31m[ERROR][0m Initial repository fetch failed
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5244629Z ##[endgroup]
+performance-test	Run /./.github/actions/setup-ocaml	2025-09-29T18:16:34.5249377Z ##[error]The process '/opt/hostedtoolcache/opam/2.1.6/x86_64/opam' failed with exit code 40
+performance-test	Post Run /./.github/actions/setup-ocaml	﻿2025-09-29T18:16:34.5500050Z Post job cleanup.
+performance-test	Post Run actions/checkout@v4	﻿2025-09-29T18:16:34.5544522Z Post job cleanup.
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6402172Z [command]/usr/bin/git version
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6433754Z git version 2.51.0
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6476754Z Temporarily overriding HOME='/home/runner/work/_temp/e2eaa312-0be4-4231-a95d-1877bc7735bb' before making global git config changes
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6477909Z Adding repository directory to the temporary git global config as a safe directory
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6481761Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6509150Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6534951Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6706484Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6723141Z http.https://github.com/.extraheader
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6734072Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+performance-test	Post Run actions/checkout@v4	2025-09-29T18:16:34.6758286Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+performance-test	Complete job	﻿2025-09-29T18:16:34.7015110Z Cleaning up orphan processes

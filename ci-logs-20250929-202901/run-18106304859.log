@@ -1,0 +1,763 @@
+rust-proxy-smoke	Set up job	﻿2025-09-29T18:07:24.5252895Z Current runner version: '2.328.0'
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5289373Z ##[group]Runner Image Provisioner
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5290932Z Hosted Compute Agent
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5291889Z Version: 20250912.392
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5292869Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5294172Z Build Date: 2025-09-12T15:23:14Z
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5295197Z ##[endgroup]
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5296038Z ##[group]Operating System
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5297041Z Ubuntu
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5297807Z 24.04.3
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5298605Z LTS
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5299429Z ##[endgroup]
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5300319Z ##[group]Runner Image
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5301570Z Image: ubuntu-24.04
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5302555Z Version: 20250922.53.1
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5304339Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250922.53/images/ubuntu/Ubuntu2404-Readme.md
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5306743Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250922.53
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5308743Z ##[endgroup]
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5313103Z ##[group]GITHUB_TOKEN Permissions
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5316212Z Actions: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5317229Z Attestations: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5318004Z Checks: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5318786Z Contents: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5319708Z Deployments: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5320541Z Discussions: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5321614Z Issues: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5322501Z Metadata: read
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5323302Z Models: read
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5324090Z Packages: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5324999Z Pages: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5325819Z PullRequests: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5326763Z RepositoryProjects: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5327708Z SecurityEvents: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5328801Z Statuses: write
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5329721Z ##[endgroup]
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5332863Z Secret source: Actions
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5334684Z Prepare workflow directory
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5729354Z Prepare all required actions
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.5767523Z Getting action download info
+rust-proxy-smoke	Set up job	2025-09-29T18:07:24.8278678Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+rust-proxy-smoke	Set up job	2025-09-29T18:07:25.0082099Z Download action repository 'actions-rs/toolchain@v1' (SHA:16499b5e05bf2e26879000db0c1d13f7e13fa3af)
+rust-proxy-smoke	Set up job	2025-09-29T18:07:25.2920513Z Complete job name: rust-proxy-smoke
+rust-proxy-smoke	Run actions/checkout@v4	﻿2025-09-29T18:07:25.3654797Z ##[group]Run actions/checkout@v4
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3656202Z with:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3656986Z   repository: ClanClanClanClan/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3658235Z   token: ***
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3659010Z   ssh-strict: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3659861Z   ssh-user: git
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3660966Z   persist-credentials: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3662055Z   clean: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3662857Z   sparse-checkout-cone-mode: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3663802Z   fetch-depth: 1
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3664585Z   fetch-tags: false
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3665429Z   show-progress: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3666310Z   lfs: false
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3667060Z   submodules: false
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3667965Z   set-safe-directory: true
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.3669250Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4802342Z Syncing repository: ClanClanClanClan/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4804241Z ##[group]Getting Git version info
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4805026Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4806173Z [command]/usr/bin/git version
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4906297Z git version 2.51.0
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4933653Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4949405Z Temporarily overriding HOME='/home/runner/work/_temp/012d0771-168c-4a36-a62d-b7e5d7410b8e' before making global git config changes
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4952290Z Adding repository directory to the temporary git global config as a safe directory
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4955523Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4992920Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.4996864Z ##[group]Initializing the repository
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5001750Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5116481Z hint: Using 'master' as the name for the initial branch. This default branch name
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5117977Z hint: is subject to change. To configure the initial branch name to use in all
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5119248Z hint: of your new repositories, which will suppress this warning, call:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5120529Z hint:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5121357Z hint: 	git config --global init.defaultBranch <name>
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5122370Z hint:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5123608Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5125599Z hint: 'development'. The just-created branch can be renamed via this command:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5127193Z hint:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5128062Z hint: 	git branch -m <name>
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5129130Z hint:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5130489Z hint: Disable this message with "git config set advice.defaultBranchName false"
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5132973Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5136372Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5173004Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5174374Z ##[group]Disabling automatic garbage collection
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5177856Z [command]/usr/bin/git config --local gc.auto 0
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5206679Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5208063Z ##[group]Setting up auth
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5214200Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5245412Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5579435Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5611435Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5832697Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5867021Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5867880Z ##[group]Fetching the repository
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.5875721Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +81733f378884f06fc30671a9c24ad89d031a09bd:refs/remotes/pull/4/merge
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8857865Z From https://github.com/ClanClanClanClan/latex_perf
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8859387Z  * [new ref]         81733f378884f06fc30671a9c24ad89d031a09bd -> pull/4/merge
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8960098Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8961759Z ##[group]Determining the checkout info
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8963220Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.8966973Z [command]/usr/bin/git sparse-checkout disable
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9079281Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9107187Z ##[group]Checking out the ref
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9110894Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9524741Z Note: switching to 'refs/remotes/pull/4/merge'.
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9526110Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9527165Z You are in 'detached HEAD' state. You can look around, make experimental
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9529923Z changes and commit them, and you can discard any commits you make in this
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9532039Z state without impacting any branches by switching back to a branch.
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9533028Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9533645Z If you want to create a new branch to retain commits you create, you may
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9535725Z do so (now or later) by using -c with the switch command. Example:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9536593Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9536947Z   git switch -c <new-branch-name>
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9537923Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9538310Z Or undo this operation with:
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9539024Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9539331Z   git switch -
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9539798Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9540489Z Turn off this advice by setting config variable advice.detachedHead to false
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9541800Z 
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9543087Z HEAD is now at 81733f3 Merge 4887232aba7d6b962bad0d84a547356f48bed82c into 92bdfe28e9a19447735918ce6f6c8395415acf11
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9547488Z ##[endgroup]
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9573470Z [command]/usr/bin/git log -1 --format=%H
+rust-proxy-smoke	Run actions/checkout@v4	2025-09-29T18:07:25.9594823Z 81733f378884f06fc30671a9c24ad89d031a09bd
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	﻿2025-09-29T18:07:25.9993094Z Prepare all required actions
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:25.9994437Z Getting action download info
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.1244396Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4479045Z ##[group]Run ./.github/actions/setup-ocaml
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4480145Z with:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4480992Z   ocaml-compiler: 4.14.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4481853Z   opam-depext: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4482699Z   allow-prerelease-opam: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4483611Z   opam-pin: true
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4484415Z   opam-local-packages: *.opam
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4485378Z   opam-disable-sandboxing: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4486323Z   dune-cache: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4487089Z   cache-prefix: v1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4487852Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4691739Z ##[group]Run sudo apt-get update
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4693365Z [36;1msudo apt-get update[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4694914Z [36;1msudo apt-get install -y \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4696150Z [36;1m  bubblewrap \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4697051Z [36;1m  g++-multilib \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4697922Z [36;1m  gcc-multilib \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4698792Z [36;1m  mercurial \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4699631Z [36;1m  musl-tools \[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4700444Z [36;1m  rsync[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4739952Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.4741397Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.6400495Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.6880171Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.6897160Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.6902781Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.6949917Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.7041873Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.7136325Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.9441444Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [39.7 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.9718252Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [57.3 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.9914794Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1443 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:26.9994059Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [282 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0015228Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [175 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0039767Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [15.3 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0047014Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1485 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0212607Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [299 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0243634Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0253312Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [31.0 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0277880Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1957 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0400263Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [441 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0876938Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0885250Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0893076Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [40.4 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0903991Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/main Translation-en [9208 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0912667Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7124 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0924901Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 c-n-f Metadata [368 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0933905Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [28.9 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0945450Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe Translation-en [17.5 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0953918Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [11.0 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0964229Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1444 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0973602Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.0982563Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1066780Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1171 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1130118Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [198 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1598774Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1608125Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [8744 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1616030Z Get:36 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [880 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1665439Z Get:37 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [195 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1685123Z Get:38 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.3 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1718079Z Get:39 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [18.0 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1727413Z Get:40 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1872 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1819940Z Get:41 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [423 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1846951Z Get:42 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:27.1854468Z Get:43 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [212 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:39.8128610Z Fetched 11.9 MB in 2s (7543 kB/s)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.5455330Z Reading package lists...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.5796072Z Reading package lists...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.7689942Z Building dependency tree...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.7698046Z Reading state information...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9441083Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9442101Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9442809Z The following additional packages will be installed:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9443743Z   g++-13-multilib gcc-13-multilib lib32asan8 lib32atomic1 lib32gcc-13-dev
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9444523Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-13-dev lib32ubsan1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9445408Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan8 libx32atomic1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9452446Z   libx32gcc-13-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9454106Z   libx32stdc++-13-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9455633Z Suggested packages:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:40.9457193Z   lib32stdc++6-13-dbg libx32stdc++6-13-dbg
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0171055Z The following NEW packages will be installed:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0172108Z   bubblewrap g++-13-multilib g++-multilib gcc-13-multilib gcc-multilib
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0172879Z   lib32asan8 lib32atomic1 lib32gcc-13-dev lib32gomp1 lib32itm1 lib32quadmath0
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0177540Z   lib32stdc++-13-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0178272Z   libx32asan8 libx32atomic1 libx32gcc-13-dev libx32gcc-s1 libx32gomp1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0179639Z   libx32itm1 libx32quadmath0 libx32stdc++-13-dev libx32stdc++6 libx32ubsan1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0181366Z   musl musl-dev musl-tools
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0371682Z 0 upgraded, 29 newly installed, 0 to remove and 18 not upgraded.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0372377Z Need to get 23.6 MB of archives.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0372923Z After this operation, 94.1 MB of additional disk space will be used.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0373579Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0747550Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 bubblewrap amd64 0.9.0-1ubuntu0.1 [50.2 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.0962628Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-i386 amd64 2.39-0ubuntu8.6 [1447 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.1654888Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-x32 amd64 2.39-0ubuntu8.6 [2913 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.2648389Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-x32 amd64 2.39-0ubuntu8.6 [1637 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3181650Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-s1 amd64 14.2.0-4ubuntu2~24.04 [78.5 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3342554Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gomp1 amd64 14.2.0-4ubuntu2~24.04 [141 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3504549Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gomp1 amd64 14.2.0-4ubuntu2~24.04 [145 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3683267Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.6 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3842775Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.8 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.3997638Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32atomic1 amd64 14.2.0-4ubuntu2~24.04 [8586 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.4148562Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32atomic1 amd64 14.2.0-4ubuntu2~24.04 [10.3 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.4303049Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32asan8 amd64 14.2.0-4ubuntu2~24.04 [2879 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.4902037Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32asan8 amd64 14.2.0-4ubuntu2~24.04 [2893 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.5581522Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1150 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.5983707Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++6 amd64 14.2.0-4ubuntu2~24.04 [778 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.6309590Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1169 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.6653690Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [227 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.6821095Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [157 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.7422201Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2380 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.8284600Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2190 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.9064617Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-multilib amd64 13.3.0-6ubuntu2~24.04 [878 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.9214739Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1150 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:41.9948790Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1086 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.0677660Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-multilib amd64 13.3.0-6ubuntu2~24.04 [890 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.0929334Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 gcc-multilib amd64 4:13.2.0-7ubuntu1 [1474 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.1111259Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 g++-multilib amd64 4:13.2.0-7ubuntu1 [884 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.1269780Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl amd64 1.2.4-2 [416 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.1782250Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-dev amd64 1.2.4-2 [616 kB]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.2508757Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-tools amd64 1.2.4-2 [5540 B]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.5637366Z Fetched 23.6 MB in 1s (19.3 MB/s)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.6415461Z Selecting previously unselected package bubblewrap.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8141135Z (Reading database ... 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8141763Z (Reading database ... 5%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8142213Z (Reading database ... 10%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8142579Z (Reading database ... 15%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8142916Z (Reading database ... 20%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8143247Z (Reading database ... 25%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8143578Z (Reading database ... 30%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8143892Z (Reading database ... 35%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8144363Z (Reading database ... 40%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8144691Z (Reading database ... 45%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:42.8145018Z (Reading database ... 50%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:43.0197436Z (Reading database ... 55%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:43.9659970Z (Reading database ... 60%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:44.7508975Z (Reading database ... 65%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:45.5069743Z (Reading database ... 70%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:46.3771546Z (Reading database ... 75%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:47.1846782Z (Reading database ... 80%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:48.1142116Z (Reading database ... 85%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.0205282Z (Reading database ... 90%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.9605743Z (Reading database ... 95%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.9606143Z (Reading database ... 100%
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.9606548Z (Reading database ... 214164 files and directories currently installed.)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.9660120Z Preparing to unpack .../00-bubblewrap_0.9.0-1ubuntu0.1_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:49.9696236Z Unpacking bubblewrap (0.9.0-1ubuntu0.1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.0408505Z Selecting previously unselected package libc6-dev-i386.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.0550121Z Preparing to unpack .../01-libc6-dev-i386_2.39-0ubuntu8.6_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.0560917Z Unpacking libc6-dev-i386 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.1885512Z Selecting previously unselected package libc6-x32.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.2025460Z Preparing to unpack .../02-libc6-x32_2.39-0ubuntu8.6_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.2134385Z Unpacking libc6-x32 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.4072749Z Selecting previously unselected package libc6-dev-x32.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.4215275Z Preparing to unpack .../03-libc6-dev-x32_2.39-0ubuntu8.6_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.4226091Z Unpacking libc6-dev-x32 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.4858730Z Selecting previously unselected package libx32gcc-s1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.4995342Z Preparing to unpack .../04-libx32gcc-s1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5005413Z Unpacking libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5236301Z Selecting previously unselected package lib32gomp1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5373418Z Preparing to unpack .../05-lib32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5385923Z Unpacking lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5625494Z Selecting previously unselected package libx32gomp1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5760232Z Preparing to unpack .../06-libx32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.5770339Z Unpacking libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6009694Z Selecting previously unselected package lib32itm1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6146360Z Preparing to unpack .../07-lib32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6158086Z Unpacking lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6396839Z Selecting previously unselected package libx32itm1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6538479Z Preparing to unpack .../08-libx32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6549124Z Unpacking libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6798900Z Selecting previously unselected package lib32atomic1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6942292Z Preparing to unpack .../09-lib32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.6952961Z Unpacking lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7192593Z Selecting previously unselected package libx32atomic1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7338533Z Preparing to unpack .../10-libx32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7352997Z Unpacking libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7588612Z Selecting previously unselected package lib32asan8.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7729644Z Preparing to unpack .../11-lib32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.7740907Z Unpacking lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.8429810Z Selecting previously unselected package libx32asan8.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.8574441Z Preparing to unpack .../12-libx32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.8584412Z Unpacking libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9253948Z Selecting previously unselected package lib32ubsan1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9392203Z Preparing to unpack .../13-lib32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9402602Z Unpacking lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9808383Z Selecting previously unselected package libx32stdc++6.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9945529Z Preparing to unpack .../14-libx32stdc++6_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:50.9958351Z Unpacking libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.0354974Z Selecting previously unselected package libx32ubsan1.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.0491370Z Preparing to unpack .../15-libx32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.0502880Z Unpacking libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.0899459Z Selecting previously unselected package lib32quadmath0.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1038426Z Preparing to unpack .../16-lib32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1049289Z Unpacking lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1301311Z Selecting previously unselected package libx32quadmath0.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1446217Z Preparing to unpack .../17-libx32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1457836Z Unpacking libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1696022Z Selecting previously unselected package lib32gcc-13-dev.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1839237Z Preparing to unpack .../18-lib32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.1849227Z Unpacking lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.2556425Z Selecting previously unselected package libx32gcc-13-dev.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.2704029Z Preparing to unpack .../19-libx32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.2714819Z Unpacking libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3404419Z Selecting previously unselected package gcc-13-multilib.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3554105Z Preparing to unpack .../20-gcc-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3565947Z Unpacking gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3773375Z Selecting previously unselected package lib32stdc++-13-dev.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3918347Z Preparing to unpack .../21-lib32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.3928392Z Unpacking lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.4654102Z Selecting previously unselected package libx32stdc++-13-dev.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.4801004Z Preparing to unpack .../22-libx32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.4810729Z Unpacking libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5325688Z Selecting previously unselected package g++-13-multilib.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5468565Z Preparing to unpack .../23-g++-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5479233Z Unpacking g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5693656Z Selecting previously unselected package gcc-multilib.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5839010Z Preparing to unpack .../24-gcc-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.5850210Z Unpacking gcc-multilib (4:13.2.0-7ubuntu1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6061387Z Selecting previously unselected package g++-multilib.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6206600Z Preparing to unpack .../25-g++-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6218364Z Unpacking g++-multilib (4:13.2.0-7ubuntu1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6440454Z Selecting previously unselected package musl:amd64.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6582065Z Preparing to unpack .../26-musl_1.2.4-2_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.6594645Z Unpacking musl:amd64 (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.7045111Z Selecting previously unselected package musl-dev:amd64.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.7182151Z Preparing to unpack .../27-musl-dev_1.2.4-2_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.7193671Z Unpacking musl-dev:amd64 (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.7919287Z Selecting previously unselected package musl-tools.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.8061732Z Preparing to unpack .../28-musl-tools_1.2.4-2_amd64.deb ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.8071634Z Unpacking musl-tools (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9029177Z Setting up bubblewrap (0.9.0-1ubuntu0.1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9083043Z Setting up libc6-dev-i386 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9117942Z Setting up lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9145626Z Setting up lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9173453Z Setting up libc6-x32 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9222207Z Setting up libc6-dev-x32 (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9250276Z Setting up lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9283039Z Setting up lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9308597Z Setting up libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9334520Z Setting up musl:amd64 (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9377262Z Setting up lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9404084Z Setting up libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9441761Z Setting up lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9471118Z Setting up libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9496491Z Setting up libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9522179Z Setting up libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9548336Z Setting up libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9575882Z Setting up musl-dev:amd64 (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9617510Z Setting up libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9643118Z Setting up libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9669501Z Setting up lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9695816Z Setting up musl-tools (1.2.4-2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9721098Z Setting up libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9748448Z Setting up gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9776051Z Setting up lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9801149Z Setting up gcc-multilib (4:13.2.0-7ubuntu1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9827132Z Setting up libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9852570Z Setting up g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9877720Z Setting up g++-multilib (4:13.2.0-7ubuntu1) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:51.9910439Z Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:07:54.5775251Z Processing triggers for man-db (2.12.0-4build2) ...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6297525Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6300132Z Running kernel seems to be up-to-date.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6301122Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6301623Z Restarting services...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6374953Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6375558Z Service restarts being deferred:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6378487Z  systemctl restart hosted-compute-agent.service
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6378852Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6379094Z No containers need to be restarted.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6379389Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6379573Z No user sessions are running outdated binaries.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6379898Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:48.6380195Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5881972Z ##[group]Run mkdir -p "$HOME/.github-tools"
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5882408Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5882723Z [36;1m{[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5882981Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5883378Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5883747Z [36;1m  printf '%s\n' '  args=()'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5884091Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5884446Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5884812Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5885189Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5885500Z [36;1m  printf '%s\n' '    fi'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5885911Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5886325Z [36;1m  printf '%s\n' '      continue'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5886620Z [36;1m  printf '%s\n' '    fi'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5886899Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5887200Z [36;1m  printf '%s\n' '  done'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5887519Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5887849Z [36;1m  printf '%s\n' 'fi'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5888136Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5888456Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5888776Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5889154Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5923054Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.5923455Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6075613Z ##[group]Run ocaml/setup-ocaml@v2
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6075870Z with:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6076066Z   ocaml-compiler: 4.14.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6076298Z   allow-prerelease-opam: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6076548Z   opam-pin: true
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6076753Z   opam-depext: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6076972Z   opam-local-packages: *.opam
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6077236Z   opam-disable-sandboxing: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6077480Z   dune-cache: false
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6077684Z   cache-prefix: v1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6078220Z   github-token: ***
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6078434Z env:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6079529Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.6080941Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:49.7938283Z ##[group]Retrieve the opam cache
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:50.6631007Z ##[warning]Failed to restore: Cache service responded with 400
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:50.6632979Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:50.6634642Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:50.6634987Z ##[group]Install opam
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4642189Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4731934Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4734338Z Added opam to the path
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4735263Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4735922Z ##[group]Initialise the opam state
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.4758651Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.5029497Z Reading package lists...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.7177831Z Building dependency tree...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.7186468Z Reading state information...
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8996012Z bubblewrap is already the newest version (0.9.0-1ubuntu0.1).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8996711Z g++-multilib is already the newest version (4:13.2.0-7ubuntu1).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8997326Z gcc-multilib is already the newest version (4:13.2.0-7ubuntu1).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8997918Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8998466Z musl-tools is already the newest version (1.2.4-2).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8998994Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.8999559Z 0 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9035590Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9177360Z No configuration file found, using built-in defaults.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9181191Z Checking for available remotes: rsync and local, git, mercurial.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9182521Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9183203Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9353546Z [31m[ERROR][0m Sandboxing is not working on your platform ubuntu:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9355400Z         "~/.opam/opam-init/hooks/sandbox.sh build sh -c echo SUCCESS >$TMPDIR/opam-sandbox-check-out && cat $TMPDIR/opam-sandbox-check-out; rm -f $TMPDIR/opam-sandbox-check-out" exited with code 1 "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9358829Z Do you want to disable it?  Note that this will result in less secure package builds, so please ensure that you have some other isolation mechanisms in place (such as running within a container or virtual machine). [y/N] y
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9361277Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:51.9362294Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:09:54.6090403Z [[32mdefault[0m] Initialised
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:06.7753873Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:06.7754367Z User configuration:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:06.7830517Z   Updating ~/.bash_profile.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:06.7832854Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:06.7833831Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:07.9936930Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:07.9939472Z ##[group]Remove the opam repositories
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:07.9962386Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:08.0529036Z default
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:08.0562747Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:08.1184321Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:08.1185143Z ##[group]Initialise the opam repositories
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:08.1203016Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:43.7556108Z [[32mdefault[0m] Initialised
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.0131530Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.1487862Z ##[group]Install OCaml
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.1505946Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.3612175Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.3613268Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:55.3614172Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:59.5647565Z 
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:10:59.5648799Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.1074780Z [32m∗[0m installed [01mbase-bigarray[0m.base
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.1080503Z [32m∗[0m installed [01mbase-threads[0m.base
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.1088348Z [32m∗[0m installed [01mbase-unix[0m.base
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.1099172Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.2057612Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:11:02.6486368Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:41.8223161Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:41.8311508Z [32m∗[0m installed [01mocaml-config[0m.2
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:41.8829933Z [32m∗[0m installed [01mocaml[0m.4.14.1
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:42.2733571Z Done.
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:42.2738436Z # Run [01meval $(opam env)[0m to update the current shell environment
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.4791662Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.4792572Z ##[group]Save the opam cache
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.4807114Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.6858819Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.7909395Z Updating /home/runner/.opam/repo/repos-config
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.7910198Z Clearing repository cache
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.7945797Z Clearing cache of downloaded files
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:43.7977917Z Clearing logs
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:44.4979575Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.4196262Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0WszaaAAAAABUpJryHFTXRraZAEi8QjghUEhMMzBFREdFMDIwOQBFZGdl
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.4930141Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.4931281Z ##[group]Retrieve the opam download cache
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.5414511Z ##[warning]Failed to restore: Cache service responded with 400
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.5419659Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304859-29, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304859-29, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304859-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.5423036Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.5457970Z ##[group]Pin local packages
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:46.5478002Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.3815255Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5291942Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5298011Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5299432Z     [31merror[0m 23: Missing field 'maintainer'
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5300013Z   [33mwarning[0m 25: Missing field 'authors'
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5300574Z   [33mwarning[0m 35: Missing field 'homepage'
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5301317Z   [33mwarning[0m 36: Missing field 'bug-reports'
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:53.5307184Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#HEAD[0m (version [01mdev[0m)
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:54.6286865Z ##[endgroup]
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:54.6301046Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:54.6432031Z 2.1.6
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:54.6455907Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+rust-proxy-smoke	Run /./.github/actions/setup-ocaml	2025-09-29T18:13:54.6736126Z The OCaml toplevel, version 4.14.1
+rust-proxy-smoke	Install dune	﻿2025-09-29T18:13:54.6904954Z ##[group]Run opam repo add default https://opam.ocaml.org || true
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6905498Z [36;1mopam repo add default https://opam.ocaml.org || true[0m
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6905826Z [36;1mopam update -y[0m
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6906079Z [36;1mopam install -y . --deps-only --with-test[0m
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6940503Z shell: /usr/bin/bash -e {0}
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6940937Z env:
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6942130Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6943408Z   OPAMCLI: 2.0
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6943627Z   OPAMCOLOR: always
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6943847Z   OPAMERRLOGLEN: 0
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6944062Z   OPAMJOBS: 4
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6944272Z   OPAMPRECISETRACKING: 1
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6944525Z   OPAMSOLVERTIMEOUT: 1000
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6944798Z   OPAMYES: 1
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6944997Z   CLICOLOR_FORCE: 1
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.6945207Z ##[endgroup]
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.7529771Z [31m[ERROR][0m Repository default is already set up and points to git+https://github.com/ocaml/opam-repository.git. To change that, use 'opam repository set-url default https://opam.ocaml.org'.
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.9994456Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.9995324Z 
+rust-proxy-smoke	Install dune	2025-09-29T18:13:54.9995929Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+rust-proxy-smoke	Install dune	2025-09-29T18:13:58.6087543Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+rust-proxy-smoke	Install dune	2025-09-29T18:14:10.0616899Z [1;34m[NOTE][0m Ignoring uncommitted changes in /home/runner/work/latex_perf/latex_perf (`--working-dir' not active).
+rust-proxy-smoke	Install dune	2025-09-29T18:14:10.2206207Z [[32mlatex-perfectionist.dev[0m] synchronised (git+file:///home/runner/work/latex_perf/latex_perf#HEAD)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7985519Z The following actions will be performed:
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7986905Z   [32m∗[0m install [01mocamlbuild[0m          0.16.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7987949Z   [32m∗[0m install [01mconf-gmp[0m            5
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7991750Z   [32m∗[0m install [01mconf-pkg-config[0m     4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7992603Z   [32m∗[0m install [01mocamlfind[0m           1.9.8
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7993515Z   [32m∗[0m install [01mdune[0m                3.20.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7994418Z   [32m∗[0m install [01mzarith[0m              1.14
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7995104Z   [32m∗[0m install [01mtopkg[0m               1.1.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7995724Z   [32m∗[0m install [01myojson[0m              3.0.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7996369Z   [32m∗[0m install [01mstdlib-shims[0m        0.3.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7997032Z   [32m∗[0m install [01msexplib0[0m            v0.17.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7997624Z   [32m∗[0m install [01mppx_derivers[0m        1.2.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7998281Z   [32m∗[0m install [01mocaml-syntax-shims[0m  1.0.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.7999511Z   [32m∗[0m install [01mocaml-compiler-libs[0m v0.12.4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8000152Z   [32m∗[0m install [01mcsexp[0m               1.5.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8000940Z   [32m∗[0m install [01mcppo[0m                1.8.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8001562Z   [32m∗[0m install [01mcoq-core[0m            8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8002128Z   [32m∗[0m install [01muutf[0m                1.0.4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8002690Z   [32m∗[0m install [01mppxlib[0m              0.36.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8003276Z   [32m∗[0m install [01mdune-configurator[0m   3.20.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8003848Z   [32m∗[0m install [01mcoqide-server[0m       8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8004409Z   [32m∗[0m install [01mcoq-stdlib[0m          8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8005032Z   [32m∗[0m install [01mppx_deriving[0m        6.1.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8005716Z   [32m∗[0m install [01mbigstringaf[0m         0.10.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8006831Z   [32m∗[0m install [01mcoq[0m                 8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8007504Z   [32m∗[0m install [01mangstrom[0m            0.16.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8008055Z ===== [32m∗[0m 25 =====
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8008316Z 
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8008833Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+rust-proxy-smoke	Install dune	2025-09-29T18:14:14.8540269Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:17.3600006Z [32m∗[0m installed [01mconf-gmp[0m.5
+rust-proxy-smoke	Install dune	2025-09-29T18:14:17.3612943Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:17.3739854Z [36m⬇[0m retrieved [01mangstrom[0m.0.16.1  (https://github.com/inhabitedtype/angstrom/archive/0.16.1.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:17.4118501Z [36m⬇[0m retrieved [01mbigstringaf[0m.0.10.0  (https://github.com/inhabitedtype/bigstringaf/archive/0.10.0.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:18.2401390Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:18.7499042Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.1309413Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.5083850Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.5534636Z [36m⬇[0m retrieved [01mcppo[0m.1.8.0  (https://github.com/ocaml-community/cppo/archive/v1.8.0.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.5786632Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.6885989Z [36m⬇[0m retrieved [01mocaml-compiler-libs[0m.v0.12.4  (https://github.com/janestreet/ocaml-compiler-libs/releases/download/v0.12.4/ocaml-compiler-libs-v0.12.4.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:19.8296981Z [36m⬇[0m retrieved [01mocaml-syntax-shims[0m.1.0.0  (https://github.com/ocaml-ppx/ocaml-syntax-shims/releases/download/1.0.0/ocaml-syntax-shims-1.0.0.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:20.2177674Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:20.4205343Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:20.5562984Z [36m⬇[0m retrieved [01mppx_derivers[0m.1.2.1  (https://github.com/ocaml-ppx/ppx_derivers/archive/1.2.1.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:20.8007576Z [36m⬇[0m retrieved [01mppx_deriving[0m.6.1.1  (https://github.com/ocaml-ppx/ppx_deriving/releases/download/v6.1.1/ppx_deriving-6.1.1.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:21.5454528Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:22.6061550Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:22.6895985Z [36m⬇[0m retrieved [01msexplib0[0m.v0.17.0  (https://github.com/janestreet/sexplib0/archive/refs/tags/v0.17.0.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:22.8053473Z [36m⬇[0m retrieved [01mstdlib-shims[0m.0.3.0  (https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:22.8700392Z [36m⬇[0m retrieved [01mppxlib[0m.0.36.0  (https://github.com/ocaml-ppx/ppxlib/releases/download/0.36.0/ppxlib-0.36.0.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:23.0842805Z [36m⬇[0m retrieved [01myojson[0m.3.0.0  (https://github.com/ocaml-community/yojson/releases/download/3.0.0/yojson-3.0.0.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:23.2474038Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:23.3219349Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:23.4680999Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+rust-proxy-smoke	Install dune	2025-09-29T18:14:26.5511161Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+rust-proxy-smoke	Install dune	2025-09-29T18:14:26.6071609Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:30.4237677Z [32m∗[0m installed [01mzarith[0m.1.14
+rust-proxy-smoke	Install dune	2025-09-29T18:14:32.7893662Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:33.5749124Z [32m∗[0m installed [01muutf[0m.1.0.4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:50.3068445Z [32m∗[0m installed [01mdune[0m.3.20.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:50.9799736Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:52.6569030Z [32m∗[0m installed [01mocaml-compiler-libs[0m.v0.12.4
+rust-proxy-smoke	Install dune	2025-09-29T18:14:52.6730237Z [32m∗[0m installed [01mcppo[0m.1.8.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:52.7371958Z [32m∗[0m installed [01mocaml-syntax-shims[0m.1.0.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:52.9554414Z [32m∗[0m installed [01mppx_derivers[0m.1.2.1
+rust-proxy-smoke	Install dune	2025-09-29T18:14:53.2744822Z [32m∗[0m installed [01mstdlib-shims[0m.0.3.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:53.7268249Z [32m∗[0m installed [01msexplib0[0m.v0.17.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:56.0954076Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+rust-proxy-smoke	Install dune	2025-09-29T18:14:56.4228962Z [32m∗[0m installed [01myojson[0m.3.0.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:57.0752393Z [32m∗[0m installed [01mbigstringaf[0m.0.10.0
+rust-proxy-smoke	Install dune	2025-09-29T18:14:58.1477004Z [32m∗[0m installed [01mangstrom[0m.0.16.1
+rust-proxy-smoke	Install dune	2025-09-29T18:15:21.3184418Z [32m∗[0m installed [01mppxlib[0m.0.36.0
+rust-proxy-smoke	Install dune	2025-09-29T18:15:27.1671702Z [32m∗[0m installed [01mppx_deriving[0m.6.1.1
+rust-proxy-smoke	Install dune	2025-09-29T18:15:52.0256104Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:15:55.9305464Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:18:17.3305207Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:18:17.7270086Z [32m∗[0m installed [01mcoq[0m.8.18.0
+rust-proxy-smoke	Install dune	2025-09-29T18:18:19.6257586Z Done.
+rust-proxy-smoke	Install dune	2025-09-29T18:18:19.6267883Z # Run [01meval $(opam env)[0m to update the current shell environment
+rust-proxy-smoke	Setup Rust	﻿2025-09-29T18:18:20.8425113Z ##[group]Run actions-rs/toolchain@v1
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8425390Z with:
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8425554Z   toolchain: stable
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8425738Z   profile: minimal
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8425909Z   override: true
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8426080Z   default: false
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8426262Z env:
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8427220Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8428232Z   OPAMCLI: 2.0
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8428402Z   OPAMCOLOR: always
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8428580Z   OPAMERRLOGLEN: 0
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8428747Z   OPAMJOBS: 4
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8428926Z   OPAMPRECISETRACKING: 1
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8429130Z   OPAMSOLVERTIMEOUT: 1000
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8429327Z   OPAMYES: 1
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8429487Z   CLICOLOR_FORCE: 1
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.8429690Z ##[endgroup]
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:20.9421965Z [command]/home/runner/.cargo/bin/rustup show
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.5335240Z Default host: x86_64-unknown-linux-gnu
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.5335997Z rustup home:  /home/runner/.rustup
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.5336403Z 
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6440953Z installed toolchains
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6441375Z --------------------
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6441748Z 1.89.0-x86_64-unknown-linux-gnu (active, default)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6442064Z 
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6442178Z active toolchain
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6442457Z ----------------
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6442747Z name: 1.89.0-x86_64-unknown-linux-gnu
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6443155Z active because: it's the default toolchain
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6443537Z installed targets:
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6443832Z   x86_64-unknown-linux-gnu
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6488168Z [command]/home/runner/.cargo/bin/rustup -V
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6542223Z rustup 1.28.2 (e4f3ad6f8 2025-04-28)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:21.6611076Z info: This is the version for the rustup toolchain manager, not the rustc compiler.
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.0931656Z info: The currently active `rustc` version is `rustc 1.89.0 (29483883e 2025-08-04)`
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.0962035Z Installed rustup 1.28.2 support profiles
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.0965340Z [command]/home/runner/.cargo/bin/rustup set profile minimal
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.1221243Z info: profile set to 'minimal'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.1240059Z [command]/home/runner/.cargo/bin/rustup toolchain install stable
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.1439381Z info: syncing channel updates for 'stable-x86_64-unknown-linux-gnu'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.4782932Z info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.4783615Z info: downloading component 'cargo'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.5401970Z info: downloading component 'rust-std'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.6496578Z info: downloading component 'rustc'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:23.9130066Z info: installing component 'cargo'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:24.6056057Z info: installing component 'rust-std'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:26.4768743Z info: installing component 'rustc'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3478235Z 
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3578853Z   stable-x86_64-unknown-linux-gnu installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3579439Z 
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3620395Z [command]/home/runner/.cargo/bin/rustup override set stable
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3685748Z info: override toolchain for '/home/runner/work/latex_perf/latex_perf' set to 'stable-x86_64-unknown-linux-gnu'
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3704775Z ##[group]Gathering installed versions
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.3715115Z [command]/home/runner/.cargo/bin/rustc -V
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4203596Z rustc 1.90.0 (1159e78c4 2025-09-14)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4233737Z ##[warning]The `set-output` command is deprecated and will be disabled soon. Please upgrade to using Environment Files. For more information see: https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4238389Z ##[warning]The `set-output` command is deprecated and will be disabled soon. Please upgrade to using Environment Files. For more information see: https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4240450Z [command]/home/runner/.cargo/bin/cargo -V
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4687542Z cargo 1.90.0 (840b83a10 2025-07-30)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4700973Z ##[warning]The `set-output` command is deprecated and will be disabled soon. Please upgrade to using Environment Files. For more information see: https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4709741Z [command]/home/runner/.cargo/bin/rustup -V
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4763543Z rustup 1.28.2 (e4f3ad6f8 2025-04-28)
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.4764230Z info: This is the version for the rustup toolchain manager, not the rustc compiler.
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.5202494Z info: The currently active `rustc` version is `rustc 1.90.0 (1159e78c4 2025-09-14)`
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.5232808Z ##[warning]The `set-output` command is deprecated and will be disabled soon. Please upgrade to using Environment Files. For more information see: https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
+rust-proxy-smoke	Setup Rust	2025-09-29T18:18:31.5234980Z ##[endgroup]
+rust-proxy-smoke	Build service and proxy	﻿2025-09-29T18:18:31.5327399Z ##[group]Run opam exec -- dune build latex-parse/src/main_service.exe
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5328430Z [36;1mopam exec -- dune build latex-parse/src/main_service.exe[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5329052Z [36;1mcargo build -p elderd_rust_proxy --release[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5365089Z shell: /usr/bin/bash -e {0}
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5365341Z env:
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5366335Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5367347Z   OPAMCLI: 2.0
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5367533Z   OPAMCOLOR: always
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5367721Z   OPAMERRLOGLEN: 0
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5367913Z   OPAMJOBS: 4
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5368091Z   OPAMPRECISETRACKING: 1
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5368308Z   OPAMSOLVERTIMEOUT: 1000
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5368504Z   OPAMYES: 1
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5368716Z   CLICOLOR_FORCE: 1
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.5368896Z ##[endgroup]
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.8934817Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o simd_tokenizer_fixed.o -c simd_tokenizer_fixed.c)[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.8966257Z [1msimd_tokenizer_fixed.c:283:15:[0m [1;35mwarning: [0m‘[1mfind_next_special_neon[0m’ defined but not used [[1;35m-Wunused-function[0m]
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.8968044Z   283 | static size_t [1;35mfind_next_special_neon[0m(const uint8_t *input, size_t start, size_t len) {
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9021620Z       |               [1;35m^~~~~~~~~~~~~~~~~~~~~~[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9557380Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o xxh64_simd_stubs.o -c xxh64_simd_stubs.c)[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9560312Z [1mxxh64_simd_stubs.c:[0m In function ‘[1mocaml_xxh64_simd[0m’:
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9561847Z [1mxxh64_simd_stubs.c:118:7:[0m [1;35mwarning: [0mvariable ‘[1mhas_simd[0m’ set but not used [[1;35m-Wunused-but-set-variable[0m]
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9562803Z   118 |   int [1;35mhas_simd[0m = 0;
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:31.9563277Z       |       [1;35m^~~~~~~~[0m
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:32.5371584Z [1m[31merror[0m[1m:[0m could not find `Cargo.toml` in `/home/runner/work/latex_perf/latex_perf` or any parent directory
+rust-proxy-smoke	Build service and proxy	2025-09-29T18:18:32.5388138Z ##[error]Process completed with exit code 101.
+rust-proxy-smoke	Stop processes	﻿2025-09-29T18:18:32.5426241Z ##[group]Run if [ -f proxy.pid ]; then kill $(cat proxy.pid) || true; fi
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5426799Z [36;1mif [ -f proxy.pid ]; then kill $(cat proxy.pid) || true; fi[0m
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5427263Z [36;1mif [ -f service.pid ]; then kill $(cat service.pid) || true; fi[0m
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5427659Z [36;1mpkill -f elderd_rust_proxy || true[0m
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5427978Z [36;1mpkill -f main_service || true[0m
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5459539Z shell: /usr/bin/bash -e {0}
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5459798Z env:
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5461324Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5462615Z   OPAMCLI: 2.0
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5462834Z   OPAMCOLOR: always
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5463057Z   OPAMERRLOGLEN: 0
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5463262Z   OPAMJOBS: 4
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5463516Z   OPAMPRECISETRACKING: 1
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5463949Z   OPAMSOLVERTIMEOUT: 1000
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5464184Z   OPAMYES: 1
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5464402Z   CLICOLOR_FORCE: 1
+rust-proxy-smoke	Stop processes	2025-09-29T18:18:32.5464689Z ##[endgroup]
+rust-proxy-smoke	Post Run /./.github/actions/setup-ocaml	﻿2025-09-29T18:18:32.6011841Z Post job cleanup.
+rust-proxy-smoke	Post Run actions/checkout@v4	﻿2025-09-29T18:18:32.6059919Z Post job cleanup.
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7002698Z [command]/usr/bin/git version
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7039847Z git version 2.51.0
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7091055Z Temporarily overriding HOME='/home/runner/work/_temp/bb715e6e-77de-4bb2-ac7e-a4dffa354313' before making global git config changes
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7092390Z Adding repository directory to the temporary git global config as a safe directory
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7097054Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7131880Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7164686Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7393877Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7415423Z http.https://github.com/.extraheader
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7428129Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+rust-proxy-smoke	Post Run actions/checkout@v4	2025-09-29T18:18:32.7458895Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+rust-proxy-smoke	Complete job	﻿2025-09-29T18:18:32.7788295Z Cleaning up orphan processes

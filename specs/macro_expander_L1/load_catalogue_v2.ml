@@ -1,11 +1,7 @@
 (* load_catalogue_v2.ml — load v25r2 JSON (backward compatible) *)
 open Yojson.Basic
 
-type token =
-  | TText of string
-  | TOp of string
-  | TDelim of string
-
+type token = TText of string | TOp of string | TDelim of string
 type mode = Math | Text | Any
 
 type entry = {
@@ -20,29 +16,36 @@ type entry = {
 }
 
 let token_of_json = function
-  | `Assoc [("TText", `String s)] -> TText s
-  | `Assoc [("TOp", `String s)] -> TOp s
-  | `Assoc [("TDelim", `String s)] -> TDelim s
+  | `Assoc [ ("TText", `String s) ] -> TText s
+  | `Assoc [ ("TOp", `String s) ] -> TOp s
+  | `Assoc [ ("TDelim", `String s) ] -> TDelim s
   | j -> failwith ("bad token: " ^ Yojson.Basic.to_string j)
 
 let mode_of_string = function
   | "math" -> Math
   | "text" -> Text
-  | "any"  -> Any
-  | s -> failwith ("bad mode: "^s)
+  | "any" -> Any
+  | s -> failwith ("bad mode: " ^ s)
 
 let list_assoc_exn k = function
-  | `Assoc props -> (match List.assoc_opt k props with Some v -> v | None -> failwith ("missing "^k))
+  | `Assoc props -> (
+      match List.assoc_opt k props with
+      | Some v -> v
+      | None -> failwith ("missing " ^ k))
   | _ -> failwith "expected object"
 
 let entry_of_json j =
   match j with
   | `Assoc _ ->
-      let name = match list_assoc_exn "name" j with `String s -> s | _ -> failwith "name" in
+      let name =
+        match list_assoc_exn "name" j with
+        | `String s -> s
+        | _ -> failwith "name"
+      in
       (* "expansion" (new) if present, else legacy "body" *)
       let body_json =
         match list_assoc_exn "expansion" j with
-        | (`List _ as l) -> l
+        | `List _ as l -> l
         | _ -> list_assoc_exn "body" j
       in
       let expansion =
@@ -56,31 +59,28 @@ let entry_of_json j =
         | _ -> Any
       in
       let category =
-        match list_assoc_exn "category" j with
-        | `String s -> s
-        | _ -> "symbol"
+        match list_assoc_exn "category" j with `String s -> s | _ -> "symbol"
       in
-      let arity =
-        match list_assoc_exn "arity" j with
-        | `Int n -> n
-        | _ -> 0
-      in
+      let arity = match list_assoc_exn "arity" j with `Int n -> n | _ -> 0 in
       let expand_in_math =
-        match list_assoc_exn "expand_in_math" j with
-        | `Bool b -> b
-        | _ -> true
+        match list_assoc_exn "expand_in_math" j with `Bool b -> b | _ -> true
       in
       let expand_in_text =
-        match list_assoc_exn "expand_in_text" j with
-        | `Bool b -> b
-        | _ -> true
+        match list_assoc_exn "expand_in_text" j with `Bool b -> b | _ -> true
       in
       let non_expandable =
-        match list_assoc_exn "non_expandable" j with
-        | `Bool b -> b
-        | _ -> true
+        match list_assoc_exn "non_expandable" j with `Bool b -> b | _ -> true
       in
-      { name; mode; category; arity; expansion; expand_in_math; expand_in_text; non_expandable }
+      {
+        name;
+        mode;
+        category;
+        arity;
+        expansion;
+        expand_in_math;
+        expand_in_text;
+        non_expandable;
+      }
   | _ -> failwith "entry not an object"
 
 let load path =

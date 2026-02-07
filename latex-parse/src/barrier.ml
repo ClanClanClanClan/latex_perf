@@ -1,14 +1,7 @@
-type t = {
-  mutex : Mutex.t;
-  cond : Condition.t;
-  ready : bool ref;
-}
+type t = { mutex : Mutex.t; cond : Condition.t; ready : bool ref }
 
-let create () = {
-  mutex = Mutex.create ();
-  cond = Condition.create ();
-  ready = ref false;
-}
+let create () =
+  { mutex = Mutex.create (); cond = Condition.create (); ready = ref false }
 
 let release t =
   Mutex.lock t.mutex;

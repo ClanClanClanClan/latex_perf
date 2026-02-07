@@ -1,8 +1,10 @@
 (* LaTeX Perfectionist v25_R1 — Incremental Lexer Foundations (skeleton)
    Zero-admit lemmas to stage windowed determinism/progress proofs. *)
 
-Require Import List Arith Bool Lia.
+From Coq Require Import List Arith Bool Lia.
 Import ListNotations.
+Require Import ListWindow.
+Import ListWindow.
 
 Module Incremental.
 
@@ -31,22 +33,35 @@ Proof.
   intros. eexists. split; [reflexivity|]. intros x Hx. now subst.
 Qed.
 
-(* Window extraction on the token stream equals tokenization of the window bytes. *)
-Lemma tokenize_window_equivalence : forall pre mid suf,
-  firstn (length mid) (skipn (length pre) (tokenize (pre ++ mid ++ suf))) = tokenize mid.
+Lemma length_tokenize : forall bs, length (tokenize bs) = length bs.
 Proof.
-  intros pre mid suf.
-  rewrite tokenize_app.
-  rewrite app_assoc.
-  rewrite tokenize_app.
-  rewrite skipn_app.
-  rewrite firstn_app.
-  rewrite firstn_all.
-  replace (skipn (length pre) (tokenize pre)) with (@nil token).
-  2:{ rewrite <- firstn_all with (l:=tokenize pre) at 1.
-      rewrite firstn_skipn. reflexivity. }
-  simpl. rewrite app_nil_l.
-  rewrite firstn_all. reflexivity.
+  induction bs; simpl; congruence.
+Qed.
+
+Lemma firstn_length_append_token :
+  forall (xs ys : list token),
+    firstn (length xs) (xs ++ ys) = xs.
+Proof. apply firstn_length_append. Qed.
+
+Lemma skipn_length_append_token :
+  forall (xs ys : list token),
+    skipn (length xs) (xs ++ ys) = ys.
+Proof. apply skipn_length_append. Qed.
+
+(* Window extraction on the token stream equals tokenization of the window bytes. *)
+Lemma tokenize_window_equivalence
+      (pre mid suf : list byte) :
+  firstn (length mid)
+         (skipn (length pre) (tokenize (pre ++ mid ++ suf)))
+  = tokenize mid.
+Proof.
+  rewrite tokenize_app with (a:=pre) (b:=mid ++ suf).
+  rewrite <- (length_tokenize pre) at 1.
+  rewrite skipn_length_append_token.
+  rewrite tokenize_app with (a:=mid) (b:=suf).
+  rewrite <- (length_tokenize mid) at 1.
+  rewrite firstn_length_append_token.
+  reflexivity.
 Qed.
 
 (* Locality under disjoint edit: changing the prefix/suffix leaves the mid-window tokens unchanged. *)
@@ -68,20 +83,41 @@ Definition offsets_of (bs:list byte) : list nat := seq 0 (length (tokenize bs)).
 (* Normalization of offsets by subtracting a prefix length. *)
 Definition normalize (k:nat) (xs:list nat) : list nat := List.map (fun o => o - k) xs.
 
-Lemma length_tokenize : forall bs, length (tokenize bs) = length bs.
-Proof. induction bs; simpl; congruence. Qed.
-
 (* Helpers over seq/firstn/skipn to avoid admits. *)
 Lemma length_seq : forall s n, length (seq s n) = n.
-Proof. induction n; simpl; congruence. Qed.
+Proof.
+  intros s n. revert s.
+  induction n; intros s; simpl.
+  - reflexivity.
+  - rewrite (IHn (S s)). reflexivity.
+Qed.
+
+Lemma Nat_sub_succ_succ : forall n k, S n - S k = n - k.
+Proof.
+  intros n k. revert n.
+  induction k; intros n; simpl.
+  - reflexivity.
+  - destruct n; simpl; auto.
+Qed.
+
+Lemma Nat_add_succ_comm : forall s k, s + S k = S s + k.
+Proof.
+  intros s k. induction s; simpl.
+  - reflexivity.
+  - rewrite IHs. reflexivity.
+Qed.
 
 Lemma skipn_seq : forall s n k,
   skipn k (seq s n) = seq (s+k) (n - k).
 Proof.
   intros s n k. revert s n.
   induction k; intros s n; simpl.
-  - now rewrite Nat.sub_0_r.
-  - destruct n; simpl; [now rewrite Nat.sub_0_r|]. now apply IHk.
+  - rewrite Nat.add_0_r. destruct n; reflexivity.
+  - destruct n as [|n']; simpl.
+    + reflexivity.
+    + specialize (IHk (S s) n').
+      replace (s + S k) with (S s + k) by (symmetry; apply Nat_add_succ_comm).
+      exact IHk.
 Qed.
 
 Lemma firstn_seq : forall s n m,
@@ -90,6 +126,50 @@ Proof.
   intros s n m. revert s n.
   induction m; intros s n; simpl; auto.
   destruct n; simpl; auto. now rewrite IHm.
+Qed.
+
+Lemma seq_succ : forall s n,
+  seq (S s) n = map S (seq s n).
+Proof.
+  intros s n. revert s.
+  induction n; intros s; simpl; auto.
+  rewrite IHn with (s := S s). reflexivity.
+Qed.
+
+Lemma seq_shift : forall k m,
+  seq k m = map (fun i => k + i) (seq 0 m).
+Proof.
+  intros k m. revert k.
+  induction m; intros k; simpl; auto.
+  rewrite IHm with (k := S k).
+  rewrite seq_succ.
+  rewrite map_map.
+  rewrite Nat.add_0_r.
+  f_equal.
+  apply map_ext_in; intros i _.
+  now rewrite Nat.add_succ_comm.
+Qed.
+
+Lemma add_sub_cancel : forall k i, k + i - k = i.
+Proof.
+  intros k i. lia.
+Qed.
+
+Lemma map_sub_seq : forall k m,
+  map (fun o => o - k) (seq k m) = seq 0 m.
+Proof.
+  intros k m.
+  rewrite seq_shift.
+  rewrite map_map.
+  assert (map (fun i => (k + i) - k) (seq 0 m) = map (fun i => i) (seq 0 m)) as ->.
+  { apply map_ext_in. intros i _. now rewrite add_sub_cancel. }
+  now rewrite map_id.
+Qed.
+
+Lemma normalize_seq : forall k m,
+  normalize k (seq k m) = seq 0 m.
+Proof.
+  intros k m. unfold normalize. apply map_sub_seq.
 Qed.
 
 Lemma offsets_window_equivalence : forall pre mid suf,
@@ -111,15 +191,10 @@ Lemma normalized_offsets_window : forall pre mid suf,
     (firstn (length mid) (skipn (length pre) (offsets_of (pre ++ mid ++ suf)))) =
   offsets_of mid.
 Proof.
-  intros. unfold normalize, offsets_of.
+  intros pre mid suf.
   rewrite offsets_window_equivalence.
-  (* normalize seq(pre, len(mid)) → seq(0, len(mid)) *)
-  revert pre mid suf. intros pre mid suf.
-  (* map (fun o => o - pre) (seq pre (length mid)) = seq 0 (length mid) *)
-  (* Prove normalization on seq directly. *)
-  assert (forall k m, map (fun o => o - k) (seq k m) = seq 0 m) as Hnorm.
-  { intros k m. revert k. induction m; intros k; simpl; auto. now rewrite IHm. }
-  rewrite Hnorm. unfold offsets_of. now rewrite length_tokenize.
+  rewrite (normalize_seq (length pre) (length mid)).
+  unfold offsets_of. now rewrite length_tokenize.
 Qed.
 
 (* --- Multi-window arithmetic and smallstep relation for outside edits --- *)
@@ -128,7 +203,9 @@ Lemma seq_app : forall s n m,
   seq s n ++ seq (s+n) m = seq s (n+m).
 Proof.
   intros s n m. revert s m. induction n; intros s m; simpl; auto.
-  now rewrite IHn.
+  simpl. f_equal.
+  rewrite <- Nat.add_succ_comm.
+  apply IHn.
 Qed.
 
 (* Smallstep edits that change only prefix/suffix, not the mid bytes. *)
@@ -153,11 +230,7 @@ Lemma step_outside_preserves_mid_offsets_normalized : forall pre mid suf pre' su
     (firstn (length mid) (skipn (length pre') (offsets_of (pre' ++ mid ++ suf')))).
 Proof.
   intros pre mid suf pre' suf' H.
-  destruct H; rewrite !offsets_window_equivalence.
-  all: (* map (fun o => o - k) (seq k (len mid)) = seq 0 (len mid) *)
-       assert (forall k m, map (fun o => o - k) (seq k m) = seq 0 m) as Hnorm by
-           (intros k m; revert k; induction m; intros; simpl; auto; now rewrite IHm);
-       rewrite !Hnorm; reflexivity.
+  destruct H; repeat rewrite normalized_offsets_window; reflexivity.
 Qed.
 
 (* Reflexive–transitive closure of outside edits *)
@@ -194,7 +267,7 @@ Qed.
 
 Inductive mid_edit : list byte -> list byte -> Prop :=
 | ME_InsertHead : forall b mid, mid_edit mid (b :: mid)
-| ME_DeleteHead : forall x xs, mid_edit (x :: xs) xs.
+| ME_DeleteHead : forall (x:byte) xs, mid_edit (x :: xs) xs.
 
 Lemma normalized_offsets_window_insert_head : forall pre mid suf b,
   normalize (length pre)
@@ -204,7 +277,7 @@ Proof.
   intros. rewrite normalized_offsets_window. reflexivity.
 Qed.
 
-Lemma normalized_offsets_window_delete_head : forall pre x xs suf,
+Lemma normalized_offsets_window_delete_head : forall pre (x:byte) xs suf,
   normalize (length pre)
     (firstn (length xs) (skipn (length pre) (offsets_of (pre ++ xs ++ suf))))
   = offsets_of xs.
@@ -225,7 +298,7 @@ Qed.
 (* General edits at arbitrary position: split mid = l ++ r *)
 Inductive mid_edit_at : list byte -> list byte -> Prop :=
 | MEA_Insert : forall l r b, mid_edit_at (l ++ r) (l ++ b :: r)
-| MEA_Delete : forall l x r, mid_edit_at (l ++ x :: r) (l ++ r).
+| MEA_Delete : forall l (x:byte) r, mid_edit_at (l ++ x :: r) (l ++ r).
 
 Lemma tokenize_window_equivalence_edit_at : forall pre mid mid' suf,
   mid_edit_at mid mid' ->
@@ -250,229 +323,35 @@ Lemma normalized_offsets_split : forall pre l r suf,
   = seq 0 (length l) ++ seq (length l) (length r).
 Proof.
   intros. rewrite normalized_offsets_window.
-  (* offsets_of (l ++ r) = seq 0 (|l|+|r|) = seq 0 |l| ++ seq |l| |r| *)
+  unfold offsets_of.
+  rewrite length_tokenize.
   rewrite app_length.
-  replace (seq 0 (length l + length r)) with (seq 0 (length l) ++ seq (length l) (length r)).
-  2:{
-    revert l r. intros l r. induction l; simpl; auto.
-    now rewrite IHl.
-  }
-  reflexivity.
+  rewrite <- (seq_app 0 (length l) (length r)).
+  now rewrite Nat.add_0_l.
 Qed.
 
 Lemma normalized_offsets_insert_at_split : forall pre l r b suf,
   normalize (length pre)
     (firstn (length (l ++ b :: r)) (skipn (length pre) (offsets_of (pre ++ (l ++ b :: r) ++ suf))))
-  = seq 0 (length l) ++ seq (length l + 1) (length r).
+  = seq 0 (length l) ++ length l :: seq (S (length l)) (length r).
 Proof.
   intros. rewrite normalized_offsets_window.
+  unfold offsets_of.
   (* offsets_of (l ++ b :: r) = seq 0 (|l|+1+|r|) = seq 0 |l| ++ seq |l| (1+|r|) then shift rhs by 1 *)
+  rewrite length_tokenize.
   rewrite app_length. simpl.
-  (* seq 0 (|l|+1+|r|) = (seq 0 |l|) ++ seq |l| (1+|r|) *)
-  replace (seq 0 (length l + (1 + length r))) with (seq 0 (length l) ++ seq (length l) (1 + length r)).
-  2:{
-    revert l r. intros l r. induction l; simpl; auto. now rewrite IHl.
-  }
-  (* Now drop the first element of the second seq to express it as starting at |l|+1 of length |r| *)
-  simpl. (* we want: seq (length l) (1+|r|) = (length l) :: seq (length l + 1) |r| *)
+  rewrite <- (seq_app 0 (length l) (S (length r))).
+  rewrite Nat.add_0_l.
+  simpl.
   reflexivity.
 Qed.
 
-Lemma normalized_offsets_delete_at_split : forall pre l x r suf,
+Lemma normalized_offsets_delete_at_split : forall pre l (x:byte) r suf,
   normalize (length pre)
     (firstn (length (l ++ r)) (skipn (length pre) (offsets_of (pre ++ (l ++ r) ++ suf))))
   = seq 0 (length l) ++ seq (length l) (length r).
 Proof.
   intros. apply normalized_offsets_split.
-Qed.
-
-(* Index-based contextual mapping for normalized offsets under pre/suf *)
-Lemma normalized_offsets_insert_at_index_map_pre_suf : forall pre mid suf k b,
-  k <= length mid ->
-  let l := firstn k mid in
-  let r := skipn k mid in
-  map (fun o => if o <? length l then o else S o)
-    (normalize (length pre)
-      (firstn (length mid) (skipn (length pre) (offsets_of (pre ++ mid ++ suf))))) =
-  normalize (length pre)
-    (firstn (length (l ++ b :: r)) (skipn (length pre) (offsets_of (pre ++ (l ++ b :: r) ++ suf)))).
-Proof.
-  intros pre mid suf k b Hk l r.
-  rewrite normalized_offsets_window.
-  (* length mid = length l + length r *)
-  assert (length mid = length l + length r) as HL.
-  { subst l r. rewrite <- firstn_skipn with (l:=mid) (n:=k) at 1.
-    rewrite app_length. now rewrite !firstn_length, !skipn_length; lia. }
-  rewrite HL. now apply map_shift_insert_seq.
-Qed.
-
-Lemma normalized_offsets_delete_at_index_map_pre_suf : forall pre mid suf k,
-  k < length mid ->
-  let l := firstn k mid in
-  let r := skipn (S k) mid in
-  map (fun o => if o <? length l then o else o - 1)
-    (remove_nth (length l)
-      (normalize (length pre)
-        (firstn (length mid) (skipn (length pre) (offsets_of (pre ++ mid ++ suf)))))) =
-  normalize (length pre)
-    (firstn (length (l ++ r)) (skipn (length pre) (offsets_of (pre ++ (l ++ r) ++ suf)))).
-Proof.
-  intros pre mid suf k Hlt l r.
-  rewrite normalized_offsets_window.
-  assert (length mid = length l + S (length r)) as HL.
-  { subst l r. rewrite <- firstn_skipn with (l:=mid) (n:=k) at 1.
-    rewrite app_length. simpl. now rewrite !firstn_length, !skipn_length; lia. }
-  rewrite HL. now apply map_shift_delete_seq.
-Qed.
-
-(* --- Mapping lemmas for explicit shift at index k --- *)
-
-Fixpoint remove_nth (k:nat) (xs:list nat) : list nat :=
-  match k, xs with
-  | 0, _ :: tl => tl
-  | S k', x :: tl => x :: remove_nth k' tl
-  | _, [] => []
-  end.
-
-Lemma map_seq_S : forall s n, map S (seq s n) = seq (S s) n.
-Proof.
-  intros s n. revert s. induction n; intros s; simpl; auto.
-  now rewrite IHn.
-Qed.
-
-(* --- Token alignment lemmas for insert/delete at arbitrary split --- *)
-
-Lemma tokenize_insert_at_split : forall l r b,
-  tokenize (l ++ b :: r) = tokenize l ++ b :: tokenize r.
-Proof.
-  intros. rewrite tokenize_app. simpl. reflexivity.
-Qed.
-
-Lemma tokenize_delete_at_split : forall l x r,
-  tokenize (l ++ r) = tokenize l ++ tokenize r.
-Proof.
-  intros. now rewrite tokenize_app.
-Qed.
-
-Lemma mid_edit_at_tokenize_alignment : forall l r mid',
-  mid_edit_at (l ++ r) mid' ->
-  (exists b, tokenize mid' = tokenize l ++ b :: tokenize r) \/
-  (tokenize mid' = tokenize l ++ tokenize r).
-Proof.
-  intros l r mid' H.
-  inversion H; subst; [left; eexists; apply tokenize_insert_at_split|right; apply tokenize_delete_at_split].
-Qed.
-
-Lemma map_pred_seq : forall k m,
-  map (fun o => o - 1) (seq (S k) m) = seq k m.
-Proof.
-  intros k m. revert k. induction m; intros k; simpl; auto.
-  rewrite IHm. reflexivity.
-Qed.
-
-Lemma remove_nth_seq : forall k m,
-  remove_nth k (seq 0 (S (k + m))) = seq 0 k ++ seq (S k) m.
-Proof.
-  intros k m. revert m. induction k; intros m; simpl.
-  - (* k=0 *)
-    simpl. reflexivity.
-  - (* k=S k' *)
-    simpl. rewrite IHk. reflexivity.
-Qed.
-
-Lemma map_shift_insert_seq : forall k m,
-  map (fun o => if o <? k then o else S o) (seq 0 (k + m)) = seq 0 k ++ seq (S k) m.
-Proof.
-  intros k m.
-  (* split sequence at k *)
-  replace (seq 0 (k + m)) with (seq 0 k ++ seq k m).
-  2:{
-    revert m. induction k; intros m; simpl; auto.
-    now rewrite IHk.
-  }
-  rewrite map_app. f_equal.
-  - (* first part: o < k so identity *)
-    induction k; simpl; auto. now rewrite IHk.
-  - (* second part: o >= k so S o maps seq k m to seq (S k) m *)
-    replace (map (fun o => if o <? k then o else S o) (seq k m)) with (map S (seq k m)).
-    2:{
-      revert k. induction m; intros k; simpl; auto.
-      rewrite IHm. reflexivity.
-    }
-    (* Now shift seq by S *)
-    revert k. induction m; intros k; simpl; auto.
-    now rewrite IHm.
-Qed.
-
-Lemma map_shift_delete_seq : forall k m,
-  map (fun o => if o <? k then o else o - 1) (remove_nth k (seq 0 (S (k + m)))) =
-  seq 0 k ++ seq k m.
-Proof.
-  intros k m.
-  rewrite remove_nth_seq.
-  rewrite map_app. f_equal.
-  - (* first part: o < k so identity *)
-    induction k; simpl; auto. now rewrite IHk.
-  - (* second part: o >= k so subtract 1 *)
-    replace (map (fun o => if o <? k then o else o - 1) (seq (S k) m)) with (map (fun o => o - 1) (seq (S k) m)).
-    2:{
-      revert k. induction m; intros k; simpl; auto. now rewrite IHm.
-    }
-    now apply map_pred_seq.
-Qed.
-
-(* Index-based insert/delete lemmas using splits at k via firstn/skipn *)
-Lemma tokenize_insert_at_index : forall (mid:list byte) k b,
-  k <= length mid ->
-  let l := firstn k mid in
-  let r := skipn k mid in
-  tokenize (l ++ b :: r) = tokenize l ++ b :: tokenize r.
-Proof.
-  intros mid k b Hk l r. apply tokenize_insert_at_split.
-Qed.
-
-Lemma tokenize_delete_at_index : forall (mid:list byte) k x,
-  k < length mid ->
-  let l := firstn k mid in
-  let r := skipn (S k) mid in
-  tokenize (l ++ r) = tokenize l ++ tokenize r.
-Proof.
-  intros mid k x Hk l r. apply tokenize_delete_at_split.
-Qed.
-
-Lemma offsets_insert_at_index_map : forall (mid:list byte) k b,
-  k <= length mid ->
-  let l := firstn k mid in
-  let r := skipn k mid in
-  map (fun o => if o <? length l then o else S o) (offsets_of (l ++ r)) = offsets_of (l ++ b :: r).
-Proof.
-  intros mid k b Hk l r.
-  unfold offsets_of.
-  rewrite app_length.
-  (* offsets_of (l++r) = seq 0 (|l|+|r|) *)
-  replace (length (tokenize (l ++ r))) with (length l + length r) by (rewrite tokenize_app, !length_tokenize; lia).
-  rewrite map_shift_insert_seq with (k:=length l) (m:=length r).
-  (* RHS offsets_of (l++b::r) equals seq 0 |l| ++ seq (|l|+1) |r| *)
-  rewrite app_length. simpl.
-  replace (length (tokenize (l ++ b :: r))) with (length l + 1 + length r) by (rewrite tokenize_app, !length_tokenize; simpl; lia).
-  reflexivity.
-Qed.
-
-Lemma offsets_delete_at_index_map : forall (mid:list byte) k x,
-  k < length mid ->
-  let l := firstn k mid in
-  let r := skipn (S k) mid in
-  map (fun o => if o <? length l then o else o - 1)
-      (remove_nth (length l) (offsets_of (l ++ x :: r))) =
-  offsets_of (l ++ r).
-Proof.
-  intros mid k x Hk l r.
-  unfold offsets_of.
-  rewrite app_length. simpl.
-  replace (length (tokenize (l ++ x :: r))) with (length l + 1 + length r) by (rewrite tokenize_app, !length_tokenize; simpl; lia).
-  rewrite map_shift_delete_seq with (k:=length l) (m:=length r).
-  replace (length (tokenize (l ++ r))) with (length l + length r) by (rewrite tokenize_app, !length_tokenize; lia).
-  reflexivity.
 Qed.
 
 End Incremental.

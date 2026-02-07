@@ -1,0 +1,761 @@
+l1-smoke	Set up job	﻿2025-09-29T18:07:22.8306188Z Current runner version: '2.328.0'
+l1-smoke	Set up job	2025-09-29T18:07:22.8332884Z ##[group]Runner Image Provisioner
+l1-smoke	Set up job	2025-09-29T18:07:22.8333756Z Hosted Compute Agent
+l1-smoke	Set up job	2025-09-29T18:07:22.8334390Z Version: 20250912.392
+l1-smoke	Set up job	2025-09-29T18:07:22.8334985Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+l1-smoke	Set up job	2025-09-29T18:07:22.8335678Z Build Date: 2025-09-12T15:23:14Z
+l1-smoke	Set up job	2025-09-29T18:07:22.8336323Z ##[endgroup]
+l1-smoke	Set up job	2025-09-29T18:07:22.8336838Z ##[group]Operating System
+l1-smoke	Set up job	2025-09-29T18:07:22.8337715Z Ubuntu
+l1-smoke	Set up job	2025-09-29T18:07:22.8338165Z 24.04.3
+l1-smoke	Set up job	2025-09-29T18:07:22.8338719Z LTS
+l1-smoke	Set up job	2025-09-29T18:07:22.8339151Z ##[endgroup]
+l1-smoke	Set up job	2025-09-29T18:07:22.8339688Z ##[group]Runner Image
+l1-smoke	Set up job	2025-09-29T18:07:22.8340325Z Image: ubuntu-24.04
+l1-smoke	Set up job	2025-09-29T18:07:22.8340929Z Version: 20250922.53.1
+l1-smoke	Set up job	2025-09-29T18:07:22.8341942Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250922.53/images/ubuntu/Ubuntu2404-Readme.md
+l1-smoke	Set up job	2025-09-29T18:07:22.8343357Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250922.53
+l1-smoke	Set up job	2025-09-29T18:07:22.8344514Z ##[endgroup]
+l1-smoke	Set up job	2025-09-29T18:07:22.8347062Z ##[group]GITHUB_TOKEN Permissions
+l1-smoke	Set up job	2025-09-29T18:07:22.8349356Z Actions: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8350039Z Attestations: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8350533Z Checks: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8351035Z Contents: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8351595Z Deployments: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8352090Z Discussions: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8352646Z Issues: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8353145Z Metadata: read
+l1-smoke	Set up job	2025-09-29T18:07:22.8353657Z Models: read
+l1-smoke	Set up job	2025-09-29T18:07:22.8354122Z Packages: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8354668Z Pages: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8355153Z PullRequests: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8355732Z RepositoryProjects: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8356261Z SecurityEvents: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8356973Z Statuses: write
+l1-smoke	Set up job	2025-09-29T18:07:22.8357664Z ##[endgroup]
+l1-smoke	Set up job	2025-09-29T18:07:22.8359729Z Secret source: Actions
+l1-smoke	Set up job	2025-09-29T18:07:22.8360576Z Prepare workflow directory
+l1-smoke	Set up job	2025-09-29T18:07:22.8701637Z Prepare all required actions
+l1-smoke	Set up job	2025-09-29T18:07:22.8740765Z Getting action download info
+l1-smoke	Set up job	2025-09-29T18:07:23.3300870Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+l1-smoke	Set up job	2025-09-29T18:07:23.6699405Z Complete job name: l1-smoke
+l1-smoke	Run actions/checkout@v4	﻿2025-09-29T18:07:23.7535014Z ##[group]Run actions/checkout@v4
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7535866Z with:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7536289Z   repository: ClanClanClanClan/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7537033Z   token: ***
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7537586Z   ssh-strict: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7537973Z   ssh-user: git
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7538382Z   persist-credentials: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7538822Z   clean: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7539232Z   sparse-checkout-cone-mode: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7539736Z   fetch-depth: 1
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7540199Z   fetch-tags: false
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7540596Z   show-progress: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7541003Z   lfs: false
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7541361Z   submodules: false
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7541767Z   set-safe-directory: true
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.7542439Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8662283Z Syncing repository: ClanClanClanClan/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8664561Z ##[group]Getting Git version info
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8665344Z Working directory is '/home/runner/work/latex_perf/latex_perf'
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8666401Z [command]/usr/bin/git version
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8722165Z git version 2.51.0
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8749540Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8765179Z Temporarily overriding HOME='/home/runner/work/_temp/24c6af88-42a6-4a8b-878b-8f7e031134c1' before making global git config changes
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8779552Z Adding repository directory to the temporary git global config as a safe directory
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8781316Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8820938Z Deleting the contents of '/home/runner/work/latex_perf/latex_perf'
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8825365Z ##[group]Initializing the repository
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8830574Z [command]/usr/bin/git init /home/runner/work/latex_perf/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8936272Z hint: Using 'master' as the name for the initial branch. This default branch name
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8940078Z hint: is subject to change. To configure the initial branch name to use in all
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8941382Z hint: of your new repositories, which will suppress this warning, call:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8942252Z hint:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8942861Z hint: 	git config --global init.defaultBranch <name>
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8943611Z hint:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8944314Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8945492Z hint: 'development'. The just-created branch can be renamed via this command:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8946410Z hint:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8946996Z hint: 	git branch -m <name>
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8948069Z hint:
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8949216Z hint: Disable this message with "git config set advice.defaultBranchName false"
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8950231Z Initialized empty Git repository in /home/runner/work/latex_perf/latex_perf/.git/
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.8956772Z [command]/usr/bin/git remote add origin https://github.com/ClanClanClanClan/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9001590Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9002397Z ##[group]Disabling automatic garbage collection
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9008394Z [command]/usr/bin/git config --local gc.auto 0
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9044181Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9044939Z ##[group]Setting up auth
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9055219Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9093089Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9433891Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9471576Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9701710Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9739141Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9740136Z ##[group]Fetching the repository
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:23.9757386Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4887232aba7d6b962bad0d84a547356f48bed82c:refs/remotes/origin/fix-math-strip
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5851529Z From https://github.com/ClanClanClanClan/latex_perf
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5853642Z  * [new ref]         4887232aba7d6b962bad0d84a547356f48bed82c -> origin/fix-math-strip
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5886502Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5888353Z ##[group]Determining the checkout info
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5890363Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5894470Z [command]/usr/bin/git sparse-checkout disable
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5937332Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5970946Z ##[group]Checking out the ref
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.5976146Z [command]/usr/bin/git checkout --progress --force -B fix-math-strip refs/remotes/origin/fix-math-strip
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.6425184Z Switched to a new branch 'fix-math-strip'
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.6426850Z branch 'fix-math-strip' set up to track 'origin/fix-math-strip'.
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.6436666Z ##[endgroup]
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.6490129Z [command]/usr/bin/git log -1 --format=%H
+l1-smoke	Run actions/checkout@v4	2025-09-29T18:07:24.6519048Z 4887232aba7d6b962bad0d84a547356f48bed82c
+l1-smoke	Set up OCaml and OPAM	﻿2025-09-29T18:07:24.6894626Z Prepare all required actions
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:24.6896087Z Getting action download info
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:24.8768754Z Download action repository 'ocaml/setup-ocaml@v2' (SHA:8cc6339f55862749298d198ef84788b8d6acdacc)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7850358Z ##[group]Run ./.github/actions/setup-ocaml
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7850733Z with:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7850966Z   ocaml-compiler: 4.14.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7851229Z   opam-depext: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7851802Z   allow-prerelease-opam: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7852073Z   opam-pin: true
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7852325Z   opam-local-packages: *.opam
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7852615Z   opam-disable-sandboxing: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7852890Z   dune-cache: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7853117Z   cache-prefix: v1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7853359Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7954615Z ##[group]Run sudo apt-get update
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7955119Z [36;1msudo apt-get update[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7955476Z [36;1msudo apt-get install -y \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7955782Z [36;1m  bubblewrap \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7956099Z [36;1m  g++-multilib \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7956361Z [36;1m  gcc-multilib \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7956608Z [36;1m  mercurial \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7956859Z [36;1m  musl-tools \[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7957095Z [36;1m  rsync[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7996488Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.7996967Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.8739305Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9079676Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9080857Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9082578Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9113971Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9139702Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:25.9165270Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.0927319Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [39.7 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1026847Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [57.3 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1435427Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1443 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1548450Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [282 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1565623Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [175 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1578695Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [15.3 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1610378Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1485 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1679307Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [299 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1709659Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1745362Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [31.0 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1782897Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1957 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.1912649Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [441 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2401795Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2410556Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2420810Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [40.4 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2435521Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/main Translation-en [9208 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2445436Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7124 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2455861Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 c-n-f Metadata [368 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2460964Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [28.9 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2470110Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe Translation-en [17.5 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2478791Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [11.0 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2486116Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1444 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2492110Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2497843Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2810441Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1171 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.2878867Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [198 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3319947Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3343461Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [8744 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3359145Z Get:36 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [880 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3412228Z Get:37 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [195 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3429047Z Get:38 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.3 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3439443Z Get:39 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [18.0 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3460513Z Get:40 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1872 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3551379Z Get:41 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [423 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3576127Z Get:42 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:26.3584283Z Get:43 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [212 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:35.2669458Z Fetched 11.9 MB in 1s (8070 kB/s)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.1460424Z Reading package lists...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.1804592Z Reading package lists...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.4128170Z Building dependency tree...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.4136357Z Reading state information...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6101744Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6102643Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6103375Z The following additional packages will be installed:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6104377Z   g++-13-multilib gcc-13-multilib lib32asan8 lib32atomic1 lib32gcc-13-dev
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6105255Z   lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++-13-dev lib32ubsan1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6107405Z   libc6-dev-i386 libc6-dev-x32 libc6-x32 libx32asan8 libx32atomic1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6108517Z   libx32gcc-13-dev libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6109461Z   libx32stdc++-13-dev libx32stdc++6 libx32ubsan1 musl musl-dev
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6116602Z Suggested packages:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6117017Z   lib32stdc++6-13-dbg libx32stdc++6-13-dbg
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6638093Z The following NEW packages will be installed:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6639566Z   bubblewrap g++-13-multilib g++-multilib gcc-13-multilib gcc-multilib
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6640505Z   lib32asan8 lib32atomic1 lib32gcc-13-dev lib32gomp1 lib32itm1 lib32quadmath0
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6645901Z   lib32stdc++-13-dev lib32ubsan1 libc6-dev-i386 libc6-dev-x32 libc6-x32
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6647033Z   libx32asan8 libx32atomic1 libx32gcc-13-dev libx32gcc-s1 libx32gomp1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6648537Z   libx32itm1 libx32quadmath0 libx32stdc++-13-dev libx32stdc++6 libx32ubsan1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6650758Z   musl musl-dev musl-tools
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6849713Z 0 upgraded, 29 newly installed, 0 to remove and 18 not upgraded.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6850389Z Need to get 23.6 MB of archives.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6850835Z After this operation, 94.1 MB of additional disk space will be used.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.6851892Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.7571070Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 bubblewrap amd64 0.9.0-1ubuntu0.1 [50.2 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.8406919Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-i386 amd64 2.39-0ubuntu8.6 [1447 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:36.9655149Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-x32 amd64 2.39-0ubuntu8.6 [2913 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.1963396Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev-x32 amd64 2.39-0ubuntu8.6 [1637 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.3140542Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-s1 amd64 14.2.0-4ubuntu2~24.04 [78.5 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.3701638Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gomp1 amd64 14.2.0-4ubuntu2~24.04 [141 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.4261894Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gomp1 amd64 14.2.0-4ubuntu2~24.04 [145 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.4828285Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.6 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.5388491Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32itm1 amd64 14.2.0-4ubuntu2~24.04 [29.8 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.5968472Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32atomic1 amd64 14.2.0-4ubuntu2~24.04 [8586 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.6519308Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32atomic1 amd64 14.2.0-4ubuntu2~24.04 [10.3 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.7067870Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32asan8 amd64 14.2.0-4ubuntu2~24.04 [2879 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.8930854Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32asan8 amd64 14.2.0-4ubuntu2~24.04 [2893 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:37.9812917Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1150 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.0934171Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++6 amd64 14.2.0-4ubuntu2~24.04 [778 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.2084341Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32ubsan1 amd64 14.2.0-4ubuntu2~24.04 [1169 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.3221000Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [227 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.3820337Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32quadmath0 amd64 14.2.0-4ubuntu2~24.04 [157 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.4378850Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2380 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.6060305Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32gcc-13-dev amd64 13.3.0-6ubuntu2~24.04 [2190 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.7710442Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-multilib amd64 13.3.0-6ubuntu2~24.04 [878 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.8266983Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lib32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1150 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:38.9405947Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libx32stdc++-13-dev amd64 13.3.0-6ubuntu2~24.04 [1086 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.0607791Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-multilib amd64 13.3.0-6ubuntu2~24.04 [890 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.1158000Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 gcc-multilib amd64 4:13.2.0-7ubuntu1 [1474 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.1726224Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 g++-multilib amd64 4:13.2.0-7ubuntu1 [884 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.2270965Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl amd64 1.2.4-2 [416 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.2876295Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-dev amd64 1.2.4-2 [616 kB]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.3950006Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 musl-tools amd64 1.2.4-2 [5540 B]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7019715Z Fetched 23.6 MB in 3s (8670 kB/s)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7258996Z Selecting previously unselected package bubblewrap.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7516496Z (Reading database ... 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7517007Z (Reading database ... 5%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7517576Z (Reading database ... 10%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7517914Z (Reading database ... 15%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7518176Z (Reading database ... 20%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7590925Z (Reading database ... 25%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7591444Z (Reading database ... 30%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7591773Z (Reading database ... 35%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7592082Z (Reading database ... 40%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7592398Z (Reading database ... 45%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7592691Z (Reading database ... 50%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:39.7942878Z (Reading database ... 55%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:40.0502791Z (Reading database ... 60%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:40.2202188Z (Reading database ... 65%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:40.4457744Z (Reading database ... 70%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:40.6138042Z (Reading database ... 75%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:40.8548221Z (Reading database ... 80%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.1084320Z (Reading database ... 85%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.3448342Z (Reading database ... 90%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.5967918Z (Reading database ... 95%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.5968563Z (Reading database ... 100%
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.5969088Z (Reading database ... 214164 files and directories currently installed.)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.6016755Z Preparing to unpack .../00-bubblewrap_0.9.0-1ubuntu0.1_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.6046684Z Unpacking bubblewrap (0.9.0-1ubuntu0.1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.6424385Z Selecting previously unselected package libc6-dev-i386.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.6569650Z Preparing to unpack .../01-libc6-dev-i386_2.39-0ubuntu8.6_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.6583558Z Unpacking libc6-dev-i386 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.7546493Z Selecting previously unselected package libc6-x32.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.7691017Z Preparing to unpack .../02-libc6-x32_2.39-0ubuntu8.6_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.7798530Z Unpacking libc6-x32 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.8927282Z Selecting previously unselected package libc6-dev-x32.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.9066460Z Preparing to unpack .../03-libc6-dev-x32_2.39-0ubuntu8.6_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.9076598Z Unpacking libc6-dev-x32 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.9668925Z Selecting previously unselected package libx32gcc-s1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.9810709Z Preparing to unpack .../04-libx32gcc-s1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:41.9822473Z Unpacking libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0076975Z Selecting previously unselected package lib32gomp1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0218387Z Preparing to unpack .../05-lib32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0229591Z Unpacking lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0482042Z Selecting previously unselected package libx32gomp1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0626797Z Preparing to unpack .../06-libx32gomp1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0638916Z Unpacking libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.0901356Z Selecting previously unselected package lib32itm1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1044202Z Preparing to unpack .../07-lib32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1056157Z Unpacking lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1296286Z Selecting previously unselected package libx32itm1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1445417Z Preparing to unpack .../08-libx32itm1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1468130Z Unpacking libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1708648Z Selecting previously unselected package lib32atomic1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1855375Z Preparing to unpack .../09-lib32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.1867657Z Unpacking lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2107737Z Selecting previously unselected package libx32atomic1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2258115Z Preparing to unpack .../10-libx32atomic1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2272947Z Unpacking libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2506799Z Selecting previously unselected package lib32asan8.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2653667Z Preparing to unpack .../11-lib32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.2664480Z Unpacking lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.3369238Z Selecting previously unselected package libx32asan8.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.3523746Z Preparing to unpack .../12-libx32asan8_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.3535246Z Unpacking libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4238086Z Selecting previously unselected package lib32ubsan1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4389635Z Preparing to unpack .../13-lib32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4401100Z Unpacking lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4800451Z Selecting previously unselected package libx32stdc++6.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4953204Z Preparing to unpack .../14-libx32stdc++6_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.4965475Z Unpacking libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.5355276Z Selecting previously unselected package libx32ubsan1.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.5500580Z Preparing to unpack .../15-libx32ubsan1_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.5511529Z Unpacking libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.5911951Z Selecting previously unselected package lib32quadmath0.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6065009Z Preparing to unpack .../16-lib32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6075173Z Unpacking lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6344528Z Selecting previously unselected package libx32quadmath0.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6497414Z Preparing to unpack .../17-libx32quadmath0_14.2.0-4ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6509140Z Unpacking libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6757743Z Selecting previously unselected package lib32gcc-13-dev.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6910572Z Preparing to unpack .../18-lib32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.6920819Z Unpacking lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.7505531Z Selecting previously unselected package libx32gcc-13-dev.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.7652604Z Preparing to unpack .../19-libx32gcc-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.7664805Z Unpacking libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8267934Z Selecting previously unselected package gcc-13-multilib.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8417838Z Preparing to unpack .../20-gcc-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8429934Z Unpacking gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8644634Z Selecting previously unselected package lib32stdc++-13-dev.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8796326Z Preparing to unpack .../21-lib32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.8808995Z Unpacking lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.9439912Z Selecting previously unselected package libx32stdc++-13-dev.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.9586872Z Preparing to unpack .../22-libx32stdc++-13-dev_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:42.9597064Z Unpacking libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0110201Z Selecting previously unselected package g++-13-multilib.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0254564Z Preparing to unpack .../23-g++-13-multilib_13.3.0-6ubuntu2~24.04_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0264801Z Unpacking g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0475219Z Selecting previously unselected package gcc-multilib.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0618126Z Preparing to unpack .../24-gcc-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0632596Z Unpacking gcc-multilib (4:13.2.0-7ubuntu1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0841216Z Selecting previously unselected package g++-multilib.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.0988955Z Preparing to unpack .../25-g++-multilib_4%3a13.2.0-7ubuntu1_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1001919Z Unpacking g++-multilib (4:13.2.0-7ubuntu1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1220542Z Selecting previously unselected package musl:amd64.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1367889Z Preparing to unpack .../26-musl_1.2.4-2_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1382433Z Unpacking musl:amd64 (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1824762Z Selecting previously unselected package musl-dev:amd64.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1964709Z Preparing to unpack .../27-musl-dev_1.2.4-2_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.1977548Z Unpacking musl-dev:amd64 (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.2687747Z Selecting previously unselected package musl-tools.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.2843980Z Preparing to unpack .../28-musl-tools_1.2.4-2_amd64.deb ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.2856997Z Unpacking musl-tools (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3330732Z Setting up bubblewrap (0.9.0-1ubuntu0.1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3387917Z Setting up libc6-dev-i386 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3416559Z Setting up lib32itm1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3447913Z Setting up lib32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3477343Z Setting up libc6-x32 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3526885Z Setting up libc6-dev-x32 (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3554441Z Setting up lib32gomp1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3582414Z Setting up lib32asan8 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3614795Z Setting up libx32gomp1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3642378Z Setting up musl:amd64 (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3694845Z Setting up lib32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3723864Z Setting up libx32quadmath0 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3750395Z Setting up lib32atomic1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3786248Z Setting up libx32atomic1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3812763Z Setting up libx32gcc-s1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3839119Z Setting up libx32itm1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3863226Z Setting up libx32asan8 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3889180Z Setting up musl-dev:amd64 (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3929625Z Setting up libx32stdc++6 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3952785Z Setting up libx32ubsan1 (14.2.0-4ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.3976941Z Setting up lib32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4002989Z Setting up musl-tools (1.2.4-2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4029831Z Setting up libx32gcc-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4054305Z Setting up gcc-13-multilib (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4091371Z Setting up lib32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4116177Z Setting up gcc-multilib (4:13.2.0-7ubuntu1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4144458Z Setting up libx32stdc++-13-dev (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4173230Z Setting up g++-13-multilib (13.3.0-6ubuntu2~24.04) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4200748Z Setting up g++-multilib (4:13.2.0-7ubuntu1) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.4239232Z Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:43.5016276Z Processing triggers for man-db (2.12.0-4build2) ...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.6982514Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.6983065Z Running kernel seems to be up-to-date.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.6983472Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.6983965Z Restarting services...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7062877Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7063179Z Service restarts being deferred:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7066345Z  systemctl restart hosted-compute-agent.service
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7066769Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7068226Z No containers need to be restarted.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7068576Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7068799Z No user sessions are running outdated binaries.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7069498Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:58.7069795Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8839895Z ##[group]Run mkdir -p "$HOME/.github-tools"
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8840282Z [36;1mmkdir -p "$HOME/.github-tools"[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8840553Z [36;1m{[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8840776Z [36;1m  printf '%s\n' '#!/usr/bin/env bash'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8841122Z [36;1m  printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8841447Z [36;1m  printf '%s\n' '  args=()'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8841736Z [36;1m  printf '%s\n' '  install_seen=false'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8842054Z [36;1m  printf '%s\n' '  for arg in "$@"; do'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8842380Z [36;1m  printf '%s\n' '    if [[ "$arg" == "install" ]]; then'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8842708Z [36;1m  printf '%s\n' '      install_seen=true'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8842979Z [36;1m  printf '%s\n' '    fi'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8843307Z [36;1m  printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8843670Z [36;1m  printf '%s\n' '      continue'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8843926Z [36;1m  printf '%s\n' '    fi'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8844167Z [36;1m  printf '%s\n' '    args+=("$arg")'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8844425Z [36;1m  printf '%s\n' '  done'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8844698Z [36;1m  printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8844982Z [36;1m  printf '%s\n' 'fi'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8845233Z [36;1m  printf '%s\n' 'exec /usr/bin/sudo "$@"'[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8845513Z [36;1m} > "$HOME/.github-tools/sudo"[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8845796Z [36;1mchmod +x "$HOME/.github-tools/sudo"[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8846120Z [36;1mecho "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8881249Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.8881584Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9016571Z ##[group]Run ocaml/setup-ocaml@v2
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9016816Z with:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9016987Z   ocaml-compiler: 4.14.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9017592Z   allow-prerelease-opam: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9017818Z   opam-pin: true
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9017997Z   opam-depext: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9018183Z   opam-local-packages: *.opam
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9018410Z   opam-disable-sandboxing: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9018621Z   dune-cache: false
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9018796Z   cache-prefix: v1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9019266Z   github-token: ***
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9019453Z env:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9020395Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:07:59.9021413Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:00.0904134Z ##[group]Retrieve the opam cache
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:01.1248764Z ##[warning]Failed to restore: Cache service responded with 400
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:01.1250629Z Cache not found for input keys: v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-40, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-2025-, v1-setup-ocaml-opam-2.1.6-sandbox-linux-24.04-x86_64-ocaml_base_compiler_4_14_1-
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:01.1252010Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:01.1252383Z ##[group]Install opam
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3404701Z Acquired 2.1.6 from https://github.com/ocaml/opam/releases/download/2.1.6/opam-2.1.6-x86_64-linux
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3501609Z Successfully cached opam to /opt/hostedtoolcache/opam/2.1.6/x86_64
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3502474Z Added opam to the path
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3503372Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3505046Z ##[group]Initialise the opam state
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3530427Z [command]/home/runner/.github-tools/sudo apt-get --yes install bubblewrap darcs g++-multilib gcc-multilib mercurial musl-tools rsync
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.3826044Z Reading package lists...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.6371886Z Building dependency tree...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.6379749Z Reading state information...
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8664566Z bubblewrap is already the newest version (0.9.0-1ubuntu0.1).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8665327Z g++-multilib is already the newest version (4:13.2.0-7ubuntu1).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8665996Z gcc-multilib is already the newest version (4:13.2.0-7ubuntu1).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8666650Z mercurial is already the newest version (6.7.2-1ubuntu2.2).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8667440Z musl-tools is already the newest version (1.2.4-2).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8667978Z rsync is already the newest version (3.2.7-1ubuntu1.2).
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8668519Z 0 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8701047Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam init --auto-setup --bare --enable-shell-hook
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8857551Z No configuration file found, using built-in defaults.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8860931Z Checking for available remotes: rsync and local, git, mercurial.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8862543Z   - you won't be able to use darcs repositories unless you install the [01mdarcs[0m command on your system.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.8863208Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.9042569Z [31m[ERROR][0m Sandboxing is not working on your platform ubuntu:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.9044344Z         "~/.opam/opam-init/hooks/sandbox.sh build sh -c echo SUCCESS >$TMPDIR/opam-sandbox-check-out && cat $TMPDIR/opam-sandbox-check-out; rm -f $TMPDIR/opam-sandbox-check-out" exited with code 1 "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.9049184Z Do you want to disable it?  Note that this will result in less secure package builds, so please ensure that you have some other isolation mechanisms in place (such as running within a container or virtual machine). [y/N] y
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.9050651Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:02.9051171Z [36m<><>[0m [01mFetching repository information[0m [36m><><><><><><><><><><><><><><><><><><><><><>[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:05.9322294Z [[32mdefault[0m] Initialised
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:18.3888872Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:18.3889622Z User configuration:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:18.3894354Z   Updating ~/.bash_profile.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:18.3895784Z [1;34m[NOTE][0m Make sure that ~/.bash_profile is well [04msourced[0m in your ~/.bashrc.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:18.3896332Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.6601397Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.6602131Z ##[group]Remove the opam repositories
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.6623353Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository list --all-switches --short
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.7208127Z default
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.7243775Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository remove default --all-switches
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.7890816Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.7891631Z ##[group]Initialise the opam repositories
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:19.7912068Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam repository add default https://github.com/ocaml/opam-repository.git --all-switches --set-default
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:08:56.7607557Z [[32mdefault[0m] Initialised
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.2904151Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.5778583Z ##[group]Install OCaml
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.5791258Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam switch create . --no-install --packages ocaml-base-compiler.4.14.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.7928008Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.7929348Z [36m<><>[0m [01mInstalling new switch packages[0m [36m<><><><><><><><><><><><><><><><><><><><><><>[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:08.7930155Z Switch invariant: ["ocaml-base-compiler" {= "4.14.1"}]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:13.1431110Z 
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:13.1432571Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:15.6995602Z [32m∗[0m installed [01mbase-bigarray[0m.base
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:15.7002399Z [32m∗[0m installed [01mbase-threads[0m.base
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:15.7010478Z [32m∗[0m installed [01mbase-unix[0m.base
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:15.7024977Z [32m∗[0m installed [01mocaml-options-vanilla[0m.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:15.8414288Z [36m⬇[0m retrieved [01mocaml-config[0m.2  (2 extra sources)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:09:16.2754039Z [36m⬇[0m retrieved [01mocaml-base-compiler[0m.4.14.1  (https://github.com/ocaml/ocaml/archive/4.14.1.tar.gz)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:47.6278833Z [32m∗[0m installed [01mocaml-base-compiler[0m.4.14.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:47.6372643Z [32m∗[0m installed [01mocaml-config[0m.2
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:47.6908557Z [32m∗[0m installed [01mocaml[0m.4.14.1
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:48.0913138Z Done.
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:48.0917927Z # Run [01meval $(opam env)[0m to update the current shell environment
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.3109524Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.3112110Z ##[group]Save the opam cache
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.3132245Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam clean --all-switches --download-cache --logs --repo-cache --unused-repositories
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.5272225Z Cleaning up switch /home/runner/work/latex_perf/latex_perf
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.6340918Z Updating /home/runner/.opam/repo/repos-config
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.6341484Z Clearing repository cache
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.6376091Z Clearing cache of downloaded files
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:49.6408340Z Clearing logs
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:50.5830599Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/latex_perf/latex_perf --files-from manifest.txt --use-compress-program zstdmt
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.3864405Z ##[warning]Failed to save: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>06MvaaAAAAABlA2Auv1E7RYAnc/4VWerPREVOMzAxMDAwMTA3MDA5AEVkZ2U=
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.4609323Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.4610703Z ##[group]Retrieve the opam download cache
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.5154380Z ##[warning]Failed to restore: Cache service responded with 400
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.5159564Z Cache not found for input keys: v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304962-57, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304962-57, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-18106304962-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-29-, v1-setup-ocaml-opam-download-github.com/ocaml/opam-repository.git-4_14_1-2025-8-
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.5162032Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.5196991Z ##[group]Pin local packages
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:52.5212043Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam pin add latex-perfectionist.dev . --no-action
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.5617768Z Package latex-perfectionist does not exist, create as a [01mNEW[0m package? [Y/n] y
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6857995Z [[32mlatex-perfectionist.dev[0m] synchronised (file:///home/runner/work/latex_perf/latex_perf)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6864316Z [33m[WARNING][0m Failed checks on latex-perfectionist package definition from source at file:///home/runner/work/latex_perf/latex_perf:
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6865821Z     [31merror[0m 23: Missing field 'maintainer'
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6866572Z   [33mwarning[0m 25: Missing field 'authors'
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6867536Z   [33mwarning[0m 35: Missing field 'homepage'
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6868146Z   [33mwarning[0m 36: Missing field 'bug-reports'
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:11:59.6875593Z latex-perfectionist is now pinned to [01mgit+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip[0m (version [01mdev[0m)
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:12:00.8220808Z ##[endgroup]
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:12:00.8234868Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam --version
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:12:00.8378530Z 2.1.6
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:12:00.8411666Z [command]/opt/hostedtoolcache/opam/2.1.6/x86_64/opam exec -- ocaml -version
+l1-smoke	Set up OCaml and OPAM	2025-09-29T18:12:00.8713874Z The OCaml toplevel, version 4.14.1
+l1-smoke	Install dependencies	﻿2025-09-29T18:12:00.8864459Z ##[group]Run sudo apt-get update -y
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8864791Z [36;1msudo apt-get update -y[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8865032Z [36;1msudo apt-get install -y jq[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8865608Z [36;1mopam repo add default https://opam.ocaml.org || true[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8865932Z [36;1mopam update -y || true[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8866184Z [36;1mopam install -y . --deps-only --with-test[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8902491Z shell: /usr/bin/bash -e {0}
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8902848Z env:
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8904466Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8905680Z   OPAMCLI: 2.0
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8905859Z   OPAMCOLOR: always
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8906058Z   OPAMERRLOGLEN: 0
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8906233Z   OPAMJOBS: 4
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8906441Z   OPAMPRECISETRACKING: 1
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8906652Z   OPAMSOLVERTIMEOUT: 1000
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8906844Z   OPAMYES: 1
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8907006Z   CLICOLOR_FORCE: 1
+l1-smoke	Install dependencies	2025-09-29T18:12:00.8907405Z ##[endgroup]
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9589709Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9899002Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9910908Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9915117Z Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9918719Z Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9922645Z Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:00.9928752Z Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
+l1-smoke	Install dependencies	2025-09-29T18:12:02.3694659Z Reading package lists...
+l1-smoke	Install dependencies	2025-09-29T18:12:02.4090427Z Reading package lists...
+l1-smoke	Install dependencies	2025-09-29T18:12:02.6777574Z Building dependency tree...
+l1-smoke	Install dependencies	2025-09-29T18:12:02.6787003Z Reading state information...
+l1-smoke	Install dependencies	2025-09-29T18:12:03.0070735Z jq is already the newest version (1.7.1-3ubuntu0.24.04.1).
+l1-smoke	Install dependencies	2025-09-29T18:12:03.0071367Z 0 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+l1-smoke	Install dependencies	2025-09-29T18:12:03.0666972Z [31m[ERROR][0m Repository default is already set up and points to git+https://github.com/ocaml/opam-repository.git. To change that, use 'opam repository set-url default https://opam.ocaml.org'.
+l1-smoke	Install dependencies	2025-09-29T18:12:03.3178397Z [1;34m[NOTE][0m latex-perfectionist.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+l1-smoke	Install dependencies	2025-09-29T18:12:03.3179226Z 
+l1-smoke	Install dependencies	2025-09-29T18:12:03.3179765Z [36m<><>[0m [01mUpdating package repositories[0m [36m><><><><><><><><><><><><><><><><><><><><><><>[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:07.2236063Z [[32mdefault[0m] no changes from git+https://github.com/ocaml/opam-repository.git
+l1-smoke	Install dependencies	2025-09-29T18:12:19.0346628Z [1;34m[NOTE][0m Ignoring uncommitted changes in /home/runner/work/latex_perf/latex_perf (`--working-dir' not active).
+l1-smoke	Install dependencies	2025-09-29T18:12:19.1958128Z [[32mlatex-perfectionist.dev[0m] synchronised (git+file:///home/runner/work/latex_perf/latex_perf#fix-math-strip)
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9927358Z The following actions will be performed:
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9928594Z   [32m∗[0m install [01mocamlbuild[0m          0.16.1
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9929437Z   [32m∗[0m install [01mconf-gmp[0m            5
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9930375Z   [32m∗[0m install [01mconf-pkg-config[0m     4
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9931046Z   [32m∗[0m install [01mocamlfind[0m           1.9.8
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9931724Z   [32m∗[0m install [01mdune[0m                3.20.2
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9932485Z   [32m∗[0m install [01mzarith[0m              1.14
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9933261Z   [32m∗[0m install [01mtopkg[0m               1.1.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9934171Z   [32m∗[0m install [01myojson[0m              3.0.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9935144Z   [32m∗[0m install [01mstdlib-shims[0m        0.3.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9936750Z   [32m∗[0m install [01msexplib0[0m            v0.17.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9937774Z   [32m∗[0m install [01mppx_derivers[0m        1.2.1
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9939010Z   [32m∗[0m install [01mocaml-syntax-shims[0m  1.0.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9939861Z   [32m∗[0m install [01mocaml-compiler-libs[0m v0.12.4
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9940732Z   [32m∗[0m install [01mcsexp[0m               1.5.2
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9941601Z   [32m∗[0m install [01mcppo[0m                1.8.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9942466Z   [32m∗[0m install [01mcoq-core[0m            8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9943312Z   [32m∗[0m install [01muutf[0m                1.0.4
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9944127Z   [32m∗[0m install [01mppxlib[0m              0.36.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9944917Z   [32m∗[0m install [01mdune-configurator[0m   3.20.2
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9945482Z   [32m∗[0m install [01mcoqide-server[0m       8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9946129Z   [32m∗[0m install [01mcoq-stdlib[0m          8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9946804Z   [32m∗[0m install [01mppx_deriving[0m        6.1.1
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9947667Z   [32m∗[0m install [01mbigstringaf[0m         0.10.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9948296Z   [32m∗[0m install [01mcoq[0m                 8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9948887Z   [32m∗[0m install [01mangstrom[0m            0.16.1
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9949401Z ===== [32m∗[0m 25 =====
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9949631Z 
+l1-smoke	Install dependencies	2025-09-29T18:12:23.9950129Z [36m<><>[0m [01mProcessing actions[0m [36m<><><><><><><><><><><><><><><><><><><><><><><><><><><><>[0m
+l1-smoke	Install dependencies	2025-09-29T18:12:24.0913628Z [36m⬇[0m retrieved [01mconf-gmp[0m.5  (https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4)
+l1-smoke	Install dependencies	2025-09-29T18:12:26.6409786Z [32m∗[0m installed [01mconf-gmp[0m.5
+l1-smoke	Install dependencies	2025-09-29T18:12:26.6423272Z [32m∗[0m installed [01mconf-pkg-config[0m.4
+l1-smoke	Install dependencies	2025-09-29T18:12:26.6571847Z [36m⬇[0m retrieved [01mangstrom[0m.0.16.1  (https://github.com/inhabitedtype/angstrom/archive/0.16.1.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:26.7041167Z [36m⬇[0m retrieved [01mbigstringaf[0m.0.10.0  (https://github.com/inhabitedtype/bigstringaf/archive/0.10.0.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:27.6937641Z [36m⬇[0m retrieved [01mcoq[0m.8.18.0  (https://github.com/coq/coq/releases/download/V8.18.0/coq-8.18.0.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:28.1623840Z [36m⬇[0m retrieved [01mcoq-core[0m.8.18.0  (cached)
+l1-smoke	Install dependencies	2025-09-29T18:12:28.5395613Z [36m⬇[0m retrieved [01mcoq-stdlib[0m.8.18.0  (cached)
+l1-smoke	Install dependencies	2025-09-29T18:12:28.9209657Z [36m⬇[0m retrieved [01mcoqide-server[0m.8.18.0  (cached)
+l1-smoke	Install dependencies	2025-09-29T18:12:28.9640100Z [36m⬇[0m retrieved [01mcppo[0m.1.8.0  (https://github.com/ocaml-community/cppo/archive/v1.8.0.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:28.9940016Z [36m⬇[0m retrieved [01mcsexp[0m.1.5.2  (https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:29.3529428Z [36m⬇[0m retrieved [01mocaml-compiler-libs[0m.v0.12.4  (https://github.com/janestreet/ocaml-compiler-libs/releases/download/v0.12.4/ocaml-compiler-libs-v0.12.4.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:29.7087945Z [36m⬇[0m retrieved [01mocaml-syntax-shims[0m.1.0.0  (https://github.com/ocaml-ppx/ocaml-syntax-shims/releases/download/1.0.0/ocaml-syntax-shims-1.0.0.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:30.3686611Z [36m⬇[0m retrieved [01mocamlbuild[0m.0.16.1  (https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.16.1.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:31.0341913Z [36m⬇[0m retrieved [01mdune-configurator[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:31.6015924Z [36m⬇[0m retrieved [01mdune[0m.3.20.2  (https://github.com/ocaml/dune/releases/download/3.20.2/dune-3.20.2.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.0576858Z [36m⬇[0m retrieved [01mocamlfind[0m.1.9.8  (https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-1.9.8.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.0822063Z [36m⬇[0m retrieved [01mppx_derivers[0m.1.2.1  (https://github.com/ocaml-ppx/ppx_derivers/archive/1.2.1.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.1108181Z [36m⬇[0m retrieved [01mppx_deriving[0m.6.1.1  (https://github.com/ocaml-ppx/ppx_deriving/releases/download/v6.1.1/ppx_deriving-6.1.1.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.5111871Z [36m⬇[0m retrieved [01mstdlib-shims[0m.0.3.0  (https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.6307096Z [36m⬇[0m retrieved [01msexplib0[0m.v0.17.0  (https://github.com/janestreet/sexplib0/archive/refs/tags/v0.17.0.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:32.6944040Z [36m⬇[0m retrieved [01mppxlib[0m.0.36.0  (https://github.com/ocaml-ppx/ppxlib/releases/download/0.36.0/ppxlib-0.36.0.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:33.1401854Z [36m⬇[0m retrieved [01myojson[0m.3.0.0  (https://github.com/ocaml-community/yojson/releases/download/3.0.0/yojson-3.0.0.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:33.6665591Z [36m⬇[0m retrieved [01mzarith[0m.1.14  (https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz)
+l1-smoke	Install dependencies	2025-09-29T18:12:34.1193404Z [36m⬇[0m retrieved [01muutf[0m.1.0.4  (https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:34.3893184Z [36m⬇[0m retrieved [01mtopkg[0m.1.1.0  (https://erratique.ch/software/topkg/releases/topkg-1.1.0.tbz)
+l1-smoke	Install dependencies	2025-09-29T18:12:36.9615343Z [32m∗[0m installed [01mocamlfind[0m.1.9.8
+l1-smoke	Install dependencies	2025-09-29T18:12:38.2492836Z [32m∗[0m installed [01mocamlbuild[0m.0.16.1
+l1-smoke	Install dependencies	2025-09-29T18:12:41.0736776Z [32m∗[0m installed [01mzarith[0m.1.14
+l1-smoke	Install dependencies	2025-09-29T18:12:44.4808957Z [32m∗[0m installed [01mtopkg[0m.1.1.0
+l1-smoke	Install dependencies	2025-09-29T18:12:45.3520694Z [32m∗[0m installed [01muutf[0m.1.0.4
+l1-smoke	Install dependencies	2025-09-29T18:13:01.9015747Z [32m∗[0m installed [01mdune[0m.3.20.2
+l1-smoke	Install dependencies	2025-09-29T18:13:02.5984465Z [32m∗[0m installed [01mcsexp[0m.1.5.2
+l1-smoke	Install dependencies	2025-09-29T18:13:04.2494179Z [32m∗[0m installed [01mocaml-syntax-shims[0m.1.0.0
+l1-smoke	Install dependencies	2025-09-29T18:13:04.2756106Z [32m∗[0m installed [01mcppo[0m.1.8.0
+l1-smoke	Install dependencies	2025-09-29T18:13:04.3006886Z [32m∗[0m installed [01mocaml-compiler-libs[0m.v0.12.4
+l1-smoke	Install dependencies	2025-09-29T18:13:04.5597943Z [32m∗[0m installed [01mppx_derivers[0m.1.2.1
+l1-smoke	Install dependencies	2025-09-29T18:13:04.8913402Z [32m∗[0m installed [01mstdlib-shims[0m.0.3.0
+l1-smoke	Install dependencies	2025-09-29T18:13:05.2949284Z [32m∗[0m installed [01msexplib0[0m.v0.17.0
+l1-smoke	Install dependencies	2025-09-29T18:13:07.4979243Z [32m∗[0m installed [01mdune-configurator[0m.3.20.2
+l1-smoke	Install dependencies	2025-09-29T18:13:08.1684568Z [32m∗[0m installed [01myojson[0m.3.0.0
+l1-smoke	Install dependencies	2025-09-29T18:13:08.5316697Z [32m∗[0m installed [01mbigstringaf[0m.0.10.0
+l1-smoke	Install dependencies	2025-09-29T18:13:09.5679146Z [32m∗[0m installed [01mangstrom[0m.0.16.1
+l1-smoke	Install dependencies	2025-09-29T18:13:33.3932685Z [32m∗[0m installed [01mppxlib[0m.0.36.0
+l1-smoke	Install dependencies	2025-09-29T18:13:39.5759090Z [32m∗[0m installed [01mppx_deriving[0m.6.1.1
+l1-smoke	Install dependencies	2025-09-29T18:14:06.0699909Z [32m∗[0m installed [01mcoq-core[0m.8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:14:09.8594394Z [32m∗[0m installed [01mcoqide-server[0m.8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:16:34.5370102Z [32m∗[0m installed [01mcoq-stdlib[0m.8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:16:34.9342925Z [32m∗[0m installed [01mcoq[0m.8.18.0
+l1-smoke	Install dependencies	2025-09-29T18:16:36.8436196Z Done.
+l1-smoke	Install dependencies	2025-09-29T18:16:36.8444674Z # Run [01meval $(opam env)[0m to update the current shell environment
+l1-smoke	Build service and REST	﻿2025-09-29T18:16:38.1278144Z ##[group]Run opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1279042Z [36;1mopam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe[0m
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1311337Z shell: /usr/bin/bash -e {0}
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1311596Z env:
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1312790Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1314058Z   OPAMCLI: 2.0
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1314268Z   OPAMCOLOR: always
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1314479Z   OPAMERRLOGLEN: 0
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1314684Z   OPAMJOBS: 4
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1314884Z   OPAMPRECISETRACKING: 1
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1315128Z   OPAMSOLVERTIMEOUT: 1000
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1315352Z   OPAMYES: 1
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1315541Z   CLICOLOR_FORCE: 1
+l1-smoke	Build service and REST	2025-09-29T18:16:38.1315774Z ##[endgroup]
+l1-smoke	Build service and REST	2025-09-29T18:16:38.5360568Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o simd_tokenizer_fixed.o -c simd_tokenizer_fixed.c)[0m
+l1-smoke	Build service and REST	2025-09-29T18:16:38.5364232Z [1msimd_tokenizer_fixed.c:283:15:[0m [1;35mwarning: [0m‘[1mfind_next_special_neon[0m’ defined but not used [[1;35m-Wunused-function[0m]
+l1-smoke	Build service and REST	2025-09-29T18:16:38.5365622Z   283 | static size_t [1;35mfind_next_special_neon[0m(const uint8_t *input, size_t start, size_t len) {
+l1-smoke	Build service and REST	2025-09-29T18:16:38.5366496Z       |               [1;35m^~~~~~~~~~~~~~~~~~~~~~[0m
+l1-smoke	Build service and REST	2025-09-29T18:16:38.6250113Z [2m(cd _build/default/latex-parse/src && /usr/bin/gcc -O2 -fno-strict-aliasing -fwrapv -pthread -fPIC -D_FILE_OFFSET_BITS=64 -Wall -fdiagnostics-color=always -g -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml -I /home/runner/work/latex_perf/latex_perf/_opam/lib/ocaml/threads -I /home/runner/work/latex_perf/latex_perf/_opam/lib/uutf -o xxh64_simd_stubs.o -c xxh64_simd_stubs.c)[0m
+l1-smoke	Build service and REST	2025-09-29T18:16:38.6256583Z [1mxxh64_simd_stubs.c:[0m In function ‘[1mocaml_xxh64_simd[0m’:
+l1-smoke	Build service and REST	2025-09-29T18:16:38.6261603Z [1mxxh64_simd_stubs.c:118:7:[0m [1;35mwarning: [0mvariable ‘[1mhas_simd[0m’ set but not used [[1;35m-Wunused-but-set-variable[0m]
+l1-smoke	Build service and REST	2025-09-29T18:16:38.6266179Z   118 |   int [1;35mhas_simd[0m = 0;
+l1-smoke	Build service and REST	2025-09-29T18:16:38.6270764Z       |       [1;35m^~~~~~~~[0m
+l1-smoke	Run service and REST	﻿2025-09-29T18:16:39.2213945Z ##[group]Run rm -f /tmp/l0_lex_svc.sock
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2214274Z [36;1mrm -f /tmp/l0_lex_svc.sock[0m
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2214602Z [36;1mopam exec -- ./_build/default/latex-parse/src/main_service.exe &[0m
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2214925Z [36;1msleep 0.5[0m
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2215243Z [36;1mopam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &[0m
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2215595Z [36;1msleep 0.5[0m
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2247000Z shell: /usr/bin/bash -e {0}
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2247575Z env:
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2248557Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2249544Z   OPAMCLI: 2.0
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2249715Z   OPAMCOLOR: always
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2249886Z   OPAMERRLOGLEN: 0
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250054Z   OPAMJOBS: 4
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250249Z   OPAMPRECISETRACKING: 1
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250454Z   OPAMSOLVERTIMEOUT: 1000
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250639Z   OPAMYES: 1
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250795Z   CLICOLOR_FORCE: 1
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2250968Z ##[endgroup]
+l1-smoke	Run service and REST	2025-09-29T18:16:39.2454227Z [svc] listening at /tmp/l0_lex_svc.sock
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7488535Z Connected to SIMD service at /tmp/l0_lex_svc.sock
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7489102Z REST API Server listening on port 8080
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7489503Z Endpoints:
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7489848Z   POST /tokenize - Tokenize LaTeX content
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7490259Z   GET /health   - Health check
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7490618Z   GET /metrics  - Prometheus metrics
+l1-smoke	Run service and REST	2025-09-29T18:16:39.7490900Z 
+l1-smoke	L1 smokes	﻿2025-09-29T18:16:45.2390336Z ##[group]Run bash scripts/smoke_rules_l1.sh
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2390709Z [36;1mbash scripts/smoke_rules_l1.sh[0m
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2422620Z shell: /usr/bin/bash -e {0}
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2422890Z env:
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2424172Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2425533Z   OPAMCLI: 2.0
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2425753Z   OPAMCOLOR: always
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2425983Z   OPAMERRLOGLEN: 0
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2426205Z   OPAMJOBS: 4
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2426424Z   OPAMPRECISETRACKING: 1
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2426908Z   OPAMSOLVERTIMEOUT: 1000
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2427268Z   OPAMYES: 1
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2427476Z   CLICOLOR_FORCE: 1
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2427694Z ##[endgroup]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2516866Z awk: cmd. line:21: warning: regexp escape sequence `\"' is not a known regexp operator
+l1-smoke	L1 smokes	2025-09-29T18:16:45.2871418Z [l1-smoke] FAIL: corpora/l1/CMD-001_deprecated_after_expansion.tex expected:[CMD-001] forbid:[] messages:[;] got: MOD-001 
+l1-smoke	L1 smokes	2025-09-29T18:16:45.3081013Z [l1-smoke] FAIL: corpora/l1/CMD-003_deep_sectioning.tex expected:[CMD-003] forbid:[] messages:[;] got:  
+l1-smoke	L1 smokes	2025-09-29T18:16:45.3274766Z [l1-smoke] PASS: corpora/l1/MOD-001_mixed_bf_textbf.tex -> expect:[MOD-001] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.3464268Z [l1-smoke] PASS: corpora/l1/EXP-001_incomplete_expansion.tex -> expect:[EXP-001] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.3676295Z [l1-smoke] PASS: corpora/l1/MOD-002_mixed_bf_textbf_para.tex -> expect:[MOD-002 EXP-001] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.3869944Z [l1-smoke] PASS: corpora/l1/MOD-003_mixed_it_textit_para.tex -> expect:[MOD-003] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.4065691Z [l1-smoke] PASS: corpora/l1/MOD-004_mixed_rm_textrm_para.tex -> expect:[MOD-004] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.4256770Z [l1-smoke] PASS: corpora/l1/MOD-005_mixed_tt_texttt_para.tex -> expect:[MOD-005] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.4462338Z [l1-smoke] PASS: corpora/l1/MOD-006_mixed_sf_textsf_para.tex -> expect:[MOD-006] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.4714716Z [l1-smoke] PASS: corpora/l1/MOD-007_mixed_sc_textsc_para.tex -> expect:[MOD-007] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.4928728Z [l1-smoke] FAIL: corpora/l1/MOD-008_mixed_bfseries_textbf_para.tex expected:[MOD-008] forbid:[] messages:[;] got: EXP-001 
+l1-smoke	L1 smokes	2025-09-29T18:16:45.5124537Z [l1-smoke] PASS: corpora/l1/MOD-009_mixed_itshape_textit_para.tex -> expect:[MOD-009] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.5335825Z [l1-smoke] PASS: corpora/l1/MOD-010_mixed_sffamily_textsf_para.tex -> expect:[MOD-010] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.5539622Z [l1-smoke] PASS: corpora/l1/MOD-011_mixed_ttfamily_texttt_para.tex -> expect:[MOD-011] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.5735467Z [l1-smoke] PASS: corpora/l1/MOD-012_mixed_rmfamily_textrm_para.tex -> expect:[MOD-012] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.5949538Z [l1-smoke] PASS: corpora/l1/MOD-013_mixed_scshape_textsc_para.tex -> expect:[MOD-013] forbid:[] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.6155023Z [l1-smoke] PASS: corpora/l1/MOD-002_paragraph_separated_bf_textbf.tex -> expect:[] forbid:[MOD-002] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.6350751Z [l1-smoke] PASS: corpora/l1/MOD-003_paragraph_separated_it_textit.tex -> expect:[] forbid:[MOD-003] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.6550078Z [l1-smoke] PASS: corpora/l1/MOD-004_paragraph_separated_rm_textrm.tex -> expect:[] forbid:[MOD-004] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.6748647Z [l1-smoke] PASS: corpora/l1/MOD-005_paragraph_separated_tt_texttt.tex -> expect:[] forbid:[MOD-005] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.6950881Z [l1-smoke] PASS: corpora/l1/MOD-006_paragraph_separated_sf_textsf.tex -> expect:[] forbid:[MOD-006] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.7152882Z [l1-smoke] PASS: corpora/l1/MOD-007_paragraph_separated_sc_textsc.tex -> expect:[] forbid:[MOD-007] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.7388556Z [l1-smoke] FAIL: corpora/l1/MOD-008_paragraph_separated_bfseries_textbf.tex expected:[MOD-020] forbid:[MOD-008] messages:[;] got: EXP-001 
+l1-smoke	L1 smokes	2025-09-29T18:16:45.7608347Z [l1-smoke] PASS: corpora/l1/MOD-009_paragraph_separated_itshape_textit.tex -> expect:[MOD-021] forbid:[MOD-009] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.7827780Z [l1-smoke] PASS: corpora/l1/MOD-010_paragraph_separated_sffamily_textsf.tex -> expect:[MOD-023] forbid:[MOD-010] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.8043234Z [l1-smoke] PASS: corpora/l1/MOD-011_paragraph_separated_ttfamily_texttt.tex -> expect:[MOD-024] forbid:[MOD-011] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.8253195Z [l1-smoke] PASS: corpora/l1/MOD-012_paragraph_separated_rmfamily_textrm.tex -> expect:[MOD-022] forbid:[MOD-012] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.8451278Z [l1-smoke] PASS: corpora/l1/MOD-013_paragraph_separated_scshape_textsc.tex -> expect:[] forbid:[MOD-013] messages:[;]
+l1-smoke	L1 smokes	2025-09-29T18:16:45.8452229Z [l1-smoke] Summary: pass=24 fail=4
+l1-smoke	L1 smokes	2025-09-29T18:16:45.8462188Z ##[error]Process completed with exit code 1.
+l1-smoke	Teardown	﻿2025-09-29T18:16:45.8501905Z ##[group]Run pkill -f rest_api_server || true
+l1-smoke	Teardown	2025-09-29T18:16:45.8502451Z [36;1mpkill -f rest_api_server || true[0m
+l1-smoke	Teardown	2025-09-29T18:16:45.8502884Z [36;1mpkill -f main_service || true[0m
+l1-smoke	Teardown	2025-09-29T18:16:45.8537027Z shell: /usr/bin/bash -e {0}
+l1-smoke	Teardown	2025-09-29T18:16:45.8537483Z env:
+l1-smoke	Teardown	2025-09-29T18:16:45.8538729Z   PATH: /home/runner/.github-tools:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+l1-smoke	Teardown	2025-09-29T18:16:45.8539784Z   OPAMCLI: 2.0
+l1-smoke	Teardown	2025-09-29T18:16:45.8539964Z   OPAMCOLOR: always
+l1-smoke	Teardown	2025-09-29T18:16:45.8540156Z   OPAMERRLOGLEN: 0
+l1-smoke	Teardown	2025-09-29T18:16:45.8540330Z   OPAMJOBS: 4
+l1-smoke	Teardown	2025-09-29T18:16:45.8540497Z   OPAMPRECISETRACKING: 1
+l1-smoke	Teardown	2025-09-29T18:16:45.8540703Z   OPAMSOLVERTIMEOUT: 1000
+l1-smoke	Teardown	2025-09-29T18:16:45.8540890Z   OPAMYES: 1
+l1-smoke	Teardown	2025-09-29T18:16:45.8541044Z   CLICOLOR_FORCE: 1
+l1-smoke	Teardown	2025-09-29T18:16:45.8541212Z ##[endgroup]
+l1-smoke	Post Set up OCaml and OPAM	﻿2025-09-29T18:16:45.9147710Z Post job cleanup.
+l1-smoke	Post Run actions/checkout@v4	﻿2025-09-29T18:16:45.9196238Z Post job cleanup.
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0184197Z [command]/usr/bin/git version
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0223731Z git version 2.51.0
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0269883Z Temporarily overriding HOME='/home/runner/work/_temp/75866dff-a66f-453a-9551-03453909e624' before making global git config changes
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0271313Z Adding repository directory to the temporary git global config as a safe directory
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0283549Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/latex_perf/latex_perf
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0321329Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0356263Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0586699Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0607966Z http.https://github.com/.extraheader
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0621753Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+l1-smoke	Post Run actions/checkout@v4	2025-09-29T18:16:46.0668170Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+l1-smoke	Complete job	﻿2025-09-29T18:16:46.1005971Z Cleaning up orphan processes

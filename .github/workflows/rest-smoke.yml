@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [ main ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   rest-smoke:
     runs-on: ubuntu-latest
@@ -14,14 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
-      - name: Install dune and yojson
+          opam-depext: false
+      - name: Install dependencies
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune yojson
+          opam install -y . --deps-only --with-test
 
       - name: Build service and REST server
         run: |

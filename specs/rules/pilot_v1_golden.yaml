@@ -119,3 +119,39 @@ cases:
     expect: ["TYPO-030"]
     expect_msgs:
       - "TYPO-030:More than three hyphens detected (----)"
+  - file: corpora/lint/pilot_v1/TYPO-034_space_before_footnote.tex
+    expect: ["TYPO-034"]
+    expect_msgs:
+      - "TYPO-034:Spurious space before \\footnote"
+  - file: corpora/lint/pilot_v1/TYPO-037_space_before_comma.tex
+    expect: ["TYPO-037"]
+    expect_msgs:
+      - "TYPO-037:Space before comma"
+  - file: corpora/lint/pilot_v1/TYPO-042_consecutive_question_marks.tex
+    expect: ["TYPO-042"]
+    expect_msgs:
+      - "TYPO-042:Multiple consecutive question marks"
+  - file: corpora/lint/pilot_v1/TYPO-048_en_dash_as_minus.tex
+    expect: ["TYPO-048"]
+    expect_msgs:
+      - "TYPO-048:En-dash character used where minus sign expected"
+  - file: corpora/lint/pilot_v1/TYPO-051_thin_space.tex
+    expect: ["TYPO-051"]
+    expect_msgs:
+      - "TYPO-051:Thin space U+2009 found; prefer \\thinspace or \\, macro"
+  - file: corpora/lint/pilot_v1/TYPO-052_unescaped_angle.tex
+    expect: ["TYPO-052"]
+    expect_msgs:
+      - "TYPO-052:Unescaped < or > in text; use \\textless / \\textgreater"
+  - file: corpora/lint/pilot_v1/TYPO-053_unicode_midline_ellipsis.tex
+    expect: ["TYPO-053"]
+    expect_msgs:
+      - "TYPO-053:Unicode midline ellipsis U+22EF found; use \\cdots instead"
+  - file: corpora/lint/pilot_v1/TYPO-055_consecutive_thinspace.tex
+    expect: ["TYPO-055"]
+    expect_msgs:
+      - "TYPO-055:Consecutive \\, thin-spaces detected; collapse into single space"
+  - file: corpora/lint/pilot_v1/TYPO-061_unicode_multiply.tex
+    expect: ["TYPO-061"]
+    expect_msgs:
+      - "TYPO-061:Unicode multiplication sign found; prefer \\times in math mode"

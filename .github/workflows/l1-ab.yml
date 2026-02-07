@@ -3,6 +3,12 @@ name: L1 Expander A/B (Opt-in)
 on:
   workflow_dispatch:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   l1-ab:
     runs-on: ubuntu-latest
@@ -10,14 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
       - name: Install dependencies
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Enable L1 build
         run: |

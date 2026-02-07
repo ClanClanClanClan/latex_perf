@@ -7,6 +7,12 @@ on:
   push:
     branches: [ main, develop ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   rust-proxy-verify:
     runs-on: ubuntu-latest
@@ -15,14 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
       - name: Install dune and deps
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -34,7 +41,7 @@ jobs:
       - name: Build OCaml service and Rust proxy
         run: |
           opam exec -- dune build latex-parse/src/main_service.exe
-          cargo build -p elderd_rust_proxy --release
+          cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
       - name: Run verify_r1 (proxy A/B perf gate)
         run: |

@@ -54,10 +54,10 @@ let worker_task sock data results start_idx count barrier =
   done
 
 let () =
-  if Array.length Sys.argv < 4 then begin
-    Printf.eprintf "usage: run_service_bench_keepalive FILE ITERS THREADS [--out FILE]\n";
-    exit 2
-  end;
+  if Array.length Sys.argv < 4 then (
+    Printf.eprintf
+      "usage: run_service_bench_keepalive FILE ITERS THREADS [--out FILE]\n";
+    exit 2);
 
   let file = Sys.argv.(1) in
   let iters = int_of_string Sys.argv.(2) in
@@ -87,11 +87,15 @@ let () =
   let barrier = Barrier.create () in
 
   (* Launch threads *)
-  let workers = Array.mapi (fun i sock ->
-    Thread.create (fun () ->
-      worker_task sock data results (i * per_thread) per_thread barrier
-    ) ()
-  ) sockets in
+  let workers =
+    Array.mapi
+      (fun i sock ->
+        Thread.create
+          (fun () ->
+            worker_task sock data results (i * per_thread) per_thread barrier)
+          ())
+      sockets
+  in
 
   (* Start all threads *)
   Thread.delay 0.01;
@@ -108,14 +112,14 @@ let () =
   Bench_utils.Percentiles_strict.dump "Service(keepalive)" results;
 
   (* Write output file if requested *)
-  begin match out_file with
+  (match out_file with
   | Some path ->
       let oc = open_out path in
       Array.iter (Printf.fprintf oc "%.6f\n") results;
       close_out oc;
-      Printf.printf "[keepalive] wrote %d samples to %s\n%!" (Array.length results) path
-  | None -> ()
-  end;
+      Printf.printf "[keepalive] wrote %d samples to %s\n%!"
+        (Array.length results) path
+  | None -> ());
 
   (* Write tail CSV for slow queries *)
   let tail_size = min 100 (Array.length results) in

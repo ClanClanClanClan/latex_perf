@@ -1,5 +1,5 @@
-Weekly Status (Weeks 0–7)
-=========================
+Weekly Status (Weeks 0–10)
+==========================
 
 Week 0 — Bootstrap
 - Minimal repo layout (latex-parse/, core/, proofs/, scripts/, specs/) and dune build green
@@ -54,3 +54,22 @@ Week 9 — Performance β Gate (CI wiring)
 Week 10 — Proof β Gate (enforced)
 - Branch protection can enforce required checks (proof/perf/smokes)
 - Proof β Gate now effective via required Proof CI (Coq)
+
+Week 10 — Code Health Audit & Fixes
+- Fixed CI YAML indentation across 23 workflows (ocaml-compiler was sibling of with: instead of child)
+- Fixed opam version constraint (>= 5.1.1 in latex-parse/dune-project package stanza)
+- Fixed 15 corpora/l1/sample_*.tex files (encoding: double backslash to single)
+- Fixed simple_expander_test expected output for fixpoint expansion
+- Fixed l1_integration_test corpus access (deps + chdir for dune sandbox)
+- Replaced 15 duplicated .ml files in core/l0_lexer/ with symlinks to latex-parse/src/
+- Removed 5 orphaned .ml files from core/l1_expander/
+- Removed hardcoded absolute path from latex-parse/src/dune
+- Applied dune fmt across codebase
+- All 13 tests pass; dune build, runtest, fmt all green
+
+Current State (Post Week 10)
+- Validators: 58 rules (33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- Proofs: 11 files, 1,998 lines, 0 admits, 0 axioms
+- Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
+- CI: 23 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
+- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)

@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   performance-test:
     runs-on: ubuntu-latest
@@ -14,18 +20,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
-          ocaml-version: 5.1.1
-          opam-repository: https://github.com/ocaml/opam-repository.git
-
+          ocaml-compiler: 5.1.1
+          opam-depext: false
+          opam-disable-sandboxing: true
       - name: Install project dependencies
         run: |
           opam install . --deps-only --with-test --yes
 
       - name: Build project
         run: |
-          opam exec -- dune build @all
+          opam exec -- dune build \
+            latex-parse/src/main_service.exe \
+            latex-parse/src/rest_api_server.exe \
+            latex-parse/bench/ab_microbench.exe \
+            latex-parse/bench/edit_window_bench.exe \
+            latex-parse/bench/edit_replay_bench.exe
 
       - name: Run microbench sample (10K iterations)
         run: |

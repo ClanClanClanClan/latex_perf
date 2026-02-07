@@ -4,28 +4,33 @@ on:
   push:
   pull_request:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   perf-ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v2
+      - uses: ./.github/actions/setup-ocaml
         with:
           ocaml-compiler: 5.1.1
-
+          opam-depext: false
       - name: Install dependencies
         run: |
+          opam repo add default https://opam.ocaml.org || true
           opam update -y
-          opam install -y dune
+          opam install -y . --deps-only --with-test
 
       - name: Build benches
         run: |
           opam exec -- dune build latex-parse/bench/ab_microbench.exe latex-parse/bench/edit_window_bench.exe latex-parse/bench/first_token_latency.exe
 
       - name: Full-doc perf gate (quick)
-        env:
-          SAMPLES: 10
         run: |
           opam exec -- bash scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 50
 
@@ -51,6 +56,7 @@ jobs:
 
       - name: Email notify on failure
         if: failure()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
@@ -60,7 +66,6 @@ jobs:
           subject: "Perf CI gate failed: ${{ github.repository }}"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          content_type: text/plain
           body: |
             Performance CI gate failed.
             Repo: ${{ github.repository }}

@@ -118,7 +118,7 @@ jobs:
           fi
 
       - name: Email notify (perf regression)
-        if: env.PERF_FAIL == '1' && secrets.EMAIL_FROM
+        if: ${{ env.PERF_FAIL == '1' && secrets.EMAIL_FROM != '' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}
@@ -175,9 +175,7 @@ jobs:
             if [ "$VAL" -lt 8 ]; then COLOR=brightgreen; elif [ "$VAL" -lt 20 ]; then COLOR=yellow; else COLOR=orange; fi
           fi
           mkdir -p badges
-          cat > badges/perf.json <<JSON
-          {"schemaVersion":1,"label":"p95 (median-of-100)","message":"${MED} ms","color":"${COLOR}"}
-JSON
+          printf '{"schemaVersion":1,"label":"p95 (median-of-100)","message":"%s ms","color":"%s"}\n' "$MED" "$COLOR" > badges/perf.json
 
       - name: Publish badge to gh-pages
         env:
@@ -205,92 +203,74 @@ JSON
           FTP95=$(awk -F, 'NR==2{print $4}' /tmp/first_token_latency.csv 2>/dev/null || true)
           XXH=$(awk -F, '$1=="xxh64"{print $2}' ../hash_throughput.csv 2>/dev/null | tail -1)
           MED=$(grep -E "\[gate\] median-of-100 p95 =" ../perf_gate.out | tail -1 | awk '{print $6}')
-          python3 - <<PY
-import json
-entry = {"ts":"${TS}","full_doc_p95_med100_ms":"${MED}","ab10k_p95_ms":"${ABP95}","edit4k5k_p95_ms":"${EWP95}","first_token_p95_us":"${FTP95}","xxh64_mb_per_s":"${XXH}"}
-try:
-  with open('data/perf_history.json','r') as f:
-    hist = json.load(f)
-except Exception:
-  hist = []
-hist.append(entry)
-with open('data/perf_history.json','w') as f:
-  json.dump(hist, f)
-PY
+          python3 -c "
+          import json, sys, os
+          entry = {'ts': os.environ['TS'], 'full_doc_p95_med100_ms': os.environ.get('MED',''),
+                   'ab10k_p95_ms': os.environ.get('ABP95',''), 'edit4k5k_p95_ms': os.environ.get('EWP95',''),
+                   'first_token_p95_us': os.environ.get('FTP95',''), 'xxh64_mb_per_s': os.environ.get('XXH','')}
+          try:
+            with open('data/perf_history.json','r') as f: hist = json.load(f)
+          except Exception: hist = []
+          hist.append(entry)
+          with open('data/perf_history.json','w') as f: json.dump(hist, f)
+          "
           # Generate sparkline svg for full-doc p95
-          python3 - <<'PY'
-import json, math
-from pathlib import Path
-try:
-  hist = json.load(open('data/perf_history.json','r'))
-except Exception:
-  hist = []
-vals = []
-for e in hist[-50:]:
-  try:
-    v = float(e.get('full_doc_p95_med100_ms','nan'))
-  except Exception:
-    v = float('nan')
-  if not math.isnan(v):
-    vals.append(v)
-if not vals:
-  vals = [0.0]
-w,h,px = 200, 30, 3
-vmin, vmax = min(vals), max(vals)
-if abs(vmax - vmin) < 1e-9:
-  vmax = vmin + 1.0
-def scale(i,v):
-  x = px + i*(w-2*px)/max(1,len(vals)-1)
-  y = h - px - (v-vmin)*(h-2*px)/(vmax-vmin)
-  return x,y
-pts = [scale(i,v) for i,v in enumerate(vals)]
-svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}' viewBox='0 0 {w} {h}'>
-  <polyline fill='none' stroke='#4caf50' stroke-width='2' points='{" ".join([f"{x:.1f},{y:.1f}" for x,y in pts])}'/>
-</svg>"""
-Path('badges').mkdir(exist_ok=True)
-open('badges/perf_spark.svg','w').write(svg)
-PY
+          python3 -c "
+          import json, math
+          from pathlib import Path
+          try: hist = json.load(open('data/perf_history.json','r'))
+          except Exception: hist = []
+          vals = []
+          for e in hist[-50:]:
+            try: v = float(e.get('full_doc_p95_med100_ms','nan'))
+            except Exception: v = float('nan')
+            if not math.isnan(v): vals.append(v)
+          if not vals: vals = [0.0]
+          w,h,px = 200, 30, 3
+          vmin, vmax = min(vals), max(vals)
+          if abs(vmax - vmin) < 1e-9: vmax = vmin + 1.0
+          def scale(i,v):
+            x = px + i*(w-2*px)/max(1,len(vals)-1)
+            y = h - px - (v-vmin)*(h-2*px)/(vmax-vmin)
+            return x,y
+          pts = [scale(i,v) for i,v in enumerate(vals)]
+          svg = f\"\"\"<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}' viewBox='0 0 {w} {h}'>
+            <polyline fill='none' stroke='#4caf50' stroke-width='2' points='{' '.join([f'{x:.1f},{y:.1f}' for x,y in pts])}'/>
+          </svg>\"\"\"
+          Path('badges').mkdir(exist_ok=True)
+          open('badges/perf_spark.svg','w').write(svg)
+          "
           # Create minimal index.html if missing (Chart.js)
           if [ ! -f index.html ]; then
-            cat > index.html <<'HTML'
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <title>Nightly Performance Trends</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style> body{font-family:system-ui, sans-serif; margin:20px;} canvas{max-width:900px;} </style>
-</head>
-<body>
-  <h1>Nightly Performance Trends</h1>
-  <p>Data from data/perf_history.json</p>
-  <canvas id="chart" height="120"></canvas>
-  <script>
-    async function run(){
-      const resp = await fetch('data/perf_history.json');
-      const hist = await resp.json();
-      const xs = hist.map(e => e.ts);
-      const y1 = hist.map(e => parseFloat(e.full_doc_p95_med100_ms||'NaN'));
-      const y2 = hist.map(e => parseFloat(e.ab10k_p95_ms||'NaN'));
-      const y3 = hist.map(e => parseFloat(e.edit4k5k_p95_ms||'NaN'));
-      const y4 = hist.map(e => parseFloat(e.xxh64_mb_per_s||'NaN'));
-      const ctx = document.getElementById('chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: { labels: xs, datasets: [
-          {label: 'full-doc p95 (med-100) ms', data: y1, borderColor: 'green', yAxisID: 'y'},
-          {label: 'ab10k p95 ms', data: y2, borderColor: 'orange', yAxisID: 'y'},
-          {label: 'edit4k5k p95 ms', data: y3, borderColor: 'blue', yAxisID: 'y'},
-          {label: 'xxh64 MB/s', data: y4, borderColor: 'purple', yAxisID: 'y1'}
-        ]},
-        options: { responsive: true, scales: { y: { type:'linear', position:'left' }, y1: { type:'linear', position:'right' } } }
-      });
-    }
-    run();
-  </script>
-</body>
-</html>
-HTML
+            python3 -c "
+          print('''<!doctype html>
+          <html><head><meta charset=\"utf-8\"/><title>Nightly Performance Trends</title>
+          <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>
+          <style>body{font-family:system-ui,sans-serif;margin:20px}canvas{max-width:900px}</style>
+          </head><body>
+          <h1>Nightly Performance Trends</h1>
+          <p>Data from data/perf_history.json</p>
+          <canvas id=\"chart\" height=\"120\"></canvas>
+          <script>
+          async function run(){
+            const resp=await fetch(\"data/perf_history.json\");const hist=await resp.json();
+            const xs=hist.map(e=>e.ts);
+            const y1=hist.map(e=>parseFloat(e.full_doc_p95_med100_ms||\"NaN\"));
+            const y2=hist.map(e=>parseFloat(e.ab10k_p95_ms||\"NaN\"));
+            const y3=hist.map(e=>parseFloat(e.edit4k5k_p95_ms||\"NaN\"));
+            const y4=hist.map(e=>parseFloat(e.xxh64_mb_per_s||\"NaN\"));
+            const ctx=document.getElementById(\"chart\").getContext(\"2d\");
+            new Chart(ctx,{type:\"line\",
+              data:{labels:xs,datasets:[
+                {label:\"full-doc p95 ms\",data:y1,borderColor:\"green\",yAxisID:\"y\"},
+                {label:\"ab10k p95 ms\",data:y2,borderColor:\"orange\",yAxisID:\"y\"},
+                {label:\"edit4k5k p95 ms\",data:y3,borderColor:\"blue\",yAxisID:\"y\"},
+                {label:\"xxh64 MB/s\",data:y4,borderColor:\"purple\",yAxisID:\"y1\"}]},
+              options:{responsive:true,scales:{y:{type:\"linear\",position:\"left\"},y1:{type:\"linear\",position:\"right\"}}}});
+          }
+          run();
+          </script></body></html>''')
+          " > index.html
           fi
           git add badges/perf.json badges/perf_spark.svg data/perf_history.json index.html
           git commit -m "chore(badge): update nightly perf badge" || true

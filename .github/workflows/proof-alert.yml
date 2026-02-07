@@ -49,7 +49,7 @@ jobs:
           fi
 
       - name: Email notify (proof regression)
-        if: secrets.EMAIL_FROM
+        if: ${{ secrets.EMAIL_FROM != '' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}

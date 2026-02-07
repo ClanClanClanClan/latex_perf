@@ -67,17 +67,16 @@ jobs:
           name: l1-latency-badge
           path: /tmp/latency_badge_l1.json
 
+      - name: Prepare L1 badge directory
+        run: |
+          mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
+
       - name: Publish L1 badge to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: public-badges
-        env:
-          GH_PAGES_PREP: |
-            mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
-        run: |
-          bash -lc "$GH_PAGES_PREP"
 
       - name: Update README L1 badge block
         run: |

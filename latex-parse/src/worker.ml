@@ -52,7 +52,7 @@ let words_total () =
   let s = Gc.quick_stat () in
   s.minor_words +. s.major_words
 
-let major_collections () = (Gc.stat ()).major_collections
+let major_collections () = (Gc.quick_stat ()).major_collections
 
 let reset_spawn_counters st =
   st.words_at_spawn <- words_total ();
@@ -75,8 +75,9 @@ let ensure_ibuf st need =
     st.ibuf <- Bytes.create cap;
     st.ibuf_cap <- cap
 
-let _alarm =
-  Gc.create_alarm (fun () -> stats.major_cycles <- stats.major_cycles + 1)
+(* GC alarm is registered inside start_loop after fork, not at module load time.
+   Creating it before fork leaks parent-domain state into the child under OCaml
+   5's multicore runtime and can cause hangs. *)
 
 (* CRITICAL FIX: Optimized monitoring for P99.9 performance *)
 let update_and_log st =
@@ -143,22 +144,41 @@ let handle_req st ~req_id (input : bytes) =
   if should_retire st then exit 0 else ()
 
 let start_loop fd ~core:_ =
-  Mlock.init ();
-  Gc_prep.init_gc ();
+  let pid = Unix.getpid () in
+  (try
+     Printf.eprintf "[worker:%d] init start\n%!" pid;
+     Mlock.init ();
+     Printf.eprintf "[worker:%d] mlock done\n%!" pid;
+     Gc_prep.init_gc ();
+     Printf.eprintf "[worker:%d] gc done\n%!" pid;
+     (* Register GC alarm in child process (post-fork), not at module load *)
+     ignore
+       (Gc.create_alarm (fun () -> stats.major_cycles <- stats.major_cycles + 1));
+     Printf.eprintf "[worker:%d] alarm registered\n%!" pid
+   with exn ->
+     Printf.eprintf "[worker:%d] init exn: %s\n%!" pid (Printexc.to_string exn));
   let st =
-    {
-      fd;
-      arenas = Arena.create ~cap:Config.arenas_tokens_cap;
-      ibuf = Bytes.create 0;
-      ibuf_cap = 0;
-      cur_req = None;
-      cancelled = false;
-      reqs = 0;
-      words_at_spawn = 0.0;
-      majors_at_spawn = 0;
-    }
+    try
+      let a = Arena.create ~cap:Config.arenas_tokens_cap in
+      Printf.eprintf "[worker:%d] arenas ok\n%!" pid;
+      {
+        fd;
+        arenas = a;
+        ibuf = Bytes.create 0;
+        ibuf_cap = 0;
+        cur_req = None;
+        cancelled = false;
+        reqs = 0;
+        words_at_spawn = 0.0;
+        majors_at_spawn = 0;
+      }
+    with exn ->
+      Printf.eprintf "[worker:%d] arena exn: %s\n%!" pid
+        (Printexc.to_string exn);
+      exit 1
   in
   reset_spawn_counters st;
+  Printf.eprintf "[worker:%d] ready, entering loop\n%!" pid;
   let rec loop () =
     match Ipc.read_any st.fd with
     | Any_req (id, payload) ->

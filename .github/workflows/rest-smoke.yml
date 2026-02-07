@@ -36,13 +36,13 @@ jobs:
 
       - name: Start service (UDS)
         run: |
-          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+          opam exec -- env L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
             ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
-          sleep 2
+          sleep 3
 
       - name: Start REST server
         run: |
-          ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 & echo $! > rest.pid
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 & echo $! > rest.pid
           sleep 1
 
       - name: REST smoke test

@@ -50,14 +50,16 @@ jobs:
           opam exec -- dune build latex-parse/src/main_service.exe
           cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
-      - name: Start service and proxy
+      - name: Start service
         run: |
           rm -f /tmp/l0_lex_svc.sock
           rm -f service.stdout service.stderr proxy.stdout proxy.stderr
-          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 stdbuf -oL -eL ./_build/default/latex-parse/src/main_service.exe \
-            1>service.stdout 2>service.stderr & echo $! > service.pid
+          opam exec -- env L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+            ./_build/default/latex-parse/src/main_service.exe \
+            1>service.stdout 2>service.stderr &
+          echo $! > service.pid
 
-      - name: Wait for OCaml workers to initialize
+      - name: Wait for service readiness
         run: |
           set -euo pipefail
           echo "Waiting for UDS socket..."
@@ -68,8 +70,13 @@ jobs:
             fi
             sleep 1
           done
-          echo "Sending warmup request to verify workers are ready..."
-          for attempt in $(seq 1 30); do
+          if [ ! -S /tmp/l0_lex_svc.sock ]; then
+            echo "Socket never appeared" >&2
+            cat service.stderr 2>/dev/null || true
+            exit 1
+          fi
+          echo "Sending warmup request..."
+          for attempt in $(seq 1 45); do
             if python3 -c "
           import socket, struct, sys
           try:
@@ -94,13 +101,20 @@ jobs:
               echo "Workers ready on attempt ${attempt}"
               break
             fi
+            if [ "$attempt" -le 5 ] || [ $(($attempt % 10)) -eq 0 ]; then
+              echo "=== service.stderr (attempt ${attempt}) ==="
+              cat service.stderr 2>/dev/null || true
+              echo "=== processes ==="
+              pgrep -la main_service || echo "(no main_service)"
+            fi
             sleep 2
           done
 
       - name: Start proxy
         run: |
-          stdbuf -oL -eL ./rust/target/release/elderd_rust_proxy \
-            1>proxy.stdout 2>proxy.stderr & echo $! > proxy.pid
+          ./rust/target/release/elderd_rust_proxy \
+            1>proxy.stdout 2>proxy.stderr &
+          echo $! > proxy.pid
 
       - name: Wait for proxy readiness
         run: |
@@ -124,6 +138,9 @@ jobs:
       - name: Smoke 3 requests via proxy
         run: |
           set -euo pipefail
+          echo "=== service.stderr ==="
+          cat service.stderr 2>/dev/null || true
+          echo "=== end ==="
           PYTHONUNBUFFERED=1 python3 scripts/proxy_smoke.py 2>&1 | tee proxy_smoke.log
           test "${PIPESTATUS[0]}" -eq 0
 

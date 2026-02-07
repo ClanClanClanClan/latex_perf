@@ -1564,7 +1564,7 @@ let l1_exp_001_rule : rule =
     (* EXP-001: Incomplete expansion — strip targets still present
        post-expansion *)
     let names = extract_command_names s in
-    let targets = [ "textbf"; "emph"; "section"; "bfseries" ] in
+    let targets = [ "textbf"; "emph"; "section" ] in
     let cnt =
       List.fold_left
         (fun acc n -> if List.exists (( = ) n) targets then acc + 1 else acc)

@@ -18,7 +18,7 @@ jobs:
       - name: Install OCaml & opam
         uses: ./.github/actions/setup-ocaml
         with:
-        ocaml-compiler: 5.1.1
+          ocaml-compiler: 5.1.1
           opam-depext: false
       - name: Install ocamlformat
         run: |

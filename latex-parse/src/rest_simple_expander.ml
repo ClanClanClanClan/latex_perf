@@ -1,6 +1,10 @@
 type cfg = { strip_controls : string list; bfseries_until_brace : bool }
 
-let default = { strip_controls = ["textbf"; "emph"; "section"]; bfseries_until_brace = true }
+let default =
+  {
+    strip_controls = [ "textbf"; "emph"; "section" ];
+    bfseries_until_brace = true;
+  }
 
 let of_json (j : Yojson.Safe.t) : cfg =
   let open Yojson.Safe.Util in

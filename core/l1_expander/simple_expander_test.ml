@@ -2,7 +2,7 @@ open L1_expander
 
 let cases =
   [
-    ("Before \\textbf{A \\emph{B} C} after", "Before A \\emph{B} C after");
+    ("Before \\textbf{A \\emph{B} C} after", "Before A B C after");
     ("\\textbf{X}", "X");
     ("plain", "plain");
   ]

@@ -36,8 +36,9 @@ jobs:
 
       - name: Start service (UDS)
         run: |
-          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
-          sleep 1
+          L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+            ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
+          sleep 2
 
       - name: Start REST server
         run: |

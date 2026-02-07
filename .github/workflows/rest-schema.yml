@@ -34,8 +34,9 @@ jobs:
       - name: Run service and REST
         run: |
           rm -f /tmp/l0_lex_svc.sock
-          opam exec -- ./_build/default/latex-parse/src/main_service.exe &
-          sleep 0.5
+          opam exec -- env L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+            ./_build/default/latex-parse/src/main_service.exe &
+          sleep 2
           opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
           sleep 0.5
 

@@ -31,8 +31,6 @@ jobs:
           opam exec -- dune build latex-parse/bench/ab_microbench.exe latex-parse/bench/edit_window_bench.exe latex-parse/bench/first_token_latency.exe
 
       - name: Full-doc perf gate (quick)
-        env:
-          SAMPLES: 10
         run: |
           opam exec -- bash scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 50
 
@@ -58,6 +56,7 @@ jobs:
 
       - name: Email notify on failure
         if: failure()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}

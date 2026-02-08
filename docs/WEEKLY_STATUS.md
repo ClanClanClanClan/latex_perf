@@ -131,11 +131,29 @@ Week 14 — Phase 2 Kickoff: L1 Expansion Proofs + Coq Build Infrastructure
 - All 13 proof files compile clean with Coq 8.18.0 via dune build proofs
 - Proofs: 13 files (up from 12), 0 admits, 0 axioms
 
-Current State (Post Week 14 / Phase 2 Start)
+Week 15 — Expansion Termination + Fuel Confluence Proofs
+- Completed all 3 deferred expansion theorems (all QED, zero admits):
+  - expand_one_decreases_ctrls: acyclic single-step strictly decreases control count
+  - expand_terminates_acyclic: acyclic well-formed catalog → expansion reaches fixpoint
+  - expand_fuel_insensitive: sufficient fuel → result independent of fuel amount (confluence)
+- New helper lemmas (all QED):
+  - filter_app, count_ctrls_app, count_ctrls_nil, count_ctrls_zero_filter, count_ctrls_cons
+  - is_catalog_ctrl_lookup, is_catalog_ctrl_non_ctrl, is_catalog_ctrl_none
+  - catalog_lookup_in, acyclic_lookup_zero
+  - expand_one_ctrls_unchanged: unchanged step preserves control count
+  - expand_star_reaches_fixpoint: fuel ≥ count → fixpoint reached
+  - expand_star_succ_at_fixpoint, expand_star_fuel_excess
+- Expand.v: 11 theorems/lemmas QED total (up from 8 in W14)
+- W14-17 exit criteria fully met ahead of schedule
+- CI fix: removed legacy coq_makefile step from ci.yml (conflicted with proofs/dune)
+- CI fix: restricted latex-perfectionist.yml trigger paths (package not on PyPI yet)
+- Golden corpus: 8 new corpus files for VPD batch 2 validators (47 golden cases total)
+
+Current State (Post Week 15 / Phase 2 Active)
 - Validators: 75 rules (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in vpd_patterns.json)
-- Proofs: 13 files, 0 admits, 0 axioms — L1 expansion model established
+- Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
 - CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
 - Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)
-- Next gate: L0-L1 QED (W26) — expand_terminates_acyclic + expand_fuel_insensitive remaining
+- Next gate: L0-L1 QED (W26) — expansion proofs complete; remaining is L1 integration + audit

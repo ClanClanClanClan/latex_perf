@@ -6,7 +6,6 @@ _build/
 *.vok
 *.vdd
 *.vos
-.cmx
 *.o
 *.tar.gz
 *.cmi

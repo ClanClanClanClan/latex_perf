@@ -35,11 +35,7 @@ jobs:
           done
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build OCaml service and Rust proxy
         run: |

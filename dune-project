@@ -19,6 +19,4 @@
   (coq           (= 8.18.0))
   (coq-core      (= 8.18.0))
   (yojson        (>= 2.1))
-  (ppx_deriving  (>= 5.2))
-  (angstrom      (>= 0.16))
   (uutf          (>= 1.0.3))))

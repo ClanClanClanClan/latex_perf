@@ -6,7 +6,7 @@
 
 ## Current Status Summary
 
-- 83 validators implemented (33 TYPO hand + 25 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- 83 validators implemented (33 TYPO hand + 25 VPD-gen + 18 MOD + 2 CMD + 1 EXP + 4 basic)
 - VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in pipeline)
 - 13 Coq proof files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
@@ -84,7 +84,7 @@ specs/                          # Authoritative plans & rule catalogues
 
 ## 📊 Performance Status
 
-### Week 1 Baseline (post-clean-up)
+### Current Baseline
 | Area | Target | Repository State | Notes |
 |------|--------|------------------|-------|
 | Build | `dune build` green | ✅ | Active for `latex-parse/` modules |
@@ -93,12 +93,12 @@ specs/                          # Authoritative plans & rule catalogues
 | Performance snapshot | record p95 | p95 ≈ 2.73 ms (200 k iters), ≈ 2.96 ms (1 M iters) | `ab_microbench` on `perf_smoke_big` (see `core/l0_lexer/current_baseline_performance.json`) |
 | Performance gate | p95 < 20 ms (Tier A) | ✅ | `scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100` |
 | Edit-window p95 | < 1ms | ✅ | `scripts/edit_window_gate.sh corpora/perf/edit_window_4kb.tex 2000` (p95 ≈ 0.017 ms) |
-| Validators | 623 total | 67 implemented (10.8%) | 33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy |
+| Validators | 623 total | 83 implemented (13.3%) | 33 TYPO hand + 25 VPD-gen + 18 MOD + 2 CMD + 1 EXP + 4 basic |
 
 ### Long-term Targets (Week 156 GA)
 | Metric | Target | Current | Progress |
 |--------|--------|---------|----------|
-| Validators | 623 | 67 implemented | 10.8% |
+| Validators | 623 | 83 implemented | 13.3% |
 | Languages | 21 | 6 live + 15 stubbed | 29% |
 | Edit-window p95 | < 1ms | 0.017 ms | Exceeds target |
 | False-positive rate | < 0.1% | pending | - |

@@ -13,6 +13,7 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Install OCaml & opam
@@ -49,6 +50,7 @@ jobs:
           path: ocamlformat.patch
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Show revision and entry points

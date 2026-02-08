@@ -11,7 +11,7 @@
   "TYPO-004": {
     "layer": "L0",
     "severity": "Warning",
-    "message": "TeX double back-tick or single-quote pairs found; use curly quotes",
+    "message": "TeX double back-tick ``…'' not allowed; use curly quotes",
     "pattern": {
       "family": "multi_substring",
       "needles": ["``", "''"]
@@ -38,7 +38,7 @@
   "TYPO-023": {
     "layer": "L0",
     "severity": "Warning",
-    "message": "Windows carriage-return found; use Unix line endings",
+    "message": "Windows CR (\\r) line endings found",
     "pattern": {
       "family": "count_char",
       "char": "\r"
@@ -47,7 +47,7 @@
   "TYPO-030": {
     "layer": "L0",
     "severity": "Warning",
-    "message": "Quadruple hyphen ---- found; use em-dash or rule",
+    "message": "More than three hyphens detected (----)",
     "pattern": {
       "family": "count_substring",
       "needle": "----"

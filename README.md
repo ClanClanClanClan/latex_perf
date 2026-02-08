@@ -12,24 +12,25 @@
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-**3-Year Project - Week 1 of 156** - Comprehensive LaTeX document analysis and style validation system.
+**3-Year Project - Week 16 of 156** - Comprehensive LaTeX document analysis and style validation system.
 
 LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 623 rules across 21 languages.
 
-## Current Status (Week 1 - September 2025)
+## Current Status (Week 16 - February 2026)
 
-Baseline after the Week‑1 audit clean-up:
-- **Build**: `dune build` compiles the SIMD service and benches under `latex-parse/`. Legacy prototypes in `core/` are archived (`dune.disabled`) until they are rebuilt against the new runtime.
-- **Proofs**: The zero-admit baseline is preserved via `proofs/CoreProofs.v`, `proofs/Catcode.v`, and `proofs/Arena_safe.v`. Earlier drafts remain in `proofs/archive/` and do not participate in the build.
-  Recent additions: `proofs/LexerSoA.v` (SoA small-step + big-step with window locality and stability), `proofs/LexerFaithfulStep.v`, `proofs/LexerDeterminism.v`, `proofs/LexerTotality.v` — all admit-free.
-- **Validators & Languages**: Implementation of the 623-rule catalog is still tracked in `specs/`; no production validators ship in this repository yet.
+Phase 2 in progress — VPD pipeline operational, all expansion proofs QED:
+- **Build**: `dune build` compiles the SIMD service, benches, generator pipeline, and 13 Coq proofs via `(coq.theory)` stanza.
+- **Proofs**: 13 Coq proof files, 0 admits, 0 axioms. All expansion theorems QED (W15). Includes `proofs/LexerSoA.v` (SoA small-step + big-step with window locality and stability), `proofs/LexerFaithfulStep.v`, `proofs/LexerDeterminism.v`, `proofs/LexerTotality.v` — all admit-free.
+- **Validators**: 83 validators implemented (33 TYPO hand-coded + 25 VPD-generated + 18 MOD + 2 CMD + 1 EXP + 4 basic). TYPO coverage: 58/63 rules.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
 
-### Week 1 Deliverables
-- ✅ Repository and build hygiene pass: legacy OCaml/Coq drafts archived, modern build unblocked
-- ✅ Coq baseline restored (CoreProofs.v / Catcode.v / Arena_safe.v, 0 admits, 0 axioms)
-- ✅ Performance harness wired up (bench + gate scripts)
-- 🔄 Rebuild L0 lexer/validator implementations on top of the refreshed runtime
+### Recent Milestones
+- ✅ W1: Bootstrap complete — build, proofs, perf harness
+- ✅ W5: Performance α gate (p95 < 20ms)
+- ✅ W10: Proof β gate (admits = 0)
+- ✅ W14-15: Phase 2 — all expansion proofs QED
+- ✅ W16: VPD Batch 3 — 55 golden test cases
+- 🔄 Next: L0-L1 formal checkpoint (W26)
 
 ## Quick Start
 
@@ -215,7 +216,8 @@ The R1 baseline is the OCaml L0 runtime. SIMD acceleration is available via:
 
 ---
 
-**Status**: Build and proof baselines restored; rebuilding the L0 lexer + validator implementation is the next milestone before re-running the Week‑5 performance gate.
+**Status**: Week 16 — 83 validators implemented, 13 Coq proofs QED, VPD pipeline operational. Next milestone: L0-L1 formal checkpoint (W26).
+
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 
 ```bash

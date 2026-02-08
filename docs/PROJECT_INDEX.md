@@ -1,15 +1,16 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 10 of 156 - Q1 Gates Passed (Bootstrap, Perf alpha, Proof beta)
+**Status**: Week 12 of 156 - Q1 Gates Passed (Bootstrap, Perf alpha, Proof beta)
 **Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
 ## Current Status Summary
 
-- 58 validators implemented (33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- 11 Coq proof files (1,998 lines), 0 admits, 0 axioms
+- 67 validators implemented (33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (E2E verified)
+- 12 Coq proof files, 0 admits, 0 axioms
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
-- 23 CI workflows green
+- 31 CI workflows green
 - 3 gates passed: Bootstrap (W1), Perf alpha (W5), Proof beta (W10)
 - Next gate: L0-L1 QED (W26)
 
@@ -27,10 +28,27 @@ latex-parse/
     └── ab_microbench.ml
 ```
 
+### VPD Generator Pipeline
+```
+generator/
+├── vpd_grammar.ml          # YAML + patterns JSON → VPD manifest JSON bridge
+├── vpd_compile.ml          # VPD manifest JSON → OCaml validator code
+├── vpd_types.ml            # Core VPD type definitions (11 pattern families)
+├── vpd_parse.ml            # JSON manifest parser
+├── vpd_emit.ml             # OCaml code emitter
+└── typo_batch1.json        # Batch 1 manifest (9 rules)
+
+specs/rules/
+├── rules_v3.yaml           # Authoritative rule catalogue (623 rules)
+├── vpd_patterns.json       # Pattern annotations for VPD-able rules
+├── pilot_v1_golden.yaml    # Golden test cases (42 entries)
+├── l1_golden.yaml          # L1 golden test cases
+└── unicode_golden.yaml     # Unicode golden test cases
+```
+
 ### Archived / Gated Prototypes
 ```
-core/                           # Legacy L0-L4 experiments (disabled by default)
-  ↳ Reactivate by temporarily renaming `dune.disabled` → `dune`
+core/                           # Legacy L0-L4 experiments (may be disabled)
 
 proofs/archive/                 # Historical proof drafts kept for reference
 ```
@@ -60,12 +78,12 @@ specs/                          # Authoritative plans & rule catalogues
 | Performance snapshot | record p95 | p95 ≈ 2.73 ms (200 k iters), ≈ 2.96 ms (1 M iters) | `ab_microbench` on `perf_smoke_big` (see `core/l0_lexer/current_baseline_performance.json`) |
 | Performance gate | p95 < 20 ms (Tier A) | ✅ | `scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100` |
 | Edit-window p95 | < 1ms | ✅ | `scripts/edit_window_gate.sh corpora/perf/edit_window_4kb.tex 2000` (p95 ≈ 0.017 ms) |
-| Validators | 623 total | 58 implemented (9.3%) | 33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy |
+| Validators | 623 total | 67 implemented (10.8%) | 33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy |
 
 ### Long-term Targets (Week 156 GA)
 | Metric | Target | Current | Progress |
 |--------|--------|---------|----------|
-| Validators | 623 | 58 implemented | 9.3% |
+| Validators | 623 | 67 implemented | 10.8% |
 | Languages | 21 | 6 live + 15 stubbed | 29% |
 | Edit-window p95 | < 1ms | 0.017 ms | Exceeds target |
 | False-positive rate | < 0.1% | pending | - |

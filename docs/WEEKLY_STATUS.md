@@ -67,9 +67,42 @@ Week 10 — Code Health Audit & Fixes
 - Applied dune fmt across codebase
 - All 13 tests pass; dune build, runtest, fmt all green
 
-Current State (Post Week 10)
-- Validators: 58 rules (33 TYPO + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- Proofs: 11 files, 1,998 lines, 0 admits, 0 axioms
+Week 11 — VPD Compiler Batch 1
+- VPD compiler skeleton: vpd_types.ml, vpd_parse.ml, vpd_emit.ml, vpd_compile.ml (313 lines)
+- 10 pattern families: count_char, count_substring, count_substring_strip_math, multi_substring, multi_substring_strip_math, char_range, regex, line_pred, custom
+- Generated 9 new TYPO validators (034, 037, 042, 048, 051, 052, 053, 055, 061) via VPD batch
+- Wired into validators.ml via rules_vpd_gen list
+- 9 corpus files + 9 golden entries in pilot_v1_golden.yaml
+- All smoke tests green
+
+Week 11 — CI Infrastructure Hardening
+- Fixed timerfd blocking hang: added TFD_NONBLOCK to hedge_timer_stubs.c
+- Added proper service warmup to rest-smoke, rest-schema, rust-proxy-smoke workflows
+- Added opam install retry (3 attempts with 15s backoff) to all 25 CI workflows
+- Fixed expander-smoke jq selector (was broken since Sept 2025)
+- All 35 CI checks green on main
+
+Week 12 — VPD Grammar Front-End + Code Debt
+- VPD Grammar tool: generator/vpd_grammar.ml — YAML-to-VPD-JSON bridge
+  - Reads rules_v3.yaml (623 rules) + vpd_patterns.json (pattern annotations)
+  - Minimal YAML-subset parser (no new opam dependency)
+  - Produces VPD manifest JSON for vpd_compile
+  - Supports --filter (subset generation) and --validate (consistency check)
+- New VPD pattern family: Count_char_strip_math (strip math then count char)
+- E2E pipeline verified: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (TYPO-001 match)
+- vpd_patterns.json: initial 6 entries (TYPO-001, 004, 005, 006, 023, 030)
+- E2E test script: scripts/test_vpd_e2e.sh
+- Code debt cleanup:
+  - Deleted core/l0_lexer/dune.disabled (dead file with hardcoded absolute path)
+  - Converted test_simd_attestation from executable to test stanza with exit code assertions
+  - Added fault-test Makefile target for test_fault_injection
+- CI: 25 workflows with opam retry, all green
+- Tests: 13 dune tests pass (including new test_simd_attestation)
+
+Current State (Post Week 12)
+- Validators: 67 rules (33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (E2E verified)
+- Proofs: 12 files, 0 admits, 0 axioms
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
-- CI: 23 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
+- CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
 - Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)

@@ -1,0 +1,56 @@
+{
+  "TYPO-001": {
+    "layer": "L0",
+    "severity": "Error",
+    "message": "ASCII straight quotes must be curly quotes",
+    "pattern": {
+      "family": "count_char_strip_math",
+      "char": "\""
+    }
+  },
+  "TYPO-004": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "TeX double back-tick or single-quote pairs found; use curly quotes",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["``", "''"]
+    }
+  },
+  "TYPO-005": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Ellipsis typed as three periods ...; use \\dots",
+    "pattern": {
+      "family": "count_substring_strip_math",
+      "needle": "..."
+    }
+  },
+  "TYPO-006": {
+    "layer": "L0",
+    "severity": "Error",
+    "message": "Tab character U+0009 forbidden",
+    "pattern": {
+      "family": "count_char",
+      "char": "\t"
+    }
+  },
+  "TYPO-023": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Windows carriage-return found; use Unix line endings",
+    "pattern": {
+      "family": "count_char",
+      "char": "\r"
+    }
+  },
+  "TYPO-030": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Quadruple hyphen ---- found; use em-dash or rule",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "----"
+    }
+  }
+}

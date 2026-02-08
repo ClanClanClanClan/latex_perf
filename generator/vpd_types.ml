@@ -10,6 +10,8 @@ type layer = L0_Lexer | L1_Expanded | L2_Ast | L3_Semantics | L4_Style
     template. *)
 type pattern =
   | Count_char of char  (** Count occurrences of a single byte. *)
+  | Count_char_strip_math of char
+      (** Like [Count_char] but strip math segments first. *)
   | Count_substring of string
       (** Count occurrences of a substring (with overlap). *)
   | Count_substring_strip_math of string

@@ -18,6 +18,7 @@ EDIT_ITERS ?= 5000
 .PHONY: hash-bench
 .PHONY: fmt
 .PHONY: rest-run rest-stop rest-smoke
+.PHONY: fault-test
 .PHONY: build-simd
 .PHONY: simd-hash-avx2 simd-hash-neon
 
@@ -158,6 +159,12 @@ rest-smoke: rest-run
 	bash scripts/rest_smoke.sh || true
 	$(MAKE) rest-stop
 	$(MAKE) service-stop
+
+fault-test: build service-run
+	@sleep 2
+	@echo "[fault-test] Running fault injection..."
+	./_build/default/latex-parse/src/test_fault_injection.exe
+	@$(MAKE) service-stop
 
 build-simd:
 	@bash scripts/build_simd.sh

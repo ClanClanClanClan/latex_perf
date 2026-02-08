@@ -60,6 +60,11 @@ let parse_pattern (json : Yojson.Basic.t) : pattern =
       if String.length c <> 1 then
         failwith "vpd_parse: count_char expects single char";
       Count_char c.[0]
+  | "count_char_strip_math" ->
+      let c = string_member "char" json in
+      if String.length c <> 1 then
+        failwith "vpd_parse: count_char_strip_math expects single char";
+      Count_char_strip_math c.[0]
   | "count_substring" ->
       let sub = string_member "needle" json in
       Count_substring sub

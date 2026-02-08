@@ -1,6 +1,6 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 13 of 156 - Q1 Complete (Bootstrap, Perf alpha, Proof beta)
+**Status**: Week 14 of 156 - Phase 2 In Progress (L1 Expansion + Proofs)
 **Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
@@ -8,7 +8,7 @@
 
 - 75 validators implemented (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
 - VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in pipeline)
-- 12 Coq proof files, 0 admits, 0 axioms
+- 13 Coq proof files, 0 admits, 0 axioms (Expand.v added W14)
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
 - 31 CI workflows green
 - 3 gates passed: Bootstrap (W1), Perf alpha (W5), Proof beta (W10)
@@ -60,9 +60,21 @@ prototypes and benches aligned with the active runtime without duplication.
 When editing runtime modules, prefer touching files under `latex-parse/src/` —
 the symlinks in `core/l0_lexer/` will reflect those changes automatically.
 
+### Formal Proofs
+```
+proofs/
+├── dune                        # Coq theory stanza (coq.theory, added W14)
+├── CoreProofs.v                # Live zero-admit baseline (L0 core)
+├── Catcode.v                   # Category code proofs
+├── Arena_safe.v                # Arena safety proofs
+├── LexerSoA.v                  # SoA window equivalence
+├── LexerFaithfulStep.v         # Step determinism & progress
+├── Expand.v                    # L1 fuel-bounded expansion model (added W14)
+└── archive/                    # Historical proof drafts
+```
+
 ### Shared Assets
 ```
-proofs/CoreProofs.v             # Live zero-admit baseline
 data/                           # Shared OCaml data structures
 corpora/                        # Test data (perf_smoke, etc.)
 specs/                          # Authoritative plans & rule catalogues
@@ -146,15 +158,15 @@ OPAMSWITCH=l0-testing opam exec -- \
 
 ## 🎯 Upcoming Milestones
 
-### Immediate (Weeks 2-5)
-- **Week 2-3**: Catcode module + proofs
-- **Week 4**: Chunk infra, xxHash scalar
-- **Week 5** 🎯: Performance α gate (p95 < 20ms mandatory)
+### Phase 2 Immediate (Weeks 14-17)
+- **Week 14** ✅: Phase 2 kickoff — Expand.v, proofs/dune, fuel-bounded model
+- **Week 15-16**: Complete expansion termination proofs (decreases_ctrls, fuel_insensitive)
+- **Week 17** 🎯: expand_no_teof QED exit criterion
 
-### Q1 Gates (Weeks 1-13)
+### Q1 Gates (Weeks 1-13) — ALL PASSED
 - **Week 1** ✅: Bootstrap complete
-- **Week 5** 🎯: Performance α gate
-- **Week 10** 🎯: Proof β gate (admits ≤ 10)
+- **Week 5** ✅: Performance α gate (p95 < 20ms)
+- **Week 10** ✅: Proof β gate (admits = 0)
 
 ### Major Milestones
 - **Week 26**: L0-L1 formal checkpoint
@@ -175,4 +187,4 @@ OPAMSWITCH=l0-testing opam exec -- \
 
 ---
 
-**Week 1 Status**: ✅ Build + proof baselines restored; performance and validator work resume after the lexer/runtime rebuild.
+**Week 14 Status**: ✅ Phase 2 kickoff — L1 expansion proof model (Expand.v), Coq build stanza (proofs/dune), 8 QED theorems. Q1 gates all passed.

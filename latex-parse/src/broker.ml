@@ -111,7 +111,7 @@ let maybe_rotate p w =
 let inflight_total p =
   Array.fold_left (fun acc w -> acc + if w.inflight then 1 else 0) 0 p.workers
 
-let int_of_fd (fd : Unix.file_descr) : int = (Obj.magic fd : int)
+let int_of_fd = Fd_util.fd_to_int
 
 let find_by_fd p fd =
   let rec loop i =
@@ -137,7 +137,7 @@ let drain_one_ready ~deadline_ns p =
      let tf, ready = Hedge_timer.wait_two p.timer ~fd1 ~fd2 in
      ignore tf;
      if ready >= 0 then
-       match find_by_fd p (Obj.magic ready) with
+       match find_by_fd p ready with
        | None -> ()
        | Some w -> (
            match Ipc.read_any w.fd with

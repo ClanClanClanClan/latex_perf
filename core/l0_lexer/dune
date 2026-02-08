@@ -25,7 +25,8 @@
   simd_guard
   real_processor
   service_bracket
-  worker)
+  worker
+  fd_util)
  (libraries unix threads data)
  (foreign_stubs
   (language c)
@@ -36,7 +37,8 @@
    mlock_stubs
    simd_guard_stubs
    simd_production_stubs
-   simd_tokenizer_fixed)))
+   simd_tokenizer_fixed
+   fd_util_stubs)))
 
 (executable
  (name main_service)

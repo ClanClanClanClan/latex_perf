@@ -187,8 +187,6 @@ let rescue_once p ~req_id ~(input : bytes) : svc_result =
   | _ -> failwith "broker: rescue unexpected"
 
 let hedged_call p ~(input : bytes) ~(hedge_ms : int) : svc_result =
-  Printf.eprintf "[broker] hedged_call start len=%d inflight=%d\n%!"
-    (Bytes.length input) (inflight_total p);
   (* CRITICAL FIX: Further reduced timeout to 200ms for aggressive P99.9 *)
   let deadline = Int64.add (Clock.now ()) (Clock.ns_of_ms 200) in
   while inflight_total p >= Array.length p.workers do
@@ -198,21 +196,15 @@ let hedged_call p ~(input : bytes) ~(hedge_ms : int) : svc_result =
   let req_id = next_req_id () in
   let primary = pick_hot p in
   primary.inflight <- true;
-  Printf.eprintf "[broker] writing req_id=%Ld to worker pid=%d fd=%d\n%!" req_id
-    primary.pid (int_of_fd primary.fd);
   Ipc.write_req primary.fd ~req_id ~bytes:input;
-  Printf.eprintf "[broker] write_req done, arming timer %d ms\n%!" hedge_ms;
 
   Hedge_timer.arm p.timer ~ns:(Clock.ns_of_ms hedge_ms);
   p.requests <- p.requests + 1;
 
   let rec wait_primary_or_timer () =
-    Printf.eprintf "[broker] entering wait_two fd1=%d fd2=-1\n%!"
-      (int_of_fd primary.fd);
     let tf, ready =
       Hedge_timer.wait_two p.timer ~fd1:(int_of_fd primary.fd) ~fd2:(-1)
     in
-    Printf.eprintf "[broker] wait_two returned tf=%d ready=%d\n%!" tf ready;
     if ready = int_of_fd primary.fd then `Primary_ready
     else if tf = 1 then `Hedge_fire
     else wait_primary_or_timer ()

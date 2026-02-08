@@ -100,11 +100,7 @@ let run () =
     | Some s -> parse_cores s
     | None -> Latex_parse_lib.Config.pool_cores
   in
-  Printf.eprintf "[svc] forking workers for cores: %s\n%!"
-    (String.concat "," (List.map string_of_int (Array.to_list cores)));
   let pool = Latex_parse_lib.Broker.init_pool cores in
-  Printf.eprintf "[svc] pool ready, %d workers spawned\n%!"
-    (Array.length Latex_parse_lib.Broker.(pool.workers));
 
   let tail_csv_keep = Latex_parse_lib.Config.tail_trace_keep in
   let slow =
@@ -147,28 +143,22 @@ let run () =
   in
 
   let handle_conn c =
-    let tid = Thread.id (Thread.self ()) in
-    Printf.eprintf "[svc:t%d] handle_conn entered pid=%d\n%!" tid
-      (Unix.getpid ());
     (* keep-alive loop: many requests per connection *)
     let rec loop () =
       (* recv *)
-      Printf.eprintf "[svc:t%d] reading hdr...\n%!" tid;
       let hdr = Bytes.create 16 in
       (try read_exact c hdr 0 16
        with e ->
-         Printf.eprintf "[svc:t%d] read_exact(hdr) exn: %s\n%!" tid
+         Printf.eprintf "[svc] read_exact(hdr) exn: %s\n%!"
            (Printexc.to_string e);
          raise Exit);
-      Printf.eprintf "[svc:t%d] got hdr\n%!" tid;
       let msg_type = be32_get hdr 0 in
       if msg_type <> 1 then (
-        Printf.eprintf "[svc:t%d] bad msg_type=%d\n%!" tid msg_type;
+        Printf.eprintf "[svc] bad msg_type=%d\n%!" msg_type;
         raise Exit);
       let req_id = be64_get hdr 4 in
       let payload_len = be32_get hdr 12 in
-      Printf.eprintf "[svc:t%d] recv req_id=%Ld len=%d\n%!" tid req_id
-        payload_len;
+      Printf.eprintf "[svc] recv req_id=%Ld len=%d\n%!" req_id payload_len;
       let doc_bytes_max = Latex_parse_lib.Config.max_req_bytes in
       let payload = Bytes.create payload_len in
       read_exact c payload 0 payload_len;
@@ -190,21 +180,17 @@ let run () =
         ref None
       in
       let process (req : bytes) =
-        Printf.eprintf "[svc:t%d] calling hedged_call len=%d\n%!" tid
-          (Bytes.length req);
         try
           let r =
             Latex_parse_lib.Broker.hedged_call pool ~input:req
               ~hedge_ms:Latex_parse_lib.Config.hedge_timer_ms_default
           in
-          Printf.eprintf "[svc:t%d] hedged_call returned status=%d\n%!" tid
-            r.Latex_parse_lib.Broker.status;
           last_result := Some r;
           `Ok r
-        with exn ->
+        with _ ->
           last_result := None;
-          Printf.eprintf "[svc:t%d] hedged_call exn: %s len=%d sample=%s\n%!"
-            tid (Printexc.to_string exn) (Bytes.length req) (hex_prefix req);
+          Format.eprintf "[svc] hedged_call exn len=%d sample=%s@."
+            (Bytes.length req) (hex_prefix req);
           `Err
       in
       let put32 b off v =
@@ -294,30 +280,15 @@ let run () =
         dump_csv ());
       loop ()
     in
-    try loop ()
-    with exn -> (
-      Printf.eprintf "[svc:t%d] loop exn: %s\n%!" tid (Printexc.to_string exn);
-      try Unix.close c with _ -> ())
+    try loop () with _ -> ( try Unix.close c with _ -> ())
   in
 
-  Printf.eprintf "[svc] entering accept_loop\n%!";
   let rec accept_loop () =
     try
       let c, _ = Unix.accept srv in
-      Printf.eprintf "[svc] accepted connection, spawning thread\n%!";
-      (try
-         ignore (Thread.create handle_conn c);
-         Printf.eprintf "[svc] thread created\n%!"
-       with exn -> (
-         Printf.eprintf "[svc] Thread.create FAILED: %s\n%!"
-           (Printexc.to_string exn);
-         try Unix.close c with _ -> ()));
+      ignore (Thread.create handle_conn c);
       accept_loop ()
-    with
-    | Unix.Unix_error (Unix.EINTR, _, _) -> accept_loop ()
-    | exn ->
-        Printf.eprintf "[svc] accept exn: %s\n%!" (Printexc.to_string exn);
-        accept_loop ()
+    with Unix.Unix_error (Unix.EINTR, _, _) -> accept_loop ()
   in
   accept_loop ()
 

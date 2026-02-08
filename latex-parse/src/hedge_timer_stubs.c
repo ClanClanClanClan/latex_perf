@@ -54,13 +54,18 @@
 
   /* Single timerfd created once in ht_create, re-armed in ht_arm_ns.
      Previous implementation leaked a new timerfd on every arm() call,
-     corrupting the epoll set with stale expired timers. */
+     corrupting the epoll set with stale expired timers.
+
+     TFD_NONBLOCK is required: arm_ns drains pending expirations with read()
+     before re-arming.  On the very first call no timer has fired yet, so a
+     blocking read() would hang forever.  Non-blocking makes the drain return
+     EAGAIN when nothing is pending, which is harmless (cast to void). */
   static int g_timer_fd = -1;
 
   CAMLprim value ocaml_ht_create(value unit){
     int ep = epoll_create1(EPOLL_CLOEXEC);
     if (ep < 0) uerror("epoll_create1", Nothing);
-    int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
+    int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
     if (tfd < 0) { close(ep); uerror("timerfd_create", Nothing); }
     struct epoll_event ev = { .events = EPOLLIN, .data.fd = tfd };
     if (epoll_ctl(ep, EPOLL_CTL_ADD, tfd, &ev) < 0) {

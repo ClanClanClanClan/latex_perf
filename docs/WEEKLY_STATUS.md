@@ -114,11 +114,28 @@ Week 13 — VPD Batch 2 + Q1 Wrap-Up
   - TYPO-001 E2E pipeline verified via VPD grammar
   - Code debt resolved (no dead files, no hardcoded paths, no TODOs)
 
-Current State (Post Week 13 / Q1 Exit)
+Week 14 — Phase 2 Kickoff: L1 Expansion Proofs + Coq Build Infrastructure
+- Created proofs/dune with (coq.theory) stanza: all 13 proof files now compile via dune
+  - Previously proofs/ had no dune file — CI was textually checking but not compiling
+  - Theory name: LaTeXPerfectionist (matches existing Require Import statements)
+- New proof file: proofs/Expand.v — L1 expansion model with fuel-bounded recursion
+  - Defines: token model, macro catalog, expand_one (single step), expand_star (fixpoint)
+  - Defines: well-formedness (wf_catalog), acyclicity (acyclic_catalog)
+  - Proven (QED): expand_no_teof — expansion preserves EOF-free invariant
+  - Proven (QED): expand_deterministic — same input → same output
+  - Proven (QED): expand_one_unchanged — unchanged flag means identity
+  - Proven (QED): expand_star_fixpoint — at fixpoint, extra fuel is no-op
+  - Helper lemmas (QED): has_eof_cons, has_eof_app, catalog_lookup_wf, expand_one_no_eof
+  - Deferred: expand_one_decreases_ctrls, expand_terminates_acyclic, expand_fuel_insensitive
+  - Zero admits, zero axioms (CI gate compliant)
+- All 13 proof files compile clean with Coq 8.18.0 via dune build proofs
+- Proofs: 13 files (up from 12), 0 admits, 0 axioms
+
+Current State (Post Week 14 / Phase 2 Start)
 - Validators: 75 rules (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in vpd_patterns.json)
-- Proofs: 12 files, 0 admits, 0 axioms
+- Proofs: 13 files, 0 admits, 0 axioms — L1 expansion model established
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
 - CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
 - Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)
-- Next gate: L0-L1 QED (W26) — Phase 2 begins
+- Next gate: L0-L1 QED (W26) — expand_terminates_acyclic + expand_fuel_insensitive remaining

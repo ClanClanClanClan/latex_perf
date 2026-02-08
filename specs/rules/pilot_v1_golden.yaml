@@ -155,3 +155,35 @@ cases:
     expect: ["TYPO-061"]
     expect_msgs:
       - "TYPO-061:Unicode multiplication sign found; prefer \\times in math mode"
+  - file: corpora/lint/pilot_v1/TYPO-035_french_punctuation.tex
+    expect: ["TYPO-035"]
+    expect_msgs:
+      - "TYPO-035:Space before French punctuation mark; use non-breaking space ~"
+  - file: corpora/lint/pilot_v1/TYPO-036_shouting.tex
+    expect: ["TYPO-036"]
+    expect_msgs:
+      - "TYPO-036:Suspicious consecutive capitalised words; check for inadvertent shouting"
+  - file: corpora/lint/pilot_v1/TYPO-038_bare_email.tex
+    expect: ["TYPO-038"]
+    expect_msgs:
+      - "TYPO-038:Bare e-mail address found; wrap in \\href{mailto:...}"
+  - file: corpora/lint/pilot_v1/TYPO-041_ldots_spacing.tex
+    expect: ["TYPO-041"]
+    expect_msgs:
+      - "TYPO-041:Incorrect spacing around \\ldots; check for missing space"
+  - file: corpora/lint/pilot_v1/TYPO-043_smart_quotes_verbatim.tex
+    expect: ["TYPO-043"]
+    expect_msgs:
+      - "TYPO-043:Smart (curly) quotes detected; verbatim sections require ASCII quotes"
+  - file: corpora/lint/pilot_v1/TYPO-054_endash_spacing.tex
+    expect: ["TYPO-054"]
+    expect_msgs:
+      - "TYPO-054:En-dash adjacent to letter without spacing; consider thin space"
+  - file: corpora/lint/pilot_v1/TYPO-057_degree_spacing.tex
+    expect: ["TYPO-057"]
+    expect_msgs:
+      - "TYPO-057:Number directly adjacent to degree symbol; insert thin space"
+  - file: corpora/lint/pilot_v1/TYPO-063_nonbreaking_hyphen.tex
+    expect: ["TYPO-063"]
+    expect_msgs:
+      - "TYPO-063:Non-breaking hyphen U+2011 found; use standard hyphen"

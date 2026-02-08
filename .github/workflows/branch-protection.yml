@@ -35,18 +35,23 @@ jobs:
           github-token: ${{ env.ADMIN_TOKEN }}
           script: |
             const branch = core.getInput('branch') || context.payload.repository.default_branch;
-            const contexts = JSON.parse(process.env.CHECKS || '[]');
+            const checks = JSON.parse(process.env.CHECKS || '[]');
             if (!process.env.ADMIN_TOKEN) {
               core.setFailed('REPO_ADMIN_TOKEN secret missing; cannot set branch protection.');
               return;
             }
+            // Use the modern "checks" field (objects with app_id) instead of
+            // the legacy "contexts" field (plain strings).  The legacy field
+            // sets app_id: null, which makes GitHub look at the empty commit-
+            // statuses API instead of the check-runs API where GitHub Actions
+            // posts results (app_id 15368).
             await github.request('PUT /repos/{owner}/{repo}/branches/{branch}/protection', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               branch,
               required_status_checks: {
                 strict: true,
-                contexts
+                checks
               },
               enforce_admins: true,
               required_pull_request_reviews: {
@@ -54,4 +59,4 @@ jobs:
               },
               restrictions: null
             });
-            core.notice(`Branch protection updated on ${branch} with ${contexts.length} required checks.`);
+            core.notice(`Branch protection updated on ${branch} with ${checks.length} required checks.`);

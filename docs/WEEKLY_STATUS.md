@@ -149,9 +149,26 @@ Week 15 — Expansion Termination + Fuel Confluence Proofs
 - CI fix: restricted latex-perfectionist.yml trigger paths (package not on PyPI yet)
 - Golden corpus: 8 new corpus files for VPD batch 2 validators (47 golden cases total)
 
-Current State (Post Week 15 / Phase 2 Active)
-- Validators: 75 rules (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in vpd_patterns.json)
+Week 16 — VPD Batch 3: 8 New Validators
+- VPD Batch 3: 8 new validators covering previously unimplemented TYPO rules:
+  - TYPO-039: URL split across lines without \url{} (regex)
+  - TYPO-040: Inline math $...$ exceeds 80 characters (custom — Str interval workaround)
+  - TYPO-045: Non-ASCII punctuation in math mode (custom — byte-level $ toggle scanner)
+  - TYPO-046: Use of \begin{math} instead of $...$ (multi_substring)
+  - TYPO-047: Starred \section* used where numbered section expected (count_substring)
+  - TYPO-049: Space after opening quote (multi_substring — curly open quote + space)
+  - TYPO-056: Legacy TeX accent commands (regex — \\['^`"~=.]{letter})
+  - TYPO-058: Greek homograph letters in Latin text (multi_substring — α ε ι ο ρ ς υ)
+- VPD-generated section now contains 25 rules (up from 17 in batch 2)
+- vpd_patterns.json expanded to 31 entries
+- 8 new corpus test files + 8 new golden entries (55 golden cases total, all pass)
+- TYPO implementation coverage: 58/63 implemented (5 remaining: 044, 050, 059, 060, 062)
+- All dune build, dune runtest, dune fmt: exit 0
+- No proof regressions
+
+Current State (Post Week 16 / Phase 2 Active)
+- Validators: 83 rules (33 TYPO hand + 25 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
 - CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy

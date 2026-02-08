@@ -205,5 +205,77 @@
       "family": "count_substring",
       "needle": "\u2011"
     }
+  },
+  "TYPO-039": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "URL split across lines without \\url{}",
+    "pattern": {
+      "family": "regex",
+      "regex": "https?://[^ \t\n}]+"
+    }
+  },
+  "TYPO-040": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Inline math $...$ exceeds 80 characters",
+    "pattern": {
+      "family": "custom",
+      "body": "fun s -> let re = Str.regexp \"\\\\$\\\\([^$]+\\\\)\\\\$\" in let rec loop i acc = try ignore (Str.search_forward re s i); let inner = Str.matched_group 1 s in loop (Str.match_end ()) (if String.length inner > 80 then acc + 1 else acc) with Not_found -> acc in loop 0 0"
+    }
+  },
+  "TYPO-045": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Non-ASCII punctuation in math mode",
+    "pattern": {
+      "family": "custom",
+      "body": "fun s -> let n = String.length s in let rec scan i inside acc = if i >= n then acc else let c = Char.code s.[i] in if c = 0x24 then scan (i+1) (not inside) acc else if inside && c >= 0x80 then scan (i+1) inside (acc+1) else scan (i+1) inside acc in scan 0 false 0"
+    }
+  },
+  "TYPO-046": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Use of \\begin{math} instead of $...$",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\begin{math}", "\\end{math}"]
+    }
+  },
+  "TYPO-047": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Starred \\section* used where numbered section expected",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\section*"
+    }
+  },
+  "TYPO-049": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Space after opening quote",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\u201C ", "\u2018 "]
+    }
+  },
+  "TYPO-056": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Legacy TeX accent command found; use UTF-8 character directly",
+    "pattern": {
+      "family": "regex",
+      "regex": "\\\\['^`\"~=.][{][a-zA-Z][}]"
+    }
+  },
+  "TYPO-058": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Greek homograph letter found in Latin text",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\u03B1", "\u03B5", "\u03B9", "\u03BF", "\u03C1", "\u03C2", "\u03C5"]
+    }
   }
 }

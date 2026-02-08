@@ -109,6 +109,29 @@ jobs:
             fi
             sleep 2
           done
+          # Allow worker rotation (triggered by warmup) to complete
+          sleep 3
+          echo "Sending stabilization request..."
+          python3 -c "
+          import socket, struct, sys
+          try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(10.0)
+            s.connect('/tmp/l0_lex_svc.sock')
+            doc = b' ok'
+            payload = struct.pack('>I', len(doc)) + doc
+            hdr = struct.pack('>IqI', 1, 2, len(payload))
+            s.sendall(hdr + payload)
+            rhdr = b''
+            while len(rhdr) < 16: rhdr += s.recv(16 - len(rhdr))
+            rlen = struct.unpack('>IqI', rhdr)[2]
+            body = b''
+            while len(body) < rlen: body += s.recv(rlen - len(body))
+            s.close()
+            print('Stabilization request ok')
+          except Exception as e:
+            print(f'stabilization failed (non-fatal): {e}', file=sys.stderr)
+          "
 
       - name: Start proxy
         run: |

@@ -89,9 +89,9 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          opam exec -- coq_makefile -f _CoqProject -o CoqMakefile
-          opam exec -- make -f CoqMakefile -j2
-          rm -f CoqMakefile CoqMakefile.conf .CoqMakefile.d
+          # Coq proofs are now built via (coq.theory) stanza in proofs/dune;
+          # the legacy coq_makefile path was removed in Week 14 to avoid
+          # "Multiple rules generated for .glob" conflicts with dune.
           pushd latex-parse >/dev/null
           opam exec -- dune build
           popd >/dev/null

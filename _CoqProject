@@ -19,6 +19,7 @@ proofs/LexerSmallstep.v
 proofs/LexerIncremental.v
 proofs/L0Smallstep.v
 proofs/L0SmallstepControl.v
+proofs/Expand.v
 
 # Archived v25 proof drafts live under proofs/archive/
 

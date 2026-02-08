@@ -147,11 +147,18 @@ let run () =
     let rec loop () =
       (* recv *)
       let hdr = Bytes.create 16 in
-      (try read_exact c hdr 0 16 with _ -> raise Exit);
+      (try read_exact c hdr 0 16
+       with e ->
+         Printf.eprintf "[svc] read_exact(hdr) exn: %s\n%!"
+           (Printexc.to_string e);
+         raise Exit);
       let msg_type = be32_get hdr 0 in
-      if msg_type <> 1 then raise Exit;
+      if msg_type <> 1 then (
+        Printf.eprintf "[svc] bad msg_type=%d\n%!" msg_type;
+        raise Exit);
       let req_id = be64_get hdr 4 in
       let payload_len = be32_get hdr 12 in
+      Printf.eprintf "[svc] recv req_id=%Ld len=%d\n%!" req_id payload_len;
       let doc_bytes_max = Latex_parse_lib.Config.max_req_bytes in
       let payload = Bytes.create payload_len in
       read_exact c payload 0 payload_len;

@@ -27,7 +27,11 @@ jobs:
       - name: Install dependencies
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
+          for attempt in 1 2 3; do
+            opam update -y && break
+            echo "[rest-smoke] opam update failed (attempt $attempt), retrying in 10s..."
+            sleep 10
+          done
           opam install -y . --deps-only --with-test
 
       - name: Build service and REST server
@@ -36,12 +40,61 @@ jobs:
 
       - name: Start service (UDS)
         run: |
-          L0_ALLOW_SCALAR=1 ./_build/default/latex-parse/src/main_service.exe & echo $! > service.pid
-          sleep 1
+          rm -f /tmp/l0_lex_svc.sock
+          opam exec -- env L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+            ./_build/default/latex-parse/src/main_service.exe \
+            1>service.stdout 2>service.stderr &
+          echo $! > service.pid
+
+      - name: Wait for service readiness
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if [ -S /tmp/l0_lex_svc.sock ]; then
+              echo "Socket exists on attempt ${attempt}"
+              break
+            fi
+            sleep 1
+          done
+          if [ ! -S /tmp/l0_lex_svc.sock ]; then
+            echo "Socket never appeared" >&2
+            cat service.stderr 2>/dev/null || true
+            exit 1
+          fi
+          echo "Sending warmup request..."
+          for attempt in $(seq 1 30); do
+            if python3 -c "
+          import socket, struct, sys
+          try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(10.0)
+            s.connect('/tmp/l0_lex_svc.sock')
+            doc = b' hi'
+            payload = struct.pack('>I', len(doc)) + doc
+            hdr = struct.pack('>IqI', 1, 1, len(payload))
+            s.sendall(hdr + payload)
+            rhdr = b''
+            while len(rhdr) < 16: rhdr += s.recv(16 - len(rhdr))
+            rlen = struct.unpack('>IqI', rhdr)[2]
+            body = b''
+            while len(body) < rlen: body += s.recv(rlen - len(body))
+            s.close()
+            sys.exit(0)
+          except Exception as e:
+            print(f'warmup attempt failed: {e}', file=sys.stderr)
+            sys.exit(1)
+          "; then
+                echo "Workers ready on attempt ${attempt}"
+                break
+              fi
+            sleep 2
+          done
+          # Allow worker rotation to complete
+          sleep 3
 
       - name: Start REST server
         run: |
-          ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 & echo $! > rest.pid
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 & echo $! > rest.pid
           sleep 1
 
       - name: REST smoke test

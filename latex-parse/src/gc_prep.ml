@@ -5,8 +5,11 @@ let words_total () =
 let last_full = ref 0.0
 
 let drain_major ?(slice = 2_048) () =
-  let rec loop () = if Gc.major_slice slice <> 0 then loop () in
-  loop ()
+  (* Safety bound: avoid infinite loop if GC cycle never completes (e.g. after
+     fork in OCaml 5 multicore runtime). *)
+  let max_iters = 100_000 in
+  let rec loop n = if n > 0 && Gc.major_slice slice <> 0 then loop (n - 1) in
+  loop max_iters
 
 let prepay () =
   let delta_words = words_total () -. !last_full in

@@ -28,7 +28,8 @@
   validators_metrics
   tokenizer_lite
   unicode
-  parser_l2)
+  parser_l2
+  fd_util)
  (libraries unix threads str uutf)
  (foreign_stubs
   (language c)
@@ -40,7 +41,8 @@
    simd_guard_stubs
    simd_production_stubs
    simd_tokenizer_fixed
-   xxh64_simd_stubs)
+   xxh64_simd_stubs
+   fd_util_stubs)
   (flags (:standard)))
  ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
  ;; DISABLED: _Caml_state symbol incompatibility with OCaml 5.x FFI.

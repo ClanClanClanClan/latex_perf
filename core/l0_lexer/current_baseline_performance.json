@@ -21,14 +21,26 @@
       "iterations": 1000000,
       "timestamp_utc": "2025-09-19T09:49:52Z",
       "stats_ms": { "min": 2.502, "p50": 2.707, "p95": 2.959, "p99": 3.990, "p999": 8.685, "max": 102.020 }
+    },
+    {
+      "iterations": 200000,
+      "timestamp_utc": "2026-02-08T20:30:00Z",
+      "stats_ms": { "min": 2.502, "p50": 2.591, "p95": 2.781, "p99": 3.107, "p999": 7.255, "max": 36.970 }
     }
   ],
   "edit_window": {
     "input": "corpora/perf/edit_window_4kb.tex",
     "window_bytes": 4096,
     "iterations": 5000,
-    "timestamp_utc": "2025-09-19T11:20:04Z",
-    "stats_ms": { "min": 0.009, "p50": 0.011, "p95": 0.017, "p99": 0.019, "p999": 0.020, "max": 0.031 }
+    "timestamp_utc": "2026-02-08T20:30:00Z",
+    "stats_ms": { "min": 0.009, "p50": 0.012, "p95": 0.022, "p99": 0.027, "p999": 0.034, "max": 0.058 }
   },
-  "notes": "Measured via latex-parse/bench/ab_microbench.exe (warmup 512) and latex-parse/bench/edit_window_bench.exe (warmup 256)."
+  "first_token": {
+    "input": "corpora/perf/edit_window_4kb.tex",
+    "window_bytes": 4096,
+    "iterations": 10000,
+    "timestamp_utc": "2026-02-08T20:30:00Z",
+    "stats_us": { "min": 8.0, "p50": 10.0, "p95": 20.0, "p99": 24.0, "p999": 37.0, "max": 93.0 }
+  },
+  "notes": "Measured via latex-parse/bench/ab_microbench.exe (warmup 512), edit_window_bench.exe (warmup 256), and first_token_latency.exe. Feb 2026 run includes first-ever first-token latency measurement."
 }

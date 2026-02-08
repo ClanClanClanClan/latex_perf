@@ -22,10 +22,14 @@ jobs:
           opam-depext: false
       - name: Install ocamlformat
         run: |
-          opam update -y
+          opam repo add default https://opam.ocaml.org || true
           opam pin add -y cmdliner 1.3.0
           opam pin add -y ocaml-version 3.5.0
-          opam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0 && break
+            echo "[ci-format] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
       - name: Check formatting
         id: fmt
         run: |
@@ -71,7 +75,13 @@ jobs:
           ocaml-compiler: 5.1.1
           opam-depext: false
       - name: Install dependencies
-        run: opam install . --deps-only --with-test -y
+        run: |
+          opam repo add default https://opam.ocaml.org || true
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[ci-build] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
       - name: Reset dune state
         run: |
           rm -rf _build

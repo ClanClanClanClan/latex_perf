@@ -27,7 +27,12 @@ jobs:
           opam-disable-sandboxing: true
       - name: Install project dependencies
         run: |
-          opam install . --deps-only --with-test --yes
+          opam repo add default https://opam.ocaml.org || true
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[performance-gate] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
 
       - name: Build project
         run: |

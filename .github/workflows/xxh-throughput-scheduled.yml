@@ -24,8 +24,11 @@ jobs:
       - name: Build bench
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
-          opam install -y . --deps-only --with-test
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[xxh-throughput-scheduled] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
           opam exec -- dune build latex-parse/bench/hash_throughput.exe
 
       - name: Measure throughput

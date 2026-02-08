@@ -28,8 +28,11 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq
           opam repo add default https://opam.ocaml.org || true
-          opam update -y || true
-          opam install -y . --deps-only --with-test
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[l1-smoke] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
 
       - name: Build service and REST
         run: |

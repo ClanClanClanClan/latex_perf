@@ -23,8 +23,11 @@ jobs:
       - name: Build unit test executables
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
-          opam install -y . --deps-only --with-test
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[unit-tests] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
           opam exec -- dune build \
             latex-parse/src/test_strip_math.exe \
             latex-parse/src/test_tokenizer_props.exe \

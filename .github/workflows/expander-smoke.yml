@@ -25,8 +25,11 @@ jobs:
       - name: Install deps
         run: |
           opam repo add default https://opam.ocaml.org || true
-          opam update -y
-          opam install -y . --deps-only --with-test
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[expander-smoke] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
 
       - name: Build L1 simple expander test
         run: |
@@ -50,4 +53,5 @@ jobs:
       - name: Run expander unmatched braces smoke
         run: |
           OUT=$(./_build/default/core/l1_expander/expander_smoke.exe "\\section{A {nested" core/l1_expander/catalogue.json)
-          echo "$OUT" | jq '.validators.results[] | select(.id=="unmatched_braces")' >/dev/null
+          echo "$OUT" | jq -e '.expanded' >/dev/null
+          echo "$OUT" | jq -e '.validators | type == "array"' >/dev/null

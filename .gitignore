@@ -41,3 +41,10 @@ test/**/*
 target/
 public-badges/
 *.csv
+
+# CI debug logs (local only)
+ci-logs/
+ci-logs-*/
+
+# Binary archives
+specs/Archive.zip

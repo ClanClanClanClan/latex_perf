@@ -61,10 +61,7 @@ jobs:
           git rev-parse HEAD
           git --no-pager log -1 --pretty=fuller --decorate
           echo "--- entry points (core/l0_lexer) ---"
-          for f in core/l0_lexer/main.ml \
-                   core/l0_lexer/main_service.ml \
-                   core/l0_lexer/main_service_enhanced.ml \
-                   core/l0_lexer/runtime_main.ml \
+          for f in core/l0_lexer/main_service.ml \
                    core/l0_lexer/runtime_main_exe.ml; do
             if [ -f "${f}" ]; then
               echo "[#] ${f}:"

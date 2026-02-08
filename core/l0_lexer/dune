@@ -44,16 +44,6 @@
  (libraries l0_lexer unix threads))
 
 (executable
- (name main_service_enhanced)
- (modules main_service_enhanced)
- (libraries l0_lexer unix threads))
-
-(executable
- (name main)
- (modules main)
- (libraries l0_lexer unix threads))
-
-(executable
  (name runtime_main_exe)
  (modules runtime_main_exe)
  (libraries l0_lexer unix threads))

@@ -1,6 +1,6 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 14 of 156 - Phase 2 In Progress (L1 Expansion + Proofs)
+**Status**: Week 15 of 156 - Phase 2 In Progress (L1 Expansion Proofs Complete)
 **Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
@@ -8,10 +8,11 @@
 
 - 75 validators implemented (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
 - VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in pipeline)
-- 13 Coq proof files, 0 admits, 0 axioms (Expand.v added W14)
+- 13 Coq proof files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
 - 31 CI workflows green
 - 3 gates passed: Bootstrap (W1), Perf alpha (W5), Proof beta (W10)
+- W14-17 exit criteria met ahead of schedule (expand_no_teof + termination + confluence)
 - Next gate: L0-L1 QED (W26)
 
 ## 📁 Project Structure
@@ -158,10 +159,10 @@ OPAMSWITCH=l0-testing opam exec -- \
 
 ## 🎯 Upcoming Milestones
 
-### Phase 2 Immediate (Weeks 14-17)
+### Phase 2 Immediate (Weeks 14-17) — EXIT CRITERIA MET
 - **Week 14** ✅: Phase 2 kickoff — Expand.v, proofs/dune, fuel-bounded model
-- **Week 15-16**: Complete expansion termination proofs (decreases_ctrls, fuel_insensitive)
-- **Week 17** 🎯: expand_no_teof QED exit criterion
+- **Week 15** ✅: All expansion proofs QED (decreases_ctrls, terminates_acyclic, fuel_insensitive)
+- **Week 17** ✅: expand_no_teof QED exit criterion (met ahead of schedule at W15)
 
 ### Q1 Gates (Weeks 1-13) — ALL PASSED
 - **Week 1** ✅: Bootstrap complete
@@ -187,4 +188,4 @@ OPAMSWITCH=l0-testing opam exec -- \
 
 ---
 
-**Week 14 Status**: ✅ Phase 2 kickoff — L1 expansion proof model (Expand.v), Coq build stanza (proofs/dune), 8 QED theorems. Q1 gates all passed.
+**Week 15 Status**: ✅ All expansion theorems QED — termination, fuel confluence, and decrease proofs complete. W14-17 exit criteria met ahead of schedule.

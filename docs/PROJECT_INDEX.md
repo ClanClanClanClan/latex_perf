@@ -1,13 +1,13 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 12 of 156 - Q1 Gates Passed (Bootstrap, Perf alpha, Proof beta)
+**Status**: Week 13 of 156 - Q1 Complete (Bootstrap, Perf alpha, Proof beta)
 **Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
 ## Current Status Summary
 
-- 67 validators implemented (33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (E2E verified)
+- 75 validators implemented (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in pipeline)
 - 12 Coq proof files, 0 admits, 0 axioms
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
 - 31 CI workflows green
@@ -36,7 +36,8 @@ generator/
 ├── vpd_types.ml            # Core VPD type definitions (11 pattern families)
 ├── vpd_parse.ml            # JSON manifest parser
 ├── vpd_emit.ml             # OCaml code emitter
-└── typo_batch1.json        # Batch 1 manifest (9 rules)
+├── typo_batch1.json        # Batch 1 manifest (9 rules)
+└── typo_batch2.json        # Batch 2 manifest (8 rules)
 
 specs/rules/
 ├── rules_v3.yaml           # Authoritative rule catalogue (623 rules)

@@ -40,11 +40,24 @@ FULL=$(./_build/default/generator/vpd_compile.exe "$MANIFEST" --internal)
 RULE_COUNT=$(echo "$FULL" | grep -c 'let r_typo_')
 echo "[vpd-e2e] Full manifest generated $RULE_COUNT rules"
 
-# Verify all 6 rules present
-for id in TYPO-001 TYPO-004 TYPO-005 TYPO-006 TYPO-023 TYPO-030; do
+# Verify all 23 VPD-patterned rules present
+for id in TYPO-001 TYPO-004 TYPO-005 TYPO-006 TYPO-023 TYPO-030 \
+          TYPO-034 TYPO-035 TYPO-036 TYPO-037 TYPO-038 TYPO-041 \
+          TYPO-042 TYPO-043 TYPO-048 TYPO-051 TYPO-052 TYPO-053 \
+          TYPO-054 TYPO-055 TYPO-057 TYPO-061 TYPO-063; do
   echo "$FULL" | grep -q "\"$id\"" || { echo "FAIL: missing $id"; exit 1; }
 done
-echo "[vpd-e2e] PASS: all 6 rules present in full manifest"
+echo "[vpd-e2e] PASS: all 23 rules present in full manifest"
+
+# ── Test 2b: Batch 2 regex rules compile correctly ─────────────────
+
+echo "[vpd-e2e] Checking batch 2 regex rules..."
+echo "$FULL" | grep -q 'Str.regexp' || { echo "FAIL: no Str.regexp in generated code"; exit 1; }
+echo "$FULL" | grep -q '"TYPO-036"' || { echo "FAIL: missing TYPO-036 (shouting)"; exit 1; }
+echo "$FULL" | grep -q '"TYPO-038"' || { echo "FAIL: missing TYPO-038 (email)"; exit 1; }
+echo "$FULL" | grep -q '"TYPO-054"' || { echo "FAIL: missing TYPO-054 (en-dash)"; exit 1; }
+echo "$FULL" | grep -q '"TYPO-057"' || { echo "FAIL: missing TYPO-057 (degree)"; exit 1; }
+echo "[vpd-e2e] PASS: batch 2 regex rules verified"
 
 # ── Test 3: --validate flag ───────────────────────────────────────────
 

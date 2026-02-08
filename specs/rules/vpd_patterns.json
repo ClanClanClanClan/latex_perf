@@ -52,5 +52,158 @@
       "family": "count_substring",
       "needle": "----"
     }
+  },
+  "TYPO-034": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Spurious space before \\footnote",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " \\footnote"
+    }
+  },
+  "TYPO-035": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Space before French punctuation mark; use non-breaking space ~",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [" ;", " :", " !", " ?"]
+    }
+  },
+  "TYPO-036": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Suspicious consecutive capitalised words; check for inadvertent shouting",
+    "pattern": {
+      "family": "regex",
+      "regex": "\\b[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\\b"
+    }
+  },
+  "TYPO-037": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Space before comma",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " ,"
+    }
+  },
+  "TYPO-038": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Bare e-mail address found; wrap in \\href{mailto:...}",
+    "pattern": {
+      "family": "regex",
+      "regex": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+"
+    }
+  },
+  "TYPO-041": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Incorrect spacing around \\ldots; check for missing space",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [".\\ldots", "\\ldots.", ",\\ldots"]
+    }
+  },
+  "TYPO-042": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Multiple consecutive question marks",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "??"
+    }
+  },
+  "TYPO-043": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Smart (curly) quotes detected; verbatim sections require ASCII quotes",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\u201C", "\u201D", "\u2018", "\u2019"]
+    }
+  },
+  "TYPO-048": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "En-dash character used where minus sign expected",
+    "pattern": {
+      "family": "custom",
+      "body": "fun s -> let s = strip_math_segments s in Unicode.count_en_dash s"
+    }
+  },
+  "TYPO-051": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Thin space U+2009 found; prefer \\thinspace or \\, macro",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u2009"
+    }
+  },
+  "TYPO-052": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Unescaped < or > in text; use \\textless / \\textgreater",
+    "pattern": {
+      "family": "custom",
+      "body": "fun s -> let s = strip_math_segments s in count_char s '<' + count_char s '>'"
+    }
+  },
+  "TYPO-053": {
+    "layer": "L0",
+    "severity": "Warning",
+    "message": "Unicode midline ellipsis U+22EF found; use \\cdots instead",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u22EF"
+    }
+  },
+  "TYPO-054": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "En-dash adjacent to letter without spacing; consider thin space",
+    "pattern": {
+      "family": "regex",
+      "regex": "[a-zA-Z]\u2013[a-zA-Z]"
+    }
+  },
+  "TYPO-055": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Consecutive \\, thin-spaces detected; collapse into single space",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\,\\,"
+    }
+  },
+  "TYPO-057": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Number directly adjacent to degree symbol; insert thin space",
+    "pattern": {
+      "family": "regex",
+      "regex": "[0-9]\u00b0"
+    }
+  },
+  "TYPO-061": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Unicode multiplication sign found; prefer \\times in math mode",
+    "pattern": {
+      "family": "count_substring_strip_math",
+      "needle": "\u00D7"
+    }
+  },
+  "TYPO-063": {
+    "layer": "L0",
+    "severity": "Info",
+    "message": "Non-breaking hyphen U+2011 found; use standard hyphen",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u2011"
+    }
   }
 }

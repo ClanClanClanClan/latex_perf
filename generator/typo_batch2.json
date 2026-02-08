@@ -1,0 +1,93 @@
+{
+  "version": "0.1.0",
+  "rules": [
+    {
+      "id": "TYPO-035",
+      "description": "French punctuation requires NBSP before ; : ! ?",
+      "layer": "L0",
+      "severity": "Warning",
+      "message": "Space before French punctuation mark; use non-breaking space ~",
+      "pattern": {
+        "family": "multi_substring",
+        "needles": [" ;", " :", " !", " ?"]
+      }
+    },
+    {
+      "id": "TYPO-036",
+      "description": "Suspicious consecutive capitalised words (shouting)",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Suspicious consecutive capitalised words; check for inadvertent shouting",
+      "pattern": {
+        "family": "regex",
+        "regex": "\\b[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\\b"
+      }
+    },
+    {
+      "id": "TYPO-038",
+      "description": "E-mail address not in \\href",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Bare e-mail address found; wrap in \\href{mailto:...}",
+      "pattern": {
+        "family": "regex",
+        "regex": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+"
+      }
+    },
+    {
+      "id": "TYPO-041",
+      "description": "Incorrect spacing around \\ldots",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Incorrect spacing around \\ldots; check for missing space",
+      "pattern": {
+        "family": "multi_substring",
+        "needles": [".\\ldots", "\\ldots.", ",\\ldots"]
+      }
+    },
+    {
+      "id": "TYPO-043",
+      "description": "Smart quotes inside verbatim detected",
+      "layer": "L0",
+      "severity": "Warning",
+      "message": "Smart (curly) quotes detected; verbatim sections require ASCII quotes",
+      "pattern": {
+        "family": "multi_substring",
+        "needles": ["\u201C", "\u201D", "\u2018", "\u2019"]
+      }
+    },
+    {
+      "id": "TYPO-054",
+      "description": "Hair-space required after en-dash in word-word ranges",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "En-dash adjacent to letter without spacing; consider thin space",
+      "pattern": {
+        "family": "regex",
+        "regex": "[a-zA-Z]\u2013[a-zA-Z]"
+      }
+    },
+    {
+      "id": "TYPO-057",
+      "description": "Missing thin-space before degree symbol",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Number directly adjacent to degree symbol; insert thin space",
+      "pattern": {
+        "family": "regex",
+        "regex": "[0-9]\u00b0"
+      }
+    },
+    {
+      "id": "TYPO-063",
+      "description": "Non-breaking hyphen U+2011 found",
+      "layer": "L0",
+      "severity": "Info",
+      "message": "Non-breaking hyphen U+2011 found; use standard hyphen",
+      "pattern": {
+        "family": "count_substring",
+        "needle": "\u2011"
+      }
+    }
+  ]
+}

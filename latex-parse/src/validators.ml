@@ -1534,7 +1534,7 @@ let r_typo_033 : rule =
 
 let rules_pilot : rule list = rules_pilot @ [ r_typo_033 ]
 
-(* BEGIN VPD-generated validators v0.1.0 — DO NOT EDIT BELOW THIS LINE *)
+(* BEGIN VPD-generated validators v0.2.0 — DO NOT EDIT BELOW THIS LINE *)
 
 (* Spurious space before footnote command \footnote *)
 let r_typo_034 : rule =
@@ -1552,6 +1552,53 @@ let r_typo_034 : rule =
   in
   { id = "TYPO-034"; run }
 
+(* French punctuation requires NBSP before ; : ! ? *)
+let r_typo_035 : rule =
+  let run s =
+    let cnt =
+      count_substring s " ;"
+      + count_substring s " :"
+      + count_substring s " !"
+      + count_substring s " ?"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-035";
+          severity = Warning;
+          message =
+            "Space before French punctuation mark; use non-breaking space ~";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-035"; run }
+
+(* Suspicious consecutive capitalised words (shouting) *)
+let r_typo_036 : rule =
+  let run s =
+    let re = Str.regexp "\\b[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\\b" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-036";
+          severity = Info;
+          message =
+            "Suspicious consecutive capitalised words; check for inadvertent \
+             shouting";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-036"; run }
+
 (* Space before comma *)
 let r_typo_037 : rule =
   let run s =
@@ -1568,6 +1615,49 @@ let r_typo_037 : rule =
   in
   { id = "TYPO-037"; run }
 
+(* E-mail address not in \href *)
+let r_typo_038 : rule =
+  let run s =
+    let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-038";
+          severity = Info;
+          message = "Bare e-mail address found; wrap in \\href{mailto:...}";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-038"; run }
+
+(* Incorrect spacing around \ldots *)
+let r_typo_041 : rule =
+  let run s =
+    let cnt =
+      count_substring s ".\\ldots"
+      + count_substring s "\\ldots."
+      + count_substring s ",\\ldots"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-041";
+          severity = Info;
+          message = "Incorrect spacing around \\ldots; check for missing space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-041"; run }
+
 (* Multiple consecutive question marks ?? *)
 let r_typo_042 : rule =
   let run s =
@@ -1583,6 +1673,29 @@ let r_typo_042 : rule =
     else None
   in
   { id = "TYPO-042"; run }
+
+(* Smart quotes inside verbatim detected *)
+let r_typo_043 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xe2\x80\x9c"
+      + count_substring s "\xe2\x80\x9d"
+      + count_substring s "\xe2\x80\x98"
+      + count_substring s "\xe2\x80\x99"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-043";
+          severity = Warning;
+          message =
+            "Smart (curly) quotes detected; verbatim sections require ASCII \
+             quotes";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-043"; run }
 
 (* En-dash used as minus sign in text *)
 let r_typo_048 : rule =
@@ -1658,6 +1771,30 @@ let r_typo_053 : rule =
   in
   { id = "TYPO-053"; run }
 
+(* Hair-space required after en-dash in word-word ranges *)
+let r_typo_054 : rule =
+  let run s =
+    let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-054";
+          severity = Info;
+          message =
+            "En-dash adjacent to letter without spacing; consider thin space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-054"; run }
+
 (* Consecutive thin-spaces prohibited *)
 let r_typo_055 : rule =
   let run s =
@@ -1674,6 +1811,30 @@ let r_typo_055 : rule =
     else None
   in
   { id = "TYPO-055"; run }
+
+(* Missing thin-space before degree symbol *)
+let r_typo_057 : rule =
+  let run s =
+    let re = Str.regexp "[0-9]\xc2\xb0" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-057";
+          severity = Info;
+          message =
+            "Number directly adjacent to degree symbol; insert thin space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-057"; run }
 
 (* Unicode multiplication sign in text *)
 let r_typo_061 : rule =
@@ -1693,17 +1854,41 @@ let r_typo_061 : rule =
   in
   { id = "TYPO-061"; run }
 
+(* Non-breaking hyphen U+2011 found *)
+let r_typo_063 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x80\x91" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-063";
+          severity = Info;
+          message = "Non-breaking hyphen U+2011 found; use standard hyphen";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-063"; run }
+
 let rules_vpd_gen : rule list =
   [
     r_typo_034;
+    r_typo_035;
+    r_typo_036;
     r_typo_037;
+    r_typo_038;
+    r_typo_041;
     r_typo_042;
+    r_typo_043;
     r_typo_048;
     r_typo_051;
     r_typo_052;
     r_typo_053;
+    r_typo_054;
     r_typo_055;
+    r_typo_057;
     r_typo_061;
+    r_typo_063;
   ]
 
 (* END VPD-generated validators *)

@@ -99,10 +99,26 @@ Week 12 — VPD Grammar Front-End + Code Debt
 - CI: 25 workflows with opam retry, all green
 - Tests: 13 dune tests pass (including new test_simd_attestation)
 
-Current State (Post Week 12)
-- Validators: 67 rules (33 TYPO hand + 9 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (E2E verified)
+Week 13 — VPD Batch 2 + Q1 Wrap-Up
+- VPD Batch 2: 8 new validators via VPD pipeline (TYPO-035, 036, 038, 041, 043, 054, 057, 063)
+  - 4 regex-family rules (shouting detection, email detection, en-dash spacing, degree symbol)
+  - 3 multi_substring rules (French punctuation, ldots spacing, smart quotes)
+  - 1 count_substring rule (non-breaking hyphen)
+- VPD-generated section now contains 17 rules (up from 9 in batch 1)
+- vpd_patterns.json expanded to 23 entries (covering all VPD-generated + hand-coded VPD-able rules)
+- typo_batch2.json: standalone batch 2 manifest for provenance tracking
+- E2E test updated: verifies all 23 rules in full manifest + batch 2 regex rules
+- All pilot golden tests pass (39/39), zero regressions
+- Q1 exit criteria met:
+  - dune build, dune runtest --force, dune fmt: all exit 0
+  - TYPO-001 E2E pipeline verified via VPD grammar
+  - Code debt resolved (no dead files, no hardcoded paths, no TODOs)
+
+Current State (Post Week 13 / Q1 Exit)
+- Validators: 75 rules (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in vpd_patterns.json)
 - Proofs: 12 files, 0 admits, 0 axioms
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
 - CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
 - Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)
+- Next gate: L0-L1 QED (W26) — Phase 2 begins

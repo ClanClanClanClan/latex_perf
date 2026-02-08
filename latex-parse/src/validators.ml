@@ -1534,7 +1534,7 @@ let r_typo_033 : rule =
 
 let rules_pilot : rule list = rules_pilot @ [ r_typo_033 ]
 
-(* BEGIN VPD-generated validators v0.2.0 — DO NOT EDIT BELOW THIS LINE *)
+(* BEGIN VPD-generated validators v0.3.0 — DO NOT EDIT BELOW THIS LINE *)
 
 (* Spurious space before footnote command \footnote *)
 let r_typo_034 : rule =
@@ -1870,6 +1870,183 @@ let r_typo_063 : rule =
   in
   { id = "TYPO-063"; run }
 
+(* URL split across lines without \url{} *)
+let r_typo_039 : rule =
+  let run s =
+    let re = Str.regexp "https?://[^ \t\n}]+" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-039";
+          severity = Info;
+          message = "URL split across lines without \\url{}";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-039"; run }
+
+(* Inline math $...$ exceeds 80 characters *)
+let r_typo_040 : rule =
+  let run s =
+    let re = Str.regexp "\\$\\([^$]+\\)\\$" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        let inner = Str.matched_group 1 s in
+        let acc' = if String.length inner > 80 then acc + 1 else acc in
+        loop (Str.match_end ()) acc'
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-040";
+          severity = Info;
+          message = "Inline math $...$ exceeds 80 characters";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-040"; run }
+
+(* Non-ASCII punctuation in math mode *)
+let r_typo_045 : rule =
+  let run s =
+    let cnt =
+      (fun s ->
+        let n = String.length s in
+        let rec scan i inside acc =
+          if i >= n then acc
+          else
+            let c = Char.code s.[i] in
+            if c = 0x24 then scan (i + 1) (not inside) acc
+            else if inside && c >= 0x80 then scan (i + 1) inside (acc + 1)
+            else scan (i + 1) inside acc
+        in
+        scan 0 false 0)
+        s
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-045";
+          severity = Warning;
+          message = "Non-ASCII punctuation in math mode";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-045"; run }
+
+(* Use of \begin{math} instead of $...$ *)
+let r_typo_046 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\\begin{math}" + count_substring s "\\end{math}"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-046";
+          severity = Info;
+          message = "Use of \\begin{math} instead of $...$";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-046"; run }
+
+(* Starred \section* used where numbered section expected *)
+let r_typo_047 : rule =
+  let run s =
+    let cnt = count_substring s "\\section*" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-047";
+          severity = Info;
+          message = "Starred \\section* used where numbered section expected";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-047"; run }
+
+(* Space after opening quote *)
+let r_typo_049 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xe2\x80\x9c " + count_substring s "\xe2\x80\x98 "
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-049";
+          severity = Info;
+          message = "Space after opening quote";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-049"; run }
+
+(* Legacy TeX accent command found *)
+let r_typo_056 : rule =
+  let run s =
+    let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-056";
+          severity = Warning;
+          message =
+            "Legacy TeX accent command found; use UTF-8 character directly";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-056"; run }
+
+(* Greek homograph letter found in Latin text *)
+let r_typo_058 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xce\xb1"
+      + count_substring s "\xce\xb5"
+      + count_substring s "\xce\xb9"
+      + count_substring s "\xce\xbf"
+      + count_substring s "\xcf\x81"
+      + count_substring s "\xcf\x82"
+      + count_substring s "\xcf\x85"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-058";
+          severity = Warning;
+          message = "Greek homograph letter found in Latin text";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-058"; run }
+
 let rules_vpd_gen : rule list =
   [
     r_typo_034;
@@ -1877,16 +2054,24 @@ let rules_vpd_gen : rule list =
     r_typo_036;
     r_typo_037;
     r_typo_038;
+    r_typo_039;
+    r_typo_040;
     r_typo_041;
     r_typo_042;
     r_typo_043;
+    r_typo_045;
+    r_typo_046;
+    r_typo_047;
     r_typo_048;
+    r_typo_049;
     r_typo_051;
     r_typo_052;
     r_typo_053;
     r_typo_054;
     r_typo_055;
+    r_typo_056;
     r_typo_057;
+    r_typo_058;
     r_typo_061;
     r_typo_063;
   ]

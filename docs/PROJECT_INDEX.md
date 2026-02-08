@@ -1,18 +1,19 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 15 of 156 - Phase 2 In Progress (L1 Expansion Proofs Complete)
+**Status**: Week 16 of 156 - Phase 2 In Progress (VPD Batch 3 Complete)
 **Last Updated**: February 2026
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
 ## Current Status Summary
 
-- 75 validators implemented (33 TYPO hand + 17 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
-- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (23 rules in pipeline)
+- 83 validators implemented (33 TYPO hand + 25 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in pipeline)
 - 13 Coq proof files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
 - 31 CI workflows green
 - 3 gates passed: Bootstrap (W1), Perf alpha (W5), Proof beta (W10)
 - W14-17 exit criteria met ahead of schedule (expand_no_teof + termination + confluence)
+- TYPO coverage: 58/63 rules implemented (5 deferred: 044, 050, 059, 060, 062)
 - Next gate: L0-L1 QED (W26)
 
 ## 📁 Project Structure
@@ -43,7 +44,7 @@ generator/
 specs/rules/
 ├── rules_v3.yaml           # Authoritative rule catalogue (623 rules)
 ├── vpd_patterns.json       # Pattern annotations for VPD-able rules
-├── pilot_v1_golden.yaml    # Golden test cases (42 entries)
+├── pilot_v1_golden.yaml    # Golden test cases (55 entries)
 ├── l1_golden.yaml          # L1 golden test cases
 └── unicode_golden.yaml     # Unicode golden test cases
 ```

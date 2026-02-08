@@ -187,3 +187,35 @@ cases:
     expect: ["TYPO-063"]
     expect_msgs:
       - "TYPO-063:Non-breaking hyphen U+2011 found; use standard hyphen"
+  - file: corpora/lint/pilot_v1/TYPO-039_url_no_url_cmd.tex
+    expect: ["TYPO-039"]
+    expect_msgs:
+      - "TYPO-039:URL split across lines without \\url{}"
+  - file: corpora/lint/pilot_v1/TYPO-040_long_inline_math.tex
+    expect: ["TYPO-040"]
+    expect_msgs:
+      - "TYPO-040:Inline math $...$ exceeds 80 characters"
+  - file: corpora/lint/pilot_v1/TYPO-045_non_ascii_math.tex
+    expect: ["TYPO-045"]
+    expect_msgs:
+      - "TYPO-045:Non-ASCII punctuation in math mode"
+  - file: corpora/lint/pilot_v1/TYPO-046_begin_math.tex
+    expect: ["TYPO-046"]
+    expect_msgs:
+      - "TYPO-046:Use of \\begin{math} instead of $...$"
+  - file: corpora/lint/pilot_v1/TYPO-047_starred_section.tex
+    expect: ["TYPO-047"]
+    expect_msgs:
+      - "TYPO-047:Starred \\section* used where numbered section expected"
+  - file: corpora/lint/pilot_v1/TYPO-049_space_after_open_quote.tex
+    expect: ["TYPO-049"]
+    expect_msgs:
+      - "TYPO-049:Space after opening quote"
+  - file: corpora/lint/pilot_v1/TYPO-056_legacy_accent.tex
+    expect: ["TYPO-056"]
+    expect_msgs:
+      - "TYPO-056:Legacy TeX accent command found; use UTF-8 character directly"
+  - file: corpora/lint/pilot_v1/TYPO-058_greek_homograph.tex
+    expect: ["TYPO-058"]
+    expect_msgs:
+      - "TYPO-058:Greek homograph letter found in Latin text"

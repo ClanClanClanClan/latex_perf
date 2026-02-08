@@ -26,7 +26,8 @@
   real_processor
   service_bracket
   worker
-  fd_util)
+  fd_util
+  net_io)
  (libraries unix threads data)
  (foreign_stubs
   (language c)

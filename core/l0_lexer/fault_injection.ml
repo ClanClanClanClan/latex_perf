@@ -255,24 +255,12 @@ let check_recovery socket_path =
     Bytes.set header 14 (char_of_int ((payload_len lsr 8) land 0xff));
     Bytes.set header 15 (char_of_int (payload_len land 0xff));
 
-    let rec write_all buf ofs rem =
-      if rem > 0 then
-        let n = Unix.write sock buf ofs rem in
-        if n = 0 then failwith "short write"
-        else write_all buf (ofs + n) (rem - n)
-    in
-    write_all header 0 16;
-    write_all payload 0 payload_len;
+    Net_io.write_all_exn sock header 0 16;
+    Net_io.write_all_exn sock payload 0 payload_len;
 
     (* Try to read response (16-byte header + body) *)
     let response_header = Bytes.create 16 in
-    let rec read_exact buf ofs rem =
-      if rem > 0 then
-        let n = Unix.read sock buf ofs rem in
-        if n = 0 then failwith "short read"
-        else read_exact buf (ofs + n) (rem - n)
-    in
-    read_exact response_header 0 16;
+    Net_io.read_exact_exn sock response_header 0 16;
     let resp_len =
       (Char.code (Bytes.get response_header 12) lsl 24)
       lor (Char.code (Bytes.get response_header 13) lsl 16)
@@ -280,7 +268,7 @@ let check_recovery socket_path =
       lor Char.code (Bytes.get response_header 15)
     in
     let resp_body = Bytes.create resp_len in
-    read_exact resp_body 0 resp_len;
+    Net_io.read_exact_exn sock resp_body 0 resp_len;
     ignore resp_body;
 
     Unix.close sock;

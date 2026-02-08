@@ -29,7 +29,8 @@
   tokenizer_lite
   unicode
   parser_l2
-  fd_util)
+  fd_util
+  net_io)
  (libraries unix threads str uutf)
  (foreign_stubs
   (language c)

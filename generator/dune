@@ -2,3 +2,8 @@
  (name vpd_compile)
  (modules vpd_compile vpd_types vpd_parse vpd_emit)
  (libraries yojson))
+
+(executable
+ (name vpd_grammar)
+ (modules vpd_grammar)
+ (libraries yojson))

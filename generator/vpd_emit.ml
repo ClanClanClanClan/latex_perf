@@ -37,6 +37,11 @@ let emit_count_expr buf (p : pattern) =
   | Count_char c ->
       Printf.bprintf buf "    let cnt = count_char s %s in\n"
         (ocaml_char_literal c)
+  | Count_char_strip_math c ->
+      Printf.bprintf buf
+        "    let s = strip_math_segments s in\n\
+        \    let cnt = count_char s %s in\n"
+        (ocaml_char_literal c)
   | Count_substring needle ->
       Printf.bprintf buf "    let cnt = count_substring s %S in\n" needle
   | Count_substring_strip_math needle ->

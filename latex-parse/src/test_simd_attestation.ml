@@ -29,4 +29,14 @@ let () =
     let start_pos = Bigarray.Array1.get buf.offs i in
     Printf.printf "  Token %d: kind=%ld code=%ld start=%ld\n" i kind code
       start_pos
-  done
+  done;
+
+  (* Assertions *)
+  if status <> 0 then (
+    Printf.eprintf "[simd-attest] FAIL: status=%d (expected 0)\n" status;
+    exit 1);
+  if token_count < 9 then (
+    Printf.eprintf "[simd-attest] FAIL: token_count=%d (expected >= 9)\n"
+      token_count;
+    exit 1);
+  Printf.printf "[simd-attest] PASS %d tokens\n" token_count

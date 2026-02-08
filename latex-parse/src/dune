@@ -53,7 +53,7 @@
  (modules main_service)
  (libraries latex_parse_lib unix threads))
 
-(executable
+(test
  (name test_simd_attestation)
  (modules test_simd_attestation)
  (libraries latex_parse_lib))

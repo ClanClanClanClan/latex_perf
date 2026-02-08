@@ -1,7 +1,7 @@
 # Unified L1 Macro Catalog Specification
 
 **Created**: 2025-08-12  
-**Status**: Production-Ready  
+**Status**: Spec-Complete, Implementation Partial
 **Version**: v25-R2 (with epsilon-safe argumentful extensions)
 
 ## Executive Summary
@@ -12,6 +12,12 @@ The LaTeX Perfectionist L1 Macro Expander supports two complementary macro catal
 2. **argsafe.v25r1 Catalog**: 28 argumentful macros (epsilon-safe, deterministic)
 
 Combined, these provide 411 macros for L1 expansion, covering the most common LaTeX patterns while maintaining strict safety guarantees.
+
+> **Implementation Note (Feb 2026):** Production currently uses the v1 catalog
+> (`macro_catalogue.json`, ~100 macros). The v25r2 and argsafe catalogs exist as
+> spec artifacts but are not yet integrated into the runtime. Integration is
+> planned for the Phase 2 → Phase 3 transition. See
+> `MACRO_IMPLEMENTATION_STATUS_REPORT.md` for current state.
 
 ## Catalog Breakdown
 

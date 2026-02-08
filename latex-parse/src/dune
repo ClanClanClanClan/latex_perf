@@ -43,7 +43,9 @@
    xxh64_simd_stubs)
   (flags (:standard)))
  ;; --- macOS force-load of static SIMD library to avoid dead-stripping ---
- ;; TEMPORARILY DISABLED DUE TO _Caml_state SYMBOL COMPATIBILITY ISSUE
+ ;; DISABLED: _Caml_state symbol incompatibility with OCaml 5.x FFI.
+ ;; Tracked as Risk T-4 in specs/v25_R1/L0_LEXER_SPEC_v25_R1.md §11.
+ ;; SIMD path is informational-only (Tier B); scalar path meets all SLAs.
  ;; (c_library_flags
  ;;  (-Wl,-force_load,<PROJECT_ROOT>/core/l0_lexer/simd/libsimd_production.a))
  )
@@ -58,7 +60,7 @@
  (modules test_simd_attestation)
  (libraries latex_parse_lib))
 
-(executable
+(test
  (name test_fault_injection)
  (modules test_fault_injection)
  (libraries latex_parse_lib unix threads))

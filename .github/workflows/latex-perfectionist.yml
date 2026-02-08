@@ -4,15 +4,11 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - '**.tex'
-      - '**.bib'
       - '.latex-perfectionist.toml'
       - 'pyproject.toml'
   pull_request:
     branches: [ main ]
     paths:
-      - '**.tex'
-      - '**.bib'
       - '.latex-perfectionist.toml'
       - 'pyproject.toml'
 

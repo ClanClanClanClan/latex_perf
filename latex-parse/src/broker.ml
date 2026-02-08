@@ -42,6 +42,7 @@ type pool = {
   mutable hedge_fired : int;
   mutable hedge_wins : int;
   mutable rotations : int;
+  mu : Mutex.t;
 }
 
 let init_pool cores =
@@ -53,6 +54,7 @@ let init_pool cores =
     hedge_fired = 0;
     hedge_wins = 0;
     rotations = 0;
+    mu = Mutex.create ();
   }
 
 let pick_hot p =
@@ -187,6 +189,8 @@ let rescue_once p ~req_id ~(input : bytes) : svc_result =
   | _ -> failwith "broker: rescue unexpected"
 
 let hedged_call p ~(input : bytes) ~(hedge_ms : int) : svc_result =
+  Mutex.lock p.mu;
+  Fun.protect ~finally:(fun () -> Mutex.unlock p.mu) @@ fun () ->
   (* CRITICAL FIX: Further reduced timeout to 200ms for aggressive P99.9 *)
   let deadline = Int64.add (Clock.now ()) (Clock.ns_of_ms 200) in
   while inflight_total p >= Array.length p.workers do

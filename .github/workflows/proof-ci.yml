@@ -30,8 +30,11 @@ jobs:
         run: |
           opam repo add default https://opam.ocaml.org || true
           opam repo add coq-released https://coq.inria.fr/opam/released || true
-          opam update -y || true
-          opam install -y dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0
+          for attempt in 1 2 3; do
+            opam update -y && opam install -y dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0 && break
+            echo "[proof-ci] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
+          done
 
       - name: Build proofs
         run: |

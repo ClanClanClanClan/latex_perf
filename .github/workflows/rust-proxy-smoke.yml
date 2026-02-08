@@ -36,11 +36,10 @@ jobs:
         run: |
           opam repo add default https://opam.ocaml.org || true
           for attempt in 1 2 3; do
-            opam update -y && break
-            echo "[rust-proxy-smoke] opam update failed (attempt $attempt), retrying in 10s..."
-            sleep 10
+            opam update -y && opam install -y . --deps-only --with-test && break
+            echo "[rust-proxy-smoke] opam install failed (attempt $attempt), retrying in 15s..."
+            sleep 15
           done
-          opam install -y . --deps-only --with-test
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

@@ -300,3 +300,8 @@ let hedged_call p ~(input : bytes) ~(hedge_ms : int) : svc_result =
         else race ()
       in
       race ()
+
+let requests (p : pool) = p.requests
+let hedge_fired_count (p : pool) = p.hedge_fired
+let hedge_wins_count (p : pool) = p.hedge_wins
+let rotations_count (p : pool) = p.rotations

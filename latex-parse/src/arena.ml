@@ -15,7 +15,7 @@ type buffers = {
   mutable next_ix : int;
 }
 
-type t = { a : buffers; b : buffers; mutable current : buffers; cap : int }
+type t = { a : buffers; b : buffers; mutable current : buffers }
 
 let create_buffers cap =
   let mk () = Array1.create Int32 c_layout cap in
@@ -31,7 +31,7 @@ let create_buffers cap =
 
 let create ~cap =
   let a = create_buffers cap and b = create_buffers cap in
-  { a; b; current = a; cap }
+  { a; b; current = a }
 
 let swap t =
   t.current <- (if t.current == t.a then t.b else t.a);

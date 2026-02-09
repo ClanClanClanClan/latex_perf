@@ -249,19 +249,19 @@ let run () =
           st.t_reply_ready,
           hedged,
           "" );
-      if Latex_parse_lib.Broker.(pool.requests mod 10_000 = 0) then (
+      if Latex_parse_lib.Broker.requests pool mod 10_000 = 0 then (
         Printf.eprintf
           "[hedge] req=%d fired=%d (%.3f%%) wins=%d (%.1f%%) rotations=%d\n%!"
-          Latex_parse_lib.Broker.(pool.requests)
-          Latex_parse_lib.Broker.(pool.hedge_fired)
+          (Latex_parse_lib.Broker.requests pool)
+          (Latex_parse_lib.Broker.hedge_fired_count pool)
           (100.0
-          *. float Latex_parse_lib.Broker.(pool.hedge_fired)
-          /. float (max 1 Latex_parse_lib.Broker.(pool.requests)))
-          Latex_parse_lib.Broker.(pool.hedge_wins)
+          *. float (Latex_parse_lib.Broker.hedge_fired_count pool)
+          /. float (max 1 (Latex_parse_lib.Broker.requests pool)))
+          (Latex_parse_lib.Broker.hedge_wins_count pool)
           (100.0
-          *. float Latex_parse_lib.Broker.(pool.hedge_wins)
-          /. float (max 1 Latex_parse_lib.Broker.(pool.hedge_fired)))
-          Latex_parse_lib.Broker.(pool.rotations);
+          *. float (Latex_parse_lib.Broker.hedge_wins_count pool)
+          /. float (max 1 (Latex_parse_lib.Broker.hedge_fired_count pool)))
+          (Latex_parse_lib.Broker.rotations_count pool);
         dump_csv ());
       loop ()
     in

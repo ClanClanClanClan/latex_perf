@@ -154,19 +154,19 @@ let run () =
           st.t_reply_ready,
           hedged,
           "" );
-      if Broker.(pool.requests mod 10_000 = 0) then (
+      if Broker.requests pool mod 10_000 = 0 then (
         Printf.eprintf
           "[hedge] req=%d fired=%d (%.3f%%) wins=%d (%.1f%%) rotations=%d\n%!"
-          Broker.(pool.requests)
-          Broker.(pool.hedge_fired)
+          (Broker.requests pool)
+          (Broker.hedge_fired_count pool)
           (100.0
-          *. float Broker.(pool.hedge_fired)
-          /. float (max 1 Broker.(pool.requests)))
-          Broker.(pool.hedge_wins)
+          *. float (Broker.hedge_fired_count pool)
+          /. float (max 1 (Broker.requests pool)))
+          (Broker.hedge_wins_count pool)
           (100.0
-          *. float Broker.(pool.hedge_wins)
-          /. float (max 1 Broker.(pool.hedge_fired)))
-          Broker.(pool.rotations);
+          *. float (Broker.hedge_wins_count pool)
+          /. float (max 1 (Broker.hedge_fired_count pool)))
+          (Broker.rotations_count pool);
         dump_csv ());
       loop ()
     in

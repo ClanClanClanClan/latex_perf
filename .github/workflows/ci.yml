@@ -104,4 +104,4 @@ jobs:
           path: _build/dune-build.log
           if-no-files-found: ignore
       - name: Test suite
-        run: opam exec -- dune runtest || echo "no tests defined"
+        run: opam exec -- dune runtest

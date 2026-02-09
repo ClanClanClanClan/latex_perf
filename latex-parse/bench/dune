@@ -3,12 +3,12 @@
  (modules percentiles_strict)
  (libraries unix))
 
-(executable
+(test
  (name ipc_propcheck)
  (modules ipc_propcheck)
  (libraries unix latex_parse_lib))
 
-(executable
+(test
  (name time_selftest)
  (modules time_selftest)
  (libraries unix latex_parse_lib))
@@ -47,7 +47,7 @@
  (modules catcode_selftest)
  (libraries unix latex_parse_lib))
 
-(executable
+(test
  (name xxh_selfcheck)
  (modules xxh_selfcheck)
  (libraries unix latex_parse_lib))

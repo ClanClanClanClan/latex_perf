@@ -2,23 +2,8 @@ open Unix
 
 let () = Simd_guard.require ()
 let unlink_if_exists p = try Unix.unlink p with _ -> ()
-
-let rec read_exact fd b o l =
-  if l = 0 then ()
-  else
-    try
-      let n = Unix.read fd b o l in
-      if n = 0 then failwith "client eof" else read_exact fd b (o + n) (l - n)
-    with Unix.Unix_error (Unix.EINTR, _, _) -> read_exact fd b o l
-
-let rec write_all fd b o l =
-  if l = 0 then ()
-  else
-    try
-      let n = Unix.write fd b o l in
-      if n = 0 then failwith "short write" else write_all fd b (o + n) (l - n)
-    with Unix.Unix_error (Unix.EINTR, _, _) -> write_all fd b o l
-
+let read_exact fd b o l = Net_io.read_exact_exn fd b o l
+let write_all fd b o l = Net_io.write_all_exn fd b o l
 let () = Sys.set_signal Sys.sigpipe Sys.Signal_ignore
 
 let run () =

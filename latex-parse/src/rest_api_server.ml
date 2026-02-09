@@ -116,19 +116,11 @@ let be64_get b off =
                    (shift_left (byte 5) 16)
                    (logor (shift_left (byte 6) 8) (byte 7)))))))
 
-let rec read_exact fd buf ofs len =
-  if len = 0 then ()
-  else
-    match Unix.read fd buf ofs len with
-    | 0 -> failwith "short read"
-    | n -> read_exact fd buf (ofs + n) (len - n)
+let read_exact fd buf ofs len =
+  Latex_parse_lib.Net_io.read_exact_exn fd buf ofs len
 
-let rec write_all fd buf ofs len =
-  if len = 0 then ()
-  else
-    match Unix.write fd buf ofs len with
-    | 0 -> failwith "short write"
-    | n -> write_all fd buf (ofs + n) (len - n)
+let write_all fd buf ofs len =
+  Latex_parse_lib.Net_io.write_all_exn fd buf ofs len
 
 let req_counter = ref 0L
 

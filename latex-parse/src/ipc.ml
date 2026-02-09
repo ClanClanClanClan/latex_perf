@@ -39,21 +39,8 @@ let be64_put b off v =
   put_u8 b (off + 6) (to_int (shift_right_logical v 8));
   put_u8 b (off + 7) (to_int v)
 
-let rec write_all fd b o l =
-  if l = 0 then ()
-  else
-    try
-      let n = Unix.write fd b o l in
-      if n = 0 then failwith "short write" else write_all fd b (o + n) (l - n)
-    with Unix.Unix_error (Unix.EINTR, _, _) -> write_all fd b o l
-
-let rec read_exact fd b o l =
-  if l = 0 then ()
-  else
-    try
-      let n = Unix.read fd b o l in
-      if n = 0 then failwith "eof" else read_exact fd b (o + n) (l - n)
-    with Unix.Unix_error (Unix.EINTR, _, _) -> read_exact fd b o l
+let write_all fd b o l = Net_io.write_all_exn fd b o l
+let read_exact fd b o l = Net_io.read_exact_exn fd b o l
 
 let write_header fd (h : header) =
   let b = Bytes.create header_bytes in

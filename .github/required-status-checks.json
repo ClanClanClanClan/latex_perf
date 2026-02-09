@@ -1,12 +1,12 @@
 {
   "checks": [
-    "Proof CI (Coq) / proof-ci",
-    "Unicode Rules Smoke / unicode-smoke",
-    "L1 Rules Smoke / l1-smoke",
-    "Validators Pilot Smoke (CLI) / smoke-cli",
-    "REST Smoke Test / rest-smoke",
-    "Performance Gate CI / perf-ci",
-    "XXH64 SIMD Selfcheck / xxh-selfcheck",
-    "Unit Tests / unit-tests"
+    {"context": "proof-ci",       "app_id": 15368},
+    {"context": "unicode-smoke",  "app_id": 15368},
+    {"context": "l1-smoke",       "app_id": 15368},
+    {"context": "smoke-cli",      "app_id": 15368},
+    {"context": "rest-smoke",     "app_id": 15368},
+    {"context": "perf-ci",        "app_id": 15368},
+    {"context": "xxh-selfcheck",  "app_id": 15368},
+    {"context": "unit-tests",     "app_id": 15368}
   ]
 }

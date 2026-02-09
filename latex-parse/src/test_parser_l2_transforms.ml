@@ -1,7 +1,12 @@
 open Printf
 module P = Latex_parse_lib.Parser_l2
 
-let () = Random.self_init ()
+let seed =
+  match Sys.getenv_opt "TEST_SEED" with
+  | Some s -> int_of_string s
+  | None -> 12345
+
+let () = Random.init seed
 
 let letters n =
   let b = Buffer.create n in
@@ -82,26 +87,37 @@ let strip_dummy_opt s =
   done;
   Buffer.contents buf
 
+let check_one pass s =
+  try
+    let n1 = P.parse s in
+    let s1 = serialize_nodes n1 in
+    let n2 = transform n1 in
+    let t1 = serialize_nodes n2 in
+    let t1_stripped = strip_dummy_opt t1 in
+    if String.trim s1 <> String.trim t1_stripped then (
+      eprintf "[parser2-xform] FAIL: %S -> %S stripped %S\n%!" s s1 t1_stripped;
+      pass := false)
+  with _ ->
+    eprintf "[parser2-xform] parse FAIL: %S\n%!" s;
+    pass := false
+
 let () =
-  let trials = 100 in
+  let trials = 1000 in
   let pass = ref true in
+  (* --- explicit edge cases --- *)
+  check_one pass "";
+  check_one pass "\\";
+  check_one pass "{}";
+  check_one pass "{{}}";
+  check_one pass "\\cmd";
+  check_one pass "\\cmd[opt]{arg}";
+  check_one pass (String.make 5_000 'x');
+  (* --- random trials --- *)
   for _ = 1 to trials do
     let s = gen_doc () in
-    try
-      let n1 = P.parse s in
-      let s1 = serialize_nodes n1 in
-      let n2 = transform n1 in
-      let t1 = serialize_nodes n2 in
-      let t1_stripped = strip_dummy_opt t1 in
-      if String.trim s1 <> String.trim t1_stripped then (
-        eprintf "[parser2-xform] FAIL: %S -> %S stripped %S\n%!" s s1
-          t1_stripped;
-        pass := false)
-    with _ ->
-      eprintf "[parser2-xform] parse FAIL: %S\n%!" s;
-      pass := false
+    check_one pass s
   done;
   if !pass then (
-    printf "[parser2-xform] PASS %d trials\n%!" trials;
+    printf "[parser2-xform] PASS %d trials (seed=%d)\n%!" trials seed;
     exit 0)
   else exit 1

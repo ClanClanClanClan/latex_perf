@@ -3120,22 +3120,25 @@ let expand_argumentful_macro macro args =
       let builtin_name =
         String.sub macro.template 8 (String.length macro.template - 8)
       in
-      [ TText ("BUILTIN:" ^ builtin_name ^ "(" ^ String.concat "," args ^ ")") ]
+      Some
+        [
+          TText ("BUILTIN:" ^ builtin_name ^ "(" ^ String.concat "," args ^ ")");
+        ]
     else
       (* Handle template expansion *)
       let expanded = substitute_args macro.template args in
-      [ TText expanded ]
-  else
-    failwith
-      (sprintf "Macro %s expects %d arguments, got %d" macro.name
-         macro.positional (List.length args))
+      Some [ TText expanded ]
+  else (
+    Printf.eprintf "[l1] Macro %s expects %d arguments, got %d (skipped)\n%!"
+      macro.name macro.positional (List.length args);
+    None)
 
 (* Main expansion interface *)
 let expand_macro name args in_math_mode =
   match Hashtbl.find_opt production_macro_table name with
   | Some (Symbol macro) when args = [] -> expand_symbol_macro macro in_math_mode
   | Some (Argumentful macro) when args <> [] ->
-      Some (expand_argumentful_macro macro args)
+      expand_argumentful_macro macro args
   | _ -> None
 
 (* Statistics and introspection *)

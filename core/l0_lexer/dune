@@ -27,7 +27,8 @@
   service_bracket
   worker
   fd_util
-  net_io)
+  net_io
+  validators_metrics)
  (libraries unix threads data)
  (foreign_stubs
   (language c)

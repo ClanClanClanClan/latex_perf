@@ -187,3 +187,23 @@
  (name test_pretouch_smoke)
  (modules test_pretouch_smoke)
  (libraries latex_parse_lib unix bigarray))
+
+(test
+ (name test_fast_hash)
+ (modules test_fast_hash)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_unicode)
+ (modules test_unicode)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_arena)
+ (modules test_arena)
+ (libraries latex_parse_lib bigarray))
+
+(test
+ (name test_metrics_prometheus)
+ (modules test_metrics_prometheus)
+ (libraries latex_parse_lib unix))

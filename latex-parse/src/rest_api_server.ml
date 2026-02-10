@@ -15,6 +15,10 @@ let _http_internal_error = "500 Internal Server Error"
 let http_service_unavailable = "503 Service Unavailable"
 let http_request_too_large = "413 Request Entity Too Large"
 
+(* Global macro catalogue, set once at startup *)
+let global_catalogue : Latex_parse_lib.Macro_catalogue.catalogue option ref =
+  ref None
+
 (* CORS headers for browser compatibility *)
 let cors_headers =
   [
@@ -288,6 +292,7 @@ let handle_tokenize body =
             | Some j -> Rest_simple_expander.of_json j
             | _ -> Rest_simple_expander.default
           in
+          let cfg = Rest_simple_expander.with_catalogue cfg !global_catalogue in
           match latex with
           | Some s ->
               let s' =
@@ -444,6 +449,10 @@ let handle_client client_sock _client_addr =
                         match List.assoc_opt "catalogue" props with
                         | Some j -> Rest_simple_expander.of_json j
                         | _ -> Rest_simple_expander.default
+                      in
+                      let cfg =
+                        Rest_simple_expander.with_catalogue cfg
+                          !global_catalogue
                       in
                       let expanded = Rest_simple_expander.expand_fix cfg s in
                       let open Latex_parse_lib in
@@ -724,6 +733,41 @@ let start_server port =
     | exn -> eprintf "Accept error: %s\n%!" (Printexc.to_string exn)
   done
 
+(* ── L1 Macro catalogue loading ──────────────────────────────────── *)
+
+let default_v25r2_path = "data/macro_catalogue.v25r2.json"
+let default_argsafe_path = "data/macro_catalogue.argsafe.v25r1.json"
+
+let load_catalogue () =
+  let v25r2_path =
+    match Sys.getenv_opt "L0_CATALOGUE_V25R2" with
+    | Some p -> p
+    | None -> default_v25r2_path
+  in
+  let argsafe_path =
+    match Sys.getenv_opt "L0_CATALOGUE_ARGSAFE" with
+    | Some p -> p
+    | None -> default_argsafe_path
+  in
+  if Sys.file_exists v25r2_path && Sys.file_exists argsafe_path then (
+    try
+      let cat =
+        Latex_parse_lib.Macro_catalogue.load ~v25r2_path ~argsafe_path
+      in
+      printf "[rest] Loaded macro catalogue: %d symbols + %d argsafe macros\n%!"
+        (Latex_parse_lib.Macro_catalogue.symbol_count cat)
+        (Latex_parse_lib.Macro_catalogue.argsafe_count cat);
+      Some cat
+    with exn ->
+      eprintf "[rest] WARNING: failed to load macro catalogue: %s\n%!"
+        (Printexc.to_string exn);
+      None)
+  else (
+    eprintf
+      "[rest] Macro catalogue not found (%s, %s); using legacy expander\n%!"
+      v25r2_path argsafe_path;
+    None)
+
 (* Entry point *)
 let () =
   let port =
@@ -732,6 +776,9 @@ let () =
         try int_of_string port_str with _ -> default_port)
     | _ -> default_port
   in
+
+  (* Load macro catalogue *)
+  global_catalogue := load_catalogue ();
 
   (* Check if service is available *)
   match connect_to_service () with

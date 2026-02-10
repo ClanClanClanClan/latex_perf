@@ -39,8 +39,13 @@ let roundtrip_once () =
       ignore (Unix.waitpid [] pid)
 
 let () =
-  Random.init 42;
+  let seed =
+    match Sys.getenv_opt "TEST_SEED" with
+    | Some s -> int_of_string s
+    | None -> 42
+  in
+  Random.init seed;
   for _ = 1 to 100 do
     roundtrip_once ()
   done;
-  print_endline "IPC property check: OK"
+  Printf.printf "[ipc-propcheck] PASS 100K roundtrips (seed=%d)\n%!" seed

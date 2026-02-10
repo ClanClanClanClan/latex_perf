@@ -8,7 +8,12 @@ let gen_bytes n =
   b
 
 let () =
-  Random.self_init ();
+  let seed =
+    match Sys.getenv_opt "TEST_SEED" with
+    | Some s -> int_of_string s
+    | None -> 42
+  in
+  Random.init seed;
   let iters = try int_of_string Sys.argv.(1) with _ -> 1000 in
   let sz = try int_of_string Sys.argv.(2) with _ -> 1024 in
   let mism = ref 0 in
@@ -18,6 +23,6 @@ let () =
     let s = try Xxh64.hash64_bytes_simd b with _ -> a in
     if a <> s then incr mism
   done;
-  Printf.printf "[xxh-selfcheck] iters=%d size=%d mismatches=%d\n%!" iters sz
-    !mism;
+  Printf.printf "[xxh-selfcheck] iters=%d size=%d mismatches=%d (seed=%d)\n%!"
+    iters sz !mism seed;
   if !mism > 0 then exit 1 else exit 0

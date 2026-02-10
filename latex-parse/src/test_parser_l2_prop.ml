@@ -1,7 +1,12 @@
 open Printf
 module P = Latex_parse_lib.Parser_l2
 
-let () = Random.self_init ()
+let seed =
+  match Sys.getenv_opt "TEST_SEED" with
+  | Some s -> int_of_string s
+  | None -> 12345
+
+let () = Random.init seed
 
 let letters n =
   let b = Buffer.create n in
@@ -49,24 +54,39 @@ let gen_doc () =
   done;
   String.concat " " (List.rev !parts)
 
+let check_one pass s =
+  try
+    let n1 = P.parse s in
+    let s1 = P.serialize n1 in
+    let n2 = P.parse s1 in
+    let s2 = P.serialize n2 in
+    if String.trim s1 <> String.trim s2 then (
+      eprintf "[parser2-prop] roundtrip FAIL: %S -> %S -> %S\n%!" s s1 s2;
+      pass := false)
+  with _ ->
+    eprintf "[parser2-prop] parse FAIL: %S\n%!" s;
+    pass := false
+
 let () =
-  let trials = 100 in
+  let trials = 1000 in
   let pass = ref true in
+  (* --- explicit edge cases --- *)
+  check_one pass "";
+  check_one pass "{}";
+  check_one pass "{{}}";
+  check_one pass "\\cmd";
+  check_one pass "\\cmd[opt]{arg}";
+  check_one pass "\\cmd[a][b]{c}{d}";
+  check_one pass "hello world";
+  check_one pass (String.make 5_000 'x');
+  (* deeply nested *)
+  check_one pass "{{{{{inner}}}}}";
+  (* --- random trials --- *)
   for _ = 1 to trials do
     let s = gen_doc () in
-    try
-      let n1 = P.parse s in
-      let s1 = P.serialize n1 in
-      let n2 = P.parse s1 in
-      let s2 = P.serialize n2 in
-      if String.trim s1 <> String.trim s2 then (
-        eprintf "[parser2-prop] roundtrip FAIL: %S -> %S -> %S\n%!" s s1 s2;
-        pass := false)
-    with _ ->
-      eprintf "[parser2-prop] parse FAIL: %S\n%!" s;
-      pass := false
+    check_one pass s
   done;
   if !pass then (
-    printf "[parser2-prop] PASS %d trials\n%!" trials;
+    printf "[parser2-prop] PASS %d trials (seed=%d)\n%!" trials seed;
     exit 0)
   else exit 1

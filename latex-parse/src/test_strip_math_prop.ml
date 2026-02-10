@@ -1,6 +1,11 @@
 open Printf
 
-let () = Random.self_init ()
+let seed =
+  match Sys.getenv_opt "TEST_SEED" with
+  | Some s -> int_of_string s
+  | None -> 12345
+
+let () = Random.init seed
 
 let gen_text () =
   let len = 1 + Random.int 6 in
@@ -56,22 +61,34 @@ let gen_case () =
   in
   (s, expected)
 
-let () =
+let check_one pass s exp =
   let open Latex_parse_lib.Validators in
-  let trials = 100 in
+  let got = strip_math_segments s in
+  let got2 = strip_math_segments got in
+  if got <> got2 then (
+    eprintf "[strip-prop] idempotence FAIL: %S -> %S -> %S\n%!" s got got2;
+    pass := false);
+  if String.trim got <> String.trim exp then (
+    eprintf "[strip-prop] preserve FAIL: %S -> %S (exp %S)\n%!" s got exp;
+    pass := false)
+
+let () =
+  let trials = 1000 in
   let pass = ref true in
+  (* --- explicit edge cases --- *)
+  check_one pass "" "";
+  check_one pass "$x$" "";
+  check_one pass "hello $math$ world" "hello  world";
+  check_one pass "$a$ $b$" " ";
+  check_one pass "\\(x\\)\\[y\\]" "";
+  check_one pass "plain text only" "plain text only";
+  check_one pass (String.make 10_000 'a') (String.make 10_000 'a');
+  (* --- random trials --- *)
   for _ = 1 to trials do
     let s, exp = gen_case () in
-    let got = strip_math_segments s in
-    let got2 = strip_math_segments got in
-    if got <> got2 then (
-      eprintf "[strip-prop] idempotence FAIL: %S -> %S -> %S\n%!" s got got2;
-      pass := false);
-    if String.trim got <> String.trim exp then (
-      eprintf "[strip-prop] preserve FAIL: %S -> %S (exp %S)\n%!" s got exp;
-      pass := false)
+    check_one pass s exp
   done;
   if !pass then (
-    printf "[strip-prop] PASS %d trials\n%!" 100;
+    printf "[strip-prop] PASS %d trials (seed=%d)\n%!" trials seed;
     exit 0)
   else exit 1

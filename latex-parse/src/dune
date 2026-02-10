@@ -226,3 +226,13 @@
  (name test_validators_batch2)
  (modules test_validators_batch2)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_typo)
+ (modules test_validators_typo)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_l1)
+ (modules test_validators_l1)
+ (libraries latex_parse_lib unix))

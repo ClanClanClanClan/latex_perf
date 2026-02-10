@@ -11,6 +11,9 @@ val on_hedge_win : unit -> unit
 val on_rotation : unit -> unit
 val observe_latency : float -> unit
 
+val dump_metrics : out_channel -> unit
+(** Write all metrics in Prometheus exposition format to the given channel. *)
+
 val serve : unit -> unit
 (** Start the HTTP metrics server in the current thread. Does not return under
     normal operation. *)

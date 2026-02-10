@@ -2232,10 +2232,203 @@ let r_enc_024 : rule =
   in
   { id = "ENC-024"; run }
 
+(* ENC-001: Non-UTF-8 byte sequence detected *)
+let r_enc_001 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b = Char.code s.[!i] in
+      if b <= 0x7F then incr i (* ASCII *)
+      else if b land 0xE0 = 0xC0 then
+        if
+          (* 2-byte: 110xxxxx 10xxxxxx *)
+          !i + 1 < n && Char.code s.[!i + 1] land 0xC0 = 0x80
+        then i := !i + 2
+        else (
+          incr cnt;
+          incr i)
+      else if b land 0xF0 = 0xE0 then
+        if
+          (* 3-byte: 1110xxxx 10xxxxxx 10xxxxxx *)
+          !i + 2 < n
+          && Char.code s.[!i + 1] land 0xC0 = 0x80
+          && Char.code s.[!i + 2] land 0xC0 = 0x80
+        then i := !i + 3
+        else (
+          incr cnt;
+          incr i)
+      else if b land 0xF8 = 0xF0 then
+        if
+          (* 4-byte: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx *)
+          !i + 3 < n
+          && Char.code s.[!i + 1] land 0xC0 = 0x80
+          && Char.code s.[!i + 2] land 0xC0 = 0x80
+          && Char.code s.[!i + 3] land 0xC0 = 0x80
+        then i := !i + 4
+        else (
+          incr cnt;
+          incr i)
+      else (
+        (* Invalid leading byte *)
+        incr cnt;
+        incr i)
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-001";
+          severity = Error;
+          message = "Non-UTF-8 byte sequence detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-001"; run }
+
+(* ENC-002: BOM U+FEFF present in middle of file *)
+let r_enc_002 : rule =
+  let run s =
+    let bom = "\xef\xbb\xbf" in
+    let total = count_substring s bom in
+    let at_start = String.length s >= 3 && String.sub s 0 3 = bom in
+    let interior = if at_start then total - 1 else total in
+    if interior > 0 then
+      Some
+        {
+          id = "ENC-002";
+          severity = Error;
+          message = "BOM U+FEFF present in middle of file";
+          count = interior;
+        }
+    else None
+  in
+  { id = "ENC-002"; run }
+
+(* ENC-003: LATIN-1 smart quotes detected (bare high bytes 0x91-0x94) *)
+let r_enc_003 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b = Char.code s.[!i] in
+      if b = 0x91 || b = 0x92 || b = 0x93 || b = 0x94 then (
+        (* These bare bytes are LATIN-1/Windows-1252 smart quotes *)
+        incr cnt;
+        incr i)
+      else if b >= 0xC0 && !i + 1 < n then
+        (* Skip valid UTF-8 multi-byte sequences *)
+        if b land 0xE0 = 0xC0 then i := !i + 2
+        else if b land 0xF0 = 0xE0 then i := !i + 3
+        else if b land 0xF8 = 0xF0 then i := !i + 4
+        else incr i
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-003";
+          severity = Warning;
+          message = "LATIN-1 smart quotes detected (bare bytes 0x91-0x94)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-003"; run }
+
+(* ENC-004: Windows-1252 characters outside UTF-8 *)
+let r_enc_004 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b = Char.code s.[!i] in
+      if b >= 0x80 && b <= 0x9F then (
+        (* Bare C1 range bytes that are Windows-1252 characters *)
+        incr cnt;
+        incr i)
+      else if b >= 0xC0 && !i + 1 < n then
+        if b land 0xE0 = 0xC0 then i := !i + 2
+        else if b land 0xF0 = 0xE0 then i := !i + 3
+        else if b land 0xF8 = 0xF0 then i := !i + 4
+        else incr i
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-004";
+          severity = Warning;
+          message = "Windows-1252 characters outside UTF-8 detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-004"; run }
+
+(* ENC-013: Mixed CRLF and LF line endings *)
+let r_enc_013 : rule =
+  let run s =
+    let n = String.length s in
+    let has_crlf = ref false in
+    let has_bare_lf = ref false in
+    let i = ref 0 in
+    while !i < n do
+      if s.[!i] = '\r' && !i + 1 < n && s.[!i + 1] = '\n' then (
+        has_crlf := true;
+        i := !i + 2)
+      else if s.[!i] = '\n' then (
+        has_bare_lf := true;
+        incr i)
+      else incr i
+    done;
+    if !has_crlf && !has_bare_lf then
+      Some
+        {
+          id = "ENC-013";
+          severity = Info;
+          message = "Mixed CRLF and LF line endings in file";
+          count = 1;
+        }
+    else None
+  in
+  { id = "ENC-013"; run }
+
+(* ENC-014: UTF-16 byte-order mark present *)
+let r_enc_014 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    if n >= 2 then (
+      (* UTF-16 LE BOM: FF FE *)
+      if Char.code s.[0] = 0xFF && Char.code s.[1] = 0xFE then incr cnt;
+      (* UTF-16 BE BOM: FE FF *)
+      if Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF then incr cnt);
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-014";
+          severity = Error;
+          message = "UTF-16 byte-order mark present";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-014"; run }
+
 let rules_enc : rule list =
   [
+    r_enc_001;
+    r_enc_002;
+    r_enc_003;
+    r_enc_004;
     r_enc_007;
     r_enc_012;
+    r_enc_013;
+    r_enc_014;
     r_enc_017;
     r_enc_020;
     r_enc_021;
@@ -2368,6 +2561,121 @@ let r_char_021 : rule =
   in
   { id = "CHAR-021"; run }
 
+(* CHAR-015: Emoji detected in source *)
+let r_char_015 : rule =
+  let run s =
+    (* Scan for common emoji ranges encoded in UTF-8: U+1F300-1F9FF = F0 9F 8C
+       80 .. F0 9F A7 BF (4-byte seqs) *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 3 do
+      if Char.code s.[!i] = 0xF0 && Char.code s.[!i + 1] = 0x9F then
+        let b2 = Char.code s.[!i + 2] in
+        (* U+1F300 = F0 9F 8C 80 through U+1F9FF = F0 9F A7 BF *)
+        if b2 >= 0x8C && b2 <= 0xA7 then (
+          incr cnt;
+          i := !i + 4)
+        else i := !i + 4
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-015";
+          severity = Info;
+          message = "Emoji detected in source";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-015"; run }
+
+(* CHAR-017: Full-width Latin letters detected *)
+let r_char_017 : rule =
+  let run s =
+    (* U+FF21-FF3A (A-Z) = EF BC A1 .. EF BC BA U+FF41-FF5A (a-z) = EF BD 81 ..
+       EF BD 9A *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      let b0 = Char.code s.[!i] in
+      let b1 = Char.code s.[!i + 1] in
+      let b2 = Char.code s.[!i + 2] in
+      if
+        b0 = 0xEF
+        && ((b1 = 0xBC && b2 >= 0xA1 && b2 <= 0xBA)
+           || (b1 = 0xBD && b2 >= 0x81 && b2 <= 0x9A))
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-017";
+          severity = Warning;
+          message = "Full-width Latin letters detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-017"; run }
+
+(* CHAR-018: Deprecated ligature characters present *)
+let r_char_018 : rule =
+  let run s =
+    (* U+FB00 ﬀ, U+FB01 ﬁ, U+FB02 ﬂ, U+FB03 ﬃ, U+FB04 ﬄ UTF-8: EF AC 80..84 *)
+    let cnt =
+      count_substring s "\xef\xac\x80"
+      + count_substring s "\xef\xac\x81"
+      + count_substring s "\xef\xac\x82"
+      + count_substring s "\xef\xac\x83"
+      + count_substring s "\xef\xac\x84"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-018";
+          severity = Info;
+          message = "Deprecated ligature characters present (U+FB00-FB04)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-018"; run }
+
+(* CHAR-022: Deprecated tag characters U+E0000-E007F *)
+let r_char_022 : rule =
+  let run s =
+    (* U+E0000-E007F = F3 A0 80 80 .. F3 A0 81 BF in UTF-8 *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 3 do
+      if
+        Char.code s.[!i] = 0xF3
+        && Char.code s.[!i + 1] = 0xA0
+        && (Char.code s.[!i + 2] = 0x80 || Char.code s.[!i + 2] = 0x81)
+      then (
+        incr cnt;
+        i := !i + 4)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-022";
+          severity = Warning;
+          message = "Deprecated tag characters U+E0000-E007F present";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-022"; run }
+
 let rules_char : rule list =
   [
     r_char_006;
@@ -2376,7 +2684,11 @@ let rules_char : rule list =
     r_char_009;
     r_char_013;
     r_char_014;
+    r_char_015;
+    r_char_017;
+    r_char_018;
     r_char_021;
+    r_char_022;
   ]
 
 (* ── SPC rules: spacing and whitespace ─────────────────────────────── *)
@@ -2583,6 +2895,421 @@ let r_spc_028 : rule =
   in
   { id = "SPC-028"; run }
 
+(* SPC-007: Three or more consecutive blank lines *)
+let r_spc_007 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let consecutive_newlines = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '\n' then (
+        incr consecutive_newlines;
+        (* 3 consecutive newlines = 2+ blank lines between content; 4 = 3+ blank
+           lines which is what we flag *)
+        if !consecutive_newlines = 4 then incr cnt
+        else if !consecutive_newlines > 4 then () (* already counted *))
+      else if s.[i] <> '\r' && s.[i] <> ' ' && s.[i] <> '\t' then
+        consecutive_newlines := 0
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-007";
+          severity = Info;
+          message = "Three or more consecutive blank lines";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-007"; run }
+
+(* SPC-008: Paragraph starts with whitespace (indented first line after
+   blank) *)
+let r_spc_008 : rule =
+  let run s =
+    let has_indented_para line prev_blank =
+      prev_blank
+      && String.length line > 0
+      && (line.[0] = ' ' || line.[0] = '\t')
+      && (* skip \item lines *)
+      not
+        (let trimmed = String.trim line in
+         String.length trimmed >= 5 && String.sub trimmed 0 5 = "\\item")
+    in
+    let lines = String.split_on_char '\n' s in
+    let cnt = ref 0 in
+    let prev_blank = ref true in
+    (* start of file counts as after blank *)
+    List.iter
+      (fun line ->
+        let trimmed = String.trim line in
+        if has_indented_para line !prev_blank then incr cnt;
+        prev_blank := String.length trimmed = 0)
+      lines;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-008";
+          severity = Info;
+          message = "Paragraph starts with whitespace";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-008"; run }
+
+(* SPC-009: Non-breaking space ~ at line start *)
+let r_spc_009 : rule =
+  let run s =
+    let _, matched =
+      any_line_pred s (fun line ->
+          String.length line > 0
+          && (line.[0] = '~'
+             || String.length line >= 2
+                && Char.code line.[0] = 0xC2
+                && Char.code line.[1] = 0xA0))
+    in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-009";
+          severity = Warning;
+          message = "Non-breaking space at line start";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-009"; run }
+
+(* SPC-013: Whitespace-only paragraph *)
+let r_spc_013 : rule =
+  let run s =
+    (* A paragraph that contains only whitespace chars but is non-empty. Blank
+       line = truly empty (length 0). Whitespace-only = length > 0, all chars
+       are spaces/tabs. *)
+    let lines = String.split_on_char '\n' s in
+    let cnt = ref 0 in
+    let para_started = ref false in
+    let para_has_content = ref false in
+    let para_has_ws = ref false in
+    let flush () =
+      if !para_started && !para_has_ws && not !para_has_content then incr cnt;
+      para_started := false;
+      para_has_content := false;
+      para_has_ws := false
+    in
+    List.iter
+      (fun line ->
+        if String.length line = 0 then flush ()
+        else
+          let all_ws = ref true in
+          String.iter
+            (fun c ->
+              if c <> ' ' && c <> '\t' && c <> '\r' then all_ws := false)
+            line;
+          if !all_ws then (
+            para_started := true;
+            para_has_ws := true)
+          else (
+            para_started := true;
+            para_has_content := true))
+      lines;
+    flush ();
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-013";
+          severity = Info;
+          message = "Whitespace-only paragraph";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-013"; run }
+
+(* SPC-014: Mixed LF and CRLF within same file *)
+let r_spc_014 : rule =
+  let run s =
+    let n = String.length s in
+    let has_crlf = ref false in
+    let has_bare_lf = ref false in
+    let i = ref 0 in
+    while !i < n do
+      if s.[!i] = '\r' && !i + 1 < n && s.[!i + 1] = '\n' then (
+        has_crlf := true;
+        i := !i + 2)
+      else if s.[!i] = '\n' then (
+        has_bare_lf := true;
+        incr i)
+      else incr i
+    done;
+    if !has_crlf && !has_bare_lf then
+      Some
+        {
+          id = "SPC-014";
+          severity = Info;
+          message = "Mixed LF and CRLF line endings in file";
+          count = 1;
+        }
+    else None
+  in
+  { id = "SPC-014"; run }
+
+(* SPC-015: Indentation exceeds 8 spaces *)
+let r_spc_015 : rule =
+  let run s =
+    let deep_indent line =
+      let len = String.length line in
+      let i = ref 0 in
+      while !i < len && line.[!i] = ' ' do
+        incr i
+      done;
+      !i > 8 && !i < len
+    in
+    let _, matched = any_line_pred s deep_indent in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-015";
+          severity = Info;
+          message = "Indentation exceeds 8 spaces";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-015"; run }
+
+(* SPC-016: Space before semicolon *)
+let r_spc_016 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let cnt = count_substring s " ;" in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-016";
+          severity = Warning;
+          message = "Space before semicolon";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-016"; run }
+
+(* SPC-019: Trailing full-width space U+3000 at line end *)
+let r_spc_019 : rule =
+  let run s =
+    let trailing_fw_space line =
+      let len = String.length line in
+      len >= 3
+      && Char.code line.[len - 3] = 0xE3
+      && Char.code line.[len - 2] = 0x80
+      && Char.code line.[len - 1] = 0x80
+    in
+    let _, matched = any_line_pred s trailing_fw_space in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-019";
+          severity = Warning;
+          message = "Trailing full-width space U+3000 at line end";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-019"; run }
+
+(* SPC-021: Space before colon *)
+let r_spc_021 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let cnt = count_substring s " :" in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-021";
+          severity = Warning;
+          message = "Space before colon";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-021"; run }
+
+(* SPC-025: Space before ellipsis \dots *)
+let r_spc_025 : rule =
+  let run s =
+    let cnt = count_substring s " \\dots" + count_substring s " \xe2\x80\xa6" in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-025";
+          severity = Info;
+          message = "Space before ellipsis";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-025"; run }
+
+(* SPC-029: Indentation uses NBSP U+00A0 characters *)
+let r_spc_029 : rule =
+  let run s =
+    let nbsp_indent line =
+      String.length line >= 2
+      && Char.code line.[0] = 0xC2
+      && Char.code line.[1] = 0xA0
+    in
+    let _, matched = any_line_pred s nbsp_indent in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-029";
+          severity = Warning;
+          message = "Indentation uses NBSP characters";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-029"; run }
+
+(* SPC-030: Line starts with full-width space U+3000 *)
+let r_spc_030 : rule =
+  let run s =
+    let fw_space_start line =
+      String.length line >= 3
+      && Char.code line.[0] = 0xE3
+      && Char.code line.[1] = 0x80
+      && Char.code line.[2] = 0x80
+    in
+    let _, matched = any_line_pred s fw_space_start in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-030";
+          severity = Warning;
+          message = "Line starts with full-width space U+3000";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-030"; run }
+
+(* SPC-031: Three spaces after period *)
+let r_spc_031 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let cnt = count_substring s ".   " in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-031";
+          severity = Info;
+          message = "Three spaces after period";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-031"; run }
+
+(* SPC-032: Indentation with mix of NBSP and regular space *)
+let r_spc_032 : rule =
+  let run s =
+    let mixed_nbsp_indent line =
+      let len = String.length line in
+      let i = ref 0 in
+      let has_nbsp = ref false in
+      let has_space = ref false in
+      while !i < len do
+        if
+          !i + 1 < len
+          && Char.code line.[!i] = 0xC2
+          && Char.code line.[!i + 1] = 0xA0
+        then (
+          has_nbsp := true;
+          i := !i + 2)
+        else if line.[!i] = ' ' then (
+          has_space := true;
+          incr i)
+        else if line.[!i] = '\t' then incr i
+        else i := len (* exit *)
+      done;
+      !has_nbsp && !has_space
+    in
+    let _, matched = any_line_pred s mixed_nbsp_indent in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-032";
+          severity = Info;
+          message = "Indentation with mix of NBSP and regular space";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-032"; run }
+
+(* SPC-033: No-break space before em-dash in English text *)
+let r_spc_033 : rule =
+  let run s =
+    (* U+00A0 = C2 A0 before em-dash U+2014 = E2 80 94 or --- *)
+    let cnt =
+      count_substring s "\xc2\xa0\xe2\x80\x94" + count_substring s "\xc2\xa0---"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-033";
+          severity = Info;
+          message = "No-break space before em-dash";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-033"; run }
+
+(* SPC-034: Thin-space U+2009 before en-dash *)
+let r_spc_034 : rule =
+  let run s =
+    (* U+2009 = E2 80 89 before en-dash U+2013 = E2 80 93 or -- *)
+    let cnt =
+      count_substring s "\xe2\x80\x89\xe2\x80\x93"
+      + count_substring s "\xe2\x80\x89--"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-034";
+          severity = Info;
+          message = "Thin-space before en-dash";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-034"; run }
+
+(* SPC-035: Leading thin-space U+2009 at start of line *)
+let r_spc_035 : rule =
+  let run s =
+    let thin_space_start line =
+      String.length line >= 3
+      && Char.code line.[0] = 0xE2
+      && Char.code line.[1] = 0x80
+      && Char.code line.[2] = 0x89
+    in
+    let _, matched = any_line_pred s thin_space_start in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-035";
+          severity = Info;
+          message = "Leading thin-space U+2009 at start of line";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-035"; run }
+
 let rules_spc : rule list =
   [
     r_spc_001;
@@ -2591,9 +3318,26 @@ let rules_spc : rule list =
     r_spc_004;
     r_spc_005;
     r_spc_006;
+    r_spc_007;
+    r_spc_008;
+    r_spc_009;
     r_spc_012;
+    r_spc_013;
+    r_spc_014;
+    r_spc_015;
+    r_spc_016;
+    r_spc_019;
+    r_spc_021;
     r_spc_024;
+    r_spc_025;
     r_spc_028;
+    r_spc_029;
+    r_spc_030;
+    r_spc_031;
+    r_spc_032;
+    r_spc_033;
+    r_spc_034;
+    r_spc_035;
   ]
 
 (* ── TYPO-062: Literal backslash in text ───────────────────────────── *)

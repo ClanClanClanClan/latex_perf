@@ -2078,6 +2078,559 @@ let rules_vpd_gen : rule list =
 
 (* END VPD-generated validators *)
 
+(* ── ENC rules: encoding / Unicode character detection ─────────────── *)
+
+(* ENC-007: Zero-width space U+200B *)
+let r_enc_007 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x80\x8b" in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-007";
+          severity = Warning;
+          message = "Zero-width space U+200B present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-007"; run }
+
+(* ENC-012: C1 control characters U+0080-009F *)
+let r_enc_012 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if
+        Char.code s.[!i] = 0xC2
+        && Char.code s.[!i + 1] >= 0x80
+        && Char.code s.[!i + 1] <= 0x9F
+      then (
+        incr cnt;
+        i := !i + 2)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-012";
+          severity = Error;
+          message = "C1 control characters U+0080-009F present";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-012"; run }
+
+(* ENC-017: Soft hyphen U+00AD *)
+let r_enc_017 : rule =
+  let run s =
+    let cnt = count_substring s "\xc2\xad" in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-017";
+          severity = Warning;
+          message = "Soft hyphen U+00AD found in source";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-017"; run }
+
+(* ENC-020: Invisible formatting marks U+200E (LRM) / U+200F (RLM) *)
+let r_enc_020 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xe2\x80\x8e" + count_substring s "\xe2\x80\x8f"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-020";
+          severity = Warning;
+          message = "Invisible formatting mark U+200E/U+200F present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-020"; run }
+
+(* ENC-021: Word joiner U+2060 *)
+let r_enc_021 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x81\xa0" in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-021";
+          severity = Warning;
+          message = "Word joiner U+2060 present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-021"; run }
+
+(* ENC-022: Interlinear annotation chars U+FFF9-FFFB *)
+let r_enc_022 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xef\xbf\xb9"
+      + count_substring s "\xef\xbf\xba"
+      + count_substring s "\xef\xbf\xbb"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-022";
+          severity = Warning;
+          message = "Interlinear annotation chars U+FFF9-FFFB detected";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-022"; run }
+
+(* ENC-023: Narrow no-break space U+202F *)
+let r_enc_023 : rule =
+  let run s =
+    let cnt = count_substring s "\xe2\x80\xaf" in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-023";
+          severity = Warning;
+          message = "Narrow no-break space U+202F present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-023"; run }
+
+(* ENC-024: Bidirectional embeddings U+202A-U+202E *)
+let r_enc_024 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xe2\x80\xaa"
+      + count_substring s "\xe2\x80\xab"
+      + count_substring s "\xe2\x80\xac"
+      + count_substring s "\xe2\x80\xad"
+      + count_substring s "\xe2\x80\xae"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-024";
+          severity = Warning;
+          message = "Bidirectional embedding chars U+202A-U+202E present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-024"; run }
+
+let rules_enc : rule list =
+  [
+    r_enc_007;
+    r_enc_012;
+    r_enc_017;
+    r_enc_020;
+    r_enc_021;
+    r_enc_022;
+    r_enc_023;
+    r_enc_024;
+  ]
+
+(* ── CHAR rules: control character detection ───────────────────────── *)
+
+(* CHAR-006: Backspace U+0008 *)
+let r_char_006 : rule =
+  let run s =
+    let cnt = count_char s '\x08' in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-006";
+          severity = Error;
+          message = "Backspace U+0008 present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-006"; run }
+
+(* CHAR-007: Bell/alert U+0007 *)
+let r_char_007 : rule =
+  let run s =
+    let cnt = count_char s '\x07' in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-007";
+          severity = Error;
+          message = "Bell/alert U+0007 present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-007"; run }
+
+(* CHAR-008: Form feed U+000C *)
+let r_char_008 : rule =
+  let run s =
+    let cnt = count_char s '\x0c' in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-008";
+          severity = Warning;
+          message = "Form feed U+000C present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-008"; run }
+
+(* CHAR-009: Delete U+007F *)
+let r_char_009 : rule =
+  let run s =
+    let cnt = count_char s '\x7f' in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-009";
+          severity = Warning;
+          message = "Delete U+007F present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-009"; run }
+
+(* CHAR-013: Bidirectional isolate chars U+2066-U+2069 *)
+let r_char_013 : rule =
+  let run s =
+    let cnt =
+      count_substring s "\xe2\x81\xa6"
+      + count_substring s "\xe2\x81\xa7"
+      + count_substring s "\xe2\x81\xa8"
+      + count_substring s "\xe2\x81\xa9"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-013";
+          severity = Warning;
+          message = "Bidirectional isolate chars U+2066-U+2069 present";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-013"; run }
+
+(* CHAR-014: Unicode replacement character U+FFFD *)
+let r_char_014 : rule =
+  let run s =
+    let cnt = count_substring s "\xef\xbf\xbd" in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-014";
+          severity = Warning;
+          message = "Unicode replacement character U+FFFD found; decoding error";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-014"; run }
+
+(* CHAR-021: Zero-width no-break space U+FEFF inside paragraph (BOM) *)
+let r_char_021 : rule =
+  let run s =
+    (* Count U+FEFF occurrences, skip the one at file start (legitimate BOM) *)
+    let bom = "\xef\xbb\xbf" in
+    let total = count_substring s bom in
+    let starts_with_bom = String.length s >= 3 && String.sub s 0 3 = bom in
+    let cnt = if starts_with_bom then total - 1 else total in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-021";
+          severity = Error;
+          message =
+            "Zero-width no-break space U+FEFF inside paragraph (stray BOM)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-021"; run }
+
+let rules_char : rule list =
+  [
+    r_char_006;
+    r_char_007;
+    r_char_008;
+    r_char_009;
+    r_char_013;
+    r_char_014;
+    r_char_021;
+  ]
+
+(* ── SPC rules: spacing and whitespace ─────────────────────────────── *)
+
+(* SPC-001: Line longer than 120 characters *)
+let r_spc_001 : rule =
+  let run s =
+    let _, matched = any_line_pred s (fun line -> String.length line > 120) in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-001";
+          severity = Info;
+          message = "Line longer than 120 characters";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-001"; run }
+
+(* SPC-002: Line containing only whitespace *)
+let r_spc_002 : rule =
+  let run s =
+    let is_ws_only line =
+      let len = String.length line in
+      len > 0
+      &&
+      let ok = ref true in
+      for i = 0 to len - 1 do
+        let c = line.[i] in
+        if c <> ' ' && c <> '\t' && c <> '\r' then ok := false
+      done;
+      !ok
+    in
+    let _, matched = any_line_pred s is_ws_only in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-002";
+          severity = Info;
+          message = "Line containing only whitespace";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-002"; run }
+
+(* SPC-003: Hard tab precedes non-tab text (mixed indent) *)
+let r_spc_003 : rule =
+  let run s =
+    let is_mixed_indent line =
+      let len = String.length line in
+      let i = ref 0 in
+      let has_tab = ref false in
+      let has_space = ref false in
+      while !i < len && (line.[!i] = ' ' || line.[!i] = '\t') do
+        if line.[!i] = '\t' then has_tab := true else has_space := true;
+        incr i
+      done;
+      !has_tab && !has_space && !i < len
+    in
+    let _, matched = any_line_pred s is_mixed_indent in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-003";
+          severity = Warning;
+          message = "Hard tab mixed with spaces in indentation";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-003"; run }
+
+(* SPC-004: Carriage return U+000D without LF *)
+let r_spc_004 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '\r' then
+        if i + 1 < n && s.[i + 1] = '\n' then () else incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-004";
+          severity = Warning;
+          message = "Bare carriage return U+000D without LF";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-004"; run }
+
+(* SPC-005: Trailing tab at end of line *)
+let r_spc_005 : rule =
+  let run s =
+    let ends_with_tab line =
+      let len = String.length line in
+      len > 0 && line.[len - 1] = '\t'
+    in
+    let _, matched = any_line_pred s ends_with_tab in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-005";
+          severity = Info;
+          message = "Trailing tab at end of line";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-005"; run }
+
+(* SPC-006: Indentation mixes spaces and tabs *)
+let r_spc_006 : rule =
+  let run s =
+    let has_mixed_indent line =
+      let len = String.length line in
+      if len = 0 then false
+      else
+        let seen_tab = ref false in
+        let seen_space_after_tab = ref false in
+        let i = ref 0 in
+        while !i < len && (line.[!i] = ' ' || line.[!i] = '\t') do
+          if line.[!i] = '\t' then seen_tab := true
+          else if !seen_tab then seen_space_after_tab := true;
+          incr i
+        done;
+        !seen_space_after_tab
+    in
+    let _, matched = any_line_pred s has_mixed_indent in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-006";
+          severity = Info;
+          message = "Indentation mixes spaces and tabs";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-006"; run }
+
+(* SPC-012: BOM not at file start *)
+let r_spc_012 : rule =
+  let run s =
+    let bom = "\xef\xbb\xbf" in
+    let total = count_substring s bom in
+    let at_start = String.length s >= 3 && String.sub s 0 3 = bom in
+    let interior = if at_start then total - 1 else total in
+    if interior > 0 then
+      Some
+        {
+          id = "SPC-012";
+          severity = Error;
+          message = "BOM U+FEFF not at file start";
+          count = interior;
+        }
+    else None
+  in
+  { id = "SPC-012"; run }
+
+(* SPC-024: Leading spaces on blank line *)
+let r_spc_024 : rule =
+  let run s =
+    let is_spaces_only_blank line =
+      let len = String.length line in
+      len > 0
+      &&
+      let all_space = ref true in
+      for i = 0 to len - 1 do
+        if line.[i] <> ' ' && line.[i] <> '\t' then all_space := false
+      done;
+      !all_space
+    in
+    let _, matched = any_line_pred s is_spaces_only_blank in
+    if matched > 0 then
+      Some
+        {
+          id = "SPC-024";
+          severity = Info;
+          message = "Leading spaces on blank line";
+          count = matched;
+        }
+    else None
+  in
+  { id = "SPC-024"; run }
+
+(* SPC-028: Multiple consecutive ~ (non-breaking spaces) *)
+let r_spc_028 : rule =
+  let run s =
+    let cnt = count_substring s "~~" in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-028";
+          severity = Warning;
+          message = "Multiple consecutive non-breaking spaces (~~)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-028"; run }
+
+let rules_spc : rule list =
+  [
+    r_spc_001;
+    r_spc_002;
+    r_spc_003;
+    r_spc_004;
+    r_spc_005;
+    r_spc_006;
+    r_spc_012;
+    r_spc_024;
+    r_spc_028;
+  ]
+
+(* ── TYPO-062: Literal backslash in text ───────────────────────────── *)
+let r_typo_062 : rule =
+  let run s =
+    (* Count \textbackslash suggestions -- look for \\ not followed by a letter
+       (i.e. bare backslash, not a command) outside math *)
+    let s = strip_math_segments s in
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if s.[!i] = '\\' && s.[!i + 1] = '\\' then (
+        (* Check it's not a linebreak command like \\[2pt] or \\* *)
+        if !i + 2 < n then (
+          let c = s.[!i + 2] in
+          if c <> '[' && c <> '*' then incr cnt)
+        else incr cnt;
+        i := !i + 2)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-062";
+          severity = Warning;
+          message = "Literal backslash in text; use \\textbackslash";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-062"; run }
+
+(* Combined ENC + CHAR + SPC + new TYPO rules *)
+let rules_enc_char_spc : rule list =
+  rules_enc @ rules_char @ rules_spc @ [ r_typo_062 ]
+
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =
   let run s =
@@ -2469,8 +3022,8 @@ let rules_l1 : rule list =
 let get_rules () : rule list =
   match Sys.getenv_opt "L0_VALIDATORS" with
   | Some ("1" | "true" | "pilot" | "PILOT") ->
-      rules_pilot @ rules_vpd_gen @ rules_l1
-  | _ -> rules_basic @ rules_l1
+      rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
+  | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
 
 let run_all (src : string) : result list =
   let rec go acc = function
@@ -2525,6 +3078,9 @@ type layer = L0 | L1 | L2 | L3 | L4
 let precondition_of_rule_id (id : string) : layer =
   match id with
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
+  | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
+  | _ when String.length id >= 5 && String.sub id 0 5 = "CHAR-" -> L0
+  | _ when String.length id >= 4 && String.sub id 0 4 = "SPC-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "CMD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "MOD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1

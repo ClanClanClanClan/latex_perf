@@ -51,3 +51,13 @@
  (name runtime_main_exe)
  (modules runtime_main_exe)
  (libraries l0_lexer unix threads))
+
+(test
+ (name test_percentiles)
+ (modules test_percentiles)
+ (libraries l0_lexer))
+
+(test
+ (name test_alloc_guard)
+ (modules test_alloc_guard)
+ (libraries l0_lexer))

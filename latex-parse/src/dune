@@ -122,3 +122,43 @@
  (name test_parser_l2_verb)
  (modules test_parser_l2_verb)
  (libraries latex_parse_lib))
+
+(test
+ (name test_service_payload)
+ (modules test_service_payload)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_net_io)
+ (modules test_net_io)
+ (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_fd_util)
+ (modules test_fd_util)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_context)
+ (modules test_validators_context)
+ (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_service_bracket)
+ (modules test_service_bracket)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_barrier)
+ (modules test_barrier)
+ (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_validators_metrics)
+ (modules test_validators_metrics)
+ (libraries latex_parse_lib unix str))
+
+(test
+ (name test_config)
+ (modules test_config)
+ (libraries latex_parse_lib))

@@ -162,3 +162,28 @@
  (name test_config)
  (modules test_config)
  (libraries latex_parse_lib))
+
+(test
+ (name test_hedge_timer)
+ (modules test_hedge_timer)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_mlock_smoke)
+ (modules test_mlock_smoke)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_meminfo_smoke)
+ (modules test_meminfo_smoke)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_gc_prep_smoke)
+ (modules test_gc_prep_smoke)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_pretouch_smoke)
+ (modules test_pretouch_smoke)
+ (libraries latex_parse_lib unix bigarray))

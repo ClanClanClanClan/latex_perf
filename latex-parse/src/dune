@@ -216,3 +216,8 @@
  (deps
   ../data/macro_catalogue.v25r2.json
   ../data/macro_catalogue.argsafe.v25r1.json))
+
+(test
+ (name test_validators_enc_char_spc)
+ (modules test_validators_enc_char_spc)
+ (libraries latex_parse_lib unix))

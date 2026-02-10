@@ -26,3 +26,6 @@ val run_all_with_timings : string -> result list * float * (string * float) list
 val run_all_with_timings_for_layer :
   string -> layer -> result list * float * (string * float) list
 (** Like {!run_all_with_timings} but restricted to rules for the given layer. *)
+
+val precondition_of_rule_id : string -> layer
+(** Map a rule ID to the layer it belongs to based on its prefix. *)

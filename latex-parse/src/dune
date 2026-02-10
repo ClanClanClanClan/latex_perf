@@ -221,3 +221,8 @@
  (name test_validators_enc_char_spc)
  (modules test_validators_enc_char_spc)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_batch2)
+ (modules test_validators_batch2)
+ (libraries latex_parse_lib unix))

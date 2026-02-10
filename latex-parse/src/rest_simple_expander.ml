@@ -1,9 +1,21 @@
-type cfg = { strip_controls : string list; bfseries_until_brace : bool }
+(** Simple LaTeX control-sequence expander with configurable stripping rules.
+
+    Supports two modes:
+    - Legacy: strip a fixed list of commands (backward compatible)
+    - Catalogue: delegate to {!Latex_parse_lib.Macro_catalogue.expand} for full
+      v25r2 + argsafe expansion *)
+
+type cfg = {
+  strip_controls : string list;
+  bfseries_until_brace : bool;
+  catalogue : Latex_parse_lib.Macro_catalogue.catalogue option;
+}
 
 let default =
   {
     strip_controls = [ "textbf"; "emph"; "section" ];
     bfseries_until_brace = true;
+    catalogue = None;
   }
 
 let of_json (j : Yojson.Safe.t) : cfg =
@@ -11,8 +23,17 @@ let of_json (j : Yojson.Safe.t) : cfg =
   try
     let strip = j |> member "strip_controls" |> to_list |> List.map to_string in
     let bf = j |> member "bfseries_until_brace" |> to_bool in
-    { strip_controls = strip; bfseries_until_brace = bf }
+    { strip_controls = strip; bfseries_until_brace = bf; catalogue = None }
   with _ -> default
+
+let of_catalogue (cat : Latex_parse_lib.Macro_catalogue.catalogue) : cfg =
+  { default with catalogue = Some cat }
+
+let with_catalogue cfg (cat : Latex_parse_lib.Macro_catalogue.catalogue option)
+    =
+  { cfg with catalogue = cat }
+
+(* ── Legacy expansion (backward compatible) ─────────────────────────── *)
 
 let is_letter c = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
@@ -36,7 +57,7 @@ let find_brace_block s i =
     done;
     if !depth = 0 then Some (i + 1, !j - i - 2) else None
 
-let expand_once cfg s =
+let expand_once_legacy cfg s =
   let b = Buffer.create (String.length s) in
   let n = String.length s in
   let i = ref 0 in
@@ -70,14 +91,26 @@ let expand_once cfg s =
   done;
   Buffer.contents b
 
-let rec expand_fix cfg s =
-  let s' = expand_once cfg s in
-  if String.equal s s' then s else expand_fix cfg s'
+let rec expand_fix_legacy cfg s =
+  let s' = expand_once_legacy cfg s in
+  if String.equal s s' then s else expand_fix_legacy cfg s'
+
+(* ── Public API ─────────────────────────────────────────────────────── *)
+
+let expand_once cfg s =
+  match cfg.catalogue with
+  | Some _cat ->
+      (* Catalogue mode: single-pass is not meaningful; delegate to
+         expand_fix *)
+      s
+  | None -> expand_once_legacy cfg s
+
+let expand_fix cfg s =
+  match cfg.catalogue with
+  | Some cat -> Latex_parse_lib.Macro_catalogue.expand cat s
+  | None -> expand_fix_legacy cfg s
 
 let expand_and_tokenize cfg s =
   let expanded = expand_fix cfg s in
   let tokens = Latex_parse_lib.Tokenizer_lite.tokenize expanded in
   (expanded, tokens)
-
-(* Placeholder for future expander summaries; current REST assembles
-   post_commands directly from expanded text *)

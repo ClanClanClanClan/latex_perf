@@ -30,8 +30,9 @@
   unicode
   parser_l2
   fd_util
-  net_io)
- (libraries unix threads str uutf)
+  net_io
+  macro_catalogue)
+ (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)
   (names
@@ -207,3 +208,11 @@
  (name test_metrics_prometheus)
  (modules test_metrics_prometheus)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_macro_catalogue)
+ (modules test_macro_catalogue)
+ (libraries latex_parse_lib)
+ (deps
+  ../data/macro_catalogue.v25r2.json
+  ../data/macro_catalogue.argsafe.v25r1.json))

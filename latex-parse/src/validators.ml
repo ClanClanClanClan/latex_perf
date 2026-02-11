@@ -2047,6 +2047,60 @@ let r_typo_058 : rule =
   in
   { id = "TYPO-058"; run }
 
+(* TYPO-060: Smart quotes inside lstlisting/verbatim environments *)
+let r_typo_060 : rule =
+  let run s =
+    (* Extract content within \begin{lstlisting}...\end{lstlisting} and
+       \begin{verbatim}...\end{verbatim}, then scan for curly quotes *)
+    let curly_in_env env =
+      let open_tag = "\\begin{" ^ env ^ "}" in
+      let close_tag = "\\end{" ^ env ^ "}" in
+      let olen = String.length open_tag in
+      let rec loop i acc =
+        match
+          try Some (Str.search_forward (Str.regexp_string open_tag) s i)
+          with Not_found -> None
+        with
+        | None -> acc
+        | Some start -> (
+            let content_start = start + olen in
+            match
+              try
+                Some
+                  (Str.search_forward
+                     (Str.regexp_string close_tag)
+                     s content_start)
+              with Not_found -> None
+            with
+            | None -> acc
+            | Some end_pos ->
+                let block =
+                  String.sub s content_start (end_pos - content_start)
+                in
+                let cnt =
+                  count_substring block "\xe2\x80\x9c"
+                  + count_substring block "\xe2\x80\x9d"
+                  + count_substring block "\xe2\x80\x98"
+                  + count_substring block "\xe2\x80\x99"
+                in
+                loop (end_pos + String.length close_tag) (acc + cnt))
+      in
+      loop 0 0
+    in
+    let cnt = curly_in_env "lstlisting" + curly_in_env "verbatim" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-060";
+          severity = Warning;
+          message =
+            "Smart quotes present inside lstlisting/verbatim environments";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-060"; run }
+
 let rules_vpd_gen : rule list =
   [
     r_typo_034;
@@ -2072,6 +2126,7 @@ let rules_vpd_gen : rule list =
     r_typo_056;
     r_typo_057;
     r_typo_058;
+    r_typo_060;
     r_typo_061;
     r_typo_063;
   ]
@@ -2419,6 +2474,96 @@ let r_enc_014 : rule =
   in
   { id = "ENC-014"; run }
 
+(* ENC-008: Private-use codepoint U+E000-F8FF detected *)
+let r_enc_008 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b0 = Char.code s.[!i] in
+      if b0 = 0xEE && !i + 2 < n then (
+        (* U+E000-EFFF: EE 80 80 — EE BF BF *)
+        incr cnt;
+        i := !i + 3)
+      else if b0 = 0xEF && !i + 2 < n then
+        let b1 = Char.code s.[!i + 1] in
+        if b1 <= 0xA3 then (
+          (* U+F000-F8FF: EF 80 80 — EF A3 BF *)
+          incr cnt;
+          i := !i + 3)
+        else i := !i + 1
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-008";
+          severity = Warning;
+          message = "Private-use codepoint detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-008"; run }
+
+(* ENC-009: Unpaired surrogate code unit U+D800-DFFF in UTF-8 *)
+let r_enc_009 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      let b0 = Char.code s.[!i] in
+      if b0 = 0xED then
+        let b1 = Char.code s.[!i + 1] in
+        if b1 >= 0xA0 && b1 <= 0xBF then (
+          (* ED A0 80 — ED BF BF = U+D800-DFFF *)
+          incr cnt;
+          i := !i + 3)
+        else i := !i + 1
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-009";
+          severity = Error;
+          message = "Unpaired surrogate code unit";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-009"; run }
+
+(* ENC-016: Fullwidth digits U+FF10-FF19 (Arabic numeral look-alikes) *)
+let r_enc_016 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      let b0 = Char.code s.[!i] in
+      let b1 = Char.code s.[!i + 1] in
+      let b2 = Char.code s.[!i + 2] in
+      if b0 = 0xEF && b1 = 0xBC && b2 >= 0x90 && b2 <= 0x99 then (
+        (* EF BC 90 — EF BC 99 = U+FF10-FF19 *)
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-016";
+          severity = Warning;
+          message = "Arabic numerals replaced by Unicode look-alikes";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-016"; run }
+
 let rules_enc : rule list =
   [
     r_enc_001;
@@ -2426,9 +2571,12 @@ let rules_enc : rule list =
     r_enc_003;
     r_enc_004;
     r_enc_007;
+    r_enc_008;
+    r_enc_009;
     r_enc_012;
     r_enc_013;
     r_enc_014;
+    r_enc_016;
     r_enc_017;
     r_enc_020;
     r_enc_021;
@@ -2438,6 +2586,37 @@ let rules_enc : rule list =
   ]
 
 (* ── CHAR rules: control character detection ───────────────────────── *)
+
+(* CHAR-005: Control characters U+0000-001F present (excluding TAB 0x09, LF
+   0x0A, CR 0x0D which are handled by other rules) *)
+let r_char_005 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      let c = Char.code s.[i] in
+      if
+        c <= 0x1F
+        && c <> 0x09
+        && c <> 0x0A
+        && c <> 0x0D
+        (* Also exclude 0x07/0x08/0x0C/0x7F — these have their own rules *)
+        && c <> 0x07
+        && c <> 0x08
+        && c <> 0x0C
+      then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-005";
+          severity = Error;
+          message = "Control characters U+0000-001F present";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-005"; run }
 
 (* CHAR-006: Backspace U+0008 *)
 let r_char_006 : rule =
@@ -2676,8 +2855,92 @@ let r_char_022 : rule =
   in
   { id = "CHAR-022"; run }
 
+(* CHAR-016: Double-width CJK punctuation in ASCII context *)
+let r_char_016 : rule =
+  let run s =
+    (* CJK fullwidth punctuation: U+3001 (E3 80 81), U+3002 (E3 80 82), U+FF0C
+       (EF BC 8C), U+FF0E (EF BC 8E), U+FF1A (EF BC 9A), U+FF1B (EF BC 9B),
+       U+FF01 (EF BC 81), U+FF1F (EF BC 9F) *)
+    let cnt =
+      count_substring s "\xe3\x80\x81"
+      + count_substring s "\xe3\x80\x82"
+      + count_substring s "\xef\xbc\x8c"
+      + count_substring s "\xef\xbc\x8e"
+      + count_substring s "\xef\xbc\x9a"
+      + count_substring s "\xef\xbc\x9b"
+      + count_substring s "\xef\xbc\x81"
+      + count_substring s "\xef\xbc\x9f"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-016";
+          severity = Warning;
+          message = "Double-width CJK punctuation in ASCII context";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-016"; run }
+
+(* CHAR-019: Unicode minus U+2212 in text mode *)
+let r_char_019 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let cnt = count_substring s "\xe2\x88\x92" in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHAR-019";
+          severity = Info;
+          message = "Unicode minus U+2212 in text mode";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHAR-019"; run }
+
+(* CHAR-020: Sharp S in uppercase context — suggest SS *)
+let r_char_020 : rule =
+  let run s =
+    (* U+00DF = C3 9F (lowercase sharp s) *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if Char.code s.[!i] = 0xC3 && Char.code s.[!i + 1] = 0x9F then (
+        (* Check if surrounded by uppercase context *)
+        let prev_upper =
+          !i >= 1
+          &&
+          let c = Char.code s.[!i - 1] in
+          c >= 0x41 && c <= 0x5A
+        in
+        let next_upper =
+          !i + 2 < n
+          &&
+          let c = Char.code s.[!i + 2] in
+          c >= 0x41 && c <= 0x5A
+        in
+        if prev_upper || next_upper then incr cnt;
+        i := !i + 2)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-020";
+          severity = Info;
+          message = "Sharp S (\xc3\x9f) in uppercase context; consider using SS";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-020"; run }
+
 let rules_char : rule list =
   [
+    r_char_005;
     r_char_006;
     r_char_007;
     r_char_008;
@@ -2685,8 +2948,11 @@ let rules_char : rule list =
     r_char_013;
     r_char_014;
     r_char_015;
+    r_char_016;
     r_char_017;
     r_char_018;
+    r_char_019;
+    r_char_020;
     r_char_021;
     r_char_022;
   ]
@@ -3310,6 +3576,105 @@ let r_spc_035 : rule =
   in
   { id = "SPC-035"; run }
 
+(* SPC-010: Two spaces after sentence-ending period *)
+let r_spc_010 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    (* Match ". " (period + two spaces) followed by an uppercase letter *)
+    let re = Str.regexp "\\. +[A-Z]" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        let m = Str.matched_string s in
+        let nspaces = String.length m - 2 in
+        (* Only count exactly 2 spaces — 3+ is SPC-031 *)
+        let acc' = if nspaces = 2 then acc + 1 else acc in
+        loop (Str.match_end ()) acc'
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-010";
+          severity = Info;
+          message = "Sentence spacing uses two spaces after period";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-010"; run }
+
+(* SPC-018: No space after sentence-ending period (period+uppercase) *)
+let r_spc_018 : rule =
+  let run s =
+    let s = strip_math_segments s in
+    let re = Str.regexp "\\.[A-Z]" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        loop (Str.match_end ()) (acc + 1)
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-018";
+          severity = Info;
+          message = "No space after sentence-ending period";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-018"; run }
+
+(* SPC-022: Tab after bullet in \itemize *)
+let r_spc_022 : rule =
+  let run s =
+    let cnt = count_substring s "\\item\t" in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-022";
+          severity = Info;
+          message = "Tab after bullet in \\itemize";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-022"; run }
+
+(* SPC-027: Trailing whitespace inside \url{} *)
+let r_spc_027 : rule =
+  let run s =
+    let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
+    let rec loop i acc =
+      try
+        ignore (Str.search_forward re s i);
+        let inner = Str.matched_group 1 s in
+        let len = String.length inner in
+        let has_leading = len > 0 && (inner.[0] = ' ' || inner.[0] = '\t') in
+        let has_trailing =
+          len > 0 && (inner.[len - 1] = ' ' || inner.[len - 1] = '\t')
+        in
+        let acc' = if has_leading || has_trailing then acc + 1 else acc in
+        loop (Str.match_end ()) acc'
+      with Not_found -> acc
+    in
+    let cnt = loop 0 0 in
+    if cnt > 0 then
+      Some
+        {
+          id = "SPC-027";
+          severity = Warning;
+          message = "Trailing whitespace inside \\url{}";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "SPC-027"; run }
+
 let rules_spc : rule list =
   [
     r_spc_001;
@@ -3321,15 +3686,19 @@ let rules_spc : rule list =
     r_spc_007;
     r_spc_008;
     r_spc_009;
+    r_spc_010;
     r_spc_012;
     r_spc_013;
     r_spc_014;
     r_spc_015;
     r_spc_016;
+    r_spc_018;
     r_spc_019;
     r_spc_021;
+    r_spc_022;
     r_spc_024;
     r_spc_025;
+    r_spc_027;
     r_spc_028;
     r_spc_029;
     r_spc_030;

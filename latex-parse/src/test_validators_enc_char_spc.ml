@@ -510,6 +510,86 @@ let () =
       in
       expect (enc_char_spc = []) (tag ^ ": clean LaTeX"));
 
+  (* ══════════════════════════════════════════════════════════════════════ New
+     ENC rules (batch 4)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* ENC-005: Invalid UTF-8 continuation byte *)
+  run "ENC-005 fires on orphan continuation byte" (fun tag ->
+      expect (fires "ENC-005" "text\x80more") (tag ^ ": orphan 0x80"));
+  run "ENC-005 fires on truncated 2-byte" (fun tag ->
+      expect (fires "ENC-005" "text\xc3") (tag ^ ": truncated 2-byte"));
+  run "ENC-005 fires on bad continuation" (fun tag ->
+      expect (fires "ENC-005" "text\xc3\x00more") (tag ^ ": bad continuation"));
+  run "ENC-005 clean valid UTF-8" (fun tag ->
+      expect (does_not_fire "ENC-005" "caf\xc3\xa9") (tag ^ ": valid 2-byte"));
+
+  (* ENC-006: Overlong UTF-8 encoding sequence *)
+  run "ENC-006 fires on overlong 2-byte" (fun tag ->
+      (* C0 80 = overlong NUL *)
+      expect (fires "ENC-006" "text\xc0\x80more") (tag ^ ": C0 80 overlong"));
+  run "ENC-006 fires on C1 encoding" (fun tag ->
+      expect (fires "ENC-006" "\xc1\x80") (tag ^ ": C1 xx overlong"));
+  run "ENC-006 fires on 3-byte overlong" (fun tag ->
+      (* E0 80 80 = overlong for U+0000 *)
+      expect (fires "ENC-006" "\xe0\x80\x80") (tag ^ ": 3-byte overlong"));
+  run "ENC-006 clean" (fun tag ->
+      expect (does_not_fire "ENC-006" "normal ASCII text") (tag ^ ": ASCII ok"));
+
+  (* ENC-018: Non-breaking hyphen U+2011 *)
+  run "ENC-018 fires on nb-hyphen in text" (fun tag ->
+      expect (fires "ENC-018" "well\xe2\x80\x91known") (tag ^ ": U+2011 in text"));
+  run "ENC-018 count=2" (fun tag ->
+      expect
+        (fires_with_count "ENC-018" "a\xe2\x80\x91b c\xe2\x80\x91d" 2)
+        (tag ^ ": count=2"));
+  run "ENC-018 clean" (fun tag ->
+      expect
+        (does_not_fire "ENC-018" "normal-hyphen")
+        (tag ^ ": ASCII hyphen ok"));
+
+  (* ENC-019: Duplicate combining accents *)
+  run "ENC-019 fires on double acute" (fun tag ->
+      (* e + combining acute + combining acute = e\xCC\x81\xCC\x81 *)
+      expect (fires "ENC-019" "e\xcc\x81\xcc\x81") (tag ^ ": double acute"));
+  run "ENC-019 clean single accent" (fun tag ->
+      expect (does_not_fire "ENC-019" "e\xcc\x81") (tag ^ ": single accent ok"));
+  run "ENC-019 clean different accents" (fun tag ->
+      (* e + acute + grave = different, should not fire *)
+      expect
+        (does_not_fire "ENC-019" "e\xcc\x81\xcc\x80")
+        (tag ^ ": different accents ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════ New
+     CHAR rules (batch 4)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* CHAR-010: Right-to-left mark U+200F *)
+  run "CHAR-010 fires on RTL mark" (fun tag ->
+      expect (fires "CHAR-010" "text\xe2\x80\x8fmore") (tag ^ ": U+200F"));
+  run "CHAR-010 count=2" (fun tag ->
+      expect
+        (fires_with_count "CHAR-010" "\xe2\x80\x8f and \xe2\x80\x8f" 2)
+        (tag ^ ": count=2"));
+  run "CHAR-010 clean" (fun tag ->
+      expect (does_not_fire "CHAR-010" "normal text") (tag ^ ": no RTL mark"));
+
+  (* CHAR-011: Left-to-right mark U+200E *)
+  run "CHAR-011 fires on LTR mark" (fun tag ->
+      expect (fires "CHAR-011" "text\xe2\x80\x8emore") (tag ^ ": U+200E"));
+  run "CHAR-011 clean" (fun tag ->
+      expect (does_not_fire "CHAR-011" "normal text") (tag ^ ": no LTR mark"));
+
+  (* CHAR-012: Zero-width joiner U+200D *)
+  run "CHAR-012 fires on ZWJ" (fun tag ->
+      expect (fires "CHAR-012" "text\xe2\x80\x8dmore") (tag ^ ": U+200D"));
+  run "CHAR-012 count=2" (fun tag ->
+      expect
+        (fires_with_count "CHAR-012" "\xe2\x80\x8d \xe2\x80\x8d" 2)
+        (tag ^ ": count=2"));
+  run "CHAR-012 clean" (fun tag ->
+      expect (does_not_fire "CHAR-012" "normal text") (tag ^ ": no ZWJ"));
+
   (* precondition_of_rule_id dispatches correctly *)
   run "layer dispatch ENC" (fun tag ->
       expect

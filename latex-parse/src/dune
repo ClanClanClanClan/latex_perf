@@ -246,3 +246,8 @@
  (name test_validators_l1)
  (modules test_validators_l1)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_delim)
+ (modules test_validators_delim)
+ (libraries latex_parse_lib unix))

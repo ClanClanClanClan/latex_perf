@@ -6059,6 +6059,568 @@ let l1_mod_024_rule : rule =
   in
   { id = "MOD-024"; run }
 
+(* ── DELIM rules: delimiter matching (L1 — operate on expanded text) ── *)
+
+(* Helper: extract math segment contents from source. Returns a list of strings,
+   each being the content inside a math environment ($...$, \(...\), \[...\], or
+   math-class \begin{env}...\end{env}). Unlike strip_math_segments which removes
+   math, this returns only the math parts. *)
+let extract_math_segments (s : string) : string list =
+  let len = String.length s in
+  let segments = ref [] in
+  let math_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "eqnarray";
+      "math";
+      "displaymath";
+    ]
+  in
+  let is_math_env name = List.exists (String.equal name) math_envs in
+  let starts_with prefix idx =
+    let plen = String.length prefix in
+    idx + plen <= len && String.sub s idx plen = prefix
+  in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let parse_begin idx =
+    if not (starts_with "\\begin{" idx) then None
+    else
+      let name_start = idx + 7 in
+      let j = ref name_start in
+      while !j < len && String.unsafe_get s !j <> '}' do
+        incr j
+      done;
+      if !j >= len then None
+      else Some (String.sub s name_start (!j - name_start), !j + 1)
+  in
+  let rec skip_env_end name idx =
+    let end_prefix = "\\end{" ^ name ^ "}" in
+    let end_len = String.length end_prefix in
+    if idx >= len then len
+    else if (not (is_escaped idx)) && starts_with end_prefix idx then
+      idx + end_len
+    else skip_env_end name (idx + 1)
+  in
+  let in_dollar = ref false in
+  let dollar_start = ref 0 in
+  let rec loop i =
+    if i >= len then ()
+    else if !in_dollar then
+      if (not (is_escaped i)) && s.[i] = '$' then (
+        segments := String.sub s !dollar_start (i - !dollar_start) :: !segments;
+        in_dollar := false;
+        loop (i + 1))
+      else loop (i + 1)
+    else if (not (is_escaped i)) && s.[i] = '$' then (
+      in_dollar := true;
+      dollar_start := i + 1;
+      loop (i + 1))
+    else if (not (is_escaped i)) && starts_with "\\(" i then (
+      let start = i + 2 in
+      let j = ref start in
+      while
+        !j < len - 1 && not ((not (is_escaped !j)) && starts_with "\\)" !j)
+      do
+        incr j
+      done;
+      if !j < len - 1 then (
+        segments := String.sub s start (!j - start) :: !segments;
+        loop (!j + 2))
+      else loop (i + 1))
+    else if (not (is_escaped i)) && starts_with "\\[" i then (
+      let start = i + 2 in
+      let j = ref start in
+      while
+        !j < len - 1 && not ((not (is_escaped !j)) && starts_with "\\]" !j)
+      do
+        incr j
+      done;
+      if !j < len - 1 then (
+        segments := String.sub s start (!j - start) :: !segments;
+        loop (!j + 2))
+      else loop (i + 1))
+    else if (not (is_escaped i)) && starts_with "\\begin{" i then
+      match parse_begin i with
+      | Some (name, after_begin) when is_math_env name ->
+          let end_pos = skip_env_end name after_begin in
+          let end_tag = "\\end{" ^ name ^ "}" in
+          let content_end = end_pos - String.length end_tag in
+          if content_end > after_begin then
+            segments :=
+              String.sub s after_begin (content_end - after_begin) :: !segments;
+          loop end_pos
+      | _ -> loop (i + 1)
+    else loop (i + 1)
+  in
+  loop 0;
+  List.rev !segments
+
+(* DELIM-001: Unmatched delimiters { } after expansion. Count opening vs closing
+   braces, ignoring escaped \{ and \}. *)
+let l1_delim_001_rule : rule =
+  let run s =
+    let n = String.length s in
+    let opens = ref 0 in
+    let closes = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let c = s.[!i] in
+      if c = '\\' && !i + 1 < n then (* skip escaped characters *)
+        i := !i + 2
+      else if c = '{' then (
+        incr opens;
+        incr i)
+      else if c = '}' then (
+        incr closes;
+        incr i)
+      else incr i
+    done;
+    let imbalance = abs (!opens - !closes) in
+    if imbalance > 0 then
+      Some
+        {
+          id = "DELIM-001";
+          severity = Error;
+          message = "Unmatched delimiters { } after macro expansion";
+          count = imbalance;
+        }
+    else None
+  in
+  { id = "DELIM-001"; run }
+
+(* DELIM-002: Extra closing } detected. Scan left-to-right tracking brace depth;
+   if depth ever goes negative, count those positions. *)
+let l1_delim_002_rule : rule =
+  let run s =
+    let n = String.length s in
+    let depth = ref 0 in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let c = s.[!i] in
+      if c = '\\' && !i + 1 < n then i := !i + 2
+      else if c = '{' then (
+        incr depth;
+        incr i)
+      else if c = '}' then (
+        decr depth;
+        if !depth < 0 then (
+          incr cnt;
+          depth := 0);
+        incr i)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-002";
+          severity = Error;
+          message = "Extra closing } detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-002"; run }
+
+(* DELIM-003: Unmatched \left without \right in math mode *)
+let l1_delim_003_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let lefts = count_substring seg "\\left" in
+        let rights = count_substring seg "\\right" in
+        if lefts > rights then cnt := !cnt + (lefts - rights))
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-003";
+          severity = Error;
+          message = "Unmatched \\left without \\right";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-003"; run }
+
+(* DELIM-004: Unmatched \right without \left in math mode *)
+let l1_delim_004_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let lefts = count_substring seg "\\left" in
+        let rights = count_substring seg "\\right" in
+        if rights > lefts then cnt := !cnt + (rights - lefts))
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-004";
+          severity = Error;
+          message = "Unmatched \\right without \\left";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-004"; run }
+
+(* DELIM-005: Mismatched parenthesis sizing (\big vs \Bigg) — detect \bigl/\bigr
+   paired with \Biggl/\Biggr or similar size mismatches. *)
+let l1_delim_005_rule : rule =
+  let size_of s =
+    if count_substring s "\\Bigg" > 0 then 4
+    else if count_substring s "\\bigg" > 0 then 3
+    else if count_substring s "\\Big" > 0 then 2
+    else if count_substring s "\\big" > 0 then 1
+    else 0
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Look for \left...\right pairs and check if sizing commands within
+           differ *)
+        let re_left = Str.regexp {|\\left|} in
+        let re_right = Str.regexp {|\\right|} in
+        let lefts = ref [] and rights = ref [] in
+        let i = ref 0 in
+        (try
+           while true do
+             let p = Str.search_forward re_left seg !i in
+             lefts := p :: !lefts;
+             i := p + 5
+           done
+         with Not_found -> ());
+        i := 0;
+        (try
+           while true do
+             let p = Str.search_forward re_right seg !i in
+             rights := p :: !rights;
+             i := p + 6
+           done
+         with Not_found -> ());
+        (* For each left-right pair, check sizing around them *)
+        let left_list = List.rev !lefts and right_list = List.rev !rights in
+        let pairs = min (List.length left_list) (List.length right_list) in
+        let ll = Array.of_list left_list and rl = Array.of_list right_list in
+        for k = 0 to pairs - 1 do
+          let lp = ll.(k) and rp = rl.(k) in
+          (* Check context around each delimiter for sizing commands *)
+          let l_ctx = String.sub seg (max 0 (lp - 10)) (min 10 (max 0 lp)) in
+          let r_ctx = String.sub seg (max 0 (rp - 10)) (min 10 (max 0 rp)) in
+          let l_size = size_of l_ctx and r_size = size_of r_ctx in
+          if l_size > 0 && r_size > 0 && l_size <> r_size then incr cnt
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-005";
+          severity = Info;
+          message =
+            "Mismatched parenthesis sizing (e.g. \\big vs \\Bigg in same pair)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-005"; run }
+
+(* DELIM-006: \big delimiters used outside display math — detect \big, \bigl,
+   \bigr etc. in inline math ($...$, \(...\)) rather than display math. *)
+let l1_delim_006_rule : rule =
+  let re_big = Str.regexp {|\\[Bb]ig[lrmg]?\b\|\\[Bb]igg[lrmg]?\b|} in
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    (* Scan for inline math contexts and look for \big within them *)
+    let starts_with prefix idx =
+      let plen = String.length prefix in
+      idx + plen <= len && String.sub s idx plen = prefix
+    in
+    let is_escaped idx = idx > 0 && s.[idx - 1] = '\\' in
+    let i = ref 0 in
+    while !i < len do
+      (* Inline math: $...$ (not $$) *)
+      if
+        (not (is_escaped !i))
+        && s.[!i] = '$'
+        && (!i + 1 >= len || s.[!i + 1] <> '$')
+      then (
+        let start = !i + 1 in
+        let j = ref start in
+        while
+          !j < len
+          && not
+               ((not (is_escaped !j))
+               && s.[!j] = '$'
+               && (!j + 1 >= len || s.[!j + 1] <> '$'))
+        do
+          incr j
+        done;
+        if !j < len then (
+          let inline_seg = String.sub s start (!j - start) in
+          let k = ref 0 in
+          (try
+             while true do
+               let _ = Str.search_forward re_big inline_seg !k in
+               incr cnt;
+               k := Str.match_end ()
+             done
+           with Not_found -> ());
+          i := !j + 1)
+        else i := !i + 1)
+      else if (not (is_escaped !i)) && starts_with "\\(" !i then (
+        let start = !i + 2 in
+        let j = ref start in
+        while
+          !j < len - 1 && not ((not (is_escaped !j)) && starts_with "\\)" !j)
+        do
+          incr j
+        done;
+        if !j < len - 1 then (
+          let inline_seg = String.sub s start (!j - start) in
+          let k = ref 0 in
+          (try
+             while true do
+               let _ = Str.search_forward re_big inline_seg !k in
+               incr cnt;
+               k := Str.match_end ()
+             done
+           with Not_found -> ());
+          i := !j + 2)
+        else i := !i + 1)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-006";
+          severity = Info;
+          message = "\\big delimiters used in inline math (prefer display math)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-006"; run }
+
+(* DELIM-007: Angle bracket \langle without matching \rangle in math *)
+let l1_delim_007_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let langles = count_substring seg "\\langle" in
+        let rangles = count_substring seg "\\rangle" in
+        let diff = abs (langles - rangles) in
+        if diff > 0 then cnt := !cnt + diff)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-007";
+          severity = Error;
+          message = "Unmatched \\langle / \\rangle pair";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-007"; run }
+
+(* DELIM-008: Empty \left. ... \right. pair — redundant invisible delimiters *)
+let l1_delim_008_rule : rule =
+  let re = Str.regexp {|\\left\.[ \t\n]*\\right\.|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let i = ref 0 in
+        try
+          while true do
+            let _ = Str.search_forward re seg !i in
+            incr cnt;
+            i := Str.match_end ()
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-008";
+          severity = Info;
+          message =
+            "Empty \\left. ... \\right. pair (redundant invisible delimiters)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-008"; run }
+
+(* DELIM-009: Nested delimiter type mismatch — e.g. { ... ( ... ) ... } where
+   brace group contains parenthesized expression or vice versa in math *)
+let l1_delim_009_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let stack = Stack.create () in
+        let i = ref 0 in
+        while !i < n do
+          let c = seg.[!i] in
+          if c = '\\' && !i + 1 < n then i := !i + 2
+          else if c = '{' || c = '(' || c = '[' then (
+            Stack.push c stack;
+            incr i)
+          else if c = '}' || c = ')' || c = ']' then (
+            let expected = match c with '}' -> '{' | ')' -> '(' | _ -> '[' in
+            if (not (Stack.is_empty stack)) && Stack.top stack <> expected then
+              incr cnt;
+            if not (Stack.is_empty stack) then ignore (Stack.pop stack);
+            incr i)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-009";
+          severity = Warning;
+          message = "Nested delimiter type mismatch in math mode";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-009"; run }
+
+(* DELIM-010: Display math uses \big instead of \Big — in display math contexts,
+   convention is to use capital sizing commands *)
+let l1_delim_010_rule : rule =
+  let re_small_big = Str.regexp {|\\big[lrmg]?\b|} in
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let starts_with prefix idx =
+      let plen = String.length prefix in
+      idx + plen <= len && String.sub s idx plen = prefix
+    in
+    let is_escaped idx = idx > 0 && s.[idx - 1] = '\\' in
+    let math_envs =
+      [
+        "equation";
+        "equation*";
+        "align";
+        "align*";
+        "gather";
+        "gather*";
+        "multline";
+        "multline*";
+        "eqnarray";
+        "displaymath";
+      ]
+    in
+    (* Check \[...\] display math *)
+    let i = ref 0 in
+    while !i < len do
+      if (not (is_escaped !i)) && starts_with "\\[" !i then (
+        let start = !i + 2 in
+        let j = ref start in
+        while
+          !j < len - 1 && not ((not (is_escaped !j)) && starts_with "\\]" !j)
+        do
+          incr j
+        done;
+        if !j < len - 1 then (
+          let seg = String.sub s start (!j - start) in
+          let k = ref 0 in
+          (try
+             while true do
+               let _ = Str.search_forward re_small_big seg !k in
+               incr cnt;
+               k := Str.match_end ()
+             done
+           with Not_found -> ());
+          i := !j + 2)
+        else i := !i + 1)
+      else incr i
+    done;
+    (* Check display math environments *)
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            let k = ref 0 in
+            try
+              while true do
+                let _ = Str.search_forward re_small_big blk !k in
+                incr cnt;
+                k := Str.match_end ()
+              done
+            with Not_found -> ())
+          blocks)
+      math_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-010";
+          severity = Info;
+          message =
+            "Display math uses \\big instead of \\Big (prefer capital sizing)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-010"; run }
+
+(* DELIM-011: \middle delimiter used without \left...\right pair *)
+let l1_delim_011_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let middles = count_substring seg "\\middle" in
+        if middles > 0 then
+          (* Check if there are sufficient \left..\right pairs *)
+          let lefts = count_substring seg "\\left" in
+          let rights = count_substring seg "\\right" in
+          let pairs = min lefts rights in
+          if middles > 0 && pairs = 0 then cnt := !cnt + middles)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "DELIM-011";
+          severity = Warning;
+          message = "\\middle delimiter used without \\left...\\right pair";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "DELIM-011"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -6082,6 +6644,17 @@ let rules_l1 : rule list =
     l1_mod_022_rule;
     l1_mod_023_rule;
     l1_mod_024_rule;
+    l1_delim_001_rule;
+    l1_delim_002_rule;
+    l1_delim_003_rule;
+    l1_delim_004_rule;
+    l1_delim_005_rule;
+    l1_delim_006_rule;
+    l1_delim_007_rule;
+    l1_delim_008_rule;
+    l1_delim_009_rule;
+    l1_delim_010_rule;
+    l1_delim_011_rule;
   ]
 
 let get_rules () : rule list =
@@ -6149,6 +6722,9 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 4 && String.sub id 0 4 = "CMD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "MOD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
+  | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
+  | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L0
+  | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0
 
 let allow_for_layer (id : string) (ly : layer) : bool =

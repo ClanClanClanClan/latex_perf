@@ -8,6 +8,760 @@
     },
     "macros": [
       {
+        "name": "acute",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: acute accent \\acute{x}. Content passes through for linting."
+      },
+      {
+        "name": "author",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Document author; content passes through for linting."
+      },
+      {
+        "name": "bar",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: overbar accent \\bar{x}. Content passes through for linting."
+      },
+      {
+        "name": "boldsymbol",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Bold math symbol (amsmath). Content passes through for linting."
+      },
+      {
+        "name": "breve",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: breve accent \\breve{x}. Content passes through for linting."
+      },
+      {
+        "name": "caption",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Figure/table caption; content passes through for linting."
+      },
+      {
+        "name": "chapter",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Chapter heading; content passes through for linting."
+      },
+      {
+        "name": "check",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: háček accent \\check{x}. Content passes through for linting."
+      },
+      {
+        "name": "cite",
+        "mode": "text",
+        "category": "reference",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Citation; content (key) passes through."
+      },
+      {
+        "name": "date",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Document date; content passes through for linting."
+      },
+      {
+        "name": "ddot",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: double overdot \\ddot{x}. Content passes through for linting."
+      },
+      {
+        "name": "dot",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: overdot \\dot{x}. Content passes through for linting."
+      },
+      {
+        "name": "emph",
+        "mode": "text",
+        "category": "emphasis",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\itshape $1}"
+        },
+        "examples": [],
+        "notes": "In TeX, \\emph toggles; in epsilon we model it as a pure wrapper using \\itshape."
+      },
+      {
+        "name": "ensuremath",
+        "mode": "both",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math-or-text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "ensuremath"
+        },
+        "examples": [],
+        "notes": "If outside math, wraps in $...$; otherwise passes through. Implemented as L1 builtin."
+      },
+      {
+        "name": "eqref",
+        "mode": "text",
+        "category": "reference",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Equation reference (amsmath); content passes through."
+      },
+      {
+        "name": "footnote",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Footnote text; content passes through for linting."
+      },
+      {
+        "name": "grave",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: grave accent \\grave{x}. Content passes through for linting."
+      },
+      {
+        "name": "hat",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: circumflex accent \\hat{x}. Content passes through for linting."
+      },
+      {
+        "name": "label",
+        "mode": "text",
+        "category": "reference",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Label definition; content (key) passes through."
+      },
+      {
+        "name": "mathbb",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math alphabet: blackboard bold (e.g. \\mathbb{R}). Identity for linting."
+      },
+      {
+        "name": "mathbf",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathcal",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math alphabet: calligraphic (e.g. \\mathcal{O}). Identity for linting."
+      },
+      {
+        "name": "mathfrak",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math alphabet: Fraktur (e.g. \\mathfrak{g}). Identity for linting."
+      },
+      {
+        "name": "mathit",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathnormal",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathrm",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathscr",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math alphabet: script (e.g. \\mathscr{L}). Identity for linting."
+      },
+      {
+        "name": "mathsf",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mathtt",
+        "mode": "math",
+        "category": "mathstyle",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": []
+      },
+      {
+        "name": "mbox",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "mbox"
+        },
+        "examples": [],
+        "notes": "Represents a no-break box; handled as L1 builtin to avoid layout semantics here."
+      },
+      {
+        "name": "overbrace",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: overbrace \\overbrace{x+y}. Content passes through for linting."
+      },
+      {
+        "name": "overline",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: overline \\overline{x}. Content passes through for linting."
+      },
+      {
+        "name": "pageref",
+        "mode": "text",
+        "category": "reference",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Page reference; content (key) passes through."
+      },
+      {
+        "name": "paragraph",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Paragraph heading; content passes through for linting."
+      },
+      {
+        "name": "part",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Part heading; content passes through for linting."
+      },
+      {
+        "name": "ref",
+        "mode": "text",
+        "category": "reference",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Cross-reference; content (key) passes through."
+      },
+      {
+        "name": "section",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Section heading; content passes through for linting."
+      },
+      {
+        "name": "subparagraph",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Subparagraph heading; content passes through for linting."
+      },
+      {
+        "name": "subsection",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Subsection heading; content passes through for linting."
+      },
+      {
+        "name": "subsubsection",
+        "mode": "text",
+        "category": "sectioning",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Subsubsection heading; content passes through for linting."
+      },
+      {
         "name": "textbf",
         "mode": "text",
         "category": "style",
@@ -40,60 +794,6 @@
         "template": {
           "kind": "inline",
           "body": "{\\itshape $1}"
-        },
-        "examples": []
-      },
-      {
-        "name": "texttt",
-        "mode": "text",
-        "category": "style",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "text"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\ttfamily $1}"
-        },
-        "examples": []
-      },
-      {
-        "name": "textsf",
-        "mode": "text",
-        "category": "style",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "text"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\sffamily $1}"
-        },
-        "examples": []
-      },
-      {
-        "name": "textsc",
-        "mode": "text",
-        "category": "style",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "text"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\scshape $1}"
         },
         "examples": []
       },
@@ -153,6 +853,42 @@
         "examples": []
       },
       {
+        "name": "textsc",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\scshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textsf",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\sffamily $1}"
+        },
+        "examples": []
+      },
+      {
         "name": "textsl",
         "mode": "text",
         "category": "style",
@@ -167,6 +903,62 @@
         "template": {
           "kind": "inline",
           "body": "{\\slshape $1}"
+        },
+        "examples": []
+      },
+      {
+        "name": "textsubscript",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "textsubscript"
+        },
+        "examples": [],
+        "notes": "Rendered as a lowered box in later layers; L1 records a semantic wrapper."
+      },
+      {
+        "name": "textsuperscript",
+        "mode": "text",
+        "category": "boxing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "textsuperscript"
+        },
+        "examples": [],
+        "notes": "Rendered as a raised box in later layers; L1 records a semantic wrapper."
+      },
+      {
+        "name": "texttt",
+        "mode": "text",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "inline",
+          "body": "{\\ttfamily $1}"
         },
         "examples": []
       },
@@ -189,28 +981,28 @@
         "examples": []
       },
       {
-        "name": "emph",
-        "mode": "text",
-        "category": "emphasis",
+        "name": "tilde",
+        "mode": "math",
+        "category": "math-accent",
         "epsilon_allowed": true,
         "args": {
           "positional": 1,
           "optional": [],
           "kinds": [
-            "text"
+            "math"
           ]
         },
         "template": {
-          "kind": "inline",
-          "body": "{\\itshape $1}"
+          "kind": "builtin",
+          "builtin": "math_accent"
         },
         "examples": [],
-        "notes": "In TeX, \\emph toggles; in epsilon we model it as a pure wrapper using \\itshape."
+        "notes": "Math accent/decoration: tilde accent \\tilde{x}. Content passes through for linting."
       },
       {
-        "name": "mbox",
+        "name": "title",
         "mode": "text",
-        "category": "boxing",
+        "category": "document",
         "epsilon_allowed": true,
         "args": {
           "positional": 1,
@@ -221,10 +1013,86 @@
         },
         "template": {
           "kind": "builtin",
-          "builtin": "mbox"
+          "builtin": "passthrough"
         },
         "examples": [],
-        "notes": "Represents a no-break box; handled as L1 builtin to avoid layout semantics here."
+        "notes": "Document title; content passes through for linting."
+      },
+      {
+        "name": "underbrace",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: underbrace \\underbrace{x+y}. Content passes through for linting."
+      },
+      {
+        "name": "underline",
+        "mode": "both",
+        "category": "style",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "underline"
+        },
+        "examples": [],
+        "notes": "Underline text; identity expansion for linting (content passes through)."
+      },
+      {
+        "name": "url",
+        "mode": "text",
+        "category": "hyperlink",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "verbatim-delim"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "URL display; content passes through for linting."
+      },
+      {
+        "name": "vec",
+        "mode": "math",
+        "category": "math-accent",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "math_accent"
+        },
+        "examples": [],
+        "notes": "Math accent/decoration: vector arrow \\vec{x}. Content passes through for linting."
       },
       {
         "name": "verb",
@@ -265,169 +1133,42 @@
         "notes": "Star variant shows spaces visibly; handled by builtin verb* handler."
       },
       {
-        "name": "textsuperscript",
-        "mode": "text",
-        "category": "boxing",
+        "name": "widehat",
+        "mode": "math",
+        "category": "math-accent",
         "epsilon_allowed": true,
         "args": {
           "positional": 1,
           "optional": [],
           "kinds": [
-            "text"
+            "math"
           ]
         },
         "template": {
           "kind": "builtin",
-          "builtin": "textsuperscript"
+          "builtin": "math_accent"
         },
         "examples": [],
-        "notes": "Rendered as a raised box in later layers; L1 records a semantic wrapper."
+        "notes": "Math accent/decoration: wide hat \\widehat{xy}. Content passes through for linting."
       },
       {
-        "name": "textsubscript",
-        "mode": "text",
-        "category": "boxing",
+        "name": "widetilde",
+        "mode": "math",
+        "category": "math-accent",
         "epsilon_allowed": true,
         "args": {
           "positional": 1,
           "optional": [],
           "kinds": [
-            "text"
+            "math"
           ]
         },
         "template": {
           "kind": "builtin",
-          "builtin": "textsubscript"
+          "builtin": "math_accent"
         },
         "examples": [],
-        "notes": "Rendered as a lowered box in later layers; L1 records a semantic wrapper."
-      },
-      {
-        "name": "mathrm",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathrm{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "mathbf",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathbf{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "mathsf",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathsf{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "mathtt",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathtt{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "mathit",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathit{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "mathnormal",
-        "mode": "math",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math"
-          ]
-        },
-        "template": {
-          "kind": "inline",
-          "body": "{\\mathnormal{$1}}"
-        },
-        "examples": []
-      },
-      {
-        "name": "ensuremath",
-        "mode": "both",
-        "category": "mathstyle",
-        "epsilon_allowed": true,
-        "args": {
-          "positional": 1,
-          "optional": [],
-          "kinds": [
-            "math-or-text"
-          ]
-        },
-        "template": {
-          "kind": "builtin",
-          "builtin": "ensuremath"
-        },
-        "examples": [],
-        "notes": "If outside math, wraps in $...$; otherwise passes through. Implemented as L1 builtin."
+        "notes": "Math accent/decoration: wide tilde \\widetilde{xy}. Content passes through for linting."
       }
     ]
   }

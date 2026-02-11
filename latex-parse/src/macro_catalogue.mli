@@ -1,8 +1,15 @@
 (** Production L1 macro expander with v25r2 + argsafe catalogue support.
 
-    Loads 383 symbol macros (arity-0, Unicode expansions) and 23 argumentful
+    Loads 441 symbol macros (arity-0, Unicode expansions) and 62 argumentful
     macros (epsilon-safe templates) from JSON catalogues. Performs mode-aware
-    expansion with bounded iteration (max 256 rounds). *)
+    expansion with bounded iteration (max 256 rounds).
+
+    Symbol categories: Greek letters, math operators, arrows, delimiters, text
+    symbols, spacing, font-size switches, named math operators,
+    formatting/alignment switches.
+
+    Argumentful categories: text style (NFSS), math style, math alphabets, math
+    accents, sectioning, references, document metadata, builtins. *)
 
 (** {1 Token types} *)
 

@@ -258,6 +258,71 @@ let () =
   run "SPC-035 clean" (fun tag ->
       expect (does_not_fire "SPC-035" " text") (tag ^ ": normal space"));
 
+  (* ══════════════════════════════════════════════════════════════════════ New
+     SPC rules (batch 3)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* SPC-010: Two spaces after sentence-ending period *)
+  run "SPC-010 fires on two spaces" (fun tag ->
+      expect (fires "SPC-010" "End.  Next sentence.") (tag ^ ": two spaces"));
+  run "SPC-010 does not fire on single space" (fun tag ->
+      expect
+        (does_not_fire "SPC-010" "End. Next sentence.")
+        (tag ^ ": single space ok"));
+  run "SPC-010 does not fire on three spaces" (fun tag ->
+      (* Three spaces = SPC-031 territory, not SPC-010 *)
+      expect
+        (does_not_fire "SPC-010" "End.   Next sentence.")
+        (tag ^ ": three spaces is SPC-031"));
+  run "SPC-010 count=2" (fun tag ->
+      expect (fires_with_count "SPC-010" "A.  B.  C." 2) (tag ^ ": count=2"));
+  run "SPC-010 does not fire in math" (fun tag ->
+      expect (does_not_fire "SPC-010" "$a.  B$") (tag ^ ": math stripped"));
+
+  (* SPC-018: No space after sentence-ending period *)
+  run "SPC-018 fires on period-uppercase" (fun tag ->
+      expect (fires "SPC-018" "End.Next") (tag ^ ": no space"));
+  run "SPC-018 does not fire with space" (fun tag ->
+      expect (does_not_fire "SPC-018" "End. Next") (tag ^ ": space present"));
+  run "SPC-018 count=2" (fun tag ->
+      expect (fires_with_count "SPC-018" "A.B.C." 2) (tag ^ ": count=2"));
+  run "SPC-018 does not fire in math" (fun tag ->
+      expect (does_not_fire "SPC-018" "$x.Y$") (tag ^ ": math stripped"));
+  run "SPC-018 does not fire on lowercase" (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "e.g. here")
+        (tag ^ ": lowercase after period ok"));
+
+  (* SPC-022: Tab after bullet in \itemize *)
+  run "SPC-022 fires on item-tab" (fun tag ->
+      expect (fires "SPC-022" "\\item\tSomething") (tag ^ ": tab after item"));
+  run "SPC-022 does not fire on item-space" (fun tag ->
+      expect (does_not_fire "SPC-022" "\\item Something") (tag ^ ": space ok"));
+  run "SPC-022 count=2" (fun tag ->
+      expect
+        (fires_with_count "SPC-022" "\\item\tA\n\\item\tB" 2)
+        (tag ^ ": count=2"));
+  run "SPC-022 clean" (fun tag ->
+      expect (does_not_fire "SPC-022" "regular text") (tag ^ ": no items"));
+
+  (* SPC-027: Trailing whitespace inside \url{} *)
+  run "SPC-027 fires on trailing space in url" (fun tag ->
+      expect (fires "SPC-027" "\\url{http://x.com }") (tag ^ ": trailing"));
+  run "SPC-027 fires on leading space in url" (fun tag ->
+      expect (fires "SPC-027" "\\url{ http://x.com}") (tag ^ ": leading"));
+  run "SPC-027 fires on tab in url" (fun tag ->
+      expect (fires "SPC-027" "\\url{http://x.com\t}") (tag ^ ": trailing tab"));
+  run "SPC-027 does not fire on clean url" (fun tag ->
+      expect
+        (does_not_fire "SPC-027" "\\url{http://x.com}")
+        (tag ^ ": clean url"));
+  run "SPC-027 count=2" (fun tag ->
+      expect
+        (fires_with_count "SPC-027" "\\url{ a.com} and \\url{b.org }" 2)
+        (tag ^ ": count=2"));
+  run "SPC-027 clean" (fun tag ->
+      expect (does_not_fire "SPC-027" "no urls here") (tag ^ ": no urls"));
+
   (* ══════════════════════════════════════════════════════════════════════
      Math-mode edge cases for rules using strip_math_segments
      ══════════════════════════════════════════════════════════════════════ *)

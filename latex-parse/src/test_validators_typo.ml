@@ -667,6 +667,36 @@ let () =
         (tag ^ ": standard hyphen ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
+     TYPO-060: Smart quotes inside lstlisting/verbatim
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-060 fires on curly quote in lstlisting" (fun tag ->
+      expect
+        (fires "TYPO-060"
+           "\\begin{lstlisting}\n\
+            print(\xe2\x80\x9chi\xe2\x80\x9d)\n\
+            \\end{lstlisting}")
+        (tag ^ ": curly in lstlisting"));
+  run "TYPO-060 fires on curly quote in verbatim" (fun tag ->
+      expect
+        (fires "TYPO-060"
+           "\\begin{verbatim}\n\xe2\x80\x98text\xe2\x80\x99\n\\end{verbatim}")
+        (tag ^ ": curly in verbatim"));
+  run "TYPO-060 count=2 for two curly quotes in lstlisting" (fun tag ->
+      expect
+        (fires_with_count "TYPO-060"
+           "\\begin{lstlisting}\n\xe2\x80\x9c\xe2\x80\x9d\n\\end{lstlisting}" 2)
+        (tag ^ ": count=2"));
+  run "TYPO-060 does not fire outside lstlisting" (fun tag ->
+      expect
+        (does_not_fire "TYPO-060" "Normal \xe2\x80\x9ctext\xe2\x80\x9d here")
+        (tag ^ ": outside verbatim ok"));
+  run "TYPO-060 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-060"
+           "\\begin{lstlisting}\nprint(\"hi\")\n\\end{lstlisting}")
+        (tag ^ ": ASCII quotes in lstlisting ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
      Math-mode edge cases for rules using strip_math_segments
      ══════════════════════════════════════════════════════════════════════ *)
 

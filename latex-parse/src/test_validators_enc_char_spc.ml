@@ -113,9 +113,112 @@ let () =
   run "ENC-024 clean" (fun tag ->
       expect (does_not_fire "ENC-024" "normal text") (tag ^ ": clean"));
 
+  (* ══════════════════════════════════════════════════════════════════════ New
+     ENC rules (batch 3)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* ENC-008: Private-use codepoint U+E000-F8FF *)
+  run "ENC-008 fires on PUA char" (fun tag ->
+      (* U+E000 = EE 80 80 *)
+      expect (fires "ENC-008" "text\xee\x80\x80here") (tag ^ ": U+E000"));
+  run "ENC-008 fires on higher PUA" (fun tag ->
+      (* U+F000 = EF 80 80 *)
+      expect (fires "ENC-008" "\xef\x80\x80") (tag ^ ": U+F000"));
+  run "ENC-008 count=2" (fun tag ->
+      expect
+        (fires_with_count "ENC-008" "\xee\x80\x80\xee\x80\x81" 2)
+        (tag ^ ": count=2"));
+  run "ENC-008 clean" (fun tag ->
+      expect (does_not_fire "ENC-008" "normal text") (tag ^ ": clean"));
+
+  (* ENC-009: Unpaired surrogate code unit U+D800-DFFF *)
+  run "ENC-009 fires on surrogate" (fun tag ->
+      (* U+D800 = ED A0 80 (invalid in UTF-8) *)
+      expect (fires "ENC-009" "text\xed\xa0\x80here") (tag ^ ": U+D800"));
+  run "ENC-009 fires on high surrogate" (fun tag ->
+      (* U+DFFF = ED BF BF *)
+      expect (fires "ENC-009" "\xed\xbf\xbf") (tag ^ ": U+DFFF"));
+  run "ENC-009 clean" (fun tag ->
+      expect (does_not_fire "ENC-009" "normal text") (tag ^ ": clean"));
+  run "ENC-009 clean on valid 3-byte" (fun tag ->
+      (* U+E000 = EE 80 80 — this is PUA, not surrogate *)
+      expect (does_not_fire "ENC-009" "\xee\x80\x80") (tag ^ ": not surrogate"));
+
+  (* ENC-016: Fullwidth digits U+FF10-FF19 *)
+  run "ENC-016 fires on fullwidth 0" (fun tag ->
+      (* U+FF10 = EF BC 90 *)
+      expect (fires "ENC-016" "text\xef\xbc\x90here") (tag ^ ": fullwidth 0"));
+  run "ENC-016 fires on fullwidth 9" (fun tag ->
+      (* U+FF19 = EF BC 99 *)
+      expect (fires "ENC-016" "\xef\xbc\x99") (tag ^ ": fullwidth 9"));
+  run "ENC-016 count=2" (fun tag ->
+      expect
+        (fires_with_count "ENC-016" "\xef\xbc\x90\xef\xbc\x91" 2)
+        (tag ^ ": count=2"));
+  run "ENC-016 clean" (fun tag ->
+      expect (does_not_fire "ENC-016" "12345") (tag ^ ": ASCII digits ok"));
+
   (* ══════════════════════════════════════════════════════════════════════ CHAR
      rules
      ══════════════════════════════════════════════════════════════════════ *)
+
+  (* CHAR-005: Control characters U+0000-001F present *)
+  run "CHAR-005 fires on NUL" (fun tag ->
+      expect (fires "CHAR-005" "text\x00here") (tag ^ ": NUL"));
+  run "CHAR-005 fires on STX" (fun tag ->
+      expect (fires "CHAR-005" "text\x02here") (tag ^ ": STX"));
+  run "CHAR-005 fires on ESC" (fun tag ->
+      expect (fires "CHAR-005" "text\x1bhere") (tag ^ ": ESC"));
+  run "CHAR-005 count=2" (fun tag ->
+      expect (fires_with_count "CHAR-005" "\x01\x02" 2) (tag ^ ": count=2"));
+  run "CHAR-005 does not fire on TAB/LF/CR" (fun tag ->
+      expect
+        (does_not_fire "CHAR-005" "text\t\n\rhere")
+        (tag ^ ": TAB/LF/CR excluded"));
+  run "CHAR-005 does not fire on bell/BS/FF (own rules)" (fun tag ->
+      expect
+        (does_not_fire "CHAR-005" "\x07\x08\x0c")
+        (tag ^ ": handled by CHAR-006/007/008"));
+  run "CHAR-005 clean" (fun tag ->
+      expect (does_not_fire "CHAR-005" "normal text") (tag ^ ": clean"));
+
+  (* CHAR-016: CJK fullwidth punctuation *)
+  run "CHAR-016 fires on ideographic comma" (fun tag ->
+      (* U+3001 = E3 80 81 *)
+      expect (fires "CHAR-016" "text\xe3\x80\x81here") (tag ^ ": U+3001"));
+  run "CHAR-016 fires on fullwidth comma" (fun tag ->
+      (* U+FF0C = EF BC 8C *)
+      expect (fires "CHAR-016" "\xef\xbc\x8c") (tag ^ ": U+FF0C"));
+  run "CHAR-016 count=2" (fun tag ->
+      expect
+        (fires_with_count "CHAR-016" "\xe3\x80\x81\xe3\x80\x82" 2)
+        (tag ^ ": count=2"));
+  run "CHAR-016 clean" (fun tag ->
+      expect (does_not_fire "CHAR-016" "text, here.") (tag ^ ": ASCII punct"));
+
+  (* CHAR-019: Unicode minus U+2212 in text mode *)
+  run "CHAR-019 fires on minus" (fun tag ->
+      (* U+2212 = E2 88 92 *)
+      expect (fires "CHAR-019" "5\xe2\x88\x923 in text") (tag ^ ": U+2212"));
+  run "CHAR-019 does not fire in math" (fun tag ->
+      expect
+        (does_not_fire "CHAR-019" "$5\xe2\x88\x923$")
+        (tag ^ ": math stripped"));
+  run "CHAR-019 count=2" (fun tag ->
+      expect
+        (fires_with_count "CHAR-019" "\xe2\x88\x92a and \xe2\x88\x92b" 2)
+        (tag ^ ": count=2"));
+  run "CHAR-019 clean" (fun tag ->
+      expect (does_not_fire "CHAR-019" "5-3 normal") (tag ^ ": ASCII minus"));
+
+  (* CHAR-020: Sharp S in uppercase context *)
+  run "CHAR-020 fires on uppercase context" (fun tag ->
+      (* U+00DF = C3 9F, preceded by uppercase A *)
+      expect (fires "CHAR-020" "STRASSE\xc3\x9fE") (tag ^ ": uppercase context"));
+  run "CHAR-020 does not fire in lowercase context" (fun tag ->
+      expect (does_not_fire "CHAR-020" "stra\xc3\x9fe") (tag ^ ": lowercase ok"));
+  run "CHAR-020 clean" (fun tag ->
+      expect (does_not_fire "CHAR-020" "normal text") (tag ^ ": no sharp S"));
 
   (* CHAR-006: Backspace U+0008 *)
   run "CHAR-006 fires" (fun tag ->

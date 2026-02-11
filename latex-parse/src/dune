@@ -256,3 +256,8 @@
  (name test_validators_script)
  (modules test_validators_script)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_math_l1)
+ (modules test_validators_math_l1)
+ (libraries latex_parse_lib unix))

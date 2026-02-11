@@ -6621,6 +6621,822 @@ let l1_delim_011_rule : rule =
   in
   { id = "DELIM-011"; run }
 
+(* ═══════════════════════════════════════════════════════════════════════════
+   SCRIPT family — L1 subscript / superscript validators SCRIPT-001 through
+   SCRIPT-022
+   ═══════════════════════════════════════════════════════════════════════════ *)
+
+(* Helper: extract inline math segments only ($...$ and \(...\)) *)
+let extract_inline_math_segments (s : string) : string list =
+  let len = String.length s in
+  let segments = ref [] in
+  let starts_with prefix idx =
+    let plen = String.length prefix in
+    idx + plen <= len && String.sub s idx plen = prefix
+  in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let i = ref 0 in
+  while !i < len do
+    if
+      (not (is_escaped !i))
+      && s.[!i] = '$'
+      && (!i + 1 >= len || s.[!i + 1] <> '$')
+    then (
+      let start = !i + 1 in
+      let j = ref start in
+      while
+        !j < len
+        && not
+             ((not (is_escaped !j))
+             && s.[!j] = '$'
+             && (!j + 1 >= len || s.[!j + 1] <> '$'))
+      do
+        incr j
+      done;
+      if !j < len then (
+        segments := String.sub s start (!j - start) :: !segments;
+        i := !j + 1)
+      else i := !i + 1)
+    else if (not (is_escaped !i)) && starts_with "\\(" !i then (
+      let start = !i + 2 in
+      let j = ref start in
+      while
+        !j < len - 1 && not ((not (is_escaped !j)) && starts_with "\\)" !j)
+      do
+        incr j
+      done;
+      if !j < len - 1 then (
+        segments := String.sub s start (!j - start) :: !segments;
+        i := !j + 2)
+      else i := !i + 1)
+    else incr i
+  done;
+  List.rev !segments
+
+(* Helper: count regex matches in a string *)
+let count_re_matches (re : Str.regexp) (s : string) : int =
+  let cnt = ref 0 in
+  let i = ref 0 in
+  (try
+     while true do
+       let _ = Str.search_forward re s !i in
+       incr cnt;
+       i := Str.match_end ()
+     done
+   with Not_found -> ());
+  !cnt
+
+(* SCRIPT-001: Multi-char subscript without braces — e.g. _ab where the
+   subscript has 2+ chars without { } *)
+let l1_script_001_rule : rule =
+  (* Match _X where X is 2+ alphanumeric chars not wrapped in braces *)
+  let re = Str.regexp {|_\([A-Za-z0-9][A-Za-z0-9]+\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        try
+          while true do
+            let pos = Str.search_forward re seg !i in
+            (* Make sure it's not _{ ... } — check char before match group *)
+            if pos + 1 < n && seg.[pos + 1] <> '{' then incr cnt;
+            i := Str.match_end ()
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-001";
+          severity = Warning;
+          message = "Multi-character subscript without braces";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-001"; run }
+
+(* SCRIPT-002: Superscript dash typed as unicode non-breaking hyphen U+2011
+   instead of \textsuperscript{--} *)
+let l1_script_002_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          (* Check for ^ followed by U+2011 (non-breaking hyphen: \xe2\x80\x91)
+             or U+2010 (hyphen: \xe2\x80\x90) *)
+          if
+            seg.[!i] = '^'
+            && !i + 3 < n
+            && seg.[!i + 1] = '\xe2'
+            && seg.[!i + 2] = '\x80'
+            && (seg.[!i + 3] = '\x91' || seg.[!i + 3] = '\x90')
+          then (
+            incr cnt;
+            i := !i + 4)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-002";
+          severity = Info;
+          message =
+            "Superscript dash typed as Unicode hyphen instead of \
+             \\textsuperscript{--}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-002"; run }
+
+(* SCRIPT-003: Comma-separated superscripts lack braces — e.g. ^a,b instead of
+   ^{a,b} *)
+let l1_script_003_rule : rule =
+  let re = Str.regexp {|\^\([A-Za-z0-9],[A-Za-z0-9,]+\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-003";
+          severity = Warning;
+          message = "Comma-separated superscripts lack braces";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-003"; run }
+
+(* SCRIPT-004: Subscript after prime notation mis-ordered — e.g. f'_i instead of
+   f_i' *)
+let l1_script_004_rule : rule =
+  let re = Str.regexp {|''+_\|'_|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-004";
+          severity = Info;
+          message = "Subscript after prime notation is mis-ordered";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-004"; run }
+
+(* SCRIPT-005: Superscript uses letter l instead of \ell *)
+let l1_script_005_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          if seg.[!i] = '^' then
+            let j = !i + 1 in
+            if j < n then
+              if seg.[j] = 'l' then (
+                (* Make sure next char is not alphanumeric (standalone l) *)
+                let after = j + 1 in
+                let is_end =
+                  after >= n
+                  ||
+                  let c = seg.[after] in
+                  not
+                    ((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9'))
+                in
+                if is_end then incr cnt;
+                i := after)
+              else if seg.[j] = '{' then (
+                (* check for ^{l} *)
+                if j + 2 < n && seg.[j + 1] = 'l' && seg.[j + 2] = '}' then
+                  incr cnt;
+                i := j + 1)
+              else i := j + 1
+            else i := j + 1
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-005";
+          severity = Info;
+          message = "Superscript uses letter 'l' instead of \\ell";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-005"; run }
+
+(* SCRIPT-006: Degree symbol typed ° (U+00B0) instead of ^\circ in math *)
+let l1_script_006_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* U+00B0 = \xc2\xb0 in UTF-8 *)
+        cnt := !cnt + count_substring seg "\xc2\xb0")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-006";
+          severity = Info;
+          message =
+            "Degree symbol typed as Unicode ° instead of ^{\\circ} in math";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-006"; run }
+
+(* SCRIPT-007: Subscript text not wrapped in \text{} — e.g. x_{max} where "max"
+   is a word (3+ alpha chars) without \text *)
+let l1_script_007_rule : rule =
+  let re = Str.regexp {|_{\([A-Za-z][A-Za-z][A-Za-z][A-Za-z]*\)}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let i = ref 0 in
+        try
+          while true do
+            let pos = Str.search_forward re seg !i in
+            let matched = Str.matched_group 1 seg in
+            let next_i = Str.match_end () in
+            (* Exclude common math abbreviations *)
+            let is_operator =
+              List.mem matched
+                [
+                  "min";
+                  "max";
+                  "lim";
+                  "inf";
+                  "sup";
+                  "det";
+                  "dim";
+                  "ker";
+                  "log";
+                  "exp";
+                  "sin";
+                  "cos";
+                  "tan";
+                  "arg";
+                  "deg";
+                  "gcd";
+                  "hom";
+                  "mod";
+                  "Pr";
+                ]
+            in
+            (if not is_operator then
+               (* Check prefix for \text{, \mathrm{, \operatorname{ using string
+                  operations (not Str) to avoid clobbering global match state *)
+               let prefix_start = max 0 (pos - 16) in
+               let prefix =
+                 String.sub seg prefix_start (pos - prefix_start + 2)
+               in
+               let has_wrapper =
+                 count_substring prefix "\\text{"
+                 + count_substring prefix "\\mathrm{"
+                 + count_substring prefix "\\operatorname{"
+                 > 0
+               in
+               if not has_wrapper then incr cnt);
+            i := next_i
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-007";
+          severity = Warning;
+          message = "Subscript text not wrapped in \\text{} or \\mathrm{}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-007"; run }
+
+(* SCRIPT-008: Chemical formula lacks \mathrm{} in subscript — e.g. $H_2O$ vs
+   $\mathrm{H}_2\mathrm{O}$ — detects element+subscript digit pattern outside
+   \mathrm{} or \ce{} *)
+let l1_script_008_rule : rule =
+  (* Pattern: uppercase letter optionally followed by lowercase, then _digit
+     e.g. H_2, Na_2, O_2 — these look like chemical formulas *)
+  let re = Str.regexp {|\([A-Z][a-z]?\)_\([0-9]+\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Skip if inside \ce{} or \mathrm{} context *)
+        if
+          count_substring seg "\\ce{" = 0 && count_substring seg "\\mathrm{" = 0
+        then cnt := !cnt + count_re_matches re seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-008";
+          severity = Info;
+          message = "Chemical formula in subscript lacks \\mathrm{} wrapping";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-008"; run }
+
+(* SCRIPT-009: Isotope superscript mass number missing — e.g. ^{}_{Z}X or just
+   _ZX without a mass number superscript *)
+let l1_script_009_rule : rule =
+  (* Detect: ^{}_ or ^{ }_ pattern indicating empty mass number *)
+  let re = Str.regexp {|\^{[ ]*}_{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-009";
+          severity = Info;
+          message = "Isotope notation has empty superscript mass number";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-009"; run }
+
+(* SCRIPT-010: Use of \limits on inline operator — \limits in inline math
+   ($...$, \(...\)) forces display-style limits *)
+let l1_script_010_rule : rule =
+  let re_limits = Str.regexp {|\\limits|} in
+  let run s =
+    let inline_segs = extract_inline_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_re_matches re_limits seg)
+      inline_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-010";
+          severity = Info;
+          message = "\\limits used on inline operator (prefer display math)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-010"; run }
+
+(* SCRIPT-011: Nested superscript three levels deep — e.g. x^{a^{b^{c}}} *)
+let l1_script_011_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let depth = ref 0 in
+        let max_depth = ref 0 in
+        let i = ref 0 in
+        while !i < n do
+          if seg.[!i] = '\\' then i := !i + 2
+          else if seg.[!i] = '^' then (
+            incr depth;
+            if !depth > !max_depth then max_depth := !depth;
+            incr i)
+          else if seg.[!i] = '}' then (
+            if !depth > 0 then decr depth;
+            incr i)
+          else incr i
+        done;
+        if !max_depth >= 3 then incr cnt)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-011";
+          severity = Warning;
+          message = "Nested superscript three or more levels deep";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-011"; run }
+
+(* SCRIPT-012: Prime notation f''' (> 3 primes) — prefer ^{(n)} *)
+let l1_script_012_rule : rule =
+  let re = Str.regexp {|''''|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-012";
+          severity = Info;
+          message =
+            "More than 3 prime marks — prefer ^{(n)} derivative notation";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-012"; run }
+
+(* SCRIPT-013: Plus/minus typed directly in subscript — e.g. x_{+} or x_{-}
+   where \pm or \mp would be more appropriate *)
+let l1_script_013_rule : rule =
+  let re = Str.regexp {|_{\([+-]\)}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-013";
+          severity = Info;
+          message =
+            "Plus/minus typed directly in subscript (consider \\pm or \\mp)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-013"; run }
+
+(* SCRIPT-014: Logarithm base subscript italic — \log_x where x is a bare italic
+   letter, should be \log_{x} or upright *)
+let l1_script_014_rule : rule =
+  (* Match \log_ followed by a single letter NOT in braces *)
+  let re = Str.regexp {|\\log_\([A-Za-z]\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let i = ref 0 in
+        try
+          while true do
+            let pos = Str.search_forward re seg !i in
+            (* Check it's not \log_{...} — the char after \log_ should not be
+               { *)
+            let after_underscore = pos + 5 in
+            if
+              after_underscore < String.length seg
+              && seg.[after_underscore] <> '{'
+            then incr cnt;
+            i := Str.match_end ()
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-014";
+          severity = Info;
+          message = "Logarithm base subscript is bare italic letter";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-014"; run }
+
+(* SCRIPT-015: Time derivative dot mis-aligned — \dot or \ddot used in
+   subscript/superscript context *)
+let l1_script_015_rule : rule =
+  let re = Str.regexp {|[_^]{\\d?dot{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-015";
+          severity = Info;
+          message = "Time derivative \\dot/\\ddot used inside sub/superscript";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-015"; run }
+
+(* SCRIPT-016: Prime on Greek letter typed '' not ^\prime — e.g. \alpha''
+   instead of \alpha^{\prime\prime} *)
+let l1_script_016_rule : rule =
+  let greeks =
+    [
+      "\\alpha";
+      "\\beta";
+      "\\gamma";
+      "\\delta";
+      "\\epsilon";
+      "\\zeta";
+      "\\eta";
+      "\\theta";
+      "\\iota";
+      "\\kappa";
+      "\\lambda";
+      "\\mu";
+      "\\nu";
+      "\\xi";
+      "\\pi";
+      "\\rho";
+      "\\sigma";
+      "\\tau";
+      "\\upsilon";
+      "\\phi";
+      "\\chi";
+      "\\psi";
+      "\\omega";
+      "\\Gamma";
+      "\\Delta";
+      "\\Theta";
+      "\\Lambda";
+      "\\Xi";
+      "\\Pi";
+      "\\Sigma";
+      "\\Upsilon";
+      "\\Phi";
+      "\\Psi";
+      "\\Omega";
+      "\\varepsilon";
+      "\\vartheta";
+      "\\varpi";
+      "\\varrho";
+      "\\varsigma";
+      "\\varphi";
+    ]
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun g ->
+            let pat = g ^ "''" in
+            cnt := !cnt + count_substring seg pat)
+          greeks)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-016";
+          severity = Info;
+          message =
+            "Prime on Greek letter typed as '' instead of ^{\\prime\\prime}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-016"; run }
+
+(* SCRIPT-017: Inconsistent order of sub/superscripts — detects when some atoms
+   use x_a^b and others use x^b_a in the same document *)
+let l1_script_017_rule : rule =
+  let re_sub_sup =
+    Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
+  let re_sup_sub =
+    Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let sub_sup_count = ref 0 in
+    let sup_sub_count = ref 0 in
+    List.iter
+      (fun seg ->
+        sub_sup_count := !sub_sup_count + count_re_matches re_sub_sup seg;
+        sup_sub_count := !sup_sub_count + count_re_matches re_sup_sub seg)
+      math_segs;
+    (* Fire only if both orderings are used *)
+    if !sub_sup_count > 0 && !sup_sub_count > 0 then
+      Some
+        {
+          id = "SCRIPT-017";
+          severity = Info;
+          message =
+            "Inconsistent order of sub/superscripts (mixed _a^b and ^b_a)";
+          count = min !sub_sup_count !sup_sub_count;
+        }
+    else None
+  in
+  { id = "SCRIPT-017"; run }
+
+(* SCRIPT-018: Degree symbol in superscript without braces — e.g. ^\circ without
+   braces: should be ^{\circ} *)
+let l1_script_018_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Match ^\\circ not preceded by ^{ *)
+        let n = String.length seg in
+        let target = "^\\circ" in
+        let tlen = String.length target in
+        let i = ref 0 in
+        while !i + tlen <= n do
+          if String.sub seg !i tlen = target then (
+            (* Check it's not ^{\circ} *)
+            if !i + 1 < n && seg.[!i + 1] <> '{' then incr cnt;
+            i := !i + tlen)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-018";
+          severity = Warning;
+          message = "^\\circ without braces — use ^{\\circ}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-018"; run }
+
+(* SCRIPT-019: Double prime '' instead of ^{\prime\prime} *)
+let l1_script_019_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i + 1 < n do
+          if seg.[!i] = '\'' && seg.[!i + 1] = '\'' then
+            if
+              (* Skip triple+ primes — those are handled by SCRIPT-012/022 *)
+              !i + 2 < n && seg.[!i + 2] = '\''
+            then
+              (* skip the run of primes *)
+              while !i < n && seg.[!i] = '\'' do
+                incr i
+              done
+            else (
+              incr cnt;
+              i := !i + 2)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-019";
+          severity = Info;
+          message = "Double prime '' used instead of ^{\\prime\\prime}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-019"; run }
+
+(* SCRIPT-020: Subscript text italic instead of \mathrm — e.g. $T_{eff}$ where
+   the subscript is a multi-char word rendered in italic by default, should use
+   \mathrm{eff} *)
+let l1_script_020_rule : rule =
+  (* Reuses the same detection as SCRIPT-007 but focuses specifically on
+     subscripts that are abbreviation-like 2-3 char lowercase words *)
+  let re = Str.regexp {|_{\([a-z][a-z]+\)}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let i = ref 0 in
+        try
+          while true do
+            let pos = Str.search_forward re seg !i in
+            let matched = Str.matched_group 1 seg in
+            let next_i = Str.match_end () in
+            (* Exclude single-letter and known math operators *)
+            let is_operator =
+              List.mem matched
+                [
+                  "min";
+                  "max";
+                  "lim";
+                  "inf";
+                  "sup";
+                  "det";
+                  "dim";
+                  "ker";
+                  "log";
+                  "exp";
+                  "sin";
+                  "cos";
+                  "tan";
+                  "arg";
+                  "deg";
+                  "gcd";
+                  "hom";
+                  "mod";
+                ]
+            in
+            (if (not is_operator) && String.length matched >= 2 then
+               (* Check not already wrapped in \mathrm or \text *)
+               let prefix_start = max 0 (pos - 9) in
+               let prefix =
+                 String.sub seg prefix_start (pos - prefix_start + 2)
+               in
+               if
+                 count_substring prefix "\\mathrm{" = 0
+                 && count_substring prefix "\\text{" = 0
+               then incr cnt);
+            i := next_i
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-020";
+          severity = Info;
+          message = "Subscript text is italic — consider \\mathrm{} for upright";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-020"; run }
+
+(* SCRIPT-021: Sub-sup order not canonical — a_{b}^{c} vs a^{c}_{b} — flag when
+   a_{...}^{...} is used (canonical is a^{...}_{...} per convention) *)
+let l1_script_021_rule : rule =
+  let re = Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-021";
+          severity = Warning;
+          message =
+            "Sub/superscript order is not canonical — prefer a^{c}_{b} over \
+             a_{b}^{c}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-021"; run }
+
+(* SCRIPT-022: Superscript prime stacked > 3 — prefer ^{(n)} — similar to
+   SCRIPT-012 but specifically for ^{'''...} notation *)
+let l1_script_022_rule : rule =
+  let re = Str.regexp {|\^{''''|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SCRIPT-022";
+          severity = Info;
+          message =
+            "Superscript prime stacked > 3 in braces — prefer ^{(n)} notation";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SCRIPT-022"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -6655,6 +7471,28 @@ let rules_l1 : rule list =
     l1_delim_009_rule;
     l1_delim_010_rule;
     l1_delim_011_rule;
+    l1_script_001_rule;
+    l1_script_002_rule;
+    l1_script_003_rule;
+    l1_script_004_rule;
+    l1_script_005_rule;
+    l1_script_006_rule;
+    l1_script_007_rule;
+    l1_script_008_rule;
+    l1_script_009_rule;
+    l1_script_010_rule;
+    l1_script_011_rule;
+    l1_script_012_rule;
+    l1_script_013_rule;
+    l1_script_014_rule;
+    l1_script_015_rule;
+    l1_script_016_rule;
+    l1_script_017_rule;
+    l1_script_018_rule;
+    l1_script_019_rule;
+    l1_script_020_rule;
+    l1_script_021_rule;
+    l1_script_022_rule;
   ]
 
 let get_rules () : rule list =
@@ -6723,6 +7561,7 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 4 && String.sub id 0 4 = "MOD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
   | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
+  | _ when String.length id >= 7 && String.sub id 0 7 = "SCRIPT-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0

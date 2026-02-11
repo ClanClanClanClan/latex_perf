@@ -323,6 +323,44 @@ let () =
   run "SPC-027 clean" (fun tag ->
       expect (does_not_fire "SPC-027" "no urls here") (tag ^ ": no urls"));
 
+  (* ══════════════════════════════════════════════════════════════════════ New
+     SPC rules (batch 4)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* SPC-011: Space before newline inside $$...$$ display *)
+  run "SPC-011 fires on space before newline in display" (fun tag ->
+      expect (fires "SPC-011" "$$a + b \n= c$$") (tag ^ ": space before NL"));
+  run "SPC-011 fires on tab before newline in display" (fun tag ->
+      expect (fires "SPC-011" "$$x\t\ny$$") (tag ^ ": tab before NL"));
+  run "SPC-011 does not fire outside display" (fun tag ->
+      expect (does_not_fire "SPC-011" "text \nmore") (tag ^ ": outside $$"));
+  run "SPC-011 clean" (fun tag ->
+      expect (does_not_fire "SPC-011" "$$a + b\n= c$$") (tag ^ ": no trailing"));
+
+  (* SPC-020: Tab character inside math mode *)
+  run "SPC-020 fires on tab in inline math" (fun tag ->
+      expect (fires "SPC-020" "$a\tb$") (tag ^ ": tab in $...$"));
+  run "SPC-020 fires on tab in display math" (fun tag ->
+      expect (fires "SPC-020" "$$a\tb$$") (tag ^ ": tab in $$...$$"));
+  run "SPC-020 does not fire outside math" (fun tag ->
+      expect (does_not_fire "SPC-020" "a\tb") (tag ^ ": text tab ok"));
+  run "SPC-020 count=2" (fun tag ->
+      expect (fires_with_count "SPC-020" "$a\tb\tc$" 2) (tag ^ ": count=2"));
+
+  (* SPC-023: Hard space U+00A0 outside French punctuation *)
+  run "SPC-023 fires on NBSP in text" (fun tag ->
+      expect (fires "SPC-023" "hello\xc2\xa0world") (tag ^ ": NBSP in text"));
+  run "SPC-023 does not fire before French semicolon" (fun tag ->
+      expect
+        (does_not_fire "SPC-023" "mot\xc2\xa0; suite")
+        (tag ^ ": French ; ok"));
+  run "SPC-023 does not fire before French !" (fun tag ->
+      expect (does_not_fire "SPC-023" "Bonjour\xc2\xa0!") (tag ^ ": French ! ok"));
+  run "SPC-023 count=2" (fun tag ->
+      expect
+        (fires_with_count "SPC-023" "a\xc2\xa0b c\xc2\xa0d" 2)
+        (tag ^ ": count=2"));
+
   (* ══════════════════════════════════════════════════════════════════════
      Math-mode edge cases for rules using strip_math_segments
      ══════════════════════════════════════════════════════════════════════ *)

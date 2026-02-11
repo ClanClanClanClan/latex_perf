@@ -2564,12 +2564,216 @@ let r_enc_016 : rule =
   in
   { id = "ENC-016"; run }
 
+(* ENC-005: Invalid UTF-8 continuation byte *)
+let r_enc_005 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b0 = Char.code s.[!i] in
+      if b0 < 0x80 then incr i
+      else if b0 < 0xC0 then (
+        (* Unexpected continuation byte *)
+        incr cnt;
+        incr i)
+      else if b0 < 0xE0 then
+        if (* 2-byte: need 1 continuation *)
+           !i + 1 < n then (
+          let b1 = Char.code s.[!i + 1] in
+          if b1 < 0x80 || b1 > 0xBF then incr cnt;
+          i := !i + 2)
+        else (
+          incr cnt;
+          incr i)
+      else if b0 < 0xF0 then
+        if (* 3-byte: need 2 continuations *)
+           !i + 2 < n then (
+          let b1 = Char.code s.[!i + 1] in
+          let b2 = Char.code s.[!i + 2] in
+          if b1 < 0x80 || b1 > 0xBF || b2 < 0x80 || b2 > 0xBF then incr cnt;
+          i := !i + 3)
+        else (
+          incr cnt;
+          incr i)
+      else if b0 < 0xF8 then
+        if (* 4-byte: need 3 continuations *)
+           !i + 3 < n then (
+          let b1 = Char.code s.[!i + 1] in
+          let b2 = Char.code s.[!i + 2] in
+          let b3 = Char.code s.[!i + 3] in
+          if
+            b1 < 0x80
+            || b1 > 0xBF
+            || b2 < 0x80
+            || b2 > 0xBF
+            || b3 < 0x80
+            || b3 > 0xBF
+          then incr cnt;
+          i := !i + 4)
+        else (
+          incr cnt;
+          incr i)
+      else (
+        incr cnt;
+        incr i)
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-005";
+          severity = Error;
+          message = "Invalid UTF-8 continuation byte";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-005"; run }
+
+(* ENC-006: Overlong UTF-8 encoding sequence *)
+let r_enc_006 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b0 = Char.code s.[!i] in
+      if b0 < 0x80 then incr i
+      else if b0 < 0xC0 then incr i (* continuation byte, skip *)
+      else if b0 < 0xE0 then (
+        (* 2-byte: overlong if b0 = C0 or C1 (encodes U+0000–007F) *)
+        if b0 = 0xC0 || b0 = 0xC1 then incr cnt;
+        i := !i + 2)
+      else if b0 < 0xF0 then (
+        (* 3-byte: overlong if b0=E0 and b1 < A0 *)
+        (if !i + 2 < n then
+           let b1 = Char.code s.[!i + 1] in
+           if b0 = 0xE0 && b1 < 0xA0 then incr cnt);
+        i := !i + 3)
+      else if b0 < 0xF8 then (
+        (* 4-byte: overlong if b0=F0 and b1 < 90 *)
+        (if !i + 3 < n then
+           let b1 = Char.code s.[!i + 1] in
+           if b0 = 0xF0 && b1 < 0x90 then incr cnt);
+        i := !i + 4)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-006";
+          severity = Error;
+          message = "Overlong UTF-8 encoding sequence";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-006"; run }
+
+(* ENC-018: Non-breaking hyphen U+2011 present outside URLs *)
+let r_enc_018 : rule =
+  let run s =
+    (* U+2011 = E2 80 91 *)
+    let s_text = strip_math_segments s in
+    let n = String.length s_text in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s_text.[!i] = 0xE2
+        && Char.code s_text.[!i + 1] = 0x80
+        && Char.code s_text.[!i + 2] = 0x91
+      then (
+        (* Check if inside \url{} — look back for \url{ *)
+        let in_url = ref false in
+        let j = ref (!i - 1) in
+        while !j >= 0 && not !in_url do
+          if !j + 4 < n && String.sub s_text !j 5 = "\\url{" then in_url := true;
+          if s_text.[!j] = '}' then j := -1 (* stop searching *) else decr j
+        done;
+        if not !in_url then incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-018";
+          severity = Info;
+          message = "Non-breaking hyphen U+2011 present outside URLs";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-018"; run }
+
+(* ENC-019: Duplicate combining accents on same base glyph *)
+let r_enc_019 : rule =
+  let is_combining b0 b1 =
+    (* Combining diacritical marks: U+0300–036F = CC 80 – CD AF *)
+    (b0 = 0xCC && b1 >= 0x80) || (b0 = 0xCD && b1 <= 0xAF)
+  in
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      let b0 = Char.code s.[!i] in
+      if b0 < 0x80 then (
+        (* ASCII base char; check for combining after *)
+        let j = ref (!i + 1) in
+        let prev_combining = ref (-1, -1) in
+        while !j + 1 < n do
+          let c0 = Char.code s.[!j] in
+          let c1 = Char.code s.[!j + 1] in
+          if is_combining c0 c1 then (
+            let pc0, pc1 = !prev_combining in
+            if pc0 = c0 && pc1 = c1 then incr cnt;
+            prev_combining := (c0, c1);
+            j := !j + 2)
+          else j := n (* exit inner loop *)
+        done;
+        incr i)
+      else if b0 >= 0xC0 && b0 < 0xE0 then (
+        (* 2-byte char; check for combining after *)
+        let base_end = !i + 2 in
+        let j = ref base_end in
+        let prev_combining = ref (-1, -1) in
+        while !j + 1 < n do
+          let c0 = Char.code s.[!j] in
+          let c1 = Char.code s.[!j + 1] in
+          if is_combining c0 c1 then (
+            let pc0, pc1 = !prev_combining in
+            if pc0 = c0 && pc1 = c1 then incr cnt;
+            prev_combining := (c0, c1);
+            j := !j + 2)
+          else j := n
+        done;
+        i := base_end)
+      else if b0 >= 0xE0 && b0 < 0xF0 then i := !i + 3
+      else if b0 >= 0xF0 then i := !i + 4
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-019";
+          severity = Warning;
+          message = "Duplicate combining accents on same base glyph";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-019"; run }
+
 let rules_enc : rule list =
   [
     r_enc_001;
     r_enc_002;
     r_enc_003;
     r_enc_004;
+    r_enc_005;
+    r_enc_006;
     r_enc_007;
     r_enc_008;
     r_enc_009;
@@ -2578,6 +2782,8 @@ let rules_enc : rule list =
     r_enc_014;
     r_enc_016;
     r_enc_017;
+    r_enc_018;
+    r_enc_019;
     r_enc_020;
     r_enc_021;
     r_enc_022;
@@ -2938,6 +3144,93 @@ let r_char_020 : rule =
   in
   { id = "CHAR-020"; run }
 
+(* CHAR-010: Right-to-left mark U+200F outside RTL context *)
+let r_char_010 : rule =
+  let run s =
+    (* U+200F = E2 80 8F *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE2
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x8F
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-010";
+          severity = Info;
+          message = "Right-to-left mark U+200F outside RTL context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-010"; run }
+
+(* CHAR-011: Left-to-right mark U+200E unnecessary *)
+let r_char_011 : rule =
+  let run s =
+    (* U+200E = E2 80 8E *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE2
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x8E
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-011";
+          severity = Info;
+          message = "Left-to-right mark U+200E unnecessary";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-011"; run }
+
+(* CHAR-012: Zero-width joiner U+200D outside ligature context *)
+let r_char_012 : rule =
+  let run s =
+    (* U+200D = E2 80 8D *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE2
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x8D
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHAR-012";
+          severity = Info;
+          message = "Zero-width joiner U+200D outside ligature context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHAR-012"; run }
+
 let rules_char : rule list =
   [
     r_char_005;
@@ -2945,6 +3238,9 @@ let rules_char : rule list =
     r_char_007;
     r_char_008;
     r_char_009;
+    r_char_010;
+    r_char_011;
+    r_char_012;
     r_char_013;
     r_char_014;
     r_char_015;
@@ -3675,6 +3971,120 @@ let r_spc_027 : rule =
   in
   { id = "SPC-027"; run }
 
+(* SPC-011: Space before newline inside $$…$$ display *)
+let r_spc_011 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let in_display = ref false in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if s.[!i] = '$' && !i + 1 < n && s.[!i + 1] = '$' then (
+        in_display := not !in_display;
+        i := !i + 2)
+      else if
+        !in_display && (s.[!i] = ' ' || s.[!i] = '\t') && s.[!i + 1] = '\n'
+      then (
+        incr cnt;
+        i := !i + 2)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-011";
+          severity = Warning;
+          message = "Space before newline inside $$...$$ display";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-011"; run }
+
+(* SPC-020: Tab character inside math mode *)
+let r_spc_020 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let in_math = ref false in
+    let in_display = ref false in
+    let i = ref 0 in
+    while !i < n do
+      if s.[!i] = '$' then
+        if !i + 1 < n && s.[!i + 1] = '$' then (
+          in_display := not !in_display;
+          i := !i + 2)
+        else (
+          in_math := not !in_math;
+          incr i)
+      else (
+        if (!in_math || !in_display) && s.[!i] = '\t' then incr cnt;
+        incr i)
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-020";
+          severity = Warning;
+          message = "Tab character inside math mode";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-020"; run }
+
+(* SPC-023: Hard space U+00A0 outside French punctuation context *)
+let r_spc_023 : rule =
+  let run s =
+    (* U+00A0 = C2 A0 *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if Char.code s.[!i] = 0xC2 && Char.code s.[!i + 1] = 0xA0 then (
+        (* Check if adjacent to French punctuation: ; : ! ? « » *)
+        let before_french =
+          !i >= 1
+          && (s.[!i - 1] = ';'
+             || s.[!i - 1] = ':'
+             || s.[!i - 1] = '!'
+             || s.[!i - 1] = '?')
+        in
+        let after_french =
+          !i + 2 < n
+          && (s.[!i + 2] = ';'
+             || s.[!i + 2] = ':'
+             || s.[!i + 2] = '!'
+             || s.[!i + 2] = '?')
+        in
+        (* Also check for guillemets « = C2 AB, » = C2 BB *)
+        let before_guill =
+          !i >= 2
+          && Char.code s.[!i - 2] = 0xC2
+          && (Char.code s.[!i - 1] = 0xAB || Char.code s.[!i - 1] = 0xBB)
+        in
+        let after_guill =
+          !i + 3 < n
+          && Char.code s.[!i + 2] = 0xC2
+          && (Char.code s.[!i + 3] = 0xAB || Char.code s.[!i + 3] = 0xBB)
+        in
+        if not (before_french || after_french || before_guill || after_guill)
+        then incr cnt;
+        i := !i + 2)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-023";
+          severity = Info;
+          message = "Hard space U+00A0 outside French punctuation context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-023"; run }
+
 let rules_spc : rule list =
   [
     r_spc_001;
@@ -3687,6 +4097,7 @@ let rules_spc : rule list =
     r_spc_008;
     r_spc_009;
     r_spc_010;
+    r_spc_011;
     r_spc_012;
     r_spc_013;
     r_spc_014;
@@ -3694,8 +4105,10 @@ let rules_spc : rule list =
     r_spc_016;
     r_spc_018;
     r_spc_019;
+    r_spc_020;
     r_spc_021;
     r_spc_022;
+    r_spc_023;
     r_spc_024;
     r_spc_025;
     r_spc_027;
@@ -3707,6 +4120,1009 @@ let rules_spc : rule list =
     r_spc_033;
     r_spc_034;
     r_spc_035;
+  ]
+
+(* ── VERB rules: verbatim / code environment checks ────────────────── *)
+
+(* Helper: extract content blocks between \begin{env}...\end{env} *)
+let extract_env_blocks (env : string) (s : string) : string list =
+  let open_tag = "\\begin{" ^ env ^ "}" in
+  let close_tag = "\\end{" ^ env ^ "}" in
+  let open_len = String.length open_tag in
+  let close_len = String.length close_tag in
+  let n = String.length s in
+  let blocks = ref [] in
+  let i = ref 0 in
+  while !i <= n - open_len do
+    if String.sub s !i open_len = open_tag then (
+      let start = !i + open_len in
+      (* skip optional [...] after \begin{lstlisting} *)
+      let content_start = ref start in
+      if !content_start < n && s.[!content_start] = '[' then (
+        while !content_start < n && s.[!content_start] <> ']' do
+          incr content_start
+        done;
+        if !content_start < n then incr content_start);
+      (* find matching \end{env} *)
+      let found = ref false in
+      let j = ref !content_start in
+      while !j <= n - close_len && not !found do
+        if String.sub s !j close_len = close_tag then (
+          blocks := String.sub s !content_start (!j - !content_start) :: !blocks;
+          i := !j + close_len;
+          found := true)
+        else incr j
+      done;
+      if not !found then i := n)
+    else incr i
+  done;
+  List.rev !blocks
+
+(* Helper: check if string is inside \begin{document}...\end{document} body *)
+let extract_document_body (s : string) : string option =
+  let tag = "\\begin{document}" in
+  let etag = "\\end{document}" in
+  let tlen = String.length tag in
+  let elen = String.length etag in
+  let n = String.length s in
+  let start = ref (-1) in
+  let i = ref 0 in
+  while !i <= n - tlen do
+    if String.sub s !i tlen = tag then (
+      start := !i + tlen;
+      i := n)
+    else incr i
+  done;
+  if !start < 0 then None
+  else
+    let finish = ref n in
+    let j = ref !start in
+    while !j <= n - elen do
+      if String.sub s !j elen = etag then (
+        finish := !j;
+        j := n)
+      else incr j
+    done;
+    Some (String.sub s !start (!finish - !start))
+
+(* VERB-001: \verb delimiter reused inside same \verb block *)
+let r_verb_001 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 5 do
+      if
+        !i + 5 < n
+        && s.[!i] = '\\'
+        && s.[!i + 1] = 'v'
+        && s.[!i + 2] = 'e'
+        && s.[!i + 3] = 'r'
+        && s.[!i + 4] = 'b'
+        && (!i + 5 >= n
+           || s.[!i + 5] <> '*'
+              && not
+                   (Char.lowercase_ascii s.[!i + 5] >= 'a'
+                   && Char.lowercase_ascii s.[!i + 5] <= 'z'))
+      then
+        let delim_pos =
+          if !i + 5 < n && s.[!i + 5] = '*' then !i + 6 else !i + 5
+        in
+        if delim_pos < n then (
+          let delim = s.[delim_pos] in
+          let j = ref (delim_pos + 1) in
+          let found_end = ref false in
+          let has_reuse = ref false in
+          while !j < n && not !found_end do
+            if s.[!j] = delim then found_end := true
+            else if
+              s.[!j] = '\\'
+              && !j + 4 < n
+              && s.[!j + 1] = 'v'
+              && s.[!j + 2] = 'e'
+              && s.[!j + 3] = 'r'
+              && s.[!j + 4] = 'b'
+            then has_reuse := true;
+            incr j
+          done;
+          if !has_reuse then incr cnt;
+          i := !j)
+        else i := n
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-001";
+          severity = Error;
+          message = "\\verb delimiter reused inside same \\verb block";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-001"; run }
+
+(* VERB-002: Tab inside verbatim *)
+let r_verb_002 : rule =
+  let run s =
+    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk -> String.iter (fun c -> if c = '\t' then incr cnt) blk)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-002";
+          severity = Info;
+          message = "Tab inside verbatim – discouraged";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-002"; run }
+
+(* VERB-003: Trailing spaces inside verbatim *)
+let r_verb_003 : rule =
+  let run s =
+    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            let lines = String.split_on_char '\n' blk in
+            List.iter
+              (fun line ->
+                let len = String.length line in
+                if len > 0 && (line.[len - 1] = ' ' || line.[len - 1] = '\t')
+                then incr cnt)
+              lines)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-003";
+          severity = Info;
+          message = "Trailing spaces inside verbatim";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-003"; run }
+
+(* VERB-004: Non-ASCII quotes inside verbatim *)
+let r_verb_004 : rule =
+  let run s =
+    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            let n = String.length blk in
+            let i = ref 0 in
+            while !i < n - 2 do
+              let b0 = Char.code blk.[!i] in
+              if b0 = 0xE2 && !i + 2 < n then (
+                let b1 = Char.code blk.[!i + 1] in
+                let b2 = Char.code blk.[!i + 2] in
+                if
+                  b1 = 0x80 && (b2 = 0x9C || b2 = 0x9D || b2 = 0x98 || b2 = 0x99)
+                then incr cnt;
+                i := !i + 3)
+              else incr i
+            done)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-004";
+          severity = Warning;
+          message = "Non-ASCII quotes inside verbatim";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-004"; run }
+
+(* VERB-005: Verbatim line > 120 characters *)
+let r_verb_005 : rule =
+  let run s =
+    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            let lines = String.split_on_char '\n' blk in
+            List.iter
+              (fun line -> if String.length line > 120 then incr cnt)
+              lines)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-005";
+          severity = Info;
+          message = "Verbatim line > 120 characters";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-005"; run }
+
+(* VERB-006: Inline \verb used for multiline content *)
+let r_verb_006 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 5 do
+      if
+        s.[!i] = '\\'
+        && s.[!i + 1] = 'v'
+        && s.[!i + 2] = 'e'
+        && s.[!i + 3] = 'r'
+        && s.[!i + 4] = 'b'
+        && (!i + 5 >= n
+           || s.[!i + 5] <> '*'
+              && not
+                   (Char.lowercase_ascii s.[!i + 5] >= 'a'
+                   && Char.lowercase_ascii s.[!i + 5] <= 'z'))
+      then
+        let delim_pos =
+          if !i + 5 < n && s.[!i + 5] = '*' then !i + 6 else !i + 5
+        in
+        if delim_pos < n then (
+          let delim = s.[delim_pos] in
+          let j = ref (delim_pos + 1) in
+          let found_end = ref false in
+          let has_newline = ref false in
+          while !j < n && not !found_end do
+            if s.[!j] = delim then found_end := true
+            else if s.[!j] = '\n' then has_newline := true;
+            incr j
+          done;
+          if !has_newline then incr cnt;
+          i := !j)
+        else i := n
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-006";
+          severity = Error;
+          message = "Inline \\verb used for multiline content";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-006"; run }
+
+(* VERB-007: Nested verbatim environment *)
+let r_verb_007 : rule =
+  let run s =
+    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            List.iter
+              (fun inner_env ->
+                let tag = "\\begin{" ^ inner_env ^ "}" in
+                let tlen = String.length tag in
+                let n = String.length blk in
+                let i = ref 0 in
+                while !i <= n - tlen do
+                  if String.sub blk !i tlen = tag then (
+                    incr cnt;
+                    i := !i + tlen)
+                  else incr i
+                done)
+              envs)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-007";
+          severity = Error;
+          message = "Nested verbatim environment";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-007"; run }
+
+(* VERB-008: lstlisting uses language=none *)
+let r_verb_008 : rule =
+  let re = Str.regexp {|\\begin{lstlisting}\[.*language *= *none.*\]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-008";
+          severity = Info;
+          message = "`lstlisting` uses language=none";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-008"; run }
+
+(* VERB-009: Missing caption in minted code block *)
+let r_verb_009 : rule =
+  let run s =
+    let _blocks = extract_env_blocks "minted" s in
+    let cnt = ref 0 in
+    (* For each \begin{minted}, check if wrapped in listing/figure env *)
+    let n = String.length s in
+    let tag = "\\begin{minted}" in
+    let tlen = String.length tag in
+    let i = ref 0 in
+    while !i <= n - tlen do
+      if String.sub s !i tlen = tag then (
+        let context_start = max 0 (!i - 200) in
+        let before = String.sub s context_start (!i - context_start) in
+        if
+          not
+            (try
+               let _ =
+                 Str.search_forward
+                   (Str.regexp_string "\\begin{listing}")
+                   before 0
+               in
+               true
+             with Not_found -> false)
+        then incr cnt;
+        i := !i + tlen)
+      else incr i
+    done;
+    let cnt = !cnt in
+    if cnt > 0 then
+      Some
+        {
+          id = "VERB-009";
+          severity = Warning;
+          message = "Missing caption in `minted` code block";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "VERB-009"; run }
+
+(* VERB-010: Inline code uses back-ticks instead of \verb *)
+let r_verb_010 : rule =
+  let re = Str.regexp {|`[^`\n]+`|} in
+  let run s =
+    let s_text = strip_math_segments s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s_text !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-010";
+          severity = Info;
+          message = "Inline code uses back-ticks instead of \\verb";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-010"; run }
+
+(* VERB-012: minted block missing autogobble *)
+let r_verb_012 : rule =
+  let re = Str.regexp {|\\begin{minted}[ \t\n]*\(\[[^\]]*\]\)?[ \t\n]*{|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re s !i in
+         let matched = Str.matched_string s in
+         if
+           not
+             (try
+                let _ =
+                  Str.search_forward (Str.regexp_string "autogobble") matched 0
+                in
+                true
+              with Not_found -> false)
+         then incr cnt;
+         i := pos + String.length matched
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-012";
+          severity = Info;
+          message = "`minted` block missing autogobble";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-012"; run }
+
+(* VERB-013: Code line > 120 glyphs — same as VERB-005 but for minted
+   specifically *)
+let r_verb_013 : rule =
+  let run s =
+    let blocks = extract_env_blocks "minted" s in
+    let cnt = ref 0 in
+    List.iter
+      (fun blk ->
+        let lines = String.split_on_char '\n' blk in
+        List.iter (fun line -> if String.length line > 120 then incr cnt) lines)
+      blocks;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-013";
+          severity = Info;
+          message = "Code line > 120 glyphs";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-013"; run }
+
+(* VERB-015: Verbatim uses catcode changes instead of \verb *)
+let r_verb_015 : rule =
+  let re = Str.regexp {|\\catcode[ \t\n]*`|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-015";
+          severity = Warning;
+          message = "Verbatim uses catcode changes instead of \\verb";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-015"; run }
+
+(* VERB-016: minted without escapeinside while containing back-ticks *)
+let r_verb_016 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let tag = "\\begin{minted}" in
+    let tlen = String.length tag in
+    let i = ref 0 in
+    while !i <= n - tlen do
+      if String.sub s !i tlen = tag then (
+        (* Find the options and body *)
+        let opts_end = ref (!i + tlen) in
+        (* Skip optional [...] *)
+        if !opts_end < n && s.[!opts_end] = '[' then (
+          while !opts_end < n && s.[!opts_end] <> ']' do
+            incr opts_end
+          done;
+          if !opts_end < n then incr opts_end);
+        let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
+        let has_escape =
+          try
+            let _ =
+              Str.search_forward (Str.regexp_string "escapeinside") opts 0
+            in
+            true
+          with Not_found -> false
+        in
+        if not has_escape then
+          (* Check body for back-ticks *)
+          let blocks = extract_env_blocks "minted" (String.sub s !i (n - !i)) in
+          match blocks with
+          | blk :: _ ->
+              if String.contains blk '`' then incr cnt;
+              i := !opts_end
+          | [] -> i := !opts_end
+        else i := !opts_end)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-016";
+          severity = Info;
+          message =
+            "`minted` without `escapeinside` while containing back-ticks";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-016"; run }
+
+(* VERB-017: minted lacks linenos in code block > 20 lines *)
+let r_verb_017 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let tag = "\\begin{minted}" in
+    let tlen = String.length tag in
+    let i = ref 0 in
+    while !i <= n - tlen do
+      if String.sub s !i tlen = tag then (
+        let opts_end = ref (!i + tlen) in
+        if !opts_end < n && s.[!opts_end] = '[' then (
+          while !opts_end < n && s.[!opts_end] <> ']' do
+            incr opts_end
+          done;
+          if !opts_end < n then incr opts_end);
+        let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
+        let has_linenos =
+          try
+            let _ = Str.search_forward (Str.regexp_string "linenos") opts 0 in
+            true
+          with Not_found -> false
+        in
+        if not has_linenos then
+          let blocks = extract_env_blocks "minted" (String.sub s !i (n - !i)) in
+          match blocks with
+          | blk :: _ ->
+              let lines = String.split_on_char '\n' blk in
+              if List.length lines > 20 then incr cnt;
+              i := !opts_end
+          | [] -> i := !opts_end
+        else i := !opts_end)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-017";
+          severity = Info;
+          message = "`minted` lacks `linenos` in code block > 20 lines";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-017"; run }
+
+let rules_verb : rule list =
+  [
+    r_verb_001;
+    r_verb_002;
+    r_verb_003;
+    r_verb_004;
+    r_verb_005;
+    r_verb_006;
+    r_verb_007;
+    r_verb_008;
+    r_verb_009;
+    r_verb_010;
+    r_verb_012;
+    r_verb_013;
+    r_verb_015;
+    r_verb_016;
+    r_verb_017;
+  ]
+
+(* ── CJK rules: CJK character and punctuation checks ────────────────── *)
+
+(* CJK-001: Full-width comma U+FF0C in ASCII context *)
+let r_cjk_001 : rule =
+  let run s =
+    (* U+FF0C = EF BC 8C *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xEF
+        && Char.code s.[!i + 1] = 0xBC
+        && Char.code s.[!i + 2] = 0x8C
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-001";
+          severity = Warning;
+          message = "Full-width comma U+FF0C in ASCII context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-001"; run }
+
+(* CJK-002: Full-width period U+FF0E in ASCII context *)
+let r_cjk_002 : rule =
+  let run s =
+    (* U+FF0E = EF BC 8E *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xEF
+        && Char.code s.[!i + 1] = 0xBC
+        && Char.code s.[!i + 2] = 0x8E
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-002";
+          severity = Warning;
+          message = "Full-width period U+FF0E in ASCII context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-002"; run }
+
+(* CJK-010: Half-width CJK punctuation in full-width context *)
+(* Detect ASCII comma/period/colon/semicolon adjacent to CJK characters *)
+let r_cjk_010 : rule =
+  let is_cjk_byte0 b = b >= 0xE4 && b <= 0xE9 in
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 1 to n - 1 do
+      let c = s.[i] in
+      if c = ',' || c = '.' || c = ':' || c = ';' then
+        if
+          (* Check if preceded by a CJK character (3-byte UTF-8 starting
+             E4-E9) *)
+          i >= 3 && is_cjk_byte0 (Char.code s.[i - 3])
+        then incr cnt (* or followed by CJK *)
+        else if i + 3 < n && is_cjk_byte0 (Char.code s.[i + 1]) then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-010";
+          severity = Warning;
+          message = "Half-width CJK punctuation in full-width context";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-010"; run }
+
+(* CJK-014: Inter-punct U+30FB outside CJK run *)
+let r_cjk_014 : rule =
+  let run s =
+    (* U+30FB = E3 83 BB *)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE3
+        && Char.code s.[!i + 1] = 0x83
+        && Char.code s.[!i + 2] = 0xBB
+      then (
+        incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-014";
+          severity = Info;
+          message = "Inter-punct U+30FB outside CJK run";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-014"; run }
+
+let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
+
+(* ── CMD rules: command definition checks ────────────────────────────── *)
+
+(* CMD-002: Command redefined with \def instead of \renewcommand *)
+let r_cmd_002 : rule =
+  let re = Str.regexp {|\\def\\[a-zA-Z]+|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-002";
+          severity = Warning;
+          message = "Command redefined with \\def instead of \\renewcommand";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-002"; run }
+
+(* CMD-004: CamelCase command names discouraged *)
+let r_cmd_004 : rule =
+  let re = Str.regexp {|\\newcommand\|\\renewcommand\|\\def|} in
+  let camel_re = Str.regexp {|{?\\[a-z]+[A-Z][a-zA-Z]*}?|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re s !i in
+         let after = pos + String.length (Str.matched_string s) in
+         (* skip whitespace *)
+         let j = ref after in
+         while !j < String.length s && (s.[!j] = ' ' || s.[!j] = '\t') do
+           incr j
+         done;
+         (try
+            let _ = Str.search_forward camel_re s !j in
+            if Str.match_beginning () = !j then incr cnt
+          with Not_found -> ());
+         i := max (after + 1) (pos + 1)
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-004";
+          severity = Info;
+          message = "CamelCase command names discouraged";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-004"; run }
+
+(* CMD-005: Single-letter macro created *)
+let r_cmd_005 : rule =
+  let re =
+    Str.regexp {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]}|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-005";
+          severity = Warning;
+          message = "Single-letter macro created (\\x)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-005"; run }
+
+(* CMD-006: Macro defined inside document body *)
+let r_cmd_006 : rule =
+  let re = Str.regexp {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\|} in
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body ->
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let _ = Str.search_forward re body !i in
+             incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "CMD-006";
+              severity = Info;
+              message = "Macro defined inside document body";
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "CMD-006"; run }
+
+(* CMD-008: Macro uses \@ in name outside maketitle context *)
+let r_cmd_008 : rule =
+  let re =
+    Str.regexp
+      {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]*@[a-zA-Z]*}?|}
+  in
+  let run s =
+    let has_makeatletter =
+      try
+        let _ = Str.search_forward (Str.regexp_string "\\makeatletter") s 0 in
+        true
+      with Not_found -> false
+    in
+    if has_makeatletter then None
+    else
+      let cnt = ref 0 in
+      let i = ref 0 in
+      (try
+         while true do
+           let _ = Str.search_forward re s !i in
+           incr cnt;
+           i := Str.match_end ()
+         done
+       with Not_found -> ());
+      if !cnt > 0 then
+        Some
+          {
+            id = "CMD-008";
+            severity = Warning;
+            message = "Macro uses \\@ in name outside maketitle context";
+            count = !cnt;
+          }
+      else None
+  in
+  { id = "CMD-008"; run }
+
+(* CMD-009: Macro name contains digits *)
+let r_cmd_009 : rule =
+  let re =
+    Str.regexp
+      {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]*[0-9]+[a-zA-Z0-9]*}?|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-009";
+          severity = Info;
+          message = "Macro name contains digits";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-009"; run }
+
+(* CMD-011: Macro defined with \def/\edef in preamble without \makeatletter
+   guard *)
+let r_cmd_011 : rule =
+  let run s =
+    (* Extract preamble: everything before \begin{document} *)
+    let tag = "\\begin{document}" in
+    let preamble =
+      try
+        let pos = Str.search_forward (Str.regexp_string tag) s 0 in
+        String.sub s 0 pos
+      with Not_found -> s
+    in
+    let re = Str.regexp {|\\\(def\|edef\)[ \t\n]*\\[a-zA-Z@]+|} in
+    let has_makeatletter =
+      try
+        let _ =
+          Str.search_forward (Str.regexp_string "\\makeatletter") preamble 0
+        in
+        true
+      with Not_found -> false
+    in
+    if has_makeatletter then None
+    else
+      let cnt = ref 0 in
+      let i = ref 0 in
+      (try
+         while true do
+           let _ = Str.search_forward re preamble !i in
+           incr cnt;
+           i := Str.match_end ()
+         done
+       with Not_found -> ());
+      if !cnt > 0 then
+        Some
+          {
+            id = "CMD-011";
+            severity = Warning;
+            message =
+              "Macro defined with \\def/\\edef in preamble without \
+               \\makeatletter guard";
+            count = !cnt;
+          }
+      else None
+  in
+  { id = "CMD-011"; run }
+
+(* CMD-013: \def\arraystretch declared inside document body *)
+let r_cmd_013 : rule =
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body ->
+        let pat = Str.regexp_string "\\def\\arraystretch" in
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let _ = Str.search_forward pat body !i in
+             incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "CMD-013";
+              severity = Info;
+              message = "\\def\\arraystretch declared inside document body";
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "CMD-013"; run }
+
+let rules_cmd : rule list =
+  [
+    r_cmd_002;
+    r_cmd_004;
+    r_cmd_005;
+    r_cmd_006;
+    r_cmd_008;
+    r_cmd_009;
+    r_cmd_011;
+    r_cmd_013;
   ]
 
 (* ── TYPO-062: Literal backslash in text ───────────────────────────── *)
@@ -3740,9 +5156,15 @@ let r_typo_062 : rule =
   in
   { id = "TYPO-062"; run }
 
-(* Combined ENC + CHAR + SPC + new TYPO rules *)
+(* Combined ENC + CHAR + SPC + VERB + CJK + CMD + new TYPO rules *)
 let rules_enc_char_spc : rule list =
-  rules_enc @ rules_char @ rules_spc @ [ r_typo_062 ]
+  rules_enc
+  @ rules_char
+  @ rules_spc
+  @ rules_verb
+  @ rules_cjk
+  @ rules_cmd
+  @ [ r_typo_062 ]
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

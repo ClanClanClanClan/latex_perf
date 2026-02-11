@@ -233,6 +233,11 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_validators_verb_cjk_cmd)
+ (modules test_validators_verb_cjk_cmd)
+ (libraries latex_parse_lib unix))
+
+(test
  (name test_validators_l1)
  (modules test_validators_l1)
  (libraries latex_parse_lib unix))

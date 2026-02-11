@@ -311,6 +311,148 @@ let () =
         (does_not_fire "MOD-024" "\\texttt{x}\n\n\\texttt{y}")
         (tag ^ ": consistent texttt"));
 
+  (* ══════════════════════════════════════════════════════════════════════ MOD
+     paragraph edge cases — single paragraph should not trigger cross-paragraph
+     rules (MOD-020..024), but should trigger in-paragraph rules (MOD-002..013).
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* MOD-020: has_global_mixing is document-wide (not paragraph-aware), so it
+     fires even when both styles are in the same paragraph *)
+  run "MOD-020 fires even in single paragraph" (fun tag ->
+      expect
+        (fires "MOD-020" "{\\bfseries bold} and \\textbf{bold2}")
+        (tag ^ ": global check fires on any co-occurrence"));
+  (* MOD-020 does NOT fire when only one style is present *)
+  run "MOD-020 does not fire on bfseries-only" (fun tag ->
+      expect
+        (does_not_fire "MOD-020" "{\\bfseries bold} and {\\bfseries more}")
+        (tag ^ ": no mixing"));
+
+  (* MOD-021: same global behavior *)
+  run "MOD-021 fires even in single paragraph" (fun tag ->
+      expect
+        (fires "MOD-021" "{\\itshape italic} and \\emph{italic2}")
+        (tag ^ ": global check fires on any co-occurrence"));
+  run "MOD-021 does not fire on itshape-only" (fun tag ->
+      expect
+        (does_not_fire "MOD-021" "{\\itshape x} and {\\itshape y}")
+        (tag ^ ": no mixing"));
+
+  (* MOD-002 does NOT fire across paragraphs with clean paragraphs *)
+  run "MOD-002 does not fire when each paragraph is consistent" (fun tag ->
+      expect
+        (does_not_fire "MOD-002" "{\\bf bold only}\n\n\\textbf{modern only}")
+        (tag ^ ": separate paragraphs, each consistent"));
+
+  (* MOD-008 does NOT fire when bfseries only (no textbf) in paragraph *)
+  run "MOD-008 does not fire on bfseries-only paragraph" (fun tag ->
+      expect
+        (does_not_fire "MOD-008" "{\\bfseries this} and {\\bfseries that}")
+        (tag ^ ": consistent bfseries only"));
+
+  (* MOD-009 does NOT fire when itshape-only paragraph *)
+  run "MOD-009 does not fire on itshape-only paragraph" (fun tag ->
+      expect
+        (does_not_fire "MOD-009" "{\\itshape this} and {\\itshape that}")
+        (tag ^ ": consistent itshape only"));
+
+  (* Three-paragraph scenario: first legacy, second clean, third modern *)
+  run "MOD-020 fires across non-adjacent paragraphs" (fun tag ->
+      expect
+        (fires "MOD-020"
+           "{\\bfseries bold}\n\nClean paragraph here\n\n\\textbf{modern}")
+        (tag ^ ": non-adjacent paragraphs still fire"));
+
+  (* CMD-001 count — multiple deprecated commands *)
+  run "CMD-001 fires with multiple deprecated commands" (fun tag ->
+      let results = Validators.run_all "\\over and \\bf and \\it" in
+      let cmd001 =
+        List.find_opt (fun (r : Validators.result) -> r.id = "CMD-001") results
+      in
+      expect (cmd001 <> None) (tag ^ ": multiple deprecated found"));
+
+  (* CMD-003: only deep sectioning, not section/subsection *)
+  run "CMD-003 does not fire on chapter" (fun tag ->
+      expect
+        (does_not_fire "CMD-003" "\\chapter{Top}")
+        (tag ^ ": chapter is not deep"));
+
+  (* EXP-001 does not fire when only bfseries (not textbf) *)
+  run "EXP-001 does not fire on bfseries" (fun tag ->
+      expect
+        (does_not_fire "EXP-001" "{\\bfseries bold}")
+        (tag ^ ": bfseries is not textbf"));
+
+  (* EXP-001 fires when both textbf and emph are present *)
+  run "EXP-001 fires with both textbf and emph" (fun tag ->
+      expect
+        (fires "EXP-001" "\\textbf{hello} and \\emph{world}")
+        (tag ^ ": both unexpanded"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Multi-paragraph MOD rules — edge cases with blank-line paragraphs
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* Empty paragraphs separate content — MOD-002 checks per-paragraph mixing, so
+     legacy in one paragraph and modern in another does NOT fire MOD-002 *)
+  run "MOD-002 does not fire when styles are in separate paragraphs" (fun tag ->
+      expect
+        (does_not_fire "MOD-002" "{\\bf bold}\n\n\n\\textbf{modern}")
+        (tag ^ ": separate paragraphs, no per-paragraph mixing"));
+
+  (* MOD-001 fires even when legacy command is deeply nested *)
+  run "MOD-001 fires on nested legacy" (fun tag ->
+      expect
+        (fires "MOD-001" "\\begin{quote}{\\sf nested sans}\\end{quote}")
+        (tag ^ ": nested legacy"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Integration: realistic LaTeX with L1 issues
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "Integration: realistic LaTeX with L1 issues" (fun tag ->
+      let doc =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\n\
+         {\\bf Introduction}\n\n\
+         This is \\textbf{important} text. See \\emph{details} below.\n\n\
+         \\subsubsection{Deep Section}\n\n\
+         More \\textbf{content} here.\n\n\
+         \\end{document}\n"
+      in
+      let results = Validators.run_all doc in
+      let has id =
+        List.exists (fun (r : Validators.result) -> r.id = id) results
+      in
+      (* CMD-001: \bf is deprecated *)
+      expect (has "CMD-001") (tag ^ ": CMD-001 fires on \\bf");
+      (* CMD-003: \subsubsection is deep *)
+      expect (has "CMD-003") (tag ^ ": CMD-003 fires on subsubsection");
+      (* MOD-001: \bf is a legacy font command *)
+      expect (has "MOD-001") (tag ^ ": MOD-001 fires on \\bf");
+      (* EXP-001: \textbf and \emph still present *)
+      expect (has "EXP-001") (tag ^ ": EXP-001 fires on unexpanded"));
+
+  run "Integration: clean modern LaTeX — no L1 issues" (fun tag ->
+      let doc =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\n\
+         \\section{Introduction}\n\n\
+         This is well-formatted text with no issues.\n\n\
+         \\subsection{Details}\n\n\
+         More content here.\n\n\
+         \\end{document}\n"
+      in
+      let results = Validators.run_all doc in
+      let l1_issues =
+        List.filter
+          (fun (r : Validators.result) ->
+            let id = r.id in
+            (String.length id >= 4 && String.sub id 0 4 = "CMD-")
+            || (String.length id >= 4 && String.sub id 0 4 = "MOD-"))
+          results
+      in
+      expect (l1_issues = []) (tag ^ ": clean modern LaTeX, no CMD/MOD"));
+
   (* ══════════════════════════════════════════════════════════════════════
      Layer dispatch for L1 rules
      ══════════════════════════════════════════════════════════════════════ *)

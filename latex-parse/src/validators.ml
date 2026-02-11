@@ -222,6 +222,67 @@ let extract_command_names (s : string) : string list =
     in
     List.rev_append ctx_names_rev token_names
 
+(* Helper: extract content blocks between \begin{env}...\end{env} *)
+let extract_env_blocks (env : string) (s : string) : string list =
+  let open_tag = "\\begin{" ^ env ^ "}" in
+  let close_tag = "\\end{" ^ env ^ "}" in
+  let open_len = String.length open_tag in
+  let close_len = String.length close_tag in
+  let n = String.length s in
+  let blocks = ref [] in
+  let i = ref 0 in
+  while !i <= n - open_len do
+    if String.sub s !i open_len = open_tag then (
+      let start = !i + open_len in
+      (* skip optional [...] after \begin{lstlisting} *)
+      let content_start = ref start in
+      if !content_start < n && s.[!content_start] = '[' then (
+        while !content_start < n && s.[!content_start] <> ']' do
+          incr content_start
+        done;
+        if !content_start < n then incr content_start);
+      (* find matching \end{env} *)
+      let found = ref false in
+      let j = ref !content_start in
+      while !j <= n - close_len && not !found do
+        if String.sub s !j close_len = close_tag then (
+          blocks := String.sub s !content_start (!j - !content_start) :: !blocks;
+          i := !j + close_len;
+          found := true)
+        else incr j
+      done;
+      if not !found then i := n)
+    else incr i
+  done;
+  List.rev !blocks
+
+(* Helper: check if string is inside \begin{document}...\end{document} body *)
+let extract_document_body (s : string) : string option =
+  let tag = "\\begin{document}" in
+  let etag = "\\end{document}" in
+  let tlen = String.length tag in
+  let elen = String.length etag in
+  let n = String.length s in
+  let start = ref (-1) in
+  let i = ref 0 in
+  while !i <= n - tlen do
+    if String.sub s !i tlen = tag then (
+      start := !i + tlen;
+      i := n)
+    else incr i
+  done;
+  if !start < 0 then None
+  else
+    let finish = ref n in
+    let j = ref !start in
+    while !j <= n - elen do
+      if String.sub s !j elen = etag then (
+        finish := !j;
+        j := n)
+      else incr j
+    done;
+    Some (String.sub s !start (!finish - !start))
+
 (* Basic validators (legacy) *)
 
 let no_tabs : rule =
@@ -1697,6 +1758,163 @@ let r_typo_043 : rule =
   in
   { id = "TYPO-043"; run }
 
+(* TYPO-044: Acronym not defined on first use — scan for uppercase sequences of
+   2+ letters (e.g., "API", "NASA") and check whether their first occurrence in
+   the document is accompanied by a parenthetical expansion like "Application
+   Programming Interface (API)" or "API (Application Programming Interface)". If
+   not, we flag it as undefined on first use. We exclude common well-known
+   abbreviations that don't need expansion: e.g., USA, UK, PDF, etc. and LaTeX
+   command names. *)
+let r_typo_044 : rule =
+  let well_known =
+    [
+      "OK";
+      "USA";
+      "UK";
+      "EU";
+      "UN";
+      "NATO";
+      "NASA";
+      "CEO";
+      "PhD";
+      "Dr";
+      "Mr";
+      "Mrs";
+      "Ms";
+      "Jr";
+      "Sr";
+      "II";
+      "III";
+      "IV";
+      "AM";
+      "PM";
+      "BC";
+      "AD";
+      "PDF";
+      "HTML";
+      "URL";
+      "USB";
+      "CPU";
+      "GPU";
+      "RAM";
+      "ROM";
+      "DVD";
+      "CD";
+      "TV";
+      "FM";
+      "AC";
+      "DC";
+      "ID";
+      "IP";
+      "OS";
+      "PC";
+      "AI";
+      "ML";
+      "API";
+      "FAQ";
+      "DIY";
+      "GPS";
+      "VPN";
+      "PhD";
+      "MBA";
+      "MD";
+      "IEEE";
+      "ACM";
+      "ISO";
+      "RFC";
+      "HTTP";
+      "HTTPS";
+      "SSH";
+      "FTP";
+      "DNS";
+      "TCP";
+      "UDP";
+      "XML";
+      "JSON";
+      "YAML";
+      "CSV";
+      "SQL";
+      "CSS";
+      "RSS";
+      "SMTP";
+      "IMAP";
+      "POP";
+      "SSL";
+      "TLS";
+      "AES";
+      "RSA";
+      "SHA";
+      "UNIX";
+      "GNU";
+      "BSD";
+      "MIT";
+      "GPL";
+      "ASCII";
+      "UTF";
+      "NFC";
+      "NFKC";
+    ]
+  in
+  let re = Str.regexp {|\([A-Z][A-Z0-9]+\)|} in
+  let is_alnum c =
+    (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+  in
+  let run s =
+    let s_text = strip_math_segments s in
+    let n_text = String.length s_text in
+    (* Collect all acronym occurrences with their positions *)
+    let first_use = Hashtbl.create 32 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re s_text !i in
+         let acr = Str.matched_group 1 s_text in
+         let match_end = Str.match_end () in
+         (* Manual word-boundary check *)
+         let before_ok = pos = 0 || not (is_alnum s_text.[pos - 1]) in
+         let after_ok =
+           match_end >= n_text || not (is_alnum s_text.[match_end])
+         in
+         if before_ok && after_ok then
+           if not (Hashtbl.mem first_use acr) then Hashtbl.add first_use acr pos;
+         i := match_end
+       done
+     with Not_found -> ());
+    (* For each first-use acronym, check if it's well-known or has a nearby
+       parenthetical definition *)
+    let cnt = ref 0 in
+    Hashtbl.iter
+      (fun acr pos ->
+        if not (List.mem acr well_known) then
+          (* Look for "(ACR)" or "ACR (" within 200 chars before/after *)
+          let window_start = max 0 (pos - 200) in
+          let window_end =
+            min (String.length s_text) (pos + String.length acr + 200)
+          in
+          let window =
+            String.sub s_text window_start (window_end - window_start)
+          in
+          let has_paren_def =
+            (* "(ACR)" pattern *)
+            let pat1 = "(" ^ acr ^ ")" in
+            (* "ACR (" pattern — definition after acronym *)
+            let pat2 = acr ^ " (" in
+            count_substring window pat1 > 0 || count_substring window pat2 > 0
+          in
+          if not has_paren_def then incr cnt)
+      first_use;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-044";
+          severity = Info;
+          message = "Acronym not defined on first use";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-044"; run }
+
 (* En-dash used as minus sign in text *)
 let r_typo_048 : rule =
   let run s =
@@ -2113,6 +2331,7 @@ let rules_vpd_gen : rule list =
     r_typo_041;
     r_typo_042;
     r_typo_043;
+    r_typo_044;
     r_typo_045;
     r_typo_046;
     r_typo_047;
@@ -2536,6 +2755,125 @@ let r_enc_009 : rule =
   in
   { id = "ENC-009"; run }
 
+(* ENC-010: Non-canonical NFC form — detect multi-codepoint sequences that
+   should be NFC-normalised. We check for the most common cases: combining acute
+   (CC 81), combining grave (CC 80), combining diaeresis (CC 88), combining
+   tilde (CC 83), combining circumflex (CC 82), combining cedilla (CC A7)
+   immediately following an ASCII letter. These sequences have precomposed NFC
+   equivalents and should not appear in well-formed LaTeX. *)
+let r_enc_010 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      let b0 = Char.code s.[!i] in
+      let b1 = Char.code s.[!i + 1] in
+      (* ASCII letter followed by CC xx (combining diacritical marks
+         U+0300-U+036F encoded as CC 80 .. CD AF) *)
+      if
+        ((b0 >= 0x41 && b0 <= 0x5A) || (b0 >= 0x61 && b0 <= 0x7A))
+        && b1 = 0xCC
+        && !i + 2 < n
+      then
+        let b2 = Char.code s.[!i + 2] in
+        if b2 >= 0x80 && b2 <= 0xAF then (
+          incr cnt;
+          i := !i + 3)
+        else i := !i + 1
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-010";
+          severity = Info;
+          message =
+            "Non-canonical NFC form: combining diacritical after ASCII letter";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-010"; run }
+
+(* ENC-011: Byte sequence resembles MacRoman encoding — detect byte sequences
+   that are valid MacRoman but invalid or unusual UTF-8. Common MacRoman
+   artifacts: 0x8E (e-acute), 0x8A (a-umlaut), 0x9C (u-umlaut), 0x85
+   (c-cedilla), 0x92 (right-quote in Windows), 0xD2/0xD3 (smart quotes). We
+   detect isolated high bytes (0x80-0x9F) that are NOT valid UTF-8 lead bytes —
+   in valid UTF-8, 0x80-0xBF are only continuation bytes and 0xC0-0xC1 are
+   overlong. Isolated bytes in 0x80-0x9F preceded and followed by ASCII suggest
+   MacRoman or CP1252 encoding. *)
+let r_enc_011 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      let c = Char.code s.[i] in
+      if c >= 0x80 && c <= 0x9F then
+        (* Check if this byte is part of a valid UTF-8 multi-byte sequence by
+           looking back up to 3 positions for a UTF-8 lead byte that would
+           encompass this position. In valid UTF-8, bytes 0x80-0x9F only appear
+           as continuation bytes following a lead byte. *)
+        let is_valid_utf8 =
+          let rec check_back offset =
+            if offset > 3 || i - offset < 0 then false
+            else
+              let p = Char.code s.[i - offset] in
+              if p >= 0xC2 && p <= 0xDF then offset = 1
+              else if p >= 0xE0 && p <= 0xEF then offset >= 1 && offset <= 2
+              else if p >= 0xF0 && p <= 0xF4 then offset >= 1 && offset <= 3
+              else if p >= 0x80 && p <= 0xBF then check_back (offset + 1)
+              else false
+          in
+          check_back 1
+        in
+        if not is_valid_utf8 then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ENC-011";
+          severity = Warning;
+          message = "Byte sequence resembles MacRoman/CP1252 encoding";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ENC-011"; run }
+
+(* ENC-015: Non-NFKC homoglyph character — detect characters that have
+   NFKC-equivalent ASCII/Latin forms but appear in their compatibility variant.
+   Most common cases: - U+00B5 MICRO SIGN (C2 B5) vs U+03BC GREEK SMALL MU (CE
+   BC) - U+2126 OHM SIGN (E2 84 A6) vs U+03A9 GREEK CAPITAL OMEGA (CE A9) -
+   U+212B ANGSTROM SIGN (E2 84 AB) vs U+00C5 LATIN CAPITAL A WITH RING (C3 85) -
+   U+017F LATIN SMALL LONG S (C5 BF) vs 's' We flag the compatibility variants
+   that should be normalised. *)
+let r_enc_015 : rule =
+  let run s =
+    (* U+00B5 MICRO SIGN = C2 B5 *)
+    let cnt_micro = count_substring s "\xc2\xb5" in
+    (* U+2126 OHM SIGN = E2 84 A6 *)
+    let cnt_ohm = count_substring s "\xe2\x84\xa6" in
+    (* U+212B ANGSTROM SIGN = E2 84 AB *)
+    let cnt_angstrom = count_substring s "\xe2\x84\xab" in
+    (* U+017F LATIN SMALL LONG S = C5 BF *)
+    let cnt_long_s = count_substring s "\xc5\xbf" in
+    let cnt = cnt_micro + cnt_ohm + cnt_angstrom + cnt_long_s in
+    if cnt > 0 then
+      Some
+        {
+          id = "ENC-015";
+          severity = Warning;
+          message =
+            "Non-NFKC homoglyph character (micro sign, ohm sign, angstrom, or \
+             long s)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "ENC-015"; run }
+
 (* ENC-016: Fullwidth digits U+FF10-FF19 (Arabic numeral look-alikes) *)
 let r_enc_016 : rule =
   let run s =
@@ -2777,9 +3115,12 @@ let rules_enc : rule list =
     r_enc_007;
     r_enc_008;
     r_enc_009;
+    r_enc_010;
+    r_enc_011;
     r_enc_012;
     r_enc_013;
     r_enc_014;
+    r_enc_015;
     r_enc_016;
     r_enc_017;
     r_enc_018;
@@ -3658,6 +3999,38 @@ let r_spc_016 : rule =
   in
   { id = "SPC-016"; run }
 
+(* SPC-017: Missing thin space before units — detect patterns like "5cm",
+   "100kg", "3.5 GHz" where a number directly adjoins a unit abbreviation
+   without a thin space (\,). We check for digit-letter transitions in text mode
+   where the letter sequence matches a known SI/common unit. *)
+let r_spc_017 : rule =
+  let re =
+    Str.regexp
+      {|[0-9]\(mm\|cm\|km\|m\|kg\|g\|mg\|lb\|oz\|ml\|kl\|dB\|Hz\|kHz\|MHz\|GHz\|THz\|eV\|keV\|MeV\|GeV\|TeV\|K\|Pa\|kPa\|MPa\|bar\|atm\|mol\|cd\|lm\|lx\|Bq\|Gy\|Sv\|kat\|rad\|sr\|V\|kV\|mV\|W\|kW\|MW\|GW\|J\|kJ\|MJ\|cal\|kcal\|A\|mA\|N\|kN\|s\|ms\|ns\|min\|h\)\b|}
+  in
+  let run s =
+    let s_text = strip_math_segments s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s_text !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-017";
+          severity = Info;
+          message = "Missing thin space before unit (e.g. 5cm should be 5\\,cm)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-017"; run }
+
 (* SPC-019: Trailing full-width space U+3000 at line end *)
 let r_spc_019 : rule =
   let run s =
@@ -3713,6 +4086,55 @@ let r_spc_025 : rule =
     else None
   in
   { id = "SPC-025"; run }
+
+(* SPC-026: Mixed indentation width at same list depth — detect inconsistent
+   indentation levels inside list environments (itemize/enumerate/description).
+   If \item lines within the same environment use different leading whitespace
+   widths, this rule fires. *)
+let r_spc_026 : rule =
+  let run s =
+    let envs = [ "itemize"; "enumerate"; "description" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk ->
+            let lines = String.split_on_char '\n' blk in
+            (* Measure leading whitespace of \item lines *)
+            let widths = ref [] in
+            List.iter
+              (fun line ->
+                let len = String.length line in
+                let j = ref 0 in
+                while !j < len && (line.[!j] = ' ' || line.[!j] = '\t') do
+                  incr j
+                done;
+                (* Check if the non-whitespace part starts with \item *)
+                if
+                  !j < len
+                  && !j + 5 <= len
+                  && String.sub line !j (min 5 (len - !j)) = "\\item"
+                then widths := !j :: !widths)
+              lines;
+            (* If we found at least 2 \item lines with different indentation *)
+            match !widths with
+            | [] | [ _ ] -> ()
+            | first :: rest ->
+                if List.exists (fun w -> w <> first) rest then incr cnt)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "SPC-026";
+          severity = Info;
+          message = "Mixed indentation width at same list depth";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "SPC-026"; run }
 
 (* SPC-029: Indentation uses NBSP U+00A0 characters *)
 let r_spc_029 : rule =
@@ -4103,6 +4525,7 @@ let rules_spc : rule list =
     r_spc_014;
     r_spc_015;
     r_spc_016;
+    r_spc_017;
     r_spc_018;
     r_spc_019;
     r_spc_020;
@@ -4111,6 +4534,7 @@ let rules_spc : rule list =
     r_spc_023;
     r_spc_024;
     r_spc_025;
+    r_spc_026;
     r_spc_027;
     r_spc_028;
     r_spc_029;
@@ -4123,67 +4547,6 @@ let rules_spc : rule list =
   ]
 
 (* ── VERB rules: verbatim / code environment checks ────────────────── *)
-
-(* Helper: extract content blocks between \begin{env}...\end{env} *)
-let extract_env_blocks (env : string) (s : string) : string list =
-  let open_tag = "\\begin{" ^ env ^ "}" in
-  let close_tag = "\\end{" ^ env ^ "}" in
-  let open_len = String.length open_tag in
-  let close_len = String.length close_tag in
-  let n = String.length s in
-  let blocks = ref [] in
-  let i = ref 0 in
-  while !i <= n - open_len do
-    if String.sub s !i open_len = open_tag then (
-      let start = !i + open_len in
-      (* skip optional [...] after \begin{lstlisting} *)
-      let content_start = ref start in
-      if !content_start < n && s.[!content_start] = '[' then (
-        while !content_start < n && s.[!content_start] <> ']' do
-          incr content_start
-        done;
-        if !content_start < n then incr content_start);
-      (* find matching \end{env} *)
-      let found = ref false in
-      let j = ref !content_start in
-      while !j <= n - close_len && not !found do
-        if String.sub s !j close_len = close_tag then (
-          blocks := String.sub s !content_start (!j - !content_start) :: !blocks;
-          i := !j + close_len;
-          found := true)
-        else incr j
-      done;
-      if not !found then i := n)
-    else incr i
-  done;
-  List.rev !blocks
-
-(* Helper: check if string is inside \begin{document}...\end{document} body *)
-let extract_document_body (s : string) : string option =
-  let tag = "\\begin{document}" in
-  let etag = "\\end{document}" in
-  let tlen = String.length tag in
-  let elen = String.length etag in
-  let n = String.length s in
-  let start = ref (-1) in
-  let i = ref 0 in
-  while !i <= n - tlen do
-    if String.sub s !i tlen = tag then (
-      start := !i + tlen;
-      i := n)
-    else incr i
-  done;
-  if !start < 0 then None
-  else
-    let finish = ref n in
-    let j = ref !start in
-    while !j <= n - elen do
-      if String.sub s !j elen = etag then (
-        finish := !j;
-        j := n)
-      else incr j
-    done;
-    Some (String.sub s !start (!finish - !start))
 
 (* VERB-001: \verb delimiter reused inside same \verb block *)
 let r_verb_001 : rule =
@@ -4540,6 +4903,149 @@ let r_verb_010 : rule =
   in
   { id = "VERB-010"; run }
 
+(* VERB-011: Unknown lstlisting language — detect \begin{lstlisting}[language=X]
+   where X is not in the standard set of languages supported by the listings
+   package. We extract the language= option value and check against a known
+   set. *)
+let r_verb_011 : rule =
+  let known_languages =
+    [
+      "abap";
+      "acm";
+      "acmscript";
+      "ada";
+      "algol";
+      "ant";
+      "assembler";
+      "awk";
+      "bash";
+      "basic";
+      "c";
+      "caml";
+      "cil";
+      "clean";
+      "cobol";
+      "comal";
+      "command";
+      "comsol";
+      "csh";
+      "delphi";
+      "eiffel";
+      "elan";
+      "elisp";
+      "erlang";
+      "euphoria";
+      "forth";
+      "fortran";
+      "gcl";
+      "gnuplot";
+      "go";
+      "hansl";
+      "haskell";
+      "html";
+      "idl";
+      "inform";
+      "java";
+      "jvmis";
+      "ksh";
+      "lingo";
+      "lisp";
+      "llvm";
+      "logo";
+      "lua";
+      "make";
+      "mathematica";
+      "matlab";
+      "mercury";
+      "metapost";
+      "miranda";
+      "mizar";
+      "ml";
+      "modula";
+      "mupad";
+      "nastran";
+      "oberon";
+      "objective";
+      "ocaml";
+      "octave";
+      "oorexx";
+      "oz";
+      "pascal";
+      "perl";
+      "php";
+      "pli";
+      "plasm";
+      "postscript";
+      "pov";
+      "prolog";
+      "promela";
+      "pstricks";
+      "python";
+      "r";
+      "reduce";
+      "rexx";
+      "rsl";
+      "ruby";
+      "rust";
+      "s";
+      "sas";
+      "scala";
+      "scilab";
+      "sh";
+      "shelxl";
+      "simula";
+      "sparql";
+      "sql";
+      "swift";
+      "tcl";
+      "tex";
+      "vbscript";
+      "verilog";
+      "vhdl";
+      "vrml";
+      "xml";
+      "xslt";
+    ]
+  in
+  let re =
+    Str.regexp
+      {|\\begin{lstlisting}[ \t\n]*\[[^]]*language[ \t]*=[ \t]*\([A-Za-z+#]*\)|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         let lang = String.lowercase_ascii (Str.matched_group 1 s) in
+         (* Strip trailing +/# for languages like C++, C#, Objective-C *)
+         let lang_base =
+           let len = String.length lang in
+           let j = ref (len - 1) in
+           while !j >= 0 && (lang.[!j] = '+' || lang.[!j] = '#') do
+             decr j
+           done;
+           if !j < len - 1 then String.sub lang 0 (!j + 1) else lang
+         in
+         if
+           not
+             (List.exists (fun k -> k = lang || k = lang_base) known_languages)
+         then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-011";
+          severity = Warning;
+          message = "Unknown lstlisting language";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-011"; run }
+
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
   let re = Str.regexp {|\\begin{minted}[ \t\n]*\(\[[^\]]*\]\)?[ \t\n]*{|} in
@@ -4731,6 +5237,7 @@ let rules_verb : rule list =
     r_verb_008;
     r_verb_009;
     r_verb_010;
+    r_verb_011;
     r_verb_012;
     r_verb_013;
     r_verb_015;
@@ -5156,7 +5663,30 @@ let r_typo_062 : rule =
   in
   { id = "TYPO-062"; run }
 
-(* Combined ENC + CHAR + SPC + VERB + CJK + CMD + new TYPO rules *)
+(* ── MATH rules: mathematics-related lexical checks ──────────────── *)
+
+(* MATH-083: Unicode minus U+2212 inside text mode — should be a hyphen-minus in
+   text or $-$ / \textminus in math context. We detect U+2212 (E2 88 92) outside
+   of math mode segments. *)
+let r_math_083 : rule =
+  let run s =
+    let s_text = strip_math_segments s in
+    (* U+2212 MINUS SIGN = E2 88 92 *)
+    let cnt = count_substring s_text "\xe2\x88\x92" in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-083";
+          severity = Warning;
+          message =
+            "Unicode minus U+2212 in text mode; use hyphen-minus or math";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "MATH-083"; run }
+
+(* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + new TYPO rules *)
 let rules_enc_char_spc : rule list =
   rules_enc
   @ rules_char
@@ -5164,7 +5694,7 @@ let rules_enc_char_spc : rule list =
   @ rules_verb
   @ rules_cjk
   @ rules_cmd
-  @ [ r_typo_062 ]
+  @ [ r_typo_062; r_math_083 ]
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

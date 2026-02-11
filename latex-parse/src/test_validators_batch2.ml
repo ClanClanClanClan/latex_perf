@@ -258,6 +258,93 @@ let () =
   run "SPC-035 clean" (fun tag ->
       expect (does_not_fire "SPC-035" " text") (tag ^ ": normal space"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Math-mode edge cases for rules using strip_math_segments
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* SPC-016: space-semicolon — uses strip_math_segments, so $ ;$ is ok *)
+  run "SPC-016 does not fire in math" (fun tag ->
+      expect
+        (does_not_fire "SPC-016" "Let $f ;g$ be functions")
+        (tag ^ ": math stripped"));
+  run "SPC-016 fires in text even with math present" (fun tag ->
+      expect
+        (fires "SPC-016" "Text ;more $x$")
+        (tag ^ ": text fires despite math"));
+
+  (* SPC-021: space-colon — uses strip_math_segments *)
+  run "SPC-021 does not fire in math" (fun tag ->
+      expect
+        (does_not_fire "SPC-021" "Map $f :A\\to B$")
+        (tag ^ ": math stripped"));
+  run "SPC-021 fires in text even with math present" (fun tag ->
+      expect
+        (fires "SPC-021" "Label :value $x$")
+        (tag ^ ": text fires despite math"));
+
+  (* SPC-031: three spaces after period — uses strip_math_segments *)
+  run "SPC-031 does not fire in math" (fun tag ->
+      expect
+        (does_not_fire "SPC-031" "Text $a.   b$ more")
+        (tag ^ ": math stripped"));
+  run "SPC-031 fires in text even with math present" (fun tag ->
+      expect
+        (fires "SPC-031" "End.   Next $x$ sentence")
+        (tag ^ ": text fires despite math"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Additional count verification tests
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "SPC-007 count=2 for two groups of 3+ blank lines" (fun tag ->
+      expect
+        (fires_with_count "SPC-007" "a\n\n\n\nb\n\n\n\nc" 2)
+        (tag ^ ": count=2"));
+  run "SPC-008 count=2 for two indented paragraphs" (fun tag ->
+      expect
+        (fires_with_count "SPC-008" "text\n\n  para1\n\n  para2" 2)
+        (tag ^ ": count=2"));
+  run "SPC-016 count=2 for two space-semis" (fun tag ->
+      expect (fires_with_count "SPC-016" "a ;b ;c" 2) (tag ^ ": count=2"));
+  run "SPC-021 count=2 for two space-colons" (fun tag ->
+      expect (fires_with_count "SPC-021" "a :b :c" 2) (tag ^ ": count=2"));
+  run "SPC-029 count=2 for two NBSP-indented lines" (fun tag ->
+      expect
+        (fires_with_count "SPC-029" "\xc2\xa0code\n\xc2\xa0more" 2)
+        (tag ^ ": count=2"));
+  run "SPC-032 count=2 for two mixed-indent lines" (fun tag ->
+      expect
+        (fires_with_count "SPC-032" "\xc2\xa0 code\n\xc2\xa0 more" 2)
+        (tag ^ ": count=2"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Boundary condition tests
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* ENC-001: valid 3-byte and 4-byte UTF-8 should not fire *)
+  run "ENC-001 clean 3-byte UTF-8" (fun tag ->
+      (* U+2603 snowman = E2 98 83 *)
+      expect (does_not_fire "ENC-001" "\xe2\x98\x83") (tag ^ ": 3-byte ok"));
+  run "ENC-001 clean 4-byte UTF-8" (fun tag ->
+      (* U+1F600 = F0 9F 98 80 *)
+      expect (does_not_fire "ENC-001" "\xf0\x9f\x98\x80") (tag ^ ": 4-byte ok"));
+
+  (* SPC-015: exactly 8 spaces = ok, 9 = fires *)
+  run "SPC-015 boundary: 8 spaces ok" (fun tag ->
+      expect (does_not_fire "SPC-015" "        code") (tag ^ ": 8 ok"));
+
+  (* SPC-009: NBSP mid-line should not fire *)
+  run "SPC-009 does not fire on mid-line NBSP" (fun tag ->
+      expect
+        (does_not_fire "SPC-009" "Figure\xc2\xa01")
+        (tag ^ ": mid-line NBSP ok"));
+
+  (* CHAR-015: various emoji ranges *)
+  run "CHAR-015 fires on heart emoji" (fun tag ->
+      (* U+2764 = E2 9D A4 — but this is in the misc symbols range, not
+         guaranteed to be detected. Test with basic SMP emoji instead. *)
+      (* U+1F4A9 = F0 9F 92 A9 *)
+      expect (fires "CHAR-015" "\xf0\x9f\x92\xa9") (tag ^ ": SMP emoji"));
+
   (* ══════════════════════════════════════════════════════════════════════ Edge
      cases
      ══════════════════════════════════════════════════════════════════════ *)

@@ -289,6 +289,85 @@ let () =
   run "TYPO-062 clean" (fun tag ->
       expect (does_not_fire "TYPO-062" "no backslashes here") (tag ^ ": clean"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Additional count verification and edge case tests
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* ENC-007: count verification *)
+  run "ENC-007 count=3" (fun tag ->
+      expect
+        (fires_with_count "ENC-007" "\xe2\x80\x8b\xe2\x80\x8b\xe2\x80\x8b" 3)
+        (tag ^ ": three ZWS"));
+
+  (* ENC-017: count for multiple soft hyphens *)
+  run "ENC-017 count=2" (fun tag ->
+      expect
+        (fires_with_count "ENC-017" "hy\xc2\xadphen\xc2\xadated" 2)
+        (tag ^ ": count=2"));
+
+  (* ENC-021: count for multiple word joiners *)
+  run "ENC-021 count=2" (fun tag ->
+      expect
+        (fires_with_count "ENC-021" "\xe2\x81\xa0a\xe2\x81\xa0b" 2)
+        (tag ^ ": count=2"));
+
+  (* CHAR-006: boundary — only backspace, not other control chars *)
+  run "CHAR-006 does not fire on tab" (fun tag ->
+      expect
+        (does_not_fire "CHAR-006" "text\there")
+        (tag ^ ": tab is not backspace"));
+
+  (* CHAR-007: boundary — bell only *)
+  run "CHAR-007 count=2" (fun tag ->
+      expect (fires_with_count "CHAR-007" "\x07\x07" 2) (tag ^ ": count=2"));
+
+  (* CHAR-009: boundary — only DEL, not other high ASCII *)
+  run "CHAR-009 count=2" (fun tag ->
+      expect (fires_with_count "CHAR-009" "\x7f\x7f" 2) (tag ^ ": count=2"));
+
+  (* CHAR-021: BOM at very start = ok, anywhere else = fires *)
+  run "CHAR-021 count for 2 interior BOMs" (fun tag ->
+      expect
+        (fires_with_count "CHAR-021"
+           "\xef\xbb\xbfstart\xef\xbb\xbfmid\xef\xbb\xbfend" 2)
+        (tag ^ ": 2 interior BOMs"));
+
+  (* SPC-001: very long line with multiple normal lines *)
+  run "SPC-001 count=1 for one long line" (fun tag ->
+      let input = "short\n" ^ String.make 130 'x' ^ "\nshort" in
+      expect (fires_with_count "SPC-001" input 1) (tag ^ ": count=1"));
+
+  (* SPC-002: count verification *)
+  run "SPC-002 count=2 for two ws lines" (fun tag ->
+      expect
+        (fires_with_count "SPC-002" "text\n   \nmore\n  \t  \nend" 2)
+        (tag ^ ": count=2"));
+
+  (* SPC-003: boundary — tab only indent should NOT fire *)
+  run "SPC-003 does not fire on pure tab indent" (fun tag ->
+      expect (does_not_fire "SPC-003" "\t\tcode") (tag ^ ": pure tabs ok"));
+
+  (* SPC-004: count for multiple bare CRs *)
+  run "SPC-004 count=2" (fun tag ->
+      expect (fires_with_count "SPC-004" "a\rb\rc" 2) (tag ^ ": count=2"));
+
+  (* SPC-005: count for multiple trailing tab lines *)
+  run "SPC-005 count=2" (fun tag ->
+      expect (fires_with_count "SPC-005" "a\t\nb\t\nc" 2) (tag ^ ": count=2"));
+
+  (* SPC-012: count for multiple interior BOMs *)
+  run "SPC-012 count for 2 interior BOMs" (fun tag ->
+      expect
+        (fires_with_count "SPC-012"
+           "\xef\xbb\xbfstart\xef\xbb\xbfmid\xef\xbb\xbfend" 2)
+        (tag ^ ": count=2"));
+
+  (* SPC-028: count for ~~~ (3 tildes = 2 occurrences of ~~) *)
+  run "SPC-028 count for ~~~" (fun tag ->
+      expect
+        (fires_with_count "SPC-028" "use~~~here" 2)
+        (tag ^ ": triple tilde count=2"));
+
   (* ══════════════════════════════════════════════════════════════════════ Edge
      cases
      ══════════════════════════════════════════════════════════════════════ *)

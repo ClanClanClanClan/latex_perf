@@ -667,6 +667,252 @@ let () =
         (tag ^ ": standard hyphen ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
+     Math-mode edge cases for rules using strip_math_segments
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* TYPO-014: Mixed quotes — mixed quotes INSIDE math should be stripped, so
+     math-only mixing should NOT fire *)
+  run "TYPO-014 does not fire when mix is only in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-014"
+           "Normal text here $x = \"y\" \\text{\xe2\x80\x9cz\xe2\x80\x9d}$")
+        (tag ^ ": math-only mix stripped"));
+  run "TYPO-014 fires when mix is in text (with math present)" (fun tag ->
+      expect
+        (fires "TYPO-014"
+           "He said \"hi\" and \xe2\x80\x9cbye\xe2\x80\x9d, also $x$")
+        (tag ^ ": text mix fires even with math"));
+
+  (* TYPO-031: Mixed dashes — paragraphs using strip_math_segments *)
+  run "TYPO-031 does not fire when dashes only in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-031" "Normal text $a--b$ and $c\xe2\x80\x93d$")
+        (tag ^ ": math-only mix stripped"));
+
+  (* TYPO-033: Mixed ellipsis — uses strip_math_segments per paragraph *)
+  run "TYPO-033 does not fire when ellipsis only in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-033"
+           "Regular text $a + ... + z$ and $b\xe2\x80\xa6c$")
+        (tag ^ ": math-only ellipsis stripped"));
+
+  (* TYPO-045: boundary — multiple $ delimiters *)
+  run "TYPO-045 fires on non-ascii in second math" (fun tag ->
+      expect
+        (fires "TYPO-045" "$x$ and $\xc3\xa9$")
+        (tag ^ ": second math segment"));
+  run "TYPO-045 count=2 for two non-ascii bytes" (fun tag ->
+      expect
+        (fires_with_count "TYPO-045" "$\xc3\xa9$" 2)
+        (tag ^ ": count two bytes of U+00E9"));
+
+  (* TYPO-040: boundary — exactly 80 chars should NOT fire, 81 SHOULD *)
+  run "TYPO-040 does not fire at exactly 80 chars" (fun tag ->
+      let math80 = "$" ^ String.make 80 'x' ^ "$" in
+      expect (does_not_fire "TYPO-040" math80) (tag ^ ": 80 ok"));
+  run "TYPO-040 count=2 for two long inline maths" (fun tag ->
+      let long1 = "$" ^ String.make 81 'a' ^ "$" in
+      let long2 = "$" ^ String.make 90 'b' ^ "$" in
+      expect
+        (fires_with_count "TYPO-040" (long1 ^ " text " ^ long2) 2)
+        (tag ^ ": count=2"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Additional count verification tests
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-005 count=2 for two ellipses" (fun tag ->
+      expect
+        (fires_with_count "TYPO-005" "Wait... and also..." 2)
+        (tag ^ ": count=2"));
+  run "TYPO-007 count=2 for two trailing-space lines" (fun tag ->
+      expect
+        (fires_with_count "TYPO-007" "text   \nmore   \nend" 2)
+        (tag ^ ": count=2"));
+  run "TYPO-010 count=2 for two space-before-punct" (fun tag ->
+      expect
+        (fires_with_count "TYPO-010" "Text , here . too" 2)
+        (tag ^ ": count=2"));
+  run "TYPO-016 count for !!!" (fun tag ->
+      (* count_substring allows overlaps: "!!" appears 2x in "!!!", plus "!!!"
+         matches separately = 3 total *)
+      expect
+        (fires_with_count "TYPO-016" "Wow!!!" 3)
+        (tag ^ ": !!! = overlap count 3"));
+  run "TYPO-023 count=2 for two CR lines" (fun tag ->
+      expect (fires_with_count "TYPO-023" "a\r\nb\r\nc" 2) (tag ^ ": count=2"));
+  run "TYPO-043 count=4 for all four curly types" (fun tag ->
+      expect
+        (fires_with_count "TYPO-043"
+           "\xe2\x80\x9c \xe2\x80\x9d \xe2\x80\x98 \xe2\x80\x99" 4)
+        (tag ^ ": count=4"));
+  run "TYPO-052 count=2 for < and >" (fun tag ->
+      expect (fires_with_count "TYPO-052" "a<b>c in text" 2) (tag ^ ": count=2"));
+  run "TYPO-056 count=2 for two accents" (fun tag ->
+      expect
+        (fires_with_count "TYPO-056" "Caf\\'{e} and \\`{a}" 2)
+        (tag ^ ": count=2"));
+  run "TYPO-058 count=3 for three Greek homographs" (fun tag ->
+      expect
+        (fires_with_count "TYPO-058" "The \xce\xb1 and \xce\xb5 and \xce\xbf" 3)
+        (tag ^ ": count=3"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Boundary condition and tricky-input tests
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* TYPO-002: count_substring allows overlaps, so "---" matches "--" twice *)
+  run "TYPO-002 fires on --- via overlap" (fun tag ->
+      expect (fires "TYPO-002" "This---that") (tag ^ ": overlap matches"));
+
+  (* TYPO-008 fires on 4 newlines too *)
+  run "TYPO-008 fires on 4 newlines" (fun tag ->
+      expect (fires "TYPO-008" "text\n\n\n\nmore") (tag ^ ": four newlines"));
+
+  (* TYPO-009 does not fire on mid-line ~ used as non-breaking space *)
+  run "TYPO-009 does not fire on Figure~1" (fun tag ->
+      expect
+        (does_not_fire "TYPO-009" "See Figure~1 for details")
+        (tag ^ ": normal tilde usage"));
+
+  (* TYPO-013 needs " a " or " a\n" — single-letter word bounded by space *)
+  run "TYPO-013 fires on single letter mid-sentence" (fun tag ->
+      expect
+        (fires "TYPO-013" "In a single word sentence")
+        (tag ^ ": single-letter mid-sentence"));
+
+  (* TYPO-022 fires on period-digit (decimal) — known false positive by
+     design *)
+  run "TYPO-022 fires on decimal 3.14" (fun tag ->
+      expect
+        (fires "TYPO-022" "The value is 3.14 approx")
+        (tag ^ ": period-digit detected"));
+
+  (* TYPO-024 does not fire on NUL (0x00) — NUL is special, check boundary *)
+  run "TYPO-024 fires on 0x02" (fun tag ->
+      expect (fires "TYPO-024" "text\x02here") (tag ^ ": STX fires"));
+  run "TYPO-024 does not fire on 0x20" (fun tag ->
+      expect
+        (does_not_fire "TYPO-024" "text here")
+        (tag ^ ": space is not control"));
+
+  (* TYPO-036 boundary: exactly 3 uppercase words in sequence *)
+  run "TYPO-036 fires on exactly 3 uppercase words" (fun tag ->
+      expect (fires "TYPO-036" "The ABC DEF GHI method") (tag ^ ": 3 caps words"));
+  run "TYPO-036 does not fire on 2 uppercase words" (fun tag ->
+      expect
+        (does_not_fire "TYPO-036" "Use ABC DEF method")
+        (tag ^ ": 2 caps insufficient"));
+
+  (* TYPO-038 count=2 for two emails *)
+  run "TYPO-038 count=2" (fun tag ->
+      expect
+        (fires_with_count "TYPO-038" "Contact a@b.com or c@d.org" 2)
+        (tag ^ ": count=2"));
+
+  (* TYPO-039: regex is https?:// so only http/https, not ftp *)
+  run "TYPO-039 does not fire on ftp URL" (fun tag ->
+      expect
+        (does_not_fire "TYPO-039" "See ftp://files.example.com for data")
+        (tag ^ ": ftp not matched"));
+  run "TYPO-039 count=2 for two URLs" (fun tag ->
+      expect
+        (fires_with_count "TYPO-039" "Visit http://a.com and https://b.org" 2)
+        (tag ^ ": count=2"));
+
+  (* TYPO-046 count includes both begin and end *)
+  run "TYPO-046 count=2 for begin+end" (fun tag ->
+      expect
+        (fires_with_count "TYPO-046" "\\begin{math}x\\end{math}" 2)
+        (tag ^ ": count begin+end"));
+
+  (* TYPO-047 count=2 for two starred sections *)
+  run "TYPO-047 count=2" (fun tag ->
+      expect
+        (fires_with_count "TYPO-047" "\\section*{A}\\section*{B}" 2)
+        (tag ^ ": count=2"));
+
+  (* TYPO-048 count for multiple en-dashes in text *)
+  run "TYPO-048 count=2 for two en-dashes" (fun tag ->
+      expect
+        (fires_with_count "TYPO-048" "val\xe2\x80\x93ue and oth\xe2\x80\x93er" 2)
+        (tag ^ ": count=2"));
+
+  (* TYPO-054 does not fire on number ranges like 1–10 *)
+  run "TYPO-054 fires on word-endash-word" (fun tag ->
+      expect
+        (fires "TYPO-054" "New York\xe2\x80\x93London")
+        (tag ^ ": city endash city"));
+
+  (* TYPO-055 count for triple thinspace *)
+  run "TYPO-055 count=2 for \\,\\,\\," (fun tag ->
+      expect
+        (fires_with_count "TYPO-055" "text\\,\\,\\,more" 2)
+        (tag ^ ": count=2 for triple"));
+
+  (* TYPO-062 count for multiple bare backslashes *)
+  run "TYPO-062 count=2 for two bare backslashes" (fun tag ->
+      expect
+        (fires_with_count "TYPO-062" "path\\\\file and dir\\\\name" 2)
+        (tag ^ ": count=2"));
+
+  (* TYPO-063 count for two nb-hyphens *)
+  run "TYPO-063 count=2" (fun tag ->
+      expect
+        (fires_with_count "TYPO-063" "\xe2\x80\x91one \xe2\x80\x91two" 2)
+        (tag ^ ": count=2"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     Realistic LaTeX fragment — multi-rule integration test
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "Integration: realistic LaTeX triggers expected rules" (fun tag ->
+      let doc =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\n\
+         He said \"hello\" and goodbye.  Next sentence.\n\n\
+         Contact user@example.com for info.\n\n\
+         The value is 50 %.\n\n\
+         See https://example.com for details.\n\n\
+         \\end{document}\n"
+      in
+      let results = Validators.run_all doc in
+      let has id =
+        List.exists (fun (r : Validators.result) -> r.id = id) results
+      in
+      (* TYPO-001: straight quotes *)
+      expect (has "TYPO-001") (tag ^ ": TYPO-001 fires on straight quotes");
+      (* TYPO-018: double space after period *)
+      expect (has "TYPO-018") (tag ^ ": TYPO-018 fires on double-space-period");
+      (* TYPO-038: bare email *)
+      expect (has "TYPO-038") (tag ^ ": TYPO-038 fires on bare email");
+      (* TYPO-028: space before % *)
+      expect (has "TYPO-028") (tag ^ ": TYPO-028 fires on space-percent");
+      (* TYPO-039: bare URL *)
+      expect (has "TYPO-039") (tag ^ ": TYPO-039 fires on bare URL"));
+
+  run "Clean realistic LaTeX — no TYPO fires" (fun tag ->
+      let clean =
+        "\\documentclass{article}\n"
+        ^ "\\usepackage[utf8]{inputenc}\n"
+        ^ "\\begin{document}\n"
+        ^ "\n"
+        ^ "This is well-formatted.\n"
+        ^ "\n"
+        ^ "The formula $E = mc^2$ is famous.\n"
+        ^ "\n"
+        ^ "See~\\cite{einstein1905} for the original paper.\n"
+        ^ "\n"
+        ^ "\\end{document}\n"
+      in
+      let results = Validators.run_all clean in
+      let typo_results =
+        List.filter
+          (fun (r : Validators.result) ->
+            String.length r.id >= 5 && String.sub r.id 0 5 = "TYPO-")
+          results
+      in
+      expect (typo_results = []) (tag ^ ": clean realistic LaTeX, no TYPO"));
+
+  (* ══════════════════════════════════════════════════════════════════════
      Cross-cutting edge cases
      ══════════════════════════════════════════════════════════════════════ *)
   run "Empty input — no TYPO fires" (fun tag ->

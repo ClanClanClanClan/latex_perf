@@ -21,17 +21,17 @@ let argsafe_path = "../data/macro_catalogue.argsafe.v25r1.json"
 let cat = lazy (Macro_catalogue.load ~v25r2_path ~argsafe_path)
 
 let () =
-  (* 1. Load v25r2 catalogue — 383 entries *)
-  run "symbol count = 383" (fun tag ->
+  (* 1. Load v25r2 catalogue — 441 entries (383 original + 58 expansion) *)
+  run "symbol count = 441" (fun tag ->
       let c = Lazy.force cat in
       let n = Macro_catalogue.symbol_count c in
-      expect (n = 383) (tag ^ Printf.sprintf ": got %d" n));
+      expect (n = 441) (tag ^ Printf.sprintf ": got %d" n));
 
-  (* 2. Load argsafe catalogue — 23 entries *)
-  run "argsafe count = 23" (fun tag ->
+  (* 2. Load argsafe catalogue — 62 entries (23 original + 39 expansion) *)
+  run "argsafe count = 62" (fun tag ->
       let c = Lazy.force cat in
       let n = Macro_catalogue.argsafe_count c in
-      expect (n = 23) (tag ^ Printf.sprintf ": got %d" n));
+      expect (n = 62) (tag ^ Printf.sprintf ": got %d" n));
 
   (* 3. Lookup alpha → Symbol with TText "α" *)
   run "lookup alpha" (fun tag ->
@@ -226,6 +226,358 @@ let () =
       in
       let ok, _ = Macro_catalogue.validate_epsilon e in
       expect (not ok) (tag ^ ": should fail"));
+
+  (* ══════════════════════════════════════════════════════════════════════ NEW
+     MACRO EXPANSION TESTS (v25r2 expansion)
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* 26. Spacing: \quad → em space *)
+  run "expand \\quad" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "a\\quad b" in
+      expect
+        (result = "a\xe2\x80\x83 b")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 27. Spacing: \qquad → two em spaces *)
+  run "expand \\qquad" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "a\\qquad b" in
+      expect
+        (result = "a\xe2\x80\x83\xe2\x80\x83 b")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 28. Spacing: \thinspace → thin space *)
+  run "expand \\thinspace" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "a\\thinspace b" in
+      expect
+        (result = "a\xe2\x80\x89 b")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 29. Font size: \small → empty (no-op for linting) *)
+  run "expand \\small" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\small text" in
+      expect (result = " text") (tag ^ ": got " ^ String.escaped result));
+
+  (* 30. Font size: \Large → empty *)
+  run "expand \\Large" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\Large text" in
+      expect (result = " text") (tag ^ ": got " ^ String.escaped result));
+
+  (* 31. Named math operator: \sin in math mode *)
+  run "expand \\sin in math" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\sin x$" in
+      expect (result = "$sin x$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 32. Named math operator: \lim in math mode *)
+  run "expand \\lim in math" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\lim_{n}$" in
+      expect (result = "$lim_{n}$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 33. Named math operator: \max in math mode *)
+  run "expand \\max in math" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\max(a,b)$" in
+      expect (result = "$max(a,b)$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 34. Named math operators don't expand in text mode *)
+  run "\\sin in text mode" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\sin outside math" in
+      expect
+        (result = "\\sin outside math")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 35. Multiple math operators in one expression *)
+  run "multiple operators" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\sin^2 + \\cos^2 = 1$" in
+      expect
+        (result = "$sin^2 + cos^2 = 1$")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 36. \noindent → empty (no-op) *)
+  run "expand \\noindent" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\noindent Hello" in
+      expect (result = " Hello") (tag ^ ": got " ^ String.escaped result));
+
+  (* 37. \newline → newline char *)
+  run "expand \\newline" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "line1\\newline line2" in
+      expect (result = "line1\n line2") (tag ^ ": got " ^ String.escaped result));
+
+  (* 38. Alignment: \centering → empty *)
+  run "expand \\centering" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\centering text" in
+      expect (result = " text") (tag ^ ": got " ^ String.escaped result));
+
+  (* ══════════════════════════════════════════════════════════════════════ NEW
+     ARGSAFE EXPANSION TESTS
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* 39. Lookup mathbb → Argsafe with positional=1 *)
+  run "lookup mathbb" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "mathbb" with
+      | Some (Argsafe e) -> expect (e.positional = 1) (tag ^ ": positional")
+      | _ -> expect false (tag ^ ": not found or wrong type"));
+
+  (* 40. Expand \mathbb{R} in math mode → passthrough content *)
+  run "expand \\mathbb{R}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\mathbb{R}$" in
+      expect (result = "$R$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 41. Expand \mathcal{O} in math mode → passthrough content *)
+  run "expand \\mathcal{O}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\mathcal{O}$" in
+      expect (result = "$O$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 42. Expand \hat{x} in math mode → passthrough content *)
+  run "expand \\hat{x}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\hat{x}$" in
+      expect (result = "$x$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 43. Expand \vec{v} in math mode → passthrough content *)
+  run "expand \\vec{v}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\vec{v}$" in
+      expect (result = "$v$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 44. Expand \overline{AB} in math mode → passthrough content *)
+  run "expand \\overline{AB}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\overline{AB}$" in
+      expect (result = "$AB$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 45. Expand \underline{text} → passthrough content *)
+  run "expand \\underline{text}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\underline{important}" in
+      expect (result = "important") (tag ^ ": got " ^ String.escaped result));
+
+  (* 46. Expand \section{Title} → passthrough title *)
+  run "expand \\section{Title}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\section{Introduction}" in
+      expect (result = "Introduction") (tag ^ ": got " ^ String.escaped result));
+
+  (* 47. Expand \footnote{text} → passthrough text *)
+  run "expand \\footnote{text}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "see\\footnote{details here}" in
+      expect
+        (result = "seedetails here")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 48. Expand \caption{text} → passthrough text *)
+  run "expand \\caption{text}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\caption{Figure 1}" in
+      expect (result = "Figure 1") (tag ^ ": got " ^ String.escaped result));
+
+  (* 49. Expand \label{key} → passthrough key *)
+  run "expand \\label{key}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\label{eq:main}" in
+      expect (result = "eq:main") (tag ^ ": got " ^ String.escaped result));
+
+  (* 50. Expand \ref{key} → passthrough key *)
+  run "expand \\ref{key}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\ref{eq:main}" in
+      expect (result = "eq:main") (tag ^ ": got " ^ String.escaped result));
+
+  (* 51. Expand \cite{key} → passthrough key *)
+  run "expand \\cite{key}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\cite{smith2024}" in
+      expect (result = "smith2024") (tag ^ ": got " ^ String.escaped result));
+
+  (* 52. Expand \url{uri} → passthrough uri *)
+  run "expand \\url{uri}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\url{https://example.com}" in
+      expect
+        (result = "https://example.com")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* 53. Expand \boldsymbol{x} in math mode → passthrough *)
+  run "expand \\boldsymbol{x}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\boldsymbol{x}$" in
+      expect (result = "$x$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 54. Math accents don't expand in text mode *)
+  run "\\hat in text mode" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\hat{x}" in
+      expect (result = "\\hat{x}") (tag ^ ": got " ^ String.escaped result));
+
+  (* 55. Sectioning commands don't expand in math mode *)
+  run "\\section in math mode" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\section{x}$" in
+      expect (result = "$\\section{x}$") (tag ^ ": got " ^ String.escaped result));
+
+  (* 56. Epsilon validation: new builtins pass *)
+  run "epsilon validation math_accent" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "hat";
+          mode = Math;
+          category = "math-accent";
+          positional = 1;
+          kinds = [ "math" ];
+          template = Builtin "math_accent";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+
+  (* 57. Epsilon validation: passthrough passes *)
+  run "epsilon validation passthrough" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "section";
+          mode = Text;
+          category = "sectioning";
+          positional = 1;
+          kinds = [ "text" ];
+          template = Builtin "passthrough";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+
+  (* 58. Epsilon validation: underline passes *)
+  run "epsilon validation underline" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "underline";
+          mode = Both;
+          category = "style";
+          positional = 1;
+          kinds = [ "text" ];
+          template = Builtin "underline";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+
+  (* 59. Epsilon validation: mathbb builtin passes *)
+  run "epsilon validation mathbb builtin" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "mathbb";
+          mode = Math;
+          category = "mathstyle";
+          positional = 1;
+          kinds = [ "math" ];
+          template = Builtin "math_accent";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+
+  (* 60. Combined expansion: text with multiple macro types *)
+  run "combined expansion" (fun tag ->
+      let c = Lazy.force cat in
+      let result =
+        Macro_catalogue.expand c
+          "\\section{\\textbf{Results}} Show $\\alpha \\leq \\beta$."
+      in
+      (* section → passthrough, textbf → bfseries, alpha/leq/beta expand in
+         math *)
+      expect (String.length result > 0) (tag ^ ": non-empty"));
+
+  (* 61. Lookup new spacing macro *)
+  run "lookup quad" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "quad" with
+      | Some (Symbol _) -> ()
+      | _ -> expect false (tag ^ ": not found as symbol"));
+
+  (* 62. Lookup new math operator *)
+  run "lookup sin" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "sin" with
+      | Some (Symbol _) -> ()
+      | _ -> expect false (tag ^ ": not found as symbol"));
+
+  (* 63. Lookup new sectioning command *)
+  run "lookup section" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "section" with
+      | Some (Argsafe e) -> expect (e.positional = 1) (tag ^ ": positional")
+      | _ -> expect false (tag ^ ": not found or wrong type"));
+
+  (* 64. Lookup new reference command *)
+  run "lookup cite" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "cite" with
+      | Some (Argsafe e) -> expect (e.positional = 1) (tag ^ ": positional")
+      | _ -> expect false (tag ^ ": not found or wrong type"));
+
+  (* 65. Lookup new math accent *)
+  run "lookup hat" (fun tag ->
+      let c = Lazy.force cat in
+      match Macro_catalogue.lookup c "hat" with
+      | Some (Argsafe _) -> ()
+      | _ -> expect false (tag ^ ": not found as argsafe"));
+
+  (* 66. All new builtins in catalogue pass epsilon validation *)
+  run "all catalogue entries pass epsilon" (fun tag ->
+      let c = Lazy.force cat in
+      (* Look up each new argsafe entry and validate epsilon *)
+      let new_names =
+        [
+          "underline";
+          "mathbb";
+          "mathcal";
+          "mathfrak";
+          "mathscr";
+          "hat";
+          "bar";
+          "tilde";
+          "vec";
+          "dot";
+          "ddot";
+          "overline";
+          "section";
+          "subsection";
+          "footnote";
+          "caption";
+          "label";
+          "ref";
+          "cite";
+          "url";
+          "boldsymbol";
+        ]
+      in
+      List.iter
+        (fun name ->
+          match Macro_catalogue.lookup c name with
+          | Some (Argsafe e) ->
+              let ok, reason = Macro_catalogue.validate_epsilon e in
+              expect ok
+                (tag
+                ^ ": "
+                ^ name
+                ^ " failed: "
+                ^ Option.value ~default:"unknown" reason)
+          | _ -> expect false (tag ^ ": " ^ name ^ " not found as argsafe"))
+        new_names);
 
   if !fails > 0 then (
     Printf.eprintf "[macro-cat] %d failure(s)\n%!" !fails;

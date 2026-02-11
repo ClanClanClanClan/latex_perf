@@ -184,6 +184,11 @@ let allowed_inline_css =
     "\\mathtt";
     "\\mathit";
     "\\mathnormal";
+    (* Math alphabets added in v25r2 expansion *)
+    "\\mathbb";
+    "\\mathcal";
+    "\\mathfrak";
+    "\\mathscr";
   ]
 
 let eps_inline_safe (s : string) : bool =
@@ -223,7 +228,11 @@ let validate_epsilon (m : argsafe_entry) : bool * string option =
   | Builtin "mbox"
   | Builtin "textsuperscript"
   | Builtin "textsubscript"
-  | Builtin "ensuremath" ->
+  | Builtin "ensuremath"
+  (* New builtins added in v25r2 expansion *)
+  | Builtin "underline"
+  | Builtin "math_accent"
+  | Builtin "passthrough" ->
       (true, None)
   | Builtin other -> (false, Some ("unknown builtin " ^ other))
   | Inline body ->
@@ -311,6 +320,7 @@ let apply_builtin builtin_name arg =
   match builtin_name with
   | "mbox" | "textsuperscript" | "textsubscript" | "ensuremath" -> arg
   | "verb" | "verb_star" -> arg
+  | "underline" | "math_accent" | "passthrough" -> arg
   | _ -> arg (* unknown builtins: passthrough *)
 
 (** Single-pass expansion: scans the string, expanding known macros once.

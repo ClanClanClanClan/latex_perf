@@ -2,10 +2,10 @@
   "schema_version": "v25r2",
   "created_at": "2025-08-11T21:22:26.461820Z",
   "counts": {
-    "total": 383,
-    "math": 240,
-    "text": 119,
-    "any": 24
+    "total": 441,
+    "math": 272,
+    "text": 122,
+    "any": 47
   },
   "macros": [
     {
@@ -249,6 +249,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "Huge",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "Im",
       "mode": "math",
       "category": "text-symbol",
@@ -297,6 +321,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "LARGE",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "Lambda",
       "mode": "math",
       "category": "greek-letter",
@@ -318,6 +366,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "Large",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -558,6 +630,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "Pr",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "Pr"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "Pr"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: Pr",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -1086,6 +1182,102 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "arccos",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "arccos"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "arccos"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: arccos",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "arcsin",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "arcsin"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "arcsin"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: arcsin",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "arctan",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "arctan"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "arctan"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: arctan",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "arg",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "arg"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "arg"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: arg",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -1785,6 +1977,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "centering",
+      "mode": "text",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": false,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "centering declaration",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "chi",
       "mode": "math",
       "category": "greek-letter",
@@ -1905,6 +2121,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "clearpage",
+      "mode": "any",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "clear floats + page break (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "clubsuit",
       "mode": "text",
       "category": "text-symbol",
@@ -1998,6 +2238,126 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "cos",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "cos"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "cos"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: cos",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "cosh",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "cosh"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "cosh"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: cosh",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "cot",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "cot"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "cot"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: cot",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "coth",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "coth"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "coth"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: coth",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "csc",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "csc"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "csc"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: csc",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -2193,6 +2553,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "deg",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "deg"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "deg"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: deg",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "degree",
       "mode": "text",
       "category": "text-symbol",
@@ -2241,6 +2625,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "det",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "det"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "det"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: det",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "dh",
       "mode": "text",
       "category": "text-symbol",
@@ -2286,6 +2694,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "dim",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "dim"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "dim"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: dim",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -2454,6 +2886,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "enspace",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "en space (0.5em)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -2649,6 +3105,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "exp",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "exp"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "exp"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: exp",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "fallingdotseq",
       "mode": "math",
       "category": "math-operator",
@@ -2697,6 +3177,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "footnotesize",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "frown",
       "mode": "math",
       "category": "math-operator",
@@ -2742,6 +3246,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "gcd",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "gcd"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "gcd"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: gcd",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -3009,6 +3537,54 @@
       "_legacy_single_token": true
     },
     {
+      "name": "hfill",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "horizontal fill (treated as space for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "hom",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "hom"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "hom"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: hom",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "hookleftarrow",
       "mode": "math",
       "category": "math-operator",
@@ -3054,6 +3630,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "huge",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -3150,6 +3750,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "indent",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "force paragraph indent (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "inf",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "inf"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "inf"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: inf",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -3273,6 +3921,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "ker",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "ker"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "ker"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: ker",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "l",
       "mode": "text",
       "category": "text-symbol",
@@ -3366,6 +4038,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "large",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -3873,6 +4569,102 @@
       "_legacy_single_token": true
     },
     {
+      "name": "lg",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "lg"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "lg"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: lg",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "lim",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "lim"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "lim"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: lim",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "liminf",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "lim inf"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "lim inf"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: lim inf",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "limsup",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "lim sup"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "lim sup"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: lim sup",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "ll",
       "mode": "math",
       "category": "math-operator",
@@ -4014,6 +4806,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "ln",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "ln"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "ln"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: ln",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "log",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "log"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "log"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: log",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -4329,6 +5169,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "max",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "max"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "max"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: max",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "measuredangle",
       "mode": "text",
       "category": "text-symbol",
@@ -4350,6 +5214,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "medspace",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "medium space (4/18em)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -4398,6 +5286,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "min",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "min"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "min"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: min",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -4713,6 +5625,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "negthinspace",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "negative thin space (ignored for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "neq",
       "mode": "math",
       "category": "math-operator",
@@ -4758,6 +5694,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "newline",
+      "mode": "any",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": "\n"
+        }
+      ],
+      "body": [
+        {
+          "TText": "\n"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "line break",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "newpage",
+      "mode": "any",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "page break (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -4950,6 +5934,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "noindent",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "suppress paragraph indent (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "normalsize",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -5961,6 +6993,54 @@
       "_legacy_single_token": true
     },
     {
+      "name": "qquad",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": "  "
+        }
+      ],
+      "body": [
+        {
+          "TText": "  "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "2em space",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "quad",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "1em space",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "rVert",
       "mode": "any",
       "category": "delimiter",
@@ -5982,6 +7062,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "raggedleft",
+      "mode": "text",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": false,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "right-align declaration",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "raggedright",
+      "mode": "text",
+      "category": "formatting",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": false,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "left-align declaration",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -6417,6 +7545,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "scriptsize",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "searrow",
       "mode": "math",
       "category": "math-operator",
@@ -6438,6 +7590,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "sec",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "sec"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "sec"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: sec",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -6558,6 +7734,78 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "sin",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "sin"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "sin"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: sin",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "sinh",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "sinh"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "sinh"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: sinh",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "small",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -6873,6 +8121,30 @@
       "_legacy_single_token": true
     },
     {
+      "name": "sup",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "sup"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "sup"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: sup",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "supset",
       "mode": "math",
       "category": "math-operator",
@@ -6966,6 +8238,54 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "tan",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "tan"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "tan"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: tan",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "tanh",
+      "mode": "math",
+      "category": "math-operator",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TOp": "tanh"
+        }
+      ],
+      "body": [
+        {
+          "TOp": "tanh"
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": false,
+      "non_expandable": true,
+      "notes": "Named math operator: tanh",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {
@@ -8433,6 +9753,54 @@
       "_legacy_single_token": true
     },
     {
+      "name": "thickspace",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "thick space (5/18em)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "thinspace",
+      "mode": "any",
+      "category": "spacing",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": " "
+        }
+      ],
+      "body": [
+        {
+          "TText": " "
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "thin space (3/18em)",
+      "source": "v25r2-expansion",
+      "_legacy_single_token": true
+    },
+    {
       "name": "times",
       "mode": "math",
       "category": "math-operator",
@@ -8454,6 +9822,30 @@
       "non_expandable": true,
       "notes": "",
       "source": "derived-from:v1-catalogue",
+      "_legacy_single_token": true
+    },
+    {
+      "name": "tiny",
+      "mode": "any",
+      "category": "font-size",
+      "arity": 0,
+      "safety": "pure",
+      "side_effects": [],
+      "expansion": [
+        {
+          "TText": ""
+        }
+      ],
+      "body": [
+        {
+          "TText": ""
+        }
+      ],
+      "expand_in_math": true,
+      "expand_in_text": true,
+      "non_expandable": true,
+      "notes": "Font size switch (no-op for linting)",
+      "source": "v25r2-expansion",
       "_legacy_single_token": true
     },
     {

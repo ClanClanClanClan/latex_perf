@@ -7988,6 +7988,714 @@ let l1_math_022_rule : rule =
   in
   { id = "MATH-022"; run }
 
+(* MATH-030: Overuse of \displaystyle in inline math — using \displaystyle in
+   $...$ or \(...\) hurts line spacing *)
+let l1_math_030_rule : rule =
+  let run s =
+    let inline_segs = extract_inline_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\displaystyle")
+      inline_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-030";
+          severity = Info;
+          message =
+            "\\displaystyle in inline math — consider display math environment";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-030"; run }
+
+(* MATH-031: Operator spacing error — missing \; before \text in math *)
+let l1_math_031_rule : rule =
+  let re = Str.regexp {|[A-Za-z0-9}]\\text{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Count \text{ preceded by letter/digit/} without \; \, \quad etc. *)
+        cnt := !cnt + count_re_matches re seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-031";
+          severity = Info;
+          message = "Missing spacing (\\; or \\,) before \\text in math mode";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-031"; run }
+
+(* MATH-033: Use of \pm where +/- symbol required in text — \pm outside math *)
+let l1_math_033_rule : rule =
+  let run s =
+    let text_parts = strip_math_segments s in
+    let cnt = count_substring text_parts "\\pm" in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-033";
+          severity = Info;
+          message =
+            "\\pm used outside math mode — use ± symbol or wrap in $...$";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "MATH-033"; run }
+
+(* MATH-034: Spacing before differential in integral missing \, — detects \int
+   ... dx without \, before d *)
+let l1_math_034_rule : rule =
+  let diff_vars = "xytszrm" in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        if count_substring seg "\\int" > 0 then
+          let n = String.length seg in
+          let i = ref 0 in
+          while !i < n - 1 do
+            if seg.[!i] = 'd' && String.contains diff_vars seg.[!i + 1] then (
+              (* Check the char after the differential var is not a letter *)
+              let after_ok =
+                !i + 2 >= n
+                ||
+                let c = seg.[!i + 2] in
+                not ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+              in
+              (if after_ok then
+                 (* Check preceding context: should have \, before d *)
+                 let has_thin_space =
+                   !i >= 2 && seg.[!i - 2] = '\\' && seg.[!i - 1] = ','
+                 in
+                 let has_mathrm =
+                   !i >= 8 && String.sub seg (!i - 8) 8 = "\\mathrm{"
+                 in
+                 if (not has_thin_space) && not has_mathrm then
+                   (* Check there's a preceding letter/digit/paren before d *)
+                   let prev_ok =
+                     !i > 0
+                     &&
+                     let c = seg.[!i - 1] in
+                     (c >= 'A' && c <= 'Z')
+                     || (c >= 'a' && c <= 'z')
+                     || (c >= '0' && c <= '9')
+                     || c = ')'
+                     || c = '}'
+                     || c = ' '
+                   in
+                   if prev_ok then incr cnt);
+              i := !i + 2)
+            else incr i
+          done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-034";
+          severity = Info;
+          message =
+            "Missing \\, before differential in integral — use \\,dx not dx";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-034"; run }
+
+(* MATH-035: Multiple subscripts stacked vertically without braces — a_{i}_{j}
+   pattern instead of a_{i,j} *)
+let l1_math_035_rule : rule =
+  let re = Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)_|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-035";
+          severity = Warning;
+          message =
+            "Multiple subscripts stacked without braces — use _{i,j} form";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-035"; run }
+
+(* MATH-036: Superfluous \mathrm{} around single letter — \mathrm{x} is overkill
+   for one letter *)
+let l1_math_036_rule : rule =
+  let re = Str.regexp {|\\mathrm{[A-Za-z]}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-036";
+          severity = Info;
+          message = "\\mathrm{} around single letter — may be superfluous";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-036"; run }
+
+(* MATH-037: \sfrac (xfrac package) used outside text mode — \sfrac is for
+   inline text fractions *)
+let l1_math_037_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\sfrac{")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-037";
+          severity = Info;
+          message =
+            "\\sfrac used in math mode — intended for text mode fractions";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-037"; run }
+
+(* MATH-038: Nested \frac three levels deep — readability issue *)
+let l1_math_038_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Scan for \frac and track nesting depth via brace counting *)
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          if
+            !i + 5 < n
+            && seg.[!i] = '\\'
+            && seg.[!i + 1] = 'f'
+            && seg.[!i + 2] = 'r'
+            && seg.[!i + 3] = 'a'
+            && seg.[!i + 4] = 'c'
+            && seg.[!i + 5] = '{'
+          then (
+            (* Found \frac{, now count how many nested \frac{ appear in its
+               arguments *)
+            let depth = ref 1 in
+            let brace_level = ref 1 in
+            let j = ref (!i + 6) in
+            let max_depth = ref 1 in
+            (* scan through both arguments of \frac *)
+            let args_seen = ref 0 in
+            while !j < n && !args_seen < 2 do
+              if seg.[!j] = '{' then (
+                incr brace_level;
+                (* Check if this is another \frac{ *)
+                if
+                  !j >= 5
+                  && seg.[!j - 5] = '\\'
+                  && seg.[!j - 4] = 'f'
+                  && seg.[!j - 3] = 'r'
+                  && seg.[!j - 2] = 'a'
+                  && seg.[!j - 1] = 'c'
+                then (
+                  incr depth;
+                  if !depth > !max_depth then max_depth := !depth);
+                incr j)
+              else if seg.[!j] = '}' then (
+                decr brace_level;
+                if !brace_level = 0 then (
+                  incr args_seen;
+                  if !args_seen < 2 && !j + 1 < n && seg.[!j + 1] = '{' then (
+                    brace_level := 1;
+                    j := !j + 2)
+                  else incr j)
+                else incr j)
+              else incr j
+            done;
+            if !max_depth >= 3 then incr cnt;
+            i := !i + 6)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-038";
+          severity = Warning;
+          message =
+            "\\frac nested three or more levels deep — consider simplifying";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-038"; run }
+
+(* MATH-039: Stacked relational operators without \substack — detects patterns
+   like \underset{x}{\overset{y}{=}} which should use \substack *)
+let l1_math_039_rule : rule =
+  let re = Str.regexp {|\\underset{[^}]*}{\\overset{|} in
+  let re2 = Str.regexp {|\\overset{[^}]*}{\\underset{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        cnt := !cnt + count_re_matches re seg + count_re_matches re2 seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-039";
+          severity = Warning;
+          message =
+            "Stacked relational operators — consider \\substack or \\atop";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-039"; run }
+
+(* MATH-040: Ellipsis \ldots used between operators on the center axis — should
+   be \cdots for +, -, = etc. *)
+let l1_math_040_rule : rule =
+  let re = Str.regexp {|[+=<>-][ ]*\\ldots[ ]*[+=<>-]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-040";
+          severity = Info;
+          message =
+            "\\ldots between center-axis operators — use \\cdots instead";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-040"; run }
+
+(* MATH-041: Integral limits written inline in display — use \limits or
+   \displaystyle \int for display integrals *)
+let l1_math_041_rule : rule =
+  let re = Str.regexp {|\\int_|} in
+  let run s =
+    let inline_segs = extract_inline_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* \int_ in inline math — limits are typeset inline, suggest display *)
+        cnt := !cnt + count_re_matches re seg)
+      inline_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-041";
+          severity = Info;
+          message =
+            "Integral with limits in inline math — consider display math or \
+             \\limits";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-041"; run }
+
+(* MATH-042: Missing \, between number and unit in math — e.g. 5kg should be
+   5\,\mathrm{kg} *)
+let l1_math_042_rule : rule =
+  let re = Str.regexp {|[0-9]\\mathrm{\|[0-9]\\text{\|[0-9]\\textrm{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-042";
+          severity = Info;
+          message = "Missing \\, between number and unit — use 5\\,\\mathrm{kg}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-042"; run }
+
+(* MATH-043: Use of \text instead of \operatorname for function names in math —
+   \text{Var} should be \operatorname{Var} *)
+let l1_math_043_rule : rule =
+  let re = Str.regexp {|\\text{[A-Z][a-z]+}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* \text{Xxx} in math is likely a function name that should use
+           \operatorname *)
+        cnt := !cnt + count_re_matches re seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-043";
+          severity = Warning;
+          message =
+            "\\text{...} in math for function name — use \\operatorname{...}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-043"; run }
+
+(* MATH-044: Binary relation typed as text char — e.g. < for \le, = for \equiv,
+   etc., when text < > appear in math outside of delimiters *)
+let l1_math_044_rule : rule =
+  let re = Str.regexp {|[^\\]<=\|[^\\]>=|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-044";
+          severity = Warning;
+          message =
+            "Compound relation <=/>= in math — use \\le, \\ge, \\leq, \\geq";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-044"; run }
+
+(* MATH-045: Math italic capital Greek without \mathrm — e.g. bare \Gamma when
+   the document uses upright Greek capitals *)
+let l1_math_045_rule : rule =
+  let greek_capitals =
+    [
+      "\\Gamma";
+      "\\Delta";
+      "\\Theta";
+      "\\Lambda";
+      "\\Xi";
+      "\\Pi";
+      "\\Sigma";
+      "\\Upsilon";
+      "\\Phi";
+      "\\Psi";
+      "\\Omega";
+    ]
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let has_upright = ref false in
+    let bare_cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun gc ->
+            let upright_form = "\\mathrm{" ^ gc ^ "}" in
+            if count_substring seg upright_form > 0 then has_upright := true;
+            let total = count_substring seg gc in
+            let wrapped = count_substring seg upright_form in
+            let bare = total - wrapped in
+            if bare > 0 then bare_cnt := !bare_cnt + bare)
+          greek_capitals)
+      math_segs;
+    (* Only flag if document mixes upright and italic for the same class *)
+    if !has_upright && !bare_cnt > 0 then
+      Some
+        {
+          id = "MATH-045";
+          severity = Info;
+          message =
+            "Mixed italic/upright capital Greek — consider consistent \
+             \\mathrm{} wrapping";
+          count = !bare_cnt;
+        }
+    else None
+  in
+  { id = "MATH-045"; run }
+
+(* MATH-046: Ellipsis \ldots on relation axis — prefer \cdots between commas, +
+   etc. *)
+let l1_math_046_rule : rule =
+  let re = Str.regexp {|,[ ]*\\ldots[ ]*,|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-046";
+          severity = Info;
+          message =
+            "\\ldots between commas — use \\cdots for center-axis ellipsis";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-046"; run }
+
+(* MATH-047: Double superscript without braces — a^b^c is a TeX error *)
+let l1_math_047_rule : rule =
+  let re = Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)\^|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-047";
+          severity = Error;
+          message = "Double superscript a^b^c — braces required: a^{b^c}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-047"; run }
+
+(* MATH-048: Boldface digits via \mathbf in math — \mathbf{1} etc. is typically
+   unnecessary *)
+let l1_math_048_rule : rule =
+  let re = Str.regexp {|\\mathbf{[0-9]+}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-048";
+          severity = Info;
+          message = "\\mathbf applied to digits — digits are already upright";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-048"; run }
+
+(* MATH-049: Missing spacing around \times — detects a\times b without
+   surrounding spaces *)
+let l1_math_049_rule : rule =
+  let re_no_space_before = Str.regexp {|[A-Za-z0-9}]\\times|} in
+  let re_no_space_after = Str.regexp {|\\times[A-Za-z0-9{]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let total_times = count_substring seg "\\times" in
+        if total_times > 0 then
+          let before = count_re_matches re_no_space_before seg in
+          let after = count_re_matches re_no_space_after seg in
+          let bad = min total_times (max before after) in
+          if bad > 0 then cnt := !cnt + bad)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-049";
+          severity = Info;
+          message = "Missing spacing around \\times — add space for readability";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-049"; run }
+
+(* MATH-050: Circumflex accent \hat on multi-letter argument — \hat{abc} should
+   typically be \widehat{abc} *)
+let l1_math_050_rule : rule =
+  let re = Str.regexp {|\\hat{[A-Za-z][A-Za-z]+}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-050";
+          severity = Warning;
+          message =
+            "\\hat on multi-letter argument — use \\widehat for wide accents";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-050"; run }
+
+(* MATH-051: Radical \sqrt nested two levels — \sqrt{\sqrt{}} is hard to read *)
+let l1_math_051_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Find \sqrt{ and look for nested \sqrt{ inside its argument *)
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          if
+            !i + 5 < n
+            && seg.[!i] = '\\'
+            && seg.[!i + 1] = 's'
+            && seg.[!i + 2] = 'q'
+            && seg.[!i + 3] = 'r'
+            && seg.[!i + 4] = 't'
+            && (seg.[!i + 5] = '{' || seg.[!i + 5] = '[')
+          then (
+            (* Found \sqrt{ or \sqrt[, scan the argument for nested \sqrt *)
+            let start =
+              if seg.[!i + 5] = '[' then (
+                (* Skip optional argument \sqrt[n]{...} *)
+                let j = ref (!i + 6) in
+                while !j < n && seg.[!j] <> ']' do
+                  incr j
+                done;
+                if !j < n && !j + 1 < n && seg.[!j + 1] = '{' then !j + 2
+                else !i + 6)
+              else !i + 6
+            in
+            let brace_level = ref 1 in
+            let j = ref start in
+            let found_nested = ref false in
+            while !j < n && !brace_level > 0 do
+              if seg.[!j] = '{' then (
+                (* Check if this is \sqrt{ *)
+                if
+                  !j >= 5
+                  && seg.[!j - 5] = '\\'
+                  && seg.[!j - 4] = 's'
+                  && seg.[!j - 3] = 'q'
+                  && seg.[!j - 2] = 'r'
+                  && seg.[!j - 1] = 't'
+                then found_nested := true;
+                incr brace_level;
+                incr j)
+              else if seg.[!j] = '}' then (
+                decr brace_level;
+                incr j)
+              else incr j
+            done;
+            if !found_nested then incr cnt;
+            i := !i + 6)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-051";
+          severity = Warning;
+          message =
+            "Nested \\sqrt — consider rewriting with fractional exponents";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-051"; run }
+
+(* MATH-052: \over primitive used — prefer \frac{a}{b} over {a \over b} *)
+let l1_math_052_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Count \over that is NOT \overbrace, \overline, \overset,
+           \overrightarrow, \overleftarrow, \overleftrightarrow *)
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          if
+            !i + 5 <= n
+            && seg.[!i] = '\\'
+            && seg.[!i + 1] = 'o'
+            && seg.[!i + 2] = 'v'
+            && seg.[!i + 3] = 'e'
+            && seg.[!i + 4] = 'r'
+          then (
+            (* Check it's bare \over (followed by space, brace, or end) and not
+               \overbrace etc *)
+            let after = if !i + 5 < n then seg.[!i + 5] else ' ' in
+            if
+              after = ' '
+              || after = '{'
+              || after = '\\'
+              || after = '\n'
+              || after = '\t'
+              || !i + 5 = n
+            then incr cnt;
+            i := !i + 5)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-052";
+          severity = Warning;
+          message = "\\over primitive used — prefer \\frac{a}{b}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-052"; run }
+
+(* MATH-053: Space after \left( — spurious space *)
+let l1_math_053_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          let prefix = "\\left(" in
+          let plen = String.length prefix in
+          if
+            !i + plen < n
+            && String.sub seg !i plen = prefix
+            && seg.[!i + plen] = ' '
+          then (
+            incr cnt;
+            i := !i + plen)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-053";
+          severity = Info;
+          message = "Space after \\left( — remove spurious whitespace";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-053"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -8058,6 +8766,29 @@ let rules_l1 : rule list =
     l1_math_020_rule;
     l1_math_021_rule;
     l1_math_022_rule;
+    l1_math_030_rule;
+    l1_math_031_rule;
+    l1_math_033_rule;
+    l1_math_034_rule;
+    l1_math_035_rule;
+    l1_math_036_rule;
+    l1_math_037_rule;
+    l1_math_038_rule;
+    l1_math_039_rule;
+    l1_math_040_rule;
+    l1_math_041_rule;
+    l1_math_042_rule;
+    l1_math_043_rule;
+    l1_math_044_rule;
+    l1_math_045_rule;
+    l1_math_046_rule;
+    l1_math_047_rule;
+    l1_math_048_rule;
+    l1_math_049_rule;
+    l1_math_050_rule;
+    l1_math_051_rule;
+    l1_math_052_rule;
+    l1_math_053_rule;
   ]
 
 let get_rules () : rule list =

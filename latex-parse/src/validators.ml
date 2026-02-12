@@ -7437,6 +7437,557 @@ let l1_script_022_rule : rule =
   in
   { id = "SCRIPT-022"; run }
 
+(* ═══════════════════════════════════════════════════════════════════════════
+   MATH family (L1) — Core math-token validators MATH-009 through MATH-022
+   ═══════════════════════════════════════════════════════════════════════════ *)
+
+(* MATH-009: Bare 'sin/log/exp' in math — use \sin, \log, \exp etc. *)
+let l1_math_009_rule : rule =
+  let operators =
+    [
+      "sin";
+      "cos";
+      "tan";
+      "cot";
+      "sec";
+      "csc";
+      "log";
+      "exp";
+      "ln";
+      "lim";
+      "inf";
+      "sup";
+      "min";
+      "max";
+      "det";
+      "dim";
+      "ker";
+      "hom";
+      "arg";
+      "deg";
+      "gcd";
+      "Pr";
+    ]
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun op ->
+            let oplen = String.length op in
+            let n = String.length seg in
+            let i = ref 0 in
+            while !i + oplen <= n do
+              if String.sub seg !i oplen = op then (
+                (* Check it's NOT preceded by \ (i.e. not \sin already) *)
+                let preceded_by_backslash = !i > 0 && seg.[!i - 1] = '\\' in
+                (* Check word boundary before: not alphanumeric *)
+                let boundary_before =
+                  !i = 0
+                  ||
+                  let c = seg.[!i - 1] in
+                  not
+                    ((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9'))
+                in
+                (* Check word boundary after: not alphanumeric *)
+                let boundary_after =
+                  !i + oplen >= n
+                  ||
+                  let c = seg.[!i + oplen] in
+                  not
+                    ((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9'))
+                in
+                if
+                  (not preceded_by_backslash)
+                  && boundary_before
+                  && boundary_after
+                then incr cnt;
+                i := !i + oplen)
+              else incr i
+            done)
+          operators)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-009";
+          severity = Warning;
+          message =
+            "Bare function name in math mode — use \\sin, \\log, \\exp etc.";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-009"; run }
+
+(* MATH-010: Division symbol ÷ (U+00F7) used — prefer \frac or solidus *)
+let l1_math_010_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    (* U+00F7 = \xc3\xb7 in UTF-8 *)
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\xc3\xb7")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-010";
+          severity = Warning;
+          message =
+            "Division symbol ÷ used in math — prefer \\frac or solidus /";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-010"; run }
+
+(* MATH-011: Vector notation inconsistent within equation — detects when both
+   \vec{} and \mathbf{} are used for vectors in the same document *)
+let l1_math_011_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let vec_count = ref 0 in
+    let mathbf_count = ref 0 in
+    List.iter
+      (fun seg ->
+        vec_count := !vec_count + count_substring seg "\\vec{";
+        mathbf_count := !mathbf_count + count_substring seg "\\mathbf{")
+      math_segs;
+    if !vec_count > 0 && !mathbf_count > 0 then
+      Some
+        {
+          id = "MATH-011";
+          severity = Info;
+          message =
+            "Inconsistent vector notation — both \\vec{} and \\mathbf{} used";
+          count = min !vec_count !mathbf_count;
+        }
+    else None
+  in
+  { id = "MATH-011"; run }
+
+(* MATH-012: Multi-letter function not in roman (\operatorname{}) — detects
+   sequences of 2+ lowercase letters in math that look like function names but
+   aren't standard operators *)
+let l1_math_012_rule : rule =
+  let re = Str.regexp {|\([a-z][a-z]+\)|} in
+  let known_operators =
+    [
+      "sin";
+      "cos";
+      "tan";
+      "cot";
+      "sec";
+      "csc";
+      "log";
+      "exp";
+      "ln";
+      "lim";
+      "inf";
+      "sup";
+      "min";
+      "max";
+      "det";
+      "dim";
+      "ker";
+      "hom";
+      "arg";
+      "deg";
+      "gcd";
+      "mod";
+      "arcsin";
+      "arccos";
+      "arctan";
+      "sinh";
+      "cosh";
+      "tanh";
+      "coth";
+      "sech";
+      "csch";
+    ]
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let i = ref 0 in
+        try
+          while true do
+            let pos = Str.search_forward re seg !i in
+            let matched = Str.matched_group 1 seg in
+            let next_i = Str.match_end () in
+            (* Skip if preceded by backslash or inside \text{}/\mathrm{} *)
+            let preceded_by_backslash = pos > 0 && seg.[pos - 1] = '\\' in
+            let is_known = List.mem matched known_operators in
+            (* Skip 2-char that could just be variables like dx, dy *)
+            let is_short_var = String.length matched <= 2 in
+            (if
+               (not preceded_by_backslash) && (not is_known) && not is_short_var
+             then
+               (* Check prefix for \text{, \mathrm{, \operatorname{ *)
+               let prefix_start = max 0 (pos - 16) in
+               let prefix = String.sub seg prefix_start (pos - prefix_start) in
+               let has_wrapper =
+                 count_substring prefix "\\text{"
+                 + count_substring prefix "\\mathrm{"
+                 + count_substring prefix "\\operatorname{"
+                 > 0
+               in
+               if not has_wrapper then incr cnt);
+            i := next_i
+          done
+        with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-012";
+          severity = Warning;
+          message =
+            "Multi-letter function name not in \\operatorname{} or \\mathrm{}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-012"; run }
+
+(* MATH-013: Differential d not typeset roman — detects bare 'd' before a
+   variable in integrands, e.g. \int f(x) dx where d should be \mathrm{d} *)
+let l1_math_013_rule : rule =
+  let re = Str.regexp {| d\([A-Za-z]\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Only trigger if segment contains integral-like context *)
+        if
+          count_substring seg "\\int" > 0
+          || count_substring seg "\\iint" > 0
+          || count_substring seg "\\iiint" > 0
+          || count_substring seg "\\oint" > 0
+        then
+          let i = ref 0 in
+          try
+            while true do
+              let pos = Str.search_forward re seg !i in
+              let next_i = Str.match_end () in
+              (* Make sure it's not already \mathrm{d} *)
+              let prefix_start = max 0 (pos - 9) in
+              let prefix =
+                String.sub seg prefix_start (pos - prefix_start + 1)
+              in
+              if
+                count_substring prefix "\\mathrm{" = 0
+                && count_substring prefix "\\,d" = 0
+              then incr cnt;
+              i := next_i
+            done
+          with Not_found -> ())
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-013";
+          severity = Info;
+          message = "Differential d not typeset in roman — consider \\mathrm{d}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-013"; run }
+
+(* MATH-014: Inline \frac in running text — \frac inside $...$ or \(...\) can be
+   hard to read *)
+let l1_math_014_rule : rule =
+  let run s =
+    let inline_segs = extract_inline_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Count \frac occurrences, exclude \tfrac and \dfrac *)
+        let total_frac = count_substring seg "\\frac{" in
+        let tfrac = count_substring seg "\\tfrac{" in
+        let dfrac = count_substring seg "\\dfrac{" in
+        let bare_frac = total_frac - tfrac - dfrac in
+        if bare_frac > 0 then cnt := !cnt + bare_frac)
+      inline_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-014";
+          severity = Info;
+          message =
+            "\\frac used in inline math — consider \\tfrac or display math";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-014"; run }
+
+(* MATH-015: \stackrel used — prefer \overset *)
+let l1_math_015_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\stackrel{")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-015";
+          severity = Warning;
+          message = "\\stackrel used — prefer \\overset";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-015"; run }
+
+(* MATH-016: Nested subscripts without braces — e.g. x_i_j instead of x_{i_j} or
+   x_{i,j} *)
+let l1_math_016_rule : rule =
+  let re = Str.regexp {|_\([A-Za-z0-9]\)_|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-016";
+          severity = Warning;
+          message = "Nested subscripts without braces — use _{i_j} or _{i,j}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-016"; run }
+
+(* MATH-017: Mismatched \left\{ ... \right] pair — left and right delimiters
+   don't match type *)
+let l1_math_017_rule : rule =
+  let left_delims =
+    [
+      ("\\left\\{", "brace");
+      ("\\left\\[", "bracket");
+      ("\\left[", "bracket");
+      ("\\left(", "paren");
+      ("\\left\\langle", "angle");
+      ("\\left\\|", "double_bar");
+      ("\\left\\lfloor", "floor");
+      ("\\left\\lceil", "ceil");
+      ("\\left.", "invisible");
+    ]
+  in
+  let right_delims =
+    [
+      ("\\right\\}", "brace");
+      ("\\right\\]", "bracket");
+      ("\\right]", "bracket");
+      ("\\right)", "paren");
+      ("\\right\\rangle", "angle");
+      ("\\right\\|", "double_bar");
+      ("\\right\\rfloor", "floor");
+      ("\\right\\rceil", "ceil");
+      ("\\right.", "invisible");
+    ]
+  in
+  let starts_with s idx prefix =
+    let plen = String.length prefix in
+    idx + plen <= String.length s && String.sub s idx plen = prefix
+  in
+  let find_delim_type delims s idx =
+    List.fold_left
+      (fun acc (prefix, dtype) ->
+        match acc with
+        | Some _ -> acc
+        | None ->
+            if starts_with s idx prefix then Some (dtype, String.length prefix)
+            else None)
+      None delims
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        (* Collect left delimiters in order *)
+        let lefts = ref [] in
+        let i = ref 0 in
+        while !i < n do
+          match find_delim_type left_delims seg !i with
+          | Some (dtype, plen) ->
+              lefts := dtype :: !lefts;
+              i := !i + plen
+          | None -> incr i
+        done;
+        let lefts = List.rev !lefts in
+        (* Collect right delimiters in order *)
+        let rights = ref [] in
+        i := 0;
+        while !i < n do
+          match find_delim_type right_delims seg !i with
+          | Some (dtype, plen) ->
+              rights := dtype :: !rights;
+              i := !i + plen
+          | None -> incr i
+        done;
+        let rights = List.rev !rights in
+        (* Compare paired delimiters *)
+        let rec check ls rs =
+          match (ls, rs) with
+          | l :: ls', r :: rs' ->
+              if l <> "invisible" && r <> "invisible" && l <> r then incr cnt;
+              check ls' rs'
+          | _ -> ()
+        in
+        check lefts rights)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-017";
+          severity = Error;
+          message = "Mismatched \\left/\\right delimiter types";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-017"; run }
+
+(* MATH-018: π written numerically as 3.14... in math *)
+let l1_math_018_rule : rule =
+  let re = Str.regexp {|3\.14[0-9]*|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-018";
+          severity = Info;
+          message = "Numerical approximation of π (3.14...) — use \\pi instead";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-018"; run }
+
+(* MATH-019: Inline stacked ^_ order wrong — same concept as SCRIPT-021 but
+   specifically for the pattern where _ immediately follows ^ without braces in
+   inline math, e.g. $\sum^n_i$ instead of $\sum_{i}^{n}$ *)
+let l1_math_019_rule : rule =
+  let re = Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|} in
+  let run s =
+    let inline_segs = extract_inline_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) inline_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-019";
+          severity = Warning;
+          message = "Inline math has ^{sup}_{sub} order — prefer _{sub}^{sup}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-019"; run }
+
+(* MATH-020: Missing \cdot between coefficient and vector — detects digit
+   immediately followed by \vec or \mathbf without \cdot *)
+let l1_math_020_rule : rule =
+  let re = Str.regexp {|[0-9]\(\\vec{\|\\mathbf{\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-020";
+          severity = Info;
+          message = "Missing \\cdot between coefficient and vector notation";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-020"; run }
+
+(* MATH-021: Absolute value bars |x| instead of \lvert ... \rvert *)
+let l1_math_021_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n do
+          if seg.[!i] = '|' then (
+            if
+              (* Skip \| (double bar) and already-typed \lvert/\rvert *)
+              !i > 0 && seg.[!i - 1] = '\\'
+            then incr i
+            else
+              (* Look for matching closing | *)
+              let j = ref (!i + 1) in
+              while !j < n && seg.[!j] <> '|' do
+                if seg.[!j] = '\\' then j := !j + 2 else incr j
+              done;
+              if !j < n then (
+                (* Found |...| pair — this should be \lvert..\rvert *)
+                incr cnt;
+                i := !j + 1)
+              else i := !i + 1)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-021";
+          severity = Info;
+          message = "Absolute value bars |x| — prefer \\lvert x \\rvert";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-021"; run }
+
+(* MATH-022: Bold math italic without \bm or \mathbf — detects when \textbf is
+   used inside math mode for bold math *)
+let l1_math_022_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\textbf{")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-022";
+          severity = Info;
+          message = "\\textbf used in math mode — use \\mathbf or \\bm instead";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-022"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -7493,6 +8044,20 @@ let rules_l1 : rule list =
     l1_script_020_rule;
     l1_script_021_rule;
     l1_script_022_rule;
+    l1_math_009_rule;
+    l1_math_010_rule;
+    l1_math_011_rule;
+    l1_math_012_rule;
+    l1_math_013_rule;
+    l1_math_014_rule;
+    l1_math_015_rule;
+    l1_math_016_rule;
+    l1_math_017_rule;
+    l1_math_018_rule;
+    l1_math_019_rule;
+    l1_math_020_rule;
+    l1_math_021_rule;
+    l1_math_022_rule;
   ]
 
 let get_rules () : rule list =
@@ -7562,7 +8127,8 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
   | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
   | _ when String.length id >= 7 && String.sub id 0 7 = "SCRIPT-" -> L1
-  | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L0
+  | "MATH-083" -> L0
+  | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0
 

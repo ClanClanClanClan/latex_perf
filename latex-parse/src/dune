@@ -266,3 +266,13 @@
  (name test_validators_math_l1b)
  (modules test_validators_math_l1b)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_ref)
+ (modules test_validators_ref)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_chem)
+ (modules test_validators_chem)
+ (libraries latex_parse_lib unix))

@@ -8696,6 +8696,536 @@ let l1_math_053_rule : rule =
   in
   { id = "MATH-053"; run }
 
+(* ═══════════════════════════════════════════════════════════════════════ REF
+   validators: cross-referencing and label hygiene
+   ═══════════════════════════════════════════════════════════════════════ *)
+
+(* Helper: extract all \label{...} values from source *)
+let extract_labels (s : string) : string list =
+  let re = Str.regexp {|\\label{[^}]*}|} in
+  let labels = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let _ = Str.search_forward re s !i in
+       let m = Str.matched_string s in
+       let next = Str.match_end () in
+       (* extract content between { and } *)
+       let inner = String.sub m 7 (String.length m - 8) in
+       labels := inner :: !labels;
+       i := next
+     done
+   with Not_found -> ());
+  List.rev !labels
+
+(* Helper: extract all \ref{...} and \eqref{...} label references *)
+let extract_refs (s : string) : string list =
+  let re = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
+  let refs = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let _ = Str.search_forward re s !i in
+       let m = Str.matched_string s in
+       let next = Str.match_end () in
+       (* Find the { and extract content *)
+       let brace_pos = String.index m '{' in
+       let inner =
+         String.sub m (brace_pos + 1) (String.length m - brace_pos - 2)
+       in
+       refs := inner :: !refs;
+       i := next
+     done
+   with Not_found -> ());
+  List.rev !refs
+
+(* REF-001: Undefined \ref/\eqref label after expansion *)
+let l1_ref_001_rule : rule =
+  let run s =
+    let labels = extract_labels s in
+    let refs = extract_refs s in
+    let cnt = ref 0 in
+    List.iter (fun r -> if not (List.mem r labels) then incr cnt) refs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-001";
+          severity = Error;
+          message = "Undefined \\ref/\\eqref label — no matching \\label found";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-001"; run }
+
+(* REF-002: Duplicate label name *)
+let l1_ref_002_rule : rule =
+  let run s =
+    let labels = extract_labels s in
+    let seen = Hashtbl.create 16 in
+    let cnt = ref 0 in
+    List.iter
+      (fun lbl ->
+        if Hashtbl.mem seen lbl then incr cnt else Hashtbl.add seen lbl true)
+      labels;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-002";
+          severity = Error;
+          message = "Duplicate \\label name";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-002"; run }
+
+(* REF-003: Label contains spaces *)
+let l1_ref_003_rule : rule =
+  let run s =
+    let labels = extract_labels s in
+    let cnt = ref 0 in
+    List.iter (fun lbl -> if String.contains lbl ' ' then incr cnt) labels;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-003";
+          severity = Warning;
+          message = "\\label contains spaces";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-003"; run }
+
+(* REF-004: Label contains uppercase letters *)
+let l1_ref_004_rule : rule =
+  let has_upper s =
+    let n = String.length s in
+    let rec loop i =
+      if i >= n then false
+      else if s.[i] >= 'A' && s.[i] <= 'Z' then true
+      else loop (i + 1)
+    in
+    loop 0
+  in
+  let run s =
+    let labels = extract_labels s in
+    let cnt = ref 0 in
+    List.iter (fun lbl -> if has_upper lbl then incr cnt) labels;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-004";
+          severity = Info;
+          message = "\\label contains uppercase letters";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-004"; run }
+
+(* REF-005: Label not prefixed with fig:/tab:/eq:/sec: *)
+let l1_ref_005_rule : rule =
+  let prefixes =
+    [
+      "fig:";
+      "tab:";
+      "eq:";
+      "sec:";
+      "ch:";
+      "app:";
+      "lst:";
+      "thm:";
+      "lem:";
+      "def:";
+      "prop:";
+      "cor:";
+      "rem:";
+      "ex:";
+      "alg:";
+    ]
+  in
+  let has_prefix lbl =
+    List.exists
+      (fun p ->
+        let plen = String.length p in
+        String.length lbl >= plen && String.sub lbl 0 plen = p)
+      prefixes
+  in
+  let run s =
+    let labels = extract_labels s in
+    let cnt = ref 0 in
+    List.iter (fun lbl -> if not (has_prefix lbl) then incr cnt) labels;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-005";
+          severity = Info;
+          message = "\\label not prefixed with fig:/tab:/eq:/sec: etc.";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-005"; run }
+
+(* REF-006: Page reference uses \ref not \pageref — detects "page \ref{...}" *)
+let l1_ref_006_rule : rule =
+  let re = Str.regexp {|[Pp]age[ ~]*\\ref{|} in
+  let run s =
+    let cnt = count_re_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "REF-006";
+          severity = Info;
+          message = "Page reference uses \\ref — prefer \\pageref";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "REF-006"; run }
+
+(* REF-007: Cite key contains whitespace *)
+let l1_ref_007_rule : rule =
+  let re = Str.regexp "\\\\cite\\([^{]*\\){[^}]*[ \t][^}]*}" in
+  let run s =
+    let cnt = count_re_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "REF-007";
+          severity = Error;
+          message = "\\cite key contains whitespace";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "REF-007"; run }
+
+(* REF-009: Reference appears before label definition (forward ref) *)
+let l1_ref_009_rule : rule =
+  let run s =
+    let n = String.length s in
+    (* Build map of first occurrence position for each label *)
+    let label_positions = Hashtbl.create 16 in
+    let re_label = Str.regexp {|\\label{[^}]*}|} in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_label s !i in
+         let m = Str.matched_string s in
+         let next = Str.match_end () in
+         let inner = String.sub m 7 (String.length m - 8) in
+         if not (Hashtbl.mem label_positions inner) then
+           Hashtbl.add label_positions inner pos;
+         i := next
+       done
+     with Not_found -> ());
+    ignore n;
+    (* Check each ref — if it appears before its label, it's a forward ref *)
+    let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
+    let cnt = ref 0 in
+    i := 0;
+    (try
+       while true do
+         let pos = Str.search_forward re_ref s !i in
+         let m = Str.matched_string s in
+         let next = Str.match_end () in
+         let brace_pos = String.index m '{' in
+         let inner =
+           String.sub m (brace_pos + 1) (String.length m - brace_pos - 2)
+         in
+         (match Hashtbl.find_opt label_positions inner with
+         | Some label_pos -> if pos < label_pos then incr cnt
+         | None -> () (* undefined ref — handled by REF-001 *));
+         i := next
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-009";
+          severity = Info;
+          message =
+            "Forward reference — \\ref appears before \\label definition";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-009"; run }
+
+(* ═══════════════════════════════════════════════════════════════════════ CHEM
+   validators: chemistry notation
+   ═══════════════════════════════════════════════════════════════════════ *)
+
+(* CHEM-001: Missing \ce{} wrapper for chemical formula — detects patterns like
+   H_2O, CO_2, NaCl in math mode without \ce{} *)
+let l1_chem_001_rule : rule =
+  let re = Str.regexp {|[A-Z][a-z]?_\({[0-9]+}\|[0-9]\)|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        if count_substring seg "\\ce{" = 0 then
+          cnt := !cnt + count_re_matches re seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-001";
+          severity = Warning;
+          message = "Chemical formula in math mode — use \\ce{} from mhchem";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-001"; run }
+
+(* CHEM-002: Oxidation-state superscript missing braces — e.g. Fe^2+ should be
+   Fe^{2+} *)
+let l1_chem_002_rule : rule =
+  let re = Str.regexp {|[A-Z][a-z]?\^[0-9][+-]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-002";
+          severity = Warning;
+          message =
+            "Oxidation-state superscript missing braces — use ^{2+} not ^2+";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-002"; run }
+
+(* CHEM-003: Isotope mass number subscripted not superscripted — e.g. _14C
+   should be ^{14}C *)
+let l1_chem_003_rule : rule =
+  let re = Str.regexp {|_\({[0-9]+}\|[0-9]+\)[A-Z]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        if count_substring seg "\\ce{" = 0 then
+          cnt := !cnt + count_re_matches re seg)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-003";
+          severity = Warning;
+          message =
+            "Isotope mass number subscripted — should be superscripted (^{14}C)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-003"; run }
+
+(* CHEM-004: Charge written ^- instead of ^{-} *)
+let l1_chem_004_rule : rule =
+  let re = Str.regexp {|[A-Z][a-z]?\^[+-][^}]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-004";
+          severity = Info;
+          message = "Charge written ^- or ^+ — use ^{-} or ^{+}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-004"; run }
+
+(* CHEM-005: Chemical arrow typed '->' not \rightarrow — detects -> in math that
+   is not part of \rightarrow *)
+let l1_chem_005_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let total = count_substring seg "->" in
+        let proper = count_substring seg "\\rightarrow" in
+        let longarrow = count_substring seg "\\longrightarrow" in
+        let bare = total - proper - longarrow in
+        if bare > 0 then cnt := !cnt + bare)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-005";
+          severity = Info;
+          message = "Chemical arrow typed -> — use \\rightarrow or \\ce{->}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-005"; run }
+
+(* CHEM-006: Stoichiometry coefficient inside \ce missing — detects \ce{H2O}
+   without a leading number when multiple molecules are implied *)
+let l1_chem_006_rule : rule =
+  let ce_prefix = "\\ce{" in
+  let ce_plen = String.length ce_prefix in
+  let run s =
+    (* Only flag if there are \ce{} with + (reactions) where some lack
+       coefficients *)
+    let cnt = ref 0 in
+    let n = String.length s in
+    let i = ref 0 in
+    while !i <= n - ce_plen do
+      (* Manual scan for \ce{ *)
+      if String.sub s !i ce_plen = ce_prefix then (
+        let start = !i + ce_plen in
+        (* Find matching } *)
+        let brace_level = ref 1 in
+        let j = ref start in
+        while !j < n && !brace_level > 0 do
+          if s.[!j] = '{' then incr brace_level
+          else if s.[!j] = '}' then decr brace_level;
+          incr j
+        done;
+        if !brace_level = 0 then (
+          let ce_content = String.sub s start (!j - start - 1) in
+          (* Check if this \ce has a + (reaction) *)
+          (if count_substring ce_content " + " > 0 then
+             (* Check if any reactant/product lacks a coefficient *)
+             let parts = String.split_on_char '+' ce_content in
+             List.iter
+               (fun part ->
+                 let trimmed = String.trim part in
+                 if
+                   String.length trimmed > 0
+                   && trimmed.[0] >= 'A'
+                   && trimmed.[0] <= 'Z'
+                 then incr cnt)
+               parts);
+          i := !j)
+        else i := !i + 1)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-006";
+          severity = Warning;
+          message = "Stoichiometry coefficient missing in \\ce reaction";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-006"; run }
+
+(* CHEM-007: Reaction conditions not in \text above arrow — detects
+   ->[conditions] or ->[\text{...}] patterns *)
+let l1_chem_007_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        (* Look for -> followed by [...] without \text inside *)
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i < n - 3 do
+          if
+            seg.[!i] = '-'
+            && seg.[!i + 1] = '>'
+            && !i + 2 < n
+            && seg.[!i + 2] = '['
+          then (
+            (* Found ->[, scan for closing ] *)
+            let j = ref (!i + 3) in
+            while !j < n && seg.[!j] <> ']' do
+              incr j
+            done;
+            (if !j < n then
+               let bracket_content = String.sub seg (!i + 3) (!j - !i - 3) in
+               if
+                 count_substring bracket_content "\\text{" = 0
+                 && String.length bracket_content > 0
+               then incr cnt);
+            i := !j + 1)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-007";
+          severity = Info;
+          message = "Reaction conditions not wrapped in \\text above arrow";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-007"; run }
+
+(* CHEM-008: State symbols (aq), (s), (l), (g) not wrapped in \text *)
+let l1_chem_008_rule : rule =
+  let state_syms = [ "(aq)"; "(s)"; "(l)"; "(g)" ] in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun sym ->
+            let total = count_substring seg sym in
+            let wrapped = count_substring seg ("\\text{" ^ sym ^ "}") in
+            let bare = total - wrapped in
+            if bare > 0 then cnt := !cnt + bare)
+          state_syms)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-008";
+          severity = Info;
+          message = "State symbol (aq)/(s)/(l)/(g) not wrapped in \\text{}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-008"; run }
+
+(* CHEM-009: Equilibrium arrow typed as <> or <-> — should use
+   \rightleftharpoons *)
+let l1_chem_009_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let cnt1 = count_substring seg "<->" in
+        let cnt2 = count_substring seg "<=>" in
+        cnt := !cnt + cnt1 + cnt2)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CHEM-009";
+          severity = Warning;
+          message =
+            "Equilibrium arrow typed as <-> or <=> — use \\rightleftharpoons";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CHEM-009"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -8789,6 +9319,23 @@ let rules_l1 : rule list =
     l1_math_051_rule;
     l1_math_052_rule;
     l1_math_053_rule;
+    l1_ref_001_rule;
+    l1_ref_002_rule;
+    l1_ref_003_rule;
+    l1_ref_004_rule;
+    l1_ref_005_rule;
+    l1_ref_006_rule;
+    l1_ref_007_rule;
+    l1_ref_009_rule;
+    l1_chem_001_rule;
+    l1_chem_002_rule;
+    l1_chem_003_rule;
+    l1_chem_004_rule;
+    l1_chem_005_rule;
+    l1_chem_006_rule;
+    l1_chem_007_rule;
+    l1_chem_008_rule;
+    l1_chem_009_rule;
   ]
 
 let get_rules () : rule list =
@@ -8860,6 +9407,8 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 7 && String.sub id 0 7 = "SCRIPT-" -> L1
   | "MATH-083" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L1
+  | _ when String.length id >= 4 && String.sub id 0 4 = "REF-" -> L1
+  | _ when String.length id >= 5 && String.sub id 0 5 = "CHEM-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0
 

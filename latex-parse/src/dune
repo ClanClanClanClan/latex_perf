@@ -305,7 +305,8 @@
 (test
  (name test_validators_cli)
  (modules test_validators_cli)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib unix)
+ (deps validators_cli.exe))
 
 (test
  (name test_expansion_pipeline)

@@ -5048,7 +5048,7 @@ let r_verb_011 : rule =
 
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
-  let re = Str.regexp {|\\begin{minted}[ \t\n]*\(\[[^\]]*\]\)?[ \t\n]*{|} in
+  let re = Str.regexp {|\\begin{minted}[ \t\n]*\(\[[^]]*\]\)?[ \t\n]*{|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -5312,7 +5312,7 @@ let r_cjk_010 : rule =
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
-    for i = 1 to n - 1 do
+    for i = 0 to n - 1 do
       let c = s.[i] in
       if c = ',' || c = '.' || c = ':' || c = ';' then
         if

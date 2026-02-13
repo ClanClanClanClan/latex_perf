@@ -281,3 +281,8 @@
  (name test_validators_stragglers)
  (modules test_validators_stragglers)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_stress)
+ (modules test_validators_stress)
+ (libraries latex_parse_lib unix))

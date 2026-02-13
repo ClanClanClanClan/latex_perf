@@ -189,6 +189,144 @@ let () =
            "\\begin{minted}{python}\nshort\n\\end{minted}")
         (tag ^ ": short block"));
 
+  (* VERB-001: \verb delimiter reused inside same \verb block *)
+  run "VERB-001 fires on nested verb" (fun tag ->
+      expect
+        (fires "VERB-001" "\\verb|foo\\verb|bar|")
+        (tag ^ ": nested verb delimiter"));
+  run "VERB-001 fires with different delimiter" (fun tag ->
+      expect
+        (fires "VERB-001" "\\verb!foo\\verb!bar!")
+        (tag ^ ": different delimiter"));
+  run "VERB-001 severity=Error" (fun tag ->
+      match find_result "VERB-001" "\\verb|foo\\verb|bar|" with
+      | Some r ->
+          expect (r.severity = Validators.Error) (tag ^ ": severity is Error")
+      | None -> expect false (tag ^ ": should fire"));
+  run "VERB-001 clean single verb" (fun tag ->
+      expect
+        (does_not_fire "VERB-001" "\\verb|hello world|")
+        (tag ^ ": normal usage"));
+  run "VERB-001 clean verb*" (fun tag ->
+      expect
+        (does_not_fire "VERB-001" "\\verb*|hello|")
+        (tag ^ ": star variant ok"));
+  run "VERB-001 clean no verb" (fun tag ->
+      expect
+        (does_not_fire "VERB-001" "just plain text")
+        (tag ^ ": no verb at all"));
+
+  (* VERB-009: Missing caption in minted code block *)
+  run "VERB-009 fires on bare minted" (fun tag ->
+      expect
+        (fires "VERB-009"
+           "\\begin{minted}{python}\nprint(\"hi\")\n\\end{minted}")
+        (tag ^ ": bare minted"));
+  run "VERB-009 fires on minted with options but no listing" (fun tag ->
+      expect
+        (fires "VERB-009"
+           "\\begin{minted}[linenos]{python}\ncode\n\\end{minted}")
+        (tag ^ ": options but no listing"));
+  run "VERB-009 severity=Warning" (fun tag ->
+      match
+        find_result "VERB-009" "\\begin{minted}{python}\ncode\n\\end{minted}"
+      with
+      | Some r ->
+          expect
+            (r.severity = Validators.Warning)
+            (tag ^ ": severity is Warning")
+      | None -> expect false (tag ^ ": should fire"));
+  run "VERB-009 count=2" (fun tag ->
+      expect
+        (fires_with_count "VERB-009"
+           "\\begin{minted}{python}\n\
+            a\n\
+            \\end{minted}\n\
+            \\begin{minted}{java}\n\
+            b\n\
+            \\end{minted}"
+           2)
+        (tag ^ ": count=2 for two bare blocks"));
+  run "VERB-009 clean wrapped in listing" (fun tag ->
+      expect
+        (does_not_fire "VERB-009"
+           "\\begin{listing}\n\
+            \\begin{minted}{python}\n\
+            print(\"hi\")\n\
+            \\end{minted}\n\
+            \\end{listing}")
+        (tag ^ ": wrapped in listing"));
+  run "VERB-009 clean no minted" (fun tag ->
+      expect
+        (does_not_fire "VERB-009" "just text, no minted")
+        (tag ^ ": no minted at all"));
+
+  (* VERB-012: minted block missing autogobble *)
+  run "VERB-012 fires on minted without options" (fun tag ->
+      expect
+        (fires "VERB-012" "\\begin{minted}{python}\ncode\n\\end{minted}")
+        (tag ^ ": no options"));
+  run "VERB-012 fires on minted with options but no autogobble" (fun tag ->
+      expect
+        (fires "VERB-012"
+           "\\begin{minted}[linenos]{python}\ncode\n\\end{minted}")
+        (tag ^ ": linenos but no autogobble"));
+  run "VERB-012 severity=Info" (fun tag ->
+      match
+        find_result "VERB-012" "\\begin{minted}{python}\ncode\n\\end{minted}"
+      with
+      | Some r ->
+          expect (r.severity = Validators.Info) (tag ^ ": severity is Info")
+      | None -> expect false (tag ^ ": should fire"));
+  run "VERB-012 count=2" (fun tag ->
+      expect
+        (fires_with_count "VERB-012"
+           "\\begin{minted}{python}\n\
+            a\n\
+            \\end{minted}\n\
+            \\begin{minted}{java}\n\
+            b\n\
+            \\end{minted}"
+           2)
+        (tag ^ ": count=2"));
+  run "VERB-012 clean with autogobble" (fun tag ->
+      expect
+        (does_not_fire "VERB-012"
+           "\\begin{minted}[autogobble]{python}\ncode\n\\end{minted}")
+        (tag ^ ": has autogobble"));
+  run "VERB-012 clean with autogobble and other opts" (fun tag ->
+      expect
+        (does_not_fire "VERB-012"
+           "\\begin{minted}[linenos,autogobble]{python}\ncode\n\\end{minted}")
+        (tag ^ ": autogobble with linenos"));
+  run "VERB-012 clean no minted" (fun tag ->
+      expect (does_not_fire "VERB-012" "plain text") (tag ^ ": no minted"));
+
+  (* VERB-016: minted without escapeinside while containing back-ticks *)
+  run "VERB-016 fires on backtick without escapeinside" (fun tag ->
+      expect
+        (fires "VERB-016" "\\begin{minted}{python}\n`backtick`\n\\end{minted}")
+        (tag ^ ": backtick no escapeinside"));
+  run "VERB-016 severity=Info" (fun tag ->
+      match
+        find_result "VERB-016" "\\begin{minted}{python}\n`tick`\n\\end{minted}"
+      with
+      | Some r ->
+          expect (r.severity = Validators.Info) (tag ^ ": severity is Info")
+      | None -> expect false (tag ^ ": should fire"));
+  run "VERB-016 clean with escapeinside" (fun tag ->
+      expect
+        (does_not_fire "VERB-016"
+           "\\begin{minted}[escapeinside=||]{python}\n`tick`\n\\end{minted}")
+        (tag ^ ": has escapeinside"));
+  run "VERB-016 clean no backticks" (fun tag ->
+      expect
+        (does_not_fire "VERB-016"
+           "\\begin{minted}{python}\nno_ticks\n\\end{minted}")
+        (tag ^ ": no backticks in body"));
+  run "VERB-016 clean no minted" (fun tag ->
+      expect (does_not_fire "VERB-016" "just text") (tag ^ ": no minted"));
+
   (* ══════════════════════════════════════════════════════════════════════ CJK
      rules
      ══════════════════════════════════════════════════════════════════════ *)
@@ -219,6 +357,35 @@ let () =
   run "CJK-014 clean" (fun tag ->
       expect (does_not_fire "CJK-014" "normal text") (tag ^ ": no inter-punct"));
 
+  (* CJK-010: Half-width CJK punctuation in full-width context *)
+  run "CJK-010 fires on ASCII comma after CJK" (fun tag ->
+      expect (fires "CJK-010" "\xe4\xb8\xad,") (tag ^ ": CJK then comma"));
+  run "CJK-010 fires on ASCII comma before CJK" (fun tag ->
+      expect (fires "CJK-010" ",\xe4\xb8\xad") (tag ^ ": comma then CJK"));
+  run "CJK-010 fires on period after CJK" (fun tag ->
+      expect (fires "CJK-010" "\xe4\xb8\xad.") (tag ^ ": CJK then period"));
+  run "CJK-010 fires on semicolon after CJK" (fun tag ->
+      expect (fires "CJK-010" "\xe4\xb8\xad;") (tag ^ ": CJK then semicolon"));
+  run "CJK-010 fires on colon after CJK" (fun tag ->
+      expect (fires "CJK-010" "\xe4\xb8\xad:") (tag ^ ": CJK then colon"));
+  run "CJK-010 severity=Warning" (fun tag ->
+      match find_result "CJK-010" "\xe4\xb8\xad," with
+      | Some r ->
+          expect
+            (r.severity = Validators.Warning)
+            (tag ^ ": severity is Warning")
+      | None -> expect false (tag ^ ": should fire"));
+  run "CJK-010 count=2" (fun tag ->
+      expect
+        (fires_with_count "CJK-010" "\xe4\xb8\xad,\xe4\xb8\xad." 2)
+        (tag ^ ": count=2 for comma and period"));
+  run "CJK-010 clean ASCII only" (fun tag ->
+      expect (does_not_fire "CJK-010" "hello, world") (tag ^ ": no CJK context"));
+  run "CJK-010 clean no punctuation near CJK" (fun tag ->
+      expect
+        (does_not_fire "CJK-010" "\xe4\xb8\xad\xe6\x96\x87")
+        (tag ^ ": CJK without half-width punct"));
+
   (* ══════════════════════════════════════════════════════════════════════ CMD
      rules
      ══════════════════════════════════════════════════════════════════════ *)
@@ -234,6 +401,40 @@ let () =
       expect
         (does_not_fire "CMD-002" "\\newcommand{\\mycommand}{stuff}")
         (tag ^ ": newcommand ok"));
+
+  (* CMD-004: CamelCase command names discouraged *)
+  run "CMD-004 fires on newcommand with camelCase" (fun tag ->
+      expect
+        (fires "CMD-004" "\\newcommand{\\myFunc}{stuff}")
+        (tag ^ ": camelCase newcommand"));
+  run "CMD-004 fires on renewcommand with camelCase" (fun tag ->
+      expect
+        (fires "CMD-004" "\\renewcommand{\\getValue}{stuff}")
+        (tag ^ ": camelCase renewcommand"));
+  run "CMD-004 fires on def with camelCase" (fun tag ->
+      expect (fires "CMD-004" "\\def\\myVar{stuff}") (tag ^ ": camelCase def"));
+  run "CMD-004 severity=Info" (fun tag ->
+      match find_result "CMD-004" "\\newcommand{\\myFunc}{stuff}" with
+      | Some r ->
+          expect (r.severity = Validators.Info) (tag ^ ": severity is Info")
+      | None -> expect false (tag ^ ": should fire"));
+  run "CMD-004 count=2" (fun tag ->
+      expect
+        (fires_with_count "CMD-004"
+           "\\newcommand{\\myFunc}{a}\n\\renewcommand{\\getValue}{b}" 2)
+        (tag ^ ": count=2"));
+  run "CMD-004 clean all lowercase" (fun tag ->
+      expect
+        (does_not_fire "CMD-004" "\\newcommand{\\myfunc}{stuff}")
+        (tag ^ ": all lowercase ok"));
+  run "CMD-004 clean ALLCAPS" (fun tag ->
+      expect
+        (does_not_fire "CMD-004" "\\newcommand{\\MYFUNC}{stuff}")
+        (tag ^ ": all caps ok"));
+  run "CMD-004 clean no command def" (fun tag ->
+      expect
+        (does_not_fire "CMD-004" "just text, no commands")
+        (tag ^ ": no command definitions"));
 
   (* CMD-005: Single-letter macro *)
   run "CMD-005 fires on single-letter" (fun tag ->

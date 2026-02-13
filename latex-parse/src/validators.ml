@@ -7988,6 +7988,102 @@ let l1_math_022_rule : rule =
   in
   { id = "MATH-022"; run }
 
+(* MATH-025: align environment with one column — use equation instead. Detects
+   \begin{align}...\end{align} blocks with no & inside. *)
+let l1_math_025_rule : rule =
+  let re_begin = Str.regexp {|\\begin{align\*?}|} in
+  let re_end = Str.regexp {|\\end{align\*?}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    let n = String.length s in
+    (try
+       while !i < n do
+         let pos = Str.search_forward re_begin s !i in
+         let after_begin = pos + String.length (Str.matched_string s) in
+         try
+           let end_pos = Str.search_forward re_end s after_begin in
+           let body = String.sub s after_begin (end_pos - after_begin) in
+           if not (String.contains body '&') then incr cnt;
+           i := end_pos + 1
+         with Not_found -> i := n
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-025";
+          severity = Info;
+          message =
+            "align environment with single column — consider equation instead";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-025"; run }
+
+(* MATH-028: Array environment inside math without column alignment spec.
+   Detects \begin{array} without a brace argument following. *)
+let l1_math_028_rule : rule =
+  let re = Str.regexp {|\\begin{array}[^{]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Also check \begin{array} at end of string with nothing after *)
+    let ba = {|\begin{array}|} in
+    let ba_len = String.length ba in
+    (if String.length s >= ba_len then
+       let tail = String.sub s (String.length s - ba_len) ba_len in
+       if tail = ba then incr cnt);
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-028";
+          severity = Info;
+          message =
+            "\\begin{array} without column alignment spec — add e.g. {c} or \
+             {lcr}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-028"; run }
+
+(* MATH-029: Use of eqnarray / eqnarray* instead of align / align*. eqnarray is
+   deprecated — spacing around = is wrong. *)
+let l1_math_029_rule : rule =
+  let re = Str.regexp {|\\begin{eqnarray\*?}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-029";
+          severity = Warning;
+          message =
+            "Use of eqnarray environment — prefer align or align* (better \
+             spacing)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-029"; run }
+
 (* MATH-030: Overuse of \displaystyle in inline math — using \displaystyle in
    $...$ or \(...\) hurts line spacing *)
 let l1_math_030_rule : rule =
@@ -10899,6 +10995,9 @@ let rules_l1 : rule list =
     l1_math_020_rule;
     l1_math_021_rule;
     l1_math_022_rule;
+    l1_math_025_rule;
+    l1_math_028_rule;
+    l1_math_029_rule;
     l1_math_030_rule;
     l1_math_031_rule;
     l1_math_033_rule;
@@ -11053,6 +11152,8 @@ let precondition_of_rule_id (id : string) : layer =
   match id with
   | "TYPO-059" -> L1
   | "MATH-083" -> L0
+  | "MATH-023" | "MATH-024" -> L2
+  | "MATH-026" | "MATH-027" -> L3
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "CHAR-" -> L0

@@ -9226,6 +9226,313 @@ let l1_chem_009_rule : rule =
   in
   { id = "CHEM-009"; run }
 
+(* CMD-007: Optional argument declared but not used in definition body *)
+let l1_cmd_007_rule : rule =
+  let re_newcmd =
+    Str.regexp
+      {|\\\(newcommand\|renewcommand\|providecommand\){\\[a-zA-Z]+}\[[0-9]+\]|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    let n = String.length s in
+    (try
+       while true do
+         let _ = Str.search_forward re_newcmd s !i in
+         let mstart = Str.match_beginning () in
+         let mend = Str.match_end () in
+         (* Extract the arity from [N] *)
+         let bracket_start = ref (mend - 2) in
+         while !bracket_start > mstart && s.[!bracket_start] <> '[' do
+           decr bracket_start
+         done;
+         let arity_str =
+           String.sub s (!bracket_start + 1) (mend - 2 - !bracket_start)
+         in
+         let arity = try int_of_string arity_str with Failure _ -> 0 in
+         (* Find the definition body in the next brace block *)
+         if mend < n && s.[mend] = '{' then (
+           let depth = ref 1 in
+           let j = ref (mend + 1) in
+           while !j < n && !depth > 0 do
+             if s.[!j] = '{' then incr depth
+             else if s.[!j] = '}' then decr depth;
+             incr j
+           done;
+           if !depth = 0 then (
+             let body = String.sub s (mend + 1) (!j - mend - 2) in
+             (* Check each #k appears in body *)
+             let unused = ref false in
+             for k = 1 to arity do
+               let param = Printf.sprintf "#%d" k in
+               if count_substring body param = 0 then unused := true
+             done;
+             if !unused then incr cnt);
+           i := !j)
+         else i := mend
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-007";
+          severity = Info;
+          message = "Optional argument declared but not used in definition body";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-007"; run }
+
+(* CMD-010: More than three successive macro renewals *)
+let l1_cmd_010_rule : rule =
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt = ref 0 in
+    let consecutive = ref 0 in
+    List.iter
+      (fun line ->
+        let trimmed = String.trim line in
+        let prefix = "\\renewcommand" in
+        let plen = String.length prefix in
+        if String.length trimmed >= plen && String.sub trimmed 0 plen = prefix
+        then (
+          incr consecutive;
+          if !consecutive > 3 then incr cnt)
+        else consecutive := 0)
+      lines;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-010";
+          severity = Info;
+          message = "More than three successive \\renewcommand lines";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-010"; run }
+
+(* FONT-001: Small-caps applied to all-caps word (ineffective) *)
+let l1_font_001_rule : rule =
+  let textsc_prefix = "\\textsc{" in
+  let textsc_plen = String.length textsc_prefix in
+  let run s =
+    let cnt = ref 0 in
+    let n = String.length s in
+    let i = ref 0 in
+    while !i <= n - textsc_plen do
+      if String.sub s !i textsc_plen = textsc_prefix then (
+        let start = !i + textsc_plen in
+        let depth = ref 1 in
+        let j = ref start in
+        while !j < n && !depth > 0 do
+          if s.[!j] = '{' then incr depth else if s.[!j] = '}' then decr depth;
+          incr j
+        done;
+        if !depth = 0 then (
+          let content = String.sub s start (!j - start - 1) in
+          (* Check if content is all uppercase letters and spaces *)
+          let all_upper = ref true in
+          let has_alpha = ref false in
+          String.iter
+            (fun c ->
+              if c >= 'A' && c <= 'Z' then has_alpha := true
+              else if c = ' ' then ()
+              else all_upper := false)
+            content;
+          if !all_upper && !has_alpha then incr cnt);
+        i := !j)
+      else incr i
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-001";
+          severity = Info;
+          message =
+            "\\textsc applied to all-caps word — small-caps is ineffective on \
+             already-uppercase text";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-001"; run }
+
+(* FONT-004: Font change inside math via \textit not \mathit *)
+let l1_font_004_rule : rule =
+  let text_font_cmds =
+    [ "\\textit{"; "\\textbf{"; "\\textrm{"; "\\textsf{"; "\\texttt{" ]
+  in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun cmd -> cnt := !cnt + count_substring seg cmd)
+          text_font_cmds)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-004";
+          severity = Info;
+          message =
+            "Text font command inside math — use \\mathit, \\mathbf, etc. \
+             instead of \\textit, \\textbf, etc.";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-004"; run }
+
+(* RTL-003: Unbalanced \beginR / \endR primitives *)
+let l1_rtl_003_rule : rule =
+  let run s =
+    let opens = count_substring s "\\beginR" in
+    let closes = count_substring s "\\endR" in
+    if opens <> closes && (opens > 0 || closes > 0) then
+      Some
+        {
+          id = "RTL-003";
+          severity = Error;
+          message =
+            Printf.sprintf "Unbalanced \\beginR / \\endR: %d opens vs %d closes"
+              opens closes;
+          count = abs (opens - closes);
+        }
+    else None
+  in
+  { id = "RTL-003"; run }
+
+(* RTL-004: RTL punctuation not mirrored in math *)
+let l1_rtl_004_rule : rule =
+  (* Hebrew maqaf U+05BE, Arabic comma U+060C, Hebrew geresh U+05F3 *)
+  let rtl_puncts = [ "\xd6\xbe"; "\xd8\x8c"; "\xd7\x83" ] in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        List.iter
+          (fun punct -> cnt := !cnt + count_substring seg punct)
+          rtl_puncts)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "RTL-004";
+          severity = Warning;
+          message = "RTL punctuation character found inside math mode";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "RTL-004"; run }
+
+(* CJK-008: Full-width space U+3000 inside math mode *)
+let l1_cjk_008_rule : rule =
+  let fullwidth_space = "\xe3\x80\x80" in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg fullwidth_space)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-008";
+          severity = Warning;
+          message =
+            "Full-width space (U+3000) inside math mode — use standard ASCII \
+             space or \\quad/\\qquad";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-008"; run }
+
+(* CJK-015: Chinese comma U+3001 (ideographic comma) inside math mode *)
+let l1_cjk_015_rule : rule =
+  let ideographic_comma = "\xe3\x80\x81" in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg ideographic_comma)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-015";
+          severity = Warning;
+          message =
+            "Ideographic comma (U+3001) inside math mode — use ASCII comma";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-015"; run }
+
+(* TYPO-059: Punctuation inside math adjacent to operators — e.g. ,= or ;+ *)
+let l1_typo_059_rule : rule =
+  let re = Str.regexp {|[,;.][ ]*[=<>+\-]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-059";
+          severity = Info;
+          message =
+            "Punctuation inside math adjacent to operator — use spacing macros \
+             (\\, \\; etc.) for proper typographic spacing";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-059"; run }
+
+(* PT-002: pt-BR decimal comma and thousand dot enforcement *)
+let l1_pt_002_rule : rule =
+  (* Detect 1.234 or 3.14 patterns that should use comma as decimal separator in
+     pt-BR. Only fire if document uses brazilian/portuges. *)
+  let re_num = Str.regexp {|[0-9]+\.[0-9]+|} in
+  let re_br =
+    Str.regexp
+      {|\\\(usepackage\|documentclass\).*\(brazilian\|brazil\|portuges\)|}
+  in
+  let run s =
+    (* Only fire if the document uses pt-BR *)
+    let has_br =
+      try
+        let _ = Str.search_forward re_br s 0 in
+        true
+      with Not_found -> false
+    in
+    if has_br then (
+      let math_segs = extract_math_segments s in
+      let cnt = ref 0 in
+      List.iter (fun seg -> cnt := !cnt + count_re_matches re_num seg) math_segs;
+      if !cnt > 0 then
+        Some
+          {
+            id = "PT-002";
+            severity = Info;
+            message =
+              "pt-BR document uses dot as decimal separator — convention is \
+               comma for decimals and dot for thousands";
+            count = !cnt;
+          }
+      else None)
+    else None
+  in
+  { id = "PT-002"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -9336,6 +9643,16 @@ let rules_l1 : rule list =
     l1_chem_007_rule;
     l1_chem_008_rule;
     l1_chem_009_rule;
+    l1_cmd_007_rule;
+    l1_cmd_010_rule;
+    l1_font_001_rule;
+    l1_font_004_rule;
+    l1_rtl_003_rule;
+    l1_rtl_004_rule;
+    l1_cjk_008_rule;
+    l1_cjk_015_rule;
+    l1_typo_059_rule;
+    l1_pt_002_rule;
   ]
 
 let get_rules () : rule list =
@@ -9396,6 +9713,8 @@ type layer = L0 | L1 | L2 | L3 | L4
 
 let precondition_of_rule_id (id : string) : layer =
   match id with
+  | "TYPO-059" -> L1
+  | "MATH-083" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "CHAR-" -> L0
@@ -9405,10 +9724,13 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
   | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
   | _ when String.length id >= 7 && String.sub id 0 7 = "SCRIPT-" -> L1
-  | "MATH-083" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "REF-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "CHEM-" -> L1
+  | _ when String.length id >= 5 && String.sub id 0 5 = "FONT-" -> L1
+  | _ when String.length id >= 4 && String.sub id 0 4 = "RTL-" -> L1
+  | _ when String.length id >= 4 && String.sub id 0 4 = "CJK-" -> L1
+  | _ when String.length id >= 3 && String.sub id 0 3 = "PT-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0
 

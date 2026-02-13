@@ -1170,7 +1170,7 @@ let r_typo_023 : rule =
         {
           id = "TYPO-023";
           severity = Warning;
-          message = "Windows CR (\r) line endings found";
+          message = "Windows CR (\\r) line endings found";
           count = cnt;
         }
     else None
@@ -1274,7 +1274,7 @@ let r_typo_026 : rule =
             {
               id = "TYPO-026";
               severity = Warning;
-              message = "Double period .. should be … or \\\\dots";
+              message = {|Double period .. should be … or \dots|};
               count = cnt;
             }
         else None
@@ -1287,7 +1287,7 @@ let r_typo_026 : rule =
             {
               id = "TYPO-026";
               severity = Warning;
-              message = "Double period .. should be … or \\\\dots";
+              message = {|Double period .. should be … or \dots|};
               count = cnt;
             }
         else None

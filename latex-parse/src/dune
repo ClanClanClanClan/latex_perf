@@ -301,3 +301,13 @@
  (name test_validators_math_c3)
  (modules test_validators_math_c3)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_cli)
+ (modules test_validators_cli)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_expansion_pipeline)
+ (modules test_expansion_pipeline rest_simple_expander)
+ (libraries latex_parse_lib unix yojson))

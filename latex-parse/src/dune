@@ -296,3 +296,8 @@
  (name test_validators_math_c2)
  (modules test_validators_math_c2)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_math_c3)
+ (modules test_validators_math_c3)
+ (libraries latex_parse_lib unix))

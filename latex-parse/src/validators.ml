@@ -8696,6 +8696,410 @@ let l1_math_053_rule : rule =
   in
   { id = "MATH-053"; run }
 
+(* ═══════════════════════════════════════════════════════════════════════
+   MATH-C validators: extended math checks (MATH-055..MATH-108)
+   ═══════════════════════════════════════════════════════════════════════ *)
+
+(* MATH-055: \mathcal for single character only — flag multi-char argument *)
+let l1_math_055_rule : rule =
+  let re = Str.regexp {|\\mathcal{[^}][^}]+}|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-055";
+          severity = Info;
+          message = "\\mathcal argument has multiple characters";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-055"; run }
+
+(* MATH-057: Empty fraction numerator or denominator *)
+let l1_math_057_rule : rule =
+  let is_empty_brace s i =
+    (* Check if s.[i] = '{' and contents are only whitespace up to '}' *)
+    let n = String.length s in
+    if i >= n || s.[i] <> '{' then false
+    else
+      let j = ref (i + 1) in
+      while !j < n && (s.[!j] = ' ' || s.[!j] = '\t' || s.[!j] = '\n') do
+        incr j
+      done;
+      !j < n && s.[!j] = '}'
+  in
+  let skip_brace s i =
+    let n = String.length s in
+    if i >= n || s.[i] <> '{' then i
+    else
+      let depth = ref 1 in
+      let j = ref (i + 1) in
+      while !j < n && !depth > 0 do
+        if s.[!j] = '{' then incr depth else if s.[!j] = '}' then decr depth;
+        incr j
+      done;
+      !j
+  in
+  let tag = "\\frac" in
+  let tlen = String.length tag in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = String.length seg in
+        let i = ref 0 in
+        while !i <= n - tlen do
+          if String.sub seg !i tlen = tag then (
+            (* Skip whitespace after \frac *)
+            let j = ref (!i + tlen) in
+            while
+              !j < n && (seg.[!j] = ' ' || seg.[!j] = '\t' || seg.[!j] = '\n')
+            do
+              incr j
+            done;
+            let arg1_start = !j in
+            if is_empty_brace seg arg1_start then incr cnt;
+            let after_arg1 = skip_brace seg arg1_start in
+            (* Skip whitespace between args *)
+            let k = ref after_arg1 in
+            while
+              !k < n && (seg.[!k] = ' ' || seg.[!k] = '\t' || seg.[!k] = '\n')
+            do
+              incr k
+            done;
+            if is_empty_brace seg !k then incr cnt;
+            i := max (!i + 1) after_arg1)
+          else incr i
+        done)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-057";
+          severity = Error;
+          message = "Empty fraction numerator or denominator";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-057"; run }
+
+(* MATH-058: Nested \text inside \text *)
+let l1_math_058_rule : rule =
+  let re = Str.regexp {|\\text{[^}]*\\text{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-058";
+          severity = Info;
+          message = "Nested \\text inside \\text";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-058"; run }
+
+(* MATH-065: Manual spacing \hspace in math *)
+let l1_math_065_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\hspace")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-065";
+          severity = Info;
+          message = "Manual \\hspace in math detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-065"; run }
+
+(* MATH-066: \phantom used; suggest \hphantom or \vphantom *)
+let l1_math_066_rule : rule =
+  let re = Str.regexp {|\\phantom{|} in
+  let not_hv_re = Str.regexp {|\\[hv]phantom{|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let total = count_re_matches re seg in
+        let hv = count_re_matches not_hv_re seg in
+        cnt := !cnt + (total - hv))
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-066";
+          severity = Info;
+          message = "\\phantom used; consider \\hphantom or \\vphantom";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-066"; run }
+
+(* MATH-068: Spacing around \mid missing *)
+let l1_math_068_rule : rule =
+  let re = Str.regexp {|[^ \t\n]\\mid\|\\mid[^ \t\n]|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-068";
+          severity = Info;
+          message = "Spacing around \\mid missing";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-068"; run }
+
+(* MATH-069: Bold sans-serif math font used *)
+let l1_math_069_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        cnt :=
+          !cnt
+          + count_substring seg "\\mathbfsf"
+          + count_substring seg "\\bm{\\mathsf{")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-069";
+          severity = Info;
+          message = "Bold sans-serif math font used";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-069"; run }
+
+(* MATH-071: Overuse of \cancel in equations — more than 3 per equation *)
+let l1_math_071_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg ->
+        let n = count_substring seg "\\cancel{" in
+        if n > 3 then incr cnt)
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-071";
+          severity = Info;
+          message = "Overuse of \\cancel in equation (more than 3)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-071"; run }
+
+(* MATH-078: Long arrow typed as --> instead of \longrightarrow *)
+let l1_math_078_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_substring seg "-->") math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-078";
+          severity = Info;
+          message = "Long arrow typed as --> — use \\longrightarrow";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-078"; run }
+
+(* MATH-079: \displaystyle inside display math — redundant *)
+let l1_math_079_rule : rule =
+  let display_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "displaymath";
+    ]
+  in
+  let run s =
+    let cnt = ref 0 in
+    (* Check \[...\] blocks *)
+    let len = String.length s in
+    let i = ref 0 in
+    while !i < len - 1 do
+      if s.[!i] = '\\' && s.[!i + 1] = '[' then (
+        let start = !i + 2 in
+        let j = ref start in
+        while !j < len - 1 && not (s.[!j] = '\\' && s.[!j + 1] = ']') do
+          incr j
+        done;
+        if !j < len - 1 then (
+          let body = String.sub s start (!j - start) in
+          cnt := !cnt + count_substring body "\\displaystyle";
+          i := !j + 2)
+        else i := len)
+      else incr i
+    done;
+    (* Check display math environments *)
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk -> cnt := !cnt + count_substring blk "\\displaystyle")
+          blocks)
+      display_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-079";
+          severity = Info;
+          message = "\\displaystyle inside display math — redundant";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-079"; run }
+
+(* MATH-082: Negative thin space \! misused twice consecutively *)
+let l1_math_082_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_substring seg "\\!\\!") math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-082";
+          severity = Warning;
+          message = "Negative thin space \\! used twice consecutively";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-082"; run }
+
+(* MATH-085: Use of \eqcirc — rarely acceptable *)
+let l1_math_085_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter
+      (fun seg -> cnt := !cnt + count_substring seg "\\eqcirc")
+      math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-085";
+          severity = Info;
+          message = "Use of \\eqcirc — rarely acceptable";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-085"; run }
+
+(* MATH-094: Manual \kern in math detected *)
+let l1_math_094_rule : rule =
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt = ref 0 in
+    List.iter (fun seg -> cnt := !cnt + count_substring seg "\\kern") math_segs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-094";
+          severity = Info;
+          message = "Manual \\kern in math detected — typographic smell";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-094"; run }
+
+(* MATH-105: \textstyle used inside display math — redundant *)
+let l1_math_105_rule : rule =
+  let display_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "displaymath";
+    ]
+  in
+  let run s =
+    let cnt = ref 0 in
+    (* Check \[...\] blocks *)
+    let len = String.length s in
+    let i = ref 0 in
+    while !i < len - 1 do
+      if s.[!i] = '\\' && s.[!i + 1] = '[' then (
+        let start = !i + 2 in
+        let j = ref start in
+        while !j < len - 1 && not (s.[!j] = '\\' && s.[!j + 1] = ']') do
+          incr j
+        done;
+        if !j < len - 1 then (
+          let body = String.sub s start (!j - start) in
+          cnt := !cnt + count_substring body "\\textstyle";
+          i := !j + 2)
+        else i := len)
+      else incr i
+    done;
+    (* Check display math environments *)
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun blk -> cnt := !cnt + count_substring blk "\\textstyle")
+          blocks)
+      display_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-105";
+          severity = Info;
+          message = "\\textstyle inside display math — redundant";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-105"; run }
+
 (* ═══════════════════════════════════════════════════════════════════════ REF
    validators: cross-referencing and label hygiene
    ═══════════════════════════════════════════════════════════════════════ *)
@@ -9626,6 +10030,20 @@ let rules_l1 : rule list =
     l1_math_051_rule;
     l1_math_052_rule;
     l1_math_053_rule;
+    l1_math_055_rule;
+    l1_math_057_rule;
+    l1_math_058_rule;
+    l1_math_065_rule;
+    l1_math_066_rule;
+    l1_math_068_rule;
+    l1_math_069_rule;
+    l1_math_071_rule;
+    l1_math_078_rule;
+    l1_math_079_rule;
+    l1_math_082_rule;
+    l1_math_085_rule;
+    l1_math_094_rule;
+    l1_math_105_rule;
     l1_ref_001_rule;
     l1_ref_002_rule;
     l1_ref_003_rule;

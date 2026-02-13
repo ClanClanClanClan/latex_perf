@@ -315,8 +315,8 @@
 
 (test
  (name test_golden_corpus)
- (modules test_golden_corpus)
- (libraries latex_parse_lib unix)
+ (modules test_golden_corpus rest_simple_expander)
+ (libraries latex_parse_lib unix yojson)
  (deps
   ../../specs/rules/l1_golden.yaml
   ../../specs/rules/pilot_v1_golden.yaml

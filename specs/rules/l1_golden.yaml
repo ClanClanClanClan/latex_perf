@@ -37,7 +37,8 @@ cases:
     expect_msgs:
       - "MOD-007:Mixed legacy and modern small-caps commands in same paragraph"
   - file: corpora/l1/MOD-008_mixed_bfseries_textbf_para.tex
-    expect: ["MOD-008"]
+    expect: []
+    forbid: ["MOD-008"]
   - file: corpora/l1/MOD-009_mixed_itshape_textit_para.tex
     expect: ["MOD-009"]
     expect_msgs:
@@ -78,8 +79,8 @@ cases:
     expect: []
     forbid: ["MOD-007"]
   - file: corpora/l1/MOD-008_paragraph_separated_bfseries_textbf.tex
-    expect: ["MOD-020"]
-    forbid: ["MOD-008"]
+    expect: []
+    forbid: ["MOD-008", "MOD-020"]
   - file: corpora/l1/MOD-009_paragraph_separated_itshape_textit.tex
     expect: ["MOD-021"]
     forbid: ["MOD-009"]

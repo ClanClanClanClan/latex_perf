@@ -142,7 +142,10 @@ let resolve_path base_dir file_path =
   if Filename.is_relative file_path then Filename.concat base_dir file_path
   else file_path
 
-let run_golden_suite suite_name yaml_path base_dir =
+(* Pipeline mode: mirrors the REST smoke test — expand then validate at L1 *)
+type pipeline_mode = Raw_all | Expand_l1
+
+let run_golden_suite ?(mode = Raw_all) suite_name yaml_path base_dir =
   let golden_cases = parse_golden_yaml yaml_path in
   List.iter
     (fun (gc : golden_case) ->
@@ -164,8 +167,19 @@ let run_golden_suite suite_name yaml_path base_dir =
           ""
       in
       if content <> "" || gc.expect = [] then (
-        (* Run validators *)
-        let results = Latex_parse_lib.Validators.run_all content in
+        (* Run validators through the appropriate pipeline *)
+        let results =
+          match mode with
+          | Raw_all -> Latex_parse_lib.Validators.run_all content
+          | Expand_l1 ->
+              let cfg = Rest_simple_expander.default in
+              let expanded = Rest_simple_expander.expand_fix cfg content in
+              let xs, _, _ =
+                Latex_parse_lib.Validators.run_all_with_timings_for_layer
+                  expanded Latex_parse_lib.Validators.L1
+              in
+              xs
+        in
         let fired_ids =
           List.map (fun (r : Latex_parse_lib.Validators.result) -> r.id) results
         in
@@ -239,7 +253,7 @@ let () =
       exit 2
   in
   Printf.printf "[golden] base_dir = %s\n%!" base_dir;
-  run_golden_suite "l1"
+  run_golden_suite ~mode:Expand_l1 "l1"
     (Filename.concat base_dir "specs/rules/l1_golden.yaml")
     base_dir;
   run_golden_suite "pilot_v1"

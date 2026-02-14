@@ -281,3 +281,49 @@
  (name test_validators_stragglers)
  (modules test_validators_stragglers)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_stress)
+ (modules test_validators_stress)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_math_c1)
+ (modules test_validators_math_c1)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_math_c2)
+ (modules test_validators_math_c2)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_math_c3)
+ (modules test_validators_math_c3)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_cli)
+ (modules test_validators_cli)
+ (libraries latex_parse_lib unix)
+ (deps validators_cli.exe))
+
+(test
+ (name test_expansion_pipeline)
+ (modules test_expansion_pipeline rest_simple_expander)
+ (libraries latex_parse_lib unix yojson))
+
+(test
+ (name test_golden_corpus)
+ (modules test_golden_corpus rest_simple_expander)
+ (libraries latex_parse_lib unix yojson)
+ (deps
+  ../../specs/rules/l1_golden.yaml
+  ../../specs/rules/pilot_v1_golden.yaml
+  ../../specs/rules/unicode_golden.yaml
+  (source_tree ../../corpora)))
+
+(test
+ (name test_validators_math_gap)
+ (modules test_validators_math_gap)
+ (libraries latex_parse_lib unix))

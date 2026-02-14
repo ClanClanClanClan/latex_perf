@@ -174,6 +174,70 @@ let () =
         = Latex_parse_lib.Validators.L1)
         (tag ^ ": MATH-029 = L1"));
 
+  (* ════════════════════════════════════════════════════════════════════
+     precondition_of_rule_id: CJK/CMD layer mappings (spec says L0)
+     ════════════════════════════════════════════════════════════════════ *)
+  run "CJK-001 maps to L0" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CJK-001"
+        = Latex_parse_lib.Validators.L0)
+        (tag ^ ": CJK-001 = L0"));
+  run "CJK-002 maps to L0" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CJK-002"
+        = Latex_parse_lib.Validators.L0)
+        (tag ^ ": CJK-002 = L0"));
+  run "CJK-008 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CJK-008"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CJK-008 = L1"));
+  run "CJK-015 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CJK-015"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CJK-015 = L1"));
+  run "CMD-002 maps to L0" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-002"
+        = Latex_parse_lib.Validators.L0)
+        (tag ^ ": CMD-002 = L0"));
+  run "CMD-004 maps to L0" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-004"
+        = Latex_parse_lib.Validators.L0)
+        (tag ^ ": CMD-004 = L0"));
+  run "CMD-001 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-001"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CMD-001 = L1"));
+  run "CMD-003 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-003"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CMD-003 = L1"));
+  run "CMD-007 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-007"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CMD-007 = L1"));
+  run "CMD-010 maps to L1 (needs expansion)" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "CMD-010"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": CMD-010 = L1"));
+  run "VERB-001 maps to L0" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "VERB-001"
+        = Latex_parse_lib.Validators.L0)
+        (tag ^ ": VERB-001 = L0"));
+  run "TYPO-059 maps to L1" (fun tag ->
+      expect
+        (Latex_parse_lib.Validators.precondition_of_rule_id "TYPO-059"
+        = Latex_parse_lib.Validators.L1)
+        (tag ^ ": TYPO-059 = L1"));
+
   if !fails > 0 then (
     Printf.eprintf "[math-gap] %d failure(s)\n%!" !fails;
     exit 1)

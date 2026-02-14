@@ -2,19 +2,19 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-001_quotes.tex
     expect: ["TYPO-001"]
     expect_msgs:
-      - "TYPO-001:ASCII straight quotes must be curly quotes"
+      - "TYPO-001:ASCII straight quotes (\" … \") must be curly quotes"
   - file: corpora/lint/pilot_v1/TYPO-002_double_hyphen.tex
     expect: ["TYPO-002"]
     expect_msgs:
-      - "TYPO-002:Double hyphen -- should be en-dash –"
+      - "TYPO-002:Double hyphen -- should be en‑dash –"
   - file: corpora/lint/pilot_v1/TYPO-003_triple_hyphen.tex
     expect: ["TYPO-003"]
     expect_msgs:
-      - "TYPO-003:Triple hyphen --- should be em-dash —"
+      - "TYPO-003:Triple hyphen --- should be em‑dash —"
   - file: corpora/lint/pilot_v1/TYPO-004_tex_quotes.tex
     expect: ["TYPO-004"]
     expect_msgs:
-      - "TYPO-004:TeX double back-tick ``…'' not allowed; use curly quotes"
+      - "TYPO-004:TeX double back‑tick ``…'' not allowed; use opening curly quotes"
   - file: corpora/lint/pilot_v1/TYPO-005_ellipsis.tex
     expect: ["TYPO-005"]
     expect_msgs:
@@ -30,11 +30,11 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-008_blank_lines.tex
     expect: ["TYPO-008"]
     expect_msgs:
-      - "TYPO-008:Multiple consecutive blank lines (>2) in source"
+      - "TYPO-008:Multiple consecutive blank lines (> 2) in source"
   - file: corpora/lint/pilot_v1/TYPO-009_tilde_line_start.tex
     expect: ["TYPO-009"]
     expect_msgs:
-      - "TYPO-009:Non-breaking space ~ used incorrectly at line start"
+      - "TYPO-009:Non‑breaking space ~ used incorrectly at line start"
   - file: corpora/lint/pilot_v1/TYPO-010_space_before_punct.tex
     expect: ["TYPO-010"]
     expect_msgs:
@@ -102,7 +102,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-026_double_period_not_ellipsis.tex
     expect: ["TYPO-026"]
     expect_msgs:
-      - "TYPO-026:Double period .. should be … or \\dots"
+      - "TYPO-026:Double period .. should be … or \dots"
   - file: corpora/lint/pilot_v1/TYPO-027_multi_spaces_before_punct.tex
     expect: ["TYPO-027"]
     expect_msgs:
@@ -122,7 +122,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-034_space_before_footnote.tex
     expect: ["TYPO-034"]
     expect_msgs:
-      - "TYPO-034:Spurious space before \\footnote"
+      - "TYPO-034:Spurious space before footnote command \\footnote"
   - file: corpora/lint/pilot_v1/TYPO-037_space_before_comma.tex
     expect: ["TYPO-037"]
     expect_msgs:
@@ -130,15 +130,15 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-042_consecutive_question_marks.tex
     expect: ["TYPO-042"]
     expect_msgs:
-      - "TYPO-042:Multiple consecutive question marks"
+      - "TYPO-042:Multiple consecutive question marks ??"
   - file: corpora/lint/pilot_v1/TYPO-048_en_dash_as_minus.tex
     expect: ["TYPO-048"]
     expect_msgs:
-      - "TYPO-048:En-dash character used where minus sign expected"
+      - "TYPO-048:En‑dash used as minus sign in text"
   - file: corpora/lint/pilot_v1/TYPO-051_thin_space.tex
     expect: ["TYPO-051"]
     expect_msgs:
-      - "TYPO-051:Thin space U+2009 found; prefer \\thinspace or \\, macro"
+      - "TYPO-051:Figure space U+2009 used instead of \\thinspace macro"
   - file: corpora/lint/pilot_v1/TYPO-052_unescaped_angle.tex
     expect: ["TYPO-052"]
     expect_msgs:
@@ -146,19 +146,19 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-053_unicode_midline_ellipsis.tex
     expect: ["TYPO-053"]
     expect_msgs:
-      - "TYPO-053:Unicode midline ellipsis U+22EF found; use \\cdots instead"
+      - "TYPO-053:Unicode ⋯ (U+22EF) leader forbidden; use \\dots instead"
   - file: corpora/lint/pilot_v1/TYPO-055_consecutive_thinspace.tex
     expect: ["TYPO-055"]
     expect_msgs:
-      - "TYPO-055:Consecutive \\, thin-spaces detected; collapse into single space"
+      - "TYPO-055:Consecutive thin‑spaces (\\,\\,) prohibited; collapse"
   - file: corpora/lint/pilot_v1/TYPO-061_unicode_multiply.tex
     expect: ["TYPO-061"]
     expect_msgs:
-      - "TYPO-061:Unicode multiplication sign found; prefer \\times in math mode"
+      - "TYPO-061:Unicode × (U+00D7) in text; prefer \\times via math mode"
   - file: corpora/lint/pilot_v1/TYPO-035_french_punctuation.tex
     expect: ["TYPO-035"]
     expect_msgs:
-      - "TYPO-035:Space before French punctuation mark; use non-breaking space ~"
+      - "TYPO-035:French punctuation requires NBSP before ; : ! ?"
   - file: corpora/lint/pilot_v1/TYPO-036_shouting.tex
     expect: ["TYPO-036"]
     expect_msgs:
@@ -166,11 +166,11 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-038_bare_email.tex
     expect: ["TYPO-038"]
     expect_msgs:
-      - "TYPO-038:Bare e-mail address found; wrap in \\href{mailto:...}"
+      - "TYPO-038:E‑mail address not in \\href"
   - file: corpora/lint/pilot_v1/TYPO-041_ldots_spacing.tex
     expect: ["TYPO-041"]
     expect_msgs:
-      - "TYPO-041:Incorrect spacing around \\ldots; check for missing space"
+      - "TYPO-041:Incorrect spacing around \\ldots"
   - file: corpora/lint/pilot_v1/TYPO-043_smart_quotes_verbatim.tex
     expect: ["TYPO-043"]
     expect_msgs:
@@ -178,15 +178,15 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-054_endash_spacing.tex
     expect: ["TYPO-054"]
     expect_msgs:
-      - "TYPO-054:En-dash adjacent to letter without spacing; consider thin space"
+      - "TYPO-054:Hair‑space required after en‑dash in word–word ranges"
   - file: corpora/lint/pilot_v1/TYPO-057_degree_spacing.tex
     expect: ["TYPO-057"]
     expect_msgs:
-      - "TYPO-057:Number directly adjacent to degree symbol; insert thin space"
+      - "TYPO-057:Missing thin‑space before °C/°F or \\si{\\celsius}"
   - file: corpora/lint/pilot_v1/TYPO-063_nonbreaking_hyphen.tex
     expect: ["TYPO-063"]
     expect_msgs:
-      - "TYPO-063:Non-breaking hyphen U+2011 found; use standard hyphen"
+      - "TYPO-063:Non‑breaking hyphen U+2011 found inside URL"
   - file: corpora/lint/pilot_v1/TYPO-039_url_no_url_cmd.tex
     expect: ["TYPO-039"]
     expect_msgs:
@@ -194,15 +194,15 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-040_long_inline_math.tex
     expect: ["TYPO-040"]
     expect_msgs:
-      - "TYPO-040:Inline math $...$ exceeds 80 characters"
+      - "TYPO-040:Math in text mode $…$ exceeds 80 characters"
   - file: corpora/lint/pilot_v1/TYPO-045_non_ascii_math.tex
     expect: ["TYPO-045"]
     expect_msgs:
-      - "TYPO-045:Non-ASCII punctuation in math mode"
+      - "TYPO-045:Non‑ASCII punctuation in math mode (‘ ’ “ ”)"
   - file: corpora/lint/pilot_v1/TYPO-046_begin_math.tex
     expect: ["TYPO-046"]
     expect_msgs:
-      - "TYPO-046:Use of \\begin{math} instead of $...$"
+      - "TYPO-046:Use of $begin:math:text$ … $end:math:text$ instead of $…$"
   - file: corpora/lint/pilot_v1/TYPO-047_starred_section.tex
     expect: ["TYPO-047"]
     expect_msgs:
@@ -214,8 +214,8 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-056_legacy_accent.tex
     expect: ["TYPO-056"]
     expect_msgs:
-      - "TYPO-056:Legacy TeX accent command found; use UTF-8 character directly"
+      - "TYPO-056:Legacy TeX accents present despite UTF‑8 input"
   - file: corpora/lint/pilot_v1/TYPO-058_greek_homograph.tex
     expect: ["TYPO-058"]
     expect_msgs:
-      - "TYPO-058:Greek homograph letter found in Latin text"
+      - "TYPO-058:Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)"

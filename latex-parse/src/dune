@@ -327,3 +327,8 @@
  (name test_validators_math_gap)
  (modules test_validators_math_gap)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_expl3)
+ (modules test_validators_expl3)
+ (libraries latex_parse_lib unix))

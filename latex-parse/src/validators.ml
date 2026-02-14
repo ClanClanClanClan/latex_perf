@@ -10930,6 +10930,329 @@ let l1_pt_002_rule : rule =
   in
   { id = "PT-002"; run }
 
+(* ══════════════════════════════════════════════════════════════════════ L3-*
+   rules — LaTeX3 / expl3 style validators (L1_Expanded precondition)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* L3-001: LaTeX3 \tl_new:N in preamble mixed with 2e macros *)
+let l1_l3_001_rule : rule =
+  let re_expl3 =
+    Str.regexp
+      {|\\[a-z]+_[a-z_]+:[a-zA-Z]+\|\\tl_new:N\|\\int_new:N\|\\bool_new:N|}
+  in
+  let re_2e =
+    Str.regexp
+      {|\\newcommand\|\\renewcommand\|\\newenvironment\|\\renewenvironment|}
+  in
+  let run s =
+    let preamble =
+      try
+        let idx =
+          Str.search_forward (Str.regexp_string {|\begin{document}|}) s 0
+        in
+        String.sub s 0 idx
+      with Not_found -> s
+    in
+    let has_expl3 =
+      try
+        ignore (Str.search_forward re_expl3 preamble 0);
+        true
+      with Not_found -> false
+    in
+    let has_2e =
+      try
+        ignore (Str.search_forward re_2e preamble 0);
+        true
+      with Not_found -> false
+    in
+    if has_expl3 && has_2e then
+      Some
+        {
+          id = "L3-001";
+          severity = Info;
+          message =
+            "LaTeX3 expl3 declarations mixed with LaTeX2e macros in preamble";
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-001"; run }
+
+(* L3-002: Expl3 variable declared after \begin{document} *)
+let l1_l3_002_rule : rule =
+  let re_expl3_decl =
+    Str.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
+  in
+  let run s =
+    let body =
+      try
+        let idx =
+          Str.search_forward (Str.regexp_string {|\begin{document}|}) s 0
+        in
+        let start = idx + 16 in
+        if start < String.length s then
+          String.sub s start (String.length s - start)
+        else ""
+      with Not_found -> ""
+    in
+    if String.length body = 0 then None
+    else
+      let cnt = count_re_matches re_expl3_decl body in
+      if cnt > 0 then
+        Some
+          {
+            id = "L3-002";
+            severity = Warning;
+            message =
+              "Expl3 variable declaration after \\begin{document} — declare in \
+               preamble";
+            count = cnt;
+          }
+      else None
+  in
+  { id = "L3-002"; run }
+
+(* L3-003: Expl3 and etoolbox patch macros combined *)
+let l1_l3_003_rule : rule =
+  let re_expl3 = Str.regexp {|\\ExplSyntaxOn\|\\[a-z]+_[a-z_]+:[a-zA-Z]|} in
+  let re_etoolbox =
+    Str.regexp
+      {|\\patchcmd\|\\apptocmd\|\\pretocmd\|\\robustify\|\\AtBeginEnvironment|}
+  in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward re_expl3 s 0);
+        true
+      with Not_found -> false
+    in
+    let has_etoolbox =
+      try
+        ignore (Str.search_forward re_etoolbox s 0);
+        true
+      with Not_found -> false
+    in
+    if has_expl3 && has_etoolbox then
+      Some
+        {
+          id = "L3-003";
+          severity = Warning;
+          message =
+            "Expl3 and etoolbox patch macros combined — prefer pure expl3 hooks";
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-003"; run }
+
+(* L3-004: Undocumented \__module_internal:N used *)
+let l1_l3_004_rule : rule =
+  let re = Str.regexp {|\\__[a-z_]+:[a-zA-Z]*|} in
+  let run s =
+    let cnt = count_re_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "L3-004";
+          severity = Info;
+          message =
+            "Undocumented expl3 internal function (\\__...) used — fragile \
+             across updates";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "L3-004"; run }
+
+(* L3-005: Missing \ExplSyntaxOn guard around expl3 code *)
+let l1_l3_005_rule : rule =
+  let re_expl3_func = Str.regexp {|\\[a-z]+_[a-z_]+:[nNoVvxfeTFpw]+|} in
+  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward re_expl3_func s 0);
+        true
+      with Not_found -> false
+    in
+    if not has_expl3 then None
+    else
+      let has_guard =
+        try
+          ignore (Str.search_forward re_syntax_on s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_guard then
+        Some
+          {
+            id = "L3-005";
+            severity = Error;
+            message =
+              "Expl3 code used without \\ExplSyntaxOn guard — code will fail \
+               at runtime";
+            count = 1;
+          }
+      else None
+  in
+  { id = "L3-005"; run }
+
+(* L3-006: Expl3 variable clobbers package macro name *)
+let l1_l3_006_rule : rule =
+  let re_pkg = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{\([^}]+\)}|} in
+  let re_var = Str.regexp {|\\[lg]_\([a-z]+\)_[a-z_]+:[a-zA-Z]*|} in
+  let run s =
+    let pkgs = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re_pkg s !i in
+         let pkg_list = Str.matched_group 2 s in
+         List.iter
+           (fun p ->
+             let p = String.trim p in
+             if String.length p > 0 then pkgs := p :: !pkgs)
+           (String.split_on_char ',' pkg_list);
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !pkgs = [] then None
+    else
+      let cnt = ref 0 in
+      let j = ref 0 in
+      (try
+         while true do
+           let _ = Str.search_forward re_var s !j in
+           let var_prefix = Str.matched_group 1 s in
+           if List.mem var_prefix !pkgs then incr cnt;
+           j := Str.match_end ()
+         done
+       with Not_found -> ());
+      if !cnt > 0 then
+        Some
+          {
+            id = "L3-006";
+            severity = Warning;
+            message =
+              "Expl3 variable prefix matches a loaded package name — risk of \
+               namespace collision";
+            count = !cnt;
+          }
+      else None
+  in
+  { id = "L3-006"; run }
+
+(* L3-007: Mix of camelCase and snake_case in expl3 names *)
+let l1_l3_007_rule : rule =
+  let re_camel = Str.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|} in
+  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward re_syntax_on s 0);
+        true
+      with Not_found -> false
+    in
+    if not has_expl3 then None
+    else
+      let cnt = count_re_matches re_camel s in
+      if cnt > 0 then
+        Some
+          {
+            id = "L3-007";
+            severity = Info;
+            message =
+              "Mixed camelCase and snake_case in expl3 function names — use \
+               consistent snake_case";
+            count = cnt;
+          }
+      else None
+  in
+  { id = "L3-007"; run }
+
+(* L3-009: LaTeX3 function deprecated _n: variant used *)
+let l1_l3_009_rule : rule =
+  let deprecated =
+    [
+      {|\tl_to_str:n|};
+      {|\tl_count:n|};
+      {|\str_if_eq:nn|};
+      {|\int_eval:n|};
+      {|\fp_eval:n|};
+      {|\prop_get:Nn|};
+      {|\seq_count:N|};
+    ]
+  in
+  let run s =
+    let cnt =
+      List.fold_left (fun acc pat -> acc + count_substring s pat) 0 deprecated
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "L3-009";
+          severity = Info;
+          message =
+            "Deprecated expl3 function variant — check l3 changelog for \
+             updated signatures";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "L3-009"; run }
+
+(* L3-011: Engine-branch uses pdfTeX primitive in LuaTeX or XeTeX path *)
+let l1_l3_011_rule : rule =
+  let re_luatex_branch =
+    Str.regexp {|\\sys_if_engine_luatex:T\|\\ifluatex\|\\ifLuaTeX|}
+  in
+  let re_xetex_branch =
+    Str.regexp {|\\sys_if_engine_xetex:T\|\\ifxetex\|\\ifXeTeX|}
+  in
+  let pdftex_prims =
+    [
+      {|\pdfoutput|};
+      {|\pdfliteral|};
+      {|\pdfcatalog|};
+      {|\pdfcompresslevel|};
+      {|\pdfobjcompresslevel|};
+      {|\pdfminorversion|};
+      {|\pdfsavepos|};
+      {|\pdflastxpos|};
+    ]
+  in
+  let run s =
+    let has_lua =
+      try
+        ignore (Str.search_forward re_luatex_branch s 0);
+        true
+      with Not_found -> false
+    in
+    let has_xe =
+      try
+        ignore (Str.search_forward re_xetex_branch s 0);
+        true
+      with Not_found -> false
+    in
+    if not (has_lua || has_xe) then None
+    else
+      let cnt =
+        List.fold_left (fun acc p -> acc + count_substring s p) 0 pdftex_prims
+      in
+      if cnt > 0 then
+        Some
+          {
+            id = "L3-011";
+            severity = Warning;
+            message =
+              "pdfTeX primitive used in document with LuaTeX/XeTeX engine \
+               branch — may fail on non-pdfTeX engines";
+            count = cnt;
+          }
+      else None
+  in
+  { id = "L3-011"; run }
+
 let rules_l1 : rule list =
   [
     l1_cmd_001_rule;
@@ -11095,6 +11418,15 @@ let rules_l1 : rule list =
     l1_cjk_015_rule;
     l1_typo_059_rule;
     l1_pt_002_rule;
+    l1_l3_001_rule;
+    l1_l3_002_rule;
+    l1_l3_003_rule;
+    l1_l3_004_rule;
+    l1_l3_005_rule;
+    l1_l3_006_rule;
+    l1_l3_007_rule;
+    l1_l3_009_rule;
+    l1_l3_011_rule;
   ]
 
 let get_rules () : rule list =
@@ -11164,6 +11496,8 @@ let precondition_of_rule_id (id : string) : layer =
   | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1
   (* CJK-008, CJK-015 need expanded text = L1 *)
   | "CJK-008" | "CJK-015" -> L1
+  (* L3-008, L3-010 are L2_Ast per spec — not yet implemented *)
+  | "L3-008" | "L3-010" -> L2
   (* Prefix-based mappings *)
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
@@ -11182,7 +11516,7 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 5 && String.sub id 0 5 = "FONT-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "RTL-" -> L1
   | _ when String.length id >= 3 && String.sub id 0 3 = "PT-" -> L1
-  | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
+  | _ when String.length id >= 3 && String.sub id 0 3 = "L3-" -> L1
   | _ -> L0
 
 let allow_for_layer (id : string) (ly : layer) : bool =

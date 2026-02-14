@@ -776,7 +776,7 @@ let r_typo_013 : rule =
           Some
             {
               id = "TYPO-013";
-              severity = Info;
+              severity = Warning;
               message = "Consider non-breaking space after single-letter words";
               count = cnt;
             }
@@ -790,7 +790,7 @@ let r_typo_013 : rule =
           Some
             {
               id = "TYPO-013";
-              severity = Info;
+              severity = Warning;
               message = "Consider non-breaking space after single-letter words";
               count = cnt;
             }
@@ -820,7 +820,7 @@ let r_typo_014 : rule =
       Some
         {
           id = "TYPO-014";
-          severity = Warning;
+          severity = Info;
           message = "Inconsistent quotation mark style within text";
           count = 1;
         }
@@ -849,7 +849,7 @@ let r_typo_015 : rule =
           Some
             {
               id = "TYPO-015";
-              severity = Info;
+              severity = Warning;
               message = "LaTeX command spacing may need adjustment";
               count = cnt;
             }
@@ -860,7 +860,7 @@ let r_typo_015 : rule =
           Some
             {
               id = "TYPO-015";
-              severity = Info;
+              severity = Warning;
               message = "LaTeX command spacing may need adjustment";
               count = cnt;
             }
@@ -942,7 +942,7 @@ let r_typo_018 : rule =
           Some
             {
               id = "TYPO-018";
-              severity = Warning;
+              severity = Info;
               message = "Double space after sentence punctuation";
               count = cnt;
             }
@@ -957,7 +957,7 @@ let r_typo_018 : rule =
           Some
             {
               id = "TYPO-018";
-              severity = Warning;
+              severity = Info;
               message = "Double space after sentence punctuation";
               count = cnt;
             }
@@ -1074,7 +1074,7 @@ let r_typo_021 : rule =
           Some
             {
               id = "TYPO-021";
-              severity = Warning;
+              severity = Info;
               message = "Space after opening bracket ( [ {";
               count = cnt;
             }
@@ -1089,7 +1089,7 @@ let r_typo_021 : rule =
           Some
             {
               id = "TYPO-021";
-              severity = Warning;
+              severity = Info;
               message = "Space after opening bracket ( [ {";
               count = cnt;
             }
@@ -1123,7 +1123,7 @@ let r_typo_022 : rule =
           Some
             {
               id = "TYPO-022";
-              severity = Warning;
+              severity = Info;
               message = "Missing space after punctuation";
               count = cnt;
             }
@@ -1154,7 +1154,7 @@ let r_typo_022 : rule =
           Some
             {
               id = "TYPO-022";
-              severity = Warning;
+              severity = Info;
               message = "Missing space after punctuation";
               count = cnt;
             }
@@ -1169,7 +1169,7 @@ let r_typo_023 : rule =
       Some
         {
           id = "TYPO-023";
-          severity = Warning;
+          severity = Error;
           message = "Windows CR (\\r) line endings found";
           count = cnt;
         }
@@ -1193,7 +1193,7 @@ let r_typo_024 : rule =
       Some
         {
           id = "TYPO-024";
-          severity = Error;
+          severity = Info;
           message = "Control characters (U+0000–U+001F) present";
           count = cnt;
         }
@@ -1320,7 +1320,7 @@ let r_typo_027 : rule =
           Some
             {
               id = "TYPO-027";
-              severity = Warning;
+              severity = Info;
               message = "Multiple spaces before punctuation";
               count = cnt;
             }
@@ -1334,7 +1334,7 @@ let r_typo_027 : rule =
           Some
             {
               id = "TYPO-027";
-              severity = Warning;
+              severity = Info;
               message = "Multiple spaces before punctuation";
               count = cnt;
             }
@@ -1363,7 +1363,7 @@ let r_typo_028 : rule =
           Some
             {
               id = "TYPO-028";
-              severity = Warning;
+              severity = Error;
               message = "Space before percent sign %";
               count = cnt;
             }
@@ -1374,7 +1374,7 @@ let r_typo_028 : rule =
           Some
             {
               id = "TYPO-028";
-              severity = Warning;
+              severity = Error;
               message = "Space before percent sign %";
               count = cnt;
             }
@@ -1403,7 +1403,7 @@ let r_typo_029 : rule =
           Some
             {
               id = "TYPO-029";
-              severity = Warning;
+              severity = Info;
               message = "Space after opening quote";
               count = cnt;
             }
@@ -1414,7 +1414,7 @@ let r_typo_029 : rule =
           Some
             {
               id = "TYPO-029";
-              severity = Warning;
+              severity = Info;
               message = "Space after opening quote";
               count = cnt;
             }
@@ -1437,7 +1437,7 @@ let l1_cmd_001_rule : rule =
       Some
         {
           id = "CMD-001";
-          severity = Warning;
+          severity = Info;
           message = "Deprecated LaTeX command: use modern equivalent";
           count = cnt;
         }
@@ -1459,7 +1459,7 @@ let l1_cmd_003_rule : rule =
       Some
         {
           id = "CMD-003";
-          severity = Info;
+          severity = Warning;
           message = "Deep sectioning level may affect readability";
           count = cnt;
         }
@@ -1477,7 +1477,7 @@ let r_typo_030 : rule =
       Some
         {
           id = "TYPO-030";
-          severity = Warning;
+          severity = Info;
           message = "More than three hyphens detected (----)";
           count = cnt;
         }
@@ -1557,7 +1557,7 @@ let r_typo_032 : rule =
       Some
         {
           id = "TYPO-032";
-          severity = Info;
+          severity = Warning;
           message =
             "Prefer Unicode dashes consistently; ASCII --/--- appear \
              sporadically";
@@ -1585,7 +1585,7 @@ let r_typo_033 : rule =
       Some
         {
           id = "TYPO-033";
-          severity = Info;
+          severity = Warning;
           message = "Mixed ellipsis styles detected (Unicode and ASCII)";
           count = 1;
         }
@@ -1638,7 +1638,10 @@ let r_typo_035 : rule =
 (* Suspicious consecutive capitalised words (shouting) *)
 let r_typo_036 : rule =
   let run s =
-    let re = Str.regexp "\\b[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\\b" in
+    let re =
+      Str.regexp
+        {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
+    in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -6347,7 +6350,9 @@ let l1_delim_005_rule : rule =
 (* DELIM-006: \big delimiters used outside display math — detect \big, \bigl,
    \bigr etc. in inline math ($...$, \(...\)) rather than display math. *)
 let l1_delim_006_rule : rule =
-  let re_big = Str.regexp {|\\[Bb]ig[lrmg]?\b\|\\[Bb]igg[lrmg]?\b|} in
+  let re_big =
+    Str.regexp {|\\[Bb]ig[lrmg]?[^a-zA-Z]\|\\[Bb]igg[lrmg]?[^a-zA-Z]|}
+  in
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
@@ -6517,7 +6522,7 @@ let l1_delim_009_rule : rule =
 (* DELIM-010: Display math uses \big instead of \Big — in display math contexts,
    convention is to use capital sizing commands *)
 let l1_delim_010_rule : rule =
-  let re_small_big = Str.regexp {|\\big[lrmg]?\b|} in
+  let re_small_big = Str.regexp {|\\big[lrmg]?[^a-zA-Z]|} in
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
@@ -11150,15 +11155,23 @@ type layer = L0 | L1 | L2 | L3 | L4
 
 let precondition_of_rule_id (id : string) : layer =
   match id with
+  (* Explicit per-rule overrides *)
   | "TYPO-059" -> L1
   | "MATH-083" -> L0
   | "MATH-023" | "MATH-024" -> L2
   | "MATH-026" | "MATH-027" -> L3
+  (* CMD-001, CMD-003, CMD-007, CMD-010 need expanded text = L1 *)
+  | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1
+  (* CJK-008, CJK-015 need expanded text = L1 *)
+  | "CJK-008" | "CJK-015" -> L1
+  (* Prefix-based mappings *)
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
   | _ when String.length id >= 5 && String.sub id 0 5 = "CHAR-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "SPC-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "CMD-" -> L1
+  | _ when String.length id >= 4 && String.sub id 0 4 = "CMD-" -> L0
+  | _ when String.length id >= 4 && String.sub id 0 4 = "CJK-" -> L0
+  | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "MOD-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
   | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
@@ -11168,7 +11181,6 @@ let precondition_of_rule_id (id : string) : layer =
   | _ when String.length id >= 5 && String.sub id 0 5 = "CHEM-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "FONT-" -> L1
   | _ when String.length id >= 4 && String.sub id 0 4 = "RTL-" -> L1
-  | _ when String.length id >= 4 && String.sub id 0 4 = "CJK-" -> L1
   | _ when String.length id >= 3 && String.sub id 0 3 = "PT-" -> L1
   | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
   | _ -> L0

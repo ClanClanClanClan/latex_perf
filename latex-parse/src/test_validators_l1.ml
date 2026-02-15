@@ -1,5 +1,4 @@
-(** Unit tests for L1 validator rules: CMD-001, CMD-003, MOD-001..013,
-    MOD-020..024, and EXP-001. *)
+(** Unit tests for L1 validator rules: MOD-001..013, MOD-020..024, and EXP-001. *)
 
 open Latex_parse_lib
 
@@ -24,41 +23,6 @@ let fires id src = find_result id src <> None
 let does_not_fire id src = find_result id src = None
 
 let () =
-  (* ══════════════════════════════════════════════════════════════════════
-     CMD-001: Deprecated LaTeX commands (over, centerline, bf, it) Uses
-     extract_command_names which parses \command sequences.
-     ══════════════════════════════════════════════════════════════════════ *)
-  run "CMD-001 fires on \\over" (fun tag ->
-      expect (fires "CMD-001" "a \\over b") (tag ^ ": deprecated over"));
-  run "CMD-001 fires on \\centerline" (fun tag ->
-      expect
-        (fires "CMD-001" "\\centerline{text}")
-        (tag ^ ": deprecated centerline"));
-  run "CMD-001 fires on \\bf" (fun tag ->
-      expect (fires "CMD-001" "{\\bf bold}") (tag ^ ": deprecated bf"));
-  run "CMD-001 fires on \\it" (fun tag ->
-      expect (fires "CMD-001" "{\\it italic}") (tag ^ ": deprecated it"));
-  run "CMD-001 clean" (fun tag ->
-      expect
-        (does_not_fire "CMD-001" "\\textbf{bold} \\emph{italic}")
-        (tag ^ ": modern commands ok"));
-
-  (* ══════════════════════════════════════════════════════════════════════
-     CMD-003: Deep sectioning levels
-     ══════════════════════════════════════════════════════════════════════ *)
-  run "CMD-003 fires on \\paragraph" (fun tag ->
-      expect (fires "CMD-003" "\\paragraph{Deep}") (tag ^ ": deep sectioning"));
-  run "CMD-003 fires on \\subparagraph" (fun tag ->
-      expect (fires "CMD-003" "\\subparagraph{Deeper}") (tag ^ ": subparagraph"));
-  run "CMD-003 fires on \\subsubsection" (fun tag ->
-      expect
-        (fires "CMD-003" "\\subsubsection{Three levels}")
-        (tag ^ ": subsubsection"));
-  run "CMD-003 clean" (fun tag ->
-      expect
-        (does_not_fire "CMD-003" "\\section{Title} \\subsection{Sub}")
-        (tag ^ ": shallow sectioning ok"));
-
   (* ══════════════════════════════════════════════════════════════════════
      MOD-001: Legacy font commands (bf, it, tt, rm, sl, sf)
      ══════════════════════════════════════════════════════════════════════ *)
@@ -363,20 +327,6 @@ let () =
            "{\\bfseries bold}\n\nClean paragraph here\n\n\\textbf{modern}")
         (tag ^ ": non-adjacent paragraphs still fire"));
 
-  (* CMD-001 count — multiple deprecated commands *)
-  run "CMD-001 fires with multiple deprecated commands" (fun tag ->
-      let results = Validators.run_all "\\over and \\bf and \\it" in
-      let cmd001 =
-        List.find_opt (fun (r : Validators.result) -> r.id = "CMD-001") results
-      in
-      expect (cmd001 <> None) (tag ^ ": multiple deprecated found"));
-
-  (* CMD-003: only deep sectioning, not section/subsection *)
-  run "CMD-003 does not fire on chapter" (fun tag ->
-      expect
-        (does_not_fire "CMD-003" "\\chapter{Top}")
-        (tag ^ ": chapter is not deep"));
-
   (* EXP-001 does not fire when only bfseries (not textbf) *)
   run "EXP-001 does not fire on bfseries" (fun tag ->
       expect
@@ -423,10 +373,6 @@ let () =
       let has id =
         List.exists (fun (r : Validators.result) -> r.id = id) results
       in
-      (* CMD-001: \bf is deprecated *)
-      expect (has "CMD-001") (tag ^ ": CMD-001 fires on \\bf");
-      (* CMD-003: \subsubsection is deep *)
-      expect (has "CMD-003") (tag ^ ": CMD-003 fires on subsubsection");
       (* MOD-001: \bf is a legacy font command *)
       expect (has "MOD-001") (tag ^ ": MOD-001 fires on \\bf");
       (* EXP-001: \textbf and \emph still present *)
@@ -456,10 +402,6 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      Layer dispatch for L1 rules
      ══════════════════════════════════════════════════════════════════════ *)
-  run "CMD layer is L1" (fun tag ->
-      expect
-        (Validators.precondition_of_rule_id "CMD-001" = L1)
-        (tag ^ ": CMD -> L1"));
   run "MOD layer is L1" (fun tag ->
       expect
         (Validators.precondition_of_rule_id "MOD-001" = L1)

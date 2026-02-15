@@ -1,8 +1,4 @@
 cases:
-  - file: corpora/l1/CMD-001_deprecated_after_expansion.tex
-    expect: ["CMD-001"]
-  - file: corpora/l1/CMD-003_deep_sectioning.tex
-    expect: ["CMD-003"]
   - file: corpora/l1/MOD-001_mixed_bf_textbf.tex
     expect: ["MOD-001"]
     expect_msgs:

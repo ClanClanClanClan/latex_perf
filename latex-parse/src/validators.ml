@@ -670,7 +670,7 @@ let r_typo_010 : rule =
   in
   { id = "TYPO-010"; run }
 
-(* TYPO-011: Missing thin space before differential d in integrals *)
+(* TYPO-011: Missing thin space before differential d in integrals *)
 let r_typo_011 : rule =
   let re = Str.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
   let run s =
@@ -689,7 +689,7 @@ let r_typo_011 : rule =
           id = "TYPO-011";
           severity = Info;
           message =
-            {|Missing thin space (\,) before differential d in integrals|};
+            {|Missing thin space (\,) before differential d in integrals|};
           count = !cnt;
         }
     else None
@@ -957,7 +957,7 @@ let r_typo_023 : rule =
 
 (* TYPO-024: Dangling dash at line end *)
 let r_typo_024 : rule =
-  let re = Str.regexp {|-+[ \t]*$|} in
+  let re = Str.regexp "-+[ \t]*$" in
   let run s =
     let lines = String.split_on_char '\n' s in
     let cnt =
@@ -1237,9 +1237,7 @@ let r_typo_036 : rule =
         {
           id = "TYPO-036";
           severity = Info;
-          message =
-            "Suspicious consecutive capitalised words; check for inadvertent \
-             shouting";
+          message = "Suspicious consecutive capitalised words (shouting)";
           count = cnt;
         }
     else None
@@ -1335,9 +1333,7 @@ let r_typo_043 : rule =
         {
           id = "TYPO-043";
           severity = Warning;
-          message =
-            "Smart (curly) quotes detected; verbatim sections require ASCII \
-             quotes";
+          message = "Smart quotes inside verbatim detected";
           count = cnt;
         }
     else None
@@ -3576,7 +3572,7 @@ let r_spc_016 : rule =
   in
   { id = "SPC-016"; run }
 
-(* SPC-017: Missing thin space before units — detect patterns like "5cm",
+(* SPC-017: Missing thin space before units — detect patterns like "5cm",
    "100kg", "3.5 GHz" where a number directly adjoins a unit abbreviation
    without a thin space (\,). We check for digit-letter transitions in text mode
    where the letter sequence matches a known SI/common unit. *)
@@ -10753,7 +10749,8 @@ let l1_l3_011_rule : rule =
 (* CMD-001: Command \newcommand defined but never used *)
 let l1_cmd_001_rule : rule =
   let def_re =
-    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+    Str.regexp
+      "\\\\\\(newcommand\\|renewcommand\\)[ \t\n]*{?\\\\\\([a-zA-Z]+\\)}?"
   in
   let find_substring s pat from =
     let n = String.length s and m = String.length pat in
@@ -10867,7 +10864,8 @@ let l1_cmd_003_rule : rule =
     ]
   in
   let def_re =
-    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+    Str.regexp
+      "\\\\\\(newcommand\\|renewcommand\\)[ \t\n]*{?\\\\\\([a-zA-Z]+\\)}?"
   in
   let run s =
     let cnt = ref 0 in

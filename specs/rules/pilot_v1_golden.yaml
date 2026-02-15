@@ -42,7 +42,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-011_thin_space_integral.tex
     expect: ["TYPO-011"]
     expect_msgs:
-      - "TYPO-011:Missing thin space (\\,) before differential d in integrals"
+      - "TYPO-011:Missing thin space (\\,) before differential d in integrals"
   - file: corpora/lint/pilot_v1/TYPO-012_straight_apostrophe_feet.tex
     expect: ["TYPO-012"]
     expect_msgs:
@@ -158,7 +158,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-036_shouting.tex
     expect: ["TYPO-036"]
     expect_msgs:
-      - "TYPO-036:Suspicious consecutive capitalised words; check for inadvertent shouting"
+      - "TYPO-036:Suspicious consecutive capitalised words (shouting)"
   - file: corpora/lint/pilot_v1/TYPO-038_bare_email.tex
     expect: ["TYPO-038"]
     expect_msgs:
@@ -170,7 +170,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-043_smart_quotes_verbatim.tex
     expect: ["TYPO-043"]
     expect_msgs:
-      - "TYPO-043:Smart (curly) quotes detected; verbatim sections require ASCII quotes"
+      - "TYPO-043:Smart quotes inside verbatim detected"
   - file: corpora/lint/pilot_v1/TYPO-054_endash_spacing.tex
     expect: ["TYPO-054"]
     expect_msgs:

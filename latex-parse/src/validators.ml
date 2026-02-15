@@ -382,7 +382,7 @@ let r_typo_001 : rule =
         {
           id = "TYPO-001";
           severity = Error;
-          message = "ASCII straight quotes must be curly quotes";
+          message = {|ASCII straight quotes (" … ") must be curly quotes|};
           count = cnt;
         }
     else None
@@ -411,7 +411,7 @@ let r_typo_002 : rule =
             {
               id = "TYPO-002";
               severity = Warning;
-              message = "Double hyphen -- should be en-dash –";
+              message = "Double hyphen -- should be en‑dash –";
               count = cnt;
             }
         else None
@@ -422,7 +422,7 @@ let r_typo_002 : rule =
             {
               id = "TYPO-002";
               severity = Warning;
-              message = "Double hyphen -- should be en-dash –";
+              message = "Double hyphen -- should be en‑dash –";
               count = cnt;
             }
         else None
@@ -451,7 +451,7 @@ let r_typo_003 : rule =
             {
               id = "TYPO-003";
               severity = Warning;
-              message = "Triple hyphen --- should be em-dash —";
+              message = "Triple hyphen --- should be em‑dash —";
               count = cnt;
             }
         else None
@@ -462,7 +462,7 @@ let r_typo_003 : rule =
             {
               id = "TYPO-003";
               severity = Warning;
-              message = "Triple hyphen --- should be em-dash —";
+              message = "Triple hyphen --- should be em‑dash —";
               count = cnt;
             }
         else None
@@ -477,7 +477,8 @@ let r_typo_004 : rule =
         {
           id = "TYPO-004";
           severity = Warning;
-          message = "TeX double back-tick ``…'' not allowed; use curly quotes";
+          message =
+            "TeX double back‑tick ``…'' not allowed; use opening curly quotes";
           count = cnt;
         }
     else None
@@ -586,7 +587,7 @@ let r_typo_008 : rule =
             {
               id = "TYPO-008";
               severity = Info;
-              message = "Multiple consecutive blank lines (>2) in source";
+              message = "Multiple consecutive blank lines (> 2) in source";
               count = cnt;
             }
         else None
@@ -597,7 +598,7 @@ let r_typo_008 : rule =
             {
               id = "TYPO-008";
               severity = Info;
-              message = "Multiple consecutive blank lines (>2) in source";
+              message = "Multiple consecutive blank lines (> 2) in source";
               count = cnt;
             }
         else None
@@ -615,7 +616,7 @@ let r_typo_009 : rule =
         {
           id = "TYPO-009";
           severity = Warning;
-          message = "Non-breaking space ~ used incorrectly at line start";
+          message = "Non‑breaking space ~ used incorrectly at line start";
           count = cnt;
         }
     else None
@@ -669,204 +670,488 @@ let r_typo_010 : rule =
   in
   { id = "TYPO-010"; run }
 
-(* Additional pilot rules to reach 15+ *)
-
+(* TYPO-011: Missing thin space before differential d in integrals *)
 let r_typo_011 : rule =
+  let re = Str.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: rest -> (
-                match a.kind with
-                | Space when a.e - a.s > 1 -> loop (c + 1) rest
-                | _ -> loop c rest)
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-011";
-              severity = Info;
-              message = "Multiple consecutive spaces in text";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "  " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-011";
-              severity = Info;
-              message = "Multiple consecutive spaces in text";
-              count = cnt;
-            }
-        else None
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-011";
+          severity = Info;
+          message =
+            {|Missing thin space (\,) before differential d in integrals|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-011"; run }
 
+(* TYPO-012: Straight apostrophe used for minutes/feet *)
 let r_typo_012 : rule =
+  let re = Str.regexp {|[0-9]'|} in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Bracket_close, Some _ -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-012";
-              severity = Warning;
-              message = "Space before closing bracket ) ] }";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let combos = [ " )"; " ]"; " }" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-012";
-              severity = Warning;
-              message = "Space before closing bracket ) ] }";
-              count = cnt;
-            }
-        else None
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-012";
+          severity = Warning;
+          message =
+            {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-012"; run }
 
+(* TYPO-013: ASCII back-tick used as opening quote *)
 let r_typo_013 : rule =
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        (* Look for single-letter Word tokens followed by Space then Word *)
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: c' :: rest -> (
-                match (a.kind, b.kind, c'.kind) with
-                | Word, Space, Word when a.e - a.s = 1 ->
-                    loop (c + 1) (b :: c' :: rest)
-                | _ -> loop c (b :: c' :: rest))
-            | _ -> c
-          in
-          loop 0 toks
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '`' then
+        (* Only flag single backtick, not `` (TeX opening quote) *)
+        let is_double =
+          (i + 1 < n && s.[i + 1] = '`') || (i > 0 && s.[i - 1] = '`')
         in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-013";
-              severity = Warning;
-              message = "Consider non-breaking space after single-letter words";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let patterns = [ " a "; " I "; " a\n"; " I\n" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 patterns
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-013";
-              severity = Warning;
-              message = "Consider non-breaking space after single-letter words";
-              count = cnt;
-            }
-        else None
+        if not is_double then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-013";
+          severity = Warning;
+          message = {|ASCII back‑tick ` used as opening quote|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-013"; run }
 
+(* TYPO-014: Space before percent sign — relocated from old TYPO-028 *)
 let r_typo_014 : rule =
   let run s =
-    (* Paragraph-aware mixed quote styles: straight and curly in same
-       paragraph *)
-    let paras = split_into_paragraphs s in
-    let mixed =
-      let check seg0 =
-        let seg = strip_math_segments seg0 in
-        let has_straight = count_char seg '"' > 0 || count_char seg '\'' > 0 in
-        let has_curly =
-          Unicode.has_curly_quote seg
-          || count_substring seg "``" + count_substring seg "''" > 0
-        in
-        has_straight && has_curly
-      in
-      if paras = [] then check s
-      else List.exists (fun (off, len) -> check (String.sub s off len)) paras
-    in
-    if mixed then
+    let cnt = count_substring s " %" in
+    if cnt > 0 then
       Some
         {
           id = "TYPO-014";
           severity = Info;
-          message = "Inconsistent quotation mark style within text";
-          count = 1;
+          message = {|Space before percent sign \%|};
+          count = cnt;
         }
     else None
   in
   { id = "TYPO-014"; run }
 
+(* TYPO-015: Double \% in source; likely stray percent *)
 let r_typo_015 : rule =
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Command, Space -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-015";
-              severity = Warning;
-              message = "LaTeX command spacing may need adjustment";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "\\ " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-015";
-              severity = Warning;
-              message = "LaTeX command spacing may need adjustment";
-              count = cnt;
-            }
-        else None
+    let cnt = count_substring s "\\%\\%" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-015";
+          severity = Warning;
+          message = {|Double \% in source; likely stray percent|};
+          count = cnt;
+        }
+    else None
   in
   { id = "TYPO-015"; run }
+
+(* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
+let r_typo_016 : rule =
+  let re = Str.regexp {| \\cite\b\| \\ref\b|} in
+  let tilde_re = Str.regexp {|~\\cite\b\|~\\ref\b|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Subtract cases where ~ is already used *)
+    let tilde_cnt = ref 0 in
+    let j = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward tilde_re s !j in
+         incr tilde_cnt;
+         j := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt = !cnt in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-016";
+          severity = Info;
+          message = {|Non‑breaking space ~ missing before \cite / \ref|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-016"; run }
+
+(* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
+let r_typo_017 : rule =
+  let re = Str.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-017";
+          severity = Info;
+          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-017"; run }
+
+(* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011 *)
+let r_typo_018 : rule =
+  let run s =
+    let cnt = count_substring s "  " in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-018";
+          severity = Info;
+          message = "Multiple consecutive spaces in text";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-018"; run }
+
+(* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
+let r_typo_019 : rule =
+  let run _s = None in
+  { id = "TYPO-019"; run }
+
+(* TYPO-020: Sentence without ending punctuation — DEFERRED: requires NLP *)
+let r_typo_020 : rule =
+  let run _s = None in
+  { id = "TYPO-020"; run }
+
+(* TYPO-021: Capital letter after ellipsis without space *)
+let r_typo_021 : rule =
+  let re = Str.regexp {|\(\.\.\.\|…\)[A-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-021";
+          severity = Info;
+          message = "Capital letter after ellipsis without space";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-021"; run }
+
+(* TYPO-022: Space before closing punctuation — relocated from old TYPO-012 *)
+let r_typo_022 : rule =
+  let run s =
+    let combos = [ " )"; " ]"; " }" ] in
+    let cnt =
+      List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-022";
+          severity = Info;
+          message = "Space before closing punctuation ) ] }";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-022"; run }
+
+(* TYPO-023: ASCII ampersand & outside tabular env; use \& *)
+let r_typo_023 : rule =
+  let tabular_re =
+    Str.regexp
+      {|\\begin{tabular\|\\begin{array\|\\begin{align\|\\begin{tabularx\|\\begin{longtable|}
+  in
+  let end_re =
+    Str.regexp
+      {|\\end{tabular\|\\end{array\|\\end{align\|\\end{tabularx\|\\end{longtable|}
+  in
+  let run s =
+    (* Strip out tabular/array/align environments *)
+    let stripped = ref s in
+    (try
+       while true do
+         let start_pos = Str.search_forward tabular_re !stripped 0 in
+         try
+           let end_pos = Str.search_forward end_re !stripped start_pos in
+           let end_pos =
+             try
+               let _ = Str.search_forward (Str.regexp "}") !stripped end_pos in
+               Str.match_end ()
+             with Not_found -> end_pos + 10
+           in
+           let before = String.sub !stripped 0 start_pos in
+           let after =
+             if end_pos < String.length !stripped then
+               String.sub !stripped end_pos (String.length !stripped - end_pos)
+             else ""
+           in
+           stripped := before ^ after
+         with Not_found ->
+           (* No matching end — strip from start to end of string *)
+           stripped := String.sub !stripped 0 start_pos
+       done
+     with Not_found -> ());
+    (* Count bare & (not \&) in stripped text *)
+    let n = String.length !stripped in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if !stripped.[i] = '&' && not (i > 0 && !stripped.[i - 1] = '\\') then
+        incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-023";
+          severity = Error;
+          message = {|ASCII ampersand & outside tabular env; use \&|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-023"; run }
+
+(* TYPO-024: Dangling dash at line end *)
+let r_typo_024 : rule =
+  let re = Str.regexp {|-+[ \t]*$|} in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          try
+            let _ = Str.search_forward re line 0 in
+            acc + 1
+          with Not_found -> acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-024";
+          severity = Info;
+          message = "Dangling dash at line end";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-024"; run }
+
+(* TYPO-025: Space before en-dash in number range *)
+let r_typo_025 : rule =
+  let re = Str.regexp {|[0-9] +\(–\|--\)[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-025";
+          severity = Warning;
+          message = {|Space before en‑dash in number range|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-025"; run }
+
+(* TYPO-026: Wrong dash in page range — should use -- *)
+let r_typo_026 : rule =
+  let re = Str.regexp {|[0-9]–[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-026";
+          severity = Warning;
+          message = {|Wrong dash in page range – should use --|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-026"; run }
+
+(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
+let r_typo_027 : rule =
+  let run s =
+    let cnt = count_substring s "!!" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-027";
+          severity = Info;
+          message = {|Multiple exclamation marks ‼|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-027"; run }
+
+(* TYPO-028: Use of $$ display math delimiter *)
+let r_typo_028 : rule =
+  let run s =
+    let cnt = count_substring s "$$" in
+    (* Each pair of $$ counts as one — divide by 2 *)
+    let cnt = cnt / 2 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-028";
+          severity = Error;
+          message = {|Use of ``$$'' display math delimiter|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-028"; run }
+
+(* TYPO-029: Non-breaking space after \ref missing *)
+let r_typo_029 : rule =
+  let re = Str.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-029";
+          severity = Info;
+          message = {|Non‑breaking space after \ref missing|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-029"; run }
+
+(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP *)
+let r_typo_030 : rule =
+  let run _s = None in
+  { id = "TYPO-030"; run }
+
+(* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
+   NLP *)
+let r_typo_031 : rule =
+  let run _s = None in
+  { id = "TYPO-031"; run }
+
+(* TYPO-032: Comma before \cite *)
+let r_typo_032 : rule =
+  let re = Str.regexp {|,[ ]*\\cite|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-032";
+          severity = Warning;
+          message = {|Comma before \cite|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-032"; run }
+
+(* TYPO-033: Abbreviation et.al without space *)
+let r_typo_033 : rule =
+  let run s =
+    let cnt = count_substring s "et.al" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-033";
+          severity = Warning;
+          message = "Abbreviation et.al without space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-033"; run }
 
 let rules_pilot : rule list =
   [
@@ -885,715 +1170,25 @@ let rules_pilot : rule list =
     r_typo_013;
     r_typo_014;
     r_typo_015;
+    r_typo_016;
+    r_typo_017;
+    r_typo_018;
+    r_typo_019;
+    r_typo_020;
+    r_typo_021;
+    r_typo_022;
+    r_typo_023;
+    r_typo_024;
+    r_typo_025;
+    r_typo_026;
+    r_typo_027;
+    r_typo_028;
+    r_typo_029;
+    r_typo_030;
+    r_typo_031;
+    r_typo_032;
+    r_typo_033;
   ]
-
-(* Extended pilot additions *)
-
-let r_typo_016 : rule =
-  let run s =
-    let cnt = count_substring s "!!" + count_substring s "!!!" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-016";
-          severity = Info;
-          message = "Excessive exclamation marks, consider moderation";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-016"; run }
-
-let r_typo_017 : rule =
-  let run s =
-    let cnt = count_substring s "??" + count_substring s "???" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-017";
-          severity = Info;
-          message = "Excessive question marks, consider moderation";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-017"; run }
-
-let r_typo_018 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_end = function Some ('.' | '?' | '!') -> true | _ -> false in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind) with
-                | Symbol, ch, Space when is_end ch && b.e - b.s > 1 ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-018";
-              severity = Info;
-              message = "Double space after sentence punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt =
-          count_substring s ".  "
-          + count_substring s "?  "
-          + count_substring s "!  "
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-018";
-              severity = Info;
-              message = "Double space after sentence punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-018"; run }
-
-let r_typo_019 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c prev = function
-            | [] -> c
-            | t :: rest -> (
-                match (prev, t.kind) with
-                | None, Space -> loop (c + 1) (Some t.kind) rest
-                | Some Newline, Space -> loop (c + 1) (Some t.kind) rest
-                | _ -> loop c (Some t.kind) rest)
-          in
-          loop 0 None toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-019";
-              severity = Info;
-              message = "Leading spaces at start of line";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let starts =
-          if String.length s > 0 && String.unsafe_get s 0 = ' ' then 1 else 0
-        in
-        let cnt = starts + count_substring s "\n " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-019";
-              severity = Info;
-              message = "Leading spaces at start of line";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-019"; run }
-
-let r_typo_020 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind, b.ch) with
-                | Symbol, Some ',', Symbol, Some ',' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-020";
-              severity = Warning;
-              message = "Consecutive commas ,, found";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s ",," in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-020";
-              severity = Warning;
-              message = "Consecutive commas ,, found";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-020"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_016; r_typo_017; r_typo_018; r_typo_019; r_typo_020 ]
-
-(* Next 5 high-signal lexical rules *)
-
-let r_typo_021 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, a.ch) with
-                | Bracket_open, Space, Some _ -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-021";
-              severity = Info;
-              message = "Space after opening bracket ( [ {";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt =
-          count_substring s "( "
-          + count_substring s "[ "
-          + count_substring s "{ "
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-021";
-              severity = Info;
-              message = "Space after opening bracket ( [ {";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-021"; run }
-
-let r_typo_022 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_punct c =
-          match c with ',' | '.' | ';' | ':' | '?' | '!' -> true | _ -> false
-        in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind) with
-                | Symbol, Some ch, (Word | Command | Bracket_open | Quote)
-                  when is_punct ch ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-022";
-              severity = Info;
-              message = "Missing space after punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        (* byte-level fallback *)
-        let n = String.length s in
-        let is_punct c =
-          match c with ',' | '.' | ';' | ':' | '?' | '!' -> true | _ -> false
-        in
-        let is_space c = c = ' ' || c = '\n' || c = '\t' in
-        let is_word c =
-          ('a' <= c && c <= 'z')
-          || ('A' <= c && c <= 'Z')
-          || ('0' <= c && c <= '9')
-        in
-        let rec loop i acc =
-          if i + 1 >= n then acc
-          else
-            let c = String.unsafe_get s i in
-            let d = String.unsafe_get s (i + 1) in
-            if is_punct c && (not (is_space d)) && is_word d then
-              loop (i + 1) (acc + 1)
-            else loop (i + 1) acc
-        in
-        let cnt = loop 0 0 in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-022";
-              severity = Info;
-              message = "Missing space after punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-022"; run }
-
-let r_typo_023 : rule =
-  let run s =
-    let cnt = count_char s '\r' in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-023";
-          severity = Error;
-          message = "Windows CR (\\r) line endings found";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-023"; run }
-
-let r_typo_024 : rule =
-  let run s =
-    let n = String.length s in
-    let rec loop i acc =
-      if i >= n then acc
-      else
-        let c = String.unsafe_get s i in
-        let code = Char.code c in
-        if code < 32 && code <> 9 && code <> 10 then loop (i + 1) (acc + 1)
-        else loop (i + 1) acc
-    in
-    let cnt = loop 0 0 in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-024";
-          severity = Info;
-          message = "Control characters (U+0000–U+001F) present";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-024"; run }
-
-let r_typo_025 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Space, Quote -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-025";
-              severity = Warning;
-              message = "Space before closing quote";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s " \"" + count_substring s " '" in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-025";
-              severity = Warning;
-              message = "Space before closing quote";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-025"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_021; r_typo_022; r_typo_023; r_typo_024; r_typo_025 ]
-
-(* Next 5 lexical rules (026–030) *)
-
-let r_typo_026 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        (* Count pairs of consecutive '.' symbols not part of '...' *)
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | [ _ ] -> c
-            | a :: b :: c' :: rest -> (
-                match (a.ch, b.ch, c'.ch) with
-                | Some '.', Some '.', Some '.' -> loop c (b :: c' :: rest)
-                | Some '.', Some '.', _ -> loop (c + 1) (b :: c' :: rest)
-                | _ -> loop c (b :: c' :: rest))
-            | a :: b :: rest -> (
-                match (a.ch, b.ch) with
-                | Some '.', Some '.' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-026";
-              severity = Warning;
-              message = {|Double period .. should be … or \dots|};
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let dd = count_substring s ".." in
-        let ell = count_substring s "..." in
-        let cnt = dd - (2 * ell) in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-026";
-              severity = Warning;
-              message = {|Double period .. should be … or \dots|};
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-026"; run }
-
-let r_typo_027 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_punct = function
-          | Some (',' | '.' | ';' | ':' | '?' | '!') -> true
-          | _ -> false
-        in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Symbol, ch when b.e - b.s > 1 && is_punct ch ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-027";
-              severity = Info;
-              message = "Multiple spaces before punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let combos = [ "  ,"; "  ."; "  ;"; "  :"; "  ?"; "  !" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-027";
-              severity = Info;
-              message = "Multiple spaces before punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-027"; run }
-
-let r_typo_028 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Symbol, Some '%' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-028";
-              severity = Error;
-              message = "Space before percent sign %";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s " %" in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-028";
-              severity = Error;
-              message = "Space before percent sign %";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-028"; run }
-
-let r_typo_029 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Quote, Space -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-029";
-              severity = Info;
-              message = "Space after opening quote";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "\" " + count_substring s "' " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-029";
-              severity = Info;
-              message = "Space after opening quote";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-029"; run }
-
-(* CMD-001: Deprecated LaTeX commands present in the document *)
-let l1_cmd_001_rule : rule =
-  let run s =
-    let deprecated = [ "over"; "centerline"; "bf"; "it" ] in
-    let names = extract_command_names s in
-    let cnt =
-      List.fold_left
-        (fun acc name ->
-          if List.exists (( = ) name) deprecated then acc + 1 else acc)
-        0 names
-    in
-    if cnt > 0 then
-      Some
-        {
-          id = "CMD-001";
-          severity = Info;
-          message = "Deprecated LaTeX command: use modern equivalent";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "CMD-001"; run }
-
-let l1_cmd_003_rule : rule =
-  let run s =
-    let deep_sectioning = [ "paragraph"; "subparagraph"; "subsubsection" ] in
-    let names = extract_command_names s in
-    let cnt =
-      List.fold_left
-        (fun acc name ->
-          if List.exists (( = ) name) deep_sectioning then acc + 1 else acc)
-        0 names
-    in
-    if cnt > 0 then
-      Some
-        {
-          id = "CMD-003";
-          severity = Warning;
-          message = "Deep sectioning level may affect readability";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "CMD-003"; run }
-
-(* Removed earlier generic L1 rules not aligned to catalogue; will add
-   package-focused L1 rules later *)
-
-let r_typo_030 : rule =
-  let run s =
-    let cnt = count_substring s "----" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-030";
-          severity = Info;
-          message = "More than three hyphens detected (----)";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-030"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_026; r_typo_027; r_typo_028; r_typo_029; r_typo_030 ]
-
-(* Unicode: mixed dash styles — Unicode en/em dashes present alongside ASCII
-   patterns *)
-let r_typo_031 : rule =
-  let run s =
-    (* Paragraph-aware: flag only if mixing occurs within at least one
-       paragraph *)
-    let paras = split_into_paragraphs s in
-    let mixed_in_para =
-      List.exists
-        (fun (off, len) ->
-          let seg = strip_math_segments (String.sub s off len) in
-          let has_u = Unicode.has_en_dash seg || Unicode.has_em_dash seg in
-          let has_a =
-            count_substring seg "--" + count_substring seg "---" > 0
-          in
-          has_u && has_a)
-        (if paras = [] then [ (0, String.length s) ] else paras)
-    in
-    if mixed_in_para then
-      Some
-        {
-          id = "TYPO-031";
-          severity = Info;
-          message = "Mixed dash styles detected (ASCII and Unicode)";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-031"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_031 ]
-
-(* Unicode dash normalization suggestion *)
-let r_typo_032 : rule =
-  let run s =
-    (* Paragraph-aware dominance check: prefer Unicode when it dominates within
-       blocks *)
-    let paras = split_into_paragraphs s in
-    let check seg =
-      let u = Unicode.count_en_dash seg + Unicode.count_em_dash seg in
-      (* normalize ASCII dash sequences without double-counting '---' as '--' +
-         '---' *)
-      let a =
-        let n = String.length seg in
-        let rec loop i acc =
-          if i + 1 >= n then acc
-          else if
-            i + 2 < n
-            && String.unsafe_get seg i = '-'
-            && String.unsafe_get seg (i + 1) = '-'
-            && String.unsafe_get seg (i + 2) = '-'
-          then loop (i + 3) (acc + 1)
-          else if
-            String.unsafe_get seg i = '-' && String.unsafe_get seg (i + 1) = '-'
-          then loop (i + 2) (acc + 1)
-          else loop (i + 1) acc
-        in
-        loop 0 0
-      in
-      u > a && a > 0
-    in
-    let ascii_sporadic =
-      if paras = [] then check s
-      else List.exists (fun (off, len) -> check (String.sub s off len)) paras
-    in
-    if ascii_sporadic then
-      Some
-        {
-          id = "TYPO-032";
-          severity = Warning;
-          message =
-            "Prefer Unicode dashes consistently; ASCII --/--- appear \
-             sporadically";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-032"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_032 ]
-
-(* Unicode ellipsis normalization suggestion *)
-let r_typo_033 : rule =
-  let run s =
-    (* Paragraph-aware mixing for ellipsis as well *)
-    let paras = split_into_paragraphs s in
-    let mixed =
-      List.exists
-        (fun (off, len) ->
-          let seg = strip_math_segments (String.sub s off len) in
-          Unicode.has_ellipsis_char seg && count_substring seg "..." > 0)
-        (if paras = [] then [ (0, String.length s) ] else paras)
-    in
-    if mixed then
-      Some
-        {
-          id = "TYPO-033";
-          severity = Warning;
-          message = "Mixed ellipsis styles detected (Unicode and ASCII)";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-033"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_033 ]
 
 (* BEGIN VPD-generated validators v0.3.0 — DO NOT EDIT BELOW THIS LINE *)
 
@@ -1606,7 +1201,7 @@ let r_typo_034 : rule =
         {
           id = "TYPO-034";
           severity = Info;
-          message = "Spurious space before \\footnote";
+          message = {|Spurious space before footnote command \footnote|};
           count = cnt;
         }
     else None
@@ -1627,8 +1222,7 @@ let r_typo_035 : rule =
         {
           id = "TYPO-035";
           severity = Warning;
-          message =
-            "Space before French punctuation mark; use non-breaking space ~";
+          message = "French punctuation requires NBSP before ; : ! ?";
           count = cnt;
         }
     else None
@@ -1695,7 +1289,7 @@ let r_typo_038 : rule =
         {
           id = "TYPO-038";
           severity = Info;
-          message = "Bare e-mail address found; wrap in \\href{mailto:...}";
+          message = {|E‑mail address not in \href|};
           count = cnt;
         }
     else None
@@ -1715,7 +1309,7 @@ let r_typo_041 : rule =
         {
           id = "TYPO-041";
           severity = Info;
-          message = "Incorrect spacing around \\ldots; check for missing space";
+          message = {|Incorrect spacing around \ldots|};
           count = cnt;
         }
     else None
@@ -1731,7 +1325,7 @@ let r_typo_042 : rule =
         {
           id = "TYPO-042";
           severity = Info;
-          message = "Multiple consecutive question marks";
+          message = "Multiple consecutive question marks ??";
           count = cnt;
         }
     else None
@@ -1932,7 +1526,7 @@ let r_typo_048 : rule =
         {
           id = "TYPO-048";
           severity = Info;
-          message = "En-dash character used where minus sign expected";
+          message = "En‑dash used as minus sign in text";
           count = cnt;
         }
     else None
@@ -1948,7 +1542,7 @@ let r_typo_051 : rule =
         {
           id = "TYPO-051";
           severity = Warning;
-          message = "Thin space U+2009 found; prefer \\thinspace or \\, macro";
+          message = {|Figure space U+2009 used instead of \thinspace macro|};
           count = cnt;
         }
     else None
@@ -1985,7 +1579,7 @@ let r_typo_053 : rule =
         {
           id = "TYPO-053";
           severity = Warning;
-          message = "Unicode midline ellipsis U+22EF found; use \\cdots instead";
+          message = {|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|};
           count = cnt;
         }
     else None
@@ -2008,8 +1602,7 @@ let r_typo_054 : rule =
         {
           id = "TYPO-054";
           severity = Info;
-          message =
-            "En-dash adjacent to letter without spacing; consider thin space";
+          message = "Hair‑space required after en‑dash in word–word ranges";
           count = cnt;
         }
     else None
@@ -2025,8 +1618,7 @@ let r_typo_055 : rule =
         {
           id = "TYPO-055";
           severity = Info;
-          message =
-            "Consecutive \\, thin-spaces detected; collapse into single space";
+          message = {|Consecutive thin‑spaces (\,\,) prohibited; collapse|};
           count = cnt;
         }
     else None
@@ -2049,8 +1641,7 @@ let r_typo_057 : rule =
         {
           id = "TYPO-057";
           severity = Info;
-          message =
-            "Number directly adjacent to degree symbol; insert thin space";
+          message = {|Missing thin‑space before °C/°F or \si{\celsius}|};
           count = cnt;
         }
     else None
@@ -2067,8 +1658,7 @@ let r_typo_061 : rule =
         {
           id = "TYPO-061";
           severity = Info;
-          message =
-            "Unicode multiplication sign found; prefer \\times in math mode";
+          message = {|Unicode × (U+00D7) in text; prefer \times via math mode|};
           count = cnt;
         }
     else None
@@ -2084,7 +1674,7 @@ let r_typo_063 : rule =
         {
           id = "TYPO-063";
           severity = Info;
-          message = "Non-breaking hyphen U+2011 found; use standard hyphen";
+          message = "Non‑breaking hyphen U+2011 found inside URL";
           count = cnt;
         }
     else None
@@ -2132,7 +1722,7 @@ let r_typo_040 : rule =
         {
           id = "TYPO-040";
           severity = Info;
-          message = "Inline math $...$ exceeds 80 characters";
+          message = "Math in text mode $…$ exceeds 80 characters";
           count = cnt;
         }
     else None
@@ -2161,7 +1751,7 @@ let r_typo_045 : rule =
         {
           id = "TYPO-045";
           severity = Warning;
-          message = "Non-ASCII punctuation in math mode";
+          message = "Non‑ASCII punctuation in math mode (‘ ’ “ ”)";
           count = cnt;
         }
     else None
@@ -2179,7 +1769,7 @@ let r_typo_046 : rule =
         {
           id = "TYPO-046";
           severity = Info;
-          message = "Use of \\begin{math} instead of $...$";
+          message = "Use of $begin:math:text$ … $end:math:text$ instead of $…$";
           count = cnt;
         }
     else None
@@ -2236,8 +1826,7 @@ let r_typo_056 : rule =
         {
           id = "TYPO-056";
           severity = Warning;
-          message =
-            "Legacy TeX accent command found; use UTF-8 character directly";
+          message = "Legacy TeX accents present despite UTF‑8 input";
           count = cnt;
         }
     else None
@@ -2261,7 +1850,7 @@ let r_typo_058 : rule =
         {
           id = "TYPO-058";
           severity = Warning;
-          message = "Greek homograph letter found in Latin text";
+          message = "Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)";
           count = cnt;
         }
     else None
@@ -2315,7 +1904,7 @@ let r_typo_060 : rule =
           id = "TYPO-060";
           severity = Warning;
           message =
-            "Smart quotes present inside lstlisting/verbatim environments";
+            {|Smart quotes present inside \lstlisting / verbatim environments|};
           count = cnt;
         }
     else None
@@ -2366,7 +1955,7 @@ let r_enc_007 : rule =
         {
           id = "ENC-007";
           severity = Warning;
-          message = "Zero-width space U+200B present";
+          message = "Zero‑width space U+200B present";
           count = cnt;
         }
     else None
@@ -2394,7 +1983,7 @@ let r_enc_012 : rule =
         {
           id = "ENC-012";
           severity = Error;
-          message = "C1 control characters U+0080-009F present";
+          message = "C1 control characters U+0080–009F present";
           count = !cnt;
         }
     else None
@@ -2444,7 +2033,7 @@ let r_enc_021 : rule =
         {
           id = "ENC-021";
           severity = Warning;
-          message = "Word joiner U+2060 present";
+          message = "WORD JOINER U+2060 present";
           count = cnt;
         }
     else None
@@ -2464,7 +2053,7 @@ let r_enc_022 : rule =
         {
           id = "ENC-022";
           severity = Warning;
-          message = "Interlinear annotation chars U+FFF9-FFFB detected";
+          message = "Interlinear annotation chars U+FFF9–FFFB detected";
           count = cnt;
         }
     else None
@@ -2480,7 +2069,7 @@ let r_enc_023 : rule =
         {
           id = "ENC-023";
           severity = Warning;
-          message = "Narrow no-break space U+202F present";
+          message = "NARROW NB‑SPACE U+202F outside French context";
           count = cnt;
         }
     else None
@@ -2502,7 +2091,7 @@ let r_enc_024 : rule =
         {
           id = "ENC-024";
           severity = Warning;
-          message = "Bidirectional embedding chars U+202A-U+202E present";
+          message = "Bidirectional embeddings U+202A–U+202E present";
           count = cnt;
         }
     else None
@@ -2557,7 +2146,7 @@ let r_enc_001 : rule =
         {
           id = "ENC-001";
           severity = Error;
-          message = "Non-UTF-8 byte sequence detected";
+          message = "Non‑UTF‑8 byte sequence detected";
           count = !cnt;
         }
     else None
@@ -2576,7 +2165,7 @@ let r_enc_002 : rule =
         {
           id = "ENC-002";
           severity = Error;
-          message = "BOM U+FEFF present in middle of file";
+          message = "Byte‑order mark U+FEFF present in middle of file";
           count = interior;
         }
     else None
@@ -2608,7 +2197,7 @@ let r_enc_003 : rule =
         {
           id = "ENC-003";
           severity = Warning;
-          message = "LATIN-1 smart quotes detected (bare bytes 0x91-0x94)";
+          message = "LATIN‑1 smart quotes detected";
           count = !cnt;
         }
     else None
@@ -2639,7 +2228,7 @@ let r_enc_004 : rule =
         {
           id = "ENC-004";
           severity = Warning;
-          message = "Windows-1252 characters outside UTF-8 detected";
+          message = "Windows‑1252 characters (– — …) outside UTF‑8";
           count = !cnt;
         }
     else None
@@ -2667,7 +2256,7 @@ let r_enc_013 : rule =
         {
           id = "ENC-013";
           severity = Info;
-          message = "Mixed CRLF and LF line endings in file";
+          message = "Mixed CRLF and LF line endings";
           count = 1;
         }
     else None
@@ -2689,7 +2278,7 @@ let r_enc_014 : rule =
         {
           id = "ENC-014";
           severity = Error;
-          message = "UTF-16 byte-order mark present";
+          message = "UTF‑16 byte‑order mark present";
           count = !cnt;
         }
     else None
@@ -2722,7 +2311,7 @@ let r_enc_008 : rule =
         {
           id = "ENC-008";
           severity = Warning;
-          message = "Private-use codepoint detected";
+          message = "Private‑use codepoint detected";
           count = !cnt;
         }
     else None
@@ -2791,8 +2380,7 @@ let r_enc_010 : rule =
         {
           id = "ENC-010";
           severity = Info;
-          message =
-            "Non-canonical NFC form: combining diacritical after ASCII letter";
+          message = "Non‑canonical NFC form";
           count = !cnt;
         }
     else None
@@ -2838,7 +2426,7 @@ let r_enc_011 : rule =
         {
           id = "ENC-011";
           severity = Warning;
-          message = "Byte sequence resembles MacRoman/CP1252 encoding";
+          message = "Byte sequence resembles MacRoman encoding";
           count = !cnt;
         }
     else None
@@ -2868,9 +2456,7 @@ let r_enc_015 : rule =
         {
           id = "ENC-015";
           severity = Warning;
-          message =
-            "Non-NFKC homoglyph character (micro sign, ohm sign, angstrom, or \
-             long s)";
+          message = "Non‑NFKC homoglyph character (Greek μ vs µ)";
           count = cnt;
         }
     else None
@@ -2898,7 +2484,7 @@ let r_enc_016 : rule =
         {
           id = "ENC-016";
           severity = Warning;
-          message = "Arabic numerals replaced by Unicode look-alikes";
+          message = "Arabic numerals replaced by Unicode look‑alikes";
           count = !cnt;
         }
     else None
@@ -2964,7 +2550,7 @@ let r_enc_005 : rule =
         {
           id = "ENC-005";
           severity = Error;
-          message = "Invalid UTF-8 continuation byte";
+          message = "Invalid UTF‑8 continuation byte";
           count = !cnt;
         }
     else None
@@ -3004,7 +2590,7 @@ let r_enc_006 : rule =
         {
           id = "ENC-006";
           severity = Error;
-          message = "Overlong UTF-8 encoding sequence";
+          message = "Overlong UTF‑8 encoding sequence";
           count = !cnt;
         }
     else None
@@ -3041,7 +2627,7 @@ let r_enc_018 : rule =
         {
           id = "ENC-018";
           severity = Info;
-          message = "Non-breaking hyphen U+2011 present outside URLs";
+          message = "Non‑breaking hyphen U+2011 present outside URLs";
           count = !cnt;
         }
     else None
@@ -3161,7 +2747,7 @@ let r_char_005 : rule =
         {
           id = "CHAR-005";
           severity = Error;
-          message = "Control characters U+0000-001F present";
+          message = "Control characters U+0000–001F present";
           count = !cnt;
         }
     else None
@@ -3246,7 +2832,7 @@ let r_char_013 : rule =
         {
           id = "CHAR-013";
           severity = Warning;
-          message = "Bidirectional isolate chars U+2066-U+2069 present";
+          message = "Bidirectional isolate chars U+2066–U+2069 present";
           count = cnt;
         }
     else None
@@ -3262,7 +2848,7 @@ let r_char_014 : rule =
         {
           id = "CHAR-014";
           severity = Warning;
-          message = "Unicode replacement character U+FFFD found; decoding error";
+          message = "Unicode replacement � found – decoding error";
           count = cnt;
         }
     else None
@@ -3282,8 +2868,7 @@ let r_char_021 : rule =
         {
           id = "CHAR-021";
           severity = Error;
-          message =
-            "Zero-width no-break space U+FEFF inside paragraph (stray BOM)";
+          message = "Zero‑width no‑break space U+FEFF inside paragraph";
           count = cnt;
         }
     else None
@@ -3346,7 +2931,7 @@ let r_char_017 : rule =
         {
           id = "CHAR-017";
           severity = Warning;
-          message = "Full-width Latin letters detected";
+          message = "Full‑width Latin letters detected";
           count = !cnt;
         }
     else None
@@ -3369,7 +2954,7 @@ let r_char_018 : rule =
         {
           id = "CHAR-018";
           severity = Info;
-          message = "Deprecated ligature characters present (U+FB00-FB04)";
+          message = "Deprecated ligature ﬀ/ﬁ/ﬂ characters present";
           count = cnt;
         }
     else None
@@ -3398,7 +2983,7 @@ let r_char_022 : rule =
         {
           id = "CHAR-022";
           severity = Warning;
-          message = "Deprecated tag characters U+E0000-E007F present";
+          message = "Deprecated tag characters U+E0000–E007F present";
           count = !cnt;
         }
     else None
@@ -3426,7 +3011,7 @@ let r_char_016 : rule =
         {
           id = "CHAR-016";
           severity = Warning;
-          message = "Double-width CJK punctuation in ASCII context";
+          message = "Double‑width CJK punctuation in ASCII context";
           count = cnt;
         }
     else None
@@ -3481,7 +3066,7 @@ let r_char_020 : rule =
         {
           id = "CHAR-020";
           severity = Info;
-          message = "Sharp S (\xc3\x9f) in uppercase context; consider using SS";
+          message = "Sharp S ß in uppercase context – suggest SS";
           count = !cnt;
         }
     else None
@@ -3510,7 +3095,7 @@ let r_char_010 : rule =
         {
           id = "CHAR-010";
           severity = Info;
-          message = "Right-to-left mark U+200F outside RTL context";
+          message = "Right‑to‑left mark U+200F outside RTL context";
           count = !cnt;
         }
     else None
@@ -3539,7 +3124,7 @@ let r_char_011 : rule =
         {
           id = "CHAR-011";
           severity = Info;
-          message = "Left-to-right mark U+200E unnecessary";
+          message = "Left‑to‑right mark U+200E unnecessary";
           count = !cnt;
         }
     else None
@@ -3568,7 +3153,7 @@ let r_char_012 : rule =
         {
           id = "CHAR-012";
           severity = Info;
-          message = "Zero-width joiner U+200D outside ligature context";
+          message = "Zero‑width joiner U+200D outside ligature context";
           count = !cnt;
         }
     else None
@@ -3608,7 +3193,7 @@ let r_spc_001 : rule =
         {
           id = "SPC-001";
           severity = Info;
-          message = "Line longer than 120 characters";
+          message = "Line longer than 120 characters";
           count = matched;
         }
     else None
@@ -3662,7 +3247,7 @@ let r_spc_003 : rule =
         {
           id = "SPC-003";
           severity = Warning;
-          message = "Hard tab mixed with spaces in indentation";
+          message = "Hard tab precedes non‑tab text (mixed indent)";
           count = matched;
         }
     else None
@@ -3683,7 +3268,7 @@ let r_spc_004 : rule =
         {
           id = "SPC-004";
           severity = Warning;
-          message = "Bare carriage return U+000D without LF";
+          message = "Carriage return U+000D without LF";
           count = !cnt;
         }
     else None
@@ -3752,7 +3337,7 @@ let r_spc_012 : rule =
         {
           id = "SPC-012";
           severity = Error;
-          message = "BOM U+FEFF not at file start";
+          message = "BOM not at file start";
           count = interior;
         }
     else None
@@ -3794,7 +3379,7 @@ let r_spc_028 : rule =
         {
           id = "SPC-028";
           severity = Warning;
-          message = "Multiple consecutive non-breaking spaces (~~)";
+          message = "Multiple consecutive ~ NBSPs";
           count = cnt;
         }
     else None
@@ -3880,7 +3465,7 @@ let r_spc_009 : rule =
         {
           id = "SPC-009";
           severity = Warning;
-          message = "Non-breaking space at line start";
+          message = "Non‑breaking space ~ at line start";
           count = matched;
         }
     else None
@@ -3926,7 +3511,7 @@ let r_spc_013 : rule =
         {
           id = "SPC-013";
           severity = Info;
-          message = "Whitespace-only paragraph";
+          message = "Whitespace‑only paragraph";
           count = !cnt;
         }
     else None
@@ -3954,7 +3539,7 @@ let r_spc_014 : rule =
         {
           id = "SPC-014";
           severity = Info;
-          message = "Mixed LF and CRLF line endings in file";
+          message = "Mixed LF and CRLF within paragraph";
           count = 1;
         }
     else None
@@ -3978,7 +3563,7 @@ let r_spc_015 : rule =
         {
           id = "SPC-015";
           severity = Info;
-          message = "Indentation exceeds 8 spaces";
+          message = "Indentation exceeds 8 spaces";
           count = matched;
         }
     else None
@@ -4027,7 +3612,7 @@ let r_spc_017 : rule =
         {
           id = "SPC-017";
           severity = Info;
-          message = "Missing thin space before unit (e.g. 5cm should be 5\\,cm)";
+          message = "Missing thin space before units (e.g. 5 cm)";
           count = !cnt;
         }
     else None
@@ -4050,7 +3635,7 @@ let r_spc_019 : rule =
         {
           id = "SPC-019";
           severity = Warning;
-          message = "Trailing full-width space U+3000 at line end";
+          message = "Trailing full‑width space U+3000 at line end";
           count = matched;
         }
     else None
@@ -4083,7 +3668,7 @@ let r_spc_025 : rule =
         {
           id = "SPC-025";
           severity = Info;
-          message = "Space before ellipsis";
+          message = {|Space before ellipsis \dots|};
           count = cnt;
         }
     else None
@@ -4175,7 +3760,7 @@ let r_spc_030 : rule =
         {
           id = "SPC-030";
           severity = Warning;
-          message = "Line starts with full-width space U+3000";
+          message = "Line starts with full‑width space U+3000";
           count = matched;
         }
     else None
@@ -4229,7 +3814,7 @@ let r_spc_032 : rule =
         {
           id = "SPC-032";
           severity = Info;
-          message = "Indentation with mix of NBSP and regular space";
+          message = "Paragraph indented with mix of NBSP and space";
           count = matched;
         }
     else None
@@ -4248,7 +3833,7 @@ let r_spc_033 : rule =
         {
           id = "SPC-033";
           severity = Info;
-          message = "No-break space before em-dash";
+          message = "No‑break space before em‑dash in English text forbidden";
           count = cnt;
         }
     else None
@@ -4268,7 +3853,7 @@ let r_spc_034 : rule =
         {
           id = "SPC-034";
           severity = Info;
-          message = "Thin-space before en-dash";
+          message = "Thin‑space before en‑dash in command‑line flags removed";
           count = cnt;
         }
     else None
@@ -4290,7 +3875,7 @@ let r_spc_035 : rule =
         {
           id = "SPC-035";
           severity = Info;
-          message = "Leading thin-space U+2009 at start of line";
+          message = "Leading thin‑space U+2009 at start of line";
           count = matched;
         }
     else None
@@ -4343,7 +3928,7 @@ let r_spc_018 : rule =
         {
           id = "SPC-018";
           severity = Info;
-          message = "No space after sentence-ending period";
+          message = "No space after sentence‑ending period";
           count = cnt;
         }
     else None
@@ -4419,7 +4004,7 @@ let r_spc_011 : rule =
         {
           id = "SPC-011";
           severity = Warning;
-          message = "Space before newline inside $$...$$ display";
+          message = "Space before newline inside $$…$$ display";
           count = !cnt;
         }
     else None
@@ -4693,7 +4278,7 @@ let r_verb_004 : rule =
         {
           id = "VERB-004";
           severity = Warning;
-          message = "Non-ASCII quotes inside verbatim";
+          message = "Non‑ASCII quotes inside verbatim";
           count = !cnt;
         }
     else None
@@ -4721,7 +4306,7 @@ let r_verb_005 : rule =
         {
           id = "VERB-005";
           severity = Info;
-          message = "Verbatim line > 120 characters";
+          message = "Verbatim line > 120 characters";
           count = !cnt;
         }
     else None
@@ -4899,7 +4484,7 @@ let r_verb_010 : rule =
         {
           id = "VERB-010";
           severity = Info;
-          message = "Inline code uses back-ticks instead of \\verb";
+          message = {|Inline code uses back‑ticks instead of \verb|};
           count = !cnt;
         }
     else None
@@ -5042,7 +4627,7 @@ let r_verb_011 : rule =
         {
           id = "VERB-011";
           severity = Warning;
-          message = "Unknown lstlisting language";
+          message = "Unknown `lstlisting` language";
           count = !cnt;
         }
     else None
@@ -5099,7 +4684,7 @@ let r_verb_013 : rule =
         {
           id = "VERB-013";
           severity = Info;
-          message = "Code line > 120 glyphs";
+          message = "Code line > 120 glyphs";
           count = !cnt;
         }
     else None
@@ -5175,7 +4760,7 @@ let r_verb_016 : rule =
           id = "VERB-016";
           severity = Info;
           message =
-            "`minted` without `escapeinside` while containing back-ticks";
+            "`minted` without `escapeinside` while containing back‑ticks";
           count = !cnt;
         }
     else None
@@ -5221,7 +4806,7 @@ let r_verb_017 : rule =
         {
           id = "VERB-017";
           severity = Info;
-          message = "`minted` lacks `linenos` in code block > 20 lines";
+          message = "`minted` lacks `linenos` in code block > 20 lines";
           count = !cnt;
         }
     else None
@@ -5272,7 +4857,7 @@ let r_cjk_001 : rule =
         {
           id = "CJK-001";
           severity = Warning;
-          message = "Full-width comma U+FF0C in ASCII context";
+          message = "Full‑width comma U+FF0C in ASCII context";
           count = !cnt;
         }
     else None
@@ -5301,7 +4886,7 @@ let r_cjk_002 : rule =
         {
           id = "CJK-002";
           severity = Warning;
-          message = "Full-width period U+FF0E in ASCII context";
+          message = "Full‑width period U+FF0E in ASCII context";
           count = !cnt;
         }
     else None
@@ -5330,7 +4915,7 @@ let r_cjk_010 : rule =
         {
           id = "CJK-010";
           severity = Warning;
-          message = "Half-width CJK punctuation in full-width context";
+          message = "Half‑width CJK punctuation in full‑width context";
           count = !cnt;
         }
     else None
@@ -5359,7 +4944,7 @@ let r_cjk_014 : rule =
         {
           id = "CJK-014";
           severity = Info;
-          message = "Inter-punct U+30FB outside CJK run";
+          message = "Inter‑punct U+30FB outside CJK run";
           count = !cnt;
         }
     else None
@@ -5450,7 +5035,7 @@ let r_cmd_005 : rule =
         {
           id = "CMD-005";
           severity = Warning;
-          message = "Single-letter macro created (\\x)";
+          message = {|Single‑letter macro created (\x)|};
           count = !cnt;
         }
     else None
@@ -5587,8 +5172,7 @@ let r_cmd_011 : rule =
             id = "CMD-011";
             severity = Warning;
             message =
-              "Macro defined with \\def/\\edef in preamble without \
-               \\makeatletter guard";
+              {|Macro defined with \def/\edef in preamble without \makeatletter guard|};
             count = !cnt;
           }
       else None
@@ -5681,8 +5265,7 @@ let r_math_083 : rule =
         {
           id = "MATH-083";
           severity = Warning;
-          message =
-            "Unicode minus U+2212 in text mode; use hyphen-minus or math";
+          message = "Unicode minus inside text mode";
           count = cnt;
         }
     else None
@@ -6198,7 +5781,7 @@ let l1_delim_001_rule : rule =
         {
           id = "DELIM-001";
           severity = Error;
-          message = "Unmatched delimiters { } after macro expansion";
+          message = "Unmatched delimiters { … } after macro expansion";
           count = imbalance;
         }
     else None
@@ -6339,8 +5922,7 @@ let l1_delim_005_rule : rule =
         {
           id = "DELIM-005";
           severity = Info;
-          message =
-            "Mismatched parenthesis sizing (e.g. \\big vs \\Bigg in same pair)";
+          message = {|Mismatched parenthesis sizing (\big vs \Bigg)|};
           count = !cnt;
         }
     else None
@@ -6420,7 +6002,7 @@ let l1_delim_006_rule : rule =
         {
           id = "DELIM-006";
           severity = Info;
-          message = "\\big delimiters used in inline math (prefer display math)";
+          message = {|\big delimiters used outside display math|};
           count = !cnt;
         }
     else None
@@ -6444,7 +6026,7 @@ let l1_delim_007_rule : rule =
         {
           id = "DELIM-007";
           severity = Error;
-          message = "Unmatched \\langle / \\rangle pair";
+          message = {|Angle bracket \langle without matching \rangle|};
           count = !cnt;
         }
     else None
@@ -6473,8 +6055,7 @@ let l1_delim_008_rule : rule =
         {
           id = "DELIM-008";
           severity = Info;
-          message =
-            "Empty \\left. ... \\right. pair (redundant invisible delimiters)";
+          message = {|Empty \left. … \right. pair — redundant|};
           count = !cnt;
         }
     else None
@@ -6512,7 +6093,7 @@ let l1_delim_009_rule : rule =
         {
           id = "DELIM-009";
           severity = Warning;
-          message = "Nested delimiter type mismatch in math mode";
+          message = "Nested delimiters: { … ( … ) … }";
           count = !cnt;
         }
     else None
@@ -6591,8 +6172,7 @@ let l1_delim_010_rule : rule =
         {
           id = "DELIM-010";
           severity = Info;
-          message =
-            "Display math uses \\big instead of \\Big (prefer capital sizing)";
+          message = {|Display math uses \big instead of \Big|};
           count = !cnt;
         }
     else None
@@ -6619,7 +6199,7 @@ let l1_delim_011_rule : rule =
         {
           id = "DELIM-011";
           severity = Warning;
-          message = "\\middle delimiter used without \\left...\\right pair";
+          message = {|\middle delimiter used without symmetric pair|};
           count = !cnt;
         }
     else None
@@ -6724,7 +6304,7 @@ let l1_script_001_rule : rule =
         {
           id = "SCRIPT-001";
           severity = Warning;
-          message = "Multi-character subscript without braces";
+          message = "Multi‑char subscript without braces";
           count = !cnt;
         }
     else None
@@ -6761,9 +6341,7 @@ let l1_script_002_rule : rule =
         {
           id = "SCRIPT-002";
           severity = Info;
-          message =
-            "Superscript dash typed as Unicode hyphen instead of \
-             \\textsuperscript{--}";
+          message = {|Superscript dash typed ‘‑’ not \textsuperscript{--}|};
           count = !cnt;
         }
     else None
@@ -6783,7 +6361,7 @@ let l1_script_003_rule : rule =
         {
           id = "SCRIPT-003";
           severity = Warning;
-          message = "Comma-separated superscripts lack braces";
+          message = "Comma‑separated superscripts lack braces";
           count = !cnt;
         }
     else None
@@ -6803,7 +6381,7 @@ let l1_script_004_rule : rule =
         {
           id = "SCRIPT-004";
           severity = Info;
-          message = "Subscript after prime notation is mis-ordered";
+          message = "Subscript after prime notation mis‑ordered";
           count = !cnt;
         }
     else None
@@ -6852,7 +6430,7 @@ let l1_script_005_rule : rule =
         {
           id = "SCRIPT-005";
           severity = Info;
-          message = "Superscript uses letter 'l' instead of \\ell";
+          message = {|Superscript uses letter l instead of \ell|};
           count = !cnt;
         }
     else None
@@ -6874,8 +6452,7 @@ let l1_script_006_rule : rule =
         {
           id = "SCRIPT-006";
           severity = Info;
-          message =
-            "Degree symbol typed as Unicode ° instead of ^{\\circ} in math";
+          message = {|Degree symbol typed ° instead of ^\circ|};
           count = !cnt;
         }
     else None
@@ -6945,7 +6522,7 @@ let l1_script_007_rule : rule =
         {
           id = "SCRIPT-007";
           severity = Warning;
-          message = "Subscript text not wrapped in \\text{} or \\mathrm{}";
+          message = {|Subscript text not wrapped in \text{}|};
           count = !cnt;
         }
     else None
@@ -6974,7 +6551,7 @@ let l1_script_008_rule : rule =
         {
           id = "SCRIPT-008";
           severity = Info;
-          message = "Chemical formula in subscript lacks \\mathrm{} wrapping";
+          message = {|Chemical formula lacks \mathrm{} in subscript|};
           count = !cnt;
         }
     else None
@@ -6995,7 +6572,7 @@ let l1_script_009_rule : rule =
         {
           id = "SCRIPT-009";
           severity = Info;
-          message = "Isotope notation has empty superscript mass number";
+          message = "Isotope superscript mass number missing";
           count = !cnt;
         }
     else None
@@ -7017,7 +6594,7 @@ let l1_script_010_rule : rule =
         {
           id = "SCRIPT-010";
           severity = Info;
-          message = "\\limits used on inline operator (prefer display math)";
+          message = {|Use of \limits on inline operator|};
           count = !cnt;
         }
     else None
@@ -7053,7 +6630,7 @@ let l1_script_011_rule : rule =
         {
           id = "SCRIPT-011";
           severity = Warning;
-          message = "Nested superscript three or more levels deep";
+          message = "Nested superscript three levels deep";
           count = !cnt;
         }
     else None
@@ -7072,8 +6649,7 @@ let l1_script_012_rule : rule =
         {
           id = "SCRIPT-012";
           severity = Info;
-          message =
-            "More than 3 prime marks — prefer ^{(n)} derivative notation";
+          message = "Prime notation f''' (> 3) – prefer ^{(n)}";
           count = !cnt;
         }
     else None
@@ -7093,8 +6669,7 @@ let l1_script_013_rule : rule =
         {
           id = "SCRIPT-013";
           severity = Info;
-          message =
-            "Plus/minus typed directly in subscript (consider \\pm or \\mp)";
+          message = "Plus/minus typed in subscript";
           count = !cnt;
         }
     else None
@@ -7131,7 +6706,7 @@ let l1_script_014_rule : rule =
         {
           id = "SCRIPT-014";
           severity = Info;
-          message = "Logarithm base subscript is bare italic letter";
+          message = "Logarithm base subscript italic";
           count = !cnt;
         }
     else None
@@ -7151,7 +6726,7 @@ let l1_script_015_rule : rule =
         {
           id = "SCRIPT-015";
           severity = Info;
-          message = "Time derivative \\dot/\\ddot used inside sub/superscript";
+          message = "Time derivative dot mis‑aligned";
           count = !cnt;
         }
     else None
@@ -7221,8 +6796,7 @@ let l1_script_016_rule : rule =
         {
           id = "SCRIPT-016";
           severity = Info;
-          message =
-            "Prime on Greek letter typed as '' instead of ^{\\prime\\prime}";
+          message = {|Prime on Greek letter typed '' not ^\prime|};
           count = !cnt;
         }
     else None
@@ -7253,8 +6827,7 @@ let l1_script_017_rule : rule =
         {
           id = "SCRIPT-017";
           severity = Info;
-          message =
-            "Inconsistent order of sub/superscripts (mixed _a^b and ^b_a)";
+          message = "Inconsistent order of sub/superscripts";
           count = min !sub_sup_count !sup_sub_count;
         }
     else None
@@ -7287,7 +6860,7 @@ let l1_script_018_rule : rule =
         {
           id = "SCRIPT-018";
           severity = Warning;
-          message = "^\\circ without braces — use ^{\\circ}";
+          message = "Degree symbol in superscript without braces";
           count = !cnt;
         }
     else None
@@ -7324,7 +6897,7 @@ let l1_script_019_rule : rule =
         {
           id = "SCRIPT-019";
           severity = Info;
-          message = "Double prime '' used instead of ^{\\prime\\prime}";
+          message = {|Double prime '' instead of ^{\prime\prime}|};
           count = !cnt;
         }
     else None
@@ -7392,7 +6965,7 @@ let l1_script_020_rule : rule =
         {
           id = "SCRIPT-020";
           severity = Info;
-          message = "Subscript text is italic — consider \\mathrm{} for upright";
+          message = {|Subscript text italic instead of \mathrm|};
           count = !cnt;
         }
     else None
@@ -7412,9 +6985,7 @@ let l1_script_021_rule : rule =
         {
           id = "SCRIPT-021";
           severity = Warning;
-          message =
-            "Sub/superscript order is not canonical — prefer a^{c}_{b} over \
-             a_{b}^{c}";
+          message = "Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})";
           count = !cnt;
         }
     else None
@@ -7434,8 +7005,7 @@ let l1_script_022_rule : rule =
         {
           id = "SCRIPT-022";
           severity = Info;
-          message =
-            "Superscript prime stacked > 3 in braces — prefer ^{(n)} notation";
+          message = "Superscript prime stacked > 3 – prefer ^{(n)}";
           count = !cnt;
         }
     else None
@@ -7523,8 +7093,7 @@ let l1_math_009_rule : rule =
         {
           id = "MATH-009";
           severity = Warning;
-          message =
-            "Bare function name in math mode — use \\sin, \\log, \\exp etc.";
+          message = {|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|};
           count = !cnt;
         }
     else None
@@ -7545,8 +7114,7 @@ let l1_math_010_rule : rule =
         {
           id = "MATH-010";
           severity = Warning;
-          message =
-            "Division symbol ÷ used in math — prefer \\frac or solidus /";
+          message = {|Division symbol ÷ used; prefer \frac or solidus|};
           count = !cnt;
         }
     else None
@@ -7570,8 +7138,7 @@ let l1_math_011_rule : rule =
         {
           id = "MATH-011";
           severity = Info;
-          message =
-            "Inconsistent vector notation — both \\vec{} and \\mathbf{} used";
+          message = "Vector notation inconsistent within equation";
           count = min !vec_count !mathbf_count;
         }
     else None
@@ -7656,8 +7223,7 @@ let l1_math_012_rule : rule =
         {
           id = "MATH-012";
           severity = Warning;
-          message =
-            "Multi-letter function name not in \\operatorname{} or \\mathrm{}";
+          message = {|Multi‑letter function not in roman (\operatorname{})|};
           count = !cnt;
         }
     else None
@@ -7703,7 +7269,7 @@ let l1_math_013_rule : rule =
         {
           id = "MATH-013";
           severity = Info;
-          message = "Differential d not typeset in roman — consider \\mathrm{d}";
+          message = "Differential d not typeset roman";
           count = !cnt;
         }
     else None
@@ -7730,8 +7296,7 @@ let l1_math_014_rule : rule =
         {
           id = "MATH-014";
           severity = Info;
-          message =
-            "\\frac used in inline math — consider \\tfrac or display math";
+          message = {|Inline \frac in running text|};
           count = !cnt;
         }
     else None
@@ -7751,7 +7316,7 @@ let l1_math_015_rule : rule =
         {
           id = "MATH-015";
           severity = Warning;
-          message = "\\stackrel used — prefer \\overset";
+          message = {|\stackrel used; prefer \overset|};
           count = !cnt;
         }
     else None
@@ -7771,7 +7336,7 @@ let l1_math_016_rule : rule =
         {
           id = "MATH-016";
           severity = Warning;
-          message = "Nested subscripts without braces — use _{i_j} or _{i,j}";
+          message = "Nested subscripts without braces";
           count = !cnt;
         }
     else None
@@ -7864,7 +7429,7 @@ let l1_math_017_rule : rule =
         {
           id = "MATH-017";
           severity = Error;
-          message = "Mismatched \\left/\\right delimiter types";
+          message = {|Mismatched \left\{ … \right] pair|};
           count = !cnt;
         }
     else None
@@ -7883,7 +7448,7 @@ let l1_math_018_rule : rule =
         {
           id = "MATH-018";
           severity = Info;
-          message = "Numerical approximation of π (3.14...) — use \\pi instead";
+          message = "π written numerically as 3.14";
           count = !cnt;
         }
     else None
@@ -7904,7 +7469,7 @@ let l1_math_019_rule : rule =
         {
           id = "MATH-019";
           severity = Warning;
-          message = "Inline math has ^{sup}_{sub} order — prefer _{sub}^{sup}";
+          message = "Inline stacked ^_ order wrong";
           count = !cnt;
         }
     else None
@@ -7924,7 +7489,7 @@ let l1_math_020_rule : rule =
         {
           id = "MATH-020";
           severity = Info;
-          message = "Missing \\cdot between coefficient and vector notation";
+          message = {|Missing \cdot between coefficient and vector|};
           count = !cnt;
         }
     else None
@@ -7965,7 +7530,7 @@ let l1_math_021_rule : rule =
         {
           id = "MATH-021";
           severity = Info;
-          message = "Absolute value bars |x| — prefer \\lvert x \\rvert";
+          message = {|Absolute value bars ‘|x|’ instead of \lvert … \rvert|};
           count = !cnt;
         }
     else None
@@ -7986,7 +7551,7 @@ let l1_math_022_rule : rule =
         {
           id = "MATH-022";
           severity = Info;
-          message = "\\textbf used in math mode — use \\mathbf or \\bm instead";
+          message = {|Bold math italic without \bm or \mathbf|};
           count = !cnt;
         }
     else None
@@ -8019,8 +7584,7 @@ let l1_math_025_rule : rule =
         {
           id = "MATH-025";
           severity = Info;
-          message =
-            "align environment with single column — consider equation instead";
+          message = "align environment with one column – use equation";
           count = !cnt;
         }
     else None
@@ -8052,9 +7616,7 @@ let l1_math_028_rule : rule =
         {
           id = "MATH-028";
           severity = Info;
-          message =
-            "\\begin{array} without column alignment spec — add e.g. {c} or \
-             {lcr}";
+          message = "Array environment inside math lacks {c} alignment";
           count = !cnt;
         }
     else None
@@ -8080,9 +7642,7 @@ let l1_math_029_rule : rule =
         {
           id = "MATH-029";
           severity = Warning;
-          message =
-            "Use of eqnarray environment — prefer align or align* (better \
-             spacing)";
+          message = "Use of eqnarray* instead of align*";
           count = !cnt;
         }
     else None
@@ -8103,8 +7663,7 @@ let l1_math_030_rule : rule =
         {
           id = "MATH-030";
           severity = Info;
-          message =
-            "\\displaystyle in inline math — consider display math environment";
+          message = {|Overuse of \displaystyle in inline math|};
           count = !cnt;
         }
     else None
@@ -8127,7 +7686,7 @@ let l1_math_031_rule : rule =
         {
           id = "MATH-031";
           severity = Info;
-          message = "Missing spacing (\\; or \\,) before \\text in math mode";
+          message = {|Operator spacing error: missing \; before \text|};
           count = !cnt;
         }
     else None
@@ -8144,8 +7703,7 @@ let l1_math_033_rule : rule =
         {
           id = "MATH-033";
           severity = Info;
-          message =
-            "\\pm used outside math mode — use ± symbol or wrap in $...$";
+          message = {|Use of \pm where ± symbol required in text|};
           count = cnt;
         }
     else None
@@ -8204,8 +7762,7 @@ let l1_math_034_rule : rule =
         {
           id = "MATH-034";
           severity = Info;
-          message =
-            "Missing \\, before differential in integral — use \\,dx not dx";
+          message = {|Spacing before differential in integral missing \,|};
           count = !cnt;
         }
     else None
@@ -8225,8 +7782,7 @@ let l1_math_035_rule : rule =
         {
           id = "MATH-035";
           severity = Warning;
-          message =
-            "Multiple subscripts stacked without braces — use _{i,j} form";
+          message = "Multiple subscripts stacked vertically without braces";
           count = !cnt;
         }
     else None
@@ -8246,7 +7802,7 @@ let l1_math_036_rule : rule =
         {
           id = "MATH-036";
           severity = Info;
-          message = "\\mathrm{} around single letter — may be superfluous";
+          message = {|Superfluous \mathrm{} around single letter|};
           count = !cnt;
         }
     else None
@@ -8267,8 +7823,7 @@ let l1_math_037_rule : rule =
         {
           id = "MATH-037";
           severity = Info;
-          message =
-            "\\sfrac used in math mode — intended for text mode fractions";
+          message = "xfrac package fraction used outside text mode";
           count = !cnt;
         }
     else None
@@ -8339,8 +7894,7 @@ let l1_math_038_rule : rule =
         {
           id = "MATH-038";
           severity = Warning;
-          message =
-            "\\frac nested three or more levels deep — consider simplifying";
+          message = {|Nested \frac three levels deep|};
           count = !cnt;
         }
     else None
@@ -8364,8 +7918,7 @@ let l1_math_039_rule : rule =
         {
           id = "MATH-039";
           severity = Warning;
-          message =
-            "Stacked relational operators — consider \\substack or \\atop";
+          message = {|Stacked relational operators without \atop|};
           count = !cnt;
         }
     else None
@@ -8385,8 +7938,7 @@ let l1_math_040_rule : rule =
         {
           id = "MATH-040";
           severity = Info;
-          message =
-            "\\ldots between center-axis operators — use \\cdots instead";
+          message = {|Ellipsis \ldots used between vertical alignment|};
           count = !cnt;
         }
     else None
@@ -8410,9 +7962,7 @@ let l1_math_041_rule : rule =
         {
           id = "MATH-041";
           severity = Info;
-          message =
-            "Integral with limits in inline math — consider display math or \
-             \\limits";
+          message = {|Integral limits written inline; use \displaystyle \int|};
           count = !cnt;
         }
     else None
@@ -8432,7 +7982,7 @@ let l1_math_042_rule : rule =
         {
           id = "MATH-042";
           severity = Info;
-          message = "Missing \\, between number and unit — use 5\\,\\mathrm{kg}";
+          message = {|Missing \, between numbers and units in math|};
           count = !cnt;
         }
     else None
@@ -8457,8 +8007,7 @@ let l1_math_043_rule : rule =
         {
           id = "MATH-043";
           severity = Warning;
-          message =
-            "\\text{...} in math for function name — use \\operatorname{...}";
+          message = {|Use of \text instead of \operatorname for function|};
           count = !cnt;
         }
     else None
@@ -8478,8 +8027,7 @@ let l1_math_044_rule : rule =
         {
           id = "MATH-044";
           severity = Warning;
-          message =
-            "Compound relation <=/>= in math — use \\le, \\ge, \\leq, \\geq";
+          message = {|Binary relation typed as text char (e.g. < for \le)|};
           count = !cnt;
         }
     else None
@@ -8526,9 +8074,7 @@ let l1_math_045_rule : rule =
         {
           id = "MATH-045";
           severity = Info;
-          message =
-            "Mixed italic/upright capital Greek — consider consistent \
-             \\mathrm{} wrapping";
+          message = {|Math italic capital Greek without \mathrm|};
           count = !bare_cnt;
         }
     else None
@@ -8548,8 +8094,7 @@ let l1_math_046_rule : rule =
         {
           id = "MATH-046";
           severity = Info;
-          message =
-            "\\ldots between commas — use \\cdots for center-axis ellipsis";
+          message = {|Ellipsis \ldots used on relation axis; prefer \cdots|};
           count = !cnt;
         }
     else None
@@ -8568,7 +8113,7 @@ let l1_math_047_rule : rule =
         {
           id = "MATH-047";
           severity = Error;
-          message = "Double superscript a^b^c — braces required: a^{b^c}";
+          message = "Double superscript without braces a^b^c";
           count = !cnt;
         }
     else None
@@ -8588,7 +8133,7 @@ let l1_math_048_rule : rule =
         {
           id = "MATH-048";
           severity = Info;
-          message = "\\mathbf applied to digits — digits are already upright";
+          message = {|Boldface digits via \mathbf in math – avoid|};
           count = !cnt;
         }
     else None
@@ -8617,7 +8162,7 @@ let l1_math_049_rule : rule =
         {
           id = "MATH-049";
           severity = Info;
-          message = "Missing spacing around \\times — add space for readability";
+          message = {|Spacing around \times missing|};
           count = !cnt;
         }
     else None
@@ -8637,8 +8182,7 @@ let l1_math_050_rule : rule =
         {
           id = "MATH-050";
           severity = Warning;
-          message =
-            "\\hat on multi-letter argument — use \\widehat for wide accents";
+          message = {|Circumflex accent ^\hat on multi‑letter|};
           count = !cnt;
         }
     else None
@@ -8708,8 +8252,7 @@ let l1_math_051_rule : rule =
         {
           id = "MATH-051";
           severity = Warning;
-          message =
-            "Nested \\sqrt — consider rewriting with fractional exponents";
+          message = {|Radical \sqrt nested two levels|};
           count = !cnt;
         }
     else None
@@ -8756,7 +8299,7 @@ let l1_math_052_rule : rule =
         {
           id = "MATH-052";
           severity = Warning;
-          message = "\\over primitive used — prefer \\frac{a}{b}";
+          message = {|\over brace used; prefer \frac|};
           count = !cnt;
         }
     else None
@@ -8790,7 +8333,7 @@ let l1_math_053_rule : rule =
         {
           id = "MATH-053";
           severity = Info;
-          message = "Space after \\left( — remove spurious whitespace";
+          message = {|Space after \left( at line start|};
           count = !cnt;
         }
     else None
@@ -8813,7 +8356,7 @@ let l1_math_055_rule : rule =
         {
           id = "MATH-055";
           severity = Info;
-          message = "\\mathcal argument has multiple characters";
+          message = {|Math font change \mathcal for single character only|};
           count = !cnt;
         }
     else None
@@ -8922,7 +8465,7 @@ let l1_math_065_rule : rule =
         {
           id = "MATH-065";
           severity = Info;
-          message = "Manual \\hspace in math detected";
+          message = {|Manual spacing \hspace in math detected|};
           count = !cnt;
         }
     else None
@@ -8947,7 +8490,7 @@ let l1_math_066_rule : rule =
         {
           id = "MATH-066";
           severity = Info;
-          message = "\\phantom used; consider \\hphantom or \\vphantom";
+          message = {|\phantom used; suggest \hphantom or \vphantom|};
           count = !cnt;
         }
     else None
@@ -8990,7 +8533,7 @@ let l1_math_069_rule : rule =
         {
           id = "MATH-069";
           severity = Info;
-          message = "Bold sans-serif math font used";
+          message = "Bold sans‑serif math font used";
           count = !cnt;
         }
     else None
@@ -9012,7 +8555,7 @@ let l1_math_071_rule : rule =
         {
           id = "MATH-071";
           severity = Info;
-          message = "Overuse of \\cancel in equation (more than 3)";
+          message = {|Overuse of \cancel in equations|};
           count = !cnt;
         }
     else None
@@ -9030,7 +8573,7 @@ let l1_math_078_rule : rule =
         {
           id = "MATH-078";
           severity = Info;
-          message = "Long arrow typed as --> — use \\longrightarrow";
+          message = {|Long arrow typed as --> instead of \longrightarrow|};
           count = !cnt;
         }
     else None
@@ -9084,7 +8627,7 @@ let l1_math_079_rule : rule =
         {
           id = "MATH-079";
           severity = Info;
-          message = "\\displaystyle inside display math — redundant";
+          message = {|\displaystyle inside display math – redundant|};
           count = !cnt;
         }
     else None
@@ -9102,7 +8645,7 @@ let l1_math_082_rule : rule =
         {
           id = "MATH-082";
           severity = Warning;
-          message = "Negative thin space \\! used twice consecutively";
+          message = {|Negative thin space \! misused twice consecutively|};
           count = !cnt;
         }
     else None
@@ -9122,7 +8665,7 @@ let l1_math_085_rule : rule =
         {
           id = "MATH-085";
           severity = Info;
-          message = "Use of \\eqcirc — rarely acceptable";
+          message = {|Use of \eqcirc – rarely acceptable|};
           count = !cnt;
         }
     else None
@@ -9140,7 +8683,7 @@ let l1_math_094_rule : rule =
         {
           id = "MATH-094";
           severity = Info;
-          message = "Manual \\kern in math detected — typographic smell";
+          message = {|Manual \kern in math detected – typographic smell|};
           count = !cnt;
         }
     else None
@@ -9194,7 +8737,7 @@ let l1_math_105_rule : rule =
         {
           id = "MATH-105";
           severity = Info;
-          message = "\\textstyle inside display math — redundant";
+          message = {|\textstyle used inside display math — redundant|};
           count = !cnt;
         }
     else None
@@ -9244,7 +8787,7 @@ let l1_math_059_rule : rule =
         {
           id = "MATH-059";
           severity = Warning;
-          message = "\\bar on group expression with spaces/operators";
+          message = {|Math accent \bar on group expression needs braces|};
           count = !cnt;
         }
     else None
@@ -9270,7 +8813,7 @@ let l1_math_060_rule : rule =
         {
           id = "MATH-060";
           severity = Info;
-          message = "Differential d typeset italic — use \\mathrm{d}";
+          message = "Differential d typeset italic";
           count = !cnt;
         }
     else None
@@ -9289,7 +8832,7 @@ let l1_math_061_rule : rule =
         {
           id = "MATH-061";
           severity = Warning;
-          message = "Log base missing braces — use \\log_{10}";
+          message = {|Log base missing braces in \log_10x|};
           count = !cnt;
         }
     else None
@@ -9349,7 +8892,7 @@ let l1_math_067_rule : rule =
         {
           id = "MATH-067";
           severity = Warning;
-          message = "\\limits on non-big-operator";
+          message = "Stacked limits on non‑operator";
           count = !cnt;
         }
     else None
@@ -9373,7 +8916,7 @@ let l1_math_070_rule : rule =
         {
           id = "MATH-070";
           severity = Info;
-          message = "Multiline subscripts without \\substack";
+          message = {|Multiline subscripts lack \substack|};
           count = !cnt;
         }
     else None
@@ -9392,7 +8935,7 @@ let l1_math_073_rule : rule =
         {
           id = "MATH-073";
           severity = Warning;
-          message = "\\color used inside math";
+          message = {|xcolor macro \color used inside math|};
           count = !cnt;
         }
     else None
@@ -9500,8 +9043,7 @@ let l1_math_081_rule : rule =
         {
           id = "MATH-081";
           severity = Info;
-          message =
-            "Function call f(x) without kern — consider f\\!\\left(x\\right)";
+          message = {|Improper kerning f(x) – suggest f\!\left(x\right)|};
           count = !cnt;
         }
     else None
@@ -9525,7 +9067,7 @@ let l1_math_084_rule : rule =
         {
           id = "MATH-084";
           severity = Info;
-          message = "\\displaystyle\\sum in inline math";
+          message = {|Displaystyle \sum in inline math|};
           count = !cnt;
         }
     else None
@@ -9545,7 +9087,7 @@ let l1_math_086_rule : rule =
         {
           id = "MATH-086";
           severity = Warning;
-          message = "Nested \\sqrt depth > 2";
+          message = {|Nested root \sqrt{\sqrt{…}} depth > 2|};
           count = !cnt;
         }
     else None
@@ -9565,7 +9107,7 @@ let l1_math_090_rule : rule =
         {
           id = "MATH-090";
           severity = Warning;
-          message = "Nested \\frac depth > 3 — consider \\dfrac + \\smash";
+          message = {|Nested \frac depth > 3 – suggest \dfrac + \smash|};
           count = !cnt;
         }
     else None
@@ -9633,7 +9175,7 @@ let l1_math_093_rule : rule =
         {
           id = "MATH-093";
           severity = Info;
-          message = "Multi-letter italic variable — use \\mathit{}";
+          message = {|Multi‑letter italic variable should be \mathit{}|};
           count = !cnt;
         }
     else None
@@ -9657,7 +9199,7 @@ let l1_math_098_rule : rule =
         {
           id = "MATH-098";
           severity = Info;
-          message = "More than 2 \\qquad in single math line";
+          message = {|Too many \qquad (> 2) in single line|};
           count = !cnt;
         }
     else None
@@ -9735,8 +9277,7 @@ let l1_math_072_rule : rule =
         {
           id = "MATH-072";
           severity = Warning;
-          message =
-            "\\operatorname used for predefined function — use built-in command";
+          message = "Unknown math operator name";
           count = !cnt;
         }
     else None
@@ -9760,7 +9301,7 @@ let l1_math_074_rule : rule =
         {
           id = "MATH-074";
           severity = Warning;
-          message = "TikZ \\node inside math without math mode key";
+          message = "TikZ node inside math without math mode set";
           count = !cnt;
         }
     else None
@@ -9779,7 +9320,7 @@ let l1_math_087_rule : rule =
         {
           id = "MATH-087";
           severity = Info;
-          message = "Fake bold digits via \\mathbf — consider bm package";
+          message = {|Maths uses fake bold via \mathbf on digits|};
           count = !cnt;
         }
     else None
@@ -9798,7 +9339,7 @@ let l1_math_088_rule : rule =
         {
           id = "MATH-088";
           severity = Info;
-          message = "Bare \\partial lacks thin space";
+          message = {|Bare \partial lacks thin‑space before/after|};
           count = !cnt;
         }
     else None
@@ -9861,7 +9402,7 @@ let l1_math_091_rule : rule =
         {
           id = "MATH-091";
           severity = Info;
-          message = "\\operatorname{X} used — predefined \\X exists";
+          message = {|\operatorname{det} used – predefined \det exists|};
           count = !cnt;
         }
     else None
@@ -9899,7 +9440,7 @@ let l1_math_095_rule : rule =
         {
           id = "MATH-095";
           severity = Warning;
-          message = "Log base typeset without braces — use \\log_{10}";
+          message = {|Log base typeset without braces (\log_10x)|};
           count = !cnt;
         }
     else None
@@ -9959,7 +9500,7 @@ let l1_math_096_rule : rule =
         {
           id = "MATH-096";
           severity = Info;
-          message = "Bold Greek via \\mathbf — use \\boldsymbol";
+          message = {|Bold Greek via \mathbf – use \boldsymbol|};
           count = !cnt;
         }
     else None
@@ -9982,7 +9523,7 @@ let l1_math_097_rule : rule =
         {
           id = "MATH-097";
           severity = Info;
-          message = "Arrow => typed — use \\implies";
+          message = {|Arrow '=>' typed instead of \implies|};
           count = !cnt;
         }
     else None
@@ -10006,7 +9547,7 @@ let l1_math_099_rule : rule =
         {
           id = "MATH-099";
           severity = Info;
-          message = "Large operator used in inline math";
+          message = {|Large operator (\bigcup) used inline|};
           count = !cnt;
         }
     else None
@@ -10024,7 +9565,7 @@ let l1_math_101_rule : rule =
         {
           id = "MATH-101";
           severity = Warning;
-          message = "Deprecated \\over primitive — use \\frac";
+          message = {|Deprecated \over primitive used; replace with \frac|};
           count = !cnt;
         }
     else None
@@ -10048,7 +9589,7 @@ let l1_math_104_rule : rule =
           id = "MATH-104";
           severity = Info;
           message =
-            "Repeated \\left(\\right) pairs — consider \\DeclarePairedDelimiter";
+            {|Paired delimiters repeated without \DeclarePairedDelimiter|};
           count = !cnt;
         }
     else None
@@ -10066,7 +9607,7 @@ let l1_math_106_rule : rule =
         {
           id = "MATH-106";
           severity = Info;
-          message = "\\not= used — prefer \\neq";
+          message = {|Misuse of \not=; prefer \neq|};
           count = !cnt;
         }
     else None
@@ -10086,7 +9627,7 @@ let l1_math_108_rule : rule =
         {
           id = "MATH-108";
           severity = Info;
-          message = "Middle dot (\xc2\xb7) in math — use \\cdot";
+          message = {|Scalar product uses • (⋅) directly; require \cdot|};
           count = !cnt;
         }
     else None
@@ -10148,7 +9689,7 @@ let l1_ref_001_rule : rule =
         {
           id = "REF-001";
           severity = Error;
-          message = "Undefined \\ref/\\eqref label — no matching \\label found";
+          message = {|Undefined \ref / \eqref label after expansion|};
           count = !cnt;
         }
     else None
@@ -10170,7 +9711,7 @@ let l1_ref_002_rule : rule =
         {
           id = "REF-002";
           severity = Error;
-          message = "Duplicate \\label name";
+          message = "Duplicate label name";
           count = !cnt;
         }
     else None
@@ -10188,7 +9729,7 @@ let l1_ref_003_rule : rule =
         {
           id = "REF-003";
           severity = Warning;
-          message = "\\label contains spaces";
+          message = "Label contains spaces";
           count = !cnt;
         }
     else None
@@ -10215,7 +9756,7 @@ let l1_ref_004_rule : rule =
         {
           id = "REF-004";
           severity = Info;
-          message = "\\label contains uppercase letters";
+          message = "Label contains uppercase letters";
           count = !cnt;
         }
     else None
@@ -10259,7 +9800,7 @@ let l1_ref_005_rule : rule =
         {
           id = "REF-005";
           severity = Info;
-          message = "\\label not prefixed with fig:/tab:/eq:/sec: etc.";
+          message = "Label not prefixed fig:/tab:/eq:/sec:";
           count = !cnt;
         }
     else None
@@ -10276,7 +9817,7 @@ let l1_ref_006_rule : rule =
         {
           id = "REF-006";
           severity = Info;
-          message = "Page reference uses \\ref — prefer \\pageref";
+          message = {|Page reference uses \ref not \pageref|};
           count = cnt;
         }
     else None
@@ -10293,7 +9834,7 @@ let l1_ref_007_rule : rule =
         {
           id = "REF-007";
           severity = Error;
-          message = "\\cite key contains whitespace";
+          message = "Cite key contains whitespace";
           count = cnt;
         }
     else None
@@ -10344,8 +9885,7 @@ let l1_ref_009_rule : rule =
         {
           id = "REF-009";
           severity = Info;
-          message =
-            "Forward reference — \\ref appears before \\label definition";
+          message = "Reference appears before label definition (forward ref)";
           count = !cnt;
         }
     else None
@@ -10373,7 +9913,7 @@ let l1_chem_001_rule : rule =
         {
           id = "CHEM-001";
           severity = Warning;
-          message = "Chemical formula in math mode — use \\ce{} from mhchem";
+          message = {|Missing \ce{} wrapper for chemical formula|};
           count = !cnt;
         }
     else None
@@ -10393,8 +9933,7 @@ let l1_chem_002_rule : rule =
         {
           id = "CHEM-002";
           severity = Warning;
-          message =
-            "Oxidation-state superscript missing braces — use ^{2+} not ^2+";
+          message = "Oxidation‑state superscript missing braces";
           count = !cnt;
         }
     else None
@@ -10418,8 +9957,7 @@ let l1_chem_003_rule : rule =
         {
           id = "CHEM-003";
           severity = Warning;
-          message =
-            "Isotope mass number subscripted — should be superscripted (^{14}C)";
+          message = "Isotope mass number subscripted, not superscripted";
           count = !cnt;
         }
     else None
@@ -10438,7 +9976,7 @@ let l1_chem_004_rule : rule =
         {
           id = "CHEM-004";
           severity = Info;
-          message = "Charge written ^- or ^+ — use ^{-} or ^{+}";
+          message = "Charge written ^- instead of ^{-}";
           count = !cnt;
         }
     else None
@@ -10464,7 +10002,7 @@ let l1_chem_005_rule : rule =
         {
           id = "CHEM-005";
           severity = Info;
-          message = "Chemical arrow typed -> — use \\rightarrow or \\ce{->}";
+          message = {|Chemical arrow typed '->' not \rightarrow|};
           count = !cnt;
         }
     else None
@@ -10518,7 +10056,7 @@ let l1_chem_006_rule : rule =
         {
           id = "CHEM-006";
           severity = Warning;
-          message = "Stoichiometry coefficient missing in \\ce reaction";
+          message = {|Stoichiometry coefficient inside \ce missing|};
           count = !cnt;
         }
     else None
@@ -10563,7 +10101,7 @@ let l1_chem_007_rule : rule =
         {
           id = "CHEM-007";
           severity = Info;
-          message = "Reaction conditions not wrapped in \\text above arrow";
+          message = {|Reaction conditions not in \text above arrow|};
           count = !cnt;
         }
     else None
@@ -10591,7 +10129,7 @@ let l1_chem_008_rule : rule =
         {
           id = "CHEM-008";
           severity = Info;
-          message = "State symbol (aq)/(s)/(l)/(g) not wrapped in \\text{}";
+          message = {|State symbols (aq) not wrapped in \text|};
           count = !cnt;
         }
     else None
@@ -10615,8 +10153,7 @@ let l1_chem_009_rule : rule =
         {
           id = "CHEM-009";
           severity = Warning;
-          message =
-            "Equilibrium arrow typed as <-> or <=> — use \\rightleftharpoons";
+          message = "Equilibrium arrow typed as '<>'";
           count = !cnt;
         }
     else None
@@ -10674,7 +10211,7 @@ let l1_cmd_007_rule : rule =
         {
           id = "CMD-007";
           severity = Info;
-          message = "Optional argument declared but not used in definition body";
+          message = "Optional argument not used inside definition body";
           count = !cnt;
         }
     else None
@@ -10703,7 +10240,7 @@ let l1_cmd_010_rule : rule =
         {
           id = "CMD-010";
           severity = Info;
-          message = "More than three successive \\renewcommand lines";
+          message = "More than three successive macro renewals";
           count = !cnt;
         }
     else None
@@ -10747,9 +10284,7 @@ let l1_font_001_rule : rule =
         {
           id = "FONT-001";
           severity = Info;
-          message =
-            "\\textsc applied to all-caps word — small-caps is ineffective on \
-             already-uppercase text";
+          message = "Small‑caps applied to all‑caps word (ineffective)";
           count = !cnt;
         }
     else None
@@ -10775,9 +10310,7 @@ let l1_font_004_rule : rule =
         {
           id = "FONT-004";
           severity = Info;
-          message =
-            "Text font command inside math — use \\mathit, \\mathbf, etc. \
-             instead of \\textit, \\textbf, etc.";
+          message = {|Font change inside math via \textit not \mathit|};
           count = !cnt;
         }
     else None
@@ -10794,9 +10327,7 @@ let l1_rtl_003_rule : rule =
         {
           id = "RTL-003";
           severity = Error;
-          message =
-            Printf.sprintf "Unbalanced \\beginR / \\endR: %d opens vs %d closes"
-              opens closes;
+          message = {|Unbalanced \beginR / \endR primitives|};
           count = abs (opens - closes);
         }
     else None
@@ -10821,7 +10352,7 @@ let l1_rtl_004_rule : rule =
         {
           id = "RTL-004";
           severity = Warning;
-          message = "RTL punctuation character found inside math mode";
+          message = "RTL punctuation not mirrored in math";
           count = !cnt;
         }
     else None
@@ -10842,9 +10373,7 @@ let l1_cjk_008_rule : rule =
         {
           id = "CJK-008";
           severity = Warning;
-          message =
-            "Full-width space (U+3000) inside math mode — use standard ASCII \
-             space or \\quad/\\qquad";
+          message = "Full‑width space U+3000 inside math mode";
           count = !cnt;
         }
     else None
@@ -10865,8 +10394,7 @@ let l1_cjk_015_rule : rule =
         {
           id = "CJK-015";
           severity = Warning;
-          message =
-            "Ideographic comma (U+3001) inside math mode — use ASCII comma";
+          message = "Chinese comma U+3001 inside math mode";
           count = !cnt;
         }
     else None
@@ -10885,9 +10413,7 @@ let l1_typo_059_rule : rule =
         {
           id = "TYPO-059";
           severity = Info;
-          message =
-            "Punctuation inside math adjacent to operator — use spacing macros \
-             (\\, \\; etc.) for proper typographic spacing";
+          message = "Punctuation inside math must be typed with spacing macros";
           count = !cnt;
         }
     else None
@@ -10920,9 +10446,7 @@ let l1_pt_002_rule : rule =
           {
             id = "PT-002";
             severity = Info;
-            message =
-              "pt-BR document uses dot as decimal separator — convention is \
-               comma for decimals and dot for thousands";
+            message = "pt‑BR: decimal comma and thousand dot enforcement";
             count = !cnt;
           }
       else None)
@@ -10970,8 +10494,7 @@ let l1_l3_001_rule : rule =
         {
           id = "L3-001";
           severity = Info;
-          message =
-            "LaTeX3 expl3 declarations mixed with LaTeX2e macros in preamble";
+          message = {|LaTeX3 \tl_new:N in preamble mixed with 2e macros|};
           count = 1;
         }
     else None
@@ -11003,9 +10526,7 @@ let l1_l3_002_rule : rule =
           {
             id = "L3-002";
             severity = Warning;
-            message =
-              "Expl3 variable declaration after \\begin{document} — declare in \
-               preamble";
+            message = {|Expl3 variable declared after \begin{document}|};
             count = cnt;
           }
       else None
@@ -11037,8 +10558,7 @@ let l1_l3_003_rule : rule =
         {
           id = "L3-003";
           severity = Warning;
-          message =
-            "Expl3 and etoolbox patch macros combined — prefer pure expl3 hooks";
+          message = "Expl3 and etoolbox patch macros combined";
           count = 1;
         }
     else None
@@ -11055,9 +10575,7 @@ let l1_l3_004_rule : rule =
         {
           id = "L3-004";
           severity = Info;
-          message =
-            "Undocumented expl3 internal function (\\__...) used — fragile \
-             across updates";
+          message = {|Undocumented \__module_internal:N used|};
           count = cnt;
         }
     else None
@@ -11088,9 +10606,7 @@ let l1_l3_005_rule : rule =
           {
             id = "L3-005";
             severity = Error;
-            message =
-              "Expl3 code used without \\ExplSyntaxOn guard — code will fail \
-               at runtime";
+            message = {|Missing \ExplSyntaxOn guard around expl3 code|};
             count = 1;
           }
       else None
@@ -11133,9 +10649,7 @@ let l1_l3_006_rule : rule =
           {
             id = "L3-006";
             severity = Warning;
-            message =
-              "Expl3 variable prefix matches a loaded package name — risk of \
-               namespace collision";
+            message = "Expl3 variable clobbers package macro name";
             count = !cnt;
           }
       else None
@@ -11161,9 +10675,7 @@ let l1_l3_007_rule : rule =
           {
             id = "L3-007";
             severity = Info;
-            message =
-              "Mixed camelCase and snake_case in expl3 function names — use \
-               consistent snake_case";
+            message = "Mix of camelCase and snake_case in expl3 names";
             count = cnt;
           }
       else None
@@ -11192,9 +10704,7 @@ let l1_l3_009_rule : rule =
         {
           id = "L3-009";
           severity = Info;
-          message =
-            "Deprecated expl3 function variant — check l3 changelog for \
-             updated signatures";
+          message = "LaTeX3 function deprecated _n: variant used";
           count = cnt;
         }
     else None
@@ -11244,14 +10754,154 @@ let l1_l3_011_rule : rule =
           {
             id = "L3-011";
             severity = Warning;
-            message =
-              "pdfTeX primitive used in document with LuaTeX/XeTeX engine \
-               branch — may fail on non-pdfTeX engines";
+            message = "Engine‑branch uses pdfTeX primitive in Lua/XeTeX path";
             count = cnt;
           }
       else None
   in
   { id = "L3-011"; run }
+
+(* CMD-001: Command \newcommand defined but never used *)
+let l1_cmd_001_rule : rule =
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let find_substring s pat from =
+    let n = String.length s and m = String.length pat in
+    if m = 0 || n < m then raise Not_found
+    else
+      let rec loop i =
+        if i > n - m then raise Not_found
+        else if String.sub s i m = pat then i
+        else loop (i + 1)
+      in
+      loop from
+  in
+  let def_ctx_re = Str.regexp {|\\newcommand\|\\renewcommand|} in
+  let run s =
+    (* Collect all defined command names *)
+    let defs = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         defs := name :: !defs;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Check each defined name for usage elsewhere *)
+    let len = String.length s in
+    let cnt =
+      List.fold_left
+        (fun acc name ->
+          let pat = "\\" ^ name in
+          let pat_len = String.length pat in
+          let uses = ref 0 in
+          let j = ref 0 in
+          (try
+             while true do
+               let pos = find_substring s pat !j in
+               (* Check character after match is not a letter (word boundary) *)
+               let after_ok =
+                 pos + pat_len >= len
+                 ||
+                 let c = s.[pos + pat_len] in
+                 not ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+               in
+               (if after_ok then
+                  (* Check this isn't the definition itself *)
+                  let is_def =
+                    pos >= 11
+                    &&
+                    let start = max 0 (pos - 15) in
+                    let ctx = String.sub s start (pos - start) in
+                    try
+                      let _ = Str.search_forward def_ctx_re ctx 0 in
+                      true
+                    with Not_found -> false
+                  in
+                  if not is_def then incr uses);
+               j := pos + 1
+             done
+           with Not_found -> ());
+          if !uses = 0 then acc + 1 else acc)
+        0 !defs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CMD-001";
+          severity = Info;
+          message = {|Command \newcommand defined but never used|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CMD-001"; run }
+
+(* CMD-003: User macro name clashes with package macro *)
+let l1_cmd_003_rule : rule =
+  let known_macros =
+    [
+      "textbf";
+      "textit";
+      "emph";
+      "href";
+      "cite";
+      "ref";
+      "label";
+      "caption";
+      "footnote";
+      "section";
+      "subsection";
+      "subsubsection";
+      "paragraph";
+      "includegraphics";
+      "begin";
+      "end";
+      "item";
+      "maketitle";
+      "tableofcontents";
+      "bibliography";
+      "usepackage";
+      "documentclass";
+      "title";
+      "author";
+      "date";
+      "centering";
+      "hspace";
+      "vspace";
+      "frac";
+      "sqrt";
+      "text";
+    ]
+  in
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         if List.mem name known_macros then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-003";
+          severity = Warning;
+          message = "User macro name clashes with package macro";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-003"; run }
 
 let rules_l1 : rule list =
   [

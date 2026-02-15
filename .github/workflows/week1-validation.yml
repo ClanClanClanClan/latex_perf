@@ -105,7 +105,7 @@ jobs:
     - name: Validator CLI smoke test
       run: |
         eval $(opam env)
-        TEX_SAMPLE="$PWD/corpora/l1/CMD-001_deprecated_after_expansion.tex"
+        TEX_SAMPLE="$PWD/corpora/l1/CMD-001_unused_newcommand.tex"
         dune exec --root latex-parse -- src/validators_cli.exe --layer l1 "$TEX_SAMPLE" > /tmp/validator.out
         grep "CMD-001" /tmp/validator.out
 

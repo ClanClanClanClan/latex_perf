@@ -63,9 +63,9 @@ perl -0777 -ne '
     }
 
     if ($cur_id) {
-      # Case 1: message = {|...|} on same line
-      if ($line =~ /message\s*=\s*\{\|(.+?)\|\}/) {
-        print "$cur_id\t$1\n";
+      # Case 1: message = {|...|} or {delim|...|delim} on same line
+      if ($line =~ /message\s*=\s*\{(\w*)\|(.+?)\|\1\}/) {
+        print "$cur_id\t$2\n";
         $cur_id = "";
       }
       # Case 2: message = "..." on same line (no line continuation)
@@ -101,9 +101,9 @@ perl -0777 -ne '
         $i++;
         if ($i < scalar @lines) {
           my $next = $lines[$i];
-          # Raw string on next line
-          if ($next =~ /\{\|(.+?)\|\}/) {
-            print "$cur_id\t$1\n";
+          # Raw string on next line (standard or alternate delimiter)
+          if ($next =~ /\{(\w*)\|(.+?)\|\1\}/) {
+            print "$cur_id\t$2\n";
             $cur_id = "";
           }
           # Double-quoted on next line (no continuation)

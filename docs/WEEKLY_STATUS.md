@@ -166,11 +166,36 @@ Week 16 — VPD Batch 3: 8 New Validators
 - All dune build, dune runtest, dune fmt: exit 0
 - No proof regressions
 
-Current State (Post Week 16 / Phase 2 Active)
-- Validators: 83 rules (33 TYPO hand + 25 VPD-gen + 14 MOD + 2 CMD + 1 EXP + 4 basic + 4 legacy)
+Week 17 — L1 Batch Completion + Audit Fixes (PRs #120-132)
+- Completed DELIM (11), SCRIPT (22), MATH-A (14), MATH-B (23) L1 batches
+- Completed MATH-C batch: 34 rules (MATH-055..108) across 3 test files
+- Completed REF batch: 8 rules (REF-001..009), CHEM batch: 9 rules (CHEM-001..009)
+- Completed L3 batch: 9 rules (L3-001..011 excl 008/010)
+- Renumbered TYPO-011..033 and replaced CMD-001/CMD-003 per spec alignment
+- Full project audit: fixed CI regex escaping, YAML escapes, script permissions
+- validate_messages.sh upgraded to handle alternate raw string delimiters
+- Tests: ~1,300+ validator tests, all pass
+
+Week 18 — Locale Rules + Straggler Batch (PRs #133-134)
+- 16 locale rules (FR/PT/RU/PL/CS/EL/RO/AR/HE/ZH/JA/KO/HI): L0/L1 gap closed
+  - 64 unit tests, 16 corpus files, 16 golden entries
+  - L0/L1 coverage: 100% of actionable rules (333/345; 12 Reserved)
+- 17 straggler rules batch 2:
+  - CY-001, DE-006, NL-001, NL-002, PL-002, PT-001, RU-002, TR-001, ZH-002
+  - VERB-014, MATH-064, MATH-102, MATH-107, L3-008, L3-010, REF-011, TYPO-050
+  - 53 unit tests, 17 corpus files, 17 golden entries
+- validate_messages.sh: 349/349 rules match, 0 mismatches
+- Golden corpus: 115 cases, all pass
+- All dune build, dune runtest, dune fmt: exit 0
+
+Current State (Post Week 18 / Phase 2 Active)
+- Validators: 359 rules implemented out of 623 spec rules (57.6%)
+  - Y1 target: 180 rules — well exceeded (2x)
+  - L0/L1: 100% actionable (333 impl + 12 Reserved)
+  - Remaining: 264 rules (mostly L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
 - CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
-- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10)
-- Next gate: L0-L1 QED (W26) — expansion proofs complete; remaining is L1 integration + audit
+- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13)
+- Next gate: L2 delivered (W52) — L0/L1 rules complete, focus shifts to parser + higher layers

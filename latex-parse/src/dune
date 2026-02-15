@@ -288,6 +288,11 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_validators_stragglers2)
+ (modules test_validators_stragglers2)
+ (libraries latex_parse_lib unix))
+
+(test
  (name test_validators_stress)
  (modules test_validators_stress)
  (libraries latex_parse_lib unix))
@@ -327,6 +332,7 @@
   ../../specs/rules/pilot_v1_golden.yaml
   ../../specs/rules/unicode_golden.yaml
   ../../specs/rules/locale_golden.yaml
+  ../../specs/rules/stragglers2_golden.yaml
   (source_tree ../../corpora)))
 
 (test

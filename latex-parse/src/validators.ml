@@ -5441,6 +5441,526 @@ let rules_locale : rule list =
     r_hi_001;
   ]
 
+(* ── Straggler rules ─────────────────────────────────────────────────── *)
+
+(* CY-001: Cyrillic initials require NB-space "И.\,И." *)
+let r_cy_001 : rule =
+  (* Detect Cyrillic letter followed by period and regular space before another
+     Cyrillic letter — should use NB-space / \, *)
+  (* Cyrillic capital letters: U+0410-042F = D0 90-D0 AF *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 4 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 = 0xd0 then
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        (* Cyrillic capital: D0 90-AF *)
+        if b1 >= 0x90 && b1 <= 0xaf && !i + 4 < len then
+          if
+            String.unsafe_get s (!i + 2) = '.'
+            && String.unsafe_get s (!i + 3) = ' '
+          then (
+            (* Check if next is Cyrillic capital *)
+            let n0 = Char.code (String.unsafe_get s (!i + 4)) in
+            if n0 = 0xd0 && !i + 5 < len then (
+              let n1 = Char.code (String.unsafe_get s (!i + 5)) in
+              if n1 >= 0x90 && n1 <= 0xaf then incr cnt;
+              i := !i + 4))
+          else i := !i + 2
+        else i := !i + 2
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CY-001";
+          severity = Info;
+          message = {esc|Cyrillic initials require NB‑space "И.\,И."|esc};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CY-001"; run }
+
+(* DE-006: Swiss DE ß prohibited — use "ss" *)
+let r_de_006 : rule =
+  let run s =
+    (* Count ß (U+00DF = C3 9F) and ẞ (U+1E9E = E1 BA 9E) *)
+    let cnt = count_substring s "\xc3\x9f" + count_substring s "\xe1\xba\x9e" in
+    if cnt > 0 then
+      Some
+        {
+          id = "DE-006";
+          severity = Info;
+          message = {|Swiss DE: glyph ß is prohibited—use “ss”|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "DE-006"; run }
+
+(* NL-001: NL digraph IJ/ij — capitalise both at sentence start *)
+let r_nl_001 : rule =
+  (* Detect 'Ij' at start of sentence (after '. ' or at start) *)
+  let run s =
+    let cnt = ref 0 in
+    let len = String.length s in
+    (* Check at start of string *)
+    if len >= 2 && s.[0] = 'I' && s.[1] = 'j' then incr cnt;
+    let i = ref 0 in
+    while !i < len - 3 do
+      if
+        (s.[!i] = '.' || s.[!i] = '!' || s.[!i] = '?')
+        && s.[!i + 1] = ' '
+        && s.[!i + 2] = 'I'
+        && s.[!i + 3] = 'j'
+      then (
+        incr cnt;
+        i := !i + 4)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "NL-001";
+          severity = Info;
+          message =
+            {|NL: digraph IJ/ij—capitalise both letters at sentence start|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "NL-001"; run }
+
+(* NL-002: NL quotes must be uniform *)
+let r_nl_002 : rule =
+  let run s =
+    (* Detect mixing of single-style quotes and German-style quotes *)
+    (* Single opening ' U+2018 = E2 80 98 *)
+    (* German opening „ U+201E = E2 80 9E *)
+    let has_single =
+      count_substring s "\xe2\x80\x98" > 0
+      || count_substring s "\xe2\x80\x99" > 0
+    in
+    let has_german =
+      count_substring s "\xe2\x80\x9e" > 0
+      || count_substring s "\xe2\x80\x9f" > 0
+    in
+    if has_single && has_german then
+      Some
+        {
+          id = "NL-002";
+          severity = Info;
+          message = {|NL: quotes must be uniform (‘…’ or „…‟)|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "NL-002"; run }
+
+(* PL-002: PL primary quotes, nested guillemets only *)
+let r_pl_002 : rule =
+  let run s =
+    (* Detect use of « » (French guillemets) at top level *)
+    (* « = C2 AB, » = C2 BB, „ = E2 80 9E *)
+    let has_guill =
+      count_substring s "\xc2\xab" > 0 || count_substring s "\xc2\xbb" > 0
+    in
+    let has_german = count_substring s "\xe2\x80\x9e" > 0 in
+    (* If guillemets present but no German quotes, it's wrong *)
+    if has_guill && not has_german then
+      Some
+        {
+          id = "PL-002";
+          severity = Info;
+          message = {|PL: primary quotes „…”, nested »…« only|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "PL-002"; run }
+
+(* PT-001: pt-BR pre-2009 spellings forbidden *)
+let r_pt_001 : rule =
+  let words =
+    [
+      "ac\xc3\xa7\xc3\xa3o";
+      "\xc3\xb3ptimo";
+      "direc\xc3\xa7\xc3\xa3o";
+      "objec\xc3\xa7\xc3\xa3o";
+      "projec\xc3\xa7\xc3\xa3o";
+      "colec\xc3\xa7\xc3\xa3o";
+      "selec\xc3\xa7\xc3\xa3o";
+      "correc\xc3\xa7\xc3\xa3o";
+      "protec\xc3\xa7\xc3\xa3o";
+    ]
+  in
+  let run s =
+    let s_low = String.lowercase_ascii s in
+    let cnt =
+      List.fold_left (fun acc w -> acc + count_substring s_low w) 0 words
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "PT-001";
+          severity = Warning;
+          message = {|pt‑BR: pre‑2009 spellings “acção”, “óptimo” forbidden|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "PT-001"; run }
+
+(* RU-002: RU letter ё must be preserved where needed *)
+let r_ru_002 : rule =
+  (* Common words where ё (D1 91) is often incorrectly replaced by е (D0 B5) *)
+  (* We check for known words with е where ё is mandatory *)
+  let run s =
+    (* Check for ё present — if present the author is ё-aware *)
+    let has_yo = count_substring s "\xd1\x91" > 0 in
+    if not has_yo then None
+    else
+      (* Author uses ё somewhere but may have missed some *)
+      (* Common mandatory-ё words written with е: всё, ещё, её *)
+      let cnt =
+        count_substring s "\xd0\xb5\xd1\x89\xd0\xb5"
+        (* еще instead of ещё *)
+        + count_substring s "\xd0\xb2\xd1\x81\xd0\xb5 "
+        (* все instead of всё *)
+      in
+      if cnt > 0 then
+        Some
+          {
+            id = "RU-002";
+            severity = Info;
+            message = {|RU: letter ё must be preserved where needed|};
+            count = cnt;
+          }
+      else None
+  in
+  { id = "RU-002"; run }
+
+(* TR-001: TR dotless/dotted I mapping error *)
+let r_tr_001 : rule =
+  (* Detect mixing of Turkish İ/ı with ASCII I/i in Turkish context *)
+  (* Turkish İ U+0130 = C4 B0, Turkish ı U+0131 = C4 B1 *)
+  let run s =
+    let has_turkish_i = count_substring s "\xc4\xb0" > 0 in
+    let has_turkish_dotless = count_substring s "\xc4\xb1" > 0 in
+    if has_turkish_i || has_turkish_dotless then (
+      (* Check for ASCII I where İ expected or i where ı expected *)
+      (* Simple heuristic: if Turkish chars present, flag ASCII I/i near them *)
+      let cnt = ref 0 in
+      let len = String.length s in
+      let i = ref 0 in
+      while !i < len - 1 do
+        let b0 = Char.code (String.unsafe_get s !i) in
+        if b0 = 0xc4 then (
+          let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+          if b1 = 0xb0 || b1 = 0xb1 then (
+            (* Turkish İ/ı found, check adjacent ASCII *)
+            (if !i >= 1 then
+               let prev = String.unsafe_get s (!i - 1) in
+               if prev = 'I' || prev = 'i' then incr cnt);
+            if !i + 2 < len then
+              let next = String.unsafe_get s (!i + 2) in
+              if next = 'I' || next = 'i' then incr cnt);
+          i := !i + 2)
+        else i := !i + 1
+      done;
+      if !cnt > 0 then
+        Some
+          {
+            id = "TR-001";
+            severity = Warning;
+            message = {|TR: dotless/dotted I mapping error|};
+            count = !cnt;
+          }
+      else None)
+    else None
+  in
+  { id = "TR-001"; run }
+
+(* ZH-002: ZH-Hant quotes must be 「…」 or 『…』 consistently *)
+let r_zh_002 : rule =
+  let run s =
+    (* 「 = E3 80 8C, 」 = E3 80 8D, 『 = E3 80 8E, 』 = E3 80 8F *)
+    let has_cjk_corner =
+      count_substring s "\xe3\x80\x8c" > 0
+      || count_substring s "\xe3\x80\x8d" > 0
+    in
+    let has_cjk_white =
+      count_substring s "\xe3\x80\x8e" > 0
+      || count_substring s "\xe3\x80\x8f" > 0
+    in
+    (* Also check for western curly quotes mixed in with CJK quotes *)
+    let has_western =
+      count_substring s "\xe2\x80\x9c" > 0
+      || count_substring s "\xe2\x80\x9d" > 0
+    in
+    if (has_cjk_corner || has_cjk_white) && has_western then
+      Some
+        {
+          id = "ZH-002";
+          severity = Info;
+          message = {|ZH‑Hant: quotes must be 「…」 or 『…』 consistently|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "ZH-002"; run }
+
+(* VERB-014: Code block inside caption *)
+let r_verb_014 : rule =
+  let run s =
+    (* Detect \begin{lstlisting} or \begin{verbatim} or \verb inside \caption *)
+    let cnt = ref 0 in
+    let len = String.length s in
+    (* Find \caption{ and check for code blocks within *)
+    let cap = "\\caption{" in
+    let cap_len = String.length cap in
+    let i = ref 0 in
+    while !i < len - cap_len do
+      if try String.sub s !i cap_len = cap with Invalid_argument _ -> false
+      then (
+        (* Find matching close brace, accounting for nesting *)
+        let depth = ref 1 in
+        let j = ref (!i + cap_len) in
+        let found_code = ref false in
+        while !j < len && !depth > 0 do
+          if s.[!j] = '{' then incr depth else if s.[!j] = '}' then decr depth;
+          (* Check for code block markers *)
+          if
+            !j + 17 < len
+            &&
+            try String.sub s !j 17 = "\\begin{lstlisting"
+            with Invalid_argument _ -> false
+          then found_code := true;
+          if
+            !j + 16 < len
+            &&
+            try String.sub s !j 16 = "\\begin{verbatim}"
+            with Invalid_argument _ -> false
+          then found_code := true;
+          if
+            !j + 5 < len
+            &&
+            try String.sub s !j 5 = "\\verb" with Invalid_argument _ -> false
+          then found_code := true;
+          incr j
+        done;
+        if !found_code then incr cnt;
+        i := !j)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "VERB-014";
+          severity = Warning;
+          message = {|Code block inside caption|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "VERB-014"; run }
+
+(* MATH-064: Use of \eqalign — obsolete *)
+let r_math_064 : rule =
+  let run s =
+    let cnt = count_substring s "\\eqalign" in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-064";
+          severity = Warning;
+          message = {esc|Use of \eqalign – obsolete|esc};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "MATH-064"; run }
+
+(* MATH-102: Legacy eqnarray (un-starred) environment present *)
+let r_math_102 : rule =
+  let run s =
+    let cnt = count_substring s "\\begin{eqnarray}" in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-102";
+          severity = Warning;
+          message = {|Legacy eqnarray (un‑starred) environment present|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "MATH-102"; run }
+
+(* MATH-107: Mix of \le and \leqslant within same document *)
+let r_math_107 : rule =
+  let run s =
+    let has_le =
+      count_substring s "\\le " > 0 || count_substring s "\\le\\" > 0
+    in
+    let has_leqslant = count_substring s "\\leqslant" > 0 in
+    if has_le && has_leqslant then
+      Some
+        {
+          id = "MATH-107";
+          severity = Info;
+          message = {|Mix of \le and \leqslant within same document|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "MATH-107"; run }
+
+(* L3-008: Expl3 module lacks \ProvidesExplPackage *)
+let r_l3_008 : rule =
+  let run s =
+    let has_expl3 = count_substring s "\\ExplSyntaxOn" > 0 in
+    let has_provides = count_substring s "\\ProvidesExplPackage" > 0 in
+    if has_expl3 && not has_provides then
+      Some
+        {
+          id = "L3-008";
+          severity = Warning;
+          message = {|Expl3 module lacks \ProvidesExplPackage|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-008"; run }
+
+(* L3-010: \ExplSyntaxOff missing at end of file *)
+let r_l3_010 : rule =
+  let run s =
+    let has_on = count_substring s "\\ExplSyntaxOn" > 0 in
+    let has_off = count_substring s "\\ExplSyntaxOff" > 0 in
+    if has_on && not has_off then
+      Some
+        {
+          id = "L3-010";
+          severity = Info;
+          message = {|\ExplSyntaxOff missing at end of file|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-010"; run }
+
+(* REF-011: \autoref used without hyperref/cleveref loaded *)
+let r_ref_011 : rule =
+  let run s =
+    let has_autoref = count_substring s "\\autoref" > 0 in
+    let has_hyperref =
+      count_substring s "\\usepackage{hyperref}" > 0
+      || count_substring s "\\usepackage[" > 0
+         && count_substring s "hyperref" > 0
+    in
+    let has_cleveref =
+      count_substring s "\\usepackage{cleveref}" > 0
+      || count_substring s "cleveref" > 0
+    in
+    if has_autoref && (not has_hyperref) && not has_cleveref then
+      Some
+        {
+          id = "REF-011";
+          severity = Error;
+          message = {|\autoref used without hyperref/cleveref loaded|};
+          count = count_substring s "\\autoref";
+        }
+    else None
+  in
+  { id = "REF-011"; run }
+
+(* TYPO-050: Inconsistent title-case capitalisation *)
+let r_typo_050 : rule =
+  (* Detect \section{} and \subsection{} with inconsistent capitalisation *)
+  let re_sec =
+    Str.regexp
+      {|\\section\*?\{[^}]+\}\|\\subsection\*?\{[^}]+\}\|\\chapter\*?\{[^}]+\}|}
+  in
+  let run s =
+    let titles = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re_sec s !start in
+         let m = Str.matched_string s in
+         titles := m :: !titles;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if List.length !titles < 2 then None
+    else
+      (* Check if some are title-case and some are sentence-case *)
+      let is_title_case t =
+        (* Extract content between { and } *)
+        let i = try String.index t '{' + 1 with Not_found -> 0 in
+        let j = try String.rindex t '}' with Not_found -> String.length t in
+        if j <= i then false
+        else
+          let content = String.sub t i (j - i) in
+          let words = String.split_on_char ' ' content in
+          let sig_words =
+            List.filter
+              (fun w ->
+                String.length w > 3
+                && w.[0] <> '\\'
+                && w <> "and"
+                && w <> "the"
+                && w <> "for"
+                && w <> "with")
+              words
+          in
+          List.length sig_words > 0
+          && List.for_all
+               (fun w ->
+                 let c = Char.code w.[0] in
+                 c >= 65 && c <= 90)
+               sig_words
+      in
+      let tc_count = List.length (List.filter is_title_case !titles) in
+      let total = List.length !titles in
+      let sc_count = total - tc_count in
+      if tc_count > 0 && sc_count > 0 then
+        Some
+          {
+            id = "TYPO-050";
+            severity = Info;
+            message = {|Inconsistent title‑case capitalisation|};
+            count = 1;
+          }
+      else None
+  in
+  { id = "TYPO-050"; run }
+
+let rules_stragglers : rule list =
+  [
+    r_cy_001;
+    r_de_006;
+    r_nl_001;
+    r_nl_002;
+    r_pl_002;
+    r_pt_001;
+    r_ru_002;
+    r_tr_001;
+    r_zh_002;
+    r_verb_014;
+    r_math_064;
+    r_math_102;
+    r_math_107;
+    r_l3_008;
+    r_l3_010;
+    r_ref_011;
+    r_typo_050;
+  ]
+
 (* ── CMD rules: command definition checks ────────────────────────────── *)
 
 (* CMD-002: Command redefined with \def instead of \renewcommand *)
@@ -5776,6 +6296,7 @@ let rules_enc_char_spc : rule list =
   @ rules_cmd
   @ [ r_typo_062; r_math_083 ]
   @ rules_locale
+  @ rules_stragglers
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

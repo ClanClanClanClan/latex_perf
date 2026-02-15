@@ -1,0 +1,70 @@
+# Golden corpus entries for straggler batch 2 rules
+---
+  - file: corpora/lint/stragglers2/CY-001_cyrillic_initials.tex
+    expect: ["CY-001"]
+    expect_msgs:
+      - "CY-001:Cyrillic initials require NB‑space \"И.\\,И.\""
+  - file: corpora/lint/stragglers2/DE-006_swiss_eszett.tex
+    expect: ["DE-006"]
+    expect_msgs:
+      - "DE-006:Swiss DE: glyph ß is prohibited—use “ss”"
+  - file: corpora/lint/stragglers2/NL-001_dutch_ij.tex
+    expect: ["NL-001"]
+    expect_msgs:
+      - "NL-001:NL: digraph IJ/ij—capitalise both letters at sentence start"
+  - file: corpora/lint/stragglers2/NL-002_dutch_quotes.tex
+    expect: ["NL-002"]
+    expect_msgs:
+      - "NL-002:NL: quotes must be uniform (‘…’ or „…‟)"
+  - file: corpora/lint/stragglers2/PL-002_polish_quotes.tex
+    expect: ["PL-002"]
+    expect_msgs:
+      - "PL-002:PL: primary quotes „…”, nested »…« only"
+  - file: corpora/lint/stragglers2/PT-001_pre2009_spelling.tex
+    expect: ["PT-001"]
+    expect_msgs:
+      - "PT-001:pt‑BR: pre‑2009 spellings “acção”, “óptimo” forbidden"
+  - file: corpora/lint/stragglers2/RU-002_russian_yo.tex
+    expect: ["RU-002"]
+    expect_msgs:
+      - "RU-002:RU: letter ё must be preserved where needed"
+  - file: corpora/lint/stragglers2/TR-001_turkish_i.tex
+    expect: ["TR-001"]
+    expect_msgs:
+      - "TR-001:TR: dotless/dotted I mapping error"
+  - file: corpora/lint/stragglers2/ZH-002_hant_quotes.tex
+    expect: ["ZH-002"]
+    expect_msgs:
+      - "ZH-002:ZH‑Hant: quotes must be 「…」 or 『…』 consistently"
+  - file: corpora/lint/stragglers2/VERB-014_code_caption.tex
+    expect: ["VERB-014"]
+    expect_msgs:
+      - "VERB-014:Code block inside caption"
+  - file: corpora/lint/stragglers2/MATH-064_eqalign.tex
+    expect: ["MATH-064"]
+    expect_msgs:
+      - "MATH-064:Use of \\eqalign – obsolete"
+  - file: corpora/lint/stragglers2/MATH-102_eqnarray.tex
+    expect: ["MATH-102"]
+    expect_msgs:
+      - "MATH-102:Legacy eqnarray (un‑starred) environment present"
+  - file: corpora/lint/stragglers2/MATH-107_mixed_le.tex
+    expect: ["MATH-107"]
+    expect_msgs:
+      - "MATH-107:Mix of \\le and \\leqslant within same document"
+  - file: corpora/lint/stragglers2/L3-008_expl3_provides.tex
+    expect: ["L3-008"]
+    expect_msgs:
+      - "L3-008:Expl3 module lacks \\ProvidesExplPackage"
+  - file: corpora/lint/stragglers2/L3-010_expl3_off.tex
+    expect: ["L3-010"]
+    expect_msgs:
+      - "L3-010:\\ExplSyntaxOff missing at end of file"
+  - file: corpora/lint/stragglers2/REF-011_autoref.tex
+    expect: ["REF-011"]
+    expect_msgs:
+      - "REF-011:\\autoref used without hyperref/cleveref loaded"
+  - file: corpora/lint/stragglers2/TYPO-050_title_case.tex
+    expect: ["TYPO-050"]
+    expect_msgs:
+      - "TYPO-050:Inconsistent title‑case capitalisation"

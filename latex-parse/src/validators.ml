@@ -834,7 +834,7 @@ let r_typo_017 : rule =
         {
           id = "TYPO-017";
           severity = Info;
-          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
+          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
           count = !cnt;
         }
     else None
@@ -1069,7 +1069,7 @@ let r_typo_028 : rule =
         {
           id = "TYPO-028";
           severity = Error;
-          message = {|Use of $$ display math delimiter|};
+          message = {|Use of ``$$'' display math delimiter|};
           count = cnt;
         }
     else None
@@ -10761,8 +10761,152 @@ let l1_l3_011_rule : rule =
   in
   { id = "L3-011"; run }
 
+(* CMD-001: Command \newcommand defined but never used *)
+let l1_cmd_001_rule : rule =
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let find_substring s pat from =
+    let n = String.length s and m = String.length pat in
+    if m = 0 || n < m then raise Not_found
+    else
+      let rec loop i =
+        if i > n - m then raise Not_found
+        else if String.sub s i m = pat then i
+        else loop (i + 1)
+      in
+      loop from
+  in
+  let def_ctx_re = Str.regexp {|\\newcommand\|\\renewcommand|} in
+  let run s =
+    (* Collect all defined command names *)
+    let defs = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         defs := name :: !defs;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Check each defined name for usage elsewhere *)
+    let len = String.length s in
+    let cnt =
+      List.fold_left
+        (fun acc name ->
+          let pat = "\\" ^ name in
+          let pat_len = String.length pat in
+          let uses = ref 0 in
+          let j = ref 0 in
+          (try
+             while true do
+               let pos = find_substring s pat !j in
+               (* Check character after match is not a letter (word boundary) *)
+               let after_ok =
+                 pos + pat_len >= len
+                 ||
+                 let c = s.[pos + pat_len] in
+                 not ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+               in
+               (if after_ok then
+                  (* Check this isn't the definition itself *)
+                  let is_def =
+                    pos >= 11
+                    &&
+                    let start = max 0 (pos - 15) in
+                    let ctx = String.sub s start (pos - start) in
+                    try
+                      let _ = Str.search_forward def_ctx_re ctx 0 in
+                      true
+                    with Not_found -> false
+                  in
+                  if not is_def then incr uses);
+               j := pos + 1
+             done
+           with Not_found -> ());
+          if !uses = 0 then acc + 1 else acc)
+        0 !defs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CMD-001";
+          severity = Info;
+          message = {|Command \newcommand defined but never used|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CMD-001"; run }
+
+(* CMD-003: User macro name clashes with package macro *)
+let l1_cmd_003_rule : rule =
+  let known_macros =
+    [
+      "textbf";
+      "textit";
+      "emph";
+      "href";
+      "cite";
+      "ref";
+      "label";
+      "caption";
+      "footnote";
+      "section";
+      "subsection";
+      "subsubsection";
+      "paragraph";
+      "includegraphics";
+      "begin";
+      "end";
+      "item";
+      "maketitle";
+      "tableofcontents";
+      "bibliography";
+      "usepackage";
+      "documentclass";
+      "title";
+      "author";
+      "date";
+      "centering";
+      "hspace";
+      "vspace";
+      "frac";
+      "sqrt";
+      "text";
+    ]
+  in
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         if List.mem name known_macros then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-003";
+          severity = Warning;
+          message = "User macro name clashes with package macro";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-003"; run }
+
 let rules_l1 : rule list =
   [
+    l1_cmd_001_rule;
+    l1_cmd_003_rule;
     l1_mod_001_rule;
     l1_exp_001_rule;
     l1_mod_002_rule;

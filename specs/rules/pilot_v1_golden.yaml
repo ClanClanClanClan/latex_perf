@@ -66,7 +66,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-017_tex_accent.tex
     expect: ["TYPO-017"]
     expect_msgs:
-      - "TYPO-017:TeX accent commands (\\'{e}) in text; prefer UTF‑8 é"
+      - "TYPO-017:TeX accent commands (\\'{e}) in text; prefer UTF‑8 é"
   - file: corpora/lint/pilot_v1/TYPO-018_multiple_consecutive_spaces.tex
     expect: ["TYPO-018"]
     expect_msgs:
@@ -102,7 +102,7 @@ cases:
   - file: corpora/lint/pilot_v1/TYPO-028_dollar_dollar_display.tex
     expect: ["TYPO-028"]
     expect_msgs:
-      - "TYPO-028:Use of $$ display math delimiter"
+      - "TYPO-028:Use of ``$$'' display math delimiter"
   - file: corpora/lint/pilot_v1/TYPO-029_ref_space.tex
     expect: ["TYPO-029"]
     expect_msgs:

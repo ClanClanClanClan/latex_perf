@@ -24,6 +24,40 @@ let does_not_fire id src = find_result id src = None
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
+     CMD-001: Command \newcommand defined but never used
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "CMD-001 fires on unused newcommand" (fun tag ->
+      expect
+        (fires "CMD-001"
+           "\\newcommand{\\myfoo}{bar}\nSome text without the command")
+        (tag ^ ": unused macro"));
+  run "CMD-001 clean when used" (fun tag ->
+      expect
+        (does_not_fire "CMD-001"
+           "\\newcommand{\\myfoo}{bar}\nUsing \\myfoo here")
+        (tag ^ ": macro is used"));
+  run "CMD-001 fires on unused renewcommand" (fun tag ->
+      expect
+        (fires "CMD-001" "\\renewcommand{\\mybar}{baz}\nNothing uses mybar")
+        (tag ^ ": unused renewcommand"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CMD-003: User macro name clashes with package macro
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "CMD-003 fires on clash with \\textbf" (fun tag ->
+      expect
+        (fires "CMD-003" "\\newcommand{\\textbf}{custom bold}")
+        (tag ^ ": clashes with textbf"));
+  run "CMD-003 fires on clash with \\emph" (fun tag ->
+      expect
+        (fires "CMD-003" "\\renewcommand{\\emph}{custom emphasis}")
+        (tag ^ ": clashes with emph"));
+  run "CMD-003 clean with unique name" (fun tag ->
+      expect
+        (does_not_fire "CMD-003" "\\newcommand{\\myuniquecmd}{stuff}")
+        (tag ^ ": no clash"));
+
+  (* ══════════════════════════════════════════════════════════════════════
      MOD-001: Legacy font commands (bf, it, tt, rm, sl, sf)
      ══════════════════════════════════════════════════════════════════════ *)
   run "MOD-001 fires on \\bf" (fun tag ->

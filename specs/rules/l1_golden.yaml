@@ -1,4 +1,12 @@
 cases:
+  - file: corpora/l1/CMD-001_unused_newcommand.tex
+    expect: ["CMD-001"]
+    expect_msgs:
+      - "CMD-001:Command \\newcommand defined but never used"
+  - file: corpora/l1/CMD-003_clash_with_textbf.tex
+    expect: ["CMD-003"]
+    expect_msgs:
+      - "CMD-003:User macro name clashes with package macro"
   - file: corpora/l1/MOD-001_mixed_bf_textbf.tex
     expect: ["MOD-001"]
     expect_msgs:

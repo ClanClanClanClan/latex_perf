@@ -670,204 +670,488 @@ let r_typo_010 : rule =
   in
   { id = "TYPO-010"; run }
 
-(* Additional pilot rules to reach 15+ *)
-
+(* TYPO-011: Missing thin space before differential d in integrals *)
 let r_typo_011 : rule =
+  let re = Str.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: rest -> (
-                match a.kind with
-                | Space when a.e - a.s > 1 -> loop (c + 1) rest
-                | _ -> loop c rest)
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-011";
-              severity = Info;
-              message = "Multiple consecutive spaces in text";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "  " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-011";
-              severity = Info;
-              message = "Multiple consecutive spaces in text";
-              count = cnt;
-            }
-        else None
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-011";
+          severity = Info;
+          message =
+            {|Missing thin space (\,) before differential d in integrals|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-011"; run }
 
+(* TYPO-012: Straight apostrophe used for minutes/feet *)
 let r_typo_012 : rule =
+  let re = Str.regexp {|[0-9]'|} in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Bracket_close, Some _ -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-012";
-              severity = Warning;
-              message = "Space before closing bracket ) ] }";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let combos = [ " )"; " ]"; " }" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-012";
-              severity = Warning;
-              message = "Space before closing bracket ) ] }";
-              count = cnt;
-            }
-        else None
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-012";
+          severity = Warning;
+          message =
+            {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-012"; run }
 
+(* TYPO-013: ASCII back-tick used as opening quote *)
 let r_typo_013 : rule =
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        (* Look for single-letter Word tokens followed by Space then Word *)
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: c' :: rest -> (
-                match (a.kind, b.kind, c'.kind) with
-                | Word, Space, Word when a.e - a.s = 1 ->
-                    loop (c + 1) (b :: c' :: rest)
-                | _ -> loop c (b :: c' :: rest))
-            | _ -> c
-          in
-          loop 0 toks
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '`' then
+        (* Only flag single backtick, not `` (TeX opening quote) *)
+        let is_double =
+          (i + 1 < n && s.[i + 1] = '`') || (i > 0 && s.[i - 1] = '`')
         in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-013";
-              severity = Warning;
-              message = "Consider non-breaking space after single-letter words";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let patterns = [ " a "; " I "; " a\n"; " I\n" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 patterns
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-013";
-              severity = Warning;
-              message = "Consider non-breaking space after single-letter words";
-              count = cnt;
-            }
-        else None
+        if not is_double then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-013";
+          severity = Warning;
+          message = {|ASCII back‑tick ` used as opening quote|};
+          count = !cnt;
+        }
+    else None
   in
   { id = "TYPO-013"; run }
 
+(* TYPO-014: Space before percent sign — relocated from old TYPO-028 *)
 let r_typo_014 : rule =
   let run s =
-    (* Paragraph-aware mixed quote styles: straight and curly in same
-       paragraph *)
-    let paras = split_into_paragraphs s in
-    let mixed =
-      let check seg0 =
-        let seg = strip_math_segments seg0 in
-        let has_straight = count_char seg '"' > 0 || count_char seg '\'' > 0 in
-        let has_curly =
-          Unicode.has_curly_quote seg
-          || count_substring seg "``" + count_substring seg "''" > 0
-        in
-        has_straight && has_curly
-      in
-      if paras = [] then check s
-      else List.exists (fun (off, len) -> check (String.sub s off len)) paras
-    in
-    if mixed then
+    let cnt = count_substring s " %" in
+    if cnt > 0 then
       Some
         {
           id = "TYPO-014";
           severity = Info;
-          message = "Inconsistent quotation mark style within text";
-          count = 1;
+          message = {|Space before percent sign \%|};
+          count = cnt;
         }
     else None
   in
   { id = "TYPO-014"; run }
 
+(* TYPO-015: Double \% in source; likely stray percent *)
 let r_typo_015 : rule =
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Command, Space -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-015";
-              severity = Warning;
-              message = "LaTeX command spacing may need adjustment";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "\\ " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-015";
-              severity = Warning;
-              message = "LaTeX command spacing may need adjustment";
-              count = cnt;
-            }
-        else None
+    let cnt = count_substring s "\\%\\%" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-015";
+          severity = Warning;
+          message = {|Double \% in source; likely stray percent|};
+          count = cnt;
+        }
+    else None
   in
   { id = "TYPO-015"; run }
+
+(* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
+let r_typo_016 : rule =
+  let re = Str.regexp {| \\cite\b\| \\ref\b|} in
+  let tilde_re = Str.regexp {|~\\cite\b\|~\\ref\b|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Subtract cases where ~ is already used *)
+    let tilde_cnt = ref 0 in
+    let j = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward tilde_re s !j in
+         incr tilde_cnt;
+         j := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt = !cnt in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-016";
+          severity = Info;
+          message = {|Non‑breaking space ~ missing before \cite / \ref|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-016"; run }
+
+(* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
+let r_typo_017 : rule =
+  let re = Str.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-017";
+          severity = Info;
+          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-017"; run }
+
+(* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011 *)
+let r_typo_018 : rule =
+  let run s =
+    let cnt = count_substring s "  " in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-018";
+          severity = Info;
+          message = "Multiple consecutive spaces in text";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-018"; run }
+
+(* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
+let r_typo_019 : rule =
+  let run _s = None in
+  { id = "TYPO-019"; run }
+
+(* TYPO-020: Sentence without ending punctuation — DEFERRED: requires NLP *)
+let r_typo_020 : rule =
+  let run _s = None in
+  { id = "TYPO-020"; run }
+
+(* TYPO-021: Capital letter after ellipsis without space *)
+let r_typo_021 : rule =
+  let re = Str.regexp {|\(\.\.\.\|…\)[A-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-021";
+          severity = Info;
+          message = "Capital letter after ellipsis without space";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-021"; run }
+
+(* TYPO-022: Space before closing punctuation — relocated from old TYPO-012 *)
+let r_typo_022 : rule =
+  let run s =
+    let combos = [ " )"; " ]"; " }" ] in
+    let cnt =
+      List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-022";
+          severity = Info;
+          message = "Space before closing punctuation ) ] }";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-022"; run }
+
+(* TYPO-023: ASCII ampersand & outside tabular env; use \& *)
+let r_typo_023 : rule =
+  let tabular_re =
+    Str.regexp
+      {|\\begin{tabular\|\\begin{array\|\\begin{align\|\\begin{tabularx\|\\begin{longtable|}
+  in
+  let end_re =
+    Str.regexp
+      {|\\end{tabular\|\\end{array\|\\end{align\|\\end{tabularx\|\\end{longtable|}
+  in
+  let run s =
+    (* Strip out tabular/array/align environments *)
+    let stripped = ref s in
+    (try
+       while true do
+         let start_pos = Str.search_forward tabular_re !stripped 0 in
+         try
+           let end_pos = Str.search_forward end_re !stripped start_pos in
+           let end_pos =
+             try
+               let _ = Str.search_forward (Str.regexp "}") !stripped end_pos in
+               Str.match_end ()
+             with Not_found -> end_pos + 10
+           in
+           let before = String.sub !stripped 0 start_pos in
+           let after =
+             if end_pos < String.length !stripped then
+               String.sub !stripped end_pos (String.length !stripped - end_pos)
+             else ""
+           in
+           stripped := before ^ after
+         with Not_found ->
+           (* No matching end — strip from start to end of string *)
+           stripped := String.sub !stripped 0 start_pos
+       done
+     with Not_found -> ());
+    (* Count bare & (not \&) in stripped text *)
+    let n = String.length !stripped in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if !stripped.[i] = '&' && not (i > 0 && !stripped.[i - 1] = '\\') then
+        incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-023";
+          severity = Error;
+          message = {|ASCII ampersand & outside tabular env; use \&|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-023"; run }
+
+(* TYPO-024: Dangling dash at line end *)
+let r_typo_024 : rule =
+  let re = Str.regexp {|-+[ \t]*$|} in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          try
+            let _ = Str.search_forward re line 0 in
+            acc + 1
+          with Not_found -> acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-024";
+          severity = Info;
+          message = "Dangling dash at line end";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-024"; run }
+
+(* TYPO-025: Space before en-dash in number range *)
+let r_typo_025 : rule =
+  let re = Str.regexp {|[0-9] +\(–\|--\)[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-025";
+          severity = Warning;
+          message = {|Space before en‑dash in number range|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-025"; run }
+
+(* TYPO-026: Wrong dash in page range — should use -- *)
+let r_typo_026 : rule =
+  let re = Str.regexp {|[0-9]–[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-026";
+          severity = Warning;
+          message = {|Wrong dash in page range – should use --|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-026"; run }
+
+(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
+let r_typo_027 : rule =
+  let run s =
+    let cnt = count_substring s "!!" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-027";
+          severity = Info;
+          message = {|Multiple exclamation marks ‼|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-027"; run }
+
+(* TYPO-028: Use of $$ display math delimiter *)
+let r_typo_028 : rule =
+  let run s =
+    let cnt = count_substring s "$$" in
+    (* Each pair of $$ counts as one — divide by 2 *)
+    let cnt = cnt / 2 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-028";
+          severity = Error;
+          message = {|Use of ``$$'' display math delimiter|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-028"; run }
+
+(* TYPO-029: Non-breaking space after \ref missing *)
+let r_typo_029 : rule =
+  let re = Str.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-029";
+          severity = Info;
+          message = {|Non‑breaking space after \ref missing|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-029"; run }
+
+(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP *)
+let r_typo_030 : rule =
+  let run _s = None in
+  { id = "TYPO-030"; run }
+
+(* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
+   NLP *)
+let r_typo_031 : rule =
+  let run _s = None in
+  { id = "TYPO-031"; run }
+
+(* TYPO-032: Comma before \cite *)
+let r_typo_032 : rule =
+  let re = Str.regexp {|,[ ]*\\cite|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-032";
+          severity = Warning;
+          message = {|Comma before \cite|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-032"; run }
+
+(* TYPO-033: Abbreviation et.al without space *)
+let r_typo_033 : rule =
+  let run s =
+    let cnt = count_substring s "et.al" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-033";
+          severity = Warning;
+          message = "Abbreviation et.al without space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-033"; run }
 
 let rules_pilot : rule list =
   [
@@ -886,715 +1170,25 @@ let rules_pilot : rule list =
     r_typo_013;
     r_typo_014;
     r_typo_015;
+    r_typo_016;
+    r_typo_017;
+    r_typo_018;
+    r_typo_019;
+    r_typo_020;
+    r_typo_021;
+    r_typo_022;
+    r_typo_023;
+    r_typo_024;
+    r_typo_025;
+    r_typo_026;
+    r_typo_027;
+    r_typo_028;
+    r_typo_029;
+    r_typo_030;
+    r_typo_031;
+    r_typo_032;
+    r_typo_033;
   ]
-
-(* Extended pilot additions *)
-
-let r_typo_016 : rule =
-  let run s =
-    let cnt = count_substring s "!!" + count_substring s "!!!" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-016";
-          severity = Info;
-          message = "Excessive exclamation marks, consider moderation";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-016"; run }
-
-let r_typo_017 : rule =
-  let run s =
-    let cnt = count_substring s "??" + count_substring s "???" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-017";
-          severity = Info;
-          message = "Excessive question marks, consider moderation";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-017"; run }
-
-let r_typo_018 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_end = function Some ('.' | '?' | '!') -> true | _ -> false in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind) with
-                | Symbol, ch, Space when is_end ch && b.e - b.s > 1 ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-018";
-              severity = Info;
-              message = "Double space after sentence punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt =
-          count_substring s ".  "
-          + count_substring s "?  "
-          + count_substring s "!  "
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-018";
-              severity = Info;
-              message = "Double space after sentence punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-018"; run }
-
-let r_typo_019 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c prev = function
-            | [] -> c
-            | t :: rest -> (
-                match (prev, t.kind) with
-                | None, Space -> loop (c + 1) (Some t.kind) rest
-                | Some Newline, Space -> loop (c + 1) (Some t.kind) rest
-                | _ -> loop c (Some t.kind) rest)
-          in
-          loop 0 None toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-019";
-              severity = Info;
-              message = "Leading spaces at start of line";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let starts =
-          if String.length s > 0 && String.unsafe_get s 0 = ' ' then 1 else 0
-        in
-        let cnt = starts + count_substring s "\n " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-019";
-              severity = Info;
-              message = "Leading spaces at start of line";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-019"; run }
-
-let r_typo_020 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind, b.ch) with
-                | Symbol, Some ',', Symbol, Some ',' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-020";
-              severity = Warning;
-              message = "Consecutive commas ,, found";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s ",," in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-020";
-              severity = Warning;
-              message = "Consecutive commas ,, found";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-020"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_016; r_typo_017; r_typo_018; r_typo_019; r_typo_020 ]
-
-(* Next 5 high-signal lexical rules *)
-
-let r_typo_021 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, a.ch) with
-                | Bracket_open, Space, Some _ -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-021";
-              severity = Info;
-              message = "Space after opening bracket ( [ {";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt =
-          count_substring s "( "
-          + count_substring s "[ "
-          + count_substring s "{ "
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-021";
-              severity = Info;
-              message = "Space after opening bracket ( [ {";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-021"; run }
-
-let r_typo_022 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_punct c =
-          match c with ',' | '.' | ';' | ':' | '?' | '!' -> true | _ -> false
-        in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, a.ch, b.kind) with
-                | Symbol, Some ch, (Word | Command | Bracket_open | Quote)
-                  when is_punct ch ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-022";
-              severity = Info;
-              message = "Missing space after punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        (* byte-level fallback *)
-        let n = String.length s in
-        let is_punct c =
-          match c with ',' | '.' | ';' | ':' | '?' | '!' -> true | _ -> false
-        in
-        let is_space c = c = ' ' || c = '\n' || c = '\t' in
-        let is_word c =
-          ('a' <= c && c <= 'z')
-          || ('A' <= c && c <= 'Z')
-          || ('0' <= c && c <= '9')
-        in
-        let rec loop i acc =
-          if i + 1 >= n then acc
-          else
-            let c = String.unsafe_get s i in
-            let d = String.unsafe_get s (i + 1) in
-            if is_punct c && (not (is_space d)) && is_word d then
-              loop (i + 1) (acc + 1)
-            else loop (i + 1) acc
-        in
-        let cnt = loop 0 0 in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-022";
-              severity = Info;
-              message = "Missing space after punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-022"; run }
-
-let r_typo_023 : rule =
-  let run s =
-    let cnt = count_char s '\r' in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-023";
-          severity = Error;
-          message = "Windows CR (\\r) line endings found";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-023"; run }
-
-let r_typo_024 : rule =
-  let run s =
-    let n = String.length s in
-    let rec loop i acc =
-      if i >= n then acc
-      else
-        let c = String.unsafe_get s i in
-        let code = Char.code c in
-        if code < 32 && code <> 9 && code <> 10 then loop (i + 1) (acc + 1)
-        else loop (i + 1) acc
-    in
-    let cnt = loop 0 0 in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-024";
-          severity = Info;
-          message = "Control characters (U+0000–U+001F) present";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-024"; run }
-
-let r_typo_025 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Space, Quote -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-025";
-              severity = Warning;
-              message = "Space before closing quote";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s " \"" + count_substring s " '" in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-025";
-              severity = Warning;
-              message = "Space before closing quote";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-025"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_021; r_typo_022; r_typo_023; r_typo_024; r_typo_025 ]
-
-(* Next 5 lexical rules (026–030) *)
-
-let r_typo_026 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        (* Count pairs of consecutive '.' symbols not part of '...' *)
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | [ _ ] -> c
-            | a :: b :: c' :: rest -> (
-                match (a.ch, b.ch, c'.ch) with
-                | Some '.', Some '.', Some '.' -> loop c (b :: c' :: rest)
-                | Some '.', Some '.', _ -> loop (c + 1) (b :: c' :: rest)
-                | _ -> loop c (b :: c' :: rest))
-            | a :: b :: rest -> (
-                match (a.ch, b.ch) with
-                | Some '.', Some '.' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-026";
-              severity = Warning;
-              message = {|Double period .. should be … or \dots|};
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let dd = count_substring s ".." in
-        let ell = count_substring s "..." in
-        let cnt = dd - (2 * ell) in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-026";
-              severity = Warning;
-              message = {|Double period .. should be … or \dots|};
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-026"; run }
-
-let r_typo_027 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_punct = function
-          | Some (',' | '.' | ';' | ':' | '?' | '!') -> true
-          | _ -> false
-        in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Symbol, ch when b.e - b.s > 1 && is_punct ch ->
-                    loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-027";
-              severity = Info;
-              message = "Multiple spaces before punctuation";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let combos = [ "  ,"; "  ."; "  ;"; "  :"; "  ?"; "  !" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-027";
-              severity = Info;
-              message = "Multiple spaces before punctuation";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-027"; run }
-
-let r_typo_028 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Symbol, Some '%' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-028";
-              severity = Error;
-              message = "Space before percent sign %";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s " %" in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-028";
-              severity = Error;
-              message = "Space before percent sign %";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-028"; run }
-
-let r_typo_029 : rule =
-  let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Quote, Space -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-029";
-              severity = Info;
-              message = "Space after opening quote";
-              count = cnt;
-            }
-        else None
-    | _ ->
-        let cnt = count_substring s "\" " + count_substring s "' " in
-        if cnt > 0 then
-          Some
-            {
-              id = "TYPO-029";
-              severity = Info;
-              message = "Space after opening quote";
-              count = cnt;
-            }
-        else None
-  in
-  { id = "TYPO-029"; run }
-
-(* CMD-001: Deprecated LaTeX commands present in the document *)
-let l1_cmd_001_rule : rule =
-  let run s =
-    let deprecated = [ "over"; "centerline"; "bf"; "it" ] in
-    let names = extract_command_names s in
-    let cnt =
-      List.fold_left
-        (fun acc name ->
-          if List.exists (( = ) name) deprecated then acc + 1 else acc)
-        0 names
-    in
-    if cnt > 0 then
-      Some
-        {
-          id = "CMD-001";
-          severity = Info;
-          message = "Deprecated LaTeX command: use modern equivalent";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "CMD-001"; run }
-
-let l1_cmd_003_rule : rule =
-  let run s =
-    let deep_sectioning = [ "paragraph"; "subparagraph"; "subsubsection" ] in
-    let names = extract_command_names s in
-    let cnt =
-      List.fold_left
-        (fun acc name ->
-          if List.exists (( = ) name) deep_sectioning then acc + 1 else acc)
-        0 names
-    in
-    if cnt > 0 then
-      Some
-        {
-          id = "CMD-003";
-          severity = Warning;
-          message = "Deep sectioning level may affect readability";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "CMD-003"; run }
-
-(* Removed earlier generic L1 rules not aligned to catalogue; will add
-   package-focused L1 rules later *)
-
-let r_typo_030 : rule =
-  let run s =
-    let cnt = count_substring s "----" in
-    if cnt > 0 then
-      Some
-        {
-          id = "TYPO-030";
-          severity = Info;
-          message = "More than three hyphens detected (----)";
-          count = cnt;
-        }
-    else None
-  in
-  { id = "TYPO-030"; run }
-
-let rules_pilot : rule list =
-  rules_pilot @ [ r_typo_026; r_typo_027; r_typo_028; r_typo_029; r_typo_030 ]
-
-(* Unicode: mixed dash styles — Unicode en/em dashes present alongside ASCII
-   patterns *)
-let r_typo_031 : rule =
-  let run s =
-    (* Paragraph-aware: flag only if mixing occurs within at least one
-       paragraph *)
-    let paras = split_into_paragraphs s in
-    let mixed_in_para =
-      List.exists
-        (fun (off, len) ->
-          let seg = strip_math_segments (String.sub s off len) in
-          let has_u = Unicode.has_en_dash seg || Unicode.has_em_dash seg in
-          let has_a =
-            count_substring seg "--" + count_substring seg "---" > 0
-          in
-          has_u && has_a)
-        (if paras = [] then [ (0, String.length s) ] else paras)
-    in
-    if mixed_in_para then
-      Some
-        {
-          id = "TYPO-031";
-          severity = Info;
-          message = "Mixed dash styles detected (ASCII and Unicode)";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-031"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_031 ]
-
-(* Unicode dash normalization suggestion *)
-let r_typo_032 : rule =
-  let run s =
-    (* Paragraph-aware dominance check: prefer Unicode when it dominates within
-       blocks *)
-    let paras = split_into_paragraphs s in
-    let check seg =
-      let u = Unicode.count_en_dash seg + Unicode.count_em_dash seg in
-      (* normalize ASCII dash sequences without double-counting '---' as '--' +
-         '---' *)
-      let a =
-        let n = String.length seg in
-        let rec loop i acc =
-          if i + 1 >= n then acc
-          else if
-            i + 2 < n
-            && String.unsafe_get seg i = '-'
-            && String.unsafe_get seg (i + 1) = '-'
-            && String.unsafe_get seg (i + 2) = '-'
-          then loop (i + 3) (acc + 1)
-          else if
-            String.unsafe_get seg i = '-' && String.unsafe_get seg (i + 1) = '-'
-          then loop (i + 2) (acc + 1)
-          else loop (i + 1) acc
-        in
-        loop 0 0
-      in
-      u > a && a > 0
-    in
-    let ascii_sporadic =
-      if paras = [] then check s
-      else List.exists (fun (off, len) -> check (String.sub s off len)) paras
-    in
-    if ascii_sporadic then
-      Some
-        {
-          id = "TYPO-032";
-          severity = Warning;
-          message =
-            "Prefer Unicode dashes consistently; ASCII --/--- appear \
-             sporadically";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-032"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_032 ]
-
-(* Unicode ellipsis normalization suggestion *)
-let r_typo_033 : rule =
-  let run s =
-    (* Paragraph-aware mixing for ellipsis as well *)
-    let paras = split_into_paragraphs s in
-    let mixed =
-      List.exists
-        (fun (off, len) ->
-          let seg = strip_math_segments (String.sub s off len) in
-          Unicode.has_ellipsis_char seg && count_substring seg "..." > 0)
-        (if paras = [] then [ (0, String.length s) ] else paras)
-    in
-    if mixed then
-      Some
-        {
-          id = "TYPO-033";
-          severity = Warning;
-          message = "Mixed ellipsis styles detected (Unicode and ASCII)";
-          count = 1;
-        }
-    else None
-  in
-  { id = "TYPO-033"; run }
-
-let rules_pilot : rule list = rules_pilot @ [ r_typo_033 ]
 
 (* BEGIN VPD-generated validators v0.3.0 — DO NOT EDIT BELOW THIS LINE *)
 
@@ -11166,6 +10760,148 @@ let l1_l3_011_rule : rule =
       else None
   in
   { id = "L3-011"; run }
+
+(* CMD-001: Command \newcommand defined but never used *)
+let l1_cmd_001_rule : rule =
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let find_substring s pat from =
+    let n = String.length s and m = String.length pat in
+    if m = 0 || n < m then raise Not_found
+    else
+      let rec loop i =
+        if i > n - m then raise Not_found
+        else if String.sub s i m = pat then i
+        else loop (i + 1)
+      in
+      loop from
+  in
+  let def_ctx_re = Str.regexp {|\\newcommand\|\\renewcommand|} in
+  let run s =
+    (* Collect all defined command names *)
+    let defs = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         defs := name :: !defs;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Check each defined name for usage elsewhere *)
+    let len = String.length s in
+    let cnt =
+      List.fold_left
+        (fun acc name ->
+          let pat = "\\" ^ name in
+          let pat_len = String.length pat in
+          let uses = ref 0 in
+          let j = ref 0 in
+          (try
+             while true do
+               let pos = find_substring s pat !j in
+               (* Check character after match is not a letter (word boundary) *)
+               let after_ok =
+                 pos + pat_len >= len
+                 ||
+                 let c = s.[pos + pat_len] in
+                 not ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+               in
+               (if after_ok then
+                  (* Check this isn't the definition itself *)
+                  let is_def =
+                    pos >= 11
+                    &&
+                    let start = max 0 (pos - 15) in
+                    let ctx = String.sub s start (pos - start) in
+                    try
+                      let _ = Str.search_forward def_ctx_re ctx 0 in
+                      true
+                    with Not_found -> false
+                  in
+                  if not is_def then incr uses);
+               j := pos + 1
+             done
+           with Not_found -> ());
+          if !uses = 0 then acc + 1 else acc)
+        0 !defs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CMD-001";
+          severity = Info;
+          message = {|Command \newcommand defined but never used|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CMD-001"; run }
+
+(* CMD-003: User macro name clashes with package macro *)
+let l1_cmd_003_rule : rule =
+  let known_macros =
+    [
+      "textbf";
+      "textit";
+      "emph";
+      "href";
+      "cite";
+      "ref";
+      "label";
+      "caption";
+      "footnote";
+      "section";
+      "subsection";
+      "subsubsection";
+      "paragraph";
+      "includegraphics";
+      "begin";
+      "end";
+      "item";
+      "maketitle";
+      "tableofcontents";
+      "bibliography";
+      "usepackage";
+      "documentclass";
+      "title";
+      "author";
+      "date";
+      "centering";
+      "hspace";
+      "vspace";
+      "frac";
+      "sqrt";
+      "text";
+    ]
+  in
+  let def_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\)[ \t\n]*{?\\\([a-zA-Z]+\)}?|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward def_re s !i in
+         let name = Str.matched_group 2 s in
+         if List.mem name known_macros then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CMD-003";
+          severity = Warning;
+          message = "User macro name clashes with package macro";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CMD-003"; run }
 
 let rules_l1 : rule list =
   [

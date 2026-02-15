@@ -39,86 +39,82 @@ cases:
     expect: ["TYPO-010"]
     expect_msgs:
       - "TYPO-010:Space before punctuation , . ; : ? !"
-  - file: corpora/lint/pilot_v1/TYPO-011_double_spaces.tex
+  - file: corpora/lint/pilot_v1/TYPO-011_thin_space_integral.tex
     expect: ["TYPO-011"]
     expect_msgs:
-      - "TYPO-011:Multiple consecutive spaces in text"
-  - file: corpora/lint/pilot_v1/TYPO-012_space_before_closing_bracket.tex
+      - "TYPO-011:Missing thin space (\\,) before differential d in integrals"
+  - file: corpora/lint/pilot_v1/TYPO-012_straight_apostrophe_feet.tex
     expect: ["TYPO-012"]
     expect_msgs:
-      - "TYPO-012:Space before closing bracket ) ] }"
-  - file: corpora/lint/pilot_v1/TYPO-013_single_letter_words.tex
+      - "TYPO-012:Straight apostrophe ' used for minutes/feet; use ^\\prime or ′"
+  - file: corpora/lint/pilot_v1/TYPO-013_ascii_backtick.tex
     expect: ["TYPO-013"]
     expect_msgs:
-      - "TYPO-013:Consider non-breaking space after single-letter words"
-  - file: corpora/lint/pilot_v1/TYPO-014_inconsistent_quotes.tex
+      - "TYPO-013:ASCII back‑tick ` used as opening quote"
+  - file: corpora/lint/pilot_v1/TYPO-014_space_before_percent.tex
     expect: ["TYPO-014"]
     expect_msgs:
-      - "TYPO-014:Inconsistent quotation mark style within text"
-  - file: corpora/lint/pilot_v1/TYPO-015_command_spacing.tex
+      - "TYPO-014:Space before percent sign \\%"
+  - file: corpora/lint/pilot_v1/TYPO-015_double_percent.tex
     expect: ["TYPO-015"]
     expect_msgs:
-      - "TYPO-015:LaTeX command spacing may need adjustment"
-  - file: corpora/lint/pilot_v1/TYPO-016_excessive_exclamations.tex
+      - "TYPO-015:Double \\% in source; likely stray percent"
+  - file: corpora/lint/pilot_v1/TYPO-016_space_before_cite.tex
     expect: ["TYPO-016"]
     expect_msgs:
-      - "TYPO-016:Excessive exclamation marks, consider moderation"
-  - file: corpora/lint/pilot_v1/TYPO-017_excessive_questions.tex
+      - "TYPO-016:Non‑breaking space ~ missing before \\cite / \\ref"
+  - file: corpora/lint/pilot_v1/TYPO-017_tex_accent.tex
     expect: ["TYPO-017"]
     expect_msgs:
-      - "TYPO-017:Excessive question marks, consider moderation"
-  - file: corpora/lint/pilot_v1/TYPO-018_double_space_after_sentence.tex
+      - "TYPO-017:TeX accent commands (\\'{e}) in text; prefer UTF‑8 é"
+  - file: corpora/lint/pilot_v1/TYPO-018_multiple_consecutive_spaces.tex
     expect: ["TYPO-018"]
     expect_msgs:
-      - "TYPO-018:Double space after sentence punctuation"
-  - file: corpora/lint/pilot_v1/TYPO-019_leading_spaces_line.tex
-    expect: ["TYPO-019"]
-    expect_msgs:
-      - "TYPO-019:Leading spaces at start of line"
-  - file: corpora/lint/pilot_v1/TYPO-020_double_commas.tex
-    expect: ["TYPO-020"]
-    expect_msgs:
-      - "TYPO-020:Consecutive commas ,, found"
-  - file: corpora/lint/pilot_v1/TYPO-021_space_after_open_bracket.tex
+      - "TYPO-018:Multiple consecutive spaces in text"
+  - file: corpora/lint/pilot_v1/TYPO-021_capital_after_ellipsis.tex
     expect: ["TYPO-021"]
     expect_msgs:
-      - "TYPO-021:Space after opening bracket ( [ {"
-  - file: corpora/lint/pilot_v1/TYPO-022_missing_space_after_punct.tex
+      - "TYPO-021:Capital letter after ellipsis without space"
+  - file: corpora/lint/pilot_v1/TYPO-022_space_before_closing_punct.tex
     expect: ["TYPO-022"]
     expect_msgs:
-      - "TYPO-022:Missing space after punctuation"
-  - file: corpora/lint/pilot_v1/TYPO-023_cr_line_endings.tex
+      - "TYPO-022:Space before closing punctuation ) ] }"
+  - file: corpora/lint/pilot_v1/TYPO-023_bare_ampersand.tex
     expect: ["TYPO-023"]
     expect_msgs:
-      - "TYPO-023:Windows CR (\\r) line endings found"
-  - file: corpora/lint/pilot_v1/TYPO-024_control_chars.tex
+      - "TYPO-023:ASCII ampersand & outside tabular env; use \\&"
+  - file: corpora/lint/pilot_v1/TYPO-024_dangling_dash.tex
     expect: ["TYPO-024"]
     expect_msgs:
-      - "TYPO-024:Control characters (U+0000–U+001F) present"
-  - file: corpora/lint/pilot_v1/TYPO-025_space_before_closing_quote.tex
+      - "TYPO-024:Dangling dash at line end"
+  - file: corpora/lint/pilot_v1/TYPO-025_space_before_endash_range.tex
     expect: ["TYPO-025"]
     expect_msgs:
-      - "TYPO-025:Space before closing quote"
-  - file: corpora/lint/pilot_v1/TYPO-026_double_period_not_ellipsis.tex
+      - "TYPO-025:Space before en‑dash in number range"
+  - file: corpora/lint/pilot_v1/TYPO-026_wrong_dash_page_range.tex
     expect: ["TYPO-026"]
     expect_msgs:
-      - "TYPO-026:Double period .. should be … or \dots"
-  - file: corpora/lint/pilot_v1/TYPO-027_multi_spaces_before_punct.tex
+      - "TYPO-026:Wrong dash in page range – should use --"
+  - file: corpora/lint/pilot_v1/TYPO-027_multiple_exclamation.tex
     expect: ["TYPO-027"]
     expect_msgs:
-      - "TYPO-027:Multiple spaces before punctuation"
-  - file: corpora/lint/pilot_v1/TYPO-028_space_before_percent.tex
+      - "TYPO-027:Multiple exclamation marks ‼"
+  - file: corpora/lint/pilot_v1/TYPO-028_dollar_dollar_display.tex
     expect: ["TYPO-028"]
     expect_msgs:
-      - "TYPO-028:Space before percent sign %"
-  - file: corpora/lint/pilot_v1/TYPO-029_space_after_open_quote.tex
+      - "TYPO-028:Use of ``$$'' display math delimiter"
+  - file: corpora/lint/pilot_v1/TYPO-029_ref_space.tex
     expect: ["TYPO-029"]
     expect_msgs:
-      - "TYPO-029:Space after opening quote"
-  - file: corpora/lint/pilot_v1/TYPO-030_four_hyphens.tex
-    expect: ["TYPO-030"]
+      - "TYPO-029:Non‑breaking space after \\ref missing"
+  - file: corpora/lint/pilot_v1/TYPO-032_comma_before_cite.tex
+    expect: ["TYPO-032"]
     expect_msgs:
-      - "TYPO-030:More than three hyphens detected (----)"
+      - "TYPO-032:Comma before \\cite"
+  - file: corpora/lint/pilot_v1/TYPO-033_et_al_no_space.tex
+    expect: ["TYPO-033"]
+    expect_msgs:
+      - "TYPO-033:Abbreviation et.al without space"
   - file: corpora/lint/pilot_v1/TYPO-034_space_before_footnote.tex
     expect: ["TYPO-034"]
     expect_msgs:

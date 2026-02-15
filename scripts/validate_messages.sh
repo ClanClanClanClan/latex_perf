@@ -38,20 +38,105 @@ done < "$CATALOG"
 tmp_rt=$(mktemp)
 trap 'rm -f "$tmp_rt"' EXIT
 
-perl -ne '
-  if (/id\s*=\s*"([^"]+)"/) { $cur_id = $1; }
-  if ($cur_id && /message\s*=\s*\{\|(.+?)\|\}/) {
-    # Raw string: no escaping needed
-    print "$cur_id\t$1\n";
-    $cur_id = "";
-  }
-  if ($cur_id && /message\s*=\s*"((?:[^"\\]|\\.)*)"/) {
-    # Double-quoted OCaml string: unescape \\ -> \, \" -> "
-    my $msg = $1;
-    $msg =~ s/\\\\/\\/g;
-    $msg =~ s/\\"/"/g;
-    print "$cur_id\t$msg\n";
-    $cur_id = "";
+perl -0777 -ne '
+  # Slurp entire file; extract (id, message) pairs supporting:
+  #   message = {|...|};          (raw string, single or multi-line value)
+  #   message = "...";            (double-quoted, possibly with \ line continuation)
+  #   message =\n  {|...|};      (value on next line)
+  #   message =\n  "...";        (value on next line)
+
+  # First pass: collapse OCaml \ line continuations in double-quoted strings
+  # OCaml: trailing \ before newline + leading whitespace = nothing
+  my $src = $_;
+  # We do NOT modify the file; we handle continuations during extraction.
+
+  # Track current id
+  my $cur_id = "";
+  my @lines = split /\n/, $src;
+  my $i = 0;
+  while ($i < scalar @lines) {
+    my $line = $lines[$i];
+
+    # Track id = "XXX"
+    if ($line =~ /id\s*=\s*"([^"]+)"/) {
+      $cur_id = $1;
+    }
+
+    if ($cur_id) {
+      # Case 1: message = {|...|} on same line
+      if ($line =~ /message\s*=\s*\{\|(.+?)\|\}/) {
+        print "$cur_id\t$1\n";
+        $cur_id = "";
+      }
+      # Case 2: message = "..." on same line (no line continuation)
+      elsif ($line =~ /message\s*=\s*"((?:[^"\\]|\\.)*)"/) {
+        my $msg = $1;
+        $msg =~ s/\\\\/\\/g;
+        $msg =~ s/\\"/"/g;
+        print "$cur_id\t$msg\n";
+        $cur_id = "";
+      }
+      # Case 3: message = "...\ (line continuation)
+      elsif ($line =~ /message\s*=\s*"(.*)\\\s*$/) {
+        my $msg = $1;
+        # Collect continuation lines until closing "
+        while (++$i < scalar @lines) {
+          my $cont = $lines[$i];
+          $cont =~ s/^\s+//;  # strip leading whitespace
+          if ($cont =~ /^(.*)"/) {
+            $msg .= $1;
+            last;
+          } else {
+            $cont =~ s/\\\s*$//;  # strip trailing \
+            $msg .= $cont;
+          }
+        }
+        $msg =~ s/\\\\/\\/g;
+        $msg =~ s/\\"/"/g;
+        print "$cur_id\t$msg\n";
+        $cur_id = "";
+      }
+      # Case 4: message = (newline, value on next line)
+      elsif ($line =~ /message\s*=\s*$/) {
+        $i++;
+        if ($i < scalar @lines) {
+          my $next = $lines[$i];
+          # Raw string on next line
+          if ($next =~ /\{\|(.+?)\|\}/) {
+            print "$cur_id\t$1\n";
+            $cur_id = "";
+          }
+          # Double-quoted on next line (no continuation)
+          elsif ($next =~ /"((?:[^"\\]|\\.)*)"/) {
+            my $msg = $1;
+            $msg =~ s/\\\\/\\/g;
+            $msg =~ s/\\"/"/g;
+            print "$cur_id\t$msg\n";
+            $cur_id = "";
+          }
+          # Double-quoted with line continuation
+          elsif ($next =~ /"(.*)\\\s*$/) {
+            my $msg = $1;
+            while (++$i < scalar @lines) {
+              my $cont = $lines[$i];
+              $cont =~ s/^\s+//;
+              if ($cont =~ /^(.*)"/) {
+                $msg .= $1;
+                last;
+              } else {
+                $cont =~ s/\\\s*$//;
+                $msg .= $cont;
+              }
+            }
+            $msg =~ s/\\\\/\\/g;
+            $msg =~ s/\\"/"/g;
+            print "$cur_id\t$msg\n";
+            $cur_id = "";
+          }
+        }
+      }
+    }
+    $i++;
   }
 ' "$RUNTIME" > "$tmp_rt"
 

@@ -44,7 +44,7 @@ jobs:
       - name: Enforce zero admits and zero axioms
         run: |
           # No Admitted. or admit. (exclude archives and disabled files)
-          if grep -R -nE '^\\s*(Admitted\\.|admit\\.)' proofs --exclude-dir=archive --exclude='*.disabled'; then
+          if grep -R -nE '^\s*(Admitted\.|admit\.)' proofs --exclude-dir=archive --exclude='*.disabled'; then
             echo "[proof-gate] ERROR: admits found"; exit 1; fi
           # No Axiom declarations (exclude archives and disabled files)
           if grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then

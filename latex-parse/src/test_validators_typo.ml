@@ -147,10 +147,16 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "TYPO-011 fires on integral without \\," (fun tag ->
       expect (fires "TYPO-011" "$\\int f(x)dx$") (tag ^ ": should fire"));
+  run "TYPO-011 fires with limits" (fun tag ->
+      expect (fires "TYPO-011" "$\\int_0^1 f(x)dx$") (tag ^ ": limits present"));
   run "TYPO-011 clean" (fun tag ->
       expect
         (does_not_fire "TYPO-011" "$\\int f(x)\\,dx$")
         (tag ^ ": has thin space"));
+  run "TYPO-011 clean with limits and thin space" (fun tag ->
+      expect
+        (does_not_fire "TYPO-011" "$\\int_0^1 f(x)\\,dx$")
+        (tag ^ ": thin space ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-012: Straight apostrophe for minutes/feet
@@ -193,10 +199,16 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "TYPO-016 fires on space before cite" (fun tag ->
       expect (fires "TYPO-016" "See \\cite{foo}") (tag ^ ": should fire"));
+  run "TYPO-016 fires on space before ref" (fun tag ->
+      expect (fires "TYPO-016" "See \\ref{fig:1}") (tag ^ ": space-ref"));
   run "TYPO-016 clean with tilde" (fun tag ->
       expect
         (does_not_fire "TYPO-016" "See~\\cite{foo}")
         (tag ^ ": tilde is correct"));
+  run "TYPO-016 mixed tilde and space counts correctly" (fun tag ->
+      expect
+        (fires_with_count "TYPO-016" "See \\cite{a} and see~\\cite{b}" 1)
+        (tag ^ ": only space-cite counted"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-017: TeX accent commands in text
@@ -265,6 +277,10 @@ let () =
       expect
         (does_not_fire "TYPO-023" "\\begin{tabular}{ll} a & b \\end{tabular}")
         (tag ^ ": inside tabular ok"));
+  run "TYPO-023 clean inside align" (fun tag ->
+      expect
+        (does_not_fire "TYPO-023" "\\begin{align} a & = b \\end{align}")
+        (tag ^ ": inside align ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-024: Dangling dash at line end
@@ -313,6 +329,10 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "TYPO-028 fires on $$ delimiter" (fun tag ->
       expect (fires "TYPO-028" "$$x^2$$") (tag ^ ": should fire"));
+  run "TYPO-028 counts two pairs" (fun tag ->
+      expect
+        (fires_with_count "TYPO-028" "$$x$$ and $$y$$" 2)
+        (tag ^ ": two pairs"));
   run "TYPO-028 clean with \\[" (fun tag ->
       expect
         (does_not_fire "TYPO-028" "\\[x^2\\]")

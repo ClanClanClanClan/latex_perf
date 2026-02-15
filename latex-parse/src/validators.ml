@@ -4938,6 +4938,509 @@ let r_cjk_014 : rule =
 
 let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
 
+(* ── Locale rules: language-specific checks ─────────────────────────── *)
+
+(* FR-007: FR-BE thin NB-space before/after € sign *)
+let r_fr_007 : rule =
+  (* Detect € preceded/followed by normal space instead of NBSP/thin space *)
+  let re = Str.regexp "[ ]\xe2\x82\xac\\|\xe2\x82\xac[ ]" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FR-007";
+          severity = Info;
+          message = {|FR‑BE: thin NB‑space before/after € sign required|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FR-007"; run }
+
+(* FR-008: French ligature œ/Œ mandatory *)
+let r_fr_008 : rule =
+  (* Detect "oe" where œ is required: coeur, oeuvre, oeuf, oeil, noeud, voeu,
+     etc. *)
+  let words =
+    [
+      "coeur";
+      "oeuvre";
+      "oeuf";
+      "oeil";
+      "noeud";
+      "voeu";
+      "soeur";
+      "moeurs";
+      "foetus";
+      "manoeuvre";
+    ]
+  in
+  let run s =
+    let s_low = String.lowercase_ascii s in
+    let cnt =
+      List.fold_left (fun acc w -> acc + count_substring s_low w) 0 words
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FR-008";
+          severity = Warning;
+          message = {|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FR-008"; run }
+
+(* PT-003: pt-PT ordinal must use º/ª *)
+let r_pt_003 : rule =
+  (* Detect patterns like 1\textsuperscript{o} or 1\textsuperscript{a} *)
+  let re = Str.regexp "[0-9]\\\\textsuperscript{[oa]}" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "PT-003";
+          severity = Info;
+          message = {|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PT-003"; run }
+
+(* RU-001: NB-space required before em-dash *)
+let r_ru_001 : rule =
+  (* Detect regular space before em-dash (U+2014 = \xe2\x80\x94) *)
+  let run s =
+    let cnt = count_substring s " \xe2\x80\x94" in
+    if cnt > 0 then
+      Some
+        {
+          id = "RU-001";
+          severity = Info;
+          message = {|RU: NB‑space required before em‑dash|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "RU-001"; run }
+
+(* PL-001: NB-space before abbreviations *)
+let r_pl_001 : rule =
+  (* Detect regular space before Polish abbreviations r., nr, s. *)
+  let re = Str.regexp " \\(r\\.\\|nr \\|s\\.\\)" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "PL-001";
+          severity = Info;
+          message = {|PL: NB‑space before abbreviations “r.”, “nr”, “s.”|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PL-001"; run }
+
+(* CS-001: thin NB-space before °C forbidden *)
+let r_cs_001 : rule =
+  (* Detect thin space (\,) or NBSP before °C — CS/SK forbids it *)
+  let re = Str.regexp "\\\\,\xc2\xb0C\\|\xc2\xa0\xc2\xb0C" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CS-001";
+          severity = Info;
+          message = {|CS/SK: thin NB‑space before °C forbidden|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CS-001"; run }
+
+(* CS-002: date format must be 30.\,1.\,2026 *)
+let r_cs_002 : rule =
+  (* Detect date patterns like 30.1.2026 without \, *)
+  let re = Str.regexp "[0-9]+\\.[0-9]+\\.[0-9][0-9][0-9][0-9]" in
+  let re_correct =
+    Str.regexp "[0-9]+\\.\\\\,[0-9]+\\.\\\\,[0-9][0-9][0-9][0-9]"
+  in
+  let run s =
+    let has_bare =
+      try
+        ignore (Str.search_forward re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_correct =
+      try
+        ignore (Str.search_forward re_correct s 0);
+        true
+      with Not_found -> false
+    in
+    if has_bare && not has_correct then
+      Some
+        {
+          id = "CS-002";
+          severity = Info;
+          message = "CS/SK: date format must be 30.\\,1.\\,2026";
+          count = 1;
+        }
+    else None
+  in
+  { id = "CS-002"; run }
+
+(* EL-001: Greek oxia vs tonos normalisation *)
+let r_el_001 : rule =
+  (* Detect Greek oxia accents (U+1F00-1FFF range) that should be tonos
+     (U+0384/0385) *)
+  (* Check for polytonic accents in 0x1F00-0x1FFF range *)
+  let run s =
+    let cnt = ref 0 in
+    let len = String.length s in
+    let i = ref 0 in
+    while !i < len - 2 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 = 0xe1 then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        (if b1 >= 0xbc && b1 <= 0xbf then
+           let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+           if b2 >= 0x80 && b2 <= 0xbf then incr cnt);
+        i := !i + 3)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "EL-001";
+          severity = Warning;
+          message = {|Greek: oxia vs tonos normalisation|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "EL-001"; run }
+
+(* RO-001: use Ș/ș (S-comma) not Ş/ş (S-cedilla) *)
+let r_ro_001 : rule =
+  (* Ş = U+015E = \xc5\x9e, ş = U+015F = \xc5\x9f *)
+  (* Also Ţ = U+0162 = \xc5\xa2, ţ = U+0163 = \xc5\xa3 (T-cedilla vs T-comma) *)
+  let run s =
+    let cnt =
+      count_substring s "\xc5\x9e"
+      + count_substring s "\xc5\x9f"
+      + count_substring s "\xc5\xa2"
+      + count_substring s "\xc5\xa3"
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "RO-001";
+          severity = Warning;
+          message = {|RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "RO-001"; run }
+
+(* AR-002: ASCII hyphen in phone numbers — use \arabicdash *)
+let r_ar_002 : rule =
+  (* Detect ASCII hyphen-minus between digits in Arabic text context *)
+  (* Arabic digits: U+0660-0669 = \xd9\xa0-\xd9\xa9 *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if
+        !i + 4 < len
+        && Char.code (String.unsafe_get s !i) = 0xd9
+        && Char.code (String.unsafe_get s (!i + 1)) >= 0xa0
+        && Char.code (String.unsafe_get s (!i + 1)) <= 0xa9
+        && String.unsafe_get s (!i + 2) = '-'
+        && Char.code (String.unsafe_get s (!i + 3)) = 0xd9
+        && Char.code (String.unsafe_get s (!i + 4)) >= 0xa0
+        && Char.code (String.unsafe_get s (!i + 4)) <= 0xa9
+      then (
+        incr cnt;
+        i := !i + 5)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "AR-002";
+          severity = Info;
+          message = {|AR: ASCII hyphen in phone numbers—use \arabicdash|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "AR-002"; run }
+
+(* HE-001: apostrophe used instead of geresh U+05F3 *)
+let r_he_001 : rule =
+  (* Detect ASCII apostrophe ' adjacent to Hebrew letters (U+05D0-05EA =
+     \xd7\x90-\xd7\xaa) *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if
+        String.unsafe_get s !i = '\''
+        && !i >= 2
+        && Char.code (String.unsafe_get s (!i - 2)) = 0xd7
+        &&
+        let b = Char.code (String.unsafe_get s (!i - 1)) in
+        b >= 0x90 && b <= 0xaa
+      then (
+        incr cnt;
+        i := !i + 1)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "HE-001";
+          severity = Warning;
+          message = {|HE: apostrophe used instead of geresh U+05F3|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "HE-001"; run }
+
+(* ZH-001: western '.' — use Chinese '。' *)
+let r_zh_001 : rule =
+  (* Detect ASCII period after CJK character *)
+  (* CJK Unified Ideographs: U+4E00-9FFF, 3-byte UTF-8: \xe4\xb8\x80 -
+     \xe9\xbf\xbf *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if
+        !i + 3 < len
+        && (let b0 = Char.code (String.unsafe_get s !i) in
+            b0 >= 0xe4 && b0 <= 0xe9)
+        && (let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+            b1 >= 0x80 && b1 <= 0xbf)
+        && (let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+            b2 >= 0x80 && b2 <= 0xbf)
+        && String.unsafe_get s (!i + 3) = '.'
+      then (
+        incr cnt;
+        i := !i + 4)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "ZH-001";
+          severity = Info;
+          message = {|ZH‑Hans: western '.' – use Chinese ‘。’|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "ZH-001"; run }
+
+(* JA-001: half-width katakana present — use full-width *)
+let r_ja_001 : rule =
+  (* Half-width katakana: U+FF65-FF9F = \xef\xbd\xa5-\xef\xbe\x9f *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 2 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 = 0xef then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        (* U+FF65-FF9F: EF BD A5 - EF BE 9F *)
+        if (b1 = 0xbd && b2 >= 0xa5) || (b1 = 0xbe && b2 <= 0x9f) then incr cnt;
+        i := !i + 3)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "JA-001";
+          severity = Warning;
+          message = {|JA: half‑width katakana present—use full‑width|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "JA-001"; run }
+
+(* JA-002: U+FF5E tilde normalise to wave-dash U+301C *)
+let r_ja_002 : rule =
+  (* U+FF5E fullwidth tilde = \xef\xbd\x9e *)
+  let run s =
+    let cnt = count_substring s "\xef\xbd\x9e" in
+    if cnt > 0 then
+      Some
+        {
+          id = "JA-002";
+          severity = Info;
+          message = {|JA: U+FF5E tilde normalise to wave‑dash U+301C|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "JA-002"; run }
+
+(* KO-001: Old-Hangul jamo outside scholarly context *)
+let r_ko_001 : rule =
+  (* Old Hangul Jamo: archaic ranges *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 2 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 = 0xe1 then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        (* U+1113-115F: E1 84 93 - E1 85 9F *)
+        if
+          (b1 = 0x84 && b2 >= 0x93)
+          || (b1 = 0x85 && b2 <= 0x9f)
+          (* U+1176-11A7: E1 85 B6 - E1 86 A7 *)
+          || (b1 = 0x85 && b2 >= 0xb6)
+          || (b1 = 0x86 && b2 <= 0xa7)
+          (* U+11C3-11FF: E1 87 83 - E1 87 BF *)
+          || (b1 = 0x87 && b2 >= 0x83 && b2 <= 0xbf)
+        then incr cnt;
+        i := !i + 3)
+      else if b0 = 0xea then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        (* U+A960-A97C: EA A5 A0 - EA A5 BC *)
+        if b1 = 0xa5 && b2 >= 0xa0 && b2 <= 0xbc then incr cnt;
+        i := !i + 3)
+      else if b0 = 0xed then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        (* U+D7B0-D7FF: ED 9E B0 - ED 9F BF *)
+        if (b1 = 0x9e && b2 >= 0xb0) || (b1 = 0x9f && b2 >= 0x80 && b2 <= 0xbf)
+        then incr cnt;
+        i := !i + 3)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "KO-001";
+          severity = Warning;
+          message = {|KO: Old‑Hangul jamo outside scholarly context|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "KO-001"; run }
+
+(* HI-001: ZWJ/ZWNJ misuse next to ख् *)
+let r_hi_001 : rule =
+  (* ZWJ = U+200D = \xe2\x80\x8d, ZWNJ = U+200C = \xe2\x80\x8c *)
+  (* Halant/virama: U+094D = \xe0\xa5\x8d *)
+  (* Detect ZWJ/ZWNJ adjacent to halant *)
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 5 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 = 0xe0 then
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        (* Check for halant U+094D = E0 A5 8D *)
+        if b1 = 0xa5 && b2 = 0x8d && !i + 5 < len then
+          let c0 = Char.code (String.unsafe_get s (!i + 3)) in
+          let c1 = Char.code (String.unsafe_get s (!i + 4)) in
+          let c2 = Char.code (String.unsafe_get s (!i + 5)) in
+          (* ZWJ E2 80 8D or ZWNJ E2 80 8C *)
+          if c0 = 0xe2 && c1 = 0x80 && (c2 = 0x8d || c2 = 0x8c) then (
+            incr cnt;
+            i := !i + 6)
+          else i := !i + 3
+        else i := !i + 3
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "HI-001";
+          severity = Info;
+          message = {|HI: ZWJ/ZWNJ misuse next to ख्|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "HI-001"; run }
+
+let rules_locale : rule list =
+  [
+    r_fr_007;
+    r_fr_008;
+    r_pt_003;
+    r_ru_001;
+    r_pl_001;
+    r_cs_001;
+    r_cs_002;
+    r_el_001;
+    r_ro_001;
+    r_ar_002;
+    r_he_001;
+    r_zh_001;
+    r_ja_001;
+    r_ja_002;
+    r_ko_001;
+    r_hi_001;
+  ]
+
 (* ── CMD rules: command definition checks ────────────────────────────── *)
 
 (* CMD-002: Command redefined with \def instead of \renewcommand *)
@@ -5262,7 +5765,8 @@ let r_math_083 : rule =
   in
   { id = "MATH-083"; run }
 
-(* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + new TYPO rules *)
+(* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
+   rules *)
 let rules_enc_char_spc : rule list =
   rules_enc
   @ rules_char
@@ -5271,6 +5775,7 @@ let rules_enc_char_spc : rule list =
   @ rules_cjk
   @ rules_cmd
   @ [ r_typo_062; r_math_083 ]
+  @ rules_locale
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

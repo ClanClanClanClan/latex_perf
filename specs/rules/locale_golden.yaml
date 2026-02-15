@@ -1,0 +1,65 @@
+cases:
+  - file: corpora/lint/locale/FR-007_euro_spacing.tex
+    expect: ["FR-007"]
+    expect_msgs:
+      - "FR-007:FR‑BE: thin NB‑space before/after € sign required"
+  - file: corpora/lint/locale/FR-008_ligature_oe.tex
+    expect: ["FR-008"]
+    expect_msgs:
+      - "FR-008:French: ligature œ/Œ mandatory in “cœur”, “œuvre”…"
+  - file: corpora/lint/locale/PT-003_ordinal_superscript.tex
+    expect: ["PT-003"]
+    expect_msgs:
+      - "PT-003:pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript"
+  - file: corpora/lint/locale/RU-001_emdash_spacing.tex
+    expect: ["RU-001"]
+    expect_msgs:
+      - "RU-001:RU: NB‑space required before em‑dash"
+  - file: corpora/lint/locale/PL-001_abbreviation_spacing.tex
+    expect: ["PL-001"]
+    expect_msgs:
+      - "PL-001:PL: NB‑space before abbreviations “r.”, “nr”, “s.”"
+  - file: corpora/lint/locale/CS-001_degree_spacing.tex
+    expect: ["CS-001"]
+    expect_msgs:
+      - "CS-001:CS/SK: thin NB‑space before °C forbidden"
+  - file: corpora/lint/locale/CS-002_date_format.tex
+    expect: ["CS-002"]
+    expect_msgs:
+      - "CS-002:CS/SK: date format must be 30.\\,1.\\,2026"
+  - file: corpora/lint/locale/EL-001_oxia_tonos.tex
+    expect: ["EL-001"]
+    expect_msgs:
+      - "EL-001:Greek: oxia vs tonos normalisation"
+  - file: corpora/lint/locale/RO-001_s_cedilla.tex
+    expect: ["RO-001"]
+    expect_msgs:
+      - "RO-001:RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)"
+  - file: corpora/lint/locale/AR-002_arabic_hyphen.tex
+    expect: ["AR-002"]
+    expect_msgs:
+      - "AR-002:AR: ASCII hyphen in phone numbers—use \\arabicdash"
+  - file: corpora/lint/locale/HE-001_geresh.tex
+    expect: ["HE-001"]
+    expect_msgs:
+      - "HE-001:HE: apostrophe used instead of geresh U+05F3"
+  - file: corpora/lint/locale/ZH-001_western_period.tex
+    expect: ["ZH-001"]
+    expect_msgs:
+      - "ZH-001:ZH‑Hans: western '.' – use Chinese ‘。’"
+  - file: corpora/lint/locale/JA-001_halfwidth_katakana.tex
+    expect: ["JA-001"]
+    expect_msgs:
+      - "JA-001:JA: half‑width katakana present—use full‑width"
+  - file: corpora/lint/locale/JA-002_fullwidth_tilde.tex
+    expect: ["JA-002"]
+    expect_msgs:
+      - "JA-002:JA: U+FF5E tilde normalise to wave‑dash U+301C"
+  - file: corpora/lint/locale/KO-001_old_hangul.tex
+    expect: ["KO-001"]
+    expect_msgs:
+      - "KO-001:KO: Old‑Hangul jamo outside scholarly context"
+  - file: corpora/lint/locale/HI-001_zwj_misuse.tex
+    expect: ["HI-001"]
+    expect_msgs:
+      - "HI-001:HI: ZWJ/ZWNJ misuse next to ख्"

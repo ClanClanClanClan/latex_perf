@@ -40,6 +40,15 @@ let () =
       expect
         (fires "CMD-001" "\\renewcommand{\\mybar}{baz}\nNothing uses mybar")
         (tag ^ ": unused renewcommand"));
+  run "CMD-001 fires on unused newcommand with args" (fun tag ->
+      expect
+        (fires "CMD-001" "\\newcommand{\\myfoo}[2]{#1 and #2}\nSome text")
+        (tag ^ ": unused with args"));
+  run "CMD-001 clean when renewcommand is used" (fun tag ->
+      expect
+        (does_not_fire "CMD-001"
+           "\\renewcommand{\\mybar}{baz}\nUsing \\mybar here")
+        (tag ^ ": renewcommand used"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CMD-003: User macro name clashes with package macro
@@ -52,6 +61,10 @@ let () =
       expect
         (fires "CMD-003" "\\renewcommand{\\emph}{custom emphasis}")
         (tag ^ ": clashes with emph"));
+  run "CMD-003 fires on clash with \\section" (fun tag ->
+      expect
+        (fires "CMD-003" "\\newcommand{\\section}{custom}")
+        (tag ^ ": section clash"));
   run "CMD-003 clean with unique name" (fun tag ->
       expect
         (does_not_fire "CMD-003" "\\newcommand{\\myuniquecmd}{stuff}")

@@ -781,8 +781,7 @@ let r_typo_015 : rule =
 
 (* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
 let r_typo_016 : rule =
-  let re = Str.regexp {| \\cite\b\| \\ref\b|} in
-  let tilde_re = Str.regexp {|~\\cite\b\|~\\ref\b|} in
+  let re = Str.regexp {| \\\(cite\|ref\)[^a-zA-Z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -791,16 +790,6 @@ let r_typo_016 : rule =
          let _ = Str.search_forward re s !i in
          incr cnt;
          i := Str.match_end ()
-       done
-     with Not_found -> ());
-    (* Subtract cases where ~ is already used *)
-    let tilde_cnt = ref 0 in
-    let j = ref 0 in
-    (try
-       while true do
-         let _ = Str.search_forward tilde_re s !j in
-         incr tilde_cnt;
-         j := Str.match_end ()
        done
      with Not_found -> ());
     let cnt = !cnt in

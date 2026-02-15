@@ -143,6 +143,226 @@ let () =
         (tag ^ ": no space before punct"));
 
   (* ══════════════════════════════════════════════════════════════════════
+     TYPO-011: Missing thin space before differential d in integrals
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-011 fires on integral without \\," (fun tag ->
+      expect (fires "TYPO-011" "$\\int f(x)dx$") (tag ^ ": should fire"));
+  run "TYPO-011 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-011" "$\\int f(x)\\,dx$")
+        (tag ^ ": has thin space"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-012: Straight apostrophe for minutes/feet
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-012 fires on digit-apostrophe" (fun tag ->
+      expect (fires "TYPO-012" "The board is 6' long") (tag ^ ": should fire"));
+  run "TYPO-012 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-012" "The word 'hello' is common")
+        (tag ^ ": no digit before quote"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-013: ASCII back-tick as opening quote
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-013 fires on single backtick" (fun tag ->
+      expect (fires "TYPO-013" "He said `hello' to me") (tag ^ ": should fire"));
+  run "TYPO-013 clean with double backtick" (fun tag ->
+      expect
+        (does_not_fire "TYPO-013" "He said ``hello'' to me")
+        (tag ^ ": double backtick is TeX quote"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-014: Space before percent sign (relocated from old TYPO-028)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-014 fires on space-percent" (fun tag ->
+      expect (fires "TYPO-014" "50 %") (tag ^ ": should fire"));
+  run "TYPO-014 clean" (fun tag ->
+      expect (does_not_fire "TYPO-014" "50%") (tag ^ ": no space"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-015: Double \% in source
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-015 fires on double percent escape" (fun tag ->
+      expect (fires "TYPO-015" "Value is 50\\%\\%") (tag ^ ": should fire"));
+  run "TYPO-015 clean" (fun tag ->
+      expect (does_not_fire "TYPO-015" "Value is 50\\%") (tag ^ ": single ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-016: ~ missing before \cite / \ref
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-016 fires on space before cite" (fun tag ->
+      expect (fires "TYPO-016" "See \\cite{foo}") (tag ^ ": should fire"));
+  run "TYPO-016 clean with tilde" (fun tag ->
+      expect
+        (does_not_fire "TYPO-016" "See~\\cite{foo}")
+        (tag ^ ": tilde is correct"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-017: TeX accent commands in text
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-017 fires on TeX accent" (fun tag ->
+      expect (fires "TYPO-017" "caf\\'{e}") (tag ^ ": should fire"));
+  run "TYPO-017 clean" (fun tag ->
+      expect (does_not_fire "TYPO-017" "café") (tag ^ ": UTF-8 ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-018: Multiple consecutive spaces (relocated from old TYPO-011)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-018 fires on double space" (fun tag ->
+      expect (fires "TYPO-018" "Text  with  spaces") (tag ^ ": should fire"));
+  run "TYPO-018 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-018" "Normal text here")
+        (tag ^ ": single spaces"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-019: Comma splice — DEFERRED (NLP)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-019 never fires (deferred)" (fun tag ->
+      expect
+        (does_not_fire "TYPO-019" "Any text here, it should not fire")
+        (tag ^ ": NLP deferred"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-020: Sentence without ending punctuation — DEFERRED (NLP)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-020 never fires (deferred)" (fun tag ->
+      expect
+        (does_not_fire "TYPO-020" "This sentence has no period")
+        (tag ^ ": NLP deferred"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-021: Capital letter after ellipsis without space
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-021 fires on ellipsis-capital" (fun tag ->
+      expect (fires "TYPO-021" "Wait...Then go") (tag ^ ": should fire"));
+  run "TYPO-021 clean" (fun tag ->
+      expect (does_not_fire "TYPO-021" "Wait... Then go") (tag ^ ": has space"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-022: Space before closing punctuation (relocated from old TYPO-012)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-022 fires on space-paren" (fun tag ->
+      expect (fires "TYPO-022" "(text )") (tag ^ ": should fire"));
+  run "TYPO-022 fires on space-bracket" (fun tag ->
+      expect (fires "TYPO-022" "[text ]") (tag ^ ": should fire"));
+  run "TYPO-022 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-022" "(text) [ok]")
+        (tag ^ ": no trailing space"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-023: ASCII & outside tabular env
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-023 fires on bare ampersand" (fun tag ->
+      expect (fires "TYPO-023" "Tom & Jerry are friends") (tag ^ ": should fire"));
+  run "TYPO-023 clean with escaped" (fun tag ->
+      expect
+        (does_not_fire "TYPO-023" "Tom \\& Jerry are friends")
+        (tag ^ ": escaped ok"));
+  run "TYPO-023 clean inside tabular" (fun tag ->
+      expect
+        (does_not_fire "TYPO-023" "\\begin{tabular}{ll} a & b \\end{tabular}")
+        (tag ^ ": inside tabular ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-024: Dangling dash at line end
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-024 fires on dash at EOL" (fun tag ->
+      expect
+        (fires "TYPO-024" "This is a long-\nwinded sentence")
+        (tag ^ ": should fire"));
+  run "TYPO-024 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-024" "This is a long-winded sentence")
+        (tag ^ ": dash mid-line ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-025: Space before en-dash in number range
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-025 fires on spaced en-dash range" (fun tag ->
+      expect (fires "TYPO-025" "pages 5 --10") (tag ^ ": should fire"));
+  run "TYPO-025 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-025" "pages 5--10")
+        (tag ^ ": no space before dash"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-026: Wrong dash in page range
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-026 fires on unicode en-dash between digits" (fun tag ->
+      expect (fires "TYPO-026" "pages 5\xe2\x80\x9310") (tag ^ ": should fire"));
+  run "TYPO-026 clean with ASCII dash" (fun tag ->
+      expect (does_not_fire "TYPO-026" "pages 5--10") (tag ^ ": ASCII -- ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-027: Multiple exclamation marks (relocated from old TYPO-016)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-027 fires on !!" (fun tag ->
+      expect (fires "TYPO-027" "Wow!!") (tag ^ ": should fire"));
+  run "TYPO-027 fires on !!!" (fun tag ->
+      expect (fires "TYPO-027" "Amazing!!!") (tag ^ ": should fire"));
+  run "TYPO-027 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-027" "Wow! Really!")
+        (tag ^ ": single exclamation ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-028: Use of $$ display math delimiter
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-028 fires on $$ delimiter" (fun tag ->
+      expect (fires "TYPO-028" "$$x^2$$") (tag ^ ": should fire"));
+  run "TYPO-028 clean with \\[" (fun tag ->
+      expect
+        (does_not_fire "TYPO-028" "\\[x^2\\]")
+        (tag ^ ": modern delimiter ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-029: Non-breaking space after \ref missing
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-029 fires on ref-space" (fun tag ->
+      expect (fires "TYPO-029" "\\ref{fig:1} shows") (tag ^ ": should fire"));
+  run "TYPO-029 clean with tilde" (fun tag ->
+      expect (does_not_fire "TYPO-029" "\\ref{fig:1}~shows") (tag ^ ": tilde ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-030: UK spelling inconsistency — DEFERRED (NLP)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-030 never fires (deferred)" (fun tag ->
+      expect
+        (does_not_fire "TYPO-030" "colour color behaviour behavior")
+        (tag ^ ": NLP deferred"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-031: American punctuation placement — DEFERRED (NLP)
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-031 never fires (deferred)" (fun tag ->
+      expect
+        (does_not_fire "TYPO-031" {|He said "hello," she replied.|})
+        (tag ^ ": NLP deferred"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-032: Comma before \cite
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-032 fires on comma-cite" (fun tag ->
+      expect (fires "TYPO-032" "as shown,\\cite{foo}") (tag ^ ": should fire"));
+  run "TYPO-032 fires on comma-space-cite" (fun tag ->
+      expect (fires "TYPO-032" "as shown, \\cite{foo}") (tag ^ ": should fire"));
+  run "TYPO-032 clean" (fun tag ->
+      expect
+        (does_not_fire "TYPO-032" "as shown~\\cite{foo}")
+        (tag ^ ": tilde ok"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-033: Abbreviation et.al without space
+     ══════════════════════════════════════════════════════════════════════ *)
+  run "TYPO-033 fires on et.al" (fun tag ->
+      expect (fires "TYPO-033" "Smith et.al") (tag ^ ": should fire"));
+  run "TYPO-033 clean" (fun tag ->
+      expect (does_not_fire "TYPO-033" "Smith et al.") (tag ^ ": correct form"));
+
+  (* ══════════════════════════════════════════════════════════════════════
      TYPO-034: Spurious space before \footnote
      ══════════════════════════════════════════════════════════════════════ *)
   run "TYPO-034 fires on space-footnote" (fun tag ->

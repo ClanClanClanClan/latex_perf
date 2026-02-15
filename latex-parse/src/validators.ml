@@ -670,6 +670,489 @@ let r_typo_010 : rule =
   in
   { id = "TYPO-010"; run }
 
+(* TYPO-011: Missing thin space before differential d in integrals *)
+let r_typo_011 : rule =
+  let re = Str.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-011";
+          severity = Info;
+          message =
+            {|Missing thin space (\,) before differential d in integrals|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-011"; run }
+
+(* TYPO-012: Straight apostrophe used for minutes/feet *)
+let r_typo_012 : rule =
+  let re = Str.regexp {|[0-9]'|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-012";
+          severity = Warning;
+          message =
+            {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-012"; run }
+
+(* TYPO-013: ASCII back-tick used as opening quote *)
+let r_typo_013 : rule =
+  let run s =
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '`' then
+        (* Only flag single backtick, not `` (TeX opening quote) *)
+        let is_double =
+          (i + 1 < n && s.[i + 1] = '`') || (i > 0 && s.[i - 1] = '`')
+        in
+        if not is_double then incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-013";
+          severity = Warning;
+          message = {|ASCII back‑tick ` used as opening quote|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-013"; run }
+
+(* TYPO-014: Space before percent sign — relocated from old TYPO-028 *)
+let r_typo_014 : rule =
+  let run s =
+    let cnt = count_substring s " %" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-014";
+          severity = Info;
+          message = {|Space before percent sign \%|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-014"; run }
+
+(* TYPO-015: Double \% in source; likely stray percent *)
+let r_typo_015 : rule =
+  let run s =
+    let cnt = count_substring s "\\%\\%" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-015";
+          severity = Warning;
+          message = {|Double \% in source; likely stray percent|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-015"; run }
+
+(* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
+let r_typo_016 : rule =
+  let re = Str.regexp {| \\cite\b\| \\ref\b|} in
+  let tilde_re = Str.regexp {|~\\cite\b\|~\\ref\b|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Subtract cases where ~ is already used *)
+    let tilde_cnt = ref 0 in
+    let j = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward tilde_re s !j in
+         incr tilde_cnt;
+         j := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt = !cnt in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-016";
+          severity = Info;
+          message = {|Non‑breaking space ~ missing before \cite / \ref|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-016"; run }
+
+(* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
+let r_typo_017 : rule =
+  let re = Str.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-017";
+          severity = Info;
+          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-017"; run }
+
+(* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011 *)
+let r_typo_018 : rule =
+  let run s =
+    let cnt = count_substring s "  " in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-018";
+          severity = Info;
+          message = "Multiple consecutive spaces in text";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-018"; run }
+
+(* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
+let r_typo_019 : rule =
+  let run _s = None in
+  { id = "TYPO-019"; run }
+
+(* TYPO-020: Sentence without ending punctuation — DEFERRED: requires NLP *)
+let r_typo_020 : rule =
+  let run _s = None in
+  { id = "TYPO-020"; run }
+
+(* TYPO-021: Capital letter after ellipsis without space *)
+let r_typo_021 : rule =
+  let re = Str.regexp {|\(\.\.\.\|…\)[A-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-021";
+          severity = Info;
+          message = "Capital letter after ellipsis without space";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-021"; run }
+
+(* TYPO-022: Space before closing punctuation — relocated from old TYPO-012 *)
+let r_typo_022 : rule =
+  let run s =
+    let combos = [ " )"; " ]"; " }" ] in
+    let cnt =
+      List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-022";
+          severity = Info;
+          message = "Space before closing punctuation ) ] }";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-022"; run }
+
+(* TYPO-023: ASCII ampersand & outside tabular env; use \& *)
+let r_typo_023 : rule =
+  let tabular_re =
+    Str.regexp
+      {|\\begin{tabular\|\\begin{array\|\\begin{align\|\\begin{tabularx\|\\begin{longtable|}
+  in
+  let end_re =
+    Str.regexp
+      {|\\end{tabular\|\\end{array\|\\end{align\|\\end{tabularx\|\\end{longtable|}
+  in
+  let run s =
+    (* Strip out tabular/array/align environments *)
+    let stripped = ref s in
+    (try
+       while true do
+         let start_pos = Str.search_forward tabular_re !stripped 0 in
+         try
+           let end_pos = Str.search_forward end_re !stripped start_pos in
+           let end_pos =
+             try
+               let _ = Str.search_forward (Str.regexp "}") !stripped end_pos in
+               Str.match_end ()
+             with Not_found -> end_pos + 10
+           in
+           let before = String.sub !stripped 0 start_pos in
+           let after =
+             if end_pos < String.length !stripped then
+               String.sub !stripped end_pos (String.length !stripped - end_pos)
+             else ""
+           in
+           stripped := before ^ after
+         with Not_found ->
+           (* No matching end — strip from start to end of string *)
+           stripped := String.sub !stripped 0 start_pos
+       done
+     with Not_found -> ());
+    (* Count bare & (not \&) in stripped text *)
+    let n = String.length !stripped in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if !stripped.[i] = '&' && not (i > 0 && !stripped.[i - 1] = '\\') then
+        incr cnt
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-023";
+          severity = Error;
+          message = {|ASCII ampersand & outside tabular env; use \&|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-023"; run }
+
+(* TYPO-024: Dangling dash at line end *)
+let r_typo_024 : rule =
+  let re = Str.regexp {|-+[ \t]*$|} in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          try
+            let _ = Str.search_forward re line 0 in
+            acc + 1
+          with Not_found -> acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-024";
+          severity = Info;
+          message = "Dangling dash at line end";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-024"; run }
+
+(* TYPO-025: Space before en-dash in number range *)
+let r_typo_025 : rule =
+  let re = Str.regexp {|[0-9] +\(–\|--\)[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-025";
+          severity = Warning;
+          message = {|Space before en‑dash in number range|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-025"; run }
+
+(* TYPO-026: Wrong dash in page range — should use -- *)
+let r_typo_026 : rule =
+  let re = Str.regexp {|[0-9]–[0-9]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-026";
+          severity = Warning;
+          message = {|Wrong dash in page range – should use --|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-026"; run }
+
+(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
+let r_typo_027 : rule =
+  let run s =
+    let cnt = count_substring s "!!" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-027";
+          severity = Info;
+          message = {|Multiple exclamation marks ‼|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-027"; run }
+
+(* TYPO-028: Use of $$ display math delimiter *)
+let r_typo_028 : rule =
+  let run s =
+    let cnt = count_substring s "$$" in
+    (* Each pair of $$ counts as one — divide by 2 *)
+    let cnt = cnt / 2 in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-028";
+          severity = Error;
+          message = {|Use of $$ display math delimiter|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-028"; run }
+
+(* TYPO-029: Non-breaking space after \ref missing *)
+let r_typo_029 : rule =
+  let re = Str.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-029";
+          severity = Info;
+          message = {|Non‑breaking space after \ref missing|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-029"; run }
+
+(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP *)
+let r_typo_030 : rule =
+  let run _s = None in
+  { id = "TYPO-030"; run }
+
+(* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
+   NLP *)
+let r_typo_031 : rule =
+  let run _s = None in
+  { id = "TYPO-031"; run }
+
+(* TYPO-032: Comma before \cite *)
+let r_typo_032 : rule =
+  let re = Str.regexp {|,[ ]*\\cite|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TYPO-032";
+          severity = Warning;
+          message = {|Comma before \cite|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TYPO-032"; run }
+
+(* TYPO-033: Abbreviation et.al without space *)
+let r_typo_033 : rule =
+  let run s =
+    let cnt = count_substring s "et.al" in
+    if cnt > 0 then
+      Some
+        {
+          id = "TYPO-033";
+          severity = Warning;
+          message = "Abbreviation et.al without space";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TYPO-033"; run }
+
 let rules_pilot : rule list =
   [
     r_typo_001;
@@ -682,6 +1165,29 @@ let rules_pilot : rule list =
     r_typo_008;
     r_typo_009;
     r_typo_010;
+    r_typo_011;
+    r_typo_012;
+    r_typo_013;
+    r_typo_014;
+    r_typo_015;
+    r_typo_016;
+    r_typo_017;
+    r_typo_018;
+    r_typo_019;
+    r_typo_020;
+    r_typo_021;
+    r_typo_022;
+    r_typo_023;
+    r_typo_024;
+    r_typo_025;
+    r_typo_026;
+    r_typo_027;
+    r_typo_028;
+    r_typo_029;
+    r_typo_030;
+    r_typo_031;
+    r_typo_032;
+    r_typo_033;
   ]
 
 (* BEGIN VPD-generated validators v0.3.0 — DO NOT EDIT BELOW THIS LINE *)

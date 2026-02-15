@@ -262,6 +262,9 @@ let () =
   run_golden_suite "unicode"
     (Filename.concat base_dir "specs/rules/unicode_golden.yaml")
     base_dir;
+  run_golden_suite "locale"
+    (Filename.concat base_dir "specs/rules/locale_golden.yaml")
+    base_dir;
   if !fails > 0 then (
     Printf.eprintf "[golden] %d failure(s) in %d cases\n%!" !fails !cases;
     exit 1)

@@ -4452,7 +4452,7 @@ let r_verb_009 : rule =
 
 (* VERB-010: Inline code uses back-ticks instead of \verb *)
 let r_verb_010 : rule =
-  let re = Str.regexp {|`[^`\n]+`|} in
+  let re = Str.regexp "`[^`\n]+`" in
   let run s =
     let s_text = strip_math_segments s in
     let cnt = ref 0 in
@@ -4621,7 +4621,7 @@ let r_verb_011 : rule =
 
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
-  let re = Str.regexp {|\\begin{minted}[ \t\n]*\(\[[^]]*\]\)?[ \t\n]*{|} in
+  let re = Str.regexp "\\\\begin{minted}[ \t\n]*\\(\\[[^]]*\\]\\)?[ \t\n]*{" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -4678,7 +4678,7 @@ let r_verb_013 : rule =
 
 (* VERB-015: Verbatim uses catcode changes instead of \verb *)
 let r_verb_015 : rule =
-  let re = Str.regexp {|\\catcode[ \t\n]*`|} in
+  let re = Str.regexp "\\\\catcode[ \t\n]*`" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -5003,7 +5003,8 @@ let r_cmd_004 : rule =
 (* CMD-005: Single-letter macro created *)
 let r_cmd_005 : rule =
   let re =
-    Str.regexp {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]}|}
+    Str.regexp
+      "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n]*{?\\\\[a-zA-Z]}"
   in
   let run s =
     let cnt = ref 0 in
@@ -5029,7 +5030,9 @@ let r_cmd_005 : rule =
 
 (* CMD-006: Macro defined inside document body *)
 let r_cmd_006 : rule =
-  let re = Str.regexp {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\|} in
+  let re =
+    Str.regexp "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n]*{?\\\\"
+  in
   let run s =
     match extract_document_body s with
     | None -> None
@@ -5059,7 +5062,8 @@ let r_cmd_006 : rule =
 let r_cmd_008 : rule =
   let re =
     Str.regexp
-      {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]*@[a-zA-Z]*}?|}
+      "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n\
+       ]*{?\\\\[a-zA-Z]*@[a-zA-Z]*}?"
   in
   let run s =
     let has_makeatletter =
@@ -5095,7 +5099,8 @@ let r_cmd_008 : rule =
 let r_cmd_009 : rule =
   let re =
     Str.regexp
-      {|\\\(newcommand\|renewcommand\|def\)[ \t\n]*{?\\[a-zA-Z]*[0-9]+[a-zA-Z0-9]*}?|}
+      "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n\
+       ]*{?\\\\[a-zA-Z]*[0-9]+[a-zA-Z0-9]*}?"
   in
   let run s =
     let cnt = ref 0 in
@@ -5131,7 +5136,7 @@ let r_cmd_011 : rule =
         String.sub s 0 pos
       with Not_found -> s
     in
-    let re = Str.regexp {|\\\(def\|edef\)[ \t\n]*\\[a-zA-Z@]+|} in
+    let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
     let has_makeatletter =
       try
         let _ =
@@ -6020,7 +6025,7 @@ let l1_delim_007_rule : rule =
 
 (* DELIM-008: Empty \left. ... \right. pair — redundant invisible delimiters *)
 let l1_delim_008_rule : rule =
-  let re = Str.regexp {|\\left\.[ \t\n]*\\right\.|} in
+  let re = Str.regexp "\\\\left\\.[ \t\n]*\\\\right\\." in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -8484,7 +8489,7 @@ let l1_math_066_rule : rule =
 
 (* MATH-068: Spacing around \mid missing *)
 let l1_math_068_rule : rule =
-  let re = Str.regexp {|[^ \t\n]\\mid\|\\mid[^ \t\n]|} in
+  let re = Str.regexp "[^ \t\n]\\\\mid\\|\\\\mid[^ \t\n]" in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -9314,7 +9319,7 @@ let l1_math_087_rule : rule =
 
 (* MATH-088: Bare \partial lacks thin space *)
 let l1_math_088_rule : rule =
-  let re = Str.regexp {|[^ \t,\\]\\partial\|\\partial[^ \t{\\]|} in
+  let re = Str.regexp "[^ \t,\\\\]\\\\partial\\|\\\\partial[^ \t{\\\\]" in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -9396,7 +9401,7 @@ let l1_math_091_rule : rule =
 
 (* MATH-092: \sum with explicit limits in inline math *)
 let l1_math_092_rule : rule =
-  let re = Str.regexp {|\\sum[ \t]*_|} in
+  let re = Str.regexp "\\\\sum[ \t]*_" in
   let run s =
     let inline_segs = extract_inline_math_segments s in
     let cnt = ref 0 in

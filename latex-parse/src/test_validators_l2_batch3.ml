@@ -51,16 +51,20 @@ let () =
       expect (does_not_fire "CMD-014" "") (tag ^ ": empty"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     DOC-001: Title missing \maketitle
+     DOC-001: Title missing \maketitle (requires article-like class)
      ══════════════════════════════════════════════════════════════════════ *)
   run "DOC-001 fires when no maketitle" (fun tag ->
       expect
-        (fires "DOC-001" "\\begin{document}\nHello\n\\end{document}")
+        (fires "DOC-001"
+           "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}")
         (tag ^ ": no maketitle"));
   run "DOC-001 clean with maketitle" (fun tag ->
       expect
         (does_not_fire "DOC-001"
-           "\\begin{document}\n\\maketitle\n\\end{document}")
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
+            \\maketitle\n\
+            \\end{document}")
         (tag ^ ": has maketitle"));
   run "DOC-001 clean without document" (fun tag ->
       expect (does_not_fire "DOC-001" "just text") (tag ^ ": no document"));
@@ -68,16 +72,18 @@ let () =
       expect (does_not_fire "DOC-001" "") (tag ^ ": empty"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     DOC-002: Abstract environment missing
+     DOC-002: Abstract environment missing (requires article-like class)
      ══════════════════════════════════════════════════════════════════════ *)
   run "DOC-002 fires when no abstract" (fun tag ->
       expect
-        (fires "DOC-002" "\\begin{document}\nHello\n\\end{document}")
+        (fires "DOC-002"
+           "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}")
         (tag ^ ": no abstract"));
   run "DOC-002 clean with abstract" (fun tag ->
       expect
         (does_not_fire "DOC-002"
-           "\\begin{document}\n\
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
             \\begin{abstract}\n\
             Text\n\
             \\end{abstract}\n\
@@ -89,16 +95,20 @@ let () =
       expect (does_not_fire "DOC-002" "") (tag ^ ": empty"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     DOC-003: Keywords missing
+     DOC-003: Keywords missing (requires article-like class)
      ══════════════════════════════════════════════════════════════════════ *)
   run "DOC-003 fires when no keywords" (fun tag ->
       expect
-        (fires "DOC-003" "\\begin{document}\nHello\n\\end{document}")
+        (fires "DOC-003"
+           "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}")
         (tag ^ ": no keywords"));
   run "DOC-003 clean with keywords" (fun tag ->
       expect
         (does_not_fire "DOC-003"
-           "\\begin{document}\n\\keywords{foo, bar}\n\\end{document}")
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
+            \\keywords{foo, bar}\n\
+            \\end{document}")
         (tag ^ ": has keywords"));
   run "DOC-003 clean without document" (fun tag ->
       expect (does_not_fire "DOC-003" "just text") (tag ^ ": no document"));

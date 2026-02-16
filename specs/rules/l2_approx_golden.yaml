@@ -1,0 +1,58 @@
+# Golden corpus entries for L2-approximable rules (FIG, TAB, PKG, CJK)
+---
+  - file: corpora/lint/l2_approx/fig_001.tex
+    expect: ["FIG-001"]
+    expect_msgs:
+      - "FIG-001:Figure without caption"
+  - file: corpora/lint/l2_approx/fig_002.tex
+    expect: ["FIG-002"]
+    expect_msgs:
+      - "FIG-002:Figure without label"
+  - file: corpora/lint/l2_approx/fig_003.tex
+    expect: ["FIG-003"]
+    expect_msgs:
+      - "FIG-003:Label before caption in figure"
+  - file: corpora/lint/l2_approx/fig_007.tex
+    expect: ["FIG-007"]
+    expect_msgs:
+      - "FIG-007:Figure lacks alt text for accessibility"
+  - file: corpora/lint/l2_approx/fig_009.tex
+    expect: ["FIG-009"]
+    expect_msgs:
+      - "FIG-009:Float position specifier ! used excessively"
+  - file: corpora/lint/l2_approx/tab_001.tex
+    expect: ["TAB-001"]
+    expect_msgs:
+      - "TAB-001:Table lacks caption"
+  - file: corpora/lint/l2_approx/tab_002.tex
+    expect: ["TAB-002"]
+    expect_msgs:
+      - "TAB-002:Caption below table (journal requires above)"
+  - file: corpora/lint/l2_approx/tab_005.tex
+    expect: ["TAB-005"]
+    expect_msgs:
+      - "TAB-005:Vertical rules present in tabular"
+  - file: corpora/lint/l2_approx/pkg_001.tex
+    expect: ["PKG-001"]
+    expect_msgs:
+      - "PKG-001:Package duplicate inclusion detected"
+  - file: corpora/lint/l2_approx/pkg_002.tex
+    expect: ["PKG-002"]
+    expect_msgs:
+      - "PKG-002:geometry loaded after hyperref – must precede"
+  - file: corpora/lint/l2_approx/pkg_004.tex
+    expect: ["PKG-004"]
+    expect_msgs:
+      - "PKG-004:Package loaded after \begin{document}"
+  - file: corpora/lint/l2_approx/pkg_005.tex
+    expect: ["PKG-005"]
+    expect_msgs:
+      - "PKG-005:Unknown option for geometry"
+  - file: corpora/lint/l2_approx/cjk_004.tex
+    expect: ["CJK-004"]
+    expect_msgs:
+      - "CJK-004:xeCJK package missing when CJK glyphs present"
+  - file: corpora/lint/l2_approx/cjk_006.tex
+    expect: ["CJK-006"]
+    expect_msgs:
+      - "CJK-006:Ruby annotation requires ruby package"

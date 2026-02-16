@@ -268,6 +268,9 @@ let () =
   run_golden_suite "stragglers2"
     (Filename.concat base_dir "specs/rules/stragglers2_golden.yaml")
     base_dir;
+  run_golden_suite "l2_approx"
+    (Filename.concat base_dir "specs/rules/l2_approx_golden.yaml")
+    base_dir;
   if !fails > 0 then (
     Printf.eprintf "[golden] %d failure(s) in %d cases\n%!" !fails !cases;
     exit 1)

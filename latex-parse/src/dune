@@ -333,6 +333,7 @@
   ../../specs/rules/unicode_golden.yaml
   ../../specs/rules/locale_golden.yaml
   ../../specs/rules/stragglers2_golden.yaml
+  ../../specs/rules/l2_approx_golden.yaml
   (source_tree ../../corpora)))
 
 (test
@@ -343,4 +344,9 @@
 (test
  (name test_validators_expl3)
  (modules test_validators_expl3)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_l2_approx)
+ (modules test_validators_l2_approx)
  (libraries latex_parse_lib unix))

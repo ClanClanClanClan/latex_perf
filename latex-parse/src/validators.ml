@@ -6054,14 +6054,34 @@ let extract_usepackages (s : string) : (int * string) list =
    with Not_found -> ());
   List.rev !results
 
+(* ── Helper: check if a LaTeX package is loaded (handles options) ────── *)
+(* Uses extract_usepackages which handles both \usepackage{pkg} and
+   \usepackage[opts]{pkg} and comma-separated packages *)
+let has_package (s : string) (pkg : string) : bool =
+  let pkgs = extract_usepackages s in
+  List.exists (fun (_pos, p) -> p = pkg) pkgs
+
+(* ── Helper: extract env blocks for both env and env* ────────────────── *)
+let extract_env_blocks_starred (env : string) (s : string) : string list =
+  let plain = extract_env_blocks env s in
+  let starred = extract_env_blocks (env ^ "*") s in
+  plain @ starred
+
+(* ── Helper: check for \caption{ or \caption[ (not \captionsetup etc.) *)
+let has_caption (body : string) : bool =
+  let re = Str.regexp {|\\caption\(\[\|{\)|} in
+  try
+    ignore (Str.search_forward re body 0);
+    true
+  with Not_found -> false
+
 (* ── FIG-001: Figure without caption ─────────────────────────────────── *)
 let r_fig_001 : rule =
   let run s =
-    let blocks = extract_env_blocks "figure" s in
+    let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
       List.fold_left
-        (fun acc body ->
-          if count_substring body "\\caption" = 0 then acc + 1 else acc)
+        (fun acc body -> if not (has_caption body) then acc + 1 else acc)
         0 blocks
     in
     if cnt > 0 then
@@ -6078,12 +6098,19 @@ let r_fig_001 : rule =
 
 (* ── FIG-002: Figure without label ───────────────────────────────────── *)
 let r_fig_002 : rule =
+  let re_label = Str.regexp {|\\label{|} in
   let run s =
-    let blocks = extract_env_blocks "figure" s in
+    let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
       List.fold_left
         (fun acc body ->
-          if count_substring body "\\label" = 0 then acc + 1 else acc)
+          let found =
+            try
+              ignore (Str.search_forward re_label body 0);
+              true
+            with Not_found -> false
+          in
+          if not found then acc + 1 else acc)
         0 blocks
     in
     if cnt > 0 then
@@ -6100,17 +6127,19 @@ let r_fig_002 : rule =
 
 (* ── FIG-003: Label before caption in figure ─────────────────────────── *)
 let r_fig_003 : rule =
+  let re_label = Str.regexp {|\\label{|} in
+  let re_caption = Str.regexp {|\\caption\(\[\|{\)|} in
   let run s =
-    let blocks = extract_env_blocks "figure" s in
+    let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
       List.fold_left
         (fun acc body ->
           let label_pos =
-            try Some (Str.search_forward (Str.regexp_string "\\label") body 0)
+            try Some (Str.search_forward re_label body 0)
             with Not_found -> None
           in
           let caption_pos =
-            try Some (Str.search_forward (Str.regexp_string "\\caption") body 0)
+            try Some (Str.search_forward re_caption body 0)
             with Not_found -> None
           in
           match (label_pos, caption_pos) with
@@ -6134,7 +6163,7 @@ let r_fig_003 : rule =
 let r_fig_007 : rule =
   let re_includegraphics = Str.regexp_string "\\includegraphics" in
   let run s =
-    let blocks = extract_env_blocks "figure" s in
+    let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -6206,11 +6235,10 @@ let r_fig_009 : rule =
 (* ── TAB-001: Table lacks caption ────────────────────────────────────── *)
 let r_tab_001 : rule =
   let run s =
-    let blocks = extract_env_blocks "table" s in
+    let blocks = extract_env_blocks_starred "table" s in
     let cnt =
       List.fold_left
-        (fun acc body ->
-          if count_substring body "\\caption" = 0 then acc + 1 else acc)
+        (fun acc body -> if not (has_caption body) then acc + 1 else acc)
         0 blocks
     in
     if cnt > 0 then
@@ -6227,22 +6255,21 @@ let r_tab_001 : rule =
 
 (* ── TAB-002: Caption below table (journal requires above) ──────────── *)
 let r_tab_002 : rule =
+  (* Match both \end{tabular} and \end{tabular*} *)
+  let re_tabular_end = Str.regexp {|\\end{tabular\*?}|} in
+  let re_caption = Str.regexp {|\\caption\(\[\|{\)|} in
   let run s =
-    let blocks = extract_env_blocks "table" s in
+    let blocks = extract_env_blocks_starred "table" s in
     let cnt =
       List.fold_left
         (fun acc body ->
-          (* Check if \caption appears after \end{tabular} *)
+          (* Check if \caption appears after \end{tabular} or \end{tabular*} *)
           let tabular_end_pos =
-            try
-              let p =
-                Str.search_forward (Str.regexp_string "\\end{tabular}") body 0
-              in
-              Some p
+            try Some (Str.search_forward re_tabular_end body 0)
             with Not_found -> None
           in
           let caption_pos =
-            try Some (Str.search_forward (Str.regexp_string "\\caption") body 0)
+            try Some (Str.search_forward re_caption body 0)
             with Not_found -> None
           in
           match (tabular_end_pos, caption_pos) with
@@ -6264,26 +6291,56 @@ let r_tab_002 : rule =
 
 (* ── TAB-005: Vertical rules present in tabular ─────────────────────── *)
 let r_tab_005 : rule =
+  let re_plain = Str.regexp_string "\\begin{tabular}{" in
+  let re_star = Str.regexp_string "\\begin{tabular*}{" in
+  (* Skip one brace group: returns position after matching } *)
+  let skip_brace_group s start =
+    let depth = ref 1 in
+    let j = ref start in
+    while !j < String.length s && !depth > 0 do
+      (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+      incr j
+    done;
+    !j
+  in
+  (* Extract column spec string from brace group starting at pos *)
+  let extract_col_spec s start =
+    let depth = ref 1 in
+    let j = ref start in
+    while !j < String.length s && !depth > 0 do
+      (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+      if !depth > 0 then incr j
+    done;
+    if !j > start then Some (String.sub s start (!j - start)) else None
+  in
   let run s =
-    (* Find \begin{tabular}{...} and check for | in the column spec *)
-    let re = Str.regexp {|\\begin{tabular\*?}{|} in
     let cnt = ref 0 in
     let i = ref 0 in
+    (* Check plain \begin{tabular}{colspec} *)
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _ = Str.search_forward re_plain s !i in
          let after = Str.match_end () in
-         (* find the closing } of column spec *)
-         let depth = ref 1 in
-         let j = ref after in
-         while !j < String.length s && !depth > 0 do
-           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
-           if !depth > 0 then incr j
-         done;
-         (if !j > after then
-            let col_spec = String.sub s after (!j - after) in
-            if String.contains col_spec '|' then incr cnt);
-         i := !j + 1
+         (match extract_col_spec s after with
+         | Some col_spec -> if String.contains col_spec '|' then incr cnt
+         | None -> ());
+         i := after + 1
+       done
+     with Not_found -> ());
+    (* Check \begin{tabular*}{width}{colspec} — skip width, check colspec *)
+    i := 0;
+    (try
+       while true do
+         let _ = Str.search_forward re_star s !i in
+         let after = Str.match_end () in
+         (* skip the width brace group *)
+         let after_width = skip_brace_group s after in
+         (* now expect the column spec brace group *)
+         (if after_width < String.length s && s.[after_width] = '{' then
+            match extract_col_spec s (after_width + 1) with
+            | Some col_spec -> if String.contains col_spec '|' then incr cnt
+            | None -> ());
+         i := after_width + 1
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -6530,11 +6587,13 @@ let r_cjk_004 : rule =
       else i := !i + 1
     done;
     if !has_cjk then
-      (* check if xeCJK or CJKutf8 is loaded *)
-      let has_xecjk = count_substring s "\\usepackage{xeCJK}" > 0 in
-      let has_cjkutf8 = count_substring s "\\usepackage{CJKutf8}" > 0 in
-      let has_ctex = count_substring s "\\usepackage{ctex}" > 0 in
-      if not (has_xecjk || has_cjkutf8 || has_ctex) then
+      (* check if xeCJK or CJKutf8 or ctex is loaded (handles options) *)
+      if
+        not
+          (has_package s "xeCJK"
+          || has_package s "CJKutf8"
+          || has_package s "ctex")
+      then
         Some
           {
             id = "CJK-004";
@@ -6562,9 +6621,9 @@ let r_cjk_006 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       let has_ruby_pkg =
-        count_substring s "\\usepackage{ruby}" > 0
-        || count_substring s "\\usepackage{pxrubrica}" > 0
-        || count_substring s "\\usepackage{luatexja-ruby}" > 0
+        has_package s "ruby"
+        || has_package s "pxrubrica"
+        || has_package s "luatexja-ruby"
       in
       if not has_ruby_pkg then
         Some

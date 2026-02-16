@@ -1,4 +1,6 @@
-(** Unit tests for L2-approximable rules (FIG, TAB, PKG, CJK). *)
+(** Unit tests for L2-approximable rules (FIG, TAB, PKG, CJK). Comprehensive
+    edge-case coverage including starred variants, package-with-options, count
+    accuracy, and boundary conditions. *)
 
 open Latex_parse_lib
 
@@ -65,6 +67,55 @@ let () =
       expect
         (does_not_fire "FIG-001" "\\includegraphics{img.png}")
         (tag ^ ": no figure env"));
+  (* Starred variant *)
+  run "FIG-001 fires on figure* without caption" (fun tag ->
+      expect
+        (fires "FIG-001"
+           "\\begin{figure*}\n\\includegraphics{img.png}\n\\end{figure*}")
+        (tag ^ ": figure* no caption"));
+  run "FIG-001 clean figure* with caption" (fun tag ->
+      expect
+        (does_not_fire "FIG-001"
+           "\\begin{figure*}\n\
+            \\includegraphics{img.png}\n\
+            \\caption{Wide fig}\n\
+            \\end{figure*}")
+        (tag ^ ": figure* has caption"));
+  (* captionsetup should not count as a real caption *)
+  run "FIG-001 fires when only captionsetup present" (fun tag ->
+      expect
+        (fires "FIG-001"
+           "\\begin{figure}\n\
+            \\captionsetup{font=small}\n\
+            \\includegraphics{img.png}\n\
+            \\end{figure}")
+        (tag ^ ": captionsetup is not caption"));
+  (* Mixed: one with caption, one without *)
+  run "FIG-001 count=1 mixed" (fun tag ->
+      expect
+        (fires_with_count "FIG-001"
+           "\\begin{figure}\n\
+            \\caption{Has one}\n\
+            \\end{figure}\n\
+            \\begin{figure}\n\
+            \\includegraphics{b.png}\n\
+            \\end{figure}"
+           1)
+        (tag ^ ": one with, one without"));
+  (* Empty figure *)
+  run "FIG-001 fires on empty figure" (fun tag ->
+      expect
+        (fires "FIG-001" "\\begin{figure}\\end{figure}")
+        (tag ^ ": empty figure"));
+  (* Empty string *)
+  run "FIG-001 clean empty string" (fun tag ->
+      expect (does_not_fire "FIG-001" "") (tag ^ ": empty string"));
+  (* caption with optional arg *)
+  run "FIG-001 clean with caption[short]" (fun tag ->
+      expect
+        (does_not_fire "FIG-001"
+           "\\begin{figure}\n\\caption[Short]{Long caption}\n\\end{figure}")
+        (tag ^ ": caption with optional arg"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FIG-002: Figure without label
@@ -88,6 +139,26 @@ let () =
         (tag ^ ": has label"));
   run "FIG-002 clean no figure" (fun tag ->
       expect (does_not_fire "FIG-002" "plain text") (tag ^ ": no figure"));
+  (* Starred variant *)
+  run "FIG-002 fires on figure* without label" (fun tag ->
+      expect
+        (fires "FIG-002" "\\begin{figure*}\n\\caption{Wide}\n\\end{figure*}")
+        (tag ^ ": figure* no label"));
+  (* Count accuracy *)
+  run "FIG-002 count=2" (fun tag ->
+      expect
+        (fires_with_count "FIG-002"
+           "\\begin{figure}\n\
+            \\caption{A}\n\
+            \\end{figure}\n\
+            \\begin{figure*}\n\
+            \\caption{B}\n\
+            \\end{figure*}"
+           2)
+        (tag ^ ": two figures no label"));
+  (* Empty string *)
+  run "FIG-002 clean empty string" (fun tag ->
+      expect (does_not_fire "FIG-002" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FIG-003: Label before caption in figure
@@ -118,6 +189,35 @@ let () =
             \\caption{A fig}\n\
             \\end{figure}")
         (tag ^ ": no label"));
+  (* Starred variant *)
+  run "FIG-003 fires on figure* with label before caption" (fun tag ->
+      expect
+        (fires "FIG-003"
+           "\\begin{figure*}\n\\label{fig:x}\n\\caption{A fig}\n\\end{figure*}")
+        (tag ^ ": figure* label before caption"));
+  (* Label but no caption: should not fire *)
+  run "FIG-003 clean label but no caption" (fun tag ->
+      expect
+        (does_not_fire "FIG-003"
+           "\\begin{figure}\n\\label{fig:x}\n\\end{figure}")
+        (tag ^ ": label but no caption"));
+  (* Count accuracy *)
+  run "FIG-003 count=2" (fun tag ->
+      expect
+        (fires_with_count "FIG-003"
+           "\\begin{figure}\n\
+            \\label{fig:a}\n\
+            \\caption{A}\n\
+            \\end{figure}\n\
+            \\begin{figure}\n\
+            \\label{fig:b}\n\
+            \\caption{B}\n\
+            \\end{figure}"
+           2)
+        (tag ^ ": two bad figures"));
+  (* Empty string *)
+  run "FIG-003 clean empty string" (fun tag ->
+      expect (does_not_fire "FIG-003" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FIG-007: Figure lacks alt text for accessibility
@@ -145,6 +245,25 @@ let () =
       expect
         (does_not_fire "FIG-007" "\\includegraphics{img.png}")
         (tag ^ ": outside figure"));
+  (* Starred variant *)
+  run "FIG-007 fires on figure* without alt" (fun tag ->
+      expect
+        (fires "FIG-007"
+           "\\begin{figure*}\n\\includegraphics{img.png}\n\\end{figure*}")
+        (tag ^ ": figure* no alt"));
+  (* Multiple includegraphics: one with alt, one without *)
+  run "FIG-007 count=1 mixed" (fun tag ->
+      expect
+        (fires_with_count "FIG-007"
+           "\\begin{figure}\n\
+            \\includegraphics[alt={Good}]{a.png}\n\
+            \\includegraphics{b.png}\n\
+            \\end{figure}"
+           1)
+        (tag ^ ": one with alt, one without"));
+  (* Empty string *)
+  run "FIG-007 clean empty string" (fun tag ->
+      expect (does_not_fire "FIG-007" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FIG-009: Float position specifier ! used excessively
@@ -171,6 +290,34 @@ let () =
         (does_not_fire "FIG-009"
            "\\begin{figure}\n\\includegraphics{img.png}\n\\end{figure}")
         (tag ^ ": no options ok"));
+  (* Starred variants *)
+  run "FIG-009 fires on figure* with !" (fun tag ->
+      expect
+        (fires "FIG-009"
+           "\\begin{figure*}[!htbp]\n\\includegraphics{img.png}\n\\end{figure*}")
+        (tag ^ ": figure* [!htbp]"));
+  run "FIG-009 fires on table* with !" (fun tag ->
+      expect
+        (fires "FIG-009"
+           "\\begin{table*}[!p]\n\
+            \\begin{tabular}{c}x\\end{tabular}\n\
+            \\end{table*}")
+        (tag ^ ": table* [!p]"));
+  (* Count accuracy *)
+  run "FIG-009 count=2" (fun tag ->
+      expect
+        (fires_with_count "FIG-009"
+           "\\begin{figure}[!h]\n\
+            x\n\
+            \\end{figure}\n\
+            \\begin{table}[!t]\n\
+            y\n\
+            \\end{table}"
+           2)
+        (tag ^ ": figure + table with !"));
+  (* Empty string *)
+  run "FIG-009 clean empty string" (fun tag ->
+      expect (does_not_fire "FIG-009" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TAB-001: Table lacks caption
@@ -198,6 +345,52 @@ let () =
       expect
         (does_not_fire "TAB-001" "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
         (tag ^ ": no table env"));
+  (* Starred variant *)
+  run "TAB-001 fires on table* without caption" (fun tag ->
+      expect
+        (fires "TAB-001"
+           "\\begin{table*}\n\
+            \\begin{tabular}{cc}\n\
+            a & b\n\
+            \\end{tabular}\n\
+            \\end{table*}")
+        (tag ^ ": table* no caption"));
+  run "TAB-001 clean table* with caption" (fun tag ->
+      expect
+        (does_not_fire "TAB-001"
+           "\\begin{table*}\n\
+            \\caption{Wide table}\n\
+            \\begin{tabular}{cc}\n\
+            a & b\n\
+            \\end{tabular}\n\
+            \\end{table*}")
+        (tag ^ ": table* has caption"));
+  (* captionsetup should not count as caption *)
+  run "TAB-001 fires when only captionsetup" (fun tag ->
+      expect
+        (fires "TAB-001"
+           "\\begin{table}\n\
+            \\captionsetup{justification=centering}\n\
+            \\begin{tabular}{cc}\n\
+            a & b\n\
+            \\end{tabular}\n\
+            \\end{table}")
+        (tag ^ ": captionsetup is not caption"));
+  (* Count accuracy *)
+  run "TAB-001 count=2" (fun tag ->
+      expect
+        (fires_with_count "TAB-001"
+           "\\begin{table}\n\
+            \\begin{tabular}{c}x\\end{tabular}\n\
+            \\end{table}\n\
+            \\begin{table}\n\
+            \\begin{tabular}{c}y\\end{tabular}\n\
+            \\end{table}"
+           2)
+        (tag ^ ": two tables no caption"));
+  (* Empty string *)
+  run "TAB-001 clean empty string" (fun tag ->
+      expect (does_not_fire "TAB-001" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TAB-002: Caption below table (journal requires above)
@@ -231,6 +424,51 @@ let () =
             \\end{tabular}\n\
             \\end{table}")
         (tag ^ ": no caption"));
+  (* Starred variant: table* *)
+  run "TAB-002 fires on table* caption below" (fun tag ->
+      expect
+        (fires "TAB-002"
+           "\\begin{table*}\n\
+            \\begin{tabular}{cc}\n\
+            a & b\n\
+            \\end{tabular}\n\
+            \\caption{Wide table}\n\
+            \\end{table*}")
+        (tag ^ ": table* caption below"));
+  (* tabular* variant *)
+  run "TAB-002 fires on caption below tabular*" (fun tag ->
+      expect
+        (fires "TAB-002"
+           "\\begin{table}\n\
+            \\begin{tabular*}{\\textwidth}{cc}\n\
+            a & b\n\
+            \\end{tabular*}\n\
+            \\caption{A table}\n\
+            \\end{table}")
+        (tag ^ ": tabular* caption below"));
+  (* No tabular at all *)
+  run "TAB-002 clean no tabular" (fun tag ->
+      expect
+        (does_not_fire "TAB-002"
+           "\\begin{table}\n\\caption{A table}\nSome text\n\\end{table}")
+        (tag ^ ": no tabular in table"));
+  (* Count accuracy *)
+  run "TAB-002 count=2" (fun tag ->
+      expect
+        (fires_with_count "TAB-002"
+           "\\begin{table}\n\
+            \\begin{tabular}{c}x\\end{tabular}\n\
+            \\caption{A}\n\
+            \\end{table}\n\
+            \\begin{table}\n\
+            \\begin{tabular}{c}y\\end{tabular}\n\
+            \\caption{B}\n\
+            \\end{table}"
+           2)
+        (tag ^ ": two tables caption below"));
+  (* Empty string *)
+  run "TAB-002 clean empty string" (fun tag ->
+      expect (does_not_fire "TAB-002" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TAB-005: Vertical rules present in tabular
@@ -255,6 +493,31 @@ let () =
         (tag ^ ": no pipes"));
   run "TAB-005 clean no tabular" (fun tag ->
       expect (does_not_fire "TAB-005" "plain text") (tag ^ ": no tabular"));
+  (* tabular* variant: pipe in colspec (second braces), not width (first) *)
+  run "TAB-005 fires on tabular* with pipes in colspec" (fun tag ->
+      expect
+        (fires "TAB-005"
+           "\\begin{tabular*}{\\textwidth}{|c|c|}\na & b\n\\end{tabular*}")
+        (tag ^ ": tabular* pipe in colspec"));
+  (* tabular*: no pipe in colspec, but | in width arg — should NOT fire *)
+  run "TAB-005 clean tabular* pipe only in width" (fun tag ->
+      expect
+        (does_not_fire "TAB-005"
+           "\\begin{tabular*}{0.5|\\textwidth}{cc}\na & b\n\\end{tabular*}")
+        (tag ^ ": tabular* pipe in width only"));
+  (* Nested braces in colspec *)
+  run "TAB-005 fires on pipes with nested braces" (fun tag ->
+      expect
+        (fires "TAB-005" "\\begin{tabular}{>{$}c<{$}|r}\na & b\n\\end{tabular}")
+        (tag ^ ": pipe with nested braces"));
+  (* Empty colspec *)
+  run "TAB-005 clean empty colspec" (fun tag ->
+      expect
+        (does_not_fire "TAB-005" "\\begin{tabular}{}\n\\end{tabular}")
+        (tag ^ ": empty colspec"));
+  (* Empty string *)
+  run "TAB-005 clean empty string" (fun tag ->
+      expect (does_not_fire "TAB-005" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-001: Package duplicate inclusion detected
@@ -294,6 +557,27 @@ let () =
             \\begin{document}\n\
             \\end{document}")
         (tag ^ ": different packages with options"));
+  (* Comma-separated packages with duplicate *)
+  run "PKG-001 fires on comma-separated duplicate" (fun tag ->
+      expect
+        (fires "PKG-001"
+           "\\usepackage{amsmath,graphicx}\n\
+            \\usepackage{amsmath}\n\
+            \\begin{document}\n\
+            \\end{document}")
+        (tag ^ ": comma-separated dup"));
+  (* Same package different options *)
+  run "PKG-001 fires same pkg different options" (fun tag ->
+      expect
+        (fires "PKG-001"
+           "\\usepackage[utf8]{inputenc}\n\
+            \\usepackage[latin1]{inputenc}\n\
+            \\begin{document}\n\
+            \\end{document}")
+        (tag ^ ": same pkg different opts"));
+  (* Empty string *)
+  run "PKG-001 clean empty string" (fun tag ->
+      expect (does_not_fire "PKG-001" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-002: geometry loaded after hyperref — must precede
@@ -324,6 +608,18 @@ let () =
         (does_not_fire "PKG-002"
            "\\usepackage{hyperref}\n\\begin{document}\n\\end{document}")
         (tag ^ ": no geometry"));
+  (* With options *)
+  run "PKG-002 fires with options" (fun tag ->
+      expect
+        (fires "PKG-002"
+           "\\usepackage[colorlinks]{hyperref}\n\
+            \\usepackage[margin=1in]{geometry}\n\
+            \\begin{document}\n\
+            \\end{document}")
+        (tag ^ ": both with options, wrong order"));
+  (* Empty string *)
+  run "PKG-002 clean empty string" (fun tag ->
+      expect (does_not_fire "PKG-002" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-004: Package loaded after \begin{document}
@@ -358,6 +654,15 @@ let () =
       expect
         (does_not_fire "PKG-004" "\\usepackage{amsmath}\nhello world")
         (tag ^ ": no document env"));
+  (* Usepackage with options in body *)
+  run "PKG-004 fires on usepackage with options in body" (fun tag ->
+      expect
+        (fires "PKG-004"
+           "\\begin{document}\n\\usepackage[utf8]{inputenc}\n\\end{document}")
+        (tag ^ ": usepackage with options in body"));
+  (* Empty string *)
+  run "PKG-004 clean empty string" (fun tag ->
+      expect (does_not_fire "PKG-004" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-005: Unknown option for geometry
@@ -379,6 +684,25 @@ let () =
       expect
         (does_not_fire "PKG-005" "\\usepackage{amsmath}")
         (tag ^ ": no geometry"));
+  (* Boolean option (no =) that is known *)
+  run "PKG-005 clean boolean known option" (fun tag ->
+      expect
+        (does_not_fire "PKG-005" "\\usepackage[landscape, showframe]{geometry}")
+        (tag ^ ": boolean known options"));
+  (* Empty options *)
+  run "PKG-005 clean empty options" (fun tag ->
+      expect
+        (does_not_fire "PKG-005" "\\usepackage[]{geometry}")
+        (tag ^ ": empty options"));
+  (* Whitespace around option keys *)
+  run "PKG-005 clean whitespace in options" (fun tag ->
+      expect
+        (does_not_fire "PKG-005"
+           "\\usepackage[ margin = 1in , top = 2cm ]{geometry}")
+        (tag ^ ": whitespace in options"));
+  (* Empty string *)
+  run "PKG-005 clean empty string" (fun tag ->
+      expect (does_not_fire "PKG-005" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CJK-004: xeCJK package missing when CJK glyphs present
@@ -412,6 +736,26 @@ let () =
         (does_not_fire "CJK-004"
            "\\documentclass{article}\n\\begin{document}\nhello\n\\end{document}")
         (tag ^ ": no CJK glyphs"));
+  (* Package with options — fixed bug *)
+  run "CJK-004 clean with xeCJK with options" (fun tag ->
+      expect
+        (does_not_fire "CJK-004"
+           "\\usepackage[AutoFakeBold]{xeCJK}\n\
+            \\begin{document}\n\
+            \xe4\xb8\xad\xe6\x96\x87\n\
+            \\end{document}")
+        (tag ^ ": xeCJK with options"));
+  run "CJK-004 clean with CJKutf8" (fun tag ->
+      expect
+        (does_not_fire "CJK-004"
+           "\\usepackage{CJKutf8}\n\
+            \\begin{document}\n\
+            \xe4\xb8\xad\xe6\x96\x87\n\
+            \\end{document}")
+        (tag ^ ": has CJKutf8"));
+  (* Empty string *)
+  run "CJK-004 clean empty string" (fun tag ->
+      expect (does_not_fire "CJK-004" "") (tag ^ ": empty string"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CJK-006: Ruby annotation requires ruby package
@@ -435,6 +779,19 @@ let () =
         (tag ^ ": has pxrubrica"));
   run "CJK-006 clean no ruby" (fun tag ->
       expect (does_not_fire "CJK-006" "plain text") (tag ^ ": no ruby"));
+  (* Package with options — fixed bug *)
+  run "CJK-006 clean with ruby package with options" (fun tag ->
+      expect
+        (does_not_fire "CJK-006"
+           "\\usepackage[encoding=utf8]{ruby}\n\\ruby{a}{b}")
+        (tag ^ ": ruby package with options"));
+  run "CJK-006 clean with luatexja-ruby" (fun tag ->
+      expect
+        (does_not_fire "CJK-006" "\\usepackage{luatexja-ruby}\n\\ruby{a}{b}")
+        (tag ^ ": has luatexja-ruby"));
+  (* Empty string *)
+  run "CJK-006 clean empty string" (fun tag ->
+      expect (does_not_fire "CJK-006" "") (tag ^ ": empty string"));
 
   (* ─── summary ─────────────────────────────────────────────────────── *)
   Printf.printf "[l2-approx] PASS %d cases\n%!" !cases;

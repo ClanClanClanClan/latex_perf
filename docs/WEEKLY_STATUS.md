@@ -231,12 +231,42 @@ Week 20 — L2-Approximable Rules Batch 2 (FONT, MATH, REF cross-ref)
 - 374/374 messages match spec, 0 mismatches
 - All dune build, dune runtest, dune fmt: exit 0
 
-Current State (Post Week 20 / Phase 2 Active)
-- Validators: 384 rules implemented out of 623 spec rules (61.6%)
-  - Y1 target: 180 rules — well exceeded (2x+)
+Week 21 — L2-Approximable Rules Batch 3 (CMD, DOC, TAB, PKG, LANG, TIKZ, FIG)
+- 22 new validators — package ordering, document structure, table hygiene:
+  - CMD-014: \AtBeginDocument after \begin{document} (position comparison)
+  - DOC-001: Title missing \maketitle (substring absence)
+  - DOC-002: Abstract environment missing (substring absence)
+  - DOC-003: Keywords missing (substring absence)
+  - TAB-006: Consecutive \hline duplicated (regex)
+  - TAB-009: Floating table missing \label (env block scan)
+  - TAB-010: Footnote placed inside table environment (env block scan)
+  - TAB-011: Top/bottom \hline instead of \toprule/\bottomrule (env block scan)
+  - TAB-014: Empty multicolumn alignment spec {} (regex)
+  - PKG-007: hyperref loaded before geometry (preamble position)
+  - PKG-009: TikZ libraries loaded inside document body (position check)
+  - PKG-011: booktabs required but not loaded for \toprule (cmd vs pkg)
+  - PKG-012: csquotes not loaded when \enquote used (cmd vs pkg)
+  - PKG-015: inputenc loaded under XeLaTeX/LuaLaTeX (pkg co-occurrence)
+  - PKG-020: tikz external library not loaded (cmd vs lib)
+  - PKG-022: Obsolete package detected (epsfig, subfigure, natbib, etc.)
+  - PKG-023: unicode-math must load before microtype (preamble ordering)
+  - LANG-002: babel language option missing (bare package detection)
+  - LANG-004: Polyglossia loaded alongside babel – mutual exclusion (pkg pair)
+  - TIKZ-007: TikZ loaded after hyperref (preamble ordering)
+  - FIG-010: Subfigure without \subcaption (env block scan)
+  - FIG-013: Graphicx option scale used instead of width (regex)
+- 91 new unit tests in test_validators_l2_batch3.ml
+- 22 corpus files in corpora/lint/l2_batch3/
+- 22 golden entries in l2_batch3_golden.yaml (162 total golden cases, all pass)
+- 396/396 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Current State (Post Week 21 / Phase 2 Active)
+- Validators: 406 rules implemented out of 623 spec rules (65.2%)
+  - Y1 target: 180 rules — well exceeded (2.2x)
   - L0/L1: 100% actionable (333 impl + 12 Reserved)
-  - L2-approx: 25 rules (FIG, TAB, PKG, CJK, FONT, MATH, REF)
-  - Remaining: 239 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
+  - L2-approx: 47 rules (FIG, TAB, PKG, CJK, FONT, MATH, REF, CMD, DOC, LANG, TIKZ)
+  - Remaining: 217 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms

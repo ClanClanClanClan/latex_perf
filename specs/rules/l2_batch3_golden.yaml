@@ -1,0 +1,90 @@
+# Golden corpus entries for L2-approximable batch 3 rules
+---
+  - file: corpora/lint/l2_batch3/cmd_014.tex
+    expect: ["CMD-014"]
+    expect_msgs:
+      - "CMD-014:\AtBeginDocument placed after \begin{document}"
+  - file: corpora/lint/l2_batch3/doc_001.tex
+    expect: ["DOC-001"]
+    expect_msgs:
+      - "DOC-001:Title missing \maketitle"
+  - file: corpora/lint/l2_batch3/doc_002.tex
+    expect: ["DOC-002"]
+    expect_msgs:
+      - "DOC-002:Abstract environment missing"
+  - file: corpora/lint/l2_batch3/doc_003.tex
+    expect: ["DOC-003"]
+    expect_msgs:
+      - "DOC-003:Keywords missing"
+  - file: corpora/lint/l2_batch3/tab_006.tex
+    expect: ["TAB-006"]
+    expect_msgs:
+      - "TAB-006:Consecutive \hline duplicated"
+  - file: corpora/lint/l2_batch3/tab_009.tex
+    expect: ["TAB-009"]
+    expect_msgs:
+      - "TAB-009:Floating table missing \label"
+  - file: corpora/lint/l2_batch3/tab_010.tex
+    expect: ["TAB-010"]
+    expect_msgs:
+      - "TAB-010:Footnote placed inside table environment"
+  - file: corpora/lint/l2_batch3/tab_011.tex
+    expect: ["TAB-011"]
+    expect_msgs:
+      - "TAB-011:Top/bottom \hline instead of \toprule/\bottomrule"
+  - file: corpora/lint/l2_batch3/tab_014.tex
+    expect: ["TAB-014"]
+    expect_msgs:
+      - "TAB-014:Empty multicolumn alignment spec {} encountered"
+  - file: corpora/lint/l2_batch3/pkg_007.tex
+    expect: ["PKG-007"]
+    expect_msgs:
+      - "PKG-007:hyperref loaded before geometry"
+  - file: corpora/lint/l2_batch3/pkg_009.tex
+    expect: ["PKG-009"]
+    expect_msgs:
+      - "PKG-009:TikZ libraries loaded inside document body"
+  - file: corpora/lint/l2_batch3/pkg_011.tex
+    expect: ["PKG-011"]
+    expect_msgs:
+      - "PKG-011:booktabs required but not loaded for \toprule"
+  - file: corpora/lint/l2_batch3/pkg_012.tex
+    expect: ["PKG-012"]
+    expect_msgs:
+      - "PKG-012:csquotes not loaded when \enquote used"
+  - file: corpora/lint/l2_batch3/pkg_015.tex
+    expect: ["PKG-015"]
+    expect_msgs:
+      - "PKG-015:inputenc loaded under XeLaTeX/LuaLaTeX"
+  - file: corpora/lint/l2_batch3/pkg_020.tex
+    expect: ["PKG-020"]
+    expect_msgs:
+      - "PKG-020:tikz external library not loaded when externalising"
+  - file: corpora/lint/l2_batch3/pkg_022.tex
+    expect: ["PKG-022"]
+    expect_msgs:
+      - "PKG-022:Obsolete package (epsfig, subfigure, natbib) detected"
+  - file: corpora/lint/l2_batch3/pkg_023.tex
+    expect: ["PKG-023"]
+    expect_msgs:
+      - "PKG-023:unicode‑math must load before microtype"
+  - file: corpora/lint/l2_batch3/lang_002.tex
+    expect: ["LANG-002"]
+    expect_msgs:
+      - "LANG-002:babel language option missing"
+  - file: corpora/lint/l2_batch3/lang_004.tex
+    expect: ["LANG-004"]
+    expect_msgs:
+      - "LANG-004:Polyglossia loaded alongside babel – mutual exclusion"
+  - file: corpora/lint/l2_batch3/tikz_007.tex
+    expect: ["TIKZ-007"]
+    expect_msgs:
+      - "TIKZ-007:TikZ loaded after hyperref – reorder required"
+  - file: corpora/lint/l2_batch3/fig_010.tex
+    expect: ["FIG-010"]
+    expect_msgs:
+      - "FIG-010:Subfigure environment without \subcaption"
+  - file: corpora/lint/l2_batch3/fig_013.tex
+    expect: ["FIG-013"]
+    expect_msgs:
+      - "FIG-013:Graphicx option scale used instead of width"

@@ -7088,6 +7088,639 @@ let r_ref_010 : rule =
   in
   { id = "REF-010"; run }
 
+(* ── CMD-014: \AtBeginDocument placed after \begin{document} ──────────── *)
+let r_cmd_014 : rule =
+  let re = Str.regexp_string "\\AtBeginDocument" in
+  let run s =
+    let doc_pos =
+      try Some (Str.search_forward (Str.regexp_string "\\begin{document}") s 0)
+      with Not_found -> None
+    in
+    match doc_pos with
+    | None -> None
+    | Some dp ->
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let pos = Str.search_forward re s !i in
+             if pos > dp then incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "CMD-014";
+              severity = Warning;
+              message = "\\AtBeginDocument placed after \\begin{document}";
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "CMD-014"; run }
+
+(* ── DOC-001: Title missing \maketitle ───────────────────────────────── *)
+let r_doc_001 : rule =
+  let run s =
+    let has_doc =
+      try
+        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
+        true
+      with Not_found -> false
+    in
+    if has_doc then
+      let has_maketitle =
+        try
+          ignore (Str.search_forward (Str.regexp_string "\\maketitle") s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_maketitle then
+        Some
+          {
+            id = "DOC-001";
+            severity = Error;
+            message = "Title missing \\maketitle";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "DOC-001"; run }
+
+(* ── DOC-002: Abstract environment missing ───────────────────────────── *)
+let r_doc_002 : rule =
+  let run s =
+    let has_doc =
+      try
+        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
+        true
+      with Not_found -> false
+    in
+    if has_doc then
+      let has_abstract =
+        try
+          ignore
+            (Str.search_forward (Str.regexp_string "\\begin{abstract}") s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_abstract then
+        Some
+          {
+            id = "DOC-002";
+            severity = Warning;
+            message = "Abstract environment missing";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "DOC-002"; run }
+
+(* ── DOC-003: Keywords missing ───────────────────────────────────────── *)
+let r_doc_003 : rule =
+  let run s =
+    let has_doc =
+      try
+        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
+        true
+      with Not_found -> false
+    in
+    if has_doc then
+      let has_keywords =
+        try
+          ignore (Str.search_forward (Str.regexp_string "\\keywords{") s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_keywords then
+        Some
+          {
+            id = "DOC-003";
+            severity = Info;
+            message = "Keywords missing";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "DOC-003"; run }
+
+(* ── TAB-006: Consecutive \hline duplicated ──────────────────────────── *)
+let r_tab_006 : rule =
+  let re = Str.regexp "\\\\hline[ \t\n]*\\\\hline" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TAB-006";
+          severity = Info;
+          message = "Consecutive \\hline duplicated";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TAB-006"; run }
+
+(* ── TAB-009: Floating table missing \label ──────────────────────────── *)
+let r_tab_009 : rule =
+  let run s =
+    let blocks = extract_env_blocks_starred "table" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_label =
+            try
+              ignore (Str.search_forward (Str.regexp {|\\label{|}) body 0);
+              true
+            with Not_found -> false
+          in
+          if not has_label then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-009";
+          severity = Warning;
+          message = "Floating table missing \\label";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-009"; run }
+
+(* ── TAB-010: Footnote placed inside table environment ───────────────── *)
+let r_tab_010 : rule =
+  let re_fn = Str.regexp {|\\footnote{|} in
+  let run s =
+    let blocks = extract_env_blocks_starred "table" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let n = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               ignore (Str.search_forward re_fn body !i);
+               incr n;
+               i := Str.match_end ()
+             done
+           with Not_found -> ());
+          acc + !n)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-010";
+          severity = Warning;
+          message = "Footnote placed inside table environment";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-010"; run }
+
+(* ── TAB-011: Top/bottom \hline instead of \toprule/\bottomrule ──────── *)
+let r_tab_011 : rule =
+  let run s =
+    let blocks =
+      extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
+    in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_hline =
+            try
+              ignore (Str.search_forward (Str.regexp_string "\\hline") body 0);
+              true
+            with Not_found -> false
+          in
+          let has_booktabs =
+            try
+              ignore (Str.search_forward (Str.regexp_string "\\toprule") body 0);
+              true
+            with Not_found -> (
+              try
+                ignore
+                  (Str.search_forward (Str.regexp_string "\\bottomrule") body 0);
+                true
+              with Not_found -> false)
+          in
+          if has_hline && not has_booktabs then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-011";
+          severity = Info;
+          message = "Top/bottom \\hline instead of \\toprule/\\bottomrule";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-011"; run }
+
+(* ── TAB-014: Empty multicolumn alignment spec {} encountered ────────── *)
+let r_tab_014 : rule =
+  let re = Str.regexp {|\\multicolumn{[^}]*}{}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TAB-014";
+          severity = Info;
+          message = "Empty multicolumn alignment spec {} encountered";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TAB-014"; run }
+
+(* ── PKG-007: hyperref loaded before geometry ────────────────────────── *)
+let r_pkg_007 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let hyp_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "hyperref" then Some pos else acc)
+        None pkgs
+    in
+    let geo_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "geometry" then Some pos else acc)
+        None pkgs
+    in
+    match (hyp_pos, geo_pos) with
+    | Some hp, Some gp ->
+        if hp < gp then
+          Some
+            {
+              id = "PKG-007";
+              severity = Error;
+              message = "hyperref loaded before geometry";
+              count = 1;
+            }
+        else None
+    | _ -> None
+  in
+  { id = "PKG-007"; run }
+
+(* ── PKG-009: TikZ libraries loaded inside document body ─────────────── *)
+let r_pkg_009 : rule =
+  let re = Str.regexp_string "\\usetikzlibrary" in
+  let run s =
+    let doc_pos =
+      try Some (Str.search_forward (Str.regexp_string "\\begin{document}") s 0)
+      with Not_found -> None
+    in
+    match doc_pos with
+    | None -> None
+    | Some dp ->
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let pos = Str.search_forward re s !i in
+             if pos > dp then incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "PKG-009";
+              severity = Info;
+              message = "TikZ libraries loaded inside document body";
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "PKG-009"; run }
+
+(* ── PKG-011: booktabs required but not loaded for \toprule ──────────── *)
+let r_pkg_011 : rule =
+  let re_toprule = Str.regexp_string "\\toprule" in
+  let re_midrule = Str.regexp_string "\\midrule" in
+  let re_bottomrule = Str.regexp_string "\\bottomrule" in
+  let run s =
+    let uses_booktabs_cmds =
+      (try
+         ignore (Str.search_forward re_toprule s 0);
+         true
+       with Not_found -> false)
+      ||
+      try
+        ignore (Str.search_forward re_midrule s 0);
+        true
+      with Not_found -> (
+        try
+          ignore (Str.search_forward re_bottomrule s 0);
+          true
+        with Not_found -> false)
+    in
+    if uses_booktabs_cmds && not (has_package s "booktabs") then
+      Some
+        {
+          id = "PKG-011";
+          severity = Warning;
+          message = "booktabs required but not loaded for \\toprule";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-011"; run }
+
+(* ── PKG-012: csquotes not loaded when \enquote used ─────────────────── *)
+let r_pkg_012 : rule =
+  let re = Str.regexp_string "\\enquote{" in
+  let run s =
+    let has_enquote =
+      try
+        ignore (Str.search_forward re s 0);
+        true
+      with Not_found -> false
+    in
+    if has_enquote && not (has_package s "csquotes") then
+      Some
+        {
+          id = "PKG-012";
+          severity = Error;
+          message = "csquotes not loaded when \\enquote used";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-012"; run }
+
+(* ── PKG-015: inputenc loaded under XeLaTeX/LuaLaTeX ────────────────── *)
+let r_pkg_015 : rule =
+  let run s =
+    if has_package s "inputenc" then
+      let xeluatex =
+        has_package s "fontspec"
+        || has_package s "xeCJK"
+        || has_package s "ifxetex"
+        || has_package s "ifluatex"
+        || has_package s "luatexja"
+      in
+      if xeluatex then
+        Some
+          {
+            id = "PKG-015";
+            severity = Warning;
+            message = "inputenc loaded under XeLaTeX/LuaLaTeX";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "PKG-015"; run }
+
+(* ── PKG-020: tikz external library not loaded when externalising ────── *)
+let r_pkg_020 : rule =
+  let re_ext = Str.regexp_string "\\tikzexternalize" in
+  let re_lib = Str.regexp_string "\\usetikzlibrary{external}" in
+  let run s =
+    let has_externalize =
+      try
+        ignore (Str.search_forward re_ext s 0);
+        true
+      with Not_found -> false
+    in
+    if has_externalize then
+      let has_lib =
+        try
+          ignore (Str.search_forward re_lib s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_lib then
+        Some
+          {
+            id = "PKG-020";
+            severity = Info;
+            message = "tikz external library not loaded when externalising";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "PKG-020"; run }
+
+(* ── PKG-022: Obsolete package (epsfig, subfigure, natbib) detected ──── *)
+let r_pkg_022 : rule =
+  let obsolete_pkgs =
+    [ "epsfig"; "subfigure"; "natbib"; "t1enc"; "palatcm"; "euler"; "pslatex" ]
+  in
+  let run s =
+    let cnt =
+      List.fold_left
+        (fun acc pkg -> if has_package s pkg then acc + 1 else acc)
+        0 obsolete_pkgs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "PKG-022";
+          severity = Warning;
+          message = "Obsolete package (epsfig, subfigure, natbib) detected";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "PKG-022"; run }
+
+(* ── PKG-023: unicode‑math must load before microtype ────────────────── *)
+(* Note: spec description has a non-breaking hyphen U+2011 between "unicode" and
+   "math" (bytes E2 80 91) *)
+let r_pkg_023 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let umath_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "unicode-math" then Some pos else acc)
+        None pkgs
+    in
+    let micro_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "microtype" then Some pos else acc)
+        None pkgs
+    in
+    match (umath_pos, micro_pos) with
+    | Some up, Some mp ->
+        if up > mp then
+          Some
+            {
+              id = "PKG-023";
+              severity = Error;
+              message = {|unicode‑math must load before microtype|};
+              count = 1;
+            }
+        else None
+    | _ -> None
+  in
+  { id = "PKG-023"; run }
+
+(* ── LANG-002: babel language option missing ─────────────────────────── *)
+let r_lang_002 : rule =
+  let re_bare = Str.regexp {|\\usepackage{babel}|} in
+  let re_empty = Str.regexp {|\\usepackage\[\]{babel}|} in
+  let run s =
+    let has_bare =
+      try
+        ignore (Str.search_forward re_bare s 0);
+        true
+      with Not_found -> false
+    in
+    let has_empty =
+      try
+        ignore (Str.search_forward re_empty s 0);
+        true
+      with Not_found -> false
+    in
+    if has_bare || has_empty then
+      Some
+        {
+          id = "LANG-002";
+          severity = Warning;
+          message = "babel language option missing";
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-002"; run }
+
+(* ── LANG-004: Polyglossia loaded alongside babel – mutual exclusion ── *)
+(* Note: spec has en-dash E2 80 93 between "babel" and "mutual" *)
+let r_lang_004 : rule =
+  let run s =
+    if has_package s "polyglossia" && has_package s "babel" then
+      Some
+        {
+          id = "LANG-004";
+          severity = Error;
+          message = {|Polyglossia loaded alongside babel – mutual exclusion|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-004"; run }
+
+(* ── TIKZ-007: TikZ loaded after hyperref – reorder required ─────────── *)
+(* Note: spec has en-dash E2 80 93 between "hyperref" and "reorder" *)
+let r_tikz_007 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let tikz_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "tikz" then Some pos else acc)
+        None pkgs
+    in
+    let hyp_pos =
+      List.fold_left
+        (fun acc (pos, name) -> if name = "hyperref" then Some pos else acc)
+        None pkgs
+    in
+    match (tikz_pos, hyp_pos) with
+    | Some tp, Some hp ->
+        if tp > hp then
+          Some
+            {
+              id = "TIKZ-007";
+              severity = Warning;
+              message = {|TikZ loaded after hyperref – reorder required|};
+              count = 1;
+            }
+        else None
+    | _ -> None
+  in
+  { id = "TIKZ-007"; run }
+
+(* ── FIG-010: Subfigure environment without \subcaption ──────────────── *)
+let r_fig_010 : rule =
+  let run s =
+    let blocks = extract_env_blocks "subfigure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_subcap =
+            try
+              ignore
+                (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
+              true
+            with Not_found -> (
+              try
+                ignore
+                  (Str.search_forward (Str.regexp_string "\\caption") body 0);
+                true
+              with Not_found -> false)
+          in
+          if not has_subcap then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-010";
+          severity = Warning;
+          message = "Subfigure environment without \\subcaption";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-010"; run }
+
+(* ── FIG-013: Graphicx option scale used instead of width ────────────── *)
+let r_fig_013 : rule =
+  let re = Str.regexp {|\\includegraphics\[[^]]*scale[ ]*=[^]]*\]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FIG-013";
+          severity = Info;
+          message = "Graphicx option scale used instead of width";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FIG-013"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -7095,13 +7728,28 @@ let rules_l2_approx : rule list =
     r_fig_003;
     r_fig_007;
     r_fig_009;
+    r_fig_010;
+    r_fig_013;
     r_tab_001;
     r_tab_002;
     r_tab_005;
+    r_tab_006;
+    r_tab_009;
+    r_tab_010;
+    r_tab_011;
+    r_tab_014;
     r_pkg_001;
     r_pkg_002;
     r_pkg_004;
     r_pkg_005;
+    r_pkg_007;
+    r_pkg_009;
+    r_pkg_011;
+    r_pkg_012;
+    r_pkg_015;
+    r_pkg_020;
+    r_pkg_022;
+    r_pkg_023;
     r_cjk_004;
     r_cjk_006;
     r_font_006;
@@ -7115,6 +7763,13 @@ let rules_l2_approx : rule list =
     r_math_023;
     r_math_024;
     r_ref_010;
+    r_cmd_014;
+    r_doc_001;
+    r_doc_002;
+    r_doc_003;
+    r_lang_002;
+    r_lang_004;
+    r_tikz_007;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)
@@ -13319,6 +13974,14 @@ let precondition_of_rule_id (id : string) : layer =
   | "MATH-032" | "MATH-054" | "MATH-062" | "MATH-063" | "MATH-100" -> L2
   | "FONT-006" | "FONT-007" | "FONT-008" -> L2
   | "REF-010" -> L2
+  | "CMD-014" -> L2
+  | "DOC-001" | "DOC-002" | "DOC-003" -> L2
+  | "TAB-006" | "TAB-009" | "TAB-010" | "TAB-011" | "TAB-014" -> L2
+  | "PKG-007" | "PKG-009" | "PKG-011" | "PKG-012" | "PKG-015" -> L2
+  | "PKG-020" | "PKG-022" | "PKG-023" -> L2
+  | "LANG-002" | "LANG-004" -> L2
+  | "TIKZ-007" -> L2
+  | "FIG-010" | "FIG-013" -> L2
   | "MATH-026" | "MATH-027" -> L3
   (* CMD-001, CMD-003, CMD-007, CMD-010 need expanded text = L1 *)
   | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1

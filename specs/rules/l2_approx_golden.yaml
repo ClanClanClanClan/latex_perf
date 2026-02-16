@@ -56,3 +56,47 @@
     expect: ["CJK-006"]
     expect_msgs:
       - "CJK-006:Ruby annotation requires ruby package"
+  - file: corpora/lint/l2_approx/font_006.tex
+    expect: ["FONT-006"]
+    expect_msgs:
+      - "FONT-006:Missing \microtypesetup{expansion=true}"
+  - file: corpora/lint/l2_approx/font_007.tex
+    expect: ["FONT-007"]
+    expect_msgs:
+      - "FONT-007:Obsolete \usepackage[T1]{fontenc} under XeLaTeX"
+  - file: corpora/lint/l2_approx/font_008.tex
+    expect: ["FONT-008"]
+    expect_msgs:
+      - "FONT-008:Multiple \setmainfont declarations"
+  - file: corpora/lint/l2_approx/math_032.tex
+    expect: ["MATH-032"]
+    expect_msgs:
+      - "MATH-032:Incorrect small matrix brackets"
+  - file: corpora/lint/l2_approx/math_054.tex
+    expect: ["MATH-054"]
+    expect_msgs:
+      - "MATH-054:Equation labelled 'eq:' without environment"
+  - file: corpora/lint/l2_approx/math_062.tex
+    expect: ["MATH-062"]
+    expect_msgs:
+      - "MATH-062:Multiline equation lacks alignment character &"
+  - file: corpora/lint/l2_approx/math_063.tex
+    expect: ["MATH-063"]
+    expect_msgs:
+      - "MATH-063:Equation array with > 1 alignment point"
+  - file: corpora/lint/l2_approx/math_100.tex
+    expect: ["MATH-100"]
+    expect_msgs:
+      - "MATH-100:Punctuation after equation missing (comma/period)"
+  - file: corpora/lint/l2_approx/math_023.tex
+    expect: ["MATH-023"]
+    expect_msgs:
+      - "MATH-023:Equation label missing although referenced"
+  - file: corpora/lint/l2_approx/math_024.tex
+    expect: ["MATH-024"]
+    expect_msgs:
+      - "MATH-024:Equation labelled but never referenced"
+  - file: corpora/lint/l2_approx/ref_010.tex
+    expect: ["REF-010"]
+    expect_msgs:
+      - "REF-010:Figure referenced before first mention in text"

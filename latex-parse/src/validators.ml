@@ -6638,6 +6638,456 @@ let r_cjk_006 : rule =
   in
   { id = "CJK-006"; run }
 
+(* ── FONT-006: Missing \microtypesetup{expansion=true} ─────────────── *)
+(* Fire if \usepackage{microtype} is present but \microtypesetup{expansion=true}
+   is absent *)
+let r_font_006 : rule =
+  let re_setup =
+    Str.regexp {|\\microtypesetup{[^}]*expansion[ ]*=[ ]*true[^}]*}|}
+  in
+  let run s =
+    if has_package s "microtype" then
+      let found =
+        try
+          ignore (Str.search_forward re_setup s 0);
+          true
+        with Not_found -> false
+      in
+      if not found then
+        Some
+          {
+            id = "FONT-006";
+            severity = Info;
+            message = {|Missing \microtypesetup{expansion=true}|};
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "FONT-006"; run }
+
+(* ── FONT-007: Obsolete \usepackage[T1]{fontenc} under XeLaTeX ──────── *)
+(* Fire if \usepackage[T1]{fontenc} is present AND there is evidence of XeLaTeX
+   usage (fontspec, xeCJK, or ifxetex) *)
+let r_font_007 : rule =
+  let re_fontenc = Str.regexp {|\\usepackage\[T1\]{fontenc}|} in
+  let run s =
+    let has_fontenc =
+      try
+        ignore (Str.search_forward re_fontenc s 0);
+        true
+      with Not_found -> false
+    in
+    if has_fontenc then
+      let xelatex =
+        has_package s "fontspec"
+        || has_package s "xeCJK"
+        || has_package s "ifxetex"
+      in
+      if xelatex then
+        Some
+          {
+            id = "FONT-007";
+            severity = Warning;
+            message = {|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|};
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "FONT-007"; run }
+
+(* ── FONT-008: Multiple \setmainfont declarations ────────────────────── *)
+let r_font_008 : rule =
+  let re = Str.regexp {|\\setmainfont\(\[\|{\)|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 1 then
+      Some
+        {
+          id = "FONT-008";
+          severity = Warning;
+          message = "Multiple \\setmainfont declarations";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-008"; run }
+
+(* ── MATH-032: Incorrect small matrix brackets ───────────────────────── *)
+(* In LaTeX, \begin{smallmatrix} should be wrapped in appropriate delimiters:
+   \bigl( ... \bigr) or \left( ... \right) etc. If wrapped in [ ] brackets, the
+   correct environment is bsmallmatrix. Fire if \begin{smallmatrix} is found
+   inside [ ] delimiters. *)
+let r_math_032 : rule =
+  let re = Str.regexp_string "\\begin{smallmatrix}" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re s !i in
+         (* Look backwards for opening delimiter *)
+         let j = ref (pos - 1) in
+         while !j >= 0 && (s.[!j] = ' ' || s.[!j] = '\n' || s.[!j] = '\r') do
+           decr j
+         done;
+         if !j >= 0 && s.[!j] = '[' then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-032";
+          severity = Warning;
+          message = "Incorrect small matrix brackets";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-032"; run }
+
+(* ── MATH-054: Equation labelled 'eq:' without environment ──────────── *)
+(* Fire if \label{eq:...} appears outside known equation environments *)
+let r_math_054 : rule =
+  let re_label = Str.regexp {|\\label{eq:[^}]*}|} in
+  let eq_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "flalign";
+      "flalign*";
+      "alignat";
+      "alignat*";
+      "eqnarray";
+      "eqnarray*";
+    ]
+  in
+  let run s =
+    (* Collect all ranges covered by equation environments *)
+    let eq_ranges = ref [] in
+    List.iter
+      (fun env ->
+        let open_tag = "\\begin{" ^ env ^ "}" in
+        let close_tag = "\\end{" ^ env ^ "}" in
+        let open_len = String.length open_tag in
+        let close_len = String.length close_tag in
+        let n = String.length s in
+        let i = ref 0 in
+        while !i <= n - open_len do
+          if String.sub s !i open_len = open_tag then (
+            let start = !i in
+            i := !i + open_len;
+            let found = ref false in
+            while !i <= n - close_len && not !found do
+              if String.sub s !i close_len = close_tag then (
+                eq_ranges := (start, !i + close_len) :: !eq_ranges;
+                i := !i + close_len;
+                found := true)
+              else incr i
+            done;
+            if not !found then i := n)
+          else incr i
+        done)
+      eq_envs;
+    let ranges = !eq_ranges in
+    (* Find \label{eq:...} outside any equation range *)
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_label s !i in
+         let inside =
+           List.exists (fun (lo, hi) -> pos >= lo && pos < hi) ranges
+         in
+         if not inside then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-054";
+          severity = Warning;
+          message = {|Equation labelled 'eq:' without environment|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-054"; run }
+
+(* ── MATH-062: Multiline equation lacks alignment character & ────────── *)
+(* Fire if an align, align*, flalign, flalign*, alignat, alignat* environment
+   contains no & character *)
+let r_math_062 : rule =
+  let align_envs =
+    [ "align"; "align*"; "flalign"; "flalign*"; "alignat"; "alignat*" ]
+  in
+  let run s =
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun body -> if not (String.contains body '&') then incr cnt)
+          blocks)
+      align_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-062";
+          severity = Warning;
+          message = "Multiline equation lacks alignment character &";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-062"; run }
+
+(* ── MATH-063: Equation array with > 1 alignment point ──────────────── *)
+(* In eqnarray, each line should have at most 2 & (for 3 columns). Fire if any
+   line has more than 2 & characters. Also check split environments which should
+   have exactly 1 &. *)
+let r_math_063 : rule =
+  let run s =
+    let cnt = ref 0 in
+    (* eqnarray: more than 2 & per line *)
+    let eqn_envs = [ "eqnarray"; "eqnarray*" ] in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun body ->
+            let lines = String.split_on_char '\\' body in
+            List.iter
+              (fun line ->
+                let amps =
+                  String.fold_left
+                    (fun acc c -> if c = '&' then acc + 1 else acc)
+                    0 line
+                in
+                if amps > 2 then incr cnt)
+              lines)
+          blocks)
+      eqn_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-063";
+          severity = Warning;
+          message = "Equation array with > 1 alignment point";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-063"; run }
+
+(* ── MATH-100: Punctuation after equation missing (comma/period) ─────── *)
+(* Fire if a display equation environment ends without a comma, period, or
+   semicolon before \end{...} *)
+let r_math_100 : rule =
+  let display_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "flalign";
+      "flalign*";
+    ]
+  in
+  let run s =
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun body ->
+            (* Strip trailing whitespace *)
+            let b = String.trim body in
+            let n = String.length b in
+            if n > 0 then
+              let last = b.[n - 1] in
+              if last <> ',' && last <> '.' && last <> ';' then incr cnt)
+          blocks)
+      display_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-100";
+          severity = Info;
+          message = "Punctuation after equation missing (comma/period)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-100"; run }
+
+(* ── Helper: extract all \label{prefix:...} keys ──────────────────────── *)
+let extract_labels_with_prefix (prefix : string) (s : string) :
+    (int * string) list =
+  let re = Str.regexp ("\\\\label{" ^ Str.quote prefix ^ "\\([^}]*\\)}") in
+  let results = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let pos = Str.search_forward re s !i in
+       let key = Str.matched_group 1 s in
+       results := (pos, prefix ^ key) :: !results;
+       i := Str.match_end ()
+     done
+   with Not_found -> ());
+  List.rev !results
+
+(* ── Helper: extract all \ref{prefix:...}, \eqref{prefix:...},
+   \autoref{prefix:...}, \cref{prefix:...} keys ──────────── *)
+let extract_refs_with_prefix (prefix : string) (s : string) :
+    (int * string) list =
+  let re =
+    Str.regexp
+      ("\\\\\\(eq\\)?ref{"
+      ^ Str.quote prefix
+      ^ "\\([^}]*\\)}"
+      ^ "\\|\\\\autoref{"
+      ^ Str.quote prefix
+      ^ "\\([^}]*\\)}"
+      ^ "\\|\\\\cref{"
+      ^ Str.quote prefix
+      ^ "\\([^}]*\\)}"
+      ^ "\\|\\\\Cref{"
+      ^ Str.quote prefix
+      ^ "\\([^}]*\\)}")
+  in
+  let results = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let pos = Str.search_forward re s !i in
+       (* Try each group to find the match *)
+       let key =
+         try Str.matched_group 2 s
+         with Not_found -> (
+           try Str.matched_group 3 s
+           with Not_found -> (
+             try Str.matched_group 4 s with Not_found -> Str.matched_group 5 s))
+       in
+       results := (pos, prefix ^ key) :: !results;
+       i := Str.match_end ()
+     done
+   with Not_found -> ());
+  List.rev !results
+
+(* ── MATH-023: Equation label missing although referenced ────────────── *)
+let r_math_023 : rule =
+  let run s =
+    let labels = extract_labels_with_prefix "eq:" s in
+    let refs = extract_refs_with_prefix "eq:" s in
+    let label_keys =
+      List.fold_left
+        (fun acc (_pos, key) -> if List.mem key acc then acc else key :: acc)
+        [] labels
+    in
+    let cnt = ref 0 in
+    List.iter
+      (fun (_pos, key) ->
+        if not (List.mem key label_keys) then
+          (* Only count each missing label once *)
+          if not (List.exists (fun (_p2, k2) -> k2 = key && _p2 < _pos) refs)
+          then incr cnt)
+      refs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-023";
+          severity = Warning;
+          message = "Equation label missing although referenced";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-023"; run }
+
+(* ── MATH-024: Equation labelled but never referenced ────────────────── *)
+let r_math_024 : rule =
+  let run s =
+    let labels = extract_labels_with_prefix "eq:" s in
+    let refs = extract_refs_with_prefix "eq:" s in
+    let ref_keys =
+      List.fold_left
+        (fun acc (_pos, key) -> if List.mem key acc then acc else key :: acc)
+        [] refs
+    in
+    let cnt = ref 0 in
+    List.iter
+      (fun (_pos, key) -> if not (List.mem key ref_keys) then incr cnt)
+      labels;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-024";
+          severity = Info;
+          message = "Equation labelled but never referenced";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-024"; run }
+
+(* ── REF-010: Figure referenced before first mention in text ─────────── *)
+(* Fire if \ref{fig:X} appears at a position before the \label{fig:X} *)
+let r_ref_010 : rule =
+  let run s =
+    let labels = extract_labels_with_prefix "fig:" s in
+    let refs = extract_refs_with_prefix "fig:" s in
+    let cnt = ref 0 in
+    (* For each unique ref key, check if first ref precedes label *)
+    let checked = ref [] in
+    List.iter
+      (fun (ref_pos, key) ->
+        if not (List.mem key !checked) then (
+          checked := key :: !checked;
+          (* Find label position for this key *)
+          let label_pos =
+            try
+              let lpos, _ = List.find (fun (_p, k) -> k = key) labels in
+              Some lpos
+            with Not_found -> None
+          in
+          match label_pos with
+          | Some lpos -> if ref_pos < lpos then incr cnt
+          | None -> ()))
+      refs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-010";
+          severity = Info;
+          message = "Figure referenced before first mention in text";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-010"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -6654,6 +7104,17 @@ let rules_l2_approx : rule list =
     r_pkg_005;
     r_cjk_004;
     r_cjk_006;
+    r_font_006;
+    r_font_007;
+    r_font_008;
+    r_math_032;
+    r_math_054;
+    r_math_062;
+    r_math_063;
+    r_math_100;
+    r_math_023;
+    r_math_024;
+    r_ref_010;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)
@@ -12855,6 +13316,9 @@ let precondition_of_rule_id (id : string) : layer =
   | "TYPO-059" -> L1
   | "MATH-083" -> L0
   | "MATH-023" | "MATH-024" -> L2
+  | "MATH-032" | "MATH-054" | "MATH-062" | "MATH-063" | "MATH-100" -> L2
+  | "FONT-006" | "FONT-007" | "FONT-008" -> L2
+  | "REF-010" -> L2
   | "MATH-026" | "MATH-027" -> L3
   (* CMD-001, CMD-003, CMD-007, CMD-010 need expanded text = L1 *)
   | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1

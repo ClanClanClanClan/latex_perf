@@ -211,12 +211,32 @@ Week 19 — L2-Approximable Rules Batch 1 (FIG, TAB, PKG, CJK)
 - 363/363 messages match spec, 0 mismatches
 - All dune build, dune runtest, dune fmt: exit 0
 
-Current State (Post Week 19 / Phase 2 Active)
-- Validators: 373 rules implemented out of 623 spec rules (59.9%)
+Week 20 — L2-Approximable Rules Batch 2 (FONT, MATH, REF cross-ref)
+- 11 new validators via structural text scanning:
+  - FONT-006: Missing \microtypesetup{expansion=true} (package + setup detection)
+  - FONT-007: Obsolete \usepackage[T1]{fontenc} under XeLaTeX (package co-occurrence)
+  - FONT-008: Multiple \setmainfont declarations (occurrence counting)
+  - MATH-032: Incorrect small matrix brackets (delimiter context scan)
+  - MATH-054: Equation labelled 'eq:' without environment (range exclusion)
+  - MATH-062: Multiline equation lacks alignment character & (env block scan)
+  - MATH-063: Equation array with > 1 alignment point (per-line & counting)
+  - MATH-100: Punctuation after equation missing (trailing char check)
+  - MATH-023: Equation label missing although referenced (cross-reference analysis)
+  - MATH-024: Equation labelled but never referenced (cross-reference analysis)
+  - REF-010: Figure referenced before first mention in text (position comparison)
+- New helpers: extract_labels_with_prefix, extract_refs_with_prefix
+- 85 new unit tests (191 total in test_validators_l2_approx.ml)
+- 11 corpus files in corpora/lint/l2_approx/
+- 11 golden entries (140 total golden cases, all pass)
+- 374/374 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Current State (Post Week 20 / Phase 2 Active)
+- Validators: 384 rules implemented out of 623 spec rules (61.6%)
   - Y1 target: 180 rules — well exceeded (2x+)
   - L0/L1: 100% actionable (333 impl + 12 Reserved)
-  - L2-approx: 14 rules (FIG, TAB, PKG, CJK structure checks)
-  - Remaining: 250 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
+  - L2-approx: 25 rules (FIG, TAB, PKG, CJK, FONT, MATH, REF)
+  - Remaining: 239 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms

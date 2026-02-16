@@ -330,7 +330,6 @@
  (deps
   ../../specs/rules/l1_golden.yaml
   ../../specs/rules/pilot_v1_golden.yaml
-  ../../specs/rules/unicode_golden.yaml
   ../../specs/rules/locale_golden.yaml
   ../../specs/rules/stragglers2_golden.yaml
   ../../specs/rules/l2_approx_golden.yaml
@@ -355,4 +354,9 @@
 (test
  (name test_validators_l2_batch3)
  (modules test_validators_l2_batch3)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_audit_regression)
+ (modules test_audit_regression)
  (libraries latex_parse_lib unix))

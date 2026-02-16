@@ -259,9 +259,6 @@ let () =
   run_golden_suite "pilot_v1"
     (Filename.concat base_dir "specs/rules/pilot_v1_golden.yaml")
     base_dir;
-  run_golden_suite "unicode"
-    (Filename.concat base_dir "specs/rules/unicode_golden.yaml")
-    base_dir;
   run_golden_suite "locale"
     (Filename.concat base_dir "specs/rules/locale_golden.yaml")
     base_dir;

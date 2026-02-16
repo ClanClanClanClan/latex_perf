@@ -6864,16 +6864,16 @@ let r_math_062 : rule =
    line has more than 2 & characters. Also check split environments which should
    have exactly 1 &. *)
 let r_math_063 : rule =
+  let linebreak_re = Str.regexp_string "\\\\" in
   let run s =
     let cnt = ref 0 in
-    (* eqnarray: more than 2 & per line *)
     let eqn_envs = [ "eqnarray"; "eqnarray*" ] in
     List.iter
       (fun env ->
         let blocks = extract_env_blocks env s in
         List.iter
           (fun body ->
-            let lines = String.split_on_char '\\' body in
+            let lines = Str.split linebreak_re body in
             List.iter
               (fun line ->
                 let amps =
@@ -7120,16 +7120,46 @@ let r_cmd_014 : rule =
   in
   { id = "CMD-014"; run }
 
+(* ── Helper: extract document class name ─────────────────────────────── *)
+(* Matches \documentclass[opts]{classname} or \documentclass{classname}. *)
+let extract_docclass (s : string) : string option =
+  let re = Str.regexp "\\\\documentclass\\(\\[[^]]*\\]\\)?{\\([^}]+\\)}" in
+  try
+    ignore (Str.search_forward re s 0);
+    Some (Str.matched_group 2 s)
+  with Not_found -> None
+
+(* Document classes that conventionally require \maketitle and abstract. *)
+let article_like_classes =
+  [
+    "article";
+    "report";
+    "scrartcl";
+    "scrreprt";
+    "scrbook";
+    "amsart";
+    "IEEEtran";
+    "llncs";
+    "acmart";
+    "revtex4-2";
+    "elsarticle";
+    "svjour3";
+    "memoir";
+    "book";
+  ]
+
+let is_article_like (s : string) : bool =
+  match extract_docclass s with
+  | None -> false
+  | Some cls -> List.mem cls article_like_classes
+
 (* ── DOC-001: Title missing \maketitle ───────────────────────────────── *)
+(* Only fires for article-like document classes that conventionally use
+   \maketitle. Skips beamer, letter, standalone, etc. *)
 let r_doc_001 : rule =
   let run s =
-    let has_doc =
-      try
-        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
-        true
-      with Not_found -> false
-    in
-    if has_doc then
+    if not (is_article_like s) then None
+    else
       let has_maketitle =
         try
           ignore (Str.search_forward (Str.regexp_string "\\maketitle") s 0);
@@ -7145,20 +7175,15 @@ let r_doc_001 : rule =
             count = 1;
           }
       else None
-    else None
   in
   { id = "DOC-001"; run }
 
 (* ── DOC-002: Abstract environment missing ───────────────────────────── *)
+(* Only fires for article-like document classes. *)
 let r_doc_002 : rule =
   let run s =
-    let has_doc =
-      try
-        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
-        true
-      with Not_found -> false
-    in
-    if has_doc then
+    if not (is_article_like s) then None
+    else
       let has_abstract =
         try
           ignore
@@ -7175,20 +7200,15 @@ let r_doc_002 : rule =
             count = 1;
           }
       else None
-    else None
   in
   { id = "DOC-002"; run }
 
 (* ── DOC-003: Keywords missing ───────────────────────────────────────── *)
+(* Only fires for article-like document classes. *)
 let r_doc_003 : rule =
   let run s =
-    let has_doc =
-      try
-        ignore (Str.search_forward (Str.regexp_string "\\begin{document}") s 0);
-        true
-      with Not_found -> false
-    in
-    if has_doc then
+    if not (is_article_like s) then None
+    else
       let has_keywords =
         try
           ignore (Str.search_forward (Str.regexp_string "\\keywords{") s 0);
@@ -7204,7 +7224,6 @@ let r_doc_003 : rule =
             count = 1;
           }
       else None
-    else None
   in
   { id = "DOC-003"; run }
 
@@ -7360,18 +7379,25 @@ let r_tab_014 : rule =
   { id = "TAB-014"; run }
 
 (* ── PKG-007: hyperref loaded before geometry ────────────────────────── *)
+(* Uses first-occurrence position for each package (consistent with PKG-002). *)
 let r_pkg_007 : rule =
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages preamble in
     let hyp_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "hyperref" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "hyperref" then Some pos else None)
         None pkgs
     in
     let geo_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "geometry" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "geometry" then Some pos else None)
         None pkgs
     in
     match (hyp_pos, geo_pos) with
@@ -7563,12 +7589,18 @@ let r_pkg_023 : rule =
     let pkgs = extract_usepackages preamble in
     let umath_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "unicode-math" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "unicode-math" then Some pos else None)
         None pkgs
     in
     let micro_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "microtype" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "microtype" then Some pos else None)
         None pkgs
     in
     match (umath_pos, micro_pos) with
@@ -7639,12 +7671,18 @@ let r_tikz_007 : rule =
     let pkgs = extract_usepackages preamble in
     let tikz_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "tikz" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "tikz" then Some pos else None)
         None pkgs
     in
     let hyp_pos =
       List.fold_left
-        (fun acc (pos, name) -> if name = "hyperref" then Some pos else acc)
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "hyperref" then Some pos else None)
         None pkgs
     in
     match (tikz_pos, hyp_pos) with
@@ -7663,9 +7701,10 @@ let r_tikz_007 : rule =
   { id = "TIKZ-007"; run }
 
 (* ── FIG-010: Subfigure environment without \subcaption ──────────────── *)
+(* Check both subfigure and subfigure* environments. *)
 let r_fig_010 : rule =
   let run s =
-    let blocks = extract_env_blocks "subfigure" s in
+    let blocks = extract_env_blocks_starred "subfigure" s in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -7835,12 +7874,13 @@ let r_cmd_004 : rule =
   { id = "CMD-004"; run }
 
 (* CMD-005: Single-letter macro created *)
+(* Two patterns: (1) \newcommand{\X} / \renewcommand{\X} with braces around the
+   single-letter name; (2) \def\X where X is a single letter followed by a
+   non-letter (space, brace, digit, etc.). *)
 let r_cmd_005 : rule =
-  let re =
-    Str.regexp
-      "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n]*{?\\\\[a-zA-Z]}"
-  in
-  let run s =
+  let re_cmd = Str.regexp "\\\\\\(newcommand\\|renewcommand\\){\\\\[a-zA-Z]}" in
+  let re_def = Str.regexp "\\\\def\\\\\\([a-zA-Z]\\)[^a-zA-Z]" in
+  let count_matches re s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
@@ -7850,13 +7890,17 @@ let r_cmd_005 : rule =
          i := Str.match_end ()
        done
      with Not_found -> ());
-    if !cnt > 0 then
+    !cnt
+  in
+  let run s =
+    let cnt = count_matches re_cmd s + count_matches re_def s in
+    if cnt > 0 then
       Some
         {
           id = "CMD-005";
           severity = Warning;
           message = {|Single‑letter macro created (\x)|};
-          count = !cnt;
+          count = cnt;
         }
     else None
   in

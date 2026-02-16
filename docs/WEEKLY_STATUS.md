@@ -188,11 +188,35 @@ Week 18 — Locale Rules + Straggler Batch (PRs #133-134)
 - Golden corpus: 115 cases, all pass
 - All dune build, dune runtest, dune fmt: exit 0
 
-Current State (Post Week 18 / Phase 2 Active)
-- Validators: 359 rules implemented out of 623 spec rules (57.6%)
-  - Y1 target: 180 rules — well exceeded (2x)
+Week 19 — L2-Approximable Rules Batch 1 (FIG, TAB, PKG, CJK)
+- 14 new validators via structural text scanning (L2-specced rules with L0/L1 implementation):
+  - FIG-001: Figure without caption (env block scanning)
+  - FIG-002: Figure without label
+  - FIG-003: Label before caption in figure (position comparison)
+  - FIG-007: Figure lacks alt text for accessibility (\includegraphics options scanning)
+  - FIG-009: Float position specifier ! used excessively (env opts extraction)
+  - TAB-001: Table lacks caption
+  - TAB-002: Caption below table (position of \caption vs \end{tabular})
+  - TAB-005: Vertical rules present in tabular (column spec | detection)
+  - PKG-001: Package duplicate inclusion detected (preamble usepackage tracking)
+  - PKG-002: geometry loaded after hyperref (package ordering)
+  - PKG-004: Package loaded after \begin{document} (body usepackage detection)
+  - PKG-005: Unknown option for geometry (known-option set matching)
+  - CJK-004: xeCJK package missing when CJK glyphs present (byte-level CJK scan)
+  - CJK-006: Ruby annotation requires ruby package
+- New helpers: extract_env_blocks_with_opts, extract_preamble, extract_usepackages
+- 53 unit tests in test_validators_l2_approx.ml
+- 14 corpus files in corpora/lint/l2_approx/
+- 14 golden entries in l2_approx_golden.yaml (129 total golden cases, all pass)
+- 363/363 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Current State (Post Week 19 / Phase 2 Active)
+- Validators: 373 rules implemented out of 623 spec rules (59.9%)
+  - Y1 target: 180 rules — well exceeded (2x+)
   - L0/L1: 100% actionable (333 impl + 12 Reserved)
-  - Remaining: 264 rules (mostly L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
+  - L2-approx: 14 rules (FIG, TAB, PKG, CJK structure checks)
+  - Remaining: 250 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms

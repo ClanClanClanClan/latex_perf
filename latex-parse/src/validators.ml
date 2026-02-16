@@ -5961,6 +5961,642 @@ let rules_stragglers : rule list =
     r_typo_050;
   ]
 
+(* ══════════════════════════════════════════════════════════════════════
+   L2-approximable rules: figure, table, package, CJK structure checks These are
+   specced at L2_Ast but implemented via structural text scanning
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* ── Helper: extract env blocks with optional args ───────────────────── *)
+(* Returns list of (optional_args_string, body_string) for each
+   \begin{env}[opts]...\end{env} *)
+let extract_env_blocks_with_opts (env : string) (s : string) :
+    (string * string) list =
+  let open_tag = "\\begin{" ^ env ^ "}" in
+  let close_tag = "\\end{" ^ env ^ "}" in
+  let open_len = String.length open_tag in
+  let close_len = String.length close_tag in
+  let n = String.length s in
+  let blocks = ref [] in
+  let i = ref 0 in
+  while !i <= n - open_len do
+    if String.sub s !i open_len = open_tag then (
+      let after_open = !i + open_len in
+      (* extract optional [...] if present *)
+      let opts = ref "" in
+      let content_start = ref after_open in
+      if !content_start < n && s.[!content_start] = '[' then (
+        let bracket_start = !content_start + 1 in
+        let j = ref bracket_start in
+        while !j < n && s.[!j] <> ']' do
+          incr j
+        done;
+        if !j < n then (
+          opts := String.sub s bracket_start (!j - bracket_start);
+          content_start := !j + 1));
+      (* find matching \end{env} *)
+      let found = ref false in
+      let j = ref !content_start in
+      while !j <= n - close_len && not !found do
+        if String.sub s !j close_len = close_tag then (
+          blocks :=
+            (!opts, String.sub s !content_start (!j - !content_start))
+            :: !blocks;
+          i := !j + close_len;
+          found := true)
+        else incr j
+      done;
+      if not !found then i := n)
+    else incr i
+  done;
+  List.rev !blocks
+
+(* ── Helper: extract preamble (everything before \begin{document}) ──── *)
+let extract_preamble (s : string) : string =
+  let tag = "\\begin{document}" in
+  let tlen = String.length tag in
+  let n = String.length s in
+  let i = ref 0 in
+  let pos = ref n in
+  while !i <= n - tlen do
+    if String.sub s !i tlen = tag then (
+      pos := !i;
+      i := n)
+    else incr i
+  done;
+  String.sub s 0 !pos
+
+(* ── Helper: extract all \usepackage occurrences with positions ─────── *)
+(* Returns list of (position, package_name) *)
+let extract_usepackages (s : string) : (int * string) list =
+  let re = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
+  let results = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let pos = Str.search_forward re s !i in
+       let after_brace = Str.match_end () in
+       (* find closing brace *)
+       let j = ref after_brace in
+       while !j < String.length s && s.[!j] <> '}' do
+         incr j
+       done;
+       (if !j < String.length s then
+          let pkg_str = String.sub s after_brace (!j - after_brace) in
+          (* handle comma-separated packages *)
+          let pkgs = String.split_on_char ',' pkg_str in
+          List.iter
+            (fun p ->
+              let p = String.trim p in
+              if p <> "" then results := (pos, p) :: !results)
+            pkgs);
+       i := !j + 1
+     done
+   with Not_found -> ());
+  List.rev !results
+
+(* ── FIG-001: Figure without caption ─────────────────────────────────── *)
+let r_fig_001 : rule =
+  let run s =
+    let blocks = extract_env_blocks "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          if count_substring body "\\caption" = 0 then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-001";
+          severity = Warning;
+          message = "Figure without caption";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-001"; run }
+
+(* ── FIG-002: Figure without label ───────────────────────────────────── *)
+let r_fig_002 : rule =
+  let run s =
+    let blocks = extract_env_blocks "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          if count_substring body "\\label" = 0 then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-002";
+          severity = Warning;
+          message = "Figure without label";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-002"; run }
+
+(* ── FIG-003: Label before caption in figure ─────────────────────────── *)
+let r_fig_003 : rule =
+  let run s =
+    let blocks = extract_env_blocks "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let label_pos =
+            try Some (Str.search_forward (Str.regexp_string "\\label") body 0)
+            with Not_found -> None
+          in
+          let caption_pos =
+            try Some (Str.search_forward (Str.regexp_string "\\caption") body 0)
+            with Not_found -> None
+          in
+          match (label_pos, caption_pos) with
+          | Some lp, Some cp when lp < cp -> acc + 1
+          | _ -> acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-003";
+          severity = Info;
+          message = "Label before caption in figure";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-003"; run }
+
+(* ── FIG-007: Figure lacks alt text for accessibility ────────────────── *)
+let r_fig_007 : rule =
+  let re_includegraphics = Str.regexp_string "\\includegraphics" in
+  let run s =
+    let blocks = extract_env_blocks "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          (* count \includegraphics without alt= in their options *)
+          let c = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               let pos = Str.search_forward re_includegraphics body !i in
+               let after = pos + 16 in
+               (* \includegraphics = 16 chars *)
+               (* check if followed by [...] containing alt= *)
+               let has_alt =
+                 if after < String.length body && body.[after] = '[' then (
+                   let j = ref (after + 1) in
+                   while !j < String.length body && body.[!j] <> ']' do
+                     incr j
+                   done;
+                   if !j < String.length body then
+                     let opts = String.sub body (after + 1) (!j - after - 1) in
+                     count_substring opts "alt=" > 0
+                   else false)
+                 else false
+               in
+               if not has_alt then incr c;
+               i := after
+             done
+           with Not_found -> ());
+          acc + !c)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-007";
+          severity = Info;
+          message = {|Figure lacks alt text for accessibility|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-007"; run }
+
+(* ── FIG-009: Float position specifier ! used excessively ────────────── *)
+let r_fig_009 : rule =
+  let run s =
+    (* count \begin{figure}[...!...] or \begin{table}[...!...] *)
+    let cnt = ref 0 in
+    let envs = [ "figure"; "table"; "figure*"; "table*" ] in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks_with_opts env s in
+        List.iter
+          (fun (opts, _body) -> if String.contains opts '!' then incr cnt)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "FIG-009";
+          severity = Info;
+          message = "Float position specifier ! used excessively";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FIG-009"; run }
+
+(* ── TAB-001: Table lacks caption ────────────────────────────────────── *)
+let r_tab_001 : rule =
+  let run s =
+    let blocks = extract_env_blocks "table" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          if count_substring body "\\caption" = 0 then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-001";
+          severity = Warning;
+          message = "Table lacks caption";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-001"; run }
+
+(* ── TAB-002: Caption below table (journal requires above) ──────────── *)
+let r_tab_002 : rule =
+  let run s =
+    let blocks = extract_env_blocks "table" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          (* Check if \caption appears after \end{tabular} *)
+          let tabular_end_pos =
+            try
+              let p =
+                Str.search_forward (Str.regexp_string "\\end{tabular}") body 0
+              in
+              Some p
+            with Not_found -> None
+          in
+          let caption_pos =
+            try Some (Str.search_forward (Str.regexp_string "\\caption") body 0)
+            with Not_found -> None
+          in
+          match (tabular_end_pos, caption_pos) with
+          | Some tp, Some cp when cp > tp -> acc + 1
+          | _ -> acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-002";
+          severity = Info;
+          message = "Caption below table (journal requires above)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-002"; run }
+
+(* ── TAB-005: Vertical rules present in tabular ─────────────────────── *)
+let r_tab_005 : rule =
+  let run s =
+    (* Find \begin{tabular}{...} and check for | in the column spec *)
+    let re = Str.regexp {|\\begin{tabular\*?}{|} in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         let after = Str.match_end () in
+         (* find the closing } of column spec *)
+         let depth = ref 1 in
+         let j = ref after in
+         while !j < String.length s && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         (if !j > after then
+            let col_spec = String.sub s after (!j - after) in
+            if String.contains col_spec '|' then incr cnt);
+         i := !j + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TAB-005";
+          severity = Info;
+          message = "Vertical rules present in tabular";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TAB-005"; run }
+
+(* ── PKG-001: Package duplicate inclusion detected ───────────────────── *)
+let r_pkg_001 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let seen = Hashtbl.create 16 in
+    let cnt = ref 0 in
+    List.iter
+      (fun (_pos, pkg) ->
+        if Hashtbl.mem seen pkg then incr cnt else Hashtbl.add seen pkg true)
+      pkgs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "PKG-001";
+          severity = Warning;
+          message = "Package duplicate inclusion detected";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PKG-001"; run }
+
+(* ── PKG-002: geometry loaded after hyperref — must precede ──────────── *)
+let r_pkg_002 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let geom_pos = ref (-1) in
+    let hyper_pos = ref (-1) in
+    List.iter
+      (fun (pos, pkg) ->
+        if pkg = "geometry" && !geom_pos < 0 then geom_pos := pos;
+        if pkg = "hyperref" && !hyper_pos < 0 then hyper_pos := pos)
+      pkgs;
+    if !geom_pos >= 0 && !hyper_pos >= 0 && !geom_pos > !hyper_pos then
+      Some
+        {
+          id = "PKG-002";
+          severity = Error;
+          message = {|geometry loaded after hyperref – must precede|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-002"; run }
+
+(* ── PKG-004: Package loaded after \begin{document} ──────────────────── *)
+let r_pkg_004 : rule =
+  let re_usepackage = Str.regexp_string "\\usepackage" in
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body ->
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let _ = Str.search_forward re_usepackage body !i in
+             incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "PKG-004";
+              severity = Error;
+              message = {esc|Package loaded after \begin{document}|esc};
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "PKG-004"; run }
+
+(* ── PKG-005: Unknown option for geometry ────────────────────────────── *)
+let r_pkg_005 : rule =
+  (* Known geometry options — comprehensive list *)
+  let known_opts =
+    [
+      "a0paper";
+      "a1paper";
+      "a2paper";
+      "a3paper";
+      "a4paper";
+      "a5paper";
+      "a6paper";
+      "b0paper";
+      "b1paper";
+      "b2paper";
+      "b3paper";
+      "b4paper";
+      "b5paper";
+      "b6paper";
+      "letterpaper";
+      "legalpaper";
+      "executivepaper";
+      "landscape";
+      "portrait";
+      "top";
+      "bottom";
+      "left";
+      "right";
+      "inner";
+      "outer";
+      "hmargin";
+      "vmargin";
+      "margin";
+      "textheight";
+      "textwidth";
+      "paperheight";
+      "paperwidth";
+      "headheight";
+      "headsep";
+      "footskip";
+      "marginparsep";
+      "marginparwidth";
+      "columnsep";
+      "hoffset";
+      "voffset";
+      "bindingoffset";
+      "twoside";
+      "asymmetric";
+      "includeheadfoot";
+      "includehead";
+      "includefoot";
+      "includemp";
+      "centering";
+      "scale";
+      "hscale";
+      "vscale";
+      "heightrounded";
+      "hratio";
+      "vratio";
+      "lines";
+      "pass";
+      "reset";
+      "mag";
+      "truedimen";
+      "showframe";
+      "verbose";
+      "nohead";
+      "nofoot";
+      "noheadfoot";
+      "nomarginpar";
+      "driver";
+      "pdftex";
+      "xetex";
+      "luatex";
+      "dvips";
+      "dvipdfm";
+      "dvipdfmx";
+      "total";
+      "body";
+      "paper";
+      "lmargin";
+      "rmargin";
+      "tmargin";
+      "bmargin";
+      "ignoreall";
+      "ignorehead";
+      "ignorefoot";
+      "ignoremp";
+    ]
+  in
+  let known_set = Hashtbl.create 128 in
+  let () = List.iter (fun o -> Hashtbl.add known_set o true) known_opts in
+  let re_geom_opts = Str.regexp {|\\usepackage\[\([^]]*\)\]{geometry}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re_geom_opts s !i in
+         let opts_str = Str.matched_group 1 s in
+         let opts = String.split_on_char ',' opts_str in
+         List.iter
+           (fun o ->
+             let o = String.trim o in
+             (* strip key=value to get just key *)
+             let key =
+               match String.index_opt o '=' with
+               | Some idx -> String.trim (String.sub o 0 idx)
+               | None -> o
+             in
+             if key <> "" && not (Hashtbl.mem known_set key) then incr cnt)
+           opts;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "PKG-005";
+          severity = Warning;
+          message = "Unknown option for geometry";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PKG-005"; run }
+
+(* ── CJK-004: xeCJK package missing when CJK glyphs present ─────────── *)
+let r_cjk_004 : rule =
+  let run s =
+    (* Check if CJK characters present (U+4E00..U+9FFF, U+3400..U+4DBF) *)
+    let has_cjk = ref false in
+    let len = String.length s in
+    let i = ref 0 in
+    while !i < len - 2 && not !has_cjk do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 >= 0xe4 && b0 <= 0xe9 then (
+        (* potential CJK Unified Ideograph: U+4E00..U+9FFF = E4 B8 80..E9 BF BF *)
+        (* also U+3400..U+4DBF = E3 90 80..E4 B6 BF *)
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        if b1 >= 0x80 && b1 <= 0xbf && b2 >= 0x80 && b2 <= 0xbf then
+          has_cjk := true;
+        i := !i + 3)
+      else if b0 = 0xe3 then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+        if b1 >= 0x90 && b2 >= 0x80 then has_cjk := true;
+        i := !i + 3)
+      else if b0 >= 0x80 then
+        (* skip other multi-byte *)
+        if b0 >= 0xf0 then i := !i + 4
+        else if b0 >= 0xe0 then i := !i + 3
+        else i := !i + 2
+      else i := !i + 1
+    done;
+    if !has_cjk then
+      (* check if xeCJK or CJKutf8 is loaded *)
+      let has_xecjk = count_substring s "\\usepackage{xeCJK}" > 0 in
+      let has_cjkutf8 = count_substring s "\\usepackage{CJKutf8}" > 0 in
+      let has_ctex = count_substring s "\\usepackage{ctex}" > 0 in
+      if not (has_xecjk || has_cjkutf8 || has_ctex) then
+        Some
+          {
+            id = "CJK-004";
+            severity = Warning;
+            message = "xeCJK package missing when CJK glyphs present";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "CJK-004"; run }
+
+(* ── CJK-006: Ruby annotation requires ruby package ─────────────────── *)
+let r_cjk_006 : rule =
+  let re_ruby = Str.regexp_string "\\ruby{" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re_ruby s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      let has_ruby_pkg =
+        count_substring s "\\usepackage{ruby}" > 0
+        || count_substring s "\\usepackage{pxrubrica}" > 0
+        || count_substring s "\\usepackage{luatexja-ruby}" > 0
+      in
+      if not has_ruby_pkg then
+        Some
+          {
+            id = "CJK-006";
+            severity = Warning;
+            message = "Ruby annotation requires ruby package";
+            count = !cnt;
+          }
+      else None
+    else None
+  in
+  { id = "CJK-006"; run }
+
+let rules_l2_approx : rule list =
+  [
+    r_fig_001;
+    r_fig_002;
+    r_fig_003;
+    r_fig_007;
+    r_fig_009;
+    r_tab_001;
+    r_tab_002;
+    r_tab_005;
+    r_pkg_001;
+    r_pkg_002;
+    r_pkg_004;
+    r_pkg_005;
+    r_cjk_004;
+    r_cjk_006;
+  ]
+
 (* ── CMD rules: command definition checks ────────────────────────────── *)
 
 (* CMD-002: Command redefined with \def instead of \renewcommand *)
@@ -6297,6 +6933,7 @@ let rules_enc_char_spc : rule list =
   @ [ r_typo_062; r_math_083 ]
   @ rules_locale
   @ rules_stragglers
+  @ rules_l2_approx
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

@@ -1,0 +1,55 @@
+cases:
+  - file: corpora/lint/l2_batch4/pkg_008.tex
+    expect: ["PKG-008"]
+  - file: corpora/lint/l2_batch4/pkg_010.tex
+    expect: ["PKG-010"]
+  - file: corpora/lint/l2_batch4/pkg_013.tex
+    expect: ["PKG-013"]
+  - file: corpora/lint/l2_batch4/pkg_014.tex
+    expect: ["PKG-014"]
+  - file: corpora/lint/l2_batch4/pkg_016.tex
+    expect: ["PKG-016"]
+  - file: corpora/lint/l2_batch4/pkg_017.tex
+    expect: ["PKG-017"]
+  - file: corpora/lint/l2_batch4/pkg_021.tex
+    expect: ["PKG-021"]
+  - file: corpora/lint/l2_batch4/pkg_024.tex
+    expect: ["PKG-024"]
+  - file: corpora/lint/l2_batch4/pkg_025.tex
+    expect: ["PKG-025"]
+  - file: corpora/lint/l2_batch4/tab_003.tex
+    expect: ["TAB-003"]
+  - file: corpora/lint/l2_batch4/tab_007.tex
+    expect: ["TAB-007"]
+  - file: corpora/lint/l2_batch4/tab_008.tex
+    expect: ["TAB-008"]
+  - file: corpora/lint/l2_batch4/tab_012.tex
+    expect: ["TAB-012"]
+  - file: corpora/lint/l2_batch4/tab_013.tex
+    expect: ["TAB-013"]
+  - file: corpora/lint/l2_batch4/tab_015.tex
+    expect: ["TAB-015"]
+  - file: corpora/lint/l2_batch4/tab_016.tex
+    expect: ["TAB-016"]
+  - file: corpora/lint/l2_batch4/fig_012.tex
+    expect: ["FIG-012"]
+  - file: corpora/lint/l2_batch4/fig_014.tex
+    expect: ["FIG-014"]
+  - file: corpora/lint/l2_batch4/fig_017.tex
+    expect: ["FIG-017"]
+  - file: corpora/lint/l2_batch4/fig_019.tex
+    expect: ["FIG-019"]
+  - file: corpora/lint/l2_batch4/fig_022.tex
+    expect: ["FIG-022"]
+  - file: corpora/lint/l2_batch4/fig_024.tex
+    expect: ["FIG-024"]
+  - file: corpora/lint/l2_batch4/fig_025.tex
+    expect: ["FIG-025"]
+  - file: corpora/lint/l2_batch4/math_075.tex
+    expect: ["MATH-075"]
+  - file: corpora/lint/l2_batch4/math_080.tex
+    expect: ["MATH-080"]
+  - file: corpora/lint/l2_batch4/cmd_012.tex
+    expect: ["CMD-012"]
+  - file: corpora/lint/l2_batch4/doc_004.tex
+    expect: ["DOC-004"]

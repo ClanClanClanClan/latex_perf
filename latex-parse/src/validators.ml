@@ -7760,6 +7760,962 @@ let r_fig_013 : rule =
   in
   { id = "FIG-013"; run }
 
+(* ── Helper: extract usepackage with options ────────────────────────── *)
+(* Returns list of (position, options_string, package_name). Options may be ""
+   if no options bracket present. *)
+let extract_usepackages_with_opts (s : string) : (int * string * string) list =
+  let re = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
+  let results = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let pos = Str.search_forward re s !i in
+       let full = Str.matched_string s in
+       let after_brace = Str.match_end () in
+       let opts =
+         try
+           let _ = Str.search_forward (Str.regexp {|\[\([^]]*\)\]|}) full 0 in
+           Str.matched_group 1 full
+         with Not_found -> ""
+       in
+       let j = ref after_brace in
+       while !j < String.length s && s.[!j] <> '}' do
+         incr j
+       done;
+       (if !j < String.length s then
+          let pkg_str = String.sub s after_brace (!j - after_brace) in
+          let pkgs = String.split_on_char ',' pkg_str in
+          List.iter
+            (fun p ->
+              let p = String.trim p in
+              if p <> "" then results := (pos, opts, p) :: !results)
+            pkgs);
+       i := !j + 1
+     done
+   with Not_found -> ());
+  List.rev !results
+
+(* ── Helper: extract caption content from env body ──────────────────── *)
+let extract_caption_content (body : string) : string option =
+  let re = Str.regexp {|\\caption{|} in
+  try
+    let _ = Str.search_forward re body 0 in
+    let start = Str.match_end () in
+    let depth = ref 1 in
+    let j = ref start in
+    while !j < String.length body && !depth > 0 do
+      (match body.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+      if !depth > 0 then incr j
+    done;
+    if !depth = 0 then Some (String.sub body start (!j - start)) else None
+  with Not_found -> None
+
+(* ── PKG-008: xcolor loaded without dvipsnames option ────────────────── *)
+let r_pkg_008 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_xcolor_no_dvips =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "xcolor"
+          && not
+               (try
+                  ignore
+                    (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
+                  true
+                with Not_found -> false))
+        pkgs
+    in
+    if has_xcolor_no_dvips then
+      Some
+        {
+          id = "PKG-008";
+          severity = Info;
+          message = "xcolor loaded without dvipsnames option";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-008"; run }
+
+(* ── PKG-010: biblatex loaded with deprecated backend=biber ──────────── *)
+let r_pkg_010 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_deprecated =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "biblatex"
+          &&
+          try
+            ignore
+              (Str.search_forward (Str.regexp_string "backend=biber") opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    if has_deprecated then
+      Some
+        {
+          id = "PKG-010";
+          severity = Warning;
+          message = "biblatex loaded with deprecated backend=biber";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-010"; run }
+
+(* ── PKG-013: microtype not loaded on XeLaTeX path ───────────────────── *)
+(* If fontspec is present (implies XeLaTeX/LuaLaTeX) but microtype is not *)
+let r_pkg_013 : rule =
+  let run s =
+    if has_package s "fontspec" && not (has_package s "microtype") then
+      Some
+        {
+          id = "PKG-013";
+          severity = Warning;
+          message = "microtype not loaded on XeLaTeX path";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-013"; run }
+
+(* ── PKG-014: siunitx v2 API detected (outdated) ────────────────────── *)
+(* Detect \SI{, \si{, \num{ which are v2 commands. v3 uses \qty, \unit instead.
+   Only fire if siunitx is loaded. *)
+let r_pkg_014 : rule =
+  let re = Str.regexp {|\\\(SI\|si\|SIrange\){|} in
+  let run s =
+    if not (has_package s "siunitx") then None
+    else
+      let cnt = ref 0 in
+      let i = ref 0 in
+      (try
+         while true do
+           let _ = Str.search_forward re s !i in
+           incr cnt;
+           i := Str.match_end ()
+         done
+       with Not_found -> ());
+      if !cnt > 0 then
+        Some
+          {
+            id = "PKG-014";
+            severity = Warning;
+            message = "siunitx v2 API detected (outdated)";
+            count = !cnt;
+          }
+      else None
+  in
+  { id = "PKG-014"; run }
+
+(* ── PKG-016: graphicx option pdftex incompatible with engine ────────── *)
+let r_pkg_016 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_pdftex_opt =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "graphicx"
+          &&
+          try
+            ignore (Str.search_forward (Str.regexp_string "pdftex") opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    if has_pdftex_opt then
+      Some
+        {
+          id = "PKG-016";
+          severity = Warning;
+          message = "graphicx option pdftex incompatible with engine";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-016"; run }
+
+(* ── PKG-017: fontspec loaded in pdfLaTeX ────────────────────────────── *)
+(* Conservative: fire if fontspec is loaded AND pdfLaTeX markers present
+   ([T1]{fontenc} or [utf8]{inputenc}). *)
+let r_pkg_017 : rule =
+  let run s =
+    if not (has_package s "fontspec") then None
+    else
+      let preamble = extract_preamble s in
+      let pkgs = extract_usepackages_with_opts preamble in
+      let has_pdftex_marker =
+        List.exists
+          (fun (_pos, opts, name) ->
+            (name = "fontenc"
+            && String.length opts > 0
+            &&
+            try
+              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
+              true
+            with Not_found -> false)
+            || name = "inputenc"
+               && String.length opts > 0
+               &&
+               try
+                 ignore (Str.search_forward (Str.regexp_string "utf8") opts 0);
+                 true
+               with Not_found -> false)
+          pkgs
+      in
+      if has_pdftex_marker then
+        Some
+          {
+            id = "PKG-017";
+            severity = Error;
+            message = "fontspec loaded in pdfLaTeX";
+            count = 1;
+          }
+      else None
+  in
+  { id = "PKG-017"; run }
+
+(* ── PKG-021: Package loaded twice with conflicting options ──────────── *)
+let r_pkg_021 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    (* Group by package name, collect distinct option strings *)
+    let tbl = Hashtbl.create 16 in
+    List.iter
+      (fun (_pos, opts, name) ->
+        let existing = try Hashtbl.find tbl name with Not_found -> [] in
+        if not (List.mem opts existing) then
+          Hashtbl.replace tbl name (opts :: existing))
+      pkgs;
+    let cnt = ref 0 in
+    Hashtbl.iter
+      (fun _name opts_list -> if List.length opts_list > 1 then incr cnt)
+      tbl;
+    if !cnt > 0 then
+      Some
+        {
+          id = "PKG-021";
+          severity = Error;
+          message = "Package loaded twice with conflicting options";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PKG-021"; run }
+
+(* ── PKG-024: polyglossia language duplicated ────────────────────────── *)
+let r_pkg_024 : rule =
+  let re =
+    Str.regexp {|\\\(setdefaultlanguage\|setotherlanguage\){\([^}]+\)}|}
+  in
+  let run s =
+    let langs = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         let lang = Str.matched_group 2 s in
+         langs := lang :: !langs;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Check for duplicates *)
+    let seen = Hashtbl.create 8 in
+    let dups = ref 0 in
+    List.iter
+      (fun l ->
+        if Hashtbl.mem seen l then incr dups else Hashtbl.add seen l true)
+      (List.rev !langs);
+    if !dups > 0 then
+      Some
+        {
+          id = "PKG-024";
+          severity = Warning;
+          message = {|polyglossia language duplicated via \setdefaultlanguage|};
+          count = !dups;
+        }
+    else None
+  in
+  { id = "PKG-024"; run }
+
+(* ── PKG-025: Engine option mismatch ─────────────────────────────────── *)
+(* Detect contradictory engine indicators, e.g. fontspec (XeLaTeX/LuaLaTeX)
+   together with [T1]{fontenc} + [utf8]{inputenc} (pdfLaTeX). *)
+let r_pkg_025 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_xeluatex =
+      List.exists (fun (_, _, name) -> name = "fontspec") pkgs
+    in
+    let has_pdftex_enc =
+      List.exists
+        (fun (_, opts, name) ->
+          name = "fontenc"
+          &&
+          try
+            ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    let has_inputenc =
+      List.exists (fun (_, _, name) -> name = "inputenc") pkgs
+    in
+    if has_xeluatex && has_pdftex_enc && has_inputenc then
+      Some
+        {
+          id = "PKG-025";
+          severity = Warning;
+          message = "Engine option mismatch (xelatex=true on LuaLaTeX run)";
+          count = 1;
+        }
+    else None
+  in
+  { id = "PKG-025"; run }
+
+(* ── TAB-003: Decimal column not aligned on dot ─────────────────────── *)
+(* Fire if tabular uses l/c/r columns with numeric data containing '.' but no S
+   column or @{.} separator. *)
+let r_tab_003 : rule =
+  let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let run s =
+    let blocks =
+      extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
+    in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          (* check if body contains decimal numbers *)
+          let has_decimal =
+            try
+              ignore (Str.search_forward (Str.regexp {|[0-9]+\.[0-9]|}) body 0);
+              true
+            with Not_found -> false
+          in
+          if not has_decimal then acc
+          else
+            (* check if colspec has S column *)
+            let has_s_col =
+              try
+                let _ = Str.search_forward colspec_re s 0 in
+                let spec = Str.matched_group 1 s in
+                String.contains spec 'S'
+                ||
+                try
+                  ignore (Str.search_forward (Str.regexp_string "@{.}") spec 0);
+                  true
+                with Not_found -> false
+              with Not_found -> false
+            in
+            if has_s_col then acc else acc + 1)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-003";
+          severity = Info;
+          message = "Decimal column not aligned on dot";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-003"; run }
+
+(* ── TAB-007: Text in numeric column without \multicolumn ─────────── *)
+(* Fire if S-column tabular contains text rows without \multicolumn *)
+let r_tab_007 : rule =
+  let run s =
+    let blocks =
+      extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
+    in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          (* Check if tabular uses S columns *)
+          let has_s =
+            try
+              ignore (Str.search_forward (Str.regexp {|{[^}]*S[^}]*}|}) s 0);
+              true
+            with Not_found -> false
+          in
+          if not has_s then acc
+          else
+            (* Check for text in S columns without multicolumn *)
+            let has_text_no_mc =
+              try
+                ignore
+                  (Str.search_forward
+                     (Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|})
+                     body 0);
+                let has_mc =
+                  try
+                    ignore
+                      (Str.search_forward
+                         (Str.regexp_string "\\multicolumn")
+                         body 0);
+                    true
+                  with Not_found -> false
+                in
+                not has_mc
+              with Not_found -> false
+            in
+            if has_text_no_mc then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-007";
+          severity = Info;
+          message = {|Text in numeric column without \multicolumn|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-007"; run }
+
+(* ── TAB-008: Table > 30 rows ────────────────────────────────────────── *)
+let r_tab_008 : rule =
+  let linebreak_re = Str.regexp_string "\\\\" in
+  let run s =
+    let blocks =
+      extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
+    in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let rows = List.length (Str.split linebreak_re body) in
+          if rows > 30 then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-008";
+          severity = Info;
+          message = {|Table > 30 rows – suggest longtable/xtab|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-008"; run }
+
+(* ── TAB-012: Numeric column not aligned using siunitx S-column ──────── *)
+let r_tab_012 : rule =
+  let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward colspec_re s !i in
+         let spec = Str.matched_group 1 s in
+         let after = Str.match_end () in
+         (* Check if spec has r/c/l but no S *)
+         let has_rcl = String.contains spec 'r' || String.contains spec 'l' in
+         let has_s = String.contains spec 'S' in
+         (if has_rcl && not has_s then
+            (* Check if body has numbers *)
+            let body_end =
+              try Str.search_forward (Str.regexp_string "\\end{tabular") s after
+              with Not_found -> String.length s
+            in
+            let body = String.sub s after (body_end - after) in
+            let has_nums =
+              try
+                ignore
+                  (Str.search_forward (Str.regexp {|[0-9]+\.?[0-9]|}) body 0);
+                true
+              with Not_found -> false
+            in
+            if has_nums then incr cnt);
+         i := after
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TAB-012";
+          severity = Info;
+          message = {|Numeric column not aligned using siunitx S‑column|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TAB-012"; run }
+
+(* ── TAB-013: Caption position for longtable must be at top ──────────── *)
+let r_tab_013 : rule =
+  let run s =
+    let blocks = extract_env_blocks "longtable" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_caption =
+            try
+              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
+              true
+            with Not_found -> false
+          in
+          if not has_caption then acc
+          else
+            let cap_pos =
+              try Str.search_forward (Str.regexp_string "\\caption") body 0
+              with Not_found -> 0
+            in
+            let first_row_pos =
+              try Str.search_forward (Str.regexp_string "\\\\") body 0
+              with Not_found -> String.length body
+            in
+            if cap_pos > first_row_pos then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-013";
+          severity = Info;
+          message = "Caption position for longtable must be at top per style";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-013"; run }
+
+(* ── TAB-015: \multirow inside tabularx X without raggedright ────── *)
+let r_tab_015 : rule =
+  let run s =
+    let blocks = extract_env_blocks "tabularx" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_multirow =
+            try
+              ignore
+                (Str.search_forward (Str.regexp_string "\\multirow") body 0);
+              true
+            with Not_found -> false
+          in
+          let has_raggedright =
+            try
+              ignore
+                (Str.search_forward (Str.regexp_string "\\raggedright") body 0);
+              true
+            with Not_found -> false
+          in
+          if has_multirow && not has_raggedright then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-015";
+          severity = Warning;
+          message = {|\multirow inside tabularx column X without raggedright|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TAB-015"; run }
+
+(* ── TAB-016: Centred 'c' column in longtable holds ragged text ──────── *)
+let r_tab_016 : rule =
+  let colspec_re = Str.regexp {|\\begin{longtable}{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward colspec_re s !i in
+         let spec = Str.matched_group 1 s in
+         if String.contains spec 'c' then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TAB-016";
+          severity = Info;
+          message = "Centred 'c' column in longtable holds ragged text";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TAB-016"; run }
+
+(* ── FIG-012: Figure listed in LoF but not referenced ────────────────── *)
+let r_fig_012 : rule =
+  let run s =
+    let labels = extract_labels_with_prefix "fig:" s in
+    let refs = extract_refs_with_prefix "fig:" s in
+    let ref_keys = List.map snd refs in
+    let cnt =
+      List.fold_left
+        (fun acc (_pos, key) ->
+          if not (List.mem key ref_keys) then acc + 1 else acc)
+        0 labels
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-012";
+          severity = Info;
+          message = "Figure listed in LoF but not referenced";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-012"; run }
+
+(* ── FIG-014: Figure caption exceeds 300 characters ──────────────────── *)
+let r_fig_014 : rule =
+  let run s =
+    let blocks = extract_env_blocks_starred "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          match extract_caption_content body with
+          | Some cap -> if String.length cap > 300 then acc + 1 else acc
+          | None -> acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-014";
+          severity = Info;
+          message = {|Figure caption exceeds 300 characters|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-014"; run }
+
+(* ── FIG-017: Sidewaysfigure used with portrait page layout ──────────── *)
+let r_fig_017 : rule =
+  let re = Str.regexp_string "\\begin{sidewaysfigure" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    (* Only fire if no landscape geometry *)
+    if !cnt > 0 then
+      let has_landscape =
+        try
+          ignore (Str.search_forward (Str.regexp_string "landscape") s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_landscape then
+        Some
+          {
+            id = "FIG-017";
+            severity = Warning;
+            message = "Sidewaysfigure used with portrait page layout";
+            count = !cnt;
+          }
+      else None
+    else None
+  in
+  { id = "FIG-017"; run }
+
+(* ── FIG-019: Subcaption label missing (a), (b)... ───────────────────── *)
+(* Similar to FIG-010 but specifically checks that subcaption has label text *)
+let r_fig_019 : rule =
+  let run s =
+    let blocks = extract_env_blocks_starred "subfigure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_subcap =
+            try
+              ignore
+                (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
+              true
+            with Not_found -> false
+          in
+          let has_caption =
+            try
+              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
+              true
+            with Not_found -> false
+          in
+          if (not has_subcap) && not has_caption then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-019";
+          severity = Info;
+          message = {|Subcaption label missing (a), (b)…|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-019"; run }
+
+(* ── FIG-022: Figure caption identical to surrounding sentence ───────── *)
+let r_fig_022 : rule =
+  let run s =
+    let blocks = extract_env_blocks_starred "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          match extract_caption_content body with
+          | None -> acc
+          | Some cap ->
+              let cap = String.trim cap in
+              if String.length cap < 5 then acc
+              else
+                (* Search for caption text outside figure environments *)
+                let outside =
+                  try
+                    let fig_start =
+                      Str.search_forward
+                        (Str.regexp_string "\\begin{figure")
+                        s 0
+                    in
+                    let before = String.sub s 0 fig_start in
+                    try
+                      ignore
+                        (Str.search_forward (Str.regexp_string cap) before 0);
+                      true
+                    with Not_found -> false
+                  with Not_found -> false
+                in
+                if outside then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-022";
+          severity = Info;
+          message = "Figure caption identical to surrounding sentence";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-022"; run }
+
+(* ── FIG-024: Alt-text exceeds 140 chars ─────────────────────────────── *)
+let r_fig_024 : rule =
+  let re = Str.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         let alt = Str.matched_group 1 s in
+         if String.length alt > 140 then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FIG-024";
+          severity = Info;
+          message = {|Alt‑text exceeds 140 chars—trim for accessibility|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FIG-024"; run }
+
+(* ── FIG-025: Alt-text identical to caption ──────────────────────────── *)
+let r_fig_025 : rule =
+  let alt_re = Str.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
+  let run s =
+    let blocks = extract_env_blocks_starred "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let cap =
+            match extract_caption_content body with
+            | Some c -> String.trim c
+            | None -> ""
+          in
+          if String.length cap < 3 then acc
+          else
+            let has_matching_alt =
+              try
+                let _ = Str.search_forward alt_re body 0 in
+                let alt = String.trim (Str.matched_group 1 body) in
+                alt = cap
+              with Not_found -> false
+            in
+            if has_matching_alt then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-025";
+          severity = Info;
+          message = {|Alt‑text identical to caption—reduce redundancy|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "FIG-025"; run }
+
+(* ── MATH-075: Equation number suppressed with \nonumber but referenced *)
+let r_math_075 : rule =
+  let run s =
+    (* Find labels in equation environments that also have \nonumber *)
+    let eq_envs = [ "equation"; "align"; "gather"; "multline"; "flalign" ] in
+    let cnt = ref 0 in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun body ->
+            let has_nonumber =
+              try
+                ignore
+                  (Str.search_forward (Str.regexp_string "\\nonumber") body 0);
+                true
+              with Not_found -> false
+            in
+            if has_nonumber then
+              let labels = extract_labels_with_prefix "eq:" body in
+              let refs = extract_refs_with_prefix "eq:" s in
+              let ref_keys = List.map snd refs in
+              List.iter
+                (fun (_pos, key) -> if List.mem key ref_keys then incr cnt)
+                labels)
+          blocks)
+      eq_envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-075";
+          severity = Warning;
+          message = {|Equation number suppressed with \nonumber but referenced|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-075"; run }
+
+(* ── MATH-080: Equation exceeds 3 alignment columns ─────────────────── *)
+let r_math_080 : rule =
+  let linebreak_re = Str.regexp_string "\\\\" in
+  let run s =
+    let cnt = ref 0 in
+    let envs =
+      [ "align"; "align*"; "flalign"; "flalign*"; "alignat"; "alignat*" ]
+    in
+    List.iter
+      (fun env ->
+        let blocks = extract_env_blocks env s in
+        List.iter
+          (fun body ->
+            let lines = Str.split linebreak_re body in
+            List.iter
+              (fun line ->
+                let amps =
+                  String.fold_left
+                    (fun acc c -> if c = '&' then acc + 1 else acc)
+                    0 line
+                in
+                if amps > 3 then incr cnt)
+              lines)
+          blocks)
+      envs;
+    if !cnt > 0 then
+      Some
+        {
+          id = "MATH-080";
+          severity = Info;
+          message = "Equation exceeds 3 alignment columns";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "MATH-080"; run }
+
+(* ── CMD-012: \renewcommand\thesection after hyperref ────────────── *)
+let r_cmd_012 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages preamble in
+    let hyp_pos =
+      List.fold_left
+        (fun acc (pos, name) ->
+          match acc with
+          | Some _ -> acc
+          | None -> if name = "hyperref" then Some pos else None)
+        None pkgs
+    in
+    match hyp_pos with
+    | None -> None
+    | Some hp ->
+        let re = Str.regexp_string "\\renewcommand{\\thesection}" in
+        let found =
+          try
+            let p = Str.search_forward re preamble 0 in
+            p > hp
+          with Not_found -> false
+        in
+        if found then
+          Some
+            {
+              id = "CMD-012";
+              severity = Warning;
+              message =
+                {|\renewcommand\thesection redefined after hyperref — bookmark mismatch|};
+              count = 1;
+            }
+        else None
+  in
+  { id = "CMD-012"; run }
+
+(* ── DOC-004: Acknowledgment section before conclusion ───────────────── *)
+let r_doc_004 : rule =
+  let run s =
+    let ack_re = Str.regexp {|\\section{[Aa]cknowledg|} in
+    let conc_re = Str.regexp {|\\section{[Cc]onclusion|} in
+    let ack_pos =
+      try Some (Str.search_forward ack_re s 0) with Not_found -> None
+    in
+    let conc_pos =
+      try Some (Str.search_forward conc_re s 0) with Not_found -> None
+    in
+    match (ack_pos, conc_pos) with
+    | Some ap, Some cp ->
+        if ap < cp then
+          Some
+            {
+              id = "DOC-004";
+              severity = Info;
+              message = "Acknowledgment section before conclusion";
+              count = 1;
+            }
+        else None
+    | _ -> None
+  in
+  { id = "DOC-004"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -7809,6 +8765,33 @@ let rules_l2_approx : rule list =
     r_lang_002;
     r_lang_004;
     r_tikz_007;
+    r_pkg_008;
+    r_pkg_010;
+    r_pkg_013;
+    r_pkg_014;
+    r_pkg_016;
+    r_pkg_017;
+    r_pkg_021;
+    r_pkg_024;
+    r_pkg_025;
+    r_tab_003;
+    r_tab_007;
+    r_tab_008;
+    r_tab_012;
+    r_tab_013;
+    r_tab_015;
+    r_tab_016;
+    r_fig_012;
+    r_fig_014;
+    r_fig_017;
+    r_fig_019;
+    r_fig_022;
+    r_fig_024;
+    r_fig_025;
+    r_math_075;
+    r_math_080;
+    r_cmd_012;
+    r_doc_004;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)
@@ -14026,6 +15009,15 @@ let precondition_of_rule_id (id : string) : layer =
   | "LANG-002" | "LANG-004" -> L2
   | "TIKZ-007" -> L2
   | "FIG-010" | "FIG-013" -> L2
+  | "PKG-008" | "PKG-010" | "PKG-013" | "PKG-014" | "PKG-016" -> L2
+  | "PKG-017" | "PKG-021" | "PKG-024" | "PKG-025" -> L2
+  | "TAB-003" | "TAB-007" | "TAB-008" | "TAB-012" | "TAB-013" -> L2
+  | "TAB-015" | "TAB-016" -> L2
+  | "FIG-012" | "FIG-014" | "FIG-017" | "FIG-019" | "FIG-022" -> L2
+  | "FIG-024" | "FIG-025" -> L2
+  | "MATH-075" | "MATH-080" -> L2
+  | "CMD-012" -> L2
+  | "DOC-004" -> L2
   | "MATH-026" | "MATH-027" -> L3
   (* CMD-001, CMD-003, CMD-007, CMD-010 need expanded text = L1 *)
   | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1

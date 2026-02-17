@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{expl3}
+\newcommand{\foo}{hello}
+\ExplSyntaxOn
+\tl_new:N \l_foo_tl
+\ExplSyntaxOff
+\begin{document}
+\foo
+\end{document}

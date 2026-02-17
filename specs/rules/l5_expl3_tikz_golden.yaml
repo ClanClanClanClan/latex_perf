@@ -1,0 +1,51 @@
+cases:
+  - file: corpora/lint/l5_expl3_tikz/l3_001.tex
+    expect: ["L3-001"]
+  - file: corpora/lint/l5_expl3_tikz/l3_002.tex
+    expect: ["L3-002"]
+  - file: corpora/lint/l5_expl3_tikz/l3_003.tex
+    expect: ["L3-003"]
+  - file: corpora/lint/l5_expl3_tikz/l3_004.tex
+    expect: ["L3-004"]
+  - file: corpora/lint/l5_expl3_tikz/l3_005.tex
+    expect: ["L3-005"]
+  - file: corpora/lint/l5_expl3_tikz/l3_006.tex
+    expect: ["L3-006"]
+  - file: corpora/lint/l5_expl3_tikz/l3_007.tex
+    expect: ["L3-007"]
+  - file: corpora/lint/l5_expl3_tikz/l3_008.tex
+    expect: ["L3-008"]
+  - file: corpora/lint/l5_expl3_tikz/l3_009.tex
+    expect: ["L3-009"]
+  - file: corpora/lint/l5_expl3_tikz/l3_010.tex
+    expect: ["L3-010"]
+  - file: corpora/lint/l5_expl3_tikz/l3_011.tex
+    expect: ["L3-011"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_001.tex
+    expect: ["TIKZ-001"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_003.tex
+    expect: ["TIKZ-003"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_004.tex
+    expect: ["TIKZ-004"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_006.tex
+    expect: ["TIKZ-006"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_009.tex
+    expect: ["TIKZ-009"]
+  - file: corpora/lint/l5_expl3_tikz/tikz_010.tex
+    expect: ["TIKZ-010"]
+  - file: corpora/lint/l5_expl3_tikz/lang_001.tex
+    expect: ["LANG-001"]
+  - file: corpora/lint/l5_expl3_tikz/lang_006.tex
+    expect: ["LANG-006"]
+  - file: corpora/lint/l5_expl3_tikz/lang_007.tex
+    expect: ["LANG-007"]
+  - file: corpora/lint/l5_expl3_tikz/lang_013.tex
+    expect: ["LANG-013"]
+  - file: corpora/lint/l5_expl3_tikz/col_006.tex
+    expect: ["COL-006"]
+  - file: corpora/lint/l5_expl3_tikz/lay_024.tex
+    expect: ["LAY-024"]
+  - file: corpora/lint/l5_expl3_tikz/meta_002.tex
+    expect: ["META-002"]
+  - file: corpora/lint/l5_expl3_tikz/rtl_005.tex
+    expect: ["RTL-005"]

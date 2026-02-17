@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{expl3}
+\usepackage{etoolbox}
+\ExplSyntaxOn
+\tl_set:Nn \l_my_tl {hello}
+\ExplSyntaxOff
+\patchcmd{\maketitle}{}{}{}{}
+\begin{document}
+Hello
+\end{document}

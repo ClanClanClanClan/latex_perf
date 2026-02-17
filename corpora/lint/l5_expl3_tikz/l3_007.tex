@@ -1,0 +1,8 @@
+\documentclass{article}
+\usepackage{expl3}
+\begin{document}
+\myFunc{hello}
+\ExplSyntaxOn
+\cs_new:Npn \my_func:N #1 { #1 }
+\ExplSyntaxOff
+\end{document}

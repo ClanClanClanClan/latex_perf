@@ -8716,6 +8716,910 @@ let r_doc_004 : rule =
   in
   { id = "DOC-004"; run }
 
+(* ══════════════════════════════════════════════════════════════════════
+   L3-expl3 rules (L1_Expanded)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* ── L3-001: LaTeX3 \tl_new:N in preamble mixed with 2e macros ──── *)
+let r_l3_001 : rule =
+  let expl3_re =
+    Str.regexp
+      {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_\(new\|set\|gset\):|}
+  in
+  let latex2e_re =
+    Str.regexp {|\\\(newcommand\|renewcommand\|def\)[^a-zA-Z]|}
+  in
+  let run s =
+    let preamble = extract_preamble s in
+    let has_expl3 =
+      try
+        ignore (Str.search_forward expl3_re preamble 0);
+        true
+      with Not_found -> false
+    in
+    let has_2e =
+      try
+        ignore (Str.search_forward latex2e_re preamble 0);
+        true
+      with Not_found -> false
+    in
+    if has_expl3 && has_2e then
+      Some
+        {
+          id = "L3-001";
+          severity = Info;
+          message = {|LaTeX3 \tl_new:N in preamble mixed with 2e macros|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-001"; run }
+
+(* ── L3-002: Expl3 variable declared after \begin{document} ──────── *)
+let r_l3_002 : rule =
+  let expl3_decl_re =
+    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_new:|}
+  in
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body ->
+        let cnt = ref 0 in
+        let i = ref 0 in
+        (try
+           while true do
+             let _ = Str.search_forward expl3_decl_re body !i in
+             incr cnt;
+             i := Str.match_end ()
+           done
+         with Not_found -> ());
+        if !cnt > 0 then
+          Some
+            {
+              id = "L3-002";
+              severity = Warning;
+              message = {|Expl3 variable declared after \begin{document}|};
+              count = !cnt;
+            }
+        else None
+  in
+  { id = "L3-002"; run }
+
+(* ── L3-003: Expl3 and etoolbox patch macros combined ────────────── *)
+let r_l3_003 : rule =
+  let expl3_re = Str.regexp {|\\\(tl\|cs\|int\|bool\)_\(new\|set\|gset\):|} in
+  let etoolbox_re =
+    Str.regexp {|\\\(patchcmd\|apptocmd\|pretocmd\|robustify\){|}
+  in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward expl3_re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_etoolbox =
+      try
+        ignore (Str.search_forward etoolbox_re s 0);
+        true
+      with Not_found -> false
+    in
+    if has_expl3 && has_etoolbox then
+      Some
+        {
+          id = "L3-003";
+          severity = Warning;
+          message = "Expl3 and etoolbox patch macros combined";
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-003"; run }
+
+(* ── L3-004: Undocumented \__module_internal:N used ──────────────── *)
+let r_l3_004 : rule =
+  let re = Str.regexp {|\\__[a-zA-Z_]+:[a-zA-Z]*|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "L3-004";
+          severity = Info;
+          message = {|Undocumented \__module_internal:N used|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "L3-004"; run }
+
+(* ── L3-005: Missing \ExplSyntaxOn guard around expl3 code ──────── *)
+let r_l3_005 : rule =
+  let expl3_re =
+    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
+  in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward expl3_re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_guard =
+      try
+        ignore (Str.search_forward (Str.regexp_string "\\ExplSyntaxOn") s 0);
+        true
+      with Not_found -> false
+    in
+    if has_expl3 && not has_guard then
+      Some
+        {
+          id = "L3-005";
+          severity = Error;
+          message = {|Missing \ExplSyntaxOn guard around expl3 code|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-005"; run }
+
+(* ── L3-006: Expl3 variable clobbers package macro name ──────────── *)
+let r_l3_006 : rule =
+  let var_re =
+    Str.regexp {|\\\(l\|g\)_\([a-zA-Z]+\)_\(tl\|int\|bool\|clist\|seq\|prop\)|}
+  in
+  let cmd_re = Str.regexp {|\\\(newcommand\|renewcommand\){\\\([a-zA-Z]+\)}|} in
+  let run s =
+    let var_names = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward var_re s !i in
+         let name = Str.matched_group 2 s in
+         var_names := name :: !var_names;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cmd_names = ref [] in
+    let j = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward cmd_re s !j in
+         let name = Str.matched_group 2 s in
+         cmd_names := name :: !cmd_names;
+         j := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt =
+      List.fold_left
+        (fun acc vn -> if List.mem vn !cmd_names then acc + 1 else acc)
+        0 !var_names
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "L3-006";
+          severity = Warning;
+          message = "Expl3 variable clobbers package macro name";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "L3-006"; run }
+
+(* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────── *)
+let r_l3_007 : rule =
+  let camel_re = Str.regexp {|\\[a-z]+[A-Z][a-zA-Z]*[{ ]|} in
+  let snake_re = Str.regexp {|\\[a-z]+_[a-z]+:|} in
+  let run s =
+    let has_camel =
+      try
+        ignore (Str.search_forward camel_re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_snake =
+      try
+        ignore (Str.search_forward snake_re s 0);
+        true
+      with Not_found -> false
+    in
+    if has_camel && has_snake then
+      Some
+        {
+          id = "L3-007";
+          severity = Info;
+          message = "Mix of camelCase and snake_case in expl3 names";
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-007"; run }
+
+(* ── L3-009: LaTeX3 function deprecated _n: variant used ─────────── *)
+let r_l3_009 : rule =
+  let re =
+    Str.regexp
+      {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_[a-z_]+:n[^a-zA-Z]|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "L3-009";
+          severity = Info;
+          message = "LaTeX3 function deprecated _n: variant used";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "L3-009"; run }
+
+(* ── L3-011: Engine-branch uses pdfTeX primitive in Lua/XeTeX path ─ *)
+let r_l3_011 : rule =
+  let pdftex_re =
+    Str.regexp
+      {|\\\(pdfoutput\|pdfliteral\|pdfcatalog\|pdfinfo\|pdfcompresslevel\)|}
+  in
+  let luaxe_re = Str.regexp {|\\sys_if_engine_\(luatex\|xetex\):|} in
+  let run s =
+    let has_pdftex =
+      try
+        ignore (Str.search_forward pdftex_re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_luaxe =
+      try
+        ignore (Str.search_forward luaxe_re s 0);
+        true
+      with Not_found -> false
+    in
+    if has_pdftex && has_luaxe then
+      Some
+        {
+          id = "L3-011";
+          severity = Warning;
+          message = "Engine‑branch uses pdfTeX primitive in Lua/XeTeX path";
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-011"; run }
+
+(* ====================================================================== TIKZ
+   rules (L2_Ast)
+   ====================================================================== *)
+
+(* -- TIKZ-001: TikZ picture outside figure environment --------------- *)
+let r_tikz_001 : rule =
+  let tikz_re = Str.regexp_string "\\begin{tikzpicture}" in
+  let run s =
+    let fig_blocks = extract_env_blocks_starred "figure" s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward tikz_re s !i in
+         let inside_fig =
+           List.exists
+             (fun body ->
+               try
+                 ignore
+                   (Str.search_forward
+                      (Str.regexp_string "\\begin{tikzpicture}")
+                      body 0);
+                 true
+               with Not_found -> false)
+             fig_blocks
+         in
+         if not inside_fig then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TIKZ-001";
+          severity = Info;
+          message = "TikZ picture outside figure environment";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TIKZ-001"; run }
+
+(* -- TIKZ-003: pgfplots axis labels not in math mode ----------------- *)
+let r_tikz_003 : rule =
+  let label_re = Str.regexp {|\(xlabel\|ylabel\|zlabel\)={\([^}]*\)}|} in
+  let run s =
+    let blocks = extract_env_blocks "axis" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let c = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               let _ = Str.search_forward label_re body !i in
+               let label_text = Str.matched_group 2 body in
+               let has_math = String.contains label_text '$' in
+               if not has_math then incr c;
+               i := Str.match_end ()
+             done
+           with Not_found -> ());
+          acc + !c)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TIKZ-003";
+          severity = Info;
+          message = "pgfplots axis labels not in math mode";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TIKZ-003"; run }
+
+(* -- TIKZ-004: Hard-coded RGB values instead of xcolor names --------- *)
+let r_tikz_004 : rule =
+  let re = Str.regexp {|\(color\|fill\|draw\)={\(rgb\|RGB\)|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TIKZ-004";
+          severity = Info;
+          message = "Hard‑coded RGB values instead of xcolor names";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TIKZ-004"; run }
+
+(* -- TIKZ-006: Missing \caption for tikzpicture inside figure ------- *)
+let r_tikz_006 : rule =
+  let run s =
+    let fig_blocks = extract_env_blocks_starred "figure" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let has_tikz =
+            try
+              ignore
+                (Str.search_forward
+                   (Str.regexp_string "\\begin{tikzpicture}")
+                   body 0);
+              true
+            with Not_found -> false
+          in
+          let has_caption =
+            try
+              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
+              true
+            with Not_found -> false
+          in
+          if has_tikz && not has_caption then acc + 1 else acc)
+        0 fig_blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TIKZ-006";
+          severity = Warning;
+          message = {|Missing \caption for tikzpicture inside figure|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TIKZ-006"; run }
+
+(* -- TIKZ-009: TikZ library arrows.meta missing for arrow tips ------- *)
+let r_tikz_009 : rule =
+  let arrow_re = Str.regexp "->\\|stealth\\|-latex" in
+  let run s =
+    let has_arrows =
+      try
+        let blocks = extract_env_blocks "tikzpicture" s in
+        List.exists
+          (fun body ->
+            try
+              ignore (Str.search_forward arrow_re body 0);
+              true
+            with Not_found -> false)
+          blocks
+      with _ -> false
+    in
+    if not has_arrows then None
+    else
+      let has_lib =
+        try
+          ignore (Str.search_forward (Str.regexp_string "arrows.meta") s 0);
+          true
+        with Not_found -> false
+      in
+      if not has_lib then
+        Some
+          {
+            id = "TIKZ-009";
+            severity = Info;
+            message = "TikZ library arrows.meta missing for arrow tips";
+            count = 1;
+          }
+      else None
+  in
+  { id = "TIKZ-009"; run }
+
+(* -- TIKZ-010: Deprecated \pgfplotsset key used -------------------- *)
+let r_tikz_010 : rule =
+  let re =
+    Str.regexp {|\\pgfplotsset{[^}]*\(every axis\|compat=1\.[0-7]\)[^}]*}|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "TIKZ-010";
+          severity = Info;
+          message = {|Deprecated \pgfplotsset key used|};
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "TIKZ-010"; run }
+
+(* ====================================================================== LANG +
+   Other L2_Ast rules
+   ====================================================================== *)
+
+(* -- LANG-001: \usepackage[british]{babel} but US spelling ---------- *)
+let r_lang_001 : rule =
+  let us_words =
+    [
+      "color";
+      "center";
+      "defense";
+      "offense";
+      "analyze";
+      "organize";
+      "recognize";
+      "favor";
+      "honor";
+      "neighbor";
+      "labor";
+    ]
+  in
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_british =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "babel"
+          &&
+          try
+            ignore
+              (Str.search_forward (Str.regexp {|british\|UKenglish|}) opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    if not has_british then None
+    else
+      match extract_document_body s with
+      | None -> None
+      | Some body ->
+          let body_lc = String.lowercase_ascii body in
+          let cnt =
+            List.fold_left
+              (fun acc w ->
+                if
+                  try
+                    ignore (Str.search_forward (Str.regexp_string w) body_lc 0);
+                    true
+                  with Not_found -> false
+                then acc + 1
+                else acc)
+              0 us_words
+          in
+          if cnt > 0 then
+            Some
+              {
+                id = "LANG-001";
+                severity = Info;
+                message =
+                  {|\usepackage[british]{babel} but US spelling detected|};
+                count = cnt;
+              }
+          else None
+  in
+  { id = "LANG-001"; run }
+
+(* -- LANG-006: Non-English abstract before \selectlanguage ---------- *)
+let r_lang_006 : rule =
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body -> (
+        let abs_pos =
+          try
+            Some
+              (Str.search_forward
+                 (Str.regexp_string "\\begin{abstract}")
+                 body 0)
+          with Not_found -> None
+        in
+        let lang_pos =
+          try
+            Some
+              (Str.search_forward (Str.regexp_string "\\selectlanguage") body 0)
+          with Not_found -> None
+        in
+        match (abs_pos, lang_pos) with
+        | Some ap, Some lp ->
+            if ap < lp then
+              Some
+                {
+                  id = "LANG-006";
+                  severity = Info;
+                  message = "Non‑English abstract before \\selectlanguage";
+                  count = 1;
+                }
+            else None
+        | _ -> None)
+  in
+  { id = "LANG-006"; run }
+
+(* -- LANG-007: babel shorthand mis-used instead of og/fg ----------- *)
+let r_lang_007 : rule =
+  let shorthand_re = Str.regexp {|""|} in
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_french =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "babel"
+          &&
+          try
+            ignore (Str.search_forward (Str.regexp {|french\|francais|}) opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    if not has_french then None
+    else
+      match extract_document_body s with
+      | None -> None
+      | Some body ->
+          let cnt = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               let _ = Str.search_forward shorthand_re body !i in
+               incr cnt;
+               i := Str.match_end ()
+             done
+           with Not_found -> ());
+          if !cnt > 0 then
+            Some
+              {
+                id = "LANG-007";
+                severity = Info;
+                message = "babel shorthand \" mis‑used instead of \\og … \\fg";
+                count = !cnt;
+              }
+          else None
+  in
+  { id = "LANG-007"; run }
+
+(* -- LANG-013: Abstract language differs from \selectlanguage ------- *)
+let r_lang_013 : rule =
+  let lang_re = Str.regexp {|\\selectlanguage{\([^}]+\)}|} in
+  let run s =
+    match extract_document_body s with
+    | None -> None
+    | Some body -> (
+        let abs_pos =
+          try
+            Some
+              (Str.search_forward
+                 (Str.regexp_string "\\begin{abstract}")
+                 body 0)
+          with Not_found -> None
+        in
+        match abs_pos with
+        | None -> None
+        | Some ap -> (
+            let abs_end =
+              try
+                Str.search_forward (Str.regexp_string "\\end{abstract}") body ap
+                + String.length "\\end{abstract}"
+              with Not_found -> ap
+            in
+            let before_abs = String.sub body 0 ap in
+            let after_abs =
+              String.sub body abs_end (String.length body - abs_end)
+            in
+            let lang_before =
+              try
+                let _ = Str.search_forward lang_re before_abs 0 in
+                Some (Str.matched_group 1 before_abs)
+              with Not_found -> None
+            in
+            let lang_after =
+              try
+                let _ = Str.search_forward lang_re after_abs 0 in
+                Some (Str.matched_group 1 after_abs)
+              with Not_found -> None
+            in
+            match (lang_before, lang_after) with
+            | Some lb, Some la when lb <> la ->
+                Some
+                  {
+                    id = "LANG-013";
+                    severity = Info;
+                    message = {|Abstract language differs from \selectlanguage|};
+                    count = 1;
+                  }
+            | _ -> None))
+  in
+  { id = "LANG-013"; run }
+
+(* -- COL-006: xcolor option dvipsnames used with pdfLaTeX ------------ *)
+let r_col_006 : rule =
+  let run s =
+    let preamble = extract_preamble s in
+    let pkgs = extract_usepackages_with_opts preamble in
+    let has_dvips_xcolor =
+      List.exists
+        (fun (_pos, opts, name) ->
+          name = "xcolor"
+          &&
+          try
+            ignore (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
+            true
+          with Not_found -> false)
+        pkgs
+    in
+    if not has_dvips_xcolor then None
+    else
+      let has_pdftex =
+        List.exists
+          (fun (_, opts, name) ->
+            (name = "fontenc"
+            &&
+            try
+              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
+              true
+            with Not_found -> false)
+            || name = "inputenc")
+          pkgs
+      in
+      if has_pdftex then
+        Some
+          {
+            id = "COL-006";
+            severity = Warning;
+            message = "xcolor option dvipsnames used with pdfLaTeX";
+            count = 1;
+          }
+      else None
+  in
+  { id = "COL-006"; run }
+
+(* -- L3-008: Expl3 module lacks \ProvidesExplPackage ---------------- *)
+let r_l3_008 : rule =
+  let expl3_re =
+    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
+  in
+  let run s =
+    let has_expl3 =
+      try
+        ignore (Str.search_forward expl3_re s 0);
+        true
+      with Not_found -> false
+    in
+    let has_provides =
+      try
+        ignore
+          (Str.search_forward (Str.regexp_string "\\ProvidesExplPackage") s 0);
+        true
+      with Not_found -> (
+        try
+          ignore
+            (Str.search_forward (Str.regexp_string "\\ProvidesExplClass") s 0);
+          true
+        with Not_found -> false)
+    in
+    if has_expl3 && not has_provides then
+      Some
+        {
+          id = "L3-008";
+          severity = Warning;
+          message = {|Expl3 module lacks \ProvidesExplPackage|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "L3-008"; run }
+
+(* -- L3-010: \ExplSyntaxOff missing at end of file ----------------- *)
+let r_l3_010 : rule =
+  let run s =
+    let on_re = Str.regexp_string "\\ExplSyntaxOn" in
+    let off_re = Str.regexp_string "\\ExplSyntaxOff" in
+    let count_matches re str =
+      let cnt = ref 0 in
+      let i = ref 0 in
+      (try
+         while true do
+           let _ = Str.search_forward re str !i in
+           incr cnt;
+           i := Str.match_end ()
+         done
+       with Not_found -> ());
+      !cnt
+    in
+    let on_count = count_matches on_re s in
+    let off_count = count_matches off_re s in
+    if on_count > 0 && on_count > off_count then
+      Some
+        {
+          id = "L3-010";
+          severity = Info;
+          message = {|\ExplSyntaxOff missing at end of file|};
+          count = on_count - off_count;
+        }
+    else None
+  in
+  { id = "L3-010"; run }
+
+(* -- LAY-024: \subsubsubsection depth > 3 without class support ---- *)
+let r_lay_024 : rule =
+  let re = Str.regexp_string "\\subsubsubsection" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re s !i in
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-024";
+          severity = Warning;
+          message = "\\subsubsubsection depth > 3 without class support";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-024"; run }
+
+(* -- META-002: Revision hash missing from \date field --------------- *)
+let r_meta_002 : rule =
+  let date_re = Str.regexp {|\\date{\([^}]*\)}|} in
+  let hash_re =
+    Str.regexp "[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+  in
+  let run s =
+    let preamble = extract_preamble s in
+    let has_date =
+      try
+        let _ = Str.search_forward date_re preamble 0 in
+        let date_content = Str.matched_group 1 preamble in
+        let has_hash =
+          try
+            ignore (Str.search_forward hash_re date_content 0);
+            true
+          with Not_found -> false
+        in
+        Some (not has_hash)
+      with Not_found -> None
+    in
+    match has_date with
+    | Some true ->
+        Some
+          {
+            id = "META-002";
+            severity = Info;
+            message = {|Revision hash missing from \date field|};
+            count = 1;
+          }
+    | _ -> None
+  in
+  { id = "META-002"; run }
+
+(* -- RTL-005: Polyglossia RTL font not specified --------------------- *)
+let r_rtl_005 : rule =
+  let rtl_langs =
+    [
+      "arabic";
+      "hebrew";
+      "persian";
+      "farsi";
+      "urdu";
+      "pashto";
+      "sindhi";
+      "kurdish";
+    ]
+  in
+  let run s =
+    let has_rtl_lang =
+      List.exists
+        (fun lang ->
+          try
+            ignore (Str.search_forward (Str.regexp_string lang) s 0);
+            true
+          with Not_found -> false)
+        rtl_langs
+    in
+    let has_polyglossia = has_package s "polyglossia" in
+    if has_rtl_lang && has_polyglossia then
+      let has_font_spec =
+        try
+          ignore (Str.search_forward (Str.regexp_string "\\newfontfamily") s 0);
+          true
+        with Not_found -> (
+          try
+            ignore (Str.search_forward (Str.regexp_string "\\setmainfont") s 0);
+            true
+          with Not_found -> false)
+      in
+      if not has_font_spec then
+        Some
+          {
+            id = "RTL-005";
+            severity = Warning;
+            message = "Polyglossia RTL font not specified";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  { id = "RTL-005"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -8792,6 +9696,32 @@ let rules_l2_approx : rule list =
     r_math_080;
     r_cmd_012;
     r_doc_004;
+    (* batch 5: expl3 + tikz + lang *)
+    r_l3_001;
+    r_l3_002;
+    r_l3_003;
+    r_l3_004;
+    r_l3_005;
+    r_l3_006;
+    r_l3_007;
+    r_l3_009;
+    r_l3_011;
+    r_tikz_001;
+    r_tikz_003;
+    r_tikz_004;
+    r_tikz_006;
+    r_tikz_009;
+    r_tikz_010;
+    r_lang_001;
+    r_lang_006;
+    r_lang_007;
+    r_lang_013;
+    r_col_006;
+    r_l3_008;
+    r_l3_010;
+    r_lay_024;
+    r_meta_002;
+    r_rtl_005;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)
@@ -15023,8 +15953,15 @@ let precondition_of_rule_id (id : string) : layer =
   | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1
   (* CJK-008, CJK-015 need expanded text = L1 *)
   | "CJK-008" | "CJK-015" -> L1
-  (* L3-008, L3-010 are L2_Ast per spec — not yet implemented *)
   | "L3-008" | "L3-010" -> L2
+  (* batch 5: expl3 + tikz + lang — L2_Ast overrides *)
+  | "TIKZ-001" | "TIKZ-003" | "TIKZ-004" | "TIKZ-006" -> L2
+  | "TIKZ-009" | "TIKZ-010" -> L2
+  | "LANG-001" | "LANG-006" | "LANG-007" | "LANG-013" -> L2
+  | "COL-006" -> L2
+  | "LAY-024" -> L2
+  | "META-002" -> L2
+  | "RTL-005" -> L2
   (* Prefix-based mappings *)
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0

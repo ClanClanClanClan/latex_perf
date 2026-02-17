@@ -9620,6 +9620,782 @@ let r_rtl_005 : rule =
   in
   { id = "RTL-005"; run }
 
+(* ── BIB rules: bibliography field / entry hygiene ──────────────── *)
+
+(* Helper: split bib content into individual entries. Each entry starts with
+   @type{key, and ends at the next @ or EOF. *)
+let split_bib_entries (s : string) : string list =
+  let re = Str.regexp "@[a-zA-Z]+{" in
+  let entries = ref [] in
+  let starts = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let pos = Str.search_forward re s !i in
+       starts := pos :: !starts;
+       i := pos + 1
+     done
+   with Not_found -> ());
+  let starts_list = List.rev !starts in
+  let n = String.length s in
+  let rec build = function
+    | [] -> ()
+    | [ p ] -> entries := String.sub s p (n - p) :: !entries
+    | p :: (q :: _ as rest) ->
+        entries := String.sub s p (q - p) :: !entries;
+        build rest
+  in
+  build starts_list;
+  List.rev !entries
+
+(* Helper: count regex matches *)
+let count_matches (re : Str.regexp) (s : string) : int =
+  let cnt = ref 0 in
+  let i = ref 0 in
+  (try
+     while true do
+       let _ = Str.search_forward re s !i in
+       incr cnt;
+       i := Str.match_end ()
+     done
+   with Not_found -> ());
+  !cnt
+
+(* BIB-002: DOI not normalised to https://doi.org/ form *)
+let r_bib_002 : rule =
+  let re_doi = Str.regexp {|doi[ \t]*=[ \t]*{|} in
+  let re_good = Str.regexp_string "https://doi.org/" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_doi s !i in
+         let after = Str.match_end () in
+         let is_good =
+           try
+             let _ = Str.search_forward re_good s after in
+             Str.match_beginning () = after
+           with Not_found -> false
+         in
+         if not is_good then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-002";
+          severity = Info;
+          message = "DOI not normalised to https://doi.org/ form";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-002"; run }
+
+(* BIB-003: Journal title capitalisation inconsistent with @string definition *)
+let r_bib_003 : rule =
+  let re_journal = Str.regexp {|journal[ \t]*=[ \t]*{|} in
+  let re_cap_word = Str.regexp {|[A-Z][a-z]+|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_journal s !i in
+         let after = Str.match_end () in
+         (* find closing brace *)
+         let j = ref after in
+         let depth = ref 1 in
+         let n = String.length s in
+         while !j < n && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         let content = String.sub s after (!j - after) in
+         (* Count capitalised words *)
+         let cap_count = count_matches re_cap_word content in
+         if cap_count >= 2 then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-003";
+          severity = Info;
+          message =
+            "Journal title capitalisation inconsistent with @string definition";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-003"; run }
+
+(* BIB-004: Book entry lacks publisher field *)
+let r_bib_004 : rule =
+  let re_book = Str.regexp {|@[Bb]ook{|} in
+  let re_publisher = Str.regexp {|publisher[ \t]*=|} in
+  let run s =
+    let entries = split_bib_entries s in
+    let cnt = ref 0 in
+    List.iter
+      (fun entry ->
+        let is_book =
+          try
+            let _ = Str.search_forward re_book entry 0 in
+            true
+          with Not_found -> false
+        in
+        if is_book then
+          let has_pub =
+            try
+              let _ = Str.search_forward re_publisher entry 0 in
+              true
+            with Not_found -> false
+          in
+          if not has_pub then incr cnt)
+      entries;
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-004";
+          severity = Warning;
+          message = "Book entry lacks publisher field";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-004"; run }
+
+(* BIB-005: URL present without urldate *)
+let r_bib_005 : rule =
+  let re_url = Str.regexp {|url[ \t]*=[ \t]*{|} in
+  let re_urldate = Str.regexp {|urldate[ \t]*=[ \t]*{|} in
+  let run s =
+    let entries = split_bib_entries s in
+    let cnt = ref 0 in
+    List.iter
+      (fun entry ->
+        (* Count url= matches minus urldate= matches to get true url count *)
+        let url_count = count_matches re_url entry in
+        let urldate_count = count_matches re_urldate entry in
+        let has_url = url_count > urldate_count in
+        if has_url then
+          let has_urldate = urldate_count > 0 in
+          if not has_urldate then incr cnt)
+      entries;
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-005";
+          severity = Info;
+          message = "URL present without urldate";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-005"; run }
+
+(* BIB-006: Author/editor names not in "von Last, First" scheme *)
+let r_bib_006 : rule =
+  let re_author = Str.regexp {|author[ \t]*=[ \t]*{|} in
+  let re_first_last = Str.regexp {|{[A-Z][a-z]+ [A-Z]|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_author s !i in
+         let after = Str.match_end () in
+         (* find closing brace *)
+         let j = ref after in
+         let depth = ref 1 in
+         let n = String.length s in
+         while !j < n && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         let content = String.sub s (after - 1) (!j - after + 2) in
+         let is_first_last =
+           try
+             let _ = Str.search_forward re_first_last content 0 in
+             (* Check there's no comma before the match — if comma present, it's
+                "Last, First" which is fine *)
+             let matched_pos = Str.match_beginning () in
+             let before = String.sub content 0 matched_pos in
+             not (String.contains before ',')
+           with Not_found -> false
+         in
+         if is_first_last then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-006";
+          severity = Info;
+          message = "Author/editor names not in “von Last, First” scheme";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-006"; run }
+
+(* BIB-008: Camel-case field names detected *)
+let r_bib_008 : rule =
+  let re = Str.regexp {|[A-Z][a-z]+ *= *{|} in
+  let re_entry = Str.regexp "@[a-zA-Z]+{" in
+  let run s =
+    (* Only flag inside bib entries *)
+    let has_bib =
+      try
+        let _ = Str.search_forward re_entry s 0 in
+        true
+      with Not_found -> false
+    in
+    if not has_bib then None
+    else
+      let cnt = count_matches re s in
+      if cnt > 0 then
+        Some
+          {
+            id = "BIB-008";
+            severity = Info;
+            message = "Camel‑case field names detected (e.g. `Title` → `title`)";
+            count = cnt;
+          }
+      else None
+  in
+  { id = "BIB-008"; run }
+
+(* BIB-009: In-proceedings entry missing required `booktitle` field *)
+let r_bib_009 : rule =
+  let re_inproc = Str.regexp {|@[Ii]n[Pp]roceedings{|} in
+  let re_booktitle = Str.regexp {|booktitle[ \t]*=|} in
+  let run s =
+    let entries = split_bib_entries s in
+    let cnt = ref 0 in
+    List.iter
+      (fun entry ->
+        let is_inproc =
+          try
+            let _ = Str.search_forward re_inproc entry 0 in
+            true
+          with Not_found -> false
+        in
+        if is_inproc then
+          let has_bt =
+            try
+              let _ = Str.search_forward re_booktitle entry 0 in
+              true
+            with Not_found -> false
+          in
+          if not has_bt then incr cnt)
+      entries;
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-009";
+          severity = Error;
+          message = "In‑proceedings entry missing required `booktitle` field";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-009"; run }
+
+(* BIB-010: `month` field uses numeric literal instead of `#jan#` macro *)
+let r_bib_010 : rule =
+  let re = Str.regexp {|month[ \t]*=[ \t]*[{0-9"]|} in
+  let run s =
+    let cnt = count_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-010";
+          severity = Info;
+          message =
+            "`month` field uses numeric literal instead of `#jan#` macro";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "BIB-010"; run }
+
+(* BIB-011: Legacy `note = {URL: ...}` field detected; move to `url` *)
+let r_bib_011 : rule =
+  let re = Str.regexp {|note[ \t]*=[ \t]*{\(URL:\|http\)|} in
+  let run s =
+    let cnt = count_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-011";
+          severity = Info;
+          message = "Legacy `note = {URL: …}` field detected; move to `url`";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "BIB-011"; run }
+
+(* BIB-012: `et al.` hard-coded in author list instead of letting Bib(La)TeX
+   truncate *)
+let r_bib_012 : rule =
+  let re_author = Str.regexp {|author[ \t]*=[ \t]*{|} in
+  let re_etal = Str.regexp_string "et al." in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_author s !i in
+         let after = Str.match_end () in
+         (* find closing brace *)
+         let j = ref after in
+         let depth = ref 1 in
+         let n = String.length s in
+         while !j < n && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         let content = String.sub s after (!j - after) in
+         let has_etal =
+           try
+             let _ = Str.search_forward re_etal content 0 in
+             true
+           with Not_found -> false
+         in
+         if has_etal then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-012";
+          severity = Warning;
+          message =
+            "`et al.` hard‑coded in author list instead of letting Bib(La)TeX \
+             truncate";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-012"; run }
+
+(* BIB-015: Trailing period in `title` or `note` field is redundant *)
+let r_bib_015 : rule =
+  let re = Str.regexp {|\(title\|note\)[ \t]*=[ \t]*{|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re s !i in
+         let after = Str.match_end () in
+         (* find closing brace *)
+         let j = ref after in
+         let depth = ref 1 in
+         let n = String.length s in
+         while !j < n && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         (* Check if char before closing brace is a period *)
+         if !j > after && s.[!j - 1] = '.' then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-015";
+          severity = Info;
+          message = "Trailing period in `title` or `note` field is redundant";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-015"; run }
+
+(* BIB-016: Both DOI and URL present — duplicate locator information *)
+let r_bib_016 : rule =
+  let re_doi = Str.regexp {|doi[ \t]*=[ \t]*{|} in
+  let re_url = Str.regexp {|url[ \t]*=[ \t]*{|} in
+  let re_urldate = Str.regexp {|urldate[ \t]*=[ \t]*{|} in
+  let run s =
+    let entries = split_bib_entries s in
+    let cnt = ref 0 in
+    List.iter
+      (fun entry ->
+        let has_doi =
+          try
+            let _ = Str.search_forward re_doi entry 0 in
+            true
+          with Not_found -> false
+        in
+        (* Count url= matches minus urldate= matches to get true url count *)
+        let url_count = count_matches re_url entry in
+        let urldate_count = count_matches re_urldate entry in
+        let has_url = url_count > urldate_count in
+        if has_doi && has_url then incr cnt)
+      entries;
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-016";
+          severity = Info;
+          message = "Both DOI and URL present—duplicate locator information";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-016"; run }
+
+(* ── PKG rules: package configuration issues ───────────────────── *)
+
+(* PKG-018: hyperref option draft left enabled *)
+let r_pkg_018 : rule =
+  let re_pkg = Str.regexp {|\\usepackage\[[^]]*draft[^]]*\]{hyperref}|} in
+  let re_setup1 = Str.regexp_string "\\hypersetup{draft}" in
+  let re_setup2 = Str.regexp_string "\\hypersetup{draft=true" in
+  let re_setup3 = Str.regexp {|\\hypersetup{[^}]*draft=true|} in
+  let run s =
+    let c1 = count_matches re_pkg s in
+    let c2 = count_matches re_setup1 s in
+    let c3 = count_matches re_setup2 s in
+    let c4 = count_matches re_setup3 s in
+    let cnt = c1 + c2 + c3 + c4 in
+    (* Avoid double-counting: re_setup2 is prefix of re_setup3 matches *)
+    let cnt = min cnt (c1 + max c2 0 + max c4 c3) in
+    if cnt > 0 then
+      Some
+        {
+          id = "PKG-018";
+          severity = Info;
+          message = "hyperref option draft left enabled";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "PKG-018"; run }
+
+(* PKG-019: geometry margin < 1 cm *)
+let r_pkg_019 : rule =
+  let re_margin_frac =
+    Str.regexp
+      {|\\\(usepackage\[[^]]*\|geometry{[^}]*\)\(margin\|left\|right\|top\|bottom\)=0\.[0-9]+cm|}
+  in
+  let re_margin_zero =
+    Str.regexp
+      {|\\\(usepackage\[[^]]*\|geometry{[^}]*\)\(margin\|left\|right\|top\|bottom\)=0cm|}
+  in
+  let run s =
+    let c1 = count_matches re_margin_frac s in
+    let c2 = count_matches re_margin_zero s in
+    let cnt = c1 + c2 in
+    if cnt > 0 then
+      Some
+        {
+          id = "PKG-019";
+          severity = Warning;
+          message = "geometry margin < 1 cm";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "PKG-019"; run }
+
+(* ── FONT rules ────────────────────────────────────────────────── *)
+
+(* FONT-005: Fontspec fallback to Latin Modern detected *)
+let r_font_005 : rule =
+  let re_fontspec = Str.regexp_string "\\usepackage{fontspec}" in
+  let re_setmain = Str.regexp_string "\\setmainfont" in
+  let run s =
+    let has_fontspec =
+      try
+        let _ = Str.search_forward re_fontspec s 0 in
+        true
+      with Not_found -> false
+    in
+    if not has_fontspec then None
+    else
+      let has_setmain =
+        try
+          let _ = Str.search_forward re_setmain s 0 in
+          true
+        with Not_found -> false
+      in
+      if has_setmain then
+        (* Check if it explicitly sets Latin Modern *)
+        let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
+        let is_lm =
+          try
+            let _ = Str.search_forward re_lm s 0 in
+            true
+          with Not_found -> false
+        in
+        if is_lm then
+          Some
+            {
+              id = "FONT-005";
+              severity = Info;
+              message = "Fontspec fallback to Latin Modern detected";
+              count = 1;
+            }
+        else None
+      else
+        Some
+          {
+            id = "FONT-005";
+            severity = Info;
+            message = "Fontspec fallback to Latin Modern detected";
+            count = 1;
+          }
+  in
+  { id = "FONT-005"; run }
+
+(* ── LAY rules: layout / spacing issues ────────────────────────── *)
+
+(* LAY-015: Line spacing < 1 or > 2 *)
+let r_lay_015 : rule =
+  let re_linespread = Str.regexp {|\\linespread{\([0-9.]+\)}|} in
+  let re_setstretch = Str.regexp {|\\setstretch{\([0-9.]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let check re =
+      let i = ref 0 in
+      try
+        while true do
+          let _ = Str.search_forward re s !i in
+          let v = Str.matched_group 1 s in
+          (try
+             let f = float_of_string v in
+             if f < 1.0 || f > 2.0 then incr cnt
+           with Failure _ -> ());
+          i := Str.match_end ()
+        done
+      with Not_found -> ()
+    in
+    check re_linespread;
+    check re_setstretch;
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-015";
+          severity = Info;
+          message = "Line spacing < 1 or > 2";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-015"; run }
+
+(* LAY-020: Float placement parameters modified (\topnumber ...) *)
+let r_lay_020 : rule =
+  let re_counter =
+    Str.regexp {|\\setcounter{\(topnumber\|bottomnumber\|totalnumber\)}|}
+  in
+  let re_fraction = Str.regexp {|\\renewcommand{\\topfraction}|} in
+  let run s =
+    let c1 = count_matches re_counter s in
+    let c2 = count_matches re_fraction s in
+    let cnt = c1 + c2 in
+    if cnt > 0 then
+      Some
+        {
+          id = "LAY-020";
+          severity = Info;
+          message = "Float placement parameters modified (\\topnumber …)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "LAY-020"; run }
+
+(* LAY-022: Global negative \parskip detected *)
+let r_lay_022 : rule =
+  let re = Str.regexp_string "\\setlength{\\parskip}{-" in
+  let run s =
+    let cnt = count_matches re s in
+    if cnt > 0 then
+      Some
+        {
+          id = "LAY-022";
+          severity = Warning;
+          message = {|Global negative \parskip detected|};
+          count = cnt;
+        }
+    else None
+  in
+  { id = "LAY-022"; run }
+
+(* ── REF rules ─────────────────────────────────────────────────── *)
+
+(* REF-008: Duplicate cite key in .bib file *)
+let r_ref_008 : rule =
+  let re_entry = Str.regexp {|@[a-zA-Z]+{[ \t]*\([^, \t\n}]+\)|} in
+  let run s =
+    let keys = Hashtbl.create 64 in
+    let i = ref 0 in
+    (try
+       while true do
+         let _ = Str.search_forward re_entry s !i in
+         let key = Str.matched_group 1 s in
+         (match Hashtbl.find_opt keys key with
+         | Some n -> Hashtbl.replace keys key (n + 1)
+         | None -> Hashtbl.replace keys key 1);
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt =
+      Hashtbl.fold (fun _ n acc -> if n > 1 then acc + 1 else acc) keys 0
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "REF-008";
+          severity = Warning;
+          message = "Duplicate cite key in .bib file";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "REF-008"; run }
+
+(* ── META rules ────────────────────────────────────────────────── *)
+
+(* META-001: PDF /Producer not set to deterministic hash *)
+let r_meta_001 : rule =
+  let re_hyperref_with_opts = Str.regexp {|\\usepackage\[[^]]*\]{hyperref}|} in
+  let re_hyperref_no_opts = Str.regexp_string "\\usepackage{hyperref}" in
+  let re_producer = Str.regexp_string "pdfproducer=" in
+  let run s =
+    let has_hyperref =
+      try
+        let _ = Str.search_forward re_hyperref_with_opts s 0 in
+        true
+      with Not_found -> (
+        try
+          let _ = Str.search_forward re_hyperref_no_opts s 0 in
+          true
+        with Not_found -> false)
+    in
+    if not has_hyperref then None
+    else
+      let has_producer =
+        try
+          let _ = Str.search_forward re_producer s 0 in
+          true
+        with Not_found -> false
+      in
+      if has_producer then None
+      else
+        Some
+          {
+            id = "META-001";
+            severity = Info;
+            message = "PDF /Producer not set to deterministic hash";
+            count = 1;
+          }
+  in
+  { id = "META-001"; run }
+
+(* ── PDF rules ─────────────────────────────────────────────────── *)
+
+(* PDF-010: Outline/bookmark text contains '_' or '#' -- use \texorpdfstring *)
+let r_pdf_010 : rule =
+  let re_sec =
+    Str.regexp {|\\\(section\|subsection\|subsubsection\|chapter\){|}
+  in
+  let re_texorpdf = Str.regexp_string "\\texorpdfstring" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    let n = String.length s in
+    (try
+       while true do
+         let pos = Str.search_forward re_sec s !i in
+         let after = Str.match_end () in
+         (* find matching closing brace *)
+         let j = ref after in
+         let depth = ref 1 in
+         while !j < n && !depth > 0 do
+           (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         let content = String.sub s after (!j - after) in
+         let has_special =
+           String.contains content '_' || String.contains content '#'
+         in
+         let has_texorpdf =
+           try
+             let _ = Str.search_forward re_texorpdf content 0 in
+             true
+           with Not_found -> false
+         in
+         if has_special && not has_texorpdf then incr cnt;
+         i := pos + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "PDF-010";
+          severity = Info;
+          message =
+            "Outline/bookmark text contains '_' or '#' – use \\texorpdfstring";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "PDF-010"; run }
+
+(* ── TIKZ rules ────────────────────────────────────────────────── *)
+
+(* TIKZ-005: TikZ externalisation not enabled for large figures *)
+let r_tikz_005 : rule =
+  let re_tikz = Str.regexp_string "\\begin{tikzpicture}" in
+  let re_ext_lib = Str.regexp_string "\\usetikzlibrary{external}" in
+  let re_ext_cmd = Str.regexp_string "\\tikzexternalize" in
+  let run s =
+    let has_tikz =
+      try
+        let _ = Str.search_forward re_tikz s 0 in
+        true
+      with Not_found -> false
+    in
+    if not has_tikz then None
+    else
+      let has_ext_lib =
+        try
+          let _ = Str.search_forward re_ext_lib s 0 in
+          true
+        with Not_found -> false
+      in
+      let has_ext_cmd =
+        try
+          let _ = Str.search_forward re_ext_cmd s 0 in
+          true
+        with Not_found -> false
+      in
+      if has_ext_lib || has_ext_cmd then None
+      else
+        Some
+          {
+            id = "TIKZ-005";
+            severity = Info;
+            message = "TikZ externalisation not enabled for large figures";
+            count = 1;
+          }
+  in
+  { id = "TIKZ-005"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -9722,6 +10498,28 @@ let rules_l2_approx : rule list =
     r_lay_024;
     r_meta_002;
     r_rtl_005;
+    r_bib_002;
+    r_bib_003;
+    r_bib_004;
+    r_bib_005;
+    r_bib_006;
+    r_bib_008;
+    r_bib_009;
+    r_bib_010;
+    r_bib_011;
+    r_bib_012;
+    r_bib_015;
+    r_bib_016;
+    r_pkg_018;
+    r_pkg_019;
+    r_font_005;
+    r_lay_015;
+    r_lay_020;
+    r_lay_022;
+    r_ref_008;
+    r_meta_001;
+    r_pdf_010;
+    r_tikz_005;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)
@@ -15962,6 +16760,17 @@ let precondition_of_rule_id (id : string) : layer =
   | "LAY-024" -> L2
   | "META-002" -> L2
   | "RTL-005" -> L2
+  (* batch 6: L3 text-scannable approximations — L2_Ast overrides *)
+  | "BIB-002" | "BIB-003" | "BIB-004" | "BIB-005" | "BIB-006" -> L2
+  | "BIB-008" | "BIB-009" | "BIB-010" | "BIB-011" | "BIB-012" -> L2
+  | "BIB-015" | "BIB-016" -> L2
+  | "PKG-018" | "PKG-019" -> L2
+  | "FONT-005" -> L2
+  | "LAY-015" | "LAY-020" | "LAY-022" -> L2
+  | "REF-008" -> L2
+  | "META-001" -> L2
+  | "PDF-010" -> L2
+  | "TIKZ-005" -> L2
   (* Prefix-based mappings *)
   | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
   | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0

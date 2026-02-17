@@ -277,6 +277,9 @@ let () =
   run_golden_suite "l5_expl3_tikz"
     (Filename.concat base_dir "specs/rules/l5_expl3_tikz_golden.yaml")
     base_dir;
+  run_golden_suite "l3_text_approx"
+    (Filename.concat base_dir "specs/rules/l3_text_approx_golden.yaml")
+    base_dir;
   if !fails > 0 then (
     Printf.eprintf "[golden] %d failure(s) in %d cases\n%!" !fails !cases;
     exit 1)

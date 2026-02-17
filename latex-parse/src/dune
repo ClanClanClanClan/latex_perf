@@ -336,6 +336,7 @@
   ../../specs/rules/l2_batch3_golden.yaml
   ../../specs/rules/l2_batch4_golden.yaml
   ../../specs/rules/l5_expl3_tikz_golden.yaml
+  ../../specs/rules/l3_text_approx_golden.yaml
   (source_tree ../../corpora)))
 
 (test
@@ -371,4 +372,9 @@
 (test
  (name test_validators_l5_expl3_tikz)
  (modules test_validators_l5_expl3_tikz)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_validators_l3_text_approx)
+ (modules test_validators_l3_text_approx)
  (libraries latex_parse_lib unix))

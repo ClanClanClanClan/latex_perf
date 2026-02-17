@@ -1,0 +1,45 @@
+cases:
+  - file: corpora/lint/l3_text_approx/bib_002.tex
+    expect: ["BIB-002"]
+  - file: corpora/lint/l3_text_approx/bib_003.tex
+    expect: ["BIB-003"]
+  - file: corpora/lint/l3_text_approx/bib_004.tex
+    expect: ["BIB-004"]
+  - file: corpora/lint/l3_text_approx/bib_005.tex
+    expect: ["BIB-005"]
+  - file: corpora/lint/l3_text_approx/bib_006.tex
+    expect: ["BIB-006"]
+  - file: corpora/lint/l3_text_approx/bib_008.tex
+    expect: ["BIB-008"]
+  - file: corpora/lint/l3_text_approx/bib_009.tex
+    expect: ["BIB-009"]
+  - file: corpora/lint/l3_text_approx/bib_010.tex
+    expect: ["BIB-010"]
+  - file: corpora/lint/l3_text_approx/bib_011.tex
+    expect: ["BIB-011"]
+  - file: corpora/lint/l3_text_approx/bib_012.tex
+    expect: ["BIB-012"]
+  - file: corpora/lint/l3_text_approx/bib_015.tex
+    expect: ["BIB-015"]
+  - file: corpora/lint/l3_text_approx/bib_016.tex
+    expect: ["BIB-016"]
+  - file: corpora/lint/l3_text_approx/pkg_018.tex
+    expect: ["PKG-018"]
+  - file: corpora/lint/l3_text_approx/pkg_019.tex
+    expect: ["PKG-019"]
+  - file: corpora/lint/l3_text_approx/font_005.tex
+    expect: ["FONT-005"]
+  - file: corpora/lint/l3_text_approx/lay_015.tex
+    expect: ["LAY-015"]
+  - file: corpora/lint/l3_text_approx/lay_020.tex
+    expect: ["LAY-020"]
+  - file: corpora/lint/l3_text_approx/lay_022.tex
+    expect: ["LAY-022"]
+  - file: corpora/lint/l3_text_approx/ref_008.tex
+    expect: ["REF-008"]
+  - file: corpora/lint/l3_text_approx/meta_001.tex
+    expect: ["META-001"]
+  - file: corpora/lint/l3_text_approx/pdf_010.tex
+    expect: ["PDF-010"]
+  - file: corpora/lint/l3_text_approx/tikz_005.tex
+    expect: ["TIKZ-005"]

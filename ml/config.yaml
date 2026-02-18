@@ -1,0 +1,50 @@
+# ML Span Extractor — Master Configuration
+# All hyperparameters, paths, and seeds live here for reproducibility.
+
+seed: 42
+
+paths:
+  vpd_patterns: "../specs/rules/vpd_patterns.json"
+  golden_yaml: "../specs/rules/pilot_v1_golden.yaml"
+  corpus_dir: "../corpora/lint/pilot_v1"
+  labeled_jsonl: "data/labeled_spans.jsonl"
+  train_jsonl: "data/train.jsonl"
+  dev_jsonl: "data/dev.jsonl"
+  eval_results: "eval_results.json"
+
+labeling:
+  # Maximum document length (chars) for BIO tagging
+  max_doc_length: 500000
+  # Context window for feature extraction (chars)
+  context_window: 5
+
+split:
+  train_ratio: 0.80
+  dev_ratio: 0.20
+  stratify_by_rule: true
+
+baseline_logreg:
+  C: 1.0
+  max_iter: 1000
+  solver: "lbfgs"
+  ngram_range: [1, 3]
+
+baseline_gbt:
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.1
+  subsample: 0.8
+
+bert_crf:
+  model_name: "allenai/scibert_scivocab_uncased"
+  max_length: 512
+  batch_size: 16
+  epochs: 5
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  crf_learning_rate: 1.0e-3
+
+evaluation:
+  f1_threshold: 0.94
+  metric: "span_f1"  # span-level, not token-level

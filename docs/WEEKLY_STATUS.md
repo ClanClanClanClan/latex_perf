@@ -1,4 +1,4 @@
-Weekly Status (Weeks 0–10)
+Weekly Status (Weeks 0–25)
 ==========================
 
 Week 0 — Bootstrap
@@ -261,15 +261,78 @@ Week 21 — L2-Approximable Rules Batch 3 (CMD, DOC, TAB, PKG, LANG, TIKZ, FIG)
 - 396/396 messages match spec, 0 mismatches
 - All dune build, dune runtest, dune fmt: exit 0
 
-Current State (Post Week 21 / Phase 2 Active)
-- Validators: 406 rules implemented out of 623 spec rules (65.2%)
-  - Y1 target: 180 rules — well exceeded (2.2x)
-  - L0/L1: 100% actionable (333 impl + 12 Reserved)
-  - L2-approx: 47 rules (FIG, TAB, PKG, CJK, FONT, MATH, REF, CMD, DOC, LANG, TIKZ)
-  - Remaining: 217 rules (L2/L3/L4 layer — BIB, FIG, LAY, PKG, STYLE, TAB, TIKZ)
+Week 22 — Audit Remediation (PR #138)
+- Critical bug fixes across previously-landed rules:
+  - MATH-063: String.split_on_char '\\' bug (was splitting on single '\' not '\\')
+  - CMD-005: \def\x{body} pattern detection for custom macros
+  - PKG-007/PKG-023/TIKZ-007: Standardised to first-occurrence logic
+  - FIG-010: Now checks both subfigure and subfigure* environments
+  - DOC-001/002/003: Added article-like class guard (excludes beamer, letter, standalone)
+- 43 new regression tests in test_validators_audit.ml
+- No new rules (406 maintained); zero regressions on existing suites
+- All dune build, dune runtest, dune fmt: exit 0
+
+Week 23 — L2-Approximable Batch 4: Final Text-Scannable (PR #139)
+- 27 new validators — exhausts all L2 rules implementable without AST parsing:
+  - PKG: 9 rules (PKG-003/006/008/010/013/014/016/017/021)
+  - TAB: 7 rules (TAB-003/004/007/008/012/013/015)
+  - FIG: 7 rules (FIG-004/005/006/008/011/012/014)
+  - MATH: 2 rules (MATH-033/101)
+  - CMD: 1 rule (CMD-011)
+  - DOC: 1 rule (DOC-004)
+- New helpers: extract_usepackages_with_opts, extract_caption_content
+- Bug fix: Str.group_end crash in regex state management
+- 77 unit tests in test_validators_l2_batch4.ml
+- 27 corpus files in corpora/lint/l2_batch4/
+- 27 golden entries in l2_batch4_golden.yaml (189 total golden cases, all pass)
+- 433/433 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Week 24 — Text-Scannable Draft Rules: expl3, TIKZ, LANG (PR #140)
+- 25 new validators across L3-expl3, TIKZ, LANG, and other families:
+  - L3-expl3: 9 rules (L3-001..L3-007, L3-009, L3-011)
+  - TIKZ: 6 rules (TIKZ-001/003/004/006/009/010)
+  - LANG: 4 rules (LANG-001/006/007/013)
+  - Others: COL-006, L3-008, L3-010, LAY-024, META-002, RTL-005
+- Fixes: META-002 hash regex (OCaml Str has no {n,m} quantifier — used consecutive classes)
+- Fixes: LANG-013 logic rewrite (compare selectlanguage before vs after abstract)
+- Fixes: TIKZ-009 raw string termination
+- 111 unit tests in test_validators_l5_expl3_tikz.ml
+- 25 golden corpus files (214 total golden cases, all pass)
+- 437/437 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Week 25 — L3_Semantics Text-Scannable Approximations (PR #141)
+- 22 new validators — L3_Semantics rules approximated via text scanning at L2:
+  - BIB: 12 rules (BIB-002..016 excl 007/013/014)
+  - PKG: 2 rules (PKG-018/019)
+  - FONT: 1 rule (FONT-005)
+  - LAY: 3 rules (LAY-015/020/022)
+  - REF: 1 rule (REF-008)
+  - META: 1 rule (META-001)
+  - PDF: 1 rule (PDF-010)
+  - TIKZ: 1 rule (TIKZ-005)
+- New helpers: split_bib_entries, count_matches
+- Exhausts all rules implementable via text scanning — remaining gaps require LaTeX
+  compiler integration (L3) or NLP pipeline (L4)
+- 94 unit tests in test_validators_l3_text_approx.ml
+- 22 corpus files in corpora/lint/l3_text_approx/
+- 22 golden entries in l3_text_approx_golden.yaml (236 total golden cases, all pass)
+- 459/459 messages match spec, 0 mismatches
+- All dune build, dune runtest, dune fmt: exit 0
+
+Current State (Post Week 25 / Phase 2 Active, entering Q3)
+- Validators: 482 rules implemented out of 623 spec rules (77.4%)
+  - Y1 target: 180 rules — exceeded by 2.7× (ahead of schedule)
+  - L0_Lexer: 183/187 (97.9%) — 4 remaining are Reserved
+  - L1_Expanded: 150/158 (94.9%) — 8 remaining are Reserved (MATH-001..008)
+  - L2_Ast: 96/96 (100%) — complete
+  - L3_Semantics: 24/112 (21.4%) — 84 Draft + 4 Reserved remaining (need compile step)
+  - L4_Style: 10/70 (14.3%) — 60 Draft remaining (need NLP pipeline)
+  - All text-scannable rules exhausted; remaining gaps blocked on infrastructure
 - VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
 - Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
 - Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
-- CI: 31 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
-- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13)
-- Next gate: L2 delivered (W52) — L0/L1 rules complete, focus shifts to parser + higher layers
+- CI: 35 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
+- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26)
+- Next per timeline: W27-30 Generic proof tactics (RegexFamily), then W31-35 ML span extractor

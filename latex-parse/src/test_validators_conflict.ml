@@ -217,6 +217,68 @@ let () =
             (List.length typo_results)))
 
 (* ══════════════════════════════════════════════════════════════════════ §10
+   Clean input triggers no ENC rules
+   ══════════════════════════════════════════════════════════════════════ *)
+
+let () =
+  (* Pure ASCII, valid UTF-8, no encoding anomalies *)
+  let src = "A perfectly normal paragraph with ASCII text only." in
+  let results = Validators.run_all src in
+  let enc_results =
+    List.filter
+      (fun (r : Validators.result) ->
+        String.length r.id >= 3 && String.sub r.id 0 3 = "ENC")
+      results
+  in
+  run "clean input: no ENC rules fire" (fun tag ->
+      expect (enc_results = [])
+        (tag
+        ^ Printf.sprintf ": %d ENC rules fired unexpectedly"
+            (List.length enc_results)))
+
+(* ══════════════════════════════════════════════════════════════════════ §11
+   Properly escaped LaTeX triggers no escaping rules
+   ══════════════════════════════════════════════════════════════════════ *)
+
+let () =
+  (* Well-formed LaTeX with no special characters *)
+  let src = "This is a simple LaTeX document with no issues at all." in
+  let results = Validators.run_all src in
+  let typo_results =
+    List.filter
+      (fun (r : Validators.result) ->
+        String.length r.id >= 4 && String.sub r.id 0 4 = "TYPO")
+      results
+  in
+  run "escaped LaTeX: no TYPO rules fire" (fun tag ->
+      expect (typo_results = [])
+        (tag
+        ^ Printf.sprintf ": %d TYPO rules fired on clean LaTeX"
+            (List.length typo_results)))
+
+(* ══════════════════════════════════════════════════════════════════════ §12
+   Deferred rules never fire
+   ══════════════════════════════════════════════════════════════════════ *)
+
+let () =
+  (* TYPO-019, -020, -030, -031 are NLP stubs returning None *)
+  let src =
+    "He went to the store, he bought some milk.\n\
+     I can not believe it\n\
+     The colour of the aeroplane was grey.\n"
+  in
+  let results = Validators.run_all src in
+  let deferred = [ "TYPO-019"; "TYPO-020"; "TYPO-030"; "TYPO-031" ] in
+  List.iter
+    (fun did ->
+      let fired =
+        List.exists (fun (r : Validators.result) -> r.id = did) results
+      in
+      run (Printf.sprintf "deferred %s does not fire" did) (fun tag ->
+          expect (not fired) (tag ^ ": " ^ did ^ " should never fire")))
+    deferred
+
+(* ══════════════════════════════════════════════════════════════════════ §13
    Triple-fire input — at least 3 different rules
    ══════════════════════════════════════════════════════════════════════ *)
 

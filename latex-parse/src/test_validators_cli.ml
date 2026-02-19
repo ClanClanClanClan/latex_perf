@@ -75,7 +75,9 @@ let () =
       in
       List.iter
         (fun line ->
-          let id = List.hd (String.split_on_char '\t' line) in
+          let id =
+            match String.split_on_char '\t' line with x :: _ -> x | [] -> ""
+          in
           let layer = Latex_parse_lib.Validators.precondition_of_rule_id id in
           expect
             (layer = Latex_parse_lib.Validators.L0)

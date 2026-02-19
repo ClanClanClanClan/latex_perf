@@ -30,6 +30,12 @@ let count_substring (s : string) (sub : string) : int =
     in
     loop 0 0
 
+let contains_substring (s : string) (needle : string) : bool =
+  try
+    ignore (Str.search_forward (Str.regexp_string needle) s 0);
+    true
+  with Not_found -> false
+
 let any_line_pred (s : string) (pred : string -> bool) : int * int =
   (* returns (lines_checked, lines_matched) *)
   let len = String.length s in
@@ -846,6 +852,14 @@ let r_typo_018 : rule =
   in
   { id = "TYPO-018"; run }
 
+(* ── DEFERRED NLP STUBS ──────────────────────────────────────────────
+   TYPO-019, -020, -030, -031 require NLP analysis and return None
+   unconditionally.  They are included in rules_pilot for API
+   completeness but are excluded from rules_vpd_catalogue and have no
+   VPD pattern entries or Coq soundness proofs.
+   Status: blocked on NLP integration (tracked in WEEKLY_STATUS.md).
+   ──────────────────────────────────────────────────────────────────── *)
+
 (* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
 let r_typo_019 : rule =
   let run _s = None in
@@ -1090,13 +1104,14 @@ let r_typo_029 : rule =
   in
   { id = "TYPO-029"; run }
 
-(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP *)
+(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP
+   (see comment block before TYPO-019 above) *)
 let r_typo_030 : rule =
   let run _s = None in
   { id = "TYPO-030"; run }
 
 (* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
-   NLP *)
+   NLP (see comment block before TYPO-019 above) *)
 let r_typo_031 : rule =
   let run _s = None in
   { id = "TYPO-031"; run }
@@ -7163,10 +7178,7 @@ let r_doc_001 : rule =
     if not (is_article_like s) then None
     else
       let has_maketitle =
-        try
-          ignore (Str.search_forward (Str.regexp_string "\\maketitle") s 0);
-          true
-        with Not_found -> false
+        contains_substring s "\\maketitle"
       in
       if not has_maketitle then
         Some
@@ -7187,11 +7199,7 @@ let r_doc_002 : rule =
     if not (is_article_like s) then None
     else
       let has_abstract =
-        try
-          ignore
-            (Str.search_forward (Str.regexp_string "\\begin{abstract}") s 0);
-          true
-        with Not_found -> false
+        contains_substring s "\\begin{abstract}"
       in
       if not has_abstract then
         Some
@@ -7212,10 +7220,7 @@ let r_doc_003 : rule =
     if not (is_article_like s) then None
     else
       let has_keywords =
-        try
-          ignore (Str.search_forward (Str.regexp_string "\\keywords{") s 0);
-          true
-        with Not_found -> false
+        contains_substring s "\\keywords{"
       in
       if not has_keywords then
         Some
@@ -7324,21 +7329,14 @@ let r_tab_011 : rule =
       List.fold_left
         (fun acc body ->
           let has_hline =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\hline") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\hline"
           in
           let has_booktabs =
             try
               ignore (Str.search_forward (Str.regexp_string "\\toprule") body 0);
               true
             with Not_found -> (
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\bottomrule") body 0);
-                true
-              with Not_found -> false)
+              contains_substring body "\\bottomrule")
           in
           if has_hline && not has_booktabs then acc + 1 else acc)
         0 blocks
@@ -7716,11 +7714,7 @@ let r_fig_010 : rule =
                 (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
               true
             with Not_found -> (
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\caption") body 0);
-                true
-              with Not_found -> false)
+              contains_substring body "\\caption")
           in
           if not has_subcap then acc + 1 else acc)
         0 blocks
@@ -7822,11 +7816,7 @@ let r_pkg_008 : rule =
         (fun (_pos, opts, name) ->
           name = "xcolor"
           && not
-               (try
-                  ignore
-                    (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
-                  true
-                with Not_found -> false))
+               (contains_substring opts "dvipsnames"))
         pkgs
     in
     if has_xcolor_no_dvips then
@@ -7851,11 +7841,7 @@ let r_pkg_010 : rule =
         (fun (_pos, opts, name) ->
           name = "biblatex"
           &&
-          try
-            ignore
-              (Str.search_forward (Str.regexp_string "backend=biber") opts 0);
-            true
-          with Not_found -> false)
+          contains_substring opts "backend=biber")
         pkgs
     in
     if has_deprecated then
@@ -7925,10 +7911,7 @@ let r_pkg_016 : rule =
         (fun (_pos, opts, name) ->
           name = "graphicx"
           &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "pdftex") opts 0);
-            true
-          with Not_found -> false)
+          contains_substring opts "pdftex")
         pkgs
     in
     if has_pdftex_opt then
@@ -7958,17 +7941,11 @@ let r_pkg_017 : rule =
             (name = "fontenc"
             && String.length opts > 0
             &&
-            try
-              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-              true
-            with Not_found -> false)
+            contains_substring opts "T1")
             || name = "inputenc"
                && String.length opts > 0
                &&
-               try
-                 ignore (Str.search_forward (Str.regexp_string "utf8") opts 0);
-                 true
-               with Not_found -> false)
+               contains_substring opts "utf8")
           pkgs
       in
       if has_pdftex_marker then
@@ -8062,10 +8039,7 @@ let r_pkg_025 : rule =
         (fun (_, opts, name) ->
           name = "fontenc"
           &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-            true
-          with Not_found -> false)
+          contains_substring opts "T1")
         pkgs
     in
     let has_inputenc =
@@ -8111,10 +8085,7 @@ let r_tab_003 : rule =
                 let spec = Str.matched_group 1 s in
                 String.contains spec 'S'
                 ||
-                try
-                  ignore (Str.search_forward (Str.regexp_string "@{.}") spec 0);
-                  true
-                with Not_found -> false
+                contains_substring spec "@{.}"
               with Not_found -> false
             in
             if has_s_col then acc else acc + 1)
@@ -8159,13 +8130,7 @@ let r_tab_007 : rule =
                      (Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|})
                      body 0);
                 let has_mc =
-                  try
-                    ignore
-                      (Str.search_forward
-                         (Str.regexp_string "\\multicolumn")
-                         body 0);
-                    true
-                  with Not_found -> false
+                  contains_substring body "\\multicolumn"
                 in
                 not has_mc
               with Not_found -> false
@@ -8263,10 +8228,7 @@ let r_tab_013 : rule =
       List.fold_left
         (fun acc body ->
           let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\caption"
           in
           if not has_caption then acc
           else
@@ -8301,18 +8263,10 @@ let r_tab_015 : rule =
       List.fold_left
         (fun acc body ->
           let has_multirow =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\multirow") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\multirow"
           in
           let has_raggedright =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\raggedright") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\raggedright"
           in
           if has_multirow && not has_raggedright then acc + 1 else acc)
         0 blocks
@@ -8419,10 +8373,7 @@ let r_fig_017 : rule =
     (* Only fire if no landscape geometry *)
     if !cnt > 0 then
       let has_landscape =
-        try
-          ignore (Str.search_forward (Str.regexp_string "landscape") s 0);
-          true
-        with Not_found -> false
+        contains_substring s "landscape"
       in
       if not has_landscape then
         Some
@@ -8446,17 +8397,10 @@ let r_fig_019 : rule =
       List.fold_left
         (fun acc body ->
           let has_subcap =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\subcaption"
           in
           let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\caption"
           in
           if (not has_subcap) && not has_caption then acc + 1 else acc)
         0 blocks
@@ -8592,11 +8536,7 @@ let r_math_075 : rule =
         List.iter
           (fun body ->
             let has_nonumber =
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\nonumber") body 0);
-                true
-              with Not_found -> false
+              contains_substring body "\\nonumber"
             in
             if has_nonumber then
               let labels = extract_labels_with_prefix "eq:" body in
@@ -8856,10 +8796,7 @@ let r_l3_005 : rule =
       with Not_found -> false
     in
     let has_guard =
-      try
-        ignore (Str.search_forward (Str.regexp_string "\\ExplSyntaxOn") s 0);
-        true
-      with Not_found -> false
+      contains_substring s "\\ExplSyntaxOn"
     in
     if has_expl3 && not has_guard then
       Some
@@ -9023,13 +8960,7 @@ let r_tikz_001 : rule =
          let inside_fig =
            List.exists
              (fun body ->
-               try
-                 ignore
-                   (Str.search_forward
-                      (Str.regexp_string "\\begin{tikzpicture}")
-                      body 0);
-                 true
-               with Not_found -> false)
+               contains_substring body "\\begin{tikzpicture}")
              fig_blocks
          in
          if not inside_fig then incr cnt;
@@ -9115,19 +9046,10 @@ let r_tikz_006 : rule =
       List.fold_left
         (fun acc body ->
           let has_tikz =
-            try
-              ignore
-                (Str.search_forward
-                   (Str.regexp_string "\\begin{tikzpicture}")
-                   body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\begin{tikzpicture}"
           in
           let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
+            contains_substring body "\\caption"
           in
           if has_tikz && not has_caption then acc + 1 else acc)
         0 fig_blocks
@@ -9163,10 +9085,7 @@ let r_tikz_009 : rule =
     if not has_arrows then None
     else
       let has_lib =
-        try
-          ignore (Str.search_forward (Str.regexp_string "arrows.meta") s 0);
-          true
-        with Not_found -> false
+        contains_substring s "arrows.meta"
       in
       if not has_lib then
         Some
@@ -9415,10 +9334,7 @@ let r_col_006 : rule =
         (fun (_pos, opts, name) ->
           name = "xcolor"
           &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
-            true
-          with Not_found -> false)
+          contains_substring opts "dvipsnames")
         pkgs
     in
     if not has_dvips_xcolor then None
@@ -9428,10 +9344,7 @@ let r_col_006 : rule =
           (fun (_, opts, name) ->
             (name = "fontenc"
             &&
-            try
-              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-              true
-            with Not_found -> false)
+            contains_substring opts "T1")
             || name = "inputenc")
           pkgs
       in
@@ -9465,11 +9378,7 @@ let r_l3_008 : rule =
           (Str.search_forward (Str.regexp_string "\\ProvidesExplPackage") s 0);
         true
       with Not_found -> (
-        try
-          ignore
-            (Str.search_forward (Str.regexp_string "\\ProvidesExplClass") s 0);
-          true
-        with Not_found -> false)
+        contains_substring s "\\ProvidesExplClass")
     in
     if has_expl3 && not has_provides then
       Some
@@ -9604,10 +9513,7 @@ let r_rtl_005 : rule =
           ignore (Str.search_forward (Str.regexp_string "\\newfontfamily") s 0);
           true
         with Not_found -> (
-          try
-            ignore (Str.search_forward (Str.regexp_string "\\setmainfont") s 0);
-            true
-          with Not_found -> false)
+          contains_substring s "\\setmainfont")
       in
       if not has_font_spec then
         Some

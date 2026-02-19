@@ -35,7 +35,9 @@ let () =
       set_post_commands xs;
       let got = get_post_commands () in
       expect (List.length got = 3) (tag ^ ": length");
-      expect ((List.hd got).name = "a") (tag ^ ": first name");
+      expect
+        (match got with h :: _ -> h.name = "a" | [] -> false)
+        (tag ^ ": first name");
       clear ());
 
   (* 3. Clear removes state *)
@@ -53,7 +55,9 @@ let () =
       set_post_commands [ { name = "new"; s = 2; e = 3 } ];
       let got = get_post_commands () in
       expect (List.length got = 1) (tag ^ ": length");
-      expect ((List.hd got).name = "new") (tag ^ ": name");
+      expect
+        (match got with h :: _ -> h.name = "new" | [] -> false)
+        (tag ^ ": name");
       clear ());
 
   (* 5. Thread isolation: spawned thread sees empty *)

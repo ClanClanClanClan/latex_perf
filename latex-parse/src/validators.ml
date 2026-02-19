@@ -99,7 +99,9 @@ let strip_math_segments (s : string) : string =
       "displaymath";
     ]
   in
-  let is_math_env name = List.exists (String.equal name) math_envs in
+  let math_env_tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace math_env_tbl e ()) math_envs;
+  let is_math_env name = Hashtbl.mem math_env_tbl name in
   let starts_with prefix idx =
     let plen = String.length prefix in
     idx + plen <= len && String.sub s idx plen = prefix
@@ -1237,11 +1239,11 @@ let r_typo_035 : rule =
 
 (* Suspicious consecutive capitalised words (shouting) *)
 let r_typo_036 : rule =
+  let re =
+    Str.regexp
+      {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
+  in
   let run s =
-    let re =
-      Str.regexp
-        {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
-    in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1279,8 +1281,8 @@ let r_typo_037 : rule =
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
+  let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
   let run s =
-    let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1590,8 +1592,8 @@ let r_typo_053 : rule =
 
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
+  let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
   let run s =
-    let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1629,8 +1631,8 @@ let r_typo_055 : rule =
 
 (* Missing thin-space before degree symbol *)
 let r_typo_057 : rule =
+  let re = Str.regexp "[0-9]\xc2\xb0" in
   let run s =
-    let re = Str.regexp "[0-9]\xc2\xb0" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1685,8 +1687,8 @@ let r_typo_063 : rule =
 
 (* URL split across lines without \url{} *)
 let r_typo_039 : rule =
+  let re = Str.regexp "https?://[^ \t\n}]+" in
   let run s =
-    let re = Str.regexp "https?://[^ \t\n}]+" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1708,8 +1710,8 @@ let r_typo_039 : rule =
 
 (* Inline math $...$ exceeds 80 characters *)
 let r_typo_040 : rule =
+  let re = Str.regexp "\\$\\([^$]+\\)\\$" in
   let run s =
-    let re = Str.regexp "\\$\\([^$]+\\)\\$" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1814,8 +1816,8 @@ let r_typo_049 : rule =
 
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
+  let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
   let run s =
-    let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3886,10 +3888,9 @@ let r_spc_035 : rule =
 
 (* SPC-010: Two spaces after sentence-ending period *)
 let r_spc_010 : rule =
+  let re = Str.regexp "\\. +[A-Z]" in
   let run s =
     let s = strip_math_segments s in
-    (* Match ". " (period + two spaces) followed by an uppercase letter *)
-    let re = Str.regexp "\\. +[A-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3915,9 +3916,9 @@ let r_spc_010 : rule =
 
 (* SPC-018: No space after sentence-ending period (period+uppercase) *)
 let r_spc_018 : rule =
+  let re = Str.regexp "\\.[A-Z]" in
   let run s =
     let s = strip_math_segments s in
-    let re = Str.regexp "\\.[A-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3955,8 +3956,8 @@ let r_spc_022 : rule =
 
 (* SPC-027: Trailing whitespace inside \url{} *)
 let r_spc_027 : rule =
+  let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
   let run s =
-    let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -8598,6 +8599,7 @@ let r_math_080 : rule =
 
 (* ── CMD-012: \renewcommand\thesection after hyperref ────────────── *)
 let r_cmd_012 : rule =
+  let re = Str.regexp_string "\\renewcommand{\\thesection}" in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages preamble in
@@ -8612,7 +8614,6 @@ let r_cmd_012 : rule =
     match hyp_pos with
     | None -> None
     | Some hp ->
-        let re = Str.regexp_string "\\renewcommand{\\thesection}" in
         let found =
           try
             let p = Str.search_forward re preamble 0 in
@@ -10024,6 +10025,7 @@ let r_pkg_019 : rule =
 let r_font_005 : rule =
   let re_fontspec = Str.regexp_string "\\usepackage{fontspec}" in
   let re_setmain = Str.regexp_string "\\setmainfont" in
+  let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
   let run s =
     let has_fontspec =
       try
@@ -10041,7 +10043,6 @@ let r_font_005 : rule =
       in
       if has_setmain then
         (* Check if it explicitly sets Latin Modern *)
-        let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
         let is_lm =
           try
             let _ = Str.search_forward re_lm s 0 in
@@ -10624,6 +10625,7 @@ let r_cmd_009 : rule =
 (* CMD-011: Macro defined with \def/\edef in preamble without \makeatletter
    guard *)
 let r_cmd_011 : rule =
+  let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
   let run s =
     (* Extract preamble: everything before \begin{document} *)
     let tag = "\\begin{document}" in
@@ -10633,7 +10635,6 @@ let r_cmd_011 : rule =
         String.sub s 0 pos
       with Not_found -> s
     in
-    let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
     let has_makeatletter =
       try
         let _ =
@@ -11256,7 +11257,9 @@ let extract_math_segments (s : string) : string list =
       "displaymath";
     ]
   in
-  let is_math_env name = List.exists (String.equal name) math_envs in
+  let math_env_tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace math_env_tbl e ()) math_envs;
+  let is_math_env name = Hashtbl.mem math_env_tbl name in
   let starts_with prefix idx =
     let plen = String.length prefix in
     idx + plen <= len && String.sub s idx plen = prefix
@@ -11465,6 +11468,8 @@ let l1_delim_005_rule : rule =
     else if count_substring s "\\big" > 0 then 1
     else 0
   in
+  let re_left = Str.regexp {|\\left|} in
+  let re_right = Str.regexp {|\\right|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -11472,8 +11477,6 @@ let l1_delim_005_rule : rule =
       (fun seg ->
         (* Look for \left...\right pairs and check if sizing commands within
            differ *)
-        let re_left = Str.regexp {|\\left|} in
-        let re_right = Str.regexp {|\\right|} in
         let lefts = ref [] and rights = ref [] in
         let i = ref 0 in
         (try
@@ -15430,11 +15433,12 @@ let l1_ref_007_rule : rule =
 
 (* REF-009: Reference appears before label definition (forward ref) *)
 let l1_ref_009_rule : rule =
+  let re_label = Str.regexp {|\\label{[^}]*}|} in
+  let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
   let run s =
     let n = String.length s in
     (* Build map of first occurrence position for each label *)
     let label_positions = Hashtbl.create 16 in
-    let re_label = Str.regexp {|\\label{[^}]*}|} in
     let i = ref 0 in
     (try
        while true do
@@ -15449,7 +15453,6 @@ let l1_ref_009_rule : rule =
      with Not_found -> ());
     ignore n;
     (* Check each ref — if it appears before its label, it's a forward ref *)
-    let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
     let cnt = ref 0 in
     i := 0;
     (try

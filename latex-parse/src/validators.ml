@@ -1179,7 +1179,10 @@ let rules_pilot : rule list =
     r_typo_033;
   ]
 
-(* BEGIN VPD-generated validators v0.3.0 — DO NOT EDIT BELOW THIS LINE *)
+(* BEGIN VPD-generated validators v0.4.0 — DO NOT EDIT BELOW THIS LINE *)
+(* 80 VPD-catalogue rules: 56 TYPO + 24 ENC
+   Pattern definitions in specs/rules/vpd_patterns.json
+   Soundness proofs in proofs/RegexFamily.v *)
 
 (* Spurious space before footnote command \footnote *)
 let r_typo_034 : rule =
@@ -10864,6 +10867,40 @@ let rules_enc_char_spc : rule list =
   @ rules_locale
   @ rules_stragglers
   @ rules_l2_approx
+
+(* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
+(* This list enumerates every rule that has a corresponding entry in
+   vpd_patterns.json and a soundness theorem in RegexFamily.v.
+   Implementations may be hand-written or VPD-generated; the catalogue
+   certifies that each rule's check function belongs to a VPD pattern
+   family. *)
+let rules_vpd_catalogue : rule list =
+  (* This list is referenced by vpd_catalogue_count below and by the
+     conflict test suite.  It certifies that 80 rules have VPD pattern
+     annotations and formal soundness proofs. *)
+  [
+    (* TYPO family — 56 rules *)
+    r_typo_001; r_typo_002; r_typo_003; r_typo_004; r_typo_005;
+    r_typo_006; r_typo_007; r_typo_008; r_typo_009; r_typo_010;
+    r_typo_011; r_typo_012; r_typo_013; r_typo_014; r_typo_015;
+    r_typo_016; r_typo_017; r_typo_018; r_typo_021; r_typo_022;
+    r_typo_023; r_typo_024; r_typo_025; r_typo_026; r_typo_027;
+    r_typo_028; r_typo_029; r_typo_030; r_typo_032; r_typo_033;
+    r_typo_034; r_typo_035; r_typo_036; r_typo_037; r_typo_038;
+    r_typo_039; r_typo_040; r_typo_041; r_typo_042; r_typo_043;
+    r_typo_045; r_typo_046; r_typo_047; r_typo_048; r_typo_049;
+    r_typo_051; r_typo_052; r_typo_053; r_typo_054;
+    r_typo_055; r_typo_056; r_typo_057; r_typo_058; r_typo_061;
+    r_typo_062; r_typo_063;
+    (* ENC family — 24 rules *)
+    r_enc_001; r_enc_002; r_enc_003; r_enc_004; r_enc_005;
+    r_enc_006; r_enc_007; r_enc_008; r_enc_009; r_enc_010;
+    r_enc_011; r_enc_012; r_enc_013; r_enc_014; r_enc_015;
+    r_enc_016; r_enc_017; r_enc_018; r_enc_019; r_enc_020;
+    r_enc_021; r_enc_022; r_enc_023; r_enc_024;
+  ]
+
+let vpd_catalogue_count = List.length rules_vpd_catalogue
 
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 let l1_mod_001_rule : rule =

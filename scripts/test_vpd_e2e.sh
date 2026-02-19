@@ -37,17 +37,32 @@ echo "[vpd-e2e] Generating full manifest..."
   -o "$MANIFEST" 2>&1
 
 FULL=$(./_build/default/generator/vpd_compile.exe "$MANIFEST" --internal)
-RULE_COUNT=$(echo "$FULL" | grep -c 'let r_typo_')
+RULE_COUNT=$(echo "$FULL" | grep -c 'let r_\(typo\|enc\)_')
 echo "[vpd-e2e] Full manifest generated $RULE_COUNT rules"
+if [ "$RULE_COUNT" -ne 80 ]; then
+  echo "FAIL: expected 80 rules, got $RULE_COUNT"
+  exit 1
+fi
+echo "[vpd-e2e] PASS: rule count = 80"
 
-# Verify all 23 VPD-patterned rules present
-for id in TYPO-001 TYPO-004 TYPO-005 TYPO-006 TYPO-023 TYPO-030 \
-          TYPO-034 TYPO-035 TYPO-036 TYPO-037 TYPO-038 TYPO-041 \
-          TYPO-042 TYPO-043 TYPO-048 TYPO-051 TYPO-052 TYPO-053 \
-          TYPO-054 TYPO-055 TYPO-057 TYPO-061 TYPO-063; do
+# Verify all 80 VPD-patterned rules present (56 TYPO + 24 ENC)
+for id in TYPO-001 TYPO-002 TYPO-003 TYPO-004 TYPO-005 TYPO-006 \
+          TYPO-007 TYPO-008 TYPO-009 TYPO-010 TYPO-011 TYPO-012 \
+          TYPO-013 TYPO-014 TYPO-015 TYPO-016 TYPO-017 TYPO-018 \
+          TYPO-021 TYPO-022 TYPO-023 TYPO-024 TYPO-025 TYPO-026 \
+          TYPO-027 TYPO-028 TYPO-029 TYPO-030 TYPO-032 TYPO-033 \
+          TYPO-034 TYPO-035 TYPO-036 TYPO-037 TYPO-038 TYPO-039 \
+          TYPO-040 TYPO-041 TYPO-042 TYPO-043 TYPO-045 TYPO-046 \
+          TYPO-047 TYPO-048 TYPO-049 TYPO-051 TYPO-052 TYPO-053 \
+          TYPO-054 TYPO-055 TYPO-056 TYPO-057 TYPO-058 TYPO-061 \
+          TYPO-062 TYPO-063 \
+          ENC-001 ENC-002 ENC-003 ENC-004 ENC-005 ENC-006 \
+          ENC-007 ENC-008 ENC-009 ENC-010 ENC-011 ENC-012 \
+          ENC-013 ENC-014 ENC-015 ENC-016 ENC-017 ENC-018 \
+          ENC-019 ENC-020 ENC-021 ENC-022 ENC-023 ENC-024; do
   echo "$FULL" | grep -q "\"$id\"" || { echo "FAIL: missing $id"; exit 1; }
 done
-echo "[vpd-e2e] PASS: all 23 rules present in full manifest"
+echo "[vpd-e2e] PASS: all 80 rules present in full manifest"
 
 # ── Test 2b: Batch 2 regex rules compile correctly ─────────────────
 

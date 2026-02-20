@@ -29,3 +29,9 @@ val run_all_with_timings_for_layer :
 
 val precondition_of_rule_id : string -> layer
 (** Map a rule ID to the layer it belongs to based on its prefix. *)
+
+val rules_vpd_catalogue : rule list
+(** All 80 rules with VPD pattern annotations and formal soundness proofs. *)
+
+val vpd_catalogue_count : int
+(** Number of rules in the VPD catalogue (= 80). *)

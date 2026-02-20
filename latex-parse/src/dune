@@ -298,6 +298,11 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_validators_conflict)
+ (modules test_validators_conflict)
+ (libraries latex_parse_lib unix))
+
+(test
  (name test_validators_math_c1)
  (modules test_validators_math_c1)
  (libraries latex_parse_lib unix))

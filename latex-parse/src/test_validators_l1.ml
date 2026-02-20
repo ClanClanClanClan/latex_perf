@@ -1,26 +1,7 @@
 (** Unit tests for L1 validator rules: MOD-001..013, MOD-020..024, and EXP-001. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[l1] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-(* Helper: run all validators and find result for a specific rule ID *)
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -490,11 +471,6 @@ let () =
             || (String.length id >= 4 && String.sub id 0 4 = "MOD-"))
           results
       in
-      expect (cmd_mod = []) (tag ^ ": clean LaTeX, no CMD/MOD"));
+      expect (cmd_mod = []) (tag ^ ": clean LaTeX, no CMD/MOD"))
 
-  (* ══════════════════════════════════════════════════════════════════════ Done
-     ══════════════════════════════════════════════════════════════════════ *)
-  if !fails > 0 then (
-    Printf.eprintf "[l1] %d FAILURES in %d cases\n%!" !fails !cases;
-    exit 1)
-  else Printf.printf "[l1] PASS %d cases\n%!" !cases
+let () = finalise "l1"

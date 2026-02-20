@@ -1,31 +1,7 @@
 (** Unit tests for MATH-C Part 2: MATH-056..098 pattern matcher rules. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[math-c2] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   (* ════════════════════════════════════════════════════════════════════
@@ -340,9 +316,6 @@ let () =
               ])
           results
       in
-      expect (math_c2 = []) (tag ^ ": no fires on empty"));
+      expect (math_c2 = []) (tag ^ ": no fires on empty"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[math-c2] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[math-c2] PASS %d cases\n%!" !cases
+let () = finalise "math-c2"

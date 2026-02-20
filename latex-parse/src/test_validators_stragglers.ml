@@ -2,36 +2,7 @@
     FONT-004, RTL-003, RTL-004, CJK-008, CJK-015, TYPO-059, PT-002. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -178,8 +149,7 @@ let () =
   run "RTL-003 fires: extra \\endR" (fun tag ->
       expect (fires "RTL-003" {|\endR extra|}) (tag ^ ": orphan endR"));
   run "RTL-003 severity is Error" (fun tag ->
-      let results = Validators.run_all {|\beginR no end|} in
-      match find_result "RTL-003" results with
+      match find_result "RTL-003" {|\beginR no end|} with
       | Some r -> expect (r.severity = Error) (tag ^ ": severity Error")
       | None -> expect false (tag ^ ": should fire"));
 
@@ -342,26 +312,22 @@ $3.14$|});
         expected);
 
   run "RTL-003 severity is Error" (fun tag ->
-      let results = Validators.run_all {|\beginR missing|} in
-      match find_result "RTL-003" results with
+      match find_result "RTL-003" {|\beginR missing|} with
       | Some r -> expect (r.severity = Validators.Error) (tag ^ ": Error")
       | None -> expect false (tag ^ ": should fire"));
 
   run "RTL-004 severity is Warning" (fun tag ->
-      let results = Validators.run_all "$\xd6\xbe$" in
-      match find_result "RTL-004" results with
+      match find_result "RTL-004" "$\xd6\xbe$" with
       | Some r -> expect (r.severity = Validators.Warning) (tag ^ ": Warning")
       | None -> expect false (tag ^ ": should fire"));
 
   run "CJK-008 severity is Warning" (fun tag ->
-      let results = Validators.run_all "$\xe3\x80\x80$" in
-      match find_result "CJK-008" results with
+      match find_result "CJK-008" "$\xe3\x80\x80$" with
       | Some r -> expect (r.severity = Validators.Warning) (tag ^ ": Warning")
       | None -> expect false (tag ^ ": should fire"));
 
   run "CJK-015 severity is Warning" (fun tag ->
-      let results = Validators.run_all "$\xe3\x80\x81$" in
-      match find_result "CJK-015" results with
+      match find_result "CJK-015" "$\xe3\x80\x81$" with
       | Some r -> expect (r.severity = Validators.Warning) (tag ^ ": Warning")
       | None -> expect false (tag ^ ": should fire"));
 
@@ -383,13 +349,13 @@ $\textit{italic} + |}
 \beginR unclosed|}
       in
       let results = Validators.run_all doc in
-      expect (find_result "CMD-007" results <> None) (tag ^ ": CMD-007 fires");
-      expect (find_result "CMD-010" results <> None) (tag ^ ": CMD-010 fires");
-      expect (find_result "FONT-001" results <> None) (tag ^ ": FONT-001 fires");
-      expect (find_result "FONT-004" results <> None) (tag ^ ": FONT-004 fires");
-      expect (find_result "CJK-008" results <> None) (tag ^ ": CJK-008 fires");
-      expect (find_result "PT-002" results <> None) (tag ^ ": PT-002 fires");
-      expect (find_result "RTL-003" results <> None) (tag ^ ": RTL-003 fires"));
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-007") results <> None) (tag ^ ": CMD-007 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-010") results <> None) (tag ^ ": CMD-010 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "FONT-001") results <> None) (tag ^ ": FONT-001 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "FONT-004") results <> None) (tag ^ ": FONT-004 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CJK-008") results <> None) (tag ^ ": CJK-008 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "PT-002") results <> None) (tag ^ ": PT-002 fires");
+      expect (List.find_opt (fun (r : Validators.result) -> r.id = "RTL-003") results <> None) (tag ^ ": RTL-003 fires"));
 
   (* ══════════════════════════════════════════════════════════════════════ Edge
      cases
@@ -413,7 +379,7 @@ $\textit{italic} + |}
       List.iter
         (fun eid ->
           expect
-            (find_result eid results = None)
+            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results = None)
             (tag ^ ": " ^ eid ^ " silent on empty"))
         straggler_ids);
 
@@ -436,11 +402,8 @@ $\textit{italic} + |}
       List.iter
         (fun eid ->
           expect
-            (find_result eid results = None)
+            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results = None)
             (tag ^ ": " ^ eid ^ " silent on plain"))
-        straggler_ids);
+        straggler_ids)
 
-  (* ═══════════════════════════════════════════════════════════ *)
-  Printf.printf "test_validators_stragglers: %d cases, %d failures\n%!" !cases
-    !fails;
-  if !fails > 0 then exit 1
+let () = finalise "stragglers"

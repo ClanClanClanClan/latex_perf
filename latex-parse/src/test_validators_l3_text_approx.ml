@@ -4,31 +4,7 @@
 
     ~100 total test cases. *)
 
-open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
+open Test_helpers
 
 let () =
   Unix.putenv "L0_VALIDATORS" "pilot";
@@ -786,10 +762,6 @@ let () =
 \begin{document}
 Hello world.
 \end{document}|})
-        (tag ^ ": no tikzpicture"));
+        (tag ^ ": no tikzpicture"))
 
-  (* ══════════════════════════════════════════════════════════════════════
-     Summary
-     ══════════════════════════════════════════════════════════════════════ *)
-  Printf.printf "l3-text-approx: %d/%d passed\n%!" (!cases - !fails) !cases;
-  if !fails > 0 then exit 1
+let () = finalise "l3-text-approx"

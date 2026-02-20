@@ -1,18 +1,7 @@
 (** Unit tests for Validators_context per-thread storage. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[val-ctx] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
+open Test_helpers
 
 let () =
   (* 1. Fresh thread: empty *)
@@ -114,9 +103,6 @@ let () =
       Validators_context.clear ();
       Validators_context.clear ();
       let got = Validators_context.get_post_commands () in
-      expect (got = []) tag);
+      expect (got = []) tag)
 
-  if !fails > 0 then (
-    Printf.eprintf "[val-ctx] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[val-ctx] PASS %d cases\n%!" !cases
+let () = finalise "val-ctx"

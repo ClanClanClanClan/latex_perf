@@ -1,32 +1,7 @@
 (** Unit tests for ENC, CHAR, SPC, and TYPO-062 validator rules. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[enc-char-spc] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-(* Helper: run all validators and find result for a specific rule ID *)
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════ ENC
@@ -602,9 +577,6 @@ let () =
   run "layer dispatch SPC" (fun tag ->
       expect
         (Validators.precondition_of_rule_id "SPC-001" = L0)
-        (tag ^ ": SPC -> L0"));
+        (tag ^ ": SPC -> L0"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[enc-char-spc] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[enc-char-spc] PASS %d cases\n%!" !cases
+let () = finalise "enc-char-spc"

@@ -7,19 +7,7 @@
     matches the expected count (80). *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "[conflict] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
+open Test_helpers
 
 let result_ids results = List.map (fun (r : Validators.result) -> r.id) results
 
@@ -295,12 +283,4 @@ let () =
         ^ Printf.sprintf ": only %d unique rules fired, expected >= 3"
             (List.length unique_ids)))
 
-(* ══════════════════════════════════════════════════════════════════════
-   Finalise
-   ══════════════════════════════════════════════════════════════════════ *)
-
-let () =
-  Printf.printf "[conflict] PASS %d cases\n%!" !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[conflict] %d FAILURES\n%!" !fails;
-    exit 1)
+let () = finalise "conflict"

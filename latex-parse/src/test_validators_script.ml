@@ -2,36 +2,7 @@
     through SCRIPT-022. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -380,12 +351,6 @@ let () =
       expect (fires "SCRIPT-012" src) (tag ^ ": SCRIPT-012 fires");
       expect (fires "SCRIPT-006" src) (tag ^ ": SCRIPT-006 fires");
       expect (fires "SCRIPT-014" src) (tag ^ ": SCRIPT-014 fires");
-      expect (fires "SCRIPT-013" src) (tag ^ ": SCRIPT-013 fires"));
+      expect (fires "SCRIPT-013" src) (tag ^ ": SCRIPT-013 fires"))
 
-  (* Summary *)
-  Printf.printf "[script] %s %d cases\n"
-    (if !fails = 0 then "PASS" else "FAIL")
-    !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[script] %d / %d failures\n" !fails !cases;
-    exit 1)
+let () = finalise "script"

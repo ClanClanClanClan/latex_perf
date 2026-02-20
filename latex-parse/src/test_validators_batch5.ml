@@ -2,31 +2,7 @@
     ENC-015, MATH-083, SPC-017, SPC-026, TYPO-044, VERB-011 *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[batch5] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -431,9 +407,6 @@ let () =
          (unicode minus in text), TYPO-044 (XYZ undefined, pilot only) *)
       expect (fires "SPC-017" src) (tag ^ ": SPC-017 fires");
       expect (fires "ENC-015" src) (tag ^ ": ENC-015 fires");
-      expect (fires "MATH-083" src) (tag ^ ": MATH-083 fires"));
+      expect (fires "MATH-083" src) (tag ^ ": MATH-083 fires"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[batch5] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[batch5] PASS %d cases\n%!" !cases
+let () = finalise "batch5"

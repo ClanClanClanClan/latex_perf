@@ -2,32 +2,7 @@
     edge-case coverage including starred variants, package-with-options, count
     accuracy, and boundary conditions. *)
 
-open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[l2-approx] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   Unix.putenv "L0_VALIDATORS" "pilot";
@@ -1210,10 +1185,6 @@ let () =
         (does_not_fire "REF-010" "See \\ref{fig:missing}")
         (tag ^ ": ref with no label at all = not this rule"));
   run "REF-010 clean empty" (fun tag ->
-      expect (does_not_fire "REF-010" "") (tag ^ ": empty"));
+      expect (does_not_fire "REF-010" "") (tag ^ ": empty"))
 
-  (* ─── summary ─────────────────────────────────────────────────────── *)
-  Printf.printf "[l2-approx] PASS %d cases\n%!" !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[l2-approx] %d FAILURES\n%!" !fails;
-    exit 1)
+let () = finalise "l2-approx"

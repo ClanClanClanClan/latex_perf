@@ -1,31 +1,7 @@
 (** Unit tests for VERB, CJK, and CMD validator rules. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[verb-cjk-cmd] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════ VERB
@@ -523,9 +499,6 @@ let () =
             pfx3 = "VERB" || pfx3 = "CJK-" || pfx3 = "CMD-" || pfx4 = "VERB-")
           results
       in
-      expect (verb_cjk_cmd = []) (tag ^ ": no fires on empty"));
+      expect (verb_cjk_cmd = []) (tag ^ ": no fires on empty"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[verb-cjk-cmd] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[verb-cjk-cmd] PASS %d cases\n%!" !cases
+let () = finalise "verb-cjk-cmd"

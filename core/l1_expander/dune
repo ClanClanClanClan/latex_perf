@@ -11,7 +11,7 @@
   catalogue_loader)
  (libraries l0_lexer data unix str yojson)
  (flags
-  (:standard -w -27-26)))
+  (:standard)))
 
 (executable
  (name l1_ab_test)

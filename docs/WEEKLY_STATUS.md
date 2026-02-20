@@ -321,18 +321,61 @@ Week 25 — L3_Semantics Text-Scannable Approximations (PR #141)
 - 459/459 messages match spec, 0 mismatches
 - All dune build, dune runtest, dune fmt: exit 0
 
-Current State (Post Week 25 / Phase 2 Active, entering Q3)
+Week 36-39 — VPD 80-Validator Catalogue + RegexFamily Proofs (PR #146)
+- VPD catalogue: 80 rules with formal soundness proofs (56 TYPO + 24 ENC)
+  - vpd_patterns.json expanded from 31 to 80 entries
+  - Coq RegexFamily.v: qed_text_sound tactic, vpd_catalogue_coverage lemma
+  - All 80 rules proven sound (0 admits, 0 axioms)
+- Conflict test suite: 22 cases for deterministic ordering, severity, cross-family fire
+- E2E test script updated: verifies all 80 rule IDs + count assertion
+- W36-39 exit criteria met: 80/80 VPD rules certified, catalogue sealed
+
+Deep Audit Remediation (post-W39)
+- Phase 1 (Quick Wins):
+  - Fixed 3 unsafe List.hd calls with pattern matching
+  - Extracted contains_substring helper, replaced 30 instances
+  - Added 6 negative conflict tests (clean input, deferred rules)
+  - Marked TYPO-019/-020/-030/-031 as deferred NLP stubs
+- Phase 2 (Performance):
+  - Hoisted 17 runtime Str.regexp compilations to rule-level
+  - Replaced List.exists with Hashtbl.mem for is_math_env (O(n) → O(1))
+- Phase 3 (Structural):
+  - Extracted test_helpers.ml from 30 test files (~759 lines deduplication)
+  - Narrowed all 44 bare exception handlers to specific types
+- Phase 4 (Documentation):
+  - Documented L0/L1 naming convention rationale
+  - Added Validators_context dependency contract to run_all
+- Phase 5 (Housekeeping):
+  - Removed -w -27-26 warning suppressions from l1_expander
+  - Updated WEEKLY_STATUS with W36-39 and deferred rules
+  - Created CHANGELOG.md
+
+Known Deferred Rules
+--------------------
+Four rules return None unconditionally and are excluded from VPD catalogue:
+
+| Rule ID   | Reason                    | Unblock Dependency              |
+|-----------|---------------------------|---------------------------------|
+| TYPO-019  | Comma splice detection    | NLP sentence parser             |
+| TYPO-020  | Run-on sentence detection | NLP sentence parser             |
+| TYPO-030  | British/US spelling mix   | NLP spelling dictionary         |
+| TYPO-031  | Mixed spellings within    | NLP spelling dictionary         |
+
+These are included in rules_pilot for API completeness. Tracked as
+blocked on NLP integration infrastructure.
+
+Current State (Post Week 39 / Q3 Capstone Complete)
 - Validators: 482 rules implemented out of 623 spec rules (77.4%)
   - Y1 target: 180 rules — exceeded by 2.7× (ahead of schedule)
   - L0_Lexer: 183/187 (97.9%) — 4 remaining are Reserved
   - L1_Expanded: 150/158 (94.9%) — 8 remaining are Reserved (MATH-001..008)
   - L2_Ast: 96/96 (100%) — complete
-  - L3_Semantics: 24/112 (21.4%) — 84 Draft + 4 Reserved remaining (need compile step)
-  - L4_Style: 10/70 (14.3%) — 60 Draft remaining (need NLP pipeline)
+  - L3_Semantics: 24/112 (21.4%) — blocked on LaTeX compiler integration
+  - L4_Style: 10/70 (14.3%) — blocked on NLP pipeline
   - All text-scannable rules exhausted; remaining gaps blocked on infrastructure
-- VPD Pipeline: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in vpd_patterns.json)
-- Proofs: 13 files, 0 admits, 0 axioms — all expansion theorems QED
-- Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms), edit-window p95 ≈ 0.017 ms
-- CI: 35 workflows covering build, format, tests, proofs, perf, REST, validators, Rust proxy
-- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26)
-- Next per timeline: W27-30 Generic proof tactics (RegexFamily), then W31-35 ML span extractor
+- VPD Pipeline: 80 rules certified with Coq soundness proofs (Q3 capstone)
+- Proofs: 14 files, 0 admits, 0 axioms — all expansion + RegexFamily theorems QED
+- Performance: p95 ≈ 2.96 ms full-doc (target < 25 ms)
+- Code health: 0 bare exception handlers, 0 unsafe List.hd, shared test helpers
+- CI: 35 workflows, all green
+- Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26), VPD-80 (W39)

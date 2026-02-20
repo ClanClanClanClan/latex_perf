@@ -244,10 +244,10 @@ let test_zero_copy_expansion soa =
 
   let rec process_tokens () =
     match ExpansionIterator.next_token iter with
-    | Some (OriginalToken idx) ->
+    | Some (OriginalToken _idx) ->
         incr original_count;
         process_tokens ()
-    | Some (SyntheticToken (offset, len, token_type)) ->
+    | Some (SyntheticToken (_offset, _len, _token_type)) ->
         incr expanded_count;
         process_tokens ()
     | None -> ()

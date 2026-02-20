@@ -242,7 +242,11 @@ let () =
       let ok = ref true in
       for _ = 1 to 50 do
         let results = Validators.run_all "$Fe^2+$" in
-        match List.find_opt (fun (r : Validators.result) -> r.id = "CHEM-002") results with
+        match
+          List.find_opt
+            (fun (r : Validators.result) -> r.id = "CHEM-002")
+            results
+        with
         | Some r -> if r.count <> 1 then ok := false
         | None -> ok := false
       done;

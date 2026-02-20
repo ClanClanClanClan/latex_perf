@@ -85,9 +85,7 @@ let () =
   in
   let results = Validators.run_all src in
   (* Group results by 4-char prefix (e.g. "TYPO") *)
-  let prefix_of id =
-    try String.sub id 0 4 with Invalid_argument _ -> id
-  in
+  let prefix_of id = try String.sub id 0 4 with Invalid_argument _ -> id in
   let families =
     List.sort_uniq String.compare
       (List.map (fun (r : Validators.result) -> prefix_of r.id) results)

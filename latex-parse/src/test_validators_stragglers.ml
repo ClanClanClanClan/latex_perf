@@ -349,13 +349,38 @@ $\textit{italic} + |}
 \beginR unclosed|}
       in
       let results = Validators.run_all doc in
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-007") results <> None) (tag ^ ": CMD-007 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-010") results <> None) (tag ^ ": CMD-010 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "FONT-001") results <> None) (tag ^ ": FONT-001 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "FONT-004") results <> None) (tag ^ ": FONT-004 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "CJK-008") results <> None) (tag ^ ": CJK-008 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "PT-002") results <> None) (tag ^ ": PT-002 fires");
-      expect (List.find_opt (fun (r : Validators.result) -> r.id = "RTL-003") results <> None) (tag ^ ": RTL-003 fires"));
+      expect
+        (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-007") results
+        <> None)
+        (tag ^ ": CMD-007 fires");
+      expect
+        (List.find_opt (fun (r : Validators.result) -> r.id = "CMD-010") results
+        <> None)
+        (tag ^ ": CMD-010 fires");
+      expect
+        (List.find_opt
+           (fun (r : Validators.result) -> r.id = "FONT-001")
+           results
+        <> None)
+        (tag ^ ": FONT-001 fires");
+      expect
+        (List.find_opt
+           (fun (r : Validators.result) -> r.id = "FONT-004")
+           results
+        <> None)
+        (tag ^ ": FONT-004 fires");
+      expect
+        (List.find_opt (fun (r : Validators.result) -> r.id = "CJK-008") results
+        <> None)
+        (tag ^ ": CJK-008 fires");
+      expect
+        (List.find_opt (fun (r : Validators.result) -> r.id = "PT-002") results
+        <> None)
+        (tag ^ ": PT-002 fires");
+      expect
+        (List.find_opt (fun (r : Validators.result) -> r.id = "RTL-003") results
+        <> None)
+        (tag ^ ": RTL-003 fires"));
 
   (* ══════════════════════════════════════════════════════════════════════ Edge
      cases
@@ -379,7 +404,8 @@ $\textit{italic} + |}
       List.iter
         (fun eid ->
           expect
-            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results = None)
+            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results
+            = None)
             (tag ^ ": " ^ eid ^ " silent on empty"))
         straggler_ids);
 
@@ -402,7 +428,8 @@ $\textit{italic} + |}
       List.iter
         (fun eid ->
           expect
-            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results = None)
+            (List.find_opt (fun (r : Validators.result) -> r.id = eid) results
+            = None)
             (tag ^ ": " ^ eid ^ " silent on plain"))
         straggler_ids)
 

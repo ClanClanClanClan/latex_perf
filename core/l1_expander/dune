@@ -10,8 +10,7 @@
   simple_expander
   catalogue_loader)
  (libraries l0_lexer data unix str yojson)
- (flags
-  (:standard)))
+ (flags (:standard)))
 
 (executable
  (name l1_ab_test)

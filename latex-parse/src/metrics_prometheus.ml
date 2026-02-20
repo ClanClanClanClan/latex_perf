@@ -14,7 +14,8 @@ let parse_addr s =
   | [ h; p ] ->
       let host =
         try inet_addr_of_string h
-        with Failure _ -> (* fallback to loopback on parse failure *) default_host
+        with Failure _ ->
+          (* fallback to loopback on parse failure *) default_host
       in
       let port = try int_of_string p with Failure _ -> default_port in
       (host, port)

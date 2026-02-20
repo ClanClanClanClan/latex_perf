@@ -265,7 +265,9 @@ let run () =
         dump_csv ());
       loop ()
     in
-    try loop () with Unix.Unix_error _ | End_of_file | Exit -> ( try Unix.close c with Unix.Unix_error _ -> ())
+    try loop ()
+    with Unix.Unix_error _ | End_of_file | Exit -> (
+      try Unix.close c with Unix.Unix_error _ -> ())
   in
 
   let rec accept_loop () =

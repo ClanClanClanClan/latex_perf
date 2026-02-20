@@ -8,10 +8,12 @@ let () =
      MATH-025: align with single column → suggest equation
      ════════════════════════════════════════════════════════════════════ *)
   run "MATH-025 align no ampersand" (fun tag ->
-      expect (fires "MATH-025" "\\begin{align}\nx = 1\n\\end{align}")
+      expect
+        (fires "MATH-025" "\\begin{align}\nx = 1\n\\end{align}")
         (tag ^ ": should fire"));
   run "MATH-025 align* no ampersand" (fun tag ->
-      expect (fires "MATH-025" "\\begin{align*}\ny = 2\n\\end{align*}")
+      expect
+        (fires "MATH-025" "\\begin{align*}\ny = 2\n\\end{align*}")
         (tag ^ ": should fire"));
   run "MATH-025 align with ampersand" (fun tag ->
       expect
@@ -26,24 +28,29 @@ let () =
   run "MATH-025 two single-column aligns" (fun tag ->
       expect
         (fires_with_count "MATH-025"
-           "\\begin{align}\nx = 1\n\\end{align}\n\\begin{align}\ny = 2\n\\end{align}"
+           "\\begin{align}\n\
+            x = 1\n\
+            \\end{align}\n\
+            \\begin{align}\n\
+            y = 2\n\
+            \\end{align}"
            2)
         (tag ^ ": count 2"));
   run "MATH-025 no align env" (fun tag ->
-      expect (does_not_fire "MATH-025" "Just some text $x = 1$")
+      expect
+        (does_not_fire "MATH-025" "Just some text $x = 1$")
         (tag ^ ": no align env"));
   run "MATH-025 equation env" (fun tag ->
       expect
-        (does_not_fire "MATH-025"
-           "\\begin{equation}\nx = 1\n\\end{equation}")
+        (does_not_fire "MATH-025" "\\begin{equation}\nx = 1\n\\end{equation}")
         (tag ^ ": equation env"));
   run "MATH-025 empty align body" (fun tag ->
-      expect (fires "MATH-025" "\\begin{align}\n\\end{align}")
+      expect
+        (fires "MATH-025" "\\begin{align}\n\\end{align}")
         (tag ^ ": should fire"));
   run "MATH-025 severity is info" (fun tag ->
       match find_result "MATH-025" "\\begin{align}\nx = 1\n\\end{align}" with
-      | Some r ->
-          expect (r.severity = Validators.Info) (tag ^ ": severity info")
+      | Some r -> expect (r.severity = Validators.Info) (tag ^ ": severity info")
       | None -> expect false (tag ^ ": did not fire"));
   run "MATH-025 empty input" (fun tag ->
       expect (does_not_fire "MATH-025" "") (tag ^ ": empty input"));
@@ -52,38 +59,35 @@ let () =
      MATH-028: array without column alignment spec
      ════════════════════════════════════════════════════════════════════ *)
   run "MATH-028 array no spec" (fun tag ->
-      expect (fires "MATH-028" "$\\begin{array} 1 \\\\ 2 \\end{array}$")
+      expect
+        (fires "MATH-028" "$\\begin{array} 1 \\\\ 2 \\end{array}$")
         (tag ^ ": should fire"));
   run "MATH-028 array space after" (fun tag ->
-      expect (fires "MATH-028" "$\\begin{array} x \\end{array}$")
+      expect
+        (fires "MATH-028" "$\\begin{array} x \\end{array}$")
         (tag ^ ": should fire"));
   run "MATH-028 array with {c}" (fun tag ->
       expect
-        (does_not_fire "MATH-028"
-           "$\\begin{array}{c} 1 \\\\ 2 \\end{array}$")
+        (does_not_fire "MATH-028" "$\\begin{array}{c} 1 \\\\ 2 \\end{array}$")
         (tag ^ ": has col spec"));
   run "MATH-028 array with {lcr}" (fun tag ->
       expect
-        (does_not_fire "MATH-028"
-           "$\\begin{array}{lcr} a & b & c \\end{array}$")
+        (does_not_fire "MATH-028" "$\\begin{array}{lcr} a & b & c \\end{array}$")
         (tag ^ ": has col spec"));
   run "MATH-028 array with {|c|}" (fun tag ->
       expect
-        (does_not_fire "MATH-028"
-           "$\\begin{array}{|c|} 1 \\end{array}$")
+        (does_not_fire "MATH-028" "$\\begin{array}{|c|} 1 \\end{array}$")
         (tag ^ ": has col spec"));
   run "MATH-028 two bare arrays" (fun tag ->
       expect
         (fires_with_count "MATH-028"
-           "$\\begin{array} 1 \\end{array}$ $\\begin{array} 2 \\end{array}$"
-           2)
+           "$\\begin{array} 1 \\end{array}$ $\\begin{array} 2 \\end{array}$" 2)
         (tag ^ ": count 2"));
   run "MATH-028 no array env" (fun tag ->
       expect (does_not_fire "MATH-028" "$x + y$") (tag ^ ": no array env"));
   run "MATH-028 severity is info" (fun tag ->
       match find_result "MATH-028" "$\\begin{array} x \\end{array}$" with
-      | Some r ->
-          expect (r.severity = Validators.Info) (tag ^ ": severity info")
+      | Some r -> expect (r.severity = Validators.Info) (tag ^ ": severity info")
       | None -> expect false (tag ^ ": did not fire"));
   run "MATH-028 empty input" (fun tag ->
       expect (does_not_fire "MATH-028" "") (tag ^ ": empty input"));
@@ -109,8 +113,7 @@ let () =
         (tag ^ ": align* ok"));
   run "MATH-029 equation" (fun tag ->
       expect
-        (does_not_fire "MATH-029"
-           "\\begin{equation}\nx = 1\n\\end{equation}")
+        (does_not_fire "MATH-029" "\\begin{equation}\nx = 1\n\\end{equation}")
         (tag ^ ": equation ok"));
   run "MATH-029 two eqnarrays" (fun tag ->
       expect
@@ -124,12 +127,12 @@ let () =
            2)
         (tag ^ ": count 2"));
   run "MATH-029 no env" (fun tag ->
-      expect (does_not_fire "MATH-029" "Just text $x = 1$")
+      expect
+        (does_not_fire "MATH-029" "Just text $x = 1$")
         (tag ^ ": no eqnarray"));
   run "MATH-029 severity is warning" (fun tag ->
       match
-        find_result "MATH-029"
-          "\\begin{eqnarray}\nx &=& 1\n\\end{eqnarray}"
+        find_result "MATH-029" "\\begin{eqnarray}\nx &=& 1\n\\end{eqnarray}"
       with
       | Some r ->
           expect (r.severity = Validators.Warning) (tag ^ ": severity warning")

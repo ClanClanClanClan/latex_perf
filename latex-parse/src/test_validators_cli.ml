@@ -70,9 +70,7 @@ let () =
             match String.split_on_char '\t' line with x :: _ -> x | [] -> ""
           in
           let layer = Validators.precondition_of_rule_id id in
-          expect
-            (layer = Validators.L0)
-            (tag ^ ": " ^ id ^ " should be L0"))
+          expect (layer = Validators.L0) (tag ^ ": " ^ id ^ " should be L0"))
         lines);
 
   (* Layer flag: --layer l1 shows timing header *)

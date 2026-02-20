@@ -112,5 +112,5 @@ let hash64_bytes_simd ?(seed = 0L) b = xxh64_simd b seed
 let hash64 ?seed b =
   match Sys.getenv_opt "L0_USE_SIMD_XXH" with
   | Some "1" -> (
-      try hash64_bytes_simd ?seed b with _ -> hash64_bytes ?seed b)
+      try hash64_bytes_simd ?seed b with Failure _ -> hash64_bytes ?seed b)
   | _ -> hash64_bytes ?seed b

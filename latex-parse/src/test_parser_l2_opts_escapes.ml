@@ -73,7 +73,7 @@ let check_one pass s =
     if String.trim s1 <> String.trim s2 then (
       eprintf "[opts-esc] roundtrip FAIL: %S -> %S -> %S\n%!" s s1 s2;
       pass := false)
-  with _ ->
+  with Failure _ | Invalid_argument _ ->
     eprintf "[opts-esc] parse FAIL: %S\n%!" s;
     pass := false
 

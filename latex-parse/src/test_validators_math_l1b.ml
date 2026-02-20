@@ -481,7 +481,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results
@@ -500,7 +500,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results
@@ -519,7 +519,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results

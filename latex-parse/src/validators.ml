@@ -9081,7 +9081,7 @@ let r_tikz_009 : rule =
               true
             with Not_found -> false)
           blocks
-      with _ -> false
+      with Not_found -> false
     in
     if not has_arrows then None
     else

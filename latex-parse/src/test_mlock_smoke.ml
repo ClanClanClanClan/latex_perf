@@ -25,7 +25,7 @@ let () =
   (* 2. Without env var: init returns (catches privilege errors internally) *)
   run "init graceful" (fun tag ->
       (* Remove the env var if present *)
-      (try Unix.putenv "L0_NO_MLOCK" "" with _ -> ());
+      (try Unix.putenv "L0_NO_MLOCK" "" with Not_found -> ());
       (try Mlock.init ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
       expect true tag);

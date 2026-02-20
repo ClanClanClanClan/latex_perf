@@ -16,7 +16,7 @@ let () =
         then (
           eprintf "[verb] serialize lacks verb: %S\n%!" out;
           pass := false)
-      with _ ->
+      with Failure _ | Invalid_argument _ ->
         eprintf "[verb] parse FAIL: %S\n%!" s;
         pass := false)
     cases;

@@ -91,7 +91,7 @@ let inject_io_block duration =
         ignore (Unix.read read_fd buffer 0 1)
       with Unix.Unix_error (Unix.EAGAIN, _, _) -> ()
     done
-  with _ ->
+  with Unix.Unix_error _ ->
     ();
 
     Unix.close read_fd;
@@ -130,7 +130,7 @@ let inject_broker_overload socket_path request_count =
       ignore (Unix.write sock (Bytes.of_string request) 0 len);
 
       Unix.close sock
-    with _ -> ()
+    with Unix.Unix_error _ -> ()
   in
 
   (* Send requests in parallel threads *)

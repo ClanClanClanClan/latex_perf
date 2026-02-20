@@ -92,21 +92,21 @@ let token_of_json = function
 
 let string_field k j =
   try U.to_string (U.member k j)
-  with _ -> failwith ("macro_catalogue: missing string field: " ^ k)
+  with Yojson.Safe.Util.Type_error _ -> failwith ("macro_catalogue: missing string field: " ^ k)
 
 let int_field k j =
   try U.to_int (U.member k j)
-  with _ -> failwith ("macro_catalogue: missing int field: " ^ k)
+  with Yojson.Safe.Util.Type_error _ -> failwith ("macro_catalogue: missing int field: " ^ k)
 
 let bool_field_opt k default j =
   try match U.member k j with `Bool b -> b | `Null -> default | _ -> default
-  with _ -> default
+  with Yojson.Safe.Util.Type_error _ -> default
 
 (** Load v25r2 symbol catalogue (383 arity-0 macros). *)
 let load_v25r2 path =
   let json = Y.from_file path in
   let macros =
-    try U.to_list (U.member "macros" json) with _ -> failwith "missing macros"
+    try U.to_list (U.member "macros" json) with Yojson.Safe.Util.Type_error _ -> failwith "missing macros"
   in
   List.map
     (fun j ->
@@ -114,9 +114,9 @@ let load_v25r2 path =
       let mode = mode_of_string (string_field "mode" j) in
       let expansion_json =
         try U.to_list (U.member "expansion" j)
-        with _ -> (
+        with Yojson.Safe.Util.Type_error _ -> (
           try U.to_list (U.member "body" j)
-          with _ -> failwith ("no expansion for " ^ name))
+          with Yojson.Safe.Util.Type_error _ -> failwith ("no expansion for " ^ name))
       in
       let expansion = List.map token_of_json expansion_json in
       let expand_in_math = bool_field_opt "expand_in_math" true j in
@@ -129,10 +129,10 @@ let load_argsafe path =
   let json = Y.from_file path in
   let cat =
     try U.member "catalog" json
-    with _ -> failwith "missing catalog in argsafe"
+    with Yojson.Safe.Util.Type_error _ -> failwith "missing catalog in argsafe"
   in
   let macros =
-    try U.to_list (U.member "macros" cat) with _ -> failwith "missing macros"
+    try U.to_list (U.member "macros" cat) with Yojson.Safe.Util.Type_error _ -> failwith "missing macros"
   in
   List.map
     (fun j ->
@@ -152,7 +152,7 @@ let load_argsafe path =
         try
           U.to_list (U.member "kinds" args)
           |> List.filter_map (function `String s -> Some s | _ -> None)
-        with _ -> []
+        with Yojson.Safe.Util.Type_error _ -> []
       in
       let templ = U.member "template" j in
       let template =

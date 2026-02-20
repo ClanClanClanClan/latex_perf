@@ -21,7 +21,7 @@ let () =
           eprintf "[parser-norm] FAIL\n in: %S\n got: %S\n exp: %S\n%!" inp got
             exp;
           pass := false)
-      with _ ->
+      with Failure _ | Invalid_argument _ ->
         eprintf "[parser-norm] parse FAIL: %S\n%!" inp;
         pass := false)
     cases;

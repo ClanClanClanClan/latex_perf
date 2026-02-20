@@ -24,7 +24,7 @@ let of_json (j : Yojson.Safe.t) : cfg =
     let strip = j |> member "strip_controls" |> to_list |> List.map to_string in
     let bf = j |> member "bfseries_until_brace" |> to_bool in
     { strip_controls = strip; bfseries_until_brace = bf; catalogue = None }
-  with _ -> default
+  with Yojson.Safe.Util.Type_error _ | Failure _ -> default
 
 let of_catalogue (cat : Latex_parse_lib.Macro_catalogue.catalogue) : cfg =
   { default with catalogue = Some cat }

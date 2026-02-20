@@ -10,7 +10,7 @@ let require_simd =
    L0_MINOR_HEAP_MB=<int> reduces heap for constrained CI. *)
 let minor_heap_bytes =
   match Sys.getenv_opt "L0_MINOR_HEAP_MB" with
-  | Some s -> (try max 1 (int_of_string s) with _ -> 128) * 1024 * 1024
+  | Some s -> (try max 1 (int_of_string s) with Failure _ -> 128) * 1024 * 1024
   | None -> 128 * 1024 * 1024
 
 let gc_space_overhead = 120

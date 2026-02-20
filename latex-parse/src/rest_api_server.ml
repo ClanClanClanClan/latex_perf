@@ -73,7 +73,7 @@ let connect_to_service () =
     let sock = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
     Unix.connect sock (Unix.ADDR_UNIX socket_path);
     Some sock
-  with _ -> None
+  with Unix.Unix_error _ -> None
 
 let[@inline] put_u8 b off v =
   Bytes.unsafe_set b off (Char.unsafe_chr (v land 0xFF))
@@ -301,7 +301,7 @@ let handle_tokenize body =
               Some (s', expand)
           | None -> None)
       | _ -> None
-    with _ -> None
+    with Yojson.Safe.Util.Type_error _ | Failure _ -> None
   in
 
   match extract_latex_content body with
@@ -477,7 +477,7 @@ let handle_client client_sock _client_addr =
                               in
                               find_layer parts
                             else Validators.L0
-                          with _ -> Validators.L0
+                          with Not_found | Invalid_argument _ -> Validators.L0
                         else Validators.L0
                       in
                       (* Tokenize expanded text and build per-request command
@@ -615,7 +615,7 @@ let handle_client client_sock _client_addr =
                       ( http_bad_request,
                         json_error ~code:400 "Missing 'latex' field" ))
               | _ -> (http_bad_request, json_error ~code:400 "Invalid JSON")
-            with _ ->
+            with Yojson.Safe.Util.Type_error _ | Failure _ ->
               (http_bad_request, json_error ~code:400 "Invalid request"))
         | Some "POST", Some "/tokens" -> (
             match Sys.getenv_opt "L0_DEBUG_TOKENS" with
@@ -665,7 +665,7 @@ let handle_client client_sock _client_addr =
                           ( http_bad_request,
                             json_error ~code:400 "Missing 'latex' field" ))
                   | _ -> (http_bad_request, json_error ~code:400 "Invalid JSON")
-                with _ ->
+                with Yojson.Safe.Util.Type_error _ | Failure _ ->
                   (http_bad_request, json_error ~code:400 "Invalid request"))
             | _ ->
                 ( http_bad_request,
@@ -773,7 +773,7 @@ let () =
   let port =
     match Sys.argv with
     | [| _; "-p"; port_str |] -> (
-        try int_of_string port_str with _ -> default_port)
+        try int_of_string port_str with Failure _ -> default_port)
     | _ -> default_port
   in
 

@@ -1,3 +1,19 @@
+(* ══════════════════════════════════════════════════════════════════════
+   Validators — LaTeX Perfectionist v25 rule engine
+   ══════════════════════════════════════════════════════════════════════
+
+   Naming convention for rule bindings:
+
+     L0 rules  : r_<family>_<NNN>       e.g. r_typo_001, r_enc_003, r_spc_010
+     L1+ rules : l1_<family>_<NNN>_rule e.g. l1_delim_001_rule, l1_math_055_rule
+
+   The L0 prefix was established in the initial rule batch (W01–W24);
+   the L1 prefix was added when the L1 layer shipped (W25–W36) to
+   distinguish higher-layer rules that depend on macro expansion.
+   Both conventions are intentional — a mechanical rename would risk
+   breaking cross-references in Coq proofs, golden files, and specs.
+   ══════════════════════════════════════════════════════════════════════ *)
+
 type severity = Error | Warning | Info
 
 type result = {
@@ -16677,6 +16693,12 @@ let get_rules () : rule list =
       rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
   | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
 
+(** Run all enabled validators on [src] and return fired results.
+
+    @requires For L1 rules that inspect post-expansion commands,
+    [Validators_context.set_post_commands] must have been called for the
+    current thread beforehand.  If it has not been set, those rules
+    silently return [None] (safe but incomplete). *)
 let run_all (src : string) : result list =
   let rec go acc = function
     | [] -> List.rev acc

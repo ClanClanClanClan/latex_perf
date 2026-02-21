@@ -25,7 +25,9 @@
   catcode
   validators_context
   validators_common
+  validators_l0_typo
   validators_l0
+  validators_l1_math
   validators_l2
   validators_l1
   validators

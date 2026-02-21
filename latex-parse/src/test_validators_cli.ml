@@ -1,16 +1,7 @@
 (** Integration tests for validators_cli — runs the CLI as a subprocess. *)
 
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[cli] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
+open Latex_parse_lib
+open Test_helpers
 
 (* Write a temp .tex file and return its path *)
 let write_temp_tex content =
@@ -75,11 +66,11 @@ let () =
       in
       List.iter
         (fun line ->
-          let id = List.hd (String.split_on_char '\t' line) in
-          let layer = Latex_parse_lib.Validators.precondition_of_rule_id id in
-          expect
-            (layer = Latex_parse_lib.Validators.L0)
-            (tag ^ ": " ^ id ^ " should be L0"))
+          let id =
+            match String.split_on_char '\t' line with x :: _ -> x | [] -> ""
+          in
+          let layer = Validators.precondition_of_rule_id id in
+          expect (layer = Validators.L0) (tag ^ ": " ^ id ^ " should be L0"))
         lines);
 
   (* Layer flag: --layer l1 shows timing header *)
@@ -152,9 +143,6 @@ let () =
       let path = write_temp_tex "" in
       let _out, code = run_cli [ path ] in
       Sys.remove path;
-      expect (code = 0) (tag ^ ": exit code 0 on empty file"));
+      expect (code = 0) (tag ^ ": exit code 0 on empty file"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[cli] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[cli] PASS %d cases\n%!" !cases
+let () = finalise "cli"

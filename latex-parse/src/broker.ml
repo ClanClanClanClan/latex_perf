@@ -96,8 +96,8 @@ let update_on_resp _p w ~alloc_mb10 ~major =
 
 let maybe_rotate p w =
   if w.state = Cooling && not w.inflight then (
-    (try Unix.close w.fd with _ -> ());
-    (try ignore (Unix.waitpid [] w.pid) with _ -> ());
+    (try Unix.close w.fd with Unix.Unix_error _ -> ());
+    (try ignore (Unix.waitpid [] w.pid) with Unix.Unix_error _ -> ());
     let nw = spawn_worker ~core:w.core in
     w.fd <- nw.fd;
     w.pid <- nw.pid;

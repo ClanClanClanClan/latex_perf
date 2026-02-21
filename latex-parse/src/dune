@@ -54,6 +54,11 @@
  ;;  (-Wl,-force_load,<PROJECT_ROOT>/core/l0_lexer/simd/libsimd_production.a))
  )
 
+(library
+ (name test_helpers)
+ (modules test_helpers)
+ (libraries latex_parse_lib))
+
 (executable
  (name main_service)
  (modules main_service)
@@ -142,7 +147,7 @@
 (test
  (name test_validators_context)
  (modules test_validators_context)
- (libraries latex_parse_lib unix threads))
+ (libraries latex_parse_lib test_helpers unix threads))
 
 (test
  (name test_service_bracket)
@@ -157,7 +162,7 @@
 (test
  (name test_validators_metrics)
  (modules test_validators_metrics)
- (libraries latex_parse_lib unix str))
+ (libraries latex_parse_lib test_helpers unix str))
 
 (test
  (name test_config)
@@ -220,107 +225,107 @@
 (test
  (name test_validators_enc_char_spc)
  (modules test_validators_enc_char_spc)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_batch2)
  (modules test_validators_batch2)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_typo)
  (modules test_validators_typo)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_verb_cjk_cmd)
  (modules test_validators_verb_cjk_cmd)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_batch5)
  (modules test_validators_batch5)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_locale)
  (modules test_validators_locale)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_l1)
  (modules test_validators_l1)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_delim)
  (modules test_validators_delim)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_script)
  (modules test_validators_script)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_math_l1)
  (modules test_validators_math_l1)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_math_l1b)
  (modules test_validators_math_l1b)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_ref)
  (modules test_validators_ref)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_chem)
  (modules test_validators_chem)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_stragglers)
  (modules test_validators_stragglers)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_stragglers2)
  (modules test_validators_stragglers2)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_stress)
  (modules test_validators_stress)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_conflict)
  (modules test_validators_conflict)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_math_c1)
  (modules test_validators_math_c1)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_math_c2)
  (modules test_validators_math_c2)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_math_c3)
  (modules test_validators_math_c3)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_cli)
  (modules test_validators_cli)
- (libraries latex_parse_lib unix)
+ (libraries latex_parse_lib test_helpers unix)
  (deps validators_cli.exe))
 
 (test
@@ -347,22 +352,22 @@
 (test
  (name test_validators_math_gap)
  (modules test_validators_math_gap)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_expl3)
  (modules test_validators_expl3)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_l2_approx)
  (modules test_validators_l2_approx)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_l2_batch3)
  (modules test_validators_l2_batch3)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_audit_regression)
@@ -372,14 +377,14 @@
 (test
  (name test_validators_l2_batch4)
  (modules test_validators_l2_batch4)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_l5_expl3_tikz)
  (modules test_validators_l5_expl3_tikz)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_l3_text_approx)
  (modules test_validators_l3_text_approx)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib test_helpers unix))

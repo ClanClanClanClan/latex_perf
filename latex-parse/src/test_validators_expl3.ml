@@ -2,36 +2,7 @@
     L3-005, L3-006, L3-007, L3-009, L3-011. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -318,9 +289,6 @@ Hello
   run "L3-011 maps to L1" (fun tag ->
       expect
         (Validators.precondition_of_rule_id "L3-011" = Validators.L1)
-        (tag ^ ": L3-011 = L1"));
+        (tag ^ ": L3-011 = L1"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[expl3] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[expl3] PASS %d cases\n%!" !cases
+let () = finalise "expl3"

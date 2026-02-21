@@ -97,7 +97,7 @@ let check_one pass s =
     if String.trim s1 <> String.trim t1_stripped then (
       eprintf "[parser2-xform] FAIL: %S -> %S stripped %S\n%!" s s1 t1_stripped;
       pass := false)
-  with _ ->
+  with Failure _ | Invalid_argument _ ->
     eprintf "[parser2-xform] parse FAIL: %S\n%!" s;
     pass := false
 

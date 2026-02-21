@@ -73,7 +73,7 @@ let read_header fd : header option =
                           (of_int (Char.code (Bytes.get b 11)))))))))
     in
     Some { ty; req_id = id; len = be32_get b 12 }
-  with _ -> None
+  with Failure _ | End_of_file | Unix.Unix_error _ -> None
 
 let write_req fd ~req_id ~(bytes : bytes) =
   let len = 4 + Bytes.length bytes in

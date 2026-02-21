@@ -4,7 +4,7 @@ let () =
   Latex_parse_lib.Simd_guard.require
     () (* hard guard: refuse to start without SIMD unless L0_ALLOW_SCALAR=1 *)
 
-let unlink_if_exists p = try Unix.unlink p with _ -> ()
+let unlink_if_exists p = try Unix.unlink p with Unix.Unix_error _ -> ()
 let read_exact fd b o l = Latex_parse_lib.Net_io.read_exact_exn fd b o l
 let write_all fd b o l = Latex_parse_lib.Net_io.write_all_exn fd b o l
 let () = Sys.set_signal Sys.sigpipe Sys.Signal_ignore
@@ -78,7 +78,7 @@ let run () =
   (* Allow overriding pool cores via env: L0_POOL_CORES="0,1,2,3" *)
   let parse_cores s =
     try s |> String.split_on_char ',' |> List.map int_of_string |> Array.of_list
-    with _ -> Latex_parse_lib.Config.pool_cores
+    with Failure _ -> Latex_parse_lib.Config.pool_cores
   in
   let cores =
     match Sys.getenv_opt "L0_POOL_CORES" with
@@ -123,7 +123,7 @@ let run () =
              origin)
          (List.rev !slow);
        close_out oc
-     with _ -> ());
+     with Sys_error _ -> ());
     Mutex.unlock slow_mu
   in
 
@@ -172,7 +172,7 @@ let run () =
           in
           last_result := Some r;
           `Ok r
-        with _ ->
+        with Failure _ | Unix.Unix_error _ ->
           last_result := None;
           Format.eprintf "[svc] hedged_call exn len=%d sample=%s@."
             (Bytes.length req) (hex_prefix req);
@@ -265,7 +265,9 @@ let run () =
         dump_csv ());
       loop ()
     in
-    try loop () with _ -> ( try Unix.close c with _ -> ())
+    try loop ()
+    with Unix.Unix_error _ | End_of_file | Exit -> (
+      try Unix.close c with Unix.Unix_error _ -> ())
   in
 
   let rec accept_loop () =

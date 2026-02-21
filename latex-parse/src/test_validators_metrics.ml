@@ -1,18 +1,7 @@
 (** Unit tests for Validators_metrics Prometheus counters. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[val-metrics] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
+open Test_helpers
 
 (* Helper: dump to a string via pipe *)
 let dump_to_string () =
@@ -140,9 +129,6 @@ let () =
           true
         with Not_found -> false
       in
-      expect has_id (tag ^ ": id present after concurrent writes"));
+      expect has_id (tag ^ ": id present after concurrent writes"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[val-metrics] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[val-metrics] PASS %d cases\n%!" !cases
+let () = finalise "val-metrics"

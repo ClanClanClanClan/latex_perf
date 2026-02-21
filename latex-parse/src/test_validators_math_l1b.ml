@@ -2,36 +2,7 @@
     (excluding MATH-032 which is L2_Ast). *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -510,7 +481,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results
@@ -529,7 +500,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results
@@ -548,7 +519,7 @@ let () =
             && String.sub id 0 5 = "MATH-"
             &&
             let num =
-              try int_of_string (String.sub id 5 (n - 5)) with _ -> 0
+              try int_of_string (String.sub id 5 (n - 5)) with Failure _ -> 0
             in
             num >= 30 && num <= 53)
           results
@@ -623,12 +594,6 @@ let () =
   run "escaped dollar: not treated as math" (fun tag ->
       expect
         (does_not_fire "MATH-030" "Price is \\$\\displaystyle 5.")
-        (tag ^ ": escaped $ ignored"));
+        (tag ^ ": escaped $ ignored"))
 
-  (* Summary *)
-  Printf.printf "[math-l1b] %s %d cases\n"
-    (if !fails = 0 then "PASS" else "FAIL")
-    !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[math-l1b] %d / %d failures\n" !fails !cases;
-    exit 1)
+let () = finalise "math-l1b"

@@ -11,7 +11,7 @@ let () =
           let nodes = Latex_parse_lib.Parser_l2.parse s in
           ignore nodes;
           true
-        with _ -> false)
+        with Failure _ | Invalid_argument _ -> false)
       samples
   in
   if pass then (

@@ -2,36 +2,7 @@
     REF-001 through REF-009, excluding REF-008 (L3_Semantics). *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -237,18 +208,15 @@ let () =
 
   (* Severity checks *)
   run "severity: REF-001 is Error" (fun tag ->
-      let results = Validators.run_all "\\ref{missing}" in
-      match find_result "REF-001" results with
+      match find_result "REF-001" "\\ref{missing}" with
       | Some r -> expect (r.severity = Error) (tag ^ ": Error severity")
       | None -> expect false (tag ^ ": should fire"));
   run "severity: REF-003 is Warning" (fun tag ->
-      let results = Validators.run_all "\\label{eq main}" in
-      match find_result "REF-003" results with
+      match find_result "REF-003" "\\label{eq main}" with
       | Some r -> expect (r.severity = Warning) (tag ^ ": Warning severity")
       | None -> expect false (tag ^ ": should fire"));
   run "severity: REF-004 is Info" (fun tag ->
-      let results = Validators.run_all "\\label{eq:Main}" in
-      match find_result "REF-004" results with
+      match find_result "REF-004" "\\label{eq:Main}" with
       | Some r -> expect (r.severity = Info) (tag ^ ": Info severity")
       | None -> expect false (tag ^ ": should fire"));
 
@@ -276,12 +244,6 @@ let () =
       in
       expect (does_not_fire "REF-001" src) (tag ^ ": no undefined refs");
       expect (does_not_fire "REF-002" src) (tag ^ ": no duplicate labels");
-      expect (does_not_fire "REF-003" src) (tag ^ ": no spaces in labels"));
+      expect (does_not_fire "REF-003" src) (tag ^ ": no spaces in labels"))
 
-  (* Summary *)
-  Printf.printf "[ref] %s %d cases\n"
-    (if !fails = 0 then "PASS" else "FAIL")
-    !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[ref] %d / %d failures\n" !fails !cases;
-    exit 1)
+let () = finalise "ref"

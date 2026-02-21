@@ -63,7 +63,7 @@ let check_one pass s =
     if String.trim s1 <> String.trim s2 then (
       eprintf "[parser2-prop] roundtrip FAIL: %S -> %S -> %S\n%!" s s1 s2;
       pass := false)
-  with _ ->
+  with Failure _ | Invalid_argument _ ->
     eprintf "[parser2-prop] parse FAIL: %S\n%!" s;
     pass := false
 

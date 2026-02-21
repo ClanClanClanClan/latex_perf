@@ -1,18 +1,7 @@
 (** Stress tests: Str regression guard + precondition layer mapping. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[stress] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
+open Test_helpers
 
 (* Run validators with a timeout — if Str corruption causes an infinite loop the
    alarm fires and the test fails instead of hanging. *)
@@ -191,9 +180,6 @@ let () =
   run "X -> L0" (fun tag ->
       expect
         (Validators.precondition_of_rule_id "X" = Validators.L0)
-        (tag ^ ": single char defaults to L0"));
+        (tag ^ ": single char defaults to L0"))
 
-  if !fails > 0 then (
-    Printf.eprintf "[stress] %d failure(s)\n%!" !fails;
-    exit 1)
-  else Printf.printf "[stress] PASS %d cases\n%!" !cases
+let () = finalise "stress"

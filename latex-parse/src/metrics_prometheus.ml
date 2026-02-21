@@ -14,9 +14,10 @@ let parse_addr s =
   | [ h; p ] ->
       let host =
         try inet_addr_of_string h
-        with _ -> (* fallback to loopback on parse failure *) default_host
+        with Failure _ ->
+          (* fallback to loopback on parse failure *) default_host
       in
-      let port = try int_of_string p with _ -> default_port in
+      let port = try int_of_string p with Failure _ -> default_port in
       (host, port)
   | _ -> (default_host, default_port)
 
@@ -139,14 +140,14 @@ let serve () =
                 \r\n";
              dump_metrics oc;
              flush oc;
-             try close_out oc with _ -> ())
+             try close_out oc with Sys_error _ -> ())
            c);
       loop ()
     in
     loop ()
   in
   let serve_uds path =
-    (try Unix.unlink path with _ -> ());
+    (try Unix.unlink path with Unix.Unix_error _ -> ());
     let fd = socket PF_UNIX SOCK_STREAM 0 in
     bind fd (ADDR_UNIX path);
     listen fd 64;
@@ -167,7 +168,7 @@ let serve () =
                 \r\n";
              dump_metrics oc;
              flush oc;
-             try close_out oc with _ -> ())
+             try close_out oc with Sys_error _ -> ())
            c);
       loop ()
     in

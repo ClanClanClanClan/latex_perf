@@ -2,26 +2,7 @@
     PKG-008/010/013/014/016/017/021/024/025, TAB-003/007/008/012/013/015/016,
     FIG-012/014/017/019/022/024/025, MATH-075/080, CMD-012, DOC-004 *)
 
-open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[l2-batch4] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   Unix.putenv "L0_VALIDATORS" "pilot";
@@ -683,12 +664,6 @@ let () =
            "\\section{Conclusion}\nDone.\n\\section{Acknowledgment}\nThanks.")
         tag);
   run "DOC-004 clean without both sections" (fun tag ->
-      expect (does_not_fire "DOC-004" "\\section{Introduction}\nHello.") tag);
+      expect (does_not_fire "DOC-004" "\\section{Introduction}\nHello.") tag)
 
-  (* ══════════════════════════════════════════════════════════════════════
-     Summary
-     ══════════════════════════════════════════════════════════════════════ *)
-  if !fails > 0 then (
-    Printf.eprintf "[l2-batch4] %d failure(s) in %d cases\n%!" !fails !cases;
-    exit 1)
-  else Printf.printf "[l2-batch4] PASS %d cases\n%!" !cases
+let () = finalise "l2-batch4"

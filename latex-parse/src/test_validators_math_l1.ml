@@ -2,36 +2,7 @@
     MATH-009 through MATH-022. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -289,12 +260,6 @@ let () =
       expect (fires "MATH-009" src) (tag ^ ": MATH-009 fires");
       expect (fires "MATH-015" src) (tag ^ ": MATH-015 fires");
       expect (fires "MATH-021" src) (tag ^ ": MATH-021 fires");
-      expect (fires "MATH-022" src) (tag ^ ": MATH-022 fires"));
+      expect (fires "MATH-022" src) (tag ^ ": MATH-022 fires"))
 
-  (* Summary *)
-  Printf.printf "[math-l1] %s %d cases\n"
-    (if !fails = 0 then "PASS" else "FAIL")
-    !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[math-l1] %d / %d failures\n" !fails !cases;
-    exit 1)
+let () = finalise "math-l1"

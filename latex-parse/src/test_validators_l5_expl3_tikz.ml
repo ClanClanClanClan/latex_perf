@@ -4,31 +4,7 @@
 
     ~104 total test cases. *)
 
-open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
+open Test_helpers
 
 let () =
   Unix.putenv "L0_VALIDATORS" "pilot";
@@ -886,12 +862,6 @@ Content here.
            {|\documentclass{article}
 \usepackage[arabic]{babel}
 \begin{document}\end{document}|})
-        (tag ^ ": no polyglossia"));
+        (tag ^ ": no polyglossia"))
 
-  (* ══════════════════════════════════════════════════════════════════════
-     Summary
-     ══════════════════════════════════════════════════════════════════════ *)
-  if !fails > 0 then (
-    Printf.eprintf "[l5-expl3-tikz] %d failure(s) in %d cases\n%!" !fails !cases;
-    exit 1)
-  else Printf.printf "[l5-expl3-tikz] PASS %d cases\n%!" !cases
+let () = finalise "l5-expl3-tikz"

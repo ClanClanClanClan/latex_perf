@@ -1,3 +1,19 @@
+(* ══════════════════════════════════════════════════════════════════════
+   Validators — LaTeX Perfectionist v25 rule engine
+   ══════════════════════════════════════════════════════════════════════
+
+   Naming convention for rule bindings:
+
+   L0 rules : r_<family>_<NNN> e.g. r_typo_001, r_enc_003, r_spc_010 L1+ rules :
+   l1_<family>_<NNN>_rule e.g. l1_delim_001_rule, l1_math_055_rule
+
+   The L0 prefix was established in the initial rule batch (W01–W24); the L1
+   prefix was added when the L1 layer shipped (W25–W36) to distinguish
+   higher-layer rules that depend on macro expansion. Both conventions are
+   intentional — a mechanical rename would risk breaking cross-references in Coq
+   proofs, golden files, and specs.
+   ══════════════════════════════════════════════════════════════════════ *)
+
 type severity = Error | Warning | Info
 
 type result = {
@@ -29,6 +45,12 @@ let count_substring (s : string) (sub : string) : int =
       else loop (i + 1) acc
     in
     loop 0 0
+
+let contains_substring (s : string) (needle : string) : bool =
+  try
+    ignore (Str.search_forward (Str.regexp_string needle) s 0);
+    true
+  with Not_found -> false
 
 let any_line_pred (s : string) (pred : string -> bool) : int * int =
   (* returns (lines_checked, lines_matched) *)
@@ -93,7 +115,9 @@ let strip_math_segments (s : string) : string =
       "displaymath";
     ]
   in
-  let is_math_env name = List.exists (String.equal name) math_envs in
+  let math_env_tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace math_env_tbl e ()) math_envs;
+  let is_math_env name = Hashtbl.mem math_env_tbl name in
   let starts_with prefix idx =
     let plen = String.length prefix in
     idx + plen <= len && String.sub s idx plen = prefix
@@ -846,6 +870,14 @@ let r_typo_018 : rule =
   in
   { id = "TYPO-018"; run }
 
+(* ── DEFERRED NLP STUBS ──────────────────────────────────────────────
+   TYPO-019, -020, -030, -031 require NLP analysis and return None
+   unconditionally. They are included in rules_pilot for API completeness but
+   are excluded from rules_vpd_catalogue and have no VPD pattern entries or Coq
+   soundness proofs. Status: blocked on NLP integration (tracked in
+   WEEKLY_STATUS.md).
+   ──────────────────────────────────────────────────────────────────── *)
+
 (* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
 let r_typo_019 : rule =
   let run _s = None in
@@ -1090,13 +1122,14 @@ let r_typo_029 : rule =
   in
   { id = "TYPO-029"; run }
 
-(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP *)
+(* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP (see comment
+   block before TYPO-019 above) *)
 let r_typo_030 : rule =
   let run _s = None in
   { id = "TYPO-030"; run }
 
 (* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
-   NLP *)
+   NLP (see comment block before TYPO-019 above) *)
 let r_typo_031 : rule =
   let run _s = None in
   { id = "TYPO-031"; run }
@@ -1222,11 +1255,11 @@ let r_typo_035 : rule =
 
 (* Suspicious consecutive capitalised words (shouting) *)
 let r_typo_036 : rule =
+  let re =
+    Str.regexp
+      {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
+  in
   let run s =
-    let re =
-      Str.regexp
-        {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
-    in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1264,8 +1297,8 @@ let r_typo_037 : rule =
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
+  let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
   let run s =
-    let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1575,8 +1608,8 @@ let r_typo_053 : rule =
 
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
+  let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
   let run s =
-    let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1614,8 +1647,8 @@ let r_typo_055 : rule =
 
 (* Missing thin-space before degree symbol *)
 let r_typo_057 : rule =
+  let re = Str.regexp "[0-9]\xc2\xb0" in
   let run s =
-    let re = Str.regexp "[0-9]\xc2\xb0" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1670,8 +1703,8 @@ let r_typo_063 : rule =
 
 (* URL split across lines without \url{} *)
 let r_typo_039 : rule =
+  let re = Str.regexp "https?://[^ \t\n}]+" in
   let run s =
-    let re = Str.regexp "https?://[^ \t\n}]+" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1693,8 +1726,8 @@ let r_typo_039 : rule =
 
 (* Inline math $...$ exceeds 80 characters *)
 let r_typo_040 : rule =
+  let re = Str.regexp "\\$\\([^$]+\\)\\$" in
   let run s =
-    let re = Str.regexp "\\$\\([^$]+\\)\\$" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -1799,8 +1832,8 @@ let r_typo_049 : rule =
 
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
+  let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
   let run s =
-    let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3871,10 +3904,9 @@ let r_spc_035 : rule =
 
 (* SPC-010: Two spaces after sentence-ending period *)
 let r_spc_010 : rule =
+  let re = Str.regexp "\\. +[A-Z]" in
   let run s =
     let s = strip_math_segments s in
-    (* Match ". " (period + two spaces) followed by an uppercase letter *)
-    let re = Str.regexp "\\. +[A-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3900,9 +3932,9 @@ let r_spc_010 : rule =
 
 (* SPC-018: No space after sentence-ending period (period+uppercase) *)
 let r_spc_018 : rule =
+  let re = Str.regexp "\\.[A-Z]" in
   let run s =
     let s = strip_math_segments s in
-    let re = Str.regexp "\\.[A-Z]" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -3940,8 +3972,8 @@ let r_spc_022 : rule =
 
 (* SPC-027: Trailing whitespace inside \url{} *)
 let r_spc_027 : rule =
+  let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
   let run s =
-    let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
     let rec loop i acc =
       try
         ignore (Str.search_forward re s i);
@@ -7162,12 +7194,7 @@ let r_doc_001 : rule =
   let run s =
     if not (is_article_like s) then None
     else
-      let has_maketitle =
-        try
-          ignore (Str.search_forward (Str.regexp_string "\\maketitle") s 0);
-          true
-        with Not_found -> false
-      in
+      let has_maketitle = contains_substring s "\\maketitle" in
       if not has_maketitle then
         Some
           {
@@ -7186,13 +7213,7 @@ let r_doc_002 : rule =
   let run s =
     if not (is_article_like s) then None
     else
-      let has_abstract =
-        try
-          ignore
-            (Str.search_forward (Str.regexp_string "\\begin{abstract}") s 0);
-          true
-        with Not_found -> false
-      in
+      let has_abstract = contains_substring s "\\begin{abstract}" in
       if not has_abstract then
         Some
           {
@@ -7211,12 +7232,7 @@ let r_doc_003 : rule =
   let run s =
     if not (is_article_like s) then None
     else
-      let has_keywords =
-        try
-          ignore (Str.search_forward (Str.regexp_string "\\keywords{") s 0);
-          true
-        with Not_found -> false
-      in
+      let has_keywords = contains_substring s "\\keywords{" in
       if not has_keywords then
         Some
           {
@@ -7323,22 +7339,12 @@ let r_tab_011 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let has_hline =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\hline") body 0);
-              true
-            with Not_found -> false
-          in
+          let has_hline = contains_substring body "\\hline" in
           let has_booktabs =
             try
               ignore (Str.search_forward (Str.regexp_string "\\toprule") body 0);
               true
-            with Not_found -> (
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\bottomrule") body 0);
-                true
-              with Not_found -> false)
+            with Not_found -> contains_substring body "\\bottomrule"
           in
           if has_hline && not has_booktabs then acc + 1 else acc)
         0 blocks
@@ -7715,12 +7721,7 @@ let r_fig_010 : rule =
               ignore
                 (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
               true
-            with Not_found -> (
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\caption") body 0);
-                true
-              with Not_found -> false)
+            with Not_found -> contains_substring body "\\caption"
           in
           if not has_subcap then acc + 1 else acc)
         0 blocks
@@ -7820,13 +7821,7 @@ let r_pkg_008 : rule =
     let has_xcolor_no_dvips =
       List.exists
         (fun (_pos, opts, name) ->
-          name = "xcolor"
-          && not
-               (try
-                  ignore
-                    (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
-                  true
-                with Not_found -> false))
+          name = "xcolor" && not (contains_substring opts "dvipsnames"))
         pkgs
     in
     if has_xcolor_no_dvips then
@@ -7849,13 +7844,7 @@ let r_pkg_010 : rule =
     let has_deprecated =
       List.exists
         (fun (_pos, opts, name) ->
-          name = "biblatex"
-          &&
-          try
-            ignore
-              (Str.search_forward (Str.regexp_string "backend=biber") opts 0);
-            true
-          with Not_found -> false)
+          name = "biblatex" && contains_substring opts "backend=biber")
         pkgs
     in
     if has_deprecated then
@@ -7923,12 +7912,7 @@ let r_pkg_016 : rule =
     let has_pdftex_opt =
       List.exists
         (fun (_pos, opts, name) ->
-          name = "graphicx"
-          &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "pdftex") opts 0);
-            true
-          with Not_found -> false)
+          name = "graphicx" && contains_substring opts "pdftex")
         pkgs
     in
     if has_pdftex_opt then
@@ -7955,20 +7939,12 @@ let r_pkg_017 : rule =
       let has_pdftex_marker =
         List.exists
           (fun (_pos, opts, name) ->
-            (name = "fontenc"
+            name = "fontenc"
             && String.length opts > 0
-            &&
-            try
-              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-              true
-            with Not_found -> false)
+            && contains_substring opts "T1"
             || name = "inputenc"
                && String.length opts > 0
-               &&
-               try
-                 ignore (Str.search_forward (Str.regexp_string "utf8") opts 0);
-                 true
-               with Not_found -> false)
+               && contains_substring opts "utf8")
           pkgs
       in
       if has_pdftex_marker then
@@ -8060,12 +8036,7 @@ let r_pkg_025 : rule =
     let has_pdftex_enc =
       List.exists
         (fun (_, opts, name) ->
-          name = "fontenc"
-          &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-            true
-          with Not_found -> false)
+          name = "fontenc" && contains_substring opts "T1")
         pkgs
     in
     let has_inputenc =
@@ -8109,12 +8080,7 @@ let r_tab_003 : rule =
               try
                 let _ = Str.search_forward colspec_re s 0 in
                 let spec = Str.matched_group 1 s in
-                String.contains spec 'S'
-                ||
-                try
-                  ignore (Str.search_forward (Str.regexp_string "@{.}") spec 0);
-                  true
-                with Not_found -> false
+                String.contains spec 'S' || contains_substring spec "@{.}"
               with Not_found -> false
             in
             if has_s_col then acc else acc + 1)
@@ -8158,15 +8124,7 @@ let r_tab_007 : rule =
                   (Str.search_forward
                      (Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|})
                      body 0);
-                let has_mc =
-                  try
-                    ignore
-                      (Str.search_forward
-                         (Str.regexp_string "\\multicolumn")
-                         body 0);
-                    true
-                  with Not_found -> false
-                in
+                let has_mc = contains_substring body "\\multicolumn" in
                 not has_mc
               with Not_found -> false
             in
@@ -8262,12 +8220,7 @@ let r_tab_013 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
-          in
+          let has_caption = contains_substring body "\\caption" in
           if not has_caption then acc
           else
             let cap_pos =
@@ -8300,20 +8253,8 @@ let r_tab_015 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let has_multirow =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\multirow") body 0);
-              true
-            with Not_found -> false
-          in
-          let has_raggedright =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\raggedright") body 0);
-              true
-            with Not_found -> false
-          in
+          let has_multirow = contains_substring body "\\multirow" in
+          let has_raggedright = contains_substring body "\\raggedright" in
           if has_multirow && not has_raggedright then acc + 1 else acc)
         0 blocks
     in
@@ -8418,12 +8359,7 @@ let r_fig_017 : rule =
      with Not_found -> ());
     (* Only fire if no landscape geometry *)
     if !cnt > 0 then
-      let has_landscape =
-        try
-          ignore (Str.search_forward (Str.regexp_string "landscape") s 0);
-          true
-        with Not_found -> false
-      in
+      let has_landscape = contains_substring s "landscape" in
       if not has_landscape then
         Some
           {
@@ -8445,19 +8381,8 @@ let r_fig_019 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let has_subcap =
-            try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
-              true
-            with Not_found -> false
-          in
-          let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
-          in
+          let has_subcap = contains_substring body "\\subcaption" in
+          let has_caption = contains_substring body "\\caption" in
           if (not has_subcap) && not has_caption then acc + 1 else acc)
         0 blocks
     in
@@ -8591,13 +8516,7 @@ let r_math_075 : rule =
         let blocks = extract_env_blocks env s in
         List.iter
           (fun body ->
-            let has_nonumber =
-              try
-                ignore
-                  (Str.search_forward (Str.regexp_string "\\nonumber") body 0);
-                true
-              with Not_found -> false
-            in
+            let has_nonumber = contains_substring body "\\nonumber" in
             if has_nonumber then
               let labels = extract_labels_with_prefix "eq:" body in
               let refs = extract_refs_with_prefix "eq:" s in
@@ -8658,6 +8577,7 @@ let r_math_080 : rule =
 
 (* ── CMD-012: \renewcommand\thesection after hyperref ────────────── *)
 let r_cmd_012 : rule =
+  let re = Str.regexp_string "\\renewcommand{\\thesection}" in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages preamble in
@@ -8672,7 +8592,6 @@ let r_cmd_012 : rule =
     match hyp_pos with
     | None -> None
     | Some hp ->
-        let re = Str.regexp_string "\\renewcommand{\\thesection}" in
         let found =
           try
             let p = Str.search_forward re preamble 0 in
@@ -8855,12 +8774,7 @@ let r_l3_005 : rule =
         true
       with Not_found -> false
     in
-    let has_guard =
-      try
-        ignore (Str.search_forward (Str.regexp_string "\\ExplSyntaxOn") s 0);
-        true
-      with Not_found -> false
-    in
+    let has_guard = contains_substring s "\\ExplSyntaxOn" in
     if has_expl3 && not has_guard then
       Some
         {
@@ -9022,14 +8936,7 @@ let r_tikz_001 : rule =
          let pos = Str.search_forward tikz_re s !i in
          let inside_fig =
            List.exists
-             (fun body ->
-               try
-                 ignore
-                   (Str.search_forward
-                      (Str.regexp_string "\\begin{tikzpicture}")
-                      body 0);
-                 true
-               with Not_found -> false)
+             (fun body -> contains_substring body "\\begin{tikzpicture}")
              fig_blocks
          in
          if not inside_fig then incr cnt;
@@ -9114,21 +9021,8 @@ let r_tikz_006 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let has_tikz =
-            try
-              ignore
-                (Str.search_forward
-                   (Str.regexp_string "\\begin{tikzpicture}")
-                   body 0);
-              true
-            with Not_found -> false
-          in
-          let has_caption =
-            try
-              ignore (Str.search_forward (Str.regexp_string "\\caption") body 0);
-              true
-            with Not_found -> false
-          in
+          let has_tikz = contains_substring body "\\begin{tikzpicture}" in
+          let has_caption = contains_substring body "\\caption" in
           if has_tikz && not has_caption then acc + 1 else acc)
         0 fig_blocks
     in
@@ -9158,16 +9052,11 @@ let r_tikz_009 : rule =
               true
             with Not_found -> false)
           blocks
-      with _ -> false
+      with Not_found -> false
     in
     if not has_arrows then None
     else
-      let has_lib =
-        try
-          ignore (Str.search_forward (Str.regexp_string "arrows.meta") s 0);
-          true
-        with Not_found -> false
-      in
+      let has_lib = contains_substring s "arrows.meta" in
       if not has_lib then
         Some
           {
@@ -9413,12 +9302,7 @@ let r_col_006 : rule =
     let has_dvips_xcolor =
       List.exists
         (fun (_pos, opts, name) ->
-          name = "xcolor"
-          &&
-          try
-            ignore (Str.search_forward (Str.regexp_string "dvipsnames") opts 0);
-            true
-          with Not_found -> false)
+          name = "xcolor" && contains_substring opts "dvipsnames")
         pkgs
     in
     if not has_dvips_xcolor then None
@@ -9426,12 +9310,7 @@ let r_col_006 : rule =
       let has_pdftex =
         List.exists
           (fun (_, opts, name) ->
-            (name = "fontenc"
-            &&
-            try
-              ignore (Str.search_forward (Str.regexp_string "T1") opts 0);
-              true
-            with Not_found -> false)
+            (name = "fontenc" && contains_substring opts "T1")
             || name = "inputenc")
           pkgs
       in
@@ -9464,12 +9343,7 @@ let r_l3_008 : rule =
         ignore
           (Str.search_forward (Str.regexp_string "\\ProvidesExplPackage") s 0);
         true
-      with Not_found -> (
-        try
-          ignore
-            (Str.search_forward (Str.regexp_string "\\ProvidesExplClass") s 0);
-          true
-        with Not_found -> false)
+      with Not_found -> contains_substring s "\\ProvidesExplClass"
     in
     if has_expl3 && not has_provides then
       Some
@@ -9603,11 +9477,7 @@ let r_rtl_005 : rule =
         try
           ignore (Str.search_forward (Str.regexp_string "\\newfontfamily") s 0);
           true
-        with Not_found -> (
-          try
-            ignore (Str.search_forward (Str.regexp_string "\\setmainfont") s 0);
-            true
-          with Not_found -> false)
+        with Not_found -> contains_substring s "\\setmainfont"
       in
       if not has_font_spec then
         Some
@@ -10118,6 +9988,7 @@ let r_pkg_019 : rule =
 let r_font_005 : rule =
   let re_fontspec = Str.regexp_string "\\usepackage{fontspec}" in
   let re_setmain = Str.regexp_string "\\setmainfont" in
+  let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
   let run s =
     let has_fontspec =
       try
@@ -10135,7 +10006,6 @@ let r_font_005 : rule =
       in
       if has_setmain then
         (* Check if it explicitly sets Latin Modern *)
-        let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
         let is_lm =
           try
             let _ = Str.search_forward re_lm s 0 in
@@ -10718,6 +10588,7 @@ let r_cmd_009 : rule =
 (* CMD-011: Macro defined with \def/\edef in preamble without \makeatletter
    guard *)
 let r_cmd_011 : rule =
+  let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
   let run s =
     (* Extract preamble: everything before \begin{document} *)
     let tag = "\\begin{document}" in
@@ -10727,7 +10598,6 @@ let r_cmd_011 : rule =
         String.sub s 0 pos
       with Not_found -> s
     in
-    let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
     let has_makeatletter =
       try
         let _ =
@@ -11350,7 +11220,9 @@ let extract_math_segments (s : string) : string list =
       "displaymath";
     ]
   in
-  let is_math_env name = List.exists (String.equal name) math_envs in
+  let math_env_tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace math_env_tbl e ()) math_envs;
+  let is_math_env name = Hashtbl.mem math_env_tbl name in
   let starts_with prefix idx =
     let plen = String.length prefix in
     idx + plen <= len && String.sub s idx plen = prefix
@@ -11559,6 +11431,8 @@ let l1_delim_005_rule : rule =
     else if count_substring s "\\big" > 0 then 1
     else 0
   in
+  let re_left = Str.regexp {|\\left|} in
+  let re_right = Str.regexp {|\\right|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -11566,8 +11440,6 @@ let l1_delim_005_rule : rule =
       (fun seg ->
         (* Look for \left...\right pairs and check if sizing commands within
            differ *)
-        let re_left = Str.regexp {|\\left|} in
-        let re_right = Str.regexp {|\\right|} in
         let lefts = ref [] and rights = ref [] in
         let i = ref 0 in
         (try
@@ -15524,11 +15396,12 @@ let l1_ref_007_rule : rule =
 
 (* REF-009: Reference appears before label definition (forward ref) *)
 let l1_ref_009_rule : rule =
+  let re_label = Str.regexp {|\\label{[^}]*}|} in
+  let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
   let run s =
     let n = String.length s in
     (* Build map of first occurrence position for each label *)
     let label_positions = Hashtbl.create 16 in
-    let re_label = Str.regexp {|\\label{[^}]*}|} in
     let i = ref 0 in
     (try
        while true do
@@ -15543,7 +15416,6 @@ let l1_ref_009_rule : rule =
      with Not_found -> ());
     ignore n;
     (* Check each ref — if it appears before its label, it's a forward ref *)
-    let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
     let cnt = ref 0 in
     i := 0;
     (try
@@ -16768,6 +16640,12 @@ let get_rules () : rule list =
       rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
   | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
 
+(** Run all enabled validators on [src] and return fired results.
+
+    @requires For L1 rules that inspect post-expansion commands,
+    [Validators_context.set_post_commands] must have been called for the
+    current thread beforehand.  If it has not been set, those rules
+    silently return [None] (safe but incomplete). *)
 let run_all (src : string) : result list =
   let rec go acc = function
     | [] -> List.rev acc

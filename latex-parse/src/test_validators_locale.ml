@@ -1,32 +1,7 @@
 (** Unit tests for locale validator rules (FR, PT, RU, PL, CS, EL, RO, AR, HE,
     ZH, JA, KO, HI). *)
 
-open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  if not cond then (
-    Printf.eprintf "[locale] FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  incr cases;
-  f msg
-
-let find_result id src =
-  let results = Validators.run_all src in
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src = find_result id src <> None
-
-let fires_with_count id src expected_count =
-  match find_result id src with
-  | Some r -> r.count = expected_count
-  | None -> false
-
-let does_not_fire id src = find_result id src = None
+open Test_helpers
 
 let () =
   Unix.putenv "L0_VALIDATORS" "pilot";
@@ -291,10 +266,6 @@ let () =
         (does_not_fire "HI-001" "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96")
         (tag ^ ": normal halant ok"));
   run "HI-001 clean ASCII" (fun tag ->
-      expect (does_not_fire "HI-001" "just text") (tag ^ ": ASCII only"));
+      expect (does_not_fire "HI-001" "just text") (tag ^ ": ASCII only"))
 
-  (* ══════════════════════════════════════════════════════════════════════ *)
-  if !fails > 0 then (
-    Printf.eprintf "[locale] %d failure(s) in %d cases\n%!" !fails !cases;
-    exit 1)
-  else Printf.printf "[locale] PASS %d cases\n%!" !cases
+let () = finalise "locale"

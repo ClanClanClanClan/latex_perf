@@ -2,36 +2,7 @@
     through CHEM-009. *)
 
 open Latex_parse_lib
-
-let fails = ref 0
-let cases = ref 0
-
-let expect cond msg =
-  incr cases;
-  if not cond then (
-    Printf.eprintf "FAIL: %s\n%!" msg;
-    incr fails)
-
-let run msg f =
-  let tag = Printf.sprintf "case %d: %s" (!cases + 1) msg in
-  f tag
-
-let find_result id results =
-  List.find_opt (fun (r : Validators.result) -> r.id = id) results
-
-let fires id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> true | None -> false
-
-let does_not_fire id src =
-  let results = Validators.run_all src in
-  match find_result id results with Some _ -> false | None -> true
-
-let fires_with_count id src expected_count =
-  let results = Validators.run_all src in
-  match find_result id results with
-  | Some r -> r.count = expected_count
-  | None -> false
+open Test_helpers
 
 let () =
   (* ══════════════════════════════════════════════════════════════════════
@@ -241,18 +212,15 @@ let () =
 
   (* Severity checks *)
   run "severity: CHEM-001 is Warning" (fun tag ->
-      let results = Validators.run_all "$H_2O$" in
-      match find_result "CHEM-001" results with
+      match find_result "CHEM-001" "$H_2O$" with
       | Some r -> expect (r.severity = Warning) (tag ^ ": Warning")
       | None -> expect false (tag ^ ": should fire"));
   run "severity: CHEM-004 is Info" (fun tag ->
-      let results = Validators.run_all "$Cl^-x$" in
-      match find_result "CHEM-004" results with
+      match find_result "CHEM-004" "$Cl^-x$" with
       | Some r -> expect (r.severity = Info) (tag ^ ": Info")
       | None -> expect false (tag ^ ": should fire"));
   run "severity: CHEM-009 is Warning" (fun tag ->
-      let results = Validators.run_all "$A <-> B$" in
-      match find_result "CHEM-009" results with
+      match find_result "CHEM-009" "$A <-> B$" with
       | Some r -> expect (r.severity = Warning) (tag ^ ": Warning")
       | None -> expect false (tag ^ ": should fire"));
 
@@ -274,16 +242,14 @@ let () =
       let ok = ref true in
       for _ = 1 to 50 do
         let results = Validators.run_all "$Fe^2+$" in
-        match find_result "CHEM-002" results with
+        match
+          List.find_opt
+            (fun (r : Validators.result) -> r.id = "CHEM-002")
+            results
+        with
         | Some r -> if r.count <> 1 then ok := false
         | None -> ok := false
       done;
-      expect !ok (tag ^ ": stable across 50 calls"));
+      expect !ok (tag ^ ": stable across 50 calls"))
 
-  (* Summary *)
-  Printf.printf "[chem] %s %d cases\n"
-    (if !fails = 0 then "PASS" else "FAIL")
-    !cases;
-  if !fails > 0 then (
-    Printf.eprintf "[chem] %d / %d failures\n" !fails !cases;
-    exit 1)
+let () = finalise "chem"

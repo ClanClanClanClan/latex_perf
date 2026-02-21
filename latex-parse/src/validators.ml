@@ -188,80 +188,166 @@ let run_all_with_timings (src : string) :
   let t1 = Unix.gettimeofday () in
   (results, (t1 -. t0) *. 1000.0, List.rev !timings)
 
-(* Precondition wiring (stubs) *)
-type layer = L0 | L1 | L2 | L3 | L4
+(* ── Layer lookup: table-driven precondition mapping ──────────────── *)
+
+let _layer_tbl : (string, layer) Hashtbl.t =
+  let tbl = Hashtbl.create 128 in
+  let add ly ids = List.iter (fun id -> Hashtbl.replace tbl id ly) ids in
+  (* L0 overrides (rules whose prefix would default to L1) *)
+  add L0 [ "MATH-083" ];
+  (* L1 overrides (rules whose prefix would default to L0) *)
+  add L1
+    [
+      "TYPO-059";
+      "CMD-001";
+      "CMD-003";
+      "CMD-007";
+      "CMD-010";
+      "CJK-008";
+      "CJK-015";
+    ];
+  (* L2 overrides *)
+  add L2
+    [
+      "MATH-023";
+      "MATH-024";
+      "MATH-032";
+      "MATH-054";
+      "MATH-062";
+      "MATH-063";
+      "MATH-075";
+      "MATH-080";
+      "MATH-100";
+      "FONT-005";
+      "FONT-006";
+      "FONT-007";
+      "FONT-008";
+      "REF-008";
+      "REF-010";
+      "CMD-012";
+      "CMD-014";
+      "DOC-001";
+      "DOC-002";
+      "DOC-003";
+      "DOC-004";
+      "TAB-003";
+      "TAB-006";
+      "TAB-007";
+      "TAB-008";
+      "TAB-009";
+      "TAB-010";
+      "TAB-011";
+      "TAB-012";
+      "TAB-013";
+      "TAB-014";
+      "TAB-015";
+      "TAB-016";
+      "PKG-007";
+      "PKG-008";
+      "PKG-009";
+      "PKG-010";
+      "PKG-011";
+      "PKG-012";
+      "PKG-013";
+      "PKG-014";
+      "PKG-015";
+      "PKG-016";
+      "PKG-017";
+      "PKG-018";
+      "PKG-019";
+      "PKG-020";
+      "PKG-021";
+      "PKG-022";
+      "PKG-023";
+      "PKG-024";
+      "PKG-025";
+      "LANG-001";
+      "LANG-002";
+      "LANG-004";
+      "LANG-006";
+      "LANG-007";
+      "LANG-013";
+      "TIKZ-001";
+      "TIKZ-003";
+      "TIKZ-004";
+      "TIKZ-005";
+      "TIKZ-006";
+      "TIKZ-007";
+      "TIKZ-009";
+      "TIKZ-010";
+      "FIG-010";
+      "FIG-012";
+      "FIG-013";
+      "FIG-014";
+      "FIG-017";
+      "FIG-019";
+      "FIG-022";
+      "FIG-024";
+      "FIG-025";
+      "COL-006";
+      "LAY-015";
+      "LAY-020";
+      "LAY-022";
+      "LAY-024";
+      "META-001";
+      "META-002";
+      "RTL-005";
+      "PDF-010";
+      "BIB-002";
+      "BIB-003";
+      "BIB-004";
+      "BIB-005";
+      "BIB-006";
+      "BIB-008";
+      "BIB-009";
+      "BIB-010";
+      "BIB-011";
+      "BIB-012";
+      "BIB-015";
+      "BIB-016";
+      "L3-008";
+      "L3-010";
+    ];
+  (* L3 overrides *)
+  add L3 [ "MATH-026"; "MATH-027" ];
+  tbl
+
+let _prefix_layers : (string * layer) list =
+  [
+    ("TYPO-", L0);
+    ("ENC-", L0);
+    ("CHAR-", L0);
+    ("SPC-", L0);
+    ("CMD-", L0);
+    ("CJK-", L0);
+    ("VERB-", L0);
+    ("MOD-", L1);
+    ("EXP-", L1);
+    ("DELIM-", L1);
+    ("SCRIPT-", L1);
+    ("MATH-", L1);
+    ("REF-", L1);
+    ("CHEM-", L1);
+    ("FONT-", L1);
+    ("RTL-", L1);
+    ("PT-", L1);
+    ("L3-", L1);
+  ]
 
 let precondition_of_rule_id (id : string) : layer =
-  match id with
-  (* Explicit per-rule overrides *)
-  | "TYPO-059" -> L1
-  | "MATH-083" -> L0
-  | "MATH-023" | "MATH-024" -> L2
-  | "MATH-032" | "MATH-054" | "MATH-062" | "MATH-063" | "MATH-100" -> L2
-  | "FONT-006" | "FONT-007" | "FONT-008" -> L2
-  | "REF-010" -> L2
-  | "CMD-014" -> L2
-  | "DOC-001" | "DOC-002" | "DOC-003" -> L2
-  | "TAB-006" | "TAB-009" | "TAB-010" | "TAB-011" | "TAB-014" -> L2
-  | "PKG-007" | "PKG-009" | "PKG-011" | "PKG-012" | "PKG-015" -> L2
-  | "PKG-020" | "PKG-022" | "PKG-023" -> L2
-  | "LANG-002" | "LANG-004" -> L2
-  | "TIKZ-007" -> L2
-  | "FIG-010" | "FIG-013" -> L2
-  | "PKG-008" | "PKG-010" | "PKG-013" | "PKG-014" | "PKG-016" -> L2
-  | "PKG-017" | "PKG-021" | "PKG-024" | "PKG-025" -> L2
-  | "TAB-003" | "TAB-007" | "TAB-008" | "TAB-012" | "TAB-013" -> L2
-  | "TAB-015" | "TAB-016" -> L2
-  | "FIG-012" | "FIG-014" | "FIG-017" | "FIG-019" | "FIG-022" -> L2
-  | "FIG-024" | "FIG-025" -> L2
-  | "MATH-075" | "MATH-080" -> L2
-  | "CMD-012" -> L2
-  | "DOC-004" -> L2
-  | "MATH-026" | "MATH-027" -> L3
-  (* CMD-001, CMD-003, CMD-007, CMD-010 need expanded text = L1 *)
-  | "CMD-001" | "CMD-003" | "CMD-007" | "CMD-010" -> L1
-  (* CJK-008, CJK-015 need expanded text = L1 *)
-  | "CJK-008" | "CJK-015" -> L1
-  | "L3-008" | "L3-010" -> L2
-  (* batch 5: expl3 + tikz + lang — L2_Ast overrides *)
-  | "TIKZ-001" | "TIKZ-003" | "TIKZ-004" | "TIKZ-006" -> L2
-  | "TIKZ-009" | "TIKZ-010" -> L2
-  | "LANG-001" | "LANG-006" | "LANG-007" | "LANG-013" -> L2
-  | "COL-006" -> L2
-  | "LAY-024" -> L2
-  | "META-002" -> L2
-  | "RTL-005" -> L2
-  (* batch 6: L3 text-scannable approximations — L2_Ast overrides *)
-  | "BIB-002" | "BIB-003" | "BIB-004" | "BIB-005" | "BIB-006" -> L2
-  | "BIB-008" | "BIB-009" | "BIB-010" | "BIB-011" | "BIB-012" -> L2
-  | "BIB-015" | "BIB-016" -> L2
-  | "PKG-018" | "PKG-019" -> L2
-  | "FONT-005" -> L2
-  | "LAY-015" | "LAY-020" | "LAY-022" -> L2
-  | "REF-008" -> L2
-  | "META-001" -> L2
-  | "PDF-010" -> L2
-  | "TIKZ-005" -> L2
-  (* Prefix-based mappings *)
-  | _ when String.length id >= 5 && String.sub id 0 5 = "TYPO-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "ENC-" -> L0
-  | _ when String.length id >= 5 && String.sub id 0 5 = "CHAR-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "SPC-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "CMD-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "CJK-" -> L0
-  | _ when String.length id >= 5 && String.sub id 0 5 = "VERB-" -> L0
-  | _ when String.length id >= 4 && String.sub id 0 4 = "MOD-" -> L1
-  | _ when String.length id >= 4 && String.sub id 0 4 = "EXP-" -> L1
-  | _ when String.length id >= 6 && String.sub id 0 6 = "DELIM-" -> L1
-  | _ when String.length id >= 7 && String.sub id 0 7 = "SCRIPT-" -> L1
-  | _ when String.length id >= 5 && String.sub id 0 5 = "MATH-" -> L1
-  | _ when String.length id >= 4 && String.sub id 0 4 = "REF-" -> L1
-  | _ when String.length id >= 5 && String.sub id 0 5 = "CHEM-" -> L1
-  | _ when String.length id >= 5 && String.sub id 0 5 = "FONT-" -> L1
-  | _ when String.length id >= 4 && String.sub id 0 4 = "RTL-" -> L1
-  | _ when String.length id >= 3 && String.sub id 0 3 = "PT-" -> L1
-  | _ when String.length id >= 3 && String.sub id 0 3 = "L3-" -> L1
-  | _ -> L0
+  match Hashtbl.find_opt _layer_tbl id with
+  | Some ly -> ly
+  | None ->
+      let rec find = function
+        | [] -> L0
+        | (pfx, ly) :: rest ->
+            if
+              String.length id >= String.length pfx
+              && String.sub id 0 (String.length pfx) = pfx
+            then ly
+            else find rest
+      in
+      find _prefix_layers
 
 let allow_for_layer (id : string) (ly : layer) : bool =
   match (precondition_of_rule_id id, ly) with
@@ -306,8 +392,3 @@ let run_all_with_timings_for_layer (src : string) (ly : layer) :
   let results = exec [] rules in
   let t1 = Unix.gettimeofday () in
   (results, (t1 -. t0) *. 1000.0, List.rev !timings)
-
-let severity_to_string = function
-  | Error -> "error"
-  | Warning -> "warning"
-  | Info -> "info"

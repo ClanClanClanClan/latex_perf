@@ -17,18 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-ocaml
-        with:
-          ocaml-compiler: 5.1.1
-          opam-depext: false
+      - uses: ./.github/actions/setup-ocaml-env
+
       - name: Build unit test executables
         run: |
-          opam repo add default https://opam.ocaml.org || true
-          for attempt in 1 2 3; do
-            opam update -y && opam install -y . --deps-only --with-test && break
-            echo "[unit-tests] opam install failed (attempt $attempt), retrying in 15s..."
-            sleep 15
-          done
           opam exec -- dune build \
             latex-parse/src/test_strip_math.exe \
             latex-parse/src/test_tokenizer_props.exe \

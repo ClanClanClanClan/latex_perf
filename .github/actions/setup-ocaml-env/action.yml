@@ -1,0 +1,63 @@
+name: Setup OCaml + Install Dependencies
+description: >-
+  Composite action that wraps .github/actions/setup-ocaml with opam repo
+  configuration and a retry-loop dependency install.  Replaces the 15-line
+  boilerplate block that was duplicated across 25 CI workflows.
+author: Internal
+
+inputs:
+  opam-packages:
+    description: >-
+      Arguments passed to `opam install -y`.  Use `. --deps-only --with-test`
+      (default) for project deps, or explicit package names for Coq/tooling.
+    required: false
+    default: ". --deps-only --with-test"
+  extra-repos:
+    description: >-
+      Space-separated list of `name=url` pairs for additional opam repos
+      (e.g. `coq-released=https://coq.inria.fr/opam/released`).
+    required: false
+    default: ""
+  dune-cache:
+    description: Enable dune build cache via ocaml/setup-ocaml.
+    required: false
+    default: "true"
+  system-packages:
+    description: >-
+      Additional apt packages to install before opam (space-separated).
+      Use for packages like libgmp-dev, pkg-config that some jobs need.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up OCaml and opam
+      uses: ./.github/actions/setup-ocaml
+      with:
+        ocaml-compiler: 5.1.1
+        opam-depext: false
+        dune-cache: ${{ inputs.dune-cache }}
+
+    - name: Install extra system packages
+      if: inputs.system-packages != ''
+      shell: bash
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y ${{ inputs.system-packages }}
+
+    - name: Install opam dependencies (with retry)
+      shell: bash
+      run: |
+        opam repo add default https://opam.ocaml.org || true
+        # Add any extra repositories
+        for pair in ${{ inputs.extra-repos }}; do
+          name="${pair%%=*}"
+          url="${pair#*=}"
+          opam repo add "$name" "$url" || true
+        done
+        for attempt in 1 2 3; do
+          opam update -y && opam install -y ${{ inputs.opam-packages }} && break
+          echo "[setup-ocaml-env] opam install failed (attempt $attempt/3), retrying in 15s..."
+          sleep 15
+        done

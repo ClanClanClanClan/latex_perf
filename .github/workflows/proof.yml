@@ -1,0 +1,89 @@
+name: Proof CI (Coq)
+
+on:
+  push:
+  pull_request:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  proof-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-ocaml-env
+        with:
+          opam-packages: dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0
+          extra-repos: coq-released=https://coq.inria.fr/opam/released
+          system-packages: libgmp-dev pkg-config
+
+      - name: Build proofs
+        run: |
+          opam exec -- dune build proofs
+
+      - name: Enforce zero admits and zero axioms
+        run: |
+          # No Admitted. or admit. (exclude archives and disabled files)
+          if grep -R -nE '^\s*(Admitted\.|admit\.)' proofs --exclude-dir=archive --exclude='*.disabled'; then
+            echo "[proof-gate] ERROR: admits found"; exit 1; fi
+          # No Axiom declarations (exclude archives and disabled files)
+          if grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then
+            echo "[proof-gate] ERROR: axioms found"; exit 1; fi
+
+  proof-alert:
+    needs: proof-build
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open issue for proof regression
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = `Proof regression: ${context.ref} @ ${context.sha.substring(0,7)}`;
+            const url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `Proof CI failed.\n\n- Branch: ${context.ref}\n- SHA: ${context.sha}\n- Run: ${url}\n\nPlease inspect the failing proof and fix admits/regressions.`;
+            const res = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['proof-regression']
+            });
+            core.notice(`Opened issue #${res.data.number}`);
+
+      - name: Slack notify (proof regression)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
+            URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            TXT="🚨 Proof regression in $GITHUB_REPOSITORY on ${GITHUB_REF} @ ${GITHUB_SHA:0:7}\nRun: ${URL}"
+            curl -s -X POST -H 'Content-type: application/json' --data "{\"text\": \"${TXT}\"}" "$SLACK_WEBHOOK_URL" || true
+          else
+            echo "[proof-alert] SLACK_WEBHOOK_URL not set; skipping Slack notification"
+          fi
+
+      - name: Email notify (proof regression)
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Proof regression: ${{ github.repository }} ${{ github.ref }} @ ${{ github.sha }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          body: |
+            Proof CI failed.
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.ref }}
+            SHA: ${{ github.sha }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

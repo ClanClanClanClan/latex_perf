@@ -25,6 +25,9 @@
   catcode
   validators_context
   validators_common
+  validators_l0
+  validators_l2
+  validators_l1
   validators
   validators_metrics
   tokenizer_lite

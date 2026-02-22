@@ -28,7 +28,12 @@ async fn handle(uds: &Client, s: &mut TcpStream) -> anyhow::Result<()> {
         let mut len_buf = [0u8; 4];
         match s.read_exact(&mut len_buf).await {
             Ok(_) => {}
-            Err(e) if matches!(e.kind(), ErrorKind::UnexpectedEof | ErrorKind::ConnectionReset) => {
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    ErrorKind::UnexpectedEof | ErrorKind::ConnectionReset
+                ) =>
+            {
                 break;
             }
             Err(e) => return Err(e.into()),

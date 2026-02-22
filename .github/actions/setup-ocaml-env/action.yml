@@ -1,0 +1,116 @@
+name: Setup OCaml + Install Dependencies
+description: >-
+  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2),
+  installs system packages, filters darcs from apt, configures opam repos,
+  and performs a retry-loop dependency install.  Replaces the 15-line
+  boilerplate block that was duplicated across 25+ CI workflows.
+
+  NOTE: This action calls ocaml/setup-ocaml@v2 DIRECTLY (not through an
+  intermediate composite action) to avoid GitHub Actions post-cleanup input
+  resolution failures with nested composite actions.
+author: Internal
+
+inputs:
+  opam-packages:
+    description: >-
+      Arguments passed to `opam install -y`.  Use `. --deps-only --with-test`
+      (default) for project deps, or explicit package names for Coq/tooling.
+    required: false
+    default: ". --deps-only --with-test"
+  extra-repos:
+    description: >-
+      Space-separated list of `name=url` pairs for additional opam repos
+      (e.g. `coq-released=https://coq.inria.fr/opam/released`).
+    required: false
+    default: ""
+  dune-cache:
+    description: Enable dune build cache via ocaml/setup-ocaml.
+    required: false
+    default: "true"
+  system-packages:
+    description: >-
+      Additional apt packages to install before opam (space-separated).
+      Use for packages like libgmp-dev, pkg-config that some jobs need.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # ── System prerequisites (from former setup-ocaml action) ──────────
+    - name: Install system packages (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          bubblewrap \
+          g++-multilib \
+          gcc-multilib \
+          mercurial \
+          musl-tools \
+          rsync
+
+    - name: Filter darcs from privileged apt invocations (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        mkdir -p "$HOME/.github-tools"
+        {
+          printf '%s\n' '#!/usr/bin/env bash'
+          printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'
+          printf '%s\n' '  args=()'
+          printf '%s\n' '  install_seen=false'
+          printf '%s\n' '  for arg in "$@"; do'
+          printf '%s\n' '    if [[ "$arg" == "install" ]]; then'
+          printf '%s\n' '      install_seen=true'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'
+          printf '%s\n' '      continue'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    args+=("$arg")'
+          printf '%s\n' '  done'
+          printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'
+          printf '%s\n' 'fi'
+          printf '%s\n' 'exec /usr/bin/sudo "$@"'
+        } > "$HOME/.github-tools/sudo"
+        chmod +x "$HOME/.github-tools/sudo"
+        echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
+
+    # ── OCaml toolchain (direct call, no intermediate composite) ───────
+    - name: Set up OCaml and opam
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: 5.1.1
+        allow-prerelease-opam: false
+        opam-pin: true
+        opam-depext: false
+        opam-local-packages: "*.opam"
+        opam-disable-sandboxing: false
+        dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: v1
+
+    # ── Extra system packages (project-specific) ──────────────────────
+    - name: Install extra system packages
+      if: inputs.system-packages != ''
+      shell: bash
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y ${{ inputs.system-packages }}
+
+    # ── Opam repos and dependency install with retry ──────────────────
+    - name: Install opam dependencies (with retry)
+      shell: bash
+      run: |
+        opam repo add default https://opam.ocaml.org || true
+        # Add any extra repositories
+        for pair in ${{ inputs.extra-repos }}; do
+          name="${pair%%=*}"
+          url="${pair#*=}"
+          opam repo add "$name" "$url" || true
+        done
+        for attempt in 1 2 3; do
+          opam update -y && opam install -y ${{ inputs.opam-packages }} && break
+          echo "[setup-ocaml-env] opam install failed (attempt $attempt/3), retrying in 15s..."
+          sleep 15
+        done

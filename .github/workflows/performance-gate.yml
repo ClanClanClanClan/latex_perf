@@ -20,19 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-ocaml
-        with:
-          ocaml-compiler: 5.1.1
-          opam-depext: false
-          opam-disable-sandboxing: true
-      - name: Install project dependencies
-        run: |
-          opam repo add default https://opam.ocaml.org || true
-          for attempt in 1 2 3; do
-            opam update -y && opam install -y . --deps-only --with-test && break
-            echo "[performance-gate] opam install failed (attempt $attempt), retrying in 15s..."
-            sleep 15
-          done
+      - uses: ./.github/actions/setup-ocaml-env
 
       - name: Build project
         run: |

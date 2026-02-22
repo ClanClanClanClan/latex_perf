@@ -20,20 +20,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup OCaml
-      uses: ./.github/actions/setup-ocaml
+    - uses: ./.github/actions/setup-ocaml-env
       with:
-        ocaml-compiler: 5.1.1
-        opam-depext: false
-    - name: Install Coq toolchain
-      run: |
-        opam repo add default https://opam.ocaml.org || true
-        opam repo add coq-released https://coq.inria.fr/opam/released || true
-        for attempt in 1 2 3; do
-          opam update -y && opam install -y coq.8.18.0 coq-mathcomp-ssreflect.1.17.0 && break
-          echo "[week1-validation-coq] opam install failed (attempt $attempt), retrying in 15s..."
-          sleep 15
-        done
+        opam-packages: coq.8.18.0 coq-mathcomp-ssreflect.1.17.0
+        extra-repos: coq-released=https://coq.inria.fr/opam/released
 
     - name: Build core proof suite
       run: |
@@ -83,19 +73,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup OCaml
-      uses: ./.github/actions/setup-ocaml
+    - uses: ./.github/actions/setup-ocaml-env
       with:
-        ocaml-compiler: 5.1.1
-        opam-depext: false
-    - name: Install project dependencies
-      run: |
-        opam repo add default https://opam.ocaml.org || true
-        for attempt in 1 2 3; do
-          opam update -y && opam install -y dune yojson angstrom uutf ppx_deriving && break
-          echo "[week1-validation-ocaml] opam install failed (attempt $attempt), retrying in 15s..."
-          sleep 15
-        done
+        opam-packages: dune yojson angstrom uutf ppx_deriving
 
     - name: Build latex-parse components
       run: |

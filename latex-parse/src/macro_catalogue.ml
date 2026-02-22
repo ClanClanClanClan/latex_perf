@@ -238,7 +238,11 @@ let validate_epsilon (m : argsafe_entry) : bool * string option =
   (* New builtins added in v25r2 expansion *)
   | Builtin "underline"
   | Builtin "math_accent"
-  | Builtin "passthrough" ->
+  | Builtin "passthrough"
+  (* Multi-arg math builtins (Phase 5d) *)
+  | Builtin "frac"
+  | Builtin "binom"
+  | Builtin "discard" ->
       (true, None)
   | Builtin other -> (false, Some ("unknown builtin " ^ other))
   | Inline body ->
@@ -306,14 +310,21 @@ let should_expand_symbol (e : symbol_entry) ~in_math =
 let should_expand_argsafe (e : argsafe_entry) ~in_math =
   match e.mode with Both | Any -> true | Math -> in_math | Text -> not in_math
 
-(** Apply an inline template by substituting $1 with the argument content. *)
-let apply_inline_template body arg =
-  let buf = Buffer.create (String.length body + String.length arg) in
+(** Apply an inline template by substituting $1..$3 with argument content.
+    [args] is an array of up to 3 positional arguments. *)
+let apply_inline_template body (args : string array) =
+  let buf = Buffer.create (String.length body + 64) in
   let n = String.length body in
   let i = ref 0 in
   while !i < n do
-    if !i + 1 < n && body.[!i] = '$' && body.[!i + 1] = '1' then (
-      Buffer.add_string buf arg;
+    if
+      !i + 1 < n
+      && body.[!i] = '$'
+      && body.[!i + 1] >= '1'
+      && body.[!i + 1] <= '3'
+    then (
+      let idx = Char.code body.[!i + 1] - Char.code '1' in
+      if idx < Array.length args then Buffer.add_string buf args.(idx);
       i := !i + 2)
     else (
       Buffer.add_char buf body.[!i];
@@ -321,12 +332,18 @@ let apply_inline_template body arg =
   done;
   Buffer.contents buf
 
-(** Apply a builtin template to the parsed argument. *)
-let apply_builtin builtin_name arg =
+(** Apply a builtin template to the parsed arguments. [args] is an array of
+    positional arguments; most builtins use only [args.(0)]. *)
+let apply_builtin builtin_name (args : string array) =
+  let arg = if Array.length args > 0 then args.(0) else "" in
+  let arg2 = if Array.length args > 1 then args.(1) else "" in
   match builtin_name with
   | "mbox" | "textsuperscript" | "textsubscript" | "ensuremath" -> arg
   | "verb" | "verb_star" -> arg
   | "underline" | "math_accent" | "passthrough" -> arg
+  | "frac" -> arg ^ "/" ^ arg2
+  | "binom" -> "(" ^ arg ^ ", " ^ arg2 ^ ")"
+  | "discard" -> ""
   | _ -> arg (* unknown builtins: passthrough *)
 
 (** Single-pass expansion: scans the string, expanding known macros once.
@@ -382,21 +399,29 @@ let expand_once cat s =
           (* Look up in catalogue *)
           match Hashtbl.find_opt cat.argsafe name with
           | Some e when should_expand_argsafe e ~in_math:!in_math ->
-              (* Try to parse argument *)
+              (* Try to parse positional arguments *)
               let consumed = ref false in
-              (if e.positional >= 1 then
-                 match find_brace_block s j with
-                 | Some (off, len) ->
-                     let arg = String.sub s off len in
-                     let result =
-                       match e.template with
-                       | Inline body -> apply_inline_template body arg
-                       | Builtin b -> apply_builtin b arg
-                     in
-                     Buffer.add_string buf result;
-                     i := j + len + 2;
-                     consumed := true
-                 | None -> ());
+              if e.positional >= 1 then (
+                let args = Array.make e.positional "" in
+                let pos = ref j in
+                let ok = ref true in
+                for k = 0 to e.positional - 1 do
+                  if !ok then
+                    match find_brace_block s !pos with
+                    | Some (off, len) ->
+                        args.(k) <- String.sub s off len;
+                        pos := off + len + 1 (* past closing brace *)
+                    | None -> ok := false
+                done;
+                if !ok then (
+                  let result =
+                    match e.template with
+                    | Inline body -> apply_inline_template body args
+                    | Builtin b -> apply_builtin b args
+                  in
+                  Buffer.add_string buf result;
+                  i := !pos;
+                  consumed := true));
               if not !consumed then (
                 Buffer.add_char buf c;
                 incr i)

@@ -11,7 +11,7 @@ concurrency:
 
 
 jobs:
-  proof-build:
+  proof-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -36,12 +36,9 @@ jobs:
           if grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then
             echo "[proof-gate] ERROR: axioms found"; exit 1; fi
 
-  proof-alert:
-    needs: proof-build
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
+      # ── Regression alerts (only on failure) ─────────────────────────
       - name: Open issue for proof regression
+        if: failure()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +56,7 @@ jobs:
             core.notice(`Opened issue #${res.data.number}`);
 
       - name: Slack notify (proof regression)
+        if: failure()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
@@ -71,7 +69,7 @@ jobs:
           fi
 
       - name: Email notify (proof regression)
-        if: always()
+        if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_HOST }}

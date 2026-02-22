@@ -15,7 +15,6 @@
  (bug_reports "https://github.com/ClanClanClanClan/latex_perf/issues")
  (depends
   (ocaml         (>= 5.1.1))
-  (dune          (>= 3.10))
   (coq           (= 8.18.0))
   (coq-core      (= 8.18.0))
   (yojson        (>= 2.1))

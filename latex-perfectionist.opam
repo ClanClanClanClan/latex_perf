@@ -6,8 +6,8 @@ authors: ["Clan Labs"]
 homepage: "https://github.com/ClanClanClanClan/latex_perf"
 bug-reports: "https://github.com/ClanClanClanClan/latex_perf/issues"
 depends: [
+  "dune" {>= "3.10"}
   "ocaml" {>= "5.1.1"}
-  "dune" {>= "3.10" & >= "3.10"}
   "coq" {= "8.18.0"}
   "coq-core" {= "8.18.0"}
   "yojson" {>= "2.1"}

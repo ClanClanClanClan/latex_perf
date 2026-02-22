@@ -21,6 +21,7 @@ concurrency:
 jobs:
   xxh-throughput-gate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

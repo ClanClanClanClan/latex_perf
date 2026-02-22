@@ -65,6 +65,64 @@
         "notes": "Math accent/decoration: overbar accent \\bar{x}. Content passes through for linting."
       },
       {
+        "name": "bibliography",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Bibliography file reference; content discarded for linting."
+      },
+      {
+        "name": "bibliographystyle",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Bibliography style declaration; content discarded for linting."
+      },
+      {
+        "name": "binom",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "binom"
+        },
+        "examples": [],
+        "notes": "Binomial coefficient \\binom{n}{k} → (n, k). Both args visible for linting."
+      },
+      {
         "name": "boldsymbol",
         "mode": "math",
         "category": "mathstyle",
@@ -120,6 +178,26 @@
         },
         "examples": [],
         "notes": "Figure/table caption; content passes through for linting."
+      },
+      {
+        "name": "cfrac",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "frac"
+        },
+        "examples": [],
+        "notes": "Continued fraction \\cfrac{a}{b} → a/b. Both args visible for linting."
       },
       {
         "name": "chapter",
@@ -198,6 +276,26 @@
         "notes": "Document date; content passes through for linting."
       },
       {
+        "name": "dbinom",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "binom"
+        },
+        "examples": [],
+        "notes": "Display binomial \\dbinom{n}{k} → (n, k). Both args visible for linting."
+      },
+      {
         "name": "ddot",
         "mode": "math",
         "category": "math-accent",
@@ -234,6 +332,45 @@
         },
         "examples": [],
         "notes": "Math accent/decoration: overdot \\dot{x}. Content passes through for linting."
+      },
+      {
+        "name": "dfrac",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "frac"
+        },
+        "examples": [],
+        "notes": "Display fraction \\dfrac{a}{b} → a/b. Both args visible for linting."
+      },
+      {
+        "name": "documentclass",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Document class declaration; content discarded for linting."
       },
       {
         "name": "emph",
@@ -312,6 +449,26 @@
         "notes": "Footnote text; content passes through for linting."
       },
       {
+        "name": "frac",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "frac"
+        },
+        "examples": [],
+        "notes": "Fraction \\frac{a}{b} → a/b. Both args visible for linting."
+      },
+      {
         "name": "grave",
         "mode": "math",
         "category": "math-accent",
@@ -348,6 +505,25 @@
         },
         "examples": [],
         "notes": "Math accent/decoration: circumflex accent \\hat{x}. Content passes through for linting."
+      },
+      {
+        "name": "hphantom",
+        "mode": "both",
+        "category": "spacing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Horizontal phantom; content discarded for linting (creates invisible horizontal space)."
       },
       {
         "name": "label",
@@ -591,6 +767,25 @@
         "notes": "Math accent/decoration: overbrace \\overbrace{x+y}. Content passes through for linting."
       },
       {
+        "name": "operatorname",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Custom math operator \\operatorname{Tr} → Tr. Content passes through for linting."
+      },
+      {
         "name": "overline",
         "mode": "math",
         "category": "math-accent",
@@ -667,6 +862,25 @@
         "notes": "Part heading; content passes through for linting."
       },
       {
+        "name": "phantom",
+        "mode": "both",
+        "category": "spacing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Phantom box; content discarded for linting (creates invisible box)."
+      },
+      {
         "name": "ref",
         "mode": "text",
         "category": "reference",
@@ -703,6 +917,25 @@
         },
         "examples": [],
         "notes": "Section heading; content passes through for linting."
+      },
+      {
+        "name": "sqrt",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Square root \\sqrt{x} → x. Content passes through for linting."
       },
       {
         "name": "subparagraph",
@@ -762,6 +995,45 @@
         "notes": "Subsubsection heading; content passes through for linting."
       },
       {
+        "name": "tbinom",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "binom"
+        },
+        "examples": [],
+        "notes": "Text-style binomial \\tbinom{n}{k} → (n, k). Both args visible for linting."
+      },
+      {
+        "name": "text",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "passthrough"
+        },
+        "examples": [],
+        "notes": "Text in math \\text{otherwise} → otherwise. Content passes through for linting."
+      },
+      {
         "name": "textbf",
         "mode": "text",
         "category": "style",
@@ -778,6 +1050,26 @@
           "body": "{\\bfseries $1}"
         },
         "examples": []
+      },
+      {
+        "name": "tfrac",
+        "mode": "math",
+        "category": "math-structure",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 2,
+          "optional": [],
+          "kinds": [
+            "math",
+            "math"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "frac"
+        },
+        "examples": [],
+        "notes": "Text-style fraction \\tfrac{a}{b} → a/b. Both args visible for linting."
       },
       {
         "name": "textit",
@@ -1076,6 +1368,25 @@
         "notes": "URL display; content passes through for linting."
       },
       {
+        "name": "usepackage",
+        "mode": "text",
+        "category": "document",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Package loading declaration; content discarded for linting."
+      },
+      {
         "name": "vec",
         "mode": "math",
         "category": "math-accent",
@@ -1131,6 +1442,25 @@
         },
         "examples": [],
         "notes": "Star variant shows spaces visibly; handled by builtin verb* handler."
+      },
+      {
+        "name": "vphantom",
+        "mode": "both",
+        "category": "spacing",
+        "epsilon_allowed": true,
+        "args": {
+          "positional": 1,
+          "optional": [],
+          "kinds": [
+            "text"
+          ]
+        },
+        "template": {
+          "kind": "builtin",
+          "builtin": "discard"
+        },
+        "examples": [],
+        "notes": "Vertical phantom; content discarded for linting (creates invisible vertical space)."
       },
       {
         "name": "widehat",

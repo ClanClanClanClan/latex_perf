@@ -27,11 +27,11 @@ let () =
       let n = Macro_catalogue.symbol_count c in
       expect (n = 441) (tag ^ Printf.sprintf ": got %d" n));
 
-  (* 2. Load argsafe catalogue — 62 entries (23 original + 39 expansion) *)
-  run "argsafe count = 62" (fun tag ->
+  (* 2. Load argsafe catalogue — 79 entries (62 prev + 17 Phase 5d) *)
+  run "argsafe count = 79" (fun tag ->
       let c = Lazy.force cat in
       let n = Macro_catalogue.argsafe_count c in
-      expect (n = 62) (tag ^ Printf.sprintf ": got %d" n));
+      expect (n = 79) (tag ^ Printf.sprintf ": got %d" n));
 
   (* 3. Lookup alpha → Symbol with TText "α" *)
   run "lookup alpha" (fun tag ->
@@ -1073,29 +1073,38 @@ let () =
         (result = "{\\bfseries Results} Show $\xCE\xB1 \xE2\x89\xA4 \xCE\xB2$.")
         (tag ^ ": got " ^ String.escaped result));
 
-  (* All 62 argsafe entries pass epsilon validation (comprehensive) *)
-  run "all 62 argsafe entries pass epsilon" (fun tag ->
+  (* All 79 argsafe entries pass epsilon validation (comprehensive) *)
+  run "all 79 argsafe entries pass epsilon" (fun tag ->
       let c = Lazy.force cat in
       let all_argsafe =
         [
           "acute";
           "author";
           "bar";
+          "bibliography";
+          "bibliographystyle";
+          "binom";
           "boldsymbol";
           "breve";
           "caption";
+          "cfrac";
           "chapter";
           "check";
           "cite";
           "date";
+          "dbinom";
           "ddot";
+          "dfrac";
+          "documentclass";
           "dot";
           "emph";
           "ensuremath";
           "eqref";
           "footnote";
+          "frac";
           "grave";
           "hat";
+          "hphantom";
           "label";
           "mathbb";
           "mathbf";
@@ -1108,17 +1117,23 @@ let () =
           "mathsf";
           "mathtt";
           "mbox";
+          "operatorname";
           "overbrace";
           "overline";
           "pageref";
           "paragraph";
           "part";
+          "phantom";
           "ref";
           "section";
+          "sqrt";
           "subparagraph";
           "subsection";
           "subsubsection";
+          "tbinom";
+          "text";
           "textbf";
+          "tfrac";
           "textit";
           "textmd";
           "textnormal";
@@ -1135,19 +1150,21 @@ let () =
           "underbrace";
           "underline";
           "url";
+          "usepackage";
           "vec";
           "verb";
           "verb*";
+          "vphantom";
           "widehat";
           "widetilde";
         ]
       in
       expect
-        (List.length all_argsafe = 62)
+        (List.length all_argsafe = 79)
         (tag
         ^ ": list has "
         ^ string_of_int (List.length all_argsafe)
-        ^ " entries, expected 62");
+        ^ " entries, expected 79");
       List.iter
         (fun name ->
           match Macro_catalogue.lookup c name with
@@ -1239,6 +1256,225 @@ let () =
           | Some (Symbol _) -> ()
           | _ -> expect false (tag ^ ": " ^ name ^ " not found as symbol"))
         new_syms);
+
+  (* ══════════════════════════════════════════════════════════════════════
+     PHASE 5d: MULTI-ARG MATH STRUCTURE MACROS
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* \frac{a}{b} → a/b *)
+  run "expand \\frac{a}{b}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\frac{a}{b}$" in
+      expect (result = "$a/b$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \dfrac{x+1}{y-1} → x+1/y-1 *)
+  run "expand \\dfrac{x+1}{y-1}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\dfrac{x+1}{y-1}$" in
+      expect (result = "$x+1/y-1$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \tfrac{1}{2} → 1/2 *)
+  run "expand \\tfrac{1}{2}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\tfrac{1}{2}$" in
+      expect (result = "$1/2$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \cfrac{a}{b} → a/b *)
+  run "expand \\cfrac{a}{b}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\cfrac{a}{b}$" in
+      expect (result = "$a/b$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \binom{n}{k} → (n, k) *)
+  run "expand \\binom{n}{k}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\binom{n}{k}$" in
+      expect (result = "$(n, k)$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \dbinom{n}{k} → (n, k) *)
+  run "expand \\dbinom{n}{k}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\dbinom{n}{k}$" in
+      expect (result = "$(n, k)$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \tbinom{n}{k} → (n, k) *)
+  run "expand \\tbinom{n}{k}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\tbinom{n}{k}$" in
+      expect (result = "$(n, k)$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \sqrt{x} → x *)
+  run "expand \\sqrt{x}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\sqrt{x}$" in
+      expect (result = "$x$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \sqrt{x^2+y^2} → x^2+y^2 *)
+  run "expand \\sqrt{x^2+y^2}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\sqrt{x^2+y^2}$" in
+      expect (result = "$x^2+y^2$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \text{otherwise} → otherwise (in math mode) *)
+  run "expand \\text{otherwise}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\text{otherwise}$" in
+      expect (result = "$otherwise$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \operatorname{Tr} → Tr (in math mode) *)
+  run "expand \\operatorname{Tr}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\operatorname{Tr}$" in
+      expect (result = "$Tr$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \phantom{x} → empty *)
+  run "expand \\phantom{x}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\phantom{x}$" in
+      expect (result = "$$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \hphantom{wide text} → empty *)
+  run "expand \\hphantom{wide}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\hphantom{wide}$" in
+      expect (result = "$$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \vphantom{tall} → empty *)
+  run "expand \\vphantom{tall}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\vphantom{tall}$" in
+      expect (result = "$$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \usepackage{amsmath} → empty *)
+  run "expand \\usepackage{amsmath}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\usepackage{amsmath}" in
+      expect (result = "") (tag ^ ": got " ^ String.escaped result));
+
+  (* \documentclass{article} → empty *)
+  run "expand \\documentclass{article}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\documentclass{article}" in
+      expect (result = "") (tag ^ ": got " ^ String.escaped result));
+
+  (* \bibliography{refs} → empty *)
+  run "expand \\bibliography{refs}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\bibliography{refs}" in
+      expect (result = "") (tag ^ ": got " ^ String.escaped result));
+
+  (* \bibliographystyle{plain} → empty *)
+  run "expand \\bibliographystyle{plain}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\bibliographystyle{plain}" in
+      expect (result = "") (tag ^ ": got " ^ String.escaped result));
+
+  (* Multi-arg macros in text mode → unchanged *)
+  run "\\frac in text mode" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "\\frac{a}{b}" in
+      expect (result = "\\frac{a}{b}") (tag ^ ": got " ^ String.escaped result));
+
+  (* Nested: \frac{\alpha}{\beta} → α/β *)
+  run "expand \\frac{\\alpha}{\\beta}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\frac{\\alpha}{\\beta}$" in
+      expect
+        (result = "$\xCE\xB1/\xCE\xB2$")
+        (tag ^ ": got " ^ String.escaped result));
+
+  (* Combined: \frac{1}{\sqrt{2}} *)
+  run "expand \\frac{1}{\\sqrt{2}}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\frac{1}{\\sqrt{2}}$" in
+      expect (result = "$1/2$") (tag ^ ": got " ^ String.escaped result));
+
+  (* \frac with empty args *)
+  run "expand \\frac{}{}" (fun tag ->
+      let c = Lazy.force cat in
+      let result = Macro_catalogue.expand c "$\\frac{}{}$" in
+      expect (result = "$/$") (tag ^ ": got " ^ String.escaped result));
+
+  (* Epsilon validation: new builtins pass *)
+  run "epsilon validation frac" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "frac";
+          mode = Math;
+          category = "math-structure";
+          positional = 2;
+          kinds = [ "math"; "math" ];
+          template = Builtin "frac";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+  run "epsilon validation binom" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "binom";
+          mode = Math;
+          category = "math-structure";
+          positional = 2;
+          kinds = [ "math"; "math" ];
+          template = Builtin "binom";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+  run "epsilon validation discard" (fun tag ->
+      let e : Macro_catalogue.argsafe_entry =
+        {
+          name = "phantom";
+          mode = Both;
+          category = "spacing";
+          positional = 1;
+          kinds = [ "text" ];
+          template = Builtin "discard";
+        }
+      in
+      let ok, _ = Macro_catalogue.validate_epsilon e in
+      expect ok (tag ^ ": should pass"));
+
+  (* All 17 new Phase 5d entries are loadable *)
+  run "all 17 Phase 5d entries present" (fun tag ->
+      let c = Lazy.force cat in
+      let new_entries =
+        [
+          ("bibliography", 1);
+          ("bibliographystyle", 1);
+          ("binom", 2);
+          ("cfrac", 2);
+          ("dbinom", 2);
+          ("dfrac", 2);
+          ("documentclass", 1);
+          ("frac", 2);
+          ("hphantom", 1);
+          ("operatorname", 1);
+          ("phantom", 1);
+          ("sqrt", 1);
+          ("tbinom", 2);
+          ("text", 1);
+          ("tfrac", 2);
+          ("usepackage", 1);
+          ("vphantom", 1);
+        ]
+      in
+      List.iter
+        (fun (name, expected_pos) ->
+          match Macro_catalogue.lookup c name with
+          | Some (Argsafe e) ->
+              expect
+                (e.positional = expected_pos)
+                (tag
+                ^ ": "
+                ^ name
+                ^ " positional="
+                ^ string_of_int e.positional
+                ^ " expected="
+                ^ string_of_int expected_pos)
+          | _ -> expect false (tag ^ ": " ^ name ^ " not found as argsafe"))
+        new_entries);
 
   if !fails > 0 then (
     Printf.eprintf "[macro-cat] %d failure(s)\n%!" !fails;

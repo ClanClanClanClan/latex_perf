@@ -4,24 +4,30 @@ All notable changes to LaTeX Perfectionist v25 are documented here.
 
 ## [Unreleased]
 
-### Added
-- 80 VPD validators with formal Coq soundness proofs (PR #146)
-- RegexFamily proof tactics: `qed_text_sound` tactic, `vpd_catalogue_coverage` lemma
-- Conflict test suite: 22 cases for deterministic ordering, severity, and cross-family fire
-- Shared `test_helpers.ml` module eliminating ~759 lines of boilerplate across 30 test files
-- `contains_substring` helper replacing 30 ad-hoc `Str.search_forward` patterns
-- Deferred NLP stubs documentation block for TYPO-019/-020/-030/-031
-- Naming convention and `Validators_context` contract documentation
+### Added (Phases 4-8, PRs #150-#159)
+- Sub-split L0 and L1 validator modules (PR #150)
+- Table-driven layer lookup (PR #151)
+- CI workflow consolidation with setup-ocaml-env (PR #152)
+- Test file consolidation by domain (PR #156)
+- REST API decomposition into 3 modules (PR #157)
+- Multi-arg macro support + 17 argsafe macros (PR #158)
+- CI hardening: timeouts on all 30 workflows, Rust fmt+clippy (PR #159)
 
 ### Changed
-- Hoisted 17 `Str.regexp` compilations from inside `let run` closures to rule-level (compiled once at module load)
-- Replaced `List.exists` with `Hashtbl.mem` for `is_math_env` lookups (O(n) to O(1))
-- Narrowed all 44 bare `with _ ->` exception handlers to specific exception types across 21 files
-- Removed `-w -27-26` warning suppressions from `core/l1_expander/dune`; fixed underlying unused variable warnings
-- Fixed 3 unsafe `List.hd` calls with pattern matching
+- Macro catalogue expanded: 441 symbols + 79 argsafe = 520 total (was 383 + 28)
+- CI consolidated from 35 to 30 workflows
+- All CI jobs now have explicit timeout-minutes
+- Rust proxy enforces cargo fmt --check + cargo clippy -D warnings
+- Removed redundant opam constraint (dune >= 3.10 dedup)
+- Deleted dead .github/actions/setup-ocaml/ composite action
 
 ### Fixed
-- TYPO-050 count mismatch (81 vs 80) between Coq proof list and VPD patterns JSON
+- Dropbox-corrupted git refs (Phase 8: 21 conflict files in .git/)
+- cargo fmt pre-existing formatting issue in rust proxy
+- Stale remote branches cleaned (6 deleted)
+- Stale local branches cleaned (16 deleted)
+- Documentation audit: corrected inflated rule counts (482 → 452 spec-matched)
+
 
 ## [W25] - L3 Text-Scannable Approximations (PR #141)
 

@@ -1,22 +1,25 @@
 # LaTeX Perfectionist v25 - Project Index
 
-**Status**: Week 29 of 156 - Phase 2 Active, entering Q3
-**Last Updated**: February 2026
+**Status**: Week 30 of 156 — Post-Phase 8, entering Q3
+**Last Updated**: 2026-02-22 (verified by full audit)
 **Project Type**: 3-Year Solo-Developer Project (156 weeks total)
 
 ## Current Status Summary
 
-- 482 validators implemented out of 623 spec rules (77.4%)
-  - L0: 183/187 (97.9%), L1: 150/158 (94.9%), L2: 96/96 (100%)
+- 452 spec-matched validators implemented out of 623 spec rules (72.6%)
+  - L0: 183/187 (97.9%), L1: 141/158 (89.2%), L2: 94/96 (97.9%)
   - L3: 24/112 (21.4%), L4: 10/70 (14.3%)
-  - All text-scannable rules exhausted; remaining gaps need compile/NLP infrastructure
-- VPD pipeline operational: rules_v3.yaml → vpd_grammar → vpd_compile → OCaml (31 rules in pipeline)
-- 13 Coq proof files, 0 admits, 0 axioms — all expansion theorems QED
-- Performance: p95 ~ 2.96 ms full-doc (target < 25 ms)
-- 35 CI workflows green
-- 5 gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26)
-- Y1 target of 180 validators exceeded by 2.7× (ahead of schedule)
-- Next per timeline: W27-30 generic proof tactics (RegexFamily)
+  - 22 orphan rules in code not in spec (MOD, EXP, UTF/LATIN utilities)
+  - 474 unique rule IDs in code total; 51 layer misplacements (functional, file vs spec layer)
+  - Remaining gaps: L3 needs semantic/AST infrastructure, L4 needs NLP pipeline
+- Macro catalogue: 520 macros (441 symbols + 79 argsafe) in production
+- 15 Coq proof files (+ 7 archive), 316 theorems/lemmas, 0 admits, 0 axioms
+- Performance: A+B p95 = 3.25 ms (target ≤ 20 ms), first-token p95 = 27 µs (target ≤ 350 µs)
+- 30 CI workflows, all with timeout-minutes on every job
+- ~7,086 test cases across 53 test files, 236 golden corpus tests, 100K IPC roundtrips
+- 6 gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26), VPD-80 (W39)
+- Y1 target of 180 validators exceeded by 2.5× (ahead of schedule)
+- Next per timeline: W27-30 generic proof tactics (RegexFamily) — W40-52 L2 parser + proofs
 
 ## 📁 Project Structure
 
@@ -97,19 +100,20 @@ specs/                          # Authoritative plans & rule catalogues
 | Area | Target | Repository State | Notes |
 |------|--------|------------------|-------|
 | Build | `dune build` green | ✅ | Active for `latex-parse/` modules |
-| Proof admits | 0 | ✅ | `proofs/CoreProofs.v`, `proofs/Catcode.v`, `proofs/Arena_safe.v` |
+| Proof admits | 0 | ✅ | 15 proof files (+ 7 archive), 316 theorems, 0 admits |
 | Proof locality | Window equivalence | ✅ | `proofs/LexerSoA.v` (kinds/codes/offs/issues) |
-| Performance snapshot | record p95 | p95 ≈ 2.73 ms (200 k iters), ≈ 2.96 ms (1 M iters) | `ab_microbench` on `perf_smoke_big` (see `core/l0_lexer/current_baseline_performance.json`) |
-| Performance gate | p95 < 20 ms (Tier A) | ✅ | `scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100` |
-| Edit-window p95 | < 1ms | ✅ | `scripts/edit_window_gate.sh corpora/perf/edit_window_4kb.tex 2000` (p95 ≈ 0.017 ms) |
-| Validators | 623 total | 482 implemented (77.4%) | L0: 97.9%, L1: 94.9%, L2: 100%, L3: 21.4%, L4: 14.3% |
+| Performance snapshot | record p95 | A+B p95 = 3.25 ms (measured 2026-02-22) | `ab_microbench` on `perf_smoke_big` |
+| Performance gate | p95 ≤ 20 ms (Tier A) | ✅ | 6.2× headroom |
+| First-token p95 | ≤ 350 µs | ✅ | p95 = 27 µs (13× headroom) |
+| Edit-window p95 | < 1ms | ✅ | p95 = 0.012 ms (250× headroom) |
+| Validators | 623 total | 452 spec-matched (72.6%) | L0: 97.9%, L1: 89.2%, L2: 97.9%, L3: 21.4%, L4: 14.3% |
 
 ### Long-term Targets (Week 156 GA)
 | Metric | Target | Current | Progress |
 |--------|--------|---------|----------|
-| Validators | 623 | 482 implemented | 77.4% |
+| Validators | 623 | 452 spec-matched | 72.6% |
 | Languages | 21 | 6 live + 15 stubbed | 29% |
-| Edit-window p95 | < 1ms | 0.017 ms | Exceeds target |
+| Edit-window p95 | < 1ms | ✅ | p95 = 0.012 ms (250× headroom) |
 | False-positive rate | < 0.1% | pending | - |
 
 ## 🛠️ Quick Commands Reference
@@ -187,7 +191,7 @@ OPAMSWITCH=l0-testing opam exec -- \
 - **Week 18**: Locale rules + stragglers
 - **Weeks 19-23**: L2-approximable batches 1-4 (FIG, TAB, PKG, CJK, FONT, MATH, REF, CMD, DOC, LANG, TIKZ)
 - **Weeks 24-25**: Text-scannable Draft rules (expl3, TIKZ, LANG, BIB, LAY, META, PDF)
-- **Result**: 482/623 rules (77.4%) — all text-scannable rules exhausted
+- **Result**: 452/623 spec-matched rules (72.6%) — all text-scannable rules exhausted
 
 ### Major Milestones (Upcoming)
 - **Weeks 27-30**: Generic proof tactics (RegexFamily) — auto-proof < 50 ms/validator
@@ -208,4 +212,4 @@ OPAMSWITCH=l0-testing opam exec -- \
 
 ---
 
-**Week 29 Status**: 482/623 validators (77.4%). All text-scannable rules exhausted. L0/L1/L2 layers complete. Q3 focus: generic proof tactics (RegexFamily) per §14.2 timeline.
+**Week 30 Status**: 452/623 spec-matched validators (72.6%). L0-L2 layers nearly complete (97.9%/89.2%/97.9%). L3/L4 gaps need semantic/NLP infrastructure. Next per timeline: W40-52 L2 parser + proofs.

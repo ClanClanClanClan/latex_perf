@@ -82,7 +82,7 @@
 
 (executable
  (name rest_api_server)
- (modules rest_api_server rest_simple_expander)
+ (modules rest_api_server rest_http rest_handlers rest_simple_expander)
  (libraries latex_parse_lib unix threads str yojson))
 
 (executable

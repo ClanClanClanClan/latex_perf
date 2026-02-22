@@ -63,7 +63,7 @@
 (library
  (name test_helpers)
  (modules test_helpers)
- (libraries latex_parse_lib))
+ (libraries latex_parse_lib unix))
 
 (executable
  (name main_service)
@@ -181,24 +181,9 @@
  (libraries latex_parse_lib unix))
 
 (test
- (name test_mlock_smoke)
- (modules test_mlock_smoke)
- (libraries latex_parse_lib unix))
-
-(test
- (name test_meminfo_smoke)
- (modules test_meminfo_smoke)
- (libraries latex_parse_lib unix))
-
-(test
- (name test_gc_prep_smoke)
- (modules test_gc_prep_smoke)
- (libraries latex_parse_lib unix))
-
-(test
- (name test_pretouch_smoke)
- (modules test_pretouch_smoke)
- (libraries latex_parse_lib unix bigarray))
+ (name test_infra_smoke)
+ (modules test_infra_smoke)
+ (libraries latex_parse_lib test_helpers unix bigarray))
 
 (test
  (name test_fast_hash)
@@ -274,13 +259,8 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
- (name test_validators_math_l1)
- (modules test_validators_math_l1)
- (libraries latex_parse_lib test_helpers unix))
-
-(test
- (name test_validators_math_l1b)
- (modules test_validators_math_l1b)
+ (name test_validators_math)
+ (modules test_validators_math)
  (libraries latex_parse_lib test_helpers unix))
 
 (test
@@ -314,21 +294,6 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
- (name test_validators_math_c1)
- (modules test_validators_math_c1)
- (libraries latex_parse_lib test_helpers unix))
-
-(test
- (name test_validators_math_c2)
- (modules test_validators_math_c2)
- (libraries latex_parse_lib test_helpers unix))
-
-(test
- (name test_validators_math_c3)
- (modules test_validators_math_c3)
- (libraries latex_parse_lib test_helpers unix))
-
-(test
  (name test_validators_cli)
  (modules test_validators_cli)
  (libraries latex_parse_lib test_helpers unix)
@@ -354,11 +319,6 @@
   ../../specs/rules/l5_expl3_tikz_golden.yaml
   ../../specs/rules/l3_text_approx_golden.yaml
   (source_tree ../../corpora)))
-
-(test
- (name test_validators_math_gap)
- (modules test_validators_math_gap)
- (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_validators_expl3)

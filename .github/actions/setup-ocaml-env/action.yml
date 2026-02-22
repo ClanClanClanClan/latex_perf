@@ -36,7 +36,8 @@ runs:
       uses: ./.github/actions/setup-ocaml
       with:
         ocaml-compiler: 5.1.1
-        opam-depext: false
+        allow-prerelease-opam: "false"
+        opam-depext: "false"
         dune-cache: ${{ inputs.dune-cache }}
 
     - name: Install extra system packages

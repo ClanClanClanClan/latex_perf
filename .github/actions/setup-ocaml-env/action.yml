@@ -1,8 +1,13 @@
 name: Setup OCaml + Install Dependencies
 description: >-
-  Composite action that wraps .github/actions/setup-ocaml with opam repo
-  configuration and a retry-loop dependency install.  Replaces the 15-line
-  boilerplate block that was duplicated across 25 CI workflows.
+  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2),
+  installs system packages, filters darcs from apt, configures opam repos,
+  and performs a retry-loop dependency install.  Replaces the 15-line
+  boilerplate block that was duplicated across 25+ CI workflows.
+
+  NOTE: This action calls ocaml/setup-ocaml@v2 DIRECTLY (not through an
+  intermediate composite action) to avoid GitHub Actions post-cleanup input
+  resolution failures with nested composite actions.
 author: Internal
 
 inputs:
@@ -32,14 +37,60 @@ inputs:
 runs:
   using: composite
   steps:
+    # ── System prerequisites (from former setup-ocaml action) ──────────
+    - name: Install system packages (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          bubblewrap \
+          g++-multilib \
+          gcc-multilib \
+          mercurial \
+          musl-tools \
+          rsync
+
+    - name: Filter darcs from privileged apt invocations (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        mkdir -p "$HOME/.github-tools"
+        {
+          printf '%s\n' '#!/usr/bin/env bash'
+          printf '%s\n' 'if [[ "$1" == "apt-get" ]]; then'
+          printf '%s\n' '  args=()'
+          printf '%s\n' '  install_seen=false'
+          printf '%s\n' '  for arg in "$@"; do'
+          printf '%s\n' '    if [[ "$arg" == "install" ]]; then'
+          printf '%s\n' '      install_seen=true'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    if [[ "$install_seen" == true && "$arg" == "darcs" ]]; then'
+          printf '%s\n' '      continue'
+          printf '%s\n' '    fi'
+          printf '%s\n' '    args+=("$arg")'
+          printf '%s\n' '  done'
+          printf '%s\n' '  exec /usr/bin/sudo "${args[@]}"'
+          printf '%s\n' 'fi'
+          printf '%s\n' 'exec /usr/bin/sudo "$@"'
+        } > "$HOME/.github-tools/sudo"
+        chmod +x "$HOME/.github-tools/sudo"
+        echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
+
+    # ── OCaml toolchain (direct call, no intermediate composite) ───────
     - name: Set up OCaml and opam
-      uses: ./.github/actions/setup-ocaml
+      uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 5.1.1
-        allow-prerelease-opam: "false"
-        opam-depext: "false"
+        allow-prerelease-opam: false
+        opam-pin: true
+        opam-depext: false
+        opam-local-packages: "*.opam"
+        opam-disable-sandboxing: false
         dune-cache: ${{ inputs.dune-cache }}
+        cache-prefix: v1
 
+    # ── Extra system packages (project-specific) ──────────────────────
     - name: Install extra system packages
       if: inputs.system-packages != ''
       shell: bash
@@ -47,6 +98,7 @@ runs:
         sudo apt-get update -y
         sudo apt-get install -y ${{ inputs.system-packages }}
 
+    # ── Opam repos and dependency install with retry ──────────────────
     - name: Install opam dependencies (with retry)
       shell: bash
       run: |

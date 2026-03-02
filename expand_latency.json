@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "expand latency p95",
-  "message": "25.37 ms",
+  "message": "23.37 ms",
   "color": "blue"
 }

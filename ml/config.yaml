@@ -6,6 +6,17 @@ seed: 42
 paths:
   vpd_patterns: "../specs/rules/vpd_patterns.json"
   golden_yaml: "../specs/rules/pilot_v1_golden.yaml"
+  corpus_dirs:
+    - "../corpora/lint/pilot_v1"
+    - "../corpora/lint/locale"
+    - "../corpora/lint/stragglers2"
+    - "../corpora/lint/l2_approx"
+    - "../corpora/lint/l2_batch3"
+    - "../corpora/lint/l2_batch4"
+    - "../corpora/lint/l3_text_approx"
+    - "../corpora/lint/l5_expl3_tikz"
+    - "../corpora/l1"
+  # Legacy single-dir key (backward compat)
   corpus_dir: "../corpora/lint/pilot_v1"
   labeled_jsonl: "data/labeled_spans.jsonl"
   train_jsonl: "data/train.jsonl"
@@ -37,13 +48,15 @@ baseline_gbt:
 
 bert_crf:
   model_name: "allenai/scibert_scivocab_uncased"
-  max_length: 512
-  batch_size: 16
-  epochs: 5
-  learning_rate: 2.0e-5
+  max_length: 128       # Docs are 30-200 chars; 512 wastes compute
+  batch_size: 8         # Smaller batch = more gradient updates per epoch
+  epochs: 50            # Time is not an issue; early stopping will cut if converged
+  learning_rate: 3.0e-5 # Slightly higher for faster convergence on small data
   warmup_ratio: 0.1
   weight_decay: 0.01
   crf_learning_rate: 1.0e-3
+  patience: 7           # Early stopping patience (only after epoch 15)
+  min_epochs: 15        # Don't early-stop before this
 
 evaluation:
   f1_threshold: 0.94

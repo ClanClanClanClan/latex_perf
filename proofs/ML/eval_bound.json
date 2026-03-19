@@ -1,0 +1,9 @@
+{
+  "delta": 0.6048,
+  "f1": 0.3952,
+  "threshold": 0.94,
+  "bound_holds": false,
+  "model": "bert-crf (allenai/scibert_scivocab_uncased)",
+  "seed": 42,
+  "timestamp": "2026-03-06T21:41:24.425145+00:00"
+}

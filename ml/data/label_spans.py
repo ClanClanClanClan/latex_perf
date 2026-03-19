@@ -269,11 +269,96 @@ def replay_custom_TYPO_045(text: str) -> List[Tuple[int, int]]:
     return spans
 
 
+def replay_custom_TYPO_013(text: str) -> List[Tuple[int, int]]:
+    """Single ASCII backtick (not part of a double ``)."""
+    spans = []
+    n = len(text)
+    for i, c in enumerate(text):
+        if c == '`':
+            is_double = ((i + 1 < n and text[i + 1] == '`') or
+                         (i > 0 and text[i - 1] == '`'))
+            if not is_double:
+                spans.append((i, i + 1))
+    return spans
+
+
+def replay_custom_TYPO_024(text: str) -> List[Tuple[int, int]]:
+    """Dangling dash at end of line."""
+    spans = []
+    pat = re.compile(r'-+[ \t]*$', re.MULTILINE)
+    for m in pat.finditer(text):
+        spans.append((m.start(), m.end()))
+    return spans
+
+
+def replay_custom_TYPO_028(text: str) -> List[Tuple[int, int]]:
+    """$$ display math (use \\[...\\] instead)."""
+    spans = []
+    i = 0
+    n = len(text)
+    while i < n - 1:
+        if text[i] == '$' and text[i + 1] == '$':
+            spans.append((i, i + 2))
+            i += 2
+        else:
+            i += 1
+    return spans
+
+
+def replay_custom_TYPO_062(text: str) -> List[Tuple[int, int]]:
+    """\\\\  not followed by [ or * (bare line break)."""
+    stripped, _ = strip_math_segments(text)
+    spans = []
+    n = len(stripped)
+    i = 0
+    while i < n - 1:
+        if stripped[i] == '\\' and stripped[i + 1] == '\\':
+            if i + 2 < n:
+                nxt = stripped[i + 2]
+                if nxt != '[' and nxt != '*':
+                    spans.append((i, i + 2))
+            else:
+                spans.append((i, i + 2))
+            i += 2
+        else:
+            i += 1
+    return spans
+
+
+def replay_line_pred_TYPO_007(text: str) -> List[Tuple[int, int]]:
+    """Trailing whitespace at end of line."""
+    spans = []
+    pat = re.compile(r'[ \t]+$', re.MULTILINE)
+    for m in pat.finditer(text):
+        spans.append((m.start(), m.end()))
+    return spans
+
+
+def replay_custom_ENC_BOM(text: str) -> List[Tuple[int, int]]:
+    """UTF-8 BOM (\\xef\\xbb\\xbf) not at position 0."""
+    bom = '\ufeff'
+    spans = []
+    for i, c in enumerate(text):
+        if c == bom and i > 0:
+            spans.append((i, i + 1))
+    return spans
+
+
 CUSTOM_HANDLERS = {
     "TYPO-048": replay_custom_TYPO_048,
     "TYPO-052": replay_custom_TYPO_052,
     "TYPO-040": replay_custom_TYPO_040,
     "TYPO-045": replay_custom_TYPO_045,
+    "TYPO-013": replay_custom_TYPO_013,
+    "TYPO-024": replay_custom_TYPO_024,
+    "TYPO-028": replay_custom_TYPO_028,
+    "TYPO-062": replay_custom_TYPO_062,
+    "ENC-002": replay_custom_ENC_BOM,
+}
+
+# line_pred family: only TYPO-007 uses this
+LINE_PRED_HANDLERS = {
+    "TYPO-007": replay_line_pred_TYPO_007,
 }
 
 
@@ -311,7 +396,14 @@ def replay_pattern(text: str, rule_id: str, pattern_def: Dict) -> List[Tuple[int
         if rule_id in CUSTOM_HANDLERS:
             return CUSTOM_HANDLERS[rule_id](text)
         else:
-            logger.warning(f"No custom handler for {rule_id}, skipping")
+            logger.debug(f"No custom handler for {rule_id}, skipping")
+            return []
+
+    elif family == "line_pred":
+        if rule_id in LINE_PRED_HANDLERS:
+            return LINE_PRED_HANDLERS[rule_id](text)
+        else:
+            logger.debug(f"No line_pred handler for {rule_id}, skipping")
             return []
 
     else:
@@ -515,8 +607,16 @@ def run_labeling_pipeline(
     vpd_patterns_path: str,
     golden_yaml_path: str,
     output_path: str,
+    corpus_dirs: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Run the full labeling pipeline.
+
+    Args:
+        corpus_dir: Primary corpus directory (backward compat).
+        vpd_patterns_path: Path to VPD patterns JSON.
+        golden_yaml_path: Path to golden YAML.
+        output_path: Output JSONL path.
+        corpus_dirs: Optional list of additional corpus directories.
 
     Returns:
         Summary statistics dict.
@@ -529,10 +629,25 @@ def run_labeling_pipeline(
     golden_cases = load_golden_yaml(golden_yaml_path)
     logger.info(f"Loaded {len(golden_cases)} golden test cases")
 
-    # Find corpus files
-    corpus_path = Path(corpus_dir)
-    tex_files = sorted(corpus_path.glob("*.tex"))
-    logger.info(f"Found {len(tex_files)} .tex files in {corpus_dir}")
+    # Collect .tex files from all corpus directories
+    all_dirs = [corpus_dir]
+    if corpus_dirs:
+        for d in corpus_dirs:
+            if d != corpus_dir and os.path.isdir(d):
+                all_dirs.append(d)
+
+    tex_files = []
+    seen_names = set()
+    for d in all_dirs:
+        p = Path(d)
+        if not p.is_dir():
+            logger.warning(f"Corpus directory not found: {d}")
+            continue
+        for f in sorted(p.glob("*.tex")):
+            if f.name not in seen_names:
+                tex_files.append(f)
+                seen_names.add(f.name)
+    logger.info(f"Found {len(tex_files)} .tex files across {len(all_dirs)} directories")
 
     if not tex_files:
         logger.error(f"No .tex files found in {corpus_dir}")
@@ -541,8 +656,19 @@ def run_labeling_pipeline(
     # Label each document
     labeled_docs = []
     total_spans = 0
+    skipped = 0
     for tex_file in tex_files:
-        text = tex_file.read_text(encoding='utf-8')
+        try:
+            text = tex_file.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            # Fall back to latin-1 (superset of ASCII, never fails)
+            try:
+                text = tex_file.read_text(encoding='latin-1')
+                logger.debug(f"Read {tex_file.name} as latin-1 (non-UTF-8 bytes)")
+            except Exception as e:
+                logger.warning(f"Skipping {tex_file.name}: {e}")
+                skipped += 1
+                continue
         doc = label_document(str(tex_file), text, vpd_patterns)
         labeled_docs.append(doc)
         total_spans += len(doc.spans)
@@ -592,6 +718,156 @@ def run_labeling_pipeline(
     }
 
     return summary
+
+
+# ── Training window extraction ──────────────────────────────────────────────
+
+def extract_training_windows(
+    labeled_docs: List[Dict],
+    window_size: int = 300,
+    stride: int = 150,
+    negative_ratio: float = 0.3,
+    seed: int = 42,
+) -> List[Dict]:
+    """Extract fixed-size training windows from labeled documents.
+
+    Short documents (< window_size) pass through unchanged.
+    Large documents are windowed:
+      - Stride windows: overlapping windows covering the entire document.
+      - Span-centered windows: for long spans (> stride) that might not be
+        fully contained in any stride window.
+      - Negative windows: random span-free windows for class balance.
+
+    Uses sorted spans + bisect for O(log S) lookups instead of O(S) scans.
+
+    Args:
+        labeled_docs: list of dicts with 'text', 'bio_tags', 'spans', etc.
+        window_size: chars per window (should fit in BERT context)
+        stride: step between consecutive windows
+        negative_ratio: fraction of extra negative windows vs positive
+        seed: for reproducible sampling
+
+    Returns:
+        List of windowed document dicts (same schema, shorter text).
+    """
+    import random as _rng
+    from bisect import bisect_left, bisect_right
+
+    rng = _rng.Random(seed)
+
+    windowed: List[Dict] = []
+    stats = {"short_passthrough": 0, "span_windows": 0,
+             "stride_windows": 0, "negative_windows": 0}
+
+    for doc_idx, doc in enumerate(labeled_docs):
+        text = doc["text"]
+        bio_tags = doc["bio_tags"]
+        spans = doc.get("spans", [])
+        file_path = doc.get("file", "unknown")
+
+        # Short documents pass through unchanged
+        if len(text) <= window_size:
+            windowed.append(doc)
+            stats["short_passthrough"] += 1
+            continue
+
+        # ── Normalise and sort spans once ────────────────────────────
+        norm: List[tuple] = []  # (start, end, rule_id)
+        for span in spans:
+            s = span["start"] if isinstance(span, dict) else span.start
+            e = span["end"] if isinstance(span, dict) else span.end
+            rid = span["rule_id"] if isinstance(span, dict) else span.rule_id
+            norm.append((s, e, rid))
+        norm.sort()
+        starts_arr = [s for s, e, r in norm]  # for bisect lookups
+
+        # ── Helper: find spans fully contained in [ws, we) ───────────
+        def _spans_in_window(ws: int, we: int) -> List[Dict]:
+            """O(log S + k) where k = spans returned."""
+            lo = bisect_left(starts_arr, ws)
+            result = []
+            for i in range(lo, len(norm)):
+                s, e, rid = norm[i]
+                if s >= we:
+                    break
+                if e <= we:  # fully contained
+                    result.append({"start": s - ws, "end": e - ws, "rule_id": rid})
+            return result
+
+        # ── Helper: does [ws, we) overlap any span? ──────────────────
+        def _has_span_overlap(ws: int, we: int) -> bool:
+            """O(log S) — check if any span intersects the window."""
+            # Any span starting in [ws, we)?
+            lo = bisect_left(starts_arr, ws)
+            if lo < len(norm) and norm[lo][0] < we:
+                return True
+            # Any span starting before ws but ending after ws?
+            if lo > 0 and norm[lo - 1][1] > ws:
+                return True
+            return False
+
+        # ── Collect unique window start positions ────────────────────
+        max_start = max(len(text) - window_size, 0)
+        window_starts: set = set()
+
+        # 1. Stride windows — cover entire document
+        for start in range(0, max_start + 1, stride):
+            window_starts.add(start)
+        stats["stride_windows"] += len(window_starts)
+
+        # 2. Span-centered windows — only for spans longer than stride
+        #    (shorter spans are guaranteed covered by stride windows)
+        for s, e, rid in norm:
+            span_len = e - s
+            if span_len >= stride:
+                mid = (s + e) // 2
+                start = max(0, min(mid - window_size // 2, max_start))
+                window_starts.add(start)
+                stats["span_windows"] += 1
+
+        # 3. Negative windows — random span-free windows (interval check)
+        n_positive = len(window_starts)
+        n_negative = max(1, int(n_positive * negative_ratio))
+        neg_found = 0
+        neg_attempts = 0
+        max_neg_attempts = n_negative * 10
+        while neg_found < n_negative and neg_attempts < max_neg_attempts:
+            neg_attempts += 1
+            start = rng.randint(0, max_start)
+            if not _has_span_overlap(start, start + window_size):
+                window_starts.add(start)
+                neg_found += 1
+                stats["negative_windows"] += 1
+
+        # ── Extract windows using bisect ─────────────────────────────
+        for ws in sorted(window_starts):
+            we = min(ws + window_size, len(text))
+            w_spans = _spans_in_window(ws, we)
+            w_rules = sorted(set(sp["rule_id"] for sp in w_spans))
+
+            windowed.append({
+                "file": f"{file_path}@{ws}-{we}",
+                "text": text[ws:we],
+                "bio_tags": bio_tags[ws:we],
+                "spans": w_spans,
+                "rule_ids": w_rules,
+            })
+
+        # Progress logging for large corpora
+        if (doc_idx + 1) % 200 == 0:
+            logger.info(
+                f"  Windowing progress: {doc_idx + 1}/{len(labeled_docs)} docs "
+                f"→ {len(windowed)} windows so far"
+            )
+
+    logger.info(
+        f"Window extraction: {len(labeled_docs)} docs → {len(windowed)} windows "
+        f"(passthrough={stats['short_passthrough']}, "
+        f"stride={stats['stride_windows']}, "
+        f"span_centered={stats['span_windows']}, "
+        f"neg={stats['negative_windows']})"
+    )
+    return windowed
 
 
 # ── CLI entry point ──────────────────────────────────────────────────────────
@@ -652,13 +928,24 @@ def main():
     golden_yaml = args.golden_yaml or str(config_dir / paths.get("golden_yaml", "../specs/rules/pilot_v1_golden.yaml"))
     output = args.output or str(config_dir / paths.get("labeled_jsonl", "data/labeled_spans.jsonl"))
 
+    # Resolve additional corpus dirs from config
+    extra_corpus_dirs = None
+    corpus_dirs_cfg = paths.get("corpus_dirs", [])
+    if corpus_dirs_cfg:
+        extra_corpus_dirs = [str(config_dir / d) for d in corpus_dirs_cfg]
+
     logger.info("=== ML Span Extractor: Data Labeling Pipeline ===")
-    logger.info(f"Corpus: {corpus_dir}")
+    logger.info(f"Primary corpus: {corpus_dir}")
+    if extra_corpus_dirs:
+        logger.info(f"Additional dirs: {len(extra_corpus_dirs)}")
     logger.info(f"VPD patterns: {vpd_patterns}")
     logger.info(f"Golden YAML: {golden_yaml}")
     logger.info(f"Output: {output}")
 
-    summary = run_labeling_pipeline(corpus_dir, vpd_patterns, golden_yaml, output)
+    summary = run_labeling_pipeline(
+        corpus_dir, vpd_patterns, golden_yaml, output,
+        corpus_dirs=extra_corpus_dirs,
+    )
 
     logger.info("=== Summary ===")
     for k, v in summary.items():

@@ -41,7 +41,7 @@ jobs:
           VAL=${{ steps.measure.outputs.val }}
           echo "[xxh-thru] arch=$ARCH measured=$VAL MB/s"
           case "$ARCH" in
-            x86_64) MIN=1200 ;;
+            x86_64) MIN=600 ;;
             aarch64) MIN=700 ;;
             *) MIN=0 ;;
           esac

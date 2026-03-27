@@ -17,7 +17,24 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List, Dict, Tuple, Any, Optional
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
+
+
+def _to_native(obj):
+    """Recursively convert numpy types to native Python for JSON serialization."""
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_to_native(v) for v in obj]
+    elif isinstance(obj, (np.integer,)):
+        return int(obj)
+    elif isinstance(obj, (np.floating,)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
 
 
 # ── BIO tag validation ───────────────────────────────────────────────────────
@@ -269,7 +286,8 @@ def evaluate(
     if seqeval_metrics:
         results["seqeval"] = seqeval_metrics
 
-    return results
+    # Convert any numpy types to native Python for JSON serialization
+    return _to_native(results)
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────

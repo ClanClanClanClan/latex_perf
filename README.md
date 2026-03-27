@@ -12,25 +12,28 @@
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-**3-Year Project - Week 16 of 156** - Comprehensive LaTeX document analysis and style validation system.
+**3-Year Project — Week 30 of 156** - Comprehensive LaTeX document analysis and style validation system.
 
 LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 623 rules across 21 languages.
 
-## Current Status (Week 16 - February 2026)
+## Current Status (Week 30 — February 2026)
 
-Phase 2 in progress — VPD pipeline operational, all expansion proofs QED:
-- **Build**: `dune build` compiles the SIMD service, benches, generator pipeline, and 13 Coq proofs via `(coq.theory)` stanza.
-- **Proofs**: 13 Coq proof files, 0 admits, 0 axioms. All expansion theorems QED (W15). Includes `proofs/LexerSoA.v` (SoA small-step + big-step with window locality and stability), `proofs/LexerFaithfulStep.v`, `proofs/LexerDeterminism.v`, `proofs/LexerTotality.v` — all admit-free.
-- **Validators**: 83 validators implemented (33 TYPO hand-coded + 25 VPD-generated + 18 MOD + 2 CMD + 1 EXP + 4 basic). TYPO coverage: 58/63 rules.
+Post-Phase 8 — all L0-L2 text-scannable rules implemented, full audit complete:
+- **Build**: `dune build` compiles the SIMD service, benches, and 15 Coq proofs (+ 7 archive) via `(coq.theory)` stanza.
+- **Proofs**: 15 Coq proof files, 316 theorems/lemmas, 0 admits, 0 axioms. All `.vo` files compile clean.
+- **Validators**: 452 spec-matched rules / 623 (72.6%). L0: 183/187, L1: 141/158, L2: 94/96, L3: 24/112, L4: 10/70. ~7,086 test cases across 53 files.
+- **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
 
-### Recent Milestones
+### Milestones
 - ✅ W1: Bootstrap complete — build, proofs, perf harness
 - ✅ W5: Performance α gate (p95 < 20ms)
 - ✅ W10: Proof β gate (admits = 0)
-- ✅ W14-15: Phase 2 — all expansion proofs QED
-- ✅ W16: VPD Batch 3 — 55 golden test cases
-- 🔄 Next: L0-L1 formal checkpoint (W26)
+- ✅ W14-15: All expansion proofs QED
+- ✅ W26: L0-L1 formal checkpoint (0 admits)
+- ✅ W39: VPD-80 capstone (80 rules certified)
+- ✅ Phases 4-8: Refactoring, CI hardening, audit, cleanup (PRs #150-#159)
+- 🔄 Next: W40-52 L2 parser + proofs → Week 52 L2 delivered gate
 
 ## Quick Start
 

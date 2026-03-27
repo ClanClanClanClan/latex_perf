@@ -379,3 +379,20 @@ Current State (Post Week 39 / Q3 Capstone Complete)
 - Code health: 0 bare exception handlers, 0 unsafe List.hd, shared test helpers
 - CI: 35 workflows, all green
 - Gates passed: Bootstrap (W1), Perf α (W5), Proof β (W10), Q1 (W13), L0-L1 QED (W26), VPD-80 (W39)
+
+Post-Phase 8 Audit Correction (2026-02-22)
+- Full audit revealed prior counts inflated by double-counting and layer misattribution
+- Corrected spec-matched count: 452/623 (72.6%), not 482 (77.4%)
+  - L0_Lexer: 183/187 (97.9%)
+  - L1_Expanded: 141/158 (89.2%) — not 150; 17 genuinely missing
+  - L2_Ast: 94/96 (97.9%) — not 96/96; 2 missing
+  - L3_Semantics: 24/112 (21.4%)
+  - L4_Style: 10/70 (14.3%)
+- 474 unique rule IDs in code; 22 are orphan rules (MOD, EXP, UTF/LATIN) not in spec
+- 51 rules in "wrong" validator file vs spec layer — functionally correct, all wired
+- Macro catalogue: 520 macros (441 symbols + 79 argsafe), fully integrated
+- Proofs: 15 files (+ 7 archive), 316 theorems, 0 admits, 0 axioms
+- Performance (measured locally): A+B p95 = 3.25 ms, first-token p95 = 27 µs
+- Testing: ~7,086 test cases, 53 files, 236 golden corpus, 100K IPC roundtrips
+- CI: 30 workflows (consolidated from 35), all with timeout-minutes
+- Phase 8: Dropbox-corrupted git fixed, 16 stale local branches deleted, full sync

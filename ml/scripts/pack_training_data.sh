@@ -38,6 +38,7 @@ tar czf "$OUT" \
     ml/data/label_spans.py \
     ml/data/split_data.py \
     ml/data/feature_extract.py \
+    ml/data/parser_state.py \
     ml/data/__init__.py \
     ml/models/bert_crf.py \
     ml/models/__init__.py \

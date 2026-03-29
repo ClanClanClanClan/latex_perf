@@ -65,7 +65,7 @@ jobs:
           mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
 
       - name: Publish L1 badge to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages

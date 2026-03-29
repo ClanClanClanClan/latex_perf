@@ -23,6 +23,11 @@ jobs:
           extra-repos: coq-released=https://coq.inria.fr/opam/released
           system-packages: libgmp-dev pkg-config
 
+      - name: Check _CoqProject exists
+        run: |
+          if [ ! -f "_CoqProject" ]; then
+            echo "_CoqProject file missing"; exit 1; fi
+
       - name: Build proofs
         run: |
           opam exec -- dune build proofs
@@ -30,10 +35,10 @@ jobs:
       - name: Enforce zero admits and zero axioms
         run: |
           # No Admitted. or admit. (exclude archives and disabled files)
-          if grep -R -nE '^\s*(Admitted\.|admit\.)' proofs --exclude-dir=archive --exclude='*.disabled'; then
+          if grep -rE '^\s*(Admitted\.|admit\.)' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/; then
             echo "[proof-gate] ERROR: admits found"; exit 1; fi
           # No Axiom declarations (exclude archives and disabled files)
-          if grep -R -nE '^\s*Axiom\b' proofs --exclude-dir=archive --exclude='*.disabled'; then
+          if grep -rE '^\s*(Axiom|Parameter)\b' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/; then
             echo "[proof-gate] ERROR: axioms found"; exit 1; fi
 
       # ── Regression alerts (only on failure) ─────────────────────────
@@ -70,7 +75,7 @@ jobs:
 
       - name: Email notify (proof regression)
         if: failure()
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v4
         with:
           server_address: ${{ secrets.SMTP_HOST }}
           server_port: ${{ secrets.SMTP_PORT }}

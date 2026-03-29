@@ -79,11 +79,25 @@ class SpanDataset:
     """Dataset of (text, BIO tags) pairs for BERT+CRF.
 
     Stores pre-tokenized data with proper subword→char alignment.
+    Optionally includes per-token parser-state features (in_math, in_verbatim).
     """
 
-    def __init__(self, texts, bio_tags, tag_scheme, tokenizer, max_length=128):
+    def __init__(self, texts, bio_tags, tag_scheme, tokenizer, max_length=128,
+                 parser_states=None):
+        """
+        Args:
+            texts: list of raw text strings
+            bio_tags: list of char-level BIO tag lists
+            tag_scheme: TagScheme instance
+            tokenizer: BERT tokenizer
+            max_length: max subword tokens
+            parser_states: optional list of ParserState objects (one per text).
+                If provided, each item gets a 'parser_features' field with
+                [in_math, in_verbatim] floats per subword token.
+        """
         self.items = []
-        for text, tags in zip(texts, bio_tags):
+        self.has_parser_features = parser_states is not None
+        for idx, (text, tags) in enumerate(zip(texts, bio_tags)):
             enc = tokenizer(
                 text,
                 max_length=max_length,
@@ -95,36 +109,55 @@ class SpanDataset:
 
             # Align char-level BIO tags → subword tokens
             aligned = []
+            parser_feats = []  # [max_length, 2] if parser_states given
+            ps = parser_states[idx] if parser_states is not None else None
+
             for start, end in offsets:
                 if start == end:
                     # Special token or padding → ignore label (-100)
                     aligned.append(-100)
+                    parser_feats.append([0.0, 0.0])
                 else:
                     char_idx = int(start)
                     if char_idx < len(tags):
                         aligned.append(tag_scheme.encode(tags[char_idx]))
                     else:
                         aligned.append(0)  # O
+                    # Parser features: sample at first char of subword
+                    if ps is not None and char_idx < len(ps):
+                        parser_feats.append([
+                            1.0 if ps.in_math[char_idx] else 0.0,
+                            1.0 if ps.in_verbatim[char_idx] else 0.0,
+                        ])
+                    else:
+                        parser_feats.append([0.0, 0.0])
 
-            self.items.append({
+            item = {
                 'input_ids': enc['input_ids'],
                 'attention_mask': enc['attention_mask'],
                 'labels': aligned,
                 'offsets': offsets,
                 'text_len': len(text),
                 'char_tags': tags,
-            })
+            }
+            if self.has_parser_features:
+                item['parser_features'] = parser_feats
+            self.items.append(item)
 
     def __len__(self):
         return len(self.items)
 
     def __getitem__(self, idx):
         item = self.items[idx]
-        return {
+        result = {
             'input_ids': torch.tensor(item['input_ids'], dtype=torch.long),
             'attention_mask': torch.tensor(item['attention_mask'], dtype=torch.long),
             'labels': torch.tensor(item['labels'], dtype=torch.long),
         }
+        if self.has_parser_features:
+            result['parser_features'] = torch.tensor(
+                item['parser_features'], dtype=torch.float32)
+        return result
 
 
 # ── Model ────────────────────────────────────────────────────────────────────
@@ -173,10 +206,13 @@ def _build_model_class():
                 ce = focal_weight * ce
             return ce.mean()
 
-        def forward(self, input_ids, attention_mask, labels=None):
+        def forward(self, input_ids, attention_mask, labels=None,
+                    parser_features=None):
             outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
             emissions = self.dropout(outputs.last_hidden_state)
             emissions = self.classifier(emissions)
+            # parser_features is accepted but ignored for single-head model
+            # (only used by BertMultiHeadSpanExtractor)
 
             if labels is not None:
                 if self.use_crf:
@@ -230,7 +266,8 @@ def _build_multihead_model_class():
         """
 
         def __init__(self, model_name, rule_ids, tag_scheme, dropout=0.1,
-                     focal_gamma=0.0, per_head_weights=None):
+                     focal_gamma=0.0, per_head_weights=None,
+                     use_parser_features=False):
             super().__init__()
             from transformers import AutoModel
             self.bert = AutoModel.from_pretrained(model_name)
@@ -241,10 +278,13 @@ def _build_multihead_model_class():
             self.num_tags = tag_scheme.num_tags
             self.focal_gamma = focal_gamma
             self.use_crf = False  # compatibility with training loop
+            self.use_parser_features = use_parser_features
 
             # Fused K×3-class head: one matmul instead of K separate ones
             hidden_size = self.bert.config.hidden_size
-            self.classifier = nn.Linear(hidden_size, self.num_rules * 3)
+            # If parser features enabled, concat 2 extra dims (in_math, in_verbatim)
+            classifier_input = hidden_size + (2 if use_parser_features else 0)
+            self.classifier = nn.Linear(classifier_input, self.num_rules * 3)
 
             # Unified-tag → per-head-label mapping: [num_rules, num_tags]
             mapping = torch.zeros(self.num_rules, tag_scheme.num_tags,
@@ -276,10 +316,14 @@ def _build_multihead_model_class():
             self.register_buffer('_i_indices',
                                  torch.tensor(i_indices, dtype=torch.long))
 
-        def forward(self, input_ids, attention_mask, labels=None):
+        def forward(self, input_ids, attention_mask, labels=None,
+                    parser_features=None):
             outputs = self.bert(input_ids=input_ids,
                                 attention_mask=attention_mask)
             hidden = self.dropout(outputs.last_hidden_state)
+            # Concatenate parser features if provided and model expects them
+            if self.use_parser_features and parser_features is not None:
+                hidden = torch.cat([hidden, parser_features], dim=-1)
             if labels is not None:
                 return self._training_forward(hidden, labels)
             else:
@@ -443,6 +487,7 @@ def train_bert_crf(
     focal_gamma: float = 0.0,
     class_weight_cap: float = 50.0,
     multi_head: bool = False,
+    use_parser_features: bool = False,
 ) -> Dict[str, Any]:
     """Full BERT+CRF training pipeline. Returns evaluation results dict."""
     _import_torch()
@@ -475,16 +520,29 @@ def train_bert_crf(
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+    # Compute parser states if enabled
+    train_parser_states = None
+    dev_parser_states = None
+    if use_parser_features:
+        from ml.data.parser_state import compute_parser_state
+        logger.info("Computing parser-state features (in_math, in_verbatim)...")
+        train_parser_states = [compute_parser_state(d["text"]) for d in train_docs]
+        dev_parser_states = [compute_parser_state(d["text"]) for d in dev_docs]
+        logger.info(f"Parser states computed: {len(train_parser_states)} train, "
+                     f"{len(dev_parser_states)} dev")
+
     # Datasets
     train_dataset = SpanDataset(
         [d["text"] for d in train_docs],
         [d["bio_tags"] for d in train_docs],
         tag_scheme, tokenizer, max_length,
+        parser_states=train_parser_states,
     )
     dev_dataset = SpanDataset(
         [d["text"] for d in dev_docs],
         [d["bio_tags"] for d in dev_docs],
         tag_scheme, tokenizer, max_length,
+        parser_states=dev_parser_states,
     )
 
     pin = device.startswith('cuda')
@@ -543,11 +601,13 @@ def train_bert_crf(
         ModelClass = _build_multihead_model_class()
         model = ModelClass(model_name, sorted_rules, tag_scheme,
                            focal_gamma=focal_gamma,
-                           per_head_weights=per_head_weights)
+                           per_head_weights=per_head_weights,
+                           use_parser_features=use_parser_features)
         model.to(device)
         n_head_params = sum(p.numel() for p in model.classifier.parameters())
+        pf_str = " +parser_features" if use_parser_features else ""
         logger.info(f"Multi-head model on {device}: {len(sorted_rules)} heads x 3, "
-                    f"focal_gamma={focal_gamma}, head_params={n_head_params:,}")
+                    f"focal_gamma={focal_gamma}, head_params={n_head_params:,}{pf_str}")
     else:
         ModelClass = _build_model_class()
         model = ModelClass(model_name, tag_scheme.num_tags, use_crf=use_crf,
@@ -608,10 +668,15 @@ def train_bert_crf(
         # Validate: architecture + tag scheme must match
         skip_reason = None
         ckpt_multi_head = ckpt.get('multi_head', False)
+        ckpt_parser_features = ckpt.get('use_parser_features', False)
         if ckpt_multi_head != multi_head:
             skip_reason = (f"architecture mismatch: checkpoint is "
                            f"{'multi-head' if ckpt_multi_head else 'single-head'}, "
                            f"current is {'multi-head' if multi_head else 'single-head'}")
+        elif ckpt_parser_features != use_parser_features:
+            skip_reason = (f"parser features mismatch: checkpoint has "
+                           f"parser_features={ckpt_parser_features}, "
+                           f"current has parser_features={use_parser_features}")
         elif ckpt_tags is not None and ckpt_tags != tag_scheme.tags:
             skip_reason = (f"tag scheme mismatch: checkpoint has "
                            f"{len(ckpt_tags)} tags, current has "
@@ -653,7 +718,8 @@ def train_bert_crf(
                     ModelClass = _build_multihead_model_class()
                     model = ModelClass(model_name, sorted_rules, tag_scheme,
                                        focal_gamma=focal_gamma,
-                                       per_head_weights=per_head_weights)
+                                       per_head_weights=per_head_weights,
+                                       use_parser_features=use_parser_features)
                 else:
                     ModelClass = _build_model_class()
                     model = ModelClass(model_name, tag_scheme.num_tags,
@@ -704,10 +770,14 @@ def train_bert_crf(
             input_ids = batch['input_ids'].to(device, non_blocking=pin)
             attention_mask = batch['attention_mask'].to(device, non_blocking=pin)
             labels = batch['labels'].to(device, non_blocking=pin)
+            pf = batch.get('parser_features')
+            if pf is not None:
+                pf = pf.to(device, non_blocking=pin)
 
             if amp_enabled:
                 with torch.amp.autocast(device_type='cuda'):
-                    loss = model(input_ids, attention_mask, labels)
+                    loss = model(input_ids, attention_mask, labels,
+                                 parser_features=pf)
                 scaled_loss = loss / accum
                 scaler.scale(scaled_loss).backward()
 
@@ -719,7 +789,8 @@ def train_bert_crf(
                     scheduler.step()
                     optimizer.zero_grad()
             else:
-                loss = model(input_ids, attention_mask, labels)
+                loss = model(input_ids, attention_mask, labels,
+                             parser_features=pf)
                 scaled_loss = loss / accum
                 scaled_loss.backward()
 
@@ -773,6 +844,7 @@ def train_bert_crf(
                 'patience_counter': 0,
                 'tag_scheme_tags': tag_scheme.tags,
                 'multi_head': multi_head,
+                'use_parser_features': use_parser_features,
             }
             if scaler is not None:
                 ckpt['scaler_state_dict'] = scaler.state_dict()
@@ -828,12 +900,17 @@ def _evaluate_model(
         for batch in dev_loader:
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
+            pf = batch.get('parser_features')
+            if pf is not None:
+                pf = pf.to(device)
 
             if amp_eval:
                 with torch.amp.autocast(device_type='cuda'):
-                    tag_indices = model(input_ids, attention_mask)
+                    tag_indices = model(input_ids, attention_mask,
+                                        parser_features=pf)
             else:
-                tag_indices = model(input_ids, attention_mask)
+                tag_indices = model(input_ids, attention_mask,
+                                    parser_features=pf)
 
             for seq in tag_indices:
                 if isinstance(seq, list):

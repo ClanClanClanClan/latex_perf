@@ -10,11 +10,22 @@ _build/
 *.tar.gz
 *.cmi
 *.cmx
+*.cmo
 *.cma
 *.cmxa
 _manual_build/
 .DS_Store
 **/.DS_Store
+
+# Coq dot-prefixed build artifacts
+.*.aux
+.*.glob
+.lia.cache
+
+# Editor artifacts
+.#*
+*.swp
+*.swo
 latex-perfectionist.opam.locked
 
 # Local static libs and SIMD artifacts

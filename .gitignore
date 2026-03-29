@@ -52,6 +52,7 @@ test/**/*
 target/
 public-badges/
 *.csv
+*.pkl
 
 # CI debug logs (local only)
 ci-logs/

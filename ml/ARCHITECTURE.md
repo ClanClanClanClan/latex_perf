@@ -347,7 +347,7 @@ Before building the full v2 pipeline, run one experiment to confirm the parser-s
 | `ml/results/expert_briefing.md` | Updated | Full problem statement + expert feedback |
 | `ml/data/label_spans.py` | Existing | Replay functions (reused for candidate extraction) |
 | `ml/data/candidate_extractor.py` | **To create** | Candidate extraction per rule |
-| `ml/data/parser_state.py` | **To create** | Per-character math/verbatim annotations |
+| `ml/data/parser_state.py` | Exists (PR #161) | Per-character math/verbatim/comment annotations |
 | `ml/data/build_candidate_dataset.py` | **To create** | Build candidate classification JSONL |
 | `ml/models/byte_classifier.py` | **To create** | Byte-level CNN+BiLSTM classifier |
 | `ml/models/bert_crf.py` | Existing | Legacy v1 model (kept for diagnostic) |

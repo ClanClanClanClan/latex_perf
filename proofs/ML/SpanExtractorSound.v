@@ -1,13 +1,20 @@
-(** Span Extractor Soundness — imports probability bound from evaluation JSON.
+(** Span Extractor Soundness — separate precision/recall bounds.
 
     Per Bootstrap Skeleton v25 R1, line 4492:
-      ML/SpanExtractorSound.v — 54 LOC, [span_extractor_sound_complete]
+      ML/SpanExtractorSound.v — [span_extractor_sound_complete]
 
-    The ML span extractor's predictions, when filtered to Info severity,
-    maintain the soundness invariant: false-positive rate is bounded.
+    v1 model (BERT+CRF) does NOT pass the F1 >= 0.94 gate.
+    Actual v1 performance: precision=0.8965, recall=0.8086, F1=0.8503.
+    v2 candidate classifier pipeline targets closing this gap.
 
-    Proof technique: probability bound imported from eval_results.json
-    (delta = 0.028) + wrapper lemma converting to Info severity invariant.
+    This proof:
+    1. Records the actual measured error rates (honest, not aspirational).
+    2. Documents the gap to target thresholds.
+    3. Provides parameterised soundness theorems that hold once a model
+       achieves the required precision/recall.
+
+    Proof technique: concrete arithmetic on measured bounds via lra.
+    Source: ml/results/20260319_234935/eval_results.json
 *)
 
 Require Import Coq.Reals.Reals.
@@ -16,79 +23,104 @@ Require Import Coq.micromega.Lra.
 Open Scope R_scope.
 
 (** ──────────────────────────────────────────────────────────────────── *)
-(** Empirically measured error bound from ML evaluation.                *)
-(** Justified by eval_results.json: overall_f1 >= 0.94, delta <= 0.06. *)
-(** Updated when model is retrained and eval gate passes.              *)
+(** Empirically measured error rates from v1 evaluation (2026-03-19).   *)
+(** Model: bert-crf (allenai/scibert_scivocab_uncased), seed=42.       *)
+(** Updated when model is retrained; values must match eval JSON.       *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
-(** The measured delta from evaluation (1 - F1). Concrete value from
-    eval_results.json, updated when the model is retrained. *)
-Definition measured_delta : R := 0.028.
+Definition measured_fp_rate : R := 1035 / 10000.  (* 1 - precision = 0.1035 *)
+Definition measured_fn_rate : R := 1914 / 10000.  (* 1 - recall   = 0.1914 *)
 
-(** The F1 threshold required by the project spec (§14.2 line 250). *)
-Definition f1_threshold : R := 0.94.
-
-(** The measured delta satisfies the threshold bound.
-    Fully proved from concrete definitions — no axiom needed.
-    Evidence: eval_results.json with overall_f1 >= 0.972 (delta <= 0.028).
-    Validated by ml/scripts/f1_gate.sh before each release. *)
-Lemma eval_bound : (1 - measured_delta >= f1_threshold)%R.
-Proof. unfold measured_delta, f1_threshold. lra. Qed.
+(** Target thresholds per project spec (§14.2 line 250). *)
+Definition precision_threshold : R := 94 / 100.
+Definition recall_threshold    : R := 94 / 100.
 
 (** ──────────────────────────────────────────────────────────────────── *)
-(** Main soundness theorem.                                             *)
+(** Gap analysis: how far v1 is from the target.                        *)
+(** precision_gap  = 0.94 - 0.8965 = 0.0435                            *)
+(** recall_gap     = 0.94 - 0.8086 = 0.1314                            *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
-(** For any actual delta no worse than the measured delta,
-    the F1 threshold is met. *)
-(** Concrete numeric bound: 1 - 0.028 = 0.972 >= 0.94. *)
-Lemma numeric_bound : (1 - 28 / 1000 >= 94 / 100)%R.
-Proof. lra. Qed.
+Lemma precision_gap :
+  (precision_threshold - (1 - measured_fp_rate) = 435 / 10000)%R.
+Proof. unfold measured_fp_rate, precision_threshold. field. Qed.
 
-Theorem span_extractor_sound_complete :
-  forall delta : R,
-    (delta <= measured_delta)%R ->
-    (1 - delta >= f1_threshold)%R.
+Lemma recall_gap :
+  (recall_threshold - (1 - measured_fn_rate) = 1314 / 10000)%R.
+Proof. unfold measured_fn_rate, recall_threshold. field. Qed.
+
+(** The v1 model does NOT pass the precision gate. *)
+Lemma v1_precision_below_threshold :
+  (1 - measured_fp_rate < precision_threshold)%R.
+Proof. unfold measured_fp_rate, precision_threshold. lra. Qed.
+
+(** The v1 model does NOT pass the recall gate. *)
+Lemma v1_recall_below_threshold :
+  (1 - measured_fn_rate < recall_threshold)%R.
+Proof. unfold measured_fn_rate, recall_threshold. lra. Qed.
+
+(** ──────────────────────────────────────────────────────────────────── *)
+(** Parameterised soundness: holds for ANY model meeting the targets.   *)
+(** These theorems become applicable once v2 achieves the thresholds.   *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+Theorem span_extractor_precision_sound :
+  forall fp_rate : R,
+    (fp_rate <= 1 - precision_threshold)%R ->
+    (1 - fp_rate >= precision_threshold)%R.
 Proof.
-  intros delta Hd.
-  unfold measured_delta, f1_threshold in *.
+  intros fp_rate Hfp.
+  unfold precision_threshold in *.
   lra.
 Qed.
 
-(** Corollary: the measured bound itself satisfies the threshold. *)
-Corollary measured_bound_valid :
-  (1 - measured_delta >= f1_threshold)%R.
+Theorem span_extractor_recall_sound :
+  forall fn_rate : R,
+    (fn_rate <= 1 - recall_threshold)%R ->
+    (1 - fn_rate >= recall_threshold)%R.
 Proof.
-  unfold measured_delta, f1_threshold.
+  intros fn_rate Hfn.
+  unfold recall_threshold in *.
   lra.
+Qed.
+
+(** Combined soundness: if both rates are bounded, both thresholds hold. *)
+Theorem span_extractor_sound_complete :
+  forall fp_rate fn_rate : R,
+    (fp_rate <= 1 - precision_threshold)%R ->
+    (fn_rate <= 1 - recall_threshold)%R ->
+    (1 - fp_rate >= precision_threshold)%R /\
+    (1 - fn_rate >= recall_threshold)%R.
+Proof.
+  intros fp_rate fn_rate Hfp Hfn.
+  split.
+  - apply span_extractor_precision_sound; exact Hfp.
+  - apply span_extractor_recall_sound; exact Hfn.
 Qed.
 
 (** ──────────────────────────────────────────────────────────────────── *)
 (** Info severity invariant.                                            *)
-(** When span extractor predictions are filtered to Info severity,     *)
-(** false positives are bounded by delta.                              *)
+(** When span extractor predictions are filtered to Info severity,      *)
+(** false positives are bounded by the model's fp_rate.                 *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
-(** Abstract type for severity levels. *)
 Inductive severity := Error | Warning | Info.
 
-(** A span prediction has an associated severity and confidence. *)
 Record span_prediction := mk_span {
   sp_severity : severity;
   sp_confidence : R;
 }.
 
-(** Info-filtered predictions maintain soundness: if the model's
-    overall error rate (delta) is bounded, then Info-severity
-    predictions have a false-positive rate at most delta. *)
+(** Info-filtered predictions maintain soundness when the model's
+    false-positive rate meets the precision threshold. *)
 Theorem info_severity_sound :
-  forall (delta : R) (sp : span_prediction),
-    (delta <= measured_delta)%R ->
+  forall (fp_rate : R) (sp : span_prediction),
+    (fp_rate <= 1 - precision_threshold)%R ->
     sp_severity sp = Info ->
-    (sp_confidence sp >= 1 - delta)%R ->
-    (sp_confidence sp >= f1_threshold)%R.
+    (sp_confidence sp >= 1 - fp_rate)%R ->
+    (sp_confidence sp >= precision_threshold)%R.
 Proof.
-  intros delta sp Hd Hsev Hconf.
-  unfold measured_delta, f1_threshold in *.
+  intros fp_rate sp Hfp _Hsev Hconf.
+  unfold precision_threshold in *.
   lra.
 Qed.

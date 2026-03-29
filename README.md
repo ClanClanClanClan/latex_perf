@@ -2,25 +2,25 @@
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
-![Expand Latency p95](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/${REPO:-${GITHUB_REPOSITORY}}/gh-pages/public-badges/expand_latency.json)
+![Expand Latency p95](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/public-badges/expand_latency.json)
 <!-- LAT_BADGE_END -->
 <!-- LAT_L1_BADGE_START -->
-![L1 Expand Latency p95](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/${REPO:-${GITHUB_REPOSITORY}}/gh-pages/public-badges/expand_latency_l1.json)
+![L1 Expand Latency p95](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/public-badges/expand_latency_l1.json)
 <!-- LAT_L1_BADGE_END -->
 <!-- UNIT_TESTS_BADGE_START -->
-![Unit Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/${REPO:-${GITHUB_REPOSITORY}}/gh-pages/public-badges/unit_tests.json)
+![Unit Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/public-badges/unit_tests.json)
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-**3-Year Project — Week 30 of 156** - Comprehensive LaTeX document analysis and style validation system.
+**3-Year Project — Week 80 of 156** - Comprehensive LaTeX document analysis and style validation system.
 
 LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 623 rules across 21 languages.
 
-## Current Status (Week 30 — February 2026)
+## Current Status (Week 80 — March 2026)
 
-Post-Phase 8 — all L0-L2 text-scannable rules implemented, full audit complete:
+Post-Phase 8 — all L0-L2 text-scannable rules implemented. Phase 9: ML span extractor (v2 candidate classifier in progress):
 - **Build**: `dune build` compiles the SIMD service, benches, and 15 Coq proofs (+ 7 archive) via `(coq.theory)` stanza.
-- **Proofs**: 15 Coq proof files, 316 theorems/lemmas, 0 admits, 0 axioms. All `.vo` files compile clean.
+- **Proofs**: 15 Coq proof files, 319 formal declarations (177 theorems/lemmas), 0 admits, 0 axioms. All `.vo` files compile clean.
 - **Validators**: 452 spec-matched rules / 623 (72.6%). L0: 183/187, L1: 141/158, L2: 94/96, L3: 24/112, L4: 10/70. ~7,086 test cases across 53 files.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
@@ -219,7 +219,7 @@ The R1 baseline is the OCaml L0 runtime. SIMD acceleration is available via:
 
 ---
 
-**Status**: Week 16 — 83 validators implemented, 13 Coq proofs QED, VPD pipeline operational. Next milestone: L0-L1 formal checkpoint (W26).
+**Status**: Week 80 — 452 validators implemented, 15 Coq proofs QED, ML span extractor v2 in progress. Next milestone: v2 candidate classifier F1 >= 0.94.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

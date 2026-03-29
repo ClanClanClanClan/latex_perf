@@ -20,6 +20,10 @@ proofs/LexerIncremental.v
 proofs/L0Smallstep.v
 proofs/L0SmallstepControl.v
 proofs/Expand.v
+proofs/RegexFamily.v
+
+# ML sub-theory (separate dune coq.theory stanza)
+# proofs/ML/SpanExtractorSound.v
 
 # Archived v25 proof drafts live under proofs/archive/
 

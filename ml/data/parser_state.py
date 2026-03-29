@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Per-character parser-state annotations for LaTeX documents.
 
-Computes boolean annotations for each character position:
+Computes annotations for each character position:
   - in_math: inside $...$, $$...$$, \\(...\\), \\[...\\], or math environments
   - in_verbatim: inside \\begin{verbatim}...\\end{verbatim} or \\verb|...|
   - in_comment: after % to end-of-line (not \\%)
+  - env_depth: \\begin{...}/\\end{...} nesting depth (int)
 
 These are used as oracle features for the diagnostic experiment (v1.5)
 and as explicit input features for the candidate classifier (v2).
@@ -44,6 +45,7 @@ class ParserState:
     in_math: List[bool]
     in_verbatim: List[bool]
     in_comment: List[bool]
+    env_depth: List[int]
 
     def __len__(self):
         return len(self.in_math)
@@ -147,13 +149,54 @@ def _find_named_math_segments(text: str) -> List[Tuple[int, int]]:
     return segments
 
 
+def _compute_env_depth(text: str) -> List[int]:
+    r"""Compute per-character \begin{...}/\end{...} nesting depth.
+
+    Scans for \begin{...} (depth++) and \end{...} (depth--).
+    Depth never goes below 0 (handles unmatched \end gracefully).
+    """
+    n = len(text)
+    depth = [0] * n
+    current = 0
+    # Find all \begin{...} and \end{...} and sort by position
+    begin_pat = re.compile(r'\\begin\{[^}]+\}')
+    end_pat = re.compile(r'\\end\{[^}]+\}')
+
+    events: List[Tuple[int, int, int]] = []  # (pos, end_pos, delta)
+    for m in begin_pat.finditer(text):
+        events.append((m.start(), m.end(), +1))
+    for m in end_pat.finditer(text):
+        events.append((m.start(), m.end(), -1))
+    events.sort()
+
+    current = 0
+    prev_pos = 0
+    for pos, end_pos, delta in events:
+        # Fill from prev_pos to pos with current depth
+        for i in range(prev_pos, min(pos, n)):
+            depth[i] = current
+        # The \begin{...} or \end{...} token itself gets the NEW depth
+        if delta > 0:
+            current += 1
+        else:
+            current = max(0, current - 1)
+        for i in range(pos, min(end_pos, n)):
+            depth[i] = current
+        prev_pos = end_pos
+    # Fill remaining
+    for i in range(prev_pos, n):
+        depth[i] = current
+    return depth
+
+
 def compute_parser_state(text: str) -> ParserState:
     """Compute per-character parser-state annotations for a LaTeX document.
 
-    Returns ParserState with boolean lists of len(text) for:
+    Returns ParserState with per-character annotations of len(text):
       - in_math: inside math mode ($, $$, \\(, \\[, equation, align, etc.)
       - in_verbatim: inside verbatim/lstlisting/minted/\\verb
       - in_comment: after % to end-of-line
+      - env_depth: \\begin/\\end nesting depth (int)
     """
     n = len(text)
 
@@ -167,11 +210,13 @@ def compute_parser_state(text: str) -> ParserState:
     in_math = _segments_to_mask(n, math_segs + named_math_segs)
     in_verbatim = _segments_to_mask(n, verb_segs)
     in_comment = _segments_to_mask(n, comment_segs)
+    env_depth = _compute_env_depth(text)
 
     return ParserState(
         in_math=in_math,
         in_verbatim=in_verbatim,
         in_comment=in_comment,
+        env_depth=env_depth,
     )
 
 
@@ -185,4 +230,5 @@ def parser_state_for_window(
         in_math=doc_state.in_math[window_start:window_end],
         in_verbatim=doc_state.in_verbatim[window_start:window_end],
         in_comment=doc_state.in_comment[window_start:window_end],
+        env_depth=doc_state.env_depth[window_start:window_end],
     )

@@ -1,0 +1,32 @@
+# LaTeX Perfectionist v25_R1 Coq Project Configuration
+# Canonical _CoqProject per v25_master.md specifications
+
+-R proofs LaTeXPerfectionist
+-Q core/interfaces LaTeXPerfectionist.Core
+-Q data LaTeXPerfectionist.Data
+-Q generator LaTeXPerfectionist.Generator
+
+# Active proof set (baseline stub)
+proofs/CoreProofs.v
+proofs/Catcode.v
+proofs/Arena_safe.v
+proofs/ListWindow.v
+proofs/LexerDeterminism.v
+proofs/LexerTotality.v
+proofs/LexerFaithfulStep.v
+proofs/LexerSoA.v
+proofs/LexerSmallstep.v
+proofs/LexerIncremental.v
+proofs/L0Smallstep.v
+proofs/L0SmallstepControl.v
+proofs/Expand.v
+proofs/RegexFamily.v
+
+# ML sub-theory (separate dune coq.theory stanza)
+# proofs/ML/SpanExtractorSound.v
+
+# Archived v25 proof drafts live under proofs/archive/
+
+# Options
+-arg -w -arg -notation-overridden
+-arg -w -arg -redundant-canonical-projection

@@ -1,0 +1,78 @@
+name: L1 Nightly Smoke
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  l1-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-ocaml-env
+        with:
+          system-packages: jq curl
+
+      - name: Build service and REST
+        run: |
+          opam exec -- dune build latex-parse/src/main_service.exe latex-parse/src/rest_api_server.exe
+
+      - name: Run service and REST
+        run: |
+          rm -f /tmp/l0_lex_svc.sock
+          opam exec -- env L0_ALLOW_SCALAR=1 L0_POOL_CORES=0,1 L0_MINOR_HEAP_MB=4 L0_NO_MLOCK=1 \
+            ./_build/default/latex-parse/src/main_service.exe &
+          sleep 2
+          opam exec -- ./_build/default/latex-parse/src/rest_api_server.exe -p 8080 &
+          sleep 0.5
+
+      - name: L1 smokes
+        run: |
+          bash scripts/smoke_rules_l1.sh
+
+      - name: L1 latency (expand)
+        run: |
+          bash scripts/latency_smoke_expand.sh 500 http://127.0.0.1:8080/expand?layer=l1 | tee /tmp/l1_latency.txt
+
+      - name: Upload L1 latencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: l1-expand-latencies
+          path: /tmp/latencies_ms.txt
+
+      - name: Generate L1 badge JSON
+        run: |
+          bash scripts/make_latency_badge.sh /tmp/latencies_ms.txt /tmp/latency_badge_l1.json
+          cat /tmp/latency_badge_l1.json
+
+      - name: Upload L1 badge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: l1-latency-badge
+          path: /tmp/latency_badge_l1.json
+
+      - name: Prepare L1 badge directory
+        run: |
+          mkdir -p public-badges && cp /tmp/latency_badge_l1.json public-badges/expand_latency_l1.json
+
+      - name: Publish L1 badge to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public-badges
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f rest_api_server || true
+          pkill -f main_service || true

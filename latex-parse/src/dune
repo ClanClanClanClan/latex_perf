@@ -207,6 +207,11 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_language_detect)
+ (modules test_language_detect)
+ (libraries latex_parse_lib))
+
+(test
  (name test_macro_catalogue)
  (modules test_macro_catalogue)
  (libraries latex_parse_lib)

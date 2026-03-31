@@ -11,9 +11,10 @@ concurrency:
 
 
 jobs:
+  # ── Phase 1: Build all proofs with parallelism + timing ───────────
   proof-ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -28,18 +29,41 @@ jobs:
           if [ ! -f "_CoqProject" ]; then
             echo "_CoqProject file missing"; exit 1; fi
 
-      - name: Build proofs
+      - name: Build proofs (parallel)
+        id: build
         run: |
-          opam exec -- dune build proofs
+          START=$(date +%s%N)
+          opam exec -- dune build proofs -j 4
+          END=$(date +%s%N)
+          ELAPSED_MS=$(( (END - START) / 1000000 ))
+          echo "proof_time_ms=$ELAPSED_MS" >> "$GITHUB_OUTPUT"
+          echo "Proof compilation: ${ELAPSED_MS}ms"
 
       - name: Enforce zero admits and zero axioms
         run: |
-          # No Admitted. or admit. (exclude archives and disabled files)
+          echo "=== Zero-Admit Policy ==="
+          ADMITS=$(grep -rcE '^\s*(Admitted\.|admit\.)' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ || echo "0")
+          AXIOMS=$(grep -rcE '^\s*(Axiom|Parameter)\b' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/ || echo "0")
+          echo "Admits found: $ADMITS"
+          echo "Axioms found: $AXIOMS"
           if grep -rE '^\s*(Admitted\.|admit\.)' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/; then
             echo "[proof-gate] ERROR: admits found"; exit 1; fi
-          # No Axiom declarations (exclude archives and disabled files)
           if grep -rE '^\s*(Axiom|Parameter)\b' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/; then
             echo "[proof-gate] ERROR: axioms found"; exit 1; fi
+          echo "✅ Zero admits, zero axioms"
+
+      - name: Proof timing summary
+        if: always()
+        run: |
+          echo "=== Proof Timing Summary ==="
+          echo "Total proof compilation: ${{ steps.build.outputs.proof_time_ms }}ms"
+          # Count proof files and theorems
+          V_FILES=$(find proofs -name '*.v' -not -path '*/archive/*' | wc -l)
+          THEOREMS=$(grep -rcE '^(Theorem|Lemma) ' proofs/*.v proofs/ML/*.v 2>/dev/null | awk -F: '{s+=$2} END{print s}')
+          echo "Proof files: $V_FILES"
+          echo "Theorems+Lemmas: $THEOREMS"
+          echo ""
+          echo "Target: < 9 min total CI time (proof compilation: ${{ steps.build.outputs.proof_time_ms }}ms)"
 
       # ── Regression alerts (only on failure) ─────────────────────────
       - name: Open issue for proof regression

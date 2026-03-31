@@ -17,6 +17,7 @@
 include Validators_common
 include Validators_l0
 include Validators_l2
+include Validators_l4_style
 include Validators_l1
 
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
@@ -32,6 +33,7 @@ let rules_enc_char_spc : rule list =
   @ rules_locale
   @ rules_stragglers
   @ rules_l2_approx
+  @ rules_style
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in
@@ -362,6 +364,7 @@ let _prefix_layers : (string * layer) list =
     ("RTL-", L1);
     ("PT-", L1);
     ("L3-", L1);
+    ("STYLE-", L4);
   ]
 
 let precondition_of_rule_id (id : string) : layer =

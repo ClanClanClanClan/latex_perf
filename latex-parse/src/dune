@@ -25,6 +25,7 @@
   catcode
   validators_context
   validators_common
+  language_detect
   validators_l0_typo
   validators_l0
   validators_l1_math

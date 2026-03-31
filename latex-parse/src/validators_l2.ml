@@ -24,7 +24,7 @@ let r_fig_001 : rule =
         }
     else None
   in
-  { id = "FIG-001"; run }
+  { id = "FIG-001"; run; languages = [] }
 
 (* ── FIG-002: Figure without label ───────────────────────────────────── *)
 let r_fig_002 : rule =
@@ -53,7 +53,7 @@ let r_fig_002 : rule =
         }
     else None
   in
-  { id = "FIG-002"; run }
+  { id = "FIG-002"; run; languages = [] }
 
 (* ── FIG-003: Label before caption in figure ─────────────────────────── *)
 let r_fig_003 : rule =
@@ -87,7 +87,7 @@ let r_fig_003 : rule =
         }
     else None
   in
-  { id = "FIG-003"; run }
+  { id = "FIG-003"; run; languages = [] }
 
 (* ── FIG-007: Figure lacks alt text for accessibility ────────────────── *)
 let r_fig_007 : rule =
@@ -135,7 +135,7 @@ let r_fig_007 : rule =
         }
     else None
   in
-  { id = "FIG-007"; run }
+  { id = "FIG-007"; run; languages = [] }
 
 (* ── FIG-009: Float position specifier ! used excessively ────────────── *)
 let r_fig_009 : rule =
@@ -160,7 +160,7 @@ let r_fig_009 : rule =
         }
     else None
   in
-  { id = "FIG-009"; run }
+  { id = "FIG-009"; run; languages = [] }
 
 (* ── TAB-001: Table lacks caption ────────────────────────────────────── *)
 let r_tab_001 : rule =
@@ -181,7 +181,7 @@ let r_tab_001 : rule =
         }
     else None
   in
-  { id = "TAB-001"; run }
+  { id = "TAB-001"; run; languages = [] }
 
 (* ── TAB-002: Caption below table (journal requires above) ──────────── *)
 let r_tab_002 : rule =
@@ -217,7 +217,7 @@ let r_tab_002 : rule =
         }
     else None
   in
-  { id = "TAB-002"; run }
+  { id = "TAB-002"; run; languages = [] }
 
 (* ── TAB-005: Vertical rules present in tabular ─────────────────────── *)
 let r_tab_005 : rule =
@@ -283,7 +283,7 @@ let r_tab_005 : rule =
         }
     else None
   in
-  { id = "TAB-005"; run }
+  { id = "TAB-005"; run; languages = [] }
 
 (* ── PKG-001: Package duplicate inclusion detected ───────────────────── *)
 let r_pkg_001 : rule =
@@ -306,7 +306,7 @@ let r_pkg_001 : rule =
         }
     else None
   in
-  { id = "PKG-001"; run }
+  { id = "PKG-001"; run; languages = [] }
 
 (* ── PKG-002: geometry loaded after hyperref — must precede ──────────── *)
 let r_pkg_002 : rule =
@@ -330,7 +330,7 @@ let r_pkg_002 : rule =
         }
     else None
   in
-  { id = "PKG-002"; run }
+  { id = "PKG-002"; run; languages = [] }
 
 (* ── PKG-004: Package loaded after \begin{document} ──────────────────── *)
 let r_pkg_004 : rule =
@@ -358,7 +358,7 @@ let r_pkg_004 : rule =
             }
         else None
   in
-  { id = "PKG-004"; run }
+  { id = "PKG-004"; run; languages = [] }
 
 (* ── PKG-005: Unknown option for geometry ────────────────────────────── *)
 let r_pkg_005 : rule =
@@ -485,7 +485,7 @@ let r_pkg_005 : rule =
         }
     else None
   in
-  { id = "PKG-005"; run }
+  { id = "PKG-005"; run; languages = [] }
 
 (* ── CJK-004: xeCJK package missing when CJK glyphs present ─────────── *)
 let r_cjk_004 : rule =
@@ -534,7 +534,7 @@ let r_cjk_004 : rule =
       else None
     else None
   in
-  { id = "CJK-004"; run }
+  { id = "CJK-004"; run; languages = ["zh"; "ja"; "ko"] }
 
 (* ── CJK-006: Ruby annotation requires ruby package ─────────────────── *)
 let r_cjk_006 : rule =
@@ -566,7 +566,7 @@ let r_cjk_006 : rule =
       else None
     else None
   in
-  { id = "CJK-006"; run }
+  { id = "CJK-006"; run; languages = ["zh"; "ja"; "ko"] }
 
 (* ── FONT-006: Missing \microtypesetup{expansion=true} ─────────────── *)
 (* Fire if \usepackage{microtype} is present but \microtypesetup{expansion=true}
@@ -594,7 +594,7 @@ let r_font_006 : rule =
       else None
     else None
   in
-  { id = "FONT-006"; run }
+  { id = "FONT-006"; run; languages = [] }
 
 (* ── FONT-007: Obsolete \usepackage[T1]{fontenc} under XeLaTeX ──────── *)
 (* Fire if \usepackage[T1]{fontenc} is present AND there is evidence of XeLaTeX
@@ -625,7 +625,7 @@ let r_font_007 : rule =
       else None
     else None
   in
-  { id = "FONT-007"; run }
+  { id = "FONT-007"; run; languages = [] }
 
 (* ── FONT-008: Multiple \setmainfont declarations ────────────────────── *)
 let r_font_008 : rule =
@@ -650,7 +650,7 @@ let r_font_008 : rule =
         }
     else None
   in
-  { id = "FONT-008"; run }
+  { id = "FONT-008"; run; languages = [] }
 
 (* ── MATH-032: Incorrect small matrix brackets ───────────────────────── *)
 (* In LaTeX, \begin{smallmatrix} should be wrapped in appropriate delimiters:
@@ -684,7 +684,7 @@ let r_math_032 : rule =
         }
     else None
   in
-  { id = "MATH-032"; run }
+  { id = "MATH-032"; run; languages = [] }
 
 (* ── MATH-054: Equation labelled 'eq:' without environment ──────────── *)
 (* Fire if \label{eq:...} appears outside known equation environments *)
@@ -759,7 +759,7 @@ let r_math_054 : rule =
         }
     else None
   in
-  { id = "MATH-054"; run }
+  { id = "MATH-054"; run; languages = [] }
 
 (* ── MATH-062: Multiline equation lacks alignment character & ────────── *)
 (* Fire if an align, align*, flalign, flalign*, alignat, alignat* environment
@@ -787,7 +787,7 @@ let r_math_062 : rule =
         }
     else None
   in
-  { id = "MATH-062"; run }
+  { id = "MATH-062"; run; languages = [] }
 
 (* ── MATH-063: Equation array with > 1 alignment point ──────────────── *)
 (* In eqnarray, each line should have at most 2 & (for 3 columns). Fire if any
@@ -825,7 +825,7 @@ let r_math_063 : rule =
         }
     else None
   in
-  { id = "MATH-063"; run }
+  { id = "MATH-063"; run; languages = [] }
 
 (* ── MATH-100: Punctuation after equation missing (comma/period) ─────── *)
 (* Fire if a display equation environment ends without a comma, period, or
@@ -870,7 +870,7 @@ let r_math_100 : rule =
         }
     else None
   in
-  { id = "MATH-100"; run }
+  { id = "MATH-100"; run; languages = [] }
 
 (* ── MATH-023: Equation label missing although referenced ────────────── *)
 let r_math_023 : rule =
@@ -900,7 +900,7 @@ let r_math_023 : rule =
         }
     else None
   in
-  { id = "MATH-023"; run }
+  { id = "MATH-023"; run; languages = [] }
 
 (* ── MATH-024: Equation labelled but never referenced ────────────────── *)
 let r_math_024 : rule =
@@ -926,7 +926,7 @@ let r_math_024 : rule =
         }
     else None
   in
-  { id = "MATH-024"; run }
+  { id = "MATH-024"; run; languages = [] }
 
 (* ── REF-010: Figure referenced before first mention in text ─────────── *)
 (* Fire if \ref{fig:X} appears at a position before the \label{fig:X} *)
@@ -962,7 +962,7 @@ let r_ref_010 : rule =
         }
     else None
   in
-  { id = "REF-010"; run }
+  { id = "REF-010"; run; languages = [] }
 
 (* ── CMD-014: \AtBeginDocument placed after \begin{document} ──────────── *)
 let r_cmd_014 : rule =
@@ -994,7 +994,7 @@ let r_cmd_014 : rule =
             }
         else None
   in
-  { id = "CMD-014"; run }
+  { id = "CMD-014"; run; languages = [] }
 
 (* ── DOC-001: Title missing \maketitle ───────────────────────────────── *)
 (* Only fires for article-like document classes that conventionally use
@@ -1014,7 +1014,7 @@ let r_doc_001 : rule =
           }
       else None
   in
-  { id = "DOC-001"; run }
+  { id = "DOC-001"; run; languages = [] }
 
 (* ── DOC-002: Abstract environment missing ───────────────────────────── *)
 (* Only fires for article-like document classes. *)
@@ -1033,7 +1033,7 @@ let r_doc_002 : rule =
           }
       else None
   in
-  { id = "DOC-002"; run }
+  { id = "DOC-002"; run; languages = [] }
 
 (* ── DOC-003: Keywords missing ───────────────────────────────────────── *)
 (* Only fires for article-like document classes. *)
@@ -1052,7 +1052,7 @@ let r_doc_003 : rule =
           }
       else None
   in
-  { id = "DOC-003"; run }
+  { id = "DOC-003"; run; languages = [] }
 
 (* ── TAB-006: Consecutive \hline duplicated ──────────────────────────── *)
 let r_tab_006 : rule =
@@ -1077,7 +1077,7 @@ let r_tab_006 : rule =
         }
     else None
   in
-  { id = "TAB-006"; run }
+  { id = "TAB-006"; run; languages = [] }
 
 (* ── TAB-009: Floating table missing \label ──────────────────────────── *)
 let r_tab_009 : rule =
@@ -1105,7 +1105,7 @@ let r_tab_009 : rule =
         }
     else None
   in
-  { id = "TAB-009"; run }
+  { id = "TAB-009"; run; languages = [] }
 
 (* ── TAB-010: Footnote placed inside table environment ───────────────── *)
 let r_tab_010 : rule =
@@ -1137,7 +1137,7 @@ let r_tab_010 : rule =
         }
     else None
   in
-  { id = "TAB-010"; run }
+  { id = "TAB-010"; run; languages = [] }
 
 (* ── TAB-011: Top/bottom \hline instead of \toprule/\bottomrule ──────── *)
 let r_tab_011 : rule =
@@ -1168,7 +1168,7 @@ let r_tab_011 : rule =
         }
     else None
   in
-  { id = "TAB-011"; run }
+  { id = "TAB-011"; run; languages = [] }
 
 (* ── TAB-014: Empty multicolumn alignment spec {} encountered ────────── *)
 let r_tab_014 : rule =
@@ -1193,7 +1193,7 @@ let r_tab_014 : rule =
         }
     else None
   in
-  { id = "TAB-014"; run }
+  { id = "TAB-014"; run; languages = [] }
 
 (* ── PKG-007: hyperref loaded before geometry ────────────────────────── *)
 (* Uses first-occurrence position for each package (consistent with PKG-002). *)
@@ -1230,7 +1230,7 @@ let r_pkg_007 : rule =
         else None
     | _ -> None
   in
-  { id = "PKG-007"; run }
+  { id = "PKG-007"; run; languages = [] }
 
 (* ── PKG-009: TikZ libraries loaded inside document body ─────────────── *)
 let r_pkg_009 : rule =
@@ -1262,7 +1262,7 @@ let r_pkg_009 : rule =
             }
         else None
   in
-  { id = "PKG-009"; run }
+  { id = "PKG-009"; run; languages = [] }
 
 (* ── PKG-011: booktabs required but not loaded for \toprule ──────────── *)
 let r_pkg_011 : rule =
@@ -1295,7 +1295,7 @@ let r_pkg_011 : rule =
         }
     else None
   in
-  { id = "PKG-011"; run }
+  { id = "PKG-011"; run; languages = [] }
 
 (* ── PKG-012: csquotes not loaded when \enquote used ─────────────────── *)
 let r_pkg_012 : rule =
@@ -1317,7 +1317,7 @@ let r_pkg_012 : rule =
         }
     else None
   in
-  { id = "PKG-012"; run }
+  { id = "PKG-012"; run; languages = [] }
 
 (* ── PKG-015: inputenc loaded under XeLaTeX/LuaLaTeX ────────────────── *)
 let r_pkg_015 : rule =
@@ -1341,7 +1341,7 @@ let r_pkg_015 : rule =
       else None
     else None
   in
-  { id = "PKG-015"; run }
+  { id = "PKG-015"; run; languages = [] }
 
 (* ── PKG-020: tikz external library not loaded when externalising ────── *)
 let r_pkg_020 : rule =
@@ -1372,7 +1372,7 @@ let r_pkg_020 : rule =
       else None
     else None
   in
-  { id = "PKG-020"; run }
+  { id = "PKG-020"; run; languages = [] }
 
 (* ── PKG-022: Obsolete package (epsfig, subfigure, natbib) detected ──── *)
 let r_pkg_022 : rule =
@@ -1395,7 +1395,7 @@ let r_pkg_022 : rule =
         }
     else None
   in
-  { id = "PKG-022"; run }
+  { id = "PKG-022"; run; languages = [] }
 
 (* ── PKG-023: unicode‑math must load before microtype ────────────────── *)
 (* Note: spec description has a non-breaking hyphen U+2011 between "unicode" and
@@ -1433,7 +1433,7 @@ let r_pkg_023 : rule =
         else None
     | _ -> None
   in
-  { id = "PKG-023"; run }
+  { id = "PKG-023"; run; languages = [] }
 
 (* ── LANG-002: babel language option missing ─────────────────────────── *)
 let r_lang_002 : rule =
@@ -1462,7 +1462,7 @@ let r_lang_002 : rule =
         }
     else None
   in
-  { id = "LANG-002"; run }
+  { id = "LANG-002"; run; languages = [] }
 
 (* ── LANG-004: Polyglossia loaded alongside babel – mutual exclusion ── *)
 (* Note: spec has en-dash E2 80 93 between "babel" and "mutual" *)
@@ -1478,7 +1478,7 @@ let r_lang_004 : rule =
         }
     else None
   in
-  { id = "LANG-004"; run }
+  { id = "LANG-004"; run; languages = [] }
 
 (* ── TIKZ-007: TikZ loaded after hyperref – reorder required ─────────── *)
 (* Note: spec has en-dash E2 80 93 between "hyperref" and "reorder" *)
@@ -1515,7 +1515,7 @@ let r_tikz_007 : rule =
         else None
     | _ -> None
   in
-  { id = "TIKZ-007"; run }
+  { id = "TIKZ-007"; run; languages = [] }
 
 (* ── FIG-010: Subfigure environment without \subcaption ──────────────── *)
 (* Check both subfigure and subfigure* environments. *)
@@ -1545,7 +1545,7 @@ let r_fig_010 : rule =
         }
     else None
   in
-  { id = "FIG-010"; run }
+  { id = "FIG-010"; run; languages = [] }
 
 (* ── FIG-013: Graphicx option scale used instead of width ────────────── *)
 let r_fig_013 : rule =
@@ -1570,7 +1570,7 @@ let r_fig_013 : rule =
         }
     else None
   in
-  { id = "FIG-013"; run }
+  { id = "FIG-013"; run; languages = [] }
 
 (* ── PKG-008: xcolor loaded without dvipsnames option ────────────────── *)
 let r_pkg_008 : rule =
@@ -1593,7 +1593,7 @@ let r_pkg_008 : rule =
         }
     else None
   in
-  { id = "PKG-008"; run }
+  { id = "PKG-008"; run; languages = [] }
 
 (* ── PKG-010: biblatex loaded with deprecated backend=biber ──────────── *)
 let r_pkg_010 : rule =
@@ -1616,7 +1616,7 @@ let r_pkg_010 : rule =
         }
     else None
   in
-  { id = "PKG-010"; run }
+  { id = "PKG-010"; run; languages = [] }
 
 (* ── PKG-013: microtype not loaded on XeLaTeX path ───────────────────── *)
 (* If fontspec is present (implies XeLaTeX/LuaLaTeX) but microtype is not *)
@@ -1632,7 +1632,7 @@ let r_pkg_013 : rule =
         }
     else None
   in
-  { id = "PKG-013"; run }
+  { id = "PKG-013"; run; languages = [] }
 
 (* ── PKG-014: siunitx v2 API detected (outdated) ────────────────────── *)
 (* Detect \SI{, \si{, \num{ which are v2 commands. v3 uses \qty, \unit instead.
@@ -1661,7 +1661,7 @@ let r_pkg_014 : rule =
           }
       else None
   in
-  { id = "PKG-014"; run }
+  { id = "PKG-014"; run; languages = [] }
 
 (* ── PKG-016: graphicx option pdftex incompatible with engine ────────── *)
 let r_pkg_016 : rule =
@@ -1684,7 +1684,7 @@ let r_pkg_016 : rule =
         }
     else None
   in
-  { id = "PKG-016"; run }
+  { id = "PKG-016"; run; languages = [] }
 
 (* ── PKG-017: fontspec loaded in pdfLaTeX ────────────────────────────── *)
 (* Conservative: fire if fontspec is loaded AND pdfLaTeX markers present
@@ -1716,7 +1716,7 @@ let r_pkg_017 : rule =
           }
       else None
   in
-  { id = "PKG-017"; run }
+  { id = "PKG-017"; run; languages = [] }
 
 (* ── PKG-021: Package loaded twice with conflicting options ──────────── *)
 let r_pkg_021 : rule =
@@ -1745,7 +1745,7 @@ let r_pkg_021 : rule =
         }
     else None
   in
-  { id = "PKG-021"; run }
+  { id = "PKG-021"; run; languages = [] }
 
 (* ── PKG-024: polyglossia language duplicated ────────────────────────── *)
 let r_pkg_024 : rule =
@@ -1780,7 +1780,7 @@ let r_pkg_024 : rule =
         }
     else None
   in
-  { id = "PKG-024"; run }
+  { id = "PKG-024"; run; languages = [] }
 
 (* ── PKG-025: Engine option mismatch ─────────────────────────────────── *)
 (* Detect contradictory engine indicators, e.g. fontspec (XeLaTeX/LuaLaTeX)
@@ -1811,7 +1811,7 @@ let r_pkg_025 : rule =
         }
     else None
   in
-  { id = "PKG-025"; run }
+  { id = "PKG-025"; run; languages = [] }
 
 (* ── TAB-003: Decimal column not aligned on dot ─────────────────────── *)
 (* Fire if tabular uses l/c/r columns with numeric data containing '.' but no S
@@ -1855,7 +1855,7 @@ let r_tab_003 : rule =
         }
     else None
   in
-  { id = "TAB-003"; run }
+  { id = "TAB-003"; run; languages = [] }
 
 (* ── TAB-007: Text in numeric column without \multicolumn ─────────── *)
 (* Fire if S-column tabular contains text rows without \multicolumn *)
@@ -1900,7 +1900,7 @@ let r_tab_007 : rule =
         }
     else None
   in
-  { id = "TAB-007"; run }
+  { id = "TAB-007"; run; languages = [] }
 
 (* ── TAB-008: Table > 30 rows ────────────────────────────────────────── *)
 let r_tab_008 : rule =
@@ -1926,7 +1926,7 @@ let r_tab_008 : rule =
         }
     else None
   in
-  { id = "TAB-008"; run }
+  { id = "TAB-008"; run; languages = [] }
 
 (* ── TAB-012: Numeric column not aligned using siunitx S-column ──────── *)
 let r_tab_012 : rule =
@@ -1970,7 +1970,7 @@ let r_tab_012 : rule =
         }
     else None
   in
-  { id = "TAB-012"; run }
+  { id = "TAB-012"; run; languages = [] }
 
 (* ── TAB-013: Caption position for longtable must be at top ──────────── *)
 let r_tab_013 : rule =
@@ -2003,7 +2003,7 @@ let r_tab_013 : rule =
         }
     else None
   in
-  { id = "TAB-013"; run }
+  { id = "TAB-013"; run; languages = [] }
 
 (* ── TAB-015: \multirow inside tabularx X without raggedright ────── *)
 let r_tab_015 : rule =
@@ -2027,7 +2027,7 @@ let r_tab_015 : rule =
         }
     else None
   in
-  { id = "TAB-015"; run }
+  { id = "TAB-015"; run; languages = [] }
 
 (* ── TAB-016: Centred 'c' column in longtable holds ragged text ──────── *)
 let r_tab_016 : rule =
@@ -2053,7 +2053,7 @@ let r_tab_016 : rule =
         }
     else None
   in
-  { id = "TAB-016"; run }
+  { id = "TAB-016"; run; languages = [] }
 
 (* ── FIG-012: Figure listed in LoF but not referenced ────────────────── *)
 let r_fig_012 : rule =
@@ -2077,7 +2077,7 @@ let r_fig_012 : rule =
         }
     else None
   in
-  { id = "FIG-012"; run }
+  { id = "FIG-012"; run; languages = [] }
 
 (* ── FIG-014: Figure caption exceeds 300 characters ──────────────────── *)
 let r_fig_014 : rule =
@@ -2101,7 +2101,7 @@ let r_fig_014 : rule =
         }
     else None
   in
-  { id = "FIG-014"; run }
+  { id = "FIG-014"; run; languages = [] }
 
 (* ── FIG-017: Sidewaysfigure used with portrait page layout ──────────── *)
 let r_fig_017 : rule =
@@ -2130,7 +2130,7 @@ let r_fig_017 : rule =
       else None
     else None
   in
-  { id = "FIG-017"; run }
+  { id = "FIG-017"; run; languages = [] }
 
 (* ── FIG-019: Subcaption label missing (a), (b)... ───────────────────── *)
 (* Similar to FIG-010 but specifically checks that subcaption has label text *)
@@ -2155,7 +2155,7 @@ let r_fig_019 : rule =
         }
     else None
   in
-  { id = "FIG-019"; run }
+  { id = "FIG-019"; run; languages = [] }
 
 (* ── FIG-022: Figure caption identical to surrounding sentence ───────── *)
 let r_fig_022 : rule =
@@ -2199,7 +2199,7 @@ let r_fig_022 : rule =
         }
     else None
   in
-  { id = "FIG-022"; run }
+  { id = "FIG-022"; run; languages = [] }
 
 (* ── FIG-024: Alt-text exceeds 140 chars ─────────────────────────────── *)
 let r_fig_024 : rule =
@@ -2225,7 +2225,7 @@ let r_fig_024 : rule =
         }
     else None
   in
-  { id = "FIG-024"; run }
+  { id = "FIG-024"; run; languages = [] }
 
 (* ── FIG-025: Alt-text identical to caption ──────────────────────────── *)
 let r_fig_025 : rule =
@@ -2262,7 +2262,7 @@ let r_fig_025 : rule =
         }
     else None
   in
-  { id = "FIG-025"; run }
+  { id = "FIG-025"; run; languages = [] }
 
 (* ── MATH-075: Equation number suppressed with \nonumber but referenced *)
 let r_math_075 : rule =
@@ -2295,7 +2295,7 @@ let r_math_075 : rule =
         }
     else None
   in
-  { id = "MATH-075"; run }
+  { id = "MATH-075"; run; languages = [] }
 
 (* ── MATH-080: Equation exceeds 3 alignment columns ─────────────────── *)
 let r_math_080 : rule =
@@ -2332,7 +2332,7 @@ let r_math_080 : rule =
         }
     else None
   in
-  { id = "MATH-080"; run }
+  { id = "MATH-080"; run; languages = [] }
 
 (* ── CMD-012: \renewcommand\thesection after hyperref ────────────── *)
 let r_cmd_012 : rule =
@@ -2368,7 +2368,7 @@ let r_cmd_012 : rule =
             }
         else None
   in
-  { id = "CMD-012"; run }
+  { id = "CMD-012"; run; languages = [] }
 
 (* ── DOC-004: Acknowledgment section before conclusion ───────────────── *)
 let r_doc_004 : rule =
@@ -2394,7 +2394,7 @@ let r_doc_004 : rule =
         else None
     | _ -> None
   in
-  { id = "DOC-004"; run }
+  { id = "DOC-004"; run; languages = [] }
 
 (* ══════════════════════════════════════════════════════════════════════
    L3-expl3 rules (L1_Expanded)
@@ -2433,7 +2433,7 @@ let r_l3_001 : rule =
         }
     else None
   in
-  { id = "L3-001"; run }
+  { id = "L3-001"; run; languages = [] }
 
 (* ── L3-002: Expl3 variable declared after \begin{document} ──────── *)
 let r_l3_002 : rule =
@@ -2463,7 +2463,7 @@ let r_l3_002 : rule =
             }
         else None
   in
-  { id = "L3-002"; run }
+  { id = "L3-002"; run; languages = [] }
 
 (* ── L3-003: Expl3 and etoolbox patch macros combined ────────────── *)
 let r_l3_003 : rule =
@@ -2494,7 +2494,7 @@ let r_l3_003 : rule =
         }
     else None
   in
-  { id = "L3-003"; run }
+  { id = "L3-003"; run; languages = [] }
 
 (* ── L3-004: Undocumented \__module_internal:N used ──────────────── *)
 let r_l3_004 : rule =
@@ -2519,7 +2519,7 @@ let r_l3_004 : rule =
         }
     else None
   in
-  { id = "L3-004"; run }
+  { id = "L3-004"; run; languages = [] }
 
 (* ── L3-005: Missing \ExplSyntaxOn guard around expl3 code ──────── *)
 let r_l3_005 : rule =
@@ -2544,7 +2544,7 @@ let r_l3_005 : rule =
         }
     else None
   in
-  { id = "L3-005"; run }
+  { id = "L3-005"; run; languages = [] }
 
 (* ── L3-006: Expl3 variable clobbers package macro name ──────────── *)
 let r_l3_006 : rule =
@@ -2588,7 +2588,7 @@ let r_l3_006 : rule =
         }
     else None
   in
-  { id = "L3-006"; run }
+  { id = "L3-006"; run; languages = [] }
 
 (* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────── *)
 let r_l3_007 : rule =
@@ -2617,7 +2617,7 @@ let r_l3_007 : rule =
         }
     else None
   in
-  { id = "L3-007"; run }
+  { id = "L3-007"; run; languages = [] }
 
 (* ── L3-009: LaTeX3 function deprecated _n: variant used ─────────── *)
 let r_l3_009 : rule =
@@ -2645,7 +2645,7 @@ let r_l3_009 : rule =
         }
     else None
   in
-  { id = "L3-009"; run }
+  { id = "L3-009"; run; languages = [] }
 
 (* ── L3-011: Engine-branch uses pdfTeX primitive in Lua/XeTeX path ─ *)
 let r_l3_011 : rule =
@@ -2677,7 +2677,7 @@ let r_l3_011 : rule =
         }
     else None
   in
-  { id = "L3-011"; run }
+  { id = "L3-011"; run; languages = [] }
 
 (* ====================================================================== TIKZ
    rules (L2_Ast)
@@ -2712,7 +2712,7 @@ let r_tikz_001 : rule =
         }
     else None
   in
-  { id = "TIKZ-001"; run }
+  { id = "TIKZ-001"; run; languages = [] }
 
 (* -- TIKZ-003: pgfplots axis labels not in math mode ----------------- *)
 let r_tikz_003 : rule =
@@ -2746,7 +2746,7 @@ let r_tikz_003 : rule =
         }
     else None
   in
-  { id = "TIKZ-003"; run }
+  { id = "TIKZ-003"; run; languages = [] }
 
 (* -- TIKZ-004: Hard-coded RGB values instead of xcolor names --------- *)
 let r_tikz_004 : rule =
@@ -2771,7 +2771,7 @@ let r_tikz_004 : rule =
         }
     else None
   in
-  { id = "TIKZ-004"; run }
+  { id = "TIKZ-004"; run; languages = [] }
 
 (* -- TIKZ-006: Missing \caption for tikzpicture inside figure ------- *)
 let r_tikz_006 : rule =
@@ -2795,7 +2795,7 @@ let r_tikz_006 : rule =
         }
     else None
   in
-  { id = "TIKZ-006"; run }
+  { id = "TIKZ-006"; run; languages = [] }
 
 (* -- TIKZ-009: TikZ library arrows.meta missing for arrow tips ------- *)
 let r_tikz_009 : rule =
@@ -2826,7 +2826,7 @@ let r_tikz_009 : rule =
           }
       else None
   in
-  { id = "TIKZ-009"; run }
+  { id = "TIKZ-009"; run; languages = [] }
 
 (* -- TIKZ-010: Deprecated \pgfplotsset key used -------------------- *)
 let r_tikz_010 : rule =
@@ -2853,7 +2853,7 @@ let r_tikz_010 : rule =
         }
     else None
   in
-  { id = "TIKZ-010"; run }
+  { id = "TIKZ-010"; run; languages = [] }
 
 (* ====================================================================== LANG +
    Other L2_Ast rules
@@ -2920,7 +2920,7 @@ let r_lang_001 : rule =
               }
           else None
   in
-  { id = "LANG-001"; run }
+  { id = "LANG-001"; run; languages = [] }
 
 (* -- LANG-006: Non-English abstract before \selectlanguage ---------- *)
 let r_lang_006 : rule =
@@ -2955,7 +2955,7 @@ let r_lang_006 : rule =
             else None
         | _ -> None)
   in
-  { id = "LANG-006"; run }
+  { id = "LANG-006"; run; languages = [] }
 
 (* -- LANG-007: babel shorthand mis-used instead of og/fg ----------- *)
 let r_lang_007 : rule =
@@ -2998,7 +2998,7 @@ let r_lang_007 : rule =
               }
           else None
   in
-  { id = "LANG-007"; run }
+  { id = "LANG-007"; run; languages = [] }
 
 (* -- LANG-013: Abstract language differs from \selectlanguage ------- *)
 let r_lang_013 : rule =
@@ -3051,7 +3051,7 @@ let r_lang_013 : rule =
                   }
             | _ -> None))
   in
-  { id = "LANG-013"; run }
+  { id = "LANG-013"; run; languages = [] }
 
 (* -- COL-006: xcolor option dvipsnames used with pdfLaTeX ------------ *)
 let r_col_006 : rule =
@@ -3083,7 +3083,7 @@ let r_col_006 : rule =
           }
       else None
   in
-  { id = "COL-006"; run }
+  { id = "COL-006"; run; languages = [] }
 
 (* -- L3-008: Expl3 module lacks \ProvidesExplPackage ---------------- *)
 let r_l3_008 : rule =
@@ -3114,7 +3114,7 @@ let r_l3_008 : rule =
         }
     else None
   in
-  { id = "L3-008"; run }
+  { id = "L3-008"; run; languages = [] }
 
 (* -- L3-010: \ExplSyntaxOff missing at end of file ----------------- *)
 let r_l3_010 : rule =
@@ -3145,7 +3145,7 @@ let r_l3_010 : rule =
         }
     else None
   in
-  { id = "L3-010"; run }
+  { id = "L3-010"; run; languages = [] }
 
 (* -- LAY-024: \subsubsubsection depth > 3 without class support ---- *)
 let r_lay_024 : rule =
@@ -3170,7 +3170,7 @@ let r_lay_024 : rule =
         }
     else None
   in
-  { id = "LAY-024"; run }
+  { id = "LAY-024"; run; languages = [] }
 
 (* -- META-002: Revision hash missing from \date field --------------- *)
 let r_meta_002 : rule =
@@ -3204,7 +3204,7 @@ let r_meta_002 : rule =
           }
     | _ -> None
   in
-  { id = "META-002"; run }
+  { id = "META-002"; run; languages = [] }
 
 (* -- RTL-005: Polyglossia RTL font not specified --------------------- *)
 let r_rtl_005 : rule =
@@ -3249,7 +3249,7 @@ let r_rtl_005 : rule =
       else None
     else None
   in
-  { id = "RTL-005"; run }
+  { id = "RTL-005"; run; languages = ["ar"; "he"] }
 
 (* ── BIB rules: bibliography field / entry hygiene ──────────────── *)
 
@@ -3284,7 +3284,7 @@ let r_bib_002 : rule =
         }
     else None
   in
-  { id = "BIB-002"; run }
+  { id = "BIB-002"; run; languages = [] }
 
 (* BIB-003: Journal title capitalisation inconsistent with @string definition *)
 let r_bib_003 : rule =
@@ -3323,7 +3323,7 @@ let r_bib_003 : rule =
         }
     else None
   in
-  { id = "BIB-003"; run }
+  { id = "BIB-003"; run; languages = [] }
 
 (* BIB-004: Book entry lacks publisher field *)
 let r_bib_004 : rule =
@@ -3359,7 +3359,7 @@ let r_bib_004 : rule =
         }
     else None
   in
-  { id = "BIB-004"; run }
+  { id = "BIB-004"; run; languages = [] }
 
 (* BIB-005: URL present without urldate *)
 let r_bib_005 : rule =
@@ -3388,7 +3388,7 @@ let r_bib_005 : rule =
         }
     else None
   in
-  { id = "BIB-005"; run }
+  { id = "BIB-005"; run; languages = [] }
 
 (* BIB-006: Author/editor names not in "von Last, First" scheme *)
 let r_bib_006 : rule =
@@ -3434,7 +3434,7 @@ let r_bib_006 : rule =
         }
     else None
   in
-  { id = "BIB-006"; run }
+  { id = "BIB-006"; run; languages = [] }
 
 (* BIB-008: Camel-case field names detected *)
 let r_bib_008 : rule =
@@ -3461,7 +3461,7 @@ let r_bib_008 : rule =
           }
       else None
   in
-  { id = "BIB-008"; run }
+  { id = "BIB-008"; run; languages = [] }
 
 (* BIB-009: In-proceedings entry missing required `booktitle` field *)
 let r_bib_009 : rule =
@@ -3497,7 +3497,7 @@ let r_bib_009 : rule =
         }
     else None
   in
-  { id = "BIB-009"; run }
+  { id = "BIB-009"; run; languages = [] }
 
 (* BIB-010: `month` field uses numeric literal instead of `#jan#` macro *)
 let r_bib_010 : rule =
@@ -3515,7 +3515,7 @@ let r_bib_010 : rule =
         }
     else None
   in
-  { id = "BIB-010"; run }
+  { id = "BIB-010"; run; languages = [] }
 
 (* BIB-011: Legacy `note = {URL: ...}` field detected; move to `url` *)
 let r_bib_011 : rule =
@@ -3532,7 +3532,7 @@ let r_bib_011 : rule =
         }
     else None
   in
-  { id = "BIB-011"; run }
+  { id = "BIB-011"; run; languages = [] }
 
 (* BIB-012: `et al.` hard-coded in author list instead of letting Bib(La)TeX
    truncate *)
@@ -3577,7 +3577,7 @@ let r_bib_012 : rule =
         }
     else None
   in
-  { id = "BIB-012"; run }
+  { id = "BIB-012"; run; languages = [] }
 
 (* BIB-015: Trailing period in `title` or `note` field is redundant *)
 let r_bib_015 : rule =
@@ -3612,7 +3612,7 @@ let r_bib_015 : rule =
         }
     else None
   in
-  { id = "BIB-015"; run }
+  { id = "BIB-015"; run; languages = [] }
 
 (* BIB-016: Both DOI and URL present — duplicate locator information *)
 let r_bib_016 : rule =
@@ -3646,7 +3646,7 @@ let r_bib_016 : rule =
         }
     else None
   in
-  { id = "BIB-016"; run }
+  { id = "BIB-016"; run; languages = [] }
 
 (* ── PKG rules: package configuration issues ───────────────────── *)
 
@@ -3674,7 +3674,7 @@ let r_pkg_018 : rule =
         }
     else None
   in
-  { id = "PKG-018"; run }
+  { id = "PKG-018"; run; languages = [] }
 
 (* PKG-019: geometry margin < 1 cm *)
 let r_pkg_019 : rule =
@@ -3700,7 +3700,7 @@ let r_pkg_019 : rule =
         }
     else None
   in
-  { id = "PKG-019"; run }
+  { id = "PKG-019"; run; languages = [] }
 
 (* ── FONT rules ────────────────────────────────────────────────── *)
 
@@ -3750,7 +3750,7 @@ let r_font_005 : rule =
             count = 1;
           }
   in
-  { id = "FONT-005"; run }
+  { id = "FONT-005"; run; languages = [] }
 
 (* ── LAY rules: layout / spacing issues ────────────────────────── *)
 
@@ -3786,7 +3786,7 @@ let r_lay_015 : rule =
         }
     else None
   in
-  { id = "LAY-015"; run }
+  { id = "LAY-015"; run; languages = [] }
 
 (* LAY-020: Float placement parameters modified (\topnumber ...) *)
 let r_lay_020 : rule =
@@ -3808,7 +3808,7 @@ let r_lay_020 : rule =
         }
     else None
   in
-  { id = "LAY-020"; run }
+  { id = "LAY-020"; run; languages = [] }
 
 (* LAY-022: Global negative \parskip detected *)
 let r_lay_022 : rule =
@@ -3825,7 +3825,7 @@ let r_lay_022 : rule =
         }
     else None
   in
-  { id = "LAY-022"; run }
+  { id = "LAY-022"; run; languages = [] }
 
 (* ── REF rules ─────────────────────────────────────────────────── *)
 
@@ -3858,7 +3858,7 @@ let r_ref_008 : rule =
         }
     else None
   in
-  { id = "REF-008"; run }
+  { id = "REF-008"; run; languages = [] }
 
 (* ── META rules ────────────────────────────────────────────────── *)
 
@@ -3896,7 +3896,7 @@ let r_meta_001 : rule =
             count = 1;
           }
   in
-  { id = "META-001"; run }
+  { id = "META-001"; run; languages = [] }
 
 (* ── PDF rules ─────────────────────────────────────────────────── *)
 
@@ -3946,7 +3946,7 @@ let r_pdf_010 : rule =
         }
     else None
   in
-  { id = "PDF-010"; run }
+  { id = "PDF-010"; run; languages = [] }
 
 (* ── TIKZ rules ────────────────────────────────────────────────── *)
 
@@ -3986,7 +3986,7 @@ let r_tikz_005 : rule =
             count = 1;
           }
   in
-  { id = "TIKZ-005"; run }
+  { id = "TIKZ-005"; run; languages = [] }
 
 let rules_l2_approx : rule list =
   [
@@ -4139,7 +4139,7 @@ let r_cmd_002 : rule =
         }
     else None
   in
-  { id = "CMD-002"; run }
+  { id = "CMD-002"; run; languages = [] }
 
 (* CMD-004: CamelCase command names discouraged *)
 let r_cmd_004 : rule =
@@ -4174,7 +4174,7 @@ let r_cmd_004 : rule =
         }
     else None
   in
-  { id = "CMD-004"; run }
+  { id = "CMD-004"; run; languages = [] }
 
 (* CMD-005: Single-letter macro created *)
 (* Two patterns: (1) \newcommand{\X} / \renewcommand{\X} with braces around the
@@ -4207,7 +4207,7 @@ let r_cmd_005 : rule =
         }
     else None
   in
-  { id = "CMD-005"; run }
+  { id = "CMD-005"; run; languages = [] }
 
 (* CMD-006: Macro defined inside document body *)
 let r_cmd_006 : rule =
@@ -4237,7 +4237,7 @@ let r_cmd_006 : rule =
             }
         else None
   in
-  { id = "CMD-006"; run }
+  { id = "CMD-006"; run; languages = [] }
 
 (* CMD-008: Macro uses \@ in name outside maketitle context *)
 let r_cmd_008 : rule =
@@ -4274,7 +4274,7 @@ let r_cmd_008 : rule =
           }
       else None
   in
-  { id = "CMD-008"; run }
+  { id = "CMD-008"; run; languages = [] }
 
 (* CMD-009: Macro name contains digits *)
 let r_cmd_009 : rule =
@@ -4303,7 +4303,7 @@ let r_cmd_009 : rule =
         }
     else None
   in
-  { id = "CMD-009"; run }
+  { id = "CMD-009"; run; languages = [] }
 
 (* CMD-011: Macro defined with \def/\edef in preamble without \makeatletter
    guard *)
@@ -4348,7 +4348,7 @@ let r_cmd_011 : rule =
           }
       else None
   in
-  { id = "CMD-011"; run }
+  { id = "CMD-011"; run; languages = [] }
 
 (* CMD-013: \def\arraystretch declared inside document body *)
 let r_cmd_013 : rule =
@@ -4376,7 +4376,7 @@ let r_cmd_013 : rule =
             }
         else None
   in
-  { id = "CMD-013"; run }
+  { id = "CMD-013"; run; languages = [] }
 
 let rules_cmd : rule list =
   [
@@ -4419,7 +4419,7 @@ let r_typo_062 : rule =
         }
     else None
   in
-  { id = "TYPO-062"; run }
+  { id = "TYPO-062"; run; languages = [] }
 
 (* ── MATH rules: mathematics-related lexical checks ──────────────── *)
 
@@ -4441,4 +4441,4 @@ let r_math_083 : rule =
         }
     else None
   in
-  { id = "MATH-083"; run }
+  { id = "MATH-083"; run; languages = [] }

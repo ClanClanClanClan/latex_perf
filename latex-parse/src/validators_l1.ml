@@ -25,7 +25,7 @@ let l1_mod_001_rule : rule =
         }
     else None
   in
-  { id = "MOD-001"; run }
+  { id = "MOD-001"; run; languages = [] }
 
 let l1_exp_001_rule : rule =
   let run s =
@@ -49,7 +49,7 @@ let l1_exp_001_rule : rule =
         }
     else None
   in
-  { id = "EXP-001"; run }
+  { id = "EXP-001"; run; languages = [] }
 
 let l1_mod_002_rule : rule =
   let run s =
@@ -65,7 +65,7 @@ let l1_mod_002_rule : rule =
         }
     else None
   in
-  { id = "MOD-002"; run }
+  { id = "MOD-002"; run; languages = [] }
 
 let l1_mod_003_rule : rule =
   let run s =
@@ -81,7 +81,7 @@ let l1_mod_003_rule : rule =
         }
     else None
   in
-  { id = "MOD-003"; run }
+  { id = "MOD-003"; run; languages = [] }
 
 let l1_mod_004_rule : rule =
   let run s =
@@ -98,7 +98,7 @@ let l1_mod_004_rule : rule =
         }
     else None
   in
-  { id = "MOD-004"; run }
+  { id = "MOD-004"; run; languages = [] }
 
 let l1_mod_005_rule : rule =
   let run s =
@@ -115,7 +115,7 @@ let l1_mod_005_rule : rule =
         }
     else None
   in
-  { id = "MOD-005"; run }
+  { id = "MOD-005"; run; languages = [] }
 
 let l1_mod_006_rule : rule =
   let run s =
@@ -132,7 +132,7 @@ let l1_mod_006_rule : rule =
         }
     else None
   in
-  { id = "MOD-006"; run }
+  { id = "MOD-006"; run; languages = [] }
 
 let l1_mod_007_rule : rule =
   let run s =
@@ -149,7 +149,7 @@ let l1_mod_007_rule : rule =
         }
     else None
   in
-  { id = "MOD-007"; run }
+  { id = "MOD-007"; run; languages = [] }
 
 let l1_mod_008_rule : rule =
   let run s =
@@ -166,7 +166,7 @@ let l1_mod_008_rule : rule =
         }
     else None
   in
-  { id = "MOD-008"; run }
+  { id = "MOD-008"; run; languages = [] }
 
 let l1_mod_009_rule : rule =
   let run s =
@@ -184,7 +184,7 @@ let l1_mod_009_rule : rule =
         }
     else None
   in
-  { id = "MOD-009"; run }
+  { id = "MOD-009"; run; languages = [] }
 
 let l1_mod_010_rule : rule =
   let run s =
@@ -200,7 +200,7 @@ let l1_mod_010_rule : rule =
         }
     else None
   in
-  { id = "MOD-010"; run }
+  { id = "MOD-010"; run; languages = [] }
 
 let l1_mod_011_rule : rule =
   let run s =
@@ -216,7 +216,7 @@ let l1_mod_011_rule : rule =
         }
     else None
   in
-  { id = "MOD-011"; run }
+  { id = "MOD-011"; run; languages = [] }
 
 let l1_mod_012_rule : rule =
   let run s =
@@ -232,7 +232,7 @@ let l1_mod_012_rule : rule =
         }
     else None
   in
-  { id = "MOD-012"; run }
+  { id = "MOD-012"; run; languages = [] }
 
 let l1_mod_013_rule : rule =
   let run s =
@@ -248,7 +248,7 @@ let l1_mod_013_rule : rule =
         }
     else None
   in
-  { id = "MOD-013"; run }
+  { id = "MOD-013"; run; languages = [] }
 
 let l1_mod_020_rule : rule =
   let run _s =
@@ -265,7 +265,7 @@ let l1_mod_020_rule : rule =
         }
     else None
   in
-  { id = "MOD-020"; run }
+  { id = "MOD-020"; run; languages = [] }
 
 let l1_mod_021_rule : rule =
   let run _s =
@@ -282,7 +282,7 @@ let l1_mod_021_rule : rule =
         }
     else None
   in
-  { id = "MOD-021"; run }
+  { id = "MOD-021"; run; languages = [] }
 
 let l1_mod_022_rule : rule =
   let run _s =
@@ -299,7 +299,7 @@ let l1_mod_022_rule : rule =
         }
     else None
   in
-  { id = "MOD-022"; run }
+  { id = "MOD-022"; run; languages = [] }
 
 let l1_mod_023_rule : rule =
   let run _s =
@@ -316,7 +316,7 @@ let l1_mod_023_rule : rule =
         }
     else None
   in
-  { id = "MOD-023"; run }
+  { id = "MOD-023"; run; languages = [] }
 
 let l1_mod_024_rule : rule =
   let run _s =
@@ -333,7 +333,7 @@ let l1_mod_024_rule : rule =
         }
     else None
   in
-  { id = "MOD-024"; run }
+  { id = "MOD-024"; run; languages = [] }
 
 (* ── DELIM rules: delimiter matching (L1 — operate on expanded text) ── *)
 
@@ -368,7 +368,7 @@ let l1_delim_001_rule : rule =
         }
     else None
   in
-  { id = "DELIM-001"; run }
+  { id = "DELIM-001"; run; languages = [] }
 
 (* DELIM-002: Extra closing } detected. Scan left-to-right tracking brace depth;
    if depth ever goes negative, count those positions. *)
@@ -402,7 +402,7 @@ let l1_delim_002_rule : rule =
         }
     else None
   in
-  { id = "DELIM-002"; run }
+  { id = "DELIM-002"; run; languages = [] }
 
 (* DELIM-003: Unmatched \left without \right in math mode *)
 let l1_delim_003_rule : rule =
@@ -425,7 +425,7 @@ let l1_delim_003_rule : rule =
         }
     else None
   in
-  { id = "DELIM-003"; run }
+  { id = "DELIM-003"; run; languages = [] }
 
 (* DELIM-004: Unmatched \right without \left in math mode *)
 let l1_delim_004_rule : rule =
@@ -448,7 +448,7 @@ let l1_delim_004_rule : rule =
         }
     else None
   in
-  { id = "DELIM-004"; run }
+  { id = "DELIM-004"; run; languages = [] }
 
 (* DELIM-005: Mismatched parenthesis sizing (\big vs \Bigg) — detect \bigl/\bigr
    paired with \Biggl/\Biggr or similar size mismatches. *)
@@ -509,7 +509,7 @@ let l1_delim_005_rule : rule =
         }
     else None
   in
-  { id = "DELIM-005"; run }
+  { id = "DELIM-005"; run; languages = [] }
 
 (* DELIM-006: \big delimiters used outside display math — detect \big, \bigl,
    \bigr etc. in inline math ($...$, \(...\)) rather than display math. *)
@@ -589,7 +589,7 @@ let l1_delim_006_rule : rule =
         }
     else None
   in
-  { id = "DELIM-006"; run }
+  { id = "DELIM-006"; run; languages = [] }
 
 (* DELIM-007: Angle bracket \langle without matching \rangle in math *)
 let l1_delim_007_rule : rule =
@@ -613,7 +613,7 @@ let l1_delim_007_rule : rule =
         }
     else None
   in
-  { id = "DELIM-007"; run }
+  { id = "DELIM-007"; run; languages = [] }
 
 (* DELIM-008: Empty \left. ... \right. pair — redundant invisible delimiters *)
 let l1_delim_008_rule : rule =
@@ -642,7 +642,7 @@ let l1_delim_008_rule : rule =
         }
     else None
   in
-  { id = "DELIM-008"; run }
+  { id = "DELIM-008"; run; languages = [] }
 
 (* DELIM-009: Nested delimiter type mismatch — e.g. { ... ( ... ) ... } where
    brace group contains parenthesized expression or vice versa in math *)
@@ -680,7 +680,7 @@ let l1_delim_009_rule : rule =
         }
     else None
   in
-  { id = "DELIM-009"; run }
+  { id = "DELIM-009"; run; languages = [] }
 
 (* DELIM-010: Display math uses \big instead of \Big — in display math contexts,
    convention is to use capital sizing commands *)
@@ -759,7 +759,7 @@ let l1_delim_010_rule : rule =
         }
     else None
   in
-  { id = "DELIM-010"; run }
+  { id = "DELIM-010"; run; languages = [] }
 
 (* DELIM-011: \middle delimiter used without \left...\right pair *)
 let l1_delim_011_rule : rule =
@@ -786,7 +786,7 @@ let l1_delim_011_rule : rule =
         }
     else None
   in
-  { id = "DELIM-011"; run }
+  { id = "DELIM-011"; run; languages = [] }
 
 (* ═══════════════════════════════════════════════════════════════════════════
    SCRIPT family — L1 subscript / superscript validators SCRIPT-001 through
@@ -824,7 +824,7 @@ let l1_script_001_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-001"; run }
+  { id = "SCRIPT-001"; run; languages = [] }
 
 (* SCRIPT-002: Superscript dash typed as unicode non-breaking hyphen U+2011
    instead of \textsuperscript{--} *)
@@ -861,7 +861,7 @@ let l1_script_002_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-002"; run }
+  { id = "SCRIPT-002"; run; languages = [] }
 
 (* SCRIPT-003: Comma-separated superscripts lack braces — e.g. ^a,b instead of
    ^{a,b} *)
@@ -881,7 +881,7 @@ let l1_script_003_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-003"; run }
+  { id = "SCRIPT-003"; run; languages = [] }
 
 (* SCRIPT-004: Subscript after prime notation mis-ordered — e.g. f'_i instead of
    f_i' *)
@@ -901,7 +901,7 @@ let l1_script_004_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-004"; run }
+  { id = "SCRIPT-004"; run; languages = [] }
 
 (* SCRIPT-005: Superscript uses letter l instead of \ell *)
 let l1_script_005_rule : rule =
@@ -950,7 +950,7 @@ let l1_script_005_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-005"; run }
+  { id = "SCRIPT-005"; run; languages = [] }
 
 (* SCRIPT-006: Degree symbol typed ° (U+00B0) instead of ^\circ in math *)
 let l1_script_006_rule : rule =
@@ -972,7 +972,7 @@ let l1_script_006_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-006"; run }
+  { id = "SCRIPT-006"; run; languages = [] }
 
 (* SCRIPT-007: Subscript text not wrapped in \text{} — e.g. x_{max} where "max"
    is a word (3+ alpha chars) without \text *)
@@ -1042,7 +1042,7 @@ let l1_script_007_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-007"; run }
+  { id = "SCRIPT-007"; run; languages = [] }
 
 (* SCRIPT-008: Chemical formula lacks \mathrm{} in subscript — e.g. $H_2O$ vs
    $\mathrm{H}_2\mathrm{O}$ — detects element+subscript digit pattern outside
@@ -1071,7 +1071,7 @@ let l1_script_008_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-008"; run }
+  { id = "SCRIPT-008"; run; languages = [] }
 
 (* SCRIPT-009: Isotope superscript mass number missing — e.g. ^{}_{Z}X or just
    _ZX without a mass number superscript *)
@@ -1092,7 +1092,7 @@ let l1_script_009_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-009"; run }
+  { id = "SCRIPT-009"; run; languages = [] }
 
 (* SCRIPT-010: Use of \limits on inline operator — \limits in inline math
    ($...$, \(...\)) forces display-style limits *)
@@ -1114,7 +1114,7 @@ let l1_script_010_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-010"; run }
+  { id = "SCRIPT-010"; run; languages = [] }
 
 (* SCRIPT-011: Nested superscript three levels deep — e.g. x^{a^{b^{c}}} *)
 let l1_script_011_rule : rule =
@@ -1150,7 +1150,7 @@ let l1_script_011_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-011"; run }
+  { id = "SCRIPT-011"; run; languages = [] }
 
 (* SCRIPT-012: Prime notation f''' (> 3 primes) — prefer ^{(n)} *)
 let l1_script_012_rule : rule =
@@ -1169,7 +1169,7 @@ let l1_script_012_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-012"; run }
+  { id = "SCRIPT-012"; run; languages = [] }
 
 (* SCRIPT-013: Plus/minus typed directly in subscript — e.g. x_{+} or x_{-}
    where \pm or \mp would be more appropriate *)
@@ -1189,7 +1189,7 @@ let l1_script_013_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-013"; run }
+  { id = "SCRIPT-013"; run; languages = [] }
 
 (* SCRIPT-014: Logarithm base subscript italic — \log_x where x is a bare italic
    letter, should be \log_{x} or upright *)
@@ -1226,7 +1226,7 @@ let l1_script_014_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-014"; run }
+  { id = "SCRIPT-014"; run; languages = [] }
 
 (* SCRIPT-015: Time derivative dot mis-aligned — \dot or \ddot used in
    subscript/superscript context *)
@@ -1246,7 +1246,7 @@ let l1_script_015_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-015"; run }
+  { id = "SCRIPT-015"; run; languages = [] }
 
 (* SCRIPT-016: Prime on Greek letter typed '' not ^\prime — e.g. \alpha''
    instead of \alpha^{\prime\prime} *)
@@ -1316,7 +1316,7 @@ let l1_script_016_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-016"; run }
+  { id = "SCRIPT-016"; run; languages = [] }
 
 (* SCRIPT-017: Inconsistent order of sub/superscripts — detects when some atoms
    use x_a^b and others use x^b_a in the same document *)
@@ -1347,7 +1347,7 @@ let l1_script_017_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-017"; run }
+  { id = "SCRIPT-017"; run; languages = [] }
 
 (* SCRIPT-018: Degree symbol in superscript without braces — e.g. ^\circ without
    braces: should be ^{\circ} *)
@@ -1380,7 +1380,7 @@ let l1_script_018_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-018"; run }
+  { id = "SCRIPT-018"; run; languages = [] }
 
 (* SCRIPT-019: Double prime '' instead of ^{\prime\prime} *)
 let l1_script_019_rule : rule =
@@ -1417,7 +1417,7 @@ let l1_script_019_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-019"; run }
+  { id = "SCRIPT-019"; run; languages = [] }
 
 (* SCRIPT-020: Subscript text italic instead of \mathrm — e.g. $T_{eff}$ where
    the subscript is a multi-char word rendered in italic by default, should use
@@ -1485,7 +1485,7 @@ let l1_script_020_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-020"; run }
+  { id = "SCRIPT-020"; run; languages = [] }
 
 (* SCRIPT-021: Sub-sup order not canonical — a_{b}^{c} vs a^{c}_{b} — flag when
    a_{...}^{...} is used (canonical is a^{...}_{...} per convention) *)
@@ -1505,7 +1505,7 @@ let l1_script_021_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-021"; run }
+  { id = "SCRIPT-021"; run; languages = [] }
 
 (* SCRIPT-022: Superscript prime stacked > 3 — prefer ^{(n)} — similar to
    SCRIPT-012 but specifically for ^{'''...} notation *)
@@ -1525,7 +1525,7 @@ let l1_script_022_rule : rule =
         }
     else None
   in
-  { id = "SCRIPT-022"; run }
+  { id = "SCRIPT-022"; run; languages = [] }
 
 (* ═══════════════════════════════════════════════════════════════════════ REF
    validators: cross-referencing and label hygiene
@@ -1548,7 +1548,7 @@ let l1_ref_001_rule : rule =
         }
     else None
   in
-  { id = "REF-001"; run }
+  { id = "REF-001"; run; languages = [] }
 
 (* REF-002: Duplicate label name *)
 let l1_ref_002_rule : rule =
@@ -1570,7 +1570,7 @@ let l1_ref_002_rule : rule =
         }
     else None
   in
-  { id = "REF-002"; run }
+  { id = "REF-002"; run; languages = [] }
 
 (* REF-003: Label contains spaces *)
 let l1_ref_003_rule : rule =
@@ -1588,7 +1588,7 @@ let l1_ref_003_rule : rule =
         }
     else None
   in
-  { id = "REF-003"; run }
+  { id = "REF-003"; run; languages = [] }
 
 (* REF-004: Label contains uppercase letters *)
 let l1_ref_004_rule : rule =
@@ -1615,7 +1615,7 @@ let l1_ref_004_rule : rule =
         }
     else None
   in
-  { id = "REF-004"; run }
+  { id = "REF-004"; run; languages = [] }
 
 (* REF-005: Label not prefixed with fig:/tab:/eq:/sec: *)
 let l1_ref_005_rule : rule =
@@ -1659,7 +1659,7 @@ let l1_ref_005_rule : rule =
         }
     else None
   in
-  { id = "REF-005"; run }
+  { id = "REF-005"; run; languages = [] }
 
 (* REF-006: Page reference uses \ref not \pageref — detects "page \ref{...}" *)
 let l1_ref_006_rule : rule =
@@ -1676,7 +1676,7 @@ let l1_ref_006_rule : rule =
         }
     else None
   in
-  { id = "REF-006"; run }
+  { id = "REF-006"; run; languages = [] }
 
 (* REF-007: Cite key contains whitespace *)
 let l1_ref_007_rule : rule =
@@ -1693,7 +1693,7 @@ let l1_ref_007_rule : rule =
         }
     else None
   in
-  { id = "REF-007"; run }
+  { id = "REF-007"; run; languages = [] }
 
 (* REF-009: Reference appears before label definition (forward ref) *)
 let l1_ref_009_rule : rule =
@@ -1744,7 +1744,7 @@ let l1_ref_009_rule : rule =
         }
     else None
   in
-  { id = "REF-009"; run }
+  { id = "REF-009"; run; languages = [] }
 
 (* ═══════════════════════════════════════════════════════════════════════ CHEM
    validators: chemistry notation
@@ -1772,7 +1772,7 @@ let l1_chem_001_rule : rule =
         }
     else None
   in
-  { id = "CHEM-001"; run }
+  { id = "CHEM-001"; run; languages = [] }
 
 (* CHEM-002: Oxidation-state superscript missing braces — e.g. Fe^2+ should be
    Fe^{2+} *)
@@ -1792,7 +1792,7 @@ let l1_chem_002_rule : rule =
         }
     else None
   in
-  { id = "CHEM-002"; run }
+  { id = "CHEM-002"; run; languages = [] }
 
 (* CHEM-003: Isotope mass number subscripted not superscripted — e.g. _14C
    should be ^{14}C *)
@@ -1816,7 +1816,7 @@ let l1_chem_003_rule : rule =
         }
     else None
   in
-  { id = "CHEM-003"; run }
+  { id = "CHEM-003"; run; languages = [] }
 
 (* CHEM-004: Charge written ^- instead of ^{-} *)
 let l1_chem_004_rule : rule =
@@ -1835,7 +1835,7 @@ let l1_chem_004_rule : rule =
         }
     else None
   in
-  { id = "CHEM-004"; run }
+  { id = "CHEM-004"; run; languages = [] }
 
 (* CHEM-005: Chemical arrow typed '->' not \rightarrow — detects -> in math that
    is not part of \rightarrow *)
@@ -1861,7 +1861,7 @@ let l1_chem_005_rule : rule =
         }
     else None
   in
-  { id = "CHEM-005"; run }
+  { id = "CHEM-005"; run; languages = [] }
 
 (* CHEM-006: Stoichiometry coefficient inside \ce missing — detects \ce{H2O}
    without a leading number when multiple molecules are implied *)
@@ -1915,7 +1915,7 @@ let l1_chem_006_rule : rule =
         }
     else None
   in
-  { id = "CHEM-006"; run }
+  { id = "CHEM-006"; run; languages = [] }
 
 (* CHEM-007: Reaction conditions not in \text above arrow — detects
    ->[conditions] or ->[\text{...}] patterns *)
@@ -1960,7 +1960,7 @@ let l1_chem_007_rule : rule =
         }
     else None
   in
-  { id = "CHEM-007"; run }
+  { id = "CHEM-007"; run; languages = [] }
 
 (* CHEM-008: State symbols (aq), (s), (l), (g) not wrapped in \text *)
 let l1_chem_008_rule : rule =
@@ -1988,7 +1988,7 @@ let l1_chem_008_rule : rule =
         }
     else None
   in
-  { id = "CHEM-008"; run }
+  { id = "CHEM-008"; run; languages = [] }
 
 (* CHEM-009: Equilibrium arrow typed as <> or <-> — should use
    \rightleftharpoons *)
@@ -2012,7 +2012,7 @@ let l1_chem_009_rule : rule =
         }
     else None
   in
-  { id = "CHEM-009"; run }
+  { id = "CHEM-009"; run; languages = [] }
 
 (* CMD-007: Optional argument declared but not used in definition body *)
 let l1_cmd_007_rule : rule =
@@ -2070,7 +2070,7 @@ let l1_cmd_007_rule : rule =
         }
     else None
   in
-  { id = "CMD-007"; run }
+  { id = "CMD-007"; run; languages = [] }
 
 (* CMD-010: More than three successive macro renewals *)
 let l1_cmd_010_rule : rule =
@@ -2099,7 +2099,7 @@ let l1_cmd_010_rule : rule =
         }
     else None
   in
-  { id = "CMD-010"; run }
+  { id = "CMD-010"; run; languages = [] }
 
 (* FONT-001: Small-caps applied to all-caps word (ineffective) *)
 let l1_font_001_rule : rule =
@@ -2143,7 +2143,7 @@ let l1_font_001_rule : rule =
         }
     else None
   in
-  { id = "FONT-001"; run }
+  { id = "FONT-001"; run; languages = [] }
 
 (* FONT-004: Font change inside math via \textit not \mathit *)
 let l1_font_004_rule : rule =
@@ -2169,7 +2169,7 @@ let l1_font_004_rule : rule =
         }
     else None
   in
-  { id = "FONT-004"; run }
+  { id = "FONT-004"; run; languages = [] }
 
 (* RTL-003: Unbalanced \beginR / \endR primitives *)
 let l1_rtl_003_rule : rule =
@@ -2186,7 +2186,7 @@ let l1_rtl_003_rule : rule =
         }
     else None
   in
-  { id = "RTL-003"; run }
+  { id = "RTL-003"; run; languages = ["ar"; "he"] }
 
 (* RTL-004: RTL punctuation not mirrored in math *)
 let l1_rtl_004_rule : rule =
@@ -2211,7 +2211,7 @@ let l1_rtl_004_rule : rule =
         }
     else None
   in
-  { id = "RTL-004"; run }
+  { id = "RTL-004"; run; languages = ["ar"; "he"] }
 
 (* CJK-008: Full-width space U+3000 inside math mode *)
 let l1_cjk_008_rule : rule =
@@ -2232,7 +2232,7 @@ let l1_cjk_008_rule : rule =
         }
     else None
   in
-  { id = "CJK-008"; run }
+  { id = "CJK-008"; run; languages = ["zh"; "ja"; "ko"] }
 
 (* CJK-015: Chinese comma U+3001 (ideographic comma) inside math mode *)
 let l1_cjk_015_rule : rule =
@@ -2253,7 +2253,7 @@ let l1_cjk_015_rule : rule =
         }
     else None
   in
-  { id = "CJK-015"; run }
+  { id = "CJK-015"; run; languages = ["zh"; "ja"; "ko"] }
 
 (* TYPO-059: Punctuation inside math adjacent to operators — e.g. ,= or ;+ *)
 let l1_typo_059_rule : rule =
@@ -2272,7 +2272,7 @@ let l1_typo_059_rule : rule =
         }
     else None
   in
-  { id = "TYPO-059"; run }
+  { id = "TYPO-059"; run; languages = [] }
 
 (* PT-002: pt-BR decimal comma and thousand dot enforcement *)
 let l1_pt_002_rule : rule =
@@ -2306,7 +2306,7 @@ let l1_pt_002_rule : rule =
       else None)
     else None
   in
-  { id = "PT-002"; run }
+  { id = "PT-002"; run; languages = ["pt"] }
 
 (* ══════════════════════════════════════════════════════════════════════ L3-*
    rules — LaTeX3 / expl3 style validators (L1_Expanded precondition)
@@ -2353,7 +2353,7 @@ let l1_l3_001_rule : rule =
         }
     else None
   in
-  { id = "L3-001"; run }
+  { id = "L3-001"; run; languages = [] }
 
 (* L3-002: Expl3 variable declared after \begin{document} *)
 let l1_l3_002_rule : rule =
@@ -2385,7 +2385,7 @@ let l1_l3_002_rule : rule =
           }
       else None
   in
-  { id = "L3-002"; run }
+  { id = "L3-002"; run; languages = [] }
 
 (* L3-003: Expl3 and etoolbox patch macros combined *)
 let l1_l3_003_rule : rule =
@@ -2417,7 +2417,7 @@ let l1_l3_003_rule : rule =
         }
     else None
   in
-  { id = "L3-003"; run }
+  { id = "L3-003"; run; languages = [] }
 
 (* L3-004: Undocumented \__module_internal:N used *)
 let l1_l3_004_rule : rule =
@@ -2434,7 +2434,7 @@ let l1_l3_004_rule : rule =
         }
     else None
   in
-  { id = "L3-004"; run }
+  { id = "L3-004"; run; languages = [] }
 
 (* L3-005: Missing \ExplSyntaxOn guard around expl3 code *)
 let l1_l3_005_rule : rule =
@@ -2465,7 +2465,7 @@ let l1_l3_005_rule : rule =
           }
       else None
   in
-  { id = "L3-005"; run }
+  { id = "L3-005"; run; languages = [] }
 
 (* L3-006: Expl3 variable clobbers package macro name *)
 let l1_l3_006_rule : rule =
@@ -2508,7 +2508,7 @@ let l1_l3_006_rule : rule =
           }
       else None
   in
-  { id = "L3-006"; run }
+  { id = "L3-006"; run; languages = [] }
 
 (* L3-007: Mix of camelCase and snake_case in expl3 names *)
 let l1_l3_007_rule : rule =
@@ -2534,7 +2534,7 @@ let l1_l3_007_rule : rule =
           }
       else None
   in
-  { id = "L3-007"; run }
+  { id = "L3-007"; run; languages = [] }
 
 (* L3-009: LaTeX3 function deprecated _n: variant used *)
 let l1_l3_009_rule : rule =
@@ -2563,7 +2563,7 @@ let l1_l3_009_rule : rule =
         }
     else None
   in
-  { id = "L3-009"; run }
+  { id = "L3-009"; run; languages = [] }
 
 (* L3-011: Engine-branch uses pdfTeX primitive in LuaTeX or XeTeX path *)
 let l1_l3_011_rule : rule =
@@ -2613,7 +2613,7 @@ let l1_l3_011_rule : rule =
           }
       else None
   in
-  { id = "L3-011"; run }
+  { id = "L3-011"; run; languages = [] }
 
 (* CMD-001: Command \newcommand defined but never used *)
 let l1_cmd_001_rule : rule =
@@ -2693,7 +2693,7 @@ let l1_cmd_001_rule : rule =
         }
     else None
   in
-  { id = "CMD-001"; run }
+  { id = "CMD-001"; run; languages = [] }
 
 (* CMD-003: User macro name clashes with package macro *)
 let l1_cmd_003_rule : rule =
@@ -2757,7 +2757,7 @@ let l1_cmd_003_rule : rule =
         }
     else None
   in
-  { id = "CMD-003"; run }
+  { id = "CMD-003"; run; languages = [] }
 
 let rules_l1 : rule list =
   [

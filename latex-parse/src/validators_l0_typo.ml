@@ -17,7 +17,7 @@ let r_typo_001 : rule =
         }
     else None
   in
-  { id = "TYPO-001"; run }
+  { id = "TYPO-001"; run; languages = [] }
 
 let r_typo_002 : rule =
   let run s =
@@ -57,7 +57,7 @@ let r_typo_002 : rule =
             }
         else None
   in
-  { id = "TYPO-002"; run }
+  { id = "TYPO-002"; run; languages = [] }
 
 let r_typo_003 : rule =
   let run s =
@@ -97,7 +97,7 @@ let r_typo_003 : rule =
             }
         else None
   in
-  { id = "TYPO-003"; run }
+  { id = "TYPO-003"; run; languages = [] }
 
 let r_typo_004 : rule =
   let run s =
@@ -113,7 +113,7 @@ let r_typo_004 : rule =
         }
     else None
   in
-  { id = "TYPO-004"; run }
+  { id = "TYPO-004"; run; languages = [] }
 
 let r_typo_005 : rule =
   let run s =
@@ -129,7 +129,7 @@ let r_typo_005 : rule =
         }
     else None
   in
-  { id = "TYPO-005"; run }
+  { id = "TYPO-005"; run; languages = [] }
 
 let r_typo_006 : rule =
   let run s =
@@ -144,7 +144,7 @@ let r_typo_006 : rule =
         }
     else None
   in
-  { id = "TYPO-006"; run }
+  { id = "TYPO-006"; run; languages = [] }
 
 let r_typo_007 : rule =
   let run s =
@@ -192,7 +192,7 @@ let r_typo_007 : rule =
             }
         else None
   in
-  { id = "TYPO-007"; run }
+  { id = "TYPO-007"; run; languages = [] }
 
 let r_typo_008 : rule =
   let run s =
@@ -233,7 +233,7 @@ let r_typo_008 : rule =
             }
         else None
   in
-  { id = "TYPO-008"; run }
+  { id = "TYPO-008"; run; languages = [] }
 
 let r_typo_009 : rule =
   let run s =
@@ -251,7 +251,7 @@ let r_typo_009 : rule =
         }
     else None
   in
-  { id = "TYPO-009"; run }
+  { id = "TYPO-009"; run; languages = [] }
 
 let r_typo_010 : rule =
   let run s =
@@ -298,7 +298,7 @@ let r_typo_010 : rule =
             }
         else None
   in
-  { id = "TYPO-010"; run }
+  { id = "TYPO-010"; run; languages = [] }
 
 (* TYPO-011: Missing thin space before differential d in integrals *)
 let r_typo_011 : rule =
@@ -324,7 +324,7 @@ let r_typo_011 : rule =
         }
     else None
   in
-  { id = "TYPO-011"; run }
+  { id = "TYPO-011"; run; languages = [] }
 
 (* TYPO-012: Straight apostrophe used for minutes/feet *)
 let r_typo_012 : rule =
@@ -350,7 +350,7 @@ let r_typo_012 : rule =
         }
     else None
   in
-  { id = "TYPO-012"; run }
+  { id = "TYPO-012"; run; languages = [] }
 
 (* TYPO-013: ASCII back-tick used as opening quote *)
 let r_typo_013 : rule =
@@ -375,7 +375,7 @@ let r_typo_013 : rule =
         }
     else None
   in
-  { id = "TYPO-013"; run }
+  { id = "TYPO-013"; run; languages = [] }
 
 (* TYPO-014: Space before percent sign — relocated from old TYPO-028 *)
 let r_typo_014 : rule =
@@ -391,7 +391,7 @@ let r_typo_014 : rule =
         }
     else None
   in
-  { id = "TYPO-014"; run }
+  { id = "TYPO-014"; run; languages = [] }
 
 (* TYPO-015: Double \% in source; likely stray percent *)
 let r_typo_015 : rule =
@@ -407,7 +407,7 @@ let r_typo_015 : rule =
         }
     else None
   in
-  { id = "TYPO-015"; run }
+  { id = "TYPO-015"; run; languages = [] }
 
 (* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
 let r_typo_016 : rule =
@@ -433,7 +433,7 @@ let r_typo_016 : rule =
         }
     else None
   in
-  { id = "TYPO-016"; run }
+  { id = "TYPO-016"; run; languages = [] }
 
 (* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
 let r_typo_017 : rule =
@@ -458,7 +458,7 @@ let r_typo_017 : rule =
         }
     else None
   in
-  { id = "TYPO-017"; run }
+  { id = "TYPO-017"; run; languages = [] }
 
 (* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011 *)
 let r_typo_018 : rule =
@@ -474,7 +474,7 @@ let r_typo_018 : rule =
         }
     else None
   in
-  { id = "TYPO-018"; run }
+  { id = "TYPO-018"; run; languages = [] }
 
 (* ── DEFERRED NLP STUBS ──────────────────────────────────────────────
    TYPO-019, -020, -030, -031 require NLP analysis and return None
@@ -487,12 +487,12 @@ let r_typo_018 : rule =
 (* TYPO-019: Comma splice detected — DEFERRED: requires NLP analysis *)
 let r_typo_019 : rule =
   let run _s = None in
-  { id = "TYPO-019"; run }
+  { id = "TYPO-019"; run; languages = [] }
 
 (* TYPO-020: Sentence without ending punctuation — DEFERRED: requires NLP *)
 let r_typo_020 : rule =
   let run _s = None in
-  { id = "TYPO-020"; run }
+  { id = "TYPO-020"; run; languages = [] }
 
 (* TYPO-021: Capital letter after ellipsis without space *)
 let r_typo_021 : rule =
@@ -517,7 +517,7 @@ let r_typo_021 : rule =
         }
     else None
   in
-  { id = "TYPO-021"; run }
+  { id = "TYPO-021"; run; languages = [] }
 
 (* TYPO-022: Space before closing punctuation — relocated from old TYPO-012 *)
 let r_typo_022 : rule =
@@ -536,7 +536,7 @@ let r_typo_022 : rule =
         }
     else None
   in
-  { id = "TYPO-022"; run }
+  { id = "TYPO-022"; run; languages = [] }
 
 (* TYPO-023: ASCII ampersand & outside tabular env; use \& *)
 let r_typo_023 : rule =
@@ -591,7 +591,7 @@ let r_typo_023 : rule =
         }
     else None
   in
-  { id = "TYPO-023"; run }
+  { id = "TYPO-023"; run; languages = [] }
 
 (* TYPO-024: Dangling dash at line end *)
 let r_typo_024 : rule =
@@ -617,7 +617,7 @@ let r_typo_024 : rule =
         }
     else None
   in
-  { id = "TYPO-024"; run }
+  { id = "TYPO-024"; run; languages = [] }
 
 (* TYPO-025: Space before en-dash in number range *)
 let r_typo_025 : rule =
@@ -642,7 +642,7 @@ let r_typo_025 : rule =
         }
     else None
   in
-  { id = "TYPO-025"; run }
+  { id = "TYPO-025"; run; languages = [] }
 
 (* TYPO-026: Wrong dash in page range — should use -- *)
 let r_typo_026 : rule =
@@ -667,7 +667,7 @@ let r_typo_026 : rule =
         }
     else None
   in
-  { id = "TYPO-026"; run }
+  { id = "TYPO-026"; run; languages = [] }
 
 (* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
 let r_typo_027 : rule =
@@ -683,7 +683,7 @@ let r_typo_027 : rule =
         }
     else None
   in
-  { id = "TYPO-027"; run }
+  { id = "TYPO-027"; run; languages = [] }
 
 (* TYPO-028: Use of $$ display math delimiter *)
 let r_typo_028 : rule =
@@ -701,7 +701,7 @@ let r_typo_028 : rule =
         }
     else None
   in
-  { id = "TYPO-028"; run }
+  { id = "TYPO-028"; run; languages = [] }
 
 (* TYPO-029: Non-breaking space after \ref missing *)
 let r_typo_029 : rule =
@@ -726,19 +726,19 @@ let r_typo_029 : rule =
         }
     else None
   in
-  { id = "TYPO-029"; run }
+  { id = "TYPO-029"; run; languages = [] }
 
 (* TYPO-030: UK spelling inconsistency — DEFERRED: requires NLP (see comment
    block before TYPO-019 above) *)
 let r_typo_030 : rule =
   let run _s = None in
-  { id = "TYPO-030"; run }
+  { id = "TYPO-030"; run; languages = [] }
 
 (* TYPO-031: American punctuation placement inside quotes — DEFERRED: requires
    NLP (see comment block before TYPO-019 above) *)
 let r_typo_031 : rule =
   let run _s = None in
-  { id = "TYPO-031"; run }
+  { id = "TYPO-031"; run; languages = [] }
 
 (* TYPO-032: Comma before \cite *)
 let r_typo_032 : rule =
@@ -763,7 +763,7 @@ let r_typo_032 : rule =
         }
     else None
   in
-  { id = "TYPO-032"; run }
+  { id = "TYPO-032"; run; languages = [] }
 
 (* TYPO-033: Abbreviation et.al without space *)
 let r_typo_033 : rule =
@@ -779,7 +779,7 @@ let r_typo_033 : rule =
         }
     else None
   in
-  { id = "TYPO-033"; run }
+  { id = "TYPO-033"; run; languages = [] }
 
 let rules_pilot : rule list =
   [
@@ -836,7 +836,7 @@ let r_typo_034 : rule =
         }
     else None
   in
-  { id = "TYPO-034"; run }
+  { id = "TYPO-034"; run; languages = [] }
 
 (* French punctuation requires NBSP before ; : ! ? *)
 let r_typo_035 : rule =
@@ -857,7 +857,7 @@ let r_typo_035 : rule =
         }
     else None
   in
-  { id = "TYPO-035"; run }
+  { id = "TYPO-035"; run; languages = [] }
 
 (* Suspicious consecutive capitalised words (shouting) *)
 let r_typo_036 : rule =
@@ -883,7 +883,7 @@ let r_typo_036 : rule =
         }
     else None
   in
-  { id = "TYPO-036"; run }
+  { id = "TYPO-036"; run; languages = [] }
 
 (* Space before comma *)
 let r_typo_037 : rule =
@@ -899,7 +899,7 @@ let r_typo_037 : rule =
         }
     else None
   in
-  { id = "TYPO-037"; run }
+  { id = "TYPO-037"; run; languages = [] }
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
@@ -922,7 +922,7 @@ let r_typo_038 : rule =
         }
     else None
   in
-  { id = "TYPO-038"; run }
+  { id = "TYPO-038"; run; languages = [] }
 
 (* Incorrect spacing around \ldots *)
 let r_typo_041 : rule =
@@ -942,7 +942,7 @@ let r_typo_041 : rule =
         }
     else None
   in
-  { id = "TYPO-041"; run }
+  { id = "TYPO-041"; run; languages = [] }
 
 (* Multiple consecutive question marks ?? *)
 let r_typo_042 : rule =
@@ -958,7 +958,7 @@ let r_typo_042 : rule =
         }
     else None
   in
-  { id = "TYPO-042"; run }
+  { id = "TYPO-042"; run; languages = [] }
 
 (* Smart quotes inside verbatim detected *)
 let r_typo_043 : rule =
@@ -979,7 +979,7 @@ let r_typo_043 : rule =
         }
     else None
   in
-  { id = "TYPO-043"; run }
+  { id = "TYPO-043"; run; languages = [] }
 
 (* TYPO-044: Acronym not defined on first use — scan for uppercase sequences of
    2+ letters (e.g., "API", "NASA") and check whether their first occurrence in
@@ -1136,7 +1136,7 @@ let r_typo_044 : rule =
         }
     else None
   in
-  { id = "TYPO-044"; run }
+  { id = "TYPO-044"; run; languages = [] }
 
 (* En-dash used as minus sign in text *)
 let r_typo_048 : rule =
@@ -1157,7 +1157,7 @@ let r_typo_048 : rule =
         }
     else None
   in
-  { id = "TYPO-048"; run }
+  { id = "TYPO-048"; run; languages = [] }
 
 (* Figure space U+2009 used instead of \thinspace macro *)
 let r_typo_051 : rule =
@@ -1173,7 +1173,7 @@ let r_typo_051 : rule =
         }
     else None
   in
-  { id = "TYPO-051"; run }
+  { id = "TYPO-051"; run; languages = [] }
 
 (* Unescaped < or > in text *)
 let r_typo_052 : rule =
@@ -1194,7 +1194,7 @@ let r_typo_052 : rule =
         }
     else None
   in
-  { id = "TYPO-052"; run }
+  { id = "TYPO-052"; run; languages = [] }
 
 (* Unicode leader dots U+22EF forbidden *)
 let r_typo_053 : rule =
@@ -1210,7 +1210,7 @@ let r_typo_053 : rule =
         }
     else None
   in
-  { id = "TYPO-053"; run }
+  { id = "TYPO-053"; run; languages = [] }
 
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
@@ -1233,7 +1233,7 @@ let r_typo_054 : rule =
         }
     else None
   in
-  { id = "TYPO-054"; run }
+  { id = "TYPO-054"; run; languages = [] }
 
 (* Consecutive thin-spaces prohibited *)
 let r_typo_055 : rule =
@@ -1249,7 +1249,7 @@ let r_typo_055 : rule =
         }
     else None
   in
-  { id = "TYPO-055"; run }
+  { id = "TYPO-055"; run; languages = [] }
 
 (* Missing thin-space before degree symbol *)
 let r_typo_057 : rule =
@@ -1272,7 +1272,7 @@ let r_typo_057 : rule =
         }
     else None
   in
-  { id = "TYPO-057"; run }
+  { id = "TYPO-057"; run; languages = [] }
 
 (* Unicode multiplication sign in text *)
 let r_typo_061 : rule =
@@ -1289,7 +1289,7 @@ let r_typo_061 : rule =
         }
     else None
   in
-  { id = "TYPO-061"; run }
+  { id = "TYPO-061"; run; languages = [] }
 
 (* Non-breaking hyphen U+2011 found *)
 let r_typo_063 : rule =
@@ -1305,7 +1305,7 @@ let r_typo_063 : rule =
         }
     else None
   in
-  { id = "TYPO-063"; run }
+  { id = "TYPO-063"; run; languages = [] }
 
 (* URL split across lines without \url{} *)
 let r_typo_039 : rule =
@@ -1328,7 +1328,7 @@ let r_typo_039 : rule =
         }
     else None
   in
-  { id = "TYPO-039"; run }
+  { id = "TYPO-039"; run; languages = [] }
 
 (* Inline math $...$ exceeds 80 characters *)
 let r_typo_040 : rule =
@@ -1353,7 +1353,7 @@ let r_typo_040 : rule =
         }
     else None
   in
-  { id = "TYPO-040"; run }
+  { id = "TYPO-040"; run; languages = [] }
 
 (* Non-ASCII punctuation in math mode *)
 let r_typo_045 : rule =
@@ -1382,7 +1382,7 @@ let r_typo_045 : rule =
         }
     else None
   in
-  { id = "TYPO-045"; run }
+  { id = "TYPO-045"; run; languages = [] }
 
 (* Use of \begin{math} instead of $...$ *)
 let r_typo_046 : rule =
@@ -1400,7 +1400,7 @@ let r_typo_046 : rule =
         }
     else None
   in
-  { id = "TYPO-046"; run }
+  { id = "TYPO-046"; run; languages = [] }
 
 (* Starred \section* used where numbered section expected *)
 let r_typo_047 : rule =
@@ -1416,7 +1416,7 @@ let r_typo_047 : rule =
         }
     else None
   in
-  { id = "TYPO-047"; run }
+  { id = "TYPO-047"; run; languages = [] }
 
 (* Space after opening quote *)
 let r_typo_049 : rule =
@@ -1434,7 +1434,7 @@ let r_typo_049 : rule =
         }
     else None
   in
-  { id = "TYPO-049"; run }
+  { id = "TYPO-049"; run; languages = [] }
 
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
@@ -1457,7 +1457,7 @@ let r_typo_056 : rule =
         }
     else None
   in
-  { id = "TYPO-056"; run }
+  { id = "TYPO-056"; run; languages = [] }
 
 (* Greek homograph letter found in Latin text *)
 let r_typo_058 : rule =
@@ -1481,7 +1481,7 @@ let r_typo_058 : rule =
         }
     else None
   in
-  { id = "TYPO-058"; run }
+  { id = "TYPO-058"; run; languages = [] }
 
 (* TYPO-060: Smart quotes inside lstlisting/verbatim environments *)
 let r_typo_060 : rule =
@@ -1535,7 +1535,7 @@ let r_typo_060 : rule =
         }
     else None
   in
-  { id = "TYPO-060"; run }
+  { id = "TYPO-060"; run; languages = [] }
 
 let rules_vpd_gen : rule list =
   [

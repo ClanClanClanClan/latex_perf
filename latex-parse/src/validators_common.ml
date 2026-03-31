@@ -11,7 +11,20 @@ type result = {
   count : int;
 }
 
-type rule = { id : string; run : string -> result option }
+type rule = {
+  id : string;
+  run : string -> result option;
+  languages : string list;
+      (** Language codes this rule applies to (ISO 639-1). Empty list =
+          universal (fires on all documents). Non-empty = only fires when
+          document language matches. *)
+}
+
+(** Construct a universal rule (fires on all documents). *)
+let mk_rule id run = { id; run; languages = [] }
+
+(** Construct a language-specific rule. *)
+let mk_lang_rule id run langs = { id; run; languages = langs }
 
 (* Helpers *)
 let count_char (s : string) (c : char) : int =

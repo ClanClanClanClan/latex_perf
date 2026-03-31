@@ -17,7 +17,7 @@ let no_tabs : rule =
         }
     else None
   in
-  { id = "no_tabs"; run }
+  { id = "no_tabs"; run; languages = [] }
 
 let require_documentclass : rule =
   let run s =
@@ -46,7 +46,7 @@ let require_documentclass : rule =
             count = 1;
           }
   in
-  { id = "require_documentclass"; run }
+  { id = "require_documentclass"; run; languages = [] }
 
 let unmatched_braces : rule =
   let run s =
@@ -66,7 +66,7 @@ let unmatched_braces : rule =
         }
     else None
   in
-  { id = "unmatched_braces"; run }
+  { id = "unmatched_braces"; run; languages = [] }
 
 let missing_section_title : rule =
   let run s =
@@ -83,7 +83,7 @@ let missing_section_title : rule =
         }
     else None
   in
-  { id = "missing_section_title"; run }
+  { id = "missing_section_title"; run; languages = [] }
 
 let rules_basic : rule list =
   [ no_tabs; require_documentclass; unmatched_braces; missing_section_title ]
@@ -104,7 +104,7 @@ let r_enc_007 : rule =
         }
     else None
   in
-  { id = "ENC-007"; run }
+  { id = "ENC-007"; run; languages = [] }
 
 (* ENC-012: C1 control characters U+0080-009F *)
 let r_enc_012 : rule =
@@ -132,7 +132,7 @@ let r_enc_012 : rule =
         }
     else None
   in
-  { id = "ENC-012"; run }
+  { id = "ENC-012"; run; languages = [] }
 
 (* ENC-017: Soft hyphen U+00AD *)
 let r_enc_017 : rule =
@@ -148,7 +148,7 @@ let r_enc_017 : rule =
         }
     else None
   in
-  { id = "ENC-017"; run }
+  { id = "ENC-017"; run; languages = [] }
 
 (* ENC-020: Invisible formatting marks U+200E (LRM) / U+200F (RLM) *)
 let r_enc_020 : rule =
@@ -166,7 +166,7 @@ let r_enc_020 : rule =
         }
     else None
   in
-  { id = "ENC-020"; run }
+  { id = "ENC-020"; run; languages = [] }
 
 (* ENC-021: Word joiner U+2060 *)
 let r_enc_021 : rule =
@@ -182,7 +182,7 @@ let r_enc_021 : rule =
         }
     else None
   in
-  { id = "ENC-021"; run }
+  { id = "ENC-021"; run; languages = [] }
 
 (* ENC-022: Interlinear annotation chars U+FFF9-FFFB *)
 let r_enc_022 : rule =
@@ -202,7 +202,7 @@ let r_enc_022 : rule =
         }
     else None
   in
-  { id = "ENC-022"; run }
+  { id = "ENC-022"; run; languages = [] }
 
 (* ENC-023: Narrow no-break space U+202F *)
 let r_enc_023 : rule =
@@ -218,7 +218,7 @@ let r_enc_023 : rule =
         }
     else None
   in
-  { id = "ENC-023"; run }
+  { id = "ENC-023"; run; languages = [] }
 
 (* ENC-024: Bidirectional embeddings U+202A-U+202E *)
 let r_enc_024 : rule =
@@ -240,7 +240,7 @@ let r_enc_024 : rule =
         }
     else None
   in
-  { id = "ENC-024"; run }
+  { id = "ENC-024"; run; languages = [] }
 
 (* ENC-001: Non-UTF-8 byte sequence detected *)
 let r_enc_001 : rule =
@@ -295,7 +295,7 @@ let r_enc_001 : rule =
         }
     else None
   in
-  { id = "ENC-001"; run }
+  { id = "ENC-001"; run; languages = [] }
 
 (* ENC-002: BOM U+FEFF present in middle of file *)
 let r_enc_002 : rule =
@@ -314,7 +314,7 @@ let r_enc_002 : rule =
         }
     else None
   in
-  { id = "ENC-002"; run }
+  { id = "ENC-002"; run; languages = [] }
 
 (* ENC-003: LATIN-1 smart quotes detected (bare high bytes 0x91-0x94) *)
 let r_enc_003 : rule =
@@ -346,7 +346,7 @@ let r_enc_003 : rule =
         }
     else None
   in
-  { id = "ENC-003"; run }
+  { id = "ENC-003"; run; languages = [] }
 
 (* ENC-004: Windows-1252 characters outside UTF-8 *)
 let r_enc_004 : rule =
@@ -377,7 +377,7 @@ let r_enc_004 : rule =
         }
     else None
   in
-  { id = "ENC-004"; run }
+  { id = "ENC-004"; run; languages = [] }
 
 (* ENC-013: Mixed CRLF and LF line endings *)
 let r_enc_013 : rule =
@@ -405,7 +405,7 @@ let r_enc_013 : rule =
         }
     else None
   in
-  { id = "ENC-013"; run }
+  { id = "ENC-013"; run; languages = [] }
 
 (* ENC-014: UTF-16 byte-order mark present *)
 let r_enc_014 : rule =
@@ -427,7 +427,7 @@ let r_enc_014 : rule =
         }
     else None
   in
-  { id = "ENC-014"; run }
+  { id = "ENC-014"; run; languages = [] }
 
 (* ENC-008: Private-use codepoint U+E000-F8FF detected *)
 let r_enc_008 : rule =
@@ -460,7 +460,7 @@ let r_enc_008 : rule =
         }
     else None
   in
-  { id = "ENC-008"; run }
+  { id = "ENC-008"; run; languages = [] }
 
 (* ENC-009: Unpaired surrogate code unit U+D800-DFFF in UTF-8 *)
 let r_enc_009 : rule =
@@ -489,7 +489,7 @@ let r_enc_009 : rule =
         }
     else None
   in
-  { id = "ENC-009"; run }
+  { id = "ENC-009"; run; languages = [] }
 
 (* ENC-010: Non-canonical NFC form — detect multi-codepoint sequences that
    should be NFC-normalised. We check for the most common cases: combining acute
@@ -529,7 +529,7 @@ let r_enc_010 : rule =
         }
     else None
   in
-  { id = "ENC-010"; run }
+  { id = "ENC-010"; run; languages = [] }
 
 (* ENC-011: Byte sequence resembles MacRoman encoding — detect byte sequences
    that are valid MacRoman but invalid or unusual UTF-8. Common MacRoman
@@ -575,7 +575,7 @@ let r_enc_011 : rule =
         }
     else None
   in
-  { id = "ENC-011"; run }
+  { id = "ENC-011"; run; languages = [] }
 
 (* ENC-015: Non-NFKC homoglyph character — detect characters that have
    NFKC-equivalent ASCII/Latin forms but appear in their compatibility variant.
@@ -605,7 +605,7 @@ let r_enc_015 : rule =
         }
     else None
   in
-  { id = "ENC-015"; run }
+  { id = "ENC-015"; run; languages = [] }
 
 (* ENC-016: Fullwidth digits U+FF10-FF19 (Arabic numeral look-alikes) *)
 let r_enc_016 : rule =
@@ -633,7 +633,7 @@ let r_enc_016 : rule =
         }
     else None
   in
-  { id = "ENC-016"; run }
+  { id = "ENC-016"; run; languages = [] }
 
 (* ENC-005: Invalid UTF-8 continuation byte *)
 let r_enc_005 : rule =
@@ -699,7 +699,7 @@ let r_enc_005 : rule =
         }
     else None
   in
-  { id = "ENC-005"; run }
+  { id = "ENC-005"; run; languages = [] }
 
 (* ENC-006: Overlong UTF-8 encoding sequence *)
 let r_enc_006 : rule =
@@ -739,7 +739,7 @@ let r_enc_006 : rule =
         }
     else None
   in
-  { id = "ENC-006"; run }
+  { id = "ENC-006"; run; languages = [] }
 
 (* ENC-018: Non-breaking hyphen U+2011 present outside URLs *)
 let r_enc_018 : rule =
@@ -776,7 +776,7 @@ let r_enc_018 : rule =
         }
     else None
   in
-  { id = "ENC-018"; run }
+  { id = "ENC-018"; run; languages = [] }
 
 (* ENC-019: Duplicate combining accents on same base glyph *)
 let r_enc_019 : rule =
@@ -835,7 +835,7 @@ let r_enc_019 : rule =
         }
     else None
   in
-  { id = "ENC-019"; run }
+  { id = "ENC-019"; run; languages = [] }
 
 let rules_enc : rule list =
   [
@@ -896,7 +896,7 @@ let r_char_005 : rule =
         }
     else None
   in
-  { id = "CHAR-005"; run }
+  { id = "CHAR-005"; run; languages = [] }
 
 (* CHAR-006: Backspace U+0008 *)
 let r_char_006 : rule =
@@ -912,7 +912,7 @@ let r_char_006 : rule =
         }
     else None
   in
-  { id = "CHAR-006"; run }
+  { id = "CHAR-006"; run; languages = [] }
 
 (* CHAR-007: Bell/alert U+0007 *)
 let r_char_007 : rule =
@@ -928,7 +928,7 @@ let r_char_007 : rule =
         }
     else None
   in
-  { id = "CHAR-007"; run }
+  { id = "CHAR-007"; run; languages = [] }
 
 (* CHAR-008: Form feed U+000C *)
 let r_char_008 : rule =
@@ -944,7 +944,7 @@ let r_char_008 : rule =
         }
     else None
   in
-  { id = "CHAR-008"; run }
+  { id = "CHAR-008"; run; languages = [] }
 
 (* CHAR-009: Delete U+007F *)
 let r_char_009 : rule =
@@ -960,7 +960,7 @@ let r_char_009 : rule =
         }
     else None
   in
-  { id = "CHAR-009"; run }
+  { id = "CHAR-009"; run; languages = [] }
 
 (* CHAR-013: Bidirectional isolate chars U+2066-U+2069 *)
 let r_char_013 : rule =
@@ -981,7 +981,7 @@ let r_char_013 : rule =
         }
     else None
   in
-  { id = "CHAR-013"; run }
+  { id = "CHAR-013"; run; languages = [] }
 
 (* CHAR-014: Unicode replacement character U+FFFD *)
 let r_char_014 : rule =
@@ -997,7 +997,7 @@ let r_char_014 : rule =
         }
     else None
   in
-  { id = "CHAR-014"; run }
+  { id = "CHAR-014"; run; languages = [] }
 
 (* CHAR-021: Zero-width no-break space U+FEFF inside paragraph (BOM) *)
 let r_char_021 : rule =
@@ -1017,7 +1017,7 @@ let r_char_021 : rule =
         }
     else None
   in
-  { id = "CHAR-021"; run }
+  { id = "CHAR-021"; run; languages = [] }
 
 (* CHAR-015: Emoji detected in source *)
 let r_char_015 : rule =
@@ -1047,7 +1047,7 @@ let r_char_015 : rule =
         }
     else None
   in
-  { id = "CHAR-015"; run }
+  { id = "CHAR-015"; run; languages = [] }
 
 (* CHAR-017: Full-width Latin letters detected *)
 let r_char_017 : rule =
@@ -1080,7 +1080,7 @@ let r_char_017 : rule =
         }
     else None
   in
-  { id = "CHAR-017"; run }
+  { id = "CHAR-017"; run; languages = [] }
 
 (* CHAR-018: Deprecated ligature characters present *)
 let r_char_018 : rule =
@@ -1103,7 +1103,7 @@ let r_char_018 : rule =
         }
     else None
   in
-  { id = "CHAR-018"; run }
+  { id = "CHAR-018"; run; languages = [] }
 
 (* CHAR-022: Deprecated tag characters U+E0000-E007F *)
 let r_char_022 : rule =
@@ -1132,7 +1132,7 @@ let r_char_022 : rule =
         }
     else None
   in
-  { id = "CHAR-022"; run }
+  { id = "CHAR-022"; run; languages = [] }
 
 (* CHAR-016: Double-width CJK punctuation in ASCII context *)
 let r_char_016 : rule =
@@ -1160,7 +1160,7 @@ let r_char_016 : rule =
         }
     else None
   in
-  { id = "CHAR-016"; run }
+  { id = "CHAR-016"; run; languages = [] }
 
 (* CHAR-019: Unicode minus U+2212 in text mode *)
 let r_char_019 : rule =
@@ -1177,7 +1177,7 @@ let r_char_019 : rule =
         }
     else None
   in
-  { id = "CHAR-019"; run }
+  { id = "CHAR-019"; run; languages = [] }
 
 (* CHAR-020: Sharp S in uppercase context — suggest SS *)
 let r_char_020 : rule =
@@ -1215,7 +1215,7 @@ let r_char_020 : rule =
         }
     else None
   in
-  { id = "CHAR-020"; run }
+  { id = "CHAR-020"; run; languages = [] }
 
 (* CHAR-010: Right-to-left mark U+200F outside RTL context *)
 let r_char_010 : rule =
@@ -1244,7 +1244,7 @@ let r_char_010 : rule =
         }
     else None
   in
-  { id = "CHAR-010"; run }
+  { id = "CHAR-010"; run; languages = [] }
 
 (* CHAR-011: Left-to-right mark U+200E unnecessary *)
 let r_char_011 : rule =
@@ -1273,7 +1273,7 @@ let r_char_011 : rule =
         }
     else None
   in
-  { id = "CHAR-011"; run }
+  { id = "CHAR-011"; run; languages = [] }
 
 (* CHAR-012: Zero-width joiner U+200D outside ligature context *)
 let r_char_012 : rule =
@@ -1302,7 +1302,7 @@ let r_char_012 : rule =
         }
     else None
   in
-  { id = "CHAR-012"; run }
+  { id = "CHAR-012"; run; languages = [] }
 
 let rules_char : rule list =
   [
@@ -1342,7 +1342,7 @@ let r_spc_001 : rule =
         }
     else None
   in
-  { id = "SPC-001"; run }
+  { id = "SPC-001"; run; languages = [] }
 
 (* SPC-002: Line containing only whitespace *)
 let r_spc_002 : rule =
@@ -1369,7 +1369,7 @@ let r_spc_002 : rule =
         }
     else None
   in
-  { id = "SPC-002"; run }
+  { id = "SPC-002"; run; languages = [] }
 
 (* SPC-003: Hard tab precedes non-tab text (mixed indent) *)
 let r_spc_003 : rule =
@@ -1396,7 +1396,7 @@ let r_spc_003 : rule =
         }
     else None
   in
-  { id = "SPC-003"; run }
+  { id = "SPC-003"; run; languages = [] }
 
 (* SPC-004: Carriage return U+000D without LF *)
 let r_spc_004 : rule =
@@ -1417,7 +1417,7 @@ let r_spc_004 : rule =
         }
     else None
   in
-  { id = "SPC-004"; run }
+  { id = "SPC-004"; run; languages = [] }
 
 (* SPC-005: Trailing tab at end of line *)
 let r_spc_005 : rule =
@@ -1437,7 +1437,7 @@ let r_spc_005 : rule =
         }
     else None
   in
-  { id = "SPC-005"; run }
+  { id = "SPC-005"; run; languages = [] }
 
 (* SPC-006: Indentation mixes spaces and tabs *)
 let r_spc_006 : rule =
@@ -1467,7 +1467,7 @@ let r_spc_006 : rule =
         }
     else None
   in
-  { id = "SPC-006"; run }
+  { id = "SPC-006"; run; languages = [] }
 
 (* SPC-012: BOM not at file start *)
 let r_spc_012 : rule =
@@ -1486,7 +1486,7 @@ let r_spc_012 : rule =
         }
     else None
   in
-  { id = "SPC-012"; run }
+  { id = "SPC-012"; run; languages = [] }
 
 (* SPC-024: Leading spaces on blank line *)
 let r_spc_024 : rule =
@@ -1512,7 +1512,7 @@ let r_spc_024 : rule =
         }
     else None
   in
-  { id = "SPC-024"; run }
+  { id = "SPC-024"; run; languages = [] }
 
 (* SPC-028: Multiple consecutive ~ (non-breaking spaces) *)
 let r_spc_028 : rule =
@@ -1528,7 +1528,7 @@ let r_spc_028 : rule =
         }
     else None
   in
-  { id = "SPC-028"; run }
+  { id = "SPC-028"; run; languages = [] }
 
 (* SPC-007: Three or more consecutive blank lines *)
 let r_spc_007 : rule =
@@ -1556,7 +1556,7 @@ let r_spc_007 : rule =
         }
     else None
   in
-  { id = "SPC-007"; run }
+  { id = "SPC-007"; run; languages = [] }
 
 (* SPC-008: Paragraph starts with whitespace (indented first line after
    blank) *)
@@ -1591,7 +1591,7 @@ let r_spc_008 : rule =
         }
     else None
   in
-  { id = "SPC-008"; run }
+  { id = "SPC-008"; run; languages = [] }
 
 (* SPC-009: Non-breaking space ~ at line start *)
 let r_spc_009 : rule =
@@ -1614,7 +1614,7 @@ let r_spc_009 : rule =
         }
     else None
   in
-  { id = "SPC-009"; run }
+  { id = "SPC-009"; run; languages = [] }
 
 (* SPC-013: Whitespace-only paragraph *)
 let r_spc_013 : rule =
@@ -1660,7 +1660,7 @@ let r_spc_013 : rule =
         }
     else None
   in
-  { id = "SPC-013"; run }
+  { id = "SPC-013"; run; languages = [] }
 
 (* SPC-014: Mixed LF and CRLF within same file *)
 let r_spc_014 : rule =
@@ -1688,7 +1688,7 @@ let r_spc_014 : rule =
         }
     else None
   in
-  { id = "SPC-014"; run }
+  { id = "SPC-014"; run; languages = [] }
 
 (* SPC-015: Indentation exceeds 8 spaces *)
 let r_spc_015 : rule =
@@ -1712,7 +1712,7 @@ let r_spc_015 : rule =
         }
     else None
   in
-  { id = "SPC-015"; run }
+  { id = "SPC-015"; run; languages = [] }
 
 (* SPC-016: Space before semicolon *)
 let r_spc_016 : rule =
@@ -1729,7 +1729,7 @@ let r_spc_016 : rule =
         }
     else None
   in
-  { id = "SPC-016"; run }
+  { id = "SPC-016"; run; languages = [] }
 
 (* SPC-017: Missing thin space before units — detect patterns like "5cm",
    "100kg", "3.5 GHz" where a number directly adjoins a unit abbreviation
@@ -1761,7 +1761,7 @@ let r_spc_017 : rule =
         }
     else None
   in
-  { id = "SPC-017"; run }
+  { id = "SPC-017"; run; languages = [] }
 
 (* SPC-019: Trailing full-width space U+3000 at line end *)
 let r_spc_019 : rule =
@@ -1784,7 +1784,7 @@ let r_spc_019 : rule =
         }
     else None
   in
-  { id = "SPC-019"; run }
+  { id = "SPC-019"; run; languages = [] }
 
 (* SPC-021: Space before colon *)
 let r_spc_021 : rule =
@@ -1801,7 +1801,7 @@ let r_spc_021 : rule =
         }
     else None
   in
-  { id = "SPC-021"; run }
+  { id = "SPC-021"; run; languages = [] }
 
 (* SPC-025: Space before ellipsis \dots *)
 let r_spc_025 : rule =
@@ -1817,7 +1817,7 @@ let r_spc_025 : rule =
         }
     else None
   in
-  { id = "SPC-025"; run }
+  { id = "SPC-025"; run; languages = [] }
 
 (* SPC-026: Mixed indentation width at same list depth — detect inconsistent
    indentation levels inside list environments (itemize/enumerate/description).
@@ -1866,7 +1866,7 @@ let r_spc_026 : rule =
         }
     else None
   in
-  { id = "SPC-026"; run }
+  { id = "SPC-026"; run; languages = [] }
 
 (* SPC-029: Indentation uses NBSP U+00A0 characters *)
 let r_spc_029 : rule =
@@ -1887,7 +1887,7 @@ let r_spc_029 : rule =
         }
     else None
   in
-  { id = "SPC-029"; run }
+  { id = "SPC-029"; run; languages = [] }
 
 (* SPC-030: Line starts with full-width space U+3000 *)
 let r_spc_030 : rule =
@@ -1909,7 +1909,7 @@ let r_spc_030 : rule =
         }
     else None
   in
-  { id = "SPC-030"; run }
+  { id = "SPC-030"; run; languages = [] }
 
 (* SPC-031: Three spaces after period *)
 let r_spc_031 : rule =
@@ -1926,7 +1926,7 @@ let r_spc_031 : rule =
         }
     else None
   in
-  { id = "SPC-031"; run }
+  { id = "SPC-031"; run; languages = [] }
 
 (* SPC-032: Indentation with mix of NBSP and regular space *)
 let r_spc_032 : rule =
@@ -1963,7 +1963,7 @@ let r_spc_032 : rule =
         }
     else None
   in
-  { id = "SPC-032"; run }
+  { id = "SPC-032"; run; languages = [] }
 
 (* SPC-033: No-break space before em-dash in English text *)
 let r_spc_033 : rule =
@@ -1982,7 +1982,7 @@ let r_spc_033 : rule =
         }
     else None
   in
-  { id = "SPC-033"; run }
+  { id = "SPC-033"; run; languages = [] }
 
 (* SPC-034: Thin-space U+2009 before en-dash *)
 let r_spc_034 : rule =
@@ -2002,7 +2002,7 @@ let r_spc_034 : rule =
         }
     else None
   in
-  { id = "SPC-034"; run }
+  { id = "SPC-034"; run; languages = [] }
 
 (* SPC-035: Leading thin-space U+2009 at start of line *)
 let r_spc_035 : rule =
@@ -2024,7 +2024,7 @@ let r_spc_035 : rule =
         }
     else None
   in
-  { id = "SPC-035"; run }
+  { id = "SPC-035"; run; languages = [] }
 
 (* SPC-010: Two spaces after sentence-ending period *)
 let r_spc_010 : rule =
@@ -2052,7 +2052,7 @@ let r_spc_010 : rule =
         }
     else None
   in
-  { id = "SPC-010"; run }
+  { id = "SPC-010"; run; languages = [] }
 
 (* SPC-018: No space after sentence-ending period (period+uppercase) *)
 let r_spc_018 : rule =
@@ -2076,7 +2076,7 @@ let r_spc_018 : rule =
         }
     else None
   in
-  { id = "SPC-018"; run }
+  { id = "SPC-018"; run; languages = [] }
 
 (* SPC-022: Tab after bullet in \itemize *)
 let r_spc_022 : rule =
@@ -2092,7 +2092,7 @@ let r_spc_022 : rule =
         }
     else None
   in
-  { id = "SPC-022"; run }
+  { id = "SPC-022"; run; languages = [] }
 
 (* SPC-027: Trailing whitespace inside \url{} *)
 let r_spc_027 : rule =
@@ -2122,7 +2122,7 @@ let r_spc_027 : rule =
         }
     else None
   in
-  { id = "SPC-027"; run }
+  { id = "SPC-027"; run; languages = [] }
 
 (* SPC-011: Space before newline inside $$…$$ display *)
 let r_spc_011 : rule =
@@ -2152,7 +2152,7 @@ let r_spc_011 : rule =
         }
     else None
   in
-  { id = "SPC-011"; run }
+  { id = "SPC-011"; run; languages = [] }
 
 (* SPC-020: Tab character inside math mode *)
 let r_spc_020 : rule =
@@ -2184,7 +2184,7 @@ let r_spc_020 : rule =
         }
     else None
   in
-  { id = "SPC-020"; run }
+  { id = "SPC-020"; run; languages = [] }
 
 (* SPC-023: Hard space U+00A0 outside French punctuation context *)
 let r_spc_023 : rule =
@@ -2236,7 +2236,7 @@ let r_spc_023 : rule =
         }
     else None
   in
-  { id = "SPC-023"; run }
+  { id = "SPC-023"; run; languages = [] }
 
 let rules_spc : rule list =
   [
@@ -2334,7 +2334,7 @@ let r_verb_001 : rule =
         }
     else None
   in
-  { id = "VERB-001"; run }
+  { id = "VERB-001"; run; languages = [] }
 
 (* VERB-002: Tab inside verbatim *)
 let r_verb_002 : rule =
@@ -2358,7 +2358,7 @@ let r_verb_002 : rule =
         }
     else None
   in
-  { id = "VERB-002"; run }
+  { id = "VERB-002"; run; languages = [] }
 
 (* VERB-003: Trailing spaces inside verbatim *)
 let r_verb_003 : rule =
@@ -2389,7 +2389,7 @@ let r_verb_003 : rule =
         }
     else None
   in
-  { id = "VERB-003"; run }
+  { id = "VERB-003"; run; languages = [] }
 
 (* VERB-004: Non-ASCII quotes inside verbatim *)
 let r_verb_004 : rule =
@@ -2426,7 +2426,7 @@ let r_verb_004 : rule =
         }
     else None
   in
-  { id = "VERB-004"; run }
+  { id = "VERB-004"; run; languages = [] }
 
 (* VERB-005: Verbatim line > 120 characters *)
 let r_verb_005 : rule =
@@ -2454,7 +2454,7 @@ let r_verb_005 : rule =
         }
     else None
   in
-  { id = "VERB-005"; run }
+  { id = "VERB-005"; run; languages = [] }
 
 (* VERB-006: Inline \verb used for multiline content *)
 let r_verb_006 : rule =
@@ -2503,7 +2503,7 @@ let r_verb_006 : rule =
         }
     else None
   in
-  { id = "VERB-006"; run }
+  { id = "VERB-006"; run; languages = [] }
 
 (* VERB-007: Nested verbatim environment *)
 let r_verb_007 : rule =
@@ -2540,7 +2540,7 @@ let r_verb_007 : rule =
         }
     else None
   in
-  { id = "VERB-007"; run }
+  { id = "VERB-007"; run; languages = [] }
 
 (* VERB-008: lstlisting uses language=none *)
 let r_verb_008 : rule =
@@ -2565,7 +2565,7 @@ let r_verb_008 : rule =
         }
     else None
   in
-  { id = "VERB-008"; run }
+  { id = "VERB-008"; run; languages = [] }
 
 (* VERB-009: Missing caption in minted code block *)
 let r_verb_009 : rule =
@@ -2606,7 +2606,7 @@ let r_verb_009 : rule =
         }
     else None
   in
-  { id = "VERB-009"; run }
+  { id = "VERB-009"; run; languages = [] }
 
 (* VERB-010: Inline code uses back-ticks instead of \verb *)
 let r_verb_010 : rule =
@@ -2632,7 +2632,7 @@ let r_verb_010 : rule =
         }
     else None
   in
-  { id = "VERB-010"; run }
+  { id = "VERB-010"; run; languages = [] }
 
 (* VERB-011: Unknown lstlisting language — detect \begin{lstlisting}[language=X]
    where X is not in the standard set of languages supported by the listings
@@ -2775,7 +2775,7 @@ let r_verb_011 : rule =
         }
     else None
   in
-  { id = "VERB-011"; run }
+  { id = "VERB-011"; run; languages = [] }
 
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
@@ -2809,7 +2809,7 @@ let r_verb_012 : rule =
         }
     else None
   in
-  { id = "VERB-012"; run }
+  { id = "VERB-012"; run; languages = [] }
 
 (* VERB-013: Code line > 120 glyphs — same as VERB-005 but for minted
    specifically *)
@@ -2832,7 +2832,7 @@ let r_verb_013 : rule =
         }
     else None
   in
-  { id = "VERB-013"; run }
+  { id = "VERB-013"; run; languages = [] }
 
 (* VERB-015: Verbatim uses catcode changes instead of \verb *)
 let r_verb_015 : rule =
@@ -2857,7 +2857,7 @@ let r_verb_015 : rule =
         }
     else None
   in
-  { id = "VERB-015"; run }
+  { id = "VERB-015"; run; languages = [] }
 
 (* VERB-016: minted without escapeinside while containing back-ticks *)
 let r_verb_016 : rule =
@@ -2908,7 +2908,7 @@ let r_verb_016 : rule =
         }
     else None
   in
-  { id = "VERB-016"; run }
+  { id = "VERB-016"; run; languages = [] }
 
 (* VERB-017: minted lacks linenos in code block > 20 lines *)
 let r_verb_017 : rule =
@@ -2954,7 +2954,7 @@ let r_verb_017 : rule =
         }
     else None
   in
-  { id = "VERB-017"; run }
+  { id = "VERB-017"; run; languages = [] }
 
 let rules_verb : rule list =
   [
@@ -3005,7 +3005,7 @@ let r_cjk_001 : rule =
         }
     else None
   in
-  { id = "CJK-001"; run }
+  { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-002: Full-width period U+FF0E in ASCII context *)
 let r_cjk_002 : rule =
@@ -3034,7 +3034,7 @@ let r_cjk_002 : rule =
         }
     else None
   in
-  { id = "CJK-002"; run }
+  { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-010: Half-width CJK punctuation in full-width context *)
 (* Detect ASCII comma/period/colon/semicolon adjacent to CJK characters *)
@@ -3063,7 +3063,7 @@ let r_cjk_010 : rule =
         }
     else None
   in
-  { id = "CJK-010"; run }
+  { id = "CJK-010"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-014: Inter-punct U+30FB outside CJK run *)
 let r_cjk_014 : rule =
@@ -3092,7 +3092,7 @@ let r_cjk_014 : rule =
         }
     else None
   in
-  { id = "CJK-014"; run }
+  { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
 
@@ -3122,7 +3122,7 @@ let r_fr_007 : rule =
         }
     else None
   in
-  { id = "FR-007"; run }
+  { id = "FR-007"; run; languages = [ "fr" ] }
 
 (* FR-008: French ligature œ/Œ mandatory *)
 let r_fr_008 : rule =
@@ -3157,7 +3157,7 @@ let r_fr_008 : rule =
         }
     else None
   in
-  { id = "FR-008"; run }
+  { id = "FR-008"; run; languages = [ "fr" ] }
 
 (* PT-003: pt-PT ordinal must use º/ª *)
 let r_pt_003 : rule =
@@ -3183,7 +3183,7 @@ let r_pt_003 : rule =
         }
     else None
   in
-  { id = "PT-003"; run }
+  { id = "PT-003"; run; languages = [ "pt" ] }
 
 (* RU-001: NB-space required before em-dash *)
 let r_ru_001 : rule =
@@ -3200,7 +3200,7 @@ let r_ru_001 : rule =
         }
     else None
   in
-  { id = "RU-001"; run }
+  { id = "RU-001"; run; languages = [ "ru" ] }
 
 (* PL-001: NB-space before abbreviations *)
 let r_pl_001 : rule =
@@ -3226,7 +3226,7 @@ let r_pl_001 : rule =
         }
     else None
   in
-  { id = "PL-001"; run }
+  { id = "PL-001"; run; languages = [ "pl" ] }
 
 (* CS-001: thin NB-space before °C forbidden *)
 let r_cs_001 : rule =
@@ -3252,7 +3252,7 @@ let r_cs_001 : rule =
         }
     else None
   in
-  { id = "CS-001"; run }
+  { id = "CS-001"; run; languages = [ "cs" ] }
 
 (* CS-002: date format must be 30.\,1.\,2026 *)
 let r_cs_002 : rule =
@@ -3284,7 +3284,7 @@ let r_cs_002 : rule =
         }
     else None
   in
-  { id = "CS-002"; run }
+  { id = "CS-002"; run; languages = [ "cs" ] }
 
 (* EL-001: Greek oxia vs tonos normalisation *)
 let r_el_001 : rule =
@@ -3315,7 +3315,7 @@ let r_el_001 : rule =
         }
     else None
   in
-  { id = "EL-001"; run }
+  { id = "EL-001"; run; languages = [ "el" ] }
 
 (* RO-001: use Ș/ș (S-comma) not Ş/ş (S-cedilla) *)
 let r_ro_001 : rule =
@@ -3338,7 +3338,7 @@ let r_ro_001 : rule =
         }
     else None
   in
-  { id = "RO-001"; run }
+  { id = "RO-001"; run; languages = [ "ro" ] }
 
 (* AR-002: ASCII hyphen in phone numbers — use \arabicdash *)
 let r_ar_002 : rule =
@@ -3373,7 +3373,7 @@ let r_ar_002 : rule =
         }
     else None
   in
-  { id = "AR-002"; run }
+  { id = "AR-002"; run; languages = [ "ar" ] }
 
 (* HE-001: apostrophe used instead of geresh U+05F3 *)
 let r_he_001 : rule =
@@ -3406,7 +3406,7 @@ let r_he_001 : rule =
         }
     else None
   in
-  { id = "HE-001"; run }
+  { id = "HE-001"; run; languages = [ "he" ] }
 
 (* ZH-001: western '.' — use Chinese '。' *)
 let r_zh_001 : rule =
@@ -3442,7 +3442,7 @@ let r_zh_001 : rule =
         }
     else None
   in
-  { id = "ZH-001"; run }
+  { id = "ZH-001"; run; languages = [ "zh" ] }
 
 (* JA-001: half-width katakana present — use full-width *)
 let r_ja_001 : rule =
@@ -3471,7 +3471,7 @@ let r_ja_001 : rule =
         }
     else None
   in
-  { id = "JA-001"; run }
+  { id = "JA-001"; run; languages = [ "ja" ] }
 
 (* JA-002: U+FF5E tilde normalise to wave-dash U+301C *)
 let r_ja_002 : rule =
@@ -3488,7 +3488,7 @@ let r_ja_002 : rule =
         }
     else None
   in
-  { id = "JA-002"; run }
+  { id = "JA-002"; run; languages = [ "ja" ] }
 
 (* KO-001: Old-Hangul jamo outside scholarly context *)
 let r_ko_001 : rule =
@@ -3538,7 +3538,7 @@ let r_ko_001 : rule =
         }
     else None
   in
-  { id = "KO-001"; run }
+  { id = "KO-001"; run; languages = [ "ko" ] }
 
 (* HI-001: ZWJ/ZWNJ misuse next to ख् *)
 let r_hi_001 : rule =
@@ -3577,7 +3577,7 @@ let r_hi_001 : rule =
         }
     else None
   in
-  { id = "HI-001"; run }
+  { id = "HI-001"; run; languages = [ "hi" ] }
 
 let rules_locale : rule list =
   [
@@ -3640,7 +3640,7 @@ let r_cy_001 : rule =
         }
     else None
   in
-  { id = "CY-001"; run }
+  { id = "CY-001"; run; languages = [ "ru" ] }
 
 (* DE-006: Swiss DE ß prohibited — use "ss" *)
 let r_de_006 : rule =
@@ -3657,7 +3657,7 @@ let r_de_006 : rule =
         }
     else None
   in
-  { id = "DE-006"; run }
+  { id = "DE-006"; run; languages = [ "de" ] }
 
 (* NL-001: NL digraph IJ/ij — capitalise both at sentence start *)
 let r_nl_001 : rule =
@@ -3690,7 +3690,7 @@ let r_nl_001 : rule =
         }
     else None
   in
-  { id = "NL-001"; run }
+  { id = "NL-001"; run; languages = [ "nl" ] }
 
 (* NL-002: NL quotes must be uniform *)
 let r_nl_002 : rule =
@@ -3716,7 +3716,7 @@ let r_nl_002 : rule =
         }
     else None
   in
-  { id = "NL-002"; run }
+  { id = "NL-002"; run; languages = [ "nl" ] }
 
 (* PL-002: PL primary quotes, nested guillemets only *)
 let r_pl_002 : rule =
@@ -3738,7 +3738,7 @@ let r_pl_002 : rule =
         }
     else None
   in
-  { id = "PL-002"; run }
+  { id = "PL-002"; run; languages = [ "pl" ] }
 
 (* PT-001: pt-BR pre-2009 spellings forbidden *)
 let r_pt_001 : rule =
@@ -3770,7 +3770,7 @@ let r_pt_001 : rule =
         }
     else None
   in
-  { id = "PT-001"; run }
+  { id = "PT-001"; run; languages = [ "pt" ] }
 
 (* RU-002: RU letter ё must be preserved where needed *)
 let r_ru_002 : rule =
@@ -3799,7 +3799,7 @@ let r_ru_002 : rule =
           }
       else None
   in
-  { id = "RU-002"; run }
+  { id = "RU-002"; run; languages = [ "ru" ] }
 
 (* TR-001: TR dotless/dotted I mapping error *)
 let r_tr_001 : rule =
@@ -3840,7 +3840,7 @@ let r_tr_001 : rule =
       else None)
     else None
   in
-  { id = "TR-001"; run }
+  { id = "TR-001"; run; languages = [ "tr" ] }
 
 (* ZH-002: ZH-Hant quotes must be 「…」 or 『…』 consistently *)
 let r_zh_002 : rule =
@@ -3869,7 +3869,7 @@ let r_zh_002 : rule =
         }
     else None
   in
-  { id = "ZH-002"; run }
+  { id = "ZH-002"; run; languages = [ "zh" ] }
 
 (* VERB-014: Code block inside caption *)
 let r_verb_014 : rule =
@@ -3924,7 +3924,7 @@ let r_verb_014 : rule =
         }
     else None
   in
-  { id = "VERB-014"; run }
+  { id = "VERB-014"; run; languages = [] }
 
 (* MATH-064: Use of \eqalign — obsolete *)
 let r_math_064 : rule =
@@ -3940,7 +3940,7 @@ let r_math_064 : rule =
         }
     else None
   in
-  { id = "MATH-064"; run }
+  { id = "MATH-064"; run; languages = [] }
 
 (* MATH-102: Legacy eqnarray (un-starred) environment present *)
 let r_math_102 : rule =
@@ -3956,7 +3956,7 @@ let r_math_102 : rule =
         }
     else None
   in
-  { id = "MATH-102"; run }
+  { id = "MATH-102"; run; languages = [] }
 
 (* MATH-107: Mix of \le and \leqslant within same document *)
 let r_math_107 : rule =
@@ -3975,7 +3975,7 @@ let r_math_107 : rule =
         }
     else None
   in
-  { id = "MATH-107"; run }
+  { id = "MATH-107"; run; languages = [] }
 
 (* L3-008: Expl3 module lacks \ProvidesExplPackage *)
 let r_l3_008 : rule =
@@ -3992,7 +3992,7 @@ let r_l3_008 : rule =
         }
     else None
   in
-  { id = "L3-008"; run }
+  { id = "L3-008"; run; languages = [] }
 
 (* L3-010: \ExplSyntaxOff missing at end of file *)
 let r_l3_010 : rule =
@@ -4009,7 +4009,7 @@ let r_l3_010 : rule =
         }
     else None
   in
-  { id = "L3-010"; run }
+  { id = "L3-010"; run; languages = [] }
 
 (* REF-011: \autoref used without hyperref/cleveref loaded *)
 let r_ref_011 : rule =
@@ -4034,7 +4034,7 @@ let r_ref_011 : rule =
         }
     else None
   in
-  { id = "REF-011"; run }
+  { id = "REF-011"; run; languages = [] }
 
 (* TYPO-050: Inconsistent title-case capitalisation *)
 let r_typo_050 : rule =
@@ -4096,7 +4096,7 @@ let r_typo_050 : rule =
           }
       else None
   in
-  { id = "TYPO-050"; run }
+  { id = "TYPO-050"; run; languages = [] }
 
 let rules_stragglers : rule list =
   [

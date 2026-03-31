@@ -86,7 +86,7 @@ let l1_math_009_rule : rule =
         }
     else None
   in
-  { id = "MATH-009"; run }
+  { id = "MATH-009"; run; languages = [] }
 
 (* MATH-010: Division symbol ÷ (U+00F7) used — prefer \frac or solidus *)
 let l1_math_010_rule : rule =
@@ -107,7 +107,7 @@ let l1_math_010_rule : rule =
         }
     else None
   in
-  { id = "MATH-010"; run }
+  { id = "MATH-010"; run; languages = [] }
 
 (* MATH-011: Vector notation inconsistent within equation — detects when both
    \vec{} and \mathbf{} are used for vectors in the same document *)
@@ -131,7 +131,7 @@ let l1_math_011_rule : rule =
         }
     else None
   in
-  { id = "MATH-011"; run }
+  { id = "MATH-011"; run; languages = [] }
 
 (* MATH-012: Multi-letter function not in roman (\operatorname{}) — detects
    sequences of 2+ lowercase letters in math that look like function names but
@@ -216,7 +216,7 @@ let l1_math_012_rule : rule =
         }
     else None
   in
-  { id = "MATH-012"; run }
+  { id = "MATH-012"; run; languages = [] }
 
 (* MATH-013: Differential d not typeset roman — detects bare 'd' before a
    variable in integrands, e.g. \int f(x) dx where d should be \mathrm{d} *)
@@ -262,7 +262,7 @@ let l1_math_013_rule : rule =
         }
     else None
   in
-  { id = "MATH-013"; run }
+  { id = "MATH-013"; run; languages = [] }
 
 (* MATH-014: Inline \frac in running text — \frac inside $...$ or \(...\) can be
    hard to read *)
@@ -289,7 +289,7 @@ let l1_math_014_rule : rule =
         }
     else None
   in
-  { id = "MATH-014"; run }
+  { id = "MATH-014"; run; languages = [] }
 
 (* MATH-015: \stackrel used — prefer \overset *)
 let l1_math_015_rule : rule =
@@ -309,7 +309,7 @@ let l1_math_015_rule : rule =
         }
     else None
   in
-  { id = "MATH-015"; run }
+  { id = "MATH-015"; run; languages = [] }
 
 (* MATH-016: Nested subscripts without braces — e.g. x_i_j instead of x_{i_j} or
    x_{i,j} *)
@@ -329,7 +329,7 @@ let l1_math_016_rule : rule =
         }
     else None
   in
-  { id = "MATH-016"; run }
+  { id = "MATH-016"; run; languages = [] }
 
 (* MATH-017: Mismatched \left\{ ... \right] pair — left and right delimiters
    don't match type *)
@@ -422,7 +422,7 @@ let l1_math_017_rule : rule =
         }
     else None
   in
-  { id = "MATH-017"; run }
+  { id = "MATH-017"; run; languages = [] }
 
 (* MATH-018: π written numerically as 3.14... in math *)
 let l1_math_018_rule : rule =
@@ -441,7 +441,7 @@ let l1_math_018_rule : rule =
         }
     else None
   in
-  { id = "MATH-018"; run }
+  { id = "MATH-018"; run; languages = [] }
 
 (* MATH-019: Inline stacked ^_ order wrong — same concept as SCRIPT-021 but
    specifically for the pattern where _ immediately follows ^ without braces in
@@ -462,7 +462,7 @@ let l1_math_019_rule : rule =
         }
     else None
   in
-  { id = "MATH-019"; run }
+  { id = "MATH-019"; run; languages = [] }
 
 (* MATH-020: Missing \cdot between coefficient and vector — detects digit
    immediately followed by \vec or \mathbf without \cdot *)
@@ -482,7 +482,7 @@ let l1_math_020_rule : rule =
         }
     else None
   in
-  { id = "MATH-020"; run }
+  { id = "MATH-020"; run; languages = [] }
 
 (* MATH-021: Absolute value bars |x| instead of \lvert ... \rvert *)
 let l1_math_021_rule : rule =
@@ -523,7 +523,7 @@ let l1_math_021_rule : rule =
         }
     else None
   in
-  { id = "MATH-021"; run }
+  { id = "MATH-021"; run; languages = [] }
 
 (* MATH-022: Bold math italic without \bm or \mathbf — detects when \textbf is
    used inside math mode for bold math *)
@@ -544,7 +544,7 @@ let l1_math_022_rule : rule =
         }
     else None
   in
-  { id = "MATH-022"; run }
+  { id = "MATH-022"; run; languages = [] }
 
 (* MATH-025: align environment with one column — use equation instead. Detects
    \begin{align}...\end{align} blocks with no & inside. *)
@@ -577,7 +577,7 @@ let l1_math_025_rule : rule =
         }
     else None
   in
-  { id = "MATH-025"; run }
+  { id = "MATH-025"; run; languages = [] }
 
 (* MATH-028: Array environment inside math without column alignment spec.
    Detects \begin{array} without a brace argument following. *)
@@ -609,7 +609,7 @@ let l1_math_028_rule : rule =
         }
     else None
   in
-  { id = "MATH-028"; run }
+  { id = "MATH-028"; run; languages = [] }
 
 (* MATH-029: Use of eqnarray / eqnarray* instead of align / align*. eqnarray is
    deprecated — spacing around = is wrong. *)
@@ -635,7 +635,7 @@ let l1_math_029_rule : rule =
         }
     else None
   in
-  { id = "MATH-029"; run }
+  { id = "MATH-029"; run; languages = [] }
 
 (* MATH-030: Overuse of \displaystyle in inline math — using \displaystyle in
    $...$ or \(...\) hurts line spacing *)
@@ -656,7 +656,7 @@ let l1_math_030_rule : rule =
         }
     else None
   in
-  { id = "MATH-030"; run }
+  { id = "MATH-030"; run; languages = [] }
 
 (* MATH-031: Operator spacing error — missing \; before \text in math *)
 let l1_math_031_rule : rule =
@@ -679,7 +679,7 @@ let l1_math_031_rule : rule =
         }
     else None
   in
-  { id = "MATH-031"; run }
+  { id = "MATH-031"; run; languages = [] }
 
 (* MATH-033: Use of \pm where +/- symbol required in text — \pm outside math *)
 let l1_math_033_rule : rule =
@@ -696,7 +696,7 @@ let l1_math_033_rule : rule =
         }
     else None
   in
-  { id = "MATH-033"; run }
+  { id = "MATH-033"; run; languages = [] }
 
 (* MATH-034: Spacing before differential in integral missing \, — detects \int
    ... dx without \, before d *)
@@ -755,7 +755,7 @@ let l1_math_034_rule : rule =
         }
     else None
   in
-  { id = "MATH-034"; run }
+  { id = "MATH-034"; run; languages = [] }
 
 (* MATH-035: Multiple subscripts stacked vertically without braces — a_{i}_{j}
    pattern instead of a_{i,j} *)
@@ -775,7 +775,7 @@ let l1_math_035_rule : rule =
         }
     else None
   in
-  { id = "MATH-035"; run }
+  { id = "MATH-035"; run; languages = [] }
 
 (* MATH-036: Superfluous \mathrm{} around single letter — \mathrm{x} is overkill
    for one letter *)
@@ -795,7 +795,7 @@ let l1_math_036_rule : rule =
         }
     else None
   in
-  { id = "MATH-036"; run }
+  { id = "MATH-036"; run; languages = [] }
 
 (* MATH-037: \sfrac (xfrac package) used outside text mode — \sfrac is for
    inline text fractions *)
@@ -816,7 +816,7 @@ let l1_math_037_rule : rule =
         }
     else None
   in
-  { id = "MATH-037"; run }
+  { id = "MATH-037"; run; languages = [] }
 
 (* MATH-038: Nested \frac three levels deep — readability issue *)
 let l1_math_038_rule : rule =
@@ -887,7 +887,7 @@ let l1_math_038_rule : rule =
         }
     else None
   in
-  { id = "MATH-038"; run }
+  { id = "MATH-038"; run; languages = [] }
 
 (* MATH-039: Stacked relational operators without \substack — detects patterns
    like \underset{x}{\overset{y}{=}} which should use \substack *)
@@ -911,7 +911,7 @@ let l1_math_039_rule : rule =
         }
     else None
   in
-  { id = "MATH-039"; run }
+  { id = "MATH-039"; run; languages = [] }
 
 (* MATH-040: Ellipsis \ldots used between operators on the center axis — should
    be \cdots for +, -, = etc. *)
@@ -931,7 +931,7 @@ let l1_math_040_rule : rule =
         }
     else None
   in
-  { id = "MATH-040"; run }
+  { id = "MATH-040"; run; languages = [] }
 
 (* MATH-041: Integral limits written inline in display — use \limits or
    \displaystyle \int for display integrals *)
@@ -955,7 +955,7 @@ let l1_math_041_rule : rule =
         }
     else None
   in
-  { id = "MATH-041"; run }
+  { id = "MATH-041"; run; languages = [] }
 
 (* MATH-042: Missing \, between number and unit in math — e.g. 5kg should be
    5\,\mathrm{kg} *)
@@ -975,7 +975,7 @@ let l1_math_042_rule : rule =
         }
     else None
   in
-  { id = "MATH-042"; run }
+  { id = "MATH-042"; run; languages = [] }
 
 (* MATH-043: Use of \text instead of \operatorname for function names in math —
    \text{Var} should be \operatorname{Var} *)
@@ -1000,7 +1000,7 @@ let l1_math_043_rule : rule =
         }
     else None
   in
-  { id = "MATH-043"; run }
+  { id = "MATH-043"; run; languages = [] }
 
 (* MATH-044: Binary relation typed as text char — e.g. < for \le, = for \equiv,
    etc., when text < > appear in math outside of delimiters *)
@@ -1020,7 +1020,7 @@ let l1_math_044_rule : rule =
         }
     else None
   in
-  { id = "MATH-044"; run }
+  { id = "MATH-044"; run; languages = [] }
 
 (* MATH-045: Math italic capital Greek without \mathrm — e.g. bare \Gamma when
    the document uses upright Greek capitals *)
@@ -1067,7 +1067,7 @@ let l1_math_045_rule : rule =
         }
     else None
   in
-  { id = "MATH-045"; run }
+  { id = "MATH-045"; run; languages = [] }
 
 (* MATH-046: Ellipsis \ldots on relation axis — prefer \cdots between commas, +
    etc. *)
@@ -1087,7 +1087,7 @@ let l1_math_046_rule : rule =
         }
     else None
   in
-  { id = "MATH-046"; run }
+  { id = "MATH-046"; run; languages = [] }
 
 (* MATH-047: Double superscript without braces — a^b^c is a TeX error *)
 let l1_math_047_rule : rule =
@@ -1106,7 +1106,7 @@ let l1_math_047_rule : rule =
         }
     else None
   in
-  { id = "MATH-047"; run }
+  { id = "MATH-047"; run; languages = [] }
 
 (* MATH-048: Boldface digits via \mathbf in math — \mathbf{1} etc. is typically
    unnecessary *)
@@ -1126,7 +1126,7 @@ let l1_math_048_rule : rule =
         }
     else None
   in
-  { id = "MATH-048"; run }
+  { id = "MATH-048"; run; languages = [] }
 
 (* MATH-049: Missing spacing around \times — detects a\times b without
    surrounding spaces *)
@@ -1155,7 +1155,7 @@ let l1_math_049_rule : rule =
         }
     else None
   in
-  { id = "MATH-049"; run }
+  { id = "MATH-049"; run; languages = [] }
 
 (* MATH-050: Circumflex accent \hat on multi-letter argument — \hat{abc} should
    typically be \widehat{abc} *)
@@ -1175,7 +1175,7 @@ let l1_math_050_rule : rule =
         }
     else None
   in
-  { id = "MATH-050"; run }
+  { id = "MATH-050"; run; languages = [] }
 
 (* MATH-051: Radical \sqrt nested two levels — \sqrt{\sqrt{}} is hard to read *)
 let l1_math_051_rule : rule =
@@ -1245,7 +1245,7 @@ let l1_math_051_rule : rule =
         }
     else None
   in
-  { id = "MATH-051"; run }
+  { id = "MATH-051"; run; languages = [] }
 
 (* MATH-052: \over primitive used — prefer \frac{a}{b} over {a \over b} *)
 let l1_math_052_rule : rule =
@@ -1292,7 +1292,7 @@ let l1_math_052_rule : rule =
         }
     else None
   in
-  { id = "MATH-052"; run }
+  { id = "MATH-052"; run; languages = [] }
 
 (* MATH-053: Space after \left( — spurious space *)
 let l1_math_053_rule : rule =
@@ -1326,7 +1326,7 @@ let l1_math_053_rule : rule =
         }
     else None
   in
-  { id = "MATH-053"; run }
+  { id = "MATH-053"; run; languages = [] }
 
 (* ═══════════════════════════════════════════════════════════════════════
    MATH-C validators: extended math checks (MATH-055..MATH-108)
@@ -1349,7 +1349,7 @@ let l1_math_055_rule : rule =
         }
     else None
   in
-  { id = "MATH-055"; run }
+  { id = "MATH-055"; run; languages = [] }
 
 (* MATH-057: Empty fraction numerator or denominator *)
 let l1_math_057_rule : rule =
@@ -1419,7 +1419,7 @@ let l1_math_057_rule : rule =
         }
     else None
   in
-  { id = "MATH-057"; run }
+  { id = "MATH-057"; run; languages = [] }
 
 (* MATH-058: Nested \text inside \text *)
 let l1_math_058_rule : rule =
@@ -1438,7 +1438,7 @@ let l1_math_058_rule : rule =
         }
     else None
   in
-  { id = "MATH-058"; run }
+  { id = "MATH-058"; run; languages = [] }
 
 (* MATH-065: Manual spacing \hspace in math *)
 let l1_math_065_rule : rule =
@@ -1458,7 +1458,7 @@ let l1_math_065_rule : rule =
         }
     else None
   in
-  { id = "MATH-065"; run }
+  { id = "MATH-065"; run; languages = [] }
 
 (* MATH-066: \phantom used; suggest \hphantom or \vphantom *)
 let l1_math_066_rule : rule =
@@ -1483,7 +1483,7 @@ let l1_math_066_rule : rule =
         }
     else None
   in
-  { id = "MATH-066"; run }
+  { id = "MATH-066"; run; languages = [] }
 
 (* MATH-068: Spacing around \mid missing *)
 let l1_math_068_rule : rule =
@@ -1502,7 +1502,7 @@ let l1_math_068_rule : rule =
         }
     else None
   in
-  { id = "MATH-068"; run }
+  { id = "MATH-068"; run; languages = [] }
 
 (* MATH-069: Bold sans-serif math font used *)
 let l1_math_069_rule : rule =
@@ -1526,7 +1526,7 @@ let l1_math_069_rule : rule =
         }
     else None
   in
-  { id = "MATH-069"; run }
+  { id = "MATH-069"; run; languages = [] }
 
 (* MATH-071: Overuse of \cancel in equations — more than 3 per equation *)
 let l1_math_071_rule : rule =
@@ -1548,7 +1548,7 @@ let l1_math_071_rule : rule =
         }
     else None
   in
-  { id = "MATH-071"; run }
+  { id = "MATH-071"; run; languages = [] }
 
 (* MATH-078: Long arrow typed as --> instead of \longrightarrow *)
 let l1_math_078_rule : rule =
@@ -1566,7 +1566,7 @@ let l1_math_078_rule : rule =
         }
     else None
   in
-  { id = "MATH-078"; run }
+  { id = "MATH-078"; run; languages = [] }
 
 (* MATH-079: \displaystyle inside display math — redundant *)
 let l1_math_079_rule : rule =
@@ -1620,7 +1620,7 @@ let l1_math_079_rule : rule =
         }
     else None
   in
-  { id = "MATH-079"; run }
+  { id = "MATH-079"; run; languages = [] }
 
 (* MATH-082: Negative thin space \! misused twice consecutively *)
 let l1_math_082_rule : rule =
@@ -1638,7 +1638,7 @@ let l1_math_082_rule : rule =
         }
     else None
   in
-  { id = "MATH-082"; run }
+  { id = "MATH-082"; run; languages = [] }
 
 (* MATH-085: Use of \eqcirc — rarely acceptable *)
 let l1_math_085_rule : rule =
@@ -1658,7 +1658,7 @@ let l1_math_085_rule : rule =
         }
     else None
   in
-  { id = "MATH-085"; run }
+  { id = "MATH-085"; run; languages = [] }
 
 (* MATH-094: Manual \kern in math detected *)
 let l1_math_094_rule : rule =
@@ -1676,7 +1676,7 @@ let l1_math_094_rule : rule =
         }
     else None
   in
-  { id = "MATH-094"; run }
+  { id = "MATH-094"; run; languages = [] }
 
 (* MATH-105: \textstyle used inside display math — redundant *)
 let l1_math_105_rule : rule =
@@ -1730,7 +1730,7 @@ let l1_math_105_rule : rule =
         }
     else None
   in
-  { id = "MATH-105"; run }
+  { id = "MATH-105"; run; languages = [] }
 
 (* MATH-056: \operatorname duplicated for same function *)
 let l1_math_056_rule : rule =
@@ -1761,7 +1761,7 @@ let l1_math_056_rule : rule =
         }
     else None
   in
-  { id = "MATH-056"; run }
+  { id = "MATH-056"; run; languages = [] }
 
 (* MATH-059: Math accent \bar on group expression needs braces *)
 let l1_math_059_rule : rule =
@@ -1780,7 +1780,7 @@ let l1_math_059_rule : rule =
         }
     else None
   in
-  { id = "MATH-059"; run }
+  { id = "MATH-059"; run; languages = [] }
 
 (* MATH-060: Differential d typeset italic — detect bare d in integral *)
 let l1_math_060_rule : rule =
@@ -1806,7 +1806,7 @@ let l1_math_060_rule : rule =
         }
     else None
   in
-  { id = "MATH-060"; run }
+  { id = "MATH-060"; run; languages = [] }
 
 (* MATH-061: Log base missing braces \log_10x *)
 let l1_math_061_rule : rule =
@@ -1825,7 +1825,7 @@ let l1_math_061_rule : rule =
         }
     else None
   in
-  { id = "MATH-061"; run }
+  { id = "MATH-061"; run; languages = [] }
 
 (* MATH-067: Stacked limits on non-operator *)
 let l1_math_067_rule : rule =
@@ -1885,7 +1885,7 @@ let l1_math_067_rule : rule =
         }
     else None
   in
-  { id = "MATH-067"; run }
+  { id = "MATH-067"; run; languages = [] }
 
 (* MATH-070: Multiline subscripts lack \substack *)
 let l1_math_070_rule : rule =
@@ -1909,7 +1909,7 @@ let l1_math_070_rule : rule =
         }
     else None
   in
-  { id = "MATH-070"; run }
+  { id = "MATH-070"; run; languages = [] }
 
 (* MATH-073: \color used inside math *)
 let l1_math_073_rule : rule =
@@ -1928,7 +1928,7 @@ let l1_math_073_rule : rule =
         }
     else None
   in
-  { id = "MATH-073"; run }
+  { id = "MATH-073"; run; languages = [] }
 
 (* MATH-077: Alignment point & outside alignment environment *)
 let l1_math_077_rule : rule =
@@ -1987,7 +1987,7 @@ let l1_math_077_rule : rule =
         }
     else None
   in
-  { id = "MATH-077"; run }
+  { id = "MATH-077"; run; languages = [] }
 
 (* MATH-081: Improper kerning f(x) — suggest f\!\left(x\right) *)
 let l1_math_081_rule : rule =
@@ -2036,7 +2036,7 @@ let l1_math_081_rule : rule =
         }
     else None
   in
-  { id = "MATH-081"; run }
+  { id = "MATH-081"; run; languages = [] }
 
 (* MATH-084: Displaystyle \sum in inline math *)
 let l1_math_084_rule : rule =
@@ -2060,7 +2060,7 @@ let l1_math_084_rule : rule =
         }
     else None
   in
-  { id = "MATH-084"; run }
+  { id = "MATH-084"; run; languages = [] }
 
 (* MATH-086: Nested root \sqrt{\sqrt{...}} depth > 2 *)
 let l1_math_086_rule : rule =
@@ -2080,7 +2080,7 @@ let l1_math_086_rule : rule =
         }
     else None
   in
-  { id = "MATH-086"; run }
+  { id = "MATH-086"; run; languages = [] }
 
 (* MATH-090: Nested \frac depth > 3 *)
 let l1_math_090_rule : rule =
@@ -2100,7 +2100,7 @@ let l1_math_090_rule : rule =
         }
     else None
   in
-  { id = "MATH-090"; run }
+  { id = "MATH-090"; run; languages = [] }
 
 (* MATH-093: Multi-letter italic variable — suggest \mathit{} *)
 let l1_math_093_rule : rule =
@@ -2168,7 +2168,7 @@ let l1_math_093_rule : rule =
         }
     else None
   in
-  { id = "MATH-093"; run }
+  { id = "MATH-093"; run; languages = [] }
 
 (* MATH-098: Too many \qquad (> 2) in single line *)
 let l1_math_098_rule : rule =
@@ -2192,7 +2192,7 @@ let l1_math_098_rule : rule =
         }
     else None
   in
-  { id = "MATH-098"; run }
+  { id = "MATH-098"; run; languages = [] }
 
 (* MATH-072: Unknown math operator name — \operatorname{X} where X is a
    predefined LaTeX function like \det, \lim, \sin etc. *)
@@ -2270,7 +2270,7 @@ let l1_math_072_rule : rule =
         }
     else None
   in
-  { id = "MATH-072"; run }
+  { id = "MATH-072"; run; languages = [] }
 
 (* MATH-074: TikZ \node inside math without math mode key *)
 let l1_math_074_rule : rule =
@@ -2294,7 +2294,7 @@ let l1_math_074_rule : rule =
         }
     else None
   in
-  { id = "MATH-074"; run }
+  { id = "MATH-074"; run; languages = [] }
 
 (* MATH-087: Fake bold digits via \mathbf{0}...\mathbf{9} *)
 let l1_math_087_rule : rule =
@@ -2313,7 +2313,7 @@ let l1_math_087_rule : rule =
         }
     else None
   in
-  { id = "MATH-087"; run }
+  { id = "MATH-087"; run; languages = [] }
 
 (* MATH-088: Bare \partial lacks thin space *)
 let l1_math_088_rule : rule =
@@ -2332,7 +2332,7 @@ let l1_math_088_rule : rule =
         }
     else None
   in
-  { id = "MATH-088"; run }
+  { id = "MATH-088"; run; languages = [] }
 
 (* MATH-091: \operatorname{X} used when predefined \X exists *)
 let l1_math_091_rule : rule =
@@ -2395,7 +2395,7 @@ let l1_math_091_rule : rule =
         }
     else None
   in
-  { id = "MATH-091"; run }
+  { id = "MATH-091"; run; languages = [] }
 
 (* MATH-092: \sum with explicit limits in inline math *)
 let l1_math_092_rule : rule =
@@ -2414,7 +2414,7 @@ let l1_math_092_rule : rule =
         }
     else None
   in
-  { id = "MATH-092"; run }
+  { id = "MATH-092"; run; languages = [] }
 
 (* MATH-095: Log base without braces — alias of MATH-061 logic *)
 let l1_math_095_rule : rule =
@@ -2433,7 +2433,7 @@ let l1_math_095_rule : rule =
         }
     else None
   in
-  { id = "MATH-095"; run }
+  { id = "MATH-095"; run; languages = [] }
 
 (* MATH-096: Bold Greek via \mathbf — use \boldsymbol *)
 let l1_math_096_rule : rule =
@@ -2493,7 +2493,7 @@ let l1_math_096_rule : rule =
         }
     else None
   in
-  { id = "MATH-096"; run }
+  { id = "MATH-096"; run; languages = [] }
 
 (* MATH-097: Arrow => typed instead of \implies *)
 let l1_math_097_rule : rule =
@@ -2516,7 +2516,7 @@ let l1_math_097_rule : rule =
         }
     else None
   in
-  { id = "MATH-097"; run }
+  { id = "MATH-097"; run; languages = [] }
 
 (* MATH-099: Large operator (\bigcup/\bigcap/\bigoplus) in inline math *)
 let l1_math_099_rule : rule =
@@ -2540,7 +2540,7 @@ let l1_math_099_rule : rule =
         }
     else None
   in
-  { id = "MATH-099"; run }
+  { id = "MATH-099"; run; languages = [] }
 
 (* MATH-101: Deprecated \over primitive used *)
 let l1_math_101_rule : rule =
@@ -2558,7 +2558,7 @@ let l1_math_101_rule : rule =
         }
     else None
   in
-  { id = "MATH-101"; run }
+  { id = "MATH-101"; run; languages = [] }
 
 (* MATH-104: Repeated \left(...\right) pairs without \DeclarePairedDelimiter *)
 let l1_math_104_rule : rule =
@@ -2582,7 +2582,7 @@ let l1_math_104_rule : rule =
         }
     else None
   in
-  { id = "MATH-104"; run }
+  { id = "MATH-104"; run; languages = [] }
 
 (* MATH-106: Misuse of \not= — prefer \neq *)
 let l1_math_106_rule : rule =
@@ -2600,7 +2600,7 @@ let l1_math_106_rule : rule =
         }
     else None
   in
-  { id = "MATH-106"; run }
+  { id = "MATH-106"; run; languages = [] }
 
 (* MATH-108: Middle dot U+00B7 in math — use \cdot *)
 let l1_math_108_rule : rule =
@@ -2620,4 +2620,4 @@ let l1_math_108_rule : rule =
         }
     else None
   in
-  { id = "MATH-108"; run }
+  { id = "MATH-108"; run; languages = [] }

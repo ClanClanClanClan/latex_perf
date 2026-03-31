@@ -92,6 +92,68 @@ def stratified_split(
     return train, dev
 
 
+def stratified_three_way_split(
+    docs: List[Dict],
+    train_ratio: float = 0.70,
+    dev_ratio: float = 0.15,
+    test_ratio: float = 0.15,
+    seed: int = 42,
+) -> Tuple[List[Dict], List[Dict], List[Dict]]:
+    """Split documents into train/dev/test with stratification by primary rule.
+
+    The test split is intended as a **frozen** evaluation set — never tuned
+    against, used only for final metric computation (e.g. Coq proof bounds).
+
+    Ensures every rule ID with >= 3 documents appears in all three splits.
+    Rules with 1-2 documents are duplicated to ensure coverage.
+    """
+    assert abs(train_ratio + dev_ratio + test_ratio - 1.0) < 1e-9, \
+        f"Ratios must sum to 1.0, got {train_ratio + dev_ratio + test_ratio}"
+
+    rng = random.Random(seed)
+
+    rule_groups: Dict[str, List[Dict]] = defaultdict(list)
+    for doc in docs:
+        rule = get_primary_rule(doc)
+        rule_groups[rule].append(doc)
+
+    train, dev, test = [], [], []
+
+    for rule, group in sorted(rule_groups.items()):
+        rng.shuffle(group)
+        n = len(group)
+
+        if n == 1:
+            train.append(group[0])
+            dev.append(group[0])
+            test.append(group[0])
+        elif n == 2:
+            train.append(group[0])
+            dev.append(group[1])
+            test.append(group[1])
+        else:
+            n_train = max(1, int(n * train_ratio))
+            n_dev = max(1, int(n * dev_ratio))
+            n_test = max(1, n - n_train - n_dev)
+            while n_train + n_dev + n_test > n:
+                if n_train > 1:
+                    n_train -= 1
+                elif n_dev > 1:
+                    n_dev -= 1
+            while n_train + n_dev + n_test < n:
+                n_train += 1
+
+            train.extend(group[:n_train])
+            dev.extend(group[n_train:n_train + n_dev])
+            test.extend(group[n_train + n_dev:])
+
+    rng.shuffle(train)
+    rng.shuffle(dev)
+    rng.shuffle(test)
+
+    return train, dev, test
+
+
 def write_jsonl(docs: List[Dict], path: str) -> None:
     """Write documents to JSONL."""
     Path(path).parent.mkdir(parents=True, exist_ok=True)

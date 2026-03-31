@@ -25,6 +25,7 @@
   catcode
   validators_context
   validators_common
+  language_detect
   validators_l0_typo
   validators_l0
   validators_l1_math
@@ -204,6 +205,11 @@
  (name test_metrics_prometheus)
  (modules test_metrics_prometheus)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_language_detect)
+ (modules test_language_detect)
+ (libraries latex_parse_lib))
 
 (test
  (name test_macro_catalogue)

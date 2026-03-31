@@ -2186,7 +2186,7 @@ let l1_rtl_003_rule : rule =
         }
     else None
   in
-  { id = "RTL-003"; run; languages = ["ar"; "he"] }
+  { id = "RTL-003"; run; languages = [ "ar"; "he" ] }
 
 (* RTL-004: RTL punctuation not mirrored in math *)
 let l1_rtl_004_rule : rule =
@@ -2211,7 +2211,7 @@ let l1_rtl_004_rule : rule =
         }
     else None
   in
-  { id = "RTL-004"; run; languages = ["ar"; "he"] }
+  { id = "RTL-004"; run; languages = [ "ar"; "he" ] }
 
 (* CJK-008: Full-width space U+3000 inside math mode *)
 let l1_cjk_008_rule : rule =
@@ -2232,7 +2232,7 @@ let l1_cjk_008_rule : rule =
         }
     else None
   in
-  { id = "CJK-008"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-008"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-015: Chinese comma U+3001 (ideographic comma) inside math mode *)
 let l1_cjk_015_rule : rule =
@@ -2253,7 +2253,7 @@ let l1_cjk_015_rule : rule =
         }
     else None
   in
-  { id = "CJK-015"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-015"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* TYPO-059: Punctuation inside math adjacent to operators — e.g. ,= or ;+ *)
 let l1_typo_059_rule : rule =
@@ -2306,7 +2306,7 @@ let l1_pt_002_rule : rule =
       else None)
     else None
   in
-  { id = "PT-002"; run; languages = ["pt"] }
+  { id = "PT-002"; run; languages = [ "pt" ] }
 
 (* ══════════════════════════════════════════════════════════════════════ L3-*
    rules — LaTeX3 / expl3 style validators (L1_Expanded precondition)

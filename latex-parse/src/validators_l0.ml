@@ -3005,7 +3005,7 @@ let r_cjk_001 : rule =
         }
     else None
   in
-  { id = "CJK-001"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-002: Full-width period U+FF0E in ASCII context *)
 let r_cjk_002 : rule =
@@ -3034,7 +3034,7 @@ let r_cjk_002 : rule =
         }
     else None
   in
-  { id = "CJK-002"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-010: Half-width CJK punctuation in full-width context *)
 (* Detect ASCII comma/period/colon/semicolon adjacent to CJK characters *)
@@ -3063,7 +3063,7 @@ let r_cjk_010 : rule =
         }
     else None
   in
-  { id = "CJK-010"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-010"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* CJK-014: Inter-punct U+30FB outside CJK run *)
 let r_cjk_014 : rule =
@@ -3092,7 +3092,7 @@ let r_cjk_014 : rule =
         }
     else None
   in
-  { id = "CJK-014"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
 
@@ -3122,7 +3122,7 @@ let r_fr_007 : rule =
         }
     else None
   in
-  { id = "FR-007"; run; languages = ["fr"] }
+  { id = "FR-007"; run; languages = [ "fr" ] }
 
 (* FR-008: French ligature œ/Œ mandatory *)
 let r_fr_008 : rule =
@@ -3157,7 +3157,7 @@ let r_fr_008 : rule =
         }
     else None
   in
-  { id = "FR-008"; run; languages = ["fr"] }
+  { id = "FR-008"; run; languages = [ "fr" ] }
 
 (* PT-003: pt-PT ordinal must use º/ª *)
 let r_pt_003 : rule =
@@ -3183,7 +3183,7 @@ let r_pt_003 : rule =
         }
     else None
   in
-  { id = "PT-003"; run; languages = ["pt"] }
+  { id = "PT-003"; run; languages = [ "pt" ] }
 
 (* RU-001: NB-space required before em-dash *)
 let r_ru_001 : rule =
@@ -3200,7 +3200,7 @@ let r_ru_001 : rule =
         }
     else None
   in
-  { id = "RU-001"; run; languages = ["ru"] }
+  { id = "RU-001"; run; languages = [ "ru" ] }
 
 (* PL-001: NB-space before abbreviations *)
 let r_pl_001 : rule =
@@ -3226,7 +3226,7 @@ let r_pl_001 : rule =
         }
     else None
   in
-  { id = "PL-001"; run; languages = ["pl"] }
+  { id = "PL-001"; run; languages = [ "pl" ] }
 
 (* CS-001: thin NB-space before °C forbidden *)
 let r_cs_001 : rule =
@@ -3252,7 +3252,7 @@ let r_cs_001 : rule =
         }
     else None
   in
-  { id = "CS-001"; run; languages = ["cs"] }
+  { id = "CS-001"; run; languages = [ "cs" ] }
 
 (* CS-002: date format must be 30.\,1.\,2026 *)
 let r_cs_002 : rule =
@@ -3284,7 +3284,7 @@ let r_cs_002 : rule =
         }
     else None
   in
-  { id = "CS-002"; run; languages = ["cs"] }
+  { id = "CS-002"; run; languages = [ "cs" ] }
 
 (* EL-001: Greek oxia vs tonos normalisation *)
 let r_el_001 : rule =
@@ -3315,7 +3315,7 @@ let r_el_001 : rule =
         }
     else None
   in
-  { id = "EL-001"; run; languages = ["el"] }
+  { id = "EL-001"; run; languages = [ "el" ] }
 
 (* RO-001: use Ș/ș (S-comma) not Ş/ş (S-cedilla) *)
 let r_ro_001 : rule =
@@ -3338,7 +3338,7 @@ let r_ro_001 : rule =
         }
     else None
   in
-  { id = "RO-001"; run; languages = ["ro"] }
+  { id = "RO-001"; run; languages = [ "ro" ] }
 
 (* AR-002: ASCII hyphen in phone numbers — use \arabicdash *)
 let r_ar_002 : rule =
@@ -3373,7 +3373,7 @@ let r_ar_002 : rule =
         }
     else None
   in
-  { id = "AR-002"; run; languages = ["ar"] }
+  { id = "AR-002"; run; languages = [ "ar" ] }
 
 (* HE-001: apostrophe used instead of geresh U+05F3 *)
 let r_he_001 : rule =
@@ -3406,7 +3406,7 @@ let r_he_001 : rule =
         }
     else None
   in
-  { id = "HE-001"; run; languages = ["he"] }
+  { id = "HE-001"; run; languages = [ "he" ] }
 
 (* ZH-001: western '.' — use Chinese '。' *)
 let r_zh_001 : rule =
@@ -3442,7 +3442,7 @@ let r_zh_001 : rule =
         }
     else None
   in
-  { id = "ZH-001"; run; languages = ["zh"] }
+  { id = "ZH-001"; run; languages = [ "zh" ] }
 
 (* JA-001: half-width katakana present — use full-width *)
 let r_ja_001 : rule =
@@ -3471,7 +3471,7 @@ let r_ja_001 : rule =
         }
     else None
   in
-  { id = "JA-001"; run; languages = ["ja"] }
+  { id = "JA-001"; run; languages = [ "ja" ] }
 
 (* JA-002: U+FF5E tilde normalise to wave-dash U+301C *)
 let r_ja_002 : rule =
@@ -3488,7 +3488,7 @@ let r_ja_002 : rule =
         }
     else None
   in
-  { id = "JA-002"; run; languages = ["ja"] }
+  { id = "JA-002"; run; languages = [ "ja" ] }
 
 (* KO-001: Old-Hangul jamo outside scholarly context *)
 let r_ko_001 : rule =
@@ -3538,7 +3538,7 @@ let r_ko_001 : rule =
         }
     else None
   in
-  { id = "KO-001"; run; languages = ["ko"] }
+  { id = "KO-001"; run; languages = [ "ko" ] }
 
 (* HI-001: ZWJ/ZWNJ misuse next to ख् *)
 let r_hi_001 : rule =
@@ -3577,7 +3577,7 @@ let r_hi_001 : rule =
         }
     else None
   in
-  { id = "HI-001"; run; languages = ["hi"] }
+  { id = "HI-001"; run; languages = [ "hi" ] }
 
 let rules_locale : rule list =
   [
@@ -3640,7 +3640,7 @@ let r_cy_001 : rule =
         }
     else None
   in
-  { id = "CY-001"; run; languages = ["ru"] }
+  { id = "CY-001"; run; languages = [ "ru" ] }
 
 (* DE-006: Swiss DE ß prohibited — use "ss" *)
 let r_de_006 : rule =
@@ -3657,7 +3657,7 @@ let r_de_006 : rule =
         }
     else None
   in
-  { id = "DE-006"; run; languages = ["de"] }
+  { id = "DE-006"; run; languages = [ "de" ] }
 
 (* NL-001: NL digraph IJ/ij — capitalise both at sentence start *)
 let r_nl_001 : rule =
@@ -3690,7 +3690,7 @@ let r_nl_001 : rule =
         }
     else None
   in
-  { id = "NL-001"; run; languages = ["nl"] }
+  { id = "NL-001"; run; languages = [ "nl" ] }
 
 (* NL-002: NL quotes must be uniform *)
 let r_nl_002 : rule =
@@ -3716,7 +3716,7 @@ let r_nl_002 : rule =
         }
     else None
   in
-  { id = "NL-002"; run; languages = ["nl"] }
+  { id = "NL-002"; run; languages = [ "nl" ] }
 
 (* PL-002: PL primary quotes, nested guillemets only *)
 let r_pl_002 : rule =
@@ -3738,7 +3738,7 @@ let r_pl_002 : rule =
         }
     else None
   in
-  { id = "PL-002"; run; languages = ["pl"] }
+  { id = "PL-002"; run; languages = [ "pl" ] }
 
 (* PT-001: pt-BR pre-2009 spellings forbidden *)
 let r_pt_001 : rule =
@@ -3770,7 +3770,7 @@ let r_pt_001 : rule =
         }
     else None
   in
-  { id = "PT-001"; run; languages = ["pt"] }
+  { id = "PT-001"; run; languages = [ "pt" ] }
 
 (* RU-002: RU letter ё must be preserved where needed *)
 let r_ru_002 : rule =
@@ -3799,7 +3799,7 @@ let r_ru_002 : rule =
           }
       else None
   in
-  { id = "RU-002"; run; languages = ["ru"] }
+  { id = "RU-002"; run; languages = [ "ru" ] }
 
 (* TR-001: TR dotless/dotted I mapping error *)
 let r_tr_001 : rule =
@@ -3840,7 +3840,7 @@ let r_tr_001 : rule =
       else None)
     else None
   in
-  { id = "TR-001"; run; languages = ["tr"] }
+  { id = "TR-001"; run; languages = [ "tr" ] }
 
 (* ZH-002: ZH-Hant quotes must be 「…」 or 『…』 consistently *)
 let r_zh_002 : rule =
@@ -3869,7 +3869,7 @@ let r_zh_002 : rule =
         }
     else None
   in
-  { id = "ZH-002"; run; languages = ["zh"] }
+  { id = "ZH-002"; run; languages = [ "zh" ] }
 
 (* VERB-014: Code block inside caption *)
 let r_verb_014 : rule =

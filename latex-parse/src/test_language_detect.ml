@@ -24,43 +24,43 @@ let () =
        {|\documentclass{article}
 \usepackage[french]{babel}
 \begin{document}Bonjour\end{document}|}
-     = "fr");
+    = "fr");
 
   check "babel ngerman"
     (Language_detect.detect_language
        {|\usepackage[ngerman]{babel}
 \begin{document}Hallo\end{document}|}
-     = "de");
+    = "de");
 
   check "babel russian"
     (Language_detect.detect_language
        {|\usepackage[russian]{babel}
 \begin{document}Привет\end{document}|}
-     = "ru");
+    = "ru");
 
   check "babel multi-lang (last is main)"
     (Language_detect.detect_language
        {|\usepackage[english,french]{babel}
 \begin{document}Bonjour\end{document}|}
-     = "fr");
+    = "fr");
 
   check "babel spanish"
     (Language_detect.detect_language
        {|\usepackage[spanish]{babel}
 \begin{document}Hola\end{document}|}
-     = "es");
+    = "es");
 
   check "babel japanese"
     (Language_detect.detect_language
        {|\usepackage[japanese]{babel}
 \begin{document}こんにちは\end{document}|}
-     = "ja");
+    = "ja");
 
   check "babel arabic"
     (Language_detect.detect_language
        {|\usepackage[arabic]{babel}
 \begin{document}مرحبا\end{document}|}
-     = "ar");
+    = "ar");
 
   (* ── Polyglossia detection ───────────────────────────────────────── *)
   check "polyglossia setdefaultlanguage arabic"
@@ -68,50 +68,49 @@ let () =
        {|\usepackage{polyglossia}
 \setdefaultlanguage{arabic}
 \begin{document}مرحبا\end{document}|}
-     = "ar");
+    = "ar");
 
   check "polyglossia setmainlanguage french"
     (Language_detect.detect_language
        {|\usepackage{polyglossia}
 \setmainlanguage{french}
 \begin{document}Bonjour\end{document}|}
-     = "fr");
+    = "fr");
 
   check "polyglossia with options"
     (Language_detect.detect_language
        {|\usepackage{polyglossia}
 \setdefaultlanguage[variant=british]{english}
 \begin{document}Hello\end{document}|}
-     = "en");
+    = "en");
 
   (* ── CJK heuristic ──────────────────────────────────────────────── *)
   check "CJK Chinese characters"
     (Language_detect.detect_language
        {|\documentclass{article}
 \begin{document}这是中文文档。\end{document}|}
-     = "zh");
+    = "zh");
 
   check "katakana -> Japanese"
     (Language_detect.detect_language
        {|\documentclass{article}
 \begin{document}カタカナテスト\end{document}|}
-     = "ja");
+    = "ja");
 
   check "Arabic script -> ar"
     (Language_detect.detect_language
        {|\documentclass{article}
 \begin{document}مرحبا بالعالم\end{document}|}
-     = "ar");
+    = "ar");
 
   (* ── Fallback ────────────────────────────────────────────────────── *)
   check "no language declaration -> en"
     (Language_detect.detect_language
        {|\documentclass{article}
 \begin{document}Hello world\end{document}|}
-     = "en");
+    = "en");
 
-  check "empty document -> en"
-    (Language_detect.detect_language "" = "en");
+  check "empty document -> en" (Language_detect.detect_language "" = "en");
 
   check "pure ASCII no preamble -> en"
     (Language_detect.detect_language "Just some text." = "en");
@@ -121,20 +120,16 @@ let () =
     (Language_detect.detect_language
        {|\usepackage[english]{babel}
 \begin{document}这是中文 but babel says English\end{document}|}
-     = "en");
+    = "en");
 
   (* ── Language pack registry ──────────────────────────────────────── *)
-  check "live packs includes ar"
-    (List.mem "ar" Language_detect.live_packs);
+  check "live packs includes ar" (List.mem "ar" Language_detect.live_packs);
 
-  check "live packs includes ja"
-    (List.mem "ja" Language_detect.live_packs);
+  check "live packs includes ja" (List.mem "ja" Language_detect.live_packs);
 
-  check "live packs includes zh"
-    (List.mem "zh" Language_detect.live_packs);
+  check "live packs includes zh" (List.mem "zh" Language_detect.live_packs);
 
-  check "all_packs >= 21"
-    (List.length Language_detect.all_packs >= 21);
+  check "all_packs >= 21" (List.length Language_detect.all_packs >= 21);
 
   (* ── Babel mapping coverage ──────────────────────────────────────── *)
   check "resolve french"
@@ -151,14 +146,14 @@ let () =
     (Language_detect.detect_language
        {|\documentclass{article}
 \begin{document}한국어 텍스트\end{document}|}
-     = "ko");
+    = "ko");
 
   (* ── Babel with no option falls through ──────────────────────────── *)
   check "babel no language option -> fallback en"
     (Language_detect.detect_language
        {|\usepackage{babel}
 \begin{document}Hello\end{document}|}
-     = "en");
+    = "en");
 
   (* ── CJK in comment should still trigger (known limitation) ──────── *)
   check "CJK only in comment still triggers heuristic"
@@ -166,10 +161,11 @@ let () =
        {|\documentclass{article}
 % 中文注释
 \begin{document}English text only\end{document}|}
-     = "zh");
-  (* NOTE: This is a known limitation — the heuristic scans the full
-     document including comments. To fix, would need to strip comments
-     before heuristic detection. Documenting behavior, not a bug. *)
+    = "zh");
+
+  (* NOTE: This is a known limitation — the heuristic scans the full document
+     including comments. To fix, would need to strip comments before heuristic
+     detection. Documenting behavior, not a bug. *)
 
   (* ── Summary ─────────────────────────────────────────────────────── *)
   Printf.printf "[lang-detect] %d passed, %d failed\n" !pass !fail;

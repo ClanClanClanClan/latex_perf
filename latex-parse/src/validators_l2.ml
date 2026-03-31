@@ -534,7 +534,7 @@ let r_cjk_004 : rule =
       else None
     else None
   in
-  { id = "CJK-004"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-004"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* ── CJK-006: Ruby annotation requires ruby package ─────────────────── *)
 let r_cjk_006 : rule =
@@ -566,7 +566,7 @@ let r_cjk_006 : rule =
       else None
     else None
   in
-  { id = "CJK-006"; run; languages = ["zh"; "ja"; "ko"] }
+  { id = "CJK-006"; run; languages = [ "zh"; "ja"; "ko" ] }
 
 (* ── FONT-006: Missing \microtypesetup{expansion=true} ─────────────── *)
 (* Fire if \usepackage{microtype} is present but \microtypesetup{expansion=true}
@@ -3249,7 +3249,7 @@ let r_rtl_005 : rule =
       else None
     else None
   in
-  { id = "RTL-005"; run; languages = ["ar"; "he"] }
+  { id = "RTL-005"; run; languages = [ "ar"; "he" ] }
 
 (* ── BIB rules: bibliography field / entry hygiene ──────────────── *)
 

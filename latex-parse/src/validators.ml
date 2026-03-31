@@ -159,21 +159,17 @@ let run_all (src : string) : result list =
   in
   go [] (get_rules ())
 
-(** Filter rules by detected or explicit language.
-    Universal rules (languages = []) always run.
-    Locale rules run only if their language list includes the detected lang. *)
+(** Filter rules by detected or explicit language. Universal rules (languages =
+    []) always run. Locale rules run only if their language list includes the
+    detected lang. *)
 let filter_by_language (rules : rule list) (lang : string) : rule list =
-  List.filter (fun r ->
-    r.languages = [] || List.mem lang r.languages
-  ) rules
+  List.filter (fun r -> r.languages = [] || List.mem lang r.languages) rules
 
-(** Run all rules with language gating.
-    If [lang] is [Some "fr"], only universal + French rules run.
-    If [lang] is [None], auto-detect from document content. *)
+(** Run all rules with language gating. If [lang] is [Some "fr"], only universal
+    \+ French rules run. If [lang] is [None], auto-detect from document content. *)
 let run_all_for_language (src : string) (lang : string option) : result list =
-  let detected = match lang with
-    | Some l -> l
-    | None -> Language_detect.detect_language src
+  let detected =
+    match lang with Some l -> l | None -> Language_detect.detect_language src
   in
   let rules = filter_by_language (get_rules ()) detected in
   let rec go acc = function

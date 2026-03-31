@@ -9,7 +9,12 @@ type result = {
   count : int;
 }
 
-type rule = { id : string; run : string -> result option; languages : string list }
+type rule = {
+  id : string;
+  run : string -> result option;
+  languages : string list;
+}
+
 type layer = L0 | L1 | L2 | L3 | L4
 
 val severity_to_string : severity -> string
@@ -22,8 +27,8 @@ val run_all : string -> result list
 
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
-    matching that language (or universal rules) are run. If [None],
-    auto-detects language from the document preamble. *)
+    matching that language (or universal rules) are run. If [None], auto-detects
+    language from the document preamble. *)
 
 val run_all_with_timings : string -> result list * float * (string * float) list
 (** Like {!run_all} but returns [(results, total_ms, per_rule_timings)]. *)

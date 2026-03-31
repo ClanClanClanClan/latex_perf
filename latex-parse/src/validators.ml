@@ -365,6 +365,10 @@ let _prefix_layers : (string * layer) list =
     ("PT-", L1);
     ("L3-", L1);
     ("STYLE-", L4);
+    ("CE-", L4);
+    ("IB-", L4);
+    ("LANG-", L4);
+    ("TH-", L0);
   ]
 
 let precondition_of_rule_id (id : string) : layer =

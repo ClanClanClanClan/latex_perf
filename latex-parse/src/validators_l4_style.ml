@@ -1,17 +1,15 @@
 (* ══════════════════════════════════════════════════════════════════════
    Validators_l4_style — L4 style rules (text-scannable approximations)
 
-   Phase 1 batch: 25 rules (STYLE-004..049), all Info severity.
-   These rules operate on strip_math_segments output so they ignore
-   math-mode content.
+   Phase 1 batch: 25 rules (STYLE-004..049), all Info severity. These rules
+   operate on strip_math_segments output so they ignore math-mode content.
    ══════════════════════════════════════════════════════════════════════ *)
 
 open Validators_common
 
 (* ── Helpers ────────────────────────────────────────────────────────── *)
 
-(** Strip LaTeX comments (lines starting with % or inline % not preceded
-    by \\). *)
+(** Strip LaTeX comments (lines starting with % or inline % not preceded by \\). *)
 let strip_comments (s : string) : string =
   let lines = String.split_on_char '\n' s in
   let strip_line l =
@@ -28,8 +26,8 @@ let strip_comments (s : string) : string =
   in
   String.concat "\n" (List.map strip_line lines)
 
-(** Rough sentence split: split on ". " followed by uppercase or end.
-    Returns list of sentence strings. *)
+(** Rough sentence split: split on ". " followed by uppercase or end. Returns
+    list of sentence strings. *)
 let sentence_split (s : string) : string list =
   let len = String.length s in
   let buf = Buffer.create 256 in
@@ -42,8 +40,9 @@ let sentence_split (s : string) : string list =
       s.[i] = '.'
       && i + 2 < len
       && s.[i + 1] = ' '
-      && let c = s.[i + 2] in
-         c >= 'A' && c <= 'Z'
+      &&
+      let c = s.[i + 2] in
+      c >= 'A' && c <= 'Z'
     then (
       Buffer.add_char buf '.';
       let cur = Buffer.contents buf in
@@ -75,16 +74,11 @@ let word_count (s : string) : int =
 
 (** Extract the body content of \\section{...}, \\subsection{...} etc. *)
 let extract_heading_titles (s : string) : string list =
-  let re =
-    Str.regexp
-      {|\\[sub]*section\*?[ \t\n]*\(\[[^]]*\][ \t\n]*\)?\{|}
-  in
+  let re = Str.regexp {|\\[sub]*section\*?[ \t\n]*\(\[[^]]*\][ \t\n]*\)?\{|} in
   let acc = ref [] in
   let len = String.length s in
   let rec find start =
-    match
-      (try Some (Str.search_forward re s start) with Not_found -> None)
-    with
+    match try Some (Str.search_forward re s start) with Not_found -> None with
     | None -> ()
     | Some _pos ->
         let mend = Str.match_end () in
@@ -92,14 +86,10 @@ let extract_heading_titles (s : string) : string list =
         let depth = ref 1 in
         let j = ref mend in
         while !j < len && !depth > 0 do
-          (match s.[!j] with
-          | '{' -> incr depth
-          | '}' -> decr depth
-          | _ -> ());
+          (match s.[!j] with '{' -> incr depth | '}' -> decr depth | _ -> ());
           if !depth > 0 then incr j
         done;
-        if !depth = 0 then
-          acc := String.sub s mend (!j - mend) :: !acc;
+        if !depth = 0 then acc := String.sub s mend (!j - mend) :: !acc;
         find (!j + 1)
   in
   find 0;
@@ -114,9 +104,7 @@ let split_paragraphs (s : string) : string list =
 (** First word of a sentence after trimming. *)
 let first_word (s : string) : string =
   let s = String.trim s in
-  match String.index_opt s ' ' with
-  | Some i -> String.sub s 0 i
-  | None -> s
+  match String.index_opt s ' ' with Some i -> String.sub s 0 i | None -> s
 
 (* ── Rules ──────────────────────────────────────────────────────────── *)
 
@@ -149,12 +137,10 @@ let r_style_006 : rule =
     let sents = sentence_split text in
     let rec check cnt = function
       | [] | [ _ ] -> cnt
-      | a :: ((b :: _) as rest) ->
+      | a :: (b :: _ as rest) ->
           let wa = String.lowercase_ascii (first_word a) in
           let wb = String.lowercase_ascii (first_word b) in
-          let cnt =
-            if String.length wa > 0 && wa = wb then cnt + 1 else cnt
-          in
+          let cnt = if String.length wa > 0 && wa = wb then cnt + 1 else cnt in
           check cnt rest
     in
     let cnt = check 0 sents in
@@ -226,10 +212,30 @@ let r_style_013 : rule =
 let r_style_014 : rule =
   let contractions =
     [
-      "don't"; "doesn't"; "didn't"; "isn't"; "aren't"; "wasn't"; "weren't";
-      "won't"; "wouldn't"; "couldn't"; "shouldn't"; "can't"; "haven't";
-      "hasn't"; "hadn't"; "it's"; "that's"; "there's"; "they're"; "we're";
-      "you're"; "let's"; "who's"; "what's";
+      "don't";
+      "doesn't";
+      "didn't";
+      "isn't";
+      "aren't";
+      "wasn't";
+      "weren't";
+      "won't";
+      "wouldn't";
+      "couldn't";
+      "shouldn't";
+      "can't";
+      "haven't";
+      "hasn't";
+      "hadn't";
+      "it's";
+      "that's";
+      "there's";
+      "they're";
+      "we're";
+      "you're";
+      "let's";
+      "who's";
+      "what's";
     ]
   in
   let run s =
@@ -323,9 +329,7 @@ let r_style_017 : rule =
 
 (* STYLE-019: Multiple consecutive headings without intervening text *)
 let r_style_019 : rule =
-  let heading_re =
-    Str.regexp {|\\[sub]*section\*?[ \t\n]*\({[^}]*}\)|}
-  in
+  let heading_re = Str.regexp {|\\[sub]*section\*?[ \t\n]*\({[^}]*}\)|} in
   let run s =
     let text = strip_comments s in
     (* Find all heading positions *)
@@ -342,16 +346,14 @@ let r_style_019 : rule =
     (* Check consecutive pairs for intervening non-whitespace text *)
     let rec check cnt = function
       | [] | [ _ ] -> cnt
-      | a :: ((b :: _) as rest) ->
+      | a :: (b :: _ as rest) ->
           (* Find end of first heading *)
           ignore (Str.search_forward heading_re text a);
           let a_end = Str.match_end () in
           (* Check if text between a_end and b is only whitespace *)
           let between = String.sub text a_end (b - a_end) in
           let trimmed = String.trim between in
-          let cnt =
-            if String.length trimmed = 0 then cnt + 1 else cnt
-          in
+          let cnt = if String.length trimmed = 0 then cnt + 1 else cnt in
           check cnt rest
     in
     let cnt = check 0 positions in
@@ -374,8 +376,7 @@ let r_style_023 : rule =
     let len = String.length text in
     let cnt = ref 0 in
     for i = 0 to len - 1 do
-      if text.[i] = '%' then
-        if i = 0 || text.[i - 1] <> '\\' then incr cnt
+      if text.[i] = '%' then if i = 0 || text.[i - 1] <> '\\' then incr cnt
     done;
     if !cnt > 0 then
       Some
@@ -401,8 +402,7 @@ let r_style_024 : rule =
       let len = String.length text in
       let cnt = ref 0 in
       for i = 0 to len - 1 do
-        if text.[i] = '&' then
-          if i = 0 || text.[i - 1] <> '\\' then incr cnt
+        if text.[i] = '&' then if i = 0 || text.[i - 1] <> '\\' then incr cnt
       done;
       if !cnt > 0 then
         Some
@@ -422,15 +422,11 @@ let r_style_026 : rule =
     let text =
       String.lowercase_ascii (strip_comments (strip_math_segments s))
     in
-    let words =
-      Str.split (Str.regexp "[ \t\n\r]+") text
-    in
+    let words = Str.split (Str.regexp "[ \t\n\r]+") text in
     let rec check cnt = function
       | [] | [ _ ] -> cnt
-      | a :: ((b :: _) as rest) ->
-          let cnt =
-            if String.length a > 1 && a = b then cnt + 1 else cnt
-          in
+      | a :: (b :: _ as rest) ->
+          let cnt = if String.length a > 1 && a = b then cnt + 1 else cnt in
           check cnt rest
     in
     let cnt = check 0 words in
@@ -450,9 +446,7 @@ let r_style_026 : rule =
 let r_style_030 : rule =
   let is_titlecase s =
     let words =
-      List.filter
-        (fun w -> String.length w > 3)
-        (String.split_on_char ' ' s)
+      List.filter (fun w -> String.length w > 3) (String.split_on_char ' ' s)
     in
     List.for_all
       (fun w ->
@@ -479,8 +473,7 @@ let r_style_030 : rule =
       let sc_count =
         List.fold_left
           (fun acc t ->
-            if (not (is_titlecase t)) && is_sentencecase t then acc + 1
-            else acc)
+            if (not (is_titlecase t)) && is_sentencecase t then acc + 1 else acc)
           0 titles
       in
       if tc_count > 0 && sc_count > 0 then
@@ -560,8 +553,7 @@ let r_style_034 : rule =
           let words = String.split_on_char ' ' trimmed in
           match List.rev words with
           | last :: _ ->
-              if String.length last > 0 && String.length last <= 2 then
-                acc + 1
+              if String.length last > 0 && String.length last <= 2 then acc + 1
               else acc
           | [] -> acc)
         0 paras
@@ -674,7 +666,7 @@ let r_style_042 : rule =
     let paras = split_paragraphs text in
     let rec check cnt = function
       | [] | [ _ ] -> cnt
-      | a :: ((b :: _) as rest) ->
+      | a :: (b :: _ as rest) ->
           let cnt =
             if word_count a < 15 && word_count b < 15 then cnt + 1 else cnt
           in
@@ -756,8 +748,7 @@ let r_style_048 : rule =
     let cnt =
       List.fold_left
         (fun acc (a, b) ->
-          if contains_substring text a && contains_substring text b then
-            acc + 1
+          if contains_substring text a && contains_substring text b then acc + 1
           else acc)
         0 pairs
     in
@@ -781,8 +772,7 @@ let r_style_049 : rule =
       List.fold_left
         (fun acc t ->
           let t = String.trim t in
-          if String.length t > 0 && t.[String.length t - 1] = ':' then
-            acc + 1
+          if String.length t > 0 && t.[String.length t - 1] = ':' then acc + 1
           else acc)
         0 titles
     in
@@ -797,6 +787,718 @@ let r_style_049 : rule =
     else None
   in
   { id = "STYLE-049"; run }
+
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   2 batch: 14 more STYLE rules + 10 locale/LANG rules
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* STYLE-001: Inconsistent Oxford-comma usage *)
+let r_style_001 : rule =
+  let re_oxford = Str.regexp {|, [a-zA-Z]+, and |} in
+  let re_no_oxford = Str.regexp {|, [a-zA-Z]+ and |} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let has_oxford =
+      try
+        ignore (Str.search_forward re_oxford text 0);
+        true
+      with Not_found -> false
+    in
+    let has_no_oxford =
+      try
+        ignore (Str.search_forward re_no_oxford text 0);
+        true
+      with Not_found -> false
+    in
+    if has_oxford && has_no_oxford then
+      Some
+        {
+          id = "STYLE-001";
+          severity = Info;
+          message = "Inconsistent Oxford-comma usage";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-001"; run }
+
+(* STYLE-002: Mixed UK and US spelling *)
+let r_style_002 : rule =
+  let pairs =
+    [
+      ("colour", "color");
+      ("favour", "favor");
+      ("honour", "honor");
+      ("labour", "labor");
+      ("analyse", "analyze");
+      ("organise", "organize");
+      ("realise", "realize");
+      ("defence", "defense");
+      ("licence", "license");
+      ("centre", "center");
+      ("metre", "meter");
+      ("programme", "program");
+    ]
+  in
+  let run s =
+    let text =
+      String.lowercase_ascii (strip_comments (strip_math_segments s))
+    in
+    let cnt =
+      List.fold_left
+        (fun acc (uk, us) ->
+          if contains_substring text uk && contains_substring text us then
+            acc + 1
+          else acc)
+        0 pairs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "STYLE-002";
+          severity = Info;
+          message = "Mixed UK and US spelling detected";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "STYLE-002"; run }
+
+(* STYLE-005: First-person 'we' inconsistent with 'I' *)
+let r_style_005 : rule =
+  let re_we = Str.regexp {|\bwe \|We |} in
+  let re_i = Str.regexp {| I \| I,\| I\.|^I |} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let has_we =
+      try
+        ignore (Str.search_forward re_we text 0);
+        true
+      with Not_found -> false
+    in
+    let has_i =
+      try
+        ignore (Str.search_forward re_i text 0);
+        true
+      with Not_found -> false
+    in
+    if has_we && has_i then
+      Some
+        {
+          id = "STYLE-005";
+          severity = Info;
+          message = "First-person pronoun inconsistent (mixed 'we' and 'I')";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-005"; run }
+
+(* STYLE-007: Bullet-list items inconsistent punctuation *)
+let r_style_007 : rule =
+  let re_item = Str.regexp {|\\item\([^\\]*\)|} in
+  let run s =
+    let text = strip_comments s in
+    let items = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_item text !start);
+         let body = String.trim (Str.matched_group 1 text) in
+         if String.length body > 0 then items := body :: !items;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let items = !items in
+    if List.length items < 2 then None
+    else
+      let ends_with_punct s =
+        let c = s.[String.length s - 1] in
+        c = '.' || c = ';' || c = ','
+      in
+      let with_p =
+        List.fold_left
+          (fun acc it -> if ends_with_punct it then acc + 1 else acc)
+          0 items
+      in
+      let without_p = List.length items - with_p in
+      if with_p > 0 && without_p > 0 then
+        Some
+          {
+            id = "STYLE-007";
+            severity = Info;
+            message = "Bullet-list items have inconsistent punctuation";
+            count = min with_p without_p;
+          }
+      else None
+  in
+  { id = "STYLE-007"; run }
+
+(* STYLE-009: Citation style mixes parenthetical and narrative *)
+let r_style_009 : rule =
+  let run s =
+    let text = strip_comments s in
+    let has_cite = contains_substring text "\\cite{" in
+    let has_citep =
+      contains_substring text "\\citep{"
+      || contains_substring text "\\parencite{"
+    in
+    let has_citet =
+      contains_substring text "\\citet{"
+      || contains_substring text "\\textcite{"
+    in
+    if has_cite && (has_citep || has_citet) then
+      Some
+        {
+          id = "STYLE-009";
+          severity = Info;
+          message = "Mixed citation styles (\\cite with \\citep/\\citet)";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-009"; run }
+
+(* STYLE-010: First-person singular 'I' in multi-author paper *)
+let r_style_010 : rule =
+  let re_i = Str.regexp {| I \| I,\| I\.|^I |} in
+  let re_multi = Str.regexp {|\\author{[^}]*and[^}]*}|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let multi =
+      try
+        ignore (Str.search_forward re_multi s 0);
+        true
+      with Not_found -> false
+    in
+    let has_i =
+      try
+        ignore (Str.search_forward re_i text 0);
+        true
+      with Not_found -> false
+    in
+    if multi && has_i then
+      Some
+        {
+          id = "STYLE-010";
+          severity = Info;
+          message = "First-person 'I' in multi-author paper";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-010"; run }
+
+(* STYLE-011: Hyphen vs en-dash inconsistency in ranges *)
+let r_style_011 : rule =
+  let re_hyphen_range = Str.regexp {|[0-9]-[0-9]|} in
+  let re_endash_range = Str.regexp {|[0-9]--[0-9]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let has_hyphen =
+      try
+        ignore (Str.search_forward re_hyphen_range text 0);
+        true
+      with Not_found -> false
+    in
+    let has_endash =
+      try
+        ignore (Str.search_forward re_endash_range text 0);
+        true
+      with Not_found -> false
+    in
+    if has_hyphen && has_endash then
+      Some
+        {
+          id = "STYLE-011";
+          severity = Info;
+          message = "Hyphen vs en-dash inconsistency in number ranges";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-011"; run }
+
+(* STYLE-018: Dangling reference word 'this' *)
+let r_style_018 : rule =
+  let re =
+    Str.regexp {|[Tt]his \(is\|was\|has\|shows\|suggests\|means\|implies\) |}
+  in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-018";
+          severity = Info;
+          message = "Dangling 'this' without noun";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-018"; run }
+
+(* STYLE-020: Acronym defined but never used *)
+let r_style_020 : rule =
+  let re_def = Str.regexp {|(\([A-Z][A-Z]+\))|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let defs = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_def text !start);
+         let acr = Str.matched_group 1 text in
+         defs := acr :: !defs;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let cnt =
+      List.fold_left
+        (fun acc acr ->
+          (* Count uses outside the definition *)
+          let n = count_substring text acr in
+          (* Subtract 1 for the definition itself *)
+          if n <= 1 then acc + 1 else acc)
+        0 !defs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "STYLE-020";
+          severity = Info;
+          message = "Acronym defined but never used";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "STYLE-020"; run }
+
+(* STYLE-021: Acronym used before definition *)
+let r_style_021 : rule =
+  let re_def = Str.regexp {|(\([A-Z][A-Z]+\))|} in
+  let re_acr = Str.regexp {|[^a-zA-Z]\([A-Z][A-Z][A-Z]+\)[^a-zA-Z]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    (* Find first definition *)
+    let first_def_pos = ref max_int in
+    let acr_name = ref "" in
+    (try
+       ignore (Str.search_forward re_def text 0);
+       first_def_pos := Str.match_beginning ();
+       acr_name := Str.matched_group 1 text
+     with Not_found -> ());
+    if !first_def_pos = max_int then None
+    else
+      (* Check if the acronym appears before definition *)
+      let used_before =
+        try
+          let pos = Str.search_forward re_acr text 0 in
+          let found = Str.matched_group 1 text in
+          pos < !first_def_pos && found = !acr_name
+        with Not_found -> false
+      in
+      if used_before then
+        Some
+          {
+            id = "STYLE-021";
+            severity = Info;
+            message = "Acronym used before definition";
+            count = 1;
+          }
+      else None
+  in
+  { id = "STYLE-021"; run }
+
+(* STYLE-022: Serial comma missing in three-item list *)
+let r_style_022 : rule =
+  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-022";
+          severity = Info;
+          message = "Serial comma missing in three-item list";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-022"; run }
+
+(* STYLE-025: Run-on sentence detected *)
+let r_style_025 : rule =
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let sents = sentence_split text in
+    let cnt =
+      List.fold_left
+        (fun acc sent -> if word_count sent > 60 then acc + 1 else acc)
+        0 sents
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "STYLE-025";
+          severity = Info;
+          message = "Run-on sentence detected (> 60 words)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "STYLE-025"; run }
+
+(* STYLE-027: Overuse of adverbs (-ly > 5% of words) *)
+let r_style_027 : rule =
+  let re_ly = Str.regexp {|[a-zA-Z]+ly |} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let total = word_count text in
+    if total < 50 then None
+    else
+      let cnt = ref 0 in
+      let start = ref 0 in
+      (try
+         while true do
+           ignore (Str.search_forward re_ly text !start);
+           incr cnt;
+           start := Str.match_end ()
+         done
+       with Not_found -> ());
+      let ratio = float_of_int !cnt /. float_of_int total in
+      if ratio > 0.05 then
+        Some
+          {
+            id = "STYLE-027";
+            severity = Info;
+            message =
+              Printf.sprintf "Overuse of adverbs (%.1f%% -ly words)"
+                (ratio *. 100.0);
+            count = !cnt;
+          }
+      else None
+  in
+  { id = "STYLE-027"; run }
+
+(* STYLE-028: Equation referenced without adjoining punctuation *)
+let r_style_028 : rule =
+  let re = Str.regexp {|\\eqref{[^}]*} [A-Za-z]|} in
+  let run s =
+    let text = strip_comments s in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-028";
+          severity = Info;
+          message = "Equation reference without adjoining punctuation";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-028"; run }
+
+(* ── Locale / LANG rules ───────────────────────────────────────────── *)
+
+(* CE-001: Canadian EN mixes BrE colour with AmE color *)
+let r_ce_001 : rule =
+  let pairs =
+    [ ("colour", "color"); ("favour", "favor"); ("centre", "center") ]
+  in
+  let run s =
+    let text =
+      String.lowercase_ascii (strip_comments (strip_math_segments s))
+    in
+    let cnt =
+      List.fold_left
+        (fun acc (uk, us) ->
+          if contains_substring text uk && contains_substring text us then
+            acc + 1
+          else acc)
+        0 pairs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CE-001";
+          severity = Info;
+          message = "Canadian EN: mixes BrE and AmE spelling";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CE-001"; run }
+
+(* CE-002: Canadian EN requires Oxford comma *)
+let r_ce_002 : rule =
+  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "CE-002";
+          severity = Info;
+          message = "Canadian EN: Oxford comma must always be used";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CE-002"; run }
+
+(* TH-001: Thai leading vowels at line break need non-breaking space *)
+let r_th_001 : rule =
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 then
+            (* Thai leading vowels: U+0E40-0E44 = E0 B9 80..84 *)
+            let b0 = Char.code line.[0] in
+            let b1 = Char.code line.[1] in
+            let b2 = Char.code line.[2] in
+            if b0 = 0xe0 && b1 = 0xb9 && b2 >= 0x80 && b2 <= 0x84 then acc + 1
+            else acc
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TH-001";
+          severity = Info;
+          message = "Thai leading vowel at line start needs \\nobreakspace";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "TH-001"; run }
+
+(* IB-001: Brochure mixes pt-BR 'voce' with es-ES 'tu' *)
+let r_ib_001 : rule =
+  let voce = "voc\xc3\xaa" in
+  (* U+00EA = ê *)
+  let run s =
+    let text = String.lowercase_ascii (strip_comments s) in
+    let has_voce = contains_substring text voce in
+    let has_tu =
+      contains_substring text " tu " || contains_substring text " t\xc3\xba "
+    in
+    if has_voce && has_tu then
+      Some
+        {
+          id = "IB-001";
+          severity = Info;
+          message = {|Brochure mixes pt-BR 'você' with es-ES 'tú'|};
+          count = 1;
+        }
+    else None
+  in
+  { id = "IB-001"; run }
+
+(* LANG-003: Mixed French/English punctuation spacing *)
+let r_lang_003 : rule =
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    (* French: space before ; : ! ? *)
+    let fr_style =
+      contains_substring text " ;" || contains_substring text " :"
+    in
+    (* English: no space before ; : *)
+    let en_style =
+      contains_substring text ";\n" || contains_substring text ": "
+    in
+    let has_both = fr_style && en_style in
+    if has_both then
+      Some
+        {
+          id = "LANG-003";
+          severity = Info;
+          message = "Mixed French/English punctuation spacing";
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-003"; run }
+
+(* LANG-011: French quotes absent — should use \og ... \fg{} *)
+let r_lang_011 : rule =
+  let run s =
+    let has_french_babel =
+      contains_substring s "\\usepackage[french]{babel}"
+      || contains_substring s "\\usepackage[francais]{babel}"
+      || contains_substring s "{french}" (* polyglossia *)
+    in
+    if not has_french_babel then None
+    else
+      let text = strip_comments (strip_math_segments s) in
+      let has_ascii_quotes =
+        contains_substring text {|"|} || contains_substring text {|``|}
+      in
+      if has_ascii_quotes then
+        Some
+          {
+            id = "LANG-011";
+            severity = Info;
+            message = "French document uses ASCII quotes — use \\og ... \\fg{}";
+            count = 1;
+          }
+      else None
+  in
+  { id = "LANG-011"; run }
+
+(* LANG-012: babel language option mismatches \selectlanguage *)
+let r_lang_012 : rule =
+  let re_babel = Str.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
+  let re_select = Str.regexp {|\\selectlanguage{\([a-z]+\)}|} in
+  let run s =
+    let babel_lang =
+      try
+        ignore (Str.search_forward re_babel s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    let select_lang =
+      try
+        ignore (Str.search_forward re_select s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    match (babel_lang, select_lang) with
+    | Some b, Some sl when b <> sl ->
+        Some
+          {
+            id = "LANG-012";
+            severity = Info;
+            message =
+              Printf.sprintf
+                "babel language '%s' mismatches \\selectlanguage{'%s'}" b sl;
+            count = 1;
+          }
+    | _ -> None
+  in
+  { id = "LANG-012"; run }
+
+(* LANG-014: BrE -ize/-ise inconsistency *)
+let r_lang_014 : rule =
+  let re_ize = Str.regexp {|[a-z]ize[ds .,\n]|} in
+  let re_ise = Str.regexp {|[a-z]ise[ds .,\n]|} in
+  let run s =
+    let text =
+      String.lowercase_ascii (strip_comments (strip_math_segments s))
+    in
+    let has_ize =
+      try
+        ignore (Str.search_forward re_ize text 0);
+        true
+      with Not_found -> false
+    in
+    let has_ise =
+      try
+        ignore (Str.search_forward re_ise text 0);
+        true
+      with Not_found -> false
+    in
+    if has_ize && has_ise then
+      Some
+        {
+          id = "LANG-014";
+          severity = Info;
+          message = "BrE -ize/-ise ending inconsistency";
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-014"; run }
+
+(* LANG-015: Serial-comma rule violated *)
+let r_lang_015 : rule =
+  (* Reuses STYLE-022 logic but as LANG-level rule *)
+  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LANG-015";
+          severity = Info;
+          message = "Serial-comma rule violated (per style)";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LANG-015"; run }
+
+(* LANG-016: 'programme'/'program' inconsistency in BrE text *)
+let r_lang_016 : rule =
+  let run s =
+    let text =
+      String.lowercase_ascii (strip_comments (strip_math_segments s))
+    in
+    let has_programme = contains_substring text "programme" in
+    let has_program =
+      contains_substring text "program "
+      || contains_substring text "program,"
+      || contains_substring text "program."
+    in
+    if has_programme && has_program then
+      Some
+        {
+          id = "LANG-016";
+          severity = Info;
+          message = "'programme'/'program' inconsistency in text";
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-016"; run }
 
 (* ── Exported rules list ────────────────────────────────────────────── *)
 
@@ -827,4 +1529,30 @@ let rules_style : rule list =
     r_style_046;
     r_style_048;
     r_style_049;
+    (* Phase 2 *)
+    r_style_001;
+    r_style_002;
+    r_style_005;
+    r_style_007;
+    r_style_009;
+    r_style_010;
+    r_style_011;
+    r_style_018;
+    r_style_020;
+    r_style_021;
+    r_style_022;
+    r_style_025;
+    r_style_027;
+    r_style_028;
+    (* Locale / LANG *)
+    r_ce_001;
+    r_ce_002;
+    r_th_001;
+    r_ib_001;
+    r_lang_003;
+    r_lang_011;
+    r_lang_012;
+    r_lang_014;
+    r_lang_015;
+    r_lang_016;
   ]

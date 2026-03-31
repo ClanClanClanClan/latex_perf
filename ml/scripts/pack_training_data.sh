@@ -39,8 +39,12 @@ tar czf "$OUT" \
     ml/data/split_data.py \
     ml/data/feature_extract.py \
     ml/data/parser_state.py \
+    ml/data/candidate_extractor.py \
+    ml/data/build_candidate_dataset.py \
     ml/data/__init__.py \
     ml/models/bert_crf.py \
+    ml/models/byte_classifier.py \
+    ml/models/train_byte_classifier.py \
     ml/models/__init__.py \
     ml/evaluate.py \
     ml/export_eval.py \

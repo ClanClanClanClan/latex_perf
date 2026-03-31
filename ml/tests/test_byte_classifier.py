@@ -246,5 +246,25 @@ class TestByteClassifier(unittest.TestCase):
         )
 
 
+    @skipUnlessTorch
+    def test_zero_width_anchor_fallback(self):
+        """Zero-width anchor (start == end) should fall back to global mean pooling,
+        not crash or produce NaN. This path fires if candidate extraction produces
+        degenerate spans."""
+        model = _build_model()
+        model.eval()
+        byte_input, _, _, rule_id, parser_features = _make_batch(batch_size=2)
+        # Set anchor_start == anchor_end (zero-width)
+        anchor_start = torch.tensor([64, 64])
+        anchor_end = torch.tensor([64, 64])  # zero-width
+        with torch.no_grad():
+            out = model(byte_input, anchor_start, anchor_end, rule_id, parser_features)
+        self.assertEqual(out.shape, (2,))
+        self.assertTrue(torch.all(out >= 0) and torch.all(out <= 1),
+                        f"Output out of [0,1] range with zero-width anchor: {out}")
+        self.assertFalse(torch.any(torch.isnan(out)),
+                         "NaN with zero-width anchor")
+
+
 if __name__ == "__main__":
     unittest.main()

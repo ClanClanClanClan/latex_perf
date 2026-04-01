@@ -3988,6 +3988,974 @@ let r_tikz_005 : rule =
   in
   { id = "TIKZ-005"; run; languages = [] }
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   3: L3-approximable rules (20 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* BIB-001: Entry missing DOI or ISBN/ISSN *)
+let r_bib_001 : rule =
+  let re_entry = Str.regexp {|@[a-zA-Z]+{[^,]+,|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_entry s !start);
+         let entry_start = Str.match_end () in
+         (* find end of entry: next @ at line start or end of string *)
+         let entry_end =
+           try Str.search_forward (Str.regexp_string "\n@") s entry_start
+           with Not_found -> String.length s
+         in
+         let entry = String.sub s entry_start (entry_end - entry_start) in
+         let has_doi = contains_substring entry "doi" in
+         let has_isbn =
+           contains_substring entry "isbn" || contains_substring entry "issn"
+         in
+         if (not has_doi) && not has_isbn then incr cnt;
+         start := entry_end
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-001";
+          severity = Warning;
+          message = "Bibliography entry missing DOI or ISBN/ISSN";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "BIB-001" run
+
+(* BIB-007: Duplicate DOI across entries *)
+let r_bib_007 : rule =
+  let re_doi = Str.regexp {|doi *= *{?\([^},]+\)}?|} in
+  let run s =
+    let dois = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_doi s !start);
+         let doi = String.trim (Str.matched_group 1 s) in
+         dois := doi :: !dois;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let sorted = List.sort String.compare !dois in
+    let rec count_dups cnt = function
+      | [] | [ _ ] -> cnt
+      | a :: (b :: _ as rest) ->
+          count_dups (if a = b then cnt + 1 else cnt) rest
+    in
+    let cnt = count_dups 0 sorted in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-007";
+          severity = Warning;
+          message = "Duplicate DOI appears in more than one entry";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "BIB-007" run
+
+(* BIB-013: Title capitalisation incorrect for bibliography style *)
+let r_bib_013 : rule =
+  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_title s !start);
+         let title = Str.matched_group 1 s in
+         (* Check for sentence-case violation: multiple capitalised words not
+            protected by braces *)
+         let words = String.split_on_char ' ' title in
+         let cap_words =
+           List.filter
+             (fun w ->
+               String.length w > 3
+               && w.[0] >= 'A'
+               && w.[0] <= 'Z'
+               && not (w.[0] = '{'))
+             words
+         in
+         if List.length cap_words > 3 then incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-013";
+          severity = Info;
+          message =
+            "Title capitalisation incorrect for selected bibliography style";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "BIB-013" run
+
+(* BIB-014: Duplicate author-year key *)
+let r_bib_014 : rule =
+  let re_author = Str.regexp {|author *= *{\([^}]+\)}|} in
+  let re_year = Str.regexp {|year *= *{\([^}]+\)}|} in
+  let run s =
+    let entries = Str.split (Str.regexp "\n@") s in
+    let keys = ref [] in
+    List.iter
+      (fun entry ->
+        let author =
+          try
+            ignore (Str.search_forward re_author entry 0);
+            Str.matched_group 1 entry
+          with Not_found -> ""
+        in
+        let year =
+          try
+            ignore (Str.search_forward re_year entry 0);
+            Str.matched_group 1 entry
+          with Not_found -> ""
+        in
+        if author <> "" && year <> "" then
+          keys := (author ^ ":" ^ year) :: !keys)
+      entries;
+    let sorted = List.sort String.compare !keys in
+    let rec count_dups cnt = function
+      | [] | [ _ ] -> cnt
+      | a :: (b :: _ as rest) ->
+          count_dups (if a = b then cnt + 1 else cnt) rest
+    in
+    let cnt = count_dups 0 sorted in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-014";
+          severity = Warning;
+          message = "Duplicate author-year key without disambiguation suffix";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "BIB-014" run
+
+(* BIB-017: Sentence-case title ends with punctuation mark *)
+let r_bib_017 : rule =
+  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_title s !start);
+         let title = String.trim (Str.matched_group 1 s) in
+         (if String.length title > 0 then
+            let last = title.[String.length title - 1] in
+            if last = '.' || last = '!' || last = '?' then incr cnt);
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-017";
+          severity = Info;
+          message = "Bibliography title ends with punctuation mark";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "BIB-017" run
+
+(* FONT-003: Microtype protrusion disabled globally *)
+let r_font_003 : rule =
+  let run s =
+    let has_microtype =
+      contains_substring s "\\usepackage" && contains_substring s "microtype"
+    in
+    if not has_microtype then None
+    else if contains_substring s "protrusion=false" then
+      Some
+        {
+          id = "FONT-003";
+          severity = Warning;
+          message = "Microtype protrusion disabled globally";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "FONT-003" run
+
+(* FONT-002: Mixed optical sizes in paragraph *)
+let r_font_002 : rule =
+  let re = Str.regexp {|\\fontsize{\([0-9]+\)}|} in
+  let run s =
+    let sizes = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         let sz = Str.matched_group 1 s in
+         sizes := sz :: !sizes;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let unique = List.sort_uniq String.compare !sizes in
+    if List.length unique > 2 then
+      Some
+        {
+          id = "FONT-002";
+          severity = Info;
+          message = "Mixed optical sizes in paragraph";
+          count = List.length unique;
+        }
+    else None
+  in
+  mk_rule "FONT-002" run
+
+(* RTL-001: Mixture of RTL and LTR digits within number *)
+let r_rtl_001 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 3 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      (* Arabic-Indic digits: U+0660-0669 = D9 A0..A9 *)
+      if b0 = 0xd9 then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        if b1 >= 0xa0 && b1 <= 0xa9 then (
+          (* check if adjacent ASCII digit exists nearby *)
+          let has_ascii_nearby = ref false in
+          for j = max 0 (!i - 4) to min (len - 1) (!i + 5) do
+            let c = String.unsafe_get s j in
+            if c >= '0' && c <= '9' then has_ascii_nearby := true
+          done;
+          if !has_ascii_nearby then incr cnt);
+        i := !i + 2)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "RTL-001";
+          severity = Warning;
+          message = "Mixture of RTL and LTR digits within number";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "RTL-001" run
+
+(* RTL-002: Missing \textLR around Latin acronym in Arabic text *)
+let r_rtl_002 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 5 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      (* Arabic chars: U+0600-06FF = D8 80..DB BF *)
+      if b0 >= 0xd8 && b0 <= 0xdb then (
+        (* skip the Arabic char *)
+        i := !i + 2;
+        (* check if followed by space + ASCII uppercase *)
+        if !i < len && String.unsafe_get s !i = ' ' then
+          let j = !i + 1 in
+          if j < len then
+            let c = String.unsafe_get s j in
+            if c >= 'A' && c <= 'Z' then
+              (* check not inside \textLR *)
+              if not (j >= 8 && String.sub s (j - 8) 8 = "\\textLR{") then
+                incr cnt)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "RTL-002";
+          severity = Info;
+          message = "Missing \\textLR around Latin acronym in Arabic text";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "RTL-002" run
+
+(* META-003: Build timestamp not reproducible *)
+let r_meta_003 : rule =
+  let run s =
+    if contains_substring s "\\date{\\today}" then
+      Some
+        {
+          id = "META-003";
+          severity = Warning;
+          message = "Build timestamp not reproducible (\\date{\\today})";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "META-003" run
+
+(* META-004: PDF CreationDate not stripped *)
+let r_meta_004 : rule =
+  let run s =
+    if
+      contains_substring s "\\pdfinfo"
+      && not (contains_substring s "CreationDate")
+    then None
+    else if
+      contains_substring s "\\pdfinfo" && contains_substring s "CreationDate"
+    then
+      Some
+        {
+          id = "META-004";
+          severity = Info;
+          message = "PDF /CreationDate not stripped — build not reproducible";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "META-004" run
+
+(* DOC-005: \\keywords present but absent from PDF/XMP metadata *)
+let r_doc_005 : rule =
+  let run s =
+    let has_keywords = contains_substring s "\\keywords{" in
+    let has_hypersetup = contains_substring s "\\hypersetup{" in
+    let has_pdfkeywords = contains_substring s "pdfkeywords" in
+    if has_keywords && has_hypersetup && not has_pdfkeywords then
+      Some
+        {
+          id = "DOC-005";
+          severity = Info;
+          message = "\\keywords present but absent from PDF/XMP metadata";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "DOC-005" run
+
+(* REF-012: Reference text 'above/below' may contradict float position *)
+let r_ref_012 : rule =
+  let re =
+    Str.regexp
+      {|\(above\|below\)[ ,]*\\ref{\|\\ref{[^}]*}[ ,]*\(above\|below\)|}
+  in
+  let run s =
+    let text = strip_math_segments s in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-012";
+          severity = Info;
+          message = "Reference text 'above/below' may contradict float position";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "REF-012" run
+
+(* FONT-010: Digits in \\textsc not converted to small-caps figures *)
+let r_font_010 : rule =
+  let re = Str.regexp {|\\textsc{[^}]*[0-9][^}]*}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-010";
+          severity = Info;
+          message = "Digits in \\textsc not converted to small-caps figures";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "FONT-010" run
+
+(* FONT-013: Mixed proportional and tabular figures in same table column *)
+let r_font_013 : rule =
+  let run s =
+    let has_tabular = contains_substring s "\\begin{tabular" in
+    let has_proportional = contains_substring s "\\proportional" in
+    let has_tabularfigs = contains_substring s "\\tabularfigures" in
+    if has_tabular && has_proportional && has_tabularfigs then
+      Some
+        {
+          id = "FONT-013";
+          severity = Warning;
+          message = "Mixed proportional and tabular figures in same table";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "FONT-013" run
+
+(* PDF-005: PDF/A or PDF/UA compliance flag missing *)
+let r_pdf_005 : rule =
+  let run s =
+    let has_hyperref =
+      contains_substring s "\\usepackage" && contains_substring s "hyperref"
+    in
+    if not has_hyperref then None
+    else
+      let has_pdfa =
+        contains_substring s "pdfa"
+        || contains_substring s "pdfuatag"
+        || contains_substring s "\\DocumentMetadata"
+      in
+      if not has_pdfa then
+        Some
+          {
+            id = "PDF-005";
+            severity = Warning;
+            message = "PDF/A or PDF/UA compliance flag missing";
+            count = 1;
+          }
+      else None
+  in
+  mk_rule "PDF-005" run
+
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   4: LAY + FONT + CHEM + LANG misc rules (11 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* LAY-010: Missing \clearpage before appendix *)
+let r_lay_010 : rule =
+  let run s =
+    if contains_substring s "\\appendix" then
+      let pos =
+        try Str.search_forward (Str.regexp_string "\\appendix") s 0
+        with Not_found -> -1
+      in
+      if pos > 0 then
+        let before = String.sub s (max 0 (pos - 30)) (min 30 pos) in
+        if not (contains_substring before "\\clearpage") then
+          Some
+            {
+              id = "LAY-010";
+              severity = Info;
+              message = "Missing \\clearpage before \\appendix";
+              count = 1;
+            }
+        else None
+      else None
+    else None
+  in
+  mk_rule "LAY-010" run
+
+(* LAY-011: \columnbreak in single-column document *)
+let r_lay_011 : rule =
+  let run s =
+    let has_colbreak = contains_substring s "\\columnbreak" in
+    let has_twocol =
+      contains_substring s "twocolumn" || contains_substring s "multicol"
+    in
+    if has_colbreak && not has_twocol then
+      Some
+        {
+          id = "LAY-011";
+          severity = Info;
+          message = "\\columnbreak in single-column document";
+          count = count_substring s "\\columnbreak";
+        }
+    else None
+  in
+  mk_rule "LAY-011" run
+
+(* LAY-012: Float specifier missing *)
+let r_lay_012 : rule =
+  let re_nopt = Str.regexp {|\\begin{figure}\s*[^[]|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_nopt s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-012";
+          severity = Info;
+          message = "Float position specifier missing on \\begin{figure}";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-012" run
+
+(* LAY-013: \newpage inside float *)
+let r_lay_013 : rule =
+  let run s =
+    let fig_blocks = extract_env_blocks s "figure" in
+    let tab_blocks = extract_env_blocks s "table" in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          acc
+          + count_substring body "\\newpage"
+          + count_substring body "\\clearpage")
+        0 (fig_blocks @ tab_blocks)
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "LAY-013";
+          severity = Info;
+          message = "\\newpage or \\clearpage inside float environment";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-013" run
+
+(* LAY-014: Page break before subsection discouraged *)
+let r_lay_014 : rule =
+  let re = Str.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-014";
+          severity = Info;
+          message = "Page break before subsection discouraged";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-014" run
+
+(* FONT-009: Small-caps requested but glyphs missing — fallback visible *)
+let r_font_009 : rule =
+  let run s =
+    (* Heuristic: \textsc used with non-Latin chars *)
+    let re = Str.regexp {|\\textsc{[^}]*[^\x00-\x7f][^}]*}|} in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-009";
+          severity = Warning;
+          message = "Small-caps with non-ASCII chars — fallback may be visible";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "FONT-009" run
+
+(* FONT-011: Microtype protrusion mismatch between text and math fonts *)
+let r_font_011 : rule =
+  let run s =
+    let has_microtype = contains_substring s "microtype" in
+    let has_mathfont =
+      contains_substring s "\\setmathfont"
+      || contains_substring s "unicode-math"
+    in
+    if has_microtype && has_mathfont then
+      Some
+        {
+          id = "FONT-011";
+          severity = Warning;
+          message =
+            "Microtype protrusion may mismatch between text and math fonts";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "FONT-011" run
+
+(* FONT-012: ff-ligature disabled adjacent to \texttt *)
+let r_font_012 : rule =
+  let re =
+    Str.regexp
+      {|\\texttt{[^}]*}\(ff\|fi\|fl\)\|ff\\texttt\|fi\\texttt\|fl\\texttt|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-012";
+          severity = Info;
+          message = "Ligature adjacent to \\texttt may cause visual clash";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "FONT-012" run
+
+(* CHEM-010: Reaction scheme exceeds page width heuristic *)
+let r_chem_010 : rule =
+  let run s =
+    let ce_blocks = extract_env_blocks s "reaction" in
+    let scheme_blocks = extract_env_blocks s "scheme" in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let lines = String.split_on_char '\n' body in
+          List.fold_left
+            (fun a line -> if String.length line > 120 then a + 1 else a)
+            acc lines)
+        0
+        (ce_blocks @ scheme_blocks)
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHEM-010";
+          severity = Info;
+          message = "Reaction scheme line exceeds page width (> 120 chars)";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "CHEM-010" run
+
+(* LANG-009: Ragged-right text in non-Latin script *)
+let r_lang_009 : rule =
+  let run s =
+    let has_ragged = contains_substring s "\\raggedright" in
+    (* Check for CJK or Arabic content *)
+    let has_nonlatin =
+      contains_substring s "\\begin{CJK}"
+      || contains_substring s "xeCJK"
+      || contains_substring s "\\setdefaultlanguage{arabic}"
+    in
+    if has_ragged && has_nonlatin then
+      Some
+        {
+          id = "LANG-009";
+          severity = Info;
+          message = "Ragged-right text in non-Latin script";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "LANG-009" run
+
+(* LANG-010: Arabic digits in RTL context not localised *)
+let r_lang_010 : rule =
+  let run s =
+    let has_arabic =
+      contains_substring s "\\setdefaultlanguage{arabic}"
+      || contains_substring s "{arabic}"
+    in
+    if not has_arabic then None
+    else
+      (* Check for ASCII digits in Arabic text *)
+      let text = strip_math_segments s in
+      let has_ascii_digits =
+        let found = ref false in
+        String.iter (fun c -> if c >= '0' && c <= '9' then found := true) text;
+        !found
+      in
+      if has_ascii_digits then
+        Some
+          {
+            id = "LANG-010";
+            severity = Info;
+            message = "Arabic digits in RTL context not localised";
+            count = 1;
+          }
+      else None
+  in
+  mk_rule "LANG-010" run
+
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   5: LAY + CJK + LANG final batch (10 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* LAY-016: \enlargethispage used > 3 times *)
+let r_lay_016 : rule =
+  let run s =
+    let cnt = count_substring s "\\enlargethispage" in
+    if cnt > 3 then
+      Some
+        {
+          id = "LAY-016";
+          severity = Info;
+          message = "\\enlargethispage used excessively";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-016" run
+
+(* LAY-017: Float-only page specifier [p] *)
+let r_lay_017 : rule =
+  let re = Str.regexp {|\\begin{figure}\[p\]|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-017";
+          severity = Info;
+          message = "Float-only page specifier [p] used";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-017" run
+
+(* LAY-018: \pagebreak immediately before \section *)
+let r_lay_018 : rule =
+  let re = Str.regexp {|\\pagebreak[ \t\n]*\\section|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-018";
+          severity = Info;
+          message = "\\pagebreak immediately before \\section";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-018" run
+
+(* LAY-019: Manual linebreak \\\\ in paragraph *)
+let r_lay_019 : rule =
+  let run s =
+    let text = strip_math_segments s in
+    let in_tabular = contains_substring s "\\begin{tabular}" in
+    let in_align = contains_substring s "\\begin{align" in
+    if in_tabular || in_align then None
+    else
+      let cnt = count_substring text "\\\\" in
+      if cnt > 0 then
+        Some
+          {
+            id = "LAY-019";
+            severity = Info;
+            message = "Manual linebreak \\\\ in running paragraph";
+            count = cnt;
+          }
+      else None
+  in
+  mk_rule "LAY-019" run
+
+(* LAY-021: \\vfill before \\end{document} *)
+let r_lay_021 : rule =
+  let run s =
+    let len = String.length s in
+    if len < 30 then None
+    else
+      let tail = String.sub s (max 0 (len - 80)) (min 80 len) in
+      if contains_substring tail "\\vfill" then
+        Some
+          {
+            id = "LAY-021";
+            severity = Info;
+            message = "\\vfill near \\end{document}";
+            count = 1;
+          }
+      else None
+  in
+  mk_rule "LAY-021" run
+
+(* CJK-009: Western space between CJK glyphs *)
+let r_cjk_009 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 6 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 >= 0xe4 && b0 <= 0xe9 && !i + 5 < len then (
+        let after_cjk = !i + 3 in
+        (if after_cjk < len && String.unsafe_get s after_cjk = ' ' then
+           let next = after_cjk + 1 in
+           if next + 2 < len then
+             let n0 = Char.code (String.unsafe_get s next) in
+             if n0 >= 0xe4 && n0 <= 0xe9 then incr cnt);
+        i := !i + 3)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-009";
+          severity = Info;
+          message = "Western inter-word space between CJK glyphs";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "CJK-009" run
+
+(* CJK-011: Hiragana prolonged-sound mark at line start *)
+let r_cjk_011 : rule =
+  let prolonged = "\xe3\x83\xbc" in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 && String.sub line 0 3 = prolonged then
+            acc + 1
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CJK-011";
+          severity = Info;
+          message = "Hiragana prolonged-sound mark at line start";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "CJK-011" run
+
+(* CJK-013: Prohibited break before ideographic full stop U+3002 *)
+let r_cjk_013 : rule =
+  let fullstop = "\xe3\x80\x82" in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 && String.sub line 0 3 = fullstop then
+            acc + 1
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CJK-013";
+          severity = Info;
+          message =
+            "Prohibited break before ideographic full stop at line start";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "CJK-013" run
+
+(* LANG-005: Hyphen-penalty too low *)
+let r_lang_005 : rule =
+  let re = Str.regexp {|\\hyphenpenalty *= *\([0-9]+\)|} in
+  let run s =
+    try
+      ignore (Str.search_forward re s 0);
+      let v = int_of_string (Str.matched_group 1 s) in
+      if v < 50 then
+        Some
+          {
+            id = "LANG-005";
+            severity = Info;
+            message = Printf.sprintf "Hyphen-penalty too low (%d < 50)" v;
+            count = 1;
+          }
+      else None
+    with Not_found | Failure _ -> None
+  in
+  mk_rule "LANG-005" run
+
+(* LANG-008: Spell-checker dictionary differs from babel option *)
+let r_lang_008 : rule =
+  let re_babel = Str.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
+  let re_spell = Str.regexp {|\\setspelling{\([a-z]+\)}|} in
+  let run s =
+    let babel =
+      try
+        ignore (Str.search_forward re_babel s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    let spell =
+      try
+        ignore (Str.search_forward re_spell s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    match (babel, spell) with
+    | Some b, Some sp when b <> sp ->
+        Some
+          {
+            id = "LANG-008";
+            severity = Info;
+            message =
+              Printf.sprintf
+                "Spell-checker dictionary '%s' differs from babel '%s'" sp b;
+            count = 1;
+          }
+    | _ -> None
+  in
+  mk_rule "LANG-008" run
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -4112,6 +5080,46 @@ let rules_l2_approx : rule list =
     r_meta_001;
     r_pdf_010;
     r_tikz_005;
+    (* Phase 3: L3-approximable *)
+    r_bib_001;
+    r_bib_007;
+    r_bib_013;
+    r_bib_014;
+    r_bib_017;
+    r_font_002;
+    r_font_003;
+    r_font_010;
+    r_font_013;
+    r_rtl_001;
+    r_rtl_002;
+    r_meta_003;
+    r_meta_004;
+    r_doc_005;
+    r_ref_012;
+    r_pdf_005;
+    (* Phase 4: LAY + FONT + misc *)
+    r_lay_010;
+    r_lay_011;
+    r_lay_012;
+    r_lay_013;
+    r_lay_014;
+    r_font_009;
+    r_font_011;
+    r_font_012;
+    r_chem_010;
+    r_lang_009;
+    r_lang_010;
+    (* Phase 5: final batch *)
+    r_lay_016;
+    r_lay_017;
+    r_lay_018;
+    r_lay_019;
+    r_lay_021;
+    r_cjk_009;
+    r_cjk_011;
+    r_cjk_013;
+    r_lang_005;
+    r_lang_008;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

@@ -30,6 +30,7 @@
   validators_l0
   validators_l1_math
   validators_l2
+  validators_l4_style
   validators_l1
   validators
   validators_metrics
@@ -359,4 +360,9 @@
 (test
  (name test_validators_l3_text_approx)
  (modules test_validators_l3_text_approx)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_validators_style)
+ (modules test_validators_style)
  (libraries latex_parse_lib test_helpers unix))

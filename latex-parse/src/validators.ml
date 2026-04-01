@@ -17,6 +17,7 @@
 include Validators_common
 include Validators_l0
 include Validators_l2
+include Validators_l4_style
 include Validators_l1
 
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
@@ -32,6 +33,7 @@ let rules_enc_char_spc : rule list =
   @ rules_locale
   @ rules_stragglers
   @ rules_l2_approx
+  @ rules_style
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in
@@ -338,6 +340,46 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "L3-008";
       "L3-010";
     ];
+  add L2
+    [
+      "BIB-001";
+      "BIB-007";
+      "BIB-013";
+      "BIB-014";
+      "BIB-017";
+      "FONT-002";
+      "FONT-003";
+      "FONT-010";
+      "FONT-013";
+      "RTL-001";
+      "RTL-002";
+      "META-003";
+      "META-004";
+      "DOC-005";
+      "REF-012";
+      "PDF-005";
+      "LAY-010";
+      "LAY-011";
+      "LAY-012";
+      "LAY-013";
+      "LAY-014";
+      "FONT-009";
+      "FONT-011";
+      "FONT-012";
+      "CHEM-010";
+      "LANG-009";
+      "LANG-010";
+      "LAY-016";
+      "LAY-017";
+      "LAY-018";
+      "LAY-019";
+      "LAY-021";
+      "CJK-009";
+      "CJK-011";
+      "CJK-013";
+      "LANG-005";
+      "LANG-008";
+    ];
   (* L3 overrides *)
   add L3 [ "MATH-026"; "MATH-027" ];
   tbl
@@ -362,6 +404,11 @@ let _prefix_layers : (string * layer) list =
     ("RTL-", L1);
     ("PT-", L1);
     ("L3-", L1);
+    ("STYLE-", L4);
+    ("CE-", L4);
+    ("IB-", L4);
+    ("LANG-", L4);
+    ("TH-", L0);
   ]
 
 let precondition_of_rule_id (id : string) : layer =

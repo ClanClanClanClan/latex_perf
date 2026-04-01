@@ -40,8 +40,8 @@ VPD_PATH = "specs/rules/vpd_patterns.json"
 RULES_PATH = "specs/rules/rules_v3.yaml"
 OUTPUT_DIR = "proofs/generated"
 
-# Layers we generate proofs for (L3/L4 excluded — insufficient implementation)
-PROOF_LAYERS = {"L0_Lexer", "L1_Expanded", "L2_Ast"}
+# Layers we generate proofs for (L3/L4 added W102 — conservative models)
+PROOF_LAYERS = {"L0_Lexer", "L1_Expanded", "L2_Ast", "L3_Semantics", "L4_Style"}
 
 # Severity mapping
 SEVERITY_MAP = {"Error": "Error", "Warning": "Warning", "Info": "Info"}

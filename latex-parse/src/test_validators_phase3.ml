@@ -395,4 +395,71 @@ The year 2026 is important.|})
            "\\begin{reaction}\nH2O -> H+ + OH-\n\\end{reaction}")
         (tag ^ ": short reaction"));
 
+  (* ══════════════════════════════════════════════════════════════════════ Test
+     hardening: fires_with_count + edge cases
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* fires_with_count *)
+  run "BIB-001 count: two entries missing doi" (fun tag ->
+      expect
+        (fires_with_count "BIB-001"
+           {|@article{k1,
+  author = {A}, year = {2020}
+}
+@article{k2,
+  author = {B}, year = {2021}
+}|}
+           2)
+        (tag ^ ": 2 entries missing doi"));
+  run "FONT-010 count: two textsc with digits" (fun tag ->
+      expect
+        (fires_with_count "FONT-010" {|\textsc{ABC1} and \textsc{DEF2}|} 2)
+        (tag ^ ": 2 textsc with digits"));
+  run "BIB-017 count: two titles with periods" (fun tag ->
+      expect
+        (fires_with_count "BIB-017"
+           {|@article{k1,
+  title = {First title.}
+}
+@article{k2,
+  title = {Second title.}
+}|}
+           2)
+        (tag ^ ": 2 titles with periods"));
+
+  (* Edge cases *)
+  run "META-003 clean: fixed date" (fun tag ->
+      expect
+        (does_not_fire "META-003" {|\date{2026-04-01}|})
+        (tag ^ ": fixed date"));
+  run "PDF-005 clean: has DocumentMetadata" (fun tag ->
+      expect
+        (does_not_fire "PDF-005"
+           {|\DocumentMetadata{pdfstandard=a-2b}
+\usepackage{hyperref}|})
+        (tag ^ ": has DocumentMetadata"));
+  run "FONT-003 clean: default microtype" (fun tag ->
+      expect
+        (does_not_fire "FONT-003" {|\usepackage{microtype}|})
+        (tag ^ ": default microtype, no disable"));
+  run "REF-012 clean: no above/below" (fun tag ->
+      expect
+        (does_not_fire "REF-012" "See \\ref{fig:1} for details.")
+        (tag ^ ": no above/below words"));
+
+  (* Cross-rule interaction: BIB-001 should not fire when doi present *)
+  run "BIB-001 clean: entry WITH issn" (fun tag ->
+      expect
+        (does_not_fire "BIB-001"
+           {|@article{key1,
+  author = {Smith}, title = {Paper}, issn = {0000-0000}
+}|})
+        (tag ^ ": has issn"));
+  run "BIB-007 clean: different dois" (fun tag ->
+      expect
+        (does_not_fire "BIB-007"
+           {|@article{k1, doi = {10.1/a}}
+@article{k2, doi = {10.1/b}}|})
+        (tag ^ ": unique dois"));
+
   finalise "phase3"

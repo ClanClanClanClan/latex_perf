@@ -3988,6 +3988,455 @@ let r_tikz_005 : rule =
   in
   { id = "TIKZ-005"; run; languages = [] }
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   3: L3-approximable rules (20 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* BIB-001: Entry missing DOI or ISBN/ISSN *)
+let r_bib_001 : rule =
+  let re_entry = Str.regexp {|@[a-zA-Z]+{[^,]+,|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_entry s !start);
+         let entry_start = Str.match_end () in
+         (* find end of entry: next @ at line start or end of string *)
+         let entry_end =
+           try Str.search_forward (Str.regexp_string "\n@") s entry_start
+           with Not_found -> String.length s
+         in
+         let entry = String.sub s entry_start (entry_end - entry_start) in
+         let has_doi = contains_substring entry "doi" in
+         let has_isbn =
+           contains_substring entry "isbn" || contains_substring entry "issn"
+         in
+         if (not has_doi) && not has_isbn then incr cnt;
+         start := entry_end
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-001";
+          severity = Warning;
+          message = "Bibliography entry missing DOI or ISBN/ISSN";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-001"; run }
+
+(* BIB-007: Duplicate DOI across entries *)
+let r_bib_007 : rule =
+  let re_doi = Str.regexp {|doi *= *{?\([^},]+\)}?|} in
+  let run s =
+    let dois = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_doi s !start);
+         let doi = String.trim (Str.matched_group 1 s) in
+         dois := doi :: !dois;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let sorted = List.sort String.compare !dois in
+    let rec count_dups cnt = function
+      | [] | [ _ ] -> cnt
+      | a :: (b :: _ as rest) ->
+          count_dups (if a = b then cnt + 1 else cnt) rest
+    in
+    let cnt = count_dups 0 sorted in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-007";
+          severity = Warning;
+          message = "Duplicate DOI appears in more than one entry";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "BIB-007"; run }
+
+(* BIB-013: Title capitalisation incorrect for bibliography style *)
+let r_bib_013 : rule =
+  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_title s !start);
+         let title = Str.matched_group 1 s in
+         (* Check for sentence-case violation: multiple capitalised words not
+            protected by braces *)
+         let words = String.split_on_char ' ' title in
+         let cap_words =
+           List.filter
+             (fun w ->
+               String.length w > 3
+               && w.[0] >= 'A'
+               && w.[0] <= 'Z'
+               && not (w.[0] = '{'))
+             words
+         in
+         if List.length cap_words > 3 then incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-013";
+          severity = Info;
+          message =
+            "Title capitalisation incorrect for selected bibliography style";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-013"; run }
+
+(* BIB-014: Duplicate author-year key *)
+let r_bib_014 : rule =
+  let re_author = Str.regexp {|author *= *{\([^}]+\)}|} in
+  let re_year = Str.regexp {|year *= *{\([^}]+\)}|} in
+  let run s =
+    let entries = Str.split (Str.regexp "\n@") s in
+    let keys = ref [] in
+    List.iter
+      (fun entry ->
+        let author =
+          try
+            ignore (Str.search_forward re_author entry 0);
+            Str.matched_group 1 entry
+          with Not_found -> ""
+        in
+        let year =
+          try
+            ignore (Str.search_forward re_year entry 0);
+            Str.matched_group 1 entry
+          with Not_found -> ""
+        in
+        if author <> "" && year <> "" then
+          keys := (author ^ ":" ^ year) :: !keys)
+      entries;
+    let sorted = List.sort String.compare !keys in
+    let rec count_dups cnt = function
+      | [] | [ _ ] -> cnt
+      | a :: (b :: _ as rest) ->
+          count_dups (if a = b then cnt + 1 else cnt) rest
+    in
+    let cnt = count_dups 0 sorted in
+    if cnt > 0 then
+      Some
+        {
+          id = "BIB-014";
+          severity = Warning;
+          message = "Duplicate author-year key without disambiguation suffix";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "BIB-014"; run }
+
+(* BIB-017: Sentence-case title ends with punctuation mark *)
+let r_bib_017 : rule =
+  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_title s !start);
+         let title = String.trim (Str.matched_group 1 s) in
+         (if String.length title > 0 then
+            let last = title.[String.length title - 1] in
+            if last = '.' || last = '!' || last = '?' then incr cnt);
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "BIB-017";
+          severity = Info;
+          message = "Bibliography title ends with punctuation mark";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "BIB-017"; run }
+
+(* FONT-003: Microtype protrusion disabled globally *)
+let r_font_003 : rule =
+  let run s =
+    let has_microtype =
+      contains_substring s "\\usepackage" && contains_substring s "microtype"
+    in
+    if not has_microtype then None
+    else if contains_substring s "protrusion=false" then
+      Some
+        {
+          id = "FONT-003";
+          severity = Warning;
+          message = "Microtype protrusion disabled globally";
+          count = 1;
+        }
+    else None
+  in
+  { id = "FONT-003"; run }
+
+(* FONT-002: Mixed optical sizes in paragraph *)
+let r_font_002 : rule =
+  let re = Str.regexp {|\\fontsize{\([0-9]+\)}|} in
+  let run s =
+    let sizes = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         let sz = Str.matched_group 1 s in
+         sizes := sz :: !sizes;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    let unique = List.sort_uniq String.compare !sizes in
+    if List.length unique > 2 then
+      Some
+        {
+          id = "FONT-002";
+          severity = Info;
+          message = "Mixed optical sizes in paragraph";
+          count = List.length unique;
+        }
+    else None
+  in
+  { id = "FONT-002"; run }
+
+(* RTL-001: Mixture of RTL and LTR digits within number *)
+let r_rtl_001 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 3 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      (* Arabic-Indic digits: U+0660-0669 = D9 A0..A9 *)
+      if b0 = 0xd9 then (
+        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+        if b1 >= 0xa0 && b1 <= 0xa9 then (
+          (* check if adjacent ASCII digit exists nearby *)
+          let has_ascii_nearby = ref false in
+          for j = max 0 (!i - 4) to min (len - 1) (!i + 5) do
+            let c = String.unsafe_get s j in
+            if c >= '0' && c <= '9' then has_ascii_nearby := true
+          done;
+          if !has_ascii_nearby then incr cnt);
+        i := !i + 2)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "RTL-001";
+          severity = Warning;
+          message = "Mixture of RTL and LTR digits within number";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "RTL-001"; run }
+
+(* RTL-002: Missing \textLR around Latin acronym in Arabic text *)
+let r_rtl_002 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 5 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      (* Arabic chars: U+0600-06FF = D8 80..DB BF *)
+      if b0 >= 0xd8 && b0 <= 0xdb then (
+        (* skip the Arabic char *)
+        i := !i + 2;
+        (* check if followed by space + ASCII uppercase *)
+        if !i < len && String.unsafe_get s !i = ' ' then
+          let j = !i + 1 in
+          if j < len then
+            let c = String.unsafe_get s j in
+            if c >= 'A' && c <= 'Z' then
+              (* check not inside \textLR *)
+              if not (j >= 8 && String.sub s (j - 8) 8 = "\\textLR{") then
+                incr cnt)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "RTL-002";
+          severity = Info;
+          message = "Missing \\textLR around Latin acronym in Arabic text";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "RTL-002"; run }
+
+(* META-003: Build timestamp not reproducible *)
+let r_meta_003 : rule =
+  let run s =
+    if contains_substring s "\\date{\\today}" then
+      Some
+        {
+          id = "META-003";
+          severity = Warning;
+          message = "Build timestamp not reproducible (\\date{\\today})";
+          count = 1;
+        }
+    else None
+  in
+  { id = "META-003"; run }
+
+(* META-004: PDF CreationDate not stripped *)
+let r_meta_004 : rule =
+  let run s =
+    if
+      contains_substring s "\\pdfinfo"
+      && not (contains_substring s "CreationDate")
+    then None
+    else if
+      contains_substring s "\\pdfinfo" && contains_substring s "CreationDate"
+    then
+      Some
+        {
+          id = "META-004";
+          severity = Info;
+          message = "PDF /CreationDate not stripped — build not reproducible";
+          count = 1;
+        }
+    else None
+  in
+  { id = "META-004"; run }
+
+(* DOC-005: \\keywords present but absent from PDF/XMP metadata *)
+let r_doc_005 : rule =
+  let run s =
+    let has_keywords = contains_substring s "\\keywords{" in
+    let has_hypersetup = contains_substring s "\\hypersetup{" in
+    let has_pdfkeywords = contains_substring s "pdfkeywords" in
+    if has_keywords && has_hypersetup && not has_pdfkeywords then
+      Some
+        {
+          id = "DOC-005";
+          severity = Info;
+          message = "\\keywords present but absent from PDF/XMP metadata";
+          count = 1;
+        }
+    else None
+  in
+  { id = "DOC-005"; run }
+
+(* REF-012: Reference text 'above/below' may contradict float position *)
+let r_ref_012 : rule =
+  let re =
+    Str.regexp
+      {|\(above\|below\)[ ,]*\\ref{\|\\ref{[^}]*}[ ,]*\(above\|below\)|}
+  in
+  let run s =
+    let text = strip_math_segments s in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "REF-012";
+          severity = Info;
+          message = "Reference text 'above/below' may contradict float position";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "REF-012"; run }
+
+(* FONT-010: Digits in \\textsc not converted to small-caps figures *)
+let r_font_010 : rule =
+  let re = Str.regexp {|\\textsc{[^}]*[0-9][^}]*}|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-010";
+          severity = Info;
+          message = "Digits in \\textsc not converted to small-caps figures";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-010"; run }
+
+(* FONT-013: Mixed proportional and tabular figures in same table column *)
+let r_font_013 : rule =
+  let run s =
+    let has_tabular = contains_substring s "\\begin{tabular" in
+    let has_proportional = contains_substring s "\\proportional" in
+    let has_tabularfigs = contains_substring s "\\tabularfigures" in
+    if has_tabular && has_proportional && has_tabularfigs then
+      Some
+        {
+          id = "FONT-013";
+          severity = Warning;
+          message = "Mixed proportional and tabular figures in same table";
+          count = 1;
+        }
+    else None
+  in
+  { id = "FONT-013"; run }
+
+(* PDF-005: PDF/A or PDF/UA compliance flag missing *)
+let r_pdf_005 : rule =
+  let run s =
+    let has_hyperref =
+      contains_substring s "\\usepackage" && contains_substring s "hyperref"
+    in
+    if not has_hyperref then None
+    else
+      let has_pdfa =
+        contains_substring s "pdfa"
+        || contains_substring s "pdfuatag"
+        || contains_substring s "\\DocumentMetadata"
+      in
+      if not has_pdfa then
+        Some
+          {
+            id = "PDF-005";
+            severity = Warning;
+            message = "PDF/A or PDF/UA compliance flag missing";
+            count = 1;
+          }
+      else None
+  in
+  { id = "PDF-005"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -4112,6 +4561,23 @@ let rules_l2_approx : rule list =
     r_meta_001;
     r_pdf_010;
     r_tikz_005;
+    (* Phase 3: L3-approximable *)
+    r_bib_001;
+    r_bib_007;
+    r_bib_013;
+    r_bib_014;
+    r_bib_017;
+    r_font_002;
+    r_font_003;
+    r_font_010;
+    r_font_013;
+    r_rtl_001;
+    r_rtl_002;
+    r_meta_003;
+    r_meta_004;
+    r_doc_005;
+    r_ref_012;
+    r_pdf_005;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

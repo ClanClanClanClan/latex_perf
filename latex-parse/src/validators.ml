@@ -340,6 +340,25 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "L3-008";
       "L3-010";
     ];
+  add L2
+    [
+      "BIB-001";
+      "BIB-007";
+      "BIB-013";
+      "BIB-014";
+      "BIB-017";
+      "FONT-002";
+      "FONT-003";
+      "FONT-010";
+      "FONT-013";
+      "RTL-001";
+      "RTL-002";
+      "META-003";
+      "META-004";
+      "DOC-005";
+      "REF-012";
+      "PDF-005";
+    ];
   (* L3 overrides *)
   add L3 [ "MATH-026"; "MATH-027" ];
   tbl

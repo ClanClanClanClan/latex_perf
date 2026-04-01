@@ -4,6 +4,28 @@ All notable changes to LaTeX Perfectionist v25 are documented here.
 
 ## [Unreleased]
 
+### Added (Phases 9-12, PRs #161-#171)
+- ML v2 parser-state diagnostic + architecture docs (PR #161)
+- v2 candidate classification pipeline: extractor, dataset, byte classifier (PR #165)
+- 429 soundness theorems via auto-generation + CI parallelism (PR #166)
+- Language detection: babel/polyglossia/CJK heuristic, 65-lang mapping (PR #167)
+- 84 new validators: 49 STYLE, 10 locale (CE/TH/IB/LANG), 25 L3-approx (PR #168)
+- Post-merge audit fixes: regex bugs, severity mismatches, 55 test cases (PR #169)
+- 93 golden corpus tests + 7 i18n QA documents across 12 YAML suites (PR #170)
+- 607 soundness theorems (was 429), 26 test hardening cases, perf verified (PR #171)
+
+### Changed (Phases 9-12)
+- Rule count: 452 → 568 unique IDs (91.2% of 623 spec)
+- Proof count: 429 → 607 per-rule soundness theorems (26 faithful, 581 conservative)
+- Golden corpus: 236 → 329 cases across 12 suites
+- Test suites: 53 → 57, ~7,320 test cases total
+- gen_coq_proofs.py extended to L3/L4 layers
+
+### Infrastructure (Phases 9-12)
+- Project health cleanup: gitignore, CI consolidation, action bumps (PR #162)
+- Docs/proofs audit: README sync, macro sync, Coq proof refactor (PR #163)
+- Folder cleanup: archive stale docs, remove orphans (PR #164)
+
 ### Added (Phases 4-8, PRs #150-#159)
 - Sub-split L0 and L1 validator modules (PR #150)
 - Table-driven layer lookup (PR #151)

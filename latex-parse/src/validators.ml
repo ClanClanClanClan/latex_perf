@@ -12,6 +12,12 @@
    higher-layer rules that depend on macro expansion. Both conventions are
    intentional — a mechanical rename would risk breaking cross-references in Coq
    proofs, golden files, and specs.
+
+   PERF NOTE (W102 audit): ~219 Str.regexp calls are inside `let run` closures
+   and recompile on every invocation. Hoisting them before the closure would
+   avoid recompilation. Current p95=2.8ms vs 20ms gate (86% headroom), so this
+   is not urgent. A future refactor should move `let re = Str.regexp ... in`
+   bindings before the `let run s =` line in each rule where possible.
    ══════════════════════════════════════════════════════════════════════ *)
 
 include Validators_common

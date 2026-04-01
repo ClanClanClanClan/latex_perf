@@ -2372,9 +2372,9 @@ let r_cmd_012 : rule =
 
 (* ── DOC-004: Acknowledgment section before conclusion ───────────────── *)
 let r_doc_004 : rule =
+  let ack_re = Str.regexp {|\\section{[Aa]cknowledg|} in
+  let conc_re = Str.regexp {|\\section{[Cc]onclusion|} in
   let run s =
-    let ack_re = Str.regexp {|\\section{[Aa]cknowledg|} in
-    let conc_re = Str.regexp {|\\section{[Cc]onclusion|} in
     let ack_pos =
       try Some (Str.search_forward ack_re s 0) with Not_found -> None
     in
@@ -3118,9 +3118,9 @@ let r_l3_008 : rule =
 
 (* -- L3-010: \ExplSyntaxOff missing at end of file ----------------- *)
 let r_l3_010 : rule =
+  let on_re = Str.regexp_string "\\ExplSyntaxOn" in
+  let off_re = Str.regexp_string "\\ExplSyntaxOff" in
   let run s =
-    let on_re = Str.regexp_string "\\ExplSyntaxOn" in
-    let off_re = Str.regexp_string "\\ExplSyntaxOff" in
     let count_matches re str =
       let cnt = ref 0 in
       let i = ref 0 in
@@ -5139,11 +5139,11 @@ let r_cmd_011 : rule =
 
 (* CMD-013: \def\arraystretch declared inside document body *)
 let r_cmd_013 : rule =
+  let pat = Str.regexp_string "\\def\\arraystretch" in
   let run s =
     match extract_document_body s with
     | None -> None
     | Some body ->
-        let pat = Str.regexp_string "\\def\\arraystretch" in
         let cnt = ref 0 in
         let i = ref 0 in
         (try

@@ -2569,6 +2569,7 @@ let r_verb_008 : rule =
 
 (* VERB-009: Missing caption in minted code block *)
 let r_verb_009 : rule =
+  let _re_listing = Str.regexp_string "\\begin{listing}" in
   let run s =
     let _blocks = extract_env_blocks "minted" s in
     let cnt = ref 0 in
@@ -2584,11 +2585,7 @@ let r_verb_009 : rule =
         if
           not
             (try
-               let _ =
-                 Str.search_forward
-                   (Str.regexp_string "\\begin{listing}")
-                   before 0
-               in
+               let _ = Str.search_forward _re_listing before 0 in
                true
              with Not_found -> false)
         then incr cnt;
@@ -2780,6 +2777,7 @@ let r_verb_011 : rule =
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
   let re = Str.regexp "\\\\begin{minted}[ \t\n]*\\(\\[[^]]*\\]\\)?[ \t\n]*{" in
+  let _re_autogobble = Str.regexp_string "autogobble" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -2790,9 +2788,7 @@ let r_verb_012 : rule =
          if
            not
              (try
-                let _ =
-                  Str.search_forward (Str.regexp_string "autogobble") matched 0
-                in
+                let _ = Str.search_forward _re_autogobble matched 0 in
                 true
               with Not_found -> false)
          then incr cnt;
@@ -2861,6 +2857,7 @@ let r_verb_015 : rule =
 
 (* VERB-016: minted without escapeinside while containing back-ticks *)
 let r_verb_016 : rule =
+  let _re_escapeinside = Str.regexp_string "escapeinside" in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
@@ -2880,9 +2877,7 @@ let r_verb_016 : rule =
         let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
         let has_escape =
           try
-            let _ =
-              Str.search_forward (Str.regexp_string "escapeinside") opts 0
-            in
+            let _ = Str.search_forward _re_escapeinside opts 0 in
             true
           with Not_found -> false
         in
@@ -2912,6 +2907,7 @@ let r_verb_016 : rule =
 
 (* VERB-017: minted lacks linenos in code block > 20 lines *)
 let r_verb_017 : rule =
+  let _re_linenos = Str.regexp_string "linenos" in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
@@ -2929,7 +2925,7 @@ let r_verb_017 : rule =
         let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
         let has_linenos =
           try
-            let _ = Str.search_forward (Str.regexp_string "linenos") opts 0 in
+            let _ = Str.search_forward _re_linenos opts 0 in
             true
           with Not_found -> false
         in

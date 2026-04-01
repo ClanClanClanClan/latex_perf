@@ -4711,6 +4711,251 @@ let r_lang_010 : rule =
   in
   { id = "LANG-010"; run }
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   5: LAY + CJK + LANG final batch (10 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* LAY-016: \enlargethispage used > 3 times *)
+let r_lay_016 : rule =
+  let run s =
+    let cnt = count_substring s "\\enlargethispage" in
+    if cnt > 3 then
+      Some
+        {
+          id = "LAY-016";
+          severity = Info;
+          message = "\\enlargethispage used excessively";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "LAY-016"; run }
+
+(* LAY-017: Float-only page specifier [p] *)
+let r_lay_017 : rule =
+  let re = Str.regexp {|\\begin{figure}\[p\]|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-017";
+          severity = Info;
+          message = "Float-only page specifier [p] used";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-017"; run }
+
+(* LAY-018: \pagebreak immediately before \section *)
+let r_lay_018 : rule =
+  let re = Str.regexp {|\\pagebreak[ \t\n]*\\section|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-018";
+          severity = Info;
+          message = "\\pagebreak immediately before \\section";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-018"; run }
+
+(* LAY-019: Manual linebreak \\\\ in paragraph *)
+let r_lay_019 : rule =
+  let run s =
+    let text = strip_math_segments s in
+    let in_tabular = contains_substring s "\\begin{tabular}" in
+    let in_align = contains_substring s "\\begin{align" in
+    if in_tabular || in_align then None
+    else
+      let cnt = count_substring text "\\\\" in
+      if cnt > 0 then
+        Some
+          {
+            id = "LAY-019";
+            severity = Info;
+            message = "Manual linebreak \\\\ in running paragraph";
+            count = cnt;
+          }
+      else None
+  in
+  { id = "LAY-019"; run }
+
+(* LAY-021: \\vfill before \\end{document} *)
+let r_lay_021 : rule =
+  let run s =
+    let len = String.length s in
+    if len < 30 then None
+    else
+      let tail = String.sub s (max 0 (len - 80)) (min 80 len) in
+      if contains_substring tail "\\vfill" then
+        Some
+          {
+            id = "LAY-021";
+            severity = Info;
+            message = "\\vfill near \\end{document}";
+            count = 1;
+          }
+      else None
+  in
+  { id = "LAY-021"; run }
+
+(* CJK-009: Western space between CJK glyphs *)
+let r_cjk_009 : rule =
+  let run s =
+    let len = String.length s in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < len - 6 do
+      let b0 = Char.code (String.unsafe_get s !i) in
+      if b0 >= 0xe4 && b0 <= 0xe9 && !i + 5 < len then (
+        let after_cjk = !i + 3 in
+        (if after_cjk < len && String.unsafe_get s after_cjk = ' ' then
+           let next = after_cjk + 1 in
+           if next + 2 < len then
+             let n0 = Char.code (String.unsafe_get s next) in
+             if n0 >= 0xe4 && n0 <= 0xe9 then incr cnt);
+        i := !i + 3)
+      else i := !i + 1
+    done;
+    if !cnt > 0 then
+      Some
+        {
+          id = "CJK-009";
+          severity = Info;
+          message = "Western inter-word space between CJK glyphs";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "CJK-009"; run }
+
+(* CJK-011: Hiragana prolonged-sound mark at line start *)
+let r_cjk_011 : rule =
+  let prolonged = "\xe3\x83\xbc" in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 && String.sub line 0 3 = prolonged then
+            acc + 1
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CJK-011";
+          severity = Info;
+          message = "Hiragana prolonged-sound mark at line start";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CJK-011"; run }
+
+(* CJK-013: Prohibited break before ideographic full stop U+3002 *)
+let r_cjk_013 : rule =
+  let fullstop = "\xe3\x80\x82" in
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 && String.sub line 0 3 = fullstop then
+            acc + 1
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CJK-013";
+          severity = Info;
+          message =
+            "Prohibited break before ideographic full stop at line start";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CJK-013"; run }
+
+(* LANG-005: Hyphen-penalty too low *)
+let r_lang_005 : rule =
+  let re = Str.regexp {|\\hyphenpenalty *= *\([0-9]+\)|} in
+  let run s =
+    try
+      ignore (Str.search_forward re s 0);
+      let v = int_of_string (Str.matched_group 1 s) in
+      if v < 50 then
+        Some
+          {
+            id = "LANG-005";
+            severity = Info;
+            message = Printf.sprintf "Hyphen-penalty too low (%d < 50)" v;
+            count = 1;
+          }
+      else None
+    with Not_found | Failure _ -> None
+  in
+  { id = "LANG-005"; run }
+
+(* LANG-008: Spell-checker dictionary differs from babel option *)
+let r_lang_008 : rule =
+  let re_babel = Str.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
+  let re_spell = Str.regexp {|\\setspelling{\([a-z]+\)}|} in
+  let run s =
+    let babel =
+      try
+        ignore (Str.search_forward re_babel s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    let spell =
+      try
+        ignore (Str.search_forward re_spell s 0);
+        Some (Str.matched_group 1 s)
+      with Not_found -> None
+    in
+    match (babel, spell) with
+    | Some b, Some sp when b <> sp ->
+        Some
+          {
+            id = "LANG-008";
+            severity = Info;
+            message =
+              Printf.sprintf
+                "Spell-checker dictionary '%s' differs from babel '%s'" sp b;
+            count = 1;
+          }
+    | _ -> None
+  in
+  { id = "LANG-008"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -4864,6 +5109,17 @@ let rules_l2_approx : rule list =
     r_chem_010;
     r_lang_009;
     r_lang_010;
+    (* Phase 5: final batch *)
+    r_lay_016;
+    r_lay_017;
+    r_lay_018;
+    r_lay_019;
+    r_lay_021;
+    r_cjk_009;
+    r_cjk_011;
+    r_cjk_013;
+    r_lang_005;
+    r_lang_008;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

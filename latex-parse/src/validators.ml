@@ -369,6 +369,16 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "CHEM-010";
       "LANG-009";
       "LANG-010";
+      "LAY-016";
+      "LAY-017";
+      "LAY-018";
+      "LAY-019";
+      "LAY-021";
+      "CJK-009";
+      "CJK-011";
+      "CJK-013";
+      "LANG-005";
+      "LANG-008";
     ];
   (* L3 overrides *)
   add L3 [ "MATH-026"; "MATH-027" ];

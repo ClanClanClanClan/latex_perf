@@ -18,10 +18,10 @@ LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-v
 
 ## Current Status (Week 80 — March 2026)
 
-Post-Phase 8 — all L0-L2 text-scannable rules implemented. Phase 9: ML span extractor (v2 candidate classifier in progress):
+Post-Phase 10 — L4 STYLE rules + locale validators + L3-approximable rules implemented. ML span extractor (v2 candidate classifier) blocked on A100 access:
 - **Build**: `dune build` compiles the SIMD service, benches, and 15 Coq proofs (+ 7 archive) via `(coq.theory)` stanza.
 - **Proofs**: 15 Coq proof files, 319 formal declarations (177 theorems/lemmas), 0 admits, 0 axioms. All `.vo` files compile clean.
-- **Validators**: 452 spec-matched rules / 623 (72.6%). L0: 183/187, L1: 141/158, L2: 94/96, L3: 24/112, L4: 10/70. ~7,086 test cases across 53 files.
+- **Validators**: 568 unique rule IDs / 623 spec (91.2%). L0: 183/187, L1: 141/158, L2: 122/96 (includes L3-approx), L3: 24/112, L4: 59/70. ~7,234 test cases across 56 files.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
 
@@ -33,7 +33,8 @@ Post-Phase 8 — all L0-L2 text-scannable rules implemented. Phase 9: ML span ex
 - ✅ W26: L0-L1 formal checkpoint (0 admits)
 - ✅ W39: VPD-80 capstone (80 rules certified)
 - ✅ Phases 4-8: Refactoring, CI hardening, audit, cleanup (PRs #150-#159)
-- 🔄 Next: W40-52 L2 parser + proofs → Week 52 L2 delivered gate
+- ✅ W97-101: 84 new validators (STYLE, locale, L3-approx) — PRs #168/#169
+- 🔄 Next: W102-104 Corpus expansion + i18n test
 
 ## Quick Start
 

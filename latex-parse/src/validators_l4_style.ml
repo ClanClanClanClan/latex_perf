@@ -158,9 +158,10 @@ let r_style_006 : rule =
 
 (* STYLE-008: Sentence starts with mathematical symbol *)
 let r_style_008 : rule =
-  let re = Str.regexp {|\. \$\|^\$|} in
+  let re = Str.regexp {|\. \$|} in
   let run s =
     let text = strip_comments s in
+    (* We detect ". $" pattern — a dollar sign after sentence-ending period *)
     let cnt = ref 0 in
     let start = ref 0 in
     (try
@@ -382,7 +383,7 @@ let r_style_023 : rule =
       Some
         {
           id = "STYLE-023";
-          severity = Info;
+          severity = Warning;
           message = "Percent sign in text not escaped";
           count = !cnt;
         }
@@ -408,7 +409,7 @@ let r_style_024 : rule =
         Some
           {
             id = "STYLE-024";
-            severity = Info;
+            severity = Warning;
             message = "Ampersand in text not escaped";
             count = !cnt;
           }
@@ -490,7 +491,7 @@ let r_style_030 : rule =
 
 (* STYLE-031: Heading number without title *)
 let r_style_031 : rule =
-  let re = Str.regexp {|\\[sub]*section\*?\s*{[0-9. ]*}|} in
+  let re = Str.regexp {|\\[sub]*section\*?[ \t\n]*{[0-9. ]*}|} in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
@@ -505,7 +506,7 @@ let r_style_031 : rule =
       Some
         {
           id = "STYLE-031";
-          severity = Info;
+          severity = Warning;
           message = "Heading contains only numbers without title text";
           count = !cnt;
         }
@@ -866,8 +867,8 @@ let r_style_002 : rule =
 
 (* STYLE-005: First-person 'we' inconsistent with 'I' *)
 let r_style_005 : rule =
-  let re_we = Str.regexp {|\bwe \|We |} in
-  let re_i = Str.regexp {| I \| I,\| I\.|^I |} in
+  let re_we = Str.regexp {| [Ww]e |} in
+  let re_i = Str.regexp {| I [a-z]\| I,\| I\.|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let has_we =
@@ -1111,7 +1112,7 @@ let r_style_021 : rule =
         Some
           {
             id = "STYLE-021";
-            severity = Info;
+            severity = Warning;
             message = "Acronym used before definition";
             count = 1;
           }

@@ -4438,138 +4438,32 @@ let r_pdf_005 : rule =
   mk_rule "PDF-005" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
-   4: LAY + FONT + CHEM + LANG misc rules (11 rules)
+   4: FONT + CHEM + LANG misc rules NOTE: LAY-010..014 removed — spec
+   descriptions require compile-log analysis that cannot be text-approximated.
+   Our implementations checked different things than the spec describes (e.g.
+   spec LAY-010 = "page number suppressed on chapter opener" but we checked
+   "clearpage before appendix"). Removed to avoid misleading spec-match counts.
    ══════════════════════════════════════════════════════════════════════ *)
-
-(* LAY-010: Missing \clearpage before appendix *)
-let r_lay_010 : rule =
-  let run s =
-    if contains_substring s "\\appendix" then
-      let pos =
-        try Str.search_forward (Str.regexp_string "\\appendix") s 0
-        with Not_found -> -1
-      in
-      if pos > 0 then
-        let before = String.sub s (max 0 (pos - 30)) (min 30 pos) in
-        if not (contains_substring before "\\clearpage") then
-          Some
-            {
-              id = "LAY-010";
-              severity = Info;
-              message = "Missing \\clearpage before \\appendix";
-              count = 1;
-            }
-        else None
-      else None
-    else None
-  in
-  mk_rule "LAY-010" run
-
-(* LAY-011: \columnbreak in single-column document *)
-let r_lay_011 : rule =
-  let run s =
-    let has_colbreak = contains_substring s "\\columnbreak" in
-    let has_twocol =
-      contains_substring s "twocolumn" || contains_substring s "multicol"
-    in
-    if has_colbreak && not has_twocol then
-      Some
-        {
-          id = "LAY-011";
-          severity = Info;
-          message = "\\columnbreak in single-column document";
-          count = count_substring s "\\columnbreak";
-        }
-    else None
-  in
-  mk_rule "LAY-011" run
-
-(* LAY-012: Float specifier missing *)
-let r_lay_012 : rule =
-  let re_nopt = Str.regexp {|\\begin{figure}\s*[^[]|} in
-  let run s =
-    let cnt = ref 0 in
-    let start = ref 0 in
-    (try
-       while true do
-         ignore (Str.search_forward re_nopt s !start);
-         incr cnt;
-         start := Str.match_end ()
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        {
-          id = "LAY-012";
-          severity = Info;
-          message = "Float position specifier missing on \\begin{figure}";
-          count = !cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-012" run
-
-(* LAY-013: \newpage inside float *)
-let r_lay_013 : rule =
-  let run s =
-    let fig_blocks = extract_env_blocks s "figure" in
-    let tab_blocks = extract_env_blocks s "table" in
-    let cnt =
-      List.fold_left
-        (fun acc body ->
-          acc
-          + count_substring body "\\newpage"
-          + count_substring body "\\clearpage")
-        0 (fig_blocks @ tab_blocks)
-    in
-    if cnt > 0 then
-      Some
-        {
-          id = "LAY-013";
-          severity = Info;
-          message = "\\newpage or \\clearpage inside float environment";
-          count = cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-013" run
-
-(* LAY-014: Page break before subsection discouraged *)
-let r_lay_014 : rule =
-  let re = Str.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
-  let run s =
-    let cnt = ref 0 in
-    let start = ref 0 in
-    (try
-       while true do
-         ignore (Str.search_forward re s !start);
-         incr cnt;
-         start := Str.match_end ()
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        {
-          id = "LAY-014";
-          severity = Info;
-          message = "Page break before subsection discouraged";
-          count = !cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-014" run
 
 (* FONT-009: Small-caps requested but glyphs missing — fallback visible *)
 let r_font_009 : rule =
+  let re = Str.regexp {|\\textsc{[^}]*}|} in
+  let has_nonascii body =
+    let found = ref false in
+    String.iter (fun c -> if Char.code c > 127 then found := true) body;
+    !found
+  in
   let run s =
     (* Heuristic: \textsc used with non-Latin chars *)
-    let re = Str.regexp {|\\textsc{[^}]*[^\x00-\x7f][^}]*}|} in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
          ignore (Str.search_forward re s !start);
-         incr cnt;
+         let m = Str.matched_string s in
+         (* Extract body between { and } *)
+         let body = String.sub m 8 (String.length m - 9) in
+         if has_nonascii body then incr cnt;
          start := Str.match_end ()
        done
      with Not_found -> ());
@@ -4637,8 +4531,8 @@ let r_font_012 : rule =
 (* CHEM-010: Reaction scheme exceeds page width heuristic *)
 let r_chem_010 : rule =
   let run s =
-    let ce_blocks = extract_env_blocks s "reaction" in
-    let scheme_blocks = extract_env_blocks s "scheme" in
+    let ce_blocks = extract_env_blocks "reaction" s in
+    let scheme_blocks = extract_env_blocks "scheme" s in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -4712,114 +4606,9 @@ let r_lang_010 : rule =
   mk_rule "LANG-010" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
-   5: LAY + CJK + LANG final batch (10 rules)
+   5: CJK + LANG final batch NOTE: LAY-016..021 removed — same issue as
+   LAY-010..014 above.
    ══════════════════════════════════════════════════════════════════════ *)
-
-(* LAY-016: \enlargethispage used > 3 times *)
-let r_lay_016 : rule =
-  let run s =
-    let cnt = count_substring s "\\enlargethispage" in
-    if cnt > 3 then
-      Some
-        {
-          id = "LAY-016";
-          severity = Info;
-          message = "\\enlargethispage used excessively";
-          count = cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-016" run
-
-(* LAY-017: Float-only page specifier [p] *)
-let r_lay_017 : rule =
-  let re = Str.regexp {|\\begin{figure}\[p\]|} in
-  let run s =
-    let cnt = ref 0 in
-    let start = ref 0 in
-    (try
-       while true do
-         ignore (Str.search_forward re s !start);
-         incr cnt;
-         start := Str.match_end ()
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        {
-          id = "LAY-017";
-          severity = Info;
-          message = "Float-only page specifier [p] used";
-          count = !cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-017" run
-
-(* LAY-018: \pagebreak immediately before \section *)
-let r_lay_018 : rule =
-  let re = Str.regexp {|\\pagebreak[ \t\n]*\\section|} in
-  let run s =
-    let cnt = ref 0 in
-    let start = ref 0 in
-    (try
-       while true do
-         ignore (Str.search_forward re s !start);
-         incr cnt;
-         start := Str.match_end ()
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        {
-          id = "LAY-018";
-          severity = Info;
-          message = "\\pagebreak immediately before \\section";
-          count = !cnt;
-        }
-    else None
-  in
-  mk_rule "LAY-018" run
-
-(* LAY-019: Manual linebreak \\\\ in paragraph *)
-let r_lay_019 : rule =
-  let run s =
-    let text = strip_math_segments s in
-    let in_tabular = contains_substring s "\\begin{tabular}" in
-    let in_align = contains_substring s "\\begin{align" in
-    if in_tabular || in_align then None
-    else
-      let cnt = count_substring text "\\\\" in
-      if cnt > 0 then
-        Some
-          {
-            id = "LAY-019";
-            severity = Info;
-            message = "Manual linebreak \\\\ in running paragraph";
-            count = cnt;
-          }
-      else None
-  in
-  mk_rule "LAY-019" run
-
-(* LAY-021: \\vfill before \\end{document} *)
-let r_lay_021 : rule =
-  let run s =
-    let len = String.length s in
-    if len < 30 then None
-    else
-      let tail = String.sub s (max 0 (len - 80)) (min 80 len) in
-      if contains_substring tail "\\vfill" then
-        Some
-          {
-            id = "LAY-021";
-            severity = Info;
-            message = "\\vfill near \\end{document}";
-            count = 1;
-          }
-      else None
-  in
-  mk_rule "LAY-021" run
 
 (* CJK-009: Western space between CJK glyphs *)
 let r_cjk_009 : rule =
@@ -5097,24 +4886,14 @@ let rules_l2_approx : rule list =
     r_doc_005;
     r_ref_012;
     r_pdf_005;
-    (* Phase 4: LAY + FONT + misc *)
-    r_lay_010;
-    r_lay_011;
-    r_lay_012;
-    r_lay_013;
-    r_lay_014;
+    (* Phase 4: FONT + misc *)
     r_font_009;
     r_font_011;
     r_font_012;
     r_chem_010;
     r_lang_009;
     r_lang_010;
-    (* Phase 5: final batch *)
-    r_lay_016;
-    r_lay_017;
-    r_lay_018;
-    r_lay_019;
-    r_lay_021;
+    (* Phase 5: CJK + LANG final batch *)
     r_cjk_009;
     r_cjk_011;
     r_cjk_013;

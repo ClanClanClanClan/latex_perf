@@ -325,6 +325,9 @@
   ../../specs/rules/l2_batch4_golden.yaml
   ../../specs/rules/l5_expl3_tikz_golden.yaml
   ../../specs/rules/l3_text_approx_golden.yaml
+  ../../specs/rules/style_golden.yaml
+  ../../specs/rules/phase3_golden.yaml
+  ../../specs/rules/i18n_qa_golden.yaml
   (source_tree ../../corpora)))
 
 (test

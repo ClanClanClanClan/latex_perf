@@ -1,0 +1,109 @@
+cases:
+  - file: corpora/lint/phase3/BIB-001_missing_doi.tex
+    expect: ["BIB-001"]
+    expect_msgs:
+      - "BIB-001:Bibliography entry missing DOI or ISBN/ISSN"
+  - file: corpora/lint/phase3/BIB-007_dup_doi.tex
+    expect: ["BIB-007"]
+    expect_msgs:
+      - "BIB-007:Duplicate DOI appears in more than one entry"
+  - file: corpora/lint/phase3/BIB-013_title_caps.tex
+    expect: ["BIB-013"]
+    expect_msgs:
+      - "BIB-013:Title capitalisation incorrect for selected bibliography style"
+  - file: corpora/lint/phase3/BIB-014_dup_author_year.tex
+    expect: ["BIB-014"]
+    expect_msgs:
+      - "BIB-014:Duplicate author-year key without disambiguation suffix"
+  - file: corpora/lint/phase3/BIB-017_title_period.tex
+    expect: ["BIB-017"]
+    expect_msgs:
+      - "BIB-017:Bibliography title ends with punctuation mark"
+  - file: corpora/lint/phase3/CHEM-010_long_reaction.tex
+    expect: ["CHEM-010"]
+    expect_msgs:
+      - "CHEM-010:Reaction scheme line exceeds page width (> 120 chars)"
+  - file: corpora/lint/phase3/CJK-009_western_space.tex
+    expect: ["CJK-009"]
+    expect_msgs:
+      - "CJK-009:Western inter-word space between CJK glyphs"
+  - file: corpora/lint/phase3/CJK-011_prolonged_mark.tex
+    expect: ["CJK-011"]
+    expect_msgs:
+      - "CJK-011:Hiragana prolonged-sound mark at line start"
+  - file: corpora/lint/phase3/CJK-013_fullstop_linestart.tex
+    expect: ["CJK-013"]
+    expect_msgs:
+      - "CJK-013:Prohibited break before ideographic full stop at line start"
+  - file: corpora/lint/phase3/DOC-005_keywords_no_pdf.tex
+    expect: ["DOC-005"]
+    expect_msgs:
+      - "DOC-005:\\keywords present but absent from PDF/XMP metadata"
+  - file: corpora/lint/phase3/FONT-002_mixed_sizes.tex
+    expect: ["FONT-002"]
+    expect_msgs:
+      - "FONT-002:Mixed optical sizes in paragraph"
+  - file: corpora/lint/phase3/FONT-003_protrusion_disabled.tex
+    expect: ["FONT-003"]
+    expect_msgs:
+      - "FONT-003:Microtype protrusion disabled globally"
+  - file: corpora/lint/phase3/FONT-009_textsc_nonascii.tex
+    expect: ["FONT-009"]
+    expect_msgs:
+      - "FONT-009:Small-caps with non-ASCII chars — fallback may be visible"
+  - file: corpora/lint/phase3/FONT-010_textsc_digits.tex
+    expect: ["FONT-010"]
+    expect_msgs:
+      - "FONT-010:Digits in \\textsc not converted to small-caps figures"
+  - file: corpora/lint/phase3/FONT-011_microtype_mathfont.tex
+    expect: ["FONT-011"]
+    expect_msgs:
+      - "FONT-011:Microtype protrusion may mismatch between text and math fonts"
+  - file: corpora/lint/phase3/FONT-012_ligature_texttt.tex
+    expect: ["FONT-012"]
+    expect_msgs:
+      - "FONT-012:Ligature adjacent to \\texttt may cause visual clash"
+  - file: corpora/lint/phase3/FONT-013_mixed_figures.tex
+    expect: ["FONT-013"]
+    expect_msgs:
+      - "FONT-013:Mixed proportional and tabular figures in same table"
+  - file: corpora/lint/phase3/LANG-005_hyphenpenalty.tex
+    expect: ["LANG-005"]
+    expect_msgs:
+      - "LANG-005:Hyphen-penalty too low (10 < 50)"
+  - file: corpora/lint/phase3/LANG-008_spell_mismatch.tex
+    expect: ["LANG-008"]
+    expect_msgs:
+      - "LANG-008:Spell-checker dictionary 'french' differs from babel 'english'"
+  - file: corpora/lint/phase3/LANG-009_raggedright_cjk.tex
+    expect: ["LANG-009"]
+    expect_msgs:
+      - "LANG-009:Ragged-right text in non-Latin script"
+  - file: corpora/lint/phase3/LANG-010_arabic_digits.tex
+    expect: ["LANG-010"]
+    expect_msgs:
+      - "LANG-010:Arabic digits in RTL context not localised"
+  - file: corpora/lint/phase3/META-003_date_today.tex
+    expect: ["META-003"]
+    expect_msgs:
+      - "META-003:Build timestamp not reproducible (\\date{\\today})"
+  - file: corpora/lint/phase3/META-004_creationdate.tex
+    expect: ["META-004"]
+    expect_msgs:
+      - "META-004:PDF /CreationDate not stripped — build not reproducible"
+  - file: corpora/lint/phase3/PDF-005_no_pdfa.tex
+    expect: ["PDF-005"]
+    expect_msgs:
+      - "PDF-005:PDF/A or PDF/UA compliance flag missing"
+  - file: corpora/lint/phase3/REF-012_above_ref.tex
+    expect: ["REF-012"]
+    expect_msgs:
+      - "REF-012:Reference text 'above/below' may contradict float position"
+  - file: corpora/lint/phase3/RTL-001_mixed_digits.tex
+    expect: ["RTL-001"]
+    expect_msgs:
+      - "RTL-001:Mixture of RTL and LTR digits within number"
+  - file: corpora/lint/phase3/RTL-002_latin_in_arabic.tex
+    expect: ["RTL-002"]
+    expect_msgs:
+      - "RTL-002:Missing \\textLR around Latin acronym in Arabic text"

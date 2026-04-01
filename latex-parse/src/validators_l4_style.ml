@@ -962,7 +962,7 @@ let r_style_009 : rule =
 
 (* STYLE-010: First-person singular 'I' in multi-author paper *)
 let r_style_010 : rule =
-  let re_i = Str.regexp {| I \| I,\| I\.|^I |} in
+  let re_i = Str.regexp {| I \| I,\| I\.|} in
   let re_multi = Str.regexp {|\\author{[^}]*and[^}]*}|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
@@ -1475,7 +1475,7 @@ let r_lang_015 : rule =
         }
     else None
   in
-  mk_rule "LANG-015" run
+  mk_lang_rule "LANG-015" run [ "en" ]
 
 (* LANG-016: 'programme'/'program' inconsistency in BrE text *)
 let r_lang_016 : rule =
@@ -1789,12 +1789,11 @@ let r_style_043 : rule =
   in
   mk_rule "STYLE-043" run
 
-(* STYLE-044: Ambiguous demonstrative 'this' without noun *)
+(* STYLE-044: Ambiguous demonstrative 'this' without noun NOTE: STYLE-018 checks
+   {is,was,has,shows,suggests,means,implies}; STYLE-044 checks ONLY the modal
+   auxiliaries to avoid overlap. *)
 let r_style_044 : rule =
-  let re =
-    Str.regexp
-      {|[Tt]his \(is\|was\|has\|shows\|suggests\|means\|implies\|can\|will\|may\|might\|could\|should\) |}
-  in
+  let re = Str.regexp {|[Tt]his \(can\|will\|may\|might\|could\|should\) |} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in

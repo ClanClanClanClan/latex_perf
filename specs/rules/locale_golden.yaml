@@ -63,3 +63,43 @@ cases:
     expect: ["HI-001"]
     expect_msgs:
       - "HI-001:HI: ZWJ/ZWNJ misuse next to ख्"
+  - file: corpora/lint/locale/CE-001_canadian_spelling.tex
+    expect: ["CE-001"]
+    expect_msgs:
+      - "CE-001:Canadian EN: mixes BrE and AmE spelling"
+  - file: corpora/lint/locale/CE-002_oxford_comma.tex
+    expect: ["CE-002"]
+    expect_msgs:
+      - "CE-002:Canadian EN: Oxford comma must always be used"
+  - file: corpora/lint/locale/TH-001_thai_vowel.tex
+    expect: ["TH-001"]
+    expect_msgs:
+      - "TH-001:Thai leading vowel at line start needs \\nobreakspace"
+  - file: corpora/lint/locale/IB-001_iberian_mix.tex
+    expect: ["IB-001"]
+    expect_msgs:
+      - "IB-001:Brochure mixes pt-BR 'você' with es-ES 'tú'"
+  - file: corpora/lint/locale/LANG-003_fr_punct.tex
+    expect: ["LANG-003"]
+    expect_msgs:
+      - "LANG-003:Mixed French/English punctuation spacing"
+  - file: corpora/lint/locale/LANG-011_fr_quotes.tex
+    expect: ["LANG-011"]
+    expect_msgs:
+      - "LANG-011:French document uses ASCII quotes — use \\og ... \\fg{}"
+  - file: corpora/lint/locale/LANG-012_babel_mismatch.tex
+    expect: ["LANG-012"]
+    expect_msgs:
+      - "LANG-012:babel language 'french' mismatches \\selectlanguage{'german'}"
+  - file: corpora/lint/locale/LANG-014_ize_ise.tex
+    expect: ["LANG-014"]
+    expect_msgs:
+      - "LANG-014:BrE -ize/-ise ending inconsistency"
+  - file: corpora/lint/locale/LANG-015_serial_comma.tex
+    expect: ["LANG-015"]
+    expect_msgs:
+      - "LANG-015:Serial-comma rule violated (per style)"
+  - file: corpora/lint/locale/LANG-016_programme_program.tex
+    expect: ["LANG-016"]
+    expect_msgs:
+      - "LANG-016:'programme'/'program' inconsistency in text"

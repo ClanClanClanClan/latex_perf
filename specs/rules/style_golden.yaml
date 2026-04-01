@@ -1,0 +1,197 @@
+cases:
+  - file: corpora/lint/style/STYLE-001_oxford_comma.tex
+    expect: ["STYLE-001"]
+    expect_msgs:
+      - "STYLE-001:Inconsistent Oxford-comma usage"
+  - file: corpora/lint/style/STYLE-002_mixed_spelling.tex
+    expect: ["STYLE-002"]
+    expect_msgs:
+      - "STYLE-002:Mixed UK and US spelling detected"
+  - file: corpora/lint/style/STYLE-003_passive_voice.tex
+    expect: ["STYLE-003"]
+    expect_msgs:
+      - "STYLE-003:Passive voice in 100% of sentences"
+  - file: corpora/lint/style/STYLE-004_long_para.tex
+    expect: ["STYLE-004"]
+    expect_msgs:
+      - "STYLE-004:Paragraph exceeds 300 words"
+  - file: corpora/lint/style/STYLE-005_mixed_pronoun.tex
+    expect: ["STYLE-005"]
+    expect_msgs:
+      - "STYLE-005:First-person pronoun inconsistent (mixed 'we' and 'I')"
+  - file: corpora/lint/style/STYLE-006_same_start.tex
+    expect: ["STYLE-006"]
+    expect_msgs:
+      - "STYLE-006:Consecutive sentences start with same word"
+  - file: corpora/lint/style/STYLE-007_bullet_punct.tex
+    expect: ["STYLE-007"]
+    expect_msgs:
+      - "STYLE-007:Bullet-list items have inconsistent punctuation"
+  - file: corpora/lint/style/STYLE-008_math_start.tex
+    expect: ["STYLE-008"]
+    expect_msgs:
+      - "STYLE-008:Sentence starts with mathematical symbol"
+  - file: corpora/lint/style/STYLE-009_mixed_cite.tex
+    expect: ["STYLE-009"]
+    expect_msgs:
+      - "STYLE-009:Mixed citation styles (\\cite with \\citep/\\citet)"
+  - file: corpora/lint/style/STYLE-010_i_multiauthor.tex
+    expect: ["STYLE-010"]
+    expect_msgs:
+      - "STYLE-010:First-person 'I' in multi-author paper"
+  - file: corpora/lint/style/STYLE-011_range_dashes.tex
+    expect: ["STYLE-011"]
+    expect_msgs:
+      - "STYLE-011:Hyphen vs en-dash inconsistency in number ranges"
+  - file: corpora/lint/style/STYLE-012_that_which.tex
+    expect: ["STYLE-012"]
+    expect_msgs:
+      - "STYLE-012:That/which relative-clause usage may be inconsistent"
+  - file: corpora/lint/style/STYLE-013_numeral_start.tex
+    expect: ["STYLE-013"]
+    expect_msgs:
+      - "STYLE-013:Sentence starts with numeric figure"
+  - file: corpora/lint/style/STYLE-014_contraction.tex
+    expect: ["STYLE-014"]
+    expect_msgs:
+      - "STYLE-014:Contraction in formal text"
+  - file: corpora/lint/style/STYLE-015_double_space.tex
+    expect: ["STYLE-015"]
+    expect_msgs:
+      - "STYLE-015:Double space after period"
+  - file: corpora/lint/style/STYLE-016_latin_abbr.tex
+    expect: ["STYLE-016"]
+    expect_msgs:
+      - "STYLE-016:Latin abbreviation (e.g., i.e.) missing comma after abbreviation"
+  - file: corpora/lint/style/STYLE-017_long_sentence.tex
+    expect: ["STYLE-017"]
+    expect_msgs:
+      - "STYLE-017:Sentence exceeds 40 words"
+  - file: corpora/lint/style/STYLE-018_dangling_this.tex
+    expect: ["STYLE-018"]
+    expect_msgs:
+      - "STYLE-018:Dangling 'this' without noun"
+  - file: corpora/lint/style/STYLE-019_consecutive_headings.tex
+    expect: ["STYLE-019"]
+    expect_msgs:
+      - "STYLE-019:Multiple consecutive headings without intervening text"
+  - file: corpora/lint/style/STYLE-020_unused_acronym.tex
+    expect: ["STYLE-020"]
+    expect_msgs:
+      - "STYLE-020:Acronym defined but never used"
+  - file: corpora/lint/style/STYLE-021_acronym_before_def.tex
+    expect: ["STYLE-021"]
+    expect_msgs:
+      - "STYLE-021:Acronym used before definition"
+  - file: corpora/lint/style/STYLE-022_serial_comma.tex
+    expect: ["STYLE-022"]
+    expect_msgs:
+      - "STYLE-022:Serial comma missing in three-item list"
+  - file: corpora/lint/style/STYLE-023_bare_percent.tex
+    expect: ["STYLE-023"]
+    expect_msgs:
+      - "STYLE-023:Percent sign in text not escaped"
+  - file: corpora/lint/style/STYLE-024_bare_ampersand.tex
+    expect: ["STYLE-024"]
+    expect_msgs:
+      - "STYLE-024:Ampersand in text not escaped"
+  - file: corpora/lint/style/STYLE-025_runon.tex
+    expect: ["STYLE-025"]
+    expect_msgs:
+      - "STYLE-025:Run-on sentence detected (> 60 words)"
+  - file: corpora/lint/style/STYLE-026_repeated_word.tex
+    expect: ["STYLE-026"]
+    expect_msgs:
+      - "STYLE-026:Repeated word detected"
+  - file: corpora/lint/style/STYLE-027_adverb_overuse.tex
+    expect: ["STYLE-027"]
+    expect_msgs:
+      - "STYLE-027:Overuse of adverbs (14.0% -ly words)"
+  - file: corpora/lint/style/STYLE-028_eqref_punct.tex
+    expect: ["STYLE-028"]
+    expect_msgs:
+      - "STYLE-028:Equation reference without adjoining punctuation"
+  - file: corpora/lint/style/STYLE-029_undefined_we.tex
+    expect: ["STYLE-029"]
+    expect_msgs:
+      - "STYLE-029:Undefined 'we' — mixes author-we and generic-we"
+  - file: corpora/lint/style/STYLE-030_heading_case.tex
+    expect: ["STYLE-030"]
+    expect_msgs:
+      - "STYLE-030:Sub-heading capitalisation inconsistent"
+  - file: corpora/lint/style/STYLE-031_heading_number.tex
+    expect: ["STYLE-031"]
+    expect_msgs:
+      - "STYLE-031:Heading contains only numbers without title text"
+  - file: corpora/lint/style/STYLE-032_bullet_case.tex
+    expect: ["STYLE-032"]
+    expect_msgs:
+      - "STYLE-032:Bullet list mixes sentence-case and title-case"
+  - file: corpora/lint/style/STYLE-033_space_cite.tex
+    expect: ["STYLE-033"]
+    expect_msgs:
+      - "STYLE-033:Space before \\cite — use ~ (non-breaking space)"
+  - file: corpora/lint/style/STYLE-034_orphan_word.tex
+    expect: ["STYLE-034"]
+    expect_msgs:
+      - "STYLE-034:Orphan word (1-2 letters) at paragraph end"
+  - file: corpora/lint/style/STYLE-035_and_or.tex
+    expect: ["STYLE-035"]
+    expect_msgs:
+      - "STYLE-035:Slash used for 'and/or'"
+  - file: corpora/lint/style/STYLE-036_latin_phrase.tex
+    expect: ["STYLE-036"]
+    expect_msgs:
+      - "STYLE-036:Latin phrase not italicised"
+  - file: corpora/lint/style/STYLE-037_conjunction_start.tex
+    expect: ["STYLE-037"]
+    expect_msgs:
+      - "STYLE-037:Sentence starts with conjunction 'And' or 'But'"
+  - file: corpora/lint/style/STYLE-038_long_footnote.tex
+    expect: ["STYLE-038"]
+    expect_msgs:
+      - "STYLE-038:Footnote paragraph exceeds 80 words"
+  - file: corpora/lint/style/STYLE-039_caption_punct.tex
+    expect: ["STYLE-039"]
+    expect_msgs:
+      - "STYLE-039:Figure-caption ending punctuation inconsistent"
+  - file: corpora/lint/style/STYLE-040_exclamation.tex
+    expect: ["STYLE-040"]
+    expect_msgs:
+      - "STYLE-040:Exclamation mark in academic prose"
+  - file: corpora/lint/style/STYLE-041_footnote_no_period.tex
+    expect: ["STYLE-041"]
+    expect_msgs:
+      - "STYLE-041:Footnote lacks terminal period"
+  - file: corpora/lint/style/STYLE-042_short_paras.tex
+    expect: ["STYLE-042"]
+    expect_msgs:
+      - "STYLE-042:Consecutive short paragraphs (< 15 words each)"
+  - file: corpora/lint/style/STYLE-043_heading_punct.tex
+    expect: ["STYLE-043"]
+    expect_msgs:
+      - "STYLE-043:Section-heading punctuation inconsistent"
+  - file: corpora/lint/style/STYLE-044_ambiguous_this.tex
+    expect: ["STYLE-044"]
+    expect_msgs:
+      - "STYLE-044:Ambiguous demonstrative 'this' without noun"
+  - file: corpora/lint/style/STYLE-045_excess_parens.tex
+    expect: ["STYLE-045"]
+    expect_msgs:
+      - "STYLE-045:Excess parentheses in single sentence (> 3)"
+  - file: corpora/lint/style/STYLE-046_mixed_dash.tex
+    expect: ["STYLE-046"]
+    expect_msgs:
+      - "STYLE-046:Mixed en-dash and em-dash in same sentence"
+  - file: corpora/lint/style/STYLE-047_quote_punct.tex
+    expect: ["STYLE-047"]
+    expect_msgs:
+      - "STYLE-047:Quote-punctuation placement AmE vs BrE inconsistent"
+  - file: corpora/lint/style/STYLE-048_word_pair.tex
+    expect: ["STYLE-048"]
+    expect_msgs:
+      - "STYLE-048:Word-pair variant mixed (e.g. among/amongst)"
+  - file: corpora/lint/style/STYLE-049_heading_colon.tex
+    expect: ["STYLE-049"]
+    expect_msgs:
+      - "STYLE-049:Section heading ends with colon"

@@ -1,0 +1,15 @@
+cases:
+  - file: corpora/lint/i18n_qa/i18n_qa_en.tex
+    expect: ["STYLE-002", "STYLE-017", "STYLE-022", "CE-001", "CE-002", "LANG-014", "LANG-015", "LANG-016"]
+  - file: corpora/lint/i18n_qa/i18n_qa_fr.tex
+    expect: ["LANG-003", "LANG-011"]
+  - file: corpora/lint/i18n_qa/i18n_qa_de.tex
+    expect: ["LANG-012"]
+  - file: corpora/lint/i18n_qa/i18n_qa_es.tex
+    expect: ["IB-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_ja.tex
+    expect: ["JA-001", "CJK-011"]
+  - file: corpora/lint/i18n_qa/i18n_qa_zh.tex
+    expect: ["ZH-001", "CJK-009"]
+  - file: corpora/lint/i18n_qa/i18n_qa_ar.tex
+    expect: ["RTL-001", "RTL-002", "LANG-010"]

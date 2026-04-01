@@ -548,4 +548,82 @@ let () =
            "The programme is part of the larger programme.")
         (tag ^ ": programme consistent"));
 
+  (* ══════════════════════════════════════════════════════════════════════ Test
+     hardening: fires_with_count + edge cases
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* fires_with_count tests *)
+  run "STYLE-014 count: two contractions" (fun tag ->
+      expect
+        (fires_with_count "STYLE-014" "We don't know and can't guess." 2)
+        (tag ^ ": 2 contractions"));
+  run "STYLE-040 count: three exclamations" (fun tag ->
+      expect
+        (fires_with_count "STYLE-040" "Wow! Amazing! Incredible!" 3)
+        (tag ^ ": 3 exclamation marks"));
+  run "STYLE-015 count: two double-spaces" (fun tag ->
+      expect
+        (fires_with_count "STYLE-015" "One.  Two.  Three." 2)
+        (tag ^ ": 2 double spaces"));
+  run "STYLE-035 count: two and/or" (fun tag ->
+      expect
+        (fires_with_count "STYLE-035" "Use A and/or B. Also C and/or D." 2)
+        (tag ^ ": 2 and/or"));
+
+  (* Edge cases: false-positive prevention *)
+  run "STYLE-023 clean: escaped percent" (fun tag ->
+      expect
+        (does_not_fire "STYLE-023" "The rate is 50\\% in our study.")
+        (tag ^ ": escaped percent"));
+  run "STYLE-024 clean: ampersand in tabular" (fun tag ->
+      expect
+        (does_not_fire "STYLE-024" "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
+        (tag ^ ": & in tabular"));
+  run "STYLE-036 clean: emph et al." (fun tag ->
+      expect
+        (does_not_fire "STYLE-036"
+           "Smith \\emph{et al.} showed important results.")
+        (tag ^ ": italicised et al."));
+  run "STYLE-019 clean: text between headings" (fun tag ->
+      expect
+        (does_not_fire "STYLE-019"
+           "\\section{Intro}\nSome text here.\n\\subsection{Details}")
+        (tag ^ ": text between headings"));
+  run "STYLE-026 clean: no repeated words" (fun tag ->
+      expect
+        (does_not_fire "STYLE-026" "We studied the effect of light.")
+        (tag ^ ": no repeats"));
+  run "STYLE-049 clean: heading without colon" (fun tag ->
+      expect
+        (does_not_fire "STYLE-049" "\\section{Results}")
+        (tag ^ ": no colon in heading"));
+
+  (* Math-mode interaction *)
+  run "STYLE-014 fires: contraction outside math" (fun tag ->
+      expect
+        (fires "STYLE-014" "The derivative $f'(x)$ isn't computed here.")
+        (tag ^ ": isn't detected even with math present"));
+  run "STYLE-040 clean: exclamation only in math" (fun tag ->
+      expect
+        (does_not_fire "STYLE-040" "We compute $n!$ for large values.")
+        (tag ^ ": ! in math mode stripped"));
+  run "STYLE-026 fires: repeated word across line break" (fun tag ->
+      expect
+        (fires "STYLE-026" "End of paragraph the\nthe start of next.")
+        (tag ^ ": the the across line break"));
+
+  (* STYLE-018 vs STYLE-044 non-overlap verification *)
+  run "STYLE-018 fires on 'This is'" (fun tag ->
+      expect (fires "STYLE-018" "This is important.") (tag ^ ": This is"));
+  run "STYLE-044 fires on 'This can'" (fun tag ->
+      expect (fires "STYLE-044" "This can be improved.") (tag ^ ": This can"));
+  run "STYLE-044 clean: 'This is' does NOT fire 044" (fun tag ->
+      expect
+        (does_not_fire "STYLE-044" "This is important for our work.")
+        (tag ^ ": This is should not fire 044"));
+  run "STYLE-018 clean: 'This can' does NOT fire 018" (fun tag ->
+      expect
+        (does_not_fire "STYLE-018" "This can be improved by a better method.")
+        (tag ^ ": This can should not fire 018"));
+
   finalise "style"

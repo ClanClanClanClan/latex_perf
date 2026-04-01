@@ -351,7 +351,7 @@ let () =
   run "STYLE-005 fires: mixed we/I" (fun tag ->
       expect
         (fires "STYLE-005"
-           "We tested this method. I think the results are good.")
+           "In this paper, we tested this method. I think the results are good.")
         (tag ^ ": we and I"));
   run "STYLE-005 clean: we only" (fun tag ->
       expect

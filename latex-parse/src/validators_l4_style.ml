@@ -128,7 +128,7 @@ let r_style_004 : rule =
         }
     else None
   in
-  { id = "STYLE-004"; run }
+  mk_rule "STYLE-004" run
 
 (* STYLE-006: Consecutive sentences start with same word *)
 let r_style_006 : rule =
@@ -154,7 +154,7 @@ let r_style_006 : rule =
         }
     else None
   in
-  { id = "STYLE-006"; run }
+  mk_rule "STYLE-006" run
 
 (* STYLE-008: Sentence starts with mathematical symbol *)
 let r_style_008 : rule =
@@ -180,7 +180,7 @@ let r_style_008 : rule =
         }
     else None
   in
-  { id = "STYLE-008"; run }
+  mk_rule "STYLE-008" run
 
 (* STYLE-013: Sentence starts with numeric figure *)
 let r_style_013 : rule =
@@ -206,7 +206,7 @@ let r_style_013 : rule =
         }
     else None
   in
-  { id = "STYLE-013"; run }
+  mk_rule "STYLE-013" run
 
 (* STYLE-014: Contraction (don't, isn't) in formal text *)
 let r_style_014 : rule =
@@ -259,7 +259,7 @@ let r_style_014 : rule =
         }
     else None
   in
-  { id = "STYLE-014"; run }
+  mk_rule "STYLE-014" run
 
 (* STYLE-015: Double space after period *)
 let r_style_015 : rule =
@@ -276,7 +276,7 @@ let r_style_015 : rule =
         }
     else None
   in
-  { id = "STYLE-015"; run }
+  mk_rule "STYLE-015" run
 
 (* STYLE-016: Latin abbreviation (e.g., i.e.) missing comma *)
 let r_style_016 : rule =
@@ -303,7 +303,7 @@ let r_style_016 : rule =
         }
     else None
   in
-  { id = "STYLE-016"; run }
+  mk_rule "STYLE-016" run
 
 (* STYLE-017: Sentence exceeds 40 words *)
 let r_style_017 : rule =
@@ -325,7 +325,7 @@ let r_style_017 : rule =
         }
     else None
   in
-  { id = "STYLE-017"; run }
+  mk_rule "STYLE-017" run
 
 (* STYLE-019: Multiple consecutive headings without intervening text *)
 let r_style_019 : rule =
@@ -367,7 +367,7 @@ let r_style_019 : rule =
         }
     else None
   in
-  { id = "STYLE-019"; run }
+  mk_rule "STYLE-019" run
 
 (* STYLE-023: Percent sign in text not escaped *)
 let r_style_023 : rule =
@@ -388,7 +388,7 @@ let r_style_023 : rule =
         }
     else None
   in
-  { id = "STYLE-023"; run }
+  mk_rule "STYLE-023" run
 
 (* STYLE-024: Ampersand in text not escaped *)
 let r_style_024 : rule =
@@ -414,7 +414,7 @@ let r_style_024 : rule =
           }
       else None
   in
-  { id = "STYLE-024"; run }
+  mk_rule "STYLE-024" run
 
 (* STYLE-026: Repeated word (the the) *)
 let r_style_026 : rule =
@@ -440,7 +440,7 @@ let r_style_026 : rule =
         }
     else None
   in
-  { id = "STYLE-026"; run }
+  mk_rule "STYLE-026" run
 
 (* STYLE-030: Sub-heading capitalisation inconsistent *)
 let r_style_030 : rule =
@@ -486,7 +486,7 @@ let r_style_030 : rule =
           }
       else None
   in
-  { id = "STYLE-030"; run }
+  mk_rule "STYLE-030" run
 
 (* STYLE-031: Heading number without title *)
 let r_style_031 : rule =
@@ -511,7 +511,7 @@ let r_style_031 : rule =
         }
     else None
   in
-  { id = "STYLE-031"; run }
+  mk_rule "STYLE-031" run
 
 (* STYLE-033: Space before citation bracket *)
 let r_style_033 : rule =
@@ -539,7 +539,7 @@ let r_style_033 : rule =
         }
     else None
   in
-  { id = "STYLE-033"; run }
+  mk_rule "STYLE-033" run
 
 (* STYLE-034: Orphan word (1-2 letters) at paragraph end *)
 let r_style_034 : rule =
@@ -568,7 +568,7 @@ let r_style_034 : rule =
         }
     else None
   in
-  { id = "STYLE-034"; run }
+  mk_rule "STYLE-034" run
 
 (* STYLE-035: Slash used for 'and/or' *)
 let r_style_035 : rule =
@@ -585,7 +585,7 @@ let r_style_035 : rule =
         }
     else None
   in
-  { id = "STYLE-035"; run }
+  mk_rule "STYLE-035" run
 
 (* STYLE-036: Latin phrase (cf., ibid.) not italicised *)
 let r_style_036 : rule =
@@ -614,7 +614,7 @@ let r_style_036 : rule =
         }
     else None
   in
-  { id = "STYLE-036"; run }
+  mk_rule "STYLE-036" run
 
 (* STYLE-037: Sentence starts with conjunction 'And' or 'But' *)
 let r_style_037 : rule =
@@ -640,7 +640,7 @@ let r_style_037 : rule =
         }
     else None
   in
-  { id = "STYLE-037"; run }
+  mk_rule "STYLE-037" run
 
 (* STYLE-040: Exclamation mark in academic prose *)
 let r_style_040 : rule =
@@ -657,7 +657,7 @@ let r_style_040 : rule =
         }
     else None
   in
-  { id = "STYLE-040"; run }
+  mk_rule "STYLE-040" run
 
 (* STYLE-042: Consecutive short paragraphs (< 15 words) *)
 let r_style_042 : rule =
@@ -683,7 +683,7 @@ let r_style_042 : rule =
         }
     else None
   in
-  { id = "STYLE-042"; run }
+  mk_rule "STYLE-042" run
 
 (* STYLE-045: Excess parentheses in single sentence (> 3) *)
 let r_style_045 : rule =
@@ -707,7 +707,7 @@ let r_style_045 : rule =
         }
     else None
   in
-  { id = "STYLE-045"; run }
+  mk_rule "STYLE-045" run
 
 (* STYLE-046: Mixed en-dash and em-dash in same sentence *)
 let r_style_046 : rule =
@@ -736,7 +736,7 @@ let r_style_046 : rule =
         }
     else None
   in
-  { id = "STYLE-046"; run }
+  mk_rule "STYLE-046" run
 
 (* STYLE-048: Word-pair variant 'among/amongst', 'while/whilst' mixed *)
 let r_style_048 : rule =
@@ -762,7 +762,7 @@ let r_style_048 : rule =
         }
     else None
   in
-  { id = "STYLE-048"; run }
+  mk_rule "STYLE-048" run
 
 (* STYLE-049: Section heading ends with colon *)
 let r_style_049 : rule =
@@ -786,7 +786,7 @@ let r_style_049 : rule =
         }
     else None
   in
-  { id = "STYLE-049"; run }
+  mk_rule "STYLE-049" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
    2 batch: 14 more STYLE rules + 10 locale/LANG rules
@@ -820,7 +820,7 @@ let r_style_001 : rule =
         }
     else None
   in
-  { id = "STYLE-001"; run }
+  mk_rule "STYLE-001" run
 
 (* STYLE-002: Mixed UK and US spelling *)
 let r_style_002 : rule =
@@ -862,7 +862,7 @@ let r_style_002 : rule =
         }
     else None
   in
-  { id = "STYLE-002"; run }
+  mk_rule "STYLE-002" run
 
 (* STYLE-005: First-person 'we' inconsistent with 'I' *)
 let r_style_005 : rule =
@@ -892,7 +892,7 @@ let r_style_005 : rule =
         }
     else None
   in
-  { id = "STYLE-005"; run }
+  mk_rule "STYLE-005" run
 
 (* STYLE-007: Bullet-list items inconsistent punctuation *)
 let r_style_007 : rule =
@@ -932,7 +932,7 @@ let r_style_007 : rule =
           }
       else None
   in
-  { id = "STYLE-007"; run }
+  mk_rule "STYLE-007" run
 
 (* STYLE-009: Citation style mixes parenthetical and narrative *)
 let r_style_009 : rule =
@@ -957,7 +957,7 @@ let r_style_009 : rule =
         }
     else None
   in
-  { id = "STYLE-009"; run }
+  mk_rule "STYLE-009" run
 
 (* STYLE-010: First-person singular 'I' in multi-author paper *)
 let r_style_010 : rule =
@@ -987,7 +987,7 @@ let r_style_010 : rule =
         }
     else None
   in
-  { id = "STYLE-010"; run }
+  mk_rule "STYLE-010" run
 
 (* STYLE-011: Hyphen vs en-dash inconsistency in ranges *)
 let r_style_011 : rule =
@@ -1017,7 +1017,7 @@ let r_style_011 : rule =
         }
     else None
   in
-  { id = "STYLE-011"; run }
+  mk_rule "STYLE-011" run
 
 (* STYLE-018: Dangling reference word 'this' *)
 let r_style_018 : rule =
@@ -1045,7 +1045,7 @@ let r_style_018 : rule =
         }
     else None
   in
-  { id = "STYLE-018"; run }
+  mk_rule "STYLE-018" run
 
 (* STYLE-020: Acronym defined but never used *)
 let r_style_020 : rule =
@@ -1081,7 +1081,7 @@ let r_style_020 : rule =
         }
     else None
   in
-  { id = "STYLE-020"; run }
+  mk_rule "STYLE-020" run
 
 (* STYLE-021: Acronym used before definition *)
 let r_style_021 : rule =
@@ -1117,7 +1117,7 @@ let r_style_021 : rule =
           }
       else None
   in
-  { id = "STYLE-021"; run }
+  mk_rule "STYLE-021" run
 
 (* STYLE-022: Serial comma missing in three-item list *)
 let r_style_022 : rule =
@@ -1143,7 +1143,7 @@ let r_style_022 : rule =
         }
     else None
   in
-  { id = "STYLE-022"; run }
+  mk_rule "STYLE-022" run
 
 (* STYLE-025: Run-on sentence detected *)
 let r_style_025 : rule =
@@ -1165,7 +1165,7 @@ let r_style_025 : rule =
         }
     else None
   in
-  { id = "STYLE-025"; run }
+  mk_rule "STYLE-025" run
 
 (* STYLE-027: Overuse of adverbs (-ly > 5% of words) *)
 let r_style_027 : rule =
@@ -1197,7 +1197,7 @@ let r_style_027 : rule =
           }
       else None
   in
-  { id = "STYLE-027"; run }
+  mk_rule "STYLE-027" run
 
 (* STYLE-028: Equation referenced without adjoining punctuation *)
 let r_style_028 : rule =
@@ -1223,7 +1223,7 @@ let r_style_028 : rule =
         }
     else None
   in
-  { id = "STYLE-028"; run }
+  mk_rule "STYLE-028" run
 
 (* ── Locale / LANG rules ───────────────────────────────────────────── *)
 
@@ -1254,7 +1254,7 @@ let r_ce_001 : rule =
         }
     else None
   in
-  { id = "CE-001"; run }
+  mk_lang_rule "CE-001" run [ "en" ]
 
 (* CE-002: Canadian EN requires Oxford comma *)
 let r_ce_002 : rule =
@@ -1280,7 +1280,7 @@ let r_ce_002 : rule =
         }
     else None
   in
-  { id = "CE-002"; run }
+  mk_lang_rule "CE-002" run [ "en" ]
 
 (* TH-001: Thai leading vowels at line break need non-breaking space *)
 let r_th_001 : rule =
@@ -1310,7 +1310,7 @@ let r_th_001 : rule =
         }
     else None
   in
-  { id = "TH-001"; run }
+  mk_lang_rule "TH-001" run [ "th" ]
 
 (* IB-001: Brochure mixes pt-BR 'voce' with es-ES 'tu' *)
 let r_ib_001 : rule =
@@ -1332,7 +1332,7 @@ let r_ib_001 : rule =
         }
     else None
   in
-  { id = "IB-001"; run }
+  mk_lang_rule "IB-001" run [ "pt"; "es" ]
 
 (* LANG-003: Mixed French/English punctuation spacing *)
 let r_lang_003 : rule =
@@ -1357,7 +1357,7 @@ let r_lang_003 : rule =
         }
     else None
   in
-  { id = "LANG-003"; run }
+  mk_lang_rule "LANG-003" run [ "fr" ]
 
 (* LANG-011: French quotes absent — should use \og ... \fg{} *)
 let r_lang_011 : rule =
@@ -1383,7 +1383,7 @@ let r_lang_011 : rule =
           }
       else None
   in
-  { id = "LANG-011"; run }
+  mk_lang_rule "LANG-011" run [ "fr" ]
 
 (* LANG-012: babel language option mismatches \selectlanguage *)
 let r_lang_012 : rule =
@@ -1415,7 +1415,7 @@ let r_lang_012 : rule =
           }
     | _ -> None
   in
-  { id = "LANG-012"; run }
+  mk_rule "LANG-012" run
 
 (* LANG-014: BrE -ize/-ise inconsistency *)
 let r_lang_014 : rule =
@@ -1447,7 +1447,7 @@ let r_lang_014 : rule =
         }
     else None
   in
-  { id = "LANG-014"; run }
+  mk_lang_rule "LANG-014" run [ "en" ]
 
 (* LANG-015: Serial-comma rule violated *)
 let r_lang_015 : rule =
@@ -1474,7 +1474,7 @@ let r_lang_015 : rule =
         }
     else None
   in
-  { id = "LANG-015"; run }
+  mk_rule "LANG-015" run
 
 (* LANG-016: 'programme'/'program' inconsistency in BrE text *)
 let r_lang_016 : rule =
@@ -1498,7 +1498,7 @@ let r_lang_016 : rule =
         }
     else None
   in
-  { id = "LANG-016"; run }
+  mk_lang_rule "LANG-016" run [ "en" ]
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
    4 batch: 10 remaining STYLE rules
@@ -1540,7 +1540,7 @@ let r_style_003 : rule =
           }
       else None
   in
-  { id = "STYLE-003"; run }
+  mk_rule "STYLE-003" run
 
 (* STYLE-012: That/which relative-clause misuse *)
 let r_style_012 : rule =
@@ -1571,7 +1571,7 @@ let r_style_012 : rule =
         }
     else None
   in
-  { id = "STYLE-012"; run }
+  mk_rule "STYLE-012" run
 
 (* STYLE-029: Undefined 'we' (author vs generic) *)
 let r_style_029 : rule =
@@ -1601,7 +1601,7 @@ let r_style_029 : rule =
         }
     else None
   in
-  { id = "STYLE-029"; run }
+  mk_rule "STYLE-029" run
 
 (* STYLE-032: Bullet list mixes sentence-case and title-case *)
 let r_style_032 : rule =
@@ -1629,7 +1629,7 @@ let r_style_032 : rule =
         }
     else None
   in
-  { id = "STYLE-032"; run }
+  mk_rule "STYLE-032" run
 
 (* STYLE-038: Footnote paragraph exceeds 80 words *)
 let r_style_038 : rule =
@@ -1668,7 +1668,7 @@ let r_style_038 : rule =
         }
     else None
   in
-  { id = "STYLE-038"; run }
+  mk_rule "STYLE-038" run
 
 (* STYLE-039: Figure-caption ending punctuation inconsistent *)
 let r_style_039 : rule =
@@ -1715,7 +1715,7 @@ let r_style_039 : rule =
           }
       else None
   in
-  { id = "STYLE-039"; run }
+  mk_rule "STYLE-039" run
 
 (* STYLE-041: Footnote lacks terminal period *)
 let r_style_041 : rule =
@@ -1757,7 +1757,7 @@ let r_style_041 : rule =
         }
     else None
   in
-  { id = "STYLE-041"; run }
+  mk_rule "STYLE-041" run
 
 (* STYLE-043: Section-heading punctuation inconsistent *)
 let r_style_043 : rule =
@@ -1786,7 +1786,7 @@ let r_style_043 : rule =
           }
       else None
   in
-  { id = "STYLE-043"; run }
+  mk_rule "STYLE-043" run
 
 (* STYLE-044: Ambiguous demonstrative 'this' without noun *)
 let r_style_044 : rule =
@@ -1815,7 +1815,7 @@ let r_style_044 : rule =
         }
     else None
   in
-  { id = "STYLE-044"; run }
+  mk_rule "STYLE-044" run
 
 (* STYLE-047: Quote-punctuation placement AmE vs BrE inconsistent *)
 let r_style_047 : rule =
@@ -1838,7 +1838,7 @@ let r_style_047 : rule =
         }
     else None
   in
-  { id = "STYLE-047"; run }
+  mk_rule "STYLE-047" run
 
 (* ── Exported rules list ────────────────────────────────────────────── *)
 

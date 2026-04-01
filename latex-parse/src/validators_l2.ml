@@ -4026,7 +4026,7 @@ let r_bib_001 : rule =
         }
     else None
   in
-  { id = "BIB-001"; run }
+  mk_rule "BIB-001" run
 
 (* BIB-007: Duplicate DOI across entries *)
 let r_bib_007 : rule =
@@ -4059,7 +4059,7 @@ let r_bib_007 : rule =
         }
     else None
   in
-  { id = "BIB-007"; run }
+  mk_rule "BIB-007" run
 
 (* BIB-013: Title capitalisation incorrect for bibliography style *)
 let r_bib_013 : rule =
@@ -4098,7 +4098,7 @@ let r_bib_013 : rule =
         }
     else None
   in
-  { id = "BIB-013"; run }
+  mk_rule "BIB-013" run
 
 (* BIB-014: Duplicate author-year key *)
 let r_bib_014 : rule =
@@ -4141,7 +4141,7 @@ let r_bib_014 : rule =
         }
     else None
   in
-  { id = "BIB-014"; run }
+  mk_rule "BIB-014" run
 
 (* BIB-017: Sentence-case title ends with punctuation mark *)
 let r_bib_017 : rule =
@@ -4169,7 +4169,7 @@ let r_bib_017 : rule =
         }
     else None
   in
-  { id = "BIB-017"; run }
+  mk_rule "BIB-017" run
 
 (* FONT-003: Microtype protrusion disabled globally *)
 let r_font_003 : rule =
@@ -4188,7 +4188,7 @@ let r_font_003 : rule =
         }
     else None
   in
-  { id = "FONT-003"; run }
+  mk_rule "FONT-003" run
 
 (* FONT-002: Mixed optical sizes in paragraph *)
 let r_font_002 : rule =
@@ -4215,7 +4215,7 @@ let r_font_002 : rule =
         }
     else None
   in
-  { id = "FONT-002"; run }
+  mk_rule "FONT-002" run
 
 (* RTL-001: Mixture of RTL and LTR digits within number *)
 let r_rtl_001 : rule =
@@ -4249,7 +4249,7 @@ let r_rtl_001 : rule =
         }
     else None
   in
-  { id = "RTL-001"; run }
+  mk_rule "RTL-001" run
 
 (* RTL-002: Missing \textLR around Latin acronym in Arabic text *)
 let r_rtl_002 : rule =
@@ -4284,7 +4284,7 @@ let r_rtl_002 : rule =
         }
     else None
   in
-  { id = "RTL-002"; run }
+  mk_rule "RTL-002" run
 
 (* META-003: Build timestamp not reproducible *)
 let r_meta_003 : rule =
@@ -4299,7 +4299,7 @@ let r_meta_003 : rule =
         }
     else None
   in
-  { id = "META-003"; run }
+  mk_rule "META-003" run
 
 (* META-004: PDF CreationDate not stripped *)
 let r_meta_004 : rule =
@@ -4320,7 +4320,7 @@ let r_meta_004 : rule =
         }
     else None
   in
-  { id = "META-004"; run }
+  mk_rule "META-004" run
 
 (* DOC-005: \\keywords present but absent from PDF/XMP metadata *)
 let r_doc_005 : rule =
@@ -4338,7 +4338,7 @@ let r_doc_005 : rule =
         }
     else None
   in
-  { id = "DOC-005"; run }
+  mk_rule "DOC-005" run
 
 (* REF-012: Reference text 'above/below' may contradict float position *)
 let r_ref_012 : rule =
@@ -4367,7 +4367,7 @@ let r_ref_012 : rule =
         }
     else None
   in
-  { id = "REF-012"; run }
+  mk_rule "REF-012" run
 
 (* FONT-010: Digits in \\textsc not converted to small-caps figures *)
 let r_font_010 : rule =
@@ -4392,7 +4392,7 @@ let r_font_010 : rule =
         }
     else None
   in
-  { id = "FONT-010"; run }
+  mk_rule "FONT-010" run
 
 (* FONT-013: Mixed proportional and tabular figures in same table column *)
 let r_font_013 : rule =
@@ -4410,7 +4410,7 @@ let r_font_013 : rule =
         }
     else None
   in
-  { id = "FONT-013"; run }
+  mk_rule "FONT-013" run
 
 (* PDF-005: PDF/A or PDF/UA compliance flag missing *)
 let r_pdf_005 : rule =
@@ -4435,7 +4435,7 @@ let r_pdf_005 : rule =
           }
       else None
   in
-  { id = "PDF-005"; run }
+  mk_rule "PDF-005" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
    4: LAY + FONT + CHEM + LANG misc rules (11 rules)
@@ -4463,7 +4463,7 @@ let r_lay_010 : rule =
       else None
     else None
   in
-  { id = "LAY-010"; run }
+  mk_rule "LAY-010" run
 
 (* LAY-011: \columnbreak in single-column document *)
 let r_lay_011 : rule =
@@ -4482,7 +4482,7 @@ let r_lay_011 : rule =
         }
     else None
   in
-  { id = "LAY-011"; run }
+  mk_rule "LAY-011" run
 
 (* LAY-012: Float specifier missing *)
 let r_lay_012 : rule =
@@ -4507,7 +4507,7 @@ let r_lay_012 : rule =
         }
     else None
   in
-  { id = "LAY-012"; run }
+  mk_rule "LAY-012" run
 
 (* LAY-013: \newpage inside float *)
 let r_lay_013 : rule =
@@ -4532,7 +4532,7 @@ let r_lay_013 : rule =
         }
     else None
   in
-  { id = "LAY-013"; run }
+  mk_rule "LAY-013" run
 
 (* LAY-014: Page break before subsection discouraged *)
 let r_lay_014 : rule =
@@ -4557,7 +4557,7 @@ let r_lay_014 : rule =
         }
     else None
   in
-  { id = "LAY-014"; run }
+  mk_rule "LAY-014" run
 
 (* FONT-009: Small-caps requested but glyphs missing — fallback visible *)
 let r_font_009 : rule =
@@ -4583,7 +4583,7 @@ let r_font_009 : rule =
         }
     else None
   in
-  { id = "FONT-009"; run }
+  mk_rule "FONT-009" run
 
 (* FONT-011: Microtype protrusion mismatch between text and math fonts *)
 let r_font_011 : rule =
@@ -4604,7 +4604,7 @@ let r_font_011 : rule =
         }
     else None
   in
-  { id = "FONT-011"; run }
+  mk_rule "FONT-011" run
 
 (* FONT-012: ff-ligature disabled adjacent to \texttt *)
 let r_font_012 : rule =
@@ -4632,7 +4632,7 @@ let r_font_012 : rule =
         }
     else None
   in
-  { id = "FONT-012"; run }
+  mk_rule "FONT-012" run
 
 (* CHEM-010: Reaction scheme exceeds page width heuristic *)
 let r_chem_010 : rule =
@@ -4659,7 +4659,7 @@ let r_chem_010 : rule =
         }
     else None
   in
-  { id = "CHEM-010"; run }
+  mk_rule "CHEM-010" run
 
 (* LANG-009: Ragged-right text in non-Latin script *)
 let r_lang_009 : rule =
@@ -4681,7 +4681,7 @@ let r_lang_009 : rule =
         }
     else None
   in
-  { id = "LANG-009"; run }
+  mk_rule "LANG-009" run
 
 (* LANG-010: Arabic digits in RTL context not localised *)
 let r_lang_010 : rule =
@@ -4709,7 +4709,7 @@ let r_lang_010 : rule =
           }
       else None
   in
-  { id = "LANG-010"; run }
+  mk_rule "LANG-010" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
    5: LAY + CJK + LANG final batch (10 rules)
@@ -4729,7 +4729,7 @@ let r_lay_016 : rule =
         }
     else None
   in
-  { id = "LAY-016"; run }
+  mk_rule "LAY-016" run
 
 (* LAY-017: Float-only page specifier [p] *)
 let r_lay_017 : rule =
@@ -4754,7 +4754,7 @@ let r_lay_017 : rule =
         }
     else None
   in
-  { id = "LAY-017"; run }
+  mk_rule "LAY-017" run
 
 (* LAY-018: \pagebreak immediately before \section *)
 let r_lay_018 : rule =
@@ -4779,7 +4779,7 @@ let r_lay_018 : rule =
         }
     else None
   in
-  { id = "LAY-018"; run }
+  mk_rule "LAY-018" run
 
 (* LAY-019: Manual linebreak \\\\ in paragraph *)
 let r_lay_019 : rule =
@@ -4800,7 +4800,7 @@ let r_lay_019 : rule =
           }
       else None
   in
-  { id = "LAY-019"; run }
+  mk_rule "LAY-019" run
 
 (* LAY-021: \\vfill before \\end{document} *)
 let r_lay_021 : rule =
@@ -4819,7 +4819,7 @@ let r_lay_021 : rule =
           }
       else None
   in
-  { id = "LAY-021"; run }
+  mk_rule "LAY-021" run
 
 (* CJK-009: Western space between CJK glyphs *)
 let r_cjk_009 : rule =
@@ -4849,7 +4849,7 @@ let r_cjk_009 : rule =
         }
     else None
   in
-  { id = "CJK-009"; run }
+  mk_rule "CJK-009" run
 
 (* CJK-011: Hiragana prolonged-sound mark at line start *)
 let r_cjk_011 : rule =
@@ -4875,7 +4875,7 @@ let r_cjk_011 : rule =
         }
     else None
   in
-  { id = "CJK-011"; run }
+  mk_rule "CJK-011" run
 
 (* CJK-013: Prohibited break before ideographic full stop U+3002 *)
 let r_cjk_013 : rule =
@@ -4902,7 +4902,7 @@ let r_cjk_013 : rule =
         }
     else None
   in
-  { id = "CJK-013"; run }
+  mk_rule "CJK-013" run
 
 (* LANG-005: Hyphen-penalty too low *)
 let r_lang_005 : rule =
@@ -4922,7 +4922,7 @@ let r_lang_005 : rule =
       else None
     with Not_found | Failure _ -> None
   in
-  { id = "LANG-005"; run }
+  mk_rule "LANG-005" run
 
 (* LANG-008: Spell-checker dictionary differs from babel option *)
 let r_lang_008 : rule =
@@ -4954,7 +4954,7 @@ let r_lang_008 : rule =
           }
     | _ -> None
   in
-  { id = "LANG-008"; run }
+  mk_rule "LANG-008" run
 
 let rules_l2_approx : rule list =
   [

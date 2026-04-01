@@ -1500,6 +1500,346 @@ let r_lang_016 : rule =
   in
   { id = "LANG-016"; run }
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   4 batch: 10 remaining STYLE rules
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* STYLE-003: Passive voice in > 20% of sentences *)
+let r_style_003 : rule =
+  let re_passive =
+    Str.regexp {|\(was\|were\|been\|being\|is\|are\) +[a-z]+ed |}
+  in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let sents = sentence_split text in
+    let total = List.length sents in
+    if total < 5 then None
+    else
+      let passive_cnt =
+        List.fold_left
+          (fun acc sent ->
+            if
+              try
+                ignore (Str.search_forward re_passive sent 0);
+                true
+              with Not_found -> false
+            then acc + 1
+            else acc)
+          0 sents
+      in
+      let ratio = float_of_int passive_cnt /. float_of_int total in
+      if ratio > 0.20 then
+        Some
+          {
+            id = "STYLE-003";
+            severity = Info;
+            message =
+              Printf.sprintf "Passive voice in %.0f%% of sentences"
+                (ratio *. 100.0);
+            count = passive_cnt;
+          }
+      else None
+  in
+  { id = "STYLE-003"; run }
+
+(* STYLE-012: That/which relative-clause misuse *)
+let r_style_012 : rule =
+  let re = Str.regexp {|, which [a-z]|} in
+  let re_that = Str.regexp {|that [a-z]|} in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let has_which =
+      try
+        ignore (Str.search_forward re text 0);
+        true
+      with Not_found -> false
+    in
+    let has_that =
+      try
+        ignore (Str.search_forward re_that text 0);
+        true
+      with Not_found -> false
+    in
+    (* Only fire if both patterns present — indicates potential misuse *)
+    if has_which && has_that then
+      Some
+        {
+          id = "STYLE-012";
+          severity = Info;
+          message = "That/which relative-clause usage may be inconsistent";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-012"; run }
+
+(* STYLE-029: Undefined 'we' (author vs generic) *)
+let r_style_029 : rule =
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let has_author_we =
+      contains_substring text "we present"
+      || contains_substring text "we propose"
+      || contains_substring text "we show"
+      || contains_substring text "We present"
+      || contains_substring text "We propose"
+    in
+    let has_generic_we =
+      contains_substring text "we can see"
+      || contains_substring text "we note"
+      || contains_substring text "we observe"
+      || contains_substring text "We can see"
+      || contains_substring text "We note"
+    in
+    if has_author_we && has_generic_we then
+      Some
+        {
+          id = "STYLE-029";
+          severity = Info;
+          message = "Undefined 'we' — mixes author-we and generic-we";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-029"; run }
+
+(* STYLE-032: Bullet list mixes sentence-case and title-case *)
+let r_style_032 : rule =
+  let re_item = Str.regexp {|\\item +\([A-Za-z]\)|} in
+  let run s =
+    let text = strip_comments s in
+    let uppers = ref 0 in
+    let lowers = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_item text !start);
+         let c = (Str.matched_group 1 text).[0] in
+         if c >= 'A' && c <= 'Z' then incr uppers else incr lowers;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !uppers > 0 && !lowers > 0 then
+      Some
+        {
+          id = "STYLE-032";
+          severity = Info;
+          message = "Bullet list mixes sentence-case and title-case";
+          count = min !uppers !lowers;
+        }
+    else None
+  in
+  { id = "STYLE-032"; run }
+
+(* STYLE-038: Footnote paragraph exceeds 80 words *)
+let r_style_038 : rule =
+  let re = Str.regexp {|\\footnote{|} in
+  let run s =
+    let text = strip_comments s in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         let brace_start = Str.match_end () in
+         let len = String.length text in
+         let depth = ref 1 in
+         let j = ref brace_start in
+         while !j < len && !depth > 0 do
+           (match text.[!j] with
+           | '{' -> incr depth
+           | '}' -> decr depth
+           | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         (if !depth = 0 then
+            let body = String.sub text brace_start (!j - brace_start) in
+            if word_count body > 80 then incr cnt);
+         start := !j + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-038";
+          severity = Info;
+          message = "Footnote paragraph exceeds 80 words";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-038"; run }
+
+(* STYLE-039: Figure-caption ending punctuation inconsistent *)
+let r_style_039 : rule =
+  let re = Str.regexp {|\\caption{|} in
+  let run s =
+    let text = strip_comments s in
+    let endings = ref [] in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         let brace_start = Str.match_end () in
+         let len = String.length text in
+         let depth = ref 1 in
+         let j = ref brace_start in
+         while !j < len && !depth > 0 do
+           (match text.[!j] with
+           | '{' -> incr depth
+           | '}' -> decr depth
+           | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         (if !depth = 0 && !j > brace_start then
+            let body =
+              String.trim (String.sub text brace_start (!j - brace_start))
+            in
+            if String.length body > 0 then
+              endings := body.[String.length body - 1] :: !endings);
+         start := !j + 1
+       done
+     with Not_found -> ());
+    let endings = !endings in
+    if List.length endings < 2 then None
+    else
+      let with_period = List.filter (fun c -> c = '.') endings in
+      let without_period = List.filter (fun c -> c <> '.') endings in
+      if List.length with_period > 0 && List.length without_period > 0 then
+        Some
+          {
+            id = "STYLE-039";
+            severity = Info;
+            message = "Figure-caption ending punctuation inconsistent";
+            count = min (List.length with_period) (List.length without_period);
+          }
+      else None
+  in
+  { id = "STYLE-039"; run }
+
+(* STYLE-041: Footnote lacks terminal period *)
+let r_style_041 : rule =
+  let re = Str.regexp {|\\footnote{|} in
+  let run s =
+    let text = strip_comments s in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         let brace_start = Str.match_end () in
+         let len = String.length text in
+         let depth = ref 1 in
+         let j = ref brace_start in
+         while !j < len && !depth > 0 do
+           (match text.[!j] with
+           | '{' -> incr depth
+           | '}' -> decr depth
+           | _ -> ());
+           if !depth > 0 then incr j
+         done;
+         (if !depth = 0 && !j > brace_start then
+            let body =
+              String.trim (String.sub text brace_start (!j - brace_start))
+            in
+            if String.length body > 0 && body.[String.length body - 1] <> '.'
+            then incr cnt);
+         start := !j + 1
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-041";
+          severity = Info;
+          message = "Footnote lacks terminal period";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-041"; run }
+
+(* STYLE-043: Section-heading punctuation inconsistent *)
+let r_style_043 : rule =
+  let run s =
+    let titles = extract_heading_titles s in
+    if List.length titles < 2 then None
+    else
+      let with_punct =
+        List.fold_left
+          (fun acc t ->
+            let t = String.trim t in
+            if String.length t > 0 then
+              let c = t.[String.length t - 1] in
+              if c = '.' || c = ':' || c = '!' || c = '?' then acc + 1 else acc
+            else acc)
+          0 titles
+      in
+      let without_punct = List.length titles - with_punct in
+      if with_punct > 0 && without_punct > 0 then
+        Some
+          {
+            id = "STYLE-043";
+            severity = Info;
+            message = "Section-heading punctuation inconsistent";
+            count = min with_punct without_punct;
+          }
+      else None
+  in
+  { id = "STYLE-043"; run }
+
+(* STYLE-044: Ambiguous demonstrative 'this' without noun *)
+let r_style_044 : rule =
+  let re =
+    Str.regexp
+      {|[Tt]his \(is\|was\|has\|shows\|suggests\|means\|implies\|can\|will\|may\|might\|could\|should\) |}
+  in
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re text !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "STYLE-044";
+          severity = Info;
+          message = "Ambiguous demonstrative 'this' without noun";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "STYLE-044"; run }
+
+(* STYLE-047: Quote-punctuation placement AmE vs BrE inconsistent *)
+let r_style_047 : rule =
+  let run s =
+    let text = strip_comments (strip_math_segments s) in
+    (* AmE: period inside quotes; BrE: period outside quotes *)
+    let ame =
+      contains_substring text {|."|} || contains_substring text {|,"|}
+    in
+    let bre =
+      contains_substring text {|".|} || contains_substring text {|",|}
+    in
+    if ame && bre then
+      Some
+        {
+          id = "STYLE-047";
+          severity = Info;
+          message = "Quote-punctuation placement AmE vs BrE inconsistent";
+          count = 1;
+        }
+    else None
+  in
+  { id = "STYLE-047"; run }
+
 (* ── Exported rules list ────────────────────────────────────────────── *)
 
 let rules_style : rule list =
@@ -1555,4 +1895,15 @@ let rules_style : rule list =
     r_lang_014;
     r_lang_015;
     r_lang_016;
+    (* Phase 4 *)
+    r_style_003;
+    r_style_012;
+    r_style_029;
+    r_style_032;
+    r_style_038;
+    r_style_039;
+    r_style_041;
+    r_style_043;
+    r_style_044;
+    r_style_047;
   ]

@@ -4437,6 +4437,280 @@ let r_pdf_005 : rule =
   in
   { id = "PDF-005"; run }
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   4: LAY + FONT + CHEM + LANG misc rules (11 rules)
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* LAY-010: Missing \clearpage before appendix *)
+let r_lay_010 : rule =
+  let run s =
+    if contains_substring s "\\appendix" then
+      let pos =
+        try Str.search_forward (Str.regexp_string "\\appendix") s 0
+        with Not_found -> -1
+      in
+      if pos > 0 then
+        let before = String.sub s (max 0 (pos - 30)) (min 30 pos) in
+        if not (contains_substring before "\\clearpage") then
+          Some
+            {
+              id = "LAY-010";
+              severity = Info;
+              message = "Missing \\clearpage before \\appendix";
+              count = 1;
+            }
+        else None
+      else None
+    else None
+  in
+  { id = "LAY-010"; run }
+
+(* LAY-011: \columnbreak in single-column document *)
+let r_lay_011 : rule =
+  let run s =
+    let has_colbreak = contains_substring s "\\columnbreak" in
+    let has_twocol =
+      contains_substring s "twocolumn" || contains_substring s "multicol"
+    in
+    if has_colbreak && not has_twocol then
+      Some
+        {
+          id = "LAY-011";
+          severity = Info;
+          message = "\\columnbreak in single-column document";
+          count = count_substring s "\\columnbreak";
+        }
+    else None
+  in
+  { id = "LAY-011"; run }
+
+(* LAY-012: Float specifier missing *)
+let r_lay_012 : rule =
+  let re_nopt = Str.regexp {|\\begin{figure}\s*[^[]|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_nopt s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-012";
+          severity = Info;
+          message = "Float position specifier missing on \\begin{figure}";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-012"; run }
+
+(* LAY-013: \newpage inside float *)
+let r_lay_013 : rule =
+  let run s =
+    let fig_blocks = extract_env_blocks s "figure" in
+    let tab_blocks = extract_env_blocks s "table" in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          acc
+          + count_substring body "\\newpage"
+          + count_substring body "\\clearpage")
+        0 (fig_blocks @ tab_blocks)
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "LAY-013";
+          severity = Info;
+          message = "\\newpage or \\clearpage inside float environment";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "LAY-013"; run }
+
+(* LAY-014: Page break before subsection discouraged *)
+let r_lay_014 : rule =
+  let re = Str.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-014";
+          severity = Info;
+          message = "Page break before subsection discouraged";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "LAY-014"; run }
+
+(* FONT-009: Small-caps requested but glyphs missing — fallback visible *)
+let r_font_009 : rule =
+  let run s =
+    (* Heuristic: \textsc used with non-Latin chars *)
+    let re = Str.regexp {|\\textsc{[^}]*[^\x00-\x7f][^}]*}|} in
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-009";
+          severity = Warning;
+          message = "Small-caps with non-ASCII chars — fallback may be visible";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-009"; run }
+
+(* FONT-011: Microtype protrusion mismatch between text and math fonts *)
+let r_font_011 : rule =
+  let run s =
+    let has_microtype = contains_substring s "microtype" in
+    let has_mathfont =
+      contains_substring s "\\setmathfont"
+      || contains_substring s "unicode-math"
+    in
+    if has_microtype && has_mathfont then
+      Some
+        {
+          id = "FONT-011";
+          severity = Warning;
+          message =
+            "Microtype protrusion may mismatch between text and math fonts";
+          count = 1;
+        }
+    else None
+  in
+  { id = "FONT-011"; run }
+
+(* FONT-012: ff-ligature disabled adjacent to \texttt *)
+let r_font_012 : rule =
+  let re =
+    Str.regexp
+      {|\\texttt{[^}]*}\(ff\|fi\|fl\)\|ff\\texttt\|fi\\texttt\|fl\\texttt|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let start = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !start);
+         incr cnt;
+         start := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FONT-012";
+          severity = Info;
+          message = "Ligature adjacent to \\texttt may cause visual clash";
+          count = !cnt;
+        }
+    else None
+  in
+  { id = "FONT-012"; run }
+
+(* CHEM-010: Reaction scheme exceeds page width heuristic *)
+let r_chem_010 : rule =
+  let run s =
+    let ce_blocks = extract_env_blocks s "reaction" in
+    let scheme_blocks = extract_env_blocks s "scheme" in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let lines = String.split_on_char '\n' body in
+          List.fold_left
+            (fun a line -> if String.length line > 120 then a + 1 else a)
+            acc lines)
+        0
+        (ce_blocks @ scheme_blocks)
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CHEM-010";
+          severity = Info;
+          message = "Reaction scheme line exceeds page width (> 120 chars)";
+          count = cnt;
+        }
+    else None
+  in
+  { id = "CHEM-010"; run }
+
+(* LANG-009: Ragged-right text in non-Latin script *)
+let r_lang_009 : rule =
+  let run s =
+    let has_ragged = contains_substring s "\\raggedright" in
+    (* Check for CJK or Arabic content *)
+    let has_nonlatin =
+      contains_substring s "\\begin{CJK}"
+      || contains_substring s "xeCJK"
+      || contains_substring s "\\setdefaultlanguage{arabic}"
+    in
+    if has_ragged && has_nonlatin then
+      Some
+        {
+          id = "LANG-009";
+          severity = Info;
+          message = "Ragged-right text in non-Latin script";
+          count = 1;
+        }
+    else None
+  in
+  { id = "LANG-009"; run }
+
+(* LANG-010: Arabic digits in RTL context not localised *)
+let r_lang_010 : rule =
+  let run s =
+    let has_arabic =
+      contains_substring s "\\setdefaultlanguage{arabic}"
+      || contains_substring s "{arabic}"
+    in
+    if not has_arabic then None
+    else
+      (* Check for ASCII digits in Arabic text *)
+      let text = strip_math_segments s in
+      let has_ascii_digits =
+        let found = ref false in
+        String.iter (fun c -> if c >= '0' && c <= '9' then found := true) text;
+        !found
+      in
+      if has_ascii_digits then
+        Some
+          {
+            id = "LANG-010";
+            severity = Info;
+            message = "Arabic digits in RTL context not localised";
+            count = 1;
+          }
+      else None
+  in
+  { id = "LANG-010"; run }
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -4578,6 +4852,18 @@ let rules_l2_approx : rule list =
     r_doc_005;
     r_ref_012;
     r_pdf_005;
+    (* Phase 4: LAY + FONT + misc *)
+    r_lay_010;
+    r_lay_011;
+    r_lay_012;
+    r_lay_013;
+    r_lay_014;
+    r_font_009;
+    r_font_011;
+    r_font_012;
+    r_chem_010;
+    r_lang_009;
+    r_lang_010;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

@@ -48,10 +48,16 @@ let count_substring (s : string) (sub : string) : int =
     loop 0 0
 
 let contains_substring (s : string) (needle : string) : bool =
-  try
-    ignore (Str.search_forward (Str.regexp_string needle) s 0);
-    true
-  with Not_found -> false
+  let slen = String.length s and nlen = String.length needle in
+  if nlen = 0 then true
+  else if nlen > slen then false
+  else
+    let rec loop i =
+      if i > slen - nlen then false
+      else if String.sub s i nlen = needle then true
+      else loop (i + 1)
+    in
+    loop 0
 
 let any_line_pred (s : string) (pred : string -> bool) : int * int =
   (* returns (lines_checked, lines_matched) *)
@@ -509,6 +515,7 @@ let is_article_like (s : string) : bool =
    if no options bracket present. *)
 let extract_usepackages_with_opts (s : string) : (int * string * string) list =
   let re = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
+  let re_opts = Str.regexp {|\[\([^]]*\)\]|} in
   let results = ref [] in
   let i = ref 0 in
   (try
@@ -518,7 +525,7 @@ let extract_usepackages_with_opts (s : string) : (int * string * string) list =
        let after_brace = Str.match_end () in
        let opts =
          try
-           let _ = Str.search_forward (Str.regexp {|\[\([^]]*\)\]|}) full 0 in
+           let _ = Str.search_forward re_opts full 0 in
            Str.matched_group 1 full
          with Not_found -> ""
        in

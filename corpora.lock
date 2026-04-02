@@ -1,0 +1,37 @@
+# corpora.lock — External corpus manifest for LaTeX Perfectionist v25
+# Each entry specifies a downloadable corpus with integrity verification.
+# Usage: make fetch-corpora (or: bash scripts/fetch_corpora.sh)
+#
+# Schema per entry:
+#   name:        Human-readable corpus name
+#   url:         HTTPS download URL
+#   sha256:      Expected SHA-256 hash of the downloaded file
+#   size_bytes:  Expected file size (for progress display)
+#   format:      tar.gz | zip | tex (single file)
+#   target_dir:  Extraction target under external_corpora/
+#   description: What this corpus contains
+
+corpora:
+  - name: "arxiv-sample-2024"
+    url: "https://example.com/corpora/arxiv-sample-2024.tar.gz"
+    sha256: "placeholder-update-after-first-download"
+    size_bytes: 52428800
+    format: "tar.gz"
+    target_dir: "external_corpora/arxiv-sample"
+    description: "500 random arXiv papers (2024), diverse LaTeX styles"
+
+  - name: "ctan-classes-2024"
+    url: "https://example.com/corpora/ctan-classes-2024.tar.gz"
+    sha256: "placeholder-update-after-first-download"
+    size_bytes: 10485760
+    format: "tar.gz"
+    target_dir: "external_corpora/ctan-classes"
+    description: "50 popular CTAN document classes with example docs"
+
+  - name: "multilingual-theses"
+    url: "https://example.com/corpora/multilingual-theses.tar.gz"
+    sha256: "placeholder-update-after-first-download"
+    size_bytes: 104857600
+    format: "tar.gz"
+    target_dir: "external_corpora/multilingual-theses"
+    description: "30 PhD theses across 7 languages (en, fr, de, es, ja, zh, ar)"

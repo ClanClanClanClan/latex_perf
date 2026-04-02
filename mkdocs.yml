@@ -1,0 +1,45 @@
+site_name: LaTeX Perfectionist v25
+site_description: Formally-verified, high-performance LaTeX validation system
+site_url: https://ClanClanClanClan.github.io/latex_perf/
+
+repo_name: ClanClanClanClan/latex_perf
+repo_url: https://github.com/ClanClanClanClan/latex_perf
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - Overview: ARCHITECTURE.md
+    - Build System: docs/BUILD_SYSTEM_GUIDE.md
+    - REST API: docs/REST_API.md
+  - Rules:
+    - Implementation Plan: docs/RULES_IMPLEMENTATION_PLAN.md
+    - Runtime: docs/VALIDATORS_RUNTIME.md
+    - Token-Aware: docs/TOKEN_AWARE_VALIDATORS.md
+  - Proofs:
+    - Overview: docs/PROOFS.md
+  - CI/CD:
+    - Status Checks: docs/CI_STATUS_CHECKS.md
+    - Notifications: docs/NOTIFICATIONS.md
+    - Test Coverage: docs/TEST_COVERAGE_MATRIX.md
+  - ML Pipeline:
+    - Architecture: ml/ARCHITECTURE.md
+    - Results: ml/RESULTS.md
+  - Governance:
+    - Risk Register: governance/risk-register.md
+  - Changelog: CHANGELOG.md
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - admonition

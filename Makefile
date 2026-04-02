@@ -174,3 +174,12 @@ simd-hash-avx2:
 
 simd-hash-neon:
 	OPAMSWITCH=${OPAMSWITCH:-l0-testing} opam exec -- dune build --profile=simd-neon @simd-hash
+
+# ── Documentation Site ──────────────────────────────────────────────
+docs-site:
+	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
+	@mkdocs build --strict
+
+docs-serve:
+	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
+	@mkdocs serve

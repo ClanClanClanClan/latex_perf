@@ -82,10 +82,16 @@
  (modules test_fault_injection)
  (libraries latex_parse_lib unix threads))
 
+(library
+ (name rest_simple_expander_lib)
+ (wrapped false)
+ (modules rest_simple_expander)
+ (libraries latex_parse_lib str))
+
 (executable
  (name rest_api_server)
- (modules rest_api_server rest_http rest_handlers rest_simple_expander)
- (libraries latex_parse_lib unix threads str yojson))
+ (modules rest_api_server rest_http rest_handlers)
+ (libraries latex_parse_lib rest_simple_expander_lib unix threads str yojson))
 
 (executable
  (name validators_cli)
@@ -308,13 +314,13 @@
 
 (test
  (name test_expansion_pipeline)
- (modules test_expansion_pipeline rest_simple_expander)
- (libraries latex_parse_lib unix yojson))
+ (modules test_expansion_pipeline)
+ (libraries latex_parse_lib rest_simple_expander_lib unix yojson))
 
 (test
  (name test_golden_corpus)
- (modules test_golden_corpus rest_simple_expander)
- (libraries latex_parse_lib unix yojson)
+ (modules test_golden_corpus)
+ (libraries latex_parse_lib rest_simple_expander_lib unix yojson)
  (deps
   ../../specs/rules/l1_golden.yaml
   ../../specs/rules/pilot_v1_golden.yaml

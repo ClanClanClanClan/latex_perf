@@ -2322,12 +2322,11 @@ let l1_l3_001_rule : rule =
     Str.regexp
       {|\\newcommand\|\\renewcommand\|\\newenvironment\|\\renewenvironment|}
   in
+  let re_begin_doc = Str.regexp_string {|\begin{document}|} in
   let run s =
     let preamble =
       try
-        let idx =
-          Str.search_forward (Str.regexp_string {|\begin{document}|}) s 0
-        in
+        let idx = Str.search_forward re_begin_doc s 0 in
         String.sub s 0 idx
       with Not_found -> s
     in
@@ -2360,12 +2359,11 @@ let l1_l3_002_rule : rule =
   let re_expl3_decl =
     Str.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
   in
+  let re_begin_doc2 = Str.regexp_string {|\begin{document}|} in
   let run s =
     let body =
       try
-        let idx =
-          Str.search_forward (Str.regexp_string {|\begin{document}|}) s 0
-        in
+        let idx = Str.search_forward re_begin_doc2 s 0 in
         let start = idx + 16 in
         if start < String.length s then
           String.sub s start (String.length s - start)

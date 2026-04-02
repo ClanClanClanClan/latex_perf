@@ -548,6 +548,7 @@ let r_typo_023 : rule =
     Str.regexp
       {|\\end{tabular\|\\end{array\|\\end{align\|\\end{tabularx\|\\end{longtable|}
   in
+  let _re_close_brace = Str.regexp "}" in
   let run s =
     (* Strip out tabular/array/align environments *)
     let stripped = ref s in
@@ -558,7 +559,7 @@ let r_typo_023 : rule =
            let end_pos = Str.search_forward end_re !stripped start_pos in
            let end_pos =
              try
-               let _ = Str.search_forward (Str.regexp "}") !stripped end_pos in
+               let _ = Str.search_forward _re_close_brace !stripped end_pos in
                Str.match_end ()
              with Not_found -> end_pos + 10
            in

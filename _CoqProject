@@ -1,5 +1,10 @@
 # LaTeX Perfectionist v25_R1 Coq Project Configuration
 # Canonical _CoqProject per v25_master.md specifications
+#
+# NOTE: This file lists only core (hand-written) proofs for editor LSP.
+# Auto-generated per-rule soundness proofs live in proofs/generated/
+# and are built by a separate (coq.theory) stanza in proofs/generated/dune.
+# Run gen_coq_proofs.py to regenerate them (607 theorems as of W102).
 
 -R proofs LaTeXPerfectionist
 -Q core/interfaces LaTeXPerfectionist.Core

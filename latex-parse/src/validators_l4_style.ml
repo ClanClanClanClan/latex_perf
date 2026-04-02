@@ -419,11 +419,12 @@ let r_style_024 : rule =
 
 (* STYLE-026: Repeated word (the the) *)
 let r_style_026 : rule =
+  let re_whitespace = Str.regexp "[ \t\n\r]+" in
   let run s =
     let text =
       String.lowercase_ascii (strip_comments (strip_math_segments s))
     in
-    let words = Str.split (Str.regexp "[ \t\n\r]+") text in
+    let words = Str.split re_whitespace text in
     let rec check cnt = function
       | [] | [ _ ] -> cnt
       | a :: (b :: _ as rest) ->

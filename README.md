@@ -16,7 +16,7 @@
 
 LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 623 rules across 21 languages.
 
-## Current Status (Week 80 — March 2026)
+## Current Status (Week 80 — April 2026)
 
 Post-Phase 10 — L4 STYLE rules + locale validators + L3-approximable rules implemented. ML span extractor (v2 candidate classifier) blocked on A100 access:
 - **Build**: `dune build` compiles the SIMD service, benches, and 15 Coq proofs (+ 7 archive) via `(coq.theory)` stanza.

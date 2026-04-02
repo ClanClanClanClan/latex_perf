@@ -27,24 +27,15 @@ let require_documentclass : rule =
       | _ -> false
     in
     if pilot_mode then None
+    else if contains_substring s "\\documentclass" then None
     else
-      let needle = "\\documentclass" in
-      if
-        String.length s >= String.length needle
-        &&
-        try
-          ignore (Str.search_forward (Str.regexp_string needle) s 0);
-          true
-        with Not_found -> false
-      then None
-      else
-        Some
-          {
-            id = "require_documentclass";
-            severity = Warning;
-            message = "Missing \\documentclass";
-            count = 1;
-          }
+      Some
+        {
+          id = "require_documentclass";
+          severity = Warning;
+          message = "Missing \\documentclass";
+          count = 1;
+        }
   in
   { id = "require_documentclass"; run; languages = [] }
 

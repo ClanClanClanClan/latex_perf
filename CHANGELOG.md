@@ -4,7 +4,11 @@ All notable changes to LaTeX Perfectionist v25 are documented here.
 
 ## [Unreleased]
 
-### Added (Phases 9-12, PRs #161-#171)
+### Added (Phases 9-12, PRs #161-#173)
+- Comprehensive project audit: docs, .mli, _CoqProject fixes (PR #172)
+- Regex hoisting: 44 Str.regexp compilations moved out of run closures (PRs #172, #173)
+
+### Added (PRs #161-#171)
 - ML v2 parser-state diagnostic + architecture docs (PR #161)
 - v2 candidate classification pipeline: extractor, dataset, byte classifier (PR #165)
 - 429 soundness theorems via auto-generation + CI parallelism (PR #166)

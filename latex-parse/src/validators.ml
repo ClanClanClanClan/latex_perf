@@ -197,6 +197,60 @@ let run_all_for_language (src : string) (lang : string option) : result list =
   in
   go [] rules
 
+(** Run all validators in parallel using OCaml 5.x domains. Splits rules into
+    [n_domains] chunks, runs each chunk in a separate domain. Results are merged
+    and returned in rule-definition order.
+
+    Gated behind [L0_PARALLEL=1] env var; falls back to sequential if unset or
+    if [n_domains <= 1]. *)
+let run_all_parallel ?(n_domains = 4) (src : string) : result list =
+  let parallel_mode =
+    match Sys.getenv_opt "L0_PARALLEL" with
+    | Some ("1" | "true" | "on") -> true
+    | _ -> false
+  in
+  if (not parallel_mode) || n_domains <= 1 then run_all src
+  else
+    let rules = get_rules () in
+    let n = List.length rules in
+    let chunk_size = (n + n_domains - 1) / n_domains in
+    (* Split rules into chunks *)
+    let rec split_chunks acc remaining =
+      if remaining = [] then List.rev acc
+      else
+        let rec take n lst acc =
+          if n = 0 || lst = [] then (List.rev acc, lst)
+          else
+            match lst with
+            | x :: xs -> take (n - 1) xs (x :: acc)
+            | [] -> (List.rev acc, [])
+        in
+        let chunk, rest = take chunk_size remaining [] in
+        split_chunks (chunk :: acc) rest
+    in
+    let chunks = split_chunks [] rules in
+    (* Spawn domains for each chunk *)
+    let domains =
+      List.map
+        (fun chunk ->
+          Domain.spawn (fun () ->
+              let rec go acc = function
+                | [] -> List.rev acc
+                | r :: rs ->
+                    let acc =
+                      match r.run src with
+                      | Some res -> res :: acc
+                      | None -> acc
+                    in
+                    go acc rs
+              in
+              go [] chunk))
+        chunks
+    in
+    (* Join all domains and merge results *)
+    let chunk_results = List.map Domain.join domains in
+    List.concat chunk_results
+
 let run_all_with_timings (src : string) :
     result list * float * (string * float) list =
   let rules = get_rules () in

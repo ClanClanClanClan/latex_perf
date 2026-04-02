@@ -967,10 +967,10 @@ let r_ref_010 : rule =
 (* ── CMD-014: \AtBeginDocument placed after \begin{document} ──────────── *)
 let r_cmd_014 : rule =
   let re = Str.regexp_string "\\AtBeginDocument" in
+  let _re_begin_doc = Str.regexp_string "\\begin{document}" in
   let run s =
     let doc_pos =
-      try Some (Str.search_forward (Str.regexp_string "\\begin{document}") s 0)
-      with Not_found -> None
+      try Some (Str.search_forward _re_begin_doc s 0) with Not_found -> None
     in
     match doc_pos with
     | None -> None
@@ -1081,6 +1081,7 @@ let r_tab_006 : rule =
 
 (* ── TAB-009: Floating table missing \label ──────────────────────────── *)
 let r_tab_009 : rule =
+  let _re_label = Str.regexp {|\\label{|} in
   let run s =
     let blocks = extract_env_blocks_starred "table" s in
     let cnt =
@@ -1088,7 +1089,7 @@ let r_tab_009 : rule =
         (fun acc body ->
           let has_label =
             try
-              ignore (Str.search_forward (Str.regexp {|\\label{|}) body 0);
+              ignore (Str.search_forward _re_label body 0);
               true
             with Not_found -> false
           in
@@ -1141,6 +1142,7 @@ let r_tab_010 : rule =
 
 (* ── TAB-011: Top/bottom \hline instead of \toprule/\bottomrule ──────── *)
 let r_tab_011 : rule =
+  let _re_toprule = Str.regexp_string "\\toprule" in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1151,7 +1153,7 @@ let r_tab_011 : rule =
           let has_hline = contains_substring body "\\hline" in
           let has_booktabs =
             try
-              ignore (Str.search_forward (Str.regexp_string "\\toprule") body 0);
+              ignore (Str.search_forward _re_toprule body 0);
               true
             with Not_found -> contains_substring body "\\bottomrule"
           in
@@ -1235,9 +1237,10 @@ let r_pkg_007 : rule =
 (* ── PKG-009: TikZ libraries loaded inside document body ─────────────── *)
 let r_pkg_009 : rule =
   let re = Str.regexp_string "\\usetikzlibrary" in
+  let _re_begin_doc_p9 = Str.regexp_string "\\begin{document}" in
   let run s =
     let doc_pos =
-      try Some (Str.search_forward (Str.regexp_string "\\begin{document}") s 0)
+      try Some (Str.search_forward _re_begin_doc_p9 s 0)
       with Not_found -> None
     in
     match doc_pos with
@@ -1520,6 +1523,7 @@ let r_tikz_007 : rule =
 (* ── FIG-010: Subfigure environment without \subcaption ──────────────── *)
 (* Check both subfigure and subfigure* environments. *)
 let r_fig_010 : rule =
+  let _re_subcaption = Str.regexp_string "\\subcaption" in
   let run s =
     let blocks = extract_env_blocks_starred "subfigure" s in
     let cnt =
@@ -1527,8 +1531,7 @@ let r_fig_010 : rule =
         (fun acc body ->
           let has_subcap =
             try
-              ignore
-                (Str.search_forward (Str.regexp_string "\\subcaption") body 0);
+              ignore (Str.search_forward _re_subcaption body 0);
               true
             with Not_found -> contains_substring body "\\caption"
           in
@@ -1818,6 +1821,7 @@ let r_pkg_025 : rule =
    column or @{.} separator. *)
 let r_tab_003 : rule =
   let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let _re_decimal = Str.regexp {|[0-9]+\.[0-9]|} in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1828,7 +1832,7 @@ let r_tab_003 : rule =
           (* check if body contains decimal numbers *)
           let has_decimal =
             try
-              ignore (Str.search_forward (Str.regexp {|[0-9]+\.[0-9]|}) body 0);
+              ignore (Str.search_forward _re_decimal body 0);
               true
             with Not_found -> false
           in
@@ -1860,6 +1864,8 @@ let r_tab_003 : rule =
 (* ── TAB-007: Text in numeric column without \multicolumn ─────────── *)
 (* Fire if S-column tabular contains text rows without \multicolumn *)
 let r_tab_007 : rule =
+  let _re_s_column = Str.regexp {|{[^}]*S[^}]*}|} in
+  let _re_three_alpha = Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|} in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1870,7 +1876,7 @@ let r_tab_007 : rule =
           (* Check if tabular uses S columns *)
           let has_s =
             try
-              ignore (Str.search_forward (Str.regexp {|{[^}]*S[^}]*}|}) s 0);
+              ignore (Str.search_forward _re_s_column s 0);
               true
             with Not_found -> false
           in
@@ -1879,10 +1885,7 @@ let r_tab_007 : rule =
             (* Check for text in S columns without multicolumn *)
             let has_text_no_mc =
               try
-                ignore
-                  (Str.search_forward
-                     (Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|})
-                     body 0);
+                ignore (Str.search_forward _re_three_alpha body 0);
                 let has_mc = contains_substring body "\\multicolumn" in
                 not has_mc
               with Not_found -> false
@@ -1931,6 +1934,8 @@ let r_tab_008 : rule =
 (* ── TAB-012: Numeric column not aligned using siunitx S-column ──────── *)
 let r_tab_012 : rule =
   let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let _re_end_tabular = Str.regexp_string "\\end{tabular" in
+  let _re_numeric = Str.regexp {|[0-9]+\.?[0-9]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -1945,14 +1950,13 @@ let r_tab_012 : rule =
          (if has_rcl && not has_s then
             (* Check if body has numbers *)
             let body_end =
-              try Str.search_forward (Str.regexp_string "\\end{tabular") s after
+              try Str.search_forward _re_end_tabular s after
               with Not_found -> String.length s
             in
             let body = String.sub s after (body_end - after) in
             let has_nums =
               try
-                ignore
-                  (Str.search_forward (Str.regexp {|[0-9]+\.?[0-9]|}) body 0);
+                ignore (Str.search_forward _re_numeric body 0);
                 true
               with Not_found -> false
             in
@@ -1974,6 +1978,8 @@ let r_tab_012 : rule =
 
 (* ── TAB-013: Caption position for longtable must be at top ──────────── *)
 let r_tab_013 : rule =
+  let _re_caption_t13 = Str.regexp_string "\\caption" in
+  let _re_linebreak_t13 = Str.regexp_string "\\\\" in
   let run s =
     let blocks = extract_env_blocks "longtable" s in
     let cnt =
@@ -1983,11 +1989,11 @@ let r_tab_013 : rule =
           if not has_caption then acc
           else
             let cap_pos =
-              try Str.search_forward (Str.regexp_string "\\caption") body 0
+              try Str.search_forward _re_caption_t13 body 0
               with Not_found -> 0
             in
             let first_row_pos =
-              try Str.search_forward (Str.regexp_string "\\\\") body 0
+              try Str.search_forward _re_linebreak_t13 body 0
               with Not_found -> String.length body
             in
             if cap_pos > first_row_pos then acc + 1 else acc)
@@ -2159,6 +2165,7 @@ let r_fig_019 : rule =
 
 (* ── FIG-022: Figure caption identical to surrounding sentence ───────── *)
 let r_fig_022 : rule =
+  let _re_begin_figure = Str.regexp_string "\\begin{figure" in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
@@ -2173,11 +2180,7 @@ let r_fig_022 : rule =
                 (* Search for caption text outside figure environments *)
                 let outside =
                   try
-                    let fig_start =
-                      Str.search_forward
-                        (Str.regexp_string "\\begin{figure")
-                        s 0
-                    in
+                    let fig_start = Str.search_forward _re_begin_figure s 0 in
                     let before = String.sub s 0 fig_start in
                     try
                       ignore
@@ -2876,6 +2879,7 @@ let r_lang_001 : rule =
       "labor";
     ]
   in
+  let _re_british = Str.regexp {|british\|UKenglish|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -2885,8 +2889,7 @@ let r_lang_001 : rule =
           name = "babel"
           &&
           try
-            ignore
-              (Str.search_forward (Str.regexp {|british\|UKenglish|}) opts 0);
+            ignore (Str.search_forward _re_british opts 0);
             true
           with Not_found -> false)
         pkgs
@@ -2924,22 +2927,18 @@ let r_lang_001 : rule =
 
 (* -- LANG-006: Non-English abstract before \selectlanguage ---------- *)
 let r_lang_006 : rule =
+  let _re_begin_abstract = Str.regexp_string "\\begin{abstract}" in
+  let _re_selectlang = Str.regexp_string "\\selectlanguage" in
   let run s =
     match extract_document_body s with
     | None -> None
     | Some body -> (
         let abs_pos =
-          try
-            Some
-              (Str.search_forward
-                 (Str.regexp_string "\\begin{abstract}")
-                 body 0)
+          try Some (Str.search_forward _re_begin_abstract body 0)
           with Not_found -> None
         in
         let lang_pos =
-          try
-            Some
-              (Str.search_forward (Str.regexp_string "\\selectlanguage") body 0)
+          try Some (Str.search_forward _re_selectlang body 0)
           with Not_found -> None
         in
         match (abs_pos, lang_pos) with
@@ -2960,6 +2959,7 @@ let r_lang_006 : rule =
 (* -- LANG-007: babel shorthand mis-used instead of og/fg ----------- *)
 let r_lang_007 : rule =
   let shorthand_re = Str.regexp {|""|} in
+  let _re_french = Str.regexp {|french\|francais|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -2969,7 +2969,7 @@ let r_lang_007 : rule =
           name = "babel"
           &&
           try
-            ignore (Str.search_forward (Str.regexp {|french\|francais|}) opts 0);
+            ignore (Str.search_forward _re_french opts 0);
             true
           with Not_found -> false)
         pkgs
@@ -3003,16 +3003,14 @@ let r_lang_007 : rule =
 (* -- LANG-013: Abstract language differs from \selectlanguage ------- *)
 let r_lang_013 : rule =
   let lang_re = Str.regexp {|\\selectlanguage{\([^}]+\)}|} in
+  let _re_begin_abstract_l13 = Str.regexp_string "\\begin{abstract}" in
+  let _re_end_abstract = Str.regexp_string "\\end{abstract}" in
   let run s =
     match extract_document_body s with
     | None -> None
     | Some body -> (
         let abs_pos =
-          try
-            Some
-              (Str.search_forward
-                 (Str.regexp_string "\\begin{abstract}")
-                 body 0)
+          try Some (Str.search_forward _re_begin_abstract_l13 body 0)
           with Not_found -> None
         in
         match abs_pos with
@@ -3020,7 +3018,7 @@ let r_lang_013 : rule =
         | Some ap -> (
             let abs_end =
               try
-                Str.search_forward (Str.regexp_string "\\end{abstract}") body ap
+                Str.search_forward _re_end_abstract body ap
                 + String.length "\\end{abstract}"
               with Not_found -> ap
             in
@@ -3090,6 +3088,7 @@ let r_l3_008 : rule =
   let expl3_re =
     Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
   in
+  let _re_provides_expl = Str.regexp_string "\\ProvidesExplPackage" in
   let run s =
     let has_expl3 =
       try
@@ -3099,8 +3098,7 @@ let r_l3_008 : rule =
     in
     let has_provides =
       try
-        ignore
-          (Str.search_forward (Str.regexp_string "\\ProvidesExplPackage") s 0);
+        ignore (Str.search_forward _re_provides_expl s 0);
         true
       with Not_found -> contains_substring s "\\ProvidesExplClass"
     in
@@ -3220,6 +3218,7 @@ let r_rtl_005 : rule =
       "kurdish";
     ]
   in
+  let _re_newfontfamily = Str.regexp_string "\\newfontfamily" in
   let run s =
     let has_rtl_lang =
       List.exists
@@ -3234,7 +3233,7 @@ let r_rtl_005 : rule =
     if has_rtl_lang && has_polyglossia then
       let has_font_spec =
         try
-          ignore (Str.search_forward (Str.regexp_string "\\newfontfamily") s 0);
+          ignore (Str.search_forward _re_newfontfamily s 0);
           true
         with Not_found -> contains_substring s "\\setmainfont"
       in
@@ -3995,6 +3994,7 @@ let r_tikz_005 : rule =
 (* BIB-001: Entry missing DOI or ISBN/ISSN *)
 let r_bib_001 : rule =
   let re_entry = Str.regexp {|@[a-zA-Z]+{[^,]+,|} in
+  let _re_entry_sep = Str.regexp_string "\n@" in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
@@ -4004,7 +4004,7 @@ let r_bib_001 : rule =
          let entry_start = Str.match_end () in
          (* find end of entry: next @ at line start or end of string *)
          let entry_end =
-           try Str.search_forward (Str.regexp_string "\n@") s entry_start
+           try Str.search_forward _re_entry_sep s entry_start
            with Not_found -> String.length s
          in
          let entry = String.sub s entry_start (entry_end - entry_start) in
@@ -4104,8 +4104,9 @@ let r_bib_013 : rule =
 let r_bib_014 : rule =
   let re_author = Str.regexp {|author *= *{\([^}]+\)}|} in
   let re_year = Str.regexp {|year *= *{\([^}]+\)}|} in
+  let _re_entry_split = Str.regexp "\n@" in
   let run s =
-    let entries = Str.split (Str.regexp "\n@") s in
+    let entries = Str.split _re_entry_split s in
     let keys = ref [] in
     List.iter
       (fun entry ->
@@ -5033,10 +5034,11 @@ let r_cmd_008 : rule =
       "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n\
        ]*{?\\\\[a-zA-Z]*@[a-zA-Z]*}?"
   in
+  let _re_makeatletter = Str.regexp_string "\\makeatletter" in
   let run s =
     let has_makeatletter =
       try
-        let _ = Str.search_forward (Str.regexp_string "\\makeatletter") s 0 in
+        let _ = Str.search_forward _re_makeatletter s 0 in
         true
       with Not_found -> false
     in
@@ -5096,20 +5098,19 @@ let r_cmd_009 : rule =
    guard *)
 let r_cmd_011 : rule =
   let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
+  let _re_begin_doc_c11 = Str.regexp_string "\\begin{document}" in
+  let _re_makeatletter_c11 = Str.regexp_string "\\makeatletter" in
   let run s =
     (* Extract preamble: everything before \begin{document} *)
-    let tag = "\\begin{document}" in
     let preamble =
       try
-        let pos = Str.search_forward (Str.regexp_string tag) s 0 in
+        let pos = Str.search_forward _re_begin_doc_c11 s 0 in
         String.sub s 0 pos
       with Not_found -> s
     in
     let has_makeatletter =
       try
-        let _ =
-          Str.search_forward (Str.regexp_string "\\makeatletter") preamble 0
-        in
+        let _ = Str.search_forward _re_makeatletter_c11 preamble 0 in
         true
       with Not_found -> false
     in

@@ -1486,27 +1486,23 @@ let r_typo_058 : rule =
 
 (* TYPO-060: Smart quotes inside lstlisting/verbatim environments *)
 let r_typo_060 : rule =
+  let _re_begin_lst = Str.regexp_string "\\begin{lstlisting}" in
+  let _re_end_lst = Str.regexp_string "\\end{lstlisting}" in
+  let _re_begin_verb = Str.regexp_string "\\begin{verbatim}" in
+  let _re_end_verb = Str.regexp_string "\\end{verbatim}" in
   let run s =
     (* Extract content within \begin{lstlisting}...\end{lstlisting} and
        \begin{verbatim}...\end{verbatim}, then scan for curly quotes *)
-    let curly_in_env env =
-      let open_tag = "\\begin{" ^ env ^ "}" in
-      let close_tag = "\\end{" ^ env ^ "}" in
-      let olen = String.length open_tag in
+    let curly_in_env open_re close_re olen clen =
       let rec loop i acc =
         match
-          try Some (Str.search_forward (Str.regexp_string open_tag) s i)
-          with Not_found -> None
+          try Some (Str.search_forward open_re s i) with Not_found -> None
         with
         | None -> acc
         | Some start -> (
             let content_start = start + olen in
             match
-              try
-                Some
-                  (Str.search_forward
-                     (Str.regexp_string close_tag)
-                     s content_start)
+              try Some (Str.search_forward close_re s content_start)
               with Not_found -> None
             with
             | None -> acc
@@ -1520,11 +1516,14 @@ let r_typo_060 : rule =
                   + count_substring block "\xe2\x80\x98"
                   + count_substring block "\xe2\x80\x99"
                 in
-                loop (end_pos + String.length close_tag) (acc + cnt))
+                loop (end_pos + clen) (acc + cnt))
       in
       loop 0 0
     in
-    let cnt = curly_in_env "lstlisting" + curly_in_env "verbatim" in
+    let cnt =
+      curly_in_env _re_begin_lst _re_end_lst 18 16
+      + curly_in_env _re_begin_verb _re_end_verb 16 14
+    in
     if cnt > 0 then
       Some
         {

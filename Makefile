@@ -175,11 +175,9 @@ simd-hash-avx2:
 simd-hash-neon:
 	OPAMSWITCH=${OPAMSWITCH:-l0-testing} opam exec -- dune build --profile=simd-neon @simd-hash
 
-# ── Documentation Site ──────────────────────────────────────────────
-docs-site:
-	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
-	@mkdocs build --strict
+# ── External Corpus Management ──────────────────────────────────────
+fetch-corpora:
+	@bash scripts/fetch_corpora.sh
 
-docs-serve:
-	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
-	@mkdocs serve
+fetch-corpora-dry:
+	@bash scripts/fetch_corpora.sh --dry-run

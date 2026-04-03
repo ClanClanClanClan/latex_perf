@@ -83,18 +83,30 @@ def tags_to_binary(tags: List[str]) -> np.ndarray:
 def binary_to_bio(y_pred: np.ndarray, original_tags: List[str]) -> List[str]:
     """Convert binary predictions back to BIO format.
 
-    For positions predicted as 1 (positive), assigns B-SPAN for the first
-    positive position in a contiguous sequence, and I-SPAN for continuations.
+    For positions predicted as 1 (positive), extracts the rule ID from the
+    nearest gold B-tag in original_tags to produce correct rule-specific
+    labels (e.g. B-TYPO-001, I-TYPO-001) instead of generic B-SPAN/I-SPAN.
     """
     tags = []
     in_span = False
-    for pred in y_pred:
+    current_rule = "SPAN"
+    for i, pred in enumerate(y_pred):
         if pred == 1:
             if not in_span:
-                tags.append("B-SPAN")
+                # Find rule ID from original gold tag at this position
+                if i < len(original_tags) and original_tags[i].startswith("B-"):
+                    current_rule = original_tags[i][2:]  # e.g. "TYPO-001"
+                else:
+                    # Search backwards for nearest B-tag
+                    current_rule = "SPAN"
+                    for j in range(i, -1, -1):
+                        if j < len(original_tags) and original_tags[j].startswith("B-"):
+                            current_rule = original_tags[j][2:]
+                            break
+                tags.append(f"B-{current_rule}")
                 in_span = True
             else:
-                tags.append("I-SPAN")
+                tags.append(f"I-{current_rule}")
         else:
             tags.append("O")
             in_span = False
@@ -104,13 +116,15 @@ def binary_to_bio(y_pred: np.ndarray, original_tags: List[str]) -> List[str]:
 def reconstruct_per_doc_tags(
     flat_predictions: np.ndarray,
     per_doc_lengths: List[int],
+    flat_original_tags: List[str] = None,
 ) -> List[List[str]]:
     """Split flat predictions back into per-document tag lists."""
     result = []
     offset = 0
     for length in per_doc_lengths:
         doc_preds = flat_predictions[offset:offset + length]
-        doc_tags = binary_to_bio(doc_preds, [])
+        orig = flat_original_tags[offset:offset + length] if flat_original_tags else []
+        doc_tags = binary_to_bio(doc_preds, orig)
         result.append(doc_tags)
         offset += length
     return result
@@ -194,7 +208,7 @@ def train_and_evaluate(
     logger.info(f"Predictions: {np.sum(y_pred)} positive ({np.mean(y_pred) * 100:.1f}%)")
 
     # Reconstruct per-doc BIO tags
-    pred_doc_tags = reconstruct_per_doc_tags(y_pred, dev_doc_lengths)
+    pred_doc_tags = reconstruct_per_doc_tags(y_pred, dev_doc_lengths, dev_tags)
 
     # Evaluate
     results = evaluate(dev_doc_tags, pred_doc_tags, "logreg", seed)

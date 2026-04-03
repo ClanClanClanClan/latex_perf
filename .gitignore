@@ -63,3 +63,4 @@ specs/Archive.zip
 # ML generated data (reproducible via pipeline)
 ml/data/*.jsonl
 ml/eval_*.json
+site/

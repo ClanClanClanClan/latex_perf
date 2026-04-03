@@ -181,3 +181,12 @@ fetch-corpora:
 
 fetch-corpora-dry:
 	@bash scripts/fetch_corpora.sh --dry-run
+
+# ── Documentation Site ──────────────────────────────────────────────
+docs-site:
+	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
+	@mkdocs build --strict
+
+docs-serve:
+	@pip install mkdocs-material pymdown-extensions 2>/dev/null || true
+	@mkdocs serve

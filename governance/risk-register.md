@@ -14,7 +14,7 @@ CI badge turns red if any Residual >= 4.
 - **Residual**: Score after mitigations applied
 - **C** (Critical): Y = requires immediate escalation if triggered
 
-## Register (31 risks)
+## Register (33 risks)
 
 | # | Area | Risk | P | I | Score | Residual | C | Mitigation | Status |
 |---|------|------|---|---|-------|----------|---|------------|--------|

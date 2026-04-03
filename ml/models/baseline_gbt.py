@@ -135,7 +135,7 @@ def train_and_evaluate(
     logger.info(f"Predictions: {np.sum(y_pred)} positive ({np.mean(y_pred) * 100:.1f}%)")
 
     # Reconstruct per-doc BIO tags
-    pred_doc_tags = reconstruct_per_doc_tags(y_pred, dev_doc_lengths)
+    pred_doc_tags = reconstruct_per_doc_tags(y_pred, dev_doc_lengths, dev_tags)
 
     # Evaluate
     results = evaluate(dev_doc_tags, pred_doc_tags, "gbt", seed)

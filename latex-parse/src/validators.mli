@@ -25,11 +25,6 @@ val strip_math_segments : string -> string
 val run_all : string -> result list
 (** Run all active rules against the source and return triggered results. *)
 
-val run_all_parallel : ?n_domains:int -> string -> result list
-(** Like {!run_all} but splits rules across OCaml 5.x domains for parallel
-    execution. Gated behind [L0_PARALLEL=1] env var; falls back to sequential if
-    unset. Default [n_domains] is 4. *)
-
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
     matching that language (or universal rules) are run. If [None], auto-detects

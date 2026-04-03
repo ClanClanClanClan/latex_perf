@@ -4,9 +4,18 @@ All notable changes to LaTeX Perfectionist v25 are documented here.
 
 ## [Unreleased]
 
-### Added (Phases 9-12, PRs #161-#173)
+### Added (Phases 9-12, PRs #161-#179)
 - Comprehensive project audit: docs, .mli, _CoqProject fixes (PR #172)
 - Regex hoisting: 44 Str.regexp compilations moved out of run closures (PRs #172, #173)
+- contains_substring: replaced Str.regexp_string with pure OCaml (PR #174)
+- ML CPU baselines: logistic regression + gradient boosting pipeline (PR #175)
+- External corpus infrastructure: corpora.lock + fetch_corpora.sh (PR #176)
+- Risk register: governance/risk-register.md with 33 risks (PR #177)
+- Parallel validators: run_all_parallel with OCaml 5.x domains (PR #178)
+- Documentation site: mkdocs.yml + landing page (PR #179)
+
+### Removed
+- run_all_parallel: unsafe with Str global state, removed pending Re migration (PR #180)
 
 ### Added (PRs #161-#171)
 - ML v2 parser-state diagnostic + architecture docs (PR #161)

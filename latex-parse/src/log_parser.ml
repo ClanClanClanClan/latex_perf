@@ -176,3 +176,19 @@ let parse_log (content : string) : log_context =
     has_widows;
     has_orphans;
   }
+
+(* ── Thread-local log context ───────────────────────────────────── *)
+
+let _log_ctx_tbl : (int, log_context) Hashtbl.t = Hashtbl.create 4
+
+let set_log_context (ctx : log_context) : unit =
+  let tid = Thread.id (Thread.self ()) in
+  Hashtbl.replace _log_ctx_tbl tid ctx
+
+let get_log_context () : log_context option =
+  let tid = Thread.id (Thread.self ()) in
+  Hashtbl.find_opt _log_ctx_tbl tid
+
+let clear_log_context () : unit =
+  let tid = Thread.id (Thread.self ()) in
+  Hashtbl.remove _log_ctx_tbl tid

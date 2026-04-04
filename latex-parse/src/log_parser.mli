@@ -28,3 +28,9 @@ type log_context = {
 
 val empty_context : log_context
 val parse_log : string -> log_context
+
+(** Thread-local log context for validators that need compile-log data. *)
+
+val set_log_context : log_context -> unit
+val get_log_context : unit -> log_context option
+val clear_log_context : unit -> unit

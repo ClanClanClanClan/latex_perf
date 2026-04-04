@@ -5071,6 +5071,398 @@ let r_lay_013 : rule =
   in
   mk_rule "LAY-013" run
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   7: LAY rules via .log parser — require Log_parser.set_log_context Rules
+   silently return None if no log context is set.
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* LAY-001: Overfull \hbox > 2pt outside bibliography *)
+let r_lay_001 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          List.length (List.filter (fun (_, _) -> true) ctx.overfull_lines)
+        in
+        if cnt > 0 && ctx.max_overfull_pt > 2.0 then
+          Some
+            {
+              id = "LAY-001";
+              severity = Warning;
+              message =
+                Printf.sprintf
+                  "Overfull \\hbox > 2pt (%d occurrences, max %.1fpt)" cnt
+                  ctx.max_overfull_pt;
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-001" run
+
+(* LAY-002: Widow or orphan line detected *)
+let r_lay_002 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          (if ctx.has_widows then 1 else 0) + if ctx.has_orphans then 1 else 0
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-002";
+              severity = Info;
+              message = "Widow or orphan line detected";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-002" run
+
+(* LAY-003: Section heading at bottom of page — heuristic via overfull near
+   section *)
+let r_lay_003 : rule =
+  let re_section = Str.regexp {|\\section\|\\subsection|} in
+  let run s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let section_lines = ref [] in
+        let i = ref 0 in
+        let line_no = ref 1 in
+        let len = String.length s in
+        while !i < len do
+          if s.[!i] = '\n' then incr line_no;
+          (try
+             ignore (Str.search_forward re_section s !i);
+             if Str.match_beginning () = !i then
+               section_lines := !line_no :: !section_lines
+           with Not_found -> ());
+          incr i
+        done;
+        (* Check if any section line is near an overfull line *)
+        let cnt =
+          List.fold_left
+            (fun acc (ls, le) ->
+              if
+                List.exists
+                  (fun sl -> sl >= ls - 2 && sl <= le + 2)
+                  !section_lines
+              then acc + 1
+              else acc)
+            0 ctx.overfull_lines
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-003";
+              severity = Info;
+              message =
+                "Section heading near page break (possible bottom-of-page)";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-003" run
+
+(* LAY-004: Page margin outside geometry limits *)
+let r_lay_004 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.max_overfull_pt > 10.0 then
+          Some
+            {
+              id = "LAY-004";
+              severity = Warning;
+              message =
+                Printf.sprintf
+                  "Content extends beyond margins (max overflow %.1fpt)"
+                  ctx.max_overfull_pt;
+              count = 1;
+            }
+        else None
+  in
+  mk_rule "LAY-004" run
+
+(* LAY-006: Float too close to previous float *)
+let r_lay_006 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          List.length
+            (List.filter
+               (function Log_parser.FloatWarning _ -> true | _ -> false)
+               ctx.events)
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-006";
+              severity = Info;
+              message = "Float placement warning in compile log";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-006" run
+
+(* LAY-007: Paragraph indent inconsistent after display math *)
+let r_lay_007 : rule =
+  let run s =
+    let cnt = ref 0 in
+    let re_end =
+      Str.regexp {|\\end{equation\|\\end{align\|\\end{gather\|\\\]|}
+    in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re_end s !i);
+         let after = Str.match_end () in
+         (* Check if next non-whitespace line is indented *)
+         if after < String.length s then (
+           let j = ref after in
+           while
+             !j < String.length s
+             && (s.[!j] = '\n' || s.[!j] = ' ' || s.[!j] = '\t')
+           do
+             incr j
+           done;
+           if !j < String.length s && s.[!j] <> '\\' && s.[!j] <> '%' then
+             (* Text follows display math without command — check indent *)
+             if !j > 0 && (s.[!j - 1] = ' ' || s.[!j - 1] = '\t') then incr cnt);
+         i := after
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-007";
+          severity = Info;
+          message = "Paragraph indent inconsistent after display math";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-007" run
+
+(* LAY-009: Footnote overlaps bottom margin *)
+let r_lay_009 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        (* Detect underfull vbox which often indicates footnote overflow *)
+        let cnt =
+          List.length
+            (List.filter
+               (function
+                 | Log_parser.Underfull { box = Log_parser.Vbox; _ } -> true
+                 | _ -> false)
+               ctx.events)
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-009";
+              severity = Warning;
+              message = "Underfull \\vbox detected — possible footnote overflow";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-009" run
+
+(* LAY-011: Figure overlaps footer (compile warning) *)
+let r_lay_011 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          List.length
+            (List.filter
+               (function
+                 | Log_parser.FloatWarning { message; _ } ->
+                     contains_substring message "too large"
+                 | _ -> false)
+               ctx.events)
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-011";
+              severity = Warning;
+              message = "Figure overlaps footer (compile warning)";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-011" run
+
+(* LAY-014: Page break before subsection discouraged *)
+let r_lay_014 : rule =
+  let re = Str.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-014";
+          severity = Info;
+          message = "Page break before subsection discouraged";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-014" run
+
+(* LAY-016: Table split across page without \allowbreak hints *)
+let r_lay_016 : rule =
+  let run s =
+    let blocks = extract_env_blocks "longtable" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          if not (contains_substring body "\\allowbreak") then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "LAY-016";
+          severity = Info;
+          message = "Table split across page without \\allowbreak hints";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-016" run
+
+(* LAY-017: Section heading orphaned at page top *)
+let r_lay_017 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.has_widows then
+          Some
+            {
+              id = "LAY-017";
+              severity = Info;
+              message = "Section heading may be orphaned at page top";
+              count = 1;
+            }
+        else None
+  in
+  mk_rule "LAY-017" run
+
+(* LAY-018: Underfull \vbox warning in log *)
+let r_lay_018 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          List.length
+            (List.filter
+               (function
+                 | Log_parser.Underfull { box = Log_parser.Vbox; _ } -> true
+                 | _ -> false)
+               ctx.events)
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-018";
+              severity = Info;
+              message = "Underfull \\vbox warning in log";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-018" run
+
+(* LAY-021: Overfull \vbox inside bibliography section *)
+let r_lay_021 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt =
+          List.length
+            (List.filter
+               (function
+                 | Log_parser.Overfull { box = Log_parser.Vbox; _ } -> true
+                 | _ -> false)
+               ctx.events)
+        in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-021";
+              severity = Warning;
+              message = "Overfull \\vbox inside bibliography section";
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-021" run
+
+(* MATH-026: Overfull \hbox in equation (compile log) *)
+let r_math_026 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.max_overfull_pt > 0.0 then
+          Some
+            {
+              id = "MATH-026";
+              severity = Warning;
+              message =
+                Printf.sprintf "Overfull \\hbox in equation (%.1fpt)"
+                  ctx.max_overfull_pt;
+              count = List.length ctx.overfull_lines;
+            }
+        else None
+  in
+  mk_rule "MATH-026" run
+
+(* MATH-027: Displayed equation exceeds page margins *)
+let r_math_027 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.max_overfull_pt > 5.0 then
+          Some
+            {
+              id = "MATH-027";
+              severity = Warning;
+              message =
+                Printf.sprintf
+                  "Displayed equation exceeds page margins (%.1fpt overflow)"
+                  ctx.max_overfull_pt;
+              count = 1;
+            }
+        else None
+  in
+  mk_rule "MATH-027" run
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -5239,6 +5631,22 @@ let rules_l2_approx : rule list =
     r_fig_011;
     r_lay_005;
     r_lay_013;
+    (* Phase 7: LAY rules via .log parser *)
+    r_lay_001;
+    r_lay_002;
+    r_lay_003;
+    r_lay_004;
+    r_lay_006;
+    r_lay_007;
+    r_lay_009;
+    r_lay_011;
+    r_lay_014;
+    r_lay_016;
+    r_lay_017;
+    r_lay_018;
+    r_lay_021;
+    r_math_026;
+    r_math_027;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

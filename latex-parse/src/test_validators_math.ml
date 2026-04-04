@@ -413,14 +413,14 @@ let () =
       expect
         (Validators.precondition_of_rule_id "MATH-024" = Validators.L2)
         (tag ^ ": MATH-024 = L2"));
-  run "MATH-026 maps to L3" (fun tag ->
+  run "MATH-026 maps to L2 (log-based approx)" (fun tag ->
       expect
-        (Validators.precondition_of_rule_id "MATH-026" = Validators.L3)
-        (tag ^ ": MATH-026 = L3"));
-  run "MATH-027 maps to L3" (fun tag ->
+        (Validators.precondition_of_rule_id "MATH-026" = Validators.L2)
+        (tag ^ ": MATH-026 = L2"));
+  run "MATH-027 maps to L2 (log-based approx)" (fun tag ->
       expect
-        (Validators.precondition_of_rule_id "MATH-027" = Validators.L3)
-        (tag ^ ": MATH-027 = L3"));
+        (Validators.precondition_of_rule_id "MATH-027" = Validators.L2)
+        (tag ^ ": MATH-027 = L2"));
   run "MATH-025 maps to L1" (fun tag ->
       expect
         (Validators.precondition_of_rule_id "MATH-025" = Validators.L1)

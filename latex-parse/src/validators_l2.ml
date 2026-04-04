@@ -4730,6 +4730,347 @@ let r_lang_008 : rule =
   in
   mk_rule "LANG-008" run
 
+(* ══════════════════════════════════════════════════════════════════════ Phase
+   6: L3-approx batch 2 — rules previously claimed "blocked"
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* PKG-003: Incompatible microtype options under LuaTeX *)
+let r_pkg_003 : rule =
+  let run s =
+    let has_microtype = contains_substring s "microtype" in
+    let has_luatex =
+      contains_substring s "\\usepackage{luatexja}"
+      || contains_substring s "lualatex"
+      || contains_substring s "LuaLaTeX"
+    in
+    if has_microtype && has_luatex then
+      let has_compat =
+        contains_substring s "letterspace" || contains_substring s "protrusion"
+      in
+      if has_compat then
+        Some
+          {
+            id = "PKG-003";
+            severity = Error;
+            message = "Incompatible microtype options under LuaTeX";
+            count = 1;
+          }
+      else None
+    else None
+  in
+  mk_rule "PKG-003" run
+
+(* PKG-006: microtype expansion disabled *)
+let r_pkg_006 : rule =
+  let run s =
+    if
+      contains_substring s "microtype" && contains_substring s "expansion=false"
+    then
+      Some
+        {
+          id = "PKG-006";
+          severity = Info;
+          message = "microtype expansion disabled";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "PKG-006" run
+
+(* CJK-003: Japanese kinsoku — forbidden break before small kana *)
+let r_cjk_003 : rule =
+  let run s =
+    let lines = String.split_on_char '\n' s in
+    let cnt =
+      List.fold_left
+        (fun acc line ->
+          let line = String.trim line in
+          if String.length line >= 3 then
+            let b0 = Char.code line.[0] in
+            let b1 = Char.code line.[1] in
+            let b2 = Char.code line.[2] in
+            (* Small kana: U+3041-3063 = E3 81 81..E3 81 A3 *)
+            if b0 = 0xe3 && b1 = 0x81 && b2 >= 0x81 && b2 <= 0xa3 then acc + 1
+            else acc
+          else acc)
+        0 lines
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "CJK-003";
+          severity = Info;
+          message = "Japanese kinsoku: forbidden break before small kana";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "CJK-003" run
+
+(* CJK-005: Mixed zh/ja fonts in same paragraph *)
+let r_cjk_005 : rule =
+  let run s =
+    let has_zh_font = contains_substring s "\\setCJKmainfont" in
+    let has_ja_font =
+      contains_substring s "\\setjamainfont"
+      || contains_substring s "\\setCJKfamilyfont{min}"
+    in
+    if has_zh_font && has_ja_font then
+      Some
+        {
+          id = "CJK-005";
+          severity = Info;
+          message = "Mixed zh/ja fonts in same paragraph";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "CJK-005" run
+
+(* CJK-012: xeCJK spaceskip not tuned *)
+let r_cjk_012 : rule =
+  let run s =
+    let has_xecjk = contains_substring s "\\usepackage{xeCJK}" in
+    let has_setup = contains_substring s "\\xeCJKsetup" in
+    if has_xecjk && not has_setup then
+      Some
+        {
+          id = "CJK-012";
+          severity = Info;
+          message = "xeCJK spaceskip not tuned (\\xeCJKsetup)";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "CJK-012" run
+
+(* CJK-016: xeCJKsetup CJKecglue not tuned *)
+let r_cjk_016 : rule =
+  let run s =
+    let has_setup = contains_substring s "\\xeCJKsetup" in
+    let has_ecglue = contains_substring s "CJKecglue" in
+    if has_setup && not has_ecglue then
+      Some
+        {
+          id = "CJK-016";
+          severity = Info;
+          message = "\\xeCJKsetup{CJKecglue} not tuned — wide gap";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "CJK-016" run
+
+(* MATH-076: Equation split across pages without \allowbreak *)
+let r_math_076 : rule =
+  let run s =
+    let align_blocks = extract_env_blocks "align" s in
+    let align_star = extract_env_blocks "align*" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let lines = String.split_on_char '\n' body in
+          let nlines = List.length lines in
+          if nlines > 8 && not (contains_substring body "\\allowbreak") then
+            acc + 1
+          else acc)
+        0
+        (align_blocks @ align_star)
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-076";
+          severity = Info;
+          message = "Equation split across pages without \\allowbreak";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "MATH-076" run
+
+(* MATH-103: \left…\right shrinks baseline — suggest \mathopen *)
+let r_math_103 : rule =
+  let re_left_frac = Str.regexp {|\\left[.([][ \t\n]*\\frac|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt =
+      List.fold_left
+        (fun acc seg ->
+          let c = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               ignore (Str.search_forward re_left_frac seg !i);
+               incr c;
+               i := Str.match_end ()
+             done
+           with Not_found -> ());
+          acc + !c)
+        0 math_segs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-103";
+          severity = Info;
+          message =
+            "\\left…\\right pair may shrink baseline; suggest \\mathopen";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "MATH-103" run
+
+(* TAB-004: Table width exceeds \textwidth — heuristic *)
+let r_tab_004 : rule =
+  let run s =
+    let blocks = extract_env_blocks "tabular" s in
+    let cnt =
+      List.fold_left
+        (fun acc body ->
+          let lines = String.split_on_char '\n' body in
+          let max_len =
+            List.fold_left (fun m l -> max m (String.length l)) 0 lines
+          in
+          if max_len > 120 then acc + 1 else acc)
+        0 blocks
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "TAB-004";
+          severity = Warning;
+          message = "Table width may exceed \\textwidth (line > 120 chars)";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "TAB-004" run
+
+(* FIG-008: TikZ figure compiled in draft mode *)
+let r_fig_008 : rule =
+  let run s =
+    let has_draft =
+      contains_substring s "\\usepackage[draft]"
+      || contains_substring s "\\documentclass[draft]"
+      || contains_substring s "draft=true"
+    in
+    let has_tikz = contains_substring s "\\begin{tikzpicture}" in
+    if has_draft && has_tikz then
+      Some
+        {
+          id = "FIG-008";
+          severity = Warning;
+          message = "TikZ figure compiled in draft mode";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "FIG-008" run
+
+(* FIG-011: EPS graphic in pdfLaTeX run *)
+let r_fig_011 : rule =
+  let run s =
+    let has_eps =
+      contains_substring s ".eps}" || contains_substring s ".eps]"
+    in
+    let has_pdflatex =
+      contains_substring s "pdflatex"
+      || (not (contains_substring s "xelatex"))
+         && not (contains_substring s "lualatex")
+    in
+    if has_eps && has_pdflatex then
+      Some
+        {
+          id = "FIG-011";
+          severity = Warning;
+          message = "EPS graphic in pdfLaTeX run";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "FIG-011" run
+
+(* LAY-005: Lines per page exceed 66 — heuristic *)
+let r_lay_005 : rule =
+  let re_textheight =
+    Str.regexp {|\\textheight *= *\([0-9.]+\)\(cm\|in\|pt\|mm\)|}
+  in
+  let re_baselineskip =
+    Str.regexp {|\\baselineskip *= *\([0-9.]+\)\(pt\|cm\)|}
+  in
+  let run s =
+    let th =
+      try
+        ignore (Str.search_forward re_textheight s 0);
+        Some (float_of_string (Str.matched_group 1 s))
+      with Not_found | Failure _ -> None
+    in
+    let bs =
+      try
+        ignore (Str.search_forward re_baselineskip s 0);
+        Some (float_of_string (Str.matched_group 1 s))
+      with Not_found | Failure _ -> None
+    in
+    match (th, bs) with
+    | Some h, Some b when b > 0.0 ->
+        let lines = h /. b in
+        if lines > 66.0 then
+          Some
+            {
+              id = "LAY-005";
+              severity = Info;
+              message =
+                Printf.sprintf "Lines per page may exceed 66 (%.0f estimated)"
+                  lines;
+              count = 1;
+            }
+        else None
+    | _ -> None
+  in
+  mk_rule "LAY-005" run
+
+(* LAY-013: Empty page without \thispagestyle{empty} *)
+let r_lay_013 : rule =
+  let re_clearpage = Str.regexp {|\\clearpage\|\\newpage|} in
+  let re_thispagestyle = Str.regexp_string "\\thispagestyle{empty}" in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         let pos = Str.search_forward re_clearpage s !i in
+         let after = Str.match_end () in
+         (* Check if \thispagestyle{empty} appears within 100 chars after *)
+         let window = min (String.length s) (after + 100) in
+         let region = String.sub s after (window - after) in
+         let is_blank_page =
+           String.trim region = "" || String.length (String.trim region) < 10
+         in
+         (if is_blank_page then
+            let has_style =
+              try
+                ignore (Str.search_forward re_thispagestyle s pos);
+                Str.match_beginning () < window
+              with Not_found -> false
+            in
+            if not has_style then incr cnt);
+         i := after
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-013";
+          severity = Info;
+          message = "Empty page without \\thispagestyle{empty}";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-013" run
+
 let rules_l2_approx : rule list =
   [
     r_fig_001;
@@ -4884,6 +5225,20 @@ let rules_l2_approx : rule list =
     r_cjk_013;
     r_lang_005;
     r_lang_008;
+    (* Phase 6: L3-approx batch 2 *)
+    r_pkg_003;
+    r_pkg_006;
+    r_cjk_003;
+    r_cjk_005;
+    r_cjk_012;
+    r_cjk_016;
+    r_math_076;
+    r_math_103;
+    r_tab_004;
+    r_fig_008;
+    r_fig_011;
+    r_lay_005;
+    r_lay_013;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

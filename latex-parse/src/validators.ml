@@ -382,6 +382,20 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "CJK-013";
       "LANG-005";
       "LANG-008";
+      (* Phase 6: L3-approx batch 2 *)
+      "PKG-003";
+      "PKG-006";
+      "CJK-003";
+      "CJK-005";
+      "CJK-012";
+      "CJK-016";
+      "MATH-076";
+      "MATH-103";
+      "TAB-004";
+      "FIG-008";
+      "FIG-011";
+      "LAY-005";
+      "LAY-013";
     ];
   (* L3 overrides *)
   add L3 [ "MATH-026"; "MATH-027" ];

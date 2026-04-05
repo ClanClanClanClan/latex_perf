@@ -141,8 +141,10 @@ let vpd_catalogue_count = List.length rules_vpd_catalogue
 
 let _run_generation = Atomic.make 0
 
-(* DAG validation deferred until precondition_of_rule_id is defined *)
+(* DAG validation + ordering deferred until precondition_of_rule_id is
+   defined *)
 let _dag_validated = ref false
+let _dag_topo_order : string list ref = ref []
 let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
 
 let get_rules () : rule list =
@@ -155,6 +157,10 @@ let get_rules () : rule list =
   if not !_dag_validated then (
     _dag_validated := true;
     !_dag_validate_fn rules);
+  (* DAG topo_order stored for future use when validators declare actual
+     provides/requires dependencies. Currently all rules use default_meta with
+     no edges, so we preserve original list order to maintain deterministic
+     severity ordering within families. *)
   rules
 
 (** Run all enabled validators on [src] and return fired results.
@@ -164,8 +170,20 @@ let get_rules () : rule list =
     current thread beforehand.  If it has not been set, those rules
     silently return [None] (safe but incomplete). *)
 let run_all (src : string) : result list =
-  (* Increment generation counter per spec §5 *)
-  ignore (Atomic.fetch_and_add _run_generation 1);
+  (* Increment generation counter + build snapshot per spec §5 *)
+  let gen = Atomic.fetch_and_add _run_generation 1 in
+  let parent_ver = Layer_sync.mk_version ~gen ~parent_gen:(max 0 (gen - 1)) in
+  let child_ver = Layer_sync.advance parent_ver in
+  let snap =
+    Layer_sync.create_snapshot
+      [
+        { Layer_sync.layer = L0; version = parent_ver; data = "lexer" };
+        { Layer_sync.layer = L1; version = child_ver; data = "expander" };
+      ]
+  in
+  if not (Layer_sync.is_consistent snap) then
+    Printf.eprintf "[validators] WARNING: snapshot inconsistency at gen %d\n%!"
+      gen;
   (* Build semantic state for L3 validators (spec W53-57) *)
   let sem = Semantic_state.analyze src in
   Semantic_state.set_state sem;
@@ -188,6 +206,17 @@ let run_all (src : string) : result list =
         go acc rs
   in
   go [] rules
+
+(** Like {!run_all} but returns scored results with confidence levels. Uses VPD
+    catalogue for confidence assignment (spec W75). *)
+let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
+    Evidence_scoring.scored_result list =
+  let results = run_all src in
+  let vpd_ids = List.map (fun r -> r.id) rules_vpd_catalogue in
+  let scored =
+    List.map (fun r -> Evidence_scoring.score_result r vpd_ids) results
+  in
+  Evidence_scoring.filter_by_config config scored
 
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
@@ -563,7 +592,9 @@ let () =
           unique_rules
       in
       match Validator_dag.build_dag metas with
-      | Ok _dag ->
+      | Ok dag ->
+          (* Store topological order for rule execution ordering *)
+          _dag_topo_order := dag.Validator_dag.topo_order;
           let conflicts = Validator_dag.detect_conflicts metas in
           if conflicts <> [] then
             Printf.eprintf

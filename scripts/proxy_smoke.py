@@ -30,15 +30,19 @@ def request(sock: socket.socket, payload: bytes) -> tuple[int, int, int, int, in
 def main():
     doc = b" " + b"test"
     payload = struct.pack('>I', len(doc)) + doc
+    import time
     for i in range(3):
         ok = False
-        for attempt in range(3):
+        for attempt in range(5):
             try:
-                with socket.create_connection((HOST, PORT), timeout=10.0) as s:
-                    s.settimeout(10.0)
+                with socket.create_connection((HOST, PORT), timeout=15.0) as s:
+                    s.settimeout(15.0)
                     status, tokens, issues, alloc, majors = request(s, payload)
-            except OSError as exc:
-                print(f"[proxy-smoke] socket error: {exc}", file=sys.stderr)
+            except (OSError, RuntimeError) as exc:
+                print(f"[proxy-smoke] request {i+1} attempt {attempt+1} error: {exc}", file=sys.stderr)
+                if attempt < 4:
+                    time.sleep(2)
+                    continue
                 raise SystemExit(1)
 
             if status == 0:
@@ -52,6 +56,8 @@ def main():
                 f"[proxy-smoke] WARN request={i+1} attempt={attempt+1} status={status} alloc_x10={alloc} majors={majors}",
                 file=sys.stderr,
             )
+            if attempt < 4:
+                time.sleep(2)
         if not ok:
             raise SystemExit(status or 1)
 

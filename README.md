@@ -21,7 +21,7 @@ LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-v
 Post-Phase 10 — L4 STYLE rules + locale validators + L3-approximable rules implemented. ML span extractor (v2 candidate classifier) blocked on A100 access:
 - **Build**: `dune build` compiles the SIMD service, benches, and 15 Coq proofs (+ 7 archive) via `(coq.theory)` stanza.
 - **Proofs**: 95 Coq files: 14 core + 74 auto-generated (+ 7 archive). 607 per-rule soundness theorems (26 faithful, 581 conservative). 0 admits, 0 axioms.
-- **Validators**: 568 unique rule IDs / 623 spec (91.2%). 329 golden corpus tests across 12 YAML suites. ~7,320 test cases across 56 suites.
+- **Validators**: 596 unique rule IDs / 623 spec (95.7%). 329 golden corpus tests across 12 YAML suites. ~7,350 test cases across 58 suites. LaTeX .log parser for compile-log-dependent rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
 

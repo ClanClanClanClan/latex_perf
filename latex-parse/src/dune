@@ -46,7 +46,9 @@
   semantic_state
   sentence_split
   event_bus
-  evidence_scoring)
+  evidence_scoring
+  cache_key
+  float_tracking)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)

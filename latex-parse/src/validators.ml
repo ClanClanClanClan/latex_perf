@@ -382,9 +382,37 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "CJK-013";
       "LANG-005";
       "LANG-008";
+      (* Phase 6: L3-approx batch 2 *)
+      "PKG-003";
+      "PKG-006";
+      "CJK-003";
+      "CJK-005";
+      "CJK-012";
+      "CJK-016";
+      "MATH-076";
+      "MATH-103";
+      "TAB-004";
+      "FIG-008";
+      "FIG-011";
+      "LAY-005";
+      "LAY-013";
+      (* Phase 7: LAY via .log parser *)
+      "LAY-001";
+      "LAY-002";
+      "LAY-003";
+      "LAY-004";
+      "LAY-006";
+      "LAY-007";
+      "LAY-009";
+      "LAY-011";
+      "LAY-014";
+      "LAY-016";
+      "LAY-017";
+      "LAY-018";
+      "LAY-021";
+      "MATH-026";
+      "MATH-027";
     ];
-  (* L3 overrides *)
-  add L3 [ "MATH-026"; "MATH-027" ];
   tbl
 
 let _prefix_layers : (string * layer) list =

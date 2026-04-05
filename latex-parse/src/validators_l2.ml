@@ -5912,6 +5912,9 @@ let rules_l2_approx : rule list =
     r_lay_023;
   ]
 
+(* L2 parser-driven validators — must be composed AFTER rules_l2_approx *)
+let rules_l2_parser : rule list = [] (* populated below after definitions *)
+
 (* ── CMD rules: command definition checks ────────────────────────────── *)
 
 (* CMD-002: Command redefined with \def instead of \renewcommand *)
@@ -6240,3 +6243,43 @@ let r_math_083 : rule =
     else None
   in
   { id = "MATH-083"; run; languages = [] }
+
+(* ══════════════════════════════════════════════════════════════════════ L2
+   Parser-driven validators — use Parser_l2.extract_document These validators
+   operate on the parsed AST, not raw text.
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* DOC-structural: Verify document has expected structure via L2 parser *)
+let r_doc_structure : rule =
+  let run s =
+    let doc = Parser_l2.extract_document s in
+    let issues = ref 0 in
+    (* Check: labels with errors *)
+    List.iter
+      (fun (msg, _loc) ->
+        ignore msg;
+        incr issues)
+      doc.Parser_l2.errors;
+    (* Check: orphan refs (ref with no matching label) *)
+    let label_keys = List.map (fun (k, _) -> k) doc.Parser_l2.labels in
+    List.iter
+      (fun (rkey, _) -> if not (List.mem rkey label_keys) then incr issues)
+      doc.Parser_l2.refs;
+    if !issues > 0 then
+      Some
+        {
+          id = "DOC-STRUCT";
+          severity = Info;
+          message =
+            Printf.sprintf
+              "Document structure: %d parse errors, %d labels, %d refs"
+              (List.length doc.Parser_l2.errors)
+              (List.length doc.Parser_l2.labels)
+              (List.length doc.Parser_l2.refs);
+          count = !issues;
+        }
+    else None
+  in
+  mk_rule "DOC-STRUCT" run
+
+let rules_l2_parser_actual : rule list = [ r_doc_structure ]

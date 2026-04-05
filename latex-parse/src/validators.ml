@@ -39,6 +39,7 @@ let rules_enc_char_spc : rule list =
   @ rules_locale
   @ rules_stragglers
   @ rules_l2_approx
+  @ rules_l2_parser_actual
   @ rules_style
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
@@ -187,8 +188,30 @@ let run_all (src : string) : result list =
   (* Build semantic state for L3 validators (spec W53-57) *)
   let sem = Semantic_state.analyze src in
   Semantic_state.set_state sem;
-  (* Publish events to bus (spec W62) *)
-  Event_bus.scan_and_publish (Event_bus.global ()) src;
+  (* Publish events to bus (spec W62) — subscribers consume deltas *)
+  let bus = Event_bus.global () in
+  (* Register one-shot subscribers for this run *)
+  let label_count = ref 0 in
+  let ref_count = ref 0 in
+  let env_count = ref 0 in
+  Event_bus.subscribe bus "_run_label_counter" (function
+    | Event_bus.LabelDefined _ -> incr label_count
+    | _ -> ());
+  Event_bus.subscribe bus "_run_ref_counter" (function
+    | Event_bus.RefUsed _ -> incr ref_count
+    | _ -> ());
+  Event_bus.subscribe bus "_run_env_counter" (function
+    | Event_bus.EnvironmentOpened _ -> incr env_count
+    | _ -> ());
+  Event_bus.scan_and_publish bus src;
+  (* Unsubscribe after scan *)
+  Event_bus.unsubscribe bus "_run_label_counter";
+  Event_bus.unsubscribe bus "_run_ref_counter";
+  Event_bus.unsubscribe bus "_run_env_counter";
+  (* Record event counts in metrics *)
+  Validators_metrics.record ~id:"_bus_labels" ~count:!label_count ~dur_ms:0.0;
+  Validators_metrics.record ~id:"_bus_refs" ~count:!ref_count ~dur_ms:0.0;
+  Validators_metrics.record ~id:"_bus_envs" ~count:!env_count ~dur_ms:0.0;
   let rules = get_rules () in
   let rec go acc = function
     | [] -> List.rev acc

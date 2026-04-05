@@ -412,6 +412,17 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "LAY-021";
       "MATH-026";
       "MATH-027";
+      (* Phase 8: more approximable *)
+      "MATH-089";
+      "FIG-005";
+      "FIG-015";
+      "FIG-018";
+      "FIG-020";
+      "LAY-008";
+      "LAY-010";
+      "LAY-012";
+      "LAY-019";
+      "LAY-023";
     ];
   tbl
 

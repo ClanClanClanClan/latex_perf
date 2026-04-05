@@ -25,6 +25,12 @@ val strip_math_segments : string -> string
 val run_all : string -> result list
 (** Run all active rules against the source and return triggered results. *)
 
+val run_all_scored :
+  ?config:Evidence_scoring.scoring_config ->
+  string ->
+  Evidence_scoring.scored_result list
+(** Like {!run_all} but returns confidence-scored results (spec W75). *)
+
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
     matching that language (or universal rules) are run. If [None], auto-detects

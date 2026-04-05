@@ -1531,42 +1531,71 @@ let l1_script_022_rule : rule =
    validators: cross-referencing and label hygiene
    ═══════════════════════════════════════════════════════════════════════ *)
 
-(* REF-001: Undefined \ref/\eqref label after expansion *)
+(* REF-001: Undefined \ref/\eqref label after expansion Uses
+   Semantic_state.get_state() if available, falls back to regex. *)
 let l1_ref_001_rule : rule =
   let run s =
-    let labels = extract_labels s in
-    let refs = extract_refs s in
-    let cnt = ref 0 in
-    List.iter (fun r -> if not (List.mem r labels) then incr cnt) refs;
-    if !cnt > 0 then
+    let cnt =
+      match Semantic_state.get_state () with
+      | Some st -> List.length st.Semantic_state.undefined_refs
+      | None ->
+          (* Fallback: regex-based *)
+          let labels = extract_labels s in
+          let refs = extract_refs s in
+          let c = ref 0 in
+          List.iter (fun r -> if not (List.mem r labels) then incr c) refs;
+          !c
+    in
+    if cnt > 0 then
       Some
         {
           id = "REF-001";
           severity = Error;
           message = {|Undefined \ref / \eqref label after expansion|};
-          count = !cnt;
+          count = cnt;
         }
     else None
   in
   { id = "REF-001"; run; languages = [] }
 
-(* REF-002: Duplicate label name *)
+(* REF-002: Duplicate label name Uses Semantic_state.get_state() if available,
+   falls back to regex. *)
 let l1_ref_002_rule : rule =
   let run s =
-    let labels = extract_labels s in
-    let seen = Hashtbl.create 16 in
-    let cnt = ref 0 in
-    List.iter
-      (fun lbl ->
-        if Hashtbl.mem seen lbl then incr cnt else Hashtbl.add seen lbl true)
-      labels;
-    if !cnt > 0 then
+    let cnt =
+      match Semantic_state.get_state () with
+      | Some st ->
+          (* Count extra occurrences: for each dup key, count how many times it
+             appears beyond the first *)
+          let label_keys =
+            List.map
+              (fun (l : Semantic_state.label_entry) -> l.Semantic_state.key)
+              st.Semantic_state.labels
+          in
+          List.fold_left
+            (fun acc dup_key ->
+              let total =
+                List.length (List.filter (fun k -> k = dup_key) label_keys)
+              in
+              acc + total - 1)
+            0 st.Semantic_state.duplicate_labels
+      | None ->
+          let labels = extract_labels s in
+          let seen = Hashtbl.create 16 in
+          let c = ref 0 in
+          List.iter
+            (fun lbl ->
+              if Hashtbl.mem seen lbl then incr c else Hashtbl.add seen lbl true)
+            labels;
+          !c
+    in
+    if cnt > 0 then
       Some
         {
           id = "REF-002";
           severity = Error;
           message = "Duplicate label name";
-          count = !cnt;
+          count = cnt;
         }
     else None
   in
@@ -1695,52 +1724,57 @@ let l1_ref_007_rule : rule =
   in
   { id = "REF-007"; run; languages = [] }
 
-(* REF-009: Reference appears before label definition (forward ref) *)
+(* REF-009: Reference appears before label definition (forward ref) Uses
+   Semantic_state.get_state() if available, falls back to regex. *)
 let l1_ref_009_rule : rule =
   let re_label = Str.regexp {|\\label{[^}]*}|} in
   let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
   let run s =
-    let n = String.length s in
-    (* Build map of first occurrence position for each label *)
-    let label_positions = Hashtbl.create 16 in
-    let i = ref 0 in
-    (try
-       while true do
-         let pos = Str.search_forward re_label s !i in
-         let m = Str.matched_string s in
-         let next = Str.match_end () in
-         let inner = String.sub m 7 (String.length m - 8) in
-         if not (Hashtbl.mem label_positions inner) then
-           Hashtbl.add label_positions inner pos;
-         i := next
-       done
-     with Not_found -> ());
-    ignore n;
-    (* Check each ref — if it appears before its label, it's a forward ref *)
-    let cnt = ref 0 in
-    i := 0;
-    (try
-       while true do
-         let pos = Str.search_forward re_ref s !i in
-         let m = Str.matched_string s in
-         let next = Str.match_end () in
-         let brace_pos = String.index m '{' in
-         let inner =
-           String.sub m (brace_pos + 1) (String.length m - brace_pos - 2)
-         in
-         (match Hashtbl.find_opt label_positions inner with
-         | Some label_pos -> if pos < label_pos then incr cnt
-         | None -> () (* undefined ref — handled by REF-001 *));
-         i := next
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
+    let cnt =
+      match Semantic_state.get_state () with
+      | Some st -> List.length st.Semantic_state.forward_refs
+      | None ->
+          let n = String.length s in
+          let label_positions = Hashtbl.create 16 in
+          let i = ref 0 in
+          (try
+             while true do
+               let pos = Str.search_forward re_label s !i in
+               let m = Str.matched_string s in
+               let next = Str.match_end () in
+               let inner = String.sub m 7 (String.length m - 8) in
+               if not (Hashtbl.mem label_positions inner) then
+                 Hashtbl.add label_positions inner pos;
+               i := next
+             done
+           with Not_found -> ());
+          ignore n;
+          let c = ref 0 in
+          i := 0;
+          (try
+             while true do
+               let pos = Str.search_forward re_ref s !i in
+               let m = Str.matched_string s in
+               let next = Str.match_end () in
+               let brace_pos = String.index m '{' in
+               let inner =
+                 String.sub m (brace_pos + 1) (String.length m - brace_pos - 2)
+               in
+               (match Hashtbl.find_opt label_positions inner with
+               | Some label_pos -> if pos < label_pos then incr c
+               | None -> ());
+               i := next
+             done
+           with Not_found -> ());
+          !c
+    in
+    if cnt > 0 then
       Some
         {
           id = "REF-009";
           severity = Info;
           message = "Reference appears before label definition (forward ref)";
-          count = !cnt;
+          count = cnt;
         }
     else None
   in

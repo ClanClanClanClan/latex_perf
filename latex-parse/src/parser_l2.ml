@@ -1,5 +1,41 @@
 type cmd = { name : string; opts : string list; args : string list }
-type node = Word of string | Cmd of cmd | Group of node list
+
+type node =
+  | Word of string
+  | Cmd of cmd
+  | Group of node list
+  | Environment of { env_name : string; opts : string list; body : node list }
+  | MathInline of string
+  | MathDisplay of string
+  | Comment of string
+
+(* ── Structured document representation ──────────────────────── *)
+
+type doc_section = {
+  level : int; (* 0=chapter, 1=section, 2=subsection, etc. *)
+  title : string;
+  label : string option;
+  children : doc_element list;
+}
+
+and doc_element =
+  | Section of doc_section
+  | Paragraph of node list
+  | Float of {
+      kind : string;
+      label : string option;
+      caption : string option;
+      body : node list;
+    }
+  | MathBlock of string
+  | RawNodes of node list
+
+type document = {
+  preamble : node list;
+  body : doc_element list;
+  labels : (string * int) list; (* label -> position *)
+  refs : (string * int) list; (* ref -> position *)
+}
 
 let is_letter c = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
@@ -236,11 +272,158 @@ let rec parse_group s i n =
             g;
           Buffer.add_char buf '}';
           go xs
+      | Environment { env_name; body; _ } :: xs ->
+          Buffer.add_string buf ("\\begin{" ^ env_name ^ "}");
+          go body;
+          Buffer.add_string buf ("\\end{" ^ env_name ^ "}");
+          go xs
+      | MathInline s :: xs ->
+          Buffer.add_char buf '$';
+          Buffer.add_string buf s;
+          Buffer.add_char buf '$';
+          go xs
+      | MathDisplay s :: xs ->
+          Buffer.add_string buf "\\[";
+          Buffer.add_string buf s;
+          Buffer.add_string buf "\\]";
+          go xs
+      | Comment s :: xs ->
+          Buffer.add_char buf '%';
+          Buffer.add_string buf s;
+          go xs
     in
     go nodes;
     Buffer.contents buf
   in
   loop i []
+
+(* ── Environment-aware parsing ────────────────────────────────── *)
+
+let parse_with_envs (s : string) : node list =
+  let n = String.length s in
+  let _, raw_nodes = parse_group ("{" ^ s ^ "}") 1 (n + 2) in
+  (* Post-process: match \begin{env}...\end{env} pairs *)
+  let rec process = function
+    | [] -> []
+    | Cmd { name = "begin"; args = env_name :: _; opts; _ } :: rest ->
+        let body, remaining = collect_env_body env_name rest in
+        Environment { env_name; opts; body = process body } :: process remaining
+    | node :: rest -> node :: process rest
+  and collect_env_body env_name nodes =
+    let rec loop acc = function
+      | [] -> (List.rev acc, [])
+      | Cmd { name = "end"; args = en :: _; _ } :: rest when en = env_name ->
+          (List.rev acc, rest)
+      | Cmd { name = "begin"; args = inner :: _; opts; _ } :: rest ->
+          let inner_body, after_inner = collect_env_body inner rest in
+          let env_node =
+            Environment { env_name = inner; opts; body = process inner_body }
+          in
+          loop (env_node :: acc) after_inner
+      | node :: rest -> loop (node :: acc) rest
+    in
+    loop [] nodes
+  in
+  process raw_nodes
+
+(* ── Document structure extraction ──────────────────────────── *)
+
+let section_level name =
+  match name with
+  | "chapter" -> Some 0
+  | "section" -> Some 1
+  | "subsection" -> Some 2
+  | "subsubsection" -> Some 3
+  | "paragraph" -> Some 4
+  | _ -> None
+
+let extract_document (nodes : node list) : document =
+  let preamble = ref [] in
+  let body_nodes = ref [] in
+  let in_body = ref false in
+  let labels = ref [] in
+  let refs = ref [] in
+  let pos = ref 0 in
+  let rec scan = function
+    | [] -> ()
+    | Environment { env_name = "document"; body; _ } :: rest ->
+        in_body := true;
+        body_nodes := body;
+        scan rest
+    | Cmd { name = "label"; args = lbl :: _; _ } :: rest ->
+        labels := (lbl, !pos) :: !labels;
+        incr pos;
+        if not !in_body then
+          preamble :=
+            Cmd { name = "label"; args = [ lbl ]; opts = [] } :: !preamble;
+        scan rest
+    | Cmd { name; args = r :: _; _ } :: rest
+      when name = "ref" || name = "eqref" || name = "autoref" || name = "cref"
+      ->
+        refs := (r, !pos) :: !refs;
+        incr pos;
+        scan rest
+    | node :: rest ->
+        incr pos;
+        if not !in_body then preamble := node :: !preamble;
+        scan rest
+  in
+  scan nodes;
+  (* Build doc_elements from body nodes *)
+  let elements =
+    List.map
+      (fun node ->
+        match node with
+        | Environment { env_name; body; _ }
+          when env_name = "figure"
+               || env_name = "figure*"
+               || env_name = "table"
+               || env_name = "table*" ->
+            let caption =
+              List.find_map
+                (function
+                  | Cmd { name = "caption"; args = c :: _; _ } -> Some c
+                  | _ -> None)
+                body
+            in
+            let label =
+              List.find_map
+                (function
+                  | Cmd { name = "label"; args = l :: _; _ } -> Some l
+                  | _ -> None)
+                body
+            in
+            Float { kind = env_name; label; caption; body }
+        | Cmd c -> (
+            match section_level c.name with
+            | Some level ->
+                let title = match c.args with t :: _ -> t | [] -> "" in
+                Section { level; title; label = None; children = [] }
+            | None -> RawNodes [ Cmd c ])
+        | Environment { env_name; body = _; _ }
+          when env_name = "equation"
+               || env_name = "equation*"
+               || env_name = "align"
+               || env_name = "align*" ->
+            MathBlock env_name
+        | _ -> RawNodes [ node ])
+      !body_nodes
+  in
+  {
+    preamble = List.rev !preamble;
+    body = elements;
+    labels = List.rev !labels;
+    refs = List.rev !refs;
+  }
+
+(* ── Parse success metric ───────────────────────────────────── *)
+
+let parse_success (s : string) : bool =
+  try
+    let nodes = parse_with_envs s in
+    (* Success if we got at least 1 node and no unparsed remainder *)
+    List.length nodes > 0
+  with _ -> false
 
 let parse s =
   let n = String.length s in
@@ -276,6 +459,26 @@ let serialize (nodes : node list) : string =
         Buffer.add_char b '{';
         go g;
         Buffer.add_char b '}';
+        Buffer.add_char b ' ';
+        go xs
+    | Environment { env_name; body; _ } :: xs ->
+        Buffer.add_string b ("\\begin{" ^ env_name ^ "} ");
+        go body;
+        Buffer.add_string b ("\\end{" ^ env_name ^ "} ");
+        go xs
+    | MathInline s :: xs ->
+        Buffer.add_char b '$';
+        Buffer.add_string b s;
+        Buffer.add_string b "$ ";
+        go xs
+    | MathDisplay s :: xs ->
+        Buffer.add_string b "\\[";
+        Buffer.add_string b s;
+        Buffer.add_string b "\\] ";
+        go xs
+    | Comment s :: xs ->
+        Buffer.add_char b '%';
+        Buffer.add_string b s;
         Buffer.add_char b ' ';
         go xs
   in

@@ -48,7 +48,8 @@
   event_bus
   evidence_scoring
   cache_key
-  float_tracking)
+  float_tracking
+  suffix_array)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)
@@ -394,6 +395,13 @@
  (name test_log_parser)
  (modules test_log_parser)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_parser_corpus)
+ (modules test_parser_corpus)
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora)))
 
 (test
  (name test_validator_dag)

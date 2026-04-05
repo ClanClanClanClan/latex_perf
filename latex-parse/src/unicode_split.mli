@@ -1,6 +1,6 @@
-(** Unicode-aware text segmentation using Uutf (spec W66-67).
-    Supports CJK, Arabic, mixed-script documents.
-    Property: concat(split(s)) preserves content order. *)
+(** Unicode-aware text segmentation using Uutf (spec W66-67). Supports CJK,
+    Arabic, mixed-script documents. Property: concat(split(s)) preserves content
+    order. *)
 
 type uchar_category =
   | Letter

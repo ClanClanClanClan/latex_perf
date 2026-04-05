@@ -1,11 +1,11 @@
 (* ══════════════════════════════════════════════════════════════════════
    Lockfree_queue — MPMC ring buffer using OCaml 5.x Atomic (spec W63)
 
-   Multi-producer, multi-consumer bounded queue using compare-and-swap.
-   Target: 8M events/sec on 4 cores.
+   Multi-producer, multi-consumer bounded queue using compare-and-swap. Target:
+   8M events/sec on 4 cores.
 
-   Design: power-of-two ring buffer with atomic head/tail indices.
-   Each slot has a sequence number for ABA protection.
+   Design: power-of-two ring buffer with atomic head/tail indices. Each slot has
+   a sequence number for ABA protection.
    ══════════════════════════════════════════════════════════════════════ *)
 
 type 'a slot = { mutable data : 'a option; seq : int Atomic.t }

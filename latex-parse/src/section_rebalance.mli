@@ -1,4 +1,5 @@
-(** Section tree extraction, renumbering, and structural validation (spec W48-49). *)
+(** Section tree extraction, renumbering, and structural validation (spec
+    W48-49). *)
 
 type section_node = {
   level : int;

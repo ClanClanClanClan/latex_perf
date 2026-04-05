@@ -1,11 +1,11 @@
 (* ══════════════════════════════════════════════════════════════════════
    Unicode_split — Unicode-aware text segmentation (spec W66-67)
 
-   Uses Uutf for proper grapheme cluster handling. Supports CJK,
-   Arabic, mixed-script documents. Provides word and sentence
-   segmentation that respects Unicode boundaries.
+   Uses Uutf for proper grapheme cluster handling. Supports CJK, Arabic,
+   mixed-script documents. Provides word and sentence segmentation that respects
+   Unicode boundaries.
 
-   Property: concat(split(s)) = s  (proved in SplitPreservesOrder.v)
+   Property: concat(split(s)) = s (proved in SplitPreservesOrder.v)
    ══════════════════════════════════════════════════════════════════════ *)
 
 (* ── Unicode character classification ─────────────────────────────── *)
@@ -47,7 +47,11 @@ let classify_uchar (u : Uchar.t) : uchar_category =
     (* Arabic-Indic *)
   then Digit
   else if
-    cp = 0x20 || cp = 0x09 || cp = 0x0A || cp = 0x0D || cp = 0x00A0 (* NBSP *)
+    cp = 0x20
+    || cp = 0x09
+    || cp = 0x0A
+    || cp = 0x0D
+    || cp = 0x00A0 (* NBSP *)
     || cp = 0x3000 (* Ideographic space *)
     || cp = 0x2000
     || cp = 0x2001 (* En/Em space *)
@@ -95,8 +99,8 @@ type word_segment = {
 (** A word segment with its byte range. *)
 
 (** Split into word segments. CJK characters are each their own word.
-    Latin/Cyrillic/Greek words break on whitespace/punctuation.
-    Arabic words break on whitespace. *)
+    Latin/Cyrillic/Greek words break on whitespace/punctuation. Arabic words
+    break on whitespace. *)
 let split_words (s : string) : word_segment list =
   let len = String.length s in
   let segments = ref [] in
@@ -157,7 +161,8 @@ type sentence_segment = { s_text : string; s_start : int; s_end : int }
 (** Unicode sentence terminators. *)
 let is_sentence_end (u : Uchar.t) : bool =
   let cp = Uchar.to_int u in
-  cp = 0x2E (* . *) || cp = 0x21
+  cp = 0x2E
+  (* . *) || cp = 0x21
   (* ! *) || cp = 0x3F (* ? *)
   || cp = 0x3002 (* CJK period 。 *)
   || cp = 0xFF01 (* fullwidth ! *)
@@ -216,9 +221,8 @@ let split_sentences (s : string) : sentence_segment list =
 
 (* ── Concatenation roundtrip property ─────────────────────────────── *)
 
-(** concat(split_words(s)) should contain the same non-whitespace content
-    as the original string. This is the OCaml witness for
-    proofs/SplitPreservesOrder.v. *)
+(** concat(split_words(s)) should contain the same non-whitespace content as the
+    original string. This is the OCaml witness for proofs/SplitPreservesOrder.v. *)
 let concat_words (words : word_segment list) : string =
   String.concat "" (List.map (fun w -> w.w_text) words)
 

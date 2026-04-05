@@ -1,9 +1,9 @@
 (* ══════════════════════════════════════════════════════════════════════
    Section_rebalance — section tree extraction + renumbering (spec W48-49)
 
-   Extracts a tree of sections from a LaTeX document, supports
-   renumbering after insertions/deletions, and validates structural
-   consistency (no level-skip violations like section → subsubsection).
+   Extracts a tree of sections from a LaTeX document, supports renumbering after
+   insertions/deletions, and validates structural consistency (no level-skip
+   violations like section → subsubsection).
    ══════════════════════════════════════════════════════════════════════ *)
 
 type section_node = {
@@ -154,7 +154,8 @@ let validate (tree : section_tree) : violation list =
     let prev_level = ref parent_level in
     List.iter
       (fun n ->
-        (* Violation if we skip more than one level from the previous sibling or parent *)
+        (* Violation if we skip more than one level from the previous sibling or
+           parent *)
         if n.level > !prev_level + 1 && !prev_level >= 0 then
           violations :=
             {

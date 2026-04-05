@@ -4,7 +4,8 @@
 type 'a t
 
 val create : int -> 'a t
-(** [create capacity] creates a queue with given capacity (rounded up to power of 2). *)
+(** [create capacity] creates a queue with given capacity (rounded up to power
+    of 2). *)
 
 val capacity : 'a t -> int
 (** The actual capacity (power of 2). *)

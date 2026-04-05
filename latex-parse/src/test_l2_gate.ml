@@ -1,7 +1,5 @@
-(** L2 delivered gate measurement (spec W52).
-    Measures end-to-end latency: L0 + L1 + L2 combined.
-    Gate: p95 < 1.2ms.
-    Records results in RESULTS.md. *)
+(** L2 delivered gate measurement (spec W52). Measures end-to-end latency: L0 +
+    L1 + L2 combined. Gate: p95 < 1.2ms. Records results in RESULTS.md. *)
 
 let () =
   Printf.printf "[test_l2_gate] Measuring L0+L1+L2 end-to-end latency\n%!";
@@ -86,7 +84,8 @@ A reference to \ref{fig:test} and a citation \cite{paper2024}.
     (if !all_pass then "PASS: all sizes within p95 < 1.2ms"
      else "WARN: some sizes exceeded target");
 
-  (* The test passes as long as 4KB is under target — larger docs naturally take longer *)
+  (* The test passes as long as 4KB is under target — larger docs naturally take
+     longer *)
   if edit_p95 > 5.0 then (
     Printf.eprintf "[test_l2_gate] FAIL: 4KB p95 %.3fms > 5.0ms\n%!" edit_p95;
     exit 1)

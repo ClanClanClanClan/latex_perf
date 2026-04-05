@@ -84,10 +84,30 @@ let expand_once_with cfg s =
   done;
   Buffer.contents b
 
-let rec expand_fix s =
-  let s' = expand_once_with Catalogue_loader.default s in
-  if String.equal s s' then s else expand_fix s'
+let max_expansion_depth = 100
 
-let rec expand_fix_with cfg s =
-  let s' = expand_once_with cfg s in
-  if String.equal s s' then s else expand_fix_with cfg s'
+let expand_fix s =
+  let rec loop s depth =
+    if depth >= max_expansion_depth then (
+      Printf.eprintf
+        "[l1-expander] WARNING: expansion depth limit (%d) reached\n%!"
+        max_expansion_depth;
+      s)
+    else
+      let s' = expand_once_with Catalogue_loader.default s in
+      if String.equal s s' then s else loop s' (depth + 1)
+  in
+  loop s 0
+
+let expand_fix_with cfg s =
+  let rec loop s depth =
+    if depth >= max_expansion_depth then (
+      Printf.eprintf
+        "[l1-expander] WARNING: expansion depth limit (%d) reached\n%!"
+        max_expansion_depth;
+      s)
+    else
+      let s' = expand_once_with cfg s in
+      if String.equal s s' then s else loop s' (depth + 1)
+  in
+  loop s 0

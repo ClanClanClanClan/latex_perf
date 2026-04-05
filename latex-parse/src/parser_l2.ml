@@ -62,6 +62,8 @@ type document = {
   labels : (string * loc) list;
   refs : (string * loc) list;
   errors : (string * loc) list;
+  packages : (string * string option * loc) list;
+  documentclass : (string * string option) option;
 }
 
 (* ── Parser state ───────────────────────────────────────────── *)
@@ -108,7 +110,9 @@ let is_letter c = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
 (* ── Verbatim environments (opaque) ─────────────────────────── *)
 
-let verbatim_envs = [ "verbatim"; "lstlisting"; "minted"; "Verbatim" ]
+let verbatim_envs =
+  [ "verbatim"; "lstlisting"; "minted"; "Verbatim"; "tikzpicture" ]
+
 let is_verbatim_env name = List.mem name verbatim_envs
 
 (* ── Math environment names ─────────────────────────────────── *)
@@ -129,6 +133,19 @@ let math_envs =
     "displaymath";
     "flalign";
     "flalign*";
+    (* amsmath inner-math environments *)
+    "split";
+    "cases";
+    "matrix";
+    "pmatrix";
+    "bmatrix";
+    "Bmatrix";
+    "vmatrix";
+    "Vmatrix";
+    "smallmatrix";
+    "aligned";
+    "alignedat";
+    "gathered";
   ]
 
 let is_math_env name = List.mem name math_envs
@@ -467,6 +484,14 @@ let section_level name =
   | "paragraph" -> Some 4
   | _ -> None
 
+let is_float_env name =
+  name = "figure"
+  || name = "figure*"
+  || name = "table"
+  || name = "table*"
+  || name = "algorithm"
+  || name = "algorithm*"
+
 let extract_document (s : string) : document =
   let nodes, errors = parse_located s in
   let preamble = ref [] in
@@ -474,6 +499,8 @@ let extract_document (s : string) : document =
   let in_body = ref false in
   let labels = ref [] in
   let refs = ref [] in
+  let packages = ref [] in
+  let docclass = ref None in
   List.iter
     (fun ln ->
       (match ln.node with
@@ -487,20 +514,55 @@ let extract_document (s : string) : document =
              || name = "eqref"
              || name = "autoref"
              || name = "cref"
-             || name = "Cref" ->
+             || name = "Cref"
+             || name = "pageref"
+             || name = "nameref"
+             || name = "href" ->
           refs := (r, ln.loc) :: !refs
+      | Cmd { name = "usepackage"; args; opts; _ } ->
+          let opt_str = match opts with o :: _ -> Some o | [] -> None in
+          List.iter
+            (fun pkg_str ->
+              let pkgs =
+                String.split_on_char ',' pkg_str
+                |> List.map String.trim
+                |> List.filter (fun s -> String.length s > 0)
+              in
+              List.iter
+                (fun pkg -> packages := (pkg, opt_str, ln.loc) :: !packages)
+                pkgs)
+            args
+      | Cmd { name = "documentclass"; args; opts; _ } ->
+          let cls = match args with c :: _ -> c | [] -> "" in
+          let opt_str = match opts with o :: _ -> Some o | [] -> None in
+          docclass := Some (cls, opt_str)
       | _ -> ());
       if not !in_body then preamble := ln :: !preamble)
     nodes;
+  (* Also scan body nodes for labels/refs (they are children of the document
+     env) *)
+  List.iter
+    (fun ln ->
+      match ln.node with
+      | Cmd { name = "label"; args = lbl :: _; _ } ->
+          labels := (lbl, ln.loc) :: !labels
+      | Cmd { name; args = r :: _; _ }
+        when name = "ref"
+             || name = "eqref"
+             || name = "autoref"
+             || name = "cref"
+             || name = "Cref"
+             || name = "pageref"
+             || name = "nameref"
+             || name = "href" ->
+          refs := (r, ln.loc) :: !refs
+      | _ -> ())
+    !body_nodes;
   let elements =
     List.map
       (fun ln ->
         match ln.node with
-        | Environment { env_name; body; _ }
-          when env_name = "figure"
-               || env_name = "figure*"
-               || env_name = "table"
-               || env_name = "table*" ->
+        | Environment { env_name; body; _ } when is_float_env env_name ->
             let caption =
               List.find_map
                 (function
@@ -532,6 +594,8 @@ let extract_document (s : string) : document =
     labels = List.rev !labels;
     refs = List.rev !refs;
     errors;
+    packages = List.rev !packages;
+    documentclass = !docclass;
   }
 
 (* ── Parse success metric ───────────────────────────────────── *)

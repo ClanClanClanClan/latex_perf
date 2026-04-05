@@ -435,3 +435,13 @@
  (name test_l2_gate)
  (modules test_l2_gate)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_parser_l2_envs)
+ (modules test_parser_l2_envs)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_tokenizer_utf8)
+ (modules test_tokenizer_utf8)
+ (libraries latex_parse_lib))

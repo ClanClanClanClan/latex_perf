@@ -220,12 +220,17 @@ type document = {
 
 ### Environment Recognition
 
-| Category | Environments | AST Node |
-|----------|-------------|----------|
-| Math | equation, equation*, align, align*, gather, gather*, multline, multline*, eqnarray, eqnarray*, math, displaymath, flalign, flalign*, split, cases, matrix, pmatrix, bmatrix, Bmatrix, vmatrix, Vmatrix, smallmatrix, aligned, alignedat, gathered | `MathDisplay` (opaque) |
-| Verbatim | verbatim, lstlisting, minted, Verbatim, tikzpicture | `Verbatim` (opaque) |
-| Float | figure, figure*, table, table*, algorithm, algorithm* | `Float` in document |
-| Other | all others | `Environment` (recursive) |
+| Category | Count | Environments | AST Node | Parsing |
+|----------|-------|-------------|----------|---------|
+| Math | 26 | equation, equation*, align, align*, gather, gather*, multline, multline*, eqnarray, eqnarray*, math, displaymath, flalign, flalign*, split, cases, matrix, pmatrix, bmatrix, Bmatrix, vmatrix, Vmatrix, smallmatrix, aligned, alignedat, gathered | `MathDisplay` | Opaque string body via `parse_env_body` |
+| Verbatim | 5 | verbatim, lstlisting, minted, Verbatim, tikzpicture | `Verbatim` | Opaque string body via `parse_env_body` |
+| Float | 6 | figure, figure*, table, table*, algorithm, algorithm* | `Float` | Recursive parse; caption/label extracted |
+| Section | 5 | chapter, section, subsection, subsubsection, paragraph | `Section` | Command args → level 0-4, title |
+| Other | ∞ | all unrecognised `\begin{env}` | `Environment` | Recursive `parse_nodes` on body |
+
+Dispatch order in `parse_nodes` (line 334-346): verbatim checked first
+(`is_verbatim_env`), then math (`is_math_env`), then recursive fallback.
+Float and section recognition happens in `extract_document`, not during parsing.
 
 ### Metadata Extraction
 
@@ -405,22 +410,30 @@ No cycles; every `.ml` depends on `.mli` of lower tier only.
 
 ## B-12 Formal Proof Obligations Matrix
 
-| File | Theorems | Status |
-|------|----------|--------|
-| `Catcode.v` | `nat_catcode_inverse`, `catcode_eq_dec`, `nat_to_catcode_inv` | QED |
-| `LexerDeterminism.v` | `lexer_step_determinism` | QED |
-| `LexerTotality.v` | `lexer_step_total_nonempty` | QED |
-| `LexerFaithfulStep.v` | `step_deterministic`, `step_progress` | QED |
-| `LexerIncremental.v` | Incremental re-lex correctness | QED |
-| `ExpandProofsFinal.v` | `sufficient_fuel`, `expand_no_teof` | QED |
-| `ParserSound.v` | 12 theorems (identity, flatten, well-formedness) | QED |
-| `InterpLocality.v` | 8 theorems (diff algebra, insert/delete length) | QED |
-| `LabelsUnique.v` | Duplicate label detection | QED |
-| `ValidatorGraphProofs.v` | DAG acyclicity | QED |
-| `SnapshotConsistency.v` | Cross-layer snapshot consistency | QED |
-| `ElderProofs.v` | `update_preserves_length`, `update_at_correct` | QED |
-| `RegexFamily.v` | `text_validator_sound` + 80 instantiations | QED |
-| `SectionRebalance.v` | 8 theorems (renumber preserves shape) | QED |
-| `SplitPreservesOrder.v` | 7 theorems (sorted segments increasing) | QED |
-| `proofs/generated/*.v` | 429 per-rule soundness theorems | QED |
-| **Total** | **429+ theorems, 0 admits, 0 axioms** | **QED** |
+| File | Lines | Key Theorems | Status |
+|------|-------|-------------|--------|
+| `CoreProofs.v` | 6 | Core imports | QED |
+| `Catcode.v` | 64 | `nat_catcode_inverse`, `catcode_eq_dec`, `nat_to_catcode_inv` | QED |
+| `LexerDeterminism.v` | 7 | `lexer_step_determinism` | QED |
+| `LexerTotality.v` | 10 | `lexer_step_total_nonempty` | QED |
+| `LexerFaithfulStep.v` | 45 | `step_deterministic`, `step_progress` | QED |
+| `LexerSmallstep.v` | 41 | Small-step lexer semantics | QED |
+| `LexerIncremental.v` | 379 | Incremental re-lex correctness | QED |
+| `LexerSoA.v` | 715 | SoA layout proofs | QED |
+| `L0Smallstep.v` | 305 | Catcode-sensitive classifier | QED |
+| `L0SmallstepControl.v` | 136 | Control-flow small-step | QED |
+| `Expand.v` | 597 | Full expansion proofs | QED |
+| `ExpandProofsFinal.v` | 35 | `sufficient_fuel`, `expand_no_teof` | QED |
+| `RegexFamily.v` | 292 | `text_validator_sound`, `qed_text_sound` tactic | QED |
+| `ParserSound.v` | 149 | 12 theorems (identity, flatten, well-formedness) | QED |
+| `InterpLocality.v` | 138 | 8 theorems (diff algebra, insert/delete length) | QED |
+| `LabelsUnique.v` | 31 | Duplicate label detection | QED |
+| `ValidatorGraphProofs.v` | 70 | DAG acyclicity | QED |
+| `SnapshotConsistency.v` | 76 | Cross-layer snapshot consistency | QED |
+| `ElderProofs.v` | 42 | `update_preserves_length`, `update_at_correct` | QED |
+| `Arena_safe.v` | 217 | Arena memory safety | QED |
+| `ListWindow.v` | 73 | List windowing correctness | QED |
+| `SectionRebalance.v` | 84 | 8 theorems (renumber preserves shape) | QED |
+| `SplitPreservesOrder.v` | 106 | 7 theorems (sorted segments increasing) | QED |
+| `proofs/generated/*.v` | 74 files | 429 per-rule soundness theorems | QED |
+| **Total** | **3,662 + gen** | **429+ theorems, 0 admits, 0 axioms** | **QED** |

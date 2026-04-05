@@ -345,7 +345,21 @@ This tactic dispatches 403 of 429 soundness theorems (conservative proofs).
 | Admits | 0 |
 | Axioms | 0 |
 
-## C.8 Evidence Scoring (`evidence_scoring.ml`)
+## C.8 Built-in Fixers (Spec C-6)
+
+| Name | Captures | Behaviour | Proof Template |
+|------|----------|-----------|----------------|
+| `auto_replace` | `$0` or named groups | Single regex substitution | `fix_auto_replace_sound` |
+| `insert_nbsp` | `$pos` offset | Inserts U+00A0 before span | `fix_nbsp_sound` |
+| `wrap_braces` | span | `{ ... }` wrapping | `fix_wrap_sound` |
+| `collapse_spaces` | span | Replace `  +` → `" "` | `fix_ws_collapse_sound` |
+
+All built-ins are proven `fixer_preserves_semantics` (spec obligation).
+
+**Current status:** Fixers are spec-designed but not yet implemented in the
+OCaml runtime. Validators are detection-only (`result option`, no rewrite).
+
+## C.9 Evidence Scoring (`evidence_scoring.ml`)
 
 ```ocaml
 type confidence = High | Medium | Low
@@ -430,8 +444,23 @@ end
 ```
 
 The DSL compiles to a first-class OCaml detector; static analysis ensures
-termination. Currently, structural validators are implemented directly in OCaml
-(e.g., `validators_l4_style.ml`) without the ppx layer.
+termination.
+
+**Grammar (from spec C-3.3):**
+
+```
+sequence   ::= line+
+line       ::= Constructor Literal? Regex?
+Constructor ::= TChar | TMacro | TGroupOpen | TGroupClose | TEOF
+Literal    ::= STRING   (* OCaml lex string literal *)
+Regex      ::= /.../
+```
+
+`_` wildcard and `{m,n}` repetition allowed.
+
+**Current status:** Structural validators are implemented directly in OCaml
+(e.g., `validators_l4_style.ml`) without the ppx layer. The DSL is a v26
+target.
 
 ## C.11 Generator CLI
 

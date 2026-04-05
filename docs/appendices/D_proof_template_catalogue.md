@@ -310,6 +310,26 @@ Proof. qed_text_sound. Qed.
 
 Separate theory for parallel compilation (`-j 4` in CI).
 
+## D.5.5 Instantiation Examples
+
+**TYPO-001 (Curly quotes):**
+- Precondition: `L0_Lexer` → Template 1 (Text-Scan) + Template 5 (Diff)
+- Fix: local replacement `"..."` → `"..."`
+- Proof: locality bound 1; idempotence by char-class predicate; semantics
+  preserved as renderer maps both to identical glyph
+
+**PKG-002 (geometry before hyperref):**
+- Precondition: `L2_Ast` → Template 3 (Parser Soundness)
+- Obligation: `order_ok ast ["geometry"; "hyperref"]`
+- Auto-fix: reorder preamble nodes; proof via permutation lemma
+
+**MATH-012 (operatorname for multi-letter functions):**
+- Precondition: `L1_Expanded` → Template 2 (Fuel-Bounded)
+- Fix: wrap `foo(x)` → `\operatorname{foo}(x)`
+- Proof: expansion determinism ensures identical token boundaries
+
+---
+
 ## D.6 Automation: `auto_solver` Dispatcher
 
 The spec defines a meta-tactic that selects the appropriate proof template

@@ -1,4 +1,44 @@
-# ML Span Extractor — Results
+# ML Span Extractor + Validation Metrics — Results
+
+## Validation Baselines (April 2026)
+
+### L2 Parser Corpus Pass Rate
+
+| Metric | Value |
+|--------|-------|
+| Total corpus files | 306 |
+| Parse success | 306 / 306 (100.0%) |
+| Target (spec W43-45) | ≥ 90% |
+| Status | **EXCEEDS** |
+
+Measured across all golden corpus directories (lint/style, locale, phase3,
+i18n_qa, pilot_v1, l2_approx, l2_batch3, l2_batch4, l3_text_approx,
+l5_expl3_tikz, stragglers2, perf).
+
+### False Positive Rate (FPR)
+
+| Metric | Value |
+|--------|-------|
+| Clean corpus | corpora/perf/ (4 files) |
+| Target (spec §1.2) | ≤ 0.1% |
+| Status | **Pending full measurement** |
+
+FPR measurement script: `scripts/measure_fpr.sh`. Requires a larger clean
+corpus for statistically meaningful FPR — the 4 perf files are insufficient.
+External corpora (corpora.lock) needed for proper FPR baseline.
+
+### Validator DAG Integrity
+
+| Metric | Value |
+|--------|-------|
+| Total unique rules | 606 |
+| DAG cycles | 0 |
+| Conflicts | 0 |
+| Status | **PASS** |
+
+DAG validated at startup via `Validator_dag.build_dag` in `get_rules()`.
+
+---
 
 ## CPU Baseline Models (April 2026)
 

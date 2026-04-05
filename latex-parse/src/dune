@@ -42,7 +42,11 @@
   macro_catalogue
   log_parser
   validator_dag
-  layer_sync)
+  layer_sync
+  semantic_state
+  sentence_split
+  event_bus
+  evidence_scoring)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)

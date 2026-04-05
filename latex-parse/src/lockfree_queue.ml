@@ -24,9 +24,7 @@ let create (capacity : int) : 'a t =
     cap := !cap * 2
   done;
   let n = !cap in
-  let buffer =
-    Array.init n (fun i -> { data = None; seq = Atomic.make i })
-  in
+  let buffer = Array.init n (fun i -> { data = None; seq = Atomic.make i }) in
   { buffer; mask = n - 1; head = Atomic.make 0; tail = Atomic.make 0 }
 
 let capacity (q : 'a t) : int = q.mask + 1
@@ -39,13 +37,15 @@ let try_push (q : 'a t) (v : 'a) : bool =
     let slot = q.buffer.(idx) in
     let seq = Atomic.get slot.seq in
     let diff = seq - tail in
-    if diff = 0 then (
-      (* Slot is available for writing *)
-      if Atomic.compare_and_set q.tail tail (tail + 1) then (
+    if diff = 0 then
+      if
+        (* Slot is available for writing *)
+        Atomic.compare_and_set q.tail tail (tail + 1)
+      then (
         slot.data <- Some v;
         Atomic.set slot.seq (tail + 1);
         true)
-      else loop ())
+      else loop ()
     else if diff < 0 then false (* Queue full *)
     else loop ()
     (* Another producer claimed this slot, retry *)
@@ -60,14 +60,15 @@ let try_pop (q : 'a t) : 'a option =
     let slot = q.buffer.(idx) in
     let seq = Atomic.get slot.seq in
     let diff = seq - (head + 1) in
-    if diff = 0 then (
-      (* Slot has data ready *)
-      if Atomic.compare_and_set q.head head (head + 1) then (
+    if diff = 0 then
+      if (* Slot has data ready *)
+         Atomic.compare_and_set q.head head (head + 1)
+      then (
         let v = slot.data in
         slot.data <- None;
         Atomic.set slot.seq (head + (q.mask + 1));
         v)
-      else loop ())
+      else loop ()
     else if diff < 0 then None (* Queue empty *)
     else loop ()
     (* Another consumer claimed this slot, retry *)

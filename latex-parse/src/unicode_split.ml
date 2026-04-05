@@ -16,46 +16,53 @@ type uchar_category =
   | Digit
   | Whitespace
   | Punctuation
-  | CJK         (* CJK Unified Ideographs + extensions *)
-  | Arabic      (* Arabic script *)
+  | CJK (* CJK Unified Ideographs + extensions *)
+  | Arabic (* Arabic script *)
   | Other
 
 let classify_uchar (u : Uchar.t) : uchar_category =
   let cp = Uchar.to_int u in
-  if cp >= 0x4E00 && cp <= 0x9FFF then CJK           (* CJK Unified *)
-  else if cp >= 0x3400 && cp <= 0x4DBF then CJK      (* CJK Extension A *)
-  else if cp >= 0x20000 && cp <= 0x2A6DF then CJK    (* CJK Extension B *)
-  else if cp >= 0xF900 && cp <= 0xFAFF then CJK      (* CJK Compat *)
+  if cp >= 0x4E00 && cp <= 0x9FFF then CJK (* CJK Unified *)
+  else if cp >= 0x3400 && cp <= 0x4DBF then CJK (* CJK Extension A *)
+  else if cp >= 0x20000 && cp <= 0x2A6DF then CJK (* CJK Extension B *)
+  else if cp >= 0xF900 && cp <= 0xFAFF then CJK (* CJK Compat *)
   else if cp >= 0x3000 && cp <= 0x303F then Punctuation (* CJK Symbols *)
-  else if cp >= 0x3040 && cp <= 0x309F then CJK      (* Hiragana *)
-  else if cp >= 0x30A0 && cp <= 0x30FF then CJK      (* Katakana *)
-  else if cp >= 0x0600 && cp <= 0x06FF then Arabic    (* Arabic *)
-  else if cp >= 0x0750 && cp <= 0x077F then Arabic    (* Arabic Supplement *)
+  else if cp >= 0x3040 && cp <= 0x309F then CJK (* Hiragana *)
+  else if cp >= 0x30A0 && cp <= 0x30FF then CJK (* Katakana *)
+  else if cp >= 0x0600 && cp <= 0x06FF then Arabic (* Arabic *)
+  else if cp >= 0x0750 && cp <= 0x077F then Arabic (* Arabic Supplement *)
   else if cp >= 0x0620 && cp <= 0x064A then Arabic
-  else if cp >= 0xFB50 && cp <= 0xFDFF then Arabic    (* Arabic Pres A *)
-  else if cp >= 0xFE70 && cp <= 0xFEFF then Arabic    (* Arabic Pres B *)
-  else if (cp >= 0x41 && cp <= 0x5A)                  (* A-Z *)
-       || (cp >= 0x61 && cp <= 0x7A)                  (* a-z *)
-       || (cp >= 0xC0 && cp <= 0x24F)                 (* Latin Extended *)
-       || (cp >= 0x0400 && cp <= 0x04FF)              (* Cyrillic *)
-       || (cp >= 0x0370 && cp <= 0x03FF)              (* Greek *)
+  else if cp >= 0xFB50 && cp <= 0xFDFF then Arabic (* Arabic Pres A *)
+  else if cp >= 0xFE70 && cp <= 0xFEFF then Arabic (* Arabic Pres B *)
+  else if
+    (cp >= 0x41 && cp <= 0x5A) (* A-Z *)
+    || (cp >= 0x61 && cp <= 0x7A) (* a-z *)
+    || (cp >= 0xC0 && cp <= 0x24F) (* Latin Extended *)
+    || (cp >= 0x0400 && cp <= 0x04FF) (* Cyrillic *)
+    || (cp >= 0x0370 && cp <= 0x03FF)
+    (* Greek *)
   then Letter
-  else if (cp >= 0x30 && cp <= 0x39)                  (* 0-9 *)
-       || (cp >= 0x0660 && cp <= 0x0669)              (* Arabic-Indic *)
+  else if
+    (cp >= 0x30 && cp <= 0x39) (* 0-9 *) || (cp >= 0x0660 && cp <= 0x0669)
+    (* Arabic-Indic *)
   then Digit
-  else if cp = 0x20 || cp = 0x09 || cp = 0x0A || cp = 0x0D
-       || cp = 0x00A0                                 (* NBSP *)
-       || cp = 0x3000                                 (* Ideographic space *)
-       || cp = 0x2000 || cp = 0x2001                  (* En/Em space *)
+  else if
+    cp = 0x20 || cp = 0x09 || cp = 0x0A || cp = 0x0D || cp = 0x00A0 (* NBSP *)
+    || cp = 0x3000 (* Ideographic space *)
+    || cp = 0x2000
+    || cp = 0x2001 (* En/Em space *)
   then Whitespace
-  else if (cp >= 0x21 && cp <= 0x2F)
-       || (cp >= 0x3A && cp <= 0x40)
-       || (cp >= 0x5B && cp <= 0x60)
-       || (cp >= 0x7B && cp <= 0x7E)
-       || (cp >= 0x2000 && cp <= 0x206F)              (* Gen. punctuation *)
-       || (cp >= 0xFF01 && cp <= 0xFF0F)              (* Fullwidth punct *)
-       || cp = 0x3001 || cp = 0x3002                  (* CJK comma/period *)
-       || cp = 0xFF0C || cp = 0xFF0E                  (* Fullwidth comma/period *)
+  else if
+    (cp >= 0x21 && cp <= 0x2F)
+    || (cp >= 0x3A && cp <= 0x40)
+    || (cp >= 0x5B && cp <= 0x60)
+    || (cp >= 0x7B && cp <= 0x7E)
+    || (cp >= 0x2000 && cp <= 0x206F) (* Gen. punctuation *)
+    || (cp >= 0xFF01 && cp <= 0xFF0F) (* Fullwidth punct *)
+    || cp = 0x3001
+    || cp = 0x3002 (* CJK comma/period *)
+    || cp = 0xFF0C
+    || cp = 0xFF0E (* Fullwidth comma/period *)
   then Punctuation
   else Other
 
@@ -80,12 +87,12 @@ let decode_uchars (s : string) : Uchar.t list =
 
 (* ── Word segmentation ────────────────────────────────────────────── *)
 
-(** A word segment with its byte range. *)
 type word_segment = {
   w_text : string;
-  w_start : int;  (* byte offset *)
-  w_end : int;    (* byte offset *)
+  w_start : int; (* byte offset *)
+  w_end : int; (* byte offset *)
 }
+(** A word segment with its byte range. *)
 
 (** Split into word segments. CJK characters are each their own word.
     Latin/Cyrillic/Greek words break on whitespace/punctuation.
@@ -101,8 +108,7 @@ let split_words (s : string) : word_segment list =
       let text = Buffer.contents buf in
       let byte_end = Uutf.decoder_byte_count d in
       segments :=
-        { w_text = text; w_start = !seg_start; w_end = byte_end }
-        :: !segments;
+        { w_text = text; w_start = !seg_start; w_end = byte_end } :: !segments;
       Buffer.clear buf;
       seg_start := byte_end)
   in
@@ -133,8 +139,7 @@ let split_words (s : string) : word_segment list =
             let byte_start = Uutf.decoder_byte_count d - n in
             Buffer.add_string buf (String.sub s byte_start n));
         loop ()
-    | `End ->
-        flush ()
+    | `End -> flush ()
     | `Malformed _ ->
         Buffer.add_string buf (String.make 1 '\xEF');
         loop ()
@@ -146,19 +151,14 @@ let split_words (s : string) : word_segment list =
 
 (* ── Sentence segmentation (Unicode-aware) ────────────────────────── *)
 
+type sentence_segment = { s_text : string; s_start : int; s_end : int }
 (** A sentence with byte range. *)
-type sentence_segment = {
-  s_text : string;
-  s_start : int;
-  s_end : int;
-}
 
 (** Unicode sentence terminators. *)
 let is_sentence_end (u : Uchar.t) : bool =
   let cp = Uchar.to_int u in
-  cp = 0x2E    (* . *)
-  || cp = 0x21 (* ! *)
-  || cp = 0x3F (* ? *)
+  cp = 0x2E (* . *) || cp = 0x21
+  (* ! *) || cp = 0x3F (* ? *)
   || cp = 0x3002 (* CJK period 。 *)
   || cp = 0xFF01 (* fullwidth ! *)
   || cp = 0xFF1F (* fullwidth ? *)
@@ -182,7 +182,11 @@ let split_sentences (s : string) : sentence_segment list =
           (* Sentence boundary: terminator followed by whitespace *)
           let text = Buffer.contents buf in
           segments :=
-            { s_text = String.trim text; s_start = !seg_start; s_end = byte_pos }
+            {
+              s_text = String.trim text;
+              s_start = !seg_start;
+              s_end = byte_pos;
+            }
             :: !segments;
           Buffer.clear buf;
           seg_start := byte_pos;
@@ -191,7 +195,7 @@ let split_sentences (s : string) : sentence_segment list =
           saw_terminator := false;
         loop ()
     | `End ->
-        if Buffer.length buf > 0 then (
+        if Buffer.length buf > 0 then
           let text = Buffer.contents buf in
           let trimmed = String.trim text in
           if String.length trimmed > 0 then
@@ -201,7 +205,7 @@ let split_sentences (s : string) : sentence_segment list =
                 s_start = !seg_start;
                 s_end = Uutf.decoder_byte_count d;
               }
-              :: !segments)
+              :: !segments
     | `Malformed _ ->
         Buffer.add_string buf "\xEF\xBF\xBD";
         loop ()

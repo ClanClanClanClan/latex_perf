@@ -35,10 +35,7 @@ let () =
   check "3 sentences" (List.length sents = 3);
 
   (* Test 5: CJK sentence split with 。 *)
-  let cjk_sents =
-    Latex_parse_lib.Unicode_split.split_sentences
-      "第一句。第二句。"
-  in
+  let cjk_sents = Latex_parse_lib.Unicode_split.split_sentences "第一句。第二句。" in
   check "CJK sentences >= 1" (List.length cjk_sents >= 1);
 
   (* Test 6: empty string *)

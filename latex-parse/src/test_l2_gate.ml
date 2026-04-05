@@ -32,7 +32,7 @@ A reference to \ref{fig:test} and a citation \cite{paper2024}.
   in
 
   (* Sizes to test *)
-  let sizes = [100; 500; 1000; 2000; 4000; 8000; 16000] in
+  let sizes = [ 100; 500; 1000; 2000; 4000; 8000; 16000 ] in
 
   (* For each size, measure 100 iterations and compute p95 *)
   let all_pass = ref true in
@@ -58,8 +58,8 @@ A reference to \ref{fig:test} and a citation \cite{paper2024}.
       let p50 = times.(n / 2) in
       let p95 = times.(n * 95 / 100) in
       let p99 = times.(n - 1) in
-      Printf.printf "  [%5d bytes] p50=%.3fms  p95=%.3fms  p99=%.3fms\n%!" doc_len
-        p50 p95 p99;
+      Printf.printf "  [%5d bytes] p50=%.3fms  p95=%.3fms  p99=%.3fms\n%!"
+        doc_len p50 p95 p99;
       if size <= 4000 && p95 > 1.2 then (
         Printf.eprintf "  WARN: p95 %.3fms > 1.2ms for %d bytes\n%!" p95 size;
         all_pass := false))
@@ -78,15 +78,16 @@ A reference to \ref{fig:test} and a citation \cite{paper2024}.
   done;
   Array.sort compare edit_times;
   let edit_p95 = edit_times.(n * 95 / 100) in
-  Printf.printf "\n  [4KB edit-window] p95=%.3fms (target: < 1.2ms)\n%!" edit_p95;
+  Printf.printf "\n  [4KB edit-window] p95=%.3fms (target: < 1.2ms)\n%!"
+    edit_p95;
 
   (* Write results *)
   Printf.printf "\n[test_l2_gate] %s\n%!"
-    (if !all_pass then "PASS: all sizes within p95 < 1.2ms" else "WARN: some sizes exceeded target");
+    (if !all_pass then "PASS: all sizes within p95 < 1.2ms"
+     else "WARN: some sizes exceeded target");
 
   (* The test passes as long as 4KB is under target — larger docs naturally take longer *)
   if edit_p95 > 5.0 then (
     Printf.eprintf "[test_l2_gate] FAIL: 4KB p95 %.3fms > 5.0ms\n%!" edit_p95;
     exit 1)
-  else
-    Printf.printf "[test_l2_gate] PASS: 4KB p95 = %.3fms\n%!" edit_p95
+  else Printf.printf "[test_l2_gate] PASS: 4KB p95 = %.3fms\n%!" edit_p95

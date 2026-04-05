@@ -6,7 +6,6 @@
    consistency (no level-skip violations like section → subsubsection).
    ══════════════════════════════════════════════════════════════════════ *)
 
-(** A node in the section tree. *)
 type section_node = {
   level : int; (* 0=chapter, 1=section, 2=subsection, 3=subsubsection *)
   title : string;
@@ -15,23 +14,23 @@ type section_node = {
   children : section_node list;
   source_offset : int; (* byte offset in source *)
 }
+(** A node in the section tree. *)
 
-(** Section tree = forest of top-level sections. *)
 type section_tree = section_node list
+(** Section tree = forest of top-level sections. *)
 
-(** Level-skip violation. *)
 type violation = {
   v_title : string;
   v_expected_max_level : int;
   v_actual_level : int;
   v_offset : int;
 }
+(** Level-skip violation. *)
 
 (* ── Regex for section commands ───────────────────────────────────── *)
 
 let section_re =
-  Str.regexp
-    "\\\\\\(chapter\\|section\\|subsection\\|subsubsection\\)[*]?{"
+  Str.regexp "\\\\\\(chapter\\|section\\|subsection\\|subsubsection\\)[*]?{"
 
 let level_of_name = function
   | "chapter" -> 0
@@ -57,8 +56,7 @@ let extract_brace_arg (s : string) (start : int) : string * int =
     let depth = ref 1 in
     let i = ref (start + 1) in
     while !i < len && !depth > 0 do
-      if s.[!i] = '{' then incr depth
-      else if s.[!i] = '}' then decr depth;
+      if s.[!i] = '{' then incr depth else if s.[!i] = '}' then decr depth;
       incr i
     done;
     (String.sub s (start + 1) (!i - start - 2), !i)
@@ -84,8 +82,9 @@ let extract_sections (source : string) : raw_section list =
        let name_end = String.index_from matched 0 '{' in
        let name_raw = String.sub matched 1 (name_end - 1) in
        let name =
-         if String.length name_raw > 0
-            && name_raw.[String.length name_raw - 1] = '*'
+         if
+           String.length name_raw > 0
+           && name_raw.[String.length name_raw - 1] = '*'
          then String.sub name_raw 0 (String.length name_raw - 1)
          else name_raw
        in
@@ -142,11 +141,7 @@ let build_tree (raw : raw_section list) : section_tree =
 let rec renumber_children (nodes : section_node list) : section_node list =
   List.mapi
     (fun i n ->
-      {
-        n with
-        number = i + 1;
-        children = renumber_children n.children;
-      })
+      { n with number = i + 1; children = renumber_children n.children })
     nodes
 
 let renumber (tree : section_tree) : section_tree = renumber_children tree

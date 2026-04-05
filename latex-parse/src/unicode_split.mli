@@ -11,17 +11,8 @@ type uchar_category =
   | Arabic
   | Other
 
-type word_segment = {
-  w_text : string;
-  w_start : int;
-  w_end : int;
-}
-
-type sentence_segment = {
-  s_text : string;
-  s_start : int;
-  s_end : int;
-}
+type word_segment = { w_text : string; w_start : int; w_end : int }
+type sentence_segment = { s_text : string; s_start : int; s_end : int }
 
 val classify_uchar : Uchar.t -> uchar_category
 val decode_uchars : string -> Uchar.t list

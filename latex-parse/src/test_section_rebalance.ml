@@ -44,16 +44,28 @@ Details.|}
 
   (* Test 3: renumber after delete *)
   let tree2 =
-    Latex_parse_lib.Section_rebalance.renumber
-      [List.nth tree 1]  (* keep only Methods *)
+    Latex_parse_lib.Section_rebalance.renumber [ List.nth tree 1 ]
+    (* keep only Methods *)
   in
   check "renumbered Methods = 1" ((List.nth tree2 0).number = 1);
 
   (* Test 4: validate level-skip *)
   let bad_raw : Latex_parse_lib.Section_rebalance.raw_section list =
     [
-      { rs_level = 1; rs_name = "section"; rs_title = "A"; rs_label = None; rs_offset = 0 };
-      { rs_level = 3; rs_name = "subsubsection"; rs_title = "B"; rs_label = None; rs_offset = 50 };
+      {
+        rs_level = 1;
+        rs_name = "section";
+        rs_title = "A";
+        rs_label = None;
+        rs_offset = 0;
+      };
+      {
+        rs_level = 3;
+        rs_name = "subsubsection";
+        rs_title = "B";
+        rs_label = None;
+        rs_offset = 50;
+      };
     ]
   in
   let bad_tree = Latex_parse_lib.Section_rebalance.build_tree bad_raw in
@@ -63,8 +75,10 @@ Details.|}
   (* Test 5: valid structure has no violations *)
   let good_violations = Latex_parse_lib.Section_rebalance.validate tree in
   if List.length good_violations > 0 then
-    List.iter (fun (v : Latex_parse_lib.Section_rebalance.violation) ->
-      Printf.eprintf "  violation: %s expected_max=%d actual=%d\n%!" v.v_title v.v_expected_max_level v.v_actual_level)
+    List.iter
+      (fun (v : Latex_parse_lib.Section_rebalance.violation) ->
+        Printf.eprintf "  violation: %s expected_max=%d actual=%d\n%!" v.v_title
+          v.v_expected_max_level v.v_actual_level)
       good_violations;
   check "good tree no violations" (List.length good_violations = 0);
 
@@ -81,8 +95,12 @@ Details.|}
   check "empty document" (List.length empty_tree = 0);
 
   (* Test 9: document with chapters *)
-  let chapter_src = {|\chapter{One}\section{A}\section{B}\chapter{Two}\section{C}|} in
-  let chapter_tree = Latex_parse_lib.Section_rebalance.extract_tree chapter_src in
+  let chapter_src =
+    {|\chapter{One}\section{A}\section{B}\chapter{Two}\section{C}|}
+  in
+  let chapter_tree =
+    Latex_parse_lib.Section_rebalance.extract_tree chapter_src
+  in
   check "chapters count" (List.length chapter_tree = 2);
 
   (* Test 10: star sections *)

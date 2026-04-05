@@ -89,20 +89,26 @@ let () =
   let q8 = Latex_parse_lib.Lockfree_queue.create 4096 in
   let count = 5000 in
   let consumed = Atomic.make 0 in
-  let p1 = Domain.spawn (fun () ->
-    for i = 1 to count do
-      Latex_parse_lib.Lockfree_queue.push q8 i
-    done) in
-  let p2 = Domain.spawn (fun () ->
-    for i = 1 to count do
-      Latex_parse_lib.Lockfree_queue.push q8 (i + count)
-    done) in
+  let p1 =
+    Domain.spawn (fun () ->
+        for i = 1 to count do
+          Latex_parse_lib.Lockfree_queue.push q8 i
+        done)
+  in
+  let p2 =
+    Domain.spawn (fun () ->
+        for i = 1 to count do
+          Latex_parse_lib.Lockfree_queue.push q8 (i + count)
+        done)
+  in
   (* Consumer runs concurrently *)
-  let c1 = Domain.spawn (fun () ->
-    for _ = 1 to count * 2 do
-      let _v = Latex_parse_lib.Lockfree_queue.pop q8 in
-      ignore (Atomic.fetch_and_add consumed 1)
-    done) in
+  let c1 =
+    Domain.spawn (fun () ->
+        for _ = 1 to count * 2 do
+          let _v = Latex_parse_lib.Lockfree_queue.pop q8 in
+          ignore (Atomic.fetch_and_add consumed 1)
+        done)
+  in
   Domain.join p1;
   Domain.join p2;
   Domain.join c1;

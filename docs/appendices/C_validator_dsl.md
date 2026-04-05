@@ -414,7 +414,87 @@ let r_fig_001 : rule =
     else None)
 ```
 
-## C.10 Adding a New Validator
+## C.10 Structural DSL Dialect (Spec C-3.3)
+
+**Status:** Specified, not yet implemented.
+
+The spec describes a ppx-based OCaml pattern matcher (`ppx_vdl_dsl`) for
+structural validators that need AST context beyond regex:
+
+```
+DSL
+match block::Paragraph(inlines) with
+| _ when sentence_length inlines > 40 ->
+    issue ~loc:(loc_of inlines) "STYLE-017" "Sentence too long"
+end
+```
+
+The DSL compiles to a first-class OCaml detector; static analysis ensures
+termination. Currently, structural validators are implemented directly in OCaml
+(e.g., `validators_l4_style.ml`) without the ppx layer.
+
+## C.11 Generator CLI
+
+The proof generator `scripts/infra/proof_farm/gen_coq_proofs.py` accepts:
+
+| Argument | Purpose |
+|----------|---------|
+| `--rules-yaml PATH` | Path to `rules_v3.yaml` (default: `specs/rules/rules_v3.yaml`) |
+| `--vpd-json PATH` | Path to `vpd_patterns.json` |
+| `--output-dir DIR` | Where to emit generated `.v` files (default: `proofs/generated/`) |
+| `--layer LAYER` | Restrict to specific layer (L0, L1, L2, L3, L4) |
+| `--dry-run` | Parse and validate only, no code generation |
+
+Usage:
+
+```bash
+python scripts/infra/proof_farm/gen_coq_proofs.py
+# Generates proofs/generated/L0_TYPO.v, L0_SPC.v, ..., L2_TIKZ.v, etc.
+```
+
+`dune runtest` invokes the generator in check-only mode to enforce schema
+correctness before proofs build.
+
+## C.12 Error Codes
+
+| Code | Message | Typical Fix |
+|------|---------|------------|
+| E001 | Duplicate rule id | Rename file/id |
+| E011 | Unknown front-matter key | Prefix with `_comment:` or remove |
+| E101 | Regex parse error | Escape metacharacters |
+| E201 | Unknown token constructor | Sync with token type |
+| E401 | Fixer references undefined capture | Add capture group or rename |
+
+All generator diagnostics include `file:line:col` snippet.
+
+## C.13 Validator Life-Cycle Diagram
+
+```
+rules_v3.yaml + vpd_patterns.json
+   |
+   v
+gen_coq_proofs.py              (CI Stage 1: generate)
+   |
+   +---> proofs/generated/*.v  (Coq proof stubs)
+   +---> validators_*.ml       (OCaml detectors, manually written)
+   |
+   v
+dune build                     (CI Stage 2: compile)
+   |
+   +---> *.vo                  (proof objects, zero admits)
+   +---> *.cmo / *.cmx         (OCaml bytecode/native)
+   |
+   v
+dune runtest                   (CI Stage 3: integration tests)
+   |
+   +---> golden corpus         (329 test cases)
+   +---> property tests        (4×1000 trials)
+   +---> unit tests            (58 test suites)
+```
+
+A PR merges only when all three stages are green.
+
+## C.14 Adding a New Validator
 
 1. Add rule definition to `specs/rules/rules_v3.yaml`
 2. Implement in appropriate `validators_*.ml` module using `mk_rule` or `mk_lang_rule`

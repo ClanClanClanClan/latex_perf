@@ -310,7 +310,60 @@ Proof. qed_text_sound. Qed.
 
 Separate theory for parallel compilation (`-j 4` in CI).
 
-## D.6 Proof Statistics
+## D.6 Automation: `auto_solver` Dispatcher
+
+The spec defines a meta-tactic that selects the appropriate proof template
+by matching the goal shape:
+
+```coq
+(* Spec D.6 — not yet implemented as unified Ltac;
+   current proofs use per-template tactics directly *)
+Ltac auto_solver :=
+  match goal with
+  | |- context [wf_L0 _]       => eapply T_lex_total; eauto
+  | |- context [order_ok _ _]  => eapply T_pkg_order; eauto
+  | |- context [render _ = render _] =>
+      eapply T_sem_nfc || eapply T_sem_ws; eauto
+  | |- text_check_absent _ _ =>
+      qed_text_sound
+  | _ => eauto with core
+  end.
+```
+
+Currently, proofs use direct tactic invocation (`qed_text_sound` for 403 rules).
+The unified `auto_solver` is a v26 target once all five obligation families
+have full tactic coverage.
+
+## D.7 Coverage Matrix
+
+Which rule families bind to which template:
+
+| Template | Families | Count |
+|----------|---------|-------|
+| T.lex.safety (Text-Scan) | TYPO, SPC, ENC, CHAR, VERB, CMD | 403 |
+| T.exp.determinism (Fuel) | L1 expansion | 2 |
+| T.ast.ref-int (Parser) | ParserSound theorems | 12 |
+| T.sem.preservation (Diff) | InterpLocality theorems | 8 |
+| T.style.policy (Section) | SectionRebalance theorems | 8 |
+| Catcode (Totality) | Catcode bijection | 3 |
+| Split (Order) | SplitPreservesOrder | 7 |
+| DAG (Acyclicity) | ValidatorGraphProofs | 1 |
+| Snapshot (Consistency) | SnapshotConsistency | 1 |
+| Elder (Update) | ElderProofs | 2 |
+
+Each block binds to one core template. Family-specific lemmas handle boundary
+cases (e.g., verbatim/math context exclusions).
+
+## D.8 Known Gaps
+
+- PDF accessibility proofs remain *checks*, not semantic proofs.
+- TikZ compilation time bounds are empirical, documented via CI artefacts.
+- Full Unicode equivalence beyond NFC is purposely **out of scope** for v25
+  (see Appendix F for policy).
+- 55 LAY/PAGE rules require compile-log data (L3 semantic layer); cannot be
+  proved from source text alone.
+
+## D.9 Proof Statistics
 
 | Metric | Count |
 |--------|-------|

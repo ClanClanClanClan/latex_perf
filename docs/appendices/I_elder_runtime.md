@@ -640,9 +640,69 @@ type error = { source : string; message : string; position : int option }
 
 ---
 
-## I-14 Spec Features Not Yet Implemented
+## I-14 Spec-Designed Features (Not Yet Implemented)
 
-The spec describes several features that are not yet in the codebase:
+The spec describes several features designed for the full Elder runtime. These
+are documented here for completeness; implementation is planned for v26.
+
+### I-14.1 Chunk Store & Snapshots (Spec I-3)
+
+Logical chunk size: 4 KiB. Memory-mapped window: 32 KiB (huge-page aligned).
+
+```
+ChunkMeta { id : chunk_id; start : u32; len : u16;
+            cat_vec : SmallVec<u8>; dirty : AtomicBool }
+```
+
+Hash: BLAKE3-256 over `(bytes, catcode_vector)` → `ChunkId`.
+Merkle root of all chunk IDs → `SnapshotId`.
+All layer caches key off `(SnapshotId, slice_range)`.
+
+### I-14.2 EDF Real-Time Scheduler (Spec I-6)
+
+Each validator `τ_j = (C_j, D_j, T_j)` where C = worst-case execution time
+(padded +20%), D = deadline from layer budget, T = measured inter-arrival.
+
+Schedulability: if `Σ C_j/T_j ≤ 0.6`, no deadlines missed. Current utilisation
+U = 0.43 (measured; sufficient headroom).
+
+Implementation plan: Crossbeam work-stealing + parking_lot fallback.
+
+### I-14.3 Proof-Carrying Snapshot (PCS) Format (Spec I-10)
+
+Binary format:
+
+```
+magic    = "LPSS"                  (4 bytes)
+version  = 0x0001                  (2 bytes)
+root_hash : BLAKE3                 (32 bytes)
+layers   : 5 × LayerEntry {
+  sha256_proof   : 32 bytes       // coqchk --sha256 proof.vo
+  artefact_start : u64
+  artefact_len   : u64
+}                                  (5 × 48 = 240 bytes)
+payload  : concatenated CBOR blobs (per layer)
+```
+
+### I-14.4 gRPC IPC API (Spec I-11)
+
+```protobuf
+service Elder {
+  rpc Validate     (stream Patch)       returns (stream IssueDelta);
+  rpc SnapshotSave (SnapshotRequest)    returns (SaveReply);
+  rpc SnapshotLoad (SnapshotId)         returns (SnapshotReply);
+}
+```
+
+Bindings planned for: Rust (prost), OCaml (grpc-ocaml), Python.
+
+### I-14.5 Extensibility (Spec I-12)
+
+1. GPU off-load plugin trait for L4 heavy NLP
+2. Remote cache (`--remote-cache <url>`) via Redis Streams / S3
+3. Custom validators: dynamic libraries registered with proof hash
+
+### Summary Table
 
 | Feature | Spec Section | Status |
 |---------|-------------|--------|

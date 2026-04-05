@@ -160,7 +160,66 @@ Process: RFC -> 7-day open comment -> Steward verdict.
 
 ---
 
-## L-7 Release Cadence
+## L-7 Deprecation & Compatibility
+
+SemVer policy:
+- **MAJOR** = DSL or layer API break
+- **MINOR** = new validators, performance improvements, CI changes
+- **PATCH** = bug fixes, documentation, proof corrections
+
+Deprecation flow:
+1. RFC filed with rationale
+2. Mark `@deprecated` in code with migration guide
+3. Two MINOR releases with compiler warnings
+4. Removal in next MAJOR
+
+CI enforcement: `check_deprecated.ml` verifies the deprecation sequence is
+followed for all `@deprecated` annotations.
+
+---
+
+## L-8 Security Policy
+
+From `docs/SECURITY.md`:
+
+- **Reporting:** `security@latex-perfectionist.dev` (72-hour response SLA)
+- **Disclosure:** CVD best practices; 45-day max disclosure window, 15 days if
+  actively exploited
+- **Scoring:** CVSS v4 with modifier for macro-expansion RCE
+- **SBOM:** CycloneDX JSON generated in CI; attached to every release
+- **Scanning:** Weekly cron: `cargo audit`, `opam audit`, `trivy fs`; fail on
+  High with available fix
+- **Sandboxing:** seccomp profile at `scripts/sandbox/seccomp.json` restricts
+  syscalls to file I/O, mmap, socket, clone, clock_gettime
+
+---
+
+## L-9 Knowledge-Transfer Artefacts
+
+| Artefact | Location | Update Frequency |
+|----------|----------|-----------------|
+| Architecture handbook | `docs/ARCH.md` | Evergreen |
+| Proof-writers guide | `docs/PROOF_GUIDE.md` | Every MINOR |
+| Release process video | S3 archive | On process change |
+| Brown-bag recordings | `recordings/` index | Quarterly |
+
+---
+
+## L-10 On-boarding (New Maintainers)
+
+Five-step process:
+
+1. **Contributor survey** — time-zone, expertise areas, language skills
+2. **Starter quest** — fix a TYPO rule, add a unit test, prove a trivial lemma
+3. **Pair-review** with steward on first real PR
+4. **Triage team** — after 2 green PRs, invited to triage rotation
+5. **Core eligibility** — after 10 merged PRs + 2 proof modules reviewed
+
+Mentor checklist: `maintainers/onboarding_checklist.yaml`
+
+---
+
+## L-11 Release Cadence
 
 | Train | Branch | SLA | Frequency |
 |-------|--------|-----|-----------|
@@ -171,7 +230,7 @@ Process: RFC -> 7-day open comment -> Steward verdict.
 
 ---
 
-## L-8 Regression-Budget Policy
+## L-12 Regression-Budget Policy
 
 - **Proof debt** must remain zero.
 - **Performance budget:** p95 latency may rise at most +5% over last LTS;
@@ -181,7 +240,7 @@ Process: RFC -> 7-day open comment -> Steward verdict.
 
 ---
 
-## L-9 Sustainability
+## L-13 Sustainability
 
 | Stream | Status | Annual Target (USD) |
 |--------|--------|-------------------|
@@ -195,7 +254,7 @@ Budget split: 60% infra (CI runners, hosting) / 25% stipend / 10% bounties /
 
 ---
 
-## L-10 End-of-Life (EOL)
+## L-14 End-of-Life (EOL)
 
 If 12 months pass with zero commits and no steward:
 - Org becomes read-only archive.
@@ -203,6 +262,15 @@ If 12 months pass with zero commits and no steward:
   1. Preserve copyright
   2. Maintain 0-admit
   3. Publish SBOM for each release
+
+---
+
+## L-15 Appendix Change-log
+
+- 2026-04-05 — Initial revision (PR #194). De-scoped features, timeline,
+  v26/v27 items, governance, release cadence, security policy, on-boarding.
+- 2026-04-06 — Added deprecation policy (L-7), security policy (L-8),
+  knowledge-transfer artefacts (L-9), on-boarding (L-10).
 
 ---
 

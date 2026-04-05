@@ -1,0 +1,33 @@
+{
+  "_comment": "Seccomp profile for LaTeX Perfectionist v25 runtime (§11 of v25_master.md)",
+  "defaultAction": "SCMP_ACT_ERRNO",
+  "syscalls": [
+    {
+      "names": [
+        "read", "write", "open", "close", "stat", "fstat", "lstat",
+        "poll", "lseek", "mmap", "mprotect", "munmap", "brk",
+        "rt_sigaction", "rt_sigprocmask", "ioctl",
+        "access", "pipe", "select", "sched_yield",
+        "mremap", "madvise", "shmget", "shmat", "shmctl",
+        "dup", "dup2", "nanosleep", "getpid",
+        "socket", "connect", "accept", "sendto", "recvfrom",
+        "bind", "listen", "getsockname", "getpeername",
+        "clone", "fork", "execve", "exit", "wait4",
+        "uname", "fcntl", "flock", "fsync",
+        "getcwd", "readlink", "gettimeofday",
+        "getuid", "getgid", "geteuid", "getegid",
+        "sigaltstack", "arch_prctl", "futex",
+        "set_tid_address", "exit_group",
+        "openat", "newfstatat", "readlinkat",
+        "set_robust_list", "get_robust_list",
+        "clock_gettime", "clock_nanosleep",
+        "epoll_create1", "epoll_ctl", "epoll_wait",
+        "getrandom", "membarrier", "rseq",
+        "pread64", "pwrite64", "writev",
+        "sysinfo", "getrlimit", "setrlimit",
+        "prlimit64", "close_range"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    }
+  ]
+}

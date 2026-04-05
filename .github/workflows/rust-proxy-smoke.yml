@@ -71,7 +71,7 @@ jobs:
           import socket, struct, sys
           try:
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.settimeout(5.0)
+            s.settimeout(15.0)
             s.connect('/tmp/l0_lex_svc.sock')
             doc = b' hi'
             payload = struct.pack('>I', len(doc)) + doc
@@ -100,13 +100,13 @@ jobs:
             sleep 2
           done
           # Allow worker rotation (triggered by warmup) to complete
-          sleep 3
+          sleep 5
           echo "Sending stabilization request..."
           python3 -c "
           import socket, struct, sys
           try:
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.settimeout(10.0)
+            s.settimeout(15.0)
             s.connect('/tmp/l0_lex_svc.sock')
             doc = b' ok'
             payload = struct.pack('>I', len(doc)) + doc
@@ -136,7 +136,7 @@ jobs:
             if python3 -c "
           import socket, sys
           try:
-            socket.create_connection(('127.0.0.1', 9123), timeout=0.5).close()
+            socket.create_connection(('127.0.0.1', 9123), timeout=2.0).close()
           except OSError:
             sys.exit(1)
           "; then

@@ -49,7 +49,10 @@
   evidence_scoring
   cache_key
   float_tracking
-  suffix_array)
+  suffix_array
+  section_rebalance
+  lockfree_queue
+  unicode_split)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)
@@ -412,3 +415,23 @@
  (name test_layer_sync)
  (modules test_layer_sync)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_section_rebalance)
+ (modules test_section_rebalance)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_lockfree_queue)
+ (modules test_lockfree_queue)
+ (libraries latex_parse_lib unix))
+
+(test
+ (name test_unicode_split)
+ (modules test_unicode_split)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_l2_gate)
+ (modules test_l2_gate)
+ (libraries latex_parse_lib unix))

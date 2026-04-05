@@ -41,7 +41,8 @@
   net_io
   macro_catalogue
   log_parser
-  validator_dag)
+  validator_dag
+  layer_sync)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)
@@ -391,4 +392,9 @@
 (test
  (name test_validator_dag)
  (modules test_validator_dag)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_layer_sync)
+ (modules test_layer_sync)
  (libraries latex_parse_lib test_helpers unix))

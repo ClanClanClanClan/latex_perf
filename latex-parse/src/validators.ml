@@ -137,11 +137,25 @@ let rules_vpd_catalogue : rule list =
 
 let vpd_catalogue_count = List.length rules_vpd_catalogue
 
+(* ── Generation tracking (spec §5) ───────────────────────────────── *)
+
+let _run_generation = Atomic.make 0
+
+(* DAG validation deferred until precondition_of_rule_id is defined *)
+let _dag_validated = ref false
+let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
+
 let get_rules () : rule list =
-  match Sys.getenv_opt "L0_VALIDATORS" with
-  | Some ("1" | "true" | "pilot" | "PILOT") ->
-      rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
-  | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
+  let rules =
+    match Sys.getenv_opt "L0_VALIDATORS" with
+    | Some ("1" | "true" | "pilot" | "PILOT") ->
+        rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
+    | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
+  in
+  if not !_dag_validated then (
+    _dag_validated := true;
+    !_dag_validate_fn rules);
+  rules
 
 (** Run all enabled validators on [src] and return fired results.
 
@@ -150,6 +164,9 @@ let get_rules () : rule list =
     current thread beforehand.  If it has not been set, those rules
     silently return [None] (safe but incomplete). *)
 let run_all (src : string) : result list =
+  (* Increment generation counter per spec §5 *)
+  ignore (Atomic.fetch_and_add _run_generation 1);
+  let rules = get_rules () in
   let rec go acc = function
     | [] -> List.rev acc
     | r :: rs ->
@@ -165,7 +182,7 @@ let run_all (src : string) : result list =
         in
         go acc rs
   in
-  go [] (get_rules ())
+  go [] rules
 
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
@@ -511,3 +528,41 @@ let run_all_with_timings_for_layer (src : string) (ly : layer) :
   let results = exec [] rules in
   let t1 = Unix.gettimeofday () in
   (results, (t1 -. t0) *. 1000.0, List.rev !timings)
+
+(* ── Wire DAG validation (spec §6.1) ─────────────────────────────── *)
+(* Deferred initialization: precondition_of_rule_id is now defined *)
+let () =
+  _dag_validate_fn :=
+    fun rules ->
+      (* Deduplicate rules by ID before DAG construction *)
+      let seen = Hashtbl.create 256 in
+      let unique_rules =
+        List.filter
+          (fun r ->
+            if Hashtbl.mem seen r.id then false
+            else (
+              Hashtbl.replace seen r.id ();
+              true))
+          rules
+      in
+      let metas =
+        List.map
+          (fun r ->
+            Validator_dag.default_meta r.id
+              (match precondition_of_rule_id r.id with
+              | L0 -> Validator_dag.L0
+              | L1 -> Validator_dag.L1
+              | L2 -> Validator_dag.L2
+              | L3 -> Validator_dag.L3
+              | L4 -> Validator_dag.L4))
+          unique_rules
+      in
+      match Validator_dag.build_dag metas with
+      | Ok _dag ->
+          let conflicts = Validator_dag.detect_conflicts metas in
+          if conflicts <> [] then
+            Printf.eprintf
+              "[validators] WARNING: %d conflict(s) in validator DAG\n%!"
+              (List.length conflicts)
+      | Error msg ->
+          Printf.eprintf "[validators] WARNING: DAG cycle: %s\n%!" msg

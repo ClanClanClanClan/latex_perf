@@ -5072,6 +5072,258 @@ let r_lay_013 : rule =
   mk_rule "LAY-013" run
 
 (* ══════════════════════════════════════════════════════════════════════ Phase
+   8: 10 more approximable L3 rules
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* MATH-089: \left…\right pair produces vertical gap *)
+let r_math_089 : rule =
+  let re = Str.regexp {|\\left[.([][ \t\n]*\\frac|} in
+  let run s =
+    let math_segs = extract_math_segments s in
+    let cnt =
+      List.fold_left
+        (fun acc seg ->
+          let c = ref 0 in
+          let i = ref 0 in
+          (try
+             while true do
+               ignore (Str.search_forward re seg !i);
+               incr c;
+               i := Str.match_end ()
+             done
+           with Not_found -> ());
+          acc + !c)
+        0 math_segs
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "MATH-089";
+          severity = Warning;
+          message = "\\left…\\right pair may produce vertical gap > 1 ex";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "MATH-089" run
+
+(* FIG-005: Figure width > \linewidth *)
+let r_fig_005 : rule =
+  let re =
+    Str.regexp {|\\includegraphics\[[^]]*width *= *\([0-9.]+\)\\linewidth|}
+  in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         (try
+            let w = float_of_string (Str.matched_group 1 s) in
+            if w > 1.0 then incr cnt
+          with Failure _ -> ());
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "FIG-005";
+          severity = Warning;
+          message = "Figure width exceeds \\linewidth";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "FIG-005" run
+
+(* FIG-015: Figure placed before first reference *)
+let r_fig_015 : rule =
+  let re_fig = Str.regexp_string "\\begin{figure}" in
+  let re_ref = Str.regexp {|\\ref{fig:[^}]*}|} in
+  let run s =
+    let fig_pos =
+      try Some (Str.search_forward re_fig s 0) with Not_found -> None
+    in
+    let ref_pos =
+      try Some (Str.search_forward re_ref s 0) with Not_found -> None
+    in
+    match (fig_pos, ref_pos) with
+    | Some fp, Some rp when fp < rp ->
+        Some
+          {
+            id = "FIG-015";
+            severity = Info;
+            message = "Figure placed before first reference in text";
+            count = 1;
+          }
+    | _ -> None
+  in
+  mk_rule "FIG-015" run
+
+(* FIG-018: Float distance from reference > 3 pages *)
+let r_fig_018 : rule =
+  let run s =
+    let labels = extract_labels_with_prefix "fig:" s in
+    let refs = extract_refs_with_prefix "fig:" s in
+    let cnt =
+      List.fold_left
+        (fun acc (lpos, lkey) ->
+          let closest_ref =
+            List.fold_left
+              (fun best (rpos, rkey) ->
+                if rkey = lkey then min best (abs (rpos - lpos)) else best)
+              max_int refs
+          in
+          if closest_ref > 5000 then acc + 1 else acc)
+        0 labels
+    in
+    if cnt > 0 then
+      Some
+        {
+          id = "FIG-018";
+          severity = Info;
+          message = "Float distance from reference may exceed 3 pages";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "FIG-018" run
+
+(* FIG-020: Overfull \hbox within figure caption — via log *)
+let r_fig_020 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.max_overfull_pt > 0.0 then
+          Some
+            {
+              id = "FIG-020";
+              severity = Warning;
+              message = "Overfull \\hbox detected (may be in caption)";
+              count = List.length ctx.overfull_lines;
+            }
+        else None
+  in
+  mk_rule "FIG-020" run
+
+(* LAY-008: Heading left-aligned but style requires centred *)
+let r_lay_008 : rule =
+  let run s =
+    let has_centered_class =
+      contains_substring s "\\documentclass{book}"
+      || contains_substring s "\\documentclass{report}"
+    in
+    let has_raggedright =
+      contains_substring s "\\raggedright" && contains_substring s "\\section"
+    in
+    if has_centered_class && has_raggedright then
+      Some
+        {
+          id = "LAY-008";
+          severity = Info;
+          message = "Heading left-aligned but style may require centred";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "LAY-008" run
+
+(* LAY-010: Page number suppressed on chapter opener *)
+let r_lay_010 : rule =
+  let run s =
+    if
+      contains_substring s "\\thispagestyle{empty}"
+      && contains_substring s "\\chapter"
+    then
+      Some
+        {
+          id = "LAY-010";
+          severity = Info;
+          message = "Page number suppressed on chapter opener";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "LAY-010" run
+
+(* LAY-012: Chapter starts on even page *)
+let r_lay_012 : rule =
+  let run s =
+    let has_openright =
+      contains_substring s "openright"
+      || contains_substring s "\\documentclass{book}"
+    in
+    let has_chapter = contains_substring s "\\chapter" in
+    let has_cleardouble = contains_substring s "\\cleardoublepage" in
+    if has_openright && has_chapter && not has_cleardouble then
+      Some
+        {
+          id = "LAY-012";
+          severity = Info;
+          message = "Chapter may start on even page (missing \\cleardoublepage)";
+          count = 1;
+        }
+    else None
+  in
+  mk_rule "LAY-012" run
+
+(* LAY-019: Margin note wider than marginpar width *)
+let r_lay_019 : rule =
+  let re = Str.regexp {|\\marginpar{[^}]*}|} in
+  let run s =
+    let cnt = ref 0 in
+    let i = ref 0 in
+    (try
+       while true do
+         ignore (Str.search_forward re s !i);
+         let m = Str.matched_string s in
+         if String.length m - 11 > 60 then incr cnt;
+         i := Str.match_end ()
+       done
+     with Not_found -> ());
+    if !cnt > 0 then
+      Some
+        {
+          id = "LAY-019";
+          severity = Info;
+          message = "Margin note may be wider than marginpar width";
+          count = !cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-019" run
+
+(* LAY-023: Single-sentence paragraph followed by blank line *)
+let r_lay_023 : rule =
+  let re_sentence_boundary = Str.regexp {|\. [A-Z]|} in
+  let run s =
+    let text = strip_math_segments s in
+    let paras = Str.split (Str.regexp "\n[ \t]*\n") text in
+    let cnt =
+      List.fold_left
+        (fun acc p ->
+          let p = String.trim p in
+          if String.length p > 20 then
+            let sents = Str.split re_sentence_boundary p in
+            if List.length sents <= 1 then acc + 1 else acc
+          else acc)
+        0 paras
+    in
+    if cnt > 3 then
+      Some
+        {
+          id = "LAY-023";
+          severity = Info;
+          message = "Multiple single-sentence paragraphs detected";
+          count = cnt;
+        }
+    else None
+  in
+  mk_rule "LAY-023" run
+
+(* ══════════════════════════════════════════════════════════════════════ Phase
    7: LAY rules via .log parser — require Log_parser.set_log_context Rules
    silently return None if no log context is set.
    ══════════════════════════════════════════════════════════════════════ *)
@@ -5647,6 +5899,17 @@ let rules_l2_approx : rule list =
     r_lay_021;
     r_math_026;
     r_math_027;
+    (* Phase 8: 10 more approximable *)
+    r_math_089;
+    r_fig_005;
+    r_fig_015;
+    r_fig_018;
+    r_fig_020;
+    r_lay_008;
+    r_lay_010;
+    r_lay_012;
+    r_lay_019;
+    r_lay_023;
   ]
 
 (* ── CMD rules: command definition checks ────────────────────────────── *)

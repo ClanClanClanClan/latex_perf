@@ -166,6 +166,11 @@ let get_rules () : rule list =
 let run_all (src : string) : result list =
   (* Increment generation counter per spec §5 *)
   ignore (Atomic.fetch_and_add _run_generation 1);
+  (* Build semantic state for L3 validators (spec W53-57) *)
+  let sem = Semantic_state.analyze src in
+  Semantic_state.set_state sem;
+  (* Publish events to bus (spec W62) *)
+  Event_bus.scan_and_publish (Event_bus.global ()) src;
   let rules = get_rules () in
   let rec go acc = function
     | [] -> List.rev acc

@@ -11,8 +11,40 @@ concurrency:
 
 
 jobs:
-  # ── Phase 1: Build all proofs with parallelism + timing ───────────
+  # ── Phase 1: Sharded proof compilation (8 parallel jobs) ──────────
+  # Spec W86-91: "proof-farm scale to 128 jobs; total time < 9 min"
+  # CI uses 8 shards (GitHub Actions); k8s scales to 32-128 via
+  # infra/k8s/proof-farm-job.yaml.
+  proof-shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+      max-parallel: 8
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-ocaml-env
+        with:
+          opam-packages: dune coq=8.18.0 coq-core=8.18.0 coq-mathcomp-ssreflect=1.17.0
+          extra-repos: coq-released=https://coq.inria.fr/opam/released
+          system-packages: libgmp-dev pkg-config
+
+      - name: Build proofs (shard ${{ matrix.shard }}/8)
+        id: build
+        run: |
+          START=$(date +%s%N)
+          bash scripts/infra/proof_farm/proof_shard.sh ${{ matrix.shard }} 8
+          END=$(date +%s%N)
+          ELAPSED_MS=$(( (END - START) / 1000000 ))
+          echo "shard_time_ms=$ELAPSED_MS" >> "$GITHUB_OUTPUT"
+          echo "Shard ${{ matrix.shard }} compilation: ${ELAPSED_MS}ms"
+
+  # ── Phase 2: Verification (runs after all shards complete) ────────
   proof-ci:
+    needs: proof-shard
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,7 +61,7 @@ jobs:
           if [ ! -f "_CoqProject" ]; then
             echo "_CoqProject file missing"; exit 1; fi
 
-      - name: Build proofs (parallel)
+      - name: Full proof build (verification)
         id: build
         run: |
           START=$(date +%s%N)
@@ -57,7 +89,6 @@ jobs:
         run: |
           echo "=== Proof Timing Summary ==="
           echo "Total proof compilation: ${{ steps.build.outputs.proof_time_ms }}ms"
-          # Count proof files and theorems
           V_FILES=$(find proofs -name '*.v' -not -path '*/archive/*' | wc -l)
           THEOREMS=$(grep -rcE '^(Theorem|Lemma) ' proofs/*.v proofs/ML/*.v 2>/dev/null | awk -F: '{s+=$2} END{print s}')
           echo "Proof files: $V_FILES"

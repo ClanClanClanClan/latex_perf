@@ -86,6 +86,32 @@ let () =
        (function Latex_parse_lib.Parser_l2.MathDisplay _ -> true | _ -> false)
        nodes8);
 
+  (* ── Remaining math environments (18 more, for full 26 coverage) ── *)
+  let is_math n =
+    List.exists
+      (function Latex_parse_lib.Parser_l2.MathDisplay _ -> true | _ -> false)
+      (Latex_parse_lib.Parser_l2.parse
+         (Printf.sprintf {|\begin{%s} x \end{%s}|} n n))
+  in
+  check "equation → MathDisplay" (is_math "equation");
+  check "equation* → MathDisplay" (is_math "equation*");
+  check "align → MathDisplay" (is_math "align");
+  check "align* → MathDisplay" (is_math "align*");
+  check "gather → MathDisplay" (is_math "gather");
+  check "gather* → MathDisplay" (is_math "gather*");
+  check "multline → MathDisplay" (is_math "multline");
+  check "multline* → MathDisplay" (is_math "multline*");
+  check "eqnarray → MathDisplay" (is_math "eqnarray");
+  check "eqnarray* → MathDisplay" (is_math "eqnarray*");
+  check "math → MathDisplay" (is_math "math");
+  check "displaymath → MathDisplay" (is_math "displaymath");
+  check "flalign → MathDisplay" (is_math "flalign");
+  check "flalign* → MathDisplay" (is_math "flalign*");
+  check "alignedat → MathDisplay" (is_math "alignedat");
+  check "matrix → MathDisplay" (is_math "matrix");
+  check "vmatrix → MathDisplay" (is_math "vmatrix");
+  check "Bmatrix → MathDisplay" (is_math "Bmatrix");
+
   (* Negative test: itemize → Environment (not MathDisplay) *)
   let nodes_neg =
     Latex_parse_lib.Parser_l2.parse {|\begin{itemize}\item x\end{itemize}|}

@@ -71,8 +71,15 @@ MathChar       <- '\\' . / !('$') .
 BeginEnd       <- VerbatimEnv / MathEnv / GeneralEnv
 
 VerbatimEnv    <- '\\begin{' VerbatimName '}' VerbatimBody
+                / VerbCommand
 VerbatimName   <- 'verbatim' / 'lstlisting' / 'minted' / 'Verbatim'
+                / 'tikzpicture'
 VerbatimBody   <- (!('\\end{' VerbatimName '}') .)* '\\end{' VerbatimName '}'
+
+# \verb|...| and \verb*|...| with arbitrary delimiter
+VerbCommand    <- '\\verb' '*'? VerbDelim VerbContent VerbDelim
+VerbDelim      <- .  # any single character as delimiter
+VerbContent    <- (!VerbDelim .)*
 
 MathEnv        <- '\\begin{' MathEnvName '}' MathEnvBody
 MathEnvName    <- 'equation*' / 'equation'
@@ -82,6 +89,11 @@ MathEnvName    <- 'equation*' / 'equation'
                 / 'eqnarray*' / 'eqnarray'
                 / 'math' / 'displaymath'
                 / 'flalign*' / 'flalign'
+                # amsmath inner-math environments
+                / 'split' / 'cases'
+                / 'matrix' / 'pmatrix' / 'bmatrix' / 'Bmatrix'
+                / 'vmatrix' / 'Vmatrix' / 'smallmatrix'
+                / 'aligned' / 'alignedat' / 'gathered'
 MathEnvBody    <- (!('\\end{' MathEnvName '}') .)* '\\end{' MathEnvName '}'
 
 GeneralEnv     <- '\\begin{' EnvName '}' EnvBody '\\end{' EnvName '}'
@@ -100,7 +112,7 @@ EndEnv         <- '\\end{' EnvName '}'
 Command        <- '\\' CmdName OptArg* BraceArg*
                 / '\\' NonLetterChar
 
-CmdName        <- [a-zA-Z]+
+CmdName        <- [a-zA-Z]+ '*'?    # starred variants: \section*, \chapter*
 NonLetterChar  <- !([a-zA-Z]) .
 
 # parse_opt_arg: consumes [...] with balanced bracket tracking
@@ -162,12 +174,16 @@ EOF            <- !.
 # DocBody        <- DocElement*
 # DocElement     <- FloatEnv / SectionCmd / MathBlock / RawNodes
 #
-# FloatEnv       <- Environment where env_name ∈ {figure, figure*, table, table*}
+# FloatEnv       <- Environment where env_name ∈ {figure, figure*, table, table*,
+#                                                   algorithm, algorithm*}
 #                   → extracts: kind, label, caption, body
 #
-# SectionCmd     <- Cmd where name ∈ {chapter, section, subsection,
-#                                      subsubsection, paragraph}
-#                   → extracts: level (0-4), title, label
+# SectionCmd     <- Cmd where name ∈ {part, part*, chapter, chapter*,
+#                                      section, section*, subsection, subsection*,
+#                                      subsubsection, subsubsection*,
+#                                      paragraph, paragraph*,
+#                                      subparagraph, subparagraph*}
+#                   → extracts: level (-1 to 5), title, label
 #
 # MathBlock      <- MathDisplay
 #                   → extracts: env_name, content
@@ -176,8 +192,12 @@ EOF            <- !.
 #
 # Labels and refs are collected globally:
 #   label: Cmd where name = "label"          → (arg₁, loc)
-#   ref:   Cmd where name ∈ {ref, eqref,
-#          autoref, cref, Cref}              → (arg₁, loc)
+#   ref:   Cmd where name ∈ {ref, eqref, autoref,
+#          cref, Cref, pageref, nameref, href} → (arg₁, loc)
+#   pkg:   Cmd where name = "usepackage"     → (name, opts, loc)
+#   cls:   Cmd where name = "documentclass"  → (class, opts)
+#   bib:   Cmd where name = "bibliography"   → (file, loc)
+#   bst:   Cmd where name = "bibliographystyle" → (style, loc)
 #
 # ══════════════════════════════════════════════════════════════════════
 # Parser Properties

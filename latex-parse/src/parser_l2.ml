@@ -247,7 +247,13 @@ let parse_cmd_name (st : parse_state) : string =
   while st.pos < st.len && is_letter (String.unsafe_get st.src st.pos) do
     advance st
   done;
-  if st.pos > start then String.sub st.src start (st.pos - start)
+  if st.pos > start then
+    (* Check for starred variant: \section* etc. *)
+    let name = String.sub st.src start (st.pos - start) in
+    if st.pos < st.len && String.unsafe_get st.src st.pos = '*' then (
+      advance st;
+      name ^ "*")
+    else name
   else if st.pos < st.len then (
     let c = String.unsafe_get st.src st.pos in
     advance st;
@@ -386,6 +392,33 @@ let rec parse_nodes (st : parse_state) (stop_at_end : string option) :
           (* skip \ *)
           let name = parse_cmd_name st in
           if name = "" then nodes := { node = Word "\\"; loc } :: !nodes
+          else if name = "verb" || name = "verb*" then
+            if
+              (* \verb|...| — arbitrary delimiter, opaque content *)
+              st.pos < st.len
+            then (
+              let delim = String.unsafe_get st.src st.pos in
+              advance st;
+              let buf = Buffer.create 64 in
+              let found_close = ref false in
+              while st.pos < st.len && not !found_close do
+                let c = String.unsafe_get st.src st.pos in
+                if c = delim then (
+                  found_close := true;
+                  advance st)
+                else (
+                  Buffer.add_char buf c;
+                  advance st)
+              done;
+              if not !found_close then record_error st "Unclosed \\verb";
+              nodes :=
+                {
+                  node =
+                    Verbatim { env_name = name; content = Buffer.contents buf };
+                  loc;
+                }
+                :: !nodes)
+            else record_error st "\\verb at end of input"
           else
             let opts = ref [] in
             let more_opts = ref true in
@@ -477,11 +510,13 @@ let parse_with_envs (s : string) : node list = parse s
 
 let section_level name =
   match name with
-  | "chapter" -> Some 0
-  | "section" -> Some 1
-  | "subsection" -> Some 2
-  | "subsubsection" -> Some 3
-  | "paragraph" -> Some 4
+  | "part" | "part*" -> Some (-1)
+  | "chapter" | "chapter*" -> Some 0
+  | "section" | "section*" -> Some 1
+  | "subsection" | "subsection*" -> Some 2
+  | "subsubsection" | "subsubsection*" -> Some 3
+  | "paragraph" | "paragraph*" -> Some 4
+  | "subparagraph" | "subparagraph*" -> Some 5
   | _ -> None
 
 let is_float_env name =
@@ -536,6 +571,11 @@ let extract_document (s : string) : document =
           let cls = match args with c :: _ -> c | [] -> "" in
           let opt_str = match opts with o :: _ -> Some o | [] -> None in
           docclass := Some (cls, opt_str)
+      | Cmd { name = "bibliography"; args = bib :: _; _ } ->
+          (* Track bibliography files as package-like metadata *)
+          packages := (bib, Some "bibliography", ln.loc) :: !packages
+      | Cmd { name = "bibliographystyle"; args = sty :: _; _ } ->
+          packages := (sty, Some "bibliographystyle", ln.loc) :: !packages
       | _ -> ());
       if not !in_body then preamble := ln :: !preamble)
     nodes;

@@ -157,6 +157,81 @@ Hello \ref{fig:a} and \pageref{fig:b} and \nameref{sec:c}.
   check "empty doc: no packages" (doc2.packages = []);
   check "empty doc: no docclass" (doc2.documentclass = None);
 
+  (* ── Starred commands ──────────────────────────────────────── *)
+  let nodes_star = Latex_parse_lib.Parser_l2.parse {|\section*{Unnumbered}|} in
+  check "section* name includes star"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Cmd { name = "section*"; _ } -> true
+         | _ -> false)
+       nodes_star);
+
+  let nodes_chap = Latex_parse_lib.Parser_l2.parse {|\chapter*{Preface}|} in
+  check "chapter* name includes star"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Cmd { name = "chapter*"; _ } -> true
+         | _ -> false)
+       nodes_chap);
+
+  (* ── \verb|...| support ────────────────────────────────────── *)
+  let nodes_verb = Latex_parse_lib.Parser_l2.parse {|\verb|foo_bar||} in
+  check "verb → Verbatim"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Verbatim { env_name = "verb"; content } ->
+             content = "foo_bar"
+         | _ -> false)
+       nodes_verb);
+
+  let nodes_verb2 = Latex_parse_lib.Parser_l2.parse {|\verb!x + y!|} in
+  check "verb with ! delimiter"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Verbatim
+             { env_name = "verb"; content = "x + y" } ->
+             true
+         | _ -> false)
+       nodes_verb2);
+
+  (* ── \part and \subparagraph ────────────────────────────────── *)
+  let doc_part =
+    Latex_parse_lib.Parser_l2.extract_document
+      {|\begin{document}\part{One}\subparagraph{Deep}\end{document}|}
+  in
+  check "part in body"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Section { level = -1; title = "One"; _ } ->
+             true
+         | _ -> false)
+       doc_part.body);
+  check "subparagraph in body"
+    (List.exists
+       (function
+         | Latex_parse_lib.Parser_l2.Section { level = 5; title = "Deep"; _ } ->
+             true
+         | _ -> false)
+       doc_part.body);
+
+  (* ── \bibliography tracking ─────────────────────────────────── *)
+  let doc_bib =
+    Latex_parse_lib.Parser_l2.extract_document
+      {|\bibliographystyle{plain}
+\bibliography{refs}
+\begin{document}
+Hello
+\end{document}|}
+  in
+  check "bibliography tracked"
+    (List.exists
+       (fun (p, o, _) -> p = "refs" && o = Some "bibliography")
+       doc_bib.packages);
+  check "bibliographystyle tracked"
+    (List.exists
+       (fun (p, o, _) -> p = "plain" && o = Some "bibliographystyle")
+       doc_bib.packages);
+
   Printf.printf "[test_parser_l2_envs] done\n%!";
   if !fails > 0 then (
     Printf.eprintf "[test_parser_l2_envs] %d failures\n%!" !fails;

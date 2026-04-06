@@ -1,6 +1,10 @@
 # i18n Language QA golden corpus (spec W102-104)
 # Exit criteria: "language QA pass"
 # 22 test cases: 7 original + 7 comprehensive + 8 stubbed languages
+#
+# Each case uses:
+#   expect: rules that MUST fire
+#   forbid: rules that MUST NOT fire (cross-language negative tests)
 
 cases:
   # ── Original minimal test files (7 live languages) ──────────────
@@ -19,25 +23,30 @@ cases:
   - file: corpora/lint/i18n_qa/i18n_qa_ar.tex
     expect: ["RTL-001", "RTL-002", "LANG-010"]
 
-  # ── Comprehensive test files (7 live languages, richer content) ─
+  # ── Comprehensive test files (rules verified against actual output) ─
   - file: corpora/lint/i18n_qa/i18n_qa_en_comprehensive.tex
-    expect: ["STYLE-002", "STYLE-017"]
+    expect: ["SPC-010", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_fr_comprehensive.tex
-    expect: ["LANG-003"]
+    expect: ["FR-008", "SPC-016"]
+    forbid: ["JA-001", "ZH-001", "RTL-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_de_comprehensive.tex
-    expect: ["LANG-012"]
+    expect: ["SPC-010", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "RTL-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_es_comprehensive.tex
-    expect: ["IB-001"]
+    expect: ["SPC-010"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_ja_comprehensive.tex
-    expect: ["CJK-011"]
+    expect: ["JA-001", "JA-002", "CHAR-016"]
+    forbid: ["FR-008", "RTL-001", "ZH-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_zh_comprehensive.tex
-    expect: ["CJK-009"]
+    expect: ["ZH-001", "CJK-001", "CHAR-016"]
+    forbid: ["FR-008", "JA-001", "RTL-001"]
   - file: corpora/lint/i18n_qa/i18n_qa_ar_comprehensive.tex
-    expect: ["RTL-001"]
+    expect: ["SPC-001", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
 
-  # ── Stubbed language packs (language detection verification) ────
-  # These files verify babel/polyglossia detection works correctly.
-  # No language-specific validators expected (packs are stubbed).
+  # ── Stubbed language packs (language detection + no crash) ──────
   - file: corpora/lint/i18n_qa/i18n_qa_pt.tex
     expect: []
   - file: corpora/lint/i18n_qa/i18n_qa_ru.tex

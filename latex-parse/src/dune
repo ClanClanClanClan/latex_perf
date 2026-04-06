@@ -505,4 +505,6 @@
 (test
  (name test_i18n_qa)
  (modules test_i18n_qa)
- (libraries latex_parse_lib unix))
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora)))

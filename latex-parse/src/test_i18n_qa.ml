@@ -30,6 +30,23 @@ let read_file path =
 let () =
   Printf.printf "[test_i18n_qa] Language QA Gate\n%!";
 
+  (* Resolve base directory (same logic as test_golden_corpus.ml) *)
+  let exe_dir = Filename.dirname Sys.argv.(0) in
+  let candidates =
+    [ Filename.concat exe_dir "../.."; "."; Filename.concat exe_dir "../../.." ]
+  in
+  let base_dir =
+    try
+      List.find
+        (fun d -> Sys.file_exists (Filename.concat d "corpora"))
+        candidates
+    with Not_found ->
+      Printf.eprintf
+        "[test_i18n_qa] WARNING: cannot find corpora/ directory\n%!";
+      "."
+  in
+  Printf.printf "[test_i18n_qa] base_dir = %s\n%!" base_dir;
+
   (* All i18n_qa corpus files with expected languages *)
   let test_cases =
     [
@@ -66,10 +83,11 @@ let () =
 
   List.iter
     (fun (path, expected_lang, is_live) ->
-      match read_file path with
+      let full_path = Filename.concat base_dir path in
+      match read_file full_path with
       | None ->
           incr skipped;
-          Printf.printf "  SKIP %s (file not found)\n%!" path
+          Printf.printf "  SKIP %s (file not found)\n%!" full_path
       | Some content ->
           incr tested;
           let basename = Filename.basename path in

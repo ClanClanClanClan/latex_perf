@@ -62,6 +62,8 @@ type document = {
   labels : (string * loc) list;
   refs : (string * loc) list;
   errors : (string * loc) list;
+  packages : (string * string option * loc) list;
+  documentclass : (string * string option) option;
 }
 
 (* ── Parser state ───────────────────────────────────────────── *)
@@ -108,7 +110,9 @@ let is_letter c = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
 (* ── Verbatim environments (opaque) ─────────────────────────── *)
 
-let verbatim_envs = [ "verbatim"; "lstlisting"; "minted"; "Verbatim" ]
+let verbatim_envs =
+  [ "verbatim"; "lstlisting"; "minted"; "Verbatim"; "tikzpicture" ]
+
 let is_verbatim_env name = List.mem name verbatim_envs
 
 (* ── Math environment names ─────────────────────────────────── *)
@@ -129,6 +133,19 @@ let math_envs =
     "displaymath";
     "flalign";
     "flalign*";
+    (* amsmath inner-math environments *)
+    "split";
+    "cases";
+    "matrix";
+    "pmatrix";
+    "bmatrix";
+    "Bmatrix";
+    "vmatrix";
+    "Vmatrix";
+    "smallmatrix";
+    "aligned";
+    "alignedat";
+    "gathered";
   ]
 
 let is_math_env name = List.mem name math_envs
@@ -230,7 +247,13 @@ let parse_cmd_name (st : parse_state) : string =
   while st.pos < st.len && is_letter (String.unsafe_get st.src st.pos) do
     advance st
   done;
-  if st.pos > start then String.sub st.src start (st.pos - start)
+  if st.pos > start then
+    (* Check for starred variant: \section* etc. *)
+    let name = String.sub st.src start (st.pos - start) in
+    if st.pos < st.len && String.unsafe_get st.src st.pos = '*' then (
+      advance st;
+      name ^ "*")
+    else name
   else if st.pos < st.len then (
     let c = String.unsafe_get st.src st.pos in
     advance st;
@@ -369,6 +392,33 @@ let rec parse_nodes (st : parse_state) (stop_at_end : string option) :
           (* skip \ *)
           let name = parse_cmd_name st in
           if name = "" then nodes := { node = Word "\\"; loc } :: !nodes
+          else if name = "verb" || name = "verb*" then
+            if
+              (* \verb|...| — arbitrary delimiter, opaque content *)
+              st.pos < st.len
+            then (
+              let delim = String.unsafe_get st.src st.pos in
+              advance st;
+              let buf = Buffer.create 64 in
+              let found_close = ref false in
+              while st.pos < st.len && not !found_close do
+                let c = String.unsafe_get st.src st.pos in
+                if c = delim then (
+                  found_close := true;
+                  advance st)
+                else (
+                  Buffer.add_char buf c;
+                  advance st)
+              done;
+              if not !found_close then record_error st "Unclosed \\verb";
+              nodes :=
+                {
+                  node =
+                    Verbatim { env_name = name; content = Buffer.contents buf };
+                  loc;
+                }
+                :: !nodes)
+            else record_error st "\\verb at end of input"
           else
             let opts = ref [] in
             let more_opts = ref true in
@@ -460,12 +510,22 @@ let parse_with_envs (s : string) : node list = parse s
 
 let section_level name =
   match name with
-  | "chapter" -> Some 0
-  | "section" -> Some 1
-  | "subsection" -> Some 2
-  | "subsubsection" -> Some 3
-  | "paragraph" -> Some 4
+  | "part" | "part*" -> Some (-1)
+  | "chapter" | "chapter*" -> Some 0
+  | "section" | "section*" -> Some 1
+  | "subsection" | "subsection*" -> Some 2
+  | "subsubsection" | "subsubsection*" -> Some 3
+  | "paragraph" | "paragraph*" -> Some 4
+  | "subparagraph" | "subparagraph*" -> Some 5
   | _ -> None
+
+let is_float_env name =
+  name = "figure"
+  || name = "figure*"
+  || name = "table"
+  || name = "table*"
+  || name = "algorithm"
+  || name = "algorithm*"
 
 let extract_document (s : string) : document =
   let nodes, errors = parse_located s in
@@ -474,6 +534,8 @@ let extract_document (s : string) : document =
   let in_body = ref false in
   let labels = ref [] in
   let refs = ref [] in
+  let packages = ref [] in
+  let docclass = ref None in
   List.iter
     (fun ln ->
       (match ln.node with
@@ -487,20 +549,60 @@ let extract_document (s : string) : document =
              || name = "eqref"
              || name = "autoref"
              || name = "cref"
-             || name = "Cref" ->
+             || name = "Cref"
+             || name = "pageref"
+             || name = "nameref"
+             || name = "href" ->
           refs := (r, ln.loc) :: !refs
+      | Cmd { name = "usepackage"; args; opts; _ } ->
+          let opt_str = match opts with o :: _ -> Some o | [] -> None in
+          List.iter
+            (fun pkg_str ->
+              let pkgs =
+                String.split_on_char ',' pkg_str
+                |> List.map String.trim
+                |> List.filter (fun s -> String.length s > 0)
+              in
+              List.iter
+                (fun pkg -> packages := (pkg, opt_str, ln.loc) :: !packages)
+                pkgs)
+            args
+      | Cmd { name = "documentclass"; args; opts; _ } ->
+          let cls = match args with c :: _ -> c | [] -> "" in
+          let opt_str = match opts with o :: _ -> Some o | [] -> None in
+          docclass := Some (cls, opt_str)
+      | Cmd { name = "bibliography"; args = bib :: _; _ } ->
+          (* Track bibliography files as package-like metadata *)
+          packages := (bib, Some "bibliography", ln.loc) :: !packages
+      | Cmd { name = "bibliographystyle"; args = sty :: _; _ } ->
+          packages := (sty, Some "bibliographystyle", ln.loc) :: !packages
       | _ -> ());
       if not !in_body then preamble := ln :: !preamble)
     nodes;
+  (* Also scan body nodes for labels/refs (they are children of the document
+     env) *)
+  List.iter
+    (fun ln ->
+      match ln.node with
+      | Cmd { name = "label"; args = lbl :: _; _ } ->
+          labels := (lbl, ln.loc) :: !labels
+      | Cmd { name; args = r :: _; _ }
+        when name = "ref"
+             || name = "eqref"
+             || name = "autoref"
+             || name = "cref"
+             || name = "Cref"
+             || name = "pageref"
+             || name = "nameref"
+             || name = "href" ->
+          refs := (r, ln.loc) :: !refs
+      | _ -> ())
+    !body_nodes;
   let elements =
     List.map
       (fun ln ->
         match ln.node with
-        | Environment { env_name; body; _ }
-          when env_name = "figure"
-               || env_name = "figure*"
-               || env_name = "table"
-               || env_name = "table*" ->
+        | Environment { env_name; body; _ } when is_float_env env_name ->
             let caption =
               List.find_map
                 (function
@@ -532,6 +634,8 @@ let extract_document (s : string) : document =
     labels = List.rev !labels;
     refs = List.rev !refs;
     errors;
+    packages = List.rev !packages;
+    documentclass = !docclass;
   }
 
 (* ── Parse success metric ───────────────────────────────────── *)

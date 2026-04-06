@@ -1,0 +1,4 @@
+# spaCy NLP pipeline dependencies (spec W71)
+spacy>=3.7,<4.0
+flask>=3.0
+gunicorn>=21.0

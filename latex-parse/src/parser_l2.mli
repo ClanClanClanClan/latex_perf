@@ -43,6 +43,8 @@ type document = {
   labels : (string * loc) list;
   refs : (string * loc) list;
   errors : (string * loc) list;
+  packages : (string * string option * loc) list;
+  documentclass : (string * string option) option;
 }
 
 type dirty_region = { dr_start : int; dr_end : int }

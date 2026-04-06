@@ -17,14 +17,21 @@
 
 // Token types (matching OCaml catcodes)
 #define TOK_ESCAPE     0   // backslash
-#define TOK_BEGIN_GRP  1   // {
-#define TOK_END_GRP    2   // }
-#define TOK_MATH       3   // $
-#define TOK_NEWLINE    5   // \n
-#define TOK_SPACE      10  // space
+#define TOK_BEGIN_GRP  1   // '{'
+#define TOK_END_GRP    2   // '}'
+#define TOK_MATH       3   // '$'
+#define TOK_ALIGNTAB   4   // '&'
+#define TOK_NEWLINE    5   // '\n', '\r'
+#define TOK_PARAM      6   // '#'
+#define TOK_SUPERSCR   7   // '^'
+#define TOK_SUBSCR     8   // '_'
+#define TOK_IGNORED    9   // NUL '\0'
+#define TOK_SPACE      10  // ' ', '\t'
 #define TOK_LETTER     11  // a-z, A-Z
 #define TOK_OTHER      12  // default
-#define TOK_COMMENT    14  // %
+#define TOK_ACTIVE     13  // '~'
+#define TOK_COMMENT    14  // '%'
+#define TOK_INVALID    15  // DEL '\x7F'
 
 // SIMD Attestation: Atomic counters for audit verification
 static _Atomic uint64_t simd_neon_scans_performed = 0;
@@ -52,24 +59,32 @@ int tokenize_bytes_into_soa_simd(
     // SIMD Attestation: Record total tokenization calls
     atomic_fetch_add(&total_tokenize_calls, 1);
     
-    // Initialize catcode lookup table
-    static uint8_t catcode_table[256];
-    static bool table_initialized = false;
-    
+    // Initialize catcode lookup table (all 16 catcodes per Catcode.v)
+    // Thread safety: uses static bool + atomic semantics via volatile
+    static volatile uint8_t catcode_table[256];
+    static volatile bool table_initialized = false;
     if (!table_initialized) {
-        memset(catcode_table, TOK_OTHER, 256);
-        catcode_table['\\'] = TOK_ESCAPE;
-        catcode_table['{'] = TOK_BEGIN_GRP;
-        catcode_table['}'] = TOK_END_GRP;
-        catcode_table['$'] = TOK_MATH;
-        catcode_table['\n'] = TOK_NEWLINE;
-        catcode_table[' '] = TOK_SPACE;
-        catcode_table['\t'] = TOK_SPACE;
-        catcode_table['%'] = TOK_COMMENT;
-        
-        for (int i = 'a'; i <= 'z'; i++) catcode_table[i] = TOK_LETTER;
-        for (int i = 'A'; i <= 'Z'; i++) catcode_table[i] = TOK_LETTER;
-        
+        uint8_t tmp[256];
+        memset(tmp, TOK_OTHER, 256);
+        tmp['\\'] = TOK_ESCAPE;
+        tmp['{'] = TOK_BEGIN_GRP;
+        tmp['}'] = TOK_END_GRP;
+        tmp['$'] = TOK_MATH;
+        tmp['&'] = TOK_ALIGNTAB;
+        tmp['\n'] = TOK_NEWLINE;
+        tmp['\r'] = TOK_NEWLINE;
+        tmp['#'] = TOK_PARAM;
+        tmp['^'] = TOK_SUPERSCR;
+        tmp['_'] = TOK_SUBSCR;
+        tmp[0] = TOK_IGNORED;
+        tmp[' '] = TOK_SPACE;
+        tmp['\t'] = TOK_SPACE;
+        tmp['~'] = TOK_ACTIVE;
+        tmp['%'] = TOK_COMMENT;
+        tmp[127] = TOK_INVALID;
+        for (int i = 'a'; i <= 'z'; i++) tmp[i] = TOK_LETTER;
+        for (int i = 'A'; i <= 'Z'; i++) tmp[i] = TOK_LETTER;
+        memcpy((void*)catcode_table, tmp, 256);
         table_initialized = true;
     }
     
@@ -164,12 +179,23 @@ int tokenize_bytes_into_soa_simd(
         }
         
         case TOK_COMMENT: {
-            // Skip comment to end of line
+            // Emit comment token covering % to end of line
+            int32_t comment_start = (int32_t)pos;
+            int32_t comment_start_col = col_num;
             pos++;
             col_num++;
             while (pos < input_len && input[pos] != '\n') {
                 pos++;
                 col_num++;
+            }
+            if (token_count < max_tokens) {
+                kinds[token_count] = TOK_COMMENT;
+                codes[token_count] = '%';
+                start_pos[token_count] = comment_start;
+                end_pos[token_count] = (int32_t)pos;
+                lines[token_count] = line_num;
+                cols[token_count] = comment_start_col;
+                token_count++;
             }
             break;
         }

@@ -32,26 +32,43 @@ value simd_tokenize_stub(value v_input, value v_input_len,
     CAMLxparam4(v_end_pos, v_lines, v_cols, v_capacity);
     CAMLlocal1(result);
     
-    // Extract input data
+    // Extract input data with NULL checks
     const uint8_t *input = (const uint8_t*)bigarray_data_ptr(v_input);
+    if (input == NULL) {
+        caml_failwith("simd_tokenize: NULL input buffer");
+    }
     size_t input_len = Int_val(v_input_len);
     int32_t capacity = Int_val(v_capacity);
-    
+
+    // Extract output buffers with NULL checks
+    int32_t *p_kinds = (int32_t*)bigarray_data_ptr(v_kinds);
+    int32_t *p_codes = (int32_t*)bigarray_data_ptr(v_codes);
+    int32_t *p_start = (int32_t*)bigarray_data_ptr(v_start_pos);
+    int32_t *p_end   = (int32_t*)bigarray_data_ptr(v_end_pos);
+    int32_t *p_lines = (int32_t*)bigarray_data_ptr(v_lines);
+    int32_t *p_cols  = (int32_t*)bigarray_data_ptr(v_cols);
+    if (!p_kinds || !p_codes || !p_start || !p_end || !p_lines || !p_cols) {
+        caml_failwith("simd_tokenize: NULL output buffer");
+    }
+
     // Create SIMD buffer structure
     simd_token_buffer_t output = {
-        .kinds = (int32_t*)bigarray_data_ptr(v_kinds),
-        .codes = (int32_t*)bigarray_data_ptr(v_codes),
-        .start_pos = (int32_t*)bigarray_data_ptr(v_start_pos),
-        .end_pos = (int32_t*)bigarray_data_ptr(v_end_pos),
-        .lines = (int32_t*)bigarray_data_ptr(v_lines),
-        .cols = (int32_t*)bigarray_data_ptr(v_cols),
+        .kinds = p_kinds,
+        .codes = p_codes,
+        .start_pos = p_start,
+        .end_pos = p_end,
+        .lines = p_lines,
+        .cols = p_cols,
         .count = 0,
         .capacity = capacity
     };
-    
+
     // Call SIMD tokenizer
     int token_count = simd_tokenize(input, input_len, &output);
-    
+    if (token_count < 0) {
+        caml_failwith("simd_tokenize: tokenization error");
+    }
+
     result = Val_int(token_count);
     CAMLreturn(result);
 }

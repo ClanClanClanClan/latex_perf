@@ -1,0 +1,38 @@
+# ══════════════════════════════════════════════════════════════════════
+# spaCy NLP Pipeline Container (spec W71)
+#
+# Provides en/fr/de language models for L4 style validators.
+# Exposes a REST endpoint for sentence-level NLP processing.
+# ══════════════════════════════════════════════════════════════════════
+
+FROM python:3.10-slim AS base
+
+LABEL maintainer="Clan Labs <maintainers@clan.dev>"
+LABEL description="LaTeX Perfectionist v25 — spaCy NLP service"
+
+# System deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps
+COPY ml/requirements-spacy.txt /tmp/requirements-spacy.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-spacy.txt
+
+# Download language models (en/fr/de — spec W71 exit criteria)
+RUN python -m spacy download en_core_web_sm && \
+    python -m spacy download fr_core_news_sm && \
+    python -m spacy download de_core_news_sm
+
+# Copy NLP server
+COPY ml/scripts/spacy_server.py /app/spacy_server.py
+
+WORKDIR /app
+EXPOSE 8090
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8090/health || exit 1
+
+CMD ["python", "spacy_server.py", "--host", "0.0.0.0", "--port", "8090"]

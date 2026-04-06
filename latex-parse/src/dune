@@ -52,7 +52,8 @@
   suffix_array
   section_rebalance
   lockfree_queue
-  unicode_split)
+  unicode_split
+  incremental_nlp)
  (libraries unix threads str uutf yojson)
  (foreign_stubs
   (language c)
@@ -435,3 +436,18 @@
  (name test_l2_gate)
  (modules test_l2_gate)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_parser_l2_envs)
+ (modules test_parser_l2_envs)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_tokenizer_utf8)
+ (modules test_tokenizer_utf8)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_incremental_nlp)
+ (modules test_incremental_nlp)
+ (libraries latex_parse_lib))

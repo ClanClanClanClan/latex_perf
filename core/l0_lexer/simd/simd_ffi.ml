@@ -175,8 +175,9 @@ let simd_architecture () =
             let arch = input_line ic in
             let _ = Unix.close_process_in ic in
             if String.equal (String.trim arch) "x86_64" then "AVX2"
-            else if String.equal (String.trim arch) "aarch64"
-                    || String.equal (String.trim arch) "arm64"
+            else if
+              String.equal (String.trim arch) "aarch64"
+              || String.equal (String.trim arch) "arm64"
             then "NEON"
             else "Scalar"
           with _ -> "Scalar")

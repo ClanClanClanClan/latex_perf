@@ -91,9 +91,20 @@ let expand_once_legacy cfg s =
   done;
   Buffer.contents b
 
-let rec expand_fix_legacy cfg s =
-  let s' = expand_once_legacy cfg s in
-  if String.equal s s' then s else expand_fix_legacy cfg s'
+let max_legacy_depth = 100
+
+let expand_fix_legacy cfg s =
+  let rec loop s depth =
+    if depth >= max_legacy_depth then (
+      Printf.eprintf
+        "[rest-expander] WARNING: legacy expansion depth limit (%d) reached\n%!"
+        max_legacy_depth;
+      s)
+    else
+      let s' = expand_once_legacy cfg s in
+      if String.equal s s' then s else loop s' (depth + 1)
+  in
+  loop s 0
 
 (* ── Public API ─────────────────────────────────────────────────────── *)
 

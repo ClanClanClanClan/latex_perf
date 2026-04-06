@@ -1,0 +1,70 @@
+\documentclass{article}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Analyse spectrale des op\'erateurs diff\'erentiels}
+\author{M.~Dupont}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+L'analyse spectrale des op\'erateurs diff\'erentiels est un domaine fondamental
+des math\'ematiques appliqu\'ees.  Dans cet article, nous \'etudions les propri\'et\'es
+de convergence des valeurs propres pour une classe d'op\'erateurs elliptiques.
+
+% LANG-003 / FR-007: missing NBSP before ; : ! ?
+Le th\'eor\`eme principal est le suivant: pour tout op\'erateur $A$ born\'e, le
+spectre est compact. C'est un r\'esultat important; il g\'en\'eralise les travaux
+ant\'erieurs! Peut-on l'am\'eliorer?
+
+% Correct: with NBSP before punctuation
+Le r\'esultat est remarquable~; il unifie plusieurs approches~! La question est~:
+comment l'appliquer en pratique~?
+
+% LANG-005: wrong quote style (straight quotes instead of guillemets)
+La m\'ethode dite "de Galerkin" est bien connue.  On parle aussi de "convergence
+faible" dans ce contexte.
+
+% Correct: guillemets
+La m\'ethode dite \og de Galerkin\fg{} est classique.  On parle de \og convergence
+forte\fg{} lorsque la norme est pr\'eserv\'ee.
+
+% FR-007: Euro sign without thin space
+Le co\^ut du calcul est estim\'e \`a 50\euro{} par heure de processeur.
+L'abonnement revient \`a 120\euro{} par mois.
+
+% Correct: with thin space
+Le budget total est de 500\,\euro{} pour le projet.
+
+% LANG-011: oe vs \oe{}
+Le coeur du probl\`eme r\'eside dans l'approximation.  L'oeuvre de Lebesgue
+est fondamentale pour cette th\'eorie.
+
+% Correct: \oe ligature
+Le c\oe{}ur de l'algorithme repose sur la d\'ecomposition.  L'\oe{}uvre de
+Cauchy inspire notre approche.
+
+\section{R\'esultats}
+
+Soit $T \colon H \to H$ un op\'erateur lin\'eaire born\'e sur un espace de Hilbert.
+On d\'emontre que $\sigma(T) \subset \overline{B(0,\|T\|)}$.
+
+\begin{theorem}
+Pour tout $\epsilon > 0$, il existe $N \in \mathbb{N}$ tel que pour tout $n \ge N$,
+on a $|\lambda_n - \lambda| < \epsilon$.
+\end{theorem}
+
+La d\'emonstration utilise le th\'eor\`eme de Banach-Steinhaus et le lemme de Riesz.
+
+\section{Conclusion}
+
+Les r\'esultats obtenus permettent de caract\'eriser compl\`etement le spectre des
+op\'erateurs consid\'er\'es.  Les applications \`a la m\'ecanique quantique et \`a
+la th\'eorie du contr\^ole sont imm\'ediates.
+
+\end{document}

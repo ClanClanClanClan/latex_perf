@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage{xeCJK}
+\setCJKmainfont{Hiragino Mincho ProN}
+\usepackage{amsmath}
+
+\title{確率過程の収束定理について}
+\author{田中太郎}
+\date{2026年}
+
+\begin{document}
+\maketitle
+
+\section{はじめに}
+
+確率過程の収束理論は、統計学および確率論における重要な研究分野である。
+本稿では、マルチンゲール収束定理の一般化について考察する。
+特に、バナッハ空間に値をとる確率過程に対する強収束条件を明らかにする。
+
+% CJK-011: CJK text mixed with Latin without spacing
+本研究ではBanach空間上のmartingale理論を拡張する。convergence定理の
+証明にはDoob分解とRiesz表現定理を用いる。
+
+% Correct: spacing around Latin text
+本研究では Banach 空間上の martingale 理論を拡張する。convergence 定理の
+証明には Doob 分解と Riesz 表現定理を用いる。
+
+% JA-001: half-width katakana (incorrect)
+ﾏﾙﾁﾝｹﾞｰﾙの収束に関する主要な結果を述べる。ﾊﾞﾅｯﾊ空間における
+ﾄﾞｩｰﾌﾞの不等式は基本的な道具である。
+
+% Correct: full-width katakana
+マルチンゲールの収束に関する主要な結果を述べる。バナッハ空間における
+ドゥーブの不等式は基本的な道具である。
+
+\section{準備}
+
+% CJK-009: CJK text inside math mode (incorrect)
+確率空間$(\Omega, \mathcal{F}, P)$上で、$X_n$を可積分確率変数の列とする。
+$E[|X_n|] < \infty$であるとき、次の不等式が成り立つ：
+\[
+  P\left(\max_{1 \le k \le n} |X_k| \ge \lambda\right) \le \frac{E[|X_n|]}{\lambda}.
+\]
+
+% JA-002: full-width tilde (incorrect in LaTeX context)
+この結果は～の一般化である。関数$f$の値域は～に含まれる。
+
+% Correct: proper tilde/approximation
+この結果は先行研究の一般化である。関数$f$の値域は$\tilde{A}$に含まれる。
+
+\section{主結果}
+
+\begin{theorem}
+$(X_n)_{n \ge 1}$を$L^1$有界なマルチンゲールとする。このとき、
+$X_\infty = \lim_{n \to \infty} X_n$が概収束の意味で存在し、
+$E[|X_\infty|] \le \sup_n E[|X_n|]$が成り立つ。
+\end{theorem}
+
+証明は標準的なアップクロッシング不等式による。
+
+\section{応用}
+
+強大数の法則への応用として、独立同分布の確率変数の列$(Y_i)$に対して
+\[
+  \frac{1}{n}\sum_{i=1}^{n} Y_i \to E[Y_1] \quad \text{a.s.}
+\]
+が成り立つことを示す。
+
+\section{まとめ}
+
+マルチンゲール収束定理の一般化を与え、バナッハ空間値確率過程への
+拡張を行った。今後の課題として、弱収束との関連を調べることが挙げられる。
+
+\end{document}

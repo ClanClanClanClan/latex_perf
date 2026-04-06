@@ -374,7 +374,40 @@ Which rule families bind to which template:
 Each block binds to one core template. Family-specific lemmas handle boundary
 cases (e.g., verbatim/math context exclusions).
 
-## D.8 Known Gaps
+## D.8 Conservative vs Faithful Proofs
+
+The proof system uses two tiers:
+
+**Faithful proofs (26 rules):** The Coq `_chk` function mirrors the actual
+OCaml validator logic using `string_contains_substring`, `count_char`, and
+other string helpers from `RegexFamily.v`. These proofs genuinely establish
+that when the validator reports no issues, the specific pattern is absent.
+
+**Conservative proofs (581 rules):** The Coq `_chk` function is
+`Definition foo_chk (s : string) : bool := false`. Since this function never
+returns `true`, the soundness theorem `text_validator check iss doc = [] →
+text_check_absent check doc` is vacuously satisfied.
+
+**What conservative proofs establish:**
+- The proof *framework* (`text_validator_sound`) is sound
+- The automation tactic (`qed_text_sound`) is correct
+- The generated proof structure compiles without admits
+
+**What conservative proofs do NOT establish:**
+- That any specific OCaml regex/validator correctly detects its target pattern
+- That the OCaml implementation matches the rule's description
+
+**Roadmap to faithful proofs:**
+- W106-120 (spec): "Continuous validator generation" — convert `_chk := false`
+  to actual pattern models for all 623 rules
+- W121-125 (spec): "Proof-debt elimination sprint" — close remaining gaps
+- Target: all proofs faithful by W130
+
+**Current ratio:** 26/607 faithful = 4.3%. The 581 conservative proofs are a
+deliberate scalability tradeoff, not a bug. They will be upgraded to faithful
+proofs per the spec timeline.
+
+## D.9 Known Gaps
 
 - PDF accessibility proofs remain *checks*, not semantic proofs.
 - TikZ compilation time bounds are empirical, documented via CI artefacts.

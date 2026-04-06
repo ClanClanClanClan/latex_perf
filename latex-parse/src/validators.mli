@@ -1,4 +1,14 @@
-(** LaTeX validation rules for typography, style, and modernisation. *)
+(** LaTeX validation rules for typography, style, and modernisation.
+
+    {b Thread safety:} The OCaml [Str] module uses global mutable state for
+    regex matching. Validators that use [Str.regexp] / [Str.search_forward] are
+    NOT thread-safe. Do NOT call {!run_all} concurrently from multiple threads
+    or OCaml 5 domains. Use sequential execution or process-level parallelism
+    (separate OS processes) for concurrent linting.
+
+    The [semantic_state] module uses per-thread [Hashtbl] keyed by [Thread.id],
+    which is safe for threads but not for domains (domains share
+    [Thread.id = 0]). *)
 
 type severity = Error | Warning | Info
 

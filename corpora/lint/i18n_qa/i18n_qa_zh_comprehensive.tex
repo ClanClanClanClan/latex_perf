@@ -1,0 +1,77 @@
+\documentclass{article}
+\usepackage{xeCJK}
+\setCJKmainfont{STSong}
+\usepackage{amsmath}
+
+\title{有限元方法在弹性力学中的应用}
+\author{王明}
+\date{2026年}
+
+\begin{document}
+\maketitle
+
+\section{引言}
+
+有限元方法是工程计算中最重要的数值方法之一。本文研究线弹性问题
+的有限元逼近，重点讨论误差估计和自适应网格加密策略。
+
+% ZH-001: Western punctuation in Chinese text (incorrect)
+有限元方法的基本思想是将连续问题离散化.首先,将求解域划分为有限
+个单元;然后,在每个单元上构造近似函数;最后,组装整体方程组.
+
+% Correct: Chinese punctuation
+有限元方法的基本思想是将连续问题离散化。首先，将求解域划分为有限
+个单元；然后，在每个单元上构造近似函数；最后，组装整体方程组。
+
+% ZH-002: wrong quote marks (English quotes in Chinese context)
+所谓"弱解"是指满足变分方程的函数。"有限元空间"是试探函数空间
+的有限维子空间。
+
+% Correct: Chinese angle quotes
+所谓「弱解」是指满足变分方程的函数。「有限元空间」是试探函数空间
+的有限维子空间。
+
+\section{数学模型}
+
+% CJK-009: CJK inside math — mixed content
+设弹性体占据区域$\Omega \subset \mathbb{R}^2$，位移场为$\mathbf{u} = (u_1, u_2)$。
+平衡方程为
+\[
+  -\nabla \cdot \boldsymbol{\sigma} = \mathbf{f} \quad \text{在}\Omega\text{中},
+\]
+其中$\boldsymbol{\sigma}$为应力张量，$\mathbf{f}$为体力。
+
+% Mixed Chinese and English text
+本文使用的software是基于FEniCS框架开发的。mesh生成采用Gmsh工具，
+post-processing使用ParaView完成。
+
+% Correct: proper spacing
+本文使用的软件是基于 FEniCS 框架开发的。网格生成采用 Gmsh 工具，
+后处理使用 ParaView 完成。
+
+\section{有限元离散}
+
+选取三角形单元，在每个单元$K$上定义分片线性函数空间
+\[
+  V_h = \{v_h \in C(\bar{\Omega}) : v_h|_K \in P_1(K), \forall K \in \mathcal{T}_h\}.
+\]
+
+\begin{theorem}
+设$u \in H^2(\Omega)$为精确解，$u_h \in V_h$为有限元解，则
+\[
+  \|u - u_h\|_{H^1(\Omega)} \le Ch\|u\|_{H^2(\Omega)},
+\]
+其中$C$为与$h$无关的常数。
+\end{theorem}
+
+\section{数值实验}
+
+对$L$形区域上的泊松问题进行数值计算。自适应加密后，收敛阶恢复到
+最优阶$O(h)$。计算结果与理论预测完全一致。
+
+\section{结论}
+
+本文系统研究了线弹性问题的有限元方法。数值实验验证了理论结果的
+正确性。今后的研究方向包括非线性问题和三维问题的推广。
+
+\end{document}

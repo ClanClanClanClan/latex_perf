@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Wst\k{e}p do topologii algebraicznej}
+\author{J.~Kowalski}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Wst\k{e}p}
+
+Topologia algebraiczna bada w\l{}a\'sno\'sci przestrzeni topologicznych za
+pomoc\k{a} narz\k{e}dzi algebraicznych.  G\l{}\'ownym obiektem badania s\k{a}
+grupy homotopii i grupy homologii.
+
+Niech $X$ b\k{e}dzie przestrzeni\k{a} topologiczn\k{a} i niech $x_0 \in X$
+b\k{e}dzie punktem bazowym.  Grup\k{e} podstawow\k{a} definiujemy jako
+\[
+  \pi_1(X, x_0) = \{[\gamma] : \gamma \text{ jest p\k{e}tl\k{a} w } x_0\}.
+\]
+
+\section{Twierdzenie g\l{}\'owne}
+
+\begin{theorem}[Van Kampen]
+Je\'sli $X = U_1 \cup U_2$, gdzie $U_1, U_2$ i $U_1 \cap U_2$ s\k{a}
+\l{}\k{a}kowo sp\'ojne i otwarte, to $\pi_1(X)$ jest amalgamowanym produktem
+wolnym $\pi_1(U_1) *_{\pi_1(U_1 \cap U_2)} \pi_1(U_2)$.
+\end{theorem}
+
+Dzi\k{e}ki temu twierdzeniu mo\.zna obliczy\'c grupy podstawowe wielu
+przestrzeni, na przyk\l{}ad tor\'ow, sfer i powierzchni Riemanna.
+
+\section{Podsumowanie}
+
+Metody algebraiczne dostarczaj\k{a} pot\k{e}\.znych narz\k{e}dzi do badania
+struktury przestrzeni topologicznych.
+
+\end{document}

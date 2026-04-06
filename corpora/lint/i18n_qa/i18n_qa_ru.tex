@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage[russian]{babel}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{О сходимости рядов Фурье}
+\author{И.~Петров}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Введение}
+
+Теория рядов Фурье занимает центральное место в математическом анализе.
+Пусть $f \colon [-\pi, \pi] \to \mathbb{R}$ --- интегрируемая функция.
+Ряд Фурье функции~$f$ определяется как
+\[
+  f(x) \sim \frac{a_0}{2} + \sum_{n=1}^{\infty} \left(a_n \cos nx + b_n \sin nx\right),
+\]
+где коэффициенты вычисляются по формулам
+\[
+  a_n = \frac{1}{\pi}\int_{-\pi}^{\pi} f(x)\cos nx\,dx, \quad
+  b_n = \frac{1}{\pi}\int_{-\pi}^{\pi} f(x)\sin nx\,dx.
+\]
+
+\section{Основной результат}
+
+\begin{theorem}[Карлесон]
+Если $f \in L^2[-\pi,\pi]$, то ряд Фурье функции~$f$ сходится почти всюду.
+\end{theorem}
+
+Доказательство этой теоремы является одним из наиболее сложных результатов
+гармонического анализа двадцатого века.
+
+\section{Заключение}
+
+Проблема сходимости рядов Фурье продолжает оставаться активной областью
+исследований в современной математике.
+
+\end{document}

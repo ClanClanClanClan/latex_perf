@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{polyglossia}
+\setdefaultlanguage{arabic}
+\setotherlanguage{english}
+\usepackage{amsmath}
+\usepackage{fontspec}
+\setmainfont{Amiri}
+
+\title{نظرية الأعداد الجبرية وتطبيقاتها}
+\author{أحمد محمد}
+\date{٢٠٢٦}
+
+\begin{document}
+\maketitle
+
+\section{مقدمة}
+
+تعد نظرية الأعداد الجبرية من أهم فروع الرياضيات البحتة. في هذا البحث ندرس
+حلقات الأعداد الصحيحة الجبرية وخصائص التحليل الأولي فيها.
+
+% RTL-001: missing bidi package — this document should load bidi for proper RTL
+% The polyglossia package handles basic RTL but explicit bidi is recommended
+
+% RTL-002: RTL/LTR boundary without proper markers
+نستخدم نظرية Galois لدراسة التوسعات الحقلية. يعتبر حقل الأعداد الجبرية
+\begin{english}$\mathbb{Q}(\sqrt{-5})$\end{english}
+مثالاً كلاسيكياً على حلقة لا تملك خاصية التحليل الأولي الوحيد.
+
+% Incorrect: LTR content without proper environment markers
+نظرية Dedekind تعطي حلاً لهذه المشكلة عبر المثاليات. خوارزمية Euclidean
+تنطبق فقط على الحلقات Euclidean.
+
+% Correct: with proper language switching
+نظرية \textenglish{Dedekind} تعطي حلاً لهذه المشكلة عبر المثاليات.
+خوارزمية \textenglish{Euclidean} تنطبق فقط على الحلقات الإقليدية.
+
+\section{الأساسيات}
+
+% LANG-010: language detection in mixed content
+ليكن $K$ حقلاً عددياً بدرجة $[K:\mathbb{Q}] = n$.
+نعرف حلقة الأعداد الصحيحة الجبرية كالتالي:
+\[
+  \mathcal{O}_K = \{ \alpha \in K : f(\alpha) = 0 \text{ لبعض } f \in \mathbb{Z}[x] \text{ أحادي} \}.
+\]
+
+% AR-002: Arabic hyphenation issues
+المثاليـــــــات الأولية في حلقة الأعداد الصحيحة تلعب دوراً محورياً في النظرية.
+التحليل إلى عوامل أولية في الأعداد الصحيحة العادية لا يتحقق دائماً.
+
+\section{النتيجة الرئيسية}
+
+\begin{theorem}
+كل مثالي غير صفري في $\mathcal{O}_K$ يتحلل بشكل وحيد إلى جداء مثاليات
+أولية:
+\[
+  \mathfrak{a} = \mathfrak{p}_1^{e_1} \cdots \mathfrak{p}_r^{e_r}.
+\]
+\end{theorem}
+
+هذا التحليل الوحيد للمثاليات يعوض غياب التحليل الأولي الوحيد للعناصر.
+
+% Numbers in Arabic context
+العدد $p = 2$ ينشطر في $\mathbb{Z}[i]$ كالتالي: $(2) = (1+i)^2$.
+الأعداد الأولية ٢ و٣ و٥ و٧ تمثل الحالات الأساسية.
+
+\section{الخلاصة}
+
+قدمنا عرضاً شاملاً لنظرية التحليل الأولي للمثاليات في حلقات الأعداد
+الصحيحة الجبرية. هذه النظرية تشكل الأساس لدراسات أعمق في نظرية الأعداد
+التحليلية وحدسية فيرما الأخيرة.
+
+\end{document}

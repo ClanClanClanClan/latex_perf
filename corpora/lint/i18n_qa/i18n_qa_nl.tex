@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage[dutch]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Inleiding tot de getaltheorie}
+\author{P.~de Vries}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Inleiding}
+
+De getaltheorie is een van de oudste takken van de wiskunde.  In dit artikel
+behandelen wij de verdeling van priemgetallen en het verband met de
+Riemann-zetafunctie.
+
+De zetafunctie wordt gedefinieerd als
+\[
+  \zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s}, \quad \text{Re}(s) > 1.
+\]
+
+% IJ digraph usage
+Het IJsselmeer is vernoemd naar de rivier de IJssel.  De stad IJmuiden ligt
+aan het Noordzeekanaal.  In de wiskunde schrijven wij bijectie en injectie
+zonder de IJ-combinatie.
+
+\section{De priemgetalstelling}
+
+\begin{theorem}
+Zij $\pi(x)$ het aantal priemgetallen kleiner dan of gelijk aan~$x$.  Dan geldt
+\[
+  \pi(x) \sim \frac{x}{\ln x} \quad (x \to \infty).
+\]
+\end{theorem}
+
+Het bewijs maakt gebruik van de analytische eigenschappen van~$\zeta(s)$ en
+het feit dat $\zeta(s) \ne 0$ voor $\text{Re}(s) = 1$.
+
+\section{Conclusie}
+
+De verdeling van priemgetallen blijft een centraal onderwerp in de moderne
+getaltheorie en analyse.
+
+\end{document}

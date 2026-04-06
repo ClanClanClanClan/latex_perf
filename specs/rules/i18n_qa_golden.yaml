@@ -1,4 +1,13 @@
+# i18n Language QA golden corpus (spec W102-104)
+# Exit criteria: "language QA pass"
+# 22 test cases: 7 original + 7 comprehensive + 8 stubbed languages
+#
+# Each case uses:
+#   expect: rules that MUST fire
+#   forbid: rules that MUST NOT fire (cross-language negative tests)
+
 cases:
+  # ── Original minimal test files (7 live languages) ──────────────
   - file: corpora/lint/i18n_qa/i18n_qa_en.tex
     expect: ["STYLE-002", "STYLE-017", "STYLE-022", "CE-001", "CE-002", "LANG-014", "LANG-015", "LANG-016"]
   - file: corpora/lint/i18n_qa/i18n_qa_fr.tex
@@ -13,3 +22,44 @@ cases:
     expect: ["ZH-001", "CJK-009"]
   - file: corpora/lint/i18n_qa/i18n_qa_ar.tex
     expect: ["RTL-001", "RTL-002", "LANG-010"]
+
+  # ── Comprehensive test files (rules verified against actual output) ─
+  - file: corpora/lint/i18n_qa/i18n_qa_en_comprehensive.tex
+    expect: ["SPC-010", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_fr_comprehensive.tex
+    expect: ["FR-008", "SPC-016"]
+    forbid: ["JA-001", "ZH-001", "RTL-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_de_comprehensive.tex
+    expect: ["SPC-010", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "RTL-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_es_comprehensive.tex
+    expect: ["SPC-010"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_ja_comprehensive.tex
+    expect: ["JA-001", "JA-002", "CHAR-016"]
+    forbid: ["FR-008", "RTL-001", "ZH-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_zh_comprehensive.tex
+    expect: ["ZH-001", "CJK-001", "CHAR-016"]
+    forbid: ["FR-008", "JA-001", "RTL-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_ar_comprehensive.tex
+    expect: ["SPC-001", "DOC-002"]
+    forbid: ["FR-008", "JA-001", "ZH-001"]
+
+  # ── Stubbed language packs (language detection + no crash) ──────
+  - file: corpora/lint/i18n_qa/i18n_qa_pt.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_ru.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_pl.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_ko.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_it.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_nl.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_tr.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_el.tex
+    expect: []

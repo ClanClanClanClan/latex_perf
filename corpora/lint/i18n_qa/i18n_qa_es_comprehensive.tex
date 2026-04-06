@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{M\'etodos variacionales para ecuaciones diferenciales parciales}
+\author{A.~Garc\'ia L\'opez}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Introducci\'on}
+
+Los m\'etodos variacionales constituyen una herramienta fundamental en el
+an\'alisis de ecuaciones diferenciales parciales.  En este trabajo estudiamos
+la existencia de soluciones d\'ebiles para problemas el\'ipticos no lineales
+en dominios acotados de~$\mathbb{R}^n$.
+
+% IB-001: Iberian vs Latin American mix
+El ordenador realiza los c\'alculos num\'ericos con precisi\'on.  La computadora
+procesa los datos de entrada.  El conductor del autobus facilit\'o la informaci\'on.
+La informaci\'on fue transmitida por el celular.
+
+% Correct: consistent Iberian Spanish
+El ordenador ejecuta el algoritmo en tiempo polinomial.  El c\'alculo se realiza
+mediante un programa inform\'atico desarrollado en la universidad.
+
+% Inverted punctuation — correct usage
+?`Cu\'al es la tasa de convergencia del m\'etodo propuesto?  !`Excelente resultado!
+La respuesta es sorprendente.  ?`Podemos generalizar este enfoque a dimensiones
+superiores?
+
+% Missing inverted punctuation — incorrect
+Cual es el error de aproximacion?  Es posible mejorar la cota!
+
+\section{Formulaci\'on del problema}
+
+Sea $\Omega \subset \mathbb{R}^n$ un dominio acotado con frontera regular.
+Consideramos el problema
+\begin{equation}
+  -\Delta u + u^3 = f \quad \text{en } \Omega, \qquad u = 0 \quad \text{en } \partial\Omega.
+\end{equation}
+
+Definimos el funcional de energ\'ia $J \colon H_0^1(\Omega) \to \mathbb{R}$ como
+\[
+  J(u) = \frac{1}{2}\int_\Omega |\nabla u|^2\,dx + \frac{1}{4}\int_\Omega u^4\,dx
+         - \int_\Omega fu\,dx.
+\]
+
+\section{Resultado principal}
+
+\begin{theorem}
+Si $f \in L^2(\Omega)$, entonces existe una \'unica soluci\'on d\'ebil
+$u \in H_0^1(\Omega)$ del problema~(1).  Adem\'as, $u$ minimiza el funcional~$J$.
+\end{theorem}
+
+La demostraci\'on se basa en el teorema de Lax-Milgram y en la desigualdad
+de Poincar\'e.  Utilizamos tambi\'en la coercividad del operador asociado.
+
+\section{Experimentos num\'ericos}
+
+Se implementaron elementos finitos de orden $p = 1, 2, 3$ en mallas triangulares.
+Los resultados confirman la tasa de convergencia te\'orica de $O(h^{p+1})$ en la
+norma~$L^2$.  La Tabla~1 resume los errores obtenidos.
+
+\section{Conclusiones}
+
+Hemos demostrado la existencia y unicidad de soluciones d\'ebiles para una clase
+de problemas el\'ipticos no lineales.  El m\'etodo variacional proporciona un marco
+natural para el an\'alisis y la aproximaci\'on num\'erica de estas ecuaciones.
+
+\end{document}

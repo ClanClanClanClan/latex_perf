@@ -1,10 +1,14 @@
 open Printf
 
 let read_all path =
-  let ic = open_in_bin path in
-  let buf = really_input_string ic (in_channel_length ic) in
-  close_in ic;
-  buf
+  try
+    let ic = open_in_bin path in
+    let buf = really_input_string ic (in_channel_length ic) in
+    close_in ic;
+    buf
+  with Sys_error msg ->
+    eprintf "Error: %s\n" msg;
+    exit 1
 
 let parse_layer = function
   | "l0" -> Latex_parse_lib.Validators.L0

@@ -174,8 +174,9 @@ let simd_architecture () =
             let ic = Unix.open_process_in "uname -m" in
             let arch = input_line ic in
             let _ = Unix.close_process_in ic in
-            if String.contains arch '6' then "AVX2"
-            else if Str.string_match (Str.regexp ".*arm.*\\|.*aarch.*") arch 0
+            if String.equal (String.trim arch) "x86_64" then "AVX2"
+            else if String.equal (String.trim arch) "aarch64"
+                    || String.equal (String.trim arch) "arm64"
             then "NEON"
             else "Scalar"
           with _ -> "Scalar")

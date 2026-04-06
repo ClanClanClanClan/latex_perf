@@ -33,8 +33,8 @@ else
     INCLUDES = -I/usr/local/lib/ocaml
 endif
 
-# Source files
-C_SOURCES = simd_tokenizer.c simd_stubs.c
+# Source files (use fixed tokenizer + production stubs)
+C_SOURCES = simd_tokenizer.c simd_tokenizer_fixed.c simd_stubs.c simd_production_stubs.c
 ML_SOURCES = simd_ffi.ml
 HEADERS = simd_tokenizer.h
 

@@ -41,26 +41,35 @@ value tokenize_bytes_into_soa_simd_stub(
     CAMLxparam4(v_end_pos, v_lines, v_cols, v_max_tokens);
     CAMLlocal1(result);
     
-    // Extract input bytes
+    // Extract input bytes with NULL check
     const uint8_t *input = (const uint8_t*)Bytes_val(v_input);
+    if (input == NULL) {
+        caml_failwith("tokenize_soa_simd: NULL input bytes");
+    }
     size_t input_len = Int_val(v_input_len);
     int max_tokens = Int_val(v_max_tokens);
-    
-    // Extract bigarray pointers
+
+    // Extract bigarray pointers with NULL checks
     int32_t *kinds = (int32_t*)Caml_ba_data_val(v_kinds);
     int32_t *codes = (int32_t*)Caml_ba_data_val(v_codes);
     int32_t *start_pos = (int32_t*)Caml_ba_data_val(v_start_pos);
     int32_t *end_pos = (int32_t*)Caml_ba_data_val(v_end_pos);
     int32_t *lines = (int32_t*)Caml_ba_data_val(v_lines);
     int32_t *cols = (int32_t*)Caml_ba_data_val(v_cols);
-    
+    if (!kinds || !codes || !start_pos || !end_pos || !lines || !cols) {
+        caml_failwith("tokenize_soa_simd: NULL output bigarray");
+    }
+
     // Call SIMD tokenizer
     int token_count = tokenize_bytes_into_soa_simd(
         input, input_len,
         kinds, codes, start_pos, end_pos, lines, cols,
         max_tokens
     );
-    
+    if (token_count < 0) {
+        caml_failwith("tokenize_soa_simd: tokenization error");
+    }
+
     result = Val_int(token_count);
     CAMLreturn(result);
 }

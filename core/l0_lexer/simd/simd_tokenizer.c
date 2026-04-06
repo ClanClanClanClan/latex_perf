@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdatomic.h>
+#include <pthread.h>
 
 // Architecture detection
 #ifdef __x86_64__
@@ -23,16 +24,23 @@
 #endif
 #endif
 
-// Token types (matching OCaml catcodes)
-#define TOK_ESCAPE     0   // backslash
-#define TOK_BEGIN_GRP  1   // {
-#define TOK_END_GRP    2   // }
-#define TOK_MATH       3   // $
-#define TOK_NEWLINE    5   // \n
-#define TOK_SPACE      10  // space
+// Token types (matching OCaml catcodes 0-15, per Catcode.v)
+#define TOK_ESCAPE     0   // backslash '\'
+#define TOK_BEGIN_GRP  1   // '{'
+#define TOK_END_GRP    2   // '}'
+#define TOK_MATH       3   // '$'
+#define TOK_ALIGNTAB   4   // '&'
+#define TOK_NEWLINE    5   // '\n', '\r'
+#define TOK_PARAM      6   // '#'
+#define TOK_SUPERSCR   7   // '^'
+#define TOK_SUBSCR     8   // '_'
+#define TOK_IGNORED    9   // NUL '\0'
+#define TOK_SPACE      10  // ' ', '\t'
 #define TOK_LETTER     11  // a-z, A-Z
 #define TOK_OTHER      12  // default
-#define TOK_COMMENT    14  // %
+#define TOK_ACTIVE     13  // '~'
+#define TOK_COMMENT    14  // '%'
+#define TOK_INVALID    15  // DEL '\x7F'
 
 // SIMD processing configuration
 #ifdef USE_AVX2
@@ -57,36 +65,59 @@ typedef struct {
 
 // Lookup table for fast character classification
 static uint8_t catcode_table[256];
-static bool table_initialized = false;
 
 // SIMD Attestation: Atomic counters for audit verification
 static _Atomic uint64_t simd_avx2_blocks_processed = 0;
-static _Atomic uint64_t simd_neon_blocks_processed = 0; 
+static _Atomic uint64_t simd_neon_blocks_processed = 0;
 static _Atomic uint64_t scalar_bytes_processed = 0;
 static _Atomic uint64_t total_tokenize_calls = 0;
 
-// Initialize catcode lookup table
-static void init_catcode_table(void) {
-    if (table_initialized) return;
-    
-    // Initialize all to TOK_OTHER
+// Thread-safe one-time initialization
+static pthread_once_t catcode_init_once = PTHREAD_ONCE_INIT;
+
+// Initialize catcode lookup table (all 16 catcodes per Catcode.v)
+static void init_catcode_table_impl(void) {
+    // Default: TOK_OTHER (catcode 12)
     memset(catcode_table, TOK_OTHER, 256);
-    
-    // Set specific catcodes
+
+    // Catcode 0: Escape
     catcode_table['\\'] = TOK_ESCAPE;
+    // Catcode 1: BeginGrp
     catcode_table['{'] = TOK_BEGIN_GRP;
+    // Catcode 2: EndGrp
     catcode_table['}'] = TOK_END_GRP;
+    // Catcode 3: Math
     catcode_table['$'] = TOK_MATH;
+    // Catcode 4: AlignTab
+    catcode_table['&'] = TOK_ALIGNTAB;
+    // Catcode 5: Newline
     catcode_table['\n'] = TOK_NEWLINE;
+    catcode_table['\r'] = TOK_NEWLINE;
+    // Catcode 6: Param
+    catcode_table['#'] = TOK_PARAM;
+    // Catcode 7: Superscr
+    catcode_table['^'] = TOK_SUPERSCR;
+    // Catcode 8: Subscr
+    catcode_table['_'] = TOK_SUBSCR;
+    // Catcode 9: Ignored
+    catcode_table[0] = TOK_IGNORED;
+    // Catcode 10: Space
     catcode_table[' '] = TOK_SPACE;
     catcode_table['\t'] = TOK_SPACE;
-    catcode_table['%'] = TOK_COMMENT;
-    
-    // Letters
+    // Catcode 11: Letter (a-z, A-Z)
     for (int i = 'a'; i <= 'z'; i++) catcode_table[i] = TOK_LETTER;
     for (int i = 'A'; i <= 'Z'; i++) catcode_table[i] = TOK_LETTER;
-    
-    table_initialized = true;
+    // Catcode 12: Other — already set by memset
+    // Catcode 13: Active
+    catcode_table['~'] = TOK_ACTIVE;
+    // Catcode 14: Comment
+    catcode_table['%'] = TOK_COMMENT;
+    // Catcode 15: Invalid
+    catcode_table[127] = TOK_INVALID;
+}
+
+static void init_catcode_table(void) {
+    pthread_once(&catcode_init_once, init_catcode_table_impl);
 }
 
 #ifdef USE_AVX2
@@ -118,9 +149,13 @@ static inline void tokenize_block_avx2(const uint8_t *input, size_t input_len, s
     __m256i is_percent = _mm256_cmpeq_epi8(data, percent);
     
     // Extract individual bytes and process
+    // Use stored copy to avoid unaligned access through SIMD register
+    uint8_t block_bytes[32];
+    _mm256_storeu_si256((__m256i*)block_bytes, data);
     for (int i = 0; i < 32 && output->count < output->capacity; i++) {
-        uint8_t byte = ((uint8_t*)&data)[i];
-        if (byte == 0) break; // End of input
+        size_t global_byte_pos = block_start + i;
+        if (global_byte_pos >= input_len) break; // End of input (not zero-byte!)
+        uint8_t byte = block_bytes[i];
         
         int catcode = catcode_table[byte];
         

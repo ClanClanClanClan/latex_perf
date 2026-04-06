@@ -170,79 +170,101 @@ let get_rules () : rule list =
     [Validators_context.set_post_commands] must have been called for the
     current thread beforehand.  If it has not been set, those rules
     silently return [None] (safe but incomplete). *)
+let max_input_bytes = 10 * 1024 * 1024 (* 10 MiB — safety guard *)
+
 let run_all (src : string) : result list =
-  (* Check cache first (spec W19) *)
-  let rules = get_rules () in
-  let cache = Cache_key.global () in
-  let cache_key =
-    Cache_key.compute_key ~source:src ~validator_count:(List.length rules)
-      ~language:"auto"
-  in
-  match Cache_key.lookup cache cache_key with
-  | Some cached_results -> cached_results
-  | None ->
-      (* Increment generation counter + build snapshot per spec §5 *)
-      let gen = Atomic.fetch_and_add _run_generation 1 in
-      let parent_ver =
-        Layer_sync.mk_version ~gen ~parent_gen:(max 0 (gen - 1))
-      in
-      let child_ver = Layer_sync.advance parent_ver in
-      let snap =
-        Layer_sync.create_snapshot
-          [
-            { Layer_sync.layer = L0; version = parent_ver; data = "lexer" };
-            { Layer_sync.layer = L1; version = child_ver; data = "expander" };
-          ]
-      in
-      if not (Layer_sync.is_consistent snap) then
-        Printf.eprintf
-          "[validators] WARNING: snapshot inconsistency at gen %d\n%!" gen;
-      (* Build semantic state for L3 validators (spec W53-57) *)
-      let sem = Semantic_state.analyze src in
-      Semantic_state.set_state sem;
-      (* Publish events to bus (spec W62) — subscribers consume deltas *)
-      let bus = Event_bus.global () in
-      (* Register one-shot subscribers for this run *)
-      let label_count = ref 0 in
-      let ref_count = ref 0 in
-      let env_count = ref 0 in
-      Event_bus.subscribe bus "_run_label_counter" (function
-        | Event_bus.LabelDefined _ -> incr label_count
-        | _ -> ());
-      Event_bus.subscribe bus "_run_ref_counter" (function
-        | Event_bus.RefUsed _ -> incr ref_count
-        | _ -> ());
-      Event_bus.subscribe bus "_run_env_counter" (function
-        | Event_bus.EnvironmentOpened _ -> incr env_count
-        | _ -> ());
-      Event_bus.scan_and_publish bus src;
-      (* Unsubscribe after scan *)
-      Event_bus.unsubscribe bus "_run_label_counter";
-      Event_bus.unsubscribe bus "_run_ref_counter";
-      Event_bus.unsubscribe bus "_run_env_counter";
-      (* Record event counts in metrics *)
-      Validators_metrics.record ~id:"_bus_labels" ~count:!label_count
-        ~dur_ms:0.0;
-      Validators_metrics.record ~id:"_bus_refs" ~count:!ref_count ~dur_ms:0.0;
-      Validators_metrics.record ~id:"_bus_envs" ~count:!env_count ~dur_ms:0.0;
-      let rec go acc = function
-        | [] -> List.rev acc
-        | r :: rs ->
-            let t0 = Unix.gettimeofday () in
-            let acc =
-              match r.run src with
-              | Some res ->
-                  let t1 = Unix.gettimeofday () in
-                  let dur_ms = (t1 -. t0) *. 1000.0 in
-                  Validators_metrics.record ~id:res.id ~count:res.count ~dur_ms;
-                  res :: acc
-              | None -> acc
-            in
-            go acc rs
-      in
-      let results = go [] rules in
-      Cache_key.store cache cache_key results;
-      results
+  (* Input size guard — prevent OOM/slowdown on huge files *)
+  if String.length src > max_input_bytes then (
+    Printf.eprintf
+      "[validators] WARNING: input size %d bytes exceeds %d byte limit; \
+       truncating\n\
+       %!"
+      (String.length src) max_input_bytes;
+    [
+      {
+        id = "INTERNAL-001";
+        severity = Warning;
+        message =
+          Printf.sprintf
+            "Input truncated: %d bytes exceeds %d byte safety limit"
+            (String.length src) max_input_bytes;
+        count = 1;
+      };
+    ])
+  else
+    (* Check cache first (spec W19) *)
+    let rules = get_rules () in
+    let cache = Cache_key.global () in
+    let cache_key =
+      Cache_key.compute_key ~source:src ~validator_count:(List.length rules)
+        ~language:"auto"
+    in
+    match Cache_key.lookup cache cache_key with
+    | Some cached_results -> cached_results
+    | None ->
+        (* Increment generation counter + build snapshot per spec §5 *)
+        let gen = Atomic.fetch_and_add _run_generation 1 in
+        let parent_ver =
+          Layer_sync.mk_version ~gen ~parent_gen:(max 0 (gen - 1))
+        in
+        let child_ver = Layer_sync.advance parent_ver in
+        let snap =
+          Layer_sync.create_snapshot
+            [
+              { Layer_sync.layer = L0; version = parent_ver; data = "lexer" };
+              { Layer_sync.layer = L1; version = child_ver; data = "expander" };
+            ]
+        in
+        if not (Layer_sync.is_consistent snap) then
+          Printf.eprintf
+            "[validators] WARNING: snapshot inconsistency at gen %d\n%!" gen;
+        (* Build semantic state for L3 validators (spec W53-57) *)
+        let sem = Semantic_state.analyze src in
+        Semantic_state.set_state sem;
+        (* Publish events to bus (spec W62) — subscribers consume deltas *)
+        let bus = Event_bus.global () in
+        (* Register one-shot subscribers for this run *)
+        let label_count = ref 0 in
+        let ref_count = ref 0 in
+        let env_count = ref 0 in
+        Event_bus.subscribe bus "_run_label_counter" (function
+          | Event_bus.LabelDefined _ -> incr label_count
+          | _ -> ());
+        Event_bus.subscribe bus "_run_ref_counter" (function
+          | Event_bus.RefUsed _ -> incr ref_count
+          | _ -> ());
+        Event_bus.subscribe bus "_run_env_counter" (function
+          | Event_bus.EnvironmentOpened _ -> incr env_count
+          | _ -> ());
+        Event_bus.scan_and_publish bus src;
+        (* Unsubscribe after scan *)
+        Event_bus.unsubscribe bus "_run_label_counter";
+        Event_bus.unsubscribe bus "_run_ref_counter";
+        Event_bus.unsubscribe bus "_run_env_counter";
+        (* Record event counts in metrics *)
+        Validators_metrics.record ~id:"_bus_labels" ~count:!label_count
+          ~dur_ms:0.0;
+        Validators_metrics.record ~id:"_bus_refs" ~count:!ref_count ~dur_ms:0.0;
+        Validators_metrics.record ~id:"_bus_envs" ~count:!env_count ~dur_ms:0.0;
+        let rec go acc = function
+          | [] -> List.rev acc
+          | r :: rs ->
+              let t0 = Unix.gettimeofday () in
+              let acc =
+                match r.run src with
+                | Some res ->
+                    let t1 = Unix.gettimeofday () in
+                    let dur_ms = (t1 -. t0) *. 1000.0 in
+                    Validators_metrics.record ~id:res.id ~count:res.count
+                      ~dur_ms;
+                    res :: acc
+                | None -> acc
+              in
+              go acc rs
+        in
+        let results = go [] rules in
+        Cache_key.store cache cache_key results;
+        results
 
 (** Like {!run_all} but returns scored results with confidence levels. Uses VPD
     catalogue for confidence assignment (spec W75). *)

@@ -456,3 +456,48 @@
  (name test_throughput)
  (modules test_throughput)
  (libraries latex_parse_lib unix))
+
+(test
+ (name test_cache_key)
+ (modules test_cache_key)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_semantic_state)
+ (modules test_semantic_state)
+ (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_evidence_scoring)
+ (modules test_evidence_scoring)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_event_bus)
+ (modules test_event_bus)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_suffix_array)
+ (modules test_suffix_array)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_float_tracking)
+ (modules test_float_tracking)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_sentence_split)
+ (modules test_sentence_split)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_xxh64)
+ (modules test_xxh64)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_ipc)
+ (modules test_ipc)
+ (libraries latex_parse_lib unix))

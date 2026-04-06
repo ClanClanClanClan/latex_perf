@@ -303,195 +303,208 @@ let parse_brace_arg (st : parse_state) : string option =
 
 (* ── Main recursive parser ──────────────────────────────────── *)
 
-let rec parse_nodes (st : parse_state) (stop_at_end : string option) :
-    located_node list =
-  let nodes = ref [] in
-  let running = ref true in
-  while st.pos < st.len && !running do
-    let loc = current_loc st in
-    match peek st with
-    | None -> running := false
-    | Some '%' ->
-        let n = parse_comment st in
-        nodes := n :: !nodes
-    | Some '$' ->
-        if st.pos + 1 < st.len && String.unsafe_get st.src (st.pos + 1) = '$'
-        then (
-          (* Display math $$ *)
-          advance_n st 2;
-          let buf = Buffer.create 64 in
-          let found = ref false in
-          while st.pos < st.len && not !found do
-            if
-              st.pos + 1 < st.len
-              && String.unsafe_get st.src st.pos = '$'
-              && String.unsafe_get st.src (st.pos + 1) = '$'
-            then (
-              found := true;
-              advance_n st 2)
-            else (
-              Buffer.add_char buf (String.unsafe_get st.src st.pos);
-              advance st)
-          done;
-          nodes := { node = MathDisplay (Buffer.contents buf); loc } :: !nodes)
-        else
-          let n = parse_inline_math st in
+let max_nesting_depth = 500
+
+let rec parse_nodes ?(depth = 0) (st : parse_state)
+    (stop_at_end : string option) : located_node list =
+  if depth > max_nesting_depth then (
+    record_error st
+      (Printf.sprintf "Maximum nesting depth %d exceeded" max_nesting_depth);
+    [])
+  else
+    let nodes = ref [] in
+    let running = ref true in
+    while st.pos < st.len && !running do
+      let loc = current_loc st in
+      match peek st with
+      | None -> running := false
+      | Some '%' ->
+          let n = parse_comment st in
           nodes := n :: !nodes
-    | Some '\\' ->
-        if starts_with st "\\[" then
-          let n = parse_display_math_bracket st in
-          nodes := n :: !nodes
-        else if starts_with st "\\(" then
-          let n = parse_paren_math st in
-          nodes := n :: !nodes
-        else if starts_with st "\\begin{" then (
-          advance_n st 7;
-          (* skip \begin{ *)
-          let name_start = st.pos in
-          while st.pos < st.len && String.unsafe_get st.src st.pos <> '}' do
-            advance st
-          done;
-          let env_name = String.sub st.src name_start (st.pos - name_start) in
-          if st.pos < st.len then advance st;
-          (* skip } *)
-          if is_verbatim_env env_name then
-            (* Parse verbatim content as opaque string *)
-            let content = parse_env_body st env_name in
-            nodes := { node = Verbatim { env_name; content }; loc } :: !nodes
-          else if is_math_env env_name then
-            let content = parse_env_body st env_name in
-            nodes := { node = MathDisplay content; loc } :: !nodes
+      | Some '$' ->
+          if st.pos + 1 < st.len && String.unsafe_get st.src (st.pos + 1) = '$'
+          then (
+            (* Display math $$ *)
+            advance_n st 2;
+            let buf = Buffer.create 64 in
+            let found = ref false in
+            while st.pos < st.len && not !found do
+              if
+                st.pos + 1 < st.len
+                && String.unsafe_get st.src st.pos = '$'
+                && String.unsafe_get st.src (st.pos + 1) = '$'
+              then (
+                found := true;
+                advance_n st 2)
+              else (
+                Buffer.add_char buf (String.unsafe_get st.src st.pos);
+                advance st)
+            done;
+            nodes := { node = MathDisplay (Buffer.contents buf); loc } :: !nodes)
           else
-            (* Parse environment body recursively *)
-            let body_lnodes = parse_nodes st (Some env_name) in
-            let body = List.map (fun ln -> ln.node) body_lnodes in
-            nodes :=
-              { node = Environment { env_name; opts = []; body }; loc }
-              :: !nodes)
-        else if starts_with st "\\end{" then (
-          advance_n st 5;
-          let name_start = st.pos in
-          while st.pos < st.len && String.unsafe_get st.src st.pos <> '}' do
-            advance st
-          done;
-          let env_name = String.sub st.src name_start (st.pos - name_start) in
-          if st.pos < st.len then advance st;
-          match stop_at_end with
-          | Some expected when expected = env_name -> running := false
-          | Some expected ->
-              record_error st
-                ("Expected \\end{"
-                ^ expected
-                ^ "} but got \\end{"
-                ^ env_name
-                ^ "}");
-              running := false
-          | None -> record_error st ("Unexpected \\end{" ^ env_name ^ "}"))
-        else (
-          advance st;
-          (* skip \ *)
-          let name = parse_cmd_name st in
-          if name = "" then nodes := { node = Word "\\"; loc } :: !nodes
-          else if name = "verb" || name = "verb*" then
-            if
-              (* \verb|...| — arbitrary delimiter, opaque content *)
-              st.pos < st.len
-            then (
-              let delim = String.unsafe_get st.src st.pos in
-              advance st;
-              let buf = Buffer.create 64 in
-              let found_close = ref false in
-              while st.pos < st.len && not !found_close do
-                let c = String.unsafe_get st.src st.pos in
-                if c = delim then (
-                  found_close := true;
-                  advance st)
-                else (
-                  Buffer.add_char buf c;
-                  advance st)
+            let n = parse_inline_math st in
+            nodes := n :: !nodes
+      | Some '\\' ->
+          if starts_with st "\\[" then
+            let n = parse_display_math_bracket st in
+            nodes := n :: !nodes
+          else if starts_with st "\\(" then
+            let n = parse_paren_math st in
+            nodes := n :: !nodes
+          else if starts_with st "\\begin{" then (
+            advance_n st 7;
+            (* skip \begin{ *)
+            let name_start = st.pos in
+            while st.pos < st.len && String.unsafe_get st.src st.pos <> '}' do
+              advance st
+            done;
+            let env_name = String.sub st.src name_start (st.pos - name_start) in
+            if st.pos < st.len then advance st;
+            (* skip } *)
+            if is_verbatim_env env_name then
+              (* Parse verbatim content as opaque string *)
+              let content = parse_env_body st env_name in
+              nodes := { node = Verbatim { env_name; content }; loc } :: !nodes
+            else if is_math_env env_name then
+              let content = parse_env_body st env_name in
+              nodes := { node = MathDisplay content; loc } :: !nodes
+            else
+              (* Parse environment body recursively *)
+              let body_lnodes =
+                parse_nodes ~depth:(depth + 1) st (Some env_name)
+              in
+              let body = List.map (fun ln -> ln.node) body_lnodes in
+              nodes :=
+                { node = Environment { env_name; opts = []; body }; loc }
+                :: !nodes)
+          else if starts_with st "\\end{" then (
+            advance_n st 5;
+            let name_start = st.pos in
+            while st.pos < st.len && String.unsafe_get st.src st.pos <> '}' do
+              advance st
+            done;
+            let env_name = String.sub st.src name_start (st.pos - name_start) in
+            if st.pos < st.len then advance st;
+            match stop_at_end with
+            | Some expected when expected = env_name -> running := false
+            | Some expected ->
+                record_error st
+                  ("Expected \\end{"
+                  ^ expected
+                  ^ "} but got \\end{"
+                  ^ env_name
+                  ^ "}");
+                running := false
+            | None -> record_error st ("Unexpected \\end{" ^ env_name ^ "}"))
+          else (
+            advance st;
+            (* skip \ *)
+            let name = parse_cmd_name st in
+            if name = "" then nodes := { node = Word "\\"; loc } :: !nodes
+            else if name = "verb" || name = "verb*" then
+              if
+                (* \verb|...| — arbitrary delimiter, opaque content *)
+                st.pos < st.len
+              then (
+                let delim = String.unsafe_get st.src st.pos in
+                advance st;
+                let buf = Buffer.create 64 in
+                let found_close = ref false in
+                while st.pos < st.len && not !found_close do
+                  let c = String.unsafe_get st.src st.pos in
+                  if c = delim then (
+                    found_close := true;
+                    advance st)
+                  else (
+                    Buffer.add_char buf c;
+                    advance st)
+                done;
+                if not !found_close then record_error st "Unclosed \\verb";
+                nodes :=
+                  {
+                    node =
+                      Verbatim
+                        { env_name = name; content = Buffer.contents buf };
+                    loc;
+                  }
+                  :: !nodes)
+              else record_error st "\\verb at end of input"
+            else
+              let opts = ref [] in
+              let more_opts = ref true in
+              while !more_opts do
+                match parse_opt_arg st with
+                | Some o -> opts := o :: !opts
+                | None -> more_opts := false
               done;
-              if not !found_close then record_error st "Unclosed \\verb";
+              let args = ref [] in
+              let more_args = ref true in
+              while !more_args do
+                match parse_brace_arg st with
+                | Some a -> args := a :: !args
+                | None -> more_args := false
+              done;
               nodes :=
                 {
                   node =
-                    Verbatim { env_name = name; content = Buffer.contents buf };
+                    Cmd { name; opts = List.rev !opts; args = List.rev !args };
                   loc;
                 }
                 :: !nodes)
-            else record_error st "\\verb at end of input"
-          else
-            let opts = ref [] in
-            let more_opts = ref true in
-            while !more_opts do
-              match parse_opt_arg st with
-              | Some o -> opts := o :: !opts
-              | None -> more_opts := false
-            done;
-            let args = ref [] in
-            let more_args = ref true in
-            while !more_args do
-              match parse_brace_arg st with
-              | Some a -> args := a :: !args
-              | None -> more_args := false
-            done;
-            nodes :=
-              {
-                node =
-                  Cmd { name; opts = List.rev !opts; args = List.rev !args };
-                loc;
-              }
-              :: !nodes)
-    | Some '{' ->
-        advance st;
-        let inner = parse_nodes st None in
-        (* Find closing } *)
-        (* The recursive call should have consumed up to } *)
-        nodes :=
-          { node = Group (List.map (fun n -> n.node) inner); loc } :: !nodes
-    | Some '}' -> (
-        advance st;
-        match stop_at_end with
-        | None -> running := false (* closing a group *)
-        | Some _ -> running := false)
-    | Some '\n' ->
-        advance st;
-        nodes := { node = Newline; loc } :: !nodes
-    | Some c when c = ' ' || c = '\t' ->
-        let start = st.pos in
-        while
-          st.pos < st.len
-          &&
-          let c = String.unsafe_get st.src st.pos in
-          c = ' ' || c = '\t'
-        do
-          advance st
-        done;
-        nodes :=
-          { node = Whitespace (String.sub st.src start (st.pos - start)); loc }
-          :: !nodes
-    | Some _ ->
-        let start = st.pos in
-        while
-          st.pos < st.len
-          &&
-          let c = String.unsafe_get st.src st.pos in
-          c <> '\\'
-          && c <> '{'
-          && c <> '}'
-          && c <> '$'
-          && c <> '%'
-          && c <> '\n'
-          && c <> ' '
-          && c <> '\t'
-        do
-          advance st
-        done;
-        if st.pos > start then
+      | Some '{' ->
+          advance st;
+          let inner = parse_nodes ~depth:(depth + 1) st None in
+          (* Find closing } *)
+          (* The recursive call should have consumed up to } *)
           nodes :=
-            { node = Word (String.sub st.src start (st.pos - start)); loc }
+            { node = Group (List.map (fun n -> n.node) inner); loc } :: !nodes
+      | Some '}' -> (
+          advance st;
+          match stop_at_end with
+          | None -> running := false (* closing a group *)
+          | Some _ -> running := false)
+      | Some '\n' ->
+          advance st;
+          nodes := { node = Newline; loc } :: !nodes
+      | Some c when c = ' ' || c = '\t' ->
+          let start = st.pos in
+          while
+            st.pos < st.len
+            &&
+            let c = String.unsafe_get st.src st.pos in
+            c = ' ' || c = '\t'
+          do
+            advance st
+          done;
+          nodes :=
+            {
+              node = Whitespace (String.sub st.src start (st.pos - start));
+              loc;
+            }
             :: !nodes
-  done;
-  List.rev !nodes
+      | Some _ ->
+          let start = st.pos in
+          while
+            st.pos < st.len
+            &&
+            let c = String.unsafe_get st.src st.pos in
+            c <> '\\'
+            && c <> '{'
+            && c <> '}'
+            && c <> '$'
+            && c <> '%'
+            && c <> '\n'
+            && c <> ' '
+            && c <> '\t'
+          do
+            advance st
+          done;
+          if st.pos > start then
+            nodes :=
+              { node = Word (String.sub st.src start (st.pos - start)); loc }
+              :: !nodes
+    done;
+    List.rev !nodes
 
 (* ── Public parse API ───────────────────────────────────────── *)
 

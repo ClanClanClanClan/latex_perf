@@ -1,0 +1,69 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+
+\title{On the Behaviour of Stochastic Processes in Distributed Systems}
+\author{J.~Smith}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+The behaviour of distributed systems has been widely studied in the literature over
+the past several decades.  In this paper we analyse the colour of noise arising in
+large-scale networks.  The programme of research initiated by earlier authors is
+extended here to cover generalised models that incorporate both synchronisation
+and randomisation primitives.
+
+% STYLE-002: double space after period
+It is well known that consensus is hard.  However,  the problem can be decomposed
+into smaller sub-problems that are each tractable in isolation.
+
+% STYLE-017: sentence > 40 words
+The fundamental observation underlying our approach is that when the variance of the
+delay distribution exceeds the threshold predicted by the central limit theorem applied
+to the sum of independent identically distributed random variables drawn from a
+heavy-tailed family then the system transitions into an unstable regime characterised
+by unbounded message queues.
+
+% STYLE-022: passive voice
+The algorithm was implemented in OCaml and the results were verified by running
+the test suite on a cluster of 64 machines.  The data was collected over a period
+of three weeks and the analysis was performed using standard statistical methods.
+
+\section{Methodology}
+
+We randomize the initial configuration and optimize the objective function using
+gradient descent.  The color of the output signal is measured at each step.
+% Note: American spellings above — consistent within section
+
+% CE-001/CE-002: Canadian/British mix with American
+The behaviour of the optimiser was analysed carefully.  We then maximize the
+throughput while minimizing latency, but also favour the centralised approach.
+
+% LANG-014: -ise vs -ize inconsistency
+We standardise our notation but also utilize the framework from~\cite{jones2024}.
+The organisation recognises the need to modernize its infrastructure.
+
+% LANG-015/LANG-016: programme vs program
+The research programme outlined in Section~1 describes a computer program that
+automates the scheduling of the programme's milestones.
+
+\section{Results}
+
+Let $f(x) = \sum_{i=1}^{n} x_i^2$ denote the objective.  We minimise $f$ subject
+to the constraint $\|x\| \le 1$.  The optimisation converges in $O(n \log n)$ steps.
+
+% Correct pattern: consistent British spelling
+The generalisation of Theorem~2 to the multi-dimensional case is straightforward.
+The parametrisation of the model was chosen to maximise interpretability.
+
+\section{Conclusion}
+
+In conclusion, the behaviour of distributed stochastic systems can be characterised
+by a small number of parameters.  Future work will focus on the parallelisation of
+the algorithm and its deployment in containerised environments.
+
+\end{document}

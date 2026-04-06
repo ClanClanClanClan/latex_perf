@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{xeCJK}
+\setCJKmainfont{AppleMyungjo}
+\usepackage{amsmath}
+
+\title{확률론의 기초와 응용}
+\author{김수학}
+\date{2026년}
+
+\begin{document}
+\maketitle
+
+\section{서론}
+
+확률론은 불확실한 현상을 수학적으로 분석하는 학문이다.
+본 논문에서는 중심극한정리의 일반화에 대해 논의한다.
+
+확률 공간 $(\Omega, \mathcal{F}, P)$ 위에서 독립이고 동일한 분포를 따르는
+확률 변수의 열 $(X_n)_{n \ge 1}$을 고려하자.
+
+\section{주요 결과}
+
+\begin{theorem}[중심극한정리]
+$E[X_1] = \mu$이고 $\text{Var}(X_1) = \sigma^2 < \infty$이면,
+\[
+  \frac{\bar{X}_n - \mu}{\sigma / \sqrt{n}} \xrightarrow{d} N(0, 1)
+\]
+이 성립한다.
+\end{theorem}
+
+이 정리는 표본의 크기가 충분히 클 때 표본 평균의 분포가 정규분포에
+근사한다는 것을 의미한다.  통계적 추론의 이론적 기반을 제공한다.
+
+\section{결론}
+
+중심극한정리는 현대 통계학에서 가장 중요한 정리 중 하나이다.
+
+\end{document}

@@ -1,0 +1,70 @@
+\documentclass{article}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Zur Approximation ganzer Funktionen durch Polynome}
+\author{K.~M\"uller}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\section{Einleitung}
+
+Die Approximationstheorie besch\"aftigt sich mit der Frage, wie gut sich
+komplizierte Funktionen durch einfachere ann\"ahern lassen.  In dieser Arbeit
+untersuchen wir die gleichm\"a\ss{}ige Konvergenz von Polynomfolgen auf
+kompakten Teilmengen der komplexen Ebene.
+
+% LANG-012 / DE-006: wrong quote style (English quotes instead of German)
+Die sogenannte "Weierstra\ss-Approximation" ist ein klassisches Ergebnis.
+Man spricht von "gleichm\"a\ss{}iger Konvergenz" im Banachraum.
+
+% Correct: German quotes
+Die sogenannte \glqq Weierstra\ss-Approximation\grqq{} bildet die Grundlage.
+Man spricht von \glqq gleichm\"a\ss{}iger Konvergenz\grqq{} im Funktionenraum.
+
+\section{Grundlagen}
+
+Sei $f \colon \mathbb{C} \to \mathbb{C}$ eine ganze Funktion.  Nach dem Satz
+von Liouville ist jede beschr\"ankte ganze Funktion konstant.  D.\,h.\ wenn
+$|f(z)| \le M$ f\"ur alle $z \in \mathbb{C}$, dann ist $f$ konstant.
+
+% German abbreviations
+Bzgl.\ der Konvergenz unterscheidet man verschiedene Typen.  Z.\,B.\ ist die
+punktweise Konvergenz schw\"acher als die gleichm\"a\ss{}ige.  U.\,a.\ gilt
+der Satz von Dini f\"ur monotone Folgen.  S.\,o.\ f\"ur weitere Details.
+
+% Correct use of \ss
+Die Gr\"o\ss{}e des Fehlers h\"angt von der Gl\"atte der Funktion ab.  Au\ss{}erdem
+spielt die Gestalt des Definitionsbereichs eine wesentliche Rolle.  Das Ma\ss{}
+der Abweichung wird in der Supremumsnorm gemessen.
+
+\section{Hauptergebnis}
+
+\begin{theorem}
+F\"ur jede stetige Funktion $f \colon [a,b] \to \mathbb{R}$ und jedes
+$\varepsilon > 0$ existiert ein Polynom $p$ mit
+\[
+  \|f - p\|_\infty < \varepsilon.
+\]
+\end{theorem}
+
+Der Beweis verl\"auft \"uber die Bernstein-Polynome
+\[
+  B_n(f; x) = \sum_{k=0}^{n} \binom{n}{k} f\!\left(\frac{k}{n}\right)
+  x^k (1-x)^{n-k}.
+\]
+
+Die Konvergenz $B_n(f) \to f$ ist gleichm\"a\ss{}ig auf $[0,1]$.
+
+\section{Zusammenfassung}
+
+Wir haben gezeigt, dass die Bernstein-Polynome ein konstruktives Werkzeug
+zur gleichm\"a\ss{}igen Approximation stetiger Funktionen darstellen.
+Weiterf\"uhrende Untersuchungen betreffen die Konvergenzgeschwindigkeit
+und die Verallgemeinerung auf h\"oherdimensionale Gebiete.
+
+\end{document}

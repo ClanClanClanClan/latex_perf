@@ -18,6 +18,8 @@ type scoring_config = {
 }
 
 val default_config : scoring_config
+val config_from_file : string -> scoring_config
+val load_config : unit -> scoring_config
 val score_result : Validators_common.result -> string list -> scored_result
 
 val filter_by_config :

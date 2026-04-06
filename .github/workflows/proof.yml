@@ -11,7 +11,10 @@ concurrency:
 
 
 jobs:
-  # ── Phase 1: Build all proofs with parallelism + timing ───────────
+  # ── Proof compilation with parallelism + timing ─────────────────────
+  # Spec W86-91: proof compilation with parallel dune build.
+  # For full 128-job k8s sharding, see infra/k8s/proof-farm-job.yaml
+  # + scripts/infra/proof_farm/proof_shard.sh.
   proof-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -57,13 +60,16 @@ jobs:
         run: |
           echo "=== Proof Timing Summary ==="
           echo "Total proof compilation: ${{ steps.build.outputs.proof_time_ms }}ms"
-          # Count proof files and theorems
           V_FILES=$(find proofs -name '*.v' -not -path '*/archive/*' | wc -l)
           THEOREMS=$(grep -rcE '^(Theorem|Lemma) ' proofs/*.v proofs/ML/*.v 2>/dev/null | awk -F: '{s+=$2} END{print s}')
           echo "Proof files: $V_FILES"
           echo "Theorems+Lemmas: $THEOREMS"
           echo ""
           echo "Target: < 9 min total CI time (proof compilation: ${{ steps.build.outputs.proof_time_ms }}ms)"
+          echo ""
+          echo "Note: For 128-job distributed sharding, use:"
+          echo "  kubectl apply -f infra/k8s/proof-farm-job.yaml"
+          echo "  (see scripts/infra/proof_farm/proof_shard.sh)"
 
       # ── Regression alerts (only on failure) ─────────────────────────
       - name: Open issue for proof regression

@@ -27,6 +27,39 @@ type scoring_config = {
 let default_config : scoring_config =
   { min_confidence = Low; min_weight = 0.0; boost_vpd_rules = true }
 
+(** Load scoring config from a JSON file (spec W75: "config file loaded").
+    Format: {"min_confidence":"Low","min_weight":0.0,"boost_vpd_rules":true} *)
+let config_from_file (path : string) : scoring_config =
+  try
+    let ic = open_in path in
+    let n = in_channel_length ic in
+    let s = Bytes.create n in
+    really_input ic s 0 n;
+    close_in ic;
+    let json = Yojson.Safe.from_string (Bytes.to_string s) in
+    let open Yojson.Safe.Util in
+    let min_conf =
+      match json |> member "min_confidence" |> to_string with
+      | "High" -> High
+      | "Medium" -> Medium
+      | _ -> Low
+    in
+    let min_w = try json |> member "min_weight" |> to_float with _ -> 0.0 in
+    let boost =
+      try json |> member "boost_vpd_rules" |> to_bool with _ -> true
+    in
+    { min_confidence = min_conf; min_weight = min_w; boost_vpd_rules = boost }
+  with _ -> default_config
+
+(** Try to load config from default path, fall back to default_config. *)
+let load_config () : scoring_config =
+  let default_path = "evidence_scoring.json" in
+  match Sys.getenv_opt "LP_SCORING_CONFIG" with
+  | Some path -> config_from_file path
+  | None ->
+      if Sys.file_exists default_path then config_from_file default_path
+      else default_config
+
 (* ── Scoring logic ──────────────────────────────────────────── *)
 
 let confidence_of_rule (id : string) (vpd_ids : string list) : confidence =

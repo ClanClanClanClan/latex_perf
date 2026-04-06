@@ -451,3 +451,8 @@
  (name test_incremental_nlp)
  (modules test_incremental_nlp)
  (libraries latex_parse_lib))
+
+(test
+ (name test_throughput)
+ (modules test_throughput)
+ (libraries latex_parse_lib unix))

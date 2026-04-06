@@ -41,15 +41,18 @@ if [ ${#SHARD_FILES[@]} -eq 0 ]; then
   exit 0
 fi
 
-# Compile each file
+# Compile each file using opam exec (for k8s/container environments)
+# In CI, prefer `dune build proofs` for dependency management.
+# This script is for k8s proof-farm where each pod compiles its shard.
+COQC="${COQC:-opam exec -- coqc}"
 FAILURES=0
 for f in "${SHARD_FILES[@]}"; do
   echo "[proof-shard] Compiling: $f"
   START_TIME=$(date +%s%N)
-  if coqc -R proofs LaTeXPerfectionist \
-          -R proofs/generated LaTeXPerfectionist.Generated \
-          -Q core/interfaces LaTeXPerfectionist.Core \
-          "$f" 2>&1; then
+  if $COQC -R proofs LaTeXPerfectionist \
+           -R proofs/generated LaTeXPerfectionist.Generated \
+           -Q core/interfaces LaTeXPerfectionist.Core \
+           "$f" 2>&1; then
     END_TIME=$(date +%s%N)
     ELAPSED_MS=$(( (END_TIME - START_TIME) / 1000000 ))
     echo "[proof-shard]   OK (${ELAPSED_MS}ms)"

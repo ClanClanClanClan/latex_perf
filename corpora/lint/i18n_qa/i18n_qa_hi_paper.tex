@@ -1,0 +1,420 @@
+% i18n_qa_hi_paper.tex — Hindi statistics paper on Bayesian inference
+% Intentional errors: ZWJ misuse between conjuncts, mixing Hindi and
+%   Arabic numerals, Devanagari quotation marks issues
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[hindi]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{bm}
+\usepackage{tikz}
+\usepackage{fontspec}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{प्रमेय}[section]
+\newtheorem{lemma}[theorem]{लेम्मा}
+\newtheorem{proposition}[theorem]{प्रस्ताव}
+\newtheorem{corollary}[theorem]{उपप्रमेय}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{परिभाषा}
+\newtheorem{example}[theorem]{उदाहरण}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{टिप्पणी}
+
+\title{बायेसियन अनुमान के लिए मार्कोव श्रृंखला\\
+मोंटे कार्लो विधियों का तुलनात्मक अध्ययन}
+\author{%
+  प्रो॰ अमित शर्मा\thanks{सांख्यिकी विभाग, भारतीय सांख्यिकी संस्थान, कोलकाता।}
+  \and
+  डॉ॰ प्रिया गुप्ता\thanks{गणित विभाग, भारतीय प्रौद्योगिकी संस्थान, दिल्ली।}
+}
+\date{६ अप्रैल २०२६}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+इस शोधपत्र में हम बायेसियन अनुमान के लिए विभिन्न मार्कोव श्रृंखला
+मोंटे कार्लो (MCMC) विधियों का तुलनात्मक अध्ययन प्रस्तुत करते हैं।
+हम गिब्स सैम्पलर, मेट्रोपोलिस-हेस्टिंग्स एल्गोरिदम, और हैमिल्टोनियन
+मोंटे कार्लो (HMC) विधि की तुलना उच्च-आयामी पश्च वितरणों पर करते हैं।
+% INTENTIONAL ERROR: mixing Hindi numerals (१२) and Arabic numerals (50)
+हमारे प्रयोगात्मक परिणाम दर्शाते हैं कि HMC विधि १२ से 50 आयामों वाले
+प्रतिदर्श स्थानों में अभिसरण दर में ३-५ गुना सुधार प्रदान करती है।
+हम एक नया अनुकूली HMC एल्गोरिदम भी प्रस्तुत करते हैं जो स्वचालित रूप
+से पथ लंबाई और चरण आकार को समायोजित करता है। सैद्धांतिक विश्लेषण
+से पता चलता है कि प्रस्तावित विधि सभी लॉग-अवतल लक्ष्य वितरणों के लिए
+ज्यामितीय एर्गोडिकता प्राप्त करती है।
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{परिचय}
+\label{sec:intro}
+
+बायेसियन सांख्यिकी में पश्च वितरण का अनुमान एक केंद्रीय समस्या है।
+बायेस प्रमेय के अनुसार, पश्च वितरण इस प्रकार दिया जाता है:
+\begin{equation}
+\label{eq:bayes}
+p(\bm{\theta} \mid \mathbf{y}) = \frac{p(\mathbf{y} \mid \bm{\theta}) \, p(\bm{\theta})}{p(\mathbf{y})},
+\end{equation}
+जहाँ $\bm{\theta}$ पैरामीटर सदिश है, $\mathbf{y}$ प्रेक्षित आँकड़े हैं,
+$p(\mathbf{y} \mid \bm{\theta})$ प्रशंसनीयता फलन है, $p(\bm{\theta})$ पूर्व
+वितरण है, और $p(\mathbf{y}) = \int p(\mathbf{y} \mid \bm{\theta}) p(\bm{\theta}) \, d\bm{\theta}$
+सीमांत प्रशंसनीयता है।
+
+% INTENTIONAL ERROR: ZWJ (‍) misused between conjuncts — unnecessary ZWJ in सम्‍भव
+अधिकांश व्यावहारिक मामलों में, सीमांत प्रशंसनीयता का विश्लेषणात्मक
+मूल्यांकन सम्‍भव नहीं होता\footnote{केवल संयुग्मी पूर्व वितरण परिवारों
+के लिए बंद-रूप समाधान उपलब्ध हैं।}। इसलिए, MCMC विधियाँ पश्च
+वितरण से प्रतिदर्श उत्पन्न करने का मानक उपकरण बन गई हैं~\citep{gelman2013}.
+
+\subsection{मार्कोव श्रृंखला मोंटे कार्लो}
+
+MCMC विधियाँ एक मार्कोव श्रृंखला $\{\bm{\theta}^{(t)}\}_{t=0}^{T}$
+का निर्माण करती हैं जिसका स्थिर वितरण लक्ष्य पश्च वितरण
+$p(\bm{\theta} \mid \mathbf{y})$ है।
+
+\begin{definition}
+\label{def:ergodic}
+एक मार्कोव श्रृंखला ज्यामितीय रूप से एर्गोडिक है यदि कोई
+$\rho \in (0,1)$ और $C > 0$ अस्तित्व में हैं जैसे कि
+\begin{equation}
+\label{eq:ergodic}
+\|P^t(\bm{\theta}, \cdot) - \pi(\cdot)\|_{\mathrm{TV}} \leq C \, \rho^t,
+\end{equation}
+जहाँ $P^t$ संक्रमण नाभिक की $t$-वीं शक्ति है और $\pi$ स्थिर
+वितरण है।
+\end{definition}
+
+% INTENTIONAL ERROR: mixing Arabic numerals (1953) with Hindi text
+मेट्रोपोलिस एल्गोरिदम सर्वप्रथम 1953 में प्रस्तावित किया गया
+था~\citep{metropolis1953} और बाद में हेस्टिंग्स (1970) द्वारा
+सामान्यीकृत किया गया~\citep{hastings1970}।
+
+\subsection{शोधपत्र की संरचना}
+
+% INTENTIONAL ERROR: Devanagari quotation marks — using English "..." instead of proper marks
+इस शोधपत्र की संरचना निम्न प्रकार है: खंड~\ref{sec:methods} में
+हम "मानक MCMC विधियों" का वर्णन करते हैं, खंड~\ref{sec:hmc}
+में हम HMC विधि और हमारे अनुकूली एल्गोरिदम का विवरण देते हैं,
+खंड~\ref{sec:theory} में सैद्धांतिक गुणधर्म प्रस्तुत करते हैं,
+और खंड~\ref{sec:experiments} में प्रयोगात्मक परिणाम दिखाते हैं।
+
+%% ---------------------------------------------------------------
+\section{मानक MCMC विधियाँ}
+\label{sec:methods}
+
+\subsection{मेट्रोपोलिस-हेस्टिंग्स एल्गोरिदम}
+
+मेट्रोपोलिस-हेस्टिंग्स (MH) एल्गोरिदम प्रत्येक चरण में एक
+प्रस्ताव $\bm{\theta}^*$ उत्पन्न करता है और इसे स्वीकृति
+प्रायिकता के साथ स्वीकार या अस्वीकार करता है:
+\begin{equation}
+\label{eq:mh_accept}
+\alpha(\bm{\theta}^{(t)}, \bm{\theta}^*) = \min\!\left(1, \frac{p(\bm{\theta}^* \mid \mathbf{y}) \, q(\bm{\theta}^{(t)} \mid \bm{\theta}^*)}{p(\bm{\theta}^{(t)} \mid \mathbf{y}) \, q(\bm{\theta}^* \mid \bm{\theta}^{(t)})}\right),
+\end{equation}
+जहाँ $q(\cdot \mid \cdot)$ प्रस्ताव वितरण है।
+
+\begin{proposition}
+\label{prop:mh_balance}
+MH एल्गोरिदम विस्तृत संतुलन शर्त को संतुष्ट करता है:
+\[
+\pi(\bm{\theta}) \, P(\bm{\theta}, \bm{\theta}') = \pi(\bm{\theta}') \, P(\bm{\theta}', \bm{\theta}),
+\]
+जहाँ $\pi = p(\cdot \mid \mathbf{y})$ लक्ष्य वितरण है।
+\end{proposition}
+
+\subsection{गिब्स सैम्पलर}
+
+गिब्स सैम्पलर MH का एक विशेष मामला है जहाँ प्रस्ताव
+सशर्त वितरणों से लिया जाता है। $d$-आयामी पैरामीटर
+$\bm{\theta} = (\theta_1, \ldots, \theta_d)$ के लिए:
+
+% INTENTIONAL ERROR: mixing Hindi numerals ३ and Arabic numerals 1
+चरण ३.1: प्रत्येक $i = 1, \ldots, d$ के लिए:
+\begin{equation}
+\label{eq:gibbs}
+\theta_i^{(t+1)} \sim p(\theta_i \mid \theta_1^{(t+1)}, \ldots, \theta_{i-1}^{(t+1)}, \theta_{i+1}^{(t)}, \ldots, \theta_d^{(t)}, \mathbf{y}).
+\end{equation}
+
+\begin{remark}
+गिब्स सैम्पलर को सभी सशर्त वितरणों का ज्ञान आवश्यक है,
+जो व्यवहार में हमेशा उपलब्ध नहीं होता\footnote{%
+संयुग्मी मॉडलों में सशर्त वितरण ज्ञात रूपों में आते हैं,
+जैसे सामान्य-सामान्य या बीटा-द्विपद।}।
+\end{remark}
+
+%% ---------------------------------------------------------------
+\section{हैमिल्टोनियन मोंटे कार्लो}
+\label{sec:hmc}
+
+\subsection{भौतिकी प्रेरणा}
+
+HMC विधि हैमिल्टोनियन यांत्रिकी से प्रेरित है। सहायक
+संवेग चर $\mathbf{p}$ प्रवर्तित करते हुए, हैमिल्टोनियन
+फलन परिभाषित करें:
+\begin{equation}
+\label{eq:hamiltonian}
+\mathcal{H}(\bm{\theta}, \mathbf{p}) = -\log p(\bm{\theta} \mid \mathbf{y}) + \frac{1}{2} \mathbf{p}^\top M^{-1} \mathbf{p},
+\end{equation}
+जहाँ $M$ द्रव्यमान आव्यूह है। हैमिल्टन समीकरण हैं:
+\begin{align}
+\label{eq:hamilton_eqs}
+\frac{d\bm{\theta}}{dt} &= M^{-1} \mathbf{p}, \\
+\frac{d\mathbf{p}}{dt} &= \nabla_{\bm{\theta}} \log p(\bm{\theta} \mid \mathbf{y}).
+\end{align}
+
+\subsection{लीपफ्रॉग समाकलक}
+
+हैमिल्टन समीकरणों का संख्यात्मक समाकलन लीपफ्रॉग विधि
+से किया जाता है। चरण आकार $\varepsilon$ और $L$ चरणों के लिए:
+\begin{align}
+\mathbf{p}_{1/2} &= \mathbf{p}_0 + \frac{\varepsilon}{2} \nabla_{\bm{\theta}} \log p(\bm{\theta}_0 \mid \mathbf{y}), \label{eq:leapfrog1} \\
+\bm{\theta}_1 &= \bm{\theta}_0 + \varepsilon \, M^{-1} \mathbf{p}_{1/2}, \label{eq:leapfrog2} \\
+\mathbf{p}_1 &= \mathbf{p}_{1/2} + \frac{\varepsilon}{2} \nabla_{\bm{\theta}} \log p(\bm{\theta}_1 \mid \mathbf{y}). \label{eq:leapfrog3}
+\end{align}
+
+\subsection{अनुकूली HMC एल्गोरिदम}
+
+हम प्रस्ताव करते हैं कि चरण आकार $\varepsilon$ और पथ लंबाई $L$
+को स्वचालित रूप से समायोजित किया जाए।
+
+\begin{definition}
+\label{def:dual_averaging}
+% INTENTIONAL ERROR: ZWJ misuse — unnecessary ZWJ in प्राय‍ः
+दोहरी औसत अनुकूलन: प्राय‍ः $\varepsilon$ को इस प्रकार अद्यतन करें:
+\begin{equation}
+\label{eq:dual_avg}
+\log \varepsilon_{t+1} = \mu - \frac{\sqrt{t}}{s_0} \bar{H}_t,
+\end{equation}
+जहाँ $\bar{H}_t$ स्वीकृति प्रायिकता का चलायमान औसत है और
+$\mu = \log(10 \varepsilon_0)$ प्रारंभिक मान है।
+\end{definition}
+
+%% ---------------------------------------------------------------
+\section{सैद्धांतिक विश्लेषण}
+\label{sec:theory}
+
+\subsection{ज्यामितीय एर्गोडिकता}
+
+\begin{theorem}
+\label{thm:geometric}
+मान लीजिए $p(\bm{\theta} \mid \mathbf{y})$ एक लॉग-अवतल वितरण है
+जिसके लिए $-\nabla^2 \log p(\bm{\theta} \mid \mathbf{y}) \succeq m I_d$
+कुछ $m > 0$ के लिए। तब अनुकूली HMC एल्गोरिदम ज्यामितीय
+रूप से एर्गोडिक है दर $\rho$ के साथ जहाँ
+\begin{equation}
+\label{eq:rate}
+\rho \leq 1 - \frac{m}{m + M_{\max}},
+\end{equation}
+यहाँ $M_{\max}$ लक्ष्य वितरण की अधिकतम वक्रता है।
+\end{theorem}
+
+\begin{proof}
+% INTENTIONAL ERROR: mixing Hindi and Arabic — "चरण 2" should be "चरण २"
+हम ल्यापुनोव फलन $V(\bm{\theta}) = \|\bm{\theta} - \bm{\theta}^*\|^2$
+का उपयोग करते हैं, जहाँ $\bm{\theta}^*$ बहुलक (mode) है।
+चरण 2 में, लॉग-अवतलता से:
+\[
+\mathbb{E}[V(\bm{\theta}^{(t+1)}) \mid \bm{\theta}^{(t)}] \leq \left(1 - \frac{m}{m + M_{\max}}\right) V(\bm{\theta}^{(t)}) + b,
+\]
+कुछ $b > 0$ के लिए। यह दर्शाता है कि फोस्टर-ल्यापुनोव
+शर्त संतुष्ट है~\citep{meyn2009}, जो ज्यामितीय
+एर्गोडिकता सिद्ध करता है।
+\end{proof}
+
+\subsection{अभिसरण दर}
+
+\begin{corollary}
+\label{cor:convergence}
+% INTENTIONAL ERROR: mixing Hindi ५०,००० and Arabic 50,000 style
+$n$ प्रतिदर्शों के बाद, पश्च माध्य का अनुमान $\hat{\mu}_n$ संतुष्ट करता है:
+\begin{equation}
+\label{eq:convergence}
+\mathrm{Var}(\hat{\mu}_n) \leq \frac{C}{n} \cdot \frac{1 + \rho}{1 - \rho},
+\end{equation}
+जहाँ $C$ लक्ष्य वितरण के प्रसरण पर निर्भर करता है और
+$\rho$ प्रमेय~\ref{thm:geometric} में दी गई दर है। 50,000
+प्रतिदर्शों के लिए, यह व्यवहार में पर्याप्त सटीकता प्रदान करता है।
+\end{corollary}
+
+%% ---------------------------------------------------------------
+\section{प्रयोगात्मक परिणाम}
+\label{sec:experiments}
+
+\subsection{प्रयोगात्मक व्यवस्था}
+
+सभी प्रयोग Python 3.12 में NumPy और JAX पुस्तकालयों का
+उपयोग करके NVIDIA A100 GPU पर चलाए गए।
+
+\begin{table}[ht]
+\centering
+\caption{विभिन्न MCMC विधियों की तुलना: प्रभावी प्रतिदर्श आकार प्रति सेकंड}
+\label{tab:comparison}
+\begin{tabular}{lcccc}
+\toprule
+विधि & $d = 10$ & $d = 20$ & $d = 50$ & $d = 100$ \\
+\midrule
+MH (यादृच्छिक चाल) & 142 & 38 & 5.2 & 0.8 \\
+गिब्स सैम्पलर & 285 & 112 & 24 & 6.1 \\
+HMC (स्थिर) & 830 & 410 & 185 & 72 \\
+अनुकूली HMC (प्रस्तावित) & 1240 & 680 & 295 & 128 \\
+NUTS & 1150 & 620 & 270 & 115 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+सारणी~\ref{tab:comparison} स्पष्ट रूप से दर्शाती है कि प्रस्तावित
+अनुकूली HMC विधि सभी आयामों में सर्वश्रेष्ठ प्रदर्शन करती है।
+
+\subsection{बहु-मोडल वितरण}
+
+बहु-मोडल पश्च वितरणों के लिए, हमने दो गाउसियन मिश्रण
+वितरण पर परीक्षण किया:
+\[
+p(\theta) = 0.4 \, \mathcal{N}(\mu_1, \Sigma_1) + 0.6 \, \mathcal{N}(\mu_2, \Sigma_2).
+\]
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{द्वि-मोडल वितरण के लिए MCMC ट्रेस प्लॉट}\\[8pt]
+\begin{tabular}{cc}
+चरण & $\theta_1$ मान (MH / HMC / अनुकूली HMC) \\
+\hline
+0--1000 & मोड 1 में फँसा / दोनों मोड / दोनों मोड \\
+1000--5000 & धीमा मिश्रण / अच्छा मिश्रण / तीव्र मिश्रण \\
+5000--10000 & अपर्याप्त / पर्याप्त / उत्कृष्ट \\
+\end{tabular}\\[6pt]
+\emph{अनुकूली HMC मोडों के बीच सबसे तेज़ मिश्रण दिखाता है।}
+}}
+\caption{द्वि-मोडल गाउसियन मिश्रण वितरण के लिए तीन MCMC विधियों
+के ट्रेस प्लॉट। अनुकूली HMC (दाएँ) सर्वश्रेष्ठ मिश्रण दर्शाता है।}
+\label{fig:trace}
+\end{figure}
+
+\subsection{वास्तविक आँकड़ों पर अनुप्रयोग}
+
+% INTENTIONAL ERROR: using English quotes instead of proper Devanagari
+हमने प्रस्तावित विधि को "बोस्टन आवास मूल्य" डेटासेट पर
+बायेसियन रैखिक प्रतिगमन के लिए लागू किया। मॉडल है:
+\begin{equation}
+\label{eq:regression}
+y_i = \mathbf{x}_i^\top \bm{\beta} + \sigma \epsilon_i, \quad \epsilon_i \sim \mathcal{N}(0, 1),
+\end{equation}
+% INTENTIONAL ERROR: mixing Hindi numerals and Arabic — "१३ विशेषताएँ" then "506 observations"
+जहाँ $\mathbf{x}_i \in \mathbb{R}^{13}$ (१३ विशेषताएँ) और 506 प्रेक्षण हैं।
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{बायेसियन प्रतिगमन: पश्च वितरण}\\[8pt]
+\begin{tabular}{ccc}
+पैरामीटर & पश्च माध्य & 95\% विश्वसनीय अंतराल \\
+\hline
+$\beta_1$ (CRIM) & $-0.108$ & $[-0.175, -0.041]$ \\
+$\beta_2$ (ZN) & $0.046$ & $[0.012, 0.081]$ \\
+$\beta_3$ (INDUS) & $0.021$ & $[-0.063, 0.105]$ \\
+$\sigma$ & $4.72$ & $[4.38, 5.09]$ \\
+\end{tabular}\\[6pt]
+\emph{प्रस्तावित विधि से प्राप्त पश्च सारांश।}
+}}
+\caption{बोस्टन आवास डेटासेट पर बायेसियन रैखिक प्रतिगमन के लिए
+पश्च वितरण सारांश। प्रस्तावित अनुकूली HMC से ५,००० प्रतिदर्श।}
+\label{fig:posterior}
+\end{figure}
+
+%% ---------------------------------------------------------------
+\section{चर्चा}
+\label{sec:discussion}
+
+\subsection{अन्य विधियों से तुलना}
+
+NUTS (No-U-Turn Sampler)~\citep{hoffman2014} एक लोकप्रिय
+अनुकूली HMC संस्करण है। हमारी विधि NUTS से भिन्न है क्योंकि
+हम दोहरी औसत का उपयोग करते हैं जबकि NUTS पथ लंबाई को
+U-मोड़ मानदंड से निर्धारित करता है\footnote{%
+NUTS Stan सॉफ़्टवेयर में डिफ़ॉल्ट सैम्पलर है।}।
+
+\subsection{सीमाएँ}
+
+प्रस्तावित विधि की मुख्य सीमा यह है कि इसे लक्ष्य वितरण
+के प्रवणता (gradient) की आवश्यकता होती है। असतत या
+खंडश: रैखिक वितरणों के लिए, प्रवणता-मुक्त विधियाँ
+अधिक उपयुक्त हो सकती हैं।
+
+%% ---------------------------------------------------------------
+\section{निष्कर्ष}
+\label{sec:conclusion}
+
+इस शोधपत्र में हमने बायेसियन अनुमान के लिए एक नया अनुकूली
+HMC एल्गोरिदम प्रस्तुत किया। हमने सिद्ध किया कि यह
+एल्गोरिदम लॉग-अवतल लक्ष्य वितरणों के लिए ज्यामितीय
+रूप से एर्गोडिक है (प्रमेय~\ref{thm:geometric})।
+प्रयोगात्मक परिणाम दर्शाते हैं कि प्रस्तावित विधि मानक
+MH और गिब्स सैम्पलर से ३--५ गुना तेज़ अभिसरण प्राप्त
+करती है, और NUTS से भी बेहतर प्रदर्शन करती है
+(सारणी~\ref{tab:comparison})।
+
+भविष्य के कार्य में हम इस विधि को अन्य MCMC ढाँचों
+जैसे स्टोकैस्टिक प्रवणता MCMC और विभाजकीय MCMC
+में विस्तारित करने की योजना बनाते हैं।
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[Gelman et al.(2013)]{gelman2013}
+Gelman, A., Carlin, J.\,B., Stern, H.\,S., Dunson, D.\,B.,
+Vehtari, A. and Rubin, D.\,B. (2013).
+\emph{Bayesian Data Analysis}, 3rd ed.
+Chapman \& Hall/CRC.
+
+\bibitem[Hastings(1970)]{hastings1970}
+Hastings, W.\,K. (1970).
+Monte Carlo sampling methods using Markov chains and their applications.
+\emph{Biometrika}, 57(1), 97--109.
+
+\bibitem[Hoffman and Gelman(2014)]{hoffman2014}
+Hoffman, M.\,D. and Gelman, A. (2014).
+The No-U-Turn Sampler: Adaptively setting path lengths in Hamiltonian Monte Carlo.
+\emph{Journal of Machine Learning Research}, 15, 1593--1623.
+
+\bibitem[Metropolis et al.(1953)]{metropolis1953}
+Metropolis, N., Rosenbluth, A.\,W., Rosenbluth, M.\,N.,
+Teller, A.\,H. and Teller, E. (1953).
+Equation of state calculations by fast computing machines.
+\emph{The Journal of Chemical Physics}, 21(6), 1087--1092.
+
+\bibitem[Meyn and Tweedie(2009)]{meyn2009}
+Meyn, S.\,P. and Tweedie, R.\,L. (2009).
+\emph{Markov Chains and Stochastic Stability}, 2nd ed.
+Cambridge University Press.
+
+\bibitem[Neal(2011)]{neal2011}
+Neal, R.\,M. (2011).
+MCMC using Hamiltonian dynamics.
+In \emph{Handbook of Markov Chain Monte Carlo}, Chapman \& Hall/CRC.
+
+\end{thebibliography}
+
+\end{document}

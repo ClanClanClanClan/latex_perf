@@ -1,0 +1,438 @@
+% i18n_qa_mixed_ja_zh_paper.tex
+% Japanese paper with Chinese citations
+% Expected detect_language result: "ja" (katakana presence should dominate)
+% Deliberate errors: half-width katakana (ｶﾃｺﾞﾘｰ), mixing en/em dashes
+\documentclass[12pt,a4paper]{article}
+\usepackage{xeCJK}
+\setCJKmainfont{IPAMincho}
+\setCJKsansfont{IPAGothic}
+\setCJKmonofont{IPAGothic}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{enumitem}
+\usepackage{float}
+
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{補題}
+\newtheorem{proposition}[theorem]{命題}
+\newtheorem{corollary}[theorem]{系}
+\theoremstyle{definition}
+\newtheorem{definition}{定義}[section]
+\newtheorem{example}{例}[section]
+\newtheorem{remark}{注意}[section]
+
+\title{高次圏論におけるホモトピー型理論の応用\\
+  {\large ——無限カテゴリーの代数的構造について——}}
+\author{田中太郎\textsuperscript{1}\quad 鈴木花子\textsuperscript{2}\quad
+  山田一郎\textsuperscript{1}\\[6pt]
+  \textsuperscript{1}東京大学大学院数理科学研究科\\
+  \textsuperscript{2}京都大学数理解析研究所}
+\date{2026年2月}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+本稿では、ホモトピー型理論（Homotopy Type Theory, HoTT）の枠組みを用いて
+高次圏論（higher category theory）の諸概念を再定式化し、無限カテゴリー
+（$\infty$-category）の代数的構造に関する新たな知見を提示する。特に、
+ルリーの$(\infty,1)$-圏の理論\cite{lurie2009htt}を型理論的な言語で
+再構成し、ユニバレンス公理（Univalence Axiom）がもたらす同値関係の
+自然な取り扱いが高次圏の構成にどのような利点をもたらすかを明らかにする。
+主要な成果として、(1)~HoTT内での$(\infty,1)$-トポスの特徴付け定理、
+(2)~型理論的ヤンーバクスター方程式の定式化、(3)~安定ホモトピー圏の
+構成的証明の三つを得た。これらの結果は、数学の基礎論と具体的な代数的
+応用の橋渡しとなるものである。
+
+\medskip
+\noindent\textbf{キーワード：}ホモトピー型理論、高次圏論、
+無限カテゴリー、ユニバレンス公理、トポス理論
+\end{abstract}
+
+
+\section{序論}
+
+% ERROR: half-width katakana used (should be full-width)
+現代数学において、ｶﾃｺﾞﾘｰ理論は諸分野を統一的に記述するための
+基本的な言語として広く認識されている。1940年代にアイレンベルグと
+マックレーンによって創始されたカテゴリー理論は、その後半世紀以上に
+わたり驚くべき発展を遂げてきた。
+
+特に21世紀に入り、ルリー\cite{lurie2009htt}やジョワイヤル
+\cite{joyal2008theory}らの先駆的な仕事により、高次圏論は急速に
+成熟した分野へと成長した。$(\infty,1)$-圏の理論は、通常のカテゴリー論を
+「ホモトピー的に厚く」したものと直観的に理解でき、射の空間が単なる集合
+ではなくホモトピー型（空間）であるような圏を考える。
+
+\begin{definition}[$(\infty,1)$-圏]
+$(\infty,1)$-圏 $\mathcal{C}$ とは、以下を満たす高次圏である：
+\begin{enumerate}[label=(\roman*)]
+  \item 任意の対象 $x, y \in \mathcal{C}$ に対して、射の空間
+    $\mathrm{Map}_\mathcal{C}(x,y)$ はカン複体である；
+  \item $k \geq 2$ に対して、すべての $k$-射は同値射である。
+\end{enumerate}
+\end{definition}
+
+一方、ヴォエヴォドスキーらにより提唱されたホモトピー型理論（HoTT）
+\cite{hottbook}は、型理論の枠組みの中にホモトピー的構造を自然に
+組み込むことに成功した革新的な基礎理論である。HoTTの中心的な公理
+であるユニバレンス公理は、同値な型を等しい型と同一視することを
+可能にする。
+
+% ERROR: half-width katakana again
+本稿の目的は、ｱﾌﾟﾘｹｰｼｮﾝ（応用）として、HoTTの言語を用いて高次圏論
+の基本概念を再定式化し、この再定式化がもたらす理論的利点を示すことである。
+
+
+\section{予備知識}
+
+\subsection{ホモトピー型理論の基礎}
+
+HoTTにおける基本的な概念を復習する。型 $A : \mathcal{U}$ と
+その項 $a : A$ から出発し、依存型（dependent type）
+$B : A \to \mathcal{U}$ を用いて型の族を構成する。
+
+\begin{definition}[恒等型]
+型 $A$ と項 $a, b : A$ に対して、恒等型 $a =_A b$ は帰納的に定義される。
+その構成子は反射性 $\mathrm{refl}_a : a =_A a$ である。
+\end{definition}
+
+\begin{definition}[ユニバレンス公理]
+宇宙 $\mathcal{U}$ の型 $A, B : \mathcal{U}$ に対して、正準写像
+\begin{equation}\label{eq:univalence}
+  \mathrm{idtoeqv} : (A =_\mathcal{U} B) \to (A \simeq B)
+\end{equation}
+が同値であることをユニバレンス公理（UA）と呼ぶ。ここで $A \simeq B$ は
+$A$ と $B$ の間の型同値の型を表す。
+\end{definition}
+
+ユニバレンスの重要な帰結として、同値な型に対する命題は自動的に
+輸送（transport）される：
+
+\begin{lemma}[輸送補題]
+$P : \mathcal{U} \to \mathcal{U}$ を型族、$e : A \simeq B$ を同値
+とすると、$\mathrm{ua}(e) : A =_\mathcal{U} B$ を用いて輸送写像
+\begin{equation}
+  \mathrm{transport}^P(\mathrm{ua}(e)) : P(A) \to P(B)
+\end{equation}
+が得られる。
+\end{lemma}
+
+\subsection{準圏とカン複体}
+
+% ERROR: half-width katakana
+ｼﾝﾌﾟﾘｼｬﾙ集合（simplicial set）の理論を復習する。
+
+\begin{definition}[準圏]
+単体的集合 $S : \Delta^{\mathrm{op}} \to \mathrm{Set}$ が準圏
+（quasi-category）であるとは、すべての $0 < i < n$ に対して
+内角除去条件（inner horn filling condition）を満たすことをいう：
+\begin{equation}
+  \Lambda^n_i \hookrightarrow S \implies \Delta^n \to S.
+\end{equation}
+\end{definition}
+
+準圏は$(\infty,1)$-圏のモデルの一つであり、ジョワイヤル
+\cite{joyal2008theory}およびルリー\cite{lurie2009htt}によって
+詳しく研究されている。
+
+
+\section{HoTTにおける$(\infty,1)$-圏の再定式化}
+
+\subsection{型理論的圏}
+
+\begin{definition}[型理論的前圏]
+型理論的前圏（precategory）$\mathcal{C}$ は以下のデータからなる：
+\begin{enumerate}[label=(\arabic*)]
+  \item 対象の型 $\mathrm{Ob}(\mathcal{C}) : \mathcal{U}$
+  \item 射の族 $\mathrm{Hom}_\mathcal{C} : \mathrm{Ob} \times \mathrm{Ob} \to \mathcal{U}$
+  \item 合成 $\circ : \mathrm{Hom}(b,c) \times \mathrm{Hom}(a,b) \to \mathrm{Hom}(a,c)$
+  \item 恒等射 $\mathrm{id}_a : \mathrm{Hom}(a,a)$
+  \item 結合法則と単位法則の証明項
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}[ユニバレンスと圏同値]\label{thm:univalent-cat}
+前圏 $\mathcal{C}$ が「ユニバレントである」（すなわち、同型な対象が
+等しい対象と一致する）ことは、$\mathcal{C}$ の対象の型が集合（set、
+すなわち0-切断型）であることと同値である。これがAhrens-Kapulkin-Shulman
+の定理\cite{aks2015univalent}である。
+\end{theorem}
+
+\subsection{$(\infty,1)$-トポスの特徴付け}
+
+\begin{theorem}[HoTTにおける$(\infty,1)$-トポスの特徴付け]\label{thm:topos}
+型 $A : \mathcal{U}$ 上の族の圏 $\mathrm{Fam}(A)$ が
+$(\infty,1)$-トポスの公理を満たすことは、以下の条件と同値である：
+\begin{enumerate}[label=(\alph*)]
+  \item 宇宙 $\mathcal{U}$ がオブジェクト分類子を持つ；
+  \item 依存和と依存積が左完全列を保存する；
+  \item 高次帰納的型（HIT）の構成が許容される。
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[証明の概略]
+(a)から(b)への方向はルリーの直接的像定理の型理論的翻訳として得られる。
+(b)から(c)への方向は、リジクの構成\cite{rijke2017join}を用いて
+高次帰納的型を依存和の余等化子として実現することによる。(c)から(a)は
+ユニバレンス公理から従う。
+
+詳細は付録Aに記す。
+\end{proof}
+
+
+\section{ヤン--バクスター方程式の型理論的定式化}
+
+% ERROR: mixing en-dash and em-dash inconsistently
+\subsection{ブレイド群とヤン-バクスター方程式}
+
+量子群の理論において中心的な役割を果たすヤン—バクスター方程式を
+型理論的に定式化する。
+
+\begin{definition}[型理論的ヤン--バクスター方程式]
+型 $V : \mathcal{U}$ と写像 $R : V \times V \to V \times V$ が
+型理論的ヤン--バクスター方程式を満たすとは、以下の等式が恒等型として
+成立することをいう：
+\begin{equation}\label{eq:ybe}
+  (R \times \mathrm{id}_V) \circ (\mathrm{id}_V \times R) \circ
+  (R \times \mathrm{id}_V) =_{V^3 \to V^3}
+  (\mathrm{id}_V \times R) \circ (R \times \mathrm{id}_V) \circ
+  (\mathrm{id}_V \times R).
+\end{equation}
+\end{definition}
+
+\begin{proposition}
+ユニバレンス公理の下で、型同値 $e : V \simeq W$ が与えられたとき、
+$V$ 上のヤン--バクスター解 $R_V$ から $W$ 上の解 $R_W$ が自動的に
+輸送される：
+\begin{equation}
+  R_W = (e \times e) \circ R_V \circ (e^{-1} \times e^{-1}).
+\end{equation}
+\end{proposition}
+
+\subsection{量子群との関連}
+
+ドリンフェルドの量子群 $U_q(\mathfrak{g})$ に付随する普遍 $R$-行列は、
+表現の圏においてヤン--バクスター方程式の解を与える。型理論的には、
+これは以下のように表現される。
+
+\begin{table}[H]
+\centering
+\caption{古典的定式化と型理論的定式化の対応}\label{tab:correspondence}
+\begin{tabular}{@{}ll@{}}
+\toprule
+古典的概念 & 型理論的対応物 \\
+\midrule
+ベクトル空間 $V$ & 型 $V : \mathcal{U}$ \\
+線形写像 $f : V \to W$ & 関数 $f : V \to W$ \\
+テンソル積 $V \otimes W$ & 積型 $V \times W$ \\
+同型 $V \cong W$ & 型同値 $V \simeq W$ \\
+等式 $f = g$ & 恒等型 $f =_{V \to W} g$ \\
+ブレイド群 $B_n$ & ループ空間 $\Omega^n(\mathcal{U})$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{安定ホモトピー圏の構成}
+
+\subsection{スペクトラムの型理論的定義}
+
+\begin{definition}[型理論的スペクトラム]
+スペクトラム $E$ は以下の列からなる：
+\begin{equation}
+  E_0, E_1, E_2, \ldots \in \mathcal{U}_*
+\end{equation}
+ただし各 $E_n$ は付点型（pointed type）であり、構造写像
+\begin{equation}
+  \sigma_n : E_n \simeq \Omega E_{n+1}
+\end{equation}
+が型同値として与えられる。ここで $\Omega E_{n+1} \equiv
+(\mathrm{pt} =_{E_{n+1}} \mathrm{pt})$ はループ空間である。
+\end{definition}
+
+\begin{theorem}[安定ホモトピー圏の構成的証明]\label{thm:stable}
+HoTTにおいて、スペクトラムの圏 $\mathrm{Sp}$ は安定
+$(\infty,1)$-圏の構造を持つ。具体的には：
+\begin{enumerate}[label=(\roman*)]
+  \item $\mathrm{Sp}$ はゼロ対象を持つ（ゼロスペクトラム）；
+  \item $\mathrm{Sp}$ はすべてのファイバー列とコファイバー列を持つ；
+  \item $\mathrm{Sp}$ においてファイバー列とコファイバー列は一致する。
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[証明の概略]
+(i) は自明型 $\mathbf{1}$ の列として定義される。(ii) は依存型の
+パスオーバー（path-over）を用いたファイバーの構成と、余帰納的型
+（coinductive type）を用いたコファイバーの構成による。(iii) は
+ループ空間と懸垂の随伴性から従う。厳密な証明は付録Bに記す。
+\end{proof}
+
+\subsection{一般コホモロジー理論}
+
+スペクトラム $E$ から一般コホモロジー理論が得られる：
+\begin{equation}\label{eq:cohomology}
+  E^n(X) \equiv \|X \to E_n\|_0 \equiv \pi_0(\mathrm{Map}(X, E_n)),
+\end{equation}
+ここで $\|\cdot\|_0$ は集合への切断（set truncation）を表す。
+
+\begin{corollary}
+$E$ がアイレンベルグ--マックレーンスペクトラム $HA$（$A$ は
+アーベル群）のとき、$E^n(X) \cong H^n(X; A)$ は通常の特異
+コホモロジーに一致する。
+\end{corollary}
+
+
+\section{計算例}
+
+\begin{example}[球面のホモトピー群]
+$n$-球面 $S^n$ はHoTTにおいて高次帰納的型として定義される。
+$\pi_3(S^2) \cong \mathbb{Z}$ の型理論的証明は、ホップファイブレーション
+の構成に帰着される：
+\begin{equation}
+  S^1 \hookrightarrow S^3 \xrightarrow{\eta} S^2.
+\end{equation}
+この証明はLicataとBrunerie\cite{licata2013pi3s2}によりAgdaで形式化されている。
+\end{example}
+
+\begin{table}[H]
+\centering
+\caption{HoTTにおいて形式化された主要な結果}\label{tab:formalized}
+\begin{tabular}{@{}llr@{}}
+\toprule
+結果 & 証明支援系 & 証明行数 \\
+\midrule
+$\pi_1(S^1) \cong \mathbb{Z}$ & Agda & 約500行 \\
+$\pi_3(S^2) \cong \mathbb{Z}$ & Agda & 約15000行 \\
+ブラウアー不動点定理 & Coq (HoTT) & 約3000行 \\
+セール分光列 & Lean 4 & 約8000行 \\
+定理\ref{thm:topos} (本稿) & Agda & 約2400行 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{結論}
+
+本稿では、ホモトピー型理論の枠組みを用いて高次圏論の諸概念を再定式化し、
+三つの主要な結果を得た。第一に、HoTT内での$(\infty,1)$-トポスの特徴付け
+定理（定理\ref{thm:topos}）を証明した。第二に、ヤン--バクスター方程式の
+型理論的定式化を与え、ユニバレンスによる解の輸送を示した。第三に、安定
+ホモトピー圏の構成的証明（定理\ref{thm:stable}）を得た。
+
+% ERROR: half-width katakana
+今後の課題として、ﾎﾓﾄﾋﾟｰ型理論の計算的側面の研究、特にキュビカル型理論
+（cubical type theory）に基づく効率的な実装の開発が挙げられる。また、
+本稿の成果を凝縮体数学（condensed mathematics）\cite{scholze2019condensed}
+や導来代数幾何学への応用に拡張することも重要な方向性である。
+
+\subsection{今後の研究計画}
+
+具体的な研究計画として、以下の三つの方向性を考えている。
+
+% ERROR: half-width katakana
+第一に、ｷｭｰﾋﾞｶﾙ型理論（cubical type theory）に基づく計算的実装の開発
+が挙げられる。キュビカル型理論はコーエンら\cite{cohen2018cubical}に
+よって導入されたHoTTの計算的変種であり、ユニバレンス公理が計算的内容を
+持つという重要な性質を有する。
+
+第二に、本稿の$(\infty,1)$-トポスの特徴付け定理を$(\infty,n)$-圏へ
+一般化することが考えられる。$n > 1$ の場合には、射の可逆性に関する条件を
+緩和する必要があり、技術的な困難が伴う。
+
+第三に、量子情報理論への応用が期待される。量子エンタングルメントの
+圏論的記述において、テンソル圏のコヒーレンス条件はヤン--バクスター
+方程式と密接に関連している。本稿の型理論的定式化は、量子計算の
+形式的検証への応用可能性を示唆するものである。
+
+\begin{table}[H]
+\centering
+\caption{研究計画のタイムライン}\label{tab:timeline}
+\begin{tabular}{@{}llr@{}}
+\toprule
+段階 & 内容 & 予定期間 \\
+\midrule
+第1段階 & キュビカル型理論の実装 & 6ヶ月 \\
+第2段階 & $(\infty,n)$-圏への一般化 & 12ヶ月 \\
+第3段階 & 量子情報理論への応用 & 18ヶ月 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{thebibliography}{99}
+
+\bibitem{lurie2009htt}
+J.~Lurie.
+\newblock \textit{Higher Topos Theory}.
+\newblock Princeton University Press, 2009.
+
+\bibitem{joyal2008theory}
+A.~Joyal.
+\newblock The theory of quasi-categories and its applications.
+\newblock \textit{Advanced Course on Simplicial Methods in Higher Categories},
+  CRM Barcelona, 2008.
+
+\bibitem{hottbook}
+The~Univalent Foundations Program.
+\newblock \textit{Homotopy Type Theory: Univalent Foundations of Mathematics}.
+\newblock Institute for Advanced Study, 2013.
+
+\bibitem{aks2015univalent}
+B.~Ahrens, K.~Kapulkin, and M.~Shulman.
+\newblock Univalent categories and the Rezk completion.
+\newblock \textit{Mathematical Structures in Computer Science},
+  25(5):1010--1039, 2015.
+
+\bibitem{rijke2017join}
+E.~Rijke.
+\newblock The join construction.
+\newblock \textit{arXiv preprint arXiv:1701.07538}, 2017.
+
+% Chinese citations
+\bibitem{zhang2018homotopy}
+张伟平（Zhang~Weiping）.
+\newblock ホモトピー理論の最近の発展（同伦理论的最新进展）.
+\newblock 《数学学报》（\textit{Acta Mathematica Sinica}），
+  61(3):345--378，2018.
+
+\bibitem{chen2020categorical}
+陈省身（Chen~Xingshen）基金研究報告.
+\newblock 高次范畴论与量子场论（高次圏論と量子場の理論）.
+\newblock 《中国科学：数学》（\textit{Science China: Mathematics}），
+  50(2):123--156，2020.
+
+\bibitem{wang2019infinity}
+王诗宬（Wang~Shicheng）.
+\newblock 无穷范畴的拓扑应用（無限圏の位相幾何学的応用）.
+\newblock 《北京大学学报（自然科学版）》
+  （\textit{Acta Scientiarum Naturalium Universitatis Pekinensis}），
+  55(4):601--624，2019.
+
+\bibitem{cohen2018cubical}
+C.~Cohen, T.~Coquand, S.~Huber, and A.~M\"ortberg.
+\newblock Cubical type theory: A constructive interpretation of the
+  univalence axiom.
+\newblock In \textit{Types for Proofs and Programs (TYPES 2015)},
+  LIPIcs vol.~69, pages 5:1--5:34, 2018.
+
+\bibitem{licata2013pi3s2}
+D.~R. Licata and G.~Brunerie.
+\newblock $\pi_n(S^n)$ in homotopy type theory.
+\newblock In \textit{Certified Programs and Proofs (CPP)},
+  pages 1--16, 2013.
+
+\bibitem{scholze2019condensed}
+P.~Scholze.
+\newblock \textit{Lectures on Condensed Mathematics}.
+\newblock Bonn, 2019.
+
+\end{thebibliography}
+
+\end{document}

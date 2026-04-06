@@ -1,0 +1,422 @@
+% i18n_qa_mixed_zh_en_paper.tex
+% Chinese paper with English abstract
+% Expected detect_language result: "zh" (CJK heuristic via xeCJK)
+% Deliberate errors: Western punctuation in Chinese text (commas, periods)
+\documentclass[12pt,a4paper]{article}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}
+\setCJKsansfont{SimHei}
+\setCJKmonofont{FangSong}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{enumitem}
+\usepackage{float}
+
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{proposition}[theorem]{命题}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{remark}{注}[section]
+
+\title{基于注意力机制的多模态特征融合方法研究\\
+  {\large 及其在医学图像分析中的应用}}
+\author{王建华\textsuperscript{1}\quad 李明辉\textsuperscript{2}\quad
+  张晓燕\textsuperscript{1}\\[6pt]
+  \textsuperscript{1}清华大学计算机科学与技术系\\
+  \textsuperscript{2}北京大学智能科学系}
+\date{2026年3月}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent\textbf{Abstract.}
+This paper proposes a novel multi-modal feature fusion framework based on
+cross-attention mechanisms for medical image analysis. Our approach, termed
+Cross-Modal Attention Fusion Network (CMAFN), effectively integrates
+information from CT scans, MRI images, and clinical text reports to improve
+diagnostic accuracy for pulmonary diseases. Unlike existing late-fusion
+strategies that simply concatenate features from different modalities,
+CMAFN learns modality-specific attention weights that dynamically adjust
+the contribution of each input source based on the diagnostic context.
+We evaluate our method on two large-scale datasets: the ChestX-ray14
+benchmark containing 112,120 frontal-view chest X-rays and a proprietary
+multi-modal dataset from Beijing Union Medical College Hospital comprising
+15,432 patient records with paired CT, MRI, and radiology reports. Our
+experimental results demonstrate that CMAFN achieves state-of-the-art
+performance with an AUC of 0.943 on ChestX-ray14 and 0.961 on the
+multi-modal dataset, outperforming single-modality baselines by 4.2\%
+and 6.8\% respectively. Ablation studies confirm the effectiveness of
+the cross-attention mechanism and the importance of incorporating textual
+clinical information alongside imaging data.
+
+\medskip
+\noindent\textbf{Keywords:} multi-modal learning, attention mechanism,
+medical image analysis, feature fusion, deep learning.
+\end{abstract}
+
+
+\section{引言}
+
+% ERROR: Western comma used instead of Chinese comma (，)
+医学图像分析是计算机视觉领域的一个重要研究方向,近年来深度学习技术的
+快速发展为该领域带来了革命性的变化。传统的医学诊断主要依赖于放射科医生
+对单一模态影像的视觉判读,这种方式不仅耗时耗力,而且容易受到医生主观
+经验的影响。
+
+% ERROR: Western period used instead of Chinese period (。)
+随着医疗信息化的推进,患者的诊疗数据日益丰富,包括CT扫描、MRI成像、
+X光片、超声图像以及临床文本报告等多种模态的信息.如何有效地融合这些
+多模态信息以提高诊断准确率,是当前医学人工智能研究的核心问题之一。
+
+在本文中，我们提出了一种基于交叉注意力机制的多模态特征融合网络
+（Cross-Modal Attention Fusion Network，简称CMAFN），该方法能够
+自适应地学习不同模态之间的关联关系，并根据诊断任务动态调整各模态的
+贡献权重。
+
+本文的主要贡献包括以下几个方面：
+\begin{enumerate}[label=(\arabic*)]
+  \item 提出了一种新颖的交叉注意力融合机制，能够捕捉不同模态特征之间
+    的细粒度交互关系；
+  \item 设计了一个端到端的多模态学习框架，支持影像和文本两类输入的
+    联合训练；
+  \item 在两个大规模数据集上验证了方法的有效性，取得了领先的诊断性能；
+  \item 通过消融实验和可视化分析，深入探讨了各组件对最终性能的贡献。
+\end{enumerate}
+
+
+\section{相关工作}
+
+\subsection{医学图像分析}
+
+% ERROR: Western comma in Chinese context
+深度卷积神经网络在医学图像分析中的应用始于2012年Krizhevsky等人
+\cite{krizhevsky2012imagenet}提出的AlexNet,此后ResNet
+\cite{he2016deep}、DenseNet \cite{huang2017densely}等经典网络结构被
+广泛应用于各类医学影像任务。在胸部X光片分析方面,Wang等人
+\cite{wang2017chestx}构建了大规模的ChestX-ray14数据集并提出了基线模型。
+
+Rajpurkar等人\cite{rajpurkar2017chexnet}提出的CheXNet模型在14种胸部
+疾病的检测任务上达到了放射科医生水平的性能。然而，这些方法大多仅利用
+单一模态的影像信息，忽略了临床文本报告中包含的丰富语义信息。
+
+\subsection{多模态学习}
+
+多模态学习旨在利用来自不同数据源的互补信息来提升模型性能。根据融合
+策略的不同，现有方法可分为三类：
+
+\begin{definition}[多模态融合策略]
+设 $\{M_1, M_2, \ldots, M_K\}$ 为 $K$ 种不同模态的特征表示，
+多模态融合函数 $\mathcal{F}$ 定义为：
+\begin{equation}\label{eq:fusion-def}
+  z = \mathcal{F}(M_1, M_2, \ldots, M_K; \theta_f),
+\end{equation}
+其中 $z$ 为融合后的表示，$\theta_f$ 为融合参数。
+\end{definition}
+
+% ERROR: Western period in Chinese sentence
+早期融合（Early Fusion）在输入层直接拼接各模态的原始特征.
+晚期融合（Late Fusion）分别对各模态进行独立编码后在决策层进行融合.
+中间融合（Intermediate Fusion）在网络的中间层进行特征交互。
+
+\subsection{注意力机制}
+
+注意力机制最初由Bahdanau等人\cite{bahdanau2015neural}在机器翻译任务中
+提出，后来Vaswani等人\cite{vaswani2017attention}提出的Transformer架构
+将自注意力机制推广到了更广泛的应用场景。在多模态学习中，交叉注意力
+（Cross-Attention）机制被用于建模不同模态之间的对应关系：
+\begin{equation}\label{eq:cross-attn}
+  \text{CrossAttn}(Q_i, K_j, V_j) =
+    \text{softmax}\!\left(\frac{Q_i K_j^\top}{\sqrt{d_k}}\right) V_j,
+\end{equation}
+其中 $Q_i$ 来自模态 $i$，$K_j$ 和 $V_j$ 来自模态 $j$，
+$d_k$ 为键向量的维度。
+
+
+\section{方法}
+
+\subsection{整体框架}
+
+CMAFN由三个主要模块组成：模态编码器（Modality Encoder）、交叉注意力
+融合模块（Cross-Attention Fusion Module）和分类头（Classification
+Head）。设输入包含影像 $I \in \mathbb{R}^{H \times W \times C}$ 和
+文本报告 $T = (t_1, t_2, \ldots, t_L)$，其中 $L$ 为文本长度。
+
+\begin{definition}[模态编码器]
+影像编码器 $E_v$ 和文本编码器 $E_t$ 分别将输入映射到统一的特征空间：
+\begin{align}
+  F_v &= E_v(I; \theta_v) \in \mathbb{R}^{N_v \times d}, \label{eq:vis-enc} \\
+  F_t &= E_t(T; \theta_t) \in \mathbb{R}^{N_t \times d}, \label{eq:txt-enc}
+\end{align}
+其中 $N_v$ 为影像特征的空间位置数，$N_t$ 为文本标记数，
+$d$ 为特征维度。
+\end{definition}
+
+\subsection{交叉注意力融合模块}
+
+融合模块的核心是双向交叉注意力层，其数学形式如下：
+\begin{align}
+  \hat{F}_v &= F_v + \text{CrossAttn}(F_v W_Q^v, F_t W_K^t, F_t W_V^t),
+    \label{eq:v2t-attn} \\
+  \hat{F}_t &= F_t + \text{CrossAttn}(F_t W_Q^t, F_v W_K^v, F_v W_V^v),
+    \label{eq:t2v-attn}
+\end{align}
+其中 $W_Q^v, W_K^t, W_V^t, W_Q^t, W_K^v, W_V^v \in \mathbb{R}^{d \times d_k}$
+为可学习的投影矩阵。
+
+\begin{lemma}[融合表示的信息保持性]
+设 $H(X)$ 表示随机变量 $X$ 的信息熵。在交叉注意力融合下：
+\begin{equation}
+  H(\hat{F}_v, \hat{F}_t) \geq \max\{H(F_v), H(F_t)\},
+\end{equation}
+即融合后的联合表示至少保留了各单模态表示的信息量。
+\end{lemma}
+
+\subsection{多尺度特征提取}
+
+为了捕捉不同尺度的病变特征，我们在影像编码器中引入了特征金字塔
+网络（FPN）：
+\begin{equation}\label{eq:fpn}
+  P_l = \text{Conv}_{1\times 1}(C_l) + \text{Upsample}(P_{l+1}),
+    \quad l = 3, 4, 5,
+\end{equation}
+其中 $C_l$ 为ResNet第 $l$ 层的特征图，$P_l$ 为对应的金字塔层特征。
+
+\subsection{损失函数}
+
+% ERROR: Western comma in Chinese text
+总损失函数由分类损失和对齐损失两部分组成,定义如下：
+\begin{equation}\label{eq:total-loss}
+  \mathcal{L} = \mathcal{L}_{\text{cls}} + \alpha \mathcal{L}_{\text{align}},
+\end{equation}
+其中分类损失采用加权二元交叉熵：
+\begin{equation}\label{eq:cls-loss}
+  \mathcal{L}_{\text{cls}} = -\sum_{c=1}^{C} \left[
+    w_c y_c \log(\hat{y}_c) + (1-y_c) \log(1-\hat{y}_c)
+  \right],
+\end{equation}
+对齐损失鼓励语义相似的跨模态特征在嵌入空间中靠近：
+\begin{equation}\label{eq:align-loss}
+  \mathcal{L}_{\text{align}} = \sum_{i,j} \max\left(0,
+    \|f_v^{(i)} - f_t^{(j)}\|_2 - m + s_{ij}\right),
+\end{equation}
+其中 $m$ 为间隔参数，$s_{ij}$ 表示影像区域 $i$ 和文本片段 $j$
+之间的语义相似度。
+
+
+\section{实验}
+
+\subsection{数据集}
+
+我们在两个数据集上进行实验验证：
+
+\begin{table}[H]
+\centering
+\caption{实验数据集统计信息}\label{tab:datasets}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+数据集 & 样本数 & 疾病类别 & 模态 & 来源 \\
+\midrule
+ChestX-ray14 & 112,120 & 14 & X光 & NIH \\
+BUMCH-MM & 15,432 & 8 & CT+MRI+文本 & 北京协和医院 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{实现细节}
+
+影像编码器采用在ImageNet上预训练的ResNet-50 \cite{he2016deep}作为
+骨干网络。文本编码器采用预训练的Chinese-BERT-wwm
+\cite{cui2020revisiting}。交叉注意力模块使用8头注意力，特征维度
+$d = 512$，键/值维度 $d_k = 64$。
+
+\begin{table}[H]
+\centering
+\caption{训练超参数设置}\label{tab:hyperparams}
+\begin{tabular}{@{}lr@{}}
+\toprule
+超参数 & 值 \\
+\midrule
+学习率 & $1 \times 10^{-4}$ \\
+批量大小 & 32 \\
+优化器 & AdamW \\
+权重衰减 & $1 \times 10^{-5}$ \\
+训练轮数 & 100 \\
+对齐损失权重 $\alpha$ & 0.1 \\
+间隔参数 $m$ & 0.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{主要结果}
+
+\begin{table}[H]
+\centering
+\caption{ChestX-ray14数据集上各方法的AUC比较}\label{tab:main-results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+方法 & 肺不张 & 心脏肥大 & 渗出 & 平均AUC \\
+\midrule
+ResNet-50 \cite{he2016deep}  & 0.816 & 0.904 & 0.884 & 0.901 \\
+DenseNet-121 \cite{huang2017densely} & 0.826 & 0.912 & 0.891 & 0.910 \\
+CheXNet \cite{rajpurkar2017chexnet} & 0.832 & 0.918 & 0.897 & 0.917 \\
+Late Fusion & 0.845 & 0.925 & 0.905 & 0.928 \\
+Bilinear Pooling & 0.851 & 0.929 & 0.911 & 0.933 \\
+\textbf{CMAFN (ours)} & \textbf{0.872} & \textbf{0.947} & \textbf{0.932} & \textbf{0.943} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{消融实验}
+
+% ERROR: Western period in Chinese sentence
+为了验证各模块的有效性,我们进行了详细的消融实验.具体结果如表
+\ref{tab:ablation}所示。
+
+\begin{table}[H]
+\centering
+\caption{消融实验结果（BUMCH-MM数据集）}\label{tab:ablation}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+配置 & AUC & Precision & Recall \\
+\midrule
+仅影像 & 0.894 & 0.856 & 0.831 \\
+仅文本 & 0.867 & 0.823 & 0.798 \\
+晚期融合 & 0.931 & 0.892 & 0.876 \\
+无交叉注意力 & 0.938 & 0.901 & 0.883 \\
+无FPN & 0.947 & 0.912 & 0.895 \\
+无对齐损失 & 0.953 & 0.918 & 0.902 \\
+\textbf{CMAFN完整模型} & \textbf{0.961} & \textbf{0.928} & \textbf{0.915} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{可视化分析}
+
+图\ref{fig:attention-vis}展示了交叉注意力权重的可视化结果。可以观察到，
+当文本报告中提到特定病变区域时，模型能够准确地将注意力集中到对应的
+影像区域。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[fill=gray!20] (0,0) rectangle (4,4);
+\node at (2,2) {CT影像};
+\draw[->,red,ultra thick] (4.2,3) -- (5.8,3.5);
+\draw[->,red,ultra thick] (4.2,1.5) -- (5.8,1);
+\draw[fill=blue!10] (6,0) rectangle (10,4);
+\node[text width=3.5cm,align=center] at (8,3.5) {右上肺叶};
+\node[text width=3.5cm,align=center] at (8,2.5) {磨玻璃影};
+\node[text width=3.5cm,align=center] at (8,1.5) {结节状病变};
+\node[text width=3.5cm,align=center] at (8,0.5) {考虑肺癌};
+\draw[red,ultra thick,dashed] (1,2.5) circle (0.8);
+\node[red,font=\small] at (1,1.2) {高注意力区域};
+\end{tikzpicture}
+\caption{交叉注意力可视化示例：影像区域与文本描述的对应关系}\label{fig:attention-vis}
+\end{figure}
+
+
+\section{讨论}
+
+% ERROR: Western comma mixed with Chinese text
+实验结果表明,CMAFN在两个数据集上均取得了优异的性能。与单模态方法
+相比,多模态融合带来了显著的性能提升,这证实了不同模态之间存在互补
+信息。
+
+\begin{remark}
+值得注意的是，交叉注意力机制不仅提高了分类性能，还提供了良好的
+可解释性。通过可视化注意力权重，临床医生可以直观地理解模型的
+诊断依据，这对于医学人工智能系统的临床应用至关重要。
+\end{remark}
+
+\subsection{局限性}
+
+本研究存在以下局限性：首先，BUMCH-MM数据集来自单一医疗机构，模型在
+跨机构泛化方面的表现有待进一步验证。其次，当前方法假设所有模态数据
+都是完整的，而实际临床场景中经常存在模态缺失的情况。最后，模型的
+计算复杂度与模态数量呈平方关系，可扩展性需要进一步优化。
+
+
+\section{结论}
+
+% ERROR: Western period ending Chinese sentence
+本文提出了CMAFN多模态融合框架,有效地结合了医学影像和临床文本信息.
+实验结果验证了该方法的有效性和优越性。未来工作将围绕模态缺失鲁棒性、
+跨机构泛化以及三维影像处理等方向展开深入研究。
+
+
+\begin{thebibliography}{99}
+
+\bibitem{krizhevsky2012imagenet}
+A.~Krizhevsky, I.~Sutskever, and G.~E. Hinton.
+\newblock {ImageNet} classification with deep convolutional neural networks.
+\newblock In \textit{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 1097--1105, 2012.
+
+\bibitem{he2016deep}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \textit{IEEE Conference on Computer Vision and Pattern Recognition
+  (CVPR)}, pages 770--778, 2016.
+
+\bibitem{huang2017densely}
+G.~Huang, Z.~Liu, L.~van~der~Maaten, and K.~Q. Weinberger.
+\newblock Densely connected convolutional networks.
+\newblock In \textit{IEEE Conference on Computer Vision and Pattern Recognition
+  (CVPR)}, pages 4700--4708, 2017.
+
+\bibitem{wang2017chestx}
+X.~Wang, Y.~Peng, L.~Lu, Z.~Lu, M.~Bagheri, and R.~M. Summers.
+\newblock {ChestX-ray8}: Hospital-scale chest X-ray database and benchmarks.
+\newblock In \textit{IEEE Conference on Computer Vision and Pattern Recognition
+  (CVPR)}, pages 2097--2106, 2017.
+
+\bibitem{rajpurkar2017chexnet}
+P.~Rajpurkar, J.~Irvin, K.~Zhu, et~al.
+\newblock {CheXNet}: Radiologist-level pneumonia detection on chest X-rays with
+  deep learning.
+\newblock \textit{arXiv preprint arXiv:1711.05225}, 2017.
+
+\bibitem{vaswani2017attention}
+A.~Vaswani, N.~Shazeer, N.~Parmar, et~al.
+\newblock Attention is all you need.
+\newblock In \textit{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 5998--6008, 2017.
+
+\bibitem{bahdanau2015neural}
+D.~Bahdanau, K.~Cho, and Y.~Bengio.
+\newblock Neural machine translation by jointly learning to align and translate.
+\newblock In \textit{International Conference on Learning Representations
+  (ICLR)}, 2015.
+
+\bibitem{cui2020revisiting}
+Y.~Cui, W.~Che, T.~Liu, B.~Qin, and Z.~Yang.
+\newblock Revisiting pre-trained models for {Chinese} natural language
+  processing.
+\newblock In \textit{Findings of EMNLP}, pages 657--668, 2020.
+
+\bibitem{lu2019vilbert}
+J.~Lu, D.~Batra, D.~Parikh, and S.~Lee.
+\newblock {ViLBERT}: Pretraining task-agnostic visiolinguistic representations
+  for vision-and-language tasks.
+\newblock In \textit{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 13--23, 2019.
+
+\bibitem{chen2020uniter}
+Y.~Chen, L.~Li, L.~Yu, et~al.
+\newblock {UNITER}: Universal image-text representation learning.
+\newblock In \textit{European Conference on Computer Vision (ECCV)},
+  pages 104--120, 2020.
+
+\end{thebibliography}
+
+\end{document}

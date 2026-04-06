@@ -1,0 +1,429 @@
+% i18n_qa_he_paper.tex — Hebrew computer science paper on algorithm complexity
+% Intentional errors: missing geresh for abbreviations, RTL/LTR boundary
+%   issues, missing bidi package
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[english,hebrew]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{mathrsfs}
+% INTENTIONAL ERROR: missing \usepackage{bidi} — needed for proper RTL
+
+\theoremstyle{plain}
+\newtheorem{theorem}{משפט}[section]
+\newtheorem{lemma}[theorem]{למה}
+\newtheorem{proposition}[theorem]{טענה}
+\newtheorem{corollary}[theorem]{מסקנה}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{הגדרה}
+\newtheorem{example}[theorem]{דוגמה}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{הערה}
+
+\title{חסמים תחתונים לסיבוכיות אלגוריתמים\\
+למיון וחיפוש במבני נתונים דינמיים}
+\author{%
+  % INTENTIONAL ERROR: missing geresh for abbreviation פרופ (should be פרופ׳)
+  פרופ דוד כהן\thanks{המחלקה למדעי המחשב, האוניברסיטה העברית בירושלים.}
+  \and
+  % INTENTIONAL ERROR: missing geresh for דר (should be ד״ר)
+  דר רחל לוי\thanks{מכון ויצמן למדע, רחובות.}
+}
+\date{6 באפריל 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+במאמר זה אנו מוכיחים חסמים תחתונים חדשים לסיבוכיות הזמן של אלגוריתמים
+למיון והכנסה במבני נתונים דינמיים. אנו מראים כי כל מבנה נתונים דינמי
+התומך בפעולות הכנסה, מחיקה ושאילתת קודם במודל השוואות חייב לבצע
+לפחות $\Omega(\log n / \log \log n)$ פעולות לכל עדכון. תוצאה זו משפרת
+את החסם התחתון הקלאסי של $\Omega(\log n)$ של פרדמן ושהם. בנוסף, אנו
+מציגים מבנה נתונים חדש המשיג חסם זה עד גורם קבוע, מה שמוכיח כי
+החסם התחתון שלנו הדוק. השיטה מבוססת על תורת המידע ועל טכניקת כרונוגרמות.
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{מבוא}
+\label{sec:intro}
+
+סיבוכיות חישובית היא ענף מרכזי במדעי המחשב התיאורטיים העוסק
+בחקר המשאבים הנדרשים לפתרון בעיות חישוביות. במאמר זה אנו
+מתמקדים בסיבוכיות מבני נתונים דינמיים --- מבנים התומכים
+בעדכונים ובשאילתות באופן מקוון.
+
+% INTENTIONAL ERROR: RTL/LTR boundary issue — English in Hebrew context without proper isolation
+בעיית המיון הדינמי, הידועה גם כ-dynamic sorting problem, היא
+אחת הבעיות היסודיות ביותר. במודל ההשוואות, כל אלגוריתם מיון
+סטטי דורש $\Omega(n \log n)$ השוואות כדי למיין $n$ איברים,
+כפי שהוכח על ידי עץ ההחלטות\footnote{%
+ראו \citet{knuth1998}, כרך~3, פרק~5.3, למבוא מקיף.}.
+
+\subsection{הגדרות ותוצאות קודמות}
+
+\begin{definition}
+\label{def:dynamic_ds}
+מבנה נתונים דינמי למיון הוא מבנה $D$ התומך בפעולות הבאות:
+\begin{enumerate}[label=(\alph*)]
+  \item $\textsc{Insert}(x)$: הכנסת איבר $x$ למבנה;
+  \item $\textsc{Delete}(x)$: מחיקת איבר $x$ מהמבנה;
+  \item $\textsc{Predecessor}(x)$: מציאת האיבר הגדול ביותר $y \in D$ כך ש-$y \leq x$.
+\end{enumerate}
+\end{definition}
+
+% INTENTIONAL ERROR: missing geresh for abbreviation עמ (should be עמ׳)
+התוצאה הקלאסית של פרדמן ושהם (1989, עמ 42--58) קובעת כי
+במודל עץ החלטות, כל מבנה נתונים דינמי התומך בהכנסה ובשאילתת
+קודם דורש זמן $\Omega(\log n)$ לכל פעולה, כאשר $n$ הוא מספר
+האיברים במבנה~\citep{fredman1989}.
+
+\subsection{תרומות המאמר}
+
+תרומותינו העיקריות הן:
+
+\begin{theorem}[חסם תחתון עיקרי]
+\label{thm:main}
+כל מבנה נתונים דינמי במודל ההשוואות התומך בפעולות
+$\textsc{Insert}$, $\textsc{Delete}$ ו-$\textsc{Predecessor}$
+חייב לבצע לפחות
+\begin{equation}
+\label{eq:lower_bound}
+T(n) = \Omega\!\left(\frac{\log n}{\log \log n}\right)
+\end{equation}
+פעולות ממוצעות (amortized) לכל עדכון.
+\end{theorem}
+
+\begin{theorem}[חסם עליון תואם]
+\label{thm:upper}
+קיים מבנה נתונים דינמי במודל ההשוואות המשיג
+\begin{equation}
+\label{eq:upper_bound}
+T(n) = O\!\left(\frac{\log n}{\log \log n}\right)
+\end{equation}
+פעולות לכל עדכון ושאילתה.
+\end{theorem}
+
+מבנה הנייר הוא כדלקמן: סעיף~\ref{sec:model} מגדיר את המודל
+הפורמלי, סעיף~\ref{sec:lower} מוכיח את החסם התחתון,
+סעיף~\ref{sec:upper} מתאר את מבנה הנתונים, וסעיף~\ref{sec:apps}
+דן ביישומים.
+
+%% ---------------------------------------------------------------
+\section{המודל הפורמלי}
+\label{sec:model}
+
+\subsection{מודל ההשוואות}
+
+במודל ההשוואות, האלגוריתם יכול לגשת לנתונים רק באמצעות
+השוואות בין זוגות איברים. באופן פורמלי:
+
+\begin{definition}
+\label{def:comparison_model}
+אלגוריתם במודל ההשוואות מוגדר כעץ החלטות בינארי $\mathcal{T}$
+בו כל צומת פנימי מכיל השוואה $x_i \stackrel{?}{\leq} x_j$
+וכל עלה מציין פלט. הסיבוכיות היא עומק העץ.
+\end{definition}
+
+\subsection{מודל הכרונוגרמה}
+
+% INTENTIONAL ERROR: RTL/LTR boundary — English terms without isolation
+הכרונוגרמה (chronogram technique) היא שיטה להוכחת חסמים
+תחתונים שפותחה על ידי פרדמן ושהם. הרעיון המרכזי הוא
+לשקול את ה-information flow בין פעולות עדכון לשאילתות.
+
+\begin{definition}
+\label{def:chronogram}
+כרונוגרמה של סדרת פעולות $\sigma = (o_1, o_2, \ldots, o_m)$
+על מבנה נתונים $D$ היא חלוקה של צעדי החישוב לשכבות
+$L_0, L_1, \ldots, L_t$ כך ש-$L_i$ מכילה את הצעדים
+שבוצעו בזמנים $[2^i, 2^{i+1})$ לאחר העדכון האחרון.
+\end{definition}
+
+\subsection{אנטרופיה ומידע}
+
+הוכחת החסם התחתון משתמשת בתורת המידע. נזכיר הגדרות בסיסיות:
+
+\begin{equation}
+\label{eq:entropy}
+H(X) = -\sum_{x} p(x) \log_2 p(x),
+\end{equation}
+ו-המידע ההדדי:
+\begin{equation}
+\label{eq:mutual_info}
+I(X; Y) = H(X) - H(X \mid Y) = H(Y) - H(Y \mid X).
+\end{equation}
+
+לפי אי-שוויון פאנו\footnote{%
+אי-שוויון פאנו קובע כי $H(X \mid Y) \leq h(P_e) + P_e \log(|\mathcal{X}| - 1)$,
+ראו \citet{cover2006}.},
+\begin{equation}
+\label{eq:fano}
+P_e \geq \frac{H(X \mid Y) - 1}{\log |\mathcal{X}|}.
+\end{equation}
+
+%% ---------------------------------------------------------------
+\section{הוכחת החסם התחתון}
+\label{sec:lower}
+
+\subsection{בניית הקלט הקשה}
+
+נבנה סדרת פעולות שתכריח כל אלגוריתם לבצע עבודה רבה.
+נבחר $n$ איברים $x_1 < x_2 < \cdots < x_n$ ופרמוטציה
+אקראית $\pi \in S_n$.
+
+\begin{lemma}
+\label{lem:info_content}
+סדרת ההכנסות $\textsc{Insert}(x_{\pi(1)}), \textsc{Insert}(x_{\pi(2)}),
+\ldots, \textsc{Insert}(x_{\pi(n)})$ מכילה $\log_2(n!) = \Theta(n \log n)$
+סיביות מידע.
+\end{lemma}
+
+\begin{proof}
+מספר הפרמוטציות הוא $n!$, לכן האנטרופיה היא $\log_2(n!)$.
+לפי קירוב סטירלינג, $\log_2(n!) = n \log_2 n - n \log_2 e + O(\log n) = \Theta(n \log n)$.
+\end{proof}
+
+\subsection{ניתוח הכרונוגרמה}
+
+\begin{lemma}
+\label{lem:chronogram_layers}
+בכרונוגרמה עם $t = \log n / \log \log n$ שכבות, כל שכבה $L_i$
+חייבת להעביר לפחות
+\[
+\frac{n \log n}{t} = \Omega(n \log \log n)
+\]
+סיביות מידע.
+\end{lemma}
+
+\begin{proof}
+סך המידע שיש להעביר הוא $\Theta(n \log n)$ סיביות
+(למה~\ref{lem:info_content}). חלוקה שווה ל-$t$ שכבות נותנת
+$n \log n / t$ סיביות לשכבה. עבור $t = \log n / \log \log n$:
+\[
+\frac{n \log n}{t} = \frac{n \log n}{\log n / \log \log n} = n \log \log n.
+\]
+\end{proof}
+
+\begin{proof}[הוכחת משפט~\ref{thm:main}]
+נשתמש בלמה~\ref{lem:chronogram_layers}. כל פעולת עדכון מבצעת
+לכל היותר $T(n)$ השוואות, כאשר כל השוואה מעבירה סיבית אחת
+של מידע. לכן, $n$ פעולות עדכון מעבירות לכל היותר $n \cdot T(n)$
+סיביות. מכאן:
+\begin{align}
+\label{eq:main_proof}
+n \cdot T(n) &\geq \frac{n \log n}{t} = n \log \log n, \notag \\
+T(n) &\geq \log \log n = \frac{\log n}{\log n / \log \log n} = \frac{\log n}{\log n / \log \log n}.
+\end{align}
+עידון הניתוח באמצעות אי-שוויון פאנו~\eqref{eq:fano} מראה
+שהחסם ההדוק הוא $\Omega(\log n / \log \log n)$.
+\end{proof}
+
+%% ---------------------------------------------------------------
+\section{מבנה הנתונים העליון}
+\label{sec:upper}
+
+\subsection{תיאור המבנה}
+
+מבנה הנתונים שלנו מבוסס על עצי חיפוש מאוזנים עם גורם
+הסתעפות $B = \log^\epsilon n$ לערך קבוע $\epsilon > 0$.
+
+\begin{definition}
+\label{def:b_tree}
+עץ-$B$ דינמי הוא עץ חיפוש מאוזן בו כל צומת פנימי מכיל
+בין $B/2$ ל-$B$ מפתחות, וכל העלים נמצאים באותו עומק.
+\end{definition}
+
+העומק של עץ-$B$ עם $n$ מפתחות הוא:
+\begin{equation}
+\label{eq:depth}
+h = O\!\left(\frac{\log n}{\log B}\right) = O\!\left(\frac{\log n}{\epsilon \log \log n}\right) = O\!\left(\frac{\log n}{\log \log n}\right).
+\end{equation}
+
+\subsection{אלגוריתם ההכנסה}
+
+\begin{algorithm}[ht]
+\caption{הכנסה לעץ-$B$ דינמי}
+\label{alg:insert}
+\begin{algorithmic}[1]
+\Require מפתח $x$, עץ $T$
+\Ensure עץ מעודכן $T'$
+\State מצא את העלה $v$ המתאים ל-$x$ בעץ $T$
+\State הכנס את $x$ לצומת $v$
+\While{$v$ מכיל יותר מ-$B$ מפתחות}
+  \State פצל את $v$ לשני צמתים
+  \State העלה את המפתח האמצעי לצומת האב
+  \State $v \gets \text{אב}(v)$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\begin{proposition}
+\label{prop:insert_time}
+אלגוריתם~\ref{alg:insert} מבצע $O(\log n / \log \log n)$
+השוואות לכל הכנסה.
+\end{proposition}
+
+\begin{proof}
+עומק העץ הוא $O(\log n / \log \log n)$ לפי~\eqref{eq:depth}.
+בכל צומת, מציאת המיקום הנכון דורשת $O(\log B) = O(\log \log n)$
+השוואות באמצעות חיפוש בינארי. סך ההשוואות:
+\[
+O\!\left(\frac{\log n}{\log \log n}\right) \cdot O(\log \log n) = O(\log n).
+\]
+אולם, באמצעות טכניקת fusion trees~\citep{fredman1993} ניתן
+לחפש בכל צומת ב-$O(1)$ השוואות, ואז הסיבוכיות הכוללת היא
+$O(\log n / \log \log n)$.
+\end{proof}
+
+%% ---------------------------------------------------------------
+\section{יישומים}
+\label{sec:apps}
+
+\subsection{מיון דינמי}
+
+\begin{table}[ht]
+\centering
+\caption{השוואת סיבוכיות מבני נתונים דינמיים}
+\label{tab:comparison}
+\begin{tabular}{lccc}
+\toprule
+מבנה נתונים & הכנסה & מחיקה & שאילתה \\
+\midrule
+עץ AVL & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
+עץ אדום-שחור & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
+Skip list & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\
+% INTENTIONAL ERROR: RTL/LTR boundary issue — parenthetical English
+Fusion tree (פרדמן-וילארד) & $O(\log_w n)$ & $O(\log_w n)$ & $O(\log_w n)$ \\
+המבנה שלנו & $O\!\left(\frac{\log n}{\log \log n}\right)$ & $O\!\left(\frac{\log n}{\log \log n}\right)$ & $O\!\left(\frac{\log n}{\log \log n}\right)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+טבלה~\ref{tab:comparison} משווה את מבנה הנתונים שלנו למבנים
+קיימים. במודל ההשוואות, המבנה שלנו משיג את הסיבוכיות
+האופטימלית~\citep{patrascu2008}.
+
+\subsection{גרפים דינמיים}
+
+מבנה הנתונים שלנו יכול לשמש כמרכיב בסיסי באלגוריתמים
+לגרפים דינמיים. למשל, בעיית הקישוריות הדינמית דורשת
+תחזוקת יער פורש בעת הכנסה ומחיקה של קשתות.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.7\textwidth}{%
+\centering
+\textbf{מבנה העץ-$B$ הדינמי}\\[8pt]
+\begin{tabular}{ccccc}
+& & [25, 50] & & \\
+& / & & \textbackslash & \\
+{[5, 12, 18]} & & {[30, 38, 42]} & & {[55, 63, 78, 91]} \\
+\end{tabular}\\[6pt]
+\emph{דוגמה לעץ-$B$ עם $B = 4$. כל צומת מכיל 2--4 מפתחות.}
+}}
+\caption{עץ-$B$ דינמי עם גורם הסתעפות $B = 4$ המכיל 12 מפתחות.
+העומק הוא 2, מה שתואם את החסם $O(\log n / \log B)$.}
+\label{fig:btree}
+\end{figure}
+
+\subsection{יישום לגיאומטריה חישובית}
+
+% INTENTIONAL ERROR: missing geresh for abbreviation ד (should be ד׳)
+בגיאומטריה חישובית ב-$d$ ממדים (עבור $d$ קבוע), מבנה
+הנתונים שלנו מאפשר תחזוקת מעטפת קמורה דינמית
+בסיבוכיות $O(\log^{d-1} n / \log \log n)$ לכל עדכון.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.7\textwidth}{%
+\centering
+\textbf{סיבוכיות כפונקציה של $n$}\\[8pt]
+\begin{tabular}{cc}
+$n$ & $\log n / \log \log n$ \\
+\hline
+$10^3$ & 3.01 \\
+$10^6$ & 4.31 \\
+$10^9$ & 5.17 \\
+$10^{12}$ & 5.85 \\
+$10^{15}$ & 6.39 \\
+\end{tabular}\\[6pt]
+\emph{הצמיחה של $\log n / \log \log n$ לעומת $\log n$}
+}}
+\caption{השוואה מספרית בין $\log n / \log \log n$ ל-$\log n$
+עבור ערכי $n$ טיפוסיים. היתרון גדל עם גודל הקלט.}
+\label{fig:growth}
+\end{figure}
+
+%% ---------------------------------------------------------------
+\section{סיכום}
+\label{sec:conclusion}
+
+הוכחנו חסם תחתון חדש של $\Omega(\log n / \log \log n)$ לסיבוכיות
+מבני נתונים דינמיים במודל ההשוואות (משפט~\ref{thm:main}).
+הראינו שחסם זה הדוק על ידי הצגת מבנה נתונים התואם
+(משפט~\ref{thm:upper}). התוצאה משפרת את החסם הקלאסי
+$\Omega(\log n)$ ומספקת תמונה שלמה יותר של סיבוכיות
+מבני נתונים דינמיים.
+
+כיוונים עתידיים כוללים הכללה למודלים חזקים יותר כמו
+מודל RAM ומודל cell probe, וכן יישום לבעיות ספציפיות
+בגיאומטריה חישובית ובתורת הגרפים\footnote{%
+ראו \citet{demaine2007} לסקירה מקיפה של חסמים תחתונים
+למבני נתונים.}.
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[Cover and Thomas(2006)]{cover2006}
+Cover, T.\,M. and Thomas, J.\,A. (2006).
+\emph{Elements of Information Theory}, 2nd ed.
+Wiley-Interscience.
+
+\bibitem[Demaine(2007)]{demaine2007}
+Demaine, E.\,D. (2007).
+Cache-oblivious algorithms and data structures.
+In \emph{Lecture Notes from the EEF Summer School on Massive Data Sets}.
+
+\bibitem[Fredman and Saks(1989)]{fredman1989}
+Fredman, M.\,L. and Saks, M.\,E. (1989).
+The cell probe complexity of dynamic data structures.
+\emph{Proceedings of the 21st ACM STOC}, 345--354.
+
+\bibitem[Fredman and Willard(1993)]{fredman1993}
+Fredman, M.\,L. and Willard, D.\,E. (1993).
+Surpassing the information theoretic bound with fusion trees.
+\emph{Journal of Computer and System Sciences}, 47(3), 424--436.
+
+\bibitem[Knuth(1998)]{knuth1998}
+Knuth, D.\,E. (1998).
+\emph{The Art of Computer Programming, Vol.~3: Sorting and Searching},
+2nd ed. Addison-Wesley.
+
+\bibitem[P\u{a}tra\c{s}cu(2008)]{patrascu2008}
+P\u{a}tra\c{s}cu, M. (2008).
+Lower bounds for 2-dimensional range counting.
+\emph{Proceedings of the 39th ACM STOC}, 40--46.
+
+\end{thebibliography}
+
+\end{document}

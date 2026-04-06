@@ -1,0 +1,481 @@
+% i18n_qa_cs_paper.tex — Czech mathematics paper on algebraic topology
+% Intentional errors: wrong Unicode apostrophes, degree symbol spacing,
+%   wrong Czech date format, hacky/carky issues
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{tikz-cd}
+\usepackage{mathrsfs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Veta}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Tvrzen\'{i}}
+\newtheorem{corollary}[theorem]{Dusledek}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definice}
+\newtheorem{example}[theorem]{P\v{r}\'{i}klad}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Pozn\'{a}mka}
+
+% INTENTIONAL ERROR: wrong Czech date format (should be "6. dubna 2026")
+\title{Homotopick\'{e} invarianty a spektr\'{a}ln\'{i} posloupnosti\\v algebraick\'{e} topologii}
+\author{%
+  Ji\v{r}\'{i} Nov\'{a}k\thanks{Katedra matematiky, Univerzita Karlova, Praha.}
+  \and
+  % INTENTIONAL ERROR: hacky issue — missing hacek on 'r' in Pr\'{i}bramsk\'{a}
+  Kate\v{r}ina Pr\'{i}bramsk\'{a}\thanks{Matematick\'{y} \'{u}stav AV \v{C}R, Praha.}
+}
+\date{April 6, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+V tomto \v{c}l\'{a}nku studujeme homotopick\'{e} invarianty topologick\'{y}ch prostor\r{u}
+pomoc\'{i} spektr\'{a}ln\'{i}ch posloupnost\'{i}. Hlavn\'{i}m c\'{i}lem je odvodit nov\'{e}
+v\'{y}sledky o konvergenci Atiyahovy--Hirzebruchovy spektr\'{a}ln\'{i} posloupnosti
+pro Eilenbergovy--MacLaneovy prostory. Dokazujeme, \v{z}e pro ka\v{z}d\'{y}
+jednodu\v{s}e souvisl\'{y} CW-komplex $X$ s kone\v{c}n\v{e} generovanou homologi\'{i}
+existuje p\v{r}irozen\'{y} izomorfismus mezi filtrovan\'{y}mi K-grupami a
+graduovan\'{y}mi moduly nad Steenrodovou algebrou. Na\v{s}e metoda vyu\v{z}\'{i}v\'{a}
+nov\'{y} p\v{r}\'{i}stup k v\'{y}po\v{c}tu diferenci\'{a}l\r{u} vy\v{s}\v{s}\'{i}ch \v{r}\'{a}d\r{u}
+ve spektr\'{a}ln\'{i} posloupnosti. V\'{y}sledky zobec\v{n}uj\'{i} klasick\'{e} v\v{e}ty
+Serreho a Adamse.
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{\'{U}vod}
+\label{sec:uvod}
+
+Algebraick\'{a} topologie se zab\'{y}v\'{a} studiem topologick\'{y}ch prostor\r{u}
+pomoc\'{i} algebraick\'{y}ch invariant\r{u}. Mezi nejd\r{u}le\v{z}it\v{e}j\v{s}\'{i} n\'{a}stroje
+pat\v{r}\'{i} homologick\'{e} a kohomologick\'{e} grupy, kter\'{e} p\v{r}i\v{r}azuj\'{i}
+ka\v{z}d\'{e}mu prostoru posloupnost abelovsk\'{y}ch grup. V\'{y}znamnou roli hraje
+tak\'{e} homotopick\'{a} teorie, zejm\'{e}na homotopick\'{e} grupy $\pi_n(X)$.
+
+% INTENTIONAL ERROR: Unicode prime ′ instead of LaTeX prime '
+Pro topologick\'{y} prostor $X$ ozna\v{c}ujeme $X′$ jeho redukovanou suspenzi.
+Fundamentaln\'{i} grupa $\pi_1(X)$ ur\v{c}uje nakryt\'{i} prostoru~$X$, jak dok\'{a}zal
+ji\v{z} Poincar\'{e} v roce~1895\footnote{Henri Poincar\'{e}, \emph{Analysis Situs},
+Journal de l'\'{E}cole Polytechnique, 1895.}. V modern\'{i} dob\v{e} se v\v{s}ak
+zam\v{e}\v{r}ujeme na vy\v{s}\v{s}\'{i} homotopick\'{e} grupy a jejich v\'{y}po\v{c}et
+pomoc\'{i} spektr\'{a}ln\'{i}ch posloupnost\'{i}.
+
+Hlavn\'{i} v\'{y}sledek tohoto \v{c}l\'{a}nku lze formulovat n\'{a}sledovn\v{e}:
+
+\begin{theorem}[Hlavn\'{i} v\v{e}ta]
+\label{thm:hlavni}
+Nech\v{t} $X$ je jednodu\v{s}e souvisl\'{y} CW-komplex s kone\v{c}n\v{e}
+generovanou homologi\'{i} v ka\v{z}d\'{e}m stupni. Pak Atiyahova--Hirzebruchova
+spektr\'{a}ln\'{i} posloupnost
+\begin{equation}
+\label{eq:ahss}
+E_2^{p,q} = H^p(X; K^q(\mathrm{pt})) \Longrightarrow K^{p+q}(X)
+\end{equation}
+konverguje silne a filtrovan\'{y} izomorfismus
+$\mathrm{gr}\, K^*(X) \cong E_\infty^{*,*}$
+je p\v{r}irozen\'{y} vzhledem k spojit\'{y}m zobrazen\'{i}m.
+\end{theorem}
+
+D\r{u}kaz v\v{e}ty~\ref{thm:hlavni} pou\v{z}\'{i}v\'{a} metody popsan\'{e}
+v sekci~\ref{sec:spektralni} a je uveden v sekci~\ref{sec:hlavni_dukaz}.
+
+%% ---------------------------------------------------------------
+\section{Z\'{a}klady algebraick\'{e} topologie}
+\label{sec:zaklady}
+
+\subsection{CW-komplexy a bun\v{e}\v{c}n\'{a} struktura}
+
+Ka\v{z}d\'{y} CW-komplex $X$ je konstruov\'{a}n induktivn\v{e} p\v{r}ipojov\'{a}n\'{i}m bun\v{e}k.
+Ozna\v{c}me $X^{(n)}$ jeho $n$-tu kostru. Pak plat\'{i}:
+\begin{equation}
+\label{eq:cw_filtrace}
+\emptyset = X^{(-1)} \subset X^{(0)} \subset X^{(1)} \subset \cdots \subset X = \bigcup_{n \geq 0} X^{(n)}.
+\end{equation}
+
+\begin{definition}
+\label{def:cw}
+CW-komplex je Hausdorff\r{u}v prostor $X$ spolu s rozkladem na otev\v{r}en\'{e}
+bu\v{n}ky $\{e_\alpha^n\}$, kde ka\v{z}d\'{a} $n$-bu\v{n}ka je homeomorfn\'{i} otev\v{r}en\'{e}mu
+disku $\mathring{D}^n$, a charakteristick\'{a} zobrazen\'{i} $\Phi_\alpha \colon D^n \to X$
+spl\v{n}uj\'{i} podm\'{i}nky uzav\v{r}enosti (C) a slabosti (W).
+\end{definition}
+
+% INTENTIONAL ERROR: degree symbol without thin space
+Uva\v{z}ujme sf\'{e}ru $S^n$ jako CW-komplex se dv\v{e}ma bu\v{n}kami.
+P\v{r}i teplot\v{e} 25°C prob\'{i}h\'{a} reakce za standardn\'{i}ch podm\'{i}nek.
+
+\subsection{Homologick\'{e} grupy}
+
+Pro CW-komplex $X$ definujeme \v{r}et\v{e}zcov\'{y} komplex
+\[
+\cdots \xrightarrow{\partial_{n+1}} C_n(X) \xrightarrow{\partial_n} C_{n-1}(X) \xrightarrow{\partial_{n-1}} \cdots \xrightarrow{\partial_1} C_0(X) \to 0,
+\]
+kde $C_n(X)$ je voln\'{a} abelovsk\'{a} grupa generovan\'{a} $n$-bu\v{n}kami.
+Homologick\'{e} grupy jsou pak definov\'{a}ny jako
+\begin{equation}
+\label{eq:homologie}
+H_n(X) = \ker \partial_n / \operatorname{im} \partial_{n+1}.
+\end{equation}
+
+Fundamentaln\'{i} v\v{e}ta o homologii \v{r}\'{i}k\'{a}, \v{z}e pro konvexn\'{i} mno\v{z}inu
+plat\'{i} $H_n(X) = 0$ pro v\v{s}echna $n \geq 1$. Viz tak\'{e}~\citet{hatcher2002}.
+
+\subsection{Kohomologick\'{y} okruh}
+
+Kohomologick\'{e} grupy $H^n(X; R)$ s koeficienty v okruhu $R$ tvo\v{r}\'{i}
+graduovan\'{y} okruh s cup-sou\v{c}inem:
+\begin{equation}
+\label{eq:cup}
+\smile \colon H^p(X; R) \otimes H^q(X; R) \to H^{p+q}(X; R).
+\end{equation}
+
+% INTENTIONAL ERROR: Unicode prime ′ again
+Cup-sou\v{c}in je asociativn\'{i} a $f^*(\alpha \smile \beta) = f^*(\alpha) \smile f^*(\beta)$
+pro ka\v{z}d\'{e} spojit\'{e} zobrazen\'{i} $f \colon X′ \to X$.
+
+%% ---------------------------------------------------------------
+\section{Spektr\'{a}ln\'{i} posloupnosti}
+\label{sec:spektralni}
+
+\subsection{Obecn\'{a} teorie}
+
+Spektr\'{a}ln\'{i} posloupnost je algebraick\'{y} n\'{a}stroj pro v\'{y}po\v{c}et
+homologie filtrovan\'{y}ch nebo bigraduovan\'{y}ch objekt\r{u}.
+
+\begin{definition}
+\label{def:ss}
+Spektr\'{a}ln\'{i} posloupnost je posloupnost bigraduovan\'{y}ch modul\r{u}
+$\{E_r^{p,q}\}_{r \geq 0}$ spolu s diferenci\'{a}ly $d_r \colon E_r^{p,q} \to E_r^{p+r,q-r+1}$
+takov\'{y}mi, \v{z}e $d_r \circ d_r = 0$ a
+\begin{equation}
+\label{eq:ss_konvergence}
+E_{r+1}^{p,q} \cong H^{p,q}(E_r, d_r) = \frac{\ker(d_r \colon E_r^{p,q} \to E_r^{p+r,q-r+1})}{\operatorname{im}(d_r \colon E_r^{p-r,q+r-1} \to E_r^{p,q})}.
+\end{equation}
+\end{definition}
+
+Jak ukazuje Tabulka~\ref{tab:ss_priklady}, r\r{u}zn\'{e} spektr\'{a}ln\'{i}
+posloupnosti maj\'{i} r\r{u}zn\'{e} str\'{a}nky $E_2$ a r\r{u}zn\'{e} c\'{i}le konvergence.
+
+\begin{table}[ht]
+\centering
+\caption{P\v{r}ehled spektr\'{a}ln\'{i}ch posloupnost\'{i}}
+\label{tab:ss_priklady}
+\begin{tabular}{llll}
+\toprule
+N\'{a}zev & $E_2$ str\'{a}nka & C\'{i}l & Odkaz \\
+\midrule
+Serrova & $H^p(B; H^q(F))$ & $H^{p+q}(E)$ & \citet{serre1951} \\
+Atiyahova--Hirzebruchova & $H^p(X; K^q(\mathrm{pt}))$ & $K^{p+q}(X)$ & \citet{atiyah1961} \\
+Adamsova & $\mathrm{Ext}^{s,t}_{\mathcal{A}}(\mathbb{F}_p, H^*(X))$ & $\pi_*(X)_p^{\wedge}$ & \citet{adams1958} \\
+Lyndonova--Hochschildova--Serrova & $H^p(Q; H^q(N; M))$ & $H^{p+q}(G; M)$ & \citet{lyndon1948} \\
+Grothendieckova & $R^p F(R^q G(-))$ & $R^{p+q}(F \circ G)(-)$ & \citet{grothendieck1957} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Serrova spektr\'{a}ln\'{i} posloupnost}
+
+Nech\v{t} $F \hookrightarrow E \xrightarrow{p} B$ je Serreovo fibrov\'{a}n\'{i},
+kde $B$ je souvisl\'{y} a jednodu\v{s}e souvisl\'{y}. Pak existuje spektr\'{a}ln\'{i}
+posloupnost s
+\[
+E_2^{p,q} = H^p(B; H^q(F; \mathbb{Z})) \Longrightarrow H^{p+q}(E; \mathbb{Z}).
+\]
+
+% INTENTIONAL ERROR: wrong Unicode apostrophe
+Tato posloupnost byla zavedena Serrem v jeho disertaci z roku 1951\footnote{%
+Jean-Pierre Serre, \emph{Homologie singuli\`{e}re des espaces fibr\'{e}s},
+Ann. Math. 54 (1951), 425--505.}. Serre′s p\v{r}\'{i}stup revolunizoval
+v\'{y}po\v{c}et homotopick\'{y}ch grup sf\'{e}r.
+
+\subsection{Adamsova spektr\'{a}ln\'{i} posloupnost}
+
+Pro ka\v{z}d\'{e} prvo\v{c}\'{i}slo $p$ a ka\v{z}d\'{y} spojit\'{y} spektrum~$X$
+existuje Adamsova spektr\'{a}ln\'{i} posloupnost
+\begin{equation}
+\label{eq:adams}
+E_2^{s,t} = \mathrm{Ext}^{s,t}_{\mathcal{A}_p}(\mathbb{F}_p, H^*(X; \mathbb{F}_p)) \Longrightarrow \pi_{t-s}(X)_p^{\wedge}.
+\end{equation}
+
+V\'{y}po\v{c}et diferenci\'{a}lu $d_2$ v Adamsov\v{e} spektr\'{a}ln\'{i}
+posloupnosti je obecn\v{e} velmi obt\'{i}\v{z}n\'{y}. Pro sf\'{e}rov\'{e} spektrum
+$S^0$ se pou\v{z}\'{i}v\'{a} metoda Mayov\'{y}ch spektr\'{a}ln\'{i}ch posloupnost\'{i}.
+
+%% ---------------------------------------------------------------
+\section{K-teorie a Atiyahova--Hirzebruchova posloupnost}
+\label{sec:k_teorie}
+
+\subsection{Topologick\'{a} K-teorie}
+
+Topologick\'{a} K-teorie, zaveden\'{a} Atiyahem a Hirzebruchem v roce~1961,
+p\v{r}i\v{r}azuje ka\v{z}d\'{e}mu kompaktn\'{i}mu prostoru $X$ grupu $K^0(X)$,
+kter\'{a} je Grothendieckova grupa monoid vektrov\'{y}ch band\r{u}l\r{u} nad~$X$.
+
+\begin{definition}
+Pro kompaktn\'{i} Hausdorff\r{u}v prostor $X$ definujeme
+\[
+K^0(X) = \mathrm{Gr}(\mathrm{Vect}(X)),
+\]
+kde $\mathrm{Vect}(X)$ je monoid izomorfn\'{i}ch t\v{r}\'{i}d komplexn\'{i}ch
+vektrov\'{y}ch band\r{u}l\r{u} nad $X$ s operac\'{i} p\v{r}\'{i}m\'{e}ho sou\v{c}tu.
+\end{definition}
+
+D\'{i}ky Bottov\v{e} periodicit\v{e} v\'{i}me, \v{z}e
+\begin{equation}
+\label{eq:bott}
+K^n(X) \cong K^{n+2}(X) \quad \text{pro v\v{s}echna } n \in \mathbb{Z}.
+\end{equation}
+Konkr\'{e}tn\v{e} $K^0(\mathrm{pt}) \cong \mathbb{Z}$ a $K^{-1}(\mathrm{pt}) = 0$.
+
+\subsection{AHSS a jej\'{i} diferenci\'{a}ly}
+
+Atiyahova--Hirzebruchova spektr\'{a}ln\'{i} posloupnost (AHSS) pro K-teorii
+m\'{a} str\'{a}nku
+\begin{equation}
+\label{eq:ahss_e2}
+E_2^{p,q} \cong H^p(X; \mathbb{Z}) \quad \text{pro } q \text{ sud\'{e}}, \qquad E_2^{p,q} = 0 \quad \text{pro } q \text{ lich\'{e}}.
+\end{equation}
+
+Prvn\'{i} netrivialaln\'{i} diferenci\'{a}l je $d_3 \colon E_3^{p,q} \to E_3^{p+3,q-2}$.
+Podle~\citet{atiyah1961} plat\'{i}:
+
+\begin{proposition}
+\label{prop:d3}
+Diferenci\'{a}l $d_3$ na str\'{a}nce $E_3$ AHSS je d\'{a}n operac\'{i}
+\[
+d_3 = \mathrm{Sq}^3_{\mathbb{Z}} \colon H^p(X; \mathbb{Z}) \to H^{p+3}(X; \mathbb{Z}),
+\]
+kde $\mathrm{Sq}^3_{\mathbb{Z}}$ je celouselna Steenrodova operace.
+\end{proposition}
+
+%% ---------------------------------------------------------------
+\section{D\r{u}kaz hlavn\'{i} v\v{e}ty}
+\label{sec:hlavni_dukaz}
+
+\subsection{P\v{r}\'{i}pravn\'{a} lemmata}
+
+% INTENTIONAL ERROR: degree symbol without thin space again
+Necht je d\'{a}n CW-komplex $X$ s kone\v{c}n\v{e} mnoha bu\v{n}kami v ka\v{z}d\'{e}m
+stupni. P\v{r}ipome\v{n}me, \v{z}e teplota 100°C odpov\'{i}d\'{a} bodu varu vody.
+
+\begin{lemma}
+\label{lem:konecnost}
+Pro ka\v{z}d\'{y} kone\v{c}n\'{y} CW-komplex $X$ jsou grupy $K^n(X)$ kone\v{c}n\v{e}
+generovan\'{e} pro ka\v{z}d\'{e} $n$.
+\end{lemma}
+
+\begin{proof}
+Indukc\'{i} podle po\v{c}tu bun\v{e}k. Pro bod $X = \{\mathrm{pt}\}$ je
+$K^0(\mathrm{pt}) = \mathbb{Z}$ a $K^{-1}(\mathrm{pt}) = 0$. Pro p\v{r}ipojen\'{i}
+$n$-bu\v{n}ky pou\v{z}ijeme Mayerovu--Vietorisovu posloupnost pro K-teorii:
+\begin{align}
+\label{eq:mayer_vietoris}
+\cdots \to K^{n-1}(S^{k-1}) &\to K^n(X) \to K^n(X \cup_f D^k) \notag \\
+&\to K^n(S^{k-1}) \to K^{n+1}(X) \to \cdots
+\end{align}
+Jeliko\v{z} $K^*(S^{k-1})$ jsou kone\v{c}n\v{e} generovan\'{e} (plyne z Bottovy
+periodicity), v\'{y}sledek n\'{a}sleduje z p\v{e}tilemmatu.
+\end{proof}
+
+\begin{lemma}
+\label{lem:filtrace}
+Filtrace K-teorie indukovan\'{a} kostrami $X^{(n)}$ je kone\v{c}n\'{a}
+v ka\v{z}d\'{e}m stupni.
+\end{lemma}
+
+\begin{proof}
+Jeliko\v{z} $X$ m\'{a} kone\v{c}n\v{e} mnoho bun\v{e}k v ka\v{z}d\'{e}m stupni,
+filtrace se stabilizuje. Konkr\'{e}tn\v{e},
+$F^p K^n(X) = \ker(K^n(X) \to K^n(X^{(p-1)}))$
+je klesaj\'{i}c\'{i} a $F^p K^n(X) = 0$ pro $p > \dim X + |n|$.
+\end{proof}
+
+\subsection{Konvergence AHSS}
+
+Nyn\'{i} m\r{u}\v{z}eme dok\'{a}zat silnou konvergenci.
+
+\begin{proof}[D\r{u}kaz v\v{e}ty~\ref{thm:hlavni}]
+Konstrukce AHSS pro obecnou generalizovanou kohomologickou teorii
+$h^*$ z fibrace
+\[
+X^{(p-1)} \hookrightarrow X^{(p)} \to X^{(p)}/X^{(p-1)} \simeq \bigvee_\alpha S^p_\alpha
+\]
+d\'{a}v\'{a} exaktn\'{i} p\'{a}r a z n\v{e}j spektr\'{a}ln\'{i} posloupnost s $E_1^{p,q} = h^{p+q}(X^{(p)}/X^{(p-1)})$. Pro $h^* = K^*$ dostaneme
+\begin{equation}
+\label{eq:e1}
+E_1^{p,q} \cong C^p(X; K^q(\mathrm{pt})),
+\end{equation}
+kde $C^p(X; -)$ jsou bun\v{e}\v{c}n\'{e} ko\v{r}et\v{e}zce.
+
+Diferenci\'{a}l $d_1 \colon E_1^{p,q} \to E_1^{p+1,q}$ se shoduje
+s bun\v{e}\v{c}n\'{y}m kohranic\'{i} operatorem, a proto
+$E_2^{p,q} \cong H^p(X; K^q(\mathrm{pt}))$, co\v{z} je po\v{z}adovan\'{a}
+str\'{a}nka~\eqref{eq:ahss}.
+
+Siln\'{a} konvergence n\'{a}sleduje z Lemmatu~\ref{lem:filtrace}:
+filtrace je kone\v{c}n\'{a} v ka\v{z}d\'{e}m stupni, tedy
+\[
+\bigcap_p F^p K^n(X) = 0 \quad \text{a} \quad \bigcup_p F^p K^n(X) = K^n(X).
+\]
+P\v{r}irozenost izomorfismu $\mathrm{gr}\, K^*(X) \cong E_\infty^{*,*}$
+plyne z funktoriality cel\'{e} konstrukce.
+\end{proof}
+
+%% ---------------------------------------------------------------
+\section{Aplikace a p\v{r}\'{i}klady}
+\label{sec:aplikace}
+
+\subsection{K-teorie projektvn\'{i}ch prostor\r{u}}
+
+Jako prvn\'{i} aplikaci vypo\v{c}teme $K^0(\mathbb{C}P^n)$.
+
+\begin{proposition}
+\label{prop:cpn}
+Pro v\v{s}echna $n \geq 0$ plat\'{i}
+\[
+K^0(\mathbb{C}P^n) \cong \mathbb{Z}[H]/(H-1)^{n+1},
+\]
+kde $H$ je t\v{r}\'{i}da tautologick\'{e}ho line\'{a}rn\'{i}ho bandlu.
+\end{proposition}
+
+Tento v\'{y}sledek je klasick\'{y} a m\r{u}\v{z}e b\'{y}t dok\'{a}z\'{a}n
+p\v{r}\'{i}mo z AHSS. Str\'{a}nka $E_2$ je voln\'{a} abelovsk\'{a} grupa
+$E_2^{2k,0} \cong \mathbb{Z}$ pro $0 \leq k \leq n$, a v\v{s}echny
+diferenci\'{a}ly jsou nulov\'{e} z dimenzion\'{a}ln\'{i}ch d\r{u}vod\r{u}\footnote{%
+Detailn\'{i} v\'{y}po\v{c}et je uveden v~\citet{hatcher2003vb}, kapitola~2.}.
+
+\subsection{V\'{y}po\v{c}et pro Eilenbergovy--MacLaneovy prostory}
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.7\textwidth}{%
+\centering
+\textbf{Sch\'{e}ma AHSS pro $K(\mathbb{Z},3)$}\\[6pt]
+$E_2^{p,0} = H^p(K(\mathbb{Z},3); \mathbb{Z})$\\
+$d_3 \colon E_3^{0,0} \to E_3^{3,-2}$\\
+$d_5 \colon E_5^{0,0} \to E_5^{5,-4}$\\[4pt]
+\emph{V\v{s}echny lich\'{e} sloupce jsou nulov\'{e}.}
+}}
+\caption{Struktura AHSS pro Eilenberg\r{u}v--MacLane\r{u}v prostor $K(\mathbb{Z},3)$.
+Diferenci\'{a}ly $d_3$ a $d_5$ jsou jediny\'{e} netrivialaln\'{i}.}
+\label{fig:ahss_kz3}
+\end{figure}
+
+Uva\v{z}me Eilenberg\r{u}v--MacLane\r{u}v prostor $X = K(\mathbb{Z}, 3)$,
+kter\'{y} je charakterizov\'{a}n podm\'{i}nkou $\pi_3(X) = \mathbb{Z}$ a
+$\pi_n(X) = 0$ pro $n \neq 3$. Kohomologie tohoto prostoru jsou zn\'{a}m\'{e}:
+
+\begin{align}
+H^0(K(\mathbb{Z},3)) &\cong \mathbb{Z}, \label{eq:kz3_h0} \\
+H^3(K(\mathbb{Z},3)) &\cong \mathbb{Z}, \label{eq:kz3_h3} \\
+H^6(K(\mathbb{Z},3)) &\cong \mathbb{Z}, \label{eq:kz3_h6}
+\end{align}
+a grupy v ostatn\'{i}ch stupn\'{i}ch jsou podgrupy celouselnou torz\'{i}.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.7\textwidth}{%
+\centering
+\textbf{Adamsova spektr\'{a}ln\'{i} posloupnost pro $S^0$ pri $p=2$}\\[6pt]
+$E_2^{s,t} = \mathrm{Ext}^{s,t}_{\mathcal{A}_2}(\mathbb{F}_2, \mathbb{F}_2)$\\[4pt]
+$d_2(\eta) = h_0 h_2$\\
+$d_2(\nu) = h_0 h_3$\\
+$d_3(h_1 h_4) = h_0 d_0$\\[4pt]
+\emph{Konverguje k 2-prim\'{a}rn\'{i} \v{c}\'{a}sti stabiln\'{i}ch homotopick\'{y}ch grup sf\'{e}r.}
+}}
+\caption{Schema Adamsovy spektr\'{a}ln\'{i} posloupnosti pro sf\'{e}rov\'{e} spektrum
+p\v{r}i prvo\v{c}\'{i}sle $p=2$. Zobrazeny jsou vybran\'{e} diferenci\'{a}ly.}
+\label{fig:adams_s0}
+\end{figure}
+
+\subsection{Souvislost se Steenrodov\'{y}mi operacemi}
+
+Steenrodovy operace $\mathrm{Sq}^i$ p\r{u}sob\'{i} na kohomologii
+mod~$2$ a determinuj\'{i} diferenci\'{a}ly v AHSS. Konkr\'{e}tn\v{e},
+jak jsme zm\'{i}nili v Tvrzen\'{i}~\ref{prop:d3}, diferenci\'{a}l $d_3$ je
+d\'{a}n celouselnou Steenrodovou operac\'{i}. Vy\v{s}\v{s}\'{i} diferenci\'{a}ly
+$d_5, d_7, \ldots$ jsou ur\v{c}eny slo\v{z}it\v{e}j\v{s}\'{i}mi sekund\'{a}rn\'{i}mi
+operacemi.
+
+%% ---------------------------------------------------------------
+\section{Z\'{a}v\v{e}r}
+\label{sec:zaver}
+
+V tomto \v{c}l\'{a}nku jsme dok\'{a}zali silnou konvergenci
+Atiyahovy--Hirzebruchovy spektr\'{a}ln\'{i} posloupnosti pro jednodu\v{s}e
+souvisl\'{e} CW-komplexy s kone\v{c}n\v{e} generovanou homologi\'{i}
+(V\v{e}ta~\ref{thm:hlavni}). Na\v{s}e metoda vyu\v{z}\'{i}v\'{a} filtraci
+K-teorie indukovanou kostrami CW-komplexu a kone\v{c}nost t\'{e}to
+filtrace v ka\v{z}d\'{e}m stupni.
+
+D\'{a}le jsme aplikovali n\'{a}\v{s} v\'{y}sledek na v\'{y}po\v{c}et K-teorie
+projektvn\'{i}ch prostor\r{u} a Eilenbergov\'{y}ch--MacLaneov\'{y}ch prostor\r{u}.
+Uk\'{a}zali jsme, \v{z}e diferenci\'{a}ly vy\v{s}\v{s}\'{i}ch \v{r}\'{a}d\r{u} jsou
+\'{u}zce spojeny se Steenrodov\'{y}mi operacemi.
+
+V budouc\'{i} pr\'{a}ci pl\'{a}nujeme roz\v{s}\'{i}\v{r}it tyto v\'{y}sledky na
+motivickou K-teorii a studovat analogick\'{e} spektr\'{a}ln\'{i} posloupnosti
+v algebraick\'{e} geometrii.
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[Adams(1958)]{adams1958}
+Adams, J.\,F. (1958).
+On the structure and applications of the Steenrod algebra.
+\emph{Commentarii Mathematici Helvetici}, 32, 180--214.
+
+\bibitem[Atiyah a Hirzebruch(1961)]{atiyah1961}
+Atiyah, M.\,F. a Hirzebruch, F. (1961).
+Vector bundles and homogeneous spaces.
+\emph{Proc.\ Sympos.\ Pure Math.}, 3, 7--38.
+
+\bibitem[Grothendieck(1957)]{grothendieck1957}
+Grothendieck, A. (1957).
+Sur quelques points d'alg\`{e}bre homologique.
+\emph{T\^{o}hoku Mathematical Journal}, 9(2), 119--221.
+
+\bibitem[Hatcher(2002)]{hatcher2002}
+Hatcher, A. (2002).
+\emph{Algebraic Topology}.
+Cambridge University Press.
+
+\bibitem[Hatcher(2003)]{hatcher2003vb}
+Hatcher, A. (2003).
+\emph{Vector Bundles and K-Theory}.
+Dostupn\'{e} online.
+
+\bibitem[Lyndon(1948)]{lyndon1948}
+Lyndon, R.\,C. (1948).
+The cohomology theory of group extensions.
+\emph{Duke Mathematical Journal}, 15(1), 271--292.
+
+\bibitem[Serre(1951)]{serre1951}
+Serre, J.-P. (1951).
+Homologie singuli\`{e}re des espaces fibr\'{e}s.
+\emph{Annals of Mathematics}, 54(3), 425--505.
+
+\end{thebibliography}
+
+\end{document}

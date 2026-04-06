@@ -1,0 +1,75 @@
+# Language-gated golden corpus (spec W102-104 gap fix)
+#
+# Tests run_all_for_language: verifies that language-specific rules
+# fire ONLY for their target language and are BLOCKED for others.
+#
+# Uses Language_gated mode in test_golden_corpus.ml.
+# Each case declares `language:` to specify the gating language.
+# `forbid:` lists rules that MUST NOT fire under gating.
+
+cases:
+  # ── French paper: FR rules fire, non-FR rules blocked ──────────
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_fr_en_paper.tex
+    language: "fr"
+    expect: ["LANG-003"]
+    forbid: ["JA-001", "ZH-001", "DE-006", "CE-001", "CE-002", "HI-001", "KO-001"]
+
+  # ── Japanese paper: JA/CJK rules fire, non-JA rules blocked ───
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_ja_zh_paper.tex
+    language: "ja"
+    expect: ["JA-001"]
+    forbid: ["FR-007", "FR-008", "DE-006", "CE-001", "CE-002", "HI-001", "RTL-003"]
+
+  # ── Chinese paper: CJK/ZH rules fire, non-ZH rules blocked ────
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_zh_en_paper.tex
+    language: "zh"
+    expect: ["CJK-001"]
+    forbid: ["FR-007", "FR-008", "JA-001", "DE-006", "CE-001", "HI-001", "RTL-003"]
+
+  # ── English paper: EN rules fire, non-EN rules blocked ─────────
+  - file: corpora/lint/i18n_qa/i18n_qa_no_babel_paper.tex
+    language: "en"
+    expect: ["LANG-014"]
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "DE-006", "HI-001", "RTL-003"]
+
+  # ── Conflicting babel: english wins, FR rules blocked ──────────
+  - file: corpora/lint/i18n_qa/i18n_qa_conflicting_paper.tex
+    language: "en"
+    expect: ["LANG-014"]
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "DE-006", "HI-001"]
+
+  # ── Hindi paper: HI rules fire, others blocked ─────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_hi_paper.tex
+    language: "hi"
+    expect: ["HI-001"]
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "DE-006", "CE-001", "KO-001"]
+
+  # ── Hebrew paper: RTL rules fire, others blocked ───────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_he_paper.tex
+    language: "he"
+    expect: []
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "DE-006", "CE-001", "HI-001"]
+
+  # ── Czech paper: no CS-specific rules expected to fire on content
+  - file: corpora/lint/i18n_qa/i18n_qa_cs_paper.tex
+    language: "cs"
+    expect: []
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "CE-001", "HI-001", "DE-006"]
+
+  # ── Romanian paper ──────────────────────────────────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_ro_paper.tex
+    language: "ro"
+    expect: []
+    forbid: ["FR-007", "FR-008", "JA-001", "CE-001", "DE-006", "HI-001"]
+
+  # ── Swedish paper ──────────────────────────────────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_sv_paper.tex
+    language: "sv"
+    expect: []
+    forbid: ["FR-007", "FR-008", "JA-001", "CE-001", "DE-006", "HI-001"]
+
+  # ── Welsh paper ────────────────────────────────────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_cy_paper.tex
+    language: "cy"
+    expect: []
+    forbid: ["FR-007", "FR-008", "JA-001", "ZH-001", "DE-006", "HI-001"]

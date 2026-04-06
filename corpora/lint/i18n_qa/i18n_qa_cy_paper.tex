@@ -1,0 +1,458 @@
+% i18n_qa_cy_paper.tex — Welsh linguistics paper on Celtic language mutations
+% Intentional errors: missing circumflexes (w vs ŵ, y vs ŷ),
+%   wrong quote style, English loanwords without italics
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[welsh]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{tipa}
+\usepackage{gb4e}
+\usepackage{multicol}
+\usepackage{longtable}
+\usepackage{phonrule}
+\usepackage{covington}
+
+\title{Treigladau yn y Gymraeg Gyfoes:\\
+Dadansoddiad Ystadegol o Batrymau Treiglad Meddal}
+\author{%
+  % INTENTIONAL ERROR: missing circumflex on w — should be Gruffudd Owŵain or similar
+  Dr Megan Owain\thanks{Adran y Gymraeg, Prifysgol Aberystwyth.}
+  \and
+  % INTENTIONAL ERROR: missing circumflex on y — should be Rhŷs or similar
+  Yr Athro Rhys Dafydd\thanks{Ysgol y Gymraeg, Prifysgol Caerdydd.}
+}
+\date{6 Ebrill 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Mae'r erthygl hon yn cyflwyno dadansoddiad ystadegol cynhwysfawr o
+batrymau treiglad meddal yn y Gymraeg gyfoes. Trwy ddadansoddi
+corpws o 2.4 miliwn gair o destunau ysgrifenedig a llafar, rydym
+yn dangos bod amlder y treiglad meddal yn amrywio'n sylweddol yn
+% INTENTIONAL ERROR: missing circumflex — gwr instead of gŵr
+ol cyd-destun gramadegol, tafodiaith, a chofrestru. Mae'r
+canlyniadau'n dangos mai'r treiglad meddal ar ol y fannod
+benywaidd unigol sy'n dangos y gyfradd uchaf o gydymffurfiaeth
+(94.2\%), tra bo'r treiglad ar ol arddodiaid yn dangos y gyfradd
+isaf (67.8\%). Rydym hefyd yn cyflwyno model ystadegol sy'n
+rhagfynegi cydymffurfiaeth treiglo yn seiliedig ar ffactorau
+ieithyddol a chymdeithasol. Mae'r model yn cyflawni cywirdeb
+o 89.3\% ar y set brawf.
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{Cyflwyniad}
+\label{sec:cyflwyniad}
+
+Mae treigladau'n un o nodweddion mwyaf trawiadol yr ieithoedd
+Celtaidd. Yn y Gymraeg, ceir tri math o dreiglad: y treiglad
+meddal, y treiglad trwynol, a'r treiglad llaes\footnote{%
+Mae rhai ieithyddion hefyd yn cynnwys y treiglad H- fel
+pedwerydd math; gweler \citet{thomas1996}.}. Mae'r treiglad
+meddal yn effeithio ar naw cytsain gychwynnol:
+
+\begin{equation}
+\label{eq:treiglad_meddal}
+\text{p} \to \text{b}, \quad
+\text{t} \to \text{d}, \quad
+\text{c} \to \text{g}, \quad
+\text{b} \to \text{f}, \quad
+\text{d} \to \text{dd}, \quad
+\text{g} \to \varnothing
+\end{equation}
+
+\begin{equation}
+\label{eq:treiglad_meddal_2}
+\text{m} \to \text{f}, \quad
+\text{ll} \to \text{l}, \quad
+\text{rh} \to \text{r}
+\end{equation}
+
+% INTENTIONAL ERROR: English loanword "mutation" without italics
+Er bod y system mutation yn cael ei ddisgrifio'n drylwyr mewn
+gramadegau traddodiadol~\citep{thomas1996, king2003}, ychydig
+o ymchwil ystadegol systematig sydd wedi'i gynnal ar ei
+ddefnydd gwirioneddol mewn Cymraeg naturiol.
+
+\subsection{Cyd-destun hanesyddol}
+
+Mae'r treigladau Cymraeg yn deillio o brosesau ffonolegol
+yn y Frythoneg Gyffredin (tua 500--600 OC). Yn wreiddiol,
+roedd y newidiadau'n rheolaidd ac yn awtomatig, wedi'u
+% INTENTIONAL ERROR: missing circumflex on w — gwr instead of gŵr
+sbarduno gan y sain ganlynol. Dros amser, collodd y
+cyd-destunau ffonolegol gwreiddiol eu perthnasedd, a daeth
+y treigladau'n morffolegol~\citep{russell1995}.
+
+% INTENTIONAL ERROR: English quotes instead of Welsh
+Fel y dywedodd Syr John Morris-Jones: "Mae'r treigladau yn
+elfen hanfodol o ramadeg y Gymraeg." Mae hyn yn arbennig o
+wir am y treiglad meddal, sy'n digwydd mewn dros 20 o
+gyd-destunau gramadegol gwahanol.
+
+\subsection{Amcanion yr ymchwil}
+
+Amcanion yr erthygl hon yw:
+\begin{enumerate}[label=(\roman*)]
+  \item Meintoli amlder y treiglad meddal mewn gwahanol
+        gyd-destunau gramadegol;
+  \item Archwilio'r berthynas rhwng cydymffurfiaeth dreiglo
+        a ffactorau cymdeithasol (oedran, rhywedd, tafodiaith);
+  \item Datblygu model rhagfynegol ar gyfer cydymffurfiaeth dreiglo;
+  \item Cymharu'r canlyniadau a chanfyddiadau o ieithoedd
+        Celtaidd eraill (Adran~\ref{sec:cymharu}).
+\end{enumerate}
+
+%% ---------------------------------------------------------------
+\section{Adolygiad llenyddiaeth}
+\label{sec:adolygiad}
+
+\subsection{Systemau treiglad Celtaidd}
+
+Mae'r ieithoedd Celtaidd yn rhannu system treigladau cymhleth.
+Mae Tabl~\ref{tab:celtaidd} yn cymharu systemau treiglad yr
+ieithoedd Celtaidd modern.
+
+\begin{table}[ht]
+\centering
+\caption{Cymhariaeth o systemau treiglad yr ieithoedd Celtaidd}
+\label{tab:celtaidd}
+\begin{tabular}{lccc}
+\toprule
+Iaith & Mathau o dreiglad & Cytseiniad & Cyd-destunau \\
+\midrule
+Cymraeg & 3 (+ H-) & 9 & 20+ \\
+Gwyddeleg & 2 (s\'{e}imhi\'{u}, ur\'{u}) & 13 & 15+ \\
+Gaeleg yr Alban & 2 & 13 & 12+ \\
+Llydaweg & 4 & 9 & 18+ \\
+Cernyweg & 3 & 9 & 15+ \\
+Manaweg & 2 & 10 & 10+ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ymchwil blaenorol ar dreiglo Cymraeg}
+
+% INTENTIONAL ERROR: English loanword "softening" without italics
+Mae nifer o astudiaethau wedi archwilio'r broses softening yn
+y Gymraeg. Ball a M\"uller~\citep{ball1992} a gyflwynodd y
+fframwaith ffonolegol safonol. Yn ddiweddarach,
+Borsley et al.~\citep{borsley2007} a ddadansoddodd y
+treigladau o fewn fframwaith gramadeg gyredig pen (HPSG).
+
+% INTENTIONAL ERROR: missing circumflex — Cymru not Cymrŵ but should be tŷ not ty
+Ymchwil diweddar gan Robert~\citep{robert2020} a ddangosodd
+fod patrymau treiglo'n amrywio'n sylweddol rhwng siaradwyr
+ty cynta a siaradwyr ail iaith. Mae'r gwahaniaeth hwn yn
+arbennig o amlwg yn y cyd-destunau llai ffurfiol.
+
+%% ---------------------------------------------------------------
+\section{Methodoleg}
+\label{sec:methodoleg}
+
+\subsection{Y corpws}
+
+Casglwyd corpws o 2.4 miliwn gair o'r ffynonellau canlynol\footnote{%
+Cafodd caniat\^{a}d moesegol ei roi gan Bwyllgor Moeseg Ymchwil
+Prifysgol Aberystwyth (cyfeirnod: AE-2025-0142).}:
+\begin{itemize}
+  \item Testunau ysgrifenedig ffurfiol (700,000 gair):
+        papurau newydd, dogfennau llywodraethol;
+  \item Testunau ysgrifenedig anffurfiol (600,000 gair):
+        blogiau, cyfryngau cymdeithasol;
+  \item Data llafar ffurfiol (500,000 gair):
+        darllediadau radio a theledu;
+  \item Data llafar anffurfiol (600,000 gair):
+        sgyrsiau naturiol wedi'u recordio.
+\end{itemize}
+
+\subsection{Codio treigladau}
+
+Datblygwyd algorithm awtomatig i adnabod lleoliadau posibl
+ar gyfer treiglad a phenderfynu a oedd y treiglad wedi'i
+gymhwyso ai peidio. Yn ffurfiol, ar gyfer pob tocyn $w_i$
+yn y corpws:
+
+\begin{equation}
+\label{eq:treiglad_model}
+P(\text{treiglad} \mid w_{i-1}, w_i, c) = \sigma(\mathbf{w}^\top \mathbf{x} + b),
+\end{equation}
+% INTENTIONAL ERROR: English loanword without italics
+lle mae $\sigma$ yn swyddogaeth sigmoid, $\mathbf{x}$ yn
+fector o features ieithyddol, a $c$ yn gyd-destun gramadegol.
+
+Nodweddion y model oedd:
+\begin{enumerate}[label=(\alph*)]
+  \item Math y cyd-destun gramadegol (20 categori);
+  \item Dosbarth geiriol y gair blaenorol;
+  \item Hyd y gair (mewn sillafau);
+  \item Amlder y gair yn y corpws;
+  \item Cofrestru (ffurfiol/anffurfiol);
+  \item Rhanbarth (gogledd/de).
+\end{enumerate}
+
+\subsection{Dadansoddiad ystadegol}
+
+Defnyddiwyd atchweliad logistaidd aml-lefel i ddadansoddi'r
+data, gyda siaradwyr unigol fel lefel ar hap:
+\begin{equation}
+\label{eq:logistic}
+\log\!\left(\frac{p_{ij}}{1 - p_{ij}}\right) = \beta_0 + \sum_{k=1}^{K} \beta_k x_{ijk} + u_j,
+\end{equation}
+lle mae $p_{ij}$ yn debygolrwydd y bydd siaradwr $j$ yn
+treiglo yn achlysuron $i$, $\beta_k$ yn gyfernodau sefydlog,
+a $u_j \sim \mathcal{N}(0, \sigma_u^2)$ yn effeithiau ar hap.
+
+%% ---------------------------------------------------------------
+\section{Canlyniadau}
+\label{sec:canlyniadau}
+
+\subsection{Cyfraddau cydymffurfiaeth cyffredinol}
+
+Mae Ffigur~\ref{fig:cyfraddau} yn dangos y cyfraddau
+cydymffurfiaeth ar gyfer y prif gyd-destunau treiglad meddal.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.78\textwidth}{%
+\centering
+\textbf{Cyfraddau cydymffurfiaeth treiglad meddal yn y Gymraeg}\\[8pt]
+\begin{tabular}{lcc}
+Cyd-destun gramadegol & Cydymffurfiaeth (\%) & $n$ \\
+\hline
+Ar \^{o}l y fannod fenywaidd & 94.2 & 45,230 \\
+Ar \^{o}l ``yn'' (traethiadol) & 91.7 & 18,420 \\
+Gwrthrych berfenw & 88.3 & 12,150 \\
+Ar \^{o}l ``i'' & 85.6 & 22,380 \\
+Ar \^{o}l ``o'' & 83.1 & 19,870 \\
+Ansoddair benywaidd unigol & 79.4 & 8,920 \\
+Ar \^{o}l ``dy'' & 76.8 & 6,340 \\
+Ar \^{o}l ``am'' & 74.2 & 5,180 \\
+Ar \^{o}l ``ar'' & 71.5 & 14,230 \\
+Ar \^{o}l ``gan'' & 67.8 & 4,890 \\
+\end{tabular}\\[6pt]
+\emph{Cyd-destunau wedi'u trefnu yn \^{o}l cyfradd cydymffurfiaeth.}
+}}
+\caption{Cyfraddau cydymffurfiaeth treiglad meddal ar gyfer y deg
+prif gyd-destun gramadegol, yn seiliedig ar y corpws o 2.4 miliwn
+gair. Yr $n$ yw nifer yr achlysuron posibl.}
+\label{fig:cyfraddau}
+\end{figure}
+
+\subsection{Ffactorau cymdeithasol}
+
+Mae Tabl~\ref{tab:ffactorau} yn dangos effaith ffactorau
+cymdeithasol ar gydymffurfiaeth dreiglo.
+
+\begin{table}[ht]
+\centering
+\caption{Effaith ffactorau cymdeithasol ar gydymffurfiaeth dreiglo}
+\label{tab:ffactorau}
+\begin{tabular}{lcccc}
+\toprule
+Ffactor & Categori & Cydymffurfiaeth & Odds ratio & $p$ \\
+\midrule
+Oedran & 18--30 & 78.4\% & 1.00 (cyf.) & --- \\
+        & 31--50 & 83.2\% & 1.37 & $<0.001$ \\
+        & 51+ & 89.1\% & 2.15 & $<0.001$ \\
+\midrule
+% INTENTIONAL ERROR: English loanword without italics
+Gender & Benywaidd & 86.2\% & 1.42 & $<0.001$ \\
+       & Gwrywaidd & 80.1\% & 1.00 (cyf.) & --- \\
+\midrule
+Rhanbarth & Gogledd & 85.8\% & 1.31 & $<0.01$ \\
+           & De & 81.3\% & 1.00 (cyf.) & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Y model rhagfynegol}
+
+% INTENTIONAL ERROR: English quotes instead of Welsh
+Mae'r model logistaidd aml-lefel yn dangos fod y
+"cyd-destun gramadegol" yn brif ragfynegydd o gydymffurfiaeth.
+Gwerth AIC y model llawn yw 45,230, o'i gymharu a 52,180
+ar gyfer y model gwag ($\chi^2 = 6950$, $\text{gd} = 28$,
+$p < 0.001$). Cywirdeb y model ar y set brawf yw:
+\begin{equation}
+\label{eq:cywirdeb}
+\text{Cywirdeb} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{TN} + \text{FP} + \text{FN}} = 0.893.
+\end{equation}
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{Cromlin ROC ar gyfer y model rhagfynegol}\\[8pt]
+\begin{tabular}{cc}
+Cyfradd positif ffug & Sensitifrwydd \\
+\hline
+0.00 & 0.00 \\
+0.05 & 0.62 \\
+0.10 & 0.78 \\
+0.20 & 0.89 \\
+0.30 & 0.94 \\
+0.50 & 0.97 \\
+1.00 & 1.00 \\
+\end{tabular}\\[6pt]
+\emph{AUC = 0.934}
+}}
+\caption{Cromlin ROC ar gyfer y model atchweliad logistaidd aml-lefel.
+Arwynebedd o dan y gromlin (AUC) = 0.934, sy'n dangos
+perfformiad da iawn.}
+\label{fig:roc}
+\end{figure}
+
+%% ---------------------------------------------------------------
+\section{Cymhariaeth ag ieithoedd Celtaidd eraill}
+\label{sec:cymharu}
+
+\subsection{Gwyddeleg}
+
+% INTENTIONAL ERROR: missing circumflex on y — gyfystyr not gŷfystyr
+Yn y Wyddeleg, mae s\'{e}imhi\'{u} (lenitiad) yn gyfystyr a'r
+treiglad meddal Cymraeg mewn sawl ffordd. Fodd bynnag, mae
+s\'{e}imhi\'{u} yn effeithio ar fwy o gytseiniad (13 o'i
+gymharu a 9 yn y Gymraeg).
+
+\begin{equation}
+\label{eq:gwyddeleg}
+\text{Gwyddeleg: } \text{c} \to \text{ch}, \quad
+\text{p} \to \text{ph}, \quad
+\text{t} \to \text{th}, \quad
+\text{b} \to \text{bh}, \quad
+\text{d} \to \text{dh}
+\end{equation}
+
+Mae astudiaethau blaenorol~\citep{nig2008} yn dangos bod
+cyfraddau cydymffurfiaeth yn y Wyddeleg tua 72--85\%, sy'n
+is na'r Gymraeg ar gyfartaledd.
+
+\subsection{Llydaweg}
+
+% INTENTIONAL ERROR: English loanword without italics
+Mae'r system mutation yn y Llydaweg yn fwy cymhleth na'r
+Gymraeg, gyda phedwar math o dreiglad yn hytrach na thri.
+Mae'r treiglad meddal Llydaweg yn debyg iawn i'r un Cymraeg,
+ond ceir hefyd dreiglad caledu (provection) nad oes ganddo
+gyfatebiaeth uniongyrchol yn y Gymraeg\footnote{%
+Mae'r treiglad caledu Llydaweg yn troi cytseiniad llais
+yn ddi-lais, e.e.\ $\text{b} \to \text{p}$, $\text{d} \to \text{t}$.}.
+
+%% ---------------------------------------------------------------
+\section{Trafodaeth}
+\label{sec:trafodaeth}
+
+\subsection{Goblygiadau damcaniaethol}
+
+Mae ein canlyniadau'n cefnogi'r ddamcaniaeth fod treigladau'n
+cael eu cadw'n fwyaf cyson mewn cyd-destunau lle mae'r
+% INTENTIONAL ERROR: missing circumflex — gwr instead of gŵr, and ty instead of tŷ
+cysylltiad rhwng y sbardun a'r targed yn fwy tryloyw. Yn
+benodol, mae'r gyfradd uchaf (94.2\%) ar ol y fannod
+fenywaidd yn adlewyrchu'r ffaith mai hwn yw un o'r
+cyd-destunau mwyaf salient yn yr iaith.
+
+Mae'r gwahaniaethau oedran yn awgrymu bod erydiad graddol
+yn y system dreiglo, yn enwedig ymhlith siaradwyr iau.
+Fodd bynnag, mae'r cyfraddau'n dal yn uchel hyd yn oed
+yn y grwp oedran ieuengaf (78.4\%), sy'n dangos nad yw'r
+system ar fin diflannu~\citep{thomas2020}.
+
+\subsection{Cyfyngiadau}
+
+Prif gyfyngiad yr astudiaeth hon yw bod y corpws yn
+cynnwys mwy o destunau ysgrifenedig na llafar. Mae'n
+bosibl bod patrymau treiglo ar lafar yn wahanol i'r rhai
+a welir mewn ysgrifen. Yn ogystal, nid yw'r corpws yn
+% INTENTIONAL ERROR: English quotes instead of Welsh
+cynnwys digon o ddata o "siaradwyr ail iaith" i ganiat\'{a}u
+dadansoddiad ystadegol cadarn.
+
+%% ---------------------------------------------------------------
+\section{Casgliadau}
+\label{sec:casgliadau}
+
+Mae'r erthygl hon wedi cyflwyno dadansoddiad ystadegol
+cynhwysfawr o batrymau treiglad meddal yn y Gymraeg gyfoes.
+Prif ganfyddiadau'r astudiaeth yw:
+
+\begin{enumerate}
+  \item Mae cyfraddau cydymffurfiaeth yn amrywio o 67.8\% i
+        94.2\% yn dibynnu ar y cyd-destun gramadegol
+        (Ffigur~\ref{fig:cyfraddau});
+  \item Mae oedran, rhywedd a rhanbarth yn effeithio'n
+        arwyddocaol ar gydymffurfiaeth
+        (Tabl~\ref{tab:ffactorau});
+  \item Mae model rhagfynegol yn cyflawni cywirdeb o 89.3\%
+        (Ffigur~\ref{fig:roc}).
+\end{enumerate}
+
+Mae'r canlyniadau'n cyfrannu at ein dealltwriaeth o
+forffoleg synchronig y Gymraeg ac yn darparu sylfaen
+ar gyfer ymchwil pellach i newidiadau ieithyddol yn y
+system dreiglo.
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[Ball a M\"uller(1992)]{ball1992}
+Ball, M.\,J. a M\"uller, N. (1992).
+\emph{Mutation in Welsh}.
+Routledge.
+
+\bibitem[Borsley et al.(2007)]{borsley2007}
+Borsley, R.\,D., Tallerman, M. a Willis, D. (2007).
+\emph{The Syntax of Welsh}.
+Cambridge University Press.
+
+\bibitem[King(2003)]{king2003}
+King, G. (2003).
+\emph{Modern Welsh: A Comprehensive Grammar}, 2il arg.
+Routledge.
+
+\bibitem[N\'{i} Ghallchobhair(2008)]{nig2008}
+N\'{i} Ghallchobhair, E. (2008).
+Mutation patterns in contemporary spoken Irish.
+\emph{Journal of Celtic Linguistics}, 12, 43--68.
+
+\bibitem[Robert(2020)]{robert2020}
+Robert, E. (2020).
+Mutation acquisition in Welsh-medium education.
+\emph{Language, Culture and Curriculum}, 33(4), 389--404.
+
+\bibitem[Russell(1995)]{russell1995}
+Russell, P. (1995).
+\emph{An Introduction to the Celtic Languages}.
+Longman.
+
+\bibitem[Thomas(1996)]{thomas1996}
+Thomas, P.\,W. (1996).
+\emph{Gramadeg y Gymraeg}.
+Gwasg Prifysgol Cymru.
+
+\bibitem[Thomas(2020)]{thomas2020}
+Thomas, E.\,M. (2020).
+The mutation system in child and adult Welsh.
+\emph{Journal of Linguistics}, 56(1), 115--152.
+
+\end{thebibliography}
+
+\end{document}

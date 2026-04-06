@@ -1,0 +1,431 @@
+% i18n_qa_sv_paper.tex — Swedish physics paper on quantum mechanics
+% Intentional errors: wrong quotes (English "..." instead of Swedish >>...<<),
+%   decimal period instead of decimal comma (3.14 vs 3,14),
+%   aa/ae/oe encoding issues
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[swedish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{braket}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{siunitx}
+\usepackage{physics}
+\usepackage{mathrsfs}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Sats}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{P\r{a}st\r{a}ende}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Exempel}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Anm\"arkning}
+
+\title{Kvantmekaniska sammanfl\"atningar och Bellska olikheter\\
+i system med flera partiklar}
+\author{%
+  Erik Lindstr\"om\thanks{Institutionen f\"or fysik, Lunds universitet, Lund.}
+  \and
+  Anna S\"oderstr\"om\thanks{Institutionen f\"or teoretisk fysik,
+  Kungliga Tekniska h\"ogskolan, Stockholm.}
+}
+\date{den 6 april 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+I denna artikel unders\"oker vi kvantmekanisk sammanfl\"atning
+(entanglement) i system best\r{a}ende av tre eller fler partiklar.
+Vi h\"arleder en ny familj av Bellska olikheter som \"ar striktare
+\"an de klassiska CHSH-olikheterna f\"or flerpartikelsystem.
+V\r{a}ra teoretiska resultat visar att det maximala br\"attet mot
+de lokala realistiska gr\"anserna \"okar exponentiellt med antalet
+partiklar. Vi presenterar ocks\r{a} numeriska simuleringar som
+bekr\"aftar de teoretiska f\"oruts\"agelserna f\"or system med upp till
+% INTENTIONAL ERROR: decimal period instead of comma
+12 partiklar. Den maximala kr\"ankningskvoten \"ar 2.83 f\"or tv\r{a}
+partiklar och v\"axer till 45.7 f\"or tio partiklar. Resultaten
+har implikationer f\"or kvantinformationsbehandling och
+kvantkryptografi.
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{Inledning}
+\label{sec:inledning}
+
+Kvantmekanisk sammanfl\"atning \"ar ett av de mest fascinerande
+fenomenen i modern fysik. Sedan Einstein, Podolsky och Rosens
+(EPR) ber\"omda artikel 1935~\citep{einstein1935} har fr\r{a}gan
+om kvantmekanikens fullst\"andighet debatterats intensivt.
+
+% INTENTIONAL ERROR: English quotes instead of Swedish >>...<<
+John Bells banbrytande arbete 1964~\citep{bell1964} visade att
+ingen "lokal realistisk" teori kan reproducera alla
+f\"oruts\"agelser fr\r{a}n kvantmekaniken. Bells olikhet ger ett
+experimentellt testbart kriterium f\"or att skilja mellan
+kvantmekanik och lokala dolda variabelmodeller.
+
+F\"or tv\r{a} partiklar i ett singletttillst\r{a}nd
+\begin{equation}
+\label{eq:singlet}
+\ket{\Psi^-} = \frac{1}{\sqrt{2}} \left( \ket{\uparrow\downarrow} - \ket{\downarrow\uparrow} \right),
+\end{equation}
+ger CHSH-olikheten~\citep{clauser1969}:
+\begin{equation}
+\label{eq:chsh}
+|S| = |\langle A_1 B_1 \rangle + \langle A_1 B_2 \rangle + \langle A_2 B_1 \rangle - \langle A_2 B_2 \rangle| \leq 2,
+\end{equation}
+% INTENTIONAL ERROR: decimal period instead of comma
+d\"ar den lokala realistiska gr\"ansen \"ar 2. Kvantmekaniken
+f\"oruts\"ager ett maximalt v\"arde p\r{a} $2\sqrt{2} \approx 2.828$,
+k\"ant som Tsirelsons gr\"ans\footnote{Boris Tsirelson (1980)
+visade att detta \"ar den maximala kr\"ankningen m\"ojlig inom
+kvantmekaniken.}.
+
+V\r{a}rt m\r{a}l \"ar att generalisera dessa resultat till system
+med $N \geq 3$ partiklar och h\"arleda nya, striktare olikheter.
+
+\subsection{Tidigare arbeten}
+
+Greenberger, Horne och Zeilinger (GHZ)~\citep{ghz1989} visade
+att f\"or tre partiklar finns ett \"annu st\"orre gap mellan
+kvantmekanik och lokal realism. GHZ-tillst\r{a}ndet
+\begin{equation}
+\label{eq:ghz}
+\ket{\mathrm{GHZ}} = \frac{1}{\sqrt{2}} \left( \ket{000} + \ket{111} \right)
+\end{equation}
+ger ett perfekt motexempel utan statistiska argument\footnote{%
+Till skillnad fr\r{a}n Bells olikhet, som kr\"aver statistik \"over
+m\r{a}nga m\"atningar, ger GHZ ett enstaka motexempel.}.
+
+Mermin~\citep{mermin1990} formulerade en generalisering av
+CHSH-olikheten f\"or $N$ partiklar och visade att kvantmekaniken
+% INTENTIONAL ERROR: decimal period
+kr\"anker den med en faktor som v\"axer som $2^{(N-1)/2} \approx 1.414^{N-1}$.
+
+\subsection{V\r{a}ra bidrag}
+
+De huvudsakliga bidragen i denna artikel \"ar:
+
+\begin{enumerate}[label=(\roman*)]
+  \item En ny familj av Bellska olikheter f\"or $N$ partiklar
+        (Sats~\ref{thm:huvudsats});
+  \item Bevis f\"or att den maximala kvantmekaniska kr\"ankningen
+        \"ar exponentiell i $N$ (Sats~\ref{thm:exponentiell});
+  \item Numerisk verifiering f\"or $N \leq 12$
+        (Avsnitt~\ref{sec:numeriska}).
+\end{enumerate}
+
+%% ---------------------------------------------------------------
+\section{Teoretisk bakgrund}
+\label{sec:bakgrund}
+
+\subsection{Kvantmekaniska grundbegrepp}
+
+% INTENTIONAL ERROR: English quotes instead of Swedish
+I kvantmekaniken beskrivs tillst\r{a}ndet hos ett system av
+ett "tillst\r{a}ndsvektor" $\ket{\psi}$ i ett Hilbertrum
+$\mathcal{H}$. F\"or ett tv\r{a}partikelsystem \"ar
+tillst\r{a}ndsrummet tensorprodukten:
+\begin{equation}
+\label{eq:tensor}
+\mathcal{H} = \mathcal{H}_A \otimes \mathcal{H}_B.
+\end{equation}
+
+En observabel representeras av en sj\"alvkonjugerad operat\"or
+$\hat{O}$ med egenv\"arden $\{o_i\}$ och egentillst\r{a}nd $\{\ket{o_i}\}$.
+V\"antev\"ardet \"ar:
+\begin{equation}
+\label{eq:expectation}
+\langle \hat{O} \rangle = \bra{\psi} \hat{O} \ket{\psi} = \sum_i o_i |\braket{o_i | \psi}|^2.
+\end{equation}
+
+\subsection{Sammanfl\"atning}
+
+\begin{definition}
+\label{def:entanglement}
+Ett tv\r{a}partikeltillst\r{a}nd $\ket{\psi} \in \mathcal{H}_A \otimes \mathcal{H}_B$
+\"ar sammanfl\"atat om det inte kan skrivas som en tensorprodukt
+$\ket{\psi} \neq \ket{\alpha} \otimes \ket{\beta}$ f\"or n\r{a}gra
+$\ket{\alpha} \in \mathcal{H}_A$, $\ket{\beta} \in \mathcal{H}_B$.
+\end{definition}
+
+F\"or att kvantifiera sammanfl\"atning anv\"ands entropi. Den
+von Neumannska entropin f\"or en reducerad densitetsmatris
+$\rho_A = \mathrm{Tr}_B(\ket{\psi}\bra{\psi})$ \"ar:
+\begin{equation}
+\label{eq:von_neumann}
+S(\rho_A) = -\mathrm{Tr}(\rho_A \log_2 \rho_A) = -\sum_i \lambda_i \log_2 \lambda_i,
+\end{equation}
+d\"ar $\{\lambda_i\}$ \"ar egenv\"ardena till $\rho_A$.
+
+\subsection{Bellska olikheter}
+
+\begin{definition}
+\label{def:bell_operator}
+Belloperatorn f\"or CHSH-olikheten \"ar:
+\[
+\hat{B}_{\mathrm{CHSH}} = A_1 \otimes (B_1 + B_2) + A_2 \otimes (B_1 - B_2),
+\]
+d\"ar $A_i, B_j$ \"ar observabler med egenv\"arden $\pm 1$.
+\end{definition}
+
+%% ---------------------------------------------------------------
+\section{Nya Bellska olikheter f\"or flerpartikelsystem}
+\label{sec:nya_olikheter}
+
+\subsection{Konstruktion av Belloperatorn}
+
+F\"or $N$ partiklar definierar vi en generaliserad Belloperator:
+\begin{equation}
+\label{eq:bell_N}
+\hat{B}_N = \frac{1}{2} \left[ (A_1 + A_2) \otimes \hat{B}_{N-1} + (A_1 - A_2) \otimes \hat{B}_{N-1}' \right],
+\end{equation}
+d\"ar $\hat{B}_{N-1}$ och $\hat{B}_{N-1}'$ \"ar Belloperatorer
+f\"or $N-1$ partiklar med olika m\"atinst\"allningar.
+
+\begin{theorem}[Huvudsats]
+\label{thm:huvudsats}
+F\"or varje $N \geq 2$ g\"aller den lokala realistiska olikheten:
+\begin{equation}
+\label{eq:lr_bound}
+|\langle \hat{B}_N \rangle_{\mathrm{LR}}| \leq 1.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Vi bevisar med induktion \"over $N$. Basfallet $N = 2$ \"ar
+CHSH-olikheten~\eqref{eq:chsh} normaliserad med en faktor
+$1/2$. F\"or induktionssteget, antag att $|\langle \hat{B}_{N-1} \rangle_{\mathrm{LR}}| \leq 1$
+och $|\langle \hat{B}_{N-1}' \rangle_{\mathrm{LR}}| \leq 1$. D\r{a}:
+\begin{align}
+|\langle \hat{B}_N \rangle_{\mathrm{LR}}|
+&\leq \frac{1}{2} |a_1 + a_2| \cdot |\langle \hat{B}_{N-1} \rangle| + \frac{1}{2} |a_1 - a_2| \cdot |\langle \hat{B}_{N-1}' \rangle| \notag \\
+&\leq \frac{1}{2} (|a_1 + a_2| + |a_1 - a_2|) = 1, \label{eq:induction}
+\end{align}
+d\"ar sista steget f\"oljer av att $a_1, a_2 \in \{-1, +1\}$.
+\end{proof}
+
+\subsection{Kvantmekanisk kr\"ankning}
+
+\begin{theorem}
+\label{thm:exponentiell}
+F\"or GHZ-tillst\r{a}ndet med $N$ partiklar g\"aller:
+\begin{equation}
+\label{eq:qm_violation}
+\langle \hat{B}_N \rangle_{\mathrm{QM}} = 2^{(N-2)/2},
+\end{equation}
+vilket ger en kr\"ankningskvot
+% INTENTIONAL ERROR: decimal period instead of comma
+$Q_N = 2^{(N-2)/2}$ som v\"axer exponentiellt. F\"or $N = 2$
+\"ar $Q_2 = 1.0$, f\"or $N = 3$ \"ar $Q_3 = 1.414$, och f\"or
+$N = 10$ \"ar $Q_{10} = 22.627$.
+\end{theorem}
+
+\begin{proof}
+Vi v\"aljer m\"atriktningarna optimalt. F\"or GHZ-tillst\r{a}ndet
+$\ket{\mathrm{GHZ}_N} = (\ket{0}^{\otimes N} + \ket{1}^{\otimes N})/\sqrt{2}$
+och m\"atriktningarna $\theta_{k,1} = 0$, $\theta_{k,2} = \pi/(2N)$
+f\"or varje partikel $k$, f\r{a}r vi:
+\begin{align}
+\langle \hat{B}_N \rangle &= \cos^N\!\left(\frac{\pi}{2N}\right) + \binom{N}{2} \cos^{N-2}\!\left(\frac{\pi}{2N}\right) \sin^2\!\left(\frac{\pi}{2N}\right) + \cdots \notag \\
+&= 2^{(N-2)/2}. \label{eq:violation_calc}
+\end{align}
+Det fullst\"andiga beviset anv\"ander identiteter f\"or
+Tjebysjovpolynom.
+\end{proof}
+
+%% ---------------------------------------------------------------
+\section{Numeriska resultat}
+\label{sec:numeriska}
+
+\subsection{Ber\"akningsmetod}
+
+Vi ber\"aknar det maximala v\"ardet av $\langle \hat{B}_N \rangle$
+\"over alla m\"ojliga tillst\r{a}nd och m\"atriktningar med hj\"alp
+av semidefinit programmering (SDP)~\citep{navascues2008}.
+
+\begin{table}[ht]
+\centering
+% INTENTIONAL ERROR: decimal periods instead of commas throughout
+\caption{Maximal kvantmekanisk kr\"ankning av Bellska olikheten}
+\label{tab:violation}
+\begin{tabular}{ccccl}
+\toprule
+$N$ & LR-gr\"ans & QM-maximum & Kr\"ankningskvot & Tillst\r{a}nd \\
+\midrule
+2 & 1.000 & 1.414 & 1.414 & Singlett \\
+3 & 1.000 & 2.000 & 2.000 & GHZ \\
+4 & 1.000 & 2.828 & 2.828 & GHZ \\
+5 & 1.000 & 4.000 & 4.000 & GHZ \\
+6 & 1.000 & 5.657 & 5.657 & GHZ \\
+8 & 1.000 & 11.314 & 11.314 & GHZ \\
+10 & 1.000 & 22.627 & 22.627 & GHZ \\
+12 & 1.000 & 45.255 & 45.255 & GHZ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tabell~\ref{tab:violation} bekr\"aftar att kr\"ankningskvoten
+v\"axer exponentiellt med $N$, i \"overensst\"ammelse med
+Sats~\ref{thm:exponentiell}.
+
+\subsection{Janus-tillst\r{a}nd}
+
+% INTENTIONAL ERROR: English quotes
+F\"orutom GHZ-tillst\r{a}nd har vi ocks\r{a} unders\"okt
+s\r{a} kallade "W-tillst\r{a}nd":
+\begin{equation}
+\label{eq:w_state}
+\ket{W_N} = \frac{1}{\sqrt{N}} \left( \ket{100\cdots0} + \ket{010\cdots0} + \cdots + \ket{000\cdots1} \right).
+\end{equation}
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{Kr\"ankningskvot som funktion av $N$}\\[8pt]
+\begin{tabular}{ccc}
+$N$ & GHZ & W-tillst\r{a}nd \\
+\hline
+3 & 2.000 & 1.207 \\
+5 & 4.000 & 1.512 \\
+7 & 8.000 & 1.693 \\
+10 & 22.627 & 1.841 \\
+\end{tabular}\\[6pt]
+\emph{GHZ-tillst\r{a}nd ger exponentiell kr\"ankning,}\\
+\emph{W-tillst\r{a}nd ger logaritmisk.}
+}}
+\caption{J\"amf\"orelse av kr\"ankningskvoten f\"or GHZ- och W-tillst\r{a}nd
+som funktion av antalet partiklar $N$. GHZ-tillst\r{a}ndet \"ar optimalt.}
+\label{fig:violation}
+\end{figure}
+
+\subsection{Experimentella \"overv\"aganden}
+
+% INTENTIONAL ERROR: aa encoding issue — using 'a' instead of '\r{a}'
+F\"or experimentell verifiering kr\"avs h\"og fidelitet i
+tillst\r{a}ndspreparation. Med nuvarande teknik kan GHZ-tillstand
+med upp till $N = 14$ fotoner genereras~\citep{wang2018}.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+% INTENTIONAL ERROR: decimal period
+\textbf{Kr\"avd fidelitet f\"or signifikant kr\"ankning}\\[8pt]
+\begin{tabular}{cc}
+$N$ & Minsta fidelitet $F_{\min}$ \\
+\hline
+3 & 0.707 \\
+5 & 0.841 \\
+8 & 0.924 \\
+10 & 0.951 \\
+12 & 0.967 \\
+\end{tabular}\\[6pt]
+\emph{H\"ogre $N$ kr\"aver h\"ogre fidelitet.}
+}}
+\caption{Minsta tillst\r{a}ndsfidelitet $F_{\min}$ som kr\"avs
+f\"or att observera en statistiskt signifikant (3$\sigma$)
+kr\"ankning av den Bellska olikheten, som funktion av $N$.}
+\label{fig:fidelity}
+\end{figure}
+
+%% ---------------------------------------------------------------
+\section{Till\"ampningar}
+\label{sec:tillamningar}
+
+\subsection{Kvantkryptografi}
+
+V\r{a}ra resultat har direkta till\"ampningar inom kvantkryptografi.
+% INTENTIONAL ERROR: decimal period
+Device-independent quantum key distribution (DI-QKD) anv\"ander
+kr\"ankningar av Bellska olikheter f\"or att garantera s\"akerhet.
+Den h\"ogre kr\"ankningskvoten f\"or flerpartikelsystem inneb\"ar
+en nyckelhastighet p\r{a} $R \approx 0.85$ bitar per m\"atning
+j\"amf\"ort med $R \approx 0.42$ f\"or tv\r{a}partikelsystem.
+
+\subsection{Kvantber\"akning}
+
+Flerpartikelsammanfl\"atning \"ar en grundl\"aggande resurs i
+kvantber\"akning. V\r{a}ra olikheter kan anv\"andas f\"or att
+verifiera sammanfl\"atning i kvantdatorer med m\r{a}nga
+kvantbitar\footnote{Google Sycamore-processorn har 72 kvantbitar
+och IBM Eagle har 127 kvantbitar (2024).}.
+
+%% ---------------------------------------------------------------
+\section{Slutsatser}
+\label{sec:slutsatser}
+
+Vi har h\"arlett en ny familj av Bellska olikheter f\"or
+flerpartikelsystem (Sats~\ref{thm:huvudsats}) och visat att
+den kvantmekaniska kr\"ankningen v\"axer exponentiellt med
+antalet partiklar (Sats~\ref{thm:exponentiell}). Numeriska
+simuleringar bekr\"aftar de teoretiska resultaten f\"or system
+med upp till 12 partiklar (Tabell~\ref{tab:violation}).
+
+Framtida arbete inkluderar experimentell verifiering med
+fotoniska system och till\"ampningar inom flerparti-QKD-protokoll.
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[Bell(1964)]{bell1964}
+Bell, J.\,S. (1964).
+On the Einstein--Podolsky--Rosen paradox.
+\emph{Physics Physique Fizika}, 1(3), 195--200.
+
+\bibitem[Clauser et al.(1969)]{clauser1969}
+Clauser, J.\,F., Horne, M.\,A., Shimony, A. and Holt, R.\,A. (1969).
+Proposed experiment to test local hidden-variable theories.
+\emph{Physical Review Letters}, 23(15), 880--884.
+
+\bibitem[Einstein, Podolsky och Rosen(1935)]{einstein1935}
+Einstein, A., Podolsky, B. och Rosen, N. (1935).
+Can quantum-mechanical description of physical reality be considered complete?
+\emph{Physical Review}, 47(10), 777--780.
+
+\bibitem[Greenberger, Horne och Zeilinger(1989)]{ghz1989}
+Greenberger, D.\,M., Horne, M.\,A. och Zeilinger, A. (1989).
+Going beyond Bell's theorem.
+In \emph{Bell's Theorem, Quantum Theory, and Conceptions of the Universe},
+Kluwer Academic Publishers, 69--72.
+
+\bibitem[Mermin(1990)]{mermin1990}
+Mermin, N.\,D. (1990).
+Extreme quantum entanglement in a superposition of macroscopically distinct states.
+\emph{Physical Review Letters}, 65(15), 1838--1840.
+
+\bibitem[Navascu\'{e}s et al.(2008)]{navascues2008}
+Navascu\'{e}s, M., Pironio, S. and Ac\'{i}n, A. (2008).
+A convergent hierarchy of semidefinite programs characterizing the
+set of quantum correlations.
+\emph{New Journal of Physics}, 10, 073013.
+
+\bibitem[Wang et al.(2018)]{wang2018}
+Wang, X.-L., et al. (2018).
+18-qubit entanglement with six photons' three degrees of freedom.
+\emph{Physical Review Letters}, 120(26), 260502.
+
+\end{thebibliography}
+
+\end{document}

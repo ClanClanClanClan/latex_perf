@@ -1,0 +1,512 @@
+% i18n_qa_mixed_fr_en_paper.tex
+% French thesis with English abstract
+% Expected detect_language result: "fr" (last babel option)
+% Deliberate errors: missing NBSP before punctuation, wrong quote style
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english,french]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\newtheorem{theoreme}{Th\'eor\`eme}[chapter]
+\newtheorem{lemme}[theoreme]{Lemme}
+\newtheorem{proposition}[theoreme]{Proposition}
+\newtheorem{corollaire}[theoreme]{Corollaire}
+\newtheorem{definition}{D\'efinition}[chapter]
+
+\title{Optimisation convexe sous contraintes stochastiques :\\
+       Algorithmes adaptatifs et garanties de convergence}
+\author{Marie-Claire Dubois\\
+  \textit{Laboratoire de Math\'ematiques Appliqu\'ees}\\
+  \textit{Universit\'e Paris-Saclay}}
+\date{Janvier 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\selectlanguage{english}
+This thesis investigates adaptive algorithms for convex optimization under
+stochastic constraints. We propose a novel framework that unifies proximal
+gradient methods with variance reduction techniques, achieving optimal
+convergence rates for both smooth and non-smooth objectives. Our main
+contribution is a family of algorithms, termed Adaptive Stochastic Proximal
+(ASP), that automatically adjust step sizes based on local curvature
+estimates without requiring knowledge of the global Lipschitz constant.
+We establish $O(1/\sqrt{T})$ convergence for the general convex case and
+linear convergence under strong convexity assumptions. Numerical experiments
+on large-scale machine learning problems, including LASSO regression and
+support vector machines, demonstrate that ASP consistently outperforms
+existing methods such as SGD with momentum, Adam, and AdaGrad.
+Furthermore, we extend our analysis to the distributed setting, proving
+that communication-efficient variants of ASP retain their theoretical
+guarantees while reducing bandwidth requirements by a factor of $O(d)$
+where $d$ is the problem dimension.
+
+\medskip
+\noindent\textbf{Keywords:} convex optimization, stochastic gradient descent,
+proximal methods, variance reduction, adaptive step sizes, distributed optimization.
+\selectlanguage{french}
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+% ERROR: missing NBSP before colon (French typography requires NBSP before :;!?)
+L'optimisation convexe constitue un pilier fondamental des math\'ematiques
+appliqu\'ees modernes. Depuis les travaux fondateurs de Nesterov dans les
+ann\'ees 1980, la th\'eorie de la complexit\'e des algorithmes d'optimisation
+a connu des avanc\'ees consid\'erables. Dans cette th\`ese, nous nous
+int\'eressons particuli\`erement aux probl\`emes d'optimisation sous
+contraintes stochastiques: un cadre qui apparait naturellement dans de
+nombreuses applications pratiques.
+
+% ERROR: straight quotes instead of guillemets
+Le probl\`eme g\'en\'eral que nous consid\'erons s'\'ecrit sous la forme
+"standard" suivante:
+\begin{equation}\label{eq:prob-principal}
+  \min_{x \in \mathcal{X}} \left\{ F(x) \triangleq
+    \mathbb{E}_{\xi \sim \mathcal{D}} \left[ f(x; \xi) \right]
+    + \lambda \, g(x) \right\},
+\end{equation}
+o\`u $\mathcal{X} \subseteq \mathbb{R}^d$ est un ensemble convexe ferm\'e,
+$f(\cdot; \xi)$ est une fonction convexe pour chaque r\'ealisation $\xi$
+de la variable al\'eatoire, $g : \mathbb{R}^d \to \mathbb{R} \cup \{+\infty\}$
+est une fonction convexe semi-continue inf\'erieurement, et $\lambda > 0$
+est un param\`etre de r\'egularisation.
+
+% ERROR: missing NBSP before semicolon
+La motivation principale de ce travail provient des applications en
+apprentissage automatique; en effet, la plupart des probl\`emes
+d'entra\^inement de mod\`eles statistiques se formulent naturellement
+sous la forme~\eqref{eq:prob-principal}. Par exemple, la r\'egression
+logistique r\'egularis\'ee correspond au choix $f(x; \xi_i) =
+\log(1 + \exp(-y_i \langle a_i, x \rangle))$ et $g(x) = \|x\|_1$.
+
+Les contributions principales de cette th\`ese sont les suivantes:
+\begin{enumerate}
+  \item Nous proposons une famille d'algorithmes adaptatifs, appel\'ee
+    ASP (Adaptive Stochastic Proximal), qui ajuste automatiquement les
+    pas de descente en fonction de la courbure locale du probl\`eme.
+  \item Nous \'etablissons des garanties de convergence optimales pour
+    ASP dans le cas convexe g\'en\'eral ($O(1/\sqrt{T})$) et dans le
+    cas fortement convexe (convergence lin\'eaire).
+  \item Nous \'etendons notre analyse au cadre distribu\'e et montrons
+    que les variantes efficaces en communication de ASP conservent leurs
+    garanties th\'eoriques.
+  \item Nous validons nos r\'esultats par des exp\'eriences num\'eriques
+    approfondies sur des jeux de donn\'ees r\'eels de grande taille.
+\end{enumerate}
+
+
+\chapter{Pr\'eliminaires et \'etat de l'art}
+
+\section{Cadre th\'eorique}
+
+Nous commen\c{c}ons par rappeler les d\'efinitions et propri\'et\'es
+fondamentales de l'optimisation convexe qui seront utilis\'ees tout
+au long de cette th\`ese.
+
+\begin{definition}[Convexit\'e forte]
+Une fonction $f : \mathbb{R}^d \to \mathbb{R}$ est dite
+$\mu$-fortement convexe (avec $\mu > 0$) si pour tout
+$x, y \in \mathbb{R}^d$ et tout $\alpha \in [0, 1]$:
+\begin{equation}\label{eq:strong-cvx}
+  f(\alpha x + (1-\alpha) y) \leq \alpha f(x) + (1-\alpha) f(y)
+    - \frac{\mu}{2} \alpha (1-\alpha) \|x - y\|^2.
+\end{equation}
+\end{definition}
+
+\begin{definition}[Lissit\'e]
+Une fonction diff\'erentiable $f : \mathbb{R}^d \to \mathbb{R}$ est
+dite $L$-lisse si son gradient est $L$-lipschitzien:
+\begin{equation}\label{eq:lipschitz-grad}
+  \|\nabla f(x) - \nabla f(y)\| \leq L \|x - y\|, \quad
+  \forall x, y \in \mathbb{R}^d.
+\end{equation}
+\end{definition}
+
+Le nombre de condition $\kappa = L / \mu$ joue un r\^ole central dans
+l'analyse de la vitesse de convergence des algorithmes d'optimisation.
+Plus $\kappa$ est grand, plus le probl\`eme est mal conditionn\'e et
+plus la convergence est lente.
+
+\section{M\'ethodes de gradient stochastique}
+
+% ERROR: missing NBSP before exclamation mark
+La descente de gradient stochastique (SGD), introduite par Robbins et
+Monro en 1951, est l'algorithme le plus fondamental pour r\'esoudre le
+probl\`eme~\eqref{eq:prob-principal}. L'id\'ee est remarquablement simple!
+\`A chaque it\'eration $t$, on tire un \'echantillon $\xi_t$ et on
+effectue la mise \`a jour:
+\begin{equation}\label{eq:sgd}
+  x_{t+1} = \Pi_{\mathcal{X}} \left( x_t - \eta_t \nabla f(x_t; \xi_t) \right),
+\end{equation}
+o\`u $\Pi_{\mathcal{X}}$ d\'esigne la projection sur $\mathcal{X}$ et
+$\eta_t > 0$ est le pas de descente.
+
+\begin{theoreme}[Convergence de SGD, \cite{nemirovski2009robust}]
+Sous les hypoth\`eses standard (convexit\'e de $f$, gradient born\'e
+$\mathbb{E}[\|\nabla f(x; \xi)\|^2] \leq G^2$), le choix
+$\eta_t = c / \sqrt{t}$ assure:
+\begin{equation}
+  \mathbb{E}[F(\bar{x}_T)] - F(x^*) \leq \frac{C}{\sqrt{T}},
+\end{equation}
+o\`u $\bar{x}_T = \frac{1}{T} \sum_{t=1}^T x_t$ et $C$ d\'epend de
+$G$, $c$ et $\|x_0 - x^*\|$.
+\end{theoreme}
+
+La limitation principale de SGD r\'eside dans la variance du gradient
+stochastique, qui impose un pas de descente d\'ecroissant et conduit
+\`a une convergence sous-lin\'eaire m\^eme pour les probl\`emes
+fortement convexes.
+
+\section{R\'eduction de variance}
+
+Les m\'ethodes de r\'eduction de variance, telles que SVRG
+\cite{johnson2013accelerating} et SAGA \cite{defazio2014saga},
+permettent de surmonter cette limitation en construisant des estimateurs
+du gradient \`a variance d\'ecroissante.
+
+\begin{lemme}[R\'eduction de variance SVRG]
+L'estimateur SVRG d\'efini par
+$v_t = \nabla f(x_t; \xi_t) - \nabla f(\tilde{x}; \xi_t) + \nabla F(\tilde{x})$
+satisfait:
+\begin{equation}
+  \mathbb{E}[\|v_t - \nabla F(x_t)\|^2] \leq 4L \left( F(x_t) - F(x^*)
+    + F(\tilde{x}) - F(x^*) \right).
+\end{equation}
+\end{lemme}
+
+Cette propri\'et\'e permet d'obtenir une convergence lin\'eaire pour
+les probl\`emes fortement convexes avec un pas de descente constant,
+ce qui repr\'esente une am\'elioration significative par rapport \`a SGD.
+
+
+\chapter{Algorithmes adaptatifs proximaux stochastiques}
+
+\section{Formulation g\'en\'erale}
+
+Nous introduisons maintenant notre famille d'algorithmes ASP. L'id\'ee
+principale est de combiner les avantages des m\'ethodes proximales avec
+une estimation adaptative de la courbure locale.
+
+\begin{algorithm}
+\caption{ASP -- Adaptive Stochastic Proximal}\label{alg:asp}
+\begin{algorithmic}[1]
+\Require Point initial $x_0$, param\`etres $\beta_1, \beta_2 \in (0,1)$
+\State Initialiser $m_0 = 0$, $v_0 = \epsilon \mathbf{I}_d$
+\For{$t = 0, 1, 2, \ldots, T-1$}
+  \State Tirer $\xi_t \sim \mathcal{D}$
+  \State $g_t = \nabla f(x_t; \xi_t)$
+  \State $m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t$
+  \State $v_t = \beta_2 v_{t-1} + (1-\beta_2) g_t \odot g_t$
+  \State $\hat{m}_t = m_t / (1 - \beta_1^{t+1})$
+  \State $\hat{v}_t = v_t / (1 - \beta_2^{t+1})$
+  \State $H_t = \mathrm{diag}(\sqrt{\hat{v}_t} + \epsilon)$
+  \State $x_{t+1} = \mathrm{prox}_{g}^{H_t} \left( x_t - H_t^{-1} \hat{m}_t \right)$
+\EndFor
+\State \Return $\bar{x}_T = \frac{1}{T} \sum_{t=0}^{T-1} x_t$
+\end{algorithmic}
+\end{algorithm}
+
+% ERROR: missing NBSP before question mark
+L'op\'erateur proximal g\'en\'eralis\'e utilis\'e \`a la ligne~10 est
+d\'efini par:
+\begin{equation}\label{eq:prox-gen}
+  \mathrm{prox}_{g}^{H}(y) = \arg\min_{x \in \mathcal{X}} \left\{
+    g(x) + \frac{1}{2} (x - y)^\top H (x - y) \right\}.
+\end{equation}
+Pourquoi cette formulation est-elle avantageuse? Elle combine la
+r\'egularisation implicite de l'op\'erateur proximal avec l'adaptation
+de la m\'etrique \`a la g\'eom\'etrie locale du probl\`eme.
+
+\section{Analyse de convergence}
+
+\begin{theoreme}[Convergence de ASP -- cas convexe]\label{thm:asp-convex}
+Soit $F$ une fonction convexe et $L$-lisse. Sous les hypoth\`eses~(H1)-(H3)
+d\'efinies dans l'Annexe~A, l'algorithme ASP avec $\beta_1 = 1 - 1/\sqrt{T}$
+et $\beta_2 = 1 - 1/T$ satisfait:
+\begin{equation}
+  \mathbb{E}[F(\bar{x}_T)] - F(x^*) \leq \frac{C_1 \sqrt{d}}{\sqrt{T}}
+    \left( 1 + \log T \right),
+\end{equation}
+o\`u $C_1$ d\'epend de $L$, $\|x_0 - x^*\|$ et des moments du bruit.
+\end{theoreme}
+
+\begin{proof}[D\'emonstration (esquisse)]
+La preuve repose sur trois ingr\'edients principaux. Premi\`erement, nous
+\'etablissons un lemme de descente adapt\'e \`a la m\'etrique variable $H_t$.
+Deuxi\`emement, nous bornons l'erreur d'approximation due \`a la correction
+de biais. Troisi\`emement, nous utilisons une analyse de regret \`a la
+mani\`ere de Zinkevich pour conclure.
+
+Soit $r_t = F(x_t) - F(x^*)$. Par convexit\'e de $F$ et la propri\'et\'e
+de l'op\'erateur proximal:
+\begin{align}
+  r_{t+1} &\leq \langle \nabla F(x_t), x_t - x^* \rangle
+    - \frac{1}{2} \|x_{t+1} - x_t\|_{H_t}^2 \nonumber \\
+  &\leq r_t - \frac{\mu_{\min}(H_t)}{2} \|x_{t+1} - x_t\|^2
+    + \langle g_t - \nabla F(x_t), x_t - x^* \rangle.
+\end{align}
+En sommant de $t=0$ \`a $T-1$ et en prenant l'esp\'erance, on obtient le
+r\'esultat apr\`es des majorations techniques d\'etaill\'ees dans
+l'Annexe~A.
+\end{proof}
+
+\begin{theoreme}[Convergence lin\'eaire -- cas fortement convexe]\label{thm:asp-strong}
+Si en outre $F$ est $\mu$-fortement convexe avec $\kappa = L/\mu$, alors
+ASP avec red\'emarrage p\'eriodique (p\'eriode $T_0 = O(\kappa \sqrt{d})$)
+satisfait apr\`es $K$ \'epoques:
+\begin{equation}
+  \mathbb{E}[F(x^{(K)})] - F(x^*) \leq
+    \left( 1 - \frac{c}{\kappa \sqrt{d}} \right)^K
+    \left( F(x_0) - F(x^*) \right).
+\end{equation}
+\end{theoreme}
+
+
+\chapter{Extension au cadre distribu\'e}
+
+\section{Mod\`ele de communication}
+
+Nous consid\'erons un r\'eseau de $n$ agents, chacun ayant acc\`es \`a
+une distribution locale $\mathcal{D}_i$. Le probl\`eme global s'\'ecrit:
+\begin{equation}\label{eq:dist-prob}
+  \min_{x \in \mathcal{X}} \frac{1}{n} \sum_{i=1}^n
+    \mathbb{E}_{\xi \sim \mathcal{D}_i} [f_i(x; \xi)] + \lambda g(x).
+\end{equation}
+
+% ERROR: missing NBSP before colon
+La contrainte principale dans ce cadre est la communication entre agents:
+chaque \'echange de vecteurs dans $\mathbb{R}^d$ a un co\^ut proportionnel
+\`a $d$, ce qui peut devenir prohibitif pour les probl\`emes de grande
+dimension.
+
+\section{Compression par quantification}
+
+Nous proposons une variante de ASP avec compression des gradients
+communiqu\'es. Soit $Q : \mathbb{R}^d \to \mathbb{R}^d$ un op\'erateur
+de quantification satisfaisant:
+\begin{equation}
+  \mathbb{E}[\|Q(x) - x\|^2] \leq (1-\delta) \|x\|^2,
+\end{equation}
+pour un certain $\delta \in (0, 1]$.\footnote{Cette propri\'et\'e est
+v\'erifi\'ee par de nombreux op\'erateurs classiques, notamment la
+quantification stochastique \`a $b$ bits avec $\delta = \min(b/d, 1)$.}
+
+\begin{proposition}[Convergence de ASP distribu\'e compress\'e]
+L'algorithme ASP distribu\'e avec compression $Q$ converge \`a la vitesse:
+\begin{equation}
+  \mathbb{E}[F(\bar{x}_T)] - F(x^*) \leq
+    \frac{C_2}{\delta} \cdot \frac{\sqrt{d}}{\sqrt{nT}},
+\end{equation}
+ce qui correspond \`a une acc\'el\'eration lin\'eaire en $n$ (speed-up
+lin\'eaire).
+\end{proposition}
+
+Le tableau~\ref{tab:comparison} r\'esume les r\'esultats de convergence
+pour les diff\'erentes variantes de notre algorithme.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparaison des vitesses de convergence}\label{tab:comparison}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Algorithme & Cas convexe & Cas fort. convexe & Communication \\
+\midrule
+SGD        & $O(1/\sqrt{T})$ & $O(1/T)$ & $O(dT)$ \\
+Adam       & $O(1/\sqrt{T})$ & $O(\sqrt{d}/T)$ & --- \\
+ASP        & $O(\sqrt{d}/\sqrt{T})$ & $O(\exp(-T/\kappa\sqrt{d}))$ & --- \\
+ASP-Dist   & $O(\sqrt{d}/\sqrt{nT})$ & $O(\exp(-nT/\kappa\sqrt{d}))$ & $O(dT)$ \\
+ASP-Comp   & $O(\sqrt{d}/\delta\sqrt{nT})$ & $O(\exp(-\delta nT/\kappa\sqrt{d}))$ & $O(bT)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\chapter{Exp\'eriences num\'eriques}
+
+\section{Configuration exp\'erimentale}
+
+% ERROR: missing NBSP before semicolon
+Nous \'evaluons nos algorithmes sur trois probl\`emes classiques
+d'apprentissage automatique; la r\'egression LASSO, les machines \`a
+vecteurs de support (SVM) et la r\'egression logistique r\'egularis\'ee.
+
+Les jeux de donn\'ees utilis\'es sont d\'ecrits dans le
+tableau~\ref{tab:datasets}.
+
+\begin{table}[htbp]
+\centering
+\caption{Jeux de donn\'ees utilis\'es dans les exp\'eriences}\label{tab:datasets}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Jeu de donn\'ees & $n$ (\'echantillons) & $d$ (dimension) & Taille (Mo) \\
+\midrule
+rcv1-train  & 20\,242  & 47\,236  & 87 \\
+news20      & 15\,935  & 62\,061  & 120 \\
+covtype     & 581\,012 & 54       & 72 \\
+MNIST-8M    & 8\,100\,000 & 784   & 24\,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{R\'esultats sur la r\'egression LASSO}
+
+Le probl\`eme LASSO consiste \`a r\'esoudre:
+\begin{equation}
+  \min_{x \in \mathbb{R}^d} \frac{1}{2n} \|Ax - b\|_2^2 + \lambda \|x\|_1,
+\end{equation}
+o\`u $A \in \mathbb{R}^{n \times d}$ et $b \in \mathbb{R}^n$ sont les
+donn\'ees d'entra\^inement. Nous fixons $\lambda = 10^{-4}$ et comparons
+ASP avec SGD, Adam, AdaGrad et SVRG.
+
+La figure~\ref{fig:lasso-convergence} illustre la convergence de l'erreur
+relative $[F(x_t) - F(x^*)] / F(x^*)$ en fonction du nombre d'\'epoques.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[
+  width=0.85\textwidth,
+  height=6cm,
+  xlabel={\'Epoques},
+  ylabel={Erreur relative},
+  legend pos=north east,
+  grid=major,
+  xmin=0, xmax=100,
+]
+\addplot[blue, thick] coordinates {
+  (0,1) (10,0.3) (20,0.08) (30,0.02) (40,0.005) (50,0.001)
+  (60,3e-4) (70,8e-5) (80,2e-5) (90,5e-6) (100,1e-6)
+};
+\addplot[red, thick, dashed] coordinates {
+  (0,1) (10,0.5) (20,0.2) (30,0.1) (40,0.05) (50,0.03)
+  (60,0.015) (70,0.008) (80,0.005) (90,0.003) (100,0.002)
+};
+\addplot[green!60!black, thick, dotted] coordinates {
+  (0,1) (10,0.4) (20,0.15) (30,0.06) (40,0.02) (50,0.008)
+  (60,0.003) (70,0.001) (80,4e-4) (90,1.5e-4) (100,5e-5)
+};
+\legend{ASP, SGD+Momentum, SVRG}
+\end{semilogyaxis}
+\end{tikzpicture}
+\caption{Convergence de l'erreur relative sur rcv1-train (LASSO,
+  $\lambda = 10^{-4}$).}\label{fig:lasso-convergence}
+\end{figure}
+
+\section{R\'esultats distribu\'es}
+
+Nous simulons un r\'eseau de $n = 16$ agents et comparons ASP-Dist
+et ASP-Comp (avec quantification \`a 4 bits) avec des m\'ethodes
+distribu\'ees de r\'ef\'erence.
+
+\begin{table}[htbp]
+\centering
+\caption{Temps d'entra\^inement (secondes) pour atteindre $\epsilon = 10^{-4}$
+  sur covtype ($n=16$ agents)}\label{tab:dist-results}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+M\'ethode & Temps (s) & Communication (Go) & Speed-up \\
+\midrule
+ASP (centralis\'e)  & 42.3  & ---  & 1.0$\times$ \\
+ASP-Dist            & 3.8   & 1.2  & 11.1$\times$ \\
+ASP-Comp (4 bits)   & 4.2   & 0.15 & 10.1$\times$ \\
+D-PSGD              & 5.1   & 1.2  & 8.3$\times$ \\
+CHOCO-SGD           & 4.7   & 0.18 & 9.0$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\chapter{Conclusion et perspectives}
+
+% ERROR: straight quotes instead of guillemets
+Nous avons pr\'esent\'e dans cette th\`ese la famille d'algorithmes ASP,
+qui offre un cadre unifi\'e pour l'optimisation convexe stochastique
+adaptative. Nos r\'esultats th\'eoriques montrent que ASP atteint des
+vitesses de convergence "optimales" au sens minimax, tout en s'adaptant
+automatiquement \`a la g\'eom\'etrie locale du probl\`eme.
+
+Les perspectives de ce travail sont nombreuses. Premi\`erement, l'extension
+aux probl\`emes non convexes, qui apparaissent fr\'equemment dans
+l'entra\^inement des r\'eseaux de neurones profonds, constitue un d\'efi
+majeur. Deuxi\`emement, l'int\'egration de techniques de pr\'econditionnement
+de second ordre pourrait am\'eliorer la convergence dans les r\'egimes
+mal conditionn\'es. Troisi\`emement, l'application \`a des probl\`emes
+d'optimisation sous contraintes plus g\'en\'erales, incluant des contraintes
+d'in\'egalit\'e non lin\'eaires, reste \`a explorer.
+
+\section*{Remerciements}
+
+% Footnote in French
+L'auteure remercie son directeur de th\`ese, le Professeur Jean-Luc
+Martin\footnote{Actuellement en d\'el\'egation au CNRS, UMR 7641.},
+pour son encadrement exceptionnel et ses conseils avis\'es tout au long
+de ce travail. Elle remercie \'egalement les membres du jury pour leurs
+remarques constructives lors de la soutenance.
+
+
+\begin{thebibliography}{99}
+
+\bibitem{nemirovski2009robust}
+A.~Nemirovski, A.~Juditsky, G.~Lan, and A.~Shapiro.
+\newblock Robust stochastic approximation approach to stochastic programming.
+\newblock \textit{SIAM Journal on Optimization}, 19(4):1574--1609, 2009.
+
+\bibitem{johnson2013accelerating}
+R.~Johnson and T.~Zhang.
+\newblock Accelerating stochastic gradient descent using predictive variance
+  reduction.
+\newblock In \textit{Advances in Neural Information Processing Systems (NeurIPS)},
+  pages 315--323, 2013.
+
+\bibitem{defazio2014saga}
+A.~Defazio, F.~Bach, and S.~Lacoste-Julien.
+\newblock {SAGA}: A fast incremental gradient method with support for
+  non-strongly convex composite objectives.
+\newblock In \textit{Advances in Neural Information Processing Systems (NeurIPS)},
+  pages 1646--1654, 2014.
+
+\bibitem{kingma2015adam}
+D.~P. Kingma and J.~Ba.
+\newblock Adam: A method for stochastic optimization.
+\newblock In \textit{International Conference on Learning Representations
+  (ICLR)}, 2015.
+
+\bibitem{koloskova2019decentralized}
+A.~Koloskova, S.~Stich, and M.~Jaggi.
+\newblock Decentralized stochastic optimization and gossip algorithms with
+  compressed communication.
+\newblock In \textit{International Conference on Machine Learning (ICML)},
+  pages 3478--3487, 2019.
+
+\bibitem{duchi2011adaptive}
+J.~Duchi, E.~Hazan, and Y.~Singer.
+\newblock Adaptive subgradient methods for online learning and stochastic
+  optimization.
+\newblock \textit{Journal of Machine Learning Research}, 12:2121--2159, 2011.
+
+\bibitem{nesterov2004introductory}
+Y.~Nesterov.
+\newblock \textit{Introductory Lectures on Convex Optimization: A Basic Course}.
+\newblock Springer, 2004.
+
+\bibitem{bottou2018optimization}
+L.~Bottou, F.~E. Curtis, and J.~Nocedal.
+\newblock Optimization methods for large-scale machine learning.
+\newblock \textit{SIAM Review}, 60(2):223--311, 2018.
+
+\end{thebibliography}
+
+\end{document}

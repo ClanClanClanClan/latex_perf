@@ -307,8 +307,8 @@ let () =
   run_golden_suite "i18n_qa"
     (Filename.concat base_dir "specs/rules/i18n_qa_golden.yaml")
     base_dir;
-  (* Language-gated suite: tests that run_all_for_language correctly
-     filters rules by document language (spec W102-104 gap fix) *)
+  (* Language-gated suite: tests that run_all_for_language correctly filters
+     rules by document language (spec W102-104 gap fix) *)
   let gated_yaml =
     Filename.concat base_dir "specs/rules/i18n_qa_gated_golden.yaml"
   in

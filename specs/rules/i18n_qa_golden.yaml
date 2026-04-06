@@ -63,3 +63,31 @@ cases:
     expect: []
   - file: corpora/lint/i18n_qa/i18n_qa_el.tex
     expect: []
+
+  # ── Full synthetic papers (400-600 lines, 6 stubbed languages) ──
+  - file: corpora/lint/i18n_qa/i18n_qa_cs_paper.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_ro_paper.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_he_paper.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_hi_paper.tex
+    expect: ["HI-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_sv_paper.tex
+    expect: []
+  - file: corpora/lint/i18n_qa/i18n_qa_cy_paper.tex
+    expect: []
+
+  # ── Mixed-language papers ───────────────────────────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_fr_en_paper.tex
+    expect: ["LANG-003"]
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_zh_en_paper.tex
+    expect: ["CJK-001"]
+  - file: corpora/lint/i18n_qa/i18n_qa_mixed_ja_zh_paper.tex
+    expect: ["JA-001"]
+
+  # ── Edge case papers ────────────────────────────────────────────
+  - file: corpora/lint/i18n_qa/i18n_qa_no_babel_paper.tex
+    expect: ["LANG-014"]
+  - file: corpora/lint/i18n_qa/i18n_qa_conflicting_paper.tex
+    expect: ["LANG-014"]

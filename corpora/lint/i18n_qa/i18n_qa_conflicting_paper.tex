@@ -1,0 +1,347 @@
+% i18n_qa_conflicting_paper.tex
+% Paper with conflicting babel options: last option is "english" → main=English
+% BUT the body text is mostly French (deliberate mismatch)
+% Expected detect_language result: "en" (last babel option wins)
+% Deliberate errors: both French and English typography errors
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{float}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\title{Mod\`eles de transport optimal pour la segmentation\\
+  d'images m\'edicales par r\'eseaux de neurones}
+\author{Pierre-Antoine Moreau\textsuperscript{1}\quad
+  Sophie Laurent\textsuperscript{2}\\[6pt]
+  \textsuperscript{1}INRIA Paris, \'Equipe SIERRA\\
+  \textsuperscript{2}\'Ecole Normale Sup\'erieure, D\'epartement d'Informatique}
+\date{F\'evrier 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% Abstract in English (matches babel main language)
+We present a novel approach to medical image segmentation that leverages
+optimal transport theory to define a geometrically meaningful loss function
+for neural network training. Our method, termed Wasserstein Segmentation
+Network (WSegNet), replaces the standard cross-entropy loss with a
+regularized optimal transport distance between predicted and ground-truth
+segmentation masks. We prove that the Sinkhorn divergence provides a
+smooth approximation to the Wasserstein distance that is amenable to
+backpropagation, and we establish convergence guarantees for the
+resulting training procedure. Experiments on the ACDC cardiac MRI
+dataset and the BraTS brain tumor segmentation benchmark demonstrate
+improvements of 2.1\% and 1.8\% in Dice score respectively over
+U-Net baselines trained with cross-entropy loss.
+
+\medskip
+\noindent\textbf{Keywords:} optimal transport, Wasserstein distance,
+image segmentation, neural networks, medical imaging.
+\end{abstract}
+
+
+\section{Introduction}
+
+% Body text mostly in French despite babel declaring English as main
+% ERROR: missing NBSP before French punctuation (colon)
+La segmentation d'images m\'edicales repr\'esente un enjeu majeur en
+imagerie num\'erique. Les m\'ethodes fond\'ees sur les r\'eseaux de
+neurones convolutifs, en particulier l'architecture U-Net propos\'ee par
+Ronneberger et al.~\cite{ronneberger2015unet}, ont consid\'erablement
+am\'elior\'e les performances de segmentation automatique. Cependant,
+la fonction de perte utilis\'ee pour l'entra\^inement joue un r\^ole
+d\'eterminant dans la qualit\'e des r\'esultats obtenus.
+
+% ERROR: English-style double quotes in French text
+La plupart des approches actuelles utilisent l'entropie crois\'ee ou le
+coefficient de Dice comme fonction de perte. Ces fonctions traitent chaque
+pixel "ind\'ependamment" et ignorent la structure g\'eom\'etrique de
+l'espace des segmentations.
+
+% ERROR: missing NBSP before exclamation mark
+Dans ce travail, nous proposons d'utiliser la distance de Wasserstein
+comme fonction de perte alternative! Cette distance, issue de la
+th\'eorie du transport optimal, poss\`ede des propri\'et\'es
+g\'eom\'etriques remarquables qui la rendent particuli\`erement
+adapt\'ee \`a la comparaison de distributions spatiales.
+
+\begin{definition}[Distance de Wasserstein]
+Soient $\mu, \nu$ deux mesures de probabilit\'e sur $\mathbb{R}^d$.
+La distance de Wasserstein d'ordre $p \geq 1$ est d\'efinie par:
+\begin{equation}\label{eq:wasserstein}
+  W_p(\mu, \nu) = \left( \inf_{\gamma \in \Pi(\mu, \nu)}
+    \int_{\mathbb{R}^d \times \mathbb{R}^d} \|x - y\|^p \,
+    \mathrm{d}\gamma(x, y) \right)^{1/p},
+\end{equation}
+o\`u $\Pi(\mu, \nu)$ d\'esigne l'ensemble des couplages de $\mu$ et $\nu$.
+\end{definition}
+
+
+\section{Transport optimal r\'egularis\'e}
+
+% ERROR: missing NBSP before semicolon
+Le calcul direct de la distance de Wasserstein est co\^uteux;
+sa complexit\'e est $O(n^3 \log n)$ pour des mesures discr\`etes
+\`a $n$ supports. La r\'egularisation entropique, introduite par
+Cuturi~\cite{cuturi2013sinkhorn}, permet de r\'eduire cette
+complexit\'e \`a $O(n^2 / \epsilon)$ o\`u $\epsilon$ est le
+param\`etre de r\'egularisation.
+
+\begin{definition}[Distance de Sinkhorn]
+La distance de Sinkhorn r\'egularis\'ee est d\'efinie par:
+\begin{equation}\label{eq:sinkhorn}
+  S_\epsilon(\mu, \nu) = \text{OT}_\epsilon(\mu, \nu)
+    - \frac{1}{2} \text{OT}_\epsilon(\mu, \mu)
+    - \frac{1}{2} \text{OT}_\epsilon(\nu, \nu),
+\end{equation}
+o\`u
+\begin{equation}\label{eq:ot-reg}
+  \text{OT}_\epsilon(\mu, \nu) = \min_{\gamma \in \Pi(\mu, \nu)}
+    \left\{ \int \|x-y\|^2 \, \mathrm{d}\gamma + \epsilon \,
+    \text{KL}(\gamma \| \mu \otimes \nu) \right\}.
+\end{equation}
+\end{definition}
+
+\begin{lemma}[Propri\'et\'es de diff\'erentiabilit\'e]
+La divergence de Sinkhorn $S_\epsilon$ est:
+\begin{enumerate}
+  \item continument diff\'erentiable par rapport aux mesures d'entr\'ee;
+  \item d\'efinie positive ($S_\epsilon(\mu, \nu) \geq 0$ avec \'egalit\'e
+    ssi $\mu = \nu$);
+  \item $|\sqrt{S_\epsilon(\mu, \nu)} - W_2(\mu, \nu)| = O(\sqrt{\epsilon})$
+    quand $\epsilon \to 0$.
+\end{enumerate}
+\end{lemma}
+
+
+\section{Architecture WSegNet}
+
+L'architecture WSegNet repose sur un encodeur-d\'ecodeur de type U-Net
+avec des connexions r\'esiduelles. La sortie du r\'eseau est une carte
+de probabilit\'es $\hat{p}(x) \in [0, 1]^C$ pour chaque pixel $x$,
+o\`u $C$ est le nombre de classes.
+
+% ERROR: straight English quotes used in French text
+La fonction de perte totale combine la divergence de Sinkhorn avec un
+terme de r\'egularisation spatiale, formant ce que nous appelons la
+"perte de transport":
+\begin{equation}\label{eq:total-loss}
+  \mathcal{L}(\theta) = \sum_{c=1}^C S_\epsilon(\hat{p}_c, p_c^*)
+    + \lambda \sum_{c=1}^C \int \|\nabla \hat{p}_c(x)\|^2 \, \mathrm{d}x,
+\end{equation}
+o\`u $p_c^*$ est la segmentation de r\'ef\'erence pour la classe $c$
+et $\lambda > 0$ contr\^ole la r\'egularisation.
+
+\begin{theorem}[Convergence de l'entra\^inement]\label{thm:convergence}
+Sous les hypoth\`eses standard de lissit\'e du r\'eseau et de bornitude
+des gradients, l'algorithme SGD appliqu\'e \`a la perte~\eqref{eq:total-loss}
+converge \`a un point stationnaire au taux:
+\begin{equation}
+  \min_{t \leq T} \mathbb{E}[\|\nabla_\theta \mathcal{L}(\theta_t)\|^2]
+    \leq \frac{C_0}{\sqrt{T}},
+\end{equation}
+o\`u $C_0$ d\'epend de la constante de Lipschitz du gradient et de la
+variance du bruit stochastique.
+\end{theorem}
+
+
+\section{Exp\'eriences}
+
+\subsection{Protocole exp\'erimental}
+
+% ERROR: double space after period (English style error)
+Nous \'evaluons WSegNet sur deux benchmarks publics de segmentation
+d'images m\'edicales.  Le premier est le jeu de donn\'ees ACDC
+(Automated Cardiac Diagnosis Challenge) contenant 150 examens IRM
+cardiaques avec segmentation du ventricule gauche, du ventricule droit
+et du myocarde.
+
+Le second benchmark est BraTS (Brain Tumor Segmentation), comprenant
+335 volumes IRM c\'er\'ebraux avec annotation de trois types de tumeurs.
+
+\begin{table}[H]
+\centering
+\caption{Description des jeux de donn\'ees}\label{tab:datasets}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Benchmark & Sujets & Classes & R\'esolution & Modalit\'e \\
+\midrule
+ACDC & 150 & 4 & $256 \times 256$ & IRM cine \\
+BraTS & 335 & 4 & $240 \times 240 \times 155$ & IRM T1/T2/FLAIR \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{R\'esultats quantitatifs}
+
+% ERROR: missing NBSP before colon
+Les r\'esultats principaux sont pr\'esent\'es dans le tableau~\ref{tab:results}.
+WSegNet am\'eliore les performances sur les deux benchmarks:
+
+\begin{table}[H]
+\centering
+\caption{Score de Dice (\%) sur les benchmarks ACDC et BraTS}\label{tab:results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+M\'ethode & \multicolumn{2}{c}{ACDC} & \multicolumn{2}{c}{BraTS} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & Dice & HD95 & Dice & HD95 \\
+\midrule
+U-Net + CE & 88.4 & 12.3 & 84.2 & 15.7 \\
+U-Net + Dice & 89.1 & 11.8 & 84.9 & 14.9 \\
+Attention U-Net & 89.7 & 10.5 & 85.6 & 13.8 \\
+TransUNet & 90.2 & 9.8 & 86.1 & 13.2 \\
+\textbf{WSegNet (ours)} & \textbf{90.5} & \textbf{8.9} & \textbf{86.0} & \textbf{12.4} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On observe que WSegNet obtient les meilleurs scores de Dice sur ACDC
+(90.5\%) et des performances comp\'etitives sur BraTS (86.0\%). La
+m\'etrique HD95 (distance de Hausdorff au 95e percentile) est
+am\'elior\'ee de mani\`ere significative, ce qui confirme que la perte
+de transport favorise des contours de segmentation plus pr\'ecis.
+
+\subsection{\'Etude d'ablation}
+
+\begin{table}[H]
+\centering
+\caption{\'Etude d'ablation sur ACDC}\label{tab:ablation}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Configuration & Dice (\%) & HD95 (mm) & Temps/\'epoque (s) \\
+\midrule
+CE seule & 88.4 & 12.3 & 45 \\
+Sinkhorn seule & 89.8 & 9.5 & 78 \\
+Sinkhorn + TV & 90.1 & 9.2 & 82 \\
+Sinkhorn + $H^1$ reg. & \textbf{90.5} & \textbf{8.9} & 85 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Analyse th\'eorique}
+
+\begin{proposition}[Avantage g\'eom\'etrique du transport optimal]
+Pour deux masques binaires $A, B \subset \Omega$ tels que $B$ est une
+translation de $A$ par un vecteur $v$, on a:
+\begin{equation}
+  W_2(\mathbf{1}_A, \mathbf{1}_B) = \|v\| \cdot \sqrt{|A|},
+\end{equation}
+tandis que l'entropie crois\'ee ne d\'epend que du recouvrement:
+\begin{equation}
+  \text{CE}(\mathbf{1}_A, \mathbf{1}_B) = -|A \cap B| \log 1 -
+    |A \setminus B| \log 0 = +\infty.
+\end{equation}
+Ceci illustre que $W_2$ fournit un signal de gradient informatif m\^eme
+lorsque les masques ne se recouvrent pas, contrairement \`a l'entropie
+crois\'ee.
+\end{proposition}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.75\textwidth,
+  height=5.5cm,
+  xlabel={\'Epoque},
+  ylabel={Score de Dice (\%)},
+  legend pos=south east,
+  grid=major,
+  xmin=0, xmax=200,
+  ymin=70, ymax=92,
+]
+\addplot[blue, thick] coordinates {
+  (0,72) (20,80) (40,84) (60,86.5) (80,88) (100,89)
+  (120,89.5) (140,90) (160,90.3) (180,90.4) (200,90.5)
+};
+\addplot[red, thick, dashed] coordinates {
+  (0,71) (20,78) (40,82) (60,84.5) (80,86) (100,87)
+  (120,87.5) (140,88) (160,88.2) (180,88.3) (200,88.4)
+};
+\addplot[green!60!black, thick, dotted] coordinates {
+  (0,72.5) (20,79.5) (40,83.5) (60,85.5) (80,87.5) (100,88.5)
+  (120,89) (140,89.3) (160,89.5) (180,89.6) (200,89.7)
+};
+\legend{WSegNet, U-Net+CE, Attention U-Net}
+\end{axis}
+\end{tikzpicture}
+\caption{Courbes d'entra\^inement sur ACDC (validation Dice).
+  WSegNet converge plus rapidement et atteint un meilleur score
+  final.}\label{fig:training-curves}
+\end{figure}
+
+
+\section{Conclusion}
+
+% Mixed French/English conclusion
+Nous avons pr\'esent\'e WSegNet, une approche de segmentation d'images
+m\'edicales fond\'ee sur le transport optimal. Les r\'esultats
+exp\'erimentaux d\'emontrent l'int\'er\^et de la divergence de Sinkhorn
+comme fonction de perte pour l'entra\^inement de r\'eseaux de neurones
+de segmentation. Les perspectives incluent l'extension aux probl\`emes
+3D volum\'etriques et l'\'etude de variantes non r\'egularis\'ees
+utilisant des formulations duales.
+
+% ERROR: missing NBSP before question mark (French style error)
+Une question ouverte importante reste celle de la g\'en\'eralisation
+multi-classes: comment \'etendre efficacement la perte de transport
+au cas o\`u le nombre de classes est sup\'erieur \`a deux?
+
+
+\begin{thebibliography}{99}
+
+\bibitem{ronneberger2015unet}
+O.~Ronneberger, P.~Fischer, and T.~Brox.
+\newblock {U-Net}: Convolutional networks for biomedical image segmentation.
+\newblock In \textit{Medical Image Computing and Computer-Assisted Intervention
+  (MICCAI)}, pages 234--241, 2015.
+
+\bibitem{cuturi2013sinkhorn}
+M.~Cuturi.
+\newblock Sinkhorn distances: Lightspeed computation of optimal transport.
+\newblock In \textit{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 2292--2300, 2013.
+
+\bibitem{peyre2019computational}
+G.~Peyr\'e and M.~Cuturi.
+\newblock Computational optimal transport: With applications to data science.
+\newblock \textit{Foundations and Trends in Machine Learning},
+  11(5--6):355--607, 2019.
+
+\bibitem{feydy2019interpolating}
+J.~Feydy, T.~S\'ejourn\'e, F.-X.~Vialard, S.-I.~Amari, A.~Trouv\'e,
+  and G.~Peyr\'e.
+\newblock Interpolating between optimal transport and {MMD} using {Sinkhorn}
+  divergences.
+\newblock In \textit{International Conference on Artificial Intelligence and
+  Statistics (AISTATS)}, pages 2681--2690, 2019.
+
+\bibitem{villani2009optimal}
+C.~Villani.
+\newblock \textit{Optimal Transport: Old and New}.
+\newblock Springer, 2009.
+
+\bibitem{chen2018transunet}
+J.~Chen, Y.~Lu, Q.~Yu, et~al.
+\newblock {TransUNet}: Transformers make strong encoders for medical image
+  segmentation.
+\newblock \textit{arXiv preprint arXiv:2102.04306}, 2021.
+
+\end{thebibliography}
+
+\end{document}

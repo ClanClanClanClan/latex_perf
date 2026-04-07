@@ -16,6 +16,7 @@ let expect cond msg =
 
 type golden_case = {
   file : string;
+  language : string option;
   expect : string list;
   forbid : string list;
   expect_msgs : string list;
@@ -86,7 +87,8 @@ let parse_golden_yaml path =
   close_in ic;
   let lines = List.rev !lines in
   let current_case =
-    ref { file = ""; expect = []; forbid = []; expect_msgs = [] }
+    ref
+      { file = ""; language = None; expect = []; forbid = []; expect_msgs = [] }
   in
   let result = ref [] in
   let in_expect_msgs = ref false in
@@ -103,7 +105,20 @@ let parse_golden_yaml path =
           String.trim (String.sub trimmed 7 (String.length trimmed - 7))
         in
         current_case :=
-          { file = value; expect = []; forbid = []; expect_msgs = [] };
+          {
+            file = value;
+            language = None;
+            expect = [];
+            forbid = [];
+            expect_msgs = [];
+          };
+        in_expect_msgs := false)
+      else if starts_with ~prefix:"language:" trimmed then (
+        let value =
+          String.trim (String.sub trimmed 9 (String.length trimmed - 9))
+        in
+        current_case :=
+          { !current_case with language = Some (strip_quotes value) };
         in_expect_msgs := false)
       else if starts_with ~prefix:"expect:" trimmed then (
         let value =
@@ -143,7 +158,7 @@ let resolve_path base_dir file_path =
   else file_path
 
 (* Pipeline mode: mirrors the REST smoke test — expand then validate at L1 *)
-type pipeline_mode = Raw_all | Expand_l1
+type pipeline_mode = Raw_all | Expand_l1 | Language_gated
 
 let run_golden_suite ?(mode = Raw_all) suite_name yaml_path base_dir =
   let golden_cases = parse_golden_yaml yaml_path in
@@ -179,6 +194,9 @@ let run_golden_suite ?(mode = Raw_all) suite_name yaml_path base_dir =
                   expanded Latex_parse_lib.Validators.L1
               in
               xs
+          | Language_gated ->
+              let lang = gc.language in
+              Latex_parse_lib.Validators.run_all_for_language content lang
         in
         let fired_ids =
           List.map (fun (r : Latex_parse_lib.Validators.result) -> r.id) results
@@ -289,6 +307,18 @@ let () =
   run_golden_suite "i18n_qa"
     (Filename.concat base_dir "specs/rules/i18n_qa_golden.yaml")
     base_dir;
+  (* Language-gated suite: tests that run_all_for_language correctly filters
+     rules by document language (spec W102-104 gap fix) *)
+  let gated_yaml =
+    Filename.concat base_dir "specs/rules/i18n_qa_gated_golden.yaml"
+  in
+  if Sys.file_exists gated_yaml then
+    run_golden_suite ~mode:Language_gated "i18n_qa_gated" gated_yaml base_dir
+  else
+    Printf.printf
+      "[golden] SKIP i18n_qa_gated (specs/rules/i18n_qa_gated_golden.yaml not \
+       found)\n\
+       %!";
   if !fails > 0 then (
     Printf.eprintf "[golden] %d failure(s) in %d cases\n%!" !fails !cases;
     exit 1)

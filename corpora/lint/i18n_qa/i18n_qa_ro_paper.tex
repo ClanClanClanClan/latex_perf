@@ -1,0 +1,419 @@
+% i18n_qa_ro_paper.tex — Romanian engineering paper on signal processing
+% Intentional errors: cedilla (ş/ţ) instead of comma-below (ș/ț),
+%   wrong Romanian quotes, encoding issues
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[romanian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{siunitx}
+
+% INTENTIONAL ERROR: cedilla ş instead of comma-below ș in title
+\title{Metode avansate de prelucrare a semnalelor digitale\\
+pentru sisteme de comunicaţii 5G}
+\author{%
+  Alexandru Ionescu\thanks{Departamentul de Electronică şi Telecomunicaţii,
+  Universitatea Politehnica din Bucureşti.}
+  \and
+  Maria Popescu\thanks{Institutul Naţional de Cercetare-Dezvoltare
+  pentru Microtehnologie, Bucureşti.}
+}
+\date{6 aprilie 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% INTENTIONAL ERROR: cedilla ş/ţ throughout instead of comma-below ș/ț
+Acest articol prezintă o metodă nouă de prelucrare a semnalelor digitale
+bazată pe transformata wavelet discretă şi algoritmi de comprimare adaptivă.
+Propunem un cadru teoretic unificat pentru analiza spectrală a semnalelor
+în sisteme de comunicaţii de generaţia a cincea (5G). Metoda noastră
+permite reducerea complexităţii computaţionale cu 35\% faţă de abordările
+convenţionale bazate pe transformata Fourier rapidă. Rezultatele
+experimentale demonstrează că algoritmul propus atinge un raport semnal-zgomot
+superior cu \SI{4.2}{\decibel} în condiţii de canal cu estompare Rayleigh.
+Validarea a fost realizată atât prin simulări Monte Carlo, cât şi prin
+măsurători pe o platformă hardware FPGA Xilinx Zynq UltraScale+.
+\end{abstract}
+
+\tableofcontents
+
+%% ---------------------------------------------------------------
+\section{Introducere}
+\label{sec:intro}
+
+Sistemele de comunicaţii de generaţia a cincea (5G) necesită tehnici
+avansate de prelucrare a semnalelor pentru a gestiona lăţimile de bandă
+extinse şi densităţile spectrale ridicate. Standardul 3GPP Release~17
+% INTENTIONAL ERROR: wrong quotes — English "..." instead of Romanian „..."
+specifică "multiple-input multiple-output" (MIMO) masiv cu până la
+256~de antene la staţia de bază~\citep{dahlman2020}.
+
+Transformata Fourier rapidă (FFT) a fost instrumentul fundamental în
+prelucrarea semnalelor digitale timp de decenii. Cu toate acestea,
+pentru semnale nestaţionare întâlnite în canalele 5G cu mobilitate
+ridicată, analiza timp-frecvenţă oferită de transformata wavelet
+discretă (DWT) este superioară~\citep{mallat2009}.
+
+% INTENTIONAL ERROR: cedilla ţ instead of comma-below ț
+Contribuţiile principale ale acestui articol sunt:
+\begin{enumerate}[label=(\roman*)]
+  \item Un algoritm de descompunere wavelet adaptivă cu complexitate
+        $\mathcal{O}(N \log N)$ în loc de $\mathcal{O}(N^2)$;
+  \item O metodă de estimare a canalului bazată pe proiecţii pe
+        subraze wavelet;
+  \item Validare experimentală pe platforma FPGA cu latentă sub
+        \SI{1}{\milli\second}.
+\end{enumerate}
+
+Restul articolului este organizat astfel: Secţiunea~\ref{sec:fundamente}
+prezintă fundamentele teoretice, Secţiunea~\ref{sec:metoda} descrie
+metoda propusă, Secţiunea~\ref{sec:rezultate} conţine rezultatele
+experimentale, iar Secţiunea~\ref{sec:concluzii} prezintă concluziile.
+
+%% ---------------------------------------------------------------
+\section{Fundamente teoretice}
+\label{sec:fundamente}
+
+\subsection{Transformata Fourier discretă}
+
+Pentru un semnal discret $x[n]$ de lungime $N$, transformata Fourier
+discretă (DFT) este definită ca:
+\begin{equation}
+\label{eq:dft}
+X[k] = \sum_{n=0}^{N-1} x[n] \, e^{-j 2\pi kn/N}, \quad k = 0, 1, \ldots, N-1.
+\end{equation}
+
+Algoritmul FFT calculează DFT cu complexitate $\mathcal{O}(N \log N)$
+prin descompunere recursivă\footnote{Algoritmul Cooley--Tukey este cea
+mai utilizată variantă, publicat în 1965.}. Densitatea spectrală de
+putere se obţine din:
+\begin{equation}
+\label{eq:psd}
+S_{xx}[k] = \frac{1}{N} |X[k]|^2.
+\end{equation}
+
+\subsection{Transformata wavelet discretă}
+
+Transformata wavelet discretă descompune semnalul pe niveluri de
+rezoluţie folosind filtre trece-jos şi trece-sus:
+\begin{align}
+\label{eq:dwt_low}
+a_j[n] &= \sum_k h[k-2n] \, a_{j-1}[k], \\
+\label{eq:dwt_high}
+d_j[n] &= \sum_k g[k-2n] \, a_{j-1}[k],
+\end{align}
+unde $h[n]$ şi $g[n]$ sunt filtrele de analiză wavelet, $a_j[n]$ sunt
+coeficienţii de aproximare, iar $d_j[n]$ sunt coeficienţii de detaliu
+la nivelul $j$.
+
+% INTENTIONAL ERROR: wrong Romanian quotes
+Condiţia de "reconstucţie perfectă" cere ca filtrele să satisfacă:
+\begin{equation}
+\label{eq:pr}
+H(z)H^*(z^{-1}) + H(-z)H^*(-z^{-1}) = 2,
+\end{equation}
+unde $H(z)$ este funcţia de transfer a filtrului trece-jos.
+
+\subsection{Modelul canalului 5G}
+
+Modelul de canal pentru sisteme 5G cu frecvenţe milimetrice include
+propagare cu raze multiple:
+\begin{equation}
+\label{eq:canal}
+h(\tau, t) = \sum_{l=0}^{L-1} \alpha_l(t) \, \delta(\tau - \tau_l(t)),
+\end{equation}
+unde $\alpha_l(t)$ este câştigul complex al căii $l$, iar $\tau_l(t)$
+este întârzierea corespunzătoare. Raportul semnal-zgomot (SNR) este:
+\[
+\mathrm{SNR} = \frac{E_s}{N_0} = \frac{P_s}{B \cdot N_0},
+\]
+unde $P_s$ este puterea semnalului, $B$ este lăţimea de bandă, iar
+$N_0$ este densitatea spectrală de putere a zgomotului.
+
+%% ---------------------------------------------------------------
+\section{Metoda propusă}
+\label{sec:metoda}
+
+\subsection{Descompunere wavelet adaptivă}
+
+Propunem un algoritm de descompunere wavelet care adaptează numărul
+de niveluri în funcţie de caracteristicile spectrale ale semnalului
+recepţionat. Fie $x[n]$ semnalul recepţionat şi $J_{\max}$ numărul
+maxim de niveluri de descompunere.
+
+\begin{definition}
+Criteriul de oprire adaptivă este definit ca:
+\begin{equation}
+\label{eq:criteriu}
+\mathcal{C}_j = \frac{\|d_j\|_2^2}{\|a_{j-1}\|_2^2} < \epsilon,
+\end{equation}
+unde $\epsilon$ este un prag predefinit dependent de SNR-ul estimat.
+\end{definition}
+
+Algoritmul procedează astfel:
+
+\begin{algorithm}[ht]
+\caption{Descompunere wavelet adaptivă}
+\label{alg:dwt_adaptiv}
+\begin{algorithmic}[1]
+\Require Semnal $x[n]$, prag $\epsilon$, nivel maxim $J_{\max}$
+\Ensure Coeficienţi $\{a_J, d_J, d_{J-1}, \ldots, d_1\}$
+\State $a_0 \gets x$
+\For{$j = 1$ to $J_{\max}$}
+  \State Calculează $a_j, d_j$ conform (\ref{eq:dwt_low}), (\ref{eq:dwt_high})
+  \State Calculează $\mathcal{C}_j$ conform (\ref{eq:criteriu})
+  \If{$\mathcal{C}_j < \epsilon$}
+    \State $J \gets j$
+    \State \textbf{break}
+  \EndIf
+\EndFor
+\State \Return $\{a_J, d_J, d_{J-1}, \ldots, d_1\}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Estimarea canalului prin proiecţii wavelet}
+
+% INTENTIONAL ERROR: cedilla ş instead of comma-below ș
+Estimarea canalului se realizează prin proiecţia semnalului pilot
+pe un spaţiu wavelet ales adaptiv. Considerăm semnalul pilot
+$p[n]$ transmis pe subpurtătoarele OFDM şi semnalul recepţionat
+$y[n] = h[n] * p[n] + w[n]$, unde $w[n]$ este zgomot gaussian alb.
+
+Estimatorul propus este:
+\begin{equation}
+\label{eq:estimator}
+\hat{H}[k] = \sum_{j=1}^{J} \sum_{m} \hat{d}_{j,m} \, \psi_{j,m}[k] + \sum_{m} \hat{a}_{J,m} \, \phi_{J,m}[k],
+\end{equation}
+unde $\psi_{j,m}$ şi $\phi_{J,m}$ sunt funcţiile wavelet şi de scalare,
+iar coeficienţii sunt estimaţi prin:
+\[
+\hat{d}_{j,m} = \begin{cases}
+\tilde{d}_{j,m} & \text{dacă } |\tilde{d}_{j,m}| > \lambda_j, \\
+0 & \text{altfel},
+\end{cases}
+\]
+cu pragul de tăiere $\lambda_j = \sigma_w \sqrt{2 \ln N / 2^j}$.
+
+\subsection{Complexitatea computaţională}
+
+\begin{table}[ht]
+\centering
+% INTENTIONAL ERROR: wrong quotes again
+\caption{Comparaţie a complexităţii computaţionale între metodele "clasice" şi metoda propusă}
+\label{tab:complexitate}
+\begin{tabular}{lccc}
+\toprule
+Metodă & Adunări & Înmulţiri & Total \\
+\midrule
+FFT standard & $N \log_2 N$ & $\frac{N}{2} \log_2 N$ & $\mathcal{O}(N \log N)$ \\
+DWT complet ($J$ niveluri) & $2NL$ & $2NL$ & $\mathcal{O}(NL)$ \\
+DWT adaptiv (propus) & $2N'L$ & $2N'L$ & $\mathcal{O}(N'L)$ \\
+MMSE clasic & $N^3$ & $N^3$ & $\mathcal{O}(N^3)$ \\
+LS clasic & $N^2$ & $N^2$ & $\mathcal{O}(N^2)$ \\
+Wavelet-LS (propus) & $N \log N$ & $N \log N$ & $\mathcal{O}(N \log N)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+În Tabelul~\ref{tab:complexitate}, $N' \leq N$ este dimensiunea efectivă
+determinată de criteriul de oprire~\eqref{eq:criteriu}, iar $L$ este
+lungimea filtrului wavelet. Pentru wavelet-ul Daubechies db4, $L = 8$.
+
+%% ---------------------------------------------------------------
+\section{Rezultate experimentale}
+\label{sec:rezultate}
+
+\subsection{Configuraţia simulărilor}
+
+Simulările au fost realizate în MATLAB R2025a pe un sistem cu
+procesor Intel Core i9-14900K. Parametrii sistemului OFDM sunt
+prezentaţi în continuare\footnote{Parametrii corespund standardului
+3GPP TS~38.211 pentru banda de frecvenţe FR2 (24--52~GHz).}:
+\begin{itemize}
+  \item Număr de subpurtătoare: $N = 2048$;
+  \item Spaţiere subpurtătoare: $\Delta f = \SI{120}{\kilo\hertz}$;
+  \item Prefix ciclic: $N_{\mathrm{CP}} = 144$;
+  \item Modulaţie: 64-QAM;
+  \item Model canal: CDL-C (clustered delay line)~\citep{3gpp2020}.
+\end{itemize}
+
+\subsection{Performanţa estimării canalului}
+
+Figura~\ref{fig:mse} prezintă eroarea medie pătratică (MSE) a estimării
+canalului în funcţie de SNR pentru diferite metode.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{MSE vs. SNR pentru estimare canal CDL-C}\\[8pt]
+\begin{tabular}{cc}
+SNR (dB) & MSE (propus / LS / MMSE) \\
+\hline
+0 & $10^{-1.2}$ / $10^{-0.8}$ / $10^{-1.3}$ \\
+10 & $10^{-2.5}$ / $10^{-1.8}$ / $10^{-2.4}$ \\
+20 & $10^{-3.8}$ / $10^{-2.8}$ / $10^{-3.5}$ \\
+30 & $10^{-4.2}$ / $10^{-3.0}$ / $10^{-4.0}$ \\
+\end{tabular}\\[6pt]
+\emph{Metoda propusă (linie continuă roşie) depăşeşte}\\
+\emph{LS şi este comparabilă cu MMSE la SNR ridicat.}
+}}
+\caption{Eroarea medie pătratică a estimării canalului în funcţie de raportul
+semnal-zgomot. Canalul CDL-C cu viteză \SI{120}{\kilo\meter\per\hour}.}
+\label{fig:mse}
+\end{figure}
+
+Rezultatele arată că metoda propusă atinge o performanţă superioară
+estimatorului LS cu \SI{10}{\decibel} la SNR = \SI{20}{\decibel} şi
+este comparabilă cu estimatorul MMSE, dar cu complexitate
+semnificativ mai redusă.
+
+\subsection{Rata de eroare pe biţi}
+
+Rata de eroare pe biţi (BER) pentru modulaţie 64-QAM este prezentată
+în Figura~\ref{fig:ber}.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.75\textwidth}{%
+\centering
+\textbf{BER vs. $E_b/N_0$ pentru 64-QAM, canal CDL-C}\\[8pt]
+\begin{tabular}{cc}
+$E_b/N_0$ (dB) & BER (propus / LS / perfect) \\
+\hline
+5 & $3.2 \times 10^{-2}$ / $5.1 \times 10^{-2}$ / $2.8 \times 10^{-2}$ \\
+10 & $4.7 \times 10^{-3}$ / $1.2 \times 10^{-2}$ / $3.9 \times 10^{-3}$ \\
+15 & $2.1 \times 10^{-4}$ / $8.3 \times 10^{-3}$ / $1.5 \times 10^{-4}$ \\
+20 & $6.8 \times 10^{-6}$ / $2.1 \times 10^{-3}$ / $4.2 \times 10^{-6}$ \\
+\end{tabular}\\[6pt]
+\emph{Diferenţa faţă de estimare perfectă: sub \SI{1}{\decibel}.}
+}}
+\caption{Rata de eroare pe biţi în funcţie de $E_b/N_0$ pentru modulaţie 64-QAM.
+Comparaţie între metoda propusă, estimare LS şi cunoaştere perfectă a canalului.}
+\label{fig:ber}
+\end{figure}
+
+\subsection{Implementare FPGA}
+
+% INTENTIONAL ERROR: cedilla ţ instead of comma-below ț
+Implementarea pe FPGA Xilinx Zynq UltraScale+ ZCU111 a fost realizată
+în Vivado HLS 2025.1. Resursele utilizate sunt prezentate în
+Tabelul~\ref{tab:fpga}.
+
+\begin{table}[ht]
+\centering
+\caption{Utilizarea resurselor FPGA pentru algoritmul propus}
+\label{tab:fpga}
+\begin{tabular}{lrrc}
+\toprule
+Resursă & Utilizat & Disponibil & Procent \\
+\midrule
+LUT & 45\,230 & 425\,280 & 10.6\% \\
+FF & 62\,480 & 850\,560 & 7.3\% \\
+BRAM & 128 & 1\,080 & 11.9\% \\
+DSP & 256 & 4\,272 & 6.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Latenţa măsurată pentru o subramă OFDM completă ($N = 2048$)
+este de \SI{0.82}{\milli\second}, sub pragul de \SI{1}{\milli\second}
+specificat în cerinţele 5G NR\footnote{%
+Specificaţia 3GPP TS~38.214 v17.3.0, Secţiunea~5.1.}.
+
+%% ---------------------------------------------------------------
+\section{Discuţii}
+\label{sec:discutii}
+
+\subsection{Alegerea wavelet-ului}
+
+Am comparat performanţele pentru mai multe familii wavelet:
+Daubechies (db2--db10), Symlet (sym4--sym8) şi Coiflet (coif2--coif5).
+Cel mai bun compromis între performanţă şi complexitate a fost obţinut
+cu wavelet-ul Daubechies db4, care are 8~coeficienţi de filtru şi
+4~momente nule. Rezultatele sunt consistente cu analiza teoretică
+din~\citet{mallat2009}.
+
+\subsection{Comparaţie cu metode de învăţare profundă}
+
+Recent, metodele bazate pe reţele neuronale au fost propuse pentru
+estimarea canalului~\citep{ye2018}. Deşi aceste metode pot atinge
+performanţe superioare în condiţii staţionare, ele necesită
+antrenament extensiv şi nu generalizează bine la scenarii noi.
+Metoda noastră bazată pe wavelet este complet analitică şi nu necesită
+date de antrenament.
+
+\subsection{Limitări}
+
+Principala limitare a metodei propuse constă în presupunerea că
+canalul are o reprezentare rară în domeniul wavelet. Pentru canale
+cu difuzie bogată (de exemplu, medii interioare dense), această
+presupunere poate fi violată, iar performanţa se degradează.
+
+%% ---------------------------------------------------------------
+\section{Concluzii}
+\label{sec:concluzii}
+
+Am prezentat o metodă nouă de estimare a canalului pentru sisteme
+5G bazată pe transformata wavelet discretă adaptivă. Metoda reduce
+complexitatea computaţională cu 35\% faţă de abordările
+convenţionale şi atinge un câştig de \SI{4.2}{\decibel} în SNR faţă
+de estimarea LS. Implementarea FPGA demonstrează fezabilitatea
+metodei pentru aplicaţii în timp real, cu latenţă sub
+\SI{1}{\milli\second}. Lucrările viitoare vor investiga extensia
+metodei la sisteme MIMO masiv şi la scenarii cu mobilitate
+ultra-ridicată.
+
+%% ---------------------------------------------------------------
+\begin{thebibliography}{99}
+
+\bibitem[3GPP(2020)]{3gpp2020}
+3GPP (2020).
+TR~38.901 v16.1.0: Study on channel model for frequencies from 0.5 to 100~GHz.
+\emph{3rd Generation Partnership Project}.
+
+\bibitem[Dahlman et al.(2020)]{dahlman2020}
+Dahlman, E., Parkvall, S. \c{s}i Sk\"{o}ld, J. (2020).
+\emph{5G NR: The Next Generation Wireless Access Technology}, ed.~a 2-a.
+Academic Press.
+
+\bibitem[Mallat(2009)]{mallat2009}
+Mallat, S. (2009).
+\emph{A Wavelet Tour of Signal Processing: The Sparse Way}, ed.~a 3-a.
+Academic Press.
+
+\bibitem[Proakis \c{s}i Manolakis(2014)]{proakis2014}
+Proakis, J.\,G. \c{s}i Manolakis, D.\,G. (2014).
+\emph{Digital Signal Processing: Principles, Algorithms, and Applications},
+ed.~a 4-a. Pearson.
+
+\bibitem[Ye et al.(2018)]{ye2018}
+Ye, H., Li, G.\,Y. \c{s}i Juang, B.-H. (2018).
+Power of deep learning for channel estimation and signal detection in OFDM systems.
+\emph{IEEE Wireless Communications Letters}, 7(1), 114--117.
+
+\bibitem[Tse \c{s}i Viswanath(2005)]{tse2005}
+Tse, D. \c{s}i Viswanath, P. (2005).
+\emph{Fundamentals of Wireless Communications}.
+Cambridge University Press.
+
+\end{thebibliography}
+
+\end{document}

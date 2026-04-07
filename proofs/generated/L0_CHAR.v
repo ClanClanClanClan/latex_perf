@@ -12,17 +12,21 @@ Open Scope string_scope.
 (** CHAR-005: No VPD pattern — conservative model. *)
 Definition char_005_chk (s : string) : bool := false.
 
-(** CHAR-006: No VPD pattern — conservative model. *)
-Definition char_006_chk (s : string) : bool := false.
+(** CHAR-006: count_char "" (ASCII 8). *)
+Definition char_006_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 8).
 
-(** CHAR-007: No VPD pattern — conservative model. *)
-Definition char_007_chk (s : string) : bool := false.
+(** CHAR-007: count_char "" (ASCII 7). *)
+Definition char_007_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 7).
 
-(** CHAR-008: No VPD pattern — conservative model. *)
-Definition char_008_chk (s : string) : bool := false.
+(** CHAR-008: count_char "" (ASCII 12). *)
+Definition char_008_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 12).
 
-(** CHAR-009: No VPD pattern — conservative model. *)
-Definition char_009_chk (s : string) : bool := false.
+(** CHAR-009: count_char "" (ASCII 127). *)
+Definition char_009_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 127).
 
 (** CHAR-010: No VPD pattern — conservative model. *)
 Definition char_010_chk (s : string) : bool := false.

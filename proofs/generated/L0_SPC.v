@@ -54,8 +54,9 @@ Definition spc_014_chk (s : string) : bool := false.
 (** SPC-015: No VPD pattern — conservative model. *)
 Definition spc_015_chk (s : string) : bool := false.
 
-(** SPC-016: No VPD pattern — conservative model. *)
-Definition spc_016_chk (s : string) : bool := false.
+(** SPC-016: count_substring " ;". *)
+Definition spc_016_chk (s : string) : bool :=
+  string_contains_substring s " ;".
 
 (** SPC-017: No VPD pattern — conservative model. *)
 Definition spc_017_chk (s : string) : bool := false.
@@ -69,11 +70,13 @@ Definition spc_019_chk (s : string) : bool := false.
 (** SPC-020: No VPD pattern — conservative model. *)
 Definition spc_020_chk (s : string) : bool := false.
 
-(** SPC-021: No VPD pattern — conservative model. *)
-Definition spc_021_chk (s : string) : bool := false.
+(** SPC-021: count_substring " :". *)
+Definition spc_021_chk (s : string) : bool :=
+  string_contains_substring s " :".
 
-(** SPC-022: No VPD pattern — conservative model. *)
-Definition spc_022_chk (s : string) : bool := false.
+(** SPC-022: count_substring "\item	". *)
+Definition spc_022_chk (s : string) : bool :=
+  string_contains_substring s "\item	".
 
 (** SPC-023: No VPD pattern — conservative model. *)
 Definition spc_023_chk (s : string) : bool := false.
@@ -90,8 +93,9 @@ Definition spc_026_chk (s : string) : bool := false.
 (** SPC-027: No VPD pattern — conservative model. *)
 Definition spc_027_chk (s : string) : bool := false.
 
-(** SPC-028: No VPD pattern — conservative model. *)
-Definition spc_028_chk (s : string) : bool := false.
+(** SPC-028: count_substring "~~". *)
+Definition spc_028_chk (s : string) : bool :=
+  string_contains_substring s "~~".
 
 (** SPC-029: No VPD pattern — conservative model. *)
 Definition spc_029_chk (s : string) : bool := false.
@@ -99,8 +103,9 @@ Definition spc_029_chk (s : string) : bool := false.
 (** SPC-030: No VPD pattern — conservative model. *)
 Definition spc_030_chk (s : string) : bool := false.
 
-(** SPC-031: No VPD pattern — conservative model. *)
-Definition spc_031_chk (s : string) : bool := false.
+(** SPC-031: count_substring ".   ". *)
+Definition spc_031_chk (s : string) : bool :=
+  string_contains_substring s ".   ".
 
 (** SPC-032: No VPD pattern — conservative model. *)
 Definition spc_032_chk (s : string) : bool := false.

@@ -36,8 +36,9 @@ Definition math_062_chk (s : string) : bool := false.
 (** MATH-063: No VPD pattern — conservative model. *)
 Definition math_063_chk (s : string) : bool := false.
 
-(** MATH-064: No VPD pattern — conservative model. *)
-Definition math_064_chk (s : string) : bool := false.
+(** MATH-064: count_substring "\eqalign". *)
+Definition math_064_chk (s : string) : bool :=
+  string_contains_substring s "\eqalign".
 
 (** MATH-075: No VPD pattern — conservative model. *)
 Definition math_075_chk (s : string) : bool := false.
@@ -48,8 +49,9 @@ Definition math_080_chk (s : string) : bool := false.
 (** MATH-100: No VPD pattern — conservative model. *)
 Definition math_100_chk (s : string) : bool := false.
 
-(** MATH-102: No VPD pattern — conservative model. *)
-Definition math_102_chk (s : string) : bool := false.
+(** MATH-102: count_substring "\begin{eqnarray}". *)
+Definition math_102_chk (s : string) : bool :=
+  string_contains_substring s "\begin{eqnarray}".
 
 (* ── Soundness theorems ── *)
 

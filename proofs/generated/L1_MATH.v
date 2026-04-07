@@ -57,8 +57,9 @@ Definition math_030_chk (s : string) : bool := false.
 (** MATH-031: No VPD pattern — conservative model. *)
 Definition math_031_chk (s : string) : bool := false.
 
-(** MATH-033: No VPD pattern — conservative model. *)
-Definition math_033_chk (s : string) : bool := false.
+(** MATH-033: count_substring "\pm". *)
+Definition math_033_chk (s : string) : bool :=
+  string_contains_substring s "\pm".
 
 (** MATH-034: No VPD pattern — conservative model. *)
 Definition math_034_chk (s : string) : bool := false.
@@ -174,8 +175,9 @@ Definition math_074_chk (s : string) : bool := false.
 (** MATH-077: No VPD pattern — conservative model. *)
 Definition math_077_chk (s : string) : bool := false.
 
-(** MATH-078: No VPD pattern — conservative model. *)
-Definition math_078_chk (s : string) : bool := false.
+(** MATH-078: count_substring "-->". *)
+Definition math_078_chk (s : string) : bool :=
+  string_contains_substring s "-->".
 
 (** MATH-079: No VPD pattern — conservative model. *)
 Definition math_079_chk (s : string) : bool := false.
@@ -183,8 +185,9 @@ Definition math_079_chk (s : string) : bool := false.
 (** MATH-081: No VPD pattern — conservative model. *)
 Definition math_081_chk (s : string) : bool := false.
 
-(** MATH-082: No VPD pattern — conservative model. *)
-Definition math_082_chk (s : string) : bool := false.
+(** MATH-082: count_substring "\!\!". *)
+Definition math_082_chk (s : string) : bool :=
+  string_contains_substring s "\!\!".
 
 (** MATH-084: No VPD pattern — conservative model. *)
 Definition math_084_chk (s : string) : bool := false.
@@ -213,8 +216,9 @@ Definition math_092_chk (s : string) : bool := false.
 (** MATH-093: No VPD pattern — conservative model. *)
 Definition math_093_chk (s : string) : bool := false.
 
-(** MATH-094: No VPD pattern — conservative model. *)
-Definition math_094_chk (s : string) : bool := false.
+(** MATH-094: count_substring "\kern". *)
+Definition math_094_chk (s : string) : bool :=
+  string_contains_substring s "\kern".
 
 (** MATH-095: No VPD pattern — conservative model. *)
 Definition math_095_chk (s : string) : bool := false.
@@ -231,8 +235,9 @@ Definition math_098_chk (s : string) : bool := false.
 (** MATH-099: No VPD pattern — conservative model. *)
 Definition math_099_chk (s : string) : bool := false.
 
-(** MATH-101: No VPD pattern — conservative model. *)
-Definition math_101_chk (s : string) : bool := false.
+(** MATH-101: count_substring "\over". *)
+Definition math_101_chk (s : string) : bool :=
+  string_contains_substring s "\over".
 
 (** MATH-104: No VPD pattern — conservative model. *)
 Definition math_104_chk (s : string) : bool := false.
@@ -240,8 +245,9 @@ Definition math_104_chk (s : string) : bool := false.
 (** MATH-105: No VPD pattern — conservative model. *)
 Definition math_105_chk (s : string) : bool := false.
 
-(** MATH-106: No VPD pattern — conservative model. *)
-Definition math_106_chk (s : string) : bool := false.
+(** MATH-106: count_substring "\not=". *)
+Definition math_106_chk (s : string) : bool :=
+  string_contains_substring s "\not=".
 
 (** MATH-108: No VPD pattern — conservative model. *)
 Definition math_108_chk (s : string) : bool := false.

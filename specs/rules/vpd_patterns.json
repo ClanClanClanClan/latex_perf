@@ -1,722 +1,918 @@
 {
+  "CHAR-006": {
+    "layer": "L0",
+    "pattern": {
+      "char": "\b",
+      "family": "count_char"
+    },
+    "severity": "Warning"
+  },
+  "CHAR-007": {
+    "layer": "L0",
+    "pattern": {
+      "char": "\u0007",
+      "family": "count_char"
+    },
+    "severity": "Warning"
+  },
+  "CHAR-008": {
+    "layer": "L0",
+    "pattern": {
+      "char": "\f",
+      "family": "count_char"
+    },
+    "severity": "Warning"
+  },
+  "CHAR-009": {
+    "layer": "L0",
+    "pattern": {
+      "char": "",
+      "family": "count_char"
+    },
+    "severity": "Warning"
+  },
+  "ENC-001": {
+    "layer": "L0",
+    "message": "Non-UTF-8 byte sequence detected",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b <= 0x7F then incr i else if b land 0xE0 = 0xC0 then (if !i + 1 < n && Char.code s.[!i+1] land 0xC0 = 0x80 then i := !i + 2 else (incr cnt; incr i)) else if b land 0xF0 = 0xE0 then (if !i + 2 < n && Char.code s.[!i+1] land 0xC0 = 0x80 && Char.code s.[!i+2] land 0xC0 = 0x80 then i := !i + 3 else (incr cnt; incr i)) else if b land 0xF8 = 0xF0 then (if !i + 3 < n && Char.code s.[!i+1] land 0xC0 = 0x80 && Char.code s.[!i+2] land 0xC0 = 0x80 && Char.code s.[!i+3] land 0xC0 = 0x80 then i := !i + 4 else (incr cnt; incr i)) else (incr cnt; incr i) done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-002": {
+    "layer": "L0",
+    "message": "Byte-order mark U+FEFF present in middle of file",
+    "pattern": {
+      "body": "fun s -> let bom = \"\\xef\\xbb\\xbf\" in let total = count_substring s bom in let at_start = String.length s >= 3 && String.sub s 0 3 = bom in if at_start then total - 1 else total",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-003": {
+    "layer": "L0",
+    "message": "LATIN-1 smart quotes detected",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b = 0x91 || b = 0x92 || b = 0x93 || b = 0x94 then (incr cnt; incr i) else if b >= 0xC0 && !i + 1 < n then (if b land 0xE0 = 0xC0 then i := !i + 2 else if b land 0xF0 = 0xE0 then i := !i + 3 else if b land 0xF8 = 0xF0 then i := !i + 4 else incr i) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-004": {
+    "layer": "L0",
+    "message": "Windows-1252 characters outside UTF-8",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b >= 0x80 && b <= 0x9F then (incr cnt; incr i) else if b >= 0xC0 && !i + 1 < n then (if b land 0xE0 = 0xC0 then i := !i + 2 else if b land 0xF0 = 0xE0 then i := !i + 3 else if b land 0xF8 = 0xF0 then i := !i + 4 else incr i) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-005": {
+    "layer": "L0",
+    "message": "Invalid UTF-8 continuation byte",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then incr i else if b0 < 0xC0 then (incr cnt; incr i) else if b0 < 0xE0 then (if !i + 1 < n then (let b1 = Char.code s.[!i+1] in if b1 < 0x80 || b1 > 0xBF then incr cnt; i := !i + 2) else (incr cnt; incr i)) else if b0 < 0xF0 then (if !i + 2 < n then (let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in if b1 < 0x80 || b1 > 0xBF || b2 < 0x80 || b2 > 0xBF then incr cnt; i := !i + 3) else (incr cnt; incr i)) else if b0 < 0xF8 then (if !i + 3 < n then (let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in let b3 = Char.code s.[!i+3] in if b1 < 0x80 || b1 > 0xBF || b2 < 0x80 || b2 > 0xBF || b3 < 0x80 || b3 > 0xBF then incr cnt; i := !i + 4) else (incr cnt; incr i)) else (incr cnt; incr i) done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-006": {
+    "layer": "L0",
+    "message": "Overlong UTF-8 encoding sequence",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then incr i else if b0 < 0xC0 then incr i else if b0 < 0xE0 then (if b0 = 0xC0 || b0 = 0xC1 then incr cnt; i := !i + 2) else if b0 < 0xF0 then (if !i + 2 < n then (let b1 = Char.code s.[!i+1] in if b0 = 0xE0 && b1 < 0xA0 then incr cnt); i := !i + 3) else if b0 < 0xF8 then (if !i + 3 < n then (let b1 = Char.code s.[!i+1] in if b0 = 0xF0 && b1 < 0x90 then incr cnt); i := !i + 4) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-007": {
+    "layer": "L0",
+    "message": "Zero-width space U+200B present",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "​"
+    },
+    "severity": "Warning"
+  },
+  "ENC-008": {
+    "layer": "L0",
+    "message": "Private-use codepoint detected",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 = 0xEE && !i + 2 < n then (incr cnt; i := !i + 3) else if b0 = 0xEF && !i + 2 < n then (let b1 = Char.code s.[!i+1] in if b1 <= 0xA3 then (incr cnt; i := !i + 3) else i := !i + 1) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-009": {
+    "layer": "L0",
+    "message": "Unpaired surrogate code unit",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do let b0 = Char.code s.[!i] in if b0 = 0xED then (let b1 = Char.code s.[!i+1] in if b1 >= 0xA0 && b1 <= 0xBF then (incr cnt; i := !i + 3) else incr i) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-010": {
+    "layer": "L0",
+    "message": "Non-canonical NFC form",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do let b0 = Char.code s.[!i] in let b1 = Char.code s.[!i+1] in if ((b0 >= 0x41 && b0 <= 0x5A) || (b0 >= 0x61 && b0 <= 0x7A)) && b1 = 0xCC && !i + 2 < n then (let b2 = Char.code s.[!i+2] in if b2 >= 0x80 && b2 <= 0xAF then (incr cnt; i := !i + 3) else incr i) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Info"
+  },
+  "ENC-011": {
+    "layer": "L0",
+    "message": "Byte sequence resembles MacRoman encoding",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in for i = 0 to n - 1 do let c = Char.code s.[i] in if c >= 0x80 && c <= 0x9F then (let is_valid_utf8 = let rec check_back offset = if offset > 3 || i - offset < 0 then false else let p = Char.code s.[i - offset] in if p >= 0xC2 && p <= 0xDF then offset = 1 else if p >= 0xE0 && p <= 0xEF then offset >= 1 && offset <= 2 else if p >= 0xF0 && p <= 0xF4 then offset >= 1 && offset <= 3 else if p >= 0x80 && p <= 0xBF then check_back (offset + 1) else false in check_back 1 in if not is_valid_utf8 then incr cnt) done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-012": {
+    "layer": "L0",
+    "message": "C1 control characters U+0080-009F present",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do if Char.code s.[!i] = 0xC2 && Char.code s.[!i+1] >= 0x80 && Char.code s.[!i+1] <= 0x9F then (incr cnt; i := !i + 2) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-013": {
+    "layer": "L0",
+    "message": "Mixed CRLF and LF line endings",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let has_crlf = ref false in let has_bare_lf = ref false in let i = ref 0 in while !i < n do if s.[!i] = '\\r' && !i + 1 < n && s.[!i+1] = '\\n' then (has_crlf := true; i := !i + 2) else if s.[!i] = '\\n' then (has_bare_lf := true; incr i) else incr i done; if !has_crlf && !has_bare_lf then 1 else 0",
+      "family": "custom"
+    },
+    "severity": "Info"
+  },
+  "ENC-014": {
+    "layer": "L0",
+    "message": "UTF-16 byte-order mark present",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in if n >= 2 then (if Char.code s.[0] = 0xFF && Char.code s.[1] = 0xFE then incr cnt; if Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF then incr cnt); !cnt",
+      "family": "custom"
+    },
+    "severity": "Error"
+  },
+  "ENC-015": {
+    "layer": "L0",
+    "message": "Non-NFKC homoglyph character",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "µ",
+        "Ω",
+        "Å",
+        "ſ"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "ENC-016": {
+    "layer": "L0",
+    "message": "Arabic numerals replaced by Unicode look-alikes",
+    "pattern": {
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do let b0 = Char.code s.[!i] in let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in if b0 = 0xEF && b1 = 0xBC && b2 >= 0x90 && b2 <= 0x99 then (incr cnt; i := !i + 3) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-017": {
+    "layer": "L0",
+    "message": "Soft hyphen U+00AD found in source",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "­"
+    },
+    "severity": "Warning"
+  },
+  "ENC-018": {
+    "layer": "L0",
+    "message": "Non-breaking hyphen U+2011 present outside URLs",
+    "pattern": {
+      "body": "fun s -> let s_text = strip_math_segments s in let n = String.length s_text in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do if Char.code s_text.[!i] = 0xE2 && Char.code s_text.[!i+1] = 0x80 && Char.code s_text.[!i+2] = 0x91 then (let in_url = ref false in let j = ref (!i - 1) in while !j >= 0 && not !in_url do if !j + 4 < n && String.sub s_text !j 5 = \"\\\\url{\" then in_url := true; if s_text.[!j] = '}' then j := -1 else decr j done; if not !in_url then incr cnt; i := !i + 3) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Info"
+  },
+  "ENC-019": {
+    "layer": "L0",
+    "message": "Duplicate combining accents on same base glyph",
+    "pattern": {
+      "body": "fun s -> let is_combining b0 b1 = (b0 = 0xCC && b1 >= 0x80) || (b0 = 0xCD && b1 <= 0xAF) in let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then (let j = ref (!i + 1) in let prev = ref (-1, -1) in while !j + 1 < n do let c0 = Char.code s.[!j] in let c1 = Char.code s.[!j+1] in if is_combining c0 c1 then (let (p0,p1) = !prev in if p0 = c0 && p1 = c1 then incr cnt; prev := (c0,c1); j := !j + 2) else j := n done; incr i) else if b0 >= 0xC0 && b0 < 0xE0 then i := !i + 2 else if b0 >= 0xE0 && b0 < 0xF0 then i := !i + 3 else if b0 >= 0xF0 then i := !i + 4 else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
+  },
+  "ENC-020": {
+    "layer": "L0",
+    "message": "Invisible formatting mark U+200E/U+200F present",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "‎",
+        "‏"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "ENC-021": {
+    "layer": "L0",
+    "message": "WORD JOINER U+2060 present",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "⁠"
+    },
+    "severity": "Warning"
+  },
+  "ENC-022": {
+    "layer": "L0",
+    "message": "Interlinear annotation chars U+FFF9-FFFB detected",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "￹",
+        "￺",
+        "￻"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "ENC-023": {
+    "layer": "L0",
+    "message": "NARROW NB-SPACE U+202F outside French context",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "ENC-024": {
+    "layer": "L0",
+    "message": "Bidirectional embeddings U+202A-U+202E present",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "‪",
+        "‫",
+        "‬",
+        "‭",
+        "‮"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-033": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\pm"
+    },
+    "severity": "Info"
+  },
+  "MATH-064": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\eqalign"
+    },
+    "severity": "Warning"
+  },
+  "MATH-078": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "-->"
+    },
+    "severity": "Info"
+  },
+  "MATH-082": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\!\\!"
+    },
+    "severity": "Warning"
+  },
+  "MATH-094": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\kern"
+    },
+    "severity": "Info"
+  },
+  "MATH-101": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\over"
+    },
+    "severity": "Warning"
+  },
+  "MATH-102": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{eqnarray}"
+    },
+    "severity": "Warning"
+  },
+  "MATH-106": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\not="
+    },
+    "severity": "Info"
+  },
+  "SPC-016": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " ;"
+    },
+    "severity": "Warning"
+  },
+  "SPC-021": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " :"
+    },
+    "severity": "Warning"
+  },
+  "SPC-022": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\item\t"
+    },
+    "severity": "Info"
+  },
+  "SPC-028": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "~~"
+    },
+    "severity": "Info"
+  },
+  "SPC-031": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".   "
+    },
+    "severity": "Info"
+  },
   "TYPO-001": {
     "layer": "L0",
-    "severity": "Error",
     "message": "ASCII straight quotes must be curly quotes",
     "pattern": {
-      "family": "count_char_strip_math",
-      "char": "\""
-    }
+      "char": "\"",
+      "family": "count_char_strip_math"
+    },
+    "severity": "Error"
   },
   "TYPO-002": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Double hyphen -- should be en-dash",
     "pattern": {
       "family": "count_substring",
       "needle": "--"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-003": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Triple hyphen --- should be em-dash",
     "pattern": {
       "family": "count_substring",
       "needle": "---"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-004": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "TeX double back-tick ``…'' not allowed; use curly quotes",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["``", "''"]
-    }
+      "needles": [
+        "``",
+        "''"
+      ]
+    },
+    "severity": "Warning"
   },
   "TYPO-005": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Ellipsis typed as three periods ...; use \\dots",
     "pattern": {
       "family": "count_substring_strip_math",
       "needle": "..."
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-006": {
     "layer": "L0",
-    "severity": "Error",
     "message": "Tab character U+0009 forbidden",
     "pattern": {
-      "family": "count_char",
-      "char": "\t"
-    }
+      "char": "\t",
+      "family": "count_char"
+    },
+    "severity": "Error"
   },
   "TYPO-007": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Trailing spaces at end of line",
     "pattern": {
       "family": "line_pred",
       "predicate": "(fun line -> let len = String.length line in len > 0 && let last = String.unsafe_get line (len - 1) in last = ' ' || last = '\\t')"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-008": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Multiple consecutive blank lines (> 2) in source",
     "pattern": {
       "family": "count_substring",
       "needle": "\n\n\n"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-009": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Non-breaking space ~ used incorrectly at line start",
     "pattern": {
       "family": "count_substring",
       "needle": "\n~"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-010": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Space before punctuation , . ; : ? !",
     "pattern": {
       "family": "multi_substring",
-      "needles": [" ,", " .", " ;", " :", " ?", " !"]
-    }
+      "needles": [
+        " ,",
+        " .",
+        " ;",
+        " :",
+        " ?",
+        " !"
+      ]
+    },
+    "severity": "Info"
   },
   "TYPO-011": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Missing thin space before differential d in integrals",
     "pattern": {
       "family": "regex",
       "regex": "\\\\int[^}]*[^\\\\,]d[a-z]"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-012": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Straight apostrophe used for minutes/feet; use ^\\prime",
     "pattern": {
       "family": "regex",
       "regex": "[0-9]'"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-013": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "ASCII back-tick used as opening quote",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in for i = 0 to n - 1 do if s.[i] = '`' then let is_double = (i + 1 < n && s.[i+1] = '`') || (i > 0 && s.[i-1] = '`') in if not is_double then incr cnt done; !cnt"
-    }
+      "body": "fun s -> let n = String.length s in let cnt = ref 0 in for i = 0 to n - 1 do if s.[i] = '`' then let is_double = (i + 1 < n && s.[i+1] = '`') || (i > 0 && s.[i-1] = '`') in if not is_double then incr cnt done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
   },
   "TYPO-014": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Space before percent sign",
     "pattern": {
       "family": "count_substring",
       "needle": " %"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-015": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Double percent in source; likely stray percent",
     "pattern": {
       "family": "count_substring",
       "needle": "\\%\\%"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-016": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Non-breaking space ~ missing before \\cite / \\ref",
     "pattern": {
       "family": "regex",
       "regex": " \\\\(cite|ref)[^a-zA-Z]"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-017": {
     "layer": "L0",
-    "severity": "Info",
     "message": "TeX accent commands in text; prefer UTF-8",
     "pattern": {
       "family": "regex",
       "regex": "\\\\['^`\"~=.][{][a-zA-Z][}]"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-018": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Multiple consecutive spaces in text",
     "pattern": {
       "family": "count_substring",
       "needle": "  "
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-021": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Capital letter after ellipsis without space",
     "pattern": {
       "family": "regex",
-      "regex": "(\\.{3}|\u2026)[A-Z]"
-    }
+      "regex": "(\\.{3}|…)[A-Z]"
+    },
+    "severity": "Info"
   },
   "TYPO-022": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Space before closing punctuation ) ] }",
     "pattern": {
       "family": "multi_substring",
-      "needles": [" )", " ]", " }"]
-    }
+      "needles": [
+        " )",
+        " ]",
+        " }"
+      ]
+    },
+    "severity": "Info"
   },
   "TYPO-023": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Windows CR (\\r) line endings found",
     "pattern": {
-      "family": "count_char",
-      "char": "\r"
-    }
+      "char": "\r",
+      "family": "count_char"
+    },
+    "severity": "Warning"
   },
   "TYPO-024": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Dangling dash at line end",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let re = Str.regexp {|-+[ \\t]*$|} in let lines = String.split_on_char '\\n' s in List.fold_left (fun acc line -> try let _ = Str.search_forward re line 0 in acc + 1 with Not_found -> acc) 0 lines"
-    }
+      "body": "fun s -> let re = Str.regexp {|-+[ \\t]*$|} in let lines = String.split_on_char '\\n' s in List.fold_left (fun acc line -> try let _ = Str.search_forward re line 0 in acc + 1 with Not_found -> acc) 0 lines",
+      "family": "custom"
+    },
+    "severity": "Info"
   },
   "TYPO-025": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Space before en-dash in number range",
     "pattern": {
       "family": "regex",
       "regex": "[0-9] +(\\u2013|--)[0-9]"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-026": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Wrong dash in page range; should use --",
     "pattern": {
       "family": "regex",
-      "regex": "[0-9]\u2013[0-9]"
-    }
+      "regex": "[0-9]–[0-9]"
+    },
+    "severity": "Warning"
   },
   "TYPO-027": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Multiple exclamation marks",
     "pattern": {
       "family": "count_substring",
       "needle": "!!"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-028": {
     "layer": "L0",
-    "severity": "Error",
     "message": "Use of $$ display math delimiter",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> count_substring s \"$$\" / 2"
-    }
+      "body": "fun s -> count_substring s \"$$\" / 2",
+      "family": "custom"
+    },
+    "severity": "Error"
   },
   "TYPO-029": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Non-breaking space after \\ref missing",
     "pattern": {
       "family": "regex",
       "regex": "\\\\ref\\{[^}]*\\} [a-zA-Z]"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-030": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "More than three hyphens detected (----)",
     "pattern": {
       "family": "count_substring",
       "needle": "----"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-032": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Comma before \\cite",
     "pattern": {
       "family": "regex",
       "regex": ",[ ]*\\\\cite"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-033": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Abbreviation et.al without space",
     "pattern": {
       "family": "count_substring",
       "needle": "et.al"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-034": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Spurious space before \\footnote",
     "pattern": {
       "family": "count_substring",
       "needle": " \\footnote"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-035": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Space before French punctuation mark; use non-breaking space ~",
     "pattern": {
       "family": "multi_substring",
-      "needles": [" ;", " :", " !", " ?"]
-    }
+      "needles": [
+        " ;",
+        " :",
+        " !",
+        " ?"
+      ]
+    },
+    "severity": "Warning"
   },
   "TYPO-036": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Suspicious consecutive capitalised words; check for inadvertent shouting",
     "pattern": {
       "family": "regex",
       "regex": "\\b[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\\b"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-037": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Space before comma",
     "pattern": {
       "family": "count_substring",
       "needle": " ,"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-038": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Bare e-mail address found; wrap in \\href{mailto:...}",
     "pattern": {
       "family": "regex",
       "regex": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-039": {
     "layer": "L0",
-    "severity": "Info",
     "message": "URL split across lines without \\url{}",
     "pattern": {
       "family": "regex",
       "regex": "https?://[^ \t\n}]+"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-040": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Inline math $...$ exceeds 80 characters",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let re = Str.regexp \"\\\\$\\\\([^$]+\\\\)\\\\$\" in let rec loop i acc = try ignore (Str.search_forward re s i); let inner = Str.matched_group 1 s in loop (Str.match_end ()) (if String.length inner > 80 then acc + 1 else acc) with Not_found -> acc in loop 0 0"
-    }
+      "body": "fun s -> let re = Str.regexp \"\\\\$\\\\([^$]+\\\\)\\\\$\" in let rec loop i acc = try ignore (Str.search_forward re s i); let inner = Str.matched_group 1 s in loop (Str.match_end ()) (if String.length inner > 80 then acc + 1 else acc) with Not_found -> acc in loop 0 0",
+      "family": "custom"
+    },
+    "severity": "Info"
   },
   "TYPO-041": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Incorrect spacing around \\ldots; check for missing space",
     "pattern": {
       "family": "multi_substring",
-      "needles": [".\\ldots", "\\ldots.", ",\\ldots"]
-    }
+      "needles": [
+        ".\\ldots",
+        "\\ldots.",
+        ",\\ldots"
+      ]
+    },
+    "severity": "Info"
   },
   "TYPO-042": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Multiple consecutive question marks",
     "pattern": {
       "family": "count_substring",
       "needle": "??"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-043": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Smart (curly) quotes detected; verbatim sections require ASCII quotes",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\u201C", "\u201D", "\u2018", "\u2019"]
-    }
+      "needles": [
+        "“",
+        "”",
+        "‘",
+        "’"
+      ]
+    },
+    "severity": "Warning"
   },
   "TYPO-045": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Non-ASCII punctuation in math mode",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let rec scan i inside acc = if i >= n then acc else let c = Char.code s.[i] in if c = 0x24 then scan (i+1) (not inside) acc else if inside && c >= 0x80 then scan (i+1) inside (acc+1) else scan (i+1) inside acc in scan 0 false 0"
-    }
+      "body": "fun s -> let n = String.length s in let rec scan i inside acc = if i >= n then acc else let c = Char.code s.[i] in if c = 0x24 then scan (i+1) (not inside) acc else if inside && c >= 0x80 then scan (i+1) inside (acc+1) else scan (i+1) inside acc in scan 0 false 0",
+      "family": "custom"
+    },
+    "severity": "Warning"
   },
   "TYPO-046": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Use of \\begin{math} instead of $...$",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\begin{math}", "\\end{math}"]
-    }
+      "needles": [
+        "\\begin{math}",
+        "\\end{math}"
+      ]
+    },
+    "severity": "Info"
   },
   "TYPO-047": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Starred \\section* used where numbered section expected",
     "pattern": {
       "family": "count_substring",
       "needle": "\\section*"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-048": {
     "layer": "L0",
-    "severity": "Info",
     "message": "En-dash character used where minus sign expected",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let s = strip_math_segments s in Unicode.count_en_dash s"
-    }
+      "body": "fun s -> let s = strip_math_segments s in Unicode.count_en_dash s",
+      "family": "custom"
+    },
+    "severity": "Info"
   },
   "TYPO-049": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Space after opening quote",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\u201C ", "\u2018 "]
-    }
+      "needles": [
+        "“ ",
+        "‘ "
+      ]
+    },
+    "severity": "Info"
   },
   "TYPO-051": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Thin space U+2009 found; prefer \\thinspace or \\, macro",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u2009"
-    }
+      "needle": " "
+    },
+    "severity": "Warning"
   },
   "TYPO-052": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Unescaped < or > in text; use \\textless / \\textgreater",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let s = strip_math_segments s in count_char s '<' + count_char s '>'"
-    }
+      "body": "fun s -> let s = strip_math_segments s in count_char s '<' + count_char s '>'",
+      "family": "custom"
+    },
+    "severity": "Warning"
   },
   "TYPO-053": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Unicode midline ellipsis U+22EF found; use \\cdots instead",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u22EF"
-    }
+      "needle": "⋯"
+    },
+    "severity": "Warning"
   },
   "TYPO-054": {
     "layer": "L0",
-    "severity": "Info",
     "message": "En-dash adjacent to letter without spacing; consider thin space",
     "pattern": {
       "family": "regex",
-      "regex": "[a-zA-Z]\u2013[a-zA-Z]"
-    }
+      "regex": "[a-zA-Z]–[a-zA-Z]"
+    },
+    "severity": "Info"
   },
   "TYPO-055": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Consecutive \\, thin-spaces detected; collapse into single space",
     "pattern": {
       "family": "count_substring",
       "needle": "\\,\\,"
-    }
+    },
+    "severity": "Info"
   },
   "TYPO-056": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Legacy TeX accent command found; use UTF-8 character directly",
     "pattern": {
       "family": "regex",
       "regex": "\\\\['^`\"~=.][{][a-zA-Z][}]"
-    }
+    },
+    "severity": "Warning"
   },
   "TYPO-057": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Number directly adjacent to degree symbol; insert thin space",
     "pattern": {
       "family": "regex",
-      "regex": "[0-9]\u00b0"
-    }
+      "regex": "[0-9]°"
+    },
+    "severity": "Info"
   },
   "TYPO-058": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Greek homograph letter found in Latin text",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\u03B1", "\u03B5", "\u03B9", "\u03BF", "\u03C1", "\u03C2", "\u03C5"]
-    }
+      "needles": [
+        "α",
+        "ε",
+        "ι",
+        "ο",
+        "ρ",
+        "ς",
+        "υ"
+      ]
+    },
+    "severity": "Warning"
   },
   "TYPO-061": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Unicode multiplication sign found; prefer \\times in math mode",
     "pattern": {
       "family": "count_substring_strip_math",
-      "needle": "\u00D7"
-    }
+      "needle": "×"
+    },
+    "severity": "Info"
   },
   "TYPO-062": {
     "layer": "L0",
-    "severity": "Warning",
     "message": "Literal backslash in text; use \\textbackslash",
     "pattern": {
-      "family": "custom",
-      "body": "fun s -> let s = strip_math_segments s in let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do if s.[!i] = '\\\\' && s.[!i + 1] = '\\\\' then (if !i + 2 < n then (let c = s.[!i + 2] in if c <> '[' && c <> '*' then incr cnt) else incr cnt; i := !i + 2) else incr i done; !cnt"
-    }
+      "body": "fun s -> let s = strip_math_segments s in let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do if s.[!i] = '\\\\' && s.[!i + 1] = '\\\\' then (if !i + 2 < n then (let c = s.[!i + 2] in if c <> '[' && c <> '*' then incr cnt) else incr cnt; i := !i + 2) else incr i done; !cnt",
+      "family": "custom"
+    },
+    "severity": "Warning"
   },
   "TYPO-063": {
     "layer": "L0",
-    "severity": "Info",
     "message": "Non-breaking hyphen U+2011 found; use standard hyphen",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u2011"
-    }
-  },
-  "ENC-001": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "Non-UTF-8 byte sequence detected",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b <= 0x7F then incr i else if b land 0xE0 = 0xC0 then (if !i + 1 < n && Char.code s.[!i+1] land 0xC0 = 0x80 then i := !i + 2 else (incr cnt; incr i)) else if b land 0xF0 = 0xE0 then (if !i + 2 < n && Char.code s.[!i+1] land 0xC0 = 0x80 && Char.code s.[!i+2] land 0xC0 = 0x80 then i := !i + 3 else (incr cnt; incr i)) else if b land 0xF8 = 0xF0 then (if !i + 3 < n && Char.code s.[!i+1] land 0xC0 = 0x80 && Char.code s.[!i+2] land 0xC0 = 0x80 && Char.code s.[!i+3] land 0xC0 = 0x80 then i := !i + 4 else (incr cnt; incr i)) else (incr cnt; incr i) done; !cnt"
-    }
-  },
-  "ENC-002": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "Byte-order mark U+FEFF present in middle of file",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let bom = \"\\xef\\xbb\\xbf\" in let total = count_substring s bom in let at_start = String.length s >= 3 && String.sub s 0 3 = bom in if at_start then total - 1 else total"
-    }
-  },
-  "ENC-003": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "LATIN-1 smart quotes detected",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b = 0x91 || b = 0x92 || b = 0x93 || b = 0x94 then (incr cnt; incr i) else if b >= 0xC0 && !i + 1 < n then (if b land 0xE0 = 0xC0 then i := !i + 2 else if b land 0xF0 = 0xE0 then i := !i + 3 else if b land 0xF8 = 0xF0 then i := !i + 4 else incr i) else incr i done; !cnt"
-    }
-  },
-  "ENC-004": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Windows-1252 characters outside UTF-8",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b = Char.code s.[!i] in if b >= 0x80 && b <= 0x9F then (incr cnt; incr i) else if b >= 0xC0 && !i + 1 < n then (if b land 0xE0 = 0xC0 then i := !i + 2 else if b land 0xF0 = 0xE0 then i := !i + 3 else if b land 0xF8 = 0xF0 then i := !i + 4 else incr i) else incr i done; !cnt"
-    }
-  },
-  "ENC-005": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "Invalid UTF-8 continuation byte",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then incr i else if b0 < 0xC0 then (incr cnt; incr i) else if b0 < 0xE0 then (if !i + 1 < n then (let b1 = Char.code s.[!i+1] in if b1 < 0x80 || b1 > 0xBF then incr cnt; i := !i + 2) else (incr cnt; incr i)) else if b0 < 0xF0 then (if !i + 2 < n then (let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in if b1 < 0x80 || b1 > 0xBF || b2 < 0x80 || b2 > 0xBF then incr cnt; i := !i + 3) else (incr cnt; incr i)) else if b0 < 0xF8 then (if !i + 3 < n then (let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in let b3 = Char.code s.[!i+3] in if b1 < 0x80 || b1 > 0xBF || b2 < 0x80 || b2 > 0xBF || b3 < 0x80 || b3 > 0xBF then incr cnt; i := !i + 4) else (incr cnt; incr i)) else (incr cnt; incr i) done; !cnt"
-    }
-  },
-  "ENC-006": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "Overlong UTF-8 encoding sequence",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then incr i else if b0 < 0xC0 then incr i else if b0 < 0xE0 then (if b0 = 0xC0 || b0 = 0xC1 then incr cnt; i := !i + 2) else if b0 < 0xF0 then (if !i + 2 < n then (let b1 = Char.code s.[!i+1] in if b0 = 0xE0 && b1 < 0xA0 then incr cnt); i := !i + 3) else if b0 < 0xF8 then (if !i + 3 < n then (let b1 = Char.code s.[!i+1] in if b0 = 0xF0 && b1 < 0x90 then incr cnt); i := !i + 4) else incr i done; !cnt"
-    }
-  },
-  "ENC-007": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Zero-width space U+200B present",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "\u200B"
-    }
-  },
-  "ENC-008": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Private-use codepoint detected",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 = 0xEE && !i + 2 < n then (incr cnt; i := !i + 3) else if b0 = 0xEF && !i + 2 < n then (let b1 = Char.code s.[!i+1] in if b1 <= 0xA3 then (incr cnt; i := !i + 3) else i := !i + 1) else incr i done; !cnt"
-    }
-  },
-  "ENC-009": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "Unpaired surrogate code unit",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do let b0 = Char.code s.[!i] in if b0 = 0xED then (let b1 = Char.code s.[!i+1] in if b1 >= 0xA0 && b1 <= 0xBF then (incr cnt; i := !i + 3) else incr i) else incr i done; !cnt"
-    }
-  },
-  "ENC-010": {
-    "layer": "L0",
-    "severity": "Info",
-    "message": "Non-canonical NFC form",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do let b0 = Char.code s.[!i] in let b1 = Char.code s.[!i+1] in if ((b0 >= 0x41 && b0 <= 0x5A) || (b0 >= 0x61 && b0 <= 0x7A)) && b1 = 0xCC && !i + 2 < n then (let b2 = Char.code s.[!i+2] in if b2 >= 0x80 && b2 <= 0xAF then (incr cnt; i := !i + 3) else incr i) else incr i done; !cnt"
-    }
-  },
-  "ENC-011": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Byte sequence resembles MacRoman encoding",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in for i = 0 to n - 1 do let c = Char.code s.[i] in if c >= 0x80 && c <= 0x9F then (let is_valid_utf8 = let rec check_back offset = if offset > 3 || i - offset < 0 then false else let p = Char.code s.[i - offset] in if p >= 0xC2 && p <= 0xDF then offset = 1 else if p >= 0xE0 && p <= 0xEF then offset >= 1 && offset <= 2 else if p >= 0xF0 && p <= 0xF4 then offset >= 1 && offset <= 3 else if p >= 0x80 && p <= 0xBF then check_back (offset + 1) else false in check_back 1 in if not is_valid_utf8 then incr cnt) done; !cnt"
-    }
-  },
-  "ENC-012": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "C1 control characters U+0080-009F present",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 1 do if Char.code s.[!i] = 0xC2 && Char.code s.[!i+1] >= 0x80 && Char.code s.[!i+1] <= 0x9F then (incr cnt; i := !i + 2) else incr i done; !cnt"
-    }
-  },
-  "ENC-013": {
-    "layer": "L0",
-    "severity": "Info",
-    "message": "Mixed CRLF and LF line endings",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let has_crlf = ref false in let has_bare_lf = ref false in let i = ref 0 in while !i < n do if s.[!i] = '\\r' && !i + 1 < n && s.[!i+1] = '\\n' then (has_crlf := true; i := !i + 2) else if s.[!i] = '\\n' then (has_bare_lf := true; incr i) else incr i done; if !has_crlf && !has_bare_lf then 1 else 0"
-    }
-  },
-  "ENC-014": {
-    "layer": "L0",
-    "severity": "Error",
-    "message": "UTF-16 byte-order mark present",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in if n >= 2 then (if Char.code s.[0] = 0xFF && Char.code s.[1] = 0xFE then incr cnt; if Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF then incr cnt); !cnt"
-    }
-  },
-  "ENC-015": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Non-NFKC homoglyph character",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": ["\u00B5", "\u2126", "\u212B", "\u017F"]
-    }
-  },
-  "ENC-016": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Arabic numerals replaced by Unicode look-alikes",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do let b0 = Char.code s.[!i] in let b1 = Char.code s.[!i+1] in let b2 = Char.code s.[!i+2] in if b0 = 0xEF && b1 = 0xBC && b2 >= 0x90 && b2 <= 0x99 then (incr cnt; i := !i + 3) else incr i done; !cnt"
-    }
-  },
-  "ENC-017": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Soft hyphen U+00AD found in source",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "\u00AD"
-    }
-  },
-  "ENC-018": {
-    "layer": "L0",
-    "severity": "Info",
-    "message": "Non-breaking hyphen U+2011 present outside URLs",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let s_text = strip_math_segments s in let n = String.length s_text in let cnt = ref 0 in let i = ref 0 in while !i < n - 2 do if Char.code s_text.[!i] = 0xE2 && Char.code s_text.[!i+1] = 0x80 && Char.code s_text.[!i+2] = 0x91 then (let in_url = ref false in let j = ref (!i - 1) in while !j >= 0 && not !in_url do if !j + 4 < n && String.sub s_text !j 5 = \"\\\\url{\" then in_url := true; if s_text.[!j] = '}' then j := -1 else decr j done; if not !in_url then incr cnt; i := !i + 3) else incr i done; !cnt"
-    }
-  },
-  "ENC-019": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Duplicate combining accents on same base glyph",
-    "pattern": {
-      "family": "custom",
-      "body": "fun s -> let is_combining b0 b1 = (b0 = 0xCC && b1 >= 0x80) || (b0 = 0xCD && b1 <= 0xAF) in let n = String.length s in let cnt = ref 0 in let i = ref 0 in while !i < n do let b0 = Char.code s.[!i] in if b0 < 0x80 then (let j = ref (!i + 1) in let prev = ref (-1, -1) in while !j + 1 < n do let c0 = Char.code s.[!j] in let c1 = Char.code s.[!j+1] in if is_combining c0 c1 then (let (p0,p1) = !prev in if p0 = c0 && p1 = c1 then incr cnt; prev := (c0,c1); j := !j + 2) else j := n done; incr i) else if b0 >= 0xC0 && b0 < 0xE0 then i := !i + 2 else if b0 >= 0xE0 && b0 < 0xF0 then i := !i + 3 else if b0 >= 0xF0 then i := !i + 4 else incr i done; !cnt"
-    }
-  },
-  "ENC-020": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Invisible formatting mark U+200E/U+200F present",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": ["\u200E", "\u200F"]
-    }
-  },
-  "ENC-021": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "WORD JOINER U+2060 present",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "\u2060"
-    }
-  },
-  "ENC-022": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Interlinear annotation chars U+FFF9-FFFB detected",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": ["\uFFF9", "\uFFFA", "\uFFFB"]
-    }
-  },
-  "ENC-023": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "NARROW NB-SPACE U+202F outside French context",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "\u202F"
-    }
-  },
-  "ENC-024": {
-    "layer": "L0",
-    "severity": "Warning",
-    "message": "Bidirectional embeddings U+202A-U+202E present",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": ["\u202A", "\u202B", "\u202C", "\u202D", "\u202E"]
-    }
+      "needle": "‑"
+    },
+    "severity": "Info"
   }
 }

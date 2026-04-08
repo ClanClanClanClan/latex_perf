@@ -9,32 +9,38 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CHEM-001: No VPD pattern — conservative model. *)
-Definition chem_001_chk (s : string) : bool := false.
+(** CHEM-001: count_substring "\ce{". *)
+Definition chem_001_chk (s : string) : bool :=
+  string_contains_substring s "\ce{".
 
 (** CHEM-002: No VPD pattern — conservative model. *)
 Definition chem_002_chk (s : string) : bool := false.
 
-(** CHEM-003: No VPD pattern — conservative model. *)
-Definition chem_003_chk (s : string) : bool := false.
+(** CHEM-003: count_substring "\ce{". *)
+Definition chem_003_chk (s : string) : bool :=
+  string_contains_substring s "\ce{".
 
 (** CHEM-004: No VPD pattern — conservative model. *)
 Definition chem_004_chk (s : string) : bool := false.
 
-(** CHEM-005: No VPD pattern — conservative model. *)
-Definition chem_005_chk (s : string) : bool := false.
+(** CHEM-005: multi_substring [->, \rightarrow, \longrightarrow]. *)
+Definition chem_005_chk (s : string) : bool :=
+  multi_substring_check ["->"; "\rightarrow"; "\longrightarrow"] s.
 
-(** CHEM-006: No VPD pattern — conservative model. *)
-Definition chem_006_chk (s : string) : bool := false.
+(** CHEM-006: count_substring " +  ". *)
+Definition chem_006_chk (s : string) : bool :=
+  string_contains_substring s " +  ".
 
-(** CHEM-007: No VPD pattern — conservative model. *)
-Definition chem_007_chk (s : string) : bool := false.
+(** CHEM-007: count_substring "\text{". *)
+Definition chem_007_chk (s : string) : bool :=
+  string_contains_substring s "\text{".
 
 (** CHEM-008: No VPD pattern — conservative model. *)
 Definition chem_008_chk (s : string) : bool := false.
 
-(** CHEM-009: No VPD pattern — conservative model. *)
-Definition chem_009_chk (s : string) : bool := false.
+(** CHEM-009: multi_substring [<->, <=>]. *)
+Definition chem_009_chk (s : string) : bool :=
+  multi_substring_check ["<->"; "<=>"] s.
 
 (* ── Soundness theorems ── *)
 

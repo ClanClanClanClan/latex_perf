@@ -18,11 +18,13 @@ Definition math_024_chk (s : string) : bool := false.
 (** MATH-025: No VPD pattern — conservative model. *)
 Definition math_025_chk (s : string) : bool := false.
 
-(** MATH-028: No VPD pattern — conservative model. *)
-Definition math_028_chk (s : string) : bool := false.
+(** MATH-028: count_substring "\begin{array}". *)
+Definition math_028_chk (s : string) : bool :=
+  string_contains_substring s "\begin{array}".
 
-(** MATH-029: No VPD pattern — conservative model. *)
-Definition math_029_chk (s : string) : bool := false.
+(** MATH-029: count_substring "\begin{eqnarray". *)
+Definition math_029_chk (s : string) : bool :=
+  string_contains_substring s "\begin{eqnarray".
 
 (** MATH-032: No VPD pattern — conservative model. *)
 Definition math_032_chk (s : string) : bool := false.

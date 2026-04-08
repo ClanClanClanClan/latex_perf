@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** L3-008: No VPD pattern — conservative model. *)
-Definition l3_008_chk (s : string) : bool := false.
+(** L3-008: multi_substring [\ExplSyntaxOn, \ProvidesExplPackage]. *)
+Definition l3_008_chk (s : string) : bool :=
+  multi_substring_check ["\ExplSyntaxOn"; "\ProvidesExplPackage"] s.
 
-(** L3-010: No VPD pattern — conservative model. *)
-Definition l3_010_chk (s : string) : bool := false.
+(** L3-010: multi_substring [\ExplSyntaxOn, \ExplSyntaxOff]. *)
+Definition l3_010_chk (s : string) : bool :=
+  multi_substring_check ["\ExplSyntaxOn"; "\ExplSyntaxOff"] s.
 
 (* ── Soundness theorems ── *)
 

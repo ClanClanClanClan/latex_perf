@@ -27,8 +27,9 @@ Definition math_089_chk (s : string) : bool := false.
 (** MATH-103: No VPD pattern — conservative model. *)
 Definition math_103_chk (s : string) : bool := false.
 
-(** MATH-107: No VPD pattern — conservative model. *)
-Definition math_107_chk (s : string) : bool := false.
+(** MATH-107: multi_substring [\le , \le\, \leqslant]. *)
+Definition math_107_chk (s : string) : bool :=
+  multi_substring_check ["\le "; "\le\"; "\leqslant"] s.
 
 (* ── Soundness theorems ── *)
 

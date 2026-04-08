@@ -27,11 +27,13 @@ Definition script_005_chk (s : string) : bool := false.
 (** SCRIPT-006: No VPD pattern — conservative model. *)
 Definition script_006_chk (s : string) : bool := false.
 
-(** SCRIPT-007: No VPD pattern — conservative model. *)
-Definition script_007_chk (s : string) : bool := false.
+(** SCRIPT-007: multi_substring [\text{, \mathrm{, \operatorname{]. *)
+Definition script_007_chk (s : string) : bool :=
+  multi_substring_check ["\text{"; "\mathrm{"; "\operatorname{"] s.
 
-(** SCRIPT-008: No VPD pattern — conservative model. *)
-Definition script_008_chk (s : string) : bool := false.
+(** SCRIPT-008: multi_substring [\ce{, \mathrm{]. *)
+Definition script_008_chk (s : string) : bool :=
+  multi_substring_check ["\ce{"; "\mathrm{"] s.
 
 (** SCRIPT-009: No VPD pattern — conservative model. *)
 Definition script_009_chk (s : string) : bool := false.
@@ -66,8 +68,9 @@ Definition script_018_chk (s : string) : bool := false.
 (** SCRIPT-019: No VPD pattern — conservative model. *)
 Definition script_019_chk (s : string) : bool := false.
 
-(** SCRIPT-020: No VPD pattern — conservative model. *)
-Definition script_020_chk (s : string) : bool := false.
+(** SCRIPT-020: multi_substring [\mathrm{, \text{]. *)
+Definition script_020_chk (s : string) : bool :=
+  multi_substring_check ["\mathrm{"; "\text{"] s.
 
 (** SCRIPT-021: No VPD pattern — conservative model. *)
 Definition script_021_chk (s : string) : bool := false.

@@ -914,5 +914,373 @@
       "needle": "‑"
     },
     "severity": "Info"
+  },
+  "CHEM-001": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ce{"
+    },
+    "severity": "Warning"
+  },
+  "CHEM-003": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ce{"
+    },
+    "severity": "Warning"
+  },
+  "CHEM-005": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["->", "\\rightarrow", "\\longrightarrow"]
+    },
+    "severity": "Info"
+  },
+  "CHEM-006": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " +  "
+    },
+    "severity": "Warning"
+  },
+  "CHEM-007": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\text{"
+    },
+    "severity": "Info"
+  },
+  "CHEM-009": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["<->", "<=>"]
+    },
+    "severity": "Warning"
+  },
+  "DELIM-003": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\left", "\\right"]
+    },
+    "severity": "Error"
+  },
+  "DELIM-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\left", "\\right"]
+    },
+    "severity": "Error"
+  },
+  "DELIM-005": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\Bigg", "\\bigg", "\\Big", "\\big"]
+    },
+    "severity": "Info"
+  },
+  "DELIM-007": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\langle", "\\rangle"]
+    },
+    "severity": "Error"
+  },
+  "DELIM-011": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\middle", "\\left", "\\right"]
+    },
+    "severity": "Warning"
+  },
+  "L3-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\ExplSyntaxOn", "\\ProvidesExplPackage"]
+    },
+    "severity": "Warning"
+  },
+  "L3-010": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\ExplSyntaxOn", "\\ExplSyntaxOff"]
+    },
+    "severity": "Info"
+  },
+  "MATH-011": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\vec{", "\\mathbf{"]
+    },
+    "severity": "Info"
+  },
+  "MATH-012": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\text{", "\\mathrm{", "\\operatorname{"]
+    },
+    "severity": "Warning"
+  },
+  "MATH-013": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\int", "\\iint", "\\iiint", "\\oint"]
+    },
+    "severity": "Info"
+  },
+  "MATH-014": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\frac{", "\\tfrac{", "\\dfrac{"]
+    },
+    "severity": "Info"
+  },
+  "MATH-015": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\stackrel{"
+    },
+    "severity": "Warning"
+  },
+  "MATH-022": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\textbf{"
+    },
+    "severity": "Info"
+  },
+  "MATH-028": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{array}"
+    },
+    "severity": "Info"
+  },
+  "MATH-029": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{eqnarray"
+    },
+    "severity": "Warning"
+  },
+  "MATH-030": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\displaystyle"
+    },
+    "severity": "Info"
+  },
+  "MATH-034": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\int"
+    },
+    "severity": "Info"
+  },
+  "MATH-037": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\sfrac{"
+    },
+    "severity": "Info"
+  },
+  "MATH-049": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\times"
+    },
+    "severity": "Info"
+  },
+  "MATH-060": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\int", "\\mathrm{d}"]
+    },
+    "severity": "Info"
+  },
+  "MATH-065": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hspace"
+    },
+    "severity": "Info"
+  },
+  "MATH-069": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\mathbfsf", "\\bm{\\mathsf{"]
+    },
+    "severity": "Info"
+  },
+  "MATH-070": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\substack"
+    },
+    "severity": "Info"
+  },
+  "MATH-071": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\cancel{"
+    },
+    "severity": "Info"
+  },
+  "MATH-074": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\node"
+    },
+    "severity": "Warning"
+  },
+  "MATH-079": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\displaystyle"
+    },
+    "severity": "Info"
+  },
+  "MATH-084": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\displaystyle", "\\sum"]
+    },
+    "severity": "Info"
+  },
+  "MATH-085": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\eqcirc"
+    },
+    "severity": "Info"
+  },
+  "MATH-086": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\sqrt{\\sqrt{"
+    },
+    "severity": "Warning"
+  },
+  "MATH-090": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\frac{\\frac{\\frac{"
+    },
+    "severity": "Warning"
+  },
+  "MATH-098": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\qquad"
+    },
+    "severity": "Info"
+  },
+  "MATH-099": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\bigcup", "\\bigcap", "\\bigoplus", "\\bigotimes", "\\bigsqcup"]
+    },
+    "severity": "Info"
+  },
+  "MATH-104": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\left(", "\\DeclarePairedDelimiter"]
+    },
+    "severity": "Info"
+  },
+  "MATH-105": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\textstyle"
+    },
+    "severity": "Info"
+  },
+  "MATH-107": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\le ", "\\le\\", "\\leqslant"]
+    },
+    "severity": "Info"
+  },
+  "REF-011": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\autoref", "\\usepackage{hyperref}"]
+    },
+    "severity": "Error"
+  },
+  "RTL-003": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\beginR", "\\endR"]
+    },
+    "severity": "Error"
+  },
+  "SCRIPT-007": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\text{", "\\mathrm{", "\\operatorname{"]
+    },
+    "severity": "Warning"
+  },
+  "SCRIPT-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\ce{", "\\mathrm{"]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-020": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\mathrm{", "\\text{"]
+    },
+    "severity": "Info"
   }
 }

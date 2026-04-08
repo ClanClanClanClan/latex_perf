@@ -15,20 +15,24 @@ Definition delim_001_chk (s : string) : bool := false.
 (** DELIM-002: No VPD pattern — conservative model. *)
 Definition delim_002_chk (s : string) : bool := false.
 
-(** DELIM-003: No VPD pattern — conservative model. *)
-Definition delim_003_chk (s : string) : bool := false.
+(** DELIM-003: multi_substring [\left, \right]. *)
+Definition delim_003_chk (s : string) : bool :=
+  multi_substring_check ["\left"; "\right"] s.
 
-(** DELIM-004: No VPD pattern — conservative model. *)
-Definition delim_004_chk (s : string) : bool := false.
+(** DELIM-004: multi_substring [\left, \right]. *)
+Definition delim_004_chk (s : string) : bool :=
+  multi_substring_check ["\left"; "\right"] s.
 
-(** DELIM-005: No VPD pattern — conservative model. *)
-Definition delim_005_chk (s : string) : bool := false.
+(** DELIM-005: multi_substring [\Bigg, \bigg, \Big, \big]. *)
+Definition delim_005_chk (s : string) : bool :=
+  multi_substring_check ["\Bigg"; "\bigg"; "\Big"; "\big"] s.
 
 (** DELIM-006: No VPD pattern — conservative model. *)
 Definition delim_006_chk (s : string) : bool := false.
 
-(** DELIM-007: No VPD pattern — conservative model. *)
-Definition delim_007_chk (s : string) : bool := false.
+(** DELIM-007: multi_substring [\langle, \rangle]. *)
+Definition delim_007_chk (s : string) : bool :=
+  multi_substring_check ["\langle"; "\rangle"] s.
 
 (** DELIM-008: No VPD pattern — conservative model. *)
 Definition delim_008_chk (s : string) : bool := false.
@@ -39,8 +43,9 @@ Definition delim_009_chk (s : string) : bool := false.
 (** DELIM-010: No VPD pattern — conservative model. *)
 Definition delim_010_chk (s : string) : bool := false.
 
-(** DELIM-011: No VPD pattern — conservative model. *)
-Definition delim_011_chk (s : string) : bool := false.
+(** DELIM-011: multi_substring [\middle, \left, \right]. *)
+Definition delim_011_chk (s : string) : bool :=
+  multi_substring_check ["\middle"; "\left"; "\right"] s.
 
 (* ── Soundness theorems ── *)
 

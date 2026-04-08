@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** RTL-003: No VPD pattern — conservative model. *)
-Definition rtl_003_chk (s : string) : bool := false.
+(** RTL-003: multi_substring [\beginR, \endR]. *)
+Definition rtl_003_chk (s : string) : bool :=
+  multi_substring_check ["\beginR"; "\endR"] s.
 
 (** RTL-004: No VPD pattern — conservative model. *)
 Definition rtl_004_chk (s : string) : bool := false.

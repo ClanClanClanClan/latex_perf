@@ -265,6 +265,18 @@ Fixpoint multi_substring_check (needles : list string) (s : string) : bool :=
       else multi_substring_check rest s
   end.
 
+(** Convert a list of byte values to a Coq string. *)
+Definition bytes_to_string (bs : list nat) : string :=
+  fold_right (fun b s => String (ascii_of_nat b) s) EmptyString bs.
+
+(** Check if a UTF-8 byte sequence appears in [haystack]. *)
+Definition string_contains_bytes (haystack : string) (bytes : list nat) : bool :=
+  string_contains_substring haystack (bytes_to_string bytes).
+
+(** Multi-bytes: true if any byte-sequence needle appears. *)
+Definition multi_bytes_check (needle_bytes : list (list nat)) (s : string) : bool :=
+  multi_substring_check (map bytes_to_string needle_bytes) s.
+
 (** Regex-family check placeholder — in the formal model we abstract
     regex matching as an opaque boolean predicate.  The soundness proof
     only requires that the check is a total function [string -> bool]. *)

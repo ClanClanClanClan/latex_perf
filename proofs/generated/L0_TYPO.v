@@ -166,8 +166,9 @@ Definition typo_041_chk (s : string) : bool :=
 Definition typo_042_chk (s : string) : bool :=
   string_contains_substring s "??".
 
-(** TYPO-043: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_043_chk (s : string) : bool := false.
+(** TYPO-043: multi_substring (UTF-8 bytes). *)
+Definition typo_043_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 156]; [226; 128; 157]; [226; 128; 152]; [226; 128; 153]] s.
 
 (** TYPO-044: No VPD pattern — conservative model. *)
 Definition typo_044_chk (s : string) : bool := false.
@@ -186,20 +187,23 @@ Definition typo_047_chk (s : string) : bool :=
 (** TYPO-048: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_048_chk (s : string) : bool := false.
 
-(** TYPO-049: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_049_chk (s : string) : bool := false.
+(** TYPO-049: multi_substring (UTF-8 bytes). *)
+Definition typo_049_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 156; 32]; [226; 128; 152; 32]] s.
 
 (** TYPO-050: No VPD pattern — conservative model. *)
 Definition typo_050_chk (s : string) : bool := false.
 
-(** TYPO-051: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_051_chk (s : string) : bool := false.
+(** TYPO-051: count_substring (UTF-8 bytes). *)
+Definition typo_051_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 137].
 
 (** TYPO-052: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_052_chk (s : string) : bool := false.
 
-(** TYPO-053: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_053_chk (s : string) : bool := false.
+(** TYPO-053: count_substring (UTF-8 bytes). *)
+Definition typo_053_chk (s : string) : bool :=
+  string_contains_bytes s [226; 139; 175].
 
 (** TYPO-054: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_054_chk (s : string) : bool := false.
@@ -214,20 +218,23 @@ Definition typo_056_chk (s : string) : bool := false.
 (** TYPO-057: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_057_chk (s : string) : bool := false.
 
-(** TYPO-058: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_058_chk (s : string) : bool := false.
+(** TYPO-058: multi_substring (UTF-8 bytes). *)
+Definition typo_058_chk (s : string) : bool :=
+  multi_bytes_check [[206; 177]; [206; 181]; [206; 185]; [206; 191]; [207; 129]; [207; 130]; [207; 133]] s.
 
 (** TYPO-060: No VPD pattern — conservative model. *)
 Definition typo_060_chk (s : string) : bool := false.
 
-(** TYPO-061: count_substring_strip_math — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_061_chk (s : string) : bool := false.
+(** TYPO-061: count_substring_strip_math — UTF-8 bytes, full string (conservative over-approx). *)
+Definition typo_061_chk (s : string) : bool :=
+  string_contains_bytes s [195; 151].
 
 (** TYPO-062: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_062_chk (s : string) : bool := false.
 
-(** TYPO-063: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_063_chk (s : string) : bool := false.
+(** TYPO-063: count_substring (UTF-8 bytes). *)
+Definition typo_063_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 145].
 
 (* ── Soundness theorems ── *)
 

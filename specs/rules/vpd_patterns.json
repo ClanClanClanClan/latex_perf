@@ -943,7 +943,7 @@
     "layer": "L1",
     "pattern": {
       "family": "count_substring",
-      "needle": " +  "
+      "needle": " + "
     },
     "severity": "Warning"
   },

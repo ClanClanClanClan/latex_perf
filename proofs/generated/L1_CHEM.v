@@ -27,9 +27,9 @@ Definition chem_004_chk (s : string) : bool := false.
 Definition chem_005_chk (s : string) : bool :=
   multi_substring_check ["->"; "\rightarrow"; "\longrightarrow"] s.
 
-(** CHEM-006: count_substring " +  ". *)
+(** CHEM-006: count_substring " + ". *)
 Definition chem_006_chk (s : string) : bool :=
-  string_contains_substring s " +  ".
+  string_contains_substring s " + ".
 
 (** CHEM-007: count_substring "\text{". *)
 Definition chem_007_chk (s : string) : bool :=

@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** TAB-001: No VPD pattern — conservative model. *)
-Definition tab_001_chk (s : string) : bool := false.
+(** TAB-001: count_substring "\begin{table". *)
+Definition tab_001_chk (s : string) : bool :=
+  string_contains_substring s "\begin{table".
 
 (** TAB-002: No VPD pattern — conservative model. *)
 Definition tab_002_chk (s : string) : bool := false.
@@ -18,11 +19,13 @@ Definition tab_002_chk (s : string) : bool := false.
 (** TAB-003: No VPD pattern — conservative model. *)
 Definition tab_003_chk (s : string) : bool := false.
 
-(** TAB-005: No VPD pattern — conservative model. *)
-Definition tab_005_chk (s : string) : bool := false.
+(** TAB-005: count_substring "\begin{tabular". *)
+Definition tab_005_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tabular".
 
-(** TAB-006: No VPD pattern — conservative model. *)
-Definition tab_006_chk (s : string) : bool := false.
+(** TAB-006: count_substring "\hline". *)
+Definition tab_006_chk (s : string) : bool :=
+  string_contains_substring s "\hline".
 
 (** TAB-007: No VPD pattern — conservative model. *)
 Definition tab_007_chk (s : string) : bool := false.
@@ -30,11 +33,13 @@ Definition tab_007_chk (s : string) : bool := false.
 (** TAB-008: No VPD pattern — conservative model. *)
 Definition tab_008_chk (s : string) : bool := false.
 
-(** TAB-009: No VPD pattern — conservative model. *)
-Definition tab_009_chk (s : string) : bool := false.
+(** TAB-009: count_substring "\begin{table". *)
+Definition tab_009_chk (s : string) : bool :=
+  string_contains_substring s "\begin{table".
 
-(** TAB-010: No VPD pattern — conservative model. *)
-Definition tab_010_chk (s : string) : bool := false.
+(** TAB-010: multi_substring [\footnote{, \begin{tabular]. *)
+Definition tab_010_chk (s : string) : bool :=
+  multi_substring_check ["\footnote{"; "\begin{tabular"] s.
 
 (** TAB-011: No VPD pattern — conservative model. *)
 Definition tab_011_chk (s : string) : bool := false.

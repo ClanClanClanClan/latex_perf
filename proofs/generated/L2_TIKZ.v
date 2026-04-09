@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** TIKZ-001: No VPD pattern — conservative model. *)
-Definition tikz_001_chk (s : string) : bool := false.
+(** TIKZ-001: count_substring "\begin{tikzpicture}". *)
+Definition tikz_001_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tikzpicture}".
 
 (** TIKZ-003: No VPD pattern — conservative model. *)
 Definition tikz_003_chk (s : string) : bool := false.

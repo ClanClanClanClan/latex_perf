@@ -33,20 +33,24 @@ Definition pkg_009_chk (s : string) : bool := false.
 (** PKG-010: No VPD pattern — conservative model. *)
 Definition pkg_010_chk (s : string) : bool := false.
 
-(** PKG-011: No VPD pattern — conservative model. *)
-Definition pkg_011_chk (s : string) : bool := false.
+(** PKG-011: multi_substring [\toprule, \midrule, \bottomrule]. *)
+Definition pkg_011_chk (s : string) : bool :=
+  multi_substring_check ["\toprule"; "\midrule"; "\bottomrule"] s.
 
-(** PKG-012: No VPD pattern — conservative model. *)
-Definition pkg_012_chk (s : string) : bool := false.
+(** PKG-012: count_substring "\enquote{". *)
+Definition pkg_012_chk (s : string) : bool :=
+  string_contains_substring s "\enquote{".
 
-(** PKG-013: No VPD pattern — conservative model. *)
-Definition pkg_013_chk (s : string) : bool := false.
+(** PKG-013: count_substring "\usepackage{fontspec}". *)
+Definition pkg_013_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage{fontspec}".
 
 (** PKG-014: No VPD pattern — conservative model. *)
 Definition pkg_014_chk (s : string) : bool := false.
 
-(** PKG-015: No VPD pattern — conservative model. *)
-Definition pkg_015_chk (s : string) : bool := false.
+(** PKG-015: count_substring "\usepackage{inputenc}". *)
+Definition pkg_015_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage{inputenc}".
 
 (** PKG-016: No VPD pattern — conservative model. *)
 Definition pkg_016_chk (s : string) : bool := false.

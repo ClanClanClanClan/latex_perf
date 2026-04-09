@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** FIG-001: No VPD pattern — conservative model. *)
-Definition fig_001_chk (s : string) : bool := false.
+(** FIG-001: count_substring "\begin{figure". *)
+Definition fig_001_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-002: No VPD pattern — conservative model. *)
-Definition fig_002_chk (s : string) : bool := false.
+(** FIG-002: count_substring "\begin{figure". *)
+Definition fig_002_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (** FIG-003: No VPD pattern — conservative model. *)
 Definition fig_003_chk (s : string) : bool := false.

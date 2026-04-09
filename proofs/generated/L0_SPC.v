@@ -87,8 +87,9 @@ Definition spc_023_chk (s : string) : bool := false.
 (** SPC-024: No VPD pattern — conservative model. *)
 Definition spc_024_chk (s : string) : bool := false.
 
-(** SPC-025: No VPD pattern — conservative model. *)
-Definition spc_025_chk (s : string) : bool := false.
+(** SPC-025: multi_substring (UTF-8 bytes). *)
+Definition spc_025_chk (s : string) : bool :=
+  multi_bytes_check [[32; 92; 100; 111; 116; 115]; [32; 226; 128; 166]] s.
 
 (** SPC-026: No VPD pattern — conservative model. *)
 Definition spc_026_chk (s : string) : bool := false.
@@ -114,8 +115,9 @@ Definition spc_031_chk (s : string) : bool :=
 (** SPC-032: No VPD pattern — conservative model. *)
 Definition spc_032_chk (s : string) : bool := false.
 
-(** SPC-033: No VPD pattern — conservative model. *)
-Definition spc_033_chk (s : string) : bool := false.
+(** SPC-033: multi_substring (UTF-8 bytes). *)
+Definition spc_033_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 137; 226; 128; 147]; [226; 128; 137; 45; 45]] s.
 
 (** SPC-034: No VPD pattern — conservative model. *)
 Definition spc_034_chk (s : string) : bool := false.

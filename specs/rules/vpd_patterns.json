@@ -1741,5 +1741,82 @@
       "needle": "et al."
     },
     "severity": "Warning"
+  },
+  "STYLE-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_char",
+      "char": "'"
+    },
+    "severity": "Info"
+  },
+  "STYLE-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".  "
+    },
+    "severity": "Info"
+  },
+  "STYLE-035": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "and/or"
+    },
+    "severity": "Info"
+  },
+  "STYLE-036": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "cf.",
+        "ibid.",
+        "et al.",
+        "viz.",
+        "e.g.",
+        "i.e."
+      ]
+    },
+    "severity": "Info"
+  },
+  "STYLE-040": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_char",
+      "char": "!"
+    },
+    "severity": "Info"
+  },
+  "SPC-025": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        " \\dots",
+        " …"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SPC-033": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        " –",
+        " --"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-083": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring_strip_math",
+      "needle": "−"
+    },
+    "severity": "Warning"
   }
 }

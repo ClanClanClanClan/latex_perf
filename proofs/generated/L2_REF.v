@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** REF-011: No VPD pattern — conservative model. *)
-Definition ref_011_chk (s : string) : bool := false.
+(** REF-011: multi_substring [\autoref, \usepackage{hyperref}]. *)
+Definition ref_011_chk (s : string) : bool :=
+  multi_substring_check ["\autoref"; "\usepackage{hyperref}"] s.
 
 (* ── Soundness theorems ── *)
 

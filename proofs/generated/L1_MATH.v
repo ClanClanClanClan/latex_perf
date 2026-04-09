@@ -15,20 +15,25 @@ Definition math_009_chk (s : string) : bool := false.
 (** MATH-010: No VPD pattern — conservative model. *)
 Definition math_010_chk (s : string) : bool := false.
 
-(** MATH-011: No VPD pattern — conservative model. *)
-Definition math_011_chk (s : string) : bool := false.
+(** MATH-011: multi_substring [\vec{, \mathbf{]. *)
+Definition math_011_chk (s : string) : bool :=
+  multi_substring_check ["\vec{"; "\mathbf{"] s.
 
-(** MATH-012: No VPD pattern — conservative model. *)
-Definition math_012_chk (s : string) : bool := false.
+(** MATH-012: multi_substring [\text{, \mathrm{, \operatorname{]. *)
+Definition math_012_chk (s : string) : bool :=
+  multi_substring_check ["\text{"; "\mathrm{"; "\operatorname{"] s.
 
-(** MATH-013: No VPD pattern — conservative model. *)
-Definition math_013_chk (s : string) : bool := false.
+(** MATH-013: multi_substring [\int, \iint, \iiint, \oint]. *)
+Definition math_013_chk (s : string) : bool :=
+  multi_substring_check ["\int"; "\iint"; "\iiint"; "\oint"] s.
 
-(** MATH-014: No VPD pattern — conservative model. *)
-Definition math_014_chk (s : string) : bool := false.
+(** MATH-014: multi_substring [\frac{, \tfrac{, \dfrac{]. *)
+Definition math_014_chk (s : string) : bool :=
+  multi_substring_check ["\frac{"; "\tfrac{"; "\dfrac{"] s.
 
-(** MATH-015: No VPD pattern — conservative model. *)
-Definition math_015_chk (s : string) : bool := false.
+(** MATH-015: count_substring "\stackrel{". *)
+Definition math_015_chk (s : string) : bool :=
+  string_contains_substring s "\stackrel{".
 
 (** MATH-016: No VPD pattern — conservative model. *)
 Definition math_016_chk (s : string) : bool := false.
@@ -48,11 +53,13 @@ Definition math_020_chk (s : string) : bool := false.
 (** MATH-021: No VPD pattern — conservative model. *)
 Definition math_021_chk (s : string) : bool := false.
 
-(** MATH-022: No VPD pattern — conservative model. *)
-Definition math_022_chk (s : string) : bool := false.
+(** MATH-022: count_substring "\textbf{". *)
+Definition math_022_chk (s : string) : bool :=
+  string_contains_substring s "\textbf{".
 
-(** MATH-030: No VPD pattern — conservative model. *)
-Definition math_030_chk (s : string) : bool := false.
+(** MATH-030: count_substring "\displaystyle". *)
+Definition math_030_chk (s : string) : bool :=
+  string_contains_substring s "\displaystyle".
 
 (** MATH-031: No VPD pattern — conservative model. *)
 Definition math_031_chk (s : string) : bool := false.
@@ -61,8 +68,9 @@ Definition math_031_chk (s : string) : bool := false.
 Definition math_033_chk (s : string) : bool :=
   string_contains_substring s "\pm".
 
-(** MATH-034: No VPD pattern — conservative model. *)
-Definition math_034_chk (s : string) : bool := false.
+(** MATH-034: count_substring "\int". *)
+Definition math_034_chk (s : string) : bool :=
+  string_contains_substring s "\int".
 
 (** MATH-035: No VPD pattern — conservative model. *)
 Definition math_035_chk (s : string) : bool := false.
@@ -70,8 +78,9 @@ Definition math_035_chk (s : string) : bool := false.
 (** MATH-036: No VPD pattern — conservative model. *)
 Definition math_036_chk (s : string) : bool := false.
 
-(** MATH-037: No VPD pattern — conservative model. *)
-Definition math_037_chk (s : string) : bool := false.
+(** MATH-037: count_substring "\sfrac{". *)
+Definition math_037_chk (s : string) : bool :=
+  string_contains_substring s "\sfrac{".
 
 (** MATH-038: No VPD pattern — conservative model. *)
 Definition math_038_chk (s : string) : bool := false.
@@ -106,8 +115,9 @@ Definition math_047_chk (s : string) : bool := false.
 (** MATH-048: No VPD pattern — conservative model. *)
 Definition math_048_chk (s : string) : bool := false.
 
-(** MATH-049: No VPD pattern — conservative model. *)
-Definition math_049_chk (s : string) : bool := false.
+(** MATH-049: count_substring "\times". *)
+Definition math_049_chk (s : string) : bool :=
+  string_contains_substring s "\times".
 
 (** MATH-050: No VPD pattern — conservative model. *)
 Definition math_050_chk (s : string) : bool := false.
@@ -136,14 +146,16 @@ Definition math_058_chk (s : string) : bool := false.
 (** MATH-059: No VPD pattern — conservative model. *)
 Definition math_059_chk (s : string) : bool := false.
 
-(** MATH-060: No VPD pattern — conservative model. *)
-Definition math_060_chk (s : string) : bool := false.
+(** MATH-060: multi_substring [\int, \mathrm{d}]. *)
+Definition math_060_chk (s : string) : bool :=
+  multi_substring_check ["\int"; "\mathrm{d}"] s.
 
 (** MATH-061: No VPD pattern — conservative model. *)
 Definition math_061_chk (s : string) : bool := false.
 
-(** MATH-065: No VPD pattern — conservative model. *)
-Definition math_065_chk (s : string) : bool := false.
+(** MATH-065: count_substring "\hspace". *)
+Definition math_065_chk (s : string) : bool :=
+  string_contains_substring s "\hspace".
 
 (** MATH-066: No VPD pattern — conservative model. *)
 Definition math_066_chk (s : string) : bool := false.
@@ -154,14 +166,17 @@ Definition math_067_chk (s : string) : bool := false.
 (** MATH-068: No VPD pattern — conservative model. *)
 Definition math_068_chk (s : string) : bool := false.
 
-(** MATH-069: No VPD pattern — conservative model. *)
-Definition math_069_chk (s : string) : bool := false.
+(** MATH-069: multi_substring [\mathbfsf, \bm{\mathsf{]. *)
+Definition math_069_chk (s : string) : bool :=
+  multi_substring_check ["\mathbfsf"; "\bm{\mathsf{"] s.
 
-(** MATH-070: No VPD pattern — conservative model. *)
-Definition math_070_chk (s : string) : bool := false.
+(** MATH-070: count_substring "\substack". *)
+Definition math_070_chk (s : string) : bool :=
+  string_contains_substring s "\substack".
 
-(** MATH-071: No VPD pattern — conservative model. *)
-Definition math_071_chk (s : string) : bool := false.
+(** MATH-071: count_substring "\cancel{". *)
+Definition math_071_chk (s : string) : bool :=
+  string_contains_substring s "\cancel{".
 
 (** MATH-072: No VPD pattern — conservative model. *)
 Definition math_072_chk (s : string) : bool := false.
@@ -169,8 +184,9 @@ Definition math_072_chk (s : string) : bool := false.
 (** MATH-073: No VPD pattern — conservative model. *)
 Definition math_073_chk (s : string) : bool := false.
 
-(** MATH-074: No VPD pattern — conservative model. *)
-Definition math_074_chk (s : string) : bool := false.
+(** MATH-074: count_substring "\node". *)
+Definition math_074_chk (s : string) : bool :=
+  string_contains_substring s "\node".
 
 (** MATH-077: No VPD pattern — conservative model. *)
 Definition math_077_chk (s : string) : bool := false.
@@ -179,8 +195,9 @@ Definition math_077_chk (s : string) : bool := false.
 Definition math_078_chk (s : string) : bool :=
   string_contains_substring s "-->".
 
-(** MATH-079: No VPD pattern — conservative model. *)
-Definition math_079_chk (s : string) : bool := false.
+(** MATH-079: count_substring "\displaystyle". *)
+Definition math_079_chk (s : string) : bool :=
+  string_contains_substring s "\displaystyle".
 
 (** MATH-081: No VPD pattern — conservative model. *)
 Definition math_081_chk (s : string) : bool := false.
@@ -189,14 +206,17 @@ Definition math_081_chk (s : string) : bool := false.
 Definition math_082_chk (s : string) : bool :=
   string_contains_substring s "\!\!".
 
-(** MATH-084: No VPD pattern — conservative model. *)
-Definition math_084_chk (s : string) : bool := false.
+(** MATH-084: multi_substring [\displaystyle, \sum]. *)
+Definition math_084_chk (s : string) : bool :=
+  multi_substring_check ["\displaystyle"; "\sum"] s.
 
-(** MATH-085: No VPD pattern — conservative model. *)
-Definition math_085_chk (s : string) : bool := false.
+(** MATH-085: count_substring "\eqcirc". *)
+Definition math_085_chk (s : string) : bool :=
+  string_contains_substring s "\eqcirc".
 
-(** MATH-086: No VPD pattern — conservative model. *)
-Definition math_086_chk (s : string) : bool := false.
+(** MATH-086: count_substring "\sqrt{\sqrt{". *)
+Definition math_086_chk (s : string) : bool :=
+  string_contains_substring s "\sqrt{\sqrt{".
 
 (** MATH-087: No VPD pattern — conservative model. *)
 Definition math_087_chk (s : string) : bool := false.
@@ -204,8 +224,9 @@ Definition math_087_chk (s : string) : bool := false.
 (** MATH-088: No VPD pattern — conservative model. *)
 Definition math_088_chk (s : string) : bool := false.
 
-(** MATH-090: No VPD pattern — conservative model. *)
-Definition math_090_chk (s : string) : bool := false.
+(** MATH-090: count_substring "\frac{\frac{\frac{". *)
+Definition math_090_chk (s : string) : bool :=
+  string_contains_substring s "\frac{\frac{\frac{".
 
 (** MATH-091: No VPD pattern — conservative model. *)
 Definition math_091_chk (s : string) : bool := false.
@@ -229,21 +250,25 @@ Definition math_096_chk (s : string) : bool := false.
 (** MATH-097: No VPD pattern — conservative model. *)
 Definition math_097_chk (s : string) : bool := false.
 
-(** MATH-098: No VPD pattern — conservative model. *)
-Definition math_098_chk (s : string) : bool := false.
+(** MATH-098: count_substring "\qquad". *)
+Definition math_098_chk (s : string) : bool :=
+  string_contains_substring s "\qquad".
 
-(** MATH-099: No VPD pattern — conservative model. *)
-Definition math_099_chk (s : string) : bool := false.
+(** MATH-099: multi_substring [\bigcup, \bigcap, \bigoplus, \bigotimes, \bigsqcup]. *)
+Definition math_099_chk (s : string) : bool :=
+  multi_substring_check ["\bigcup"; "\bigcap"; "\bigoplus"; "\bigotimes"; "\bigsqcup"] s.
 
 (** MATH-101: count_substring "\over". *)
 Definition math_101_chk (s : string) : bool :=
   string_contains_substring s "\over".
 
-(** MATH-104: No VPD pattern — conservative model. *)
-Definition math_104_chk (s : string) : bool := false.
+(** MATH-104: multi_substring [\left(, \DeclarePairedDelimiter]. *)
+Definition math_104_chk (s : string) : bool :=
+  multi_substring_check ["\left("; "\DeclarePairedDelimiter"] s.
 
-(** MATH-105: No VPD pattern — conservative model. *)
-Definition math_105_chk (s : string) : bool := false.
+(** MATH-105: count_substring "\textstyle". *)
+Definition math_105_chk (s : string) : bool :=
+  string_contains_substring s "\textstyle".
 
 (** MATH-106: count_substring "\not=". *)
 Definition math_106_chk (s : string) : bool :=

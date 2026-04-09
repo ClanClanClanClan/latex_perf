@@ -24,8 +24,9 @@ Definition script_004_chk (s : string) : bool := false.
 (** SCRIPT-005: No VPD pattern — conservative model. *)
 Definition script_005_chk (s : string) : bool := false.
 
-(** SCRIPT-006: No VPD pattern — conservative model. *)
-Definition script_006_chk (s : string) : bool := false.
+(** SCRIPT-006: count_substring (UTF-8 bytes). *)
+Definition script_006_chk (s : string) : bool :=
+  string_contains_bytes s [194; 176].
 
 (** SCRIPT-007: multi_substring [\text{, \mathrm{, \operatorname{]. *)
 Definition script_007_chk (s : string) : bool :=
@@ -38,8 +39,9 @@ Definition script_008_chk (s : string) : bool :=
 (** SCRIPT-009: No VPD pattern — conservative model. *)
 Definition script_009_chk (s : string) : bool := false.
 
-(** SCRIPT-010: No VPD pattern — conservative model. *)
-Definition script_010_chk (s : string) : bool := false.
+(** SCRIPT-010: count_substring "\limits". *)
+Definition script_010_chk (s : string) : bool :=
+  string_contains_substring s "\limits".
 
 (** SCRIPT-011: No VPD pattern — conservative model. *)
 Definition script_011_chk (s : string) : bool := false.

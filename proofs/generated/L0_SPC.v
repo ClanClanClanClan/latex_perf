@@ -43,8 +43,9 @@ Definition spc_010_chk (s : string) : bool := false.
 (** SPC-011: No VPD pattern — conservative model. *)
 Definition spc_011_chk (s : string) : bool := false.
 
-(** SPC-012: No VPD pattern — conservative model. *)
-Definition spc_012_chk (s : string) : bool := false.
+(** SPC-012: count_substring (UTF-8 bytes). *)
+Definition spc_012_chk (s : string) : bool :=
+  string_contains_bytes s [239; 187; 191].
 
 (** SPC-013: No VPD pattern — conservative model. *)
 Definition spc_013_chk (s : string) : bool := false.

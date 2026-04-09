@@ -42,8 +42,9 @@ Definition bib_010_chk (s : string) : bool := false.
 (** BIB-011: No VPD pattern — conservative model. *)
 Definition bib_011_chk (s : string) : bool := false.
 
-(** BIB-012: No VPD pattern — conservative model. *)
-Definition bib_012_chk (s : string) : bool := false.
+(** BIB-012: count_substring "et al.". *)
+Definition bib_012_chk (s : string) : bool :=
+  string_contains_substring s "et al.".
 
 (** BIB-013: No VPD pattern — conservative model. *)
 Definition bib_013_chk (s : string) : bool := false.

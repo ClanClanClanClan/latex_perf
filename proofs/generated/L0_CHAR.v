@@ -40,17 +40,20 @@ Definition char_011_chk (s : string) : bool :=
 Definition char_012_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 141].
 
-(** CHAR-013: No VPD pattern — conservative model. *)
-Definition char_013_chk (s : string) : bool := false.
+(** CHAR-013: multi_substring (UTF-8 bytes). *)
+Definition char_013_chk (s : string) : bool :=
+  multi_bytes_check [[226; 129; 166]; [226; 129; 167]; [226; 129; 168]; [226; 129; 169]] s.
 
-(** CHAR-014: No VPD pattern — conservative model. *)
-Definition char_014_chk (s : string) : bool := false.
+(** CHAR-014: count_substring (UTF-8 bytes). *)
+Definition char_014_chk (s : string) : bool :=
+  string_contains_bytes s [239; 191; 189].
 
 (** CHAR-015: No VPD pattern — conservative model. *)
 Definition char_015_chk (s : string) : bool := false.
 
-(** CHAR-016: No VPD pattern — conservative model. *)
-Definition char_016_chk (s : string) : bool := false.
+(** CHAR-016: multi_substring (UTF-8 bytes). *)
+Definition char_016_chk (s : string) : bool :=
+  multi_bytes_check [[227; 128; 129]; [227; 128; 130]; [239; 188; 140]; [239; 188; 142]; [239; 188; 154]; [239; 188; 155]; [239; 188; 129]; [239; 188; 159]] s.
 
 (** CHAR-017: No VPD pattern — conservative model. *)
 Definition char_017_chk (s : string) : bool := false.
@@ -66,8 +69,9 @@ Definition char_019_chk (s : string) : bool :=
 (** CHAR-020: No VPD pattern — conservative model. *)
 Definition char_020_chk (s : string) : bool := false.
 
-(** CHAR-021: No VPD pattern — conservative model. *)
-Definition char_021_chk (s : string) : bool := false.
+(** CHAR-021: count_substring (UTF-8 bytes). *)
+Definition char_021_chk (s : string) : bool :=
+  string_contains_bytes s [239; 187; 191].
 
 (** CHAR-022: No VPD pattern — conservative model. *)
 Definition char_022_chk (s : string) : bool := false.

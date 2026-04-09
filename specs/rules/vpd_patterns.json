@@ -1378,5 +1378,189 @@
       "needle": "\u2009"
     },
     "severity": "Info"
+  },
+  "MATH-010": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u00f7"
+    },
+    "severity": "Warning"
+  },
+  "MATH-038": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\frac{"
+    },
+    "severity": "Warning"
+  },
+  "MATH-051": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\sqrt{"
+    },
+    "severity": "Warning"
+  },
+  "MATH-052": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\over"
+    },
+    "severity": "Warning"
+  },
+  "MATH-053": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\left("
+    },
+    "severity": "Info"
+  },
+  "MATH-057": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\frac"
+    },
+    "severity": "Error"
+  },
+  "MATH-066": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\phantom{"
+    },
+    "severity": "Info"
+  },
+  "MATH-067": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\limits"
+    },
+    "severity": "Warning"
+  },
+  "MATH-096": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\mathbf{"
+    },
+    "severity": "Info"
+  },
+  "MATH-108": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u00b7"
+    },
+    "severity": "Info"
+  },
+  "FIG-001": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "FIG-002": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "TAB-001": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{table"
+    },
+    "severity": "Warning"
+  },
+  "TAB-005": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-006": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hline"
+    },
+    "severity": "Info"
+  },
+  "TAB-009": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{table"
+    },
+    "severity": "Warning"
+  },
+  "TAB-010": {
+    "layer": "L2",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\footnote{", "\\begin{tabular"]
+    },
+    "severity": "Warning"
+  },
+  "PKG-011": {
+    "layer": "L2",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\toprule", "\\midrule", "\\bottomrule"]
+    },
+    "severity": "Warning"
+  },
+  "PKG-012": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\enquote{"
+    },
+    "severity": "Error"
+  },
+  "PKG-013": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage{fontspec}"
+    },
+    "severity": "Warning"
+  },
+  "PKG-015": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage{inputenc}"
+    },
+    "severity": "Warning"
+  },
+  "TIKZ-001": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tikzpicture}"
+    },
+    "severity": "Info"
+  },
+  "LANG-004": {
+    "layer": "L2",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\usepackage{polyglossia}", "\\usepackage{babel}"]
+    },
+    "severity": "Error"
   }
 }

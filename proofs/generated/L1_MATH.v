@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** MATH-009: No VPD pattern — conservative model. *)
 Definition math_009_chk (s : string) : bool := false.
 
-(** MATH-010: No VPD pattern — conservative model. *)
-Definition math_010_chk (s : string) : bool := false.
+(** MATH-010: count_substring (UTF-8 bytes). *)
+Definition math_010_chk (s : string) : bool :=
+  string_contains_bytes s [195; 183].
 
 (** MATH-011: multi_substring [\vec{, \mathbf{]. *)
 Definition math_011_chk (s : string) : bool :=
@@ -82,8 +83,9 @@ Definition math_036_chk (s : string) : bool := false.
 Definition math_037_chk (s : string) : bool :=
   string_contains_substring s "\sfrac{".
 
-(** MATH-038: No VPD pattern — conservative model. *)
-Definition math_038_chk (s : string) : bool := false.
+(** MATH-038: count_substring "\frac{". *)
+Definition math_038_chk (s : string) : bool :=
+  string_contains_substring s "\frac{".
 
 (** MATH-039: No VPD pattern — conservative model. *)
 Definition math_039_chk (s : string) : bool := false.
@@ -122,14 +124,17 @@ Definition math_049_chk (s : string) : bool :=
 (** MATH-050: No VPD pattern — conservative model. *)
 Definition math_050_chk (s : string) : bool := false.
 
-(** MATH-051: No VPD pattern — conservative model. *)
-Definition math_051_chk (s : string) : bool := false.
+(** MATH-051: count_substring "\sqrt{". *)
+Definition math_051_chk (s : string) : bool :=
+  string_contains_substring s "\sqrt{".
 
-(** MATH-052: No VPD pattern — conservative model. *)
-Definition math_052_chk (s : string) : bool := false.
+(** MATH-052: count_substring "\over". *)
+Definition math_052_chk (s : string) : bool :=
+  string_contains_substring s "\over".
 
-(** MATH-053: No VPD pattern — conservative model. *)
-Definition math_053_chk (s : string) : bool := false.
+(** MATH-053: count_substring "\left(". *)
+Definition math_053_chk (s : string) : bool :=
+  string_contains_substring s "\left(".
 
 (** MATH-055: No VPD pattern — conservative model. *)
 Definition math_055_chk (s : string) : bool := false.
@@ -137,8 +142,9 @@ Definition math_055_chk (s : string) : bool := false.
 (** MATH-056: No VPD pattern — conservative model. *)
 Definition math_056_chk (s : string) : bool := false.
 
-(** MATH-057: No VPD pattern — conservative model. *)
-Definition math_057_chk (s : string) : bool := false.
+(** MATH-057: count_substring "\frac". *)
+Definition math_057_chk (s : string) : bool :=
+  string_contains_substring s "\frac".
 
 (** MATH-058: No VPD pattern — conservative model. *)
 Definition math_058_chk (s : string) : bool := false.
@@ -157,11 +163,13 @@ Definition math_061_chk (s : string) : bool := false.
 Definition math_065_chk (s : string) : bool :=
   string_contains_substring s "\hspace".
 
-(** MATH-066: No VPD pattern — conservative model. *)
-Definition math_066_chk (s : string) : bool := false.
+(** MATH-066: count_substring "\phantom{". *)
+Definition math_066_chk (s : string) : bool :=
+  string_contains_substring s "\phantom{".
 
-(** MATH-067: No VPD pattern — conservative model. *)
-Definition math_067_chk (s : string) : bool := false.
+(** MATH-067: count_substring "\limits". *)
+Definition math_067_chk (s : string) : bool :=
+  string_contains_substring s "\limits".
 
 (** MATH-068: No VPD pattern — conservative model. *)
 Definition math_068_chk (s : string) : bool := false.
@@ -244,8 +252,9 @@ Definition math_094_chk (s : string) : bool :=
 (** MATH-095: No VPD pattern — conservative model. *)
 Definition math_095_chk (s : string) : bool := false.
 
-(** MATH-096: No VPD pattern — conservative model. *)
-Definition math_096_chk (s : string) : bool := false.
+(** MATH-096: count_substring "\mathbf{". *)
+Definition math_096_chk (s : string) : bool :=
+  string_contains_substring s "\mathbf{".
 
 (** MATH-097: No VPD pattern — conservative model. *)
 Definition math_097_chk (s : string) : bool := false.
@@ -274,8 +283,9 @@ Definition math_105_chk (s : string) : bool :=
 Definition math_106_chk (s : string) : bool :=
   string_contains_substring s "\not=".
 
-(** MATH-108: No VPD pattern — conservative model. *)
-Definition math_108_chk (s : string) : bool := false.
+(** MATH-108: count_substring (UTF-8 bytes). *)
+Definition math_108_chk (s : string) : bool :=
+  string_contains_bytes s [194; 183].
 
 (* ── Soundness theorems ── *)
 

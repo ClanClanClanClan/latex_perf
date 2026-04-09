@@ -15,8 +15,9 @@ Definition lang_001_chk (s : string) : bool := false.
 (** LANG-002: No VPD pattern — conservative model. *)
 Definition lang_002_chk (s : string) : bool := false.
 
-(** LANG-004: No VPD pattern — conservative model. *)
-Definition lang_004_chk (s : string) : bool := false.
+(** LANG-004: multi_substring [\usepackage{polyglossia}, \usepackage{babel}]. *)
+Definition lang_004_chk (s : string) : bool :=
+  multi_substring_check ["\usepackage{polyglossia}"; "\usepackage{babel}"] s.
 
 (** LANG-006: No VPD pattern — conservative model. *)
 Definition lang_006_chk (s : string) : bool := false.

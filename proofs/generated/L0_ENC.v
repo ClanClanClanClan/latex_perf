@@ -27,8 +27,9 @@ Definition enc_005_chk (s : string) : bool := false.
 (** ENC-006: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_006_chk (s : string) : bool := false.
 
-(** ENC-007: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_007_chk (s : string) : bool := false.
+(** ENC-007: count_substring (UTF-8 bytes). *)
+Definition enc_007_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 139].
 
 (** ENC-008: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_008_chk (s : string) : bool := false.
@@ -51,14 +52,16 @@ Definition enc_013_chk (s : string) : bool := false.
 (** ENC-014: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_014_chk (s : string) : bool := false.
 
-(** ENC-015: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_015_chk (s : string) : bool := false.
+(** ENC-015: multi_substring (UTF-8 bytes). *)
+Definition enc_015_chk (s : string) : bool :=
+  multi_bytes_check [[194; 181]; [226; 132; 166]; [226; 132; 171]; [197; 191]] s.
 
 (** ENC-016: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_016_chk (s : string) : bool := false.
 
-(** ENC-017: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_017_chk (s : string) : bool := false.
+(** ENC-017: count_substring (UTF-8 bytes). *)
+Definition enc_017_chk (s : string) : bool :=
+  string_contains_bytes s [194; 173].
 
 (** ENC-018: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_018_chk (s : string) : bool := false.
@@ -66,20 +69,25 @@ Definition enc_018_chk (s : string) : bool := false.
 (** ENC-019: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition enc_019_chk (s : string) : bool := false.
 
-(** ENC-020: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_020_chk (s : string) : bool := false.
+(** ENC-020: multi_substring (UTF-8 bytes). *)
+Definition enc_020_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 142]; [226; 128; 143]] s.
 
-(** ENC-021: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_021_chk (s : string) : bool := false.
+(** ENC-021: count_substring (UTF-8 bytes). *)
+Definition enc_021_chk (s : string) : bool :=
+  string_contains_bytes s [226; 129; 160].
 
-(** ENC-022: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_022_chk (s : string) : bool := false.
+(** ENC-022: multi_substring (UTF-8 bytes). *)
+Definition enc_022_chk (s : string) : bool :=
+  multi_bytes_check [[239; 191; 185]; [239; 191; 186]; [239; 191; 187]] s.
 
-(** ENC-023: count_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_023_chk (s : string) : bool := false.
+(** ENC-023: count_substring (UTF-8 bytes). *)
+Definition enc_023_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 175].
 
-(** ENC-024: multi_substring — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_024_chk (s : string) : bool := false.
+(** ENC-024: multi_substring (UTF-8 bytes). *)
+Definition enc_024_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 170]; [226; 128; 171]; [226; 128; 172]; [226; 128; 173]; [226; 128; 174]] s.
 
 (* ── Soundness theorems ── *)
 

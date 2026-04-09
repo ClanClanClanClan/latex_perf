@@ -18,8 +18,9 @@ Definition spc_002_chk (s : string) : bool := false.
 (** SPC-003: No VPD pattern — conservative model. *)
 Definition spc_003_chk (s : string) : bool := false.
 
-(** SPC-004: No VPD pattern — conservative model. *)
-Definition spc_004_chk (s : string) : bool := false.
+(** SPC-004: count_char "" (ASCII 13). *)
+Definition spc_004_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 13).
 
 (** SPC-005: No VPD pattern — conservative model. *)
 Definition spc_005_chk (s : string) : bool := false.
@@ -64,8 +65,9 @@ Definition spc_017_chk (s : string) : bool := false.
 (** SPC-018: No VPD pattern — conservative model. *)
 Definition spc_018_chk (s : string) : bool := false.
 
-(** SPC-019: No VPD pattern — conservative model. *)
-Definition spc_019_chk (s : string) : bool := false.
+(** SPC-019: count_substring (UTF-8 bytes). *)
+Definition spc_019_chk (s : string) : bool :=
+  string_contains_bytes s [227; 128; 128].
 
 (** SPC-020: No VPD pattern — conservative model. *)
 Definition spc_020_chk (s : string) : bool := false.
@@ -100,8 +102,9 @@ Definition spc_028_chk (s : string) : bool :=
 (** SPC-029: No VPD pattern — conservative model. *)
 Definition spc_029_chk (s : string) : bool := false.
 
-(** SPC-030: No VPD pattern — conservative model. *)
-Definition spc_030_chk (s : string) : bool := false.
+(** SPC-030: count_substring (UTF-8 bytes). *)
+Definition spc_030_chk (s : string) : bool :=
+  string_contains_bytes s [227; 128; 128].
 
 (** SPC-031: count_substring ".   ". *)
 Definition spc_031_chk (s : string) : bool :=
@@ -116,8 +119,9 @@ Definition spc_033_chk (s : string) : bool := false.
 (** SPC-034: No VPD pattern — conservative model. *)
 Definition spc_034_chk (s : string) : bool := false.
 
-(** SPC-035: No VPD pattern — conservative model. *)
-Definition spc_035_chk (s : string) : bool := false.
+(** SPC-035: count_substring (UTF-8 bytes). *)
+Definition spc_035_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 137].
 
 (* ── Soundness theorems ── *)
 

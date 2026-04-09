@@ -28,14 +28,17 @@ Definition char_008_chk (s : string) : bool :=
 Definition char_009_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 127).
 
-(** CHAR-010: No VPD pattern — conservative model. *)
-Definition char_010_chk (s : string) : bool := false.
+(** CHAR-010: count_substring (UTF-8 bytes). *)
+Definition char_010_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 143].
 
-(** CHAR-011: No VPD pattern — conservative model. *)
-Definition char_011_chk (s : string) : bool := false.
+(** CHAR-011: count_substring (UTF-8 bytes). *)
+Definition char_011_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 142].
 
-(** CHAR-012: No VPD pattern — conservative model. *)
-Definition char_012_chk (s : string) : bool := false.
+(** CHAR-012: count_substring (UTF-8 bytes). *)
+Definition char_012_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 141].
 
 (** CHAR-013: No VPD pattern — conservative model. *)
 Definition char_013_chk (s : string) : bool := false.
@@ -52,11 +55,13 @@ Definition char_016_chk (s : string) : bool := false.
 (** CHAR-017: No VPD pattern — conservative model. *)
 Definition char_017_chk (s : string) : bool := false.
 
-(** CHAR-018: No VPD pattern — conservative model. *)
-Definition char_018_chk (s : string) : bool := false.
+(** CHAR-018: multi_substring (UTF-8 bytes). *)
+Definition char_018_chk (s : string) : bool :=
+  multi_bytes_check [[239; 172; 128]; [239; 172; 129]; [239; 172; 130]; [239; 172; 131]; [239; 172; 132]] s.
 
-(** CHAR-019: No VPD pattern — conservative model. *)
-Definition char_019_chk (s : string) : bool := false.
+(** CHAR-019: count_substring_strip_math — UTF-8 bytes, full string (conservative over-approx). *)
+Definition char_019_chk (s : string) : bool :=
+  string_contains_bytes s [226; 136; 146].
 
 (** CHAR-020: No VPD pattern — conservative model. *)
 Definition char_020_chk (s : string) : bool := false.

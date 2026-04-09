@@ -1282,5 +1282,101 @@
       "needles": ["\\mathrm{", "\\text{"]
     },
     "severity": "Info"
+  },
+  "CHAR-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u200f"
+    },
+    "severity": "Info"
+  },
+  "CHAR-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u200e"
+    },
+    "severity": "Info"
+  },
+  "CHAR-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u200d"
+    },
+    "severity": "Info"
+  },
+  "CHAR-018": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\ufb00", "\ufb01", "\ufb02", "\ufb03", "\ufb04"]
+    },
+    "severity": "Info"
+  },
+  "CHAR-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring_strip_math",
+      "needle": "\u2212"
+    },
+    "severity": "Info"
+  },
+  "CJK-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\uff0c"
+    },
+    "severity": "Warning"
+  },
+  "CJK-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\uff0e"
+    },
+    "severity": "Warning"
+  },
+  "JA-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\uff5e"
+    },
+    "severity": "Info"
+  },
+  "SPC-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_char",
+      "char": "\r"
+    },
+    "severity": "Warning"
+  },
+  "SPC-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u3000"
+    },
+    "severity": "Warning"
+  },
+  "SPC-030": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u3000"
+    },
+    "severity": "Warning"
+  },
+  "SPC-035": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\u2009"
+    },
+    "severity": "Info"
   }
 }

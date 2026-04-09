@@ -65,6 +65,11 @@ def coq_rule_id(rule_id: str) -> str:
     return rule_id.lower().replace("-", "_")
 
 
+def coq_byte_list(s: str) -> str:
+    """Encode a string as a Coq nat list of UTF-8 bytes."""
+    return "; ".join(str(b) for b in s.encode("utf-8"))
+
+
 # ── Check function generation ────────────────────────────────────────────────
 
 def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, str]:
@@ -112,6 +117,13 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'  string_contains_substring s "{coq_string_literal(needle)}".',
                 f'(** {rule_id}: count_substring "{coq_string_literal(needle)}". *)'
             )
+        elif needle:
+            byte_list = coq_byte_list(needle)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  string_contains_bytes s [{byte_list}].',
+                f'(** {rule_id}: count_substring (UTF-8 bytes). *)'
+            )
 
     elif family == "count_substring_strip_math":
         needle = pattern.get("needle", "")
@@ -120,6 +132,13 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'Definition {cid}_chk (s : string) : bool :=\n'
                 f'  string_contains_substring s "{coq_string_literal(needle)}".',
                 f'(** {rule_id}: count_substring_strip_math — Coq model checks full string. *)'
+            )
+        elif needle:
+            byte_list = coq_byte_list(needle)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  string_contains_bytes s [{byte_list}].',
+                f'(** {rule_id}: count_substring_strip_math — UTF-8 bytes, full string (conservative over-approx). *)'
             )
 
     elif family == "multi_substring":
@@ -130,6 +149,13 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'Definition {cid}_chk (s : string) : bool :=\n'
                 f'  multi_substring_check [{items}] s.',
                 f'(** {rule_id}: multi_substring [{", ".join(needles)}]. *)'
+            )
+        elif needles:
+            items = "; ".join(f'[{coq_byte_list(n)}]' for n in needles)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  multi_bytes_check [{items}] s.',
+                f'(** {rule_id}: multi_substring (UTF-8 bytes). *)'
             )
 
     elif family == "line_pred":

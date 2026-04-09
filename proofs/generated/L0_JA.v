@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** JA-001: No VPD pattern — conservative model. *)
 Definition ja_001_chk (s : string) : bool := false.
 
-(** JA-002: No VPD pattern — conservative model. *)
-Definition ja_002_chk (s : string) : bool := false.
+(** JA-002: count_substring (UTF-8 bytes). *)
+Definition ja_002_chk (s : string) : bool :=
+  string_contains_bytes s [239; 189; 158].
 
 (* ── Soundness theorems ── *)
 

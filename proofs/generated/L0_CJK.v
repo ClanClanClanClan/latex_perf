@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CJK-001: No VPD pattern — conservative model. *)
-Definition cjk_001_chk (s : string) : bool := false.
+(** CJK-001: count_substring (UTF-8 bytes). *)
+Definition cjk_001_chk (s : string) : bool :=
+  string_contains_bytes s [239; 188; 140].
 
-(** CJK-002: No VPD pattern — conservative model. *)
-Definition cjk_002_chk (s : string) : bool := false.
+(** CJK-002: count_substring (UTF-8 bytes). *)
+Definition cjk_002_chk (s : string) : bool :=
+  string_contains_bytes s [239; 188; 142].
 
 (** CJK-003: No VPD pattern — conservative model. *)
 Definition cjk_003_chk (s : string) : bool := false.

@@ -516,10 +516,12 @@
   },
   "TYPO-016": {
     "layer": "L0",
-    "message": "Non-breaking space ~ missing before \\cite / \\ref",
     "pattern": {
-      "family": "regex",
-      "regex": " \\\\(cite|ref)[^a-zA-Z]"
+      "family": "multi_substring",
+      "needles": [
+        " \\cite",
+        " \\ref"
+      ]
     },
     "severity": "Info"
   },
@@ -592,10 +594,9 @@
   },
   "TYPO-026": {
     "layer": "L0",
-    "message": "Wrong dash in page range; should use --",
     "pattern": {
-      "family": "regex",
-      "regex": "[0-9]–[0-9]"
+      "family": "count_substring",
+      "needle": "–"
     },
     "severity": "Warning"
   },
@@ -637,10 +638,9 @@
   },
   "TYPO-032": {
     "layer": "L0",
-    "message": "Comma before \\cite",
     "pattern": {
-      "family": "regex",
-      "regex": ",[ ]*\\\\cite"
+      "family": "count_substring",
+      "needle": "\\cite"
     },
     "severity": "Warning"
   },
@@ -705,10 +705,12 @@
   },
   "TYPO-039": {
     "layer": "L0",
-    "message": "URL split across lines without \\url{}",
     "pattern": {
-      "family": "regex",
-      "regex": "https?://[^ \t\n}]+"
+      "family": "multi_substring",
+      "needles": [
+        "http://",
+        "https://"
+      ]
     },
     "severity": "Info"
   },
@@ -837,10 +839,9 @@
   },
   "TYPO-054": {
     "layer": "L0",
-    "message": "En-dash adjacent to letter without spacing; consider thin space",
     "pattern": {
-      "family": "regex",
-      "regex": "[a-zA-Z]–[a-zA-Z]"
+      "family": "count_substring",
+      "needle": "–"
     },
     "severity": "Info"
   },
@@ -864,10 +865,9 @@
   },
   "TYPO-057": {
     "layer": "L0",
-    "message": "Number directly adjacent to degree symbol; insert thin space",
     "pattern": {
-      "family": "regex",
-      "regex": "[0-9]°"
+      "family": "count_substring",
+      "needle": "°"
     },
     "severity": "Info"
   },
@@ -935,7 +935,11 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["->", "\\rightarrow", "\\longrightarrow"]
+      "needles": [
+        "->",
+        "\\rightarrow",
+        "\\longrightarrow"
+      ]
     },
     "severity": "Info"
   },
@@ -959,7 +963,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["<->", "<=>"]
+      "needles": [
+        "<->",
+        "<=>"
+      ]
     },
     "severity": "Warning"
   },
@@ -967,7 +974,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\left", "\\right"]
+      "needles": [
+        "\\left",
+        "\\right"
+      ]
     },
     "severity": "Error"
   },
@@ -975,7 +985,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\left", "\\right"]
+      "needles": [
+        "\\left",
+        "\\right"
+      ]
     },
     "severity": "Error"
   },
@@ -983,7 +996,12 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\Bigg", "\\bigg", "\\Big", "\\big"]
+      "needles": [
+        "\\Bigg",
+        "\\bigg",
+        "\\Big",
+        "\\big"
+      ]
     },
     "severity": "Info"
   },
@@ -991,7 +1009,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\langle", "\\rangle"]
+      "needles": [
+        "\\langle",
+        "\\rangle"
+      ]
     },
     "severity": "Error"
   },
@@ -999,7 +1020,11 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\middle", "\\left", "\\right"]
+      "needles": [
+        "\\middle",
+        "\\left",
+        "\\right"
+      ]
     },
     "severity": "Warning"
   },
@@ -1007,7 +1032,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\ExplSyntaxOn", "\\ProvidesExplPackage"]
+      "needles": [
+        "\\ExplSyntaxOn",
+        "\\ProvidesExplPackage"
+      ]
     },
     "severity": "Warning"
   },
@@ -1015,7 +1043,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\ExplSyntaxOn", "\\ExplSyntaxOff"]
+      "needles": [
+        "\\ExplSyntaxOn",
+        "\\ExplSyntaxOff"
+      ]
     },
     "severity": "Info"
   },
@@ -1023,7 +1054,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\vec{", "\\mathbf{"]
+      "needles": [
+        "\\vec{",
+        "\\mathbf{"
+      ]
     },
     "severity": "Info"
   },
@@ -1031,7 +1065,11 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\text{", "\\mathrm{", "\\operatorname{"]
+      "needles": [
+        "\\text{",
+        "\\mathrm{",
+        "\\operatorname{"
+      ]
     },
     "severity": "Warning"
   },
@@ -1039,7 +1077,12 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\int", "\\iint", "\\iiint", "\\oint"]
+      "needles": [
+        "\\int",
+        "\\iint",
+        "\\iiint",
+        "\\oint"
+      ]
     },
     "severity": "Info"
   },
@@ -1047,7 +1090,11 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\frac{", "\\tfrac{", "\\dfrac{"]
+      "needles": [
+        "\\frac{",
+        "\\tfrac{",
+        "\\dfrac{"
+      ]
     },
     "severity": "Info"
   },
@@ -1119,7 +1166,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\int", "\\mathrm{d}"]
+      "needles": [
+        "\\int",
+        "\\mathrm{d}"
+      ]
     },
     "severity": "Info"
   },
@@ -1135,7 +1185,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\mathbfsf", "\\bm{\\mathsf{"]
+      "needles": [
+        "\\mathbfsf",
+        "\\bm{\\mathsf{"
+      ]
     },
     "severity": "Info"
   },
@@ -1175,7 +1228,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\displaystyle", "\\sum"]
+      "needles": [
+        "\\displaystyle",
+        "\\sum"
+      ]
     },
     "severity": "Info"
   },
@@ -1215,7 +1271,13 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\bigcup", "\\bigcap", "\\bigoplus", "\\bigotimes", "\\bigsqcup"]
+      "needles": [
+        "\\bigcup",
+        "\\bigcap",
+        "\\bigoplus",
+        "\\bigotimes",
+        "\\bigsqcup"
+      ]
     },
     "severity": "Info"
   },
@@ -1223,7 +1285,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\left(", "\\DeclarePairedDelimiter"]
+      "needles": [
+        "\\left(",
+        "\\DeclarePairedDelimiter"
+      ]
     },
     "severity": "Info"
   },
@@ -1239,7 +1304,11 @@
     "layer": "L0",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\le ", "\\le\\", "\\leqslant"]
+      "needles": [
+        "\\le ",
+        "\\le\\",
+        "\\leqslant"
+      ]
     },
     "severity": "Info"
   },
@@ -1247,7 +1316,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\autoref", "\\usepackage{hyperref}"]
+      "needles": [
+        "\\autoref",
+        "\\usepackage{hyperref}"
+      ]
     },
     "severity": "Error"
   },
@@ -1255,7 +1327,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\beginR", "\\endR"]
+      "needles": [
+        "\\beginR",
+        "\\endR"
+      ]
     },
     "severity": "Error"
   },
@@ -1263,7 +1338,11 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\text{", "\\mathrm{", "\\operatorname{"]
+      "needles": [
+        "\\text{",
+        "\\mathrm{",
+        "\\operatorname{"
+      ]
     },
     "severity": "Warning"
   },
@@ -1271,7 +1350,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\ce{", "\\mathrm{"]
+      "needles": [
+        "\\ce{",
+        "\\mathrm{"
+      ]
     },
     "severity": "Info"
   },
@@ -1279,7 +1361,10 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\mathrm{", "\\text{"]
+      "needles": [
+        "\\mathrm{",
+        "\\text{"
+      ]
     },
     "severity": "Info"
   },
@@ -1287,7 +1372,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u200f"
+      "needle": "‏"
     },
     "severity": "Info"
   },
@@ -1295,7 +1380,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u200e"
+      "needle": "‎"
     },
     "severity": "Info"
   },
@@ -1303,7 +1388,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u200d"
+      "needle": "‍"
     },
     "severity": "Info"
   },
@@ -1311,7 +1396,13 @@
     "layer": "L0",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\ufb00", "\ufb01", "\ufb02", "\ufb03", "\ufb04"]
+      "needles": [
+        "ﬀ",
+        "ﬁ",
+        "ﬂ",
+        "ﬃ",
+        "ﬄ"
+      ]
     },
     "severity": "Info"
   },
@@ -1319,7 +1410,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring_strip_math",
-      "needle": "\u2212"
+      "needle": "−"
     },
     "severity": "Info"
   },
@@ -1327,7 +1418,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\uff0c"
+      "needle": "，"
     },
     "severity": "Warning"
   },
@@ -1335,7 +1426,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\uff0e"
+      "needle": "．"
     },
     "severity": "Warning"
   },
@@ -1343,7 +1434,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\uff5e"
+      "needle": "～"
     },
     "severity": "Info"
   },
@@ -1359,7 +1450,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u3000"
+      "needle": "　"
     },
     "severity": "Warning"
   },
@@ -1367,7 +1458,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u3000"
+      "needle": "　"
     },
     "severity": "Warning"
   },
@@ -1375,7 +1466,7 @@
     "layer": "L0",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u2009"
+      "needle": " "
     },
     "severity": "Info"
   },
@@ -1383,7 +1474,7 @@
     "layer": "L1",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u00f7"
+      "needle": "÷"
     },
     "severity": "Warning"
   },
@@ -1455,7 +1546,7 @@
     "layer": "L1",
     "pattern": {
       "family": "count_substring",
-      "needle": "\u00b7"
+      "needle": "·"
     },
     "severity": "Info"
   },
@@ -1511,7 +1602,10 @@
     "layer": "L2",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\footnote{", "\\begin{tabular"]
+      "needles": [
+        "\\footnote{",
+        "\\begin{tabular"
+      ]
     },
     "severity": "Warning"
   },
@@ -1519,7 +1613,11 @@
     "layer": "L2",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\toprule", "\\midrule", "\\bottomrule"]
+      "needles": [
+        "\\toprule",
+        "\\midrule",
+        "\\bottomrule"
+      ]
     },
     "severity": "Warning"
   },
@@ -1559,8 +1657,89 @@
     "layer": "L2",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\usepackage{polyglossia}", "\\usepackage{babel}"]
+      "needles": [
+        "\\usepackage{polyglossia}",
+        "\\usepackage{babel}"
+      ]
     },
     "severity": "Error"
+  },
+  "CHAR-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "⁦",
+        "⁧",
+        "⁨",
+        "⁩"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "CHAR-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "�"
+    },
+    "severity": "Warning"
+  },
+  "CHAR-016": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "、",
+        "。",
+        "，",
+        "．",
+        "：",
+        "；",
+        "！",
+        "？"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "CHAR-021": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "﻿"
+    },
+    "severity": "Error"
+  },
+  "SPC-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "﻿"
+    },
+    "severity": "Error"
+  },
+  "SCRIPT-006": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "°"
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-010": {
+    "layer": "L1",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\limits"
+    },
+    "severity": "Info"
+  },
+  "BIB-012": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "et al."
+    },
+    "severity": "Warning"
   }
 }

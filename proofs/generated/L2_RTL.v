@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** RTL-005: No VPD pattern — conservative model. *)
-Definition rtl_005_chk (s : string) : bool := false.
+(** RTL-005: count_substring '\\\\setmainfont'. *)
+Definition rtl_005_chk (s : string) : bool :=
+  string_contains_substring s "\\setmainfont".
 
 (* ── Soundness theorems ── *)
 

@@ -9,29 +9,37 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** REF-001: No VPD pattern — conservative model. *)
-Definition ref_001_chk (s : string) : bool := false.
+(** REF-001: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition ref_001_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
-(** REF-002: No VPD pattern — conservative model. *)
-Definition ref_002_chk (s : string) : bool := false.
+(** REF-002: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_002_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-003: No VPD pattern — conservative model. *)
-Definition ref_003_chk (s : string) : bool := false.
+(** REF-003: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_003_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-004: No VPD pattern — conservative model. *)
-Definition ref_004_chk (s : string) : bool := false.
+(** REF-004: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_004_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-005: No VPD pattern — conservative model. *)
-Definition ref_005_chk (s : string) : bool := false.
+(** REF-005: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_005_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-006: No VPD pattern — conservative model. *)
-Definition ref_006_chk (s : string) : bool := false.
+(** REF-006: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_006_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-007: No VPD pattern — conservative model. *)
-Definition ref_007_chk (s : string) : bool := false.
+(** REF-007: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_007_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-009: No VPD pattern — conservative model. *)
-Definition ref_009_chk (s : string) : bool := false.
+(** REF-009: count_substring '\\label{'. *)
+Definition ref_009_chk (s : string) : bool :=
+  string_contains_substring s "\label{".
 
 (* ── Soundness theorems ── *)
 

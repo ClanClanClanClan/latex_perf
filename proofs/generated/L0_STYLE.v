@@ -9,44 +9,57 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** STYLE-001: No VPD pattern — conservative model. *)
-Definition style_001_chk (s : string) : bool := false.
+(** STYLE-001: count_substring '\\begin{document}'. *)
+Definition style_001_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-002: No VPD pattern — conservative model. *)
-Definition style_002_chk (s : string) : bool := false.
+(** STYLE-002: count_substring '\\begin{document}'. *)
+Definition style_002_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-003: No VPD pattern — conservative model. *)
-Definition style_003_chk (s : string) : bool := false.
+(** STYLE-003: count_substring 'programme'. *)
+Definition style_003_chk (s : string) : bool :=
+  string_contains_substring s "programme".
 
-(** STYLE-004: No VPD pattern — conservative model. *)
-Definition style_004_chk (s : string) : bool := false.
+(** STYLE-004: count_substring '\\begin{document}'. *)
+Definition style_004_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-005: No VPD pattern — conservative model. *)
-Definition style_005_chk (s : string) : bool := false.
+(** STYLE-005: count_substring '\\begin{document}'. *)
+Definition style_005_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-006: No VPD pattern — conservative model. *)
-Definition style_006_chk (s : string) : bool := false.
+(** STYLE-006: count_substring '\\begin{document}'. *)
+Definition style_006_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-007: No VPD pattern — conservative model. *)
-Definition style_007_chk (s : string) : bool := false.
+(** STYLE-007: count_substring '\\item'. *)
+Definition style_007_chk (s : string) : bool :=
+  string_contains_substring s "\item".
 
-(** STYLE-008: No VPD pattern — conservative model. *)
-Definition style_008_chk (s : string) : bool := false.
+(** STYLE-008: count_substring '\\begin{document}'. *)
+Definition style_008_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-009: No VPD pattern — conservative model. *)
-Definition style_009_chk (s : string) : bool := false.
+(** STYLE-009: count_substring '\\\\parencite{'. *)
+Definition style_009_chk (s : string) : bool :=
+  string_contains_substring s "\\parencite{".
 
-(** STYLE-010: No VPD pattern — conservative model. *)
-Definition style_010_chk (s : string) : bool := false.
+(** STYLE-010: count_substring '\\\\parencite{'. *)
+Definition style_010_chk (s : string) : bool :=
+  string_contains_substring s "\\parencite{".
 
-(** STYLE-011: No VPD pattern — conservative model. *)
-Definition style_011_chk (s : string) : bool := false.
+(** STYLE-011: count_substring '\\author{'. *)
+Definition style_011_chk (s : string) : bool :=
+  string_contains_substring s "\author{".
 
-(** STYLE-012: No VPD pattern — conservative model. *)
-Definition style_012_chk (s : string) : bool := false.
+(** STYLE-012: multi_substring [, which ,  that ]. *)
+Definition style_012_chk (s : string) : bool :=
+  multi_substring_check [", which "; " that "] s.
 
-(** STYLE-013: No VPD pattern — conservative model. *)
-Definition style_013_chk (s : string) : bool := false.
+(** STYLE-013: count_substring '\\begin{document}'. *)
+Definition style_013_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
 (** STYLE-014: count_char ''' (ASCII 39). *)
 Definition style_014_chk (s : string) : bool :=
@@ -56,62 +69,81 @@ Definition style_014_chk (s : string) : bool :=
 Definition style_015_chk (s : string) : bool :=
   string_contains_substring s ".  ".
 
-(** STYLE-016: No VPD pattern — conservative model. *)
-Definition style_016_chk (s : string) : bool := false.
+(** STYLE-016: count_substring '.  '. *)
+Definition style_016_chk (s : string) : bool :=
+  string_contains_substring s ".  ".
 
-(** STYLE-017: No VPD pattern — conservative model. *)
-Definition style_017_chk (s : string) : bool := false.
+(** STYLE-017: count_substring '.  '. *)
+Definition style_017_chk (s : string) : bool :=
+  string_contains_substring s ".  ".
 
-(** STYLE-018: No VPD pattern — conservative model. *)
-Definition style_018_chk (s : string) : bool := false.
+(** STYLE-018: count_substring '\\begin{document}'. *)
+Definition style_018_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-019: No VPD pattern — conservative model. *)
-Definition style_019_chk (s : string) : bool := false.
+(** STYLE-019: count_substring '\\begin{document}'. *)
+Definition style_019_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-020: No VPD pattern — conservative model. *)
-Definition style_020_chk (s : string) : bool := false.
+(** STYLE-020: count_substring '\\begin{document}'. *)
+Definition style_020_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-021: No VPD pattern — conservative model. *)
-Definition style_021_chk (s : string) : bool := false.
+(** STYLE-021: count_substring '\\begin{document}'. *)
+Definition style_021_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-022: No VPD pattern — conservative model. *)
-Definition style_022_chk (s : string) : bool := false.
+(** STYLE-022: count_substring '\\begin{document}'. *)
+Definition style_022_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-023: No VPD pattern — conservative model. *)
-Definition style_023_chk (s : string) : bool := false.
+(** STYLE-023: count_substring '\\begin{document}'. *)
+Definition style_023_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-024: No VPD pattern — conservative model. *)
-Definition style_024_chk (s : string) : bool := false.
+(** STYLE-024: count_substring '\\\\begin{tabular}'. *)
+Definition style_024_chk (s : string) : bool :=
+  string_contains_substring s "\\begin{tabular}".
 
-(** STYLE-025: No VPD pattern — conservative model. *)
-Definition style_025_chk (s : string) : bool := false.
+(** STYLE-025: count_substring '\\begin{document}'. *)
+Definition style_025_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-026: No VPD pattern — conservative model. *)
-Definition style_026_chk (s : string) : bool := false.
+(** STYLE-026: count_substring '\\\\begin{tabular}'. *)
+Definition style_026_chk (s : string) : bool :=
+  string_contains_substring s "\\begin{tabular}".
 
-(** STYLE-027: No VPD pattern — conservative model. *)
-Definition style_027_chk (s : string) : bool := false.
+(** STYLE-027: count_substring '\\begin{document}'. *)
+Definition style_027_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-028: No VPD pattern — conservative model. *)
-Definition style_028_chk (s : string) : bool := false.
+(** STYLE-028: count_substring '\\eqref{'. *)
+Definition style_028_chk (s : string) : bool :=
+  string_contains_substring s "\eqref{".
 
-(** STYLE-029: No VPD pattern — conservative model. *)
-Definition style_029_chk (s : string) : bool := false.
+(** STYLE-029: multi_substring [we present, we propose, we show, We present, We propose, we can see]. *)
+Definition style_029_chk (s : string) : bool :=
+  multi_substring_check ["we present"; "we propose"; "we show"; "We present"; "We propose"; "we can see"] s.
 
-(** STYLE-030: No VPD pattern — conservative model. *)
-Definition style_030_chk (s : string) : bool := false.
+(** STYLE-030: count_substring '\\begin{document}'. *)
+Definition style_030_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-031: No VPD pattern — conservative model. *)
-Definition style_031_chk (s : string) : bool := false.
+(** STYLE-031: count_substring '\\begin{document}'. *)
+Definition style_031_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-032: No VPD pattern — conservative model. *)
-Definition style_032_chk (s : string) : bool := false.
+(** STYLE-032: count_substring '\\item'. *)
+Definition style_032_chk (s : string) : bool :=
+  string_contains_substring s "\item".
 
-(** STYLE-033: No VPD pattern — conservative model. *)
-Definition style_033_chk (s : string) : bool := false.
+(** STYLE-033: count_substring '\\begin{document}'. *)
+Definition style_033_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-034: No VPD pattern — conservative model. *)
-Definition style_034_chk (s : string) : bool := false.
+(** STYLE-034: count_substring '\\begin{document}'. *)
+Definition style_034_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
 (** STYLE-035: count_substring 'and/or'. *)
 Definition style_035_chk (s : string) : bool :=
@@ -121,45 +153,57 @@ Definition style_035_chk (s : string) : bool :=
 Definition style_036_chk (s : string) : bool :=
   multi_substring_check ["cf."; "ibid."; "et al."; "viz."; "e.g."; "i.e."] s.
 
-(** STYLE-037: No VPD pattern — conservative model. *)
-Definition style_037_chk (s : string) : bool := false.
+(** STYLE-037: count_substring 'and/or'. *)
+Definition style_037_chk (s : string) : bool :=
+  string_contains_substring s "and/or".
 
-(** STYLE-038: No VPD pattern — conservative model. *)
-Definition style_038_chk (s : string) : bool := false.
+(** STYLE-038: count_substring '\\item'. *)
+Definition style_038_chk (s : string) : bool :=
+  string_contains_substring s "\item".
 
-(** STYLE-039: No VPD pattern — conservative model. *)
-Definition style_039_chk (s : string) : bool := false.
+(** STYLE-039: count_substring '\\caption{'. *)
+Definition style_039_chk (s : string) : bool :=
+  string_contains_substring s "\caption{".
 
 (** STYLE-040: count_char '!' (ASCII 33). *)
 Definition style_040_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 33).
 
-(** STYLE-041: No VPD pattern — conservative model. *)
-Definition style_041_chk (s : string) : bool := false.
+(** STYLE-041: count_substring '\\footnote{'. *)
+Definition style_041_chk (s : string) : bool :=
+  string_contains_substring s "\footnote{".
 
-(** STYLE-042: No VPD pattern — conservative model. *)
-Definition style_042_chk (s : string) : bool := false.
+(** STYLE-042: count_substring '\\begin{document}'. *)
+Definition style_042_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-043: No VPD pattern — conservative model. *)
-Definition style_043_chk (s : string) : bool := false.
+(** STYLE-043: count_substring '\\footnote{'. *)
+Definition style_043_chk (s : string) : bool :=
+  string_contains_substring s "\footnote{".
 
-(** STYLE-044: No VPD pattern — conservative model. *)
-Definition style_044_chk (s : string) : bool := false.
+(** STYLE-044: count_substring '\\begin{document}'. *)
+Definition style_044_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-045: No VPD pattern — conservative model. *)
-Definition style_045_chk (s : string) : bool := false.
+(** STYLE-045: count_substring '\\begin{document}'. *)
+Definition style_045_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-046: No VPD pattern — conservative model. *)
-Definition style_046_chk (s : string) : bool := false.
+(** STYLE-046: count_substring '\\begin{document}'. *)
+Definition style_046_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-047: No VPD pattern — conservative model. *)
-Definition style_047_chk (s : string) : bool := false.
+(** STYLE-047: count_substring '\\begin{document}'. *)
+Definition style_047_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-048: No VPD pattern — conservative model. *)
-Definition style_048_chk (s : string) : bool := false.
+(** STYLE-048: count_substring '\\begin{document}'. *)
+Definition style_048_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
-(** STYLE-049: No VPD pattern — conservative model. *)
-Definition style_049_chk (s : string) : bool := false.
+(** STYLE-049: count_substring '\\begin{document}'. *)
+Definition style_049_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
 (* ── Soundness theorems ── *)
 

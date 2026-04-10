@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** AR-002: No VPD pattern — conservative model. *)
-Definition ar_002_chk (s : string) : bool := false.
+(** AR-002: count_substring (UTF-8 bytes). *)
+Definition ar_002_chk (s : string) : bool :=
+  string_contains_bytes s [197; 158].
 
 (* ── Soundness theorems ── *)
 

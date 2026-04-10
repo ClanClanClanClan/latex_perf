@@ -9,24 +9,29 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** LANG-001: No VPD pattern — conservative model. *)
-Definition lang_001_chk (s : string) : bool := false.
+(** LANG-001: count_substring 'british'. *)
+Definition lang_001_chk (s : string) : bool :=
+  string_contains_substring s "british".
 
-(** LANG-002: No VPD pattern — conservative model. *)
-Definition lang_002_chk (s : string) : bool := false.
+(** LANG-002: count_substring '\\usepackage{'. *)
+Definition lang_002_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage{".
 
 (** LANG-004: multi_substring [\usepackage{polyglossia}, \usepackage{babel}]. *)
 Definition lang_004_chk (s : string) : bool :=
   multi_substring_check ["\usepackage{polyglossia}"; "\usepackage{babel}"] s.
 
-(** LANG-006: No VPD pattern — conservative model. *)
-Definition lang_006_chk (s : string) : bool := false.
+(** LANG-006: count_substring '\\begin{abstract}'. *)
+Definition lang_006_chk (s : string) : bool :=
+  string_contains_substring s "\begin{abstract}".
 
-(** LANG-007: No VPD pattern — conservative model. *)
-Definition lang_007_chk (s : string) : bool := false.
+(** LANG-007: count_substring 'french'. *)
+Definition lang_007_chk (s : string) : bool :=
+  string_contains_substring s "french".
 
-(** LANG-013: No VPD pattern — conservative model. *)
-Definition lang_013_chk (s : string) : bool := false.
+(** LANG-013: count_substring '\\begin{abstract}'. *)
+Definition lang_013_chk (s : string) : bool :=
+  string_contains_substring s "\begin{abstract}".
 
 (* ── Soundness theorems ── *)
 

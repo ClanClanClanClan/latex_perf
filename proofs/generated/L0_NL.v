@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** NL-001: No VPD pattern — conservative model. *)
-Definition nl_001_chk (s : string) : bool := false.
+(** NL-001: count_substring (UTF-8 bytes). *)
+Definition nl_001_chk (s : string) : bool :=
+  string_contains_bytes s [195; 159].
 
 (** NL-002: multi_substring (UTF-8 bytes). *)
 Definition nl_002_chk (s : string) : bool :=

@@ -9,14 +9,17 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** REF-008: No VPD pattern — conservative model. *)
-Definition ref_008_chk (s : string) : bool := false.
+(** REF-008: count_substring '\\setlength{\\parskip}{-'. *)
+Definition ref_008_chk (s : string) : bool :=
+  string_contains_substring s "\setlength{\parskip}{-".
 
-(** REF-010: No VPD pattern — conservative model. *)
-Definition ref_010_chk (s : string) : bool := false.
+(** REF-010: multi_substring [\ref{, \label{, \cite{]. *)
+Definition ref_010_chk (s : string) : bool :=
+  multi_substring_check ["\ref{"; "\label{"; "\cite{"] s.
 
-(** REF-012: No VPD pattern — conservative model. *)
-Definition ref_012_chk (s : string) : bool := false.
+(** REF-012: count_substring '\\\\hypersetup{'. *)
+Definition ref_012_chk (s : string) : bool :=
+  string_contains_substring s "\\hypersetup{".
 
 (* ── Soundness theorems ── *)
 

@@ -9,32 +9,41 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** L3-001: No VPD pattern — conservative model. *)
-Definition l3_001_chk (s : string) : bool := false.
+(** L3-001: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition l3_001_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
-(** L3-002: No VPD pattern — conservative model. *)
-Definition l3_002_chk (s : string) : bool := false.
+(** L3-002: count_substring '\\newcommand'. *)
+Definition l3_002_chk (s : string) : bool :=
+  string_contains_substring s "\newcommand".
 
-(** L3-003: No VPD pattern — conservative model. *)
-Definition l3_003_chk (s : string) : bool := false.
+(** L3-003: count_substring '\\ExplSyntaxOn'. *)
+Definition l3_003_chk (s : string) : bool :=
+  string_contains_substring s "\ExplSyntaxOn".
 
-(** L3-004: No VPD pattern — conservative model. *)
-Definition l3_004_chk (s : string) : bool := false.
+(** L3-004: count_substring '\\ExplSyntaxOn'. *)
+Definition l3_004_chk (s : string) : bool :=
+  string_contains_substring s "\ExplSyntaxOn".
 
-(** L3-005: No VPD pattern — conservative model. *)
-Definition l3_005_chk (s : string) : bool := false.
+(** L3-005: count_substring '\\\\ExplSyntaxOn'. *)
+Definition l3_005_chk (s : string) : bool :=
+  string_contains_substring s "\\ExplSyntaxOn".
 
-(** L3-006: No VPD pattern — conservative model. *)
-Definition l3_006_chk (s : string) : bool := false.
+(** L3-006: count_substring '\\usepackage'. *)
+Definition l3_006_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** L3-007: No VPD pattern — conservative model. *)
-Definition l3_007_chk (s : string) : bool := false.
+(** L3-007: count_substring '\\usepackage'. *)
+Definition l3_007_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** L3-009: No VPD pattern — conservative model. *)
-Definition l3_009_chk (s : string) : bool := false.
+(** L3-009: count_substring '\\ExplSyntaxOn'. *)
+Definition l3_009_chk (s : string) : bool :=
+  string_contains_substring s "\ExplSyntaxOn".
 
-(** L3-011: No VPD pattern — conservative model. *)
-Definition l3_011_chk (s : string) : bool := false.
+(** L3-011: count_substring '\\sys'. *)
+Definition l3_011_chk (s : string) : bool :=
+  string_contains_substring s "\sys".
 
 (* ── Soundness theorems ── *)
 

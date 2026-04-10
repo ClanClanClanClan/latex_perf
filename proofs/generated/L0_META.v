@@ -9,14 +9,17 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** META-001: No VPD pattern — conservative model. *)
-Definition meta_001_chk (s : string) : bool := false.
+(** META-001: count_substring '\\usepackage{hyperref}'. *)
+Definition meta_001_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage{hyperref}".
 
-(** META-003: No VPD pattern — conservative model. *)
-Definition meta_003_chk (s : string) : bool := false.
+(** META-003: count_substring '\\\\date{\\\\today}'. *)
+Definition meta_003_chk (s : string) : bool :=
+  string_contains_substring s "\\date{\\today}".
 
-(** META-004: No VPD pattern — conservative model. *)
-Definition meta_004_chk (s : string) : bool := false.
+(** META-004: count_substring '\\\\date{\\\\today}'. *)
+Definition meta_004_chk (s : string) : bool :=
+  string_contains_substring s "\\date{\\today}".
 
 (* ── Soundness theorems ── *)
 

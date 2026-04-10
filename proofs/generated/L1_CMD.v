@@ -9,17 +9,21 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CMD-001: No VPD pattern — conservative model. *)
-Definition cmd_001_chk (s : string) : bool := false.
+(** CMD-001: count_substring '\\newcommand'. *)
+Definition cmd_001_chk (s : string) : bool :=
+  string_contains_substring s "\newcommand".
 
-(** CMD-003: No VPD pattern — conservative model. *)
-Definition cmd_003_chk (s : string) : bool := false.
+(** CMD-003: multi_substring [\newcommand, \renewcommand, \def\]. *)
+Definition cmd_003_chk (s : string) : bool :=
+  multi_substring_check ["\newcommand"; "\renewcommand"; "\def\"] s.
 
-(** CMD-007: No VPD pattern — conservative model. *)
-Definition cmd_007_chk (s : string) : bool := false.
+(** CMD-007: multi_substring [\newcommand, \renewcommand, \def\]. *)
+Definition cmd_007_chk (s : string) : bool :=
+  multi_substring_check ["\newcommand"; "\renewcommand"; "\def\"] s.
 
-(** CMD-010: No VPD pattern — conservative model. *)
-Definition cmd_010_chk (s : string) : bool := false.
+(** CMD-010: multi_substring [\newcommand, \renewcommand, \def\]. *)
+Definition cmd_010_chk (s : string) : bool :=
+  multi_substring_check ["\newcommand"; "\renewcommand"; "\def\"] s.
 
 (* ── Soundness theorems ── *)
 

@@ -17,22 +17,25 @@ Definition tikz_001_chk (s : string) : bool :=
 Definition tikz_003_chk (s : string) : bool :=
   string_contains_substring s "\begin{axis}".
 
-(** TIKZ-004: No VPD pattern — conservative model. *)
-Definition tikz_004_chk (s : string) : bool := false.
+(** TIKZ-004: count_substring '\\begin{axis'. *)
+Definition tikz_004_chk (s : string) : bool :=
+  string_contains_substring s "\begin{axis".
 
 (** TIKZ-006: count_substring '\\begin{figure'. *)
 Definition tikz_006_chk (s : string) : bool :=
   string_contains_substring s "\begin{figure".
 
-(** TIKZ-007: No VPD pattern — conservative model. *)
-Definition tikz_007_chk (s : string) : bool := false.
+(** TIKZ-007: count_substring '\\begin{tikzpicture}'. *)
+Definition tikz_007_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tikzpicture}".
 
 (** TIKZ-009: count_substring '\\begin{tikzpicture}'. *)
 Definition tikz_009_chk (s : string) : bool :=
   string_contains_substring s "\begin{tikzpicture}".
 
-(** TIKZ-010: No VPD pattern — conservative model. *)
-Definition tikz_010_chk (s : string) : bool := false.
+(** TIKZ-010: count_substring 'arrows.meta'. *)
+Definition tikz_010_chk (s : string) : bool :=
+  string_contains_substring s "arrows.meta".
 
 (* ── Soundness theorems ── *)
 

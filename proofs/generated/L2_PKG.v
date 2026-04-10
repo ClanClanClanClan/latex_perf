@@ -9,30 +9,37 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** PKG-001: No VPD pattern — conservative model. *)
-Definition pkg_001_chk (s : string) : bool := false.
+(** PKG-001: count_substring '\\usepackage'. *)
+Definition pkg_001_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-002: No VPD pattern — conservative model. *)
-Definition pkg_002_chk (s : string) : bool := false.
+(** PKG-002: count_substring '\\usepackage'. *)
+Definition pkg_002_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-004: No VPD pattern — conservative model. *)
-Definition pkg_004_chk (s : string) : bool := false.
+(** PKG-004: count_substring '\\usepackage'. *)
+Definition pkg_004_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-005: No VPD pattern — conservative model. *)
-Definition pkg_005_chk (s : string) : bool := false.
+(** PKG-005: count_substring '\\usepackage'. *)
+Definition pkg_005_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-007: No VPD pattern — conservative model. *)
-Definition pkg_007_chk (s : string) : bool := false.
+(** PKG-007: count_substring '\\multicolumn{'. *)
+Definition pkg_007_chk (s : string) : bool :=
+  string_contains_substring s "\multicolumn{".
 
-(** PKG-008: No VPD pattern — conservative model. *)
-Definition pkg_008_chk (s : string) : bool := false.
+(** PKG-008: count_substring 'dvipsnames'. *)
+Definition pkg_008_chk (s : string) : bool :=
+  string_contains_substring s "dvipsnames".
 
 (** PKG-009: count_substring '\\usetikzlibrary'. *)
 Definition pkg_009_chk (s : string) : bool :=
   string_contains_substring s "\usetikzlibrary".
 
-(** PKG-010: No VPD pattern — conservative model. *)
-Definition pkg_010_chk (s : string) : bool := false.
+(** PKG-010: count_substring 'backend=biber'. *)
+Definition pkg_010_chk (s : string) : bool :=
+  string_contains_substring s "backend=biber".
 
 (** PKG-011: multi_substring [\toprule, \midrule, \bottomrule]. *)
 Definition pkg_011_chk (s : string) : bool :=
@@ -46,37 +53,45 @@ Definition pkg_012_chk (s : string) : bool :=
 Definition pkg_013_chk (s : string) : bool :=
   string_contains_substring s "\usepackage{fontspec}".
 
-(** PKG-014: No VPD pattern — conservative model. *)
-Definition pkg_014_chk (s : string) : bool := false.
+(** PKG-014: count_substring 'backend=biber'. *)
+Definition pkg_014_chk (s : string) : bool :=
+  string_contains_substring s "backend=biber".
 
 (** PKG-015: count_substring '\\usepackage{inputenc}'. *)
 Definition pkg_015_chk (s : string) : bool :=
   string_contains_substring s "\usepackage{inputenc}".
 
-(** PKG-016: No VPD pattern — conservative model. *)
-Definition pkg_016_chk (s : string) : bool := false.
+(** PKG-016: count_substring 'pdftex'. *)
+Definition pkg_016_chk (s : string) : bool :=
+  string_contains_substring s "pdftex".
 
-(** PKG-017: No VPD pattern — conservative model. *)
-Definition pkg_017_chk (s : string) : bool := false.
+(** PKG-017: count_substring 'pdftex'. *)
+Definition pkg_017_chk (s : string) : bool :=
+  string_contains_substring s "pdftex".
 
 (** PKG-020: count_substring '\\tikzexternalize'. *)
 Definition pkg_020_chk (s : string) : bool :=
   string_contains_substring s "\tikzexternalize".
 
-(** PKG-021: No VPD pattern — conservative model. *)
-Definition pkg_021_chk (s : string) : bool := false.
+(** PKG-021: count_substring 'utf8'. *)
+Definition pkg_021_chk (s : string) : bool :=
+  string_contains_substring s "utf8".
 
-(** PKG-022: No VPD pattern — conservative model. *)
-Definition pkg_022_chk (s : string) : bool := false.
+(** PKG-022: count_substring '\\usetikzlibrary{external}'. *)
+Definition pkg_022_chk (s : string) : bool :=
+  string_contains_substring s "\usetikzlibrary{external}".
 
-(** PKG-023: No VPD pattern — conservative model. *)
-Definition pkg_023_chk (s : string) : bool := false.
+(** PKG-023: count_substring '\\usepackage'. *)
+Definition pkg_023_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-024: No VPD pattern — conservative model. *)
-Definition pkg_024_chk (s : string) : bool := false.
+(** PKG-024: count_substring '\\usepackage'. *)
+Definition pkg_024_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** PKG-025: No VPD pattern — conservative model. *)
-Definition pkg_025_chk (s : string) : bool := false.
+(** PKG-025: count_substring 'T1'. *)
+Definition pkg_025_chk (s : string) : bool :=
+  string_contains_substring s "T1".
 
 (* ── Soundness theorems ── *)
 

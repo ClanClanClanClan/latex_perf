@@ -17,17 +17,20 @@ Definition cjk_001_chk (s : string) : bool :=
 Definition cjk_002_chk (s : string) : bool :=
   string_contains_bytes s [239; 188; 142].
 
-(** CJK-003: No VPD pattern — conservative model. *)
-Definition cjk_003_chk (s : string) : bool := false.
+(** CJK-003: count_substring 'expansion=false'. *)
+Definition cjk_003_chk (s : string) : bool :=
+  string_contains_substring s "expansion=false".
 
-(** CJK-005: No VPD pattern — conservative model. *)
-Definition cjk_005_chk (s : string) : bool := false.
+(** CJK-005: count_substring '\\\\setCJKfamilyfont{min}'. *)
+Definition cjk_005_chk (s : string) : bool :=
+  string_contains_substring s "\\setCJKfamilyfont{min}".
 
 (** CJK-007: No VPD pattern — conservative model. *)
 Definition cjk_007_chk (s : string) : bool := false.
 
-(** CJK-009: No VPD pattern — conservative model. *)
-Definition cjk_009_chk (s : string) : bool := false.
+(** CJK-009: count_substring '\\\\setdefaultlanguage{arabic}'. *)
+Definition cjk_009_chk (s : string) : bool :=
+  string_contains_substring s "\\setdefaultlanguage{arabic}".
 
 (** CJK-010: No VPD pattern — conservative model. *)
 Definition cjk_010_chk (s : string) : bool := false.
@@ -35,8 +38,9 @@ Definition cjk_010_chk (s : string) : bool := false.
 (** CJK-011: No VPD pattern — conservative model. *)
 Definition cjk_011_chk (s : string) : bool := false.
 
-(** CJK-012: No VPD pattern — conservative model. *)
-Definition cjk_012_chk (s : string) : bool := false.
+(** CJK-012: count_substring '\\\\setCJKfamilyfont{min}'. *)
+Definition cjk_012_chk (s : string) : bool :=
+  string_contains_substring s "\\setCJKfamilyfont{min}".
 
 (** CJK-013: No VPD pattern — conservative model. *)
 Definition cjk_013_chk (s : string) : bool := false.
@@ -44,8 +48,9 @@ Definition cjk_013_chk (s : string) : bool := false.
 (** CJK-014: No VPD pattern — conservative model. *)
 Definition cjk_014_chk (s : string) : bool := false.
 
-(** CJK-016: No VPD pattern — conservative model. *)
-Definition cjk_016_chk (s : string) : bool := false.
+(** CJK-016: count_substring '\\\\setCJKfamilyfont{min}'. *)
+Definition cjk_016_chk (s : string) : bool :=
+  string_contains_substring s "\\setCJKfamilyfont{min}".
 
 (* ── Soundness theorems ── *)
 

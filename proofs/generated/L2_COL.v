@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** COL-006: No VPD pattern — conservative model. *)
-Definition col_006_chk (s : string) : bool := false.
+(** COL-006: count_substring 'dvipsnames'. *)
+Definition col_006_chk (s : string) : bool :=
+  string_contains_substring s "dvipsnames".
 
 (* ── Soundness theorems ── *)
 

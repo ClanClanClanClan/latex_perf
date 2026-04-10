@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** LAY-024: No VPD pattern — conservative model. *)
-Definition lay_024_chk (s : string) : bool := false.
+(** LAY-024: count_substring '\\subsubsubsection'. *)
+Definition lay_024_chk (s : string) : bool :=
+  string_contains_substring s "\subsubsubsection".
 
 (* ── Soundness theorems ── *)
 

@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CMD-012: No VPD pattern — conservative model. *)
-Definition cmd_012_chk (s : string) : bool := false.
+(** CMD-012: count_substring '\\renewcommand{\\thesection}'. *)
+Definition cmd_012_chk (s : string) : bool :=
+  string_contains_substring s "\renewcommand{\thesection}".
 
-(** CMD-014: No VPD pattern — conservative model. *)
-Definition cmd_014_chk (s : string) : bool := false.
+(** CMD-014: count_substring '\\AtBeginDocument'. *)
+Definition cmd_014_chk (s : string) : bool :=
+  string_contains_substring s "\AtBeginDocument".
 
 (* ── Soundness theorems ── *)
 

@@ -9,29 +9,37 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** FONT-002: No VPD pattern — conservative model. *)
-Definition font_002_chk (s : string) : bool := false.
+(** FONT-002: count_substring 'protrusion=false'. *)
+Definition font_002_chk (s : string) : bool :=
+  string_contains_substring s "protrusion=false".
 
-(** FONT-003: No VPD pattern — conservative model. *)
-Definition font_003_chk (s : string) : bool := false.
+(** FONT-003: count_substring 'protrusion=false'. *)
+Definition font_003_chk (s : string) : bool :=
+  string_contains_substring s "protrusion=false".
 
-(** FONT-005: No VPD pattern — conservative model. *)
-Definition font_005_chk (s : string) : bool := false.
+(** FONT-005: count_substring '\\setmainfont{Latin Modern'. *)
+Definition font_005_chk (s : string) : bool :=
+  string_contains_substring s "\setmainfont{Latin Modern".
 
-(** FONT-009: No VPD pattern — conservative model. *)
-Definition font_009_chk (s : string) : bool := false.
+(** FONT-009: count_substring '\\\\DocumentMetadata'. *)
+Definition font_009_chk (s : string) : bool :=
+  string_contains_substring s "\\DocumentMetadata".
 
-(** FONT-010: No VPD pattern — conservative model. *)
-Definition font_010_chk (s : string) : bool := false.
+(** FONT-010: count_substring '\\\\hypersetup{'. *)
+Definition font_010_chk (s : string) : bool :=
+  string_contains_substring s "\\hypersetup{".
 
-(** FONT-011: No VPD pattern — conservative model. *)
-Definition font_011_chk (s : string) : bool := false.
+(** FONT-011: count_substring '\\\\setmathfont'. *)
+Definition font_011_chk (s : string) : bool :=
+  string_contains_substring s "\\setmathfont".
 
-(** FONT-012: No VPD pattern — conservative model. *)
-Definition font_012_chk (s : string) : bool := false.
+(** FONT-012: count_substring '\\\\setmathfont'. *)
+Definition font_012_chk (s : string) : bool :=
+  string_contains_substring s "\\setmathfont".
 
-(** FONT-013: No VPD pattern — conservative model. *)
-Definition font_013_chk (s : string) : bool := false.
+(** FONT-013: count_substring '\\\\tabularfigures'. *)
+Definition font_013_chk (s : string) : bool :=
+  string_contains_substring s "\\tabularfigures".
 
 (* ── Soundness theorems ── *)
 

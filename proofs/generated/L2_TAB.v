@@ -49,15 +49,17 @@ Definition tab_010_chk (s : string) : bool :=
 Definition tab_011_chk (s : string) : bool :=
   string_contains_substring s "\begin{tabular".
 
-(** TAB-012: No VPD pattern — conservative model. *)
-Definition tab_012_chk (s : string) : bool := false.
+(** TAB-012: count_substring '\\begin{tabular*'. *)
+Definition tab_012_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tabular*".
 
 (** TAB-013: count_substring '\\begin{longtable}'. *)
 Definition tab_013_chk (s : string) : bool :=
   string_contains_substring s "\begin{longtable}".
 
-(** TAB-014: No VPD pattern — conservative model. *)
-Definition tab_014_chk (s : string) : bool := false.
+(** TAB-014: count_substring '\\\\bottomrule'. *)
+Definition tab_014_chk (s : string) : bool :=
+  string_contains_substring s "\\bottomrule".
 
 (** TAB-015: count_substring '\\begin{tabularx}'. *)
 Definition tab_015_chk (s : string) : bool :=

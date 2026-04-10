@@ -9,36 +9,45 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** LANG-003: No VPD pattern — conservative model. *)
-Definition lang_003_chk (s : string) : bool := false.
+(** LANG-003: count_substring ' t\\xc3\\xba '. *)
+Definition lang_003_chk (s : string) : bool :=
+  string_contains_substring s " t\xc3\xba ".
 
-(** LANG-005: No VPD pattern — conservative model. *)
-Definition lang_005_chk (s : string) : bool := false.
+(** LANG-005: count_substring '\\hyphenpenalty'. *)
+Definition lang_005_chk (s : string) : bool :=
+  string_contains_substring s "\hyphenpenalty".
 
-(** LANG-008: No VPD pattern — conservative model. *)
-Definition lang_008_chk (s : string) : bool := false.
+(** LANG-008: count_substring '\\hyphenpenalty'. *)
+Definition lang_008_chk (s : string) : bool :=
+  string_contains_substring s "\hyphenpenalty".
 
 (** LANG-009: count_substring '\\raggedright'. *)
 Definition lang_009_chk (s : string) : bool :=
   string_contains_substring s "\raggedright".
 
-(** LANG-010: No VPD pattern — conservative model. *)
-Definition lang_010_chk (s : string) : bool := false.
+(** LANG-010: count_substring '\\\\setdefaultlanguage{arabic}'. *)
+Definition lang_010_chk (s : string) : bool :=
+  string_contains_substring s "\\setdefaultlanguage{arabic}".
 
-(** LANG-011: No VPD pattern — conservative model. *)
-Definition lang_011_chk (s : string) : bool := false.
+(** LANG-011: count_substring '\\\\usepackage[francais]{babel}'. *)
+Definition lang_011_chk (s : string) : bool :=
+  string_contains_substring s "\\usepackage[francais]{babel}".
 
-(** LANG-012: No VPD pattern — conservative model. *)
-Definition lang_012_chk (s : string) : bool := false.
+(** LANG-012: count_substring '\\\\usepackage[francais]{babel}'. *)
+Definition lang_012_chk (s : string) : bool :=
+  string_contains_substring s "\\usepackage[francais]{babel}".
 
-(** LANG-014: No VPD pattern — conservative model. *)
-Definition lang_014_chk (s : string) : bool := false.
+(** LANG-014: count_substring '\\usepackage'. *)
+Definition lang_014_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** LANG-015: No VPD pattern — conservative model. *)
-Definition lang_015_chk (s : string) : bool := false.
+(** LANG-015: count_substring '\\usepackage'. *)
+Definition lang_015_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
-(** LANG-016: No VPD pattern — conservative model. *)
-Definition lang_016_chk (s : string) : bool := false.
+(** LANG-016: count_substring 'programme'. *)
+Definition lang_016_chk (s : string) : bool :=
+  string_contains_substring s "programme".
 
 (* ── Soundness theorems ── *)
 

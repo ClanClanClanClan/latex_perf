@@ -84,11 +84,13 @@ Definition typo_017_chk (s : string) : bool :=
 Definition typo_018_chk (s : string) : bool :=
   string_contains_substring s "  ".
 
-(** TYPO-019: No VPD pattern — conservative model. *)
-Definition typo_019_chk (s : string) : bool := false.
+(** TYPO-019: count_substring '  '. *)
+Definition typo_019_chk (s : string) : bool :=
+  string_contains_substring s "  ".
 
-(** TYPO-020: No VPD pattern — conservative model. *)
-Definition typo_020_chk (s : string) : bool := false.
+(** TYPO-020: count_substring '  '. *)
+Definition typo_020_chk (s : string) : bool :=
+  string_contains_substring s "  ".
 
 (** TYPO-021: multi_substring (UTF-8 bytes). *)
 Definition typo_021_chk (s : string) : bool :=
@@ -124,11 +126,13 @@ Definition typo_028_chk (s : string) : bool := false.
 Definition typo_029_chk (s : string) : bool :=
   string_contains_substring s "\ref{".
 
-(** TYPO-030: No VPD pattern — conservative model. *)
-Definition typo_030_chk (s : string) : bool := false.
+(** TYPO-030: count_substring '!!'. *)
+Definition typo_030_chk (s : string) : bool :=
+  string_contains_substring s "!!".
 
-(** TYPO-031: No VPD pattern — conservative model. *)
-Definition typo_031_chk (s : string) : bool := false.
+(** TYPO-031: count_substring '$$'. *)
+Definition typo_031_chk (s : string) : bool :=
+  string_contains_substring s "$$".
 
 (** TYPO-032: count_substring '\\cite'. *)
 Definition typo_032_chk (s : string) : bool :=
@@ -176,8 +180,9 @@ Definition typo_042_chk (s : string) : bool :=
 Definition typo_043_chk (s : string) : bool :=
   multi_bytes_check [[226; 128; 156]; [226; 128; 157]; [226; 128; 152]; [226; 128; 153]] s.
 
-(** TYPO-044: No VPD pattern — conservative model. *)
-Definition typo_044_chk (s : string) : bool := false.
+(** TYPO-044: count_substring '\\documentclass'. *)
+Definition typo_044_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
 (** TYPO-045: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_045_chk (s : string) : bool := false.
@@ -197,8 +202,9 @@ Definition typo_048_chk (s : string) : bool := false.
 Definition typo_049_chk (s : string) : bool :=
   multi_bytes_check [[226; 128; 156; 32]; [226; 128; 152; 32]] s.
 
-(** TYPO-050: No VPD pattern — conservative model. *)
-Definition typo_050_chk (s : string) : bool := false.
+(** TYPO-050: count_substring '\\\\autoref'. *)
+Definition typo_050_chk (s : string) : bool :=
+  string_contains_substring s "\\autoref".
 
 (** TYPO-051: count_substring (UTF-8 bytes). *)
 Definition typo_051_chk (s : string) : bool :=

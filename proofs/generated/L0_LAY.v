@@ -9,50 +9,65 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** LAY-001: No VPD pattern — conservative model. *)
-Definition lay_001_chk (s : string) : bool := false.
+(** LAY-001: count_substring '\\documentclass'. *)
+Definition lay_001_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** LAY-002: No VPD pattern — conservative model. *)
-Definition lay_002_chk (s : string) : bool := false.
+(** LAY-002: count_substring '\\documentclass'. *)
+Definition lay_002_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** LAY-003: No VPD pattern — conservative model. *)
-Definition lay_003_chk (s : string) : bool := false.
+(** LAY-003: count_substring '\\section'. *)
+Definition lay_003_chk (s : string) : bool :=
+  string_contains_substring s "\section".
 
-(** LAY-004: No VPD pattern — conservative model. *)
-Definition lay_004_chk (s : string) : bool := false.
+(** LAY-004: count_substring '\\section'. *)
+Definition lay_004_chk (s : string) : bool :=
+  string_contains_substring s "\section".
 
-(** LAY-005: No VPD pattern — conservative model. *)
-Definition lay_005_chk (s : string) : bool := false.
+(** LAY-005: count_substring 'pdflatex'. *)
+Definition lay_005_chk (s : string) : bool :=
+  string_contains_substring s "pdflatex".
 
-(** LAY-006: No VPD pattern — conservative model. *)
-Definition lay_006_chk (s : string) : bool := false.
+(** LAY-006: count_substring '\\documentclass'. *)
+Definition lay_006_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** LAY-007: No VPD pattern — conservative model. *)
-Definition lay_007_chk (s : string) : bool := false.
+(** LAY-007: count_substring '\\end{'. *)
+Definition lay_007_chk (s : string) : bool :=
+  string_contains_substring s "\end{".
 
-(** LAY-008: No VPD pattern — conservative model. *)
-Definition lay_008_chk (s : string) : bool := false.
+(** LAY-008: multi_substring [\documentclass{book}, \documentclass{report}]. *)
+Definition lay_008_chk (s : string) : bool :=
+  multi_substring_check ["\documentclass{book}"; "\documentclass{report}"] s.
 
-(** LAY-009: No VPD pattern — conservative model. *)
-Definition lay_009_chk (s : string) : bool := false.
+(** LAY-009: count_substring '\\end{'. *)
+Definition lay_009_chk (s : string) : bool :=
+  string_contains_substring s "\end{".
 
-(** LAY-010: No VPD pattern — conservative model. *)
-Definition lay_010_chk (s : string) : bool := false.
+(** LAY-010: count_substring '\\thispagestyle{empty}'. *)
+Definition lay_010_chk (s : string) : bool :=
+  string_contains_substring s "\thispagestyle{empty}".
 
-(** LAY-011: No VPD pattern — conservative model. *)
-Definition lay_011_chk (s : string) : bool := false.
+(** LAY-011: count_substring 'too large'. *)
+Definition lay_011_chk (s : string) : bool :=
+  string_contains_substring s "too large".
 
-(** LAY-012: No VPD pattern — conservative model. *)
-Definition lay_012_chk (s : string) : bool := false.
+(** LAY-012: multi_substring [openright, \documentclass{book}]. *)
+Definition lay_012_chk (s : string) : bool :=
+  multi_substring_check ["openright"; "\documentclass{book}"] s.
 
-(** LAY-013: No VPD pattern — conservative model. *)
-Definition lay_013_chk (s : string) : bool := false.
+(** LAY-013: count_substring '\\thispagestyle{empty}'. *)
+Definition lay_013_chk (s : string) : bool :=
+  string_contains_substring s "\thispagestyle{empty}".
 
-(** LAY-014: No VPD pattern — conservative model. *)
-Definition lay_014_chk (s : string) : bool := false.
+(** LAY-014: count_substring '\\pagebreak'. *)
+Definition lay_014_chk (s : string) : bool :=
+  string_contains_substring s "\pagebreak".
 
-(** LAY-015: No VPD pattern — conservative model. *)
-Definition lay_015_chk (s : string) : bool := false.
+(** LAY-015: count_substring '\\linespread{'. *)
+Definition lay_015_chk (s : string) : bool :=
+  string_contains_substring s "\linespread{".
 
 (** LAY-016: count_substring '\\begin{longtable}'. *)
 Definition lay_016_chk (s : string) : bool :=
@@ -62,23 +77,29 @@ Definition lay_016_chk (s : string) : bool :=
 Definition lay_017_chk (s : string) : bool :=
   string_contains_substring s "\begin{longtable}".
 
-(** LAY-018: No VPD pattern — conservative model. *)
-Definition lay_018_chk (s : string) : bool := false.
+(** LAY-018: count_substring '\\begin{longtable'. *)
+Definition lay_018_chk (s : string) : bool :=
+  string_contains_substring s "\begin{longtable".
 
-(** LAY-019: No VPD pattern — conservative model. *)
-Definition lay_019_chk (s : string) : bool := false.
+(** LAY-019: count_substring '\\\\thispagestyle{empty}'. *)
+Definition lay_019_chk (s : string) : bool :=
+  string_contains_substring s "\\thispagestyle{empty}".
 
-(** LAY-020: No VPD pattern — conservative model. *)
-Definition lay_020_chk (s : string) : bool := false.
+(** LAY-020: count_substring '\\linespread{'. *)
+Definition lay_020_chk (s : string) : bool :=
+  string_contains_substring s "\linespread{".
 
-(** LAY-021: No VPD pattern — conservative model. *)
-Definition lay_021_chk (s : string) : bool := false.
+(** LAY-021: count_substring '\\documentclass'. *)
+Definition lay_021_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** LAY-022: No VPD pattern — conservative model. *)
-Definition lay_022_chk (s : string) : bool := false.
+(** LAY-022: count_substring '\\setlength{\\parskip}{-'. *)
+Definition lay_022_chk (s : string) : bool :=
+  string_contains_substring s "\setlength{\parskip}{-".
 
-(** LAY-023: No VPD pattern — conservative model. *)
-Definition lay_023_chk (s : string) : bool := false.
+(** LAY-023: count_substring '\\\\cleardoublepage'. *)
+Definition lay_023_chk (s : string) : bool :=
+  string_contains_substring s "\\cleardoublepage".
 
 (* ── Soundness theorems ── *)
 

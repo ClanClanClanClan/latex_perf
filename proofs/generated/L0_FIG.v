@@ -9,39 +9,49 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** FIG-004: No VPD pattern — conservative model. *)
-Definition fig_004_chk (s : string) : bool := false.
+(** FIG-004: count_substring '\\begin{figure'. *)
+Definition fig_004_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-005: No VPD pattern — conservative model. *)
-Definition fig_005_chk (s : string) : bool := false.
+(** FIG-005: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition fig_005_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
-(** FIG-006: No VPD pattern — conservative model. *)
-Definition fig_006_chk (s : string) : bool := false.
+(** FIG-006: count_substring '\\begin{figure'. *)
+Definition fig_006_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (** FIG-008: count_substring '\\begin{tikzpicture}'. *)
 Definition fig_008_chk (s : string) : bool :=
   string_contains_substring s "\begin{tikzpicture}".
 
-(** FIG-011: No VPD pattern — conservative model. *)
-Definition fig_011_chk (s : string) : bool := false.
+(** FIG-011: count_substring '\\\\documentclass[draft]'. *)
+Definition fig_011_chk (s : string) : bool :=
+  string_contains_substring s "\\documentclass[draft]".
 
-(** FIG-015: No VPD pattern — conservative model. *)
-Definition fig_015_chk (s : string) : bool := false.
+(** FIG-015: count_substring '\\begin{figure}'. *)
+Definition fig_015_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure}".
 
-(** FIG-016: No VPD pattern — conservative model. *)
-Definition fig_016_chk (s : string) : bool := false.
+(** FIG-016: count_substring '\\begin{figure'. *)
+Definition fig_016_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-018: No VPD pattern — conservative model. *)
-Definition fig_018_chk (s : string) : bool := false.
+(** FIG-018: count_substring '\\begin{figure}'. *)
+Definition fig_018_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure}".
 
-(** FIG-020: No VPD pattern — conservative model. *)
-Definition fig_020_chk (s : string) : bool := false.
+(** FIG-020: count_substring '\\begin{figure}'. *)
+Definition fig_020_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure}".
 
-(** FIG-021: No VPD pattern — conservative model. *)
-Definition fig_021_chk (s : string) : bool := false.
+(** FIG-021: count_substring '\\begin{figure'. *)
+Definition fig_021_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-023: No VPD pattern — conservative model. *)
-Definition fig_023_chk (s : string) : bool := false.
+(** FIG-023: count_substring '\\begin{figure'. *)
+Definition fig_023_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (* ── Soundness theorems ── *)
 

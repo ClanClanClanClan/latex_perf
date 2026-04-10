@@ -9,27 +9,33 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CMD-002: No VPD pattern — conservative model. *)
-Definition cmd_002_chk (s : string) : bool := false.
+(** CMD-002: count_substring '\\def'. *)
+Definition cmd_002_chk (s : string) : bool :=
+  string_contains_substring s "\def".
 
-(** CMD-004: No VPD pattern — conservative model. *)
-Definition cmd_004_chk (s : string) : bool := false.
+(** CMD-004: count_substring '\\def'. *)
+Definition cmd_004_chk (s : string) : bool :=
+  string_contains_substring s "\def".
 
-(** CMD-005: No VPD pattern — conservative model. *)
-Definition cmd_005_chk (s : string) : bool := false.
+(** CMD-005: count_substring '\\newcommand'. *)
+Definition cmd_005_chk (s : string) : bool :=
+  string_contains_substring s "\newcommand".
 
-(** CMD-006: No VPD pattern — conservative model. *)
-Definition cmd_006_chk (s : string) : bool := false.
+(** CMD-006: multi_substring [\newcommand, \renewcommand, \def\]. *)
+Definition cmd_006_chk (s : string) : bool :=
+  multi_substring_check ["\newcommand"; "\renewcommand"; "\def\"] s.
 
 (** CMD-008: count_substring '\\makeatletter'. *)
 Definition cmd_008_chk (s : string) : bool :=
   string_contains_substring s "\makeatletter".
 
-(** CMD-009: No VPD pattern — conservative model. *)
-Definition cmd_009_chk (s : string) : bool := false.
+(** CMD-009: count_substring '\\makeatletter'. *)
+Definition cmd_009_chk (s : string) : bool :=
+  string_contains_substring s "\makeatletter".
 
-(** CMD-011: No VPD pattern — conservative model. *)
-Definition cmd_011_chk (s : string) : bool := false.
+(** CMD-011: count_substring '\\begin{document}'. *)
+Definition cmd_011_chk (s : string) : bool :=
+  string_contains_substring s "\begin{document}".
 
 (** CMD-013: count_substring '\\def\\arraystretch'. *)
 Definition cmd_013_chk (s : string) : bool :=

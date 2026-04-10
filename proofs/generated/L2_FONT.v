@@ -9,14 +9,17 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** FONT-006: No VPD pattern — conservative model. *)
-Definition font_006_chk (s : string) : bool := false.
+(** FONT-006: count_substring '\\ruby{'. *)
+Definition font_006_chk (s : string) : bool :=
+  string_contains_substring s "\ruby{".
 
-(** FONT-007: No VPD pattern — conservative model. *)
-Definition font_007_chk (s : string) : bool := false.
+(** FONT-007: count_substring '\\microtypesetup{'. *)
+Definition font_007_chk (s : string) : bool :=
+  string_contains_substring s "\microtypesetup{".
 
-(** FONT-008: No VPD pattern — conservative model. *)
-Definition font_008_chk (s : string) : bool := false.
+(** FONT-008: count_substring '\\usepackage'. *)
+Definition font_008_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
 (* ── Soundness theorems ── *)
 

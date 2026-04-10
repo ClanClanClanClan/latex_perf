@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** DELIM-001: No VPD pattern — conservative model. *)
-Definition delim_001_chk (s : string) : bool := false.
+(** DELIM-001: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition delim_001_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
-(** DELIM-002: No VPD pattern — conservative model. *)
-Definition delim_002_chk (s : string) : bool := false.
+(** DELIM-002: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition delim_002_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
 (** DELIM-003: multi_substring [\left, \right]. *)
 Definition delim_003_chk (s : string) : bool :=
@@ -27,8 +29,9 @@ Definition delim_004_chk (s : string) : bool :=
 Definition delim_005_chk (s : string) : bool :=
   multi_substring_check ["\Bigg"; "\bigg"; "\Big"; "\big"] s.
 
-(** DELIM-006: No VPD pattern — conservative model. *)
-Definition delim_006_chk (s : string) : bool := false.
+(** DELIM-006: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition delim_006_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
 (** DELIM-007: multi_substring [\langle, \rangle]. *)
 Definition delim_007_chk (s : string) : bool :=
@@ -42,8 +45,9 @@ Definition delim_008_chk (s : string) : bool :=
 Definition delim_009_chk (s : string) : bool :=
   multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
-(** DELIM-010: No VPD pattern — conservative model. *)
-Definition delim_010_chk (s : string) : bool := false.
+(** DELIM-010: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition delim_010_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
 (** DELIM-011: multi_substring [\middle, \left, \right]. *)
 Definition delim_011_chk (s : string) : bool :=

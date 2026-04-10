@@ -15,8 +15,9 @@ Definition math_023_chk (s : string) : bool := false.
 (** MATH-024: No VPD pattern — conservative model. *)
 Definition math_024_chk (s : string) : bool := false.
 
-(** MATH-025: No VPD pattern — conservative model. *)
-Definition math_025_chk (s : string) : bool := false.
+(** MATH-025: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition math_025_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** MATH-028: count_substring '\\begin{array}'. *)
 Definition math_028_chk (s : string) : bool :=
@@ -42,8 +43,9 @@ Definition math_063_chk (s : string) : bool := false.
 Definition math_064_chk (s : string) : bool :=
   string_contains_substring s "\eqalign".
 
-(** MATH-075: No VPD pattern — conservative model. *)
-Definition math_075_chk (s : string) : bool := false.
+(** MATH-075: count_substring '\\\\nonumber'. *)
+Definition math_075_chk (s : string) : bool :=
+  string_contains_substring s "\\nonumber".
 
 (** MATH-080: No VPD pattern — conservative model. *)
 Definition math_080_chk (s : string) : bool := false.

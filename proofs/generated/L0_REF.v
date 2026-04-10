@@ -15,8 +15,9 @@ Definition ref_008_chk (s : string) : bool := false.
 (** REF-010: No VPD pattern — conservative model. *)
 Definition ref_010_chk (s : string) : bool := false.
 
-(** REF-012: No VPD pattern — conservative model. *)
-Definition ref_012_chk (s : string) : bool := false.
+(** REF-012: count_substring '\\\\hypersetup{'. *)
+Definition ref_012_chk (s : string) : bool :=
+  string_contains_substring s "\\hypersetup{".
 
 (* ── Soundness theorems ── *)
 

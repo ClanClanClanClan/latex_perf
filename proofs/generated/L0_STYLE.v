@@ -33,11 +33,13 @@ Definition style_007_chk (s : string) : bool := false.
 (** STYLE-008: No VPD pattern — conservative model. *)
 Definition style_008_chk (s : string) : bool := false.
 
-(** STYLE-009: No VPD pattern — conservative model. *)
-Definition style_009_chk (s : string) : bool := false.
+(** STYLE-009: count_substring '\\\\parencite{'. *)
+Definition style_009_chk (s : string) : bool :=
+  string_contains_substring s "\\parencite{".
 
-(** STYLE-010: No VPD pattern — conservative model. *)
-Definition style_010_chk (s : string) : bool := false.
+(** STYLE-010: count_substring '\\\\parencite{'. *)
+Definition style_010_chk (s : string) : bool :=
+  string_contains_substring s "\\parencite{".
 
 (** STYLE-011: No VPD pattern — conservative model. *)
 Definition style_011_chk (s : string) : bool := false.
@@ -80,14 +82,16 @@ Definition style_022_chk (s : string) : bool := false.
 (** STYLE-023: No VPD pattern — conservative model. *)
 Definition style_023_chk (s : string) : bool := false.
 
-(** STYLE-024: No VPD pattern — conservative model. *)
-Definition style_024_chk (s : string) : bool := false.
+(** STYLE-024: count_substring '\\\\begin{tabular}'. *)
+Definition style_024_chk (s : string) : bool :=
+  string_contains_substring s "\\begin{tabular}".
 
 (** STYLE-025: No VPD pattern — conservative model. *)
 Definition style_025_chk (s : string) : bool := false.
 
-(** STYLE-026: No VPD pattern — conservative model. *)
-Definition style_026_chk (s : string) : bool := false.
+(** STYLE-026: count_substring '\\\\begin{tabular}'. *)
+Definition style_026_chk (s : string) : bool :=
+  string_contains_substring s "\\begin{tabular}".
 
 (** STYLE-027: No VPD pattern — conservative model. *)
 Definition style_027_chk (s : string) : bool := false.
@@ -95,8 +99,9 @@ Definition style_027_chk (s : string) : bool := false.
 (** STYLE-028: No VPD pattern — conservative model. *)
 Definition style_028_chk (s : string) : bool := false.
 
-(** STYLE-029: No VPD pattern — conservative model. *)
-Definition style_029_chk (s : string) : bool := false.
+(** STYLE-029: multi_substring [we present, we propose, we show, We present, We propose, we can see]. *)
+Definition style_029_chk (s : string) : bool :=
+  multi_substring_check ["we present"; "we propose"; "we show"; "We present"; "We propose"; "we can see"] s.
 
 (** STYLE-030: No VPD pattern — conservative model. *)
 Definition style_030_chk (s : string) : bool := false.
@@ -104,8 +109,9 @@ Definition style_030_chk (s : string) : bool := false.
 (** STYLE-031: No VPD pattern — conservative model. *)
 Definition style_031_chk (s : string) : bool := false.
 
-(** STYLE-032: No VPD pattern — conservative model. *)
-Definition style_032_chk (s : string) : bool := false.
+(** STYLE-032: count_substring '\\item'. *)
+Definition style_032_chk (s : string) : bool :=
+  string_contains_substring s "\item".
 
 (** STYLE-033: No VPD pattern — conservative model. *)
 Definition style_033_chk (s : string) : bool := false.

@@ -33,8 +33,9 @@ Definition verb_007_chk (s : string) : bool := false.
 (** VERB-008: No VPD pattern — conservative model. *)
 Definition verb_008_chk (s : string) : bool := false.
 
-(** VERB-009: No VPD pattern — conservative model. *)
-Definition verb_009_chk (s : string) : bool := false.
+(** VERB-009: count_substring '\\begin{minted}'. *)
+Definition verb_009_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted}".
 
 (** VERB-010: No VPD pattern — conservative model. *)
 Definition verb_010_chk (s : string) : bool := false.
@@ -45,17 +46,21 @@ Definition verb_011_chk (s : string) : bool := false.
 (** VERB-012: No VPD pattern — conservative model. *)
 Definition verb_012_chk (s : string) : bool := false.
 
-(** VERB-013: No VPD pattern — conservative model. *)
-Definition verb_013_chk (s : string) : bool := false.
+(** VERB-013: count_substring '\\begin{minted}'. *)
+Definition verb_013_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted}".
 
-(** VERB-015: No VPD pattern — conservative model. *)
-Definition verb_015_chk (s : string) : bool := false.
+(** VERB-015: count_substring '\\begin{minted}'. *)
+Definition verb_015_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted}".
 
-(** VERB-016: No VPD pattern — conservative model. *)
-Definition verb_016_chk (s : string) : bool := false.
+(** VERB-016: count_substring '\\begin{minted}'. *)
+Definition verb_016_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted}".
 
-(** VERB-017: No VPD pattern — conservative model. *)
-Definition verb_017_chk (s : string) : bool := false.
+(** VERB-017: count_substring '\\begin{minted}'. *)
+Definition verb_017_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted}".
 
 (* ── Soundness theorems ── *)
 

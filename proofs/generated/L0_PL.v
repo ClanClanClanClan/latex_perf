@@ -9,9 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** PL-001: count_substring (UTF-8 bytes). *)
+(** PL-001: multi_substring [ r.,  nr ,  s.]. *)
 Definition pl_001_chk (s : string) : bool :=
-  string_contains_bytes s [32; 226; 128; 148].
+  multi_substring_check [" r."; " nr "; " s."] s.
 
 (** PL-002: multi_substring (UTF-8 bytes). *)
 Definition pl_002_chk (s : string) : bool :=

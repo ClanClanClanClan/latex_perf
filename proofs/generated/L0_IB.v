@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** IB-001: No VPD pattern — conservative model. *)
-Definition ib_001_chk (s : string) : bool := false.
+(** IB-001: count_substring ' t\\xc3\\xba '. *)
+Definition ib_001_chk (s : string) : bool :=
+  string_contains_substring s " t\xc3\xba ".
 
 (* ── Soundness theorems ── *)
 

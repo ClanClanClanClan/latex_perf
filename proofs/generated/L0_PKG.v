@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** PKG-003: No VPD pattern — conservative model. *)
-Definition pkg_003_chk (s : string) : bool := false.
+(** PKG-003: count_substring '\\\\usepackage{luatexja}'. *)
+Definition pkg_003_chk (s : string) : bool :=
+  string_contains_substring s "\\usepackage{luatexja}".
 
-(** PKG-006: No VPD pattern — conservative model. *)
-Definition pkg_006_chk (s : string) : bool := false.
+(** PKG-006: count_substring '\\\\usepackage{luatexja}'. *)
+Definition pkg_006_chk (s : string) : bool :=
+  string_contains_substring s "\\usepackage{luatexja}".
 
 (** PKG-018: count_substring '\\hypersetup{draft'. *)
 Definition pkg_018_chk (s : string) : bool :=

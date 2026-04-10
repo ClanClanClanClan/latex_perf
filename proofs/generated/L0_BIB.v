@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** BIB-001: No VPD pattern — conservative model. *)
-Definition bib_001_chk (s : string) : bool := false.
+(** BIB-001: count_substring 'isbn'. *)
+Definition bib_001_chk (s : string) : bool :=
+  string_contains_substring s "isbn".
 
 (** BIB-002: No VPD pattern — conservative model. *)
 Definition bib_002_chk (s : string) : bool := false.

@@ -56,8 +56,9 @@ Definition tab_012_chk (s : string) : bool := false.
 Definition tab_013_chk (s : string) : bool :=
   string_contains_substring s "\begin{longtable}".
 
-(** TAB-014: No VPD pattern — conservative model. *)
-Definition tab_014_chk (s : string) : bool := false.
+(** TAB-014: count_substring '\\\\bottomrule'. *)
+Definition tab_014_chk (s : string) : bool :=
+  string_contains_substring s "\\bottomrule".
 
 (** TAB-015: count_substring '\\begin{tabularx}'. *)
 Definition tab_015_chk (s : string) : bool :=

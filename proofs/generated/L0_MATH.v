@@ -23,11 +23,13 @@ Definition math_076_chk (s : string) : bool :=
 Definition math_083_chk (s : string) : bool :=
   string_contains_bytes s [226; 136; 146].
 
-(** MATH-089: No VPD pattern — conservative model. *)
-Definition math_089_chk (s : string) : bool := false.
+(** MATH-089: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition math_089_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
-(** MATH-103: No VPD pattern — conservative model. *)
-Definition math_103_chk (s : string) : bool := false.
+(** MATH-103: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition math_103_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** MATH-107: multi_substring [\le , \le\, \leqslant]. *)
 Definition math_107_chk (s : string) : bool :=

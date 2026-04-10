@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** PDF-005: No VPD pattern — conservative model. *)
-Definition pdf_005_chk (s : string) : bool := false.
+(** PDF-005: count_substring '\\\\DocumentMetadata'. *)
+Definition pdf_005_chk (s : string) : bool :=
+  string_contains_substring s "\\DocumentMetadata".
 
 (** PDF-006: No VPD pattern — conservative model. *)
 Definition pdf_006_chk (s : string) : bool := false.

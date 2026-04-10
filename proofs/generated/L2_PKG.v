@@ -24,15 +24,17 @@ Definition pkg_005_chk (s : string) : bool := false.
 (** PKG-007: No VPD pattern — conservative model. *)
 Definition pkg_007_chk (s : string) : bool := false.
 
-(** PKG-008: No VPD pattern — conservative model. *)
-Definition pkg_008_chk (s : string) : bool := false.
+(** PKG-008: count_substring 'dvipsnames'. *)
+Definition pkg_008_chk (s : string) : bool :=
+  string_contains_substring s "dvipsnames".
 
 (** PKG-009: count_substring '\\usetikzlibrary'. *)
 Definition pkg_009_chk (s : string) : bool :=
   string_contains_substring s "\usetikzlibrary".
 
-(** PKG-010: No VPD pattern — conservative model. *)
-Definition pkg_010_chk (s : string) : bool := false.
+(** PKG-010: count_substring 'backend=biber'. *)
+Definition pkg_010_chk (s : string) : bool :=
+  string_contains_substring s "backend=biber".
 
 (** PKG-011: multi_substring [\toprule, \midrule, \bottomrule]. *)
 Definition pkg_011_chk (s : string) : bool :=
@@ -53,18 +55,21 @@ Definition pkg_014_chk (s : string) : bool := false.
 Definition pkg_015_chk (s : string) : bool :=
   string_contains_substring s "\usepackage{inputenc}".
 
-(** PKG-016: No VPD pattern — conservative model. *)
-Definition pkg_016_chk (s : string) : bool := false.
+(** PKG-016: count_substring 'pdftex'. *)
+Definition pkg_016_chk (s : string) : bool :=
+  string_contains_substring s "pdftex".
 
-(** PKG-017: No VPD pattern — conservative model. *)
-Definition pkg_017_chk (s : string) : bool := false.
+(** PKG-017: count_substring 'pdftex'. *)
+Definition pkg_017_chk (s : string) : bool :=
+  string_contains_substring s "pdftex".
 
 (** PKG-020: count_substring '\\tikzexternalize'. *)
 Definition pkg_020_chk (s : string) : bool :=
   string_contains_substring s "\tikzexternalize".
 
-(** PKG-021: No VPD pattern — conservative model. *)
-Definition pkg_021_chk (s : string) : bool := false.
+(** PKG-021: count_substring 'utf8'. *)
+Definition pkg_021_chk (s : string) : bool :=
+  string_contains_substring s "utf8".
 
 (** PKG-022: No VPD pattern — conservative model. *)
 Definition pkg_022_chk (s : string) : bool := false.

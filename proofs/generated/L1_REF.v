@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** REF-001: No VPD pattern — conservative model. *)
-Definition ref_001_chk (s : string) : bool := false.
+(** REF-001: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition ref_001_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** REF-002: No VPD pattern — conservative model. *)
 Definition ref_002_chk (s : string) : bool := false.

@@ -30,26 +30,30 @@ Definition lay_006_chk (s : string) : bool := false.
 (** LAY-007: No VPD pattern — conservative model. *)
 Definition lay_007_chk (s : string) : bool := false.
 
-(** LAY-008: No VPD pattern — conservative model. *)
-Definition lay_008_chk (s : string) : bool := false.
+(** LAY-008: multi_substring [\documentclass{book}, \documentclass{report}]. *)
+Definition lay_008_chk (s : string) : bool :=
+  multi_substring_check ["\documentclass{book}"; "\documentclass{report}"] s.
 
 (** LAY-009: No VPD pattern — conservative model. *)
 Definition lay_009_chk (s : string) : bool := false.
 
-(** LAY-010: No VPD pattern — conservative model. *)
-Definition lay_010_chk (s : string) : bool := false.
+(** LAY-010: count_substring '\\thispagestyle{empty}'. *)
+Definition lay_010_chk (s : string) : bool :=
+  string_contains_substring s "\thispagestyle{empty}".
 
 (** LAY-011: No VPD pattern — conservative model. *)
 Definition lay_011_chk (s : string) : bool := false.
 
-(** LAY-012: No VPD pattern — conservative model. *)
-Definition lay_012_chk (s : string) : bool := false.
+(** LAY-012: multi_substring [openright, \documentclass{book}]. *)
+Definition lay_012_chk (s : string) : bool :=
+  multi_substring_check ["openright"; "\documentclass{book}"] s.
 
 (** LAY-013: No VPD pattern — conservative model. *)
 Definition lay_013_chk (s : string) : bool := false.
 
-(** LAY-014: No VPD pattern — conservative model. *)
-Definition lay_014_chk (s : string) : bool := false.
+(** LAY-014: count_substring '\\pagebreak'. *)
+Definition lay_014_chk (s : string) : bool :=
+  string_contains_substring s "\pagebreak".
 
 (** LAY-015: No VPD pattern — conservative model. *)
 Definition lay_015_chk (s : string) : bool := false.

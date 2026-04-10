@@ -35,8 +35,9 @@ Definition fig_010_chk (s : string) : bool :=
 (** FIG-012: No VPD pattern — conservative model. *)
 Definition fig_012_chk (s : string) : bool := false.
 
-(** FIG-013: No VPD pattern — conservative model. *)
-Definition fig_013_chk (s : string) : bool := false.
+(** FIG-013: count_substring '\\\\caption'. *)
+Definition fig_013_chk (s : string) : bool :=
+  string_contains_substring s "\\caption".
 
 (** FIG-014: count_substring '\\begin{figure'. *)
 Definition fig_014_chk (s : string) : bool :=

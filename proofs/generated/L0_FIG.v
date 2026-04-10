@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** FIG-004: No VPD pattern — conservative model. *)
 Definition fig_004_chk (s : string) : bool := false.
 
-(** FIG-005: No VPD pattern — conservative model. *)
-Definition fig_005_chk (s : string) : bool := false.
+(** FIG-005: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition fig_005_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** FIG-006: No VPD pattern — conservative model. *)
 Definition fig_006_chk (s : string) : bool := false.
@@ -22,8 +23,9 @@ Definition fig_006_chk (s : string) : bool := false.
 Definition fig_008_chk (s : string) : bool :=
   string_contains_substring s "\begin{tikzpicture}".
 
-(** FIG-011: No VPD pattern — conservative model. *)
-Definition fig_011_chk (s : string) : bool := false.
+(** FIG-011: count_substring '\\\\documentclass[draft]'. *)
+Definition fig_011_chk (s : string) : bool :=
+  string_contains_substring s "\\documentclass[draft]".
 
 (** FIG-015: No VPD pattern — conservative model. *)
 Definition fig_015_chk (s : string) : bool := false.

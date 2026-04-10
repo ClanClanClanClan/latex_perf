@@ -21,8 +21,9 @@ Definition l3_003_chk (s : string) : bool := false.
 (** L3-004: No VPD pattern — conservative model. *)
 Definition l3_004_chk (s : string) : bool := false.
 
-(** L3-005: No VPD pattern — conservative model. *)
-Definition l3_005_chk (s : string) : bool := false.
+(** L3-005: count_substring '\\\\ExplSyntaxOn'. *)
+Definition l3_005_chk (s : string) : bool :=
+  string_contains_substring s "\\ExplSyntaxOn".
 
 (** L3-006: No VPD pattern — conservative model. *)
 Definition l3_006_chk (s : string) : bool := false.

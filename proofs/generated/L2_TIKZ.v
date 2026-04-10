@@ -31,8 +31,9 @@ Definition tikz_007_chk (s : string) : bool := false.
 Definition tikz_009_chk (s : string) : bool :=
   string_contains_substring s "\begin{tikzpicture}".
 
-(** TIKZ-010: No VPD pattern — conservative model. *)
-Definition tikz_010_chk (s : string) : bool := false.
+(** TIKZ-010: count_substring 'arrows.meta'. *)
+Definition tikz_010_chk (s : string) : bool :=
+  string_contains_substring s "arrows.meta".
 
 (* ── Soundness theorems ── *)
 

@@ -2047,5 +2047,1183 @@
       "needle": "\\def\\arraystretch"
     },
     "severity": "Info"
+  },
+  "MATH-009": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-016": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-017": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-018": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-020": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-021": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-031": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-035": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-036": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-039": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-040": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-042": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-043": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-044": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-045": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-046": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-047": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-048": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-050": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-055": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-056": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-058": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-059": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-061": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-068": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-072": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-073": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-081": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-087": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-088": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-091": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-093": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-095": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-097": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-001": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-002": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-003": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-005": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-009": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-011": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-012": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-013": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-014": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-015": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-016": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-017": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-018": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-019": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-021": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SCRIPT-022": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CHEM-002": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CHEM-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CHEM-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "DELIM-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "DELIM-009": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CJK-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CJK-015": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "FONT-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "RTL-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "TYPO-059": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "PT-002": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
   }
 }

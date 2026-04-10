@@ -13,8 +13,9 @@ Open Scope string_scope.
 Definition rtl_003_chk (s : string) : bool :=
   multi_substring_check ["\beginR"; "\endR"] s.
 
-(** RTL-004: No VPD pattern — conservative model. *)
-Definition rtl_004_chk (s : string) : bool := false.
+(** RTL-004: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition rtl_004_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (* ── Soundness theorems ── *)
 

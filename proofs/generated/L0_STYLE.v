@@ -48,11 +48,13 @@ Definition style_012_chk (s : string) : bool := false.
 (** STYLE-013: No VPD pattern — conservative model. *)
 Definition style_013_chk (s : string) : bool := false.
 
-(** STYLE-014: No VPD pattern — conservative model. *)
-Definition style_014_chk (s : string) : bool := false.
+(** STYLE-014: count_char ''' (ASCII 39). *)
+Definition style_014_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 39).
 
-(** STYLE-015: No VPD pattern — conservative model. *)
-Definition style_015_chk (s : string) : bool := false.
+(** STYLE-015: count_substring '.  '. *)
+Definition style_015_chk (s : string) : bool :=
+  string_contains_substring s ".  ".
 
 (** STYLE-016: No VPD pattern — conservative model. *)
 Definition style_016_chk (s : string) : bool := false.
@@ -111,11 +113,13 @@ Definition style_033_chk (s : string) : bool := false.
 (** STYLE-034: No VPD pattern — conservative model. *)
 Definition style_034_chk (s : string) : bool := false.
 
-(** STYLE-035: No VPD pattern — conservative model. *)
-Definition style_035_chk (s : string) : bool := false.
+(** STYLE-035: count_substring 'and/or'. *)
+Definition style_035_chk (s : string) : bool :=
+  string_contains_substring s "and/or".
 
-(** STYLE-036: No VPD pattern — conservative model. *)
-Definition style_036_chk (s : string) : bool := false.
+(** STYLE-036: multi_substring [cf., ibid., et al., viz., e.g., i.e.]. *)
+Definition style_036_chk (s : string) : bool :=
+  multi_substring_check ["cf."; "ibid."; "et al."; "viz."; "e.g."; "i.e."] s.
 
 (** STYLE-037: No VPD pattern — conservative model. *)
 Definition style_037_chk (s : string) : bool := false.
@@ -126,8 +130,9 @@ Definition style_038_chk (s : string) : bool := false.
 (** STYLE-039: No VPD pattern — conservative model. *)
 Definition style_039_chk (s : string) : bool := false.
 
-(** STYLE-040: No VPD pattern — conservative model. *)
-Definition style_040_chk (s : string) : bool := false.
+(** STYLE-040: count_char '!' (ASCII 33). *)
+Definition style_040_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 33).
 
 (** STYLE-041: No VPD pattern — conservative model. *)
 Definition style_041_chk (s : string) : bool := false.

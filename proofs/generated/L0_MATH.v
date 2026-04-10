@@ -19,8 +19,9 @@ Definition math_027_chk (s : string) : bool := false.
 Definition math_076_chk (s : string) : bool :=
   string_contains_substring s "\begin{align".
 
-(** MATH-083: No VPD pattern — conservative model. *)
-Definition math_083_chk (s : string) : bool := false.
+(** MATH-083: count_substring_strip_math — UTF-8 bytes, full string (conservative over-approx). *)
+Definition math_083_chk (s : string) : bool :=
+  string_contains_bytes s [226; 136; 146].
 
 (** MATH-089: No VPD pattern — conservative model. *)
 Definition math_089_chk (s : string) : bool := false.

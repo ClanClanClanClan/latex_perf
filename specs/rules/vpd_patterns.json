@@ -5,7 +5,7 @@
       "char": "\b",
       "family": "count_char"
     },
-    "severity": "Warning"
+    "severity": "Error"
   },
   "CHAR-007": {
     "layer": "L0",
@@ -13,7 +13,7 @@
       "char": "\u0007",
       "family": "count_char"
     },
-    "severity": "Warning"
+    "severity": "Error"
   },
   "CHAR-008": {
     "layer": "L0",
@@ -359,7 +359,7 @@
       "family": "count_substring",
       "needle": "~~"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SPC-031": {
     "layer": "L0",
@@ -483,7 +483,7 @@
       "family": "count_char",
       "char": "'"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-013": {
     "layer": "L0",
@@ -536,7 +536,7 @@
         "\\.{"
       ]
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "TYPO-018": {
     "layer": "L0",
@@ -575,10 +575,10 @@
     "layer": "L0",
     "message": "Windows CR (\\r) line endings found",
     "pattern": {
-      "char": "\r",
-      "family": "count_char"
+      "family": "count_char",
+      "char": "&"
     },
-    "severity": "Warning"
+    "severity": "Error"
   },
   "TYPO-024": {
     "layer": "L0",
@@ -633,15 +633,6 @@
       "needle": "\\ref{"
     },
     "severity": "Info"
-  },
-  "TYPO-030": {
-    "layer": "L0",
-    "message": "More than three hyphens detected (----)",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "----"
-    },
-    "severity": "Warning"
   },
   "TYPO-032": {
     "layer": "L0",
@@ -873,7 +864,7 @@
         "\\.{"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-057": {
     "layer": "L0",
@@ -1774,9 +1765,9 @@
     "layer": "L2",
     "pattern": {
       "family": "count_substring",
-      "needle": "\\begin{tabular"
+      "needle": "\\begin{tikzpicture}"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "FIG-010": {
     "layer": "L2",
@@ -1816,7 +1807,7 @@
       "family": "count_substring",
       "needle": "\\begin{figure"
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "FIG-025": {
     "layer": "L2",
@@ -1848,7 +1839,7 @@
       "family": "count_substring",
       "needle": "\\begin{tabular"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TAB-007": {
     "layer": "L2",
@@ -1888,7 +1879,7 @@
       "family": "count_substring",
       "needle": "\\begin{tabularx}"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TAB-016": {
     "layer": "L2",
@@ -1928,7 +1919,7 @@
       "family": "count_substring",
       "needle": "\\begin{longtable}"
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "LAY-017": {
     "layer": "L2",
@@ -1936,7 +1927,7 @@
       "family": "count_substring",
       "needle": "\\begin{longtable}"
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "CHEM-010": {
     "layer": "L2",
@@ -1952,11 +1943,8 @@
   "LANG-009": {
     "layer": "L2",
     "pattern": {
-      "family": "multi_substring",
-      "needles": [
-        "\\begin{reaction}",
-        "\\begin{scheme}"
-      ]
+      "family": "count_substring",
+      "needle": "\\raggedright"
     },
     "severity": "Info"
   },
@@ -2022,7 +2010,7 @@
       "family": "count_substring",
       "needle": "\\hypersetup{draft"
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "PKG-020": {
     "layer": "L2",
@@ -2065,7 +2053,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-016": {
     "layer": "L1",
@@ -2084,7 +2072,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-017": {
     "layer": "L1",
@@ -2103,7 +2091,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Error"
   },
   "MATH-018": {
     "layer": "L1",
@@ -2198,7 +2186,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-036": {
     "layer": "L1",
@@ -2236,7 +2224,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-040": {
     "layer": "L1",
@@ -2293,7 +2281,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-044": {
     "layer": "L1",
@@ -2312,7 +2300,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-045": {
     "layer": "L1",
@@ -2369,7 +2357,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Error"
   },
   "MATH-048": {
     "layer": "L1",
@@ -2407,7 +2395,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-055": {
     "layer": "L1",
@@ -2483,7 +2471,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-061": {
     "layer": "L1",
@@ -2502,7 +2490,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-068": {
     "layer": "L1",
@@ -2540,7 +2528,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-073": {
     "layer": "L1",
@@ -2559,7 +2547,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-081": {
     "layer": "L1",
@@ -2673,7 +2661,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MATH-097": {
     "layer": "L1",
@@ -2711,7 +2699,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SCRIPT-002": {
     "layer": "L1",
@@ -2749,7 +2737,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SCRIPT-004": {
     "layer": "L1",
@@ -2825,7 +2813,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SCRIPT-012": {
     "layer": "L1",
@@ -2958,7 +2946,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SCRIPT-019": {
     "layer": "L1",
@@ -2996,7 +2984,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SCRIPT-022": {
     "layer": "L1",
@@ -3034,7 +3022,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "CHEM-004": {
     "layer": "L1",
@@ -3110,7 +3098,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "CJK-008": {
     "layer": "L1",
@@ -3129,7 +3117,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "CJK-015": {
     "layer": "L1",
@@ -3148,7 +3136,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "FONT-004": {
     "layer": "L1",
@@ -3186,7 +3174,7 @@
         "\\begin{displaymath}"
       ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-059": {
     "layer": "L1",
@@ -3225,5 +3213,195 @@
       ]
     },
     "severity": "Info"
+  },
+  "STYLE-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_char",
+      "char": "'"
+    },
+    "severity": "Info"
+  },
+  "STYLE-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".  "
+    },
+    "severity": "Info"
+  },
+  "STYLE-035": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "and/or"
+    },
+    "severity": "Info"
+  },
+  "STYLE-036": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "cf.",
+        "ibid.",
+        "et al.",
+        "viz.",
+        "e.g.",
+        "i.e."
+      ]
+    },
+    "severity": "Info"
+  },
+  "STYLE-040": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_char",
+      "char": "!"
+    },
+    "severity": "Info"
+  },
+  "SPC-025": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        " \\dots",
+        " …"
+      ]
+    },
+    "severity": "Info"
+  },
+  "SPC-033": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        " –",
+        " --"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-083": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring_strip_math",
+      "needle": "−"
+    },
+    "severity": "Warning"
+  },
+  "DE-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "ß",
+        "ẞ"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "NL-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "‘",
+        "’",
+        "„",
+        "‟"
+      ]
+    },
+    "severity": "Info"
+  },
+  "RO-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "Ş",
+        "ş",
+        "Ţ",
+        "ţ"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "RU-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " —"
+    },
+    "severity": "Warning"
+  },
+  "RU-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "ё"
+    },
+    "severity": "Info"
+  },
+  "TR-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "İ",
+        "ı"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "PL-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " —"
+    },
+    "severity": "Warning"
+  },
+  "PL-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "„",
+        "‟",
+        "«",
+        "»"
+      ]
+    },
+    "severity": "Info"
+  },
+  "ZH-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "「",
+        "」",
+        "『",
+        "』",
+        "“",
+        "”"
+      ]
+    },
+    "severity": "Info"
+  },
+  "TYPO-060": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "“",
+        "”",
+        "‘",
+        "’"
+      ]
+    },
+    "severity": "Warning"
   }
 }

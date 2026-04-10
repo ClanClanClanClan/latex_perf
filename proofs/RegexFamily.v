@@ -277,6 +277,25 @@ Definition string_contains_bytes (haystack : string) (bytes : list nat) : bool :
 Definition multi_bytes_check (needle_bytes : list (list nat)) (s : string) : bool :=
   multi_substring_check (map bytes_to_string needle_bytes) s.
 
+(** Check if any byte in [s] has value >= [n]. *)
+Fixpoint string_has_byte_ge (s : string) (n : nat) : bool :=
+  match s with
+  | EmptyString => false
+  | String c rest =>
+      if Nat.leb n (nat_of_ascii c) then true
+      else string_has_byte_ge rest n
+  end.
+
+(** Check if any byte in [s] has value in [lo..hi] inclusive. *)
+Fixpoint string_has_byte_in_range (s : string) (lo hi : nat) : bool :=
+  match s with
+  | EmptyString => false
+  | String c rest =>
+      let v := nat_of_ascii c in
+      if andb (Nat.leb lo v) (Nat.leb v hi) then true
+      else string_has_byte_in_range rest lo hi
+  end.
+
 (** Regex-family check placeholder — in the formal model we abstract
     regex matching as an opaque boolean predicate.  The soundness proof
     only requires that the check is a total function [string -> bool]. *)

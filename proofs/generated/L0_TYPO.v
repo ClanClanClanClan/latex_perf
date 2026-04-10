@@ -61,8 +61,9 @@ Definition typo_011_chk (s : string) : bool :=
 Definition typo_012_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 39).
 
-(** TYPO-013: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_013_chk (s : string) : bool := false.
+(** TYPO-013: count_char '`' (ASCII 96). *)
+Definition typo_013_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 96).
 
 (** TYPO-014: count_substring ' %'. *)
 Definition typo_014_chk (s : string) : bool :=
@@ -104,8 +105,9 @@ Definition typo_022_chk (s : string) : bool :=
 Definition typo_023_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 38).
 
-(** TYPO-024: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_024_chk (s : string) : bool := false.
+(** TYPO-024: count_char '-' (ASCII 45). *)
+Definition typo_024_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 45).
 
 (** TYPO-025: multi_substring (UTF-8 bytes). *)
 Definition typo_025_chk (s : string) : bool :=
@@ -119,8 +121,9 @@ Definition typo_026_chk (s : string) : bool :=
 Definition typo_027_chk (s : string) : bool :=
   string_contains_substring s "!!".
 
-(** TYPO-028: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_028_chk (s : string) : bool := false.
+(** TYPO-028: count_substring '$$'. *)
+Definition typo_028_chk (s : string) : bool :=
+  string_contains_substring s "$$".
 
 (** TYPO-029: count_substring '\\ref{'. *)
 Definition typo_029_chk (s : string) : bool :=
@@ -150,8 +153,9 @@ Definition typo_034_chk (s : string) : bool :=
 Definition typo_035_chk (s : string) : bool :=
   multi_substring_check [" ;"; " :"; " !"; " ?"] s.
 
-(** TYPO-036: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_036_chk (s : string) : bool := false.
+(** TYPO-036: byte_range [65..90]. *)
+Definition typo_036_chk (s : string) : bool :=
+  string_has_byte_in_range s 65 90.
 
 (** TYPO-037: count_substring ' ,'. *)
 Definition typo_037_chk (s : string) : bool :=
@@ -165,8 +169,9 @@ Definition typo_038_chk (s : string) : bool :=
 Definition typo_039_chk (s : string) : bool :=
   multi_substring_check ["http://"; "https://"] s.
 
-(** TYPO-040: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_040_chk (s : string) : bool := false.
+(** TYPO-040: count_char '$' (ASCII 36). *)
+Definition typo_040_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 36).
 
 (** TYPO-041: multi_substring [.\ldots, \ldots., ,\ldots]. *)
 Definition typo_041_chk (s : string) : bool :=
@@ -184,8 +189,9 @@ Definition typo_043_chk (s : string) : bool :=
 Definition typo_044_chk (s : string) : bool :=
   string_contains_substring s "\documentclass".
 
-(** TYPO-045: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_045_chk (s : string) : bool := false.
+(** TYPO-045: byte_ge 128 — document contains byte >= 128. *)
+Definition typo_045_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
 (** TYPO-046: multi_substring [\begin{math}, \end{math}]. *)
 Definition typo_046_chk (s : string) : bool :=
@@ -195,8 +201,9 @@ Definition typo_046_chk (s : string) : bool :=
 Definition typo_047_chk (s : string) : bool :=
   string_contains_substring s "\section*".
 
-(** TYPO-048: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_048_chk (s : string) : bool := false.
+(** TYPO-048: count_substring (UTF-8 bytes). *)
+Definition typo_048_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 147].
 
 (** TYPO-049: multi_substring (UTF-8 bytes). *)
 Definition typo_049_chk (s : string) : bool :=
@@ -210,8 +217,9 @@ Definition typo_050_chk (s : string) : bool :=
 Definition typo_051_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 137].
 
-(** TYPO-052: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_052_chk (s : string) : bool := false.
+(** TYPO-052: multi_substring [<, >]. *)
+Definition typo_052_chk (s : string) : bool :=
+  multi_substring_check ["<"; ">"] s.
 
 (** TYPO-053: count_substring (UTF-8 bytes). *)
 Definition typo_053_chk (s : string) : bool :=
@@ -245,8 +253,9 @@ Definition typo_060_chk (s : string) : bool :=
 Definition typo_061_chk (s : string) : bool :=
   string_contains_bytes s [195; 151].
 
-(** TYPO-062: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_062_chk (s : string) : bool := false.
+(** TYPO-062: count_substring '\\\\'. *)
+Definition typo_062_chk (s : string) : bool :=
+  string_contains_substring s "\\".
 
 (** TYPO-063: count_substring (UTF-8 bytes). *)
 Definition typo_063_chk (s : string) : bool :=

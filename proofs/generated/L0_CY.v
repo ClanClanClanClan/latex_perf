@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CY-001: No VPD pattern — conservative model. *)
-Definition cy_001_chk (s : string) : bool := false.
+(** CY-001: byte_range [208..209]. *)
+Definition cy_001_chk (s : string) : bool :=
+  string_has_byte_in_range s 208 209.
 
 (* ── Soundness theorems ── *)
 

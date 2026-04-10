@@ -33,9 +33,9 @@ Definition cmd_008_chk (s : string) : bool :=
 Definition cmd_009_chk (s : string) : bool :=
   string_contains_substring s "\makeatletter".
 
-(** CMD-011: count_substring '\\begin{document}'. *)
+(** CMD-011: count_substring '\\makeatletter'. *)
 Definition cmd_011_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s "\makeatletter".
 
 (** CMD-013: count_substring '\\def\\arraystretch'. *)
 Definition cmd_013_chk (s : string) : bool :=

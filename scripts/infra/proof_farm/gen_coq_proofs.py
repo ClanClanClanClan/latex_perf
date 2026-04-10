@@ -176,6 +176,23 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'(** {rule_id}: line_pred — trailing spaces. *)'
             )
 
+    elif family == "byte_ge":
+        threshold = pattern.get("threshold", 128)
+        return (
+            f'Definition {cid}_chk (s : string) : bool :=\n'
+            f'  string_has_byte_ge s {threshold}.',
+            f'(** {rule_id}: byte_ge {threshold} — document contains byte >= {threshold}. *)'
+        )
+
+    elif family == "byte_range":
+        lo = pattern.get("lo", 0)
+        hi = pattern.get("hi", 255)
+        return (
+            f'Definition {cid}_chk (s : string) : bool :=\n'
+            f'  string_has_byte_in_range s {lo} {hi}.',
+            f'(** {rule_id}: byte_range [{lo}..{hi}]. *)'
+        )
+
     # Default: conservative
     return (
         f'Definition {cid}_chk (s : string) : bool := false.',

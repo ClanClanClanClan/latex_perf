@@ -9,37 +9,37 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** STYLE-001: count_substring '\\begin{document}'. *)
+(** STYLE-001: count_substring '. '. *)
 Definition style_001_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-002: count_substring '\\begin{document}'. *)
+(** STYLE-002: count_substring '. '. *)
 Definition style_002_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-003: count_substring 'programme'. *)
 Definition style_003_chk (s : string) : bool :=
   string_contains_substring s "programme".
 
-(** STYLE-004: count_substring '\\begin{document}'. *)
+(** STYLE-004: count_substring '. '. *)
 Definition style_004_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-005: count_substring '\\begin{document}'. *)
+(** STYLE-005: count_substring '. '. *)
 Definition style_005_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-006: count_substring '\\begin{document}'. *)
+(** STYLE-006: count_substring '. '. *)
 Definition style_006_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-007: count_substring '\\item'. *)
 Definition style_007_chk (s : string) : bool :=
   string_contains_substring s "\item".
 
-(** STYLE-008: count_substring '\\begin{document}'. *)
+(** STYLE-008: count_substring '. '. *)
 Definition style_008_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-009: count_substring '\\\\parencite{'. *)
 Definition style_009_chk (s : string) : bool :=
@@ -57,9 +57,9 @@ Definition style_011_chk (s : string) : bool :=
 Definition style_012_chk (s : string) : bool :=
   multi_substring_check [", which "; " that "] s.
 
-(** STYLE-013: count_substring '\\begin{document}'. *)
+(** STYLE-013: count_substring '. '. *)
 Definition style_013_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-014: count_char ''' (ASCII 39). *)
 Definition style_014_chk (s : string) : bool :=
@@ -77,45 +77,45 @@ Definition style_016_chk (s : string) : bool :=
 Definition style_017_chk (s : string) : bool :=
   string_contains_substring s ".  ".
 
-(** STYLE-018: count_substring '\\begin{document}'. *)
+(** STYLE-018: count_substring '. '. *)
 Definition style_018_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-019: count_substring '\\begin{document}'. *)
+(** STYLE-019: count_substring '. '. *)
 Definition style_019_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-020: count_substring '\\begin{document}'. *)
+(** STYLE-020: count_substring '. '. *)
 Definition style_020_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-021: count_substring '\\begin{document}'. *)
+(** STYLE-021: count_substring '. '. *)
 Definition style_021_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-022: count_substring '\\begin{document}'. *)
+(** STYLE-022: count_substring '. '. *)
 Definition style_022_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-023: count_substring '\\begin{document}'. *)
+(** STYLE-023: count_substring '. '. *)
 Definition style_023_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-024: count_substring '\\\\begin{tabular}'. *)
 Definition style_024_chk (s : string) : bool :=
   string_contains_substring s "\\begin{tabular}".
 
-(** STYLE-025: count_substring '\\begin{document}'. *)
+(** STYLE-025: count_substring '. '. *)
 Definition style_025_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-026: count_substring '\\\\begin{tabular}'. *)
 Definition style_026_chk (s : string) : bool :=
   string_contains_substring s "\\begin{tabular}".
 
-(** STYLE-027: count_substring '\\begin{document}'. *)
+(** STYLE-027: count_substring '. '. *)
 Definition style_027_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-028: count_substring '\\eqref{'. *)
 Definition style_028_chk (s : string) : bool :=
@@ -125,25 +125,25 @@ Definition style_028_chk (s : string) : bool :=
 Definition style_029_chk (s : string) : bool :=
   multi_substring_check ["we present"; "we propose"; "we show"; "We present"; "We propose"; "we can see"] s.
 
-(** STYLE-030: count_substring '\\begin{document}'. *)
+(** STYLE-030: count_substring '\\section'. *)
 Definition style_030_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s "\section".
 
-(** STYLE-031: count_substring '\\begin{document}'. *)
+(** STYLE-031: count_substring '. '. *)
 Definition style_031_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-032: count_substring '\\item'. *)
 Definition style_032_chk (s : string) : bool :=
   string_contains_substring s "\item".
 
-(** STYLE-033: count_substring '\\begin{document}'. *)
+(** STYLE-033: count_substring '. '. *)
 Definition style_033_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-034: count_substring '\\begin{document}'. *)
+(** STYLE-034: count_substring '. '. *)
 Definition style_034_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-035: count_substring 'and/or'. *)
 Definition style_035_chk (s : string) : bool :=
@@ -173,37 +173,37 @@ Definition style_040_chk (s : string) : bool :=
 Definition style_041_chk (s : string) : bool :=
   string_contains_substring s "\footnote{".
 
-(** STYLE-042: count_substring '\\begin{document}'. *)
+(** STYLE-042: count_substring '. '. *)
 Definition style_042_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
 (** STYLE-043: count_substring '\\footnote{'. *)
 Definition style_043_chk (s : string) : bool :=
   string_contains_substring s "\footnote{".
 
-(** STYLE-044: count_substring '\\begin{document}'. *)
+(** STYLE-044: count_substring '. '. *)
 Definition style_044_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-045: count_substring '\\begin{document}'. *)
+(** STYLE-045: count_char '(' (ASCII 40). *)
 Definition style_045_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains s (ascii_of_nat 40).
 
-(** STYLE-046: count_substring '\\begin{document}'. *)
+(** STYLE-046: count_substring (UTF-8 bytes). *)
 Definition style_046_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_bytes s [226; 128; 147].
 
-(** STYLE-047: count_substring '\\begin{document}'. *)
+(** STYLE-047: count_substring '. '. *)
 Definition style_047_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-048: count_substring '\\begin{document}'. *)
+(** STYLE-048: count_substring '. '. *)
 Definition style_048_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s ". ".
 
-(** STYLE-049: count_substring '\\begin{document}'. *)
+(** STYLE-049: count_substring '\\section'. *)
 Definition style_049_chk (s : string) : bool :=
-  string_contains_substring s "\begin{document}".
+  string_contains_substring s "\section".
 
 (* ── Soundness theorems ── *)
 

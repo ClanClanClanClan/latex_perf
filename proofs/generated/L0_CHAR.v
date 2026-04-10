@@ -9,9 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CHAR-005: count_substring '\\documentclass'. *)
+(** CHAR-005: byte_ge 128 — document contains byte >= 128. *)
 Definition char_005_chk (s : string) : bool :=
-  string_contains_substring s "\documentclass".
+  string_has_byte_ge s 128.
 
 (** CHAR-006: count_char '\x08' (ASCII 8). *)
 Definition char_006_chk (s : string) : bool :=
@@ -57,9 +57,9 @@ Definition char_015_chk (s : string) : bool :=
 Definition char_016_chk (s : string) : bool :=
   multi_bytes_check [[227; 128; 129]; [227; 128; 130]; [239; 188; 140]; [239; 188; 142]; [239; 188; 154]; [239; 188; 155]; [239; 188; 129]; [239; 188; 159]] s.
 
-(** CHAR-017: count_substring '\\documentclass'. *)
+(** CHAR-017: byte_ge 128 — document contains byte >= 128. *)
 Definition char_017_chk (s : string) : bool :=
-  string_contains_substring s "\documentclass".
+  string_has_byte_ge s 128.
 
 (** CHAR-018: multi_substring (UTF-8 bytes). *)
 Definition char_018_chk (s : string) : bool :=
@@ -69,9 +69,9 @@ Definition char_018_chk (s : string) : bool :=
 Definition char_019_chk (s : string) : bool :=
   string_contains_bytes s [226; 136; 146].
 
-(** CHAR-020: count_substring '\\documentclass'. *)
+(** CHAR-020: byte_ge 128 — document contains byte >= 128. *)
 Definition char_020_chk (s : string) : bool :=
-  string_contains_substring s "\documentclass".
+  string_has_byte_ge s 128.
 
 (** CHAR-021: count_substring (UTF-8 bytes). *)
 Definition char_021_chk (s : string) : bool :=

@@ -32,21 +32,25 @@ Definition cjk_007_chk (s : string) : bool := false.
 Definition cjk_009_chk (s : string) : bool :=
   string_contains_substring s "\\setdefaultlanguage{arabic}".
 
-(** CJK-010: No VPD pattern — conservative model. *)
-Definition cjk_010_chk (s : string) : bool := false.
+(** CJK-010: byte_range [224..239]. *)
+Definition cjk_010_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 239.
 
-(** CJK-011: No VPD pattern — conservative model. *)
-Definition cjk_011_chk (s : string) : bool := false.
+(** CJK-011: byte_range [224..239]. *)
+Definition cjk_011_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 239.
 
 (** CJK-012: count_substring '\\\\setCJKfamilyfont{min}'. *)
 Definition cjk_012_chk (s : string) : bool :=
   string_contains_substring s "\\setCJKfamilyfont{min}".
 
-(** CJK-013: No VPD pattern — conservative model. *)
-Definition cjk_013_chk (s : string) : bool := false.
+(** CJK-013: byte_range [224..239]. *)
+Definition cjk_013_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 239.
 
-(** CJK-014: No VPD pattern — conservative model. *)
-Definition cjk_014_chk (s : string) : bool := false.
+(** CJK-014: byte_range [224..239]. *)
+Definition cjk_014_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 239.
 
 (** CJK-016: count_substring '\\\\setCJKfamilyfont{min}'. *)
 Definition cjk_016_chk (s : string) : bool :=

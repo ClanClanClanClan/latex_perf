@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** JA-001: No VPD pattern — conservative model. *)
-Definition ja_001_chk (s : string) : bool := false.
+(** JA-001: byte_range [239..239]. *)
+Definition ja_001_chk (s : string) : bool :=
+  string_has_byte_in_range s 239 239.
 
 (** JA-002: count_substring (UTF-8 bytes). *)
 Definition ja_002_chk (s : string) : bool :=

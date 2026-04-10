@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** FONT-001: No VPD pattern — conservative model. *)
-Definition font_001_chk (s : string) : bool := false.
+(** FONT-001: byte_range [65..90]. *)
+Definition font_001_chk (s : string) : bool :=
+  string_has_byte_in_range s 65 90.
 
 (** FONT-004: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
 Definition font_004_chk (s : string) : bool :=

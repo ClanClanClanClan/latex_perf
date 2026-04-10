@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** HI-001: No VPD pattern — conservative model. *)
-Definition hi_001_chk (s : string) : bool := false.
+(** HI-001: byte_range [224..224]. *)
+Definition hi_001_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 224.
 
 (* ── Soundness theorems ── *)
 

@@ -9,14 +9,17 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** TIKZ-002: No VPD pattern — conservative model. *)
-Definition tikz_002_chk (s : string) : bool := false.
+(** TIKZ-002: count_substring '\\begin{tikzpicture}'. *)
+Definition tikz_002_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tikzpicture}".
 
-(** TIKZ-005: No VPD pattern — conservative model. *)
-Definition tikz_005_chk (s : string) : bool := false.
+(** TIKZ-005: count_substring '\\usetikzlibrary{external}'. *)
+Definition tikz_005_chk (s : string) : bool :=
+  string_contains_substring s "\usetikzlibrary{external}".
 
-(** TIKZ-008: No VPD pattern — conservative model. *)
-Definition tikz_008_chk (s : string) : bool := false.
+(** TIKZ-008: count_substring '\\begin{tikzpicture}'. *)
+Definition tikz_008_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tikzpicture}".
 
 (* ── Soundness theorems ── *)
 

@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CE-001: No VPD pattern — conservative model. *)
-Definition ce_001_chk (s : string) : bool := false.
+(** CE-001: count_substring '\\eqref{'. *)
+Definition ce_001_chk (s : string) : bool :=
+  string_contains_substring s "\eqref{".
 
-(** CE-002: No VPD pattern — conservative model. *)
-Definition ce_002_chk (s : string) : bool := false.
+(** CE-002: count_substring '\\eqref{'. *)
+Definition ce_002_chk (s : string) : bool :=
+  string_contains_substring s "\eqref{".
 
 (* ── Soundness theorems ── *)
 

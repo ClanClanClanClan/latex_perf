@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CS-001: No VPD pattern — conservative model. *)
-Definition cs_001_chk (s : string) : bool := false.
+(** CS-001: count_substring (UTF-8 bytes). *)
+Definition cs_001_chk (s : string) : bool :=
+  string_contains_bytes s [194; 176; 67].
 
-(** CS-002: No VPD pattern — conservative model. *)
-Definition cs_002_chk (s : string) : bool := false.
+(** CS-002: count_substring '\\documentclass'. *)
+Definition cs_002_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
 (* ── Soundness theorems ── *)
 

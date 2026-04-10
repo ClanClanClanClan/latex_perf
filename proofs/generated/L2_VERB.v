@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** VERB-014: No VPD pattern — conservative model. *)
-Definition verb_014_chk (s : string) : bool := false.
+(** VERB-014: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_014_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
 (* ── Soundness theorems ── *)
 

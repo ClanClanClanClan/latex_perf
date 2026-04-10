@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** RTL-001: No VPD pattern — conservative model. *)
-Definition rtl_001_chk (s : string) : bool := false.
+(** RTL-001: count_substring '\\fontsize{'. *)
+Definition rtl_001_chk (s : string) : bool :=
+  string_contains_substring s "\fontsize{".
 
 (** RTL-002: No VPD pattern — conservative model. *)
 Definition rtl_002_chk (s : string) : bool := false.

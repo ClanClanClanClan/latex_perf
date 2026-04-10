@@ -3964,5 +3964,1955 @@
       "needle": "\\begin{minted}"
     },
     "severity": "Info"
+  },
+  "BIB-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\setmainfont"
+    },
+    "severity": "Info"
+  },
+  "BIB-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "https://doi.org/"
+    },
+    "severity": "Info"
+  },
+  "BIB-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "publisher"
+    },
+    "severity": "Warning"
+  },
+  "BIB-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "publisher"
+    },
+    "severity": "Info"
+  },
+  "BIB-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "author"
+    },
+    "severity": "Info"
+  },
+  "BIB-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "isbn"
+    },
+    "severity": "Warning"
+  },
+  "BIB-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "booktitle"
+    },
+    "severity": "Error"
+  },
+  "BIB-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "booktitle"
+    },
+    "severity": "Info"
+  },
+  "BIB-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "booktitle"
+    },
+    "severity": "Info"
+  },
+  "BIB-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "doi"
+    },
+    "severity": "Info"
+  },
+  "BIB-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "author"
+    },
+    "severity": "Warning"
+  },
+  "BIB-016": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "doi"
+    },
+    "severity": "Info"
+  },
+  "BIB-017": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "year"
+    },
+    "severity": "Info"
+  },
+  "CE-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\eqref{"
+    },
+    "severity": "Info"
+  },
+  "CJK-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ruby{"
+    },
+    "severity": "Warning"
+  },
+  "CJK-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\setdefaultlanguage{arabic}"
+    },
+    "severity": "Info"
+  },
+  "CMD-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\newcommand"
+    },
+    "severity": "Info"
+  },
+  "CMD-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\def"
+    },
+    "severity": "Warning"
+  },
+  "CMD-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\def"
+    },
+    "severity": "Info"
+  },
+  "CMD-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\newcommand"
+    },
+    "severity": "Warning"
+  },
+  "CMD-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\makeatletter"
+    },
+    "severity": "Info"
+  },
+  "CMD-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Warning"
+  },
+  "CMD-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\renewcommand{\\thesection}"
+    },
+    "severity": "Warning"
+  },
+  "CMD-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\AtBeginDocument"
+    },
+    "severity": "Warning"
+  },
+  "CS-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "°C"
+    },
+    "severity": "Warning"
+  },
+  "FIG-009": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\raggedright"
+    },
+    "severity": "Info"
+  },
+  "FIG-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure}"
+    },
+    "severity": "Info"
+  },
+  "FIG-018": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure}"
+    },
+    "severity": "Info"
+  },
+  "FIG-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure}"
+    },
+    "severity": "Warning"
+  },
+  "FIG-024": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FONT-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\setmainfont{Latin Modern"
+    },
+    "severity": "Info"
+  },
+  "FONT-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ruby{"
+    },
+    "severity": "Info"
+  },
+  "FONT-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\microtypesetup{"
+    },
+    "severity": "Warning"
+  },
+  "FONT-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "FONT-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\DocumentMetadata"
+    },
+    "severity": "Warning"
+  },
+  "FONT-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\hypersetup{"
+    },
+    "severity": "Info"
+  },
+  "L3-001": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align",
+        "\\begin{gather",
+        "\\begin{multline",
+        "\\begin{eqnarray",
+        "\\begin{math}",
+        "\\begin{displaymath}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "L3-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\newcommand"
+    },
+    "severity": "Warning"
+  },
+  "L3-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ExplSyntaxOn"
+    },
+    "severity": "Warning"
+  },
+  "L3-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ExplSyntaxOn"
+    },
+    "severity": "Info"
+  },
+  "L3-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "L3-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Info"
+  },
+  "L3-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\sys"
+    },
+    "severity": "Warning"
+  },
+  "LANG-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "british"
+    },
+    "severity": "Info"
+  },
+  "LANG-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage{"
+    },
+    "severity": "Warning"
+  },
+  "LANG-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hyphenpenalty"
+    },
+    "severity": "Info"
+  },
+  "LANG-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{abstract}"
+    },
+    "severity": "Info"
+  },
+  "LANG-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "french"
+    },
+    "severity": "Info"
+  },
+  "LANG-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hyphenpenalty"
+    },
+    "severity": "Info"
+  },
+  "LANG-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\usepackage[francais]{babel}"
+    },
+    "severity": "Info"
+  },
+  "LANG-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{abstract}"
+    },
+    "severity": "Info"
+  },
+  "LANG-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Info"
+  },
+  "LAY-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\section"
+    },
+    "severity": "Info"
+  },
+  "LAY-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\section"
+    },
+    "severity": "Warning"
+  },
+  "LAY-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "pdflatex"
+    },
+    "severity": "Info"
+  },
+  "LAY-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\end{"
+    },
+    "severity": "Info"
+  },
+  "LAY-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\end{"
+    },
+    "severity": "Warning"
+  },
+  "LAY-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\thispagestyle{empty}"
+    },
+    "severity": "Info"
+  },
+  "LAY-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\linespread{"
+    },
+    "severity": "Info"
+  },
+  "LAY-018": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{longtable"
+    },
+    "severity": "Info"
+  },
+  "LAY-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\thispagestyle{empty}"
+    },
+    "severity": "Info"
+  },
+  "LAY-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\linespread{"
+    },
+    "severity": "Info"
+  },
+  "LAY-022": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\setlength{\\parskip}{-"
+    },
+    "severity": "Warning"
+  },
+  "LAY-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\cleardoublepage"
+    },
+    "severity": "Info"
+  },
+  "LAY-024": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\subsubsubsection"
+    },
+    "severity": "Warning"
+  },
+  "MATH-032": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{smallmatrix}"
+    },
+    "severity": "Warning"
+  },
+  "MATH-063": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\"
+    },
+    "severity": "Warning"
+  },
+  "MATH-080": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\nonumber"
+    },
+    "severity": "Info"
+  },
+  "META-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage{hyperref}"
+    },
+    "severity": "Info"
+  },
+  "META-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\subsubsubsection"
+    },
+    "severity": "Info"
+  },
+  "PDF-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\texorpdfstring"
+    },
+    "severity": "Info"
+  },
+  "PKG-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Error"
+  },
+  "PKG-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "PKG-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\multicolumn{"
+    },
+    "severity": "Error"
+  },
+  "PKG-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "backend=biber"
+    },
+    "severity": "Warning"
+  },
+  "PKG-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hypersetup{draft=true"
+    },
+    "severity": "Warning"
+  },
+  "PKG-022": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usetikzlibrary{external}"
+    },
+    "severity": "Warning"
+  },
+  "PKG-025": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "T1"
+    },
+    "severity": "Warning"
+  },
+  "REF-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\setlength{\\parskip}{-"
+    },
+    "severity": "Warning"
+  },
+  "REF-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\label{"
+    },
+    "severity": "Info"
+  },
+  "RTL-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\fontsize{"
+    },
+    "severity": "Warning"
+  },
+  "SPC-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "~~"
+    },
+    "severity": "Info"
+  },
+  "SPC-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " --"
+    },
+    "severity": "Info"
+  },
+  "SPC-017": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " ;"
+    },
+    "severity": "Info"
+  },
+  "SPC-026": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " \\\\dots"
+    },
+    "severity": "Info"
+  },
+  "SPC-027": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\item\\t"
+    },
+    "severity": "Warning"
+  },
+  "SPC-032": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".   "
+    },
+    "severity": "Info"
+  },
+  "SPC-034": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " ---"
+    },
+    "severity": "Info"
+  },
+  "STYLE-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "programme"
+    },
+    "severity": "Info"
+  },
+  "STYLE-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\item"
+    },
+    "severity": "Info"
+  },
+  "STYLE-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\author{"
+    },
+    "severity": "Info"
+  },
+  "STYLE-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        ", which ",
+        " that "
+      ]
+    },
+    "severity": "Info"
+  },
+  "STYLE-016": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".  "
+    },
+    "severity": "Info"
+  },
+  "STYLE-017": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": ".  "
+    },
+    "severity": "Info"
+  },
+  "STYLE-028": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\eqref{"
+    },
+    "severity": "Info"
+  },
+  "STYLE-037": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "and/or"
+    },
+    "severity": "Info"
+  },
+  "STYLE-038": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\item"
+    },
+    "severity": "Info"
+  },
+  "STYLE-039": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\caption{"
+    },
+    "severity": "Info"
+  },
+  "STYLE-041": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\footnote{"
+    },
+    "severity": "Info"
+  },
+  "STYLE-043": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\footnote{"
+    },
+    "severity": "Info"
+  },
+  "TAB-012": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular*"
+    },
+    "severity": "Info"
+  },
+  "TIKZ-004": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{axis"
+    },
+    "severity": "Info"
+  },
+  "TIKZ-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usetikzlibrary{external}"
+    },
+    "severity": "Info"
+  },
+  "TYPO-050": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\\\autoref"
+    },
+    "severity": "Info"
+  },
+  "VERB-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{"
+    },
+    "severity": "Info"
+  },
+  "VERB-010": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{minted"
+    },
+    "severity": "Info"
+  },
+  "VERB-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{"
+    },
+    "severity": "Warning"
+  },
+  "VERB-012": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "autogobble"
+    },
+    "severity": "Info"
+  },
+  "AR-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "Ş"
+    },
+    "severity": "Info"
+  },
+  "CHAR-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "�"
+    },
+    "severity": "Info"
+  },
+  "CHAR-022": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "ﬀ"
+    },
+    "severity": "Warning"
+  },
+  "LAY-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "too large"
+    },
+    "severity": "Warning"
+  },
+  "NL-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "ß"
+    },
+    "severity": "Info"
+  },
+  "PT-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "„"
+    },
+    "severity": "Warning"
+  },
+  "TYPO-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "  "
+    },
+    "severity": "Info"
+  },
+  "TYPO-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "  "
+    },
+    "severity": "Warning"
+  },
+  "TYPO-030": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "!!"
+    },
+    "severity": "Info"
+  },
+  "TYPO-031": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "$$"
+    },
+    "severity": "Info"
+  },
+  "TYPO-044": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
+  },
+  "SPC-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "SPC-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "SPC-011": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "SPC-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-018": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "SPC-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-024": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Info"
+  },
+  "SPC-029": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": " "
+    },
+    "severity": "Warning"
+  },
+  "CHAR-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Error"
+  },
+  "CHAR-017": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Warning"
+  },
+  "CHAR-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
+  },
+  "VERB-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Error"
+  },
+  "VERB-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "VERB-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "VERB-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "VERB-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "VERB-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Error"
+  },
+  "VERB-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Error"
+  },
+  "VERB-014": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\verb",
+        "\\begin{verbatim}",
+        "\\begin{lstlisting}",
+        "\\begin{minted}"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "CMD-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\newcommand",
+        "\\renewcommand",
+        "\\def\\"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "CMD-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\newcommand",
+        "\\renewcommand",
+        "\\def\\"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CMD-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\newcommand",
+        "\\renewcommand",
+        "\\def\\"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CMD-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\newcommand",
+        "\\renewcommand",
+        "\\def\\"
+      ]
+    },
+    "severity": "Info"
+  },
+  "DELIM-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Error"
+  },
+  "DELIM-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Error"
+  },
+  "DELIM-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Info"
+  },
+  "DELIM-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-024": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-026": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-027": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-054": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-062": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MATH-077": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Error"
+  },
+  "MATH-100": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "$",
+        "\\(",
+        "\\[",
+        "\\begin{equation",
+        "\\begin{align"
+      ]
+    },
+    "severity": "Info"
+  },
+  "REF-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Error"
+  },
+  "REF-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "REF-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Info"
+  },
+  "REF-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Info"
+  },
+  "REF-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Info"
+  },
+  "REF-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Error"
+  },
+  "REF-010": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\ref{",
+        "\\label{",
+        "\\cite{"
+      ]
+    },
+    "severity": "Info"
+  },
+  "FIG-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-016": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-021": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "FIG-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "PKG-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "PKG-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Error"
+  },
+  "PKG-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Error"
+  },
+  "PKG-024": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "TIKZ-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tikzpicture}"
+    },
+    "severity": "Warning"
+  },
+  "TIKZ-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tikzpicture}"
+    },
+    "severity": "Warning"
+  },
+  "TIKZ-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tikzpicture}"
+    },
+    "severity": "Info"
+  },
+  "LAY-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Warning"
+  },
+  "LAY-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
+  },
+  "LAY-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
+  },
+  "LAY-021": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Warning"
+  },
+  "LANG-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Info"
+  },
+  "STYLE-001": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-004": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-005": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-006": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-013": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-018": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-019": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-020": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-021": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Warning"
+  },
+  "STYLE-022": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-023": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Warning"
+  },
+  "STYLE-025": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-027": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-030": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-031": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Warning"
+  },
+  "STYLE-033": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-034": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-042": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-044": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-045": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-046": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-047": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-048": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "STYLE-049": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{document}"
+    },
+    "severity": "Info"
+  },
+  "L3-009": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\ExplSyntaxOn"
+    },
+    "severity": "Info"
+  },
+  "BIB-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "@article{",
+        "@book{",
+        "@inproceedings{",
+        "\\bibliography",
+        "\\printbibliography"
+      ]
+    },
+    "severity": "Info"
+  },
+  "BIB-015": {
+    "layer": "L0",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "@article{",
+        "@book{",
+        "@inproceedings{",
+        "\\bibliography",
+        "\\printbibliography"
+      ]
+    },
+    "severity": "Info"
+  },
+  "CE-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\eqref{"
+    },
+    "severity": "Info"
+  },
+  "FR-007": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Info"
+  },
+  "FR-008": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Warning"
+  },
+  "PT-003": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usepackage"
+    },
+    "severity": "Info"
+  },
+  "CS-002": {
+    "layer": "L0",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
   }
 }

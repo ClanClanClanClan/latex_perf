@@ -49,8 +49,9 @@ Definition tab_010_chk (s : string) : bool :=
 Definition tab_011_chk (s : string) : bool :=
   string_contains_substring s "\begin{tabular".
 
-(** TAB-012: No VPD pattern — conservative model. *)
-Definition tab_012_chk (s : string) : bool := false.
+(** TAB-012: count_substring '\\begin{tabular*'. *)
+Definition tab_012_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tabular*".
 
 (** TAB-013: count_substring '\\begin{longtable}'. *)
 Definition tab_013_chk (s : string) : bool :=

@@ -13,54 +13,69 @@ Open Scope string_scope.
 Definition bib_001_chk (s : string) : bool :=
   string_contains_substring s "isbn".
 
-(** BIB-002: No VPD pattern — conservative model. *)
-Definition bib_002_chk (s : string) : bool := false.
+(** BIB-002: count_substring '\\\\setmainfont'. *)
+Definition bib_002_chk (s : string) : bool :=
+  string_contains_substring s "\\setmainfont".
 
-(** BIB-003: No VPD pattern — conservative model. *)
-Definition bib_003_chk (s : string) : bool := false.
+(** BIB-003: count_substring 'https://doi.org/'. *)
+Definition bib_003_chk (s : string) : bool :=
+  string_contains_substring s "https://doi.org/".
 
-(** BIB-004: No VPD pattern — conservative model. *)
-Definition bib_004_chk (s : string) : bool := false.
+(** BIB-004: count_substring 'publisher'. *)
+Definition bib_004_chk (s : string) : bool :=
+  string_contains_substring s "publisher".
 
-(** BIB-005: No VPD pattern — conservative model. *)
-Definition bib_005_chk (s : string) : bool := false.
+(** BIB-005: count_substring 'publisher'. *)
+Definition bib_005_chk (s : string) : bool :=
+  string_contains_substring s "publisher".
 
-(** BIB-006: No VPD pattern — conservative model. *)
-Definition bib_006_chk (s : string) : bool := false.
+(** BIB-006: count_substring 'author'. *)
+Definition bib_006_chk (s : string) : bool :=
+  string_contains_substring s "author".
 
-(** BIB-007: No VPD pattern — conservative model. *)
-Definition bib_007_chk (s : string) : bool := false.
+(** BIB-007: count_substring 'isbn'. *)
+Definition bib_007_chk (s : string) : bool :=
+  string_contains_substring s "isbn".
 
-(** BIB-008: No VPD pattern — conservative model. *)
-Definition bib_008_chk (s : string) : bool := false.
+(** BIB-008: multi_substring [@article{, @book{, @inproceedings{, \bibliography, \printbibliography]. *)
+Definition bib_008_chk (s : string) : bool :=
+  multi_substring_check ["@article{"; "@book{"; "@inproceedings{"; "\bibliography"; "\printbibliography"] s.
 
-(** BIB-009: No VPD pattern — conservative model. *)
-Definition bib_009_chk (s : string) : bool := false.
+(** BIB-009: count_substring 'booktitle'. *)
+Definition bib_009_chk (s : string) : bool :=
+  string_contains_substring s "booktitle".
 
-(** BIB-010: No VPD pattern — conservative model. *)
-Definition bib_010_chk (s : string) : bool := false.
+(** BIB-010: count_substring 'booktitle'. *)
+Definition bib_010_chk (s : string) : bool :=
+  string_contains_substring s "booktitle".
 
-(** BIB-011: No VPD pattern — conservative model. *)
-Definition bib_011_chk (s : string) : bool := false.
+(** BIB-011: count_substring 'booktitle'. *)
+Definition bib_011_chk (s : string) : bool :=
+  string_contains_substring s "booktitle".
 
 (** BIB-012: count_substring 'et al.'. *)
 Definition bib_012_chk (s : string) : bool :=
   string_contains_substring s "et al.".
 
-(** BIB-013: No VPD pattern — conservative model. *)
-Definition bib_013_chk (s : string) : bool := false.
+(** BIB-013: count_substring 'doi'. *)
+Definition bib_013_chk (s : string) : bool :=
+  string_contains_substring s "doi".
 
-(** BIB-014: No VPD pattern — conservative model. *)
-Definition bib_014_chk (s : string) : bool := false.
+(** BIB-014: count_substring 'author'. *)
+Definition bib_014_chk (s : string) : bool :=
+  string_contains_substring s "author".
 
-(** BIB-015: No VPD pattern — conservative model. *)
-Definition bib_015_chk (s : string) : bool := false.
+(** BIB-015: multi_substring [@article{, @book{, @inproceedings{, \bibliography, \printbibliography]. *)
+Definition bib_015_chk (s : string) : bool :=
+  multi_substring_check ["@article{"; "@book{"; "@inproceedings{"; "\bibliography"; "\printbibliography"] s.
 
-(** BIB-016: No VPD pattern — conservative model. *)
-Definition bib_016_chk (s : string) : bool := false.
+(** BIB-016: count_substring 'doi'. *)
+Definition bib_016_chk (s : string) : bool :=
+  string_contains_substring s "doi".
 
-(** BIB-017: No VPD pattern — conservative model. *)
-Definition bib_017_chk (s : string) : bool := false.
+(** BIB-017: count_substring 'year'. *)
+Definition bib_017_chk (s : string) : bool :=
+  string_contains_substring s "year".
 
 (* ── Soundness theorems ── *)
 

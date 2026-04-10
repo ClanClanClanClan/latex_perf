@@ -225,8 +225,9 @@ Definition math_073_chk (s : string) : bool :=
 Definition math_074_chk (s : string) : bool :=
   string_contains_substring s "\node".
 
-(** MATH-077: No VPD pattern — conservative model. *)
-Definition math_077_chk (s : string) : bool := false.
+(** MATH-077: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition math_077_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
 (** MATH-078: count_substring '-->'. *)
 Definition math_078_chk (s : string) : bool :=

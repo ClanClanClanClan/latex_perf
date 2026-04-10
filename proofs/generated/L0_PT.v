@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** PT-001: No VPD pattern — conservative model. *)
-Definition pt_001_chk (s : string) : bool := false.
+(** PT-001: count_substring (UTF-8 bytes). *)
+Definition pt_001_chk (s : string) : bool :=
+  string_contains_bytes s [226; 128; 158].
 
-(** PT-003: No VPD pattern — conservative model. *)
-Definition pt_003_chk (s : string) : bool := false.
+(** PT-003: count_substring '\\usepackage'. *)
+Definition pt_003_chk (s : string) : bool :=
+  string_contains_substring s "\usepackage".
 
 (* ── Soundness theorems ── *)
 

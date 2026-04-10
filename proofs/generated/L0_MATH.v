@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** MATH-026: No VPD pattern — conservative model. *)
-Definition math_026_chk (s : string) : bool := false.
+(** MATH-026: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition math_026_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
-(** MATH-027: No VPD pattern — conservative model. *)
-Definition math_027_chk (s : string) : bool := false.
+(** MATH-027: multi_substring [$, \(, \[, \begin{equation, \begin{align]. *)
+Definition math_027_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"] s.
 
 (** MATH-076: count_substring '\\begin{align'. *)
 Definition math_076_chk (s : string) : bool :=

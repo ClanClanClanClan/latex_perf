@@ -9,42 +9,53 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** VERB-001: No VPD pattern — conservative model. *)
-Definition verb_001_chk (s : string) : bool := false.
+(** VERB-001: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_001_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-002: No VPD pattern — conservative model. *)
-Definition verb_002_chk (s : string) : bool := false.
+(** VERB-002: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_002_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-003: No VPD pattern — conservative model. *)
-Definition verb_003_chk (s : string) : bool := false.
+(** VERB-003: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_003_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-004: No VPD pattern — conservative model. *)
-Definition verb_004_chk (s : string) : bool := false.
+(** VERB-004: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_004_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-005: No VPD pattern — conservative model. *)
-Definition verb_005_chk (s : string) : bool := false.
+(** VERB-005: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_005_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-006: No VPD pattern — conservative model. *)
-Definition verb_006_chk (s : string) : bool := false.
+(** VERB-006: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_006_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-007: No VPD pattern — conservative model. *)
-Definition verb_007_chk (s : string) : bool := false.
+(** VERB-007: multi_substring [\verb, \begin{verbatim}, \begin{lstlisting}, \begin{minted}]. *)
+Definition verb_007_chk (s : string) : bool :=
+  multi_substring_check ["\verb"; "\begin{verbatim}"; "\begin{lstlisting}"; "\begin{minted}"] s.
 
-(** VERB-008: No VPD pattern — conservative model. *)
-Definition verb_008_chk (s : string) : bool := false.
+(** VERB-008: count_substring '\\begin{'. *)
+Definition verb_008_chk (s : string) : bool :=
+  string_contains_substring s "\begin{".
 
 (** VERB-009: count_substring '\\begin{minted}'. *)
 Definition verb_009_chk (s : string) : bool :=
   string_contains_substring s "\begin{minted}".
 
-(** VERB-010: No VPD pattern — conservative model. *)
-Definition verb_010_chk (s : string) : bool := false.
+(** VERB-010: count_substring '\\begin{minted'. *)
+Definition verb_010_chk (s : string) : bool :=
+  string_contains_substring s "\begin{minted".
 
-(** VERB-011: No VPD pattern — conservative model. *)
-Definition verb_011_chk (s : string) : bool := false.
+(** VERB-011: count_substring '\\begin{'. *)
+Definition verb_011_chk (s : string) : bool :=
+  string_contains_substring s "\begin{".
 
-(** VERB-012: No VPD pattern — conservative model. *)
-Definition verb_012_chk (s : string) : bool := false.
+(** VERB-012: count_substring 'autogobble'. *)
+Definition verb_012_chk (s : string) : bool :=
+  string_contains_substring s "autogobble".
 
 (** VERB-013: count_substring '\\begin{minted}'. *)
 Definition verb_013_chk (s : string) : bool :=

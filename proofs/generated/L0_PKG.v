@@ -21,8 +21,9 @@ Definition pkg_006_chk (s : string) : bool :=
 Definition pkg_018_chk (s : string) : bool :=
   string_contains_substring s "\hypersetup{draft".
 
-(** PKG-019: No VPD pattern — conservative model. *)
-Definition pkg_019_chk (s : string) : bool := false.
+(** PKG-019: count_substring '\\hypersetup{draft=true'. *)
+Definition pkg_019_chk (s : string) : bool :=
+  string_contains_substring s "\hypersetup{draft=true".
 
 (* ── Soundness theorems ── *)
 

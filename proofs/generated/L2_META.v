@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** META-002: No VPD pattern — conservative model. *)
-Definition meta_002_chk (s : string) : bool := false.
+(** META-002: count_substring '\\subsubsubsection'. *)
+Definition meta_002_chk (s : string) : bool :=
+  string_contains_substring s "\subsubsubsection".
 
 (* ── Soundness theorems ── *)
 

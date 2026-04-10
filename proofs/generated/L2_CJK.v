@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** CJK-004: No VPD pattern — conservative model. *)
 Definition cjk_004_chk (s : string) : bool := false.
 
-(** CJK-006: No VPD pattern — conservative model. *)
-Definition cjk_006_chk (s : string) : bool := false.
+(** CJK-006: count_substring '\\ruby{'. *)
+Definition cjk_006_chk (s : string) : bool :=
+  string_contains_substring s "\ruby{".
 
 (* ── Soundness theorems ── *)
 

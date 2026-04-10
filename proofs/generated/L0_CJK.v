@@ -28,8 +28,9 @@ Definition cjk_005_chk (s : string) : bool :=
 (** CJK-007: No VPD pattern — conservative model. *)
 Definition cjk_007_chk (s : string) : bool := false.
 
-(** CJK-009: No VPD pattern — conservative model. *)
-Definition cjk_009_chk (s : string) : bool := false.
+(** CJK-009: count_substring '\\\\setdefaultlanguage{arabic}'. *)
+Definition cjk_009_chk (s : string) : bool :=
+  string_contains_substring s "\\setdefaultlanguage{arabic}".
 
 (** CJK-010: No VPD pattern — conservative model. *)
 Definition cjk_010_chk (s : string) : bool := false.

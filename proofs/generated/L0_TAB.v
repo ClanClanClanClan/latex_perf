@@ -9,7 +9,7 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** TAB-004: count_substring "\begin{tabular". *)
+(** TAB-004: count_substring '\\begin{tabular'. *)
 Definition tab_004_chk (s : string) : bool :=
   string_contains_substring s "\begin{tabular".
 

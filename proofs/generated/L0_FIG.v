@@ -18,7 +18,7 @@ Definition fig_005_chk (s : string) : bool := false.
 (** FIG-006: No VPD pattern — conservative model. *)
 Definition fig_006_chk (s : string) : bool := false.
 
-(** FIG-008: count_substring "\begin{tabular". *)
+(** FIG-008: count_substring '\\begin{tabular'. *)
 Definition fig_008_chk (s : string) : bool :=
   string_contains_substring s "\begin{tabular".
 

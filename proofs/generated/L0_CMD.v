@@ -21,7 +21,7 @@ Definition cmd_005_chk (s : string) : bool := false.
 (** CMD-006: No VPD pattern — conservative model. *)
 Definition cmd_006_chk (s : string) : bool := false.
 
-(** CMD-008: count_substring "\makeatletter". *)
+(** CMD-008: count_substring '\\makeatletter'. *)
 Definition cmd_008_chk (s : string) : bool :=
   string_contains_substring s "\makeatletter".
 
@@ -31,7 +31,7 @@ Definition cmd_009_chk (s : string) : bool := false.
 (** CMD-011: No VPD pattern — conservative model. *)
 Definition cmd_011_chk (s : string) : bool := false.
 
-(** CMD-013: count_substring "\def\arraystretch". *)
+(** CMD-013: count_substring '\\def\\arraystretch'. *)
 Definition cmd_013_chk (s : string) : bool :=
   string_contains_substring s "\def\arraystretch".
 

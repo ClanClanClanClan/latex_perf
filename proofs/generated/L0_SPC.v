@@ -18,7 +18,7 @@ Definition spc_002_chk (s : string) : bool := false.
 (** SPC-003: No VPD pattern — conservative model. *)
 Definition spc_003_chk (s : string) : bool := false.
 
-(** SPC-004: count_char "" (ASCII 13). *)
+(** SPC-004: count_char '\r' (ASCII 13). *)
 Definition spc_004_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 13).
 
@@ -56,7 +56,7 @@ Definition spc_014_chk (s : string) : bool := false.
 (** SPC-015: No VPD pattern — conservative model. *)
 Definition spc_015_chk (s : string) : bool := false.
 
-(** SPC-016: count_substring " ;". *)
+(** SPC-016: count_substring ' ;'. *)
 Definition spc_016_chk (s : string) : bool :=
   string_contains_substring s " ;".
 
@@ -73,11 +73,11 @@ Definition spc_019_chk (s : string) : bool :=
 (** SPC-020: No VPD pattern — conservative model. *)
 Definition spc_020_chk (s : string) : bool := false.
 
-(** SPC-021: count_substring " :". *)
+(** SPC-021: count_substring ' :'. *)
 Definition spc_021_chk (s : string) : bool :=
   string_contains_substring s " :".
 
-(** SPC-022: count_substring "\item	". *)
+(** SPC-022: count_substring '\\item\t'. *)
 Definition spc_022_chk (s : string) : bool :=
   string_contains_substring s "\item	".
 
@@ -96,7 +96,7 @@ Definition spc_026_chk (s : string) : bool := false.
 (** SPC-027: No VPD pattern — conservative model. *)
 Definition spc_027_chk (s : string) : bool := false.
 
-(** SPC-028: count_substring "~~". *)
+(** SPC-028: count_substring '~~'. *)
 Definition spc_028_chk (s : string) : bool :=
   string_contains_substring s "~~".
 
@@ -107,7 +107,7 @@ Definition spc_029_chk (s : string) : bool := false.
 Definition spc_030_chk (s : string) : bool :=
   string_contains_bytes s [227; 128; 128].
 
-(** SPC-031: count_substring ".   ". *)
+(** SPC-031: count_substring '.   '. *)
 Definition spc_031_chk (s : string) : bool :=
   string_contains_substring s ".   ".
 

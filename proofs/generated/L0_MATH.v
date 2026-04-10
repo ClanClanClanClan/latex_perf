@@ -15,7 +15,7 @@ Definition math_026_chk (s : string) : bool := false.
 (** MATH-027: No VPD pattern — conservative model. *)
 Definition math_027_chk (s : string) : bool := false.
 
-(** MATH-076: count_substring "\begin{align". *)
+(** MATH-076: count_substring '\\begin{align'. *)
 Definition math_076_chk (s : string) : bool :=
   string_contains_substring s "\begin{align".
 

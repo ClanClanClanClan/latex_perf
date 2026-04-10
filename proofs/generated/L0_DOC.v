@@ -9,7 +9,7 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** DOC-005: count_substring "\pdfinfo". *)
+(** DOC-005: count_substring '\\pdfinfo'. *)
 Definition doc_005_chk (s : string) : bool :=
   string_contains_substring s "\pdfinfo".
 

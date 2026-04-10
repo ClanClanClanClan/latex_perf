@@ -54,11 +54,11 @@ Definition lay_014_chk (s : string) : bool := false.
 (** LAY-015: No VPD pattern — conservative model. *)
 Definition lay_015_chk (s : string) : bool := false.
 
-(** LAY-016: count_substring "\begin{longtable}". *)
+(** LAY-016: count_substring '\\begin{longtable}'. *)
 Definition lay_016_chk (s : string) : bool :=
   string_contains_substring s "\begin{longtable}".
 
-(** LAY-017: count_substring "\begin{longtable}". *)
+(** LAY-017: count_substring '\\begin{longtable}'. *)
 Definition lay_017_chk (s : string) : bool :=
   string_contains_substring s "\begin{longtable}".
 

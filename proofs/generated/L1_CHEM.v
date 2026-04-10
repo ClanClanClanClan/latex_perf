@@ -13,15 +13,17 @@ Open Scope string_scope.
 Definition chem_001_chk (s : string) : bool :=
   string_contains_substring s "\ce{".
 
-(** CHEM-002: No VPD pattern — conservative model. *)
-Definition chem_002_chk (s : string) : bool := false.
+(** CHEM-002: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition chem_002_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** CHEM-003: count_substring '\\ce{'. *)
 Definition chem_003_chk (s : string) : bool :=
   string_contains_substring s "\ce{".
 
-(** CHEM-004: No VPD pattern — conservative model. *)
-Definition chem_004_chk (s : string) : bool := false.
+(** CHEM-004: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition chem_004_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** CHEM-005: multi_substring [->, \rightarrow, \longrightarrow]. *)
 Definition chem_005_chk (s : string) : bool :=
@@ -35,8 +37,9 @@ Definition chem_006_chk (s : string) : bool :=
 Definition chem_007_chk (s : string) : bool :=
   string_contains_substring s "\text{".
 
-(** CHEM-008: No VPD pattern — conservative model. *)
-Definition chem_008_chk (s : string) : bool := false.
+(** CHEM-008: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition chem_008_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (** CHEM-009: multi_substring [<->, <=>]. *)
 Definition chem_009_chk (s : string) : bool :=

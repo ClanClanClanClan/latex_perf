@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** FONT-001: No VPD pattern — conservative model. *)
 Definition font_001_chk (s : string) : bool := false.
 
-(** FONT-004: No VPD pattern — conservative model. *)
-Definition font_004_chk (s : string) : bool := false.
+(** FONT-004: multi_substring [$, \(, \[, \begin{equation, \begin{align, \begin{gather, \begin{multline, \begin{eqnarray, \begin{math}, \begin{displaymath}]. *)
+Definition font_004_chk (s : string) : bool :=
+  multi_substring_check ["$"; "\("; "\["; "\begin{equation"; "\begin{align"; "\begin{gather"; "\begin{multline"; "\begin{eqnarray"; "\begin{math}"; "\begin{displaymath}"] s.
 
 (* ── Soundness theorems ── *)
 

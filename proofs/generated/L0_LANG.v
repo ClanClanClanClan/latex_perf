@@ -18,9 +18,9 @@ Definition lang_005_chk (s : string) : bool := false.
 (** LANG-008: No VPD pattern — conservative model. *)
 Definition lang_008_chk (s : string) : bool := false.
 
-(** LANG-009: multi_substring [\begin{reaction}, \begin{scheme}]. *)
+(** LANG-009: count_substring '\\raggedright'. *)
 Definition lang_009_chk (s : string) : bool :=
-  multi_substring_check ["\begin{reaction}"; "\begin{scheme}"] s.
+  string_contains_substring s "\raggedright".
 
 (** LANG-010: No VPD pattern — conservative model. *)
 Definition lang_010_chk (s : string) : bool := false.

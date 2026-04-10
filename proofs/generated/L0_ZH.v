@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** ZH-001: No VPD pattern — conservative model. *)
 Definition zh_001_chk (s : string) : bool := false.
 
-(** ZH-002: No VPD pattern — conservative model. *)
-Definition zh_002_chk (s : string) : bool := false.
+(** ZH-002: multi_substring (UTF-8 bytes). *)
+Definition zh_002_chk (s : string) : bool :=
+  multi_bytes_check [[227; 128; 140]; [227; 128; 141]; [227; 128; 142]; [227; 128; 143]; [226; 128; 156]; [226; 128; 157]] s.
 
 (* ── Soundness theorems ── *)
 

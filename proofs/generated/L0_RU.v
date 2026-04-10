@@ -9,11 +9,13 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** RU-001: No VPD pattern — conservative model. *)
-Definition ru_001_chk (s : string) : bool := false.
+(** RU-001: count_substring (UTF-8 bytes). *)
+Definition ru_001_chk (s : string) : bool :=
+  string_contains_bytes s [32; 226; 128; 148].
 
-(** RU-002: No VPD pattern — conservative model. *)
-Definition ru_002_chk (s : string) : bool := false.
+(** RU-002: count_substring (UTF-8 bytes). *)
+Definition ru_002_chk (s : string) : bool :=
+  string_contains_bytes s [209; 145].
 
 (* ── Soundness theorems ── *)
 

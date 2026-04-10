@@ -98,9 +98,9 @@ Definition typo_021_chk (s : string) : bool :=
 Definition typo_022_chk (s : string) : bool :=
   multi_substring_check [" )"; " ]"; " }"] s.
 
-(** TYPO-023: count_char '\r' (ASCII 13). *)
+(** TYPO-023: count_char '&' (ASCII 38). *)
 Definition typo_023_chk (s : string) : bool :=
-  string_contains s (ascii_of_nat 13).
+  string_contains s (ascii_of_nat 38).
 
 (** TYPO-024: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_024_chk (s : string) : bool := false.
@@ -124,9 +124,8 @@ Definition typo_028_chk (s : string) : bool := false.
 Definition typo_029_chk (s : string) : bool :=
   string_contains_substring s "\ref{".
 
-(** TYPO-030: count_substring '----'. *)
-Definition typo_030_chk (s : string) : bool :=
-  string_contains_substring s "----".
+(** TYPO-030: No VPD pattern — conservative model. *)
+Definition typo_030_chk (s : string) : bool := false.
 
 (** TYPO-031: No VPD pattern — conservative model. *)
 Definition typo_031_chk (s : string) : bool := false.
@@ -232,8 +231,9 @@ Definition typo_057_chk (s : string) : bool :=
 Definition typo_058_chk (s : string) : bool :=
   multi_bytes_check [[206; 177]; [206; 181]; [206; 185]; [206; 191]; [207; 129]; [207; 130]; [207; 133]] s.
 
-(** TYPO-060: No VPD pattern — conservative model. *)
-Definition typo_060_chk (s : string) : bool := false.
+(** TYPO-060: multi_substring (UTF-8 bytes). *)
+Definition typo_060_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 156]; [226; 128; 157]; [226; 128; 152]; [226; 128; 153]] s.
 
 (** TYPO-061: count_substring_strip_math — UTF-8 bytes, full string (conservative over-approx). *)
 Definition typo_061_chk (s : string) : bool :=

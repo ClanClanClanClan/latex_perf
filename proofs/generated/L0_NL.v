@@ -12,8 +12,9 @@ Open Scope string_scope.
 (** NL-001: No VPD pattern — conservative model. *)
 Definition nl_001_chk (s : string) : bool := false.
 
-(** NL-002: No VPD pattern — conservative model. *)
-Definition nl_002_chk (s : string) : bool := false.
+(** NL-002: multi_substring (UTF-8 bytes). *)
+Definition nl_002_chk (s : string) : bool :=
+  multi_bytes_check [[226; 128; 152]; [226; 128; 153]; [226; 128; 158]; [226; 128; 159]] s.
 
 (* ── Soundness theorems ── *)
 

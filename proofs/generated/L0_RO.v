@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** RO-001: No VPD pattern — conservative model. *)
-Definition ro_001_chk (s : string) : bool := false.
+(** RO-001: multi_substring (UTF-8 bytes). *)
+Definition ro_001_chk (s : string) : bool :=
+  multi_bytes_check [[197; 158]; [197; 159]; [197; 162]; [197; 163]] s.
 
 (* ── Soundness theorems ── *)
 

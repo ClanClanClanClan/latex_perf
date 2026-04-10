@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** ZH-001: No VPD pattern — conservative model. *)
-Definition zh_001_chk (s : string) : bool := false.
+(** ZH-001: byte_range [228..233]. *)
+Definition zh_001_chk (s : string) : bool :=
+  string_has_byte_in_range s 228 233.
 
 (** ZH-002: multi_substring (UTF-8 bytes). *)
 Definition zh_002_chk (s : string) : bool :=

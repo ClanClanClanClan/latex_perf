@@ -13,9 +13,9 @@ Open Scope string_scope.
 Definition cs_001_chk (s : string) : bool :=
   string_contains_bytes s [194; 176; 67].
 
-(** CS-002: count_substring '\\documentclass'. *)
+(** CS-002: byte_ge 128 — document contains byte >= 128. *)
 Definition cs_002_chk (s : string) : bool :=
-  string_contains_substring s "\documentclass".
+  string_has_byte_ge s 128.
 
 (* ── Soundness theorems ── *)
 

@@ -13,8 +13,9 @@ Open Scope string_scope.
 Definition rtl_001_chk (s : string) : bool :=
   string_contains_substring s "\fontsize{".
 
-(** RTL-002: No VPD pattern — conservative model. *)
-Definition rtl_002_chk (s : string) : bool := false.
+(** RTL-002: byte_range [216..219]. *)
+Definition rtl_002_chk (s : string) : bool :=
+  string_has_byte_in_range s 216 219.
 
 (* ── Soundness theorems ── *)
 

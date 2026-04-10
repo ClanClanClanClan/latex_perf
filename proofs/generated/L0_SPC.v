@@ -9,65 +9,65 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** SPC-001: count_substring ' '. *)
+(** SPC-001: count_char '\n' (ASCII 10). *)
 Definition spc_001_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 10).
 
-(** SPC-002: count_substring ' '. *)
+(** SPC-002: count_char '\t' (ASCII 9). *)
 Definition spc_002_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
-(** SPC-003: count_substring ' '. *)
+(** SPC-003: count_char '\t' (ASCII 9). *)
 Definition spc_003_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
 (** SPC-004: count_char '\r' (ASCII 13). *)
 Definition spc_004_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 13).
 
-(** SPC-005: count_substring ' '. *)
+(** SPC-005: count_char '\t' (ASCII 9). *)
 Definition spc_005_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
-(** SPC-006: count_substring ' '. *)
+(** SPC-006: count_char '\t' (ASCII 9). *)
 Definition spc_006_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
 (** SPC-007: count_substring '~~'. *)
 Definition spc_007_chk (s : string) : bool :=
   string_contains_substring s "~~".
 
-(** SPC-008: count_substring ' '. *)
+(** SPC-008: count_char '\t' (ASCII 9). *)
 Definition spc_008_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
-(** SPC-009: count_substring ' '. *)
+(** SPC-009: count_char '\n' (ASCII 10). *)
 Definition spc_009_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 10).
 
 (** SPC-010: count_substring (UTF-8 bytes). *)
 Definition spc_010_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 137; 45; 45].
 
-(** SPC-011: count_substring ' '. *)
+(** SPC-011: count_char '\t' (ASCII 9). *)
 Definition spc_011_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
 (** SPC-012: count_substring (UTF-8 bytes). *)
 Definition spc_012_chk (s : string) : bool :=
   string_contains_bytes s [239; 187; 191].
 
-(** SPC-013: count_substring ' '. *)
+(** SPC-013: count_char '\t' (ASCII 9). *)
 Definition spc_013_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
-(** SPC-014: count_substring ' '. *)
+(** SPC-014: count_char '\t' (ASCII 9). *)
 Definition spc_014_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
-(** SPC-015: count_substring ' '. *)
+(** SPC-015: count_char '\n' (ASCII 10). *)
 Definition spc_015_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 10).
 
 (** SPC-016: count_substring ' ;'. *)
 Definition spc_016_chk (s : string) : bool :=
@@ -77,17 +77,17 @@ Definition spc_016_chk (s : string) : bool :=
 Definition spc_017_chk (s : string) : bool :=
   string_contains_substring s " ;".
 
-(** SPC-018: count_substring ' '. *)
+(** SPC-018: count_substring '. '. *)
 Definition spc_018_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains_substring s ". ".
 
 (** SPC-019: count_substring (UTF-8 bytes). *)
 Definition spc_019_chk (s : string) : bool :=
   string_contains_bytes s [227; 128; 128].
 
-(** SPC-020: count_substring ' '. *)
+(** SPC-020: count_char '\t' (ASCII 9). *)
 Definition spc_020_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
 (** SPC-021: count_substring ' :'. *)
 Definition spc_021_chk (s : string) : bool :=
@@ -97,13 +97,13 @@ Definition spc_021_chk (s : string) : bool :=
 Definition spc_022_chk (s : string) : bool :=
   string_contains_substring s "\item	".
 
-(** SPC-023: count_substring ' '. *)
+(** SPC-023: count_substring (UTF-8 bytes). *)
 Definition spc_023_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains_bytes s [194; 160].
 
-(** SPC-024: count_substring ' '. *)
+(** SPC-024: count_char '\t' (ASCII 9). *)
 Definition spc_024_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 9).
 
 (** SPC-025: multi_substring (UTF-8 bytes). *)
 Definition spc_025_chk (s : string) : bool :=
@@ -121,9 +121,9 @@ Definition spc_027_chk (s : string) : bool :=
 Definition spc_028_chk (s : string) : bool :=
   string_contains_substring s "~~".
 
-(** SPC-029: count_substring ' '. *)
+(** SPC-029: count_char '\n' (ASCII 10). *)
 Definition spc_029_chk (s : string) : bool :=
-  string_contains_substring s " ".
+  string_contains s (ascii_of_nat 10).
 
 (** SPC-030: count_substring (UTF-8 bytes). *)
 Definition spc_030_chk (s : string) : bool :=

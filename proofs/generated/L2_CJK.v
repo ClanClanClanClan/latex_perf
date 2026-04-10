@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CJK-004: No VPD pattern — conservative model. *)
-Definition cjk_004_chk (s : string) : bool := false.
+(** CJK-004: byte_range [224..239]. *)
+Definition cjk_004_chk (s : string) : bool :=
+  string_has_byte_in_range s 224 239.
 
 (** CJK-006: count_substring '\\ruby{'. *)
 Definition cjk_006_chk (s : string) : bool :=

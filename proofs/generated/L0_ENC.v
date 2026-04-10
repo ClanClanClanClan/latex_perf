@@ -9,65 +9,81 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** ENC-001: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_001_chk (s : string) : bool := false.
+(** ENC-001: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_001_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-002: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_002_chk (s : string) : bool := false.
+(** ENC-002: count_substring (UTF-8 bytes). *)
+Definition enc_002_chk (s : string) : bool :=
+  string_contains_bytes s [239; 187; 191].
 
-(** ENC-003: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_003_chk (s : string) : bool := false.
+(** ENC-003: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_003_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-004: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_004_chk (s : string) : bool := false.
+(** ENC-004: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_004_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-005: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_005_chk (s : string) : bool := false.
+(** ENC-005: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_005_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-006: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_006_chk (s : string) : bool := false.
+(** ENC-006: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_006_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
 (** ENC-007: count_substring (UTF-8 bytes). *)
 Definition enc_007_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 139].
 
-(** ENC-008: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_008_chk (s : string) : bool := false.
+(** ENC-008: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_008_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-009: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_009_chk (s : string) : bool := false.
+(** ENC-009: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_009_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-010: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_010_chk (s : string) : bool := false.
+(** ENC-010: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_010_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-011: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_011_chk (s : string) : bool := false.
+(** ENC-011: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_011_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-012: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_012_chk (s : string) : bool := false.
+(** ENC-012: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_012_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-013: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_013_chk (s : string) : bool := false.
+(** ENC-013: count_char '\r' (ASCII 13). *)
+Definition enc_013_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 13).
 
-(** ENC-014: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_014_chk (s : string) : bool := false.
+(** ENC-014: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_014_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
 (** ENC-015: multi_substring (UTF-8 bytes). *)
 Definition enc_015_chk (s : string) : bool :=
   multi_bytes_check [[194; 181]; [226; 132; 166]; [226; 132; 171]; [197; 191]] s.
 
-(** ENC-016: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_016_chk (s : string) : bool := false.
+(** ENC-016: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_016_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
 (** ENC-017: count_substring (UTF-8 bytes). *)
 Definition enc_017_chk (s : string) : bool :=
   string_contains_bytes s [194; 173].
 
-(** ENC-018: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_018_chk (s : string) : bool := false.
+(** ENC-018: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_018_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
-(** ENC-019: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition enc_019_chk (s : string) : bool := false.
+(** ENC-019: byte_ge 128 — document contains byte >= 128. *)
+Definition enc_019_chk (s : string) : bool :=
+  string_has_byte_ge s 128.
 
 (** ENC-020: multi_substring (UTF-8 bytes). *)
 Definition enc_020_chk (s : string) : bool :=

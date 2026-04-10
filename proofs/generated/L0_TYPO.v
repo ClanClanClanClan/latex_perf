@@ -57,11 +57,13 @@ Definition typo_009_chk (s : string) : bool :=
 Definition typo_010_chk (s : string) : bool :=
   multi_substring_check [" ,"; " ."; " ;"; " :"; " ?"; " !"] s.
 
-(** TYPO-011: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_011_chk (s : string) : bool := false.
+(** TYPO-011: count_substring "\int". *)
+Definition typo_011_chk (s : string) : bool :=
+  string_contains_substring s "\int".
 
-(** TYPO-012: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_012_chk (s : string) : bool := false.
+(** TYPO-012: count_char "'" (ASCII 39). *)
+Definition typo_012_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 39).
 
 (** TYPO-013: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_013_chk (s : string) : bool := false.
@@ -78,8 +80,9 @@ Definition typo_015_chk (s : string) : bool :=
 Definition typo_016_chk (s : string) : bool :=
   multi_substring_check [" \cite"; " \ref"] s.
 
-(** TYPO-017: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_017_chk (s : string) : bool := false.
+(** TYPO-017: multi_substring [\'{, \`{, \"{, \~{, \={, \.{]. *)
+Definition typo_017_chk (s : string) : bool :=
+  multi_substring_check ["\'{"; "\`{"; "\""{"; "\~{"; "\={"; "\.{"] s.
 
 (** TYPO-018: count_substring "  ". *)
 Definition typo_018_chk (s : string) : bool :=
@@ -91,8 +94,9 @@ Definition typo_019_chk (s : string) : bool := false.
 (** TYPO-020: No VPD pattern — conservative model. *)
 Definition typo_020_chk (s : string) : bool := false.
 
-(** TYPO-021: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_021_chk (s : string) : bool := false.
+(** TYPO-021: multi_substring (UTF-8 bytes). *)
+Definition typo_021_chk (s : string) : bool :=
+  multi_bytes_check [[46; 46; 46]; [226; 128; 166]] s.
 
 (** TYPO-022: multi_substring [ ),  ],  }]. *)
 Definition typo_022_chk (s : string) : bool :=
@@ -105,8 +109,9 @@ Definition typo_023_chk (s : string) : bool :=
 (** TYPO-024: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_024_chk (s : string) : bool := false.
 
-(** TYPO-025: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_025_chk (s : string) : bool := false.
+(** TYPO-025: multi_substring (UTF-8 bytes). *)
+Definition typo_025_chk (s : string) : bool :=
+  multi_bytes_check [[45; 45]; [226; 128; 147]] s.
 
 (** TYPO-026: count_substring (UTF-8 bytes). *)
 Definition typo_026_chk (s : string) : bool :=
@@ -119,8 +124,9 @@ Definition typo_027_chk (s : string) : bool :=
 (** TYPO-028: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_028_chk (s : string) : bool := false.
 
-(** TYPO-029: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_029_chk (s : string) : bool := false.
+(** TYPO-029: count_substring "\ref{". *)
+Definition typo_029_chk (s : string) : bool :=
+  string_contains_substring s "\ref{".
 
 (** TYPO-030: count_substring "----". *)
 Definition typo_030_chk (s : string) : bool :=
@@ -152,8 +158,9 @@ Definition typo_036_chk (s : string) : bool := false.
 Definition typo_037_chk (s : string) : bool :=
   string_contains_substring s " ,".
 
-(** TYPO-038: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_038_chk (s : string) : bool := false.
+(** TYPO-038: count_char "@" (ASCII 64). *)
+Definition typo_038_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 64).
 
 (** TYPO-039: multi_substring [http://, https://]. *)
 Definition typo_039_chk (s : string) : bool :=
@@ -217,8 +224,9 @@ Definition typo_054_chk (s : string) : bool :=
 Definition typo_055_chk (s : string) : bool :=
   string_contains_substring s "\,\,".
 
-(** TYPO-056: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_056_chk (s : string) : bool := false.
+(** TYPO-056: multi_substring [\'{, \`{, \"{, \~{, \={, \.{]. *)
+Definition typo_056_chk (s : string) : bool :=
+  multi_substring_check ["\'{"; "\`{"; "\""{"; "\~{"; "\={"; "\.{"] s.
 
 (** TYPO-057: count_substring (UTF-8 bytes). *)
 Definition typo_057_chk (s : string) : bool :=

@@ -18,8 +18,9 @@ Definition lang_005_chk (s : string) : bool := false.
 (** LANG-008: No VPD pattern — conservative model. *)
 Definition lang_008_chk (s : string) : bool := false.
 
-(** LANG-009: No VPD pattern — conservative model. *)
-Definition lang_009_chk (s : string) : bool := false.
+(** LANG-009: multi_substring [\begin{reaction}, \begin{scheme}]. *)
+Definition lang_009_chk (s : string) : bool :=
+  multi_substring_check ["\begin{reaction}"; "\begin{scheme}"] s.
 
 (** LANG-010: No VPD pattern — conservative model. *)
 Definition lang_010_chk (s : string) : bool := false.

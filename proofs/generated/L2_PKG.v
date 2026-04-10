@@ -27,8 +27,9 @@ Definition pkg_007_chk (s : string) : bool := false.
 (** PKG-008: No VPD pattern — conservative model. *)
 Definition pkg_008_chk (s : string) : bool := false.
 
-(** PKG-009: No VPD pattern — conservative model. *)
-Definition pkg_009_chk (s : string) : bool := false.
+(** PKG-009: count_substring "\usetikzlibrary". *)
+Definition pkg_009_chk (s : string) : bool :=
+  string_contains_substring s "\usetikzlibrary".
 
 (** PKG-010: No VPD pattern — conservative model. *)
 Definition pkg_010_chk (s : string) : bool := false.
@@ -58,8 +59,9 @@ Definition pkg_016_chk (s : string) : bool := false.
 (** PKG-017: No VPD pattern — conservative model. *)
 Definition pkg_017_chk (s : string) : bool := false.
 
-(** PKG-020: No VPD pattern — conservative model. *)
-Definition pkg_020_chk (s : string) : bool := false.
+(** PKG-020: count_substring "\tikzexternalize". *)
+Definition pkg_020_chk (s : string) : bool :=
+  string_contains_substring s "\tikzexternalize".
 
 (** PKG-021: No VPD pattern — conservative model. *)
 Definition pkg_021_chk (s : string) : bool := false.

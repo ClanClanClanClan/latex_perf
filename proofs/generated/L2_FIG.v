@@ -17,17 +17,20 @@ Definition fig_001_chk (s : string) : bool :=
 Definition fig_002_chk (s : string) : bool :=
   string_contains_substring s "\begin{figure".
 
-(** FIG-003: No VPD pattern — conservative model. *)
-Definition fig_003_chk (s : string) : bool := false.
+(** FIG-003: count_substring "\begin{figure". *)
+Definition fig_003_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-007: No VPD pattern — conservative model. *)
-Definition fig_007_chk (s : string) : bool := false.
+(** FIG-007: count_substring "\begin{figure". *)
+Definition fig_007_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (** FIG-009: No VPD pattern — conservative model. *)
 Definition fig_009_chk (s : string) : bool := false.
 
-(** FIG-010: No VPD pattern — conservative model. *)
-Definition fig_010_chk (s : string) : bool := false.
+(** FIG-010: count_substring "\begin{subfigure}". *)
+Definition fig_010_chk (s : string) : bool :=
+  string_contains_substring s "\begin{subfigure}".
 
 (** FIG-012: No VPD pattern — conservative model. *)
 Definition fig_012_chk (s : string) : bool := false.
@@ -35,23 +38,28 @@ Definition fig_012_chk (s : string) : bool := false.
 (** FIG-013: No VPD pattern — conservative model. *)
 Definition fig_013_chk (s : string) : bool := false.
 
-(** FIG-014: No VPD pattern — conservative model. *)
-Definition fig_014_chk (s : string) : bool := false.
+(** FIG-014: count_substring "\begin{figure". *)
+Definition fig_014_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-017: No VPD pattern — conservative model. *)
-Definition fig_017_chk (s : string) : bool := false.
+(** FIG-017: count_substring "\begin{figure". *)
+Definition fig_017_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
-(** FIG-019: No VPD pattern — conservative model. *)
-Definition fig_019_chk (s : string) : bool := false.
+(** FIG-019: count_substring "\begin{subfigure}". *)
+Definition fig_019_chk (s : string) : bool :=
+  string_contains_substring s "\begin{subfigure}".
 
-(** FIG-022: No VPD pattern — conservative model. *)
-Definition fig_022_chk (s : string) : bool := false.
+(** FIG-022: count_substring "\begin{figure". *)
+Definition fig_022_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (** FIG-024: No VPD pattern — conservative model. *)
 Definition fig_024_chk (s : string) : bool := false.
 
-(** FIG-025: No VPD pattern — conservative model. *)
-Definition fig_025_chk (s : string) : bool := false.
+(** FIG-025: count_substring "\begin{figure". *)
+Definition fig_025_chk (s : string) : bool :=
+  string_contains_substring s "\begin{figure".
 
 (* ── Soundness theorems ── *)
 

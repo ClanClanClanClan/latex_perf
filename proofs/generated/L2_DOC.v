@@ -9,17 +9,21 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** DOC-001: No VPD pattern — conservative model. *)
-Definition doc_001_chk (s : string) : bool := false.
+(** DOC-001: count_substring "\documentclass". *)
+Definition doc_001_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** DOC-002: No VPD pattern — conservative model. *)
-Definition doc_002_chk (s : string) : bool := false.
+(** DOC-002: count_substring "\documentclass". *)
+Definition doc_002_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** DOC-003: No VPD pattern — conservative model. *)
-Definition doc_003_chk (s : string) : bool := false.
+(** DOC-003: count_substring "\documentclass". *)
+Definition doc_003_chk (s : string) : bool :=
+  string_contains_substring s "\documentclass".
 
-(** DOC-004: No VPD pattern — conservative model. *)
-Definition doc_004_chk (s : string) : bool := false.
+(** DOC-004: count_substring "\section{". *)
+Definition doc_004_chk (s : string) : bool :=
+  string_contains_substring s "\section{".
 
 (* ── Soundness theorems ── *)
 

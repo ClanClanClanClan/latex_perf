@@ -27,8 +27,9 @@ Definition pkg_007_chk (s : string) : bool := false.
 (** PKG-008: No VPD pattern — conservative model. *)
 Definition pkg_008_chk (s : string) : bool := false.
 
-(** PKG-009: No VPD pattern — conservative model. *)
-Definition pkg_009_chk (s : string) : bool := false.
+(** PKG-009: count_substring '\\usetikzlibrary'. *)
+Definition pkg_009_chk (s : string) : bool :=
+  string_contains_substring s "\usetikzlibrary".
 
 (** PKG-010: No VPD pattern — conservative model. *)
 Definition pkg_010_chk (s : string) : bool := false.
@@ -37,18 +38,18 @@ Definition pkg_010_chk (s : string) : bool := false.
 Definition pkg_011_chk (s : string) : bool :=
   multi_substring_check ["\toprule"; "\midrule"; "\bottomrule"] s.
 
-(** PKG-012: count_substring "\enquote{". *)
+(** PKG-012: count_substring '\\enquote{'. *)
 Definition pkg_012_chk (s : string) : bool :=
   string_contains_substring s "\enquote{".
 
-(** PKG-013: count_substring "\usepackage{fontspec}". *)
+(** PKG-013: count_substring '\\usepackage{fontspec}'. *)
 Definition pkg_013_chk (s : string) : bool :=
   string_contains_substring s "\usepackage{fontspec}".
 
 (** PKG-014: No VPD pattern — conservative model. *)
 Definition pkg_014_chk (s : string) : bool := false.
 
-(** PKG-015: count_substring "\usepackage{inputenc}". *)
+(** PKG-015: count_substring '\\usepackage{inputenc}'. *)
 Definition pkg_015_chk (s : string) : bool :=
   string_contains_substring s "\usepackage{inputenc}".
 
@@ -58,8 +59,9 @@ Definition pkg_016_chk (s : string) : bool := false.
 (** PKG-017: No VPD pattern — conservative model. *)
 Definition pkg_017_chk (s : string) : bool := false.
 
-(** PKG-020: No VPD pattern — conservative model. *)
-Definition pkg_020_chk (s : string) : bool := false.
+(** PKG-020: count_substring '\\tikzexternalize'. *)
+Definition pkg_020_chk (s : string) : bool :=
+  string_contains_substring s "\tikzexternalize".
 
 (** PKG-021: No VPD pattern — conservative model. *)
 Definition pkg_021_chk (s : string) : bool := false.

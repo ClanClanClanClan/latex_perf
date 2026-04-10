@@ -39,7 +39,7 @@ Definition script_008_chk (s : string) : bool :=
 (** SCRIPT-009: No VPD pattern — conservative model. *)
 Definition script_009_chk (s : string) : bool := false.
 
-(** SCRIPT-010: count_substring "\limits". *)
+(** SCRIPT-010: count_substring '\\limits'. *)
 Definition script_010_chk (s : string) : bool :=
   string_contains_substring s "\limits".
 

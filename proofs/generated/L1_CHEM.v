@@ -9,14 +9,14 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CHEM-001: count_substring "\ce{". *)
+(** CHEM-001: count_substring '\\ce{'. *)
 Definition chem_001_chk (s : string) : bool :=
   string_contains_substring s "\ce{".
 
 (** CHEM-002: No VPD pattern — conservative model. *)
 Definition chem_002_chk (s : string) : bool := false.
 
-(** CHEM-003: count_substring "\ce{". *)
+(** CHEM-003: count_substring '\\ce{'. *)
 Definition chem_003_chk (s : string) : bool :=
   string_contains_substring s "\ce{".
 
@@ -27,11 +27,11 @@ Definition chem_004_chk (s : string) : bool := false.
 Definition chem_005_chk (s : string) : bool :=
   multi_substring_check ["->"; "\rightarrow"; "\longrightarrow"] s.
 
-(** CHEM-006: count_substring " + ". *)
+(** CHEM-006: count_substring ' + '. *)
 Definition chem_006_chk (s : string) : bool :=
   string_contains_substring s " + ".
 
-(** CHEM-007: count_substring "\text{". *)
+(** CHEM-007: count_substring '\\text{'. *)
 Definition chem_007_chk (s : string) : bool :=
   string_contains_substring s "\text{".
 

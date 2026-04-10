@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** DOC-005: No VPD pattern — conservative model. *)
-Definition doc_005_chk (s : string) : bool := false.
+(** DOC-005: count_substring '\\pdfinfo'. *)
+Definition doc_005_chk (s : string) : bool :=
+  string_contains_substring s "\pdfinfo".
 
 (* ── Soundness theorems ── *)
 

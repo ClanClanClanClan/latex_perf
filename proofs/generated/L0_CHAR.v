@@ -12,19 +12,19 @@ Open Scope string_scope.
 (** CHAR-005: No VPD pattern — conservative model. *)
 Definition char_005_chk (s : string) : bool := false.
 
-(** CHAR-006: count_char "" (ASCII 8). *)
+(** CHAR-006: count_char '\x08' (ASCII 8). *)
 Definition char_006_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 8).
 
-(** CHAR-007: count_char "" (ASCII 7). *)
+(** CHAR-007: count_char '\x07' (ASCII 7). *)
 Definition char_007_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 7).
 
-(** CHAR-008: count_char "" (ASCII 12). *)
+(** CHAR-008: count_char '\x0c' (ASCII 12). *)
 Definition char_008_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 12).
 
-(** CHAR-009: count_char "" (ASCII 127). *)
+(** CHAR-009: count_char '\x7f' (ASCII 127). *)
 Definition char_009_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 127).
 

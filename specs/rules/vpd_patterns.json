@@ -471,21 +471,19 @@
   },
   "TYPO-011": {
     "layer": "L0",
-    "message": "Missing thin space before differential d in integrals",
     "pattern": {
-      "family": "regex",
-      "regex": "\\\\int[^}]*[^\\\\,]d[a-z]"
+      "family": "count_substring",
+      "needle": "\\int"
     },
     "severity": "Info"
   },
   "TYPO-012": {
     "layer": "L0",
-    "message": "Straight apostrophe used for minutes/feet; use ^\\prime",
     "pattern": {
-      "family": "regex",
-      "regex": "[0-9]'"
+      "family": "count_char",
+      "char": "'"
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "TYPO-013": {
     "layer": "L0",
@@ -527,12 +525,18 @@
   },
   "TYPO-017": {
     "layer": "L0",
-    "message": "TeX accent commands in text; prefer UTF-8",
     "pattern": {
-      "family": "regex",
-      "regex": "\\\\['^`\"~=.][{][a-zA-Z][}]"
+      "family": "multi_substring",
+      "needles": [
+        "\\'{",
+        "\\`{",
+        "\\\"{",
+        "\\~{",
+        "\\={",
+        "\\.{"
+      ]
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-018": {
     "layer": "L0",
@@ -545,10 +549,12 @@
   },
   "TYPO-021": {
     "layer": "L0",
-    "message": "Capital letter after ellipsis without space",
     "pattern": {
-      "family": "regex",
-      "regex": "(\\.{3}|…)[A-Z]"
+      "family": "multi_substring",
+      "needles": [
+        "...",
+        "…"
+      ]
     },
     "severity": "Info"
   },
@@ -585,10 +591,12 @@
   },
   "TYPO-025": {
     "layer": "L0",
-    "message": "Space before en-dash in number range",
     "pattern": {
-      "family": "regex",
-      "regex": "[0-9] +(\\u2013|--)[0-9]"
+      "family": "multi_substring",
+      "needles": [
+        "--",
+        "–"
+      ]
     },
     "severity": "Warning"
   },
@@ -620,10 +628,9 @@
   },
   "TYPO-029": {
     "layer": "L0",
-    "message": "Non-breaking space after \\ref missing",
     "pattern": {
-      "family": "regex",
-      "regex": "\\\\ref\\{[^}]*\\} [a-zA-Z]"
+      "family": "count_substring",
+      "needle": "\\ref{"
     },
     "severity": "Info"
   },
@@ -696,10 +703,9 @@
   },
   "TYPO-038": {
     "layer": "L0",
-    "message": "Bare e-mail address found; wrap in \\href{mailto:...}",
     "pattern": {
-      "family": "regex",
-      "regex": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+"
+      "family": "count_char",
+      "char": "@"
     },
     "severity": "Info"
   },
@@ -856,12 +862,18 @@
   },
   "TYPO-056": {
     "layer": "L0",
-    "message": "Legacy TeX accent command found; use UTF-8 character directly",
     "pattern": {
-      "family": "regex",
-      "regex": "\\\\['^`\"~=.][{][a-zA-Z][}]"
+      "family": "multi_substring",
+      "needles": [
+        "\\'{",
+        "\\`{",
+        "\\\"{",
+        "\\~{",
+        "\\={",
+        "\\.{"
+      ]
     },
-    "severity": "Warning"
+    "severity": "Info"
   },
   "TYPO-057": {
     "layer": "L0",
@@ -1742,81 +1754,298 @@
     },
     "severity": "Warning"
   },
-  "STYLE-014": {
-    "layer": "L0",
-    "pattern": {
-      "family": "count_char",
-      "char": "'"
-    },
-    "severity": "Info"
-  },
-  "STYLE-015": {
-    "layer": "L0",
-    "pattern": {
-      "family": "count_substring",
-      "needle": ".  "
-    },
-    "severity": "Info"
-  },
-  "STYLE-035": {
-    "layer": "L0",
-    "pattern": {
-      "family": "count_substring",
-      "needle": "and/or"
-    },
-    "severity": "Info"
-  },
-  "STYLE-036": {
-    "layer": "L0",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": [
-        "cf.",
-        "ibid.",
-        "et al.",
-        "viz.",
-        "e.g.",
-        "i.e."
-      ]
-    },
-    "severity": "Info"
-  },
-  "STYLE-040": {
-    "layer": "L0",
-    "pattern": {
-      "family": "count_char",
-      "char": "!"
-    },
-    "severity": "Info"
-  },
-  "SPC-025": {
-    "layer": "L0",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": [
-        " \\dots",
-        " …"
-      ]
-    },
-    "severity": "Info"
-  },
-  "SPC-033": {
-    "layer": "L0",
-    "pattern": {
-      "family": "multi_substring",
-      "needles": [
-        " –",
-        " --"
-      ]
-    },
-    "severity": "Warning"
-  },
-  "MATH-083": {
+  "FIG-003": {
     "layer": "L2",
     "pattern": {
-      "family": "count_substring_strip_math",
-      "needle": "−"
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-007": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-008": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "FIG-010": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{subfigure}"
     },
     "severity": "Warning"
+  },
+  "FIG-014": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "FIG-017": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "FIG-019": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{subfigure}"
+    },
+    "severity": "Info"
+  },
+  "FIG-022": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "FIG-025": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Info"
+  },
+  "TAB-002": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{table"
+    },
+    "severity": "Info"
+  },
+  "TAB-003": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-004": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-007": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-008": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-011": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabular"
+    },
+    "severity": "Info"
+  },
+  "TAB-013": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{longtable}"
+    },
+    "severity": "Info"
+  },
+  "TAB-015": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabularx}"
+    },
+    "severity": "Info"
+  },
+  "TAB-016": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tabularx}"
+    },
+    "severity": "Info"
+  },
+  "TIKZ-003": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{axis}"
+    },
+    "severity": "Info"
+  },
+  "TIKZ-006": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{figure"
+    },
+    "severity": "Warning"
+  },
+  "TIKZ-009": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{tikzpicture}"
+    },
+    "severity": "Info"
+  },
+  "LAY-016": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{longtable}"
+    },
+    "severity": "Warning"
+  },
+  "LAY-017": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{longtable}"
+    },
+    "severity": "Warning"
+  },
+  "CHEM-010": {
+    "layer": "L2",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\begin{reaction}",
+        "\\begin{scheme}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "LANG-009": {
+    "layer": "L2",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": [
+        "\\begin{reaction}",
+        "\\begin{scheme}"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MATH-076": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\begin{align"
+    },
+    "severity": "Info"
+  },
+  "DOC-001": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Error"
+  },
+  "DOC-002": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Warning"
+  },
+  "DOC-003": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\documentclass"
+    },
+    "severity": "Info"
+  },
+  "DOC-004": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\section{"
+    },
+    "severity": "Info"
+  },
+  "DOC-005": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\pdfinfo"
+    },
+    "severity": "Info"
+  },
+  "PKG-009": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\usetikzlibrary"
+    },
+    "severity": "Info"
+  },
+  "PKG-018": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\hypersetup{draft"
+    },
+    "severity": "Warning"
+  },
+  "PKG-020": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\tikzexternalize"
+    },
+    "severity": "Info"
+  },
+  "CMD-008": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\makeatletter"
+    },
+    "severity": "Warning"
+  },
+  "CMD-013": {
+    "layer": "L2",
+    "pattern": {
+      "family": "count_substring",
+      "needle": "\\def\\arraystretch"
+    },
+    "severity": "Info"
   }
 }

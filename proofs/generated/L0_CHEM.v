@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CHEM-010: No VPD pattern — conservative model. *)
-Definition chem_010_chk (s : string) : bool := false.
+(** CHEM-010: multi_substring [\begin{reaction}, \begin{scheme}]. *)
+Definition chem_010_chk (s : string) : bool :=
+  multi_substring_check ["\begin{reaction}"; "\begin{scheme}"] s.
 
 (* ── Soundness theorems ── *)
 

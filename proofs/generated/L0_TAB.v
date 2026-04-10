@@ -9,8 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** TAB-004: No VPD pattern — conservative model. *)
-Definition tab_004_chk (s : string) : bool := false.
+(** TAB-004: count_substring '\\begin{tabular'. *)
+Definition tab_004_chk (s : string) : bool :=
+  string_contains_substring s "\begin{tabular".
 
 (* ── Soundness theorems ── *)
 

@@ -18,11 +18,11 @@ Definition math_024_chk (s : string) : bool := false.
 (** MATH-025: No VPD pattern — conservative model. *)
 Definition math_025_chk (s : string) : bool := false.
 
-(** MATH-028: count_substring "\begin{array}". *)
+(** MATH-028: count_substring '\\begin{array}'. *)
 Definition math_028_chk (s : string) : bool :=
   string_contains_substring s "\begin{array}".
 
-(** MATH-029: count_substring "\begin{eqnarray". *)
+(** MATH-029: count_substring '\\begin{eqnarray'. *)
 Definition math_029_chk (s : string) : bool :=
   string_contains_substring s "\begin{eqnarray".
 
@@ -38,7 +38,7 @@ Definition math_062_chk (s : string) : bool := false.
 (** MATH-063: No VPD pattern — conservative model. *)
 Definition math_063_chk (s : string) : bool := false.
 
-(** MATH-064: count_substring "\eqalign". *)
+(** MATH-064: count_substring '\\eqalign'. *)
 Definition math_064_chk (s : string) : bool :=
   string_contains_substring s "\eqalign".
 
@@ -51,7 +51,7 @@ Definition math_080_chk (s : string) : bool := false.
 (** MATH-100: No VPD pattern — conservative model. *)
 Definition math_100_chk (s : string) : bool := false.
 
-(** MATH-102: count_substring "\begin{eqnarray}". *)
+(** MATH-102: count_substring '\\begin{eqnarray}'. *)
 Definition math_102_chk (s : string) : bool :=
   string_contains_substring s "\begin{eqnarray}".
 

@@ -13,11 +13,11 @@ Open Scope string_scope.
 Definition typo_001_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 34).
 
-(** TYPO-002: count_substring "--". *)
+(** TYPO-002: count_substring '--'. *)
 Definition typo_002_chk (s : string) : bool :=
   string_contains_substring s "--".
 
-(** TYPO-003: count_substring "---". *)
+(** TYPO-003: count_substring '---'. *)
 Definition typo_003_chk (s : string) : bool :=
   string_contains_substring s "---".
 
@@ -29,7 +29,7 @@ Definition typo_004_chk (s : string) : bool :=
 Definition typo_005_chk (s : string) : bool :=
   string_contains_substring s "...".
 
-(** TYPO-006: count_char "	" (ASCII 9). *)
+(** TYPO-006: count_char '\t' (ASCII 9). *)
 Definition typo_006_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 9).
 
@@ -37,18 +37,14 @@ Definition typo_006_chk (s : string) : bool :=
 Definition typo_007_chk (s : string) : bool :=
   string_ends_with_spaces s.
 
-(** TYPO-008: count_substring "
-
-
-". *)
+(** TYPO-008: count_substring '\n\n\n'. *)
 Definition typo_008_chk (s : string) : bool :=
   string_contains_substring s "
 
 
 ".
 
-(** TYPO-009: count_substring "
-~". *)
+(** TYPO-009: count_substring '\n~'. *)
 Definition typo_009_chk (s : string) : bool :=
   string_contains_substring s "
 ~".
@@ -57,20 +53,22 @@ Definition typo_009_chk (s : string) : bool :=
 Definition typo_010_chk (s : string) : bool :=
   multi_substring_check [" ,"; " ."; " ;"; " :"; " ?"; " !"] s.
 
-(** TYPO-011: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_011_chk (s : string) : bool := false.
+(** TYPO-011: count_substring '\\int'. *)
+Definition typo_011_chk (s : string) : bool :=
+  string_contains_substring s "\int".
 
-(** TYPO-012: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_012_chk (s : string) : bool := false.
+(** TYPO-012: count_char ''' (ASCII 39). *)
+Definition typo_012_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 39).
 
 (** TYPO-013: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_013_chk (s : string) : bool := false.
 
-(** TYPO-014: count_substring " %". *)
+(** TYPO-014: count_substring ' %'. *)
 Definition typo_014_chk (s : string) : bool :=
   string_contains_substring s " %".
 
-(** TYPO-015: count_substring "\%\%". *)
+(** TYPO-015: count_substring '\\%\\%'. *)
 Definition typo_015_chk (s : string) : bool :=
   string_contains_substring s "\%\%".
 
@@ -78,10 +76,11 @@ Definition typo_015_chk (s : string) : bool :=
 Definition typo_016_chk (s : string) : bool :=
   multi_substring_check [" \cite"; " \ref"] s.
 
-(** TYPO-017: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_017_chk (s : string) : bool := false.
+(** TYPO-017: multi_substring [\'{, \`{, \'{, \~{, \={, \.{]. *)
+Definition typo_017_chk (s : string) : bool :=
+  multi_substring_check ["\'{"; "\`{"; "\""{"; "\~{"; "\={"; "\.{"] s.
 
-(** TYPO-018: count_substring "  ". *)
+(** TYPO-018: count_substring '  '. *)
 Definition typo_018_chk (s : string) : bool :=
   string_contains_substring s "  ".
 
@@ -91,53 +90,56 @@ Definition typo_019_chk (s : string) : bool := false.
 (** TYPO-020: No VPD pattern — conservative model. *)
 Definition typo_020_chk (s : string) : bool := false.
 
-(** TYPO-021: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_021_chk (s : string) : bool := false.
+(** TYPO-021: multi_substring (UTF-8 bytes). *)
+Definition typo_021_chk (s : string) : bool :=
+  multi_bytes_check [[46; 46; 46]; [226; 128; 166]] s.
 
 (** TYPO-022: multi_substring [ ),  ],  }]. *)
 Definition typo_022_chk (s : string) : bool :=
   multi_substring_check [" )"; " ]"; " }"] s.
 
-(** TYPO-023: count_char "" (ASCII 13). *)
+(** TYPO-023: count_char '\r' (ASCII 13). *)
 Definition typo_023_chk (s : string) : bool :=
   string_contains s (ascii_of_nat 13).
 
 (** TYPO-024: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_024_chk (s : string) : bool := false.
 
-(** TYPO-025: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_025_chk (s : string) : bool := false.
+(** TYPO-025: multi_substring (UTF-8 bytes). *)
+Definition typo_025_chk (s : string) : bool :=
+  multi_bytes_check [[45; 45]; [226; 128; 147]] s.
 
 (** TYPO-026: count_substring (UTF-8 bytes). *)
 Definition typo_026_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 147].
 
-(** TYPO-027: count_substring "!!". *)
+(** TYPO-027: count_substring '!!'. *)
 Definition typo_027_chk (s : string) : bool :=
   string_contains_substring s "!!".
 
 (** TYPO-028: custom — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_028_chk (s : string) : bool := false.
 
-(** TYPO-029: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_029_chk (s : string) : bool := false.
+(** TYPO-029: count_substring '\\ref{'. *)
+Definition typo_029_chk (s : string) : bool :=
+  string_contains_substring s "\ref{".
 
-(** TYPO-030: count_substring "----". *)
+(** TYPO-030: count_substring '----'. *)
 Definition typo_030_chk (s : string) : bool :=
   string_contains_substring s "----".
 
 (** TYPO-031: No VPD pattern — conservative model. *)
 Definition typo_031_chk (s : string) : bool := false.
 
-(** TYPO-032: count_substring "\cite". *)
+(** TYPO-032: count_substring '\\cite'. *)
 Definition typo_032_chk (s : string) : bool :=
   string_contains_substring s "\cite".
 
-(** TYPO-033: count_substring "et.al". *)
+(** TYPO-033: count_substring 'et.al'. *)
 Definition typo_033_chk (s : string) : bool :=
   string_contains_substring s "et.al".
 
-(** TYPO-034: count_substring " \footnote". *)
+(** TYPO-034: count_substring ' \\footnote'. *)
 Definition typo_034_chk (s : string) : bool :=
   string_contains_substring s " \footnote".
 
@@ -148,12 +150,13 @@ Definition typo_035_chk (s : string) : bool :=
 (** TYPO-036: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
 Definition typo_036_chk (s : string) : bool := false.
 
-(** TYPO-037: count_substring " ,". *)
+(** TYPO-037: count_substring ' ,'. *)
 Definition typo_037_chk (s : string) : bool :=
   string_contains_substring s " ,".
 
-(** TYPO-038: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_038_chk (s : string) : bool := false.
+(** TYPO-038: count_char '@' (ASCII 64). *)
+Definition typo_038_chk (s : string) : bool :=
+  string_contains s (ascii_of_nat 64).
 
 (** TYPO-039: multi_substring [http://, https://]. *)
 Definition typo_039_chk (s : string) : bool :=
@@ -166,7 +169,7 @@ Definition typo_040_chk (s : string) : bool := false.
 Definition typo_041_chk (s : string) : bool :=
   multi_substring_check [".\ldots"; "\ldots."; ",\ldots"] s.
 
-(** TYPO-042: count_substring "??". *)
+(** TYPO-042: count_substring '??'. *)
 Definition typo_042_chk (s : string) : bool :=
   string_contains_substring s "??".
 
@@ -184,7 +187,7 @@ Definition typo_045_chk (s : string) : bool := false.
 Definition typo_046_chk (s : string) : bool :=
   multi_substring_check ["\begin{math}"; "\end{math}"] s.
 
-(** TYPO-047: count_substring "\section*". *)
+(** TYPO-047: count_substring '\\section*'. *)
 Definition typo_047_chk (s : string) : bool :=
   string_contains_substring s "\section*".
 
@@ -213,12 +216,13 @@ Definition typo_053_chk (s : string) : bool :=
 Definition typo_054_chk (s : string) : bool :=
   string_contains_bytes s [226; 128; 147].
 
-(** TYPO-055: count_substring "\,\,". *)
+(** TYPO-055: count_substring '\\,\\,'. *)
 Definition typo_055_chk (s : string) : bool :=
   string_contains_substring s "\,\,".
 
-(** TYPO-056: regex — conservative model (cannot faithfully represent in Coq ASCII). *)
-Definition typo_056_chk (s : string) : bool := false.
+(** TYPO-056: multi_substring [\'{, \`{, \'{, \~{, \={, \.{]. *)
+Definition typo_056_chk (s : string) : bool :=
+  multi_substring_check ["\'{"; "\`{"; "\""{"; "\~{"; "\={"; "\.{"] s.
 
 (** TYPO-057: count_substring (UTF-8 bytes). *)
 Definition typo_057_chk (s : string) : bool :=

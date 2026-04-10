@@ -70,6 +70,15 @@ def coq_byte_list(s: str) -> str:
     return "; ".join(str(b) for b in s.encode("utf-8"))
 
 
+def coq_comment_safe(s: str) -> str:
+    """Sanitize a string for use inside a Coq comment.
+
+    Coq parses string literals inside comments, so bare " characters
+    can cause unterminated-string errors that swallow subsequent code.
+    """
+    return s.replace('"', "'").replace("(*", "( *").replace("*)", "* )")
+
+
 # ── Check function generation ────────────────────────────────────────────────
 
 def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, str]:
@@ -96,7 +105,7 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
             return (
                 f'Definition {cid}_chk (s : string) : bool :=\n'
                 f'  string_contains s (ascii_of_nat {code}).',
-                f'(** {rule_id}: count_char "{coq_string_literal(char)}" (ASCII {code}). *)'
+                f'(** {rule_id}: count_char {coq_comment_safe(repr(char))} (ASCII {code}). *)'
             )
 
     elif family == "count_char_strip_math":
@@ -115,7 +124,7 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
             return (
                 f'Definition {cid}_chk (s : string) : bool :=\n'
                 f'  string_contains_substring s "{coq_string_literal(needle)}".',
-                f'(** {rule_id}: count_substring "{coq_string_literal(needle)}". *)'
+                f'(** {rule_id}: count_substring {coq_comment_safe(repr(needle))}. *)'
             )
         elif needle:
             byte_list = coq_byte_list(needle)
@@ -148,7 +157,7 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
             return (
                 f'Definition {cid}_chk (s : string) : bool :=\n'
                 f'  multi_substring_check [{items}] s.',
-                f'(** {rule_id}: multi_substring [{", ".join(needles)}]. *)'
+                f'(** {rule_id}: multi_substring [{", ".join(coq_comment_safe(n) for n in needles)}]. *)'
             )
         elif needles:
             items = "; ".join(f'[{coq_byte_list(n)}]' for n in needles)

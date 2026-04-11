@@ -93,7 +93,8 @@
  (name test_binary_gen)
  (modules test_binary_gen)
  (libraries latex_parse_lib)
- (flags (:standard -w -26-27)))
+ (flags
+  (:standard -w -26-27)))
 
 (executable
  (name main_service)

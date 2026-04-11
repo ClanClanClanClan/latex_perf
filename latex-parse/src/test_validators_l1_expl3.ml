@@ -1,5 +1,5 @@
-(** Unit tests for Validators_l1_expl3:
-    CHAR-004, MATH-006, L3-001..L3-011 (12 rules, 60+ cases). *)
+(** Unit tests for Validators_l1_expl3: CHAR-004, MATH-006, L3-001..L3-011 (12
+    rules, 60+ cases). *)
 
 open Latex_parse_lib
 open Test_helpers
@@ -18,13 +18,10 @@ let () =
         (tag ^ ": U+F8FF detected"));
   run "CHAR-004 fires: count=2 for two PUA chars" (fun tag ->
       expect
-        (fires_with_count "CHAR-004"
-           "A\xee\x80\x80B\xee\x80\x81C" 2)
+        (fires_with_count "CHAR-004" "A\xee\x80\x80B\xee\x80\x81C" 2)
         (tag ^ ": count=2"));
   run "CHAR-004 fires: U+F000 (mid-range PUA)" (fun tag ->
-      expect
-        (fires "CHAR-004" "X\xef\x80\x80Y")
-        (tag ^ ": U+F000 detected"));
+      expect (fires "CHAR-004" "X\xef\x80\x80Y") (tag ^ ": U+F000 detected"));
   run "CHAR-004 clean: plain ASCII" (fun tag ->
       expect
         (does_not_fire "CHAR-004" "Hello world, no special chars")
@@ -35,8 +32,7 @@ let () =
         (tag ^ ": U+F900 is above PUA range"));
   run "CHAR-004 clean: normal UTF-8 (accented chars)" (fun tag ->
       expect
-        (does_not_fire "CHAR-004"
-           "R\xc3\xa9sum\xc3\xa9 with \xc3\xa0ccents")
+        (does_not_fire "CHAR-004" "R\xc3\xa9sum\xc3\xa9 with \xc3\xa0ccents")
         (tag ^ ": normal multibyte ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -48,13 +44,12 @@ let () =
         (tag ^ ": no separator"));
   run "MATH-006 fires: in align env" (fun tag ->
       expect
-        (fires "MATH-006"
-           {|\begin{align}\langle x \rangle\end{align}|})
+        (fires "MATH-006" {|\begin{align}\langle x \rangle\end{align}|})
         (tag ^ ": in align env"));
   run "MATH-006 fires: count=2" (fun tag ->
       expect
-        (fires_with_count "MATH-006"
-           {|$\langle a \rangle + \langle b \rangle$|} 2)
+        (fires_with_count "MATH-006" {|$\langle a \rangle + \langle b \rangle$|}
+           2)
         (tag ^ ": count=2"));
   run "MATH-006 clean: with \\mid separator" (fun tag ->
       expect
@@ -202,8 +197,7 @@ Hello
         (tag ^ ": internal fn"));
   run "L3-004 fires: count=2" (fun tag ->
       expect
-        (fires_with_count "L3-004"
-           {|\__foo_bar:nn {a}{b}
+        (fires_with_count "L3-004" {|\__foo_bar:nn {a}{b}
 \__baz_helper:N \l_x|}
            2)
         (tag ^ ": count=2"));
@@ -216,9 +210,7 @@ Hello
         (does_not_fire "L3-004" {|\tl_set:Nn \l_foo {bar}|})
         (tag ^ ": public function ok"));
   run "L3-004 clean: plain text" (fun tag ->
-      expect
-        (does_not_fire "L3-004" "Hello world")
-        (tag ^ ": no expl3"));
+      expect (does_not_fire "L3-004" "Hello world") (tag ^ ": no expl3"));
 
   (* ══════════════════════════════════════════════════════════════════════
      L3-005: Missing \ExplSyntaxOn guard around expl3 code
@@ -254,8 +246,7 @@ Hello
      ══════════════════════════════════════════════════════════════════════ *)
   run "L3-007 fires: camelCase in expl3" (fun tag ->
       expect
-        (fires "L3-007"
-           {|\ExplSyntaxOn
+        (fires "L3-007" {|\ExplSyntaxOn
 \myFunc_helper:n {x}
 \ExplSyntaxOff|})
         (tag ^ ": camelCase function"));
@@ -285,7 +276,8 @@ Hello
      ══════════════════════════════════════════════════════════════════════ *)
   run "L3-008 fires: ExplSyntaxOn without Provides" (fun tag ->
       expect
-        (fires "L3-008" {|\ExplSyntaxOn
+        (fires "L3-008"
+           {|\ExplSyntaxOn
 \cs_new:Npn \foo:n #1 {#1}
 \ExplSyntaxOff|})
         (tag ^ ": no ProvidesExplPackage"));
@@ -311,7 +303,8 @@ Hello
         (tag ^ ": has ProvidesExplClass"));
   run "L3-008 clean: no expl3 code" (fun tag ->
       expect
-        (does_not_fire "L3-008" {|\documentclass{article}
+        (does_not_fire "L3-008"
+           {|\documentclass{article}
 \newcommand{\foo}{bar}|})
         (tag ^ ": no expl3"));
 
@@ -328,27 +321,22 @@ Hello
         (tag ^ ": deprecated int_eval:n"));
   run "L3-009 fires: count=2 for two deprecated" (fun tag ->
       expect
-        (fires_with_count "L3-009"
-           {|\tl_to_str:n {a}
-\fp_eval:n {3.14}|}
-           2)
+        (fires_with_count "L3-009" {|\tl_to_str:n {a}
+\fp_eval:n {3.14}|} 2)
         (tag ^ ": count=2"));
   run "L3-009 clean: non-deprecated functions" (fun tag ->
       expect
         (does_not_fire "L3-009" {|\tl_set:Nn \l_foo {bar}|})
         (tag ^ ": non-deprecated ok"));
   run "L3-009 clean: plain text" (fun tag ->
-      expect
-        (does_not_fire "L3-009" "Just some text")
-        (tag ^ ": no expl3"));
+      expect (does_not_fire "L3-009" "Just some text") (tag ^ ": no expl3"));
 
   (* ══════════════════════════════════════════════════════════════════════
      L3-010: ExplSyntaxOff missing at end of file
      ══════════════════════════════════════════════════════════════════════ *)
   run "L3-010 fires: ExplSyntaxOn without Off" (fun tag ->
       expect
-        (fires "L3-010"
-           {|\ExplSyntaxOn
+        (fires "L3-010" {|\ExplSyntaxOn
 \cs_new:Npn \foo:n #1 {#1}|})
         (tag ^ ": On without Off"));
   run "L3-010 fires: two On, one Off" (fun tag ->
@@ -362,8 +350,7 @@ Hello
         (tag ^ ": 2 On, 1 Off"));
   run "L3-010 fires: count reflects mismatch" (fun tag ->
       expect
-        (fires_with_count "L3-010"
-           {|\ExplSyntaxOn
+        (fires_with_count "L3-010" {|\ExplSyntaxOn
 \ExplSyntaxOn|} 2)
         (tag ^ ": count=2 for 2 On, 0 Off"));
   run "L3-010 clean: balanced On/Off" (fun tag ->
@@ -383,22 +370,19 @@ Hello
      ══════════════════════════════════════════════════════════════════════ *)
   run "L3-011 fires: ifluatex + pdfoutput" (fun tag ->
       expect
-        (fires "L3-011"
-           {|\ifluatex
+        (fires "L3-011" {|\ifluatex
 \pdfoutput=1
 \fi|})
         (tag ^ ": pdfTeX prim in LuaTeX branch"));
   run "L3-011 fires: ifXeTeX + pdfliteral" (fun tag ->
       expect
-        (fires "L3-011"
-           {|\ifXeTeX
+        (fires "L3-011" {|\ifXeTeX
 \pdfliteral{q 1 0 0 rg}
 \fi|})
         (tag ^ ": pdfliteral in XeTeX branch"));
   run "L3-011 fires: fontspec + pdfoutput" (fun tag ->
       expect
-        (fires "L3-011"
-           {|\usepackage{fontspec}
+        (fires "L3-011" {|\usepackage{fontspec}
 \pdfoutput=1|})
         (tag ^ ": fontspec implies Lua/XeTeX"));
   run "L3-011 fires: count=2" (fun tag ->
@@ -407,8 +391,7 @@ Hello
            {|\ifluatex
 \pdfoutput=1
 \pdfminorversion=7
-\fi|}
-           2)
+\fi|} 2)
         (tag ^ ": count=2 prims"));
   run "L3-011 clean: no engine branch" (fun tag ->
       expect
@@ -416,8 +399,7 @@ Hello
         (tag ^ ": no engine branch"));
   run "L3-011 clean: engine branch without pdfTeX prims" (fun tag ->
       expect
-        (does_not_fire "L3-011"
-           {|\ifluatex
+        (does_not_fire "L3-011" {|\ifluatex
 \directlua{tex.print("hello")}
 \fi|})
         (tag ^ ": lua code ok"));

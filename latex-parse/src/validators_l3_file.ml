@@ -1,21 +1,18 @@
 (* ══════════════════════════════════════════════════════════════════════
    Validators_l3_file — 19 L3 semantic rules requiring external files
 
-   All rules follow the Log_parser pattern: if File_context is not set,
-   the rule returns None (graceful degradation).
+   All rules follow the Log_parser pattern: if File_context is not set, the rule
+   returns None (graceful degradation).
 
-   Rules:
-     FIG-004, FIG-006, FIG-016, FIG-021
-     COL-001, COL-002, COL-003, COL-005, COL-004, COL-007
-     PDF-006, PDF-007, PDF-008, PDF-009, PDF-011, PDF-012
-     TIKZ-002, TIKZ-008
-     CJK-007
+   Rules: FIG-004, FIG-006, FIG-016, FIG-021 COL-001, COL-002, COL-003, COL-005,
+   COL-004, COL-007 PDF-006, PDF-007, PDF-008, PDF-009, PDF-011, PDF-012
+   TIKZ-002, TIKZ-008 CJK-007
    ══════════════════════════════════════════════════════════════════════ *)
 
 open Validators_common
 
-(* ══════════════════════════════════════════════════════════════════════
-   Image metadata rules (8)
+(* ══════════════════════════════════════════════════════════════════════ Image
+   metadata rules (8)
    ══════════════════════════════════════════════════════════════════════ *)
 
 (* FIG-004: Raster image exceeds 300 dpi *)
@@ -27,8 +24,7 @@ let r_fig_004 : rule =
         let cnt =
           List.fold_left
             (fun acc (img : File_context.image_info) ->
-              if img.dpi_x > 300.0 || img.dpi_y > 300.0 then acc + 1
-              else acc)
+              if img.dpi_x > 300.0 || img.dpi_y > 300.0 then acc + 1 else acc)
             0 ctx.images
         in
         if cnt > 0 then
@@ -126,9 +122,7 @@ let r_col_001 : rule =
         let cnt =
           List.fold_left
             (fun acc (img : File_context.image_info) ->
-              match img.color_type with
-              | `CMYK | `YCCK -> acc + 1
-              | _ -> acc)
+              match img.color_type with `CMYK | `YCCK -> acc + 1 | _ -> acc)
             0 ctx.images
         in
         if cnt > 0 then
@@ -188,8 +182,7 @@ let r_col_003 : rule =
               {
                 id = "COL-003";
                 severity = Warning;
-                message =
-                  "Transparent PNG in print-optimised document class";
+                message = "Transparent PNG in print-optimised document class";
                 count = cnt;
               }
           else None
@@ -220,8 +213,8 @@ let r_col_005 : rule =
   in
   mk_rule "COL-005" run
 
-(* ══════════════════════════════════════════════════════════════════════
-   PDF structure rules (8)
+(* ══════════════════════════════════════════════════════════════════════ PDF
+   structure rules (8)
    ══════════════════════════════════════════════════════════════════════ *)
 
 (* PDF-006: Tagged PDF lacks /StructTreeRoot *)
@@ -233,8 +226,7 @@ let r_pdf_006 : rule =
         let cnt =
           List.fold_left
             (fun acc (pdf : File_context.pdf_info) ->
-              if pdf.has_mark_info && not pdf.has_struct_tree_root then
-                acc + 1
+              if pdf.has_mark_info && not pdf.has_struct_tree_root then acc + 1
               else acc)
             0 ctx.pdfs
         in
@@ -267,8 +259,7 @@ let r_pdf_007 : rule =
             {
               id = "PDF-007";
               severity = Warning;
-              message =
-                "Figure objects without /Alt text in tagged PDF";
+              message = "Figure objects without /Alt text in tagged PDF";
               count = cnt;
             }
         else None
@@ -317,8 +308,7 @@ let r_pdf_009 : rule =
             {
               id = "PDF-009";
               severity = Warning;
-              message =
-                "/Lang entry missing in PDF catalog";
+              message = "/Lang entry missing in PDF catalog";
               count = cnt;
             }
         else None
@@ -362,11 +352,12 @@ let r_pdf_012 : rule =
           List.fold_left
             (fun acc (pdf : File_context.pdf_info) ->
               (* Fire if page labels exist but count doesn't match page count.
-                 page_label_count=0 means no labels (acceptable).
-                 Mismatch = labels are present but don't cover all pages. *)
-              if pdf.page_label_count > 0
-                 && pdf.page_label_count <> pdf.page_count then
-                acc + 1
+                 page_label_count=0 means no labels (acceptable). Mismatch =
+                 labels are present but don't cover all pages. *)
+              if
+                pdf.page_label_count > 0
+                && pdf.page_label_count <> pdf.page_count
+              then acc + 1
               else acc)
             0 ctx.pdfs
         in
@@ -375,8 +366,7 @@ let r_pdf_012 : rule =
             {
               id = "PDF-012";
               severity = Info;
-              message =
-                "Logical page labels inconsistent with numbering";
+              message = "Logical page labels inconsistent with numbering";
               count = cnt;
             }
         else None
@@ -431,8 +421,8 @@ let r_col_007 : rule =
   in
   mk_rule "COL-007" run
 
-(* ══════════════════════════════════════════════════════════════════════
-   Build integration rules (2)
+(* ══════════════════════════════════════════════════════════════════════ Build
+   integration rules (2)
    ══════════════════════════════════════════════════════════════════════ *)
 
 (* TIKZ-002: TikZ compile time > 5 s *)
@@ -482,8 +472,8 @@ let r_tikz_008 : rule =
   in
   mk_rule "TIKZ-008" run
 
-(* ══════════════════════════════════════════════════════════════════════
-   Font introspection (1)
+(* ══════════════════════════════════════════════════════════════════════ Font
+   introspection (1)
    ══════════════════════════════════════════════════════════════════════ *)
 
 (* CJK-007: Kanji glyph missing in selected CJK font *)
@@ -503,8 +493,7 @@ let r_cjk_007 : rule =
             {
               id = "CJK-007";
               severity = Warning;
-              message =
-                "Kanji glyph missing in selected CJK font";
+              message = "Kanji glyph missing in selected CJK font";
               count = cnt;
             }
         else None

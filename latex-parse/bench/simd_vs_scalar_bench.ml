@@ -2,13 +2,12 @@
    simd_vs_scalar_bench — isolated timing benchmark
    ══════════════════════════════════════════════════════════════════════
 
-   Measures tokenizer_lite (pure OCaml scalar) vs real_processor (SIMD FFI)
-   on the same corpus and reports per-path latency percentiles plus the
-   speedup ratio.  Spec target: ≥ 6× at the tokeniser level.
+   Measures tokenizer_lite (pure OCaml scalar) vs real_processor (SIMD FFI) on
+   the same corpus and reports per-path latency percentiles plus the speedup
+   ratio. Spec target: ≥ 6× at the tokeniser level.
 
-   Usage:
-     dune exec latex-parse/bench/simd_vs_scalar_bench.exe -- FILE ITERS \
-       [--warmup N] [--csv PATH]
+   Usage: dune exec latex-parse/bench/simd_vs_scalar_bench.exe -- FILE ITERS \
+   [--warmup N] [--csv PATH]
    ══════════════════════════════════════════════════════════════════════ *)
 
 open Latex_parse_lib
@@ -84,8 +83,7 @@ let sort_copy a =
 let write_csv path scalar_stats simd_stats ratio =
   let oc = open_out path in
   Fun.protect ~finally:(fun () -> close_out_noerr oc) @@ fun () ->
-  output_string oc
-    "path,min_ms,p50_ms,p95_ms,p99_ms,max_ms,throughput_MBps\n";
+  output_string oc "path,min_ms,p50_ms,p95_ms,p99_ms,max_ms,throughput_MBps\n";
   let row label (s : float array) tp =
     Printf.fprintf oc "%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.1f\n" label s.(0) s.(1)
       s.(2) s.(3) s.(4) tp
@@ -202,6 +200,6 @@ let () =
       ratio target;
 
   (* Optional CSV *)
-  (match csv_path with
+  match csv_path with
   | Some path -> write_csv path scalar_stats simd_stats ratio
-  | None -> ())
+  | None -> ()

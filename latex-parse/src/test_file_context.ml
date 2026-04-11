@@ -32,7 +32,9 @@ let () =
         }
       in
       File_context.set_file_context ctx;
-      expect (File_context.get_file_context () <> None) (tag ^ ": should be Some"));
+      expect
+        (File_context.get_file_context () <> None)
+        (tag ^ ": should be Some"));
 
   run "get returns correct doc_class" (fun tag ->
       match File_context.get_file_context () with
@@ -42,17 +44,11 @@ let () =
 
   run "set overwrites previous" (fun tag ->
       let ctx2 =
-        {
-          File_context.images = [];
-          pdfs = [];
-          fonts = [];
-          doc_class = "book";
-        }
+        { File_context.images = []; pdfs = []; fonts = []; doc_class = "book" }
       in
       File_context.set_file_context ctx2;
       match File_context.get_file_context () with
-      | Some ctx ->
-          expect (ctx.doc_class = "book") (tag ^ ": doc_class=book")
+      | Some ctx -> expect (ctx.doc_class = "book") (tag ^ ": doc_class=book")
       | None -> expect false (tag ^ ": should be Some"));
 
   run "clear then get returns None" (fun tag ->

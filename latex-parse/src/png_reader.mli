@@ -1,8 +1,8 @@
 (* ══════════════════════════════════════════════════════════════════════
    Png_reader — minimal PNG metadata reader
 
-   Reads IHDR, pHYs, tRNS, iCCP, sRGB, PLTE chunks from a PNG file
-   without decompressing image data.
+   Reads IHDR, pHYs, tRNS, iCCP, sRGB, PLTE chunks from a PNG file without
+   decompressing image data.
    ══════════════════════════════════════════════════════════════════════ *)
 
 type png_info = {
@@ -21,5 +21,5 @@ type png_info = {
 }
 
 val read_png_info : string -> png_info option
-(** [read_png_info path] reads PNG metadata from [path].
-    Returns [None] on I/O error or invalid PNG. *)
+(** [read_png_info path] reads PNG metadata from [path]. Returns [None] on I/O
+    error or invalid PNG. *)

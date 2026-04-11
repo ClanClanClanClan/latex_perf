@@ -37,8 +37,8 @@ let mk_image ?(dpi_x = 72.0) ?(dpi_y = 72.0) ?(has_transparency = false)
   }
 
 let mk_pdf ?(has_struct_tree = false) ?(has_mark_info = false)
-    ?(figures_without_alt = 0) ?(links_without_contents = 0)
-    ?(lang = None) ?(fonts = []) ?(has_spot = false) ?(has_spot_vec = false)
+    ?(figures_without_alt = 0) ?(links_without_contents = 0) ?(lang = None)
+    ?(fonts = []) ?(has_spot = false) ?(has_spot_vec = false)
     ?(compressed = true) () : File_context.pdf_info =
   {
     path = "/tmp/test.pdf";
@@ -61,20 +61,25 @@ let with_file_ctx ctx f =
   Fun.protect ~finally:File_context.clear_file_context f
 
 let () =
-  (* ══════════════════════════════════════════════════════════════════
-     FIG-004: Raster image exceeds 300 dpi
+  (* ══════════════════════════════════════════════════════════════════ FIG-004:
+     Raster image exceeds 300 dpi
      ══════════════════════════════════════════════════════════════════ *)
-
   run "FIG-004 fires: 301 dpi" (fun tag ->
       let ctx =
-        { (empty_ctx ()) with images = [ mk_image ~dpi_x:301.0 ~dpi_y:301.0 () ] }
+        {
+          (empty_ctx ()) with
+          images = [ mk_image ~dpi_x:301.0 ~dpi_y:301.0 () ];
+        }
       in
       with_file_ctx ctx (fun () ->
           expect (fires "FIG-004" (unique_src ())) (tag ^ ": fires")));
 
   run "FIG-004 clean: 300 dpi exactly" (fun tag ->
       let ctx =
-        { (empty_ctx ()) with images = [ mk_image ~dpi_x:300.0 ~dpi_y:300.0 () ] }
+        {
+          (empty_ctx ()) with
+          images = [ mk_image ~dpi_x:300.0 ~dpi_y:300.0 () ];
+        }
       in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "FIG-004" (unique_src ())) (tag ^ ": clean")));
@@ -94,17 +99,17 @@ let () =
       let ctx =
         {
           (empty_ctx ()) with
-          images =
-            [ mk_image ~dpi_x:600.0 (); mk_image ~dpi_y:400.0 () ];
+          images = [ mk_image ~dpi_x:600.0 (); mk_image ~dpi_y:400.0 () ];
         }
       in
       with_file_ctx ctx (fun () ->
-          expect (fires_with_count "FIG-004" (unique_src ()) 2) (tag ^ ": count=2")));
+          expect
+            (fires_with_count "FIG-004" (unique_src ()) 2)
+            (tag ^ ": count=2")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     FIG-006: Bitmap image with transparency channel
+  (* ══════════════════════════════════════════════════════════════════ FIG-006:
+     Bitmap image with transparency channel
      ══════════════════════════════════════════════════════════════════ *)
-
   run "FIG-006 fires: RGBA PNG" (fun tag ->
       let ctx =
         {
@@ -140,10 +145,9 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "FIG-006" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     FIG-016: Raster image colour profile not sRGB
+  (* ══════════════════════════════════════════════════════════════════ FIG-016:
+     Raster image colour profile not sRGB
      ══════════════════════════════════════════════════════════════════ *)
-
   run "FIG-016 fires: ICC present but not sRGB" (fun tag ->
       let ctx =
         {
@@ -175,10 +179,9 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "FIG-016" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     FIG-021: Embedded bitmap > 20 MiB
+  (* ══════════════════════════════════════════════════════════════════ FIG-021:
+     Embedded bitmap > 20 MiB
      ══════════════════════════════════════════════════════════════════ *)
-
   run "FIG-021 fires: 25 MiB" (fun tag ->
       let ctx =
         {
@@ -218,15 +221,17 @@ let () =
       in
       with_file_ctx ctx (fun () ->
           let results = Validators.run_all (unique_src ()) in
-          match List.find_opt (fun r -> (r : Validators.result).id = "FIG-021") results with
-          | Some r ->
-              expect (r.severity = Warning) (tag ^ ": Warning severity")
+          match
+            List.find_opt
+              (fun r -> (r : Validators.result).id = "FIG-021")
+              results
+          with
+          | Some r -> expect (r.severity = Warning) (tag ^ ": Warning severity")
           | None -> expect false (tag ^ ": should fire")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-001: CMYK image in RGB workflow
+  (* ══════════════════════════════════════════════════════════════════ COL-001:
+     CMYK image in RGB workflow
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-001 fires: CMYK" (fun tag ->
       let ctx =
         { (empty_ctx ()) with images = [ mk_image ~color_type:`CMYK () ] }
@@ -255,10 +260,9 @@ let () =
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "COL-001" (unique_src ())) (tag ^ ": clean")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-002: ICC profile missing
+  (* ══════════════════════════════════════════════════════════════════ COL-002:
+     ICC profile missing
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-002 fires: no ICC" (fun tag ->
       let ctx =
         { (empty_ctx ()) with images = [ mk_image ~has_icc:false () ] }
@@ -277,17 +281,17 @@ let () =
       let ctx =
         {
           (empty_ctx ()) with
-          images =
-            [ mk_image (); mk_image (); mk_image ~has_icc:true () ];
+          images = [ mk_image (); mk_image (); mk_image ~has_icc:true () ];
         }
       in
       with_file_ctx ctx (fun () ->
-          expect (fires_with_count "COL-002" (unique_src ()) 2) (tag ^ ": count=2")));
+          expect
+            (fires_with_count "COL-002" (unique_src ()) 2)
+            (tag ^ ": count=2")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-003: Transparent PNG in print-optimised class
+  (* ══════════════════════════════════════════════════════════════════ COL-003:
+     Transparent PNG in print-optimised class
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-003 fires: transparent + book" (fun tag ->
       let ctx =
         {
@@ -336,12 +340,13 @@ let () =
         }
       in
       with_file_ctx ctx (fun () ->
-          expect (does_not_fire "COL-003" (unique_src ())) (tag ^ ": JPEG not PNG")));
+          expect
+            (does_not_fire "COL-003" (unique_src ()))
+            (tag ^ ": JPEG not PNG")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-005: Excess distinct colours (> 256)
+  (* ══════════════════════════════════════════════════════════════════ COL-005:
+     Excess distinct colours (> 256)
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-005 fires: palette > 256" (fun tag ->
       let ctx =
         { (empty_ctx ()) with images = [ mk_image ~palette_size:300 () ] }
@@ -363,10 +368,9 @@ let () =
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "COL-005" (unique_src ())) (tag ^ ": clean")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-006: Tagged PDF lacks /StructTreeRoot
+  (* ══════════════════════════════════════════════════════════════════ PDF-006:
+     Tagged PDF lacks /StructTreeRoot
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-006 fires: marked but no struct tree" (fun tag ->
       let ctx =
         {
@@ -394,19 +398,17 @@ let () =
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "PDF-006" (unique_src ())) (tag ^ ": clean")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-007: Figure objects without /Alt text
+  (* ══════════════════════════════════════════════════════════════════ PDF-007:
+     Figure objects without /Alt text
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-007 fires: 3 figures no alt" (fun tag ->
       let ctx =
-        {
-          (empty_ctx ()) with
-          pdfs = [ mk_pdf ~figures_without_alt:3 () ];
-        }
+        { (empty_ctx ()) with pdfs = [ mk_pdf ~figures_without_alt:3 () ] }
       in
       with_file_ctx ctx (fun () ->
-          expect (fires_with_count "PDF-007" (unique_src ()) 3) (tag ^ ": count=3")));
+          expect
+            (fires_with_count "PDF-007" (unique_src ()) 3)
+            (tag ^ ": count=3")));
 
   run "PDF-007 clean: 0 figures" (fun tag ->
       let ctx =
@@ -419,19 +421,17 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "PDF-007" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-008: Link annotations missing /Contents
+  (* ══════════════════════════════════════════════════════════════════ PDF-008:
+     Link annotations missing /Contents
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-008 fires: 2 links no contents" (fun tag ->
       let ctx =
-        {
-          (empty_ctx ()) with
-          pdfs = [ mk_pdf ~links_without_contents:2 () ];
-        }
+        { (empty_ctx ()) with pdfs = [ mk_pdf ~links_without_contents:2 () ] }
       in
       with_file_ctx ctx (fun () ->
-          expect (fires_with_count "PDF-008" (unique_src ()) 2) (tag ^ ": count=2")));
+          expect
+            (fires_with_count "PDF-008" (unique_src ()) 2)
+            (tag ^ ": count=2")));
 
   run "PDF-008 clean: 0 links" (fun tag ->
       let ctx =
@@ -444,14 +444,11 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "PDF-008" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-009: /Lang entry missing
+  (* ══════════════════════════════════════════════════════════════════ PDF-009:
+     /Lang entry missing
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-009 fires: no lang" (fun tag ->
-      let ctx =
-        { (empty_ctx ()) with pdfs = [ mk_pdf ~lang:None () ] }
-      in
+      let ctx = { (empty_ctx ()) with pdfs = [ mk_pdf ~lang:None () ] } in
       with_file_ctx ctx (fun () ->
           expect (fires "PDF-009" (unique_src ())) (tag ^ ": fires")));
 
@@ -466,10 +463,9 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "PDF-009" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-011: Fonts not embedded (Error severity!)
+  (* ══════════════════════════════════════════════════════════════════ PDF-011:
+     Fonts not embedded (Error severity!)
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-011 fires: font not embedded" (fun tag ->
       let ctx =
         {
@@ -508,7 +504,9 @@ let () =
         }
       in
       with_file_ctx ctx (fun () ->
-          expect (fires_with_count "PDF-011" (unique_src ()) 2) (tag ^ ": count=2")));
+          expect
+            (fires_with_count "PDF-011" (unique_src ()) 2)
+            (tag ^ ": count=2")));
 
   run "PDF-011 severity: Error" (fun tag ->
       let ctx =
@@ -520,28 +518,21 @@ let () =
       with_file_ctx ctx (fun () ->
           let results = Validators.run_all (unique_src ()) in
           match
-            List.find_opt (fun r -> (r : Validators.result).id = "PDF-011") results
+            List.find_opt
+              (fun r -> (r : Validators.result).id = "PDF-011")
+              results
           with
-          | Some r ->
-              expect (r.severity = Error) (tag ^ ": Error severity")
+          | Some r -> expect (r.severity = Error) (tag ^ ": Error severity")
           | None -> expect false (tag ^ ": should fire")));
 
-  (* ══════════════════════════════════════════════════════════════════
-     PDF-012: Page labels inconsistent with numbering
+  (* ══════════════════════════════════════════════════════════════════ PDF-012:
+     Page labels inconsistent with numbering
      ══════════════════════════════════════════════════════════════════ *)
-
   run "PDF-012 fires: label count != page count" (fun tag ->
       let ctx =
         {
           (empty_ctx ()) with
-          pdfs =
-            [
-              {
-                (mk_pdf ()) with
-                page_label_count = 3;
-                page_count = 5;
-              };
-            ];
+          pdfs = [ { (mk_pdf ()) with page_label_count = 3; page_count = 5 } ];
         }
       in
       with_file_ctx ctx (fun () ->
@@ -551,14 +542,7 @@ let () =
       let ctx =
         {
           (empty_ctx ()) with
-          pdfs =
-            [
-              {
-                (mk_pdf ()) with
-                page_label_count = 5;
-                page_count = 5;
-              };
-            ];
+          pdfs = [ { (mk_pdf ()) with page_label_count = 5; page_count = 5 } ];
         }
       in
       with_file_ctx ctx (fun () ->
@@ -568,14 +552,7 @@ let () =
       let ctx =
         {
           (empty_ctx ()) with
-          pdfs =
-            [
-              {
-                (mk_pdf ()) with
-                page_label_count = 0;
-                page_count = 10;
-              };
-            ];
+          pdfs = [ { (mk_pdf ()) with page_label_count = 0; page_count = 10 } ];
         }
       in
       with_file_ctx ctx (fun () ->
@@ -585,21 +562,16 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "PDF-012" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-004: PDF contains spot-colour separation
+  (* ══════════════════════════════════════════════════════════════════ COL-004:
+     PDF contains spot-colour separation
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-004 fires: spot colour" (fun tag ->
-      let ctx =
-        { (empty_ctx ()) with pdfs = [ mk_pdf ~has_spot:true () ] }
-      in
+      let ctx = { (empty_ctx ()) with pdfs = [ mk_pdf ~has_spot:true () ] } in
       with_file_ctx ctx (fun () ->
           expect (fires "COL-004" (unique_src ())) (tag ^ ": fires")));
 
   run "COL-004 clean: no spot" (fun tag ->
-      let ctx =
-        { (empty_ctx ()) with pdfs = [ mk_pdf ~has_spot:false () ] }
-      in
+      let ctx = { (empty_ctx ()) with pdfs = [ mk_pdf ~has_spot:false () ] } in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "COL-004" (unique_src ())) (tag ^ ": clean")));
 
@@ -607,10 +579,9 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "COL-004" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     COL-007: Spot colour in vector element
+  (* ══════════════════════════════════════════════════════════════════ COL-007:
+     Spot colour in vector element
      ══════════════════════════════════════════════════════════════════ *)
-
   run "COL-007 fires: spot vector" (fun tag ->
       let ctx =
         { (empty_ctx ()) with pdfs = [ mk_pdf ~has_spot_vec:true () ] }
@@ -632,24 +603,20 @@ let () =
   (* ══════════════════════════════════════════════════════════════════
      TIKZ-002: TikZ compile time > 5 s
      ══════════════════════════════════════════════════════════════════ *)
-
   run "TIKZ-002 fires: 6.2s compile time" (fun tag ->
       let log_ctx =
         { Log_parser.empty_context with tikz_compile_times = [ 6.2 ] }
       in
       Log_parser.set_log_context log_ctx;
-      Fun.protect
-        ~finally:Log_parser.clear_log_context
-        (fun () -> expect (fires "TIKZ-002" (unique_src ())) (tag ^ ": fires")));
+      Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
+          expect (fires "TIKZ-002" (unique_src ())) (tag ^ ": fires")));
 
   run "TIKZ-002 clean: 4.9s" (fun tag ->
       let log_ctx =
         { Log_parser.empty_context with tikz_compile_times = [ 4.9 ] }
       in
       Log_parser.set_log_context log_ctx;
-      Fun.protect
-        ~finally:Log_parser.clear_log_context
-        (fun () ->
+      Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
           expect (does_not_fire "TIKZ-002" (unique_src ())) (tag ^ ": clean")));
 
   run "TIKZ-002 clean: no log context" (fun tag ->
@@ -664,15 +631,14 @@ let () =
         }
       in
       Log_parser.set_log_context log_ctx;
-      Fun.protect
-        ~finally:Log_parser.clear_log_context
-        (fun () ->
-          expect (fires_with_count "TIKZ-002" (unique_src ()) 2) (tag ^ ": count=2")));
+      Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
+          expect
+            (fires_with_count "TIKZ-002" (unique_src ()) 2)
+            (tag ^ ": count=2")));
 
   (* ══════════════════════════════════════════════════════════════════
      TIKZ-008: Uncompressed PDFs
      ══════════════════════════════════════════════════════════════════ *)
-
   run "TIKZ-008 fires: uncompressed streams" (fun tag ->
       let ctx =
         { (empty_ctx ()) with pdfs = [ mk_pdf ~compressed:false () ] }
@@ -681,9 +647,7 @@ let () =
           expect (fires "TIKZ-008" (unique_src ())) (tag ^ ": fires")));
 
   run "TIKZ-008 clean: compressed streams" (fun tag ->
-      let ctx =
-        { (empty_ctx ()) with pdfs = [ mk_pdf ~compressed:true () ] }
-      in
+      let ctx = { (empty_ctx ()) with pdfs = [ mk_pdf ~compressed:true () ] } in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "TIKZ-008" (unique_src ())) (tag ^ ": clean")));
 
@@ -691,10 +655,9 @@ let () =
       File_context.clear_file_context ();
       expect (does_not_fire "TIKZ-008" (unique_src ())) (tag ^ ": no ctx"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     CJK-007: Kanji glyph missing
+  (* ══════════════════════════════════════════════════════════════════ CJK-007:
+     Kanji glyph missing
      ══════════════════════════════════════════════════════════════════ *)
-
   run "CJK-007 fires: font without CJK" (fun tag ->
       let ctx =
         {
@@ -722,44 +685,71 @@ let () =
   (* ══════════════════════════════════════════════════════════════════
      Integration: all rules with no context return None
      ══════════════════════════════════════════════════════════════════ *)
-
   run "All L3 rules silent without file context" (fun tag ->
       File_context.clear_file_context ();
       Log_parser.clear_log_context ();
       let results = Validators.run_all (unique_src ()) in
       let l3_ids =
         [
-          "FIG-004"; "FIG-006"; "FIG-016"; "FIG-021";
-          "COL-001"; "COL-002"; "COL-003"; "COL-005";
-          "PDF-006"; "PDF-007"; "PDF-008"; "PDF-009";
-          "PDF-011"; "PDF-012"; "COL-004"; "COL-007";
-          "TIKZ-002"; "TIKZ-008"; "CJK-007";
+          "FIG-004";
+          "FIG-006";
+          "FIG-016";
+          "FIG-021";
+          "COL-001";
+          "COL-002";
+          "COL-003";
+          "COL-005";
+          "PDF-006";
+          "PDF-007";
+          "PDF-008";
+          "PDF-009";
+          "PDF-011";
+          "PDF-012";
+          "COL-004";
+          "COL-007";
+          "TIKZ-002";
+          "TIKZ-008";
+          "CJK-007";
         ]
       in
       let l3_results =
-        List.filter (fun r -> List.mem (r : Validators.result).id l3_ids) results
+        List.filter
+          (fun r -> List.mem (r : Validators.result).id l3_ids)
+          results
       in
       expect (l3_results = []) (tag ^ ": none fired"));
 
-  (* ══════════════════════════════════════════════════════════════════
-     Layer mapping: all 19 rules map to L3
+  (* ══════════════════════════════════════════════════════════════════ Layer
+     mapping: all 19 rules map to L3
      ══════════════════════════════════════════════════════════════════ *)
-
   run "All 19 rules mapped to L3" (fun tag ->
       let l3_ids =
         [
-          "FIG-004"; "FIG-006"; "FIG-016"; "FIG-021";
-          "COL-001"; "COL-002"; "COL-003"; "COL-005";
-          "PDF-006"; "PDF-007"; "PDF-008"; "PDF-009";
-          "PDF-011"; "PDF-012"; "COL-004"; "COL-007";
-          "TIKZ-002"; "TIKZ-008"; "CJK-007";
+          "FIG-004";
+          "FIG-006";
+          "FIG-016";
+          "FIG-021";
+          "COL-001";
+          "COL-002";
+          "COL-003";
+          "COL-005";
+          "PDF-006";
+          "PDF-007";
+          "PDF-008";
+          "PDF-009";
+          "PDF-011";
+          "PDF-012";
+          "COL-004";
+          "COL-007";
+          "TIKZ-002";
+          "TIKZ-008";
+          "CJK-007";
         ]
       in
       List.iter
         (fun id ->
           let ly = Validators.precondition_of_rule_id id in
-          expect (ly = L3)
-            (Printf.sprintf "%s: %s -> L3" tag id))
+          expect (ly = L3) (Printf.sprintf "%s: %s -> L3" tag id))
         l3_ids)
 
 let () = finalise "validators-l3-file"

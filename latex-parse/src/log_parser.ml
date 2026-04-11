@@ -68,9 +68,7 @@ let _re_latex_warning =
 
 let re_widow = Str.regexp_string "Widow penalty"
 let re_club = Str.regexp_string "Club penalty"
-
-let re_tikz_time =
-  Str.regexp {|[Cc]ompile time.*: \([0-9.]+\)s|}
+let re_tikz_time = Str.regexp {|[Cc]ompile time.*: \([0-9.]+\)s|}
 
 (* ── Parser ─────────────────────────────────────────────────────── *)
 
@@ -137,15 +135,15 @@ let parse_log (content : string) : log_context =
          events := WidowPenalty { page = 0 } :: !events
        with Not_found -> ());
       (try
-        ignore (Str.search_forward re_club line 0);
-        events := ClubPenalty { page = 0 } :: !events
-      with Not_found -> ());
+         ignore (Str.search_forward re_club line 0);
+         events := ClubPenalty { page = 0 } :: !events
+       with Not_found -> ());
       (* TikZ compile times *)
-      (try
-         ignore (Str.search_forward re_tikz_time line 0);
-         let t = float_of_string (Str.matched_group 1 line) in
-         tikz_times := t :: !tikz_times
-       with Not_found | Failure _ -> ()))
+      try
+        ignore (Str.search_forward re_tikz_time line 0);
+        let t = float_of_string (Str.matched_group 1 line) in
+        tikz_times := t :: !tikz_times
+      with Not_found | Failure _ -> ())
     lines;
   let events = List.rev !events in
   let overfull_lines =

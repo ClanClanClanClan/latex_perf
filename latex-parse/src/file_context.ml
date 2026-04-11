@@ -12,8 +12,7 @@ type image_info = {
   dpi_x : float;
   dpi_y : float;
   has_transparency : bool;
-  color_type :
-    [ `Gray | `RGB | `RGBA | `Indexed | `GrayAlpha | `CMYK | `YCCK ];
+  color_type : [ `Gray | `RGB | `RGBA | `Indexed | `GrayAlpha | `CMYK | `YCCK ];
   has_icc_profile : bool;
   icc_is_srgb : bool;
   palette_size : int;

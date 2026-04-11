@@ -1,8 +1,8 @@
 (* ══════════════════════════════════════════════════════════════════════
    Jpeg_reader — minimal JPEG metadata reader
 
-   Reads SOF0/SOF2 dimensions, APP0 (JFIF DPI), APP1 (EXIF DPI),
-   APP2 (ICC profile), APP14 (Adobe color transform).
+   Reads SOF0/SOF2 dimensions, APP0 (JFIF DPI), APP1 (EXIF DPI), APP2 (ICC
+   profile), APP14 (Adobe color transform).
    ══════════════════════════════════════════════════════════════════════ *)
 
 type jpeg_info = {
@@ -17,5 +17,5 @@ type jpeg_info = {
 }
 
 val read_jpeg_info : string -> jpeg_info option
-(** [read_jpeg_info path] reads JPEG metadata from [path].
-    Returns [None] on I/O error or invalid JPEG. *)
+(** [read_jpeg_info path] reads JPEG metadata from [path]. Returns [None] on I/O
+    error or invalid JPEG. *)

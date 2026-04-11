@@ -7,7 +7,6 @@ let () =
   (* ══════════════════════════════════════════════════════════════
      \includegraphics path extraction
      ══════════════════════════════════════════════════════════════ *)
-
   run "extract simple path" (fun tag ->
       let paths =
         File_analyzer.extract_includegraphics_paths
@@ -71,34 +70,27 @@ More text
   (* ══════════════════════════════════════════════════════════════
      \graphicspath extraction
      ══════════════════════════════════════════════════════════════ *)
-
   run "extract graphicspath single dir" (fun tag ->
       let dirs =
-        File_analyzer.extract_graphicspath
-          {|\graphicspath{{figures/}}|}
+        File_analyzer.extract_graphicspath {|\graphicspath{{figures/}}|}
       in
       expect (dirs = [ "figures/" ]) (tag ^ ": figures/"));
 
   run "extract graphicspath multiple dirs" (fun tag ->
-      let src =
-        {|\graphicspath{{figures/}}
-\graphicspath{{img/}}|}
-      in
+      let src = {|\graphicspath{{figures/}}
+\graphicspath{{img/}}|} in
       let dirs = File_analyzer.extract_graphicspath src in
       expect (List.length dirs = 2) (tag ^ ": 2 dirs");
       expect (List.nth dirs 0 = "figures/") (tag ^ ": first=figures/");
       expect (List.nth dirs 1 = "img/") (tag ^ ": second=img/"));
 
   run "no graphicspath" (fun tag ->
-      let dirs =
-        File_analyzer.extract_graphicspath "No graphics path here."
-      in
+      let dirs = File_analyzer.extract_graphicspath "No graphics path here." in
       expect (dirs = []) (tag ^ ": empty"));
 
-  (* ══════════════════════════════════════════════════════════════
-     Full analyze_files
+  (* ══════════════════════════════════════════════════════════════ Full
+     analyze_files
      ══════════════════════════════════════════════════════════════ *)
-
   run "empty source produces empty analysis" (fun tag ->
       let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:"" () in
       expect (ctx.images = []) (tag ^ ": no images");
@@ -143,15 +135,12 @@ More text
         (fun () ->
           let dir = Filename.dirname path in
           let basename = Filename.basename path in
-          let src =
-            Printf.sprintf {|\includegraphics{%s}|} basename
-          in
+          let src = Printf.sprintf {|\includegraphics{%s}|} basename in
           let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.images = 1) (tag ^ ": 1 image");
           let img = List.hd ctx.images in
           expect (img.width_px = 100) (tag ^ ": width=100");
-          expect (img.dpi_x > 290.0 && img.dpi_x < 310.0)
-            (tag ^ ": dpi ~300")));
+          expect (img.dpi_x > 290.0 && img.dpi_x < 310.0) (tag ^ ": dpi ~300")));
 
   run "analyze real JPEG file" (fun tag ->
       let jpg_data =
@@ -164,9 +153,7 @@ More text
         (fun () ->
           let dir = Filename.dirname path in
           let basename = Filename.basename path in
-          let src =
-            Printf.sprintf {|\includegraphics{%s}|} basename
-          in
+          let src = Printf.sprintf {|\includegraphics{%s}|} basename in
           let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.images = 1) (tag ^ ": 1 image");
           let img = List.hd ctx.images in
@@ -187,9 +174,7 @@ More text
         (fun () ->
           let dir = Filename.dirname path in
           let basename = Filename.basename path in
-          let src =
-            Printf.sprintf {|\includegraphics{%s}|} basename
-          in
+          let src = Printf.sprintf {|\includegraphics{%s}|} basename in
           let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.pdfs >= 1) (tag ^ ": >=1 pdf")));
 
@@ -199,15 +184,11 @@ More text
 \setCJKsansfont{SourceHanSans}|}
       in
       (* These fonts don't exist, so no font_info entries *)
-      let ctx =
-        File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src ()
-      in
+      let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src () in
       expect (ctx.fonts = []) (tag ^ ": missing fonts produce empty list"));
 
   run "multiple images in document" (fun tag ->
-      let png1 =
-        Test_binary_gen.make_png Test_binary_gen.default_png_opts
-      in
+      let png1 = Test_binary_gen.make_png Test_binary_gen.default_png_opts in
       let png2 =
         Test_binary_gen.make_png
           { Test_binary_gen.default_png_opts with width = 200 }
@@ -223,14 +204,10 @@ More text
           let b1 = Filename.basename p1 in
           let b2 = Filename.basename p2 in
           let src =
-            Printf.sprintf
-              {|\includegraphics{%s}
-\includegraphics{%s}|}
-              b1 b2
+            Printf.sprintf {|\includegraphics{%s}
+\includegraphics{%s}|} b1 b2
           in
-          let ctx =
-            File_analyzer.analyze_files ~base_dir:dir ~source:src ()
-          in
+          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.images = 2) (tag ^ ": 2 images")))
 
 let () = finalise "file-analyzer"

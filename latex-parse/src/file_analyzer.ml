@@ -55,7 +55,8 @@ let extract_docclass (source : string) : string =
     Str.matched_group 2 source
   with Not_found -> ""
 
-let re_cjk_font = Str.regexp {|\\setCJK\(main\|sans\|mono\)font\(\[[^]]*\]\)?{\([^}]+\)}|}
+let re_cjk_font =
+  Str.regexp {|\\setCJK\(main\|sans\|mono\)font\(\[[^]]*\]\)?{\([^}]+\)}|}
 
 let extract_cjk_fonts (source : string) : string list =
   let fonts = ref [] in
@@ -83,8 +84,7 @@ let resolve_path ~(base_dir : string) ~(graphics_paths : string list)
       | [] -> None
       | ext :: rest ->
           let full = base ^ ext in
-          if Sys.file_exists full then Some full
-          else try_ext rest
+          if Sys.file_exists full then Some full else try_ext rest
     in
     try_ext extensions
   in
@@ -92,14 +92,13 @@ let resolve_path ~(base_dir : string) ~(graphics_paths : string list)
   let search_dirs = graphics_paths @ [ base_dir ] in
   let rec try_dirs = function
     | [] -> None
-    | dir :: rest ->
+    | dir :: rest -> (
         let full_dir =
-          if Filename.is_relative dir then Filename.concat base_dir dir
-          else dir
+          if Filename.is_relative dir then Filename.concat base_dir dir else dir
         in
         match try_dir full_dir with
         | Some _ as found -> found
-        | None -> try_dirs rest
+        | None -> try_dirs rest)
   in
   try_dirs search_dirs
 
@@ -111,8 +110,8 @@ let analyze_image (path : string) : File_context.image_info option =
     try (Unix.stat path).Unix.st_size with Unix.Unix_error _ -> 0
   in
   match ext with
-  | ".png" ->
-      begin match Png_reader.read_png_info path with
+  | ".png" -> (
+      match Png_reader.read_png_info path with
       | None -> None
       | Some png ->
           let dpi_x, dpi_y =
@@ -122,8 +121,8 @@ let analyze_image (path : string) : File_context.image_info option =
           in
           let has_transparency =
             png.has_trns
-            || png.color_type = 4  (* gray + alpha *)
-            || png.color_type = 6  (* RGBA *)
+            || png.color_type = 4 (* gray + alpha *)
+            || png.color_type = 6 (* RGBA *)
           in
           let color_type =
             match png.color_type with
@@ -134,43 +133,51 @@ let analyze_image (path : string) : File_context.image_info option =
             | 6 -> `RGBA
             | _ -> `RGB
           in
-          Some {
-            File_context.path; format = `PNG;
-            width_px = png.width; height_px = png.height;
-            dpi_x; dpi_y; has_transparency; color_type;
-            has_icc_profile = png.has_iccp;
-            icc_is_srgb = png.has_srgb || (png.has_iccp &&
-              String.lowercase_ascii png.iccp_name = "srgb");
-            palette_size = png.plte_entries;
-            file_size;
-          }
-      end
-  | ".jpg" | ".jpeg" ->
-      begin match Jpeg_reader.read_jpeg_info path with
+          Some
+            {
+              File_context.path;
+              format = `PNG;
+              width_px = png.width;
+              height_px = png.height;
+              dpi_x;
+              dpi_y;
+              has_transparency;
+              color_type;
+              has_icc_profile = png.has_iccp;
+              icc_is_srgb =
+                png.has_srgb
+                || png.has_iccp
+                   && String.lowercase_ascii png.iccp_name = "srgb";
+              palette_size = png.plte_entries;
+              file_size;
+            })
+  | ".jpg" | ".jpeg" -> (
+      match Jpeg_reader.read_jpeg_info path with
       | None -> None
       | Some jpg ->
           let color_type =
             if jpg.components = 1 then `Gray
             else if jpg.components = 4 then
-              if jpg.adobe_color_transform = 2 then `YCCK
-              else `CMYK
-            else `RGB  (* 3 components = YCbCr → RGB *)
+              if jpg.adobe_color_transform = 2 then `YCCK else `CMYK
+            else `RGB (* 3 components = YCbCr → RGB *)
           in
-          let icc_is_srgb =
-            jpg.has_icc_profile && jpg.icc_color_space = `RGB
-          in
-          Some {
-            File_context.path; format = `JPEG;
-            width_px = jpg.width; height_px = jpg.height;
-            dpi_x = jpg.dpi_x; dpi_y = jpg.dpi_y;
-            has_transparency = false;  (* JPEG has no alpha *)
-            color_type;
-            has_icc_profile = jpg.has_icc_profile;
-            icc_is_srgb;
-            palette_size = 0;
-            file_size;
-          }
-      end
+          let icc_is_srgb = jpg.has_icc_profile && jpg.icc_color_space = `RGB in
+          Some
+            {
+              File_context.path;
+              format = `JPEG;
+              width_px = jpg.width;
+              height_px = jpg.height;
+              dpi_x = jpg.dpi_x;
+              dpi_y = jpg.dpi_y;
+              has_transparency = false;
+              (* JPEG has no alpha *)
+              color_type;
+              has_icc_profile = jpg.has_icc_profile;
+              icc_is_srgb;
+              palette_size = 0;
+              file_size;
+            })
   | _ -> None
 
 (* ── PDF analysis ──────────────────────────────────────────────────── *)
@@ -182,41 +189,45 @@ let analyze_pdf (path : string) : File_context.pdf_info option =
   match Pdf_reader.read_pdf_info path with
   | None -> None
   | Some info ->
-      Some {
-        File_context.path; file_size;
-        has_struct_tree_root = info.has_struct_tree_root;
-        has_mark_info = info.has_mark_info;
-        figures_without_alt = info.figures_without_alt;
-        links_without_contents = info.links_without_contents;
-        lang_entry = info.lang;
-        fonts = info.fonts;
-        has_spot_colour = info.has_spot_colour;
-        has_spot_colour_vector = info.has_spot_colour_vector;
-        streams_all_compressed = info.streams_all_compressed;
-        page_label_count = info.page_label_count;
-        page_count = info.page_count;
-      }
+      Some
+        {
+          File_context.path;
+          file_size;
+          has_struct_tree_root = info.has_struct_tree_root;
+          has_mark_info = info.has_mark_info;
+          figures_without_alt = info.figures_without_alt;
+          links_without_contents = info.links_without_contents;
+          lang_entry = info.lang;
+          fonts = info.fonts;
+          has_spot_colour = info.has_spot_colour;
+          has_spot_colour_vector = info.has_spot_colour_vector;
+          streams_all_compressed = info.streams_all_compressed;
+          page_label_count = info.page_label_count;
+          page_count = info.page_count;
+        }
 
 (* ── Font analysis ─────────────────────────────────────────────────── *)
 
 let find_font_file ~(base_dir : string) (name : string) : string option =
   (* Try common font file locations *)
-  let candidates = [
-    Filename.concat base_dir (name ^ ".ttf");
-    Filename.concat base_dir (name ^ ".otf");
-    Filename.concat base_dir (name ^ ".TTF");
-    Filename.concat base_dir (name ^ ".OTF");
-  ] in
+  let candidates =
+    [
+      Filename.concat base_dir (name ^ ".ttf");
+      Filename.concat base_dir (name ^ ".otf");
+      Filename.concat base_dir (name ^ ".TTF");
+      Filename.concat base_dir (name ^ ".OTF");
+    ]
+  in
   List.find_opt Sys.file_exists candidates
 
-let analyze_font ~(base_dir : string) (name : string) : File_context.font_info option =
+let analyze_font ~(base_dir : string) (name : string) :
+    File_context.font_info option =
   match find_font_file ~base_dir name with
   | None -> None
-  | Some path ->
+  | Some path -> (
       match Font_reader.has_cjk_coverage path with
       | None -> None
-      | Some has_cjk ->
-          Some { File_context.path; has_cjk_coverage = has_cjk }
+      | Some has_cjk -> Some { File_context.path; has_cjk_coverage = has_cjk })
 
 (* ── Main orchestrator ─────────────────────────────────────────────── *)
 
@@ -228,30 +239,37 @@ let analyze_files ~(base_dir : string) ?tex_path ~(source : string) () :
   (* Analyze images *)
   let image_paths = extract_includegraphics_paths source in
   let images =
-    List.filter_map (fun raw_path ->
-      match resolve_path ~base_dir ~graphics_paths
-              ~extensions:image_extensions raw_path with
-      | Some full_path -> analyze_image full_path
-      | None ->
-          (* Try as PDF *)
-          match resolve_path ~base_dir ~graphics_paths
-                  ~extensions:pdf_extensions raw_path with
-          | Some _ -> None  (* PDFs handled separately *)
-          | None -> None
-    ) image_paths
+    List.filter_map
+      (fun raw_path ->
+        match
+          resolve_path ~base_dir ~graphics_paths ~extensions:image_extensions
+            raw_path
+        with
+        | Some full_path -> analyze_image full_path
+        | None -> (
+            (* Try as PDF *)
+            match
+              resolve_path ~base_dir ~graphics_paths ~extensions:pdf_extensions
+                raw_path
+            with
+            | Some _ -> None (* PDFs handled separately *)
+            | None -> None))
+      image_paths
   in
 
   (* Analyze PDFs referenced by \includegraphics *)
   let pdfs =
-    List.filter_map (fun raw_path ->
-      match resolve_path ~base_dir ~graphics_paths
-              ~extensions:pdf_extensions raw_path with
-      | Some full_path ->
-          let ext = String.lowercase_ascii (Filename.extension full_path) in
-          if ext = ".pdf" then analyze_pdf full_path
-          else None
-      | None -> None
-    ) image_paths
+    List.filter_map
+      (fun raw_path ->
+        match
+          resolve_path ~base_dir ~graphics_paths ~extensions:pdf_extensions
+            raw_path
+        with
+        | Some full_path ->
+            let ext = String.lowercase_ascii (Filename.extension full_path) in
+            if ext = ".pdf" then analyze_pdf full_path else None
+        | None -> None)
+      image_paths
   in
 
   (* Also look for the main output PDF (same name as .tex, with .pdf) *)
@@ -277,9 +295,4 @@ let analyze_files ~(base_dir : string) ?tex_path ~(source : string) () :
     List.filter_map (fun name -> analyze_font ~base_dir name) cjk_font_names
   in
 
-  {
-    File_context.images;
-    pdfs = pdfs @ main_pdfs;
-    fonts;
-    doc_class;
-  }
+  { File_context.images; pdfs = pdfs @ main_pdfs; fonts; doc_class }

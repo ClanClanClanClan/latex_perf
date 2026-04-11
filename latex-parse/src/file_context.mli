@@ -2,7 +2,7 @@
    File_context — thread-local storage for external file analysis results
 
    Set by validators_cli / REST handlers before run_all; consumed by L3
-   validators via get_file_context ().  Follows the same pattern as
+   validators via get_file_context (). Follows the same pattern as
    Log_parser.{set,get,clear}_log_context.
    ══════════════════════════════════════════════════════════════════════ *)
 
@@ -14,8 +14,7 @@ type image_info = {
   dpi_x : float;  (** 0.0 = not specified *)
   dpi_y : float;
   has_transparency : bool;
-  color_type :
-    [ `Gray | `RGB | `RGBA | `Indexed | `GrayAlpha | `CMYK | `YCCK ];
+  color_type : [ `Gray | `RGB | `RGBA | `Indexed | `GrayAlpha | `CMYK | `YCCK ];
   has_icc_profile : bool;
   icc_is_srgb : bool;
   palette_size : int;  (** 0 if no palette *)
@@ -30,8 +29,7 @@ type pdf_info = {
   figures_without_alt : int;
   links_without_contents : int;
   lang_entry : string option;
-  fonts : (string * bool * bool) list;
-      (** (name, embedded, subsetted) *)
+  fonts : (string * bool * bool) list;  (** (name, embedded, subsetted) *)
   has_spot_colour : bool;
   has_spot_colour_vector : bool;
   streams_all_compressed : bool;

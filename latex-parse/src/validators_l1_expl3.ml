@@ -2,9 +2,9 @@
    Validators_l1_expl3 — CHAR-004, MATH-006, L3-001..L3-011 rules
    ══════════════════════════════════════════════════════════════════════
 
-   12 rules covering private-use Unicode, bra-ket notation, and the
-   full LaTeX3/expl3 style family.  All are text-scannable heuristics
-   that do not require macro expansion or AST parsing.
+   12 rules covering private-use Unicode, bra-ket notation, and the full
+   LaTeX3/expl3 style family. All are text-scannable heuristics that do not
+   require macro expansion or AST parsing.
    ══════════════════════════════════════════════════════════════════════ *)
 
 open Validators_common
@@ -17,31 +17,31 @@ let r_char_004 : rule =
     let i = ref 0 in
     while !i < len do
       let b0 = Char.code (String.unsafe_get s !i) in
-      (* U+E000–U+F8FF encodes as:
-         U+E000  = 0xEE 0x80 0x80
-         U+F8FF  = 0xEF 0xA3 0xBF
-         3-byte UTF-8: 1110xxxx 10xxxxxx 10xxxxxx *)
-      if b0 = 0xEE && !i + 2 < len then (
+      (* U+E000–U+F8FF encodes as: U+E000 = 0xEE 0x80 0x80 U+F8FF = 0xEF 0xA3
+         0xBF 3-byte UTF-8: 1110xxxx 10xxxxxx 10xxxxxx *)
+      if b0 = 0xEE && !i + 2 < len then
         let b1 = Char.code (String.unsafe_get s (!i + 1)) in
         let b2 = Char.code (String.unsafe_get s (!i + 2)) in
         if b1 land 0xC0 = 0x80 && b2 land 0xC0 = 0x80 then (
           (* U+E000 = 0xEE 0x80 0x80 .. U+EFFF = 0xEE 0xBF 0xBF *)
           incr cnt;
           i := !i + 3)
-        else i := !i + 1)
-      else if b0 = 0xEF && !i + 2 < len then (
+        else i := !i + 1
+      else if b0 = 0xEF && !i + 2 < len then
         let b1 = Char.code (String.unsafe_get s (!i + 1)) in
         let b2 = Char.code (String.unsafe_get s (!i + 2)) in
-        if b1 land 0xC0 = 0x80 && b2 land 0xC0 = 0x80 then (
-          (* Decode: cp = (0xEF land 0x0F)<<12 | (b1 land 0x3F)<<6 | b2 land 0x3F
-             = 0xF000 | ((b1 land 0x3F)<<6) | (b2 land 0x3F)
-             PUA upper bound is U+F8FF = 0xEF 0xA3 0xBF
-             so b1 must be <= 0xA3, and if b1=0xA3 then b2 <= 0xBF (always true) *)
-          if b1 <= 0xA3 then (
+        if b1 land 0xC0 = 0x80 && b2 land 0xC0 = 0x80 then
+          if
+            (* Decode: cp = (0xEF land 0x0F)<<12 | (b1 land 0x3F)<<6 | b2 land
+               0x3F = 0xF000 | ((b1 land 0x3F)<<6) | (b2 land 0x3F) PUA upper
+               bound is U+F8FF = 0xEF 0xA3 0xBF so b1 must be <= 0xA3, and if
+               b1=0xA3 then b2 <= 0xBF (always true) *)
+            b1 <= 0xA3
+          then (
             incr cnt;
             i := !i + 3)
-          else i := !i + 3 (* skip valid 3-byte seq but not PUA *))
-        else i := !i + 1)
+          else i := !i + 3 (* skip valid 3-byte seq but not PUA *)
+        else i := !i + 1
       else i := !i + 1
     done;
     if !cnt > 0 then
@@ -49,7 +49,8 @@ let r_char_004 : rule =
         {
           id = "CHAR-004";
           severity = Info;
-          message = "Private-use Unicode (U+E000\xe2\x80\x93F8FF) codepoint found";
+          message =
+            "Private-use Unicode (U+E000\xe2\x80\x93F8FF) codepoint found";
           count = !cnt;
         }
     else None
@@ -67,26 +68,26 @@ let r_math_006 : rule =
     List.iter
       (fun seg ->
         let i = ref 0 in
-        (try
-           while true do
-             let _ = Str.search_forward re_braket seg !i in
-             let matched = Str.matched_string seg in
-             (* Check for separator: \mid or | between \langle and \rangle *)
-             let has_mid = contains_substring matched "\\mid" in
-             let has_pipe =
-               (* look for | that isn't \| *)
-               let mlen = String.length matched in
-               let found = ref false in
-               for j = 7 (* skip \langle *) to mlen - 8 (* before \rangle *) do
-                 if matched.[j] = '|' then
-                   if j = 0 || matched.[j - 1] <> '\\' then found := true
-               done;
-               !found
-             in
-             if (not has_mid) && not has_pipe then incr cnt;
-             i := Str.match_end ()
-           done
-         with Not_found -> ()))
+        try
+          while true do
+            let _ = Str.search_forward re_braket seg !i in
+            let matched = Str.matched_string seg in
+            (* Check for separator: \mid or | between \langle and \rangle *)
+            let has_mid = contains_substring matched "\\mid" in
+            let has_pipe =
+              (* look for | that isn't \| *)
+              let mlen = String.length matched in
+              let found = ref false in
+              for j = 7 (* skip \langle *) to mlen - 8 (* before \rangle *) do
+                if matched.[j] = '|' then
+                  if j = 0 || matched.[j - 1] <> '\\' then found := true
+              done;
+              !found
+            in
+            if (not has_mid) && not has_pipe then incr cnt;
+            i := Str.match_end ()
+          done
+        with Not_found -> ())
       math_segs;
     if !cnt > 0 then
       Some

@@ -415,6 +415,10 @@ let () =
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "PDF-007" (unique_src ())) (tag ^ ": clean")));
 
+  run "PDF-007 no context" (fun tag ->
+      File_context.clear_file_context ();
+      expect (does_not_fire "PDF-007" (unique_src ())) (tag ^ ": no ctx"));
+
   (* ══════════════════════════════════════════════════════════════════
      PDF-008: Link annotations missing /Contents
      ══════════════════════════════════════════════════════════════════ *)
@@ -435,6 +439,10 @@ let () =
       in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "PDF-008" (unique_src ())) (tag ^ ": clean")));
+
+  run "PDF-008 no context" (fun tag ->
+      File_context.clear_file_context ();
+      expect (does_not_fire "PDF-008" (unique_src ())) (tag ^ ": no ctx"));
 
   (* ══════════════════════════════════════════════════════════════════
      PDF-009: /Lang entry missing
@@ -595,6 +603,10 @@ let () =
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "COL-004" (unique_src ())) (tag ^ ": clean")));
 
+  run "COL-004 no context" (fun tag ->
+      File_context.clear_file_context ();
+      expect (does_not_fire "COL-004" (unique_src ())) (tag ^ ": no ctx"));
+
   (* ══════════════════════════════════════════════════════════════════
      COL-007: Spot colour in vector element
      ══════════════════════════════════════════════════════════════════ *)
@@ -612,6 +624,10 @@ let () =
       in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "COL-007" (unique_src ())) (tag ^ ": clean")));
+
+  run "COL-007 no context" (fun tag ->
+      File_context.clear_file_context ();
+      expect (does_not_fire "COL-007" (unique_src ())) (tag ^ ": no ctx"));
 
   (* ══════════════════════════════════════════════════════════════════
      TIKZ-002: TikZ compile time > 5 s
@@ -670,6 +686,10 @@ let () =
       in
       with_file_ctx ctx (fun () ->
           expect (does_not_fire "TIKZ-008" (unique_src ())) (tag ^ ": clean")));
+
+  run "TIKZ-008 no context" (fun tag ->
+      File_context.clear_file_context ();
+      expect (does_not_fire "TIKZ-008" (unique_src ())) (tag ^ ": no ctx"));
 
   (* ══════════════════════════════════════════════════════════════════
      CJK-007: Kanji glyph missing

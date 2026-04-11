@@ -31,9 +31,11 @@ From LaTeXPerfectionist.Generated Require Import L1_CHEM.
 From LaTeXPerfectionist.Generated Require Import L1_CJK.
 From LaTeXPerfectionist.Generated Require Import L1_CMD.
 From LaTeXPerfectionist.Generated Require Import L1_DELIM.
+From LaTeXPerfectionist.Generated Require Import L1_EXP.
 From LaTeXPerfectionist.Generated Require Import L1_FONT.
 From LaTeXPerfectionist.Generated Require Import L1_L3.
 From LaTeXPerfectionist.Generated Require Import L1_MATH.
+From LaTeXPerfectionist.Generated Require Import L1_MOD.
 From LaTeXPerfectionist.Generated Require Import L1_PT.
 From LaTeXPerfectionist.Generated Require Import L1_REF.
 From LaTeXPerfectionist.Generated Require Import L1_RTL.
@@ -115,9 +117,11 @@ Definition all_proved_rule_ids : list string :=
   l1_cjk_proved ++
   l1_cmd_proved ++
   l1_delim_proved ++
+  l1_exp_proved ++
   l1_font_proved ++
   l1_l3_proved ++
   l1_math_proved ++
+  l1_mod_proved ++
   l1_pt_proved ++
   l1_ref_proved ++
   l1_rtl_proved ++
@@ -173,4 +177,4 @@ Definition all_proved_rule_ids : list string :=
   l4_typo_proved ++
   l4_zh_proved.
 
-(** Total coverage: 607 rules with soundness proofs. *)
+(** Total coverage: 626 rules with soundness proofs. *)

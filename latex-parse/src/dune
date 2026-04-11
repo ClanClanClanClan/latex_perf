@@ -32,6 +32,7 @@
   validators_l2
   validators_l4_style
   validators_l1
+  validators_l1_expl3
   file_context
   png_reader
   jpeg_reader
@@ -366,6 +367,11 @@
 (test
  (name test_validators_expl3)
  (modules test_validators_expl3)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_validators_l1_expl3)
+ (modules test_validators_l1_expl3)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

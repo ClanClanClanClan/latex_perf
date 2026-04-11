@@ -5997,5 +5997,21 @@
       "hi": 219
     },
     "severity": "Info"
+  },
+  "MOD-001": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\bf ", "\\bf{", "\\it ", "\\it{", "\\tt ", "\\tt{", "\\rm ", "\\rm{", "\\sl ", "\\sl{", "\\sf ", "\\sf{"]
+    },
+    "severity": "Warning"
+  },
+  "EXP-001": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring",
+      "needles": ["\\textbf{", "\\emph{", "\\section{"]
+    },
+    "severity": "Info"
   }
 }

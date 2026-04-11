@@ -182,13 +182,14 @@ type jpeg_opts = {
   j_dpi : int;         (* 0 = no JFIF DPI *)
   j_has_icc : bool;
   j_icc_color_space : string;  (* "RGB ", "CMYK", "GRAY" *)
+  j_icc_chunks : int;          (* number of APP2 ICC chunks, default 1 *)
   j_adobe_transform : int;     (* -1 = no Adobe marker *)
 }
 
 let default_jpeg_opts = {
   j_width = 100; j_height = 100; j_components = 3;
   j_dpi = 0; j_has_icc = false; j_icc_color_space = "RGB ";
-  j_adobe_transform = -1;
+  j_icc_chunks = 1; j_adobe_transform = -1;
 }
 
 let make_jpeg (opts : jpeg_opts) : bytes =
@@ -215,24 +216,38 @@ let make_jpeg (opts : jpeg_opts) : bytes =
     add app0
   end;
 
-  (* APP2 ICC_PROFILE *)
+  (* APP2 ICC_PROFILE — supports multi-chunk profiles *)
   if opts.j_has_icc then begin
-    (* ICC header is at least 128 bytes *)
-    let icc_header = Bytes.make 128 '\000' in
-    (* Color space at offset 16 *)
-    let cs = opts.j_icc_color_space in
-    if String.length cs >= 4 then
-      Bytes.blit_string cs 0 icc_header 16 4;
-    let prefix = "ICC_PROFILE\000\001\001" in
-    let plen = String.length prefix in
-    let seg_len = 2 + plen + 128 in
-    let app2 = Bytes.create (2 + seg_len) in
-    Bytes.set app2 0 '\xFF';
-    Bytes.set app2 1 '\xE2';
-    put_u16_be app2 2 seg_len;
-    Bytes.blit_string prefix 0 app2 4 plen;
-    Bytes.blit icc_header 0 app2 (4 + plen) 128;
-    add app2
+    let total_chunks = max 1 opts.j_icc_chunks in
+    for chunk = 1 to total_chunks do
+      (* Chunk 1 carries the ICC header (128 bytes min);
+         subsequent chunks carry dummy continuation data. *)
+      let icc_data =
+        if chunk = 1 then begin
+          let hdr = Bytes.make 128 '\000' in
+          (* Color space at ICC header offset 16 *)
+          let cs = opts.j_icc_color_space in
+          if String.length cs >= 4 then
+            Bytes.blit_string cs 0 hdr 16 4;
+          hdr
+        end else
+          (* Continuation chunk: 64 bytes of dummy data *)
+          Bytes.make 64 '\xAA'
+      in
+      let icc_data_len = Bytes.length icc_data in
+      (* "ICC_PROFILE\0" (12) + seq (1) + total (1) + icc_data *)
+      let payload_len = 12 + 1 + 1 + icc_data_len in
+      let seg_len = 2 + payload_len in  (* length field includes itself *)
+      let app2 = Bytes.create (2 + seg_len) in
+      Bytes.set app2 0 '\xFF';
+      Bytes.set app2 1 '\xE2';
+      put_u16_be app2 2 seg_len;
+      Bytes.blit_string "ICC_PROFILE\000" 0 app2 4 12;
+      Bytes.set app2 16 (Char.chr chunk);          (* sequence number *)
+      Bytes.set app2 17 (Char.chr total_chunks);   (* total chunks *)
+      Bytes.blit icc_data 0 app2 18 icc_data_len;
+      add app2
+    done
   end;
 
   (* APP14 Adobe *)
@@ -602,3 +617,287 @@ let make_ttf ~(has_cjk : bool) : bytes =
   Buffer.add_string buf cmap_data;
 
   Bytes.of_string (Buffer.contents buf)
+
+(* ── Minimal TTF with format 4 cmap ──────────────────────────────── *)
+
+let make_ttf_format4 ~(has_cjk : bool) : bytes =
+  (* Build a minimal TTF with a format 4 (BMP) cmap subtable.
+     Platform 3, encoding 1 = Windows Unicode BMP. *)
+  let buf = Buffer.create 512 in
+
+  (* Offset table: 1 table (cmap) *)
+  let header = Bytes.create 12 in
+  put_u32_be header 0 0x00010000;  (* sfnt version *)
+  put_u16_be header 4 1;           (* numTables *)
+  put_u16_be header 6 16;          (* searchRange *)
+  put_u16_be header 8 0;           (* entrySelector *)
+  put_u16_be header 10 16;         (* rangeShift *)
+  Buffer.add_bytes buf header;
+
+  (* Table record for cmap *)
+  let cmap_offset = 12 + 16 in  (* after header + 1 table record *)
+  let table_rec = Bytes.create 16 in
+  Bytes.blit_string "cmap" 0 table_rec 0 4;
+  put_u32_be table_rec 4 0;           (* checksum *)
+  put_u32_be table_rec 8 cmap_offset; (* offset *)
+
+  (* Build cmap with format 4 *)
+  let cmap_buf = Buffer.create 256 in
+  let cmap_header = Bytes.create 4 in
+  put_u16_be cmap_header 0 0;  (* version *)
+  put_u16_be cmap_header 2 1;  (* numTables *)
+  Buffer.add_bytes cmap_buf cmap_header;
+
+  (* Encoding record: platform 3, encoding 1 (Windows Unicode BMP) *)
+  let enc_rec = Bytes.create 8 in
+  put_u16_be enc_rec 0 3;   (* platformID *)
+  put_u16_be enc_rec 2 1;   (* encodingID = Unicode BMP *)
+  put_u32_be enc_rec 4 12;  (* offset to subtable from cmap start *)
+  Buffer.add_bytes cmap_buf enc_rec;
+
+  (* Format 4 subtable *)
+  let segments =
+    if has_cjk then
+      (* ASCII + CJK Unified Ideographs + sentinel *)
+      [ (0x0020, 0x007E, 1);       (* startGlyphID = 1 for ASCII *)
+        (0x4E00, 0x9FFF, 0x60);    (* startGlyphID for CJK *)
+        (0xFFFF, 0xFFFF, 1) ]      (* required sentinel *)
+    else
+      (* ASCII only + sentinel *)
+      [ (0x0020, 0x007E, 1);
+        (0xFFFF, 0xFFFF, 1) ]
+  in
+  let seg_count = List.length segments in
+  (* searchRange = 2 * 2^(floor(log2(segCount))) *)
+  let log2_seg = int_of_float (log (float_of_int seg_count) /. log 2.0) in
+  let search_range = 2 * (1 lsl log2_seg) in
+  let entry_selector = log2_seg in
+  let seg_count_x2 = 2 * seg_count in
+  let range_shift = seg_count_x2 - search_range in
+
+  (* Header: 14 bytes *)
+  let subtable_len = 14 + seg_count * 2 * 4 + 2 in  (* 4 arrays + reservedPad *)
+  let fmt4_header = Bytes.create 14 in
+  put_u16_be fmt4_header 0 4;                 (* format *)
+  put_u16_be fmt4_header 2 subtable_len;      (* length *)
+  put_u16_be fmt4_header 4 0;                 (* language *)
+  put_u16_be fmt4_header 6 seg_count_x2;      (* segCountX2 *)
+  put_u16_be fmt4_header 8 search_range;       (* searchRange *)
+  put_u16_be fmt4_header 10 entry_selector;    (* entrySelector *)
+  put_u16_be fmt4_header 12 range_shift;       (* rangeShift *)
+  Buffer.add_bytes cmap_buf fmt4_header;
+
+  (* endCount array *)
+  let end_arr = Bytes.create (seg_count * 2) in
+  List.iteri (fun i (_start_code, end_code, _glyph) ->
+    put_u16_be end_arr (i * 2) end_code
+  ) segments;
+  Buffer.add_bytes cmap_buf end_arr;
+
+  (* reservedPad *)
+  let pad = Bytes.create 2 in
+  put_u16_be pad 0 0;
+  Buffer.add_bytes cmap_buf pad;
+
+  (* startCount array *)
+  let start_arr = Bytes.create (seg_count * 2) in
+  List.iteri (fun i (start_code, _end_code, _glyph) ->
+    put_u16_be start_arr (i * 2) start_code
+  ) segments;
+  Buffer.add_bytes cmap_buf start_arr;
+
+  (* idDelta array: delta = startGlyphID - startCount (mod 65536) *)
+  let delta_arr = Bytes.create (seg_count * 2) in
+  List.iteri (fun i (start_code, _end_code, start_glyph_id) ->
+    let delta = (start_glyph_id - start_code) land 0xFFFF in
+    put_u16_be delta_arr (i * 2) delta
+  ) segments;
+  Buffer.add_bytes cmap_buf delta_arr;
+
+  (* idRangeOffset array: all zeros (direct mapping via idDelta) *)
+  let range_off_arr = Bytes.create (seg_count * 2) in
+  (* All zeros by default *)
+  Buffer.add_bytes cmap_buf range_off_arr;
+
+  let cmap_data = Buffer.contents cmap_buf in
+  put_u32_be table_rec 12 (String.length cmap_data);  (* length *)
+  Buffer.add_bytes buf table_rec;
+
+  (* Write cmap *)
+  Buffer.add_string buf cmap_data;
+
+  Bytes.of_string (Buffer.contents buf)
+
+(* ── JPEG with EXIF APP1 DPI ─────────────────────────────────────── *)
+
+let put_u16_le buf off v =
+  Bytes.set buf off (Char.chr (v land 0xFF));
+  Bytes.set buf (off + 1) (Char.chr ((v lsr 8) land 0xFF))
+
+let put_u32_le buf off v =
+  Bytes.set buf off       (Char.chr (v land 0xFF));
+  Bytes.set buf (off + 1) (Char.chr ((v lsr 8)  land 0xFF));
+  Bytes.set buf (off + 2) (Char.chr ((v lsr 16) land 0xFF));
+  Bytes.set buf (off + 3) (Char.chr ((v lsr 24) land 0xFF))
+
+(** Generate a minimal valid JPEG with an EXIF APP1 marker carrying
+    XResolution, YResolution, and ResolutionUnit IFD entries.
+
+    [~dpi]: density value written into both XResolution and YResolution
+            as a rational (dpi/1).
+    [~big_endian]: if true the TIFF header uses "MM" (big-endian);
+                   otherwise "II" (little-endian).
+    [~res_unit]: 2 = inches (default), 3 = centimetres.
+    [~include_jfif]: if true an APP0 JFIF marker with 72 DPI is also
+                     emitted (defaults to true). *)
+let make_jpeg_exif ?(res_unit = 2) ?(include_jfif = true)
+    ~(dpi : int) ~(big_endian : bool) () : bytes =
+  let parts = ref [] in
+  let add b = parts := b :: !parts in
+
+  (* SOI *)
+  add (Bytes.of_string "\xFF\xD8");
+
+  (* Optional APP0 JFIF with 72 DPI *)
+  if include_jfif then begin
+    let app0 = Bytes.create 18 in
+    Bytes.set app0 0 '\xFF';
+    Bytes.set app0 1 '\xE0';
+    put_u16_be app0 2 16;
+    Bytes.blit_string "JFIF\000" 0 app0 4 5;
+    Bytes.set app0 9 '\001';
+    Bytes.set app0 10 '\001';
+    Bytes.set app0 11 '\001';       (* units = DPI *)
+    put_u16_be app0 12 72;          (* X density *)
+    put_u16_be app0 14 72;          (* Y density *)
+    Bytes.set app0 16 '\000';
+    Bytes.set app0 17 '\000';
+    add app0
+  end;
+
+  (* ── APP1 EXIF segment ─────────────────────────────────────────── *)
+  (*
+     Layout inside the APP1 data (after the 2-byte marker FF E1):
+       [0..5]   "Exif\0\0"
+       --- TIFF header starts at offset 6 (= tiff_start) ---
+       [6..7]   byte order: "II" or "MM"
+       [8..9]   magic 0x002A
+       [10..13] IFD0 offset from tiff_start (= 8, right after header)
+       --- IFD0 at tiff_start + 8 = offset 14 ---
+       [14..15] entry count = 3
+       [16..27] entry 0: XResolution  tag=0x011A type=5 count=1 valoff
+       [28..39] entry 1: YResolution  tag=0x011B type=5 count=1 valoff
+       [40..51] entry 2: ResolutionUnit tag=0x0128 type=3 count=1 val
+       [52..55] next IFD offset = 0
+       --- rational values ---
+       [56..63] XResolution rational (num 4 + den 4)
+       [64..71] YResolution rational (num 4 + den 4)
+     Total EXIF data length = 72 bytes.
+  *)
+  let exif_data_len = 72 in
+  (* APP1 segment: marker(2) + length(2) + data *)
+  let seg_len = 2 + exif_data_len in   (* length field includes itself *)
+  let app1 = Bytes.make (2 + 2 + exif_data_len) '\000' in
+  Bytes.set app1 0 '\xFF';
+  Bytes.set app1 1 '\xE1';
+  put_u16_be app1 2 seg_len;
+  (* "Exif\0\0" *)
+  Bytes.blit_string "Exif\000\000" 0 app1 4 6;
+
+  (* Byte-order-aware writers *)
+  let pu16 buf off v =
+    if big_endian then put_u16_be buf off v
+    else put_u16_le buf off v
+  in
+  let pu32 buf off v =
+    if big_endian then put_u32_be buf off v
+    else put_u32_le buf off v
+  in
+
+  let tiff = 4 + 6 in  (* offset of TIFF header inside app1 buffer *)
+  (* Byte order mark *)
+  if big_endian then
+    Bytes.blit_string "MM" 0 app1 tiff 2
+  else
+    Bytes.blit_string "II" 0 app1 tiff 2;
+  (* TIFF magic 0x002A *)
+  pu16 app1 (tiff + 2) 0x002A;
+  (* IFD0 offset from tiff_start = 8 *)
+  pu32 app1 (tiff + 4) 8;
+
+  let ifd = tiff + 8 in
+  (* Number of IFD entries = 3 *)
+  pu16 app1 ifd 3;
+
+  (* Rational values stored after the IFD block.
+     IFD block = 2 (count) + 3*12 (entries) + 4 (next IFD) = 42 bytes
+     Rationals start at tiff_start + 8 + 42 = tiff_start + 50
+     i.e. offset-from-tiff-start = 50 for XRes, 58 for YRes. *)
+  let xres_valoff = 50 in
+  let yres_valoff = 58 in
+
+  (* Entry 0: XResolution — tag 0x011A, type RATIONAL(5), count 1 *)
+  let e0 = ifd + 2 in
+  pu16 app1 e0 0x011A;
+  pu16 app1 (e0 + 2) 5;       (* type = RATIONAL *)
+  pu32 app1 (e0 + 4) 1;       (* count *)
+  pu32 app1 (e0 + 8) xres_valoff;
+
+  (* Entry 1: YResolution — tag 0x011B *)
+  let e1 = e0 + 12 in
+  pu16 app1 e1 0x011B;
+  pu16 app1 (e1 + 2) 5;
+  pu32 app1 (e1 + 4) 1;
+  pu32 app1 (e1 + 8) yres_valoff;
+
+  (* Entry 2: ResolutionUnit — tag 0x0128, type SHORT(3), count 1,
+     value stored inline in the value_or_offset field. *)
+  let e2 = e1 + 12 in
+  pu16 app1 e2 0x0128;
+  pu16 app1 (e2 + 2) 3;       (* type = SHORT *)
+  pu32 app1 (e2 + 4) 1;       (* count *)
+  pu16 app1 (e2 + 8) res_unit; (* value inline, upper 2 bytes stay 0 *)
+
+  (* Next IFD offset = 0 (no more IFDs) — already zeroed *)
+
+  (* Rational values *)
+  let rv_base = tiff + xres_valoff in
+  pu32 app1 rv_base dpi;        (* XRes numerator *)
+  pu32 app1 (rv_base + 4) 1;    (* XRes denominator *)
+  pu32 app1 (rv_base + 8) dpi;  (* YRes numerator *)
+  pu32 app1 (rv_base + 12) 1;   (* YRes denominator *)
+
+  add app1;
+
+  (* SOF0: 1x1, 3 components *)
+  let sof_data_len = 8 + 3 * 3 in
+  let sof = Bytes.create (2 + 2 + sof_data_len - 2) in
+  Bytes.set sof 0 '\xFF';
+  Bytes.set sof 1 '\xC0';
+  put_u16_be sof 2 sof_data_len;
+  Bytes.set sof 4 '\x08';
+  put_u16_be sof 5 1;             (* height *)
+  put_u16_be sof 7 1;             (* width *)
+  Bytes.set sof 9 (Char.chr 3);   (* 3 components *)
+  for i = 0 to 2 do
+    let off = 10 + i * 3 in
+    Bytes.set sof off (Char.chr (i + 1));
+    Bytes.set sof (off + 1) '\x11';
+    Bytes.set sof (off + 2) '\x00'
+  done;
+  add sof;
+
+  (* EOI *)
+  add (Bytes.of_string "\xFF\xD9");
+
+  (* Assemble *)
+  let all = List.rev !parts in
+  let total = List.fold_left (fun acc b -> acc + Bytes.length b) 0 all in
+  let result = Bytes.create total in
+  let pos = ref 0 in
+  List.iter (fun b ->
+    let blen = Bytes.length b in
+    Bytes.blit b 0 result !pos blen;
+    pos := !pos + blen
+  ) all;
+  result

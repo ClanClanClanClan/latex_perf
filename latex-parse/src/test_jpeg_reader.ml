@@ -237,6 +237,44 @@ let () =
         expect info.has_icc_profile (tag ^ ": has_icc=true");
         expect (info.icc_color_space = `Unknown) (tag ^ ": icc=Unknown")));
 
+  (* ── Multi-chunk ICC profiles ──────────────────────────────────────── *)
+
+  run "ICC multi-chunk: 2 chunks, color space from chunk 1" (fun tag ->
+    let opts = { Test_binary_gen.default_jpeg_opts with
+                 j_has_icc = true; j_icc_color_space = "CMYK";
+                 j_icc_chunks = 2 } in
+    with_jpeg opts (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some")
+      | Some info ->
+        expect info.has_icc_profile (tag ^ ": has_icc=true");
+        expect (info.icc_color_space = `CMYK) (tag ^ ": icc=CMYK from chunk 1")));
+
+  run "ICC multi-chunk: 3 chunks, color space from chunk 1" (fun tag ->
+    let opts = { Test_binary_gen.default_jpeg_opts with
+                 j_has_icc = true; j_icc_color_space = "RGB ";
+                 j_icc_chunks = 3 } in
+    with_jpeg opts (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some")
+      | Some info ->
+        expect info.has_icc_profile (tag ^ ": has_icc=true");
+        expect (info.icc_color_space = `RGB) (tag ^ ": icc=RGB from chunk 1")));
+
+  run "ICC multi-chunk: chunk 2 does not overwrite chunk 1 color space" (fun tag ->
+    (* Use the generator for a 2-chunk CMYK profile, then verify
+       the reader doesn't clobber icc_cs with Unknown from chunk 2. *)
+    let opts = { Test_binary_gen.default_jpeg_opts with
+                 j_has_icc = true; j_icc_color_space = "GRAY";
+                 j_icc_chunks = 2 } in
+    with_jpeg opts (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some")
+      | Some info ->
+        expect info.has_icc_profile (tag ^ ": has_icc=true");
+        expect (info.icc_color_space = `Gray)
+          (tag ^ ": icc=Gray not overwritten by chunk 2")));
+
   (* ════════════════════════════════════════════════════════════════════
      5. APP14 Adobe marker with transform values 0, 1, 2
      ════════════════════════════════════════════════════════════════════ *)
@@ -368,7 +406,7 @@ let () =
     let opts = { Test_binary_gen.j_width = 640; j_height = 480;
                  j_components = 3; j_dpi = 300;
                  j_has_icc = true; j_icc_color_space = "RGB ";
-                 j_adobe_transform = 1 } in
+                 j_icc_chunks = 1; j_adobe_transform = 1 } in
     with_jpeg opts (fun path ->
       match Jpeg_reader.read_jpeg_info path with
       | None -> expect false (tag ^ ": expected Some")
@@ -386,7 +424,7 @@ let () =
     let opts = { Test_binary_gen.j_width = 1200; j_height = 800;
                  j_components = 4; j_dpi = 150;
                  j_has_icc = true; j_icc_color_space = "CMYK";
-                 j_adobe_transform = 2 } in
+                 j_icc_chunks = 1; j_adobe_transform = 2 } in
     with_jpeg opts (fun path ->
       match Jpeg_reader.read_jpeg_info path with
       | None -> expect false (tag ^ ": expected Some")
@@ -403,7 +441,7 @@ let () =
     let opts = { Test_binary_gen.j_width = 256; j_height = 256;
                  j_components = 1; j_dpi = 96;
                  j_has_icc = true; j_icc_color_space = "GRAY";
-                 j_adobe_transform = -1 } in
+                 j_icc_chunks = 1; j_adobe_transform = -1 } in
     with_jpeg opts (fun path ->
       match Jpeg_reader.read_jpeg_info path with
       | None -> expect false (tag ^ ": expected Some")
@@ -415,6 +453,79 @@ let () =
         expect info.has_icc_profile (tag ^ ": has_icc=true");
         expect (info.icc_color_space = `Gray) (tag ^ ": icc=Gray");
         expect (info.adobe_color_transform = -1) (tag ^ ": adobe=-1")));
+
+  (* ════════════════════════════════════════════════════════════════════
+     9. EXIF APP1 DPI — big-endian and little-endian TIFF headers
+     ════════════════════════════════════════════════════════════════════ *)
+
+  run "EXIF DPI: big-endian (MM) 300 DPI" (fun tag ->
+    let data = Test_binary_gen.make_jpeg_exif ~dpi:300 ~big_endian:true () in
+    with_jpeg_file data (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some, got None")
+      | Some info ->
+        expect (info.dpi_x = 300.0)
+          (Printf.sprintf "%s: dpi_x=%.1f expected 300.0" tag info.dpi_x);
+        expect (info.dpi_y = 300.0)
+          (Printf.sprintf "%s: dpi_y=%.1f expected 300.0" tag info.dpi_y)));
+
+  run "EXIF DPI: little-endian (II) 150 DPI" (fun tag ->
+    let data = Test_binary_gen.make_jpeg_exif ~dpi:150 ~big_endian:false () in
+    with_jpeg_file data (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some, got None")
+      | Some info ->
+        expect (info.dpi_x = 150.0)
+          (Printf.sprintf "%s: dpi_x=%.1f expected 150.0" tag info.dpi_x);
+        expect (info.dpi_y = 150.0)
+          (Printf.sprintf "%s: dpi_y=%.1f expected 150.0" tag info.dpi_y)));
+
+  run "EXIF DPI: ResolutionUnit=3 (cm) 118 dpcm -> ~300 DPI" (fun tag ->
+    let data =
+      Test_binary_gen.make_jpeg_exif ~dpi:118 ~big_endian:true ~res_unit:3 ()
+    in
+    with_jpeg_file data (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some, got None")
+      | Some info ->
+        (* 118 dots/cm * 2.54 = 299.72 *)
+        let expected = 118.0 *. 2.54 in
+        expect (abs_float (info.dpi_x -. expected) < 0.01)
+          (Printf.sprintf "%s: dpi_x=%.2f expected ~%.2f" tag info.dpi_x expected);
+        expect (abs_float (info.dpi_y -. expected) < 0.01)
+          (Printf.sprintf "%s: dpi_y=%.2f expected ~%.2f" tag info.dpi_y expected)));
+
+  run "EXIF DPI: no JFIF, only APP1 -> DPI from EXIF" (fun tag ->
+    let data =
+      Test_binary_gen.make_jpeg_exif ~dpi:300 ~big_endian:false
+        ~include_jfif:false ()
+    in
+    with_jpeg_file data (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some, got None")
+      | Some info ->
+        expect (info.dpi_x = 300.0)
+          (Printf.sprintf "%s: dpi_x=%.1f expected 300.0" tag info.dpi_x);
+        expect (info.dpi_y = 300.0)
+          (Printf.sprintf "%s: dpi_y=%.1f expected 300.0" tag info.dpi_y)));
+
+  run "EXIF DPI: JFIF(72) + EXIF(300) -> EXIF overrides" (fun tag ->
+    (* make_jpeg_exif defaults to include_jfif=true with 72 DPI *)
+    let data =
+      Test_binary_gen.make_jpeg_exif ~dpi:300 ~big_endian:true
+        ~include_jfif:true ()
+    in
+    with_jpeg_file data (fun path ->
+      match Jpeg_reader.read_jpeg_info path with
+      | None -> expect false (tag ^ ": expected Some, got None")
+      | Some info ->
+        (* EXIF sets dpi unconditionally when > 0, so 300 wins over 72 *)
+        expect (info.dpi_x = 300.0)
+          (Printf.sprintf "%s: dpi_x=%.1f expected 300.0 (EXIF overrides JFIF)"
+             tag info.dpi_x);
+        expect (info.dpi_y = 300.0)
+          (Printf.sprintf "%s: dpi_y=%.1f expected 300.0 (EXIF overrides JFIF)"
+             tag info.dpi_y)));
 
   (* ════════════════════════════════════════════════════════════════════ *)
   finalise "jpeg_reader"

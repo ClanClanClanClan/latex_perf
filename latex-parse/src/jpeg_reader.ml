@@ -204,11 +204,17 @@ let read_jpeg_info (path : string) : jpeg_info option =
                         if ey > 0.0 then dpi_y := ey
 
                     (* APP2 — ICC_PROFILE *)
-                    | 0xE2 when data_len >= 18 && starts_with data 0 "ICC_PROFILE\000" ->
-                        (* bytes 12-13: sequence number, total chunks *)
+                    | 0xE2 when data_len >= 14 && starts_with data 0 "ICC_PROFILE\000" ->
+                        (* data[12] = sequence number (1-based), data[13] = total chunks *)
                         has_icc := true;
-                        let cs = parse_icc_color_space data 14 in
-                        if cs <> `Unknown then icc_cs := cs
+                        let seq_num = Char.code (Bytes.get data 12) in
+                        (* Only read color space from the first chunk (seq=1).
+                           ICC header byte 16 (color space) is at data[14+16]=data[30],
+                           so we need data_len >= 34. *)
+                        if seq_num = 1 && !icc_cs = `Unknown && data_len >= 34 then begin
+                          let cs = parse_icc_color_space data 14 in
+                          if cs <> `Unknown then icc_cs := cs
+                        end
 
                     (* APP14 — Adobe *)
                     | 0xEE when data_len >= 12 && starts_with data 0 "Adobe" ->

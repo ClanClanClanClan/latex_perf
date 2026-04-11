@@ -220,7 +220,7 @@ let analyze_font ~(base_dir : string) (name : string) : File_context.font_info o
 
 (* ── Main orchestrator ─────────────────────────────────────────────── *)
 
-let analyze_files ~(base_dir : string) ~(source : string) :
+let analyze_files ~(base_dir : string) ?tex_path ~(source : string) () :
     File_context.file_analysis =
   let graphics_paths = extract_graphicspath source in
   let doc_class = extract_docclass source in
@@ -256,16 +256,19 @@ let analyze_files ~(base_dir : string) ~(source : string) :
 
   (* Also look for the main output PDF (same name as .tex, with .pdf) *)
   let main_pdfs =
-    let bn = Filename.basename base_dir in
-    let stem =
-      try Filename.chop_extension bn with Invalid_argument _ -> bn
-    in
-    let main_pdf_path = Filename.concat base_dir (stem ^ ".pdf") in
-    if Sys.file_exists main_pdf_path then
-      match analyze_pdf main_pdf_path with
-      | Some info -> [ info ]
-      | None -> []
-    else []
+    match tex_path with
+    | Some tp ->
+        let stem =
+          try Filename.chop_extension (Filename.basename tp)
+          with Invalid_argument _ -> Filename.basename tp
+        in
+        let main_pdf_path = Filename.concat base_dir (stem ^ ".pdf") in
+        if Sys.file_exists main_pdf_path then
+          match analyze_pdf main_pdf_path with
+          | Some info -> [ info ]
+          | None -> []
+        else []
+    | None -> []
   in
 
   (* Analyze CJK fonts *)

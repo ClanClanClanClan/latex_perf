@@ -100,7 +100,7 @@ More text
      ══════════════════════════════════════════════════════════════ *)
 
   run "empty source produces empty analysis" (fun tag ->
-      let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:"" in
+      let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:"" () in
       expect (ctx.images = []) (tag ^ ": no images");
       expect (ctx.pdfs = []) (tag ^ ": no pdfs");
       expect (ctx.fonts = []) (tag ^ ": no fonts");
@@ -109,27 +109,27 @@ More text
   run "docclass extraction: article" (fun tag ->
       let ctx =
         File_analyzer.analyze_files ~base_dir:"/tmp"
-          ~source:{|\documentclass{article}|}
+          ~source:{|\documentclass{article}|} ()
       in
       expect (ctx.doc_class = "article") (tag ^ ": article"));
 
   run "docclass extraction: book with options" (fun tag ->
       let ctx =
         File_analyzer.analyze_files ~base_dir:"/tmp"
-          ~source:{|\documentclass[12pt,a4paper]{book}|}
+          ~source:{|\documentclass[12pt,a4paper]{book}|} ()
       in
       expect (ctx.doc_class = "book") (tag ^ ": book"));
 
   run "docclass extraction: memoir" (fun tag ->
       let ctx =
         File_analyzer.analyze_files ~base_dir:"/tmp"
-          ~source:{|\documentclass{memoir}|}
+          ~source:{|\documentclass{memoir}|} ()
       in
       expect (ctx.doc_class = "memoir") (tag ^ ": memoir"));
 
   run "missing image files produce empty list" (fun tag ->
       let src = {|\includegraphics{nonexistent.png}|} in
-      let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src in
+      let ctx = File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src () in
       expect (ctx.images = []) (tag ^ ": no images for missing file"));
 
   run "analyze real PNG file" (fun tag ->
@@ -146,7 +146,7 @@ More text
           let src =
             Printf.sprintf {|\includegraphics{%s}|} basename
           in
-          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src in
+          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.images = 1) (tag ^ ": 1 image");
           let img = List.hd ctx.images in
           expect (img.width_px = 100) (tag ^ ": width=100");
@@ -167,7 +167,7 @@ More text
           let src =
             Printf.sprintf {|\includegraphics{%s}|} basename
           in
-          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src in
+          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.images = 1) (tag ^ ": 1 image");
           let img = List.hd ctx.images in
           expect (img.format = `JPEG) (tag ^ ": format=JPEG")));
@@ -190,7 +190,7 @@ More text
           let src =
             Printf.sprintf {|\includegraphics{%s}|} basename
           in
-          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src in
+          let ctx = File_analyzer.analyze_files ~base_dir:dir ~source:src () in
           expect (List.length ctx.pdfs >= 1) (tag ^ ": >=1 pdf")));
 
   run "CJK font extraction" (fun tag ->
@@ -200,7 +200,7 @@ More text
       in
       (* These fonts don't exist, so no font_info entries *)
       let ctx =
-        File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src
+        File_analyzer.analyze_files ~base_dir:"/tmp" ~source:src ()
       in
       expect (ctx.fonts = []) (tag ^ ": missing fonts produce empty list"));
 
@@ -229,7 +229,7 @@ More text
               b1 b2
           in
           let ctx =
-            File_analyzer.analyze_files ~base_dir:dir ~source:src
+            File_analyzer.analyze_files ~base_dir:dir ~source:src ()
           in
           expect (List.length ctx.images = 2) (tag ^ ": 2 images")))
 

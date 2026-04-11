@@ -26,7 +26,7 @@ let () =
       (* Inject L3 file context *)
       let base_dir = Filename.dirname path in
       let file_ctx =
-        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~source:src
+        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~tex_path:path ~source:src ()
       in
       Latex_parse_lib.File_context.set_file_context file_ctx;
       (* Build post-command spans for context, mirroring REST summary *)
@@ -78,7 +78,7 @@ let () =
       (* Inject L3 file context *)
       let base_dir = Filename.dirname path in
       let file_ctx =
-        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~source:src
+        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~tex_path:path ~source:src ()
       in
       Latex_parse_lib.File_context.set_file_context file_ctx;
       let module T = Latex_parse_lib.Tokenizer_lite in

@@ -248,18 +248,26 @@ Grammar origin: `specs/v25_R1/l2_parser_peg_grammar.peg` (239 lines).
 ## B-5 Layer 3 — Semantic State (`semantic_state.ml`)
 
 ```ocaml
+type label_entry = { key : string; position : int; prefix : string }
+type ref_entry = { key : string; position : int; command : string }
+
 type semantic_state = {
-  labels : (string * int) list;
-  refs : (string * int) list;
+  labels : label_entry list;
+  refs : ref_entry list;
   duplicate_labels : string list;
   undefined_refs : string list;
   forward_refs : string list;
 }
 
-val build_state : string -> semantic_state
+val analyze : string -> semantic_state
+val build_state : string -> semantic_state  (* alias for analyze *)
 val set_state : semantic_state -> unit    (* thread-local *)
 val get_state : unit -> semantic_state option
+val clear_state : unit -> unit
 ```
+
+Labels carry a `prefix` field (`"fig:"`, `"eq:"`, `"sec:"`, `"tab:"`, or `""`).
+Refs carry a `command` field (`"ref"`, `"eqref"`, `"autoref"`, `"cref"`, etc.).
 
 Consumers: REF-001 (duplicate labels), REF-002 (undefined refs), REF-009 (forward refs).
 
@@ -339,6 +347,7 @@ type log_context = {
   max_overfull_pt : float;
   has_widows : bool;
   has_orphans : bool;
+  tikz_compile_times : float list;  (* seconds per TikZ externalization *)
 }
 
 val empty_context : log_context

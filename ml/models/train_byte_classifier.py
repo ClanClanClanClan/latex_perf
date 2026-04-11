@@ -386,7 +386,8 @@ def train_byte_classifier(
                 with torch.amp.autocast(device_type='cuda'):
                     probs = model(byte_input, anchor_start, anchor_end,
                                   rule_id, parser_features)
-                    loss = criterion(probs, labels)
+                # BCELoss outside autocast (not safe under fp16)
+                loss = criterion(probs.float(), labels)
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)

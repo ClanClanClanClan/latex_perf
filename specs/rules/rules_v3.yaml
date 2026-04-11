@@ -4714,6 +4714,167 @@
 # ------------------------------------------------
 #  Document‑level structure  •  DOC‑001 → DOC‑005
 # ------------------------------------------------
+# ----------------------------------------------------------------
+#  Modernisation rules  -  MOD-001 to MOD-024
+#  Detect legacy LaTeX2e font commands mixed with modern NFSS/inline
+# ----------------------------------------------------------------
+- id: "MOD-001"
+  description: "Legacy font commands (\\bf/\\it/...) present; prefer \\textbf/\\emph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-002"
+  description: "Mixed legacy and modern bold commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-003"
+  description: "Mixed legacy and modern italic commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-004"
+  description: "Mixed legacy and modern roman commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-005"
+  description: "Mixed legacy and modern typewriter commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-006"
+  description: "Mixed legacy and modern sans-serif commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-007"
+  description: "Mixed legacy and modern small-caps commands in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-008"
+  description: "Mixed NFSS bfseries and inline \\textbf in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-009"
+  description: "Mixed NFSS itshape and inline \\textit/\\emph in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-010"
+  description: "Mixed NFSS sffamily and inline \\textsf in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-011"
+  description: "Mixed NFSS ttfamily and inline \\texttt in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-012"
+  description: "Mixed NFSS rmfamily and inline \\textrm in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-013"
+  description: "Mixed NFSS scshape and inline \\textsc in same paragraph"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-020"
+  description: "Global mix: NFSS bfseries and inline \\textbf across paragraphs"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-021"
+  description: "Global mix: NFSS itshape and inline \\textit/\\emph across paragraphs"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-022"
+  description: "Global mix: NFSS rmfamily and inline \\textrm across paragraphs"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-023"
+  description: "Global mix: NFSS sffamily and inline \\textsf across paragraphs"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+- id: "MOD-024"
+  description: "Global mix: NFSS ttfamily and inline \\texttt across paragraphs"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@modernisation"
+  fix: null
+
+
+# ----------------------------------------------------------------
+#  Expansion rules  -  EXP-001
+# ----------------------------------------------------------------
+- id: "EXP-001"
+  description: "Incomplete expansion: catalogue commands remain post-expansion"
+  precondition: L1_Expanded
+  default_severity: Info
+  maturity: Implemented
+  owner: "@expansion"
+  fix: null
+
+
 - id: "DOC-001"
   description: "Title missing \\maketitle"
   precondition: L2_Ast

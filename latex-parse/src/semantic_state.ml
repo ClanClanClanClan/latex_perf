@@ -124,6 +124,8 @@ let analyze (s : string) : semantic_state =
   in
   { labels; refs; duplicate_labels; undefined_refs; forward_refs }
 
+let build_state = analyze
+
 (* ── Thread-local state for validators ──────────────────────── *)
 
 let _state_tbl : (int, semantic_state) Hashtbl.t = Hashtbl.create 4

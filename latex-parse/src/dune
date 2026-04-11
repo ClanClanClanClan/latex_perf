@@ -32,6 +32,14 @@
   validators_l2
   validators_l4_style
   validators_l1
+  validators_l1_expl3
+  file_context
+  png_reader
+  jpeg_reader
+  pdf_reader
+  font_reader
+  file_analyzer
+  validators_l3_file
   validators
   validators_metrics
   tokenizer_lite
@@ -80,6 +88,13 @@
  (name test_helpers)
  (modules test_helpers)
  (libraries latex_parse_lib unix))
+
+(library
+ (name test_binary_gen)
+ (modules test_binary_gen)
+ (libraries latex_parse_lib)
+ (flags
+  (:standard -w -26-27)))
 
 (executable
  (name main_service)
@@ -356,6 +371,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_validators_l1_expl3)
+ (modules test_validators_l1_expl3)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_validators_l2_approx)
  (modules test_validators_l2_approx)
  (libraries latex_parse_lib test_helpers unix))
@@ -508,3 +528,38 @@
  (libraries latex_parse_lib unix)
  (deps
   (source_tree ../../corpora)))
+
+(test
+ (name test_pdf_reader)
+ (modules test_pdf_reader)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix))
+
+(test
+ (name test_jpeg_reader)
+ (modules test_jpeg_reader)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix))
+
+(test
+ (name test_png_reader)
+ (modules test_png_reader)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix))
+
+(test
+ (name test_file_context)
+ (modules test_file_context)
+ (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_font_reader)
+ (modules test_font_reader)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix))
+
+(test
+ (name test_file_analyzer)
+ (modules test_file_analyzer)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix))
+
+(test
+ (name test_validators_l3_file)
+ (modules test_validators_l3_file)
+ (libraries latex_parse_lib test_helpers test_binary_gen unix threads))

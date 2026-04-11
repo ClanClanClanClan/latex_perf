@@ -292,7 +292,7 @@ def build_and_write(
 
     logger.info("Loading VPD patterns from %s", vpd_patterns_path)
     with open(vpd_patterns_path, "r", encoding="utf-8") as f:
-        vpd_patterns = yaml.safe_load(f)
+        vpd_patterns = json.load(f)
 
     logger.info("Building candidate dataset (context_size=%d) ...", context_size)
     records = build_candidate_dataset(

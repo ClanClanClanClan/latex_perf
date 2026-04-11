@@ -7,46 +7,23 @@ Import ListNotations.
 Open Scope string_scope.
 
 From LaTeXPerfectionist.Generated Require Import L0_AR.
-From LaTeXPerfectionist.Generated Require Import L0_BIB.
-From LaTeXPerfectionist.Generated Require Import L0_CE.
 From LaTeXPerfectionist.Generated Require Import L0_CHAR.
-From LaTeXPerfectionist.Generated Require Import L0_CHEM.
 From LaTeXPerfectionist.Generated Require Import L0_CJK.
 From LaTeXPerfectionist.Generated Require Import L0_CMD.
-From LaTeXPerfectionist.Generated Require Import L0_COL.
 From LaTeXPerfectionist.Generated Require Import L0_CS.
-From LaTeXPerfectionist.Generated Require Import L0_CY.
-From LaTeXPerfectionist.Generated Require Import L0_DE.
-From LaTeXPerfectionist.Generated Require Import L0_DOC.
 From LaTeXPerfectionist.Generated Require Import L0_EL.
 From LaTeXPerfectionist.Generated Require Import L0_ENC.
-From LaTeXPerfectionist.Generated Require Import L0_FIG.
-From LaTeXPerfectionist.Generated Require Import L0_FONT.
 From LaTeXPerfectionist.Generated Require Import L0_FR.
 From LaTeXPerfectionist.Generated Require Import L0_HE.
 From LaTeXPerfectionist.Generated Require Import L0_HI.
-From LaTeXPerfectionist.Generated Require Import L0_IB.
 From LaTeXPerfectionist.Generated Require Import L0_JA.
 From LaTeXPerfectionist.Generated Require Import L0_KO.
-From LaTeXPerfectionist.Generated Require Import L0_LANG.
-From LaTeXPerfectionist.Generated Require Import L0_LAY.
 From LaTeXPerfectionist.Generated Require Import L0_MATH.
-From LaTeXPerfectionist.Generated Require Import L0_META.
-From LaTeXPerfectionist.Generated Require Import L0_NL.
-From LaTeXPerfectionist.Generated Require Import L0_PDF.
-From LaTeXPerfectionist.Generated Require Import L0_PKG.
 From LaTeXPerfectionist.Generated Require Import L0_PL.
 From LaTeXPerfectionist.Generated Require Import L0_PT.
-From LaTeXPerfectionist.Generated Require Import L0_REF.
 From LaTeXPerfectionist.Generated Require Import L0_RO.
-From LaTeXPerfectionist.Generated Require Import L0_RTL.
 From LaTeXPerfectionist.Generated Require Import L0_RU.
 From LaTeXPerfectionist.Generated Require Import L0_SPC.
-From LaTeXPerfectionist.Generated Require Import L0_STYLE.
-From LaTeXPerfectionist.Generated Require Import L0_TAB.
-From LaTeXPerfectionist.Generated Require Import L0_TH.
-From LaTeXPerfectionist.Generated Require Import L0_TIKZ.
-From LaTeXPerfectionist.Generated Require Import L0_TR.
 From LaTeXPerfectionist.Generated Require Import L0_TYPO.
 From LaTeXPerfectionist.Generated Require Import L0_VERB.
 From LaTeXPerfectionist.Generated Require Import L0_ZH.
@@ -54,9 +31,11 @@ From LaTeXPerfectionist.Generated Require Import L1_CHEM.
 From LaTeXPerfectionist.Generated Require Import L1_CJK.
 From LaTeXPerfectionist.Generated Require Import L1_CMD.
 From LaTeXPerfectionist.Generated Require Import L1_DELIM.
+From LaTeXPerfectionist.Generated Require Import L1_EXP.
 From LaTeXPerfectionist.Generated Require Import L1_FONT.
 From LaTeXPerfectionist.Generated Require Import L1_L3.
 From LaTeXPerfectionist.Generated Require Import L1_MATH.
+From LaTeXPerfectionist.Generated Require Import L1_MOD.
 From LaTeXPerfectionist.Generated Require Import L1_PT.
 From LaTeXPerfectionist.Generated Require Import L1_REF.
 From LaTeXPerfectionist.Generated Require Import L1_RTL.
@@ -79,49 +58,58 @@ From LaTeXPerfectionist.Generated Require Import L2_RTL.
 From LaTeXPerfectionist.Generated Require Import L2_TAB.
 From LaTeXPerfectionist.Generated Require Import L2_TIKZ.
 From LaTeXPerfectionist.Generated Require Import L2_VERB.
+From LaTeXPerfectionist.Generated Require Import L3_BIB.
+From LaTeXPerfectionist.Generated Require Import L3_CHEM.
+From LaTeXPerfectionist.Generated Require Import L3_CJK.
+From LaTeXPerfectionist.Generated Require Import L3_COL.
+From LaTeXPerfectionist.Generated Require Import L3_DOC.
+From LaTeXPerfectionist.Generated Require Import L3_FIG.
+From LaTeXPerfectionist.Generated Require Import L3_FONT.
+From LaTeXPerfectionist.Generated Require Import L3_LANG.
+From LaTeXPerfectionist.Generated Require Import L3_LAY.
+From LaTeXPerfectionist.Generated Require Import L3_MATH.
+From LaTeXPerfectionist.Generated Require Import L3_META.
+From LaTeXPerfectionist.Generated Require Import L3_PDF.
+From LaTeXPerfectionist.Generated Require Import L3_PKG.
+From LaTeXPerfectionist.Generated Require Import L3_REF.
+From LaTeXPerfectionist.Generated Require Import L3_RTL.
+From LaTeXPerfectionist.Generated Require Import L3_TAB.
+From LaTeXPerfectionist.Generated Require Import L3_TH.
+From LaTeXPerfectionist.Generated Require Import L3_TIKZ.
+From LaTeXPerfectionist.Generated Require Import L4_CE.
+From LaTeXPerfectionist.Generated Require Import L4_CY.
+From LaTeXPerfectionist.Generated Require Import L4_DE.
+From LaTeXPerfectionist.Generated Require Import L4_IB.
+From LaTeXPerfectionist.Generated Require Import L4_LANG.
+From LaTeXPerfectionist.Generated Require Import L4_LAY.
+From LaTeXPerfectionist.Generated Require Import L4_NL.
+From LaTeXPerfectionist.Generated Require Import L4_PL.
+From LaTeXPerfectionist.Generated Require Import L4_PT.
+From LaTeXPerfectionist.Generated Require Import L4_RU.
+From LaTeXPerfectionist.Generated Require Import L4_STYLE.
+From LaTeXPerfectionist.Generated Require Import L4_TR.
+From LaTeXPerfectionist.Generated Require Import L4_TYPO.
+From LaTeXPerfectionist.Generated Require Import L4_ZH.
 
 Definition all_proved_rule_ids : list string :=
   l0_ar_proved ++
-  l0_bib_proved ++
-  l0_ce_proved ++
   l0_char_proved ++
-  l0_chem_proved ++
   l0_cjk_proved ++
   l0_cmd_proved ++
-  l0_col_proved ++
   l0_cs_proved ++
-  l0_cy_proved ++
-  l0_de_proved ++
-  l0_doc_proved ++
   l0_el_proved ++
   l0_enc_proved ++
-  l0_fig_proved ++
-  l0_font_proved ++
   l0_fr_proved ++
   l0_he_proved ++
   l0_hi_proved ++
-  l0_ib_proved ++
   l0_ja_proved ++
   l0_ko_proved ++
-  l0_lang_proved ++
-  l0_lay_proved ++
   l0_math_proved ++
-  l0_meta_proved ++
-  l0_nl_proved ++
-  l0_pdf_proved ++
-  l0_pkg_proved ++
   l0_pl_proved ++
   l0_pt_proved ++
-  l0_ref_proved ++
   l0_ro_proved ++
-  l0_rtl_proved ++
   l0_ru_proved ++
   l0_spc_proved ++
-  l0_style_proved ++
-  l0_tab_proved ++
-  l0_th_proved ++
-  l0_tikz_proved ++
-  l0_tr_proved ++
   l0_typo_proved ++
   l0_verb_proved ++
   l0_zh_proved ++
@@ -129,9 +117,11 @@ Definition all_proved_rule_ids : list string :=
   l1_cjk_proved ++
   l1_cmd_proved ++
   l1_delim_proved ++
+  l1_exp_proved ++
   l1_font_proved ++
   l1_l3_proved ++
   l1_math_proved ++
+  l1_mod_proved ++
   l1_pt_proved ++
   l1_ref_proved ++
   l1_rtl_proved ++
@@ -153,6 +143,38 @@ Definition all_proved_rule_ids : list string :=
   l2_rtl_proved ++
   l2_tab_proved ++
   l2_tikz_proved ++
-  l2_verb_proved.
+  l2_verb_proved ++
+  l3_bib_proved ++
+  l3_chem_proved ++
+  l3_cjk_proved ++
+  l3_col_proved ++
+  l3_doc_proved ++
+  l3_fig_proved ++
+  l3_font_proved ++
+  l3_lang_proved ++
+  l3_lay_proved ++
+  l3_math_proved ++
+  l3_meta_proved ++
+  l3_pdf_proved ++
+  l3_pkg_proved ++
+  l3_ref_proved ++
+  l3_rtl_proved ++
+  l3_tab_proved ++
+  l3_th_proved ++
+  l3_tikz_proved ++
+  l4_ce_proved ++
+  l4_cy_proved ++
+  l4_de_proved ++
+  l4_ib_proved ++
+  l4_lang_proved ++
+  l4_lay_proved ++
+  l4_nl_proved ++
+  l4_pl_proved ++
+  l4_pt_proved ++
+  l4_ru_proved ++
+  l4_style_proved ++
+  l4_tr_proved ++
+  l4_typo_proved ++
+  l4_zh_proved.
 
-(** Total coverage: 607 rules with soundness proofs. *)
+(** Total coverage: 626 rules with soundness proofs. *)

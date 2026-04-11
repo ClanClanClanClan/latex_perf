@@ -5812,8 +5812,7 @@ let rules_l2_approx : rule list =
     r_lang_007;
     r_lang_013;
     r_col_006;
-    r_l3_008;
-    r_l3_010;
+    (* r_l3_008 and r_l3_010 moved to Validators_l1_expl3 *)
     r_lay_024;
     r_meta_002;
     r_rtl_005;

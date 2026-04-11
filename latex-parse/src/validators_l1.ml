@@ -2956,13 +2956,6 @@ let rules_l1 : rule list =
     l1_cjk_015_rule;
     l1_typo_059_rule;
     l1_pt_002_rule;
-    l1_l3_001_rule;
-    l1_l3_002_rule;
-    l1_l3_003_rule;
-    l1_l3_004_rule;
-    l1_l3_005_rule;
     l1_l3_006_rule;
-    l1_l3_007_rule;
-    l1_l3_009_rule;
-    l1_l3_011_rule;
+    (* L3-001..005,007,009,011 moved to Validators_l1_expl3 *)
   ]

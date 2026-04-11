@@ -309,7 +309,8 @@ def group_rules(rules: List[Dict]) -> Dict[str, List[Dict]]:
         # Extract prefix: TYPO, ENC, MATH, MOD, CMD, FIG, TAB, PKG, etc.
         prefix = rid.split("-")[0] if "-" in rid else rid
         # Also group by layer
-        layer = {"L0_Lexer": "L0", "L1_Expanded": "L1", "L2_Ast": "L2"
+        layer = {"L0_Lexer": "L0", "L1_Expanded": "L1", "L2_Ast": "L2",
+                 "L3_Semantics": "L3", "L4_Style": "L4"
                 }.get(rule["precondition"], "L0")
         group_key = f"{layer}_{prefix}"
         groups[group_key].append(rule)

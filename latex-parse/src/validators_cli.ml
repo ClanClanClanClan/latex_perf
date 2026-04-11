@@ -23,6 +23,12 @@ let () =
   match args with
   | [ _; path ] ->
       let src = read_all path in
+      (* Inject L3 file context *)
+      let base_dir = Filename.dirname path in
+      let file_ctx =
+        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~source:src
+      in
+      Latex_parse_lib.File_context.set_file_context file_ctx;
       (* Build post-command spans for context, mirroring REST summary *)
       let module T = Latex_parse_lib.Tokenizer_lite in
       let toks = T.tokenize src in
@@ -59,6 +65,7 @@ let () =
       Latex_parse_lib.Validators_context.set_post_commands cmd_spans;
       let results = Latex_parse_lib.Validators.run_all src in
       Latex_parse_lib.Validators_context.clear ();
+      Latex_parse_lib.File_context.clear_file_context ();
       List.iter
         (fun (r : Latex_parse_lib.Validators.result) ->
           printf "%s\t%s\t%d\t%s\n" r.id
@@ -68,6 +75,12 @@ let () =
   | [ _; "--layer"; layer; path ] ->
       let ly = parse_layer layer in
       let src = read_all path in
+      (* Inject L3 file context *)
+      let base_dir = Filename.dirname path in
+      let file_ctx =
+        Latex_parse_lib.File_analyzer.analyze_files ~base_dir ~source:src
+      in
+      Latex_parse_lib.File_context.set_file_context file_ctx;
       let module T = Latex_parse_lib.Tokenizer_lite in
       let toks = T.tokenize src in
       let n = String.length src in
@@ -105,6 +118,7 @@ let () =
         Latex_parse_lib.Validators.run_all_with_timings_for_layer src ly
       in
       Latex_parse_lib.Validators_context.clear ();
+      Latex_parse_lib.File_context.clear_file_context ();
       printf "# layer=%s\ttotal_ms=%.3f\n" layer total_ms;
       List.iter (fun (id, ms) -> printf "# %s\t%.3f\n" id ms) timings;
       List.iter

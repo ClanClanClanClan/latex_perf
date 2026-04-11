@@ -30,6 +30,7 @@ type log_context = {
   max_overfull_pt : float;
   has_widows : bool;
   has_orphans : bool;
+  tikz_compile_times : float list;
 }
 
 let empty_context =
@@ -37,6 +38,7 @@ let empty_context =
     events = [];
     overfull_lines = [];
     underfull_lines = [];
+    tikz_compile_times = [];
     pages = [];
     max_overfull_pt = 0.0;
     has_widows = false;
@@ -67,10 +69,14 @@ let _re_latex_warning =
 let re_widow = Str.regexp_string "Widow penalty"
 let re_club = Str.regexp_string "Club penalty"
 
+let re_tikz_time =
+  Str.regexp {|[Cc]ompile time.*: \([0-9.]+\)s|}
+
 (* ── Parser ─────────────────────────────────────────────────────── *)
 
 let parse_log (content : string) : log_context =
   let events = ref [] in
+  let tikz_times = ref [] in
   let lines = String.split_on_char '\n' content in
   List.iter
     (fun line ->
@@ -130,10 +136,16 @@ let parse_log (content : string) : log_context =
          ignore (Str.search_forward re_widow line 0);
          events := WidowPenalty { page = 0 } :: !events
        with Not_found -> ());
-      try
+      (try
         ignore (Str.search_forward re_club line 0);
         events := ClubPenalty { page = 0 } :: !events
-      with Not_found -> ())
+      with Not_found -> ());
+      (* TikZ compile times *)
+      (try
+         ignore (Str.search_forward re_tikz_time line 0);
+         let t = float_of_string (Str.matched_group 1 line) in
+         tikz_times := t :: !tikz_times
+       with Not_found | Failure _ -> ()))
     lines;
   let events = List.rev !events in
   let overfull_lines =
@@ -175,6 +187,7 @@ let parse_log (content : string) : log_context =
     max_overfull_pt;
     has_widows;
     has_orphans;
+    tikz_compile_times = List.rev !tikz_times;
   }
 
 (* ── Thread-local log context ───────────────────────────────────── *)

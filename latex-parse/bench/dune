@@ -61,3 +61,8 @@
  (name run_service_bench_concurrent)
  (modules run_service_bench_concurrent)
  (libraries unix threads latex_parse_lib bench_utils))
+
+(executable
+ (name simd_vs_scalar_bench)
+ (modules simd_vs_scalar_bench)
+ (libraries unix latex_parse_lib))

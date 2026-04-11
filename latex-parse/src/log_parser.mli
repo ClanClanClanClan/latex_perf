@@ -24,6 +24,7 @@ type log_context = {
   max_overfull_pt : float;
   has_widows : bool;
   has_orphans : bool;
+  tikz_compile_times : float list;
 }
 
 val empty_context : log_context

@@ -24,6 +24,7 @@ include Validators_common
 include Validators_l0
 include Validators_l2
 include Validators_l4_style
+include Validators_l3_file
 include Validators_l1
 
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
@@ -41,6 +42,7 @@ let rules_enc_char_spc : rule list =
   @ rules_l2_approx
   @ rules_l2_parser_actual
   @ rules_style
+  @ rules_l3_file
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in
@@ -533,6 +535,29 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "LAY-012";
       "LAY-019";
       "LAY-023";
+    ];
+  (* L3 overrides: external file analysis rules *)
+  add L3
+    [
+      "FIG-004";
+      "FIG-006";
+      "FIG-016";
+      "FIG-021";
+      "COL-001";
+      "COL-002";
+      "COL-003";
+      "COL-005";
+      "PDF-006";
+      "PDF-007";
+      "PDF-008";
+      "PDF-009";
+      "PDF-011";
+      "PDF-012";
+      "COL-004";
+      "COL-007";
+      "TIKZ-002";
+      "TIKZ-008";
+      "CJK-007";
     ];
   tbl
 

@@ -4100,8 +4100,7 @@ let rules_stragglers : rule list =
     r_math_064;
     r_math_102;
     r_math_107;
-    r_l3_008;
-    r_l3_010;
+    (* r_l3_008 and r_l3_010 moved to Validators_l1_expl3 *)
     r_ref_011;
     r_typo_050;
   ]

@@ -1,0 +1,86 @@
+{
+  "model": "ByteClassifier_v2",
+  "params": 538625,
+  "seed": 42,
+  "threshold": 0.5,
+  "overall_f1": 0.9799,
+  "overall_precision": 0.975,
+  "overall_recall": 0.9849,
+  "measured_fp_rate": 0.025,
+  "measured_fn_rate": 0.0151,
+  "bound_holds": true,
+  "per_rule": {
+    "TYPO-001": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 1701,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0
+    },
+    "TYPO-005": {
+      "precision": 1.0,
+      "recall": 0.9983,
+      "f1": 0.9992,
+      "tp": 1177,
+      "fp": 0,
+      "fn": 2,
+      "tn": 0
+    },
+    "TYPO-012": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13547
+    },
+    "TYPO-028": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 3968,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0
+    },
+    "TYPO-048": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 134,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5
+    },
+    "TYPO-052": {
+      "precision": 0.9684,
+      "recall": 0.9735,
+      "f1": 0.9709,
+      "tp": 2571,
+      "fp": 84,
+      "fn": 70,
+      "tn": 2954
+    },
+    "TYPO-056": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 143
+    },
+    "TYPO-062": {
+      "precision": 0.9626,
+      "recall": 0.9789,
+      "f1": 0.9707,
+      "tp": 12127,
+      "fp": 471,
+      "fn": 261,
+      "tn": 1000
+    }
+  }
+}

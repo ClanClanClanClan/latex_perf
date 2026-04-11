@@ -32,5 +32,5 @@ fi
 MEDIAN=$(sort -n "$OUTLIST" | awk 'NF{a[NR]=$1} END{ if (NR%2){print a[(NR+1)/2]} else {print (a[NR/2]+a[NR/2+1])/2} }')
 echo "[gate] median-of-100 p95 = ${MEDIAN} ms"
 
-# Gate: Tier A scalar p95 < 20 ms (SLA 42 ms separate dashboard threshold).
-awk -v p95="$MEDIAN" 'BEGIN{if (p95 < 20.0) exit 0; else exit 1}'
+# Gate: p95 < 25 ms target per spec §8; SLA 42 ms separate dashboard threshold.
+awk -v p95="$MEDIAN" 'BEGIN{if (p95 < 25.0) exit 0; else exit 1}'

@@ -51,7 +51,7 @@ Proof admits	211	0 (strict)	0 (no admits in main)
 0‑Axiom compliance	n/a	Yes (§7)	0 axioms ✅
 p95 latency — perf_smoke (≈ 1.1 MB)	420 ms	< 25 ms (SLA gate 42 ms)	8.36 ms (median‑of‑100, baseline HW)  
 p95 latency — edit‑window 4 KB	—	< 1 ms	proto CI gate wired
-Multi‑language coverage	3	21	6 implemented, 15 stubbed
+Multi‑language coverage	3	21	7 implemented, 14 stubbed
 
 What changed in R1 (audit integration):
 • Performance targets clarified to 25 ms (full‑doc perf_smoke) with 42 ms SLA buffer, plus 1 ms for 4 KB edit‑window; CI gates updated accordingly.
@@ -176,7 +176,7 @@ Evidence & hand‑off docs: performance notes and audit trail captured in PERFOR
 ⸻
 
 9 MULTI‑LANGUAGE SUPPORT
-	•	I18n framework retained; 6 language packs integrated (en, fr, de, es, ja, zh); 15 additional packs stubbed toward the 21‑language target.
+	•	I18n framework retained; 7 language packs integrated (en, fr, de, es, ja, zh, ar); 14 additional packs stubbed toward the 21‑language target.
 	•	Validators parameterised by lang_code; per‑language thresholds and rules allowed.
 	•	Cultural appropriateness uses a native‑speaker review queue. (Concern #4 mitigated.)
 

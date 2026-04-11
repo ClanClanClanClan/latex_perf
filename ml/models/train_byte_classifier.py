@@ -386,7 +386,8 @@ def train_byte_classifier(
                 with torch.amp.autocast(device_type='cuda'):
                     probs = model(byte_input, anchor_start, anchor_end,
                                   rule_id, parser_features)
-                    loss = criterion(probs, labels)
+                # BCELoss outside autocast (not safe under fp16)
+                loss = criterion(probs.float(), labels)
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -451,6 +452,22 @@ def train_byte_classifier(
                 save_callback(output_dir, epoch, f1)
         else:
             patience_counter += 1
+            # Periodic checkpoint every 5 epochs (survives disconnection)
+            if epoch % 5 == 4:
+                ckpt = {
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'scheduler_state_dict': scheduler.state_dict(),
+                    'best_f1': best_f1,
+                    'patience_counter': patience_counter,
+                }
+                if scaler is not None:
+                    ckpt['scaler_state_dict'] = scaler.state_dict()
+                torch.save(ckpt, f"{output_dir}/training_checkpoint.pt")
+                if save_callback:
+                    save_callback(output_dir, epoch, best_f1)
+                logger.info(f"Periodic checkpoint saved (epoch {epoch+1})")
             if patience_counter >= patience and epoch >= min_epochs:
                 logger.info(f"Early stopping at epoch {epoch+1} "
                            f"(patience={patience})")

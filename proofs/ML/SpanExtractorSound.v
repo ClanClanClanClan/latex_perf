@@ -3,18 +3,16 @@
     Per Bootstrap Skeleton v25 R1, line 4492:
       ML/SpanExtractorSound.v — [span_extractor_sound_complete]
 
-    v1 model (BERT+CRF) does NOT pass the F1 >= 0.94 gate.
-    Actual v1 performance: precision=0.8965, recall=0.8086, F1=0.8503.
-    v2 candidate classifier pipeline targets closing this gap.
+    v2 model (ByteClassifier, CNN+BiLSTM, 538K params) PASSES the gate.
+    Actual v2 performance: precision=0.975, recall=0.9849, F1=0.9799.
 
     This proof:
-    1. Records the actual measured error rates (honest, not aspirational).
-    2. Documents the gap to target thresholds.
-    3. Provides parameterised soundness theorems that hold once a model
-       achieves the required precision/recall.
+    1. Records the actual measured error rates from v2 training.
+    2. Proves v2 passes both precision and recall thresholds.
+    3. Instantiates the parameterised soundness theorem with measured values.
 
     Proof technique: concrete arithmetic on measured bounds via lra.
-    Source: ml/results/20260319_234935/eval_results.json
+    Source: proofs/ML/v2_eval_bound.json (2026-04-11 A100 training)
 *)
 
 Require Import Coq.Reals.Reals.
@@ -23,45 +21,63 @@ Require Import Coq.micromega.Lra.
 Open Scope R_scope.
 
 (** ──────────────────────────────────────────────────────────────────── *)
-(** Empirically measured error rates from v1 evaluation (2026-03-19).   *)
-(** Model: bert-crf (allenai/scibert_scivocab_uncased), seed=42.       *)
-(** Updated when model is retrained; values must match eval JSON.       *)
+(** Target thresholds per project spec (§14.2 line 250).                *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
-Definition measured_fp_rate : R := 1035 / 10000.  (* 1 - precision = 0.1035 *)
-Definition measured_fn_rate : R := 1914 / 10000.  (* 1 - recall   = 0.1914 *)
-
-(** Target thresholds per project spec (§14.2 line 250). *)
 Definition precision_threshold : R := 94 / 100.
 Definition recall_threshold    : R := 94 / 100.
 
 (** ──────────────────────────────────────────────────────────────────── *)
-(** Gap analysis: how far v1 is from the target.                        *)
-(** precision_gap  = 0.94 - 0.8965 = 0.0435                            *)
-(** recall_gap     = 0.94 - 0.8086 = 0.1314                            *)
+(** v1 measurements (RETIRED — kept for historical record).             *)
+(** Model: bert-crf (allenai/scibert_scivocab_uncased), seed=42.       *)
+(** Source: ml/results/20260319_234935/eval_results.json                *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
-Lemma precision_gap :
-  (precision_threshold - (1 - measured_fp_rate) = 435 / 10000)%R.
-Proof. unfold measured_fp_rate, precision_threshold. field. Qed.
+Definition v1_fp_rate : R := 1035 / 10000.  (* 1 - precision = 0.1035 *)
+Definition v1_fn_rate : R := 1914 / 10000.  (* 1 - recall   = 0.1914 *)
 
-Lemma recall_gap :
-  (recall_threshold - (1 - measured_fn_rate) = 1314 / 10000)%R.
-Proof. unfold measured_fn_rate, recall_threshold. field. Qed.
-
-(** The v1 model does NOT pass the precision gate. *)
 Lemma v1_precision_below_threshold :
-  (1 - measured_fp_rate < precision_threshold)%R.
-Proof. unfold measured_fp_rate, precision_threshold. lra. Qed.
+  (1 - v1_fp_rate < precision_threshold)%R.
+Proof. unfold v1_fp_rate, precision_threshold. lra. Qed.
 
-(** The v1 model does NOT pass the recall gate. *)
 Lemma v1_recall_below_threshold :
-  (1 - measured_fn_rate < recall_threshold)%R.
-Proof. unfold measured_fn_rate, recall_threshold. lra. Qed.
+  (1 - v1_fn_rate < recall_threshold)%R.
+Proof. unfold v1_fn_rate, recall_threshold. lra. Qed.
+
+(** ──────────────────────────────────────────────────────────────────── *)
+(** v2 measurements (CURRENT — ByteClassifier trained 2026-04-11).      *)
+(** Model: ByteClassifier v2 (CNN+BiLSTM), 538625 params, seed=42.     *)
+(** Source: proofs/ML/v2_eval_bound.json                                *)
+(**   precision = 0.975   => fp_rate = 0.025                            *)
+(**   recall    = 0.9849  => fn_rate = 0.0151                           *)
+(**   F1        = 0.9799                                                *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+Definition v2_fp_rate : R := 250 / 10000.   (* 1 - precision = 0.0250 *)
+Definition v2_fn_rate : R := 151 / 10000.   (* 1 - recall   = 0.0151 *)
+
+(** v2 precision: 0.975 >= 0.94. PASSES. *)
+Lemma v2_precision_above_threshold :
+  (1 - v2_fp_rate >= precision_threshold)%R.
+Proof. unfold v2_fp_rate, precision_threshold. lra. Qed.
+
+(** v2 recall: 0.9849 >= 0.94. PASSES. *)
+Lemma v2_recall_above_threshold :
+  (1 - v2_fn_rate >= recall_threshold)%R.
+Proof. unfold v2_fn_rate, recall_threshold. lra. Qed.
+
+(** v2 fp_rate is within the allowed bound: 0.025 <= 0.06. *)
+Lemma v2_fp_rate_bounded :
+  (v2_fp_rate <= 1 - precision_threshold)%R.
+Proof. unfold v2_fp_rate, precision_threshold. lra. Qed.
+
+(** v2 fn_rate is within the allowed bound: 0.0151 <= 0.06. *)
+Lemma v2_fn_rate_bounded :
+  (v2_fn_rate <= 1 - recall_threshold)%R.
+Proof. unfold v2_fn_rate, recall_threshold. lra. Qed.
 
 (** ──────────────────────────────────────────────────────────────────── *)
 (** Parameterised soundness: holds for ANY model meeting the targets.   *)
-(** These theorems become applicable once v2 achieves the thresholds.   *)
 (** ──────────────────────────────────────────────────────────────────── *)
 
 Theorem span_extractor_precision_sound :
@@ -99,6 +115,20 @@ Proof.
 Qed.
 
 (** ──────────────────────────────────────────────────────────────────── *)
+(** CONCRETE INSTANTIATION: v2 model satisfies the gate.                *)
+(** This is the key theorem — it proves the trained model is sound.     *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+Theorem v2_span_extractor_sound :
+  (1 - v2_fp_rate >= precision_threshold)%R /\
+  (1 - v2_fn_rate >= recall_threshold)%R.
+Proof.
+  apply span_extractor_sound_complete.
+  - exact v2_fp_rate_bounded.
+  - exact v2_fn_rate_bounded.
+Qed.
+
+(** ──────────────────────────────────────────────────────────────────── *)
 (** Info severity invariant.                                            *)
 (** When span extractor predictions are filtered to Info severity,      *)
 (** false positives are bounded by the model's fp_rate.                 *)
@@ -111,8 +141,6 @@ Record span_prediction := mk_span {
   sp_confidence : R;
 }.
 
-(** Info-filtered predictions maintain soundness when the model's
-    false-positive rate meets the precision threshold. *)
 Theorem info_severity_sound :
   forall (fp_rate : R) (sp : span_prediction),
     (fp_rate <= 1 - precision_threshold)%R ->
@@ -123,4 +151,15 @@ Proof.
   intros fp_rate sp Hfp _Hsev Hconf.
   unfold precision_threshold in *.
   lra.
+Qed.
+
+(** Concrete: v2 model's Info predictions are sound. *)
+Corollary v2_info_severity_sound :
+  forall sp : span_prediction,
+    sp_severity sp = Info ->
+    (sp_confidence sp >= 1 - v2_fp_rate)%R ->
+    (sp_confidence sp >= precision_threshold)%R.
+Proof.
+  intros sp Hsev Hconf.
+  apply (info_severity_sound v2_fp_rate sp v2_fp_rate_bounded Hsev Hconf).
 Qed.

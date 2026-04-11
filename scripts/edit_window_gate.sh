@@ -15,9 +15,9 @@ if [[ -z "$P95" ]]; then
   exit 1
 fi
 
-awk -v p95="$P95" 'BEGIN{ if (p95 <= 1.2) exit 0; else exit 1 }' || {
-  echo "[edit-gate] FAIL: p95=${P95} ms > 1.2 ms target"
+awk -v p95="$P95" 'BEGIN{ if (p95 <= 1.0) exit 0; else exit 1 }' || {
+  echo "[edit-gate] FAIL: p95=${P95} ms > 1.0 ms target (spec §8)"
   exit 1
 }
 
-echo "[edit-gate] PASS: p95=${P95} ms ≤ 1.2 ms"
+echo "[edit-gate] PASS: p95=${P95} ms ≤ 1.0 ms"

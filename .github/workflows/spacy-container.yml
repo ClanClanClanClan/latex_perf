@@ -1,0 +1,29 @@
+name: spacy-container
+on:
+  push:
+    paths:
+      - 'Dockerfile.spacy'
+      - 'ml/requirements-spacy.txt'
+      - 'ml/scripts/spacy_server.py'
+  pull_request:
+    paths:
+      - 'Dockerfile.spacy'
+      - 'ml/requirements-spacy.txt'
+      - 'ml/scripts/spacy_server.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build spaCy container
+        run: docker build -f Dockerfile.spacy -t latex-perf-spacy:ci .
+
+      - name: Verify health endpoint
+        run: |
+          docker run -d --name spacy-test -p 8090:8090 latex-perf-spacy:ci
+          sleep 10
+          curl -f http://localhost:8090/health | jq .
+          docker stop spacy-test

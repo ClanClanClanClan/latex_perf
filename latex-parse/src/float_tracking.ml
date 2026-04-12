@@ -23,10 +23,10 @@ type float_distances = {
       (* floats that appear before any reference *)
 }
 
-let re_begin_figure = Str.regexp {|\\begin{figure\*?}|}
-let re_begin_table = Str.regexp {|\\begin{table\*?}|}
-let re_label = Str.regexp {|\\label{\([^}]+\)}|}
-let re_ref = Str.regexp {|\\ref{\([^}]+\)}\|\\autoref{\([^}]+\)}|}
+let re_begin_figure = Re_compat.regexp {|\\begin{figure\*?}|}
+let re_begin_table = Re_compat.regexp {|\\begin{table\*?}|}
+let re_label = Re_compat.regexp {|\\label{\([^}]+\)}|}
+let re_ref = Re_compat.regexp {|\\ref{\([^}]+\)}\|\\autoref{\([^}]+\)}|}
 
 let line_at (s : string) (pos : int) : int =
   let cnt = ref 1 in
@@ -41,19 +41,27 @@ let extract_floats (s : string) : float_entry list =
     let i = ref 0 in
     try
       while true do
-        let pos = Str.search_forward re s !i in
-        let after = Str.match_end () in
+        let _mr, pos = Re_compat.search_forward re s !i in
+        let after = Re_compat.match_end _mr in
         (* Find label inside this float environment *)
         let label =
           try
             let end_pos =
-              try Str.search_forward (Str.regexp_string "\\end{") s after
+              try
+                let _mr, _p =
+                  Re_compat.search_forward
+                    (Re_compat.regexp_string "\\end{")
+                    s after
+                in
+                ignore _mr;
+                _p
               with Not_found -> String.length s
             in
             let body = String.sub s after (end_pos - after) in
             try
-              ignore (Str.search_forward re_label body 0);
-              Some (Str.matched_group 1 body)
+              let _mr, _ = Re_compat.search_forward re_label body 0 in
+              ignore _mr;
+              Some (Re_compat.matched_group _mr 1 body)
             with Not_found -> None
           with _ -> None
         in
@@ -72,13 +80,14 @@ let extract_refs (s : string) : ref_entry list =
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re_ref s !i in
+       let _mr, pos = Re_compat.search_forward re_ref s !i in
        let key =
-         try Str.matched_group 1 s
-         with Not_found -> ( try Str.matched_group 2 s with Not_found -> "")
+         try Re_compat.matched_group _mr 1 s
+         with Not_found -> (
+           try Re_compat.matched_group _mr 2 s with Not_found -> "")
        in
        entries := { key; position = pos; line = line_at s pos } :: !entries;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !entries

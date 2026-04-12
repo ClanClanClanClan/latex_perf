@@ -61,10 +61,15 @@ let unmatched_braces : rule =
 
 let missing_section_title : rule =
   let run s =
-    let open Str in
-    let re_empty = regexp "\\\\section{[ \\t\\n]*}" in
-    let re_missing = regexp "\\\\section{}" in
-    if string_match re_empty s 0 || string_match re_missing s 0 then
+    let re_empty = Re_compat.regexp "\\\\section{[ \\t\\n]*}" in
+    let re_missing = Re_compat.regexp "\\\\section{}" in
+    let has_match re =
+      try
+        ignore (Re_compat.search_forward re s 0);
+        true
+      with Not_found -> false
+    in
+    if has_match re_empty || has_match re_missing then
       Some
         {
           id = "missing_section_title";
@@ -1728,7 +1733,7 @@ let r_spc_016 : rule =
    where the letter sequence matches a known SI/common unit. *)
 let r_spc_017 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|[0-9]\(mm\|cm\|km\|m\|kg\|g\|mg\|lb\|oz\|ml\|kl\|dB\|Hz\|kHz\|MHz\|GHz\|THz\|eV\|keV\|MeV\|GeV\|TeV\|K\|Pa\|kPa\|MPa\|bar\|atm\|mol\|cd\|lm\|lx\|Bq\|Gy\|Sv\|kat\|rad\|sr\|V\|kV\|mV\|W\|kW\|MW\|GW\|J\|kJ\|MJ\|cal\|kcal\|A\|mA\|N\|kN\|s\|ms\|ns\|min\|h\)\b|}
   in
   let run s =
@@ -1737,9 +1742,9 @@ let r_spc_017 : rule =
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s_text !i in
+         let _mr, _ = Re_compat.search_forward re s_text !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2019,17 +2024,18 @@ let r_spc_035 : rule =
 
 (* SPC-010: Two spaces after sentence-ending period *)
 let r_spc_010 : rule =
-  let re = Str.regexp "\\. +[A-Z]" in
+  let re = Re_compat.regexp "\\. +[A-Z]" in
   let run s =
     let s = strip_math_segments s in
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        let m = Str.matched_string s in
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        let m = Re_compat.matched_string _mr s in
         let nspaces = String.length m - 2 in
         (* Only count exactly 2 spaces — 3+ is SPC-031 *)
         let acc' = if nspaces = 2 then acc + 1 else acc in
-        loop (Str.match_end ()) acc'
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -2047,13 +2053,14 @@ let r_spc_010 : rule =
 
 (* SPC-018: No space after sentence-ending period (period+uppercase) *)
 let r_spc_018 : rule =
-  let re = Str.regexp "\\.[A-Z]" in
+  let re = Re_compat.regexp "\\.[A-Z]" in
   let run s =
     let s = strip_math_segments s in
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -2087,19 +2094,20 @@ let r_spc_022 : rule =
 
 (* SPC-027: Trailing whitespace inside \url{} *)
 let r_spc_027 : rule =
-  let re = Str.regexp "\\\\url{\\([^}]*\\)}" in
+  let re = Re_compat.regexp "\\\\url{\\([^}]*\\)}" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        let inner = Str.matched_group 1 s in
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        let inner = Re_compat.matched_group _mr 1 s in
         let len = String.length inner in
         let has_leading = len > 0 && (inner.[0] = ' ' || inner.[0] = '\t') in
         let has_trailing =
           len > 0 && (inner.[len - 1] = ' ' || inner.[len - 1] = '\t')
         in
         let acc' = if has_leading || has_trailing then acc + 1 else acc in
-        loop (Str.match_end ()) acc'
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -2535,15 +2543,15 @@ let r_verb_007 : rule =
 
 (* VERB-008: lstlisting uses language=none *)
 let r_verb_008 : rule =
-  let re = Str.regexp {|\\begin{lstlisting}\[.*language *= *none.*\]|} in
+  let re = Re_compat.regexp {|\\begin{lstlisting}\[.*language *= *none.*\]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2560,7 +2568,7 @@ let r_verb_008 : rule =
 
 (* VERB-009: Missing caption in minted code block *)
 let r_verb_009 : rule =
-  let _re_listing = Str.regexp_string "\\begin{listing}" in
+  let _re_listing = Re_compat.regexp_string "\\begin{listing}" in
   let run s =
     let _blocks = extract_env_blocks "minted" s in
     let cnt = ref 0 in
@@ -2576,7 +2584,7 @@ let r_verb_009 : rule =
         if
           not
             (try
-               let _ = Str.search_forward _re_listing before 0 in
+               let _mr, _ = Re_compat.search_forward _re_listing before 0 in
                true
              with Not_found -> false)
         then incr cnt;
@@ -2598,16 +2606,16 @@ let r_verb_009 : rule =
 
 (* VERB-010: Inline code uses back-ticks instead of \verb *)
 let r_verb_010 : rule =
-  let re = Str.regexp "`[^`\n]+`" in
+  let re = Re_compat.regexp "`[^`\n]+`" in
   let run s =
     let s_text = strip_math_segments s in
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s_text !i in
+         let _mr, _ = Re_compat.search_forward re s_text !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2727,7 +2735,7 @@ let r_verb_011 : rule =
     ]
   in
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|\\begin{lstlisting}[ \t\n]*\[[^]]*language[ \t]*=[ \t]*\([A-Za-z+#]*\)|}
   in
   let run s =
@@ -2735,8 +2743,8 @@ let r_verb_011 : rule =
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
-         let lang = String.lowercase_ascii (Str.matched_group 1 s) in
+         let _mr, _ = Re_compat.search_forward re s !i in
+         let lang = String.lowercase_ascii (Re_compat.matched_group _mr 1 s) in
          (* Strip trailing +/# for languages like C++, C#, Objective-C *)
          let lang_base =
            let len = String.length lang in
@@ -2750,7 +2758,7 @@ let r_verb_011 : rule =
            not
              (List.exists (fun k -> k = lang || k = lang_base) known_languages)
          then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2767,19 +2775,23 @@ let r_verb_011 : rule =
 
 (* VERB-012: minted block missing autogobble *)
 let r_verb_012 : rule =
-  let re = Str.regexp "\\\\begin{minted}[ \t\n]*\\(\\[[^]]*\\]\\)?[ \t\n]*{" in
-  let _re_autogobble = Str.regexp_string "autogobble" in
+  let re =
+    Re_compat.regexp "\\\\begin{minted}[ \t\n]*\\(\\[[^]]*\\]\\)?[ \t\n]*{"
+  in
+  let _re_autogobble = Re_compat.regexp_string "autogobble" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re s !i in
-         let matched = Str.matched_string s in
+         let _mr, pos = Re_compat.search_forward re s !i in
+         let matched = Re_compat.matched_string _mr s in
          if
            not
              (try
-                let _ = Str.search_forward _re_autogobble matched 0 in
+                let _mr, _ =
+                  Re_compat.search_forward _re_autogobble matched 0
+                in
                 true
               with Not_found -> false)
          then incr cnt;
@@ -2823,15 +2835,15 @@ let r_verb_013 : rule =
 
 (* VERB-015: Verbatim uses catcode changes instead of \verb *)
 let r_verb_015 : rule =
-  let re = Str.regexp "\\\\catcode[ \t\n]*`" in
+  let re = Re_compat.regexp "\\\\catcode[ \t\n]*`" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2848,7 +2860,7 @@ let r_verb_015 : rule =
 
 (* VERB-016: minted without escapeinside while containing back-ticks *)
 let r_verb_016 : rule =
-  let _re_escapeinside = Str.regexp_string "escapeinside" in
+  let _re_escapeinside = Re_compat.regexp_string "escapeinside" in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
@@ -2868,7 +2880,7 @@ let r_verb_016 : rule =
         let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
         let has_escape =
           try
-            let _ = Str.search_forward _re_escapeinside opts 0 in
+            let _mr, _ = Re_compat.search_forward _re_escapeinside opts 0 in
             true
           with Not_found -> false
         in
@@ -2898,7 +2910,7 @@ let r_verb_016 : rule =
 
 (* VERB-017: minted lacks linenos in code block > 20 lines *)
 let r_verb_017 : rule =
-  let _re_linenos = Str.regexp_string "linenos" in
+  let _re_linenos = Re_compat.regexp_string "linenos" in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
@@ -2916,7 +2928,7 @@ let r_verb_017 : rule =
         let opts = String.sub s (!i + tlen) (!opts_end - !i - tlen) in
         let has_linenos =
           try
-            let _ = Str.search_forward _re_linenos opts 0 in
+            let _mr, _ = Re_compat.search_forward _re_linenos opts 0 in
             true
           with Not_found -> false
         in
@@ -3088,15 +3100,16 @@ let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
 (* FR-007: FR-BE thin NB-space before/after € sign *)
 let r_fr_007 : rule =
   (* Detect € preceded/followed by normal space instead of NBSP/thin space *)
-  let re = Str.regexp "[ ]\xe2\x82\xac\\|\xe2\x82\xac[ ]" in
+  let re = Re_compat.regexp "[ ]\xe2\x82\xac\\|\xe2\x82\xac[ ]" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -3149,15 +3162,16 @@ let r_fr_008 : rule =
 (* PT-003: pt-PT ordinal must use º/ª *)
 let r_pt_003 : rule =
   (* Detect patterns like 1\textsuperscript{o} or 1\textsuperscript{a} *)
-  let re = Str.regexp "[0-9]\\\\textsuperscript{[oa]}" in
+  let re = Re_compat.regexp "[0-9]\\\\textsuperscript{[oa]}" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -3192,15 +3206,16 @@ let r_ru_001 : rule =
 (* PL-001: NB-space before abbreviations *)
 let r_pl_001 : rule =
   (* Detect regular space before Polish abbreviations r., nr, s. *)
-  let re = Str.regexp " \\(r\\.\\|nr \\|s\\.\\)" in
+  let re = Re_compat.regexp " \\(r\\.\\|nr \\|s\\.\\)" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -3218,15 +3233,16 @@ let r_pl_001 : rule =
 (* CS-001: thin NB-space before °C forbidden *)
 let r_cs_001 : rule =
   (* Detect thin space (\,) or NBSP before °C — CS/SK forbids it *)
-  let re = Str.regexp "\\\\,\xc2\xb0C\\|\xc2\xa0\xc2\xb0C" in
+  let re = Re_compat.regexp "\\\\,\xc2\xb0C\\|\xc2\xa0\xc2\xb0C" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -3244,20 +3260,22 @@ let r_cs_001 : rule =
 (* CS-002: date format must be 30.\,1.\,2026 *)
 let r_cs_002 : rule =
   (* Detect date patterns like 30.1.2026 without \, *)
-  let re = Str.regexp "[0-9]+\\.[0-9]+\\.[0-9][0-9][0-9][0-9]" in
+  let re = Re_compat.regexp "[0-9]+\\.[0-9]+\\.[0-9][0-9][0-9][0-9]" in
   let re_correct =
-    Str.regexp "[0-9]+\\.\\\\,[0-9]+\\.\\\\,[0-9][0-9][0-9][0-9]"
+    Re_compat.regexp "[0-9]+\\.\\\\,[0-9]+\\.\\\\,[0-9][0-9][0-9][0-9]"
   in
   let run s =
     let has_bare =
       try
-        ignore (Str.search_forward re s 0);
+        let _mr, _ = Re_compat.search_forward re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_correct =
       try
-        ignore (Str.search_forward re_correct s 0);
+        let _mr, _ = Re_compat.search_forward re_correct s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -4027,7 +4045,7 @@ let r_ref_011 : rule =
 let r_typo_050 : rule =
   (* Detect \section{} and \subsection{} with inconsistent capitalisation *)
   let re_sec =
-    Str.regexp
+    Re_compat.regexp
       {|\\section\*?\{[^}]+\}\|\\subsection\*?\{[^}]+\}\|\\chapter\*?\{[^}]+\}|}
   in
   let run s =
@@ -4035,10 +4053,10 @@ let r_typo_050 : rule =
     let start = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re_sec s !start in
-         let m = Str.matched_string s in
+         let _mr, _ = Re_compat.search_forward re_sec s !start in
+         let m = Re_compat.matched_string _mr s in
          titles := m :: !titles;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if List.length !titles < 2 then None

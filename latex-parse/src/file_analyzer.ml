@@ -5,23 +5,23 @@
 (* ── Path extraction ───────────────────────────────────────────────── *)
 
 let re_includegraphics =
-  Str.regexp {|\\includegraphics\(\[[^]]*\]\)?{\([^}]*\)}|}
+  Re_compat.regexp {|\\includegraphics\(\[[^]]*\]\)?{\([^}]*\)}|}
 
 let extract_includegraphics_paths (source : string) : string list =
   let paths = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re_includegraphics source !i in
-       let path = Str.matched_group 2 source in
+       let _mr, _ = Re_compat.search_forward re_includegraphics source !i in
+       let path = Re_compat.matched_group _mr 2 source in
        paths := path :: !paths;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !paths
 
-let re_graphicspath_outer = Str.regexp {|\\graphicspath{\([^}]*}\)|}
-let re_graphicspath_dir = Str.regexp {|{\([^}]*\)}|}
+let re_graphicspath_outer = Re_compat.regexp {|\\graphicspath{\([^}]*}\)|}
+let re_graphicspath_dir = Re_compat.regexp {|{\([^}]*\)}|}
 
 let extract_graphicspath (source : string) : string list =
   (* \graphicspath{{dir1/}{dir2/}{dir3/}} — extract each {dir/} individually *)
@@ -29,17 +29,19 @@ let extract_graphicspath (source : string) : string list =
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re_graphicspath_outer source !i in
-       let inner = Str.matched_group 1 source in
-       let outer_end = Str.match_end () in
+       let _mr, _ = Re_compat.search_forward re_graphicspath_outer source !i in
+       let inner = Re_compat.matched_group _mr 1 source in
+       let outer_end = Re_compat.match_end _mr in
        (* Extract each {dir/} from the inner content *)
        let j = ref 0 in
        (try
           while true do
-            let _ = Str.search_forward re_graphicspath_dir inner !j in
-            let dir = Str.matched_group 1 inner in
+            let _mr, _ =
+              Re_compat.search_forward re_graphicspath_dir inner !j
+            in
+            let dir = Re_compat.matched_group _mr 1 inner in
             if dir <> "" then dirs := dir :: !dirs;
-            j := Str.match_end ()
+            j := Re_compat.match_end _mr
           done
         with Not_found -> ());
        i := outer_end
@@ -47,26 +49,26 @@ let extract_graphicspath (source : string) : string list =
    with Not_found -> ());
   List.rev !dirs
 
-let re_docclass = Str.regexp {|\\documentclass\(\[[^]]*\]\)?{\([^}]+\)}|}
+let re_docclass = Re_compat.regexp {|\\documentclass\(\[[^]]*\]\)?{\([^}]+\)}|}
 
 let extract_docclass (source : string) : string =
   try
-    ignore (Str.search_forward re_docclass source 0);
-    Str.matched_group 2 source
+    let _mr, _ = Re_compat.search_forward re_docclass source 0 in
+    Re_compat.matched_group _mr 2 source
   with Not_found -> ""
 
 let re_cjk_font =
-  Str.regexp {|\\setCJK\(main\|sans\|mono\)font\(\[[^]]*\]\)?{\([^}]+\)}|}
+  Re_compat.regexp {|\\setCJK\(main\|sans\|mono\)font\(\[[^]]*\]\)?{\([^}]+\)}|}
 
 let extract_cjk_fonts (source : string) : string list =
   let fonts = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re_cjk_font source !i in
-       let name = Str.matched_group 3 source in
+       let _mr, _ = Re_compat.search_forward re_cjk_font source !i in
+       let name = Re_compat.matched_group _mr 3 source in
        fonts := name :: !fonts;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !fonts

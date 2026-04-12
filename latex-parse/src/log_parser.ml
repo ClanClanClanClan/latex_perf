@@ -48,27 +48,30 @@ let empty_context =
 (* ── Regex patterns for log parsing ─────────────────────────────── *)
 
 let re_overfull_hbox =
-  Str.regexp
+  Re_compat.regexp
     {|Overfull \\hbox (\([0-9.]+\)pt too wide) in paragraph at lines \([0-9]+\)--\([0-9]+\)|}
 
-let re_overfull_vbox = Str.regexp {|Overfull \\vbox (\([0-9.]+\)pt too high)|}
+let re_overfull_vbox =
+  Re_compat.regexp {|Overfull \\vbox (\([0-9.]+\)pt too high)|}
 
 let re_underfull_hbox =
-  Str.regexp
+  Re_compat.regexp
     {|Underfull \\hbox (badness \([0-9]+\)) in paragraph at lines \([0-9]+\)|}
 
-let re_underfull_vbox = Str.regexp {|Underfull \\vbox (badness \([0-9]+\))|}
-let re_page_number = Str.regexp {|\[\([0-9]+\)\]|}
+let re_underfull_vbox =
+  Re_compat.regexp {|Underfull \\vbox (badness \([0-9]+\))|}
+
+let re_page_number = Re_compat.regexp {|\[\([0-9]+\)\]|}
 
 let re_float_warning =
-  Str.regexp {|LaTeX Warning: Float too large.*input line \([0-9]+\)|}
+  Re_compat.regexp {|LaTeX Warning: Float too large.*input line \([0-9]+\)|}
 
 let _re_latex_warning =
-  Str.regexp {|LaTeX Warning: \(.*\) on input line \([0-9]+\)|}
+  Re_compat.regexp {|LaTeX Warning: \(.*\) on input line \([0-9]+\)|}
 
-let re_widow = Str.regexp_string "Widow penalty"
-let re_club = Str.regexp_string "Club penalty"
-let re_tikz_time = Str.regexp {|[Cc]ompile time.*: \([0-9.]+\)s|}
+let re_widow = Re_compat.regexp_string "Widow penalty"
+let re_club = Re_compat.regexp_string "Club penalty"
+let re_tikz_time = Re_compat.regexp {|[Cc]ompile time.*: \([0-9.]+\)s|}
 
 (* ── Parser ─────────────────────────────────────────────────────── *)
 
@@ -80,10 +83,11 @@ let parse_log (content : string) : log_context =
     (fun line ->
       (* Overfull \hbox *)
       (try
-         ignore (Str.search_forward re_overfull_hbox line 0);
-         let amt = float_of_string (Str.matched_group 1 line) in
-         let ls = int_of_string (Str.matched_group 2 line) in
-         let le = int_of_string (Str.matched_group 3 line) in
+         let _mr, _ = Re_compat.search_forward re_overfull_hbox line 0 in
+         ignore _mr;
+         let amt = float_of_string (Re_compat.matched_group _mr 1 line) in
+         let ls = int_of_string (Re_compat.matched_group _mr 2 line) in
+         let le = int_of_string (Re_compat.matched_group _mr 3 line) in
          events :=
            Overfull
              { box = Hbox; amount_pt = amt; line_start = ls; line_end = le }
@@ -91,8 +95,9 @@ let parse_log (content : string) : log_context =
        with Not_found | Failure _ -> ());
       (* Overfull \vbox *)
       (try
-         ignore (Str.search_forward re_overfull_vbox line 0);
-         let amt = float_of_string (Str.matched_group 1 line) in
+         let _mr, _ = Re_compat.search_forward re_overfull_vbox line 0 in
+         ignore _mr;
+         let amt = float_of_string (Re_compat.matched_group _mr 1 line) in
          events :=
            Overfull
              { box = Vbox; amount_pt = amt; line_start = 0; line_end = 0 }
@@ -100,16 +105,18 @@ let parse_log (content : string) : log_context =
        with Not_found | Failure _ -> ());
       (* Underfull \hbox *)
       (try
-         ignore (Str.search_forward re_underfull_hbox line 0);
-         let bad = int_of_string (Str.matched_group 1 line) in
-         let ls = int_of_string (Str.matched_group 2 line) in
+         let _mr, _ = Re_compat.search_forward re_underfull_hbox line 0 in
+         ignore _mr;
+         let bad = int_of_string (Re_compat.matched_group _mr 1 line) in
+         let ls = int_of_string (Re_compat.matched_group _mr 2 line) in
          events :=
            Underfull { box = Hbox; badness = bad; line_start = ls } :: !events
        with Not_found | Failure _ -> ());
       (* Underfull \vbox *)
       (try
-         ignore (Str.search_forward re_underfull_vbox line 0);
-         let bad = int_of_string (Str.matched_group 1 line) in
+         let _mr, _ = Re_compat.search_forward re_underfull_vbox line 0 in
+         ignore _mr;
+         let bad = int_of_string (Re_compat.matched_group _mr 1 line) in
          events :=
            Underfull { box = Vbox; badness = bad; line_start = 0 } :: !events
        with Not_found | Failure _ -> ());
@@ -117,31 +124,36 @@ let parse_log (content : string) : log_context =
       let i = ref 0 in
       (try
          while true do
-           ignore (Str.search_forward re_page_number line !i);
-           let pg = int_of_string (Str.matched_group 1 line) in
+           let _mr, _ = Re_compat.search_forward re_page_number line !i in
+           ignore _mr;
+           let pg = int_of_string (Re_compat.matched_group _mr 1 line) in
            events := PageNumber pg :: !events;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       (* Float warnings *)
       (try
-         ignore (Str.search_forward re_float_warning line 0);
-         let ln = int_of_string (Str.matched_group 1 line) in
+         let _mr, _ = Re_compat.search_forward re_float_warning line 0 in
+         ignore _mr;
+         let ln = int_of_string (Re_compat.matched_group _mr 1 line) in
          events := FloatWarning { message = line; line = ln } :: !events
        with Not_found | Failure _ -> ());
       (* Widow/club penalties *)
       (try
-         ignore (Str.search_forward re_widow line 0);
+         let _mr, _ = Re_compat.search_forward re_widow line 0 in
+         ignore _mr;
          events := WidowPenalty { page = 0 } :: !events
        with Not_found -> ());
       (try
-         ignore (Str.search_forward re_club line 0);
+         let _mr, _ = Re_compat.search_forward re_club line 0 in
+         ignore _mr;
          events := ClubPenalty { page = 0 } :: !events
        with Not_found -> ());
       (* TikZ compile times *)
       try
-        ignore (Str.search_forward re_tikz_time line 0);
-        let t = float_of_string (Str.matched_group 1 line) in
+        let _mr, _ = Re_compat.search_forward re_tikz_time line 0 in
+        ignore _mr;
+        let t = float_of_string (Re_compat.matched_group _mr 1 line) in
         tikz_times := t :: !tikz_times
       with Not_found | Failure _ -> ())
     lines;

@@ -50,19 +50,19 @@ let subscribe_global (name : string) (handler : handler) : unit =
 (* ── Event generation from source scan ──────────────────────── *)
 
 let scan_and_publish (bus : bus) (src : string) : unit =
-  let re_label = Str.regexp {|\\label{\([^}]+\)}|} in
-  let re_ref = Str.regexp {|\\ref{\([^}]+\)}|} in
-  let re_section = Str.regexp {|\\section{\([^}]+\)}|} in
-  let re_begin = Str.regexp {|\\begin{\([^}]+\)}|} in
-  let re_end = Str.regexp {|\\end{\([^}]+\)}|} in
+  let re_label = Re_compat.regexp {|\\label{\([^}]+\)}|} in
+  let re_ref = Re_compat.regexp {|\\ref{\([^}]+\)}|} in
+  let re_section = Re_compat.regexp {|\\section{\([^}]+\)}|} in
+  let re_begin = Re_compat.regexp {|\\begin{\([^}]+\)}|} in
+  let re_end = Re_compat.regexp {|\\end{\([^}]+\)}|} in
   let scan re mk_event =
     let i = ref 0 in
     try
       while true do
-        let pos = Str.search_forward re src !i in
-        let g1 = Str.matched_group 1 src in
+        let _mr, pos = Re_compat.search_forward re src !i in
+        let g1 = Re_compat.matched_group _mr 1 src in
         publish bus (mk_event g1 pos);
-        i := Str.match_end ()
+        i := Re_compat.match_end _mr
       done
     with Not_found -> ()
   in

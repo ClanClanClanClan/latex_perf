@@ -60,7 +60,7 @@ let r_char_004 : rule =
 (* ── MATH-006 (L1_Expanded, Info): Bra-ket spacing ────────────────── *)
 let r_math_006 : rule =
   let re_braket =
-    Str.regexp {|\\langle\([^\\]*\(\\[^r][a-zA-Z]*\)*\)*\\rangle|}
+    Re_compat.regexp {|\\langle\([^\\]*\(\\[^r][a-zA-Z]*\)*\)*\\rangle|}
   in
   let run s =
     let math_segs = extract_math_segments s in
@@ -70,8 +70,8 @@ let r_math_006 : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re_braket seg !i in
-            let matched = Str.matched_string seg in
+            let _mr, _ = Re_compat.search_forward re_braket seg !i in
+            let matched = Re_compat.matched_string _mr seg in
             (* Check for separator: \mid or | between \langle and \rangle *)
             let has_mid = contains_substring matched "\\mid" in
             let has_pipe =
@@ -85,7 +85,7 @@ let r_math_006 : rule =
               !found
             in
             if (not has_mid) && not has_pipe then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -105,30 +105,32 @@ let r_math_006 : rule =
 (* ── L3-001 (L1_Expanded, Info): expl3 + 2e macros in preamble ──── *)
 let r_l3_001 : rule =
   let re_expl3 =
-    Str.regexp
+    Re_compat.regexp
       {|\\[a-z]+_[a-z_]+:[a-zA-Z]+\|\\tl_new:N\|\\int_new:N\|\\bool_new:N|}
   in
   let re_2e =
-    Str.regexp
+    Re_compat.regexp
       {|\\newcommand\|\\renewcommand\|\\newenvironment\|\\renewenvironment|}
   in
-  let re_begin_doc = Str.regexp_string {|\begin{document}|} in
+  let re_begin_doc = Re_compat.regexp_string {|\begin{document}|} in
   let run s =
     let preamble =
       try
-        let idx = Str.search_forward re_begin_doc s 0 in
+        let _mr, idx = Re_compat.search_forward re_begin_doc s 0 in
         String.sub s 0 idx
       with Not_found -> s
     in
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3 preamble 0);
+        let _mr, _ = Re_compat.search_forward re_expl3 preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_2e =
       try
-        ignore (Str.search_forward re_2e preamble 0);
+        let _mr, _ = Re_compat.search_forward re_2e preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -147,13 +149,13 @@ let r_l3_001 : rule =
 (* ── L3-002 (L1_Expanded, Warning): expl3 variable after \begin{document} *)
 let r_l3_002 : rule =
   let re_expl3_decl =
-    Str.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
+    Re_compat.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
   in
-  let re_begin_doc = Str.regexp_string {|\begin{document}|} in
+  let re_begin_doc = Re_compat.regexp_string {|\begin{document}|} in
   let run s =
     let body =
       try
-        let idx = Str.search_forward re_begin_doc s 0 in
+        let _mr, idx = Re_compat.search_forward re_begin_doc s 0 in
         let start = idx + 16 in
         if start < String.length s then
           String.sub s start (String.length s - start)
@@ -177,21 +179,25 @@ let r_l3_002 : rule =
 
 (* ── L3-003 (L1_Expanded, Warning): expl3 + etoolbox combined ────── *)
 let r_l3_003 : rule =
-  let re_expl3 = Str.regexp {|\\ExplSyntaxOn\|\\[a-z]+_[a-z_]+:[a-zA-Z]|} in
+  let re_expl3 =
+    Re_compat.regexp {|\\ExplSyntaxOn\|\\[a-z]+_[a-z_]+:[a-zA-Z]|}
+  in
   let re_etoolbox =
-    Str.regexp
+    Re_compat.regexp
       {|\\patchcmd\|\\apptocmd\|\\pretocmd\|\\robustify\|\\AtBeginEnvironment|}
   in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3 s 0);
+        let _mr, _ = Re_compat.search_forward re_expl3 s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_etoolbox =
       try
-        ignore (Str.search_forward re_etoolbox s 0);
+        let _mr, _ = Re_compat.search_forward re_etoolbox s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -209,7 +215,7 @@ let r_l3_003 : rule =
 
 (* ── L3-004 (L1_Expanded, Info): Undocumented \__module_internal:N ── *)
 let r_l3_004 : rule =
-  let re = Str.regexp {|\\__[a-z_]+:[a-zA-Z]*|} in
+  let re = Re_compat.regexp {|\\__[a-z_]+:[a-zA-Z]*|} in
   let run s =
     let cnt = count_re_matches re s in
     if cnt > 0 then
@@ -226,12 +232,13 @@ let r_l3_004 : rule =
 
 (* ── L3-005 (L1_Expanded, Error): Missing \ExplSyntaxOn guard ────── *)
 let r_l3_005 : rule =
-  let re_expl3_func = Str.regexp {|\\[a-z]+_[a-z_]+:[nNoVvxfeTFpw]+|} in
-  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let re_expl3_func = Re_compat.regexp {|\\[a-z]+_[a-z_]+:[nNoVvxfeTFpw]+|} in
+  let re_syntax_on = Re_compat.regexp_string {|\ExplSyntaxOn|} in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3_func s 0);
+        let _mr, _ = Re_compat.search_forward re_expl3_func s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -239,7 +246,8 @@ let r_l3_005 : rule =
     else
       let has_guard =
         try
-          ignore (Str.search_forward re_syntax_on s 0);
+          let _mr, _ = Re_compat.search_forward re_syntax_on s 0 in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -257,12 +265,15 @@ let r_l3_005 : rule =
 
 (* ── L3-007 (L1_Expanded, Info): camelCase + snake_case in expl3 ─── *)
 let r_l3_007 : rule =
-  let re_camel = Str.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|} in
-  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let re_camel =
+    Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|}
+  in
+  let re_syntax_on = Re_compat.regexp_string {|\ExplSyntaxOn|} in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_syntax_on s 0);
+        let _mr, _ = Re_compat.search_forward re_syntax_on s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -284,13 +295,14 @@ let r_l3_007 : rule =
 (* ── L3-008 (L2_Ast, Warning): Expl3 module lacks \ProvidesExplPackage *)
 let r_l3_008 : rule =
   let expl3_re =
-    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
+    Re_compat.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
   in
-  let re_provides_expl = Str.regexp_string "\\ProvidesExplPackage" in
+  let re_provides_expl = Re_compat.regexp_string "\\ProvidesExplPackage" in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward expl3_re s 0);
+        let _mr, _ = Re_compat.search_forward expl3_re s 0 in
+        ignore _mr;
         true
       with Not_found ->
         (* Also check for \ExplSyntaxOn *)
@@ -298,7 +310,8 @@ let r_l3_008 : rule =
     in
     let has_provides =
       try
-        ignore (Str.search_forward re_provides_expl s 0);
+        let _mr, _ = Re_compat.search_forward re_provides_expl s 0 in
+        ignore _mr;
         true
       with Not_found -> contains_substring s "\\ProvidesExplClass"
     in
@@ -345,17 +358,17 @@ let r_l3_009 : rule =
 
 (* ── L3-010 (L2_Ast, Info): ExplSyntaxOff missing at end of file ─── *)
 let r_l3_010 : rule =
-  let on_re = Str.regexp_string "\\ExplSyntaxOn" in
-  let off_re = Str.regexp_string "\\ExplSyntaxOff" in
+  let on_re = Re_compat.regexp_string "\\ExplSyntaxOn" in
+  let off_re = Re_compat.regexp_string "\\ExplSyntaxOff" in
   let run s =
     let count_m re str =
       let cnt = ref 0 in
       let i = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re str !i in
+           let _mr, _ = Re_compat.search_forward re str !i in
            incr cnt;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       !cnt
@@ -377,12 +390,12 @@ let r_l3_010 : rule =
 (* ── L3-011 (L1_Expanded, Warning): pdfTeX prim in Lua/XeTeX path ── *)
 let r_l3_011 : rule =
   let re_luatex_branch =
-    Str.regexp {|\\sys_if_engine_luatex:T\|\\ifluatex\|\\ifLuaTeX|}
+    Re_compat.regexp {|\\sys_if_engine_luatex:T\|\\ifluatex\|\\ifLuaTeX|}
   in
   let re_xetex_branch =
-    Str.regexp {|\\sys_if_engine_xetex:T\|\\ifxetex\|\\ifXeTeX|}
+    Re_compat.regexp {|\\sys_if_engine_xetex:T\|\\ifxetex\|\\ifXeTeX|}
   in
-  let re_fontspec = Str.regexp_string {|\usepackage{fontspec}|} in
+  let re_fontspec = Re_compat.regexp_string {|\usepackage{fontspec}|} in
   let pdftex_prims =
     [
       {|\pdfoutput|};
@@ -398,19 +411,22 @@ let r_l3_011 : rule =
   let run s =
     let has_lua =
       try
-        ignore (Str.search_forward re_luatex_branch s 0);
+        let _mr, _ = Re_compat.search_forward re_luatex_branch s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_xe =
       try
-        ignore (Str.search_forward re_xetex_branch s 0);
+        let _mr, _ = Re_compat.search_forward re_xetex_branch s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_fontspec =
       try
-        ignore (Str.search_forward re_fontspec s 0);
+        let _mr, _ = Re_compat.search_forward re_fontspec s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in

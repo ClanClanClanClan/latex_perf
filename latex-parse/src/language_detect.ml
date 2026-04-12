@@ -117,10 +117,11 @@ let extract_preamble s =
 
 let detect_babel preamble =
   (* Match \usepackage[lang]{babel} or \usepackage[lang1,lang2]{babel} *)
-  let re = Str.regexp {|\\usepackage\[\([^]]*\)\]{babel}|} in
+  let re = Re_compat.regexp {|\\usepackage\[\([^]]*\)\]{babel}|} in
   try
-    ignore (Str.search_forward re preamble 0);
-    let opts = Str.matched_group 1 preamble in
+    let _mr, _ = Re_compat.search_forward re preamble 0 in
+    ignore _mr;
+    let opts = Re_compat.matched_group _mr 1 preamble in
     (* Parse comma-separated language names, last one is main *)
     let langs = String.split_on_char ',' opts in
     let langs = List.map String.trim langs in
@@ -134,12 +135,15 @@ let detect_babel preamble =
 
 let detect_polyglossia preamble =
   (* Match \setdefaultlanguage{lang} or \setmainlanguage{lang} *)
-  let re1 = Str.regexp {|\\setdefaultlanguage\(\[[^]]*\]\)?{\([^}]+\)}|} in
-  let re2 = Str.regexp {|\\setmainlanguage\(\[[^]]*\]\)?{\([^}]+\)}|} in
+  let re1 =
+    Re_compat.regexp {|\\setdefaultlanguage\(\[[^]]*\]\)?{\([^}]+\)}|}
+  in
+  let re2 = Re_compat.regexp {|\\setmainlanguage\(\[[^]]*\]\)?{\([^}]+\)}|} in
   let try_re re =
     try
-      ignore (Str.search_forward re preamble 0);
-      let lang = Str.matched_group 2 preamble in
+      let _mr, _ = Re_compat.search_forward re preamble 0 in
+      ignore _mr;
+      let lang = Re_compat.matched_group _mr 2 preamble in
       resolve_babel_name lang
     with Not_found | Invalid_argument _ -> None
   in

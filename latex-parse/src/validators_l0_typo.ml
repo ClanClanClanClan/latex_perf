@@ -302,15 +302,15 @@ let r_typo_010 : rule =
 
 (* TYPO-011: Missing thin space before differential d in integrals *)
 let r_typo_011 : rule =
-  let re = Str.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
+  let re = Re_compat.regexp {|\\int[^}]*[^\\,]d[a-z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -328,15 +328,15 @@ let r_typo_011 : rule =
 
 (* TYPO-012: Straight apostrophe used for minutes/feet *)
 let r_typo_012 : rule =
-  let re = Str.regexp {|[0-9]'|} in
+  let re = Re_compat.regexp {|[0-9]'|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -411,15 +411,15 @@ let r_typo_015 : rule =
 
 (* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
 let r_typo_016 : rule =
-  let re = Str.regexp {| \\\(cite\|ref\)[^a-zA-Z]|} in
+  let re = Re_compat.regexp {| \\\(cite\|ref\)[^a-zA-Z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cnt = !cnt in
@@ -437,15 +437,15 @@ let r_typo_016 : rule =
 
 (* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
 let r_typo_017 : rule =
-  let re = Str.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
+  let re = Re_compat.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -496,15 +496,15 @@ let r_typo_020 : rule =
 
 (* TYPO-021: Capital letter after ellipsis without space *)
 let r_typo_021 : rule =
-  let re = Str.regexp {|\(\.\.\.\|…\)[A-Z]|} in
+  let re = Re_compat.regexp {|\(\.\.\.\|…\)[A-Z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -541,26 +541,30 @@ let r_typo_022 : rule =
 (* TYPO-023: ASCII ampersand & outside tabular env; use \& *)
 let r_typo_023 : rule =
   let tabular_re =
-    Str.regexp
+    Re_compat.regexp
       {|\\begin{tabular\|\\begin{array\|\\begin{align\|\\begin{tabularx\|\\begin{longtable|}
   in
   let end_re =
-    Str.regexp
+    Re_compat.regexp
       {|\\end{tabular\|\\end{array\|\\end{align\|\\end{tabularx\|\\end{longtable|}
   in
-  let _re_close_brace = Str.regexp "}" in
+  let _re_close_brace = Re_compat.regexp "}" in
   let run s =
     (* Strip out tabular/array/align environments *)
     let stripped = ref s in
     (try
        while true do
-         let start_pos = Str.search_forward tabular_re !stripped 0 in
+         let _mr, start_pos = Re_compat.search_forward tabular_re !stripped 0 in
          try
-           let end_pos = Str.search_forward end_re !stripped start_pos in
+           let _mr, end_pos =
+             Re_compat.search_forward end_re !stripped start_pos
+           in
            let end_pos =
              try
-               let _ = Str.search_forward _re_close_brace !stripped end_pos in
-               Str.match_end ()
+               let _mr, _ =
+                 Re_compat.search_forward _re_close_brace !stripped end_pos
+               in
+               Re_compat.match_end _mr
              with Not_found -> end_pos + 10
            in
            let before = String.sub !stripped 0 start_pos in
@@ -596,14 +600,14 @@ let r_typo_023 : rule =
 
 (* TYPO-024: Dangling dash at line end *)
 let r_typo_024 : rule =
-  let re = Str.regexp "-+[ \t]*$" in
+  let re = Re_compat.regexp "-+[ \t]*$" in
   let run s =
     let lines = String.split_on_char '\n' s in
     let cnt =
       List.fold_left
         (fun acc line ->
           try
-            let _ = Str.search_forward re line 0 in
+            let _mr, _ = Re_compat.search_forward re line 0 in
             acc + 1
           with Not_found -> acc)
         0 lines
@@ -622,15 +626,15 @@ let r_typo_024 : rule =
 
 (* TYPO-025: Space before en-dash in number range *)
 let r_typo_025 : rule =
-  let re = Str.regexp {|[0-9] +\(–\|--\)[0-9]|} in
+  let re = Re_compat.regexp {|[0-9] +\(–\|--\)[0-9]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -647,15 +651,15 @@ let r_typo_025 : rule =
 
 (* TYPO-026: Wrong dash in page range — should use -- *)
 let r_typo_026 : rule =
-  let re = Str.regexp {|[0-9]–[0-9]|} in
+  let re = Re_compat.regexp {|[0-9]–[0-9]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -706,15 +710,15 @@ let r_typo_028 : rule =
 
 (* TYPO-029: Non-breaking space after \ref missing *)
 let r_typo_029 : rule =
-  let re = Str.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
+  let re = Re_compat.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -743,15 +747,15 @@ let r_typo_031 : rule =
 
 (* TYPO-032: Comma before \cite *)
 let r_typo_032 : rule =
-  let re = Str.regexp {|,[ ]*\\cite|} in
+  let re = Re_compat.regexp {|,[ ]*\\cite|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -863,14 +867,15 @@ let r_typo_035 : rule =
 (* Suspicious consecutive capitalised words (shouting) *)
 let r_typo_036 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
   in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -904,12 +909,13 @@ let r_typo_037 : rule =
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
-  let re = Str.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
+  let re = Re_compat.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1079,7 +1085,7 @@ let r_typo_044 : rule =
       "NFKC";
     ]
   in
-  let re = Str.regexp {|\([A-Z][A-Z0-9]+\)|} in
+  let re = Re_compat.regexp {|\([A-Z][A-Z0-9]+\)|} in
   let is_alnum c =
     (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
   in
@@ -1091,9 +1097,9 @@ let r_typo_044 : rule =
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re s_text !i in
-         let acr = Str.matched_group 1 s_text in
-         let match_end = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re s_text !i in
+         let acr = Re_compat.matched_group _mr 1 s_text in
+         let match_end = Re_compat.match_end _mr in
          (* Manual word-boundary check *)
          let before_ok = pos = 0 || not (is_alnum s_text.[pos - 1]) in
          let after_ok =
@@ -1215,12 +1221,13 @@ let r_typo_053 : rule =
 
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
-  let re = Str.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
+  let re = Re_compat.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1254,12 +1261,13 @@ let r_typo_055 : rule =
 
 (* Missing thin-space before degree symbol *)
 let r_typo_057 : rule =
-  let re = Str.regexp "[0-9]\xc2\xb0" in
+  let re = Re_compat.regexp "[0-9]\xc2\xb0" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1310,12 +1318,13 @@ let r_typo_063 : rule =
 
 (* URL split across lines without \url{} *)
 let r_typo_039 : rule =
-  let re = Str.regexp "https?://[^ \t\n}]+" in
+  let re = Re_compat.regexp "https?://[^ \t\n}]+" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1333,14 +1342,15 @@ let r_typo_039 : rule =
 
 (* Inline math $...$ exceeds 80 characters *)
 let r_typo_040 : rule =
-  let re = Str.regexp "\\$\\([^$]+\\)\\$" in
+  let re = Re_compat.regexp "\\$\\([^$]+\\)\\$" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        let inner = Str.matched_group 1 s in
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        let inner = Re_compat.matched_group _mr 1 s in
         let acc' = if String.length inner > 80 then acc + 1 else acc in
-        loop (Str.match_end ()) acc'
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1439,12 +1449,13 @@ let r_typo_049 : rule =
 
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
-  let re = Str.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
+  let re = Re_compat.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
   let run s =
     let rec loop i acc =
       try
-        ignore (Str.search_forward re s i);
-        loop (Str.match_end ()) (acc + 1)
+        let _mr, _ = Re_compat.search_forward re s i in
+        ignore _mr;
+        loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1486,23 +1497,30 @@ let r_typo_058 : rule =
 
 (* TYPO-060: Smart quotes inside lstlisting/verbatim environments *)
 let r_typo_060 : rule =
-  let _re_begin_lst = Str.regexp_string "\\begin{lstlisting}" in
-  let _re_end_lst = Str.regexp_string "\\end{lstlisting}" in
-  let _re_begin_verb = Str.regexp_string "\\begin{verbatim}" in
-  let _re_end_verb = Str.regexp_string "\\end{verbatim}" in
+  let _re_begin_lst = Re_compat.regexp_string "\\begin{lstlisting}" in
+  let _re_end_lst = Re_compat.regexp_string "\\end{lstlisting}" in
+  let _re_begin_verb = Re_compat.regexp_string "\\begin{verbatim}" in
+  let _re_end_verb = Re_compat.regexp_string "\\end{verbatim}" in
   let run s =
     (* Extract content within \begin{lstlisting}...\end{lstlisting} and
        \begin{verbatim}...\end{verbatim}, then scan for curly quotes *)
     let curly_in_env open_re close_re olen clen =
       let rec loop i acc =
         match
-          try Some (Str.search_forward open_re s i) with Not_found -> None
+          try
+            let _mr, _p = Re_compat.search_forward open_re s i in
+            Some _p
+          with Not_found -> None
         with
         | None -> acc
         | Some start -> (
             let content_start = start + olen in
             match
-              try Some (Str.search_forward close_re s content_start)
+              try
+                let _mr, _p =
+                  Re_compat.search_forward close_re s content_start
+                in
+                Some _p
               with Not_found -> None
             with
             | None -> acc

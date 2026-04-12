@@ -586,3 +586,8 @@
  (name test_ml_client)
  (modules test_ml_client)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_incremental_integration)
+ (modules test_incremental_integration)
+ (libraries latex_parse_lib test_helpers unix))

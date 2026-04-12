@@ -116,7 +116,11 @@ let load_ml_confidence_map (path : string) :
          in
          Hashtbl.replace tbl rule_id { precision; weight; suppress })
        (to_assoc json)
-   with _ -> ());
+   with exn ->
+     Printf.eprintf
+       "[evidence_scoring] WARNING: failed to load ML confidence map from %s: %s\n\
+        %!"
+       path (Printexc.to_string exn));
   tbl
 
 let apply_ml_boost (map : (string, ml_rule_confidence) Hashtbl.t)

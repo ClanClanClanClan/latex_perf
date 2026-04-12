@@ -19,13 +19,25 @@ type chunk_cache = {
 
 let min_chunk_size = 64
 
+let hash_chunk_content (content : string) : int64 =
+  (* Hash bytes + catcode vector per spec I-3: hash(bytes, catcode_vector) *)
+  let n = String.length content in
+  let buf = Bytes.create (n * 2) in
+  Bytes.blit_string content 0 buf 0 n;
+  for i = 0 to n - 1 do
+    let b = Char.code content.[i] in
+    let cc = Catcode.classify_ascii b in
+    Bytes.set buf (n + i) (Char.chr (cc land 0xFF))
+  done;
+  Xxh64.hash64 buf
+
 let split_into_chunks (src : string) : chunk array =
   let spans = Validators_common.split_into_paragraphs src in
   if spans = [] then
     if String.length src > 0 then
       [|
         {
-          id = Xxh64.hash64 (Bytes.of_string src);
+          id = hash_chunk_content src;
           start = 0;
           length = String.length src;
           content = src;
@@ -48,12 +60,7 @@ let split_into_chunks (src : string) : chunk array =
     Array.of_list
       (List.map
          (fun (s, len, content) ->
-           {
-             id = Xxh64.hash64 (Bytes.of_string content);
-             start = s;
-             length = len;
-             content;
-           })
+           { id = hash_chunk_content content; start = s; length = len; content })
          merged)
 
 let create_snapshot (src : string) : snapshot =
@@ -62,19 +69,17 @@ let create_snapshot (src : string) : snapshot =
 (* ── Diffing ───────────────────────────────────────────────────────── *)
 
 let diff_snapshots (old_snap : snapshot) (new_snap : snapshot) : int list =
-  let old_ids = Hashtbl.create (Array.length old_snap.chunks) in
-  Array.iteri (fun i c -> Hashtbl.replace old_ids i c.id) old_snap.chunks;
-  let dirty = ref [] in
-  Array.iteri
-    (fun i c ->
-      let changed =
-        match Hashtbl.find_opt old_ids i with
-        | Some old_id -> old_id <> c.id
-        | None -> true (* new chunk *)
-      in
-      if changed then dirty := i :: !dirty)
-    new_snap.chunks;
-  List.rev !dirty
+  let new_len = Array.length new_snap.chunks in
+  let old_len = Array.length old_snap.chunks in
+  (* If chunk counts differ, mark ALL new chunks as dirty (structural change) *)
+  if new_len <> old_len then List.init new_len Fun.id
+  else
+    let dirty = ref [] in
+    for i = 0 to new_len - 1 do
+      if new_snap.chunks.(i).id <> old_snap.chunks.(i).id then
+        dirty := i :: !dirty
+    done;
+    List.rev !dirty
 
 (* ── Cache ─────────────────────────────────────────────────────────── *)
 

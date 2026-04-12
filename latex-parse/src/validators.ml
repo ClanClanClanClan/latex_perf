@@ -710,13 +710,19 @@ let _chunk_cache : Chunk_store.chunk_cache = Chunk_store.create_cache ()
 let _is_cross_chunk_rule (r : rule) : bool =
   match precondition_of_rule_id r.id with L3 | L4 -> true | _ -> false
 
+let _resolve_old_snap prev_src =
+  match (!_prev_snapshot, prev_src) with
+  | Some cached, _ -> Some cached
+  | None, Some ps -> Some (Chunk_store.create_snapshot ps)
+  | None, None -> None
+
 let run_all_incremental ?(prev_src : string option) (src : string) : result list
     =
   let new_snap = Chunk_store.create_snapshot src in
   let dirty_indices =
-    match (prev_src, !_prev_snapshot) with
-    | None, _ | _, None -> List.init (Array.length new_snap.chunks) Fun.id
-    | Some _, Some old_snap -> Chunk_store.diff_snapshots old_snap new_snap
+    match _resolve_old_snap prev_src with
+    | None -> List.init (Array.length new_snap.chunks) Fun.id
+    | Some os -> Chunk_store.diff_snapshots os new_snap
   in
   _prev_snapshot := Some new_snap;
   (* Per-chunk rules: only re-run dirty chunks *)
@@ -765,9 +771,9 @@ let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
     : result list =
   let new_snap = Chunk_store.create_snapshot src in
   let dirty_indices =
-    match (prev_src, !_prev_snapshot) with
-    | None, _ | _, None -> List.init (Array.length new_snap.chunks) Fun.id
-    | Some _, Some old_snap -> Chunk_store.diff_snapshots old_snap new_snap
+    match _resolve_old_snap prev_src with
+    | None -> List.init (Array.length new_snap.chunks) Fun.id
+    | Some os -> Chunk_store.diff_snapshots os new_snap
   in
   _prev_snapshot := Some new_snap;
   let rules = get_rules () in

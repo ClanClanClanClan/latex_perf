@@ -31,15 +31,10 @@ type stats_internal = {
   mutable si_deadline_misses : int;
 }
 
-type scheduler = {
-  _queue : task Lockfree_queue.t;
-  mutable pending : task list;
-  si : stats_internal;
-}
+type scheduler = { mutable pending : task list; si : stats_internal }
 
-let create ?(capacity = 1024) () : scheduler =
+let create ?capacity:(_ = 1024) () : scheduler =
   {
-    _queue = Lockfree_queue.create capacity;
     pending = [];
     si =
       {

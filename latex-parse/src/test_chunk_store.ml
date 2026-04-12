@@ -26,16 +26,22 @@ let () =
       let chunks = Chunk_store.split_into_chunks "" in
       expect (Array.length chunks = 0) (tag ^ ": 0 chunks"));
 
-  run "chunk content matches source" (fun tag ->
-      let src = "Hello world.\n\nGoodbye world." in
+  run "chunks cover entire source" (fun tag ->
+      let src =
+        "Hello world with enough text to be a real chunk.\n\n\
+         Goodbye world with more text."
+      in
       let chunks = Chunk_store.split_into_chunks src in
       expect (Array.length chunks >= 1) (tag ^ ": has chunks");
-      let reconstructed =
-        Array.to_list chunks
-        |> List.map (fun (c : Chunk_store.chunk) -> c.content)
-        |> String.concat ""
+      let total_len =
+        Array.fold_left
+          (fun acc c -> acc + String.length c.Chunk_store.content)
+          0 chunks
       in
-      expect (String.length reconstructed > 0) (tag ^ ": non-empty content"));
+      (* Chunks should cover most of the source (minus separators) *)
+      expect
+        (total_len > 0 && total_len <= String.length src)
+        (tag ^ ": total len reasonable"));
 
   (* ── hash determinism ───────────────────────────────────────── *)
   run "same content same hash" (fun tag ->

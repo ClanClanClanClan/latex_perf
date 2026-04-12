@@ -272,6 +272,17 @@ let run_all (src : string) : result list =
 
 (** Like {!run_all} but returns scored results with confidence levels. Uses VPD
     catalogue for confidence assignment (spec W75). *)
+let _ml_confidence_map :
+    (string, Evidence_scoring.ml_rule_confidence) Hashtbl.t lazy_t =
+  lazy
+    (let path =
+       match Sys.getenv_opt "LP_ML_CONFIDENCE_MAP" with
+       | Some p -> p
+       | None -> "data/ml_confidence_map.json"
+     in
+     if Sys.file_exists path then Evidence_scoring.load_ml_confidence_map path
+     else Hashtbl.create 0)
+
 let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
     Evidence_scoring.scored_result list =
   let results = run_all src in
@@ -279,6 +290,8 @@ let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
   let scored =
     List.map (fun r -> Evidence_scoring.score_result r vpd_ids) results
   in
+  let ml_map = Lazy.force _ml_confidence_map in
+  let scored = Evidence_scoring.apply_ml_boost ml_map scored in
   Evidence_scoring.filter_by_config config scored
 
 (** Filter rules by detected or explicit language. Universal rules (languages =
@@ -688,3 +701,135 @@ let () =
               (List.length conflicts)
       | Error msg ->
           Printf.eprintf "[validators] WARNING: DAG cycle: %s\n%!" msg
+
+(* ── Incremental validation (spec W111-120) ────────────────────── *)
+
+let _prev_snapshot : Chunk_store.snapshot option ref = ref None
+let _chunk_cache : Chunk_store.chunk_cache = Chunk_store.create_cache ()
+
+let _is_cross_chunk_rule (r : rule) : bool =
+  match precondition_of_rule_id r.id with L3 | L4 -> true | _ -> false
+
+let run_all_incremental ?(prev_src : string option) (src : string) : result list
+    =
+  let new_snap = Chunk_store.create_snapshot src in
+  let dirty_indices =
+    match (prev_src, !_prev_snapshot) with
+    | None, _ | _, None -> List.init (Array.length new_snap.chunks) Fun.id
+    | Some _, Some old_snap -> Chunk_store.diff_snapshots old_snap new_snap
+  in
+  _prev_snapshot := Some new_snap;
+  (* Per-chunk rules: only re-run dirty chunks *)
+  let chunk_results =
+    Array.to_list
+      (Array.mapi
+         (fun i (chunk : Chunk_store.chunk) ->
+           if List.mem i dirty_indices then (
+             let rules = get_rules () in
+             let chunk_rules =
+               List.filter (fun r -> not (_is_cross_chunk_rule r)) rules
+             in
+             let res =
+               List.filter_map (fun r -> r.run chunk.content) chunk_rules
+             in
+             Chunk_store.store_chunk _chunk_cache chunk.Chunk_store.id res;
+             res)
+           else
+             match
+               Chunk_store.lookup_chunk _chunk_cache chunk.Chunk_store.id
+             with
+             | Some cached -> cached
+             | None ->
+                 let rules = get_rules () in
+                 let chunk_rules =
+                   List.filter (fun r -> not (_is_cross_chunk_rule r)) rules
+                 in
+                 let res =
+                   List.filter_map (fun r -> r.run chunk.content) chunk_rules
+                 in
+                 Chunk_store.store_chunk _chunk_cache chunk.Chunk_store.id res;
+                 res)
+         new_snap.chunks)
+  in
+  (* Cross-chunk rules: always run on full source *)
+  let rules = get_rules () in
+  let cross_rules = List.filter _is_cross_chunk_rule rules in
+  let cross_results = List.filter_map (fun r -> r.run src) cross_rules in
+  List.concat chunk_results @ cross_results
+
+(* ── EDF-scheduled incremental validation ──────────────────────── *)
+
+let _scheduler = Edf_scheduler.create ~capacity:4096 ()
+
+let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
+    : result list =
+  let new_snap = Chunk_store.create_snapshot src in
+  let dirty_indices =
+    match (prev_src, !_prev_snapshot) with
+    | None, _ | _, None -> List.init (Array.length new_snap.chunks) Fun.id
+    | Some _, Some old_snap -> Chunk_store.diff_snapshots old_snap new_snap
+  in
+  _prev_snapshot := Some new_snap;
+  let rules = get_rules () in
+  let chunk_rules = List.filter (fun r -> not (_is_cross_chunk_rule r)) rules in
+  (* Submit tasks for dirty chunks *)
+  let tasks =
+    List.concat_map
+      (fun i ->
+        let chunk = new_snap.chunks.(i) in
+        let layers = [ 0; 1; 2 ] in
+        List.map
+          (fun layer_id ->
+            let deadline =
+              Edf_scheduler.compute_deadline ~edit_pos ~chunk_start:chunk.start
+                ~layer_id
+            in
+            let layer_rules =
+              List.filter
+                (fun r ->
+                  let rl =
+                    match precondition_of_rule_id r.id with
+                    | L0 -> 0
+                    | L1 -> 1
+                    | L2 -> 2
+                    | L3 -> 3
+                    | L4 -> 4
+                  in
+                  rl = layer_id)
+                chunk_rules
+            in
+            {
+              Edf_scheduler.task_id = Printf.sprintf "chunk%d-L%d" i layer_id;
+              layer_id;
+              chunk_id = chunk.Chunk_store.id;
+              deadline;
+              work =
+                (fun () ->
+                  let res =
+                    List.filter_map (fun r -> r.run chunk.content) layer_rules
+                  in
+                  Chunk_store.store_chunk _chunk_cache chunk.Chunk_store.id res;
+                  res);
+            })
+          layers)
+      dirty_indices
+  in
+  Edf_scheduler.submit_batch _scheduler tasks;
+  let scheduled_results = Edf_scheduler.drain _scheduler in
+  (* Cached results for clean chunks *)
+  let cached_results =
+    Array.to_list new_snap.chunks
+    |> List.mapi (fun i chunk ->
+           if List.mem i dirty_indices then []
+           else
+             match
+               Chunk_store.lookup_chunk _chunk_cache chunk.Chunk_store.id
+             with
+             | Some r -> r
+             | None -> [])
+    |> List.concat
+  in
+  (* Cross-chunk rules on full source *)
+  let cross_rules = List.filter _is_cross_chunk_rule rules in
+  let cross_results = List.filter_map (fun r -> r.run src) cross_rules in
+  scheduled_results @ cached_results @ cross_results

@@ -61,3 +61,13 @@ val rules_vpd_catalogue : rule list
 
 val vpd_catalogue_count : int
 (** Number of rules in the VPD catalogue. *)
+
+val run_all_incremental : ?prev_src:string -> string -> result list
+(** Incremental validation: only re-runs validators on chunks that changed since
+    [prev_src]. Uses chunk_store for hash-based change detection. Cross-chunk
+    rules (L3+) run on full source regardless. *)
+
+val run_all_scheduled :
+  ?edit_pos:int -> ?prev_src:string -> string -> result list
+(** EDF-scheduled incremental validation. Chunks closer to [edit_pos] and lower
+    layers execute first. Sequential execution in current version. *)

@@ -8,6 +8,9 @@ type event =
   | EnvironmentClosed of { name : string; position : int }
   | DocumentBegin of int
   | DocumentEnd of int
+  | TaskScheduled of { task_id : string; deadline : float }
+  | TaskCompleted of { task_id : string; elapsed_ms : float }
+  | DeadlineMissed of { task_id : string; deadline : float; actual : float }
 
 type handler = event -> unit
 type bus

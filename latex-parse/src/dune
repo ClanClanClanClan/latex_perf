@@ -40,6 +40,9 @@
   font_reader
   file_analyzer
   validators_l3_file
+  chunk_store
+  edf_scheduler
+  ml_client
   validators
   validators_metrics
   tokenizer_lite
@@ -563,3 +566,23 @@
  (name test_validators_l3_file)
  (modules test_validators_l3_file)
  (libraries latex_parse_lib test_helpers test_binary_gen unix threads))
+
+(test
+ (name test_ml_confidence)
+ (modules test_ml_confidence)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_chunk_store)
+ (modules test_chunk_store)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_edf_scheduler)
+ (modules test_edf_scheduler)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_ml_client)
+ (modules test_ml_client)
+ (libraries latex_parse_lib test_helpers unix))

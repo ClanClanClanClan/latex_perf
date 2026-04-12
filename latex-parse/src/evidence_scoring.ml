@@ -90,6 +90,48 @@ let score_result (result : Validators_common.result) (vpd_ids : string list) :
     evidence_weight = weight_of_confidence confidence;
   }
 
+(* ── ML confidence integration (spec W105-110) ─────────────── *)
+
+type ml_rule_confidence = { precision : float; weight : float; suppress : bool }
+
+let load_ml_confidence_map (path : string) :
+    (string, ml_rule_confidence) Hashtbl.t =
+  let tbl = Hashtbl.create 16 in
+  (try
+     let ic = open_in path in
+     let n = in_channel_length ic in
+     let s = Bytes.create n in
+     really_input ic s 0 n;
+     close_in ic;
+     let json = Yojson.Safe.from_string (Bytes.to_string s) in
+     let open Yojson.Safe.Util in
+     List.iter
+       (fun (rule_id, obj) ->
+         let precision =
+           try obj |> member "precision" |> to_float with _ -> 1.0
+         in
+         let weight = try obj |> member "weight" |> to_float with _ -> 1.0 in
+         let suppress =
+           try obj |> member "suppress" |> to_bool with _ -> false
+         in
+         Hashtbl.replace tbl rule_id { precision; weight; suppress })
+       (to_assoc json)
+   with _ -> ());
+  tbl
+
+let apply_ml_boost (map : (string, ml_rule_confidence) Hashtbl.t)
+    (results : scored_result list) : scored_result list =
+  if Hashtbl.length map = 0 then results
+  else
+    List.filter_map
+      (fun r ->
+        match Hashtbl.find_opt map r.id with
+        | None -> Some r
+        | Some { suppress = true; _ } -> None
+        | Some { weight; _ } ->
+            Some { r with evidence_weight = r.evidence_weight *. weight })
+      results
+
 let filter_by_config (config : scoring_config) (results : scored_result list) :
     scored_result list =
   List.filter

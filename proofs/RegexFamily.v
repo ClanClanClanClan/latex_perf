@@ -275,6 +275,14 @@ Fixpoint multi_substring_all_check (needles : list string) (s : string) : bool :
       else false
   end.
 
+(** Substring-pair: true if any needle from group_a AND any from group_b are present.
+    Used for MOD-002..007 where group_a = legacy command variants (e.g. "\bf ", "\bf{")
+    and group_b = modern command (e.g. "\textbf").
+    Tighter than multi_substring_all for short legacy commands that could
+    be prefixes of longer commands (e.g. \bf in \bfseries). *)
+Definition substring_pair_check (group_a group_b : list string) (s : string) : bool :=
+  multi_substring_check group_a s && multi_substring_check group_b s.
+
 (** Convert a list of byte values to a Coq string. *)
 Definition bytes_to_string (bs : list nat) : string :=
   fold_right (fun b s => String (ascii_of_nat b) s) EmptyString bs.

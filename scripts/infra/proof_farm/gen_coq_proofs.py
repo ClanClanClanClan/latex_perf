@@ -177,6 +177,18 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'(** {rule_id}: multi_substring_all [{", ".join(coq_comment_safe(n) for n in needles)}]. *)'
             )
 
+    elif family == "substring_pair":
+        group_a = pattern.get("group_a", [])
+        group_b = pattern.get("group_b", [])
+        if group_a and group_b and all(is_ascii_safe(n) for n in group_a + group_b):
+            items_a = "; ".join(f'"{coq_string_literal(n)}"' for n in group_a)
+            items_b = "; ".join(f'"{coq_string_literal(n)}"' for n in group_b)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  substring_pair_check [{items_a}] [{items_b}] s.',
+                f'(** {rule_id}: substring_pair (any of [{", ".join(coq_comment_safe(n) for n in group_a)}]) AND (any of [{", ".join(coq_comment_safe(n) for n in group_b)}]). *)'
+            )
+
     elif family == "line_pred":
         # Only TYPO-007 uses this — trailing spaces
         if rule_id == "TYPO-007":

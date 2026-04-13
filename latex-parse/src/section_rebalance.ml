@@ -30,7 +30,8 @@ type violation = {
 (* ── Regex for section commands ───────────────────────────────────── *)
 
 let section_re =
-  Str.regexp "\\\\\\(chapter\\|section\\|subsection\\|subsubsection\\)[*]?{"
+  Re_compat.regexp
+    "\\\\\\(chapter\\|section\\|subsection\\|subsubsection\\)[*]?{"
 
 let level_of_name = function
   | "chapter" -> 0
@@ -62,9 +63,9 @@ let extract_brace_arg (s : string) (start : int) : string * int =
     (String.sub s (start + 1) (!i - start - 2), !i)
 
 let find_label_after (s : string) (start : int) (limit : int) : string option =
-  let label_re = Str.regexp {|\\label{|} in
+  let label_re = Re_compat.regexp {|\\label{|} in
   try
-    let pos = Str.search_forward label_re s start in
+    let _mr, pos = Re_compat.search_forward label_re s start in
     if pos > limit then None
     else
       let lbl, _ = extract_brace_arg s (pos + 7 - 1) in
@@ -76,8 +77,8 @@ let extract_sections (source : string) : raw_section list =
   let start = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward section_re source !start in
-       let matched = Str.matched_string source in
+       let _mr, pos = Re_compat.search_forward section_re source !start in
+       let matched = Re_compat.matched_string _mr source in
        (* Extract command name *)
        let name_end = String.index_from matched 0 '{' in
        let name_raw = String.sub matched 1 (name_end - 1) in

@@ -28,7 +28,7 @@ let r_fig_001 : rule =
 
 (* ── FIG-002: Figure without label ───────────────────────────────────── *)
 let r_fig_002 : rule =
-  let re_label = Str.regexp {|\\label{|} in
+  let re_label = Re_compat.regexp {|\\label{|} in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
@@ -36,7 +36,8 @@ let r_fig_002 : rule =
         (fun acc body ->
           let found =
             try
-              ignore (Str.search_forward re_label body 0);
+              let _mr, _ = Re_compat.search_forward re_label body 0 in
+              ignore _mr;
               true
             with Not_found -> false
           in
@@ -57,19 +58,23 @@ let r_fig_002 : rule =
 
 (* ── FIG-003: Label before caption in figure ─────────────────────────── *)
 let r_fig_003 : rule =
-  let re_label = Str.regexp {|\\label{|} in
-  let re_caption = Str.regexp {|\\caption\(\[\|{\)|} in
+  let re_label = Re_compat.regexp {|\\label{|} in
+  let re_caption = Re_compat.regexp {|\\caption\(\[\|{\)|} in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
       List.fold_left
         (fun acc body ->
           let label_pos =
-            try Some (Str.search_forward re_label body 0)
+            try
+              let _mr, _p = Re_compat.search_forward re_label body 0 in
+              Some _p
             with Not_found -> None
           in
           let caption_pos =
-            try Some (Str.search_forward re_caption body 0)
+            try
+              let _mr, _p = Re_compat.search_forward re_caption body 0 in
+              Some _p
             with Not_found -> None
           in
           match (label_pos, caption_pos) with
@@ -91,7 +96,7 @@ let r_fig_003 : rule =
 
 (* ── FIG-007: Figure lacks alt text for accessibility ────────────────── *)
 let r_fig_007 : rule =
-  let re_includegraphics = Str.regexp_string "\\includegraphics" in
+  let re_includegraphics = Re_compat.regexp_string "\\includegraphics" in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
@@ -102,7 +107,9 @@ let r_fig_007 : rule =
           let i = ref 0 in
           (try
              while true do
-               let pos = Str.search_forward re_includegraphics body !i in
+               let _mr, pos =
+                 Re_compat.search_forward re_includegraphics body !i
+               in
                let after = pos + 16 in
                (* \includegraphics = 16 chars *)
                (* check if followed by [...] containing alt= *)
@@ -186,8 +193,8 @@ let r_tab_001 : rule =
 (* ── TAB-002: Caption below table (journal requires above) ──────────── *)
 let r_tab_002 : rule =
   (* Match both \end{tabular} and \end{tabular*} *)
-  let re_tabular_end = Str.regexp {|\\end{tabular\*?}|} in
-  let re_caption = Str.regexp {|\\caption\(\[\|{\)|} in
+  let re_tabular_end = Re_compat.regexp {|\\end{tabular\*?}|} in
+  let re_caption = Re_compat.regexp {|\\caption\(\[\|{\)|} in
   let run s =
     let blocks = extract_env_blocks_starred "table" s in
     let cnt =
@@ -195,11 +202,15 @@ let r_tab_002 : rule =
         (fun acc body ->
           (* Check if \caption appears after \end{tabular} or \end{tabular*} *)
           let tabular_end_pos =
-            try Some (Str.search_forward re_tabular_end body 0)
+            try
+              let _mr, _p = Re_compat.search_forward re_tabular_end body 0 in
+              Some _p
             with Not_found -> None
           in
           let caption_pos =
-            try Some (Str.search_forward re_caption body 0)
+            try
+              let _mr, _p = Re_compat.search_forward re_caption body 0 in
+              Some _p
             with Not_found -> None
           in
           match (tabular_end_pos, caption_pos) with
@@ -221,8 +232,8 @@ let r_tab_002 : rule =
 
 (* ── TAB-005: Vertical rules present in tabular ─────────────────────── *)
 let r_tab_005 : rule =
-  let re_plain = Str.regexp_string "\\begin{tabular}{" in
-  let re_star = Str.regexp_string "\\begin{tabular*}{" in
+  let re_plain = Re_compat.regexp_string "\\begin{tabular}{" in
+  let re_star = Re_compat.regexp_string "\\begin{tabular*}{" in
   (* Skip one brace group: returns position after matching } *)
   let skip_brace_group s start =
     let depth = ref 1 in
@@ -249,8 +260,8 @@ let r_tab_005 : rule =
     (* Check plain \begin{tabular}{colspec} *)
     (try
        while true do
-         let _ = Str.search_forward re_plain s !i in
-         let after = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re_plain s !i in
+         let after = Re_compat.match_end _mr in
          (match extract_col_spec s after with
          | Some col_spec -> if String.contains col_spec '|' then incr cnt
          | None -> ());
@@ -261,8 +272,8 @@ let r_tab_005 : rule =
     i := 0;
     (try
        while true do
-         let _ = Str.search_forward re_star s !i in
-         let after = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re_star s !i in
+         let after = Re_compat.match_end _mr in
          (* skip the width brace group *)
          let after_width = skip_brace_group s after in
          (* now expect the column spec brace group *)
@@ -334,7 +345,7 @@ let r_pkg_002 : rule =
 
 (* ── PKG-004: Package loaded after \begin{document} ──────────────────── *)
 let r_pkg_004 : rule =
-  let re_usepackage = Str.regexp_string "\\usepackage" in
+  let re_usepackage = Re_compat.regexp_string "\\usepackage" in
   let run s =
     match extract_document_body s with
     | None -> None
@@ -343,9 +354,9 @@ let r_pkg_004 : rule =
         let i = ref 0 in
         (try
            while true do
-             let _ = Str.search_forward re_usepackage body !i in
+             let _mr, _ = Re_compat.search_forward re_usepackage body !i in
              incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then
@@ -452,14 +463,14 @@ let r_pkg_005 : rule =
   in
   let known_set = Hashtbl.create 128 in
   let () = List.iter (fun o -> Hashtbl.add known_set o true) known_opts in
-  let re_geom_opts = Str.regexp {|\\usepackage\[\([^]]*\)\]{geometry}|} in
+  let re_geom_opts = Re_compat.regexp {|\\usepackage\[\([^]]*\)\]{geometry}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re_geom_opts s !i in
-         let opts_str = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward re_geom_opts s !i in
+         let opts_str = Re_compat.matched_group _mr 1 s in
          let opts = String.split_on_char ',' opts_str in
          List.iter
            (fun o ->
@@ -472,7 +483,7 @@ let r_pkg_005 : rule =
              in
              if key <> "" && not (Hashtbl.mem known_set key) then incr cnt)
            opts;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -538,15 +549,15 @@ let r_cjk_004 : rule =
 
 (* ── CJK-006: Ruby annotation requires ruby package ─────────────────── *)
 let r_cjk_006 : rule =
-  let re_ruby = Str.regexp_string "\\ruby{" in
+  let re_ruby = Re_compat.regexp_string "\\ruby{" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re_ruby s !i in
+         let _mr, _ = Re_compat.search_forward re_ruby s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -573,13 +584,14 @@ let r_cjk_006 : rule =
    is absent *)
 let r_font_006 : rule =
   let re_setup =
-    Str.regexp {|\\microtypesetup{[^}]*expansion[ ]*=[ ]*true[^}]*}|}
+    Re_compat.regexp {|\\microtypesetup{[^}]*expansion[ ]*=[ ]*true[^}]*}|}
   in
   let run s =
     if has_package s "microtype" then
       let found =
         try
-          ignore (Str.search_forward re_setup s 0);
+          let _mr, _ = Re_compat.search_forward re_setup s 0 in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -600,11 +612,12 @@ let r_font_006 : rule =
 (* Fire if \usepackage[T1]{fontenc} is present AND there is evidence of XeLaTeX
    usage (fontspec, xeCJK, or ifxetex) *)
 let r_font_007 : rule =
-  let re_fontenc = Str.regexp {|\\usepackage\[T1\]{fontenc}|} in
+  let re_fontenc = Re_compat.regexp {|\\usepackage\[T1\]{fontenc}|} in
   let run s =
     let has_fontenc =
       try
-        ignore (Str.search_forward re_fontenc s 0);
+        let _mr, _ = Re_compat.search_forward re_fontenc s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -629,15 +642,15 @@ let r_font_007 : rule =
 
 (* ── FONT-008: Multiple \setmainfont declarations ────────────────────── *)
 let r_font_008 : rule =
-  let re = Str.regexp {|\\setmainfont\(\[\|{\)|} in
+  let re = Re_compat.regexp {|\\setmainfont\(\[\|{\)|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 1 then
@@ -658,20 +671,20 @@ let r_font_008 : rule =
    correct environment is bsmallmatrix. Fire if \begin{smallmatrix} is found
    inside [ ] delimiters. *)
 let r_math_032 : rule =
-  let re = Str.regexp_string "\\begin{smallmatrix}" in
+  let re = Re_compat.regexp_string "\\begin{smallmatrix}" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re s !i in
+         let _mr, pos = Re_compat.search_forward re s !i in
          (* Look backwards for opening delimiter *)
          let j = ref (pos - 1) in
          while !j >= 0 && (s.[!j] = ' ' || s.[!j] = '\n' || s.[!j] = '\r') do
            decr j
          done;
          if !j >= 0 && s.[!j] = '[' then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -689,7 +702,7 @@ let r_math_032 : rule =
 (* ── MATH-054: Equation labelled 'eq:' without environment ──────────── *)
 (* Fire if \label{eq:...} appears outside known equation environments *)
 let r_math_054 : rule =
-  let re_label = Str.regexp {|\\label{eq:[^}]*}|} in
+  let re_label = Re_compat.regexp {|\\label{eq:[^}]*}|} in
   let eq_envs =
     [
       "equation";
@@ -741,12 +754,12 @@ let r_math_054 : rule =
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_label s !i in
+         let _mr, pos = Re_compat.search_forward re_label s !i in
          let inside =
            List.exists (fun (lo, hi) -> pos >= lo && pos < hi) ranges
          in
          if not inside then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -794,7 +807,7 @@ let r_math_062 : rule =
    line has more than 2 & characters. Also check split environments which should
    have exactly 1 &. *)
 let r_math_063 : rule =
-  let linebreak_re = Str.regexp_string "\\\\" in
+  let linebreak_re = Re_compat.regexp_string "\\\\" in
   let run s =
     let cnt = ref 0 in
     let eqn_envs = [ "eqnarray"; "eqnarray*" ] in
@@ -803,7 +816,7 @@ let r_math_063 : rule =
         let blocks = extract_env_blocks env s in
         List.iter
           (fun body ->
-            let lines = Str.split linebreak_re body in
+            let lines = Re_compat.split linebreak_re body in
             List.iter
               (fun line ->
                 let amps =
@@ -966,11 +979,14 @@ let r_ref_010 : rule =
 
 (* ── CMD-014: \AtBeginDocument placed after \begin{document} ──────────── *)
 let r_cmd_014 : rule =
-  let re = Str.regexp_string "\\AtBeginDocument" in
-  let _re_begin_doc = Str.regexp_string "\\begin{document}" in
+  let re = Re_compat.regexp_string "\\AtBeginDocument" in
+  let _re_begin_doc = Re_compat.regexp_string "\\begin{document}" in
   let run s =
     let doc_pos =
-      try Some (Str.search_forward _re_begin_doc s 0) with Not_found -> None
+      try
+        let _mr, _p = Re_compat.search_forward _re_begin_doc s 0 in
+        Some _p
+      with Not_found -> None
     in
     match doc_pos with
     | None -> None
@@ -979,9 +995,9 @@ let r_cmd_014 : rule =
         let i = ref 0 in
         (try
            while true do
-             let pos = Str.search_forward re s !i in
+             let _mr, pos = Re_compat.search_forward re s !i in
              if pos > dp then incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then
@@ -1056,15 +1072,16 @@ let r_doc_003 : rule =
 
 (* ── TAB-006: Consecutive \hline duplicated ──────────────────────────── *)
 let r_tab_006 : rule =
-  let re = Str.regexp "\\\\hline[ \t\n]*\\\\hline" in
+  let re = Re_compat.regexp "\\\\hline[ \t\n]*\\\\hline" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1081,7 +1098,7 @@ let r_tab_006 : rule =
 
 (* ── TAB-009: Floating table missing \label ──────────────────────────── *)
 let r_tab_009 : rule =
-  let _re_label = Str.regexp {|\\label{|} in
+  let _re_label = Re_compat.regexp {|\\label{|} in
   let run s =
     let blocks = extract_env_blocks_starred "table" s in
     let cnt =
@@ -1089,7 +1106,8 @@ let r_tab_009 : rule =
         (fun acc body ->
           let has_label =
             try
-              ignore (Str.search_forward _re_label body 0);
+              let _mr, _ = Re_compat.search_forward _re_label body 0 in
+              ignore _mr;
               true
             with Not_found -> false
           in
@@ -1110,7 +1128,7 @@ let r_tab_009 : rule =
 
 (* ── TAB-010: Footnote placed inside table environment ───────────────── *)
 let r_tab_010 : rule =
-  let re_fn = Str.regexp {|\\footnote{|} in
+  let re_fn = Re_compat.regexp {|\\footnote{|} in
   let run s =
     let blocks = extract_env_blocks_starred "table" s in
     let cnt =
@@ -1120,9 +1138,10 @@ let r_tab_010 : rule =
           let i = ref 0 in
           (try
              while true do
-               ignore (Str.search_forward re_fn body !i);
+               let _mr, _ = Re_compat.search_forward re_fn body !i in
+               ignore _mr;
                incr n;
-               i := Str.match_end ()
+               i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           acc + !n)
@@ -1142,7 +1161,7 @@ let r_tab_010 : rule =
 
 (* ── TAB-011: Top/bottom \hline instead of \toprule/\bottomrule ──────── *)
 let r_tab_011 : rule =
-  let _re_toprule = Str.regexp_string "\\toprule" in
+  let _re_toprule = Re_compat.regexp_string "\\toprule" in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1153,7 +1172,8 @@ let r_tab_011 : rule =
           let has_hline = contains_substring body "\\hline" in
           let has_booktabs =
             try
-              ignore (Str.search_forward _re_toprule body 0);
+              let _mr, _ = Re_compat.search_forward _re_toprule body 0 in
+              ignore _mr;
               true
             with Not_found -> contains_substring body "\\bottomrule"
           in
@@ -1174,15 +1194,16 @@ let r_tab_011 : rule =
 
 (* ── TAB-014: Empty multicolumn alignment spec {} encountered ────────── *)
 let r_tab_014 : rule =
-  let re = Str.regexp {|\\multicolumn{[^}]*}{}|} in
+  let re = Re_compat.regexp {|\\multicolumn{[^}]*}{}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1236,11 +1257,13 @@ let r_pkg_007 : rule =
 
 (* ── PKG-009: TikZ libraries loaded inside document body ─────────────── *)
 let r_pkg_009 : rule =
-  let re = Str.regexp_string "\\usetikzlibrary" in
-  let _re_begin_doc_p9 = Str.regexp_string "\\begin{document}" in
+  let re = Re_compat.regexp_string "\\usetikzlibrary" in
+  let _re_begin_doc_p9 = Re_compat.regexp_string "\\begin{document}" in
   let run s =
     let doc_pos =
-      try Some (Str.search_forward _re_begin_doc_p9 s 0)
+      try
+        let _mr, _p = Re_compat.search_forward _re_begin_doc_p9 s 0 in
+        Some _p
       with Not_found -> None
     in
     match doc_pos with
@@ -1250,9 +1273,9 @@ let r_pkg_009 : rule =
         let i = ref 0 in
         (try
            while true do
-             let pos = Str.search_forward re s !i in
+             let _mr, pos = Re_compat.search_forward re s !i in
              if pos > dp then incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then
@@ -1269,22 +1292,25 @@ let r_pkg_009 : rule =
 
 (* ── PKG-011: booktabs required but not loaded for \toprule ──────────── *)
 let r_pkg_011 : rule =
-  let re_toprule = Str.regexp_string "\\toprule" in
-  let re_midrule = Str.regexp_string "\\midrule" in
-  let re_bottomrule = Str.regexp_string "\\bottomrule" in
+  let re_toprule = Re_compat.regexp_string "\\toprule" in
+  let re_midrule = Re_compat.regexp_string "\\midrule" in
+  let re_bottomrule = Re_compat.regexp_string "\\bottomrule" in
   let run s =
     let uses_booktabs_cmds =
       (try
-         ignore (Str.search_forward re_toprule s 0);
+         let _mr, _ = Re_compat.search_forward re_toprule s 0 in
+         ignore _mr;
          true
        with Not_found -> false)
       ||
       try
-        ignore (Str.search_forward re_midrule s 0);
+        let _mr, _ = Re_compat.search_forward re_midrule s 0 in
+        ignore _mr;
         true
       with Not_found -> (
         try
-          ignore (Str.search_forward re_bottomrule s 0);
+          let _mr, _ = Re_compat.search_forward re_bottomrule s 0 in
+          ignore _mr;
           true
         with Not_found -> false)
     in
@@ -1302,11 +1328,12 @@ let r_pkg_011 : rule =
 
 (* ── PKG-012: csquotes not loaded when \enquote used ─────────────────── *)
 let r_pkg_012 : rule =
-  let re = Str.regexp_string "\\enquote{" in
+  let re = Re_compat.regexp_string "\\enquote{" in
   let run s =
     let has_enquote =
       try
-        ignore (Str.search_forward re s 0);
+        let _mr, _ = Re_compat.search_forward re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -1348,19 +1375,21 @@ let r_pkg_015 : rule =
 
 (* ── PKG-020: tikz external library not loaded when externalising ────── *)
 let r_pkg_020 : rule =
-  let re_ext = Str.regexp_string "\\tikzexternalize" in
-  let re_lib = Str.regexp_string "\\usetikzlibrary{external}" in
+  let re_ext = Re_compat.regexp_string "\\tikzexternalize" in
+  let re_lib = Re_compat.regexp_string "\\usetikzlibrary{external}" in
   let run s =
     let has_externalize =
       try
-        ignore (Str.search_forward re_ext s 0);
+        let _mr, _ = Re_compat.search_forward re_ext s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     if has_externalize then
       let has_lib =
         try
-          ignore (Str.search_forward re_lib s 0);
+          let _mr, _ = Re_compat.search_forward re_lib s 0 in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -1440,18 +1469,20 @@ let r_pkg_023 : rule =
 
 (* ── LANG-002: babel language option missing ─────────────────────────── *)
 let r_lang_002 : rule =
-  let re_bare = Str.regexp {|\\usepackage{babel}|} in
-  let re_empty = Str.regexp {|\\usepackage\[\]{babel}|} in
+  let re_bare = Re_compat.regexp {|\\usepackage{babel}|} in
+  let re_empty = Re_compat.regexp {|\\usepackage\[\]{babel}|} in
   let run s =
     let has_bare =
       try
-        ignore (Str.search_forward re_bare s 0);
+        let _mr, _ = Re_compat.search_forward re_bare s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_empty =
       try
-        ignore (Str.search_forward re_empty s 0);
+        let _mr, _ = Re_compat.search_forward re_empty s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -1523,7 +1554,7 @@ let r_tikz_007 : rule =
 (* ── FIG-010: Subfigure environment without \subcaption ──────────────── *)
 (* Check both subfigure and subfigure* environments. *)
 let r_fig_010 : rule =
-  let _re_subcaption = Str.regexp_string "\\subcaption" in
+  let _re_subcaption = Re_compat.regexp_string "\\subcaption" in
   let run s =
     let blocks = extract_env_blocks_starred "subfigure" s in
     let cnt =
@@ -1531,7 +1562,8 @@ let r_fig_010 : rule =
         (fun acc body ->
           let has_subcap =
             try
-              ignore (Str.search_forward _re_subcaption body 0);
+              let _mr, _ = Re_compat.search_forward _re_subcaption body 0 in
+              ignore _mr;
               true
             with Not_found -> contains_substring body "\\caption"
           in
@@ -1552,15 +1584,16 @@ let r_fig_010 : rule =
 
 (* ── FIG-013: Graphicx option scale used instead of width ────────────── *)
 let r_fig_013 : rule =
-  let re = Str.regexp {|\\includegraphics\[[^]]*scale[ ]*=[^]]*\]|} in
+  let re = Re_compat.regexp {|\\includegraphics\[[^]]*scale[ ]*=[^]]*\]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1641,7 +1674,7 @@ let r_pkg_013 : rule =
 (* Detect \SI{, \si{, \num{ which are v2 commands. v3 uses \qty, \unit instead.
    Only fire if siunitx is loaded. *)
 let r_pkg_014 : rule =
-  let re = Str.regexp {|\\\(SI\|si\|SIrange\){|} in
+  let re = Re_compat.regexp {|\\\(SI\|si\|SIrange\){|} in
   let run s =
     if not (has_package s "siunitx") then None
     else
@@ -1649,9 +1682,9 @@ let r_pkg_014 : rule =
       let i = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re s !i in
+           let _mr, _ = Re_compat.search_forward re s !i in
            incr cnt;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       if !cnt > 0 then
@@ -1753,17 +1786,17 @@ let r_pkg_021 : rule =
 (* ── PKG-024: polyglossia language duplicated ────────────────────────── *)
 let r_pkg_024 : rule =
   let re =
-    Str.regexp {|\\\(setdefaultlanguage\|setotherlanguage\){\([^}]+\)}|}
+    Re_compat.regexp {|\\\(setdefaultlanguage\|setotherlanguage\){\([^}]+\)}|}
   in
   let run s =
     let langs = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
-         let lang = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward re s !i in
+         let lang = Re_compat.matched_group _mr 2 s in
          langs := lang :: !langs;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     (* Check for duplicates *)
@@ -1820,8 +1853,8 @@ let r_pkg_025 : rule =
 (* Fire if tabular uses l/c/r columns with numeric data containing '.' but no S
    column or @{.} separator. *)
 let r_tab_003 : rule =
-  let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
-  let _re_decimal = Str.regexp {|[0-9]+\.[0-9]|} in
+  let colspec_re = Re_compat.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let _re_decimal = Re_compat.regexp {|[0-9]+\.[0-9]|} in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1832,7 +1865,8 @@ let r_tab_003 : rule =
           (* check if body contains decimal numbers *)
           let has_decimal =
             try
-              ignore (Str.search_forward _re_decimal body 0);
+              let _mr, _ = Re_compat.search_forward _re_decimal body 0 in
+              ignore _mr;
               true
             with Not_found -> false
           in
@@ -1841,8 +1875,8 @@ let r_tab_003 : rule =
             (* check if colspec has S column *)
             let has_s_col =
               try
-                let _ = Str.search_forward colspec_re s 0 in
-                let spec = Str.matched_group 1 s in
+                let _mr, _ = Re_compat.search_forward colspec_re s 0 in
+                let spec = Re_compat.matched_group _mr 1 s in
                 String.contains spec 'S' || contains_substring spec "@{.}"
               with Not_found -> false
             in
@@ -1864,8 +1898,8 @@ let r_tab_003 : rule =
 (* ── TAB-007: Text in numeric column without \multicolumn ─────────── *)
 (* Fire if S-column tabular contains text rows without \multicolumn *)
 let r_tab_007 : rule =
-  let _re_s_column = Str.regexp {|{[^}]*S[^}]*}|} in
-  let _re_three_alpha = Str.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|} in
+  let _re_s_column = Re_compat.regexp {|{[^}]*S[^}]*}|} in
+  let _re_three_alpha = Re_compat.regexp {|[a-zA-Z][a-zA-Z][a-zA-Z]|} in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1876,7 +1910,8 @@ let r_tab_007 : rule =
           (* Check if tabular uses S columns *)
           let has_s =
             try
-              ignore (Str.search_forward _re_s_column s 0);
+              let _mr, _ = Re_compat.search_forward _re_s_column s 0 in
+              ignore _mr;
               true
             with Not_found -> false
           in
@@ -1885,7 +1920,8 @@ let r_tab_007 : rule =
             (* Check for text in S columns without multicolumn *)
             let has_text_no_mc =
               try
-                ignore (Str.search_forward _re_three_alpha body 0);
+                let _mr, _ = Re_compat.search_forward _re_three_alpha body 0 in
+                ignore _mr;
                 let has_mc = contains_substring body "\\multicolumn" in
                 not has_mc
               with Not_found -> false
@@ -1907,7 +1943,7 @@ let r_tab_007 : rule =
 
 (* ── TAB-008: Table > 30 rows ────────────────────────────────────────── *)
 let r_tab_008 : rule =
-  let linebreak_re = Str.regexp_string "\\\\" in
+  let linebreak_re = Re_compat.regexp_string "\\\\" in
   let run s =
     let blocks =
       extract_env_blocks "tabular" s @ extract_env_blocks "tabular*" s
@@ -1915,7 +1951,7 @@ let r_tab_008 : rule =
     let cnt =
       List.fold_left
         (fun acc body ->
-          let rows = List.length (Str.split linebreak_re body) in
+          let rows = List.length (Re_compat.split linebreak_re body) in
           if rows > 30 then acc + 1 else acc)
         0 blocks
     in
@@ -1933,30 +1969,36 @@ let r_tab_008 : rule =
 
 (* ── TAB-012: Numeric column not aligned using siunitx S-column ──────── *)
 let r_tab_012 : rule =
-  let colspec_re = Str.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
-  let _re_end_tabular = Str.regexp_string "\\end{tabular" in
-  let _re_numeric = Str.regexp {|[0-9]+\.?[0-9]|} in
+  let colspec_re = Re_compat.regexp {|\\begin{tabular\*?}{\([^}]+\)}|} in
+  let _re_end_tabular = Re_compat.regexp_string "\\end{tabular" in
+  let _re_numeric = Re_compat.regexp {|[0-9]+\.?[0-9]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward colspec_re s !i in
-         let spec = Str.matched_group 1 s in
-         let after = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward colspec_re s !i in
+         let spec = Re_compat.matched_group _mr 1 s in
+         let after = Re_compat.match_end _mr in
          (* Check if spec has r/c/l but no S *)
          let has_rcl = String.contains spec 'r' || String.contains spec 'l' in
          let has_s = String.contains spec 'S' in
          (if has_rcl && not has_s then
             (* Check if body has numbers *)
             let body_end =
-              try Str.search_forward _re_end_tabular s after
+              try
+                let _mr, _p =
+                  Re_compat.search_forward _re_end_tabular s after
+                in
+                ignore _mr;
+                _p
               with Not_found -> String.length s
             in
             let body = String.sub s after (body_end - after) in
             let has_nums =
               try
-                ignore (Str.search_forward _re_numeric body 0);
+                let _mr, _ = Re_compat.search_forward _re_numeric body 0 in
+                ignore _mr;
                 true
               with Not_found -> false
             in
@@ -1978,8 +2020,8 @@ let r_tab_012 : rule =
 
 (* ── TAB-013: Caption position for longtable must be at top ──────────── *)
 let r_tab_013 : rule =
-  let _re_caption_t13 = Str.regexp_string "\\caption" in
-  let _re_linebreak_t13 = Str.regexp_string "\\\\" in
+  let _re_caption_t13 = Re_compat.regexp_string "\\caption" in
+  let _re_linebreak_t13 = Re_compat.regexp_string "\\\\" in
   let run s =
     let blocks = extract_env_blocks "longtable" s in
     let cnt =
@@ -1989,11 +2031,19 @@ let r_tab_013 : rule =
           if not has_caption then acc
           else
             let cap_pos =
-              try Str.search_forward _re_caption_t13 body 0
+              try
+                let _mr, _p = Re_compat.search_forward _re_caption_t13 body 0 in
+                ignore _mr;
+                _p
               with Not_found -> 0
             in
             let first_row_pos =
-              try Str.search_forward _re_linebreak_t13 body 0
+              try
+                let _mr, _p =
+                  Re_compat.search_forward _re_linebreak_t13 body 0
+                in
+                ignore _mr;
+                _p
               with Not_found -> String.length body
             in
             if cap_pos > first_row_pos then acc + 1 else acc)
@@ -2037,16 +2087,16 @@ let r_tab_015 : rule =
 
 (* ── TAB-016: Centred 'c' column in longtable holds ragged text ──────── *)
 let r_tab_016 : rule =
-  let colspec_re = Str.regexp {|\\begin{longtable}{\([^}]+\)}|} in
+  let colspec_re = Re_compat.regexp {|\\begin{longtable}{\([^}]+\)}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward colspec_re s !i in
-         let spec = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward colspec_re s !i in
+         let spec = Re_compat.matched_group _mr 1 s in
          if String.contains spec 'c' then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2111,15 +2161,15 @@ let r_fig_014 : rule =
 
 (* ── FIG-017: Sidewaysfigure used with portrait page layout ──────────── *)
 let r_fig_017 : rule =
-  let re = Str.regexp_string "\\begin{sidewaysfigure" in
+  let re = Re_compat.regexp_string "\\begin{sidewaysfigure" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     (* Only fire if no landscape geometry *)
@@ -2165,7 +2215,7 @@ let r_fig_019 : rule =
 
 (* ── FIG-022: Figure caption identical to surrounding sentence ───────── *)
 let r_fig_022 : rule =
-  let _re_begin_figure = Str.regexp_string "\\begin{figure" in
+  let _re_begin_figure = Re_compat.regexp_string "\\begin{figure" in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
@@ -2180,7 +2230,9 @@ let r_fig_022 : rule =
                 (* Search for caption text outside figure environments *)
                 let outside =
                   try
-                    let fig_start = Str.search_forward _re_begin_figure s 0 in
+                    let _mr, fig_start =
+                      Re_compat.search_forward _re_begin_figure s 0
+                    in
                     let before = String.sub s 0 fig_start in
                     contains_substring before cap
                   with Not_found -> false
@@ -2202,16 +2254,16 @@ let r_fig_022 : rule =
 
 (* ── FIG-024: Alt-text exceeds 140 chars ─────────────────────────────── *)
 let r_fig_024 : rule =
-  let re = Str.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
+  let re = Re_compat.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
-         let alt = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward re s !i in
+         let alt = Re_compat.matched_group _mr 1 s in
          if String.length alt > 140 then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2228,7 +2280,7 @@ let r_fig_024 : rule =
 
 (* ── FIG-025: Alt-text identical to caption ──────────────────────────── *)
 let r_fig_025 : rule =
-  let alt_re = Str.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
+  let alt_re = Re_compat.regexp {|\\includegraphics\[[^]]*alt={\([^}]*\)}|} in
   let run s =
     let blocks = extract_env_blocks_starred "figure" s in
     let cnt =
@@ -2243,8 +2295,8 @@ let r_fig_025 : rule =
           else
             let has_matching_alt =
               try
-                let _ = Str.search_forward alt_re body 0 in
-                let alt = String.trim (Str.matched_group 1 body) in
+                let _mr, _ = Re_compat.search_forward alt_re body 0 in
+                let alt = String.trim (Re_compat.matched_group _mr 1 body) in
                 alt = cap
               with Not_found -> false
             in
@@ -2298,7 +2350,7 @@ let r_math_075 : rule =
 
 (* ── MATH-080: Equation exceeds 3 alignment columns ─────────────────── *)
 let r_math_080 : rule =
-  let linebreak_re = Str.regexp_string "\\\\" in
+  let linebreak_re = Re_compat.regexp_string "\\\\" in
   let run s =
     let cnt = ref 0 in
     let envs =
@@ -2309,7 +2361,7 @@ let r_math_080 : rule =
         let blocks = extract_env_blocks env s in
         List.iter
           (fun body ->
-            let lines = Str.split linebreak_re body in
+            let lines = Re_compat.split linebreak_re body in
             List.iter
               (fun line ->
                 let amps =
@@ -2335,7 +2387,7 @@ let r_math_080 : rule =
 
 (* ── CMD-012: \renewcommand\thesection after hyperref ────────────── *)
 let r_cmd_012 : rule =
-  let re = Str.regexp_string "\\renewcommand{\\thesection}" in
+  let re = Re_compat.regexp_string "\\renewcommand{\\thesection}" in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages preamble in
@@ -2352,7 +2404,7 @@ let r_cmd_012 : rule =
     | Some hp ->
         let found =
           try
-            let p = Str.search_forward re preamble 0 in
+            let _mr, p = Re_compat.search_forward re preamble 0 in
             p > hp
           with Not_found -> false
         in
@@ -2371,14 +2423,20 @@ let r_cmd_012 : rule =
 
 (* ── DOC-004: Acknowledgment section before conclusion ───────────────── *)
 let r_doc_004 : rule =
-  let ack_re = Str.regexp {|\\section{[Aa]cknowledg|} in
-  let conc_re = Str.regexp {|\\section{[Cc]onclusion|} in
+  let ack_re = Re_compat.regexp {|\\section{[Aa]cknowledg|} in
+  let conc_re = Re_compat.regexp {|\\section{[Cc]onclusion|} in
   let run s =
     let ack_pos =
-      try Some (Str.search_forward ack_re s 0) with Not_found -> None
+      try
+        let _mr, _p = Re_compat.search_forward ack_re s 0 in
+        Some _p
+      with Not_found -> None
     in
     let conc_pos =
-      try Some (Str.search_forward conc_re s 0) with Not_found -> None
+      try
+        let _mr, _p = Re_compat.search_forward conc_re s 0 in
+        Some _p
+      with Not_found -> None
     in
     match (ack_pos, conc_pos) with
     | Some ap, Some cp ->
@@ -2402,23 +2460,25 @@ let r_doc_004 : rule =
 (* ── L3-001: LaTeX3 \tl_new:N in preamble mixed with 2e macros ──── *)
 let r_l3_001 : rule =
   let expl3_re =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_\(new\|set\|gset\):|}
   in
   let latex2e_re =
-    Str.regexp {|\\\(newcommand\|renewcommand\|def\)[^a-zA-Z]|}
+    Re_compat.regexp {|\\\(newcommand\|renewcommand\|def\)[^a-zA-Z]|}
   in
   let run s =
     let preamble = extract_preamble s in
     let has_expl3 =
       try
-        ignore (Str.search_forward expl3_re preamble 0);
+        let _mr, _ = Re_compat.search_forward expl3_re preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_2e =
       try
-        ignore (Str.search_forward latex2e_re preamble 0);
+        let _mr, _ = Re_compat.search_forward latex2e_re preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2437,7 +2497,7 @@ let r_l3_001 : rule =
 (* ── L3-002: Expl3 variable declared after \begin{document} ──────── *)
 let r_l3_002 : rule =
   let expl3_decl_re =
-    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_new:|}
+    Re_compat.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_new:|}
   in
   let run s =
     match extract_document_body s with
@@ -2447,9 +2507,9 @@ let r_l3_002 : rule =
         let i = ref 0 in
         (try
            while true do
-             let _ = Str.search_forward expl3_decl_re body !i in
+             let _mr, _ = Re_compat.search_forward expl3_decl_re body !i in
              incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then
@@ -2466,20 +2526,24 @@ let r_l3_002 : rule =
 
 (* ── L3-003: Expl3 and etoolbox patch macros combined ────────────── *)
 let r_l3_003 : rule =
-  let expl3_re = Str.regexp {|\\\(tl\|cs\|int\|bool\)_\(new\|set\|gset\):|} in
+  let expl3_re =
+    Re_compat.regexp {|\\\(tl\|cs\|int\|bool\)_\(new\|set\|gset\):|}
+  in
   let etoolbox_re =
-    Str.regexp {|\\\(patchcmd\|apptocmd\|pretocmd\|robustify\){|}
+    Re_compat.regexp {|\\\(patchcmd\|apptocmd\|pretocmd\|robustify\){|}
   in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward expl3_re s 0);
+        let _mr, _ = Re_compat.search_forward expl3_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_etoolbox =
       try
-        ignore (Str.search_forward etoolbox_re s 0);
+        let _mr, _ = Re_compat.search_forward etoolbox_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2497,15 +2561,15 @@ let r_l3_003 : rule =
 
 (* ── L3-004: Undocumented \__module_internal:N used ──────────────── *)
 let r_l3_004 : rule =
-  let re = Str.regexp {|\\__[a-zA-Z_]+:[a-zA-Z]*|} in
+  let re = Re_compat.regexp {|\\__[a-zA-Z_]+:[a-zA-Z]*|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2523,12 +2587,13 @@ let r_l3_004 : rule =
 (* ── L3-005: Missing \ExplSyntaxOn guard around expl3 code ──────── *)
 let r_l3_005 : rule =
   let expl3_re =
-    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
+    Re_compat.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
   in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward expl3_re s 0);
+        let _mr, _ = Re_compat.search_forward expl3_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2548,28 +2613,31 @@ let r_l3_005 : rule =
 (* ── L3-006: Expl3 variable clobbers package macro name ──────────── *)
 let r_l3_006 : rule =
   let var_re =
-    Str.regexp {|\\\(l\|g\)_\([a-zA-Z]+\)_\(tl\|int\|bool\|clist\|seq\|prop\)|}
+    Re_compat.regexp
+      {|\\\(l\|g\)_\([a-zA-Z]+\)_\(tl\|int\|bool\|clist\|seq\|prop\)|}
   in
-  let cmd_re = Str.regexp {|\\\(newcommand\|renewcommand\){\\\([a-zA-Z]+\)}|} in
+  let cmd_re =
+    Re_compat.regexp {|\\\(newcommand\|renewcommand\){\\\([a-zA-Z]+\)}|}
+  in
   let run s =
     let var_names = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward var_re s !i in
-         let name = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward var_re s !i in
+         let name = Re_compat.matched_group _mr 2 s in
          var_names := name :: !var_names;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cmd_names = ref [] in
     let j = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward cmd_re s !j in
-         let name = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward cmd_re s !j in
+         let name = Re_compat.matched_group _mr 2 s in
          cmd_names := name :: !cmd_names;
-         j := Str.match_end ()
+         j := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cnt =
@@ -2591,18 +2659,20 @@ let r_l3_006 : rule =
 
 (* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────── *)
 let r_l3_007 : rule =
-  let camel_re = Str.regexp {|\\[a-z]+[A-Z][a-zA-Z]*[{ ]|} in
-  let snake_re = Str.regexp {|\\[a-z]+_[a-z]+:|} in
+  let camel_re = Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*[{ ]|} in
+  let snake_re = Re_compat.regexp {|\\[a-z]+_[a-z]+:|} in
   let run s =
     let has_camel =
       try
-        ignore (Str.search_forward camel_re s 0);
+        let _mr, _ = Re_compat.search_forward camel_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_snake =
       try
-        ignore (Str.search_forward snake_re s 0);
+        let _mr, _ = Re_compat.search_forward snake_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2621,7 +2691,7 @@ let r_l3_007 : rule =
 (* ── L3-009: LaTeX3 function deprecated _n: variant used ─────────── *)
 let r_l3_009 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_[a-z_]+:n[^a-zA-Z]|}
   in
   let run s =
@@ -2629,9 +2699,9 @@ let r_l3_009 : rule =
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2649,20 +2719,22 @@ let r_l3_009 : rule =
 (* ── L3-011: Engine-branch uses pdfTeX primitive in Lua/XeTeX path ─ *)
 let r_l3_011 : rule =
   let pdftex_re =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(pdfoutput\|pdfliteral\|pdfcatalog\|pdfinfo\|pdfcompresslevel\)|}
   in
-  let luaxe_re = Str.regexp {|\\sys_if_engine_\(luatex\|xetex\):|} in
+  let luaxe_re = Re_compat.regexp {|\\sys_if_engine_\(luatex\|xetex\):|} in
   let run s =
     let has_pdftex =
       try
-        ignore (Str.search_forward pdftex_re s 0);
+        let _mr, _ = Re_compat.search_forward pdftex_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_luaxe =
       try
-        ignore (Str.search_forward luaxe_re s 0);
+        let _mr, _ = Re_compat.search_forward luaxe_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2684,14 +2756,14 @@ let r_l3_011 : rule =
 
 (* -- TIKZ-001: TikZ picture outside figure environment --------------- *)
 let r_tikz_001 : rule =
-  let tikz_re = Str.regexp_string "\\begin{tikzpicture}" in
+  let tikz_re = Re_compat.regexp_string "\\begin{tikzpicture}" in
   let run s =
     let fig_blocks = extract_env_blocks_starred "figure" s in
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward tikz_re s !i in
+         let _mr, pos = Re_compat.search_forward tikz_re s !i in
          let inside_fig =
            List.exists
              (fun body -> contains_substring body "\\begin{tikzpicture}")
@@ -2715,7 +2787,7 @@ let r_tikz_001 : rule =
 
 (* -- TIKZ-003: pgfplots axis labels not in math mode ----------------- *)
 let r_tikz_003 : rule =
-  let label_re = Str.regexp {|\(xlabel\|ylabel\|zlabel\)={\([^}]*\)}|} in
+  let label_re = Re_compat.regexp {|\(xlabel\|ylabel\|zlabel\)={\([^}]*\)}|} in
   let run s =
     let blocks = extract_env_blocks "axis" s in
     let cnt =
@@ -2725,11 +2797,11 @@ let r_tikz_003 : rule =
           let i = ref 0 in
           (try
              while true do
-               let _ = Str.search_forward label_re body !i in
-               let label_text = Str.matched_group 2 body in
+               let _mr, _ = Re_compat.search_forward label_re body !i in
+               let label_text = Re_compat.matched_group _mr 2 body in
                let has_math = String.contains label_text '$' in
                if not has_math then incr c;
-               i := Str.match_end ()
+               i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           acc + !c)
@@ -2749,15 +2821,15 @@ let r_tikz_003 : rule =
 
 (* -- TIKZ-004: Hard-coded RGB values instead of xcolor names --------- *)
 let r_tikz_004 : rule =
-  let re = Str.regexp {|\(color\|fill\|draw\)={\(rgb\|RGB\)|} in
+  let re = Re_compat.regexp {|\(color\|fill\|draw\)={\(rgb\|RGB\)|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2798,7 +2870,7 @@ let r_tikz_006 : rule =
 
 (* -- TIKZ-009: TikZ library arrows.meta missing for arrow tips ------- *)
 let r_tikz_009 : rule =
-  let arrow_re = Str.regexp "->\\|stealth\\|-latex" in
+  let arrow_re = Re_compat.regexp "->\\|stealth\\|-latex" in
   let run s =
     let has_arrows =
       try
@@ -2806,7 +2878,8 @@ let r_tikz_009 : rule =
         List.exists
           (fun body ->
             try
-              ignore (Str.search_forward arrow_re body 0);
+              let _mr, _ = Re_compat.search_forward arrow_re body 0 in
+              ignore _mr;
               true
             with Not_found -> false)
           blocks
@@ -2830,16 +2903,17 @@ let r_tikz_009 : rule =
 (* -- TIKZ-010: Deprecated \pgfplotsset key used -------------------- *)
 let r_tikz_010 : rule =
   let re =
-    Str.regexp {|\\pgfplotsset{[^}]*\(every axis\|compat=1\.[0-7]\)[^}]*}|}
+    Re_compat.regexp
+      {|\\pgfplotsset{[^}]*\(every axis\|compat=1\.[0-7]\)[^}]*}|}
   in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -2875,7 +2949,7 @@ let r_lang_001 : rule =
       "labor";
     ]
   in
-  let _re_british = Str.regexp {|british\|UKenglish|} in
+  let _re_british = Re_compat.regexp {|british\|UKenglish|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -2885,7 +2959,8 @@ let r_lang_001 : rule =
           name = "babel"
           &&
           try
-            ignore (Str.search_forward _re_british opts 0);
+            let _mr, _ = Re_compat.search_forward _re_british opts 0 in
+            ignore _mr;
             true
           with Not_found -> false)
         pkgs
@@ -2917,18 +2992,22 @@ let r_lang_001 : rule =
 
 (* -- LANG-006: Non-English abstract before \selectlanguage ---------- *)
 let r_lang_006 : rule =
-  let _re_begin_abstract = Str.regexp_string "\\begin{abstract}" in
-  let _re_selectlang = Str.regexp_string "\\selectlanguage" in
+  let _re_begin_abstract = Re_compat.regexp_string "\\begin{abstract}" in
+  let _re_selectlang = Re_compat.regexp_string "\\selectlanguage" in
   let run s =
     match extract_document_body s with
     | None -> None
     | Some body -> (
         let abs_pos =
-          try Some (Str.search_forward _re_begin_abstract body 0)
+          try
+            let _mr, _p = Re_compat.search_forward _re_begin_abstract body 0 in
+            Some _p
           with Not_found -> None
         in
         let lang_pos =
-          try Some (Str.search_forward _re_selectlang body 0)
+          try
+            let _mr, _p = Re_compat.search_forward _re_selectlang body 0 in
+            Some _p
           with Not_found -> None
         in
         match (abs_pos, lang_pos) with
@@ -2948,8 +3027,8 @@ let r_lang_006 : rule =
 
 (* -- LANG-007: babel shorthand mis-used instead of og/fg ----------- *)
 let r_lang_007 : rule =
-  let shorthand_re = Str.regexp {|""|} in
-  let _re_french = Str.regexp {|french\|francais|} in
+  let shorthand_re = Re_compat.regexp {|""|} in
+  let _re_french = Re_compat.regexp {|french\|francais|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -2959,7 +3038,8 @@ let r_lang_007 : rule =
           name = "babel"
           &&
           try
-            ignore (Str.search_forward _re_french opts 0);
+            let _mr, _ = Re_compat.search_forward _re_french opts 0 in
+            ignore _mr;
             true
           with Not_found -> false)
         pkgs
@@ -2973,9 +3053,9 @@ let r_lang_007 : rule =
           let i = ref 0 in
           (try
              while true do
-               let _ = Str.search_forward shorthand_re body !i in
+               let _mr, _ = Re_compat.search_forward shorthand_re body !i in
                incr cnt;
-               i := Str.match_end ()
+               i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           if !cnt > 0 then
@@ -2992,15 +3072,19 @@ let r_lang_007 : rule =
 
 (* -- LANG-013: Abstract language differs from \selectlanguage ------- *)
 let r_lang_013 : rule =
-  let lang_re = Str.regexp {|\\selectlanguage{\([^}]+\)}|} in
-  let _re_begin_abstract_l13 = Str.regexp_string "\\begin{abstract}" in
-  let _re_end_abstract = Str.regexp_string "\\end{abstract}" in
+  let lang_re = Re_compat.regexp {|\\selectlanguage{\([^}]+\)}|} in
+  let _re_begin_abstract_l13 = Re_compat.regexp_string "\\begin{abstract}" in
+  let _re_end_abstract = Re_compat.regexp_string "\\end{abstract}" in
   let run s =
     match extract_document_body s with
     | None -> None
     | Some body -> (
         let abs_pos =
-          try Some (Str.search_forward _re_begin_abstract_l13 body 0)
+          try
+            let _mr, _p =
+              Re_compat.search_forward _re_begin_abstract_l13 body 0
+            in
+            Some _p
           with Not_found -> None
         in
         match abs_pos with
@@ -3008,8 +3092,11 @@ let r_lang_013 : rule =
         | Some ap -> (
             let abs_end =
               try
-                Str.search_forward _re_end_abstract body ap
-                + String.length "\\end{abstract}"
+                let _mr, _p =
+                  Re_compat.search_forward _re_end_abstract body ap
+                in
+                ignore _mr;
+                _p + String.length "\\end{abstract}"
               with Not_found -> ap
             in
             let before_abs = String.sub body 0 ap in
@@ -3018,14 +3105,14 @@ let r_lang_013 : rule =
             in
             let lang_before =
               try
-                let _ = Str.search_forward lang_re before_abs 0 in
-                Some (Str.matched_group 1 before_abs)
+                let _mr, _ = Re_compat.search_forward lang_re before_abs 0 in
+                Some (Re_compat.matched_group _mr 1 before_abs)
               with Not_found -> None
             in
             let lang_after =
               try
-                let _ = Str.search_forward lang_re after_abs 0 in
-                Some (Str.matched_group 1 after_abs)
+                let _mr, _ = Re_compat.search_forward lang_re after_abs 0 in
+                Some (Re_compat.matched_group _mr 1 after_abs)
               with Not_found -> None
             in
             match (lang_before, lang_after) with
@@ -3076,19 +3163,21 @@ let r_col_006 : rule =
 (* -- L3-008: Expl3 module lacks \ProvidesExplPackage ---------------- *)
 let r_l3_008 : rule =
   let expl3_re =
-    Str.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
+    Re_compat.regexp {|\\\(tl\|cs\|int\|bool\|fp\|clist\|seq\|prop\)_|}
   in
-  let _re_provides_expl = Str.regexp_string "\\ProvidesExplPackage" in
+  let _re_provides_expl = Re_compat.regexp_string "\\ProvidesExplPackage" in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward expl3_re s 0);
+        let _mr, _ = Re_compat.search_forward expl3_re s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_provides =
       try
-        ignore (Str.search_forward _re_provides_expl s 0);
+        let _mr, _ = Re_compat.search_forward _re_provides_expl s 0 in
+        ignore _mr;
         true
       with Not_found -> contains_substring s "\\ProvidesExplClass"
     in
@@ -3106,17 +3195,17 @@ let r_l3_008 : rule =
 
 (* -- L3-010: \ExplSyntaxOff missing at end of file ----------------- *)
 let r_l3_010 : rule =
-  let on_re = Str.regexp_string "\\ExplSyntaxOn" in
-  let off_re = Str.regexp_string "\\ExplSyntaxOff" in
+  let on_re = Re_compat.regexp_string "\\ExplSyntaxOn" in
+  let off_re = Re_compat.regexp_string "\\ExplSyntaxOff" in
   let run s =
     let count_matches re str =
       let cnt = ref 0 in
       let i = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re str !i in
+           let _mr, _ = Re_compat.search_forward re str !i in
            incr cnt;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       !cnt
@@ -3137,15 +3226,15 @@ let r_l3_010 : rule =
 
 (* -- LAY-024: \subsubsubsection depth > 3 without class support ---- *)
 let r_lay_024 : rule =
-  let re = Str.regexp_string "\\subsubsubsection" in
+  let re = Re_compat.regexp_string "\\subsubsubsection" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -3162,19 +3251,20 @@ let r_lay_024 : rule =
 
 (* -- META-002: Revision hash missing from \date field --------------- *)
 let r_meta_002 : rule =
-  let date_re = Str.regexp {|\\date{\([^}]*\)}|} in
+  let date_re = Re_compat.regexp {|\\date{\([^}]*\)}|} in
   let hash_re =
-    Str.regexp "[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+    Re_compat.regexp "[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
   in
   let run s =
     let preamble = extract_preamble s in
     let has_date =
       try
-        let _ = Str.search_forward date_re preamble 0 in
-        let date_content = Str.matched_group 1 preamble in
+        let _mr, _ = Re_compat.search_forward date_re preamble 0 in
+        let date_content = Re_compat.matched_group _mr 1 preamble in
         let has_hash =
           try
-            ignore (Str.search_forward hash_re date_content 0);
+            let _mr, _ = Re_compat.search_forward hash_re date_content 0 in
+            ignore _mr;
             true
           with Not_found -> false
         in
@@ -3208,7 +3298,7 @@ let r_rtl_005 : rule =
       "kurdish";
     ]
   in
-  let _re_newfontfamily = Str.regexp_string "\\newfontfamily" in
+  let _re_newfontfamily = Re_compat.regexp_string "\\newfontfamily" in
   let run s =
     let has_rtl_lang =
       List.exists (fun lang -> contains_substring s lang) rtl_langs
@@ -3217,7 +3307,8 @@ let r_rtl_005 : rule =
     if has_rtl_lang && has_polyglossia then
       let has_font_spec =
         try
-          ignore (Str.search_forward _re_newfontfamily s 0);
+          let _mr, _ = Re_compat.search_forward _re_newfontfamily s 0 in
+          ignore _mr;
           true
         with Not_found -> contains_substring s "\\setmainfont"
       in
@@ -3238,19 +3329,19 @@ let r_rtl_005 : rule =
 
 (* BIB-002: DOI not normalised to https://doi.org/ form *)
 let r_bib_002 : rule =
-  let re_doi = Str.regexp {|doi[ \t]*=[ \t]*{|} in
-  let re_good = Str.regexp_string "https://doi.org/" in
+  let re_doi = Re_compat.regexp {|doi[ \t]*=[ \t]*{|} in
+  let re_good = Re_compat.regexp_string "https://doi.org/" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_doi s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_doi s !i in
+         let after = Re_compat.match_end _mr in
          let is_good =
            try
-             let _ = Str.search_forward re_good s after in
-             Str.match_beginning () = after
+             let _mr, _ = Re_compat.search_forward re_good s after in
+             Re_compat.match_beginning _mr = after
            with Not_found -> false
          in
          if not is_good then incr cnt;
@@ -3271,15 +3362,15 @@ let r_bib_002 : rule =
 
 (* BIB-003: Journal title capitalisation inconsistent with @string definition *)
 let r_bib_003 : rule =
-  let re_journal = Str.regexp {|journal[ \t]*=[ \t]*{|} in
-  let re_cap_word = Str.regexp {|[A-Z][a-z]+|} in
+  let re_journal = Re_compat.regexp {|journal[ \t]*=[ \t]*{|} in
+  let re_cap_word = Re_compat.regexp {|[A-Z][a-z]+|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_journal s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_journal s !i in
+         let after = Re_compat.match_end _mr in
          (* find closing brace *)
          let j = ref after in
          let depth = ref 1 in
@@ -3310,8 +3401,8 @@ let r_bib_003 : rule =
 
 (* BIB-004: Book entry lacks publisher field *)
 let r_bib_004 : rule =
-  let re_book = Str.regexp {|@[Bb]ook{|} in
-  let re_publisher = Str.regexp {|publisher[ \t]*=|} in
+  let re_book = Re_compat.regexp {|@[Bb]ook{|} in
+  let re_publisher = Re_compat.regexp {|publisher[ \t]*=|} in
   let run s =
     let entries = split_bib_entries s in
     let cnt = ref 0 in
@@ -3319,14 +3410,14 @@ let r_bib_004 : rule =
       (fun entry ->
         let is_book =
           try
-            let _ = Str.search_forward re_book entry 0 in
+            let _mr, _ = Re_compat.search_forward re_book entry 0 in
             true
           with Not_found -> false
         in
         if is_book then
           let has_pub =
             try
-              let _ = Str.search_forward re_publisher entry 0 in
+              let _mr, _ = Re_compat.search_forward re_publisher entry 0 in
               true
             with Not_found -> false
           in
@@ -3346,8 +3437,8 @@ let r_bib_004 : rule =
 
 (* BIB-005: URL present without urldate *)
 let r_bib_005 : rule =
-  let re_url = Str.regexp {|url[ \t]*=[ \t]*{|} in
-  let re_urldate = Str.regexp {|urldate[ \t]*=[ \t]*{|} in
+  let re_url = Re_compat.regexp {|url[ \t]*=[ \t]*{|} in
+  let re_urldate = Re_compat.regexp {|urldate[ \t]*=[ \t]*{|} in
   let run s =
     let entries = split_bib_entries s in
     let cnt = ref 0 in
@@ -3375,15 +3466,15 @@ let r_bib_005 : rule =
 
 (* BIB-006: Author/editor names not in "von Last, First" scheme *)
 let r_bib_006 : rule =
-  let re_author = Str.regexp {|author[ \t]*=[ \t]*{|} in
-  let re_first_last = Str.regexp {|{[A-Z][a-z]+ [A-Z]|} in
+  let re_author = Re_compat.regexp {|author[ \t]*=[ \t]*{|} in
+  let re_first_last = Re_compat.regexp {|{[A-Z][a-z]+ [A-Z]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_author s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_author s !i in
+         let after = Re_compat.match_end _mr in
          (* find closing brace *)
          let j = ref after in
          let depth = ref 1 in
@@ -3395,10 +3486,10 @@ let r_bib_006 : rule =
          let content = String.sub s (after - 1) (!j - after + 2) in
          let is_first_last =
            try
-             let _ = Str.search_forward re_first_last content 0 in
+             let _mr, _ = Re_compat.search_forward re_first_last content 0 in
              (* Check there's no comma before the match — if comma present, it's
                 "Last, First" which is fine *)
-             let matched_pos = Str.match_beginning () in
+             let matched_pos = Re_compat.match_beginning _mr in
              let before = String.sub content 0 matched_pos in
              not (String.contains before ',')
            with Not_found -> false
@@ -3421,13 +3512,13 @@ let r_bib_006 : rule =
 
 (* BIB-008: Camel-case field names detected *)
 let r_bib_008 : rule =
-  let re = Str.regexp {|[A-Z][a-z]+ *= *{|} in
-  let re_entry = Str.regexp "@[a-zA-Z]+{" in
+  let re = Re_compat.regexp {|[A-Z][a-z]+ *= *{|} in
+  let re_entry = Re_compat.regexp "@[a-zA-Z]+{" in
   let run s =
     (* Only flag inside bib entries *)
     let has_bib =
       try
-        let _ = Str.search_forward re_entry s 0 in
+        let _mr, _ = Re_compat.search_forward re_entry s 0 in
         true
       with Not_found -> false
     in
@@ -3448,8 +3539,8 @@ let r_bib_008 : rule =
 
 (* BIB-009: In-proceedings entry missing required `booktitle` field *)
 let r_bib_009 : rule =
-  let re_inproc = Str.regexp {|@[Ii]n[Pp]roceedings{|} in
-  let re_booktitle = Str.regexp {|booktitle[ \t]*=|} in
+  let re_inproc = Re_compat.regexp {|@[Ii]n[Pp]roceedings{|} in
+  let re_booktitle = Re_compat.regexp {|booktitle[ \t]*=|} in
   let run s =
     let entries = split_bib_entries s in
     let cnt = ref 0 in
@@ -3457,14 +3548,14 @@ let r_bib_009 : rule =
       (fun entry ->
         let is_inproc =
           try
-            let _ = Str.search_forward re_inproc entry 0 in
+            let _mr, _ = Re_compat.search_forward re_inproc entry 0 in
             true
           with Not_found -> false
         in
         if is_inproc then
           let has_bt =
             try
-              let _ = Str.search_forward re_booktitle entry 0 in
+              let _mr, _ = Re_compat.search_forward re_booktitle entry 0 in
               true
             with Not_found -> false
           in
@@ -3484,7 +3575,7 @@ let r_bib_009 : rule =
 
 (* BIB-010: `month` field uses numeric literal instead of `#jan#` macro *)
 let r_bib_010 : rule =
-  let re = Str.regexp {|month[ \t]*=[ \t]*[{0-9"]|} in
+  let re = Re_compat.regexp {|month[ \t]*=[ \t]*[{0-9"]|} in
   let run s =
     let cnt = count_matches re s in
     if cnt > 0 then
@@ -3502,7 +3593,7 @@ let r_bib_010 : rule =
 
 (* BIB-011: Legacy `note = {URL: ...}` field detected; move to `url` *)
 let r_bib_011 : rule =
-  let re = Str.regexp {|note[ \t]*=[ \t]*{\(URL:\|http\)|} in
+  let re = Re_compat.regexp {|note[ \t]*=[ \t]*{\(URL:\|http\)|} in
   let run s =
     let cnt = count_matches re s in
     if cnt > 0 then
@@ -3520,15 +3611,15 @@ let r_bib_011 : rule =
 (* BIB-012: `et al.` hard-coded in author list instead of letting Bib(La)TeX
    truncate *)
 let r_bib_012 : rule =
-  let re_author = Str.regexp {|author[ \t]*=[ \t]*{|} in
-  let re_etal = Str.regexp_string "et al." in
+  let re_author = Re_compat.regexp {|author[ \t]*=[ \t]*{|} in
+  let re_etal = Re_compat.regexp_string "et al." in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_author s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_author s !i in
+         let after = Re_compat.match_end _mr in
          (* find closing brace *)
          let j = ref after in
          let depth = ref 1 in
@@ -3540,7 +3631,7 @@ let r_bib_012 : rule =
          let content = String.sub s after (!j - after) in
          let has_etal =
            try
-             let _ = Str.search_forward re_etal content 0 in
+             let _mr, _ = Re_compat.search_forward re_etal content 0 in
              true
            with Not_found -> false
          in
@@ -3564,14 +3655,14 @@ let r_bib_012 : rule =
 
 (* BIB-015: Trailing period in `title` or `note` field is redundant *)
 let r_bib_015 : rule =
-  let re = Str.regexp {|\(title\|note\)[ \t]*=[ \t]*{|} in
+  let re = Re_compat.regexp {|\(title\|note\)[ \t]*=[ \t]*{|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re s !i in
+         let after = Re_compat.match_end _mr in
          (* find closing brace *)
          let j = ref after in
          let depth = ref 1 in
@@ -3599,9 +3690,9 @@ let r_bib_015 : rule =
 
 (* BIB-016: Both DOI and URL present — duplicate locator information *)
 let r_bib_016 : rule =
-  let re_doi = Str.regexp {|doi[ \t]*=[ \t]*{|} in
-  let re_url = Str.regexp {|url[ \t]*=[ \t]*{|} in
-  let re_urldate = Str.regexp {|urldate[ \t]*=[ \t]*{|} in
+  let re_doi = Re_compat.regexp {|doi[ \t]*=[ \t]*{|} in
+  let re_url = Re_compat.regexp {|url[ \t]*=[ \t]*{|} in
+  let re_urldate = Re_compat.regexp {|urldate[ \t]*=[ \t]*{|} in
   let run s =
     let entries = split_bib_entries s in
     let cnt = ref 0 in
@@ -3609,7 +3700,7 @@ let r_bib_016 : rule =
       (fun entry ->
         let has_doi =
           try
-            let _ = Str.search_forward re_doi entry 0 in
+            let _mr, _ = Re_compat.search_forward re_doi entry 0 in
             true
           with Not_found -> false
         in
@@ -3635,10 +3726,10 @@ let r_bib_016 : rule =
 
 (* PKG-018: hyperref option draft left enabled *)
 let r_pkg_018 : rule =
-  let re_pkg = Str.regexp {|\\usepackage\[[^]]*draft[^]]*\]{hyperref}|} in
-  let re_setup1 = Str.regexp_string "\\hypersetup{draft}" in
-  let re_setup2 = Str.regexp_string "\\hypersetup{draft=true" in
-  let re_setup3 = Str.regexp {|\\hypersetup{[^}]*draft=true|} in
+  let re_pkg = Re_compat.regexp {|\\usepackage\[[^]]*draft[^]]*\]{hyperref}|} in
+  let re_setup1 = Re_compat.regexp_string "\\hypersetup{draft}" in
+  let re_setup2 = Re_compat.regexp_string "\\hypersetup{draft=true" in
+  let re_setup3 = Re_compat.regexp {|\\hypersetup{[^}]*draft=true|} in
   let run s =
     let c1 = count_matches re_pkg s in
     let c2 = count_matches re_setup1 s in
@@ -3662,11 +3753,11 @@ let r_pkg_018 : rule =
 (* PKG-019: geometry margin < 1 cm *)
 let r_pkg_019 : rule =
   let re_margin_frac =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(usepackage\[[^]]*\|geometry{[^}]*\)\(margin\|left\|right\|top\|bottom\)=0\.[0-9]+cm|}
   in
   let re_margin_zero =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(usepackage\[[^]]*\|geometry{[^}]*\)\(margin\|left\|right\|top\|bottom\)=0cm|}
   in
   let run s =
@@ -3689,13 +3780,13 @@ let r_pkg_019 : rule =
 
 (* FONT-005: Fontspec fallback to Latin Modern detected *)
 let r_font_005 : rule =
-  let re_fontspec = Str.regexp_string "\\usepackage{fontspec}" in
-  let re_setmain = Str.regexp_string "\\setmainfont" in
-  let re_lm = Str.regexp_string "\\setmainfont{Latin Modern" in
+  let re_fontspec = Re_compat.regexp_string "\\usepackage{fontspec}" in
+  let re_setmain = Re_compat.regexp_string "\\setmainfont" in
+  let re_lm = Re_compat.regexp_string "\\setmainfont{Latin Modern" in
   let run s =
     let has_fontspec =
       try
-        let _ = Str.search_forward re_fontspec s 0 in
+        let _mr, _ = Re_compat.search_forward re_fontspec s 0 in
         true
       with Not_found -> false
     in
@@ -3703,7 +3794,7 @@ let r_font_005 : rule =
     else
       let has_setmain =
         try
-          let _ = Str.search_forward re_setmain s 0 in
+          let _mr, _ = Re_compat.search_forward re_setmain s 0 in
           true
         with Not_found -> false
       in
@@ -3711,7 +3802,7 @@ let r_font_005 : rule =
         (* Check if it explicitly sets Latin Modern *)
         let is_lm =
           try
-            let _ = Str.search_forward re_lm s 0 in
+            let _mr, _ = Re_compat.search_forward re_lm s 0 in
             true
           with Not_found -> false
         in
@@ -3739,21 +3830,21 @@ let r_font_005 : rule =
 
 (* LAY-015: Line spacing < 1 or > 2 *)
 let r_lay_015 : rule =
-  let re_linespread = Str.regexp {|\\linespread{\([0-9.]+\)}|} in
-  let re_setstretch = Str.regexp {|\\setstretch{\([0-9.]+\)}|} in
+  let re_linespread = Re_compat.regexp {|\\linespread{\([0-9.]+\)}|} in
+  let re_setstretch = Re_compat.regexp {|\\setstretch{\([0-9.]+\)}|} in
   let run s =
     let cnt = ref 0 in
     let check re =
       let i = ref 0 in
       try
         while true do
-          let _ = Str.search_forward re s !i in
-          let v = Str.matched_group 1 s in
+          let _mr, _ = Re_compat.search_forward re s !i in
+          let v = Re_compat.matched_group _mr 1 s in
           (try
              let f = float_of_string v in
              if f < 1.0 || f > 2.0 then incr cnt
            with Failure _ -> ());
-          i := Str.match_end ()
+          i := Re_compat.match_end _mr
         done
       with Not_found -> ()
     in
@@ -3774,9 +3865,9 @@ let r_lay_015 : rule =
 (* LAY-020: Float placement parameters modified (\topnumber ...) *)
 let r_lay_020 : rule =
   let re_counter =
-    Str.regexp {|\\setcounter{\(topnumber\|bottomnumber\|totalnumber\)}|}
+    Re_compat.regexp {|\\setcounter{\(topnumber\|bottomnumber\|totalnumber\)}|}
   in
-  let re_fraction = Str.regexp {|\\renewcommand{\\topfraction}|} in
+  let re_fraction = Re_compat.regexp {|\\renewcommand{\\topfraction}|} in
   let run s =
     let c1 = count_matches re_counter s in
     let c2 = count_matches re_fraction s in
@@ -3795,7 +3886,7 @@ let r_lay_020 : rule =
 
 (* LAY-022: Global negative \parskip detected *)
 let r_lay_022 : rule =
-  let re = Str.regexp_string "\\setlength{\\parskip}{-" in
+  let re = Re_compat.regexp_string "\\setlength{\\parskip}{-" in
   let run s =
     let cnt = count_matches re s in
     if cnt > 0 then
@@ -3814,18 +3905,18 @@ let r_lay_022 : rule =
 
 (* REF-008: Duplicate cite key in .bib file *)
 let r_ref_008 : rule =
-  let re_entry = Str.regexp {|@[a-zA-Z]+{[ \t]*\([^, \t\n}]+\)|} in
+  let re_entry = Re_compat.regexp {|@[a-zA-Z]+{[ \t]*\([^, \t\n}]+\)|} in
   let run s =
     let keys = Hashtbl.create 64 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re_entry s !i in
-         let key = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward re_entry s !i in
+         let key = Re_compat.matched_group _mr 1 s in
          (match Hashtbl.find_opt keys key with
          | Some n -> Hashtbl.replace keys key (n + 1)
          | None -> Hashtbl.replace keys key 1);
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cnt =
@@ -3847,17 +3938,19 @@ let r_ref_008 : rule =
 
 (* META-001: PDF /Producer not set to deterministic hash *)
 let r_meta_001 : rule =
-  let re_hyperref_with_opts = Str.regexp {|\\usepackage\[[^]]*\]{hyperref}|} in
-  let re_hyperref_no_opts = Str.regexp_string "\\usepackage{hyperref}" in
-  let re_producer = Str.regexp_string "pdfproducer=" in
+  let re_hyperref_with_opts =
+    Re_compat.regexp {|\\usepackage\[[^]]*\]{hyperref}|}
+  in
+  let re_hyperref_no_opts = Re_compat.regexp_string "\\usepackage{hyperref}" in
+  let re_producer = Re_compat.regexp_string "pdfproducer=" in
   let run s =
     let has_hyperref =
       try
-        let _ = Str.search_forward re_hyperref_with_opts s 0 in
+        let _mr, _ = Re_compat.search_forward re_hyperref_with_opts s 0 in
         true
       with Not_found -> (
         try
-          let _ = Str.search_forward re_hyperref_no_opts s 0 in
+          let _mr, _ = Re_compat.search_forward re_hyperref_no_opts s 0 in
           true
         with Not_found -> false)
     in
@@ -3865,7 +3958,7 @@ let r_meta_001 : rule =
     else
       let has_producer =
         try
-          let _ = Str.search_forward re_producer s 0 in
+          let _mr, _ = Re_compat.search_forward re_producer s 0 in
           true
         with Not_found -> false
       in
@@ -3886,17 +3979,17 @@ let r_meta_001 : rule =
 (* PDF-010: Outline/bookmark text contains '_' or '#' -- use \texorpdfstring *)
 let r_pdf_010 : rule =
   let re_sec =
-    Str.regexp {|\\\(section\|subsection\|subsubsection\|chapter\){|}
+    Re_compat.regexp {|\\\(section\|subsection\|subsubsection\|chapter\){|}
   in
-  let re_texorpdf = Str.regexp_string "\\texorpdfstring" in
+  let re_texorpdf = Re_compat.regexp_string "\\texorpdfstring" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     let n = String.length s in
     (try
        while true do
-         let pos = Str.search_forward re_sec s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_sec s !i in
+         let after = Re_compat.match_end _mr in
          (* find matching closing brace *)
          let j = ref after in
          let depth = ref 1 in
@@ -3910,7 +4003,7 @@ let r_pdf_010 : rule =
          in
          let has_texorpdf =
            try
-             let _ = Str.search_forward re_texorpdf content 0 in
+             let _mr, _ = Re_compat.search_forward re_texorpdf content 0 in
              true
            with Not_found -> false
          in
@@ -3935,13 +4028,13 @@ let r_pdf_010 : rule =
 
 (* TIKZ-005: TikZ externalisation not enabled for large figures *)
 let r_tikz_005 : rule =
-  let re_tikz = Str.regexp_string "\\begin{tikzpicture}" in
-  let re_ext_lib = Str.regexp_string "\\usetikzlibrary{external}" in
-  let re_ext_cmd = Str.regexp_string "\\tikzexternalize" in
+  let re_tikz = Re_compat.regexp_string "\\begin{tikzpicture}" in
+  let re_ext_lib = Re_compat.regexp_string "\\usetikzlibrary{external}" in
+  let re_ext_cmd = Re_compat.regexp_string "\\tikzexternalize" in
   let run s =
     let has_tikz =
       try
-        let _ = Str.search_forward re_tikz s 0 in
+        let _mr, _ = Re_compat.search_forward re_tikz s 0 in
         true
       with Not_found -> false
     in
@@ -3949,13 +4042,13 @@ let r_tikz_005 : rule =
     else
       let has_ext_lib =
         try
-          let _ = Str.search_forward re_ext_lib s 0 in
+          let _mr, _ = Re_compat.search_forward re_ext_lib s 0 in
           true
         with Not_found -> false
       in
       let has_ext_cmd =
         try
-          let _ = Str.search_forward re_ext_cmd s 0 in
+          let _mr, _ = Re_compat.search_forward re_ext_cmd s 0 in
           true
         with Not_found -> false
       in
@@ -3977,18 +4070,24 @@ let r_tikz_005 : rule =
 
 (* BIB-001: Entry missing DOI or ISBN/ISSN *)
 let r_bib_001 : rule =
-  let re_entry = Str.regexp {|@[a-zA-Z]+{[^,]+,|} in
-  let _re_entry_sep = Str.regexp_string "\n@" in
+  let re_entry = Re_compat.regexp {|@[a-zA-Z]+{[^,]+,|} in
+  let _re_entry_sep = Re_compat.regexp_string "\n@" in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_entry s !start);
-         let entry_start = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re_entry s !start in
+         ignore _mr;
+         let entry_start = Re_compat.match_end _mr in
          (* find end of entry: next @ at line start or end of string *)
          let entry_end =
-           try Str.search_forward _re_entry_sep s entry_start
+           try
+             let _mr, _p =
+               Re_compat.search_forward _re_entry_sep s entry_start
+             in
+             ignore _mr;
+             _p
            with Not_found -> String.length s
          in
          let entry = String.sub s entry_start (entry_end - entry_start) in
@@ -4014,16 +4113,17 @@ let r_bib_001 : rule =
 
 (* BIB-007: Duplicate DOI across entries *)
 let r_bib_007 : rule =
-  let re_doi = Str.regexp {|doi *= *{?\([^},]+\)}?|} in
+  let re_doi = Re_compat.regexp {|doi *= *{?\([^},]+\)}?|} in
   let run s =
     let dois = ref [] in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_doi s !start);
-         let doi = String.trim (Str.matched_group 1 s) in
+         let _mr, _ = Re_compat.search_forward re_doi s !start in
+         ignore _mr;
+         let doi = String.trim (Re_compat.matched_group _mr 1 s) in
          dois := doi :: !dois;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let sorted = List.sort String.compare !dois in
@@ -4047,14 +4147,15 @@ let r_bib_007 : rule =
 
 (* BIB-013: Title capitalisation incorrect for bibliography style *)
 let r_bib_013 : rule =
-  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let re_title = Re_compat.regexp {|title *= *{\([^}]+\)}|} in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_title s !start);
-         let title = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward re_title s !start in
+         ignore _mr;
+         let title = Re_compat.matched_group _mr 1 s in
          (* Check for sentence-case violation: multiple capitalised words not
             protected by braces *)
          let words = String.split_on_char ' ' title in
@@ -4068,7 +4169,7 @@ let r_bib_013 : rule =
              words
          in
          if List.length cap_words > 3 then incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4086,24 +4187,26 @@ let r_bib_013 : rule =
 
 (* BIB-014: Duplicate author-year key *)
 let r_bib_014 : rule =
-  let re_author = Str.regexp {|author *= *{\([^}]+\)}|} in
-  let re_year = Str.regexp {|year *= *{\([^}]+\)}|} in
-  let _re_entry_split = Str.regexp "\n@" in
+  let re_author = Re_compat.regexp {|author *= *{\([^}]+\)}|} in
+  let re_year = Re_compat.regexp {|year *= *{\([^}]+\)}|} in
+  let _re_entry_split = Re_compat.regexp "\n@" in
   let run s =
-    let entries = Str.split _re_entry_split s in
+    let entries = Re_compat.split _re_entry_split s in
     let keys = ref [] in
     List.iter
       (fun entry ->
         let author =
           try
-            ignore (Str.search_forward re_author entry 0);
-            Str.matched_group 1 entry
+            let _mr, _ = Re_compat.search_forward re_author entry 0 in
+            ignore _mr;
+            Re_compat.matched_group _mr 1 entry
           with Not_found -> ""
         in
         let year =
           try
-            ignore (Str.search_forward re_year entry 0);
-            Str.matched_group 1 entry
+            let _mr, _ = Re_compat.search_forward re_year entry 0 in
+            ignore _mr;
+            Re_compat.matched_group _mr 1 entry
           with Not_found -> ""
         in
         if author <> "" && year <> "" then
@@ -4130,18 +4233,19 @@ let r_bib_014 : rule =
 
 (* BIB-017: Sentence-case title ends with punctuation mark *)
 let r_bib_017 : rule =
-  let re_title = Str.regexp {|title *= *{\([^}]+\)}|} in
+  let re_title = Re_compat.regexp {|title *= *{\([^}]+\)}|} in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_title s !start);
-         let title = String.trim (Str.matched_group 1 s) in
+         let _mr, _ = Re_compat.search_forward re_title s !start in
+         ignore _mr;
+         let title = String.trim (Re_compat.matched_group _mr 1 s) in
          (if String.length title > 0 then
             let last = title.[String.length title - 1] in
             if last = '.' || last = '!' || last = '?' then incr cnt);
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4177,16 +4281,17 @@ let r_font_003 : rule =
 
 (* FONT-002: Mixed optical sizes in paragraph *)
 let r_font_002 : rule =
-  let re = Str.regexp {|\\fontsize{\([0-9]+\)}|} in
+  let re = Re_compat.regexp {|\\fontsize{\([0-9]+\)}|} in
   let run s =
     let sizes = ref [] in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !start);
-         let sz = Str.matched_group 1 s in
+         let _mr, _ = Re_compat.search_forward re s !start in
+         ignore _mr;
+         let sz = Re_compat.matched_group _mr 1 s in
          sizes := sz :: !sizes;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let unique = List.sort_uniq String.compare !sizes in
@@ -4328,7 +4433,7 @@ let r_doc_005 : rule =
 (* REF-012: Reference text 'above/below' may contradict float position *)
 let r_ref_012 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|\(above\|below\)[ ,]*\\ref{\|\\ref{[^}]*}[ ,]*\(above\|below\)|}
   in
   let run s =
@@ -4337,9 +4442,10 @@ let r_ref_012 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4356,15 +4462,16 @@ let r_ref_012 : rule =
 
 (* FONT-010: Digits in \\textsc not converted to small-caps figures *)
 let r_font_010 : rule =
-  let re = Str.regexp {|\\textsc{[^}]*[0-9][^}]*}|} in
+  let re = Re_compat.regexp {|\\textsc{[^}]*[0-9][^}]*}|} in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !start);
+         let _mr, _ = Re_compat.search_forward re s !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4432,7 +4539,7 @@ let r_pdf_005 : rule =
 
 (* FONT-009: Small-caps requested but glyphs missing — fallback visible *)
 let r_font_009 : rule =
-  let re = Str.regexp {|\\textsc{[^}]*}|} in
+  let re = Re_compat.regexp {|\\textsc{[^}]*}|} in
   let has_nonascii body =
     let found = ref false in
     String.iter (fun c -> if Char.code c > 127 then found := true) body;
@@ -4444,12 +4551,13 @@ let r_font_009 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !start);
-         let m = Str.matched_string s in
+         let _mr, _ = Re_compat.search_forward re s !start in
+         ignore _mr;
+         let m = Re_compat.matched_string _mr s in
          (* Extract body between { and } *)
          let body = String.sub m 8 (String.length m - 9) in
          if has_nonascii body then incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4488,7 +4596,7 @@ let r_font_011 : rule =
 (* FONT-012: ff-ligature disabled adjacent to \texttt *)
 let r_font_012 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       {|\\texttt{[^}]*}\(ff\|fi\|fl\)\|ff\\texttt\|fi\\texttt\|fl\\texttt|}
   in
   let run s =
@@ -4496,9 +4604,10 @@ let r_font_012 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !start);
+         let _mr, _ = Re_compat.search_forward re s !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -4680,11 +4789,12 @@ let r_cjk_013 : rule =
 
 (* LANG-005: Hyphen-penalty too low *)
 let r_lang_005 : rule =
-  let re = Str.regexp {|\\hyphenpenalty *= *\([0-9]+\)|} in
+  let re = Re_compat.regexp {|\\hyphenpenalty *= *\([0-9]+\)|} in
   let run s =
     try
-      ignore (Str.search_forward re s 0);
-      let v = int_of_string (Str.matched_group 1 s) in
+      let _mr, _ = Re_compat.search_forward re s 0 in
+      ignore _mr;
+      let v = int_of_string (Re_compat.matched_group _mr 1 s) in
       if v < 50 then
         Some
           {
@@ -4700,19 +4810,21 @@ let r_lang_005 : rule =
 
 (* LANG-008: Spell-checker dictionary differs from babel option *)
 let r_lang_008 : rule =
-  let re_babel = Str.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
-  let re_spell = Str.regexp {|\\setspelling{\([a-z]+\)}|} in
+  let re_babel = Re_compat.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
+  let re_spell = Re_compat.regexp {|\\setspelling{\([a-z]+\)}|} in
   let run s =
     let babel =
       try
-        ignore (Str.search_forward re_babel s 0);
-        Some (Str.matched_group 1 s)
+        let _mr, _ = Re_compat.search_forward re_babel s 0 in
+        ignore _mr;
+        Some (Re_compat.matched_group _mr 1 s)
       with Not_found -> None
     in
     let spell =
       try
-        ignore (Str.search_forward re_spell s 0);
-        Some (Str.matched_group 1 s)
+        let _mr, _ = Re_compat.search_forward re_spell s 0 in
+        ignore _mr;
+        Some (Re_compat.matched_group _mr 1 s)
       with Not_found -> None
     in
     match (babel, spell) with
@@ -4891,7 +5003,7 @@ let r_math_076 : rule =
 
 (* MATH-103: \left…\right shrinks baseline — suggest \mathopen *)
 let r_math_103 : rule =
-  let re_left_frac = Str.regexp {|\\left[.([][ \t\n]*\\frac|} in
+  let re_left_frac = Re_compat.regexp {|\\left[.([][ \t\n]*\\frac|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt =
@@ -4901,9 +5013,10 @@ let r_math_103 : rule =
           let i = ref 0 in
           (try
              while true do
-               ignore (Str.search_forward re_left_frac seg !i);
+               let _mr, _ = Re_compat.search_forward re_left_frac seg !i in
+               ignore _mr;
                incr c;
-               i := Str.match_end ()
+               i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           acc + !c)
@@ -4995,22 +5108,24 @@ let r_fig_011 : rule =
 (* LAY-005: Lines per page exceed 66 — heuristic *)
 let r_lay_005 : rule =
   let re_textheight =
-    Str.regexp {|\\textheight *= *\([0-9.]+\)\(cm\|in\|pt\|mm\)|}
+    Re_compat.regexp {|\\textheight *= *\([0-9.]+\)\(cm\|in\|pt\|mm\)|}
   in
   let re_baselineskip =
-    Str.regexp {|\\baselineskip *= *\([0-9.]+\)\(pt\|cm\)|}
+    Re_compat.regexp {|\\baselineskip *= *\([0-9.]+\)\(pt\|cm\)|}
   in
   let run s =
     let th =
       try
-        ignore (Str.search_forward re_textheight s 0);
-        Some (float_of_string (Str.matched_group 1 s))
+        let _mr, _ = Re_compat.search_forward re_textheight s 0 in
+        ignore _mr;
+        Some (float_of_string (Re_compat.matched_group _mr 1 s))
       with Not_found | Failure _ -> None
     in
     let bs =
       try
-        ignore (Str.search_forward re_baselineskip s 0);
-        Some (float_of_string (Str.matched_group 1 s))
+        let _mr, _ = Re_compat.search_forward re_baselineskip s 0 in
+        ignore _mr;
+        Some (float_of_string (Re_compat.matched_group _mr 1 s))
       with Not_found | Failure _ -> None
     in
     match (th, bs) with
@@ -5033,15 +5148,15 @@ let r_lay_005 : rule =
 
 (* LAY-013: Empty page without \thispagestyle{empty} *)
 let r_lay_013 : rule =
-  let re_clearpage = Str.regexp {|\\clearpage\|\\newpage|} in
-  let re_thispagestyle = Str.regexp_string "\\thispagestyle{empty}" in
+  let re_clearpage = Re_compat.regexp {|\\clearpage\|\\newpage|} in
+  let re_thispagestyle = Re_compat.regexp_string "\\thispagestyle{empty}" in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re_clearpage s !i in
-         let after = Str.match_end () in
+         let _mr, pos = Re_compat.search_forward re_clearpage s !i in
+         let after = Re_compat.match_end _mr in
          (* Check if \thispagestyle{empty} appears within 100 chars after *)
          let window = min (String.length s) (after + 100) in
          let region = String.sub s after (window - after) in
@@ -5051,8 +5166,9 @@ let r_lay_013 : rule =
          (if is_blank_page then
             let has_style =
               try
-                ignore (Str.search_forward re_thispagestyle s pos);
-                Str.match_beginning () < window
+                let _mr, _ = Re_compat.search_forward re_thispagestyle s pos in
+                ignore _mr;
+                Re_compat.match_beginning _mr < window
               with Not_found -> false
             in
             if not has_style then incr cnt);
@@ -5077,7 +5193,7 @@ let r_lay_013 : rule =
 
 (* MATH-089: \left…\right pair produces vertical gap *)
 let r_math_089 : rule =
-  let re = Str.regexp {|\\left[.([][ \t\n]*\\frac|} in
+  let re = Re_compat.regexp {|\\left[.([][ \t\n]*\\frac|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt =
@@ -5087,9 +5203,10 @@ let r_math_089 : rule =
           let i = ref 0 in
           (try
              while true do
-               ignore (Str.search_forward re seg !i);
+               let _mr, _ = Re_compat.search_forward re seg !i in
+               ignore _mr;
                incr c;
-               i := Str.match_end ()
+               i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           acc + !c)
@@ -5110,19 +5227,21 @@ let r_math_089 : rule =
 (* FIG-005: Figure width > \linewidth *)
 let r_fig_005 : rule =
   let re =
-    Str.regexp {|\\includegraphics\[[^]]*width *= *\([0-9.]+\)\\linewidth|}
+    Re_compat.regexp
+      {|\\includegraphics\[[^]]*width *= *\([0-9.]+\)\\linewidth|}
   in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          (try
-            let w = float_of_string (Str.matched_group 1 s) in
+            let w = float_of_string (Re_compat.matched_group _mr 1 s) in
             if w > 1.0 then incr cnt
           with Failure _ -> ());
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -5139,14 +5258,20 @@ let r_fig_005 : rule =
 
 (* FIG-015: Figure placed before first reference *)
 let r_fig_015 : rule =
-  let re_fig = Str.regexp_string "\\begin{figure}" in
-  let re_ref = Str.regexp {|\\ref{fig:[^}]*}|} in
+  let re_fig = Re_compat.regexp_string "\\begin{figure}" in
+  let re_ref = Re_compat.regexp {|\\ref{fig:[^}]*}|} in
   let run s =
     let fig_pos =
-      try Some (Str.search_forward re_fig s 0) with Not_found -> None
+      try
+        let _mr, _p = Re_compat.search_forward re_fig s 0 in
+        Some _p
+      with Not_found -> None
     in
     let ref_pos =
-      try Some (Str.search_forward re_ref s 0) with Not_found -> None
+      try
+        let _mr, _p = Re_compat.search_forward re_ref s 0 in
+        Some _p
+      with Not_found -> None
     in
     match (fig_pos, ref_pos) with
     | Some fp, Some rp when fp < rp ->
@@ -5271,16 +5396,17 @@ let r_lay_012 : rule =
 
 (* LAY-019: Margin note wider than marginpar width *)
 let r_lay_019 : rule =
-  let re = Str.regexp {|\\marginpar{[^}]*}|} in
+  let re = Re_compat.regexp {|\\marginpar{[^}]*}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
-         let m = Str.matched_string s in
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
+         let m = Re_compat.matched_string _mr s in
          if String.length m - 11 > 60 then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -5297,16 +5423,16 @@ let r_lay_019 : rule =
 
 (* LAY-023: Single-sentence paragraph followed by blank line *)
 let r_lay_023 : rule =
-  let re_sentence_boundary = Str.regexp {|\. [A-Z]|} in
+  let re_sentence_boundary = Re_compat.regexp {|\. [A-Z]|} in
   let run s =
     let text = strip_math_segments s in
-    let paras = Str.split (Str.regexp "\n[ \t]*\n") text in
+    let paras = Re_compat.split (Re_compat.regexp "\n[ \t]*\n") text in
     let cnt =
       List.fold_left
         (fun acc p ->
           let p = String.trim p in
           if String.length p > 20 then
-            let sents = Str.split re_sentence_boundary p in
+            let sents = Re_compat.split re_sentence_boundary p in
             if List.length sents <= 1 then acc + 1 else acc
           else acc)
         0 paras
@@ -5376,7 +5502,7 @@ let r_lay_002 : rule =
 (* LAY-003: Section heading at bottom of page — heuristic via overfull near
    section *)
 let r_lay_003 : rule =
-  let re_section = Str.regexp {|\\section\|\\subsection|} in
+  let re_section = Re_compat.regexp {|\\section\|\\subsection|} in
   let run s =
     match Log_parser.get_log_context () with
     | None -> None
@@ -5388,8 +5514,9 @@ let r_lay_003 : rule =
         while !i < len do
           if s.[!i] = '\n' then incr line_no;
           (try
-             ignore (Str.search_forward re_section s !i);
-             if Str.match_beginning () = !i then
+             let _mr, _ = Re_compat.search_forward re_section s !i in
+             ignore _mr;
+             if Re_compat.match_beginning _mr = !i then
                section_lines := !line_no :: !section_lines
            with Not_found -> ());
           incr i
@@ -5469,13 +5596,14 @@ let r_lay_007 : rule =
   let run s =
     let cnt = ref 0 in
     let re_end =
-      Str.regexp {|\\end{equation\|\\end{align\|\\end{gather\|\\\]|}
+      Re_compat.regexp {|\\end{equation\|\\end{align\|\\end{gather\|\\\]|}
     in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_end s !i);
-         let after = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re_end s !i in
+         ignore _mr;
+         let after = Re_compat.match_end _mr in
          (* Check if next non-whitespace line is indented *)
          if after < String.length s then (
            let j = ref after in
@@ -5559,15 +5687,16 @@ let r_lay_011 : rule =
 
 (* LAY-014: Page break before subsection discouraged *)
 let r_lay_014 : rule =
-  let re = Str.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
+  let re = Re_compat.regexp {|\\pagebreak[ \t\n]*\\subsection|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !i);
+         let _mr, _ = Re_compat.search_forward re s !i in
+         ignore _mr;
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -5918,15 +6047,15 @@ let rules_l2_parser : rule list = [] (* populated below after definitions *)
 
 (* CMD-002: Command redefined with \def instead of \renewcommand *)
 let r_cmd_002 : rule =
-  let re = Str.regexp {|\\def\\[a-zA-Z]+|} in
+  let re = Re_compat.regexp {|\\def\\[a-zA-Z]+|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -5943,23 +6072,23 @@ let r_cmd_002 : rule =
 
 (* CMD-004: CamelCase command names discouraged *)
 let r_cmd_004 : rule =
-  let re = Str.regexp {|\\newcommand\|\\renewcommand\|\\def|} in
-  let camel_re = Str.regexp {|{?\\[a-z]+[A-Z][a-zA-Z]*}?|} in
+  let re = Re_compat.regexp {|\\newcommand\|\\renewcommand\|\\def|} in
+  let camel_re = Re_compat.regexp {|{?\\[a-z]+[A-Z][a-zA-Z]*}?|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward re s !i in
-         let after = pos + String.length (Str.matched_string s) in
+         let _mr, pos = Re_compat.search_forward re s !i in
+         let after = pos + String.length (Re_compat.matched_string _mr s) in
          (* skip whitespace *)
          let j = ref after in
          while !j < String.length s && (s.[!j] = ' ' || s.[!j] = '\t') do
            incr j
          done;
          (try
-            let _ = Str.search_forward camel_re s !j in
-            if Str.match_beginning () = !j then incr cnt
+            let _mr, _ = Re_compat.search_forward camel_re s !j in
+            if Re_compat.match_beginning _mr = !j then incr cnt
           with Not_found -> ());
          i := max (after + 1) (pos + 1)
        done
@@ -5981,16 +6110,18 @@ let r_cmd_004 : rule =
    single-letter name; (2) \def\X where X is a single letter followed by a
    non-letter (space, brace, digit, etc.). *)
 let r_cmd_005 : rule =
-  let re_cmd = Str.regexp "\\\\\\(newcommand\\|renewcommand\\){\\\\[a-zA-Z]}" in
-  let re_def = Str.regexp "\\\\def\\\\\\([a-zA-Z]\\)[^a-zA-Z]" in
+  let re_cmd =
+    Re_compat.regexp "\\\\\\(newcommand\\|renewcommand\\){\\\\[a-zA-Z]}"
+  in
+  let re_def = Re_compat.regexp "\\\\def\\\\\\([a-zA-Z]\\)[^a-zA-Z]" in
   let count_matches re s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     !cnt
@@ -6012,7 +6143,7 @@ let r_cmd_005 : rule =
 (* CMD-006: Macro defined inside document body *)
 let r_cmd_006 : rule =
   let re =
-    Str.regexp "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n]*{?\\\\"
+    Re_compat.regexp "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n]*{?\\\\"
   in
   let run s =
     match extract_document_body s with
@@ -6022,9 +6153,9 @@ let r_cmd_006 : rule =
         let i = ref 0 in
         (try
            while true do
-             let _ = Str.search_forward re body !i in
+             let _mr, _ = Re_compat.search_forward re body !i in
              incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then
@@ -6042,15 +6173,15 @@ let r_cmd_006 : rule =
 (* CMD-008: Macro uses \@ in name outside maketitle context *)
 let r_cmd_008 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n\
        ]*{?\\\\[a-zA-Z]*@[a-zA-Z]*}?"
   in
-  let _re_makeatletter = Str.regexp_string "\\makeatletter" in
+  let _re_makeatletter = Re_compat.regexp_string "\\makeatletter" in
   let run s =
     let has_makeatletter =
       try
-        let _ = Str.search_forward _re_makeatletter s 0 in
+        let _mr, _ = Re_compat.search_forward _re_makeatletter s 0 in
         true
       with Not_found -> false
     in
@@ -6060,9 +6191,9 @@ let r_cmd_008 : rule =
       let i = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re s !i in
+           let _mr, _ = Re_compat.search_forward re s !i in
            incr cnt;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       if !cnt > 0 then
@@ -6080,7 +6211,7 @@ let r_cmd_008 : rule =
 (* CMD-009: Macro name contains digits *)
 let r_cmd_009 : rule =
   let re =
-    Str.regexp
+    Re_compat.regexp
       "\\\\\\(newcommand\\|renewcommand\\|def\\)[ \t\n\
        ]*{?\\\\[a-zA-Z]*[0-9]+[a-zA-Z0-9]*}?"
   in
@@ -6089,9 +6220,9 @@ let r_cmd_009 : rule =
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -6109,20 +6240,20 @@ let r_cmd_009 : rule =
 (* CMD-011: Macro defined with \def/\edef in preamble without \makeatletter
    guard *)
 let r_cmd_011 : rule =
-  let re = Str.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
-  let _re_begin_doc_c11 = Str.regexp_string "\\begin{document}" in
-  let _re_makeatletter_c11 = Str.regexp_string "\\makeatletter" in
+  let re = Re_compat.regexp "\\\\\\(def\\|edef\\)[ \t\n]*\\\\[a-zA-Z@]+" in
+  let _re_begin_doc_c11 = Re_compat.regexp_string "\\begin{document}" in
+  let _re_makeatletter_c11 = Re_compat.regexp_string "\\makeatletter" in
   let run s =
     (* Extract preamble: everything before \begin{document} *)
     let preamble =
       try
-        let pos = Str.search_forward _re_begin_doc_c11 s 0 in
+        let _mr, pos = Re_compat.search_forward _re_begin_doc_c11 s 0 in
         String.sub s 0 pos
       with Not_found -> s
     in
     let has_makeatletter =
       try
-        let _ = Str.search_forward _re_makeatletter_c11 preamble 0 in
+        let _mr, _ = Re_compat.search_forward _re_makeatletter_c11 preamble 0 in
         true
       with Not_found -> false
     in
@@ -6132,9 +6263,9 @@ let r_cmd_011 : rule =
       let i = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re preamble !i in
+           let _mr, _ = Re_compat.search_forward re preamble !i in
            incr cnt;
-           i := Str.match_end ()
+           i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       if !cnt > 0 then
@@ -6152,7 +6283,7 @@ let r_cmd_011 : rule =
 
 (* CMD-013: \def\arraystretch declared inside document body *)
 let r_cmd_013 : rule =
-  let pat = Str.regexp_string "\\def\\arraystretch" in
+  let pat = Re_compat.regexp_string "\\def\\arraystretch" in
   let run s =
     match extract_document_body s with
     | None -> None
@@ -6161,9 +6292,9 @@ let r_cmd_013 : rule =
         let i = ref 0 in
         (try
            while true do
-             let _ = Str.search_forward pat body !i in
+             let _mr, _ = Re_compat.search_forward pat body !i in
              incr cnt;
-             i := Str.match_end ()
+             i := Re_compat.match_end _mr
            done
          with Not_found -> ());
         if !cnt > 0 then

@@ -35,24 +35,25 @@ let extract_label_prefix (key : string) : string =
   | Some i -> String.sub key 0 (i + 1)
   | None -> ""
 
-let re_label = Str.regexp {|\\label{\([^}]+\)}|}
-let re_ref = Str.regexp {|\\ref{\([^}]+\)}|}
-let re_eqref = Str.regexp {|\\eqref{\([^}]+\)}|}
-let re_autoref = Str.regexp {|\\autoref{\([^}]+\)}|}
-let re_cref = Str.regexp {|\\cref{\([^}]+\)}|}
-let re_cref_cap = Str.regexp {|\\Cref{\([^}]+\)}|}
+let re_label = Re_compat.regexp {|\\label{\([^}]+\)}|}
+let re_ref = Re_compat.regexp {|\\ref{\([^}]+\)}|}
+let re_eqref = Re_compat.regexp {|\\eqref{\([^}]+\)}|}
+let re_autoref = Re_compat.regexp {|\\autoref{\([^}]+\)}|}
+let re_cref = Re_compat.regexp {|\\cref{\([^}]+\)}|}
+let re_cref_cap = Re_compat.regexp {|\\Cref{\([^}]+\)}|}
 
 let extract_labels (s : string) : label_entry list =
   let entries = ref [] in
   let i = ref 0 in
   (try
      while true do
-       ignore (Str.search_forward re_label s !i);
-       let key = Str.matched_group 1 s in
-       let pos = Str.match_beginning () in
+       let _mr, _ = Re_compat.search_forward re_label s !i in
+       ignore _mr;
+       let key = Re_compat.matched_group _mr 1 s in
+       let pos = Re_compat.match_beginning _mr in
        entries :=
          { key; position = pos; prefix = extract_label_prefix key } :: !entries;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !entries
@@ -73,11 +74,12 @@ let extract_refs (s : string) : ref_entry list =
       let i = ref 0 in
       try
         while true do
-          ignore (Str.search_forward re s !i);
-          let key = Str.matched_group 1 s in
-          let pos = Str.match_beginning () in
+          let _mr, _ = Re_compat.search_forward re s !i in
+          ignore _mr;
+          let key = Re_compat.matched_group _mr 1 s in
+          let pos = Re_compat.match_beginning _mr in
           entries := { key; position = pos; command = cmd } :: !entries;
-          i := Str.match_end ()
+          i := Re_compat.match_end _mr
         done
       with Not_found -> ())
     patterns;

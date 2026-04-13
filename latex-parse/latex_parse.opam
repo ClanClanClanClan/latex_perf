@@ -8,6 +8,7 @@ bug-reports: "https://github.com/ClanClanClanClan/latex_perf/issues"
 depends: [
   "dune" {>= "3.10"}
   "ocaml" {>= "5.1.1"}
+  "re" {>= "1.11.0"}
   "uutf" {>= "1.0.3"}
   "yojson" {>= "2.1"}
   "odoc" {with-doc}

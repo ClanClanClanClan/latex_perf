@@ -460,8 +460,8 @@ let l1_delim_005_rule : rule =
     else if count_substring s "\\big" > 0 then 1
     else 0
   in
-  let re_left = Str.regexp {|\\left|} in
-  let re_right = Str.regexp {|\\right|} in
+  let re_left = Re_compat.regexp {|\\left|} in
+  let re_right = Re_compat.regexp {|\\right|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -473,7 +473,7 @@ let l1_delim_005_rule : rule =
         let i = ref 0 in
         (try
            while true do
-             let p = Str.search_forward re_left seg !i in
+             let _mr, p = Re_compat.search_forward re_left seg !i in
              lefts := p :: !lefts;
              i := p + 5
            done
@@ -481,7 +481,7 @@ let l1_delim_005_rule : rule =
         i := 0;
         (try
            while true do
-             let p = Str.search_forward re_right seg !i in
+             let _mr, p = Re_compat.search_forward re_right seg !i in
              rights := p :: !rights;
              i := p + 6
            done
@@ -515,7 +515,7 @@ let l1_delim_005_rule : rule =
    \bigr etc. in inline math ($...$, \(...\)) rather than display math. *)
 let l1_delim_006_rule : rule =
   let re_big =
-    Str.regexp {|\\[Bb]ig[lrmg]?[^a-zA-Z]\|\\[Bb]igg[lrmg]?[^a-zA-Z]|}
+    Re_compat.regexp {|\\[Bb]ig[lrmg]?[^a-zA-Z]\|\\[Bb]igg[lrmg]?[^a-zA-Z]|}
   in
   let run s =
     let len = String.length s in
@@ -550,9 +550,9 @@ let l1_delim_006_rule : rule =
           let k = ref 0 in
           (try
              while true do
-               let _ = Str.search_forward re_big inline_seg !k in
+               let _mr, _ = Re_compat.search_forward re_big inline_seg !k in
                incr cnt;
-               k := Str.match_end ()
+               k := Re_compat.match_end _mr
              done
            with Not_found -> ());
           i := !j + 1)
@@ -570,9 +570,9 @@ let l1_delim_006_rule : rule =
           let k = ref 0 in
           (try
              while true do
-               let _ = Str.search_forward re_big inline_seg !k in
+               let _mr, _ = Re_compat.search_forward re_big inline_seg !k in
                incr cnt;
-               k := Str.match_end ()
+               k := Re_compat.match_end _mr
              done
            with Not_found -> ());
           i := !j + 2)
@@ -617,7 +617,7 @@ let l1_delim_007_rule : rule =
 
 (* DELIM-008: Empty \left. ... \right. pair — redundant invisible delimiters *)
 let l1_delim_008_rule : rule =
-  let re = Str.regexp "\\\\left\\.[ \t\n]*\\\\right\\." in
+  let re = Re_compat.regexp "\\\\left\\.[ \t\n]*\\\\right\\." in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -626,9 +626,9 @@ let l1_delim_008_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re seg !i in
+            let _mr, _ = Re_compat.search_forward re seg !i in
             incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -685,7 +685,7 @@ let l1_delim_009_rule : rule =
 (* DELIM-010: Display math uses \big instead of \Big — in display math contexts,
    convention is to use capital sizing commands *)
 let l1_delim_010_rule : rule =
-  let re_small_big = Str.regexp {|\\big[lrmg]?[^a-zA-Z]|} in
+  let re_small_big = Re_compat.regexp {|\\big[lrmg]?[^a-zA-Z]|} in
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
@@ -724,9 +724,9 @@ let l1_delim_010_rule : rule =
           let k = ref 0 in
           (try
              while true do
-               let _ = Str.search_forward re_small_big seg !k in
+               let _mr, _ = Re_compat.search_forward re_small_big seg !k in
                incr cnt;
-               k := Str.match_end ()
+               k := Re_compat.match_end _mr
              done
            with Not_found -> ());
           i := !j + 2)
@@ -742,9 +742,9 @@ let l1_delim_010_rule : rule =
             let k = ref 0 in
             try
               while true do
-                let _ = Str.search_forward re_small_big blk !k in
+                let _mr, _ = Re_compat.search_forward re_small_big blk !k in
                 incr cnt;
-                k := Str.match_end ()
+                k := Re_compat.match_end _mr
               done
             with Not_found -> ())
           blocks)
@@ -797,7 +797,7 @@ let l1_delim_011_rule : rule =
    subscript has 2+ chars without { } *)
 let l1_script_001_rule : rule =
   (* Match _X where X is 2+ alphanumeric chars not wrapped in braces *)
-  let re = Str.regexp {|_\([A-Za-z0-9][A-Za-z0-9]+\)|} in
+  let re = Re_compat.regexp {|_\([A-Za-z0-9][A-Za-z0-9]+\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -807,10 +807,10 @@ let l1_script_001_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
+            let _mr, pos = Re_compat.search_forward re seg !i in
             (* Make sure it's not _{ ... } — check char before match group *)
             if pos + 1 < n && seg.[pos + 1] <> '{' then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -866,7 +866,7 @@ let l1_script_002_rule : rule =
 (* SCRIPT-003: Comma-separated superscripts lack braces — e.g. ^a,b instead of
    ^{a,b} *)
 let l1_script_003_rule : rule =
-  let re = Str.regexp {|\^\([A-Za-z0-9],[A-Za-z0-9,]+\)|} in
+  let re = Re_compat.regexp {|\^\([A-Za-z0-9],[A-Za-z0-9,]+\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -886,7 +886,7 @@ let l1_script_003_rule : rule =
 (* SCRIPT-004: Subscript after prime notation mis-ordered — e.g. f'_i instead of
    f_i' *)
 let l1_script_004_rule : rule =
-  let re = Str.regexp {|''+_\|'_|} in
+  let re = Re_compat.regexp {|''+_\|'_|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -977,7 +977,7 @@ let l1_script_006_rule : rule =
 (* SCRIPT-007: Subscript text not wrapped in \text{} — e.g. x_{max} where "max"
    is a word (3+ alpha chars) without \text *)
 let l1_script_007_rule : rule =
-  let re = Str.regexp {|_{\([A-Za-z][A-Za-z][A-Za-z][A-Za-z]*\)}|} in
+  let re = Re_compat.regexp {|_{\([A-Za-z][A-Za-z][A-Za-z][A-Za-z]*\)}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -986,9 +986,9 @@ let l1_script_007_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
-            let matched = Str.matched_group 1 seg in
-            let next_i = Str.match_end () in
+            let _mr, pos = Re_compat.search_forward re seg !i in
+            let matched = Re_compat.matched_group _mr 1 seg in
+            let next_i = Re_compat.match_end _mr in
             (* Exclude common math abbreviations *)
             let is_operator =
               List.mem matched
@@ -1050,7 +1050,7 @@ let l1_script_007_rule : rule =
 let l1_script_008_rule : rule =
   (* Pattern: uppercase letter optionally followed by lowercase, then _digit
      e.g. H_2, Na_2, O_2 — these look like chemical formulas *)
-  let re = Str.regexp {|\([A-Z][a-z]?\)_\([0-9]+\)|} in
+  let re = Re_compat.regexp {|\([A-Z][a-z]?\)_\([0-9]+\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1077,7 +1077,7 @@ let l1_script_008_rule : rule =
    _ZX without a mass number superscript *)
 let l1_script_009_rule : rule =
   (* Detect: ^{}_ or ^{ }_ pattern indicating empty mass number *)
-  let re = Str.regexp {|\^{[ ]*}_{|} in
+  let re = Re_compat.regexp {|\^{[ ]*}_{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1097,7 +1097,7 @@ let l1_script_009_rule : rule =
 (* SCRIPT-010: Use of \limits on inline operator — \limits in inline math
    ($...$, \(...\)) forces display-style limits *)
 let l1_script_010_rule : rule =
-  let re_limits = Str.regexp {|\\limits|} in
+  let re_limits = Re_compat.regexp {|\\limits|} in
   let run s =
     let inline_segs = extract_inline_math_segments s in
     let cnt = ref 0 in
@@ -1154,7 +1154,7 @@ let l1_script_011_rule : rule =
 
 (* SCRIPT-012: Prime notation f''' (> 3 primes) — prefer ^{(n)} *)
 let l1_script_012_rule : rule =
-  let re = Str.regexp {|''''|} in
+  let re = Re_compat.regexp {|''''|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1174,7 +1174,7 @@ let l1_script_012_rule : rule =
 (* SCRIPT-013: Plus/minus typed directly in subscript — e.g. x_{+} or x_{-}
    where \pm or \mp would be more appropriate *)
 let l1_script_013_rule : rule =
-  let re = Str.regexp {|_{\([+-]\)}|} in
+  let re = Re_compat.regexp {|_{\([+-]\)}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1195,7 +1195,7 @@ let l1_script_013_rule : rule =
    letter, should be \log_{x} or upright *)
 let l1_script_014_rule : rule =
   (* Match \log_ followed by a single letter NOT in braces *)
-  let re = Str.regexp {|\\log_\([A-Za-z]\)|} in
+  let re = Re_compat.regexp {|\\log_\([A-Za-z]\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1204,7 +1204,7 @@ let l1_script_014_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
+            let _mr, pos = Re_compat.search_forward re seg !i in
             (* Check it's not \log_{...} — the char after \log_ should not be
                { *)
             let after_underscore = pos + 5 in
@@ -1212,7 +1212,7 @@ let l1_script_014_rule : rule =
               after_underscore < String.length seg
               && seg.[after_underscore] <> '{'
             then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -1231,7 +1231,7 @@ let l1_script_014_rule : rule =
 (* SCRIPT-015: Time derivative dot mis-aligned — \dot or \ddot used in
    subscript/superscript context *)
 let l1_script_015_rule : rule =
-  let re = Str.regexp {|[_^]{\\d?dot{|} in
+  let re = Re_compat.regexp {|[_^]{\\d?dot{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1322,10 +1322,10 @@ let l1_script_016_rule : rule =
    use x_a^b and others use x^b_a in the same document *)
 let l1_script_017_rule : rule =
   let re_sub_sup =
-    Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
+    Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
   in
   let re_sup_sub =
-    Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
+    Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
   in
   let run s =
     let math_segs = extract_math_segments s in
@@ -1425,7 +1425,7 @@ let l1_script_019_rule : rule =
 let l1_script_020_rule : rule =
   (* Reuses the same detection as SCRIPT-007 but focuses specifically on
      subscripts that are abbreviation-like 2-3 char lowercase words *)
-  let re = Str.regexp {|_{\([a-z][a-z]+\)}|} in
+  let re = Re_compat.regexp {|_{\([a-z][a-z]+\)}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1434,9 +1434,9 @@ let l1_script_020_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
-            let matched = Str.matched_group 1 seg in
-            let next_i = Str.match_end () in
+            let _mr, pos = Re_compat.search_forward re seg !i in
+            let matched = Re_compat.matched_group _mr 1 seg in
+            let next_i = Re_compat.match_end _mr in
             (* Exclude single-letter and known math operators *)
             let is_operator =
               List.mem matched
@@ -1490,7 +1490,9 @@ let l1_script_020_rule : rule =
 (* SCRIPT-021: Sub-sup order not canonical — a_{b}^{c} vs a^{c}_{b} — flag when
    a_{...}^{...} is used (canonical is a^{...}_{...} per convention) *)
 let l1_script_021_rule : rule =
-  let re = Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|} in
+  let re =
+    Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1510,7 +1512,7 @@ let l1_script_021_rule : rule =
 (* SCRIPT-022: Superscript prime stacked > 3 — prefer ^{(n)} — similar to
    SCRIPT-012 but specifically for ^{'''...} notation *)
 let l1_script_022_rule : rule =
-  let re = Str.regexp {|\^{''''|} in
+  let re = Re_compat.regexp {|\^{''''|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1692,7 +1694,7 @@ let l1_ref_005_rule : rule =
 
 (* REF-006: Page reference uses \ref not \pageref — detects "page \ref{...}" *)
 let l1_ref_006_rule : rule =
-  let re = Str.regexp {|[Pp]age[ ~]*\\ref{|} in
+  let re = Re_compat.regexp {|[Pp]age[ ~]*\\ref{|} in
   let run s =
     let cnt = count_re_matches re s in
     if cnt > 0 then
@@ -1709,7 +1711,7 @@ let l1_ref_006_rule : rule =
 
 (* REF-007: Cite key contains whitespace *)
 let l1_ref_007_rule : rule =
-  let re = Str.regexp "\\\\cite\\([^{]*\\){[^}]*[ \t][^}]*}" in
+  let re = Re_compat.regexp "\\\\cite\\([^{]*\\){[^}]*[ \t][^}]*}" in
   let run s =
     let cnt = count_re_matches re s in
     if cnt > 0 then
@@ -1727,8 +1729,8 @@ let l1_ref_007_rule : rule =
 (* REF-009: Reference appears before label definition (forward ref) Uses
    Semantic_state.get_state() if available, falls back to regex. *)
 let l1_ref_009_rule : rule =
-  let re_label = Str.regexp {|\\label{[^}]*}|} in
-  let re_ref = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
+  let re_label = Re_compat.regexp {|\\label{[^}]*}|} in
+  let re_ref = Re_compat.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
   let run s =
     let cnt =
       match Semantic_state.get_state () with
@@ -1739,9 +1741,9 @@ let l1_ref_009_rule : rule =
           let i = ref 0 in
           (try
              while true do
-               let pos = Str.search_forward re_label s !i in
-               let m = Str.matched_string s in
-               let next = Str.match_end () in
+               let _mr, pos = Re_compat.search_forward re_label s !i in
+               let m = Re_compat.matched_string _mr s in
+               let next = Re_compat.match_end _mr in
                let inner = String.sub m 7 (String.length m - 8) in
                if not (Hashtbl.mem label_positions inner) then
                  Hashtbl.add label_positions inner pos;
@@ -1753,9 +1755,9 @@ let l1_ref_009_rule : rule =
           i := 0;
           (try
              while true do
-               let pos = Str.search_forward re_ref s !i in
-               let m = Str.matched_string s in
-               let next = Str.match_end () in
+               let _mr, pos = Re_compat.search_forward re_ref s !i in
+               let m = Re_compat.matched_string _mr s in
+               let next = Re_compat.match_end _mr in
                let brace_pos = String.index m '{' in
                let inner =
                  String.sub m (brace_pos + 1) (String.length m - brace_pos - 2)
@@ -1787,7 +1789,7 @@ let l1_ref_009_rule : rule =
 (* CHEM-001: Missing \ce{} wrapper for chemical formula — detects patterns like
    H_2O, CO_2, NaCl in math mode without \ce{} *)
 let l1_chem_001_rule : rule =
-  let re = Str.regexp {|[A-Z][a-z]?_\({[0-9]+}\|[0-9]\)|} in
+  let re = Re_compat.regexp {|[A-Z][a-z]?_\({[0-9]+}\|[0-9]\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1811,7 +1813,7 @@ let l1_chem_001_rule : rule =
 (* CHEM-002: Oxidation-state superscript missing braces — e.g. Fe^2+ should be
    Fe^{2+} *)
 let l1_chem_002_rule : rule =
-  let re = Str.regexp {|[A-Z][a-z]?\^[0-9][+-]|} in
+  let re = Re_compat.regexp {|[A-Z][a-z]?\^[0-9][+-]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1831,7 +1833,7 @@ let l1_chem_002_rule : rule =
 (* CHEM-003: Isotope mass number subscripted not superscripted — e.g. _14C
    should be ^{14}C *)
 let l1_chem_003_rule : rule =
-  let re = Str.regexp {|_\({[0-9]+}\|[0-9]+\)[A-Z]|} in
+  let re = Re_compat.regexp {|_\({[0-9]+}\|[0-9]+\)[A-Z]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1854,7 +1856,7 @@ let l1_chem_003_rule : rule =
 
 (* CHEM-004: Charge written ^- instead of ^{-} *)
 let l1_chem_004_rule : rule =
-  let re = Str.regexp {|[A-Z][a-z]?\^[+-][^}]|} in
+  let re = Re_compat.regexp {|[A-Z][a-z]?\^[+-][^}]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2051,7 +2053,7 @@ let l1_chem_009_rule : rule =
 (* CMD-007: Optional argument declared but not used in definition body *)
 let l1_cmd_007_rule : rule =
   let re_newcmd =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(newcommand\|renewcommand\|providecommand\){\\[a-zA-Z]+}\[[0-9]+\]|}
   in
   let run s =
@@ -2060,9 +2062,9 @@ let l1_cmd_007_rule : rule =
     let n = String.length s in
     (try
        while true do
-         let _ = Str.search_forward re_newcmd s !i in
-         let mstart = Str.match_beginning () in
-         let mend = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re_newcmd s !i in
+         let mstart = Re_compat.match_beginning _mr in
+         let mend = Re_compat.match_end _mr in
          (* Extract the arity from [N] *)
          let bracket_start = ref (mend - 2) in
          while !bracket_start > mstart && s.[!bracket_start] <> '[' do
@@ -2291,7 +2293,7 @@ let l1_cjk_015_rule : rule =
 
 (* TYPO-059: Punctuation inside math adjacent to operators — e.g. ,= or ;+ *)
 let l1_typo_059_rule : rule =
-  let re = Str.regexp {|[,;.][ ]*[=<>+\-]|} in
+  let re = Re_compat.regexp {|[,;.][ ]*[=<>+\-]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2312,16 +2314,16 @@ let l1_typo_059_rule : rule =
 let l1_pt_002_rule : rule =
   (* Detect 1.234 or 3.14 patterns that should use comma as decimal separator in
      pt-BR. Only fire if document uses brazilian/portuges. *)
-  let re_num = Str.regexp {|[0-9]+\.[0-9]+|} in
+  let re_num = Re_compat.regexp {|[0-9]+\.[0-9]+|} in
   let re_br =
-    Str.regexp
+    Re_compat.regexp
       {|\\\(usepackage\|documentclass\).*\(brazilian\|brazil\|portuges\)|}
   in
   let run s =
     (* Only fire if the document uses pt-BR *)
     let has_br =
       try
-        let _ = Str.search_forward re_br s 0 in
+        let _mr, _ = Re_compat.search_forward re_br s 0 in
         true
       with Not_found -> false
     in
@@ -2349,30 +2351,32 @@ let l1_pt_002_rule : rule =
 (* L3-001: LaTeX3 \tl_new:N in preamble mixed with 2e macros *)
 let l1_l3_001_rule : rule =
   let re_expl3 =
-    Str.regexp
+    Re_compat.regexp
       {|\\[a-z]+_[a-z_]+:[a-zA-Z]+\|\\tl_new:N\|\\int_new:N\|\\bool_new:N|}
   in
   let re_2e =
-    Str.regexp
+    Re_compat.regexp
       {|\\newcommand\|\\renewcommand\|\\newenvironment\|\\renewenvironment|}
   in
-  let re_begin_doc = Str.regexp_string {|\begin{document}|} in
+  let re_begin_doc = Re_compat.regexp_string {|\begin{document}|} in
   let run s =
     let preamble =
       try
-        let idx = Str.search_forward re_begin_doc s 0 in
+        let _mr, idx = Re_compat.search_forward re_begin_doc s 0 in
         String.sub s 0 idx
       with Not_found -> s
     in
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3 preamble 0);
+        let _mr, _ = Re_compat.search_forward re_expl3 preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_2e =
       try
-        ignore (Str.search_forward re_2e preamble 0);
+        let _mr, _ = Re_compat.search_forward re_2e preamble 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2391,13 +2395,13 @@ let l1_l3_001_rule : rule =
 (* L3-002: Expl3 variable declared after \begin{document} *)
 let l1_l3_002_rule : rule =
   let re_expl3_decl =
-    Str.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
+    Re_compat.regexp {|\\[a-z]+_new:N\|\\[a-z]+_const:Nn\|\\[a-z]+_gset:Nn|}
   in
-  let re_begin_doc2 = Str.regexp_string {|\begin{document}|} in
+  let re_begin_doc2 = Re_compat.regexp_string {|\begin{document}|} in
   let run s =
     let body =
       try
-        let idx = Str.search_forward re_begin_doc2 s 0 in
+        let _mr, idx = Re_compat.search_forward re_begin_doc2 s 0 in
         let start = idx + 16 in
         if start < String.length s then
           String.sub s start (String.length s - start)
@@ -2421,21 +2425,25 @@ let l1_l3_002_rule : rule =
 
 (* L3-003: Expl3 and etoolbox patch macros combined *)
 let l1_l3_003_rule : rule =
-  let re_expl3 = Str.regexp {|\\ExplSyntaxOn\|\\[a-z]+_[a-z_]+:[a-zA-Z]|} in
+  let re_expl3 =
+    Re_compat.regexp {|\\ExplSyntaxOn\|\\[a-z]+_[a-z_]+:[a-zA-Z]|}
+  in
   let re_etoolbox =
-    Str.regexp
+    Re_compat.regexp
       {|\\patchcmd\|\\apptocmd\|\\pretocmd\|\\robustify\|\\AtBeginEnvironment|}
   in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3 s 0);
+        let _mr, _ = Re_compat.search_forward re_expl3 s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_etoolbox =
       try
-        ignore (Str.search_forward re_etoolbox s 0);
+        let _mr, _ = Re_compat.search_forward re_etoolbox s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2453,7 +2461,7 @@ let l1_l3_003_rule : rule =
 
 (* L3-004: Undocumented \__module_internal:N used *)
 let l1_l3_004_rule : rule =
-  let re = Str.regexp {|\\__[a-z_]+:[a-zA-Z]*|} in
+  let re = Re_compat.regexp {|\\__[a-z_]+:[a-zA-Z]*|} in
   let run s =
     let cnt = count_re_matches re s in
     if cnt > 0 then
@@ -2470,12 +2478,13 @@ let l1_l3_004_rule : rule =
 
 (* L3-005: Missing \ExplSyntaxOn guard around expl3 code *)
 let l1_l3_005_rule : rule =
-  let re_expl3_func = Str.regexp {|\\[a-z]+_[a-z_]+:[nNoVvxfeTFpw]+|} in
-  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let re_expl3_func = Re_compat.regexp {|\\[a-z]+_[a-z_]+:[nNoVvxfeTFpw]+|} in
+  let re_syntax_on = Re_compat.regexp_string {|\ExplSyntaxOn|} in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_expl3_func s 0);
+        let _mr, _ = Re_compat.search_forward re_expl3_func s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2483,7 +2492,8 @@ let l1_l3_005_rule : rule =
     else
       let has_guard =
         try
-          ignore (Str.search_forward re_syntax_on s 0);
+          let _mr, _ = Re_compat.search_forward re_syntax_on s 0 in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -2501,21 +2511,21 @@ let l1_l3_005_rule : rule =
 
 (* L3-006: Expl3 variable clobbers package macro name *)
 let l1_l3_006_rule : rule =
-  let re_pkg = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{\([^}]+\)}|} in
-  let re_var = Str.regexp {|\\[lg]_\([a-z]+\)_[a-z_]+:[a-zA-Z]*|} in
+  let re_pkg = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{\([^}]+\)}|} in
+  let re_var = Re_compat.regexp {|\\[lg]_\([a-z]+\)_[a-z_]+:[a-zA-Z]*|} in
   let run s =
     let pkgs = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re_pkg s !i in
-         let pkg_list = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward re_pkg s !i in
+         let pkg_list = Re_compat.matched_group _mr 2 s in
          List.iter
            (fun p ->
              let p = String.trim p in
              if String.length p > 0 then pkgs := p :: !pkgs)
            (String.split_on_char ',' pkg_list);
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !pkgs = [] then None
@@ -2524,10 +2534,10 @@ let l1_l3_006_rule : rule =
       let j = ref 0 in
       (try
          while true do
-           let _ = Str.search_forward re_var s !j in
-           let var_prefix = Str.matched_group 1 s in
+           let _mr, _ = Re_compat.search_forward re_var s !j in
+           let var_prefix = Re_compat.matched_group _mr 1 s in
            if List.mem var_prefix !pkgs then incr cnt;
-           j := Str.match_end ()
+           j := Re_compat.match_end _mr
          done
        with Not_found -> ());
       if !cnt > 0 then
@@ -2544,12 +2554,15 @@ let l1_l3_006_rule : rule =
 
 (* L3-007: Mix of camelCase and snake_case in expl3 names *)
 let l1_l3_007_rule : rule =
-  let re_camel = Str.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|} in
-  let re_syntax_on = Str.regexp_string {|\ExplSyntaxOn|} in
+  let re_camel =
+    Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|}
+  in
+  let re_syntax_on = Re_compat.regexp_string {|\ExplSyntaxOn|} in
   let run s =
     let has_expl3 =
       try
-        ignore (Str.search_forward re_syntax_on s 0);
+        let _mr, _ = Re_compat.search_forward re_syntax_on s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2600,10 +2613,10 @@ let l1_l3_009_rule : rule =
 (* L3-011: Engine-branch uses pdfTeX primitive in LuaTeX or XeTeX path *)
 let l1_l3_011_rule : rule =
   let re_luatex_branch =
-    Str.regexp {|\\sys_if_engine_luatex:T\|\\ifluatex\|\\ifLuaTeX|}
+    Re_compat.regexp {|\\sys_if_engine_luatex:T\|\\ifluatex\|\\ifLuaTeX|}
   in
   let re_xetex_branch =
-    Str.regexp {|\\sys_if_engine_xetex:T\|\\ifxetex\|\\ifXeTeX|}
+    Re_compat.regexp {|\\sys_if_engine_xetex:T\|\\ifxetex\|\\ifXeTeX|}
   in
   let pdftex_prims =
     [
@@ -2620,13 +2633,15 @@ let l1_l3_011_rule : rule =
   let run s =
     let has_lua =
       try
-        ignore (Str.search_forward re_luatex_branch s 0);
+        let _mr, _ = Re_compat.search_forward re_luatex_branch s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_xe =
       try
-        ignore (Str.search_forward re_xetex_branch s 0);
+        let _mr, _ = Re_compat.search_forward re_xetex_branch s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -2650,7 +2665,7 @@ let l1_l3_011_rule : rule =
 (* CMD-001: Command \newcommand defined but never used *)
 let l1_cmd_001_rule : rule =
   let def_re =
-    Str.regexp
+    Re_compat.regexp
       "\\\\\\(newcommand\\|renewcommand\\)[ \t\n]*{?\\\\\\([a-zA-Z]+\\)}?"
   in
   let find_substring s pat from =
@@ -2664,17 +2679,17 @@ let l1_cmd_001_rule : rule =
       in
       loop from
   in
-  let def_ctx_re = Str.regexp {|\\newcommand\|\\renewcommand|} in
+  let def_ctx_re = Re_compat.regexp {|\\newcommand\|\\renewcommand|} in
   let run s =
     (* Collect all defined command names *)
     let defs = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward def_re s !i in
-         let name = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward def_re s !i in
+         let name = Re_compat.matched_group _mr 2 s in
          defs := name :: !defs;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     (* Check each defined name for usage elsewhere *)
@@ -2704,7 +2719,7 @@ let l1_cmd_001_rule : rule =
                     let start = max 0 (pos - 15) in
                     let ctx = String.sub s start (pos - start) in
                     try
-                      let _ = Str.search_forward def_ctx_re ctx 0 in
+                      let _mr, _ = Re_compat.search_forward def_ctx_re ctx 0 in
                       true
                     with Not_found -> false
                   in
@@ -2765,7 +2780,7 @@ let l1_cmd_003_rule : rule =
     ]
   in
   let def_re =
-    Str.regexp
+    Re_compat.regexp
       "\\\\\\(newcommand\\|renewcommand\\)[ \t\n]*{?\\\\\\([a-zA-Z]+\\)}?"
   in
   let run s =
@@ -2773,10 +2788,10 @@ let l1_cmd_003_rule : rule =
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward def_re s !i in
-         let name = Str.matched_group 2 s in
+         let _mr, _ = Re_compat.search_forward def_re s !i in
+         let name = Re_compat.matched_group _mr 2 s in
          if List.mem name known_macros then incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then

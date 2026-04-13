@@ -13,11 +13,11 @@
    intentional — a mechanical rename would risk breaking cross-references in Coq
    proofs, golden files, and specs.
 
-   PERF NOTE (W102 audit): ~219 Str.regexp calls are inside `let run` closures
-   and recompile on every invocation. Hoisting them before the closure would
-   avoid recompilation. Current p95=2.8ms vs 20ms gate (86% headroom), so this
-   is not urgent. A future refactor should move `let re = Str.regexp ... in`
-   bindings before the `let run s =` line in each rule where possible.
+   PERF NOTE (W102 audit): ~219 Re_compat.regexp calls are inside `let run`
+   closures and recompile on every invocation. Hoisting them before the closure
+   would avoid recompilation. Current p95=2.8ms vs 20ms gate (86% headroom), so
+   this is not urgent. A future refactor should move `let re = Re_compat.regexp
+   ... in` bindings before the `let run s =` line in each rule where possible.
    ══════════════════════════════════════════════════════════════════════ *)
 
 include Validators_common
@@ -275,13 +275,9 @@ let run_all (src : string) : result list =
 let _ml_confidence_map :
     (string, Evidence_scoring.ml_rule_confidence) Hashtbl.t lazy_t =
   lazy
-    (let path =
-       match Sys.getenv_opt "LP_ML_CONFIDENCE_MAP" with
-       | Some p -> p
-       | None -> "data/ml_confidence_map.json"
-     in
-     if Sys.file_exists path then Evidence_scoring.load_ml_confidence_map path
-     else Hashtbl.create 0)
+    (match Sys.getenv_opt "LP_ML_CONFIDENCE_MAP" with
+    | Some p when Sys.file_exists p -> Evidence_scoring.load_ml_confidence_map p
+    | _ -> Hashtbl.create 0)
 
 let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
     Evidence_scoring.scored_result list =

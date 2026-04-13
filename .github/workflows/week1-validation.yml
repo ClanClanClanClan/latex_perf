@@ -78,7 +78,7 @@ jobs:
 
     - uses: ./.github/actions/setup-ocaml-env
       with:
-        opam-packages: dune yojson angstrom uutf ppx_deriving
+        opam-packages: dune re yojson angstrom uutf ppx_deriving
 
     - name: Build latex-parse components
       run: |

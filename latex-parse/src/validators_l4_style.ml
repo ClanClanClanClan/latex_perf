@@ -74,14 +74,21 @@ let word_count (s : string) : int =
 
 (** Extract the body content of \\section{...}, \\subsection{...} etc. *)
 let extract_heading_titles (s : string) : string list =
-  let re = Str.regexp {|\\[sub]*section\*?[ \t\n]*\(\[[^]]*\][ \t\n]*\)?\{|} in
+  let re =
+    Re_compat.regexp {|\\[sub]*section\*?[ \t\n]*\(\[[^]]*\][ \t\n]*\)?\{|}
+  in
   let acc = ref [] in
   let len = String.length s in
   let rec find start =
-    match try Some (Str.search_forward re s start) with Not_found -> None with
+    match
+      try
+        let _mr, _p = Re_compat.search_forward re s start in
+        Some (_mr, _p)
+      with Not_found -> None
+    with
     | None -> ()
-    | Some _pos ->
-        let mend = Str.match_end () in
+    | Some (_mr, _pos) ->
+        let mend = Re_compat.match_end _mr in
         (* find the matching closing brace *)
         let depth = ref 1 in
         let j = ref mend in
@@ -97,8 +104,8 @@ let extract_heading_titles (s : string) : string list =
 
 (** Split text into paragraphs (separated by blank lines). *)
 let split_paragraphs (s : string) : string list =
-  let re = Str.regexp "\n[ \t]*\n" in
-  let parts = Str.split re s in
+  let re = Re_compat.regexp "\n[ \t]*\n" in
+  let parts = Re_compat.split re s in
   List.filter (fun p -> String.length (String.trim p) > 0) parts
 
 (** First word of a sentence after trimming. *)
@@ -158,7 +165,7 @@ let r_style_006 : rule =
 
 (* STYLE-008: Sentence starts with mathematical symbol *)
 let r_style_008 : rule =
-  let re = Str.regexp {|\. \$|} in
+  let re = Re_compat.regexp {|\. \$|} in
   let run s =
     let text = strip_comments s in
     (* We detect ". $" pattern — a dollar sign after sentence-ending period *)
@@ -166,9 +173,10 @@ let r_style_008 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -185,16 +193,17 @@ let r_style_008 : rule =
 
 (* STYLE-013: Sentence starts with numeric figure *)
 let r_style_013 : rule =
-  let re = Str.regexp {|\. +[0-9]|} in
+  let re = Re_compat.regexp {|\. +[0-9]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -281,16 +290,17 @@ let r_style_015 : rule =
 
 (* STYLE-016: Latin abbreviation (e.g., i.e.) missing comma *)
 let r_style_016 : rule =
-  let re = Str.regexp {|[ei]\.g\.\([^,]\)\|i\.e\.\([^,]\)|} in
+  let re = Re_compat.regexp {|[ei]\.g\.\([^,]\)\|i\.e\.\([^,]\)|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -330,7 +340,7 @@ let r_style_017 : rule =
 
 (* STYLE-019: Multiple consecutive headings without intervening text *)
 let r_style_019 : rule =
-  let heading_re = Str.regexp {|\\[sub]*section\*?[ \t\n]*\({[^}]*}\)|} in
+  let heading_re = Re_compat.regexp {|\\[sub]*section\*?[ \t\n]*\({[^}]*}\)|} in
   let run s =
     let text = strip_comments s in
     (* Find all heading positions *)
@@ -338,9 +348,9 @@ let r_style_019 : rule =
     let start = ref 0 in
     (try
        while true do
-         let pos = Str.search_forward heading_re text !start in
+         let _mr, pos = Re_compat.search_forward heading_re text !start in
          positions := pos :: !positions;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let positions = List.rev !positions in
@@ -349,8 +359,9 @@ let r_style_019 : rule =
       | [] | [ _ ] -> cnt
       | a :: (b :: _ as rest) ->
           (* Find end of first heading *)
-          ignore (Str.search_forward heading_re text a);
-          let a_end = Str.match_end () in
+          let _mr, _ = Re_compat.search_forward heading_re text a in
+          ignore _mr;
+          let a_end = Re_compat.match_end _mr in
           (* Check if text between a_end and b is only whitespace *)
           let between = String.sub text a_end (b - a_end) in
           let trimmed = String.trim between in
@@ -419,12 +430,12 @@ let r_style_024 : rule =
 
 (* STYLE-026: Repeated word (the the) *)
 let r_style_026 : rule =
-  let re_whitespace = Str.regexp "[ \t\n\r]+" in
+  let re_whitespace = Re_compat.regexp "[ \t\n\r]+" in
   let run s =
     let text =
       String.lowercase_ascii (strip_comments (strip_math_segments s))
     in
-    let words = Str.split re_whitespace text in
+    let words = Re_compat.split re_whitespace text in
     let rec check cnt = function
       | [] | [ _ ] -> cnt
       | a :: (b :: _ as rest) ->
@@ -492,15 +503,16 @@ let r_style_030 : rule =
 
 (* STYLE-031: Heading number without title *)
 let r_style_031 : rule =
-  let re = Str.regexp {|\\[sub]*section\*?[ \t\n]*{[0-9. ]*}|} in
+  let re = Re_compat.regexp {|\\[sub]*section\*?[ \t\n]*{[0-9. ]*}|} in
   let run s =
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re s !start);
+         let _mr, _ = Re_compat.search_forward re s !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -517,18 +529,19 @@ let r_style_031 : rule =
 
 (* STYLE-033: Space before citation bracket *)
 let r_style_033 : rule =
-  let re = Str.regexp {| \\cite[^a-zA-Z]|} in
+  let re = Re_compat.regexp {| \\cite[^a-zA-Z]|} in
   let run s =
     let text = strip_comments s in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          (* check it's not a tilde ~ before \cite *)
-         let pos = Str.match_beginning () in
+         let pos = Re_compat.match_beginning _mr in
          if pos = 0 || text.[pos - 1] <> '~' then incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -620,16 +633,17 @@ let r_style_036 : rule =
 
 (* STYLE-037: Sentence starts with conjunction 'And' or 'But' *)
 let r_style_037 : rule =
-  let re = Str.regexp {|\. +\(And\|But\) +|} in
+  let re = Re_compat.regexp {|\. +\(And\|But\) +|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -796,19 +810,21 @@ let r_style_049 : rule =
 
 (* STYLE-001: Inconsistent Oxford-comma usage *)
 let r_style_001 : rule =
-  let re_oxford = Str.regexp {|, [a-zA-Z]+, and |} in
-  let re_no_oxford = Str.regexp {|, [a-zA-Z]+ and |} in
+  let re_oxford = Re_compat.regexp {|, [a-zA-Z]+, and |} in
+  let re_no_oxford = Re_compat.regexp {|, [a-zA-Z]+ and |} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let has_oxford =
       try
-        ignore (Str.search_forward re_oxford text 0);
+        let _mr, _ = Re_compat.search_forward re_oxford text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_no_oxford =
       try
-        ignore (Str.search_forward re_no_oxford text 0);
+        let _mr, _ = Re_compat.search_forward re_no_oxford text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -868,19 +884,21 @@ let r_style_002 : rule =
 
 (* STYLE-005: First-person 'we' inconsistent with 'I' *)
 let r_style_005 : rule =
-  let re_we = Str.regexp {| [Ww]e |} in
-  let re_i = Str.regexp {| I [a-z]\| I,\| I\.|} in
+  let re_we = Re_compat.regexp {| [Ww]e |} in
+  let re_i = Re_compat.regexp {| I [a-z]\| I,\| I\.|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let has_we =
       try
-        ignore (Str.search_forward re_we text 0);
+        let _mr, _ = Re_compat.search_forward re_we text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_i =
       try
-        ignore (Str.search_forward re_i text 0);
+        let _mr, _ = Re_compat.search_forward re_i text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -898,17 +916,18 @@ let r_style_005 : rule =
 
 (* STYLE-007: Bullet-list items inconsistent punctuation *)
 let r_style_007 : rule =
-  let re_item = Str.regexp {|\\item\([^\\]*\)|} in
+  let re_item = Re_compat.regexp {|\\item\([^\\]*\)|} in
   let run s =
     let text = strip_comments s in
     let items = ref [] in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_item text !start);
-         let body = String.trim (Str.matched_group 1 text) in
+         let _mr, _ = Re_compat.search_forward re_item text !start in
+         ignore _mr;
+         let body = String.trim (Re_compat.matched_group _mr 1 text) in
          if String.length body > 0 then items := body :: !items;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let items = !items in
@@ -963,19 +982,21 @@ let r_style_009 : rule =
 
 (* STYLE-010: First-person singular 'I' in multi-author paper *)
 let r_style_010 : rule =
-  let re_i = Str.regexp {| I \| I,\| I\.|} in
-  let re_multi = Str.regexp {|\\author{[^}]*and[^}]*}|} in
+  let re_i = Re_compat.regexp {| I \| I,\| I\.|} in
+  let re_multi = Re_compat.regexp {|\\author{[^}]*and[^}]*}|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let multi =
       try
-        ignore (Str.search_forward re_multi s 0);
+        let _mr, _ = Re_compat.search_forward re_multi s 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_i =
       try
-        ignore (Str.search_forward re_i text 0);
+        let _mr, _ = Re_compat.search_forward re_i text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -993,19 +1014,21 @@ let r_style_010 : rule =
 
 (* STYLE-011: Hyphen vs en-dash inconsistency in ranges *)
 let r_style_011 : rule =
-  let re_hyphen_range = Str.regexp {|[0-9]-[0-9]|} in
-  let re_endash_range = Str.regexp {|[0-9]--[0-9]|} in
+  let re_hyphen_range = Re_compat.regexp {|[0-9]-[0-9]|} in
+  let re_endash_range = Re_compat.regexp {|[0-9]--[0-9]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let has_hyphen =
       try
-        ignore (Str.search_forward re_hyphen_range text 0);
+        let _mr, _ = Re_compat.search_forward re_hyphen_range text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_endash =
       try
-        ignore (Str.search_forward re_endash_range text 0);
+        let _mr, _ = Re_compat.search_forward re_endash_range text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -1024,7 +1047,8 @@ let r_style_011 : rule =
 (* STYLE-018: Dangling reference word 'this' *)
 let r_style_018 : rule =
   let re =
-    Str.regexp {|[Tt]his \(is\|was\|has\|shows\|suggests\|means\|implies\) |}
+    Re_compat.regexp
+      {|[Tt]his \(is\|was\|has\|shows\|suggests\|means\|implies\) |}
   in
   let run s =
     let text = strip_comments (strip_math_segments s) in
@@ -1032,9 +1056,10 @@ let r_style_018 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1051,17 +1076,18 @@ let r_style_018 : rule =
 
 (* STYLE-020: Acronym defined but never used *)
 let r_style_020 : rule =
-  let re_def = Str.regexp {|(\([A-Z][A-Z]+\))|} in
+  let re_def = Re_compat.regexp {|(\([A-Z][A-Z]+\))|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let defs = ref [] in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_def text !start);
-         let acr = Str.matched_group 1 text in
+         let _mr, _ = Re_compat.search_forward re_def text !start in
+         ignore _mr;
+         let acr = Re_compat.matched_group _mr 1 text in
          defs := acr :: !defs;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cnt =
@@ -1087,25 +1113,26 @@ let r_style_020 : rule =
 
 (* STYLE-021: Acronym used before definition *)
 let r_style_021 : rule =
-  let re_def = Str.regexp {|(\([A-Z][A-Z]+\))|} in
-  let re_acr = Str.regexp {|[^a-zA-Z]\([A-Z][A-Z][A-Z]+\)[^a-zA-Z]|} in
+  let re_def = Re_compat.regexp {|(\([A-Z][A-Z]+\))|} in
+  let re_acr = Re_compat.regexp {|[^a-zA-Z]\([A-Z][A-Z][A-Z]+\)[^a-zA-Z]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     (* Find first definition *)
     let first_def_pos = ref max_int in
     let acr_name = ref "" in
     (try
-       ignore (Str.search_forward re_def text 0);
-       first_def_pos := Str.match_beginning ();
-       acr_name := Str.matched_group 1 text
+       let _mr, _ = Re_compat.search_forward re_def text 0 in
+       ignore _mr;
+       first_def_pos := Re_compat.match_beginning _mr;
+       acr_name := Re_compat.matched_group _mr 1 text
      with Not_found -> ());
     if !first_def_pos = max_int then None
     else
       (* Check if the acronym appears before definition *)
       let used_before =
         try
-          let pos = Str.search_forward re_acr text 0 in
-          let found = Str.matched_group 1 text in
+          let _mr, pos = Re_compat.search_forward re_acr text 0 in
+          let found = Re_compat.matched_group _mr 1 text in
           pos < !first_def_pos && found = !acr_name
         with Not_found -> false
       in
@@ -1123,16 +1150,17 @@ let r_style_021 : rule =
 
 (* STYLE-022: Serial comma missing in three-item list *)
 let r_style_022 : rule =
-  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let re = Re_compat.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1171,7 +1199,7 @@ let r_style_025 : rule =
 
 (* STYLE-027: Overuse of adverbs (-ly > 5% of words) *)
 let r_style_027 : rule =
-  let re_ly = Str.regexp {|[a-zA-Z]+ly |} in
+  let re_ly = Re_compat.regexp {|[a-zA-Z]+ly |} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let total = word_count text in
@@ -1181,9 +1209,10 @@ let r_style_027 : rule =
       let start = ref 0 in
       (try
          while true do
-           ignore (Str.search_forward re_ly text !start);
+           let _mr, _ = Re_compat.search_forward re_ly text !start in
+           ignore _mr;
            incr cnt;
-           start := Str.match_end ()
+           start := Re_compat.match_end _mr
          done
        with Not_found -> ());
       let ratio = float_of_int !cnt /. float_of_int total in
@@ -1203,16 +1232,17 @@ let r_style_027 : rule =
 
 (* STYLE-028: Equation referenced without adjoining punctuation *)
 let r_style_028 : rule =
-  let re = Str.regexp {|\\eqref{[^}]*} [A-Za-z]|} in
+  let re = Re_compat.regexp {|\\eqref{[^}]*} [A-Za-z]|} in
   let run s =
     let text = strip_comments s in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1260,16 +1290,17 @@ let r_ce_001 : rule =
 
 (* CE-002: Canadian EN requires Oxford comma *)
 let r_ce_002 : rule =
-  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let re = Re_compat.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1389,19 +1420,21 @@ let r_lang_011 : rule =
 
 (* LANG-012: babel language option mismatches \selectlanguage *)
 let r_lang_012 : rule =
-  let re_babel = Str.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
-  let re_select = Str.regexp {|\\selectlanguage{\([a-z]+\)}|} in
+  let re_babel = Re_compat.regexp {|\\usepackage\[\([a-z]+\)\]{babel}|} in
+  let re_select = Re_compat.regexp {|\\selectlanguage{\([a-z]+\)}|} in
   let run s =
     let babel_lang =
       try
-        ignore (Str.search_forward re_babel s 0);
-        Some (Str.matched_group 1 s)
+        let _mr, _ = Re_compat.search_forward re_babel s 0 in
+        ignore _mr;
+        Some (Re_compat.matched_group _mr 1 s)
       with Not_found -> None
     in
     let select_lang =
       try
-        ignore (Str.search_forward re_select s 0);
-        Some (Str.matched_group 1 s)
+        let _mr, _ = Re_compat.search_forward re_select s 0 in
+        ignore _mr;
+        Some (Re_compat.matched_group _mr 1 s)
       with Not_found -> None
     in
     match (babel_lang, select_lang) with
@@ -1421,21 +1454,23 @@ let r_lang_012 : rule =
 
 (* LANG-014: BrE -ize/-ise inconsistency *)
 let r_lang_014 : rule =
-  let re_ize = Str.regexp {|[a-z]ize[ds .,\n]|} in
-  let re_ise = Str.regexp {|[a-z]ise[ds .,\n]|} in
+  let re_ize = Re_compat.regexp {|[a-z]ize[ds .,\n]|} in
+  let re_ise = Re_compat.regexp {|[a-z]ise[ds .,\n]|} in
   let run s =
     let text =
       String.lowercase_ascii (strip_comments (strip_math_segments s))
     in
     let has_ize =
       try
-        ignore (Str.search_forward re_ize text 0);
+        let _mr, _ = Re_compat.search_forward re_ize text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_ise =
       try
-        ignore (Str.search_forward re_ise text 0);
+        let _mr, _ = Re_compat.search_forward re_ise text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -1454,16 +1489,17 @@ let r_lang_014 : rule =
 (* LANG-015: Serial-comma rule violated *)
 let r_lang_015 : rule =
   (* Reuses STYLE-022 logic but as LANG-level rule *)
-  let re = Str.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
+  let re = Re_compat.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -1509,7 +1545,7 @@ let r_lang_016 : rule =
 (* STYLE-003: Passive voice in > 20% of sentences *)
 let r_style_003 : rule =
   let re_passive =
-    Str.regexp {|\(was\|were\|been\|being\|is\|are\) +[a-z]+ed |}
+    Re_compat.regexp {|\(was\|were\|been\|being\|is\|are\) +[a-z]+ed |}
   in
   let run s =
     let text = strip_comments (strip_math_segments s) in
@@ -1522,7 +1558,8 @@ let r_style_003 : rule =
           (fun acc sent ->
             if
               try
-                ignore (Str.search_forward re_passive sent 0);
+                let _mr, _ = Re_compat.search_forward re_passive sent 0 in
+                ignore _mr;
                 true
               with Not_found -> false
             then acc + 1
@@ -1546,19 +1583,21 @@ let r_style_003 : rule =
 
 (* STYLE-012: That/which relative-clause misuse *)
 let r_style_012 : rule =
-  let re = Str.regexp {|, which [a-z]|} in
-  let re_that = Str.regexp {|that [a-z]|} in
+  let re = Re_compat.regexp {|, which [a-z]|} in
+  let re_that = Re_compat.regexp {|that [a-z]|} in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let has_which =
       try
-        ignore (Str.search_forward re text 0);
+        let _mr, _ = Re_compat.search_forward re text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
     let has_that =
       try
-        ignore (Str.search_forward re_that text 0);
+        let _mr, _ = Re_compat.search_forward re_that text 0 in
+        ignore _mr;
         true
       with Not_found -> false
     in
@@ -1607,7 +1646,7 @@ let r_style_029 : rule =
 
 (* STYLE-032: Bullet list mixes sentence-case and title-case *)
 let r_style_032 : rule =
-  let re_item = Str.regexp {|\\item +\([A-Za-z]\)|} in
+  let re_item = Re_compat.regexp {|\\item +\([A-Za-z]\)|} in
   let run s =
     let text = strip_comments s in
     let uppers = ref 0 in
@@ -1615,10 +1654,11 @@ let r_style_032 : rule =
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re_item text !start);
-         let c = (Str.matched_group 1 text).[0] in
+         let _mr, _ = Re_compat.search_forward re_item text !start in
+         ignore _mr;
+         let c = (Re_compat.matched_group _mr 1 text).[0] in
          if c >= 'A' && c <= 'Z' then incr uppers else incr lowers;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !uppers > 0 && !lowers > 0 then
@@ -1635,15 +1675,16 @@ let r_style_032 : rule =
 
 (* STYLE-038: Footnote paragraph exceeds 80 words *)
 let r_style_038 : rule =
-  let re = Str.regexp {|\\footnote{|} in
+  let re = Re_compat.regexp {|\\footnote{|} in
   let run s =
     let text = strip_comments s in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
-         let brace_start = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
+         let brace_start = Re_compat.match_end _mr in
          let len = String.length text in
          let depth = ref 1 in
          let j = ref brace_start in
@@ -1674,15 +1715,16 @@ let r_style_038 : rule =
 
 (* STYLE-039: Figure-caption ending punctuation inconsistent *)
 let r_style_039 : rule =
-  let re = Str.regexp {|\\caption{|} in
+  let re = Re_compat.regexp {|\\caption{|} in
   let run s =
     let text = strip_comments s in
     let endings = ref [] in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
-         let brace_start = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
+         let brace_start = Re_compat.match_end _mr in
          let len = String.length text in
          let depth = ref 1 in
          let j = ref brace_start in
@@ -1721,15 +1763,16 @@ let r_style_039 : rule =
 
 (* STYLE-041: Footnote lacks terminal period *)
 let r_style_041 : rule =
-  let re = Str.regexp {|\\footnote{|} in
+  let re = Re_compat.regexp {|\\footnote{|} in
   let run s =
     let text = strip_comments s in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
-         let brace_start = Str.match_end () in
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
+         let brace_start = Re_compat.match_end _mr in
          let len = String.length text in
          let depth = ref 1 in
          let j = ref brace_start in
@@ -1794,16 +1837,19 @@ let r_style_043 : rule =
    {is,was,has,shows,suggests,means,implies}; STYLE-044 checks ONLY the modal
    auxiliaries to avoid overlap. *)
 let r_style_044 : rule =
-  let re = Str.regexp {|[Tt]his \(can\|will\|may\|might\|could\|should\) |} in
+  let re =
+    Re_compat.regexp {|[Tt]his \(can\|will\|may\|might\|could\|should\) |}
+  in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = ref 0 in
     let start = ref 0 in
     (try
        while true do
-         ignore (Str.search_forward re text !start);
+         let _mr, _ = Re_compat.search_forward re text !start in
+         ignore _mr;
          incr cnt;
-         start := Str.match_end ()
+         start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then

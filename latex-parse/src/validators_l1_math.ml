@@ -137,7 +137,7 @@ let l1_math_011_rule : rule =
    sequences of 2+ lowercase letters in math that look like function names but
    aren't standard operators *)
 let l1_math_012_rule : rule =
-  let re = Str.regexp {|\([a-z][a-z]+\)|} in
+  let re = Re_compat.regexp {|\([a-z][a-z]+\)|} in
   let known_operators =
     [
       "sin";
@@ -181,9 +181,9 @@ let l1_math_012_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
-            let matched = Str.matched_group 1 seg in
-            let next_i = Str.match_end () in
+            let _mr, pos = Re_compat.search_forward re seg !i in
+            let matched = Re_compat.matched_group _mr 1 seg in
+            let next_i = Re_compat.match_end _mr in
             (* Skip if preceded by backslash or inside \text{}/\mathrm{} *)
             let preceded_by_backslash = pos > 0 && seg.[pos - 1] = '\\' in
             let is_known = List.mem matched known_operators in
@@ -221,7 +221,7 @@ let l1_math_012_rule : rule =
 (* MATH-013: Differential d not typeset roman — detects bare 'd' before a
    variable in integrands, e.g. \int f(x) dx where d should be \mathrm{d} *)
 let l1_math_013_rule : rule =
-  let re = Str.regexp {| d\([A-Za-z]\)|} in
+  let re = Re_compat.regexp {| d\([A-Za-z]\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -237,8 +237,8 @@ let l1_math_013_rule : rule =
           let i = ref 0 in
           try
             while true do
-              let pos = Str.search_forward re seg !i in
-              let next_i = Str.match_end () in
+              let _mr, pos = Re_compat.search_forward re seg !i in
+              let next_i = Re_compat.match_end _mr in
               (* Make sure it's not already \mathrm{d} *)
               let prefix_start = max 0 (pos - 9) in
               let prefix =
@@ -314,7 +314,7 @@ let l1_math_015_rule : rule =
 (* MATH-016: Nested subscripts without braces — e.g. x_i_j instead of x_{i_j} or
    x_{i,j} *)
 let l1_math_016_rule : rule =
-  let re = Str.regexp {|_\([A-Za-z0-9]\)_|} in
+  let re = Re_compat.regexp {|_\([A-Za-z0-9]\)_|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -426,7 +426,7 @@ let l1_math_017_rule : rule =
 
 (* MATH-018: π written numerically as 3.14... in math *)
 let l1_math_018_rule : rule =
-  let re = Str.regexp {|3\.14[0-9]*|} in
+  let re = Re_compat.regexp {|3\.14[0-9]*|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -447,7 +447,9 @@ let l1_math_018_rule : rule =
    specifically for the pattern where _ immediately follows ^ without braces in
    inline math, e.g. $\sum^n_i$ instead of $\sum_{i}^{n}$ *)
 let l1_math_019_rule : rule =
-  let re = Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|} in
+  let re =
+    Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
   let run s =
     let inline_segs = extract_inline_math_segments s in
     let cnt = ref 0 in
@@ -467,7 +469,7 @@ let l1_math_019_rule : rule =
 (* MATH-020: Missing \cdot between coefficient and vector — detects digit
    immediately followed by \vec or \mathbf without \cdot *)
 let l1_math_020_rule : rule =
-  let re = Str.regexp {|[0-9]\(\\vec{\|\\mathbf{\)|} in
+  let re = Re_compat.regexp {|[0-9]\(\\vec{\|\\mathbf{\)|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -549,18 +551,20 @@ let l1_math_022_rule : rule =
 (* MATH-025: align environment with one column — use equation instead. Detects
    \begin{align}...\end{align} blocks with no & inside. *)
 let l1_math_025_rule : rule =
-  let re_begin = Str.regexp {|\\begin{align\*?}|} in
-  let re_end = Str.regexp {|\\end{align\*?}|} in
+  let re_begin = Re_compat.regexp {|\\begin{align\*?}|} in
+  let re_end = Re_compat.regexp {|\\end{align\*?}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     let n = String.length s in
     (try
        while !i < n do
-         let pos = Str.search_forward re_begin s !i in
-         let after_begin = pos + String.length (Str.matched_string s) in
+         let _mr, pos = Re_compat.search_forward re_begin s !i in
+         let after_begin =
+           pos + String.length (Re_compat.matched_string _mr s)
+         in
          try
-           let end_pos = Str.search_forward re_end s after_begin in
+           let _mr, end_pos = Re_compat.search_forward re_end s after_begin in
            let body = String.sub s after_begin (end_pos - after_begin) in
            if not (String.contains body '&') then incr cnt;
            i := end_pos + 1
@@ -582,15 +586,15 @@ let l1_math_025_rule : rule =
 (* MATH-028: Array environment inside math without column alignment spec.
    Detects \begin{array} without a brace argument following. *)
 let l1_math_028_rule : rule =
-  let re = Str.regexp {|\\begin{array}[^{]|} in
+  let re = Re_compat.regexp {|\\begin{array}[^{]|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     (* Also check \begin{array} at end of string with nothing after *)
@@ -614,15 +618,15 @@ let l1_math_028_rule : rule =
 (* MATH-029: Use of eqnarray / eqnarray* instead of align / align*. eqnarray is
    deprecated — spacing around = is wrong. *)
 let l1_math_029_rule : rule =
-  let re = Str.regexp {|\\begin{eqnarray\*?}|} in
+  let re = Re_compat.regexp {|\\begin{eqnarray\*?}|} in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
-         let _ = Str.search_forward re s !i in
+         let _mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Str.match_end ()
+         i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
@@ -660,7 +664,7 @@ let l1_math_030_rule : rule =
 
 (* MATH-031: Operator spacing error — missing \; before \text in math *)
 let l1_math_031_rule : rule =
-  let re = Str.regexp {|[A-Za-z0-9}]\\text{|} in
+  let re = Re_compat.regexp {|[A-Za-z0-9}]\\text{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -760,7 +764,7 @@ let l1_math_034_rule : rule =
 (* MATH-035: Multiple subscripts stacked vertically without braces — a_{i}_{j}
    pattern instead of a_{i,j} *)
 let l1_math_035_rule : rule =
-  let re = Str.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)_|} in
+  let re = Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)_|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -780,7 +784,7 @@ let l1_math_035_rule : rule =
 (* MATH-036: Superfluous \mathrm{} around single letter — \mathrm{x} is overkill
    for one letter *)
 let l1_math_036_rule : rule =
-  let re = Str.regexp {|\\mathrm{[A-Za-z]}|} in
+  let re = Re_compat.regexp {|\\mathrm{[A-Za-z]}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -892,8 +896,8 @@ let l1_math_038_rule : rule =
 (* MATH-039: Stacked relational operators without \substack — detects patterns
    like \underset{x}{\overset{y}{=}} which should use \substack *)
 let l1_math_039_rule : rule =
-  let re = Str.regexp {|\\underset{[^}]*}{\\overset{|} in
-  let re2 = Str.regexp {|\\overset{[^}]*}{\\underset{|} in
+  let re = Re_compat.regexp {|\\underset{[^}]*}{\\overset{|} in
+  let re2 = Re_compat.regexp {|\\overset{[^}]*}{\\underset{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -916,7 +920,7 @@ let l1_math_039_rule : rule =
 (* MATH-040: Ellipsis \ldots used between operators on the center axis — should
    be \cdots for +, -, = etc. *)
 let l1_math_040_rule : rule =
-  let re = Str.regexp {|[+=<>-][ ]*\\ldots[ ]*[+=<>-]|} in
+  let re = Re_compat.regexp {|[+=<>-][ ]*\\ldots[ ]*[+=<>-]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -936,7 +940,7 @@ let l1_math_040_rule : rule =
 (* MATH-041: Integral limits written inline in display — use \limits or
    \displaystyle \int for display integrals *)
 let l1_math_041_rule : rule =
-  let re = Str.regexp {|\\int_|} in
+  let re = Re_compat.regexp {|\\int_|} in
   let run s =
     let inline_segs = extract_inline_math_segments s in
     let cnt = ref 0 in
@@ -960,7 +964,7 @@ let l1_math_041_rule : rule =
 (* MATH-042: Missing \, between number and unit in math — e.g. 5kg should be
    5\,\mathrm{kg} *)
 let l1_math_042_rule : rule =
-  let re = Str.regexp {|[0-9]\\mathrm{\|[0-9]\\text{\|[0-9]\\textrm{|} in
+  let re = Re_compat.regexp {|[0-9]\\mathrm{\|[0-9]\\text{\|[0-9]\\textrm{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -980,7 +984,7 @@ let l1_math_042_rule : rule =
 (* MATH-043: Use of \text instead of \operatorname for function names in math —
    \text{Var} should be \operatorname{Var} *)
 let l1_math_043_rule : rule =
-  let re = Str.regexp {|\\text{[A-Z][a-z]+}|} in
+  let re = Re_compat.regexp {|\\text{[A-Z][a-z]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1005,7 +1009,7 @@ let l1_math_043_rule : rule =
 (* MATH-044: Binary relation typed as text char — e.g. < for \le, = for \equiv,
    etc., when text < > appear in math outside of delimiters *)
 let l1_math_044_rule : rule =
-  let re = Str.regexp {|[^\\]<=\|[^\\]>=|} in
+  let re = Re_compat.regexp {|[^\\]<=\|[^\\]>=|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1072,7 +1076,7 @@ let l1_math_045_rule : rule =
 (* MATH-046: Ellipsis \ldots on relation axis — prefer \cdots between commas, +
    etc. *)
 let l1_math_046_rule : rule =
-  let re = Str.regexp {|,[ ]*\\ldots[ ]*,|} in
+  let re = Re_compat.regexp {|,[ ]*\\ldots[ ]*,|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1091,7 +1095,7 @@ let l1_math_046_rule : rule =
 
 (* MATH-047: Double superscript without braces — a^b^c is a TeX error *)
 let l1_math_047_rule : rule =
-  let re = Str.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)\^|} in
+  let re = Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)\^|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1111,7 +1115,7 @@ let l1_math_047_rule : rule =
 (* MATH-048: Boldface digits via \mathbf in math — \mathbf{1} etc. is typically
    unnecessary *)
 let l1_math_048_rule : rule =
-  let re = Str.regexp {|\\mathbf{[0-9]+}|} in
+  let re = Re_compat.regexp {|\\mathbf{[0-9]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1131,8 +1135,8 @@ let l1_math_048_rule : rule =
 (* MATH-049: Missing spacing around \times — detects a\times b without
    surrounding spaces *)
 let l1_math_049_rule : rule =
-  let re_no_space_before = Str.regexp {|[A-Za-z0-9}]\\times|} in
-  let re_no_space_after = Str.regexp {|\\times[A-Za-z0-9{]|} in
+  let re_no_space_before = Re_compat.regexp {|[A-Za-z0-9}]\\times|} in
+  let re_no_space_after = Re_compat.regexp {|\\times[A-Za-z0-9{]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1160,7 +1164,7 @@ let l1_math_049_rule : rule =
 (* MATH-050: Circumflex accent \hat on multi-letter argument — \hat{abc} should
    typically be \widehat{abc} *)
 let l1_math_050_rule : rule =
-  let re = Str.regexp {|\\hat{[A-Za-z][A-Za-z]+}|} in
+  let re = Re_compat.regexp {|\\hat{[A-Za-z][A-Za-z]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1334,7 +1338,7 @@ let l1_math_053_rule : rule =
 
 (* MATH-055: \mathcal for single character only — flag multi-char argument *)
 let l1_math_055_rule : rule =
-  let re = Str.regexp {|\\mathcal{[^}][^}]+}|} in
+  let re = Re_compat.regexp {|\\mathcal{[^}][^}]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1423,7 +1427,7 @@ let l1_math_057_rule : rule =
 
 (* MATH-058: Nested \text inside \text *)
 let l1_math_058_rule : rule =
-  let re = Str.regexp {|\\text{[^}]*\\text{|} in
+  let re = Re_compat.regexp {|\\text{[^}]*\\text{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1462,8 +1466,8 @@ let l1_math_065_rule : rule =
 
 (* MATH-066: \phantom used; suggest \hphantom or \vphantom *)
 let l1_math_066_rule : rule =
-  let re = Str.regexp {|\\phantom{|} in
-  let not_hv_re = Str.regexp {|\\[hv]phantom{|} in
+  let re = Re_compat.regexp {|\\phantom{|} in
+  let not_hv_re = Re_compat.regexp {|\\[hv]phantom{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1487,7 +1491,7 @@ let l1_math_066_rule : rule =
 
 (* MATH-068: Spacing around \mid missing *)
 let l1_math_068_rule : rule =
-  let re = Str.regexp "[^ \t\n]\\\\mid\\|\\\\mid[^ \t\n]" in
+  let re = Re_compat.regexp "[^ \t\n]\\\\mid\\|\\\\mid[^ \t\n]" in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1734,7 +1738,7 @@ let l1_math_105_rule : rule =
 
 (* MATH-056: \operatorname duplicated for same function *)
 let l1_math_056_rule : rule =
-  let re = Str.regexp {|\\operatorname{[^}]*}|} in
+  let re = Re_compat.regexp {|\\operatorname{[^}]*}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1744,10 +1748,10 @@ let l1_math_056_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re seg !i in
-            let m = Str.matched_string seg in
+            let _mr, _ = Re_compat.search_forward re seg !i in
+            let m = Re_compat.matched_string _mr seg in
             if List.mem m !names then incr cnt else names := m :: !names;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -1765,7 +1769,7 @@ let l1_math_056_rule : rule =
 
 (* MATH-059: Math accent \bar on group expression needs braces *)
 let l1_math_059_rule : rule =
-  let re = Str.regexp {|\\bar{[^}]*[ +\-=][^}]*}|} in
+  let re = Re_compat.regexp {|\\bar{[^}]*[ +\-=][^}]*}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1784,7 +1788,7 @@ let l1_math_059_rule : rule =
 
 (* MATH-060: Differential d typeset italic — detect bare d in integral *)
 let l1_math_060_rule : rule =
-  let re = Str.regexp {|\\int[^$]*[^\\]d[xyzt ]|} in
+  let re = Re_compat.regexp {|\\int[^$]*[^\\]d[xyzt ]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1810,7 +1814,7 @@ let l1_math_060_rule : rule =
 
 (* MATH-061: Log base missing braces \log_10x *)
 let l1_math_061_rule : rule =
-  let re = Str.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
+  let re = Re_compat.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1850,7 +1854,7 @@ let l1_math_067_rule : rule =
       "\\liminf";
     ]
   in
-  let re = Str.regexp {|\\limits|} in
+  let re = Re_compat.regexp {|\\limits|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1859,7 +1863,7 @@ let l1_math_067_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
+            let _mr, pos = Re_compat.search_forward re seg !i in
             (* Check if preceded by a big operator *)
             let before = String.sub seg 0 pos in
             let preceded_by_op =
@@ -1871,7 +1875,7 @@ let l1_math_067_rule : rule =
                 big_ops
             in
             if not preceded_by_op then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -1889,7 +1893,7 @@ let l1_math_067_rule : rule =
 
 (* MATH-070: Multiline subscripts lack \substack *)
 let l1_math_070_rule : rule =
-  let re = Str.regexp {|_{[^}]*\\\\[^}]*}|} in
+  let re = Re_compat.regexp {|_{[^}]*\\\\[^}]*}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1913,7 +1917,7 @@ let l1_math_070_rule : rule =
 
 (* MATH-073: \color used inside math *)
 let l1_math_073_rule : rule =
-  let re = Str.regexp {|\\color{|} in
+  let re = Re_compat.regexp {|\\color{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1991,7 +1995,7 @@ let l1_math_077_rule : rule =
 
 (* MATH-081: Improper kerning f(x) — suggest f\!\left(x\right) *)
 let l1_math_081_rule : rule =
-  let re = Str.regexp {|[a-zA-Z]([^)]*)|} in
+  let re = Re_compat.regexp {|[a-zA-Z]([^)]*)|} in
   let is_part_of_cmd seg pos =
     (* Check if the letter at pos is part of a \command like \left, \right,
        etc. *)
@@ -2015,14 +2019,14 @@ let l1_math_081_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let pos = Str.search_forward re seg !i in
+            let _mr, pos = Re_compat.search_forward re seg !i in
             (* Check it's not preceded by \! and the letter is not part of a
                \cmd *)
             let has_kern =
               pos >= 2 && seg.[pos - 2] = '\\' && seg.[pos - 1] = '!'
             in
             if (not has_kern) && not (is_part_of_cmd seg pos) then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -2104,7 +2108,7 @@ let l1_math_090_rule : rule =
 
 (* MATH-093: Multi-letter italic variable — suggest \mathit{} *)
 let l1_math_093_rule : rule =
-  let re = Str.regexp {|[^\\a-zA-Z{]\([a-zA-Z][a-zA-Z]+\)[^a-zA-Z}]|} in
+  let re = Re_compat.regexp {|[^\\a-zA-Z{]\([a-zA-Z][a-zA-Z]+\)[^a-zA-Z}]|} in
   let known_funcs =
     [
       "sin";
@@ -2151,10 +2155,10 @@ let l1_math_093_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re padded !i in
-            let word = Str.matched_group 1 padded in
+            let _mr, _ = Re_compat.search_forward re padded !i in
+            let word = Re_compat.matched_group _mr 1 padded in
             if not (List.mem word known_funcs) then incr cnt;
-            i := Str.match_end () - 1
+            i := Re_compat.match_end _mr - 1
           done
         with Not_found -> ())
       math_segs;
@@ -2235,7 +2239,7 @@ let l1_math_072_rule : rule =
       "varliminf";
     ]
   in
-  let re = Str.regexp {|\\operatorname{[^}]*}|} in
+  let re = Re_compat.regexp {|\\operatorname{[^}]*}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2244,8 +2248,8 @@ let l1_math_072_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re seg !i in
-            let m = Str.matched_string seg in
+            let _mr, _ = Re_compat.search_forward re seg !i in
+            let m = Re_compat.matched_string _mr seg in
             (* Extract the name between { and } *)
             let brace_start =
               (try String.index_from m 0 '{' with Not_found -> -1) + 1
@@ -2256,7 +2260,7 @@ let l1_math_072_rule : rule =
             in
             let name = String.sub m brace_start (brace_end - brace_start) in
             if List.mem name known_ops then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -2298,7 +2302,7 @@ let l1_math_074_rule : rule =
 
 (* MATH-087: Fake bold digits via \mathbf{0}...\mathbf{9} *)
 let l1_math_087_rule : rule =
-  let re = Str.regexp {|\\mathbf{[0-9]+}|} in
+  let re = Re_compat.regexp {|\\mathbf{[0-9]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2317,7 +2321,7 @@ let l1_math_087_rule : rule =
 
 (* MATH-088: Bare \partial lacks thin space *)
 let l1_math_088_rule : rule =
-  let re = Str.regexp "[^ \t,\\\\]\\\\partial\\|\\\\partial[^ \t{\\\\]" in
+  let re = Re_compat.regexp "[^ \t,\\\\]\\\\partial\\|\\\\partial[^ \t{\\\\]" in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2361,7 +2365,7 @@ let l1_math_091_rule : rule =
       "Pr";
     ]
   in
-  let re = Str.regexp {|\\operatorname{[^}]*}|} in
+  let re = Re_compat.regexp {|\\operatorname{[^}]*}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2370,8 +2374,8 @@ let l1_math_091_rule : rule =
         let i = ref 0 in
         try
           while true do
-            let _ = Str.search_forward re seg !i in
-            let m = Str.matched_string seg in
+            let _mr, _ = Re_compat.search_forward re seg !i in
+            let m = Re_compat.matched_string _mr seg in
             let brace_start =
               (try String.index_from m 0 '{' with Not_found -> -1) + 1
             in
@@ -2381,7 +2385,7 @@ let l1_math_091_rule : rule =
             in
             let name = String.sub m brace_start (brace_end - brace_start) in
             if List.mem name known_ops then incr cnt;
-            i := Str.match_end ()
+            i := Re_compat.match_end _mr
           done
         with Not_found -> ())
       math_segs;
@@ -2399,7 +2403,7 @@ let l1_math_091_rule : rule =
 
 (* MATH-092: \sum with explicit limits in inline math *)
 let l1_math_092_rule : rule =
-  let re = Str.regexp "\\\\sum[ \t]*_" in
+  let re = Re_compat.regexp "\\\\sum[ \t]*_" in
   let run s =
     let inline_segs = extract_inline_math_segments s in
     let cnt = ref 0 in
@@ -2418,7 +2422,7 @@ let l1_math_092_rule : rule =
 
 (* MATH-095: Log base without braces — alias of MATH-061 logic *)
 let l1_math_095_rule : rule =
-  let re = Str.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
+  let re = Re_compat.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2497,7 +2501,7 @@ let l1_math_096_rule : rule =
 
 (* MATH-097: Arrow => typed instead of \implies *)
 let l1_math_097_rule : rule =
-  let re = Str.regexp {|[^=!<>\\]=>|} in
+  let re = Re_compat.regexp {|[^=!<>\\]=>|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in

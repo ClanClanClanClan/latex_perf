@@ -376,13 +376,13 @@ let extract_preamble (s : string) : string =
 (* ── Helper: extract all \usepackage occurrences with positions ─────── *)
 (* Returns list of (position, package_name) *)
 let extract_usepackages (s : string) : (int * string) list =
-  let re = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
+  let re = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
   let results = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re s !i in
-       let after_brace = Str.match_end () in
+       let _mr, pos = Re_compat.search_forward re s !i in
+       let after_brace = Re_compat.match_end _mr in
        (* find closing brace *)
        let j = ref after_brace in
        while !j < String.length s && s.[!j] <> '}' do
@@ -417,24 +417,27 @@ let extract_env_blocks_starred (env : string) (s : string) : string list =
 
 (* ── Helper: check for \caption{ or \caption[ (not \captionsetup etc.) *)
 let has_caption (body : string) : bool =
-  let re = Str.regexp {|\\caption\(\[\|{\)|} in
+  let re = Re_compat.regexp {|\\caption\(\[\|{\)|} in
   try
-    ignore (Str.search_forward re body 0);
+    let _mr, _ = Re_compat.search_forward re body 0 in
+    ignore _mr;
     true
   with Not_found -> false
 
 (* ── Helper: extract all \label{prefix:...} keys ──────────────────────── *)
 let extract_labels_with_prefix (prefix : string) (s : string) :
     (int * string) list =
-  let re = Str.regexp ("\\\\label{" ^ Str.quote prefix ^ "\\([^}]*\\)}") in
+  let re =
+    Re_compat.regexp ("\\\\label{" ^ Re_compat.quote prefix ^ "\\([^}]*\\)}")
+  in
   let results = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re s !i in
-       let key = Str.matched_group 1 s in
+       let _mr, pos = Re_compat.search_forward re s !i in
+       let key = Re_compat.matched_group _mr 1 s in
        results := (pos, prefix ^ key) :: !results;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !results
@@ -444,35 +447,36 @@ let extract_labels_with_prefix (prefix : string) (s : string) :
 let extract_refs_with_prefix (prefix : string) (s : string) :
     (int * string) list =
   let re =
-    Str.regexp
+    Re_compat.regexp
       ("\\\\\\(eq\\)?ref{"
-      ^ Str.quote prefix
+      ^ Re_compat.quote prefix
       ^ "\\([^}]*\\)}"
       ^ "\\|\\\\autoref{"
-      ^ Str.quote prefix
+      ^ Re_compat.quote prefix
       ^ "\\([^}]*\\)}"
       ^ "\\|\\\\cref{"
-      ^ Str.quote prefix
+      ^ Re_compat.quote prefix
       ^ "\\([^}]*\\)}"
       ^ "\\|\\\\Cref{"
-      ^ Str.quote prefix
+      ^ Re_compat.quote prefix
       ^ "\\([^}]*\\)}")
   in
   let results = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re s !i in
+       let _mr, pos = Re_compat.search_forward re s !i in
        (* Try each group to find the match *)
        let key =
-         try Str.matched_group 2 s
+         try Re_compat.matched_group _mr 2 s
          with Not_found -> (
-           try Str.matched_group 3 s
+           try Re_compat.matched_group _mr 3 s
            with Not_found -> (
-             try Str.matched_group 4 s with Not_found -> Str.matched_group 5 s))
+             try Re_compat.matched_group _mr 4 s
+             with Not_found -> Re_compat.matched_group _mr 5 s))
        in
        results := (pos, prefix ^ key) :: !results;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   List.rev !results
@@ -480,10 +484,13 @@ let extract_refs_with_prefix (prefix : string) (s : string) :
 (* ── Helper: extract document class name ─────────────────────────────── *)
 (* Matches \documentclass[opts]{classname} or \documentclass{classname}. *)
 let extract_docclass (s : string) : string option =
-  let re = Str.regexp "\\\\documentclass\\(\\[[^]]*\\]\\)?{\\([^}]+\\)}" in
+  let re =
+    Re_compat.regexp "\\\\documentclass\\(\\[[^]]*\\]\\)?{\\([^}]+\\)}"
+  in
   try
-    ignore (Str.search_forward re s 0);
-    Some (Str.matched_group 2 s)
+    let _mr, _ = Re_compat.search_forward re s 0 in
+    ignore _mr;
+    Some (Re_compat.matched_group _mr 2 s)
   with Not_found -> None
 
 (* Document classes that conventionally require \maketitle and abstract. *)
@@ -514,19 +521,19 @@ let is_article_like (s : string) : bool =
 (* Returns list of (position, options_string, package_name). Options may be ""
    if no options bracket present. *)
 let extract_usepackages_with_opts (s : string) : (int * string * string) list =
-  let re = Str.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
-  let re_opts = Str.regexp {|\[\([^]]*\)\]|} in
+  let re = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{|} in
+  let re_opts = Re_compat.regexp {|\[\([^]]*\)\]|} in
   let results = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re s !i in
-       let full = Str.matched_string s in
-       let after_brace = Str.match_end () in
+       let _mr, pos = Re_compat.search_forward re s !i in
+       let full = Re_compat.matched_string _mr s in
+       let after_brace = Re_compat.match_end _mr in
        let opts =
          try
-           let _ = Str.search_forward re_opts full 0 in
-           Str.matched_group 1 full
+           let _mr, _ = Re_compat.search_forward re_opts full 0 in
+           Re_compat.matched_group _mr 1 full
          with Not_found -> ""
        in
        let j = ref after_brace in
@@ -548,10 +555,10 @@ let extract_usepackages_with_opts (s : string) : (int * string * string) list =
 
 (* ── Helper: extract caption content from env body ──────────────────── *)
 let extract_caption_content (body : string) : string option =
-  let re = Str.regexp {|\\caption{|} in
+  let re = Re_compat.regexp {|\\caption{|} in
   try
-    let _ = Str.search_forward re body 0 in
-    let start = Str.match_end () in
+    let _mr, _ = Re_compat.search_forward re body 0 in
+    let start = Re_compat.match_end _mr in
     let depth = ref 1 in
     let j = ref start in
     while !j < String.length body && !depth > 0 do
@@ -564,13 +571,13 @@ let extract_caption_content (body : string) : string option =
 (* Helper: split bib content into individual entries. Each entry starts with
    @type{key, and ends at the next @ or EOF. *)
 let split_bib_entries (s : string) : string list =
-  let re = Str.regexp "@[a-zA-Z]+{" in
+  let re = Re_compat.regexp "@[a-zA-Z]+{" in
   let entries = ref [] in
   let starts = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let pos = Str.search_forward re s !i in
+       let _mr, pos = Re_compat.search_forward re s !i in
        starts := pos :: !starts;
        i := pos + 1
      done
@@ -588,14 +595,14 @@ let split_bib_entries (s : string) : string list =
   List.rev !entries
 
 (* Helper: count regex matches *)
-let count_matches (re : Str.regexp) (s : string) : int =
+let count_matches (re : Re_compat.regexp) (s : string) : int =
   let cnt = ref 0 in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re s !i in
+       let _mr, _ = Re_compat.search_forward re s !i in
        incr cnt;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   !cnt
@@ -795,28 +802,28 @@ let extract_inline_math_segments (s : string) : string list =
   List.rev !segments
 
 (* Helper: count regex matches in a string *)
-let count_re_matches (re : Str.regexp) (s : string) : int =
+let count_re_matches (re : Re_compat.regexp) (s : string) : int =
   let cnt = ref 0 in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re s !i in
+       let _mr, _ = Re_compat.search_forward re s !i in
        incr cnt;
-       i := Str.match_end ()
+       i := Re_compat.match_end _mr
      done
    with Not_found -> ());
   !cnt
 
 (* Helper: extract all \label{...} values from source *)
 let extract_labels (s : string) : string list =
-  let re = Str.regexp {|\\label{[^}]*}|} in
+  let re = Re_compat.regexp {|\\label{[^}]*}|} in
   let labels = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re s !i in
-       let m = Str.matched_string s in
-       let next = Str.match_end () in
+       let _mr, _ = Re_compat.search_forward re s !i in
+       let m = Re_compat.matched_string _mr s in
+       let next = Re_compat.match_end _mr in
        (* extract content between { and } *)
        let inner = String.sub m 7 (String.length m - 8) in
        labels := inner :: !labels;
@@ -827,14 +834,14 @@ let extract_labels (s : string) : string list =
 
 (* Helper: extract all \ref{...} and \eqref{...} label references *)
 let extract_refs (s : string) : string list =
-  let re = Str.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
+  let re = Re_compat.regexp {|\\eqref{[^}]*}\|\\ref{[^}]*}|} in
   let refs = ref [] in
   let i = ref 0 in
   (try
      while true do
-       let _ = Str.search_forward re s !i in
-       let m = Str.matched_string s in
-       let next = Str.match_end () in
+       let _mr, _ = Re_compat.search_forward re s !i in
+       let m = Re_compat.matched_string _mr s in
+       let next = Re_compat.match_end _mr in
        (* Find the { and extract content *)
        let brace_pos = String.index m '{' in
        let inner =

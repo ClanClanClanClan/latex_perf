@@ -31,7 +31,10 @@ let () =
         (String.length s > 0
         &&
         try
-          ignore (Str.search_forward (Str.regexp_string "test_vm_1") s 0);
+          let _mr, _ =
+            Re_compat.search_forward (Re_compat.regexp_string "test_vm_1") s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false)
         (tag ^ ": id present"));
@@ -44,11 +47,13 @@ let () =
       (* hits_total should be 2 *)
       expect
         (try
-           ignore
-             (Str.search_forward
-                (Str.regexp_string
-                   "validators_rule_hits_total{id=\"test_vm_2\"} 2")
-                s 0);
+           let _mr, _ =
+             Re_compat.search_forward
+               (Re_compat.regexp_string
+                  "validators_rule_hits_total{id=\"test_vm_2\"} 2")
+               s 0
+           in
+           ignore _mr;
            true
          with Not_found -> false)
         (tag ^ ": hits=2"));
@@ -60,13 +65,19 @@ let () =
       let s = dump_to_string () in
       let has_3a =
         try
-          ignore (Str.search_forward (Str.regexp_string "test_vm_3a") s 0);
+          let _mr, _ =
+            Re_compat.search_forward (Re_compat.regexp_string "test_vm_3a") s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in
       let has_3b =
         try
-          ignore (Str.search_forward (Str.regexp_string "test_vm_3b") s 0);
+          let _mr, _ =
+            Re_compat.search_forward (Re_compat.regexp_string "test_vm_3b") s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -79,28 +90,35 @@ let () =
       let s = dump_to_string () in
       let has_hits =
         try
-          ignore
-            (Str.search_forward
-               (Str.regexp "validators_rule_hits_total{id=\"test_vm_4\"}")
-               s 0);
+          let _mr, _ =
+            Re_compat.search_forward
+              (Re_compat.regexp "validators_rule_hits_total{id=\"test_vm_4\"}")
+              s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in
       let has_dur =
         try
-          ignore
-            (Str.search_forward
-               (Str.regexp "validators_rule_duration_ms_sum{id=\"test_vm_4\"}")
-               s 0);
+          let _mr, _ =
+            Re_compat.search_forward
+              (Re_compat.regexp
+                 "validators_rule_duration_ms_sum{id=\"test_vm_4\"}")
+              s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in
       let has_count =
         try
-          ignore
-            (Str.search_forward
-               (Str.regexp "validators_rule_last_count{id=\"test_vm_4\"}")
-               s 0);
+          let _mr, _ =
+            Re_compat.search_forward
+              (Re_compat.regexp "validators_rule_last_count{id=\"test_vm_4\"}")
+              s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in
@@ -125,7 +143,10 @@ let () =
       (* Total hits should be 400 (4 × 100) plus any from previous tests *)
       let has_id =
         try
-          ignore (Str.search_forward (Str.regexp_string "test_vm_5") s 0);
+          let _mr, _ =
+            Re_compat.search_forward (Re_compat.regexp_string "test_vm_5") s 0
+          in
+          ignore _mr;
           true
         with Not_found -> false
       in

@@ -1,11 +1,11 @@
 (** LaTeX validation rules for typography, style, and modernisation.
 
     {b Thread safety:} Regex operations use [Re_compat] (backed by the [Re]
-    library), which is thread-safe — no global mutable state.  Concurrent
-    calls to {!run_all} from multiple threads are safe.  For OCaml 5 domains,
-    the [semantic_state] and [File_context] modules use per-thread [Hashtbl]
-    keyed by [Thread.id], which is safe for threads but not for domains
-    (domains share [Thread.id = 0]). *)
+    library), which is thread-safe — no global mutable state. Concurrent calls
+    to {!run_all} from multiple threads are safe. For OCaml 5 domains, the
+    [semantic_state] and [File_context] modules use per-thread [Hashtbl] keyed
+    by [Thread.id], which is safe for threads but not for domains (domains share
+    [Thread.id = 0]). *)
 
 type severity = Error | Warning | Info
 

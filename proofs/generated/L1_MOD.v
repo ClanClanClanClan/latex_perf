@@ -13,56 +13,73 @@ Open Scope string_scope.
 Definition mod_001_chk (s : string) : bool :=
   multi_substring_check ["\bf "; "\bf{"; "\it "; "\it{"; "\tt "; "\tt{"; "\rm "; "\rm{"; "\sl "; "\sl{"; "\sf "; "\sf{"] s.
 
-(** MOD-002: No VPD pattern — conservative model. *)
-Definition mod_002_chk (s : string) : bool := false.
+(** MOD-002: paragraph_terminated_command_pair — per-paragraph check: cmd=\bf AND any of [\textbf]. *)
+Definition mod_002_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\bf" ["\textbf"] s.
 
-(** MOD-003: No VPD pattern — conservative model. *)
-Definition mod_003_chk (s : string) : bool := false.
+(** MOD-003: paragraph_terminated_command_pair — per-paragraph check: cmd=\it AND any of [\emph, \textit]. *)
+Definition mod_003_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\it" ["\emph"; "\textit"] s.
 
-(** MOD-004: No VPD pattern — conservative model. *)
-Definition mod_004_chk (s : string) : bool := false.
+(** MOD-004: paragraph_terminated_command_pair — per-paragraph check: cmd=\rm AND any of [\textrm]. *)
+Definition mod_004_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\rm" ["\textrm"] s.
 
-(** MOD-005: No VPD pattern — conservative model. *)
-Definition mod_005_chk (s : string) : bool := false.
+(** MOD-005: paragraph_terminated_command_pair — per-paragraph check: cmd=\tt AND any of [\texttt]. *)
+Definition mod_005_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\tt" ["\texttt"] s.
 
-(** MOD-006: No VPD pattern — conservative model. *)
-Definition mod_006_chk (s : string) : bool := false.
+(** MOD-006: paragraph_terminated_command_pair — per-paragraph check: cmd=\sf AND any of [\textsf]. *)
+Definition mod_006_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\sf" ["\textsf"] s.
 
-(** MOD-007: No VPD pattern — conservative model. *)
-Definition mod_007_chk (s : string) : bool := false.
+(** MOD-007: paragraph_terminated_command_pair — per-paragraph check: cmd=\sc AND any of [\textsc]. *)
+Definition mod_007_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\sc" ["\textsc"] s.
 
-(** MOD-008: No VPD pattern — conservative model. *)
-Definition mod_008_chk (s : string) : bool := false.
+(** MOD-008: paragraph_terminated_command_pair — per-paragraph check: cmd=\bfseries AND any of [\textbf]. *)
+Definition mod_008_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\bfseries" ["\textbf"] s.
 
-(** MOD-009: No VPD pattern — conservative model. *)
-Definition mod_009_chk (s : string) : bool := false.
+(** MOD-009: paragraph_terminated_command_pair — per-paragraph check: cmd=\itshape AND any of [\textit, \emph]. *)
+Definition mod_009_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\itshape" ["\textit"; "\emph"] s.
 
-(** MOD-010: No VPD pattern — conservative model. *)
-Definition mod_010_chk (s : string) : bool := false.
+(** MOD-010: paragraph_terminated_command_pair — per-paragraph check: cmd=\sffamily AND any of [\textsf]. *)
+Definition mod_010_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\sffamily" ["\textsf"] s.
 
-(** MOD-011: No VPD pattern — conservative model. *)
-Definition mod_011_chk (s : string) : bool := false.
+(** MOD-011: paragraph_terminated_command_pair — per-paragraph check: cmd=\ttfamily AND any of [\texttt]. *)
+Definition mod_011_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\ttfamily" ["\texttt"] s.
 
-(** MOD-012: No VPD pattern — conservative model. *)
-Definition mod_012_chk (s : string) : bool := false.
+(** MOD-012: paragraph_terminated_command_pair — per-paragraph check: cmd=\rmfamily AND any of [\textrm]. *)
+Definition mod_012_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\rmfamily" ["\textrm"] s.
 
-(** MOD-013: No VPD pattern — conservative model. *)
-Definition mod_013_chk (s : string) : bool := false.
+(** MOD-013: paragraph_terminated_command_pair — per-paragraph check: cmd=\scshape AND any of [\textsc]. *)
+Definition mod_013_chk (s : string) : bool :=
+  paragraph_terminated_command_pair_check "\scshape" ["\textsc"] s.
 
-(** MOD-020: No VPD pattern — conservative model. *)
-Definition mod_020_chk (s : string) : bool := false.
+(** MOD-020: multi_substring_all [\bfseries, \textbf]. *)
+Definition mod_020_chk (s : string) : bool :=
+  multi_substring_all_check ["\bfseries"; "\textbf"] s.
 
-(** MOD-021: No VPD pattern — conservative model. *)
-Definition mod_021_chk (s : string) : bool := false.
+(** MOD-021: multi_substring_all [\itshape, \textit]. *)
+Definition mod_021_chk (s : string) : bool :=
+  multi_substring_all_check ["\itshape"; "\textit"] s.
 
-(** MOD-022: No VPD pattern — conservative model. *)
-Definition mod_022_chk (s : string) : bool := false.
+(** MOD-022: multi_substring_all [\rmfamily, \textrm]. *)
+Definition mod_022_chk (s : string) : bool :=
+  multi_substring_all_check ["\rmfamily"; "\textrm"] s.
 
-(** MOD-023: No VPD pattern — conservative model. *)
-Definition mod_023_chk (s : string) : bool := false.
+(** MOD-023: multi_substring_all [\sffamily, \textsf]. *)
+Definition mod_023_chk (s : string) : bool :=
+  multi_substring_all_check ["\sffamily"; "\textsf"] s.
 
-(** MOD-024: No VPD pattern — conservative model. *)
-Definition mod_024_chk (s : string) : bool := false.
+(** MOD-024: multi_substring_all [\ttfamily, \texttt]. *)
+Definition mod_024_chk (s : string) : bool :=
+  multi_substring_all_check ["\ttfamily"; "\texttt"] s.
 
 (* ── Soundness theorems ── *)
 

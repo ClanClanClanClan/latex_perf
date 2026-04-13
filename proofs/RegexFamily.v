@@ -265,6 +265,167 @@ Fixpoint multi_substring_check (needles : list string) (s : string) : bool :=
       else multi_substring_check rest s
   end.
 
+(** Multi-substring-all: true if ALL needles in the list are substrings.
+    Used for MOD rules that check "document contains BOTH legacy AND modern". *)
+Fixpoint multi_substring_all_check (needles : list string) (s : string) : bool :=
+  match needles with
+  | [] => true
+  | n :: rest =>
+      if string_contains_substring s n then multi_substring_all_check rest s
+      else false
+  end.
+
+(** ──────────────────────────────────────────────────────────────────── *)
+(** Command-boundary detection: models LaTeX tokenizer behavior.         *)
+(** A command \foo is "terminated" if the character after \foo is either  *)
+(** absent (end of string) or a non-letter (space, brace, digit, etc.). *)
+(** This distinguishes \bf (2-letter command) from \bfseries.           *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+(** True if c is an ASCII letter (a-z or A-Z). *)
+Definition is_alpha (c : ascii) : bool :=
+  let n := nat_of_ascii c in
+  (Nat.leb 65 n && Nat.leb n 90) || (Nat.leb 97 n && Nat.leb n 122).
+
+(** Get the nth character of a string (0-indexed). *)
+Fixpoint string_get (n : nat) (s : string) : option ascii :=
+  match n, s with
+  | _, EmptyString => None
+  | O, String c _ => Some c
+  | S n', String _ rest => string_get n' rest
+  end.
+
+(** True if [cmd] appears in [s] followed by a non-letter or end-of-string.
+    Models the LaTeX tokenizer's command-name boundary detection. *)
+Fixpoint has_terminated_command_aux (fuel : nat) (cmd : string) (s : string) : bool :=
+  match fuel with
+  | O => false
+  | S fuel' =>
+      match s with
+      | EmptyString => false
+      | String _ rest =>
+          if string_prefix cmd s then
+            match string_get (String.length cmd) s with
+            | None => true        (* cmd at end of string — valid command *)
+            | Some next_char => negb (is_alpha next_char)
+            end
+          else has_terminated_command_aux fuel' cmd rest
+      end
+  end.
+
+Definition has_terminated_command (cmd : string) (s : string) : bool :=
+  has_terminated_command_aux (String.length s) cmd s.
+
+(** Terminated-command pair: true if [cmd] appears as a terminated command
+    AND any needle from [group_b] is a substring.  Used for MOD rules that
+    check "legacy command present AND modern command present". *)
+Definition terminated_command_pair_check
+    (cmd : string) (group_b : list string) (s : string) : bool :=
+  has_terminated_command cmd s && multi_substring_check group_b s.
+
+(** ──────────────────────────────────────────────────────────────────── *)
+(** Paragraph-local checking: splits on double-newline boundaries and   *)
+(** checks each paragraph independently.  Models the OCaml validator's  *)
+(** has_mixed_in_paragraphs which detects mixing within a paragraph.    *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+Definition newline_char : ascii := ascii_of_nat 10.
+
+(** Take the first [n] characters of [s]. *)
+Fixpoint string_take (n : nat) (s : string) : string :=
+  match n with
+  | O => EmptyString
+  | S n' => match s with
+            | EmptyString => EmptyString
+            | String c rest => String c (string_take n' rest)
+            end
+  end.
+
+(** Drop the first [n] characters of [s]. *)
+Fixpoint string_drop (n : nat) (s : string) : string :=
+  match n with
+  | O => s
+  | S n' => match s with
+            | EmptyString => EmptyString
+            | String _ rest => string_drop n' rest
+            end
+  end.
+
+(** Find position of the first double-newline in [s], counting from 0.
+    Returns [String.length s] if no double-newline is found. *)
+Fixpoint find_double_newline_aux (fuel : nat) (s : string) (pos : nat) : nat :=
+  match fuel with
+  | O => pos
+  | S fuel' =>
+      match s with
+      | EmptyString => pos
+      | String c1 rest =>
+          if Ascii.eqb c1 newline_char then
+            match rest with
+            | String c2 _ =>
+                if Ascii.eqb c2 newline_char then pos
+                else find_double_newline_aux fuel' rest (S pos)
+            | EmptyString => S pos
+            end
+          else find_double_newline_aux fuel' rest (S pos)
+      end
+  end.
+
+(** Skip consecutive newline characters. *)
+Fixpoint skip_newlines (fuel : nat) (s : string) : string :=
+  match fuel with
+  | O => s
+  | S fuel' =>
+      match s with
+      | String c rest =>
+          if Ascii.eqb c newline_char then skip_newlines fuel' rest
+          else s
+      | EmptyString => EmptyString
+      end
+  end.
+
+(** Check if any paragraph (separated by double-newline) satisfies [pred].
+    Models split_into_paragraphs + List.exists from validators_common.ml. *)
+Fixpoint exists_paragraph_aux (fuel : nat) (pred : string -> bool) (s : string) : bool :=
+  match fuel with
+  | O => false
+  | S fuel' =>
+      match s with
+      | EmptyString => false
+      | _ =>
+          let len := String.length s in
+          let para_end := find_double_newline_aux len s 0 in
+          let para := string_take para_end s in
+          if pred para then true
+          else
+            let rest := string_drop para_end s in
+            let rest' := skip_newlines len rest in
+            exists_paragraph_aux fuel' pred rest'
+      end
+  end.
+
+Definition exists_paragraph (pred : string -> bool) (s : string) : bool :=
+  exists_paragraph_aux (String.length s) pred s.
+
+(** Paragraph-local terminated-command pair: true if SOME paragraph
+    contains [cmd] as a terminated command AND any of [group_b] as
+    a substring.  This is the EXACT model of the OCaml validator's
+    has_mixed_in_paragraphs for MOD-002..013 rules. *)
+Definition paragraph_terminated_command_pair_check
+    (cmd : string) (group_b : list string) (s : string) : bool :=
+  exists_paragraph
+    (fun para => has_terminated_command cmd para
+                 && multi_substring_check group_b para)
+    s.
+
+(** Substring-pair: true if any needle from group_a AND any from group_b are present.
+    Used for MOD-002..007 where group_a = legacy command variants (e.g. "\bf ", "\bf{")
+    and group_b = modern command (e.g. "\textbf").
+    Tighter than multi_substring_all for short legacy commands that could
+    be prefixes of longer commands (e.g. \bf in \bfseries). *)
+Definition substring_pair_check (group_a group_b : list string) (s : string) : bool :=
+  multi_substring_check group_a s && multi_substring_check group_b s.
+
 (** Convert a list of byte values to a Coq string. *)
 Definition bytes_to_string (bs : list nat) : string :=
   fold_right (fun b s => String (ascii_of_nat b) s) EmptyString bs.

@@ -415,7 +415,7 @@
       "family": "count_substring_strip_math",
       "needle": "..."
     },
-    "severity": "Warning"
+    "severity": "Error"
   },
   "TYPO-006": {
     "layer": "L0",
@@ -501,7 +501,7 @@
       "family": "count_substring",
       "needle": " %"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-015": {
     "layer": "L0",
@@ -615,7 +615,7 @@
       "family": "count_substring",
       "needle": "!!"
     },
-    "severity": "Info"
+    "severity": "Error"
   },
   "TYPO-028": {
     "layer": "L0",
@@ -794,7 +794,7 @@
       "family": "count_substring",
       "needle": "–"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-049": {
     "layer": "L0",
@@ -4482,7 +4482,7 @@
       "family": "count_substring",
       "needle": "\\linespread{"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "LAY-022": {
     "layer": "L0",
@@ -4933,7 +4933,7 @@
       "family": "count_substring",
       "needle": "$$"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "TYPO-044": {
     "layer": "L0",
@@ -5029,7 +5029,7 @@
       "family": "count_char",
       "char": "\n"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SPC-018": {
     "layer": "L0",
@@ -5061,7 +5061,7 @@
       "family": "count_char",
       "char": "\t"
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "SPC-029": {
     "layer": "L0",
@@ -5473,7 +5473,7 @@
         "\\cite{"
       ]
     },
-    "severity": "Info"
+    "severity": "Error"
   },
   "REF-007": {
     "layer": "L0",
@@ -5996,13 +5996,26 @@
       "lo": 216,
       "hi": 219
     },
-    "severity": "Info"
+    "severity": "Warning"
   },
   "MOD-001": {
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\bf ", "\\bf{", "\\it ", "\\it{", "\\tt ", "\\tt{", "\\rm ", "\\rm{", "\\sl ", "\\sl{", "\\sf ", "\\sf{"]
+      "needles": [
+        "\\bf ",
+        "\\bf{",
+        "\\it ",
+        "\\it{",
+        "\\tt ",
+        "\\tt{",
+        "\\rm ",
+        "\\rm{",
+        "\\sl ",
+        "\\sl{",
+        "\\sf ",
+        "\\sf{"
+      ]
     },
     "severity": "Warning"
   },
@@ -6010,7 +6023,200 @@
     "layer": "L1",
     "pattern": {
       "family": "multi_substring",
-      "needles": ["\\textbf{", "\\emph{", "\\section{"]
+      "needles": [
+        "\\textbf{",
+        "\\emph{",
+        "\\section{"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MOD-002": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\bf",
+      "group_b": [
+        "\\textbf"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-003": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\it",
+      "group_b": [
+        "\\emph",
+        "\\textit"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-004": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\rm",
+      "group_b": [
+        "\\textrm"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-005": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\tt",
+      "group_b": [
+        "\\texttt"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-006": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\sf",
+      "group_b": [
+        "\\textsf"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-007": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\sc",
+      "group_b": [
+        "\\textsc"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-008": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\bfseries",
+      "group_b": [
+        "\\textbf"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-009": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\itshape",
+      "group_b": [
+        "\\textit",
+        "\\emph"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-010": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\sffamily",
+      "group_b": [
+        "\\textsf"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-011": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\ttfamily",
+      "group_b": [
+        "\\texttt"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-012": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\rmfamily",
+      "group_b": [
+        "\\textrm"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-013": {
+    "layer": "L1",
+    "pattern": {
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\scshape",
+      "group_b": [
+        "\\textsc"
+      ]
+    },
+    "severity": "Warning"
+  },
+  "MOD-020": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring_all",
+      "needles": [
+        "\\bfseries",
+        "\\textbf"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MOD-021": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring_all",
+      "needles": [
+        "\\itshape",
+        "\\textit"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MOD-022": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring_all",
+      "needles": [
+        "\\rmfamily",
+        "\\textrm"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MOD-023": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring_all",
+      "needles": [
+        "\\sffamily",
+        "\\textsf"
+      ]
+    },
+    "severity": "Info"
+  },
+  "MOD-024": {
+    "layer": "L1",
+    "pattern": {
+      "family": "multi_substring_all",
+      "needles": [
+        "\\ttfamily",
+        "\\texttt"
+      ]
     },
     "severity": "Info"
   }

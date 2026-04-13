@@ -48,10 +48,10 @@ Features explicitly excluded from the v25 release, with rationale:
 
 | Weeks | Phase | Status | Description |
 |-------|-------|--------|-------------|
-| 102--104 | Corpus expansion + i18n test | Next | Expand golden corpus across all 7 live language packs |
-| 105--110 | ML v2 training | Blocked | Requires A100 GPU; byte classifier training |
-| 111--120 | Performance hardening | Planned | Chunk store, EDF scheduler stubs |
-| 121--130 | Proof maturity | Planned | Faithful proofs for all VPD rules; zero proof-debt gate |
+| 102--104 | Corpus expansion + i18n test | Done | 33 i18n corpus files, QA gate operational (PRs #197/#198) |
+| 105--110 | ML v2 training | Done | ByteClassifier v2 F1=0.9799 on A100; SpanExtractorSound.v QED |
+| 111--120 | Performance hardening | Done | Chunk store, EDF scheduler, ML confidence, Str→Re migration |
+| 121--130 | Proof maturity | Next | Faithful proofs for all VPD rules; zero proof-debt gate |
 | 131--140 | Integration testing | Planned | Cross-layer regression suite |
 | 141--150 | Release preparation | Planned | Documentation, packaging, SBOM |
 | 151--156 | GA release | Planned | v25 General Availability |

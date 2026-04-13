@@ -1,0 +1,33 @@
+# Pre-commit hooks for LaTeX Perfectionist v25 (spec §13)
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      - id: zero-admits
+        name: Zero admits gate
+        entry: bash -c 'if grep -rn "Admitted\." proofs/*.v proofs/generated/*.v proofs/ML/*.v 2>/dev/null | grep -v "\.disabled"; then echo "BLOCKED: Admitted found in active proofs"; exit 1; fi'
+        language: system
+        files: '\.v$'
+        pass_filenames: false
+
+      - id: zero-axioms
+        name: Zero axioms gate
+        entry: bash -c 'if grep -rn "^Axiom \|^Parameter " proofs/*.v proofs/generated/*.v proofs/ML/*.v 2>/dev/null | grep -v "\.disabled"; then echo "BLOCKED: Axiom/Parameter found in active proofs"; exit 1; fi'
+        language: system
+        files: '\.v$'
+        pass_filenames: false
+
+      - id: no-str-module
+        name: No Str module usage
+        entry: bash -c 'if grep -rn "Str\." latex-parse/src/*.ml 2>/dev/null | grep -v "String\.\|Re_compat"; then echo "BLOCKED: Str module usage found (use Re_compat instead)"; exit 1; fi'
+        language: system
+        files: '\.ml$'
+        pass_filenames: false
+
+      - id: ocamlformat
+        name: OCaml formatting check
+        entry: bash -c 'opam exec -- dune fmt 2>&1 | head -5; if opam exec -- dune fmt 2>&1 | grep -q "Promoting"; then echo "BLOCKED: Run dune fmt --auto-promote"; exit 1; fi'
+        language: system
+        files: '\.ml$|\.mli$'
+        pass_filenames: false

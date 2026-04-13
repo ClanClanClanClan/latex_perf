@@ -64,9 +64,27 @@ let () =
         |> List.rev
       in
       Latex_parse_lib.Validators_context.set_post_commands cmd_spans;
-      let results = Latex_parse_lib.Validators.run_all src in
+      let scored = Latex_parse_lib.Validators.run_all_scored src in
       Latex_parse_lib.Validators_context.clear ();
       Latex_parse_lib.File_context.clear_file_context ();
+      let results =
+        List.map
+          (fun (r : Latex_parse_lib.Evidence_scoring.scored_result) ->
+            let sev : Latex_parse_lib.Validators.severity =
+              match r.severity with
+              | Latex_parse_lib.Validators_common.Error ->
+                  Latex_parse_lib.Validators.Error
+              | Warning -> Warning
+              | Info -> Info
+            in
+            {
+              Latex_parse_lib.Validators.id = r.id;
+              severity = sev;
+              message = r.message;
+              count = r.count;
+            })
+          scored
+      in
       List.iter
         (fun (r : Latex_parse_lib.Validators.result) ->
           printf "%s\t%s\t%d\t%s\n" r.id

@@ -43,13 +43,9 @@ let () =
       in
       match build_dag [ a; b; c ] with
       | Ok dag ->
-          expect (List.length dag.topo_order = 3) (tag ^ ": 3 nodes");
-          (* A must come before B, B before C *)
-          let idx_of id =
-            List.length (fst (List.partition (fun x -> x <> id) dag.topo_order))
-          in
-          ignore idx_of;
-          expect true (tag ^ ": linear builds OK")
+          expect
+            (List.length dag.topo_order = 3)
+            (tag ^ ": 3 nodes in topo order")
       | Error msg -> expect false (tag ^ ": " ^ msg));
 
   (* Test 3: Cycle detection *)

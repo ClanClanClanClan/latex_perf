@@ -12,45 +12,45 @@ let () =
   run "pretouch: bytes 4096" (fun tag ->
       (try Pretouch.pre_touch_bytes (Bytes.create 4096) ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 2. pre_touch_bytes on empty buffer *)
   run "pretouch: bytes empty" (fun tag ->
       (try Pretouch.pre_touch_bytes Bytes.empty ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 3. pre_touch_bytes on 1-byte buffer *)
   run "pretouch: bytes 1 byte" (fun tag ->
       (try Pretouch.pre_touch_bytes (Bytes.create 1) ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 4. pre_touch_bytes with small page stride *)
   run "pretouch: bytes small page" (fun tag ->
       (try Pretouch.pre_touch_bytes (Bytes.create 100_000) ~page:256
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 5. pre_touch_ba_1 on a Bigarray *)
   run "pretouch: ba1 normal" (fun tag ->
       let ba = Bigarray.Array1.create Bigarray.float64 Bigarray.c_layout 1024 in
       (try Pretouch.pre_touch_ba_1 ba ~elem_bytes:8 ~elems:1024 ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 6. pre_touch_ba_1 with elems > dim — clamped safely *)
   run "pretouch: ba1 elems clamped" (fun tag ->
       let ba = Bigarray.Array1.create Bigarray.float64 Bigarray.c_layout 100 in
       (try Pretouch.pre_touch_ba_1 ba ~elem_bytes:8 ~elems:99999 ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 7. pre_touch_bytes on large buffer *)
   run "pretouch: bytes 1MB" (fun tag ->
       (try Pretouch.pre_touch_bytes (Bytes.create (1024 * 1024)) ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 8. pre_touch_ba_1 with small Bigarray *)
   run "pretouch: ba1 tiny" (fun tag ->
@@ -59,7 +59,7 @@ let () =
       in
       (try Pretouch.pre_touch_ba_1 ba ~elem_bytes:1 ~elems:1 ~page:4096
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag)
+      expect true (tag ^ ": no exception"))
 
 (* ── Gc_prep smoke tests ───────────────────────────────────────────── *)
 
@@ -74,19 +74,19 @@ let () =
   run "gc-prep: drain_major" (fun tag ->
       (try Gc_prep.drain_major ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 3. drain_major with custom slice completes *)
   run "gc-prep: drain_major slice" (fun tag ->
       (try Gc_prep.drain_major ~slice:512 ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 4. prepay completes without crashing *)
   run "gc-prep: prepay" (fun tag ->
       (try Gc_prep.prepay ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 5. init_gc applies config settings *)
   run "gc-prep: init_gc settings" (fun tag ->
@@ -109,7 +109,7 @@ let () =
   run "gc-prep: drain_major idempotent" (fun tag ->
       Gc_prep.drain_major ();
       Gc_prep.drain_major ();
-      expect true tag)
+      expect true (tag ^ ": no exception"))
 
 (* ── Meminfo smoke tests ───────────────────────────────────────────── *)
 
@@ -150,7 +150,7 @@ let () =
       Unix.putenv "L0_NO_MLOCK" "1";
       (try Mlock.init ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 2. Without env var: init returns (catches privilege errors internally) *)
   run "mlock: init graceful" (fun tag ->
@@ -158,13 +158,13 @@ let () =
       (try Unix.putenv "L0_NO_MLOCK" "" with Not_found -> ());
       (try Mlock.init ()
        with exn -> expect false (tag ^ ": raised " ^ Printexc.to_string exn));
-      expect true tag);
+      expect true (tag ^ ": no exception"));
 
   (* 3. Double init is safe *)
   run "mlock: double init" (fun tag ->
       Unix.putenv "L0_NO_MLOCK" "1";
       Mlock.init ();
       Mlock.init ();
-      expect true tag)
+      expect true (tag ^ ": no exception"))
 
 let () = finalise "infra-smoke"

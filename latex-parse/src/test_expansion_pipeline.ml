@@ -106,7 +106,7 @@ let () =
       in
       expect (expanded = "hello") (tag ^ ": expanded is hello");
       (* Tokens should be from expanded text *)
-      expect (List.length tokens >= 0) (tag ^ ": tokens is a list"));
+      expect (List.length tokens > 0) (tag ^ ": tokens non-empty"));
 
   (* ════════════════════════════════════════════════════════════════════ JSON
      config parsing

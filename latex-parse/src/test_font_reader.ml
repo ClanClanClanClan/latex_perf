@@ -12,18 +12,16 @@ let () =
   run "TTF with CJK coverage returns Some true" (fun tag ->
       let data = Test_binary_gen.make_ttf ~has_cjk:true in
       with_temp_file data ".ttf" (fun path ->
-          match Font_reader.has_cjk_coverage path with
-          | Some true -> expect true (tag ^ ": has CJK")
-          | Some false -> expect false (tag ^ ": expected true got false")
-          | None -> expect false (tag ^ ": expected Some got None")));
+          expect
+            (Font_reader.has_cjk_coverage path = Some true)
+            (tag ^ ": has CJK")));
 
   run "TTF without CJK coverage returns Some false" (fun tag ->
       let data = Test_binary_gen.make_ttf ~has_cjk:false in
       with_temp_file data ".ttf" (fun path ->
-          match Font_reader.has_cjk_coverage path with
-          | Some false -> expect true (tag ^ ": no CJK")
-          | Some true -> expect false (tag ^ ": expected false got true")
-          | None -> expect false (tag ^ ": expected Some got None")));
+          expect
+            (Font_reader.has_cjk_coverage path = Some false)
+            (tag ^ ": no CJK")));
 
   (* ── Edge cases ──────────────────────────────────────────────── *)
   run "nonexistent file returns None" (fun tag ->
@@ -77,9 +75,9 @@ let () =
       let data = Test_binary_gen.make_ttf ~has_cjk:false in
       with_temp_file data ".ttf" (fun path ->
           (* Should parse successfully even without CJK *)
-          match Font_reader.has_cjk_coverage path with
-          | Some _ -> expect true (tag ^ ": parsed OK")
-          | None -> expect false (tag ^ ": should parse")));
+          expect
+            (Font_reader.has_cjk_coverage path <> None)
+            (tag ^ ": parsed OK")));
 
   (* ── Idempotence ─────────────────────────────────────────────── *)
   run "reading same file twice gives same result" (fun tag ->
@@ -109,32 +107,23 @@ let () =
   run "Format 4 TTF with CJK returns Some true" (fun tag ->
       let data = Test_binary_gen.make_ttf_format4 ~has_cjk:true in
       with_temp_file data ".ttf" (fun path ->
-          match Font_reader.has_cjk_coverage path with
-          | Some true -> expect true (tag ^ ": fmt4 has CJK")
-          | Some false -> expect false (tag ^ ": fmt4 expected true got false")
-          | None -> expect false (tag ^ ": fmt4 expected Some got None")));
+          expect
+            (Font_reader.has_cjk_coverage path = Some true)
+            (tag ^ ": fmt4 has CJK")));
 
   run "Format 4 TTF without CJK returns Some false" (fun tag ->
       let data = Test_binary_gen.make_ttf_format4 ~has_cjk:false in
       with_temp_file data ".ttf" (fun path ->
-          match Font_reader.has_cjk_coverage path with
-          | Some false -> expect true (tag ^ ": fmt4 no CJK")
-          | Some true -> expect false (tag ^ ": fmt4 expected false got true")
-          | None -> expect false (tag ^ ": fmt4 expected Some got None")));
+          expect
+            (Font_reader.has_cjk_coverage path = Some false)
+            (tag ^ ": fmt4 no CJK")));
 
   run "Format 4 ASCII-only returns Some false" (fun tag ->
       let data = Test_binary_gen.make_ttf_format4 ~has_cjk:false in
       with_temp_file data ".ttf" (fun path ->
-          match Font_reader.has_cjk_coverage path with
-          | Some false -> expect true (tag ^ ": fmt4 ASCII-only is false")
-          | r ->
-              let s =
-                match r with
-                | Some true -> "Some true"
-                | Some false -> "Some false"
-                | None -> "None"
-              in
-              expect false (tag ^ ": expected Some false got " ^ s)));
+          expect
+            (Font_reader.has_cjk_coverage path = Some false)
+            (tag ^ ": fmt4 ASCII-only is false")));
 
   run "Format 4 and format 12 agree on CJK coverage" (fun tag ->
       let fmt4_cjk = Test_binary_gen.make_ttf_format4 ~has_cjk:true in

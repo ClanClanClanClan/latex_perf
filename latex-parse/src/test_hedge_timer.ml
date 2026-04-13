@@ -18,7 +18,7 @@ let () =
   (* 1. create does not raise *)
   run "create" (fun tag ->
       let _ht = Hedge_timer.create () in
-      expect true tag);
+      expect true (tag ^ ": create returns"));
 
   (* 2. Arm 10ms, wait with no fds → timer fires *)
   run "timer fires" (fun tag ->

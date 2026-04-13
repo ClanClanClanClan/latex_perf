@@ -6034,7 +6034,7 @@
   "MOD-002": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\bf",
       "group_b": [
         "\\textbf"
@@ -6045,7 +6045,7 @@
   "MOD-003": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\it",
       "group_b": [
         "\\emph",
@@ -6057,7 +6057,7 @@
   "MOD-004": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\rm",
       "group_b": [
         "\\textrm"
@@ -6068,7 +6068,7 @@
   "MOD-005": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\tt",
       "group_b": [
         "\\texttt"
@@ -6079,7 +6079,7 @@
   "MOD-006": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\sf",
       "group_b": [
         "\\textsf"
@@ -6090,7 +6090,7 @@
   "MOD-007": {
     "layer": "L1",
     "pattern": {
-      "family": "terminated_command_pair",
+      "family": "paragraph_terminated_command_pair",
       "command": "\\sc",
       "group_b": [
         "\\textsc"
@@ -6101,9 +6101,9 @@
   "MOD-008": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\bfseries",
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\bfseries",
+      "group_b": [
         "\\textbf"
       ]
     },
@@ -6112,10 +6112,11 @@
   "MOD-009": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\itshape",
-        "\\textit"
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\itshape",
+      "group_b": [
+        "\\textit",
+        "\\emph"
       ]
     },
     "severity": "Warning"
@@ -6123,9 +6124,9 @@
   "MOD-010": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\sffamily",
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\sffamily",
+      "group_b": [
         "\\textsf"
       ]
     },
@@ -6134,9 +6135,9 @@
   "MOD-011": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\ttfamily",
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\ttfamily",
+      "group_b": [
         "\\texttt"
       ]
     },
@@ -6145,9 +6146,9 @@
   "MOD-012": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\rmfamily",
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\rmfamily",
+      "group_b": [
         "\\textrm"
       ]
     },
@@ -6156,9 +6157,9 @@
   "MOD-013": {
     "layer": "L1",
     "pattern": {
-      "family": "multi_substring_all",
-      "needles": [
-        "\\scshape",
+      "family": "paragraph_terminated_command_pair",
+      "command": "\\scshape",
+      "group_b": [
         "\\textsc"
       ]
     },

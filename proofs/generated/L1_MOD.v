@@ -13,53 +13,53 @@ Open Scope string_scope.
 Definition mod_001_chk (s : string) : bool :=
   multi_substring_check ["\bf "; "\bf{"; "\it "; "\it{"; "\tt "; "\tt{"; "\rm "; "\rm{"; "\sl "; "\sl{"; "\sf "; "\sf{"] s.
 
-(** MOD-002: terminated_command_pair (cmd=\bf) AND (any of [\textbf]). *)
+(** MOD-002: paragraph_terminated_command_pair — per-paragraph check: cmd=\bf AND any of [\textbf]. *)
 Definition mod_002_chk (s : string) : bool :=
-  terminated_command_pair_check "\bf" ["\textbf"] s.
+  paragraph_terminated_command_pair_check "\bf" ["\textbf"] s.
 
-(** MOD-003: terminated_command_pair (cmd=\it) AND (any of [\emph, \textit]). *)
+(** MOD-003: paragraph_terminated_command_pair — per-paragraph check: cmd=\it AND any of [\emph, \textit]. *)
 Definition mod_003_chk (s : string) : bool :=
-  terminated_command_pair_check "\it" ["\emph"; "\textit"] s.
+  paragraph_terminated_command_pair_check "\it" ["\emph"; "\textit"] s.
 
-(** MOD-004: terminated_command_pair (cmd=\rm) AND (any of [\textrm]). *)
+(** MOD-004: paragraph_terminated_command_pair — per-paragraph check: cmd=\rm AND any of [\textrm]. *)
 Definition mod_004_chk (s : string) : bool :=
-  terminated_command_pair_check "\rm" ["\textrm"] s.
+  paragraph_terminated_command_pair_check "\rm" ["\textrm"] s.
 
-(** MOD-005: terminated_command_pair (cmd=\tt) AND (any of [\texttt]). *)
+(** MOD-005: paragraph_terminated_command_pair — per-paragraph check: cmd=\tt AND any of [\texttt]. *)
 Definition mod_005_chk (s : string) : bool :=
-  terminated_command_pair_check "\tt" ["\texttt"] s.
+  paragraph_terminated_command_pair_check "\tt" ["\texttt"] s.
 
-(** MOD-006: terminated_command_pair (cmd=\sf) AND (any of [\textsf]). *)
+(** MOD-006: paragraph_terminated_command_pair — per-paragraph check: cmd=\sf AND any of [\textsf]. *)
 Definition mod_006_chk (s : string) : bool :=
-  terminated_command_pair_check "\sf" ["\textsf"] s.
+  paragraph_terminated_command_pair_check "\sf" ["\textsf"] s.
 
-(** MOD-007: terminated_command_pair (cmd=\sc) AND (any of [\textsc]). *)
+(** MOD-007: paragraph_terminated_command_pair — per-paragraph check: cmd=\sc AND any of [\textsc]. *)
 Definition mod_007_chk (s : string) : bool :=
-  terminated_command_pair_check "\sc" ["\textsc"] s.
+  paragraph_terminated_command_pair_check "\sc" ["\textsc"] s.
 
-(** MOD-008: multi_substring_all [\bfseries, \textbf]. *)
+(** MOD-008: paragraph_terminated_command_pair — per-paragraph check: cmd=\bfseries AND any of [\textbf]. *)
 Definition mod_008_chk (s : string) : bool :=
-  multi_substring_all_check ["\bfseries"; "\textbf"] s.
+  paragraph_terminated_command_pair_check "\bfseries" ["\textbf"] s.
 
-(** MOD-009: multi_substring_all [\itshape, \textit]. *)
+(** MOD-009: paragraph_terminated_command_pair — per-paragraph check: cmd=\itshape AND any of [\textit, \emph]. *)
 Definition mod_009_chk (s : string) : bool :=
-  multi_substring_all_check ["\itshape"; "\textit"] s.
+  paragraph_terminated_command_pair_check "\itshape" ["\textit"; "\emph"] s.
 
-(** MOD-010: multi_substring_all [\sffamily, \textsf]. *)
+(** MOD-010: paragraph_terminated_command_pair — per-paragraph check: cmd=\sffamily AND any of [\textsf]. *)
 Definition mod_010_chk (s : string) : bool :=
-  multi_substring_all_check ["\sffamily"; "\textsf"] s.
+  paragraph_terminated_command_pair_check "\sffamily" ["\textsf"] s.
 
-(** MOD-011: multi_substring_all [\ttfamily, \texttt]. *)
+(** MOD-011: paragraph_terminated_command_pair — per-paragraph check: cmd=\ttfamily AND any of [\texttt]. *)
 Definition mod_011_chk (s : string) : bool :=
-  multi_substring_all_check ["\ttfamily"; "\texttt"] s.
+  paragraph_terminated_command_pair_check "\ttfamily" ["\texttt"] s.
 
-(** MOD-012: multi_substring_all [\rmfamily, \textrm]. *)
+(** MOD-012: paragraph_terminated_command_pair — per-paragraph check: cmd=\rmfamily AND any of [\textrm]. *)
 Definition mod_012_chk (s : string) : bool :=
-  multi_substring_all_check ["\rmfamily"; "\textrm"] s.
+  paragraph_terminated_command_pair_check "\rmfamily" ["\textrm"] s.
 
-(** MOD-013: multi_substring_all [\scshape, \textsc]. *)
+(** MOD-013: paragraph_terminated_command_pair — per-paragraph check: cmd=\scshape AND any of [\textsc]. *)
 Definition mod_013_chk (s : string) : bool :=
-  multi_substring_all_check ["\scshape"; "\textsc"] s.
+  paragraph_terminated_command_pair_check "\scshape" ["\textsc"] s.
 
 (** MOD-020: multi_substring_all [\bfseries, \textbf]. *)
 Definition mod_020_chk (s : string) : bool :=

@@ -323,6 +323,101 @@ Definition terminated_command_pair_check
     (cmd : string) (group_b : list string) (s : string) : bool :=
   has_terminated_command cmd s && multi_substring_check group_b s.
 
+(** ──────────────────────────────────────────────────────────────────── *)
+(** Paragraph-local checking: splits on double-newline boundaries and   *)
+(** checks each paragraph independently.  Models the OCaml validator's  *)
+(** has_mixed_in_paragraphs which detects mixing within a paragraph.    *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+Definition newline_char : ascii := ascii_of_nat 10.
+
+(** Take the first [n] characters of [s]. *)
+Fixpoint string_take (n : nat) (s : string) : string :=
+  match n with
+  | O => EmptyString
+  | S n' => match s with
+            | EmptyString => EmptyString
+            | String c rest => String c (string_take n' rest)
+            end
+  end.
+
+(** Drop the first [n] characters of [s]. *)
+Fixpoint string_drop (n : nat) (s : string) : string :=
+  match n with
+  | O => s
+  | S n' => match s with
+            | EmptyString => EmptyString
+            | String _ rest => string_drop n' rest
+            end
+  end.
+
+(** Find position of the first double-newline in [s], counting from 0.
+    Returns [String.length s] if no double-newline is found. *)
+Fixpoint find_double_newline_aux (fuel : nat) (s : string) (pos : nat) : nat :=
+  match fuel with
+  | O => pos
+  | S fuel' =>
+      match s with
+      | EmptyString => pos
+      | String c1 rest =>
+          if Ascii.eqb c1 newline_char then
+            match rest with
+            | String c2 _ =>
+                if Ascii.eqb c2 newline_char then pos
+                else find_double_newline_aux fuel' rest (S pos)
+            | EmptyString => S pos
+            end
+          else find_double_newline_aux fuel' rest (S pos)
+      end
+  end.
+
+(** Skip consecutive newline characters. *)
+Fixpoint skip_newlines (fuel : nat) (s : string) : string :=
+  match fuel with
+  | O => s
+  | S fuel' =>
+      match s with
+      | String c rest =>
+          if Ascii.eqb c newline_char then skip_newlines fuel' rest
+          else s
+      | EmptyString => EmptyString
+      end
+  end.
+
+(** Check if any paragraph (separated by double-newline) satisfies [pred].
+    Models split_into_paragraphs + List.exists from validators_common.ml. *)
+Fixpoint exists_paragraph_aux (fuel : nat) (pred : string -> bool) (s : string) : bool :=
+  match fuel with
+  | O => false
+  | S fuel' =>
+      match s with
+      | EmptyString => false
+      | _ =>
+          let len := String.length s in
+          let para_end := find_double_newline_aux len s 0 in
+          let para := string_take para_end s in
+          if pred para then true
+          else
+            let rest := string_drop para_end s in
+            let rest' := skip_newlines len rest in
+            exists_paragraph_aux fuel' pred rest'
+      end
+  end.
+
+Definition exists_paragraph (pred : string -> bool) (s : string) : bool :=
+  exists_paragraph_aux (String.length s) pred s.
+
+(** Paragraph-local terminated-command pair: true if SOME paragraph
+    contains [cmd] as a terminated command AND any of [group_b] as
+    a substring.  This is the EXACT model of the OCaml validator's
+    has_mixed_in_paragraphs for MOD-002..013 rules. *)
+Definition paragraph_terminated_command_pair_check
+    (cmd : string) (group_b : list string) (s : string) : bool :=
+  exists_paragraph
+    (fun para => has_terminated_command cmd para
+                 && multi_substring_check group_b para)
+    s.
+
 (** Substring-pair: true if any needle from group_a AND any from group_b are present.
     Used for MOD-002..007 where group_a = legacy command variants (e.g. "\bf ", "\bf{")
     and group_b = modern command (e.g. "\textbf").

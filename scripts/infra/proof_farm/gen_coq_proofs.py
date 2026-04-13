@@ -189,6 +189,17 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'(** {rule_id}: substring_pair (any of [{", ".join(coq_comment_safe(n) for n in group_a)}]) AND (any of [{", ".join(coq_comment_safe(n) for n in group_b)}]). *)'
             )
 
+    elif family == "paragraph_terminated_command_pair":
+        cmd = pattern.get("command", "")
+        group_b = pattern.get("group_b", [])
+        if cmd and is_ascii_safe(cmd) and group_b and all(is_ascii_safe(n) for n in group_b):
+            items_b = "; ".join(f'"{coq_string_literal(n)}"' for n in group_b)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  paragraph_terminated_command_pair_check "{coq_string_literal(cmd)}" [{items_b}] s.',
+                f'(** {rule_id}: paragraph_terminated_command_pair — per-paragraph check: cmd={coq_comment_safe(cmd)} AND any of [{", ".join(coq_comment_safe(n) for n in group_b)}]. *)'
+            )
+
     elif family == "terminated_command_pair":
         cmd = pattern.get("command", "")
         group_b = pattern.get("group_b", [])

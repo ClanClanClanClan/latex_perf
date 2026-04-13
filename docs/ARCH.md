@@ -13,8 +13,9 @@ with formal (Coq) soundness proofs for every validator rule.
 Source ─► L0 Tokenizer ─► L1 Expander ─► L2 Parser ─► L3 Semantics ─► L4 Style
              │                │              │              │              │
              ▼                ▼              ▼              ▼              ▼
-          catcode.ml    simple_expander  parser_l2.ml  semantic_state  validators_l4
-          tokenizer_lite  macro_catalogue               file_context    _style.ml
+          catcode.ml    rest_simple_     parser_l2.ml  semantic_state  validators_l4
+          tokenizer_lite  expander.ml                   file_context    _style.ml
+                         macro_catalogue
                                                         log_parser
 ```
 
@@ -32,7 +33,7 @@ Greek, Cyrillic, Arabic, CJK). CJK characters produce individual Word tokens.
 - **Proof**: `LexerDeterminism.v`, `LexerTotality.v`, `LexerIncremental.v`
 - **SIMD path**: `real_processor.ml` → C FFI → AVX2/NEON kernel
 
-### L1 — Macro Expander (`simple_expander.ml`, `macro_catalogue.ml`)
+### L1 — Macro Expander (`rest_simple_expander.ml`, `macro_catalogue.ml`)
 
 Fuel-bounded iterative expansion of 520 catalogued macros (441 symbol + 79
 argsafe). Max depth 100. Deterministic, side-effect-free.

@@ -6,14 +6,14 @@ repos:
     hooks:
       - id: zero-admits
         name: Zero admits gate
-        entry: bash -c 'if grep -rn "Admitted\." proofs/*.v proofs/generated/*.v proofs/ML/*.v 2>/dev/null | grep -v "\.disabled"; then echo "BLOCKED: Admitted found in active proofs"; exit 1; fi'
+        entry: bash -c 'if grep -rn "Admitted\." proofs/ 2>/dev/null | grep -v "\.disabled\|archive"; then echo "BLOCKED: Admitted found in active proofs"; exit 1; fi'
         language: system
         files: '\.v$'
         pass_filenames: false
 
       - id: zero-axioms
         name: Zero axioms gate
-        entry: bash -c 'if grep -rn "^Axiom \|^Parameter " proofs/*.v proofs/generated/*.v proofs/ML/*.v 2>/dev/null | grep -v "\.disabled"; then echo "BLOCKED: Axiom/Parameter found in active proofs"; exit 1; fi'
+        entry: bash -c 'if grep -rn "^Axiom \|^Parameter " proofs/ 2>/dev/null | grep -v "\.disabled\|archive"; then echo "BLOCKED: Axiom/Parameter found in active proofs"; exit 1; fi'
         language: system
         files: '\.v$'
         pass_filenames: false

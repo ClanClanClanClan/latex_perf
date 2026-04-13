@@ -265,6 +265,16 @@ Fixpoint multi_substring_check (needles : list string) (s : string) : bool :=
       else multi_substring_check rest s
   end.
 
+(** Multi-substring-all: true if ALL needles in the list are substrings.
+    Used for MOD rules that check "document contains BOTH legacy AND modern". *)
+Fixpoint multi_substring_all_check (needles : list string) (s : string) : bool :=
+  match needles with
+  | [] => true
+  | n :: rest =>
+      if string_contains_substring s n then multi_substring_all_check rest s
+      else false
+  end.
+
 (** Convert a list of byte values to a Coq string. *)
 Definition bytes_to_string (bs : list nat) : string :=
   fold_right (fun b s => String (ascii_of_nat b) s) EmptyString bs.

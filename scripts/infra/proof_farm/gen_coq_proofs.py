@@ -167,6 +167,16 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
                 f'(** {rule_id}: multi_substring (UTF-8 bytes). *)'
             )
 
+    elif family == "multi_substring_all":
+        needles = pattern.get("needles", [])
+        if needles and all(is_ascii_safe(n) for n in needles):
+            items = "; ".join(f'"{coq_string_literal(n)}"' for n in needles)
+            return (
+                f'Definition {cid}_chk (s : string) : bool :=\n'
+                f'  multi_substring_all_check [{items}] s.',
+                f'(** {rule_id}: multi_substring_all [{", ".join(coq_comment_safe(n) for n in needles)}]. *)'
+            )
+
     elif family == "line_pred":
         # Only TYPO-007 uses this — trailing spaces
         if rule_id == "TYPO-007":

@@ -13,56 +13,73 @@ Open Scope string_scope.
 Definition mod_001_chk (s : string) : bool :=
   multi_substring_check ["\bf "; "\bf{"; "\it "; "\it{"; "\tt "; "\tt{"; "\rm "; "\rm{"; "\sl "; "\sl{"; "\sf "; "\sf{"] s.
 
-(** MOD-002: No VPD pattern — conservative model. *)
-Definition mod_002_chk (s : string) : bool := false.
+(** MOD-002: multi_substring_all [\bf, \textbf]. *)
+Definition mod_002_chk (s : string) : bool :=
+  multi_substring_all_check ["\bf"; "\textbf"] s.
 
-(** MOD-003: No VPD pattern — conservative model. *)
-Definition mod_003_chk (s : string) : bool := false.
+(** MOD-003: multi_substring_all [\it, \emph]. *)
+Definition mod_003_chk (s : string) : bool :=
+  multi_substring_all_check ["\it"; "\emph"] s.
 
-(** MOD-004: No VPD pattern — conservative model. *)
-Definition mod_004_chk (s : string) : bool := false.
+(** MOD-004: multi_substring_all [\rm, \textrm]. *)
+Definition mod_004_chk (s : string) : bool :=
+  multi_substring_all_check ["\rm"; "\textrm"] s.
 
-(** MOD-005: No VPD pattern — conservative model. *)
-Definition mod_005_chk (s : string) : bool := false.
+(** MOD-005: multi_substring_all [\tt, \texttt]. *)
+Definition mod_005_chk (s : string) : bool :=
+  multi_substring_all_check ["\tt"; "\texttt"] s.
 
-(** MOD-006: No VPD pattern — conservative model. *)
-Definition mod_006_chk (s : string) : bool := false.
+(** MOD-006: multi_substring_all [\sf, \textsf]. *)
+Definition mod_006_chk (s : string) : bool :=
+  multi_substring_all_check ["\sf"; "\textsf"] s.
 
-(** MOD-007: No VPD pattern — conservative model. *)
-Definition mod_007_chk (s : string) : bool := false.
+(** MOD-007: multi_substring_all [\sc, \textsc]. *)
+Definition mod_007_chk (s : string) : bool :=
+  multi_substring_all_check ["\sc"; "\textsc"] s.
 
-(** MOD-008: No VPD pattern — conservative model. *)
-Definition mod_008_chk (s : string) : bool := false.
+(** MOD-008: multi_substring_all [\bfseries, \textbf]. *)
+Definition mod_008_chk (s : string) : bool :=
+  multi_substring_all_check ["\bfseries"; "\textbf"] s.
 
-(** MOD-009: No VPD pattern — conservative model. *)
-Definition mod_009_chk (s : string) : bool := false.
+(** MOD-009: multi_substring_all [\itshape, \textit]. *)
+Definition mod_009_chk (s : string) : bool :=
+  multi_substring_all_check ["\itshape"; "\textit"] s.
 
-(** MOD-010: No VPD pattern — conservative model. *)
-Definition mod_010_chk (s : string) : bool := false.
+(** MOD-010: multi_substring_all [\sffamily, \textsf]. *)
+Definition mod_010_chk (s : string) : bool :=
+  multi_substring_all_check ["\sffamily"; "\textsf"] s.
 
-(** MOD-011: No VPD pattern — conservative model. *)
-Definition mod_011_chk (s : string) : bool := false.
+(** MOD-011: multi_substring_all [\ttfamily, \texttt]. *)
+Definition mod_011_chk (s : string) : bool :=
+  multi_substring_all_check ["\ttfamily"; "\texttt"] s.
 
-(** MOD-012: No VPD pattern — conservative model. *)
-Definition mod_012_chk (s : string) : bool := false.
+(** MOD-012: multi_substring_all [\rmfamily, \textrm]. *)
+Definition mod_012_chk (s : string) : bool :=
+  multi_substring_all_check ["\rmfamily"; "\textrm"] s.
 
-(** MOD-013: No VPD pattern — conservative model. *)
-Definition mod_013_chk (s : string) : bool := false.
+(** MOD-013: multi_substring_all [\scshape, \textsc]. *)
+Definition mod_013_chk (s : string) : bool :=
+  multi_substring_all_check ["\scshape"; "\textsc"] s.
 
-(** MOD-020: No VPD pattern — conservative model. *)
-Definition mod_020_chk (s : string) : bool := false.
+(** MOD-020: multi_substring_all [\bfseries, \textbf]. *)
+Definition mod_020_chk (s : string) : bool :=
+  multi_substring_all_check ["\bfseries"; "\textbf"] s.
 
-(** MOD-021: No VPD pattern — conservative model. *)
-Definition mod_021_chk (s : string) : bool := false.
+(** MOD-021: multi_substring_all [\itshape, \textit]. *)
+Definition mod_021_chk (s : string) : bool :=
+  multi_substring_all_check ["\itshape"; "\textit"] s.
 
-(** MOD-022: No VPD pattern — conservative model. *)
-Definition mod_022_chk (s : string) : bool := false.
+(** MOD-022: multi_substring_all [\rmfamily, \textrm]. *)
+Definition mod_022_chk (s : string) : bool :=
+  multi_substring_all_check ["\rmfamily"; "\textrm"] s.
 
-(** MOD-023: No VPD pattern — conservative model. *)
-Definition mod_023_chk (s : string) : bool := false.
+(** MOD-023: multi_substring_all [\sffamily, \textsf]. *)
+Definition mod_023_chk (s : string) : bool :=
+  multi_substring_all_check ["\sffamily"; "\textsf"] s.
 
-(** MOD-024: No VPD pattern — conservative model. *)
-Definition mod_024_chk (s : string) : bool := false.
+(** MOD-024: multi_substring_all [\ttfamily, \texttt]. *)
+Definition mod_024_chk (s : string) : bool :=
+  multi_substring_all_check ["\ttfamily"; "\texttt"] s.
 
 (* ── Soundness theorems ── *)
 

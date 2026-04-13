@@ -107,6 +107,7 @@ This generates/updates `proofs/generated/L{0-4}_{FAMILY}.v` files.
 | `byte_ge` | `string_has_byte_ge` | Byte ≥ threshold |
 | `byte_range` | `string_has_byte_in_range` | Byte in [lo, hi] |
 | `line_pred` | (custom) | Per-line predicate |
+| `multi_substring_all` | `multi_substring_all_check` | ALL of N substrings present |
 
 Rules that can't be modeled with these families get conservative proofs.
 
@@ -141,7 +142,7 @@ Runs on every push and PR. Cannot be bypassed.
 ## Current State
 
 - **1,068 theorems/lemmas** across 139 files
-- **589 faithful proofs** (VPD-pattern match, exact Coq model)
-- **37 conservative proofs** (check function = `false`, vacuously sound)
+- **606 faithful proofs** (VPD-pattern match, exact Coq model)
+- **20 conservative proofs** (L3 file-based rules — external binary checks, no Coq string model possible)
 - **0 admits, 0 axioms**
 - **ML proof**: `v2_span_extractor_sound` — ByteClassifier meets 0.94 F1 gate

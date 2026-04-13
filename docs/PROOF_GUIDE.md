@@ -108,6 +108,8 @@ This generates/updates `proofs/generated/L{0-4}_{FAMILY}.v` files.
 | `byte_range` | `string_has_byte_in_range` | Byte in [lo, hi] |
 | `line_pred` | (custom) | Per-line predicate |
 | `multi_substring_all` | `multi_substring_all_check` | ALL of N substrings present |
+| `substring_pair` | `substring_pair_check` | Any of group A AND any of group B |
+| `terminated_command_pair` | `terminated_command_pair_check` | Command with boundary + any of group B |
 
 Rules that can't be modeled with these families get conservative proofs.
 

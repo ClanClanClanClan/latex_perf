@@ -6034,12 +6034,8 @@
   "MOD-002": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\bf ",
-        "\\bf{",
-        "\\bf}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\bf",
       "group_b": [
         "\\textbf"
       ]
@@ -6049,12 +6045,8 @@
   "MOD-003": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\it ",
-        "\\it{",
-        "\\it}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\it",
       "group_b": [
         "\\emph",
         "\\textit"
@@ -6065,12 +6057,8 @@
   "MOD-004": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\rm ",
-        "\\rm{",
-        "\\rm}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\rm",
       "group_b": [
         "\\textrm"
       ]
@@ -6080,12 +6068,8 @@
   "MOD-005": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\tt ",
-        "\\tt{",
-        "\\tt}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\tt",
       "group_b": [
         "\\texttt"
       ]
@@ -6095,12 +6079,8 @@
   "MOD-006": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\sf ",
-        "\\sf{",
-        "\\sf}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\sf",
       "group_b": [
         "\\textsf"
       ]
@@ -6110,12 +6090,8 @@
   "MOD-007": {
     "layer": "L1",
     "pattern": {
-      "family": "substring_pair",
-      "group_a": [
-        "\\sc ",
-        "\\sc{",
-        "\\sc}"
-      ],
+      "family": "terminated_command_pair",
+      "command": "\\sc",
       "group_b": [
         "\\textsc"
       ]

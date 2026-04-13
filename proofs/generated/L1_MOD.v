@@ -13,29 +13,29 @@ Open Scope string_scope.
 Definition mod_001_chk (s : string) : bool :=
   multi_substring_check ["\bf "; "\bf{"; "\it "; "\it{"; "\tt "; "\tt{"; "\rm "; "\rm{"; "\sl "; "\sl{"; "\sf "; "\sf{"] s.
 
-(** MOD-002: substring_pair (any of [\bf , \bf{, \bf}]) AND (any of [\textbf]). *)
+(** MOD-002: terminated_command_pair (cmd=\bf) AND (any of [\textbf]). *)
 Definition mod_002_chk (s : string) : bool :=
-  substring_pair_check ["\bf "; "\bf{"; "\bf}"] ["\textbf"] s.
+  terminated_command_pair_check "\bf" ["\textbf"] s.
 
-(** MOD-003: substring_pair (any of [\it , \it{, \it}]) AND (any of [\emph, \textit]). *)
+(** MOD-003: terminated_command_pair (cmd=\it) AND (any of [\emph, \textit]). *)
 Definition mod_003_chk (s : string) : bool :=
-  substring_pair_check ["\it "; "\it{"; "\it}"] ["\emph"; "\textit"] s.
+  terminated_command_pair_check "\it" ["\emph"; "\textit"] s.
 
-(** MOD-004: substring_pair (any of [\rm , \rm{, \rm}]) AND (any of [\textrm]). *)
+(** MOD-004: terminated_command_pair (cmd=\rm) AND (any of [\textrm]). *)
 Definition mod_004_chk (s : string) : bool :=
-  substring_pair_check ["\rm "; "\rm{"; "\rm}"] ["\textrm"] s.
+  terminated_command_pair_check "\rm" ["\textrm"] s.
 
-(** MOD-005: substring_pair (any of [\tt , \tt{, \tt}]) AND (any of [\texttt]). *)
+(** MOD-005: terminated_command_pair (cmd=\tt) AND (any of [\texttt]). *)
 Definition mod_005_chk (s : string) : bool :=
-  substring_pair_check ["\tt "; "\tt{"; "\tt}"] ["\texttt"] s.
+  terminated_command_pair_check "\tt" ["\texttt"] s.
 
-(** MOD-006: substring_pair (any of [\sf , \sf{, \sf}]) AND (any of [\textsf]). *)
+(** MOD-006: terminated_command_pair (cmd=\sf) AND (any of [\textsf]). *)
 Definition mod_006_chk (s : string) : bool :=
-  substring_pair_check ["\sf "; "\sf{"; "\sf}"] ["\textsf"] s.
+  terminated_command_pair_check "\sf" ["\textsf"] s.
 
-(** MOD-007: substring_pair (any of [\sc , \sc{, \sc}]) AND (any of [\textsc]). *)
+(** MOD-007: terminated_command_pair (cmd=\sc) AND (any of [\textsc]). *)
 Definition mod_007_chk (s : string) : bool :=
-  substring_pair_check ["\sc "; "\sc{"; "\sc}"] ["\textsc"] s.
+  terminated_command_pair_check "\sc" ["\textsc"] s.
 
 (** MOD-008: multi_substring_all [\bfseries, \textbf]. *)
 Definition mod_008_chk (s : string) : bool :=

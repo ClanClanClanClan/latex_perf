@@ -275,6 +275,54 @@ Fixpoint multi_substring_all_check (needles : list string) (s : string) : bool :
       else false
   end.
 
+(** ──────────────────────────────────────────────────────────────────── *)
+(** Command-boundary detection: models LaTeX tokenizer behavior.         *)
+(** A command \foo is "terminated" if the character after \foo is either  *)
+(** absent (end of string) or a non-letter (space, brace, digit, etc.). *)
+(** This distinguishes \bf (2-letter command) from \bfseries.           *)
+(** ──────────────────────────────────────────────────────────────────── *)
+
+(** True if c is an ASCII letter (a-z or A-Z). *)
+Definition is_alpha (c : ascii) : bool :=
+  let n := nat_of_ascii c in
+  (Nat.leb 65 n && Nat.leb n 90) || (Nat.leb 97 n && Nat.leb n 122).
+
+(** Get the nth character of a string (0-indexed). *)
+Fixpoint string_get (n : nat) (s : string) : option ascii :=
+  match n, s with
+  | _, EmptyString => None
+  | O, String c _ => Some c
+  | S n', String _ rest => string_get n' rest
+  end.
+
+(** True if [cmd] appears in [s] followed by a non-letter or end-of-string.
+    Models the LaTeX tokenizer's command-name boundary detection. *)
+Fixpoint has_terminated_command_aux (fuel : nat) (cmd : string) (s : string) : bool :=
+  match fuel with
+  | O => false
+  | S fuel' =>
+      match s with
+      | EmptyString => false
+      | String _ rest =>
+          if string_prefix cmd s then
+            match string_get (String.length cmd) s with
+            | None => true        (* cmd at end of string — valid command *)
+            | Some next_char => negb (is_alpha next_char)
+            end
+          else has_terminated_command_aux fuel' cmd rest
+      end
+  end.
+
+Definition has_terminated_command (cmd : string) (s : string) : bool :=
+  has_terminated_command_aux (String.length s) cmd s.
+
+(** Terminated-command pair: true if [cmd] appears as a terminated command
+    AND any needle from [group_b] is a substring.  Used for MOD rules that
+    check "legacy command present AND modern command present". *)
+Definition terminated_command_pair_check
+    (cmd : string) (group_b : list string) (s : string) : bool :=
+  has_terminated_command cmd s && multi_substring_check group_b s.
+
 (** Substring-pair: true if any needle from group_a AND any from group_b are present.
     Used for MOD-002..007 where group_a = legacy command variants (e.g. "\bf ", "\bf{")
     and group_b = modern command (e.g. "\textbf").

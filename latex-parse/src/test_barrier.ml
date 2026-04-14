@@ -31,7 +31,7 @@ let () =
       let b = Barrier.create () in
       Barrier.release b;
       Barrier.wait b;
-      expect true tag);
+      expect true (tag ^ ": wait after release returns"));
 
   (* 4. Blocking behavior: thread releases after delay *)
   run "blocking wait" (fun tag ->

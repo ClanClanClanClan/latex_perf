@@ -592,3 +592,8 @@
  (name test_incremental_integration)
  (modules test_incremental_integration)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_integration_e2e)
+ (modules test_integration_e2e)
+ (libraries latex_parse_lib test_helpers unix threads))

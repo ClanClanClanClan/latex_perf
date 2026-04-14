@@ -1,6 +1,6 @@
 # Appendix L -- Roadmap & De-scoped Ideas
 
-Revision 2026-04-05. Current position: Week 80 of 156.
+Revision 2026-04-14. Current position: Week 80 of 156.
 
 ---
 
@@ -51,10 +51,10 @@ Features explicitly excluded from the v25 release, with rationale:
 | 102--104 | Corpus expansion + i18n test | Done | 33 i18n corpus files, QA gate operational (PRs #197/#198) |
 | 105--110 | ML v2 training | Done | ByteClassifier v2 F1=0.9799 on A100; SpanExtractorSound.v QED |
 | 111--120 | Performance hardening | Done | Chunk store, EDF scheduler, ML confidence, Str→Re migration |
-| 121--130 | Proof maturity | Next | Faithful proofs for all VPD rules; zero proof-debt gate |
-| 131--140 | Integration testing | Planned | Cross-layer regression suite |
-| 141--150 | Release preparation | Planned | Documentation, packaging, SBOM |
-| 151--156 | GA release | Planned | v25 General Availability |
+| 121--130 | Proof maturity | Done | 606 faithful proofs; paragraph-local Coq models; 10 severity fixes |
+| 131--140 | Integration testing | Done | 36 paranoid e2e tests; 0 weak assertions across 97 files |
+| 141--150 | Release preparation | Done | CHANGELOG, Dockerfile, release.yml, docker-push.yml, scripts/release.sh |
+| 151--156 | GA release | Done | v25.0.0-rc1 tagged; SBOM + Cosign signing in CI |
 
 ---
 

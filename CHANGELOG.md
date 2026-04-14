@@ -2,7 +2,56 @@
 
 All notable changes to LaTeX Perfectionist v25 are documented here.
 
-## [Unreleased]
+## [v25.0.0-rc1] — 2026-04-14
+
+### Added (PRs #200-#219)
+- 19 L3 file-based validators: PNG/JPEG/PDF/font binary readers (PRs #214-#215)
+- 12 expl3/draft rules: CHAR-004, MATH-006, L3-001..011 (PR #215)
+- 19 MOD/EXP rules added to spec with VPD entries (PR #215)
+- SIMD 6x benchmark: simd_vs_scalar_bench.ml, 12.67x measured (PR #214)
+- ML v2 ByteClassifier trained on A100: F1=0.9799 (PR #215)
+- SpanExtractorSound.v: v2_span_extractor_sound theorem QED (PR #215)
+- Chunk store: paragraph-level splitting, xxh64 hashing, per-chunk caching (PR #216)
+- EDF scheduler: deadline-ordered task execution, event bus integration (PR #216)
+- ML confidence integration: pre-computed map suppresses zero-TP rules (PR #216)
+- run_all_incremental: only re-validates dirty chunks (PR #216)
+- run_all_scheduled: EDF-ordered incremental validation (PR #216)
+- Proof maturity: multi_substring_all, substring_pair, terminated_command,
+  paragraph_terminated_command_pair Coq families (PRs #218-#219)
+- Integration test suite: 36 paranoid end-to-end assertions (PR #219)
+- docs/ARCH.md: architecture handbook (PR #217)
+- docs/PROOF_GUIDE.md: proof-writers guide (PR #217)
+- .pre-commit-config.yaml: zero-admits, zero-axioms, no-Str, format hooks (PR #217)
+- Re_compat module: thread-safe Str replacement via Re library (PR #217)
+- Colab notebook: v2_byte_classifier_training.ipynb, disconnection-safe (PR #215)
+- data/ml_confidence_map.json: per-rule ML precision weights (PR #216)
+- Dockerfile: multi-stage OCaml service image
+- scripts/release.sh: release automation
+- .github/workflows/release.yml: GitHub Release + Cosign signing
+- .github/workflows/docker-push.yml: Docker image to GHCR
+
+### Changed (PRs #200-#219)
+- Str→Re migration: 1,057 call sites across 16 files, zero Str references (PR #217)
+- Proof count: 606 faithful (was 587), 20 conservative (was 37)
+- Theorem count: 1,067 (was ~600)
+- Severity mismatches: 10 fixed in VPD patterns (PR #219)
+- validators_cli.ml: now uses run_all_scored with ML confidence (PR #217)
+- ML confidence map: opt-in via LP_ML_CONFIDENCE_MAP env var (PR #217)
+- Performance gates: aligned to spec (25ms full-doc, 1ms edit-window) (PR #217)
+- v25_master_R1.md §9: 6→7 language packs (Arabic added) (PR #217)
+- L_roadmap.md: W102-140 marked Done
+
+### Fixed (PRs #200-#219)
+- gen_coq_proofs.py: L3/L4 grouping bug (was defaulting to L0) (PR #214)
+- build_candidate_dataset.py: yaml.safe_load→json.load for control chars (PR #215)
+- train_byte_classifier.py: BCELoss outside autocast for AMP safety (PR #215)
+- chunk_store: catcode vector in hash per spec I-3 (PR #216)
+- chunk_store: diff_snapshots handles deletion (PR #216)
+- edf_scheduler: removed dead Lockfree_queue field (PR #216)
+- 25 weak test assertions eliminated across 5 files (PR #219)
+- All font reader tests: match/expect-true→direct equality (PR #219)
+
+## [Unreleased — Phases 9-12]
 
 ### Added (Phases 9-12, PRs #161-#179)
 - Comprehensive project audit: docs, .mli, _CoqProject fixes (PR #172)

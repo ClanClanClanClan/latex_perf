@@ -14,7 +14,48 @@
 
 **3-Year Project — Week 80 of 156** - Comprehensive LaTeX document analysis and style validation system.
 
-LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 623 rules across 21 languages.
+LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 642 rules across 21 languages.
+
+## Installation
+
+### From Source (opam + dune)
+
+```bash
+# Prerequisites: opam 2.1+, OCaml 5.1.1+
+opam switch create latex-perf 5.1.1
+eval $(opam env)
+opam install coq.8.18.0 coq-core.8.18.0 re yojson uutf
+dune build @all
+```
+
+### Docker
+
+```bash
+docker pull ghcr.io/clanclanclanclan/latex_perf:latest
+docker run --rm -v $(pwd):/data ghcr.io/clanclanclanclan/latex_perf:latest /data/paper.tex
+```
+
+## CLI Reference
+
+```bash
+# Validate a LaTeX file (all layers)
+dune exec latex-parse/src/validators_cli.exe -- paper.tex
+
+# Validate with a specific layer only
+dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
+dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `L0_VALIDATORS` | unset | Set to `pilot` to enable pilot L0 TYPO rules |
+| `LP_ML_CONFIDENCE_MAP` | unset | Path to ML confidence map JSON (suppresses zero-TP rules) |
+| `LP_SCORING_CONFIG` | unset | Path to evidence scoring config JSON |
+| `L0_PROM` | unset | Set to `1` to enable Prometheus metrics exporter |
+| `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
+| `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
 ## Current Status (Week 80 — April 2026)
 

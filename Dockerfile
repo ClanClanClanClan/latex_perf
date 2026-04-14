@@ -4,11 +4,16 @@
 # Stage 1: Build
 FROM ocaml/opam:ubuntu-22.04-ocaml-5.1 AS builder
 
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgmp-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
 USER opam
 WORKDIR /home/opam/src
 COPY --chown=opam:opam . .
 
-RUN opam install -y . --deps-only && \
+RUN opam update -y && opam install -y . --deps-only && \
     opam exec -- dune build \
       latex-parse/src/validators_cli.exe \
       latex-parse/src/rest_api_server.exe \

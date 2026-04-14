@@ -1,0 +1,55 @@
+# GitHub Release + Cosign Signing (spec W141-156)
+#
+# Triggered on tag push v*. Builds release artifacts, generates SBOM,
+# signs with cosign (keyless via Sigstore OIDC), creates GitHub Release.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-ocaml-env
+
+      - name: Build release
+        run: opam exec -- dune build @all
+
+      - name: Run tests
+        run: opam exec -- dune runtest
+
+      - name: Generate SBOM
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'cyclonedx'
+          output: 'sbom-cyclonedx.json'
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign SBOM (keyless)
+        run: cosign sign-blob --yes sbom-cyclonedx.json --output-signature sbom-cyclonedx.json.sig --output-certificate sbom-cyclonedx.json.crt
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            sbom-cyclonedx.json
+            sbom-cyclonedx.json.sig
+            sbom-cyclonedx.json.crt

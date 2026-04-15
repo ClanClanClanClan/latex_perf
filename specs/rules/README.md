@@ -2,7 +2,7 @@
 
 ## Files
 
-- `rules_v3.yaml` — Unified, authoritative ruleset (623 rules)
+- `rules_v3.yaml` — Unified, authoritative ruleset (642 rules, 626 non-reserved, 16 reserved)
 - `rules_unified.cache.pkl` — Cached index for tooling (generated)
 - `phase1/` — Coq spec stubs for early L0 rules (typography/commands)
 - `phase1_5/` — Coq spec stubs for early L1 post‑expansion rules
@@ -17,7 +17,7 @@
 
 ## Catalog Snapshot (rules_v3.yaml)
 
-- Total rules: 623
+- Total rules: 642
 - By layer (exact):
   - L0_Lexer: 187
   - L1_Expanded: 158

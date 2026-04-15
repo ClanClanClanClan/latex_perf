@@ -1,27 +1,27 @@
-# LaTeX Perfectionist v25
+# LaTeX Perfectionist v25.0.0
 
 **3-Year Project — Week 80 of 156**
 
-Comprehensive LaTeX document analysis and style validation system with 623 rules across 21 languages, backed by formal Coq proofs.
+Comprehensive LaTeX document analysis and style validation system with 642 rules across 21 languages, backed by formal Coq proofs.
 
 ## Quick Links
 
-- [Architecture Overview](ARCHITECTURE.md) — Two-project structure, layer model
-- [Build System Guide](docs/BUILD_SYSTEM_GUIDE.md) — How to build and test
-- [Rule Implementation](docs/RULES_IMPLEMENTATION_PLAN.md) — 568 / 623 rules implemented
-- [Proof Infrastructure](docs/PROOFS.md) — 607 soundness theorems, 0 admits
-- [ML Pipeline](ml/ARCHITECTURE.md) — Span extractor v2 design
-- [Risk Register](governance/risk-register.md) — 31 tracked risks
+- [Architecture Overview](ARCH.md) — Five-layer pipeline, Elder runtime
+- [Proof Guide](PROOF_GUIDE.md) — Proof conventions and taxonomy
+- [Support Matrix](SUPPORT_MATRIX.md) — Engines, packages, proof classes
+- [Risk Register](../governance/risk-register.md) — 33 tracked risks
 
 ## Current Status
 
 | Metric | Value |
 |--------|-------|
-| Rules implemented | 568 / 623 (91.2%) |
-| Soundness theorems | 607 (26 faithful, 581 conservative) |
-| Golden corpus tests | 329 across 12 suites |
-| Test suites | 56 |
-| Performance p95 | 2.8 ms (gate: 20 ms) |
+| Rules specified | 642 (16 reserved) |
+| Rules shipped | 626 / 642 |
+| Soundness theorems | 626 per-rule (606 faithful, 20 conservative) |
+| Total theorems/lemmas | 1,067 |
+| Test suites | 97 |
+| Test cases | 3,254 |
+| Performance p95 | 2.78 ms (gate: 25 ms) |
 | Admits / Axioms | 0 / 0 |
 | Languages | 7 live + 14 stubbed = 21 target |
 

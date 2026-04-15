@@ -1,0 +1,106 @@
+metadata:
+  title: "LaTeX Perfectionist v27 — Repo-exact master specification"
+  version: "v27-draft-repo-exact"
+  status: "platform-roadmap"
+  dependency: "v26 substrate required"
+
+objective: "Build the platform layer above the verified core without diluting the support contract"
+
+preconditions:
+  - "Canonical facts in place"
+  - "Support matrix in place"
+  - "Proof taxonomy public"
+  - "Bounded user macro registry shipped"
+  - "Project graph foundation shipped"
+  - "Hybrid invalidation shipped"
+  - "Initial partial-document semantics shipped"
+  - "Compile-log subsystem first-class"
+
+workstreams:
+  - id: "WS7"
+    name: "cst_and_rewrite_substrate"
+    deliverables:
+      - "lossless CST"
+      - "CST<->AST mapping"
+      - "stable node IDs"
+      - "rewrite engine"
+      - "round-trip preservation"
+    acceptance:
+      - "supported syntax round-trips losslessly"
+
+  - id: "WS8"
+    name: "stronger_compilation_guarantee_stack"
+    deliverables:
+      - "engine profile semantics"
+      - "toolchain profile semantics"
+      - "bounded-pass / convergence contract"
+      - "project compile theorem fragments"
+    acceptance:
+      - "LP-Core compile guarantee exists for supported profile subset"
+
+  - id: "WS9"
+    name: "editorial_policy_system"
+    deliverables:
+      - "house-style profiles"
+      - "waiver model"
+      - "audit trail"
+      - "batch reports"
+    acceptance:
+      - "policy/waiver workflows are auditable"
+
+  - id: "WS10"
+    name: "collaboration_and_review"
+    deliverables:
+      - "comments"
+      - "tracked changes"
+      - "accept/reject"
+      - "review snapshots"
+      - "stable anchors"
+    acceptance:
+      - "anchors survive local edits within documented bounds"
+
+  - id: "WS11"
+    name: "roles_permissions_deployment"
+    deliverables:
+      - "project roles"
+      - "permissions"
+      - "audit logs"
+      - "deployment profiles"
+    acceptance:
+      - "institutional workflows are supportable"
+
+  - id: "WS12"
+    name: "extension_plane"
+    deliverables:
+      - "extension API"
+      - "foreign contract boundary"
+      - "support downgrade semantics"
+    acceptance:
+      - "extensions cannot overclaim guarantees"
+
+new_execution_class:
+  id: "E"
+  name: "collaboration_editorial_state"
+  rule: "Must never silently contaminate LP-Core document semantics"
+
+out_of_scope:
+  - "Full TeX generality"
+  - "Arbitrary catcode semantics"
+  - "Unrestricted shell-escape workflows"
+  - "Universal package semantics"
+  - "Total proof of all external binary/tooling layers"
+
+timeline:
+  phase_1_weeks: 6
+  phase_2_weeks: 6
+  phase_3_weeks: 8
+  phase_4_weeks: 6
+  total_weeks: 26
+
+exit_criteria:
+  - "CST round-trip real for supported syntax"
+  - "Tracked changes/comment anchors stable enough for declared workflows"
+  - "Editorial waivers/policies auditable"
+  - "Stronger compile guarantee for LP-Core project profile"
+  - "Support matrix covers platform features"
+  - "No regression in proof taxonomy honesty"

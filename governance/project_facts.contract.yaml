@@ -1,0 +1,66 @@
+version: "v26"
+purpose: "Single source of truth for counts, support claims, and proof taxonomy"
+
+required_fields:
+  release:
+    - version
+    - git_commit
+    - release_state
+    - release_date
+  rules:
+    - total_specified
+    - total_non_reserved
+    - total_reserved
+    - total_shipped
+    - by_family
+    - by_execution_class
+    - by_proof_class
+  proofs:
+    - theorem_count
+    - admits
+    - axioms
+    - formal_faithful_count
+    - formal_conservative_count
+    - statistical_validated_count
+  languages:
+    - live
+    - stubbed
+    - total_target
+  ci:
+    - workflow_count
+    - hard_gates
+  interfaces:
+    - cli
+    - rest
+    - grpc
+    - collaboration
+  support:
+    - engines
+    - document_modes
+    - macro_support_level
+    - build_coupled_features
+    - collaboration_features
+  performance:
+    - full_document_p95_ms
+    - edit_window_p95_ms
+    - first_token_p95_us
+    - benchmark_corpus_id
+
+generation_policy:
+  source_of_truth: "generated from repository state + approved metadata"
+  no_manual_edits: true
+  consumers:
+    - README.md
+    - docs/index.md
+    - CHANGELOG.md
+    - release notes
+    - support matrix
+    - website
+    - CI badges
+
+ci_rules:
+  - "Fail if README disagrees with canonical facts"
+  - "Fail if docs/index.md disagrees with canonical facts"
+  - "Fail if changelog top release disagrees with canonical facts"
+  - "Fail if rule spec header disagrees with canonical facts"
+  - "Fail if proof taxonomy counts disagree with canonical facts"

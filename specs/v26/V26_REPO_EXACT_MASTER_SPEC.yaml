@@ -1,0 +1,150 @@
+metadata:
+  title: "LaTeX Perfectionist v26 — Repo-exact master specification"
+  version: "v26-draft-repo-exact"
+  status: "planning-complete"
+  objective: "Extend semantic reach without weakening the proof/performance contract"
+
+non_negotiables:
+  - "Zero admits"
+  - "Zero axioms"
+  - "Canonical facts drive all public counts"
+  - "No uncontrolled hot-path regressions"
+  - "No silent scope expansion"
+
+language_contract:
+  levels:
+    - id: "LP-Core"
+      description: "Fully guaranteed subset"
+    - id: "LP-Extended"
+      description: "Practical subset with weaker contracts"
+    - id: "LP-Foreign"
+      description: "Outside strongest guarantees; explicit downgrade"
+
+execution_classes:
+  - id: "A"
+    name: "keystroke_critical"
+  - id: "B"
+    name: "debounce_background"
+  - id: "C"
+    name: "build_coupled"
+  - id: "D"
+    name: "optional_heuristic"
+
+workstreams:
+  - id: "WS0"
+    name: "truth_surface_freeze"
+    priority: 0
+    deliverables:
+      - "project_facts_v26.yaml"
+      - "generate_project_facts.py"
+      - "check_repo_facts.py"
+      - "support matrix"
+      - "proof taxonomy export"
+    acceptance:
+      - "README/docs/changelog/specs aligned to canonical facts"
+      - "CI fails on drift"
+
+  - id: "WS1"
+    name: "compile_log_integration"
+    priority: 1
+    deliverables:
+      - "build_profile.ml"
+      - "build_artifact_state.ml"
+      - "Class C execution path"
+      - "initial LAY/PAGE rule pack"
+      - "compile-log corpus"
+    acceptance:
+      - "build-coupled checks isolated from Class A latency"
+
+  - id: "WS2"
+    name: "bounded_user_macro_registry"
+    priority: 2
+    deliverables:
+      - "newcommand/renewcommand/providecommand subset"
+      - "def-use dependency edges"
+      - "termination and cycle proofs"
+    acceptance:
+      - "supported subset proven and unsupported subset diagnosed"
+
+  - id: "WS3"
+    name: "project_graph_foundation"
+    priority: 3
+    deliverables:
+      - "project_graph.ml"
+      - "project_state.ml"
+      - "include_resolver.ml"
+      - "cross-file semantic projection"
+    acceptance:
+      - "multi-file workspace linting works"
+
+  - id: "WS4"
+    name: "hybrid_invalidation"
+    priority: 4
+    deliverables:
+      - "dependency_graph.ml"
+      - "invalidation.ml"
+      - "paragraph cache + AST/semantic invalidation"
+    acceptance:
+      - "whole-source fallback rate reduced"
+
+  - id: "WS5"
+    name: "partial_document_semantics"
+    priority: 5
+    deliverables:
+      - "partial_cst.ml"
+      - "error_recovery.ml"
+      - "editing proofs"
+    acceptance:
+      - "formal distinction between complete and partial states"
+
+  - id: "WS6"
+    name: "testing_hardening"
+    priority: 6
+    deliverables:
+      - "mutation testing"
+      - "fuzzing"
+      - "long-run stress suite"
+    acceptance:
+      - "mutation baseline and fuzz nightly live"
+
+timeline:
+  phase_0_weeks: 2
+  phase_1_weeks: 4
+  phase_2_weeks: 5
+  phase_3_weeks: 4
+  phase_4_weeks: 3
+  total_weeks: 18
+
+out_of_scope:
+  - "Full catcode tracking"
+  - "Arbitrary def semantics"
+  - "General TeX conditionals"
+  - "Full Beamer semantics"
+  - "Hot-path live ML inference"
+  - "Full collaboration platform"
+
+release_slicing:
+  v26_0:
+    - "WS0"
+    - "WS1"
+    - "WS2"
+    - "WS4 foundation"
+    - "WS6 baseline"
+  v26_1:
+    - "WS3"
+    - "expanded WS1"
+    - "stronger conservative-proof architecture"
+  v26_2:
+    - "optional Beamer pilot"
+    - "UX/reporting improvements"
+    - "gRPC only if justified"
+
+exit_criteria:
+  - "Canonical facts file is source of truth"
+  - "Support matrix public"
+  - "Proof taxonomy public"
+  - "Compile-log alpha shipped"
+  - "Bounded user macro subset shipped"
+  - "No proof regressions"
+  - "No uncontrolled hot-path regressions"
+  - "Mutation/fuzz/stress infra live"

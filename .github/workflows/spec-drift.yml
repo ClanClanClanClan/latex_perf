@@ -1,0 +1,31 @@
+# Spec Drift Gate (v26 WS0)
+#
+# Ensures no public document disagrees with governance/project_facts.yaml.
+# Runs check_repo_facts.py on every push and PR.
+
+name: Spec Drift
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install pyyaml
+
+      - name: Check project facts consistency
+        run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .

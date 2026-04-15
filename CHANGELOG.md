@@ -2,7 +2,7 @@
 
 All notable changes to LaTeX Perfectionist v25 are documented here.
 
-## [v25.0.0-rc1] — 2026-04-14
+## [v25.0.0] — 2026-04-14
 
 ### Added (PRs #200-#219)
 - 19 L3 file-based validators: PNG/JPEG/PDF/font binary readers (PRs #214-#215)

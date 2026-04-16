@@ -782,8 +782,8 @@ let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
         let layers = [ 0; 1; 2 ] in
         List.map
           (fun layer_id ->
-            let deadline =
-              Edf_scheduler.compute_deadline ~edit_pos ~chunk_start:chunk.start
+            let priority =
+              Edf_scheduler.compute_priority ~edit_pos ~chunk_start:chunk.start
                 ~layer_id
             in
             let layer_rules =
@@ -804,7 +804,7 @@ let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
               Edf_scheduler.task_id = Printf.sprintf "chunk%d-L%d" i layer_id;
               layer_id;
               chunk_id = chunk.Chunk_store.id;
-              deadline;
+              priority;
               work =
                 (fun () ->
                   let res =

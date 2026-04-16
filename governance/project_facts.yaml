@@ -1,23 +1,67 @@
-version: "v25.0.0"
-release_state: "GA"
-release_date: "2026-04-14"
-source_snapshot: "repo-exact uploaded archive"
-git_commit: "unknown-from-zip"
-
+version: v25.0.0
+release_state: GA
+release_date: '2026-04-14'
+generated_by: scripts/tools/generate_project_facts.py
 rules:
   total_specified: 642
   total_reserved: 16
   total_non_reserved: 626
   total_shipped: 626
+  by_family:
+    AR: 1
+    BIB: 17
+    CE: 2
+    CHAR: 22
+    CHEM: 10
+    CJK: 16
+    CMD: 14
+    COL: 7
+    CS: 2
+    CY: 1
+    DE: 1
+    DELIM: 11
+    DOC: 5
+    EL: 1
+    ENC: 24
+    EXP: 1
+    FIG: 25
+    FONT: 13
+    FR: 2
+    HE: 1
+    HI: 1
+    IB: 1
+    JA: 2
+    KO: 1
+    L3: 11
+    LANG: 16
+    LAY: 24
+    MATH: 108
+    META: 4
+    MOD: 18
+    NL: 2
+    PDF: 12
+    PKG: 25
+    PL: 2
+    PT: 3
+    REF: 12
+    RO: 1
+    RTL: 5
+    RU: 2
+    SCRIPT: 22
+    SPC: 35
+    STYLE: 49
+    TAB: 16
+    TH: 1
+    TIKZ: 10
+    TR: 1
+    TYPO: 63
+    VERB: 17
+    ZH: 2
   by_proof_class:
     formal_faithful: 606
     formal_conservative: 20
-  notes:
-    - "rules_v3.yaml contains 642 entries; legacy references to 623 are historical drift"
-    - "16 entries are explicitly Reserved"
-
 proofs:
-  proof_files_total: 139
+  proof_files_total: 132
   proof_files_core: 23
   proof_files_generated: 108
   proof_files_ml: 1
@@ -28,45 +72,37 @@ proofs:
   theorem_count_reported: 1067
   admits: 0
   axioms: 0
-
 languages:
   live: 7
   stubbed: 14
   target: 21
-
 ci:
   workflow_count: 34
   hard_gates:
-    - zero_admit
-    - build
-    - tests
-    - performance_full_document
-    - performance_edit_window
-    - security_scan
-
+  - zero_admit
+  - build
+  - tests
+  - performance_full_document
+  - performance_edit_window
+  - security_scan
+  - spec_drift
 interfaces:
-  cli: "GA"
-  rest: "GA"
-  grpc: "planned"
-  collaboration: "not_shipped"
-
+  cli: GA
+  rest: GA
+  grpc: planned
+  collaboration: not_shipped
 support:
   engines:
-    pdflatex: "GA"
-    xelatex: "beta"
-    lualatex: "beta"
-    ptex_uptex: "experimental"
+    pdflatex: GA
+    xelatex: beta
+    lualatex: beta
+    ptex_uptex: experimental
   document_modes:
-    single_file: "GA"
-    build_coupled_single_file: "beta"
-    multi_file: "planned"
-    beamer: "deferred"
-  macro_support_level: "catalogue-only in v25; bounded user macro subset planned for v26"
-  build_coupled_features: "partial via log_parser and L3 file validators"
-  collaboration_features: "not shipped"
-
-performance:
-  benchmark_corpus_id: "corpora/perf/perf_smoke_big.tex"
-  full_document_p95_ms: 2.78
-  edit_window_p95_ms: 0.022
-  first_token_p95_us: 27
+    single_file: GA
+    build_coupled_single_file: beta
+    multi_file: planned
+    beamer: deferred
+  macro_support_level: catalogue-only in v25; bounded user macro subset planned for
+    v26
+  build_coupled_features: partial via log_parser and L3 file validators
+  collaboration_features: not shipped

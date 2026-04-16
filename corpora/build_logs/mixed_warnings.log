@@ -1,0 +1,24 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex)
+entering extended mode
+(./thesis.tex
+LaTeX2e <2023-11-01> patch level 1
+
+Overfull \hbox (5.2pt too wide) in paragraph at lines 42--48
+[]\T1/cmr/m/n/10 The quick brown fox jumps over the lazy dog repeatedly.
+
+Overfull \hbox (12.8pt too wide) in paragraph at lines 100--105
+[]\T1/cmr/m/n/10 An extremely long equation that overflows the margins.
+
+Underfull \hbox (badness 10000) in paragraph at lines 55
+[]\T1/cmr/m/n/10
+
+Underfull \vbox (badness 5000)
+
+Widow penalty 150
+Club penalty 150
+
+LaTeX Warning: Float too large for page by 2.5pt on input line 73
+
+[1] [2] [3] [4] [5]
+Output written on thesis.pdf (5 pages, 85000 bytes).
+Transcript written on thesis.log.

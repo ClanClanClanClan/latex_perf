@@ -6011,33 +6011,41 @@ let rules_l2_approx : rule list =
     r_fig_011;
     r_lay_005;
     r_lay_013;
-    (* Phase 7: LAY rules via .log parser *)
-    r_lay_001;
-    r_lay_002;
-    r_lay_003;
-    r_lay_004;
-    r_lay_006;
+    (* Phase 7: LAY text-analysis rules (log-dependent rules moved to
+       rules_class_c) *)
     r_lay_007;
-    r_lay_009;
-    r_lay_011;
     r_lay_014;
     r_lay_016;
-    r_lay_017;
-    r_lay_018;
-    r_lay_021;
-    r_math_026;
-    r_math_027;
-    (* Phase 8: 10 more approximable *)
+    (* Phase 8: more approximable *)
     r_math_089;
     r_fig_005;
     r_fig_015;
     r_fig_018;
-    r_fig_020;
     r_lay_008;
     r_lay_010;
     r_lay_012;
     r_lay_019;
     r_lay_023;
+  ]
+
+(** Class C (build-coupled) rules — require [Log_parser.set_log_context]. These
+    are excluded from the keystroke-critical [run_all] path and only produce
+    results when a compile log has been loaded. *)
+let rules_class_c : rule list =
+  [
+    r_fig_020;
+    r_lay_001;
+    r_lay_002;
+    r_lay_003;
+    r_lay_004;
+    r_lay_006;
+    r_lay_009;
+    r_lay_011;
+    r_lay_017;
+    r_lay_018;
+    r_lay_021;
+    r_math_026;
+    r_math_027;
   ]
 
 (* L2 parser-driven validators — must be composed AFTER rules_l2_approx *)

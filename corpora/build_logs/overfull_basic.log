@@ -1,0 +1,14 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex)
+entering extended mode
+(./paper.tex
+LaTeX2e <2023-11-01> patch level 1
+(/usr/local/texlive/2023/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2023/05/17 v1.4n Standard LaTeX document class
+)
+
+Overfull \hbox (3.5pt too wide) in paragraph at lines 10--12
+[]\T1/cmr/m/n/10 Lorem ip-sum dolor sit amet, con-sectetuer adip-isc-ing elit.
+
+[1] [2] [3]
+Output written on paper.pdf (3 pages, 42000 bytes).
+Transcript written on paper.log.

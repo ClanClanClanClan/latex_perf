@@ -38,6 +38,18 @@ val run_all_scored :
   Evidence_scoring.scored_result list
 (** Like {!run_all} but returns confidence-scored results (spec W75). *)
 
+val rules_class_c : rule list
+(** Log-dependent rules (Class C). Only produce results when
+    {!Log_parser.set_log_context} has been called. *)
+
+val run_class_c : string -> result list
+(** Run only Class C (log-dependent) rules. Requires log context to be set via
+    {!Log_parser.set_log_context}; returns [[]] otherwise. *)
+
+val run_with_build : string -> result list
+(** Run all A/B rules via {!run_all} plus Class C rules. Use when a compile log
+    is available (save/build trigger). *)
+
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
     matching that language (or universal rules) are run. If [None], auto-detects

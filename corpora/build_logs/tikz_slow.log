@@ -1,0 +1,11 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex)
+entering extended mode
+(./tikz_heavy.tex
+LaTeX2e <2023-11-01> patch level 1
+
+Compile time for tikz picture: 6.2s
+Compile time for tikz picture: 8.1s
+
+[1] [2]
+Output written on tikz_heavy.pdf (2 pages, 150000 bytes).
+Transcript written on tikz_heavy.log.

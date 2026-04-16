@@ -290,6 +290,22 @@ let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
   let scored = Evidence_scoring.apply_ml_boost ml_map scored in
   Evidence_scoring.filter_by_config config scored
 
+(* ── Class C (build-coupled) execution path ──────────────────────── *)
+
+let run_class_c (src : string) : result list =
+  let rec go acc = function
+    | [] -> List.rev acc
+    | r :: rs ->
+        let acc = match r.run src with Some res -> res :: acc | None -> acc in
+        go acc rs
+  in
+  go [] rules_class_c
+
+let run_with_build (src : string) : result list =
+  let ab = run_all src in
+  let c = run_class_c src in
+  ab @ c
+
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
     detected lang. *)
@@ -519,7 +535,7 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "FIG-011";
       "LAY-005";
       "LAY-013";
-      (* Phase 7: LAY via .log parser *)
+      (* Phase 7: LAY text-analysis only; log-dependent rules in rules_class_c *)
       "LAY-001";
       "LAY-002";
       "LAY-003";

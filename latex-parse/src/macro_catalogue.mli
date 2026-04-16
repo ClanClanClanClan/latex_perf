@@ -82,6 +82,13 @@ val expand_and_tokenize :
   catalogue -> string -> string * Tokenizer_lite.tok list
 (** Expand to fixed point, then tokenise the result. *)
 
+(** {1 User macro merging} *)
+
+val merge_user_macros : catalogue -> User_macro_registry.registry -> catalogue
+(** Merge supported, acyclic user macros into the catalogue. [\newcommand] adds
+    if not present, [\renewcommand] replaces, [\providecommand] adds only if not
+    present. *)
+
 (** {1 Validation} *)
 
 val validate_epsilon : argsafe_entry -> bool * string option

@@ -485,3 +485,53 @@ let expand_and_tokenize cat s =
   let expanded = expand cat s in
   let tokens = Tokenizer_lite.tokenize expanded in
   (expanded, tokens)
+
+(* ── User macro merging ──────────────────────────────────────────── *)
+
+let merge_user_macros (cat : catalogue) (reg : User_macro_registry.registry) :
+    catalogue =
+  let cycle_set =
+    let tbl = Hashtbl.create 16 in
+    if reg.has_cycle then
+      List.iter (fun n -> Hashtbl.replace tbl n ()) reg.cycle_path;
+    tbl
+  in
+  let new_argsafe = Hashtbl.copy cat.argsafe in
+  let new_all = Hashtbl.copy cat.all_names in
+  let new_symbols = Hashtbl.copy cat.symbols in
+  List.iter
+    (fun (cd : User_macro_registry.classified_def) ->
+      match cd.status with
+      | User_macro_registry.Unsupported _ -> ()
+      | User_macro_registry.Supported -> (
+          if Hashtbl.mem cycle_set cd.def.User_macro_registry.name then ()
+          else
+            let d = cd.def in
+            let template_body =
+              User_macro_registry.param_to_placeholder
+                d.User_macro_registry.body
+            in
+            let entry =
+              {
+                name = d.User_macro_registry.name;
+                mode = Both;
+                category = "user";
+                positional = d.User_macro_registry.arity;
+                kinds = List.init d.User_macro_registry.arity (fun _ -> "brace");
+                template = Inline template_body;
+              }
+            in
+            match d.User_macro_registry.kind with
+            | User_macro_registry.Newcommand ->
+                if not (Hashtbl.mem new_all entry.name) then (
+                  Hashtbl.replace new_argsafe entry.name entry;
+                  Hashtbl.replace new_all entry.name (Argsafe entry))
+            | User_macro_registry.Renewcommand ->
+                Hashtbl.replace new_argsafe entry.name entry;
+                Hashtbl.replace new_all entry.name (Argsafe entry)
+            | User_macro_registry.Providecommand ->
+                if not (Hashtbl.mem new_all entry.name) then (
+                  Hashtbl.replace new_argsafe entry.name entry;
+                  Hashtbl.replace new_all entry.name (Argsafe entry))))
+    reg.defs;
+  { symbols = new_symbols; argsafe = new_argsafe; all_names = new_all }

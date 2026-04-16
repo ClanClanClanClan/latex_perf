@@ -6317,6 +6317,138 @@ let r_cmd_013 : rule =
   in
   { id = "CMD-013"; run; languages = [] }
 
+(* ══════════════════════════════════════════════════════════════════════ WS2:
+   User macro registry validators — require User_macro_context. Rules silently
+   return None if no registry context is set.
+   ══════════════════════════════════════════════════════════════════════ *)
+
+(* CMD-015: Unsupported user macro construct *)
+let r_cmd_015 : rule =
+  let run _s =
+    match User_macro_context.get () with
+    | None -> None
+    | Some reg ->
+        let unsupported =
+          List.filter_map
+            (fun (cd : User_macro_registry.classified_def) ->
+              match cd.status with
+              | User_macro_registry.Unsupported reason ->
+                  Some (cd.def.User_macro_registry.name, reason)
+              | Supported -> None)
+            reg.User_macro_registry.defs
+        in
+        let cnt = List.length unsupported in
+        if cnt > 0 then
+          let reasons =
+            List.map
+              (fun (name, reason) -> Printf.sprintf "\\%s: %s" name reason)
+              unsupported
+          in
+          Some
+            {
+              id = "CMD-015";
+              severity = Info;
+              message =
+                Printf.sprintf "Unsupported user macro construct(s): %s"
+                  (String.concat "; " reasons);
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "CMD-015" run
+
+(* CMD-016: Cycle in user macro definitions *)
+let r_cmd_016 : rule =
+  let run _s =
+    match User_macro_context.get () with
+    | None -> None
+    | Some reg ->
+        if reg.User_macro_registry.has_cycle then
+          let path =
+            String.concat " -> "
+              (List.map (fun n -> "\\" ^ n) reg.User_macro_registry.cycle_path)
+          in
+          Some
+            {
+              id = "CMD-016";
+              severity = Warning;
+              message =
+                Printf.sprintf "Cycle in user macro definitions: %s" path;
+              count = 1;
+            }
+        else None
+  in
+  mk_rule "CMD-016" run
+
+(* CMD-017: User macro shadows built-in via \newcommand *)
+let r_cmd_017 : rule =
+  let run _s =
+    match User_macro_context.get () with
+    | None -> None
+    | Some reg ->
+        let shadows =
+          List.filter_map
+            (fun (cd : User_macro_registry.classified_def) ->
+              if
+                cd.def.User_macro_registry.kind = User_macro_registry.Newcommand
+                && cd.status = User_macro_registry.Supported
+              then
+                (* Check if the name matches a known built-in *)
+                let known =
+                  [
+                    "textbf";
+                    "textit";
+                    "texttt";
+                    "textsf";
+                    "textsc";
+                    "emph";
+                    "mathrm";
+                    "mathbf";
+                    "mathsf";
+                    "mathtt";
+                    "frac";
+                    "sqrt";
+                    "operatorname";
+                    "section";
+                    "subsection";
+                    "chapter";
+                    "ref";
+                    "label";
+                    "cite";
+                    "caption";
+                    "includegraphics";
+                    "usepackage";
+                    "documentclass";
+                    "title";
+                    "author";
+                    "date";
+                    "maketitle";
+                    "tableofcontents";
+                    "bibliography";
+                  ]
+                in
+                if List.mem cd.def.User_macro_registry.name known then
+                  Some cd.def.User_macro_registry.name
+                else None
+              else None)
+            reg.User_macro_registry.defs
+        in
+        let cnt = List.length shadows in
+        if cnt > 0 then
+          Some
+            {
+              id = "CMD-017";
+              severity = Warning;
+              message =
+                Printf.sprintf
+                  "User \\newcommand shadows built-in: %s (use \\renewcommand)"
+                  (String.concat ", " (List.map (fun n -> "\\" ^ n) shadows));
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "CMD-017" run
+
 let rules_cmd : rule list =
   [
     r_cmd_002;
@@ -6328,6 +6460,10 @@ let rules_cmd : rule list =
     r_cmd_011;
     r_cmd_013;
   ]
+
+(** WS2 user macro registry validators — require [User_macro_context]. Separated
+    from [rules_cmd] because they are defined after [rules_l2_approx]. *)
+let rules_user_macro : rule list = [ r_cmd_015; r_cmd_016; r_cmd_017 ]
 
 (* ── TYPO-062: Literal backslash in text ───────────────────────────── *)
 let r_typo_062 : rule =

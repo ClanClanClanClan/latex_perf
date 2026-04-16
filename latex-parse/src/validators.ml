@@ -45,6 +45,7 @@ let rules_enc_char_spc : rule list =
   @ rules_style
   @ rules_l3_file
   @ rules_l1_expl3
+  @ rules_user_macro
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in

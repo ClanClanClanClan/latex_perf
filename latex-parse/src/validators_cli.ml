@@ -65,7 +65,8 @@ let setup_command_spans src =
 let cleanup () =
   Latex_parse_lib.Validators_context.clear ();
   Latex_parse_lib.File_context.clear_file_context ();
-  Latex_parse_lib.Build_artifact_state.clear ()
+  Latex_parse_lib.Build_artifact_state.clear ();
+  Latex_parse_lib.User_macro_context.clear ()
 
 let setup_all ~path ~src ~log_path =
   let base_dir = Filename.dirname path in
@@ -80,6 +81,8 @@ let setup_all ~path ~src ~log_path =
   (match Latex_parse_lib.Build_artifact_state.from_profile bp with
   | Some state -> Latex_parse_lib.Build_artifact_state.set state
   | None -> ());
+  let reg = Latex_parse_lib.User_macro_registry.create src in
+  Latex_parse_lib.User_macro_context.set reg;
   bp
 
 (* ── Class C result detection ────────────────────────────────────── *)

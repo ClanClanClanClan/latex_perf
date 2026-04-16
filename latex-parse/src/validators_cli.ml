@@ -65,30 +65,28 @@ let setup_command_spans src =
 let cleanup () =
   Latex_parse_lib.Validators_context.clear ();
   Latex_parse_lib.File_context.clear_file_context ();
-  Latex_parse_lib.Build_profile.deactivate ()
+  Latex_parse_lib.Build_artifact_state.clear ()
 
 let setup_all ~path ~src ~log_path =
   let base_dir = Filename.dirname path in
   setup_file_context ~base_dir ~tex_path:path ~src;
   setup_command_spans src;
+  let bp = Latex_parse_lib.Build_profile.create ~tex_path:path ~base_dir in
   let bp =
     match log_path with
-    | Some lp ->
-        Latex_parse_lib.Build_profile.create_with_log ~tex_path:path
-          ~log_path:lp
-    | None -> Latex_parse_lib.Build_profile.create path
+    | Some lp -> Latex_parse_lib.Build_profile.load_log_from ~log_path:lp bp
+    | None -> Latex_parse_lib.Build_profile.load_log bp
   in
-  Latex_parse_lib.Build_profile.activate bp;
+  (match Latex_parse_lib.Build_artifact_state.from_profile bp with
+  | Some state -> Latex_parse_lib.Build_artifact_state.set state
+  | None -> ());
   bp
 
 (* ── Class C result detection ────────────────────────────────────── *)
 
-let _class_c_ids =
-  List.map
-    (fun (r : Latex_parse_lib.Validators.rule) -> r.id)
-    Latex_parse_lib.Validators.rules_class_c
-
-let is_class_c id = List.mem id _class_c_ids
+let is_class_c id =
+  Latex_parse_lib.Execution_class.classify id
+  = Latex_parse_lib.Execution_class.C
 
 let print_result (r : Latex_parse_lib.Validators.result) =
   let tag = if is_class_c r.id then "[build] " else "" in
@@ -106,7 +104,10 @@ let () =
       let bp = setup_all ~path ~src ~log_path:None in
       Fun.protect ~finally:cleanup (fun () ->
           if Latex_parse_lib.Build_profile.has_log bp then
-            let results = Latex_parse_lib.Validators.run_with_build src in
+            let policy = Latex_parse_lib.Execution_policy.with_build in
+            let results =
+              Latex_parse_lib.Validators.run_with_policy policy src
+            in
             List.iter print_result results
           else
             let scored = Latex_parse_lib.Validators.run_all_scored src in
@@ -120,8 +121,9 @@ let () =
   | [ _; "--log"; log_path; path ] ->
       let src = read_all path in
       ignore (setup_all ~path ~src ~log_path:(Some log_path));
+      let policy = Latex_parse_lib.Execution_policy.with_build in
       Fun.protect ~finally:cleanup (fun () ->
-          let results = Latex_parse_lib.Validators.run_with_build src in
+          let results = Latex_parse_lib.Validators.run_with_policy policy src in
           List.iter print_result results)
   | [ _; "--layer"; layer; path ] ->
       let src = read_all path in

@@ -54,6 +54,9 @@
   macro_catalogue
   log_parser
   build_profile
+  build_artifact_state
+  execution_class
+  execution_policy
   validator_dag
   layer_sync
   semantic_state

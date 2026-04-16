@@ -50,6 +50,9 @@ val run_with_build : string -> result list
 (** Run all A/B rules via {!run_all} plus Class C rules. Use when a compile log
     is available (save/build trigger). *)
 
+val run_with_policy : Execution_policy.t -> string -> result list
+(** Run rules according to the given execution policy. *)
+
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
     matching that language (or universal rules) are run. If [None], auto-detects

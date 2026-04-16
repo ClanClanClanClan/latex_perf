@@ -306,6 +306,11 @@ let run_with_build (src : string) : result list =
   let c = run_class_c src in
   ab @ c
 
+let run_with_policy (policy : Execution_policy.t) (src : string) : result list =
+  let ab = if policy.enable_a || policy.enable_b then run_all src else [] in
+  let c = if policy.enable_c then run_class_c src else [] in
+  ab @ c
+
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
     detected lang. *)
@@ -535,7 +540,8 @@ let _layer_tbl : (string, layer) Hashtbl.t =
       "FIG-011";
       "LAY-005";
       "LAY-013";
-      (* Phase 7: LAY text-analysis only; log-dependent rules in rules_class_c *)
+      (* Phase 7: LAY text-analysis only; log-dependent rules in
+         rules_class_c *)
       "LAY-001";
       "LAY-002";
       "LAY-003";

@@ -1,7 +1,7 @@
 (** Tests for WS1 compile-log integration.
 
-    Exercises Class C execution path isolation, build profiles, and log-coupled
-    rule activation. *)
+    Exercises Class C execution path isolation, build profiles, execution
+    classes, execution policies, and log-coupled rule activation. *)
 
 open Latex_parse_lib
 open Test_helpers
@@ -60,9 +60,58 @@ let repo_root =
 
 let corpus_log name = Filename.concat repo_root ("corpora/build_logs/" ^ name)
 
-(* ── Isolation tests ─────────────────────────────────────────────── *)
+(* ── Execution class tests ───────────────────────────────────────── *)
 
 let () =
+  run "Execution_class.classify LAY-001 = C" (fun tag ->
+      expect
+        (Execution_class.classify "LAY-001" = Execution_class.C)
+        (tag ^ ": is C"));
+
+  run "Execution_class.classify MATH-026 = C" (fun tag ->
+      expect
+        (Execution_class.classify "MATH-026" = Execution_class.C)
+        (tag ^ ": is C"));
+
+  run "Execution_class.classify FIG-020 = C" (fun tag ->
+      expect
+        (Execution_class.classify "FIG-020" = Execution_class.C)
+        (tag ^ ": is C"));
+
+  run "Execution_class.classify TYPO-001 = A" (fun tag ->
+      expect
+        (Execution_class.classify "TYPO-001" = Execution_class.A)
+        (tag ^ ": is A"));
+
+  run "Execution_class.is_keystroke_safe A = true" (fun tag ->
+      expect
+        (Execution_class.is_keystroke_safe Execution_class.A)
+        (tag ^ ": safe"));
+
+  run "Execution_class.is_keystroke_safe C = false" (fun tag ->
+      expect
+        (not (Execution_class.is_keystroke_safe Execution_class.C))
+        (tag ^ ": not safe"));
+
+  (* ── Execution policy tests ────────────────────────────────────── *)
+  run "default policy allows A, disallows C" (fun tag ->
+      expect
+        (Execution_policy.allows Execution_policy.default Execution_class.A)
+        (tag ^ ": A allowed");
+      expect
+        (not
+           (Execution_policy.allows Execution_policy.default Execution_class.C))
+        (tag ^ ": C disallowed"));
+
+  run "with_build policy allows A and C" (fun tag ->
+      expect
+        (Execution_policy.allows Execution_policy.with_build Execution_class.A)
+        (tag ^ ": A allowed");
+      expect
+        (Execution_policy.allows Execution_policy.with_build Execution_class.C)
+        (tag ^ ": C allowed"));
+
+  (* ── Isolation tests ───────────────────────────────────────────── *)
   run "run_all excludes Class C rules (no log context)" (fun tag ->
       let results = Validators.run_all src_minimal in
       let has_c =
@@ -102,6 +151,26 @@ let () =
           in
           expect has_ab (tag ^ ": has A/B results");
           expect has_c (tag ^ ": has C results")));
+
+  run "run_with_policy default excludes C" (fun tag ->
+      with_log_context overfull_log (fun () ->
+          let results =
+            Validators.run_with_policy Execution_policy.default src_minimal
+          in
+          let has_c =
+            List.exists (fun (r : Validators.result) -> is_class_c r.id) results
+          in
+          expect (not has_c) (tag ^ ": no C in default")));
+
+  run "run_with_policy with_build includes C" (fun tag ->
+      with_log_context overfull_log (fun () ->
+          let results =
+            Validators.run_with_policy Execution_policy.with_build src_minimal
+          in
+          let has_c =
+            List.exists (fun (r : Validators.result) -> is_class_c r.id) results
+          in
+          expect has_c (tag ^ ": has C in with_build")));
 
   (* ── Per-rule smoke tests ───────────────────────────────────────── *)
   run "LAY-001 fires on overfull > 2pt" (fun tag ->
@@ -195,27 +264,52 @@ let () =
 
   (* ── Build profile tests ────────────────────────────────────────── *)
   run "Build_profile.create finds no log for nonexistent file" (fun tag ->
-      let bp = Build_profile.create "/tmp/nonexistent_test_file.tex" in
+      let bp =
+        Build_profile.create ~tex_path:"/tmp/nonexistent_test_file.tex"
+          ~base_dir:"/tmp"
+      in
+      let bp = Build_profile.load_log bp in
       expect (not (Build_profile.has_log bp)) (tag ^ ": no log"));
 
-  run "Build_profile.create_with_log loads log" (fun tag ->
+  run "Build_profile.load_log_from loads corpus log" (fun tag ->
+      let bp = Build_profile.create ~tex_path:"test.tex" ~base_dir:"." in
       let bp =
-        Build_profile.create_with_log ~tex_path:"test.tex"
+        Build_profile.load_log_from
           ~log_path:(corpus_log "overfull_basic.log")
+          bp
       in
       expect (Build_profile.has_log bp) (tag ^ ": has log"));
 
-  run "Build_profile.activate/deactivate sets/clears context" (fun tag ->
+  run "Build_profile detects pdflatex engine" (fun tag ->
+      let bp = Build_profile.create ~tex_path:"test.tex" ~base_dir:"." in
       let bp =
-        Build_profile.create_with_log ~tex_path:"test.tex"
+        Build_profile.load_log_from
           ~log_path:(corpus_log "overfull_basic.log")
+          bp
       in
-      Build_profile.activate bp;
-      let has_ctx = Log_parser.get_log_context () <> None in
-      Build_profile.deactivate ();
-      let no_ctx = Log_parser.get_log_context () = None in
-      expect has_ctx (tag ^ ": context set");
-      expect no_ctx (tag ^ ": context cleared"));
+      expect (bp.engine = Build_profile.PDFLaTeX) (tag ^ ": pdflatex detected"));
+
+  (* ── Build artifact state tests ─────────────────────────────────── *)
+  run "Build_artifact_state set/get/clear" (fun tag ->
+      let bp = Build_profile.create ~tex_path:"test.tex" ~base_dir:"." in
+      let bp =
+        Build_profile.load_log_from
+          ~log_path:(corpus_log "overfull_basic.log")
+          bp
+      in
+      match Build_artifact_state.from_profile bp with
+      | None -> expect false (tag ^ ": from_profile returned None")
+      | Some state ->
+          Build_artifact_state.set state;
+          let has = Build_artifact_state.get () <> None in
+          let has_log = Log_parser.get_log_context () <> None in
+          Build_artifact_state.clear ();
+          let no_state = Build_artifact_state.get () = None in
+          let no_log = Log_parser.get_log_context () = None in
+          expect has (tag ^ ": state set");
+          expect has_log (tag ^ ": log context set");
+          expect no_state (tag ^ ": state cleared");
+          expect no_log (tag ^ ": log context cleared"));
 
   run "rules_class_c has exactly 13 rules" (fun tag ->
       expect (List.length Validators.rules_class_c = 13) (tag ^ ": 13 rules"))

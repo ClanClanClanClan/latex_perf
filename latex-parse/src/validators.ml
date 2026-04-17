@@ -29,6 +29,9 @@ include Validators_l1
 include Validators_l1_expl3
 include Validators_project
 
+(* Extend rules_class_c with TIKZ-002 from validators_l3_file (log-dependent) *)
+let rules_class_c = rules_class_c @ [ r_tikz_002 ]
+
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
    rules *)
 let rules_enc_char_spc : rule list =

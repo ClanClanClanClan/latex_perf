@@ -139,8 +139,33 @@ let () =
           printf "# layer=%s\ttotal_ms=%.3f\n" layer total_ms;
           List.iter (fun (id, ms) -> printf "# %s\t%.3f\n" id ms) timings;
           List.iter print_result results)
+  | [ _; "--project"; path ] ->
+      let graph = Latex_parse_lib.Project_graph.build ~root:path in
+      let ps = Latex_parse_lib.Project_state.build graph in
+      Latex_parse_lib.Project_context.set ps;
+      Fun.protect
+        ~finally:(fun () ->
+          Latex_parse_lib.Project_context.clear ();
+          cleanup ())
+        (fun () ->
+          (* Run single-file validators on each file *)
+          List.iter
+            (fun (fs : Latex_parse_lib.Project_state.file_state) ->
+              let src = read_all fs.path in
+              ignore (setup_all ~path:fs.path ~src ~log_path:None);
+              let results = Latex_parse_lib.Validators.run_all src in
+              List.iter
+                (fun (r : Latex_parse_lib.Validators.result) ->
+                  printf "[%s] %s\t%s\t%d\t%s\n"
+                    (Filename.basename fs.path)
+                    r.id
+                    (Latex_parse_lib.Validators.severity_to_string r.severity)
+                    r.count r.message)
+                results)
+            ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n"
+        "Usage: %s [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
+         <file.log>] <file.tex>\n"
         Sys.argv.(0);
       exit 2

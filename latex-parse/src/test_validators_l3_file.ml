@@ -603,27 +603,45 @@ let () =
   (* ══════════════════════════════════════════════════════════════════
      TIKZ-002: TikZ compile time > 5 s
      ══════════════════════════════════════════════════════════════════ *)
-  run "TIKZ-002 fires: 6.2s compile time" (fun tag ->
+  (* TIKZ-002 moved to Class C (rules_class_c) — use run_class_c *)
+  run "TIKZ-002 fires: 6.2s compile time (Class C)" (fun tag ->
       let log_ctx =
         { Log_parser.empty_context with tikz_compile_times = [ 6.2 ] }
       in
       Log_parser.set_log_context log_ctx;
       Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
-          expect (fires "TIKZ-002" (unique_src ())) (tag ^ ": fires")));
+          let results = Validators.run_class_c (unique_src ()) in
+          expect
+            (List.exists
+               (fun r -> (r : Validators.result).id = "TIKZ-002")
+               results)
+            (tag ^ ": fires")));
 
-  run "TIKZ-002 clean: 4.9s" (fun tag ->
+  run "TIKZ-002 clean: 4.9s (Class C)" (fun tag ->
       let log_ctx =
         { Log_parser.empty_context with tikz_compile_times = [ 4.9 ] }
       in
       Log_parser.set_log_context log_ctx;
       Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
-          expect (does_not_fire "TIKZ-002" (unique_src ())) (tag ^ ": clean")));
+          let results = Validators.run_class_c (unique_src ()) in
+          expect
+            (not
+               (List.exists
+                  (fun r -> (r : Validators.result).id = "TIKZ-002")
+                  results))
+            (tag ^ ": clean")));
 
-  run "TIKZ-002 clean: no log context" (fun tag ->
+  run "TIKZ-002 clean: no log context (Class C)" (fun tag ->
       Log_parser.clear_log_context ();
-      expect (does_not_fire "TIKZ-002" (unique_src ())) (tag ^ ": no ctx"));
+      let results = Validators.run_class_c (unique_src ()) in
+      expect
+        (not
+           (List.exists
+              (fun r -> (r : Validators.result).id = "TIKZ-002")
+              results))
+        (tag ^ ": no ctx"));
 
-  run "TIKZ-002 count: 2 slow pictures" (fun tag ->
+  run "TIKZ-002 count: 2 slow pictures (Class C)" (fun tag ->
       let log_ctx =
         {
           Log_parser.empty_context with
@@ -632,9 +650,15 @@ let () =
       in
       Log_parser.set_log_context log_ctx;
       Fun.protect ~finally:Log_parser.clear_log_context (fun () ->
-          expect
-            (fires_with_count "TIKZ-002" (unique_src ()) 2)
-            (tag ^ ": count=2")));
+          let results = Validators.run_class_c (unique_src ()) in
+          let tikz =
+            List.find_opt
+              (fun r -> (r : Validators.result).id = "TIKZ-002")
+              results
+          in
+          match tikz with
+          | Some r -> expect (r.count = 2) (tag ^ ": count=2")
+          | None -> expect false (tag ^ ": TIKZ-002 not found")));
 
   (* ══════════════════════════════════════════════════════════════════
      TIKZ-008: Uncompressed PDFs
@@ -707,7 +731,6 @@ let () =
           "PDF-012";
           "COL-004";
           "COL-007";
-          "TIKZ-002";
           "TIKZ-008";
           "CJK-007";
         ]
@@ -722,7 +745,7 @@ let () =
   (* ══════════════════════════════════════════════════════════════════ Layer
      mapping: all 19 rules map to L3
      ══════════════════════════════════════════════════════════════════ *)
-  run "All 19 rules mapped to L3" (fun tag ->
+  run "All 18 rules mapped to L3 (TIKZ-002 now Class C)" (fun tag ->
       let l3_ids =
         [
           "FIG-004";
@@ -741,7 +764,6 @@ let () =
           "PDF-012";
           "COL-004";
           "COL-007";
-          "TIKZ-002";
           "TIKZ-008";
           "CJK-007";
         ]

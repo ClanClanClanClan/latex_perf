@@ -11,6 +11,7 @@ type resolved_include = { entry : include_entry; resolved_path : string option }
 (* ── Extraction ──────────────────────────────────────────────────── *)
 
 let re_input = Re_compat.regexp {|\\input{\([^}]+\)}|}
+let re_input_nobrace = Re_compat.regexp {|\\input[ \t]+\([^ \t{\\][^ \t\\]*\)|}
 let re_include = Re_compat.regexp {|\\include{\([^}]+\)}|}
 let re_includeonly = Re_compat.regexp {|\\includeonly{\([^}]+\)}|}
 
@@ -31,8 +32,22 @@ let extract_with_re re cmd src =
 
 let extract_includes (src : string) : include_entry list =
   let inputs = extract_with_re re_input "input" src in
+  let inputs_nb = extract_with_re re_input_nobrace "input" src in
   let includes = extract_with_re re_include "include" src in
-  List.sort (fun a b -> compare a.position b.position) (inputs @ includes)
+  (* Deduplicate: no-brace matches may overlap with brace matches *)
+  let all = inputs @ inputs_nb @ includes in
+  let seen = Hashtbl.create 16 in
+  let deduped =
+    List.filter
+      (fun e ->
+        let key = (e.command, e.position) in
+        if Hashtbl.mem seen key then false
+        else (
+          Hashtbl.replace seen key ();
+          true))
+      all
+  in
+  List.sort (fun a b -> compare a.position b.position) deduped
 
 let extract_includeonly (src : string) : string list =
   try

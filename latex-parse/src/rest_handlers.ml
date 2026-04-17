@@ -161,6 +161,11 @@ let handle_tokenize body ~catalogue =
                 | Latex_parse_lib.Service_payload.Hedge -> "hedge"
                 | Latex_parse_lib.Service_payload.Unknown -> "unknown"
               in
+              (* Set up user macro context for CMD-015/016/017 *)
+              let _reg =
+                Latex_parse_lib.User_macro_registry.create latex_content
+              in
+              Latex_parse_lib.User_macro_context.set _reg;
               let vres, vdur, vtim =
                 let open Latex_parse_lib in
                 let xs, dur, timings =
@@ -175,6 +180,7 @@ let handle_tokenize body ~catalogue =
                   dur,
                   timings )
               in
+              Latex_parse_lib.User_macro_context.clear ();
               let json =
                 json_ok
                   ~expanded:(if did_expand then Some latex_content else None)

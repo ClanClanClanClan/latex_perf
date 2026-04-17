@@ -520,7 +520,6 @@ let rules_l3_file : rule list =
     r_pdf_012;
     r_col_004;
     r_col_007;
-    r_tikz_002;
     r_tikz_008;
     r_cjk_007;
   ]

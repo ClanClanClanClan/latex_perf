@@ -64,6 +64,9 @@
   build_artifact_state
   execution_class
   execution_policy
+  semantic_edges
+  dependency_graph
+  invalidation
   validator_dag
   layer_sync
   semantic_state
@@ -278,6 +281,21 @@
 (test
  (name test_include_resolver)
  (modules test_include_resolver)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_semantic_edges)
+ (modules test_semantic_edges)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_dependency_graph)
+ (modules test_dependency_graph)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_invalidation)
+ (modules test_invalidation)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

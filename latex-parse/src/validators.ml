@@ -28,6 +28,7 @@ include Validators_l3_file
 include Validators_l1
 include Validators_l1_expl3
 include Validators_project
+include Validators_partial
 
 (* Extend rules_class_c with TIKZ-002 from validators_l3_file (log-dependent) *)
 let rules_class_c = rules_class_c @ [ r_tikz_002 ]
@@ -51,6 +52,7 @@ let rules_enc_char_spc : rule list =
   @ rules_l1_expl3
   @ rules_user_macro
   @ rules_project
+  @ rules_partial
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in

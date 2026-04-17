@@ -64,6 +64,10 @@
   build_artifact_state
   execution_class
   execution_policy
+  partial_cst
+  error_recovery
+  partial_context
+  validators_partial
   semantic_edges
   dependency_graph
   invalidation
@@ -281,6 +285,11 @@
 (test
  (name test_include_resolver)
  (modules test_include_resolver)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_partial_cst)
+ (modules test_partial_cst)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

@@ -30,6 +30,8 @@ proofs/BuildLog.v
 proofs/UserExpand.v
 proofs/IncludeGraphSound.v
 proofs/InvalidationSound.v
+proofs/PartialParseLocality.v
+proofs/DamageContainment.v
 
 # ML sub-theory (separate dune coq.theory stanza)
 # proofs/ML/SpanExtractorSound.v

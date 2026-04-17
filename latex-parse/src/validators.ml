@@ -27,6 +27,7 @@ include Validators_l4_style
 include Validators_l3_file
 include Validators_l1
 include Validators_l1_expl3
+include Validators_project
 
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
    rules *)
@@ -46,6 +47,7 @@ let rules_enc_char_spc : rule list =
   @ rules_l3_file
   @ rules_l1_expl3
   @ rules_user_macro
+  @ rules_project
 
 (* ── VPD-catalogue: all 80 rules with VPD pattern annotations ──────── *)
 (* This list enumerates every rule that has a corresponding entry in

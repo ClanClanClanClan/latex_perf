@@ -54,6 +54,11 @@
   macro_catalogue
   user_macro_registry
   user_macro_context
+  include_resolver
+  project_graph
+  project_state
+  project_context
+  validators_project
   log_parser
   build_profile
   build_artifact_state
@@ -268,6 +273,21 @@
 (test
  (name test_user_macro_registry)
  (modules test_user_macro_registry)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_include_resolver)
+ (modules test_include_resolver)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_project_graph)
+ (modules test_project_graph)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_project_state)
+ (modules test_project_state)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

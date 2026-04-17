@@ -19,6 +19,7 @@ let _class_c_ids =
     "LAY-021";
     "MATH-026";
     "MATH-027";
+    "TIKZ-002";
   ]
 
 let _class_c_tbl : (string, unit) Hashtbl.t =

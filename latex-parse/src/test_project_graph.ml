@@ -50,8 +50,22 @@ let () =
 
   run "unresolved includes reported" (fun tag ->
       let g = Project_graph.build ~root:(corpus "main.tex") in
-      (* main.tex includes chapter2 which has no further includes *)
-      (* All includes should resolve for the main corpus *)
-      expect (g.unresolved = []) (tag ^ ": no unresolved"))
+      expect (g.unresolved = []) (tag ^ ": no unresolved"));
+
+  run "self-cycle detected" (fun tag ->
+      let g = Project_graph.build ~root:(corpus "self_cycle.tex") in
+      expect (not (Project_graph.is_acyclic g)) (tag ^ ": has cycle"));
+
+  run "diamond shape (no cycle)" (fun tag ->
+      let g = Project_graph.build ~root:(corpus "diamond_top.tex") in
+      expect (Project_graph.is_acyclic g) (tag ^ ": acyclic");
+      expect (Project_graph.file_count g >= 4) (tag ^ ": >= 4 files"));
+
+  run "\\input without braces" (fun tag ->
+      let entries =
+        Include_resolver.extract_includes "\\input chapter1.tex\n"
+      in
+      expect (List.length entries >= 1) (tag ^ ": found no-brace input");
+      expect ((List.hd entries).raw_path = "chapter1.tex") (tag ^ ": path"))
 
 let () = finalise "project-graph"

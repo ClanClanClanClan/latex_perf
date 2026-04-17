@@ -100,7 +100,7 @@ support:
   document_modes:
     single_file: GA
     build_coupled_single_file: beta
-    multi_file: planned
+    multi_file: alpha
     beamer: deferred
   macro_support_level: catalogue-only in v25; bounded user macro subset planned for
     v26

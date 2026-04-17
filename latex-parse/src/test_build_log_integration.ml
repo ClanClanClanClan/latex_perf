@@ -311,7 +311,7 @@ let () =
           expect no_state (tag ^ ": state cleared");
           expect no_log (tag ^ ": log context cleared"));
 
-  run "rules_class_c has exactly 13 rules" (fun tag ->
-      expect (List.length Validators.rules_class_c = 13) (tag ^ ": 13 rules"))
+  run "rules_class_c has exactly 14 rules (13 + TIKZ-002)" (fun tag ->
+      expect (List.length Validators.rules_class_c = 14) (tag ^ ": 14 rules"))
 
 let () = finalise "build-log-integration"

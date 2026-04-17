@@ -53,6 +53,12 @@ val run_with_build : string -> result list
 val run_with_policy : Execution_policy.t -> string -> result list
 (** Run rules according to the given execution policy. *)
 
+val rules_user_macro : rule list
+(** WS2 user macro registry validators (CMD-015/016/017). *)
+
+val rules_project : rule list
+(** WS3 project-level validators (PRJ-001/002/003/004). *)
+
 val run_all_for_language : string -> string option -> result list
 (** Like {!run_all} but with language gating. If [Some lang], only rules
     matching that language (or universal rules) are run. If [None], auto-detects

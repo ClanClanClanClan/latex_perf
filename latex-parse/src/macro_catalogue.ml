@@ -401,27 +401,37 @@ let expand_once cat s =
           | Some e when should_expand_argsafe e ~in_math:!in_math ->
               (* Try to parse positional arguments *)
               let consumed = ref false in
-              if e.positional >= 1 then (
-                let args = Array.make e.positional "" in
-                let pos = ref j in
-                let ok = ref true in
-                for k = 0 to e.positional - 1 do
-                  if !ok then
-                    match find_brace_block s !pos with
-                    | Some (off, len) ->
-                        args.(k) <- String.sub s off len;
-                        pos := off + len + 1 (* past closing brace *)
-                    | None -> ok := false
-                done;
-                if !ok then (
-                  let result =
-                    match e.template with
-                    | Inline body -> apply_inline_template body args
-                    | Builtin b -> apply_builtin b args
-                  in
-                  Buffer.add_string buf result;
-                  i := !pos;
-                  consumed := true));
+              (if e.positional >= 1 then (
+                 let args = Array.make e.positional "" in
+                 let pos = ref j in
+                 let ok = ref true in
+                 for k = 0 to e.positional - 1 do
+                   if !ok then
+                     match find_brace_block s !pos with
+                     | Some (off, len) ->
+                         args.(k) <- String.sub s off len;
+                         pos := off + len + 1 (* past closing brace *)
+                     | None -> ok := false
+                 done;
+                 if !ok then (
+                   let result =
+                     match e.template with
+                     | Inline body -> apply_inline_template body args
+                     | Builtin b -> apply_builtin b args
+                   in
+                   Buffer.add_string buf result;
+                   i := !pos;
+                   consumed := true))
+               else
+                 (* Arity-0 argsafe entry (e.g., user macro with no args) *)
+                 let result =
+                   match e.template with
+                   | Inline body -> apply_inline_template body [||]
+                   | Builtin b -> apply_builtin b [||]
+                 in
+                 Buffer.add_string buf result;
+                 i := j;
+                 consumed := true);
               if not !consumed then (
                 Buffer.add_char buf c;
                 incr i)

@@ -233,6 +233,10 @@ let run_all (src : string) : result list =
         (* Build semantic state for L3 validators (spec W53-57) *)
         let sem = Semantic_state.analyze src in
         Semantic_state.set_state sem;
+        (* Build partial document state for PRT validators (WS5) *)
+        let _parse_nodes, parse_errors = Parser_l2.parse_located src in
+        let pdoc = Partial_cst.classify src parse_errors in
+        Partial_context.set pdoc;
         (* Publish events to bus (spec W62) — subscribers consume deltas *)
         let bus = Event_bus.global () in
         (* Register one-shot subscribers for this run *)
@@ -275,6 +279,7 @@ let run_all (src : string) : result list =
               go acc rs
         in
         let results = go [] rules in
+        Partial_context.clear ();
         Cache_key.store cache cache_key results;
         results
 
@@ -748,7 +753,7 @@ let run_all_incremental ?(prev_src : string option) (src : string) : result list
   let dirty_indices =
     match _resolve_old_snap prev_src with
     | None -> List.init (Array.length new_snap.chunks) Fun.id
-    | Some os -> Chunk_store.diff_snapshots os new_snap
+    | Some os -> Invalidation.compute ~old_snap:os ~new_snap
   in
   _prev_snapshot := Some new_snap;
   (* Per-chunk rules: only re-run dirty chunks *)
@@ -799,7 +804,7 @@ let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
   let dirty_indices =
     match _resolve_old_snap prev_src with
     | None -> List.init (Array.length new_snap.chunks) Fun.id
-    | Some os -> Chunk_store.diff_snapshots os new_snap
+    | Some os -> Invalidation.compute ~old_snap:os ~new_snap
   in
   _prev_snapshot := Some new_snap;
   let rules = get_rules () in

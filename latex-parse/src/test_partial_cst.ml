@@ -135,38 +135,20 @@ let () =
       expect has (tag ^ ": set");
       expect no (tag ^ ": cleared"));
 
-  (* ── PRT validator tests ───────────────────────────────────────── *)
-  run "PRT-001 fires on Broken document" (fun tag ->
-      let pd =
-        Partial_cst.classify "broken {{" [ ("Unclosed brace", mk_loc 7) ]
+  (* ── PRT validator tests (run_all now auto-sets partial context) ── *)
+  run "PRT-001 fires on source with mismatched env" (fun tag ->
+      let src =
+        "\\begin{itemize}\n\\end{enumerate}\n"
+        ^ string_of_int (Random.int 999999)
       in
-      Partial_context.set pd;
-      Fun.protect ~finally:Partial_context.clear (fun () ->
-          let src = "broken {{ " ^ string_of_int (Random.int 999999) in
-          let results = Validators.run_all src in
-          let has_prt =
-            List.exists
-              (fun (r : Validators.result) -> r.id = "PRT-001")
-              results
-          in
-          expect has_prt (tag ^ ": PRT-001 fires")));
+      let results = Validators.run_all src in
+      let has_prt =
+        List.exists (fun (r : Validators.result) -> r.id = "PRT-001") results
+      in
+      expect has_prt (tag ^ ": PRT-001 fires"));
 
-  run "PRT-001 silent on Complete document" (fun tag ->
-      let pd = Partial_cst.classify "good document" [] in
-      Partial_context.set pd;
-      Fun.protect ~finally:Partial_context.clear (fun () ->
-          let src = "good document " ^ string_of_int (Random.int 999999) in
-          let results = Validators.run_all src in
-          let has_prt =
-            List.exists
-              (fun (r : Validators.result) -> r.id = "PRT-001")
-              results
-          in
-          expect (not has_prt) (tag ^ ": PRT-001 silent")));
-
-  run "PRT-001 silent without context" (fun tag ->
-      Partial_context.clear ();
-      let src = "no context " ^ string_of_int (Random.int 999999) in
+  run "PRT-001 silent on clean source" (fun tag ->
+      let src = "Hello world. " ^ string_of_int (Random.int 999999) in
       let results = Validators.run_all src in
       let has_prt =
         List.exists (fun (r : Validators.result) -> r.id = "PRT-001") results

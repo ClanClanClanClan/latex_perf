@@ -1,6 +1,69 @@
 # Changelog
 
-All notable changes to LaTeX Perfectionist v25 are documented here.
+All notable changes to LaTeX Perfectionist are documented here.
+
+## [v26.0.0] — 2026-04-18
+
+### Added (PRs #223-#233)
+
+**WS0: Truth-surface freeze**
+- Canonical `governance/project_facts.yaml` with `generate_project_facts.py` and `check_repo_facts.py`
+- Spec-drift CI gate (`.github/workflows/spec-drift.yml`)
+- `docs/SUPPORT_MATRIX.md`, `docs/PROOF_CLASSES.md`, `docs/COMPILATION_GUARANTEE_STACK.md`
+
+**WS1: Compile-log integration**
+- Class C execution path: 14 log-dependent rules isolated from keystroke-critical `run_all`
+- `build_profile.ml`: auto-detect `.log` sibling, engine detection, staleness check
+- `execution_class.ml` / `execution_policy.ml`: A/B/C/D taxonomy
+- CLI `--log` flag, auto-detect, `[build]` tagged output
+- `docs/BUILD_LOG_CONTRACT.md`
+
+**WS2: Bounded user macro registry**
+- `user_macro_registry.ml`: parse `\newcommand`/`\renewcommand`/`\providecommand`, 29-primitive blocklist
+- Def-use dependency edges, DFS cycle detection
+- `merge_user_macros` in `macro_catalogue.ml`: user macros expand via existing pipeline
+- CMD-015 (unsupported construct), CMD-016 (cycle), CMD-017 (shadowing)
+
+**WS3: Project graph foundation**
+- `include_resolver.ml`: parse `\input`/`\include`/`\includeonly`, no-brace form support
+- `project_graph.ml`: directed inclusion graph, DFS cycle detection, `\includeonly` respect
+- `project_state.ml`: per-file semantic analysis, cross-file label/ref projection
+- PRJ-001 (cycle), PRJ-002 (unresolved), PRJ-003 (cross-file undef ref), PRJ-004 (dup label)
+- CLI `--project` mode
+
+**WS4: Hybrid invalidation**
+- `semantic_edges.ml`: label-ref and macro def-use edges per chunk
+- `dependency_graph.ml`: BFS transitive affected set propagation
+- `invalidation.ml`: replaces whole-source fallback with semantic-aware invalidation
+- Wired into `run_all_incremental` and `run_all_scheduled`
+
+**WS5: Partial document semantics**
+- `partial_cst.ml`: classify documents into trust zones (Complete/Partial/Broken)
+- `error_recovery.ml`: recovery point detection, monotonic repair predicate
+- PRT-001 (parse errors with confidence-based severity), PRT-002 (trust zone boundary)
+- Wired into `run_all` via `Parser_l2.parse_located`
+
+**WS6: Testing hardening**
+- `test_mutation_baseline.ml`: 92.4% rule coverage (532/576)
+- `test_fuzz_parser.ml`: grammar-aware parser fuzzing (5000 trials)
+- `test_fuzz_binary.ml`: PNG/JPEG/font reader fuzzing (1000 trials/format)
+- `test_long_stress.ml`: 10K iterations + GC tracking
+- `.github/workflows/mutation.yml`, `.github/workflows/fuzz-nightly.yml`
+
+**Coq proofs (6 new files, 22 QED, 0 admits)**
+- `BuildLog.v`, `UserExpand.v`, `IncludeGraphSound.v`
+- `InvalidationSound.v`, `PartialParseLocality.v`, `DamageContainment.v`
+
+### Fixed
+- EDF scheduler: renamed `deadline` to `priority` (was compared against wall-clock time)
+- Removed dead `DeadlineMissed` event from event_bus
+- TIKZ-002 moved from `rules_l3_file` to `rules_class_c` (Class C isolation)
+- `expand_once` arity-0 argsafe fix (user macros with no args never expanded)
+- REST handler: `User_macro_context` set/cleared per request
+
+### Changed
+- `project_facts.yaml`: `multi_file: planned` → `multi_file: alpha`
+- 18 new OCaml modules, 15 new test files, ~3,846 new lines
 
 ## [v25.0.0] — 2026-04-14
 

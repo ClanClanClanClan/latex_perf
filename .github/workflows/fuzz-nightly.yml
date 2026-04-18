@@ -1,0 +1,44 @@
+name: Nightly Fuzzing
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-ocaml-env
+      - name: Build fuzz + stress executables
+        run: |
+          opam exec -- dune build \
+            latex-parse/src/test_fuzz_parser.exe \
+            latex-parse/src/test_fuzz_binary.exe \
+            latex-parse/src/test_long_stress.exe
+      - name: Parser fuzzing (100K trials)
+        run: |
+          FUZZ_TRIALS=100000 TEST_SEED=$RANDOM \
+            ./_build/default/latex-parse/src/test_fuzz_parser.exe
+      - name: Binary reader fuzzing (10K per format)
+        run: |
+          FUZZ_TRIALS=10000 TEST_SEED=$RANDOM \
+            ./_build/default/latex-parse/src/test_fuzz_binary.exe
+      - name: Long stress (10K iterations)
+        run: |
+          STRESS_ITERS=10000 TEST_SEED=$RANDOM \
+            ./_build/default/latex-parse/src/test_long_stress.exe
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: `Nightly fuzz failure (${new Date().toISOString().slice(0,10)})`,
+              body: `Fuzzing failed. See [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).`,
+              labels: ['bug', 'fuzz']
+            });

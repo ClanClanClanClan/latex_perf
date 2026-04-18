@@ -1,0 +1,16 @@
+name: Mutation Baseline
+on: [push, pull_request]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-ocaml-env
+      - name: Build mutation baseline
+        run: opam exec -- dune build latex-parse/src/test_mutation_baseline.exe
+      - name: Run mutation baseline
+        run: opam exec -- ./_build/default/latex-parse/src/test_mutation_baseline.exe

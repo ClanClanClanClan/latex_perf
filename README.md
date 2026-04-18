@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v25.0.0
+# LaTeX Perfectionist v26.0.0
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->

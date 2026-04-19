@@ -21,6 +21,9 @@ type log_event =
   | ClubPenalty of { page : int }
   | FloatWarning of { message : string; line : int }
   | LatexWarning of { message : string; line : int }
+  | RerunNeeded of { message : string }
+  | CitationUndefined of { key : string }
+  | FontSubstitution of { message : string }
 
 type log_context = {
   events : log_event list;
@@ -31,6 +34,9 @@ type log_context = {
   has_widows : bool;
   has_orphans : bool;
   tikz_compile_times : float list;
+  has_rerun_warnings : bool;
+  undefined_citations : string list;
+  font_substitutions : string list;
 }
 
 let empty_context =
@@ -43,6 +49,9 @@ let empty_context =
     max_overfull_pt = 0.0;
     has_widows = false;
     has_orphans = false;
+    has_rerun_warnings = false;
+    undefined_citations = [];
+    font_substitutions = [];
   }
 
 (* ── Regex patterns for log parsing ─────────────────────────────── *)
@@ -66,8 +75,16 @@ let re_page_number = Re_compat.regexp {|\[\([0-9]+\)\]|}
 let re_float_warning =
   Re_compat.regexp {|LaTeX Warning: Float too large.*input line \([0-9]+\)|}
 
-let _re_latex_warning =
+let re_latex_warning =
   Re_compat.regexp {|LaTeX Warning: \(.*\) on input line \([0-9]+\)|}
+
+let re_rerun = Re_compat.regexp {|LaTeX Warning:.*Rerun|}
+
+let re_citation_undef =
+  Re_compat.regexp {|LaTeX Warning: Citation `\([^']*\)' on page|}
+
+let re_font_subst =
+  Re_compat.regexp {|LaTeX Font Warning: Font shape.*not available|}
 
 let re_widow = Re_compat.regexp_string "Widow penalty"
 let re_club = Re_compat.regexp_string "Club penalty"
@@ -150,12 +167,41 @@ let parse_log (content : string) : log_context =
          events := ClubPenalty { page = 0 } :: !events
        with Not_found -> ());
       (* TikZ compile times *)
-      try
-        let _mr, _ = Re_compat.search_forward re_tikz_time line 0 in
-        ignore _mr;
-        let t = float_of_string (Re_compat.matched_group _mr 1 line) in
-        tikz_times := t :: !tikz_times
-      with Not_found | Failure _ -> ())
+      (try
+         let _mr, _ = Re_compat.search_forward re_tikz_time line 0 in
+         ignore _mr;
+         let t = float_of_string (Re_compat.matched_group _mr 1 line) in
+         tikz_times := t :: !tikz_times
+       with Not_found | Failure _ -> ());
+      (* Rerun warnings *)
+      (try
+         let _mr, _ = Re_compat.search_forward re_rerun line 0 in
+         ignore _mr;
+         events := RerunNeeded { message = line } :: !events
+       with Not_found -> ());
+      (* Citation undefined *)
+      let matched_specific = ref false in
+      (try
+         let _mr, _ = Re_compat.search_forward re_citation_undef line 0 in
+         let key = Re_compat.matched_group _mr 1 line in
+         events := CitationUndefined { key } :: !events;
+         matched_specific := true
+       with Not_found | Failure _ -> ());
+      (* Font substitution *)
+      (try
+         let _mr, _ = Re_compat.search_forward re_font_subst line 0 in
+         ignore _mr;
+         events := FontSubstitution { message = line } :: !events;
+         matched_specific := true
+       with Not_found -> ());
+      (* General LaTeX warning (catch-all, only if not already matched) *)
+      if not !matched_specific then
+        try
+          let _mr, _ = Re_compat.search_forward re_latex_warning line 0 in
+          let msg = Re_compat.matched_group _mr 1 line in
+          let ln = int_of_string (Re_compat.matched_group _mr 2 line) in
+          events := LatexWarning { message = msg; line = ln } :: !events
+        with Not_found | Failure _ -> ())
     lines;
   let events = List.rev !events in
   let overfull_lines =
@@ -189,6 +235,19 @@ let parse_log (content : string) : log_context =
   let has_orphans =
     List.exists (function ClubPenalty _ -> true | _ -> false) events
   in
+  let has_rerun_warnings =
+    List.exists (function RerunNeeded _ -> true | _ -> false) events
+  in
+  let undefined_citations =
+    List.filter_map
+      (function CitationUndefined { key } -> Some key | _ -> None)
+      events
+  in
+  let font_substitutions =
+    List.filter_map
+      (function FontSubstitution { message } -> Some message | _ -> None)
+      events
+  in
   {
     events;
     overfull_lines;
@@ -198,6 +257,9 @@ let parse_log (content : string) : log_context =
     has_widows;
     has_orphans;
     tikz_compile_times = List.rev !tikz_times;
+    has_rerun_warnings;
+    undefined_citations;
+    font_substitutions;
   }
 
 (* ── Thread-local log context ───────────────────────────────────── *)

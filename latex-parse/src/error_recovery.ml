@@ -70,3 +70,23 @@ let is_repaired ~(old_errors : (string * Parser_l2.loc) list)
   (* Strict subset: new errors ⊂ old errors (fewer = repaired) *)
   List.length new_set < List.length old_set
   && List.for_all (fun e -> List.mem e old_set) new_set
+
+(* ── PR #239 (memo §6, E2): dependency-boundary-aware repair ─────── *)
+
+type dependency_boundary = { region : int * int; reason : string }
+
+let position_disjoint_from_boundary (pos : int) (b : dependency_boundary) : bool
+    =
+  let s, e = b.region in
+  pos < s || e <= pos
+
+let is_repaired_with_deps ~(old_errors : (string * Parser_l2.loc) list)
+    ~(new_errors : (string * Parser_l2.loc) list)
+    ~(deps : dependency_boundary list) : bool =
+  (* First: classic monotonic repair. *)
+  is_repaired ~old_errors ~new_errors
+  (* Second: every remaining error must be disjoint from every boundary. *)
+  && List.for_all
+       (fun (_, (loc : Parser_l2.loc)) ->
+         List.for_all (position_disjoint_from_boundary loc.offset) deps)
+       new_errors

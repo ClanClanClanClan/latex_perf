@@ -161,6 +161,24 @@ let handle_tokenize body ~catalogue =
                 | Latex_parse_lib.Service_payload.Hedge -> "hedge"
                 | Latex_parse_lib.Service_payload.Unknown -> "unknown"
               in
+              (* Set up language profile context for PR #236 (memo §4).
+                 L0_PROFILE_OVERRIDE takes precedence; otherwise
+                 auto-classify. *)
+              let _profile_tier =
+                match Sys.getenv_opt "L0_PROFILE_OVERRIDE" with
+                | Some s -> (
+                    match Latex_parse_lib.Language_profile.tier_of_string s with
+                    | Some t -> t
+                    | None ->
+                        fst
+                          (Latex_parse_lib.Language_profile.classify_source
+                             latex_content))
+                | None ->
+                    fst
+                      (Latex_parse_lib.Language_profile.classify_source
+                         latex_content)
+              in
+              Latex_parse_lib.Language_profile.Context.set _profile_tier;
               (* Set up user macro context for CMD-015/016/017 *)
               let _reg =
                 Latex_parse_lib.User_macro_registry.create latex_content
@@ -181,6 +199,7 @@ let handle_tokenize body ~catalogue =
                   timings )
               in
               Latex_parse_lib.User_macro_context.clear ();
+              Latex_parse_lib.Language_profile.Context.clear ();
               let json =
                 json_ok
                   ~expanded:(if did_expand then Some latex_content else None)

@@ -1,0 +1,16 @@
+\documentclass{article}
+
+% LP-Foreign trigger: shell-escape invocation
+\immediate\write18{echo hello > out.txt}
+
+% LP-Foreign trigger: catcode mutation
+\catcode`\@=11
+
+\begin{document}
+\section{An LP-Foreign document}
+
+Shell-escape and direct catcode mutation push this document outside
+the supported language domain. The classifier returns LP-Foreign.
+No soundness claim applies.
+
+\end{document}

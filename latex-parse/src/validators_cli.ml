@@ -66,7 +66,41 @@ let cleanup () =
   Latex_parse_lib.Validators_context.clear ();
   Latex_parse_lib.File_context.clear_file_context ();
   Latex_parse_lib.Build_artifact_state.clear ();
-  Latex_parse_lib.User_macro_context.clear ()
+  Latex_parse_lib.User_macro_context.clear ();
+  Latex_parse_lib.Language_profile.Context.clear ()
+
+(* ── Profile handling (PR #236, memo §4) ─────────────────────────── *)
+
+let parse_profile_flag = function
+  | "auto" -> `Auto
+  | s -> (
+      match Latex_parse_lib.Language_profile.tier_of_string s with
+      | Some t -> `Forced t
+      | None ->
+          eprintf
+            "Error: unknown profile %S (expected one of: auto, lp-core, \
+             lp-extended, lp-foreign)\n"
+            s;
+          exit 2)
+
+let resolve_profile ~requested ~src =
+  let tier, features =
+    match requested with
+    | `Auto -> Latex_parse_lib.Language_profile.classify_source src
+    | `Forced t -> (t, [])
+  in
+  Latex_parse_lib.Language_profile.Context.set tier;
+  (tier, features)
+
+let print_profile_banner tier features =
+  eprintf "# profile=%s\n"
+    (Latex_parse_lib.Language_profile.tier_to_string tier);
+  List.iter
+    (fun (f : Latex_parse_lib.Unsupported_feature.t) ->
+      eprintf "# [%s] line %d offset %d: %s\n"
+        (Latex_parse_lib.Unsupported_feature.severity_to_string f.severity)
+        f.line f.offset f.message)
+    features
 
 let setup_all ~path ~src ~log_path =
   let base_dir = Filename.dirname path in
@@ -104,6 +138,30 @@ let () =
   match args with
   | [ _; path ] ->
       let src = read_all path in
+      let tier, features = resolve_profile ~requested:`Auto ~src in
+      print_profile_banner tier features;
+      let bp = setup_all ~path ~src ~log_path:None in
+      Fun.protect ~finally:cleanup (fun () ->
+          if Latex_parse_lib.Build_profile.has_log bp then
+            let policy = Latex_parse_lib.Execution_policy.with_build in
+            let results =
+              Latex_parse_lib.Validators.run_with_policy policy src
+            in
+            List.iter print_result results
+          else
+            let scored = Latex_parse_lib.Validators.run_all_scored src in
+            List.iter
+              (fun (r : Latex_parse_lib.Evidence_scoring.scored_result) ->
+                printf "%s\t%s\t%d\t%s\n" r.id
+                  (Latex_parse_lib.Validators_common.severity_to_string
+                     r.severity)
+                  r.count r.message)
+              scored)
+  | [ _; "--profile"; profile_arg; path ] ->
+      let src = read_all path in
+      let requested = parse_profile_flag profile_arg in
+      let tier, features = resolve_profile ~requested ~src in
+      print_profile_banner tier features;
       let bp = setup_all ~path ~src ~log_path:None in
       Fun.protect ~finally:cleanup (fun () ->
           if Latex_parse_lib.Build_profile.has_log bp then
@@ -123,6 +181,8 @@ let () =
               scored)
   | [ _; "--log"; log_path; path ] ->
       let src = read_all path in
+      let tier, features = resolve_profile ~requested:`Auto ~src in
+      print_profile_banner tier features;
       ignore (setup_all ~path ~src ~log_path:(Some log_path));
       let policy = Latex_parse_lib.Execution_policy.with_build in
       Fun.protect ~finally:cleanup (fun () ->
@@ -165,7 +225,7 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
-         <file.log>] <file.tex>\n"
+        "Usage: %s [--profile auto|lp-core|lp-extended|lp-foreign] [--project \
+         <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n"
         Sys.argv.(0);
       exit 2

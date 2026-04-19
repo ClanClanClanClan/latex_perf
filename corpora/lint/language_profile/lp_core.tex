@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\newcommand{\doublewide}[1]{\textbf{\textit{#1}}}
+
+\title{An LP-Core Document}
+\author{Example}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This document uses only constructs admitted by LP-Core: standard
+sectioning, \texttt{amsmath}, a bounded \verb|\newcommand|, and
+references.
+
+\begin{equation}
+  \label{eq:pythagoras}
+  a^2 + b^2 = c^2.
+\end{equation}
+
+Equation~\eqref{eq:pythagoras} is the Pythagorean identity.
+
+\doublewide{Emphasised text.}
+
+\section{Conclusion}
+No forbidden features appear anywhere in this source.
+
+\end{document}

@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+% LP-Core violation: \def outside \newcommand family
+\def\mymacro#1{\textbf{#1}}
+
+% LP-Core violation: \makeatletter in body
+\makeatletter
+\def\@secondof#1#2{#2}
+\makeatother
+
+\begin{document}
+\section{An LP-Extended document}
+
+This file uses \verb|\def| and \verb|\makeatletter|, which are
+outside LP-Core. No foreign triggers (no shell-escape, no catcode
+mutation, no scantokens) appear, so the classifier returns LP-Extended.
+
+\mymacro{Example}
+
+\end{document}

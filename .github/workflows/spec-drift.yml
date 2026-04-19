@@ -29,3 +29,19 @@ jobs:
 
       - name: Check project facts consistency
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
+
+      - name: Check support matrix yaml parses
+        run: |
+          python3 - <<'PY'
+          import yaml, sys
+          from pathlib import Path
+          p = Path("specs/v26/support_matrix.yaml")
+          if not p.is_file():
+              print("FAIL: missing", p, file=sys.stderr); sys.exit(1)
+          data = yaml.safe_load(p.read_text())
+          for section in ("engines", "document_modes", "macro_support",
+                          "proof_classes", "interfaces", "execution_classes"):
+              if section not in data:
+                  print(f"FAIL: missing section {section}", file=sys.stderr); sys.exit(1)
+          print(f"[support_matrix] PASS: v{data['version']} with {len(data)} sections")
+          PY

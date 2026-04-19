@@ -1,0 +1,170 @@
+# LaTeX Perfectionist v26 — Machine-readable Support Matrix
+#
+# Source of truth for tier/engine/mode/interface/package status.
+# Consumed by: docs/SUPPORT_MATRIX.md (human-readable wrapper),
+#              scripts/tools/check_repo_facts.py (drift gate),
+#              future UI diagnostics.
+# Memo reference: REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md §12
+# Human prose:    docs/SUPPORT_MATRIX.md
+
+version: v26.1
+last_updated: "2026-04-20"
+
+# Release-state taxonomy
+release_state:
+  GA: "supported for external users; part of the product contract"
+  beta: "available but still allowed to change in non-breaking ways"
+  alpha: "available but feature-incomplete; interface may change"
+  experimental: "feature-flagged; excluded from strongest proof/perf claims"
+  planned: "scoped for a future release; not available yet"
+  deferred: "acknowledged need but no committed schedule"
+  research: "not part of supported product behaviour"
+
+engines:
+  pdflatex:
+    status: GA
+    tier: lp_core
+    notes: "Primary target for v26 deterministic support."
+  xelatex:
+    status: beta
+    tier: lp_extended
+    notes: "Supported where Unicode/font handling is already covered."
+  lualatex:
+    status: beta
+    tier: lp_extended
+    notes: "Accepted with tighter package/profile boundaries."
+  ptex_uptex:
+    status: experimental
+    tier: lp_extended
+    notes: "CJK compatibility shim exists; not part of strongest guarantees."
+
+document_modes:
+  single_file:
+    status: GA
+    runtime: validators_cli
+    notes: "Current strongest support boundary."
+  single_file_with_log:
+    status: beta
+    runtime: validators_cli (--log)
+    notes: "Build-coupled; Class C rules isolated from keystroke-critical path."
+  multi_file_input_include:
+    status: alpha
+    runtime: validators_cli (--project)
+    notes: "Project graph foundation (PR #228/#231). Cross-file labels/refs wired."
+  beamer:
+    status: deferred
+    notes: "Pilot only after project graph substrate stabilises (v26.2)."
+
+macro_support:
+  builtin_catalogue:
+    status: GA
+    source: "core/l1_expander/macro_catalogue.json"
+    count: 520
+    notes: "441 symbol + 79 argsafe macros."
+  bounded_user_macros:
+    status: GA
+    source: "core/l1_expander/user_macro_registry.ml (WS2)"
+    admitted_forms:
+      - newcommand
+      - renewcommand
+      - providecommand
+    max_arity: 9
+    catcode_changes: forbidden
+    cycle_detection: enabled
+    notes: "Terminating, argument-safe, cycle-detected subset."
+  arbitrary_def_catcode_metaprogramming:
+    status: unsupported
+    tier: lp_foreign
+    notes: "Explicitly outside LP-Core; classifier surfaces as diagnostic."
+
+proof_classes:
+  formal_faithful:
+    status: GA
+    rule_count: 622
+    notes: "Rule logic mirrors formal model closely enough to justify strong soundness claims."
+  formal_conservative:
+    status: GA
+    rule_count: 20
+    notes: "Rule covered by vacuously sound theorem (check=false) for external binary checks."
+  formal_conditional:
+    status: GA
+    rule_count: 3
+    notes: "Sound given log predicate; LAY-025/026/027 compile-log-derived rules."
+  statistical_ml_bounded:
+    status: GA
+    rule_count: 8
+    notes: "Overlay on faithful proofs; TYPO-001/005/012/028/048/052/056/062 via v2 ByteClassifier."
+  heuristic_advisory:
+    status: "avoid_if_possible"
+    rule_count: 0
+    notes: "Kept empty; otherwise surfaced clearly."
+
+interfaces:
+  cli:
+    status: GA
+    entrypoint: "dune exec latex-parse/src/validators_cli.exe"
+    flags:
+      - "--profile {auto|lp-core|lp-extended|lp-foreign}"
+      - "--log <file.log>"
+      - "--layer {l0|l1|l2|l3|l4}"
+      - "--project <root.tex>"
+  rest:
+    status: GA
+    entrypoint: "make rest-run  # POST /tokenize, /expand"
+    env_vars:
+      - "L0_VALIDATORS=pilot"
+      - "L0_PROFILE_OVERRIDE={lp-core|lp-extended|lp-foreign}"
+      - "L0_INCLUDE_VALIDATORS_DURATION"
+      - "L0_INCLUDE_VALIDATORS_TIMINGS"
+  grpc_streaming:
+    status: deferred
+    notes: "Not the primary blocker for capability; reconsider in v26.2."
+  ide_lsp_grade:
+    status: planned
+    notes: "Requires lossless CST + rewrite substrate (v26.2, memo §7)."
+
+collaboration_platform:
+  comments_review_threads:
+    status: planned
+    target_release: v27.0
+    memo_reference: "§13 (editorial policy) + §14 (collaboration)"
+  tracked_changes:
+    status: planned
+    target_release: v27.1
+  project_permissions_roles:
+    status: planned
+    target_release: v27.1
+  institutional_deployment_audit_logs:
+    status: planned
+    target_release: v27.1
+  house_style_profiles_waivers:
+    status: planned
+    target_release: v27.0
+    notes: "Editorial policy layer per memo §13."
+
+execution_classes:
+  A:
+    name: keystroke_critical
+    latency_budget_ms: 1.2
+    state_reads: [hot_path_state]
+    proof_reference: "proofs/ExecutionClasses.v class_a_reads_only_hot_path"
+  B:
+    name: debounce_background
+    latency_budget_ms: 100
+    state_reads: [hot_path_state]
+  C:
+    name: build_coupled
+    latency_budget_ms: null
+    state_reads: [hot_path_state, build_log_state, external_binary_state]
+    trigger: "save|build|request"
+    proof_reference: "proofs/ExecutionClasses.v class_c_requires_build_profile"
+  D:
+    name: optional_heuristic
+    latency_budget_ms: null
+    state_reads: [hot_path_state, ml_confidence_state]
+    proof_reference: "proofs/ExecutionClasses.v class_d_advisory_only"
+
+hot_path_contract:
+  excluded_classes: [C, D]
+  proof_reference: "proofs/ExecutionClasses.v hot_path_excludes_cd"
+  runtime_reference: "latex-parse/src/execution_class.ml is_keystroke_safe"

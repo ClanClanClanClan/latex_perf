@@ -170,10 +170,11 @@ let get_rules () : rule list =
   if not !_dag_validated then (
     _dag_validated := true;
     !_dag_validate_fn rules);
-  (* DAG topo_order stored for future use when validators declare actual
-     provides/requires dependencies. Currently all rules use default_meta with
-     no edges, so we preserve original list order to maintain deterministic
-     severity ordering within families. *)
+  (* DAG topo_order is stored in [_dag_topo_order] and populated from
+     rule_contracts.yaml via Rule_contract_loader. We preserve original list
+     order here to keep severity ordering within families deterministic — the
+     topo order is used by [run_all_scheduled] / [run_all_incremental] for
+     edge-driven invalidation rather than to globally reorder run_all. *)
   rules
 
 (** Run all enabled validators on [src] and return fired results.
@@ -712,13 +713,18 @@ let () =
       let metas =
         List.map
           (fun r ->
-            Validator_dag.default_meta r.id
-              (match precondition_of_rule_id r.id with
-              | L0 -> Validator_dag.L0
-              | L1 -> Validator_dag.L1
-              | L2 -> Validator_dag.L2
-              | L3 -> Validator_dag.L3
-              | L4 -> Validator_dag.L4))
+            match Rule_contract_loader.find_opt r.id with
+            | Some c -> Rule_contract_loader.to_validator_meta c
+            | None ->
+                (* Fallback for rules not yet in rule_contracts.yaml. Preserves
+                   PR #235 behaviour until the contract catches up. *)
+                Validator_dag.default_meta r.id
+                  (match precondition_of_rule_id r.id with
+                  | L0 -> Validator_dag.L0
+                  | L1 -> Validator_dag.L1
+                  | L2 -> Validator_dag.L2
+                  | L3 -> Validator_dag.L3
+                  | L4 -> Validator_dag.L4))
           unique_rules
       in
       match Validator_dag.build_dag metas with

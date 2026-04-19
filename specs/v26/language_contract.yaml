@@ -1,0 +1,223 @@
+# LaTeX Perfectionist v26 — Language Contract (machine-readable source)
+#
+# Consumed by: latex-parse/src/language_profile.ml (OCaml mirror — CI enforces agreement)
+# Human-readable prose: specs/v26/language_contract.md
+# Proof: proofs/LanguageContract.v
+# Memo reference: specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md §4
+
+version: "v26.1"
+contract_id: "lp-language-contract-v26"
+
+tiers:
+
+  lp_core:
+    name: "LP-Core"
+    description: "Fully guaranteed subset"
+    engines:
+      - pdflatex
+
+    admitted_packages:
+      - inputenc
+      - fontenc
+      - babel
+      - polyglossia
+      - amsmath
+      - amssymb
+      - amsthm
+      - mathtools
+      - graphicx
+      - xcolor
+      - caption
+      - subcaption
+      - hyperref
+      - url
+      - cleveref
+      - booktabs
+      - natbib
+      - biblatex
+      - enumitem
+      - microtype
+
+    admitted_environments:
+      - document
+      - equation
+      - equation*
+      - align
+      - align*
+      - gather
+      - gather*
+      - multline
+      - multline*
+      - eqnarray
+      - eqnarray*
+      - itemize
+      - enumerate
+      - description
+      - figure
+      - table
+      - tabular
+      - verbatim
+      - quote
+      - quotation
+      - abstract
+
+    macro_rules:
+      builtin_catalogue_path: "core/l1_expander/macro_catalogue.json"
+      user_macros:
+        allowed_forms:
+          - newcommand
+          - renewcommand
+          - providecommand
+        max_arity: 9
+        catcode_changes_allowed: false
+        delimited_args_allowed: false
+        cycle_detection: required
+        fuel_bounded: required
+
+    forbidden_features:
+      # Each entry: { id, pattern_description, example }
+      - id: arbitrary_def
+        description: "Arbitrary \\def outside \\newcommand family"
+        example: "\\def\\x#1{...}"
+      - id: catcode_mutation
+        description: "Direct catcode assignment"
+        example: "\\catcode`\\@=11"
+      - id: makeatletter_bare
+        description: "\\makeatletter outside package boundaries"
+        example: "\\makeatletter ... \\makeatother in document body"
+      - id: shell_escape
+        description: "Shell command execution"
+        example: "\\write18{rm -rf ...}"
+      - id: csname_metaprogramming
+        description: "Dynamic command-name construction"
+        example: "\\csname some-\\romannumeral\\number-name\\endcsname"
+      - id: expandafter_heavy
+        description: "Heavy \\expandafter conditional programming"
+        example: "\\expandafter\\expandafter\\expandafter..."
+      - id: primitive_conditional
+        description: "Primitive TeX conditionals outside macro catalogue"
+        example: "\\ifnum\\x<\\y ... \\fi"
+      - id: detokenize
+        description: "String-level token mutation primitive"
+        example: "\\detokenize{...}"
+      - id: scantokens
+        description: "Re-tokenization primitive"
+        example: "\\scantokens{...}"
+      - id: csstring
+        description: "Command-name string conversion primitive"
+        example: "\\csstring\\x"
+      - id: openout_write
+        description: "File-output primitive"
+        example: "\\openout1=... \\write1{...}"
+
+    proof_claims:
+      - parser_sound
+      - lexer_deterministic
+      - lexer_total
+      - user_macro_terminating
+      - user_macro_cycle_detected
+      - partial_parse_local
+      - damage_contained
+      - include_graph_sound
+      - hybrid_invalidation_sound
+      - per_rule_soundness_all_faithful
+
+  lp_extended:
+    name: "LP-Extended"
+    description: "Practical subset with weaker contracts"
+    engines:
+      - pdflatex
+      - xelatex
+      - lualatex
+
+    additional_packages:
+      - fontspec
+      - luacode
+      - listings
+      - pgfplots
+      - tikz
+      - acmart
+      - elsarticle
+      - IEEEtran
+      - revtex
+      - beamer
+
+    additional_syntax:
+      - "\\def (detected, not expanded; surfaced as diagnostic)"
+      - "Conditional macros (\\ifdefined, \\@ifundefined)"
+      - "Opaque package-declared commands"
+
+    contracts:
+      - parser_continues_on_degraded_input
+      - trust_zones_via_partial_cst
+      - compile_log_diagnostics_class_c
+      - conservative_per_rule_soundness_file_based
+
+    downgraded_claims:
+      - "No soundness claim for semantically resolved labels/refs if LP-Extended package modifies cross-reference behaviour"
+      - "User macro expansion fidelity beyond bounded subset is best-effort"
+
+  lp_foreign:
+    name: "LP-Foreign"
+    description: "Explicitly outside strongest guarantees"
+    engines: any
+
+    triggers:
+      - id: shell_escape_invocation
+        description: "Any use of \\write18 / \\immediate\\write18 / \\ShellEscape"
+        example: "\\immediate\\write18{...}"
+      - id: catcode_mutation
+        description: "Runtime catcode changes"
+        example: "\\catcode`\\$=0"
+      - id: csname_dynamic
+        description: "\\csname with dynamic name construction"
+        example: "\\csname \\jobname -\\the\\year\\endcsname"
+      - id: scantokens_primitive
+        description: "\\scantokens primitive invocation"
+        example: "\\scantokens{...}"
+      - id: detokenize_primitive
+        description: "\\detokenize primitive invocation"
+        example: "\\detokenize{...}"
+      - id: external_preprocessor
+        description: "Documents generated by knitr/sweave/other"
+        example: "% knitr source"
+      - id: openout_write
+        description: "Primitive file-output"
+        example: "\\openout\\f=...\\write\\f{...}"
+      - id: global_let_primitive
+        description: "\\let redefining catcode-carrying tokens"
+        example: "\\let\\x=\\catcode"
+
+    contracts:
+      - rejected_for_guaranteed_mode
+      - best_effort_linting_with_tag
+      - no_soundness_claim
+      - user_notified_of_triggering_construct
+
+classification_order:
+  # Deterministic decision procedure, top-down
+  - step: 1
+    name: "lp_foreign_detection"
+    applies_tier: lp_foreign
+    on_match: "return LP_Foreign with triggering features"
+  - step: 2
+    name: "lp_core_violation_detection"
+    applies_tier: lp_extended
+    on_match: "return LP_Extended with violating features"
+  - step: 3
+    name: "default"
+    applies_tier: lp_core
+    on_match: "return LP_Core"
+
+runtime_integration:
+  cli_flag: "--profile {lp-core|lp-extended|lp-foreign|auto}"
+  rest_body_field: "profile"
+  env_override: "L0_PROFILE_OVERRIDE"
+  default_behaviour: "auto"
+  tag_applied_to_results: true
+
+exit_conditions:
+  - "Every input source maps to exactly one tier (totality)"
+  - "LP-Core classification implies absence of all forbidden features (soundness)"
+  - "LP-Foreign classification surfaces at least one triggering feature"
+  - "LP-Extended features subsumes LP-Core features (subset monotonicity)"

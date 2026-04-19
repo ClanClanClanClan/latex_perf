@@ -6028,9 +6028,67 @@ let rules_l2_approx : rule list =
     r_lay_023;
   ]
 
+(* LAY-025: Rerun required but not performed *)
+
 (** Class C (build-coupled) rules — require [Log_parser.set_log_context]. These
     are excluded from the keystroke-critical [run_all] path and only produce
     results when a compile log has been loaded. *)
+let r_lay_025 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        if ctx.has_rerun_warnings then
+          Some
+            {
+              id = "LAY-025";
+              severity = Warning;
+              message = "LaTeX rerun required -- cross-references may be wrong";
+              count = 1;
+            }
+        else None
+  in
+  mk_rule "LAY-025" run
+
+(* LAY-026: Citation undefined in compile log *)
+let r_lay_026 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt = List.length ctx.undefined_citations in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-026";
+              severity = Warning;
+              message =
+                Printf.sprintf "Undefined citation(s) in compile log (%d)" cnt;
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-026" run
+
+(* LAY-027: Font substitution in compile log *)
+let r_lay_027 : rule =
+  let run _s =
+    match Log_parser.get_log_context () with
+    | None -> None
+    | Some ctx ->
+        let cnt = List.length ctx.font_substitutions in
+        if cnt > 0 then
+          Some
+            {
+              id = "LAY-027";
+              severity = Info;
+              message = Printf.sprintf "Font substitution warning (%d)" cnt;
+              count = cnt;
+            }
+        else None
+  in
+  mk_rule "LAY-027" run
+
 let rules_class_c : rule list =
   [
     r_fig_020;
@@ -6046,6 +6104,9 @@ let rules_class_c : rule list =
     r_lay_021;
     r_math_026;
     r_math_027;
+    r_lay_025;
+    r_lay_026;
+    r_lay_027;
   ]
 
 (* L2 parser-driven validators — must be composed AFTER rules_l2_approx *)

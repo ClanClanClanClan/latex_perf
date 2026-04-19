@@ -311,7 +311,40 @@ let () =
           expect no_state (tag ^ ": state cleared");
           expect no_log (tag ^ ": log context cleared"));
 
-  run "rules_class_c has exactly 14 rules (13 + TIKZ-002)" (fun tag ->
-      expect (List.length Validators.rules_class_c = 14) (tag ^ ": 14 rules"))
+  run "rules_class_c has exactly 17 rules (13 + TIKZ-002 + LAY-025/026/027)"
+    (fun tag ->
+      expect (List.length Validators.rules_class_c = 17) (tag ^ ": 17 rules"));
+
+  run "LAY-025 fires on rerun warning" (fun tag ->
+      let log =
+        "LaTeX Warning: Label(s) may have changed. Rerun to get \
+         cross-references right.\n"
+      in
+      with_log_context log (fun () ->
+          let results = Validators.run_class_c src_minimal in
+          expect
+            (find_result "LAY-025" results <> None)
+            (tag ^ ": LAY-025 fires")));
+
+  run "LAY-026 fires on undefined citation" (fun tag ->
+      let log =
+        "LaTeX Warning: Citation `smith2020' on page 3 undefined on input line \
+         42.\n"
+      in
+      with_log_context log (fun () ->
+          let results = Validators.run_class_c src_minimal in
+          expect
+            (find_result "LAY-026" results <> None)
+            (tag ^ ": LAY-026 fires")));
+
+  run "LAY-027 fires on font substitution" (fun tag ->
+      let log =
+        "LaTeX Font Warning: Font shape `T1/cmss/bx/n' not available\n"
+      in
+      with_log_context log (fun () ->
+          let results = Validators.run_class_c src_minimal in
+          expect
+            (find_result "LAY-027" results <> None)
+            (tag ^ ": LAY-027 fires")))
 
 let () = finalise "build-log-integration"

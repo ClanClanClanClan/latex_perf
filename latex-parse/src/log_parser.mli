@@ -15,6 +15,9 @@ type log_event =
   | ClubPenalty of { page : int }
   | FloatWarning of { message : string; line : int }
   | LatexWarning of { message : string; line : int }
+  | RerunNeeded of { message : string }
+  | CitationUndefined of { key : string }
+  | FontSubstitution of { message : string }
 
 type log_context = {
   events : log_event list;
@@ -25,6 +28,9 @@ type log_context = {
   has_widows : bool;
   has_orphans : bool;
   tikz_compile_times : float list;
+  has_rerun_warnings : bool;
+  undefined_citations : string list;
+  font_substitutions : string list;
 }
 
 val empty_context : log_context

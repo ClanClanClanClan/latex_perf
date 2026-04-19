@@ -1,0 +1,11 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex)
+entering extended mode
+(./paper.tex
+LaTeX2e <2023-11-01> patch level 1
+
+LaTeX Font Warning: Font shape `T1/cmss/bx/n' not available
+(Font)              using `T1/cmss/m/n' instead on input line 15.
+
+[1] [2]
+Output written on paper.pdf (2 pages, 28000 bytes).
+Transcript written on paper.log.

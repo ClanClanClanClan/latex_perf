@@ -151,6 +151,23 @@ def main() -> int:
                 f"contracts Class C not in execution_class.ml: {sorted(extra)}"
             )
 
+    # 3b. PR #241 (p1.2): every Class C rule in execution_class.ml's
+    # hardcoded table must have execution_class = "C" in the contract.
+    # This is the concrete binding for proofs/ExecutionClasses.v — it
+    # turns the abstract isolation theorems into runtime-enforced
+    # invariants.
+    contract_by_id = {c["rule_id"]: c for c in contracts}
+    for rid in sorted(runtime_class_c):
+        c = contract_by_id.get(rid)
+        if c is None:
+            failures.append(f"runtime Class C id {rid!r} has no contract entry")
+            continue
+        if c["execution_class"] != "C":
+            failures.append(
+                f"{rid}: execution_class.ml says C, contract says "
+                f"{c['execution_class']!r}"
+            )
+
     # 4. Acyclicity.
     cycles = check_acyclic(contracts)
     for c in cycles:

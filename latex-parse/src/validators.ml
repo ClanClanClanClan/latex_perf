@@ -182,14 +182,31 @@ let vpd_catalogue_count = List.length rules_vpd_catalogue
 let _run_generation = Atomic.make 0
 
 (* DAG validation deferred until precondition_of_rule_id is defined. PR #241
-   (p1.1-#6): _dag_topo_order was computed on startup and never read anywhere.
-   Deleted; [Validator_dag.build_dag] still returns the topo order in its [dag]
-   record for future incremental callers. *)
+   (p1.1-#6): _dag_topo_order global ref removed. The build_dag result's
+   topo_order is currently unused on the hot path; v26.2
+   incremental-invalidation work (memo §9 three-plane planes) will consume it at
+   that point, computing it locally from [Validator_dag.build_dag]. *)
 let _dag_validated = ref false
 let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
 
+(** PR #241 (p1.2): tier gating per memo §4. When the active [Language_profile]
+    tier is LP_Foreign, skip every rule whose contract declares
+    [project_scope = Lp_core_or_extended]. Rules marked [Any_tier] (e.g. the
+    build-coupled log rules) still fire across all tiers. LP_Core and
+    LP_Extended documents get the full rule set. *)
+let _filter_by_tier (rules : rule list) : rule list =
+  match Language_profile.Context.get () with
+  | Some Language_profile.LP_Foreign ->
+      List.filter
+        (fun (r : rule) ->
+          match Rule_contract_loader.find_opt r.id with
+          | Some c -> c.project_scope = Rule_contract_loader.Any_tier
+          | None -> true)
+        rules
+  | _ -> rules
+
 let get_rules () : rule list =
-  let rules =
+  let base =
     match Sys.getenv_opt "L0_VALIDATORS" with
     | Some ("1" | "true" | "pilot" | "PILOT") ->
         rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
@@ -197,12 +214,16 @@ let get_rules () : rule list =
   in
   if not !_dag_validated then (
     _dag_validated := true;
-    !_dag_validate_fn rules);
+    !_dag_validate_fn base);
   (* PR #241 (p1.1-#6): preserve original list order for deterministic severity
      ordering within families. Incremental / scheduled callers that want
      edge-driven ordering compute the topo order locally via
-     [Validator_dag.build_dag]. *)
-  rules
+     [Validator_dag.build_dag].
+
+     PR #241 (p1.2): after DAG validation, apply tier gating (memo §4). DAG
+     validation runs against the unfiltered list so metadata consistency is
+     enforced even for rules that won't fire in the current tier. *)
+  _filter_by_tier base
 
 (** Run all enabled validators on [src] and return fired results.
 

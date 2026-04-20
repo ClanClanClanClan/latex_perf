@@ -528,6 +528,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_tier_gating)
+ (modules test_tier_gating)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_node_id)
  (modules test_node_id)
  (libraries latex_parse_lib test_helpers unix))

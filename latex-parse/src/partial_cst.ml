@@ -121,3 +121,17 @@ let classify (src : string) (errors : (string * Parser_l2.loc) list) :
       trust_zones;
       error_regions = List.rev !error_regions;
     }
+
+(* PR #241 (p1.2, memo §6 E3): expose stable node_ids for trust zones so
+   consumers can track a zone across edits. The [command_hash] slot encodes the
+   confidence tag: 0 = Complete, 1 = Partial, 2 = Broken. Matches
+   proofs/StableNodeIds.v::of_located_stable_under_local_edit — zones whose span
+   is outside an edit keep the same content_id. *)
+let zone_id (z : trust_zone) : Node_id.t =
+  let conf_tag =
+    match z.confidence with Complete -> 0 | Partial -> 1 | Broken -> 2
+  in
+  Node_id.of_located
+    ~node_length:(max 0 (z.end_pos - z.start_pos))
+    ~command_hash:conf_tag
+    { Parser_l2.line = 0; col = 0; offset = z.start_pos }

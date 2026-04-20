@@ -29,3 +29,12 @@ val damage_radius : error_pos:int -> string -> int * int
     enclosing paragraph boundary. *)
 
 val confidence_to_string : parse_confidence -> string
+
+val zone_id : trust_zone -> Node_id.t
+(** PR #241 (p1.2, memo §6 E3): deterministic stable identifier for a trust
+    zone. Computed via {!Node_id.of_located} over the zone's
+    [(start_pos, end_pos, confidence)]. Consumers (collaboration anchors,
+    incremental re-validation) can use these IDs to track a zone across edits.
+
+    Proved stable under local edits in
+    {!proofs/StableNodeIds.v::of_located_stable_under_local_edit}. *)

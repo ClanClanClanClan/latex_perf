@@ -90,9 +90,9 @@ for line in PILOT.read_text().splitlines():
 fail = 0
 
 for rid, info in runtime_rules.items():
-    layer = info['precondition']
-    if layer != 'L0_Lexer':
-        continue
+    # PR #237 (memo §10, §15.4): check runtime rules across all layers, not
+    # just L0_Lexer. The prior early-return hid LAY-025/026/027 and other
+    # non-L0 divergences from CI.
     if rid not in catalog_ids:
         print(f"[catalog] FAIL: runtime rule not in catalog: {rid}", file=sys.stderr)
         fail = 1

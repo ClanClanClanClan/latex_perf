@@ -2,6 +2,20 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.1.0] — Unreleased (P1 substrate)
+
+Closes memo-mandated v26 substrate gaps before the v26.1.0 tag is cut.
+
+**Added:**
+- Formal language contract (LP-Core / LP-Extended / LP-Foreign). See `specs/v26/language_contract.{md,yaml}`. PR #236.
+- Machine-readable rule contracts (`specs/rules/rule_contracts.yaml` + `.json`) driving a real validator DAG. PR #237.
+- LAY-025/026/027 spec entries (v26.1 compile-log pack now matches runtime).
+- Governance facts regenerated (645 rules, 629 shipped).
+
+**Fixed:**
+- Hollow validator DAG: all rules were calling `Validator_dag.default_meta r.id` with empty edges. PR #237 populates real provides/requires/conflicts from `rule_contracts.yaml`.
+- `scripts/validate_catalogue.py` L0-only early return removed; all runtime rules now checked against `rules_v3.yaml`.
+
 ## [v26.0.0] — 2026-04-18
 
 ### Added (PRs #223-#233)

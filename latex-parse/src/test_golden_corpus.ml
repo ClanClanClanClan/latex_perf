@@ -157,8 +157,10 @@ let resolve_path base_dir file_path =
   if Filename.is_relative file_path then Filename.concat base_dir file_path
   else file_path
 
-(* Pipeline mode: mirrors the REST smoke test — expand then validate at L1 *)
-type pipeline_mode = Raw_all | Expand_l1 | Language_gated
+(* Pipeline mode: mirrors the REST smoke test — expand then validate at L1. PR
+   #241 (memo §11): Advisory mode routes through run_with_policy with
+   with_advisory so Class D (STYLE family) rules fire. *)
+type pipeline_mode = Raw_all | Expand_l1 | Language_gated | Advisory
 
 let run_golden_suite ?(mode = Raw_all) suite_name yaml_path base_dir =
   let golden_cases = parse_golden_yaml yaml_path in
@@ -197,6 +199,9 @@ let run_golden_suite ?(mode = Raw_all) suite_name yaml_path base_dir =
           | Language_gated ->
               let lang = gc.language in
               Latex_parse_lib.Validators.run_all_for_language content lang
+          | Advisory ->
+              Latex_parse_lib.Validators.run_with_policy
+                Latex_parse_lib.Execution_policy.with_advisory content
         in
         let fired_ids =
           List.map (fun (r : Latex_parse_lib.Validators.result) -> r.id) results
@@ -298,13 +303,13 @@ let () =
   run_golden_suite "l3_text_approx"
     (Filename.concat base_dir "specs/rules/l3_text_approx_golden.yaml")
     base_dir;
-  run_golden_suite "style"
+  run_golden_suite ~mode:Advisory "style"
     (Filename.concat base_dir "specs/rules/style_golden.yaml")
     base_dir;
   run_golden_suite "phase3"
     (Filename.concat base_dir "specs/rules/phase3_golden.yaml")
     base_dir;
-  run_golden_suite "i18n_qa"
+  run_golden_suite ~mode:Advisory "i18n_qa"
     (Filename.concat base_dir "specs/rules/i18n_qa_golden.yaml")
     base_dir;
   (* Language-gated suite: tests that run_all_for_language correctly filters

@@ -11,25 +11,27 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-004 fires: long paragraph" (fun tag ->
       let long_para = String.concat " " (List.init 310 (fun _ -> "word")) in
-      expect (fires "STYLE-004" long_para) (tag ^ ": 310 words"));
+      expect (fires_advisory "STYLE-004" long_para) (tag ^ ": 310 words"));
   run "STYLE-004 clean: short paragraph" (fun tag ->
       expect
-        (does_not_fire "STYLE-004" "This is a short paragraph with few words.")
+        (does_not_fire_advisory "STYLE-004"
+           "This is a short paragraph with few words.")
         (tag ^ ": short para"));
   run "STYLE-004 clean: two short paras" (fun tag ->
       let two = "Short paragraph.\n\nAnother short one." in
-      expect (does_not_fire "STYLE-004" two) (tag ^ ": two short paras"));
+      expect (does_not_fire_advisory "STYLE-004" two) (tag ^ ": two short paras"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-006: Consecutive sentences start with same word
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-006 fires: same start" (fun tag ->
       expect
-        (fires "STYLE-006" "The cat sat. The dog ran. The bird flew.")
+        (fires_advisory "STYLE-006" "The cat sat. The dog ran. The bird flew.")
         (tag ^ ": three The starts"));
   run "STYLE-006 clean: different starts" (fun tag ->
       expect
-        (does_not_fire "STYLE-006" "The cat sat. A dog ran. Some bird flew.")
+        (does_not_fire_advisory "STYLE-006"
+           "The cat sat. A dog ran. Some bird flew.")
         (tag ^ ": different starts"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -37,11 +39,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-008 fires: dollar after period" (fun tag ->
       expect
-        (fires "STYLE-008" "We know this. $x$ is important.")
+        (fires_advisory "STYLE-008" "We know this. $x$ is important.")
         (tag ^ ": $ after period"));
   run "STYLE-008 clean: no math at sentence start" (fun tag ->
       expect
-        (does_not_fire "STYLE-008" "We know that the value is small.")
+        (does_not_fire_advisory "STYLE-008" "We know that the value is small.")
         (tag ^ ": no math start"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -49,25 +51,31 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-013 fires: digit after period" (fun tag ->
       expect
-        (fires "STYLE-013" "We observed this. 42 samples were collected.")
+        (fires_advisory "STYLE-013"
+           "We observed this. 42 samples were collected.")
         (tag ^ ": digit after period"));
   run "STYLE-013 clean: word after period" (fun tag ->
       expect
-        (does_not_fire "STYLE-013" "We observed this. Many samples were used.")
+        (does_not_fire_advisory "STYLE-013"
+           "We observed this. Many samples were used.")
         (tag ^ ": word after period"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-014: Contraction in formal text
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-014 fires: don't" (fun tag ->
-      expect (fires "STYLE-014" "We don't know the answer.") (tag ^ ": don't"));
+      expect
+        (fires_advisory "STYLE-014" "We don't know the answer.")
+        (tag ^ ": don't"));
   run "STYLE-014 fires: can't and won't" (fun tag ->
       expect
-        (fires_with_count "STYLE-014" "We can't do this and won't try." 2)
+        (fires_with_count_advisory "STYLE-014" "We can't do this and won't try."
+           2)
         (tag ^ ": two contractions"));
   run "STYLE-014 clean: no contractions" (fun tag ->
       expect
-        (does_not_fire "STYLE-014" "We do not know the answer to this question.")
+        (does_not_fire_advisory "STYLE-014"
+           "We do not know the answer to this question.")
         (tag ^ ": no contractions"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -75,11 +83,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-015 fires: double space" (fun tag ->
       expect
-        (fires "STYLE-015" "End of sentence.  Start of next.")
+        (fires_advisory "STYLE-015" "End of sentence.  Start of next.")
         (tag ^ ": double space"));
   run "STYLE-015 clean: single space" (fun tag ->
       expect
-        (does_not_fire "STYLE-015" "End of sentence. Start of next.")
+        (does_not_fire_advisory "STYLE-015" "End of sentence. Start of next.")
         (tag ^ ": single space"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -87,11 +95,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-016 fires: e.g. no comma" (fun tag ->
       expect
-        (fires "STYLE-016" "For example e.g. the first")
+        (fires_advisory "STYLE-016" "For example e.g. the first")
         (tag ^ ": e.g. no comma"));
   run "STYLE-016 clean: e.g., with comma" (fun tag ->
       expect
-        (does_not_fire "STYLE-016" "For example e.g., the first")
+        (does_not_fire_advisory "STYLE-016" "For example e.g., the first")
         (tag ^ ": e.g., with comma"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -99,10 +107,10 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-017 fires: long sentence" (fun tag ->
       let long = String.concat " " (List.init 45 (fun _ -> "word")) ^ "." in
-      expect (fires "STYLE-017" long) (tag ^ ": 45-word sentence"));
+      expect (fires_advisory "STYLE-017" long) (tag ^ ": 45-word sentence"));
   run "STYLE-017 clean: short sentence" (fun tag ->
       expect
-        (does_not_fire "STYLE-017" "This is a short sentence.")
+        (does_not_fire_advisory "STYLE-017" "This is a short sentence.")
         (tag ^ ": short sentence"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -110,12 +118,12 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-019 fires: back-to-back sections" (fun tag ->
       expect
-        (fires "STYLE-019"
+        (fires_advisory "STYLE-019"
            "\\section{Intro}\n\\subsection{Details}\nSome text here.")
         (tag ^ ": consecutive headings"));
   run "STYLE-019 clean: text between headings" (fun tag ->
       expect
-        (does_not_fire "STYLE-019"
+        (does_not_fire_advisory "STYLE-019"
            "\\section{Intro}\nSome introductory text.\n\\subsection{Details}")
         (tag ^ ": text between headings"));
 
@@ -123,10 +131,12 @@ let () =
      STYLE-023: Percent sign in text not escaped
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-023 fires: bare percent" (fun tag ->
-      expect (fires "STYLE-023" "The rate is 50% in 2025.") (tag ^ ": bare %"));
+      expect
+        (fires_advisory "STYLE-023" "The rate is 50% in 2025.")
+        (tag ^ ": bare %"));
   run "STYLE-023 clean: escaped percent" (fun tag ->
       expect
-        (does_not_fire "STYLE-023" "The rate is 50\\% in 2025.")
+        (does_not_fire_advisory "STYLE-023" "The rate is 50\\% in 2025.")
         (tag ^ ": escaped %"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -134,11 +144,12 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-024 fires: bare ampersand" (fun tag ->
       expect
-        (fires "STYLE-024" "Smith & Jones wrote the paper.")
+        (fires_advisory "STYLE-024" "Smith & Jones wrote the paper.")
         (tag ^ ": bare &"));
   run "STYLE-024 clean: in tabular" (fun tag ->
       expect
-        (does_not_fire "STYLE-024" "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
+        (does_not_fire_advisory "STYLE-024"
+           "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
         (tag ^ ": in tabular"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -146,11 +157,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-026 fires: the the" (fun tag ->
       expect
-        (fires "STYLE-026" "We studied the the effect of light.")
+        (fires_advisory "STYLE-026" "We studied the the effect of light.")
         (tag ^ ": the the"));
   run "STYLE-026 clean: no repeats" (fun tag ->
       expect
-        (does_not_fire "STYLE-026" "We studied the effect of light.")
+        (does_not_fire_advisory "STYLE-026" "We studied the effect of light.")
         (tag ^ ": no repeats"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -158,11 +169,12 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-030 fires: mixed case headings" (fun tag ->
       expect
-        (fires "STYLE-030" "\\section{The Big Idea}\n\\section{A small concept}")
+        (fires_advisory "STYLE-030"
+           "\\section{The Big Idea}\n\\section{A small concept}")
         (tag ^ ": mixed title/sentence case"));
   run "STYLE-030 clean: consistent case" (fun tag ->
       expect
-        (does_not_fire "STYLE-030"
+        (does_not_fire_advisory "STYLE-030"
            "\\section{The Big Idea}\n\\section{Another Big Concept}")
         (tag ^ ": consistent title case"));
 
@@ -170,10 +182,12 @@ let () =
      STYLE-031: Heading number without title
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-031 fires: number-only heading" (fun tag ->
-      expect (fires "STYLE-031" "\\section{3.1}") (tag ^ ": number-only heading"));
+      expect
+        (fires_advisory "STYLE-031" "\\section{3.1}")
+        (tag ^ ": number-only heading"));
   run "STYLE-031 clean: real title" (fun tag ->
       expect
-        (does_not_fire "STYLE-031" "\\section{Introduction}")
+        (does_not_fire_advisory "STYLE-031" "\\section{Introduction}")
         (tag ^ ": real title"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -181,11 +195,12 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-033 fires: space before cite" (fun tag ->
       expect
-        (fires "STYLE-033" "As shown \\cite{smith2020} we see this.")
+        (fires_advisory "STYLE-033" "As shown \\cite{smith2020} we see this.")
         (tag ^ ": space before cite"));
   run "STYLE-033 clean: tilde before cite" (fun tag ->
       expect
-        (does_not_fire "STYLE-033" "As shown~\\cite{smith2020} we see this.")
+        (does_not_fire_advisory "STYLE-033"
+           "As shown~\\cite{smith2020} we see this.")
         (tag ^ ": tilde before cite"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -193,11 +208,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-034 fires: 2-letter orphan" (fun tag ->
       expect
-        (fires "STYLE-034" "This paragraph ends with a short word at")
+        (fires_advisory "STYLE-034" "This paragraph ends with a short word at")
         (tag ^ ": ends with 'at'"));
   run "STYLE-034 clean: long final word" (fun tag ->
       expect
-        (does_not_fire "STYLE-034"
+        (does_not_fire_advisory "STYLE-034"
            "This paragraph ends with a longer word here.")
         (tag ^ ": long final word"));
 
@@ -206,11 +221,11 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-035 fires: and/or" (fun tag ->
       expect
-        (fires "STYLE-035" "You can use method A and/or method B.")
+        (fires_advisory "STYLE-035" "You can use method A and/or method B.")
         (tag ^ ": and/or"));
   run "STYLE-035 clean: no slash" (fun tag ->
       expect
-        (does_not_fire "STYLE-035" "You can use method A or method B.")
+        (does_not_fire_advisory "STYLE-035" "You can use method A or method B.")
         (tag ^ ": no and/or"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -218,11 +233,12 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-036 fires: bare et al." (fun tag ->
       expect
-        (fires "STYLE-036" "Smith et al. showed this result.")
+        (fires_advisory "STYLE-036" "Smith et al. showed this result.")
         (tag ^ ": bare et al."));
   run "STYLE-036 clean: italicised et al." (fun tag ->
       expect
-        (does_not_fire "STYLE-036" "Smith \\emph{et al.} showed this result.")
+        (does_not_fire_advisory "STYLE-036"
+           "Smith \\emph{et al.} showed this result.")
         (tag ^ ": emph et al."));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -230,25 +246,28 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-037 fires: And at sentence start" (fun tag ->
       expect
-        (fires "STYLE-037" "We tested this. And we found results.")
+        (fires_advisory "STYLE-037" "We tested this. And we found results.")
         (tag ^ ": And start"));
   run "STYLE-037 fires: But at sentence start" (fun tag ->
       expect
-        (fires "STYLE-037" "We tested this. But we found nothing.")
+        (fires_advisory "STYLE-037" "We tested this. But we found nothing.")
         (tag ^ ": But start"));
   run "STYLE-037 clean: no conjunction start" (fun tag ->
       expect
-        (does_not_fire "STYLE-037" "We tested this. However, we found results.")
+        (does_not_fire_advisory "STYLE-037"
+           "We tested this. However, we found results.")
         (tag ^ ": no conjunction"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-040: Exclamation mark in academic prose
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-040 fires: exclamation" (fun tag ->
-      expect (fires "STYLE-040" "This is amazing!") (tag ^ ": exclamation mark"));
+      expect
+        (fires_advisory "STYLE-040" "This is amazing!")
+        (tag ^ ": exclamation mark"));
   run "STYLE-040 clean: no exclamation" (fun tag ->
       expect
-        (does_not_fire "STYLE-040" "This is an important result.")
+        (does_not_fire_advisory "STYLE-040" "This is an important result.")
         (tag ^ ": no exclamation"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -256,7 +275,7 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-042 fires: two short paras" (fun tag ->
       expect
-        (fires "STYLE-042" "Short one.\n\nAnother short.")
+        (fires_advisory "STYLE-042" "Short one.\n\nAnother short.")
         (tag ^ ": two short paras"));
   run "STYLE-042 clean: normal paras" (fun tag ->
       let normal =
@@ -265,19 +284,19 @@ let () =
          Another sufficiently long paragraph with many words that also exceeds \
          the fifteen word threshold comfortably by a margin."
       in
-      expect (does_not_fire "STYLE-042" normal) (tag ^ ": normal paras"));
+      expect (does_not_fire_advisory "STYLE-042" normal) (tag ^ ": normal paras"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-045: Excess parentheses in single sentence
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-045 fires: 4 parens" (fun tag ->
       expect
-        (fires "STYLE-045"
+        (fires_advisory "STYLE-045"
            "We (a) tested (b) measured (c) computed (d) verified the result.")
         (tag ^ ": 4 parens"));
   run "STYLE-045 clean: 2 parens" (fun tag ->
       expect
-        (does_not_fire "STYLE-045"
+        (does_not_fire_advisory "STYLE-045"
            "We tested (alpha) and measured (beta) the effect.")
         (tag ^ ": 2 parens"));
 
@@ -287,13 +306,14 @@ let () =
   run "STYLE-046 fires: mixed dashes" (fun tag ->
       let en = "\xe2\x80\x93" and em = "\xe2\x80\x94" in
       expect
-        (fires "STYLE-046"
+        (fires_advisory "STYLE-046"
            ("Pages 1" ^ en ^ "10 and this" ^ em ^ "is important."))
         (tag ^ ": mixed dashes"));
   run "STYLE-046 clean: only en-dash" (fun tag ->
       let en = "\xe2\x80\x93" in
       expect
-        (does_not_fire "STYLE-046" ("Pages 1" ^ en ^ "10 in the paper."))
+        (does_not_fire_advisory "STYLE-046"
+           ("Pages 1" ^ en ^ "10 in the paper."))
         (tag ^ ": only en-dash"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -301,23 +321,26 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-048 fires: among/amongst" (fun tag ->
       expect
-        (fires "STYLE-048"
+        (fires_advisory "STYLE-048"
            "Among the factors, we found that amongst the results there was \
             consensus.")
         (tag ^ ": among/amongst mix"));
   run "STYLE-048 clean: consistent" (fun tag ->
       expect
-        (does_not_fire "STYLE-048" "Among the factors, we found agreement.")
+        (does_not_fire_advisory "STYLE-048"
+           "Among the factors, we found agreement.")
         (tag ^ ": consistent among"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-049: Section heading ends with colon
      ══════════════════════════════════════════════════════════════════════ *)
   run "STYLE-049 fires: heading with colon" (fun tag ->
-      expect (fires "STYLE-049" "\\section{Results:}") (tag ^ ": colon heading"));
+      expect
+        (fires_advisory "STYLE-049" "\\section{Results:}")
+        (tag ^ ": colon heading"));
   run "STYLE-049 clean: no colon" (fun tag ->
       expect
-        (does_not_fire "STYLE-049" "\\section{Results}")
+        (does_not_fire_advisory "STYLE-049" "\\section{Results}")
         (tag ^ ": no colon"));
 
   (* ══════════════════════════════════════════════════════════════════════
@@ -327,41 +350,42 @@ let () =
   (* STYLE-001 *)
   run "STYLE-001 fires: mixed oxford comma" (fun tag ->
       expect
-        (fires "STYLE-001"
+        (fires_advisory "STYLE-001"
            "We tested cats, dogs, and birds. We also saw lions, tigers and \
             bears.")
         (tag ^ ": mixed oxford"));
   run "STYLE-001 clean: consistent" (fun tag ->
       expect
-        (does_not_fire "STYLE-001"
+        (does_not_fire_advisory "STYLE-001"
            "We tested cats, dogs, and birds. We saw lions, tigers, and bears.")
         (tag ^ ": consistent oxford"));
 
   (* STYLE-002 *)
   run "STYLE-002 fires: mixed UK/US" (fun tag ->
       expect
-        (fires "STYLE-002" "The colour of the color wheel is nice.")
+        (fires_advisory "STYLE-002" "The colour of the color wheel is nice.")
         (tag ^ ": colour/color mix"));
   run "STYLE-002 clean: UK only" (fun tag ->
       expect
-        (does_not_fire "STYLE-002" "The colour of the favour is good.")
+        (does_not_fire_advisory "STYLE-002" "The colour of the favour is good.")
         (tag ^ ": UK only"));
 
   (* STYLE-005 *)
   run "STYLE-005 fires: mixed we/I" (fun tag ->
       expect
-        (fires "STYLE-005"
+        (fires_advisory "STYLE-005"
            "In this paper, we tested this method. I think the results are good.")
         (tag ^ ": we and I"));
   run "STYLE-005 clean: we only" (fun tag ->
       expect
-        (does_not_fire "STYLE-005" "We tested and we measured the results.")
+        (does_not_fire_advisory "STYLE-005"
+           "We tested and we measured the results.")
         (tag ^ ": we only"));
 
   (* STYLE-007 *)
   run "STYLE-007 fires: mixed item punct" (fun tag ->
       expect
-        (fires "STYLE-007"
+        (fires_advisory "STYLE-007"
            "\\begin{itemize}\n\
             \\item First item.\n\
             \\item Second item\n\
@@ -369,7 +393,7 @@ let () =
         (tag ^ ": mixed item punct"));
   run "STYLE-007 clean: consistent item punct" (fun tag ->
       expect
-        (does_not_fire "STYLE-007"
+        (does_not_fire_advisory "STYLE-007"
            "\\begin{itemize}\n\
             \\item First item.\n\
             \\item Second item.\n\
@@ -379,87 +403,88 @@ let () =
   (* STYLE-009 *)
   run "STYLE-009 fires: mixed cite styles" (fun tag ->
       expect
-        (fires "STYLE-009" "As shown \\cite{a} and also \\citep{b}.")
+        (fires_advisory "STYLE-009" "As shown \\cite{a} and also \\citep{b}.")
         (tag ^ ": cite + citep"));
   run "STYLE-009 clean: single style" (fun tag ->
       expect
-        (does_not_fire "STYLE-009" "As shown \\citep{a} and \\citep{b}.")
+        (does_not_fire_advisory "STYLE-009"
+           "As shown \\citep{a} and \\citep{b}.")
         (tag ^ ": citep only"));
 
   (* STYLE-010 *)
   run "STYLE-010 fires: I in multi-author" (fun tag ->
       expect
-        (fires "STYLE-010"
+        (fires_advisory "STYLE-010"
            "\\author{Alice and Bob}\nIn this paper, I present results.")
         (tag ^ ": I + multi author"));
   run "STYLE-010 clean: single author" (fun tag ->
       expect
-        (does_not_fire "STYLE-010"
+        (does_not_fire_advisory "STYLE-010"
            "\\author{Alice}\nIn this paper, I present results.")
         (tag ^ ": single author"));
 
   (* STYLE-011 *)
   run "STYLE-011 fires: mixed ranges" (fun tag ->
       expect
-        (fires "STYLE-011" "Pages 1-10 and also pages 20--30.")
+        (fires_advisory "STYLE-011" "Pages 1-10 and also pages 20--30.")
         (tag ^ ": mixed range dashes"));
   run "STYLE-011 clean: consistent" (fun tag ->
       expect
-        (does_not_fire "STYLE-011" "Pages 1--10 and pages 20--30.")
+        (does_not_fire_advisory "STYLE-011" "Pages 1--10 and pages 20--30.")
         (tag ^ ": consistent endash"));
 
   (* STYLE-018 *)
   run "STYLE-018 fires: dangling this" (fun tag ->
       expect
-        (fires "STYLE-018" "This is important for our work.")
+        (fires_advisory "STYLE-018" "This is important for our work.")
         (tag ^ ": this is"));
   run "STYLE-018 clean: this + noun" (fun tag ->
       expect
-        (does_not_fire "STYLE-018" "This method improves performance.")
+        (does_not_fire_advisory "STYLE-018" "This method improves performance.")
         (tag ^ ": this method"));
 
   (* STYLE-020 *)
   run "STYLE-020 fires: unused acronym" (fun tag ->
       expect
-        (fires "STYLE-020"
+        (fires_advisory "STYLE-020"
            "The Machine Learning (ML) approach. The Deep Learning (DL) method.")
         (tag ^ ": DL never used again"));
   run "STYLE-020 clean: acronym used" (fun tag ->
       expect
-        (does_not_fire "STYLE-020"
+        (does_not_fire_advisory "STYLE-020"
            "The Machine Learning (ML) approach. ML is powerful.")
         (tag ^ ": ML used"));
 
   (* STYLE-021 *)
   run "STYLE-021 fires: acronym before def" (fun tag ->
       expect
-        (fires "STYLE-021"
+        (fires_advisory "STYLE-021"
            "We use CNN for classification. Convolutional Neural Network (CNN) \
             is defined here.")
         (tag ^ ": CNN before def"));
   run "STYLE-021 clean: def before use" (fun tag ->
       expect
-        (does_not_fire "STYLE-021"
+        (does_not_fire_advisory "STYLE-021"
            "Convolutional Neural Network (CNN) is powerful. CNN excels.")
         (tag ^ ": def before use"));
 
   (* STYLE-022 *)
   run "STYLE-022 fires: missing serial comma" (fun tag ->
       expect
-        (fires "STYLE-022" "We studied cats, dogs and birds.")
+        (fires_advisory "STYLE-022" "We studied cats, dogs and birds.")
         (tag ^ ": missing serial comma"));
   run "STYLE-022 clean: has serial comma" (fun tag ->
       expect
-        (does_not_fire "STYLE-022" "We studied cats, dogs, and birds.")
+        (does_not_fire_advisory "STYLE-022" "We studied cats, dogs, and birds.")
         (tag ^ ": has serial comma"));
 
   (* STYLE-025 *)
   run "STYLE-025 fires: run-on" (fun tag ->
       let runon = String.concat " " (List.init 65 (fun _ -> "word")) ^ "." in
-      expect (fires "STYLE-025" runon) (tag ^ ": 65-word sentence"));
+      expect (fires_advisory "STYLE-025" runon) (tag ^ ": 65-word sentence"));
   run "STYLE-025 clean: normal" (fun tag ->
       expect
-        (does_not_fire "STYLE-025" "This sentence is quite normal.")
+        (does_not_fire_advisory "STYLE-025" "This sentence is quite normal.")
         (tag ^ ": normal sentence"));
 
   (* STYLE-027 *)
@@ -468,21 +493,22 @@ let () =
         String.concat " "
           (List.init 50 (fun i -> if i mod 8 = 0 then "quickly" else "the"))
       in
-      expect (fires "STYLE-027" adverby) (tag ^ ": adverb overuse"));
+      expect (fires_advisory "STYLE-027" adverby) (tag ^ ": adverb overuse"));
   run "STYLE-027 clean: few adverbs" (fun tag ->
       expect
-        (does_not_fire "STYLE-027"
+        (does_not_fire_advisory "STYLE-027"
            "We tested carefully. The results clearly show improvement.")
         (tag ^ ": few adverbs"));
 
   (* STYLE-028 *)
   run "STYLE-028 fires: eqref no punct" (fun tag ->
       expect
-        (fires "STYLE-028" "As shown in \\eqref{eq1} the result holds.")
+        (fires_advisory "STYLE-028" "As shown in \\eqref{eq1} the result holds.")
         (tag ^ ": eqref no punct"));
   run "STYLE-028 clean: eqref with punct" (fun tag ->
       expect
-        (does_not_fire "STYLE-028" "As shown in \\eqref{eq1}, the result holds.")
+        (does_not_fire_advisory "STYLE-028"
+           "As shown in \\eqref{eq1}, the result holds.")
         (tag ^ ": eqref with comma"));
 
   (* ── Locale rules ────────────────────────────────────────────────── *)
@@ -555,75 +581,84 @@ let () =
   (* fires_with_count tests *)
   run "STYLE-014 count: two contractions" (fun tag ->
       expect
-        (fires_with_count "STYLE-014" "We don't know and can't guess." 2)
+        (fires_with_count_advisory "STYLE-014" "We don't know and can't guess."
+           2)
         (tag ^ ": 2 contractions"));
   run "STYLE-040 count: three exclamations" (fun tag ->
       expect
-        (fires_with_count "STYLE-040" "Wow! Amazing! Incredible!" 3)
+        (fires_with_count_advisory "STYLE-040" "Wow! Amazing! Incredible!" 3)
         (tag ^ ": 3 exclamation marks"));
   run "STYLE-015 count: two double-spaces" (fun tag ->
       expect
-        (fires_with_count "STYLE-015" "One.  Two.  Three." 2)
+        (fires_with_count_advisory "STYLE-015" "One.  Two.  Three." 2)
         (tag ^ ": 2 double spaces"));
   run "STYLE-035 count: two and/or" (fun tag ->
       expect
-        (fires_with_count "STYLE-035" "Use A and/or B. Also C and/or D." 2)
+        (fires_with_count_advisory "STYLE-035"
+           "Use A and/or B. Also C and/or D." 2)
         (tag ^ ": 2 and/or"));
 
   (* Edge cases: false-positive prevention *)
   run "STYLE-023 clean: escaped percent" (fun tag ->
       expect
-        (does_not_fire "STYLE-023" "The rate is 50\\% in our study.")
+        (does_not_fire_advisory "STYLE-023" "The rate is 50\\% in our study.")
         (tag ^ ": escaped percent"));
   run "STYLE-024 clean: ampersand in tabular" (fun tag ->
       expect
-        (does_not_fire "STYLE-024" "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
+        (does_not_fire_advisory "STYLE-024"
+           "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
         (tag ^ ": & in tabular"));
   run "STYLE-036 clean: emph et al." (fun tag ->
       expect
-        (does_not_fire "STYLE-036"
+        (does_not_fire_advisory "STYLE-036"
            "Smith \\emph{et al.} showed important results.")
         (tag ^ ": italicised et al."));
   run "STYLE-019 clean: text between headings" (fun tag ->
       expect
-        (does_not_fire "STYLE-019"
+        (does_not_fire_advisory "STYLE-019"
            "\\section{Intro}\nSome text here.\n\\subsection{Details}")
         (tag ^ ": text between headings"));
   run "STYLE-026 clean: no repeated words" (fun tag ->
       expect
-        (does_not_fire "STYLE-026" "We studied the effect of light.")
+        (does_not_fire_advisory "STYLE-026" "We studied the effect of light.")
         (tag ^ ": no repeats"));
   run "STYLE-049 clean: heading without colon" (fun tag ->
       expect
-        (does_not_fire "STYLE-049" "\\section{Results}")
+        (does_not_fire_advisory "STYLE-049" "\\section{Results}")
         (tag ^ ": no colon in heading"));
 
   (* Math-mode interaction *)
   run "STYLE-014 fires: contraction outside math" (fun tag ->
       expect
-        (fires "STYLE-014" "The derivative $f'(x)$ isn't computed here.")
+        (fires_advisory "STYLE-014"
+           "The derivative $f'(x)$ isn't computed here.")
         (tag ^ ": isn't detected even with math present"));
   run "STYLE-040 clean: exclamation only in math" (fun tag ->
       expect
-        (does_not_fire "STYLE-040" "We compute $n!$ for large values.")
+        (does_not_fire_advisory "STYLE-040" "We compute $n!$ for large values.")
         (tag ^ ": ! in math mode stripped"));
   run "STYLE-026 fires: repeated word across line break" (fun tag ->
       expect
-        (fires "STYLE-026" "End of paragraph the\nthe start of next.")
+        (fires_advisory "STYLE-026" "End of paragraph the\nthe start of next.")
         (tag ^ ": the the across line break"));
 
   (* STYLE-018 vs STYLE-044 non-overlap verification *)
   run "STYLE-018 fires on 'This is'" (fun tag ->
-      expect (fires "STYLE-018" "This is important.") (tag ^ ": This is"));
+      expect
+        (fires_advisory "STYLE-018" "This is important.")
+        (tag ^ ": This is"));
   run "STYLE-044 fires on 'This can'" (fun tag ->
-      expect (fires "STYLE-044" "This can be improved.") (tag ^ ": This can"));
+      expect
+        (fires_advisory "STYLE-044" "This can be improved.")
+        (tag ^ ": This can"));
   run "STYLE-044 clean: 'This is' does NOT fire 044" (fun tag ->
       expect
-        (does_not_fire "STYLE-044" "This is important for our work.")
+        (does_not_fire_advisory "STYLE-044" "This is important for our work.")
         (tag ^ ": This is should not fire 044"));
   run "STYLE-018 clean: 'This can' does NOT fire 018" (fun tag ->
       expect
-        (does_not_fire "STYLE-018" "This can be improved by a better method.")
+        (does_not_fire_advisory "STYLE-018"
+           "This can be improved by a better method.")
         (tag ^ ": This can should not fire 018"));
 
   finalise "style"

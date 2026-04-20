@@ -522,6 +522,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_class_d_isolation)
+ (modules test_class_d_isolation)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_parser_corpus)
  (modules test_parser_corpus)
  (libraries latex_parse_lib unix)

@@ -33,8 +33,35 @@ include Validators_partial
 (* Extend rules_class_c with TIKZ-002 from validators_l3_file (log-dependent) *)
 let rules_class_c = rules_class_c @ [ r_tikz_002 ]
 
+(* PR #241 (memo §11): split rules_style by execution_class from
+   rule_contracts.yaml. STYLE-* rules are Class D (advisory) and must not appear
+   on the keystroke-critical hot path. The rules_style list from
+   validators_l4_style.ml also contains Class B locale rules (CE, TH, IB, LANG
+   families) which MUST stay on the hot path. *)
+let rules_class_d : rule list =
+  List.filter
+    (fun (r : rule) ->
+      match Rule_contract_loader.find_opt r.id with
+      | Some c -> c.execution_class = Rule_contract_loader.D
+      | None -> false)
+    rules_style
+
+let rules_style_hot_path : rule list =
+  List.filter
+    (fun (r : rule) ->
+      match Rule_contract_loader.find_opt r.id with
+      | Some c -> c.execution_class <> Rule_contract_loader.D
+      | None -> true (* unclassified rules default to hot-path, safer *))
+    rules_style
+
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
-   rules *)
+   rules.
+
+   PR #241 (memo §11): uses rules_style_hot_path (the B locale subset of
+   rules_style) rather than rules_style directly. Class D rules are in
+   rules_class_d and reachable only via [run_with_policy] with a policy that
+   enables Class D. `proofs/ExecutionClasses.v::hot_path_excludes_cd` is now
+   honoured by the runtime. *)
 let rules_enc_char_spc : rule list =
   rules_enc
   @ rules_char
@@ -47,7 +74,7 @@ let rules_enc_char_spc : rule list =
   @ rules_stragglers
   @ rules_l2_approx
   @ rules_l2_parser_actual
-  @ rules_style
+  @ rules_style_hot_path
   @ rules_l3_file
   @ rules_l1_expl3
   @ rules_user_macro
@@ -320,10 +347,23 @@ let run_with_build (src : string) : result list =
   let c = run_class_c src in
   ab @ c
 
+(* PR #241 (memo §11): execute Class D rules explicitly. Not in run_all. *)
+let run_class_d (src : string) : result list =
+  let rec go acc = function
+    | [] -> List.rev acc
+    | (r : rule) :: rs ->
+        let acc' =
+          match r.run src with Some res -> res :: acc | None -> acc
+        in
+        go acc' rs
+  in
+  go [] rules_class_d
+
 let run_with_policy (policy : Execution_policy.t) (src : string) : result list =
   let ab = if policy.enable_a || policy.enable_b then run_all src else [] in
   let c = if policy.enable_c then run_class_c src else [] in
-  ab @ c
+  let d = if policy.enable_d then run_class_d src else [] in
+  ab @ c @ d
 
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the

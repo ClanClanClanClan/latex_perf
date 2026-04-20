@@ -179,6 +179,16 @@ let () =
                      r.severity)
                   r.count r.message)
               scored)
+  | [ _; "--advisory"; path ] ->
+      (* PR #241 (memo §11): hot-path + Class D advisory rules. *)
+      let src = read_all path in
+      let tier, features = resolve_profile ~requested:`Auto ~src in
+      print_profile_banner tier features;
+      ignore (setup_all ~path ~src ~log_path:None);
+      let policy = Latex_parse_lib.Execution_policy.with_advisory in
+      Fun.protect ~finally:cleanup (fun () ->
+          let results = Latex_parse_lib.Validators.run_with_policy policy src in
+          List.iter print_result results)
   | [ _; "--log"; log_path; path ] ->
       let src = read_all path in
       let tier, features = resolve_profile ~requested:`Auto ~src in
@@ -225,7 +235,8 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--profile auto|lp-core|lp-extended|lp-foreign] [--project \
-         <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n"
+        "Usage: %s [--profile auto|lp-core|lp-extended|lp-foreign] \
+         [--advisory] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
+         <file.log>] <file.tex>\n"
         Sys.argv.(0);
       exit 2

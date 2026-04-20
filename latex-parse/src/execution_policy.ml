@@ -10,6 +10,12 @@ let default =
 let with_build =
   { enable_a = true; enable_b = true; enable_c = true; enable_d = false }
 
+(* PR #241 (memo §11): advisory path runs hot-path classes + Class D (STYLE
+   family). Used by IDE/editor modes that want heuristic suggestions without a
+   build profile. *)
+let with_advisory =
+  { enable_a = true; enable_b = true; enable_c = false; enable_d = true }
+
 let full =
   { enable_a = true; enable_b = true; enable_c = true; enable_d = true }
 

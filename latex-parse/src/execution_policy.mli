@@ -8,6 +8,11 @@ val default : t
 val with_build : t
 (** A+B+C. For save/build triggers with compile log available. *)
 
+val with_advisory : t
+(** A+B+D. Hot-path rules plus advisory (STYLE family) rules. For IDE/editor
+    requests that can tolerate heuristic suggestions but have no build context.
+    PR #241 (memo §11). *)
+
 val full : t
 (** A+B+C+D. All classes enabled. *)
 

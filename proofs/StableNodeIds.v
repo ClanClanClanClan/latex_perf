@@ -152,5 +152,69 @@ Proof.
   - apply content_id_invariant_under_edit_outside; assumption.
 Qed.
 
+(** ── PR #241 (p1.1-#3): tie to Parser_l2.located_node ─────────────
+
+    The abstract [node_id] record above is not attached to the real
+    OCaml AST node. PR #241 adds a [Node_id.of_located] constructor
+    in OCaml and the following Coq mirror + theorem so the invariants
+    bind to consumers that use [Parser_l2.located_node]. *)
+
+(** Coq mirror of OCaml [Parser_l2.located_node] + associated metadata.
+    The OCaml runtime passes [loc.offset], [node_length] (byte span),
+    and [command_hash] into [Node_id.of_located]. *)
+Record parser_located_node := mk_parser_node {
+  pn_offset : nat;
+  pn_length : nat;
+  pn_command_hash : nat;
+}.
+
+(** Constructor mirrors [Node_id.of_located] in [node_id.ml]. *)
+Definition of_located (pn : parser_located_node) : node_id :=
+  mk_node_id (pn_offset pn) (pn_length pn) (pn_command_hash pn).
+
+(** Edit-shift on a parser_located_node: offset moves only when the
+    edit lies strictly before; length + command_hash never change. *)
+Definition shift_parser_node (ed : edit) (pn : parser_located_node)
+  : parser_located_node :=
+  if Nat.ltb (e_position ed) (pn_offset pn) then
+    mk_parser_node
+      (pn_offset pn + e_insert_length ed)
+      (pn_length pn)
+      (pn_command_hash pn)
+  else pn.
+
+(** The edit applied to [of_located pn] agrees with [of_located
+    (shift_parser_node ed pn)] for content: both preserve the
+    [(length, command_hash)] pair under any local edit. *)
+Theorem of_located_stable_under_local_edit :
+  forall pn ed,
+    content_id (apply_edit ed (of_located pn)) =
+    content_id (of_located (shift_parser_node ed pn)).
+Proof.
+  intros pn ed.
+  unfold of_located, shift_parser_node, apply_edit, content_id. simpl.
+  destruct (Nat.ltb (e_position ed) (pn_offset pn)) eqn:Hc;
+    simpl; reflexivity.
+Qed.
+
+(** Edit strictly after the parser node's span leaves the node_id
+    unchanged, preserving offset as well as content. *)
+Definition parser_edit_outside_node (ed : edit) (pn : parser_located_node) : Prop :=
+  e_position ed >= pn_offset pn + pn_length pn.
+
+Theorem of_located_id_unchanged_outside :
+  forall pn ed,
+    parser_edit_outside_node ed pn ->
+    apply_edit ed (of_located pn) = of_located pn.
+Proof.
+  intros pn ed Hout.
+  unfold parser_edit_outside_node in Hout.
+  unfold apply_edit, of_located. simpl.
+  (* Match condition: e_position ed <? pn_offset pn. *)
+  assert (Hnlt : Nat.ltb (e_position ed) (pn_offset pn) = false).
+  { apply Nat.ltb_ge. lia. }
+  rewrite Hnlt. reflexivity.
+Qed.
+
 (** ── Zero-admit witness ──────────────────────────────────────────── *)
 Definition stable_node_ids_zero_admits : True := I.

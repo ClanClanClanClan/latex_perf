@@ -52,6 +52,7 @@
   tokenizer_lite
   unicode
   parser_l2
+  node_id
   fd_util
   net_io
   macro_catalogue
@@ -524,6 +525,11 @@
 (test
  (name test_class_d_isolation)
  (modules test_class_d_isolation)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_node_id)
+ (modules test_node_id)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

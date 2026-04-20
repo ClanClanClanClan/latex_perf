@@ -76,13 +76,24 @@ def count_proofs(repo: Path):
         for f in archive_dir.rglob("*.v"):
             files_archive += 1
 
-    # Count faithful/conservative from VPD
-    with open(repo / "specs/rules/vpd_patterns.json") as f:
-        vpd = json.load(f)
-    faithful = len(vpd)
+    # Count faithful/conservative/conditional from rule_contracts.yaml when
+    # available; fall back to VPD heuristic otherwise.
+    contract_path = repo / "specs/rules/rule_contracts.yaml"
+    if contract_path.exists():
+        with open(contract_path, encoding="utf-8") as f:
+            contracts = yaml.safe_load(f)["rules"]
+        faithful = sum(1 for c in contracts if c["proof_class"] == "formal_faithful")
+        conservative = sum(1 for c in contracts if c["proof_class"] == "formal_conservative")
+        conditional = sum(1 for c in contracts if c["proof_class"] == "formal_conditional")
+    else:
+        with open(repo / "specs/rules/vpd_patterns.json") as f:
+            vpd = json.load(f)
+        faithful = len(vpd)
+        rules = count_rules(repo)
+        conservative = rules["total_non_reserved"] - faithful
+        conditional = 0
 
     rules = count_rules(repo)
-    conservative = rules["total_non_reserved"] - faithful
 
     return {
         "proof_files_total": files_core + files_generated + files_ml,
@@ -93,6 +104,7 @@ def count_proofs(repo: Path):
         "per_rule_soundness_count": rules["total_non_reserved"],
         "formal_faithful_count": faithful,
         "formal_conservative_count": conservative,
+        "formal_conditional_count": conditional,
         "theorem_count_reported": theorem_count,
         "admits": admits,
         "axioms": axioms,
@@ -154,11 +166,22 @@ def generate(repo: Path) -> dict:
     langs = count_languages(repo)
     version = get_version(repo)
 
-    # Add proof class to rules
+    # Add proof class to rules (PR #238: include formal_conditional).
     rules["by_proof_class"] = {
         "formal_faithful": proofs["formal_faithful_count"],
         "formal_conservative": proofs["formal_conservative_count"],
+        "formal_conditional": proofs.get("formal_conditional_count", 0),
     }
+
+    # Add execution class counts from rule_contracts.yaml when available.
+    contract_path = repo / "specs/rules/rule_contracts.yaml"
+    if contract_path.exists():
+        with open(contract_path, encoding="utf-8") as f:
+            contracts = yaml.safe_load(f)["rules"]
+        rules["by_execution_class"] = {
+            cls: sum(1 for c in contracts if c["execution_class"] == cls)
+            for cls in ("A", "B", "C", "D")
+        }
 
     return {
         "version": f"v{version}" if not version.startswith("v") else version,

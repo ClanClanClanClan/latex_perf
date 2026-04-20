@@ -56,8 +56,8 @@ release). Current ship state:
 | Class | Status | Rule count | Meaning |
 |---|---|---|---|
 | Formal / faithful | GA | 606 | Rule logic matches formal model closely enough to justify strong soundness claims. |
-| Formal / conservative | GA | 20 | Rule covered by theorem via a conservative wrapper (`check = false`) for external binary checks. |
-| Formal / conditional | GA | 3 new in v26.1 | Sound given log predicate. LAY-025/026/027 compile-log-derived rules. (Counts pending regeneration with rule_contracts.yaml.) |
+| Formal / conservative | GA | 23 | Rule covered by theorem via a conservative wrapper (`check = false`) for external binary checks. |
+| Formal / conditional | GA | 3 new in v26.1 | Sound given log predicate. LAY-025/026/027 compile-log-derived rules. Exact count landing with PR #240 facts regen. |
 | Statistically validated (overlay) | GA | 8 | v2 ByteClassifier precision/recall bounds in `proofs/ML/SpanExtractorSound.v`. Overlay on faithful proofs for 8 ambiguous TYPO rules. |
 | Heuristic / advisory | Avoid | 0 | Kept empty if possible; otherwise surfaced clearly. |
 

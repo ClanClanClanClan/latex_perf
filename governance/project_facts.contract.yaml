@@ -21,6 +21,7 @@ required_fields:
     - axioms
     - formal_faithful_count
     - formal_conservative_count
+    - formal_conditional_count
     - statistical_validated_count
   languages:
     - live
@@ -54,7 +55,8 @@ generation_policy:
     - docs/index.md
     - CHANGELOG.md
     - release notes
-    - support matrix
+    - docs/SUPPORT_MATRIX.md
+    - specs/v26/support_matrix.yaml
     - website
     - CI badges
 

@@ -12,6 +12,11 @@ CHECKS = [
     ("specs/README.md", ["rules.total_specified", "rules.total_non_reserved", "rules.total_reserved"]),
     ("specs/rules/README.md", ["rules.total_specified", "rules.total_non_reserved", "rules.total_reserved"]),
     ("specs/rules/rules_v3.yaml", ["rules.total_specified"]),
+    # PR #238 (memo §12): machine-readable support matrix must be referenced
+    # from the human-readable doc, and the proof taxonomy prose must match
+    # canonical counts.
+    ("docs/SUPPORT_MATRIX.md", ["support_matrix_yaml_path", "proofs.formal_faithful_count", "proofs.formal_conservative_count"]),
+    ("docs/PROOF_CLASSES.md", ["proofs.formal_faithful_count", "proofs.formal_conservative_count"]),
 ]
 
 def load_yaml(path: Path):
@@ -46,6 +51,12 @@ def render_candidates(key: str, facts: dict):
         return [str(facts['proofs']['formal_faithful_count'])]
     if key == 'proofs.formal_conservative_count':
         return [str(facts['proofs']['formal_conservative_count'])]
+    if key == 'proofs.formal_conditional_count':
+        n = facts['proofs'].get('formal_conditional_count', 0)
+        return [str(n)]
+    if key == 'support_matrix_yaml_path':
+        # Literal path reference to the machine-readable source.
+        return ['specs/v26/support_matrix.yaml']
     return [str(get_nested(facts, key))]
 
 def main() -> int:

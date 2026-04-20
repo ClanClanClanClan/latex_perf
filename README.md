@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.0.0
+# LaTeX Perfectionist v26.1.0
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -14,7 +14,7 @@
 
 **3-Year Project — Week 80 of 156** - Comprehensive LaTeX document analysis and style validation system.
 
-LaTeX Perfectionist v25 is a 3-year solo-developer project to build a formally-verified, high-performance LaTeX validation system with 642 rules across 21 languages.
+LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 645 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap.
 
 ## Installation
 
@@ -61,8 +61,8 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
 Post-Phase 12 — All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and 23 core Coq proofs + 108 generated + 1 ML via `(coq.theory)` stanzas.
-- **Proofs**: 139 Coq files, 1,068 theorems/lemmas. 626 per-rule soundness (606 faithful, 20 conservative). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
-- **Validators**: 627 rule IDs / 642 spec (97.7%). 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
+- **Proofs**: 30+ Coq files, 1,096 theorems/lemmas. 629 per-rule soundness (606 faithful, 23 conservative). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+- **Validators**: 629 rule IDs / 645 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.

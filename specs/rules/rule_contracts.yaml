@@ -7,7 +7,7 @@
 version: v26.1
 source: scripts/tools/generate_rule_contracts.py
 input: specs/rules/rules_v3.yaml
-total_rules: 645
+total_rules: 654
 rules:
 - rule_id: AR-002
   layer: L0_Lexer
@@ -990,6 +990,42 @@ rules:
   consumes: []
   provides:
   - CMD-014
+  depends_on: []
+  conflicts_with: []
+  fix_scope: local
+  project_scope: lp_core_or_extended
+- rule_id: CMD-015
+  layer: L1_Expanded
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - CMD-015
+  depends_on: []
+  conflicts_with: []
+  fix_scope: document
+  project_scope: lp_core_or_extended
+- rule_id: CMD-016
+  layer: L1_Expanded
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - CMD-016
+  depends_on: []
+  conflicts_with: []
+  fix_scope: document
+  project_scope: lp_core_or_extended
+- rule_id: CMD-017
+  layer: L1_Expanded
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - CMD-017
   depends_on: []
   conflicts_with: []
   fix_scope: local
@@ -4911,6 +4947,78 @@ rules:
   consumes: []
   provides:
   - PL-002
+  depends_on: []
+  conflicts_with: []
+  fix_scope: local
+  project_scope: lp_core_or_extended
+- rule_id: PRJ-001
+  layer: L3_Semantics
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRJ-001
+  depends_on: []
+  conflicts_with: []
+  fix_scope: document
+  project_scope: lp_core_or_extended
+- rule_id: PRJ-002
+  layer: L3_Semantics
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRJ-002
+  depends_on: []
+  conflicts_with: []
+  fix_scope: local
+  project_scope: lp_core_or_extended
+- rule_id: PRJ-003
+  layer: L3_Semantics
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRJ-003
+  depends_on: []
+  conflicts_with: []
+  fix_scope: local
+  project_scope: lp_core_or_extended
+- rule_id: PRJ-004
+  layer: L3_Semantics
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRJ-004
+  depends_on: []
+  conflicts_with: []
+  fix_scope: document
+  project_scope: lp_core_or_extended
+- rule_id: PRT-001
+  layer: L2_Ast
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRT-001
+  depends_on: []
+  conflicts_with: []
+  fix_scope: local
+  project_scope: lp_core_or_extended
+- rule_id: PRT-002
+  layer: L2_Ast
+  execution_class: B
+  proof_class: formal_faithful
+  evidence_class: source_pattern_evidence
+  consumes: []
+  provides:
+  - PRT-002
   depends_on: []
   conflicts_with: []
   fix_scope: local

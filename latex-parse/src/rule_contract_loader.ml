@@ -127,28 +127,38 @@ let find_json_file () = List.find_opt Sys.file_exists (candidate_paths ())
 
 let _cache : contract list option ref = ref None
 
+exception Rule_contracts_missing of string
+(** PR #241 (p1.1-#4): rule contract file is a required deployment artefact. A
+    missing or malformed file is a fatal startup error; the previous
+    silent-empty-list fallback could mask a broken deploy (every rule would
+    quietly run with [default_meta] and an empty DAG). *)
+
 let do_load () : contract list =
   match find_json_file () with
   | None ->
-      Printf.eprintf
-        "[rule_contracts] WARNING: rule_contracts.json not found; falling back \
-         to empty contract list\n\
-         %!";
-      []
+      raise
+        (Rule_contracts_missing
+           "rule_contracts.json not found on any candidate path \
+            (LP_RULE_CONTRACTS_JSON env var, cwd, or repo-root search). Deploy \
+            is missing specs/rules/rule_contracts.json.")
   | Some path -> (
       try
         let root = Y.from_file path in
         let rules = Y.Util.member "rules" root in
         match rules with
         | `List xs -> List.map parse_contract xs
-        | _ -> failwith "missing 'rules' array"
-      with exn ->
-        Printf.eprintf
-          "[rule_contracts] WARNING: failed to parse %s: %s; falling back to \
-           empty contract list\n\
-           %!"
-          path (Printexc.to_string exn);
-        [])
+        | _ ->
+            raise
+              (Rule_contracts_missing
+                 (Printf.sprintf "%s: missing 'rules' array in contract JSON"
+                    path))
+      with
+      | Rule_contracts_missing _ as e -> raise e
+      | exn ->
+          raise
+            (Rule_contracts_missing
+               (Printf.sprintf "%s: failed to parse: %s" path
+                  (Printexc.to_string exn))))
 
 let load () : contract list =
   match !_cache with

@@ -59,6 +59,10 @@ PHASE_A_FAMILIES = {"TYPO", "CHAR", "ENC", "SPC", "DELIM", "VERB"}
 # Phase D (advisory) families: style, ML-gated, language-specific heuristics.
 PHASE_D_FAMILIES = {"STYLE"}
 
+# PR #241 (p1.1-#4): PRJ-001..004 + PRT-001/002 + CMD-015/016/017 are
+# now included in rules_v3.yaml (spec catch-up). No runtime-only back
+# door needed.
+
 
 def rule_family(rule_id: str) -> str:
     return rule_id.split("-", 1)[0] if "-" in rule_id else rule_id

@@ -750,23 +750,58 @@ let () =
               true))
           rules
       in
+      (* PR #241 (p1.1-#4): no silent fallback to default_meta. If a catalogued
+         rule is missing from rule_contracts.yaml, fail loudly at startup so the
+         CI drift gate's invariant is enforced at runtime too.
+
+         Internal utility "rules" (e.g. "no_tabs", "unmatched_braces",
+         "DOC-STRUCT") that don't follow the FAMILY-NNN public rule-id
+         convention are skipped from the check — they are infrastructure
+         markers, not part of the public rule catalogue. *)
+      let is_catalogue_id id =
+        let n = String.length id in
+        let has_dash = String.contains id '-' in
+        let is_upper_family =
+          n >= 3
+          &&
+          let c = id.[0] in
+          c >= 'A' && c <= 'Z'
+        in
+        has_dash && is_upper_family && not (String.equal id "DOC-STRUCT")
+      in
+      let missing = ref [] in
       let metas =
-        List.map
+        List.filter_map
           (fun r ->
             match Rule_contract_loader.find_opt r.id with
-            | Some c -> Rule_contract_loader.to_validator_meta c
+            | Some c -> Some (Rule_contract_loader.to_validator_meta c)
+            | None when is_catalogue_id r.id ->
+                missing := r.id :: !missing;
+                None
             | None ->
-                (* Fallback for rules not yet in rule_contracts.yaml. Preserves
-                   PR #235 behaviour until the contract catches up. *)
-                Validator_dag.default_meta r.id
-                  (match precondition_of_rule_id r.id with
-                  | L0 -> Validator_dag.L0
-                  | L1 -> Validator_dag.L1
-                  | L2 -> Validator_dag.L2
-                  | L3 -> Validator_dag.L3
-                  | L4 -> Validator_dag.L4))
+                (* Internal utility: give it a default meta so the DAG still
+                   contains it, but it isn't part of the public catalogue so the
+                   drift check doesn't fire. Deprecated alert is silenced here —
+                   this is the intended remaining use of [default_meta]. *)
+                Some
+                  ((Validator_dag.default_meta [@alert "-deprecated"]) r.id
+                     (match precondition_of_rule_id r.id with
+                     | L0 -> Validator_dag.L0
+                     | L1 -> Validator_dag.L1
+                     | L2 -> Validator_dag.L2
+                     | L3 -> Validator_dag.L3
+                     | L4 -> Validator_dag.L4)))
           unique_rules
       in
+      if !missing <> [] then
+        failwith
+          (Printf.sprintf
+             "[validators] %d catalogued rule(s) registered but missing from \
+              specs/rules/rule_contracts.yaml; first few: %s. Regenerate with \
+              scripts/tools/generate_rule_contracts.py."
+             (List.length !missing)
+             (String.concat ","
+                (List.filteri (fun i _ -> i < 5) (List.rev !missing))));
       match Validator_dag.build_dag metas with
       | Ok dag ->
           (* Store topological order for rule execution ordering *)

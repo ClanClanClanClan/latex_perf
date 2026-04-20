@@ -1542,6 +1542,30 @@
   owner: "@structure"
   fix: null
 
+- id: "CMD-015"
+  description: "Unsupported user macro construct (catcode / delimited args)"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@expander"
+  fix: null
+
+- id: "CMD-016"
+  description: "User macro definition cycle detected"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@expander"
+  fix: null
+
+- id: "CMD-017"
+  description: "User macro shadows built-in catalogue entry"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expander"
+  fix: null
+
 
 
 # ----------------------------------------------------------
@@ -5324,3 +5348,59 @@
   maturity: Draft
   owner: "@style-council"
   fix: null
+
+# ------------------------------------
+#  Project-graph rules  •  PRJ-001 → PRJ-004 (WS3)
+# ------------------------------------
+- id: "PRJ-001"
+  description: "Project include cycle detected"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-002"
+  description: "Unresolved \\input / \\include target"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-003"
+  description: "Undefined cross-file reference"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-004"
+  description: "Duplicate label across project files"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+
+# ------------------------------------
+#  Partial-document trust rules  •  PRT-001 → PRT-002 (WS5)
+# ------------------------------------
+- id: "PRT-001"
+  description: "Parse errors detected; partial document analysis"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@parser"
+  fix: null
+
+- id: "PRT-002"
+  description: "Trust zone boundary: analysis degraded in this region"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@parser"
+  fix: null
+

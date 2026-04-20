@@ -23,4 +23,9 @@ val phase_of_string : string -> phase
 val build_dag : validator_meta list -> (dag, string) result
 val detect_conflicts : validator_meta list -> conflict list
 val resolve_conflict : validator_meta -> validator_meta -> int -> int -> string
+
 val default_meta : string -> phase -> validator_meta
+[@@deprecated
+  "PR #241 (p1.1-#4): retained for internal-utility rules only (no_tabs / \
+   unmatched_braces / etc.). Catalogued rules (FAMILY-NNN) must load metadata \
+   from Rule_contract_loader.to_validator_meta."]

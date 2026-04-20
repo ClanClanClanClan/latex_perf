@@ -1,7 +1,7 @@
 (** Tests for PR #237 rule contracts + real validator DAG (memo §10, §15.4).
 
     Exercises:
-    - Rule_contract_loader successfully loads 645 contracts.
+    - Rule_contract_loader loads the full catalogue (645+ contracts).
     - Every runtime rule has a contract.
     - Class C population from contracts matches execution_class.ml.
     - DAG builds acyclic.
@@ -11,11 +11,11 @@ open Latex_parse_lib
 open Test_helpers
 
 let () =
-  (* 1. Loader returns the full 645-entry catalogue. *)
-  run "Rule_contract_loader loads 645 contracts" (fun tag ->
+  (* 1. Loader returns the full catalogue (>= 645 baseline). *)
+  run "Rule_contract_loader loads full catalogue" (fun tag ->
       let n = Rule_contract_loader.count () in
-      expect (n = 645)
-        (tag ^ ": loaded " ^ string_of_int n ^ " contracts, expected 645"));
+      expect (n >= 645)
+        (tag ^ ": loaded " ^ string_of_int n ^ " contracts, expected >= 645"));
 
   (* 2. Every runtime Class C rule has a matching contract. *)
   run "every Class C rule has a contract" (fun tag ->

@@ -540,7 +540,8 @@
 (test
  (name test_rule_contract_load_failure)
  (modules test_rule_contract_load_failure)
- (libraries latex_parse_lib test_helpers unix))
+ (libraries latex_parse_lib test_helpers unix str)
+ (deps validators_cli.exe))
 
 (test
  (name test_parser_corpus)

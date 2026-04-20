@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Release automation for LaTeX Perfectionist v25 (spec J-9)
+# Release automation for LaTeX Perfectionist (spec J-9)
 #
 # Usage:
-#   scripts/release.sh 25.0.0           # full release
-#   scripts/release.sh 25.0.0 --dry-run # verify without committing
+#   scripts/release.sh 26.1.0           # full release
+#   scripts/release.sh 26.1.0 --dry-run # verify without committing
 set -euo pipefail
 
 VERSION="${1:?Usage: release.sh <version> [--dry-run]}"
@@ -12,10 +12,36 @@ TAG="v${VERSION}"
 
 echo "[release] Preparing ${TAG}..."
 
+# 0. PR #241 (p1.3): pre-flight — refuse to release with a dirty tree.
+# A release cut from uncommitted state can embed local experiments into the
+# tag. The only safe state is: every file either committed or explicitly
+# .gitignored.
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "[release] FATAL: working tree has uncommitted changes:" >&2
+  git status --porcelain >&2
+  echo "[release] Commit or stash before releasing." >&2
+  exit 1
+fi
+echo "[release] Working tree clean ✓"
+
 # 1. Update version in dune-project
 echo "[release] Updating dune-project version..."
 sed -i.bak "s/^(version .*)/(version ${VERSION})/" dune-project
 rm -f dune-project.bak
+
+# 1b. PR #241 (p1.3): regenerate governance + rule contracts so the release
+# tag points to a self-consistent source tree. Without this the release could
+# ship with stale project_facts.yaml or rule_contracts.yaml (drift gates
+# would then fail CI on the release branch).
+echo "[release] Regenerating governance/project_facts.yaml..."
+python3 scripts/tools/generate_project_facts.py > /dev/null
+echo "[release] Regenerating specs/rules/rule_contracts.{yaml,json}..."
+python3 scripts/tools/generate_rule_contracts.py 2>&1 | tail -3
+echo "[release] Running drift gates..."
+python3 scripts/tools/check_repo_facts.py > /dev/null
+python3 scripts/tools/check_rule_contracts.py > /dev/null
+python3 scripts/validate_catalogue.py > /dev/null
+echo "[release] Governance + contracts in sync ✓"
 
 # 2. Regenerate opam files
 echo "[release] Regenerating opam files..."
@@ -58,7 +84,9 @@ fi
 
 # 7. Commit version bump
 echo "[release] Committing version bump..."
-git add dune-project latex-perfectionist.opam latex-parse/latex_parse.opam
+git add dune-project latex-perfectionist.opam latex-parse/latex_parse.opam \
+  governance/project_facts.yaml specs/rules/rule_contracts.yaml \
+  specs/rules/rule_contracts.json
 git commit -m "chore: bump version to ${VERSION}"
 
 # 8. Tag

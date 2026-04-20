@@ -8670,7 +8670,9 @@
         "TYPO-001"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-004"
+      ],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended"
     },
@@ -8685,7 +8687,10 @@
         "TYPO-002"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-003",
+        "TYPO-030"
+      ],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
@@ -8700,7 +8705,10 @@
         "TYPO-003"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-002",
+        "TYPO-030"
+      ],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
@@ -8715,7 +8723,10 @@
         "TYPO-004"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-001",
+        "TYPO-013"
+      ],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
@@ -8854,7 +8865,9 @@
         "TYPO-013"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-004"
+      ],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
@@ -9111,7 +9124,10 @@
         "TYPO-030"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "TYPO-003",
+        "TYPO-002"
+      ],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },

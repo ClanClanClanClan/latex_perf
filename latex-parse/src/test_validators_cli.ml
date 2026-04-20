@@ -143,6 +143,40 @@ let () =
       let path = write_temp_tex "" in
       let _out, code = run_cli [ path ] in
       Sys.remove path;
-      expect (code = 0) (tag ^ ": exit code 0 on empty file"))
+      expect (code = 0) (tag ^ ": exit code 0 on empty file"));
+
+  (* PR #241 (p1.3): end-to-end --advisory gate. Without --advisory, STYLE-*
+     Class D rules must not appear in CLI output. With --advisory, at least
+     one STYLE-* rule should fire on a source that triggers them. *)
+  let styleful_src =
+    "\\documentclass{article}\n\
+     \\begin{document}\n\
+     This is a very long sentence that keeps going and going and going and \
+     going and going and going and going and going and going until it \
+     becomes utterly unreasonable and rambling.\n\n\
+     One.\n\n\
+     Two.\n\n\
+     Three.\n\
+     \\end{document}\n"
+  in
+  let has_style_id out =
+    String.split_on_char '\n' out
+    |> List.exists (fun line ->
+           String.length line >= 6 && String.sub line 0 6 = "STYLE-")
+  in
+  run "CLI default run excludes STYLE rules" (fun tag ->
+      let path = write_temp_tex styleful_src in
+      let out, code = run_cli [ path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect (not (has_style_id out))
+        (tag ^ ": no STYLE-* line in default output"));
+  run "CLI --advisory enables STYLE rules" (fun tag ->
+      let path = write_temp_tex styleful_src in
+      let out, code = run_cli [ "--advisory"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect (has_style_id out)
+        (tag ^ ": at least one STYLE-* line under --advisory"))
 
 let () = finalise "cli"

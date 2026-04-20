@@ -30,6 +30,15 @@ jobs:
       - name: Check project facts consistency
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
 
+      - name: Check rule contracts drift (PR #241 p1.3)
+        # Runtime-vs-contract binding: every Class C id in
+        # execution_class.ml has execution_class=C in rule_contracts.yaml.
+        # JSON mirror matches YAML. Every spec id has a contract. Acyclic.
+        run: python3 scripts/tools/check_rule_contracts.py --repo .
+
+      - name: Check catalogue compliance
+        run: python3 scripts/validate_catalogue.py
+
       - name: Check support matrix yaml parses
         run: |
           python3 - <<'PY'

@@ -151,6 +151,15 @@ def build_contract(rule: dict) -> dict:
     }
 
 
+def _add_conflict(by_id: dict, a: str, b: str) -> None:
+    """Symmetric conflict edge. Both rules declare the other."""
+    for ra, rb in ((a, b), (b, a)):
+        if ra in by_id:
+            c = by_id[ra]
+            if rb not in c["conflicts_with"]:
+                c["conflicts_with"].append(rb)
+
+
 def hand_audit_overrides(contracts: list[dict]) -> None:
     """Apply hand-audited overrides for rules with non-trivial edges.
 
@@ -158,6 +167,16 @@ def hand_audit_overrides(contracts: list[dict]) -> None:
     reference either a spec section or a known runtime dependency.
     """
     by_id = {c["rule_id"]: c for c in contracts}
+
+    # PR #241 (p1.3): real conflict edges derived from pattern overlap.
+    # Each pair below has verifiable-from-source conflict: one rule's
+    # pattern is a prefix/subset of the other's so both fire on the
+    # same span if enabled simultaneously.
+    _add_conflict(by_id, "TYPO-002", "TYPO-003")  # `--` vs `---` (en vs em dash)
+    _add_conflict(by_id, "TYPO-003", "TYPO-030")  # `---` vs `----+` (em-dash vs 4+ hyphens)
+    _add_conflict(by_id, "TYPO-002", "TYPO-030")  # `--` inside `----+`
+    _add_conflict(by_id, "TYPO-001", "TYPO-004")  # straight quote vs backtick-apostrophe
+    _add_conflict(by_id, "TYPO-013", "TYPO-004")  # lone backtick vs backtick-pair
 
     # Class C rules consume compile_log_context (produced by Log_parser).
     for rid in CLASS_C_RULE_IDS:

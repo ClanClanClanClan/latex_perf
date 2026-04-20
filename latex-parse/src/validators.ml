@@ -225,6 +225,58 @@ let get_rules () : rule list =
      enforced even for rules that won't fire in the current tier. *)
   _filter_by_tier base
 
+(** PR #241 (p1.3): severity-to-int mapping for conflict resolution. Error
+    outranks Warning outranks Info. *)
+let _severity_rank : severity -> int = function
+  | Error -> 2
+  | Warning -> 1
+  | Info -> 0
+
+(** PR #241 (p1.3): honour [conflicts_with] in rule contracts. When two rules
+    declare each other as conflicts and both fire, keep the winner and drop
+    the loser. Priority tuple (winner minimises):
+    - severity DESC (Error > Warning > Info)
+    - count ASC (fewer matches = more specific pattern; on overlapping
+      patterns such as `--` vs `---` the longer-pattern rule fires less
+      often and is thus more specific)
+    - id_lex ASC (deterministic tie-break)
+
+    Purely post-processing; zero overhead when no conflict pair both fire. *)
+let _resolve_conflicts (results : result list) : result list =
+  if List.compare_length_with results 1 <= 0 then results
+  else
+    let res_by_id = Hashtbl.create (List.length results) in
+    List.iter (fun (r : result) -> Hashtbl.replace res_by_id r.id r) results;
+    let pick_winner (ra : result) (rb : result) : string =
+      let sev_a = _severity_rank ra.severity in
+      let sev_b = _severity_rank rb.severity in
+      if sev_a <> sev_b then if sev_a > sev_b then ra.id else rb.id
+      else if ra.count <> rb.count then
+        if ra.count < rb.count then ra.id else rb.id
+      else if ra.id <= rb.id then ra.id
+      else rb.id
+    in
+    let suppressed = Hashtbl.create 4 in
+    Hashtbl.iter
+      (fun rid_a (ra : result) ->
+        match Rule_contract_loader.find_opt rid_a with
+        | None -> ()
+        | Some ca ->
+            List.iter
+              (fun rid_b ->
+                if rid_a < rid_b (* process each pair once *) then
+                  match Hashtbl.find_opt res_by_id rid_b with
+                  | None -> ()
+                  | Some rb ->
+                      let winner = pick_winner ra rb in
+                      let loser = if winner = rid_a then rid_b else rid_a in
+                      Hashtbl.replace suppressed loser ())
+              ca.conflicts_with)
+      res_by_id;
+    if Hashtbl.length suppressed = 0 then results
+    else
+      List.filter (fun (r : result) -> not (Hashtbl.mem suppressed r.id)) results
+
 (** Run all enabled validators on [src] and return fired results.
 
     @requires For L1 rules that inspect post-expansion commands,
@@ -328,6 +380,7 @@ let run_all (src : string) : result list =
               go acc rs
         in
         let results = go [] rules in
+        let results = _resolve_conflicts results in
         Partial_context.clear ();
         Cache_key.store cache cache_key results;
         results

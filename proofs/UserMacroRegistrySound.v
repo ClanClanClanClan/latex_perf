@@ -24,26 +24,90 @@ Proof.
   apply merge_acyclic.
 Qed.
 
+(** Bridge between [mem_nat] (decidable boolean membership) and [In]
+    (propositional membership). Straightforward induction. *)
+Lemma mem_nat_true_In : forall x l, mem_nat x l = true -> In x l.
+Proof.
+  intros x l. induction l as [|y ys IH]; simpl; intro H.
+  - discriminate.
+  - destruct (Nat.eqb x y) eqn:Heq.
+    + apply Nat.eqb_eq in Heq. left; symmetry; exact Heq.
+    + right. apply IH. exact H.
+Qed.
+
+Lemma mem_nat_In_true : forall x l, In x l -> mem_nat x l = true.
+Proof.
+  intros x l. induction l as [|y ys IH]; simpl; intro H.
+  - destruct H.
+  - destruct H as [Heq | HIn].
+    + subst. rewrite Nat.eqb_refl. reflexivity.
+    + destruct (Nat.eqb x y); auto.
+Qed.
+
+Lemma not_In_mem_nat_false : forall x l, ~ In x l -> mem_nat x l = false.
+Proof.
+  intros x l H. destruct (mem_nat x l) eqn:E; auto.
+  exfalso. apply H. apply mem_nat_true_In. exact E.
+Qed.
+
+(** A body is "closed" under a name list when every reference it makes is
+    to a name in that list. This is the runtime invariant enforced by
+    [User_macro_registry.merge_into_catalogue]: macro bodies are normalised
+    so that every name token resolves to a catalog entry (unresolved names
+    are rejected before merge is attempted). *)
+Definition body_closed (names : list nat) (body : list nat) : Prop :=
+  forall x, In x body -> In x names.
+
+Definition catalog_bodies_closed (cat : catalog) : Prop :=
+  forall e, In e cat -> body_closed (entry_names cat) (snd e).
+
+(** Bridging lemma: a body closed under [names1] has zero cross-references
+    to any [names2] disjoint from [names1]. This is the only place the
+    runtime's "names are disjoint" policy becomes load-bearing — without
+    it the cross-ref hypotheses of [merge_acyclic] have to be given
+    externally. *)
+Lemma body_closed_disjoint_zero :
+  forall (names1 names2 body : list nat),
+    body_closed names1 body ->
+    (forall n, In n names1 -> ~ In n names2) ->
+    count_refs names2 body = 0.
+Proof.
+  intros names1 names2 body Hclosed Hdisj.
+  induction body as [|x xs IH]; simpl; auto.
+  assert (Hx_in1 : In x names1) by (apply Hclosed; left; reflexivity).
+  assert (Hx_notin2 : ~ In x names2) by (apply Hdisj; exact Hx_in1).
+  rewrite (not_In_mem_nat_false _ _ Hx_notin2). simpl.
+  apply IH. intros y Hy. apply Hclosed. right. exact Hy.
+Qed.
+
 (** Specialised soundness: merging an acyclic user catalog into an
-    acyclic built-in catalog is sound exactly when the user names are
-    disjoint from the built-in names. Matches the runtime's behaviour:
-    user macros that shadow built-ins are rejected with CMD-017 before
-    merge is attempted. *)
+    acyclic built-in catalog is sound when the user names are disjoint
+    from the built-in names AND both catalogs' bodies are closed under
+    their own names. Matches the runtime's behaviour:
+    - user macros that shadow built-ins are rejected with CMD-017
+      (disjoint names)
+    - unresolved references in macro bodies are rejected before merge
+      (bodies closed) *)
 Theorem user_macro_registry_merge_disjoint_names :
   forall (builtin user : catalog),
     acyclic builtin ->
     acyclic user ->
+    catalog_bodies_closed builtin ->
+    catalog_bodies_closed user ->
     (forall n, In n (entry_names builtin) ->
                ~ In n (entry_names user)) ->
-    (* disjoint names ⇒ cross-refs are zero in both directions. *)
-    (forall e, In e builtin ->
-       count_refs (entry_names user) (snd e) = 0) ->
-    (forall e, In e user ->
-       count_refs (entry_names builtin) (snd e) = 0) ->
     acyclic (merge builtin user).
 Proof.
-  intros builtin user Hb Hu _Hdisjoint Hfwd Hbck.
-  apply merge_acyclic; assumption.
+  intros builtin user Hb Hu Hcb Hcu Hdisjoint.
+  apply merge_acyclic; try assumption.
+  - intros e He.
+    apply (body_closed_disjoint_zero (entry_names builtin) (entry_names user)).
+    + exact (Hcb e He).
+    + exact Hdisjoint.
+  - intros e He.
+    apply (body_closed_disjoint_zero (entry_names user) (entry_names builtin)).
+    + exact (Hcu e He).
+    + intros n Hn Hcontra. apply (Hdisjoint n Hcontra). exact Hn.
 Qed.
 
 (** Commutativity is NOT claimed: merge (c1 ++ c2) and merge (c2 ++ c1)

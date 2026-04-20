@@ -65,6 +65,14 @@ File-based analysis (PNG/JPEG/PDF/font binary readers) for L3 validator rules.
 - **Log context**: `set_log_context`/`get_log_context` for .log file events
 - **Proof**: `LabelsUnique.v`, `InterpLocality.v`
 
+> **L3 derivation honesty (memo §15.5):** current L3 rules other than the
+> 20 binary-file validators operate partly on source-regex-derived
+> context (label/ref extraction via regex, not CST traversal). This is
+> cheap and correct for LP-Core documents but can surprise on
+> LP-Extended inputs where macros expand to `\label{...}` / `\ref{...}`
+> — the regex won't catch it, the AST walk would. Full AST-derived L3
+> is v26.2 work (see `docs/L3_ROADMAP.md`).
+
 ### L4 — Style Validators (`validators_l4_style.ml`)
 
 Sentence-level heuristic rules (49 STYLE + 10 locale). Operates on text after

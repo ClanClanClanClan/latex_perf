@@ -4,6 +4,77 @@ All notable changes to LaTeX Perfectionist are documented here.
 
 ## [v26.1.0] — 2026-04-20
 
+
+### P1.1 honest fixes (PR #240 additional commits)
+
+After the P1 audit flagged shortcuts in PR #236–#239, the following
+fixes landed as additional commits on this PR before the tag is cut:
+
+**Runtime (memo §11, §15.4):**
+- Class D (STYLE family) rules are now routed **out of** `run_all`. The
+  hot path enumerates only A+B rules per
+  `proofs/ExecutionClasses.v::hot_path_excludes_cd`. Class D is
+  reachable via `run_with_policy Execution_policy.with_advisory` or
+  the new CLI `--advisory` flag.
+- `validators.ml` no longer falls back to `Validator_dag.default_meta`
+  for catalogued rules: a missing contract is now a fatal startup error
+  with a diagnostic listing. Internal utility rules (no_tabs,
+  unmatched_braces, DOC-STRUCT) still use default_meta behind an
+  explicit alert silencer; `Validator_dag.default_meta` is `[@@deprecated]`.
+- `Rule_contract_loader.load` raises `Rule_contracts_missing` on
+  missing / malformed JSON instead of silently returning `[]`.
+
+**Proofs (memo §6):**
+- E2 strengthened: `proofs/RepairMonotonicity.v` gains
+  `repair_restores_trust_outside_boundaries` (+1 QED). The boundary
+  hypothesis is now genuinely consumed — the previous cardinality-only
+  theorem is retained as a backwards-compat corollary.
+- E3 bound to the real AST: `proofs/StableNodeIds.v` gains
+  `of_located_stable_under_local_edit` and
+  `of_located_id_unchanged_outside` (+2 QED) tied to a Coq mirror of
+  `Parser_l2.located_node`. New OCaml module `Node_id.of_located`
+  provides the runtime constructor without touching the ~22 record
+  literals in `parser_l2.ml`.
+
+**Spec catch-up (memo §15.4):**
+- `specs/rules/rules_v3.yaml`: added 9 previously runtime-only
+  catalogued rules — CMD-015/016/017 (user macro), PRJ-001..004
+  (project graph), PRT-001/002 (partial document trust). Totals move
+  645 → 654 specified, 629 → 638 shipped.
+- `scripts/tools/generate_rule_contracts.py`: regenerated with the new
+  entries.
+
+**Documentation (memo §15.5, §16.1):**
+- `docs/L3_ROADMAP.md`: new doc acknowledging that current L3 is partly
+  source-regex-derived, with migration plan to AST-derived extraction
+  (v26.2+). `docs/ARCH.md` L3 section gets a pointer.
+- `proofs/UserMacroTermination.v` + `proofs/UserMacroRegistrySound.v`:
+  thin wrappers over `UserExpand.v` exposing the termination and merge
+  soundness theorems under the memo-requested names.
+- `generated/project_facts.json`: JSON mirror emitted by the facts
+  generator alongside the canonical YAML.
+
+**Housekeeping:**
+- `_dag_topo_order` global ref deleted (was populated, never read).
+  Incremental callers compute topo order locally from
+  `Validator_dag.build_dag`.
+- New tests: `test_class_d_isolation.ml` (9 cases),
+  `test_node_id.ml` (6 cases),
+  `test_rule_contract_load_failure.ml` (3 cases).
+  Full runtest: 93+ suites PASS, 0 failures.
+
+**Explicit deferrals:**
+- Per-class scheduling in `evidence_scoring.ml` + `edf_scheduler.ml`
+  (memo §11.2): the registration-time class taxonomy is enforced in
+  this release; full per-class scoring/priority rewrite is scheduled
+  for v26.2 where it pairs with the compile-guarantee stack work.
+- `specs/v26/compilation_profiles.yaml` (memo §5.5): waits on the T0-T7
+  theorem stack work in v26.2/v27.2.
+- `docs/SUPPORT_MATRIX.yaml` at the memo-requested path: currently
+  lives at `specs/v26/support_matrix.yaml`; relocation is cosmetic,
+  tracked as a low-priority follow-up.
+
+
 Memo-mandated v26 substrate (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0.
 
 **Added (PRs #235-#240):**

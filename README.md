@@ -12,7 +12,7 @@
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 645 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap; [specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md) for the architecture memo.
+LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 654 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap; [specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md) for the architecture memo.
 
 ## Installation
 
@@ -59,8 +59,8 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (33 core + 108 generated + 1 ML) via `(coq.theory)` stanzas.
-- **Proofs**: 142 Coq files, 1,130 theorems/lemmas. 629 per-rule soundness (622 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
-- **Validators**: 629 rule IDs / 645 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
+- **Proofs**: 142 Coq files, 1,133 theorems/lemmas. 638 per-rule soundness (631 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+- **Validators**: 638 rule IDs / 654 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
@@ -218,15 +218,15 @@ bash scripts/latency_smoke_expand.sh 200
 
 ## Success Metrics (v26.1)
 
-- 645 rules specified / 629 shipped
-- 622 formal faithful + 20 conservative + 3 conditional proofs
+- 654 rules specified / 638 shipped
+- 631 formal faithful + 20 conservative + 3 conditional proofs
 - 0 admits, 0 axioms
 - 21-language target (7 live + 14 stubbed)
 - p95 edit-window ≈ 0.017 ms (target ≤ 1.2 ms)
 
 ---
 
-**Status**: v26.1.0 released. 629 validators implemented, 33+ core Coq proofs QED, ML v2 byte classifier trained (F1=0.9799, proved).
+**Status**: v26.1.0 released. 638 validators implemented, 33+ core Coq proofs QED, ML v2 byte classifier trained (F1=0.9799, proved).
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

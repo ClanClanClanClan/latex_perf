@@ -245,6 +245,17 @@ def main():
     with open(args.output, "w") as f:
         yaml.dump(facts, f, default_flow_style=False, sort_keys=False)
 
+    # PR #241 (p1.1-#6): emit JSON mirror alongside the YAML per memo §16.1.
+    # The mirror is consumed by external tooling that prefers JSON; CI's
+    # check_repo_facts.py reads the YAML authoritatively.
+    import json
+    json_path = repo / "generated" / "project_facts.json"
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(json_path, "w") as jf:
+        json.dump(facts, jf, indent=2, default=str)
+        jf.write("\n")
+    print(f"Generated {json_path} (JSON mirror)")
+
     print(f"Generated {args.output}")
     print(f"  Rules: {facts['rules']['total_specified']} specified, {facts['rules']['total_shipped']} shipped")
     print(f"  Proofs: {facts['proofs']['theorem_count_reported']} theorems, {facts['proofs']['admits']} admits")

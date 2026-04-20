@@ -181,10 +181,11 @@ let vpd_catalogue_count = List.length rules_vpd_catalogue
 
 let _run_generation = Atomic.make 0
 
-(* DAG validation + ordering deferred until precondition_of_rule_id is
-   defined *)
+(* DAG validation deferred until precondition_of_rule_id is defined. PR #241
+   (p1.1-#6): _dag_topo_order was computed on startup and never read anywhere.
+   Deleted; [Validator_dag.build_dag] still returns the topo order in its [dag]
+   record for future incremental callers. *)
 let _dag_validated = ref false
-let _dag_topo_order : string list ref = ref []
 let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
 
 let get_rules () : rule list =
@@ -197,11 +198,10 @@ let get_rules () : rule list =
   if not !_dag_validated then (
     _dag_validated := true;
     !_dag_validate_fn rules);
-  (* DAG topo_order is stored in [_dag_topo_order] and populated from
-     rule_contracts.yaml via Rule_contract_loader. We preserve original list
-     order here to keep severity ordering within families deterministic — the
-     topo order is used by [run_all_scheduled] / [run_all_incremental] for
-     edge-driven invalidation rather than to globally reorder run_all. *)
+  (* PR #241 (p1.1-#6): preserve original list order for deterministic severity
+     ordering within families. Incremental / scheduled callers that want
+     edge-driven ordering compute the topo order locally via
+     [Validator_dag.build_dag]. *)
   rules
 
 (** Run all enabled validators on [src] and return fired results.
@@ -803,9 +803,10 @@ let () =
              (String.concat ","
                 (List.filteri (fun i _ -> i < 5) (List.rev !missing))));
       match Validator_dag.build_dag metas with
-      | Ok dag ->
-          (* Store topological order for rule execution ordering *)
-          _dag_topo_order := dag.Validator_dag.topo_order;
+      | Ok _dag ->
+          (* PR #241 (p1.1-#6): topo_order no longer stored globally. Callers
+             that need an edge-driven invalidation order compute it at the use
+             site via [Validator_dag.build_dag]. *)
           let conflicts = Validator_dag.detect_conflicts metas in
           if conflicts <> [] then
             Printf.eprintf

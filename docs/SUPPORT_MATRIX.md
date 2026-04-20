@@ -1,6 +1,6 @@
 # Repo-exact support matrix
 
-> **Source of truth:** `specs/v26/support_matrix.yaml`. This document is a narrative wrapper — please keep both in sync (CI enforces agreement via `scripts/tools/check_repo_facts.py`).
+> **Source of truth:** `docs/SUPPORT_MATRIX.yaml`. This document is a narrative wrapper — please keep both in sync (CI enforces agreement via `scripts/tools/check_repo_facts.py`).
 >
 > **Memo reference:** `specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md` §12.
 
@@ -55,7 +55,7 @@ release). Current ship state:
 
 | Class | Status | Rule count | Meaning |
 |---|---|---|---|
-| Formal / faithful | GA | 622 | Rule logic matches formal model closely enough to justify strong soundness claims. |
+| Formal / faithful | GA | 636 | Rule logic matches formal model closely enough to justify strong soundness claims. |
 | Formal / conservative | GA | 20 | Rule covered by theorem via a conservative wrapper (`check = false`) for external binary checks. |
 | Formal / conditional | GA | 3 | Sound given log predicate. LAY-025/026/027 compile-log-derived rules. |
 | Statistically validated (overlay) | GA | 8 | v2 ByteClassifier precision/recall bounds in `proofs/ML/SpanExtractorSound.v`. Overlay on faithful proofs for 8 ambiguous TYPO rules. |

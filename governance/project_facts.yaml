@@ -1,12 +1,12 @@
 version: v26.1.0
-release_state: GA
+release_state: rc
 release_date: '2026-04-20'
 generated_by: scripts/tools/generate_project_facts.py
 rules:
-  total_specified: 645
+  total_specified: 659
   total_reserved: 16
-  total_non_reserved: 629
-  total_shipped: 629
+  total_non_reserved: 643
+  total_shipped: 643
   by_family:
     AR: 1
     BIB: 17
@@ -14,7 +14,7 @@ rules:
     CHAR: 22
     CHEM: 10
     CJK: 16
-    CMD: 14
+    CMD: 17
     COL: 7
     CS: 2
     CY: 1
@@ -42,6 +42,8 @@ rules:
     PDF: 12
     PKG: 25
     PL: 2
+    PRJ: 4
+    PRT: 2
     PT: 3
     REF: 12
     RO: 1
@@ -49,6 +51,7 @@ rules:
     RU: 2
     SCRIPT: 22
     SPC: 35
+    STRUCT: 5
     STYLE: 49
     TAB: 16
     TH: 1
@@ -58,25 +61,25 @@ rules:
     VERB: 17
     ZH: 2
   by_proof_class:
-    formal_faithful: 622
+    formal_faithful: 636
     formal_conservative: 20
     formal_conditional: 3
   by_execution_class:
-    A: 172
-    B: 407
+    A: 162
+    B: 431
     C: 17
     D: 49
 proofs:
-  proof_files_total: 142
-  proof_files_core: 33
+  proof_files_total: 144
+  proof_files_core: 35
   proof_files_generated: 108
   proof_files_ml: 1
   proof_files_archive: 7
-  per_rule_soundness_count: 629
-  formal_faithful_count: 622
+  per_rule_soundness_count: 643
+  formal_faithful_count: 636
   formal_conservative_count: 20
   formal_conditional_count: 3
-  theorem_count_reported: 1130
+  theorem_count_reported: 1150
   admits: 0
   axioms: 0
 languages:
@@ -107,8 +110,9 @@ support:
   document_modes:
     single_file: GA
     build_coupled_single_file: beta
-    multi_file: alpha
+    multi_file: planned
     beamer: deferred
-  macro_support_level: built-in catalogue (520 macros) + bounded \\newcommand/\\renewcommand/\\providecommand subset
+  macro_support_level: catalogue-only in v25; bounded user macro subset planned for
+    v26
   build_coupled_features: partial via log_parser and L3 file validators
   collaboration_features: not shipped

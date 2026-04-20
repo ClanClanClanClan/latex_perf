@@ -29,3 +29,21 @@ val damage_radius : error_pos:int -> string -> int * int
     enclosing paragraph boundary. *)
 
 val confidence_to_string : parse_confidence -> string
+
+val zone_conf_tag_complete : int
+(** PR #241 (p1.3): numeric confidence tags packed into [Node_id.command_hash]
+    so that zones with identical spans but different trust levels hash to
+    distinct IDs. The values are stable — persisted consumers (collaboration
+    anchors) can rely on them across releases. *)
+
+val zone_conf_tag_partial : int
+val zone_conf_tag_broken : int
+
+val zone_id : trust_zone -> Node_id.t
+(** PR #241 (p1.2, memo §6 E3): deterministic stable identifier for a trust
+    zone. Computed via {!Node_id.of_located} over the zone's
+    [(start_pos, end_pos, confidence)]. Consumers (collaboration anchors,
+    incremental re-validation) can use these IDs to track a zone across edits.
+
+    Proved stable under local edits in
+    {!proofs/StableNodeIds.v::of_located_stable_under_local_edit}. *)

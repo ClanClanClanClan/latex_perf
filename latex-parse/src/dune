@@ -52,6 +52,7 @@
   tokenizer_lite
   unicode
   parser_l2
+  node_id
   fd_util
   net_io
   macro_catalogue
@@ -520,6 +521,27 @@
  (name test_repair_monotonic)
  (modules test_repair_monotonic)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_class_d_isolation)
+ (modules test_class_d_isolation)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_tier_gating)
+ (modules test_tier_gating)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_node_id)
+ (modules test_node_id)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_rule_contract_load_failure)
+ (modules test_rule_contract_load_failure)
+ (libraries latex_parse_lib test_helpers unix str)
+ (deps validators_cli.exe))
 
 (test
  (name test_parser_corpus)

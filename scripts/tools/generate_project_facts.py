@@ -183,10 +183,29 @@ def generate(repo: Path) -> dict:
             for cls in ("A", "B", "C", "D")
         }
 
+    # PR #241 (p1.3): release_state reflects git state, not a hard-coded
+    # literal. A working tree that is checked out at an annotated git tag
+    # matching the current version is "GA"; anything else is "rc". The old
+    # hard-coded "GA" meant every mid-cycle regeneration falsely advertised
+    # the project as released.
+    import subprocess
+    try:
+        tag = subprocess.run(
+            ["git", "describe", "--tags", "--exact-match", "HEAD"],
+            capture_output=True, text=True, check=True, cwd=str(repo),
+        ).stdout.strip()
+        expected = f"v{version}" if not version.startswith("v") else version
+        release_state = "GA" if tag == expected else "rc"
+    except subprocess.CalledProcessError:
+        release_state = "rc"
+
+    import datetime
+    release_date = datetime.date.today().isoformat()
+
     return {
         "version": f"v{version}" if not version.startswith("v") else version,
-        "release_state": "GA",
-        "release_date": "2026-04-14",
+        "release_state": release_state,
+        "release_date": release_date,
         "generated_by": "scripts/tools/generate_project_facts.py",
         "rules": rules,
         "proofs": proofs,
@@ -244,6 +263,17 @@ def main():
 
     with open(args.output, "w") as f:
         yaml.dump(facts, f, default_flow_style=False, sort_keys=False)
+
+    # PR #241 (p1.1-#6): emit JSON mirror alongside the YAML per memo §16.1.
+    # The mirror is consumed by external tooling that prefers JSON; CI's
+    # check_repo_facts.py reads the YAML authoritatively.
+    import json
+    json_path = repo / "generated" / "project_facts.json"
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(json_path, "w") as jf:
+        json.dump(facts, jf, indent=2, default=str)
+        jf.write("\n")
+    print(f"Generated {json_path} (JSON mirror)")
 
     print(f"Generated {args.output}")
     print(f"  Rules: {facts['rules']['total_specified']} specified, {facts['rules']['total_shipped']} shipped")

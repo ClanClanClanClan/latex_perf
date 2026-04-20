@@ -43,7 +43,7 @@ Documents in LP-Core receive the strongest claims: parser soundness, macro expan
   - No catcode changes in body
   - No delimited-argument tricks
   - Cycle-detected, fuel-bounded expansion
-  - See `core/l1_expander/user_macro_registry.ml`
+  - See `latex-parse/src/user_macro_registry.ml`
 
 #### Admitted packages
 - `inputenc`, `fontenc`, `babel`, `polyglossia`

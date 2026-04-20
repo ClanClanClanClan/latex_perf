@@ -127,39 +127,69 @@ let find_json_file () = List.find_opt Sys.file_exists (candidate_paths ())
 
 let _cache : contract list option ref = ref None
 
+exception Rule_contracts_missing of string
+(** PR #241 (p1.1-#4): rule contract file is a required deployment artefact. A
+    missing or malformed file is a fatal startup error; the previous
+    silent-empty-list fallback could mask a broken deploy (every rule would
+    quietly run with [default_meta] and an empty DAG). *)
+
 let do_load () : contract list =
   match find_json_file () with
   | None ->
-      Printf.eprintf
-        "[rule_contracts] WARNING: rule_contracts.json not found; falling back \
-         to empty contract list\n\
-         %!";
-      []
+      raise
+        (Rule_contracts_missing
+           "rule_contracts.json not found on any candidate path \
+            (LP_RULE_CONTRACTS_JSON env var, cwd, or repo-root search). Deploy \
+            is missing specs/rules/rule_contracts.json.")
   | Some path -> (
       try
         let root = Y.from_file path in
         let rules = Y.Util.member "rules" root in
         match rules with
         | `List xs -> List.map parse_contract xs
-        | _ -> failwith "missing 'rules' array"
-      with exn ->
-        Printf.eprintf
-          "[rule_contracts] WARNING: failed to parse %s: %s; falling back to \
-           empty contract list\n\
-           %!"
-          path (Printexc.to_string exn);
-        [])
+        | _ ->
+            raise
+              (Rule_contracts_missing
+                 (Printf.sprintf "%s: missing 'rules' array in contract JSON"
+                    path))
+      with
+      | Rule_contracts_missing _ as e -> raise e
+      | exn ->
+          raise
+            (Rule_contracts_missing
+               (Printf.sprintf "%s: failed to parse: %s" path
+                  (Printexc.to_string exn))))
+
+(** PR #241 (p1.3): hashtable index for O(1) find_opt. Previously the public
+    [find_opt] did List.find_opt over 654 contracts per call;
+    [Validators.get_rules] now invokes it twice per rule (tier gating + DAG
+    validation) for 645 rules = ~800k string comparisons per [run_all]. With the
+    index every lookup is O(1). *)
+let _index : (string, contract) Hashtbl.t option ref = ref None
+
+let _ensure_index () : (string, contract) Hashtbl.t =
+  match !_index with
+  | Some tbl -> tbl
+  | None ->
+      let xs =
+        match !_cache with
+        | Some ys -> ys
+        | None ->
+            let ys = do_load () in
+            _cache := Some ys;
+            ys
+      in
+      let tbl = Hashtbl.create (2 * List.length xs) in
+      List.iter (fun (c : contract) -> Hashtbl.replace tbl c.rule_id c) xs;
+      _index := Some tbl;
+      tbl
 
 let load () : contract list =
-  match !_cache with
-  | Some xs -> xs
-  | None ->
-      let xs = do_load () in
-      _cache := Some xs;
-      xs
+  ignore (_ensure_index ());
+  match !_cache with Some xs -> xs | None -> do_load ()
 
 let find_opt (rule_id : string) : contract option =
-  List.find_opt (fun c -> c.rule_id = rule_id) (load ())
+  Hashtbl.find_opt (_ensure_index ()) rule_id
 
 let count () : int = List.length (load ())
 

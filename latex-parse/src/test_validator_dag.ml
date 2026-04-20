@@ -1,5 +1,10 @@
 (** Tests for Validator_dag — dependency graph + conflict resolution. *)
 
+(* Unit-testing the DAG machinery uses default_meta directly; the deprecation
+   alert targets production callers (validators.ml) which must use
+   Rule_contract_loader instead. *)
+[@@@ocaml.alert "-deprecated"]
+
 open Test_helpers
 
 let () =

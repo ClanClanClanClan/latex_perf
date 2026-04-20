@@ -73,6 +73,30 @@ jobs:
           opam exec -- dune build latex-parse/src/test_fault_injection.exe
           ./_build/default/latex-parse/src/test_fault_injection.exe
 
+      # PR #241 (p1.3): named steps for the P1 architecture tests so
+      # regressions surface as individual red check marks, not buried in the
+      # catch-all runtest avalanche below.
+      - name: Run tier gating (memo §4)
+        run: |
+          opam exec -- dune exec latex-parse/src/test_tier_gating.exe
+
+      - name: Run Class D isolation (memo §11)
+        run: |
+          opam exec -- dune exec latex-parse/src/test_class_d_isolation.exe
+
+      - name: Run L2 4KB perf gate
+        run: |
+          opam exec -- dune exec latex-parse/src/test_l2_gate.exe
+
+      - name: Run rule-contract load-failure gate
+        run: |
+          # The test forks validators_cli.exe so both binaries must be built.
+          # `dune exec` alone only builds the test target.
+          opam exec -- dune build \
+            latex-parse/src/test_rule_contract_load_failure.exe \
+            latex-parse/src/validators_cli.exe
+          ./_build/default/latex-parse/src/test_rule_contract_load_failure.exe
+
       - name: Run all dune-registered tests (catch-all)
         run: |
           opam exec -- dune runtest

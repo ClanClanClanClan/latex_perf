@@ -8,7 +8,7 @@
 | [PROOFS.md](PROOFS.md) | Coq proof infrastructure overview |
 | [PROOF_GUIDE.md](PROOF_GUIDE.md) | Proof-writers guide |
 | [PROOF_CLASSES.md](PROOF_CLASSES.md) | Proof taxonomy (faithful / conservative / conditional / statistical) |
-| [SUPPORT_MATRIX.md](SUPPORT_MATRIX.md) | Engine/package/interface support (wrapper over `specs/v26/support_matrix.yaml`) |
+| [SUPPORT_MATRIX.md](SUPPORT_MATRIX.md) | Engine/package/interface support (wrapper over `docs/SUPPORT_MATRIX.yaml`) |
 | [COMPILATION_GUARANTEE_STACK.md](COMPILATION_GUARANTEE_STACK.md) | v27 compile-guarantee theorem stack (T0-T7) |
 | [BUILD_LOG_CONTRACT.md](BUILD_LOG_CONTRACT.md) | Class C compile-log contract (LAY-001..027) |
 | [REST_API.md](REST_API.md) | REST endpoint reference (`/expand`, `/tokens`, profile env) |

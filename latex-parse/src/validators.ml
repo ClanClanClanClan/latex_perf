@@ -33,8 +33,35 @@ include Validators_partial
 (* Extend rules_class_c with TIKZ-002 from validators_l3_file (log-dependent) *)
 let rules_class_c = rules_class_c @ [ r_tikz_002 ]
 
+(* PR #241 (memo §11): split rules_style by execution_class from
+   rule_contracts.yaml. STYLE-* rules are Class D (advisory) and must not appear
+   on the keystroke-critical hot path. The rules_style list from
+   validators_l4_style.ml also contains Class B locale rules (CE, TH, IB, LANG
+   families) which MUST stay on the hot path. *)
+let rules_class_d : rule list =
+  List.filter
+    (fun (r : rule) ->
+      match Rule_contract_loader.find_opt r.id with
+      | Some c -> c.execution_class = Rule_contract_loader.D
+      | None -> false)
+    rules_style
+
+let rules_style_hot_path : rule list =
+  List.filter
+    (fun (r : rule) ->
+      match Rule_contract_loader.find_opt r.id with
+      | Some c -> c.execution_class <> Rule_contract_loader.D
+      | None -> true (* unclassified rules default to hot-path, safer *))
+    rules_style
+
 (* Combined ENC + CHAR + SPC + VERB + CJK + CMD + MATH + LOCALE + new TYPO
-   rules *)
+   rules.
+
+   PR #241 (memo §11): uses rules_style_hot_path (the B locale subset of
+   rules_style) rather than rules_style directly. Class D rules are in
+   rules_class_d and reachable only via [run_with_policy] with a policy that
+   enables Class D. `proofs/ExecutionClasses.v::hot_path_excludes_cd` is now
+   honoured by the runtime. *)
 let rules_enc_char_spc : rule list =
   rules_enc
   @ rules_char
@@ -47,7 +74,7 @@ let rules_enc_char_spc : rule list =
   @ rules_stragglers
   @ rules_l2_approx
   @ rules_l2_parser_actual
-  @ rules_style
+  @ rules_style_hot_path
   @ rules_l3_file
   @ rules_l1_expl3
   @ rules_user_macro
@@ -154,14 +181,32 @@ let vpd_catalogue_count = List.length rules_vpd_catalogue
 
 let _run_generation = Atomic.make 0
 
-(* DAG validation + ordering deferred until precondition_of_rule_id is
-   defined *)
+(* DAG validation deferred until precondition_of_rule_id is defined. PR #241
+   (p1.1-#6): _dag_topo_order global ref removed. The build_dag result's
+   topo_order is currently unused on the hot path; v26.2
+   incremental-invalidation work (memo §9 three-plane planes) will consume it at
+   that point, computing it locally from [Validator_dag.build_dag]. *)
 let _dag_validated = ref false
-let _dag_topo_order : string list ref = ref []
 let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
 
+(** PR #241 (p1.2): tier gating per memo §4. When the active [Language_profile]
+    tier is LP_Foreign, skip every rule whose contract declares
+    [project_scope = Lp_core_or_extended]. Rules marked [Any_tier] (e.g. the
+    build-coupled log rules) still fire across all tiers. LP_Core and
+    LP_Extended documents get the full rule set. *)
+let _filter_by_tier (rules : rule list) : rule list =
+  match Language_profile.Context.get () with
+  | Some Language_profile.LP_Foreign ->
+      List.filter
+        (fun (r : rule) ->
+          match Rule_contract_loader.find_opt r.id with
+          | Some c -> c.project_scope = Rule_contract_loader.Any_tier
+          | None -> true)
+        rules
+  | _ -> rules
+
 let get_rules () : rule list =
-  let rules =
+  let base =
     match Sys.getenv_opt "L0_VALIDATORS" with
     | Some ("1" | "true" | "pilot" | "PILOT") ->
         rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
@@ -169,20 +214,77 @@ let get_rules () : rule list =
   in
   if not !_dag_validated then (
     _dag_validated := true;
-    !_dag_validate_fn rules);
-  (* DAG topo_order is stored in [_dag_topo_order] and populated from
-     rule_contracts.yaml via Rule_contract_loader. We preserve original list
-     order here to keep severity ordering within families deterministic — the
-     topo order is used by [run_all_scheduled] / [run_all_incremental] for
-     edge-driven invalidation rather than to globally reorder run_all. *)
-  rules
+    !_dag_validate_fn base);
+  (* PR #241 (p1.1-#6): preserve original list order for deterministic severity
+     ordering within families. Incremental / scheduled callers that want
+     edge-driven ordering compute the topo order locally via
+     [Validator_dag.build_dag].
+
+     PR #241 (p1.2): after DAG validation, apply tier gating (memo §4). DAG
+     validation runs against the unfiltered list so metadata consistency is
+     enforced even for rules that won't fire in the current tier. *)
+  _filter_by_tier base
+
+(** PR #241 (p1.3): severity-to-int mapping for conflict resolution. Error
+    outranks Warning outranks Info. *)
+let _severity_rank : severity -> int = function
+  | Error -> 2
+  | Warning -> 1
+  | Info -> 0
+
+(** PR #241 (p1.3): honour [conflicts_with] in rule contracts. When two rules
+    declare each other as conflicts and both fire, keep the winner and drop the
+    loser. Priority tuple (winner minimises):
+    - severity DESC (Error > Warning > Info)
+    - count ASC (fewer matches = more specific pattern; on overlapping patterns
+      such as `--` vs `---` the longer-pattern rule fires less often and is thus
+      more specific)
+    - id_lex ASC (deterministic tie-break)
+
+    Purely post-processing; zero overhead when no conflict pair both fire. *)
+let _resolve_conflicts (results : result list) : result list =
+  if List.compare_length_with results 1 <= 0 then results
+  else
+    let res_by_id = Hashtbl.create (List.length results) in
+    List.iter (fun (r : result) -> Hashtbl.replace res_by_id r.id r) results;
+    let pick_winner (ra : result) (rb : result) : string =
+      let sev_a = _severity_rank ra.severity in
+      let sev_b = _severity_rank rb.severity in
+      if sev_a <> sev_b then if sev_a > sev_b then ra.id else rb.id
+      else if ra.count <> rb.count then
+        if ra.count < rb.count then ra.id else rb.id
+      else if ra.id <= rb.id then ra.id
+      else rb.id
+    in
+    let suppressed = Hashtbl.create 4 in
+    Hashtbl.iter
+      (fun rid_a (ra : result) ->
+        match Rule_contract_loader.find_opt rid_a with
+        | None -> ()
+        | Some ca ->
+            List.iter
+              (fun rid_b ->
+                if rid_a < rid_b (* process each pair once *) then
+                  match Hashtbl.find_opt res_by_id rid_b with
+                  | None -> ()
+                  | Some rb ->
+                      let winner = pick_winner ra rb in
+                      let loser = if winner = rid_a then rid_b else rid_a in
+                      Hashtbl.replace suppressed loser ())
+              ca.conflicts_with)
+      res_by_id;
+    if Hashtbl.length suppressed = 0 then results
+    else
+      List.filter
+        (fun (r : result) -> not (Hashtbl.mem suppressed r.id))
+        results
 
 (** Run all enabled validators on [src] and return fired results.
 
-    @requires For L1 rules that inspect post-expansion commands,
-    [Validators_context.set_post_commands] must have been called for the
-    current thread beforehand.  If it has not been set, those rules
-    silently return [None] (safe but incomplete). *)
+    Precondition: for L1 rules that inspect post-expansion commands,
+    [Validators_context.set_post_commands] must have been called for the current
+    thread beforehand. If it has not been set, those rules silently return
+    [None] (safe but incomplete). *)
 let max_input_bytes = 10 * 1024 * 1024 (* 10 MiB — safety guard *)
 
 let run_all (src : string) : result list =
@@ -280,6 +382,7 @@ let run_all (src : string) : result list =
               go acc rs
         in
         let results = go [] rules in
+        let results = _resolve_conflicts results in
         Partial_context.clear ();
         Cache_key.store cache cache_key results;
         results
@@ -320,10 +423,23 @@ let run_with_build (src : string) : result list =
   let c = run_class_c src in
   ab @ c
 
+(* PR #241 (memo §11): execute Class D rules explicitly. Not in run_all. *)
+let run_class_d (src : string) : result list =
+  let rec go acc = function
+    | [] -> List.rev acc
+    | (r : rule) :: rs ->
+        let acc' =
+          match r.run src with Some res -> res :: acc | None -> acc
+        in
+        go acc' rs
+  in
+  go [] rules_class_d
+
 let run_with_policy (policy : Execution_policy.t) (src : string) : result list =
   let ab = if policy.enable_a || policy.enable_b then run_all src else [] in
   let c = if policy.enable_c then run_class_c src else [] in
-  ab @ c
+  let d = if policy.enable_d then run_class_d src else [] in
+  ab @ c @ d
 
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
@@ -710,27 +826,36 @@ let () =
               true))
           rules
       in
+      (* PR #241 (p1.3): every runtime rule must have a contract. The old
+         is_catalogue_id filter (exempting lowercase/DOC-STRUCT internal rules)
+         was deleted along with the STRUCT-00N rename (see validators_l0.ml +
+         validators_l2.ml). A missing contract is now a hard startup failure —
+         no more silent default_meta fallback. *)
+      let missing = ref [] in
       let metas =
-        List.map
+        List.filter_map
           (fun r ->
             match Rule_contract_loader.find_opt r.id with
-            | Some c -> Rule_contract_loader.to_validator_meta c
+            | Some c -> Some (Rule_contract_loader.to_validator_meta c)
             | None ->
-                (* Fallback for rules not yet in rule_contracts.yaml. Preserves
-                   PR #235 behaviour until the contract catches up. *)
-                Validator_dag.default_meta r.id
-                  (match precondition_of_rule_id r.id with
-                  | L0 -> Validator_dag.L0
-                  | L1 -> Validator_dag.L1
-                  | L2 -> Validator_dag.L2
-                  | L3 -> Validator_dag.L3
-                  | L4 -> Validator_dag.L4))
+                missing := r.id :: !missing;
+                None)
           unique_rules
       in
+      if !missing <> [] then
+        failwith
+          (Printf.sprintf
+             "[validators] %d rule(s) registered at runtime but missing from \
+              specs/rules/rule_contracts.yaml; first few: %s. Regenerate with \
+              scripts/tools/generate_rule_contracts.py."
+             (List.length !missing)
+             (String.concat ","
+                (List.filteri (fun i _ -> i < 5) (List.rev !missing))));
       match Validator_dag.build_dag metas with
-      | Ok dag ->
-          (* Store topological order for rule execution ordering *)
-          _dag_topo_order := dag.Validator_dag.topo_order;
+      | Ok _dag ->
+          (* PR #241 (p1.1-#6): topo_order no longer stored globally. Callers
+             that need an edge-driven invalidation order compute it at the use
+             site via [Validator_dag.build_dag]. *)
           let conflicts = Validator_dag.detect_conflicts metas in
           if conflicts <> [] then
             Printf.eprintf

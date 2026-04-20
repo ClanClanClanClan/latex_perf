@@ -57,13 +57,24 @@ re-parse.
 
 ### L3 — Semantic State (`semantic_state.ml`, `file_context.ml`)
 
+> **Caveat first (memo §15.5):** current L3 is *partly* source-regex-derived.
+> Label/ref/cite extraction scans the raw source via regex rather than
+> walking the CST. This is correct on LP-Core documents (no catcode
+> mutation, no macro-expanded `\label{...}`) and wrong on LP-Extended
+> inputs where macros expand into the anchor commands. Full AST-derived
+> L3 is v26.2 work; see [`L3_ROADMAP.md`](L3_ROADMAP.md) for the
+> migration plan. The 20 binary-file validators (PNG/JPEG/PDF/font)
+> operate on extracted binary metadata and do not share this
+> limitation — they carry Formal Conservative proofs.
+
 Label/ref tracking, duplicate detection, undefined/forward ref identification.
 File-based analysis (PNG/JPEG/PDF/font binary readers) for L3 validator rules.
 
 - **Thread-local state**: `set_state`/`get_state` per-thread Hashtbl
 - **File context**: `set_file_context`/`get_file_context` for binary file metadata
 - **Log context**: `set_log_context`/`get_log_context` for .log file events
-- **Proof**: `LabelsUnique.v`, `InterpLocality.v`
+- **Proof**: `LabelsUnique.v`, `InterpLocality.v` (conditional on the
+  extractor matching AST semantics — v26.2 closes this gap)
 
 ### L4 — Style Validators (`validators_l4_style.ml`)
 

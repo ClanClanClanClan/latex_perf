@@ -1,5 +1,5 @@
 # =====================================================================
-#  rules.yaml  •  LaTeX Perfectionist v26  •  645 rules
+#  rules.yaml  •  LaTeX Perfectionist v26  •  659 rules
 #  Generated 27 Jul 2025 (v25); extended 2026-04-19 (v26.1)  •  © Lint‑Team
 # =====================================================================
 
@@ -1540,6 +1540,30 @@
   default_severity: Warning
   maturity: Draft
   owner: "@structure"
+  fix: null
+
+- id: "CMD-015"
+  description: "Unsupported user macro construct (catcode / delimited args)"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@expander"
+  fix: null
+
+- id: "CMD-016"
+  description: "User macro definition cycle detected"
+  precondition: L1_Expanded
+  default_severity: Error
+  maturity: Draft
+  owner: "@expander"
+  fix: null
+
+- id: "CMD-017"
+  description: "User macro shadows built-in catalogue entry"
+  precondition: L1_Expanded
+  default_severity: Warning
+  maturity: Draft
+  owner: "@expander"
   fix: null
 
 
@@ -5323,4 +5347,102 @@
   default_severity: Info
   maturity: Draft
   owner: "@style-council"
+  fix: null
+
+# ------------------------------------
+#  Project-graph rules  •  PRJ-001 → PRJ-004 (WS3)
+# ------------------------------------
+- id: "PRJ-001"
+  description: "Project include cycle detected"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-002"
+  description: "Unresolved \\input / \\include target"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-003"
+  description: "Undefined cross-file reference"
+  precondition: L3_Semantics
+  default_severity: Warning
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+- id: "PRJ-004"
+  description: "Duplicate label across project files"
+  precondition: L3_Semantics
+  default_severity: Error
+  maturity: Draft
+  owner: "@project"
+  fix: null
+
+
+# ------------------------------------
+#  Partial-document trust rules  •  PRT-001 → PRT-002 (WS5)
+# ------------------------------------
+- id: "PRT-001"
+  description: "Parse errors detected; partial document analysis"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@parser"
+  fix: null
+
+- id: "PRT-002"
+  description: "Trust zone boundary: analysis degraded in this region"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Draft
+  owner: "@parser"
+  fix: null
+
+# ------------------------------------
+#  Document-structure rules  •  STRUCT-001 → STRUCT-005 (PR #241 p1.3)
+# ------------------------------------
+- id: "STRUCT-001"
+  description: 'Missing \documentclass declaration'
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Impl
+  owner: "@structure"
+  fix: null
+
+- id: "STRUCT-002"
+  description: "Empty section title"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Impl
+  owner: "@structure"
+  fix: null
+
+- id: "STRUCT-003"
+  description: "Tab characters in source"
+  precondition: L0_Lexer
+  default_severity: Error
+  maturity: Impl
+  owner: "@structure"
+  fix: null
+
+- id: "STRUCT-004"
+  description: "Unmatched braces in document"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Impl
+  owner: "@structure"
+  fix: null
+
+- id: "STRUCT-005"
+  description: "Document-structure summary: parse errors + label/ref balance"
+  precondition: L2_Ast
+  default_severity: Info
+  maturity: Impl
+  owner: "@structure"
   fix: null

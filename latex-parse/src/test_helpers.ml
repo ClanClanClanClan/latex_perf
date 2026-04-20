@@ -41,6 +41,24 @@ let fires_with_count id src expected_count =
 (** [does_not_fire id src] is [true] when rule [id] does not fire on [src]. *)
 let does_not_fire id src = find_result id src = None
 
+(** PR #241 (memo §11): advisory variants that route through
+    [run_with_policy Execution_policy.with_advisory] so Class D rules (STYLE
+    family) are reachable. Use these in test_validators_style.ml after the Class
+    D routing refactor. *)
+let find_advisory_result id src =
+  let results = Validators.run_with_policy Execution_policy.with_advisory src in
+  List.find_opt (fun (r : Validators.result) -> r.id = id) results
+
+let fires_advisory id src = find_advisory_result id src <> None
+let does_not_fire_advisory id src = find_advisory_result id src = None
+
+let fires_advisory_with_count id src expected_count =
+  match find_advisory_result id src with
+  | Some r -> r.count = expected_count
+  | None -> false
+
+let fires_with_count_advisory = fires_advisory_with_count
+
 (** [with_pilot_env f] sets [L0_VALIDATORS=pilot], runs [f ()], then returns. *)
 let with_pilot_env f =
   Unix.putenv "L0_VALIDATORS" "pilot";

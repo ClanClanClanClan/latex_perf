@@ -28,7 +28,8 @@ let default_config : scoring_config =
   { min_confidence = Low; min_weight = 0.0; boost_vpd_rules = true }
 
 (** Load scoring config from a JSON file (spec W75: "config file loaded").
-    Format: {"min_confidence":"Low","min_weight":0.0,"boost_vpd_rules":true} *)
+    Format: a JSON object with keys [min_confidence], [min_weight],
+    [boost_vpd_rules]. *)
 let config_from_file (path : string) : scoring_config =
   try
     let ic = open_in path in

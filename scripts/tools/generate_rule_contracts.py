@@ -54,10 +54,17 @@ ML_STATISTICAL_RULE_IDS = {
 }
 
 # Phase A (keystroke-critical) families: fast, local, deterministic.
-PHASE_A_FAMILIES = {"TYPO", "CHAR", "ENC", "SPC", "DELIM", "VERB"}
+# Gated additionally on precondition=L0 so that a family member at L2+
+# stays at Class B even if the family prefix is in this set
+# (e.g. STRUCT-005 is L2 AST-dependent even though STRUCT-001..004 are L0).
+PHASE_A_FAMILIES = {"TYPO", "CHAR", "ENC", "SPC", "DELIM", "VERB", "STRUCT"}
 
 # Phase D (advisory) families: style, ML-gated, language-specific heuristics.
 PHASE_D_FAMILIES = {"STYLE"}
+
+# PR #241 (p1.1-#4): PRJ-001..004 + PRT-001/002 + CMD-015/016/017 are
+# now included in rules_v3.yaml (spec catch-up). No runtime-only back
+# door needed.
 
 
 def rule_family(rule_id: str) -> str:
@@ -72,7 +79,10 @@ def pick_phase(rule_id: str, precondition: str | None) -> str:
     if family in PHASE_D_FAMILIES:
         return "D"
     if family in PHASE_A_FAMILIES:
-        return "A"
+        # A Phase-A family member stays Class A only at L0 — L2+ members
+        # need debounce (Class B) because they rely on parser output.
+        if precondition is None or precondition.startswith("L0"):
+            return "A"
     # Default heuristic by layer: L0/L1 → B (debounce); L2/L3 → B; L4 already D.
     return "B"
 
@@ -147,6 +157,48 @@ def build_contract(rule: dict) -> dict:
     }
 
 
+def _add_conflict(by_id: dict, a: str, b: str) -> None:
+    """Symmetric conflict edge. Both rules declare the other."""
+    for ra, rb in ((a, b), (b, a)):
+        if ra in by_id:
+            c = by_id[ra]
+            if rb not in c["conflicts_with"]:
+                c["conflicts_with"].append(rb)
+
+
+# PR #241 (p1.3): family-level capability bindings. Each prefix produces or
+# consumes the listed capabilities, turning the validator DAG from a set of
+# isolated nodes into a real graph.
+#
+# Rationale per family:
+#   LAB  provides label_index   (collects \label occurrences)
+#   REF  consumes label_index   (must resolve references to labels)
+#   BIB  provides bib_entries   (parses .bib / \bibitem)
+#   CITE consumes bib_entries   (resolves \cite)
+#   CMD  consumes post_expansion_commands (L1 expansion output)
+#   ENV  consumes environment_events      (L2 AST env begin/end pairs)
+#   MATH consumes math_mode_contexts      (L2 AST math regions)
+#   FIG  consumes float_contexts          (L2 AST floats)
+#   TAB  consumes float_contexts          (L2 AST floats)
+#   VERB consumes verbatim_regions        (L0 verbatim lexer state)
+#   STYLE consumes language_model         (Class D advisory, ML-informed)
+#   STRUCT consumes document_structure    (document-level invariants)
+FAMILY_CAPABILITIES: dict[str, dict[str, list[str]]] = {
+    "LAB":    {"provides": ["label_index"]},
+    "REF":    {"consumes": ["label_index"]},
+    "BIB":    {"provides": ["bib_entries"]},
+    "CITE":   {"consumes": ["bib_entries"]},
+    "CMD":    {"consumes": ["post_expansion_commands"]},
+    "ENV":    {"consumes": ["environment_events"]},
+    "MATH":   {"consumes": ["math_mode_contexts"]},
+    "FIG":    {"consumes": ["float_contexts"]},
+    "TAB":    {"consumes": ["float_contexts"]},
+    "VERB":   {"consumes": ["verbatim_regions"]},
+    "STYLE":  {"consumes": ["language_model"]},
+    "STRUCT": {"consumes": ["document_structure"]},
+}
+
+
 def hand_audit_overrides(contracts: list[dict]) -> None:
     """Apply hand-audited overrides for rules with non-trivial edges.
 
@@ -154,6 +206,32 @@ def hand_audit_overrides(contracts: list[dict]) -> None:
     reference either a spec section or a known runtime dependency.
     """
     by_id = {c["rule_id"]: c for c in contracts}
+
+    # PR #241 (p1.3): real conflict edges derived from pattern overlap.
+    # Each pair below has verifiable-from-source conflict: one rule's
+    # pattern is a prefix/subset of the other's so both fire on the
+    # same span if enabled simultaneously.
+    _add_conflict(by_id, "TYPO-002", "TYPO-003")  # `--` vs `---` (en vs em dash)
+    _add_conflict(by_id, "TYPO-003", "TYPO-030")  # `---` vs `----+` (em-dash vs 4+ hyphens)
+    _add_conflict(by_id, "TYPO-002", "TYPO-030")  # `--` inside `----+`
+    _add_conflict(by_id, "TYPO-001", "TYPO-004")  # straight quote vs backtick-apostrophe
+    _add_conflict(by_id, "TYPO-013", "TYPO-004")  # lone backtick vs backtick-pair
+
+    # PR #241 (p1.3): family-level capability edges. Every rule whose family
+    # is in FAMILY_CAPABILITIES picks up provides/consumes defaults so the
+    # DAG has meaningful structure. Per-rule overrides in this function can
+    # still layer on top.
+    for c in contracts:
+        fam = rule_family(c["rule_id"])
+        caps = FAMILY_CAPABILITIES.get(fam)
+        if not caps:
+            continue
+        for cap in caps.get("provides", []):
+            if cap not in c["provides"]:
+                c["provides"].append(cap)
+        for cap in caps.get("consumes", []):
+            if cap not in c["consumes"]:
+                c["consumes"].append(cap)
 
     # Class C rules consume compile_log_context (produced by Log_parser).
     for rid in CLASS_C_RULE_IDS:

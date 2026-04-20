@@ -151,6 +151,63 @@ def main() -> int:
                 f"contracts Class C not in execution_class.ml: {sorted(extra)}"
             )
 
+    # 3b. PR #241 (p1.2): every Class C rule in execution_class.ml's
+    # hardcoded table must have execution_class = "C" in the contract.
+    # This is the concrete binding for proofs/ExecutionClasses.v — it
+    # turns the abstract isolation theorems into runtime-enforced
+    # invariants.
+    contract_by_id = {c["rule_id"]: c for c in contracts}
+    for rid in sorted(runtime_class_c):
+        c = contract_by_id.get(rid)
+        if c is None:
+            failures.append(f"runtime Class C id {rid!r} has no contract entry")
+            continue
+        if c["execution_class"] != "C":
+            failures.append(
+                f"{rid}: execution_class.ml says C, contract says "
+                f"{c['execution_class']!r}"
+            )
+
+    # 3c. PR #241 (p1.3): Class D ↔ STYLE family binding. Class D rules
+    # are identified in validators.ml by filtering rules_style; the
+    # contract must agree on family membership so a new STYLE rule
+    # without the D tag can't silently enter the hot path.
+    style_ids = {rid for rid in spec_ids if rid.startswith("STYLE-")}
+    contract_class_d = {
+        c["rule_id"] for c in contracts if c["execution_class"] == "D"
+    }
+    # Every Class D contract rule must be a STYLE-* rule.
+    non_style_d = contract_class_d - style_ids
+    if non_style_d:
+        failures.append(
+            f"non-STYLE rule(s) tagged execution_class=D in contracts: "
+            f"{sorted(non_style_d)} — runtime rules_class_d derived from "
+            f"rules_style won't pick them up"
+        )
+    # Every STYLE-* rule must have execution_class=D.
+    style_not_d = {
+        rid for rid in style_ids if contract_by_id[rid]["execution_class"] != "D"
+    }
+    if style_not_d:
+        failures.append(
+            f"STYLE-* rule(s) NOT tagged execution_class=D: "
+            f"{sorted(style_not_d)} — will silently run on hot path"
+        )
+
+    # 3d. PR #241 (p1.3): every Class C rule must have
+    # project_scope=any (memo §4 + tier gating: Class C fires across
+    # all tiers because build-log diagnostics matter regardless of
+    # language-contract tier).
+    class_c_wrong_scope = [
+        c for c in contracts
+        if c["execution_class"] == "C" and c["project_scope"] != "any"
+    ]
+    for c in class_c_wrong_scope:
+        failures.append(
+            f"{c['rule_id']}: execution_class=C requires project_scope=any "
+            f"(tier gating), got {c['project_scope']!r}"
+        )
+
     # 4. Acyclicity.
     cycles = check_acyclic(contracts)
     for c in cycles:

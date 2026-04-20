@@ -40,8 +40,17 @@ type contract = {
   project_scope : project_scope;
 }
 
+exception Rule_contracts_missing of string
+(** Raised by {!load} when the contract file is missing or malformed. PR #241
+    (p1.1-#4): this is fatal at startup — the previous silent empty-list
+    fallback could mask a broken deploy where every rule would run with empty
+    DAG edges. *)
+
 val load : unit -> contract list
-(** Load contracts. Memoised: subsequent calls return the cached list. *)
+(** Load contracts. Memoised: subsequent calls return the cached list.
+    @raise Rule_contracts_missing
+      if the JSON mirror cannot be found at any candidate path, or if it fails
+      to parse. *)
 
 val find_opt : string -> contract option
 (** [find_opt rule_id] returns the contract for [rule_id], or [None]. *)

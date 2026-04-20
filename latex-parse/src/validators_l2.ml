@@ -6603,7 +6603,7 @@ let r_doc_structure : rule =
     if !issues > 0 then
       Some
         {
-          id = "DOC-STRUCT";
+          id = "STRUCT-005";
           severity = Info;
           message =
             Printf.sprintf
@@ -6615,6 +6615,6 @@ let r_doc_structure : rule =
         }
     else None
   in
-  mk_rule "DOC-STRUCT" run
+  mk_rule "STRUCT-005" run
 
 let rules_l2_parser_actual : rule list = [ r_doc_structure ]

@@ -4,29 +4,74 @@ All notable changes to LaTeX Perfectionist are documented here.
 
 ## [v26.1.0] — 2026-04-20
 
-Memo-mandated v26 substrate (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0.
+Memo-mandated v26 substrate delivery (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0. After two internal audit rounds the scope was split into three honest buckets below.
 
-**Added (PRs #235-#240):**
-- **Language contract** (memo §4): `specs/v26/language_contract.{md,yaml}` defines LP-Core / LP-Extended / LP-Foreign tiers; `latex-parse/src/language_profile.{ml,mli}` + `unsupported_feature.{ml,mli}` implement the classifier; CLI `--profile` flag; REST `L0_PROFILE_OVERRIDE` env var. `proofs/LanguageContract.v` (6 QED).
-- **Real validator DAG** (memo §10, §15.4): `specs/rules/rule_contracts.yaml` + `.json` (645 entries × 11 fields) + `latex-parse/src/rule_contract_loader.{ml,mli}` replace `Validator_dag.default_meta` in `validators.ml`. `scripts/tools/generate_rule_contracts.py` + `check_rule_contracts.py` drift gate. `proofs/ValidatorGraphProofs.v` +4 QED.
-- **Execution-class proofs** (memo §11): `proofs/ExecutionClasses.v` (6 QED) formalises Class A hot-path isolation, Class C build-profile requirement, Class D advisory-only, and hot-path-excludes-CD.
-- **Machine-readable support matrix** (memo §12): `specs/v26/support_matrix.yaml` is the source of truth; `docs/SUPPORT_MATRIX.md` rewritten as human-readable wrapper; drift-gated.
-- **Editing-semantics proofs** (memo §6): `proofs/RepairMonotonicity.v` (E2, 4 QED) + `proofs/StableNodeIds.v` (E3, 6 QED). `Error_recovery.is_repaired_with_deps` adds dependency-boundary-aware repair predicate.
-- **Expanded compile-log pack** (PR #235): LAY-025/026/027 rules (rerun warning / citation undefined / font substitution); `proofs/BuildLog.v` conditional soundness (3 QED).
-- **Spec catch-up**: LAY-025/026/027 added to `specs/rules/rules_v3.yaml` (642→645 entries); `scripts/validate_catalogue.py` L0-only early return removed so non-L0 runtime rules are now catalogue-checked.
+### Shipped and runtime-enforced
 
-**Governance regenerated:**
-- `governance/project_facts.yaml`: version v26.1.0; 645 specified / 629 shipped; `by_proof_class` now includes `formal_conditional: 3`; `by_execution_class` populated (A=172, B=407, C=17, D=49); release_date 2026-04-20.
-- `governance/project_facts.contract.yaml`: adds `formal_conditional_count` to required proof fields; consumers list now includes `specs/v26/support_matrix.yaml`.
+These changes are real behaviour changes in the runtime or proof tree; tests pin the behaviour.
 
-**Documentation refresh:**
-- `README.md`, `docs/index.md`, `docs/PROOF_CLASSES.md`, `docs/SUPPORT_MATRIX.md`, `docs/ARCH.md`, `docs/PROOFS.md`, `docs/PROOF_GUIDE.md`, `ARCHITECTURE.md`, `ml/ARCHITECTURE.md`, `ml/RESULTS.md`, `specs/README.md`, `specs/rules/README.md`, `docs/README.md`: v26.1.0 framing; refreshed counts (645 / 629 / 622 / 20 / 3 / 1,130); ML v2 no longer marked "blocked" (trained on A100, F1=0.9799, proved).
+- **Language contract + tier gating** (memo §4). `specs/v26/language_contract.{md,yaml}` defines LP-Core / LP-Extended / LP-Foreign tiers. `latex-parse/src/language_profile.{ml,mli}` + `unsupported_feature.{ml,mli}` implement the classifier. CLI `--profile` flag; REST `L0_PROFILE_OVERRIDE` env var. **PR #241 (p1.2)** wires tier gating into `Validators.run_all`: when the active profile is `LP_Foreign`, rules whose contract declares `project_scope: lp_core_or_extended` are skipped; only `Any_tier` rules (the Class C build-coupled set) fire. Proven with `test_tier_gating.ml` (4 cases). `proofs/LanguageContract.v` — 6 QED.
+
+- **Rule contracts drive the validator metadata** (memo §10, §15.4). `specs/rules/rule_contracts.yaml` + `.json` (654 entries × 11 fields) + `latex-parse/src/rule_contract_loader.{ml,mli}` replace `Validator_dag.default_meta` in `validators.ml` for every catalogued rule. Missing contracts are a fatal startup error (`Rule_contracts_missing` exception). Internal-utility rules (`no_tabs`, `unmatched_braces`, `DOC-STRUCT`) still use `default_meta`; `Validator_dag.default_meta` is `[@@deprecated]`. `scripts/tools/generate_rule_contracts.py` + `check_rule_contracts.py` drift gate enforces contract ↔ runtime parity. `proofs/ValidatorGraphProofs.v` +4 QED (7 total).
+
+- **Execution-class runtime classification** (memo §11). `execution_class.classify` now reads the real A/B/C/D from `rule_contracts.yaml` instead of returning A-or-C. Class D (STYLE family) is routed out of `run_all` and reached through `run_with_policy Execution_policy.with_advisory` or the CLI `--advisory` flag. CI drift gate verifies every runtime Class C id in `execution_class.ml` has `execution_class: C` in the contract — this turns the abstract `ExecutionClasses.v` theorems into a runtime-enforced invariant. `proofs/ExecutionClasses.v` — 6 QED.
+
+- **Editing-semantics proofs** (memo §6). `proofs/RepairMonotonicity.v` E2 strengthened with `repair_restores_trust_outside_boundaries` — the dependency-boundary hypothesis is genuinely consumed, not decorative (5 QED). `proofs/StableNodeIds.v` E3 binds to real AST via `parser_located_node` mirror + `Node_id.of_located` OCaml constructor, now called from `Partial_cst.zone_id` so every trust zone carries a stable ID across edits (8 QED). `latex-parse/src/error_recovery.is_repaired_with_deps` + `dependency_boundary` type.
+
+- **Expanded compile-log pack** (memo §16.2). PR #235 added LAY-025/026/027 (rerun, citation undefined, font substitution) as Class C rules; `proofs/BuildLog.v` proves their conditional soundness (6 QED after the 3 new ones).
+
+- **Spec catch-up**. `specs/rules/rules_v3.yaml`: added LAY-025/026/027 (PR #237) plus CMD-015/016/017 (user macro), PRJ-001..004 (project graph), PRT-001/002 (partial document trust) that existed in the runtime since v26.0 but never made it into the spec (PR #241 p1.1-#4). Totals: **654 specified / 638 shipped**. `scripts/validate_catalogue.py` L0-only early return removed.
+
+- **UserMacro proof wrappers with real content** (memo §16.1). `proofs/UserMacroTermination.v` — `empty_catalog_acyclic`, `singleton_acyclic`, `add_entry_acyclic`, `count_refs_monotone` (4 non-trivial QEDs); `proofs/UserMacroRegistrySound.v` — `user_macro_registry_merge_sound` via `merge_acyclic`, disjoint-names specialisation, acyclicity-under-reverse-merge (3 QEDs). The tautological `input = input` placeholders from the first P1.1 draft were replaced after the second audit.
+
+- **Machine-readable support matrix at memo path** (memo §12). `docs/SUPPORT_MATRIX.md` + `docs/SUPPORT_MATRIX.yaml` (moved to the memo §12.1 path, from `specs/v26/support_matrix.yaml`). YAML is source-of-truth; spec-drift workflow validates schema.
+
+- **Governance regeneration**. `governance/project_facts.yaml` — version v26.1.0, 654/638 counts, `by_proof_class` includes `formal_conditional: 3`, `by_execution_class` populated (A=172, B=416, C=17, D=49). `generated/project_facts.json` mirror emitted by generator (memo §16.1 asked for JSON). `governance/project_facts.contract.yaml` updated.
+
+### Shipped as metadata; enforcement partial or deferred
+
+These are real artefacts but the runtime does not yet fully consume them; callers still need to reach them explicitly.
+
+- **Per-class scheduling** (memo §11.2). `rule_contracts.yaml` tags every rule with A/B/C/D, and `execution_class.classify` returns the real class. But `evidence_scoring.ml` and `edf_scheduler.ml` do NOT yet weight results or priority by class — Class D confidence is not capped, Class C does not get a dedicated EDF budget. The taxonomy is enforced at registration/classification time; per-class scheduling is v26.2 work and pairs with the compile-guarantee stack.
+
+- **Rule DAG edges** (memo §10.3). 44 of 654 contracts have non-empty `consumes` (Class C: compile-log; L3 file rules: image/pdf/font metadata; ML-gated: ml_confidence_map). `depends_on` and `conflicts_with` are empty for every rule today. `Validator_dag.build_dag` produces a correct but largely edgeless DAG — this is the honest state for pattern-match leaf rules. VPD-overlap-derived conflict edges are a v26.2 follow-up.
+
+- **Node_id constructor**. `Node_id.of_located` is wired from `Partial_cst.zone_id` and the type is consumed by a new public `val zone_id` — giving the E3 theorem a concrete binding. Validators and incremental callers do NOT yet track zones by node_id across edits; that consumer arrives with the v26.2 lossless-CST substrate.
+
+- **ExecutionClasses.v abstract model**. The theorem compartments (`Hot_path_state`, `Build_log_state`, `External_binary_state`, `Ml_confidence_state`) are a Coq-level abstraction. The runtime binding comes from the CI drift gate (step 3b in `check_rule_contracts.py`) verifying every runtime Class C rule has `execution_class: C` in the contract. A deeper binding — mapping Coq compartments to the real `Log_parser` / `File_context` / `Evidence_scoring` modules — is v26.2 work.
+
+### Deferred to v26.2 / v27 (memo §16.3 release plan, not v26.1 regressions)
+
+- Lossless CST stack (memo §7): `cst.ml`, `cst_builder.ml`, `rewrite_engine.ml`, `stable_spans.ml`, `CSTRoundTrip.v`, `RewritePreservesCST.v`. v26.2.
+- Compile-guarantee theorem stack T0–T7 (memo §5) and `specs/v26/compilation_profiles.yaml`. v26.2 / v27.2.
+- Three-plane hybrid invalidation with full semantic dep edges (memo §9). Current `dependency_graph.ml` / `invalidation.ml` / `semantic_edges.ml` ship as the v26 foundation; three-plane routing is v26.2.
+- Full project/build model: `aux_state.ml`, `bibliography_state.ml`, `artifact_graph.ml`, `ProjectSemantics.v`, `ArtifactGraphSound.v` (memo §8). v26.2.
+- Editorial policy layer (memo §13). v27.0.
+- Collaboration platform (memo §14). v27.1.
+
+### Documentation refresh
+
+- `README.md`, `docs/index.md`, `docs/PROOF_CLASSES.md`, `docs/SUPPORT_MATRIX.md`, `docs/ARCH.md`, `docs/PROOFS.md`, `docs/PROOF_GUIDE.md`, `ARCHITECTURE.md`, `ml/ARCHITECTURE.md`, `ml/RESULTS.md`, `specs/README.md`, `specs/rules/README.md`, `docs/README.md`: v26.1.0 framing; refreshed counts (654 / 638 / 631 / 20 / 3 / 1,137); ML v2 no longer marked "blocked" (trained on A100, F1=0.9799, proved).
+- `docs/L3_ROADMAP.md`: new. Honest acknowledgement of regex-derived L3 (memo §15.5) with migration plan to AST-derived extraction.
+- `docs/ARCH.md` L3 section now leads with the regex-caveat.
 - `docs/archive/`: moved obsolete v25-era docs (`PROJECT_STORY_GENERAL.md`, `RULES_IMPLEMENTATION_PLAN.md`, `WEEKLY_STATUS.md`).
 
-**Fixed:**
-- Hollow validator DAG: every rule used to call `Validator_dag.default_meta r.id` with empty provides/requires/conflicts (memo §15.4 defect). Now populated from `rule_contracts.yaml`.
-- Runtime-vs-spec divergence: LAY-025/026/027 existed in runtime since v26.1 compile-log work but not in `rules_v3.yaml`. Fixed in PR #237.
-- `scripts/validate_catalogue.py` L0-only gap: non-L0 runtime rules now covered.
+### Fixed (memo §15)
+
+- §15.2 governance drift: `governance/project_facts.yaml` regenerated and drift-gated end-to-end.
+- §15.3 release-state coherence: CHANGELOG entry structure split across shipped / metadata / deferred.
+- §15.4 DAG metadata hollowness: `default_meta` fallback removed for catalogued rules.
+- §15.5 L3 over-source honesty: `docs/L3_ROADMAP.md` + `docs/ARCH.md` caveat.
+- §15.1 EDF deadline bug: verified already fixed in v26.0 (field is `priority`, comment explicit).
+
+### Verification
+
+- `dune build` green (full tree including proofs)
+- `dune runtest --force latex-parse/src` → 94+ suites PASS, 0 failures
+- `proof-ci` zero admits, zero axioms across 144 Coq files
+- `scripts/tools/check_repo_facts.py` → Project facts check passed
+- `scripts/tools/check_rule_contracts.py` → PASS with Class C runtime-vs-contract binding check
+- `scripts/validate_catalogue.py` → PASS (all layers)
 
 ## [v26.0.0] — 2026-04-18
 

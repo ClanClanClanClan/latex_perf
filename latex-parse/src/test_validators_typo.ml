@@ -738,9 +738,15 @@ let () =
      Boundary condition and tricky-input tests
      ══════════════════════════════════════════════════════════════════════ *)
 
-  (* TYPO-002: count_substring allows overlaps, so "---" matches "--" twice *)
-  run "TYPO-002 fires on --- via overlap" (fun tag ->
-      expect (fires "TYPO-002" "This---that") (tag ^ ": overlap matches"));
+  (* TYPO-002: on isolated "--" only; conflict resolution (PR #241 p1.3)
+     suppresses TYPO-002 when TYPO-003 fires on the same input because `---` is
+     a strictly more specific match than `--`. *)
+  run "TYPO-002 fires on -- without overlap" (fun tag ->
+      expect (fires "TYPO-002" "a -- b") (tag ^ ": isolated double hyphen"));
+  run "TYPO-002 suppressed on --- (TYPO-003 wins)" (fun tag ->
+      expect
+        (does_not_fire "TYPO-002" "This---that")
+        (tag ^ ": conflict resolution drops TYPO-002"));
 
   (* TYPO-008 fires on 4 newlines too *)
   run "TYPO-008 fires on 4 newlines" (fun tag ->

@@ -46,6 +46,15 @@ val run_class_c : string -> result list
 (** Run only Class C (log-dependent) rules. Requires log context to be set via
     {!Log_parser.set_log_context}; returns [[]] otherwise. *)
 
+val rules_class_d : rule list
+(** Advisory rules (Class D) — STYLE family heuristics. PR #241 (memo §11): NOT
+    included in {!run_all}; reachable only through {!run_with_policy} with
+    {!Execution_policy.with_advisory} / {!Execution_policy.full}. *)
+
+val run_class_d : string -> result list
+(** Run only Class D (advisory / STYLE family) rules. Separate from [run_all] so
+    the keystroke-critical hot path never executes them. *)
+
 val run_with_build : string -> result list
 (** Run all A/B rules via {!run_all} plus Class C rules. Use when a compile log
     is available (save/build trigger). *)

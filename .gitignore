@@ -64,3 +64,14 @@ specs/Archive.zip
 ml/data/*.jsonl
 ml/eval_*.json
 site/
+
+# Dropbox conflicted-copy files (tool artefacts, never checked in)
+*conflicted copy*
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# ML checkpoints (reproducible from pipeline; too large for git)
+ml/checkpoints_v2/*.pt
+ml/checkpoints/*.pt

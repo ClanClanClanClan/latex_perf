@@ -1,7 +1,10 @@
 open Validators_common
 include Validators_l0_typo
 
-(* Basic validators (legacy) *)
+(* STRUCT family: document-structure rules (PR #241 p1.3, memo §10). Previously
+   these ran with ad-hoc lowercase IDs (no_tabs, etc.) and bypassed the
+   rule-contract drift gate via an is_catalogue_id filter. Renamed to the
+   FAMILY-NNN convention so every runtime rule has a contract. *)
 
 let no_tabs : rule =
   let run s =
@@ -10,14 +13,14 @@ let no_tabs : rule =
     if !cnt > 0 then
       Some
         {
-          id = "no_tabs";
+          id = "STRUCT-003";
           severity = Error;
           message = "Tab characters found";
           count = !cnt;
         }
     else None
   in
-  { id = "no_tabs"; run; languages = [] }
+  { id = "STRUCT-003"; run; languages = [] }
 
 let require_documentclass : rule =
   let run s =
@@ -31,13 +34,13 @@ let require_documentclass : rule =
     else
       Some
         {
-          id = "require_documentclass";
+          id = "STRUCT-001";
           severity = Warning;
           message = "Missing \\documentclass";
           count = 1;
         }
   in
-  { id = "require_documentclass"; run; languages = [] }
+  { id = "STRUCT-001"; run; languages = [] }
 
 let unmatched_braces : rule =
   let run s =
@@ -50,14 +53,14 @@ let unmatched_braces : rule =
     if !bal <> 0 then
       Some
         {
-          id = "unmatched_braces";
+          id = "STRUCT-004";
           severity = Warning;
           message = "Unmatched braces count";
           count = abs !bal;
         }
     else None
   in
-  { id = "unmatched_braces"; run; languages = [] }
+  { id = "STRUCT-004"; run; languages = [] }
 
 let missing_section_title : rule =
   let run s =
@@ -72,14 +75,14 @@ let missing_section_title : rule =
     if has_match re_empty || has_match re_missing then
       Some
         {
-          id = "missing_section_title";
+          id = "STRUCT-002";
           severity = Warning;
           message = "Empty section title";
           count = 1;
         }
     else None
   in
-  { id = "missing_section_title"; run; languages = [] }
+  { id = "STRUCT-002"; run; languages = [] }
 
 let rules_basic : rule list =
   [ no_tabs; require_documentclass; unmatched_braces; missing_section_title ]

@@ -7,7 +7,7 @@ Counts sourced from `governance/project_facts.yaml` (regenerated per release).
 
 ## Classification
 
-### Formal Faithful (622 rules)
+### Formal Faithful (636 rules)
 
 The Coq check function mirrors the OCaml validator's logic. If the Coq
 model says "no violation," the OCaml validator agrees.
@@ -64,7 +64,7 @@ for context-dependent disambiguation.
 
 ## Execution Classes (v26)
 
-See `specs/v26/support_matrix.yaml` (machine-readable) and
+See `docs/SUPPORT_MATRIX.yaml` (machine-readable) and
 `proofs/ExecutionClasses.v` (formal isolation theorems).
 
 | Class | Name | Latency | Proof requirement |
@@ -83,8 +83,8 @@ Each rule carries its execution class in `specs/rules/rule_contracts.yaml`
 
 | Class | Count | Percentage |
 |-------|-------|-----------|
-| Formal faithful | 622 | 98.9% |
+| Formal faithful | 631 | 98.9% |
 | Formal conservative | 20 | 3.2% |
 | Formal conditional | 3 | 0.5% |
 | Statistical (ML) | 8 | (overlay on faithful) |
-| **Total with proofs** | **629** | **100% (of 629 shipped; 16 Reserved excluded)** |
+| **Total with proofs** | **654** | **100% (of 638 shipped; 16 Reserved excluded)** |

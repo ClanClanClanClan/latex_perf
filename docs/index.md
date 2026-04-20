@@ -1,8 +1,6 @@
-# LaTeX Perfectionist v25.0.0
+# LaTeX Perfectionist v26.1.0
 
-**3-Year Project — Week 80 of 156**
-
-Comprehensive LaTeX document analysis and style validation system with 642 rules across 21 languages, backed by formal Coq proofs.
+Comprehensive LaTeX document analysis and style validation system with 645 rules across 21 languages, backed by formal Coq proofs.
 
 ## Quick Links
 
@@ -15,9 +13,9 @@ Comprehensive LaTeX document analysis and style validation system with 642 rules
 
 | Metric | Value |
 |--------|-------|
-| Rules specified | 642 (16 reserved) |
-| Rules shipped | 626 / 642 |
-| Soundness theorems | 626 per-rule (606 faithful, 20 conservative) |
+| Rules specified | 645 (16 reserved) |
+| Rules shipped | 629 / 645 |
+| Soundness theorems | 629 per-rule (606 faithful, 23 conservative) |
 | Total theorems/lemmas | 1,067 |
 | Test suites | 97 |
 | Test cases | 3,254 |

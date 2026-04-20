@@ -27,6 +27,7 @@
   re_compat
   validators_common
   language_detect
+  rule_contract_loader
   unsupported_feature
   language_profile
   validators_l0_typo
@@ -500,6 +501,12 @@
 (test
  (name test_build_log_integration)
  (modules test_build_log_integration)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_rule_contracts_integration)
+ (modules test_rule_contracts_integration)
+ (deps ../../specs/rules/rule_contracts.json)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

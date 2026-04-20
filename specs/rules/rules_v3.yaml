@@ -1,6 +1,6 @@
 # =====================================================================
-#  rules.yaml  •  LaTeX Perfectionist v25  •  642 rules
-#  Generated 27 Jul 2025  •  © Lint‑Team
+#  rules.yaml  •  LaTeX Perfectionist v26  •  645 rules
+#  Generated 27 Jul 2025 (v25); extended 2026-04-19 (v26.1)  •  © Lint‑Team
 # =====================================================================
 
 # ----------------------------------------------------------------
@@ -3543,6 +3543,30 @@
   description: "\\subsubsubsection depth > 3 without class support"
   precondition: L2_Ast
   default_severity: Warning
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+
+- id: "LAY-025"
+  description: "Rerun required: cross-references not yet resolved"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+
+- id: "LAY-026"
+  description: "Citation undefined in compile log"
+  precondition: L2_Ast
+  default_severity: Warning
+  maturity: Draft
+  owner: "@structure"
+  fix: null
+
+- id: "LAY-027"
+  description: "Font shape substitution reported by engine"
+  precondition: L2_Ast
+  default_severity: Info
   maturity: Draft
   owner: "@structure"
   fix: null

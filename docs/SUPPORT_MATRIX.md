@@ -1,6 +1,6 @@
 # Repo-exact support matrix
 
-> **Source of truth:** `specs/v26/support_matrix.yaml`. This document is a narrative wrapper — please keep both in sync (CI enforces agreement via `scripts/tools/check_repo_facts.py`).
+> **Source of truth:** `docs/SUPPORT_MATRIX.yaml`. This document is a narrative wrapper — please keep both in sync (CI enforces agreement via `scripts/tools/check_repo_facts.py`).
 >
 > **Memo reference:** `specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md` §12.
 

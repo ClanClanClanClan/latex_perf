@@ -70,9 +70,6 @@ fixes landed as additional commits on this PR before the tag is cut:
   for v26.2 where it pairs with the compile-guarantee stack work.
 - `specs/v26/compilation_profiles.yaml` (memo §5.5): waits on the T0-T7
   theorem stack work in v26.2/v27.2.
-- `docs/SUPPORT_MATRIX.yaml` at the memo-requested path: currently
-  lives at `specs/v26/support_matrix.yaml`; relocation is cosmetic,
-  tracked as a low-priority follow-up.
 
 
 Memo-mandated v26 substrate (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0.

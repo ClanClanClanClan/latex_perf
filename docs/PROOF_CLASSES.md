@@ -64,7 +64,7 @@ for context-dependent disambiguation.
 
 ## Execution Classes (v26)
 
-See `specs/v26/support_matrix.yaml` (machine-readable) and
+See `docs/SUPPORT_MATRIX.yaml` (machine-readable) and
 `proofs/ExecutionClasses.v` (formal isolation theorems).
 
 | Class | Name | Latency | Proof requirement |

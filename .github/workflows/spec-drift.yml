@@ -35,7 +35,7 @@ jobs:
           python3 - <<'PY'
           import yaml, sys
           from pathlib import Path
-          p = Path("specs/v26/support_matrix.yaml")
+          p = Path("docs/SUPPORT_MATRIX.yaml")
           if not p.is_file():
               print("FAIL: missing", p, file=sys.stderr); sys.exit(1)
           data = yaml.safe_load(p.read_text())

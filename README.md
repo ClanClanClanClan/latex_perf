@@ -208,7 +208,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 - **[specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md)** — current release master spec
 - **[specs/v26/language_contract.md](specs/v26/language_contract.md)** — LP-Core / LP-Extended / LP-Foreign tiers
-- **[specs/v26/support_matrix.yaml](specs/v26/support_matrix.yaml)** — machine-readable support contract
+- **[docs/SUPPORT_MATRIX.yaml](docs/SUPPORT_MATRIX.yaml)** — machine-readable support contract
 - **[specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md)** — architecture memo (v26/v27 plan)
 - **[docs/ARCH.md](docs/ARCH.md)** — architecture handbook
 - **[docs/PROOFS.md](docs/PROOFS.md)** / **[docs/PROOF_GUIDE.md](docs/PROOF_GUIDE.md)** / **[docs/PROOF_CLASSES.md](docs/PROOF_CLASSES.md)**

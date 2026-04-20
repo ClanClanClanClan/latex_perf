@@ -56,7 +56,7 @@ generation_policy:
     - CHANGELOG.md
     - release notes
     - docs/SUPPORT_MATRIX.md
-    - specs/v26/support_matrix.yaml
+    - docs/SUPPORT_MATRIX.yaml
     - website
     - CI badges
 

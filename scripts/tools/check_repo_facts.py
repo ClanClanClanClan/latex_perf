@@ -56,7 +56,7 @@ def render_candidates(key: str, facts: dict):
         return [str(n)]
     if key == 'support_matrix_yaml_path':
         # Literal path reference to the machine-readable source.
-        return ['specs/v26/support_matrix.yaml']
+        return ['docs/SUPPORT_MATRIX.yaml']
     return [str(get_nested(facts, key))]
 
 def main() -> int:

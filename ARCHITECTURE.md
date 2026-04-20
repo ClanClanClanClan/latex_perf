@@ -43,11 +43,11 @@ by all CI tests and benchmarks.
 ## Layer Architecture
 
 ```
-L4 (Style)       → core/l4_style/        [Stub — Phase 4]
-L3 (Semantics)   → core/l3_semantics/    [Stub — Phase 3]
-L2 (Parser)      → latex-parse/src/parser_l2.ml  [Active]
-L1 (Expander)    → core/l1_expander/     [Active, proofs QED]
-L0 (Lexer)       → core/l0_lexer/ + latex-parse/src/  [Active, proofs QED]
+L4 (Style)       → core/l4_style/ + latex-parse/src/validators_l4_style.ml   [Active — 49 STYLE rules]
+L3 (Semantics)   → latex-parse/src/validators_l3_file.ml + semantic_state.ml [Active — 19 L3 file validators]
+L2 (Parser)      → latex-parse/src/parser_l2.ml                              [Active, proofs QED]
+L1 (Expander)    → core/l1_expander/                                         [Active, proofs QED]
+L0 (Lexer)       → core/l0_lexer/ + latex-parse/src/                         [Active, proofs QED]
 ```
 
 ## Proof Infrastructure

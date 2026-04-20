@@ -58,18 +58,25 @@ rules:
     VERB: 17
     ZH: 2
   by_proof_class:
-    formal_faithful: 606
-    formal_conservative: 23
+    formal_faithful: 622
+    formal_conservative: 20
+    formal_conditional: 3
+  by_execution_class:
+    A: 172
+    B: 407
+    C: 17
+    D: 49
 proofs:
-  proof_files_total: 138
-  proof_files_core: 29
+  proof_files_total: 142
+  proof_files_core: 33
   proof_files_generated: 108
   proof_files_ml: 1
   proof_files_archive: 7
   per_rule_soundness_count: 629
-  formal_faithful_count: 606
-  formal_conservative_count: 23
-  theorem_count_reported: 1096
+  formal_faithful_count: 622
+  formal_conservative_count: 20
+  formal_conditional_count: 3
+  theorem_count_reported: 1130
   admits: 0
   axioms: 0
 languages:
@@ -100,9 +107,8 @@ support:
   document_modes:
     single_file: GA
     build_coupled_single_file: beta
-    multi_file: planned
+    multi_file: alpha
     beamer: deferred
-  macro_support_level: catalogue-only in v25; bounded user macro subset planned for
-    v26
+  macro_support_level: built-in catalogue (520 macros) + bounded \\newcommand/\\renewcommand/\\providecommand subset
   build_coupled_features: partial via log_parser and L3 file validators
   collaboration_features: not shipped

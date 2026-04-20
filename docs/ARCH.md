@@ -1,13 +1,15 @@
 # Architecture Handbook
 
-Revision 2026-04-13. Evergreen document (spec L-9).
+Revision 2026-04-20. Evergreen document (spec L-9).
 
 ---
 
 ## Overview
 
-LaTeX Perfectionist v25 is a five-layer incremental LaTeX analysis pipeline
-with formal (Coq) soundness proofs for every validator rule.
+LaTeX Perfectionist v26.1 is a five-layer incremental LaTeX analysis pipeline
+with formal (Coq) soundness proofs for every validator rule, a tiered
+language contract (LP-Core / LP-Extended / LP-Foreign), and a real validator
+dependency graph driven by `specs/rules/rule_contracts.yaml`.
 
 ```
 Source ─► L0 Tokenizer ─► L1 Expander ─► L2 Parser ─► L3 Semantics ─► L4 Style
@@ -90,9 +92,10 @@ Appendix I). Orchestrates L0-L4, maintains cross-layer consistency.
 ### Execution Flow
 
 1. `chunk_store.split_into_chunks` → paragraph/environment boundaries
-2. `chunk_store.diff_snapshots` → identify dirty chunks
-3. `edf_scheduler.submit_batch` → deadline-ordered tasks per chunk×layer
-4. `edf_scheduler.drain` → sequential execution (concurrent in v26)
+2. `Invalidation.compute ~old_snap ~new_snap` → semantic-aware dirty chunk set
+   (replaced `chunk_store.diff_snapshots` in v26.0 WS4)
+3. `edf_scheduler.submit_batch` → priority-ordered tasks per chunk×layer
+4. `edf_scheduler.drain` → sequential execution
 5. Cache clean chunk results, merge with dirty chunk results
 6. Cross-chunk rules (L3+) bypass cache, run on full source
 
@@ -107,15 +110,18 @@ Appendix I). Orchestrates L0-L4, maintains cross-layer consistency.
 
 ## Validator Engine (`validators.ml`)
 
-627 rules across 642 spec entries (97.7% coverage). Rules organized by family
-prefix (TYPO, ENC, CHAR, SPC, MATH, etc.) and layer (L0-L4).
+629 rules across 645 spec entries. Rules organized by family prefix
+(TYPO, ENC, CHAR, SPC, MATH, etc.) and layer (L0-L4).
 
 ### Rule Registration
 
 Each rule: `{ id : string; run : string -> result option; languages : string list }`.
 Rules collected into lists (`rules_enc`, `rules_char`, etc.) and composed in
-`rules_enc_char_spc`. Layer mapping via `precondition_of_rule_id` (prefix table
-+ explicit overrides in `_layer_tbl`).
+`rules_enc_char_spc`. Per-rule metadata (execution class, proof class,
+consumes/provides edges, fix scope, project scope) lives in
+`specs/rules/rule_contracts.yaml` and is loaded at startup by
+`Rule_contract_loader.load` — this populates the `Validator_dag` metas
+that drive the topological execution order.
 
 ### Evidence Scoring
 
@@ -148,12 +154,16 @@ Trained on A100, F1=0.9799. Formally verified in
 
 ## Proof System
 
-139 Coq files, 1,068 theorems/lemmas, 0 admits, 0 axioms.
+142 Coq files, 1,130 theorems/lemmas, 0 admits, 0 axioms.
 
-- **Core proofs** (23): Lexer, parser, expansion, arena, snapshot consistency
+- **Core proofs** (33): Lexer, parser, expansion, arena, snapshot consistency,
+  language contract, execution classes, validator DAG, hybrid invalidation,
+  partial-parse locality, damage containment, repair monotonicity, stable
+  node IDs, project/include graph, user-macro expansion, build-log
+  conditional soundness
 - **Generated proofs** (108): Per-rule soundness via `gen_coq_proofs.py`
 - **ML proof** (1): `SpanExtractorSound.v` with measured precision/recall bounds
-- **Tactic**: `qed_text_sound` in `RegexFamily.v` — one-shot solver
+- **Tactic**: `qed_text_sound` in `RegexFamily.v` — one-shot solver for VPD families
 
 ---
 

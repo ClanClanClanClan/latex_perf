@@ -2,19 +2,31 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
-## [v26.1.0] — Unreleased (P1 substrate)
+## [v26.1.0] — 2026-04-20
 
-Closes memo-mandated v26 substrate gaps before the v26.1.0 tag is cut.
+Memo-mandated v26 substrate (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0.
 
-**Added:**
-- Formal language contract (LP-Core / LP-Extended / LP-Foreign). See `specs/v26/language_contract.{md,yaml}`. PR #236.
-- Machine-readable rule contracts (`specs/rules/rule_contracts.yaml` + `.json`) driving a real validator DAG. PR #237.
-- LAY-025/026/027 spec entries (v26.1 compile-log pack now matches runtime).
-- Governance facts regenerated (645 rules, 629 shipped).
+**Added (PRs #235-#240):**
+- **Language contract** (memo §4): `specs/v26/language_contract.{md,yaml}` defines LP-Core / LP-Extended / LP-Foreign tiers; `latex-parse/src/language_profile.{ml,mli}` + `unsupported_feature.{ml,mli}` implement the classifier; CLI `--profile` flag; REST `L0_PROFILE_OVERRIDE` env var. `proofs/LanguageContract.v` (6 QED).
+- **Real validator DAG** (memo §10, §15.4): `specs/rules/rule_contracts.yaml` + `.json` (645 entries × 11 fields) + `latex-parse/src/rule_contract_loader.{ml,mli}` replace `Validator_dag.default_meta` in `validators.ml`. `scripts/tools/generate_rule_contracts.py` + `check_rule_contracts.py` drift gate. `proofs/ValidatorGraphProofs.v` +4 QED.
+- **Execution-class proofs** (memo §11): `proofs/ExecutionClasses.v` (6 QED) formalises Class A hot-path isolation, Class C build-profile requirement, Class D advisory-only, and hot-path-excludes-CD.
+- **Machine-readable support matrix** (memo §12): `specs/v26/support_matrix.yaml` is the source of truth; `docs/SUPPORT_MATRIX.md` rewritten as human-readable wrapper; drift-gated.
+- **Editing-semantics proofs** (memo §6): `proofs/RepairMonotonicity.v` (E2, 4 QED) + `proofs/StableNodeIds.v` (E3, 6 QED). `Error_recovery.is_repaired_with_deps` adds dependency-boundary-aware repair predicate.
+- **Expanded compile-log pack** (PR #235): LAY-025/026/027 rules (rerun warning / citation undefined / font substitution); `proofs/BuildLog.v` conditional soundness (3 QED).
+- **Spec catch-up**: LAY-025/026/027 added to `specs/rules/rules_v3.yaml` (642→645 entries); `scripts/validate_catalogue.py` L0-only early return removed so non-L0 runtime rules are now catalogue-checked.
+
+**Governance regenerated:**
+- `governance/project_facts.yaml`: version v26.1.0; 645 specified / 629 shipped; `by_proof_class` now includes `formal_conditional: 3`; `by_execution_class` populated (A=172, B=407, C=17, D=49); release_date 2026-04-20.
+- `governance/project_facts.contract.yaml`: adds `formal_conditional_count` to required proof fields; consumers list now includes `specs/v26/support_matrix.yaml`.
+
+**Documentation refresh:**
+- `README.md`, `docs/index.md`, `docs/PROOF_CLASSES.md`, `docs/SUPPORT_MATRIX.md`, `docs/ARCH.md`, `docs/PROOFS.md`, `docs/PROOF_GUIDE.md`, `ARCHITECTURE.md`, `ml/ARCHITECTURE.md`, `ml/RESULTS.md`, `specs/README.md`, `specs/rules/README.md`, `docs/README.md`: v26.1.0 framing; refreshed counts (645 / 629 / 622 / 20 / 3 / 1,130); ML v2 no longer marked "blocked" (trained on A100, F1=0.9799, proved).
+- `docs/archive/`: moved obsolete v25-era docs (`PROJECT_STORY_GENERAL.md`, `RULES_IMPLEMENTATION_PLAN.md`, `WEEKLY_STATUS.md`).
 
 **Fixed:**
-- Hollow validator DAG: all rules were calling `Validator_dag.default_meta r.id` with empty edges. PR #237 populates real provides/requires/conflicts from `rule_contracts.yaml`.
-- `scripts/validate_catalogue.py` L0-only early return removed; all runtime rules now checked against `rules_v3.yaml`.
+- Hollow validator DAG: every rule used to call `Validator_dag.default_meta r.id` with empty provides/requires/conflicts (memo §15.4 defect). Now populated from `rule_contracts.yaml`.
+- Runtime-vs-spec divergence: LAY-025/026/027 existed in runtime since v26.1 compile-log work but not in `rules_v3.yaml`. Fixed in PR #237.
+- `scripts/validate_catalogue.py` L0-only gap: non-L0 runtime rules now covered.
 
 ## [v26.0.0] — 2026-04-18
 

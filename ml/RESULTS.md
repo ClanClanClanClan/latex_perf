@@ -83,12 +83,15 @@ Benchmark: `scripts/bench_catcode.sh`. The SIMD C implementation uses vpshufb
 
 | Metric | Value |
 |--------|-------|
-| Total unique rules | 606 |
+| Total unique rules | 629 |
 | DAG cycles | 0 |
 | Conflicts | 0 |
+| Edges from rule_contracts.yaml | populated (v26.1 PR #237) |
 | Status | **PASS** |
 
-DAG validated at startup via `Validator_dag.build_dag` in `get_rules()`.
+DAG validated at startup via `Validator_dag.build_dag` in `get_rules()`,
+with metadata loaded from `specs/rules/rule_contracts.yaml` by
+`Rule_contract_loader.load`.
 
 ---
 
@@ -135,7 +138,7 @@ tagging. Training the v2 model requires GPU (A100, blocked).
 | Train/dev split | OK | 210 train / 83 dev (80/20 stratified) |
 | Logistic regression | OK | ml/eval_logreg.json |
 | Gradient boosting | OK | ml/eval_gbt.json |
-| Byte classifier (v2) | Blocked | Needs A100 GPU |
+| Byte classifier (v2) | Trained (A100, 2026-04-11) | F1=0.9799 / P=0.975 / R=0.9849; `ml/checkpoints_v2/best_model.pt` |
 
 ### v1 History (Retired)
 

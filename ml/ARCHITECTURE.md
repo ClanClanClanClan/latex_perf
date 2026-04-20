@@ -1,8 +1,9 @@
 # ML Span Extractor Architecture (v2 — Candidate Classification)
 
-> **Status**: Design approved, implementation pending.
-> **Previous**: v1 (BERT multi-head BIO tagger) archived at F1=0.8503.
-> **Date**: 2026-03-22
+> **Status**: v2 trained on A100 (2026-04-11). F1 = 0.9799 on dev (precision = 0.975, recall = 0.9849). Gate (≥ 0.94 per v25 master spec §14.2) passed. Proved in `proofs/ML/SpanExtractorSound.v` via `v2_span_extractor_sound`.
+> **Previous**: v1 (BERT multi-head BIO tagger) retired at F1 = 0.8503.
+> **Checkpoints**: `ml/checkpoints_v2/best_model.pt`, `training_checkpoint.pt`, `eval_results.json`.
+> **Date updated**: 2026-04-20
 
 ---
 

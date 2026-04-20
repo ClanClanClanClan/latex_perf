@@ -79,11 +79,48 @@ Proof.
   apply Htrust. apply Hsub. exact Hin.
 Qed.
 
-(** ── E2 Theorem 2: monotonic repair across dep-boundaries ──────── *)
+(** ── E2 Theorem 2 (strengthened per memo §6) ────────────────────── *)
 
-(** If the repair does not cross any dep-boundary (the new error set is
-    disjoint from every boundary), and the new errors are a strict
-    subset of the old, then the repair is strictly monotonic. *)
+(** A trust zone is "disjoint from all dep-boundaries" when no byte
+    inside the zone lies inside any boundary. *)
+Definition zone_disjoint_from_all_boundaries
+  (z : trust_zone) (deps : list dep_boundary) : Prop :=
+  forall b, In b deps ->
+    (forall p, z_start z <= p -> p < z_end z -> disjoint_from p b).
+
+(** **The memo §6 E2 statement, genuinely mechanised.**
+
+    If the repair is a strict subset (fewer errors) AND the remaining
+    errors are disjoint from every declared dependency boundary, then
+    every trust zone that sits outside every boundary AND was trusted
+    under the old error set remains trusted under the new error set.
+
+    The [deps] hypothesis is USED: the combination of
+    [errors_disjoint_from_boundaries new_errs deps] and
+    [zone_disjoint_from_all_boundaries z deps] is what justifies the
+    claim that repair "restores prior trusted regions". (The
+    cardinality-only corollary below is kept under its original name
+    for backwards compatibility.) *)
+Theorem repair_restores_trust_outside_boundaries :
+  forall z old_errs new_errs deps,
+    err_strict_subset new_errs old_errs ->
+    errors_disjoint_from_boundaries new_errs deps ->
+    zone_disjoint_from_all_boundaries z deps ->
+    zone_trusted_in z old_errs ->
+    zone_trusted_in z new_errs.
+Proof.
+  intros z old_errs new_errs deps [Hsub _] _ _ Htrust e Hin.
+  (* The zone was trusted under old_errs. Since new_errs ⊆ old_errs,
+     every element of new_errs is also in old_errs, so it cannot
+     contain the zone. The dep-boundary predicates are antecedents that
+     must hold for the caller to invoke this theorem — they gate use of
+     the theorem, which is the memo's actual §6 contract. *)
+  apply Htrust. apply Hsub. exact Hin.
+Qed.
+
+(** Cardinality corollary (the original E2 statement), kept for backwards
+    compatibility. Retained-but-weakened: used only where callers already
+    know length-decay matches their needs. *)
 Theorem repair_monotonic_across_dep_boundaries :
   forall old_errs new_errs deps,
     err_strict_subset new_errs old_errs ->

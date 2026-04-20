@@ -90,7 +90,12 @@ jobs:
 
       - name: Run rule-contract load-failure gate
         run: |
-          opam exec -- dune exec latex-parse/src/test_rule_contract_load_failure.exe
+          # The test forks validators_cli.exe so both binaries must be built.
+          # `dune exec` alone only builds the test target.
+          opam exec -- dune build \
+            latex-parse/src/test_rule_contract_load_failure.exe \
+            latex-parse/src/validators_cli.exe
+          ./_build/default/latex-parse/src/test_rule_contract_load_failure.exe
 
       - name: Run all dune-registered tests (catch-all)
         run: |

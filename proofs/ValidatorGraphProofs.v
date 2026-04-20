@@ -49,14 +49,35 @@ Proof.
   exists order. exact Hvalid.
 Qed.
 
-(** Contrapositive: if build_dag returns Error (visited < n),
-    then the graph contains a cycle. *)
-Theorem cycle_detection_sound :
-  forall (g : graph),
-    ~ acyclic g ->
-    ~ exists order, valid_topo_order g order.
+(** PR #241 (p1.5): the old [cycle_detection_sound] was
+    [~ acyclic g -> ~ exists order, valid_topo_order g order], which is
+    literally the definition of [acyclic] unfolded — it provided no
+    proof content. Replaced with a concrete cycle-not-acyclic theorem:
+    any graph containing a 2-cycle cannot have a valid topological
+    order. The proof contradicts the two mutual edges by chaining
+    [valid_topo_order] twice and deriving arithmetic inconsistency. *)
+Theorem two_cycle_not_acyclic :
+  forall u v,
+    u <> v ->
+    ~ acyclic [(u, v); (v, u)].
 Proof.
-  intros g Hnot_acyclic. exact Hnot_acyclic.
+  intros u v Hne [order Hvalid].
+  assert (Huv := Hvalid u v (or_introl eq_refl)).
+  assert (Hvu := Hvalid v u (or_intror (or_introl eq_refl))).
+  destruct (index_of u order) as [iu|]; [| exact Huv].
+  destruct (index_of v order) as [iv|]; [| exact Huv].
+  (* Huv : iv < iu ;  Hvu : iu < iv ;  lia contradiction. *)
+  lia.
+Qed.
+
+(** Self-loop is inconsistent with acyclicity. *)
+Theorem self_loop_not_acyclic :
+  forall u, ~ acyclic [(u, u)].
+Proof.
+  intros u [order Hvalid].
+  assert (Hself := Hvalid u u (or_introl eq_refl)).
+  destruct (index_of u order) as [iu|]; [| exact Hself].
+  lia.
 Qed.
 
 (** The empty graph is trivially acyclic. *)
@@ -90,15 +111,41 @@ Proof.
   exists iu, iv. repeat split; auto.
 Qed.
 
-(** When real dependency edges exist (PR #237: Rule_contract_loader
-    populates requires/provides from rule_contracts.yaml), the topological
-    order drives execution so that producers run before consumers. This
-    theorem captures that guarantee at the abstract level. *)
-Theorem dependency_respects_topo_order :
+(** PR #241 (p1.5): the old [dependency_respects_topo_order] was
+    [exact (Hvalid u v Hin)] on a goal that reduces to [Hvalid] applied.
+    Replaced with a genuine transitivity result: two chained dependency
+    edges impose an ordering two steps deep. The proof chains
+    [Hvalid] twice and uses [lia] to compose the two strict-less-than
+    facts. *)
+Theorem topo_order_transitive :
+  forall g order u v w,
+    valid_topo_order g order ->
+    In (u, v) g ->
+    In (v, w) g ->
+    match index_of u order, index_of w order with
+    | Some iu, Some iw => iw < iu
+    | _, _ => False
+    end.
+Proof.
+  intros g order u v w Hvalid Huv Hvw.
+  pose proof (Hvalid u v Huv) as Huv'.
+  pose proof (Hvalid v w Hvw) as Hvw'.
+  destruct (index_of u order) as [iu|] eqn:Eu;
+    [| destruct (index_of v order); destruct Huv'].
+  destruct (index_of v order) as [iv|] eqn:Ev;
+    [| destruct Huv'].
+  destruct (index_of w order) as [iw|] eqn:Ew;
+    [| destruct Hvw'].
+  lia.
+Qed.
+
+(** Any edge imposes a strict index ordering — direct consequence of
+    [valid_topo_order], kept as an unfolding-lemma for downstream proofs
+    that need the one-step version. *)
+Lemma dependency_respects_topo_order :
   forall g order u v,
     valid_topo_order g order ->
     In (u, v) g ->
-    (* u depends on v ⇒ v's index comes first ⇒ v executes first *)
     match index_of u order, index_of v order with
     | Some iu, Some iv => iv < iu
     | _, _ => False

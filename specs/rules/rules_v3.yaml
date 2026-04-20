@@ -1,5 +1,5 @@
 # =====================================================================
-#  rules.yaml  •  LaTeX Perfectionist v26  •  659 rules
+#  rules.yaml  •  LaTeX Perfectionist v26  •  660 rules
 #  Generated 27 Jul 2025 (v25); extended 2026-04-19 (v26.1)  •  © Lint‑Team
 # =====================================================================
 
@@ -5445,4 +5445,15 @@
   default_severity: Info
   maturity: Impl
   owner: "@structure"
+  fix: null
+
+# ------------------------------------
+#  System/internal rules  •  SYS-001 (PR #241 p1.5)
+# ------------------------------------
+- id: "SYS-001"
+  description: "Input truncated: exceeds safety byte limit"
+  precondition: L0_Lexer
+  default_severity: Warning
+  maturity: Impl
+  owner: "@runtime"
   fix: null

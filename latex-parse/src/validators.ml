@@ -297,7 +297,7 @@ let run_all (src : string) : result list =
       (String.length src) max_input_bytes;
     [
       {
-        id = "INTERNAL-001";
+        id = "SYS-001";
         severity = Warning;
         message =
           Printf.sprintf

@@ -55,7 +55,7 @@ release). Current ship state:
 
 | Class | Status | Rule count | Meaning |
 |---|---|---|---|
-| Formal / faithful | GA | 636 | Rule logic matches formal model closely enough to justify strong soundness claims. |
+| Formal / faithful | GA | 637 | Rule logic matches formal model closely enough to justify strong soundness claims. |
 | Formal / conservative | GA | 20 | Rule covered by theorem via a conservative wrapper (`check = false`) for external binary checks. |
 | Formal / conditional | GA | 3 | Sound given log predicate. LAY-025/026/027 compile-log-derived rules. |
 | Statistically validated (overlay) | GA | 8 | v2 ByteClassifier precision/recall bounds in `proofs/ML/SpanExtractorSound.v`. Overlay on faithful proofs for 8 ambiguous TYPO rules. |

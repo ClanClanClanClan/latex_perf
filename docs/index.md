@@ -15,8 +15,8 @@ Comprehensive LaTeX document analysis and style validation system with 645 rules
 |--------|-------|
 | Rules specified | 645 (16 reserved) |
 | Rules shipped | 629 / 645 |
-| Soundness theorems | 629 per-rule (606 faithful, 23 conservative) |
-| Total theorems/lemmas | 1,067 |
+| Soundness theorems | 629 per-rule (622 faithful, 20 conservative, 3 conditional) |
+| Total theorems/lemmas | 1,130 |
 | Test suites | 97 |
 | Test cases | 3,254 |
 | Performance p95 | 2.78 ms (gate: 25 ms) |

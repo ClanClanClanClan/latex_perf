@@ -18,6 +18,9 @@ The `Log_parser.parse_log` function extracts structured events from LaTeX
 | `ClubPenalty` | `Club penalty` | `page` |
 | `FloatWarning` | `LaTeX Warning: Float too large...input line N` | `message`, `line` |
 | `LatexWarning` | `LaTeX Warning: ...on input line N` | `message`, `line` |
+| `RerunNeeded` | `LaTeX Warning: ... Rerun to get cross-references right` (v26.1) | (none; presence-only) |
+| `CitationUndefined` | `LaTeX Warning: Citation 'key' on page N undefined` (v26.1) | `key`, `page` |
+| `FontSubstitution` | `LaTeX Font Warning: Font shape ... not available` (v26.1) | `message` |
 
 Additionally, TikZ compile times are extracted via `Compile time...: Ns`.
 
@@ -37,7 +40,7 @@ From raw events, the parser computes aggregate facts:
 
 ## Consuming Rules (Class C)
 
-14 rules depend on `Log_parser.get_log_context()`. They are in `rules_class_c`
+17 rules depend on `Log_parser.get_log_context()`. They are in `rules_class_c`
 and execute only via `run_class_c` / `run_with_build` / `run_with_policy`:
 
 | Rule | Fact consumed | Condition |
@@ -56,6 +59,12 @@ and execute only via `run_class_c` / `run_with_build` / `run_with_policy`:
 | MATH-027 | `max_overfull_pt` | `> 5.0` |
 | FIG-020 | `max_overfull_pt` | `> 0.0` |
 | TIKZ-002 | `tikz_compile_times` | Any time `> 5.0` |
+| LAY-025 | `events` | Any `RerunNeeded` |
+| LAY-026 | `events` | Any `CitationUndefined` |
+| LAY-027 | `events` | Any `FontSubstitution` |
+
+The three v26.1 rules (LAY-025/026/027) carry `formal_conditional` proofs
+in `proofs/BuildLog.v` — sound given a compile-log-predicate contract.
 
 ## Staleness Policy
 

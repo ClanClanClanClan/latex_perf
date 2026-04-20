@@ -12,9 +12,7 @@
 <!-- UNIT_TESTS_BADGE_END -->
 ![Perf Sparkline](https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf_spark.svg)
 
-**3-Year Project — Week 80 of 156** - Comprehensive LaTeX document analysis and style validation system.
-
-LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 645 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap.
+LaTeX Perfectionist is a formally-verified, high-performance LaTeX validation system with 645 rules across 21 languages. See [specs/v26/](specs/v26/) for the v26 language contract, support matrix, and workstream roadmap; [specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md) for the architecture memo.
 
 ## Installation
 
@@ -57,30 +55,20 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status (Week 80 — April 2026)
+## Current Status — v26.1 (April 2026)
 
-Post-Phase 12 — All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
-- **Build**: `dune build` compiles the SIMD service, benches, and 23 core Coq proofs + 108 generated + 1 ML via `(coq.theory)` stanzas.
-- **Proofs**: 30+ Coq files, 1,096 theorems/lemmas. 629 per-rule soundness (606 faithful, 23 conservative). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
+- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (33 core + 108 generated + 1 ML) via `(coq.theory)` stanzas.
+- **Proofs**: 142 Coq files, 1,130 theorems/lemmas. 629 per-rule soundness (622 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
 - **Validators**: 629 rule IDs / 645 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
 
 ### Milestones
-- ✅ W1: Bootstrap complete — build, proofs, perf harness
-- ✅ W5: Performance α gate (p95 < 20ms)
-- ✅ W10: Proof β gate (admits = 0)
-- ✅ W14-15: All expansion proofs QED
-- ✅ W26: L0-L1 formal checkpoint (0 admits)
-- ✅ W39: VPD-80 capstone (80 rules certified)
-- ✅ Phases 4-8: Refactoring, CI hardening, audit, cleanup (PRs #150-#159)
-- ✅ W97-101: 84 new validators (STYLE, locale, L3-approx) — PRs #168/#169
-- ✅ W102-104: Corpus expansion (329 golden), i18n QA, 607 proofs — PRs #170/#171
-- ✅ Audit: regex hoisting, contains_substring rewrite, risk register — PRs #172-#174
-- ✅ Infra: ML CPU baselines, corpus lock, mkdocs, parallel removal — PRs #175-#181
-- ✅ L3: 28 more rules via .log parser + text heuristics — PR #181
-- 🔄 Blocked: ML v2 byte classifier (A100 GPU), 27 rules needing external deps
+- ✅ v25.0.0 (2026-04-14): rule coverage + ML v2 + SIMD + chunk store
+- ✅ v26.0.0 (2026-04-18): WS0-WS6 — truth-surface freeze, compile-log Class C, bounded macro registry, project graph, hybrid invalidation, partial-document semantics, testing hardening
+- ✅ v26.1.0 (2026-04-20): formal language contract + real validator DAG + ExecutionClasses proof + support_matrix.yaml + E2/E3 editing proofs + expanded compile-log (LAY-025/026/027) + governance regen
 
 ## Quick Start
 
@@ -194,79 +182,51 @@ bash scripts/latency_smoke_expand.sh 200
 - Token snapshots: see `docs/VALIDATORS_RUNTIME.md` → Token Debugging. Enable `L0_DEBUG_TOKENS=1` and POST `/tokens`.
 - Layer gating: add `?layer=l1` to `/expand` to run L1-only rules.
 
-## Project Timeline Overview
-
-### Q1 (Weeks 1-13) - Current Quarter
-- **Week 1** ✅: Bootstrap skeleton, repo restructure, _CoqProject
-- **Week 2-3**: Catcode module + proofs
-- **Week 4**: Chunk infra, xxHash scalar
-- **Week 5** 🎯: Performance α gate (Tier A p95 < 20ms)
-- **Week 6-8**: Incremental Lexer proof
-- **Week 9**: SIMD xxHash
-- **Week 10** 🎯: Proof β gate (admits ≤ 10)
-
-### Q2-Q4 (Weeks 14-52)
-- L1 macro expander + proofs
-- SIMD tokenizer implementation (Weeks 40-48)
-- Validator DSL v1
-- L2 parser delivery
-
-### Years 2-3 (Weeks 53-156)
-- Complete 623 validators
-- 21 language support
-- ML-assisted pattern generation
-- Performance target: <1ms edit-window latency
-- **Week 156**: v25 General Availability
-
 ## Performance Targets
 
-Per v25_R1 L0_LEXER_SPEC:
-
-| Metric | Tier A (Scalar) | Tier B (SIMD) | Repository Baseline |
-|--------|-----------------|---------------|---------------------|
-| Full-doc p95 (1.1MB) | ≤ 20ms | ≤ 8ms | p95 ≈ 2.96 ms (1 M) |
-| Edit-window p95 (4 KB) | ≤ 3ms | ≤ 1.2ms | p95 ≈ 0.017 ms (5 K) |
-| First-token latency | ≤ 350μs | ≤ 200μs | planned |
+| Metric | Target | Repository Baseline |
+|--------|--------|---------------------|
+| Full-doc p95 (1.1MB) | ≤ 20ms | p95 ≈ 2.96 ms (1 M iters) |
+| Edit-window p95 (4 KB) | ≤ 1.2ms | p95 ≈ 0.017 ms (5 K iters) |
+| First-token latency | ≤ 350μs (scalar) / ≤ 200μs (SIMD) | |
 
 ## Architecture
 
-Per v25_R1 specification:
-- **Implementation Baseline**: OCaml-first L0 runtime with optional performance lanes
-- **Five-Layer Architecture**: L0 (Lexer) → L1 (Expander) → L2 (Parser) → L3 (Semantics) → L4 (Style)
-- **Current Focus**: L0 Lexer implementation and optimization
-- **Proof Strategy**: Zero admits maintained, Coq formal verification
+- **Five-layer pipeline**: L0 (Lexer) → L1 (Expander) → L2 (Parser) → L3 (Semantics) → L4 (Style).
+- **Language contract** (v26): LP-Core / LP-Extended / LP-Foreign tiers. See [specs/v26/language_contract.md](specs/v26/language_contract.md).
+- **Rule contracts** (v26.1): per-rule execution/proof/project metadata in [specs/rules/rule_contracts.yaml](specs/rules/rule_contracts.yaml); drives the validator DAG.
+- **Execution classes**: A (keystroke-critical) / B (debounce) / C (build-coupled) / D (advisory). Formalised in [proofs/ExecutionClasses.v](proofs/ExecutionClasses.v).
+- **Proof strategy**: 0 admits, 0 axioms; 142 Coq files, 1,130 theorems/lemmas.
 
 ### SIMD Implementation
 
-The R1 baseline is the OCaml L0 runtime. SIMD acceleration is available via:
-- **Rust SIMD lane**: AVX-512/AVX2/NEON intrinsics with runtime feature detection
-- **C-extension lane**: Currently enabled on Apple Silicon (NEON) and auto-disabled if slower
-- **Performance policy**: Feature-flagged, auto-disabled if slower than baseline per R1 specifications
+- **Rust SIMD lane**: AVX-512/AVX2/NEON intrinsics with runtime feature detection.
+- **C-extension lane**: enabled on Apple Silicon (NEON); auto-disabled if slower than scalar.
+- Feature-flagged with auto-fallback.
 
 ## Documentation
 
-### v25_R1 Specifications
-- **specs/v25_R1/v25_master_R1.md**: Master plan (single source of truth)
-- **specs/v25_R1/L0_LEXER_SPEC_v25_R1.md**: L0 Lexer specification
-- **specs/v25_R1/PLANNER_v25_R1.yaml**: Complete 156-week timeline
+- **[specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md)** — current release master spec
+- **[specs/v26/language_contract.md](specs/v26/language_contract.md)** — LP-Core / LP-Extended / LP-Foreign tiers
+- **[specs/v26/support_matrix.yaml](specs/v26/support_matrix.yaml)** — machine-readable support contract
+- **[specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md)** — architecture memo (v26/v27 plan)
+- **[docs/ARCH.md](docs/ARCH.md)** — architecture handbook
+- **[docs/PROOFS.md](docs/PROOFS.md)** / **[docs/PROOF_GUIDE.md](docs/PROOF_GUIDE.md)** / **[docs/PROOF_CLASSES.md](docs/PROOF_CLASSES.md)**
+- **[docs/SUPPORT_MATRIX.md](docs/SUPPORT_MATRIX.md)** — engine/package/interface support
+- **[docs/BUILD_LOG_CONTRACT.md](docs/BUILD_LOG_CONTRACT.md)** — Class C compile-log contract
+- **[docs/UNIT_TESTS.md](docs/UNIT_TESTS.md)**, **[docs/BUILD_SYSTEM_GUIDE.md](docs/BUILD_SYSTEM_GUIDE.md)**, **[docs/REST_API.md](docs/REST_API.md)**
 
-### Project Documentation
-- **docs/PROJECT_INDEX.md**: Project structure and navigation
-- **docs/UNIT_TESTS.md**: Unit/property tests overview and how to add more
-- **docs/BUILD_SYSTEM_GUIDE.md**: Build and deployment instructions
-- **docs/NEXT_STEPS_PLAN.md**: Immediate development priorities
+## Success Metrics (v26.1)
 
-## Key Success Metrics (v25 GA - Week 156)
-
-- 623 validators implemented
-- 21 languages supported
-- <1ms p99 edit-window latency
-- 0 proof admits
-- <0.1% false-positive rate
+- 645 rules specified / 629 shipped
+- 622 formal faithful + 20 conservative + 3 conditional proofs
+- 0 admits, 0 axioms
+- 21-language target (7 live + 14 stubbed)
+- p95 edit-window ≈ 0.017 ms (target ≤ 1.2 ms)
 
 ---
 
-**Status**: Week 80 — 452 validators implemented, 15 Coq proofs QED, ML span extractor v2 in progress. Next milestone: v2 candidate classifier F1 >= 0.94.
+**Status**: v26.1.0 released. 629 validators implemented, 33+ core Coq proofs QED, ML v2 byte classifier trained (F1=0.9799, proved).
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

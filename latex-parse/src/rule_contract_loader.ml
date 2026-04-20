@@ -160,11 +160,11 @@ let do_load () : contract list =
                (Printf.sprintf "%s: failed to parse: %s" path
                   (Printexc.to_string exn))))
 
-(** PR #241 (p1.3): hashtable index for O(1) find_opt. Previously the
-    public [find_opt] did List.find_opt over 654 contracts per call;
-    [Validators.get_rules] now invokes it twice per rule (tier gating +
-    DAG validation) for 645 rules = ~800k string comparisons per
-    [run_all]. With the index every lookup is O(1). *)
+(** PR #241 (p1.3): hashtable index for O(1) find_opt. Previously the public
+    [find_opt] did List.find_opt over 654 contracts per call;
+    [Validators.get_rules] now invokes it twice per rule (tier gating + DAG
+    validation) for 645 rules = ~800k string comparisons per [run_all]. With the
+    index every lookup is O(1). *)
 let _index : (string, contract) Hashtbl.t option ref = ref None
 
 let _ensure_index () : (string, contract) Hashtbl.t =

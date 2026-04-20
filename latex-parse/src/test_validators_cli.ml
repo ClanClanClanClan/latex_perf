@@ -146,14 +146,14 @@ let () =
       expect (code = 0) (tag ^ ": exit code 0 on empty file"));
 
   (* PR #241 (p1.3): end-to-end --advisory gate. Without --advisory, STYLE-*
-     Class D rules must not appear in CLI output. With --advisory, at least
-     one STYLE-* rule should fire on a source that triggers them. *)
+     Class D rules must not appear in CLI output. With --advisory, at least one
+     STYLE-* rule should fire on a source that triggers them. *)
   let styleful_src =
     "\\documentclass{article}\n\
      \\begin{document}\n\
      This is a very long sentence that keeps going and going and going and \
-     going and going and going and going and going and going until it \
-     becomes utterly unreasonable and rambling.\n\n\
+     going and going and going and going and going and going until it becomes \
+     utterly unreasonable and rambling.\n\n\
      One.\n\n\
      Two.\n\n\
      Three.\n\
@@ -169,7 +169,8 @@ let () =
       let out, code = run_cli [ path ] in
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
-      expect (not (has_style_id out))
+      expect
+        (not (has_style_id out))
         (tag ^ ": no STYLE-* line in default output"));
   run "CLI --advisory enables STYLE rules" (fun tag ->
       let path = write_temp_tex styleful_src in

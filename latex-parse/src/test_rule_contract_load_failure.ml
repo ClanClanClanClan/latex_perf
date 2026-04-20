@@ -16,8 +16,9 @@ let run_cli_with_env ~env args =
   let stdout_r, stdout_w = Unix.pipe () in
   let stderr_r, stderr_w = Unix.pipe () in
   let pid =
-    Unix.create_process_env exe (Array.of_list (exe :: args)) env Unix.stdin
-      stdout_w stderr_w
+    Unix.create_process_env exe
+      (Array.of_list (exe :: args))
+      env Unix.stdin stdout_w stderr_w
   in
   Unix.close stdout_w;
   Unix.close stderr_w;
@@ -37,9 +38,7 @@ let run_cli_with_env ~env args =
   let stdout = read_all stdout_r in
   let stderr = read_all stderr_r in
   let _, status = Unix.waitpid [] pid in
-  let code =
-    match status with Unix.WEXITED c -> c | _ -> -1
-  in
+  let code = match status with Unix.WEXITED c -> c | _ -> -1 in
   (stdout, stderr, code)
 
 let () =
@@ -70,9 +69,9 @@ let () =
      The loader's upward-search walks from [Sys.executable_name] up to 8 levels;
      running the normal exe_path finds the repo-root contract file. To defeat
      this, copy validators_cli.exe into a pristine tmp directory (no ancestor
-     contains [specs/rules/rule_contracts.json]) and run it from there. Also
-     set [LP_RULE_CONTRACTS_JSON] to a nonexistent path so the env override
-     can't redirect to a real file either. *)
+     contains [specs/rules/rule_contracts.json]) and run it from there. Also set
+     [LP_RULE_CONTRACTS_JSON] to a nonexistent path so the env override can't
+     redirect to a real file either. *)
   run "CLI fails fatally when contract file truly missing" (fun tag ->
       let tmp_dir = Filename.temp_file "rcload_" "" in
       Sys.remove tmp_dir;
@@ -105,9 +104,9 @@ let () =
       in
       let stdout_r, stdout_w = Unix.pipe () in
       let stderr_r, stderr_w = Unix.pipe () in
-      (* Fork manually so the child can chdir into the pristine tmp_dir
-         before exec — otherwise the cwd-relative candidate path in the
-         loader resolves to the real repo-root contract file. *)
+      (* Fork manually so the child can chdir into the pristine tmp_dir before
+         exec — otherwise the cwd-relative candidate path in the loader resolves
+         to the real repo-root contract file. *)
       let pid = Unix.fork () in
       if pid = 0 then (
         (* child *)
@@ -158,8 +157,9 @@ let () =
         || contains "not found" stderr_out
       in
       expect mentions
-        (tag ^ ": stderr mentions the missing contract file. stderr="
-       ^ stderr_out));
+        (tag
+        ^ ": stderr mentions the missing contract file. stderr="
+        ^ stderr_out));
 
   ignore run_cli_with_env;
   finalise "rule_contract_load_failure"

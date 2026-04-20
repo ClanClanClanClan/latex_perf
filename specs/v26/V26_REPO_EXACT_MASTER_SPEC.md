@@ -279,7 +279,7 @@ Support a safe, provable subset of user-defined commands.
 
 ### Repository impact
 Add/refactor:
-- `core/l1_expander/user_macro_registry.ml`
+- `latex-parse/src/user_macro_registry.ml`
 - `core/l1_expander/user_macro_contract.ml`
 - `proofs/Expansion/UserMacro*.v`
 - macro regression corpus

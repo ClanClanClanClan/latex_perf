@@ -7,7 +7,7 @@ Counts sourced from `governance/project_facts.yaml` (regenerated per release).
 
 ## Classification
 
-### Formal Faithful (631 rules)
+### Formal Faithful (636 rules)
 
 The Coq check function mirrors the OCaml validator's logic. If the Coq
 model says "no violation," the OCaml validator agrees.

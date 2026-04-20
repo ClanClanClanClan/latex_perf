@@ -2,7 +2,7 @@
 
 ## Files
 
-- `rules_v3.yaml` — Unified, authoritative ruleset (654 rules, 638 non-reserved, 16 reserved)
+- `rules_v3.yaml` — Unified, authoritative ruleset (659 rules, 643 non-reserved, 16 reserved)
 - `rule_contracts.yaml` — Per-rule execution/proof/project metadata (PR #237; source of truth for runtime DAG)
 - `rules_unified.cache.pkl` — Cached index for tooling (generated)
 - `phase1/` — Coq spec stubs for early L0 rules (typography/commands)

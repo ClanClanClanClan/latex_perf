@@ -30,11 +30,12 @@ val damage_radius : error_pos:int -> string -> int * int
 
 val confidence_to_string : parse_confidence -> string
 
+val zone_conf_tag_complete : int
 (** PR #241 (p1.3): numeric confidence tags packed into [Node_id.command_hash]
     so that zones with identical spans but different trust levels hash to
     distinct IDs. The values are stable — persisted consumers (collaboration
     anchors) can rely on them across releases. *)
-val zone_conf_tag_complete : int
+
 val zone_conf_tag_partial : int
 val zone_conf_tag_broken : int
 

@@ -124,16 +124,15 @@ let classify (src : string) (errors : (string * Parser_l2.loc) list) :
 
 (* PR #241 (p1.2, memo §6 E3): expose stable node_ids for trust zones so
    consumers can track a zone across edits. Matches
-   proofs/StableNodeIds.v::of_located_stable_under_local_edit — zones whose
-   span is outside an edit keep the same content_id.
+   proofs/StableNodeIds.v::of_located_stable_under_local_edit — zones whose span
+   is outside an edit keep the same content_id.
 
    PR #241 (p1.3): the [Node_id.command_hash] slot is reused here to carry a
-   numeric confidence tag so that two zones with identical span but
-   different trust levels hash to different node IDs (otherwise a zone that
-   went from Complete to Partial under the same span would incorrectly
-   compare equal). The values are exposed as named constants so call sites
-   don't carry magic numbers and proofs/StableNodeIds.v can rely on a
-   stable encoding. *)
+   numeric confidence tag so that two zones with identical span but different
+   trust levels hash to different node IDs (otherwise a zone that went from
+   Complete to Partial under the same span would incorrectly compare equal). The
+   values are exposed as named constants so call sites don't carry magic numbers
+   and proofs/StableNodeIds.v can rely on a stable encoding. *)
 let zone_conf_tag_complete = 0
 let zone_conf_tag_partial = 1
 let zone_conf_tag_broken = 2

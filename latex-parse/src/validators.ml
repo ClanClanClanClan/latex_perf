@@ -233,12 +233,12 @@ let _severity_rank : severity -> int = function
   | Info -> 0
 
 (** PR #241 (p1.3): honour [conflicts_with] in rule contracts. When two rules
-    declare each other as conflicts and both fire, keep the winner and drop
-    the loser. Priority tuple (winner minimises):
+    declare each other as conflicts and both fire, keep the winner and drop the
+    loser. Priority tuple (winner minimises):
     - severity DESC (Error > Warning > Info)
-    - count ASC (fewer matches = more specific pattern; on overlapping
-      patterns such as `--` vs `---` the longer-pattern rule fires less
-      often and is thus more specific)
+    - count ASC (fewer matches = more specific pattern; on overlapping patterns
+      such as `--` vs `---` the longer-pattern rule fires less often and is thus
+      more specific)
     - id_lex ASC (deterministic tie-break)
 
     Purely post-processing; zero overhead when no conflict pair both fire. *)
@@ -275,14 +275,16 @@ let _resolve_conflicts (results : result list) : result list =
       res_by_id;
     if Hashtbl.length suppressed = 0 then results
     else
-      List.filter (fun (r : result) -> not (Hashtbl.mem suppressed r.id)) results
+      List.filter
+        (fun (r : result) -> not (Hashtbl.mem suppressed r.id))
+        results
 
 (** Run all enabled validators on [src] and return fired results.
 
-    @requires For L1 rules that inspect post-expansion commands,
-    [Validators_context.set_post_commands] must have been called for the
-    current thread beforehand.  If it has not been set, those rules
-    silently return [None] (safe but incomplete). *)
+    Precondition: for L1 rules that inspect post-expansion commands,
+    [Validators_context.set_post_commands] must have been called for the current
+    thread beforehand. If it has not been set, those rules silently return
+    [None] (safe but incomplete). *)
 let max_input_bytes = 10 * 1024 * 1024 (* 10 MiB — safety guard *)
 
 let run_all (src : string) : result list =
@@ -824,53 +826,26 @@ let () =
               true))
           rules
       in
-      (* PR #241 (p1.1-#4): no silent fallback to default_meta. If a catalogued
-         rule is missing from rule_contracts.yaml, fail loudly at startup so the
-         CI drift gate's invariant is enforced at runtime too.
-
-         Internal utility "rules" (e.g. "no_tabs", "unmatched_braces",
-         "DOC-STRUCT") that don't follow the FAMILY-NNN public rule-id
-         convention are skipped from the check — they are infrastructure
-         markers, not part of the public rule catalogue. *)
-      let is_catalogue_id id =
-        let n = String.length id in
-        let has_dash = String.contains id '-' in
-        let is_upper_family =
-          n >= 3
-          &&
-          let c = id.[0] in
-          c >= 'A' && c <= 'Z'
-        in
-        has_dash && is_upper_family && not (String.equal id "DOC-STRUCT")
-      in
+      (* PR #241 (p1.3): every runtime rule must have a contract. The old
+         is_catalogue_id filter (exempting lowercase/DOC-STRUCT internal rules)
+         was deleted along with the STRUCT-00N rename (see validators_l0.ml +
+         validators_l2.ml). A missing contract is now a hard startup failure —
+         no more silent default_meta fallback. *)
       let missing = ref [] in
       let metas =
         List.filter_map
           (fun r ->
             match Rule_contract_loader.find_opt r.id with
             | Some c -> Some (Rule_contract_loader.to_validator_meta c)
-            | None when is_catalogue_id r.id ->
-                missing := r.id :: !missing;
-                None
             | None ->
-                (* Internal utility: give it a default meta so the DAG still
-                   contains it, but it isn't part of the public catalogue so the
-                   drift check doesn't fire. Deprecated alert is silenced here —
-                   this is the intended remaining use of [default_meta]. *)
-                Some
-                  ((Validator_dag.default_meta [@alert "-deprecated"]) r.id
-                     (match precondition_of_rule_id r.id with
-                     | L0 -> Validator_dag.L0
-                     | L1 -> Validator_dag.L1
-                     | L2 -> Validator_dag.L2
-                     | L3 -> Validator_dag.L3
-                     | L4 -> Validator_dag.L4)))
+                missing := r.id :: !missing;
+                None)
           unique_rules
       in
       if !missing <> [] then
         failwith
           (Printf.sprintf
-             "[validators] %d catalogued rule(s) registered but missing from \
+             "[validators] %d rule(s) registered at runtime but missing from \
               specs/rules/rule_contracts.yaml; first few: %s. Regenerate with \
               scripts/tools/generate_rule_contracts.py."
              (List.length !missing)

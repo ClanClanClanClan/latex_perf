@@ -39,6 +39,15 @@ jobs:
       - name: Check catalogue compliance
         run: python3 scripts/validate_catalogue.py
 
+      - name: Check regression gates (PR #241 p1.6)
+        # Ratchets that prevent previously-closed issues from reopening:
+        # 1. _CoqProject lists every non-archive proof file
+        # 2. Rule IDs in rule_contracts.yaml match FAMILY-NNN
+        # 3. Mutation-uncovered rule count does not grow (skipped in drift
+        #    workflow; exercised via unit-tests workflow where mutation
+        #    binary is built)
+        run: python3 scripts/tools/check_regression_gates.py --skip-mutation
+
       - name: Check support matrix yaml parses
         run: |
           python3 - <<'PY'

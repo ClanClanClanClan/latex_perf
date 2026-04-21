@@ -42,6 +42,16 @@ proofs/UserMacroTermination.v
 proofs/UserMacroRegistrySound.v
 proofs/ValidatorGraphProofs.v
 
+# Supporting proof files (v25-era, still live)
+proofs/ElderProofs.v
+proofs/ExpandProofsFinal.v
+proofs/InterpLocality.v
+proofs/LabelsUnique.v
+proofs/ParserSound.v
+proofs/SectionRebalance.v
+proofs/SnapshotConsistency.v
+proofs/SplitPreservesOrder.v
+
 # ML sub-theory (separate dune coq.theory stanza)
 # proofs/ML/SpanExtractorSound.v
 

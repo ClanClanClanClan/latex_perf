@@ -5,7 +5,7 @@ Perfectionist. All proofs compile with zero admits and zero axioms.
 
 ## Totals
 
-142 Coq files, 1,130 theorems/lemmas, 0 admits, 0 axioms.
+142 Coq files, 1,157 theorems/lemmas, 0 admits, 0 axioms.
 
 Breakdown:
 
@@ -41,16 +41,16 @@ Breakdown:
 - `LanguageContract.v` — LP-Core / LP-Extended / LP-Foreign classifier
   soundness (memo §4, 6 QED)
 - `ValidatorGraphProofs.v` — Kahn's algorithm + conflict detection +
-  dependency edges + provides uniqueness (memo §10, 7 QED)
+  dependency edges + provides uniqueness (memo §10, 12 QED)
 - `ExecutionClasses.v` — A/B/C/D isolation theorems (memo §11, 6 QED)
 - `IncludeGraphSound.v` — project graph DFS cycle detection (4 QED)
 - `InvalidationSound.v` — semantic dependency reachability (5 QED)
-- `PartialParseLocality.v` — E0 locality (memo §6, 2 QED)
+- `PartialParseLocality.v` — E0 locality (memo §6, 5 QED)
 - `DamageContainment.v` — E1 monotonic repair (3 QED)
-- `RepairMonotonicity.v` — E2 dep-boundary-aware repair (4 QED)
-- `StableNodeIds.v` — E3 stable identifier under local edits (6 QED)
+- `RepairMonotonicity.v` — E2 dep-boundary-aware repair (7 QED)
+- `StableNodeIds.v` — E3 stable identifier under local edits (8 QED)
 - `BuildLog.v` — compile-log monotonicity + LAY-025/026/027 conditional
-  soundness (6 QED)
+  soundness (12 QED)
 
 ### Tactic library
 - `RegexFamily.v` — one-shot `qed_text_sound` solver for VPD rule families.

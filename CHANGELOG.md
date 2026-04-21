@@ -2,7 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
-## [v26.1.0] — 2026-04-20
+## [v26.1.0] — 2026-04-21
+
+### Post-merge audit rounds (PRs #241, #242, and #243)
+
+Six audit passes after the initial P1 merge unearthed progressively deeper issues that earlier rounds missed. Each was closed with substantive changes and a CI gate to prevent regression.
+
+- **Conflict resolution wiring** (PR #241 p1.3). `conflicts_with` is now consumed by `run_all`: severity DESC, count ASC, id_lex ASC picks the winner; TYPO-003 suppresses TYPO-002 on `---`. Five concrete conflict edges populated.
+- **BuildLog LAY-025/026/027 tautologies** (PR #241 p1.4). Replaced `P -> P` with `build_ctx`-parameterised firing predicates and persistence theorems using `has_event_preserved`. 12 QED, zero `Proof. auto. Qed.`.
+- **Five uncatalogued utility rules** (PR #241 p1.4). `no_tabs` / `unmatched_braces` / `require_documentclass` / `missing_section_title` / `DOC-STRUCT` renamed to `STRUCT-001..005`, added to `rules_v3.yaml` + contracts. `default_meta` has zero live callsites.
+- **Family-level DAG edges** (PR #241 p1.4). LAB/REF/BIB/CITE/CMD/ENV/MATH/FIG/TAB/VERB/STYLE/STRUCT families get default consumes/provides. Empty-consumes 93% → 56%.
+- **Three more load-bearing proof tautologies** (PR #242 p1.5). `PartialParseLocality.v` / `RepairMonotonicity.v::repair_restores_trust_outside_boundaries` / `ValidatorGraphProofs.v::cycle_detection_sound` + `dependency_respects_topo_order` — all rewritten with substantive bodies (`lia`, `andb_false_iff`, two-step transitivity).
+- **Anti-tautology CI gate** (PR #242 p1.5). `proof.yml` rejects `Proof. auto. Qed.` / `Proof. trivial. Qed.` in the ten memo-load-bearing proof files. Escape hatch via `(* ANTI-TAUT-OK: reason *)`.
+- **Memo §11.2 per-class scheduling** (PR #243 p1.6). `evidence_scoring.ml` caps Class D confidence at Low and Class C at Medium without a live build profile. `edf_scheduler.ml` gains a `execution_class` field with priority offsets (A=0, B=1e6, C=2e6, D=3e6) so hot-path rules dominate scheduling regardless of layer/chunk proximity. Tests in `test_edf_scheduler.ml` verify class dominance.
+- **Runtime-type bindings for E2 + DAG proofs** (PR #243 p1.6). `RepairMonotonicity.v` adds `partial_cst_trust_zone` Coq record mirror of `Partial_cst.trust_zone` with `forget_confidence` projection; `partial_cst_zone_trusted_under_bounded_repair` transports the E2 theorem to runtime-shaped records. `ValidatorGraphProofs.v` adds `validator_meta_v26` with string IDs (via list nat) + `find_by_id_unique`.
+- **Three regression gates** (PR #243 p1.6). `check_regression_gates.py` enforces (1) `_CoqProject` lists every non-archive `.v`, (2) every rule_id matches `FAMILY-NNN`, (3) mutation-uncovered count ≤ 35 (P1.4 baseline). Wired into `spec-drift.yml`.
+
+## [v26.1.0-draft] — 2026-04-20
 
 Memo-mandated v26 substrate delivery (`specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md`). Closes memo §4, §6, §10, §11, §12, §15 items that slipped past v26.0.0. After two internal audit rounds the scope was split into three honest buckets below.
 

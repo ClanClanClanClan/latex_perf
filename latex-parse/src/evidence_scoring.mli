@@ -20,7 +20,16 @@ type scoring_config = {
 val default_config : scoring_config
 val config_from_file : string -> scoring_config
 val load_config : unit -> scoring_config
-val score_result : Validators_common.result -> string list -> scored_result
+
+val score_result :
+  ?build_profile_active:bool ->
+  Validators_common.result ->
+  string list ->
+  scored_result
+(** PR #241 (p1.6, memo §11.2): [?build_profile_active] lets callers signal
+    whether a live compile log is available. When [false] (default), Class C
+    rule confidences are capped at [Medium] because log evidence is missing.
+    Class D results are always capped at [Low]. *)
 
 val filter_by_config :
   scoring_config -> scored_result list -> scored_result list

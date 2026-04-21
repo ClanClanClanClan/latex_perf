@@ -63,25 +63,62 @@ let load_config () : scoring_config =
 
 (* ── Scoring logic ──────────────────────────────────────────── *)
 
-let confidence_of_rule (id : string) (vpd_ids : string list) : confidence =
-  if List.mem id vpd_ids then High
-  else
-    let prefix =
-      match String.index_opt id '-' with
-      | Some i -> String.sub id 0 i
-      | None -> id
-    in
-    match prefix with
-    | "TYPO" | "ENC" | "CHAR" | "SPC" -> High (* lexical, exact patterns *)
-    | "MATH" | "DELIM" | "SCRIPT" | "CHEM" -> Medium (* structural, may FP *)
-    | "STYLE" | "LANG" -> Low (* heuristic, text-scanning *)
-    | _ -> Medium
+(** PR #241 (p1.6, memo §11.2 + §16.1): per-execution-class confidence caps.
+    Class D (advisory) results never exceed Low regardless of how reliable the
+    underlying pattern family is; Class C (build-coupled) results are capped at
+    Medium when fired without a live build profile because the supporting log
+    evidence is unverified. Class A and B flow through the family-based
+    [confidence_of_rule] logic unchanged.
+
+    This is the missing §11.2 wiring called out in every audit round since P1
+    merged. *)
+let execution_class_of (id : string) :
+    Rule_contract_loader.execution_class option =
+  match Rule_contract_loader.find_opt id with
+  | Some c -> Some c.execution_class
+  | None -> None
+
+let cap_confidence_at cap c =
+  match (cap, c) with
+  | High, _ -> c
+  | Medium, High -> Medium
+  | Medium, _ -> c
+  | Low, _ -> Low
+
+let confidence_of_rule ?(build_profile_active = false) (id : string)
+    (vpd_ids : string list) : confidence =
+  let family_confidence =
+    if List.mem id vpd_ids then High
+    else
+      let prefix =
+        match String.index_opt id '-' with
+        | Some i -> String.sub id 0 i
+        | None -> id
+      in
+      match prefix with
+      | "TYPO" | "ENC" | "CHAR" | "SPC" | "STRUCT" | "SYS" ->
+          High (* lexical, exact patterns *)
+      | "MATH" | "DELIM" | "SCRIPT" | "CHEM" -> Medium (* structural, may FP *)
+      | "STYLE" | "LANG" -> Low (* heuristic, text-scanning *)
+      | _ -> Medium
+  in
+  match execution_class_of id with
+  | Some Rule_contract_loader.D ->
+      (* Advisory rules never claim certainty (memo §11: Class D results are
+         advisory-only and do not influence Class A severity ordering). *)
+      cap_confidence_at Low family_confidence
+  | Some Rule_contract_loader.C when not build_profile_active ->
+      (* Build-coupled rules without a live profile: log evidence is absent, so
+         confidence is degraded. *)
+      cap_confidence_at Medium family_confidence
+  | _ -> family_confidence
 
 let weight_of_confidence = function High -> 1.0 | Medium -> 0.7 | Low -> 0.4
 
-let score_result (result : Validators_common.result) (vpd_ids : string list) :
-    scored_result =
-  let confidence = confidence_of_rule result.id vpd_ids in
+let score_result ?(build_profile_active = false)
+    (result : Validators_common.result) (vpd_ids : string list) : scored_result
+    =
+  let confidence = confidence_of_rule ~build_profile_active result.id vpd_ids in
   {
     id = result.id;
     severity = result.severity;

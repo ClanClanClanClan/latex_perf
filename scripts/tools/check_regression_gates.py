@@ -91,7 +91,7 @@ def gate_mutation_coverage_ratchet(repo: Path) -> list[str]:
     try:
         out = subprocess.run(
             ["dune", "exec", "--no-build",
-             "latex-parse/src/test_mutation.exe"],
+             "latex-parse/src/test_mutation_baseline.exe"],
             capture_output=True, text=True, timeout=60, cwd=str(repo),
             check=False,
         )

@@ -429,6 +429,24 @@ let run_with_build (src : string) : result list =
   let c = run_class_c src in
   ab @ c
 
+(** PR #241 (p1.8): scored Class C path. Without this, the per-class confidence
+    caps in [Evidence_scoring] never trigger — run_all_scored only sees A/B
+    results, so Class C caps are dead code. This helper exposes Class C results
+    through the same scoring pipeline so the memo §11.2 caps apply end-to-end. *)
+let run_with_build_scored ?(config = Evidence_scoring.default_config)
+    (src : string) : Evidence_scoring.scored_result list =
+  let results = run_with_build src in
+  let vpd_ids = List.map (fun r -> r.id) rules_vpd_catalogue in
+  let build_profile_active = Log_context.is_active () in
+  let scored =
+    List.map
+      (fun r -> Evidence_scoring.score_result ~build_profile_active r vpd_ids)
+      results
+  in
+  let ml_map = Lazy.force _ml_confidence_map in
+  let scored = Evidence_scoring.apply_ml_boost ml_map scored in
+  Evidence_scoring.filter_by_config config scored
+
 (* PR #241 (memo §11): execute Class D rules explicitly. Not in run_all. *)
 let run_class_d (src : string) : result list =
   let rec go acc = function

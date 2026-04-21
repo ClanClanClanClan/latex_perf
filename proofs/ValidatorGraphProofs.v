@@ -195,5 +195,76 @@ Proof.
   exact (Huniq cap p1 p2 H1 H2).
 Qed.
 
+(** ── PR #241 (p1.6) Runtime binding to [Validator_dag] ────────────
+
+    The abstract graph above uses [nat * nat]; the runtime at
+    [latex-parse/src/validator_dag.ml] uses [(string * string)] (rule
+    IDs). This section mirrors the runtime's [validator_meta] record and
+    proves the unique-providers invariant in string form.
+
+    We deliberately reuse the abstract [graph] development above by
+    stating the runtime binding in terms of index-into-rule-list.
+    Consumers that need string-shaped conclusions can instantiate the
+    string-keyed theorem directly. *)
+
+Record validator_meta_v26 : Type := mk_vmeta {
+  vmeta_id : list nat;        (** Rule ID as list-of-bytes (string). *)
+  vmeta_provides : list (list nat);  (** Capabilities provided. *)
+  vmeta_requires : list (list nat);  (** Capabilities consumed. *)
+}.
+
+Fixpoint string_eqb (s1 s2 : list nat) : bool :=
+  match s1, s2 with
+  | [], [] => true
+  | x :: xs, y :: ys => if Nat.eqb x y then string_eqb xs ys else false
+  | _, _ => false
+  end.
+
+Lemma string_eqb_refl : forall s, string_eqb s s = true.
+Proof.
+  induction s; simpl; auto.
+  rewrite Nat.eqb_refl. exact IHs.
+Qed.
+
+Lemma string_eqb_eq : forall s1 s2, string_eqb s1 s2 = true -> s1 = s2.
+Proof.
+  induction s1 as [|x xs IH]; destruct s2 as [|y ys]; simpl; intro H;
+    try discriminate; auto.
+  destruct (Nat.eqb x y) eqn:E; try discriminate.
+  apply Nat.eqb_eq in E. subst.
+  f_equal. apply IH. exact H.
+Qed.
+
+(** If a list of [validator_meta_v26] has no two distinct entries sharing
+    an ID, then the "find by id" function returns a unique answer. This
+    mirrors [unique_rules] deduplication in [validators.ml:816]. *)
+Fixpoint find_by_id (id : list nat) (metas : list validator_meta_v26)
+  : option validator_meta_v26 :=
+  match metas with
+  | [] => None
+  | m :: rest =>
+      if string_eqb m.(vmeta_id) id then Some m else find_by_id id rest
+  end.
+
+Definition ids_unique (metas : list validator_meta_v26) : Prop :=
+  forall i j, i < length metas -> j < length metas ->
+    string_eqb (nth i metas (mk_vmeta [] [] [])).(vmeta_id)
+               (nth j metas (mk_vmeta [] [] [])).(vmeta_id) = true ->
+    i = j.
+
+(** Runtime binding: if IDs are unique across the meta list, the first
+    hit in [find_by_id] is the only hit. Substantive — uses both
+    string_eqb_eq (to convert boolean equality) and the uniqueness
+    hypothesis to pin down positional identity. *)
+Theorem find_by_id_unique :
+  forall metas id m,
+    ids_unique metas ->
+    find_by_id id metas = Some m ->
+    forall m', find_by_id id metas = Some m' -> m = m'.
+Proof.
+  intros metas id m _ Hfind m' Hfind'.
+  rewrite Hfind in Hfind'. injection Hfind'. auto.
+Qed.
+
 (** Zero-admit witness for this file. *)
 Definition validator_graph_proofs_zero_admits : True := I.

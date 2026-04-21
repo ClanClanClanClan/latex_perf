@@ -10,7 +10,17 @@ type task = {
   chunk_id : int64;
   priority : float;  (** Lower = higher priority. NOT a wall-clock deadline. *)
   work : unit -> Validators_common.result list;
+  execution_class : Rule_contract_loader.execution_class;
+      (** PR #241 (p1.6, memo §11.2): per-class priority offset ensures Class A
+          tasks outrank B, which outrank C, which outrank D. Sort key is
+          [priority + class_priority_offset execution_class]. *)
 }
+
+val class_priority_offset : Rule_contract_loader.execution_class -> float
+(** Per-class offset added during [drain] sort. A=0, B=1e6, C=2e6, D=3e6. *)
+
+val effective_priority : task -> float
+(** [priority + class_priority_offset execution_class]. *)
 
 type scheduler
 

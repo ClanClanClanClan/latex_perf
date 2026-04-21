@@ -181,5 +181,51 @@ Proof.
     inversion Hb.
 Qed.
 
+(** ── PR #241 (p1.6) Runtime binding to [Partial_cst.trust_zone] ───
+
+    The abstract [trust_zone] above omits [confidence]. The runtime
+    record at [latex-parse/src/partial_cst.ml] is
+    [{ start_pos; end_pos; confidence }]. This section mirrors the
+    runtime shape into Coq and proves that the main E2 theorem
+    transports across the forgetful projection. Consumers of
+    [Partial_cst.trust_zone] can therefore apply the proofs directly
+    to runtime-shaped records. *)
+
+Inductive parse_confidence : Type :=
+  | PC_Complete
+  | PC_Partial
+  | PC_Broken.
+
+Record partial_cst_trust_zone : Type := mk_partial_cst_zone {
+  pcz_start_pos : nat;
+  pcz_end_pos : nat;
+  pcz_confidence : parse_confidence;
+}.
+
+Definition forget_confidence (pcz : partial_cst_trust_zone) : trust_zone :=
+  mk_zone pcz.(pcz_start_pos) pcz.(pcz_end_pos).
+
+Definition pcz_trusted_in (pcz : partial_cst_trust_zone) (errs : list error)
+  : Prop :=
+  zone_trusted_in (forget_confidence pcz) errs.
+
+Definition pcz_disjoint_from_all_boundaries
+  (pcz : partial_cst_trust_zone) (deps : list dep_boundary) : Prop :=
+  zone_disjoint_from_all_boundaries (forget_confidence pcz) deps.
+
+(** Binding theorem: the runtime-shaped zone inherits E2 locality.
+    Mechanistic — transports through [forget_confidence]. *)
+Theorem partial_cst_zone_trusted_under_bounded_repair :
+  forall pcz new_errs deps,
+    pcz_disjoint_from_all_boundaries pcz deps ->
+    errors_all_bounded new_errs deps ->
+    pcz_trusted_in pcz new_errs.
+Proof.
+  intros pcz new_errs deps Hd Heb.
+  unfold pcz_trusted_in, pcz_disjoint_from_all_boundaries in *.
+  apply (repair_restores_trust_outside_boundaries
+           (forget_confidence pcz) new_errs deps Hd Heb).
+Qed.
+
 (** ── Zero-admit witness ──────────────────────────────────────────── *)
 Definition repair_monotonicity_zero_admits : True := I.

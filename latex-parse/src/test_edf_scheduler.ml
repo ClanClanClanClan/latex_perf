@@ -3,12 +3,14 @@
 open Latex_parse_lib
 open Test_helpers
 
-let mk_task ?(layer = 0) ?(chunk = 0L) ?(priority = 0.0) id result_id =
+let mk_task ?(layer = 0) ?(chunk = 0L) ?(priority = 0.0)
+    ?(execution_class = Rule_contract_loader.B) id result_id =
   {
     Edf_scheduler.task_id = id;
     layer_id = layer;
     chunk_id = chunk;
     priority;
+    execution_class;
     work =
       (fun () ->
         [
@@ -121,6 +123,51 @@ let () =
       Edf_scheduler.submit sched (mk_task ~chunk:1L "t2" "R2");
       Edf_scheduler.cancel_chunk sched 1L;
       let s = Edf_scheduler.stats sched in
-      expect (s.tasks_cancelled = 2) (tag ^ ": 2 cancelled"))
+      expect (s.tasks_cancelled = 2) (tag ^ ": 2 cancelled"));
+
+  (* ── PR #241 (p1.6): per-class priority dominance (memo §11.2) ──── *)
+  run "Class A outranks B regardless of layer" (fun tag ->
+      let sched = Edf_scheduler.create () in
+      (* B task at priority 0 (lowest layer, right at edit); A task at priority
+         999 (far from edit, high layer). Class offset must still place A
+         first. *)
+      Edf_scheduler.submit sched
+        (mk_task ~priority:0.0 ~execution_class:Rule_contract_loader.B "b_task"
+           "B_RESULT");
+      Edf_scheduler.submit sched
+        (mk_task ~priority:999.0 ~execution_class:Rule_contract_loader.A
+           "a_task" "A_RESULT");
+      let results = Edf_scheduler.drain sched in
+      expect ((List.hd results).id = "A_RESULT") (tag ^ ": Class A runs first"));
+
+  run "Class D always last" (fun tag ->
+      let sched = Edf_scheduler.create () in
+      Edf_scheduler.submit sched
+        (mk_task ~priority:0.0 ~execution_class:Rule_contract_loader.D "d_task"
+           "D_RESULT");
+      Edf_scheduler.submit sched
+        (mk_task ~priority:500.0 ~execution_class:Rule_contract_loader.C
+           "c_task" "C_RESULT");
+      let results = Edf_scheduler.drain sched in
+      expect ((List.nth results 1).id = "D_RESULT") (tag ^ ": Class D runs last");
+      expect ((List.hd results).id = "C_RESULT") (tag ^ ": Class C before D"));
+
+  run "effective_priority respects class" (fun tag ->
+      let a =
+        mk_task ~priority:10.0 ~execution_class:Rule_contract_loader.A "a" "A"
+      in
+      let d =
+        mk_task ~priority:0.0 ~execution_class:Rule_contract_loader.D "d" "D"
+      in
+      expect
+        (Edf_scheduler.effective_priority a < Edf_scheduler.effective_priority d)
+        (tag ^ ": A < D even with higher base priority"));
+
+  run "class_priority_offset monotone" (fun tag ->
+      let oa = Edf_scheduler.class_priority_offset Rule_contract_loader.A in
+      let ob = Edf_scheduler.class_priority_offset Rule_contract_loader.B in
+      let oc = Edf_scheduler.class_priority_offset Rule_contract_loader.C in
+      let od = Edf_scheduler.class_priority_offset Rule_contract_loader.D in
+      expect (oa < ob && ob < oc && oc < od) (tag ^ ": A<B<C<D"))
 
 let () = finalise "edf-scheduler"

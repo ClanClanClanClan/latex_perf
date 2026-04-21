@@ -966,11 +966,34 @@ let run_all_scheduled ?(edit_pos = 0) ?(prev_src : string option) (src : string)
                   rl = layer_id)
                 chunk_rules
             in
+            (* PR #241 (p1.6): pick the task's execution_class from the
+               most-"hot" class represented in this layer's rules, so a layer
+               that contains any Class A rule schedules as A (dominates).
+               Default to B for mixed / unclassified layers. *)
+            let execution_class =
+              let has_class c =
+                List.exists
+                  (fun (r : rule) ->
+                    match Rule_contract_loader.find_opt r.id with
+                    | Some ct -> ct.execution_class = c
+                    | None -> false)
+                  layer_rules
+              in
+              if has_class Rule_contract_loader.A then Rule_contract_loader.A
+              else if has_class Rule_contract_loader.B then
+                Rule_contract_loader.B
+              else if has_class Rule_contract_loader.C then
+                Rule_contract_loader.C
+              else if has_class Rule_contract_loader.D then
+                Rule_contract_loader.D
+              else Rule_contract_loader.B
+            in
             {
               Edf_scheduler.task_id = Printf.sprintf "chunk%d-L%d" i layer_id;
               layer_id;
               chunk_id = chunk.Chunk_store.id;
               priority;
+              execution_class;
               work =
                 (fun () ->
                   let res =

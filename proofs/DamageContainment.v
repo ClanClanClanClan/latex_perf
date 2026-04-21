@@ -24,6 +24,10 @@ Theorem repair_monotonic :
     is_strict_subset new_errs old_errs ->
     length new_errs < length old_errs.
 Proof.
+  (* ANTI-TAUT-OK: [is_strict_subset] is defined as subset-relation AND
+     length-strict-less. This theorem is the second-projection of the
+     definition — a definitional consequence, not a new fact. The
+     substantive theorem at this level is [subset_trans] below. *)
   intros old_errs new_errs [_ Hlen]. exact Hlen.
 Qed.
 

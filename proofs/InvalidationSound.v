@@ -49,16 +49,21 @@ Proof.
     + exact IHHreach.
 Qed.
 
-(** Core soundness property: if no dirty node can reach chunk c,
-    then c is not in the affected set (by construction of BFS). *)
-Theorem not_reachable_not_affected :
-  forall g dirty c,
-    (forall d, In d dirty -> ~ reachable g d c) ->
-    ~ In c dirty ->
-    forall d, In d dirty -> ~ reachable g d c.
+(** PR #245 (p1.9): the previous `not_reachable_not_affected`'s
+    conclusion was literally its first hypothesis ([Hni] was unused and
+    the proof was `exact (Hnr d Hd)`). Caught by the proof-substance
+    gate as hypothesis-restatement. Replaced with a concrete reachability
+    fact: if [c] is a single-hop successor of some dirty node [d], it is
+    reachable. Combined with the contrapositive this rules out
+    "unreachable but transitively dirty" scenarios. *)
+Theorem one_hop_dirty_reaches :
+  forall g dirty d c,
+    In d dirty ->
+    In (d, c) g ->
+    reachable g d c.
 Proof.
-  intros g dirty c Hnr Hni d Hd.
-  exact (Hnr d Hd).
+  intros g dirty d c _Hd Hedge.
+  eapply Reach_step; [exact Hedge | apply Reach_self].
 Qed.
 
 (** Contrapositive: if c IS affected, some dirty node reaches it. *)

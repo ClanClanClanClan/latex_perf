@@ -100,6 +100,13 @@ jobs:
           fi
           echo "Anti-tautology gate: all load-bearing proofs have substantive bodies."
 
+      - name: Proof substance gate (PR #245 p1.9)
+        # Catches hypothesis-restatement tautologies that the shell-regex
+        # anti-tautology step above can't see: multi-line
+        # `Proof. intros ...; exact (H ...). Qed.` patterns. Would have
+        # caught the round-5 E0/DAG tautologies before they merged.
+        run: python3 scripts/tools/check_proof_substance.py --repo .
+
       - name: Proof timing summary
         if: always()
         run: |

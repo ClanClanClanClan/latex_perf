@@ -39,14 +39,34 @@ jobs:
       - name: Check catalogue compliance
         run: python3 scripts/validate_catalogue.py
 
-      - name: Check regression gates (PR #241 p1.6)
+      - name: Check regression gates (PR #241 p1.6, extended p1.9)
         # Ratchets that prevent previously-closed issues from reopening:
         # 1. _CoqProject lists every non-archive proof file
         # 2. Rule IDs in rule_contracts.yaml match FAMILY-NNN
-        # 3. Mutation-uncovered rule count does not grow (skipped in drift
-        #    workflow; exercised via unit-tests workflow where mutation
-        #    binary is built)
+        # 3. (p1.9) Runtime-emitted IDs must appear in rule_contracts
+        # 4. (p1.9) No lowercase rule IDs in validator sources
+        # 5. Mutation-uncovered count does not grow (skipped here; run
+        #    in unit-tests workflow where mutation binary is built)
         run: python3 scripts/tools/check_regression_gates.py --skip-mutation
+
+      - name: Check memo file-list presence (PR #245 p1.9)
+        # Every memo §16.1 + §16.2 "Files to create" bullet must resolve
+        # to a repo path (directly or via documented alias). Would have
+        # caught round-7 gaps (DependencyInvalidation.v, log_context.ml)
+        # before merge.
+        run: python3 scripts/tools/check_memo_files.py --repo .
+
+      - name: Check docstring theorem counts (PR #245 p1.9)
+        # P1.8 found docs/PROOFS.md + PROOF_GUIDE.md said 1,157 theorems
+        # but governance said 1,181. Extended check_repo_facts covers
+        # this now.
+        run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
+
+      - name: Meta-gate: every gate script is runnable
+        # P1.8 found check_regression_gates had a typo'd binary name.
+        # This gate verifies every gate-script itself runs without
+        # tracebacks or empty output.
+        run: python3 scripts/tools/check_gates_meta.py --repo .
 
       - name: Check support matrix yaml parses
         run: |

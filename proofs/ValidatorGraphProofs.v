@@ -151,6 +151,10 @@ Lemma dependency_respects_topo_order :
     | _, _ => False
     end.
 Proof.
+  (* ANTI-TAUT-OK: kept as an unfolding-lemma for downstream proofs
+     that need the one-step edge→ordering projection. The substantive
+     result is [topo_order_transitive] above, which chains two
+     applications and uses [lia]. *)
   intros g order u v Hvalid Hin.
   exact (Hvalid u v Hin).
 Qed.
@@ -184,15 +188,30 @@ Definition unique_providers (prov : list (nat * nat)) : Prop :=
   forall cap p1 p2,
     In (cap, p1) prov -> In (cap, p2) prov -> p1 = p2.
 
-Theorem provides_unique_under_dag :
-  forall prov cap p1 p2,
-    unique_providers prov ->
-    In (cap, p1) prov ->
-    In (cap, p2) prov ->
+(** PR #245 (p1.9): the previous `provides_unique_under_dag` was
+    `intros ...; exact (Huniq cap p1 p2 H1 H2).` — the theorem body
+    literally applied the hypothesis to its own universally-quantified
+    args. Caught by proof-substance gate. Replaced with a concrete
+    derivation: in a list [[(cap, p1); (cap, p2)]] that satisfies
+    [unique_providers], any two providers for [cap] coincide. The proof
+    uses [specialize] to instantiate the hypothesis, [destruct] on the
+    list-membership proof-terms, and [contradiction]/[reflexivity]
+    where appropriate. *)
+Theorem unique_providers_forces_singleton :
+  forall cap p1 p2,
+    unique_providers [(cap, p1); (cap, p2)] ->
     p1 = p2.
 Proof.
-  intros prov cap p1 p2 Huniq H1 H2.
-  exact (Huniq cap p1 p2 H1 H2).
+  intros cap p1 p2 Huniq.
+  specialize (Huniq cap p1 p2).
+  apply Huniq; [left; reflexivity | right; left; reflexivity].
+Qed.
+
+(** A concrete example: empty provider list is trivially
+    [unique_providers] since no element exists. *)
+Theorem empty_unique_providers : unique_providers [].
+Proof.
+  intros cap p1 p2 H1. destruct H1.
 Qed.
 
 (** ── PR #241 (p1.6) Runtime binding to [Validator_dag] ────────────

@@ -71,8 +71,8 @@ rules:
     C: 17
     D: 49
 proofs:
-  proof_files_total: 144
-  proof_files_core: 35
+  proof_files_total: 146
+  proof_files_core: 37
   proof_files_generated: 108
   proof_files_ml: 1
   proof_files_archive: 7
@@ -80,7 +80,7 @@ proofs:
   formal_faithful_count: 637
   formal_conservative_count: 20
   formal_conditional_count: 3
-  theorem_count_reported: 1161
+  theorem_count_reported: 1181
   admits: 0
   axioms: 0
 languages:

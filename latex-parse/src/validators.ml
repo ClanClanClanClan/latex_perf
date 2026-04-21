@@ -400,8 +400,14 @@ let run_all_scored ?(config = Evidence_scoring.default_config) (src : string) :
     Evidence_scoring.scored_result list =
   let results = run_all src in
   let vpd_ids = List.map (fun r -> r.id) rules_vpd_catalogue in
+  (* PR #241 (p1.7, memo §11.2): when a compile-log context is active, Class C
+     rules get a Medium-or-better cap lifted. Without a live log, Class C firing
+     is unjustified and stays at Medium. *)
+  let build_profile_active = Log_context.is_active () in
   let scored =
-    List.map (fun r -> Evidence_scoring.score_result r vpd_ids) results
+    List.map
+      (fun r -> Evidence_scoring.score_result ~build_profile_active r vpd_ids)
+      results
   in
   let ml_map = Lazy.force _ml_confidence_map in
   let scored = Evidence_scoring.apply_ml_boost ml_map scored in

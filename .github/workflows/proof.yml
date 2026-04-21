@@ -75,6 +75,11 @@ jobs:
             proofs/ValidatorGraphProofs.v
             proofs/PartialParseLocality.v
             proofs/DamageContainment.v
+            proofs/UserExpand.v
+            proofs/IncludeGraphSound.v
+            proofs/InvalidationSound.v
+            proofs/DependencyInvalidation.v
+            proofs/ProjectSemantics.v
           )
           FAIL=0
           for f in "${LOAD_BEARING[@]}"; do

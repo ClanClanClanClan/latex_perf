@@ -64,9 +64,11 @@
   project_context
   validators_project
   log_parser
+  log_context
   build_profile
   build_artifact_state
   execution_class
+  invalidation_engine
   execution_policy
   partial_cst
   error_recovery
@@ -347,6 +349,11 @@
 (test
  (name test_validators_typo)
  (modules test_validators_typo)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_validators_struct)
+ (modules test_validators_struct)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

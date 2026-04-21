@@ -44,16 +44,20 @@ jobs:
 
     - name: Count Admits
       run: |
-        ADMIT_COUNT=$(find proofs -name "*.v" ! -name "*.disabled" -exec grep -c "Admitted\|admit" {} \; | awk '{sum += $1} END {print sum}')
-        echo "Total admits found: $ADMIT_COUNT"
+        # PR #244 (p1.7): strict regex — match only `Admitted.` / `admit.`
+        # as tactics at line start, not the word "admits" in comments or
+        # definition names like `foo_zero_admits` (which are markers, not
+        # admits). Exclude archive dirs.
+        ADMIT_COUNT=$(find proofs -name "*.v" ! -name "*.disabled" ! -path "*/archive/*" -exec grep -cE '^\s*(Admitted\.|admit\.)' {} \; | awk '{sum += $1} END {print sum}')
+        echo "Total strict admits found: $ADMIT_COUNT"
 
-        # Week 1 target: maintain ≤60 admits
+        # Target: 0 admits (v26 requirement). ≤60 ceiling kept as historical
+        # safety net but production state should always be 0.
         if [ "$ADMIT_COUNT" -gt 60 ]; then
-          echo "❌ FAIL: Too many admits ($ADMIT_COUNT > 60)"
-          echo "Week 1 target is to maintain ≤60 admits while adding new functionality"
+          echo "FAIL: Too many admits ($ADMIT_COUNT > 60)"
           exit 1
         else
-          echo "✅ PASS: Admit count within target ($ADMIT_COUNT ≤ 60)"
+          echo "PASS: Admit count within target ($ADMIT_COUNT ≤ 60)"
         fi
 
     - name: Check for Axioms

@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MUTATION_UNCOVERED_CEILING = 35  # P1.4 baseline; includes 5 STRUCT + 30 others
+MUTATION_UNCOVERED_CEILING = 30  # P1.7 baseline after STRUCT-001..005 fixtures
 
 
 def gate_coqproject_completeness(repo: Path) -> list[str]:

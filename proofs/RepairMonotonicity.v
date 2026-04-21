@@ -2,10 +2,17 @@
       bounded by dependency boundaries. (Memo §6.)
 
     Strengthens E1 [DamageContainment.repair_monotonic] with a notion of
-    dependency boundary: repair that doesn't cross dep-boundaries restores
-    previously-trusted zones; repair across a dep-boundary may invalidate
-    zones. Models the OCaml [Error_recovery.is_repaired_with_deps]
+    dependency boundary. Models the OCaml [Error_recovery.is_repaired_with_deps]
     predicate (PR #239).
+
+    PR #241 (p1.5): the memo §6 contract is that repair errors live INSIDE
+    declared boundaries, and zones disjoint from every boundary are
+    consequently error-free. This round reshapes the theorem so the
+    [errors_all_bounded] and [zone_disjoint_from_all_boundaries]
+    hypotheses are GENUINELY load-bearing: the proof contradicts a
+    supposed error in the zone by extracting the error's containing
+    boundary and deriving an arithmetic contradiction. Previous
+    formulation discarded both hypotheses.
 
     Zero admits, zero axioms. *)
 
@@ -16,8 +23,7 @@ Import ListNotations.
     [DamageContainment.v]. *)
 Definition error := (nat * nat)%type.
 
-(** A dependency boundary: a half-open region [start, end) associated
-    with a reason (not modelled — abstract identifier). *)
+(** A dependency boundary: a half-open region [start, end). *)
 Record dep_boundary := mk_dep_boundary {
   db_start : nat;
   db_end : nat;
@@ -31,20 +37,7 @@ Definition in_boundary (p : nat) (b : dep_boundary) : Prop :=
 Definition disjoint_from (p : nat) (b : dep_boundary) : Prop :=
   p < db_start b \/ db_end b <= p.
 
-(** An error list is disjoint from a dep-boundary iff no error position
-    lies inside. *)
-Definition errors_disjoint_from_boundary
-  (errs : list error) (b : dep_boundary) : Prop :=
-  forall e, In e errs -> disjoint_from (snd e) b.
-
-(** An error list is disjoint from a list of dep-boundaries iff it is
-    disjoint from each one. *)
-Definition errors_disjoint_from_boundaries
-  (errs : list error) (deps : list dep_boundary) : Prop :=
-  forall b, In b deps -> errors_disjoint_from_boundary errs b.
-
-(** Subset relation on error lists — reused from DamageContainment but
-    redefined here to keep the proof self-contained. *)
+(** Subset relation on error lists. *)
 Definition err_subset (new_errs old_errs : list error) : Prop :=
   forall e, In e new_errs -> In e old_errs.
 
@@ -52,8 +45,7 @@ Definition err_subset (new_errs old_errs : list error) : Prop :=
 Definition err_strict_subset (new_errs old_errs : list error) : Prop :=
   err_subset new_errs old_errs /\ length new_errs < length old_errs.
 
-(** Trusted region predicate — abstract: a trust zone [z] is trusted in
-    error list [errs] iff no error lies inside [z]. *)
+(** Trust zone. *)
 Record trust_zone := mk_zone {
   z_start : nat;
   z_end : nat;
@@ -65,10 +57,36 @@ Definition zone_contains_error (z : trust_zone) (e : error) : Prop :=
 Definition zone_trusted_in (z : trust_zone) (errs : list error) : Prop :=
   forall e, In e errs -> ~ zone_contains_error z e.
 
-(** ── E2 Theorem 1: repair across no dep-boundary preserves existing trust ── *)
+(** A zone is "disjoint from every boundary" when every byte inside the
+    zone lies outside every declared boundary. *)
+Definition zone_disjoint_from_all_boundaries
+  (z : trust_zone) (deps : list dep_boundary) : Prop :=
+  forall b, In b deps ->
+    forall p, z_start z <= p -> p < z_end z -> disjoint_from p b.
 
-(** If a repair leaves new_errs ⊆ old_errs, then any zone trusted under
-    [old_errs] remains trusted under [new_errs]. *)
+(** An error is "bounded" when there exists a declared dep-boundary
+    containing its position. This models the runtime contract that
+    [Error_recovery.is_repaired_with_deps] only reports errors inside a
+    declared boundary — errors with no boundary are escalated differently
+    and not part of E2. *)
+Definition error_bounded (e : error) (deps : list dep_boundary) : Prop :=
+  exists b, In b deps /\ in_boundary (snd e) b.
+
+Definition errors_all_bounded
+  (errs : list error) (deps : list dep_boundary) : Prop :=
+  forall e, In e errs -> error_bounded e deps.
+
+(** Legacy disjointness predicates kept for backward-compatible lemmas. *)
+Definition errors_disjoint_from_boundary
+  (errs : list error) (b : dep_boundary) : Prop :=
+  forall e, In e errs -> disjoint_from (snd e) b.
+
+Definition errors_disjoint_from_boundaries
+  (errs : list error) (deps : list dep_boundary) : Prop :=
+  forall b, In b deps -> errors_disjoint_from_boundary errs b.
+
+(** ── E2 Theorem 1: subset repair preserves existing trust ──────────── *)
+
 Theorem repair_preserves_trust :
   forall z old_errs new_errs,
     err_subset new_errs old_errs ->
@@ -79,48 +97,50 @@ Proof.
   apply Htrust. apply Hsub. exact Hin.
 Qed.
 
-(** ── E2 Theorem 2 (strengthened per memo §6) ────────────────────── *)
+(** ── E2 Theorem 2 (strengthened per memo §6, PR #241 p1.5) ────────── *)
 
-(** A trust zone is "disjoint from all dep-boundaries" when no byte
-    inside the zone lies inside any boundary. *)
-Definition zone_disjoint_from_all_boundaries
-  (z : trust_zone) (deps : list dep_boundary) : Prop :=
-  forall b, In b deps ->
-    (forall p, z_start z <= p -> p < z_end z -> disjoint_from p b).
+(** **Memo §6 E2, mechanised with load-bearing hypotheses.**
 
-(** **The memo §6 E2 statement, genuinely mechanised.**
+    If every repair-error sits inside some dependency boundary, and the
+    zone of interest sits entirely outside every boundary, then the zone
+    is trusted under the repair error set.
 
-    If the repair is a strict subset (fewer errors) AND the remaining
-    errors are disjoint from every declared dependency boundary, then
-    every trust zone that sits outside every boundary AND was trusted
-    under the old error set remains trusted under the new error set.
-
-    The [deps] hypothesis is USED: the combination of
-    [errors_disjoint_from_boundaries new_errs deps] and
-    [zone_disjoint_from_all_boundaries z deps] is what justifies the
-    claim that repair "restores prior trusted regions". (The
-    cardinality-only corollary below is kept under its original name
-    for backwards compatibility.) *)
+    The proof is substantive:
+    1. Assume an error [e] in [new_errs] sits inside the zone.
+    2. [errors_all_bounded] gives us a boundary [b] containing [e].
+    3. [zone_disjoint_from_all_boundaries] says the zone's interior is
+       disjoint from [b].
+    4. These two facts together put [snd e] both inside [b] and outside
+       [b] — [lia] derives [False]. *)
 Theorem repair_restores_trust_outside_boundaries :
-  forall z old_errs new_errs deps,
-    err_strict_subset new_errs old_errs ->
-    errors_disjoint_from_boundaries new_errs deps ->
+  forall z new_errs deps,
     zone_disjoint_from_all_boundaries z deps ->
-    zone_trusted_in z old_errs ->
+    errors_all_bounded new_errs deps ->
     zone_trusted_in z new_errs.
 Proof.
-  intros z old_errs new_errs deps [Hsub _] _ _ Htrust e Hin.
-  (* The zone was trusted under old_errs. Since new_errs ⊆ old_errs,
-     every element of new_errs is also in old_errs, so it cannot
-     contain the zone. The dep-boundary predicates are antecedents that
-     must hold for the caller to invoke this theorem — they gate use of
-     the theorem, which is the memo's actual §6 contract. *)
-  apply Htrust. apply Hsub. exact Hin.
+  intros z new_errs deps Hzone_disj Herr_bounded e He_in Hcontains.
+  destruct Hcontains as [Hge Hlt].
+  destruct (Herr_bounded e He_in) as [b [Hb_in [Hpb_start Hpb_end]]].
+  specialize (Hzone_disj b Hb_in (snd e) Hge Hlt).
+  destruct Hzone_disj as [Hd | Hd]; lia.
 Qed.
 
-(** Cardinality corollary (the original E2 statement), kept for backwards
-    compatibility. Retained-but-weakened: used only where callers already
-    know length-decay matches their needs. *)
+(** Corollary: combined with subset-repair, trust is strictly preserved
+    for zones outside every boundary. Uses BOTH the cardinality-decay
+    and the boundary-disjointness, so both E1 and E2 content is live. *)
+Theorem subset_repair_preserves_outside_boundary_trust :
+  forall z old_errs new_errs deps,
+    err_strict_subset new_errs old_errs ->
+    zone_disjoint_from_all_boundaries z deps ->
+    errors_all_bounded new_errs deps ->
+    zone_trusted_in z new_errs /\ length new_errs < length old_errs.
+Proof.
+  intros z old_errs new_errs deps [_ Hlen] Hzd Heb. split.
+  - apply (repair_restores_trust_outside_boundaries z new_errs deps Hzd Heb).
+  - exact Hlen.
+Qed.
+
+(** Cardinality corollary (original E2 statement). *)
 Theorem repair_monotonic_across_dep_boundaries :
   forall old_errs new_errs deps,
     err_strict_subset new_errs old_errs ->
@@ -131,16 +151,8 @@ Proof.
   exact Hlen.
 Qed.
 
-(** ── E2 Theorem 3: repair across boundary can invalidate a zone ─── *)
+(** ── E2 Theorem 3: distant zones survive subset-repair regardless of deps ── *)
 
-(** When a repair crosses a dep-boundary (the new error list is not
-    disjoint from the boundary), zones that intersect the boundary may
-    lose trust. We express this as: if a zone is disjoint from a
-    boundary, repair across that boundary doesn't invalidate zones outside.
-
-    Conversely, zones inside the boundary may be invalidated —
-    captured by the non-existence of a general preservation theorem
-    spanning the boundary. *)
 Theorem outside_boundary_preserved :
   forall z b old_errs new_errs,
     (forall p, (z_start z <= p /\ p < z_end z) -> disjoint_from p b) ->
@@ -152,18 +164,21 @@ Proof.
   apply Htrust. apply Hsub. exact Hin.
 Qed.
 
-(** ── E2 Theorem 4: empty deps reduces to E1 ─────────────────────── *)
+(** ── E2 Theorem 4: empty deps degenerate case ───────────────────── *)
 
-(** With no dependency boundaries, repair monotonicity collapses to
-    the E1 cardinality-only statement. *)
-Theorem empty_deps_reduces_to_e1 :
-  forall old_errs new_errs,
-    err_strict_subset new_errs old_errs ->
-    errors_disjoint_from_boundaries new_errs [] ->
-    length new_errs < length old_errs.
+(** With no boundaries declared, [errors_all_bounded new_errs []] forces
+    [new_errs = []], so the zone is trivially trusted. This is the
+    "no-repair" edge case. *)
+Theorem empty_deps_forces_empty_errors :
+  forall new_errs,
+    errors_all_bounded new_errs [] ->
+    new_errs = [].
 Proof.
-  intros old_errs new_errs [_ Hlen] _.
-  exact Hlen.
+  intros new_errs Heb. destruct new_errs as [|e rest].
+  - reflexivity.
+  - exfalso.
+    destruct (Heb e (or_introl eq_refl)) as [b [Hb _]].
+    inversion Hb.
 Qed.
 
 (** ── Zero-admit witness ──────────────────────────────────────────── *)

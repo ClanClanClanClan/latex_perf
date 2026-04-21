@@ -53,7 +53,47 @@ jobs:
             echo "[proof-gate] ERROR: admits found"; exit 1; fi
           if grep -rE '^\s*(Axiom|Parameter)\b' --include="*.v" --exclude-dir=archive --exclude='*.disabled' proofs/; then
             echo "[proof-gate] ERROR: axioms found"; exit 1; fi
-          echo "✅ Zero admits, zero axioms"
+          echo "Zero admits, zero axioms"
+
+      - name: Anti-tautology gate (PR #241 p1.5)
+        # Reject new `Proof. auto. Qed.` / `Proof. trivial. Qed.` in
+        # memo-load-bearing proofs (§6 editing, §11 execution classes,
+        # §10 validator DAG). One-line `Proof. auto. Qed.` in these files
+        # is almost always a hypothesis-restatement tautology — the exact
+        # pattern that slipped past prior audits in BuildLog.v.
+        # Whitelist: small stub files / explicit base cases can still use
+        # auto if documented with an ANTI-TAUT-OK marker in the proof line.
+        run: |
+          LOAD_BEARING=(
+            proofs/BuildLog.v
+            proofs/LanguageContract.v
+            proofs/ExecutionClasses.v
+            proofs/RepairMonotonicity.v
+            proofs/StableNodeIds.v
+            proofs/UserMacroTermination.v
+            proofs/UserMacroRegistrySound.v
+            proofs/ValidatorGraphProofs.v
+            proofs/PartialParseLocality.v
+            proofs/DamageContainment.v
+          )
+          FAIL=0
+          for f in "${LOAD_BEARING[@]}"; do
+            if [ -f "$f" ]; then
+              HITS=$(grep -nE 'Proof\.\s*(auto|trivial)\.\s*Qed\.' "$f" | grep -vE 'ANTI-TAUT-OK' || true)
+              if [ -n "$HITS" ]; then
+                echo "[anti-taut] $f has one-liner auto/trivial proof(s):"
+                echo "$HITS"
+                FAIL=1
+              fi
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then
+            echo "[anti-taut] ERROR: load-bearing proof file(s) contain one-line auto/trivial proofs."
+            echo "            These are almost always hypothesis-restatement tautologies."
+            echo "            Rewrite with substantive tactics, or add \`(* ANTI-TAUT-OK: <reason> *)\`."
+            exit 1
+          fi
+          echo "Anti-tautology gate: all load-bearing proofs have substantive bodies."
 
       - name: Proof timing summary
         if: always()

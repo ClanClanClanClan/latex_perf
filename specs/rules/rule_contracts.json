@@ -2,7 +2,7 @@
   "version": "v26.1",
   "source": "scripts/tools/generate_rule_contracts.py",
   "input": "specs/rules/rules_v3.yaml",
-  "total_rules": 659,
+  "total_rules": 660,
   "rules": [
     {
       "rule_id": "AR-002",
@@ -8742,6 +8742,21 @@
       ],
       "provides": [
         "STYLE-049"
+      ],
+      "depends_on": [],
+      "conflicts_with": [],
+      "fix_scope": "local",
+      "project_scope": "lp_core_or_extended"
+    },
+    {
+      "rule_id": "SYS-001",
+      "layer": "L0_Lexer",
+      "execution_class": "B",
+      "proof_class": "formal_faithful",
+      "evidence_class": "source_pattern_evidence",
+      "consumes": [],
+      "provides": [
+        "SYS-001"
       ],
       "depends_on": [],
       "conflicts_with": [],

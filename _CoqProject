@@ -33,7 +33,7 @@ proofs/InvalidationSound.v
 proofs/PartialParseLocality.v
 proofs/DamageContainment.v
 
-# v26 proofs (memo §§4, 6, 10, 11, 16.1)
+# v26 proofs (memo §§4, 6, 10, 11, 16.1, 16.2)
 proofs/LanguageContract.v
 proofs/ExecutionClasses.v
 proofs/RepairMonotonicity.v
@@ -41,6 +41,8 @@ proofs/StableNodeIds.v
 proofs/UserMacroTermination.v
 proofs/UserMacroRegistrySound.v
 proofs/ValidatorGraphProofs.v
+proofs/DependencyInvalidation.v
+proofs/ProjectSemantics.v
 
 # Supporting proof files (v25-era, still live)
 proofs/ElderProofs.v

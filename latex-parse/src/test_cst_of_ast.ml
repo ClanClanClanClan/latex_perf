@@ -8,8 +8,7 @@ let roundtrip_ok src =
   Cst.serialize nodes = src
 
 let () =
-  run "empty source" (fun tag ->
-      expect (roundtrip_ok "") (tag ^ ": empty"));
+  run "empty source" (fun tag -> expect (roundtrip_ok "") (tag ^ ": empty"));
 
   run "plain text" (fun tag ->
       expect (roundtrip_ok "hello world") (tag ^ ": plain text"));
@@ -18,36 +17,38 @@ let () =
       expect (roundtrip_ok "\\section{Intro}") (tag ^ ": section"));
 
   run "command with options" (fun tag ->
-      expect (roundtrip_ok "\\includegraphics[width=5cm]{fig}")
+      expect
+        (roundtrip_ok "\\includegraphics[width=5cm]{fig}")
         (tag ^ ": graphics"));
 
   run "inline math" (fun tag ->
       expect (roundtrip_ok "Let $x = 1$.") (tag ^ ": inline math"));
 
   run "display math brackets" (fun tag ->
-      expect (roundtrip_ok "Hello \\[ a+b \\] world")
-        (tag ^ ": display math"));
+      expect (roundtrip_ok "Hello \\[ a+b \\] world") (tag ^ ": display math"));
 
   run "comment preserved" (fun tag ->
-      expect (roundtrip_ok "line\n% a comment\nmore")
-        (tag ^ ": comment line"));
+      expect (roundtrip_ok "line\n% a comment\nmore") (tag ^ ": comment line"));
 
   run "nested braces" (fun tag ->
       expect (roundtrip_ok "\\textbf{{bold} text}") (tag ^ ": nested"));
 
   run "environment" (fun tag ->
-      expect (roundtrip_ok "\\begin{itemize}\\item foo\\end{itemize}")
+      expect
+        (roundtrip_ok "\\begin{itemize}\\item foo\\end{itemize}")
         (tag ^ ": itemize"));
 
   run "verbatim opaque" (fun tag ->
       expect
-        (roundtrip_ok
-           "\\begin{verbatim}\\ $ #{}% anything\\end{verbatim}")
+        (roundtrip_ok "\\begin{verbatim}\\ $ #{}% anything\\end{verbatim}")
         (tag ^ ": verbatim"));
 
   run "multiline source" (fun tag ->
       let src =
-        "\\documentclass{article}\n\\begin{document}\nHello \\LaTeX.\n\\end{document}\n"
+        "\\documentclass{article}\n\
+         \\begin{document}\n\
+         Hello \\LaTeX.\n\
+         \\end{document}\n"
       in
       expect (roundtrip_ok src) (tag ^ ": doc"));
 
@@ -57,8 +58,7 @@ let () =
       let has_ws =
         List.exists
           (function
-            | Cst.CTrivia { kind = Cst.Whitespace; _ } -> true
-            | _ -> false)
+            | Cst.CTrivia { kind = Cst.Whitespace; _ } -> true | _ -> false)
           nodes
       in
       expect has_ws (tag ^ ": whitespace CTrivia present"));
@@ -67,9 +67,7 @@ let () =
       let src = "\\foo{bar}" in
       let nodes = Cst_of_ast.of_source src in
       let has_unparsed =
-        List.exists
-          (function Cst.CUnparsed _ -> true | _ -> false)
-          nodes
+        List.exists (function Cst.CUnparsed _ -> true | _ -> false) nodes
       in
       expect has_unparsed (tag ^ ": CUnparsed present"));
 
@@ -77,9 +75,7 @@ let () =
       let src = "\\begin{em}x\\end{em}" in
       let nodes = Cst_of_ast.of_source src in
       let has_env =
-        List.exists
-          (function Cst.CEnvironment _ -> true | _ -> false)
-          nodes
+        List.exists (function Cst.CEnvironment _ -> true | _ -> false) nodes
       in
       expect has_env (tag ^ ": CEnvironment present"));
 

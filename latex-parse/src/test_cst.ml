@@ -18,8 +18,7 @@ let () =
 
   run "serialize CUnparsed byte-lossless" (fun tag ->
       let n = Cst.CUnparsed { text = "\\foo[a]{b}"; span = span 0 10 } in
-      expect (Cst.serialize [ n ] = "\\foo[a]{b}")
-        (tag ^ ": unparsed roundtrip"));
+      expect (Cst.serialize [ n ] = "\\foo[a]{b}") (tag ^ ": unparsed roundtrip"));
 
   run "serialize concatenates" (fun tag ->
       let nodes =
@@ -32,24 +31,17 @@ let () =
       expect (Cst.serialize nodes = "ab cd") (tag ^ ": concat"));
 
   run "serialize CGroup wraps children in braces" (fun tag ->
-      let child =
-        Cst.CToken { kind = Cst.Word; text = "x"; span = span 1 2 }
-      in
+      let child = Cst.CToken { kind = Cst.Word; text = "x"; span = span 1 2 } in
       let g = Cst.CGroup { children = [ child ]; span = span 0 3 } in
       expect (Cst.serialize [ g ] = "{x}") (tag ^ ": '{x}'"));
 
   run "serialize CEnvironment wraps body in begin/end" (fun tag ->
       let e =
         Cst.CEnvironment
-          {
-            env_name = "itemize";
-            body_text = "\\item foo";
-            span = span 0 30;
-          }
+          { env_name = "itemize"; body_text = "\\item foo"; span = span 0 30 }
       in
       expect
-        (Cst.serialize [ e ]
-        = "\\begin{itemize}\\item foo\\end{itemize}")
+        (Cst.serialize [ e ] = "\\begin{itemize}\\item foo\\end{itemize}")
         (tag ^ ": environment"));
 
   run "serialize CMathInline preserves delimiters" (fun tag ->
@@ -66,8 +58,7 @@ let () =
           }
       in
       expect
-        (Cst.serialize [ v ]
-        = "\\begin{verbatim}abc\\end{verbatim}")
+        (Cst.serialize [ v ] = "\\begin{verbatim}abc\\end{verbatim}")
         (tag ^ ": verbatim"));
 
   run "byte_length matches serialize" (fun tag ->
@@ -84,7 +75,6 @@ let () =
   run "span_of returns node span" (fun tag ->
       let n = Cst.CToken { kind = Cst.Word; text = "hi"; span = span 7 9 } in
       let s = Cst.span_of n in
-      expect (s.start_offset = 7 && s.end_offset = 9)
-        (tag ^ ": span [7,9)"));
+      expect (s.start_offset = 7 && s.end_offset = 9) (tag ^ ": span [7,9)"));
 
   finalise "cst"

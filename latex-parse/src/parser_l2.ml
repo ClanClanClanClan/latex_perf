@@ -83,8 +83,8 @@ let make_state (src : string) : parse_state =
 let current_loc (st : parse_state) : loc =
   { line = st.line; col = st.col; offset = st.pos; end_offset = st.pos }
 
-(** Close [loc] to the parser's current position. Called at each emission
-    site so [end_offset] reflects the actual end of the node. *)
+(** Close [loc] to the parser's current position. Called at each emission site
+    so [end_offset] reflects the actual end of the node. *)
 let close_loc (loc : loc) (st : parse_state) : loc =
   { loc with end_offset = st.pos }
 
@@ -345,7 +345,12 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                 Buffer.add_char buf (String.unsafe_get st.src st.pos);
                 advance st)
             done;
-            nodes := { node = MathDisplay (Buffer.contents buf); loc = close_loc loc st } :: !nodes)
+            nodes :=
+              {
+                node = MathDisplay (Buffer.contents buf);
+                loc = close_loc loc st;
+              }
+              :: !nodes)
           else
             let n = parse_inline_math st in
             nodes := n :: !nodes
@@ -369,10 +374,16 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
             if is_verbatim_env env_name then
               (* Parse verbatim content as opaque string *)
               let content = parse_env_body st env_name in
-              nodes := { node = Verbatim { env_name; content }; loc = close_loc loc st } :: !nodes
+              nodes :=
+                {
+                  node = Verbatim { env_name; content };
+                  loc = close_loc loc st;
+                }
+                :: !nodes
             else if is_math_env env_name then
               let content = parse_env_body st env_name in
-              nodes := { node = MathDisplay content; loc = close_loc loc st } :: !nodes
+              nodes :=
+                { node = MathDisplay content; loc = close_loc loc st } :: !nodes
             else
               (* Parse environment body recursively *)
               let body_lnodes =
@@ -380,7 +391,10 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
               in
               let body = List.map (fun ln -> ln.node) body_lnodes in
               nodes :=
-                { node = Environment { env_name; opts = []; body }; loc = close_loc loc st }
+                {
+                  node = Environment { env_name; opts = []; body };
+                  loc = close_loc loc st;
+                }
                 :: !nodes)
           else if starts_with st "\\end{" then (
             advance_n st 5;
@@ -405,7 +419,8 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
             advance st;
             (* skip \ *)
             let name = parse_cmd_name st in
-            if name = "" then nodes := { node = Word "\\"; loc = close_loc loc st } :: !nodes
+            if name = "" then
+              nodes := { node = Word "\\"; loc = close_loc loc st } :: !nodes
             else if name = "verb" || name = "verb*" then
               if
                 (* \verb|...| — arbitrary delimiter, opaque content *)
@@ -462,7 +477,11 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           (* Find closing } *)
           (* The recursive call should have consumed up to } *)
           nodes :=
-            { node = Group (List.map (fun n -> n.node) inner); loc = close_loc loc st } :: !nodes
+            {
+              node = Group (List.map (fun n -> n.node) inner);
+              loc = close_loc loc st;
+            }
+            :: !nodes
       | Some '}' -> (
           advance st;
           match stop_at_end with
@@ -506,7 +525,10 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           done;
           if st.pos > start then
             nodes :=
-              { node = Word (String.sub st.src start (st.pos - start)); loc = close_loc loc st }
+              {
+                node = Word (String.sub st.src start (st.pos - start));
+                loc = close_loc loc st;
+              }
               :: !nodes
     done;
     List.rev !nodes

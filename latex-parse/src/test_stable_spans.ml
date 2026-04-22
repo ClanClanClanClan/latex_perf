@@ -43,28 +43,33 @@ let () =
       let b = Stable_spans.make ~start_offset:5 ~end_offset:10 in
       let c = Stable_spans.make ~start_offset:3 ~end_offset:8 in
       expect (Stable_spans.disjoint a b) (tag ^ ": touching = disjoint");
-      expect (not (Stable_spans.disjoint a c))
+      expect
+        (not (Stable_spans.disjoint a c))
         (tag ^ ": overlapping = not disjoint"));
 
   run "substring" (fun tag ->
       let src = "hello world" in
       let s = Stable_spans.make ~start_offset:6 ~end_offset:11 in
-      expect (Stable_spans.substring src s = "world")
+      expect
+        (Stable_spans.substring src s = "world")
         (tag ^ ": substring = 'world'"));
 
   run "shift_after moves span following edit" (fun tag ->
       let s = Stable_spans.make ~start_offset:10 ~end_offset:15 in
       let e =
-        Stable_spans.{ edit_offset = 0; edit_old_length = 3; edit_new_length = 5 }
+        Stable_spans.
+          { edit_offset = 0; edit_old_length = 3; edit_new_length = 5 }
       in
       let s' = Stable_spans.shift_after e s in
-      expect (s'.start_offset = 12 && s'.end_offset = 17)
+      expect
+        (s'.start_offset = 12 && s'.end_offset = 17)
         (tag ^ ": shifted by +2"));
 
   run "shift_after leaves earlier span untouched" (fun tag ->
       let s = Stable_spans.make ~start_offset:2 ~end_offset:5 in
       let e =
-        Stable_spans.{ edit_offset = 10; edit_old_length = 1; edit_new_length = 5 }
+        Stable_spans.
+          { edit_offset = 10; edit_old_length = 1; edit_new_length = 5 }
       in
       let s' = Stable_spans.shift_after e s in
       expect (Stable_spans.equal s s') (tag ^ ": unchanged"));
@@ -72,13 +77,16 @@ let () =
   run "damaged_by detects overlap" (fun tag ->
       let s = Stable_spans.make ~start_offset:10 ~end_offset:20 in
       let e_overlap =
-        Stable_spans.{ edit_offset = 15; edit_old_length = 3; edit_new_length = 1 }
+        Stable_spans.
+          { edit_offset = 15; edit_old_length = 3; edit_new_length = 1 }
       in
       let e_before =
-        Stable_spans.{ edit_offset = 5; edit_old_length = 2; edit_new_length = 0 }
+        Stable_spans.
+          { edit_offset = 5; edit_old_length = 2; edit_new_length = 0 }
       in
       expect (Stable_spans.damaged_by e_overlap s) (tag ^ ": overlap damages");
-      expect (not (Stable_spans.damaged_by e_before s))
+      expect
+        (not (Stable_spans.damaged_by e_before s))
         (tag ^ ": earlier edit does not damage"));
 
   run "of_located uses offset+end_offset" (fun tag ->
@@ -89,7 +97,8 @@ let () =
         }
       in
       let s = Stable_spans.of_located ln in
-      expect (s.start_offset = 3 && s.end_offset = 5)
+      expect
+        (s.start_offset = 3 && s.end_offset = 5)
         (tag ^ ": span matches loc"));
 
   finalise "stable-spans"

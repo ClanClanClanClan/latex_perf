@@ -40,8 +40,8 @@ val of_string : source_path:string -> string -> t
 (** Parse `.aux` content directly. [source_path] is stored for traceability. *)
 
 val find_label : t -> string -> label_entry option
-(** [find_label t name] returns the first [\newlabel] entry with the given
-    name, or [None]. For duplicate-label detection use [labels_unique]. *)
+(** [find_label t name] returns the first [\newlabel] entry with the given name,
+    or [None]. For duplicate-label detection use [labels_unique]. *)
 
 val find_bibcite : t -> string -> bibcite_entry option
 (** [find_bibcite t key] returns the [\bibcite] entry for [key], or [None]. *)

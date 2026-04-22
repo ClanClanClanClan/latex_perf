@@ -1,15 +1,8 @@
 (** See [cst.mli]. *)
 
 type span = Stable_spans.t
-
 type trivia_kind = Whitespace | Comment
-
-type token_kind =
-  | Word
-  | Command
-  | GroupOpen
-  | GroupClose
-  | MathDelim
+type token_kind = Word | Command | GroupOpen | GroupClose | MathDelim
 
 type t =
   | CToken of { kind : token_kind; text : string; span : span }
@@ -32,18 +25,20 @@ let span_of = function
   | CUnparsed { span; _ } ->
       span
 
-(* [text_of] returns the literal bytes for a node. For [CGroup], we
-   don't store delimiters as separate tokens; instead we assume the
-   span covers the full [{ ... }] and emit it via substring at
-   serialize time. To keep [text_of] total, each variant carries its
-   own text except [CGroup] whose serialization is
-   [\{ children... \}]. We therefore serialize [CGroup] by
-   concatenating children and wrapping in braces. *)
+(* [text_of] returns the literal bytes for a node. For [CGroup], we don't store
+   delimiters as separate tokens; instead we assume the span covers the full [{
+   ... }] and emit it via substring at serialize time. To keep [text_of] total,
+   each variant carries its own text except [CGroup] whose serialization is [\{
+   children... \}]. We therefore serialize [CGroup] by concatenating children
+   and wrapping in braces. *)
 
 let rec serialize_node = function
-  | CToken { text; _ } | CTrivia { text; _ }
-  | CMathInline { text; _ } | CMathDisplay { text; _ }
-  | CVerbatim { text; _ } | CUnparsed { text; _ } ->
+  | CToken { text; _ }
+  | CTrivia { text; _ }
+  | CMathInline { text; _ }
+  | CMathDisplay { text; _ }
+  | CVerbatim { text; _ }
+  | CUnparsed { text; _ } ->
       text
   | CEnvironment { env_name; body_text; _ } ->
       "\\begin{" ^ env_name ^ "}" ^ body_text ^ "\\end{" ^ env_name ^ "}"

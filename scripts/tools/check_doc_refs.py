@@ -139,6 +139,10 @@ def main() -> int:
         # v25 archival docs
         "v25_R1",
         "v25_R0",
+        # v26.2+ planning docs (describe future paths by design)
+        "V26_2_PLAN",
+        "V26_3_PLAN",
+        "v26_2",  # directory of v26.2 planning sub-docs
     }
     doc_files = set()
     for root in roots:

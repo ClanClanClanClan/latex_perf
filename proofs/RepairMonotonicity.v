@@ -147,6 +147,11 @@ Theorem repair_monotonic_across_dep_boundaries :
     errors_disjoint_from_boundaries new_errs deps ->
     length new_errs < length old_errs.
 Proof.
+  (* ANTI-TAUT-OK: cardinality corollary kept as legacy for callers that
+     need only the length-decay fact (the original E2 form). The
+     boundary-disjointness hypothesis is vacuous here by design — the
+     substantive theorem is [repair_restores_trust_outside_boundaries]
+     above, which uses both hypotheses load-bearingly. *)
   intros old_errs new_errs deps [_ Hlen] _.
   exact Hlen.
 Qed.

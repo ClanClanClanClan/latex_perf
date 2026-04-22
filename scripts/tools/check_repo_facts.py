@@ -17,6 +17,10 @@ CHECKS = [
     # canonical counts.
     ("docs/SUPPORT_MATRIX.md", ["support_matrix_yaml_path", "proofs.formal_faithful_count", "proofs.formal_conservative_count"]),
     ("docs/PROOF_CLASSES.md", ["proofs.formal_faithful_count", "proofs.formal_conservative_count"]),
+    # PR #245 (p1.9): P1.8 audit found docs/PROOFS.md and docs/PROOF_GUIDE.md
+    # theorem totals drifted from governance (1,157 vs 1,181). Gate them now.
+    ("docs/PROOFS.md", ["proofs.theorem_count_reported"]),
+    ("docs/PROOF_GUIDE.md", ["proofs.theorem_count_reported"]),
 ]
 
 def load_yaml(path: Path):
@@ -54,6 +58,12 @@ def render_candidates(key: str, facts: dict):
     if key == 'proofs.formal_conditional_count':
         n = facts['proofs'].get('formal_conditional_count', 0)
         return [str(n)]
+    if key == 'proofs.theorem_count_reported':
+        # Match either the bare number or "1,181" comma-grouped form.
+        n = facts['proofs']['theorem_count_reported']
+        comma = f"{n:,}"
+        return [str(n), comma, f"{comma} theorems", f"{n} theorems",
+                f"{comma} theorems/lemmas"]
     if key == 'support_matrix_yaml_path':
         # Literal path reference to the machine-readable source.
         return ['docs/SUPPORT_MATRIX.yaml']

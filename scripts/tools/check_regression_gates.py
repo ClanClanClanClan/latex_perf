@@ -85,13 +85,89 @@ def gate_rule_id_format(repo: Path) -> list[str]:
     return failures
 
 
+def gate_runtime_ids_catalogued(repo: Path) -> list[str]:
+    """Every `id = "..."` and `mk_rule "..."` literal in validator
+    sources must appear as a rule_id in rule_contracts.yaml. Catches
+    future uncatalogued rules before they drift into production."""
+    import yaml
+
+    failures: list[str] = []
+    # Collect all ID literals
+    src = repo / "latex-parse/src"
+    patterns = [
+        re.compile(r'id\s*=\s*"([A-Za-z_][A-Za-z_0-9-]*)"'),
+        re.compile(r'mk_rule\s+"([A-Za-z_][A-Za-z_0-9-]*)"'),
+        re.compile(r'mk_lang_rule\s+"([A-Za-z_][A-Za-z_0-9-]*)"'),
+    ]
+    runtime_ids: set[str] = set()
+    for p in src.glob("validators*.ml"):
+        if "conflicted" in p.name:
+            continue
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for pat in patterns:
+            for m in pat.finditer(text):
+                runtime_ids.add(m.group(1))
+    # Filter to plausible rule IDs: must contain hyphen to be a catalogued
+    # ID, OR match a known-internal-lowercase-pattern that should be
+    # renamed (caught by the lowercase gate below).
+    plausible = {r for r in runtime_ids if "-" in r}
+    # Contract ids
+    contracts_path = repo / "specs/rules/rule_contracts.yaml"
+    if not contracts_path.is_file():
+        return [f"missing: {contracts_path}"]
+    contracts = yaml.safe_load(contracts_path.read_text())["rules"]
+    contract_ids = {c["rule_id"] for c in contracts}
+    orphans = sorted(plausible - contract_ids)
+    if orphans:
+        for rid in orphans[:10]:
+            failures.append(
+                f"rule id {rid!r} emitted at runtime but not in "
+                f"specs/rules/rule_contracts.yaml. Add to rules_v3.yaml "
+                f"+ regenerate, or remove the runtime emission."
+            )
+        if len(orphans) > 10:
+            failures.append(f"... and {len(orphans) - 10} more")
+    return failures
+
+
+def gate_no_lowercase_runtime_ids(repo: Path) -> list[str]:
+    """Prevent reintroduction of lowercase `id = "foo_bar"` in validator
+    sources. Catches the pattern early, before rule-contracts drift."""
+    failures: list[str] = []
+    src = repo / "latex-parse/src"
+    # FAMILY-NNN is uppercase-letters hyphen digits.
+    good = re.compile(r'^[A-Z][A-Z0-9]{1,7}-[0-9]{1,4}$')
+    bad_pattern = re.compile(
+        r'(?:^|\s)(?:id\s*=|mk_rule|mk_lang_rule)\s+"([a-z_][A-Za-z_0-9]*)"'
+    )
+    for p in sorted(src.glob("validators*.ml")):
+        if "conflicted" in p.name:
+            continue
+        for i, line in enumerate(
+            p.read_text(encoding="utf-8", errors="replace").splitlines(), 1
+        ):
+            m = bad_pattern.search(line)
+            if m:
+                rid = m.group(1)
+                # Allow some known-safe lowercase helpers (event bus keys)
+                # — but a validator ID never.
+                if good.match(rid):
+                    continue
+                failures.append(
+                    f"{p.name}:{i}: lowercase rule id {rid!r}. Use "
+                    f"FAMILY-NNN convention. See STRUCT-001..005 in "
+                    f"P1.4 for the canonical rename pattern."
+                )
+    return failures
+
+
 def gate_mutation_coverage_ratchet(repo: Path) -> list[str]:
     """test_mutation.ml reports `uncovered rules (N)`; lock N <= ceiling."""
     failures: list[str] = []
     try:
         out = subprocess.run(
             ["dune", "exec", "--no-build",
-             "latex-parse/src/test_mutation.exe"],
+             "latex-parse/src/test_mutation_baseline.exe"],
             capture_output=True, text=True, timeout=60, cwd=str(repo),
             check=False,
         )
@@ -127,6 +203,12 @@ def main() -> int:
         ("_CoqProject completeness", gate_coqproject_completeness(repo))
     )
     all_failures.append(("Rule ID format", gate_rule_id_format(repo)))
+    all_failures.append(
+        ("Runtime IDs catalogued", gate_runtime_ids_catalogued(repo))
+    )
+    all_failures.append(
+        ("No lowercase runtime IDs", gate_no_lowercase_runtime_ids(repo))
+    )
     if not ns.skip_mutation:
         all_failures.append(
             ("Mutation coverage ratchet", gate_mutation_coverage_ratchet(repo))

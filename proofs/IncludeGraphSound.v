@@ -48,14 +48,23 @@ Proof.
   exists order. exact Hvalid.
 Qed.
 
-(** Contrapositive: if the graph has a cycle, no valid topological order
-    exists (DFS will find a back edge). *)
-Theorem cycle_means_no_topo :
-  forall (g : graph),
-    ~ acyclic g ->
-    ~ exists order, valid_topo_order g order.
+(** PR #245 (p1.9): the previous `cycle_means_no_topo` was
+    `intros g Hnot. exact Hnot.` — since [acyclic] is defined as
+    `exists order, valid_topo_order g order`, the goal after [intros]
+    was literally the hypothesis. Replaced with a concrete small-graph
+    cycle that is provably non-acyclic via [lia] contradiction on the
+    index ordering. *)
+Theorem two_node_cycle_not_acyclic :
+  forall u v,
+    u <> v ->
+    ~ acyclic [(u, v); (v, u)].
 Proof.
-  intros g Hnot. exact Hnot.
+  intros u v Hne [order Hvalid].
+  assert (Huv := Hvalid u v (or_introl eq_refl)).
+  assert (Hvu := Hvalid v u (or_intror (or_introl eq_refl))).
+  destruct (index_of u order) as [iu|]; [| exact Huv].
+  destruct (index_of v order) as [iv|]; [| exact Huv].
+  lia.
 Qed.
 
 (** Reachability completeness: if a node is reachable from the root,

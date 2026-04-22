@@ -38,6 +38,14 @@ val run_all_scored :
   Evidence_scoring.scored_result list
 (** Like {!run_all} but returns confidence-scored results (spec W75). *)
 
+val run_with_build_scored :
+  ?config:Evidence_scoring.scoring_config ->
+  string ->
+  Evidence_scoring.scored_result list
+(** PR #241 (p1.8): scored variant of {!run_with_build}. Includes Class C
+    results so the per-class confidence caps in {!Evidence_scoring} apply
+    end-to-end (memo §11.2). *)
+
 val rules_class_c : rule list
 (** Log-dependent rules (Class C). Only produce results when
     {!Log_parser.set_log_context} has been called. *)

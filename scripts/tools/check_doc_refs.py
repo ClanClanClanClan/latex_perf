@@ -62,6 +62,8 @@ REF_ALLOWLIST = {
     "cst_builder.ml",
     "rewrite_engine.ml",
     "stable_spans.ml",
+    # v27 WS8 forward reference — discharge target for T6/T7 hypotheses.
+    "proofs/PdflatexModel.v",
 }
 
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")

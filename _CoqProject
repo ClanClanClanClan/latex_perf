@@ -44,6 +44,16 @@ proofs/ValidatorGraphProofs.v
 proofs/DependencyInvalidation.v
 proofs/ProjectSemantics.v
 
+# v26.2 — T0-T7 compile-guarantee stack (memo §5; PR A3)
+proofs/ProjectClosure.v
+proofs/BuildProfileSound.v
+proofs/CompileProgress.v
+proofs/CompileWellFormed.v
+proofs/T0_wrapper.v
+proofs/T1_wrapper.v
+proofs/T4_wrapper.v
+proofs/T5_wrapper.v
+
 # Supporting proof files (v25-era, still live)
 proofs/ElderProofs.v
 proofs/ExpandProofsFinal.v

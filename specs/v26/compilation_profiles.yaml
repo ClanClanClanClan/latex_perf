@@ -1,0 +1,120 @@
+# Compilation profiles — v26.2
+#
+# Machine-readable metadata for each supported engine/toolchain profile.
+# Consumed by:
+#   - latex-parse/src/build_profile.ml (runtime profile type)
+#   - latex-parse/src/compile_contract.ml (T3 profile-admissibility check)
+#   - docs/COMPILATION_GUARANTEE.md (user-facing profile table)
+#
+# Companion: specs/v26/compilation_guarantee_stack.md §§ T3, T7.
+# ADR:       docs/v26_2/adr/ADR-007-compile-stack-ships-in-v26-2.md
+
+version: v26.2
+schema_version: 1
+
+profiles:
+  - id: pdflatex
+    name: "pdflatex"
+    status: "GA"
+    aux_format: pdflatex        # v26.2 aux_state.ml parses this only
+    output_format: pdf
+    supported_features:
+      - utf8_inputenc            # \usepackage[utf8]{inputenc}
+      - babel_standard           # standard babel languages
+      - amsmath
+      - hyperref
+      - graphicx_eps_only        # EPS figures; no native PDF vector
+      - bibtex
+      - natbib
+      - biblatex_backend_bibtex
+    unsupported_features:
+      - unicode_math              # use unicode-math package → xelatex
+      - opentype_fonts            # system fonts → xelatex / lualatex
+      - lua_scripting             # \directlua → lualatex
+    toolchain_version_range:
+      min: "3.14159265-2.6-1.40.20"   # TeX Live 2019 minimum
+      tested: "3.14159265-2.6-1.40.25" # TeX Live 2024 tested
+    pass_iteration:
+      bounded: true
+      typical_max: 5               # most projects converge ≤5 passes
+    documented_limits:
+      max_input_bytes: 10485760    # 10 MiB
+      max_project_files: 500
+
+  - id: xelatex
+    name: "xelatex"
+    status: "beta"                 # v26.2: runtime detection works; aux_state parser is pdflatex-only
+    aux_format: pdflatex           # xelatex writes mostly-compatible .aux
+    output_format: pdf
+    supported_features:
+      - utf8_direct                # no inputenc required; native UTF-8
+      - opentype_fonts
+      - babel_standard
+      - polyglossia
+      - unicode_math
+      - amsmath
+      - hyperref
+      - graphicx_png_jpg_pdf       # native multi-format
+    unsupported_features:
+      - lua_scripting
+    toolchain_version_range:
+      min: "0.999991"
+      tested: "0.999996"
+    pass_iteration:
+      bounded: true
+      typical_max: 4
+    known_limitations:
+      - "v26.2 aux_state parser is pdflatex-only; xelatex .aux files usually parse but edge cases (different counter serializations) may fail. v26.3 ships xelatex-aware parser."
+
+  - id: lualatex
+    name: "lualatex"
+    status: "beta"
+    aux_format: pdflatex            # lualatex .aux similar to pdflatex
+    output_format: pdf
+    supported_features:
+      - utf8_direct
+      - opentype_fonts
+      - lua_scripting
+      - babel_standard
+      - polyglossia
+      - unicode_math
+      - amsmath
+      - hyperref
+      - graphicx_png_jpg_pdf
+    unsupported_features: []
+    toolchain_version_range:
+      min: "1.10.0"
+      tested: "1.18.0"
+    pass_iteration:
+      bounded: true
+      typical_max: 4
+    known_limitations:
+      - "v26.2 aux_state parser is pdflatex-only; lualatex handled same as xelatex (see xelatex.known_limitations)."
+      - "\\directlua side effects may cause compile failures that v26.2 can't predict; rule safety (T5) covers only static analysis."
+
+  - id: ptex_uptex
+    name: "pTeX / upTeX (Japanese)"
+    status: "experimental"
+    aux_format: pdflatex            # best effort
+    output_format: dvi_or_pdf
+    supported_features:
+      - japanese_cjk
+      - pjapanese
+      - pBabel
+    unsupported_features:
+      - unicode_math
+      - opentype_fonts
+    toolchain_version_range:
+      min: "3.10.0"
+      tested: null
+    pass_iteration:
+      bounded: true
+      typical_max: 6                # Japanese typesetting often needs more passes
+    known_limitations:
+      - "Experimental. v26.2 compile_contract returns [Ready] for simple ptex documents but cannot claim T6/T7 soundness."
+      - "No dedicated aux_state variant; relies on pdflatex-compatible subset."
+
+# Global notes
+notes:
+  - "v26.2 ships formal T6/T7 proofs parametric on bounded_build_terminates_for and output_format_well_formed. v27 WS8 discharges these per profile."
+  - "status levels follow docs/SUPPORT_MATRIX.yaml semantics: GA > beta > alpha > experimental."

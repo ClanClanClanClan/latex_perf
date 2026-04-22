@@ -39,6 +39,7 @@ GATES = [
     ("python3", "scripts/tools/check_doc_refs.py", "--repo", "."),
     ("python3", "scripts/tools/check_release_integrity.py", "--repo", "."),
     ("python3", "scripts/tools/check_gates_meta.py", "--repo", "."),
+    ("python3", "scripts/tools/check_perf_ratchet.py", "--repo", "."),
 ]
 
 BUILD_CHECKS = [

@@ -46,6 +46,10 @@ GATE_SCRIPTS = [
     ("scripts/tools/check_doc_refs.py", ["--repo", "."]),
     ("scripts/tools/check_release_integrity.py",
      ["--repo", ".", "--skip-generated"]),
+    # PR #246 (p1.12) addition — skip-exec used for meta-check (gate
+    # script runnable without requiring a built test_l2_gate.exe).
+    ("scripts/tools/check_perf_ratchet.py",
+     ["--repo", ".", "--skip-exec", "--input", "/dev/null"]),
 ]
 
 

@@ -88,6 +88,13 @@ jobs:
         run: |
           opam exec -- dune exec latex-parse/src/test_l2_gate.exe
 
+      - name: Perf ratchet (PR #246 p1.12)
+        # Per-size p95 ceilings that catch catastrophic regression
+        # (≥3x the 1.2ms hard budget). Noise-tolerant by design; for
+        # precision tracking use latency-nightly.yml instead.
+        run: |
+          opam exec -- python3 scripts/tools/check_perf_ratchet.py --repo .
+
       - name: Run rule-contract load-failure gate
         run: |
           # The test forks validators_cli.exe so both binaries must be built.

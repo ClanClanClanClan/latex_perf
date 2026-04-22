@@ -1545,7 +1545,7 @@
 - id: "CMD-015"
   description: "Unsupported user macro construct (catcode / delimited args)"
   precondition: L1_Expanded
-  default_severity: Error
+  default_severity: Warning
   maturity: Draft
   owner: "@expander"
   fix: null
@@ -5379,7 +5379,7 @@
 - id: "PRJ-004"
   description: "Duplicate label across project files"
   precondition: L3_Semantics
-  default_severity: Error
+  default_severity: Warning
   maturity: Draft
   owner: "@project"
   fix: null

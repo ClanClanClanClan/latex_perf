@@ -1036,7 +1036,7 @@ rules:
   - CMD-015
   depends_on: []
   conflicts_with: []
-  fix_scope: document
+  fix_scope: local
   project_scope: lp_core_or_extended
 - rule_id: CMD-016
   layer: L1_Expanded
@@ -5164,7 +5164,7 @@ rules:
   - PRJ-004
   depends_on: []
   conflicts_with: []
-  fix_scope: document
+  fix_scope: local
   project_scope: lp_core_or_extended
 - rule_id: PRT-001
   layer: L2_Ast

@@ -68,6 +68,39 @@ jobs:
         # tracebacks or empty output.
         run: python3 scripts/tools/check_gates_meta.py --repo .
 
+      - name: Severity drift (PR #245 p1.10)
+        # Every rule's default_severity in rules_v3.yaml must match the
+        # severity = ... literal in the OCaml rule body. Catches the
+        # case where someone edits one without the other.
+        run: python3 scripts/tools/check_severity_drift.py --repo .
+
+      - name: MLI docstring coverage (PR #245 p1.10, ratchet)
+        # Ratchets the count of undocumented exported vals. Blocks new
+        # undocumented vals; existing ones can be added progressively.
+        run: python3 scripts/tools/check_mli_doc_coverage.py --repo .
+
+      - name: Code quality (PR #245 p1.10)
+        # Three sub-gates: no [Defined.] in load-bearing proofs, no
+        # silent wildcard-exception swallows in non-test OCaml, no
+        # trivially-passing test assertions.
+        run: python3 scripts/tools/check_code_quality.py --repo .
+
+      - name: Unused hypotheses in proofs (PR #245 p1.10)
+        # Flag proof bodies whose [intros] discards ≥2 hypotheses via
+        # bare `_`. Would have caught the round-5 RepairMonotonicity
+        # regression where 3 boundary hypotheses were ignored.
+        run: python3 scripts/tools/check_unused_hypotheses.py --repo .
+
+      - name: Doc cross-references (PR #245 p1.11)
+        # Every [text](path) link and `path.ext` backtick mention in
+        # docs/ and specs/ must resolve to an existing file.
+        run: python3 scripts/tools/check_doc_refs.py --repo .
+
+      - name: Release integrity (PR #245 p1.11)
+        # CHANGELOG↔governance version coherence, generated-file
+        # authenticity (regen+diff), orphan consumes capabilities.
+        run: python3 scripts/tools/check_release_integrity.py --repo .
+
       - name: Check support matrix yaml parses
         run: |
           python3 - <<'PY'

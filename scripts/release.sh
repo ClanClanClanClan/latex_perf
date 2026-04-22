@@ -95,14 +95,23 @@ if [[ "$DRY_RUN" != "--dry-run" ]]; then
   echo "[release] Pre-release gates ✓"
 fi
 
-# 7. Commit version bump
+# 7. Commit version bump (if anything actually changed)
+# If dune-project + governance + contracts are already at ${VERSION} (e.g.
+# a prior release.sh run completed the bump but failed before tagging, OR
+# someone pre-bumped), `git add` stages nothing and `git commit` fails
+# with "nothing to commit". Under `set -euo pipefail` the script would
+# abort BEFORE the tag step, leaving the repo un-tagged. Guard against it.
 echo "[release] Committing version bump..."
 git add dune-project latex-perfectionist.opam latex-parse/latex_parse.opam \
   governance/project_facts.yaml specs/rules/rule_contracts.yaml \
   specs/rules/rule_contracts.json
-git commit -m "chore: bump version to ${VERSION}"
+if git diff --cached --quiet; then
+  echo "[release] No staged changes (already at ${VERSION}); skipping commit."
+else
+  git commit -m "chore: bump version to ${VERSION}"
+fi
 
-# 8. Tag
+# 8. Tag (unconditional — works whether #7 committed or skipped)
 echo "[release] Tagging ${TAG}..."
 git tag -a "${TAG}" -m "Release ${TAG}"
 

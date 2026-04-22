@@ -63,6 +63,7 @@ let extract_floats (s : string) : float_entry list =
               ignore _mr;
               Some (Re_compat.matched_group _mr 1 body)
             with Not_found -> None
+            (* EXN-OK: regex failure → no label captured. *)
           with _ -> None
         in
         entries :=

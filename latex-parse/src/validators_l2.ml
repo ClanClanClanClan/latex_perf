@@ -6408,7 +6408,7 @@ let r_cmd_015 : rule =
           Some
             {
               id = "CMD-015";
-              severity = Info;
+              severity = Warning;
               message =
                 Printf.sprintf "Unsupported user macro construct(s): %s"
                   (String.concat "; " reasons);
@@ -6432,7 +6432,7 @@ let r_cmd_016 : rule =
           Some
             {
               id = "CMD-016";
-              severity = Warning;
+              severity = Error;
               message =
                 Printf.sprintf "Cycle in user macro definitions: %s" path;
               count = 1;

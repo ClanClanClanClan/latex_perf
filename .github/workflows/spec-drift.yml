@@ -91,6 +91,16 @@ jobs:
         # regression where 3 boundary hypotheses were ignored.
         run: python3 scripts/tools/check_unused_hypotheses.py --repo .
 
+      - name: Doc cross-references (PR #245 p1.11)
+        # Every [text](path) link and `path.ext` backtick mention in
+        # docs/ and specs/ must resolve to an existing file.
+        run: python3 scripts/tools/check_doc_refs.py --repo .
+
+      - name: Release integrity (PR #245 p1.11)
+        # CHANGELOG↔governance version coherence, generated-file
+        # authenticity (regen+diff), orphan consumes capabilities.
+        run: python3 scripts/tools/check_release_integrity.py --repo .
+
       - name: Check support matrix yaml parses
         run: |
           python3 - <<'PY'

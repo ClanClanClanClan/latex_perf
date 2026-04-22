@@ -42,6 +42,10 @@ GATE_SCRIPTS = [
     ("scripts/tools/check_mli_doc_coverage.py", ["--repo", "."]),
     ("scripts/tools/check_code_quality.py", ["--repo", "."]),
     ("scripts/tools/check_unused_hypotheses.py", ["--repo", "."]),
+    # PR #245 (p1.11) additions
+    ("scripts/tools/check_doc_refs.py", ["--repo", "."]),
+    ("scripts/tools/check_release_integrity.py",
+     ["--repo", ".", "--skip-generated"]),
 ]
 
 

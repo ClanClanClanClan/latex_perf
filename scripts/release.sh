@@ -82,6 +82,19 @@ if [[ "$DRY_RUN" == "--dry-run" ]]; then
   exit 0
 fi
 
+# 6b. PR #245 (p1.11): pre-release uber-gate before any state mutation.
+# Runs EVERY gate + full build + all tests. Fails fast if ANY check
+# is red. Skipped in --dry-run (the user is expected to have run this
+# manually before invoking release.sh).
+if [[ "$DRY_RUN" != "--dry-run" ]]; then
+  echo "[release] Running pre-release uber-gate (all gates + build + tests)..."
+  if ! python3 scripts/tools/pre_release_check.py --allow-dirty --skip-build; then
+    echo "[release] FATAL: pre-release gates failed. Aborting." >&2
+    exit 1
+  fi
+  echo "[release] Pre-release gates ✓"
+fi
+
 # 7. Commit version bump
 echo "[release] Committing version bump..."
 git add dune-project latex-perfectionist.opam latex-parse/latex_parse.opam \

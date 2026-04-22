@@ -1295,7 +1295,7 @@
       ],
       "depends_on": [],
       "conflicts_with": [],
-      "fix_scope": "document",
+      "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
     {
@@ -6573,7 +6573,7 @@
       ],
       "depends_on": [],
       "conflicts_with": [],
-      "fix_scope": "document",
+      "fix_scope": "local",
       "project_scope": "lp_core_or_extended"
     },
     {

@@ -38,9 +38,16 @@ val of_project : Project_model.t -> t
     [Compile_contract] enriches the graph with .bbl nodes after aux_state runs. *)
 
 val nodes : t -> node list
+(** All nodes (artefact + file) in the graph. *)
+
 val edges : t -> edge list
+(** All producer→consumer edges. *)
+
 val find_node : t -> node_id -> node option
+(** Look up a node by its [node_id]. *)
+
 val find_by_path : t -> string -> node option
+(** Look up the [Tex] node for a given source path, if any. *)
 
 val is_acyclic : t -> bool
 (** DFS-based acyclicity check. A healthy build_graph is always acyclic (no

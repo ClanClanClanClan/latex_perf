@@ -147,4 +147,4 @@ let zone_id (z : trust_zone) : Node_id.t =
   Node_id.of_located
     ~node_length:(max 0 (z.end_pos - z.start_pos))
     ~command_hash:conf_tag
-    { Parser_l2.line = 0; col = 0; offset = z.start_pos }
+    { Parser_l2.line = 0; col = 0; offset = z.start_pos; end_offset = z.end_pos }

@@ -6,7 +6,7 @@
 open Latex_parse_lib
 open Test_helpers
 
-let mk_loc offset = { Parser_l2.line = 0; col = 0; offset }
+let mk_loc offset = { Parser_l2.line = 0; col = 0; offset; end_offset = offset }
 let err msg offset = (msg, mk_loc offset)
 
 let () =

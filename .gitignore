@@ -75,3 +75,12 @@ site/
 # ML checkpoints (reproducible from pipeline; too large for git)
 ml/checkpoints_v2/*.pt
 ml/checkpoints/*.pt
+
+# Claude Code local state (conversation transcripts, worktrees, etc.)
+.claude/
+
+# Ad-hoc local working notes (never committed)
+PROJECT_BRIEFING_FOR_EXPERT.md
+
+# Reference archive of earlier v25/v26 planning (local only)
+specs/latex_perf_v25_repo_with_v26_v27_planning.zip

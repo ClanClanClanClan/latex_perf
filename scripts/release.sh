@@ -38,7 +38,7 @@ python3 scripts/tools/generate_project_facts.py > /dev/null
 echo "[release] Regenerating specs/rules/rule_contracts.{yaml,json}..."
 python3 scripts/tools/generate_rule_contracts.py 2>&1 | tail -3
 echo "[release] Running drift gates..."
-python3 scripts/tools/check_repo_facts.py > /dev/null
+python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo . > /dev/null
 python3 scripts/tools/check_rule_contracts.py > /dev/null
 python3 scripts/validate_catalogue.py > /dev/null
 echo "[release] Governance + contracts in sync ✓"

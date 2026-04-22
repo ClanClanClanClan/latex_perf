@@ -37,6 +37,11 @@ GATE_SCRIPTS = [
     ("scripts/tools/check_memo_files.py", ["--repo", "."]),
     ("scripts/tools/check_proof_substance.py", ["--repo", "."]),
     ("scripts/validate_catalogue.py", []),
+    # PR #245 (p1.10) additions
+    ("scripts/tools/check_severity_drift.py", ["--repo", "."]),
+    ("scripts/tools/check_mli_doc_coverage.py", ["--repo", "."]),
+    ("scripts/tools/check_code_quality.py", ["--repo", "."]),
+    ("scripts/tools/check_unused_hypotheses.py", ["--repo", "."]),
 ]
 
 

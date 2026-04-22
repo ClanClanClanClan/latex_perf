@@ -150,6 +150,7 @@ let load_ml_confidence_map (path : string) :
          in
          let weight = try obj |> member "weight" |> to_float with _ -> 1.0 in
          let suppress =
+           (* EXN-OK: missing/invalid JSON field defaults to [false]. *)
            try obj |> member "suppress" |> to_bool with _ -> false
          in
          Hashtbl.replace tbl rule_id { precision; weight; suppress })

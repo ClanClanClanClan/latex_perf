@@ -30,6 +30,7 @@ let check_available ?(host = "127.0.0.1") ?(port = 8091) () : bool =
         let addr = Unix.ADDR_INET (Unix.inet_addr_of_string host, port) in
         Unix.connect sock addr;
         true)
+    (* EXN-OK: any network failure means ML service is not available. *)
   with _ -> false
 
 let is_available () : bool =
@@ -94,6 +95,7 @@ let classify_batch ?(host = "127.0.0.1") ?(port = 8091)
               Buffer.add_subbytes buf chunk 0 n;
               read_loop ())
           in
+          (* EXN-OK: end-of-stream or socket close terminates the loop. *)
           (try read_loop () with _ -> ());
           let resp = Buffer.contents buf in
           (* Find JSON body after \r\n\r\n *)
@@ -111,4 +113,5 @@ let classify_batch ?(host = "127.0.0.1") ?(port = 8091)
                   })
                 results
           | [] -> [])
+      (* EXN-OK: any parse/network failure falls back to empty results. *)
     with _ -> []

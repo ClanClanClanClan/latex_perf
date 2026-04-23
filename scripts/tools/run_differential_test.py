@@ -48,9 +48,28 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def strip_timing(stdout: bytes) -> bytes:
+    """Remove timing-only lines from validator stdout so the hash
+    reflects semantic output (rule fires, severity, message, count),
+    not wall-clock variability.
+
+    Stripped patterns:
+    - ``# layer=… total_ms=…`` headers
+    - ``# <RULE-ID>\\t<ms>`` per-rule timing comments
+    - Any other ``# `` comment line (defensive: validators_cli emits
+      timing-only comments; semantic output lines don't start with ``#``).
+    """
+    kept = []
+    for line in stdout.splitlines(keepends=True):
+        if line.startswith(b"# "):
+            continue
+        kept.append(line)
+    return b"".join(kept)
+
+
 def emit_validator_output(binary: Path, corpus_dir: Path) -> dict[str, str]:
     """Run [binary] on every .tex under [corpus_dir] and return a
-    {relative_path: sha256_of_stdout} map."""
+    {relative_path: sha256_of_stdout_sans_timing} map."""
     results: dict[str, str] = {}
     for tex in sorted(corpus_dir.rglob("*.tex")):
         try:
@@ -61,7 +80,7 @@ def emit_validator_output(binary: Path, corpus_dir: Path) -> dict[str, str]:
                 timeout=60,
             ).stdout
             rel = tex.relative_to(REPO_ROOT).as_posix()
-            results[rel] = hashlib.sha256(out).hexdigest()
+            results[rel] = hashlib.sha256(strip_timing(out)).hexdigest()
         except subprocess.TimeoutExpired:
             results[tex.relative_to(REPO_ROOT).as_posix()] = "TIMEOUT"
     return results

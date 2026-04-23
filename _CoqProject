@@ -54,6 +54,8 @@ proofs/T1_wrapper.v
 proofs/T4_wrapper.v
 proofs/T5_wrapper.v
 proofs/CSTRoundTrip.v
+proofs/RewritePreservesCST.v
+proofs/RewritePreservesSemantics.v
 
 # Supporting proof files (v25-era, still live)
 proofs/ElderProofs.v

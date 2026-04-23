@@ -74,6 +74,8 @@
   stable_spans
   cst
   cst_of_ast
+  cst_edit
+  rewrite_engine
   execution_class
   invalidation_engine
   execution_policy
@@ -564,6 +566,16 @@
  (libraries latex_parse_lib unix)
  (deps
   (source_tree ../../corpora)))
+
+(test
+ (name test_cst_edit)
+ (modules test_cst_edit)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_rewrite_engine)
+ (modules test_rewrite_engine)
+ (libraries latex_parse_lib test_helpers unix))
 
 (test
  (name test_rule_contracts_integration)

@@ -559,6 +559,13 @@
  (libraries latex_parse_lib unix))
 
 (test
+ (name test_cst_roundtrip)
+ (modules test_cst_roundtrip)
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora)))
+
+(test
  (name test_rule_contracts_integration)
  (modules test_rule_contracts_integration)
  (deps ../../specs/rules/rule_contracts.json)

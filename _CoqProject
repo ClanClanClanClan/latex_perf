@@ -53,6 +53,7 @@ proofs/T0_wrapper.v
 proofs/T1_wrapper.v
 proofs/T4_wrapper.v
 proofs/T5_wrapper.v
+proofs/CSTRoundTrip.v
 
 # Supporting proof files (v25-era, still live)
 proofs/ElderProofs.v

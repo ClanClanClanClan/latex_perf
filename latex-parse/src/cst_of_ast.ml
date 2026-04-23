@@ -30,21 +30,32 @@ let convert_node src (ln : Parser_l2.located_node) : Cst.t =
   | Parser_l2.MathDisplay _ -> Cst.CMathDisplay { text; span }
   | Parser_l2.Verbatim { env_name; _ } -> Cst.CVerbatim { env_name; text; span }
   | Parser_l2.Environment { env_name; _ } ->
-      (* Body bytes between \begin{env}...\end{env}. We emit as a structural
-         CEnvironment with the raw body text; v26.3+ may recurse into the body
-         to build a structured body. *)
+      (* Body bytes between \begin{env}...\end{env}. Byte-lossless iff the
+         source actually contains the closing tag; on unclosed environments the
+         parser still emits an Environment node but there is no \end{env} in the
+         source, and reconstructing one would lose bytes. In that case we fall
+         back to CUnparsed so serialize returns the raw source verbatim. *)
       let opening = "\\begin{" ^ env_name ^ "}" in
       let closing = "\\end{" ^ env_name ^ "}" in
       let olen = String.length opening in
       let clen = String.length closing in
-      let body_len = Stable_spans.length span - olen - clen in
-      let body_text =
-        if body_len <= 0 then ""
-        else
-          let start = span.start_offset + olen in
-          String.sub src start body_len
+      let full_len = Stable_spans.length span in
+      let has_closing =
+        full_len >= olen + clen
+        &&
+        let start = span.start_offset + full_len - clen in
+        start >= 0
+        && start + clen <= String.length src
+        && String.sub src start clen = closing
       in
-      Cst.CEnvironment { env_name; body_text; span }
+      if has_closing then
+        let body_len = full_len - olen - clen in
+        let body_text =
+          if body_len <= 0 then ""
+          else String.sub src (span.start_offset + olen) body_len
+        in
+        Cst.CEnvironment { env_name; body_text; span }
+      else Cst.CUnparsed { text; span }
   | Parser_l2.Cmd _ | Parser_l2.Group _ | Parser_l2.Error _ ->
       (* v26.2: these constructs lose structural info at AST construction (Cmd
          args are strings, Group body drops locs, Error carries only a

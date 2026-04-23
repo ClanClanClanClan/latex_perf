@@ -2,6 +2,101 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.2.0] — 2026-04-23
+
+v26.2 closes the memo §16.3 compile-guarantee stack and CST/rewrite
+foundation. The cycle ran as two pre-releases (`v26.2.0-alpha1` on
+2026-04-22 shipped the compile-guarantee stack; `v26.2.0-alpha2` the
+same day shipped the CST round-trip and rewrite engine) before this
+final tag.
+
+### Shipped
+
+**Compile-guarantee contract (memo §5, §16.3):**
+
+- `Project_model` / `Build_graph` / `Aux_state` / `Compile_contract` —
+  typed project representation, fourth artefact-dependency graph,
+  brace-balanced `.aux` parser, and `check_ready_to_compile` that runs
+  T2 (project closure), T3 (engine/feature compatibility), T4
+  (duplicate-label coherence from `.aux`) at runtime. T0/T1/T5 are
+  delegated to the existing Parser_l2 / UserExpand / Validators.run_all
+  pipeline.
+- `specs/v26/compilation_guarantee_stack.md` + `compilation_profiles.yaml`
+  formalize the T0–T7 theorem stack and engine metadata.
+- Proofs: `ProjectClosure.v` (T2), `BuildProfileSound.v` (T3; decidable
+  + pointwise↔bulk ↔ every-engine-has-compatible-feature),
+  `CompileProgress.v` (T6, hypothesis-parametric per ADR-004),
+  `CompileWellFormed.v` (T7, hypothesis-parametric), plus thin
+  wrappers `T0_wrapper.v`, `T1_wrapper.v`, `T4_wrapper.v`,
+  `T5_wrapper.v`. `proofs/ADMISSIBILITY_MAP.md` documents v27 WS8
+  discharge targets.
+
+**Byte-lossless CST + rewrite engine (memo §16.3):**
+
+- `Parser_l2.loc` gains `end_offset : int` so CST spans are computable
+  without rescanning. The only breaking-ish change; every `loc` record
+  literal needs the new field.
+- `Stable_spans` — `{start_offset; end_offset}` spans with
+  `shift_after` / `damaged_by` edit-model.
+- `Cst` + `Cst_of_ast` — byte-lossless CST variants (CToken / CTrivia /
+  CGroup / CEnvironment / CMathInline / CMathDisplay / CVerbatim /
+  CUnparsed); `of_source` post-process builder (ADR-008). **345/345
+  corpora files round-trip** (verified at runtime by
+  `test_cst_roundtrip.ml`).
+- `Cst_edit` — edit algebra with half-open byte ranges, conflict
+  detection (insertions at same offset don't conflict; strict-overlap
+  rejected), `apply_all` batch application, `shift_after` for rebase.
+- `Rewrite_engine` — thin wrapper over `Cst_edit.apply_all` +
+  `Cst_of_ast.of_source`. `apply` + `apply_and_reparse`.
+- Proofs: `CSTRoundTrip.v` (abstract byte-lossless partition model,
+  plus hypothesis-parametric structure-lossless section for v26.3
+  discharge), `RewritePreservesCST.v`, `RewritePreservesSemantics.v`
+  (whitespace-for-whitespace replacement preserves tokens).
+- `docs/CST_ROUNDTRIP_SCOPE.md` defines the two-level scope.
+
+**Documentation:**
+
+- `docs/MIGRATION_v26.1_to_v26.2.md`, `docs/ARCHITECTURE_DIAGRAM.md`,
+  `docs/PROOF_RELATIONSHIPS.md`, `docs/PARSER_L2_AUDIT.md`,
+  `docs/COMPILATION_GUARANTEE.md`.
+- `docs/v26_2/` — plan + 5 sub-docs (USER_PERSONAS, ROLLBACK_DRILL,
+  COMMUNICATION_PLAN, FIX_STYLE_GUIDE, CORPUS_LICENSING) + 8 ADRs.
+
+**Infrastructure:**
+
+- `scripts/tools/run_differential_test.py` — plan §3.3 HARD BLOCK gate
+  that diffs v26.1.0 baseline output against HEAD on
+  `corpora/regression/`. v26.2 expects zero non-fix diffs since
+  validators weren't modified; v26.3+ uses `--expected-diff-keys fix`
+  once rule-fix producers ship.
+- `corpora/roundtrip/` — 15 synthetic edge cases (empty,
+  whitespace-only, deeply-nested, unclosed math/group/env, verbatim
+  with special characters, unicode, many-args, trailing whitespace,
+  CRLF lines).
+
+### Deferred to v26.2.1 / v26.3
+
+- `validators_common.result.fix : Cst_edit.t option` — ~40 record-
+  literal refactor, split into a dedicated PR to keep review size
+  manageable.
+- `--apply-fixes` CLI flag + per-rule fix producers for STRUCT-001,
+  TYPO-002, TYPO-003.
+- E2E `test_rule_fix_integration.ml` (validator → fixes → rewrite →
+  parse-verify).
+- CST structure-lossless runtime gate (corpus-scoped).
+- Full per-class scheduling in `edf_scheduler.ml` beyond the priority
+  offsets shipped in v26.1.
+
+### Proof deltas since v26.1.0
+
+- `+12` new theorems in the compile-guarantee stack (T0-T7 + wrappers)
+- `+3` in CST round-trip (CSTRoundTrip.v)
+- `+6` in rewrite preservation (RewritePreservesCST.v + RewritePreservesSemantics.v)
+- Zero admits, zero axioms across the v26.2 additions.
+
+Exact final counts: 157 .v files, 1,252 theorems/lemmas. See
+`governance/project_facts.yaml` and `docs/PROOF_RELATIONSHIPS.md`.
+
 ## [v26.1.0] — 2026-04-21
 
 ### Post-merge audit rounds (PRs #241, #242, and #243)

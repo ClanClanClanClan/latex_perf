@@ -1,11 +1,11 @@
-# Proofs Overview (v26.1)
+# Proofs Overview (v26.2)
 
 This document summarises the current formal proof tree for LaTeX
 Perfectionist. All proofs compile with zero admits and zero axioms.
 
 ## Totals
 
-142 Coq files, 1,182 theorems/lemmas, 0 admits, 0 axioms.
+157 Coq files, 1,252 theorems/lemmas, 0 admits, 0 axioms.
 
 Breakdown:
 

@@ -141,12 +141,13 @@ Runs on every push and PR. Cannot be bypassed.
 
 ---
 
-## Current State (v26.1)
+## Current State (v26.2)
 
-- **1,182 theorems/lemmas** across 142 files
-- **622 faithful proofs** (VPD-pattern match, exact Coq model)
+- **1,252 theorems/lemmas** across 157 files
+- **637 faithful proofs** (VPD-pattern match, exact Coq model)
 - **20 conservative proofs** (L3 file-based rules — external binary checks, no Coq string model possible)
 - **3 conditional proofs** (LAY-025/026/027 — sound given compile-log predicate)
 - **0 admits, 0 axioms**
 - **ML proof**: `v2_span_extractor_sound` — ByteClassifier meets 0.94 F1 gate (measured 0.9799)
 - **v26.1 substrate**: LanguageContract, ValidatorGraphProofs (strengthened), ExecutionClasses, RepairMonotonicity, StableNodeIds (+31 new core theorems)
+- **v26.2 substrate**: compile-guarantee stack (ProjectClosure, BuildProfileSound, CompileProgress, CompileWellFormed, T0/T1/T4/T5 wrappers), CST round-trip (CSTRoundTrip), rewrite preservation (RewritePreservesCST, RewritePreservesSemantics)

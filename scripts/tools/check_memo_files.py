@@ -75,37 +75,80 @@ PATH_ALIASES: dict[str, list[str]] = {
         ["latex-parse/src/test_mutation_baseline.ml"],
     "testing/fuzz/":
         ["latex-parse/src/test_fuzz_parser.ml"],
+    # v26.2 CST + partial-parsing aliases (memo §6.5, §7.4, §16.3).
+    # ADR-001 pattern: memo prescribes core/l2_parser/, we ship under
+    # latex-parse/src/ with alias resolution. cst_builder is memo-
+    # canonical for the builder; we shipped it as cst_of_ast.
+    "core/l2_parser/cst.ml":
+        ["latex-parse/src/cst.ml"],
+    "core/l2_parser/cst.mli":
+        ["latex-parse/src/cst.mli"],
+    "core/l2_parser/cst_builder.ml":
+        ["latex-parse/src/cst_of_ast.ml"],
+    "core/l2_parser/cst_builder.mli":
+        ["latex-parse/src/cst_of_ast.mli"],
+    "core/l2_parser/partial_cst.ml":
+        ["latex-parse/src/partial_cst.ml"],
+    "core/l2_parser/partial_cst.mli":
+        ["latex-parse/src/partial_cst.mli"],
+    "core/l2_parser/error_recovery.ml":
+        ["latex-parse/src/error_recovery.ml"],
+    "core/l2_parser/error_recovery.mli":
+        ["latex-parse/src/error_recovery.mli"],
+    # Memo §6.5 prescribes latex-parse/src/trust_regions.*; we ship
+    # the trust-zone logic under partial_cst instead.
+    "latex-parse/src/trust_regions.ml":
+        ["latex-parse/src/partial_cst.ml"],
+    "latex-parse/src/trust_regions.mli":
+        ["latex-parse/src/partial_cst.mli"],
+    # Memo §8.5 project_runner.mli — the .ml is already aliased to
+    # validators_cli.ml; mirror the interface.
+    "latex-parse/src/project_runner.mli":
+        ["latex-parse/src/validators_cli.ml"],
+    # Memo §8.5 prescribes core/project/ as a separate dune library.
+    # We ship the same concepts under latex-parse/src/: build_graph is
+    # the artefact graph; the library dune stanza lives alongside.
+    "core/project/dune":
+        ["latex-parse/src/dune"],
+    "core/project/artifact_graph.ml":
+        ["latex-parse/src/build_graph.ml"],
 }
 
 
 def parse_file_bullets(memo_path: Path) -> dict[str, list[str]]:
-    r"""Parse memo; return {section_id: list[path]} for §16.1 + §16.2.
+    r"""Parse memo; return {section_id: list[path]} for the memo sections
+    that carry "Files to create" / "New:" / "Rewrite:" bullet lists.
 
-    Bullets look like ``- `path/to/file.ext` ``; strip the backticks and
-    any ``rewrite `` / ``new `` prefix. Section boundaries are
-    ``### 16.1 ...`` and ``### 16.2 ...``.
+    Covered sections (extended in v26.2 pre-tag audit): §4.5, §5.5,
+    §6.5, §7.4, §8.5, §16.1, §16.2, §16.3.
+
+    Bullets look like ``- `path/to/file.ext` ``; strip the backticks
+    and any ``rewrite `` / ``new `` prefix. A section ends at the
+    next ``### X.Y`` heading or end of file.
     """
+    tracked = re.compile(r"^###\s+(4\.5|5\.5|6\.5|7\.4|8\.5|16\.[123])\b")
+    any_subsection = re.compile(r"^###\s+(\d+\.\d+)\b")
     text = memo_path.read_text(encoding="utf-8")
     sections: dict[str, list[str]] = {}
     current: str | None = None
     current_list: list[str] = []
     for line in text.splitlines():
-        m = re.match(r"^###\s+(16\.[12])\s", line)
-        if m:
+        m_any = any_subsection.match(line)
+        if m_any:
+            # Any subsection boundary ends the prior tracked section.
             if current is not None:
                 sections[current] = current_list
-            current = m.group(1)
-            current_list = []
-            continue
-        m2 = re.match(r"^###\s+16\.3", line)
-        if m2 and current is not None:
-            sections[current] = current_list
-            current = None
-            current_list = []
+                current = None
+                current_list = []
+            m_tracked = tracked.match(line)
+            if m_tracked:
+                current = m_tracked.group(1)
+                current_list = []
             continue
         if current is None:
             continue
-        # Match bullets like `- \`path.ext\`` or `- rewrite \`path.ext\``
+        # Match bullets like ``- `path.ext` `` or ``- rewrite `path.ext` ``.
+        # Skip bullets whose body is prose (no backticked path).
         b = re.match(r"^- (?:new |rewrite )?`([^`]+)`", line)
         if b:
             current_list.append(b.group(1))

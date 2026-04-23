@@ -43,6 +43,29 @@ substitution). Proved in `proofs/BuildLog.v` via
 `lay_025_conditional_sound` / `lay_026_conditional_sound` /
 `lay_027_conditional_sound` (QED, zero admits).
 
+### Hypothesis-parametric (v26.2 substrate, memo §5 + §7.4)
+
+Load-bearing Coq scaffolding whose final step is parametric in an
+abstract hypothesis discharged by v27 WS8 (concrete toolchain model)
+or v26.3 (runtime/structure discharge). Per ADR-004, this pattern
+keeps the v26.2 substrate honest without making unbounded toolchain
+promises.
+
+**Files & their parametric hypotheses** (documented in
+`proofs/ADMISSIBILITY_MAP.md`):
+
+- `CompileProgress.v` — `compile_progress_rule` (T6).
+- `CompileWellFormed.v` — `output_wellformed_rule` (T7).
+- `CSTRoundTrip.v` — `builder_partitions` + `parse_serialize_is_id_on_subset`
+  (structure-lossless; byte-lossless is unconditional).
+- `RewritePreservesCST.v` — `apply_total` (edit-application totality).
+- `RewritePreservesSemantics.v` — `tokens_ws_empty` + `tokens_concat`
+  (whitespace-preservation lemmas).
+
+The `proofs/CSTtoASTSound.v` and `proofs/ArtifactGraphSound.v` files
+(memo §7.4 / §8.5 aliases) re-export the relevant substantive
+theorems under the memo-prescribed names.
+
 ### Statistical / ML-Validated (8 rules, overlay)
 
 The v2 ByteClassifier provides empirical precision/recall bounds for
@@ -81,10 +104,25 @@ Each rule carries its execution class in `specs/rules/rule_contracts.yaml`
 
 ## Summary
 
+Per-rule classification (rule-level soundness proofs):
+
 | Class | Count | Percentage |
 |-------|-------|-----------|
-| Formal faithful | 631 | 98.9% |
-| Formal conservative | 20 | 3.2% |
+| Formal faithful | 637 | 98.9% |
+| Formal conservative | 20 | 3.1% |
 | Formal conditional | 3 | 0.5% |
 | Statistical (ML) | 8 | (overlay on faithful) |
-| **Total with proofs** | **654** | **100% (of 638 shipped; 16 Reserved excluded)** |
+| **Total with proofs** | **660** | **100% (of 644 shipped; 16 Reserved excluded)** |
+
+Substrate proofs (not per-rule; memo §4–§8):
+
+| Area | Files | Status |
+|------|-------|--------|
+| Language contract (memo §4) | LanguageContract.v | Formal faithful |
+| Compile-guarantee T0–T5 (memo §5) | ProjectClosure, BuildProfileSound, T0/T1/T4/T5_wrapper | Formal faithful |
+| Compile-guarantee T6/T7 (memo §5) | CompileProgress, CompileWellFormed | Hypothesis-parametric |
+| Partial-document E0–E3 (memo §6) | PartialParseLocality, DamageContainment, RepairMonotonicity, StableNodeIds | Formal faithful |
+| CST round-trip (memo §7) | CSTRoundTrip, CSTtoASTSound (alias) | Byte-lossless formal faithful + structure-lossless hypothesis-parametric |
+| Rewrite preservation (memo §7) | RewritePreservesCST, RewritePreservesSemantics | Hypothesis-parametric |
+| Artefact graph (memo §8) | ProjectClosure, ArtifactGraphSound (alias) | Formal faithful |
+| Execution classes (memo §11) | ExecutionClasses.v | Formal faithful |

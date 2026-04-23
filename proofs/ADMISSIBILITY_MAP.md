@@ -140,6 +140,81 @@ its premise.
    is predominantly negative (no fatal markers), tracked by the T6
    discharge (which rules out fatal errors on success).
 
+### CST round-trip — byte-lossless (`CSTRoundTrip.v`)
+
+**Section variables** (`Section Structure_lossless`):
+- `ast : Type`, `parse : bytes -> ast`, `in_subset : bytes -> Prop`,
+  `builder : bytes -> list cst_abs` — opaque carriers + the abstract
+  builder; v26.3 instantiates.
+
+**Hypotheses:**
+1. `builder_partitions` — every source has a byte-lossless
+   partition under the builder:
+   ```
+   forall src, is_partition src (builder src).
+   ```
+   **v26.2 discharge at the runtime level:** `test_cst_roundtrip.ml`
+   sweeps 345/345 corpus files and asserts
+   `Cst.serialize (of_source src) = src`. The runtime evidence
+   corresponds to the Coq hypothesis under the isomorphism
+   `String.to_list : String.t <-> list nat`.
+   **v26.3 Coq discharge target:** prove the Coq-level claim by
+   induction over `Cst_of_ast.fill_nodes`, showing every recursive
+   call extends a valid partition.
+2. `parse_serialize_is_id_on_subset` — for the declared subset,
+   re-parsing a serialized CST yields the same AST:
+   ```
+   forall src, in_subset src -> parse (serialize (builder src)) = parse src.
+   ```
+   **v26.3 discharge target:** corpus-test against a curated subset
+   (LP-Core inputs under 1 MB, no unclosed constructs) and ship a
+   structure-lossless corpus gate. Full Coq discharge awaits the v27
+   CST-AST mapping proof.
+
+### Rewrite engine — byte preservation (`RewritePreservesCST.v`)
+
+**Section variable:** `apply_edits : bytes -> list edit -> bytes`.
+
+**Hypothesis:**
+1. `apply_total` — `apply_edits` is total on its input:
+   ```
+   forall src es, exists out, apply_edits src es = out.
+   ```
+   **v26.2 discharge at the runtime level:** OCaml
+   `Cst_edit.apply_all` is total for disjoint edit lists (guarded by
+   `validate_non_overlapping` upstream) and returns an explicit
+   `Result.t` for overlaps. Totality holds under the precondition
+   that the caller passes a non-overlapping list.
+   **v26.3 Coq discharge target:** prove totality from a concrete
+   apply function defined in Coq, under the same disjointness
+   precondition.
+
+### Rewrite engine — semantic preservation (`RewritePreservesSemantics.v`)
+
+**Section variables:** `token : Type`, `tokens : bytes -> list token`.
+
+**Hypotheses:**
+1. `tokens_ws_empty` — whitespace-only input tokenises to the empty
+   list:
+   ```
+   forall bs, all_ws bs = true -> tokens bs = [].
+   ```
+   **v26.3 discharge target:** prove against `Parser_l2`'s
+   tokeniser: whitespace (space, tab, LF, CR) never emits a
+   `Parser_l2.node` under the current parser rules. Mechanical; the
+   Parser_l2 whitespace handler returns `[]` on pure-whitespace
+   input.
+2. `tokens_concat` — tokenisation is compositional over
+   concatenation:
+   ```
+   forall xs ys, tokens (xs ++ ys) = tokens xs ++ tokens ys.
+   ```
+   **v26.3 discharge target:** this requires a lookahead-free
+   tokeniser contract. Real `Parser_l2` uses local lookahead (for
+   e.g. `\[`); discharge may require restricting the hypothesis to
+   non-command whitespace chunks. Document the restriction at
+   discharge time.
+
 ---
 
 ## v27 WS8 discharge checklist

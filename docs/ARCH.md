@@ -1,15 +1,18 @@
 # Architecture Handbook
 
-Revision 2026-04-20. Evergreen document (spec L-9).
+Revision 2026-04-23. Evergreen document (spec L-9).
 
 ---
 
 ## Overview
 
-LaTeX Perfectionist v26.1 is a five-layer incremental LaTeX analysis pipeline
+LaTeX Perfectionist v26.2 is a five-layer incremental LaTeX analysis pipeline
 with formal (Coq) soundness proofs for every validator rule, a tiered
-language contract (LP-Core / LP-Extended / LP-Foreign), and a real validator
-dependency graph driven by `specs/rules/rule_contracts.yaml`.
+language contract (LP-Core / LP-Extended / LP-Foreign), a real validator
+dependency graph driven by `specs/rules/rule_contracts.yaml`, a pre-compile
+T0–T5 readiness contract (`Compile_contract.check_ready_to_compile`), and a
+byte-lossless CST + rewrite-engine substrate (`Cst`, `Cst_of_ast`,
+`Cst_edit`, `Rewrite_engine`).
 
 ```
 Source ─► L0 Tokenizer ─► L1 Expander ─► L2 Parser ─► L3 Semantics ─► L4 Style

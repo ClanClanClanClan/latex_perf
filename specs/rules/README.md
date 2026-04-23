@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26 — Rules Directory
+# LaTeX Perfectionist v26.2 — Rules Directory
 
 ## Files
 

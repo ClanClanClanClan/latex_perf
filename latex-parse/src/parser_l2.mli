@@ -1,6 +1,11 @@
 (** Comprehensive LaTeX parser with located AST (spec §4, W40-52). *)
 
-type loc = { line : int; col : int; offset : int }
+type loc = { line : int; col : int; offset : int; end_offset : int }
+(** [loc]: location of a node. [offset] is the byte index of the first
+    character; [end_offset] is the byte index just past the last character
+    (equals [offset] for zero-length markers and for [Error] nodes). Used by the
+    CST builder to compute spans without rescanning. *)
+
 type cmd = { name : string; opts : string list; args : string list }
 
 type node =

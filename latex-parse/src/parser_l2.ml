@@ -12,9 +12,9 @@
 
 (* ── Location tracking ──────────────────────────────────────── *)
 
-type loc = { line : int; col : int; offset : int }
+type loc = { line : int; col : int; offset : int; end_offset : int }
 
-let _loc0 = { line = 1; col = 0; offset = 0 }
+let _loc0 = { line = 1; col = 0; offset = 0; end_offset = 0 }
 
 (* ── AST node types ─────────────────────────────────────────── *)
 
@@ -81,7 +81,12 @@ let make_state (src : string) : parse_state =
   { src; len = String.length src; pos = 0; line = 1; col = 0; errors = [] }
 
 let current_loc (st : parse_state) : loc =
-  { line = st.line; col = st.col; offset = st.pos }
+  { line = st.line; col = st.col; offset = st.pos; end_offset = st.pos }
+
+(** Close [loc] to the parser's current position. Called at each emission site
+    so [end_offset] reflects the actual end of the node. *)
+let close_loc (loc : loc) (st : parse_state) : loc =
+  { loc with end_offset = st.pos }
 
 let peek (st : parse_state) : char option =
   if st.pos < st.len then Some (String.unsafe_get st.src st.pos) else None
@@ -161,7 +166,7 @@ let parse_comment (st : parse_state) : located_node =
     advance st
   done;
   let text = String.sub st.src start (st.pos - start) in
-  { node = Comment text; loc }
+  { node = Comment text; loc = close_loc loc st }
 
 (* ── Math mode parsing ──────────────────────────────────────── *)
 
@@ -186,7 +191,7 @@ let parse_inline_math (st : parse_state) : located_node =
       advance st)
   done;
   if not !found_close then record_error st "Unclosed inline math $";
-  { node = MathInline (Buffer.contents buf); loc }
+  { node = MathInline (Buffer.contents buf); loc = close_loc loc st }
 
 let parse_display_math_bracket (st : parse_state) : located_node =
   let loc = current_loc st in
@@ -203,7 +208,7 @@ let parse_display_math_bracket (st : parse_state) : located_node =
       advance st)
   done;
   if not !found_close then record_error st "Unclosed display math \\[";
-  { node = MathDisplay (Buffer.contents buf); loc }
+  { node = MathDisplay (Buffer.contents buf); loc = close_loc loc st }
 
 let parse_paren_math (st : parse_state) : located_node =
   let loc = current_loc st in
@@ -220,7 +225,7 @@ let parse_paren_math (st : parse_state) : located_node =
       advance st)
   done;
   if not !found_close then record_error st "Unclosed paren math \\(";
-  { node = MathInline (Buffer.contents buf); loc }
+  { node = MathInline (Buffer.contents buf); loc = close_loc loc st }
 
 (* ── Environment body parsing ───────────────────────────────── *)
 
@@ -340,7 +345,12 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                 Buffer.add_char buf (String.unsafe_get st.src st.pos);
                 advance st)
             done;
-            nodes := { node = MathDisplay (Buffer.contents buf); loc } :: !nodes)
+            nodes :=
+              {
+                node = MathDisplay (Buffer.contents buf);
+                loc = close_loc loc st;
+              }
+              :: !nodes)
           else
             let n = parse_inline_math st in
             nodes := n :: !nodes
@@ -364,10 +374,16 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
             if is_verbatim_env env_name then
               (* Parse verbatim content as opaque string *)
               let content = parse_env_body st env_name in
-              nodes := { node = Verbatim { env_name; content }; loc } :: !nodes
+              nodes :=
+                {
+                  node = Verbatim { env_name; content };
+                  loc = close_loc loc st;
+                }
+                :: !nodes
             else if is_math_env env_name then
               let content = parse_env_body st env_name in
-              nodes := { node = MathDisplay content; loc } :: !nodes
+              nodes :=
+                { node = MathDisplay content; loc = close_loc loc st } :: !nodes
             else
               (* Parse environment body recursively *)
               let body_lnodes =
@@ -375,7 +391,10 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
               in
               let body = List.map (fun ln -> ln.node) body_lnodes in
               nodes :=
-                { node = Environment { env_name; opts = []; body }; loc }
+                {
+                  node = Environment { env_name; opts = []; body };
+                  loc = close_loc loc st;
+                }
                 :: !nodes)
           else if starts_with st "\\end{" then (
             advance_n st 5;
@@ -400,7 +419,8 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
             advance st;
             (* skip \ *)
             let name = parse_cmd_name st in
-            if name = "" then nodes := { node = Word "\\"; loc } :: !nodes
+            if name = "" then
+              nodes := { node = Word "\\"; loc = close_loc loc st } :: !nodes
             else if name = "verb" || name = "verb*" then
               if
                 (* \verb|...| — arbitrary delimiter, opaque content *)
@@ -425,7 +445,7 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                     node =
                       Verbatim
                         { env_name = name; content = Buffer.contents buf };
-                    loc;
+                    loc = close_loc loc st;
                   }
                   :: !nodes)
               else record_error st "\\verb at end of input"
@@ -448,7 +468,7 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                 {
                   node =
                     Cmd { name; opts = List.rev !opts; args = List.rev !args };
-                  loc;
+                  loc = close_loc loc st;
                 }
                 :: !nodes)
       | Some '{' ->
@@ -457,7 +477,11 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           (* Find closing } *)
           (* The recursive call should have consumed up to } *)
           nodes :=
-            { node = Group (List.map (fun n -> n.node) inner); loc } :: !nodes
+            {
+              node = Group (List.map (fun n -> n.node) inner);
+              loc = close_loc loc st;
+            }
+            :: !nodes
       | Some '}' -> (
           advance st;
           match stop_at_end with
@@ -465,7 +489,7 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           | Some _ -> running := false)
       | Some '\n' ->
           advance st;
-          nodes := { node = Newline; loc } :: !nodes
+          nodes := { node = Newline; loc = close_loc loc st } :: !nodes
       | Some c when c = ' ' || c = '\t' ->
           let start = st.pos in
           while
@@ -479,7 +503,7 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           nodes :=
             {
               node = Whitespace (String.sub st.src start (st.pos - start));
-              loc;
+              loc = close_loc loc st;
             }
             :: !nodes
       | Some _ ->
@@ -501,7 +525,10 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
           done;
           if st.pos > start then
             nodes :=
-              { node = Word (String.sub st.src start (st.pos - start)); loc }
+              {
+                node = Word (String.sub st.src start (st.pos - start));
+                loc = close_loc loc st;
+              }
               :: !nodes
     done;
     List.rev !nodes

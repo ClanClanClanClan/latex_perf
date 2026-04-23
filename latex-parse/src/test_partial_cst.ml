@@ -3,7 +3,8 @@
 open Latex_parse_lib
 open Test_helpers
 
-let mk_loc offset = { Parser_l2.line = 1; col = offset; offset }
+let mk_loc offset =
+  { Parser_l2.line = 1; col = offset; offset; end_offset = offset }
 
 let () =
   (* ── classify tests ────────────────────────────────────────────── *)

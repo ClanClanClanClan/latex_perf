@@ -56,6 +56,8 @@ proofs/T5_wrapper.v
 proofs/CSTRoundTrip.v
 proofs/RewritePreservesCST.v
 proofs/RewritePreservesSemantics.v
+proofs/CSTtoASTSound.v
+proofs/ArtifactGraphSound.v
 
 # Supporting proof files (v25-era, still live)
 proofs/ElderProofs.v

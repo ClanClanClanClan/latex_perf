@@ -1,0 +1,88 @@
+# Partial-document semantics — machine-readable taxonomy (memo §6)
+#
+# Authoritative memo: specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md §6
+# Human prose:        specs/v26/partial_document_semantics.md
+# Runtime:            latex-parse/src/partial_cst.{ml,mli}
+#                     latex-parse/src/error_recovery.{ml,mli}
+#                     latex-parse/src/node_id.{ml,mli}
+# Consumers:          Validators.run_all (tier-gating + trust-zone context)
+#                     Semantic_state (re-validate invalidated zones)
+#                     IDE/REST surfaces (confidence-coloured diagnostics)
+
+version: v26.2
+spec_scope: v26.1-substrate-retroactive
+last_updated: '2026-04-23'
+
+# Trust-zone classification. Each classification is decidable from the
+# error set + paragraph bounds; see proofs/PartialParseLocality.v.
+trust_zone:
+  enum:
+    Complete:
+      description: "No error in the zone's paragraph. Full trust."
+      rule_policy: "All rules may fire; results are authoritative."
+    Partial:
+      description: "Zone adjacent (prev / next paragraph) to an error paragraph."
+      rule_policy: "Rules fire; confidence caps downstream at Medium."
+    Broken:
+      description: "Zone's paragraph contains an error position."
+      rule_policy: "Rules may be skipped; emitted results get Low confidence."
+
+# Aggregated document confidence — worst zone wins.
+document_confidence:
+  enum: [Complete, Partial, Broken]
+  monotone_in_zones: true
+  runtime_field: Partial_cst.partial_document.confidence
+
+# Invariants proven in Coq (E-series).
+invariants:
+  E0:
+    name: PartialParseLocality
+    claim: "Errors outside a paragraph do not change that paragraph's trust level."
+    file: proofs/PartialParseLocality.v
+    qeds: [partial_parse_locality, classify_invariant_under_distant_error, no_errors_all_complete]
+  E1:
+    name: DamageContainment
+    claim: "Damage is bounded by the containing paragraph's bounds."
+    file: proofs/DamageContainment.v
+    qeds: [damage_is_contained, is_strict_subset_transitive, empty_error_set]
+  E2:
+    name: RepairMonotonicity
+    claim: "Strict error-subset repair preserves or improves trust, modulo dependency boundaries."
+    file: proofs/RepairMonotonicity.v
+    qeds:
+      - repair_restores_trust_outside_boundaries
+      - partial_cst_zone_trusted_under_bounded_repair
+      - is_repaired_transitive
+      - is_repaired_reflexive_fails
+      - is_repaired_is_strict_subset
+  E3:
+    name: StableNodeIds
+    claim: "Local edits that don't modify a node's bytes preserve its content_id; shifts preserve content_id and shift offset by Δ."
+    file: proofs/StableNodeIds.v
+    qeds:
+      - of_located_stable_under_local_edit
+      - content_id_invariants
+      - content_id_deterministic
+      - content_id_differs_for_distinct_contents
+
+# Runtime API surface (stable for v26.2).
+api:
+  classify:
+    signature: string -> (string * loc) list -> partial_document
+    module: Partial_cst
+  zone_id:
+    signature: trust_zone -> Node_id.t
+    module: Partial_cst
+    note: "Exposes stable IDs via Node_id.of_located for zone tracking across edits."
+  is_repaired:
+    signature: old_errors:(string * loc) list -> new_errors:(string * loc) list -> bool
+    module: Error_recovery
+  is_repaired_with_deps:
+    signature: old_errors:... -> new_errors:... -> deps:dependency_boundary list -> bool
+    module: Error_recovery
+
+# Out-of-scope for v26.2.
+out_of_scope:
+  - "Full incremental reparse (v26.3+)."
+  - "Editor-level optimistic rendering."
+  - "Multi-file propagation (delegated to Dependency_graph + Invalidation)."

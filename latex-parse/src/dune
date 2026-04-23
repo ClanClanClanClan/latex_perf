@@ -578,6 +578,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_rewrite_fuzz)
+ (modules test_rewrite_fuzz)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_rule_contracts_integration)
  (modules test_rule_contracts_integration)
  (deps ../../specs/rules/rule_contracts.json)

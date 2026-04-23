@@ -19,14 +19,13 @@ let () =
 
   run "apply rejects conflicting edits" (fun tag ->
       let src = "Hello world" in
-      let es =
-        [
-          Cst_edit.replace ~start_offset:0 ~end_offset:5 "Hi";
-          Cst_edit.replace ~start_offset:3 ~end_offset:6 "Xx";
-        ]
-      in
-      match Rewrite_engine.apply ~source:src ~edits:es with
-      | Error (`Overlap _) -> expect true (tag ^ ": overlap rejected")
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:5 "Hi" in
+      let b = Cst_edit.replace ~start_offset:3 ~end_offset:6 "Xx" in
+      match Rewrite_engine.apply ~source:src ~edits:[ a; b ] with
+      | Error (`Overlap (x, y)) ->
+          expect
+            (Cst_edit.equal x a && Cst_edit.equal y b)
+            (tag ^ ": reports the conflicting pair")
       | Ok _ -> expect false (tag ^ ": should reject"));
 
   run "apply_and_reparse produces CST" (fun tag ->

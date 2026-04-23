@@ -80,19 +80,18 @@ let () =
           Cst_edit.insert ~at:10 "Z";
         ]
       in
-      match Cst_edit.validate_non_overlapping es with
-      | Ok () -> expect true (tag ^ ": no conflicts")
-      | Error _ -> expect false (tag ^ ": false positive"));
+      expect
+        (Cst_edit.validate_non_overlapping es = Ok ())
+        (tag ^ ": no conflicts"));
 
   run "validate_non_overlapping error" (fun tag ->
-      let es =
-        [
-          Cst_edit.replace ~start_offset:0 ~end_offset:4 "X";
-          Cst_edit.replace ~start_offset:3 ~end_offset:6 "Y";
-        ]
-      in
-      match Cst_edit.validate_non_overlapping es with
-      | Error _ -> expect true (tag ^ ": overlap caught")
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:4 "X" in
+      let b = Cst_edit.replace ~start_offset:3 ~end_offset:6 "Y" in
+      match Cst_edit.validate_non_overlapping [ a; b ] with
+      | Error (e, f) ->
+          expect
+            (Cst_edit.equal e a && Cst_edit.equal f b)
+            (tag ^ ": reports the conflicting pair")
       | Ok () -> expect false (tag ^ ": missed overlap"));
 
   run "apply_all multiple edits" (fun tag ->
@@ -122,14 +121,13 @@ let () =
 
   run "apply_all rejects overlap" (fun tag ->
       let src = "abcdefghij" in
-      let es =
-        [
-          Cst_edit.replace ~start_offset:0 ~end_offset:5 "X";
-          Cst_edit.replace ~start_offset:3 ~end_offset:7 "Y";
-        ]
-      in
-      match Cst_edit.apply_all src es with
-      | Error (`Overlap _) -> expect true (tag ^ ": overlap rejected")
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:5 "X" in
+      let b = Cst_edit.replace ~start_offset:3 ~end_offset:7 "Y" in
+      match Cst_edit.apply_all src [ a; b ] with
+      | Error (`Overlap (x, y)) ->
+          expect
+            (Cst_edit.equal x a && Cst_edit.equal y b)
+            (tag ^ ": reports the conflicting pair")
       | Ok _ -> expect false (tag ^ ": should reject"));
 
   run "shift_after moves edit forward" (fun tag ->

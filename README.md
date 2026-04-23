@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.1.0
+# LaTeX Perfectionist v26.2.0
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -69,6 +69,7 @@ All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML
 - ✅ v25.0.0 (2026-04-14): rule coverage + ML v2 + SIMD + chunk store
 - ✅ v26.0.0 (2026-04-18): WS0-WS6 — truth-surface freeze, compile-log Class C, bounded macro registry, project graph, hybrid invalidation, partial-document semantics, testing hardening
 - ✅ v26.1.0 (2026-04-20): formal language contract + real validator DAG + ExecutionClasses proof + support_matrix.yaml + E2/E3 editing proofs + expanded compile-log (LAY-025/026/027) + governance regen
+- ✅ v26.2.0 (2026-04-23): compile-guarantee stack T0–T7 (runtime `Compile_contract` + ProjectClosure/BuildProfileSound/CompileProgress/CompileWellFormed + T0/T1/T4/T5 wrappers) + byte-lossless CST (`Cst`, `Cst_of_ast`, `Stable_spans`; 345/345 corpora round-trip) + rewrite engine v1 (`Cst_edit`, `Rewrite_engine`) + preservation proofs (CSTRoundTrip, RewritePreservesCST, RewritePreservesSemantics)
 
 ## Quick Start
 
@@ -226,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v26.1.0 released. 638 validators implemented, 33+ core Coq proofs QED, ML v2 byte classifier trained (F1=0.9799, proved).
+**Status**: v26.2.0 released. 644 validators implemented, 1,252 theorems across 157 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine live.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

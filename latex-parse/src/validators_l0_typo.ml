@@ -17,14 +17,13 @@ let r_typo_001 : rule =
   { id = "TYPO-001"; run; languages = [] }
 
 (** [find_all_non_overlapping s needle] — offsets of every occurrence of
-    [needle] in [s], advancing by [|needle|] after each match (no
-    overlaps). Used by TYPO-002/003 fix producers to build a
-    non-overlapping replace-edit set. Differs from [count_substring]
-    (which allows overlaps) — the fix-count may therefore be smaller
-    than the rule-[count] on pathological input like "----" (count=3
-    with overlaps, 2 non-overlapping [--] matches). Acceptable: the
-    fix-set is always applicable; the rule-[count] is a separate
-    severity indicator. *)
+    [needle] in [s], advancing by [|needle|] after each match (no overlaps).
+    Used by TYPO-002/003 fix producers to build a non-overlapping replace-edit
+    set. Differs from [count_substring] (which allows overlaps) — the fix-count
+    may therefore be smaller than the rule-[count] on pathological input like
+    "----" (count=3 with overlaps, 2 non-overlapping [--] matches). Acceptable:
+    the fix-set is always applicable; the rule-[count] is a separate severity
+    indicator. *)
 let find_all_non_overlapping (s : string) (needle : string) : int list =
   let nlen = String.length needle in
   let slen = String.length s in
@@ -41,8 +40,7 @@ let r_typo_002 : rule =
   let message = "Double hyphen -- should be en‑dash –" in
   let mk_fix_edits s =
     List.map
-      (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–")
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–")
       (find_all_non_overlapping s "--")
   in
   let run s =
@@ -64,7 +62,8 @@ let r_typo_002 : rule =
         if cnt > 0 then
           let fix = mk_fix_edits s in
           if fix = [] then
-            Some (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+            Some
+              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
           else
             Some
               (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
@@ -75,7 +74,8 @@ let r_typo_002 : rule =
         if cnt > 0 then
           let fix = mk_fix_edits s in
           if fix = [] then
-            Some (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+            Some
+              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
           else
             Some
               (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
@@ -88,8 +88,7 @@ let r_typo_003 : rule =
   let message = "Triple hyphen --- should be em‑dash —" in
   let mk_fix_edits s =
     List.map
-      (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "—")
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "—")
       (find_all_non_overlapping s "---")
   in
   let run s =
@@ -111,7 +110,8 @@ let r_typo_003 : rule =
         if cnt > 0 then
           let fix = mk_fix_edits s in
           if fix = [] then
-            Some (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
+            Some
+              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
           else
             Some
               (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
@@ -122,7 +122,8 @@ let r_typo_003 : rule =
         if cnt > 0 then
           let fix = mk_fix_edits s in
           if fix = [] then
-            Some (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
+            Some
+              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
           else
             Some
               (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message

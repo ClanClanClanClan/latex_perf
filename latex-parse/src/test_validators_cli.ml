@@ -178,6 +178,64 @@ let () =
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
       expect (has_style_id out)
-        (tag ^ ": at least one STYLE-* line under --advisory"))
+        (tag ^ ": at least one STYLE-* line under --advisory"));
+
+  (* v26.2.1 PR #4: --apply-fixes applies the collected fix edits and emits
+     modified source to stdout. STRUCT-001 (missing \documentclass) is our
+     simplest exemplar. *)
+  run "CLI --apply-fixes inserts \\documentclass for STRUCT-001" (fun tag ->
+      let path = write_temp_tex "Body without docclass.\n" in
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      (* Output is raw source, not TSV reports. Must begin with the inserted
+         \documentclass and still contain the original body. *)
+      let stripped =
+        let pieces = String.split_on_char '\n' out in
+        List.filter (fun l -> String.length l = 0 || l.[0] <> '#') pieces
+        |> String.concat "\n"
+      in
+      expect
+        (String.length stripped >= 14
+        && String.sub stripped 0 14 = "\\documentclass")
+        (tag ^ ": output starts with \\documentclass"));
+
+  (* L0_APPLY_FIXES=1 is the env-gate equivalent of --apply-fixes. *)
+  run "CLI L0_APPLY_FIXES=1 env gate equivalent to --apply-fixes" (fun tag ->
+      let path = write_temp_tex "No docclass here.\n" in
+      Unix.putenv "L0_APPLY_FIXES" "1";
+      let out, code = run_cli [ path ] in
+      Unix.putenv "L0_APPLY_FIXES" "";
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      let stripped =
+        String.split_on_char '\n' out
+        |> List.filter (fun l -> String.length l = 0 || l.[0] <> '#')
+        |> String.concat "\n"
+      in
+      expect
+        (String.length stripped >= 14
+        && String.sub stripped 0 14 = "\\documentclass")
+        (tag ^ ": env-gated apply-fixes also inserts \\documentclass"));
+
+  (* Clean source → no rule emits a fix → output is the original source (plus
+     profile banner comments on stderr, which this test ignores). *)
+  run "CLI --apply-fixes on clean source echoes input" (fun tag ->
+      let path =
+        write_temp_tex
+          "\\documentclass{article}\n\\begin{document}\nOK\n\\end{document}\n"
+      in
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      let stripped =
+        String.split_on_char '\n' out
+        |> List.filter (fun l -> String.length l = 0 || l.[0] <> '#')
+        |> String.concat "\n"
+      in
+      expect
+        (String.length stripped > 0
+        && String.sub stripped 0 14 = "\\documentclass")
+        (tag ^ ": output is the original source unchanged"))
 
 let () = finalise "cli"

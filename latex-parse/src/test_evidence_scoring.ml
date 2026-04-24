@@ -18,12 +18,9 @@ let () =
 
   (* Test 2: score_result assigns correct confidence by family *)
   let mk_result id =
-    {
-      Latex_parse_lib.Validators_common.id;
-      severity = Latex_parse_lib.Validators_common.Warning;
-      message = "test";
-      count = 1;
-    }
+    Latex_parse_lib.Validators_common.mk_result ~id
+      ~severity:Latex_parse_lib.Validators_common.Warning ~message:"test"
+      ~count:1
   in
   let typo =
     Latex_parse_lib.Evidence_scoring.score_result (mk_result "TYPO-001") []

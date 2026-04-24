@@ -19,14 +19,11 @@ let r_prj_001 : rule =
             List.map (fun cycle -> String.concat " -> " cycle) cycles
           in
           Some
-            {
-              id = "PRJ-001";
-              severity = Error;
-              message =
-                Printf.sprintf "Cycle in include graph: %s"
-                  (String.concat "; " paths);
-              count = List.length cycles;
-            }
+            (mk_result ~id:"PRJ-001" ~severity:Error
+               ~message:
+                 (Printf.sprintf "Cycle in include graph: %s"
+                    (String.concat "; " paths))
+               ~count:(List.length cycles))
         else None
   in
   mk_rule "PRJ-001" run
@@ -46,14 +43,11 @@ let r_prj_002 : rule =
               unresolved
           in
           Some
-            {
-              id = "PRJ-002";
-              severity = Warning;
-              message =
-                Printf.sprintf "Unresolved include path(s): %s"
-                  (String.concat "; " paths);
-              count = List.length unresolved;
-            }
+            (mk_result ~id:"PRJ-002" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Unresolved include path(s): %s"
+                    (String.concat "; " paths))
+               ~count:(List.length unresolved))
         else None
   in
   mk_rule "PRJ-002" run
@@ -73,14 +67,11 @@ let r_prj_003 : rule =
               undef
           in
           Some
-            {
-              id = "PRJ-003";
-              severity = Warning;
-              message =
-                Printf.sprintf "Cross-file undefined reference(s): %s"
-                  (String.concat "; " keys);
-              count = List.length undef;
-            }
+            (mk_result ~id:"PRJ-003" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Cross-file undefined reference(s): %s"
+                    (String.concat "; " keys))
+               ~count:(List.length undef))
         else None
   in
   mk_rule "PRJ-003" run
@@ -101,14 +92,11 @@ let r_prj_004 : rule =
               dups
           in
           Some
-            {
-              id = "PRJ-004";
-              severity = Warning;
-              message =
-                Printf.sprintf "Cross-file duplicate label(s): %s"
-                  (String.concat "; " descs);
-              count = List.length dups;
-            }
+            (mk_result ~id:"PRJ-004" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Cross-file duplicate label(s): %s"
+                    (String.concat "; " descs))
+               ~count:(List.length dups))
         else None
   in
   mk_rule "PRJ-004" run

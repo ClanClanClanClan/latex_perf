@@ -12,12 +12,8 @@ let no_tabs : rule =
     String.iter (fun c -> if c = '\t' then incr cnt) s;
     if !cnt > 0 then
       Some
-        {
-          id = "STRUCT-003";
-          severity = Error;
-          message = "Tab characters found";
-          count = !cnt;
-        }
+        (mk_result ~id:"STRUCT-003" ~severity:Error
+           ~message:"Tab characters found" ~count:!cnt)
     else None
   in
   { id = "STRUCT-003"; run; languages = [] }
@@ -33,12 +29,8 @@ let require_documentclass : rule =
     else if contains_substring s "\\documentclass" then None
     else
       Some
-        {
-          id = "STRUCT-001";
-          severity = Warning;
-          message = "Missing \\documentclass";
-          count = 1;
-        }
+        (mk_result ~id:"STRUCT-001" ~severity:Warning
+           ~message:"Missing \\documentclass" ~count:1)
   in
   { id = "STRUCT-001"; run; languages = [] }
 
@@ -52,12 +44,8 @@ let unmatched_braces : rule =
     done;
     if !bal <> 0 then
       Some
-        {
-          id = "STRUCT-004";
-          severity = Warning;
-          message = "Unmatched braces count";
-          count = abs !bal;
-        }
+        (mk_result ~id:"STRUCT-004" ~severity:Warning
+           ~message:"Unmatched braces count" ~count:(abs !bal))
     else None
   in
   { id = "STRUCT-004"; run; languages = [] }
@@ -74,12 +62,8 @@ let missing_section_title : rule =
     in
     if has_match re_empty || has_match re_missing then
       Some
-        {
-          id = "STRUCT-002";
-          severity = Warning;
-          message = "Empty section title";
-          count = 1;
-        }
+        (mk_result ~id:"STRUCT-002" ~severity:Warning
+           ~message:"Empty section title" ~count:1)
     else None
   in
   { id = "STRUCT-002"; run; languages = [] }
@@ -95,12 +79,8 @@ let r_enc_007 : rule =
     let cnt = count_substring s "\xe2\x80\x8b" in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-007";
-          severity = Warning;
-          message = "Zero‑width space U+200B present";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-007" ~severity:Warning
+           ~message:"Zero‑width space U+200B present" ~count:cnt)
     else None
   in
   { id = "ENC-007"; run; languages = [] }
@@ -123,12 +103,8 @@ let r_enc_012 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-012";
-          severity = Error;
-          message = "C1 control characters U+0080–009F present";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-012" ~severity:Error
+           ~message:"C1 control characters U+0080–009F present" ~count:!cnt)
     else None
   in
   { id = "ENC-012"; run; languages = [] }
@@ -139,12 +115,8 @@ let r_enc_017 : rule =
     let cnt = count_substring s "\xc2\xad" in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-017";
-          severity = Warning;
-          message = "Soft hyphen U+00AD found in source";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-017" ~severity:Warning
+           ~message:"Soft hyphen U+00AD found in source" ~count:cnt)
     else None
   in
   { id = "ENC-017"; run; languages = [] }
@@ -157,12 +129,8 @@ let r_enc_020 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-020";
-          severity = Warning;
-          message = "Invisible formatting mark U+200E/U+200F present";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-020" ~severity:Warning
+           ~message:"Invisible formatting mark U+200E/U+200F present" ~count:cnt)
     else None
   in
   { id = "ENC-020"; run; languages = [] }
@@ -173,12 +141,8 @@ let r_enc_021 : rule =
     let cnt = count_substring s "\xe2\x81\xa0" in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-021";
-          severity = Warning;
-          message = "WORD JOINER U+2060 present";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-021" ~severity:Warning
+           ~message:"WORD JOINER U+2060 present" ~count:cnt)
     else None
   in
   { id = "ENC-021"; run; languages = [] }
@@ -193,12 +157,9 @@ let r_enc_022 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-022";
-          severity = Warning;
-          message = "Interlinear annotation chars U+FFF9–FFFB detected";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-022" ~severity:Warning
+           ~message:"Interlinear annotation chars U+FFF9–FFFB detected"
+           ~count:cnt)
     else None
   in
   { id = "ENC-022"; run; languages = [] }
@@ -209,12 +170,8 @@ let r_enc_023 : rule =
     let cnt = count_substring s "\xe2\x80\xaf" in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-023";
-          severity = Warning;
-          message = "NARROW NB‑SPACE U+202F outside French context";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-023" ~severity:Warning
+           ~message:"NARROW NB‑SPACE U+202F outside French context" ~count:cnt)
     else None
   in
   { id = "ENC-023"; run; languages = [] }
@@ -231,12 +188,8 @@ let r_enc_024 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-024";
-          severity = Warning;
-          message = "Bidirectional embeddings U+202A–U+202E present";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-024" ~severity:Warning
+           ~message:"Bidirectional embeddings U+202A–U+202E present" ~count:cnt)
     else None
   in
   { id = "ENC-024"; run; languages = [] }
@@ -286,12 +239,8 @@ let r_enc_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-001";
-          severity = Error;
-          message = "Non‑UTF‑8 byte sequence detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-001" ~severity:Error
+           ~message:"Non‑UTF‑8 byte sequence detected" ~count:!cnt)
     else None
   in
   { id = "ENC-001"; run; languages = [] }
@@ -305,12 +254,9 @@ let r_enc_002 : rule =
     let interior = if at_start then total - 1 else total in
     if interior > 0 then
       Some
-        {
-          id = "ENC-002";
-          severity = Error;
-          message = "Byte‑order mark U+FEFF present in middle of file";
-          count = interior;
-        }
+        (mk_result ~id:"ENC-002" ~severity:Error
+           ~message:"Byte‑order mark U+FEFF present in middle of file"
+           ~count:interior)
     else None
   in
   { id = "ENC-002"; run; languages = [] }
@@ -337,12 +283,8 @@ let r_enc_003 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-003";
-          severity = Warning;
-          message = "LATIN‑1 smart quotes detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-003" ~severity:Warning
+           ~message:"LATIN‑1 smart quotes detected" ~count:!cnt)
     else None
   in
   { id = "ENC-003"; run; languages = [] }
@@ -368,12 +310,8 @@ let r_enc_004 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-004";
-          severity = Warning;
-          message = "Windows‑1252 characters (– — …) outside UTF‑8";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-004" ~severity:Warning
+           ~message:"Windows‑1252 characters (– — …) outside UTF‑8" ~count:!cnt)
     else None
   in
   { id = "ENC-004"; run; languages = [] }
@@ -396,12 +334,8 @@ let r_enc_013 : rule =
     done;
     if !has_crlf && !has_bare_lf then
       Some
-        {
-          id = "ENC-013";
-          severity = Info;
-          message = "Mixed CRLF and LF line endings";
-          count = 1;
-        }
+        (mk_result ~id:"ENC-013" ~severity:Info
+           ~message:"Mixed CRLF and LF line endings" ~count:1)
     else None
   in
   { id = "ENC-013"; run; languages = [] }
@@ -418,12 +352,8 @@ let r_enc_014 : rule =
       if Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF then incr cnt);
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-014";
-          severity = Error;
-          message = "UTF‑16 byte‑order mark present";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-014" ~severity:Error
+           ~message:"UTF‑16 byte‑order mark present" ~count:!cnt)
     else None
   in
   { id = "ENC-014"; run; languages = [] }
@@ -451,12 +381,8 @@ let r_enc_008 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-008";
-          severity = Warning;
-          message = "Private‑use codepoint detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-008" ~severity:Warning
+           ~message:"Private‑use codepoint detected" ~count:!cnt)
     else None
   in
   { id = "ENC-008"; run; languages = [] }
@@ -480,12 +406,8 @@ let r_enc_009 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-009";
-          severity = Error;
-          message = "Unpaired surrogate code unit";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-009" ~severity:Error
+           ~message:"Unpaired surrogate code unit" ~count:!cnt)
     else None
   in
   { id = "ENC-009"; run; languages = [] }
@@ -520,12 +442,8 @@ let r_enc_010 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-010";
-          severity = Info;
-          message = "Non‑canonical NFC form";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-010" ~severity:Info
+           ~message:"Non‑canonical NFC form" ~count:!cnt)
     else None
   in
   { id = "ENC-010"; run; languages = [] }
@@ -566,12 +484,8 @@ let r_enc_011 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-011";
-          severity = Warning;
-          message = "Byte sequence resembles MacRoman encoding";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-011" ~severity:Warning
+           ~message:"Byte sequence resembles MacRoman encoding" ~count:!cnt)
     else None
   in
   { id = "ENC-011"; run; languages = [] }
@@ -596,12 +510,8 @@ let r_enc_015 : rule =
     let cnt = cnt_micro + cnt_ohm + cnt_angstrom + cnt_long_s in
     if cnt > 0 then
       Some
-        {
-          id = "ENC-015";
-          severity = Warning;
-          message = "Non‑NFKC homoglyph character (Greek μ vs µ)";
-          count = cnt;
-        }
+        (mk_result ~id:"ENC-015" ~severity:Warning
+           ~message:"Non‑NFKC homoglyph character (Greek μ vs µ)" ~count:cnt)
     else None
   in
   { id = "ENC-015"; run; languages = [] }
@@ -624,12 +534,9 @@ let r_enc_016 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-016";
-          severity = Warning;
-          message = "Arabic numerals replaced by Unicode look‑alikes";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-016" ~severity:Warning
+           ~message:"Arabic numerals replaced by Unicode look‑alikes"
+           ~count:!cnt)
     else None
   in
   { id = "ENC-016"; run; languages = [] }
@@ -690,12 +597,8 @@ let r_enc_005 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-005";
-          severity = Error;
-          message = "Invalid UTF‑8 continuation byte";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-005" ~severity:Error
+           ~message:"Invalid UTF‑8 continuation byte" ~count:!cnt)
     else None
   in
   { id = "ENC-005"; run; languages = [] }
@@ -730,12 +633,8 @@ let r_enc_006 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-006";
-          severity = Error;
-          message = "Overlong UTF‑8 encoding sequence";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-006" ~severity:Error
+           ~message:"Overlong UTF‑8 encoding sequence" ~count:!cnt)
     else None
   in
   { id = "ENC-006"; run; languages = [] }
@@ -767,12 +666,9 @@ let r_enc_018 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-018";
-          severity = Info;
-          message = "Non‑breaking hyphen U+2011 present outside URLs";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-018" ~severity:Info
+           ~message:"Non‑breaking hyphen U+2011 present outside URLs"
+           ~count:!cnt)
     else None
   in
   { id = "ENC-018"; run; languages = [] }
@@ -826,12 +722,8 @@ let r_enc_019 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ENC-019";
-          severity = Warning;
-          message = "Duplicate combining accents on same base glyph";
-          count = !cnt;
-        }
+        (mk_result ~id:"ENC-019" ~severity:Warning
+           ~message:"Duplicate combining accents on same base glyph" ~count:!cnt)
     else None
   in
   { id = "ENC-019"; run; languages = [] }
@@ -887,12 +779,8 @@ let r_char_005 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-005";
-          severity = Error;
-          message = "Control characters U+0000–001F present";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-005" ~severity:Error
+           ~message:"Control characters U+0000–001F present" ~count:!cnt)
     else None
   in
   { id = "CHAR-005"; run; languages = [] }
@@ -903,12 +791,8 @@ let r_char_006 : rule =
     let cnt = count_char s '\x08' in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-006";
-          severity = Error;
-          message = "Backspace U+0008 present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-006" ~severity:Error
+           ~message:"Backspace U+0008 present" ~count:cnt)
     else None
   in
   { id = "CHAR-006"; run; languages = [] }
@@ -919,12 +803,8 @@ let r_char_007 : rule =
     let cnt = count_char s '\x07' in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-007";
-          severity = Error;
-          message = "Bell/alert U+0007 present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-007" ~severity:Error
+           ~message:"Bell/alert U+0007 present" ~count:cnt)
     else None
   in
   { id = "CHAR-007"; run; languages = [] }
@@ -935,12 +815,8 @@ let r_char_008 : rule =
     let cnt = count_char s '\x0c' in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-008";
-          severity = Warning;
-          message = "Form feed U+000C present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-008" ~severity:Warning
+           ~message:"Form feed U+000C present" ~count:cnt)
     else None
   in
   { id = "CHAR-008"; run; languages = [] }
@@ -951,12 +827,8 @@ let r_char_009 : rule =
     let cnt = count_char s '\x7f' in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-009";
-          severity = Warning;
-          message = "Delete U+007F present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-009" ~severity:Warning
+           ~message:"Delete U+007F present" ~count:cnt)
     else None
   in
   { id = "CHAR-009"; run; languages = [] }
@@ -972,12 +844,9 @@ let r_char_013 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-013";
-          severity = Warning;
-          message = "Bidirectional isolate chars U+2066–U+2069 present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-013" ~severity:Warning
+           ~message:"Bidirectional isolate chars U+2066–U+2069 present"
+           ~count:cnt)
     else None
   in
   { id = "CHAR-013"; run; languages = [] }
@@ -988,12 +857,8 @@ let r_char_014 : rule =
     let cnt = count_substring s "\xef\xbf\xbd" in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-014";
-          severity = Warning;
-          message = "Unicode replacement � found – decoding error";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-014" ~severity:Warning
+           ~message:"Unicode replacement � found – decoding error" ~count:cnt)
     else None
   in
   { id = "CHAR-014"; run; languages = [] }
@@ -1008,12 +873,9 @@ let r_char_021 : rule =
     let cnt = if starts_with_bom then total - 1 else total in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-021";
-          severity = Error;
-          message = "Zero‑width no‑break space U+FEFF inside paragraph";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-021" ~severity:Error
+           ~message:"Zero‑width no‑break space U+FEFF inside paragraph"
+           ~count:cnt)
     else None
   in
   { id = "CHAR-021"; run; languages = [] }
@@ -1038,12 +900,8 @@ let r_char_015 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-015";
-          severity = Info;
-          message = "Emoji detected in source";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-015" ~severity:Info
+           ~message:"Emoji detected in source" ~count:!cnt)
     else None
   in
   { id = "CHAR-015"; run; languages = [] }
@@ -1071,12 +929,8 @@ let r_char_017 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-017";
-          severity = Warning;
-          message = "Full‑width Latin letters detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-017" ~severity:Warning
+           ~message:"Full‑width Latin letters detected" ~count:!cnt)
     else None
   in
   { id = "CHAR-017"; run; languages = [] }
@@ -1094,12 +948,8 @@ let r_char_018 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-018";
-          severity = Info;
-          message = "Deprecated ligature ﬀ/ﬁ/ﬂ characters present";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-018" ~severity:Info
+           ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt)
     else None
   in
   { id = "CHAR-018"; run; languages = [] }
@@ -1123,12 +973,9 @@ let r_char_022 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-022";
-          severity = Warning;
-          message = "Deprecated tag characters U+E0000–E007F present";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-022" ~severity:Warning
+           ~message:"Deprecated tag characters U+E0000–E007F present"
+           ~count:!cnt)
     else None
   in
   { id = "CHAR-022"; run; languages = [] }
@@ -1151,12 +998,8 @@ let r_char_016 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-016";
-          severity = Warning;
-          message = "Double‑width CJK punctuation in ASCII context";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-016" ~severity:Warning
+           ~message:"Double‑width CJK punctuation in ASCII context" ~count:cnt)
     else None
   in
   { id = "CHAR-016"; run; languages = [] }
@@ -1168,12 +1011,8 @@ let r_char_019 : rule =
     let cnt = count_substring s "\xe2\x88\x92" in
     if cnt > 0 then
       Some
-        {
-          id = "CHAR-019";
-          severity = Info;
-          message = "Unicode minus U+2212 in text mode";
-          count = cnt;
-        }
+        (mk_result ~id:"CHAR-019" ~severity:Info
+           ~message:"Unicode minus U+2212 in text mode" ~count:cnt)
     else None
   in
   { id = "CHAR-019"; run; languages = [] }
@@ -1206,12 +1045,8 @@ let r_char_020 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-020";
-          severity = Info;
-          message = "Sharp S ß in uppercase context – suggest SS";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-020" ~severity:Info
+           ~message:"Sharp S ß in uppercase context – suggest SS" ~count:!cnt)
     else None
   in
   { id = "CHAR-020"; run; languages = [] }
@@ -1235,12 +1070,8 @@ let r_char_010 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-010";
-          severity = Info;
-          message = "Right‑to‑left mark U+200F outside RTL context";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-010" ~severity:Info
+           ~message:"Right‑to‑left mark U+200F outside RTL context" ~count:!cnt)
     else None
   in
   { id = "CHAR-010"; run; languages = [] }
@@ -1264,12 +1095,8 @@ let r_char_011 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-011";
-          severity = Info;
-          message = "Left‑to‑right mark U+200E unnecessary";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-011" ~severity:Info
+           ~message:"Left‑to‑right mark U+200E unnecessary" ~count:!cnt)
     else None
   in
   { id = "CHAR-011"; run; languages = [] }
@@ -1293,12 +1120,9 @@ let r_char_012 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-012";
-          severity = Info;
-          message = "Zero‑width joiner U+200D outside ligature context";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-012" ~severity:Info
+           ~message:"Zero‑width joiner U+200D outside ligature context"
+           ~count:!cnt)
     else None
   in
   { id = "CHAR-012"; run; languages = [] }
@@ -1333,12 +1157,8 @@ let r_spc_001 : rule =
     let _, matched = any_line_pred s (fun line -> String.length line > 120) in
     if matched > 0 then
       Some
-        {
-          id = "SPC-001";
-          severity = Info;
-          message = "Line longer than 120 characters";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-001" ~severity:Info
+           ~message:"Line longer than 120 characters" ~count:matched)
     else None
   in
   { id = "SPC-001"; run; languages = [] }
@@ -1360,12 +1180,8 @@ let r_spc_002 : rule =
     let _, matched = any_line_pred s is_ws_only in
     if matched > 0 then
       Some
-        {
-          id = "SPC-002";
-          severity = Info;
-          message = "Line containing only whitespace";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-002" ~severity:Info
+           ~message:"Line containing only whitespace" ~count:matched)
     else None
   in
   { id = "SPC-002"; run; languages = [] }
@@ -1387,12 +1203,9 @@ let r_spc_003 : rule =
     let _, matched = any_line_pred s is_mixed_indent in
     if matched > 0 then
       Some
-        {
-          id = "SPC-003";
-          severity = Warning;
-          message = "Hard tab precedes non‑tab text (mixed indent)";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-003" ~severity:Warning
+           ~message:"Hard tab precedes non‑tab text (mixed indent)"
+           ~count:matched)
     else None
   in
   { id = "SPC-003"; run; languages = [] }
@@ -1408,12 +1221,8 @@ let r_spc_004 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-004";
-          severity = Warning;
-          message = "Carriage return U+000D without LF";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-004" ~severity:Warning
+           ~message:"Carriage return U+000D without LF" ~count:!cnt)
     else None
   in
   { id = "SPC-004"; run; languages = [] }
@@ -1428,12 +1237,8 @@ let r_spc_005 : rule =
     let _, matched = any_line_pred s ends_with_tab in
     if matched > 0 then
       Some
-        {
-          id = "SPC-005";
-          severity = Info;
-          message = "Trailing tab at end of line";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-005" ~severity:Info
+           ~message:"Trailing tab at end of line" ~count:matched)
     else None
   in
   { id = "SPC-005"; run; languages = [] }
@@ -1458,12 +1263,8 @@ let r_spc_006 : rule =
     let _, matched = any_line_pred s has_mixed_indent in
     if matched > 0 then
       Some
-        {
-          id = "SPC-006";
-          severity = Info;
-          message = "Indentation mixes spaces and tabs";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-006" ~severity:Info
+           ~message:"Indentation mixes spaces and tabs" ~count:matched)
     else None
   in
   { id = "SPC-006"; run; languages = [] }
@@ -1477,12 +1278,8 @@ let r_spc_012 : rule =
     let interior = if at_start then total - 1 else total in
     if interior > 0 then
       Some
-        {
-          id = "SPC-012";
-          severity = Error;
-          message = "BOM not at file start";
-          count = interior;
-        }
+        (mk_result ~id:"SPC-012" ~severity:Error
+           ~message:"BOM not at file start" ~count:interior)
     else None
   in
   { id = "SPC-012"; run; languages = [] }
@@ -1503,12 +1300,8 @@ let r_spc_024 : rule =
     let _, matched = any_line_pred s is_spaces_only_blank in
     if matched > 0 then
       Some
-        {
-          id = "SPC-024";
-          severity = Info;
-          message = "Leading spaces on blank line";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-024" ~severity:Info
+           ~message:"Leading spaces on blank line" ~count:matched)
     else None
   in
   { id = "SPC-024"; run; languages = [] }
@@ -1519,12 +1312,8 @@ let r_spc_028 : rule =
     let cnt = count_substring s "~~" in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-028";
-          severity = Warning;
-          message = "Multiple consecutive ~ NBSPs";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-028" ~severity:Warning
+           ~message:"Multiple consecutive ~ NBSPs" ~count:cnt)
     else None
   in
   { id = "SPC-028"; run; languages = [] }
@@ -1547,12 +1336,8 @@ let r_spc_007 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-007";
-          severity = Info;
-          message = "Three or more consecutive blank lines";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-007" ~severity:Info
+           ~message:"Three or more consecutive blank lines" ~count:!cnt)
     else None
   in
   { id = "SPC-007"; run; languages = [] }
@@ -1582,12 +1367,8 @@ let r_spc_008 : rule =
       lines;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-008";
-          severity = Info;
-          message = "Paragraph starts with whitespace";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-008" ~severity:Info
+           ~message:"Paragraph starts with whitespace" ~count:!cnt)
     else None
   in
   { id = "SPC-008"; run; languages = [] }
@@ -1605,12 +1386,8 @@ let r_spc_009 : rule =
     in
     if matched > 0 then
       Some
-        {
-          id = "SPC-009";
-          severity = Warning;
-          message = "Non‑breaking space ~ at line start";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-009" ~severity:Warning
+           ~message:"Non‑breaking space ~ at line start" ~count:matched)
     else None
   in
   { id = "SPC-009"; run; languages = [] }
@@ -1651,12 +1428,8 @@ let r_spc_013 : rule =
     flush ();
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-013";
-          severity = Info;
-          message = "Whitespace‑only paragraph";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-013" ~severity:Info
+           ~message:"Whitespace‑only paragraph" ~count:!cnt)
     else None
   in
   { id = "SPC-013"; run; languages = [] }
@@ -1679,12 +1452,8 @@ let r_spc_014 : rule =
     done;
     if !has_crlf && !has_bare_lf then
       Some
-        {
-          id = "SPC-014";
-          severity = Info;
-          message = "Mixed LF and CRLF within paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"SPC-014" ~severity:Info
+           ~message:"Mixed LF and CRLF within paragraph" ~count:1)
     else None
   in
   { id = "SPC-014"; run; languages = [] }
@@ -1703,12 +1472,8 @@ let r_spc_015 : rule =
     let _, matched = any_line_pred s deep_indent in
     if matched > 0 then
       Some
-        {
-          id = "SPC-015";
-          severity = Info;
-          message = "Indentation exceeds 8 spaces";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-015" ~severity:Info
+           ~message:"Indentation exceeds 8 spaces" ~count:matched)
     else None
   in
   { id = "SPC-015"; run; languages = [] }
@@ -1720,12 +1485,8 @@ let r_spc_016 : rule =
     let cnt = count_substring s " ;" in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-016";
-          severity = Warning;
-          message = "Space before semicolon";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-016" ~severity:Warning
+           ~message:"Space before semicolon" ~count:cnt)
     else None
   in
   { id = "SPC-016"; run; languages = [] }
@@ -1752,12 +1513,8 @@ let r_spc_017 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-017";
-          severity = Info;
-          message = "Missing thin space before units (e.g. 5 cm)";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-017" ~severity:Info
+           ~message:"Missing thin space before units (e.g. 5 cm)" ~count:!cnt)
     else None
   in
   { id = "SPC-017"; run; languages = [] }
@@ -1775,12 +1532,9 @@ let r_spc_019 : rule =
     let _, matched = any_line_pred s trailing_fw_space in
     if matched > 0 then
       Some
-        {
-          id = "SPC-019";
-          severity = Warning;
-          message = "Trailing full‑width space U+3000 at line end";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-019" ~severity:Warning
+           ~message:"Trailing full‑width space U+3000 at line end"
+           ~count:matched)
     else None
   in
   { id = "SPC-019"; run; languages = [] }
@@ -1792,12 +1546,8 @@ let r_spc_021 : rule =
     let cnt = count_substring s " :" in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-021";
-          severity = Warning;
-          message = "Space before colon";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-021" ~severity:Warning ~message:"Space before colon"
+           ~count:cnt)
     else None
   in
   { id = "SPC-021"; run; languages = [] }
@@ -1808,12 +1558,8 @@ let r_spc_025 : rule =
     let cnt = count_substring s " \\dots" + count_substring s " \xe2\x80\xa6" in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-025";
-          severity = Info;
-          message = {|Space before ellipsis \dots|};
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-025" ~severity:Info
+           ~message:{|Space before ellipsis \dots|} ~count:cnt)
     else None
   in
   { id = "SPC-025"; run; languages = [] }
@@ -1857,12 +1603,8 @@ let r_spc_026 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-026";
-          severity = Info;
-          message = "Mixed indentation width at same list depth";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-026" ~severity:Info
+           ~message:"Mixed indentation width at same list depth" ~count:!cnt)
     else None
   in
   { id = "SPC-026"; run; languages = [] }
@@ -1878,12 +1620,8 @@ let r_spc_029 : rule =
     let _, matched = any_line_pred s nbsp_indent in
     if matched > 0 then
       Some
-        {
-          id = "SPC-029";
-          severity = Warning;
-          message = "Indentation uses NBSP characters";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-029" ~severity:Warning
+           ~message:"Indentation uses NBSP characters" ~count:matched)
     else None
   in
   { id = "SPC-029"; run; languages = [] }
@@ -1900,12 +1638,8 @@ let r_spc_030 : rule =
     let _, matched = any_line_pred s fw_space_start in
     if matched > 0 then
       Some
-        {
-          id = "SPC-030";
-          severity = Warning;
-          message = "Line starts with full‑width space U+3000";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-030" ~severity:Warning
+           ~message:"Line starts with full‑width space U+3000" ~count:matched)
     else None
   in
   { id = "SPC-030"; run; languages = [] }
@@ -1917,12 +1651,8 @@ let r_spc_031 : rule =
     let cnt = count_substring s ".   " in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-031";
-          severity = Info;
-          message = "Three spaces after period";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-031" ~severity:Info
+           ~message:"Three spaces after period" ~count:cnt)
     else None
   in
   { id = "SPC-031"; run; languages = [] }
@@ -1954,12 +1684,9 @@ let r_spc_032 : rule =
     let _, matched = any_line_pred s mixed_nbsp_indent in
     if matched > 0 then
       Some
-        {
-          id = "SPC-032";
-          severity = Info;
-          message = "Paragraph indented with mix of NBSP and space";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-032" ~severity:Info
+           ~message:"Paragraph indented with mix of NBSP and space"
+           ~count:matched)
     else None
   in
   { id = "SPC-032"; run; languages = [] }
@@ -1973,12 +1700,9 @@ let r_spc_033 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-033";
-          severity = Info;
-          message = "No‑break space before em‑dash in English text forbidden";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-033" ~severity:Info
+           ~message:"No‑break space before em‑dash in English text forbidden"
+           ~count:cnt)
     else None
   in
   { id = "SPC-033"; run; languages = [] }
@@ -1993,12 +1717,9 @@ let r_spc_034 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-034";
-          severity = Info;
-          message = "Thin‑space before en‑dash in command‑line flags removed";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-034" ~severity:Info
+           ~message:"Thin‑space before en‑dash in command‑line flags removed"
+           ~count:cnt)
     else None
   in
   { id = "SPC-034"; run; languages = [] }
@@ -2015,12 +1736,8 @@ let r_spc_035 : rule =
     let _, matched = any_line_pred s thin_space_start in
     if matched > 0 then
       Some
-        {
-          id = "SPC-035";
-          severity = Info;
-          message = "Leading thin‑space U+2009 at start of line";
-          count = matched;
-        }
+        (mk_result ~id:"SPC-035" ~severity:Info
+           ~message:"Leading thin‑space U+2009 at start of line" ~count:matched)
     else None
   in
   { id = "SPC-035"; run; languages = [] }
@@ -2044,12 +1761,8 @@ let r_spc_010 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-010";
-          severity = Info;
-          message = "Sentence spacing uses two spaces after period";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-010" ~severity:Info
+           ~message:"Sentence spacing uses two spaces after period" ~count:cnt)
     else None
   in
   { id = "SPC-010"; run; languages = [] }
@@ -2069,12 +1782,8 @@ let r_spc_018 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-018";
-          severity = Info;
-          message = "No space after sentence‑ending period";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-018" ~severity:Info
+           ~message:"No space after sentence‑ending period" ~count:cnt)
     else None
   in
   { id = "SPC-018"; run; languages = [] }
@@ -2085,12 +1794,8 @@ let r_spc_022 : rule =
     let cnt = count_substring s "\\item\t" in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-022";
-          severity = Info;
-          message = "Tab after bullet in \\itemize";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-022" ~severity:Info
+           ~message:"Tab after bullet in \\itemize" ~count:cnt)
     else None
   in
   { id = "SPC-022"; run; languages = [] }
@@ -2116,12 +1821,8 @@ let r_spc_027 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "SPC-027";
-          severity = Warning;
-          message = "Trailing whitespace inside \\url{}";
-          count = cnt;
-        }
+        (mk_result ~id:"SPC-027" ~severity:Warning
+           ~message:"Trailing whitespace inside \\url{}" ~count:cnt)
     else None
   in
   { id = "SPC-027"; run; languages = [] }
@@ -2146,12 +1847,8 @@ let r_spc_011 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-011";
-          severity = Warning;
-          message = "Space before newline inside $$…$$ display";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-011" ~severity:Warning
+           ~message:"Space before newline inside $$…$$ display" ~count:!cnt)
     else None
   in
   { id = "SPC-011"; run; languages = [] }
@@ -2178,12 +1875,8 @@ let r_spc_020 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-020";
-          severity = Warning;
-          message = "Tab character inside math mode";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-020" ~severity:Warning
+           ~message:"Tab character inside math mode" ~count:!cnt)
     else None
   in
   { id = "SPC-020"; run; languages = [] }
@@ -2230,12 +1923,9 @@ let r_spc_023 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "SPC-023";
-          severity = Info;
-          message = "Hard space U+00A0 outside French punctuation context";
-          count = !cnt;
-        }
+        (mk_result ~id:"SPC-023" ~severity:Info
+           ~message:"Hard space U+00A0 outside French punctuation context"
+           ~count:!cnt)
     else None
   in
   { id = "SPC-023"; run; languages = [] }
@@ -2328,12 +2018,9 @@ let r_verb_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-001";
-          severity = Error;
-          message = "\\verb delimiter reused inside same \\verb block";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-001" ~severity:Error
+           ~message:"\\verb delimiter reused inside same \\verb block"
+           ~count:!cnt)
     else None
   in
   { id = "VERB-001"; run; languages = [] }
@@ -2352,12 +2039,8 @@ let r_verb_002 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-002";
-          severity = Info;
-          message = "Tab inside verbatim – discouraged";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-002" ~severity:Info
+           ~message:"Tab inside verbatim – discouraged" ~count:!cnt)
     else None
   in
   { id = "VERB-002"; run; languages = [] }
@@ -2383,12 +2066,8 @@ let r_verb_003 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-003";
-          severity = Info;
-          message = "Trailing spaces inside verbatim";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-003" ~severity:Info
+           ~message:"Trailing spaces inside verbatim" ~count:!cnt)
     else None
   in
   { id = "VERB-003"; run; languages = [] }
@@ -2420,12 +2099,8 @@ let r_verb_004 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-004";
-          severity = Warning;
-          message = "Non‑ASCII quotes inside verbatim";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-004" ~severity:Warning
+           ~message:"Non‑ASCII quotes inside verbatim" ~count:!cnt)
     else None
   in
   { id = "VERB-004"; run; languages = [] }
@@ -2448,12 +2123,8 @@ let r_verb_005 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-005";
-          severity = Info;
-          message = "Verbatim line > 120 characters";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-005" ~severity:Info
+           ~message:"Verbatim line > 120 characters" ~count:!cnt)
     else None
   in
   { id = "VERB-005"; run; languages = [] }
@@ -2497,12 +2168,8 @@ let r_verb_006 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-006";
-          severity = Error;
-          message = "Inline \\verb used for multiline content";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-006" ~severity:Error
+           ~message:"Inline \\verb used for multiline content" ~count:!cnt)
     else None
   in
   { id = "VERB-006"; run; languages = [] }
@@ -2534,12 +2201,8 @@ let r_verb_007 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-007";
-          severity = Error;
-          message = "Nested verbatim environment";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-007" ~severity:Error
+           ~message:"Nested verbatim environment" ~count:!cnt)
     else None
   in
   { id = "VERB-007"; run; languages = [] }
@@ -2559,12 +2222,8 @@ let r_verb_008 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-008";
-          severity = Info;
-          message = "`lstlisting` uses language=none";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-008" ~severity:Info
+           ~message:"`lstlisting` uses language=none" ~count:!cnt)
     else None
   in
   { id = "VERB-008"; run; languages = [] }
@@ -2597,12 +2256,8 @@ let r_verb_009 : rule =
     let cnt = !cnt in
     if cnt > 0 then
       Some
-        {
-          id = "VERB-009";
-          severity = Warning;
-          message = "Missing caption in `minted` code block";
-          count = cnt;
-        }
+        (mk_result ~id:"VERB-009" ~severity:Warning
+           ~message:"Missing caption in `minted` code block" ~count:cnt)
     else None
   in
   { id = "VERB-009"; run; languages = [] }
@@ -2623,12 +2278,8 @@ let r_verb_010 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-010";
-          severity = Info;
-          message = {|Inline code uses back‑ticks instead of \verb|};
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-010" ~severity:Info
+           ~message:{|Inline code uses back‑ticks instead of \verb|} ~count:!cnt)
     else None
   in
   { id = "VERB-010"; run; languages = [] }
@@ -2766,12 +2417,8 @@ let r_verb_011 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-011";
-          severity = Warning;
-          message = "Unknown `lstlisting` language";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-011" ~severity:Warning
+           ~message:"Unknown `lstlisting` language" ~count:!cnt)
     else None
   in
   { id = "VERB-011"; run; languages = [] }
@@ -2803,12 +2450,8 @@ let r_verb_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-012";
-          severity = Info;
-          message = "`minted` block missing autogobble";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-012" ~severity:Info
+           ~message:"`minted` block missing autogobble" ~count:!cnt)
     else None
   in
   { id = "VERB-012"; run; languages = [] }
@@ -2826,12 +2469,8 @@ let r_verb_013 : rule =
       blocks;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-013";
-          severity = Info;
-          message = "Code line > 120 glyphs";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-013" ~severity:Info
+           ~message:"Code line > 120 glyphs" ~count:!cnt)
     else None
   in
   { id = "VERB-013"; run; languages = [] }
@@ -2851,12 +2490,9 @@ let r_verb_015 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-015";
-          severity = Warning;
-          message = "Verbatim uses catcode changes instead of \\verb";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-015" ~severity:Warning
+           ~message:"Verbatim uses catcode changes instead of \\verb"
+           ~count:!cnt)
     else None
   in
   { id = "VERB-015"; run; languages = [] }
@@ -2900,13 +2536,10 @@ let r_verb_016 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-016";
-          severity = Info;
-          message =
-            "`minted` without `escapeinside` while containing back‑ticks";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-016" ~severity:Info
+           ~message:
+             "`minted` without `escapeinside` while containing back‑ticks"
+           ~count:!cnt)
     else None
   in
   { id = "VERB-016"; run; languages = [] }
@@ -2948,12 +2581,9 @@ let r_verb_017 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-017";
-          severity = Info;
-          message = "`minted` lacks `linenos` in code block > 20 lines";
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-017" ~severity:Info
+           ~message:"`minted` lacks `linenos` in code block > 20 lines"
+           ~count:!cnt)
     else None
   in
   { id = "VERB-017"; run; languages = [] }
@@ -2999,12 +2629,8 @@ let r_cjk_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-001";
-          severity = Warning;
-          message = "Full‑width comma U+FF0C in ASCII context";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-001" ~severity:Warning
+           ~message:"Full‑width comma U+FF0C in ASCII context" ~count:!cnt)
     else None
   in
   { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3028,12 +2654,8 @@ let r_cjk_002 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-002";
-          severity = Warning;
-          message = "Full‑width period U+FF0E in ASCII context";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-002" ~severity:Warning
+           ~message:"Full‑width period U+FF0E in ASCII context" ~count:!cnt)
     else None
   in
   { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3057,12 +2679,9 @@ let r_cjk_010 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-010";
-          severity = Warning;
-          message = "Half‑width CJK punctuation in full‑width context";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-010" ~severity:Warning
+           ~message:"Half‑width CJK punctuation in full‑width context"
+           ~count:!cnt)
     else None
   in
   { id = "CJK-010"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3086,12 +2705,8 @@ let r_cjk_014 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-014";
-          severity = Info;
-          message = "Inter‑punct U+30FB outside CJK run";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-014" ~severity:Info
+           ~message:"Inter‑punct U+30FB outside CJK run" ~count:!cnt)
     else None
   in
   { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3117,12 +2732,9 @@ let r_fr_007 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FR-007";
-          severity = Info;
-          message = {|FR‑BE: thin NB‑space before/after € sign required|};
-          count = !cnt;
-        }
+        (mk_result ~id:"FR-007" ~severity:Info
+           ~message:{|FR‑BE: thin NB‑space before/after € sign required|}
+           ~count:!cnt)
     else None
   in
   { id = "FR-007"; run; languages = [ "fr" ] }
@@ -3152,12 +2764,9 @@ let r_fr_008 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FR-008";
-          severity = Warning;
-          message = {|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|};
-          count = cnt;
-        }
+        (mk_result ~id:"FR-008" ~severity:Warning
+           ~message:{|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|}
+           ~count:cnt)
     else None
   in
   { id = "FR-008"; run; languages = [ "fr" ] }
@@ -3179,12 +2788,9 @@ let r_pt_003 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "PT-003";
-          severity = Info;
-          message = {|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|};
-          count = !cnt;
-        }
+        (mk_result ~id:"PT-003" ~severity:Info
+           ~message:{|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|}
+           ~count:!cnt)
     else None
   in
   { id = "PT-003"; run; languages = [ "pt" ] }
@@ -3196,12 +2802,8 @@ let r_ru_001 : rule =
     let cnt = count_substring s " \xe2\x80\x94" in
     if cnt > 0 then
       Some
-        {
-          id = "RU-001";
-          severity = Info;
-          message = {|RU: NB‑space required before em‑dash|};
-          count = cnt;
-        }
+        (mk_result ~id:"RU-001" ~severity:Info
+           ~message:{|RU: NB‑space required before em‑dash|} ~count:cnt)
     else None
   in
   { id = "RU-001"; run; languages = [ "ru" ] }
@@ -3223,12 +2825,9 @@ let r_pl_001 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "PL-001";
-          severity = Info;
-          message = {|PL: NB‑space before abbreviations “r.”, “nr”, “s.”|};
-          count = !cnt;
-        }
+        (mk_result ~id:"PL-001" ~severity:Info
+           ~message:{|PL: NB‑space before abbreviations “r.”, “nr”, “s.”|}
+           ~count:!cnt)
     else None
   in
   { id = "PL-001"; run; languages = [ "pl" ] }
@@ -3250,12 +2849,8 @@ let r_cs_001 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CS-001";
-          severity = Info;
-          message = {|CS/SK: thin NB‑space before °C forbidden|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CS-001" ~severity:Info
+           ~message:{|CS/SK: thin NB‑space before °C forbidden|} ~count:!cnt)
     else None
   in
   { id = "CS-001"; run; languages = [ "cs" ] }
@@ -3284,12 +2879,8 @@ let r_cs_002 : rule =
     in
     if has_bare && not has_correct then
       Some
-        {
-          id = "CS-002";
-          severity = Info;
-          message = "CS/SK: date format must be 30.\\,1.\\,2026";
-          count = 1;
-        }
+        (mk_result ~id:"CS-002" ~severity:Info
+           ~message:"CS/SK: date format must be 30.\\,1.\\,2026" ~count:1)
     else None
   in
   { id = "CS-002"; run; languages = [ "cs" ] }
@@ -3315,12 +2906,8 @@ let r_el_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "EL-001";
-          severity = Warning;
-          message = {|Greek: oxia vs tonos normalisation|};
-          count = !cnt;
-        }
+        (mk_result ~id:"EL-001" ~severity:Warning
+           ~message:{|Greek: oxia vs tonos normalisation|} ~count:!cnt)
     else None
   in
   { id = "EL-001"; run; languages = [ "el" ] }
@@ -3338,12 +2925,8 @@ let r_ro_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "RO-001";
-          severity = Warning;
-          message = {|RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)|};
-          count = cnt;
-        }
+        (mk_result ~id:"RO-001" ~severity:Warning
+           ~message:{|RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)|} ~count:cnt)
     else None
   in
   { id = "RO-001"; run; languages = [ "ro" ] }
@@ -3373,12 +2956,9 @@ let r_ar_002 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "AR-002";
-          severity = Info;
-          message = {|AR: ASCII hyphen in phone numbers—use \arabicdash|};
-          count = !cnt;
-        }
+        (mk_result ~id:"AR-002" ~severity:Info
+           ~message:{|AR: ASCII hyphen in phone numbers—use \arabicdash|}
+           ~count:!cnt)
     else None
   in
   { id = "AR-002"; run; languages = [ "ar" ] }
@@ -3406,12 +2986,8 @@ let r_he_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "HE-001";
-          severity = Warning;
-          message = {|HE: apostrophe used instead of geresh U+05F3|};
-          count = !cnt;
-        }
+        (mk_result ~id:"HE-001" ~severity:Warning
+           ~message:{|HE: apostrophe used instead of geresh U+05F3|} ~count:!cnt)
     else None
   in
   { id = "HE-001"; run; languages = [ "he" ] }
@@ -3442,12 +3018,8 @@ let r_zh_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "ZH-001";
-          severity = Info;
-          message = {|ZH‑Hans: western '.' – use Chinese ‘。’|};
-          count = !cnt;
-        }
+        (mk_result ~id:"ZH-001" ~severity:Info
+           ~message:{|ZH‑Hans: western '.' – use Chinese ‘。’|} ~count:!cnt)
     else None
   in
   { id = "ZH-001"; run; languages = [ "zh" ] }
@@ -3471,12 +3043,9 @@ let r_ja_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "JA-001";
-          severity = Warning;
-          message = {|JA: half‑width katakana present—use full‑width|};
-          count = !cnt;
-        }
+        (mk_result ~id:"JA-001" ~severity:Warning
+           ~message:{|JA: half‑width katakana present—use full‑width|}
+           ~count:!cnt)
     else None
   in
   { id = "JA-001"; run; languages = [ "ja" ] }
@@ -3488,12 +3057,9 @@ let r_ja_002 : rule =
     let cnt = count_substring s "\xef\xbd\x9e" in
     if cnt > 0 then
       Some
-        {
-          id = "JA-002";
-          severity = Info;
-          message = {|JA: U+FF5E tilde normalise to wave‑dash U+301C|};
-          count = cnt;
-        }
+        (mk_result ~id:"JA-002" ~severity:Info
+           ~message:{|JA: U+FF5E tilde normalise to wave‑dash U+301C|}
+           ~count:cnt)
     else None
   in
   { id = "JA-002"; run; languages = [ "ja" ] }
@@ -3538,12 +3104,9 @@ let r_ko_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "KO-001";
-          severity = Warning;
-          message = {|KO: Old‑Hangul jamo outside scholarly context|};
-          count = !cnt;
-        }
+        (mk_result ~id:"KO-001" ~severity:Warning
+           ~message:{|KO: Old‑Hangul jamo outside scholarly context|}
+           ~count:!cnt)
     else None
   in
   { id = "KO-001"; run; languages = [ "ko" ] }
@@ -3577,12 +3140,8 @@ let r_hi_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "HI-001";
-          severity = Info;
-          message = {|HI: ZWJ/ZWNJ misuse next to ख्|};
-          count = !cnt;
-        }
+        (mk_result ~id:"HI-001" ~severity:Info
+           ~message:{|HI: ZWJ/ZWNJ misuse next to ख्|} ~count:!cnt)
     else None
   in
   { id = "HI-001"; run; languages = [ "hi" ] }
@@ -3640,12 +3199,9 @@ let r_cy_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CY-001";
-          severity = Info;
-          message = {esc|Cyrillic initials require NB‑space "И.\,И."|esc};
-          count = !cnt;
-        }
+        (mk_result ~id:"CY-001" ~severity:Info
+           ~message:{esc|Cyrillic initials require NB‑space "И.\,И."|esc}
+           ~count:!cnt)
     else None
   in
   { id = "CY-001"; run; languages = [ "ru" ] }
@@ -3657,12 +3213,8 @@ let r_de_006 : rule =
     let cnt = count_substring s "\xc3\x9f" + count_substring s "\xe1\xba\x9e" in
     if cnt > 0 then
       Some
-        {
-          id = "DE-006";
-          severity = Info;
-          message = {|Swiss DE: glyph ß is prohibited—use “ss”|};
-          count = cnt;
-        }
+        (mk_result ~id:"DE-006" ~severity:Info
+           ~message:{|Swiss DE: glyph ß is prohibited—use “ss”|} ~count:cnt)
     else None
   in
   { id = "DE-006"; run; languages = [ "de" ] }
@@ -3689,13 +3241,10 @@ let r_nl_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "NL-001";
-          severity = Info;
-          message =
-            {|NL: digraph IJ/ij—capitalise both letters at sentence start|};
-          count = !cnt;
-        }
+        (mk_result ~id:"NL-001" ~severity:Info
+           ~message:
+             {|NL: digraph IJ/ij—capitalise both letters at sentence start|}
+           ~count:!cnt)
     else None
   in
   { id = "NL-001"; run; languages = [ "nl" ] }
@@ -3716,12 +3265,8 @@ let r_nl_002 : rule =
     in
     if has_single && has_german then
       Some
-        {
-          id = "NL-002";
-          severity = Info;
-          message = {|NL: quotes must be uniform (‘…’ or „…‟)|};
-          count = 1;
-        }
+        (mk_result ~id:"NL-002" ~severity:Info
+           ~message:{|NL: quotes must be uniform (‘…’ or „…‟)|} ~count:1)
     else None
   in
   { id = "NL-002"; run; languages = [ "nl" ] }
@@ -3738,12 +3283,8 @@ let r_pl_002 : rule =
     (* If guillemets present but no German quotes, it's wrong *)
     if has_guill && not has_german then
       Some
-        {
-          id = "PL-002";
-          severity = Info;
-          message = {|PL: primary quotes „…”, nested »…« only|};
-          count = 1;
-        }
+        (mk_result ~id:"PL-002" ~severity:Info
+           ~message:{|PL: primary quotes „…”, nested »…« only|} ~count:1)
     else None
   in
   { id = "PL-002"; run; languages = [ "pl" ] }
@@ -3770,12 +3311,9 @@ let r_pt_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "PT-001";
-          severity = Warning;
-          message = {|pt‑BR: pre‑2009 spellings “acção”, “óptimo” forbidden|};
-          count = cnt;
-        }
+        (mk_result ~id:"PT-001" ~severity:Warning
+           ~message:{|pt‑BR: pre‑2009 spellings “acção”, “óptimo” forbidden|}
+           ~count:cnt)
     else None
   in
   { id = "PT-001"; run; languages = [ "pt" ] }
@@ -3799,12 +3337,8 @@ let r_ru_002 : rule =
       in
       if cnt > 0 then
         Some
-          {
-            id = "RU-002";
-            severity = Info;
-            message = {|RU: letter ё must be preserved where needed|};
-            count = cnt;
-          }
+          (mk_result ~id:"RU-002" ~severity:Info
+             ~message:{|RU: letter ё must be preserved where needed|} ~count:cnt)
       else None
   in
   { id = "RU-002"; run; languages = [ "ru" ] }
@@ -3839,12 +3373,8 @@ let r_tr_001 : rule =
       done;
       if !cnt > 0 then
         Some
-          {
-            id = "TR-001";
-            severity = Warning;
-            message = {|TR: dotless/dotted I mapping error|};
-            count = !cnt;
-          }
+          (mk_result ~id:"TR-001" ~severity:Warning
+             ~message:{|TR: dotless/dotted I mapping error|} ~count:!cnt)
       else None)
     else None
   in
@@ -3869,12 +3399,8 @@ let r_zh_002 : rule =
     in
     if (has_cjk_corner || has_cjk_white) && has_western then
       Some
-        {
-          id = "ZH-002";
-          severity = Info;
-          message = {|ZH‑Hant: quotes must be 「…」 or 『…』 consistently|};
-          count = 1;
-        }
+        (mk_result ~id:"ZH-002" ~severity:Info
+           ~message:{|ZH‑Hant: quotes must be 「…」 or 『…』 consistently|} ~count:1)
     else None
   in
   { id = "ZH-002"; run; languages = [ "zh" ] }
@@ -3924,12 +3450,8 @@ let r_verb_014 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "VERB-014";
-          severity = Warning;
-          message = {|Code block inside caption|};
-          count = !cnt;
-        }
+        (mk_result ~id:"VERB-014" ~severity:Warning
+           ~message:{|Code block inside caption|} ~count:!cnt)
     else None
   in
   { id = "VERB-014"; run; languages = [] }
@@ -3940,12 +3462,8 @@ let r_math_064 : rule =
     let cnt = count_substring s "\\eqalign" in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-064";
-          severity = Warning;
-          message = {esc|Use of \eqalign – obsolete|esc};
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-064" ~severity:Warning
+           ~message:{esc|Use of \eqalign – obsolete|esc} ~count:cnt)
     else None
   in
   { id = "MATH-064"; run; languages = [] }
@@ -3956,12 +3474,9 @@ let r_math_102 : rule =
     let cnt = count_substring s "\\begin{eqnarray}" in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-102";
-          severity = Warning;
-          message = {|Legacy eqnarray (un‑starred) environment present|};
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-102" ~severity:Warning
+           ~message:{|Legacy eqnarray (un‑starred) environment present|}
+           ~count:cnt)
     else None
   in
   { id = "MATH-102"; run; languages = [] }
@@ -3975,12 +3490,8 @@ let r_math_107 : rule =
     let has_leqslant = count_substring s "\\leqslant" > 0 in
     if has_le && has_leqslant then
       Some
-        {
-          id = "MATH-107";
-          severity = Info;
-          message = {|Mix of \le and \leqslant within same document|};
-          count = 1;
-        }
+        (mk_result ~id:"MATH-107" ~severity:Info
+           ~message:{|Mix of \le and \leqslant within same document|} ~count:1)
     else None
   in
   { id = "MATH-107"; run; languages = [] }
@@ -3992,12 +3503,8 @@ let r_l3_008 : rule =
     let has_provides = count_substring s "\\ProvidesExplPackage" > 0 in
     if has_expl3 && not has_provides then
       Some
-        {
-          id = "L3-008";
-          severity = Warning;
-          message = {|Expl3 module lacks \ProvidesExplPackage|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-008" ~severity:Warning
+           ~message:{|Expl3 module lacks \ProvidesExplPackage|} ~count:1)
     else None
   in
   { id = "L3-008"; run; languages = [] }
@@ -4009,12 +3516,8 @@ let r_l3_010 : rule =
     let has_off = count_substring s "\\ExplSyntaxOff" > 0 in
     if has_on && not has_off then
       Some
-        {
-          id = "L3-010";
-          severity = Info;
-          message = {|\ExplSyntaxOff missing at end of file|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-010" ~severity:Info
+           ~message:{|\ExplSyntaxOff missing at end of file|} ~count:1)
     else None
   in
   { id = "L3-010"; run; languages = [] }
@@ -4034,12 +3537,9 @@ let r_ref_011 : rule =
     in
     if has_autoref && (not has_hyperref) && not has_cleveref then
       Some
-        {
-          id = "REF-011";
-          severity = Error;
-          message = {|\autoref used without hyperref/cleveref loaded|};
-          count = count_substring s "\\autoref";
-        }
+        (mk_result ~id:"REF-011" ~severity:Error
+           ~message:{|\autoref used without hyperref/cleveref loaded|}
+           ~count:(count_substring s "\\autoref"))
     else None
   in
   { id = "REF-011"; run; languages = [] }
@@ -4096,12 +3596,8 @@ let r_typo_050 : rule =
       let sc_count = total - tc_count in
       if tc_count > 0 && sc_count > 0 then
         Some
-          {
-            id = "TYPO-050";
-            severity = Info;
-            message = {|Inconsistent title‑case capitalisation|};
-            count = 1;
-          }
+          (mk_result ~id:"TYPO-050" ~severity:Info
+             ~message:{|Inconsistent title‑case capitalisation|} ~count:1)
       else None
   in
   { id = "TYPO-050"; run; languages = [] }

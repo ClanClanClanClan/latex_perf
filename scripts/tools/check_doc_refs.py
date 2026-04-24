@@ -64,6 +64,10 @@ REF_ALLOWLIST = {
     "stable_spans.ml",
     # v27 WS8 forward reference — discharge target for T6/T7 hypotheses.
     "proofs/PdflatexModel.v",
+    # V26.2.1 planned files referenced in specs/v26/V26_2_1_PLAN.md
+    "scripts/tools/migrate_result_literals.py",  # one-shot migration, PR #1
+    "scripts/tools/check_result_helpers.py",  # new gate, PR #1
+    "docs/MIGRATION_v26.2_to_v26.2.1.md",  # consumer migration doc, PR #5
 }
 
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")

@@ -17,28 +17,22 @@ let r_prt_001 : rule =
         | Partial_cst.Complete -> None
         | Partial_cst.Partial ->
             Some
-              {
-                id = "PRT-001";
-                severity = Warning;
-                message =
-                  Printf.sprintf
-                    "Document has parse errors in %d region(s); some results \
-                     may be incomplete"
-                    (List.length pd.error_regions);
-                count = List.length pd.error_regions;
-              }
+              (mk_result ~id:"PRT-001" ~severity:Warning
+                 ~message:
+                   (Printf.sprintf
+                      "Document has parse errors in %d region(s); some results \
+                       may be incomplete"
+                      (List.length pd.error_regions))
+                 ~count:(List.length pd.error_regions))
         | Partial_cst.Broken ->
             Some
-              {
-                id = "PRT-001";
-                severity = Error;
-                message =
-                  Printf.sprintf
-                    "Document has %d parse error(s); results in affected \
-                     regions are unreliable"
-                    (List.length pd.error_regions);
-                count = List.length pd.error_regions;
-              })
+              (mk_result ~id:"PRT-001" ~severity:Error
+                 ~message:
+                   (Printf.sprintf
+                      "Document has %d parse error(s); results in affected \
+                       regions are unreliable"
+                      (List.length pd.error_regions))
+                 ~count:(List.length pd.error_regions)))
   in
   mk_rule "PRT-001" run
 
@@ -65,17 +59,14 @@ let r_prt_002 : rule =
         in
         if cross_boundary then
           Some
-            {
-              id = "PRT-002";
-              severity = Info;
-              message =
-                Printf.sprintf
-                  "Parse errors affect %d zone(s) with %d adjacent partial \
-                   zone(s)"
-                  (List.length broken_zones)
-                  (List.length partial_zones);
-              count = List.length broken_zones + List.length partial_zones;
-            }
+            (mk_result ~id:"PRT-002" ~severity:Info
+               ~message:
+                 (Printf.sprintf
+                    "Parse errors affect %d zone(s) with %d adjacent partial \
+                     zone(s)"
+                    (List.length broken_zones)
+                    (List.length partial_zones))
+               ~count:(List.length broken_zones + List.length partial_zones))
         else None
   in
   mk_rule "PRT-002" run

@@ -14,12 +14,8 @@ let mk_task ?(layer = 0) ?(chunk = 0L) ?(priority = 0.0)
     work =
       (fun () ->
         [
-          {
-            Validators_common.id = result_id;
-            severity = Info;
-            message = "test";
-            count = 1;
-          };
+          Validators_common.mk_result ~id:result_id ~severity:Info
+            ~message:"test" ~count:1;
         ]);
   }
 

@@ -96,12 +96,8 @@ let () =
       expect (Chunk_store.lookup_chunk cache id = None) (tag ^ ": miss");
       Chunk_store.store_chunk cache id
         [
-          {
-            Validators_common.id = "TEST-001";
-            severity = Info;
-            message = "test";
-            count = 1;
-          };
+          Validators_common.mk_result ~id:"TEST-001" ~severity:Info
+            ~message:"test" ~count:1;
         ];
       match Chunk_store.lookup_chunk cache id with
       | Some results ->

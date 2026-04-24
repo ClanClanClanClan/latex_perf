@@ -296,15 +296,12 @@ let run_all (src : string) : result list =
        %!"
       (String.length src) max_input_bytes;
     [
-      {
-        id = "SYS-001";
-        severity = Warning;
-        message =
-          Printf.sprintf
-            "Input truncated: %d bytes exceeds %d byte safety limit"
-            (String.length src) max_input_bytes;
-        count = 1;
-      };
+      mk_result ~id:"SYS-001" ~severity:Warning
+        ~message:
+          (Printf.sprintf
+             "Input truncated: %d bytes exceeds %d byte safety limit"
+             (String.length src) max_input_bytes)
+        ~count:1;
     ])
   else
     (* Check cache first (spec W19) *)

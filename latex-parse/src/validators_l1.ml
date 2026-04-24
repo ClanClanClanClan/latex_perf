@@ -15,14 +15,11 @@ let l1_mod_001_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "MOD-001";
-          severity = Warning;
-          message =
-            "Legacy font commands (\\bf/\\it/...) present; prefer \
-             \\textbf/\\emph";
-          count = cnt;
-        }
+        (mk_result ~id:"MOD-001" ~severity:Warning
+           ~message:
+             "Legacy font commands (\\bf/\\it/...) present; prefer \
+              \\textbf/\\emph"
+           ~count:cnt)
     else None
   in
   { id = "MOD-001"; run; languages = [] }
@@ -40,13 +37,10 @@ let l1_exp_001_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "EXP-001";
-          severity = Info;
-          message =
-            "Incomplete expansion: catalogue commands remain post-expansion";
-          count = cnt;
-        }
+        (mk_result ~id:"EXP-001" ~severity:Info
+           ~message:
+             "Incomplete expansion: catalogue commands remain post-expansion"
+           ~count:cnt)
     else None
   in
   { id = "EXP-001"; run; languages = [] }
@@ -57,12 +51,9 @@ let l1_mod_002_rule : rule =
     let legacy = [ "bf" ] and modern = [ "textbf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-002";
-          severity = Warning;
-          message = "Mixed legacy and modern bold commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-002" ~severity:Warning
+           ~message:"Mixed legacy and modern bold commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-002"; run; languages = [] }
@@ -73,12 +64,9 @@ let l1_mod_003_rule : rule =
     let legacy = [ "it" ] and modern = [ "emph"; "textit" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-003";
-          severity = Warning;
-          message = "Mixed legacy and modern italic commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-003" ~severity:Warning
+           ~message:"Mixed legacy and modern italic commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-003"; run; languages = [] }
@@ -90,12 +78,9 @@ let l1_mod_004_rule : rule =
     let legacy = [ "rm" ] and modern = [ "textrm" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-004";
-          severity = Warning;
-          message = "Mixed legacy and modern roman commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-004" ~severity:Warning
+           ~message:"Mixed legacy and modern roman commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-004"; run; languages = [] }
@@ -106,13 +91,10 @@ let l1_mod_005_rule : rule =
     let legacy = [ "tt" ] and modern = [ "texttt" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-005";
-          severity = Warning;
-          message =
-            "Mixed legacy and modern typewriter commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-005" ~severity:Warning
+           ~message:
+             "Mixed legacy and modern typewriter commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-005"; run; languages = [] }
@@ -123,13 +105,10 @@ let l1_mod_006_rule : rule =
     let legacy = [ "sf" ] and modern = [ "textsf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-006";
-          severity = Warning;
-          message =
-            "Mixed legacy and modern sans-serif commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-006" ~severity:Warning
+           ~message:
+             "Mixed legacy and modern sans-serif commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-006"; run; languages = [] }
@@ -140,13 +119,10 @@ let l1_mod_007_rule : rule =
     let legacy = [ "sc" ] and modern = [ "textsc" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-007";
-          severity = Warning;
-          message =
-            "Mixed legacy and modern small-caps commands in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-007" ~severity:Warning
+           ~message:
+             "Mixed legacy and modern small-caps commands in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-007"; run; languages = [] }
@@ -158,12 +134,9 @@ let l1_mod_008_rule : rule =
     let legacy = [ "bfseries" ] and modern = [ "textbf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-008";
-          severity = Warning;
-          message = "Mixed NFSS bfseries and inline \\textbf in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-008" ~severity:Warning
+           ~message:"Mixed NFSS bfseries and inline \\textbf in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-008"; run; languages = [] }
@@ -175,13 +148,10 @@ let l1_mod_009_rule : rule =
     let legacy = [ "itshape" ] and modern = [ "textit"; "emph" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-009";
-          severity = Warning;
-          message =
-            "Mixed NFSS itshape and inline \\textit/\\emph in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-009" ~severity:Warning
+           ~message:
+             "Mixed NFSS itshape and inline \\textit/\\emph in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-009"; run; languages = [] }
@@ -192,12 +162,9 @@ let l1_mod_010_rule : rule =
     let legacy = [ "sffamily" ] and modern = [ "textsf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-010";
-          severity = Warning;
-          message = "Mixed NFSS sffamily and inline \\textsf in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-010" ~severity:Warning
+           ~message:"Mixed NFSS sffamily and inline \\textsf in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-010"; run; languages = [] }
@@ -208,12 +175,9 @@ let l1_mod_011_rule : rule =
     let legacy = [ "ttfamily" ] and modern = [ "texttt" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-011";
-          severity = Warning;
-          message = "Mixed NFSS ttfamily and inline \\texttt in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-011" ~severity:Warning
+           ~message:"Mixed NFSS ttfamily and inline \\texttt in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-011"; run; languages = [] }
@@ -224,12 +188,9 @@ let l1_mod_012_rule : rule =
     let legacy = [ "rmfamily" ] and modern = [ "textrm" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-012";
-          severity = Warning;
-          message = "Mixed NFSS rmfamily and inline \\textrm in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-012" ~severity:Warning
+           ~message:"Mixed NFSS rmfamily and inline \\textrm in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-012"; run; languages = [] }
@@ -240,12 +201,9 @@ let l1_mod_013_rule : rule =
     let legacy = [ "scshape" ] and modern = [ "textsc" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
       Some
-        {
-          id = "MOD-013";
-          severity = Warning;
-          message = "Mixed NFSS scshape and inline \\textsc in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-013" ~severity:Warning
+           ~message:"Mixed NFSS scshape and inline \\textsc in same paragraph"
+           ~count:1)
     else None
   in
   { id = "MOD-013"; run; languages = [] }
@@ -255,14 +213,11 @@ let l1_mod_020_rule : rule =
     let names = extract_command_names _s in
     if has_global_mixing names [ "bfseries" ] [ "textbf" ] then
       Some
-        {
-          id = "MOD-020";
-          severity = Info;
-          message =
-            "Global mix: NFSS bfseries and inline \\textbf appear in different \
-             paragraphs";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-020" ~severity:Info
+           ~message:
+             "Global mix: NFSS bfseries and inline \\textbf appear in \
+              different paragraphs"
+           ~count:1)
     else None
   in
   { id = "MOD-020"; run; languages = [] }
@@ -272,14 +227,11 @@ let l1_mod_021_rule : rule =
     let names = extract_command_names _s in
     if has_global_mixing names [ "itshape" ] [ "textit"; "emph" ] then
       Some
-        {
-          id = "MOD-021";
-          severity = Info;
-          message =
-            "Global mix: NFSS itshape and inline \\textit/\\emph appear in \
-             different paragraphs";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-021" ~severity:Info
+           ~message:
+             "Global mix: NFSS itshape and inline \\textit/\\emph appear in \
+              different paragraphs"
+           ~count:1)
     else None
   in
   { id = "MOD-021"; run; languages = [] }
@@ -289,14 +241,11 @@ let l1_mod_022_rule : rule =
     let names = extract_command_names _s in
     if has_global_mixing names [ "rmfamily" ] [ "textrm" ] then
       Some
-        {
-          id = "MOD-022";
-          severity = Info;
-          message =
-            "Global mix: NFSS rmfamily and inline \\textrm appear in different \
-             paragraphs";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-022" ~severity:Info
+           ~message:
+             "Global mix: NFSS rmfamily and inline \\textrm appear in \
+              different paragraphs"
+           ~count:1)
     else None
   in
   { id = "MOD-022"; run; languages = [] }
@@ -306,14 +255,11 @@ let l1_mod_023_rule : rule =
     let names = extract_command_names _s in
     if has_global_mixing names [ "sffamily" ] [ "textsf" ] then
       Some
-        {
-          id = "MOD-023";
-          severity = Info;
-          message =
-            "Global mix: NFSS sffamily and inline \\textsf appear in different \
-             paragraphs";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-023" ~severity:Info
+           ~message:
+             "Global mix: NFSS sffamily and inline \\textsf appear in \
+              different paragraphs"
+           ~count:1)
     else None
   in
   { id = "MOD-023"; run; languages = [] }
@@ -323,14 +269,11 @@ let l1_mod_024_rule : rule =
     let names = extract_command_names _s in
     if has_global_mixing names [ "ttfamily" ] [ "texttt" ] then
       Some
-        {
-          id = "MOD-024";
-          severity = Info;
-          message =
-            "Global mix: NFSS ttfamily and inline \\texttt appear in different \
-             paragraphs";
-          count = 1;
-        }
+        (mk_result ~id:"MOD-024" ~severity:Info
+           ~message:
+             "Global mix: NFSS ttfamily and inline \\texttt appear in \
+              different paragraphs"
+           ~count:1)
     else None
   in
   { id = "MOD-024"; run; languages = [] }
@@ -360,12 +303,9 @@ let l1_delim_001_rule : rule =
     let imbalance = abs (!opens - !closes) in
     if imbalance > 0 then
       Some
-        {
-          id = "DELIM-001";
-          severity = Error;
-          message = "Unmatched delimiters { … } after macro expansion";
-          count = imbalance;
-        }
+        (mk_result ~id:"DELIM-001" ~severity:Error
+           ~message:"Unmatched delimiters { … } after macro expansion"
+           ~count:imbalance)
     else None
   in
   { id = "DELIM-001"; run; languages = [] }
@@ -394,12 +334,8 @@ let l1_delim_002_rule : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-002";
-          severity = Error;
-          message = "Extra closing } detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-002" ~severity:Error
+           ~message:"Extra closing } detected" ~count:!cnt)
     else None
   in
   { id = "DELIM-002"; run; languages = [] }
@@ -417,12 +353,8 @@ let l1_delim_003_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-003";
-          severity = Error;
-          message = "Unmatched \\left without \\right";
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-003" ~severity:Error
+           ~message:"Unmatched \\left without \\right" ~count:!cnt)
     else None
   in
   { id = "DELIM-003"; run; languages = [] }
@@ -440,12 +372,8 @@ let l1_delim_004_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-004";
-          severity = Error;
-          message = "Unmatched \\right without \\left";
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-004" ~severity:Error
+           ~message:"Unmatched \\right without \\left" ~count:!cnt)
     else None
   in
   { id = "DELIM-004"; run; languages = [] }
@@ -501,12 +429,9 @@ let l1_delim_005_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-005";
-          severity = Info;
-          message = {|Mismatched parenthesis sizing (\big vs \Bigg)|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-005" ~severity:Info
+           ~message:{|Mismatched parenthesis sizing (\big vs \Bigg)|}
+           ~count:!cnt)
     else None
   in
   { id = "DELIM-005"; run; languages = [] }
@@ -581,12 +506,8 @@ let l1_delim_006_rule : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-006";
-          severity = Info;
-          message = {|\big delimiters used outside display math|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-006" ~severity:Info
+           ~message:{|\big delimiters used outside display math|} ~count:!cnt)
     else None
   in
   { id = "DELIM-006"; run; languages = [] }
@@ -605,12 +526,9 @@ let l1_delim_007_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-007";
-          severity = Error;
-          message = {|Angle bracket \langle without matching \rangle|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-007" ~severity:Error
+           ~message:{|Angle bracket \langle without matching \rangle|}
+           ~count:!cnt)
     else None
   in
   { id = "DELIM-007"; run; languages = [] }
@@ -634,12 +552,8 @@ let l1_delim_008_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-008";
-          severity = Info;
-          message = {|Empty \left. … \right. pair — redundant|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-008" ~severity:Info
+           ~message:{|Empty \left. … \right. pair — redundant|} ~count:!cnt)
     else None
   in
   { id = "DELIM-008"; run; languages = [] }
@@ -672,12 +586,8 @@ let l1_delim_009_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-009";
-          severity = Warning;
-          message = "Nested delimiters: { … ( … ) … }";
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-009" ~severity:Warning
+           ~message:"Nested delimiters: { … ( … ) … }" ~count:!cnt)
     else None
   in
   { id = "DELIM-009"; run; languages = [] }
@@ -751,12 +661,8 @@ let l1_delim_010_rule : rule =
       math_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-010";
-          severity = Info;
-          message = {|Display math uses \big instead of \Big|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-010" ~severity:Info
+           ~message:{|Display math uses \big instead of \Big|} ~count:!cnt)
     else None
   in
   { id = "DELIM-010"; run; languages = [] }
@@ -778,12 +684,9 @@ let l1_delim_011_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "DELIM-011";
-          severity = Warning;
-          message = {|\middle delimiter used without symmetric pair|};
-          count = !cnt;
-        }
+        (mk_result ~id:"DELIM-011" ~severity:Warning
+           ~message:{|\middle delimiter used without symmetric pair|}
+           ~count:!cnt)
     else None
   in
   { id = "DELIM-011"; run; languages = [] }
@@ -816,12 +719,8 @@ let l1_script_001_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-001";
-          severity = Warning;
-          message = "Multi‑char subscript without braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-001" ~severity:Warning
+           ~message:"Multi‑char subscript without braces" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-001"; run; languages = [] }
@@ -853,12 +752,9 @@ let l1_script_002_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-002";
-          severity = Info;
-          message = {|Superscript dash typed ‘‑’ not \textsuperscript{--}|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-002" ~severity:Info
+           ~message:{|Superscript dash typed ‘‑’ not \textsuperscript{--}|}
+           ~count:!cnt)
     else None
   in
   { id = "SCRIPT-002"; run; languages = [] }
@@ -873,12 +769,8 @@ let l1_script_003_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-003";
-          severity = Warning;
-          message = "Comma‑separated superscripts lack braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-003" ~severity:Warning
+           ~message:"Comma‑separated superscripts lack braces" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-003"; run; languages = [] }
@@ -893,12 +785,8 @@ let l1_script_004_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-004";
-          severity = Info;
-          message = "Subscript after prime notation mis‑ordered";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-004" ~severity:Info
+           ~message:"Subscript after prime notation mis‑ordered" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-004"; run; languages = [] }
@@ -942,12 +830,8 @@ let l1_script_005_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-005";
-          severity = Info;
-          message = {|Superscript uses letter l instead of \ell|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-005" ~severity:Info
+           ~message:{|Superscript uses letter l instead of \ell|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-005"; run; languages = [] }
@@ -964,12 +848,8 @@ let l1_script_006_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-006";
-          severity = Info;
-          message = {|Degree symbol typed ° instead of ^\circ|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-006" ~severity:Info
+           ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-006"; run; languages = [] }
@@ -1034,12 +914,8 @@ let l1_script_007_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-007";
-          severity = Warning;
-          message = {|Subscript text not wrapped in \text{}|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-007" ~severity:Warning
+           ~message:{|Subscript text not wrapped in \text{}|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-007"; run; languages = [] }
@@ -1063,12 +939,9 @@ let l1_script_008_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-008";
-          severity = Info;
-          message = {|Chemical formula lacks \mathrm{} in subscript|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-008" ~severity:Info
+           ~message:{|Chemical formula lacks \mathrm{} in subscript|}
+           ~count:!cnt)
     else None
   in
   { id = "SCRIPT-008"; run; languages = [] }
@@ -1084,12 +957,8 @@ let l1_script_009_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-009";
-          severity = Info;
-          message = "Isotope superscript mass number missing";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-009" ~severity:Info
+           ~message:"Isotope superscript mass number missing" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-009"; run; languages = [] }
@@ -1106,12 +975,8 @@ let l1_script_010_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-010";
-          severity = Info;
-          message = {|Use of \limits on inline operator|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-010" ~severity:Info
+           ~message:{|Use of \limits on inline operator|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-010"; run; languages = [] }
@@ -1142,12 +1007,8 @@ let l1_script_011_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-011";
-          severity = Warning;
-          message = "Nested superscript three levels deep";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-011" ~severity:Warning
+           ~message:"Nested superscript three levels deep" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-011"; run; languages = [] }
@@ -1161,12 +1022,8 @@ let l1_script_012_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-012";
-          severity = Info;
-          message = "Prime notation f''' (> 3) – prefer ^{(n)}";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-012" ~severity:Info
+           ~message:"Prime notation f''' (> 3) – prefer ^{(n)}" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-012"; run; languages = [] }
@@ -1181,12 +1038,8 @@ let l1_script_013_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-013";
-          severity = Info;
-          message = "Plus/minus typed in subscript";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-013" ~severity:Info
+           ~message:"Plus/minus typed in subscript" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-013"; run; languages = [] }
@@ -1218,12 +1071,8 @@ let l1_script_014_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-014";
-          severity = Info;
-          message = "Logarithm base subscript italic";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-014" ~severity:Info
+           ~message:"Logarithm base subscript italic" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-014"; run; languages = [] }
@@ -1238,12 +1087,8 @@ let l1_script_015_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-015";
-          severity = Info;
-          message = "Time derivative dot mis‑aligned";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-015" ~severity:Info
+           ~message:"Time derivative dot mis‑aligned" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-015"; run; languages = [] }
@@ -1308,12 +1153,8 @@ let l1_script_016_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-016";
-          severity = Info;
-          message = {|Prime on Greek letter typed '' not ^\prime|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-016" ~severity:Info
+           ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-016"; run; languages = [] }
@@ -1339,12 +1180,9 @@ let l1_script_017_rule : rule =
     (* Fire only if both orderings are used *)
     if !sub_sup_count > 0 && !sup_sub_count > 0 then
       Some
-        {
-          id = "SCRIPT-017";
-          severity = Info;
-          message = "Inconsistent order of sub/superscripts";
-          count = min !sub_sup_count !sup_sub_count;
-        }
+        (mk_result ~id:"SCRIPT-017" ~severity:Info
+           ~message:"Inconsistent order of sub/superscripts"
+           ~count:(min !sub_sup_count !sup_sub_count))
     else None
   in
   { id = "SCRIPT-017"; run; languages = [] }
@@ -1372,12 +1210,8 @@ let l1_script_018_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-018";
-          severity = Warning;
-          message = "Degree symbol in superscript without braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-018" ~severity:Warning
+           ~message:"Degree symbol in superscript without braces" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-018"; run; languages = [] }
@@ -1409,12 +1243,8 @@ let l1_script_019_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-019";
-          severity = Info;
-          message = {|Double prime '' instead of ^{\prime\prime}|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-019" ~severity:Info
+           ~message:{|Double prime '' instead of ^{\prime\prime}|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-019"; run; languages = [] }
@@ -1477,12 +1307,8 @@ let l1_script_020_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-020";
-          severity = Info;
-          message = {|Subscript text italic instead of \mathrm|};
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-020" ~severity:Info
+           ~message:{|Subscript text italic instead of \mathrm|} ~count:!cnt)
     else None
   in
   { id = "SCRIPT-020"; run; languages = [] }
@@ -1499,12 +1325,9 @@ let l1_script_021_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-021";
-          severity = Warning;
-          message = "Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-021" ~severity:Warning
+           ~message:"Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})"
+           ~count:!cnt)
     else None
   in
   { id = "SCRIPT-021"; run; languages = [] }
@@ -1519,12 +1342,8 @@ let l1_script_022_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "SCRIPT-022";
-          severity = Info;
-          message = "Superscript prime stacked > 3 – prefer ^{(n)}";
-          count = !cnt;
-        }
+        (mk_result ~id:"SCRIPT-022" ~severity:Info
+           ~message:"Superscript prime stacked > 3 – prefer ^{(n)}" ~count:!cnt)
     else None
   in
   { id = "SCRIPT-022"; run; languages = [] }
@@ -1550,12 +1369,8 @@ let l1_ref_001_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "REF-001";
-          severity = Error;
-          message = {|Undefined \ref / \eqref label after expansion|};
-          count = cnt;
-        }
+        (mk_result ~id:"REF-001" ~severity:Error
+           ~message:{|Undefined \ref / \eqref label after expansion|} ~count:cnt)
     else None
   in
   { id = "REF-001"; run; languages = [] }
@@ -1593,12 +1408,8 @@ let l1_ref_002_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "REF-002";
-          severity = Error;
-          message = "Duplicate label name";
-          count = cnt;
-        }
+        (mk_result ~id:"REF-002" ~severity:Error ~message:"Duplicate label name"
+           ~count:cnt)
     else None
   in
   { id = "REF-002"; run; languages = [] }
@@ -1611,12 +1422,8 @@ let l1_ref_003_rule : rule =
     List.iter (fun lbl -> if String.contains lbl ' ' then incr cnt) labels;
     if !cnt > 0 then
       Some
-        {
-          id = "REF-003";
-          severity = Warning;
-          message = "Label contains spaces";
-          count = !cnt;
-        }
+        (mk_result ~id:"REF-003" ~severity:Warning
+           ~message:"Label contains spaces" ~count:!cnt)
     else None
   in
   { id = "REF-003"; run; languages = [] }
@@ -1638,12 +1445,8 @@ let l1_ref_004_rule : rule =
     List.iter (fun lbl -> if has_upper lbl then incr cnt) labels;
     if !cnt > 0 then
       Some
-        {
-          id = "REF-004";
-          severity = Info;
-          message = "Label contains uppercase letters";
-          count = !cnt;
-        }
+        (mk_result ~id:"REF-004" ~severity:Info
+           ~message:"Label contains uppercase letters" ~count:!cnt)
     else None
   in
   { id = "REF-004"; run; languages = [] }
@@ -1682,12 +1485,8 @@ let l1_ref_005_rule : rule =
     List.iter (fun lbl -> if not (has_prefix lbl) then incr cnt) labels;
     if !cnt > 0 then
       Some
-        {
-          id = "REF-005";
-          severity = Info;
-          message = "Label not prefixed fig:/tab:/eq:/sec:";
-          count = !cnt;
-        }
+        (mk_result ~id:"REF-005" ~severity:Info
+           ~message:"Label not prefixed fig:/tab:/eq:/sec:" ~count:!cnt)
     else None
   in
   { id = "REF-005"; run; languages = [] }
@@ -1699,12 +1498,8 @@ let l1_ref_006_rule : rule =
     let cnt = count_re_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "REF-006";
-          severity = Info;
-          message = {|Page reference uses \ref not \pageref|};
-          count = cnt;
-        }
+        (mk_result ~id:"REF-006" ~severity:Info
+           ~message:{|Page reference uses \ref not \pageref|} ~count:cnt)
     else None
   in
   { id = "REF-006"; run; languages = [] }
@@ -1716,12 +1511,8 @@ let l1_ref_007_rule : rule =
     let cnt = count_re_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "REF-007";
-          severity = Error;
-          message = "Cite key contains whitespace";
-          count = cnt;
-        }
+        (mk_result ~id:"REF-007" ~severity:Error
+           ~message:"Cite key contains whitespace" ~count:cnt)
     else None
   in
   { id = "REF-007"; run; languages = [] }
@@ -1772,12 +1563,9 @@ let l1_ref_009_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "REF-009";
-          severity = Info;
-          message = "Reference appears before label definition (forward ref)";
-          count = cnt;
-        }
+        (mk_result ~id:"REF-009" ~severity:Info
+           ~message:"Reference appears before label definition (forward ref)"
+           ~count:cnt)
     else None
   in
   { id = "REF-009"; run; languages = [] }
@@ -1800,12 +1588,8 @@ let l1_chem_001_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-001";
-          severity = Warning;
-          message = {|Missing \ce{} wrapper for chemical formula|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-001" ~severity:Warning
+           ~message:{|Missing \ce{} wrapper for chemical formula|} ~count:!cnt)
     else None
   in
   { id = "CHEM-001"; run; languages = [] }
@@ -1820,12 +1604,8 @@ let l1_chem_002_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-002";
-          severity = Warning;
-          message = "Oxidation‑state superscript missing braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-002" ~severity:Warning
+           ~message:"Oxidation‑state superscript missing braces" ~count:!cnt)
     else None
   in
   { id = "CHEM-002"; run; languages = [] }
@@ -1844,12 +1624,9 @@ let l1_chem_003_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-003";
-          severity = Warning;
-          message = "Isotope mass number subscripted, not superscripted";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-003" ~severity:Warning
+           ~message:"Isotope mass number subscripted, not superscripted"
+           ~count:!cnt)
     else None
   in
   { id = "CHEM-003"; run; languages = [] }
@@ -1863,12 +1640,8 @@ let l1_chem_004_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-004";
-          severity = Info;
-          message = "Charge written ^- instead of ^{-}";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-004" ~severity:Info
+           ~message:"Charge written ^- instead of ^{-}" ~count:!cnt)
     else None
   in
   { id = "CHEM-004"; run; languages = [] }
@@ -1889,12 +1662,8 @@ let l1_chem_005_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-005";
-          severity = Info;
-          message = {|Chemical arrow typed '->' not \rightarrow|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-005" ~severity:Info
+           ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt)
     else None
   in
   { id = "CHEM-005"; run; languages = [] }
@@ -1943,12 +1712,8 @@ let l1_chem_006_rule : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-006";
-          severity = Warning;
-          message = {|Stoichiometry coefficient inside \ce missing|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-006" ~severity:Warning
+           ~message:{|Stoichiometry coefficient inside \ce missing|} ~count:!cnt)
     else None
   in
   { id = "CHEM-006"; run; languages = [] }
@@ -1988,12 +1753,8 @@ let l1_chem_007_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-007";
-          severity = Info;
-          message = {|Reaction conditions not in \text above arrow|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-007" ~severity:Info
+           ~message:{|Reaction conditions not in \text above arrow|} ~count:!cnt)
     else None
   in
   { id = "CHEM-007"; run; languages = [] }
@@ -2016,12 +1777,8 @@ let l1_chem_008_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-008";
-          severity = Info;
-          message = {|State symbols (aq) not wrapped in \text|};
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-008" ~severity:Info
+           ~message:{|State symbols (aq) not wrapped in \text|} ~count:!cnt)
     else None
   in
   { id = "CHEM-008"; run; languages = [] }
@@ -2040,12 +1797,8 @@ let l1_chem_009_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CHEM-009";
-          severity = Warning;
-          message = "Equilibrium arrow typed as '<>'";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHEM-009" ~severity:Warning
+           ~message:"Equilibrium arrow typed as '<>'" ~count:!cnt)
     else None
   in
   { id = "CHEM-009"; run; languages = [] }
@@ -2098,12 +1851,9 @@ let l1_cmd_007_rule : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-007";
-          severity = Info;
-          message = "Optional argument not used inside definition body";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-007" ~severity:Info
+           ~message:"Optional argument not used inside definition body"
+           ~count:!cnt)
     else None
   in
   { id = "CMD-007"; run; languages = [] }
@@ -2127,12 +1877,8 @@ let l1_cmd_010_rule : rule =
       lines;
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-010";
-          severity = Info;
-          message = "More than three successive macro renewals";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-010" ~severity:Info
+           ~message:"More than three successive macro renewals" ~count:!cnt)
     else None
   in
   { id = "CMD-010"; run; languages = [] }
@@ -2171,12 +1917,9 @@ let l1_font_001_rule : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "FONT-001";
-          severity = Info;
-          message = "Small‑caps applied to all‑caps word (ineffective)";
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-001" ~severity:Info
+           ~message:"Small‑caps applied to all‑caps word (ineffective)"
+           ~count:!cnt)
     else None
   in
   { id = "FONT-001"; run; languages = [] }
@@ -2197,12 +1940,9 @@ let l1_font_004_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "FONT-004";
-          severity = Info;
-          message = {|Font change inside math via \textit not \mathit|};
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-004" ~severity:Info
+           ~message:{|Font change inside math via \textit not \mathit|}
+           ~count:!cnt)
     else None
   in
   { id = "FONT-004"; run; languages = [] }
@@ -2214,12 +1954,9 @@ let l1_rtl_003_rule : rule =
     let closes = count_substring s "\\endR" in
     if opens <> closes && (opens > 0 || closes > 0) then
       Some
-        {
-          id = "RTL-003";
-          severity = Error;
-          message = {|Unbalanced \beginR / \endR primitives|};
-          count = abs (opens - closes);
-        }
+        (mk_result ~id:"RTL-003" ~severity:Error
+           ~message:{|Unbalanced \beginR / \endR primitives|}
+           ~count:(abs (opens - closes)))
     else None
   in
   { id = "RTL-003"; run; languages = [ "ar"; "he" ] }
@@ -2239,12 +1976,8 @@ let l1_rtl_004_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "RTL-004";
-          severity = Warning;
-          message = "RTL punctuation not mirrored in math";
-          count = !cnt;
-        }
+        (mk_result ~id:"RTL-004" ~severity:Warning
+           ~message:"RTL punctuation not mirrored in math" ~count:!cnt)
     else None
   in
   { id = "RTL-004"; run; languages = [ "ar"; "he" ] }
@@ -2260,12 +1993,8 @@ let l1_cjk_008_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-008";
-          severity = Warning;
-          message = "Full‑width space U+3000 inside math mode";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-008" ~severity:Warning
+           ~message:"Full‑width space U+3000 inside math mode" ~count:!cnt)
     else None
   in
   { id = "CJK-008"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -2281,12 +2010,8 @@ let l1_cjk_015_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-015";
-          severity = Warning;
-          message = "Chinese comma U+3001 inside math mode";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-015" ~severity:Warning
+           ~message:"Chinese comma U+3001 inside math mode" ~count:!cnt)
     else None
   in
   { id = "CJK-015"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -2300,12 +2025,9 @@ let l1_typo_059_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-059";
-          severity = Info;
-          message = "Punctuation inside math must be typed with spacing macros";
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-059" ~severity:Info
+           ~message:"Punctuation inside math must be typed with spacing macros"
+           ~count:!cnt)
     else None
   in
   { id = "TYPO-059"; run; languages = [] }
@@ -2333,12 +2055,9 @@ let l1_pt_002_rule : rule =
       List.iter (fun seg -> cnt := !cnt + count_re_matches re_num seg) math_segs;
       if !cnt > 0 then
         Some
-          {
-            id = "PT-002";
-            severity = Info;
-            message = "pt‑BR: decimal comma and thousand dot enforcement";
-            count = !cnt;
-          }
+          (mk_result ~id:"PT-002" ~severity:Info
+             ~message:"pt‑BR: decimal comma and thousand dot enforcement"
+             ~count:!cnt)
       else None)
     else None
   in
@@ -2382,12 +2101,9 @@ let l1_l3_001_rule : rule =
     in
     if has_expl3 && has_2e then
       Some
-        {
-          id = "L3-001";
-          severity = Info;
-          message = {|LaTeX3 \tl_new:N in preamble mixed with 2e macros|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-001" ~severity:Info
+           ~message:{|LaTeX3 \tl_new:N in preamble mixed with 2e macros|}
+           ~count:1)
     else None
   in
   { id = "L3-001"; run; languages = [] }
@@ -2413,12 +2129,9 @@ let l1_l3_002_rule : rule =
       let cnt = count_re_matches re_expl3_decl body in
       if cnt > 0 then
         Some
-          {
-            id = "L3-002";
-            severity = Warning;
-            message = {|Expl3 variable declared after \begin{document}|};
-            count = cnt;
-          }
+          (mk_result ~id:"L3-002" ~severity:Warning
+             ~message:{|Expl3 variable declared after \begin{document}|}
+             ~count:cnt)
       else None
   in
   { id = "L3-002"; run; languages = [] }
@@ -2449,12 +2162,8 @@ let l1_l3_003_rule : rule =
     in
     if has_expl3 && has_etoolbox then
       Some
-        {
-          id = "L3-003";
-          severity = Warning;
-          message = "Expl3 and etoolbox patch macros combined";
-          count = 1;
-        }
+        (mk_result ~id:"L3-003" ~severity:Warning
+           ~message:"Expl3 and etoolbox patch macros combined" ~count:1)
     else None
   in
   { id = "L3-003"; run; languages = [] }
@@ -2466,12 +2175,8 @@ let l1_l3_004_rule : rule =
     let cnt = count_re_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "L3-004";
-          severity = Info;
-          message = {|Undocumented \__module_internal:N used|};
-          count = cnt;
-        }
+        (mk_result ~id:"L3-004" ~severity:Info
+           ~message:{|Undocumented \__module_internal:N used|} ~count:cnt)
     else None
   in
   { id = "L3-004"; run; languages = [] }
@@ -2499,12 +2204,8 @@ let l1_l3_005_rule : rule =
       in
       if not has_guard then
         Some
-          {
-            id = "L3-005";
-            severity = Error;
-            message = {|Missing \ExplSyntaxOn guard around expl3 code|};
-            count = 1;
-          }
+          (mk_result ~id:"L3-005" ~severity:Error
+             ~message:{|Missing \ExplSyntaxOn guard around expl3 code|} ~count:1)
       else None
   in
   { id = "L3-005"; run; languages = [] }
@@ -2542,12 +2243,8 @@ let l1_l3_006_rule : rule =
        with Not_found -> ());
       if !cnt > 0 then
         Some
-          {
-            id = "L3-006";
-            severity = Warning;
-            message = "Expl3 variable clobbers package macro name";
-            count = !cnt;
-          }
+          (mk_result ~id:"L3-006" ~severity:Warning
+             ~message:"Expl3 variable clobbers package macro name" ~count:!cnt)
       else None
   in
   { id = "L3-006"; run; languages = [] }
@@ -2571,12 +2268,9 @@ let l1_l3_007_rule : rule =
       let cnt = count_re_matches re_camel s in
       if cnt > 0 then
         Some
-          {
-            id = "L3-007";
-            severity = Info;
-            message = "Mix of camelCase and snake_case in expl3 names";
-            count = cnt;
-          }
+          (mk_result ~id:"L3-007" ~severity:Info
+             ~message:"Mix of camelCase and snake_case in expl3 names"
+             ~count:cnt)
       else None
   in
   { id = "L3-007"; run; languages = [] }
@@ -2600,12 +2294,8 @@ let l1_l3_009_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "L3-009";
-          severity = Info;
-          message = "LaTeX3 function deprecated _n: variant used";
-          count = cnt;
-        }
+        (mk_result ~id:"L3-009" ~severity:Info
+           ~message:"LaTeX3 function deprecated _n: variant used" ~count:cnt)
     else None
   in
   { id = "L3-009"; run; languages = [] }
@@ -2652,12 +2342,9 @@ let l1_l3_011_rule : rule =
       in
       if cnt > 0 then
         Some
-          {
-            id = "L3-011";
-            severity = Warning;
-            message = "Engine‑branch uses pdfTeX primitive in Lua/XeTeX path";
-            count = cnt;
-          }
+          (mk_result ~id:"L3-011" ~severity:Warning
+             ~message:"Engine‑branch uses pdfTeX primitive in Lua/XeTeX path"
+             ~count:cnt)
       else None
   in
   { id = "L3-011"; run; languages = [] }
@@ -2732,12 +2419,8 @@ let l1_cmd_001_rule : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CMD-001";
-          severity = Info;
-          message = {|Command \newcommand defined but never used|};
-          count = cnt;
-        }
+        (mk_result ~id:"CMD-001" ~severity:Info
+           ~message:{|Command \newcommand defined but never used|} ~count:cnt)
     else None
   in
   { id = "CMD-001"; run; languages = [] }
@@ -2796,12 +2479,8 @@ let l1_cmd_003_rule : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-003";
-          severity = Warning;
-          message = "User macro name clashes with package macro";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-003" ~severity:Warning
+           ~message:"User macro name clashes with package macro" ~count:!cnt)
     else None
   in
   { id = "CMD-003"; run; languages = [] }

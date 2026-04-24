@@ -29,12 +29,8 @@ let r_fig_004 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "FIG-004";
-              severity = Info;
-              message = "Raster image exceeds 300 dpi";
-              count = cnt;
-            }
+            (mk_result ~id:"FIG-004" ~severity:Info
+               ~message:"Raster image exceeds 300 dpi" ~count:cnt)
         else None
   in
   mk_rule "FIG-004" run
@@ -53,12 +49,8 @@ let r_fig_006 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "FIG-006";
-              severity = Info;
-              message = "Bitmap image with transparency channel";
-              count = cnt;
-            }
+            (mk_result ~id:"FIG-006" ~severity:Info
+               ~message:"Bitmap image with transparency channel" ~count:cnt)
         else None
   in
   mk_rule "FIG-006" run
@@ -78,12 +70,8 @@ let r_fig_016 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "FIG-016";
-              severity = Info;
-              message = "Raster image colour profile not sRGB";
-              count = cnt;
-            }
+            (mk_result ~id:"FIG-016" ~severity:Info
+               ~message:"Raster image colour profile not sRGB" ~count:cnt)
         else None
   in
   mk_rule "FIG-016" run
@@ -103,12 +91,8 @@ let r_fig_021 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "FIG-021";
-              severity = Warning;
-              message = "Embedded bitmap > 20 MiB — PDF bloat risk";
-              count = cnt;
-            }
+            (mk_result ~id:"FIG-021" ~severity:Warning
+               ~message:"Embedded bitmap > 20 MiB — PDF bloat risk" ~count:cnt)
         else None
   in
   mk_rule "FIG-021" run
@@ -127,12 +111,8 @@ let r_col_001 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "COL-001";
-              severity = Info;
-              message = "CMYK image in RGB workflow";
-              count = cnt;
-            }
+            (mk_result ~id:"COL-001" ~severity:Info
+               ~message:"CMYK image in RGB workflow" ~count:cnt)
         else None
   in
   mk_rule "COL-001" run
@@ -151,12 +131,8 @@ let r_col_002 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "COL-002";
-              severity = Info;
-              message = "ICC profile missing in embedded image";
-              count = cnt;
-            }
+            (mk_result ~id:"COL-002" ~severity:Info
+               ~message:"ICC profile missing in embedded image" ~count:cnt)
         else None
   in
   mk_rule "COL-002" run
@@ -179,12 +155,9 @@ let r_col_003 : rule =
           in
           if cnt > 0 then
             Some
-              {
-                id = "COL-003";
-                severity = Warning;
-                message = "Transparent PNG in print-optimised document class";
-                count = cnt;
-              }
+              (mk_result ~id:"COL-003" ~severity:Warning
+                 ~message:"Transparent PNG in print-optimised document class"
+                 ~count:cnt)
           else None
   in
   mk_rule "COL-003" run
@@ -203,12 +176,9 @@ let r_col_005 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "COL-005";
-              severity = Info;
-              message = "Excess distinct colours (> 256) in indexed image";
-              count = cnt;
-            }
+            (mk_result ~id:"COL-005" ~severity:Info
+               ~message:"Excess distinct colours (> 256) in indexed image"
+               ~count:cnt)
         else None
   in
   mk_rule "COL-005" run
@@ -232,12 +202,8 @@ let r_pdf_006 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-006";
-              severity = Warning;
-              message = "Tagged PDF lacks /StructTreeRoot";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-006" ~severity:Warning
+               ~message:"Tagged PDF lacks /StructTreeRoot" ~count:cnt)
         else None
   in
   mk_rule "PDF-006" run
@@ -256,12 +222,9 @@ let r_pdf_007 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-007";
-              severity = Warning;
-              message = "Figure objects without /Alt text in tagged PDF";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-007" ~severity:Warning
+               ~message:"Figure objects without /Alt text in tagged PDF"
+               ~count:cnt)
         else None
   in
   mk_rule "PDF-007" run
@@ -280,13 +243,10 @@ let r_pdf_008 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-008";
-              severity = Warning;
-              message =
-                "Link annotations missing /Contents — screen-reader issue";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-008" ~severity:Warning
+               ~message:
+                 "Link annotations missing /Contents — screen-reader issue"
+               ~count:cnt)
         else None
   in
   mk_rule "PDF-008" run
@@ -305,12 +265,8 @@ let r_pdf_009 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-009";
-              severity = Warning;
-              message = "/Lang entry missing in PDF catalog";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-009" ~severity:Warning
+               ~message:"/Lang entry missing in PDF catalog" ~count:cnt)
         else None
   in
   mk_rule "PDF-009" run
@@ -332,12 +288,9 @@ let r_pdf_011 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-011";
-              severity = Error;
-              message = "Fonts in PDF not fully embedded or subsetted";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-011" ~severity:Error
+               ~message:"Fonts in PDF not fully embedded or subsetted"
+               ~count:cnt)
         else None
   in
   mk_rule "PDF-011" run
@@ -363,12 +316,9 @@ let r_pdf_012 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "PDF-012";
-              severity = Info;
-              message = "Logical page labels inconsistent with numbering";
-              count = cnt;
-            }
+            (mk_result ~id:"PDF-012" ~severity:Info
+               ~message:"Logical page labels inconsistent with numbering"
+               ~count:cnt)
         else None
   in
   mk_rule "PDF-012" run
@@ -387,12 +337,8 @@ let r_col_004 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "COL-004";
-              severity = Info;
-              message = "PDF contains spot-colour separation";
-              count = cnt;
-            }
+            (mk_result ~id:"COL-004" ~severity:Info
+               ~message:"PDF contains spot-colour separation" ~count:cnt)
         else None
   in
   mk_rule "COL-004" run
@@ -411,12 +357,8 @@ let r_col_007 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "COL-007";
-              severity = Info;
-              message = "Spot colour detected in vector element";
-              count = cnt;
-            }
+            (mk_result ~id:"COL-007" ~severity:Info
+               ~message:"Spot colour detected in vector element" ~count:cnt)
         else None
   in
   mk_rule "COL-007" run
@@ -438,12 +380,8 @@ let r_tikz_002 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TIKZ-002";
-              severity = Warning;
-              message = "TikZ compile time exceeds 5 seconds";
-              count = cnt;
-            }
+            (mk_result ~id:"TIKZ-002" ~severity:Warning
+               ~message:"TikZ compile time exceeds 5 seconds" ~count:cnt)
         else None
   in
   mk_rule "TIKZ-002" run
@@ -462,12 +400,9 @@ let r_tikz_008 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TIKZ-008";
-              severity = Info;
-              message = "Uncompressed streams in PDF (possible TikZ output)";
-              count = cnt;
-            }
+            (mk_result ~id:"TIKZ-008" ~severity:Info
+               ~message:"Uncompressed streams in PDF (possible TikZ output)"
+               ~count:cnt)
         else None
   in
   mk_rule "TIKZ-008" run
@@ -490,12 +425,8 @@ let r_cjk_007 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "CJK-007";
-              severity = Warning;
-              message = "Kanji glyph missing in selected CJK font";
-              count = cnt;
-            }
+            (mk_result ~id:"CJK-007" ~severity:Warning
+               ~message:"Kanji glyph missing in selected CJK font" ~count:cnt)
         else None
   in
   mk_rule "CJK-007" run

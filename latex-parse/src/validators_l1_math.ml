@@ -78,12 +78,9 @@ let l1_math_009_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-009";
-          severity = Warning;
-          message = {|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-009" ~severity:Warning
+           ~message:{|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-009"; run; languages = [] }
@@ -99,12 +96,9 @@ let l1_math_010_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-010";
-          severity = Warning;
-          message = {|Division symbol ÷ used; prefer \frac or solidus|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-010" ~severity:Warning
+           ~message:{|Division symbol ÷ used; prefer \frac or solidus|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-010"; run; languages = [] }
@@ -123,12 +117,9 @@ let l1_math_011_rule : rule =
       math_segs;
     if !vec_count > 0 && !mathbf_count > 0 then
       Some
-        {
-          id = "MATH-011";
-          severity = Info;
-          message = "Vector notation inconsistent within equation";
-          count = min !vec_count !mathbf_count;
-        }
+        (mk_result ~id:"MATH-011" ~severity:Info
+           ~message:"Vector notation inconsistent within equation"
+           ~count:(min !vec_count !mathbf_count))
     else None
   in
   { id = "MATH-011"; run; languages = [] }
@@ -208,12 +199,9 @@ let l1_math_012_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-012";
-          severity = Warning;
-          message = {|Multi‑letter function not in roman (\operatorname{})|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-012" ~severity:Warning
+           ~message:{|Multi‑letter function not in roman (\operatorname{})|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-012"; run; languages = [] }
@@ -254,12 +242,8 @@ let l1_math_013_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-013";
-          severity = Info;
-          message = "Differential d not typeset roman";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-013" ~severity:Info
+           ~message:"Differential d not typeset roman" ~count:!cnt)
     else None
   in
   { id = "MATH-013"; run; languages = [] }
@@ -281,12 +265,8 @@ let l1_math_014_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-014";
-          severity = Info;
-          message = {|Inline \frac in running text|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-014" ~severity:Info
+           ~message:{|Inline \frac in running text|} ~count:!cnt)
     else None
   in
   { id = "MATH-014"; run; languages = [] }
@@ -301,12 +281,8 @@ let l1_math_015_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-015";
-          severity = Warning;
-          message = {|\stackrel used; prefer \overset|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-015" ~severity:Warning
+           ~message:{|\stackrel used; prefer \overset|} ~count:!cnt)
     else None
   in
   { id = "MATH-015"; run; languages = [] }
@@ -321,12 +297,8 @@ let l1_math_016_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-016";
-          severity = Warning;
-          message = "Nested subscripts without braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-016" ~severity:Warning
+           ~message:"Nested subscripts without braces" ~count:!cnt)
     else None
   in
   { id = "MATH-016"; run; languages = [] }
@@ -414,12 +386,8 @@ let l1_math_017_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-017";
-          severity = Error;
-          message = {|Mismatched \left\{ … \right] pair|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-017" ~severity:Error
+           ~message:{|Mismatched \left\{ … \right] pair|} ~count:!cnt)
     else None
   in
   { id = "MATH-017"; run; languages = [] }
@@ -433,12 +401,8 @@ let l1_math_018_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-018";
-          severity = Info;
-          message = "π written numerically as 3.14";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-018" ~severity:Info
+           ~message:"π written numerically as 3.14" ~count:!cnt)
     else None
   in
   { id = "MATH-018"; run; languages = [] }
@@ -456,12 +420,8 @@ let l1_math_019_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-019";
-          severity = Warning;
-          message = "Inline stacked ^_ order wrong";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-019" ~severity:Warning
+           ~message:"Inline stacked ^_ order wrong" ~count:!cnt)
     else None
   in
   { id = "MATH-019"; run; languages = [] }
@@ -476,12 +436,8 @@ let l1_math_020_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-020";
-          severity = Info;
-          message = {|Missing \cdot between coefficient and vector|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-020" ~severity:Info
+           ~message:{|Missing \cdot between coefficient and vector|} ~count:!cnt)
     else None
   in
   { id = "MATH-020"; run; languages = [] }
@@ -517,12 +473,9 @@ let l1_math_021_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-021";
-          severity = Info;
-          message = {|Absolute value bars ‘|x|’ instead of \lvert … \rvert|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-021" ~severity:Info
+           ~message:{|Absolute value bars ‘|x|’ instead of \lvert … \rvert|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-021"; run; languages = [] }
@@ -538,12 +491,8 @@ let l1_math_022_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-022";
-          severity = Info;
-          message = {|Bold math italic without \bm or \mathbf|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-022" ~severity:Info
+           ~message:{|Bold math italic without \bm or \mathbf|} ~count:!cnt)
     else None
   in
   { id = "MATH-022"; run; languages = [] }
@@ -573,12 +522,9 @@ let l1_math_025_rule : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-025";
-          severity = Info;
-          message = "align environment with one column – use equation";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-025" ~severity:Info
+           ~message:"align environment with one column – use equation"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-025"; run; languages = [] }
@@ -605,12 +551,9 @@ let l1_math_028_rule : rule =
        if tail = ba then incr cnt);
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-028";
-          severity = Info;
-          message = "Array environment inside math lacks {c} alignment";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-028" ~severity:Info
+           ~message:"Array environment inside math lacks {c} alignment"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-028"; run; languages = [] }
@@ -631,12 +574,8 @@ let l1_math_029_rule : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-029";
-          severity = Warning;
-          message = "Use of eqnarray* instead of align*";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-029" ~severity:Warning
+           ~message:"Use of eqnarray* instead of align*" ~count:!cnt)
     else None
   in
   { id = "MATH-029"; run; languages = [] }
@@ -652,12 +591,8 @@ let l1_math_030_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-030";
-          severity = Info;
-          message = {|Overuse of \displaystyle in inline math|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-030" ~severity:Info
+           ~message:{|Overuse of \displaystyle in inline math|} ~count:!cnt)
     else None
   in
   { id = "MATH-030"; run; languages = [] }
@@ -675,12 +610,9 @@ let l1_math_031_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-031";
-          severity = Info;
-          message = {|Operator spacing error: missing \; before \text|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-031" ~severity:Info
+           ~message:{|Operator spacing error: missing \; before \text|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-031"; run; languages = [] }
@@ -692,12 +624,8 @@ let l1_math_033_rule : rule =
     let cnt = count_substring text_parts "\\pm" in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-033";
-          severity = Info;
-          message = {|Use of \pm where ± symbol required in text|};
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-033" ~severity:Info
+           ~message:{|Use of \pm where ± symbol required in text|} ~count:cnt)
     else None
   in
   { id = "MATH-033"; run; languages = [] }
@@ -751,12 +679,9 @@ let l1_math_034_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-034";
-          severity = Info;
-          message = {|Spacing before differential in integral missing \,|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-034" ~severity:Info
+           ~message:{|Spacing before differential in integral missing \,|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-034"; run; languages = [] }
@@ -771,12 +696,9 @@ let l1_math_035_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-035";
-          severity = Warning;
-          message = "Multiple subscripts stacked vertically without braces";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-035" ~severity:Warning
+           ~message:"Multiple subscripts stacked vertically without braces"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-035"; run; languages = [] }
@@ -791,12 +713,8 @@ let l1_math_036_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-036";
-          severity = Info;
-          message = {|Superfluous \mathrm{} around single letter|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-036" ~severity:Info
+           ~message:{|Superfluous \mathrm{} around single letter|} ~count:!cnt)
     else None
   in
   { id = "MATH-036"; run; languages = [] }
@@ -812,12 +730,8 @@ let l1_math_037_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-037";
-          severity = Info;
-          message = "xfrac package fraction used outside text mode";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-037" ~severity:Info
+           ~message:"xfrac package fraction used outside text mode" ~count:!cnt)
     else None
   in
   { id = "MATH-037"; run; languages = [] }
@@ -883,12 +797,8 @@ let l1_math_038_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-038";
-          severity = Warning;
-          message = {|Nested \frac three levels deep|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-038" ~severity:Warning
+           ~message:{|Nested \frac three levels deep|} ~count:!cnt)
     else None
   in
   { id = "MATH-038"; run; languages = [] }
@@ -907,12 +817,8 @@ let l1_math_039_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-039";
-          severity = Warning;
-          message = {|Stacked relational operators without \atop|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-039" ~severity:Warning
+           ~message:{|Stacked relational operators without \atop|} ~count:!cnt)
     else None
   in
   { id = "MATH-039"; run; languages = [] }
@@ -927,12 +833,9 @@ let l1_math_040_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-040";
-          severity = Info;
-          message = {|Ellipsis \ldots used between vertical alignment|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-040" ~severity:Info
+           ~message:{|Ellipsis \ldots used between vertical alignment|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-040"; run; languages = [] }
@@ -951,12 +854,9 @@ let l1_math_041_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-041";
-          severity = Info;
-          message = {|Integral limits written inline; use \displaystyle \int|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-041" ~severity:Info
+           ~message:{|Integral limits written inline; use \displaystyle \int|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-041"; run; languages = [] }
@@ -971,12 +871,8 @@ let l1_math_042_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-042";
-          severity = Info;
-          message = {|Missing \, between numbers and units in math|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-042" ~severity:Info
+           ~message:{|Missing \, between numbers and units in math|} ~count:!cnt)
     else None
   in
   { id = "MATH-042"; run; languages = [] }
@@ -996,12 +892,9 @@ let l1_math_043_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-043";
-          severity = Warning;
-          message = {|Use of \text instead of \operatorname for function|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-043" ~severity:Warning
+           ~message:{|Use of \text instead of \operatorname for function|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-043"; run; languages = [] }
@@ -1016,12 +909,9 @@ let l1_math_044_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-044";
-          severity = Warning;
-          message = {|Binary relation typed as text char (e.g. < for \le)|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-044" ~severity:Warning
+           ~message:{|Binary relation typed as text char (e.g. < for \le)|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-044"; run; languages = [] }
@@ -1063,12 +953,9 @@ let l1_math_045_rule : rule =
     (* Only flag if document mixes upright and italic for the same class *)
     if !has_upright && !bare_cnt > 0 then
       Some
-        {
-          id = "MATH-045";
-          severity = Info;
-          message = {|Math italic capital Greek without \mathrm|};
-          count = !bare_cnt;
-        }
+        (mk_result ~id:"MATH-045" ~severity:Info
+           ~message:{|Math italic capital Greek without \mathrm|}
+           ~count:!bare_cnt)
     else None
   in
   { id = "MATH-045"; run; languages = [] }
@@ -1083,12 +970,9 @@ let l1_math_046_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-046";
-          severity = Info;
-          message = {|Ellipsis \ldots used on relation axis; prefer \cdots|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-046" ~severity:Info
+           ~message:{|Ellipsis \ldots used on relation axis; prefer \cdots|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-046"; run; languages = [] }
@@ -1102,12 +986,8 @@ let l1_math_047_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-047";
-          severity = Error;
-          message = "Double superscript without braces a^b^c";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-047" ~severity:Error
+           ~message:"Double superscript without braces a^b^c" ~count:!cnt)
     else None
   in
   { id = "MATH-047"; run; languages = [] }
@@ -1122,12 +1002,8 @@ let l1_math_048_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-048";
-          severity = Info;
-          message = {|Boldface digits via \mathbf in math – avoid|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-048" ~severity:Info
+           ~message:{|Boldface digits via \mathbf in math – avoid|} ~count:!cnt)
     else None
   in
   { id = "MATH-048"; run; languages = [] }
@@ -1151,12 +1027,8 @@ let l1_math_049_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-049";
-          severity = Info;
-          message = {|Spacing around \times missing|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-049" ~severity:Info
+           ~message:{|Spacing around \times missing|} ~count:!cnt)
     else None
   in
   { id = "MATH-049"; run; languages = [] }
@@ -1171,12 +1043,8 @@ let l1_math_050_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-050";
-          severity = Warning;
-          message = {|Circumflex accent ^\hat on multi‑letter|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-050" ~severity:Warning
+           ~message:{|Circumflex accent ^\hat on multi‑letter|} ~count:!cnt)
     else None
   in
   { id = "MATH-050"; run; languages = [] }
@@ -1241,12 +1109,8 @@ let l1_math_051_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-051";
-          severity = Warning;
-          message = {|Radical \sqrt nested two levels|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-051" ~severity:Warning
+           ~message:{|Radical \sqrt nested two levels|} ~count:!cnt)
     else None
   in
   { id = "MATH-051"; run; languages = [] }
@@ -1288,12 +1152,8 @@ let l1_math_052_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-052";
-          severity = Warning;
-          message = {|\over brace used; prefer \frac|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-052" ~severity:Warning
+           ~message:{|\over brace used; prefer \frac|} ~count:!cnt)
     else None
   in
   { id = "MATH-052"; run; languages = [] }
@@ -1322,12 +1182,8 @@ let l1_math_053_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-053";
-          severity = Info;
-          message = {|Space after \left( at line start|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-053" ~severity:Info
+           ~message:{|Space after \left( at line start|} ~count:!cnt)
     else None
   in
   { id = "MATH-053"; run; languages = [] }
@@ -1345,12 +1201,9 @@ let l1_math_055_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-055";
-          severity = Info;
-          message = {|Math font change \mathcal for single character only|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-055" ~severity:Info
+           ~message:{|Math font change \mathcal for single character only|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-055"; run; languages = [] }
@@ -1415,12 +1268,8 @@ let l1_math_057_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-057";
-          severity = Error;
-          message = "Empty fraction numerator or denominator";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-057" ~severity:Error
+           ~message:"Empty fraction numerator or denominator" ~count:!cnt)
     else None
   in
   { id = "MATH-057"; run; languages = [] }
@@ -1434,12 +1283,8 @@ let l1_math_058_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-058";
-          severity = Info;
-          message = "Nested \\text inside \\text";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-058" ~severity:Info
+           ~message:"Nested \\text inside \\text" ~count:!cnt)
     else None
   in
   { id = "MATH-058"; run; languages = [] }
@@ -1454,12 +1299,8 @@ let l1_math_065_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-065";
-          severity = Info;
-          message = {|Manual spacing \hspace in math detected|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-065" ~severity:Info
+           ~message:{|Manual spacing \hspace in math detected|} ~count:!cnt)
     else None
   in
   { id = "MATH-065"; run; languages = [] }
@@ -1479,12 +1320,9 @@ let l1_math_066_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-066";
-          severity = Info;
-          message = {|\phantom used; suggest \hphantom or \vphantom|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-066" ~severity:Info
+           ~message:{|\phantom used; suggest \hphantom or \vphantom|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-066"; run; languages = [] }
@@ -1498,12 +1336,8 @@ let l1_math_068_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-068";
-          severity = Info;
-          message = "Spacing around \\mid missing";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-068" ~severity:Info
+           ~message:"Spacing around \\mid missing" ~count:!cnt)
     else None
   in
   { id = "MATH-068"; run; languages = [] }
@@ -1522,12 +1356,8 @@ let l1_math_069_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-069";
-          severity = Info;
-          message = "Bold sans‑serif math font used";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-069" ~severity:Info
+           ~message:"Bold sans‑serif math font used" ~count:!cnt)
     else None
   in
   { id = "MATH-069"; run; languages = [] }
@@ -1544,12 +1374,8 @@ let l1_math_071_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-071";
-          severity = Info;
-          message = {|Overuse of \cancel in equations|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-071" ~severity:Info
+           ~message:{|Overuse of \cancel in equations|} ~count:!cnt)
     else None
   in
   { id = "MATH-071"; run; languages = [] }
@@ -1562,12 +1388,9 @@ let l1_math_078_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_substring seg "-->") math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-078";
-          severity = Info;
-          message = {|Long arrow typed as --> instead of \longrightarrow|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-078" ~severity:Info
+           ~message:{|Long arrow typed as --> instead of \longrightarrow|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-078"; run; languages = [] }
@@ -1616,12 +1439,9 @@ let l1_math_079_rule : rule =
       display_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-079";
-          severity = Info;
-          message = {|\displaystyle inside display math – redundant|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-079" ~severity:Info
+           ~message:{|\displaystyle inside display math – redundant|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-079"; run; languages = [] }
@@ -1634,12 +1454,9 @@ let l1_math_082_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_substring seg "\\!\\!") math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-082";
-          severity = Warning;
-          message = {|Negative thin space \! misused twice consecutively|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-082" ~severity:Warning
+           ~message:{|Negative thin space \! misused twice consecutively|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-082"; run; languages = [] }
@@ -1654,12 +1471,8 @@ let l1_math_085_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-085";
-          severity = Info;
-          message = {|Use of \eqcirc – rarely acceptable|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-085" ~severity:Info
+           ~message:{|Use of \eqcirc – rarely acceptable|} ~count:!cnt)
     else None
   in
   { id = "MATH-085"; run; languages = [] }
@@ -1672,12 +1485,9 @@ let l1_math_094_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_substring seg "\\kern") math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-094";
-          severity = Info;
-          message = {|Manual \kern in math detected – typographic smell|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-094" ~severity:Info
+           ~message:{|Manual \kern in math detected – typographic smell|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-094"; run; languages = [] }
@@ -1726,12 +1536,9 @@ let l1_math_105_rule : rule =
       display_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-105";
-          severity = Info;
-          message = {|\textstyle used inside display math — redundant|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-105" ~severity:Info
+           ~message:{|\textstyle used inside display math — redundant|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-105"; run; languages = [] }
@@ -1757,12 +1564,8 @@ let l1_math_056_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-056";
-          severity = Info;
-          message = "\\operatorname duplicated for same function";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-056" ~severity:Info
+           ~message:"\\operatorname duplicated for same function" ~count:!cnt)
     else None
   in
   { id = "MATH-056"; run; languages = [] }
@@ -1776,12 +1579,9 @@ let l1_math_059_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-059";
-          severity = Warning;
-          message = {|Math accent \bar on group expression needs braces|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-059" ~severity:Warning
+           ~message:{|Math accent \bar on group expression needs braces|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-059"; run; languages = [] }
@@ -1802,12 +1602,8 @@ let l1_math_060_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-060";
-          severity = Info;
-          message = "Differential d typeset italic";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-060" ~severity:Info
+           ~message:"Differential d typeset italic" ~count:!cnt)
     else None
   in
   { id = "MATH-060"; run; languages = [] }
@@ -1821,12 +1617,8 @@ let l1_math_061_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-061";
-          severity = Warning;
-          message = {|Log base missing braces in \log_10x|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-061" ~severity:Warning
+           ~message:{|Log base missing braces in \log_10x|} ~count:!cnt)
     else None
   in
   { id = "MATH-061"; run; languages = [] }
@@ -1881,12 +1673,8 @@ let l1_math_067_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-067";
-          severity = Warning;
-          message = "Stacked limits on non‑operator";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-067" ~severity:Warning
+           ~message:"Stacked limits on non‑operator" ~count:!cnt)
     else None
   in
   { id = "MATH-067"; run; languages = [] }
@@ -1905,12 +1693,8 @@ let l1_math_070_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-070";
-          severity = Info;
-          message = {|Multiline subscripts lack \substack|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-070" ~severity:Info
+           ~message:{|Multiline subscripts lack \substack|} ~count:!cnt)
     else None
   in
   { id = "MATH-070"; run; languages = [] }
@@ -1924,12 +1708,8 @@ let l1_math_073_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-073";
-          severity = Warning;
-          message = {|xcolor macro \color used inside math|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-073" ~severity:Warning
+           ~message:{|xcolor macro \color used inside math|} ~count:!cnt)
     else None
   in
   { id = "MATH-073"; run; languages = [] }
@@ -1983,12 +1763,9 @@ let l1_math_077_rule : rule =
       non_align_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-077";
-          severity = Error;
-          message = "Alignment point & outside alignment environment";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-077" ~severity:Error
+           ~message:"Alignment point & outside alignment environment"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-077"; run; languages = [] }
@@ -2032,12 +1809,9 @@ let l1_math_081_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-081";
-          severity = Info;
-          message = {|Improper kerning f(x) – suggest f\!\left(x\right)|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-081" ~severity:Info
+           ~message:{|Improper kerning f(x) – suggest f\!\left(x\right)|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-081"; run; languages = [] }
@@ -2056,12 +1830,8 @@ let l1_math_084_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-084";
-          severity = Info;
-          message = {|Displaystyle \sum in inline math|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-084" ~severity:Info
+           ~message:{|Displaystyle \sum in inline math|} ~count:!cnt)
     else None
   in
   { id = "MATH-084"; run; languages = [] }
@@ -2076,12 +1846,8 @@ let l1_math_086_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-086";
-          severity = Warning;
-          message = {|Nested root \sqrt{\sqrt{…}} depth > 2|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-086" ~severity:Warning
+           ~message:{|Nested root \sqrt{\sqrt{…}} depth > 2|} ~count:!cnt)
     else None
   in
   { id = "MATH-086"; run; languages = [] }
@@ -2096,12 +1862,9 @@ let l1_math_090_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-090";
-          severity = Warning;
-          message = {|Nested \frac depth > 3 – suggest \dfrac + \smash|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-090" ~severity:Warning
+           ~message:{|Nested \frac depth > 3 – suggest \dfrac + \smash|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-090"; run; languages = [] }
@@ -2164,12 +1927,9 @@ let l1_math_093_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-093";
-          severity = Info;
-          message = {|Multi‑letter italic variable should be \mathit{}|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-093" ~severity:Info
+           ~message:{|Multi‑letter italic variable should be \mathit{}|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-093"; run; languages = [] }
@@ -2188,12 +1948,8 @@ let l1_math_098_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-098";
-          severity = Info;
-          message = {|Too many \qquad (> 2) in single line|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-098" ~severity:Info
+           ~message:{|Too many \qquad (> 2) in single line|} ~count:!cnt)
     else None
   in
   { id = "MATH-098"; run; languages = [] }
@@ -2266,12 +2022,8 @@ let l1_math_072_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-072";
-          severity = Warning;
-          message = "Unknown math operator name";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-072" ~severity:Warning
+           ~message:"Unknown math operator name" ~count:!cnt)
     else None
   in
   { id = "MATH-072"; run; languages = [] }
@@ -2290,12 +2042,8 @@ let l1_math_074_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-074";
-          severity = Warning;
-          message = "TikZ node inside math without math mode set";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-074" ~severity:Warning
+           ~message:"TikZ node inside math without math mode set" ~count:!cnt)
     else None
   in
   { id = "MATH-074"; run; languages = [] }
@@ -2309,12 +2057,8 @@ let l1_math_087_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-087";
-          severity = Info;
-          message = {|Maths uses fake bold via \mathbf on digits|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-087" ~severity:Info
+           ~message:{|Maths uses fake bold via \mathbf on digits|} ~count:!cnt)
     else None
   in
   { id = "MATH-087"; run; languages = [] }
@@ -2328,12 +2072,8 @@ let l1_math_088_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-088";
-          severity = Info;
-          message = {|Bare \partial lacks thin‑space before/after|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-088" ~severity:Info
+           ~message:{|Bare \partial lacks thin‑space before/after|} ~count:!cnt)
     else None
   in
   { id = "MATH-088"; run; languages = [] }
@@ -2391,12 +2131,9 @@ let l1_math_091_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-091";
-          severity = Info;
-          message = {|\operatorname{det} used – predefined \det exists|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-091" ~severity:Info
+           ~message:{|\operatorname{det} used – predefined \det exists|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-091"; run; languages = [] }
@@ -2410,12 +2147,8 @@ let l1_math_092_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-092";
-          severity = Info;
-          message = "\\sum with explicit limits in inline math";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-092" ~severity:Info
+           ~message:"\\sum with explicit limits in inline math" ~count:!cnt)
     else None
   in
   { id = "MATH-092"; run; languages = [] }
@@ -2429,12 +2162,8 @@ let l1_math_095_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-095";
-          severity = Warning;
-          message = {|Log base typeset without braces (\log_10x)|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-095" ~severity:Warning
+           ~message:{|Log base typeset without braces (\log_10x)|} ~count:!cnt)
     else None
   in
   { id = "MATH-095"; run; languages = [] }
@@ -2489,12 +2218,8 @@ let l1_math_096_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-096";
-          severity = Info;
-          message = {|Bold Greek via \mathbf – use \boldsymbol|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-096" ~severity:Info
+           ~message:{|Bold Greek via \mathbf – use \boldsymbol|} ~count:!cnt)
     else None
   in
   { id = "MATH-096"; run; languages = [] }
@@ -2512,12 +2237,8 @@ let l1_math_097_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-097";
-          severity = Info;
-          message = {|Arrow '=>' typed instead of \implies|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-097" ~severity:Info
+           ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt)
     else None
   in
   { id = "MATH-097"; run; languages = [] }
@@ -2536,12 +2257,8 @@ let l1_math_099_rule : rule =
       inline_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-099";
-          severity = Info;
-          message = {|Large operator (\bigcup) used inline|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-099" ~severity:Info
+           ~message:{|Large operator (\bigcup) used inline|} ~count:!cnt)
     else None
   in
   { id = "MATH-099"; run; languages = [] }
@@ -2554,12 +2271,9 @@ let l1_math_101_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_substring seg "\\over") math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-101";
-          severity = Warning;
-          message = {|Deprecated \over primitive used; replace with \frac|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-101" ~severity:Warning
+           ~message:{|Deprecated \over primitive used; replace with \frac|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-101"; run; languages = [] }
@@ -2577,13 +2291,10 @@ let l1_math_104_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-104";
-          severity = Info;
-          message =
-            {|Paired delimiters repeated without \DeclarePairedDelimiter|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-104" ~severity:Info
+           ~message:
+             {|Paired delimiters repeated without \DeclarePairedDelimiter|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-104"; run; languages = [] }
@@ -2596,12 +2307,8 @@ let l1_math_106_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_substring seg "\\not=") math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-106";
-          severity = Info;
-          message = {|Misuse of \not=; prefer \neq|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-106" ~severity:Info
+           ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt)
     else None
   in
   { id = "MATH-106"; run; languages = [] }
@@ -2616,12 +2323,9 @@ let l1_math_108_rule : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-108";
-          severity = Info;
-          message = {|Scalar product uses • (⋅) directly; require \cdot|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-108" ~severity:Info
+           ~message:{|Scalar product uses • (⋅) directly; require \cdot|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-108"; run; languages = [] }

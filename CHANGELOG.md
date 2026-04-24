@@ -41,7 +41,12 @@ v26.3 scope (see `specs/v26/V26_2_1_PLAN.md` §8).
   `--apply-fixes-for RULE-ID` stays v26.3 scope.
 - **`test_rule_fix_integration.ml`** (new) — E2E pipeline test for
   STRUCT-001 / TYPO-002 / TYPO-003: fire → collect fixes → apply →
-  assert rule no longer fires. 4 cases.
+  assert rule no longer fires. 5 cases. Inputs live in
+  `corpora/fixtures/v26_2_1/` (5 curated files + README) and are
+  loaded via `(deps (source_tree ...))` in `latex-parse/src/dune`.
+- **`scripts/tools/check_fix_integration_wired.py`** (new, gate #16)
+  — verifies the E2E test, its dune stanza, and the fixture files
+  are all in place so CI can't accidentally detach the pipeline.
 - **`docs/v26_2/FIX_STYLE_GUIDE.md`** refreshed to the v26.2.1 API
   (list + helper exemplars).
 - **`docs/MIGRATION_v26.2_to_v26.2.1.md`** (new) — consumer-side

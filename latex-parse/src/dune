@@ -373,7 +373,9 @@
 (test
  (name test_rule_fix_integration)
  (modules test_rule_fix_integration)
- (libraries latex_parse_lib test_helpers unix))
+ (libraries latex_parse_lib test_helpers unix)
+ (deps
+  (source_tree ../../corpora/fixtures/v26_2_1)))
 
 (test
  (name test_validators_verb_cjk_cmd)

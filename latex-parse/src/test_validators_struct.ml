@@ -18,6 +18,20 @@ let () =
         (does_not_fire "STRUCT-001"
            "\\documentclass{article}\n\\begin{document}\n\\end{document}")
         (tag ^ ": docclass present"));
+  run "STRUCT-001 emits a single insert-at-0 fix edit" (fun tag ->
+      let src = "Hello world\nNo documentclass here." in
+      let edits = fix_edits "STRUCT-001" src in
+      let applied =
+        match edits with
+        | [ edit ] -> Latex_parse_lib.Cst_edit.apply_single src edit
+        | _ -> ""
+      in
+      expect
+        (List.length edits = 1
+        && String.length applied - String.length src
+           = String.length "\\documentclass{article}\n"
+        && String.sub applied 0 14 = "\\documentclass")
+        (tag ^ ": inserts \\documentclass at top"));
 
   (* STRUCT-002: Empty section title *)
   run "STRUCT-002 fires on empty section title" (fun tag ->

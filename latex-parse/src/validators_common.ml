@@ -9,7 +9,29 @@ type result = {
   severity : severity;
   message : string;
   count : int;
+  fix : Cst_edit.t list option;
+      (** Optional fix suggestions. [None] = no fix available for this firing;
+          [Some []] is ill-formed (use [None]); [Some edits] is a
+          non-overlapping edit set that, when applied via
+          [Rewrite_engine.apply], makes the rule stop firing on the output.
+          Introduced in v26.2.1 to back the [--apply-fixes] CLI flag. See
+          [docs/v26_2/FIX_STYLE_GUIDE.md] for producer conventions. *)
 }
+
+(** Construct a [result] with no fix suggestion ([fix = None]). Every rule
+    introduced before v26.2.1 should use this helper; rules that emit fix
+    suggestions use [mk_result_with_fix] below. *)
+let mk_result ~id ~severity ~message ~count =
+  { id; severity; message; count; fix = None }
+
+(** Construct a [result] that carries a non-empty edit list. Fails if [fix] is
+    the empty list — an empty [Some] is indistinguishable from [None]
+    semantically but harder to audit, so the caller must pass [mk_result ...]
+    when no fix is available. *)
+let mk_result_with_fix ~id ~severity ~message ~count ~fix =
+  if fix = [] then
+    invalid_arg "Validators_common.mk_result_with_fix: empty fix list"
+  else { id; severity; message; count; fix = Some fix }
 
 type rule = {
   id : string;

@@ -46,13 +46,10 @@ let r_char_004 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CHAR-004";
-          severity = Info;
-          message =
-            "Private-use Unicode (U+E000\xe2\x80\x93F8FF) codepoint found";
-          count = !cnt;
-        }
+        (mk_result ~id:"CHAR-004" ~severity:Info
+           ~message:
+             "Private-use Unicode (U+E000\xe2\x80\x93F8FF) codepoint found"
+           ~count:!cnt)
     else None
   in
   mk_rule "CHAR-004" run
@@ -91,13 +88,10 @@ let r_math_006 : rule =
       math_segs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-006";
-          severity = Info;
-          message =
-            {|Bra-ket notation: \langle...\rangle without \mid or | separator|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-006" ~severity:Info
+           ~message:
+             {|Bra-ket notation: \langle...\rangle without \mid or | separator|}
+           ~count:!cnt)
     else None
   in
   mk_rule "MATH-006" run
@@ -136,12 +130,9 @@ let r_l3_001 : rule =
     in
     if has_expl3 && has_2e then
       Some
-        {
-          id = "L3-001";
-          severity = Info;
-          message = {|LaTeX3 \tl_new:N in preamble mixed with 2e macros|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-001" ~severity:Info
+           ~message:{|LaTeX3 \tl_new:N in preamble mixed with 2e macros|}
+           ~count:1)
     else None
   in
   mk_rule "L3-001" run
@@ -167,12 +158,9 @@ let r_l3_002 : rule =
       let cnt = count_re_matches re_expl3_decl body in
       if cnt > 0 then
         Some
-          {
-            id = "L3-002";
-            severity = Warning;
-            message = {|Expl3 variable declared after \begin{document}|};
-            count = cnt;
-          }
+          (mk_result ~id:"L3-002" ~severity:Warning
+             ~message:{|Expl3 variable declared after \begin{document}|}
+             ~count:cnt)
       else None
   in
   mk_rule "L3-002" run
@@ -203,12 +191,8 @@ let r_l3_003 : rule =
     in
     if has_expl3 && has_etoolbox then
       Some
-        {
-          id = "L3-003";
-          severity = Warning;
-          message = "Expl3 and etoolbox patch macros combined";
-          count = 1;
-        }
+        (mk_result ~id:"L3-003" ~severity:Warning
+           ~message:"Expl3 and etoolbox patch macros combined" ~count:1)
     else None
   in
   mk_rule "L3-003" run
@@ -220,12 +204,8 @@ let r_l3_004 : rule =
     let cnt = count_re_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "L3-004";
-          severity = Info;
-          message = {|Undocumented \__module_internal:N used|};
-          count = cnt;
-        }
+        (mk_result ~id:"L3-004" ~severity:Info
+           ~message:{|Undocumented \__module_internal:N used|} ~count:cnt)
     else None
   in
   mk_rule "L3-004" run
@@ -253,12 +233,8 @@ let r_l3_005 : rule =
       in
       if not has_guard then
         Some
-          {
-            id = "L3-005";
-            severity = Error;
-            message = {|Missing \ExplSyntaxOn guard around expl3 code|};
-            count = 1;
-          }
+          (mk_result ~id:"L3-005" ~severity:Error
+             ~message:{|Missing \ExplSyntaxOn guard around expl3 code|} ~count:1)
       else None
   in
   mk_rule "L3-005" run
@@ -282,12 +258,9 @@ let r_l3_007 : rule =
       let cnt = count_re_matches re_camel s in
       if cnt > 0 then
         Some
-          {
-            id = "L3-007";
-            severity = Info;
-            message = "Mix of camelCase and snake_case in expl3 names";
-            count = cnt;
-          }
+          (mk_result ~id:"L3-007" ~severity:Info
+             ~message:"Mix of camelCase and snake_case in expl3 names"
+             ~count:cnt)
       else None
   in
   mk_rule "L3-007" run
@@ -317,12 +290,8 @@ let r_l3_008 : rule =
     in
     if has_expl3 && not has_provides then
       Some
-        {
-          id = "L3-008";
-          severity = Warning;
-          message = {|Expl3 module lacks \ProvidesExplPackage|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-008" ~severity:Warning
+           ~message:{|Expl3 module lacks \ProvidesExplPackage|} ~count:1)
     else None
   in
   mk_rule "L3-008" run
@@ -346,12 +315,8 @@ let r_l3_009 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "L3-009";
-          severity = Info;
-          message = "LaTeX3 function deprecated _n: variant used";
-          count = cnt;
-        }
+        (mk_result ~id:"L3-009" ~severity:Info
+           ~message:"LaTeX3 function deprecated _n: variant used" ~count:cnt)
     else None
   in
   mk_rule "L3-009" run
@@ -377,12 +342,9 @@ let r_l3_010 : rule =
     let off_count = count_m off_re s in
     if on_count > 0 && on_count > off_count then
       Some
-        {
-          id = "L3-010";
-          severity = Info;
-          message = {|\ExplSyntaxOff missing at end of file|};
-          count = on_count - off_count;
-        }
+        (mk_result ~id:"L3-010" ~severity:Info
+           ~message:{|\ExplSyntaxOff missing at end of file|}
+           ~count:(on_count - off_count))
     else None
   in
   mk_rule "L3-010" run
@@ -437,13 +399,11 @@ let r_l3_011 : rule =
       in
       if cnt > 0 then
         Some
-          {
-            id = "L3-011";
-            severity = Warning;
-            message =
-              "Engine\xe2\x80\x91branch uses pdfTeX primitive in Lua/XeTeX path";
-            count = cnt;
-          }
+          (mk_result ~id:"L3-011" ~severity:Warning
+             ~message:
+               "Engine\xe2\x80\x91branch uses pdfTeX primitive in Lua/XeTeX \
+                path"
+             ~count:cnt)
       else None
   in
   mk_rule "L3-011" run

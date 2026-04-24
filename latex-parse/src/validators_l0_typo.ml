@@ -9,12 +9,9 @@ let r_typo_001 : rule =
     let cnt = count_char s '"' in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-001";
-          severity = Error;
-          message = {|ASCII straight quotes (" … ") must be curly quotes|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-001" ~severity:Error
+           ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-001"; run; languages = [] }
@@ -38,23 +35,15 @@ let r_typo_002 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-002";
-              severity = Warning;
-              message = "Double hyphen -- should be en‑dash –";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-002" ~severity:Warning
+               ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
         else None
     | _ ->
         let cnt = count_substring s "--" in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-002";
-              severity = Warning;
-              message = "Double hyphen -- should be en‑dash –";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-002" ~severity:Warning
+               ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
         else None
   in
   { id = "TYPO-002"; run; languages = [] }
@@ -78,23 +67,15 @@ let r_typo_003 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-003";
-              severity = Warning;
-              message = "Triple hyphen --- should be em‑dash —";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-003" ~severity:Warning
+               ~message:"Triple hyphen --- should be em‑dash —" ~count:cnt)
         else None
     | _ ->
         let cnt = count_substring s "---" in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-003";
-              severity = Warning;
-              message = "Triple hyphen --- should be em‑dash —";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-003" ~severity:Warning
+               ~message:"Triple hyphen --- should be em‑dash —" ~count:cnt)
         else None
   in
   { id = "TYPO-003"; run; languages = [] }
@@ -104,13 +85,10 @@ let r_typo_004 : rule =
     let cnt = count_substring s "``" + count_substring s "''" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-004";
-          severity = Warning;
-          message =
-            "TeX double back‑tick ``…'' not allowed; use opening curly quotes";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-004" ~severity:Warning
+           ~message:
+             "TeX double back‑tick ``…'' not allowed; use opening curly quotes"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-004"; run; languages = [] }
@@ -121,12 +99,8 @@ let r_typo_005 : rule =
     let cnt = count_substring s "..." in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-005";
-          severity = Warning;
-          message = "Ellipsis typed as three periods ...; use \\dots";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-005" ~severity:Warning
+           ~message:"Ellipsis typed as three periods ...; use \\dots" ~count:cnt)
     else None
   in
   { id = "TYPO-005"; run; languages = [] }
@@ -136,12 +110,8 @@ let r_typo_006 : rule =
     let cnt = count_char s '\t' in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-006";
-          severity = Error;
-          message = "Tab character U+0009 forbidden";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-006" ~severity:Error
+           ~message:"Tab character U+0009 forbidden" ~count:cnt)
     else None
   in
   { id = "TYPO-006"; run; languages = [] }
@@ -166,12 +136,8 @@ let r_typo_007 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-007";
-              severity = Info;
-              message = "Trailing spaces at end of line";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-007" ~severity:Info
+               ~message:"Trailing spaces at end of line" ~count:cnt)
         else None
     | _ ->
         let _total, matched =
@@ -184,12 +150,8 @@ let r_typo_007 : rule =
         in
         if matched > 0 then
           Some
-            {
-              id = "TYPO-007";
-              severity = Info;
-              message = "Trailing spaces at end of line";
-              count = matched;
-            }
+            (mk_result ~id:"TYPO-007" ~severity:Info
+               ~message:"Trailing spaces at end of line" ~count:matched)
         else None
   in
   { id = "TYPO-007"; run; languages = [] }
@@ -214,23 +176,17 @@ let r_typo_008 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-008";
-              severity = Info;
-              message = "Multiple consecutive blank lines (> 2) in source";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-008" ~severity:Info
+               ~message:"Multiple consecutive blank lines (> 2) in source"
+               ~count:cnt)
         else None
     | _ ->
         let cnt = count_substring s "\n\n\n" in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-008";
-              severity = Info;
-              message = "Multiple consecutive blank lines (> 2) in source";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-008" ~severity:Info
+               ~message:"Multiple consecutive blank lines (> 2) in source"
+               ~count:cnt)
         else None
   in
   { id = "TYPO-008"; run; languages = [] }
@@ -243,12 +199,9 @@ let r_typo_009 : rule =
     let cnt = starts + count_substring s "\n~" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-009";
-          severity = Warning;
-          message = "Non‑breaking space ~ used incorrectly at line start";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-009" ~severity:Warning
+           ~message:"Non‑breaking space ~ used incorrectly at line start"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-009"; run; languages = [] }
@@ -276,12 +229,8 @@ let r_typo_010 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-010";
-              severity = Info;
-              message = "Space before punctuation , . ; : ? !";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-010" ~severity:Info
+               ~message:"Space before punctuation , . ; : ? !" ~count:cnt)
         else None
     | _ ->
         let combos = [ " ,"; " ."; " ;"; " :"; " ?"; " !" ] in
@@ -290,12 +239,8 @@ let r_typo_010 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "TYPO-010";
-              severity = Info;
-              message = "Space before punctuation , . ; : ? !";
-              count = cnt;
-            }
+            (mk_result ~id:"TYPO-010" ~severity:Info
+               ~message:"Space before punctuation , . ; : ? !" ~count:cnt)
         else None
   in
   { id = "TYPO-010"; run; languages = [] }
@@ -315,13 +260,10 @@ let r_typo_011 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-011";
-          severity = Info;
-          message =
-            {|Missing thin space (\,) before differential d in integrals|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-011" ~severity:Info
+           ~message:
+             {|Missing thin space (\,) before differential d in integrals|}
+           ~count:!cnt)
     else None
   in
   { id = "TYPO-011"; run; languages = [] }
@@ -341,13 +283,10 @@ let r_typo_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-012";
-          severity = Warning;
-          message =
-            {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-012" ~severity:Warning
+           ~message:
+             {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|}
+           ~count:!cnt)
     else None
   in
   { id = "TYPO-012"; run; languages = [] }
@@ -367,12 +306,8 @@ let r_typo_013 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-013";
-          severity = Warning;
-          message = {|ASCII back‑tick ` used as opening quote|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-013" ~severity:Warning
+           ~message:{|ASCII back‑tick ` used as opening quote|} ~count:!cnt)
     else None
   in
   { id = "TYPO-013"; run; languages = [] }
@@ -383,12 +318,8 @@ let r_typo_014 : rule =
     let cnt = count_substring s " %" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-014";
-          severity = Info;
-          message = {|Space before percent sign \%|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-014" ~severity:Info
+           ~message:{|Space before percent sign \%|} ~count:cnt)
     else None
   in
   { id = "TYPO-014"; run; languages = [] }
@@ -399,12 +330,8 @@ let r_typo_015 : rule =
     let cnt = count_substring s "\\%\\%" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-015";
-          severity = Warning;
-          message = {|Double \% in source; likely stray percent|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-015" ~severity:Warning
+           ~message:{|Double \% in source; likely stray percent|} ~count:cnt)
     else None
   in
   { id = "TYPO-015"; run; languages = [] }
@@ -425,12 +352,9 @@ let r_typo_016 : rule =
     let cnt = !cnt in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-016";
-          severity = Info;
-          message = {|Non‑breaking space ~ missing before \cite / \ref|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-016" ~severity:Info
+           ~message:{|Non‑breaking space ~ missing before \cite / \ref|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-016"; run; languages = [] }
@@ -450,12 +374,9 @@ let r_typo_017 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-017";
-          severity = Info;
-          message = {|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-017" ~severity:Info
+           ~message:{|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|}
+           ~count:!cnt)
     else None
   in
   { id = "TYPO-017"; run; languages = [] }
@@ -466,12 +387,8 @@ let r_typo_018 : rule =
     let cnt = count_substring s "  " in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-018";
-          severity = Info;
-          message = "Multiple consecutive spaces in text";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-018" ~severity:Info
+           ~message:"Multiple consecutive spaces in text" ~count:cnt)
     else None
   in
   { id = "TYPO-018"; run; languages = [] }
@@ -509,12 +426,8 @@ let r_typo_021 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-021";
-          severity = Info;
-          message = "Capital letter after ellipsis without space";
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-021" ~severity:Info
+           ~message:"Capital letter after ellipsis without space" ~count:!cnt)
     else None
   in
   { id = "TYPO-021"; run; languages = [] }
@@ -528,12 +441,8 @@ let r_typo_022 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-022";
-          severity = Info;
-          message = "Space before closing punctuation ) ] }";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-022" ~severity:Info
+           ~message:"Space before closing punctuation ) ] }" ~count:cnt)
     else None
   in
   { id = "TYPO-022"; run; languages = [] }
@@ -588,12 +497,9 @@ let r_typo_023 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-023";
-          severity = Error;
-          message = {|ASCII ampersand & outside tabular env; use \&|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-023" ~severity:Error
+           ~message:{|ASCII ampersand & outside tabular env; use \&|}
+           ~count:!cnt)
     else None
   in
   { id = "TYPO-023"; run; languages = [] }
@@ -614,12 +520,8 @@ let r_typo_024 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-024";
-          severity = Info;
-          message = "Dangling dash at line end";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-024" ~severity:Info
+           ~message:"Dangling dash at line end" ~count:cnt)
     else None
   in
   { id = "TYPO-024"; run; languages = [] }
@@ -639,12 +541,8 @@ let r_typo_025 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-025";
-          severity = Warning;
-          message = {|Space before en‑dash in number range|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-025" ~severity:Warning
+           ~message:{|Space before en‑dash in number range|} ~count:!cnt)
     else None
   in
   { id = "TYPO-025"; run; languages = [] }
@@ -664,12 +562,8 @@ let r_typo_026 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-026";
-          severity = Warning;
-          message = {|Wrong dash in page range – should use --|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-026" ~severity:Warning
+           ~message:{|Wrong dash in page range – should use --|} ~count:!cnt)
     else None
   in
   { id = "TYPO-026"; run; languages = [] }
@@ -680,12 +574,8 @@ let r_typo_027 : rule =
     let cnt = count_substring s "!!" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-027";
-          severity = Info;
-          message = {|Multiple exclamation marks ‼|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-027" ~severity:Info
+           ~message:{|Multiple exclamation marks ‼|} ~count:cnt)
     else None
   in
   { id = "TYPO-027"; run; languages = [] }
@@ -698,12 +588,8 @@ let r_typo_028 : rule =
     let cnt = cnt / 2 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-028";
-          severity = Error;
-          message = {|Use of ``$$'' display math delimiter|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-028" ~severity:Error
+           ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt)
     else None
   in
   { id = "TYPO-028"; run; languages = [] }
@@ -723,12 +609,8 @@ let r_typo_029 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-029";
-          severity = Info;
-          message = {|Non‑breaking space after \ref missing|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-029" ~severity:Info
+           ~message:{|Non‑breaking space after \ref missing|} ~count:!cnt)
     else None
   in
   { id = "TYPO-029"; run; languages = [] }
@@ -760,12 +642,8 @@ let r_typo_032 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-032";
-          severity = Warning;
-          message = {|Comma before \cite|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-032" ~severity:Warning
+           ~message:{|Comma before \cite|} ~count:!cnt)
     else None
   in
   { id = "TYPO-032"; run; languages = [] }
@@ -776,12 +654,8 @@ let r_typo_033 : rule =
     let cnt = count_substring s "et.al" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-033";
-          severity = Warning;
-          message = "Abbreviation et.al without space";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-033" ~severity:Warning
+           ~message:"Abbreviation et.al without space" ~count:cnt)
     else None
   in
   { id = "TYPO-033"; run; languages = [] }
@@ -833,12 +707,9 @@ let r_typo_034 : rule =
     let cnt = count_substring s " \\footnote" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-034";
-          severity = Info;
-          message = {|Spurious space before footnote command \footnote|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-034" ~severity:Info
+           ~message:{|Spurious space before footnote command \footnote|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-034"; run; languages = [] }
@@ -854,12 +725,8 @@ let r_typo_035 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-035";
-          severity = Warning;
-          message = "French punctuation requires NBSP before ; : ! ?";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-035" ~severity:Warning
+           ~message:"French punctuation requires NBSP before ; : ! ?" ~count:cnt)
     else None
   in
   { id = "TYPO-035"; run; languages = [] }
@@ -881,12 +748,9 @@ let r_typo_036 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-036";
-          severity = Info;
-          message = "Suspicious consecutive capitalised words (shouting)";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-036" ~severity:Info
+           ~message:"Suspicious consecutive capitalised words (shouting)"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-036"; run; languages = [] }
@@ -897,12 +761,8 @@ let r_typo_037 : rule =
     let cnt = count_substring s " ," in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-037";
-          severity = Info;
-          message = "Space before comma";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-037" ~severity:Info ~message:"Space before comma"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-037"; run; languages = [] }
@@ -921,12 +781,8 @@ let r_typo_038 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-038";
-          severity = Info;
-          message = {|E‑mail address not in \href|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-038" ~severity:Info
+           ~message:{|E‑mail address not in \href|} ~count:cnt)
     else None
   in
   { id = "TYPO-038"; run; languages = [] }
@@ -941,12 +797,8 @@ let r_typo_041 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-041";
-          severity = Info;
-          message = {|Incorrect spacing around \ldots|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-041" ~severity:Info
+           ~message:{|Incorrect spacing around \ldots|} ~count:cnt)
     else None
   in
   { id = "TYPO-041"; run; languages = [] }
@@ -957,12 +809,8 @@ let r_typo_042 : rule =
     let cnt = count_substring s "??" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-042";
-          severity = Info;
-          message = "Multiple consecutive question marks ??";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-042" ~severity:Info
+           ~message:"Multiple consecutive question marks ??" ~count:cnt)
     else None
   in
   { id = "TYPO-042"; run; languages = [] }
@@ -978,12 +826,8 @@ let r_typo_043 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-043";
-          severity = Warning;
-          message = "Smart quotes inside verbatim detected";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-043" ~severity:Warning
+           ~message:"Smart quotes inside verbatim detected" ~count:cnt)
     else None
   in
   { id = "TYPO-043"; run; languages = [] }
@@ -1135,12 +979,8 @@ let r_typo_044 : rule =
       first_use;
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-044";
-          severity = Info;
-          message = "Acronym not defined on first use";
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-044" ~severity:Info
+           ~message:"Acronym not defined on first use" ~count:!cnt)
     else None
   in
   { id = "TYPO-044"; run; languages = [] }
@@ -1156,12 +996,8 @@ let r_typo_048 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-048";
-          severity = Info;
-          message = "En‑dash used as minus sign in text";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-048" ~severity:Info
+           ~message:"En‑dash used as minus sign in text" ~count:cnt)
     else None
   in
   { id = "TYPO-048"; run; languages = [] }
@@ -1172,12 +1008,9 @@ let r_typo_051 : rule =
     let cnt = count_substring s "\xe2\x80\x89" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-051";
-          severity = Warning;
-          message = {|Figure space U+2009 used instead of \thinspace macro|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-051" ~severity:Warning
+           ~message:{|Figure space U+2009 used instead of \thinspace macro|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-051"; run; languages = [] }
@@ -1193,12 +1026,9 @@ let r_typo_052 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-052";
-          severity = Warning;
-          message = "Unescaped < or > in text; use \\textless / \\textgreater";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-052" ~severity:Warning
+           ~message:"Unescaped < or > in text; use \\textless / \\textgreater"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-052"; run; languages = [] }
@@ -1209,12 +1039,9 @@ let r_typo_053 : rule =
     let cnt = count_substring s "\xe2\x8b\xaf" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-053";
-          severity = Warning;
-          message = {|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-053" ~severity:Warning
+           ~message:{|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-053"; run; languages = [] }
@@ -1233,12 +1060,9 @@ let r_typo_054 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-054";
-          severity = Info;
-          message = "Hair‑space required after en‑dash in word–word ranges";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-054" ~severity:Info
+           ~message:"Hair‑space required after en‑dash in word–word ranges"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-054"; run; languages = [] }
@@ -1249,12 +1073,9 @@ let r_typo_055 : rule =
     let cnt = count_substring s "\\,\\," in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-055";
-          severity = Info;
-          message = {|Consecutive thin‑spaces (\,\,) prohibited; collapse|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-055" ~severity:Info
+           ~message:{|Consecutive thin‑spaces (\,\,) prohibited; collapse|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-055"; run; languages = [] }
@@ -1273,12 +1094,9 @@ let r_typo_057 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-057";
-          severity = Info;
-          message = {|Missing thin‑space before °C/°F or \si{\celsius}|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-057" ~severity:Info
+           ~message:{|Missing thin‑space before °C/°F or \si{\celsius}|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-057"; run; languages = [] }
@@ -1290,12 +1108,9 @@ let r_typo_061 : rule =
     let cnt = count_substring s "\xc3\x97" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-061";
-          severity = Info;
-          message = {|Unicode × (U+00D7) in text; prefer \times via math mode|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-061" ~severity:Info
+           ~message:{|Unicode × (U+00D7) in text; prefer \times via math mode|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-061"; run; languages = [] }
@@ -1306,12 +1121,8 @@ let r_typo_063 : rule =
     let cnt = count_substring s "\xe2\x80\x91" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-063";
-          severity = Info;
-          message = "Non‑breaking hyphen U+2011 found inside URL";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-063" ~severity:Info
+           ~message:"Non‑breaking hyphen U+2011 found inside URL" ~count:cnt)
     else None
   in
   { id = "TYPO-063"; run; languages = [] }
@@ -1330,12 +1141,8 @@ let r_typo_039 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-039";
-          severity = Info;
-          message = "URL split across lines without \\url{}";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-039" ~severity:Info
+           ~message:"URL split across lines without \\url{}" ~count:cnt)
     else None
   in
   { id = "TYPO-039"; run; languages = [] }
@@ -1356,12 +1163,8 @@ let r_typo_040 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-040";
-          severity = Info;
-          message = "Math in text mode $…$ exceeds 80 characters";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-040" ~severity:Info
+           ~message:"Math in text mode $…$ exceeds 80 characters" ~count:cnt)
     else None
   in
   { id = "TYPO-040"; run; languages = [] }
@@ -1385,12 +1188,8 @@ let r_typo_045 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-045";
-          severity = Warning;
-          message = "Non‑ASCII punctuation in math mode (‘ ’ “ ”)";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-045" ~severity:Warning
+           ~message:"Non‑ASCII punctuation in math mode (‘ ’ “ ”)" ~count:cnt)
     else None
   in
   { id = "TYPO-045"; run; languages = [] }
@@ -1403,12 +1202,9 @@ let r_typo_046 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-046";
-          severity = Info;
-          message = "Use of $begin:math:text$ … $end:math:text$ instead of $…$";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-046" ~severity:Info
+           ~message:"Use of $begin:math:text$ … $end:math:text$ instead of $…$"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-046"; run; languages = [] }
@@ -1419,12 +1215,9 @@ let r_typo_047 : rule =
     let cnt = count_substring s "\\section*" in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-047";
-          severity = Info;
-          message = "Starred \\section* used where numbered section expected";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-047" ~severity:Info
+           ~message:"Starred \\section* used where numbered section expected"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-047"; run; languages = [] }
@@ -1437,12 +1230,8 @@ let r_typo_049 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-049";
-          severity = Info;
-          message = "Space after opening quote";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-049" ~severity:Info
+           ~message:"Space after opening quote" ~count:cnt)
     else None
   in
   { id = "TYPO-049"; run; languages = [] }
@@ -1461,12 +1250,8 @@ let r_typo_056 : rule =
     let cnt = loop 0 0 in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-056";
-          severity = Warning;
-          message = "Legacy TeX accents present despite UTF‑8 input";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-056" ~severity:Warning
+           ~message:"Legacy TeX accents present despite UTF‑8 input" ~count:cnt)
     else None
   in
   { id = "TYPO-056"; run; languages = [] }
@@ -1485,12 +1270,9 @@ let r_typo_058 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-058";
-          severity = Warning;
-          message = "Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)";
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-058" ~severity:Warning
+           ~message:"Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-058"; run; languages = [] }
@@ -1544,13 +1326,10 @@ let r_typo_060 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TYPO-060";
-          severity = Warning;
-          message =
-            {|Smart quotes present inside \lstlisting / verbatim environments|};
-          count = cnt;
-        }
+        (mk_result ~id:"TYPO-060" ~severity:Warning
+           ~message:
+             {|Smart quotes present inside \lstlisting / verbatim environments|}
+           ~count:cnt)
     else None
   in
   { id = "TYPO-060"; run; languages = [] }

@@ -14,7 +14,25 @@ type result = {
   severity : severity;
   message : string;
   count : int;
+  fix : Cst_edit.t list option;
+      (** Optional fix suggestions. Introduced in v26.2.1. See
+          [Validators_common.mk_result] / [mk_result_with_fix] helpers. *)
 }
+
+val mk_result :
+  id:string -> severity:severity -> message:string -> count:int -> result
+(** Construct a [result] with [fix = None]. Prefer this over raw record literals
+    so that future fields default correctly. *)
+
+val mk_result_with_fix :
+  id:string ->
+  severity:severity ->
+  message:string ->
+  count:int ->
+  fix:Cst_edit.t list ->
+  result
+(** Construct a [result] carrying a non-empty edit list. Raises
+    [Invalid_argument] on an empty [fix] list (use {!mk_result}). *)
 
 type rule = {
   id : string;

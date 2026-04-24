@@ -192,7 +192,7 @@ let handle_tokenize body ~catalogue =
                 ( List.map
                     (fun (r : Latex_parse_lib.Validators.result) ->
                       let open Latex_parse_lib.Validators in
-                      let { id; severity; message; count } = r in
+                      let { id; severity; message; count; _ } = r in
                       (id, `String (severity_to_string severity), message, count))
                     xs,
                   dur,
@@ -353,7 +353,7 @@ let handle_expand body path ~catalogue =
               List.map
                 (fun (r : Latex_parse_lib.Validators.result) ->
                   let open Latex_parse_lib.Validators in
-                  let { id; severity; message; count } = r in
+                  let { id; severity; message; count; _ } = r in
                   (id, `String (severity_to_string severity), message, count))
                 xs
             in

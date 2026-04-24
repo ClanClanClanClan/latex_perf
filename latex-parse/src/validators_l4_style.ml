@@ -127,12 +127,8 @@ let r_style_004 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-004";
-          severity = Info;
-          message = "Paragraph exceeds 300 words";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-004" ~severity:Info
+           ~message:"Paragraph exceeds 300 words" ~count:cnt)
     else None
   in
   mk_rule "STYLE-004" run
@@ -153,12 +149,8 @@ let r_style_006 : rule =
     let cnt = check 0 sents in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-006";
-          severity = Info;
-          message = "Consecutive sentences start with same word";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-006" ~severity:Info
+           ~message:"Consecutive sentences start with same word" ~count:cnt)
     else None
   in
   mk_rule "STYLE-006" run
@@ -181,12 +173,8 @@ let r_style_008 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-008";
-          severity = Info;
-          message = "Sentence starts with mathematical symbol";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-008" ~severity:Info
+           ~message:"Sentence starts with mathematical symbol" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-008" run
@@ -208,12 +196,8 @@ let r_style_013 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-013";
-          severity = Info;
-          message = "Sentence starts with numeric figure";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-013" ~severity:Info
+           ~message:"Sentence starts with numeric figure" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-013" run
@@ -261,12 +245,8 @@ let r_style_014 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-014";
-          severity = Info;
-          message = "Contraction in formal text";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-014" ~severity:Info
+           ~message:"Contraction in formal text" ~count:cnt)
     else None
   in
   mk_rule "STYLE-014" run
@@ -278,12 +258,8 @@ let r_style_015 : rule =
     let cnt = count_substring text ".  " in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-015";
-          severity = Info;
-          message = "Double space after period";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-015" ~severity:Info
+           ~message:"Double space after period" ~count:cnt)
     else None
   in
   mk_rule "STYLE-015" run
@@ -305,13 +281,10 @@ let r_style_016 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-016";
-          severity = Info;
-          message =
-            "Latin abbreviation (e.g., i.e.) missing comma after abbreviation";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-016" ~severity:Info
+           ~message:
+             "Latin abbreviation (e.g., i.e.) missing comma after abbreviation"
+           ~count:!cnt)
     else None
   in
   mk_rule "STYLE-016" run
@@ -328,12 +301,8 @@ let r_style_017 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-017";
-          severity = Info;
-          message = "Sentence exceeds 40 words";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-017" ~severity:Info
+           ~message:"Sentence exceeds 40 words" ~count:cnt)
     else None
   in
   mk_rule "STYLE-017" run
@@ -371,12 +340,9 @@ let r_style_019 : rule =
     let cnt = check 0 positions in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-019";
-          severity = Info;
-          message = "Multiple consecutive headings without intervening text";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-019" ~severity:Info
+           ~message:"Multiple consecutive headings without intervening text"
+           ~count:cnt)
     else None
   in
   mk_rule "STYLE-019" run
@@ -392,12 +358,8 @@ let r_style_023 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-023";
-          severity = Warning;
-          message = "Percent sign in text not escaped";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-023" ~severity:Warning
+           ~message:"Percent sign in text not escaped" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-023" run
@@ -418,12 +380,8 @@ let r_style_024 : rule =
       done;
       if !cnt > 0 then
         Some
-          {
-            id = "STYLE-024";
-            severity = Warning;
-            message = "Ampersand in text not escaped";
-            count = !cnt;
-          }
+          (mk_result ~id:"STYLE-024" ~severity:Warning
+             ~message:"Ampersand in text not escaped" ~count:!cnt)
       else None
   in
   mk_rule "STYLE-024" run
@@ -445,12 +403,8 @@ let r_style_026 : rule =
     let cnt = check 0 words in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-026";
-          severity = Info;
-          message = "Repeated word detected";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-026" ~severity:Info
+           ~message:"Repeated word detected" ~count:cnt)
     else None
   in
   mk_rule "STYLE-026" run
@@ -491,12 +445,9 @@ let r_style_030 : rule =
       in
       if tc_count > 0 && sc_count > 0 then
         Some
-          {
-            id = "STYLE-030";
-            severity = Info;
-            message = "Sub-heading capitalisation inconsistent";
-            count = min tc_count sc_count;
-          }
+          (mk_result ~id:"STYLE-030" ~severity:Info
+             ~message:"Sub-heading capitalisation inconsistent"
+             ~count:(min tc_count sc_count))
       else None
   in
   mk_rule "STYLE-030" run
@@ -517,12 +468,9 @@ let r_style_031 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-031";
-          severity = Warning;
-          message = "Heading contains only numbers without title text";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-031" ~severity:Warning
+           ~message:"Heading contains only numbers without title text"
+           ~count:!cnt)
     else None
   in
   mk_rule "STYLE-031" run
@@ -546,12 +494,9 @@ let r_style_033 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-033";
-          severity = Info;
-          message = "Space before \\cite — use ~ (non-breaking space)";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-033" ~severity:Info
+           ~message:"Space before \\cite — use ~ (non-breaking space)"
+           ~count:!cnt)
     else None
   in
   mk_rule "STYLE-033" run
@@ -575,12 +520,8 @@ let r_style_034 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-034";
-          severity = Info;
-          message = "Orphan word (1-2 letters) at paragraph end";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-034" ~severity:Info
+           ~message:"Orphan word (1-2 letters) at paragraph end" ~count:cnt)
     else None
   in
   mk_rule "STYLE-034" run
@@ -592,12 +533,8 @@ let r_style_035 : rule =
     let cnt = count_substring text "and/or" in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-035";
-          severity = Info;
-          message = "Slash used for 'and/or'";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-035" ~severity:Info
+           ~message:"Slash used for 'and/or'" ~count:cnt)
     else None
   in
   mk_rule "STYLE-035" run
@@ -621,12 +558,8 @@ let r_style_036 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-036";
-          severity = Info;
-          message = "Latin phrase not italicised";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-036" ~severity:Info
+           ~message:"Latin phrase not italicised" ~count:cnt)
     else None
   in
   mk_rule "STYLE-036" run
@@ -648,12 +581,9 @@ let r_style_037 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-037";
-          severity = Info;
-          message = "Sentence starts with conjunction 'And' or 'But'";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-037" ~severity:Info
+           ~message:"Sentence starts with conjunction 'And' or 'But'"
+           ~count:!cnt)
     else None
   in
   mk_rule "STYLE-037" run
@@ -665,12 +595,8 @@ let r_style_040 : rule =
     let cnt = count_char text '!' in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-040";
-          severity = Info;
-          message = "Exclamation mark in academic prose";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-040" ~severity:Info
+           ~message:"Exclamation mark in academic prose" ~count:cnt)
     else None
   in
   mk_rule "STYLE-040" run
@@ -691,12 +617,8 @@ let r_style_042 : rule =
     let cnt = check 0 paras in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-042";
-          severity = Info;
-          message = "Consecutive short paragraphs (< 15 words each)";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-042" ~severity:Info
+           ~message:"Consecutive short paragraphs (< 15 words each)" ~count:cnt)
     else None
   in
   mk_rule "STYLE-042" run
@@ -715,12 +637,8 @@ let r_style_045 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-045";
-          severity = Info;
-          message = "Excess parentheses in single sentence (> 3)";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-045" ~severity:Info
+           ~message:"Excess parentheses in single sentence (> 3)" ~count:cnt)
     else None
   in
   mk_rule "STYLE-045" run
@@ -744,12 +662,8 @@ let r_style_046 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-046";
-          severity = Info;
-          message = "Mixed en-dash and em-dash in same sentence";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-046" ~severity:Info
+           ~message:"Mixed en-dash and em-dash in same sentence" ~count:cnt)
     else None
   in
   mk_rule "STYLE-046" run
@@ -770,12 +684,8 @@ let r_style_048 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-048";
-          severity = Info;
-          message = "Word-pair variant mixed (e.g. among/amongst)";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-048" ~severity:Info
+           ~message:"Word-pair variant mixed (e.g. among/amongst)" ~count:cnt)
     else None
   in
   mk_rule "STYLE-048" run
@@ -794,12 +704,8 @@ let r_style_049 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-049";
-          severity = Info;
-          message = "Section heading ends with colon";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-049" ~severity:Info
+           ~message:"Section heading ends with colon" ~count:cnt)
     else None
   in
   mk_rule "STYLE-049" run
@@ -830,12 +736,8 @@ let r_style_001 : rule =
     in
     if has_oxford && has_no_oxford then
       Some
-        {
-          id = "STYLE-001";
-          severity = Info;
-          message = "Inconsistent Oxford-comma usage";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-001" ~severity:Info
+           ~message:"Inconsistent Oxford-comma usage" ~count:1)
     else None
   in
   mk_rule "STYLE-001" run
@@ -872,12 +774,8 @@ let r_style_002 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-002";
-          severity = Info;
-          message = "Mixed UK and US spelling detected";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-002" ~severity:Info
+           ~message:"Mixed UK and US spelling detected" ~count:cnt)
     else None
   in
   mk_rule "STYLE-002" run
@@ -904,12 +802,9 @@ let r_style_005 : rule =
     in
     if has_we && has_i then
       Some
-        {
-          id = "STYLE-005";
-          severity = Info;
-          message = "First-person pronoun inconsistent (mixed 'we' and 'I')";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-005" ~severity:Info
+           ~message:"First-person pronoun inconsistent (mixed 'we' and 'I')"
+           ~count:1)
     else None
   in
   mk_rule "STYLE-005" run
@@ -945,12 +840,9 @@ let r_style_007 : rule =
       let without_p = List.length items - with_p in
       if with_p > 0 && without_p > 0 then
         Some
-          {
-            id = "STYLE-007";
-            severity = Info;
-            message = "Bullet-list items have inconsistent punctuation";
-            count = min with_p without_p;
-          }
+          (mk_result ~id:"STYLE-007" ~severity:Info
+             ~message:"Bullet-list items have inconsistent punctuation"
+             ~count:(min with_p without_p))
       else None
   in
   mk_rule "STYLE-007" run
@@ -970,12 +862,9 @@ let r_style_009 : rule =
     in
     if has_cite && (has_citep || has_citet) then
       Some
-        {
-          id = "STYLE-009";
-          severity = Info;
-          message = "Mixed citation styles (\\cite with \\citep/\\citet)";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-009" ~severity:Info
+           ~message:"Mixed citation styles (\\cite with \\citep/\\citet)"
+           ~count:1)
     else None
   in
   mk_rule "STYLE-009" run
@@ -1002,12 +891,8 @@ let r_style_010 : rule =
     in
     if multi && has_i then
       Some
-        {
-          id = "STYLE-010";
-          severity = Info;
-          message = "First-person 'I' in multi-author paper";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-010" ~severity:Info
+           ~message:"First-person 'I' in multi-author paper" ~count:1)
     else None
   in
   mk_rule "STYLE-010" run
@@ -1034,12 +919,8 @@ let r_style_011 : rule =
     in
     if has_hyphen && has_endash then
       Some
-        {
-          id = "STYLE-011";
-          severity = Info;
-          message = "Hyphen vs en-dash inconsistency in number ranges";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-011" ~severity:Info
+           ~message:"Hyphen vs en-dash inconsistency in number ranges" ~count:1)
     else None
   in
   mk_rule "STYLE-011" run
@@ -1064,12 +945,8 @@ let r_style_018 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-018";
-          severity = Info;
-          message = "Dangling 'this' without noun";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-018" ~severity:Info
+           ~message:"Dangling 'this' without noun" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-018" run
@@ -1101,12 +978,8 @@ let r_style_020 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-020";
-          severity = Info;
-          message = "Acronym defined but never used";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-020" ~severity:Info
+           ~message:"Acronym defined but never used" ~count:cnt)
     else None
   in
   mk_rule "STYLE-020" run
@@ -1138,12 +1011,8 @@ let r_style_021 : rule =
       in
       if used_before then
         Some
-          {
-            id = "STYLE-021";
-            severity = Warning;
-            message = "Acronym used before definition";
-            count = 1;
-          }
+          (mk_result ~id:"STYLE-021" ~severity:Warning
+             ~message:"Acronym used before definition" ~count:1)
       else None
   in
   mk_rule "STYLE-021" run
@@ -1165,12 +1034,8 @@ let r_style_022 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-022";
-          severity = Info;
-          message = "Serial comma missing in three-item list";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-022" ~severity:Info
+           ~message:"Serial comma missing in three-item list" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-022" run
@@ -1187,12 +1052,8 @@ let r_style_025 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "STYLE-025";
-          severity = Info;
-          message = "Run-on sentence detected (> 60 words)";
-          count = cnt;
-        }
+        (mk_result ~id:"STYLE-025" ~severity:Info
+           ~message:"Run-on sentence detected (> 60 words)" ~count:cnt)
     else None
   in
   mk_rule "STYLE-025" run
@@ -1218,14 +1079,11 @@ let r_style_027 : rule =
       let ratio = float_of_int !cnt /. float_of_int total in
       if ratio > 0.05 then
         Some
-          {
-            id = "STYLE-027";
-            severity = Info;
-            message =
-              Printf.sprintf "Overuse of adverbs (%.1f%% -ly words)"
-                (ratio *. 100.0);
-            count = !cnt;
-          }
+          (mk_result ~id:"STYLE-027" ~severity:Info
+             ~message:
+               (Printf.sprintf "Overuse of adverbs (%.1f%% -ly words)"
+                  (ratio *. 100.0))
+             ~count:!cnt)
       else None
   in
   mk_rule "STYLE-027" run
@@ -1247,12 +1105,9 @@ let r_style_028 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-028";
-          severity = Info;
-          message = "Equation reference without adjoining punctuation";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-028" ~severity:Info
+           ~message:"Equation reference without adjoining punctuation"
+           ~count:!cnt)
     else None
   in
   mk_rule "STYLE-028" run
@@ -1278,12 +1133,8 @@ let r_ce_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CE-001";
-          severity = Info;
-          message = "Canadian EN: mixes BrE and AmE spelling";
-          count = cnt;
-        }
+        (mk_result ~id:"CE-001" ~severity:Info
+           ~message:"Canadian EN: mixes BrE and AmE spelling" ~count:cnt)
     else None
   in
   mk_lang_rule "CE-001" run [ "en" ]
@@ -1305,12 +1156,8 @@ let r_ce_002 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CE-002";
-          severity = Info;
-          message = "Canadian EN: Oxford comma must always be used";
-          count = !cnt;
-        }
+        (mk_result ~id:"CE-002" ~severity:Info
+           ~message:"Canadian EN: Oxford comma must always be used" ~count:!cnt)
     else None
   in
   mk_lang_rule "CE-002" run [ "en" ]
@@ -1335,12 +1182,9 @@ let r_th_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TH-001";
-          severity = Info;
-          message = "Thai leading vowel at line start needs \\nobreakspace";
-          count = cnt;
-        }
+        (mk_result ~id:"TH-001" ~severity:Info
+           ~message:"Thai leading vowel at line start needs \\nobreakspace"
+           ~count:cnt)
     else None
   in
   mk_lang_rule "TH-001" run [ "th" ]
@@ -1357,12 +1201,8 @@ let r_ib_001 : rule =
     in
     if has_voce && has_tu then
       Some
-        {
-          id = "IB-001";
-          severity = Info;
-          message = {|Brochure mixes pt-BR 'você' with es-ES 'tú'|};
-          count = 1;
-        }
+        (mk_result ~id:"IB-001" ~severity:Info
+           ~message:{|Brochure mixes pt-BR 'você' with es-ES 'tú'|} ~count:1)
     else None
   in
   mk_lang_rule "IB-001" run [ "pt"; "es" ]
@@ -1382,12 +1222,8 @@ let r_lang_003 : rule =
     let has_both = fr_style && en_style in
     if has_both then
       Some
-        {
-          id = "LANG-003";
-          severity = Info;
-          message = "Mixed French/English punctuation spacing";
-          count = 1;
-        }
+        (mk_result ~id:"LANG-003" ~severity:Info
+           ~message:"Mixed French/English punctuation spacing" ~count:1)
     else None
   in
   mk_lang_rule "LANG-003" run [ "fr" ]
@@ -1408,12 +1244,9 @@ let r_lang_011 : rule =
       in
       if has_ascii_quotes then
         Some
-          {
-            id = "LANG-011";
-            severity = Info;
-            message = "French document uses ASCII quotes — use \\og ... \\fg{}";
-            count = 1;
-          }
+          (mk_result ~id:"LANG-011" ~severity:Info
+             ~message:"French document uses ASCII quotes — use \\og ... \\fg{}"
+             ~count:1)
       else None
   in
   mk_lang_rule "LANG-011" run [ "fr" ]
@@ -1440,14 +1273,11 @@ let r_lang_012 : rule =
     match (babel_lang, select_lang) with
     | Some b, Some sl when b <> sl ->
         Some
-          {
-            id = "LANG-012";
-            severity = Info;
-            message =
-              Printf.sprintf
-                "babel language '%s' mismatches \\selectlanguage{'%s'}" b sl;
-            count = 1;
-          }
+          (mk_result ~id:"LANG-012" ~severity:Info
+             ~message:
+               (Printf.sprintf
+                  "babel language '%s' mismatches \\selectlanguage{'%s'}" b sl)
+             ~count:1)
     | _ -> None
   in
   mk_rule "LANG-012" run
@@ -1476,12 +1306,8 @@ let r_lang_014 : rule =
     in
     if has_ize && has_ise then
       Some
-        {
-          id = "LANG-014";
-          severity = Info;
-          message = "BrE -ize/-ise ending inconsistency";
-          count = 1;
-        }
+        (mk_result ~id:"LANG-014" ~severity:Info
+           ~message:"BrE -ize/-ise ending inconsistency" ~count:1)
     else None
   in
   mk_lang_rule "LANG-014" run [ "en" ]
@@ -1504,12 +1330,8 @@ let r_lang_015 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LANG-015";
-          severity = Info;
-          message = "Serial-comma rule violated (per style)";
-          count = !cnt;
-        }
+        (mk_result ~id:"LANG-015" ~severity:Info
+           ~message:"Serial-comma rule violated (per style)" ~count:!cnt)
     else None
   in
   mk_lang_rule "LANG-015" run [ "en" ]
@@ -1528,12 +1350,8 @@ let r_lang_016 : rule =
     in
     if has_programme && has_program then
       Some
-        {
-          id = "LANG-016";
-          severity = Info;
-          message = "'programme'/'program' inconsistency in text";
-          count = 1;
-        }
+        (mk_result ~id:"LANG-016" ~severity:Info
+           ~message:"'programme'/'program' inconsistency in text" ~count:1)
     else None
   in
   mk_lang_rule "LANG-016" run [ "en" ]
@@ -1569,14 +1387,11 @@ let r_style_003 : rule =
       let ratio = float_of_int passive_cnt /. float_of_int total in
       if ratio > 0.20 then
         Some
-          {
-            id = "STYLE-003";
-            severity = Info;
-            message =
-              Printf.sprintf "Passive voice in %.0f%% of sentences"
-                (ratio *. 100.0);
-            count = passive_cnt;
-          }
+          (mk_result ~id:"STYLE-003" ~severity:Info
+             ~message:
+               (Printf.sprintf "Passive voice in %.0f%% of sentences"
+                  (ratio *. 100.0))
+             ~count:passive_cnt)
       else None
   in
   mk_rule "STYLE-003" run
@@ -1604,12 +1419,9 @@ let r_style_012 : rule =
     (* Only fire if both patterns present — indicates potential misuse *)
     if has_which && has_that then
       Some
-        {
-          id = "STYLE-012";
-          severity = Info;
-          message = "That/which relative-clause usage may be inconsistent";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-012" ~severity:Info
+           ~message:"That/which relative-clause usage may be inconsistent"
+           ~count:1)
     else None
   in
   mk_rule "STYLE-012" run
@@ -1634,12 +1446,8 @@ let r_style_029 : rule =
     in
     if has_author_we && has_generic_we then
       Some
-        {
-          id = "STYLE-029";
-          severity = Info;
-          message = "Undefined 'we' — mixes author-we and generic-we";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-029" ~severity:Info
+           ~message:"Undefined 'we' — mixes author-we and generic-we" ~count:1)
     else None
   in
   mk_rule "STYLE-029" run
@@ -1663,12 +1471,9 @@ let r_style_032 : rule =
      with Not_found -> ());
     if !uppers > 0 && !lowers > 0 then
       Some
-        {
-          id = "STYLE-032";
-          severity = Info;
-          message = "Bullet list mixes sentence-case and title-case";
-          count = min !uppers !lowers;
-        }
+        (mk_result ~id:"STYLE-032" ~severity:Info
+           ~message:"Bullet list mixes sentence-case and title-case"
+           ~count:(min !uppers !lowers))
     else None
   in
   mk_rule "STYLE-032" run
@@ -1703,12 +1508,8 @@ let r_style_038 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-038";
-          severity = Info;
-          message = "Footnote paragraph exceeds 80 words";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-038" ~severity:Info
+           ~message:"Footnote paragraph exceeds 80 words" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-038" run
@@ -1751,12 +1552,9 @@ let r_style_039 : rule =
       let without_period = List.filter (fun c -> c <> '.') endings in
       if List.length with_period > 0 && List.length without_period > 0 then
         Some
-          {
-            id = "STYLE-039";
-            severity = Info;
-            message = "Figure-caption ending punctuation inconsistent";
-            count = min (List.length with_period) (List.length without_period);
-          }
+          (mk_result ~id:"STYLE-039" ~severity:Info
+             ~message:"Figure-caption ending punctuation inconsistent"
+             ~count:(min (List.length with_period) (List.length without_period)))
       else None
   in
   mk_rule "STYLE-039" run
@@ -1794,12 +1592,8 @@ let r_style_041 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-041";
-          severity = Info;
-          message = "Footnote lacks terminal period";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-041" ~severity:Info
+           ~message:"Footnote lacks terminal period" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-041" run
@@ -1823,12 +1617,9 @@ let r_style_043 : rule =
       let without_punct = List.length titles - with_punct in
       if with_punct > 0 && without_punct > 0 then
         Some
-          {
-            id = "STYLE-043";
-            severity = Info;
-            message = "Section-heading punctuation inconsistent";
-            count = min with_punct without_punct;
-          }
+          (mk_result ~id:"STYLE-043" ~severity:Info
+             ~message:"Section-heading punctuation inconsistent"
+             ~count:(min with_punct without_punct))
       else None
   in
   mk_rule "STYLE-043" run
@@ -1854,12 +1645,8 @@ let r_style_044 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "STYLE-044";
-          severity = Info;
-          message = "Ambiguous demonstrative 'this' without noun";
-          count = !cnt;
-        }
+        (mk_result ~id:"STYLE-044" ~severity:Info
+           ~message:"Ambiguous demonstrative 'this' without noun" ~count:!cnt)
     else None
   in
   mk_rule "STYLE-044" run
@@ -1877,12 +1664,9 @@ let r_style_047 : rule =
     in
     if ame && bre then
       Some
-        {
-          id = "STYLE-047";
-          severity = Info;
-          message = "Quote-punctuation placement AmE vs BrE inconsistent";
-          count = 1;
-        }
+        (mk_result ~id:"STYLE-047" ~severity:Info
+           ~message:"Quote-punctuation placement AmE vs BrE inconsistent"
+           ~count:1)
     else None
   in
   mk_rule "STYLE-047" run

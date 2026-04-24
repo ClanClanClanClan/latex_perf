@@ -142,10 +142,18 @@ its premise.
 
 ### CST round-trip — byte-lossless (`CSTRoundTrip.v`)
 
-**Section variables** (`Section Structure_lossless`):
+**Section variables** (`Section Structure_lossless`, lines 126–168):
 - `ast : Type`, `parse : bytes -> ast`, `in_subset : bytes -> Prop`,
   `builder : bytes -> list cst_abs` — opaque carriers + the abstract
   builder; v26.3 instantiates.
+
+> **Discharge unit note.** This Section has **two** hypotheses
+> (`builder_partitions` + `parse_serialize_is_id_on_subset`). In Coq you
+> cannot partially close a Section — to produce useful instantiated
+> theorems for v26.3+, BOTH hypotheses must be discharged together
+> against the same concrete carriers. Discharging only one yields a
+> strictly weaker "parametric in the other" theorem and doesn't unblock
+> runtime claims. Sized accordingly: this is a single discharge unit.
 
 **Hypotheses:**
 1. `builder_partitions` — every source has a byte-lossless
@@ -173,7 +181,14 @@ its premise.
 
 ### Rewrite engine — byte preservation (`RewritePreservesCST.v`)
 
-**Section variable:** `apply_edits : bytes -> list edit -> bytes`.
+**Section variable** (`Section Rewrite_preserves`, lines 54–86):
+`apply_edits : bytes -> list edit -> bytes`.
+
+> **Discharge unit note.** Only **one** hypothesis in this Section —
+> this is the **smallest v26.3 Coq discharge unit** and is the
+> recommended starting point for anyone picking up v26.3 Coq work. The
+> OCaml reference implementation (`Cst_edit.apply_all`) already exists
+> and is total on non-overlapping edit lists.
 
 **Hypothesis:**
 1. `apply_total` — `apply_edits` is total on its input:
@@ -191,7 +206,20 @@ its premise.
 
 ### Rewrite engine — semantic preservation (`RewritePreservesSemantics.v`)
 
-**Section variables:** `token : Type`, `tokens : bytes -> list token`.
+**Section variables** (`Section Semantic_preservation`, lines 32–86):
+`token : Type`, `tokens : bytes -> list token`.
+
+> **Discharge unit note.** This Section has **two** hypotheses
+> (`tokens_ws_empty` + `tokens_concat`) used together by every in-section
+> theorem (`ws_replacement_preserves_tokens` /
+> `ws_deletion_preserves_tokens` / `ws_insertion_preserves_tokens`).
+> Discharging only `tokens_ws_empty` does not close the Section.
+> `tokens_ws_empty` is mechanical in isolation BUT `tokens_concat` is
+> not — real `Parser_l2` has local lookahead (e.g. `\[`), so concat-
+> compositionality only holds when restricted to non-command whitespace
+> chunks. The discharge unit is: a minimal Coq tokenizer model on
+> trivia-only chunks satisfying both hypotheses, instantiated against
+> a reduced `in_subset` predicate.
 
 **Hypotheses:**
 1. `tokens_ws_empty` — whitespace-only input tokenises to the empty

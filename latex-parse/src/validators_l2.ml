@@ -16,12 +16,8 @@ let r_fig_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-001";
-          severity = Warning;
-          message = "Figure without caption";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-001" ~severity:Warning
+           ~message:"Figure without caption" ~count:cnt)
     else None
   in
   { id = "FIG-001"; run; languages = [] }
@@ -46,12 +42,8 @@ let r_fig_002 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-002";
-          severity = Warning;
-          message = "Figure without label";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-002" ~severity:Warning
+           ~message:"Figure without label" ~count:cnt)
     else None
   in
   { id = "FIG-002"; run; languages = [] }
@@ -84,12 +76,8 @@ let r_fig_003 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-003";
-          severity = Info;
-          message = "Label before caption in figure";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-003" ~severity:Info
+           ~message:"Label before caption in figure" ~count:cnt)
     else None
   in
   { id = "FIG-003"; run; languages = [] }
@@ -134,12 +122,8 @@ let r_fig_007 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-007";
-          severity = Info;
-          message = {|Figure lacks alt text for accessibility|};
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-007" ~severity:Info
+           ~message:{|Figure lacks alt text for accessibility|} ~count:cnt)
     else None
   in
   { id = "FIG-007"; run; languages = [] }
@@ -159,12 +143,8 @@ let r_fig_009 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "FIG-009";
-          severity = Info;
-          message = "Float position specifier ! used excessively";
-          count = !cnt;
-        }
+        (mk_result ~id:"FIG-009" ~severity:Info
+           ~message:"Float position specifier ! used excessively" ~count:!cnt)
     else None
   in
   { id = "FIG-009"; run; languages = [] }
@@ -180,12 +160,8 @@ let r_tab_001 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-001";
-          severity = Warning;
-          message = "Table lacks caption";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-001" ~severity:Warning
+           ~message:"Table lacks caption" ~count:cnt)
     else None
   in
   { id = "TAB-001"; run; languages = [] }
@@ -220,12 +196,8 @@ let r_tab_002 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-002";
-          severity = Info;
-          message = "Caption below table (journal requires above)";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-002" ~severity:Info
+           ~message:"Caption below table (journal requires above)" ~count:cnt)
     else None
   in
   { id = "TAB-002"; run; languages = [] }
@@ -286,12 +258,8 @@ let r_tab_005 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TAB-005";
-          severity = Info;
-          message = "Vertical rules present in tabular";
-          count = !cnt;
-        }
+        (mk_result ~id:"TAB-005" ~severity:Info
+           ~message:"Vertical rules present in tabular" ~count:!cnt)
     else None
   in
   { id = "TAB-005"; run; languages = [] }
@@ -309,12 +277,8 @@ let r_pkg_001 : rule =
       pkgs;
     if !cnt > 0 then
       Some
-        {
-          id = "PKG-001";
-          severity = Warning;
-          message = "Package duplicate inclusion detected";
-          count = !cnt;
-        }
+        (mk_result ~id:"PKG-001" ~severity:Warning
+           ~message:"Package duplicate inclusion detected" ~count:!cnt)
     else None
   in
   { id = "PKG-001"; run; languages = [] }
@@ -333,12 +297,8 @@ let r_pkg_002 : rule =
       pkgs;
     if !geom_pos >= 0 && !hyper_pos >= 0 && !geom_pos > !hyper_pos then
       Some
-        {
-          id = "PKG-002";
-          severity = Error;
-          message = {|geometry loaded after hyperref – must precede|};
-          count = 1;
-        }
+        (mk_result ~id:"PKG-002" ~severity:Error
+           ~message:{|geometry loaded after hyperref – must precede|} ~count:1)
     else None
   in
   { id = "PKG-002"; run; languages = [] }
@@ -361,12 +321,9 @@ let r_pkg_004 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "PKG-004";
-              severity = Error;
-              message = {esc|Package loaded after \begin{document}|esc};
-              count = !cnt;
-            }
+            (mk_result ~id:"PKG-004" ~severity:Error
+               ~message:{esc|Package loaded after \begin{document}|esc}
+               ~count:!cnt)
         else None
   in
   { id = "PKG-004"; run; languages = [] }
@@ -488,12 +445,8 @@ let r_pkg_005 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "PKG-005";
-          severity = Warning;
-          message = "Unknown option for geometry";
-          count = !cnt;
-        }
+        (mk_result ~id:"PKG-005" ~severity:Warning
+           ~message:"Unknown option for geometry" ~count:!cnt)
     else None
   in
   { id = "PKG-005"; run; languages = [] }
@@ -536,12 +489,8 @@ let r_cjk_004 : rule =
           || has_package s "ctex")
       then
         Some
-          {
-            id = "CJK-004";
-            severity = Warning;
-            message = "xeCJK package missing when CJK glyphs present";
-            count = 1;
-          }
+          (mk_result ~id:"CJK-004" ~severity:Warning
+             ~message:"xeCJK package missing when CJK glyphs present" ~count:1)
       else None
     else None
   in
@@ -568,12 +517,8 @@ let r_cjk_006 : rule =
       in
       if not has_ruby_pkg then
         Some
-          {
-            id = "CJK-006";
-            severity = Warning;
-            message = "Ruby annotation requires ruby package";
-            count = !cnt;
-          }
+          (mk_result ~id:"CJK-006" ~severity:Warning
+             ~message:"Ruby annotation requires ruby package" ~count:!cnt)
       else None
     else None
   in
@@ -597,12 +542,8 @@ let r_font_006 : rule =
       in
       if not found then
         Some
-          {
-            id = "FONT-006";
-            severity = Info;
-            message = {|Missing \microtypesetup{expansion=true}|};
-            count = 1;
-          }
+          (mk_result ~id:"FONT-006" ~severity:Info
+             ~message:{|Missing \microtypesetup{expansion=true}|} ~count:1)
       else None
     else None
   in
@@ -629,12 +570,9 @@ let r_font_007 : rule =
       in
       if xelatex then
         Some
-          {
-            id = "FONT-007";
-            severity = Warning;
-            message = {|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|};
-            count = 1;
-          }
+          (mk_result ~id:"FONT-007" ~severity:Warning
+             ~message:{|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|}
+             ~count:1)
       else None
     else None
   in
@@ -655,12 +593,8 @@ let r_font_008 : rule =
      with Not_found -> ());
     if !cnt > 1 then
       Some
-        {
-          id = "FONT-008";
-          severity = Warning;
-          message = "Multiple \\setmainfont declarations";
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-008" ~severity:Warning
+           ~message:"Multiple \\setmainfont declarations" ~count:!cnt)
     else None
   in
   { id = "FONT-008"; run; languages = [] }
@@ -689,12 +623,8 @@ let r_math_032 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-032";
-          severity = Warning;
-          message = "Incorrect small matrix brackets";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-032" ~severity:Warning
+           ~message:"Incorrect small matrix brackets" ~count:!cnt)
     else None
   in
   { id = "MATH-032"; run; languages = [] }
@@ -764,12 +694,8 @@ let r_math_054 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-054";
-          severity = Warning;
-          message = {|Equation labelled 'eq:' without environment|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-054" ~severity:Warning
+           ~message:{|Equation labelled 'eq:' without environment|} ~count:!cnt)
     else None
   in
   { id = "MATH-054"; run; languages = [] }
@@ -792,12 +718,8 @@ let r_math_062 : rule =
       align_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-062";
-          severity = Warning;
-          message = "Multiline equation lacks alignment character &";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-062" ~severity:Warning
+           ~message:"Multiline equation lacks alignment character &" ~count:!cnt)
     else None
   in
   { id = "MATH-062"; run; languages = [] }
@@ -830,12 +752,8 @@ let r_math_063 : rule =
       eqn_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-063";
-          severity = Warning;
-          message = "Equation array with > 1 alignment point";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-063" ~severity:Warning
+           ~message:"Equation array with > 1 alignment point" ~count:!cnt)
     else None
   in
   { id = "MATH-063"; run; languages = [] }
@@ -875,12 +793,9 @@ let r_math_100 : rule =
       display_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-100";
-          severity = Info;
-          message = "Punctuation after equation missing (comma/period)";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-100" ~severity:Info
+           ~message:"Punctuation after equation missing (comma/period)"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-100"; run; languages = [] }
@@ -905,12 +820,8 @@ let r_math_023 : rule =
       refs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-023";
-          severity = Warning;
-          message = "Equation label missing although referenced";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-023" ~severity:Warning
+           ~message:"Equation label missing although referenced" ~count:!cnt)
     else None
   in
   { id = "MATH-023"; run; languages = [] }
@@ -931,12 +842,8 @@ let r_math_024 : rule =
       labels;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-024";
-          severity = Info;
-          message = "Equation labelled but never referenced";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-024" ~severity:Info
+           ~message:"Equation labelled but never referenced" ~count:!cnt)
     else None
   in
   { id = "MATH-024"; run; languages = [] }
@@ -967,12 +874,8 @@ let r_ref_010 : rule =
       refs;
     if !cnt > 0 then
       Some
-        {
-          id = "REF-010";
-          severity = Info;
-          message = "Figure referenced before first mention in text";
-          count = !cnt;
-        }
+        (mk_result ~id:"REF-010" ~severity:Info
+           ~message:"Figure referenced before first mention in text" ~count:!cnt)
     else None
   in
   { id = "REF-010"; run; languages = [] }
@@ -1002,12 +905,9 @@ let r_cmd_014 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "CMD-014";
-              severity = Warning;
-              message = "\\AtBeginDocument placed after \\begin{document}";
-              count = !cnt;
-            }
+            (mk_result ~id:"CMD-014" ~severity:Warning
+               ~message:"\\AtBeginDocument placed after \\begin{document}"
+               ~count:!cnt)
         else None
   in
   { id = "CMD-014"; run; languages = [] }
@@ -1022,12 +922,8 @@ let r_doc_001 : rule =
       let has_maketitle = contains_substring s "\\maketitle" in
       if not has_maketitle then
         Some
-          {
-            id = "DOC-001";
-            severity = Error;
-            message = "Title missing \\maketitle";
-            count = 1;
-          }
+          (mk_result ~id:"DOC-001" ~severity:Error
+             ~message:"Title missing \\maketitle" ~count:1)
       else None
   in
   { id = "DOC-001"; run; languages = [] }
@@ -1041,12 +937,8 @@ let r_doc_002 : rule =
       let has_abstract = contains_substring s "\\begin{abstract}" in
       if not has_abstract then
         Some
-          {
-            id = "DOC-002";
-            severity = Warning;
-            message = "Abstract environment missing";
-            count = 1;
-          }
+          (mk_result ~id:"DOC-002" ~severity:Warning
+             ~message:"Abstract environment missing" ~count:1)
       else None
   in
   { id = "DOC-002"; run; languages = [] }
@@ -1060,12 +952,8 @@ let r_doc_003 : rule =
       let has_keywords = contains_substring s "\\keywords{" in
       if not has_keywords then
         Some
-          {
-            id = "DOC-003";
-            severity = Info;
-            message = "Keywords missing";
-            count = 1;
-          }
+          (mk_result ~id:"DOC-003" ~severity:Info ~message:"Keywords missing"
+             ~count:1)
       else None
   in
   { id = "DOC-003"; run; languages = [] }
@@ -1086,12 +974,8 @@ let r_tab_006 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TAB-006";
-          severity = Info;
-          message = "Consecutive \\hline duplicated";
-          count = !cnt;
-        }
+        (mk_result ~id:"TAB-006" ~severity:Info
+           ~message:"Consecutive \\hline duplicated" ~count:!cnt)
     else None
   in
   { id = "TAB-006"; run; languages = [] }
@@ -1116,12 +1000,8 @@ let r_tab_009 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-009";
-          severity = Warning;
-          message = "Floating table missing \\label";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-009" ~severity:Warning
+           ~message:"Floating table missing \\label" ~count:cnt)
     else None
   in
   { id = "TAB-009"; run; languages = [] }
@@ -1149,12 +1029,8 @@ let r_tab_010 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-010";
-          severity = Warning;
-          message = "Footnote placed inside table environment";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-010" ~severity:Warning
+           ~message:"Footnote placed inside table environment" ~count:cnt)
     else None
   in
   { id = "TAB-010"; run; languages = [] }
@@ -1182,12 +1058,9 @@ let r_tab_011 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-011";
-          severity = Info;
-          message = "Top/bottom \\hline instead of \\toprule/\\bottomrule";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-011" ~severity:Info
+           ~message:"Top/bottom \\hline instead of \\toprule/\\bottomrule"
+           ~count:cnt)
     else None
   in
   { id = "TAB-011"; run; languages = [] }
@@ -1208,12 +1081,9 @@ let r_tab_014 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TAB-014";
-          severity = Info;
-          message = "Empty multicolumn alignment spec {} encountered";
-          count = !cnt;
-        }
+        (mk_result ~id:"TAB-014" ~severity:Info
+           ~message:"Empty multicolumn alignment spec {} encountered"
+           ~count:!cnt)
     else None
   in
   { id = "TAB-014"; run; languages = [] }
@@ -1244,12 +1114,8 @@ let r_pkg_007 : rule =
     | Some hp, Some gp ->
         if hp < gp then
           Some
-            {
-              id = "PKG-007";
-              severity = Error;
-              message = "hyperref loaded before geometry";
-              count = 1;
-            }
+            (mk_result ~id:"PKG-007" ~severity:Error
+               ~message:"hyperref loaded before geometry" ~count:1)
         else None
     | _ -> None
   in
@@ -1280,12 +1146,8 @@ let r_pkg_009 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "PKG-009";
-              severity = Info;
-              message = "TikZ libraries loaded inside document body";
-              count = !cnt;
-            }
+            (mk_result ~id:"PKG-009" ~severity:Info
+               ~message:"TikZ libraries loaded inside document body" ~count:!cnt)
         else None
   in
   { id = "PKG-009"; run; languages = [] }
@@ -1316,12 +1178,8 @@ let r_pkg_011 : rule =
     in
     if uses_booktabs_cmds && not (has_package s "booktabs") then
       Some
-        {
-          id = "PKG-011";
-          severity = Warning;
-          message = "booktabs required but not loaded for \\toprule";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-011" ~severity:Warning
+           ~message:"booktabs required but not loaded for \\toprule" ~count:1)
     else None
   in
   { id = "PKG-011"; run; languages = [] }
@@ -1339,12 +1197,8 @@ let r_pkg_012 : rule =
     in
     if has_enquote && not (has_package s "csquotes") then
       Some
-        {
-          id = "PKG-012";
-          severity = Error;
-          message = "csquotes not loaded when \\enquote used";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-012" ~severity:Error
+           ~message:"csquotes not loaded when \\enquote used" ~count:1)
     else None
   in
   { id = "PKG-012"; run; languages = [] }
@@ -1362,12 +1216,8 @@ let r_pkg_015 : rule =
       in
       if xeluatex then
         Some
-          {
-            id = "PKG-015";
-            severity = Warning;
-            message = "inputenc loaded under XeLaTeX/LuaLaTeX";
-            count = 1;
-          }
+          (mk_result ~id:"PKG-015" ~severity:Warning
+             ~message:"inputenc loaded under XeLaTeX/LuaLaTeX" ~count:1)
       else None
     else None
   in
@@ -1395,12 +1245,9 @@ let r_pkg_020 : rule =
       in
       if not has_lib then
         Some
-          {
-            id = "PKG-020";
-            severity = Info;
-            message = "tikz external library not loaded when externalising";
-            count = 1;
-          }
+          (mk_result ~id:"PKG-020" ~severity:Info
+             ~message:"tikz external library not loaded when externalising"
+             ~count:1)
       else None
     else None
   in
@@ -1419,12 +1266,9 @@ let r_pkg_022 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "PKG-022";
-          severity = Warning;
-          message = "Obsolete package (epsfig, subfigure, natbib) detected";
-          count = cnt;
-        }
+        (mk_result ~id:"PKG-022" ~severity:Warning
+           ~message:"Obsolete package (epsfig, subfigure, natbib) detected"
+           ~count:cnt)
     else None
   in
   { id = "PKG-022"; run; languages = [] }
@@ -1456,12 +1300,8 @@ let r_pkg_023 : rule =
     | Some up, Some mp ->
         if up > mp then
           Some
-            {
-              id = "PKG-023";
-              severity = Error;
-              message = {|unicode‑math must load before microtype|};
-              count = 1;
-            }
+            (mk_result ~id:"PKG-023" ~severity:Error
+               ~message:{|unicode‑math must load before microtype|} ~count:1)
         else None
     | _ -> None
   in
@@ -1488,12 +1328,8 @@ let r_lang_002 : rule =
     in
     if has_bare || has_empty then
       Some
-        {
-          id = "LANG-002";
-          severity = Warning;
-          message = "babel language option missing";
-          count = 1;
-        }
+        (mk_result ~id:"LANG-002" ~severity:Warning
+           ~message:"babel language option missing" ~count:1)
     else None
   in
   { id = "LANG-002"; run; languages = [] }
@@ -1504,12 +1340,9 @@ let r_lang_004 : rule =
   let run s =
     if has_package s "polyglossia" && has_package s "babel" then
       Some
-        {
-          id = "LANG-004";
-          severity = Error;
-          message = {|Polyglossia loaded alongside babel – mutual exclusion|};
-          count = 1;
-        }
+        (mk_result ~id:"LANG-004" ~severity:Error
+           ~message:{|Polyglossia loaded alongside babel – mutual exclusion|}
+           ~count:1)
     else None
   in
   { id = "LANG-004"; run; languages = [] }
@@ -1540,12 +1373,9 @@ let r_tikz_007 : rule =
     | Some tp, Some hp ->
         if tp > hp then
           Some
-            {
-              id = "TIKZ-007";
-              severity = Warning;
-              message = {|TikZ loaded after hyperref – reorder required|};
-              count = 1;
-            }
+            (mk_result ~id:"TIKZ-007" ~severity:Warning
+               ~message:{|TikZ loaded after hyperref – reorder required|}
+               ~count:1)
         else None
     | _ -> None
   in
@@ -1572,12 +1402,8 @@ let r_fig_010 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-010";
-          severity = Warning;
-          message = "Subfigure environment without \\subcaption";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-010" ~severity:Warning
+           ~message:"Subfigure environment without \\subcaption" ~count:cnt)
     else None
   in
   { id = "FIG-010"; run; languages = [] }
@@ -1598,12 +1424,8 @@ let r_fig_013 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FIG-013";
-          severity = Info;
-          message = "Graphicx option scale used instead of width";
-          count = !cnt;
-        }
+        (mk_result ~id:"FIG-013" ~severity:Info
+           ~message:"Graphicx option scale used instead of width" ~count:!cnt)
     else None
   in
   { id = "FIG-013"; run; languages = [] }
@@ -1621,12 +1443,8 @@ let r_pkg_008 : rule =
     in
     if has_xcolor_no_dvips then
       Some
-        {
-          id = "PKG-008";
-          severity = Info;
-          message = "xcolor loaded without dvipsnames option";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-008" ~severity:Info
+           ~message:"xcolor loaded without dvipsnames option" ~count:1)
     else None
   in
   { id = "PKG-008"; run; languages = [] }
@@ -1644,12 +1462,8 @@ let r_pkg_010 : rule =
     in
     if has_deprecated then
       Some
-        {
-          id = "PKG-010";
-          severity = Warning;
-          message = "biblatex loaded with deprecated backend=biber";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-010" ~severity:Warning
+           ~message:"biblatex loaded with deprecated backend=biber" ~count:1)
     else None
   in
   { id = "PKG-010"; run; languages = [] }
@@ -1660,12 +1474,8 @@ let r_pkg_013 : rule =
   let run s =
     if has_package s "fontspec" && not (has_package s "microtype") then
       Some
-        {
-          id = "PKG-013";
-          severity = Warning;
-          message = "microtype not loaded on XeLaTeX path";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-013" ~severity:Warning
+           ~message:"microtype not loaded on XeLaTeX path" ~count:1)
     else None
   in
   { id = "PKG-013"; run; languages = [] }
@@ -1689,12 +1499,8 @@ let r_pkg_014 : rule =
        with Not_found -> ());
       if !cnt > 0 then
         Some
-          {
-            id = "PKG-014";
-            severity = Warning;
-            message = "siunitx v2 API detected (outdated)";
-            count = !cnt;
-          }
+          (mk_result ~id:"PKG-014" ~severity:Warning
+             ~message:"siunitx v2 API detected (outdated)" ~count:!cnt)
       else None
   in
   { id = "PKG-014"; run; languages = [] }
@@ -1712,12 +1518,8 @@ let r_pkg_016 : rule =
     in
     if has_pdftex_opt then
       Some
-        {
-          id = "PKG-016";
-          severity = Warning;
-          message = "graphicx option pdftex incompatible with engine";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-016" ~severity:Warning
+           ~message:"graphicx option pdftex incompatible with engine" ~count:1)
     else None
   in
   { id = "PKG-016"; run; languages = [] }
@@ -1744,12 +1546,8 @@ let r_pkg_017 : rule =
       in
       if has_pdftex_marker then
         Some
-          {
-            id = "PKG-017";
-            severity = Error;
-            message = "fontspec loaded in pdfLaTeX";
-            count = 1;
-          }
+          (mk_result ~id:"PKG-017" ~severity:Error
+             ~message:"fontspec loaded in pdfLaTeX" ~count:1)
       else None
   in
   { id = "PKG-017"; run; languages = [] }
@@ -1773,12 +1571,8 @@ let r_pkg_021 : rule =
       tbl;
     if !cnt > 0 then
       Some
-        {
-          id = "PKG-021";
-          severity = Error;
-          message = "Package loaded twice with conflicting options";
-          count = !cnt;
-        }
+        (mk_result ~id:"PKG-021" ~severity:Error
+           ~message:"Package loaded twice with conflicting options" ~count:!cnt)
     else None
   in
   { id = "PKG-021"; run; languages = [] }
@@ -1808,12 +1602,9 @@ let r_pkg_024 : rule =
       (List.rev !langs);
     if !dups > 0 then
       Some
-        {
-          id = "PKG-024";
-          severity = Warning;
-          message = {|polyglossia language duplicated via \setdefaultlanguage|};
-          count = !dups;
-        }
+        (mk_result ~id:"PKG-024" ~severity:Warning
+           ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
+           ~count:!dups)
     else None
   in
   { id = "PKG-024"; run; languages = [] }
@@ -1839,12 +1630,9 @@ let r_pkg_025 : rule =
     in
     if has_xeluatex && has_pdftex_enc && has_inputenc then
       Some
-        {
-          id = "PKG-025";
-          severity = Warning;
-          message = "Engine option mismatch (xelatex=true on LuaLaTeX run)";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-025" ~severity:Warning
+           ~message:"Engine option mismatch (xelatex=true on LuaLaTeX run)"
+           ~count:1)
     else None
   in
   { id = "PKG-025"; run; languages = [] }
@@ -1885,12 +1673,8 @@ let r_tab_003 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-003";
-          severity = Info;
-          message = "Decimal column not aligned on dot";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-003" ~severity:Info
+           ~message:"Decimal column not aligned on dot" ~count:cnt)
     else None
   in
   { id = "TAB-003"; run; languages = [] }
@@ -1931,12 +1715,8 @@ let r_tab_007 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-007";
-          severity = Info;
-          message = {|Text in numeric column without \multicolumn|};
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-007" ~severity:Info
+           ~message:{|Text in numeric column without \multicolumn|} ~count:cnt)
     else None
   in
   { id = "TAB-007"; run; languages = [] }
@@ -1957,12 +1737,8 @@ let r_tab_008 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-008";
-          severity = Info;
-          message = {|Table > 30 rows – suggest longtable/xtab|};
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-008" ~severity:Info
+           ~message:{|Table > 30 rows – suggest longtable/xtab|} ~count:cnt)
     else None
   in
   { id = "TAB-008"; run; languages = [] }
@@ -2008,12 +1784,9 @@ let r_tab_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TAB-012";
-          severity = Info;
-          message = {|Numeric column not aligned using siunitx S‑column|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TAB-012" ~severity:Info
+           ~message:{|Numeric column not aligned using siunitx S‑column|}
+           ~count:!cnt)
     else None
   in
   { id = "TAB-012"; run; languages = [] }
@@ -2051,12 +1824,9 @@ let r_tab_013 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-013";
-          severity = Info;
-          message = "Caption position for longtable must be at top per style";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-013" ~severity:Info
+           ~message:"Caption position for longtable must be at top per style"
+           ~count:cnt)
     else None
   in
   { id = "TAB-013"; run; languages = [] }
@@ -2075,12 +1845,9 @@ let r_tab_015 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-015";
-          severity = Warning;
-          message = {|\multirow inside tabularx column X without raggedright|};
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-015" ~severity:Warning
+           ~message:{|\multirow inside tabularx column X without raggedright|}
+           ~count:cnt)
     else None
   in
   { id = "TAB-015"; run; languages = [] }
@@ -2101,12 +1868,9 @@ let r_tab_016 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TAB-016";
-          severity = Info;
-          message = "Centred 'c' column in longtable holds ragged text";
-          count = !cnt;
-        }
+        (mk_result ~id:"TAB-016" ~severity:Info
+           ~message:"Centred 'c' column in longtable holds ragged text"
+           ~count:!cnt)
     else None
   in
   { id = "TAB-016"; run; languages = [] }
@@ -2125,12 +1889,8 @@ let r_fig_012 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-012";
-          severity = Info;
-          message = "Figure listed in LoF but not referenced";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-012" ~severity:Info
+           ~message:"Figure listed in LoF but not referenced" ~count:cnt)
     else None
   in
   { id = "FIG-012"; run; languages = [] }
@@ -2149,12 +1909,8 @@ let r_fig_014 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-014";
-          severity = Info;
-          message = {|Figure caption exceeds 300 characters|};
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-014" ~severity:Info
+           ~message:{|Figure caption exceeds 300 characters|} ~count:cnt)
     else None
   in
   { id = "FIG-014"; run; languages = [] }
@@ -2177,12 +1933,9 @@ let r_fig_017 : rule =
       let has_landscape = contains_substring s "landscape" in
       if not has_landscape then
         Some
-          {
-            id = "FIG-017";
-            severity = Warning;
-            message = "Sidewaysfigure used with portrait page layout";
-            count = !cnt;
-          }
+          (mk_result ~id:"FIG-017" ~severity:Warning
+             ~message:"Sidewaysfigure used with portrait page layout"
+             ~count:!cnt)
       else None
     else None
   in
@@ -2203,12 +1956,8 @@ let r_fig_019 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-019";
-          severity = Info;
-          message = {|Subcaption label missing (a), (b)…|};
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-019" ~severity:Info
+           ~message:{|Subcaption label missing (a), (b)…|} ~count:cnt)
     else None
   in
   { id = "FIG-019"; run; languages = [] }
@@ -2242,12 +1991,9 @@ let r_fig_022 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-022";
-          severity = Info;
-          message = "Figure caption identical to surrounding sentence";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-022" ~severity:Info
+           ~message:"Figure caption identical to surrounding sentence"
+           ~count:cnt)
     else None
   in
   { id = "FIG-022"; run; languages = [] }
@@ -2268,12 +2014,9 @@ let r_fig_024 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FIG-024";
-          severity = Info;
-          message = {|Alt‑text exceeds 140 chars—trim for accessibility|};
-          count = !cnt;
-        }
+        (mk_result ~id:"FIG-024" ~severity:Info
+           ~message:{|Alt‑text exceeds 140 chars—trim for accessibility|}
+           ~count:!cnt)
     else None
   in
   { id = "FIG-024"; run; languages = [] }
@@ -2305,12 +2048,9 @@ let r_fig_025 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-025";
-          severity = Info;
-          message = {|Alt‑text identical to caption—reduce redundancy|};
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-025" ~severity:Info
+           ~message:{|Alt‑text identical to caption—reduce redundancy|}
+           ~count:cnt)
     else None
   in
   { id = "FIG-025"; run; languages = [] }
@@ -2338,12 +2078,9 @@ let r_math_075 : rule =
       eq_envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-075";
-          severity = Warning;
-          message = {|Equation number suppressed with \nonumber but referenced|};
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-075" ~severity:Warning
+           ~message:{|Equation number suppressed with \nonumber but referenced|}
+           ~count:!cnt)
     else None
   in
   { id = "MATH-075"; run; languages = [] }
@@ -2375,12 +2112,8 @@ let r_math_080 : rule =
       envs;
     if !cnt > 0 then
       Some
-        {
-          id = "MATH-080";
-          severity = Info;
-          message = "Equation exceeds 3 alignment columns";
-          count = !cnt;
-        }
+        (mk_result ~id:"MATH-080" ~severity:Info
+           ~message:"Equation exceeds 3 alignment columns" ~count:!cnt)
     else None
   in
   { id = "MATH-080"; run; languages = [] }
@@ -2410,13 +2143,10 @@ let r_cmd_012 : rule =
         in
         if found then
           Some
-            {
-              id = "CMD-012";
-              severity = Warning;
-              message =
-                {|\renewcommand\thesection redefined after hyperref — bookmark mismatch|};
-              count = 1;
-            }
+            (mk_result ~id:"CMD-012" ~severity:Warning
+               ~message:
+                 {|\renewcommand\thesection redefined after hyperref — bookmark mismatch|}
+               ~count:1)
         else None
   in
   { id = "CMD-012"; run; languages = [] }
@@ -2442,12 +2172,8 @@ let r_doc_004 : rule =
     | Some ap, Some cp ->
         if ap < cp then
           Some
-            {
-              id = "DOC-004";
-              severity = Info;
-              message = "Acknowledgment section before conclusion";
-              count = 1;
-            }
+            (mk_result ~id:"DOC-004" ~severity:Info
+               ~message:"Acknowledgment section before conclusion" ~count:1)
         else None
     | _ -> None
   in
@@ -2484,12 +2210,9 @@ let r_l3_001 : rule =
     in
     if has_expl3 && has_2e then
       Some
-        {
-          id = "L3-001";
-          severity = Info;
-          message = {|LaTeX3 \tl_new:N in preamble mixed with 2e macros|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-001" ~severity:Info
+           ~message:{|LaTeX3 \tl_new:N in preamble mixed with 2e macros|}
+           ~count:1)
     else None
   in
   { id = "L3-001"; run; languages = [] }
@@ -2514,12 +2237,9 @@ let r_l3_002 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "L3-002";
-              severity = Warning;
-              message = {|Expl3 variable declared after \begin{document}|};
-              count = !cnt;
-            }
+            (mk_result ~id:"L3-002" ~severity:Warning
+               ~message:{|Expl3 variable declared after \begin{document}|}
+               ~count:!cnt)
         else None
   in
   { id = "L3-002"; run; languages = [] }
@@ -2549,12 +2269,8 @@ let r_l3_003 : rule =
     in
     if has_expl3 && has_etoolbox then
       Some
-        {
-          id = "L3-003";
-          severity = Warning;
-          message = "Expl3 and etoolbox patch macros combined";
-          count = 1;
-        }
+        (mk_result ~id:"L3-003" ~severity:Warning
+           ~message:"Expl3 and etoolbox patch macros combined" ~count:1)
     else None
   in
   { id = "L3-003"; run; languages = [] }
@@ -2574,12 +2290,8 @@ let r_l3_004 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "L3-004";
-          severity = Info;
-          message = {|Undocumented \__module_internal:N used|};
-          count = !cnt;
-        }
+        (mk_result ~id:"L3-004" ~severity:Info
+           ~message:{|Undocumented \__module_internal:N used|} ~count:!cnt)
     else None
   in
   { id = "L3-004"; run; languages = [] }
@@ -2600,12 +2312,8 @@ let r_l3_005 : rule =
     let has_guard = contains_substring s "\\ExplSyntaxOn" in
     if has_expl3 && not has_guard then
       Some
-        {
-          id = "L3-005";
-          severity = Error;
-          message = {|Missing \ExplSyntaxOn guard around expl3 code|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-005" ~severity:Error
+           ~message:{|Missing \ExplSyntaxOn guard around expl3 code|} ~count:1)
     else None
   in
   { id = "L3-005"; run; languages = [] }
@@ -2647,12 +2355,8 @@ let r_l3_006 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "L3-006";
-          severity = Warning;
-          message = "Expl3 variable clobbers package macro name";
-          count = cnt;
-        }
+        (mk_result ~id:"L3-006" ~severity:Warning
+           ~message:"Expl3 variable clobbers package macro name" ~count:cnt)
     else None
   in
   { id = "L3-006"; run; languages = [] }
@@ -2678,12 +2382,8 @@ let r_l3_007 : rule =
     in
     if has_camel && has_snake then
       Some
-        {
-          id = "L3-007";
-          severity = Info;
-          message = "Mix of camelCase and snake_case in expl3 names";
-          count = 1;
-        }
+        (mk_result ~id:"L3-007" ~severity:Info
+           ~message:"Mix of camelCase and snake_case in expl3 names" ~count:1)
     else None
   in
   { id = "L3-007"; run; languages = [] }
@@ -2706,12 +2406,8 @@ let r_l3_009 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "L3-009";
-          severity = Info;
-          message = "LaTeX3 function deprecated _n: variant used";
-          count = !cnt;
-        }
+        (mk_result ~id:"L3-009" ~severity:Info
+           ~message:"LaTeX3 function deprecated _n: variant used" ~count:!cnt)
     else None
   in
   { id = "L3-009"; run; languages = [] }
@@ -2740,12 +2436,9 @@ let r_l3_011 : rule =
     in
     if has_pdftex && has_luaxe then
       Some
-        {
-          id = "L3-011";
-          severity = Warning;
-          message = "Engine‑branch uses pdfTeX primitive in Lua/XeTeX path";
-          count = 1;
-        }
+        (mk_result ~id:"L3-011" ~severity:Warning
+           ~message:"Engine‑branch uses pdfTeX primitive in Lua/XeTeX path"
+           ~count:1)
     else None
   in
   { id = "L3-011"; run; languages = [] }
@@ -2775,12 +2468,8 @@ let r_tikz_001 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TIKZ-001";
-          severity = Info;
-          message = "TikZ picture outside figure environment";
-          count = !cnt;
-        }
+        (mk_result ~id:"TIKZ-001" ~severity:Info
+           ~message:"TikZ picture outside figure environment" ~count:!cnt)
     else None
   in
   { id = "TIKZ-001"; run; languages = [] }
@@ -2809,12 +2498,8 @@ let r_tikz_003 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TIKZ-003";
-          severity = Info;
-          message = "pgfplots axis labels not in math mode";
-          count = cnt;
-        }
+        (mk_result ~id:"TIKZ-003" ~severity:Info
+           ~message:"pgfplots axis labels not in math mode" ~count:cnt)
     else None
   in
   { id = "TIKZ-003"; run; languages = [] }
@@ -2834,12 +2519,8 @@ let r_tikz_004 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TIKZ-004";
-          severity = Info;
-          message = "Hard‑coded RGB values instead of xcolor names";
-          count = !cnt;
-        }
+        (mk_result ~id:"TIKZ-004" ~severity:Info
+           ~message:"Hard‑coded RGB values instead of xcolor names" ~count:!cnt)
     else None
   in
   { id = "TIKZ-004"; run; languages = [] }
@@ -2858,12 +2539,9 @@ let r_tikz_006 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TIKZ-006";
-          severity = Warning;
-          message = {|Missing \caption for tikzpicture inside figure|};
-          count = cnt;
-        }
+        (mk_result ~id:"TIKZ-006" ~severity:Warning
+           ~message:{|Missing \caption for tikzpicture inside figure|}
+           ~count:cnt)
     else None
   in
   { id = "TIKZ-006"; run; languages = [] }
@@ -2890,12 +2568,8 @@ let r_tikz_009 : rule =
       let has_lib = contains_substring s "arrows.meta" in
       if not has_lib then
         Some
-          {
-            id = "TIKZ-009";
-            severity = Info;
-            message = "TikZ library arrows.meta missing for arrow tips";
-            count = 1;
-          }
+          (mk_result ~id:"TIKZ-009" ~severity:Info
+             ~message:"TikZ library arrows.meta missing for arrow tips" ~count:1)
       else None
   in
   { id = "TIKZ-009"; run; languages = [] }
@@ -2918,12 +2592,8 @@ let r_tikz_010 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "TIKZ-010";
-          severity = Info;
-          message = {|Deprecated \pgfplotsset key used|};
-          count = !cnt;
-        }
+        (mk_result ~id:"TIKZ-010" ~severity:Info
+           ~message:{|Deprecated \pgfplotsset key used|} ~count:!cnt)
     else None
   in
   { id = "TIKZ-010"; run; languages = [] }
@@ -2979,13 +2649,10 @@ let r_lang_001 : rule =
           in
           if cnt > 0 then
             Some
-              {
-                id = "LANG-001";
-                severity = Info;
-                message =
-                  {|\usepackage[british]{babel} but US spelling detected|};
-                count = cnt;
-              }
+              (mk_result ~id:"LANG-001" ~severity:Info
+                 ~message:
+                   {|\usepackage[british]{babel} but US spelling detected|}
+                 ~count:cnt)
           else None
   in
   { id = "LANG-001"; run; languages = [] }
@@ -3014,12 +2681,9 @@ let r_lang_006 : rule =
         | Some ap, Some lp ->
             if ap < lp then
               Some
-                {
-                  id = "LANG-006";
-                  severity = Info;
-                  message = "Non‑English abstract before \\selectlanguage";
-                  count = 1;
-                }
+                (mk_result ~id:"LANG-006" ~severity:Info
+                   ~message:"Non‑English abstract before \\selectlanguage"
+                   ~count:1)
             else None
         | _ -> None)
   in
@@ -3060,12 +2724,9 @@ let r_lang_007 : rule =
            with Not_found -> ());
           if !cnt > 0 then
             Some
-              {
-                id = "LANG-007";
-                severity = Info;
-                message = "babel shorthand \" mis‑used instead of \\og … \\fg";
-                count = !cnt;
-              }
+              (mk_result ~id:"LANG-007" ~severity:Info
+                 ~message:"babel shorthand \" mis‑used instead of \\og … \\fg"
+                 ~count:!cnt)
           else None
   in
   { id = "LANG-007"; run; languages = [] }
@@ -3118,12 +2779,9 @@ let r_lang_013 : rule =
             match (lang_before, lang_after) with
             | Some lb, Some la when lb <> la ->
                 Some
-                  {
-                    id = "LANG-013";
-                    severity = Info;
-                    message = {|Abstract language differs from \selectlanguage|};
-                    count = 1;
-                  }
+                  (mk_result ~id:"LANG-013" ~severity:Info
+                     ~message:{|Abstract language differs from \selectlanguage|}
+                     ~count:1)
             | _ -> None))
   in
   { id = "LANG-013"; run; languages = [] }
@@ -3150,12 +2808,8 @@ let r_col_006 : rule =
       in
       if has_pdftex then
         Some
-          {
-            id = "COL-006";
-            severity = Warning;
-            message = "xcolor option dvipsnames used with pdfLaTeX";
-            count = 1;
-          }
+          (mk_result ~id:"COL-006" ~severity:Warning
+             ~message:"xcolor option dvipsnames used with pdfLaTeX" ~count:1)
       else None
   in
   { id = "COL-006"; run; languages = [] }
@@ -3183,12 +2837,8 @@ let r_l3_008 : rule =
     in
     if has_expl3 && not has_provides then
       Some
-        {
-          id = "L3-008";
-          severity = Warning;
-          message = {|Expl3 module lacks \ProvidesExplPackage|};
-          count = 1;
-        }
+        (mk_result ~id:"L3-008" ~severity:Warning
+           ~message:{|Expl3 module lacks \ProvidesExplPackage|} ~count:1)
     else None
   in
   { id = "L3-008"; run; languages = [] }
@@ -3214,12 +2864,9 @@ let r_l3_010 : rule =
     let off_count = count_matches off_re s in
     if on_count > 0 && on_count > off_count then
       Some
-        {
-          id = "L3-010";
-          severity = Info;
-          message = {|\ExplSyntaxOff missing at end of file|};
-          count = on_count - off_count;
-        }
+        (mk_result ~id:"L3-010" ~severity:Info
+           ~message:{|\ExplSyntaxOff missing at end of file|}
+           ~count:(on_count - off_count))
     else None
   in
   { id = "L3-010"; run; languages = [] }
@@ -3239,12 +2886,9 @@ let r_lay_024 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-024";
-          severity = Warning;
-          message = "\\subsubsubsection depth > 3 without class support";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-024" ~severity:Warning
+           ~message:"\\subsubsubsection depth > 3 without class support"
+           ~count:!cnt)
     else None
   in
   { id = "LAY-024"; run; languages = [] }
@@ -3274,12 +2918,8 @@ let r_meta_002 : rule =
     match has_date with
     | Some true ->
         Some
-          {
-            id = "META-002";
-            severity = Info;
-            message = {|Revision hash missing from \date field|};
-            count = 1;
-          }
+          (mk_result ~id:"META-002" ~severity:Info
+             ~message:{|Revision hash missing from \date field|} ~count:1)
     | _ -> None
   in
   { id = "META-002"; run; languages = [] }
@@ -3314,12 +2954,8 @@ let r_rtl_005 : rule =
       in
       if not has_font_spec then
         Some
-          {
-            id = "RTL-005";
-            severity = Warning;
-            message = "Polyglossia RTL font not specified";
-            count = 1;
-          }
+          (mk_result ~id:"RTL-005" ~severity:Warning
+             ~message:"Polyglossia RTL font not specified" ~count:1)
       else None
     else None
   in
@@ -3350,12 +2986,8 @@ let r_bib_002 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-002";
-          severity = Info;
-          message = "DOI not normalised to https://doi.org/ form";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-002" ~severity:Info
+           ~message:"DOI not normalised to https://doi.org/ form" ~count:!cnt)
     else None
   in
   { id = "BIB-002"; run; languages = [] }
@@ -3388,13 +3020,10 @@ let r_bib_003 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-003";
-          severity = Info;
-          message =
-            "Journal title capitalisation inconsistent with @string definition";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-003" ~severity:Info
+           ~message:
+             "Journal title capitalisation inconsistent with @string definition"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-003"; run; languages = [] }
@@ -3425,12 +3054,8 @@ let r_bib_004 : rule =
       entries;
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-004";
-          severity = Warning;
-          message = "Book entry lacks publisher field";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-004" ~severity:Warning
+           ~message:"Book entry lacks publisher field" ~count:!cnt)
     else None
   in
   { id = "BIB-004"; run; languages = [] }
@@ -3454,12 +3079,8 @@ let r_bib_005 : rule =
       entries;
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-005";
-          severity = Info;
-          message = "URL present without urldate";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-005" ~severity:Info
+           ~message:"URL present without urldate" ~count:!cnt)
     else None
   in
   { id = "BIB-005"; run; languages = [] }
@@ -3500,12 +3121,9 @@ let r_bib_006 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-006";
-          severity = Info;
-          message = "Author/editor names not in “von Last, First” scheme";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-006" ~severity:Info
+           ~message:"Author/editor names not in “von Last, First” scheme"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-006"; run; languages = [] }
@@ -3527,12 +3145,9 @@ let r_bib_008 : rule =
       let cnt = count_matches re s in
       if cnt > 0 then
         Some
-          {
-            id = "BIB-008";
-            severity = Info;
-            message = "Camel‑case field names detected (e.g. `Title` → `title`)";
-            count = cnt;
-          }
+          (mk_result ~id:"BIB-008" ~severity:Info
+             ~message:"Camel‑case field names detected (e.g. `Title` → `title`)"
+             ~count:cnt)
       else None
   in
   { id = "BIB-008"; run; languages = [] }
@@ -3563,12 +3178,9 @@ let r_bib_009 : rule =
       entries;
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-009";
-          severity = Error;
-          message = "In‑proceedings entry missing required `booktitle` field";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-009" ~severity:Error
+           ~message:"In‑proceedings entry missing required `booktitle` field"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-009"; run; languages = [] }
@@ -3580,13 +3192,10 @@ let r_bib_010 : rule =
     let cnt = count_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "BIB-010";
-          severity = Info;
-          message =
-            "`month` field uses numeric literal instead of `#jan#` macro";
-          count = cnt;
-        }
+        (mk_result ~id:"BIB-010" ~severity:Info
+           ~message:
+             "`month` field uses numeric literal instead of `#jan#` macro"
+           ~count:cnt)
     else None
   in
   { id = "BIB-010"; run; languages = [] }
@@ -3598,12 +3207,9 @@ let r_bib_011 : rule =
     let cnt = count_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "BIB-011";
-          severity = Info;
-          message = "Legacy `note = {URL: …}` field detected; move to `url`";
-          count = cnt;
-        }
+        (mk_result ~id:"BIB-011" ~severity:Info
+           ~message:"Legacy `note = {URL: …}` field detected; move to `url`"
+           ~count:cnt)
     else None
   in
   { id = "BIB-011"; run; languages = [] }
@@ -3641,14 +3247,11 @@ let r_bib_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-012";
-          severity = Warning;
-          message =
-            "`et al.` hard‑coded in author list instead of letting Bib(La)TeX \
-             truncate";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-012" ~severity:Warning
+           ~message:
+             "`et al.` hard‑coded in author list instead of letting Bib(La)TeX \
+              truncate"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-012"; run; languages = [] }
@@ -3678,12 +3281,9 @@ let r_bib_015 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-015";
-          severity = Info;
-          message = "Trailing period in `title` or `note` field is redundant";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-015" ~severity:Info
+           ~message:"Trailing period in `title` or `note` field is redundant"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-015"; run; languages = [] }
@@ -3712,12 +3312,9 @@ let r_bib_016 : rule =
       entries;
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-016";
-          severity = Info;
-          message = "Both DOI and URL present—duplicate locator information";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-016" ~severity:Info
+           ~message:"Both DOI and URL present—duplicate locator information"
+           ~count:!cnt)
     else None
   in
   { id = "BIB-016"; run; languages = [] }
@@ -3740,12 +3337,8 @@ let r_pkg_018 : rule =
     let cnt = min cnt (c1 + max c2 0 + max c4 c3) in
     if cnt > 0 then
       Some
-        {
-          id = "PKG-018";
-          severity = Info;
-          message = "hyperref option draft left enabled";
-          count = cnt;
-        }
+        (mk_result ~id:"PKG-018" ~severity:Info
+           ~message:"hyperref option draft left enabled" ~count:cnt)
     else None
   in
   { id = "PKG-018"; run; languages = [] }
@@ -3766,12 +3359,8 @@ let r_pkg_019 : rule =
     let cnt = c1 + c2 in
     if cnt > 0 then
       Some
-        {
-          id = "PKG-019";
-          severity = Warning;
-          message = "geometry margin < 1 cm";
-          count = cnt;
-        }
+        (mk_result ~id:"PKG-019" ~severity:Warning
+           ~message:"geometry margin < 1 cm" ~count:cnt)
     else None
   in
   { id = "PKG-019"; run; languages = [] }
@@ -3808,21 +3397,13 @@ let r_font_005 : rule =
         in
         if is_lm then
           Some
-            {
-              id = "FONT-005";
-              severity = Info;
-              message = "Fontspec fallback to Latin Modern detected";
-              count = 1;
-            }
+            (mk_result ~id:"FONT-005" ~severity:Info
+               ~message:"Fontspec fallback to Latin Modern detected" ~count:1)
         else None
       else
         Some
-          {
-            id = "FONT-005";
-            severity = Info;
-            message = "Fontspec fallback to Latin Modern detected";
-            count = 1;
-          }
+          (mk_result ~id:"FONT-005" ~severity:Info
+             ~message:"Fontspec fallback to Latin Modern detected" ~count:1)
   in
   { id = "FONT-005"; run; languages = [] }
 
@@ -3852,12 +3433,8 @@ let r_lay_015 : rule =
     check re_setstretch;
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-015";
-          severity = Info;
-          message = "Line spacing < 1 or > 2";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-015" ~severity:Info
+           ~message:"Line spacing < 1 or > 2" ~count:!cnt)
     else None
   in
   { id = "LAY-015"; run; languages = [] }
@@ -3874,12 +3451,9 @@ let r_lay_020 : rule =
     let cnt = c1 + c2 in
     if cnt > 0 then
       Some
-        {
-          id = "LAY-020";
-          severity = Info;
-          message = "Float placement parameters modified (\\topnumber …)";
-          count = cnt;
-        }
+        (mk_result ~id:"LAY-020" ~severity:Info
+           ~message:"Float placement parameters modified (\\topnumber …)"
+           ~count:cnt)
     else None
   in
   { id = "LAY-020"; run; languages = [] }
@@ -3891,12 +3465,8 @@ let r_lay_022 : rule =
     let cnt = count_matches re s in
     if cnt > 0 then
       Some
-        {
-          id = "LAY-022";
-          severity = Warning;
-          message = {|Global negative \parskip detected|};
-          count = cnt;
-        }
+        (mk_result ~id:"LAY-022" ~severity:Warning
+           ~message:{|Global negative \parskip detected|} ~count:cnt)
     else None
   in
   { id = "LAY-022"; run; languages = [] }
@@ -3924,12 +3494,8 @@ let r_ref_008 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "REF-008";
-          severity = Warning;
-          message = "Duplicate cite key in .bib file";
-          count = cnt;
-        }
+        (mk_result ~id:"REF-008" ~severity:Warning
+           ~message:"Duplicate cite key in .bib file" ~count:cnt)
     else None
   in
   { id = "REF-008"; run; languages = [] }
@@ -3965,12 +3531,8 @@ let r_meta_001 : rule =
       if has_producer then None
       else
         Some
-          {
-            id = "META-001";
-            severity = Info;
-            message = "PDF /Producer not set to deterministic hash";
-            count = 1;
-          }
+          (mk_result ~id:"META-001" ~severity:Info
+             ~message:"PDF /Producer not set to deterministic hash" ~count:1)
   in
   { id = "META-001"; run; languages = [] }
 
@@ -4013,13 +3575,10 @@ let r_pdf_010 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "PDF-010";
-          severity = Info;
-          message =
-            "Outline/bookmark text contains '_' or '#' – use \\texorpdfstring";
-          count = !cnt;
-        }
+        (mk_result ~id:"PDF-010" ~severity:Info
+           ~message:
+             "Outline/bookmark text contains '_' or '#' – use \\texorpdfstring"
+           ~count:!cnt)
     else None
   in
   { id = "PDF-010"; run; languages = [] }
@@ -4055,12 +3614,9 @@ let r_tikz_005 : rule =
       if has_ext_lib || has_ext_cmd then None
       else
         Some
-          {
-            id = "TIKZ-005";
-            severity = Info;
-            message = "TikZ externalisation not enabled for large figures";
-            count = 1;
-          }
+          (mk_result ~id:"TIKZ-005" ~severity:Info
+             ~message:"TikZ externalisation not enabled for large figures"
+             ~count:1)
   in
   { id = "TIKZ-005"; run; languages = [] }
 
@@ -4101,12 +3657,8 @@ let r_bib_001 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-001";
-          severity = Warning;
-          message = "Bibliography entry missing DOI or ISBN/ISSN";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-001" ~severity:Warning
+           ~message:"Bibliography entry missing DOI or ISBN/ISSN" ~count:!cnt)
     else None
   in
   mk_rule "BIB-001" run
@@ -4135,12 +3687,8 @@ let r_bib_007 : rule =
     let cnt = count_dups 0 sorted in
     if cnt > 0 then
       Some
-        {
-          id = "BIB-007";
-          severity = Warning;
-          message = "Duplicate DOI appears in more than one entry";
-          count = cnt;
-        }
+        (mk_result ~id:"BIB-007" ~severity:Warning
+           ~message:"Duplicate DOI appears in more than one entry" ~count:cnt)
     else None
   in
   mk_rule "BIB-007" run
@@ -4174,13 +3722,10 @@ let r_bib_013 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-013";
-          severity = Info;
-          message =
-            "Title capitalisation incorrect for selected bibliography style";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-013" ~severity:Info
+           ~message:
+             "Title capitalisation incorrect for selected bibliography style"
+           ~count:!cnt)
     else None
   in
   mk_rule "BIB-013" run
@@ -4221,12 +3766,9 @@ let r_bib_014 : rule =
     let cnt = count_dups 0 sorted in
     if cnt > 0 then
       Some
-        {
-          id = "BIB-014";
-          severity = Warning;
-          message = "Duplicate author-year key without disambiguation suffix";
-          count = cnt;
-        }
+        (mk_result ~id:"BIB-014" ~severity:Warning
+           ~message:"Duplicate author-year key without disambiguation suffix"
+           ~count:cnt)
     else None
   in
   mk_rule "BIB-014" run
@@ -4250,12 +3792,8 @@ let r_bib_017 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "BIB-017";
-          severity = Info;
-          message = "Bibliography title ends with punctuation mark";
-          count = !cnt;
-        }
+        (mk_result ~id:"BIB-017" ~severity:Info
+           ~message:"Bibliography title ends with punctuation mark" ~count:!cnt)
     else None
   in
   mk_rule "BIB-017" run
@@ -4269,12 +3807,8 @@ let r_font_003 : rule =
     if not has_microtype then None
     else if contains_substring s "protrusion=false" then
       Some
-        {
-          id = "FONT-003";
-          severity = Warning;
-          message = "Microtype protrusion disabled globally";
-          count = 1;
-        }
+        (mk_result ~id:"FONT-003" ~severity:Warning
+           ~message:"Microtype protrusion disabled globally" ~count:1)
     else None
   in
   mk_rule "FONT-003" run
@@ -4297,12 +3831,9 @@ let r_font_002 : rule =
     let unique = List.sort_uniq String.compare !sizes in
     if List.length unique > 2 then
       Some
-        {
-          id = "FONT-002";
-          severity = Info;
-          message = "Mixed optical sizes in paragraph";
-          count = List.length unique;
-        }
+        (mk_result ~id:"FONT-002" ~severity:Info
+           ~message:"Mixed optical sizes in paragraph"
+           ~count:(List.length unique))
     else None
   in
   mk_rule "FONT-002" run
@@ -4331,12 +3862,8 @@ let r_rtl_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "RTL-001";
-          severity = Warning;
-          message = "Mixture of RTL and LTR digits within number";
-          count = !cnt;
-        }
+        (mk_result ~id:"RTL-001" ~severity:Warning
+           ~message:"Mixture of RTL and LTR digits within number" ~count:!cnt)
     else None
   in
   mk_rule "RTL-001" run
@@ -4366,12 +3893,9 @@ let r_rtl_002 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "RTL-002";
-          severity = Info;
-          message = "Missing \\textLR around Latin acronym in Arabic text";
-          count = !cnt;
-        }
+        (mk_result ~id:"RTL-002" ~severity:Info
+           ~message:"Missing \\textLR around Latin acronym in Arabic text"
+           ~count:!cnt)
     else None
   in
   mk_rule "RTL-002" run
@@ -4381,12 +3905,9 @@ let r_meta_003 : rule =
   let run s =
     if contains_substring s "\\date{\\today}" then
       Some
-        {
-          id = "META-003";
-          severity = Warning;
-          message = "Build timestamp not reproducible (\\date{\\today})";
-          count = 1;
-        }
+        (mk_result ~id:"META-003" ~severity:Warning
+           ~message:"Build timestamp not reproducible (\\date{\\today})"
+           ~count:1)
     else None
   in
   mk_rule "META-003" run
@@ -4402,12 +3923,9 @@ let r_meta_004 : rule =
       contains_substring s "\\pdfinfo" && contains_substring s "CreationDate"
     then
       Some
-        {
-          id = "META-004";
-          severity = Info;
-          message = "PDF /CreationDate not stripped — build not reproducible";
-          count = 1;
-        }
+        (mk_result ~id:"META-004" ~severity:Info
+           ~message:"PDF /CreationDate not stripped — build not reproducible"
+           ~count:1)
     else None
   in
   mk_rule "META-004" run
@@ -4420,12 +3938,9 @@ let r_doc_005 : rule =
     let has_pdfkeywords = contains_substring s "pdfkeywords" in
     if has_keywords && has_hypersetup && not has_pdfkeywords then
       Some
-        {
-          id = "DOC-005";
-          severity = Info;
-          message = "\\keywords present but absent from PDF/XMP metadata";
-          count = 1;
-        }
+        (mk_result ~id:"DOC-005" ~severity:Info
+           ~message:"\\keywords present but absent from PDF/XMP metadata"
+           ~count:1)
     else None
   in
   mk_rule "DOC-005" run
@@ -4450,12 +3965,9 @@ let r_ref_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "REF-012";
-          severity = Info;
-          message = "Reference text 'above/below' may contradict float position";
-          count = !cnt;
-        }
+        (mk_result ~id:"REF-012" ~severity:Info
+           ~message:"Reference text 'above/below' may contradict float position"
+           ~count:!cnt)
     else None
   in
   mk_rule "REF-012" run
@@ -4476,12 +3988,9 @@ let r_font_010 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FONT-010";
-          severity = Info;
-          message = "Digits in \\textsc not converted to small-caps figures";
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-010" ~severity:Info
+           ~message:"Digits in \\textsc not converted to small-caps figures"
+           ~count:!cnt)
     else None
   in
   mk_rule "FONT-010" run
@@ -4494,12 +4003,9 @@ let r_font_013 : rule =
     let has_tabularfigs = contains_substring s "\\tabularfigures" in
     if has_tabular && has_proportional && has_tabularfigs then
       Some
-        {
-          id = "FONT-013";
-          severity = Warning;
-          message = "Mixed proportional and tabular figures in same table";
-          count = 1;
-        }
+        (mk_result ~id:"FONT-013" ~severity:Warning
+           ~message:"Mixed proportional and tabular figures in same table"
+           ~count:1)
     else None
   in
   mk_rule "FONT-013" run
@@ -4519,12 +4025,8 @@ let r_pdf_005 : rule =
       in
       if not has_pdfa then
         Some
-          {
-            id = "PDF-005";
-            severity = Warning;
-            message = "PDF/A or PDF/UA compliance flag missing";
-            count = 1;
-          }
+          (mk_result ~id:"PDF-005" ~severity:Warning
+             ~message:"PDF/A or PDF/UA compliance flag missing" ~count:1)
       else None
   in
   mk_rule "PDF-005" run
@@ -4562,12 +4064,9 @@ let r_font_009 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FONT-009";
-          severity = Warning;
-          message = "Small-caps with non-ASCII chars — fallback may be visible";
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-009" ~severity:Warning
+           ~message:"Small-caps with non-ASCII chars — fallback may be visible"
+           ~count:!cnt)
     else None
   in
   mk_rule "FONT-009" run
@@ -4582,13 +4081,10 @@ let r_font_011 : rule =
     in
     if has_microtype && has_mathfont then
       Some
-        {
-          id = "FONT-011";
-          severity = Warning;
-          message =
-            "Microtype protrusion may mismatch between text and math fonts";
-          count = 1;
-        }
+        (mk_result ~id:"FONT-011" ~severity:Warning
+           ~message:
+             "Microtype protrusion may mismatch between text and math fonts"
+           ~count:1)
     else None
   in
   mk_rule "FONT-011" run
@@ -4612,12 +4108,9 @@ let r_font_012 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FONT-012";
-          severity = Info;
-          message = "Ligature adjacent to \\texttt may cause visual clash";
-          count = !cnt;
-        }
+        (mk_result ~id:"FONT-012" ~severity:Info
+           ~message:"Ligature adjacent to \\texttt may cause visual clash"
+           ~count:!cnt)
     else None
   in
   mk_rule "FONT-012" run
@@ -4639,12 +4132,9 @@ let r_chem_010 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CHEM-010";
-          severity = Info;
-          message = "Reaction scheme line exceeds page width (> 120 chars)";
-          count = cnt;
-        }
+        (mk_result ~id:"CHEM-010" ~severity:Info
+           ~message:"Reaction scheme line exceeds page width (> 120 chars)"
+           ~count:cnt)
     else None
   in
   mk_rule "CHEM-010" run
@@ -4661,12 +4151,8 @@ let r_lang_009 : rule =
     in
     if has_ragged && has_nonlatin then
       Some
-        {
-          id = "LANG-009";
-          severity = Info;
-          message = "Ragged-right text in non-Latin script";
-          count = 1;
-        }
+        (mk_result ~id:"LANG-009" ~severity:Info
+           ~message:"Ragged-right text in non-Latin script" ~count:1)
     else None
   in
   mk_rule "LANG-009" run
@@ -4689,12 +4175,8 @@ let r_lang_010 : rule =
       in
       if has_ascii_digits then
         Some
-          {
-            id = "LANG-010";
-            severity = Info;
-            message = "Arabic digits in RTL context not localised";
-            count = 1;
-          }
+          (mk_result ~id:"LANG-010" ~severity:Info
+             ~message:"Arabic digits in RTL context not localised" ~count:1)
       else None
   in
   mk_rule "LANG-010" run
@@ -4724,12 +4206,8 @@ let r_cjk_009 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "CJK-009";
-          severity = Info;
-          message = "Western inter-word space between CJK glyphs";
-          count = !cnt;
-        }
+        (mk_result ~id:"CJK-009" ~severity:Info
+           ~message:"Western inter-word space between CJK glyphs" ~count:!cnt)
     else None
   in
   mk_rule "CJK-009" run
@@ -4750,12 +4228,8 @@ let r_cjk_011 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CJK-011";
-          severity = Info;
-          message = "Hiragana prolonged-sound mark at line start";
-          count = cnt;
-        }
+        (mk_result ~id:"CJK-011" ~severity:Info
+           ~message:"Hiragana prolonged-sound mark at line start" ~count:cnt)
     else None
   in
   mk_rule "CJK-011" run
@@ -4776,13 +4250,10 @@ let r_cjk_013 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CJK-013";
-          severity = Info;
-          message =
-            "Prohibited break before ideographic full stop at line start";
-          count = cnt;
-        }
+        (mk_result ~id:"CJK-013" ~severity:Info
+           ~message:
+             "Prohibited break before ideographic full stop at line start"
+           ~count:cnt)
     else None
   in
   mk_rule "CJK-013" run
@@ -4797,12 +4268,9 @@ let r_lang_005 : rule =
       let v = int_of_string (Re_compat.matched_group _mr 1 s) in
       if v < 50 then
         Some
-          {
-            id = "LANG-005";
-            severity = Info;
-            message = Printf.sprintf "Hyphen-penalty too low (%d < 50)" v;
-            count = 1;
-          }
+          (mk_result ~id:"LANG-005" ~severity:Info
+             ~message:(Printf.sprintf "Hyphen-penalty too low (%d < 50)" v)
+             ~count:1)
       else None
     with Not_found | Failure _ -> None
   in
@@ -4830,14 +4298,11 @@ let r_lang_008 : rule =
     match (babel, spell) with
     | Some b, Some sp when b <> sp ->
         Some
-          {
-            id = "LANG-008";
-            severity = Info;
-            message =
-              Printf.sprintf
-                "Spell-checker dictionary '%s' differs from babel '%s'" sp b;
-            count = 1;
-          }
+          (mk_result ~id:"LANG-008" ~severity:Info
+             ~message:
+               (Printf.sprintf
+                  "Spell-checker dictionary '%s' differs from babel '%s'" sp b)
+             ~count:1)
     | _ -> None
   in
   mk_rule "LANG-008" run
@@ -4861,12 +4326,8 @@ let r_pkg_003 : rule =
       in
       if has_compat then
         Some
-          {
-            id = "PKG-003";
-            severity = Error;
-            message = "Incompatible microtype options under LuaTeX";
-            count = 1;
-          }
+          (mk_result ~id:"PKG-003" ~severity:Error
+             ~message:"Incompatible microtype options under LuaTeX" ~count:1)
       else None
     else None
   in
@@ -4879,12 +4340,8 @@ let r_pkg_006 : rule =
       contains_substring s "microtype" && contains_substring s "expansion=false"
     then
       Some
-        {
-          id = "PKG-006";
-          severity = Info;
-          message = "microtype expansion disabled";
-          count = 1;
-        }
+        (mk_result ~id:"PKG-006" ~severity:Info
+           ~message:"microtype expansion disabled" ~count:1)
     else None
   in
   mk_rule "PKG-006" run
@@ -4909,12 +4366,9 @@ let r_cjk_003 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "CJK-003";
-          severity = Info;
-          message = "Japanese kinsoku: forbidden break before small kana";
-          count = cnt;
-        }
+        (mk_result ~id:"CJK-003" ~severity:Info
+           ~message:"Japanese kinsoku: forbidden break before small kana"
+           ~count:cnt)
     else None
   in
   mk_rule "CJK-003" run
@@ -4929,12 +4383,8 @@ let r_cjk_005 : rule =
     in
     if has_zh_font && has_ja_font then
       Some
-        {
-          id = "CJK-005";
-          severity = Info;
-          message = "Mixed zh/ja fonts in same paragraph";
-          count = 1;
-        }
+        (mk_result ~id:"CJK-005" ~severity:Info
+           ~message:"Mixed zh/ja fonts in same paragraph" ~count:1)
     else None
   in
   mk_rule "CJK-005" run
@@ -4946,12 +4396,8 @@ let r_cjk_012 : rule =
     let has_setup = contains_substring s "\\xeCJKsetup" in
     if has_xecjk && not has_setup then
       Some
-        {
-          id = "CJK-012";
-          severity = Info;
-          message = "xeCJK spaceskip not tuned (\\xeCJKsetup)";
-          count = 1;
-        }
+        (mk_result ~id:"CJK-012" ~severity:Info
+           ~message:"xeCJK spaceskip not tuned (\\xeCJKsetup)" ~count:1)
     else None
   in
   mk_rule "CJK-012" run
@@ -4963,12 +4409,8 @@ let r_cjk_016 : rule =
     let has_ecglue = contains_substring s "CJKecglue" in
     if has_setup && not has_ecglue then
       Some
-        {
-          id = "CJK-016";
-          severity = Info;
-          message = "\\xeCJKsetup{CJKecglue} not tuned — wide gap";
-          count = 1;
-        }
+        (mk_result ~id:"CJK-016" ~severity:Info
+           ~message:"\\xeCJKsetup{CJKecglue} not tuned — wide gap" ~count:1)
     else None
   in
   mk_rule "CJK-016" run
@@ -4991,12 +4433,9 @@ let r_math_076 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-076";
-          severity = Info;
-          message = "Equation split across pages without \\allowbreak";
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-076" ~severity:Info
+           ~message:"Equation split across pages without \\allowbreak"
+           ~count:cnt)
     else None
   in
   mk_rule "MATH-076" run
@@ -5024,13 +4463,10 @@ let r_math_103 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-103";
-          severity = Info;
-          message =
-            "\\left…\\right pair may shrink baseline; suggest \\mathopen";
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-103" ~severity:Info
+           ~message:
+             "\\left…\\right pair may shrink baseline; suggest \\mathopen"
+           ~count:cnt)
     else None
   in
   mk_rule "MATH-103" run
@@ -5051,12 +4487,9 @@ let r_tab_004 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "TAB-004";
-          severity = Warning;
-          message = "Table width may exceed \\textwidth (line > 120 chars)";
-          count = cnt;
-        }
+        (mk_result ~id:"TAB-004" ~severity:Warning
+           ~message:"Table width may exceed \\textwidth (line > 120 chars)"
+           ~count:cnt)
     else None
   in
   mk_rule "TAB-004" run
@@ -5072,12 +4505,8 @@ let r_fig_008 : rule =
     let has_tikz = contains_substring s "\\begin{tikzpicture}" in
     if has_draft && has_tikz then
       Some
-        {
-          id = "FIG-008";
-          severity = Warning;
-          message = "TikZ figure compiled in draft mode";
-          count = 1;
-        }
+        (mk_result ~id:"FIG-008" ~severity:Warning
+           ~message:"TikZ figure compiled in draft mode" ~count:1)
     else None
   in
   mk_rule "FIG-008" run
@@ -5095,12 +4524,8 @@ let r_fig_011 : rule =
     in
     if has_eps && has_pdflatex then
       Some
-        {
-          id = "FIG-011";
-          severity = Warning;
-          message = "EPS graphic in pdfLaTeX run";
-          count = 1;
-        }
+        (mk_result ~id:"FIG-011" ~severity:Warning
+           ~message:"EPS graphic in pdfLaTeX run" ~count:1)
     else None
   in
   mk_rule "FIG-011" run
@@ -5133,14 +4558,11 @@ let r_lay_005 : rule =
         let lines = h /. b in
         if lines > 66.0 then
           Some
-            {
-              id = "LAY-005";
-              severity = Info;
-              message =
-                Printf.sprintf "Lines per page may exceed 66 (%.0f estimated)"
-                  lines;
-              count = 1;
-            }
+            (mk_result ~id:"LAY-005" ~severity:Info
+               ~message:
+                 (Printf.sprintf "Lines per page may exceed 66 (%.0f estimated)"
+                    lines)
+               ~count:1)
         else None
     | _ -> None
   in
@@ -5177,12 +4599,8 @@ let r_lay_013 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-013";
-          severity = Info;
-          message = "Empty page without \\thispagestyle{empty}";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-013" ~severity:Info
+           ~message:"Empty page without \\thispagestyle{empty}" ~count:!cnt)
     else None
   in
   mk_rule "LAY-013" run
@@ -5214,12 +4632,9 @@ let r_math_089 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-089";
-          severity = Warning;
-          message = "\\left…\\right pair may produce vertical gap > 1 ex";
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-089" ~severity:Warning
+           ~message:"\\left…\\right pair may produce vertical gap > 1 ex"
+           ~count:cnt)
     else None
   in
   mk_rule "MATH-089" run
@@ -5246,12 +4661,8 @@ let r_fig_005 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "FIG-005";
-          severity = Warning;
-          message = "Figure width exceeds \\linewidth";
-          count = !cnt;
-        }
+        (mk_result ~id:"FIG-005" ~severity:Warning
+           ~message:"Figure width exceeds \\linewidth" ~count:!cnt)
     else None
   in
   mk_rule "FIG-005" run
@@ -5276,12 +4687,8 @@ let r_fig_015 : rule =
     match (fig_pos, ref_pos) with
     | Some fp, Some rp when fp < rp ->
         Some
-          {
-            id = "FIG-015";
-            severity = Info;
-            message = "Figure placed before first reference in text";
-            count = 1;
-          }
+          (mk_result ~id:"FIG-015" ~severity:Info
+             ~message:"Figure placed before first reference in text" ~count:1)
     | _ -> None
   in
   mk_rule "FIG-015" run
@@ -5305,12 +4712,9 @@ let r_fig_018 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "FIG-018";
-          severity = Info;
-          message = "Float distance from reference may exceed 3 pages";
-          count = cnt;
-        }
+        (mk_result ~id:"FIG-018" ~severity:Info
+           ~message:"Float distance from reference may exceed 3 pages"
+           ~count:cnt)
     else None
   in
   mk_rule "FIG-018" run
@@ -5323,12 +4727,9 @@ let r_fig_020 : rule =
     | Some ctx ->
         if ctx.max_overfull_pt > 0.0 then
           Some
-            {
-              id = "FIG-020";
-              severity = Warning;
-              message = "Overfull \\hbox detected (may be in caption)";
-              count = List.length ctx.overfull_lines;
-            }
+            (mk_result ~id:"FIG-020" ~severity:Warning
+               ~message:"Overfull \\hbox detected (may be in caption)"
+               ~count:(List.length ctx.overfull_lines))
         else None
   in
   mk_rule "FIG-020" run
@@ -5345,12 +4746,9 @@ let r_lay_008 : rule =
     in
     if has_centered_class && has_raggedright then
       Some
-        {
-          id = "LAY-008";
-          severity = Info;
-          message = "Heading left-aligned but style may require centred";
-          count = 1;
-        }
+        (mk_result ~id:"LAY-008" ~severity:Info
+           ~message:"Heading left-aligned but style may require centred"
+           ~count:1)
     else None
   in
   mk_rule "LAY-008" run
@@ -5363,12 +4761,8 @@ let r_lay_010 : rule =
       && contains_substring s "\\chapter"
     then
       Some
-        {
-          id = "LAY-010";
-          severity = Info;
-          message = "Page number suppressed on chapter opener";
-          count = 1;
-        }
+        (mk_result ~id:"LAY-010" ~severity:Info
+           ~message:"Page number suppressed on chapter opener" ~count:1)
     else None
   in
   mk_rule "LAY-010" run
@@ -5384,12 +4778,9 @@ let r_lay_012 : rule =
     let has_cleardouble = contains_substring s "\\cleardoublepage" in
     if has_openright && has_chapter && not has_cleardouble then
       Some
-        {
-          id = "LAY-012";
-          severity = Info;
-          message = "Chapter may start on even page (missing \\cleardoublepage)";
-          count = 1;
-        }
+        (mk_result ~id:"LAY-012" ~severity:Info
+           ~message:"Chapter may start on even page (missing \\cleardoublepage)"
+           ~count:1)
     else None
   in
   mk_rule "LAY-012" run
@@ -5411,12 +4802,8 @@ let r_lay_019 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-019";
-          severity = Info;
-          message = "Margin note may be wider than marginpar width";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-019" ~severity:Info
+           ~message:"Margin note may be wider than marginpar width" ~count:!cnt)
     else None
   in
   mk_rule "LAY-019" run
@@ -5439,12 +4826,8 @@ let r_lay_023 : rule =
     in
     if cnt > 3 then
       Some
-        {
-          id = "LAY-023";
-          severity = Info;
-          message = "Multiple single-sentence paragraphs detected";
-          count = cnt;
-        }
+        (mk_result ~id:"LAY-023" ~severity:Info
+           ~message:"Multiple single-sentence paragraphs detected" ~count:cnt)
     else None
   in
   mk_rule "LAY-023" run
@@ -5465,15 +4848,12 @@ let r_lay_001 : rule =
         in
         if cnt > 0 && ctx.max_overfull_pt > 2.0 then
           Some
-            {
-              id = "LAY-001";
-              severity = Warning;
-              message =
-                Printf.sprintf
-                  "Overfull \\hbox > 2pt (%d occurrences, max %.1fpt)" cnt
-                  ctx.max_overfull_pt;
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-001" ~severity:Warning
+               ~message:
+                 (Printf.sprintf
+                    "Overfull \\hbox > 2pt (%d occurrences, max %.1fpt)" cnt
+                    ctx.max_overfull_pt)
+               ~count:cnt)
         else None
   in
   mk_rule "LAY-001" run
@@ -5489,12 +4869,8 @@ let r_lay_002 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-002";
-              severity = Info;
-              message = "Widow or orphan line detected";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-002" ~severity:Info
+               ~message:"Widow or orphan line detected" ~count:cnt)
         else None
   in
   mk_rule "LAY-002" run
@@ -5535,13 +4911,10 @@ let r_lay_003 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-003";
-              severity = Info;
-              message =
-                "Section heading near page break (possible bottom-of-page)";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-003" ~severity:Info
+               ~message:
+                 "Section heading near page break (possible bottom-of-page)"
+               ~count:cnt)
         else None
   in
   mk_rule "LAY-003" run
@@ -5554,15 +4927,12 @@ let r_lay_004 : rule =
     | Some ctx ->
         if ctx.max_overfull_pt > 10.0 then
           Some
-            {
-              id = "LAY-004";
-              severity = Warning;
-              message =
-                Printf.sprintf
-                  "Content extends beyond margins (max overflow %.1fpt)"
-                  ctx.max_overfull_pt;
-              count = 1;
-            }
+            (mk_result ~id:"LAY-004" ~severity:Warning
+               ~message:
+                 (Printf.sprintf
+                    "Content extends beyond margins (max overflow %.1fpt)"
+                    ctx.max_overfull_pt)
+               ~count:1)
         else None
   in
   mk_rule "LAY-004" run
@@ -5581,12 +4951,8 @@ let r_lay_006 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-006";
-              severity = Info;
-              message = "Float placement warning in compile log";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-006" ~severity:Info
+               ~message:"Float placement warning in compile log" ~count:cnt)
         else None
   in
   mk_rule "LAY-006" run
@@ -5621,12 +4987,9 @@ let r_lay_007 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-007";
-          severity = Info;
-          message = "Paragraph indent inconsistent after display math";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-007" ~severity:Info
+           ~message:"Paragraph indent inconsistent after display math"
+           ~count:!cnt)
     else None
   in
   mk_rule "LAY-007" run
@@ -5648,12 +5011,9 @@ let r_lay_009 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-009";
-              severity = Warning;
-              message = "Underfull \\vbox detected — possible footnote overflow";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-009" ~severity:Warning
+               ~message:"Underfull \\vbox detected — possible footnote overflow"
+               ~count:cnt)
         else None
   in
   mk_rule "LAY-009" run
@@ -5675,12 +5035,8 @@ let r_lay_011 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-011";
-              severity = Warning;
-              message = "Figure overlaps footer (compile warning)";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-011" ~severity:Warning
+               ~message:"Figure overlaps footer (compile warning)" ~count:cnt)
         else None
   in
   mk_rule "LAY-011" run
@@ -5701,12 +5057,8 @@ let r_lay_014 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "LAY-014";
-          severity = Info;
-          message = "Page break before subsection discouraged";
-          count = !cnt;
-        }
+        (mk_result ~id:"LAY-014" ~severity:Info
+           ~message:"Page break before subsection discouraged" ~count:!cnt)
     else None
   in
   mk_rule "LAY-014" run
@@ -5723,12 +5075,9 @@ let r_lay_016 : rule =
     in
     if cnt > 0 then
       Some
-        {
-          id = "LAY-016";
-          severity = Info;
-          message = "Table split across page without \\allowbreak hints";
-          count = cnt;
-        }
+        (mk_result ~id:"LAY-016" ~severity:Info
+           ~message:"Table split across page without \\allowbreak hints"
+           ~count:cnt)
     else None
   in
   mk_rule "LAY-016" run
@@ -5741,12 +5090,8 @@ let r_lay_017 : rule =
     | Some ctx ->
         if ctx.has_widows then
           Some
-            {
-              id = "LAY-017";
-              severity = Info;
-              message = "Section heading may be orphaned at page top";
-              count = 1;
-            }
+            (mk_result ~id:"LAY-017" ~severity:Info
+               ~message:"Section heading may be orphaned at page top" ~count:1)
         else None
   in
   mk_rule "LAY-017" run
@@ -5767,12 +5112,8 @@ let r_lay_018 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-018";
-              severity = Info;
-              message = "Underfull \\vbox warning in log";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-018" ~severity:Info
+               ~message:"Underfull \\vbox warning in log" ~count:cnt)
         else None
   in
   mk_rule "LAY-018" run
@@ -5793,12 +5134,8 @@ let r_lay_021 : rule =
         in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-021";
-              severity = Warning;
-              message = "Overfull \\vbox inside bibliography section";
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-021" ~severity:Warning
+               ~message:"Overfull \\vbox inside bibliography section" ~count:cnt)
         else None
   in
   mk_rule "LAY-021" run
@@ -5811,14 +5148,11 @@ let r_math_026 : rule =
     | Some ctx ->
         if ctx.max_overfull_pt > 0.0 then
           Some
-            {
-              id = "MATH-026";
-              severity = Warning;
-              message =
-                Printf.sprintf "Overfull \\hbox in equation (%.1fpt)"
-                  ctx.max_overfull_pt;
-              count = List.length ctx.overfull_lines;
-            }
+            (mk_result ~id:"MATH-026" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Overfull \\hbox in equation (%.1fpt)"
+                    ctx.max_overfull_pt)
+               ~count:(List.length ctx.overfull_lines))
         else None
   in
   mk_rule "MATH-026" run
@@ -5831,15 +5165,12 @@ let r_math_027 : rule =
     | Some ctx ->
         if ctx.max_overfull_pt > 5.0 then
           Some
-            {
-              id = "MATH-027";
-              severity = Warning;
-              message =
-                Printf.sprintf
-                  "Displayed equation exceeds page margins (%.1fpt overflow)"
-                  ctx.max_overfull_pt;
-              count = 1;
-            }
+            (mk_result ~id:"MATH-027" ~severity:Warning
+               ~message:
+                 (Printf.sprintf
+                    "Displayed equation exceeds page margins (%.1fpt overflow)"
+                    ctx.max_overfull_pt)
+               ~count:1)
         else None
   in
   mk_rule "MATH-027" run
@@ -6040,12 +5371,9 @@ let r_lay_025 : rule =
     | Some ctx ->
         if ctx.has_rerun_warnings then
           Some
-            {
-              id = "LAY-025";
-              severity = Warning;
-              message = "LaTeX rerun required -- cross-references may be wrong";
-              count = 1;
-            }
+            (mk_result ~id:"LAY-025" ~severity:Warning
+               ~message:"LaTeX rerun required -- cross-references may be wrong"
+               ~count:1)
         else None
   in
   mk_rule "LAY-025" run
@@ -6059,13 +5387,10 @@ let r_lay_026 : rule =
         let cnt = List.length ctx.undefined_citations in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-026";
-              severity = Warning;
-              message =
-                Printf.sprintf "Undefined citation(s) in compile log (%d)" cnt;
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-026" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Undefined citation(s) in compile log (%d)" cnt)
+               ~count:cnt)
         else None
   in
   mk_rule "LAY-026" run
@@ -6079,12 +5404,9 @@ let r_lay_027 : rule =
         let cnt = List.length ctx.font_substitutions in
         if cnt > 0 then
           Some
-            {
-              id = "LAY-027";
-              severity = Info;
-              message = Printf.sprintf "Font substitution warning (%d)" cnt;
-              count = cnt;
-            }
+            (mk_result ~id:"LAY-027" ~severity:Info
+               ~message:(Printf.sprintf "Font substitution warning (%d)" cnt)
+               ~count:cnt)
         else None
   in
   mk_rule "LAY-027" run
@@ -6129,12 +5451,9 @@ let r_cmd_002 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-002";
-          severity = Warning;
-          message = "Command redefined with \\def instead of \\renewcommand";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-002" ~severity:Warning
+           ~message:"Command redefined with \\def instead of \\renewcommand"
+           ~count:!cnt)
     else None
   in
   { id = "CMD-002"; run; languages = [] }
@@ -6164,12 +5483,8 @@ let r_cmd_004 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-004";
-          severity = Info;
-          message = "CamelCase command names discouraged";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-004" ~severity:Info
+           ~message:"CamelCase command names discouraged" ~count:!cnt)
     else None
   in
   { id = "CMD-004"; run; languages = [] }
@@ -6199,12 +5514,8 @@ let r_cmd_005 : rule =
     let cnt = count_matches re_cmd s + count_matches re_def s in
     if cnt > 0 then
       Some
-        {
-          id = "CMD-005";
-          severity = Warning;
-          message = {|Single‑letter macro created (\x)|};
-          count = cnt;
-        }
+        (mk_result ~id:"CMD-005" ~severity:Warning
+           ~message:{|Single‑letter macro created (\x)|} ~count:cnt)
     else None
   in
   { id = "CMD-005"; run; languages = [] }
@@ -6229,12 +5540,8 @@ let r_cmd_006 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "CMD-006";
-              severity = Info;
-              message = "Macro defined inside document body";
-              count = !cnt;
-            }
+            (mk_result ~id:"CMD-006" ~severity:Info
+               ~message:"Macro defined inside document body" ~count:!cnt)
         else None
   in
   { id = "CMD-006"; run; languages = [] }
@@ -6267,12 +5574,9 @@ let r_cmd_008 : rule =
        with Not_found -> ());
       if !cnt > 0 then
         Some
-          {
-            id = "CMD-008";
-            severity = Warning;
-            message = "Macro uses \\@ in name outside maketitle context";
-            count = !cnt;
-          }
+          (mk_result ~id:"CMD-008" ~severity:Warning
+             ~message:"Macro uses \\@ in name outside maketitle context"
+             ~count:!cnt)
       else None
   in
   { id = "CMD-008"; run; languages = [] }
@@ -6296,12 +5600,8 @@ let r_cmd_009 : rule =
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        {
-          id = "CMD-009";
-          severity = Info;
-          message = "Macro name contains digits";
-          count = !cnt;
-        }
+        (mk_result ~id:"CMD-009" ~severity:Info
+           ~message:"Macro name contains digits" ~count:!cnt)
     else None
   in
   { id = "CMD-009"; run; languages = [] }
@@ -6339,13 +5639,10 @@ let r_cmd_011 : rule =
        with Not_found -> ());
       if !cnt > 0 then
         Some
-          {
-            id = "CMD-011";
-            severity = Warning;
-            message =
-              {|Macro defined with \def/\edef in preamble without \makeatletter guard|};
-            count = !cnt;
-          }
+          (mk_result ~id:"CMD-011" ~severity:Warning
+             ~message:
+               {|Macro defined with \def/\edef in preamble without \makeatletter guard|}
+             ~count:!cnt)
       else None
   in
   { id = "CMD-011"; run; languages = [] }
@@ -6368,12 +5665,9 @@ let r_cmd_013 : rule =
          with Not_found -> ());
         if !cnt > 0 then
           Some
-            {
-              id = "CMD-013";
-              severity = Info;
-              message = "\\def\\arraystretch declared inside document body";
-              count = !cnt;
-            }
+            (mk_result ~id:"CMD-013" ~severity:Info
+               ~message:"\\def\\arraystretch declared inside document body"
+               ~count:!cnt)
         else None
   in
   { id = "CMD-013"; run; languages = [] }
@@ -6406,14 +5700,11 @@ let r_cmd_015 : rule =
               unsupported
           in
           Some
-            {
-              id = "CMD-015";
-              severity = Warning;
-              message =
-                Printf.sprintf "Unsupported user macro construct(s): %s"
-                  (String.concat "; " reasons);
-              count = cnt;
-            }
+            (mk_result ~id:"CMD-015" ~severity:Warning
+               ~message:
+                 (Printf.sprintf "Unsupported user macro construct(s): %s"
+                    (String.concat "; " reasons))
+               ~count:cnt)
         else None
   in
   mk_rule "CMD-015" run
@@ -6430,13 +5721,10 @@ let r_cmd_016 : rule =
               (List.map (fun n -> "\\" ^ n) reg.User_macro_registry.cycle_path)
           in
           Some
-            {
-              id = "CMD-016";
-              severity = Error;
-              message =
-                Printf.sprintf "Cycle in user macro definitions: %s" path;
-              count = 1;
-            }
+            (mk_result ~id:"CMD-016" ~severity:Error
+               ~message:
+                 (Printf.sprintf "Cycle in user macro definitions: %s" path)
+               ~count:1)
         else None
   in
   mk_rule "CMD-016" run
@@ -6497,15 +5785,13 @@ let r_cmd_017 : rule =
         let cnt = List.length shadows in
         if cnt > 0 then
           Some
-            {
-              id = "CMD-017";
-              severity = Warning;
-              message =
-                Printf.sprintf
-                  "User \\newcommand shadows built-in: %s (use \\renewcommand)"
-                  (String.concat ", " (List.map (fun n -> "\\" ^ n) shadows));
-              count = cnt;
-            }
+            (mk_result ~id:"CMD-017" ~severity:Warning
+               ~message:
+                 (Printf.sprintf
+                    "User \\newcommand shadows built-in: %s (use \
+                     \\renewcommand)"
+                    (String.concat ", " (List.map (fun n -> "\\" ^ n) shadows)))
+               ~count:cnt)
         else None
   in
   mk_rule "CMD-017" run
@@ -6547,12 +5833,8 @@ let r_typo_062 : rule =
     done;
     if !cnt > 0 then
       Some
-        {
-          id = "TYPO-062";
-          severity = Warning;
-          message = "Literal backslash in text; use \\textbackslash";
-          count = !cnt;
-        }
+        (mk_result ~id:"TYPO-062" ~severity:Warning
+           ~message:"Literal backslash in text; use \\textbackslash" ~count:!cnt)
     else None
   in
   { id = "TYPO-062"; run; languages = [] }
@@ -6569,12 +5851,8 @@ let r_math_083 : rule =
     let cnt = count_substring s_text "\xe2\x88\x92" in
     if cnt > 0 then
       Some
-        {
-          id = "MATH-083";
-          severity = Warning;
-          message = "Unicode minus inside text mode";
-          count = cnt;
-        }
+        (mk_result ~id:"MATH-083" ~severity:Warning
+           ~message:"Unicode minus inside text mode" ~count:cnt)
     else None
   in
   { id = "MATH-083"; run; languages = [] }
@@ -6602,17 +5880,14 @@ let r_doc_structure : rule =
       doc.Parser_l2.refs;
     if !issues > 0 then
       Some
-        {
-          id = "STRUCT-005";
-          severity = Info;
-          message =
-            Printf.sprintf
-              "Document structure: %d parse errors, %d labels, %d refs"
-              (List.length doc.Parser_l2.errors)
-              (List.length doc.Parser_l2.labels)
-              (List.length doc.Parser_l2.refs);
-          count = !issues;
-        }
+        (mk_result ~id:"STRUCT-005" ~severity:Info
+           ~message:
+             (Printf.sprintf
+                "Document structure: %d parse errors, %d labels, %d refs"
+                (List.length doc.Parser_l2.errors)
+                (List.length doc.Parser_l2.labels)
+                (List.length doc.Parser_l2.refs))
+           ~count:!issues)
     else None
   in
   mk_rule "STRUCT-005" run

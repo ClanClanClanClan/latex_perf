@@ -371,6 +371,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_rule_fix_integration)
+ (modules test_rule_fix_integration)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_validators_verb_cjk_cmd)
  (modules test_validators_verb_cjk_cmd)
  (libraries latex_parse_lib test_helpers unix))

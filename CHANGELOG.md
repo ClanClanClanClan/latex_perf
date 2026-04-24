@@ -2,6 +2,82 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.2.1] — 2026-04-24
+
+v26.2.1 closes the fix-producer track deferred from v26.2.0. Every
+item in the v26.2.0 `Deferred to v26.2.1 / v26.3` fix-producer
+sub-list has shipped; the remaining deferrals are now exclusively
+v26.3 scope (see `specs/v26/V26_2_1_PLAN.md` §8).
+
+### Shipped (v26.2.1 plan)
+
+- **`Validators_common.result.fix : Cst_edit.t list option`** — new
+  field + `mk_result` / `mk_result_with_fix` constructors. Every of
+  the 673 existing record literals across 15 validator / test files
+  was migrated through the helpers via a one-shot OCaml-aware script
+  (`scripts/tools/migrate_result_literals.py`). New gate
+  `scripts/tools/check_result_helpers.py` (pre-release #15) forbids
+  raw 4-field `{ id; severity; message; count }` literals in
+  validator sources.
+- **Type deviation from v26.2.0 CHANGELOG:** the field is
+  `Cst_edit.t list option`, **not** `Cst_edit.t option`. TYPO-002/003
+  aggregate `count` per document and need one edit per match; a list
+  is required. Empty `Some` rejected by the helper.
+- **STRUCT-001 fix producer** — emits a single
+  `Cst_edit.insert ~at:0 "\documentclass{article}\n"` on missing
+  `\documentclass`.
+- **TYPO-002 / TYPO-003 fix producers** — one
+  `Cst_edit.replace (off..off+2) "–"` (resp. `…+3 "—"`) per
+  non-overlapping match offset found by the new
+  `find_all_non_overlapping` helper. Rule `count` retains its
+  overlap-count semantics via `count_substring` for back-compat; fix
+  list is strictly non-overlapping. On pathological input like
+  `----`, fix-count may be smaller than rule-count (documented).
+- **`--apply-fixes` CLI flag + `L0_APPLY_FIXES` env gate** — runs
+  validators, flattens `r.fix`, applies via `Cst_edit.apply_all`,
+  emits modified source to stdout. Overlapping fixes → stderr
+  `E.apply-fixes.overlap` + exit 2. Decision (per
+  `V26_2_PLAN.md` §3.2 B3): all-or-nothing only;
+  `--apply-fixes-for RULE-ID` stays v26.3 scope.
+- **`test_rule_fix_integration.ml`** (new) — E2E pipeline test for
+  STRUCT-001 / TYPO-002 / TYPO-003: fire → collect fixes → apply →
+  assert rule no longer fires. 4 cases.
+- **`docs/v26_2/FIX_STYLE_GUIDE.md`** refreshed to the v26.2.1 API
+  (list + helper exemplars).
+- **`docs/MIGRATION_v26.2_to_v26.2.1.md`** (new) — consumer-side
+  migration notes: helper usage, the deviation from the CHANGELOG
+  type, and the new `--apply-fixes` CLI mode.
+
+### Gate count
+
+- **16 pre-release gates** (was 14 at v26.2.0, +1 for PR #1's
+  `check_result_helpers`, +1 for the required
+  `test_rule_fix_integration` test wiring).
+- Test suites: `[typo-fix] PASS 6`, `[fix-integration] PASS 4`,
+  `[validators-struct] PASS 11`, `[cli] PASS 28`. All pre-existing
+  test files continue green.
+
+### Deferred to v26.3 (explicit)
+
+- Rolling fix producers for the remaining ~657 rules.
+- `--apply-fixes-for RULE-ID` granularity flag.
+- CST structure-lossless runtime gate (corpus-scoped).
+- `edf_scheduler.ml` per-class scheduling full rewrite.
+- Three Section-level Coq discharges: `CSTRoundTrip.Structure_lossless`
+  (2 hypotheses), `RewritePreservesCST.Rewrite_preserves` (1), and
+  `RewritePreservesSemantics.Semantic_preservation` (2). See
+  `proofs/ADMISSIBILITY_MAP.md` discharge-unit notes.
+- xelatex / lualatex `.aux` parser variants.
+- L3 AST migration (`docs/L3_ROADMAP.md`).
+
+### Semver
+
+Additive. `fix` defaults to `None`. Downstream consumers that
+constructed `Validators_common.result` record literals directly must
+migrate to `mk_result` / `mk_result_with_fix` (see
+`docs/MIGRATION_v26.2_to_v26.2.1.md`). The new CLI flag +
+env var are net-new; existing invocations are unaffected.
+
 ## [v26.2.0] — 2026-04-23
 
 v26.2 closes the memo §16.3 compile-guarantee stack and CST/rewrite

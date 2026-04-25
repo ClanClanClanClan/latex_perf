@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.2.0
+# LaTeX Perfectionist v26.2.1
 
 Comprehensive LaTeX document analysis and style validation system with 660 rules across 21 languages, backed by formal Coq proofs.
 

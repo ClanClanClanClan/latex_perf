@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.2.0
+# LaTeX Perfectionist v26.2.1
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -227,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v26.2.0 released. 644 validators implemented, 1,252 theorems across 157 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine live.
+**Status**: v26.2.1 released. 644 validators implemented, 1,257 theorems across 159 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers live.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

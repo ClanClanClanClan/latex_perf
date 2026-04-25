@@ -50,6 +50,30 @@ let () =
             \\section{Title}\n\
             \\end{document}")
         (tag ^ ": titled section clean"));
+  run "STRUCT-002 fix inserts Untitled in empty braces" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\
+         \\section{}\n\
+         \\end{document}"
+      in
+      let edits = fix_edits "STRUCT-002" src in
+      let applied =
+        match edits with
+        | [ edit ] -> Latex_parse_lib.Cst_edit.apply_single src edit
+        | _ -> ""
+      in
+      let needle = "\\section{Untitled}" in
+      let nlen = String.length needle in
+      let slen = String.length applied in
+      let rec find i =
+        if i + nlen > slen then false
+        else if String.sub applied i nlen = needle then true
+        else find (i + 1)
+      in
+      expect
+        (List.length edits = 1 && find 0)
+        (tag ^ ": \\section{Untitled} present after apply"));
 
   (* STRUCT-003: Tab characters *)
   run "STRUCT-003 fires on tab" (fun tag ->

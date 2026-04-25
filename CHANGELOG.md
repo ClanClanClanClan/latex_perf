@@ -83,8 +83,9 @@ Test suites green on HEAD: `[typo-fix] PASS 14`,
 `[fix-integration] PASS 6`, `[apply-fixes-cli] PASS 14`,
 `[cst-structure-lossless] PASS 18 fixtures`,
 `[aux-engines] PASS 3`, `[edf-scheduler] PASS 21`,
-`[validators-struct] PASS 11`, `[cli] PASS 22`. All pre-existing
-suites unchanged.
+`[validators-struct] PASS 12` (includes STRUCT-002 fix assertion),
+`[enc-char-spc]` includes ENC-002 + SPC-012 fix assertions,
+`[cli] PASS 22`. All pre-existing suites unchanged.
 
 `run_differential_test.py --baseline-ref v26.2.1 --current-ref HEAD
 --corpus corpora/lint --expected-diff-keys ""` → **0 diffs / 330

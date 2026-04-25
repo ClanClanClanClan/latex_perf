@@ -45,7 +45,14 @@ two additional items from the v26.2 horizon. Plan in
   `mk_replace_edits`) factor the common scan-and-edit pattern.
 - **F + G. xelatex / lualatex `.aux` parser support** —
   `aux_state.ml`'s `recognized_ignored` list extended with
-  engine-specific macros (`\xetexversion`, `\luatexversion`,
+  engine-specific macros. Note: per `V26_2_PLAN.md` §2.2 the
+  verification requirement was "3 real `.aux` files produced by
+  running [the engines] on documents from `corpora/`". v26.3.0
+  ships hand-synthesised representative fixtures (matching the
+  format documented in each engine's manual) — replacement with
+  genuine engine-generated samples is v26.4 scope, pending a CI
+  runner provisioned with all three engines. Engine-specific tokens
+  recognised: `\xetexversion`, `\luatexversion`,
   `\luatexkv*`, `\pgfsyspdfmark`, etc.). New `corpora/aux/` directory
   with 3 minimal hand-synthesised fixtures + README. New test
   `test_aux_state_engines.ml` confirms zero parse warnings on each
@@ -64,7 +71,12 @@ Per `V26_3_PLAN.md` §1.3, items genuinely requiring multi-week effort
 land in successor cycles:
 
 - `CSTRoundTrip.Section_lossless` full discharge (2 hypotheses;
-  needs concrete `cst_abs` partition model + parse/serialize).
+  needs concrete `cst_abs` partition model + parse/serialize). Per
+  `V26_2_PLAN.md` §10, the full discharge specifically must cover
+  `\verb`, catcode mutations, and `\lstlisting` constructs — the
+  three LaTeX features whose byte-lossless reasoning is non-trivial.
+  v26.3.0 ships only the hypothesis-parametric Section + the
+  runtime structure-lossless gate (item C) on a curated subset.
 - `RewritePreservesSemantics.Semantic_preservation` full discharge
   (2 hypotheses; needs minimal Coq tokenizer model on trivia chunks).
 - Rolling fix producers for the remaining ~647 rules.

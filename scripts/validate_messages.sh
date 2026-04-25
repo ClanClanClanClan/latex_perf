@@ -21,8 +21,13 @@ if [[ ${#RUNTIME_GLOB[@]} -eq 0 || ! -f "${RUNTIME_GLOB[0]}" ]]; then
   exit 2
 fi
 
-# Build a mapping of id -> description from the YAML catalogue
-# Uses simple grep+sed since the YAML is well-structured
+# Build a mapping of id -> expected runtime message.
+# v26.3.1+: prefer the optional [runtime_message] field over
+# [description] when both are present. The two-field design keeps
+# [description] as abstract human-readable docs while letting
+# [runtime_message] carry the exact runtime template (including %s
+# placeholders) for strict validation. See
+# scripts/tools/sync_runtime_messages.py.
 declare -A catalog_descs
 cur_id=""
 while IFS= read -r line; do
@@ -30,15 +35,38 @@ while IFS= read -r line; do
   if [[ "$line" =~ ^-[[:space:]]+id:[[:space:]]*\"([^\"]+)\" ]]; then
     cur_id="${BASH_REMATCH[1]}"
   fi
-  # Match:   description: "..."
+  # Match:   description: "..." or '...' — only used as fallback
+  # when [runtime_message] is absent.
   if [[ -n "$cur_id" && "$line" =~ ^[[:space:]]+description:[[:space:]]*\"(.*)\"$ ]]; then
-    # Unescape YAML double-quoted string: \\ -> \, \" -> "
     desc="${BASH_REMATCH[1]}"
-    desc="${desc//\\\\/\\}"
+    # YAML double-quoted scalar escapes: decode \\ \xHH \NNN \n \t \r
+    # via printf %b. \" must be decoded explicitly (printf %b doesn't
+    # touch it).
+    desc=$(printf '%b' "$desc")
     desc="${desc//\\\"/\"}"
-    catalog_descs["$cur_id"]="$desc"
-    cur_id=""
+    if [[ -z "${catalog_descs[$cur_id]:-}" ]]; then
+      catalog_descs["$cur_id"]="$desc"
+    fi
   fi
+  if [[ -n "$cur_id" && "$line" =~ ^[[:space:]]+description:[[:space:]]*\'(.*)\'$ ]]; then
+    desc="${BASH_REMATCH[1]}"
+    # YAML single-quoted: '' = literal '
+    desc="${desc//\'\'/\'}"
+    if [[ -z "${catalog_descs[$cur_id]:-}" ]]; then
+      catalog_descs["$cur_id"]="$desc"
+    fi
+  fi
+  # Match:   runtime_message: "..." — overrides description
+  if [[ -n "$cur_id" && "$line" =~ ^[[:space:]]+runtime_message:[[:space:]]*\"(.*)\"$ ]]; then
+    rmsg="${BASH_REMATCH[1]}"
+    rmsg=$(printf '%b' "$rmsg")
+    rmsg="${rmsg//\\\"/\"}"
+    catalog_descs["$cur_id"]="$rmsg"
+  fi
+  # Reset cur_id only when we hit the start of the next entry.
+  # (The previous code reset on description; with the two-field
+  # design we may see runtime_message AFTER description, so we
+  # keep cur_id alive until the next [- id:] line.)
 done < "$CATALOG"
 
 # Extract all (id, message) pairs from validators.ml
@@ -83,8 +111,21 @@ perl -0777 -ne '
       # Case 2: message = "..." or ~message:"..." on same line
       elsif ($line =~ /(?:\bmessage\s*=|~message\s*:)\s*"((?:[^"\\]|\\.)*)"/) {
         my $msg = $1;
-        $msg =~ s/\\\\/\\/g;
+        # Decode OCaml escapes so source-form variants converge:
+        #  \\  -> \  (escaped backslash)  *  \"  -> "  (escaped quote)
+        #  \xHH -> byte  *  \DDD -> byte  *  \n / \t / \r -> control char
+        # Strategy: protect literal backslashes via a placeholder that
+        # cant occur in any source string, then decode the remaining
+        # escapes, then restore. Order matters because \xHH and \DDD
+        # need to NOT consume bytes that came from a literal \\.
+        $msg =~ s/\\\\/\x{E000}/g;
         $msg =~ s/\\"/"/g;
+        $msg =~ s/\\x([0-9a-fA-F]{2})/chr(hex($1))/ge;
+        $msg =~ s/\\(\d{3})/chr(oct($1))/ge;
+        $msg =~ s/\\n/\n/g;
+        $msg =~ s/\\t/\t/g;
+        $msg =~ s/\\r/\r/g;
+        $msg =~ s/\x{E000}/\\/g;
         print "$cur_id\t$msg\n";
         $cur_id = "";
       }
@@ -103,8 +144,21 @@ perl -0777 -ne '
             $msg .= $cont;
           }
         }
-        $msg =~ s/\\\\/\\/g;
+        # Decode OCaml escapes so source-form variants converge:
+        #  \\  -> \  (escaped backslash)  *  \"  -> "  (escaped quote)
+        #  \xHH -> byte  *  \DDD -> byte  *  \n / \t / \r -> control char
+        # Strategy: protect literal backslashes via a placeholder that
+        # cant occur in any source string, then decode the remaining
+        # escapes, then restore. Order matters because \xHH and \DDD
+        # need to NOT consume bytes that came from a literal \\.
+        $msg =~ s/\\\\/\x{E000}/g;
         $msg =~ s/\\"/"/g;
+        $msg =~ s/\\x([0-9a-fA-F]{2})/chr(hex($1))/ge;
+        $msg =~ s/\\(\d{3})/chr(oct($1))/ge;
+        $msg =~ s/\\n/\n/g;
+        $msg =~ s/\\t/\t/g;
+        $msg =~ s/\\r/\r/g;
+        $msg =~ s/\x{E000}/\\/g;
         print "$cur_id\t$msg\n";
         $cur_id = "";
       }
@@ -122,8 +176,14 @@ perl -0777 -ne '
           # Double-quoted on next line (no continuation)
           elsif ($next =~ /"((?:[^"\\]|\\.)*)"/) {
             my $msg = $1;
-            $msg =~ s/\\\\/\\/g;
+            $msg =~ s/\\\\/\x{E000}/g;
             $msg =~ s/\\"/"/g;
+            $msg =~ s/\\x([0-9a-fA-F]{2})/chr(hex($1))/ge;
+            $msg =~ s/\\(\d{3})/chr(oct($1))/ge;
+            $msg =~ s/\\n/\n/g;
+            $msg =~ s/\\t/\t/g;
+            $msg =~ s/\\r/\r/g;
+            $msg =~ s/\x{E000}/\\/g;
             print "$cur_id\t$msg\n";
             $cur_id = "";
           }
@@ -141,8 +201,14 @@ perl -0777 -ne '
                 $msg .= $cont;
               }
             }
-            $msg =~ s/\\\\/\\/g;
+            $msg =~ s/\\\\/\x{E000}/g;
             $msg =~ s/\\"/"/g;
+            $msg =~ s/\\x([0-9a-fA-F]{2})/chr(hex($1))/ge;
+            $msg =~ s/\\(\d{3})/chr(oct($1))/ge;
+            $msg =~ s/\\n/\n/g;
+            $msg =~ s/\\t/\t/g;
+            $msg =~ s/\\r/\r/g;
+            $msg =~ s/\x{E000}/\\/g;
             print "$cur_id\t$msg\n";
             $cur_id = "";
           }

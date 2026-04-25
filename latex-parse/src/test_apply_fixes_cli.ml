@@ -186,6 +186,30 @@ let () =
         ^ ": exit 0, em-dash applied, no overlap error (suppression prevented \
            overlap)"));
 
+  (* v26.3 §3 item B: --apply-fixes-for RULE-ID filters by rule id.
+     Source has both STRUCT-001 (no docclass) and TYPO-002 (`--`)
+     potential, but with L0_VALIDATORS unset only STRUCT-001 is in
+     the active set. Filtering on STRUCT-001 vs an unrelated id
+     verifies the include/exclude semantics. *)
+  run "CLI --apply-fixes-for STRUCT-001 inserts \\documentclass" (fun tag ->
+      let path = write_temp_tex "Body without docclass.\n" in
+      let out, code = run_cli [ "--apply-fixes-for"; "STRUCT-001"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      let body = strip_comments out in
+      expect
+        (String.length body >= 14 && String.sub body 0 14 = "\\documentclass")
+        (tag ^ ": STRUCT-001 fix applied"));
+
+  run "CLI --apply-fixes-for unrelated-id leaves source unchanged" (fun tag ->
+      let src = "Body without docclass.\n" in
+      let path = write_temp_tex src in
+      let out, code = run_cli [ "--apply-fixes-for"; "NOT-A-RULE"; path ] in
+      Sys.remove path;
+      expect (code = 0) (tag ^ ": exit code 0");
+      let body = strip_comments out in
+      expect (body = src) (tag ^ ": no fix applied for non-matching id"));
+
   (* Plan §3 PR #4 item 4: overlapping fixes → error with [`Overlap _]. Cannot
      be triggered through any v26.2.1 natural corpus (conflict suppression +
      adjacent-boundary semantics, see prior test's comment), so we exercise the

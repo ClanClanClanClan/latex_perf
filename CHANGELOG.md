@@ -69,6 +69,10 @@ land in successor cycles:
   (2 hypotheses; needs minimal Coq tokenizer model on trivia chunks).
 - Rolling fix producers for the remaining ~647 rules.
 - L3 AST migration per `docs/L3_ROADMAP.md`.
+- Automatic conflict-aware rewrite merging (`V26_2_PLAN.md` §10
+  deferral). v26.3.0 ships strict overlap rejection in `--apply-fixes`
+  (`E.apply-fixes.overlap` + exit 2); a future cycle adds smart
+  merging where compatible edits can be combined instead.
 
 ### Gates
 

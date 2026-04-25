@@ -134,6 +134,7 @@ let () =
            a --- b\n\
            \\end{document}\n"
       in
+      let stderr_path = Filename.temp_file "test_apply_fixes_stderr_" ".log" in
       Unix.putenv "L0_VALIDATORS" "pilot";
       let exe =
         Filename.concat (Filename.dirname Sys.argv.(0)) "validators_cli.exe"
@@ -141,7 +142,8 @@ let () =
       let cmd =
         String.concat " "
           (List.map Filename.quote [ exe; "--apply-fixes"; path ])
-        ^ " 2>/tmp/test_apply_fixes_stderr"
+        ^ " 2>"
+        ^ Filename.quote stderr_path
       in
       let ic = Unix.open_process_in cmd in
       let buf = Buffer.create 256 in
@@ -157,13 +159,14 @@ let () =
       Sys.remove path;
       let stderr_text =
         try
-          let ic = open_in "/tmp/test_apply_fixes_stderr" in
+          let ic = open_in stderr_path in
           let n = in_channel_length ic in
           let s = really_input_string ic n in
           close_in ic;
           s
         with _ -> ""
       in
+      (try Sys.remove stderr_path with _ -> ());
       let body = strip_comments (Buffer.contents buf) in
       let contains s sub =
         let nlen = String.length sub in
@@ -182,5 +185,32 @@ let () =
         (tag
         ^ ": exit 0, em-dash applied, no overlap error (suppression prevented \
            overlap)"));
+
+  (* Plan §3 PR #4 item 4: overlapping fixes → error with [`Overlap _]. Cannot
+     be triggered through any v26.2.1 natural corpus (conflict suppression +
+     adjacent-boundary semantics, see prior test's comment), so we exercise the
+     CLI's underlying error path directly: construct a synthetic overlapping
+     edit pair, call [Rewrite_engine.apply] (the same function the CLI uses),
+     and assert it returns [Error (`Overlap _)]. The CLI's eprintf + [exit 2]
+     handler is then a thin sealed match on this error constructor — reviewable
+     in [validators_cli.ml] §run_apply_fixes. *)
+  run "Rewrite_engine.apply rejects overlapping edits with `Overlap _"
+    (fun tag ->
+      let src = "abcdef" in
+      let e1 =
+        Latex_parse_lib.Cst_edit.replace ~start_offset:0 ~end_offset:3 "X"
+      in
+      let e2 =
+        Latex_parse_lib.Cst_edit.replace ~start_offset:1 ~end_offset:4 "Y"
+      in
+      match
+        Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits:[ e1; e2 ]
+      with
+      | Error (`Overlap (a, b)) ->
+          expect
+            (Latex_parse_lib.Cst_edit.equal a e1
+            && Latex_parse_lib.Cst_edit.equal b e2)
+            (tag ^ ": Error (`Overlap (e1, e2)) — CLI's exit-2 path source")
+      | Ok _ -> expect false (tag ^ ": expected Error, got Ok"));
 
   finalise "apply-fixes-cli"

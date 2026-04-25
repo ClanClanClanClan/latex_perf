@@ -76,7 +76,7 @@ release-bump PR:
   `check_result_helpers`, +1 for PR #5's
   `check_fix_integration_wired`).
 - Test suites: `[typo-fix] PASS 6`, `[fix-integration] PASS 6`,
-  `[apply-fixes-cli] PASS 9`, `[validators-struct] PASS 11`,
+  `[apply-fixes-cli] PASS 10`, `[validators-struct] PASS 11`,
   `[cli] PASS 22`. All pre-existing test files continue green.
 - `run_differential_test.py --baseline-ref v26.2.0 --current-ref HEAD
   --corpus corpora/lint --expected-diff-keys ""` → 0 diffs over

@@ -148,10 +148,10 @@ let env_flag_on name =
   | _ -> false
 
 (** v26.2.1 PR #4: run validators, collect fix edits, apply them via
-    [Cst_edit.apply_all], and emit the modified source to stdout. On overlap,
-    emit [E.apply-fixes.overlap] to stderr and exit 2 without touching stdout.
-    If no rule emits fixes, the original source is echoed unchanged and the
-    return code is 0. *)
+    [Rewrite_engine.apply] (which wraps [Cst_edit.apply_all]), and emit the
+    modified source to stdout. On overlap, emit [E.apply-fixes.overlap] to
+    stderr and exit 2 without touching stdout. If no rule emits fixes, the
+    original source is echoed unchanged and the return code is 0. *)
 let run_apply_fixes ~path ~src =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;
@@ -159,7 +159,7 @@ let run_apply_fixes ~path ~src =
   Fun.protect ~finally:cleanup (fun () ->
       let results = Latex_parse_lib.Validators.run_all src in
       let edits = collect_fix_edits results in
-      match Latex_parse_lib.Cst_edit.apply_all src edits with
+      match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
       | Ok out ->
           print_string out;
           0

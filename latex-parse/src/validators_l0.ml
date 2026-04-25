@@ -65,20 +65,43 @@ let unmatched_braces : rule =
   { id = "STRUCT-004"; run; languages = [] }
 
 let missing_section_title : rule =
+  (* v26.3 §3 item E (deferred batch): fix replaces empty [\section{...}] braces
+     with [\section{Untitled}] (preserving the existing braces, replacing only
+     the empty/whitespace body). *)
+  let message = "Empty section title" in
+  let re_empty = Re_compat.regexp "\\\\section{[ \\t\\n]*}" in
+  let collect_match_ranges re s =
+    let acc = ref [] in
+    let i = ref 0 in
+    let n = String.length s in
+    (try
+       while !i < n do
+         let _mr, pos = Re_compat.search_forward re s !i in
+         let end_pos = Re_compat.match_end _mr in
+         acc := (pos, end_pos) :: !acc;
+         i := end_pos
+       done
+     with Not_found -> ());
+    List.rev !acc
+  in
   let run s =
-    let re_empty = Re_compat.regexp "\\\\section{[ \\t\\n]*}" in
-    let re_missing = Re_compat.regexp "\\\\section{}" in
-    let has_match re =
-      try
-        ignore (Re_compat.search_forward re s 0);
-        true
-      with Not_found -> false
-    in
-    if has_match re_empty || has_match re_missing then
+    let ranges = collect_match_ranges re_empty s in
+    if ranges = [] then None
+    else
+      (* For each match [(start, stop)], the literal `\section` is 8 chars, `{`
+         at start+8, `}` at stop-1. Replace [start+9, stop-1) (whatever spaces
+         are between the braces) with "Untitled". *)
+      let fix =
+        List.map
+          (fun (start, stop) ->
+            Cst_edit.replace ~start_offset:(start + 9) ~end_offset:(stop - 1)
+              "Untitled")
+          ranges
+      in
+      let count = List.length ranges in
       Some
-        (mk_result ~id:"STRUCT-002" ~severity:Warning
-           ~message:"Empty section title" ~count:1)
-    else None
+        (mk_result_with_fix ~id:"STRUCT-002" ~severity:Warning ~message ~count
+           ~fix)
   in
   { id = "STRUCT-002"; run; languages = [] }
 
@@ -259,18 +282,37 @@ let r_enc_001 : rule =
   in
   { id = "ENC-001"; run; languages = [] }
 
-(* ENC-002: BOM U+FEFF present in middle of file *)
+(* ENC-002: BOM U+FEFF present in middle of file. v26.3 §3 item E (deferred
+   batch): fix deletes each interior BOM occurrence (3 bytes EF BB BF) while
+   leaving any leading BOM in place. *)
 let r_enc_002 : rule =
+  let message = "Byte‑order mark U+FEFF present in middle of file" in
   let run s =
     let bom = "\xef\xbb\xbf" in
     let total = count_substring s bom in
     let at_start = String.length s >= 3 && String.sub s 0 3 = bom in
     let interior = if at_start then total - 1 else total in
     if interior > 0 then
-      Some
-        (mk_result ~id:"ENC-002" ~severity:Error
-           ~message:"Byte‑order mark U+FEFF present in middle of file"
-           ~count:interior)
+      let all_offsets =
+        let rec scan i acc =
+          if i + 3 > String.length s then List.rev acc
+          else if String.sub s i 3 = bom then scan (i + 3) (i :: acc)
+          else scan (i + 1) acc
+        in
+        scan 0 []
+      in
+      let interior_offsets = List.filter (fun off -> off <> 0) all_offsets in
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
+          interior_offsets
+      in
+      if fix = [] then
+        Some (mk_result ~id:"ENC-002" ~severity:Error ~message ~count:interior)
+      else
+        Some
+          (mk_result_with_fix ~id:"ENC-002" ~severity:Error ~message
+             ~count:interior ~fix)
     else None
   in
   { id = "ENC-002"; run; languages = [] }
@@ -1283,17 +1325,36 @@ let r_spc_006 : rule =
   in
   { id = "SPC-006"; run; languages = [] }
 
-(* SPC-012: BOM not at file start *)
+(* SPC-012: BOM not at file start. v26.3 §3 item E (deferred batch): fix mirrors
+   ENC-002 — delete each interior BOM occurrence. *)
 let r_spc_012 : rule =
+  let message = "BOM not at file start" in
   let run s =
     let bom = "\xef\xbb\xbf" in
     let total = count_substring s bom in
     let at_start = String.length s >= 3 && String.sub s 0 3 = bom in
     let interior = if at_start then total - 1 else total in
     if interior > 0 then
-      Some
-        (mk_result ~id:"SPC-012" ~severity:Error
-           ~message:"BOM not at file start" ~count:interior)
+      let all_offsets =
+        let rec scan i acc =
+          if i + 3 > String.length s then List.rev acc
+          else if String.sub s i 3 = bom then scan (i + 3) (i :: acc)
+          else scan (i + 1) acc
+        in
+        scan 0 []
+      in
+      let interior_offsets = List.filter (fun off -> off <> 0) all_offsets in
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
+          interior_offsets
+      in
+      if fix = [] then
+        Some (mk_result ~id:"SPC-012" ~severity:Error ~message ~count:interior)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-012" ~severity:Error ~message
+             ~count:interior ~fix)
     else None
   in
   { id = "SPC-012"; run; languages = [] }

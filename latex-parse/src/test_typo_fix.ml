@@ -104,4 +104,27 @@ let () =
         (List.length edits = 1 && apply_all src edits = "Hello\nWorld")
         (tag ^ ": dangling dash removed"));
 
+  run "TYPO-024 fix handles CRLF line endings" (fun tag ->
+      let src = "Hello-\r\nWorld" in
+      let edits = fix_edits "TYPO-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Hello\r\nWorld")
+        (tag ^ ": dangling dash removed across CRLF"));
+
+  run "TYPO-027 fix collapses run of !!! to single !" (fun tag ->
+      let src = "Wow!!! Amazing" in
+      let edits = fix_edits "TYPO-027" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Wow! Amazing")
+        (tag ^ ": run reduced to single bang"));
+
+  run "TYPO-035 fix inserts NBSP before French punct" (fun tag ->
+      let src = "Bonjour ; au revoir : merci !" in
+      let edits = fix_edits "TYPO-035" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 3
+        && out = "Bonjour\xc2\xa0; au revoir\xc2\xa0: merci\xc2\xa0!")
+        (tag ^ ": NBSP-prefixed punctuation"));
+
   finalise "typo-fix"

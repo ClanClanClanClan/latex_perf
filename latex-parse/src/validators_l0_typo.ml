@@ -611,7 +611,9 @@ let r_typo_023 : rule =
    trailing dash run + any intervening whitespace before the newline. *)
 let r_typo_024 : rule =
   let message = "Dangling dash at line end" in
-  let re = Re_compat.regexp "-+[ \t]*$" in
+  (* [\r] in the char class so CRLF lines also match — split_on_char '\n' leaves
+     the [\r] at the end of each line. *)
+  let re = Re_compat.regexp "-+[ \t\r]*$" in
   let run s =
     let lines = String.split_on_char '\n' s in
     let cnt =
@@ -635,7 +637,16 @@ let r_typo_024 : rule =
         while !i < n && s.[!i] <> '\n' do
           incr i
         done;
-        let line_end = !i in
+        let line_end_with_terminator = !i in
+        (* Step backward past a [\r] before the [\n] so the delete range stops
+           short of the CRLF terminator. *)
+        let line_end =
+          if
+            line_end_with_terminator > line_start
+            && s.[line_end_with_terminator - 1] = '\r'
+          then line_end_with_terminator - 1
+          else line_end_with_terminator
+        in
         (* Walk backwards from line_end over [ \t] then [-]+. *)
         let j = ref line_end in
         while !j > line_start && (s.[!j - 1] = ' ' || s.[!j - 1] = '\t') do
@@ -646,12 +657,11 @@ let r_typo_024 : rule =
           decr j
         done;
         let dash_start = !j in
-        if dash_start < trailing_ws_start || trailing_ws_start < line_end then
-          (* Has dashes (dash_start < trailing_ws_start) — emit delete. *)
-          if dash_start < trailing_ws_start then
-            edits :=
-              Cst_edit.delete ~start_offset:dash_start ~end_offset:line_end
-              :: !edits;
+        if dash_start < trailing_ws_start then
+          edits :=
+            Cst_edit.delete ~start_offset:dash_start ~end_offset:line_end
+            :: !edits;
+        ignore trailing_ws_start;
         if !i < n then incr i (* skip the newline *)
       done;
       let fix = List.rev !edits in
@@ -707,14 +717,27 @@ let r_typo_026 : rule =
   in
   { id = "TYPO-026"; run; languages = [] }
 
-(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
+(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016. v26.3 §3
+   item E (deferred batch): fix collapses each maximal run of >= 2 [!]
+   characters to a single [!]. *)
 let r_typo_027 : rule =
+  let message = {|Multiple exclamation marks ‼|} in
   let run s =
     let cnt = count_substring s "!!" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-027" ~severity:Info
-           ~message:{|Multiple exclamation marks ‼|} ~count:cnt)
+      let runs = find_consecutive_runs s '!' ~min_len:2 in
+      let fix =
+        List.map
+          (fun (start_offset, end_offset) ->
+            Cst_edit.replace ~start_offset ~end_offset "!")
+          runs
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-027" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-027" ~severity:Info ~message ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-027"; run; languages = [] }
@@ -859,8 +882,12 @@ let r_typo_034 : rule =
   in
   { id = "TYPO-034"; run; languages = [] }
 
-(* French punctuation requires NBSP before ; : ! ? *)
+(* French punctuation requires NBSP before ; : ! ? v26.3 §3 item E (deferred
+   batch): fix replaces each [SPACE+PUNCT] with [NBSP+PUNCT]. NBSP = U+00A0 =
+   0xC2 0xA0 in UTF-8. *)
 let r_typo_035 : rule =
+  let message = "French punctuation requires NBSP before ; : ! ?" in
+  let nbsp = "\xc2\xa0" in
   let run s =
     let cnt =
       count_substring s " ;"
@@ -869,9 +896,21 @@ let r_typo_035 : rule =
       + count_substring s " ?"
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-035" ~severity:Warning
-           ~message:"French punctuation requires NBSP before ; : ! ?" ~count:cnt)
+      let pairs =
+        [
+          (" ;", nbsp ^ ";");
+          (" :", nbsp ^ ":");
+          (" !", nbsp ^ "!");
+          (" ?", nbsp ^ "?");
+        ]
+      in
+      let fix = List.concat_map (fun (n, r) -> mk_replace_edits s n r) pairs in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-035" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-035" ~severity:Warning ~message
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-035"; run; languages = [] }

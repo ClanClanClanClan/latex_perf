@@ -14,6 +14,14 @@
    scheduler wiring called out in every audit round since P1 merged. The offset
    is larger than any realistic layer/chunk component so class dominance is
    total-ordering within a drain cycle.
+
+   v26.3 §3 item H: drain now uses explicit per-class queues instead of a single
+   sort with a magic offset. A is drained first, then B, then C, then D; within
+   each tier tasks are ordered by raw priority. The [class_priority_offset] /
+   [effective_priority] helpers are retained for backwards-compatibility (some
+   downstream tests query them) and behave the same way under the offset model.
+   The new tier-queue model gives identical ordering to the offset model while
+   making the tier-first invariant structural rather than emergent.
    ══════════════════════════════════════════════════════════════════════ *)
 
 (** Offset added to each task's priority based on [execution_class]. Dominant
@@ -87,12 +95,31 @@ let cancel_chunk (sched : scheduler) (chunk_id : int64) : unit =
   let removed = before - List.length sched.pending in
   sched.si.si_tasks_cancelled <- sched.si.si_tasks_cancelled + removed
 
+(** v26.3 §3 item H: per-class tier queues.
+
+    Partition pending tasks by [execution_class] into four buckets, sort each
+    bucket by raw [priority] (ascending = higher urgency first), then drain A →
+    B → C → D. The class dominance is now structural (tier order in the drain
+    loop) rather than emergent (offset arithmetic). *)
 let drain (sched : scheduler) : Validators_common.result list =
-  let tasks =
-    List.sort
-      (fun a b -> compare (effective_priority a) (effective_priority b))
-      sched.pending
-  in
+  let class_a = ref [] in
+  let class_b = ref [] in
+  let class_c = ref [] in
+  let class_d = ref [] in
+  List.iter
+    (fun (t : task) ->
+      match t.execution_class with
+      | Rule_contract_loader.A -> class_a := t :: !class_a
+      | Rule_contract_loader.B -> class_b := t :: !class_b
+      | Rule_contract_loader.C -> class_c := t :: !class_c
+      | Rule_contract_loader.D -> class_d := t :: !class_d)
+    sched.pending;
+  let by_priority a b = compare a.priority b.priority in
+  let tier_a = List.sort by_priority !class_a in
+  let tier_b = List.sort by_priority !class_b in
+  let tier_c = List.sort by_priority !class_c in
+  let tier_d = List.sort by_priority !class_d in
+  let tasks = tier_a @ tier_b @ tier_c @ tier_d in
   sched.pending <- [];
   let bus = Event_bus.global () in
   let results = ref [] in

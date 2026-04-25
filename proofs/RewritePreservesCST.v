@@ -107,5 +107,84 @@ Proof.
   intros a b Ha _ _. inversion Ha.
 Qed.
 
+(** ── Concrete instantiation of [apply_edits] (v26.3 item D) ────────── *)
+
+(** Standard list-prefix / list-suffix helpers. *)
+Fixpoint take (n : nat) (l : bytes) : bytes :=
+  match n, l with
+  | 0, _ => []
+  | _, [] => []
+  | S k, x :: xs => x :: take k xs
+  end.
+
+Fixpoint drop (n : nat) (l : bytes) : bytes :=
+  match n, l with
+  | 0, _ => l
+  | _, [] => []
+  | S k, _ :: xs => drop k xs
+  end.
+
+(** Apply a single edit by splicing the replacement into the byte
+    range [[e_start, e_end)] of the source. *)
+Definition apply_one_edit (src : bytes) (e : edit) : bytes :=
+  take e.(e_start) src ++ e.(e_replacement) ++ drop e.(e_end) src.
+
+(** Apply a list of edits sequentially. The OCaml runtime
+    ([Cst_edit.apply_all]) sorts edits and applies in one pass to
+    keep pre-edit offsets meaningful; for the totality proof below
+    only the existence of an output matters, so this simple
+    sequential model suffices. *)
+Fixpoint apply_edits_concrete (src : bytes) (es : list edit) : bytes :=
+  match es with
+  | [] => src
+  | e :: rest => apply_edits_concrete (apply_one_edit src e) rest
+  end.
+
+(** v26.3 item D discharge: [apply_total] holds for the concrete
+    function (trivially — every total function satisfies it). *)
+Theorem apply_total_concrete :
+  forall src es, exists out, apply_edits_concrete src es = out.
+Proof.
+  intros src es. exists (apply_edits_concrete src es). reflexivity.
+Qed.
+
+(** Unconditional byte-lossless preservation. Closes
+    [Rewrite_preserves.Section] over [apply_edits_concrete].
+
+    Note: the Section's [apply_total] hypothesis is not actually
+    consumed by [rewrite_preserves_byte_lossless] (which proves a
+    statement of the form "for any partitioning builder, the
+    rewritten source has a partition"). So Section closure only
+    inserts [apply_edits] as an extra argument; [apply_total_concrete]
+    above remains for documentation / future stronger theorems but
+    isn't needed here. *)
+Theorem rewrite_preserves_byte_lossless_concrete :
+  forall src es builder,
+    (forall s, is_partition s (builder s)) ->
+    is_partition (apply_edits_concrete src es)
+                 (builder (apply_edits_concrete src es)).
+Proof.
+  intros src es builder Hb.
+  exact
+    (rewrite_preserves_byte_lossless apply_edits_concrete src es builder Hb).
+Qed.
+
+(** Empty edit list preserves the partition trivially. *)
+Theorem rewrite_empty_preserves_concrete :
+  forall src builder,
+    (forall s, is_partition s (builder s)) ->
+    is_partition (apply_edits_concrete src [])
+                 (builder (apply_edits_concrete src [])).
+Proof.
+  intros src builder Hb.
+  exact
+    (rewrite_empty_preserves apply_edits_concrete src builder Hb).
+Qed.
+
+(** Sanity: applying an empty edit list is identity. *)
+Theorem apply_edits_concrete_nil :
+  forall src, apply_edits_concrete src [] = src.
+Proof. reflexivity. Qed.
+
 (** ── Zero-admit witness ──────────────────────────────────────────── *)
 Definition rewrite_preserves_cst_zero_admits : True := I.

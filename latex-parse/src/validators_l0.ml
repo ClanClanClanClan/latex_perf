@@ -28,7 +28,21 @@ let require_documentclass : rule =
     if pilot_mode then None
     else if contains_substring s "\\documentclass" then None
     else
-      let fix = [ Cst_edit.insert ~at:0 "\\documentclass{article}\n" ] in
+      (* v26.3 §3 item A: BOM-aware insertion. If the source begins
+         with a UTF-8 BOM (EF BB BF, 3 bytes), insert AFTER it so the
+         BOM stays at byte 0 of the output. Otherwise insert at
+         byte 0. *)
+      let n = String.length s in
+      let has_bom =
+        n >= 3
+        && Char.code s.[0] = 0xEF
+        && Char.code s.[1] = 0xBB
+        && Char.code s.[2] = 0xBF
+      in
+      let insert_offset = if has_bom then 3 else 0 in
+      let fix =
+        [ Cst_edit.insert ~at:insert_offset "\\documentclass{article}\n" ]
+      in
       Some
         (mk_result_with_fix ~id:"STRUCT-001" ~severity:Warning
            ~message:"Missing \\documentclass" ~count:1 ~fix)

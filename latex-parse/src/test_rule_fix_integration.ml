@@ -63,20 +63,30 @@ let () =
         && String.length out > String.length src)
         (tag ^ ": fired once, applied, no longer fires"));
 
-  (* STRUCT-001 + UTF-8 BOM (plan §6 R3): fix-producer respects byte-0
-     semantics. The BOM (3 bytes: EF BB BF) stays at its byte position; insert
-     at offset 0 places `\documentclass{article}\n` before the BOM, which still
-     suppresses the rule on re-validate (the resulting source contains
-     "\\documentclass" verbatim). BOM-aware insertion is documented as v26.3
-     scope. *)
-  run "E2E STRUCT-001 with leading UTF-8 BOM" (fun tag ->
+  (* STRUCT-001 + UTF-8 BOM (v26.3 §3 item A): BOM-aware insertion.
+     The fix producer detects the leading 3-byte UTF-8 BOM
+     (EF BB BF) and inserts `\documentclass{article}\n` AFTER it,
+     so the BOM remains at byte 0 of the output. *)
+  run "E2E STRUCT-001 with leading UTF-8 BOM (BOM-aware insert)" (fun tag ->
       let src = read_fixture "struct_001_with_bom.tex" in
       let edits, out = pipeline "STRUCT-001" src in
+      let bom_first =
+        String.length out >= 3
+        && Char.code out.[0] = 0xEF
+        && Char.code out.[1] = 0xBB
+        && Char.code out.[2] = 0xBF
+      in
+      let docclass_after_bom =
+        String.length out >= 17
+        && String.sub out 3 14 = "\\documentclass"
+      in
       expect
         (List.length edits = 1
         && does_not_fire "STRUCT-001" out
-        && String.length out = String.length src + 24)
-        (tag ^ ": fired once, applied, no longer fires"));
+        && String.length out = String.length src + 24
+        && bom_first
+        && docclass_after_bom)
+        (tag ^ ": BOM stays at byte 0; \\documentclass inserted at byte 3"));
 
   (* Clean source should not trigger any fix-producing rule. *)
   run "E2E clean source: no edits, applying is a no-op" (fun tag ->

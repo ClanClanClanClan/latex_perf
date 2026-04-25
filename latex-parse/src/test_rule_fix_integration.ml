@@ -35,9 +35,16 @@ let read_fixture name =
   close_in ic;
   src
 
+(** Apply edits via [Rewrite_engine.apply_and_reparse] per plan §3
+    PR #5 item 1. The CST returned by reparse is unused at the test
+    level — we re-validate the rewritten source via [Validators]
+    rather than walk the CST — but going through the engine keeps
+    test wiring aligned with the production [--apply-fixes] flow. *)
 let apply_all s edits =
-  match Latex_parse_lib.Cst_edit.apply_all s edits with
-  | Ok out -> out
+  match
+    Latex_parse_lib.Rewrite_engine.apply_and_reparse ~source:s ~edits
+  with
+  | Ok (out, _cst) -> out
   | Error _ -> failwith "overlapping fix edits"
 
 let pipeline rule_id src =

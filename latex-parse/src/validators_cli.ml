@@ -131,11 +131,62 @@ let print_result (r : Latex_parse_lib.Validators.result) =
     (Latex_parse_lib.Validators.severity_to_string r.severity)
     r.count tag r.message
 
+(* ── Apply-fixes flow (v26.2.1 PR #4) ─────────────────────────────── *)
+
+(** Collect every fix edit from [results] into a single list. Rules that emit
+    [fix = None] contribute nothing. *)
+let collect_fix_edits (results : Latex_parse_lib.Validators.result list) :
+    Latex_parse_lib.Cst_edit.t list =
+  List.concat_map
+    (fun (r : Latex_parse_lib.Validators.result) ->
+      match r.fix with Some edits -> edits | None -> [])
+    results
+
+let env_flag_on name =
+  match Sys.getenv_opt name with
+  | Some ("1" | "true" | "TRUE" | "on" | "ON") -> true
+  | _ -> false
+
+(** v26.2.1 PR #4: run validators, collect fix edits, apply them via
+    [Rewrite_engine.apply] (which wraps [Cst_edit.apply_all]), and emit the
+    modified source to stdout. On overlap, emit [E.apply-fixes.overlap] to
+    stderr and exit 2 without touching stdout. If no rule emits fixes, the
+    original source is echoed unchanged and the return code is 0. *)
+let run_apply_fixes ~path ~src =
+  let _tier, features = resolve_profile ~requested:`Auto ~src in
+  print_profile_banner _tier features;
+  let _bp = setup_all ~path ~src ~log_path:None in
+  Fun.protect ~finally:cleanup (fun () ->
+      let results = Latex_parse_lib.Validators.run_all src in
+      let edits = collect_fix_edits results in
+      match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
+      | Ok out ->
+          print_string out;
+          0
+      | Error (`Overlap (a, b)) ->
+          eprintf
+            "E.apply-fixes.overlap: two rule fixes affect overlapping source \
+             ranges; refusing to apply.\n\
+             # first edit:  %s\n\
+             # second edit: %s\n"
+            (Latex_parse_lib.Cst_edit.to_string a)
+            (Latex_parse_lib.Cst_edit.to_string b);
+          2)
+
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
 let () =
   let args = Array.to_list Sys.argv in
+  (* v26.2.1 PR #4: `L0_APPLY_FIXES=1` env gate is equivalent to prefixing a
+     single-path invocation with [--apply-fixes]. *)
+  let apply_env_on = env_flag_on "L0_APPLY_FIXES" in
   match args with
+  | [ _; "--apply-fixes"; path ] ->
+      let src = read_all path in
+      exit (run_apply_fixes ~path ~src)
+  | [ _; path ] when apply_env_on ->
+      let src = read_all path in
+      exit (run_apply_fixes ~path ~src)
   | [ _; path ] ->
       let src = read_all path in
       let tier, features = resolve_profile ~requested:`Auto ~src in
@@ -235,8 +286,14 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--profile auto|lp-core|lp-extended|lp-foreign] \
-         [--advisory] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
-         <file.log>] <file.tex>\n"
+        "Usage: %s [--apply-fixes] [--profile \
+         auto|lp-core|lp-extended|lp-foreign] [--advisory] [--project \
+         <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n\n\
+         --apply-fixes  run validators, apply every rule's fix edits via \
+         Cst_edit.apply_all,\n\
+        \               and emit the modified source to stdout. \
+         L0_APPLY_FIXES=1 is equivalent\n\
+        \               when no other flag is given. Overlapping fixes → \
+         stderr + exit 2.\n"
         Sys.argv.(0);
       exit 2

@@ -16,7 +16,33 @@ let r_typo_001 : rule =
   in
   { id = "TYPO-001"; run; languages = [] }
 
+(** [find_all_non_overlapping s needle] — offsets of every occurrence of
+    [needle] in [s], advancing by [|needle|] after each match (no overlaps).
+    Used by TYPO-002/003 fix producers to build a non-overlapping replace-edit
+    set. Differs from [count_substring] (which allows overlaps) — the fix-count
+    may therefore be smaller than the rule-[count] on pathological input like
+    "----" (count=3 with overlaps, 2 non-overlapping [--] matches). Acceptable:
+    the fix-set is always applicable; the rule-[count] is a separate severity
+    indicator. *)
+let find_all_non_overlapping (s : string) (needle : string) : int list =
+  let nlen = String.length needle in
+  let slen = String.length s in
+  if nlen = 0 || slen < nlen then []
+  else
+    let rec loop i acc =
+      if i + nlen > slen then List.rev acc
+      else if String.sub s i nlen = needle then loop (i + nlen) (i :: acc)
+      else loop (i + 1) acc
+    in
+    loop 0 []
+
 let r_typo_002 : rule =
+  let message = "Double hyphen -- should be en‑dash –" in
+  let mk_fix_edits s =
+    List.map
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–")
+      (find_all_non_overlapping s "--")
+  in
   let run s =
     match Sys.getenv_opt "L0_TOKEN_AWARE" with
     | Some ("1" | "true" | "on") ->
@@ -34,21 +60,37 @@ let r_typo_002 : rule =
           loop 0 toks
         in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-002" ~severity:Warning
-               ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some
+              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
+                 ~count:cnt ~fix)
         else None
     | _ ->
         let cnt = count_substring s "--" in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-002" ~severity:Warning
-               ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some
+              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
+                 ~count:cnt ~fix)
         else None
   in
   { id = "TYPO-002"; run; languages = [] }
 
 let r_typo_003 : rule =
+  let message = "Triple hyphen --- should be em‑dash —" in
+  let mk_fix_edits s =
+    List.map
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "—")
+      (find_all_non_overlapping s "---")
+  in
   let run s =
     match Sys.getenv_opt "L0_TOKEN_AWARE" with
     | Some ("1" | "true" | "on") ->
@@ -66,16 +108,26 @@ let r_typo_003 : rule =
           loop 0 toks
         in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-003" ~severity:Warning
-               ~message:"Triple hyphen --- should be em‑dash —" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some
+              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
+                 ~count:cnt ~fix)
         else None
     | _ ->
         let cnt = count_substring s "---" in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-003" ~severity:Warning
-               ~message:"Triple hyphen --- should be em‑dash —" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some
+              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
+                 ~count:cnt ~fix)
         else None
   in
   { id = "TYPO-003"; run; languages = [] }

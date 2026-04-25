@@ -16,31 +16,178 @@ The gate scans every validator source and test file, detects any
 record literal (OCaml-aware on strings, char literals, quoted strings
 and comments), and fails if one is found.
 
+The OCaml-aware parser was originally in
+[scripts/tools/migrate_result_literals.py] (one-shot migration script,
+deleted after PR #1 landed per plan §3 PR #1). It now lives inline
+here so the gate is self-contained.
+
 Escape hatch: none. If a helper is insufficient (e.g. because a new
 field needs a non-[None] default), extend the helper signature instead
 of bypassing it.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# Reuse the OCaml-aware parser from the migration script.
-sys.path.insert(0, str(REPO_ROOT / "scripts" / "tools"))
-from migrate_result_literals import (  # noqa: E402
-    try_parse_result_literal,
-    skip_string,
-    skip_comment,
-    try_skip_quoted_string,
-    try_skip_char_literal,
+
+# ── OCaml-aware parser (inline; see commit history for the migration
+# script that originally hosted these). ───────────────────────────────
+
+
+def skip_string(text: str, i: int) -> int:
+    """[text[i]] must be '"'. Return index just past the closing
+    unescaped quote (or end-of-text if unterminated)."""
+    assert text[i] == '"'
+    n = len(text)
+    i += 1
+    while i < n:
+        c = text[i]
+        if c == "\\" and i + 1 < n:
+            i += 2
+        elif c == '"':
+            return i + 1
+        else:
+            i += 1
+    return i
+
+
+def skip_comment(text: str, i: int) -> int:
+    """[text[i:i+2]] must be '(*'. Return index just past matching
+    '*)'. Handles nested comments."""
+    assert text[i : i + 2] == "(*"
+    n = len(text)
+    i += 2
+    depth = 1
+    while i + 1 < n:
+        if text[i : i + 2] == "(*":
+            depth += 1
+            i += 2
+        elif text[i : i + 2] == "*)":
+            depth -= 1
+            i += 2
+            if depth == 0:
+                return i
+        else:
+            i += 1
+    return n
+
+
+def skip_ws_and_comments(text: str, i: int) -> int:
+    n = len(text)
+    while i < n:
+        if text[i].isspace():
+            i += 1
+        elif text[i : i + 2] == "(*":
+            i = skip_comment(text, i)
+        else:
+            break
+    return i
+
+
+_QSTR_OPEN = re.compile(r"\{([a-z_]*)\|")
+
+_CHAR_LITERAL = re.compile(
+    r"'(?:\\x[0-9a-fA-F]{1,2}|\\[0-9]{1,3}|\\.|[^'\\])'"
 )
 
 
+def try_skip_char_literal(text: str, i: int) -> int | None:
+    m = _CHAR_LITERAL.match(text, i)
+    return m.end() if m else None
+
+
+def try_skip_quoted_string(text: str, i: int) -> int | None:
+    m = _QSTR_OPEN.match(text, i)
+    if not m:
+        return None
+    delim = m.group(1)
+    close = "|" + delim + "}"
+    end = text.find(close, m.end())
+    if end < 0:
+        return None
+    return end + len(close)
+
+
+def extract_value(text: str, i: int) -> tuple[int, str]:
+    n = len(text)
+    depth = 0
+    start = i
+    while i < n:
+        c = text[i]
+        if c == '"':
+            i = skip_string(text, i)
+        elif c == "'":
+            ch = try_skip_char_literal(text, i)
+            i = ch if ch is not None else i + 1
+        elif text[i : i + 2] == "(*":
+            i = skip_comment(text, i)
+        elif c == "{":
+            qs = try_skip_quoted_string(text, i)
+            if qs is not None:
+                i = qs
+            else:
+                depth += 1
+                i += 1
+        elif c in "([":
+            depth += 1
+            i += 1
+        elif c in "})]":
+            if depth == 0:
+                return (i, text[start:i].strip())
+            depth -= 1
+            i += 1
+        elif c == ";" and depth == 0:
+            return (i, text[start:i].strip())
+        else:
+            i += 1
+    return (i, text[start:i].strip())
+
+
+FIELD_ORDER = ("id", "severity", "message", "count")
+
+
+def try_parse_result_literal(text: str, start: int) -> int | None:
+    """[text[start]] must be '{'. Return end index (just past '}') if
+    a four-field result literal is recognised. Returns None
+    otherwise. We only care about presence/position, not field
+    values, so the return signature is simpler than the migration
+    script's."""
+    assert text[start] == "{"
+    n = len(text)
+    i = start + 1
+    i = skip_ws_and_comments(text, i)
+    for idx, expected in enumerate(FIELD_ORDER):
+        if idx == 0:
+            pattern = r"(?:[A-Z][a-zA-Z0-9_]*\.)*" + re.escape(expected) + r"\s*="
+        else:
+            pattern = re.escape(expected) + r"\s*="
+        m = re.match(pattern, text[i:])
+        if not m:
+            return None
+        i += m.end()
+        i = skip_ws_and_comments(text, i)
+        end, _value = extract_value(text, i)
+        i = end
+        if idx < len(FIELD_ORDER) - 1:
+            if i >= n or text[i] != ";":
+                return None
+            i += 1
+            i = skip_ws_and_comments(text, i)
+    if i < n and text[i] == ";":
+        i += 1
+    i = skip_ws_and_comments(text, i)
+    if i >= n or text[i] != "}":
+        return None
+    return i + 1
+
+
 def count_raw_literals(path: Path) -> list[tuple[int, str]]:
-    """Return a list of (line_number, first_field_excerpt) for each raw
-    result record literal found in [path]."""
+    """Return [(line_number, first_chars_at_brace)] for each raw
+    4-field result record literal found in [path]."""
     text = path.read_text()
     n = len(text)
     hits: list[tuple[int, str]] = []
@@ -51,10 +198,7 @@ def count_raw_literals(path: Path) -> list[tuple[int, str]]:
             i = skip_string(text, i)
         elif c == "'":
             ch = try_skip_char_literal(text, i)
-            if ch is not None:
-                i = ch
-            else:
-                i += 1
+            i = ch if ch is not None else i + 1
         elif text[i : i + 2] == "(*":
             i = skip_comment(text, i)
         elif c == "{":
@@ -62,11 +206,10 @@ def count_raw_literals(path: Path) -> list[tuple[int, str]]:
             if qs is not None:
                 i = qs
                 continue
-            parsed = try_parse_result_literal(text, i)
-            if parsed is not None:
-                end, _prefix, vals = parsed
+            end = try_parse_result_literal(text, i)
+            if end is not None:
                 line = text.count("\n", 0, i) + 1
-                hits.append((line, vals[0][:40]))
+                hits.append((line, text[i : i + 40].replace("\n", " ")))
                 i = end
             else:
                 i += 1
@@ -91,7 +234,7 @@ def main() -> int:
             rel = f.relative_to(REPO_ROOT).as_posix()
             print(
                 f"[result-helpers] FAIL: {rel}:{line}: raw result "
-                f"record literal (id={excerpt}); use "
+                f"record literal at `{excerpt}`; use "
                 f"Validators_common.mk_result / mk_result_with_fix."
             )
             total_hits += 1

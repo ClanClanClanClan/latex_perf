@@ -28,9 +28,10 @@ let require_documentclass : rule =
     if pilot_mode then None
     else if contains_substring s "\\documentclass" then None
     else
+      let fix = [ Cst_edit.insert ~at:0 "\\documentclass{article}\n" ] in
       Some
-        (mk_result ~id:"STRUCT-001" ~severity:Warning
-           ~message:"Missing \\documentclass" ~count:1)
+        (mk_result_with_fix ~id:"STRUCT-001" ~severity:Warning
+           ~message:"Missing \\documentclass" ~count:1 ~fix)
   in
   { id = "STRUCT-001"; run; languages = [] }
 

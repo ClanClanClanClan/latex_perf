@@ -180,4 +180,7 @@ let () =
       expect (has_style_id out)
         (tag ^ ": at least one STYLE-* line under --advisory"))
 
+(* v26.2.1 PR #4: --apply-fixes tests live in test_apply_fixes_cli.ml per
+   specs/v26/V26_2_1_PLAN.md §3 PR #4 item "tests". *)
+
 let () = finalise "cli"

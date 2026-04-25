@@ -59,6 +59,20 @@ let fires_advisory_with_count id src expected_count =
 
 let fires_with_count_advisory = fires_advisory_with_count
 
+(** [fires_with_fix id src] is [true] when rule [id] fires on [src] and emits a
+    non-empty fix edit list (v26.2.1 PR #2/#3). *)
+let fires_with_fix id src =
+  match find_result id src with
+  | Some { fix = Some (_ :: _); _ } -> true
+  | _ -> false
+
+(** [fix_edits id src] returns the fix edit list for rule [id] on [src], or [[]]
+    if the rule didn't fire or produced no fix. *)
+let fix_edits id src =
+  match find_result id src with
+  | Some { fix = Some edits; _ } -> edits
+  | _ -> []
+
 (** [with_pilot_env f] sets [L0_VALIDATORS=pilot], runs [f ()], then returns. *)
 let with_pilot_env f =
   Unix.putenv "L0_VALIDATORS" "pilot";

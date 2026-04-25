@@ -2,6 +2,108 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.2.1] — 2026-04-25
+
+v26.2.1 closes the fix-producer track deferred from v26.2.0. Every
+item in the v26.2.0 `Deferred to v26.2.1 / v26.3` fix-producer
+sub-list has shipped; the remaining deferrals are now exclusively
+v26.3 scope (see `specs/v26/V26_2_1_PLAN.md` §8).
+
+The cycle landed as five sequentially-stacked feature PRs plus a
+release-bump PR:
+
+- **PR #265** — `result.fix` field + `mk_result` helpers (PR #1).
+- **PR #266** — STRUCT-001 fix producer (PR #2).
+- **PR #267** — TYPO-002 / TYPO-003 fix producers (PR #3).
+- **PR #268** — `--apply-fixes` CLI + `L0_APPLY_FIXES` env (PR #4).
+- **PR #269** — E2E `test_rule_fix_integration` + CHANGELOG +
+  consumer migration doc (PR #5).
+- **PR #270** — release-bump + final spec polish (test split,
+  BOM fixture, governance + opam + docs version refresh, drift
+  cleanup of v26.2.0-era stale 1,252/157 doc figures).
+
+### Shipped (v26.2.1 plan)
+
+- **`Validators_common.result.fix : Cst_edit.t list option`** — new
+  field + `mk_result` / `mk_result_with_fix` constructors. All 673
+  existing record literals across 15 validator / test files were
+  migrated through the helpers via a one-shot OCaml-aware script
+  (`scripts/tools/migrate_result_literals.py`, deleted in PR #270
+  per plan §3 PR #1; the parser was inlined into
+  `check_result_helpers.py` so the gate stays self-contained).
+  New gate `scripts/tools/check_result_helpers.py` (pre-release #15)
+  forbids raw 4-field `{ id; severity; message; count }` literals
+  in validator sources.
+- **Type deviation from v26.2.0 CHANGELOG:** the field is
+  `Cst_edit.t list option`, **not** `Cst_edit.t option`. TYPO-002/003
+  aggregate `count` per document and need one edit per match; a list
+  is required. Empty `Some` rejected by the helper.
+- **STRUCT-001 fix producer** — emits a single
+  `Cst_edit.insert ~at:0 "\documentclass{article}\n"` on missing
+  `\documentclass`.
+- **TYPO-002 / TYPO-003 fix producers** — one
+  `Cst_edit.replace (off..off+2) "–"` (resp. `…+3 "—"`) per
+  non-overlapping match offset found by the new
+  `find_all_non_overlapping` helper. Rule `count` retains its
+  overlap-count semantics via `count_substring` for back-compat; fix
+  list is strictly non-overlapping. On pathological input like
+  `----`, fix-count may be smaller than rule-count (documented).
+- **`--apply-fixes` CLI flag + `L0_APPLY_FIXES` env gate** — runs
+  validators, flattens `r.fix`, applies via `Rewrite_engine.apply`
+  (which wraps `Cst_edit.apply_all`), emits modified source to
+  stdout. Overlapping fixes → stderr `E.apply-fixes.overlap` +
+  exit 2. Decision (per `V26_2_PLAN.md` §3.2 B3): all-or-nothing
+  only; `--apply-fixes-for RULE-ID` stays v26.3 scope.
+- **`test_rule_fix_integration.ml`** (new) — E2E pipeline test for
+  STRUCT-001 / TYPO-002 / TYPO-003: fire → collect fixes → apply
+  via `Rewrite_engine.apply_and_reparse` → assert rule no longer
+  fires. 6 cases. Inputs live in `corpora/fixtures/v26_2_1/`
+  (6 curated files + README, including a UTF-8 BOM fixture per
+  plan §6 R3) and are loaded via `(deps (source_tree ...))` in
+  `latex-parse/src/dune`.
+- **`scripts/tools/check_fix_integration_wired.py`** (new, gate #16)
+  — verifies the E2E test, its dune stanza, and the fixture files
+  are all in place so CI can't accidentally detach the pipeline.
+- **`docs/v26_2/FIX_STYLE_GUIDE.md`** refreshed to the v26.2.1 API
+  (list + helper exemplars).
+- **`docs/MIGRATION_v26.2_to_v26.2.1.md`** (new) — consumer-side
+  migration notes: helper usage, the deviation from the CHANGELOG
+  type, and the new `--apply-fixes` CLI mode.
+
+### Gate count
+
+- **16 pre-release gates** (was 14 at v26.2.0, +1 for PR #1's
+  `check_result_helpers`, +1 for PR #5's
+  `check_fix_integration_wired`).
+- Test suites: `[typo-fix] PASS 6`, `[fix-integration] PASS 6`,
+  `[apply-fixes-cli] PASS 10`, `[validators-struct] PASS 11`,
+  `[cli] PASS 22`. All pre-existing test files continue green.
+- `run_differential_test.py --baseline-ref v26.2.0 --current-ref HEAD
+  --corpus corpora/lint --expected-diff-keys ""` → 0 diffs over
+  330 files; v26.2.1 is byte-additive at the validator-output
+  level (the only new payload is `r.fix`, not exposed in the TSV).
+
+### Deferred to v26.3 (explicit)
+
+- Rolling fix producers for the remaining ~657 rules.
+- `--apply-fixes-for RULE-ID` granularity flag.
+- CST structure-lossless runtime gate (corpus-scoped).
+- `edf_scheduler.ml` per-class scheduling full rewrite.
+- Three Section-level Coq discharges: `CSTRoundTrip.Structure_lossless`
+  (2 hypotheses), `RewritePreservesCST.Rewrite_preserves` (1), and
+  `RewritePreservesSemantics.Semantic_preservation` (2). See
+  `proofs/ADMISSIBILITY_MAP.md` discharge-unit notes.
+- xelatex / lualatex `.aux` parser variants.
+- L3 AST migration (`docs/L3_ROADMAP.md`).
+
+### Semver
+
+Additive. `fix` defaults to `None`. Downstream consumers that
+constructed `Validators_common.result` record literals directly must
+migrate to `mk_result` / `mk_result_with_fix` (see
+`docs/MIGRATION_v26.2_to_v26.2.1.md`). The new CLI flag +
+env var are net-new; existing invocations are unaffected.
+
 ## [v26.2.0] — 2026-04-23
 
 v26.2 closes the memo §16.3 compile-guarantee stack and CST/rewrite

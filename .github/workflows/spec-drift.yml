@@ -15,7 +15,11 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  # Job name is the GitHub status-check context. Renamed from the
+  # generic [check] (which collided with another workflow's job of
+  # the same name) to [spec-drift] so it can be unambiguously added
+  # to branch-protection's required-checks list.
+  spec-drift:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

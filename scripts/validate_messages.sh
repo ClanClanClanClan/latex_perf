@@ -5,10 +5,19 @@ set -euo pipefail
 # Extracts all rule IDs from validators.ml and checks against rules_v3.yaml.
 
 CATALOG=specs/rules/rules_v3.yaml
-RUNTIME=latex-parse/src/validators.ml
+# Pre-v26.0 the rule definitions all lived in latex-parse/src/validators.ml.
+# v26.0 split them across validators_l0.ml, validators_l1.ml, ...; the
+# top-level validators.ml is now a dispatcher with `include Validators_*`
+# clauses, so a script that only reads validators.ml sees ~8 rules
+# instead of the 600+ that ship at runtime. Scan the full glob.
+RUNTIME_GLOB=(latex-parse/src/validators*.ml)
 
-if [[ ! -f "$CATALOG" || ! -f "$RUNTIME" ]]; then
-  echo "[msg] ERROR: missing inputs" >&2
+if [[ ! -f "$CATALOG" ]]; then
+  echo "[msg] ERROR: missing catalogue: $CATALOG" >&2
+  exit 2
+fi
+if [[ ${#RUNTIME_GLOB[@]} -eq 0 || ! -f "${RUNTIME_GLOB[0]}" ]]; then
+  echo "[msg] ERROR: no runtime sources matched latex-parse/src/validators*.ml" >&2
   exit 2
 fi
 
@@ -57,27 +66,30 @@ perl -0777 -ne '
   while ($i < scalar @lines) {
     my $line = $lines[$i];
 
-    # Track id = "XXX"
-    if ($line =~ /id\s*=\s*"([^"]+)"/) {
+    # Track id — supports both legacy record-literal syntax
+    #   { id = "XXX"; ... }
+    # and v26.2.1+ labeled-argument helper-call syntax
+    #   mk_result ~id:"XXX" ~severity:... ~message:...
+    if ($line =~ /(?:\bid\s*=|~id\s*:)\s*"([^"]+)"/) {
       $cur_id = $1;
     }
 
     if ($cur_id) {
-      # Case 1: message = {|...|} or {delim|...|delim} on same line
-      if ($line =~ /message\s*=\s*\{(\w*)\|(.+?)\|\1\}/) {
+      # Case 1: message = {|...|} or ~message:{|...|} on same line
+      if ($line =~ /(?:\bmessage\s*=|~message\s*:)\s*\{(\w*)\|(.+?)\|\1\}/) {
         print "$cur_id\t$2\n";
         $cur_id = "";
       }
-      # Case 2: message = "..." on same line (no line continuation)
-      elsif ($line =~ /message\s*=\s*"((?:[^"\\]|\\.)*)"/) {
+      # Case 2: message = "..." or ~message:"..." on same line
+      elsif ($line =~ /(?:\bmessage\s*=|~message\s*:)\s*"((?:[^"\\]|\\.)*)"/) {
         my $msg = $1;
         $msg =~ s/\\\\/\\/g;
         $msg =~ s/\\"/"/g;
         print "$cur_id\t$msg\n";
         $cur_id = "";
       }
-      # Case 3: message = "...\ (line continuation)
-      elsif ($line =~ /message\s*=\s*"(.*)\\\s*$/) {
+      # Case 3: message = "...\ or ~message:"...\ (line continuation)
+      elsif ($line =~ /(?:\bmessage\s*=|~message\s*:)\s*"(.*)\\\s*$/) {
         my $msg = $1;
         # Collect continuation lines until closing "
         while (++$i < scalar @lines) {
@@ -96,8 +108,9 @@ perl -0777 -ne '
         print "$cur_id\t$msg\n";
         $cur_id = "";
       }
-      # Case 4: message = (newline, value on next line)
-      elsif ($line =~ /message\s*=\s*$/) {
+      # Case 4: message = (newline, value on next line) OR
+      # ~message:(newline, value on next line)
+      elsif ($line =~ /(?:\bmessage\s*=|~message\s*:)\s*$/) {
         $i++;
         if ($i < scalar @lines) {
           my $next = $lines[$i];
@@ -138,7 +151,7 @@ perl -0777 -ne '
     }
     $i++;
   }
-' "$RUNTIME" > "$tmp_rt"
+' "${RUNTIME_GLOB[@]}" > "$tmp_rt"
 
 warn=0
 checked=0

@@ -20,6 +20,7 @@ DUNE = REPO_ROOT / "latex-parse" / "src" / "dune"
 FIXTURES_DIR = REPO_ROOT / "corpora" / "fixtures" / "v26_2_1"
 EXPECTED_FIXTURES = {
     "struct_001_missing_docclass.tex",
+    "struct_001_with_bom.tex",
     "typo_002_multi_dashes.tex",
     "typo_003_multi_dashes.tex",
     "typo_002_collect_all.tex",

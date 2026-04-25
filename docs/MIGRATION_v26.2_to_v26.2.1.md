@@ -107,10 +107,14 @@ Validators_common.mk_result_with_fix
   ~id:"X-042" ~severity:Warning ~message:"…" ~count:1 ~fix
 ```
 
-The `scripts/tools/migrate_result_literals.py` one-shot script used
-by the repo for its own migration is available for reference; it
-handles OCaml strings, character literals, quoted strings
-(`{|...|}`), comments, and qualified field names.
+The repo migrated its own 673 literals via a one-shot OCaml-aware
+Python script (deleted in the v26.2.1 release-bump PR per plan
+§3 PR #1). Downstream consumers with similar bulk-rewrite needs can
+recover the script from the v26.2.1 cycle history (PRs #265 / #270)
+— it handled OCaml strings, character literals, quoted strings
+(`{|...|}`), comments, and qualified field names. For a handful of
+literals, manual edits with a `~/.vimrc`-style `:%s/` are usually
+sufficient.
 
 ## New gate
 

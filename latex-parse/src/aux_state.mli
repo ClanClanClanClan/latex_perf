@@ -1,9 +1,11 @@
-(** Parse and query `.aux` files produced by pdflatex (memo §5.5, v26.2).
+(** Parse and query `.aux` files produced by LaTeX engines.
 
-    v26.2 scope: pdflatex `.aux` only. xelatex / lualatex `.aux` files are
-    mostly-compatible but edge cases (counter serialization) may fail
-    gracefully. Related aux-family files (`.toc`, `.lof`, `.lot`, `.idx`,
-    `.glg`) are OUT of scope for v26.2.
+    v26.2 scope: pdflatex `.aux`. v26.3 §3 items F + G extends to xelatex and
+    lualatex `.aux` files; the engines emit substantially the same format
+    (`\newlabel`, `\bibcite`, `\bibstyle`, `\bibdata`) plus engine-specific
+    macros (`\xetexversion`, `\luatexversion`, `\luatexkv*`) that we now
+    recognise without emitting warnings. Related aux-family files (`.toc`,
+    `.lof`, `.lot`, `.idx`, `.glg`) are OUT of scope.
 
     Design note: this is distinct from [Build_artifact_state] which wraps the
     runtime profile and holds the parsed log context. This module parses the

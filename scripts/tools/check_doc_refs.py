@@ -68,6 +68,13 @@ REF_ALLOWLIST = {
     "scripts/tools/migrate_result_literals.py",  # one-shot migration, PR #1
     "scripts/tools/check_result_helpers.py",  # new gate, PR #1
     "docs/MIGRATION_v26.2_to_v26.2.1.md",  # consumer migration doc, PR #5
+    # ml/results/expert_briefing.md references training-run output JSONs
+    # under timestamped directories (ml/results/<run-id>/). Per ml/.gitignore
+    # these are intentionally untracked (run outputs, can be tens of MB).
+    # The doc itself is tracked; the snapshot it cites is regenerated each
+    # training run.
+    "ml/results/20260319_234935/eval_results.json",
+    "ml/results/20260319_234935/eval_bound.json",
 }
 
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")

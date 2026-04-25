@@ -15,7 +15,11 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  # Job name is the GitHub status-check context. Renamed from the
+  # generic [check] (which collided with another workflow's job of
+  # the same name) to [spec-drift] so it can be unambiguously added
+  # to branch-protection's required-checks list.
+  spec-drift:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -62,7 +66,7 @@ jobs:
         # this now.
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
 
-      - name: Meta-gate: every gate script is runnable
+      - name: "Meta-gate: every gate script is runnable"
         # P1.8 found check_regression_gates had a typo'd binary name.
         # This gate verifies every gate-script itself runs without
         # tracebacks or empty output.

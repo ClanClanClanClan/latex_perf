@@ -136,7 +136,10 @@ let of_string ~source_path (content : string) : t =
                     | Some entries ->
                         bibdata := !bibdata @ split_on_comma entries
                     | None ->
-                        (* Recognized-but-ignored macros we don't warn on. *)
+                        (* Recognized-but-ignored macros we don't warn on. v26.3
+                           §3 items F + G: extended to cover xelatex and
+                           lualatex emissions (\xetexversion, \luatexversion,
+                           \luatexkv*, \pgfsyspdfmark, etc.). *)
                         let recognized_ignored =
                           [
                             "\\relax";
@@ -146,6 +149,17 @@ let of_string ~source_path (content : string) : t =
                             "\\providecommand";
                             "\\gdef";
                             "\\@tfor";
+                            (* xelatex / lualatex-specific macros (v26.3) *)
+                            "\\xetexversion";
+                            "\\xetexrevision";
+                            "\\luatexversion";
+                            "\\luatexrevision";
+                            "\\luatexkv";
+                            "\\pdfsavepos";
+                            "\\pgfsyspdfmark";
+                            "\\HyField@";
+                            "\\select@language";
+                            "\\@nameuse";
                           ]
                         in
                         let is_ignored =

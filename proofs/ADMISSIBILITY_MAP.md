@@ -184,11 +184,16 @@ its premise.
 **Section variable** (`Section Rewrite_preserves`, lines 54–86):
 `apply_edits : bytes -> list edit -> bytes`.
 
-> **Discharge unit note.** Only **one** hypothesis in this Section —
-> this is the **smallest v26.3 Coq discharge unit** and is the
-> recommended starting point for anyone picking up v26.3 Coq work. The
-> OCaml reference implementation (`Cst_edit.apply_all`) already exists
-> and is total on non-overlapping edit lists.
+> **DISCHARGED in v26.3** (item D). The file now contains
+> `apply_edits_concrete` (a concrete byte-splicing implementation in
+> Coq) plus `apply_total_concrete`. Two unconditional theorems
+> (`rewrite_preserves_byte_lossless_concrete`,
+> `rewrite_empty_preserves_concrete`) close the Section over the
+> concrete function. As a side observation, the Section's
+> `apply_total` hypothesis is not actually consumed by the in-section
+> theorems — Section closure only adds `apply_edits` as an explicit
+> argument — but `apply_total_concrete` is retained for future
+> stronger theorems and as a documentation artefact.
 
 **Hypothesis:**
 1. `apply_total` — `apply_edits` is total on its input:

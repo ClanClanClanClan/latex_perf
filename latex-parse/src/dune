@@ -378,6 +378,21 @@
   (source_tree ../../corpora/fixtures/v26_2_1)))
 
 (test
+ (name test_cst_structure_lossless)
+ (modules test_cst_structure_lossless)
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora/roundtrip)
+  (source_tree ../../corpora/fixtures/v26_2_1)))
+
+(test
+ (name test_aux_state_engines)
+ (modules test_aux_state_engines)
+ (libraries latex_parse_lib test_helpers unix)
+ (deps
+  (source_tree ../../corpora/aux)))
+
+(test
  (name test_apply_fixes_cli)
  (modules test_apply_fixes_cli)
  (libraries latex_parse_lib test_helpers unix))

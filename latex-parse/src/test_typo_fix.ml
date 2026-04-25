@@ -66,4 +66,65 @@ let () =
      p1.3); TYPO-002 is suppressed at run_all level. We don't assert on TYPO-002
      here — the test above already covers TYPO-002's fix semantics in isolation
      (no --- in the source). *)
+
+  (* v26.3 §3 item E: 5 new fix producers. Quick smoke tests below verify each
+     emits applicable edits. *)
+  run "TYPO-018 fix collapses double space" (fun tag ->
+      let src = "alpha  beta" in
+      let edits = fix_edits "TYPO-018" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha beta")
+        (tag ^ ": one space remains"));
+
+  run "TYPO-022 fix removes space before closing brace" (fun tag ->
+      let src = "(foo )" in
+      let edits = fix_edits "TYPO-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "(foo)")
+        (tag ^ ": ' )' becomes ')'"));
+
+  run "TYPO-033 fix replaces et.al with et al." (fun tag ->
+      let src = "Foo et.al bar" in
+      let edits = fix_edits "TYPO-033" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Foo et al. bar")
+        (tag ^ ": et al. with space"));
+
+  run "TYPO-037 fix removes space before comma" (fun tag ->
+      let src = "alpha , beta" in
+      let edits = fix_edits "TYPO-037" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha, beta")
+        (tag ^ ": no leading space"));
+
+  run "TYPO-024 fix deletes trailing dash" (fun tag ->
+      let src = "Hello-\nWorld" in
+      let edits = fix_edits "TYPO-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Hello\nWorld")
+        (tag ^ ": dangling dash removed"));
+
+  run "TYPO-024 fix handles CRLF line endings" (fun tag ->
+      let src = "Hello-\r\nWorld" in
+      let edits = fix_edits "TYPO-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Hello\r\nWorld")
+        (tag ^ ": dangling dash removed across CRLF"));
+
+  run "TYPO-027 fix collapses run of !!! to single !" (fun tag ->
+      let src = "Wow!!! Amazing" in
+      let edits = fix_edits "TYPO-027" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Wow! Amazing")
+        (tag ^ ": run reduced to single bang"));
+
+  run "TYPO-035 fix inserts NBSP before French punct" (fun tag ->
+      let src = "Bonjour ; au revoir : merci !" in
+      let edits = fix_edits "TYPO-035" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 3
+        && out = "Bonjour\xc2\xa0; au revoir\xc2\xa0: merci\xc2\xa0!")
+        (tag ^ ": NBSP-prefixed punctuation"));
+
   finalise "typo-fix"

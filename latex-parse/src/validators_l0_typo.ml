@@ -36,6 +36,35 @@ let find_all_non_overlapping (s : string) (needle : string) : int list =
     in
     loop 0 []
 
+(** [find_consecutive_runs s c ~min_len] — list of [(start, stop)] half-open
+    ranges where [s] has a maximal run of character [c] of length at least
+    [min_len]. Used by TYPO-018 to collapse multi-space runs to a single space. *)
+let find_consecutive_runs (s : string) (c : char) ~(min_len : int) :
+    (int * int) list =
+  let n = String.length s in
+  let rec loop i acc =
+    if i >= n then List.rev acc
+    else if s.[i] = c then (
+      let j = ref i in
+      while !j < n && s.[!j] = c do
+        incr j
+      done;
+      if !j - i >= min_len then loop !j ((i, !j) :: acc) else loop !j acc)
+    else loop (i + 1) acc
+  in
+  loop 0 []
+
+(** Build a list of single-needle replace edits for v26.3 fix producers. Each
+    match becomes a non-overlapping [Cst_edit.replace] of [needle] →
+    [replacement]. *)
+let mk_replace_edits (s : string) (needle : string) (replacement : string) :
+    Cst_edit.t list =
+  let nlen = String.length needle in
+  List.map
+    (fun off ->
+      Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) replacement)
+    (find_all_non_overlapping s needle)
+
 let r_typo_002 : rule =
   let message = "Double hyphen -- should be en‑dash –" in
   let mk_fix_edits s =
@@ -433,14 +462,26 @@ let r_typo_017 : rule =
   in
   { id = "TYPO-017"; run; languages = [] }
 
-(* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011 *)
+(* TYPO-018: Multiple consecutive spaces — relocated from old TYPO-011. v26.3 §3
+   item E: fix collapses each maximal run of >= 2 spaces to a single space. *)
 let r_typo_018 : rule =
+  let message = "Multiple consecutive spaces in text" in
   let run s =
     let cnt = count_substring s "  " in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-018" ~severity:Info
-           ~message:"Multiple consecutive spaces in text" ~count:cnt)
+      let runs = find_consecutive_runs s ' ' ~min_len:2 in
+      let fix =
+        List.map
+          (fun (start_offset, end_offset) ->
+            Cst_edit.replace ~start_offset ~end_offset " ")
+          runs
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-018" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-018" ~severity:Info ~message ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-018"; run; languages = [] }
@@ -484,17 +525,27 @@ let r_typo_021 : rule =
   in
   { id = "TYPO-021"; run; languages = [] }
 
-(* TYPO-022: Space before closing punctuation — relocated from old TYPO-012 *)
+(* TYPO-022: Space before closing punctuation — relocated from old TYPO-012.
+   v26.3 §3 item E: fix replaces each [ )]/[ ]]/[ }] with the closer alone. *)
 let r_typo_022 : rule =
+  let message = "Space before closing punctuation ) ] }" in
   let run s =
-    let combos = [ " )"; " ]"; " }" ] in
+    let combos = [ (" )", ")"); (" ]", "]"); (" }", "}") ] in
     let cnt =
-      List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
+      List.fold_left (fun acc (sub, _) -> acc + count_substring s sub) 0 combos
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-022" ~severity:Info
-           ~message:"Space before closing punctuation ) ] }" ~count:cnt)
+      let fix =
+        List.concat_map
+          (fun (needle, replacement) -> mk_replace_edits s needle replacement)
+          combos
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-022" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-022" ~severity:Info ~message ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-022"; run; languages = [] }
@@ -556,9 +607,13 @@ let r_typo_023 : rule =
   in
   { id = "TYPO-023"; run; languages = [] }
 
-(* TYPO-024: Dangling dash at line end *)
+(* TYPO-024: Dangling dash at line end. v26.3 §3 item E: fix deletes the
+   trailing dash run + any intervening whitespace before the newline. *)
 let r_typo_024 : rule =
-  let re = Re_compat.regexp "-+[ \t]*$" in
+  let message = "Dangling dash at line end" in
+  (* [\r] in the char class so CRLF lines also match — split_on_char '\n' leaves
+     the [\r] at the end of each line. *)
+  let re = Re_compat.regexp "-+[ \t\r]*$" in
   let run s =
     let lines = String.split_on_char '\n' s in
     let cnt =
@@ -570,10 +625,52 @@ let r_typo_024 : rule =
           with Not_found -> acc)
         0 lines
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-024" ~severity:Info
-           ~message:"Dangling dash at line end" ~count:cnt)
+    if cnt > 0 then (
+      (* Walk source to compute absolute offsets of each [-+[ \t]*] just before
+         a newline (or end-of-source). Each match becomes a delete edit. *)
+      let n = String.length s in
+      let edits = ref [] in
+      let i = ref 0 in
+      while !i < n do
+        (* Find next newline or EOS *)
+        let line_start = !i in
+        while !i < n && s.[!i] <> '\n' do
+          incr i
+        done;
+        let line_end_with_terminator = !i in
+        (* Step backward past a [\r] before the [\n] so the delete range stops
+           short of the CRLF terminator. *)
+        let line_end =
+          if
+            line_end_with_terminator > line_start
+            && s.[line_end_with_terminator - 1] = '\r'
+          then line_end_with_terminator - 1
+          else line_end_with_terminator
+        in
+        (* Walk backwards from line_end over [ \t] then [-]+. *)
+        let j = ref line_end in
+        while !j > line_start && (s.[!j - 1] = ' ' || s.[!j - 1] = '\t') do
+          decr j
+        done;
+        let trailing_ws_start = !j in
+        while !j > line_start && s.[!j - 1] = '-' do
+          decr j
+        done;
+        let dash_start = !j in
+        if dash_start < trailing_ws_start then
+          edits :=
+            Cst_edit.delete ~start_offset:dash_start ~end_offset:line_end
+            :: !edits;
+        ignore trailing_ws_start;
+        if !i < n then incr i (* skip the newline *)
+      done;
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-024" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-024" ~severity:Info ~message ~count:cnt
+             ~fix))
     else None
   in
   { id = "TYPO-024"; run; languages = [] }
@@ -620,14 +717,27 @@ let r_typo_026 : rule =
   in
   { id = "TYPO-026"; run; languages = [] }
 
-(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016 *)
+(* TYPO-027: Multiple exclamation marks — relocated from old TYPO-016. v26.3 §3
+   item E (deferred batch): fix collapses each maximal run of >= 2 [!]
+   characters to a single [!]. *)
 let r_typo_027 : rule =
+  let message = {|Multiple exclamation marks ‼|} in
   let run s =
     let cnt = count_substring s "!!" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-027" ~severity:Info
-           ~message:{|Multiple exclamation marks ‼|} ~count:cnt)
+      let runs = find_consecutive_runs s '!' ~min_len:2 in
+      let fix =
+        List.map
+          (fun (start_offset, end_offset) ->
+            Cst_edit.replace ~start_offset ~end_offset "!")
+          runs
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-027" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-027" ~severity:Info ~message ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-027"; run; languages = [] }
@@ -700,14 +810,20 @@ let r_typo_032 : rule =
   in
   { id = "TYPO-032"; run; languages = [] }
 
-(* TYPO-033: Abbreviation et.al without space *)
+(* TYPO-033: Abbreviation et.al without space. v26.3 §3 item E: fix replaces
+   "et.al" with "et al.". *)
 let r_typo_033 : rule =
+  let message = "Abbreviation et.al without space" in
   let run s =
     let cnt = count_substring s "et.al" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-033" ~severity:Warning
-           ~message:"Abbreviation et.al without space" ~count:cnt)
+      let fix = mk_replace_edits s "et.al" "et al." in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-033" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-033" ~severity:Warning ~message
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-033"; run; languages = [] }
@@ -766,8 +882,12 @@ let r_typo_034 : rule =
   in
   { id = "TYPO-034"; run; languages = [] }
 
-(* French punctuation requires NBSP before ; : ! ? *)
+(* French punctuation requires NBSP before ; : ! ? v26.3 §3 item E (deferred
+   batch): fix replaces each [SPACE+PUNCT] with [NBSP+PUNCT]. NBSP = U+00A0 =
+   0xC2 0xA0 in UTF-8. *)
 let r_typo_035 : rule =
+  let message = "French punctuation requires NBSP before ; : ! ?" in
+  let nbsp = "\xc2\xa0" in
   let run s =
     let cnt =
       count_substring s " ;"
@@ -776,9 +896,21 @@ let r_typo_035 : rule =
       + count_substring s " ?"
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-035" ~severity:Warning
-           ~message:"French punctuation requires NBSP before ; : ! ?" ~count:cnt)
+      let pairs =
+        [
+          (" ;", nbsp ^ ";");
+          (" :", nbsp ^ ":");
+          (" !", nbsp ^ "!");
+          (" ?", nbsp ^ "?");
+        ]
+      in
+      let fix = List.concat_map (fun (n, r) -> mk_replace_edits s n r) pairs in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-035" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-035" ~severity:Warning ~message
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-035"; run; languages = [] }
@@ -807,14 +939,19 @@ let r_typo_036 : rule =
   in
   { id = "TYPO-036"; run; languages = [] }
 
-(* Space before comma *)
+(* Space before comma. v26.3 §3 item E: fix replaces " ," with ",". *)
 let r_typo_037 : rule =
+  let message = "Space before comma" in
   let run s =
     let cnt = count_substring s " ," in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-037" ~severity:Info ~message:"Space before comma"
-           ~count:cnt)
+      let fix = mk_replace_edits s " ," "," in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-037" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-037" ~severity:Info ~message ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-037"; run; languages = [] }

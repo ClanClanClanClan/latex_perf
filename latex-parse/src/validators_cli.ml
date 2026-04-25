@@ -134,12 +134,17 @@ let print_result (r : Latex_parse_lib.Validators.result) =
 (* ── Apply-fixes flow (v26.2.1 PR #4) ─────────────────────────────── *)
 
 (** Collect every fix edit from [results] into a single list. Rules that emit
-    [fix = None] contribute nothing. *)
-let collect_fix_edits (results : Latex_parse_lib.Validators.result list) :
+    [fix = None] contribute nothing. If [filter_id] is [Some id], only results
+    whose [r.id = id] contribute (v26.3 [--apply-fixes-for]). *)
+let collect_fix_edits ?filter_id
+    (results : Latex_parse_lib.Validators.result list) :
     Latex_parse_lib.Cst_edit.t list =
   List.concat_map
     (fun (r : Latex_parse_lib.Validators.result) ->
-      match r.fix with Some edits -> edits | None -> [])
+      let included =
+        match filter_id with None -> true | Some id -> r.id = id
+      in
+      match r.fix with Some edits when included -> edits | _ -> [])
     results
 
 let env_flag_on name =
@@ -147,18 +152,16 @@ let env_flag_on name =
   | Some ("1" | "true" | "TRUE" | "on" | "ON") -> true
   | _ -> false
 
-(** v26.2.1 PR #4: run validators, collect fix edits, apply them via
-    [Rewrite_engine.apply] (which wraps [Cst_edit.apply_all]), and emit the
-    modified source to stdout. On overlap, emit [E.apply-fixes.overlap] to
-    stderr and exit 2 without touching stdout. If no rule emits fixes, the
-    original source is echoed unchanged and the return code is 0. *)
-let run_apply_fixes ~path ~src =
+(** v26.2.1 PR #4 + v26.3 item B: run validators, collect fix edits (optionally
+    filtered to a single rule via [filter_id]), apply them via
+    [Rewrite_engine.apply], emit modified source. *)
+let run_apply_fixes ?filter_id ~path ~src () =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;
   let _bp = setup_all ~path ~src ~log_path:None in
   Fun.protect ~finally:cleanup (fun () ->
       let results = Latex_parse_lib.Validators.run_all src in
-      let edits = collect_fix_edits results in
+      let edits = collect_fix_edits ?filter_id results in
       match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
       | Ok out ->
           print_string out;
@@ -183,10 +186,13 @@ let () =
   match args with
   | [ _; "--apply-fixes"; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~path ~src)
+      exit (run_apply_fixes ~path ~src ())
+  | [ _; "--apply-fixes-for"; rule_id; path ] ->
+      let src = read_all path in
+      exit (run_apply_fixes ~filter_id:rule_id ~path ~src ())
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
-      exit (run_apply_fixes ~path ~src)
+      exit (run_apply_fixes ~path ~src ())
   | [ _; path ] ->
       let src = read_all path in
       let tier, features = resolve_profile ~requested:`Auto ~src in
@@ -286,7 +292,7 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--apply-fixes] [--profile \
+        "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID] [--profile \
          auto|lp-core|lp-extended|lp-foreign] [--advisory] [--project \
          <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n\n\
          --apply-fixes  run validators, apply every rule's fix edits via \
@@ -294,6 +300,10 @@ let () =
         \               and emit the modified source to stdout. \
          L0_APPLY_FIXES=1 is equivalent\n\
         \               when no other flag is given. Overlapping fixes → \
-         stderr + exit 2.\n"
+         stderr + exit 2.\n\
+         --apply-fixes-for RULE-ID  same as --apply-fixes but only applies \
+         fixes from results\n\
+        \               whose [r.id = RULE-ID]. Useful for incremental \
+         adoption (v26.3).\n"
         Sys.argv.(0);
       exit 2

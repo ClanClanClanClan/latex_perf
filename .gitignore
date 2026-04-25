@@ -3,6 +3,8 @@ _build/
 *.vo
 *.glob
 *.aux
+# v26.3 §3 items F + G: tracked .aux fixtures for the engine parser tests.
+!corpora/aux/*.aux
 *.vok
 *.vdd
 *.vos

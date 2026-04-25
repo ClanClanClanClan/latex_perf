@@ -62,7 +62,7 @@ jobs:
         # this now.
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
 
-      - name: Meta-gate: every gate script is runnable
+      - name: "Meta-gate: every gate script is runnable"
         # P1.8 found check_regression_gates had a typo'd binary name.
         # This gate verifies every gate-script itself runs without
         # tracebacks or empty output.

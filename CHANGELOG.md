@@ -2,6 +2,89 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.3.0] — 2026-04-25
+
+v26.3.0 discharges the v26.2.1 §8 deferred-list (in-cycle subset) plus
+two additional items from the v26.2 horizon. Plan in
+`specs/v26/V26_3_PLAN.md`. **1,261 theorems / 159 .v files / 0 admits
+/ 0 axioms** (v26.2.1 had 1,257; +4 from item D's concrete
+`apply_edits` discharge).
+
+### Shipped (8 items, A–H)
+
+- **A. BOM-aware STRUCT-001 insertion** — leading UTF-8 BOM
+  (`EF BB BF`) detected; `\documentclass{article}\n` inserted at
+  byte 3 (after BOM) so the BOM stays at file start.
+- **B. `--apply-fixes-for RULE-ID` CLI flag** — restricts the
+  apply-fixes pass to results matching one rule id. `collect_fix_edits`
+  gains `?filter_id`. New CLI tests confirm filter inclusion /
+  exclusion.
+- **C. CST structure-lossless runtime gate (gate #17)** — new test
+  `test_cst_structure_lossless.ml` runs a curated subset of corpora
+  (15 roundtrip + 6 v26_2_1 fixtures, excluding unclosed / >1MB) and
+  asserts `parse(serialize(parse(src))) = parse(src)`. New script
+  `check_cst_structure_lossless.py` wired into `pre_release_check`.
+- **D. `RewritePreservesCST.apply_total` Section discharge** —
+  concrete `apply_edits_concrete` (byte-splicing model in Coq) plus
+  trivial `apply_total_concrete`. Two unconditional theorems
+  (`rewrite_preserves_byte_lossless_concrete`,
+  `rewrite_empty_preserves_concrete`) close the Section. +4 theorems.
+  `ADMISSIBILITY_MAP.md` flag flipped DISCHARGED.
+- **E. 5 rolling fix producers** — TYPO-018 collapses runs of 2+
+  spaces; TYPO-022 strips space before closing brace; TYPO-024 deletes
+  trailing dash + whitespace at line ends; TYPO-033 rewrites `et.al`
+  to `et al.`; TYPO-037 strips space before comma. Two new helpers
+  (`find_consecutive_runs`, `mk_replace_edits`) factor the common
+  scan-and-edit pattern. 5 deferred to v26.3.1.
+- **F + G. xelatex / lualatex `.aux` parser support** —
+  `aux_state.ml`'s `recognized_ignored` list extended with
+  engine-specific macros (`\xetexversion`, `\luatexversion`,
+  `\luatexkv*`, `\pgfsyspdfmark`, etc.). New `corpora/aux/` directory
+  with 3 minimal hand-synthesised fixtures + README. New test
+  `test_aux_state_engines.ml` confirms zero parse warnings on each
+  engine's fixture.
+- **H. `edf_scheduler` per-class tier queues** — `drain` rewritten
+  from single-sort with `class_priority_offset` trick to explicit
+  per-class buckets, drained A → B → C → D, each tier internally
+  ordered by raw priority. The §11.2 invariant is now structural
+  rather than emergent. `class_priority_offset` /
+  `effective_priority` retained for backwards compatibility (tests
+  still query them).
+
+### Multi-cycle scope (deferred to v26.3.1 / v26.4)
+
+Per `V26_3_PLAN.md` §1.3, items genuinely requiring multi-week effort
+land in successor cycles:
+
+- `CSTRoundTrip.Section_lossless` full discharge (2 hypotheses;
+  needs concrete `cst_abs` partition model + parse/serialize).
+- `RewritePreservesSemantics.Semantic_preservation` full discharge
+  (2 hypotheses; needs minimal Coq tokenizer model on trivia chunks).
+- Rolling fix producers for the remaining ~647 rules.
+- L3 AST migration per `docs/L3_ROADMAP.md`.
+
+### Gates
+
+**17 pre-release gates** (was 16 at v26.2.1, +1 for
+`check_cst_structure_lossless`).
+
+Test suites green on HEAD: `[typo-fix] PASS 11`,
+`[fix-integration] PASS 6`, `[apply-fixes-cli] PASS 14`,
+`[cst-structure-lossless] PASS 18 fixtures`,
+`[aux-engines] PASS 3`, `[edf-scheduler] PASS 21`,
+`[validators-struct] PASS 11`, `[cli] PASS 22`. All pre-existing
+suites unchanged.
+
+`run_differential_test.py --baseline-ref v26.2.1 --current-ref HEAD
+--corpus corpora/lint --expected-diff-keys ""` → **0 diffs / 330
+files**. v26.3.0 is additive at the validator-output level.
+
+### Semver
+
+Additive. New fix producers attach `Some edits` to firings that
+previously had `None`; default-mode TSV output is unchanged. The
+new CLI flag and gate are net-new. No existing API removed.
+
 ## [v26.2.1] — 2026-04-25
 
 v26.2.1 closes the fix-producer track deferred from v26.2.0. Every

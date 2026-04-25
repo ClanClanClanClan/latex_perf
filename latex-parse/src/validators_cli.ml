@@ -152,9 +152,9 @@ let env_flag_on name =
   | Some ("1" | "true" | "TRUE" | "on" | "ON") -> true
   | _ -> false
 
-(** v26.2.1 PR #4 + v26.3 item B: run validators, collect fix edits
-    (optionally filtered to a single rule via [filter_id]), apply them
-    via [Rewrite_engine.apply], emit modified source. *)
+(** v26.2.1 PR #4 + v26.3 item B: run validators, collect fix edits (optionally
+    filtered to a single rule via [filter_id]), apply them via
+    [Rewrite_engine.apply], emit modified source. *)
 let run_apply_fixes ?filter_id ~path ~src () =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;

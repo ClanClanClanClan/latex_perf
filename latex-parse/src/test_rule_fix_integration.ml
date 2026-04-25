@@ -63,10 +63,10 @@ let () =
         && String.length out > String.length src)
         (tag ^ ": fired once, applied, no longer fires"));
 
-  (* STRUCT-001 + UTF-8 BOM (v26.3 §3 item A): BOM-aware insertion.
-     The fix producer detects the leading 3-byte UTF-8 BOM
-     (EF BB BF) and inserts `\documentclass{article}\n` AFTER it,
-     so the BOM remains at byte 0 of the output. *)
+  (* STRUCT-001 + UTF-8 BOM (v26.3 §3 item A): BOM-aware insertion. The fix
+     producer detects the leading 3-byte UTF-8 BOM (EF BB BF) and inserts
+     `\documentclass{article}\n` AFTER it, so the BOM remains at byte 0 of the
+     output. *)
   run "E2E STRUCT-001 with leading UTF-8 BOM (BOM-aware insert)" (fun tag ->
       let src = read_fixture "struct_001_with_bom.tex" in
       let edits, out = pipeline "STRUCT-001" src in
@@ -77,8 +77,7 @@ let () =
         && Char.code out.[2] = 0xBF
       in
       let docclass_after_bom =
-        String.length out >= 17
-        && String.sub out 3 14 = "\\documentclass"
+        String.length out >= 17 && String.sub out 3 14 = "\\documentclass"
       in
       expect
         (List.length edits = 1

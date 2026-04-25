@@ -186,11 +186,10 @@ let () =
         ^ ": exit 0, em-dash applied, no overlap error (suppression prevented \
            overlap)"));
 
-  (* v26.3 §3 item B: --apply-fixes-for RULE-ID filters by rule id.
-     Source has both STRUCT-001 (no docclass) and TYPO-002 (`--`)
-     potential, but with L0_VALIDATORS unset only STRUCT-001 is in
-     the active set. Filtering on STRUCT-001 vs an unrelated id
-     verifies the include/exclude semantics. *)
+  (* v26.3 §3 item B: --apply-fixes-for RULE-ID filters by rule id. Source has
+     both STRUCT-001 (no docclass) and TYPO-002 (`--`) potential, but with
+     L0_VALIDATORS unset only STRUCT-001 is in the active set. Filtering on
+     STRUCT-001 vs an unrelated id verifies the include/exclude semantics. *)
   run "CLI --apply-fixes-for STRUCT-001 inserts \\documentclass" (fun tag ->
       let path = write_temp_tex "Body without docclass.\n" in
       let out, code = run_cli [ "--apply-fixes-for"; "STRUCT-001"; path ] in

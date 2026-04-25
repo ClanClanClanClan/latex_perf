@@ -66,4 +66,42 @@ let () =
      p1.3); TYPO-002 is suppressed at run_all level. We don't assert on TYPO-002
      here — the test above already covers TYPO-002's fix semantics in isolation
      (no --- in the source). *)
+
+  (* v26.3 §3 item E: 5 new fix producers. Quick smoke tests below verify each
+     emits applicable edits. *)
+  run "TYPO-018 fix collapses double space" (fun tag ->
+      let src = "alpha  beta" in
+      let edits = fix_edits "TYPO-018" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha beta")
+        (tag ^ ": one space remains"));
+
+  run "TYPO-022 fix removes space before closing brace" (fun tag ->
+      let src = "(foo )" in
+      let edits = fix_edits "TYPO-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "(foo)")
+        (tag ^ ": ' )' becomes ')'"));
+
+  run "TYPO-033 fix replaces et.al with et al." (fun tag ->
+      let src = "Foo et.al bar" in
+      let edits = fix_edits "TYPO-033" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Foo et al. bar")
+        (tag ^ ": et al. with space"));
+
+  run "TYPO-037 fix removes space before comma" (fun tag ->
+      let src = "alpha , beta" in
+      let edits = fix_edits "TYPO-037" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha, beta")
+        (tag ^ ": no leading space"));
+
+  run "TYPO-024 fix deletes trailing dash" (fun tag ->
+      let src = "Hello-\nWorld" in
+      let edits = fix_edits "TYPO-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Hello\nWorld")
+        (tag ^ ": dangling dash removed"));
+
   finalise "typo-fix"

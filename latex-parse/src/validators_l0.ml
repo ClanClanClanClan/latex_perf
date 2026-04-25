@@ -28,10 +28,9 @@ let require_documentclass : rule =
     if pilot_mode then None
     else if contains_substring s "\\documentclass" then None
     else
-      (* v26.3 §3 item A: BOM-aware insertion. If the source begins
-         with a UTF-8 BOM (EF BB BF, 3 bytes), insert AFTER it so the
-         BOM stays at byte 0 of the output. Otherwise insert at
-         byte 0. *)
+      (* v26.3 §3 item A: BOM-aware insertion. If the source begins with a UTF-8
+         BOM (EF BB BF, 3 bytes), insert AFTER it so the BOM stays at byte 0 of
+         the output. Otherwise insert at byte 0. *)
       let n = String.length s in
       let has_bom =
         n >= 3

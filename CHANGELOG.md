@@ -30,15 +30,29 @@ two additional items from the v26.2 horizon. Plan in
   (`rewrite_preserves_byte_lossless_concrete`,
   `rewrite_empty_preserves_concrete`) close the Section. +4 theorems.
   `ADMISSIBILITY_MAP.md` flag flipped DISCHARGED.
-- **E. 5 rolling fix producers** — TYPO-018 collapses runs of 2+
-  spaces; TYPO-022 strips space before closing brace; TYPO-024 deletes
-  trailing dash + whitespace at line ends; TYPO-033 rewrites `et.al`
-  to `et al.`; TYPO-037 strips space before comma. Two new helpers
-  (`find_consecutive_runs`, `mk_replace_edits`) factor the common
-  scan-and-edit pattern. 5 deferred to v26.3.1.
+- **E. 10 rolling fix producers** — closes plan §3 item E in full
+  (initial 5 + a deferred-batch 5 closed in the same cycle):
+  TYPO-018 collapses runs of 2+ spaces; TYPO-022 strips space
+  before closing brace; TYPO-024 deletes trailing dash + whitespace
+  at line ends (CRLF-aware via regex `[ \t\r]*$`); TYPO-027
+  collapses `!!`+ runs to a single `!`; TYPO-033 rewrites `et.al`
+  to `et al.`; TYPO-035 inserts NBSP (U+00A0 = 0xC2 0xA0 UTF-8)
+  before French punctuation `; : ! ?`; TYPO-037 strips space
+  before comma; STRUCT-002 inserts `Untitled` placeholder inside
+  empty `\section{...}` braces; ENC-002 and SPC-012 each delete
+  every interior 3-byte BOM (`EF BB BF`) occurrence while preserving
+  any leading BOM. Two new helpers (`find_consecutive_runs`,
+  `mk_replace_edits`) factor the common scan-and-edit pattern.
 - **F + G. xelatex / lualatex `.aux` parser support** —
   `aux_state.ml`'s `recognized_ignored` list extended with
-  engine-specific macros (`\xetexversion`, `\luatexversion`,
+  engine-specific macros. Note: per `V26_2_PLAN.md` §2.2 the
+  verification requirement was "3 real `.aux` files produced by
+  running [the engines] on documents from `corpora/`". v26.3.0
+  ships hand-synthesised representative fixtures (matching the
+  format documented in each engine's manual) — replacement with
+  genuine engine-generated samples is v26.4 scope, pending a CI
+  runner provisioned with all three engines. Engine-specific tokens
+  recognised: `\xetexversion`, `\luatexversion`,
   `\luatexkv*`, `\pgfsyspdfmark`, etc.). New `corpora/aux/` directory
   with 3 minimal hand-synthesised fixtures + README. New test
   `test_aux_state_engines.ml` confirms zero parse warnings on each
@@ -57,23 +71,33 @@ Per `V26_3_PLAN.md` §1.3, items genuinely requiring multi-week effort
 land in successor cycles:
 
 - `CSTRoundTrip.Section_lossless` full discharge (2 hypotheses;
-  needs concrete `cst_abs` partition model + parse/serialize).
+  needs concrete `cst_abs` partition model + parse/serialize). Per
+  `V26_2_PLAN.md` §10, the full discharge specifically must cover
+  `\verb`, catcode mutations, and `\lstlisting` constructs — the
+  three LaTeX features whose byte-lossless reasoning is non-trivial.
+  v26.3.0 ships only the hypothesis-parametric Section + the
+  runtime structure-lossless gate (item C) on a curated subset.
 - `RewritePreservesSemantics.Semantic_preservation` full discharge
   (2 hypotheses; needs minimal Coq tokenizer model on trivia chunks).
 - Rolling fix producers for the remaining ~647 rules.
 - L3 AST migration per `docs/L3_ROADMAP.md`.
+- Automatic conflict-aware rewrite merging (`V26_2_PLAN.md` §10
+  deferral). v26.3.0 ships strict overlap rejection in `--apply-fixes`
+  (`E.apply-fixes.overlap` + exit 2); a future cycle adds smart
+  merging where compatible edits can be combined instead.
 
 ### Gates
 
 **17 pre-release gates** (was 16 at v26.2.1, +1 for
 `check_cst_structure_lossless`).
 
-Test suites green on HEAD: `[typo-fix] PASS 11`,
+Test suites green on HEAD: `[typo-fix] PASS 14`,
 `[fix-integration] PASS 6`, `[apply-fixes-cli] PASS 14`,
 `[cst-structure-lossless] PASS 18 fixtures`,
 `[aux-engines] PASS 3`, `[edf-scheduler] PASS 21`,
-`[validators-struct] PASS 11`, `[cli] PASS 22`. All pre-existing
-suites unchanged.
+`[validators-struct] PASS 12` (includes STRUCT-002 fix assertion),
+`[enc-char-spc]` includes ENC-002 + SPC-012 fix assertions,
+`[cli] PASS 22`. All pre-existing suites unchanged.
 
 `run_differential_test.py --baseline-ref v26.2.1 --current-ref HEAD
 --corpus corpora/lint --expected-diff-keys ""` → **0 diffs / 330

@@ -440,6 +440,30 @@ let () =
            "\xef\xbb\xbfstart\xef\xbb\xbfmid\xef\xbb\xbfend" 2)
         (tag ^ ": count=2"));
 
+  (* v26.3 §3 item E (deferred batch): SPC-012 fix deletes each interior BOM and
+     preserves any leading BOM. *)
+  run "SPC-012 fix deletes interior BOM, leaves leading BOM" (fun tag ->
+      let src = "\xef\xbb\xbfstart\xef\xbb\xbfmid" in
+      let edits = fix_edits "SPC-012" src in
+      let applied =
+        match edits with [ edit ] -> Cst_edit.apply_single src edit | _ -> ""
+      in
+      expect
+        (List.length edits = 1 && applied = "\xef\xbb\xbfstartmid")
+        (tag ^ ": leading BOM preserved, interior deleted"));
+
+  (* v26.3 §3 item E (deferred batch): ENC-002 fix mirrors SPC-012; test
+     multi-interior-BOM apply with apply_all. *)
+  run "ENC-002 fix deletes every interior BOM" (fun tag ->
+      let src = "\xef\xbb\xbfa\xef\xbb\xbfb\xef\xbb\xbfc" in
+      let edits = fix_edits "ENC-002" src in
+      let applied =
+        match Cst_edit.apply_all src edits with Ok out -> out | Error _ -> ""
+      in
+      expect
+        (List.length edits = 2 && applied = "\xef\xbb\xbfabc")
+        (tag ^ ": 2 interior BOMs gone, leading kept"));
+
   (* SPC-028: count for ~~~ (3 tildes = 2 occurrences of ~~) *)
   run "SPC-028 count for ~~~" (fun tag ->
       expect

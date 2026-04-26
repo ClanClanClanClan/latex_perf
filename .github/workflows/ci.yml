@@ -13,12 +13,13 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-22.04
-    # v26.4: bumped 15→20 because opam install + ocamlformat installs
-    # were tipping over the 15-minute hard cap intermittently. The
-    # opam-packages list ALSO drops Coq (this job runs `dune fmt` on
-    # OCaml/dune files only — Coq packages are not needed here and were
-    # what was eating most of the wall time).
-    timeout-minutes: 20
+    # v26.4 (2nd iteration): bumped 20→30 after an intermediate 15→20
+    # bump and a Coq-removal trim still left opam install hitting the
+    # cap on cache-miss runs. Even without Coq, ocamlformat + dune
+    # over a fresh switch can take 18-22 minutes on hosted runners
+    # with cold cache. 30m gives a real safety margin while keeping
+    # an upper bound for stuck jobs. The job remains non-required.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-ocaml-env

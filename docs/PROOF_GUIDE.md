@@ -143,7 +143,7 @@ Runs on every push and PR. Cannot be bypassed.
 
 ## Current State (v26.2)
 
-- **1,261 theorems/lemmas** across 159 files
+- **1,281 theorems/lemmas** across 161 files
 - **637 faithful proofs** (VPD-pattern match, exact Coq model)
 - **20 conservative proofs** (L3 file-based rules — external binary checks, no Coq string model possible)
 - **3 conditional proofs** (LAY-025/026/027 — sound given compile-log predicate)

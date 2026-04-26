@@ -31,26 +31,55 @@ CANONICAL_SEVERITY = {
 
 
 def extract_runtime_severity(src_dir: Path) -> dict[str, str]:
-    """For every `id = "RULE"` in a validator file, associate the
-    lexically-nearest `severity = ...` within the same record literal."""
+    """Map rule ID → declared runtime severity by scanning every
+    validators*.ml source.
+
+    Two emission patterns are accepted:
+      1. Legacy record literal:
+           { id = "RULE-NNN"; severity = Warning; ... }
+         (separation: id, then severity, both fields of the same record)
+      2. v26.2.1+ helper-call:
+           mk_result ~id:"RULE-NNN" ~severity:Warning ~message:...
+           mk_result_with_fix ~id:"RULE-NNN" ~severity:Warning ...
+         (severity comes via labelled argument)
+
+    First occurrence wins; later ones for the same ID are alternative
+    branches that should agree."""
     result: dict[str, str] = {}
-    # Pattern: `id = "RULE-NNN"; ... severity = Warning; ...`
-    # We match on record literals using a non-greedy scan.
-    # Approach: find each `id = "X"` occurrence, then search the
-    # surrounding ~200 chars for `severity = Y`.
-    record_pat = re.compile(
-        r'id\s*=\s*"([A-Z][A-Z0-9]{1,7}-[0-9]+)"\s*;[^{}]{0,400}?'
-        r'severity\s*=\s*(Error|Warning|Info)\b',
+    # Legacy: id = "X" followed (within ~400 non-brace chars, same record)
+    # by severity = Y.
+    legacy_pat = re.compile(
+        r'\bid\s*=\s*"([A-Z][A-Z0-9]{1,7}-[0-9]+)"[^{}]{0,400}?'
+        r'\bseverity\s*=\s*(Error|Warning|Info)\b',
+        re.DOTALL,
+    )
+    # Helper-call: ~id:"X" followed (within ~200 chars, may include other
+    # ~labels but stays inside the same call expression — bounded char
+    # scan suffices) by ~severity:Y, OR ~severity:Y appearing first.
+    helper_id_first_pat = re.compile(
+        r'~id\s*:\s*"([A-Z][A-Z0-9]{1,7}-[0-9]+)"[^()]{0,400}?'
+        r'~severity\s*:\s*(Error|Warning|Info)\b',
+        re.DOTALL,
+    )
+    helper_sev_first_pat = re.compile(
+        r'~severity\s*:\s*(Error|Warning|Info)\b[^()]{0,400}?'
+        r'~id\s*:\s*"([A-Z][A-Z0-9]{1,7}-[0-9]+)"',
         re.DOTALL,
     )
     for p in sorted(src_dir.glob("validators*.ml")):
         if "conflicted" in p.name:
             continue
         text = p.read_text(encoding="utf-8", errors="replace")
-        for m in record_pat.finditer(text):
+        for m in legacy_pat.finditer(text):
             rid, sev = m.group(1), m.group(2)
-            # First occurrence wins; later ones for the same ID are
-            # probably alternative branches with the same severity.
+            if rid not in result:
+                result[rid] = sev
+        for m in helper_id_first_pat.finditer(text):
+            rid, sev = m.group(1), m.group(2)
+            if rid not in result:
+                result[rid] = sev
+        for m in helper_sev_first_pat.finditer(text):
+            sev, rid = m.group(1), m.group(2)
             if rid not in result:
                 result[rid] = sev
     return result
@@ -82,6 +111,19 @@ def main() -> int:
         return 2
     runtime = extract_runtime_severity(repo / "latex-parse/src")
     spec = extract_spec_severity(rules_v3)
+
+    # Sanity: the repo ships 600+ runtime rules; finding 0 means the
+    # regex no longer matches the rule-emission syntax. Refuse to
+    # silent-pass in that case.
+    if len(spec) >= 100 and len(runtime) < 100:
+        print(
+            f"[severity-drift] FAIL: spec has {len(spec)} entries but "
+            f"only {len(runtime)} runtime severities matched. The "
+            f"runtime-extraction regex is likely out of sync with the "
+            f"current OCaml syntax — refusing to silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
 
     drifts: list[str] = []
     for rid, (spec_sev, mat) in sorted(spec.items()):

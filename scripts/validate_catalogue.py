@@ -1,104 +1,112 @@
 #!/usr/bin/env python3
-import json
+"""Catalogue compliance gate.
+
+Verifies every rule emitted at runtime appears in the catalogue
+(`specs/rules/rules_v3.yaml`). Catches drift where a new validator
+ships without its corresponding spec entry, and where a spec entry
+is removed but the runtime still emits the id.
+
+Pre-v26.0 the rule definitions all lived in `latex-parse/src/validators.ml`.
+v26.0 split them across `validators_l0.ml`, `validators_l1.ml`, etc.; the
+top-level `validators.ml` is now a dispatcher with `include Validators_*`
+clauses, so a script that only reads `validators.ml` finds 0 rules and
+silently passes. Scan the full glob.
+
+v26.2.1 introduced the labelled-arg helper-call syntax
+(`mk_result ~id:"X"`, `mk_result_with_fix ~id:"X"`) alongside the
+legacy record-literal syntax (`{ id = "X"; ... }`); both forms count
+as runtime emissions.
+
+Sanity check: if runtime_rules has fewer than 100 entries, the script
+fails loudly. The repo ships 600+ rules; an empty/near-empty count
+means either the glob broke or the regex broke — either way the gate
+is not actually validating anything.
+"""
+
+from __future__ import annotations
 import re
 import sys
 from pathlib import Path
 
-RUNTIME = Path("latex-parse/src/validators.ml")
+SRC_DIR = Path("latex-parse/src")
 CATALOG = Path("specs/rules/rules_v3.yaml")
 PILOT = Path("specs/rules/pilot_v1.yaml")
 
-for path in (RUNTIME, CATALOG, PILOT):
-    if not path.is_file():
-        print(f"[catalog] ERROR: Missing required file: {path}", file=sys.stderr)
+# Conservative lower bound. Repo currently ships ~620 runtime rules;
+# anything well below that flags a scope/regex breakage rather than a
+# legitimate rules removal.
+MIN_RUNTIME_RULES = 100
+
+for path in (SRC_DIR, CATALOG, PILOT):
+    if not path.exists():
+        print(f"[catalog] ERROR: Missing required path: {path}", file=sys.stderr)
         sys.exit(2)
 
-runtime_rules: dict[str, dict[str, str]] = {}
-current_rule = None
+# Collect every runtime-emitted rule ID across the validators*.ml glob.
+# Two emission patterns are accepted:
+#   1. Legacy record literal:    { id = "FAMILY-NNN"; severity = ...; ... }
+#   2. v26.2.1+ helper call:     mk_result ~id:"FAMILY-NNN" ~severity:...
+#                                mk_result_with_fix ~id:"FAMILY-NNN" ...
+ID_PATTERNS = [
+    re.compile(r'\bid\s*=\s*"([A-Z][A-Z0-9]*-[0-9]+)"'),
+    re.compile(r'~id\s*:\s*"([A-Z][A-Z0-9]*-[0-9]+)"'),
+]
 
-for line in RUNTIME.read_text().splitlines():
-    m_rule = re.match(r"let\s+([A-Za-z0-9_]+)\s*:\s*rule\s*=\s*", line)
-    if m_rule:
-        current_rule = m_rule.group(1)
+runtime_ids: set[str] = set()
+files_scanned = 0
+for p in sorted(SRC_DIR.glob("validators*.ml")):
+    if "conflicted" in p.name:
         continue
-    if current_rule is not None:
-        m_id = re.search(r"id\s*=\s*\"([A-Z0-9-]+)\"", line)
-        m_sev = re.search(r"severity\s*=\s*(Error|Warning|Info)", line)
-        if m_id:
-            rid = m_id.group(1)
-        if m_sev and 'rid' in locals():
-            runtime_rules[rid] = {
-                'severity': m_sev.group(1).lower(),
-                'rule': current_rule,
-                'precondition': '',
-            }
-            del rid
-    if line.strip() == "":
-        current_rule = None
+    files_scanned += 1
+    text = p.read_text(encoding="utf-8", errors="replace")
+    for pat in ID_PATTERNS:
+        for m in pat.finditer(text):
+            runtime_ids.add(m.group(1))
 
-section_layers = {
-    'rules_basic': 'L0_Lexer',
-    'rules_pilot': 'L0_Lexer',
-    'rules_l1': 'L1_Expanded',
-}
+if files_scanned == 0:
+    print(
+        f"[catalog] ERROR: glob '{SRC_DIR}/validators*.ml' matched no "
+        f"files. Has the layout changed again?",
+        file=sys.stderr,
+    )
+    sys.exit(2)
 
-current_section = None
-for line in RUNTIME.read_text().splitlines():
-    stripped = line.strip()
-    m_sec = re.match(r"let\s+(rules_[A-Za-z0-9_]+)\s*:\s*rule list", stripped)
-    if m_sec:
-        current_section = m_sec.group(1)
-        continue
-    if current_section and stripped.startswith(']'):
-        current_section = None
-        continue
-    if current_section:
-        for name in re.findall(r"([A-Za-z0-9_]+)_rule", stripped):
-            rule_name = name + '_rule'
-            layer = section_layers.get(current_section, '')
-            for info in runtime_rules.values():
-                if info['rule'] == rule_name:
-                    info['precondition'] = layer
+if len(runtime_ids) < MIN_RUNTIME_RULES:
+    print(
+        f"[catalog] ERROR: only found {len(runtime_ids)} runtime rule "
+        f"IDs across {files_scanned} files (expected ≥ {MIN_RUNTIME_RULES}). "
+        f"Either the regex no longer matches the rule-definition syntax, "
+        f"or rules were mass-removed. Investigate before this gate is "
+        f"trusted again.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
 
-catalog_ids = set()
+# Catalogue IDs from rules_v3.yaml.
+catalog_ids: set[str] = set()
 for line in CATALOG.read_text().splitlines():
-    m = re.match(r"^\s*- id: \"([^\"]+)\"", line)
+    m = re.match(r'^\s*- id: "([^"]+)"', line)
     if m:
         catalog_ids.add(m.group(1))
 
-pilot_data: dict[str, tuple[str, str]] = {}
-current_id = None
-current_pre = ''
-for line in PILOT.read_text().splitlines():
-    m_id = re.match(r"^\s*- id: \"([^\"]+)\"", line)
-    if m_id:
-        current_id = m_id.group(1)
-        current_pre = ''
-        continue
-    if current_id:
-        line_stripped = line.strip()
-        m_pre = re.match(r"precondition:\s*([A-Za-z_0-9]+)", line_stripped)
-        if m_pre:
-            current_pre = m_pre.group(1)
-            continue
-        m_sev = re.match(r"default_severity:\s*([A-Za-z]+)", line_stripped)
-        if m_sev:
-            pilot_data[current_id] = (m_sev.group(1).lower(), current_pre)
-            current_id = None
-            current_pre = ''
-
-fail = 0
-
-for rid, info in runtime_rules.items():
-    # PR #237 (memo §10, §15.4): check runtime rules across all layers, not
-    # just L0_Lexer. The prior early-return hid LAY-025/026/027 and other
-    # non-L0 divergences from CI.
-    if rid not in catalog_ids:
-        print(f"[catalog] FAIL: runtime rule not in catalog: {rid}", file=sys.stderr)
-        fail = 1
-
-if fail:
-    print("[catalog] FAIL: catalogue compliance checks failed", file=sys.stderr)
+orphans = sorted(runtime_ids - catalog_ids)
+if orphans:
+    for rid in orphans[:20]:
+        print(
+            f"[catalog] FAIL: runtime rule not in catalog: {rid}",
+            file=sys.stderr,
+        )
+    if len(orphans) > 20:
+        print(f"[catalog] FAIL: ... and {len(orphans) - 20} more", file=sys.stderr)
+    print(
+        f"[catalog] FAIL: {len(orphans)} runtime rule(s) missing from "
+        f"specs/rules/rules_v3.yaml",
+        file=sys.stderr,
+    )
     sys.exit(4)
 
-print("[catalog] PASS: catalogue compliance checks OK")
+print(
+    f"[catalog] PASS: catalogue compliance checks OK "
+    f"({len(runtime_ids)} runtime rules across {files_scanned} sources, "
+    f"all in catalogue of {len(catalog_ids)} entries)"
+)

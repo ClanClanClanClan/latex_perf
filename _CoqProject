@@ -77,3 +77,5 @@ proofs/SplitPreservesOrder.v
 # Options
 -arg -w -arg -notation-overridden
 -arg -w -arg -redundant-canonical-projection
+proofs/CSTRoundtripConcrete.v
+proofs/RewritePreservesSemanticsConcrete.v

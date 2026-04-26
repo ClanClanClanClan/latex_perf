@@ -147,13 +147,16 @@ its premise.
   `builder : bytes -> list cst_abs` — opaque carriers + the abstract
   builder; v26.3 instantiates.
 
-> **Discharge unit note.** This Section has **two** hypotheses
-> (`builder_partitions` + `parse_serialize_is_id_on_subset`). In Coq you
-> cannot partially close a Section — to produce useful instantiated
-> theorems for v26.3+, BOTH hypotheses must be discharged together
-> against the same concrete carriers. Discharging only one yields a
-> strictly weaker "parametric in the other" theorem and doesn't unblock
-> runtime claims. Sized accordingly: this is a single discharge unit.
+> **DISCHARGED in v26.3.1** (PR #2 of the v26.3.1 cycle). The companion file
+> `proofs/CSTRoundtripConcrete.v` provides two concrete instantiations
+> (`Trivial_subset` and `Linewise_subset`). The latter is non-trivial:
+> a concrete byte-stream builder that splits at every line-feed
+> boundary and a concrete `parse := split_at_lf` projection. Both
+> hypotheses (`builder_partitions` and `parse_serialize_is_id_on_subset`)
+> close against this instantiation, so the file's two top-level
+> theorems (`cst_byte_lossless_concrete`, `cst_structure_lossless_concrete`)
+> are unconditional. The `in_subset` predicate becomes `no_nul_byte`,
+> matching the OCaml runtime's `String.t` invariant.
 
 **Hypotheses:**
 1. `builder_partitions` — every source has a byte-lossless
@@ -214,17 +217,29 @@ its premise.
 **Section variables** (`Section Semantic_preservation`, lines 32–86):
 `token : Type`, `tokens : bytes -> list token`.
 
-> **Discharge unit note.** This Section has **two** hypotheses
-> (`tokens_ws_empty` + `tokens_concat`) used together by every in-section
-> theorem (`ws_replacement_preserves_tokens` /
-> `ws_deletion_preserves_tokens` / `ws_insertion_preserves_tokens`).
-> Discharging only `tokens_ws_empty` does not close the Section.
-> `tokens_ws_empty` is mechanical in isolation BUT `tokens_concat` is
-> not — real `Parser_l2` has local lookahead (e.g. `\[`), so concat-
-> compositionality only holds when restricted to non-command whitespace
-> chunks. The discharge unit is: a minimal Coq tokenizer model on
-> trivia-only chunks satisfying both hypotheses, instantiated against
-> a reduced `in_subset` predicate.
+> **DISCHARGED in v26.3.1** (PR #3 of the v26.3.1 cycle). The companion file
+> `proofs/RewritePreservesSemanticsConcrete.v` instantiates the Section
+> against a concrete byte-level tokenizer:
+>   - `token := nat`
+>   - `tokens := filter (fun b => negb (is_ws_byte b))`
+>
+> Both hypotheses (`tokens_ws_empty`, `tokens_concat`) close
+> unconditionally:
+>   - `tokens_ws_empty_concrete`: when every byte is whitespace, the
+>     filter discards them all → empty list.
+>   - `tokens_concat_concrete`: precisely the standard `filter_app`
+>     lemma over arbitrary list concatenations.
+>
+> The three in-section theorems
+> (`ws_replacement_preserves_tokens` / `ws_deletion_preserves_tokens` /
+> `ws_insertion_preserves_tokens`) become unconditional via Section
+> closure.
+>
+> **Limitation.** The byte-level filter is sufficient for the
+> token-stream invariant the v26.3 [Cst_edit] rewrite engine consumes
+> (trivia-only edits at the byte level). It does NOT model
+> `Parser_l2`'s lookahead semantics (e.g., `\[`); a stronger
+> discharge against the real parser is v27 WS7 work.
 
 **Hypotheses:**
 1. `tokens_ws_empty` — whitespace-only input tokenises to the empty

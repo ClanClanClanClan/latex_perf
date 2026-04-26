@@ -128,7 +128,6 @@ let () =
         (tag ^ ": NBSP-prefixed punctuation"));
 
   (* v26.3.1 batch — 10 new fix producers. *)
-
   run "TYPO-006 fix replaces tabs with 4 spaces" (fun tag ->
       let src = "a\tb\tc" in
       let edits = fix_edits "TYPO-006" src in
@@ -182,8 +181,7 @@ let () =
       let src = "alpha\n   \nbeta\n\t\ngamma" in
       let edits = fix_edits "SPC-002" src in
       expect
-        (List.length edits = 2
-        && apply_all src edits = "alpha\n\nbeta\n\ngamma")
+        (List.length edits = 2 && apply_all src edits = "alpha\n\nbeta\n\ngamma")
         (tag ^ ": both ws-only lines emptied"));
 
   run "SPC-003 fix replaces leading tabs in mixed indent" (fun tag ->

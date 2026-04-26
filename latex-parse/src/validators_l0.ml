@@ -1253,16 +1253,17 @@ let r_spc_002 : rule =
         if is_ws_only_substr lstart (lend - lstart) then (
           incr matched;
           edits :=
-            Cst_edit.replace ~start_offset:lstart ~end_offset:lend ""
-            :: !edits));
+            Cst_edit.replace ~start_offset:lstart ~end_offset:lend "" :: !edits));
     if !matched > 0 then
       let fix = List.rev !edits in
       if fix = [] then
-        Some (mk_result ~id:"SPC-002" ~severity:Info ~message:"Line containing only whitespace" ~count:!matched)
+        Some
+          (mk_result ~id:"SPC-002" ~severity:Info
+             ~message:"Line containing only whitespace" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-002" ~severity:Info ~message:"Line containing only whitespace"
-             ~count:!matched ~fix)
+          (mk_result_with_fix ~id:"SPC-002" ~severity:Info
+             ~message:"Line containing only whitespace" ~count:!matched ~fix)
     else None
   in
   { id = "SPC-002"; run; languages = [] }
@@ -1275,10 +1276,8 @@ let r_spc_003 : rule =
       let i = ref lstart in
       let has_tab = ref false in
       let has_space = ref false in
-      while
-        !i < lend && (s.[!i] = ' ' || s.[!i] = '\t')
-      do
-        (if s.[!i] = '\t' then has_tab := true else has_space := true);
+      while !i < lend && (s.[!i] = ' ' || s.[!i] = '\t') do
+        if s.[!i] = '\t' then has_tab := true else has_space := true;
         incr i
       done;
       let mixed = !has_tab && !has_space && !i < lend in
@@ -1290,8 +1289,8 @@ let r_spc_003 : rule =
         let mixed, indent_end = analyse_line lstart lend in
         if mixed then (
           incr matched;
-          (* Replace tabs in the indent run with 4 spaces, preserving any
-             space characters already in the indent. *)
+          (* Replace tabs in the indent run with 4 spaces, preserving any space
+             characters already in the indent. *)
           let buf = Buffer.create (indent_end - lstart) in
           for j = lstart to indent_end - 1 do
             if s.[j] = '\t' then Buffer.add_string buf "    "
@@ -1305,10 +1304,13 @@ let r_spc_003 : rule =
       let fix = List.rev !edits in
       if fix = [] then
         Some
-          (mk_result ~id:"SPC-003" ~severity:Warning ~message:"Hard tab precedes non‑tab text (mixed indent)" ~count:!matched)
+          (mk_result ~id:"SPC-003" ~severity:Warning
+             ~message:"Hard tab precedes non‑tab text (mixed indent)"
+             ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-003" ~severity:Warning ~message:"Hard tab precedes non‑tab text (mixed indent)"
+          (mk_result_with_fix ~id:"SPC-003" ~severity:Warning
+             ~message:"Hard tab precedes non‑tab text (mixed indent)"
              ~count:!matched ~fix)
     else None
   in
@@ -1329,11 +1331,13 @@ let r_spc_004 : rule =
     if !cnt > 0 then
       let fix = List.rev !edits in
       if fix = [] then
-        Some (mk_result ~id:"SPC-004" ~severity:Warning ~message:"Carriage return U+000D without LF" ~count:!cnt)
+        Some
+          (mk_result ~id:"SPC-004" ~severity:Warning
+             ~message:"Carriage return U+000D without LF" ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-004" ~severity:Warning ~message:"Carriage return U+000D without LF"
-             ~count:!cnt ~fix)
+          (mk_result_with_fix ~id:"SPC-004" ~severity:Warning
+             ~message:"Carriage return U+000D without LF" ~count:!cnt ~fix)
     else None
   in
   { id = "SPC-004"; run; languages = [] }
@@ -1357,11 +1361,13 @@ let r_spc_005 : rule =
     if !matched > 0 then
       let fix = List.rev !edits in
       if fix = [] then
-        Some (mk_result ~id:"SPC-005" ~severity:Info ~message:"Trailing tab at end of line" ~count:!matched)
+        Some
+          (mk_result ~id:"SPC-005" ~severity:Info
+             ~message:"Trailing tab at end of line" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-005" ~severity:Info ~message:"Trailing tab at end of line"
-             ~count:!matched ~fix)
+          (mk_result_with_fix ~id:"SPC-005" ~severity:Info
+             ~message:"Trailing tab at end of line" ~count:!matched ~fix)
     else None
   in
   { id = "SPC-005"; run; languages = [] }

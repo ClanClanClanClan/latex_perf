@@ -189,20 +189,24 @@ let r_typo_005 : rule =
 let r_typo_006 : rule =
   let run s =
     let cnt = count_char s '\t' in
-    if cnt > 0 then
+    if cnt > 0 then (
       let n = String.length s in
       let edits = ref [] in
       for i = n - 1 downto 0 do
         if s.[i] = '\t' then
-          edits := Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "    " :: !edits
+          edits :=
+            Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "    "
+            :: !edits
       done;
       let fix = !edits in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-006" ~severity:Error ~message:"Tab character U+0009 forbidden" ~count:cnt)
+        Some
+          (mk_result ~id:"TYPO-006" ~severity:Error
+             ~message:"Tab character U+0009 forbidden" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-006" ~severity:Error ~message:"Tab character U+0009 forbidden" ~count:cnt
-             ~fix)
+          (mk_result_with_fix ~id:"TYPO-006" ~severity:Error
+             ~message:"Tab character U+0009 forbidden" ~count:cnt ~fix))
     else None
   in
   { id = "TYPO-006"; run; languages = [] }
@@ -239,7 +243,7 @@ let r_typo_007 : rule =
               let last = String.unsafe_get line (len - 1) in
               last = ' ' || last = '\t')
         in
-        if matched > 0 then
+        if matched > 0 then (
           (* Build fix edits: for each line ending in trailing whitespace, emit
              a single delete spanning the whitespace run before the line break.
              Walk the source linearly; trailing-WS at file end (no newline) is
@@ -254,8 +258,9 @@ let r_typo_007 : rule =
               let trim_start = ref line_end in
               while
                 !trim_start > !line_start
-                && (let c = s.[!trim_start - 1] in
-                    c = ' ' || c = '\t' || c = '\r')
+                &&
+                let c = s.[!trim_start - 1] in
+                c = ' ' || c = '\t' || c = '\r'
               do
                 decr trim_start
               done;
@@ -272,8 +277,9 @@ let r_typo_007 : rule =
           let trim_start = ref n in
           while
             !trim_start > !line_start
-            && (let c = s.[!trim_start - 1] in
-                c = ' ' || c = '\t' || c = '\r')
+            &&
+            let c = s.[!trim_start - 1] in
+            c = ' ' || c = '\t' || c = '\r'
           do
             decr trim_start
           done;
@@ -289,7 +295,7 @@ let r_typo_007 : rule =
           else
             Some
               (mk_result_with_fix ~id:"TYPO-007" ~severity:Info
-                 ~message:"Trailing spaces at end of line" ~count:matched ~fix)
+                 ~message:"Trailing spaces at end of line" ~count:matched ~fix))
         else None
   in
   { id = "TYPO-007"; run; languages = [] }
@@ -318,11 +324,15 @@ let r_typo_008 : rule =
   in
   let emit cnt fix =
     if fix = [] then
-      Some (mk_result ~id:"TYPO-008" ~severity:Info ~message:"Multiple consecutive blank lines (> 2) in source" ~count:cnt)
+      Some
+        (mk_result ~id:"TYPO-008" ~severity:Info
+           ~message:"Multiple consecutive blank lines (> 2) in source"
+           ~count:cnt)
     else
       Some
-        (mk_result_with_fix ~id:"TYPO-008" ~severity:Info ~message:"Multiple consecutive blank lines (> 2) in source" ~count:cnt
-           ~fix)
+        (mk_result_with_fix ~id:"TYPO-008" ~severity:Info
+           ~message:"Multiple consecutive blank lines (> 2) in source"
+           ~count:cnt ~fix)
   in
   let run s =
     match Sys.getenv_opt "L0_TOKEN_AWARE" with
@@ -352,7 +362,7 @@ let r_typo_009 : rule =
     let n = String.length s in
     let starts = if n > 0 && String.unsafe_get s 0 = '~' then 1 else 0 in
     let cnt = starts + count_substring s "\n~" in
-    if cnt > 0 then
+    if cnt > 0 then (
       let edits = ref [] in
       if starts = 1 then
         edits := Cst_edit.replace ~start_offset:0 ~end_offset:1 "" :: !edits;
@@ -367,11 +377,15 @@ let r_typo_009 : rule =
       done;
       let fix = List.rev !edits in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-009" ~severity:Warning ~message:"Non‑breaking space ~ used incorrectly at line start" ~count:cnt)
+        Some
+          (mk_result ~id:"TYPO-009" ~severity:Warning
+             ~message:"Non‑breaking space ~ used incorrectly at line start"
+             ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-009" ~severity:Warning ~message:"Non‑breaking space ~ used incorrectly at line start"
-             ~count:cnt ~fix)
+          (mk_result_with_fix ~id:"TYPO-009" ~severity:Warning
+             ~message:"Non‑breaking space ~ used incorrectly at line start"
+             ~count:cnt ~fix))
     else None
   in
   { id = "TYPO-009"; run; languages = [] }
@@ -482,11 +496,13 @@ let r_typo_013 : rule =
     if !cnt > 0 then
       let fix = List.rev !edits in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-013" ~severity:Warning ~message:"ASCII back‑tick ` used as opening quote" ~count:!cnt)
+        Some
+          (mk_result ~id:"TYPO-013" ~severity:Warning
+             ~message:"ASCII back‑tick ` used as opening quote" ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-013" ~severity:Warning ~message:"ASCII back‑tick ` used as opening quote"
-             ~count:!cnt ~fix)
+          (mk_result_with_fix ~id:"TYPO-013" ~severity:Warning
+             ~message:"ASCII back‑tick ` used as opening quote" ~count:!cnt ~fix)
     else None
   in
   { id = "TYPO-013"; run; languages = [] }
@@ -510,11 +526,14 @@ let r_typo_015 : rule =
     if cnt > 0 then
       let fix = mk_replace_edits s "\\%\\%" "\\%" in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-015" ~severity:Warning ~message:{|Double \% in source; likely stray percent|} ~count:cnt)
+        Some
+          (mk_result ~id:"TYPO-015" ~severity:Warning
+             ~message:{|Double \% in source; likely stray percent|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-015" ~severity:Warning ~message:{|Double \% in source; likely stray percent|}
-             ~count:cnt ~fix)
+          (mk_result_with_fix ~id:"TYPO-015" ~severity:Warning
+             ~message:{|Double \% in source; likely stray percent|} ~count:cnt
+             ~fix)
     else None
   in
   { id = "TYPO-015"; run; languages = [] }

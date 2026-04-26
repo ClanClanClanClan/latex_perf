@@ -2,6 +2,98 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.3.1] — 2026-04-26
+
+v26.3.1 discharges the two `V26_3_PLAN.md` §1.3 deferred items that
+turned out tractable in-session, ships 10 more rolling fix
+producers, and absorbs the substantial CI-hygiene cleanup sequence
+from PRs #273–#278. Plan in `specs/v26/V26_3_1_PLAN.md`.
+**1,281 theorems / 161 .v files / 0 admits / 0 axioms** (v26.3.0
+had 1,261 / 159; +20 lemmas across the two concrete-discharge files).
+
+### Shipped (3 items)
+
+- **CSTRoundTrip.Section_lossless DISCHARGED**
+  (`proofs/CSTRoundtripConcrete.v`, ~250 LoC). Two layers of concrete
+  carriers: `Trivial_subset` (sanity, singleton-builder) and
+  `Linewise_subset` (non-degenerate, splits at every line-feed
+  boundary; `parse := split_at_lf`; `in_subset := no_nul_byte`).
+  Both Section hypotheses (`builder_partitions`,
+  `parse_serialize_is_id_on_subset`) close unconditionally; the
+  Section's two in-section theorems re-export as
+  `cst_byte_lossless_concrete` and `cst_structure_lossless_concrete`.
+- **RewritePreservesSemantics.Semantic_preservation DISCHARGED**
+  (`proofs/RewritePreservesSemanticsConcrete.v`, ~140 LoC).
+  Concrete byte-filter tokenizer
+  (`token := nat`, `tokens := filter (negb ∘ is_ws_byte)`).
+  Both Section hypotheses (`tokens_ws_empty`, `tokens_concat`) close
+  unconditionally; three in-section theorems re-export as
+  `ws_replacement_preserves_tokens_concrete`,
+  `ws_deletion_preserves_tokens_concrete`,
+  `ws_insertion_preserves_tokens_concrete`. Limitation documented
+  in `proofs/ADMISSIBILITY_MAP.md`: byte-level filter does not
+  model `Parser_l2`'s lookahead semantics; stronger discharge is
+  v27 WS7 work.
+- **10 mechanical fix producers** (rolling work, `V26_3_1_PLAN.md`
+  §1.1):
+  - `TYPO-006` tab character → 4-space replacement
+  - `TYPO-007` trailing whitespace → strip per line
+  - `TYPO-008` 3+ blank lines → collapse to 2
+  - `TYPO-009` `~` at line start → delete
+  - `TYPO-013` single ASCII back-tick → curly U+2018
+  - `TYPO-015` `\%\%` → `\%`
+  - `SPC-002` whitespace-only line → empty line
+  - `SPC-003` mixed tab+space indent → all-space (preserve depth)
+  - `SPC-004` bare CR (not in CRLF) → LF
+  - `SPC-005` trailing tab → strip trailing tab run
+
+  11 new test cases in `latex-parse/src/test_typo_fix.ml`
+  (one per rule plus a "leave double `` ` ` `` alone" case for
+  TYPO-013). Total fix-producing rules now: **23**
+  (3 v26.2.1 + 10 v26.3.0 + 10 v26.3.1).
+
+### CI hygiene (PRs #273–#278, between v26.3.0 and v26.3.1)
+
+- **Spec-drift workflow** wasn't running on `main` for ~3 days
+  (PR #273 fixed the YAML colon-in-name parse error).
+- **Required-checks** on `main` extended with `spec-drift`
+  (PR #276; source-of-truth: `.github/required-status-checks.json`).
+  Branch-protection gate set to 9 contexts.
+- **Messages-validate** flipped from `|| true` to strict
+  `FAIL_ON_MISMATCH=1` (PR #276).
+- **Catalogue ↔ runtime contract** future-proofed via new
+  `runtime_message` field on `rules_v3.yaml` (PR #275). Generator
+  `scripts/tools/sync_runtime_messages.py` is idempotent.
+- **9 silent-failure scope bugs** in pre-release gates closed:
+  `validate_messages.sh`, `validate_catalogue.py`,
+  `check_severity_drift.py`, `check_proof_substance.py`,
+  `check_unused_hypotheses.py`, `check_code_quality.py`
+  (3 sub-gates), `check_result_helpers.py`,
+  `check_mli_doc_coverage.py`, `check_doc_refs.py`
+  (PRs #277, #278). Each fixed gate now reports an input-count in
+  its PASS message or refuses to silent-pass on empty input.
+
+### Differential test
+0 diffs across 330 corpus files vs `v26.3.0`. The new fix producers
+are gated behind `--apply-fixes` / `--apply-fixes-for`; default
+(no flag) output is byte-identical.
+
+### Counts
+- 660 catalogued rules (unchanged).
+- 23 fix-producing rules (was 13).
+- 17 pre-release gates (unchanged from v26.3.0).
+- 36 GitHub Actions workflows (unchanged).
+
+### Deferred to v26.4 / v27
+Per `V26_3_1_PLAN.md` §2 + memory:
+- Rolling fix producers for the remaining ~637 rules.
+- L3 AST migration (multi-month).
+- Conflict-aware rewrite merging (currently strict-rejects overlap).
+- v26.3.0 item D extension (apply_edits stronger semantics).
+- v27 WS8 — T6/T7 discharge against `proofs/PdflatexModel.v`
+  (the only `HYPOTHESIS-PARAMETRIC` entries left in
+  `proofs/ADMISSIBILITY_MAP.md` after this release).
+
 ## [v26.3.0] — 2026-04-25
 
 v26.3.0 discharges the v26.2.1 §8 deferred-list (in-cycle subset) plus

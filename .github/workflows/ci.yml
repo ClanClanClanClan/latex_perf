@@ -13,12 +13,17 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    # v26.4: bumped 15→20 because opam install + ocamlformat installs
+    # were tipping over the 15-minute hard cap intermittently. The
+    # opam-packages list ALSO drops Coq (this job runs `dune fmt` on
+    # OCaml/dune files only — Coq packages are not needed here and were
+    # what was eating most of the wall time).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-ocaml-env
         with:
-          opam-packages: ocamlformat.0.26.2 dune coq=8.18.0 coq-core=8.18.0
+          opam-packages: ocamlformat.0.26.2 dune
       - name: Pin formatter dependencies
         run: |
           opam pin add -y cmdliner 1.3.0

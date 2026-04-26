@@ -191,10 +191,14 @@ def main() -> int:
     ns = ap.parse_args()
     repo = Path(ns.repo)
     any_flagged = False
+    files_scanned = 0
+    missing_files: list[str] = []
     for rel in LOAD_BEARING:
         path = repo / rel
         if not path.is_file():
+            missing_files.append(rel)
             continue
+        files_scanned += 1
         for line_no, body in check_file(path):
             any_flagged = True
             preview = body[:140].replace("\n", " ")
@@ -203,6 +207,21 @@ def main() -> int:
                 f"hypothesis-restatement pattern. Body: {preview!r}",
                 file=sys.stderr,
             )
+    # Silent-failure guard: if too many LOAD_BEARING files have moved
+    # or been renamed, the gate reports PASS without checking anything.
+    # Demand at least 80% of the declared files actually scanned.
+    min_required = max(1, (len(LOAD_BEARING) * 8) // 10)
+    if files_scanned < min_required:
+        print(
+            f"[proof-substance] FAIL: only {files_scanned} of "
+            f"{len(LOAD_BEARING)} declared load-bearing files were "
+            f"found. Missing: {missing_files[:5]}{'...' if len(missing_files) > 5 else ''}. "
+            f"Update LOAD_BEARING in this script to match the current "
+            f"layout, or restore the missing files. Refusing to "
+            f"silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
     if any_flagged:
         print(
             "[proof-substance] Either add a substantive tactic "
@@ -213,8 +232,10 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
-    print("[proof-substance] PASS: no hypothesis-restatement patterns "
-          "found in load-bearing proof files.")
+    print(
+        f"[proof-substance] PASS: no hypothesis-restatement patterns "
+        f"found across {files_scanned} load-bearing proof files."
+    )
     return 0
 
 

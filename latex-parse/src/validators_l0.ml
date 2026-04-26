@@ -1219,25 +1219,50 @@ let r_spc_001 : rule =
   in
   { id = "SPC-001"; run; languages = [] }
 
+(* Walk source line by line, emitting (line_start, line_end_excl_newline)
+   offsets for each line. The trailing line without a newline counts. *)
+let iter_line_spans (s : string) (f : int -> int -> unit) : unit =
+  let n = String.length s in
+  let line_start = ref 0 in
+  let i = ref 0 in
+  while !i < n do
+    if s.[!i] = '\n' then (
+      f !line_start !i;
+      line_start := !i + 1;
+      incr i)
+    else incr i
+  done;
+  if !line_start < n then f !line_start n
+
 (* SPC-002: Line containing only whitespace *)
 let r_spc_002 : rule =
   let run s =
-    let is_ws_only line =
-      let len = String.length line in
+    let is_ws_only_substr ofs len =
       len > 0
       &&
       let ok = ref true in
-      for i = 0 to len - 1 do
-        let c = line.[i] in
+      for j = 0 to len - 1 do
+        let c = s.[ofs + j] in
         if c <> ' ' && c <> '\t' && c <> '\r' then ok := false
       done;
       !ok
     in
-    let _, matched = any_line_pred s is_ws_only in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-002" ~severity:Info
-           ~message:"Line containing only whitespace" ~count:matched)
+    let matched = ref 0 in
+    let edits = ref [] in
+    iter_line_spans s (fun lstart lend ->
+        if is_ws_only_substr lstart (lend - lstart) then (
+          incr matched;
+          edits :=
+            Cst_edit.replace ~start_offset:lstart ~end_offset:lend ""
+            :: !edits));
+    if !matched > 0 then
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some (mk_result ~id:"SPC-002" ~severity:Info ~message:"Line containing only whitespace" ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-002" ~severity:Info ~message:"Line containing only whitespace"
+             ~count:!matched ~fix)
     else None
   in
   { id = "SPC-002"; run; languages = [] }
@@ -1245,23 +1270,46 @@ let r_spc_002 : rule =
 (* SPC-003: Hard tab precedes non-tab text (mixed indent) *)
 let r_spc_003 : rule =
   let run s =
-    let is_mixed_indent line =
-      let len = String.length line in
-      let i = ref 0 in
+    (* Compute mixed-indent state and the indent length (chars to replace). *)
+    let analyse_line lstart lend =
+      let i = ref lstart in
       let has_tab = ref false in
       let has_space = ref false in
-      while !i < len && (line.[!i] = ' ' || line.[!i] = '\t') do
-        if line.[!i] = '\t' then has_tab := true else has_space := true;
+      while
+        !i < lend && (s.[!i] = ' ' || s.[!i] = '\t')
+      do
+        (if s.[!i] = '\t' then has_tab := true else has_space := true);
         incr i
       done;
-      !has_tab && !has_space && !i < len
+      let mixed = !has_tab && !has_space && !i < lend in
+      (mixed, !i)
     in
-    let _, matched = any_line_pred s is_mixed_indent in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-003" ~severity:Warning
-           ~message:"Hard tab precedes non‑tab text (mixed indent)"
-           ~count:matched)
+    let matched = ref 0 in
+    let edits = ref [] in
+    iter_line_spans s (fun lstart lend ->
+        let mixed, indent_end = analyse_line lstart lend in
+        if mixed then (
+          incr matched;
+          (* Replace tabs in the indent run with 4 spaces, preserving any
+             space characters already in the indent. *)
+          let buf = Buffer.create (indent_end - lstart) in
+          for j = lstart to indent_end - 1 do
+            if s.[j] = '\t' then Buffer.add_string buf "    "
+            else Buffer.add_char buf s.[j]
+          done;
+          edits :=
+            Cst_edit.replace ~start_offset:lstart ~end_offset:indent_end
+              (Buffer.contents buf)
+            :: !edits));
+    if !matched > 0 then
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-003" ~severity:Warning ~message:"Hard tab precedes non‑tab text (mixed indent)" ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-003" ~severity:Warning ~message:"Hard tab precedes non‑tab text (mixed indent)"
+             ~count:!matched ~fix)
     else None
   in
   { id = "SPC-003"; run; languages = [] }
@@ -1271,14 +1319,21 @@ let r_spc_004 : rule =
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     for i = 0 to n - 1 do
-      if s.[i] = '\r' then
-        if i + 1 < n && s.[i + 1] = '\n' then () else incr cnt
+      if s.[i] = '\r' && not (i + 1 < n && s.[i + 1] = '\n') then (
+        incr cnt;
+        edits :=
+          Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\n" :: !edits)
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-004" ~severity:Warning
-           ~message:"Carriage return U+000D without LF" ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some (mk_result ~id:"SPC-004" ~severity:Warning ~message:"Carriage return U+000D without LF" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-004" ~severity:Warning ~message:"Carriage return U+000D without LF"
+             ~count:!cnt ~fix)
     else None
   in
   { id = "SPC-004"; run; languages = [] }
@@ -1286,15 +1341,27 @@ let r_spc_004 : rule =
 (* SPC-005: Trailing tab at end of line *)
 let r_spc_005 : rule =
   let run s =
-    let ends_with_tab line =
-      let len = String.length line in
-      len > 0 && line.[len - 1] = '\t'
-    in
-    let _, matched = any_line_pred s ends_with_tab in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-005" ~severity:Info
-           ~message:"Trailing tab at end of line" ~count:matched)
+    let matched = ref 0 in
+    let edits = ref [] in
+    iter_line_spans s (fun lstart lend ->
+        if lend > lstart && s.[lend - 1] = '\t' then (
+          incr matched;
+          (* Strip the trailing tab run (tabs at end of line). *)
+          let trim_start = ref lend in
+          while !trim_start > lstart && s.[!trim_start - 1] = '\t' do
+            decr trim_start
+          done;
+          edits :=
+            Cst_edit.replace ~start_offset:!trim_start ~end_offset:lend ""
+            :: !edits));
+    if !matched > 0 then
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some (mk_result ~id:"SPC-005" ~severity:Info ~message:"Trailing tab at end of line" ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-005" ~severity:Info ~message:"Trailing tab at end of line"
+             ~count:!matched ~fix)
     else None
   in
   { id = "SPC-005"; run; languages = [] }

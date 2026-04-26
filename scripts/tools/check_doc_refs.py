@@ -68,6 +68,8 @@ REF_ALLOWLIST = {
     "scripts/tools/migrate_result_literals.py",  # one-shot migration, PR #1
     "scripts/tools/check_result_helpers.py",  # new gate, PR #1
     "docs/MIGRATION_v26.2_to_v26.2.1.md",  # consumer migration doc, PR #5
+    # V26.3.1 planned files referenced in specs/v26/V26_3_1_PLAN.md
+    "proofs/CSTRoundtripConcrete.v",  # CST-discharge target, PR #2
     # ml/results/expert_briefing.md references training-run output JSONs
     # under timestamped directories (ml/results/<run-id>/). Per ml/.gitignore
     # these are intentionally untracked (run outputs, can be tens of MB).

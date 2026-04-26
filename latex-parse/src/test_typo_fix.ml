@@ -127,4 +127,87 @@ let () =
         && out = "Bonjour\xc2\xa0; au revoir\xc2\xa0: merci\xc2\xa0!")
         (tag ^ ": NBSP-prefixed punctuation"));
 
+  (* v26.3.1 batch — 10 new fix producers. *)
+
+  run "TYPO-006 fix replaces tabs with 4 spaces" (fun tag ->
+      let src = "a\tb\tc" in
+      let edits = fix_edits "TYPO-006" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "a    b    c")
+        (tag ^ ": two tabs replaced"));
+
+  run "TYPO-007 fix strips trailing spaces" (fun tag ->
+      let src = "alpha   \nbeta\t \ngamma" in
+      let edits = fix_edits "TYPO-007" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "alpha\nbeta\ngamma")
+        (tag ^ ": trailing whitespace stripped on both lines"));
+
+  run "TYPO-008 fix collapses 4 newlines to 2" (fun tag ->
+      let src = "a\n\n\n\nb" in
+      let edits = fix_edits "TYPO-008" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\n\nb")
+        (tag ^ ": run collapsed"));
+
+  run "TYPO-009 fix strips ~ at line start" (fun tag ->
+      let src = "~alpha\n~beta" in
+      let edits = fix_edits "TYPO-009" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "alpha\nbeta")
+        (tag ^ ": both leading ~ deleted"));
+
+  run "TYPO-013 fix replaces single backtick with curly opening quote"
+    (fun tag ->
+      let src = "`hello' and `world'" in
+      let edits = fix_edits "TYPO-013" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "\xe2\x80\x98hello' and \xe2\x80\x98world'")
+        (tag ^ ": both backticks replaced"));
+
+  run "TYPO-013 leaves double `` alone" (fun tag ->
+      expect
+        (does_not_fire "TYPO-013" "``opener'' is fine")
+        (tag ^ ": no fire on TeX double-backtick"));
+
+  run "TYPO-015 fix collapses double escaped percent" (fun tag ->
+      let src = "stray \\%\\% inline" in
+      let edits = fix_edits "TYPO-015" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "stray \\% inline")
+        (tag ^ ": double escape collapsed"));
+
+  run "SPC-002 fix empties whitespace-only lines" (fun tag ->
+      let src = "alpha\n   \nbeta\n\t\ngamma" in
+      let edits = fix_edits "SPC-002" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "alpha\n\nbeta\n\ngamma")
+        (tag ^ ": both ws-only lines emptied"));
+
+  run "SPC-003 fix replaces leading tabs in mixed indent" (fun tag ->
+      let src = " \tcode\nclean\n\t code2" in
+      let edits = fix_edits "SPC-003" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2 && out = "     code\nclean\n     code2")
+        (tag ^ ": both mixed-indent lines normalised"));
+
+  run "SPC-004 fix replaces bare CR with LF" (fun tag ->
+      let src = "alpha\rbeta\r\ngamma\rdelta" in
+      let edits = fix_edits "SPC-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "alpha\nbeta\r\ngamma\ndelta")
+        (tag ^ ": CRs not in CRLF replaced"));
+
+  run "SPC-005 fix strips trailing tabs" (fun tag ->
+      let src = "alpha\t\nbeta\nclean\t\t\ndone" in
+      let edits = fix_edits "SPC-005" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "alpha\nbeta\nclean\ndone")
+        (tag ^ ": both trailing-tab lines stripped"));
+
   finalise "typo-fix"

@@ -112,13 +112,25 @@ def main() -> int:
         return 2
     total_undoc = 0
     all_undoc: list[tuple[str, int, str]] = []
+    files_scanned = 0
     for mli in sorted(src_dir.glob("*.mli")):
         if mli.name.startswith("test_"):
             continue
+        files_scanned += 1
         undoc = check_file(mli)
         for line_no, name in undoc:
             total_undoc += 1
             all_undoc.append((mli.name, line_no, name))
+    # Silent-failure guard: latex-parse/src ships ~80 non-test .mli
+    # files. Empty/near-empty scan means the layout changed.
+    if files_scanned < 10:
+        print(
+            f"[mli-doc] FAIL: only {files_scanned} non-test .mli files "
+            f"under {src_dir} — has the layout changed? Refusing to "
+            f"silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
     if total_undoc > ns.ceiling:
         for fname, line_no, name in all_undoc[:40]:
             print(
@@ -136,7 +148,8 @@ def main() -> int:
         )
         return 1
     print(
-        f"[mli-doc] PASS: {total_undoc} undocumented val(s) ≤ ceiling "
+        f"[mli-doc] PASS: {total_undoc} undocumented val(s) across "
+        f"{files_scanned} .mli files ≤ ceiling "
         f"{ns.ceiling}."
     )
     return 0

@@ -208,4 +208,58 @@ let () =
         && apply_all src edits = "alpha\nbeta\nclean\ndone")
         (tag ^ ": both trailing-tab lines stripped"));
 
+  (* v26.4 §1.3: 5 more fix producers. *)
+  run "TYPO-014 fix removes space before percent" (fun tag ->
+      let src = "alpha %comment\nbeta %end" in
+      let edits = fix_edits "TYPO-014" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "alpha%comment\nbeta%end")
+        (tag ^ ": both spaces deleted"));
+
+  run "TYPO-021 fix inserts space after ASCII ellipsis" (fun tag ->
+      let src = "Hello...World" in
+      let edits = fix_edits "TYPO-021" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Hello... World")
+        (tag ^ ": space inserted before W"));
+
+  run "TYPO-021 fix inserts space after Unicode ellipsis" (fun tag ->
+      let src = "End\xe2\x80\xa6Next" in
+      (* "End…Next" *)
+      let edits = fix_edits "TYPO-021" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "End\xe2\x80\xa6 Next")
+        (tag ^ ": space inserted before N"));
+
+  run "TYPO-025 fix removes space before en-dash in number range" (fun tag ->
+      let src = "see pp. 12 \xe2\x80\x9320 and 30 --45" in
+      (* "12 –20" *)
+      let edits = fix_edits "TYPO-025" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2 && out = "see pp. 12\xe2\x80\x9320 and 30--45")
+        (tag ^ ": both space-runs collapsed"));
+
+  run "SPC-009 fix strips ASCII tilde at line start" (fun tag ->
+      let src = "~ alpha\n~beta" in
+      let edits = fix_edits "SPC-009" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = " alpha\nbeta")
+        (tag ^ ": both ~ stripped"));
+
+  run "SPC-009 fix strips Unicode NBSP at line start" (fun tag ->
+      let src = "\xc2\xa0alpha\nbeta" in
+      let edits = fix_edits "SPC-009" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha\nbeta")
+        (tag ^ ": NBSP stripped"));
+
+  run "SPC-010 fix collapses double space after period to single" (fun tag ->
+      let src = "First.  Second.  Third." in
+      let edits = fix_edits "SPC-010" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "First. Second. Third.")
+        (tag ^ ": both runs collapsed"));
+
   finalise "typo-fix"

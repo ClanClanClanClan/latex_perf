@@ -1524,18 +1524,34 @@ let r_spc_008 : rule =
 (* SPC-009: Non-breaking space ~ at line start *)
 let r_spc_009 : rule =
   let run s =
-    let _, matched =
-      any_line_pred s (fun line ->
-          String.length line > 0
-          && (line.[0] = '~'
-             || String.length line >= 2
-                && Char.code line.[0] = 0xC2
-                && Char.code line.[1] = 0xA0))
-    in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-009" ~severity:Warning
-           ~message:"Non‑breaking space ~ at line start" ~count:matched)
+    let matched = ref 0 in
+    let edits = ref [] in
+    iter_line_spans s (fun lstart lend ->
+        if lend > lstart then
+          if s.[lstart] = '~' then (
+            incr matched;
+            edits :=
+              Cst_edit.replace ~start_offset:lstart ~end_offset:(lstart + 1) ""
+              :: !edits)
+          else if
+            lend - lstart >= 2
+            && Char.code s.[lstart] = 0xC2
+            && Char.code s.[lstart + 1] = 0xA0
+          then (
+            incr matched;
+            edits :=
+              Cst_edit.replace ~start_offset:lstart ~end_offset:(lstart + 2) ""
+              :: !edits));
+    if !matched > 0 then
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-009" ~severity:Warning
+             ~message:"Non‑breaking space ~ at line start" ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-009" ~severity:Warning
+             ~message:"Non‑breaking space ~ at line start" ~count:!matched ~fix)
     else None
   in
   { id = "SPC-009"; run; languages = [] }
@@ -1890,27 +1906,60 @@ let r_spc_035 : rule =
   in
   { id = "SPC-035"; run; languages = [] }
 
-(* SPC-010: Two spaces after sentence-ending period *)
+(* SPC-010: Two spaces after sentence-ending period. v26.4 §1.3: fix collapses
+   the run of spaces between period and capital to a single space. Count is
+   computed on the math-stripped source (avoids flagging `\sum. X` style); fix
+   offsets are computed on the ORIGINAL source. The fix-set may target spaces
+   inside math segments too — that's acceptable: replacing two ASCII spaces with
+   one inside math is semantically a no-op (TeX collapses whitespace runs in
+   math mode). *)
 let r_spc_010 : rule =
   let re = Re_compat.regexp "\\. +[A-Z]" in
   let run s =
-    let s = strip_math_segments s in
-    let rec loop i acc =
+    let stripped = strip_math_segments s in
+    let rec count_in str i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        let m = Re_compat.matched_string _mr s in
+        let _mr, _ = Re_compat.search_forward re str i in
+        let m = Re_compat.matched_string _mr str in
         let nspaces = String.length m - 2 in
-        (* Only count exactly 2 spaces — 3+ is SPC-031 *)
         let acc' = if nspaces = 2 then acc + 1 else acc in
-        loop (Re_compat.match_end _mr) acc'
+        count_in str (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
-    let cnt = loop 0 0 in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-010" ~severity:Info
-           ~message:"Sentence spacing uses two spaces after period" ~count:cnt)
+    let cnt = count_in stripped 0 0 in
+    if cnt > 0 then (
+      (* Recompute offsets on the original. Each match has shape `.
+         <run-of-spaces> <capital>`. Collapse the run to a single space by
+         deleting (run_len - 1) spaces. *)
+      let edits = ref [] in
+      let rec edits_in i =
+        try
+          let _mr, _ = Re_compat.search_forward re s i in
+          let mb = Re_compat.match_beginning _mr in
+          let me = Re_compat.match_end _mr in
+          (* mb points at '.'; spaces start at mb+1; capital at me-1. *)
+          let space_start = mb + 1 in
+          let space_end = me - 1 in
+          let nspaces = space_end - space_start in
+          if nspaces = 2 then
+            edits :=
+              Cst_edit.replace ~start_offset:(space_start + 1)
+                ~end_offset:space_end ""
+              :: !edits;
+          edits_in me
+        with Not_found -> ()
+      in
+      edits_in 0;
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-010" ~severity:Info
+             ~message:"Sentence spacing uses two spaces after period" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-010" ~severity:Info
+             ~message:"Sentence spacing uses two spaces after period" ~count:cnt
+             ~fix))
     else None
   in
   { id = "SPC-010"; run; languages = [] }

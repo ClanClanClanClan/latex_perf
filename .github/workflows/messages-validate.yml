@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate messages (warn only)
-        run: |
-          bash scripts/validate_messages.sh || true
+      - name: Validate messages (strict)
+        env:
+          FAIL_ON_MISMATCH: "1"
+        run: bash scripts/validate_messages.sh

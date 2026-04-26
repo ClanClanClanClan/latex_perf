@@ -7,6 +7,7 @@
     {"context": "rest-smoke",     "app_id": 15368},
     {"context": "perf-ci",        "app_id": 15368},
     {"context": "xxh-selfcheck",  "app_id": 15368},
-    {"context": "unit-tests",     "app_id": 15368}
+    {"context": "unit-tests",     "app_id": 15368},
+    {"context": "spec-drift",     "app_id": 15368}
   ]
 }

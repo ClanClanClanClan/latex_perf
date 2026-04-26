@@ -64,6 +64,29 @@ val apply_all : string -> t list -> (string, [ `Overlap of t * t ]) result
     before application. Returns [Error (`Overlap (a, b))] if any two edits
     conflict. *)
 
+val apply_best_effort : string -> t list -> string * t list * t list
+(** [apply_best_effort src edits] greedily applies as many edits as possible.
+    Returns [(output, applied, skipped)]:
+
+    - [output] is [src] with the [applied] edits applied in pre-edit
+      coordinates, equivalent to [Ok x = apply_all src applied; x].
+    - [applied] is the subset of [edits] that did not conflict with any
+      earlier-accepted edit; first-occurrence-wins (input order is the
+      conflict-resolution priority).
+    - [skipped] is the complementary subset, in the order they were encountered.
+
+    Pure insertions at the same offset are NOT conflicts (per {!conflicts}) and
+    all of them land in [applied] in input order. v26.4 §1.1 enables this as the
+    underlying primitive of the [--apply-fixes-best-effort] CLI mode. *)
+
+val apply_with_priority :
+  string -> (t -> int) -> t list -> string * t list * t list
+(** [apply_with_priority src priority edits] sorts [edits] by descending
+    [priority], then dispatches to [apply_best_effort]. Higher-priority edits
+    dominate conflicting lower-priority ones. The returned [applied] list
+    reflects the post-priority-sort order; [skipped] preserves the original
+    input order of the rejected edits. *)
+
 (** ── Shifting ────────────────────────────────────────────────────── *)
 
 val shift_after : by:int -> at_or_after:int -> t -> t

@@ -80,6 +80,36 @@ let apply_all src edits =
       if !cursor < n then Buffer.add_substring buf src !cursor (n - !cursor);
       Ok (Buffer.contents buf)
 
+(* v26.4 §1.1: conflict-aware merging. Walk the input edit list in order; an
+   edit lands in [applied] iff it doesn't conflict with anything already in
+   [applied]; otherwise it lands in [skipped]. The output is [apply_all src
+   applied] — guaranteed to succeed because applied was built to be pairwise
+   non-conflicting. *)
+let apply_best_effort src edits =
+  let rec partition acc_applied acc_skipped = function
+    | [] -> (List.rev acc_applied, List.rev acc_skipped)
+    | e :: rest ->
+        if List.exists (fun a -> conflicts e a) acc_applied then
+          partition acc_applied (e :: acc_skipped) rest
+        else partition (e :: acc_applied) acc_skipped rest
+  in
+  let applied, skipped = partition [] [] edits in
+  match apply_all src applied with
+  | Ok out -> (out, applied, skipped)
+  | Error _ ->
+      (* Internal invariant: [applied] is pairwise non-conflicting by
+         construction, so [apply_all] cannot return Overlap here. *)
+      invalid_arg
+        "Cst_edit.apply_best_effort: applied subset has conflicts (BUG)"
+
+let apply_with_priority src priority edits =
+  (* Stable sort by descending priority so equal-priority edits keep input
+     order. *)
+  let prioritised =
+    List.stable_sort (fun a b -> Int.compare (priority b) (priority a)) edits
+  in
+  apply_best_effort src prioritised
+
 let shift_after ~by ~at_or_after e =
   let shift x = if x >= at_or_after then x + by else x in
   {

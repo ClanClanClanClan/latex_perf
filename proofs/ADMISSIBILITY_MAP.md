@@ -147,13 +147,16 @@ its premise.
   `builder : bytes -> list cst_abs` — opaque carriers + the abstract
   builder; v26.3 instantiates.
 
-> **Discharge unit note.** This Section has **two** hypotheses
-> (`builder_partitions` + `parse_serialize_is_id_on_subset`). In Coq you
-> cannot partially close a Section — to produce useful instantiated
-> theorems for v26.3+, BOTH hypotheses must be discharged together
-> against the same concrete carriers. Discharging only one yields a
-> strictly weaker "parametric in the other" theorem and doesn't unblock
-> runtime claims. Sized accordingly: this is a single discharge unit.
+> **DISCHARGED in v26.3.1** (PR #2 of the v26.3.1 cycle). The companion file
+> `proofs/CSTRoundtripConcrete.v` provides two concrete instantiations
+> (`Trivial_subset` and `Linewise_subset`). The latter is non-trivial:
+> a concrete byte-stream builder that splits at every line-feed
+> boundary and a concrete `parse := split_at_lf` projection. Both
+> hypotheses (`builder_partitions` and `parse_serialize_is_id_on_subset`)
+> close against this instantiation, so the file's two top-level
+> theorems (`cst_byte_lossless_concrete`, `cst_structure_lossless_concrete`)
+> are unconditional. The `in_subset` predicate becomes `no_nul_byte`,
+> matching the OCaml runtime's `String.t` invariant.
 
 **Hypotheses:**
 1. `builder_partitions` — every source has a byte-lossless

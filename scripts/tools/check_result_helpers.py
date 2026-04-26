@@ -227,6 +227,17 @@ def main() -> int:
         | set(src.glob("test_edf_scheduler.ml"))
         | set(src.glob("test_evidence_scoring.ml"))
     )
+    # Silent-failure guard: the validators*.ml glob alone should match
+    # 10+ files at any maturity. Empty/near-empty target list means
+    # a layout change broke the gate.
+    if len(targets) < 5:
+        print(
+            f"[result-helpers] FAIL: only {len(targets)} target file(s) "
+            f"matched the glob set under latex-parse/src — has the "
+            f"layout changed? Refusing to silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
     total_hits = 0
     for f in targets:
         hits = count_raw_literals(f)
@@ -245,7 +256,10 @@ def main() -> int:
             f"specs/v26/V26_2_1_PLAN.md §3 PR #1."
         )
         return 1
-    print("[result-helpers] PASS: no raw result record literals.")
+    print(
+        f"[result-helpers] PASS: no raw result record literals "
+        f"across {len(targets)} validator/test sources."
+    )
     return 0
 
 

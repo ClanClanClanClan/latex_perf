@@ -112,10 +112,21 @@ def main() -> int:
     runtime = extract_runtime_severity(repo / "latex-parse/src")
     spec = extract_spec_severity(rules_v3)
 
-    # Sanity: the repo ships 600+ runtime rules; finding 0 means the
-    # regex no longer matches the rule-emission syntax. Refuse to
-    # silent-pass in that case.
-    if len(spec) >= 100 and len(runtime) < 100:
+    # Sanity floor 1: rules_v3.yaml ships 600+ entries. An empty/near-
+    # empty spec means the YAML moved or got truncated — refuse to
+    # silent-pass.
+    if len(spec) < 100:
+        print(
+            f"[severity-drift] FAIL: spec has only {len(spec)} entries "
+            f"(expected ≥ 100). rules_v3.yaml likely moved or the "
+            f"parser broke. Refusing to silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
+
+    # Sanity floor 2: the repo ships 600+ runtime rules; finding 0
+    # means the regex no longer matches the rule-emission syntax.
+    if len(runtime) < 100:
         print(
             f"[severity-drift] FAIL: spec has {len(spec)} entries but "
             f"only {len(runtime)} runtime severities matched. The "

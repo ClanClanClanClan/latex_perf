@@ -175,6 +175,16 @@ def main() -> int:
             if any(pat in md.name or pat in str(md) for pat in EXCLUDED_PATTERNS):
                 continue
             doc_files.add(md)
+    # Silent-failure guard: docs/ + specs/ ship dozens of markdown
+    # files; empty doc_files means the roots moved or the rglob broke.
+    if len(doc_files) < 10:
+        print(
+            f"[doc-refs] FAIL: only {len(doc_files)} doc(s) discovered "
+            f"under {[str(r) for r in roots]} — has the layout changed? "
+            f"Refusing to silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
     total_broken = 0
     for md in sorted(doc_files):
         broken = check_doc(md, repo)

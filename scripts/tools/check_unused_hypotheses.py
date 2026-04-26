@@ -141,10 +141,14 @@ def main() -> int:
     ns = ap.parse_args()
     repo = Path(ns.repo)
     any_flagged = False
+    files_scanned = 0
+    missing_files: list[str] = []
     for rel in LOAD_BEARING:
         path = repo / rel
         if not path.is_file():
+            missing_files.append(rel)
             continue
+        files_scanned += 1
         for line_no, n, preview in check_file(path):
             any_flagged = True
             print(
@@ -156,6 +160,19 @@ def main() -> int:
                 f"be load-bearing. Body preview: {preview!r}",
                 file=sys.stderr,
             )
+    # Silent-failure guard: refuse to PASS if most LOAD_BEARING files
+    # are missing (would mean the gate scanned almost nothing).
+    min_required = max(1, (len(LOAD_BEARING) * 8) // 10)
+    if files_scanned < min_required:
+        print(
+            f"[unused-hyps] FAIL: only {files_scanned} of "
+            f"{len(LOAD_BEARING)} declared load-bearing files were "
+            f"found. Missing: {missing_files[:5]}{'...' if len(missing_files) > 5 else ''}. "
+            f"Update LOAD_BEARING in this script to match the current "
+            f"layout. Refusing to silent-pass.",
+            file=sys.stderr,
+        )
+        return 2
     if any_flagged:
         print(
             "[unused-hyps] Rename the unused hypotheses (make them "
@@ -166,8 +183,9 @@ def main() -> int:
         )
         return 1
     print(
-        f"[unused-hyps] PASS: no load-bearing proof discards ≥{THRESHOLD} "
-        "hypotheses without justification."
+        f"[unused-hyps] PASS: {files_scanned} load-bearing proofs "
+        f"scanned; none discards ≥{THRESHOLD} hypotheses without "
+        f"justification."
     )
     return 0
 

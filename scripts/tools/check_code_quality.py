@@ -48,10 +48,12 @@ LOAD_BEARING_PROOFS = [
 
 def gate_defined_audit(repo: Path) -> list[str]:
     failures: list[str] = []
+    files_scanned = 0
     for rel in LOAD_BEARING_PROOFS:
         path = repo / rel
         if not path.is_file():
             continue
+        files_scanned += 1
         for i, line in enumerate(path.read_text().splitlines(), 1):
             if re.match(r"^\s*Defined\.\s*$", line):
                 context_start = max(0, i - 5)
@@ -65,6 +67,16 @@ def gate_defined_audit(repo: Path) -> list[str]:
                     f"[Qed.] to keep proof term opaque, or mark with "
                     f"`(* DEFINED-OK: <reason> *)`."
                 )
+    # Silent-failure guard: refuse to report PASS if most LOAD_BEARING
+    # files were missing (would mean the gate scanned almost nothing).
+    min_required = max(1, (len(LOAD_BEARING_PROOFS) * 8) // 10)
+    if files_scanned < min_required:
+        failures.append(
+            f"only {files_scanned} of {len(LOAD_BEARING_PROOFS)} "
+            f"LOAD_BEARING_PROOFS files were found — update the list "
+            f"in this script to match the current layout. Refusing "
+            f"to silent-pass."
+        )
     return failures
 
 
@@ -83,6 +95,7 @@ EXN_SWALLOW_CEILING = 0  # P1.10 baseline — enforce zero new.
 def gate_exception_swallow(repo: Path) -> list[str]:
     failures: list[str] = []
     src_dir = repo / "latex-parse/src"
+    files_scanned = 0
     for p in sorted(src_dir.glob("*.ml")):
         if (
             p.name.startswith("test_")
@@ -90,6 +103,7 @@ def gate_exception_swallow(repo: Path) -> list[str]:
             or p.name in {"fault_injection.ml"}
         ):
             continue
+        files_scanned += 1
         lines = p.read_text().splitlines()
         for i, line in enumerate(lines, 1):
             # EXN-OK marker may be on this line or within the prior
@@ -105,6 +119,14 @@ def gate_exception_swallow(repo: Path) -> list[str]:
                     f"explicit exception name or mark with "
                     f"`(* EXN-OK: <reason> *)`."
                 )
+    # Silent-failure guard: latex-parse/src has tens of .ml files at
+    # any maturity. Empty glob means the directory moved/renamed.
+    if files_scanned < 10:
+        failures.append(
+            f"only {files_scanned} non-test .ml files found under "
+            f"latex-parse/src — has the layout changed? Refusing to "
+            f"silent-pass."
+        )
     return failures
 
 
@@ -133,9 +155,11 @@ def gate_test_triviality(repo: Path) -> list[str]:
     failures: list[str] = []
     smoke_count = 0
     src_dir = repo / "latex-parse/src"
+    files_scanned = 0
     for p in sorted(src_dir.glob("test_*.ml")):
         if "conflicted" in p.name:
             continue
+        files_scanned += 1
         for i, line in enumerate(p.read_text().splitlines(), 1):
             for pat in TRIVIAL_EXPECT_PATTERNS[1:]:
                 # Skip the first pattern (`expect true`) — it's the
@@ -149,6 +173,14 @@ def gate_test_triviality(repo: Path) -> list[str]:
                     break
             if TRIVIAL_EXPECT_PATTERNS[0].search(line):
                 smoke_count += 1
+    # Silent-failure guard: the test_*.ml glob should match at least a
+    # handful of files. Zero means the layout changed.
+    if files_scanned < 5:
+        failures.append(
+            f"only {files_scanned} test_*.ml files found under "
+            f"latex-parse/src — has the layout changed? Refusing to "
+            f"silent-pass."
+        )
     if smoke_count > TRIVIAL_EXPECT_CEILING:
         failures.append(
             f"`expect true` smoke-test count {smoke_count} exceeds "

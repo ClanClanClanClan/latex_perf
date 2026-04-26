@@ -102,27 +102,45 @@ Same multi-week character as §1.2; lands as a separate PR.
 
 ## 3. PR slate
 
-### PR #1 — v26.3.1 plan + fix-producer batch
+The cycle adopts the bundled-cycle pattern used by `v26.3.0` PR #271
+(plan + all in-cycle items on a single branch, each commit
+reviewable in isolation), rather than the per-item pattern used by
+`v26.2.1` PRs #265–#269. Rationale: the §1.2/§1.3 Coq discharges
+turned out to be tractable in-session, so splitting them across
+separate PRs would be more administrative overhead than reviewer
+benefit. The single-branch + final release-bump path matches v26.3.0
+PR #271 → tag flow.
 
-This commit introduces `V26_3_1_PLAN.md` and lands the 10 fix
-producers from §1.1 on a single branch (`v26.3.1/plan-and-fix-batch`).
-Each rule is its own commit on the branch for reviewability. Tests
-in `validators_l0_typo.ml` / `validators_l0.ml` smoke files plus an
-extension to `test_rule_fix_integration.ml`.
+### PR #1 — bundled cycle PR
 
-### PR #2 — `CSTRoundTrip` discharge
+Branch `v26.3.1/plan-and-fix-batch`. Five logical commits, each its
+own diff for review:
 
-Single-purpose PR for §1.2. Adds `proofs/CSTRoundtripConcrete.v` (or
-extends `CSTRoundTrip.v`); updates `ADMISSIBILITY_MAP.md`.
+1. `V26_3_1_PLAN.md` — this plan file.
+2. **10 fix producers** (TYPO-006/007/008/009/013/015 + SPC-002/003/004/005)
+   plus 11 new test cases in `test_typo_fix.ml`. Inline messages
+   chosen over `let message = "X" in` to keep the
+   `validate_messages.sh` extractor consistent (§ scripts compatibility).
+3. **ocamlformat polish** (CI auto-format).
+4. **`proofs/CSTRoundtripConcrete.v`** — Layered concrete discharge of
+   `CSTRoundTrip.Section_lossless` (Trivial_subset for sanity,
+   Linewise_subset for non-trivial line-feed-bounded decomposition).
+   Both Section hypotheses (`builder_partitions`,
+   `parse_serialize_is_id_on_subset`) close unconditionally;
+   `_CoqProject` registers the file; `ADMISSIBILITY_MAP.md` flipped
+   to DISCHARGED for this entry.
+5. **`proofs/RewritePreservesSemanticsConcrete.v`** — byte-filter
+   concrete tokenizer (`token := nat`,
+   `tokens := filter (negb ∘ is_ws_byte)`). Both Section hypotheses
+   (`tokens_ws_empty`, `tokens_concat`) close unconditionally;
+   three in-section theorems re-export as `_concrete` variants;
+   `ADMISSIBILITY_MAP.md` updated.
 
-### PR #3 — `RewritePreservesSemantics` discharge
+### PR #2 — release-bump for v26.3.1
 
-Single-purpose PR for §1.3.
-
-### PR #4 — release-bump for v26.3.1
-
-Once §1.1–§1.3 ship and gates remain 17/17:
-`scripts/release.sh 26.3.1` → bump → PR → tag.
+Once PR #1 lands and gates remain 17/17 on `main`:
+`scripts/release.sh 26.3.1` → small chore PR → tag. Mirrors
+v26.2.1 PR #270 / v26.2.0 PR #262.
 
 ## 4. Gates
 

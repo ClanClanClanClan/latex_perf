@@ -89,7 +89,11 @@ runs:
       uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: 5.1.1
-        allow-prerelease-opam: false
+        # 2026-04-27: enabling prereleases per the v3 error guidance
+        # ("consider allowing pre-releases"). The default constraint
+        # apparently no longer matches a stable opam release on the
+        # version-manifest endpoint; allow-prerelease widens the match.
+        allow-prerelease-opam: true
         opam-local-packages: "*.opam"
         opam-disable-sandboxing: false
         dune-cache: ${{ inputs.dune-cache }}

@@ -71,23 +71,21 @@ strengthen the runtime guarantee:
 Optional within v26.4 if §1.1 lands cleanly. If §1.2 turns out
 non-trivial, defer to v26.4.1 / v26.5.
 
-### 1.3 Rolling fix-producer batch (10 more rules, PRIMARY ITEM)
+### 1.3 Rolling fix-producer batch (PRIMARY ITEM)
 
-Continuation of `V26_3_1_PLAN.md` §1.1's rolling work.
-Candidates (mechanical, no NLP needed):
+Continuation of `V26_3_1_PLAN.md` §1.1's rolling work. Original
+budget: 10 rules. **Actual ship: 5 rules** (TYPO-014, TYPO-021,
+TYPO-025, SPC-009, SPC-010). Honest revision — the remaining 5
+candidates the batch was draft-scoped for either need careful
+boundary-tracking (TYPO-016 must avoid escaped `\cite`-like
+patterns inside verbatim, SPC-008 needs paragraph-boundary
+detection, SPC-011 needs `$$…$$` boundary tracking) or duplicate
+existing fixes (STRUCT-003 is covered by TYPO-006's tab → spaces
+fix). These five roll into v26.5 if mechanical extensions emerge,
+or stay as count-only flags otherwise.
 
-1. `TYPO-014` — Space before percent sign → strip the space.
-2. `SPC-006` — Indentation mixes spaces and tabs after tabs → normalise.
-3. `STRUCT-003` — Tab characters in source → 4-space replacement
-   (companion of TYPO-006; already covered by TYPO-006's fix when
-   STRUCT-003 fires; document the alias rather than emit duplicates).
-4. `TYPO-031` (depending on rule body — to be triaged at impl time).
-5. `TYPO-032` — TBD.
-6-10. Additional candidates triaged at implementation time. The
-batch picks the 10 with the cleanest deterministic-fix logic.
-
-Total fix-producing rules after v26.4: **33** (was 23 at v26.3.1).
-~627 rules remain, ongoing rolling work into v26.5+.
+Total fix-producing rules after v26.4: **28** (was 23 at v26.3.1).
+~632 rules remain, ongoing rolling work into v26.5+.
 
 ## 2. Non-goals
 
@@ -100,23 +98,37 @@ Total fix-producing rules after v26.4: **33** (was 23 at v26.3.1).
 - **Full edit-list reorderable proof** — only the bounded subset
   in §1.2 if it lands.
 
-## 3. PR slate
+## 3. PR slate (post-execution revision)
 
-Bundled cycle PR (matches v26.3.0 PR #271 + v26.3.1 PR #279
-patterns).
+The cycle ended up as three PRs rather than the originally-planned
+two. The §1.2 stretch landed as a separate PR after the §1.1+§1.3
+cycle PR was merged — cleaner-than-mid-PR amendment, and §1.2 was
+explicitly "OPTIONAL stretch" in the §1.2 description.
 
-### PR #1 — bundled cycle PR
+### PR #1 — cycle PR (`v26.4/cycle`, merged as #281)
 
-Branch `v26.4/cycle`. Logical commits:
+Plan + conflict-aware merging + 5 fix producers + format-job CI fix.
+Logical commits:
 
 1. `V26_4_PLAN.md` — this plan file.
-2. **Conflict-aware merging**: `cst_edit.{ml,mli}` + tests
-   (§1.1).
-3. **Stronger Coq semantics** (only if §1.2 is tractable in
-   this session).
-4. **10 fix producers + tests** (§1.3).
+2. Conflict-aware merging (§1.1): `cst_edit.{ml,mli}` adds
+   `apply_best_effort` + `apply_with_priority`; CLI plumbing for
+   `--apply-fixes-best-effort{,-for}`; 7 new tests.
+3. ocamlformat polish.
+4. 5 fix producers (§1.3 partial): TYPO-014, TYPO-021, TYPO-025,
+   SPC-009, SPC-010 + 7 tests.
+5. CI hygiene: format job opam-packages list + timeout-minutes
+   adjustments (re-trying around upstream package mirror flakes).
 
-### PR #2 — release-bump for v26.4.0
+### PR #2 — Coq stretch (`v26.4/coq-stretch`, merged as #282)
+
+§1.2: 10 new theorems in `proofs/RewritePreservesCST.v`
+(byte-count + structural lemmas). Did NOT discharge the
+associative-reorder claim — that requires modelling parallel
+application against original-source offsets, multi-week scope,
+deferred to v26.5+ with an honest note in the commit message.
+
+### PR #3 — release-bump for v26.4.0
 
 Mirrors v26.3.1 PR #280: small chore PR bumps version metadata,
 regenerates governance, lands new CHANGELOG entry. Tag created
@@ -148,12 +160,11 @@ Items deferred from §2 each open their own scoped plan files:
   `--apply-fixes-best-effort`. The strict `--apply-fixes` mode
   preserves existing behaviour, so corpus-driven differential
   output is unchanged.
-- The 10 new fix producers contribute additional fix edits in
+- The 5 new fix producers contribute additional fix edits in
   `result.fix` for inputs that trigger them, but the default
   emission stream is unchanged.
 
-The PR description must declare any deviation explicitly with a
-reason.
+**Verified 2026-04-27 post-PR #282:** 0 diffs / 330 files vs `v26.3.1`.
 
 ## 7. First concrete action
 

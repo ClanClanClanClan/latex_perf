@@ -15,7 +15,7 @@
 
     Zero admits, zero axioms. *)
 
-From Coq Require Import List Arith.
+From Coq Require Import List Arith Lia.
 From LaTeXPerfectionist Require Import CSTRoundTrip.
 Import ListNotations.
 
@@ -185,6 +185,145 @@ Qed.
 Theorem apply_edits_concrete_nil :
   forall src, apply_edits_concrete src [] = src.
 Proof. reflexivity. Qed.
+
+(** ── v26.4 §1.2: stronger structural theorems on apply_edits ─────── *)
+
+(** [length] commutes with [take] in the bounded case. *)
+Lemma length_take_le :
+  forall (l : bytes) n,
+    n <= length l -> length (take n l) = n.
+Proof.
+  intros l. induction l as [|x xs IH]; intros [|n] H.
+  - reflexivity.
+  - simpl in H. exfalso. inversion H.
+  - reflexivity.
+  - simpl. f_equal. apply IH. simpl in H. apply Nat.succ_le_mono. exact H.
+Qed.
+
+(** [length] commutes with [drop] when the index is bounded. *)
+Lemma length_drop :
+  forall (l : bytes) n,
+    n <= length l -> length (drop n l) = length l - n.
+Proof.
+  intros l. induction l as [|x xs IH]; intros [|n] H; simpl.
+  - reflexivity.
+  - reflexivity.
+  - lia.
+  - rewrite IH; [lia | simpl in H; lia].
+Qed.
+
+(** Length of an edit's net byte-change: positive when replacement is
+    longer than the deleted range, negative (treated as integer cancel
+    via subtraction in the byte-count theorem below) when shorter. We
+    expose it as two non-negative natural quantities. *)
+Definition edit_added (e : edit) : nat := length e.(e_replacement).
+Definition edit_removed (e : edit) : nat := e.(e_end) - e.(e_start).
+
+(** Byte-count theorem for a single edit application. Given a
+    well-formed edit whose [e_end] is bounded by the source length,
+    the result's length equals [length src + edit_added - edit_removed].
+    Stated additively to stay in [nat]. *)
+Theorem apply_one_edit_length :
+  forall src e,
+    edit_wf e ->
+    e.(e_end) <= length src ->
+    length (apply_one_edit src e)
+      = length src + edit_added e - edit_removed e.
+Proof.
+  intros src e Hwf Hbound.
+  unfold apply_one_edit.
+  rewrite !app_length.
+  unfold edit_wf in Hwf.
+  rewrite (length_take_le src e.(e_start)).
+  - rewrite length_drop by exact Hbound.
+    unfold edit_added, edit_removed.
+    (* Goal: e_start + length replacement + (length src - e_end) =
+            length src + length replacement - (e_end - e_start). *)
+    assert (Hsle : e.(e_start) <= length src) by (transitivity e.(e_end); auto).
+    lia.
+  - transitivity e.(e_end); auto.
+Qed.
+
+(** A pure-replacement edit (delete = added) preserves length. *)
+Corollary apply_one_edit_length_preserved_when_balanced :
+  forall src e,
+    edit_wf e ->
+    e.(e_end) <= length src ->
+    edit_added e = edit_removed e ->
+    length (apply_one_edit src e) = length src.
+Proof.
+  intros src e Hwf Hbound Hbal.
+  rewrite (apply_one_edit_length src e Hwf Hbound).
+  rewrite Hbal. lia.
+Qed.
+
+(** A pure insertion (start = end) increases length by exactly the
+    replacement size. *)
+Corollary apply_one_edit_length_pure_insertion :
+  forall src e,
+    e.(e_start) = e.(e_end) ->
+    e.(e_end) <= length src ->
+    length (apply_one_edit src e) = length src + edit_added e.
+Proof.
+  intros src e Hins Hbound.
+  assert (Hwf : edit_wf e) by (unfold edit_wf; rewrite Hins; reflexivity).
+  rewrite (apply_one_edit_length src e Hwf Hbound).
+  unfold edit_removed. rewrite Hins. rewrite Nat.sub_diag. lia.
+Qed.
+
+(** A pure deletion (replacement = []) shrinks length by exactly the
+    deleted range size. *)
+Corollary apply_one_edit_length_pure_deletion :
+  forall src e,
+    edit_wf e ->
+    e.(e_end) <= length src ->
+    e.(e_replacement) = [] ->
+    length (apply_one_edit src e) = length src - edit_removed e.
+Proof.
+  intros src e Hwf Hbound Hempty.
+  rewrite (apply_one_edit_length src e Hwf Hbound).
+  unfold edit_added. rewrite Hempty. simpl. lia.
+Qed.
+
+(** [apply_edits_concrete] over a singleton edit equals [apply_one_edit].
+    Useful for unifying the two surfaces in downstream proofs. *)
+Theorem apply_edits_concrete_singleton :
+  forall src e,
+    apply_edits_concrete src [e] = apply_one_edit src e.
+Proof.
+  intros src e. simpl. reflexivity.
+Qed.
+
+(** [apply_edits_concrete] is left-fold style: prepending one edit is
+    the same as applying it then folding the rest. *)
+Theorem apply_edits_concrete_cons :
+  forall src e rest,
+    apply_edits_concrete src (e :: rest) =
+    apply_edits_concrete (apply_one_edit src e) rest.
+Proof.
+  intros src e rest. simpl. reflexivity.
+Qed.
+
+(** Standard prefix/suffix law: [take n l ++ drop n l = l]. *)
+Lemma take_drop :
+  forall (l : bytes) n, take n l ++ drop n l = l.
+Proof.
+  induction l as [|x xs IH]; intros [|n]; simpl.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - f_equal. apply IH.
+Qed.
+
+(** Total length is invariant under the take/drop split. *)
+Theorem take_drop_length :
+  forall (l : bytes) n,
+    length (take n l) + length (drop n l) = length l.
+Proof.
+  intros l n.
+  rewrite <- (app_length (take n l) (drop n l)).
+  rewrite take_drop. reflexivity.
+Qed.
 
 (** ── Zero-admit witness ──────────────────────────────────────────── *)
 Definition rewrite_preserves_cst_zero_admits : True := I.

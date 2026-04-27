@@ -473,3 +473,109 @@ Proof.
   - apply (pdflatex_T7_stage1 p pf out Hsucc Hproduces).
 Qed.
 
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 WS8 STAGE 4 — artefact carrier types + predicates
+    ─────────────────────────────────────────────────────────────────
+
+    Stage 4 introduces concrete artefact types — `pdf_artefact`
+    (PDF graph with object table, xref, trailer) and `log_artefact`
+    (log file image) — plus structural predicates over them.
+    Stage 5 wires these in: refines `pdflatex_artefact`,
+    `pdflatex_produces`, `pdflatex_output_format_well_formed` to use
+    them, and discharges `output_wellformed_rule` against the new
+    structure.
+
+    Stage 4 keeps the existing T7 chain (Stage 1's stage1 trivial
+    discharges) intact — the new types live alongside the
+    placeholder `pdflatex_artefact := list nat`. Stage 5 swaps in
+    the substantive predicates and re-derives the T7 chain. *)
+
+(** A PDF graph: list of objects (each a byte stream), the cross-
+    reference table mapping object index → byte offset, and the
+    trailer. Stage 4 keeps this minimal — Stage 5 may add object-
+    type tagging if needed for the discharge. *)
+Record pdf_artefact := mk_pdf_artefact {
+  pdf_objects : list (list nat);
+  pdf_xref : list nat;
+  pdf_trailer : list nat;
+}.
+
+(** A log artefact is just the byte stream of the .log file. *)
+Definition log_artefact : Type := list nat.
+
+(** Structural validity of a PDF graph: the cross-reference table
+    has one entry per object. Stage 5 may strengthen with: every
+    `pdf_xref` offset is bounded by the total artefact size, and
+    `pdf_trailer` references the xref start byte. *)
+Definition valid_pdf_graph (pdf : pdf_artefact) : Prop :=
+  length pdf.(pdf_xref) = length pdf.(pdf_objects).
+
+(** Stage 4 placeholder for log-fatality detection. Stage 5 refines
+    to: no byte sequence in the log matches any of the canonical
+    pdflatex fatal markers (e.g. ! Fatal error, ! Emergency stop). *)
+Definition log_no_fatal (_ : log_artefact) : Prop := True.
+
+(** ── Stage 4 sanity theorems ─────────────────────────────────────── *)
+
+(** An empty PDF artefact (no objects, no xref) is trivially
+    valid — both lists are nil. *)
+Theorem empty_pdf_valid :
+  valid_pdf_graph (mk_pdf_artefact [] [] []).
+Proof. unfold valid_pdf_graph. reflexivity. Qed.
+
+(** A single-object PDF with a single xref entry is valid. *)
+Theorem singleton_pdf_valid :
+  forall (obj : list nat) (xref_off : nat) (trailer : list nat),
+    valid_pdf_graph (mk_pdf_artefact [obj] [xref_off] trailer).
+Proof. intros. unfold valid_pdf_graph. reflexivity. Qed.
+
+(** Adding a matched (object, xref-entry) pair preserves validity. *)
+Theorem cons_pdf_valid :
+  forall pdf obj xref_off,
+    valid_pdf_graph pdf ->
+    valid_pdf_graph
+      (mk_pdf_artefact (obj :: pdf.(pdf_objects))
+                       (xref_off :: pdf.(pdf_xref))
+                       pdf.(pdf_trailer)).
+Proof.
+  intros pdf obj xref_off Hv.
+  unfold valid_pdf_graph in *. simpl. f_equal. exact Hv.
+Qed.
+
+(** Empty log is fatal-free (Stage 4 placeholder). *)
+Theorem empty_log_no_fatal :
+  log_no_fatal [].
+Proof. unfold log_no_fatal. exact I. Qed.
+
+(** Every log is fatal-free under the Stage 4 placeholder.
+    Stage 5 refines this to a substantive byte-pattern check. *)
+Theorem every_log_no_fatal_stage4 :
+  forall log, log_no_fatal log.
+Proof. intros. unfold log_no_fatal. exact I. Qed.
+
+(** Composite well-formedness: a (PDF, log) pair is well-formed iff
+    the PDF graph is valid AND the log has no fatal markers. This
+    is the predicate Stage 5 wires into
+    `pdflatex_output_format_well_formed`. *)
+Definition pdf_log_wellformed (pdf : pdf_artefact) (log : log_artefact)
+    : Prop :=
+  valid_pdf_graph pdf /\ log_no_fatal log.
+
+Theorem pdf_log_wellformed_intro :
+  forall pdf log,
+    valid_pdf_graph pdf ->
+    log_no_fatal log ->
+    pdf_log_wellformed pdf log.
+Proof. intros pdf log Hpdf Hlog. split; assumption. Qed.
+
+Theorem empty_pdf_empty_log_wellformed :
+  pdf_log_wellformed (mk_pdf_artefact [] [] []) [].
+Proof.
+  apply pdf_log_wellformed_intro.
+  - apply empty_pdf_valid.
+  - apply empty_log_no_fatal.
+Qed.
+
+(** ── Zero-admit witness ──────────────────────────────────────────── *)
+Definition pdflatex_model_stage4_zero_admits : True := I.

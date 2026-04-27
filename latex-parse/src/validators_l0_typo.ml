@@ -549,20 +549,33 @@ let r_typo_016 : rule =
   let re = Re_compat.regexp {| \\\(cite\|ref\)[^a-zA-Z]|} in
   let run s =
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
+         let mb = Re_compat.match_beginning _mr in
+         (* Match shape: " \cite[^a-zA-Z]" or " \ref[^a-zA-Z]". The leading
+            space is at offset mb. Replace the space with `~`. *)
+         edits :=
+           Cst_edit.replace ~start_offset:mb ~end_offset:(mb + 1) "~" :: !edits;
          incr cnt;
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     let cnt = !cnt in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-016" ~severity:Info
-           ~message:{|Non‑breaking space ~ missing before \cite / \ref|}
-           ~count:cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-016" ~severity:Info
+             ~message:{|Non‑breaking space ~ missing before \cite / \ref|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-016" ~severity:Info
+             ~message:{|Non‑breaking space ~ missing before \cite / \ref|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-016"; run; languages = [] }
@@ -866,18 +879,33 @@ let r_typo_026 : rule =
   let re = Re_compat.regexp {|[0-9]–[0-9]|} in
   let run s =
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
+         let mb = Re_compat.match_beginning _mr in
+         (* The en-dash (U+2013) is 3 UTF-8 bytes (E2 80 93). It sits at offset
+            mb+1, between the two digits. Replace those 3 bytes with the LaTeX
+            double-hyphen `--`. *)
+         edits :=
+           Cst_edit.replace ~start_offset:(mb + 1) ~end_offset:(mb + 4) "--"
+           :: !edits;
          incr cnt;
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-026" ~severity:Warning
-           ~message:{|Wrong dash in page range – should use --|} ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-026" ~severity:Warning
+             ~message:{|Wrong dash in page range – should use --|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-026" ~severity:Warning
+             ~message:{|Wrong dash in page range – should use --|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "TYPO-026"; run; languages = [] }

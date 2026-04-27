@@ -154,27 +154,49 @@ let env_flag_on name =
 
 (** v26.2.1 PR #4 + v26.3 item B: run validators, collect fix edits (optionally
     filtered to a single rule via [filter_id]), apply them via
-    [Rewrite_engine.apply], emit modified source. *)
-let run_apply_fixes ?filter_id ~path ~src () =
+    [Rewrite_engine.apply], emit modified source.
+
+    v26.4 §1.1 [best_effort]: when [true], conflicting fixes are NOT a hard
+    error — the caller gets the maximal non-conflicting subset applied to
+    stdout, with the skipped subset reported on stderr. Exit code 0 in that case
+    (the partial-fix output is the contract). When [false] (default), behaviour
+    is unchanged: any overlap returns exit 2 with no stdout. *)
+let run_apply_fixes ?filter_id ?(best_effort = false) ~path ~src () =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;
   let _bp = setup_all ~path ~src ~log_path:None in
   Fun.protect ~finally:cleanup (fun () ->
       let results = Latex_parse_lib.Validators.run_all src in
       let edits = collect_fix_edits ?filter_id results in
-      match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
-      | Ok out ->
-          print_string out;
-          0
-      | Error (`Overlap (a, b)) ->
-          eprintf
-            "E.apply-fixes.overlap: two rule fixes affect overlapping source \
-             ranges; refusing to apply.\n\
-             # first edit:  %s\n\
-             # second edit: %s\n"
-            (Latex_parse_lib.Cst_edit.to_string a)
-            (Latex_parse_lib.Cst_edit.to_string b);
-          2)
+      if best_effort then (
+        let out, applied, skipped =
+          Latex_parse_lib.Cst_edit.apply_best_effort src edits
+        in
+        print_string out;
+        if skipped <> [] then (
+          eprintf "# apply-fixes-best-effort: %d edit(s) applied, %d skipped\n"
+            (List.length applied) (List.length skipped);
+          List.iter
+            (fun e ->
+              eprintf "# skipped: %s\n" (Latex_parse_lib.Cst_edit.to_string e))
+            skipped);
+        0)
+      else
+        match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
+        | Ok out ->
+            print_string out;
+            0
+        | Error (`Overlap (a, b)) ->
+            eprintf
+              "E.apply-fixes.overlap: two rule fixes affect overlapping source \
+               ranges; refusing to apply.\n\
+               # first edit:  %s\n\
+               # second edit: %s\n\
+               # hint: re-run with --apply-fixes-best-effort to apply the \
+               maximal non-conflicting subset.\n"
+              (Latex_parse_lib.Cst_edit.to_string a)
+              (Latex_parse_lib.Cst_edit.to_string b);
+            2)
 
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
@@ -190,6 +212,12 @@ let () =
   | [ _; "--apply-fixes-for"; rule_id; path ] ->
       let src = read_all path in
       exit (run_apply_fixes ~filter_id:rule_id ~path ~src ())
+  | [ _; "--apply-fixes-best-effort"; path ] ->
+      let src = read_all path in
+      exit (run_apply_fixes ~best_effort:true ~path ~src ())
+  | [ _; "--apply-fixes-best-effort-for"; rule_id; path ] ->
+      let src = read_all path in
+      exit (run_apply_fixes ~best_effort:true ~filter_id:rule_id ~path ~src ())
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
       exit (run_apply_fixes ~path ~src ())
@@ -292,9 +320,11 @@ let () =
             ps.file_states)
   | _ ->
       eprintf
-        "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID] [--profile \
-         auto|lp-core|lp-extended|lp-foreign] [--advisory] [--project \
-         <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n\n\
+        "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID | \
+         --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
+         [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
+         [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] \
+         <file.tex>\n\n\
          --apply-fixes  run validators, apply every rule's fix edits via \
          Cst_edit.apply_all,\n\
         \               and emit the modified source to stdout. \
@@ -304,6 +334,14 @@ let () =
          --apply-fixes-for RULE-ID  same as --apply-fixes but only applies \
          fixes from results\n\
         \               whose [r.id = RULE-ID]. Useful for incremental \
-         adoption (v26.3).\n"
+         adoption (v26.3).\n\
+         --apply-fixes-best-effort  v26.4: applies the maximal non-conflicting \
+         subset of fixes\n\
+        \               via Cst_edit.apply_best_effort. Reports the skipped \
+         subset to stderr.\n\
+        \               Exit 0 even when some edits were skipped (the \
+         partial-fix output is the contract).\n\
+         --apply-fixes-best-effort-for RULE-ID  same as \
+         --apply-fixes-best-effort, filtered by rule id (v26.4).\n"
         Sys.argv.(0);
       exit 2

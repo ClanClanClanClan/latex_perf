@@ -13,7 +13,14 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    # v26.4: bumped 15→30. Coq must remain in the install set —
+    # `dune fmt` parses every dune file in the project, and `proofs/dune`
+    # contains a `(coq.theory ...)` stanza that dune can't understand
+    # without the Coq packages installed (errors out with
+    # "Hint: opam install coq"). A previous attempt to drop Coq for
+    # speed broke `dune fmt` itself; the right answer is more headroom,
+    # not a smaller install.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-ocaml-env

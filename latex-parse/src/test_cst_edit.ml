@@ -140,4 +140,98 @@ let () =
       let e' = Cst_edit.shift_after ~by:10 ~at_or_after:20 e in
       expect (Cst_edit.equal e e') (tag ^ ": unchanged"));
 
+  (* v26.4 §1.1: conflict-aware merging tests. *)
+  run "apply_best_effort: no conflicts → all applied, none skipped" (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:2 "XX" in
+      let b = Cst_edit.replace ~start_offset:5 ~end_offset:7 "YY" in
+      let out, applied, skipped = Cst_edit.apply_best_effort src [ a; b ] in
+      expect
+        (out = "XXcdeYYhij"
+        && List.length applied = 2
+        && List.length skipped = 0)
+        (tag ^ ": both applied, output equals apply_all"));
+
+  run "apply_best_effort: first wins on conflict, second skipped" (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:5 "X" in
+      let b = Cst_edit.replace ~start_offset:3 ~end_offset:7 "Y" in
+      let out, applied, skipped = Cst_edit.apply_best_effort src [ a; b ] in
+      expect
+        (out = "Xfghij"
+        && List.length applied = 1
+        && List.length skipped = 1
+        && Cst_edit.equal (List.hd applied) a
+        && Cst_edit.equal (List.hd skipped) b)
+        (tag ^ ": a applied, b skipped"));
+
+  run "apply_best_effort: two pure insertions at same offset both applied"
+    (fun tag ->
+      let src = "ab" in
+      let a = Cst_edit.insert ~at:1 "X" in
+      let b = Cst_edit.insert ~at:1 "Y" in
+      let out, applied, skipped = Cst_edit.apply_best_effort src [ a; b ] in
+      expect
+        (List.length applied = 2
+        && List.length skipped = 0
+        && (out = "aXYb" || out = "aYXb"))
+        (tag ^ ": both inserts kept (input-order interleaved)"));
+
+  run "apply_best_effort: third edit conflicts with first, second is fine"
+    (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:3 "X" in
+      let b = Cst_edit.replace ~start_offset:5 ~end_offset:7 "Y" in
+      let c = Cst_edit.replace ~start_offset:1 ~end_offset:4 "Z" in
+      let out, applied, skipped = Cst_edit.apply_best_effort src [ a; b; c ] in
+      expect
+        (out = "XdeYhij"
+        && List.length applied = 2
+        && List.length skipped = 1
+        && Cst_edit.equal (List.hd skipped) c)
+        (tag ^ ": a + b applied, c skipped"));
+
+  run "apply_with_priority: higher-priority edit dominates" (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:5 "AAA" in
+      let b = Cst_edit.replace ~start_offset:3 ~end_offset:7 "BBB" in
+      let priority e =
+        if Cst_edit.equal e a then 1 else if Cst_edit.equal e b then 5 else 0
+      in
+      let out, applied, skipped =
+        Cst_edit.apply_with_priority src priority [ a; b ]
+      in
+      expect
+        (out = "abcBBBhij"
+        && List.length applied = 1
+        && Cst_edit.equal (List.hd applied) b
+        && List.length skipped = 1
+        && Cst_edit.equal (List.hd skipped) a)
+        (tag ^ ": b wins, a skipped"));
+
+  run "apply_with_priority: equal priority preserves input order" (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:3 "X" in
+      let b = Cst_edit.replace ~start_offset:1 ~end_offset:4 "Y" in
+      let out, applied, _ =
+        Cst_edit.apply_with_priority src (fun _ -> 0) [ a; b ]
+      in
+      expect
+        (out = "Xdefghij"
+        && List.length applied = 1
+        && Cst_edit.equal (List.hd applied) a)
+        (tag ^ ": input-order tiebreak — a wins"));
+
+  run "apply_best_effort agrees with apply_all on disjoint input" (fun tag ->
+      let src = "abcdefghij" in
+      let a = Cst_edit.replace ~start_offset:0 ~end_offset:2 "XX" in
+      let b = Cst_edit.replace ~start_offset:5 ~end_offset:7 "YY" in
+      let strict =
+        match Cst_edit.apply_all src [ a; b ] with
+        | Ok s -> s
+        | Error _ -> failwith "expected Ok"
+      in
+      let best, _, _ = Cst_edit.apply_best_effort src [ a; b ] in
+      expect (strict = best) (tag ^ ": both produce identical output"));
+
   finalise "cst-edit"

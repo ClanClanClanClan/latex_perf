@@ -512,9 +512,15 @@ let r_typo_014 : rule =
   let run s =
     let cnt = count_substring s " %" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-014" ~severity:Info
-           ~message:{|Space before percent sign \%|} ~count:cnt)
+      let fix = mk_replace_edits s " %" "%" in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-014" ~severity:Info
+             ~message:{|Space before percent sign \%|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-014" ~severity:Info
+             ~message:{|Space before percent sign \%|} ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-014"; run; languages = [] }
@@ -625,23 +631,38 @@ let r_typo_020 : rule =
   let run _s = None in
   { id = "TYPO-020"; run; languages = [] }
 
-(* TYPO-021: Capital letter after ellipsis without space *)
+(* TYPO-021: Capital letter after ellipsis without space. v26.4 §1.3: fix
+   inserts a single space between the ellipsis and the capital letter. Both
+   `...A` and `…A` (Unicode ellipsis U+2026) get the same insertion. *)
 let r_typo_021 : rule =
   let re = Re_compat.regexp {|\(\.\.\.\|…\)[A-Z]|} in
   let run s =
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
+         let me = Re_compat.match_end _mr in
+         (* Insert a space immediately before the capital letter at me-1. *)
+         edits :=
+           Cst_edit.replace ~start_offset:(me - 1) ~end_offset:(me - 1) " "
+           :: !edits;
          incr cnt;
-         i := Re_compat.match_end _mr
+         i := me
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-021" ~severity:Info
-           ~message:"Capital letter after ellipsis without space" ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-021" ~severity:Info
+             ~message:"Capital letter after ellipsis without space" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-021" ~severity:Info
+             ~message:"Capital letter after ellipsis without space" ~count:!cnt
+             ~fix)
     else None
   in
   { id = "TYPO-021"; run; languages = [] }
@@ -796,23 +817,46 @@ let r_typo_024 : rule =
   in
   { id = "TYPO-024"; run; languages = [] }
 
-(* TYPO-025: Space before en-dash in number range *)
+(* TYPO-025: Space before en-dash in number range. v26.4 §1.3: fix deletes the
+   space-run between the leading digit and the en-dash. *)
 let r_typo_025 : rule =
   let re = Re_compat.regexp {|[0-9] +\(–\|--\)[0-9]|} in
   let run s =
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
+         let mb = Re_compat.match_beginning _mr in
+         let me = Re_compat.match_end _mr in
+         (* Match shape: [0-9] [SPACE]+ (–|--) [0-9]. The leading digit is at
+            mb; spaces start at mb+1; spaces end at the dash. Walk until the
+            first non-space byte (the dash). *)
+         let space_start = mb + 1 in
+         let space_end = ref space_start in
+         while !space_end < me && s.[!space_end] = ' ' do
+           incr space_end
+         done;
+         if !space_end > space_start then
+           edits :=
+             Cst_edit.replace ~start_offset:space_start ~end_offset:!space_end
+               ""
+             :: !edits;
          incr cnt;
-         i := Re_compat.match_end _mr
+         i := me
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-025" ~severity:Warning
-           ~message:{|Space before en‑dash in number range|} ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-025" ~severity:Warning
+             ~message:{|Space before en‑dash in number range|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-025" ~severity:Warning
+             ~message:{|Space before en‑dash in number range|} ~count:!cnt ~fix)
     else None
   in
   { id = "TYPO-025"; run; languages = [] }

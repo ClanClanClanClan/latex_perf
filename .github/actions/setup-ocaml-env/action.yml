@@ -78,10 +78,17 @@ runs:
         echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
 
     # ── OCaml toolchain (direct call, no intermediate composite) ───────
+    # 2026-04-27: pinned `opam-version` explicitly to work around the
+    # ocaml/setup-ocaml@v2 "Could not retrieve the opam release matching
+    # the version constraint" upstream-flake. Without the pin, the
+    # action queries GitHub's release-listing API at runtime; that
+    # endpoint flapped repeatedly on PR #291. Pinning bypasses the
+    # lookup entirely.
     - name: Set up OCaml and opam
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 5.1.1
+        opam-version: 2.1.6
         allow-prerelease-opam: false
         opam-pin: true
         opam-depext: false

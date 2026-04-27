@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.4.0
+# LaTeX Perfectionist v26.5.0
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -227,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v26.4.0 released. 644 validators implemented, 1,291 theorems across 161 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers live; CSTRoundTrip and RewritePreservesSemantics Sections both unconditionally discharged; conflict-aware rewrite merging (apply_best_effort) ships with v26.4.
+**Status**: v26.5.0 released. 644 validators implemented, 1,298 theorems across 162 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) opened in v26.5 — Stage 1 scaffolds carriers + Section closure; Stages 2–6 across successor cycles culminate at v27.0.0.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

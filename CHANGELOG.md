@@ -2,6 +2,85 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.5.0] — 2026-04-27
+
+v26.5.0 opens **v27 WS8** — the multi-session discharge of the
+last two `HYPOTHESIS-PARAMETRIC` entries in
+`proofs/ADMISSIBILITY_MAP.md` (T6 `compile_progress_rule` and T7
+`output_wellformed_rule`) — and ships the §7 boundary-tracked
+fix-producer batch. Plan in `specs/v27/V27_WS8_PLAN.md`.
+**1,298 theorems / 162 .v files / 0 admits / 0 axioms** (v26.4.0
+had 1,291 / 161; +7 from `PdflatexModel.v` Stage 1).
+
+### Shipped (2 cycle items)
+
+- **v27 WS8 Stage 1 — scaffold + plan** (`V27_WS8_PLAN.md` §1
+  Stage 1).
+  - `specs/v27/V27_WS8_PLAN.md` — full 6-stage roadmap with
+    cross-session memory-handoff protocol.
+  - `proofs/PdflatexModel.v` — concrete carriers
+    (`pdflatex_project := build_graph`,
+    `pdflatex_profile := { engine; features }`,
+    `pdflatex_artefact := list nat` — Stage 4 refines), T2 + T3
+    tied to existing concrete predicates (`project_closed`,
+    `profile_admits`); T0/T1/T4/T5 use `True` placeholders that
+    Stage 2 refines. Section-closure theorems
+    (`pdflatex_T6_modulo_compile_progress_rule`,
+    `pdflatex_T7_modulo_output_wellformed_rule`,
+    `pdflatex_T6_stage1`, `pdflatex_T7_stage1`,
+    `pdflatex_compile_safe_stage1`) — 7 added.
+  - `proofs/ADMISSIBILITY_MAP.md` — T6 + T7 entries annotated
+    "Stage 1 in flight".
+  - `_CoqProject` — registers PdflatexModel.v.
+
+  **Honest framing:** Stage 1's `True`-predicate discharge is
+  degenerate by design — Section-closure is what matters here.
+  Stages 2–5 refine each placeholder to substantive content;
+  Stage 3 + 5 supply the actual rule discharges; Stage 6 ships
+  the unconditional `pdflatex_compile_safe` Qed at v27.0.0.
+
+- **§7 fix-producer batch** (4 rules, boundary-tracked):
+  - `TYPO-016` space before `\cite/\ref` → `~` (NBSP).
+  - `TYPO-026` en-dash between digits in page range → `--`
+    (LaTeX double-hyphen).
+  - `SPC-008` indented paragraph-start → strip leading
+    whitespace (`\item` lines exempt).
+  - `SPC-011` trailing whitespace before `\n` inside `$$…$$`
+    displays → strip the run.
+
+  5 new test cases in `latex-parse/src/test_typo_fix.ml`
+  (4 positive + 1 SPC-008 negative for `\item` exemption). Total:
+  **37 cases** (was 32). Total fix-producing rules now: **32**
+  (3 v26.2.1 + 10 v26.3.0 + 10 v26.3.1 + 5 v26.4 + 4 v26.5).
+
+### Differential test
+0 diffs across 330 corpus files vs `v26.4.0`. The new fix
+producers are gated behind the `--apply-fixes` family of flags;
+default (no flag) output is byte-identical. WS8 Stage 1 is purely
+formal/Coq — no runtime change.
+
+### Counts
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (was 28).
+- 17 pre-release gates (unchanged).
+- 36 GitHub Actions workflows (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### v27 WS8 multi-session protocol
+Per `specs/v27/V27_WS8_PLAN.md` §3 + memory file
+`~/.claude/.../memory/v27_ws8_status.md`, Stages 2–6 each open
+with reading the plan + memory, do their bounded session's
+worth of Coq work, end by updating memory + ADMISSIBILITY_MAP
+annotations + (when content closes) tagging an alpha. The
+capstone — unconditional `pdflatex_compile_safe` Qed — tags as
+v27.0.0.
+
+### Deferred to v26.6 / v27 (unchanged from v26.4.0 deferral list)
+- Rolling fix producers for the remaining ~628 rules.
+- L3 AST migration (multi-month).
+- `apply_edits_concrete_associative_subset` Coq theorem
+  (parallel-application Fixpoint, multi-week).
+
 ## [v26.4.0] — 2026-04-27
 
 v26.4.0 ships conflict-aware rewrite merging (the headline feature

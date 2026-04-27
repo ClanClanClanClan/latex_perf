@@ -1,4 +1,4 @@
-version: v26.4.0
+version: v26.5.0
 release_state: rc
 release_date: '2026-04-27'
 generated_by: scripts/tools/generate_project_facts.py
@@ -71,8 +71,8 @@ rules:
     C: 17
     D: 49
 proofs:
-  proof_files_total: 161
-  proof_files_core: 52
+  proof_files_total: 162
+  proof_files_core: 53
   proof_files_generated: 108
   proof_files_ml: 1
   proof_files_archive: 7
@@ -80,7 +80,7 @@ proofs:
   formal_faithful_count: 637
   formal_conservative_count: 20
   formal_conditional_count: 3
-  theorem_count_reported: 1291
+  theorem_count_reported: 1298
   admits: 0
   axioms: 0
 languages:

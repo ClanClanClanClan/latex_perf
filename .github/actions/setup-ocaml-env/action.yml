@@ -1,11 +1,11 @@
 name: Setup OCaml + Install Dependencies
 description: >-
-  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v2),
+  Composite action that sets up OCaml tooling (via ocaml/setup-ocaml@v3),
   installs system packages, filters darcs from apt, configures opam repos,
   and performs a retry-loop dependency install.  Replaces the 15-line
   boilerplate block that was duplicated across 25+ CI workflows.
 
-  NOTE: This action calls ocaml/setup-ocaml@v2 DIRECTLY (not through an
+  NOTE: This action calls ocaml/setup-ocaml@v3 DIRECTLY (not through an
   intermediate composite action) to avoid GitHub Actions post-cleanup input
   resolution failures with nested composite actions.
 author: Internal
@@ -78,20 +78,18 @@ runs:
         echo "PATH=$HOME/.github-tools:$PATH" >> "$GITHUB_ENV"
 
     # ── OCaml toolchain (direct call, no intermediate composite) ───────
-    # 2026-04-27: pinned `opam-version` explicitly to work around the
-    # ocaml/setup-ocaml@v2 "Could not retrieve the opam release matching
-    # the version constraint" upstream-flake. Without the pin, the
-    # action queries GitHub's release-listing API at runtime; that
-    # endpoint flapped repeatedly on PR #291. Pinning bypasses the
-    # lookup entirely.
+    # 2026-04-27: bumped v2→v3. v2's release-manifest lookup
+    # (`tc.findFromManifest`) flapped repeatedly on PR #291 with
+    # "Could not retrieve the opam release matching the version
+    # constraint", failing every OCaml-using job for hours. v3 uses
+    # a different binary-cache mechanism and is the maintained
+    # upgrade path. Deprecated inputs (`opam-pin`, `opam-depext`)
+    # removed; v3 handles them implicitly.
     - name: Set up OCaml and opam
-      uses: ocaml/setup-ocaml@v2
+      uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: 5.1.1
-        opam-version: 2.1.6
         allow-prerelease-opam: false
-        opam-pin: true
-        opam-depext: false
         opam-local-packages: "*.opam"
         opam-disable-sandboxing: false
         dune-cache: ${{ inputs.dune-cache }}

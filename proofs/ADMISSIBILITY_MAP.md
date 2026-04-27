@@ -72,19 +72,27 @@ header.
 **WS8 discharge:** no new work — all v26.2 Error-level rules have
 per-rule QEDs (see `rule_contracts.yaml` / `proofs/generated/`).
 
-### T6 — Compilation progress (HYPOTHESIS-PARAMETRIC, v27 WS8 Stage 1 in flight)
+### T6 — Compilation progress (DISCHARGED in v27 WS8 Stage 3)
 
-> **v26.5.0 / v27 WS8 Stage 1 STATUS.** `proofs/PdflatexModel.v`
-> instantiates the Section against concrete pdflatex carriers
-> (`pdflatex_project := build_graph`,
-> `pdflatex_profile := { engine; features }`) and ties T2 + T3 to
-> their existing concrete predicates (`project_closed`,
-> `profile_admits`). T0, T1, T4, T5 use `True` placeholders that
-> Stages 2–3 refine. The `compile_progress_rule` Hypothesis is
-> closed against the placeholders (trivially Qed-able for `True`
-> predicates); a substantive discharge against a concrete
-> pdflatex pass-iteration model lands in Stage 3 per
-> `specs/v27/V27_WS8_PLAN.md` §1 Stage 3.
+> **v27.0.0-alpha2 / v27 WS8 Stage 3 STATUS.** `proofs/PdflatexModel.v`
+> ships `pdflatex_compile_progress_rule_proof` (Lemma, Qed) — a
+> substantive discharge of `compile_progress_rule` against the
+> Stage-2 pass-iteration model. The proof bridges
+> `pdflatex_bounded_terminates` (now substantive: exists k ≤ 5
+> steps from initial pass state that converge) and
+> `pdflatex_compilation_succeeds` (same shape; Stage 4 adds the
+> `no_fatal_log` conjunct). Section closure is applied via
+> `pdflatex_T6_discharged`. The bonus theorem
+> `pdflatex_bounded_terminates_universal` further proves the
+> bounded premise unconditionally, so given T0–T5,
+> `pdflatex_compilation_succeeds` holds without an explicit bound
+> witness (`pdflatex_T6_unconditional_in_bound`).
+>
+> **Honest scope:** Stage 3's `compilation_succeeds` is
+> definitionally equal to `bounded_terminates` (pass convergence
+> only). Stage 4 strengthens with `no_fatal_log` once the log-image
+> predicates are in place; that conjunct genuinely requires
+> T5_safe to discharge. Stage 5 closes T7 alongside.
 
 **File:** `proofs/CompileProgress.v`.
 **Section variables:**

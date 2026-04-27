@@ -79,3 +79,4 @@ proofs/SplitPreservesOrder.v
 -arg -w -arg -redundant-canonical-projection
 proofs/CSTRoundtripConcrete.v
 proofs/RewritePreservesSemanticsConcrete.v
+proofs/PdflatexModel.v

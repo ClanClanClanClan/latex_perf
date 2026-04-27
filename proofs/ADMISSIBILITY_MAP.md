@@ -72,7 +72,19 @@ header.
 **WS8 discharge:** no new work — all v26.2 Error-level rules have
 per-rule QEDs (see `rule_contracts.yaml` / `proofs/generated/`).
 
-### T6 — Compilation progress (HYPOTHESIS-PARAMETRIC)
+### T6 — Compilation progress (HYPOTHESIS-PARAMETRIC, v27 WS8 Stage 1 in flight)
+
+> **v26.5.0 / v27 WS8 Stage 1 STATUS.** `proofs/PdflatexModel.v`
+> instantiates the Section against concrete pdflatex carriers
+> (`pdflatex_project := build_graph`,
+> `pdflatex_profile := { engine; features }`) and ties T2 + T3 to
+> their existing concrete predicates (`project_closed`,
+> `profile_admits`). T0, T1, T4, T5 use `True` placeholders that
+> Stages 2–3 refine. The `compile_progress_rule` Hypothesis is
+> closed against the placeholders (trivially Qed-able for `True`
+> predicates); a substantive discharge against a concrete
+> pdflatex pass-iteration model lands in Stage 3 per
+> `specs/v27/V27_WS8_PLAN.md` §1 Stage 3.
 
 **File:** `proofs/CompileProgress.v`.
 **Section variables:**
@@ -109,7 +121,15 @@ per-rule QEDs (see `rule_contracts.yaml` / `proofs/generated/`).
 **Consumers:** `CompileWellFormed.v` (T7) takes `T6_compile_succeeds` as
 its premise.
 
-### T7 — Output well-formedness (HYPOTHESIS-PARAMETRIC)
+### T7 — Output well-formedness (HYPOTHESIS-PARAMETRIC, v27 WS8 Stage 1 in flight)
+
+> **v26.5.0 / v27 WS8 Stage 1 STATUS.** `proofs/PdflatexModel.v`
+> instantiates the Section against concrete pdflatex carriers and
+> a placeholder `pdflatex_artefact := list nat`; Stage 4 refines
+> to `pdf_artefact + log_artefact`. The `output_wellformed_rule`
+> Hypothesis is closed against the Stage-1 placeholders; a
+> substantive discharge using `valid_pdf_graph` and `log_no_fatal`
+> lands in Stage 5 per `specs/v27/V27_WS8_PLAN.md` §1 Stage 5.
 
 **File:** `proofs/CompileWellFormed.v`.
 **Section variables:**

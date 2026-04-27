@@ -2,6 +2,126 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v26.4.0] — 2026-04-27
+
+v26.4.0 ships conflict-aware rewrite merging (the headline feature
+deferred from `V26_2_PLAN.md` line 631), the §1.2 stronger
+`apply_edits` Coq theorems, and 5 more rolling fix producers. Plan
+in `specs/v26/V26_4_PLAN.md`. **1,291 theorems / 161 .v files / 0
+admits / 0 axioms** (v26.3.1 had 1,281 / 161; +10 lemmas across the
+RewritePreservesCST extensions).
+
+### Shipped (3 items + spec polish)
+
+- **Conflict-aware rewrite merging** (`V26_4_PLAN.md` §1.1). Two new
+  primitives in `Cst_edit`:
+  - `apply_best_effort : string -> t list -> string * t list * t list`
+    walks the edit list in order, accepts each edit if it doesn't
+    conflict with an already-applied one, otherwise lands it in
+    `skipped`. Output is byte-equal to `apply_all` over the
+    `applied` subset (cannot fail by construction). Pure insertions
+    at the same offset stay compatible per existing `conflicts`
+    semantics — they all land in `applied` in input order.
+  - `apply_with_priority : string -> (t -> int) -> t list -> ...`
+    stable-sorts by descending priority then dispatches to
+    `apply_best_effort`. Higher-priority edits dominate conflicting
+    lower-priority ones; equal priority falls back to input order.
+
+  CLI:
+  - `--apply-fixes-best-effort` runs the best-effort path; reports
+    skipped edits to stderr; exits 0 even when some edits were
+    skipped (the partial-fix output is the contract).
+  - `--apply-fixes-best-effort-for RULE-ID` is the same, restricted
+    to one rule id.
+  - The strict `--apply-fixes` mode is preserved for back-compat;
+    its overlap-error message now hints at the new flag.
+
+  7 new test cases in `latex-parse/src/test_cst_edit.ml` (no-conflict,
+  first-wins, same-offset insertions, priority dominates, equal-priority
+  input-order tiebreak, agrees with `apply_all` on disjoint input,
+  third-edit-conflict).
+
+- **Stronger `apply_edits` Coq theorems** (`V26_4_PLAN.md` §1.2,
+  optional stretch). 10 new theorems in
+  `proofs/RewritePreservesCST.v`:
+  - `length_take_le`, `length_drop` — bounded-index length lemmas.
+  - `edit_added`, `edit_removed` — nat aliases for byte-change
+    measures.
+  - `apply_one_edit_length` — the headline byte-count theorem:
+    `length (apply_one_edit src e) = length src + edit_added e -
+    edit_removed e` under `edit_wf` + bounded `e_end`.
+  - 3 specialisation corollaries (balanced, pure insertion, pure
+    deletion).
+  - `apply_edits_concrete_singleton`, `apply_edits_concrete_cons` —
+    fold-style decomposition.
+  - `take_drop`, `take_drop_length` — standard prefix/suffix laws.
+
+  **Honest non-discharge:** the associative-reorder claim
+  (`apply_edits_concrete_associative_subset` mentioned in the plan)
+  does NOT hold for the SEQUENTIAL `apply_edits_concrete` (each
+  edit applies on the EVOLVING source, so offsets shift even for
+  non-overlapping edits). Modelling the OCaml runtime's
+  parallel-application surface in Coq is multi-week scope; deferred
+  to v26.5+.
+
+- **5 mechanical fix producers** (`V26_4_PLAN.md` §1.3, partial):
+  - `TYPO-014` space before percent → strip the space.
+  - `TYPO-021` capital after ellipsis (ASCII or Unicode) without
+    space → insert a single space.
+  - `TYPO-025` space before en-dash in number range → delete the
+    space-run.
+  - `SPC-009` ASCII `~` or UTF-8 NBSP at line start → strip.
+  - `SPC-010` two spaces after sentence-ending period → collapse to
+    one space.
+
+  7 new test cases in `latex-parse/src/test_typo_fix.ml`
+  (one per rule plus extra cases for TYPO-021's Unicode form and
+  SPC-009's UTF-8 NBSP form). Total: **28 fix-producing rules**
+  (was 23 at v26.3.1).
+
+  The plan's §1.3 budget was 10; honest revision in PR #283 trimmed
+  to 5 — the remaining 5 candidates either need careful boundary-
+  tracking (TYPO-016, SPC-008, SPC-011) or duplicate existing fixes
+  (STRUCT-003 ≈ TYPO-006). They roll into v26.5.
+
+- **Spec polish** (PR #283): `V26_4_PLAN.md` §1.3 + §3 + §6 honest
+  post-execution revision so the plan reflects what actually
+  shipped (5/10 fix producers, 3 PRs not 2, differential test
+  verified).
+
+### CI hygiene shipped during the cycle
+
+- **Format job timeout** bumped 15→30 min after upstream package
+  mirror flakes (gitlab.inria.fr serving corrupted menhir/fix
+  archives intermittently); Coq packages restored after a brief
+  attempt to drop them broke `dune fmt` itself (it parses every
+  dune file in the project, including `proofs/dune`'s
+  `(coq.theory ...)` stanza).
+
+### Differential test
+0 diffs across 330 corpus files vs `v26.3.1`. The new fix
+producers are gated behind `--apply-fixes` / `--apply-fixes-for` /
+`--apply-fixes-best-effort{,-for}`; default (no flag) output is
+byte-identical.
+
+### Counts
+- 660 catalogued rules (unchanged).
+- 28 fix-producing rules (was 23).
+- 17 pre-release gates (unchanged from v26.3.1).
+- 36 GitHub Actions workflows (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Deferred to v26.5 / v27
+Per `V26_4_PLAN.md` §2 + §5 + memory:
+- Rolling fix producers for the remaining ~632 rules (incl. the
+  v26.4 §1.3 leftover 5 candidates).
+- L3 AST migration (multi-month per `docs/L3_ROADMAP.md`).
+- `apply_edits_concrete_associative_subset` Coq theorem (requires
+  parallel-application Fixpoint, multi-week).
+- v27 WS8 — T6/T7 discharge against `proofs/PdflatexModel.v` (the
+  only `HYPOTHESIS-PARAMETRIC` entries left in
+  `proofs/ADMISSIBILITY_MAP.md` after this release).
+
 ## [v26.3.1] — 2026-04-26
 
 v26.3.1 discharges the two `V26_3_PLAN.md` §1.3 deferred items that

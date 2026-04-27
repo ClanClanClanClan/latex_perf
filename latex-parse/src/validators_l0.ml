@@ -1493,30 +1493,59 @@ let r_spc_007 : rule =
 (* SPC-008: Paragraph starts with whitespace (indented first line after
    blank) *)
 let r_spc_008 : rule =
+  (* v26.5 §7: paragraph-starts-with-whitespace fix. Walks line spans in the
+     original source so fix offsets are exact. Skips lines that start with
+     `\item` after the leading whitespace (per the original count logic). *)
   let run s =
-    let has_indented_para line prev_blank =
-      prev_blank
-      && String.length line > 0
-      && (line.[0] = ' ' || line.[0] = '\t')
-      && (* skip \item lines *)
-      not
-        (let trimmed = String.trim line in
-         String.length trimmed >= 5 && String.sub trimmed 0 5 = "\\item")
+    let line_is_blank lstart lend =
+      let i = ref lstart in
+      while
+        !i < lend
+        &&
+        let c = s.[!i] in
+        c = ' ' || c = '\t' || c = '\r'
+      do
+        incr i
+      done;
+      !i = lend
     in
-    let lines = String.split_on_char '\n' s in
+    let leading_ws_end lstart lend =
+      let i = ref lstart in
+      while !i < lend && (s.[!i] = ' ' || s.[!i] = '\t') do
+        incr i
+      done;
+      !i
+    in
+    let starts_with_item lstart lend =
+      let trim = leading_ws_end lstart lend in
+      trim + 5 <= lend && String.sub s trim 5 = "\\item"
+    in
     let cnt = ref 0 in
+    let edits = ref [] in
     let prev_blank = ref true in
-    (* start of file counts as after blank *)
-    List.iter
-      (fun line ->
-        let trimmed = String.trim line in
-        if has_indented_para line !prev_blank then incr cnt;
-        prev_blank := String.length trimmed = 0)
-      lines;
+    iter_line_spans s (fun lstart lend ->
+        let has_leading_ws =
+          lend > lstart && (s.[lstart] = ' ' || s.[lstart] = '\t')
+        in
+        if !prev_blank && has_leading_ws && not (starts_with_item lstart lend)
+        then (
+          incr cnt;
+          let trim = leading_ws_end lstart lend in
+          if trim > lstart then
+            edits :=
+              Cst_edit.replace ~start_offset:lstart ~end_offset:trim ""
+              :: !edits);
+        prev_blank := line_is_blank lstart lend);
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-008" ~severity:Info
-           ~message:"Paragraph starts with whitespace" ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-008" ~severity:Info
+             ~message:"Paragraph starts with whitespace" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-008" ~severity:Info
+             ~message:"Paragraph starts with whitespace" ~count:!cnt ~fix)
     else None
   in
   { id = "SPC-008"; run; languages = [] }
@@ -2026,9 +2055,14 @@ let r_spc_027 : rule =
 
 (* SPC-011: Space before newline inside $$…$$ display *)
 let r_spc_011 : rule =
+  (* v26.5 §7: strip the space/tab run immediately before each newline that lies
+     inside a $$…$$ display block. Maintains the existing toggle-on-$$ display
+     tracker; emits one delete edit per matched run (one or more contiguous
+     spaces/tabs before \n). *)
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let in_display = ref false in
     let i = ref 0 in
     while !i < n - 1 do
@@ -2038,14 +2072,36 @@ let r_spc_011 : rule =
       else if
         !in_display && (s.[!i] = ' ' || s.[!i] = '\t') && s.[!i + 1] = '\n'
       then (
+        (* Found one ws byte before \n; walk back to find run start so
+           multi-byte ws runs collapse in a single edit. *)
+        let run_end = !i + 1 in
+        let run_start = ref !i in
+        while
+          !run_start > 0
+          &&
+          let c = s.[!run_start - 1] in
+          c = ' ' || c = '\t'
+        do
+          decr run_start
+        done;
+        edits :=
+          Cst_edit.replace ~start_offset:!run_start ~end_offset:run_end ""
+          :: !edits;
         incr cnt;
         i := !i + 2)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-011" ~severity:Warning
-           ~message:"Space before newline inside $$…$$ display" ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-011" ~severity:Warning
+             ~message:"Space before newline inside $$…$$ display" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-011" ~severity:Warning
+             ~message:"Space before newline inside $$…$$ display" ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SPC-011"; run; languages = [] }

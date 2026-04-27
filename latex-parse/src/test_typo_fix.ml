@@ -262,4 +262,42 @@ let () =
         (List.length edits = 2 && apply_all src edits = "First. Second. Third.")
         (tag ^ ": both runs collapsed"));
 
+  (* v26.5 §7 cycle byproduct: 4 more fix producers. *)
+  run "TYPO-016 fix replaces space-before-cite with NBSP" (fun tag ->
+      let src = "see \\cite{x} and \\ref{y}." in
+      let edits = fix_edits "TYPO-016" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "see~\\cite{x} and~\\ref{y}.")
+        (tag ^ ": both spaces replaced with ~"));
+
+  run "TYPO-026 fix replaces en-dash in number range with --" (fun tag ->
+      let src = "pages 12\xe2\x80\x9320 and 30\xe2\x80\x9345" in
+      let edits = fix_edits "TYPO-026" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "pages 12--20 and 30--45")
+        (tag ^ ": both en-dashes replaced"));
+
+  run "SPC-008 fix strips leading whitespace from indented paragraph"
+    (fun tag ->
+      let src = "Para one.\n\n   Indented paragraph." in
+      let edits = fix_edits "SPC-008" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Para one.\n\nIndented paragraph.")
+        (tag ^ ": leading whitespace stripped"));
+
+  run "SPC-008 fix leaves \\item lines alone" (fun tag ->
+      expect
+        (does_not_fire "SPC-008" "First line.\n\n  \\item bullet")
+        (tag ^ ": \\item exempt"));
+
+  run "SPC-011 fix strips trailing space inside $$…$$" (fun tag ->
+      let src = "$$\nx + y  \nz\n$$" in
+      let edits = fix_edits "SPC-011" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$$\nx + y\nz\n$$")
+        (tag ^ ": trailing whitespace before \\n stripped inside display"));
+
   finalise "typo-fix"

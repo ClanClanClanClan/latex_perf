@@ -32,78 +32,91 @@ Import ListNotations.
     catalogue. *)
 Definition rule_id : Type := string.
 
-(** ── Stage 1 placeholder predicates ───────────────────────────────── *)
+(** ── Stage 3 refinement: catalogue-parametric rule_passes ────────── *)
 
-(** Stage 1 placeholder: every rule trivially passes.  Stage 3 refines
-    by case-analysing on the rule string: for each FAMILY-NNN with a
-    per-rule soundness QED, the predicate is the per-rule premise; for
-    unknown / unimplemented rules it falls back to True (vacuous).
-    Defined over `build_graph` to avoid depending on PdflatexModel.v
-    (which would create a circular dependency). *)
-Definition pdflatex_rule_passes_pred (_ : build_graph) (_ : rule_id) : Prop :=
-  True.
+(** The Section-parametric design keeps `T5_concrete.v` independent
+    of `LaTeXPerfectionist.Generated.Catalogue` (which depends on
+    `LaTeXPerfectionist`, the very theory `T5_concrete.v` lives in —
+    a direct import would create a circular theory dependency).  The
+    catalogue is exposed as a Section [Variable] so a downstream
+    wiring file (or the [pdflatex_compile_safe] consumer) can
+    instantiate it with [LaTeXPerfectionist.Generated.Catalogue.
+    all_proved_rule_ids] at the call site.  This shape also lets
+    distinct callers parametrise different rule sets (LP-Core only,
+    LP-Extended, etc.). *)
+Section pdflatex_T5_concrete_section.
 
-(** Stage 1 placeholder: no rule list is in static violation.  Stage 4
-    refines to "no rule in the list fires on the project at any
-    catalogued span" once the runtime validator's emit-set is
-    formalised. *)
-Definition pdflatex_no_static_violation_pred (_ : build_graph)
-    (_ : list rule_id) : Prop :=
-  True.
+  (** The catalogue of rule_ids with per-rule soundness QEDs.  The
+      consumer (Stage 5 wiring or downstream theorem) instantiates
+      with `LaTeXPerfectionist.Generated.Catalogue.all_proved_rule_ids`. *)
+  Variable rule_catalogue : list rule_id.
+
+  (** Stage 3 refinement: rule r passes for project p iff r is in the
+      provided catalogue.  This replaces the Stage 1 [True] placeholder
+      with a substantive predicate: only catalogued rule_ids satisfy
+      it.  The project parameter is unused at this stage — catalogue
+      membership is project-independent.  Linking to the full per-rule
+      semantics (extracting project text and applying the per-rule
+      soundness theorems) requires a [build_graph -> list string]
+      accessor, which is Stage 4+ scope. *)
+  Definition pdflatex_rule_passes_pred (_ : build_graph) (r : rule_id) : Prop :=
+    In r rule_catalogue.
+
+  (** Stage 1 placeholder: no rule list is in static violation.  Stage 4
+      refines to "no rule in the list fires on the project at any
+      catalogued span" once the runtime validator's emit-set is
+      formalised. *)
+  Definition pdflatex_no_static_violation_pred (_ : build_graph)
+      (_ : list rule_id) : Prop :=
+    True.
+
+  (** ── v27 T5 STAGE 2 content (Section-parametric per Stage 3) ── *)
+
+  (** Project-attached "every rule in [rules] passes for project [p]". *)
+  Definition pdflatex_all_rules_pass (p : build_graph) (rules : list rule_id)
+      : Prop :=
+    forall r, In r rules -> pdflatex_rule_passes_pred p r.
+
+  (** Stage 2 discharge: rule_safety_rule for the placeholder
+      no_static_violation_pred (Stage 4 refines to substantive). *)
+  Lemma pdflatex_rule_safety_rule_proof :
+    forall (p : build_graph) (rules : list rule_id),
+      pdflatex_all_rules_pass p rules ->
+      pdflatex_no_static_violation_pred p rules.
+  Proof.
+    intros p rules _.
+    unfold pdflatex_no_static_violation_pred. exact I.
+  Qed.
+
+  (** Apply [T5_wrapper.T5_rule_safe] Section closure with our concrete
+      instantiations.  Produces the project-attached T5 safety theorem
+      parametric in the rule_catalogue.  Stage 5 wires this into
+      [proofs/PdflatexModel.v]'s [pdflatex_T5_safe]. *)
+  Theorem pdflatex_T5_safe_stage2 :
+    forall (p : build_graph) (rules : list rule_id),
+      pdflatex_all_rules_pass p rules ->
+      pdflatex_no_static_violation_pred p rules.
+  Proof.
+    intros p rules Hall.
+    apply (T5_rule_safe
+             rule_id
+             (pdflatex_rule_passes_pred p)
+             (pdflatex_no_static_violation_pred p)
+             (pdflatex_rule_safety_rule_proof p)
+             rules).
+    exact Hall.
+  Qed.
+
+End pdflatex_T5_concrete_section.
 
 (** ── Stage 1 zero-admit witness ───────────────────────────────────── *)
 
 Definition t5_concrete_stage1_zero_admits : True := I.
 
-(** ─────────────────────────────────────────────────────────────────
-    v27 T5 STAGE 2 — discharge rule_safety_rule + Section closure
-    ─────────────────────────────────────────────────────────────────
-
-    Per V27_T5_WIRING_PLAN.md Stage 2: discharge T5_wrapper's
-    rule_safety_rule hypothesis against the Stage-1 placeholders, and
-    apply the T5_rule_safe Section closure to produce a project-
-    attached T5_safe theorem.  With pdflatex_no_static_violation_pred
-    := True the discharge is trivial; the structure is in place for
-    Stages 3-4 to refine the predicates substantively without
-    changing the wiring shape. *)
-
-(** Project-attached "every rule in [rules] passes for project [p]". *)
-Definition pdflatex_all_rules_pass (p : build_graph) (rules : list rule_id)
-    : Prop :=
-  forall r, In r rules -> pdflatex_rule_passes_pred p r.
-
-(** Stage 2 discharge: rule_safety_rule for the Stage-1 placeholders.
-    With no_static_violation_pred := True the conclusion is trivial;
-    Stage 4 strengthens this to a meaningful "no rule fires" claim
-    that genuinely consumes the all-pass premise. *)
-Lemma pdflatex_rule_safety_rule_proof :
-  forall (p : build_graph) (rules : list rule_id),
-    pdflatex_all_rules_pass p rules ->
-    pdflatex_no_static_violation_pred p rules.
-Proof.
-  intros p rules _.
-  unfold pdflatex_no_static_violation_pred. exact I.
-Qed.
-
-(** Apply T5_wrapper.T5_rule_safe Section closure with our concrete
-    instantiations.  Produces the project-attached T5 safety theorem.
-    Stage 5 wires this into proofs/PdflatexModel.v's pdflatex_T5_safe
-    (currently True). *)
-Theorem pdflatex_T5_safe_stage2 :
-  forall (p : build_graph) (rules : list rule_id),
-    pdflatex_all_rules_pass p rules ->
-    pdflatex_no_static_violation_pred p rules.
-Proof.
-  intros p rules Hall.
-  apply (T5_rule_safe
-           rule_id
-           (pdflatex_rule_passes_pred p)
-           (pdflatex_no_static_violation_pred p)
-           (pdflatex_rule_safety_rule_proof p)
-           rules).
-  exact Hall.
-Qed.
-
 (** ── Stage 2 zero-admit witness ───────────────────────────────────── *)
 
 Definition t5_concrete_stage2_zero_admits : True := I.
+
+(** ── Stage 3 zero-admit witness ───────────────────────────────────── *)
+
+Definition t5_concrete_stage3_zero_admits : True := I.

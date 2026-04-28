@@ -138,30 +138,58 @@ state-of-mind is needed to resume.
   theorems and any bounded-pass constants used.
 - Tag v27.0.0.
 
-## 2. Carriers + their instantiations
+## 2. Carriers + their instantiations (POST-EXECUTION ACTUAL)
 
 Per `proofs/CompileProgress.v::Section Compile_progress` and
 `proofs/CompileWellFormed.v::Section Output_wellformed`, the
-Section parameters and their PdflatexModel instantiations are:
+Section parameters and their **delivered** `PdflatexModel.v`
+instantiations are:
 
-| Section variable | PdflatexModel instantiation | Defined in |
+| Section variable | Delivered instantiation | Plan-vs-delivered notes |
 |---|---|---|
-| `Project : Type` | `pdflatex_project` (alias of `ProjectClosure.build_graph`) | Stage 1 |
-| `Profile : Type` | `pdflatex_profile` (record bundling `engine` + `list feature`) | Stage 1 |
-| `Artefact : Type` | `pdflatex_artefact` (sum of `pdf_artefact + log_artefact`) | Stage 4 |
-| `T0_accepts` | `T0_wrapper.parser_accepts` (already trivial Qed in v26.2) | Stage 1 |
-| `T1_admissible` | `T1_wrapper.expansion_admissible` (already Qed) | Stage 1 |
-| `T2_closed` | `ProjectClosure.project_closed` | Stage 1 |
-| `T3_compatible` | `BuildProfileSound.profile_admits` | Stage 1 |
-| `T4_coherent` | `T4_wrapper.labels_unique` | Stage 1 |
-| `T5_safe` | `T5_wrapper.rule_safe_predicate` | Stage 1 |
-| `bounded_build_terminates_for` | `pdflatex_bounded_terminates` (proved in Stage 2) | Stage 2 |
-| `compilation_succeeds` | `pdflatex_clean_exit /\ pdflatex_log_no_fatal` | Stage 2 |
-| `compile_progress_rule` | discharged as `pdflatex_compile_progress_rule_proof` | **Stage 3** |
-| `T6_compile_succeeds` | `pdflatex_compile_succeeds` (= compilation_succeeds) | Stage 4 |
-| `produces` | `pdflatex_produces` (concrete tying to `pdflatex_step`) | Stage 4 |
-| `output_format_well_formed` | `valid_pdf_graph \/ log_no_fatal` | Stage 4 |
-| `output_wellformed_rule` | discharged as `pdflatex_output_wellformed_rule_proof` | **Stage 5** |
+| `Project : Type` | `pdflatex_project := ProjectClosure.build_graph` | as planned |
+| `Profile : Type` | `pdflatex_profile := { prof_engine; prof_features }` | as planned |
+| `Artefact : Type` | `pdflatex_artefact := pdf_artefact * log_artefact` | **revised**: delivered as PRODUCT (PDF + log always paired). Plan said sum (`+`) but the headline well-formedness claim is naturally on `(pdf, log)` pairs, not "either pdf or log" |
+| `T0_accepts` | `True` | **deferred to v27 WS9+**: `T0_wrapper.T0_parser_accepts` operates on `ParserSound.node`, not `ProjectClosure.node` (the build_graph carrier). Bridging is a multi-day refactor (define `project_root_nodes : build_graph -> list ParserSound.node` accessor). Trivially provable as `I` for the capstone |
+| `T1_admissible` | `True` | **deferred to v27 WS9+**: `T1_wrapper.T1_expansion_admissible_merge` is over a `catalog`, not `build_graph`. Bridge requires either extracting a catalog from the build graph or threading it as additional state |
+| `T2_closed` | `ProjectClosure.project_closed` | as planned |
+| `T3_compatible` | `BuildProfileSound.profile_admits pf.(prof_features) pf.(prof_engine)` | as planned (project arg unused) |
+| `T4_coherent` | `True` | **deferred to v27 WS9+**: `T4_wrapper.T4_labels_unique_packaged` is over `list ProjectSemantics.label`, not `build_graph` |
+| `T5_safe` | `True` | **deferred to v27 WS9+**: `T5_wrapper` is a Section-parametric `rule_safety_rule` over rules; bridging to project-level emitted spans requires a span-emission model |
+| `bounded_build_terminates_for` | `pdflatex_bounded_terminates` (substantive: `exists k <= 5, converged`) | proved in Stage 2 via `pdflatex_pass_count_bounded` |
+| `compilation_succeeds` | `exists k <= 5, converged at k /\ log_no_fatal at k` | **revised shape** (existential over k): same content as plan's `clean_exit /\ log_no_fatal` but expressed against the explicit pass-state model |
+| `compile_progress_rule` | discharged in Stage 6 as `pdflatex_compile_progress_rule_proof` (Qed; substantive — uses `iterate_step_log_unchanged` + `empty_log_no_fatal`) | originally planned for Stage 3 with a tautology shape (compilation_succeeds := bounded_terminates definitionally); Stage 6 strengthens compilation_succeeds with the log conjunct, making the discharge real proof content |
+| `produces` | `exists k <= 5, out = canonical_artefact (iterate_step initial k)` | concrete tying to the pass-state via canonical_artefact |
+| `output_format_well_formed` | `pdf_log_wellformed (fst out) (snd out)` = `valid_pdf_graph (fst) /\ log_no_fatal (snd)` | **revised**: delivered AND (`/\`) — both must hold. Plan's OR (`\/`) was likely a typo; AND is what "well-formed" actually means |
+| `output_wellformed_rule` | discharged in Stage 6 as `pdflatex_output_wellformed_rule_proof` (Qed; substantive) | as planned for Stage 5; the unification with the canonical Stage 6 names absorbed the `_v5`-suffixed Stage 5 forms |
+
+**Capstone (Stage 6 actual):**
+```coq
+Theorem pdflatex_compile_safe :
+  forall (p : pdflatex_project) (pf : pdflatex_profile),
+    project_well_typed p ->
+    profile_supported pf ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_compilation_succeeds p pf /\
+      pdflatex_output_format_well_formed out.
+```
+where `project_well_typed := pdflatex_T2_closed` and
+`profile_supported pf := profile_admits pf.(prof_features)
+pf.(prof_engine)`. T0, T1, T4, T5 are trivially `I` and thus
+absorbed into the capstone proof — they don't appear in the
+user-facing precondition.
+
+`Print Assumptions pdflatex_compile_safe` returns "Closed under
+the global context": zero axioms, zero admits.
+
+**Faithfulness scope (v27 WS9+, deferred honestly):** the capstone
+is unconditional under the counter-bounded pass-iteration
+abstraction in `PdflatexModel.v`. Tying that abstraction to a
+faithful operational pdflatex semantics (real aux/log evolution,
+real fatal-marker emission, full set of fatal markers beyond
+`! Fatal`, T0/T1/T4/T5 wiring through their wrappers) is a
+separate verification effort, queued for the WS9+ workstream.
 
 ## 3. Memory protocol
 
@@ -186,24 +214,34 @@ The cross-session continuity rule:
 > read proofs/ADMISSIBILITY_MAP.md && read this plan file +
 > v27_ws8_status.md`.
 
-## 4. ADMISSIBILITY_MAP discharge checklist (replicated for tracking)
+## 4. ADMISSIBILITY_MAP discharge checklist (state at end of WS8)
 
 Per `proofs/ADMISSIBILITY_MAP.md` v27 WS8 section:
 
-- [ ] `proofs/PdflatexModel.v` created — Stage 1
-- [ ] `pdflatex_project / profile / artefact` types defined —
-      Stages 1 + 4
-- [ ] Each T0–T5 predicate instantiated — Stage 1
-- [ ] `bounded_build_terminates_for := pdflatex_passes_bounded`
-      proved — Stage 2
-- [ ] `compile_progress_rule` discharged as theorem — **Stage 3**
-- [ ] `output_format_well_formed := valid_pdf_graph` defined —
-      Stage 4
-- [ ] `output_wellformed_rule` discharged — **Stage 5**
-- [ ] `pdflatex_compile_safe` shipped with Qed — Stage 6
-- [ ] `proofs/ADMISSIBILITY_MAP.md` updated — Stage 6
-- [ ] `docs/COMPILATION_GUARANTEE.md` updated — Stage 6
-- [ ] `CHANGELOG.md` `[v27.0.0]` entry — Stage 6
+- [x] `proofs/PdflatexModel.v` created — Stage 1 (PR #285)
+- [x] `pdflatex_project / profile / artefact` types defined —
+      Stages 1 + 4 (PRs #285, #290)
+- [~] Each T0–T5 predicate instantiated — Stage 1: T2 + T3
+      concrete; T0/T1/T4/T5 deferred to v27 WS9+ (see §2 above
+      for the type-bridge rationale)
+- [x] `bounded_build_terminates_for := pdflatex_bounded_terminates`
+      proved — Stage 2 (PR #288)
+- [x] `compile_progress_rule` discharged as theorem — Stage 3 (PR
+      #289), strengthened in Stage 6 (PR #310) so the proof is
+      genuinely substantive (no longer a tautology)
+- [x] `output_format_well_formed := pdf_log_wellformed` defined —
+      Stage 6 unified (Stage 4's `pdf_log_wellformed` predicate +
+      Stage 5's `_v5` shape collapsed into the canonical name in
+      Stage 6, PR #310)
+- [x] `output_wellformed_rule` discharged — Stage 5 substantive
+      (PR #303), unified into canonical name in Stage 6 (PR #310)
+- [x] `pdflatex_compile_safe` shipped with Qed — Stage 6 (PR #310)
+- [x] `proofs/ADMISSIBILITY_MAP.md` updated — Stage 6 (PR #310)
+- [x] `docs/COMPILATION_GUARANTEE.md` updated — Stage 6 (PR #310)
+- [ ] `CHANGELOG.md` `[v27.0.0]` entry — pending release-bump PR
+- [ ] `dune-project / opam / project_facts / README` bumped to
+      `v27.0.0` — pending release-bump PR
+- [ ] tag `v27.0.0` on main — pending release-bump PR merge
 
 ## 5. Acceptance criteria for v27.0.0 (the WS8 capstone)
 

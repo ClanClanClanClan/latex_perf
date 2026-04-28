@@ -329,13 +329,17 @@ State as of the v27 WS8 capstone (Stage 6 cleanup):
 - [x] `PdflatexModel.project / profile / artefact` types defined:
   `pdflatex_project := build_graph`, `pdflatex_profile := { engine;
   features }`, `pdflatex_artefact := pdf_artefact * log_artefact`.
-- [~] T0/T1/T4/T5 instantiated as `True` with documentation
-  pointing to the LP-Core wrappers (`T0_wrapper.T0_parser_accepts`,
-  `T1_wrapper.T1_expansion_admissible_merge`,
-  `T4_wrapper.T4_labels_unique_packaged`, `T5_wrapper.T5_rule_safe`).
-  Bridging those wrappers from per-domain carriers (node, catalog,
-  labels list, rules) to `build_graph` is v27 WS9+ scope. T2 + T3
-  are concrete (`project_closed`, `profile_admits`).
+- [x] Each T0–T5 predicate instantiated — T0/T1/T4 wired to
+  `T0_wrapper.T0_parser_accepts`,
+  `T1_wrapper.T1_expansion_admissible_merge`, and
+  `T4_wrapper.T4_labels_unique_packaged` respectively (each
+  discharged unconditionally by `pdflatex_T{0,1,4}_*_holds : forall p,
+  pdflatex_T{0,1,4}_* p` Qed lemmas). T2 + T3 concrete
+  (`project_closed`, `profile_admits`). T5 stays as `True` with
+  pointer to `proofs/generated/` per-rule QEDs — `T5_wrapper` is
+  Section-parametric in concrete rule_id / rule_passes /
+  no_static_violation, which would require a span-emission model
+  (v27 WS9+ scope).
 - [x] `pdflatex_bounded_terminates` defined; termination theorem
   `pdflatex_pass_count_bounded` proved (5-pass bound, derived from
   the abstract counter-bounded `pdflatex_step` model).

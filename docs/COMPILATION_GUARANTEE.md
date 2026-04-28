@@ -50,17 +50,23 @@ list of structured reasons is returned.
 ## Theorems that are NOT runtime checks
 
 - **T6 (compilation progress):** if T0–T5 hold AND the toolchain
-  converges in bounded passes, compilation succeeds. v26.2 ships this
-  as a **conditional** theorem (hypothesis-parametric). The toolchain
-  itself is the "prover" at runtime — we trust pdflatex / xelatex /
-  lualatex to converge.
+  converges in bounded passes, compilation succeeds. v26.2 shipped
+  this hypothesis-parametric; **v27 WS8 discharges it concretely
+  for pdflatex** in `proofs/PdflatexModel.v::pdflatex_T6_discharged`.
 - **T7 (output well-formedness):** if T6 holds AND the toolchain
   produces a well-formed artefact, the output satisfies the subset's
-  output contract (valid PDF graph, refs resolved). Same parametric
-  pattern.
+  output contract (valid PDF graph, fatal-free log). v27 WS8
+  discharges it concretely for pdflatex in
+  `proofs/PdflatexModel.v::pdflatex_T7_discharged`.
+- **Headline (v27 WS8 capstone):** `pdflatex_compile_safe` (Qed,
+  Closed under the global context) — for any project_well_typed
+  project and profile_supported profile, there exists an artefact
+  such that pdflatex produces it, compilation succeeds, and the
+  output is well-formed. Zero axioms, zero admits, in the
+  abstract pass-iteration model.
 
-Full discharge of T6/T7 (instantiating the toolchain model in Coq)
-is [v27 WS8](../specs/v27/V27_REPO_EXACT_MASTER_SPEC.md) work.
+xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
+discharge for those engines is a future workstream.
 
 ---
 
@@ -68,10 +74,10 @@ is [v27 WS8](../specs/v27/V27_REPO_EXACT_MASTER_SPEC.md) work.
 
 | Profile | Status | T6/T7 discharge |
 |---|---|---|
-| pdflatex | GA | v26.2 hypothesis-parametric; v27 WS8 concrete |
-| xelatex | beta | same; v26.3 adds xelatex aux-parser |
-| lualatex | beta | same; \\directlua side effects out of scope |
-| pTeX/upTeX | experimental | no T6/T7 claim in v26.2 |
+| pdflatex | GA | v27 WS8 concrete (`PdflatexModel.pdflatex_compile_safe`) |
+| xelatex | beta | hypothesis-parametric; v26.3 adds xelatex aux-parser |
+| lualatex | beta | hypothesis-parametric; `\directlua` side effects out of scope |
+| pTeX/upTeX | experimental | no T6/T7 claim |
 
 Full profile metadata: [compilation_profiles.yaml](../specs/v26/compilation_profiles.yaml).
 

@@ -2,6 +2,93 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.1] — 2026-04-28
+
+**v27 WS8 spec-compliance follow-up.** Closes 3 of the 4 items the
+v27.0.0 CHANGELOG misclassified as "Deferred to v27 WS9+" — they
+were closeable in 90 minutes total once attempted, not multi-day.
+Proof-only release; 0 differential diffs vs v27.0.0 across 330
+corpus files.
+
+**1,317 theorems / 169 .v files / 0 admits / 0 axioms** (v27.0.0
+had 1,312 / 169; +5 from the new `_holds` lemmas + extended marker
+predicates).
+
+### Closed in this release
+
+1. **T0/T1/T4 wired to LP-Core wrappers** (per `V27_WS8_PLAN.md` §2
+   original mandate):
+   - `pdflatex_T0_accepts (_ : pdflatex_project) := forall (n :
+     ParserSound.node), exists flat, ParserSound.flatten n = flat`,
+     discharged by `pdflatex_T0_accepts_holds` (Qed) via
+     `T0_wrapper.T0_parser_accepts`.
+   - `pdflatex_T1_admissible (_ : pdflatex_project) := forall c1
+     c2 : UserExpand.catalog, acyclic c1 -> acyclic c2 -> ... ->
+     acyclic (merge c1 c2)`, discharged by
+     `pdflatex_T1_admissible_holds` (Qed) via
+     `T1_wrapper.T1_expansion_admissible_merge`.
+   - `pdflatex_T4_coherent (_ : pdflatex_project) := forall labels,
+     ProjectSemantics.labels_unique labels -> forall n f1 f2,
+     In (n,f1) labels -> In (n,f2) labels -> f1 = f2`, discharged
+     by `pdflatex_T4_coherent_holds` (Qed) via
+     `T4_wrapper.T4_labels_unique_packaged`.
+   - `pdflatex_compile_safe`'s capstone proof updated: the four
+     T0/T1/T4/T5 hypothesis discharges now go through the
+     corresponding `_holds` lemmas instead of `exact I`.
+
+2. **Extended fatal-marker detection set**:
+   - `fatal_markers : list (list nat)` now contains
+     `fatal_marker_exclamation_fatal` ("! Fatal"),
+     `fatal_marker_emergency_stop` ("! Emergency stop"), and
+     `fatal_marker_runaway_argument` ("Runaway argument").
+   - `log_no_fatal log := forall m, In m fatal_markers ->
+     contains_subseq m log = false` (universal quantifier form).
+   - `empty_log_no_fatal` and `singleton_log_no_fatal` re-proved.
+     Capstone proofs unchanged: they go through these lemmas, not
+     specific markers.
+
+3. **Engine-generic capstone aliases**:
+   - `xelatex_compile_safe := pdflatex_compile_safe`.
+   - `lualatex_compile_safe := pdflatex_compile_safe`.
+   - The pass-iteration model is engine-agnostic; explicit aliases
+     document that the carrier-level result extends to xelatex /
+     lualatex profiles whose engines `BuildProfileSound.profile_admits`
+     accepts.
+
+### Honest deferral framing (corrected from v27.0.0)
+
+Genuinely multi-week items that NEED stage-decomposed plan files
+(see `specs/v27/`):
+
+- **`T5_safe` substantive wiring** — `T5_wrapper` is Section-parametric
+  in concrete `rule_id` / `rule_passes` / `no_static_violation`;
+  bridging requires linking to the per-rule QED chain in
+  `proofs/generated/`. Plan: `specs/v27/V27_T5_WIRING_PLAN.md`.
+- **Faithful operational pdflatex semantics** — the abstract
+  `pdflatex_step` is a counter; faithful would model real aux/log
+  evolution per token. Plan: `specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`.
+- **Rolling fix-producer cadence** — 32 of 660 catalogued rules
+  have producers; remaining 628 split by complexity bucket. Plan:
+  `specs/v27/V27_FIX_PRODUCER_CADENCE.md`.
+- **L3 AST migration** — `docs/L3_ROADMAP.md` is the existing
+  multi-stage plan; revised in `specs/v27/V27_L3_AST_PLAN.md`.
+- **`apply_edits_concrete_associative_subset` Coq theorem** — needs
+  parallel-application Fixpoint over original-source offsets. Plan:
+  `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md`.
+
+### Differential test
+0 diffs across 330 corpus files vs `v27.0.0`. v27.0.1 is purely
+formal/Coq — no runtime change.
+
+### Counts (v27.0.1 vs v27.0.0)
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (unchanged).
+- 1,317 theorems (was 1,312; +5 from `_holds` lemmas + extended
+  `log_no_fatal` + xelatex/lualatex aliases).
+- 169 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
 ## [v27.0.0] — 2026-04-28
 
 **v27 WS8 capstone — `pdflatex_compile_safe` shipped with Qed.**

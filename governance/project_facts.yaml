@@ -1,4 +1,4 @@
-version: v27.0.0
+version: v27.0.1
 release_state: rc
 release_date: '2026-04-28'
 generated_by: scripts/tools/generate_project_facts.py
@@ -80,7 +80,7 @@ proofs:
   formal_faithful_count: 637
   formal_conservative_count: 20
   formal_conditional_count: 3
-  theorem_count_reported: 1312
+  theorem_count_reported: 1317
   admits: 0
   axioms: 0
 languages:

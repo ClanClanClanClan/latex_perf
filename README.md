@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.5.0
+# LaTeX Perfectionist v27.0.0
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -59,7 +59,7 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (33 core + 108 generated + 1 ML) via `(coq.theory)` stanzas.
-- **Proofs**: 142 Coq files, 1,133 theorems/lemmas. 644 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+- **Proofs**: 169 Coq files, 1,312 theorems/lemmas. 644 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
 - **Validators**: 638 rule IDs / 654 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
@@ -197,7 +197,7 @@ bash scripts/latency_smoke_expand.sh 200
 - **Language contract** (v26): LP-Core / LP-Extended / LP-Foreign tiers. See [specs/v26/language_contract.md](specs/v26/language_contract.md).
 - **Rule contracts** (v26.1): per-rule execution/proof/project metadata in [specs/rules/rule_contracts.yaml](specs/rules/rule_contracts.yaml); drives the validator DAG.
 - **Execution classes**: A (keystroke-critical) / B (debounce) / C (build-coupled) / D (advisory). Formalised in [proofs/ExecutionClasses.v](proofs/ExecutionClasses.v).
-- **Proof strategy**: 0 admits, 0 axioms; 142 Coq files, 1,130 theorems/lemmas.
+- **Proof strategy**: 0 admits, 0 axioms; 169 Coq files, 1,312 theorems/lemmas.
 
 ### SIMD Implementation
 
@@ -227,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v26.5.0 released. 644 validators implemented, 1,298 theorems across 162 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) opened in v26.5 — Stage 1 scaffolds carriers + Section closure; Stages 2–6 across successor cycles culminate at v27.0.0.
+**Status**: v27.0.0 released. 644 validators implemented, 1,312 theorems across 169 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) opened in v26.5 — Stage 1 scaffolds carriers + Section closure; Stages 2–6 across successor cycles culminate at v27.0.0.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

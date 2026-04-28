@@ -2,6 +2,99 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.0] — 2026-04-28
+
+**v27 WS8 capstone — `pdflatex_compile_safe` shipped with Qed.**
+
+The compile-guarantee stack (`proofs/CompileProgress.v` T6 +
+`proofs/CompileWellFormed.v` T7) is now discharged unconditionally
+for the pdflatex profile. Both load-bearing hypotheses
+(`compile_progress_rule`, `output_wellformed_rule`) close as
+substantive Qed-proved lemmas in `proofs/PdflatexModel.v` against
+an explicit pass-iteration model. `Print Assumptions
+pdflatex_compile_safe` returns "Closed under the global context"
+— zero axioms, zero admits.
+
+**1,312 theorems / 169 .v files / 0 admits / 0 axioms** (v26.5.0
+had 1,298 / 162; +14 from PdflatexModel.v Stages 2–6).
+
+### Shipped (6 cycle PRs + this release-bump)
+
+| PR | Stage | Content |
+|---|---|---|
+| #285 | Stage 1 | `proofs/PdflatexModel.v` scaffold: carriers, Section closures, `True` placeholder predicates |
+| #288 | Stage 2 | `pdflatex_pass_state` Fixpoint + `iterate_step` + termination theorem `pdflatex_pass_count_bounded` (5-pass bound) |
+| #289 | Stage 3 | First substantive `compile_progress_rule` discharge (refined further in Stage 6) |
+| #290 | Stage 4 | `pdf_artefact` / `log_artefact` records + `valid_pdf_graph` + `pdf_log_wellformed` |
+| #303 | Stage 5 | Substantive `output_wellformed_rule` discharge with `_v5`-suffixed predicates |
+| #310 | Stage 6 capstone | Unify `_v5` chain into canonical names, strengthen `compilation_succeeds` to require `log_no_fatal`, ship unconditional `pdflatex_compile_safe` Qed |
+
+### Headline theorem
+
+```coq
+Theorem pdflatex_compile_safe :
+  forall (p : pdflatex_project) (pf : pdflatex_profile),
+    project_well_typed p ->
+    profile_supported pf ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_compilation_succeeds p pf /\
+      pdflatex_output_format_well_formed out.
+```
+Witness: `canonical_artefact (iterate_step pdflatex_initial_state
+pdflatex_pass_max)`. The proof composes `pdflatex_T6_discharged`
+(via `pdflatex_bounded_terminates_universal`) with
+`pdflatex_T7_discharged` plus `iterate_step_log_unchanged` +
+`empty_log_no_fatal` to close every conjunct.
+
+### Predicate map (delivered)
+
+- T2_closed  := `ProjectClosure.project_closed`
+- T3_compatible := `BuildProfileSound.profile_admits ...`
+- T0/T1/T4/T5 := `True` (deferred to v27 WS9+ — bridging to the
+  LP-Core wrappers requires accessor functions on `build_graph` for
+  per-domain carriers; multi-day per wrapper)
+- bounded_terminates := `exists k <= 5, converged at k`
+- compilation_succeeds := `exists k <= 5, converged at k /\
+  log_no_fatal at k`
+- produces := `exists k <= 5, out = canonical_artefact (iterate_step
+  initial k)`
+- output_format_well_formed := `pdf_log_wellformed (fst out) (snd
+  out)` (= `valid_pdf_graph (fst) /\ log_no_fatal (snd)`)
+
+See `proofs/ADMISSIBILITY_MAP.md` T6 + T7 entries for the full
+discharge chain and `specs/v27/V27_WS8_PLAN.md` §2 for the
+plan-vs-delivered diff.
+
+### Faithfulness scope (v27 WS9+)
+
+The capstone is unconditional under the counter-bounded
+pass-iteration abstraction in `PdflatexModel.v`. Tying that
+abstraction to a faithful operational pdflatex semantics (real
+aux/log evolution, real fatal-marker emission, full set of fatal
+markers beyond `! Fatal`, T0/T1/T4/T5 wiring through their
+wrappers) is queued for the v27 WS9+ workstream.
+
+### Differential test
+0 diffs across 330 corpus files vs `v26.5.0`. WS8 is purely
+formal/Coq — no runtime change. Same fix-producing rule set as
+v26.5.0.
+
+### Counts (v27.0.0 vs v26.5.0)
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (unchanged).
+- 1,312 theorems (was 1,298; +14 from WS8 stages 2–6).
+- 169 .v files (was 162; +7 from PdflatexModel.v + companion files).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Deferred to v27 WS9+
+- T0/T1/T4/T5 wiring through their LP-Core wrappers (multi-day
+  per wrapper — accessor functions on `build_graph` required).
+- Faithful operational pdflatex semantics (real aux/log evolution).
+- Extended fatal-marker detection set (currently only `! Fatal`).
+- xelatex / lualatex profile discharge (still hypothesis-parametric).
+
 ## [v26.5.0] — 2026-04-27
 
 v26.5.0 opens **v27 WS8** — the multi-session discharge of the

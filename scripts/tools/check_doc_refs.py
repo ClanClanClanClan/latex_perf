@@ -77,6 +77,15 @@ REF_ALLOWLIST = {
     # training run.
     "ml/results/20260319_234935/eval_results.json",
     "ml/results/20260319_234935/eval_bound.json",
+    # v27 multi-week stage-decomposed plan files reference forward
+    # deliverables (proof files / inventory docs to be created during
+    # the staged work). The plan files exist; their forward references
+    # are intentional — the plan IS the deliverable contract.
+    "proofs/T5_concrete.v",                # V27_T5_WIRING_PLAN Stage 1
+    "proofs/RewriteEngine.v",              # V27_APPLY_EDITS_ASSOC_PLAN Stage 1
+    "docs/MERGING_GUARANTEES.md",          # V27_APPLY_EDITS_ASSOC_PLAN Stage 5
+    "specs/v27/FIX_PRODUCER_LEDGER.md",    # V27_FIX_PRODUCER_CADENCE Stage cumulative
+    "specs/v27/L3_MIGRATION_INVENTORY.md", # V27_L3_AST_PLAN Stage 2
 }
 
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")

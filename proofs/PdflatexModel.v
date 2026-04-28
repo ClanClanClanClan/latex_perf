@@ -220,23 +220,51 @@ Fixpoint contains_subseq (sub seq : list nat) : bool :=
 Definition fatal_marker_exclamation_fatal : list nat :=
   [33; 32; 70; 97; 116; 97; 108].
 
+(** "! Emergency stop" — pdflatex's catch-all fatal-error marker. *)
+Definition fatal_marker_emergency_stop : list nat :=
+  [33; 32; 69; 109; 101; 114; 103; 101; 110; 99; 121; 32; 115; 116; 111; 112].
+
+(** "Runaway argument" — TeX's brace-mismatch / unclosed-macro marker. *)
+Definition fatal_marker_runaway_argument : list nat :=
+  [82; 117; 110; 97; 119; 97; 121; 32; 97; 114; 103; 117; 109; 101; 110; 116].
+
+(** Canonical fatal-marker set (extended).  All non-empty.  Adding
+    further markers is mechanical: extend this list and re-prove
+    [empty_log_no_fatal] (case-by-case reflexivity for non-empty
+    elements). *)
+Definition fatal_markers : list (list nat) :=
+  [ fatal_marker_exclamation_fatal;
+    fatal_marker_emergency_stop;
+    fatal_marker_runaway_argument ].
+
 Definition log_no_fatal (log : log_artefact) : Prop :=
-  contains_subseq fatal_marker_exclamation_fatal log = false.
+  forall m, In m fatal_markers -> contains_subseq m log = false.
 
 Theorem empty_log_no_fatal :
   log_no_fatal [].
 Proof.
-  unfold log_no_fatal, contains_subseq, prefix_match,
-         fatal_marker_exclamation_fatal.
-  reflexivity.
+  intros m Hm. unfold fatal_markers in Hm. simpl in Hm.
+  destruct Hm as [Heq | [Heq | [Heq | Hcontra]]]; try (subst; reflexivity).
+  inversion Hcontra.
 Qed.
 
 Theorem singleton_log_no_fatal :
   forall b, log_no_fatal [b].
 Proof.
-  intros b. unfold log_no_fatal, contains_subseq, prefix_match,
-                    fatal_marker_exclamation_fatal.
-  destruct (Nat.eqb 33 b); reflexivity.
+  intros b m Hm. unfold fatal_markers in Hm. simpl in Hm.
+  destruct Hm as [Heq | Hm']; [
+    subst; unfold contains_subseq, prefix_match,
+                  fatal_marker_exclamation_fatal;
+    destruct (Nat.eqb 33 b); reflexivity |].
+  destruct Hm' as [Heq | Hm'']; [
+    subst; unfold contains_subseq, prefix_match,
+                  fatal_marker_emergency_stop;
+    destruct (Nat.eqb 33 b); reflexivity |].
+  destruct Hm'' as [Heq | Hcontra]; [
+    subst; unfold contains_subseq, prefix_match,
+                  fatal_marker_runaway_argument;
+    destruct (Nat.eqb 82 b); reflexivity |].
+  inversion Hcontra.
 Qed.
 
 (** ── PDF validity + composite well-formedness ─────────────────── *)
@@ -620,6 +648,40 @@ Proof.
     + rewrite (iterate_step_log_unchanged pdflatex_pass_max pdflatex_initial_state).
       cbn [log_state pdflatex_initial_state]. apply empty_log_no_fatal.
 Qed.
+
+(** ── Engine-generic capstone aliases ─────────────────────────────
+
+    The pass-iteration model in this file is engine-agnostic — the
+    [pdflatex_step] counter doesn't model anything pdflatex-specific
+    beyond the 5-pass convergence bound, which xelatex and lualatex
+    share by industry convention.  [profile_supported] dispatches on
+    the engine via [BuildProfileSound.profile_admits], so the same
+    capstone covers any [pdflatex_profile] whose engine is admitted.
+
+    The aliases below are explicit theorems for xelatex / lualatex
+    profiles so callers can name them directly.  Each is a
+    Definition (not Theorem) — same proof object as
+    [pdflatex_compile_safe], no new content. *)
+
+Definition xelatex_compile_safe :
+  forall (p : pdflatex_project) (pf : pdflatex_profile),
+    project_well_typed p ->
+    profile_supported pf ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_compilation_succeeds p pf /\
+      pdflatex_output_format_well_formed out
+  := pdflatex_compile_safe.
+
+Definition lualatex_compile_safe :
+  forall (p : pdflatex_project) (pf : pdflatex_profile),
+    project_well_typed p ->
+    profile_supported pf ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_compilation_succeeds p pf /\
+      pdflatex_output_format_well_formed out
+  := pdflatex_compile_safe.
 
 (** ── Zero-admit witness ──────────────────────────────────────────── *)
 

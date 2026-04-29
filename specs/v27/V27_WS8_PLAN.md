@@ -155,7 +155,7 @@ instantiations are:
 | `T2_closed` | `ProjectClosure.project_closed` | as planned |
 | `T3_compatible` | `BuildProfileSound.profile_admits pf.(prof_features) pf.(prof_engine)` | as planned (project arg unused) |
 | `T4_coherent` | `forall labels, ProjectSemantics.labels_unique labels -> forall n f1 f2, In (n,f1) labels -> In (n,f2) labels -> f1 = f2` (the wrapper's claim) | wired to `T4_wrapper.T4_labels_unique_packaged`; discharged unconditionally by `pdflatex_T4_coherent_holds` (Qed) |
-| `T5_safe` | `True` | `T5_wrapper` is Section-parametric in `rule_safety_rule` (rule_id / rule_passes / no_static_violation are abstract); the substantive content lives in `proofs/generated/` per-rule QEDs. Discharge `pdflatex_T5_safe_holds := I` is honest about scope; project-level rule-safety bridging is v27 WS9+ |
+| `T5_safe` | universal-over-catalogue Forall-shape | wired in v27.0.2 (PRs #313→#317): `T5_concrete.v` Section-parametric carriers + `PdflatexModel.pdflatex_T5_safe` substantive (`forall rule_catalogue rules, all_pass -> no_static_violation`) + `proofs/generated/PdflatexT5Wired.v` catalogue-specific instance against `all_proved_rule_ids`. All discharges Qed under the global context. The fully project-attached "no rule fires on p" runtime-emit-relation bridge remains v27 WS9+ scope. |
 | `bounded_build_terminates_for` | `pdflatex_bounded_terminates` (substantive: `exists k <= 5, converged`) | proved in Stage 2 via `pdflatex_pass_count_bounded` |
 | `compilation_succeeds` | `exists k <= 5, converged at k /\ log_no_fatal at k` | **revised shape** (existential over k): same content as plan's `clean_exit /\ log_no_fatal` but expressed against the explicit pass-state model |
 | `compile_progress_rule` | discharged in Stage 6 as `pdflatex_compile_progress_rule_proof` (Qed; substantive — uses `iterate_step_log_unchanged` + `empty_log_no_fatal`) | originally planned for Stage 3 with a tautology shape (compilation_succeeds := bounded_terminates definitionally); Stage 6 strengthens compilation_succeeds with the log conjunct, making the discharge real proof content |
@@ -221,12 +221,11 @@ Per `proofs/ADMISSIBILITY_MAP.md` v27 WS8 section:
 - [x] `proofs/PdflatexModel.v` created — Stage 1 (PR #285)
 - [x] `pdflatex_project / profile / artefact` types defined —
       Stages 1 + 4 (PRs #285, #290)
-- [x] Each T0–T5 predicate instantiated — Stage 1 + spec-compliance
-      fix: T0/T1/T4 wired to `T0_wrapper`/`T1_wrapper`/`T4_wrapper`;
-      T2 + T3 concrete; T5 stays as `True` with documentation
-      pointing to `proofs/generated/` per-rule QEDs (T5_wrapper is
-      Section-parametric and would require concrete rule_id /
-      rule_passes / no_static_violation to wire substantively)
+- [x] Each T0–T5 predicate instantiated — fully wired by v27.0.2:
+      T0/T1/T4 wired to `T0_wrapper`/`T1_wrapper`/`T4_wrapper` (v27.0.1
+      PR #312); T2 + T3 concrete (`project_closed`, `profile_admits`);
+      T5 wired to `T5_concrete.v` Section + `proofs/generated/
+      PdflatexT5Wired.v` catalogue instance (v27.0.2 PRs #313→#317)
 - [x] `bounded_build_terminates_for := pdflatex_bounded_terminates`
       proved — Stage 2 (PR #288)
 - [x] `compile_progress_rule` discharged as theorem — Stage 3 (PR
@@ -241,10 +240,15 @@ Per `proofs/ADMISSIBILITY_MAP.md` v27 WS8 section:
 - [x] `pdflatex_compile_safe` shipped with Qed — Stage 6 (PR #310)
 - [x] `proofs/ADMISSIBILITY_MAP.md` updated — Stage 6 (PR #310)
 - [x] `docs/COMPILATION_GUARANTEE.md` updated — Stage 6 (PR #310)
-- [ ] `CHANGELOG.md` `[v27.0.0]` entry — pending release-bump PR
-- [ ] `dune-project / opam / project_facts / README` bumped to
-      `v27.0.0` — pending release-bump PR
-- [ ] tag `v27.0.0` on main — pending release-bump PR merge
+- [x] `CHANGELOG.md` `[v27.0.0]` entry (PR #311); subsequent
+      `[v27.0.1]` (PR #312) closes WS8 spec-compliance gaps;
+      `[v27.0.2]` (PR #318) closes the T5 wiring cycle.
+- [x] `dune-project / opam / project_facts / README` bumped to
+      `v27.0.0` (PR #311), then `v27.0.1` (PR #312), then `v27.0.2`
+      (PR #318).
+- [x] tag `v27.0.0` on main (commit `492ff90`); subsequent tags
+      `v27.0.1` (commit `1239ff9`) and `v27.0.2` (after PR #318
+      merges) extend the release line.
 
 ## 5. Acceptance criteria for v27.0.0 (the WS8 capstone)
 

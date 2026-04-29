@@ -2,6 +2,82 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.2] — 2026-04-29
+
+**v27 T5 wiring complete.** Closes the last "Genuinely multi-week
+items needing stage-decomposed plans" deferred from v27.0.1: `T5_safe`
+substantively wired to `T5_wrapper` via the 6-stage plan in
+`specs/v27/V27_T5_WIRING_PLAN.md`. The WS8 capstone is now fully
+spec-compliant end-to-end — every T0–T5 predicate substantively
+connects to its LP-Core wrapper or canonical source. No more `True`
+placeholders for the supported-profile capstone.
+
+**1,321 theorems / 170 .v files / 0 admits / 0 axioms** (v27.0.1
+had 1,317 / 169; +4 from `T5_concrete` stages 2–5 + `PdflatexT5Wired`
+catalogue instance + corollary).
+
+### Shipped (5 stage PRs + this release-bump)
+
+| PR | Stage | Content |
+|---|---|---|
+| #313 | Stage 1 | `proofs/T5_concrete.v` scaffolded with `rule_id := string` + placeholder predicates |
+| #314 | Stage 2 | `pdflatex_rule_safety_rule_proof` (Qed) + `pdflatex_T5_safe_stage2` (Qed) Section closure of `T5_wrapper.T5_rule_safe` |
+| #315 | Stage 3 | `pdflatex_rule_passes_pred` made Section-parametric in `rule_catalogue : list rule_id` (avoids circular dep with `Generated.Catalogue`); refined to `In r rule_catalogue` |
+| #316 | Stage 4 | `pdflatex_no_static_violation_pred` refined from `True` to `Forall (In rule_catalogue) rules`; discharge proof now consumes the premise via `Forall_forall` |
+| #317 | Stage 5 | `proofs/PdflatexModel.v::pdflatex_T5_safe` rewritten from `True` to universal-over-catalogue substantive form; new `proofs/generated/PdflatexT5Wired.v` derives the `Generated.Catalogue.all_proved_rule_ids`-specific instance + corollary for the full catalogue |
+
+### Architectural note
+
+The natural source of truth for "rules with per-rule QEDs" is
+`LaTeXPerfectionist.Generated.Catalogue.all_proved_rule_ids`. But
+`Generated` already depends on `LaTeXPerfectionist`, so direct import
+from main-library files (`T5_concrete`, `PdflatexModel`) creates a
+circular theory dependency. The Stage 3+5 design solves this:
+
+- `T5_concrete.v` uses a Section variable `rule_catalogue` so the
+  catalogue is parametric, not imported.
+- `PdflatexModel.v::pdflatex_T5_safe` is universal over the catalogue
+  at the predicate level.
+- `proofs/generated/PdflatexT5Wired.v` (in `Generated`, downstream)
+  derives the `all_proved_rule_ids`-specific instance.
+
+This keeps the WS8 capstone in the main library while the
+catalogue-specific witness lives where it can see both
+`PdflatexModel` and `Catalogue`.
+
+### Honest scope (v27 WS9+ deferred per `V27_T5_WIRING_PLAN.md`)
+
+A fully project-attached "no rule fires on p" claim — connecting
+per-rule QEDs to actual span emissions via a runtime validator
+emit-relation model — remains genuinely multi-day work and is
+honestly deferred to v27 WS9+. Stage 4's `Forall (In rule_catalogue)
+rules` shape is the strongest substantive predicate without that
+runtime bridge.
+
+### Remaining v27 multi-week plans (per the plan files)
+
+- `specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md` — operational pdflatex
+  semantics (token-driven aux/log evolution) — 7 stages, capstone tag
+  v27.1.0
+- `specs/v27/V27_FIX_PRODUCER_CADENCE.md` — bucket-classified rolling
+  cadence (628 rules) — v27.0.x → v27.4.0
+- `specs/v27/V27_L3_AST_PLAN.md` — L3 AST migration — 10 stages,
+  capstone tag v27.2.0
+- `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md` — apply_edits
+  associative-reorder — 6 stages
+
+### Differential test
+0 diffs across 330 corpus files vs `v27.0.1`. v27.0.2 is purely
+formal/Coq — no runtime change.
+
+### Counts (v27.0.2 vs v27.0.1)
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (unchanged).
+- 1,321 theorems (was 1,317; +4 from T5 stages 2–5 + PdflatexT5Wired).
+- 170 .v files (was 169; +1: `proofs/generated/PdflatexT5Wired.v`).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
 ## [v27.0.1] — 2026-04-28
 
 **v27 WS8 spec-compliance follow-up.** Closes 3 of the 4 items the

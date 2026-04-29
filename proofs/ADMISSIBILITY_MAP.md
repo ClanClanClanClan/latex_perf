@@ -63,14 +63,43 @@ theorem must still hold.
 - Bibliography entry resolution (hypothesis-parametric in v26.2;
   discharged in v27 WS8 once BibTeX/Biber models ship).
 
-### T5 — Rule safety
+### T5 — Rule safety (DISCHARGED in v27.0.2)
 
-**File:** `proofs/T5_wrapper.v` (to be added).
+> **v27.0.2 STATUS.** `proofs/T5_concrete.v` provides the
+> Section-parametric carriers (`rule_id := string`,
+> `pdflatex_rule_passes_pred := In r rule_catalogue`,
+> `pdflatex_no_static_violation_pred := Forall (In rule_catalogue)
+> rules`) and the Section-closed theorem `pdflatex_T5_safe_stage2`
+> (Qed) applying `T5_wrapper.T5_rule_safe` with the concrete
+> instantiations.  `proofs/PdflatexModel.v::pdflatex_T5_safe` is now
+> universal-over-catalogue substantively (`forall rule_catalogue
+> rules, all_rules_pass -> no_static_violation`), discharged by
+> `pdflatex_T5_safe_holds` (Qed) via the Section closure.
+> `proofs/generated/PdflatexT5Wired.v` derives the catalogue-specific
+> instance `pdflatex_T5_safe_proved` against
+> `Generated.Catalogue.all_proved_rule_ids`, with corollary
+> `pdflatex_T5_safe_for_full_catalogue` for the deployed full set.
+>
+> All `Print Assumptions` Closed under the global context.  Zero
+> admits, zero axioms.  Shipped in PRs #313 → #317; release-bumped
+> in #318 (v27.0.2).
+
+**File:** `proofs/T5_wrapper.v`.
 **Hypotheses:** per-rule; any rule not in `proofs/generated/` with a
 QED has a rule-level admissibility marker documented in the wrapper
 header.
-**WS8 discharge:** no new work — all v26.2 Error-level rules have
-per-rule QEDs (see `rule_contracts.yaml` / `proofs/generated/`).
+**WS8 discharge (v27.0.2):** Section-parametric `T5_concrete.v` +
+universal-over-catalogue `pdflatex_T5_safe` + downstream wiring in
+`proofs/generated/PdflatexT5Wired.v`.  All v26.2 Error-level rules
+have per-rule QEDs (see `rule_contracts.yaml` / `proofs/generated/`);
+the catalogue is consumed via `Generated.Catalogue.all_proved_rule_ids`.
+
+**Faithfulness scope (v27 WS9+):** a fully project-attached "no rule
+fires on p" claim — connecting per-rule QEDs to actual span
+emissions via a runtime validator emit-relation model — remains
+genuinely multi-day work and is honestly deferred.  The current
+`Forall (In rule_catalogue) rules` shape is the strongest
+substantive predicate without that runtime bridge.
 
 ### T6 — Compilation progress (DISCHARGED in v27 WS8 capstone)
 

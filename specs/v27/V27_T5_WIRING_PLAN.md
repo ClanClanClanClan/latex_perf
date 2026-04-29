@@ -147,13 +147,22 @@ Each stage ends by writing a memory entry under
    surprises (e.g. string equality decidability requirements).
 4. **Verification numbers** — theorem count delta, gate state.
 
-## Acceptance criteria for the capstone
+## Acceptance criteria for the capstone (state at v27.0.2)
 
-- [ ] `proofs/T5_concrete.v` exists; Section closure applied.
-- [ ] `pdflatex_T5_safe (p : pdflatex_project)` is substantive
-  (not `True`); `pdflatex_T5_safe_holds` Qed-proves it.
-- [ ] `pdflatex_compile_safe` proof still goes through.
-- [ ] All `Print Assumptions` Closed under the global context.
-- [ ] CHANGELOG entry under `[v27.0.x]` lists the closed item.
-- [ ] `proofs/ADMISSIBILITY_MAP.md` flips T5 wiring from "stays
-  True" to "wired in v27.0.x".
+- [x] `proofs/T5_concrete.v` exists; Section closure applied (PR #313
+  scaffold, #314 closure, #315 catalogue-parametric).
+- [x] `pdflatex_T5_safe (p : pdflatex_project)` is substantive
+  (universal-over-catalogue, not `True`); `pdflatex_T5_safe_holds`
+  Qed-proves it via `T5_concrete.pdflatex_T5_safe_stage2` (PR #317).
+- [x] `pdflatex_compile_safe` proof still goes through (T5 hypothesis
+  discharge via `apply pdflatex_T5_safe_holds`).
+- [x] All `Print Assumptions` Closed under the global context
+  (verified for: `pdflatex_compile_safe`, `pdflatex_T5_safe`,
+  `pdflatex_T5_safe_holds`, `pdflatex_T5_safe_stage2`,
+  `pdflatex_rule_safety_rule_proof`, `pdflatex_T5_safe_proved`,
+  `pdflatex_T5_safe_for_full_catalogue`).
+- [x] CHANGELOG entry under `[v27.0.2]` lists the 5-stage T5 cycle
+  + architectural note (PR #318).
+- [x] `proofs/ADMISSIBILITY_MAP.md` T5 entry flipped from
+  "WS8 discharge: no new work" to "DISCHARGED in v27.0.2" with
+  detailed STATUS callout (PR #318).

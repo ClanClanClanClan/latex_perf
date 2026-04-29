@@ -58,6 +58,7 @@ From LaTeXPerfectionist Require Import
   T0_wrapper
   T1_wrapper
   T4_wrapper
+  T5_concrete
   ProjectSemantics.
 Import ListNotations.
 
@@ -385,18 +386,30 @@ Proof.
   apply (T4_labels_unique_packaged labels Huniq n f1 f2 H1 H2).
 Qed.
 
-(** T5 — rule safety.  T5_wrapper is Section-parametric in
-    [rule_safety_rule]; instantiating with concrete rule_id /
-    rule_passes / no_static_violation requires the per-rule QED
-    chain in [proofs/generated/].  We expose T5_safe as a thin
-    project-attached "rule_safety_rule has a discharge" claim that
-    passes through the wrapper's hypothesis-parametric proof.  The
-    substantive content for v26.2 lives in [proofs/generated/];
-    this predicate documents the wiring intent. *)
-Definition pdflatex_T5_safe (_ : pdflatex_project) : Prop := True.
+(** T5 — rule safety.  Wired to [T5_concrete.pdflatex_T5_safe_stage2]
+    via universal quantification over the rule catalogue: for any
+    catalogue [C] and rule list [rs], if every rule in [rs] is in
+    [C] (i.e., has a per-rule soundness QED in
+    [proofs/generated/]), then no static violation remains
+    ([Forall (fun r => In r C) rs]).
+
+    The universal-over-catalogue shape avoids importing
+    [LaTeXPerfectionist.Generated.Catalogue] from
+    [LaTeXPerfectionist] (which would create a circular theory
+    dependency, since Generated already depends on this library).
+    Downstream files in [proofs/generated/] can derive the
+    catalogue-specific instance by applying [pdflatex_T5_safe_holds]
+    with [C := Generated.Catalogue.all_proved_rule_ids]. *)
+Definition pdflatex_T5_safe (p : pdflatex_project) : Prop :=
+  forall (rule_catalogue : list rule_id) (rules : list rule_id),
+    pdflatex_all_rules_pass rule_catalogue p rules ->
+    pdflatex_no_static_violation_pred rule_catalogue p rules.
 
 Lemma pdflatex_T5_safe_holds : forall p, pdflatex_T5_safe p.
-Proof. intros p. unfold pdflatex_T5_safe. exact I. Qed.
+Proof.
+  intros p rule_catalogue rules Hall.
+  apply (pdflatex_T5_safe_stage2 rule_catalogue p rules Hall).
+Qed.
 
 (** ── Toolchain predicates (substantive) ───────────────────────── *)
 

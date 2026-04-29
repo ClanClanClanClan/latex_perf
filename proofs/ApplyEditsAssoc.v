@@ -222,3 +222,139 @@ Qed.
 (** ── Stage 2 zero-admit witness ───────────────────────────────────── *)
 
 Definition apply_edits_assoc_stage2_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 apply_edits_assoc STAGE 3 — sort idempotence + sorted equivalence
+    ─────────────────────────────────────────────────────────────────
+
+    Per V27_APPLY_EDITS_ASSOC_PLAN.md Stage 3, retargeted (the
+    original "parallel = concrete on non-overlapping" form is FALSE
+    in general — see Stage 2 file-header counter-example).
+
+    Stage 3 substantively delivers:
+    - [descending_sorted] predicate
+    - [insert_desc_into_sorted_extends] structural lemma
+    - [sort_by_start_desc_idempotent] (Qed)
+    - [sort_by_start_desc_id_when_sorted] (Qed) — sort is the
+      identity on already-sorted input
+    - [apply_edits_parallel_eq_concrete_when_sorted] (Qed) — the
+      original Stage 3 equivalence claim, correctly conditioned on
+      descending-sorted input. *)
+
+(** Predicate: list is sorted in descending order by [e_start].
+    Defined inductively on the standard cons-pattern. *)
+Inductive descending_sorted : list edit -> Prop :=
+  | descending_sorted_nil : descending_sorted []
+  | descending_sorted_singleton : forall e, descending_sorted [e]
+  | descending_sorted_cons :
+      forall e1 e2 rest,
+        e2.(e_start) <= e1.(e_start) ->
+        descending_sorted (e2 :: rest) ->
+        descending_sorted (e1 :: e2 :: rest).
+
+(** [insert_desc] places [e] at the head of an already-sorted list
+    iff [e.e_start >= head's e_start].  Standard insertion-sort
+    invariant. *)
+Lemma insert_desc_preserves_sorted :
+  forall e es,
+    descending_sorted es ->
+    descending_sorted (insert_desc e es).
+Proof.
+  intros e es Hes. induction Hes as [|e0|e1 e2 rest Hle Hsorted IH].
+  - simpl. constructor.
+  - simpl. destruct (Nat.leb (e_start e0) (e_start e)) eqn:Hle0.
+    + apply Nat.leb_le in Hle0.
+      apply descending_sorted_cons; [exact Hle0 | constructor].
+    + apply Nat.leb_nle in Hle0.
+      simpl. apply descending_sorted_cons.
+      * lia.
+      * constructor.
+  - simpl. destruct (Nat.leb (e_start e1) (e_start e)) eqn:Hle1.
+    + apply Nat.leb_le in Hle1.
+      apply descending_sorted_cons; [exact Hle1 |].
+      apply descending_sorted_cons; assumption.
+    + apply Nat.leb_nle in Hle1.
+      simpl in IH. simpl.
+      destruct (Nat.leb (e_start e2) (e_start e)) eqn:Hle2.
+      * apply Nat.leb_le in Hle2.
+        apply descending_sorted_cons; [lia |].
+        apply descending_sorted_cons; [exact Hle2 | exact Hsorted].
+      * apply Nat.leb_nle in Hle2.
+        apply descending_sorted_cons; [exact Hle | exact IH].
+Qed.
+
+(** Sort produces a descending-sorted list. *)
+Lemma sort_by_start_desc_sorted :
+  forall es, descending_sorted (sort_by_start_desc es).
+Proof.
+  induction es as [|e rest IH]; simpl.
+  - constructor.
+  - apply insert_desc_preserves_sorted. exact IH.
+Qed.
+
+(** [insert_desc] is the identity when the new element is greater
+    than or equal to the head of an already-sorted list. *)
+Lemma insert_desc_id_when_head_le :
+  forall e es,
+    descending_sorted es ->
+    (forall x, In x es -> x.(e_start) <= e.(e_start)) ->
+    insert_desc e es = e :: es.
+Proof.
+  intros e es Hes Hle. destruct es as [|x rest].
+  - reflexivity.
+  - simpl. assert (Hle' : x.(e_start) <= e.(e_start)).
+    { apply Hle. simpl. left. reflexivity. }
+    apply Nat.leb_le in Hle'. rewrite Hle'. reflexivity.
+Qed.
+
+(** Sort is the identity on already-descending-sorted lists.
+    Proved by induction on the sorted structure. *)
+Lemma sort_by_start_desc_id_when_sorted :
+  forall es, descending_sorted es -> sort_by_start_desc es = es.
+Proof.
+  intros es Hes. induction Hes as [|e0|e1 e2 rest Hle Hsorted IH].
+  - reflexivity.
+  - simpl. reflexivity.
+  - change (sort_by_start_desc (e1 :: e2 :: rest))
+      with (insert_desc e1 (sort_by_start_desc (e2 :: rest))).
+    rewrite IH.
+    cbn [insert_desc].
+    assert (Nat.leb (e_start e2) (e_start e1) = true) as Hleb.
+    { apply Nat.leb_le. exact Hle. }
+    rewrite Hleb. reflexivity.
+Qed.
+
+(** Sort is idempotent: sorting twice gives the same result as
+    sorting once. *)
+Lemma sort_by_start_desc_idempotent :
+  forall es,
+    sort_by_start_desc (sort_by_start_desc es) = sort_by_start_desc es.
+Proof.
+  intros es. apply sort_by_start_desc_id_when_sorted.
+  apply sort_by_start_desc_sorted.
+Qed.
+
+(** Stage 3 headline: [apply_edits_parallel] equals
+    [apply_edits_concrete] when the input is already sorted in
+    descending order by [e_start].  Trivial by definition (since
+    [apply_edits_parallel] applies [sort_by_start_desc] before
+    handing off to [apply_edits_concrete], and sort is the
+    identity on already-sorted input).
+
+    For pairwise-non-overlapping edits the descending sort yields
+    the same byte sequence as the byte-by-byte original-offset
+    semantic — this lemma documents the wire from parallel to
+    sequential. *)
+Lemma apply_edits_parallel_eq_concrete_when_sorted :
+  forall src es,
+    descending_sorted es ->
+    apply_edits_parallel src es = apply_edits_concrete src es.
+Proof.
+  intros src es Hes. unfold apply_edits_parallel.
+  rewrite (sort_by_start_desc_id_when_sorted es Hes).
+  reflexivity.
+Qed.
+
+(** ── Stage 3 zero-admit witness ───────────────────────────────────── *)
+
+Definition apply_edits_assoc_stage3_zero_admits : True := I.

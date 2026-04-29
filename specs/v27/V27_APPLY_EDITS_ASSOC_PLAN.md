@@ -73,46 +73,74 @@ in order — this makes the offset bookkeeping straightforward.
 **Acceptance:** `apply_edits_parallel` defined; type-checks; one
 example test (apply 2 disjoint edits to a 10-byte string).
 
-### Stage 3 — Equivalence: parallel = sequential for non-overlapping
-**Branch:** `v27.0/apply-edits-stage3-equivalence`
+### Stage 3 — Sort idempotence + sorted equivalence (REVISED)
+**Branch:** `v27.0/apply-edits-stage3-equivalence` (PR #321)
 
-Prove:
+**Revision rationale:** the original Stage 3 form
+`apply_edits_parallel src edits = apply_edits_concrete src edits`
+under `pairwise_non_overlapping edits` is **false** in general —
+sequential application interprets each edit's offsets relative to
+the *current* (post-earlier-edits) buffer, not the original source.
+A pairwise-non-overlapping but not-yet-sorted edit list yields
+different sequential vs parallel results.  See PR #320 file-header
+counter-example.
+
+The revised Stage 3 ships the structural lemmas Stage 4 needs and
+the *correctly-conditioned* parallel-vs-concrete equivalence:
 
 ```coq
-Lemma apply_edits_parallel_equals_concrete :
-  forall (src : list nat) (edits : list edit),
-    pairwise_non_overlapping edits ->
-    apply_edits_parallel src edits = apply_edits_concrete src edits.
+Inductive descending_sorted : list edit -> Prop := ...
+
+Lemma insert_desc_preserves_sorted          : Qed
+Lemma sort_by_start_desc_sorted             : Qed  (* sort produces sorted *)
+Lemma insert_desc_id_when_head_le           : Qed
+Lemma sort_by_start_desc_id_when_sorted     : Qed  (* sort is id on sorted *)
+Lemma sort_by_start_desc_idempotent         : Qed
+Lemma apply_edits_parallel_eq_concrete_when_sorted : Qed
 ```
 
-Where `pairwise_non_overlapping := forall i j, i <> j -> non_overlapping (nth i) (nth j)`.
+The Stage 3 headline `apply_edits_parallel_eq_concrete_when_sorted`
+is trivial by definition (sort is the identity on already-sorted
+input).  Stage 4 carries the substantive content — permutation
+invariance for the parallel applier, which is what the v26.4
+deferral note actually wanted.
 
-**Acceptance:** Lemma Qed-proved by induction on the edit list.
+**Acceptance:** all 6 lemmas Qed; `Print Assumptions` Closed.
 
-### Stage 4 — Associativity / reorder
-**Branch:** `v27.0/apply-edits-stage4-assoc`
+### Stage 4 — Permutation invariance for the parallel applier (REVISED)
+**Branch:** `v27.0/apply-edits-stage4-perm`
 
-Prove the parallel form is order-independent (since it uses
-original-source offsets):
+**Revision rationale:** the original Stage 4 headline
+`apply_edits_concrete src [e1;e2] = apply_edits_concrete src [e2;e1]`
+under `non_overlapping e1 e2` is **false** in general (PR #320
+counter-example).  The substantive theorem the v26.4 deferral note
+wanted is permutation invariance for the *parallel* applier (which
+uses original-source offsets):
 
 ```coq
-Lemma apply_edits_parallel_perm :
+Theorem apply_edits_parallel_perm :
   forall (src : list nat) (edits1 edits2 : list edit),
     Permutation edits1 edits2 ->
-    pairwise_non_overlapping edits1 ->
+    distinct_starts edits1 ->         (* unique e_start; rules out
+                                         insertions at same point *)
     apply_edits_parallel src edits1 = apply_edits_parallel src edits2.
 ```
 
-Combined with Stage 3:
+`distinct_starts` (or a similar predicate) is required because
+two insertions at the same offset are technically pairwise
+non-overlapping per `non_overlapping_self_iff` but apply in
+order-dependent fashion.  For genuine non-empty edits with
+non-overlapping ranges, `distinct_starts` follows from
+`pairwise_non_overlapping`.
 
-```coq
-Theorem apply_edits_concrete_associative_subset :
-  forall (src : list nat) (e1 e2 : edit),
-    non_overlapping e1 e2 ->
-    apply_edits_concrete src [e1; e2] = apply_edits_concrete src [e2; e1].
-```
+**Proof sketch:** show `sort_by_start_desc edits1 = sort_by_start_desc
+edits2` when `Permutation edits1 edits2 /\ distinct_starts edits1`
+(insertion sort is determined by the multiset of keys when keys
+are unique).  Then `apply_edits_parallel = apply_edits_concrete o
+sort_by_start_desc` gives equality of outputs.
 
-**Acceptance:** Theorem Qed-proved. Closed under the global context.
+**Acceptance:** `apply_edits_parallel_perm` Qed; `Print Assumptions`
+Closed under the global context.
 
 ### Stage 5 — Wire into ADMISSIBILITY_MAP / docs
 **Branch:** `v27.0/apply-edits-stage5-docs`
@@ -129,14 +157,18 @@ Tag.
 `~/.claude/.../memory/v27_apply_edits_assoc_status.md` carries
 state.
 
-## Acceptance criteria
+## Acceptance criteria (state at end of Stage 3)
 
-- [ ] `non_overlapping` Definition + decidability lemma.
-- [ ] `apply_edits_parallel` Fixpoint defined.
-- [ ] `apply_edits_parallel_equals_concrete` Qed (parallel = sequential
-  on non-overlapping edits).
-- [ ] `apply_edits_parallel_perm` Qed (parallel is permutation-invariant).
-- [ ] `apply_edits_concrete_associative_subset` Qed (the headline).
-- [ ] `Print Assumptions` Closed under the global context.
-- [ ] ADMISSIBILITY_MAP updated.
-- [ ] CHANGELOG entry.
+- [x] `non_overlapping` Definition + decidability + symmetry +
+  consistency-with-`edits_conflict` lemmas (Stage 1, PR #319).
+- [x] `apply_edits_parallel` Fixpoint defined via
+  `sort_by_start_desc` + `apply_edits_concrete` (Stage 2, PR #320).
+- [x] Sort idempotence + identity-when-sorted + Stage 3 sorted-
+  equivalence headline (Stage 3, PR #321).
+- [ ] `apply_edits_parallel_perm` Qed — parallel is permutation-
+  invariant on `distinct_starts` inputs (Stage 4 — substantive
+  headline; replaces the original false `apply_edits_concrete_
+  associative_subset` form).
+- [ ] All `Print Assumptions` Closed under the global context.
+- [ ] ADMISSIBILITY_MAP updated (Stage 5).
+- [ ] CHANGELOG `[v27.0.x]` entry (Stage 6 release-bump).

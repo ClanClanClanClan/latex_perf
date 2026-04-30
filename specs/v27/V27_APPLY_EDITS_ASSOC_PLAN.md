@@ -169,6 +169,22 @@ Tag.
 `~/.claude/.../memory/v27_apply_edits_assoc_status.md` carries
 state.
 
+## Successor cycle: universal cursor-walk = parallel-applier theorem
+
+The v27.0.3 cycle ships **corpus-level** mechanised correspondence
+between the OCaml `Cst_edit.apply_all` algorithm (mirrored as the
+Coq `apply_edits_cursor`) and the parallel applier
+`apply_edits_parallel` — 4 reflexivity Examples on representative
+inputs (Stage 5b in `proofs/ApplyEditsAssoc.v`).
+
+The **universal theorem**
+`apply_edits_cursor_eq_parallel : forall src es valid,
+apply_edits_cursor src es = apply_edits_parallel src es`
+is the natural extension and has its own dedicated
+stage-decomposed plan: see
+[`V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`](V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md).
+Target tag: v27.0.4.
+
 ## Acceptance criteria (state at end of Stage 5)
 
 - [x] `non_overlapping` Definition + decidability + symmetry +

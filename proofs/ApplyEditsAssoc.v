@@ -575,16 +575,13 @@ Definition apply_edits_assoc_stage4_zero_admits : True := I.
     This block introduces a Coq mirror of the OCaml algorithm
     ([apply_edits_cursor]) and proves it equal to
     [apply_edits_parallel] on byte-by-byte test cases via
-    reflexivity, plus a structural lemma showing the two algorithms
-    produce identical first-prefix bytes for any valid input.  The
+    reflexivity (4 Examples on representative inputs).  The fully
     universal theorem
-    [apply_edits_cursor_eq_parallel : forall src es, ... ->
+    [apply_edits_cursor_eq_parallel : forall src es valid_inputs ->
       apply_edits_cursor src es = apply_edits_parallel src es]
-    is mechanised below at the level of computational equality on
-    representative inputs (Examples) and characterised structurally
-    via the cursor-walk semantics; a fully universal Coq proof
-    requires inducting on the byte structure with non-overlap
-    + sorted invariants and is queued as a follow-up extension. *)
+    extends this to every valid input; stage-decomposed plan
+    committed as [specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md]
+    (7 stages, target tag v27.0.4). *)
 
 (** Insertion sort ASCENDING by [e_start] — symmetric to
     [insert_desc] / [sort_by_start_desc]. *)

@@ -182,16 +182,20 @@ representative inputs in `proofs/ApplyEditsAssoc.v` Stage 5b:
   Qed-prove that both algorithms return the source unchanged for
   the empty edit list.
 
-A fully universal theorem
+The fully universal theorem
 `forall src es, distinct_starts es -> pairwise_non_overlapping es ->
    apply_edits_cursor src es = apply_edits_parallel src es`
-is achievable via induction on the sorted-ascending list (proof
-sketch: for `e :: rest` sorted ascending, the parallel applier
-applies `rev (e :: rest) = rev rest ++ [e]` so the final
-`apply_one_edit ... e` produces the same `firstn e.start ++
-replacement ++ drop e.end` shape as the cursor walk's first step;
-recurse on `rest`). Multi-session work; the corpus-level
-mechanisation above is the v27.0.3 deliverable.
+extends the corpus mechanisation to every valid input.  Stage-
+decomposed plan committed as
+[`specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`](../specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md)
+(7 stages, target tag **v27.0.4**, ~4–6 sessions).  Stage 4 of
+that plan carries the technically substantive proof
+(induction over the sorted-ascending list, with cursor-walk and
+sequential-descending shapes both reduced to a canonical byte
+mapping); Stages 1–3 build prerequisite sort-permutation /
+sort-rev-bridge / cursor-walk-shape lemmas; Stage 5 combines;
+Stage 6 wires into ADMISSIBILITY_MAP + this doc; Stage 7
+release-bumps v27.0.4.
 
 The rewrite engine surface relevant to v27.0.3:
 

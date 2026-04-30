@@ -45,12 +45,17 @@ Symmetric versions of the existing Stage 4 sort-desc lemmas:
   `insert_desc_swap_distinct`
 - `Lemma sort_by_start_asc_perm` (Qed) — symmetric to
   `sort_by_start_desc_perm`
-- `Lemma sort_by_start_asc_sorted_ascending` (Qed) — sort produces
-  ascending order
+- `Lemma sort_by_start_asc_sorted` (Qed) — sort produces ascending
+  order.  (Originally named `_sorted_ascending` in this plan; renamed
+  during PR #325 to mirror the existing `sort_by_start_desc_sorted`
+  symbol.)
 - `Lemma sort_by_start_asc_id_when_sorted` (Qed) — identity on
   already-sorted-ascending input
 
-**Acceptance:** all 4 Qed; all `Print Assumptions` Closed.
+**Acceptance:** all 4 Qed; all `Print Assumptions` Closed.  (PR
+#325 actually shipped 6 lemmas + 1 Inductive `ascending_sorted`;
+see the cycle-acceptance checklist at the end of this file for the
+full list.)
 
 ### Stage 2 — sort_asc/sort_desc are reverses on distinct-starts inputs
 **Branch:** `v27.0/cursor-univ-stage2-rev-bridge`

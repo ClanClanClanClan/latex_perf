@@ -853,3 +853,226 @@ Qed.
 (** ── Cursor-universal Stage 1 zero-admit witness ──────────────────── *)
 
 Definition apply_edits_cursor_universal_stage1_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 cursor-universal STAGE 2 — sort_by_start_desc = rev (sort_by_start_asc)
+    ─────────────────────────────────────────────────────────────────
+
+    Per `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` Stage 2.
+    The bridge between the two sort directions.  For distinct-starts
+    inputs, descending sort = reverse of ascending sort (because
+    insertion sort produces a uniquely-determined output on
+    distinct keys).
+
+    Strategy: the abstract path via permutation + sortedness
+    uniqueness.  Both `sort_by_start_desc es` and
+    `rev (sort_by_start_asc es)` are descending-sorted permutations
+    of `es`; on distinct-keys inputs the sort is unique. *)
+
+(** [insert_desc] preserves the multiset (Permutation). *)
+Lemma insert_desc_perm :
+  forall e es, Permutation (e :: es) (insert_desc e es).
+Proof.
+  intros e es. induction es as [|x rest IH]; simpl.
+  - apply Permutation_refl.
+  - destruct (Nat.leb (e_start x) (e_start e)).
+    + apply Permutation_refl.
+    + change (Permutation (e :: x :: rest) (x :: insert_desc e rest)).
+      apply (perm_trans (perm_swap _ _ _)). apply perm_skip. exact IH.
+Qed.
+
+(** [insert_asc] preserves the multiset. *)
+Lemma insert_asc_perm :
+  forall e es, Permutation (e :: es) (insert_asc e es).
+Proof.
+  intros e es. induction es as [|x rest IH]; simpl.
+  - apply Permutation_refl.
+  - destruct (Nat.leb (e_start e) (e_start x)).
+    + apply Permutation_refl.
+    + change (Permutation (e :: x :: rest) (x :: insert_asc e rest)).
+      apply (perm_trans (perm_swap _ _ _)). apply perm_skip. exact IH.
+Qed.
+
+(** [sort_by_start_desc] produces a permutation of input. *)
+Lemma sort_by_start_desc_perm_self :
+  forall es, Permutation es (sort_by_start_desc es).
+Proof.
+  induction es as [|e rest IH]; simpl.
+  - apply Permutation_refl.
+  - apply (perm_trans (perm_skip _ IH)). apply insert_desc_perm.
+Qed.
+
+(** [sort_by_start_asc] produces a permutation of input. *)
+Lemma sort_by_start_asc_perm_self :
+  forall es, Permutation es (sort_by_start_asc es).
+Proof.
+  induction es as [|e rest IH]; simpl.
+  - apply Permutation_refl.
+  - apply (perm_trans (perm_skip _ IH)). apply insert_asc_perm.
+Qed.
+
+(** Helper: appending a smaller-start element to a descending-sorted
+    list ending in e_last (where e_new.start ≤ e_last.start)
+    preserves descending_sorted. *)
+Lemma descending_sorted_app_smaller :
+  forall xs e_last e_new,
+    descending_sorted (xs ++ [e_last]) ->
+    e_new.(e_start) <= e_last.(e_start) ->
+    descending_sorted (xs ++ [e_last; e_new]).
+Proof.
+  induction xs as [|x rest IH]; intros e_last e_new H Hle.
+  - cbn. apply descending_sorted_cons; [exact Hle | constructor].
+  - cbn.
+    destruct rest as [|y rest'].
+    + (* xs = [x], so list = [x; e_last] *)
+      cbn in H. inversion H. subst.
+      apply descending_sorted_cons; [assumption |].
+      apply descending_sorted_cons; [exact Hle | constructor].
+    + (* xs = x :: y :: rest', list = x :: y :: rest' ++ [e_last] *)
+      cbn in H. inversion H. subst.
+      apply descending_sorted_cons; [assumption |].
+      apply IH; [assumption | exact Hle].
+Qed.
+
+(** Reverse of ascending-sorted is descending-sorted. *)
+Lemma rev_ascending_sorted :
+  forall xs, ascending_sorted xs -> descending_sorted (rev xs).
+Proof.
+  intros xs Hxs. induction Hxs as [|e0|e1 e2 rest Hle Hsorted IH].
+  - simpl. constructor.
+  - simpl. constructor.
+  - (* xs = e1 :: e2 :: rest, ascending; IH: descending_sorted (rev (e2 :: rest)) *)
+    simpl. (* goal: descending_sorted ((rev rest ++ [e2]) ++ [e1]) *)
+    rewrite <- app_assoc.
+    cbn [app].
+    apply descending_sorted_app_smaller.
+    + simpl in IH. exact IH.
+    + exact Hle.
+Qed.
+
+(** [descending_sorted] head dominates: the head of a descending list
+    has the maximum start.  Use [revert e] before induction so the IH
+    quantifies over the "head" parameter. *)
+Lemma descending_sorted_head_max :
+  forall e xs,
+    descending_sorted (e :: xs) ->
+    forall x, In x xs -> x.(e_start) <= e.(e_start).
+Proof.
+  intros e xs. revert e. induction xs as [|y rest IH]; intros e Hsorted x Hin.
+  - inversion Hin.
+  - inversion Hsorted; subst.
+    destruct Hin as [Heq | Hin].
+    + subst. assumption.
+    + assert (x.(e_start) <= y.(e_start)) as Hxy
+        by (apply (IH y); assumption).
+      lia.
+Qed.
+
+(** Distinct-keys descending-sorted permutations are equal.
+    Standard sort-uniqueness result. *)
+Lemma desc_sorted_perm_eq_distinct :
+  forall xs ys,
+    descending_sorted xs ->
+    descending_sorted ys ->
+    distinct_starts xs ->
+    Permutation xs ys ->
+    xs = ys.
+Proof.
+  induction xs as [|x rest IH]; intros ys Hxs Hys Hd Hperm.
+  - apply Permutation_nil in Hperm. symmetry. exact Hperm.
+  - destruct ys as [|y rest_y].
+    + apply Permutation_sym in Hperm. apply Permutation_nil in Hperm. discriminate.
+    + (* xs = x :: rest, ys = y :: rest_y, both descending *)
+      assert (Hx_in_ys : In x (y :: rest_y))
+        by (apply (Permutation_in _ Hperm); simpl; left; reflexivity).
+      assert (Hy_in_xs : In y (x :: rest))
+        by (apply (Permutation_in _ (Permutation_sym Hperm));
+            simpl; left; reflexivity).
+      (* x and y are both heads of descending-sorted lists.  In both
+         lists, the head has the max start.  By Permutation, the
+         multisets match.  By distinct_starts, equal-start ⇒ equal. *)
+      assert (Hx_max : forall z, In z (x :: rest) -> z.(e_start) <= x.(e_start)).
+      { intros z [Heqz | Hinz]; [subst; lia |].
+        apply (descending_sorted_head_max x rest Hxs z Hinz). }
+      assert (Hy_max : forall z, In z (y :: rest_y) -> z.(e_start) <= y.(e_start)).
+      { intros z [Heqz | Hinz]; [subst; lia |].
+        apply (descending_sorted_head_max y rest_y Hys z Hinz). }
+      assert (Hxs_eq : x.(e_start) = y.(e_start)).
+      { assert (Hxy : x.(e_start) <= y.(e_start)) by (apply Hy_max; exact Hx_in_ys).
+        assert (Hyx : y.(e_start) <= x.(e_start)) by (apply Hx_max; exact Hy_in_xs).
+        lia. }
+      (* From distinct_starts on (x :: rest), x's start is unique among rest's
+         starts.  Combined with Hx_in_ys (x ∈ ys), and Hxs_eq (y has same start
+         as x), and y ∈ ys, we need y = x. *)
+      assert (Hxy_eq : x = y).
+      { (* If x ≠ y, then both x and y are in (y :: rest_y) (since x ∈ ys,
+           y ∈ ys = head). Permutation pulls one copy of x into ys. The
+           Permutation also gives us NoDup of starts (preserved); since
+           x.start = y.start and distinct_starts ⇒ same start ⇒ same element
+           in the original (x ∈ rest contradicting NoDup). *)
+        apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall_x Hd_rest].
+        destruct Hx_in_ys as [Hxy | Hx_in_rest_y].
+        - symmetry. exact Hxy.
+        - (* x ∈ rest_y; since y :: rest_y permutes with x :: rest, and y ≠ x
+             (assumed), x must be in rest. *)
+          (* Better: use the start-uniqueness directly. x.start = y.start, and
+             y ∈ x :: rest. If y ≠ x, then y ∈ rest, but y.start = x.start
+             contradicts all_starts_neq x rest. *)
+          destruct Hy_in_xs as [Hyx | Hy_in_rest].
+          + exact Hyx.
+          + exfalso. unfold all_starts_neq in Hall_x.
+            rewrite Forall_forall in Hall_x.
+            apply (Hall_x y Hy_in_rest). exact Hxs_eq. }
+      subst y.
+      f_equal.
+      (* Now show rest = rest_y from Permutation and inductive hypothesis. *)
+      apply IH.
+      * inversion Hxs as [| e0 He0 | e1 e2 rest' _ Hsorted Heq]; subst.
+        -- (* rest = [] *)
+           destruct rest_y as [|y2 rest_y2].
+           ++ constructor.
+           ++ (* Permutation [x] (x :: y2 :: rest_y2) impossible *)
+              exfalso. apply Permutation_length in Hperm. simpl in Hperm. lia.
+        -- exact Hsorted.
+      * inversion Hys as [| e0 He0 | e1 e2 rest' _ Hsorted Heq]; subst.
+        -- (* rest_y = [] *)
+           destruct rest as [|x2 rest2].
+           ++ constructor.
+           ++ exfalso. apply Permutation_length in Hperm. simpl in Hperm. lia.
+        -- exact Hsorted.
+      * apply distinct_starts_cons_iff in Hd. destruct Hd as [_ Hd_rest].
+        exact Hd_rest.
+      * apply Permutation_cons_inv with (a := x). exact Hperm.
+Qed.
+
+(** ── Stage 2 substantive bridge ───────────────────────────────────── *)
+
+(** Bridge lemma: descending sort = reverse of ascending sort, on
+    distinct-starts inputs.  Used by Stage 4's sequential-descending
+    shape lemma to relate the parallel applier (descending sort + fold
+    [apply_edits_concrete]) to the cursor walk (ascending sort +
+    cursor walk). *)
+Theorem sort_by_start_desc_eq_rev_asc :
+  forall es,
+    distinct_starts es ->
+    sort_by_start_desc es = rev (sort_by_start_asc es).
+Proof.
+  intros es Hd.
+  apply (desc_sorted_perm_eq_distinct
+           (sort_by_start_desc es)
+           (rev (sort_by_start_asc es))).
+  - apply sort_by_start_desc_sorted.
+  - apply rev_ascending_sorted. apply sort_by_start_asc_sorted.
+  - (* distinct_starts (sort_by_start_desc es) — distinct_starts is
+       Permutation-stable; sort_by_start_desc is a permutation. *)
+    apply (distinct_starts_perm es (sort_by_start_desc es)
+             (sort_by_start_desc_perm_self es) Hd).
+  - (* Permutation (sort_by_start_desc es) (rev (sort_by_start_asc es)) *)
+    apply (perm_trans (Permutation_sym (sort_by_start_desc_perm_self es))).
+    apply (perm_trans (sort_by_start_asc_perm_self es)).
+    apply Permutation_rev.
+Qed.
+
+(** ── Cursor-universal Stage 2 zero-admit witness ──────────────────── *)
+
+Definition apply_edits_cursor_universal_stage2_zero_admits : True := I.

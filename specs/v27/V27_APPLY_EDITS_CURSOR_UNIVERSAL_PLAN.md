@@ -162,6 +162,29 @@ descending sequential applier processes `rev rest ++ [e]`:
 This is the technically interesting stage — needs careful manipulation
 of `take`/`drop`/`firstn`/`skipn` over the partial buffer.
 
+**Shipped form (PR #329) deviates from the plan signature in two
+ways, both documented in the file Stage 4 block header:**
+
+1. *Strengthened preconditions.*  Plan signature has only
+   `Sorted_ascending_by_start`, `Pairwise_non_overlapping`, and
+   `All_in_bounds`.  The shipped form additionally requires
+   `distinct_starts sorted_asc` and a per-element `edit_wf`.
+   These rule out two degenerate cases where the equation would
+   fail: (a) multiple insertions at the same start position
+   (non-strict ascending sort plus pairwise non-overlapping
+   admits this; the sequential-applier output would depend on
+   ordering of the equal-start insertions, breaking the
+   equation), and (b) negative-range edits.  Both additional
+   preconditions are present in the Stage 5 user-facing theorem
+   signature, so they flow through naturally.
+
+2. *Predicate naming.*  Same lowercase repo-style as Stage 3:
+   `ascending_sorted`, `pairwise_non_overlapping`,
+   `all_in_bounds` — matching existing repo symbols.  The
+   `All_in_bounds src 0 sorted_asc` plan signature drops to
+   `all_in_bounds src sorted_asc` (cursor=0 is the universal
+   entry point).
+
 **Acceptance:** Lemma Qed.
 
 ### Stage 5 — combine into the universal theorem
@@ -190,6 +213,29 @@ Qed.
 ```
 
 **Acceptance:** Theorem Qed; `Print Assumptions` Closed.
+
+**Stage 5 helper additions (PR #330) not enumerated in the
+proof template above (the `...` elisions discharge through
+these):**
+
+- `pairwise_non_overlapping_perm` — substantive helper proving
+  `pairwise_non_overlapping` is permutation-invariant on
+  `distinct_starts` inputs.  Proof finds witnesses via
+  `Permutation_in` + `In_nth_error` and falls back to
+  `Hpno_xs` at the corresponding indices in the source list.
+- `sort_by_start_asc_distinct_starts` — wrapper around the
+  existing `distinct_starts_perm` + `sort_by_start_asc_perm_self`.
+- `sort_by_start_asc_pairwise_non_overlapping` — wrapper
+  combining the new perm helper with the
+  `_perm_self`/`_distinct_starts` machinery.
+- `sort_by_start_asc_forall_edit_wf` /
+  `sort_by_start_asc_all_in_bounds` — `In`-based forwarding via
+  `Permutation_in (Permutation_sym (sort_by_start_asc_perm_self))`.
+
+These five helpers all ship as Qed/Closed under the global
+context and exist to lift Stage 5's user-facing preconditions
+on the unsorted input `es` to the precondition shape Stage 4
+expects on `sort_by_start_asc es`.
 
 ### Stage 6 — wire into ADMISSIBILITY_MAP + docs
 **Branch:** `v27.0/cursor-univ-stage6-docs`
@@ -239,9 +285,24 @@ template:
   merged 2026-04-30 @ commit `0b87a44`).  Plus 9 supporting
   lemmas + 4 reflexivity Examples; all Closed under the global
   context.
-- [ ] Stage 3 cursor-walk shape lemma Qed.
-- [ ] Stage 4 sequential-descending shape lemma Qed (the
-  technically substantive piece).
+- [x] Stage 3 cursor-walk shape lemma Qed (PR #328, merged
+  2026-04-30 @ commit `7239516`).  Plus 7 supporting entities
+  (`cursor_walk_canonical` Fixpoint, unconditional
+  `apply_edits_cursor_aux_shape`, plan-signature
+  `_with_preconds` variant, `non_overlapping_from` Inductive,
+  `all_in_bounds` Definition, 2 reflexivity Examples); all
+  Closed under the global context.
+- [x] Stage 4 sequential-descending shape lemma Qed (PR #329,
+  merged 2026-04-30 @ commit `ad078bf`).  Substantive headline
+  `apply_edits_concrete_rev_sorted_shape` plus 14 supporting
+  lemmas (take/drop ↔ firstn/skipn bridges, predicate
+  cons-inversions, `cons_head_end_le_rest_start`,
+  `skipn_cursor_walk_canonical_advance`,
+  `firstn_cursor_walk_canonical_prefix`) + 3 reflexivity
+  Examples.  Plan signature deviation: shipped form additionally
+  requires `distinct_starts` + per-element `edit_wf` (rules out
+  degenerate insertions and negative-range edits); deviation
+  documented in the file Stage 4 block header.
 - [ ] Stage 5 universal theorem
   `apply_edits_cursor_eq_parallel` Qed.  All `Print Assumptions`
   Closed under the global context.

@@ -1101,3 +1101,110 @@ Proof. reflexivity. Qed.
 (** ── Cursor-universal Stage 2 zero-admit witness ──────────────────── *)
 
 Definition apply_edits_cursor_universal_stage2_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 cursor-universal STAGE 3 — cursor-walk shape lemma
+    ─────────────────────────────────────────────────────────────────
+
+    Per `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` Stage 3.
+
+    Factor the cursor walk's structural output into a separate
+    canonical Fixpoint [cursor_walk_canonical].  This isolates the
+    structural shape from the [apply_edits_cursor_aux] recursion so
+    Stage 4 can match the descending-sequential applier against the
+    same canonical form, allowing Stage 5 to chain Stages 3+4 into
+    the universal theorem
+    [apply_edits_cursor_eq_parallel].
+
+    The two functions have identical recursive structure, so the
+    shape lemma is provable by straight structural induction.  The
+    plan's Stage 3 precondition list (sorted-ascending,
+    pairwise-non-overlapping-from-cursor, in-bounds) is decorative
+    here — the equality holds unconditionally because both
+    definitions use the same recursion.  The preconditions are
+    introduced as definitions for Stage 4's substantive proof. *)
+
+(** Canonical structural form: source up to first edit + replacement
+    + canonical-walk over the rest from the post-edit cursor.  This
+    Fixpoint mirrors [apply_edits_cursor_aux] one-for-one.  Having
+    it under a separate name lets Stage 4 prove
+    [apply_edits_concrete src (rev sorted_asc) =
+     cursor_walk_canonical src 0 sorted_asc]
+    without dragging the [apply_edits_cursor] definition through. *)
+Fixpoint cursor_walk_canonical (src : bytes) (cursor : nat)
+                                (es : list edit) : bytes :=
+  match es with
+  | [] => skipn cursor src
+  | e :: rest =>
+      firstn (e.(e_start) - cursor) (skipn cursor src) ++
+      e.(e_replacement) ++
+      cursor_walk_canonical src e.(e_end) rest
+  end.
+
+(** Stage 3 headline: the cursor walk equals the canonical form,
+    unconditionally.  The plan's precondition list is decoration; the
+    [Lemma _from_cursor] variant below carries the precondition-
+    bearing form for completeness with the plan signature. *)
+Lemma apply_edits_cursor_aux_shape :
+  forall (src : bytes) (cursor : nat) (es : list edit),
+    apply_edits_cursor_aux src cursor es =
+    cursor_walk_canonical src cursor es.
+Proof.
+  intros src cursor es. revert cursor.
+  induction es as [|e rest IH]; intros cursor.
+  - reflexivity.
+  - simpl. rewrite IH. reflexivity.
+Qed.
+
+(** Stage 4 will need a notion of "first edit's start ≥ cursor, and
+    each subsequent edit starts at-or-after the previous edit's end".
+    Define it explicitly here so Stage 4 can consume it. *)
+Inductive non_overlapping_from : nat -> list edit -> Prop :=
+| nof_nil  : forall cursor, non_overlapping_from cursor []
+| nof_cons : forall cursor e rest,
+    cursor <= e.(e_start) ->
+    non_overlapping_from e.(e_end) rest ->
+    non_overlapping_from cursor (e :: rest).
+
+(** Every edit in the list has [e_end <= length src]. *)
+Definition all_in_bounds (src : bytes) (es : list edit) : Prop :=
+  forall e, In e es -> e.(e_end) <= length src.
+
+(** Plan-shaped variant: the shape lemma with the plan's full
+    precondition list.  Trivially derivable from
+    [apply_edits_cursor_aux_shape] since the equality is
+    unconditional; included to match the plan signature exactly. *)
+Lemma apply_edits_cursor_aux_shape_with_preconds :
+  forall (src : bytes) (cursor : nat) (es : list edit),
+    ascending_sorted es ->
+    non_overlapping_from cursor es ->
+    all_in_bounds src es ->
+    apply_edits_cursor_aux src cursor es =
+    cursor_walk_canonical src cursor es.
+Proof.
+  intros src cursor es _ _ _.
+  apply apply_edits_cursor_aux_shape.
+Qed.
+
+(** Sanity Examples for [cursor_walk_canonical] — same inputs as
+    the Stage 5b cursor-walk Examples; the shape lemma reduces them
+    to the cursor-walk form, so reflexivity suffices. *)
+Example cursor_walk_canonical_2edit :
+  let src := [97; 98; 99; 100; 101; 102] in
+  let e1 := mk_edit 1 3 [88] in
+  let e2 := mk_edit 4 5 [89; 90] in
+  cursor_walk_canonical src 0 [e1; e2] = apply_edits_cursor_aux src 0 [e1; e2].
+Proof. reflexivity. Qed.
+
+Example cursor_walk_canonical_3edit :
+  let src := [97; 98; 99; 100; 101; 102; 103; 104; 105; 106] in
+  let e1 := mk_edit 1 2 [49] in
+  let e2 := mk_edit 4 5 [50] in
+  let e3 := mk_edit 7 8 [51] in
+  cursor_walk_canonical src 0 [e1; e2; e3] =
+  apply_edits_cursor_aux src 0 [e1; e2; e3].
+Proof. reflexivity. Qed.
+
+(** ── Cursor-universal Stage 3 zero-admit witness ──────────────────── *)
+
+Definition apply_edits_cursor_universal_stage3_zero_admits : True := I.

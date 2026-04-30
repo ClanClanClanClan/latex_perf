@@ -164,11 +164,34 @@ emit fixes does not affect the output, provided the fixes have
 distinct start positions.** This claim transfers from the Coq
 proof to the shipped binary because both algorithms compute the
 same parallel-applier semantic on every input where
-`distinct_starts` holds; an OCaml-vs-Coq cross-check
-(`apply_all src es = apply_edits_parallel src es` for non-empty
-non-overlapping edits) is not yet mechanised in the proof tree —
-the runtime-vs-Coq equivalence is an informal correspondence
-covered by the cursor-walk semantics above.
+`distinct_starts` holds.
+
+The runtime-vs-Coq correspondence is **mechanised** for
+representative inputs in `proofs/ApplyEditsAssoc.v` Stage 5b:
+
+- `Definition apply_edits_cursor src es :=
+   apply_edits_cursor_aux src 0 (sort_by_start_asc es)` — Coq
+  mirror of OCaml `Cst_edit.apply_all`'s ascending-sort + cursor-
+  walk algorithm.
+- 4 `Example`s prove `apply_edits_cursor src es =
+  apply_edits_parallel src es` by `reflexivity` on the documented
+  non-overlapping inputs (2-edit, 2-edit-swap, 3-edit,
+  3-edit-permuted). All `Print Assumptions` Closed under the
+  global context.
+- `apply_edits_cursor_empty` and `apply_edits_parallel_empty`
+  Qed-prove that both algorithms return the source unchanged for
+  the empty edit list.
+
+A fully universal theorem
+`forall src es, distinct_starts es -> pairwise_non_overlapping es ->
+   apply_edits_cursor src es = apply_edits_parallel src es`
+is achievable via induction on the sorted-ascending list (proof
+sketch: for `e :: rest` sorted ascending, the parallel applier
+applies `rev (e :: rest) = rev rest ++ [e]` so the final
+`apply_one_edit ... e` produces the same `firstn e.start ++
+replacement ++ drop e.end` shape as the cursor walk's first step;
+recurse on `rest`). Multi-session work; the corpus-level
+mechanisation above is the v27.0.3 deliverable.
 
 The rewrite engine surface relevant to v27.0.3:
 

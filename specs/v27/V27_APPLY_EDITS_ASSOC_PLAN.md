@@ -157,7 +157,7 @@ Tag.
 `~/.claude/.../memory/v27_apply_edits_assoc_status.md` carries
 state.
 
-## Acceptance criteria (state at end of Stage 3)
+## Acceptance criteria (state at end of Stage 4)
 
 - [x] `non_overlapping` Definition + decidability + symmetry +
   consistency-with-`edits_conflict` lemmas (Stage 1, PR #319).
@@ -165,10 +165,15 @@ state.
   `sort_by_start_desc` + `apply_edits_concrete` (Stage 2, PR #320).
 - [x] Sort idempotence + identity-when-sorted + Stage 3 sorted-
   equivalence headline (Stage 3, PR #321).
-- [ ] `apply_edits_parallel_perm` Qed — parallel is permutation-
-  invariant on `distinct_starts` inputs (Stage 4 — substantive
-  headline; replaces the original false `apply_edits_concrete_
-  associative_subset` form).
-- [ ] All `Print Assumptions` Closed under the global context.
-- [ ] ADMISSIBILITY_MAP updated (Stage 5).
-- [ ] CHANGELOG `[v27.0.x]` entry (Stage 6 release-bump).
+- [x] `apply_edits_parallel_perm` Qed — parallel is permutation-
+  invariant on `distinct_starts` inputs (Stage 4, PR #322;
+  substantive headline replacing the original false
+  `apply_edits_concrete_associative_subset` form).
+- [x] All `Print Assumptions` Closed under the global context
+  (verified for all Stage 1+2+3+4 theorems on PR #322 branch).
+- [ ] `proofs/ADMISSIBILITY_MAP.md` updated — mark v26.4
+  `apply_edits_concrete_associative_subset` deferral as
+  superseded by `apply_edits_parallel_perm` (Stage 5).
+- [ ] `docs/MERGING_GUARANTEES.md` describing the parallel-applier
+  semantics + original-source-offset interpretation (Stage 5).
+- [ ] CHANGELOG `[v27.0.3]` entry (Stage 6 release-bump).

@@ -1,6 +1,6 @@
 # ADR-004: T6/T7 proofs use Section + Variable (not Parameter / Axiom)
 
-- **Status:** Accepted (2026-04-22)
+- **Status:** Accepted (2026-04-22); **Discharged for pdflatex profile in v27.0.0** (`pdflatex_compile_safe` Qed at commit `492ff90`); T0/T1/T4/T5 wired in v27.0.1 / v27.0.2 (PRs #312 / #313→#317).
 - **Context owner:** v26.2 architectural decisions (plan §2.4)
 
 ## Context
@@ -64,3 +64,37 @@ are *not* axioms — they become parameters of the final theorem after
   `admit-audit` on it.
 - `proofs/ADMISSIBILITY_MAP.md` (created in A3) lists every Hypothesis
   T6/T7 rely on, serving as the entry point for v27 WS8 implementers.
+
+## Discharge log (post-v26.2)
+
+- **v27.0.0** (commit `492ff90`, PR #310 + #311 release-bump): WS8
+  capstone delivered.  `proofs/PdflatexModel.v` instantiates both
+  Section's Variables; both `compile_progress_rule` and
+  `output_wellformed_rule` discharged via Qed-proved lemmas
+  (`pdflatex_compile_progress_rule_proof`,
+  `pdflatex_output_wellformed_rule_proof`).  Headline
+  `pdflatex_compile_safe` Qed; `Print Assumptions` returns "Closed
+  under the global context".  Engine-generic aliases
+  `xelatex_compile_safe` / `lualatex_compile_safe` ship in v27.0.1.
+- **v27.0.1** (PR #312): T0/T1/T4 wired to LP-Core wrappers
+  (`T0_wrapper.T0_parser_accepts`,
+  `T1_wrapper.T1_expansion_admissible_merge`,
+  `T4_wrapper.T4_labels_unique_packaged`); discharge lemmas
+  `pdflatex_T{0,1,4}_*_holds` Qed.
+- **v27.0.2** (PRs #313→#317): T5 substantively wired via
+  `proofs/T5_concrete.v` Section-parametric carriers + downstream
+  `proofs/generated/PdflatexT5Wired.v` against
+  `Generated.Catalogue.all_proved_rule_ids`.
+- **v27.0.3** (PRs #319→#324): apply_edits associative-reorder
+  cycle (orthogonal to T6/T7 but builds on the same rewrite
+  engine — closes the v26.4-deferred
+  `apply_edits_concrete_associative_subset` under the corrected
+  name `apply_edits_parallel_perm`).
+
+The compile-guarantee stack T0–T7 is now substantively discharged
+end-to-end for the pdflatex profile; the engine-agnostic aliases
+extend the carrier-level result to xelatex / lualatex profiles.
+The faithful operational semantics (extending the abstract
+counter-bounded pass model to real aux/log evolution) is queued
+as `specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md` (target tag
+v27.1.0).

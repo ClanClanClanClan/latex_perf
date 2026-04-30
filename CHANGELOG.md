@@ -2,6 +2,92 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.3] — 2026-04-30
+
+**`apply_edits` associative-reorder cycle complete.** Closes the
+v26.4-deferred `apply_edits_concrete_associative_subset` theorem
+under the corrected name `apply_edits_parallel_perm` (the original
+form was provably FALSE — see Stage 2 file-header counter-example).
+Substantive headline: for permutation-equivalent edit lists with
+distinct start positions, the parallel applier produces equal byte
+streams. Closed under the global context.
+
+**1,342 theorems / 171 .v files / 0 admits / 0 axioms** (v27.0.2
+had 1,321 / 170; +21 from `proofs/ApplyEditsAssoc.v` Stages 1–5b).
+
+### Shipped (5 stage PRs + this release-bump)
+
+| PR | Stage | Content |
+|---|---|---|
+| #319 | Stage 1 | `proofs/ApplyEditsAssoc.v` scaffolded with `non_overlapping` predicate + 5 sanity lemmas |
+| #320 | Stage 2 | parallel-application Fixpoint (sort by `e_start` descending + `apply_edits_concrete`); documented FALSE original Stage 4 form via 6-byte counter-example |
+| #321 | Stage 3 | sort idempotence + sorted equivalence + plan revision |
+| #322 | Stage 4 (substantive headline) | `apply_edits_parallel_perm` Qed via insertion-sort permutation invariance on distinct-key inputs |
+| #323 | Stage 5 + 5b | ADMISSIBILITY_MAP wire-in + new `docs/MERGING_GUARANTEES.md` user-facing doc + Stage 5b cursor-walk Coq mirror of OCaml `Cst_edit.apply_all` (4 corpus-level reflexivity Examples + empty-list base lemmas); plus `V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` (7-stage plan committing the universal extension as v27.0.4 work) |
+
+### Headline theorem
+
+```coq
+Theorem apply_edits_parallel_perm :
+  forall src es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    apply_edits_parallel src es1 = apply_edits_parallel src es2.
+```
+
+`Print Assumptions apply_edits_parallel_perm` returns "Closed
+under the global context".
+
+### Why the original form was false
+
+For non-overlapping edits e1 = (1,3,"X") and e2 = (4,5,"YZ") on
+src "abcdef":
+- `apply_edits_concrete src [e1;e2]` → "aXdeYZ" (e2's offset 4
+  hits modified-buffer "aXdef"[4]='e')
+- `apply_edits_concrete src [e2;e1]` → "aXdYZf" (e1's offset 1
+  hits modified-buffer "abcdYZf"[1]='b')
+- Sequential applier interprets offsets relative to the *current*
+  buffer, not the original source — so reordering changes output.
+
+The parallel applier (sort descending by `e_start`, then apply via
+`apply_edits_concrete`) IS order-invariant because applying the
+rightmost edit first leaves all smaller offsets unchanged in the
+remaining buffer.
+
+### Runtime correspondence (mechanised at corpus level)
+
+`proofs/ApplyEditsAssoc.v` Stage 5b adds `apply_edits_cursor` —
+a Coq mirror of the OCaml `Cst_edit.apply_all` algorithm
+(ascending sort + cursor walk through original src) — and 4
+reflexivity Examples proving `apply_edits_cursor src es =
+apply_edits_parallel src es` on representative inputs. The
+**universal extension** is committed as
+`specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` (7 stages,
+target tag v27.0.4).
+
+### New documents
+
+- `docs/MERGING_GUARANTEES.md` (user-facing): two-appliers
+  explanation, counter-example, substantive theorem statement,
+  `distinct_starts` edge cases, runtime correspondence, see-also
+  references.
+- `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`: 7-stage
+  plan for the universal `apply_edits_cursor_eq_parallel` theorem.
+- `proofs/ADMISSIBILITY_MAP.md`: new "Rewrite engine —
+  associative-reorder (DISCHARGED in v27.0.3)" entry.
+
+### Differential test
+0 diffs across 330 corpus files vs `v27.0.2`. v27.0.3 is purely
+formal/Coq + docs — no runtime change.
+
+### Counts (v27.0.3 vs v27.0.2)
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (unchanged).
+- 1,342 theorems (was 1,321; +21 from ApplyEditsAssoc.v Stages 1–5b).
+- 171 .v files (was 170; +1: `proofs/ApplyEditsAssoc.v`).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
 ## [v27.0.2] — 2026-04-29
 
 **v27 T5 wiring complete.** Closes the last "Genuinely multi-week

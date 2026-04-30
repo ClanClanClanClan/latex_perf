@@ -1309,13 +1309,11 @@ Proof.
   - apply IH.
 Qed.
 
-(** Singleton case: [apply_edits_concrete src [e] = apply_one_edit src e]. *)
-Lemma apply_edits_concrete_singleton :
-  forall src e,
-    apply_edits_concrete src [e] = apply_one_edit src e.
-Proof.
-  intros src e. simpl. reflexivity.
-Qed.
+(** [apply_edits_concrete_singleton] is reused from
+    [proofs/RewritePreservesCST.v:290] (already in scope via the
+    [From LaTeXPerfectionist Require Import ... RewritePreservesCST]
+    line at the top of this file).  Round-6 audit removed an
+    accidental local re-definition shipped by Stage 4 PR #329. *)
 
 (** Stage 4 helpers — pairwise-non-overlapping inversion.
     From [pairwise_non_overlapping (e :: rest)] derive both:

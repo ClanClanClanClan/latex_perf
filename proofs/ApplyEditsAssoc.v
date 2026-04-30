@@ -1208,3 +1208,340 @@ Proof. reflexivity. Qed.
 (** ── Cursor-universal Stage 3 zero-admit witness ──────────────────── *)
 
 Definition apply_edits_cursor_universal_stage3_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 cursor-universal STAGE 4 — sequential-descending shape lemma
+    ─────────────────────────────────────────────────────────────────
+
+    Per `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` Stage 4.
+
+    Substantive headline: applying a list's edits in *descending*
+    start order via [apply_edits_concrete] (sequential, buffer-
+    relative) yields the same byte mapping as the canonical cursor
+    walk on the same list in *ascending* order.
+
+    Plan signature has [Sorted_ascending_by_start, Pairwise_non_-
+    overlapping, All_in_bounds]; the shipped form additionally
+    requires [distinct_starts] because non-strict ascending sort
+    plus pairwise non-overlapping admits multiple insertions at
+    the same start position, where the equation can fail under
+    different orderings.  This deviation is documented in the plan
+    body. *)
+
+(** Stage 4 helpers — [take]/[drop] (locally defined in
+    [RewritePreservesCST]) coincide with the stdlib
+    [firstn]/[skipn].  The cursor walk uses the stdlib pair, the
+    sequential applier uses the local pair; bridge them by
+    induction. *)
+Lemma take_is_firstn : forall n l, take n l = firstn n l.
+Proof.
+  induction n as [|n' IH]; intros [|x xs]; cbn.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - rewrite IH. reflexivity.
+Qed.
+
+Lemma drop_is_skipn : forall n l, drop n l = skipn n l.
+Proof.
+  induction n as [|n' IH]; intros [|x xs]; cbn.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - apply IH.
+Qed.
+
+(** [apply_edits_concrete] distributes over list append. *)
+Lemma apply_edits_concrete_app :
+  forall l1 src l2,
+    apply_edits_concrete src (l1 ++ l2) =
+    apply_edits_concrete (apply_edits_concrete src l1) l2.
+Proof.
+  induction l1 as [|e rest IH]; intros src l2; simpl.
+  - reflexivity.
+  - apply IH.
+Qed.
+
+(** Singleton case: [apply_edits_concrete src [e] = apply_one_edit src e]. *)
+Lemma apply_edits_concrete_singleton :
+  forall src e,
+    apply_edits_concrete src [e] = apply_one_edit src e.
+Proof.
+  intros src e. simpl. reflexivity.
+Qed.
+
+(** Stage 4 helpers — pairwise-non-overlapping inversion.
+    From [pairwise_non_overlapping (e :: rest)] derive both:
+    (a) every element of [rest] is non-overlapping with [e];
+    (b) [pairwise_non_overlapping rest]. *)
+Lemma pairwise_non_overlapping_cons_head :
+  forall e rest,
+    pairwise_non_overlapping (e :: rest) ->
+    forall x, In x rest -> non_overlapping e x.
+Proof.
+  intros e rest Hpno x Hin.
+  apply In_nth_error in Hin. destruct Hin as [k Hk].
+  unfold pairwise_non_overlapping in Hpno.
+  specialize (Hpno 0 (S k)).
+  simpl in Hpno. rewrite Hk in Hpno.
+  apply Hpno.
+  - simpl. lia.
+  - simpl.
+    assert (Hlen : k < length rest).
+    { apply nth_error_Some. rewrite Hk. discriminate. }
+    lia.
+  - lia.
+Qed.
+
+Lemma pairwise_non_overlapping_cons_tail :
+  forall e rest,
+    pairwise_non_overlapping (e :: rest) ->
+    pairwise_non_overlapping rest.
+Proof.
+  intros e rest Hpno i j Hi Hj Hne.
+  unfold pairwise_non_overlapping in Hpno.
+  specialize (Hpno (S i) (S j)).
+  simpl in Hpno. apply Hpno; try lia.
+Qed.
+
+(** [ascending_sorted] head dominates [<=] all elements of the tail. *)
+Lemma ascending_sorted_head_min :
+  forall e rest,
+    ascending_sorted (e :: rest) ->
+    forall x, In x rest -> e.(e_start) <= x.(e_start).
+Proof.
+  intros e rest. revert e.
+  induction rest as [|y rest' IH]; intros e Hsorted x Hin.
+  - inversion Hin.
+  - inversion Hsorted; subst.
+    destruct Hin as [Heq | Hin].
+    + subst. assumption.
+    + assert (Hyx : y.(e_start) <= x.(e_start)) by (apply (IH y); assumption).
+      lia.
+Qed.
+
+Lemma ascending_sorted_tail :
+  forall e rest,
+    ascending_sorted (e :: rest) ->
+    ascending_sorted rest.
+Proof.
+  intros e rest H. inversion H; subst.
+  - constructor.
+  - assumption.
+Qed.
+
+(** [all_in_bounds] cons inversion. *)
+Lemma all_in_bounds_cons :
+  forall src e rest,
+    all_in_bounds src (e :: rest) ->
+    e.(e_end) <= length src /\ all_in_bounds src rest.
+Proof.
+  intros src e rest H. unfold all_in_bounds in *. split.
+  - apply H. left. reflexivity.
+  - intros e' Hin. apply H. right. assumption.
+Qed.
+
+(** [distinct_starts] cons inversion. *)
+Lemma distinct_starts_tail :
+  forall e rest,
+    distinct_starts (e :: rest) ->
+    distinct_starts rest.
+Proof.
+  intros e rest H.
+  apply distinct_starts_cons_iff in H. tauto.
+Qed.
+
+(** Combined: head-end <= every-rest-start.  Uses ascending_sorted
+    (head_min), non-overlapping (head non-overlap with rest),
+    distinct_starts (rules out empty edits at the same start as
+    the head), and edit_wf on the tail elements (rules out
+    degenerate negative-range edits). *)
+Lemma cons_head_end_le_rest_start :
+  forall e rest,
+    ascending_sorted (e :: rest) ->
+    pairwise_non_overlapping (e :: rest) ->
+    distinct_starts (e :: rest) ->
+    (forall x, In x rest -> edit_wf x) ->
+    forall x, In x rest -> e.(e_end) <= x.(e_start).
+Proof.
+  intros e rest Hsorted Hpno Hd Hwf x Hin.
+  assert (Hex : non_overlapping e x)
+    by (apply (pairwise_non_overlapping_cons_head e rest Hpno x Hin)).
+  assert (Hes : e.(e_start) <= x.(e_start))
+    by (apply (ascending_sorted_head_min e rest Hsorted x Hin)).
+  assert (Hxwf : edit_wf x) by (apply Hwf; assumption).
+  destruct Hex as [Hl | Hr].
+  - exact Hl.
+  - (* x.end <= e.start <= x.start <= x.end (edit_wf) ⇒ x.start = e.start.
+       But distinct_starts forbids that. *)
+    apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall_x _].
+    unfold all_starts_neq in Hall_x. rewrite Forall_forall in Hall_x.
+    specialize (Hall_x x Hin). unfold edit_wf in Hxwf. lia.
+Qed.
+
+(** Stage 4 substantive list-manipulation: [skipn] of the canonical
+    cursor walk advances the cursor.
+
+    Statement: [skipn n (cursor_walk_canonical src 0 es) =
+    cursor_walk_canonical src n es] when [n] is at-most the start
+    of the first edit (and at-most the source length, vacuously). *)
+Lemma skipn_cursor_walk_canonical_advance :
+  forall src n es,
+    (forall e', In e' es -> n <= e'.(e_start)) ->
+    (forall e', In e' es -> e'.(e_start) <= length src) ->
+    skipn n (cursor_walk_canonical src 0 es) =
+    cursor_walk_canonical src n es.
+Proof.
+  intros src n es Hbound Hsrcb.
+  destruct es as [|e rest].
+  - (* es = [] *)
+    simpl cursor_walk_canonical. reflexivity.
+  - (* es = e :: rest *)
+    cbn [cursor_walk_canonical].
+    rewrite Nat.sub_0_r.
+    change (skipn 0 src) with src.
+    assert (Hne : n <= e.(e_start)) by (apply Hbound; left; reflexivity).
+    assert (Hes : e.(e_start) <= length src) by (apply Hsrcb; left; reflexivity).
+    (* LHS = skipn n (firstn e.start src ++ e.repl ++ rest_canonical) *)
+    rewrite skipn_app.
+    rewrite (firstn_length_le _ Hes).
+    (* skipn n (firstn e.start src) = firstn (e.start - n) (skipn n src) *)
+    rewrite skipn_firstn_comm.
+    (* skipn (n - e.start) tail.  n <= e.start ⇒ n - e.start = 0. *)
+    replace (n - e.(e_start)) with 0 by lia.
+    cbn [skipn].
+    reflexivity.
+Qed.
+
+(** Stage 4 substantive list-manipulation: [firstn n] of the
+    canonical cursor walk at cursor 0 equals [firstn n] of the
+    source, when [n] is at-most the start of the first edit. *)
+Lemma firstn_cursor_walk_canonical_prefix :
+  forall src n es,
+    (forall e', In e' es -> n <= e'.(e_start)) ->
+    (forall e', In e' es -> e'.(e_start) <= length src) ->
+    firstn n (cursor_walk_canonical src 0 es) = firstn n src.
+Proof.
+  intros src n es Hbound Hsrcb.
+  destruct es as [|e rest].
+  - (* es = []: cursor_walk_canonical src 0 [] = skipn 0 src = src. *)
+    cbn [cursor_walk_canonical]. reflexivity.
+  - (* es = e :: rest *)
+    cbn [cursor_walk_canonical].
+    rewrite Nat.sub_0_r.
+    change (skipn 0 src) with src.
+    assert (Hne : n <= e.(e_start)) by (apply Hbound; left; reflexivity).
+    assert (Hes : e.(e_start) <= length src) by (apply Hsrcb; left; reflexivity).
+    (* firstn n (firstn e.start src ++ e.repl ++ rest_canonical)
+       = firstn n (firstn e.start src) ++ firstn (n - e.start) (e.repl ++ ...)
+       = firstn n (firstn e.start src) ++ firstn 0 (...)
+       = firstn n (firstn e.start src) ++ []
+       = firstn (min n e.start) src
+       = firstn n src                 (since n <= e.start) *)
+    rewrite firstn_app.
+    rewrite (firstn_length_le _ Hes).
+    replace (n - e.(e_start)) with 0 by lia.
+    cbn [firstn].
+    rewrite app_nil_r.
+    rewrite firstn_firstn.
+    replace (Nat.min n (e_start e)) with n by lia.
+    reflexivity.
+Qed.
+
+(** ── Stage 4 substantive headline ─────────────────────────────────
+
+    Per [V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md] Stage 4: the
+    descending-sequential applier on a sorted-ascending list yields
+    the canonical cursor walk on the same list at cursor 0.
+
+    Plan signature has [Sorted_ascending_by_start, Pairwise_non_-
+    overlapping, All_in_bounds]; shipped form additionally requires
+    [distinct_starts] + [edit_wf] (per-element) to rule out
+    degenerate edits (multiple insertions at the same start, or
+    negative-range edits) which would invalidate the equation.
+    These additional preconditions are present in the Stage 5
+    user-facing theorem signature. *)
+Theorem apply_edits_concrete_rev_sorted_shape :
+  forall (src : bytes) (sorted_asc : list edit),
+    ascending_sorted sorted_asc ->
+    pairwise_non_overlapping sorted_asc ->
+    distinct_starts sorted_asc ->
+    (forall e, In e sorted_asc -> edit_wf e) ->
+    all_in_bounds src sorted_asc ->
+    apply_edits_concrete src (rev sorted_asc) =
+    cursor_walk_canonical src 0 sorted_asc.
+Proof.
+  intros src sorted_asc.
+  induction sorted_asc as [|e rest IH]; intros Hsorted Hpno Hd Hwf Hbnd.
+  - simpl. reflexivity.
+  - (* IH application: derive each precondition for rest. *)
+    assert (Hsorted_rest : ascending_sorted rest)
+      by (apply (ascending_sorted_tail e rest Hsorted)).
+    assert (Hpno_rest : pairwise_non_overlapping rest)
+      by (apply (pairwise_non_overlapping_cons_tail e rest Hpno)).
+    assert (Hd_rest : distinct_starts rest)
+      by (apply (distinct_starts_tail e rest Hd)).
+    assert (Hwf_rest : forall e', In e' rest -> edit_wf e').
+    { intros e' Hin. apply Hwf. right. exact Hin. }
+    assert (Hbnd_rest : all_in_bounds src rest).
+    { apply all_in_bounds_cons in Hbnd. tauto. }
+    assert (IH_applied : apply_edits_concrete src (rev rest) =
+                         cursor_walk_canonical src 0 rest)
+      by (apply IH; assumption).
+    clear IH.
+    (* Bound utility: for every e' in rest, e'.start <= length src. *)
+    assert (Hsl_rest : forall e', In e' rest -> e'.(e_start) <= length src).
+    { intros e' Hin.
+      assert (Hwf' : edit_wf e') by (apply Hwf_rest; exact Hin).
+      assert (Hb' : e'.(e_end) <= length src) by (apply Hbnd_rest; exact Hin).
+      unfold edit_wf in Hwf'. lia. }
+    (* Bound utility: for every e' in rest, e.start <= e'.start (sorted). *)
+    assert (Hes_rest : forall e', In e' rest -> e.(e_start) <= e'.(e_start)).
+    { intros e' Hin. apply (ascending_sorted_head_min e rest Hsorted e' Hin). }
+    (* Bound utility: for every e' in rest, e.end <= e'.start
+       (sorted + non-overlap + distinct + edit_wf). *)
+    assert (Hee_rest : forall e', In e' rest -> e.(e_end) <= e'.(e_start)).
+    { intros e' Hin.
+      apply (cons_head_end_le_rest_start e rest Hsorted Hpno Hd Hwf_rest e' Hin). }
+    (* Now the main rewrite chain. *)
+    cbn [rev].
+    rewrite apply_edits_concrete_app.
+    rewrite IH_applied. clear IH_applied.
+    cbn [apply_edits_concrete].
+    unfold apply_one_edit.
+    rewrite take_is_firstn, drop_is_skipn.
+    rewrite (firstn_cursor_walk_canonical_prefix src e.(e_start) rest Hes_rest Hsl_rest).
+    rewrite (skipn_cursor_walk_canonical_advance src e.(e_end) rest Hee_rest Hsl_rest).
+    cbn [cursor_walk_canonical].
+    rewrite Nat.sub_0_r, skipn_O.
+    reflexivity.
+Qed.
+
+(** Sanity Examples for the Stage 4 headline.  Each Example
+    constructs a sorted-ascending non-overlapping in-bounds list
+    of edits and checks the equation by reflexivity (all
+    preconditions discharge by computation). *)
+Example apply_edits_concrete_rev_sorted_shape_1edit :
+  let src := [97; 98; 99; 100; 101] in
+  let e1 := mk_edit 1 3 [88] in
+  apply_edits_concrete src (rev [e1]) = cursor_walk_canonical src 0 [e1].
+Proof. reflexivity. Qed.
+
+Example apply_edits_concrete_rev_sorted_shape_2edit :
+  let src := [97; 98; 99; 100; 101; 102] in
+  let e1 := mk_edit 1 3 [88] in
+  let e2 := mk_edit 4 5 [89; 90] in
+  apply_edits_concrete src (rev [e1; e2]) = cursor_walk_canonical src 0 [e1; e2].
+Proof. reflexivity. Qed.
+
+Example apply_edits_concrete_rev_sorted_shape_3edit :
+  let src := [97; 98; 99; 100; 101; 102; 103; 104; 105; 106] in
+  let e1 := mk_edit 1 2 [49] in
+  let e2 := mk_edit 4 5 [50] in
+  let e3 := mk_edit 7 8 [51] in
+  apply_edits_concrete src (rev [e1; e2; e3]) = cursor_walk_canonical src 0 [e1; e2; e3].
+Proof. reflexivity. Qed.
+
+(** ── Cursor-universal Stage 4 zero-admit witness ──────────────────── *)
+
+Definition apply_edits_cursor_universal_stage4_zero_admits : True := I.

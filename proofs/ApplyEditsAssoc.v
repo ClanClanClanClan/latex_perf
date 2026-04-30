@@ -681,3 +681,175 @@ Qed.
 (** ── Stage 5b zero-admit witness ──────────────────────────────────── *)
 
 Definition apply_edits_assoc_stage5b_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 cursor-universal STAGE 1 — sort-asc permutation lemmas
+    ─────────────────────────────────────────────────────────────────
+
+    Per `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` Stage 1.
+    Symmetric ascending-sort versions of the existing Stage 4
+    descending-sort lemmas (PRs #319→#322).  These prerequisites
+    feed Stage 4's substantive sequential-descending shape lemma
+    (which reduces both algorithms to a canonical byte mapping). *)
+
+(** Symmetric to [insert_desc_swap_distinct]: insertions via
+    [insert_asc] commute when the inserted edits have distinct
+    start keys.  Same proof structure as the descending version. *)
+Lemma insert_asc_swap_distinct :
+  forall a b s,
+    a.(e_start) <> b.(e_start) ->
+    insert_asc a (insert_asc b s) = insert_asc b (insert_asc a s).
+Proof.
+  intros a b s Hneq. induction s as [|x rest IH].
+  - (* s = [] *)
+    simpl.
+    destruct (Nat.lt_ge_cases (e_start a) (e_start b)) as [Hlt | Hge].
+    + assert (e_start a <=? e_start b = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+    + assert (e_start b < e_start a) by lia.
+      assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+      assert (e_start b <=? e_start a = true) as -> by (apply Nat.leb_le; lia).
+      reflexivity.
+  - (* s = x :: rest *)
+    simpl.
+    destruct (Nat.leb (e_start b) (e_start x)) eqn:Hbx;
+      destruct (Nat.leb (e_start a) (e_start x)) eqn:Hax.
+    + (* a <= x and b <= x: both insert at head; depends on a vs b *)
+      simpl. rewrite Hax, Hbx.
+      destruct (Nat.lt_ge_cases (e_start a) (e_start b)) as [Hlt | Hge].
+      * assert (e_start a <=? e_start b = true) as -> by (apply Nat.leb_le; lia).
+        assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+        reflexivity.
+      * assert (e_start b < e_start a) by lia.
+        assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+        assert (e_start b <=? e_start a = true) as -> by (apply Nat.leb_le; lia).
+        reflexivity.
+    + (* b <= x but ~a <= x *)
+      simpl.
+      apply Nat.leb_le in Hbx. apply Nat.leb_nle in Hax.
+      assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+      simpl.
+      assert (e_start b <=? e_start x = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start a <=? e_start x = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+    + (* ~b <= x but a <= x *)
+      simpl.
+      apply Nat.leb_nle in Hbx. apply Nat.leb_le in Hax.
+      assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+      simpl.
+      assert (e_start a <=? e_start x = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start b <=? e_start x = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+    + (* ~b <= x and ~a <= x: both recurse *)
+      simpl. rewrite Hax, Hbx. rewrite IH. reflexivity.
+Qed.
+
+(** Symmetric corollary to [sort_by_start_desc_insert_swap]. *)
+Lemma sort_by_start_asc_insert_swap :
+  forall a b es,
+    a.(e_start) <> b.(e_start) ->
+    sort_by_start_asc (a :: b :: es)
+      = sort_by_start_asc (b :: a :: es).
+Proof.
+  intros a b es Hneq.
+  cbn [sort_by_start_asc].
+  apply insert_asc_swap_distinct. exact Hneq.
+Qed.
+
+(** Symmetric to [sort_by_start_desc_perm]: sort_by_start_asc is
+    Permutation-invariant on distinct-key inputs. *)
+Lemma sort_by_start_asc_perm :
+  forall es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    sort_by_start_asc es1 = sort_by_start_asc es2.
+Proof.
+  intros es1 es2 Hperm. induction Hperm as
+      [| a l1 l2 Hp IH | a b l | l1 l2 l3 Hp1 IH1 Hp2 IH2]; intros Hd.
+  - (* perm_nil *) reflexivity.
+  - (* perm_skip *)
+    cbn [sort_by_start_asc].
+    apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall Hd].
+    rewrite (IH Hd). reflexivity.
+  - (* perm_swap: same direction issue as the desc proof *)
+    apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall_b Hd1].
+    apply distinct_starts_cons_iff in Hd1. destruct Hd1 as [Hall_a _].
+    inversion Hall_b as [|? ? Hneq _]. subst.
+    symmetry.
+    apply (sort_by_start_asc_insert_swap a b l).
+    intros Heq. apply Hneq. symmetry. exact Heq.
+  - (* perm_trans *)
+    rewrite (IH1 Hd).
+    assert (Hd2 : distinct_starts l2)
+      by (apply (distinct_starts_perm l1 l2 Hp1 Hd)).
+    rewrite (IH2 Hd2). reflexivity.
+Qed.
+
+(** Inductive descending_sorted's mirror for ascending. *)
+Inductive ascending_sorted : list edit -> Prop :=
+  | ascending_sorted_nil : ascending_sorted []
+  | ascending_sorted_singleton : forall e, ascending_sorted [e]
+  | ascending_sorted_cons :
+      forall e1 e2 rest,
+        e1.(e_start) <= e2.(e_start) ->
+        ascending_sorted (e2 :: rest) ->
+        ascending_sorted (e1 :: e2 :: rest).
+
+(** Symmetric to [insert_desc_preserves_sorted]. *)
+Lemma insert_asc_preserves_sorted :
+  forall e es,
+    ascending_sorted es ->
+    ascending_sorted (insert_asc e es).
+Proof.
+  intros e es Hes. induction Hes as [|e0|e1 e2 rest Hle Hsorted IH].
+  - simpl. constructor.
+  - simpl. destruct (Nat.leb (e_start e) (e_start e0)) eqn:Hle0.
+    + apply Nat.leb_le in Hle0.
+      apply ascending_sorted_cons; [exact Hle0 | constructor].
+    + apply Nat.leb_nle in Hle0.
+      simpl. apply ascending_sorted_cons.
+      * lia.
+      * constructor.
+  - simpl. destruct (Nat.leb (e_start e) (e_start e1)) eqn:Hle1.
+    + apply Nat.leb_le in Hle1.
+      apply ascending_sorted_cons; [exact Hle1 |].
+      apply ascending_sorted_cons; assumption.
+    + apply Nat.leb_nle in Hle1.
+      simpl in IH. simpl.
+      destruct (Nat.leb (e_start e) (e_start e2)) eqn:Hle2.
+      * apply Nat.leb_le in Hle2.
+        apply ascending_sorted_cons; [lia |].
+        apply ascending_sorted_cons; [exact Hle2 | exact Hsorted].
+      * apply Nat.leb_nle in Hle2.
+        apply ascending_sorted_cons; [exact Hle | exact IH].
+Qed.
+
+(** Symmetric to [sort_by_start_desc_sorted]. *)
+Lemma sort_by_start_asc_sorted :
+  forall es, ascending_sorted (sort_by_start_asc es).
+Proof.
+  induction es as [|e rest IH]; simpl.
+  - constructor.
+  - apply insert_asc_preserves_sorted. exact IH.
+Qed.
+
+(** Symmetric to [sort_by_start_desc_id_when_sorted]. *)
+Lemma sort_by_start_asc_id_when_sorted :
+  forall es, ascending_sorted es -> sort_by_start_asc es = es.
+Proof.
+  intros es Hes. induction Hes as [|e0|e1 e2 rest Hle Hsorted IH].
+  - reflexivity.
+  - simpl. reflexivity.
+  - change (sort_by_start_asc (e1 :: e2 :: rest))
+      with (insert_asc e1 (sort_by_start_asc (e2 :: rest))).
+    rewrite IH.
+    cbn [insert_asc].
+    assert (Nat.leb (e_start e1) (e_start e2) = true) as Hleb.
+    { apply Nat.leb_le. exact Hle. }
+    rewrite Hleb. reflexivity.
+Qed.
+
+(** ── Cursor-universal Stage 1 zero-admit witness ──────────────────── *)
+
+Definition apply_edits_cursor_universal_stage1_zero_admits : True := I.

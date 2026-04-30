@@ -1073,6 +1073,31 @@ Proof.
     apply Permutation_rev.
 Qed.
 
+(** Sanity Examples for [sort_by_start_desc_eq_rev_asc].  Cover empty,
+    singleton, two-edit, and three-edit lists; reflexivity suffices
+    for fully-evaluable concrete inputs. *)
+Example sort_desc_eq_rev_asc_empty :
+  sort_by_start_desc (@nil edit) = rev (sort_by_start_asc (@nil edit)).
+Proof. reflexivity. Qed.
+
+Example sort_desc_eq_rev_asc_singleton :
+  let e1 := mk_edit 3 4 [49] in
+  sort_by_start_desc [e1] = rev (sort_by_start_asc [e1]).
+Proof. reflexivity. Qed.
+
+Example sort_desc_eq_rev_asc_two :
+  let e1 := mk_edit 5 6 [49] in
+  let e2 := mk_edit 1 2 [50] in
+  sort_by_start_desc [e1; e2] = rev (sort_by_start_asc [e1; e2]).
+Proof. reflexivity. Qed.
+
+Example sort_desc_eq_rev_asc_three :
+  let e1 := mk_edit 7 8 [49] in
+  let e2 := mk_edit 1 2 [50] in
+  let e3 := mk_edit 4 5 [51] in
+  sort_by_start_desc [e1; e2; e3] = rev (sort_by_start_asc [e1; e2; e3]).
+Proof. reflexivity. Qed.
+
 (** ── Cursor-universal Stage 2 zero-admit witness ──────────────────── *)
 
 Definition apply_edits_cursor_universal_stage2_zero_admits : True := I.

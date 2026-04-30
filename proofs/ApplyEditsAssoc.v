@@ -24,7 +24,7 @@
 
     Zero admits, zero axioms. *)
 
-From Coq Require Import List Arith Lia.
+From Coq Require Import List Arith Lia Permutation.
 From LaTeXPerfectionist Require Import CSTRoundTrip RewritePreservesCST.
 Import ListNotations.
 
@@ -358,3 +358,198 @@ Qed.
 (** ── Stage 3 zero-admit witness ───────────────────────────────────── *)
 
 Definition apply_edits_assoc_stage3_zero_admits : True := I.
+
+(** ─────────────────────────────────────────────────────────────────
+    v27 apply_edits_assoc STAGE 4 — apply_edits_parallel_perm
+    ─────────────────────────────────────────────────────────────────
+
+    Per V27_APPLY_EDITS_ASSOC_PLAN.md Stage 4 (REVISED).  Substantive
+    headline: for permutation-equivalent edit lists with
+    [distinct_starts], [apply_edits_parallel] produces equal byte
+    streams.  Closes the v26.4 deferral.
+
+    Strategy: prove [sort_by_start_desc] is permutation-invariant on
+    distinct-key inputs, then [apply_edits_parallel] inherits the
+    invariance through its definition. *)
+
+(** All [e_start] values in the list are pairwise distinct. *)
+Definition distinct_starts (es : list edit) : Prop :=
+  NoDup (map e_start es).
+
+(** [insert_desc] commutes with itself when the two inserted edits
+    have distinct [e_start] values.  Standard insertion-sort
+    commutativity; case analysis on Nat.leb comparisons. *)
+Lemma insert_desc_swap_distinct :
+  forall a b s,
+    a.(e_start) <> b.(e_start) ->
+    insert_desc a (insert_desc b s) = insert_desc b (insert_desc a s).
+Proof.
+  intros a b s Hneq. induction s as [|x rest IH].
+  - (* s = [] *)
+    simpl.
+    destruct (Nat.lt_ge_cases (e_start a) (e_start b)) as [Hlt | Hge].
+    + assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+      assert (e_start a <=? e_start b = true) as -> by (apply Nat.leb_le; lia).
+      reflexivity.
+    + assert (e_start b < e_start a) by lia.
+      assert (e_start b <=? e_start a = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+  - (* s = x :: rest *)
+    simpl.
+    destruct (Nat.leb (e_start x) (e_start b)) eqn:Hxb;
+      destruct (Nat.leb (e_start x) (e_start a)) eqn:Hxa.
+    + (* x <= b and x <= a: both insert at head; depends on a vs b *)
+      simpl. rewrite Hxa, Hxb.
+      destruct (Nat.lt_ge_cases (e_start a) (e_start b)) as [Hlt | Hge].
+      * assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+        assert (e_start a <=? e_start b = true) as -> by (apply Nat.leb_le; lia).
+        reflexivity.
+      * assert (e_start b < e_start a) by lia.
+        assert (e_start b <=? e_start a = true) as -> by (apply Nat.leb_le; lia).
+        assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+        reflexivity.
+    + (* x <= b but ~x <= a: x heads on a's side, b heads on b's side *)
+      simpl.
+      apply Nat.leb_le in Hxb. apply Nat.leb_nle in Hxa.
+      assert (e_start b <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+      simpl.
+      assert (e_start x <=? e_start b = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start x <=? e_start a = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+    + (* ~x <= b but x <= a: x heads on b's side, a heads on a's side *)
+      simpl.
+      apply Nat.leb_nle in Hxb. apply Nat.leb_le in Hxa.
+      assert (e_start a <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+      simpl.
+      assert (e_start x <=? e_start a = true) as -> by (apply Nat.leb_le; lia).
+      assert (e_start x <=? e_start b = false) as -> by (apply Nat.leb_nle; lia).
+      reflexivity.
+    + (* ~x <= b and ~x <= a: both recurse *)
+      simpl. rewrite Hxa, Hxb. rewrite IH. reflexivity.
+Qed.
+
+(** When [a]'s start key is fresh (not in [es]'s sorted form),
+    inserting [a] commutes through any insertion built on top of
+    [es].  Generalised from [insert_desc_swap_distinct] for the
+    Permutation cons-permute case. *)
+Lemma sort_by_start_desc_insert_swap :
+  forall a b es,
+    a.(e_start) <> b.(e_start) ->
+    sort_by_start_desc (a :: b :: es)
+      = sort_by_start_desc (b :: a :: es).
+Proof.
+  intros a b es Hneq.
+  cbn [sort_by_start_desc].
+  apply insert_desc_swap_distinct. exact Hneq.
+Qed.
+
+(** All starts in [es] differ from [a]'s start (helper for the
+    permutation theorem). *)
+Definition all_starts_neq (a : edit) (es : list edit) : Prop :=
+  Forall (fun e => a.(e_start) <> e.(e_start)) es.
+
+(** [distinct_starts] cons unfolding. *)
+Lemma distinct_starts_cons_iff :
+  forall a es,
+    distinct_starts (a :: es) <->
+    all_starts_neq a es /\ distinct_starts es.
+Proof.
+  intros a es. unfold distinct_starts, all_starts_neq.
+  cbn [map]. split.
+  - intros H. inversion H as [|? ? Hnotin Hnodup]. subst.
+    split.
+    + apply Forall_forall. intros e He Heq.
+      apply Hnotin. apply in_map_iff. exists e. split.
+      * symmetry. exact Heq.
+      * exact He.
+    + exact Hnodup.
+  - intros [Hall Hnd]. constructor.
+    + intros Hin. apply in_map_iff in Hin.
+      destruct Hin as [e [Heq He]].
+      rewrite Forall_forall in Hall.
+      apply (Hall e He). symmetry. exact Heq.
+    + exact Hnd.
+Qed.
+
+(** [Permutation] preserves the multiset of [e_start] values, so
+    [distinct_starts] (NoDup of the start map) is preserved. *)
+Lemma distinct_starts_perm :
+  forall es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    distinct_starts es2.
+Proof.
+  intros es1 es2 Hperm Hd.
+  unfold distinct_starts in *.
+  apply (Permutation_NoDup (Permutation_map e_start Hperm)).
+  exact Hd.
+Qed.
+
+(** Sort is a Permutation-invariant function on distinct-key inputs.
+    Proven by induction on the Permutation relation, using
+    [sort_by_start_desc_insert_swap] for the swap case. *)
+Lemma sort_by_start_desc_perm :
+  forall es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    sort_by_start_desc es1 = sort_by_start_desc es2.
+Proof.
+  intros es1 es2 Hperm. induction Hperm as
+      [| a l1 l2 Hp IH | a b l | l1 l2 l3 Hp1 IH1 Hp2 IH2]; intros Hd.
+  - (* perm_nil *) reflexivity.
+  - (* perm_skip *)
+    cbn [sort_by_start_desc].
+    apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall Hd].
+    rewrite (IH Hd). reflexivity.
+  - (* perm_swap: Coq's perm_swap binds args (x y l) in that order;
+       my pattern (a b l) maps a := x, b := y. So es1 = b :: a :: l,
+       es2 = a :: b :: l. Goal direction is sort es1 = sort es2,
+       opposite of [sort_by_start_desc_insert_swap]. *)
+    apply distinct_starts_cons_iff in Hd. destruct Hd as [Hall_b Hd1].
+    apply distinct_starts_cons_iff in Hd1. destruct Hd1 as [Hall_a _].
+    inversion Hall_b as [|? ? Hneq _]. subst.
+    symmetry.
+    apply (sort_by_start_desc_insert_swap a b l).
+    intros Heq. apply Hneq. symmetry. exact Heq.
+  - (* perm_trans *)
+    rewrite (IH1 Hd).
+    assert (Hd2 : distinct_starts l2)
+      by (apply (distinct_starts_perm l1 l2 Hp1 Hd)).
+    rewrite (IH2 Hd2). reflexivity.
+Qed.
+
+(** ── Stage 4 substantive headline ─────────────────────────────────── *)
+
+(** Permutation invariance for the parallel applier on distinct-
+    starts inputs.  This is what the v26.4 deferral note actually
+    wanted — the original
+    [apply_edits_concrete src [e1;e2] = apply_edits_concrete src [e2;e1]]
+    form is FALSE in general (sequential application interprets
+    offsets relative to the post-edit buffer; PR #320 file-header
+    counter-example). *)
+Theorem apply_edits_parallel_perm :
+  forall src es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    apply_edits_parallel src es1 = apply_edits_parallel src es2.
+Proof.
+  intros src es1 es2 Hperm Hd.
+  unfold apply_edits_parallel.
+  rewrite (sort_by_start_desc_perm es1 es2 Hperm Hd).
+  reflexivity.
+Qed.
+
+(** Sanity Example: 3-edit permutation on a longer source. *)
+Example apply_edits_parallel_perm_3 :
+  let src := [97;98;99;100;101;102;103;104;105;106] in  (* "abcdefghij" *)
+  let e1 := mk_edit 1 2 [49] in
+  let e2 := mk_edit 4 5 [50] in
+  let e3 := mk_edit 7 8 [51] in
+  apply_edits_parallel src [e1; e2; e3]
+    = apply_edits_parallel src [e3; e1; e2].
+Proof. reflexivity. Qed.
+
+(** ── Stage 4 zero-admit witness ───────────────────────────────────── *)
+
+Definition apply_edits_assoc_stage4_zero_admits : True := I.

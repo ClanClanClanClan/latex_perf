@@ -5,7 +5,7 @@ Perfectionist. All proofs compile with zero admits and zero axioms.
 
 ## Totals
 
-170 Coq files, 1,321 theorems/lemmas, 0 admits, 0 axioms.
+171 Coq files, 1,342 theorems/lemmas, 0 admits, 0 axioms.
 
 Breakdown:
 

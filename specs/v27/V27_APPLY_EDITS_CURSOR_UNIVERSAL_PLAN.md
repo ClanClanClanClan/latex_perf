@@ -191,9 +191,14 @@ template:
    didn't.
 4. **Verification numbers** — theorem count delta, gate state.
 
-## Acceptance criteria for the cycle (v27.0.4)
+## Acceptance criteria for the cycle (state at end of Stage 1)
 
-- [ ] All 4 Stage 1 sort-asc lemmas Qed.
+- [x] All Stage 1 sort-asc lemmas Qed (PR #325): shipped
+  `insert_asc_swap_distinct`, `sort_by_start_asc_insert_swap`,
+  `sort_by_start_asc_perm`, `insert_asc_preserves_sorted`,
+  `sort_by_start_asc_sorted`, `sort_by_start_asc_id_when_sorted`,
+  plus `ascending_sorted` Inductive (6 lemmas + 1 Inductive,
+  +2 over the original 4-lemma plan estimate).
 - [ ] Stage 2 `sort_by_start_desc_eq_rev_asc` Qed.
 - [ ] Stage 3 cursor-walk shape lemma Qed.
 - [ ] Stage 4 sequential-descending shape lemma Qed (the

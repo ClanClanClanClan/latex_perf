@@ -206,4 +206,5 @@ Target tag: v27.0.4.
 - [x] `docs/MERGING_GUARANTEES.md` describing the parallel-applier
   semantics + original-source-offset interpretation +
   counter-example + runtime correspondence (Stage 5, PR #323).
-- [ ] CHANGELOG `[v27.0.3]` entry (Stage 6 release-bump).
+- [x] CHANGELOG `[v27.0.3]` entry + tag on main (Stage 6
+  release-bump, PR #324, tag `v27.0.3` @ commit `f3437c1`).

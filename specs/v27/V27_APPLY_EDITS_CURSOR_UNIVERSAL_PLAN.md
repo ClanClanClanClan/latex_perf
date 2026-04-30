@@ -204,7 +204,10 @@ template:
   `sort_by_start_asc_sorted`, `sort_by_start_asc_id_when_sorted`,
   plus `ascending_sorted` Inductive (6 lemmas + 1 Inductive,
   +2 over the original 4-lemma plan estimate).
-- [ ] Stage 2 `sort_by_start_desc_eq_rev_asc` Qed.
+- [x] Stage 2 `sort_by_start_desc_eq_rev_asc` Qed (PR #326,
+  merged 2026-04-30 @ commit `0b87a44`).  Plus 9 supporting
+  lemmas + 4 reflexivity Examples; all Closed under the global
+  context.
 - [ ] Stage 3 cursor-walk shape lemma Qed.
 - [ ] Stage 4 sequential-descending shape lemma Qed (the
   technically substantive piece).

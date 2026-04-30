@@ -94,12 +94,43 @@ Lemma apply_edits_cursor_aux_shape :
     cursor_walk_canonical src cursor es.
 ```
 
-Where `cursor_walk_canonical` is a non-recursive byte-mapping
-function that directly produces the expected concatenation of
-gap-prefixes + replacements + tail.
+Where `cursor_walk_canonical` is a byte-mapping function that
+directly produces the expected concatenation of gap-prefixes +
+replacements + tail.
 
 This isolates the cursor-walk's structural output independent of
 the recursion shape.
+
+**Shipped form (PR #328) deviates from the plan signature in three
+small ways, all documented in the file:**
+
+1. *Predicate naming.* `Sorted_ascending_by_start` is shipped as
+   `ascending_sorted` (already defined in cursor-universal Stage 1,
+   matching the existing repo `descending_sorted` symbol).
+   `Pairwise_non_overlapping_from` is shipped as
+   `non_overlapping_from` (lowercase repo style, an Inductive over
+   the sequential cursor-anchored chain).  `All_in_bounds` is
+   shipped as `all_in_bounds src es` without the cursor parameter
+   — the cursor lower bound is already captured by
+   `non_overlapping_from`'s head clause, so duplicating it would
+   be redundant.
+
+2. *Recursion shape.* `cursor_walk_canonical` is shipped as a
+   Coq `Fixpoint` mirroring `apply_edits_cursor_aux` one-for-one
+   (any "non-recursive" form for variable-length lists is just a
+   fold over a recursive helper, which is observably equivalent
+   to the Fixpoint).  The structural-isolation goal is met: Stage 4
+   matches the descending-sequential applier against
+   `cursor_walk_canonical` rather than against
+   `apply_edits_cursor_aux` directly.
+
+3. *Preconditions.* The shipped lemma `apply_edits_cursor_aux_shape`
+   is unconditional (the equality holds for all inputs because
+   both definitions use the same recursion).  A plan-signature-
+   matching variant `apply_edits_cursor_aux_shape_with_preconds`
+   carrying the three preconditions is also shipped as a
+   one-line corollary.  Stage 5 uses the unconditional form for
+   simpler rewrite chains.
 
 **Acceptance:** Lemma Qed.
 

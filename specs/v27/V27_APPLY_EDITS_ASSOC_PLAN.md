@@ -1,35 +1,47 @@
 # V27_APPLY_EDITS_ASSOC_PLAN — apply_edits associative-reorder Coq theorem
 
-**Goal:** Prove that `apply_edits_concrete` (the v26.3 byte-edit
-applier) is invariant under reordering of non-overlapping edits.
-Currently the implementation applies edits sequentially over the
-mutating buffer; the spec wants the strong claim that for
-non-overlapping edits, the order of application doesn't matter.
+**Goal (REVISED — see PR #320 for the FALSE-as-stated original
+form):** Prove that `apply_edits_parallel` (the parallel applier
+defined as `apply_edits_concrete o sort_by_start_desc`) is
+invariant under reordering of edits with distinct start positions.
 
-**Tag target:** v27.0.x patch or v27.1.x cycle.
+**Tag target:** v27.0.3 (apply_edits_assoc 6-stage cycle).
 
-**Scope estimate:** 3–5 sessions.
+**Scope estimate:** 6 stages, ~1 session each.
 
 ## Why this matters
 
-`apply_edits_concrete` currently has a sequential semantics: edit
-N+1 is applied to the buffer after edit N. This means edit N+1's
-offsets are interpreted *relative to the post-edit-N buffer*, not
-relative to the original source. For overlapping edits this is
-necessary; for non-overlapping ones it complicates the spec.
+`apply_edits_concrete` (in `RewritePreservesCST.v`) has a
+sequential semantics: edit N+1 is applied to the buffer after
+edit N. This means edit N+1's offsets are interpreted *relative
+to the post-edit-N buffer*, not the original source.  For
+overlapping edits this is necessary; for non-overlapping ones it
+makes the SEQUENTIAL applier order-sensitive even on
+non-overlapping edits (concrete counter-example documented in
+`proofs/ApplyEditsAssoc.v` file header).
 
-The "parallel-application" form computes all offsets relative to
-the original source. The desired theorem:
+The "parallel-application" form computes offsets relative to the
+original source by sorting edits descending by start and applying
+right-to-left.  The substantive theorem (delivered in Stage 4,
+PR #322):
 
 ```coq
-Theorem apply_edits_concrete_associative_subset :
-  forall (src : list nat) (e1 e2 : edit),
-    non_overlapping e1 e2 ->
-    apply_edits_concrete src [e1; e2] = apply_edits_concrete src [e2; e1].
+Theorem apply_edits_parallel_perm :
+  forall src es1 es2,
+    Permutation es1 es2 ->
+    distinct_starts es1 ->
+    apply_edits_parallel src es1 = apply_edits_parallel src es2.
 ```
 
-Currently shipped: `RewritePreservesCST` byte-count invariants.
-Missing: associativity / order-independence.
+The original draft form
+`apply_edits_concrete src [e1;e2] = apply_edits_concrete src [e2;e1]`
+under `non_overlapping e1 e2` is provably FALSE (PR #320
+counter-example: src "abcdef" with non-overlapping edits at [1,3)
+and [4,5) yields different sequential results "aXdeYZ" vs
+"aXdYZf"). The substantive guarantee lives in the parallel applier.
+
+Currently shipped: `RewritePreservesCST` byte-count invariants
+(v26.3 item D), `apply_edits_parallel_perm` (v27.0.3 PR #322).
 
 ## Stage decomposition
 
@@ -157,7 +169,23 @@ Tag.
 `~/.claude/.../memory/v27_apply_edits_assoc_status.md` carries
 state.
 
-## Acceptance criteria (state at end of Stage 4)
+## Successor cycle: universal cursor-walk = parallel-applier theorem
+
+The v27.0.3 cycle ships **corpus-level** mechanised correspondence
+between the OCaml `Cst_edit.apply_all` algorithm (mirrored as the
+Coq `apply_edits_cursor`) and the parallel applier
+`apply_edits_parallel` — 4 reflexivity Examples on representative
+inputs (Stage 5b in `proofs/ApplyEditsAssoc.v`).
+
+The **universal theorem**
+`apply_edits_cursor_eq_parallel : forall src es valid,
+apply_edits_cursor src es = apply_edits_parallel src es`
+is the natural extension and has its own dedicated
+stage-decomposed plan: see
+[`V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`](V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md).
+Target tag: v27.0.4.
+
+## Acceptance criteria (state at end of Stage 5)
 
 - [x] `non_overlapping` Definition + decidability + symmetry +
   consistency-with-`edits_conflict` lemmas (Stage 1, PR #319).
@@ -171,9 +199,11 @@ state.
   `apply_edits_concrete_associative_subset` form).
 - [x] All `Print Assumptions` Closed under the global context
   (verified for all Stage 1+2+3+4 theorems on PR #322 branch).
-- [ ] `proofs/ADMISSIBILITY_MAP.md` updated — mark v26.4
-  `apply_edits_concrete_associative_subset` deferral as
-  superseded by `apply_edits_parallel_perm` (Stage 5).
-- [ ] `docs/MERGING_GUARANTEES.md` describing the parallel-applier
-  semantics + original-source-offset interpretation (Stage 5).
+- [x] `proofs/ADMISSIBILITY_MAP.md` updated — new
+  "Rewrite engine — associative-reorder (DISCHARGED in v27.0.3)"
+  entry with full STATUS callout + PR-by-PR breakdown (Stage 5,
+  PR #323).
+- [x] `docs/MERGING_GUARANTEES.md` describing the parallel-applier
+  semantics + original-source-offset interpretation +
+  counter-example + runtime correspondence (Stage 5, PR #323).
 - [ ] CHANGELOG `[v27.0.3]` entry (Stage 6 release-bump).

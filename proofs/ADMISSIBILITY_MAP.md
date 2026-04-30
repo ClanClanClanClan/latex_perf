@@ -296,6 +296,44 @@ its premise.
    apply function defined in Coq, under the same disjointness
    precondition.
 
+### Rewrite engine — associative-reorder (`ApplyEditsAssoc.v`, DISCHARGED in v27.0.3)
+
+> **v27.0.3 STATUS.** `proofs/ApplyEditsAssoc.v` ships
+> `apply_edits_parallel_perm` (Theorem, Qed, Closed under the
+> global context).  Closes the v26.4 deferral originally noted as
+> `apply_edits_concrete_associative_subset` (the original form was
+> FALSE in general — sequential `apply_edits_concrete` interprets
+> each edit's `e_start` / `e_end` relative to the post-earlier-edits
+> buffer, not the original source, so reordering non-overlapping
+> edits in the SEQUENTIAL applier produces different results).
+>
+> The substantive guarantee is permutation invariance for the
+> *parallel* applier `apply_edits_parallel := apply_edits_concrete o
+> sort_by_start_desc`, which interprets every offset relative to the
+> original source by sorting edits descending and applying them
+> right-to-left.
+>
+> ```coq
+> Theorem apply_edits_parallel_perm :
+>   forall src es1 es2,
+>     Permutation es1 es2 ->
+>     distinct_starts es1 ->
+>     apply_edits_parallel src es1 = apply_edits_parallel src es2.
+> ```
+>
+> Stage breakdown: PR #319 (Stage 1 `non_overlapping`) → PR #320
+> (Stage 2 parallel applier + counter-example documentation) →
+> PR #321 (Stage 3 sort-idempotence + sorted equivalence) →
+> PR #322 (Stage 4 substantive `apply_edits_parallel_perm`) →
+> PR #323+ (Stage 5 ADMISSIBILITY_MAP wire-in / this entry, plus
+> `docs/MERGING_GUARANTEES.md`) → release-bump v27.0.3.
+
+**File:** `proofs/ApplyEditsAssoc.v`.
+**Predicate:** `distinct_starts es := NoDup (map e_start es)` —
+rules out pure insertions at the same offset (which are
+genuinely order-dependent).  For non-empty edits with pairwise
+non-overlapping ranges, `distinct_starts` follows automatically.
+
 ### Rewrite engine — semantic preservation (`RewritePreservesSemantics.v`)
 
 **Section variables** (`Section Semantic_preservation`, lines 32–86):

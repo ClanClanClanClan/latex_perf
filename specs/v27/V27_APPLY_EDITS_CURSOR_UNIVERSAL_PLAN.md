@@ -162,6 +162,29 @@ descending sequential applier processes `rev rest ++ [e]`:
 This is the technically interesting stage — needs careful manipulation
 of `take`/`drop`/`firstn`/`skipn` over the partial buffer.
 
+**Shipped form (PR #329) deviates from the plan signature in two
+ways, both documented in the file Stage 4 block header:**
+
+1. *Strengthened preconditions.*  Plan signature has only
+   `Sorted_ascending_by_start`, `Pairwise_non_overlapping`, and
+   `All_in_bounds`.  The shipped form additionally requires
+   `distinct_starts sorted_asc` and a per-element `edit_wf`.
+   These rule out two degenerate cases where the equation would
+   fail: (a) multiple insertions at the same start position
+   (non-strict ascending sort plus pairwise non-overlapping
+   admits this; the sequential-applier output would depend on
+   ordering of the equal-start insertions, breaking the
+   equation), and (b) negative-range edits.  Both additional
+   preconditions are present in the Stage 5 user-facing theorem
+   signature, so they flow through naturally.
+
+2. *Predicate naming.*  Same lowercase repo-style as Stage 3:
+   `ascending_sorted`, `pairwise_non_overlapping`,
+   `all_in_bounds` — matching existing repo symbols.  The
+   `All_in_bounds src 0 sorted_asc` plan signature drops to
+   `all_in_bounds src sorted_asc` (cursor=0 is the universal
+   entry point).
+
 **Acceptance:** Lemma Qed.
 
 ### Stage 5 — combine into the universal theorem

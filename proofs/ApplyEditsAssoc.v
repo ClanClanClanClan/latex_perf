@@ -1,26 +1,32 @@
 (** * ApplyEditsAssoc — apply_edits associative-reorder theorem.
 
-    Per `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md`: prove that
-    [RewritePreservesCST.apply_edits_concrete] is invariant under
-    reordering of pairwise non-overlapping edits.  Currently the
-    implementation applies edits sequentially over the mutating
-    buffer; the spec wants the strong claim that for non-overlapping
-    edits, the order of application doesn't matter.
+    Per `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md` (REVISED): prove
+    that the parallel applier [apply_edits_parallel] (defined as
+    [apply_edits_concrete o sort_by_start_desc]) is invariant under
+    reordering of edits with distinct start positions.  The original
+    draft form against the SEQUENTIAL applier is FALSE in general —
+    sequential interprets offsets relative to the current buffer,
+    not the original source (counter-example in the Stage 2 block
+    of this file).
 
-    Multi-stage:
-    - Stage 1 (this commit): define [non_overlapping] + sanity
+    Multi-stage progression:
+    - Stage 1 (PR #319): [non_overlapping] predicate + sanity
       lemmas (decidability, symmetry, consistency with the existing
       [RewritePreservesCST.edits_conflict] predicate).
-    - Stage 2: parallel-application Fixpoint (sort by start, apply
-      each in original-source offset order).
-    - Stage 3: equivalence of parallel and sequential on
-      pairwise-non-overlapping edit lists.
-    - Stage 4: associativity / permutation invariance for the
-      parallel applier; combined with Stage 3, the
-      [apply_edits_concrete_associative_subset] headline theorem.
-    - Stage 5: wire into [proofs/ADMISSIBILITY_MAP.md] +
-      [docs/MERGING_GUARANTEES.md] (or similar).
-    - Stage 6: release-bump.
+    - Stage 2 (PR #320): parallel-application Fixpoint — sort by
+      [e_start] descending, apply via [apply_edits_concrete].
+    - Stage 3 (PR #321): sort-idempotence + sorted-equivalence
+      structural lemmas; trivial-by-definition Stage 3 headline
+      [apply_edits_parallel_eq_concrete_when_sorted].
+    - Stage 4 (PR #322, SUBSTANTIVE HEADLINE):
+      [apply_edits_parallel_perm] — for [Permutation es1 es2 /\
+      distinct_starts es1], [apply_edits_parallel src es1 =
+      apply_edits_parallel src es2].  Closes the v26.4 deferral
+      (originally noted as
+      [apply_edits_concrete_associative_subset], FALSE shape).
+    - Stage 5 (PR #323): wire into [proofs/ADMISSIBILITY_MAP.md] +
+      create [docs/MERGING_GUARANTEES.md].
+    - Stage 6: release-bump v27.0.3.
 
     Zero admits, zero axioms. *)
 

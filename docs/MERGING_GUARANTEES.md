@@ -55,10 +55,12 @@ apply_edits_concrete src [e2;e1]
 ```
 
 So if your client code applies a list of non-overlapping edits using
-the sequential applier, the **order matters**.  This is by design at
-the runtime level — `Cst_edit.apply_all` does its own sorting before
-applying — but the Coq proof against the sequential applier alone
-cannot claim order-independence.
+the sequential applier *directly* (without sorting), the **order
+matters**.  This is by design at the runtime level —
+`Cst_edit.apply_all` first sorts edits ascending by `start_offset`
+and then cursor-walks through the original source (see Runtime
+correspondence below) — but the Coq proof against the sequential
+applier alone cannot claim order-independence.
 
 ### Parallel — `apply_edits_parallel` (in `proofs/ApplyEditsAssoc.v`)
 
@@ -131,22 +133,53 @@ overlap).
 
 ## Runtime correspondence
 
-The OCaml runtime's `Cst_edit.apply_all` already performs descending-
-by-start sorting before applying edits.  The Coq parallel applier
-mirrors that runtime behaviour, so the Coq guarantee transfers
-directly to the shipped binary's behaviour on:
+The OCaml runtime (`latex-parse/src/cst_edit.ml::apply_all`) and the
+Coq parallel applier produce the **same byte sequence** on
+non-overlapping edits with distinct starts, but via different
+mechanisms:
 
-- **Single-cursor batch fixes** — one validator emits multiple
-  non-overlapping suggestions; the runtime sorts and applies them.
-  Result is order-independent.
-- **Multi-cursor / multi-validator batches** — outputs from
-  different validators get merged (per
-  `apply_edits_concrete_with_priorities` for prioritised conflicts)
-  and the surviving set is then applied in parallel-applier order.
+- **OCaml `apply_all`**: sorts edits **ascending** by `start_offset`,
+  then walks a cursor through the *original source* — for each
+  sorted edit it copies `src[cursor:edit.start_offset]`, appends
+  the replacement, and advances the cursor to `edit.end_offset`.
+  After all edits, copies the tail `src[cursor:n]`.  Single
+  buffered pass; offsets stay relative to the original source by
+  construction.
+
+- **Coq `apply_edits_parallel`**: sorts edits **descending** by
+  `e_start`, then folds via `apply_edits_concrete` (the v26.3
+  sequential applier).  Applying the rightmost edit first leaves
+  all smaller offsets unchanged in the remaining buffer; iterate.
+  Same result, different traversal order.
+
+Both produce the byte-by-byte original-offset semantic.  The Coq
+descending-sort form is chosen because it composes with the
+existing `apply_edits_concrete` sequential applier (no need to
+introduce a cursor model in Coq); the OCaml ascending-sort cursor
+walk is the natural runtime implementation that avoids creating
+intermediate buffer copies.
 
 For the v27.0.3 user-facing claim: **the order in which validators
 emit fixes does not affect the output, provided the fixes have
-distinct start positions.**
+distinct start positions.** This claim transfers from the Coq
+proof to the shipped binary because both algorithms compute the
+same parallel-applier semantic on every input where
+`distinct_starts` holds; an OCaml-vs-Coq cross-check
+(`apply_all src es = apply_edits_parallel src es` for non-empty
+non-overlapping edits) is not yet mechanised in the proof tree —
+the runtime-vs-Coq equivalence is an informal correspondence
+covered by the cursor-walk semantics above.
+
+The rewrite engine surface relevant to v27.0.3:
+
+- **Single-cursor batch fixes** — one validator emits multiple
+  non-overlapping suggestions; runtime sorts ascending + cursor-
+  walks. Result is order-independent.
+- **Multi-cursor / multi-validator batches** — outputs from
+  different validators get merged (`apply_with_priority` for
+  prioritised conflicts; `apply_best_effort` for greedy-skip
+  overlap handling) and the surviving non-overlapping subset is
+  then applied via `apply_all`.
 
 ---
 

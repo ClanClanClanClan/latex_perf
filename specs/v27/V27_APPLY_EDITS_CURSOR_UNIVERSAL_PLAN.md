@@ -303,9 +303,15 @@ template:
   requires `distinct_starts` + per-element `edit_wf` (rules out
   degenerate insertions and negative-range edits); deviation
   documented in the file Stage 4 block header.
-- [ ] Stage 5 universal theorem
-  `apply_edits_cursor_eq_parallel` Qed.  All `Print Assumptions`
-  Closed under the global context.
+- [x] Stage 5 universal theorem
+  `apply_edits_cursor_eq_parallel` Qed (PR #330, merged
+  2026-04-30 @ commit `7467f06`).  All `Print Assumptions`
+  Closed under the global context.  Plus 5 supporting helpers
+  (`pairwise_non_overlapping_perm` + 4 sort-permutation
+  precondition lifts) and 2 reflexivity Examples.  Stage 5b
+  corpus mechanisation (4 reflexivity Examples shipped at
+  v27.0.3) is **superseded by the universal Theorem** for the
+  runtime-correspondence claim.
 - [ ] ADMISSIBILITY_MAP "Rewrite engine — associative-reorder"
   entry references the universal theorem.
 - [ ] `docs/MERGING_GUARANTEES.md` Runtime correspondence

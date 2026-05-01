@@ -71,10 +71,24 @@ state. These don't admit a static fix.
 ## Stage decomposition
 
 ### v27.0.x patch cycles (Bucket A only)
-Ship 10–15 mechanical producers per patch release:
-- v27.0.2: TYPO-NN batch (10 rules)
-- v27.0.3: SPC-NN + ENV-NN batch (12 rules)
-- v27.0.4: CMD-NN + STR-NN batch (15 rules)
+Ship 10–15 mechanical producers per patch release.
+
+**Note (2026-04-30):** The original tag-bindings below were
+written assuming v27.0.2/3/4 would each carry a fix-producer
+batch.  In practice those tags were repurposed for the T5
+wiring cycle (v27.0.2), `apply_edits_assoc` cycle (v27.0.3), and
+`cursor-universal` cycle (v27.0.4), so the fix-producer batches
+have not yet shipped under these tags.  The aspirational batch
+plan is preserved below as a forward-looking template; concrete
+tag-bindings will be re-issued as the rolling cadence resumes
+(target: first available patch tag after the active proof
+cycles complete).
+
+- ~~v27.0.2: TYPO-NN batch (10 rules)~~ — repurposed for T5 wiring
+- ~~v27.0.3: SPC-NN + ENV-NN batch (12 rules)~~ — repurposed for apply_edits_assoc
+- ~~v27.0.4: CMD-NN + STR-NN batch (15 rules)~~ — repurposed for cursor-universal
+- (Future patches): TYPO-NN / SPC-NN+ENV-NN / CMD-NN+STR-NN
+  batches resume once the proof cycles release into mainline.
 - ...
 
 Each cycle:

@@ -166,36 +166,48 @@ proof to the shipped binary because both algorithms compute the
 same parallel-applier semantic on every input where
 `distinct_starts` holds.
 
-The runtime-vs-Coq correspondence is **mechanised** for
-representative inputs in `proofs/ApplyEditsAssoc.v` Stage 5b:
+The runtime-vs-Coq correspondence is **mechanically certified
+universally** in `proofs/ApplyEditsAssoc.v`:
 
-- `Definition apply_edits_cursor src es :=
-   apply_edits_cursor_aux src 0 (sort_by_start_asc es)` — Coq
-  mirror of OCaml `Cst_edit.apply_all`'s ascending-sort + cursor-
-  walk algorithm.
-- 4 `Example`s prove `apply_edits_cursor src es =
-  apply_edits_parallel src es` by `reflexivity` on the documented
-  non-overlapping inputs (2-edit, 2-edit-swap, 3-edit,
-  3-edit-permuted). All `Print Assumptions` Closed under the
-  global context.
-- `apply_edits_cursor_empty` and `apply_edits_parallel_empty`
-  Qed-prove that both algorithms return the source unchanged for
-  the empty edit list.
+```coq
+Theorem apply_edits_cursor_eq_parallel :
+  forall (src : bytes) (es : list edit),
+    distinct_starts es ->
+    pairwise_non_overlapping es ->
+    (forall e, In e es -> edit_wf e) ->
+    (forall e, In e es -> e.(e_end) <= length src) ->
+    apply_edits_cursor src es = apply_edits_parallel src es.
+```
 
-The fully universal theorem
-`forall src es, distinct_starts es -> pairwise_non_overlapping es ->
-   apply_edits_cursor src es = apply_edits_parallel src es`
-extends the corpus mechanisation to every valid input.  Stage-
-decomposed plan committed as
-[`specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`](../specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md)
-(7 stages, target tag **v27.0.4**, ~4–6 sessions).  Stage 4 of
-that plan carries the technically substantive proof
-(induction over the sorted-ascending list, with cursor-walk and
-sequential-descending shapes both reduced to a canonical byte
-mapping); Stages 1–3 build prerequisite sort-permutation /
-sort-rev-bridge / cursor-walk-shape lemmas; Stage 5 combines;
-Stage 6 wires into ADMISSIBILITY_MAP + this doc; Stage 7
-release-bumps v27.0.4.
+Qed.  `Print Assumptions` returns "Closed under the global
+context" — the equation holds on **every** valid edit list, not
+just the four corpus-level reflexivity Examples shipped at
+v27.0.3.
+
+The proof structure (cycle PRs #325 → #330):
+
+- **`apply_edits_cursor src es := apply_edits_cursor_aux src 0
+  (sort_by_start_asc es)`** — Coq mirror of OCaml
+  `Cst_edit.apply_all`'s ascending-sort + cursor-walk algorithm
+  (defined in v27.0.3 Stage 5b).
+- **Stage 1** (PR #325): symmetric ascending-sort permutation +
+  sortedness lemmas.
+- **Stage 2** (PR #326): bridge lemma
+  `sort_by_start_desc_eq_rev_asc` connecting the two sort
+  directions on `distinct_starts` inputs.
+- **Stage 3** (PR #328): canonical form `cursor_walk_canonical` +
+  `apply_edits_cursor_aux_shape` (cursor-walk = canonical).
+- **Stage 4** (PR #329): substantive sequential-descending shape
+  lemma `apply_edits_concrete_rev_sorted_shape` (parallel applier
+  on `rev sorted_asc` = canonical).
+- **Stage 5** (PR #330): combines Stages 1–4 via
+  `pairwise_non_overlapping_perm` + sort-permutation lifts into
+  the universal headline.
+
+The four reflexivity Examples shipped at v27.0.3 Stage 5b
+(`apply_edits_cursor_matches_parallel_*`) are **superseded for
+the runtime-correspondence claim** but remain in the file as
+quick-check sanity tests.
 
 The rewrite engine surface relevant to v27.0.3:
 

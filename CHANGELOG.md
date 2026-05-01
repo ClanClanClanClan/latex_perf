@@ -2,6 +2,101 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.4] — 2026-05-01
+
+**Cursor-universal cycle complete: universal runtime correspondence.**
+The OCaml `Cst_edit.apply_all` (sort ascending + cursor walk) and the
+Coq `apply_edits_parallel` (sort descending + sequential applier)
+produce the same byte stream for **every valid edit list** —
+mechanically certified, not just the four corpus-level reflexivity
+Examples shipped at v27.0.3.
+
+**1,382 theorems / 171 .v files / 0 admits / 0 axioms** (v27.0.3
+had 1,342 / 171; +40 from `proofs/ApplyEditsAssoc.v` cursor-universal
+Stages 1–5).
+
+### Headline theorem
+
+```coq
+Theorem apply_edits_cursor_eq_parallel :
+  forall (src : bytes) (es : list edit),
+    distinct_starts es ->
+    pairwise_non_overlapping es ->
+    (forall e, In e es -> edit_wf e) ->
+    (forall e, In e es -> e.(e_end) <= length src) ->
+    apply_edits_cursor src es = apply_edits_parallel src es.
+```
+
+`Print Assumptions apply_edits_cursor_eq_parallel` returns "Closed
+under the global context".
+
+### Shipped (5 stage PRs + Stage 6 docs + this release-bump)
+
+| PR | Stage | Content |
+|---|---|---|
+| #325 | Stage 1 | symmetric ascending-sort permutation + sortedness lemmas (`insert_asc_swap_distinct`, `sort_by_start_asc_perm`, `sort_by_start_asc_sorted`, `sort_by_start_asc_id_when_sorted`, `insert_asc_preserves_sorted`, `ascending_sorted` Inductive) |
+| #326 | Stage 2 | bridge lemma `sort_by_start_desc_eq_rev_asc` (descending-sort = reverse of ascending-sort on `distinct_starts` inputs) + 9 supporting lemmas + 4 reflexivity Examples |
+| #328 | Stage 3 | `cursor_walk_canonical` Fixpoint + `apply_edits_cursor_aux_shape` (cursor-walk = canonical, unconditional) + plan-signature variant + 2 Examples |
+| #329 | Stage 4 (substantive) | `apply_edits_concrete_rev_sorted_shape` — for sorted-ascending non-overlapping in-bounds distinct-starts well-formed edits, the parallel applier on `rev sorted_asc` equals the cursor walk's canonical form. 14 supporting lemmas covering take/drop ↔ firstn/skipn bridges, predicate cons-inversions, and two cursor_walk_canonical manipulation lemmas |
+| #330 | Stage 5 (UNIVERSAL HEADLINE) | `apply_edits_cursor_eq_parallel` Qed combining Stages 1–4 via `pairwise_non_overlapping_perm` + four sort-permutation precondition lifts |
+| #332 | Stage 6 | wire universal extension into `proofs/ADMISSIBILITY_MAP.md` + `docs/MERGING_GUARANTEES.md` + `proofs/ApplyEditsAssoc.v` file header (no "future extension" framing remains) |
+
+### Why the universal extension matters
+
+Without this cycle: the v27.0.3 runtime-correspondence claim is
+mechanised on 4 representative inputs (Stage 5b reflexivity Examples)
+but not universally. The user-facing docs say "achievable via
+induction; multi-session future extension" — exactly the deferral
+pattern that `feedback_no_multi_week_dismissal` corrects against.
+
+With this cycle: the runtime-Coq correspondence is mechanically
+certified for every valid edit list (any size, any shape that
+satisfies `distinct_starts /\ pairwise_non_overlapping /\ edit_wf
+/\ in-bounds`). The "queued as future" framing is replaced with a
+shipped theorem reference.
+
+### Plan signature deviations (documented inline)
+
+- **Stage 3** ships `cursor_walk_canonical` as a Coq Fixpoint
+  rather than a "non-recursive byte-mapping function" (any
+  non-recursive form for variable-length lists is just a fold over
+  a recursive helper — observably equivalent). Predicate naming
+  uses repo-style lowercase (`ascending_sorted`,
+  `non_overlapping_from`, `all_in_bounds`). The shipped
+  `apply_edits_cursor_aux_shape` is unconditional; a plan-signature
+  `_with_preconds` variant is also shipped.
+- **Stage 4** strengthens preconditions with `distinct_starts` +
+  per-element `edit_wf` (rules out same-start insertions and
+  negative-range edits where the equation would fail). Both
+  additional preconditions are present in Stage 5's user-facing
+  theorem signature.
+
+### Round-9 audit fix: lost-during-squash dup removal
+
+A late-pushed commit (`19ce776`, removing a duplicate
+`apply_edits_concrete_singleton` accidentally added in Stage 4 PR
+#329) was lost from PR #330's squash merge per
+`feedback_squash_merge_drops_late_commits`. The dup re-appeared on
+main; cherry-picked back into PR #332 (commit `086d02b`). Verified
+post-merge that only the authoritative
+`RewritePreservesCST.v:290` definition remains.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.3`. v27.0.4 is purely
+formal/Coq + docs — no runtime change.
+
+### Counts (v27.0.4 vs v27.0.3)
+
+- 660 catalogued rules (unchanged).
+- 32 fix-producing rules (unchanged).
+- 1,382 theorems (was 1,342; +40 from `ApplyEditsAssoc.v`
+  cursor-universal Stages 1–5).
+- 171 .v files (unchanged; cursor-universal extends
+  `ApplyEditsAssoc.v` only).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
 ## [v27.0.3] — 2026-04-30
 
 **`apply_edits` associative-reorder cycle complete.** Closes the

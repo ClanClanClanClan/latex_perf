@@ -71,7 +71,7 @@
       [apply_edits_cursor_eq_parallel] combines Stages 1–4 via
       [pairwise_non_overlapping_perm] + four sort-permutation
       precondition lifts into the universal Theorem.
-    - Stage 6 (this PR): wire universal extension into
+    - Stage 6 (PR #332): wire universal extension into
       [proofs/ADMISSIBILITY_MAP.md] + [docs/MERGING_GUARANTEES.md]
       + this header.
     - Stage 7: release-bump v27.0.4.

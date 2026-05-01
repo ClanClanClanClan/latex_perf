@@ -357,14 +357,17 @@ its premise.
 >   (ADMISSIBILITY_MAP wire-in + `docs/MERGING_GUARANTEES.md` +
 >   Stage 5b cursor-walk Coq mirror with 4 corpus-level Examples)
 >   → PR #324 (release-bump v27.0.3).
-> - **v27.0.4 cycle (PRs #325→#330+):** PR #325 (Stage 1
+> - **v27.0.4 cycle (PRs #325, #326, #328, #329, #330, #332,
+>   + Stage 7 release-bump pending):** PR #325 (Stage 1
 >   sort-asc permutation lemmas) → PR #326 (Stage 2
 >   `sort_by_start_desc_eq_rev_asc` bridge) → PR #328 (Stage 3
 >   `cursor_walk_canonical` + `apply_edits_cursor_aux_shape`) →
 >   PR #329 (Stage 4 substantive
 >   `apply_edits_concrete_rev_sorted_shape`) → PR #330 (Stage 5
->   universal `apply_edits_cursor_eq_parallel`) → Stage 6 (this
->   entry) → release-bump v27.0.4.
+>   universal `apply_edits_cursor_eq_parallel`) → PR #332
+>   (Stage 6 — this entry, plus
+>   `docs/MERGING_GUARANTEES.md` + `proofs/ApplyEditsAssoc.v` file
+>   header) → Stage 7 release-bump v27.0.4 (pending).
 >
 > The Stage 5b corpus-level mechanisation (4 reflexivity Examples
 > on representative inputs) shipped at v27.0.3 is **superseded by

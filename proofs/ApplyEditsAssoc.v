@@ -1,15 +1,27 @@
-(** * ApplyEditsAssoc — apply_edits associative-reorder theorem.
+(** * ApplyEditsAssoc — apply_edits associative-reorder + universal
+    cursor-walk = parallel-applier theorems.
 
-    Per `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md` (REVISED): prove
-    that the parallel applier [apply_edits_parallel] (defined as
-    [apply_edits_concrete o sort_by_start_desc]) is invariant under
-    reordering of edits with distinct start positions.  The original
-    draft form against the SEQUENTIAL applier is FALSE in general —
-    sequential interprets offsets relative to the current buffer,
-    not the original source (counter-example in the Stage 2 block
-    of this file).
+    Two complementary headlines, shipped across two release cycles:
 
-    Multi-stage progression:
+    1. **v27.0.3 — parallel applier permutation invariance.**  Per
+       `specs/v27/V27_APPLY_EDITS_ASSOC_PLAN.md` (REVISED): the
+       parallel applier [apply_edits_parallel] (defined as
+       [apply_edits_concrete o sort_by_start_desc]) is invariant
+       under reordering of edits with distinct start positions.
+       The original draft form against the SEQUENTIAL applier is
+       FALSE in general — sequential interprets offsets relative
+       to the current buffer, not the original source
+       (counter-example in the Stage 2 block of this file).
+
+    2. **v27.0.4 — universal runtime correspondence.**  Per
+       `specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md`: the
+       OCaml [Cst_edit.apply_all] (sort ascending + cursor walk)
+       and the parallel applier produce the same byte stream for
+       every valid edit list, not just the four corpus-level
+       reflexivity Examples shipped at v27.0.3 Stage 5b.  Headline:
+       [apply_edits_cursor_eq_parallel].
+
+    apply_edits_assoc cycle (v27.0.3) — multi-stage progression:
     - Stage 1 (PR #319): [non_overlapping] predicate + sanity
       lemmas (decidability, symmetry, consistency with the existing
       [RewritePreservesCST.edits_conflict] predicate).
@@ -25,8 +37,44 @@
       (originally noted as
       [apply_edits_concrete_associative_subset], FALSE shape).
     - Stage 5 (PR #323): wire into [proofs/ADMISSIBILITY_MAP.md] +
-      create [docs/MERGING_GUARANTEES.md].
-    - Stage 6: release-bump v27.0.3.
+      create [docs/MERGING_GUARANTEES.md] + Stage 5b cursor-walk
+      Coq mirror of OCaml [Cst_edit.apply_all] with 4 reflexivity
+      Examples on representative inputs (corpus-level
+      mechanisation of the runtime correspondence).
+    - Stage 6 (PR #324): release-bump v27.0.3.
+
+    cursor-universal cycle (v27.0.4) — universal extension:
+    - Stage 1 (PR #325): symmetric ascending-sort permutation
+      lemmas ([insert_asc_swap_distinct],
+      [sort_by_start_asc_perm], [insert_asc_preserves_sorted],
+      [sort_by_start_asc_sorted],
+      [sort_by_start_asc_id_when_sorted], + [ascending_sorted]
+      Inductive).
+    - Stage 2 (PR #326): bridge lemma
+      [sort_by_start_desc_eq_rev_asc] connecting the two sort
+      directions on [distinct_starts] inputs.
+    - Stage 3 (PR #328): canonical form [cursor_walk_canonical]
+      Fixpoint + [apply_edits_cursor_aux_shape] (cursor-walk =
+      canonical, unconditional) +
+      [apply_edits_cursor_aux_shape_with_preconds] (plan-signature
+      variant).
+    - Stage 4 (PR #329, SUBSTANTIVE):
+      [apply_edits_concrete_rev_sorted_shape] — for sorted-
+      ascending non-overlapping in-bounds distinct-starts
+      well-formed edits, [apply_edits_concrete src (rev sorted_asc)
+      = cursor_walk_canonical src 0 sorted_asc].  The technically
+      interesting cycle stage: takes 14 supporting lemmas covering
+      take/drop ↔ firstn/skipn bridges, predicate cons-inversions,
+      and two cursor_walk_canonical manipulation lemmas
+      (skipn-advance, firstn-prefix).
+    - Stage 5 (PR #330, UNIVERSAL HEADLINE):
+      [apply_edits_cursor_eq_parallel] combines Stages 1–4 via
+      [pairwise_non_overlapping_perm] + four sort-permutation
+      precondition lifts into the universal Theorem.
+    - Stage 6 (this PR): wire universal extension into
+      [proofs/ADMISSIBILITY_MAP.md] + [docs/MERGING_GUARANTEES.md]
+      + this header.
+    - Stage 7: release-bump v27.0.4.
 
     Zero admits, zero axioms. *)
 
@@ -575,13 +623,12 @@ Definition apply_edits_assoc_stage4_zero_admits : True := I.
     This block introduces a Coq mirror of the OCaml algorithm
     ([apply_edits_cursor]) and proves it equal to
     [apply_edits_parallel] on byte-by-byte test cases via
-    reflexivity (4 Examples on representative inputs).  The fully
-    universal theorem
-    [apply_edits_cursor_eq_parallel : forall src es valid_inputs ->
-      apply_edits_cursor src es = apply_edits_parallel src es]
-    extends this to every valid input; stage-decomposed plan
-    committed as [specs/v27/V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md]
-    (7 stages, target tag v27.0.4). *)
+    reflexivity (4 Examples on representative inputs).  These
+    Examples are now superseded by the universal Theorem
+    [apply_edits_cursor_eq_parallel] (shipped at v27.0.4 in the
+    "v27 cursor-universal STAGE 5" block of this file) for the
+    runtime-correspondence claim, but remain as quick-check
+    sanity tests. *)
 
 (** Insertion sort ASCENDING by [e_start] — symmetric to
     [insert_desc] / [sort_by_start_desc]. *)

@@ -451,4 +451,43 @@ let () =
         && out = "Try \\(f''(x) \\neq 0\\) and \xe2\x80\x9cyes\xe2\x80\x9d")
         (tag ^ ": \\(..\\) paren math preserved"));
 
+  (* v27.0.7 batch: TYPO-005 fix producer (... → \dots, math-aware). *)
+  run "TYPO-005 fix: ... in text becomes \\dots" (fun tag ->
+      let src = "Wait... what?" in
+      let edits = fix_edits "TYPO-005" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Wait\\dots what?")
+        (tag ^ ": ... → \\dots in plain text"));
+
+  run "TYPO-005 fix: skips ... inside $..$ math" (fun tag ->
+      (* $1, 2, ..., n$ is the canonical math-ellipsis idiom; the fix must NOT
+         auto-rewrite it. *)
+      let src = "Sequence $1, 2, ..., n$ and footnote..." in
+      let edits = fix_edits "TYPO-005" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "Sequence $1, 2, ..., n$ and footnote\\dots")
+        (tag ^ ": math ellipsis preserved, footnote fixed"));
+
+  run "TYPO-005 fix: skips ... inside \\[..\\] display math" (fun tag ->
+      let src = "\\[ a_1, a_2, ..., a_n \\] then ..." in
+      let edits = fix_edits "TYPO-005" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1 && out = "\\[ a_1, a_2, ..., a_n \\] then \\dots")
+        (tag ^ ": display math ellipsis preserved"));
+
+  run "TYPO-005 does not fire when ... is only in math" (fun tag ->
+      (* Math-only `...` should NOT fire — count is computed on
+         strip_math_segments output, which excludes math content. *)
+      expect
+        (does_not_fire "TYPO-005" "$x_1, x_2, ..., x_n$")
+        (tag ^ ": math-only ellipsis suppressed"));
+
+  run "TYPO-005 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-005" "Already correct \\dots usage.")
+        (tag ^ ": clean source no fire"));
+
   finalise "typo-fix"

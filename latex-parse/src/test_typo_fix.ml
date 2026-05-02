@@ -300,10 +300,9 @@ let () =
         (List.length edits = 1 && apply_all src edits = "$$\nx + y\nz\n$$")
         (tag ^ ": trailing whitespace before \\n stripped inside display"));
 
-  (* v27.0.5 batch: TYPO-010 fix producer.  TYPO-004 fix deliberately
-     deferred — `` and '' need math-range filtering before they can be
-     auto-fixed (`` `` `` is fine; '' in $f''(x)$ is derivative notation
-     which would corrupt). *)
+  (* v27.0.5 batch: TYPO-010 fix producer. TYPO-004 fix deliberately deferred —
+     `` and '' need math-range filtering before they can be auto-fixed (`` `` ``
+     is fine; '' in $f''(x)$ is derivative notation which would corrupt). *)
   run "TYPO-010 fix: drops space before comma" (fun tag ->
       let src = "Apples , oranges , bananas" in
       let edits = fix_edits "TYPO-010" src in
@@ -316,8 +315,7 @@ let () =
       let src = "Hi ! How ? Yes ; ok ." in
       let edits = fix_edits "TYPO-010" src in
       expect
-        (List.length edits = 4
-        && apply_all src edits = "Hi! How? Yes; ok.")
+        (List.length edits = 4 && apply_all src edits = "Hi! How? Yes; ok.")
         (tag ^ ": ! ? ; . all normalised"));
 
   run "TYPO-010 does not fire on clean source" (fun tag ->

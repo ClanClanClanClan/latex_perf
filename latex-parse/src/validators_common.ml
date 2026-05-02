@@ -333,6 +333,20 @@ let find_math_ranges (s : string) : (int * int) list =
         in_brack_start := None;
         i := pos + 2)
       else i := pos + 1
+    else if (not (is_escaped pos)) && starts_with "$$" pos then (
+      (* Display math `$$..$$` matched-pair. Distinct from strip_math_segments'
+         single-toggle behaviour: that function treats `$$x$$` as two empty math
+         segments around literal `x`, which would let TYPO-004's fix corrupt
+         `$$f''(x)=0$$` (the very bug v27.0.5 deferred against). Match `$$`
+         first, then scan to the next un-escaped `$$`. *)
+      let start_i = pos in
+      let j = ref (pos + 2) in
+      while !j < len && not ((not (is_escaped !j)) && starts_with "$$" !j) do
+        incr j
+      done;
+      let end_i = if !j + 2 <= len then !j + 2 else len in
+      ranges := (start_i, end_i) :: !ranges;
+      i := end_i)
     else if (not (is_escaped pos)) && s.[pos] = '$' then (
       in_dollar_start := Some pos;
       i := pos + 1)

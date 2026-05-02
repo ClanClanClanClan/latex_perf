@@ -403,4 +403,19 @@ let () =
               \xe2\x80\x9ctwo\xe2\x80\x9d")
         (tag ^ ": three math regions preserved, text segments fixed"));
 
+  run "TYPO-004 fix: skips '' inside $$..$$ display math (matched-pair)"
+    (fun tag ->
+      (* Critical case for TeX-style $$..$$ display math. strip_math_segments
+         uses a single-$ toggle and treats $$x$$ as two empty math + literal
+         middle, which would let TYPO-004's fix corrupt $$f''(x)=0$$.
+         find_math_ranges matches $$ as a pair before the toggle path runs.
+         Verifies the v27.0.6 round-2 audit fix. *)
+      let src = "Pre $$f''(x) = 0$$ post ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Pre $$f''(x) = 0$$ post \xe2\x80\x9cdone\xe2\x80\x9d")
+        (tag ^ ": $$..$$ display math preserved"));
+
   finalise "typo-fix"

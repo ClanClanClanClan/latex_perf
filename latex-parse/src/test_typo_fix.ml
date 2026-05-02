@@ -418,4 +418,17 @@ let () =
         && out = "Pre $$f''(x) = 0$$ post \xe2\x80\x9cdone\xe2\x80\x9d")
         (tag ^ ": $$..$$ display math preserved"));
 
+  run "TYPO-004 fix: skips `` inside $..$ math (symmetric to '' case)"
+    (fun tag ->
+      (* Round-5 audit: '' tested in math but `` not. Symmetric coverage:
+         backtick-pair inside math should also be preserved. Pattern is unusual
+         (TeX low-level uses backtick for char codes) but the helper's filter is
+         direction-agnostic — verifying. *)
+      let src = "$``x$ then ``y''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2 && out = "$``x$ then \xe2\x80\x9cy\xe2\x80\x9d")
+        (tag ^ ": `` inside $..$ preserved, outer pair fixed"));
+
   finalise "typo-fix"

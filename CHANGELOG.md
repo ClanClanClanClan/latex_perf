@@ -25,11 +25,12 @@ matches the established cadence of v26.x fix producers.
 U+201C left double quote, `''` → U+201D right double quote,
 **but only outside math**.  `''` inside `$f''(x)$` (double-prime
 notation) is detected (count) but not auto-fixed.  Test suite
-covers eight math contexts: inline `$..$`, display `$$..$$`
-(round-2 audit fix), bracket `\[..\]`, `\begin{equation}` env,
-math-only input (no fix edits), text-only (fix applies),
-escaped `\$` (round-1 audit), and three interleaved math
-regions (round-1 audit).
+covers ten math/non-math contexts: inline `$..$`, display
+`$$..$$` (round-2 audit fix), paren `\(..\)` (round-6 audit),
+bracket `\[..\]`, `\begin{equation}` env, math-only input (no
+fix edits), text-only (fix applies), escaped `\$` (round-1
+audit), three interleaved math regions (round-1 audit), and
+backtick-pair-inside-math symmetry (round-5 audit).
 
 **34 fix-producing rules** (was 33; +1: TYPO-004).  TYPO-005 +
 TYPO-001 still deferred — same helper applies, but they need

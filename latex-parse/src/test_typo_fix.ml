@@ -369,10 +369,18 @@ let () =
         (tag ^ ": equation env preserved"));
 
   run "TYPO-004 fix: still fires count on '' in math (no-fix path)" (fun tag ->
-      (* Math-only `` or '' should still report (count > 0) but no auto-fix. *)
+      (* Math-only `` or '' should still report (count > 0) but no auto-fix.
+         Round-8 audit: previously asserted only [List.length edits = 0], which
+         can't disambiguate "rule didn't fire" from "rule fired but emitted no
+         fix". Now also asserts [fires_with_count] = 2 to verify the rule DOES
+         fire (count = 2 because the source contains two '' pairs at offsets 3
+         and 9), and the fix list is empty because both pairs are inside
+         math. *)
       let src = "$f''(x) g''(x)$" in
       let edits = fix_edits "TYPO-004" src in
-      expect (List.length edits = 0) (tag ^ ": no fix edits in math-only input"));
+      expect
+        (fires_with_count "TYPO-004" src 2 && List.length edits = 0)
+        (tag ^ ": rule fires with count=2, no fix edits"));
 
   run "TYPO-004 does not fire on clean source" (fun tag ->
       expect

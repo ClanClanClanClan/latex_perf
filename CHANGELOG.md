@@ -2,6 +2,60 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.5] — 2026-05-02
+
+**Fix-producer cadence resumes.** v27.0.5 opens the rolling Bucket A
+fix-producer cycle (per `specs/v27/V27_FIX_PRODUCER_CADENCE.md`)
+deferred by the v27.0.0–v27.0.4 proof-stack work. One mechanical
+producer shipped:
+
+- **TYPO-010** (space before punctuation): each `<space><,.;:?!>`
+  pair drops the leading space, leaving the punctuation in place.
+  Operates on the raw byte stream; the `L0_TOKEN_AWARE` path uses
+  the stricter token-level count but emits the same byte edits.
+  Math/verbatim concerns: in math, spaces are insignificant so
+  removing space before comma is benign; verbatim corruption
+  matches the existing TYPO-002/003 pattern (no boundary tracking
+  in v26.x fix producers either) — accepted per established
+  cadence.
+
+**Deferred from this batch (audit-caught correctness concern):**
+TYPO-004 (` ``…'' ` → curly quotes) was implemented but reverted
+during round-1 audit.  Reason: `''` in LaTeX math is double-prime
+notation (e.g., `$f''(x)$`), so auto-replacing with U+201D would
+corrupt math source.  Proper fix requires a math-range helper
+that exposes "is offset X inside a math segment" — tracked for
+v27.0.6 cycle, where the same helper unblocks TYPO-005
+(` ... ` → `\dots`) and TYPO-001 (open vs close curly quote).
+
+**33 fix-producing rules** (was 32; +1).  TYPO-010 ships with E2E
+unit tests in `latex-parse/src/test_typo_fix.ml` (positive cases,
+multi-pattern cases, no-fire negatives) and exercises the existing
+`apply_fixes_best_effort` infrastructure unchanged.
+
+**Plus: CI fix.** `scripts/perf_summary.sh` removed an
+`OPAMSWITCH=l0-testing` override that broke `perf-nightly` on
+GitHub Actions runners (the nightly workflow had been failing every
+night since 2026-04-28; preceding gates all passed, only the
+post-gate CSV summary step errored). Switch override now respects
+the ambient opam environment per CI norms (PR #335).
+
+### Counts (v27.0.5 vs v27.0.4)
+
+- 660 catalogued rules (unchanged).
+- **33 fix-producing rules (was 32; +1: TYPO-010)**.
+- 1,382 theorems (unchanged; this is a fix-producer cycle, not a
+  proof cycle).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.4` (default invocation).
+Fix producers gated behind `--apply-fixes`; baseline output
+unchanged.
+
 ## [v27.0.4] — 2026-05-01
 
 **Cursor-universal cycle complete: universal runtime correspondence.**

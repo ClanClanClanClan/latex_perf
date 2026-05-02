@@ -173,6 +173,12 @@ let r_typo_004 : rule =
     else None
   in
   { id = "TYPO-004"; run; languages = [] }
+(* Fix producer deliberately deferred: '' in LaTeX math is double-prime notation
+   (e.g., $f''(x)$); auto-replacing with U+201D would corrupt math source.
+   Wiring a fix requires a math-range helper that exposes "is offset X inside a
+   math segment" so mk_replace_edits can filter matches. Tracked for v27.0.6
+   cycle — the helper will also unblock TYPO-005 (... → \dots, math-aware count
+   + fix) and TYPO-001 (open vs close curly quote, context-dependent). *)
 
 let r_typo_005 : rule =
   let run s =
@@ -391,6 +397,30 @@ let r_typo_009 : rule =
   { id = "TYPO-009"; run; languages = [] }
 
 let r_typo_010 : rule =
+  let message = "Space before punctuation , . ; : ? !" in
+  (* Fix: for each `<space><punct>` pair, drop the leading space. We emit a
+     2-byte → 1-byte replace (start..start+2 → punct). Operate on the
+     non-tokenized substring view because the byte offsets are needed for
+     [Cst_edit.replace]; the token-aware count loop above is a stricter gate on
+     what counts as a "space" but its offsets aren't directly accessible. In
+     practice the underlying byte patterns coincide for the ASCII-only
+     space-before-punct case targeted by this rule. *)
+  let punct_chars = [ ','; '.'; ';'; ':'; '?'; '!' ] in
+  let mk_fix_edits s =
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if s.[!i] = ' ' && List.mem s.[!i + 1] punct_chars then (
+        edits :=
+          Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2)
+            (String.make 1 s.[!i + 1])
+          :: !edits;
+        i := !i + 2)
+      else incr i
+    done;
+    List.rev !edits
+  in
   let run s =
     match Sys.getenv_opt "L0_TOKEN_AWARE" with
     | Some ("1" | "true" | "on") ->
@@ -412,9 +442,13 @@ let r_typo_010 : rule =
           loop 0 toks
         in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-010" ~severity:Info
-               ~message:"Space before punctuation , . ; : ? !" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some (mk_result ~id:"TYPO-010" ~severity:Info ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-010" ~severity:Info ~message
+                 ~count:cnt ~fix)
         else None
     | _ ->
         let combos = [ " ,"; " ."; " ;"; " :"; " ?"; " !" ] in
@@ -422,9 +456,13 @@ let r_typo_010 : rule =
           List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
         in
         if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-010" ~severity:Info
-               ~message:"Space before punctuation , . ; : ? !" ~count:cnt)
+          let fix = mk_fix_edits s in
+          if fix = [] then
+            Some (mk_result ~id:"TYPO-010" ~severity:Info ~message ~count:cnt)
+          else
+            Some
+              (mk_result_with_fix ~id:"TYPO-010" ~severity:Info ~message
+                 ~count:cnt ~fix)
         else None
   in
   { id = "TYPO-010"; run; languages = [] }

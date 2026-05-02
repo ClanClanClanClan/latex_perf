@@ -162,23 +162,54 @@ let r_typo_003 : rule =
   { id = "TYPO-003"; run; languages = [] }
 
 let r_typo_004 : rule =
+  (* v27.0.6: math-aware fix producer. Counts both `` and '' everywhere
+     (preserves existing rule-firing semantics; the count is a severity
+     indicator); FILTERS fix-edit offsets to only those outside math segments,
+     so `''` inside `$f''(x)$` is reported but not auto-fixed. Unblocked by
+     [find_math_ranges] / [is_in_math_range] helpers added to
+     validators_common.ml in this cycle.
+
+     Message is inlined in mk_result/mk_result_with_fix calls below — NOT
+     extracted to a [let message = ...] binding, because the
+     scripts/validate_messages.sh extractor doesn't follow let-bindings and the
+     `messages` CI gate would mis-pair TYPO-003 with TYPO-004's message string
+     (per feedback_silent_gate_failures memo). *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let bt_offsets = List.filter outside (find_all_non_overlapping s "``") in
+    let ap_offsets = List.filter outside (find_all_non_overlapping s "''") in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\xe2\x80\x9c")
+      bt_offsets
+    @ List.map
+        (fun off ->
+          Cst_edit.replace ~start_offset:off ~end_offset:(off + 2)
+            "\xe2\x80\x9d")
+        ap_offsets
+  in
   let run s =
     let cnt = count_substring s "``" + count_substring s "''" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-004" ~severity:Warning
-           ~message:
-             "TeX double back‑tick ``…'' not allowed; use opening curly quotes"
-           ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-004" ~severity:Warning
+             ~message:
+               "TeX double back‑tick ``…'' not allowed; use opening curly \
+                quotes"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-004" ~severity:Warning
+             ~message:
+               "TeX double back‑tick ``…'' not allowed; use opening curly \
+                quotes"
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-004"; run; languages = [] }
-(* Fix producer deliberately deferred: '' in LaTeX math is double-prime notation
-   (e.g., $f''(x)$); auto-replacing with U+201D would corrupt math source.
-   Wiring a fix requires a math-range helper that exposes "is offset X inside a
-   math segment" so mk_replace_edits can filter matches. Tracked for v27.0.6
-   cycle — the helper will also unblock TYPO-005 (... → \dots, math-aware count
-   + fix) and TYPO-001 (open vs close curly quote, context-dependent). *)
 
 let r_typo_005 : rule =
   let run s =

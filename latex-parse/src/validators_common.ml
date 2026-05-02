@@ -233,6 +233,156 @@ let strip_math_segments (s : string) : string =
   loop 0;
   Buffer.contents buf
 
+(* find_math_ranges: half-open byte ranges of every math segment in the source.
+   Mirrors strip_math_segments' detection logic but records ranges instead of
+   producing a stripped buffer. Math segments include inline dollar pairs, paren
+   math, bracket math, and 11 named math environments.
+
+   Returned ranges are non-overlapping and sorted by start offset. At EOF with
+   an unclosed segment, the range extends to length(s). Used by fix producers
+   (TYPO-004 v27.0.6+) to filter match offsets that fall inside math, where a
+   textual auto-replacement would corrupt the semantic meaning (e.g.,
+   apostrophe-pair as double-prime). *)
+let find_math_ranges (s : string) : (int * int) list =
+  let len = String.length s in
+  let math_envs =
+    [
+      "equation";
+      "equation*";
+      "align";
+      "align*";
+      "gather";
+      "gather*";
+      "multline";
+      "multline*";
+      "eqnarray";
+      "math";
+      "displaymath";
+    ]
+  in
+  let math_env_tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace math_env_tbl e ()) math_envs;
+  let is_math_env name = Hashtbl.mem math_env_tbl name in
+  let starts_with prefix idx =
+    let plen = String.length prefix in
+    idx + plen <= len && String.sub s idx plen = prefix
+  in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let parse_begin idx =
+    let prefix = "\\begin{" in
+    if not (starts_with prefix idx) then None
+    else
+      let name_start = idx + String.length prefix in
+      let j = ref name_start in
+      while !j < len && String.unsafe_get s !j <> '}' do
+        incr j
+      done;
+      if !j >= len then None
+      else
+        let name = String.sub s name_start (!j - name_start) in
+        Some (name, !j + 1)
+  in
+  let rec skip_env name idx depth =
+    let end_prefix = "\\end{" ^ name ^ "}" in
+    let end_len = String.length end_prefix in
+    if idx >= len then len
+    else if (not (is_escaped idx)) && starts_with end_prefix idx then
+      if depth = 0 then idx + end_len
+      else skip_env name (idx + end_len) (depth - 1)
+    else if (not (is_escaped idx)) && starts_with "\\begin{" idx then
+      match parse_begin idx with
+      | Some (inner, next_idx) when is_math_env inner ->
+          let after_inner = skip_env inner next_idx 0 in
+          skip_env name after_inner depth
+      | Some (_, next_idx) -> skip_env name next_idx depth
+      | None -> skip_env name (idx + 1) depth
+    else skip_env name (idx + 1) depth
+  in
+  let ranges = ref [] in
+  let in_dollar_start = ref None in
+  let in_paren_start = ref None in
+  let in_brack_start = ref None in
+  let i = ref 0 in
+  while !i < len do
+    let pos = !i in
+    if !in_dollar_start <> None then
+      if (not (is_escaped pos)) && s.[pos] = '$' then (
+        let start_i = match !in_dollar_start with Some s -> s | None -> pos in
+        ranges := (start_i, pos + 1) :: !ranges;
+        in_dollar_start := None;
+        i := pos + 1)
+      else i := pos + 1
+    else if !in_paren_start <> None then
+      if (not (is_escaped pos)) && starts_with "\\)" pos then (
+        let start_i = match !in_paren_start with Some s -> s | None -> pos in
+        ranges := (start_i, pos + 2) :: !ranges;
+        in_paren_start := None;
+        i := pos + 2)
+      else i := pos + 1
+    else if !in_brack_start <> None then
+      if (not (is_escaped pos)) && starts_with "\\]" pos then (
+        let start_i = match !in_brack_start with Some s -> s | None -> pos in
+        ranges := (start_i, pos + 2) :: !ranges;
+        in_brack_start := None;
+        i := pos + 2)
+      else i := pos + 1
+    else if (not (is_escaped pos)) && starts_with "$$" pos then (
+      (* Display math `$$..$$` matched-pair. Distinct from strip_math_segments'
+         single-toggle behaviour: that function treats `$$x$$` as two empty math
+         segments around literal `x`, which would let TYPO-004's fix corrupt
+         `$$f''(x)=0$$` (the very bug v27.0.5 deferred against). Match `$$`
+         first, then scan to the next un-escaped `$$`. *)
+      let start_i = pos in
+      let j = ref (pos + 2) in
+      while !j < len && not ((not (is_escaped !j)) && starts_with "$$" !j) do
+        incr j
+      done;
+      let end_i = if !j + 2 <= len then !j + 2 else len in
+      ranges := (start_i, end_i) :: !ranges;
+      i := end_i)
+    else if (not (is_escaped pos)) && s.[pos] = '$' then (
+      in_dollar_start := Some pos;
+      i := pos + 1)
+    else if (not (is_escaped pos)) && starts_with "\\(" pos then (
+      in_paren_start := Some pos;
+      i := pos + 2)
+    else if (not (is_escaped pos)) && starts_with "\\[" pos then (
+      in_brack_start := Some pos;
+      i := pos + 2)
+    else if (not (is_escaped pos)) && starts_with "\\begin{" pos then
+      match parse_begin pos with
+      | Some (name, after_begin) when is_math_env name ->
+          let next_i = skip_env name after_begin 0 in
+          ranges := (pos, next_i) :: !ranges;
+          i := next_i
+      | _ -> i := pos + 1
+    else i := pos + 1
+  done;
+  (* Close any unmatched segment at EOF *)
+  (match !in_dollar_start with
+  | Some s -> ranges := (s, len) :: !ranges
+  | None -> ());
+  (match !in_paren_start with
+  | Some s -> ranges := (s, len) :: !ranges
+  | None -> ());
+  (match !in_brack_start with
+  | Some s -> ranges := (s, len) :: !ranges
+  | None -> ());
+  List.rev !ranges
+
+(** [is_in_math_range ranges off] — true iff [off] falls inside any range in
+    [ranges]. Linear in the number of ranges (typically small). Use with
+    [find_math_ranges] to filter fix-edit offsets before emitting replaces. *)
+let is_in_math_range (ranges : (int * int) list) (off : int) : bool =
+  List.exists (fun (a, b) -> a <= off && off < b) ranges
+
 (* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
 let command_tokens (s : string) : (string * int) list =
   let module T = Tokenizer_lite in

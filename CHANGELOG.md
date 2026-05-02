@@ -2,6 +2,58 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.6] — 2026-05-02
+
+**Math-range helper unblocks deferred fix producers.** Adds
+`find_math_ranges` + `is_in_math_range` to `validators_common.ml`,
+exposing half-open byte ranges of math segments rather than
+producing a stripped buffer.  Fix producers can now filter match
+offsets that fall inside math segments without changing detection-
+time count behaviour.
+
+Math syntaxes recognised: inline `$..$`, **display `$$..$$`
+(matched-pair detection — deliberately MORE correct than
+`strip_math_segments`, which uses a single-`$` toggle that parses
+`$$x$$` as two empty math + literal middle)**, paren math
+`\(...\)`, bracket math `\[...\]`, and 11 named math environments
+(`equation`, `align`, `gather`, `multline`, `eqnarray`,
+`displaymath`, plus starred variants and `math`).  Verbatim
+(`\verb|...|`) and comments (`% ...`) deliberately not tracked —
+matches the established cadence of v26.x fix producers.
+
+**Wired into TYPO-004** (deferred from v27.0.5 cycle): ` `` ` →
+U+201C left double quote, `''` → U+201D right double quote,
+**but only outside math**.  `''` inside `$f''(x)$` (double-prime
+notation) is detected (count) but not auto-fixed.  Test suite
+covers ten math/non-math contexts: inline `$..$`, display
+`$$..$$` (round-2 audit fix), paren `\(..\)` (round-6 audit),
+bracket `\[..\]`, `\begin{equation}` env, math-only input (no
+fix edits), text-only (fix applies), escaped `\$` (round-1
+audit), three interleaved math regions (round-1 audit), and
+backtick-pair-inside-math symmetry (round-5 audit).
+
+**34 fix-producing rules** (was 33; +1: TYPO-004).  TYPO-005 +
+TYPO-001 still deferred — same helper applies, but they need
+context-dependent open-vs-close logic (TYPO-001) or math-aware
+count semantics distinct from the existing strip_math behaviour
+(TYPO-005).  Tracked for v27.0.7+.
+
+### Counts (v27.0.6 vs v27.0.5)
+
+- 660 catalogued rules (unchanged).
+- **34 fix-producing rules (was 33; +1: TYPO-004 with math-aware
+  filtering)**.
+- 1,382 theorems (unchanged; fix-producer cycle, not a proof cycle).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.5` (default invocation).
+Fix producer gated behind `--apply-fixes`; baseline output
+unchanged.
+
 ## [v27.0.5] — 2026-05-02
 
 **Fix-producer cadence resumes.** v27.0.5 opens the rolling Bucket A

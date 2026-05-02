@@ -323,4 +323,132 @@ let () =
         (does_not_fire "TYPO-010" "Apples, oranges, bananas.")
         (tag ^ ": no fire, no fix"));
 
+  (* v27.0.6 batch: TYPO-004 fix producer (math-aware via find_math_ranges). *)
+  run "TYPO-004 fix: backtick/apostrophe become curly quotes outside math"
+    (fun tag ->
+      let src = "Said ``hello'' to her" in
+      let edits = fix_edits "TYPO-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
+        (tag ^ ": `` → U+201C, '' → U+201D"));
+
+  run "TYPO-004 fix: skips '' inside $..$ math (double-prime preserved)"
+    (fun tag ->
+      let src = "Let $f''(x) = 0$ and ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      (* Only the ``done'' outside math should be fixed. $f''(x) = 0$ must
+         remain bytewise unchanged. *)
+      expect
+        (List.length edits = 2
+        && out = "Let $f''(x) = 0$ and \xe2\x80\x9cdone\xe2\x80\x9d"
+        && (* Math segment $f''(x) = 0$ unchanged *)
+        String.length out = String.length src - 4 + 6
+        (* removed 4 bytes (`` and ''), added 6 (UTF-8 U+201C + U+201D) *))
+        (tag ^ ": math segment preserved"));
+
+  run "TYPO-004 fix: skips '' inside \\[...\\] display math" (fun tag ->
+      let src = "\\[ y'' = a y' + b y \\] and ``z''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (out = "\\[ y'' = a y' + b y \\] and \xe2\x80\x9cz\xe2\x80\x9d"
+        && List.length edits = 2)
+        (tag ^ ": display math preserved"));
+
+  run "TYPO-004 fix: skips '' inside \\begin{equation} env" (fun tag ->
+      let src = "\\begin{equation} f''(x) = 0 \\end{equation} and ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (out
+         = "\\begin{equation} f''(x) = 0 \\end{equation} and \
+            \xe2\x80\x9cdone\xe2\x80\x9d"
+        && List.length edits = 2)
+        (tag ^ ": equation env preserved"));
+
+  run "TYPO-004 fix: still fires count on '' in math (no-fix path)" (fun tag ->
+      (* Math-only `` or '' should still report (count > 0) but no auto-fix.
+         Round-8 audit: previously asserted only [List.length edits = 0], which
+         can't disambiguate "rule didn't fire" from "rule fired but emitted no
+         fix". Now also asserts [fires_with_count] = 2 to verify the rule DOES
+         fire (count = 2 because the source contains two '' pairs at offsets 3
+         and 9), and the fix list is empty because both pairs are inside
+         math. *)
+      let src = "$f''(x) g''(x)$" in
+      let edits = fix_edits "TYPO-004" src in
+      expect
+        (fires_with_count "TYPO-004" src 2 && List.length edits = 0)
+        (tag ^ ": rule fires with count=2, no fix edits"));
+
+  run "TYPO-004 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-004" "no curly quote needed here")
+        (tag ^ ": no fire, no fix"));
+
+  run "TYPO-004 fix: escaped \\$ does not open math" (fun tag ->
+      (* \$ is a literal dollar sign in LaTeX (escaped); it must NOT open a math
+         segment. `` `` and '' adjacent to \$ should still be fixed. *)
+      let src = "Cost: \\$5 ``cheap'' compared to gold" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Cost: \\$5 \xe2\x80\x9ccheap\xe2\x80\x9d compared to gold")
+        (tag ^ ": \\$ treated as literal, fix applies"));
+
+  run "TYPO-004 fix: multiple math regions correctly delimited" (fun tag ->
+      (* Three math regions interleaved with text. Each `''` outside math is
+         fixed; the two inside math are preserved. *)
+      let src = "Pre $a''$ mid ``one'' more $b''$ end ``two''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Pre $a''$ mid \xe2\x80\x9cone\xe2\x80\x9d more $b''$ end \
+              \xe2\x80\x9ctwo\xe2\x80\x9d")
+        (tag ^ ": three math regions preserved, text segments fixed"));
+
+  run "TYPO-004 fix: skips '' inside $$..$$ display math (matched-pair)"
+    (fun tag ->
+      (* Critical case for TeX-style $$..$$ display math. strip_math_segments
+         uses a single-$ toggle and treats $$x$$ as two empty math + literal
+         middle, which would let TYPO-004's fix corrupt $$f''(x)=0$$.
+         find_math_ranges matches $$ as a pair before the toggle path runs.
+         Verifies the v27.0.6 round-2 audit fix. *)
+      let src = "Pre $$f''(x) = 0$$ post ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Pre $$f''(x) = 0$$ post \xe2\x80\x9cdone\xe2\x80\x9d")
+        (tag ^ ": $$..$$ display math preserved"));
+
+  run "TYPO-004 fix: skips `` inside $..$ math (symmetric to '' case)"
+    (fun tag ->
+      (* Round-5 audit: '' tested in math but `` not. Symmetric coverage:
+         backtick-pair inside math should also be preserved. Pattern is unusual
+         (TeX low-level uses backtick for char codes) but the helper's filter is
+         direction-agnostic — verifying. *)
+      let src = "$``x$ then ``y''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2 && out = "$``x$ then \xe2\x80\x9cy\xe2\x80\x9d")
+        (tag ^ ": `` inside $..$ preserved, outer pair fixed"));
+
+  run "TYPO-004 fix: skips '' inside \\(..\\) paren math" (fun tag ->
+      (* Round-6 audit: CHANGELOG lists \\(..\\) as supported but no test
+         verified. Other syntaxes covered ($, $$, \\[, env); this adds the
+         missing one for completeness. *)
+      let src = "Try \\(f''(x) \\neq 0\\) and ``yes''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Try \\(f''(x) \\neq 0\\) and \xe2\x80\x9cyes\xe2\x80\x9d")
+        (tag ^ ": \\(..\\) paren math preserved"));
+
   finalise "typo-fix"

@@ -2,6 +2,51 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.5] — 2026-05-02
+
+**Fix-producer cadence resumes.** v27.0.5 opens the rolling Bucket A
+fix-producer cycle (per `specs/v27/V27_FIX_PRODUCER_CADENCE.md`)
+deferred by the v27.0.0–v27.0.4 proof-stack work. Two mechanical
+producers shipped:
+
+- **TYPO-004** (`` ``…'' `` → curly quotes): each `` `` `` becomes
+  `\xe2\x80\x9c` (U+201C left double quotation mark) and each `''`
+  becomes `\xe2\x80\x9d` (U+201D right double quotation mark).
+  Mechanical: TeX backtick syntax doesn't appear in math source, so
+  no math-stripping needed.
+- **TYPO-010** (space before punctuation): each `<space><,.;:?!>`
+  pair drops the leading space, leaving the punctuation in place.
+  Operates on the raw byte stream; the `L0_TOKEN_AWARE` path uses
+  the stricter token-level count but emits the same byte edits.
+
+**34 fix-producing rules** (was 32; +2). Both new producers ship
+with E2E unit tests in `latex-parse/src/test_typo_fix.ml` (positive
+cases, multi-pattern cases, no-fire negatives) and exercise the
+existing `apply_fixes_best_effort` infrastructure unchanged.
+
+**Plus: CI fix.** `scripts/perf_summary.sh` removed an
+`OPAMSWITCH=l0-testing` override that broke `perf-nightly` on
+GitHub Actions runners (the nightly workflow had been failing every
+night since 2026-04-28; preceding gates all passed, only the
+post-gate CSV summary step errored). Switch override now respects
+the ambient opam environment per CI norms (PR #335).
+
+### Counts (v27.0.5 vs v27.0.4)
+
+- 660 catalogued rules (unchanged).
+- **34 fix-producing rules (was 32; +2: TYPO-004, TYPO-010)**.
+- 1,382 theorems (unchanged; this is a fix-producer cycle, not a
+  proof cycle).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.4` (default invocation).
+Fix producers gated behind `--apply-fixes`; baseline output
+unchanged.
+
 ## [v27.0.4] — 2026-05-01
 
 **Cursor-universal cycle complete: universal runtime correspondence.**

@@ -300,4 +300,48 @@ let () =
         (List.length edits = 1 && apply_all src edits = "$$\nx + y\nz\n$$")
         (tag ^ ": trailing whitespace before \\n stripped inside display"));
 
+  (* v27.0.5 batch: TYPO-004 + TYPO-010 fix producers. *)
+  run "TYPO-004 fix: backtick/apostrophe become curly quotes" (fun tag ->
+      let src = "Said ``hello'' to her" in
+      let edits = fix_edits "TYPO-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits
+           = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
+        (tag ^ ": `` → U+201C, '' → U+201D"));
+
+  run "TYPO-004 fix: only opening backtick" (fun tag ->
+      let src = "She said ``hi" in
+      let edits = fix_edits "TYPO-004" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "She said \xe2\x80\x9chi")
+        (tag ^ ": just `` → curly opening"));
+
+  run "TYPO-004 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-004" "no curly quote needed here")
+        (tag ^ ": no fire, no fix"));
+
+  run "TYPO-010 fix: drops space before comma" (fun tag ->
+      let src = "Apples , oranges , bananas" in
+      let edits = fix_edits "TYPO-010" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Apples, oranges, bananas")
+        (tag ^ ": both spaces removed before ,"));
+
+  run "TYPO-010 fix: handles multiple punctuation kinds" (fun tag ->
+      let src = "Hi ! How ? Yes ; ok ." in
+      let edits = fix_edits "TYPO-010" src in
+      expect
+        (List.length edits = 4
+        && apply_all src edits = "Hi! How? Yes; ok.")
+        (tag ^ ": ! ? ; . all normalised"));
+
+  run "TYPO-010 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-010" "Apples, oranges, bananas.")
+        (tag ^ ": no fire, no fix"));
+
   finalise "typo-fix"

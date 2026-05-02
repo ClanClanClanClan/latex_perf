@@ -431,4 +431,16 @@ let () =
         (List.length edits = 2 && out = "$``x$ then \xe2\x80\x9cy\xe2\x80\x9d")
         (tag ^ ": `` inside $..$ preserved, outer pair fixed"));
 
+  run "TYPO-004 fix: skips '' inside \\(..\\) paren math" (fun tag ->
+      (* Round-6 audit: CHANGELOG lists \\(..\\) as supported but no test
+         verified. Other syntaxes covered ($, $$, \\[, env); this adds the
+         missing one for completeness. *)
+      let src = "Try \\(f''(x) \\neq 0\\) and ``yes''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Try \\(f''(x) \\neq 0\\) and \xe2\x80\x9cyes\xe2\x80\x9d")
+        (tag ^ ": \\(..\\) paren math preserved"));
+
   finalise "typo-fix"

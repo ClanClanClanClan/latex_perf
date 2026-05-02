@@ -379,4 +379,28 @@ let () =
         (does_not_fire "TYPO-004" "no curly quote needed here")
         (tag ^ ": no fire, no fix"));
 
+  run "TYPO-004 fix: escaped \\$ does not open math" (fun tag ->
+      (* \$ is a literal dollar sign in LaTeX (escaped); it must NOT open a math
+         segment. `` `` and '' adjacent to \$ should still be fixed. *)
+      let src = "Cost: \\$5 ``cheap'' compared to gold" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Cost: \\$5 \xe2\x80\x9ccheap\xe2\x80\x9d compared to gold")
+        (tag ^ ": \\$ treated as literal, fix applies"));
+
+  run "TYPO-004 fix: multiple math regions correctly delimited" (fun tag ->
+      (* Three math regions interleaved with text. Each `''` outside math is
+         fixed; the two inside math are preserved. *)
+      let src = "Pre $a''$ mid ``one'' more $b''$ end ``two''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Pre $a''$ mid \xe2\x80\x9cone\xe2\x80\x9d more $b''$ end \
+              \xe2\x80\x9ctwo\xe2\x80\x9d")
+        (tag ^ ": three math regions preserved, text segments fixed"));
+
   finalise "typo-fix"

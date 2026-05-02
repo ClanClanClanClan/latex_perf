@@ -162,32 +162,24 @@ let r_typo_003 : rule =
   { id = "TYPO-003"; run; languages = [] }
 
 let r_typo_004 : rule =
-  let message =
-    "TeX double back‑tick ``…'' not allowed; use opening curly quotes"
-  in
-  (* `` -> Unicode left double quote U+201C ("\xe2\x80\x9c"); '' -> right
-     double quote U+201D ("\xe2\x80\x9d").  Mechanical: every occurrence of
-     ``/'' is unambiguous (no context-dependence), so a flat replace is safe.
-     Math segments are not stripped here — TeX backtick syntax doesn't appear
-     in math source, so over-fix risk is nil. *)
-  let mk_fix_edits s =
-    let bt_edits = mk_replace_edits s "``" "\xe2\x80\x9c" in
-    let ap_edits = mk_replace_edits s "''" "\xe2\x80\x9d" in
-    bt_edits @ ap_edits
-  in
   let run s =
     let cnt = count_substring s "``" + count_substring s "''" in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
-      if fix = [] then
-        Some (mk_result ~id:"TYPO-004" ~severity:Warning ~message ~count:cnt)
-      else
-        Some
-          (mk_result_with_fix ~id:"TYPO-004" ~severity:Warning ~message
-             ~count:cnt ~fix)
+      Some
+        (mk_result ~id:"TYPO-004" ~severity:Warning
+           ~message:
+             "TeX double back‑tick ``…'' not allowed; use opening curly quotes"
+           ~count:cnt)
     else None
   in
   { id = "TYPO-004"; run; languages = [] }
+(* Fix producer deliberately deferred: '' in LaTeX math is double-prime
+   notation (e.g., $f''(x)$); auto-replacing with U+201D would corrupt
+   math source.  Wiring a fix requires a math-range helper that exposes
+   "is offset X inside a math segment" so mk_replace_edits can filter
+   matches.  Tracked for v27.0.6 cycle — the helper will also unblock
+   TYPO-005 (... → \dots, math-aware count + fix) and TYPO-001 (open
+   vs close curly quote, context-dependent). *)
 
 let r_typo_005 : rule =
   let run s =

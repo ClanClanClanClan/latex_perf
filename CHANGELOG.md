@@ -6,23 +6,32 @@ All notable changes to LaTeX Perfectionist are documented here.
 
 **Fix-producer cadence resumes.** v27.0.5 opens the rolling Bucket A
 fix-producer cycle (per `specs/v27/V27_FIX_PRODUCER_CADENCE.md`)
-deferred by the v27.0.0–v27.0.4 proof-stack work. Two mechanical
-producers shipped:
+deferred by the v27.0.0–v27.0.4 proof-stack work. One mechanical
+producer shipped:
 
-- **TYPO-004** (`` ``…'' `` → curly quotes): each `` `` `` becomes
-  `\xe2\x80\x9c` (U+201C left double quotation mark) and each `''`
-  becomes `\xe2\x80\x9d` (U+201D right double quotation mark).
-  Mechanical: TeX backtick syntax doesn't appear in math source, so
-  no math-stripping needed.
 - **TYPO-010** (space before punctuation): each `<space><,.;:?!>`
   pair drops the leading space, leaving the punctuation in place.
   Operates on the raw byte stream; the `L0_TOKEN_AWARE` path uses
   the stricter token-level count but emits the same byte edits.
+  Math/verbatim concerns: in math, spaces are insignificant so
+  removing space before comma is benign; verbatim corruption
+  matches the existing TYPO-002/003 pattern (no boundary tracking
+  in v26.x fix producers either) — accepted per established
+  cadence.
 
-**34 fix-producing rules** (was 32; +2). Both new producers ship
-with E2E unit tests in `latex-parse/src/test_typo_fix.ml` (positive
-cases, multi-pattern cases, no-fire negatives) and exercise the
-existing `apply_fixes_best_effort` infrastructure unchanged.
+**Deferred from this batch (audit-caught correctness concern):**
+TYPO-004 (` ``…'' ` → curly quotes) was implemented but reverted
+during round-1 audit.  Reason: `''` in LaTeX math is double-prime
+notation (e.g., `$f''(x)$`), so auto-replacing with U+201D would
+corrupt math source.  Proper fix requires a math-range helper
+that exposes "is offset X inside a math segment" — tracked for
+v27.0.6 cycle, where the same helper unblocks TYPO-005
+(` ... ` → `\dots`) and TYPO-001 (open vs close curly quote).
+
+**33 fix-producing rules** (was 32; +1).  TYPO-010 ships with E2E
+unit tests in `latex-parse/src/test_typo_fix.ml` (positive cases,
+multi-pattern cases, no-fire negatives) and exercises the existing
+`apply_fixes_best_effort` infrastructure unchanged.
 
 **Plus: CI fix.** `scripts/perf_summary.sh` removed an
 `OPAMSWITCH=l0-testing` override that broke `perf-nightly` on
@@ -34,7 +43,7 @@ the ambient opam environment per CI norms (PR #335).
 ### Counts (v27.0.5 vs v27.0.4)
 
 - 660 catalogued rules (unchanged).
-- **34 fix-producing rules (was 32; +2: TYPO-004, TYPO-010)**.
+- **33 fix-producing rules (was 32; +1: TYPO-010)**.
 - 1,382 theorems (unchanged; this is a fix-producer cycle, not a
   proof cycle).
 - 171 .v files (unchanged).

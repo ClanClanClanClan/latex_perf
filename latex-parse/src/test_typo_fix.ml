@@ -300,29 +300,10 @@ let () =
         (List.length edits = 1 && apply_all src edits = "$$\nx + y\nz\n$$")
         (tag ^ ": trailing whitespace before \\n stripped inside display"));
 
-  (* v27.0.5 batch: TYPO-004 + TYPO-010 fix producers. *)
-  run "TYPO-004 fix: backtick/apostrophe become curly quotes" (fun tag ->
-      let src = "Said ``hello'' to her" in
-      let edits = fix_edits "TYPO-004" src in
-      expect
-        (List.length edits = 2
-        && apply_all src edits
-           = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
-        (tag ^ ": `` → U+201C, '' → U+201D"));
-
-  run "TYPO-004 fix: only opening backtick" (fun tag ->
-      let src = "She said ``hi" in
-      let edits = fix_edits "TYPO-004" src in
-      expect
-        (List.length edits = 1
-        && apply_all src edits = "She said \xe2\x80\x9chi")
-        (tag ^ ": just `` → curly opening"));
-
-  run "TYPO-004 does not fire on clean source" (fun tag ->
-      expect
-        (does_not_fire "TYPO-004" "no curly quote needed here")
-        (tag ^ ": no fire, no fix"));
-
+  (* v27.0.5 batch: TYPO-010 fix producer.  TYPO-004 fix deliberately
+     deferred — `` and '' need math-range filtering before they can be
+     auto-fixed (`` `` `` is fine; '' in $f''(x)$ is derivative notation
+     which would corrupt). *)
   run "TYPO-010 fix: drops space before comma" (fun tag ->
       let src = "Apples , oranges , bananas" in
       let edits = fix_edits "TYPO-010" src in

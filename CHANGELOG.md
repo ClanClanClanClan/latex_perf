@@ -2,6 +2,47 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.6] — 2026-05-02
+
+**Math-range helper unblocks deferred fix producers.** Adds
+`find_math_ranges` + `is_in_math_range` to `validators_common.ml`,
+mirroring `strip_math_segments`' detection logic but exposing
+half-open byte ranges instead of producing a stripped buffer.
+Fix producers can now filter match offsets that fall inside math
+segments (inline `$`, paren math `\(...\)`, bracket math
+`\[...\]`, and 11 named math environments) without changing the
+detection-time count behaviour.
+
+**Wired into TYPO-004** (deferred from v27.0.5 cycle): ` `` ` →
+U+201C left double quote, `''` → U+201D right double quote,
+**but only outside math**.  `''` inside `$f''(x)$` (double-prime
+notation) is detected (count) but not auto-fixed.  Validates
+five distinct math contexts in the test suite (inline `$`,
+display `\[`, `\begin{equation}`, math-only input, no-fire
+clean).
+
+**34 fix-producing rules** (was 33; +1: TYPO-004).  TYPO-005 +
+TYPO-001 still deferred — same helper applies, but they need
+context-dependent open-vs-close logic (TYPO-001) or math-aware
+count semantics distinct from the existing strip_math behaviour
+(TYPO-005).  Tracked for v27.0.7+.
+
+### Counts (v27.0.6 vs v27.0.5)
+
+- 660 catalogued rules (unchanged).
+- **34 fix-producing rules (was 33; +1: TYPO-004 with math-aware
+  filtering)**.
+- 1,382 theorems (unchanged; fix-producer cycle, not a proof cycle).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.5` (default invocation).
+Fix producer gated behind `--apply-fixes`; baseline output
+unchanged.
+
 ## [v27.0.5] — 2026-05-02
 
 **Fix-producer cadence resumes.** v27.0.5 opens the rolling Bucket A

@@ -323,4 +323,60 @@ let () =
         (does_not_fire "TYPO-010" "Apples, oranges, bananas.")
         (tag ^ ": no fire, no fix"));
 
+  (* v27.0.6 batch: TYPO-004 fix producer (math-aware via find_math_ranges). *)
+  run "TYPO-004 fix: backtick/apostrophe become curly quotes outside math"
+    (fun tag ->
+      let src = "Said ``hello'' to her" in
+      let edits = fix_edits "TYPO-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
+        (tag ^ ": `` → U+201C, '' → U+201D"));
+
+  run "TYPO-004 fix: skips '' inside $..$ math (double-prime preserved)"
+    (fun tag ->
+      let src = "Let $f''(x) = 0$ and ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      (* Only the ``done'' outside math should be fixed. $f''(x) = 0$ must
+         remain bytewise unchanged. *)
+      expect
+        (List.length edits = 2
+        && out = "Let $f''(x) = 0$ and \xe2\x80\x9cdone\xe2\x80\x9d"
+        && (* Math segment $f''(x) = 0$ unchanged *)
+        String.length out = String.length src - 4 + 6
+        (* removed 4 bytes (`` and ''), added 6 (UTF-8 U+201C + U+201D) *))
+        (tag ^ ": math segment preserved"));
+
+  run "TYPO-004 fix: skips '' inside \\[...\\] display math" (fun tag ->
+      let src = "\\[ y'' = a y' + b y \\] and ``z''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (out = "\\[ y'' = a y' + b y \\] and \xe2\x80\x9cz\xe2\x80\x9d"
+        && List.length edits = 2)
+        (tag ^ ": display math preserved"));
+
+  run "TYPO-004 fix: skips '' inside \\begin{equation} env" (fun tag ->
+      let src = "\\begin{equation} f''(x) = 0 \\end{equation} and ``done''" in
+      let edits = fix_edits "TYPO-004" src in
+      let out = apply_all src edits in
+      expect
+        (out
+         = "\\begin{equation} f''(x) = 0 \\end{equation} and \
+            \xe2\x80\x9cdone\xe2\x80\x9d"
+        && List.length edits = 2)
+        (tag ^ ": equation env preserved"));
+
+  run "TYPO-004 fix: still fires count on '' in math (no-fix path)" (fun tag ->
+      (* Math-only `` or '' should still report (count > 0) but no auto-fix. *)
+      let src = "$f''(x) g''(x)$" in
+      let edits = fix_edits "TYPO-004" src in
+      expect (List.length edits = 0) (tag ^ ": no fix edits in math-only input"));
+
+  run "TYPO-004 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-004" "no curly quote needed here")
+        (tag ^ ": no fire, no fix"));
+
   finalise "typo-fix"

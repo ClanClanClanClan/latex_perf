@@ -6,20 +6,30 @@ All notable changes to LaTeX Perfectionist are documented here.
 
 **Math-range helper unblocks deferred fix producers.** Adds
 `find_math_ranges` + `is_in_math_range` to `validators_common.ml`,
-mirroring `strip_math_segments`' detection logic but exposing
-half-open byte ranges instead of producing a stripped buffer.
-Fix producers can now filter match offsets that fall inside math
-segments (inline `$`, paren math `\(...\)`, bracket math
-`\[...\]`, and 11 named math environments) without changing the
-detection-time count behaviour.
+exposing half-open byte ranges of math segments rather than
+producing a stripped buffer.  Fix producers can now filter match
+offsets that fall inside math segments without changing detection-
+time count behaviour.
+
+Math syntaxes recognised: inline `$..$`, **display `$$..$$`
+(matched-pair detection — deliberately MORE correct than
+`strip_math_segments`, which uses a single-`$` toggle that parses
+`$$x$$` as two empty math + literal middle)**, paren math
+`\(...\)`, bracket math `\[...\]`, and 11 named math environments
+(`equation`, `align`, `gather`, `multline`, `eqnarray`,
+`displaymath`, plus starred variants and `math`).  Verbatim
+(`\verb|...|`) and comments (`% ...`) deliberately not tracked —
+matches the established cadence of v26.x fix producers.
 
 **Wired into TYPO-004** (deferred from v27.0.5 cycle): ` `` ` →
 U+201C left double quote, `''` → U+201D right double quote,
 **but only outside math**.  `''` inside `$f''(x)$` (double-prime
-notation) is detected (count) but not auto-fixed.  Validates
-five distinct math contexts in the test suite (inline `$`,
-display `\[`, `\begin{equation}`, math-only input, no-fire
-clean).
+notation) is detected (count) but not auto-fixed.  Test suite
+covers eight math contexts: inline `$..$`, display `$$..$$`
+(round-2 audit fix), bracket `\[..\]`, `\begin{equation}` env,
+math-only input (no fix edits), text-only (fix applies),
+escaped `\$` (round-1 audit), and three interleaved math
+regions (round-1 audit).
 
 **34 fix-producing rules** (was 33; +1: TYPO-004).  TYPO-005 +
 TYPO-001 still deferred — same helper applies, but they need

@@ -216,6 +216,12 @@ def hand_audit_overrides(contracts: list[dict]) -> None:
     _add_conflict(by_id, "TYPO-002", "TYPO-030")  # `--` inside `----+`
     _add_conflict(by_id, "TYPO-001", "TYPO-004")  # straight quote vs backtick-apostrophe
     _add_conflict(by_id, "TYPO-013", "TYPO-004")  # lone backtick vs backtick-pair
+    # v27.0.5 round-3 audit: TYPO-037 ("Space before comma") is a strict
+    # subset of TYPO-010 ("Space before punctuation , . ; : ? !").  Both
+    # fire on " ," and emit identical replace edits; declaring the
+    # conflict lets the resolver pick one (TYPO-010 wins by family
+    # ordering — broader rule supersedes the narrower).
+    _add_conflict(by_id, "TYPO-010", "TYPO-037")  # space-before-, subset of space-before-punct
 
     # PR #241 (p1.3): family-level capability edges. Every rule whose family
     # is in FAMILY_CAPABILITIES picks up provides/consumes defaults so the

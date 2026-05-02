@@ -7357,7 +7357,8 @@ rules:
   provides:
   - TYPO-010
   depends_on: []
-  conflicts_with: []
+  conflicts_with:
+  - TYPO-037
   fix_scope: local
   project_scope: lp_core_or_extended
 - rule_id: TYPO-011
@@ -7686,7 +7687,8 @@ rules:
   provides:
   - TYPO-037
   depends_on: []
-  conflicts_with: []
+  conflicts_with:
+  - TYPO-010
   fix_scope: local
   project_scope: lp_core_or_extended
 - rule_id: TYPO-038

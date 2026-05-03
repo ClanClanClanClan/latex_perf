@@ -640,4 +640,37 @@ let () =
         && out = "\\textbf{label}{\\href{mailto:a@b.io}{a@b.io}}")
         (tag ^ ": non-href command does not mask"));
 
+  (* v27.0.11 batch: TYPO-034 fix producer (delete spurious space before
+     \\footnote, math-aware). *)
+  run "TYPO-034 fix: deletes space before \\footnote" (fun tag ->
+      let src = "Greetings \\footnote{see footer}." in
+      let edits = fix_edits "TYPO-034" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Greetings\\footnote{see footer}.")
+        (tag ^ ": leading space removed"));
+
+  run "TYPO-034 fix: two footnote sites get two deletions" (fun tag ->
+      let src = "First \\footnote{a}. Second \\footnote{b}." in
+      let edits = fix_edits "TYPO-034" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "First\\footnote{a}. Second\\footnote{b}.")
+        (tag ^ ": both spaces removed"));
+
+  run "TYPO-034 fix: skips \\footnote inside math" (fun tag ->
+      (* \\footnote in math is unusual but math-stripping is defensive
+         consistency with other v27.0.6+ producers. *)
+      let src = "Math: $a \\footnote{x}$ then \\footnote{y}." in
+      let edits = fix_edits "TYPO-034" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Math: $a \\footnote{x}$ then\\footnote{y}.")
+        (tag ^ ": text site fixed, math site preserved"));
+
+  run "TYPO-034 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-034" "No bad space before\\footnote{ok}.")
+        (tag ^ ": no space before footnote, no fire"));
+
   finalise "typo-fix"

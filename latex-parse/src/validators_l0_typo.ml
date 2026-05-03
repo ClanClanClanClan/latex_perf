@@ -1210,13 +1210,36 @@ let rules_pilot : rule list =
 
 (* Spurious space before footnote command \footnote *)
 let r_typo_034 : rule =
+  (* v27.0.11: math-aware fix producer. Each ` \footnote` occurrence outside
+     math has the leading space deleted. Convention: footnote marks should
+     attach directly to the preceding word with no space. Math-aware via
+     find_math_ranges (footnote in math is unusual but skip defensively).
+     Message inlined per round-3 v27.0.6 pattern. *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let offsets = find_all_non_overlapping s " \\footnote" in
+    List.filter_map
+      (fun off ->
+        if outside off then
+          Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) "")
+        else None)
+      offsets
+  in
   let run s =
     let cnt = count_substring s " \\footnote" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-034" ~severity:Info
-           ~message:{|Spurious space before footnote command \footnote|}
-           ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-034" ~severity:Info
+             ~message:{|Spurious space before footnote command \footnote|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-034" ~severity:Info
+             ~message:{|Spurious space before footnote command \footnote|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-034"; run; languages = [] }

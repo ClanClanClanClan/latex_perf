@@ -1154,23 +1154,64 @@ let r_typo_031 : rule =
   let run _s = None in
   { id = "TYPO-031"; run; languages = [] }
 
-(* TYPO-032: Comma before \cite *)
+(* TYPO-032: Comma before \cite. v27.0.14: math-aware fix producer. Pattern `,[
+   ]*\cite` (comma + zero-or-more spaces + \cite) matches a typographic
+   anti-pattern; the fix deletes the comma (single-byte delete at match start)
+   and preserves the spaces and \cite.
+
+   Round-1 audit guard: skip matches where the comma is part of a `\,` thin-
+   space control symbol — deleting the comma in `\,\cite` would corrupt it into
+   `\\cite` (a line break followed by literal `cite` text). The check counts
+   consecutive backslashes immediately before the comma; an odd count means the
+   comma belongs to a `\,` control symbol and the match must be skipped from
+   BOTH the count and fix offsets (otherwise the count would over-report and the
+   audit's 0-differential invariant would fail).
+
+   Math-aware via `find_math_ranges` on the fix offsets only; the count
+   preserves the pre-v27.0.14 semantic for non-`\,` matches (no math filter on
+   count) so the differential output vs v27.0.13 is unchanged for genuine
+   anti-patterns. *)
 let r_typo_032 : rule =
   let re = Re_compat.regexp {|,[ ]*\\cite|} in
+  let is_thin_space_comma s pos =
+    (* True iff `s.[pos]` is a comma that is part of `\,` — i.e. preceded by an
+       odd number of backslashes (so the most recent backslash is unescaped and
+       pairs with the comma). *)
+    let n = ref 0 in
+    let i = ref (pos - 1) in
+    while !i >= 0 && s.[!i] = '\\' do
+      incr n;
+      decr i
+    done;
+    !n mod 2 = 1
+  in
+  let collect_offsets s =
+    let rec loop i acc =
+      try
+        let mr, pos = Re_compat.search_forward re s i in
+        let mend = Re_compat.match_end mr in
+        let acc = if is_thin_space_comma s pos then acc else pos :: acc in
+        loop mend acc
+      with Not_found -> List.rev acc
+    in
+    loop 0 []
+  in
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    List.filter (fun pos -> not (is_in_math_range math pos)) (collect_offsets s)
+  in
+  let mk_fix_edits offsets =
+    List.map
+      (fun pos -> Cst_edit.replace ~start_offset:pos ~end_offset:(pos + 1) "")
+      offsets
+  in
   let run s =
-    let cnt = ref 0 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         incr cnt;
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
+    let cnt = List.length (collect_offsets s) in
+    if cnt > 0 then
+      let fix = mk_fix_edits (fix_offsets s) in
       Some
-        (mk_result ~id:"TYPO-032" ~severity:Warning
-           ~message:{|Comma before \cite|} ~count:!cnt)
+        (mk_result_with_fix ~id:"TYPO-032" ~severity:Warning
+           ~message:"Comma before \\cite" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-032"; run; languages = [] }

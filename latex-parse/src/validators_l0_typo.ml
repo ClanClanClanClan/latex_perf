@@ -1154,23 +1154,39 @@ let r_typo_031 : rule =
   let run _s = None in
   { id = "TYPO-031"; run; languages = [] }
 
-(* TYPO-032: Comma before \cite *)
+(* TYPO-032: Comma before \cite. v27.0.14: math-aware fix producer. Pattern `,[
+   ]*\cite` (comma + zero-or-more spaces + \cite) matches a typographic
+   anti-pattern; the fix deletes the comma (single-byte delete at match start)
+   and preserves the spaces and \cite. Math-aware via `find_math_ranges` on the
+   fix offsets only; the count preserves the pre-v27.0.14 semantic (no math
+   filter on count) so the differential output vs v27.0.13 is unchanged. *)
 let r_typo_032 : rule =
   let re = Re_compat.regexp {|,[ ]*\\cite|} in
+  let collect_offsets s =
+    let rec loop i acc =
+      try
+        let mr, pos = Re_compat.search_forward re s i in
+        loop (Re_compat.match_end mr) (pos :: acc)
+      with Not_found -> List.rev acc
+    in
+    loop 0 []
+  in
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    List.filter (fun pos -> not (is_in_math_range math pos)) (collect_offsets s)
+  in
+  let mk_fix_edits offsets =
+    List.map
+      (fun pos -> Cst_edit.replace ~start_offset:pos ~end_offset:(pos + 1) "")
+      offsets
+  in
   let run s =
-    let cnt = ref 0 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         incr cnt;
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
+    let cnt = List.length (collect_offsets s) in
+    if cnt > 0 then
+      let fix = mk_fix_edits (fix_offsets s) in
       Some
-        (mk_result ~id:"TYPO-032" ~severity:Warning
-           ~message:{|Comma before \cite|} ~count:!cnt)
+        (mk_result_with_fix ~id:"TYPO-032" ~severity:Warning
+           ~message:"Comma before \\cite" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-032"; run; languages = [] }

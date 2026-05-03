@@ -792,4 +792,48 @@ let () =
               (\\url{https://c.io}); end.")
         (tag ^ ": .!) trimmed from URL wrap span"));
 
+  (* v27.0.14: TYPO-032 fix producer (delete comma before \\cite, math-aware on
+     the fix offsets, count preserved). *)
+  run "TYPO-032 fix: deletes comma before \\cite" (fun tag ->
+      let src = "see, \\cite{ref}" in
+      let edits = fix_edits "TYPO-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "see \\cite{ref}")
+        (tag ^ ": comma deleted, space + \\cite preserved"));
+
+  run "TYPO-032 fix: deletes comma even with no space before \\cite" (fun tag ->
+      let src = "foo,\\cite{X}" in
+      let edits = fix_edits "TYPO-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "foo\\cite{X}")
+        (tag ^ ": comma deleted, no space"));
+
+  run "TYPO-032 fix: two disjoint comma+\\cite produce two edits" (fun tag ->
+      let src = "a, \\cite{x} and b, \\cite{y}" in
+      let edits = fix_edits "TYPO-032" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "a \\cite{x} and b \\cite{y}")
+        (tag ^ ": both commas deleted"));
+
+  run "TYPO-032 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-032" "see \\cite{ref} for details")
+        (tag ^ ": no comma, no fire"));
+
+  run "TYPO-032 fix: skips comma+\\cite inside $..$ math (audit-aware)"
+    (fun tag ->
+      (* \\cite is text-mode so this case is essentially LaTeX-invalid in
+         practice, but math-aware filtering keeps the producer consistent with
+         v27.0.6+ producers. The fix offset is suppressed; the count still
+         reflects the match (no math filter on count, by design — see the
+         comment on r_typo_032 for the 0-differential rationale). *)
+      let src = "text $a, \\cite{m}$ and b, \\cite{plain}" in
+      let edits = fix_edits "TYPO-032" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "text $a, \\cite{m}$ and b \\cite{plain}")
+        (tag ^ ": math comma preserved, plain comma deleted"));
+
   finalise "typo-fix"

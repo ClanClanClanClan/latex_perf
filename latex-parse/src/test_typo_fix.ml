@@ -547,6 +547,21 @@ let () =
         && out = "Caf\\\"e is \xe2\x80\x9cf\\\"oo\xe2\x80\x9d and bar")
         (tag ^ ": umlaut command preserved, real quotes fixed"));
 
+  run "TYPO-001 fix: escapes interleaved with real quotes preserve alternation"
+    (fun tag ->
+      (* Round-2 audit: escaped quote-commands (umlauts) should not consume an
+         alternation slot. Source has 3 escaped umlauts (skipped) and 2 real
+         quote pairs; alternation runs only over the real quotes. *)
+      let src = "Caf\\\"e \"x\" and na\\\"\\\"ve \"y\"" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Caf\\\"e \xe2\x80\x9cx\xe2\x80\x9d and na\\\"\\\"ve \
+              \xe2\x80\x9cy\xe2\x80\x9d")
+        (tag ^ ": umlauts preserved, alternation runs only over real quotes"));
+
   run "TYPO-001 fix: odd quote count gives best-effort alternation" (fun tag ->
       (* 3 quotes: open, close, open (last unmatched). *)
       let src = "\"a\"b\"c" in

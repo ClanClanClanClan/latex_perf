@@ -758,13 +758,12 @@ let () =
 
   run "TYPO-039 fix: math + wrapped + plain integration (round-1 audit)"
     (fun tag ->
-      (* All four conditions in one input: - plain URL (should wrap) - URL
-         inside \\url{} (skip) - URL inside \\href{} URL slot (skip) - URL
-         inside math (skip) Note: the URL regex is permissive on trailing
-         punctuation, so use space-delimited URLs to keep the wrap span
-         clean. *)
+      (* All four conditions in one input: plain URL (wraps), URL inside \\url{}
+         (skip), URL inside \\href{} URL slot (skip), URL inside math (skip).
+         Round-2 audit: comma after the plain URL exercises trim_trailing_punct
+         so the wrap span excludes the comma. *)
       let src =
-        "Plain http://a.io wrapped \\url{http://b.io} href \
+        "Plain http://a.io, wrapped \\url{http://b.io} href \
          \\href{http://c.io}{c} and math $http://d.io$"
       in
       let edits = fix_edits "TYPO-039" src in
@@ -772,8 +771,25 @@ let () =
       expect
         (List.length edits = 1
         && out
-           = "Plain \\url{http://a.io} wrapped \\url{http://b.io} href \
+           = "Plain \\url{http://a.io}, wrapped \\url{http://b.io} href \
               \\href{http://c.io}{c} and math $http://d.io$")
-        (tag ^ ": only plain URL wrapped"));
+        (tag ^ ": only plain URL wrapped, trailing comma trimmed"));
+
+  run "TYPO-039 fix: trims trailing punctuation (round-2 audit)" (fun tag ->
+      (* The URL regex `https?://[^ \t\n}]+` is permissive on trailing
+         punctuation. trim_trailing_punct excludes `,.;:!)` from the wrap span
+         so sentence-ending marks stay outside \\url{}. `?` is NOT trimmed
+         (commonly starts a URL query string). *)
+      let src =
+        "Site https://a.io. Also https://b.io! See (https://c.io); end."
+      in
+      let edits = fix_edits "TYPO-039" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 3
+        && out
+           = "Site \\url{https://a.io}. Also \\url{https://b.io}! See \
+              (\\url{https://c.io}); end.")
+        (tag ^ ": .!) trimmed from URL wrap span"));
 
   finalise "typo-fix"

@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.14] — 2026-05-03
+
+**TYPO-032 fix producer (delete comma before `\cite`, math-aware on
+fix offsets).**  Pattern `,[ ]*\cite` (comma + zero-or-more spaces +
+`\cite`) is a typographic anti-pattern; the fix deletes the comma
+(single-byte delete edit at the match start) and preserves the spaces
+and `\cite`.  Math-aware via `find_math_ranges` on the fix offsets
+only; the count preserves the pre-v27.0.14 semantic so the
+differential output vs v27.0.13 is unchanged.
+
+**41 fix-producing rules** (was 40; +1: TYPO-032).
+
+### Counts (v27.0.14 vs v27.0.13)
+
+- 660 catalogued rules (unchanged).
+- **41 fix-producing rules** (was 40; +1: TYPO-032).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- `deletes comma before \cite` (positive)
+- `deletes comma even with no space before \cite` (no-space variant)
+- `two disjoint comma+\cite produce two edits` (multi-match)
+- `does not fire on clean source` (negative)
+- `skips comma+\cite inside $..$ math` (math-aware audit)
+
+86 → 91 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.13 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.13] — 2026-05-03
 
 **TYPO-039 fix producer (URL → `\url{}`, math + already-wrapped

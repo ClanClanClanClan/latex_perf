@@ -1157,16 +1157,41 @@ let r_typo_031 : rule =
 (* TYPO-032: Comma before \cite. v27.0.14: math-aware fix producer. Pattern `,[
    ]*\cite` (comma + zero-or-more spaces + \cite) matches a typographic
    anti-pattern; the fix deletes the comma (single-byte delete at match start)
-   and preserves the spaces and \cite. Math-aware via `find_math_ranges` on the
-   fix offsets only; the count preserves the pre-v27.0.14 semantic (no math
-   filter on count) so the differential output vs v27.0.13 is unchanged. *)
+   and preserves the spaces and \cite.
+
+   Round-1 audit guard: skip matches where the comma is part of a `\,` thin-
+   space control symbol — deleting the comma in `\,\cite` would corrupt it into
+   `\\cite` (a line break followed by literal `cite` text). The check counts
+   consecutive backslashes immediately before the comma; an odd count means the
+   comma belongs to a `\,` control symbol and the match must be skipped from
+   BOTH the count and fix offsets (otherwise the count would over-report and the
+   audit's 0-differential invariant would fail).
+
+   Math-aware via `find_math_ranges` on the fix offsets only; the count
+   preserves the pre-v27.0.14 semantic for non-`\,` matches (no math filter on
+   count) so the differential output vs v27.0.13 is unchanged for genuine
+   anti-patterns. *)
 let r_typo_032 : rule =
   let re = Re_compat.regexp {|,[ ]*\\cite|} in
+  let is_thin_space_comma s pos =
+    (* True iff `s.[pos]` is a comma that is part of `\,` — i.e. preceded by an
+       odd number of backslashes (so the most recent backslash is unescaped and
+       pairs with the comma). *)
+    let n = ref 0 in
+    let i = ref (pos - 1) in
+    while !i >= 0 && s.[!i] = '\\' do
+      incr n;
+      decr i
+    done;
+    !n mod 2 = 1
+  in
   let collect_offsets s =
     let rec loop i acc =
       try
         let mr, pos = Re_compat.search_forward re s i in
-        loop (Re_compat.match_end mr) (pos :: acc)
+        let mend = Re_compat.match_end mr in
+        let acc = if is_thin_space_comma s pos then acc else pos :: acc in
+        loop mend acc
       with Not_found -> List.rev acc
     in
     loop 0 []

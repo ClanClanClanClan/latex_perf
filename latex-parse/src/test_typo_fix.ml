@@ -821,6 +821,27 @@ let () =
         (does_not_fire "TYPO-032" "see \\cite{ref} for details")
         (tag ^ ": no comma, no fire"));
 
+  run "TYPO-032 fix: skips \\,\\cite thin-space (round-1 audit)" (fun tag ->
+      (* `\,\cite` is a thin-space control symbol followed by a citation
+         (typographically CORRECT — some style guides recommend it). The
+         pre-v27.0.14 rule misfired on this pattern; v27.0.14 fixes the false
+         positive in BOTH count and fix offsets. The check counts consecutive
+         backslashes immediately before the comma; an odd count means `\,` and
+         the match is skipped. *)
+      let src = "thin space \\,\\cite{ref} works" in
+      expect (does_not_fire "TYPO-032" src) (tag ^ ": \\,\\cite not flagged"));
+
+  run "TYPO-032 fix: \\\\,\\cite (escaped backslash + comma) DOES fire"
+    (fun tag ->
+      (* `\\,\cite` = `\\` (literal backslash) + `,` + `\cite`. The comma is
+         preceded by TWO backslashes (an even count), so it is a genuine comma —
+         the rule fires and the fix deletes it. *)
+      let src = "literal\\\\,\\cite{X}" in
+      let edits = fix_edits "TYPO-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "literal\\\\\\cite{X}")
+        (tag ^ ": even-count backslashes → comma is real"));
+
   run "TYPO-032 fix: skips comma+\\cite inside $..$ math (audit-aware)"
     (fun tag ->
       (* \\cite is text-mode so this case is essentially LaTeX-invalid in

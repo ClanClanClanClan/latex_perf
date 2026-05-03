@@ -533,4 +533,28 @@ let () =
         (does_not_fire "TYPO-001" "Already \xe2\x80\x9ccurly\xe2\x80\x9d")
         (tag ^ ": clean curly source no fire"));
 
+  run "TYPO-001 fix: skips backslash-escaped quotes (round-1 audit)" (fun tag ->
+      (* LaTeX backslash-doublequote forms the umlaut command (renders
+         u-umlaut); auto-replacing would corrupt the umlaut. The fix must skip
+         backslash-escaped quotes entirely. Source has 2 real text quotes around
+         the second word and one escaped pair inside the umlaut ligature; fix
+         should emit edits only for the 2 real text quotes. *)
+      let src = "Caf\\\"e is \"f\\\"oo\" and bar" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Caf\\\"e is \xe2\x80\x9cf\\\"oo\xe2\x80\x9d and bar")
+        (tag ^ ": umlaut command preserved, real quotes fixed"));
+
+  run "TYPO-001 fix: odd quote count gives best-effort alternation" (fun tag ->
+      (* 3 quotes: open, close, open (last unmatched). *)
+      let src = "\"a\"b\"c" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 3
+        && out = "\xe2\x80\x9ca\xe2\x80\x9db\xe2\x80\x9cc")
+        (tag ^ ": alternation despite mismatch"));
+
   finalise "typo-fix"

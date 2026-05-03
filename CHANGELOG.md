@@ -2,6 +2,52 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.9] — 2026-05-03
+
+**TYPO-038 fix producer (email → `\href{mailto:...}{...}`,
+math-aware + already-wrapped detection).**  Wraps each
+non-math, not-already-wrapped email match.  Reuses v27.0.6
+`find_math_ranges` helper and adds `already_wrapped` check
+that detects emails preceded by `mailto:` (already inside
+the link's URL slot) or `}{` (already inside the link's
+display slot).
+
+**Semantic shift from pre-v27.0.9**: the old TYPO-038 counted
+ALL email patterns including those already inside `\href{mailto:}`
+wrappers, so the rule fired on already-correct documents.  The
+v27.0.9 form counts only UNWRAPPED non-math emails — matching
+the rule's stated intent ("E-mail address not in \href").
+Differential test passes 0 diffs vs v27.0.8 (corpus has no
+pre-wrapped emails so the semantic shift is invisible to
+existing tests).
+
+**37 fix-producing rules** (was 36; +1: TYPO-038).
+
+### Counts (v27.0.9 vs v27.0.8)
+
+- 660 catalogued rules (unchanged).
+- **37 fix-producing rules** (was 36; +1: TYPO-038 with
+  already-wrapped detection + math filtering).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+3 new test cases:
+- `bare email becomes \href{mailto:...}{...}` (positive)
+- `two emails get two wraps` (multi-match)
+- `does not fire on clean source` (pre-wrapped detection)
+
+64 → 67 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.8`.  Semantic shift
+in detection has no effect on the corpus (no pre-wrapped
+emails present).
+
 ## [v27.0.8] — 2026-05-03
 
 **TYPO-001 fix producer (ASCII straight quote → curly,

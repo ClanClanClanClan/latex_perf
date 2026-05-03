@@ -1297,20 +1297,63 @@ let r_typo_037 : rule =
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
+  (* v27.0.9: math-aware fix producer. Wraps each non-math email match with
+     backslash-href-mailto-EMAIL-EMAIL. Uses find_math_ranges to skip math
+     segments (emails in math are unusual but possible). Message inlined per
+     round-3 v27.0.6 pattern. *)
   let re = Re_compat.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
-  let run s =
+  let collect_matches s =
     let rec loop i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
-      with Not_found -> acc
+        let mr, pos = Re_compat.search_forward re s i in
+        let mend = Re_compat.match_end mr in
+        let email = String.sub s pos (mend - pos) in
+        loop mend ((pos, mend, email) :: acc)
+      with Not_found -> List.rev acc
     in
-    let cnt = loop 0 0 in
+    loop 0 []
+  in
+  (* Skip emails already inside a backslash-href-mailto wrapper. Two positions:
+     the mailto: copy (preceded by "mailto:") and the display copy (preceded by
+     "}{"). Detect by literal byte-prefix check immediately before the match
+     start. *)
+  let already_wrapped s start_offset =
+    let mailto_prefix = "mailto:" in
+    let mp_len = String.length mailto_prefix in
+    let display_prefix = "}{" in
+    let dp_len = String.length display_prefix in
+    start_offset >= mp_len
+    && String.sub s (start_offset - mp_len) mp_len = mailto_prefix
+    || start_offset >= dp_len
+       && String.sub s (start_offset - dp_len) dp_len = display_prefix
+  in
+  let unwrapped_matches s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let matches = collect_matches s in
+    List.filter
+      (fun (start_offset, _, _) ->
+        outside start_offset && not (already_wrapped s start_offset))
+      matches
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun (start_offset, end_offset, email) ->
+        Cst_edit.replace ~start_offset ~end_offset
+          ("\\href{mailto:" ^ email ^ "}{" ^ email ^ "}"))
+      (unwrapped_matches s)
+  in
+  let run s =
+    (* v27.0.9 semantic shift: count is based on UNWRAPPED non-math matches (the
+       rule's intent is "emails NOT in href"). Pre-v27.0.9 counted all email
+       patterns including pre-wrapped ones, which caused the rule to fire on
+       already-correct documents. *)
+    let cnt = List.length (unwrapped_matches s) in
     if cnt > 0 then
+      let fix = mk_fix_edits s in
       Some
-        (mk_result ~id:"TYPO-038" ~severity:Info
-           ~message:{|E‑mail address not in \href|} ~count:cnt)
+        (mk_result_with_fix ~id:"TYPO-038" ~severity:Info
+           ~message:{|E‑mail address not in \href|} ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-038"; run; languages = [] }

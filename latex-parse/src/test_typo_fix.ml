@@ -702,4 +702,17 @@ let () =
         (does_not_fire "TYPO-029" "See \\ref{eq:1}, also \\ref{eq:2}.")
         (tag ^ ": comma/period after \\ref doesn't fire"));
 
+  run "TYPO-029 fix: skips \\ref{X} y inside $..$ math (round-1 audit)"
+    (fun tag ->
+      (* \\ref inside math is unusual but possible (e.g., \\text{}); the
+         math-aware filter should preserve it. Outer text-mode \\ref still gets
+         the NBSP fix. *)
+      let src = "$x = \\ref{eq:1} y$ then \\ref{eq:2} again." in
+      let edits = fix_edits "TYPO-029" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "$x = \\ref{eq:1} y$ then \\ref{eq:2}~again.")
+        (tag ^ ": math \\ref preserved, text \\ref gets NBSP"));
+
   finalise "typo-fix"

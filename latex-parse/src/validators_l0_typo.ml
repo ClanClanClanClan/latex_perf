@@ -212,13 +212,45 @@ let r_typo_004 : rule =
   { id = "TYPO-004"; run; languages = [] }
 
 let r_typo_005 : rule =
+  (* v27.0.7: math-aware fix producer for `...` → `\dots`. Pre-v27.0.7 the
+     validator counted occurrences in the math-stripped buffer (so `...` inside
+     `$1, 2, ..., n$` ellipsis idiom didn't fire). v27.0.7 keeps that count
+     semantic but emits fix edits at original-string offsets, filtered by
+     find_math_ranges.
+
+     Note divergence from TYPO-004 pattern: count uses [count_substring
+     (strip_math_segments s) "..."] (overlapping count for severity), fix uses
+     [find_all_non_overlapping s "..." |> filter (not in math)] (non-overlapping
+     for non-conflicting edits). Counts can differ on pathological inputs like
+     `....` (count = 2 with overlap, fix = 1 non-overlapping). Acceptable per
+     the TYPO-002/003 documented pattern.
+
+     Message inlined per round-3 v27.0.6 pattern (validate_messages.sh extractor
+     doesn't follow let-bindings). *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let offsets = List.filter outside (find_all_non_overlapping s "...") in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
+      offsets
+  in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_substring s "..." in
+    let stripped = strip_math_segments s in
+    let cnt = count_substring stripped "..." in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-005" ~severity:Warning
-           ~message:"Ellipsis typed as three periods ...; use \\dots" ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-005" ~severity:Warning
+             ~message:"Ellipsis typed as three periods ...; use \\dots"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-005" ~severity:Warning
+             ~message:"Ellipsis typed as three periods ...; use \\dots"
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-005"; run; languages = [] }

@@ -2,6 +2,54 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.7] — 2026-05-03
+
+**TYPO-005 fix producer (`...` → `\dots`, math-aware).**  Reuses
+the v27.0.6 `find_math_ranges` helper to filter match offsets.
+Math-mode ellipsis (`$1, 2, ..., n$`) is detected (count
+unchanged: stripped buffer) but NOT auto-fixed; text-mode `...`
+is replaced with `\dots`.
+
+**Pattern divergence from TYPO-004**: count uses
+`count_substring (strip_math_segments s) "..."` (overlapping
+count for severity, preserves the pre-v27.0.7 detection
+semantic — math-only `...` doesn't fire); fix uses
+`find_all_non_overlapping s "..." |> filter (not in math)`
+(non-overlapping for non-conflicting edits).  Documented
+inline; matches the established TYPO-002/003 overlapping-vs-
+non-overlapping precedent.
+
+**35 fix-producing rules** (was 34; +1: TYPO-005).  TYPO-001
+still deferred — needs open-vs-close curly-quote
+disambiguation (likely alternation heuristic in v27.0.8+).
+
+### Counts (v27.0.7 vs v27.0.6)
+
+- 660 catalogued rules (unchanged).
+- **35 fix-producing rules** (was 34; +1: TYPO-005 with
+  math-aware filtering).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases in `latex-parse/src/test_typo_fix.ml`:
+- `... in text becomes \dots` (text-mode positive)
+- `skips ... inside $..$ math` (inline math preservation)
+- `skips ... inside \[..\] display math` (display preservation)
+- `does not fire when ... is only in math` (count semantic
+  preserved)
+- `does not fire on clean source`
+
+51 → 56 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.6`.  Fix gated behind
+`--apply-fixes`; baseline output unchanged.
+
 ## [v27.0.6] — 2026-05-02
 
 **Math-range helper unblocks deferred fix producers.** Adds

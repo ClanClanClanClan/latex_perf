@@ -2,6 +2,39 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.11] — 2026-05-03
+
+**TYPO-034 fix producer (delete spurious space before `\footnote`,
+math-aware).**  Each ` \footnote` occurrence outside math has the
+leading space deleted.  Convention: footnote marks should attach
+directly to the preceding word with no space.  Reuses v27.0.6
+`find_math_ranges` helper.
+
+**38 fix-producing rules** (was 37; +1: TYPO-034).
+
+### Counts (v27.0.11 vs v27.0.10)
+
+- 660 catalogued rules (unchanged).
+- **38 fix-producing rules** (was 37; +1: TYPO-034).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+4 new test cases:
+- `deletes space before \footnote` (positive)
+- `two footnote sites get two deletions`
+- `skips \footnote inside math`
+- `does not fire on clean source`
+
+70 → 74 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.10`.
+
 ## [v27.0.10] — 2026-05-03
 
 **TYPO-038 audit refinement.**  Round-1 audit of v27.0.9 caught

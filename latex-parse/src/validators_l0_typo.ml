@@ -4,14 +4,59 @@ open Validators_common
    Warning. *)
 
 let r_typo_001 : rule =
+  (* v27.0.8: math-aware fix producer for ASCII straight quote -> curly.
+     Disambiguation strategy: index-based ALTERNATION across straight-quote
+     occurrences outside math AND not preceded by an odd number of backslashes.
+     Even-index -> U+201C (left/opening), odd-index -> U+201D (right/closing).
+
+     CRITICAL (round-1 audit): skips backslash-escaped quotes because in LaTeX,
+     backslash-doublequote-letter is the umlaut command (e.g. renders u-umlaut);
+     auto-replacing would corrupt it. Count semantic preserved (count_char on
+     strip_math_segments output, matches pre-v27.0.8 behaviour); fix-set is the
+     corrective action and may be smaller than count when escapes/math are
+     present. Message inlined per round-3 v27.0.6 pattern. *)
+  let is_escaped_quote s i =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (i - 1) 0 land 1 = 1
+  in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let n = String.length s in
+    let rec collect i acc =
+      if i >= n then List.rev acc
+      else if s.[i] = '"' && outside i && not (is_escaped_quote s i) then
+        collect (i + 1) (i :: acc)
+      else collect (i + 1) acc
+    in
+    let offsets = collect 0 [] in
+    List.mapi
+      (fun idx off ->
+        let replacement =
+          if idx mod 2 = 0 then "\xe2\x80\x9c" else "\xe2\x80\x9d"
+        in
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) replacement)
+      offsets
+  in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_char s '"' in
+    let stripped = strip_math_segments s in
+    let cnt = count_char stripped '"' in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-001" ~severity:Error
-           ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
-           ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-001" ~severity:Error
+             ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-001" ~severity:Error
+             ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-001"; run; languages = [] }

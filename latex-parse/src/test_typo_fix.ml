@@ -490,4 +490,86 @@ let () =
         (does_not_fire "TYPO-005" "Already correct \\dots usage.")
         (tag ^ ": clean source no fire"));
 
+  (* v27.0.8 batch: TYPO-001 fix producer (ASCII straight quote -> curly via
+     alternation, math-aware). *)
+  run "TYPO-001 fix: matched pair becomes curly-pair via alternation"
+    (fun tag ->
+      let src = "Said \"hello\" to her" in
+      let edits = fix_edits "TYPO-001" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
+        (tag ^ ": even-idx -> opening, odd-idx -> closing"));
+
+  run "TYPO-001 fix: two matched pairs alternate correctly" (fun tag ->
+      let src = "\"a\" and \"b\"" in
+      let edits = fix_edits "TYPO-001" src in
+      expect
+        (List.length edits = 4
+        && apply_all src edits
+           = "\xe2\x80\x9ca\xe2\x80\x9d and \xe2\x80\x9cb\xe2\x80\x9d")
+        (tag ^ ": four edits, alternating opening/closing"));
+
+  run "TYPO-001 fix: skips quotes inside $..$ math" (fun tag ->
+      (* Quotes inside math (rare but possible in e.g. \text{}) are preserved by
+         the math-range filter. *)
+      let src = "Outside \"q1\" and $\"math-q\"$ then \"q2\"" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Outside \xe2\x80\x9cq1\xe2\x80\x9d and $\"math-q\"$ then \
+              \xe2\x80\x9cq2\xe2\x80\x9d")
+        (tag ^ ": four outside-math edits, math quotes preserved"));
+
+  run "TYPO-001 does not fire when quotes only in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-001" "$\"x\" + \"y\"$")
+        (tag ^ ": math-only quotes suppressed"));
+
+  run "TYPO-001 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-001" "Already \xe2\x80\x9ccurly\xe2\x80\x9d")
+        (tag ^ ": clean curly source no fire"));
+
+  run "TYPO-001 fix: skips backslash-escaped quotes (round-1 audit)" (fun tag ->
+      (* LaTeX backslash-doublequote forms the umlaut command (renders
+         u-umlaut); auto-replacing would corrupt the umlaut. The fix must skip
+         backslash-escaped quotes entirely. Source has 2 real text quotes around
+         the second word and one escaped pair inside the umlaut ligature; fix
+         should emit edits only for the 2 real text quotes. *)
+      let src = "Caf\\\"e is \"f\\\"oo\" and bar" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 2
+        && out = "Caf\\\"e is \xe2\x80\x9cf\\\"oo\xe2\x80\x9d and bar")
+        (tag ^ ": umlaut command preserved, real quotes fixed"));
+
+  run "TYPO-001 fix: escapes interleaved with real quotes preserve alternation"
+    (fun tag ->
+      (* Round-2 audit: escaped quote-commands (umlauts) should not consume an
+         alternation slot. Source has 3 escaped umlauts (skipped) and 2 real
+         quote pairs; alternation runs only over the real quotes. *)
+      let src = "Caf\\\"e \"x\" and na\\\"\\\"ve \"y\"" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Caf\\\"e \xe2\x80\x9cx\xe2\x80\x9d and na\\\"\\\"ve \
+              \xe2\x80\x9cy\xe2\x80\x9d")
+        (tag ^ ": umlauts preserved, alternation runs only over real quotes"));
+
+  run "TYPO-001 fix: odd quote count gives best-effort alternation" (fun tag ->
+      (* 3 quotes: open, close, open (last unmatched). *)
+      let src = "\"a\"b\"c" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 3
+        && out = "\xe2\x80\x9ca\xe2\x80\x9db\xe2\x80\x9cc")
+        (tag ^ ": alternation despite mismatch"));
+
   finalise "typo-fix"

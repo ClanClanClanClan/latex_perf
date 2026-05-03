@@ -2,6 +2,54 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.8] — 2026-05-03
+
+**TYPO-001 fix producer (ASCII straight quote → curly,
+math-aware via alternation).**  Closes the v27.0.5 / v27.0.6
+deferred TYPO-001 deferral.  Disambiguation: index-based
+ALTERNATION across straight-quote occurrences outside math —
+even-index → U+201C (left/opening), odd-index → U+201D (right/
+closing).  Works for well-formed documents with matched pairs
+("hello"-style → curly-pair); for odd-count input, gives best-
+effort with parity-determined trailing quote.
+
+Reuses v27.0.6 `find_math_ranges` helper.  Count semantic
+preserved: count_char on strip_math_segments output (math-mode
+quotes don't fire, same pre-v27.0.8 behaviour); fix emits at
+original-string offsets through find_math_ranges.
+
+**With this cycle, all three v27.0.5 deferrals are resolved:**
+- TYPO-004 (curly-quote conversion) — shipped v27.0.6
+- TYPO-005 (`...` → `\dots`) — shipped v27.0.7
+- TYPO-001 (ASCII quote → curly) — shipped v27.0.8
+
+**36 fix-producing rules** (was 35; +1: TYPO-001).
+
+### Counts (v27.0.8 vs v27.0.7)
+
+- 660 catalogued rules (unchanged).
+- **36 fix-producing rules** (was 35; +1: TYPO-001 with
+  alternation + math filtering).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases in `latex-parse/src/test_typo_fix.ml`:
+- `matched pair becomes curly-pair via alternation`
+- `two matched pairs alternate correctly` (4 quotes → 4 edits)
+- `skips quotes inside $..$ math`
+- `does not fire when quotes only in math`
+- `does not fire on clean source`
+
+56 → 61 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.7`.
+
 ## [v27.0.7] — 2026-05-03
 
 **TYPO-005 fix producer (`...` → `\dots`, math-aware).**  Reuses

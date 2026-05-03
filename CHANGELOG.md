@@ -2,6 +2,58 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.10] — 2026-05-03
+
+**TYPO-038 audit refinement.**  Round-1 audit of v27.0.9 caught
+two correctness issues in the `already_wrapped` prefix-byte
+check:
+
+1. **False-positive**: `Send to mailto:alice@x.com` (literal text
+   "mailto:" without a `\href`) had its email skipped, because
+   the check matched the bare `mailto:` prefix.
+2. **False-negative** for what we want to FIX: `\textbf{label}{a@b.io}`
+   had its email skipped, because the check matched the bare
+   `}{` prefix without verifying it was inside a `\href`.
+
+Plus the squash-merge of PR #340 dropped the round-1 integration
+test (commit `1026e1b`) — third recurrence of
+`feedback_squash_merge_drops_late_commits.md`.
+
+**Fix**: replace the prefix-byte check with `find_href_mailto_ranges`,
+which scans for the literal `\href{mailto:` opener and walks to
+the matching `}{...}` closer.  Only emails whose start offset
+falls within a complete `\href{mailto:...}{...}` range are
+treated as already-wrapped.
+
+Restored the dropped integration test plus added two new tests
+covering the false-positive and false-negative cases.
+
+### Counts (v27.0.10 vs v27.0.9)
+
+- 660 catalogued rules (unchanged).
+- **37 fix-producing rules** (unchanged — refinement to existing
+  TYPO-038, not a new producer).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+3 new test cases (1 restored + 2 new):
+- `math + wrapped + plain integration` (restored from `1026e1b`)
+- `literal mailto: text is NOT skipped` (round-1 false-positive)
+- `non-href two-arg command does NOT mask email` (round-1
+  false-negative)
+
+67 → 70 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.9` (corpus has no
+edge cases that exercise the audit findings; refinement is a
+correctness improvement that doesn't affect typical inputs).
+
 ## [v27.0.9] — 2026-05-03
 
 **TYPO-038 fix producer (email → `\href{mailto:...}{...}`,

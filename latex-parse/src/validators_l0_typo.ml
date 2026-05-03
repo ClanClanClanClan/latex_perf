@@ -1812,10 +1812,30 @@ let r_typo_039 : rule =
         outside_math start_offset && not (already_wrapped s start_offset))
       (collect_matches s)
   in
+  (* Round-2 audit fix: the URL regex `https?://[^ \t\n}]+` is permissive on
+     trailing punctuation (period, comma, semicolon, colon, bang, right-paren),
+     so a URL followed by a sentence-ending mark would have the punctuation
+     absorbed into the wrap (e.g. `Visit https://x.com.` would become `Visit
+     \url{https://x.com.}` with the period as part of the URL). Trim trailing
+     punctuation from the fix span; `?` is intentionally NOT trimmed because it
+     commonly starts a URL query string. *)
+  let trim_trailing_punct s start_offset end_offset =
+    let punct = [ ','; '.'; ';'; ':'; '!'; ')' ] in
+    let e = ref end_offset in
+    while !e > start_offset && List.mem s.[!e - 1] punct do
+      decr e
+    done;
+    !e
+  in
   let mk_fix_edits s =
     List.map
-      (fun (start_offset, end_offset, url) ->
-        Cst_edit.replace ~start_offset ~end_offset ("\\url{" ^ url ^ "}"))
+      (fun (start_offset, end_offset, _url) ->
+        let trimmed_end = trim_trailing_punct s start_offset end_offset in
+        let trimmed_url =
+          String.sub s start_offset (trimmed_end - start_offset)
+        in
+        Cst_edit.replace ~start_offset ~end_offset:trimmed_end
+          ("\\url{" ^ trimmed_url ^ "}"))
       (unwrapped_matches s)
   in
   let run s =

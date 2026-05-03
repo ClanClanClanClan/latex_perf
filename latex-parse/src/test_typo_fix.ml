@@ -598,4 +598,46 @@ let () =
         (does_not_fire "TYPO-038" "Already wrapped: \\href{mailto:x@y.z}{x@y.z}")
         (tag ^ ": pre-wrapped email shouldn't fire"));
 
+  run "TYPO-038 fix: math + wrapped + plain integration" (fun tag ->
+      (* Restored from v27.0.9 round-1 audit (commit 1026e1b) which the
+         squash-merge of PR #340 dropped per
+         feedback_squash_merge_drops_late_commits.md. *)
+      let src =
+        "Plain a@b.io, math $x@y.com$ and \\href{mailto:c@d.org}{c@d.org}."
+      in
+      let edits = fix_edits "TYPO-038" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out
+           = "Plain \\href{mailto:a@b.io}{a@b.io}, math $x@y.com$ and \
+              \\href{mailto:c@d.org}{c@d.org}.")
+        (tag ^ ": only plain email wrapped; math + wrapped preserved"));
+
+  run "TYPO-038 fix: literal mailto: text is NOT skipped (round-1 audit fix)"
+    (fun tag ->
+      (* Pre-v27.0.10 prefix-byte check treated any email preceded by literal
+         `mailto:` as wrapped, even in plain text. v27.0.10 uses
+         find_href_mailto_ranges so only emails inside real
+         \\href{mailto:...}{...} constructs are skipped. *)
+      let src = "Send to mailto:alice@x.com today" in
+      let edits = fix_edits "TYPO-038" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "Send to mailto:\\href{mailto:alice@x.com}{alice@x.com} today"
+        )
+        (tag ^ ": email after literal mailto: text gets wrapped"));
+
+  run "TYPO-038 fix: non-href two-arg command does NOT mask email" (fun tag ->
+      (* Pre-v27.0.10 prefix-byte check treated any email preceded by `}{` as
+         wrapped. v27.0.10 only skips inside real \\href{mailto:...}{...}. *)
+      let src = "\\textbf{label}{a@b.io}" in
+      let edits = fix_edits "TYPO-038" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "\\textbf{label}{\\href{mailto:a@b.io}{a@b.io}}")
+        (tag ^ ": non-href command does not mask"));
+
   finalise "typo-fix"

@@ -1313,27 +1313,56 @@ let r_typo_038 : rule =
     in
     loop 0 []
   in
-  (* Skip emails already inside a backslash-href-mailto wrapper. Two positions:
-     the mailto: copy (preceded by "mailto:") and the display copy (preceded by
-     "}{"). Detect by literal byte-prefix check immediately before the match
-     start. *)
-  let already_wrapped s start_offset =
-    let mailto_prefix = "mailto:" in
-    let mp_len = String.length mailto_prefix in
-    let display_prefix = "}{" in
-    let dp_len = String.length display_prefix in
-    start_offset >= mp_len
-    && String.sub s (start_offset - mp_len) mp_len = mailto_prefix
-    || start_offset >= dp_len
-       && String.sub s (start_offset - dp_len) dp_len = display_prefix
+  (* v27.0.10 round-1 audit refinement: replace prefix-byte check with proper
+     \href{mailto:...}{...} range detection. The pre-v27.0.10 check used literal
+     `mailto:` and `}{` prefixes which yielded: - false-positive: "Use
+     mailto:alice@x.com" (literal text) skipped - false-negative:
+     \foo{bar}{alice@x.com} treated as wrapped Both are now correctly handled by
+     find_href_mailto_ranges, which scans for the literal \href{mailto: opener
+     and walks to the matching }{...} closer. Email matches whose start offset
+     falls within any returned range are skipped — the only emails that register
+     as "already wrapped" are ones genuinely inside a complete
+     \href{mailto:...}{...} construct. *)
+  let find_href_mailto_ranges s =
+    let n = String.length s in
+    let opener = "\\href{mailto:" in
+    let opener_len = String.length opener in
+    let ranges = ref [] in
+    let i = ref 0 in
+    while !i + opener_len <= n do
+      if String.sub s !i opener_len = opener then (
+        (* Walk to closing } of URL slot, then expect {, then walk to closing }
+           of display slot. *)
+        let j = ref (!i + opener_len) in
+        while !j < n && s.[!j] <> '}' do
+          incr j
+        done;
+        if !j < n - 1 && s.[!j + 1] = '{' then (
+          let k = ref (!j + 2) in
+          while !k < n && s.[!k] <> '}' do
+            incr k
+          done;
+          if !k < n then (
+            ranges := (!i, !k + 1) :: !ranges;
+            i := !k + 1)
+          else incr i)
+        else incr i)
+      else incr i
+    done;
+    List.rev !ranges
+  in
+  let in_href_range ranges off =
+    List.exists (fun (a, b) -> a <= off && off < b) ranges
   in
   let unwrapped_matches s =
     let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
+    let href_ranges = find_href_mailto_ranges s in
+    let outside_math off = not (is_in_math_range math off) in
+    let outside_href off = not (in_href_range href_ranges off) in
     let matches = collect_matches s in
     List.filter
       (fun (start_offset, _, _) ->
-        outside start_offset && not (already_wrapped s start_offset))
+        outside_math start_offset && outside_href start_offset)
       matches
   in
   let mk_fix_edits s =

@@ -490,4 +490,47 @@ let () =
         (does_not_fire "TYPO-005" "Already correct \\dots usage.")
         (tag ^ ": clean source no fire"));
 
+  (* v27.0.8 batch: TYPO-001 fix producer (ASCII straight quote -> curly via
+     alternation, math-aware). *)
+  run "TYPO-001 fix: matched pair becomes curly-pair via alternation"
+    (fun tag ->
+      let src = "Said \"hello\" to her" in
+      let edits = fix_edits "TYPO-001" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Said \xe2\x80\x9chello\xe2\x80\x9d to her")
+        (tag ^ ": even-idx -> opening, odd-idx -> closing"));
+
+  run "TYPO-001 fix: two matched pairs alternate correctly" (fun tag ->
+      let src = "\"a\" and \"b\"" in
+      let edits = fix_edits "TYPO-001" src in
+      expect
+        (List.length edits = 4
+        && apply_all src edits
+           = "\xe2\x80\x9ca\xe2\x80\x9d and \xe2\x80\x9cb\xe2\x80\x9d")
+        (tag ^ ": four edits, alternating opening/closing"));
+
+  run "TYPO-001 fix: skips quotes inside $..$ math" (fun tag ->
+      (* Quotes inside math (rare but possible in e.g. \text{}) are preserved by
+         the math-range filter. *)
+      let src = "Outside \"q1\" and $\"math-q\"$ then \"q2\"" in
+      let edits = fix_edits "TYPO-001" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 4
+        && out
+           = "Outside \xe2\x80\x9cq1\xe2\x80\x9d and $\"math-q\"$ then \
+              \xe2\x80\x9cq2\xe2\x80\x9d")
+        (tag ^ ": four outside-math edits, math quotes preserved"));
+
+  run "TYPO-001 does not fire when quotes only in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-001" "$\"x\" + \"y\"$")
+        (tag ^ ": math-only quotes suppressed"));
+
+  run "TYPO-001 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-001" "Already \xe2\x80\x9ccurly\xe2\x80\x9d")
+        (tag ^ ": clean curly source no fire"));
+
   finalise "typo-fix"

@@ -4,14 +4,52 @@ open Validators_common
    Warning. *)
 
 let r_typo_001 : rule =
+  (* v27.0.8: math-aware fix producer for ASCII straight quote -> curly.
+     Disambiguation strategy: index-based ALTERNATION across straight- quote
+     occurrences outside math. Even-index -> U+201C (left/ opening), odd-index
+     -> U+201D (right/closing).
+
+     Works for well-formed documents with matched pairs (e.g. a quoted phrase
+     becomes a curly-pair). For odd-count input, gives best- effort: trailing
+     unmatched quote becomes opening or closing depending on parity.
+
+     Count semantic preserved: count_char on strip_math_segments output. Fix
+     emits at original-string offsets through find_math_ranges. Message inlined
+     per round-3 v27.0.6 pattern (validate_messages extractor doesn't follow
+     let-bindings). *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let n = String.length s in
+    let rec collect i acc =
+      if i >= n then List.rev acc
+      else if s.[i] = '"' && outside i then collect (i + 1) (i :: acc)
+      else collect (i + 1) acc
+    in
+    let offsets = collect 0 [] in
+    List.mapi
+      (fun idx off ->
+        let replacement =
+          if idx mod 2 = 0 then "\xe2\x80\x9c" else "\xe2\x80\x9d"
+        in
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) replacement)
+      offsets
+  in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_char s '"' in
+    let stripped = strip_math_segments s in
+    let cnt = count_char stripped '"' in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-001" ~severity:Error
-           ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
-           ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-001" ~severity:Error
+             ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-001" ~severity:Error
+             ~message:{|ASCII straight quotes (" … ") must be curly quotes|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-001"; run; languages = [] }

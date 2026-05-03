@@ -572,4 +572,30 @@ let () =
         && out = "\xe2\x80\x9ca\xe2\x80\x9db\xe2\x80\x9cc")
         (tag ^ ": alternation despite mismatch"));
 
+  (* v27.0.9 batch: TYPO-038 fix producer (email -> href, math-aware). *)
+  run "TYPO-038 fix: bare email becomes \\href{mailto:...}{...}" (fun tag ->
+      let src = "Contact: alice@example.com for more." in
+      let edits = fix_edits "TYPO-038" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits
+           = "Contact: \\href{mailto:alice@example.com}{alice@example.com} for \
+              more.")
+        (tag ^ ": email wrapped with mailto href"));
+
+  run "TYPO-038 fix: two emails get two wraps" (fun tag ->
+      let src = "Email a@b.io or c@d.org now." in
+      let edits = fix_edits "TYPO-038" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits
+           = "Email \\href{mailto:a@b.io}{a@b.io} or \
+              \\href{mailto:c@d.org}{c@d.org} now.")
+        (tag ^ ": two distinct emails, two non-overlapping wraps"));
+
+  run "TYPO-038 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-038" "Already wrapped: \\href{mailto:x@y.z}{x@y.z}")
+        (tag ^ ": pre-wrapped email shouldn't fire"));
+
   finalise "typo-fix"

@@ -2,6 +2,38 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.12] — 2026-05-03
+
+**TYPO-029 fix producer (NBSP after `\ref`, math-aware).**  Pattern
+`\ref{X} y` (regular space between `}` and a letter) is rewritten
+to `\ref{X}~y`.  Reuses v27.0.6 `find_math_ranges` helper for
+math-aware filtering.
+
+**39 fix-producing rules** (was 38; +1: TYPO-029).
+
+### Counts (v27.0.12 vs v27.0.11)
+
+- 660 catalogued rules (unchanged).
+- **39 fix-producing rules** (was 38; +1: TYPO-029).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+4 new test cases:
+- `space after \ref{X} becomes ~` (positive)
+- `two \ref sites get two replacements`
+- `does not fire when ~ already present`
+- `does not fire on \ref followed by punctuation`
+
+74 → 78 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.11`.
+
 ## [v27.0.11] — 2026-05-03
 
 **TYPO-034 fix producer (delete spurious space before `\footnote`,

@@ -1097,21 +1097,47 @@ let r_typo_028 : rule =
 
 (* TYPO-029: Non-breaking space after \ref missing *)
 let r_typo_029 : rule =
+  (* v27.0.12: math-aware fix producer. Pattern `\ref{X} y` (regular space
+     between `}` and a letter) is rewritten to `\ref{X}~y`. Match shape (regex):
+     `\ref{[^}]*} [a-zA-Z]`. The space sits at match_end - 2 (one byte before
+     the trailing letter). Math-aware via find_math_ranges (defensive: \ref in
+     math is unusual but skip). Message inlined per round-3 v27.0.6 pattern. *)
   let re = Re_compat.regexp {|\\ref{[^}]*} [a-zA-Z]|} in
+  let collect_match_ends s =
+    let rec loop i acc =
+      try
+        let mr, _ = Re_compat.search_forward re s i in
+        let mend = Re_compat.match_end mr in
+        loop mend (mend :: acc)
+      with Not_found -> List.rev acc
+    in
+    loop 0 []
+  in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    List.filter_map
+      (fun mend ->
+        let space_off = mend - 2 in
+        if outside space_off then
+          Some
+            (Cst_edit.replace ~start_offset:space_off
+               ~end_offset:(space_off + 1) "~")
+        else None)
+      (collect_match_ends s)
+  in
   let run s =
-    let cnt = ref 0 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         incr cnt;
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-029" ~severity:Info
-           ~message:{|Non‑breaking space after \ref missing|} ~count:!cnt)
+    let cnt = List.length (collect_match_ends s) in
+    if cnt > 0 then
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-029" ~severity:Info
+             ~message:{|Non‑breaking space after \ref missing|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-029" ~severity:Info
+             ~message:{|Non‑breaking space after \ref missing|} ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-029"; run; languages = [] }

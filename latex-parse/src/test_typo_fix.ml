@@ -673,4 +673,33 @@ let () =
         (does_not_fire "TYPO-034" "No bad space before\\footnote{ok}.")
         (tag ^ ": no space before footnote, no fire"));
 
+  (* v27.0.12 batch: TYPO-029 fix producer (NBSP after \\ref, math-aware). *)
+  run "TYPO-029 fix: space after \\ref{X} becomes ~" (fun tag ->
+      let src = "See \\ref{eq:1} for details." in
+      let edits = fix_edits "TYPO-029" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "See \\ref{eq:1}~for details.")
+        (tag ^ ": space replaced with NBSP"));
+
+  run "TYPO-029 fix: two \\ref sites get two replacements" (fun tag ->
+      let src = "Check \\ref{a} and \\ref{b} together." in
+      let edits = fix_edits "TYPO-029" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Check \\ref{a}~and \\ref{b}~together.")
+        (tag ^ ": both spaces replaced"));
+
+  run "TYPO-029 does not fire when ~ already present" (fun tag ->
+      expect
+        (does_not_fire "TYPO-029" "See \\ref{eq:1}~for details.")
+        (tag ^ ": pre-NBSP source no fire"));
+
+  run "TYPO-029 does not fire on \\ref followed by punctuation" (fun tag ->
+      (* Pattern requires letter after the space, so \\ref{X}, doesn't match
+         (correctly — comma after \\ref doesn't need NBSP). *)
+      expect
+        (does_not_fire "TYPO-029" "See \\ref{eq:1}, also \\ref{eq:2}.")
+        (tag ^ ": comma/period after \\ref doesn't fire"));
+
   finalise "typo-fix"

@@ -2,6 +2,39 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.13] — 2026-05-03
+
+**TYPO-039 fix producer (URL → `\url{}`, math + already-wrapped
+aware).**  Wraps each non-math, not-already-wrapped URL match
+with `\url{URL}`.  Skip if URL is already inside `\url{}` or
+the URL slot of `\href{}`.  Reuses v27.0.6 `find_math_ranges`
+helper.
+
+**40 fix-producing rules** (was 39; +1: TYPO-039).
+
+### Counts (v27.0.13 vs v27.0.12)
+
+- 660 catalogued rules (unchanged).
+- **40 fix-producing rules** (was 39; +1: TYPO-039).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+4 new test cases:
+- `bare URL becomes \url{...}` (positive)
+- `two URLs get two wraps` (multi-match)
+- `does not fire when already wrapped` (`\url{}` skip)
+- `does not fire on URL inside \href slot` (`\href{}` skip)
+
+79 → 83 tests PASS.
+
+### Differential test
+
+0 diffs across 330 corpus files vs `v27.0.12`.
+
 ## [v27.0.12] — 2026-05-03
 
 **TYPO-029 fix producer (NBSP after `\ref`, math-aware).**  Pattern

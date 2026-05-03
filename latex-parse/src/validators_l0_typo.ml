@@ -1778,20 +1778,53 @@ let r_typo_063 : rule =
 
 (* URL split across lines without \url{} *)
 let r_typo_039 : rule =
+  (* v27.0.13: math-aware fix producer. Wraps each unwrapped non-math URL match
+     with \url{URL}. Skip URLs already inside \url{} or the URL slot of \href{}.
+     Math-aware via find_math_ranges (URLs in math are extremely unusual but
+     skip defensively). Message inlined per round-3 v27.0.6 pattern. *)
   let re = Re_compat.regexp "https?://[^ \t\n}]+" in
-  let run s =
+  let collect_matches s =
     let rec loop i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
-      with Not_found -> acc
+        let mr, pos = Re_compat.search_forward re s i in
+        let mend = Re_compat.match_end mr in
+        let url = String.sub s pos (mend - pos) in
+        loop mend ((pos, mend, url) :: acc)
+      with Not_found -> List.rev acc
     in
-    let cnt = loop 0 0 in
+    loop 0 []
+  in
+  let already_wrapped s start_offset =
+    let url_prefix = "\\url{" in
+    let up_len = String.length url_prefix in
+    let href_prefix = "\\href{" in
+    let hp_len = String.length href_prefix in
+    start_offset >= up_len
+    && String.sub s (start_offset - up_len) up_len = url_prefix
+    || start_offset >= hp_len
+       && String.sub s (start_offset - hp_len) hp_len = href_prefix
+  in
+  let unwrapped_matches s =
+    let math = find_math_ranges s in
+    let outside_math off = not (is_in_math_range math off) in
+    List.filter
+      (fun (start_offset, _, _) ->
+        outside_math start_offset && not (already_wrapped s start_offset))
+      (collect_matches s)
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun (start_offset, end_offset, url) ->
+        Cst_edit.replace ~start_offset ~end_offset ("\\url{" ^ url ^ "}"))
+      (unwrapped_matches s)
+  in
+  let run s =
+    let cnt = List.length (unwrapped_matches s) in
     if cnt > 0 then
+      let fix = mk_fix_edits s in
       Some
-        (mk_result ~id:"TYPO-039" ~severity:Info
-           ~message:"URL split across lines without \\url{}" ~count:cnt)
+        (mk_result_with_fix ~id:"TYPO-039" ~severity:Info
+           ~message:"URL split across lines without \\url{}" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-039"; run; languages = [] }

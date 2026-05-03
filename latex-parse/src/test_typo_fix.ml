@@ -715,4 +715,65 @@ let () =
         && out = "$x = \\ref{eq:1} y$ then \\ref{eq:2}~again.")
         (tag ^ ": math \\ref preserved, text \\ref gets NBSP"));
 
+  (* v27.0.13 batch: TYPO-039 fix producer (URL -> \\url{}, math + already-
+     wrapped aware). *)
+  run "TYPO-039 fix: bare URL becomes \\url{...}" (fun tag ->
+      let src = "Visit https://example.com for more." in
+      let edits = fix_edits "TYPO-039" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Visit \\url{https://example.com} for more.")
+        (tag ^ ": URL wrapped"));
+
+  run "TYPO-039 fix: two URLs get two wraps" (fun tag ->
+      let src = "Sites: http://a.io and https://b.org now." in
+      let edits = fix_edits "TYPO-039" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits
+           = "Sites: \\url{http://a.io} and \\url{https://b.org} now.")
+        (tag ^ ": two URLs wrapped"));
+
+  run "TYPO-039 does not fire when already wrapped" (fun tag ->
+      expect
+        (does_not_fire "TYPO-039" "See \\url{https://example.com}.")
+        (tag ^ ": pre-wrapped URL doesn't fire"));
+
+  run "TYPO-039 does not fire on URL inside \\href slot" (fun tag ->
+      expect
+        (does_not_fire "TYPO-039" "Click \\href{https://example.com}{here}.")
+        (tag ^ ": \\href URL slot is wrapping"));
+
+  run "TYPO-039 fix: skips URL inside $..$ math (round-1 audit)" (fun tag ->
+      (* URLs in math are extremely unusual but math-aware filtering keeps the
+         producer consistent with v27.0.6+ producers. *)
+      let src = "Math: $f(x) = http://no.real$ and https://x.io plain." in
+      let edits = fix_edits "TYPO-039" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "Math: $f(x) = http://no.real$ and \\url{https://x.io} plain."
+        )
+        (tag ^ ": math URL preserved, plain URL wrapped"));
+
+  run "TYPO-039 fix: math + wrapped + plain integration (round-1 audit)"
+    (fun tag ->
+      (* All four conditions in one input: - plain URL (should wrap) - URL
+         inside \\url{} (skip) - URL inside \\href{} URL slot (skip) - URL
+         inside math (skip) Note: the URL regex is permissive on trailing
+         punctuation, so use space-delimited URLs to keep the wrap span
+         clean. *)
+      let src =
+        "Plain http://a.io wrapped \\url{http://b.io} href \
+         \\href{http://c.io}{c} and math $http://d.io$"
+      in
+      let edits = fix_edits "TYPO-039" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out
+           = "Plain \\url{http://a.io} wrapped \\url{http://b.io} href \
+              \\href{http://c.io}{c} and math $http://d.io$")
+        (tag ^ ": only plain URL wrapped"));
+
   finalise "typo-fix"

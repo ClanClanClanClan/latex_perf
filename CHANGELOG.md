@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.15] — 2026-05-04
+
+**TYPO-042 fix producer (collapse `??...?` to single `?`,
+math-aware).** Mirrors TYPO-027 (`!!!` → `!`).  Each maximal run of
+two-or-more consecutive `?` is replaced with a single `?` via
+`find_consecutive_runs s '?' ~min_len:2`.  Math-aware on fix offsets
+only; the count uses `count_substring s "??"` (overlapping semantics)
+so the differential output vs v27.0.14 is unchanged for non-math
+input.
+
+**42 fix-producing rules** (was 41; +1: TYPO-042).
+
+### Counts (v27.0.15 vs v27.0.14)
+
+- 660 catalogued rules (unchanged).
+- **42 fix-producing rules** (was 41; +1: TYPO-042).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- `collapses ?? to single ?` (positive)
+- `collapses arbitrary-length run to single ?` (5 question marks → 1)
+- `two disjoint runs produce two edits` (multi-match)
+- `does not fire on single ?` (negative)
+- `skips ?? inside $..$ math` (math-aware audit)
+
+93 → 98 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.14 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.14] — 2026-05-03
 
 **TYPO-032 fix producer (delete comma before `\cite`, math-aware on

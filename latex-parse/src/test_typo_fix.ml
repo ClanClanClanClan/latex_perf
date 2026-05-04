@@ -857,4 +857,43 @@ let () =
         && out = "text $a, \\cite{m}$ and b \\cite{plain}")
         (tag ^ ": math comma preserved, plain comma deleted"));
 
+  (* v27.0.15: TYPO-042 fix producer (collapse `??...?` runs to single `?`). *)
+  run "TYPO-042 fix: collapses ?? to single ?" (fun tag ->
+      let src = "What?? Really" in
+      let edits = fix_edits "TYPO-042" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "What? Really")
+        (tag ^ ": double question collapsed"));
+
+  run "TYPO-042 fix: collapses arbitrary-length run to single ?" (fun tag ->
+      let src = "Wow????? amazing" in
+      let edits = fix_edits "TYPO-042" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Wow? amazing")
+        (tag ^ ": run of 5 question marks collapsed"));
+
+  run "TYPO-042 fix: two disjoint runs produce two edits" (fun tag ->
+      let src = "What?? Where???" in
+      let edits = fix_edits "TYPO-042" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "What? Where?")
+        (tag ^ ": two runs collapsed independently"));
+
+  run "TYPO-042 does not fire on single ?" (fun tag ->
+      expect
+        (does_not_fire "TYPO-042" "Really? OK.")
+        (tag ^ ": one question mark, no fire"));
+
+  run "TYPO-042 fix: skips ?? inside $..$ math (audit-aware)" (fun tag ->
+      (* `??` inside math is unusual but math-aware filtering keeps the producer
+         consistent with v27.0.6+ producers. The fix offset is suppressed; the
+         count still reflects the match (no math filter on count, by design —
+         see comment on r_typo_042 for the 0-differential rationale). *)
+      let src = "math $a ?? b$ then plain ?? end" in
+      let edits = fix_edits "TYPO-042" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1 && out = "math $a ?? b$ then plain ? end")
+        (tag ^ ": math ?? preserved, plain ?? collapsed"));
+
   finalise "typo-fix"

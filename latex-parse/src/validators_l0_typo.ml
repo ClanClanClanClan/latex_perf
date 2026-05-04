@@ -1493,14 +1493,37 @@ let r_typo_041 : rule =
   in
   { id = "TYPO-041"; run; languages = [] }
 
-(* Multiple consecutive question marks ?? *)
+(* TYPO-042: Multiple consecutive question marks. v27.0.15: math-aware fix
+   producer mirroring TYPO-027 (`!!!` -> `!`). Collapse each maximal run of
+   `??...?` to a single `?` via `find_consecutive_runs s '?' ~min_len:2`.
+   Math-aware on fix offsets only; the count uses `count_substring s "??"`
+   (overlapping semantics) so the differential output vs v27.0.14 is unchanged
+   for non-math input. *)
 let r_typo_042 : rule =
   let run s =
     let cnt = count_substring s "??" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-042" ~severity:Info
-           ~message:"Multiple consecutive question marks ??" ~count:cnt)
+      let math = find_math_ranges s in
+      let runs = find_consecutive_runs s '?' ~min_len:2 in
+      let fix_runs =
+        List.filter
+          (fun (start_offset, _) -> not (is_in_math_range math start_offset))
+          runs
+      in
+      let fix =
+        List.map
+          (fun (start_offset, end_offset) ->
+            Cst_edit.replace ~start_offset ~end_offset "?")
+          fix_runs
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-042" ~severity:Info
+             ~message:"Multiple consecutive question marks ??" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-042" ~severity:Info
+             ~message:"Multiple consecutive question marks ??" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-042"; run; languages = [] }

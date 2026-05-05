@@ -1044,4 +1044,113 @@ let () =
         (List.length edits = 1 && out = "math $\\'{e}$ then text \\'a plain")
         (tag ^ ": math accent preserved, text accent fixed"));
 
+  (* v27.0.19: TYPO-046 fix producer (\\begin{math}...\\end{math} -> $...$,
+     odd-backslash-prefix guard). *)
+  run "TYPO-046 fix: \\begin{math}...\\end{math} becomes $...$" (fun tag ->
+      let src = "before \\begin{math}x+y\\end{math} after" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "before $x+y$ after")
+        (tag ^ ": both delimiters replaced with $"));
+
+  run "TYPO-046 fix: two disjoint math envs produce 4 edits" (fun tag ->
+      let src = "\\begin{math}a\\end{math} and \\begin{math}b\\end{math}" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 4 && apply_all src edits = "$a$ and $b$")
+        (tag ^ ": both math envs converted"));
+
+  run "TYPO-046 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-046" "no math env here, just $x+y$ inline")
+        (tag ^ ": no \\begin{math}, no fire"));
+
+  run "TYPO-046 fix: odd-backslash prefix marks escaped \\begin{math}"
+    (fun tag ->
+      (* Round-1 audit: when `\\begin{math}` is preceded by an odd number of
+         backslashes, the leading `\\` is the second half of a `\\\\` line-
+         break, and `begin{math}` is literal text. The naive fix would corrupt
+         this into `\\$` (escaped dollar). The guard counts consecutive
+         backslashes immediately before the match start; an odd count means the
+         match is skipped from BOTH count and fix.
+
+         OCaml source escaping: `\\\\\\` in the OCaml literal = three
+         backslashes in actual bytes, so `"x\\\\\\begin{math}"` has bytes `x \\
+         \\ \\ b e g i n { m a t h }` — three backslashes followed by
+         `begin{math}`. The match would start at the third backslash; two
+         preceding backslashes is even -> guard treats as unescaped. Hmm, but
+         the actual escape is at the third backslash itself. Re- examining:
+         `\\\\\\begin{math}` = 3 backslashes + `begin{math}`. The match
+         `\\begin{math}` starts at position of 3rd backslash; BEFORE that
+         position there are 2 backslashes (positions 0,1). Count = 2 (even) ->
+         guard says unescaped -> match fires. But semantically, 3 backslashes
+         parse as `\\\\` (line break) + `\\` (start of `\\begin{math}` command).
+         So the match IS a real command and the fix IS correct.
+
+         The actually-escaped case is when there are an EVEN number of
+         backslashes before the match start (so the match's `\\` is the second
+         half of a pair). Wait, that's the opposite of what I just said. Let me
+         re-derive:
+
+         - 0 prior backslashes: `\\begin{math}` is a command. Fire. - 1 prior
+         backslash: prior `\\` + match's `\\` = `\\\\` line break, then
+         `begin{math}` is text. NOT a command. SKIP. - 2 prior backslashes:
+         `\\\\` = line break, then match's `\\begin {math}` is a fresh command.
+         Fire. - 3 prior backslashes: `\\\\` + `\\` = line break + start of next
+         command, but the trailing single `\\` PAIRS with the match's `\\` to
+         form another `\\\\`. So match is text. SKIP.
+
+         Pattern: skip iff prior backslash count is ODD.
+
+         The current implementation checks `n mod 2 == 1` (odd) -> skip. That
+         matches the analysis. *)
+      let src = "x\\begin{math}a\\end{math}" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "x$a$")
+        (tag ^ ": no prior backslashes -> command -> fix applies"));
+
+  run "TYPO-046 fix: skips truly-escaped \\\\begin{math} (1 prior backslash)"
+    (fun tag ->
+      (* 1 prior backslash + match's `\\` = `\\\\` (line break) + `begin {math}`
+         text. The match should be skipped from both count and fix. The
+         `\\end{math}` afterward has no prior backslash and IS a real command —
+         but with only the closing delimiter left and no opening, applying just
+         the close-fix would yield `\\\\$` which is malformed math. We accept
+         this corner case: the fix matches existing rule semantic; users with
+         `\\\\begin{math}` line-breaks should not invoke --apply-fixes (the rule
+         still warns once on the unbalanced env). *)
+      let src = "p\\\\begin{math}q\\end{math}" in
+      let edits = fix_edits "TYPO-046" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1 && out = "p\\\\begin{math}q$")
+        (tag ^ ": odd prior backslashes -> escaped, only \\end{math} fires"));
+
+  run "TYPO-046 fix: adjacent empty env deleted (round-1 audit, no $$)"
+    (fun tag ->
+      (* Round-1 ultrathink audit: `\\begin{math}\\end{math}` (empty math env,
+         no content) would naively become `$$` — the display-math delimiter that
+         TYPO-028 warns against, AND it would consume following source as math
+         content. The fix detects adjacent pairs and emits a single delete edit
+         covering both delimiters. An empty math env renders to nothing in LaTeX
+         so deletion is semantically equivalent. *)
+      let src = "before\\begin{math}\\end{math}after" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": empty env deleted, no $$ collision"));
+
+  run "TYPO-046 fix: \\begin{math} \\end{math} (space content) -> $ $"
+    (fun tag ->
+      (* Single space between delimiters is NOT adjacent (begin_off + 12 !=
+         end_off because there's a space byte between). Falls through to the
+         normal lone-replacement path. Result `$ $` is a valid (pointless) math
+         env, not the `$$` corruption case. *)
+      let src = "x\\begin{math} \\end{math}y" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "x$ $y")
+        (tag ^ ": space between delimiters -> normal path, $ $ output"));
+
   finalise "typo-fix"

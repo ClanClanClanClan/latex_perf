@@ -2,6 +2,47 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.20] — 2026-05-05
+
+**TYPO-028 fix producer (`$$…$$` → `\[…\]`, pair-matching,
+escape-aware).**  Pairs adjacent unescaped `$$` offsets greedily:
+first → `\[`, second → `\]`.  Round-1 audit guards: (1)
+odd-prior-backslash escape skip — `\$$` is `\$` (escaped dollar) +
+`$` (open inline math), not a display-math delimiter; (2) count
+semantic preserved via `count_substring s "$$" / 2` so the
+differential output vs v27.0.19 is unchanged.  The fix uses the more
+precise non-overlapping offsets, which can diverge on consecutive
+runs like `$$$` (rule still warns but no pair → no fix).
+
+**47 fix-producing rules** (was 46; +1: TYPO-028).
+
+### Counts (v27.0.20 vs v27.0.19)
+
+- 660 catalogued rules (unchanged).
+- **47 fix-producing rules** (was 46; +1: TYPO-028).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+7 new test cases:
+- basic positive (`$$ X $$` → `\[ X \]`)
+- two disjoint pairs (4 edits)
+- `$$$$` empty display math → `\[\]` (valid LaTeX)
+- does not fire on clean source
+- skips `\$$` (escaped, no fire)
+- accepts `\\$$` (line break + real `$$`, fire)
+- odd `$$$` (3 chars) → count fires but no fix (no pair)
+
+121 → 128 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.19 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.19] — 2026-05-05
 
 **TYPO-046 fix producer (`\begin{math}…\end{math}` → `$…$`,

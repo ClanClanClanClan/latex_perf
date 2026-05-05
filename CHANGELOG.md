@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.18] — 2026-05-05
+
+**TYPO-017 fix producer (accent braces removal, math-aware).**
+Pattern `\<accent>{<letter>}` (5 bytes) → `\<accent><letter>` (3
+bytes).  Braces-removal is semantically identical in LaTeX and avoids
+the UTF-8 inputenc dependency that the alternative full UTF-8
+conversion would require (works on legacy docs without
+`\usepackage[utf8]{inputenc}`).  Math-aware on fix offsets only.  The
+accent character class is text-mode only (apostrophe, caret, backtick,
+doublequote, tilde, equals, period), so math accents like `\hat{x}`
+are not in scope by construction.
+
+**45 fix-producing rules** (was 44; +1: TYPO-017).
+
+### Counts (v27.0.18 vs v27.0.17)
+
+- 660 catalogued rules (unchanged).
+- **45 fix-producing rules** (was 44; +1: TYPO-017).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- `\'{e}` → `\'e` (acute accent positive)
+- all 7 text-mode accents in one source (multi-match)
+- does not fire on already-braces-removed form (idempotent)
+- does not fire on multi-letter braces (regex requires single letter)
+- skips `\'{e}` inside `$..$` math (math-aware audit)
+
+109 → 114 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.17 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.17] — 2026-05-05
 
 **TYPO-049 fix producer (delete space after curly opening quote,

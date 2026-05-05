@@ -1001,4 +1001,47 @@ let () =
         && out = "math $\xe2\x80\x9c a$ then text \xe2\x80\x9cplain")
         (tag ^ ": math quote-space preserved, text quote-space fixed"));
 
+  (* v27.0.18: TYPO-017 fix producer (\\<accent>{<letter>} -> \\<accent><letter>
+     braces-removal, math-aware on fix offsets). *)
+  run "TYPO-017 fix: \\'{e} becomes \\'e (acute accent)" (fun tag ->
+      let src = "caf\\'{e} bar" in
+      let edits = fix_edits "TYPO-017" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "caf\\'e bar")
+        (tag ^ ": braces removed, accent + letter preserved"));
+
+  run "TYPO-017 fix: handles all 7 text-mode accents" (fun tag ->
+      (* All 7 accent chars from the regex char class: apostrophe, caret,
+         backtick, doublequote, tilde, equals, period. *)
+      let src = "\\'{a} \\^{e} \\`{i} \\\"{o} \\~{n} \\={u} \\.{z}" in
+      let edits = fix_edits "TYPO-017" src in
+      expect
+        (List.length edits = 7
+        && apply_all src edits = "\\'a \\^e \\`i \\\"o \\~n \\=u \\.z")
+        (tag ^ ": all 7 accents braces-removed"));
+
+  run "TYPO-017 does not fire on already-braces-removed form" (fun tag ->
+      (* `\\'e` (no braces) doesn't match the regex; rule is idempotent. *)
+      expect
+        (does_not_fire "TYPO-017" "caf\\'e clean form")
+        (tag ^ ": no braces, no fire"));
+
+  run "TYPO-017 does not fire on multi-letter braces" (fun tag ->
+      (* `\\'{ae}` would not match (regex requires single [a-zA-Z]). *)
+      expect
+        (does_not_fire "TYPO-017" "old form \\'{ae} compound")
+        (tag ^ ": multi-letter braces not in scope"));
+
+  run "TYPO-017 fix: skips \\'{e} inside $..$ math (audit-aware)" (fun tag ->
+      (* Math-aware: text accents inside math are unusual but math-aware
+         filtering keeps the producer consistent with v27.0.6+ producers. Math
+         accents like \\hat{x} use a different command (\\hat) which is not in
+         the regex char class, so they're unaffected by design. *)
+      let src = "math $\\'{e}$ then text \\'{a} plain" in
+      let edits = fix_edits "TYPO-017" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1 && out = "math $\\'{e}$ then text \\'a plain")
+        (tag ^ ": math accent preserved, text accent fixed"));
+
   finalise "typo-fix"

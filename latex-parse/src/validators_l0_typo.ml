@@ -726,24 +726,53 @@ let r_typo_016 : rule =
   in
   { id = "TYPO-016"; run; languages = [] }
 
-(* TYPO-017: TeX accent commands in text; prefer UTF-8 *)
+(* TYPO-017: TeX accent commands in text. v27.0.18: math-aware fix producer.
+   Pattern \\<accent>{<letter>} (6 bytes) -> \\<accent><letter> (3 bytes) --
+   braces-removal is semantically identical in LaTeX and avoids the UTF-8
+   inputenc dependency that the alternative full UTF-8 conversion would require
+   (works on legacy docs without `\usepackage[utf8]{inputenc}`). Math-aware on
+   fix offsets only; the count uses the full regex match (preserves pre-v27.0.18
+   semantic for 0-differential vs v27.0.17). The accent character class is
+   text-mode only (apostrophe, caret, doublequote, tilde, equals, period,
+   backtick), so math accents like \hat{} are not in scope by construction. *)
 let r_typo_017 : rule =
   let re = Re_compat.regexp {|\\['^`"~=.][{][a-zA-Z][}]|} in
+  let collect_offsets s =
+    let rec loop i acc =
+      try
+        let mr, pos = Re_compat.search_forward re s i in
+        loop (Re_compat.match_end mr) (pos :: acc)
+      with Not_found -> List.rev acc
+    in
+    loop 0 []
+  in
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    List.filter (fun pos -> not (is_in_math_range math pos)) (collect_offsets s)
+  in
+  let mk_fix_edits s offsets =
+    List.map
+      (fun pos ->
+        let accent = s.[pos + 1] in
+        let letter = s.[pos + 3] in
+        Cst_edit.replace ~start_offset:pos ~end_offset:(pos + 5)
+          (Printf.sprintf "\\%c%c" accent letter))
+      offsets
+  in
   let run s =
-    let cnt = ref 0 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         incr cnt;
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-017" ~severity:Info
-           ~message:{|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|}
-           ~count:!cnt)
+    let cnt = List.length (collect_offsets s) in
+    if cnt > 0 then
+      let fix = mk_fix_edits s (fix_offsets s) in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-017" ~severity:Info
+             ~message:{|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-017" ~severity:Info
+             ~message:{|TeX accent commands (\'{e}) in text; prefer UTF‑8 é|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-017"; run; languages = [] }

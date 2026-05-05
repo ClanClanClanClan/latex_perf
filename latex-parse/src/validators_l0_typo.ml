@@ -1715,15 +1715,45 @@ let r_typo_048 : rule =
   in
   { id = "TYPO-048"; run; languages = [] }
 
-(* Figure space U+2009 used instead of \thinspace macro *)
+(* TYPO-051: Figure space U+2009. v27.0.16: math-aware fix producer. Replace
+   each U+2009 (3 bytes UTF-8: e2 80 89) outside math with `\thinspace{}` (12
+   bytes ASCII; the trailing `{}` is an empty group that ensures unambiguous
+   macro tokenization regardless of the byte that follows U+2009 — most commonly
+   a letter, e.g. `5 m`, where bare `\thinspace` would parse as the undefined
+   command `\thinspacem`).
+
+   Math-aware on fix offsets only; the count uses count_substring of the UTF-8
+   sequence (overlapping not relevant — needle is 3 bytes, no possible
+   self-overlap with 1 occurrence) so the differential output vs v27.0.15 is
+   unchanged for non-math input. *)
 let r_typo_051 : rule =
+  let needle = "\xe2\x80\x89" in
+  let nlen = 3 in
   let run s =
-    let cnt = count_substring s "\xe2\x80\x89" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-051" ~severity:Warning
-           ~message:{|Figure space U+2009 used instead of \thinspace macro|}
-           ~count:cnt)
+      let math = find_math_ranges s in
+      let offsets = find_all_non_overlapping s needle in
+      let fix_offsets =
+        List.filter (fun off -> not (is_in_math_range math off)) offsets
+      in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen)
+              "\\thinspace{}")
+          fix_offsets
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-051" ~severity:Warning
+             ~message:{|Figure space U+2009 used instead of \thinspace macro|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-051" ~severity:Warning
+             ~message:{|Figure space U+2009 used instead of \thinspace macro|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-051"; run; languages = [] }

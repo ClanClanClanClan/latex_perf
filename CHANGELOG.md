@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.17] — 2026-05-05
+
+**TYPO-049 fix producer (delete space after curly opening quote,
+math-aware).**  Pattern U+201C+space or U+2018+space → delete the
+trailing ASCII space (1-byte delete at `match_offset+3`); the opening
+quote itself is preserved.  Math-aware on fix offsets only; the count
+uses the same dual `count_substring` sum as pre-v27.0.17 so the
+differential output vs v27.0.16 is unchanged.  Multiple-spaces case
+only deletes the FIRST space — TYPO-018 (collapse double space)
+handles the residual run.
+
+**44 fix-producing rules** (was 43; +1: TYPO-049).
+
+### Counts (v27.0.17 vs v27.0.16)
+
+- 660 catalogued rules (unchanged).
+- **44 fix-producing rules** (was 43; +1: TYPO-049).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- `delete space after U+201C` (positive, double opening quote)
+- `delete space after U+2018` (positive, single opening quote)
+- `both quote types in same input` (multi-match)
+- `does not fire on clean source` (negative)
+- `only deletes FIRST space when multiple follow` (TYPO-018 interaction)
+- `skips opening-quote+space inside $..$ math` (math-aware audit)
+
+103 → 109 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.16 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.16] — 2026-05-05
 
 **TYPO-051 fix producer (U+2009 figure space → `\thinspace{}`,

@@ -2,6 +2,44 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.16] — 2026-05-05
+
+**TYPO-051 fix producer (U+2009 figure space → `\thinspace{}`,
+math-aware).**  Replace each 3-byte UTF-8 figure space outside math
+with `\thinspace{}`.  The trailing `{}` empty group is critical: bare
+`\thinspace` followed by a letter (the common case, e.g.
+`5 m`) would tokenize as the undefined command
+`\thinspacem`.  In math, the LaTeX-idiomatic thin space is `\,` which
+differs from `\thinspace`, so the fix conservatively skips math
+contexts.
+
+**43 fix-producing rules** (was 42; +1: TYPO-051).
+
+### Counts (v27.0.16 vs v27.0.15)
+
+- 660 catalogued rules (unchanged).
+- **43 fix-producing rules** (was 42; +1: TYPO-051).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- `U+2009 between number and unit becomes \thinspace{}` (positive)
+- `empty group {} guards against \thinspaceLETTER` (correctness audit)
+- `two disjoint U+2009 produce two edits` (multi-match)
+- `does not fire on clean source` (negative)
+- `skips U+2009 inside $..$ math` (math-aware audit)
+
+98 → 103 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.15 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.15] — 2026-05-04
 
 **TYPO-042 fix producer (collapse `??...?` to single `?`,

@@ -2019,17 +2019,58 @@ let r_typo_045 : rule =
   in
   { id = "TYPO-045"; run; languages = [] }
 
-(* Use of \begin{math} instead of $...$ *)
+(* TYPO-046: Use of \begin{math}…\end{math} instead of $…$. v27.0.19: fix
+   producer that replaces the verbose math environment delimiters with the
+   compact dollar form. Each `\begin{math}` (12 bytes) becomes `$` (1 byte);
+   each `\end{math}` (10 bytes) becomes `$` (1 byte) — the rewrite engine sorts
+   edits before applying, so emit order is irrelevant.
+
+   Round-1 audit guard: skip matches where the leading `\` is preceded by an odd
+   number of backslashes — `\\begin{math}` parses as line-break (\\) followed by
+   literal `begin{math}` text, NOT a math environment, and the naive fix would
+   corrupt this into `\$` (escaped dollar). Same gotcha as v27.0.14 TYPO-032
+   thin-space comma + v27.0.8 TYPO-001 umlaut command. The check counts
+   consecutive backslashes immediately before the match start; an odd count
+   means the match is skipped from BOTH count AND fix offsets to keep behaviour
+   internally consistent. *)
 let r_typo_046 : rule =
+  let begin_needle = "\\begin{math}" in
+  let end_needle = "\\end{math}" in
+  let blen = String.length begin_needle in
+  let elen = String.length end_needle in
+  let is_escaped_command s pos =
+    let n = ref 0 in
+    let i = ref (pos - 1) in
+    while !i >= 0 && s.[!i] = '\\' do
+      incr n;
+      decr i
+    done;
+    !n mod 2 = 1
+  in
+  let collect_unescaped s needle =
+    List.filter
+      (fun off -> not (is_escaped_command s off))
+      (find_all_non_overlapping s needle)
+  in
   let run s =
-    let cnt =
-      count_substring s "\\begin{math}" + count_substring s "\\end{math}"
-    in
+    let begin_offsets = collect_unescaped s begin_needle in
+    let end_offsets = collect_unescaped s end_needle in
+    let cnt = List.length begin_offsets + List.length end_offsets in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + blen) "$")
+          begin_offsets
+        @ List.map
+            (fun off ->
+              Cst_edit.replace ~start_offset:off ~end_offset:(off + elen) "$")
+            end_offsets
+      in
       Some
-        (mk_result ~id:"TYPO-046" ~severity:Info
+        (mk_result_with_fix ~id:"TYPO-046" ~severity:Info
            ~message:"Use of $begin:math:text$ … $end:math:text$ instead of $…$"
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-046"; run; languages = [] }

@@ -2057,15 +2057,39 @@ let r_typo_046 : rule =
     let end_offsets = collect_unescaped s end_needle in
     let cnt = List.length begin_offsets + List.length end_offsets in
     if cnt > 0 then
+      (* Round-1 ultrathink audit: detect adjacent begin/end pairs (empty math
+         env, no content between the delimiters). Naive replacement of each
+         delimiter with `$` would yield `$$` — the display-math delimiter that
+         TYPO-028 warns against, AND it would consume following source as math
+         content until the next `$$`, CORRUPTING the document. Emit a single
+         delete edit covering both delimiters instead; an empty math env renders
+         to nothing in LaTeX, so deletion is semantically equivalent. Only the
+         exact `\begin{math}\end{math}` (no whitespace between) hits this case —
+         `\begin{math} \end{math}` (single space content) falls through to the
+         normal lone-replacement path and yields a valid (if pointless) `$ $`
+         math env. *)
+      let is_paired_begin b = List.mem (b + blen) end_offsets in
+      let paired_begins = List.filter is_paired_begin begin_offsets in
+      let paired_end_set = List.map (fun b -> b + blen) paired_begins in
+      let lone_begins =
+        List.filter (fun b -> not (is_paired_begin b)) begin_offsets
+      in
+      let lone_ends =
+        List.filter (fun e -> not (List.mem e paired_end_set)) end_offsets
+      in
       let fix =
         List.map
-          (fun off ->
-            Cst_edit.replace ~start_offset:off ~end_offset:(off + blen) "$")
-          begin_offsets
+          (fun b ->
+            Cst_edit.replace ~start_offset:b ~end_offset:(b + blen + elen) "")
+          paired_begins
+        @ List.map
+            (fun off ->
+              Cst_edit.replace ~start_offset:off ~end_offset:(off + blen) "$")
+            lone_begins
         @ List.map
             (fun off ->
               Cst_edit.replace ~start_offset:off ~end_offset:(off + elen) "$")
-            end_offsets
+            lone_ends
       in
       Some
         (mk_result_with_fix ~id:"TYPO-046" ~severity:Info

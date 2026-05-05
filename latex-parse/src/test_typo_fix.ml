@@ -1127,4 +1127,30 @@ let () =
         (List.length edits = 1 && out = "p\\\\begin{math}q$")
         (tag ^ ": odd prior backslashes -> escaped, only \\end{math} fires"));
 
+  run "TYPO-046 fix: adjacent empty env deleted (round-1 audit, no $$)"
+    (fun tag ->
+      (* Round-1 ultrathink audit: `\\begin{math}\\end{math}` (empty math env,
+         no content) would naively become `$$` — the display-math delimiter that
+         TYPO-028 warns against, AND it would consume following source as math
+         content. The fix detects adjacent pairs and emits a single delete edit
+         covering both delimiters. An empty math env renders to nothing in LaTeX
+         so deletion is semantically equivalent. *)
+      let src = "before\\begin{math}\\end{math}after" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": empty env deleted, no $$ collision"));
+
+  run "TYPO-046 fix: \\begin{math} \\end{math} (space content) -> $ $"
+    (fun tag ->
+      (* Single space between delimiters is NOT adjacent (begin_off + 12 !=
+         end_off because there's a space byte between). Falls through to the
+         normal lone-replacement path. Result `$ $` is a valid (pointless) math
+         env, not the `$$` corruption case. *)
+      let src = "x\\begin{math} \\end{math}y" in
+      let edits = fix_edits "TYPO-046" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "x$ $y")
+        (tag ^ ": space between delimiters -> normal path, $ $ output"));
+
   finalise "typo-fix"

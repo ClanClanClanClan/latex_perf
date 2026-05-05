@@ -1259,4 +1259,39 @@ let () =
         (List.length edits = 1 && out = "the 1980's $f(5^\\prime)$ end")
         (tag ^ ": math fixed, text untouched"));
 
+  (* v27.0.22: ENC-007 fix producer (delete U+200B zero-width space, single
+     3-byte UTF-8 needle, mechanical deletion). First fix in ENC family beyond
+     ENC-002 (BOM deletion). *)
+  run "ENC-007 fix: deletes single U+200B zero-width space" (fun tag ->
+      let src = "hello\xe2\x80\x8bworld" in
+      let edits = fix_edits "ENC-007" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "helloworld")
+        (tag ^ ": ZWSP deleted"));
+
+  run "ENC-007 fix: multiple ZWSP all deleted" (fun tag ->
+      let src = "a\xe2\x80\x8bb\xe2\x80\x8bc\xe2\x80\x8bd" in
+      let edits = fix_edits "ENC-007" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three ZWSP deleted"));
+
+  run "ENC-007 fix: ZWSP at start, middle, and end" (fun tag ->
+      let src = "\xe2\x80\x8bstart middle\xe2\x80\x8bend\xe2\x80\x8b" in
+      let edits = fix_edits "ENC-007" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "start middleend")
+        (tag ^ ": boundary ZWSPs all deleted"));
+
+  run "ENC-007 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-007" "hello world without ZWSP")
+        (tag ^ ": no U+200B, no fire"));
+
+  run "ENC-007 fix: idempotent on already-cleaned source" (fun tag ->
+      (* After fix, no U+200B remains. Rule does not fire on the result. *)
+      expect
+        (does_not_fire "ENC-007" "no zero-width spaces here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

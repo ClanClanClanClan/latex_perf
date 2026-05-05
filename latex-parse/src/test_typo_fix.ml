@@ -943,4 +943,62 @@ let () =
         && out = "math $a\xe2\x80\x89b$ then text\\thinspace{}more")
         (tag ^ ": math U+2009 preserved, text U+2009 replaced"));
 
+  (* v27.0.17: TYPO-049 fix producer (delete space after curly opening quote
+     U+201C/U+2018, math-aware on fix offsets). *)
+  run "TYPO-049 fix: deletes space after U+201C double opening quote"
+    (fun tag ->
+      let src = "\xe2\x80\x9c hello world\xe2\x80\x9d" in
+      let edits = fix_edits "TYPO-049" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\xe2\x80\x9chello world\xe2\x80\x9d")
+        (tag ^ ": space after U+201C deleted, quote preserved"));
+
+  run "TYPO-049 fix: deletes space after U+2018 single opening quote"
+    (fun tag ->
+      let src = "\xe2\x80\x98 hello\xe2\x80\x99" in
+      let edits = fix_edits "TYPO-049" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\xe2\x80\x98hello\xe2\x80\x99")
+        (tag ^ ": space after U+2018 deleted, quote preserved"));
+
+  run "TYPO-049 fix: handles both U+201C and U+2018 in same input" (fun tag ->
+      let src = "\xe2\x80\x9c outer \xe2\x80\x98 inner\xe2\x80\x99 end" in
+      let edits = fix_edits "TYPO-049" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits
+           = "\xe2\x80\x9couter \xe2\x80\x98inner\xe2\x80\x99 end")
+        (tag ^ ": both opening-quote spaces deleted"));
+
+  run "TYPO-049 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-049" "\xe2\x80\x9chello\xe2\x80\x9d clean quote")
+        (tag ^ ": no space after opening quote, no fire"));
+
+  run "TYPO-049 fix: only deletes FIRST space when multiple follow" (fun tag ->
+      (* Round-1 audit: rule fires once on `“ abc` (count=1, since
+         count_substring `“ ` matches one quote+space pair). The fix deletes ONE
+         space, leaving `“ abc`. TYPO-018 (collapse double space) handles the
+         residual run. *)
+      let src = "\xe2\x80\x9c  abc" in
+      let edits = fix_edits "TYPO-049" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\xe2\x80\x9c abc")
+        (tag ^ ": one space deleted, residual handled by TYPO-018"));
+
+  run "TYPO-049 fix: skips opening-quote+space inside $..$ math" (fun tag ->
+      (* Math-aware: count includes math match (preserves diff invariant); fix
+         offset is suppressed. Curly opening quotes inside math are essentially
+         LaTeX-invalid in practice, but math-aware filtering keeps the producer
+         consistent with v27.0.6+ producers. *)
+      let src = "math $\xe2\x80\x9c a$ then text \xe2\x80\x9c plain" in
+      let edits = fix_edits "TYPO-049" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "math $\xe2\x80\x9c a$ then text \xe2\x80\x9cplain")
+        (tag ^ ": math quote-space preserved, text quote-space fixed"));
+
   finalise "typo-fix"

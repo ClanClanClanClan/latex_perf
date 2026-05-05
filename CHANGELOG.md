@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.21] — 2026-05-05
+
+**TYPO-012 fix producer (digit + apostrophe → digit + `^\prime`,
+math-only).**  Inside math (`$...$`), `5'` denotes prime notation;
+outside math it could be possessive (the 1980's) or feet/minutes
+(5'2"), so the fix applies ONLY inside math.  The math filter is
+POSITIVE (`is_in_math_range pos`) here — opposite of the v27.0.6+
+pattern (`not (is_in_math_range pos)`) — because `'` after digit only
+unambiguously means prime inside math.  Count semantic preserved
+(rule fires on all matches).
+
+**48 fix-producing rules** (was 47; +1: TYPO-012).
+
+### Counts (v27.0.21 vs v27.0.20)
+
+- 660 catalogued rules (unchanged).
+- **48 fix-producing rules** (was 47; +1: TYPO-012).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- math `$f(5')$` → `$f(5^\prime)$` (positive)
+- text `1980's` NOT fixed (math-only, conservative)
+- two math primes → two edits
+- does not fire on clean source
+- idempotent on already-fixed math
+- mixed math/text: count both, fix only math
+
+128 → 134 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.20 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.20] — 2026-05-05
 
 **TYPO-028 fix producer (`$$…$$` → `\[…\]`, pair-matching,

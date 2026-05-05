@@ -2018,16 +2018,46 @@ let r_typo_047 : rule =
   in
   { id = "TYPO-047"; run; languages = [] }
 
-(* Space after opening quote *)
+(* TYPO-049: Space after opening quote. v27.0.17: math-aware fix producer.
+   Pattern U+201C+space (4 bytes: e2 80 9c 20) or U+2018+space (4 bytes: e2 80
+   98 20) → delete the trailing ASCII space (1-byte delete at match_offset+3);
+   the opening quote itself is preserved.
+
+   Math-aware on fix offsets only; the count uses the same dual
+   `count_substring` sum as pre-v27.0.17 so the differential output vs v27.0.16
+   is unchanged. Multiple-spaces case (`“ abc`) only deletes the FIRST space —
+   TYPO-018 handles double-space collapse on what remains. *)
 let r_typo_049 : rule =
+  let ldquo_sp = "\xe2\x80\x9c " in
+  let lsquo_sp = "\xe2\x80\x98 " in
   let run s =
-    let cnt =
-      count_substring s "\xe2\x80\x9c " + count_substring s "\xe2\x80\x98 "
-    in
+    let cnt = count_substring s ldquo_sp + count_substring s lsquo_sp in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-049" ~severity:Info
-           ~message:"Space after opening quote" ~count:cnt)
+      let math = find_math_ranges s in
+      let offsets =
+        find_all_non_overlapping s ldquo_sp
+        @ find_all_non_overlapping s lsquo_sp
+      in
+      let fix_offsets =
+        List.filter (fun off -> not (is_in_math_range math off)) offsets
+      in
+      (* The space byte to delete sits at offset+3 (after the 3-byte quote). *)
+      let fix =
+        List.map
+          (fun off ->
+            let space_off = off + 3 in
+            Cst_edit.replace ~start_offset:space_off ~end_offset:(space_off + 1)
+              "")
+          fix_offsets
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-049" ~severity:Info
+             ~message:"Space after opening quote" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-049" ~severity:Info
+             ~message:"Space after opening quote" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-049"; run; languages = [] }

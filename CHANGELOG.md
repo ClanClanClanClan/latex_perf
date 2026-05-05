@@ -2,6 +2,44 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.19] — 2026-05-05
+
+**TYPO-046 fix producer (`\begin{math}…\end{math}` → `$…$`,
+escape-aware).**  Each `\begin{math}` (12 bytes) becomes `$` (1 byte);
+each `\end{math}` (10 bytes) becomes `$` (1 byte) — the rewrite engine
+sorts edits before applying.  Round-1 audit guard: skip matches where
+the leading `\` is preceded by an odd number of backslashes —
+`\\begin{math}` parses as line-break followed by literal text, and the
+naive fix would corrupt this into `\$`.  Same odd-backslash-count
+pattern as v27.0.14 TYPO-032 and v27.0.8 TYPO-001.
+
+**46 fix-producing rules** (was 45; +1: TYPO-046).
+
+### Counts (v27.0.19 vs v27.0.18)
+
+- 660 catalogued rules (unchanged).
+- **46 fix-producing rules** (was 45; +1: TYPO-046).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- basic positive (`\begin{math}x+y\end{math}` → `$x+y$`)
+- two disjoint math envs (4 edits)
+- does not fire on clean source
+- no prior backslashes → command → fix applies
+- truly-escaped (1 prior backslash) → skipped from count and fix
+
+114 → 119 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.18 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.18] — 2026-05-05
 
 **TYPO-017 fix producer (accent braces removal, math-aware).**

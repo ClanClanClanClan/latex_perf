@@ -598,25 +598,55 @@ let r_typo_011 : rule =
   in
   { id = "TYPO-011"; run; languages = [] }
 
-(* TYPO-012: Straight apostrophe used for minutes/feet *)
+(* TYPO-012: Straight apostrophe used for minutes/feet/prime. v27.0.21:
+   math-aware fix producer. Inside math (`$...$`), `5'` denotes prime notation
+   (5^\prime); outside math it could legitimately be possessive (the 1980s) or
+   feet/minutes (5 ft 2 in), so the fix applies ONLY inside math. Pattern: digit
+   + apostrophe (2 bytes). The apostrophe sits at offset+1; replace it with
+   `^\prime` (7 bytes). The count semantic is preserved (rule fires anywhere
+   `[0-9]'` appears, not just in math) for 0-differential vs v27.0.20. The math
+   filter is POSITIVE (`is_in_math_range pos`) here, the OPPOSITE of the
+   v27.0.6+ pattern (`not (is_in_math_range pos)`), because `'` after digit only
+   unambiguously means prime inside math. *)
 let r_typo_012 : rule =
   let re = Re_compat.regexp {|[0-9]'|} in
+  let collect_offsets s =
+    let rec loop i acc =
+      try
+        let mr, pos = Re_compat.search_forward re s i in
+        loop (Re_compat.match_end mr) (pos :: acc)
+      with Not_found -> List.rev acc
+    in
+    loop 0 []
+  in
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    List.filter (fun pos -> is_in_math_range math pos) (collect_offsets s)
+  in
+  let mk_fix_edits offsets =
+    List.map
+      (fun pos ->
+        let prime_off = pos + 1 in
+        Cst_edit.replace ~start_offset:prime_off ~end_offset:(prime_off + 1)
+          "^\\prime")
+      offsets
+  in
   let run s =
-    let cnt = ref 0 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         incr cnt;
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-012" ~severity:Warning
-           ~message:
-             {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|}
-           ~count:!cnt)
+    let cnt = List.length (collect_offsets s) in
+    if cnt > 0 then
+      let fix = mk_fix_edits (fix_offsets s) in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-012" ~severity:Warning
+             ~message:
+               {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-012" ~severity:Warning
+             ~message:
+               {|Straight apostrophe ' used for minutes/feet; use ^\prime or ′|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-012"; run; languages = [] }

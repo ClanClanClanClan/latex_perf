@@ -1110,16 +1110,62 @@ let r_typo_027 : rule =
   in
   { id = "TYPO-027"; run; languages = [] }
 
-(* TYPO-028: Use of $$ display math delimiter *)
+(* TYPO-028: Use of $$ display math delimiter. v27.0.20: fix producer that
+   replaces each pair of unescaped `$$` with `\[…\]` (the LaTeX 2e idiomatic
+   display-math form). Pairs are formed greedily from non-overlapping `$$` match
+   offsets: the first becomes `\[`, the second becomes `\]`, and any leftover
+   unpaired delimiter is left in place (rule still warns).
+
+   Round-1 audit guards: 1. Odd-prior-backslash escape skip (matches v27.0.19
+   TYPO-046 + v27.0.14 TYPO-032 + v27.0.8 TYPO-001): `\$$` parses as `\$`
+   (escaped dollar) followed by `$` (open inline math), NOT a display-math
+   delimiter. 2. Count semantic preserved from pre-v27.0.20 via `count_substring
+   s "$$" / 2` so the differential output vs v27.0.19 is unchanged. The fix uses
+   the more precise non-overlapping offsets, which can diverge on consecutive
+   runs like `$$$` (3 chars: pre-v27.0.20 counted 1 pair via overlap;
+   non-overlap gives 1 offset → no pair → no fix). For `$$$$` (4 chars) both
+   views agree on 1 pair. *)
 let r_typo_028 : rule =
+  let needle = "$$" in
+  let nlen = 2 in
+  let is_escaped s pos =
+    let n = ref 0 in
+    let i = ref (pos - 1) in
+    while !i >= 0 && s.[!i] = '\\' do
+      incr n;
+      decr i
+    done;
+    !n mod 2 = 1
+  in
+  let unescaped_offsets s =
+    List.filter
+      (fun off -> not (is_escaped s off))
+      (find_all_non_overlapping s needle)
+  in
+  let rec pairs = function a :: b :: rest -> (a, b) :: pairs rest | _ -> [] in
   let run s =
-    let cnt = count_substring s "$$" in
-    (* Each pair of $$ counts as one — divide by 2 *)
-    let cnt = cnt / 2 in
+    let cnt = count_substring s needle / 2 in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-028" ~severity:Error
-           ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt)
+      let pair_offsets = pairs (unescaped_offsets s) in
+      let fix =
+        List.concat_map
+          (fun (open_off, close_off) ->
+            [
+              Cst_edit.replace ~start_offset:open_off
+                ~end_offset:(open_off + nlen) "\\[";
+              Cst_edit.replace ~start_offset:close_off
+                ~end_offset:(close_off + nlen) "\\]";
+            ])
+          pair_offsets
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-028" ~severity:Error
+             ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-028" ~severity:Error
+             ~message:{|Use of ``$$'' display math delimiter|} ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-028"; run; languages = [] }

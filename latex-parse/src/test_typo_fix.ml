@@ -1212,4 +1212,51 @@ let () =
       let edits = fix_edits "TYPO-028" src in
       expect (List.length edits = 0) (tag ^ ": odd run -> no pair, no fix"));
 
+  (* v27.0.21: TYPO-012 fix producer (digit + apostrophe -> digit + ^\prime,
+     math-only fix). *)
+  run "TYPO-012 fix: 5' inside math becomes 5^\\prime" (fun tag ->
+      let src = "$f(5') = g$" in
+      let edits = fix_edits "TYPO-012" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$f(5^\\prime) = g$")
+        (tag ^ ": math digit-prime fixed"));
+
+  run "TYPO-012 fix: outside math, 5' is NOT fixed (ambiguous)" (fun tag ->
+      (* `5'` outside math could be possessive (1980s) or feet/minutes (5 ft 2
+         in). Math-only fix is conservative. The rule still warns (count
+         includes outside-math matches) but the fix doesn't apply. *)
+      let src = "the 1980's were great" in
+      let edits = fix_edits "TYPO-012" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode digit-prime not fixed"));
+
+  run "TYPO-012 fix: two math primes produce two edits" (fun tag ->
+      let src = "$x = 5'$ and $y = 7'$" in
+      let edits = fix_edits "TYPO-012" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$x = 5^\\prime$ and $y = 7^\\prime$")
+        (tag ^ ": both math primes fixed"));
+
+  run "TYPO-012 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-012" "no apostrophe-after-digit here")
+        (tag ^ ": no [0-9]', no fire"));
+
+  run "TYPO-012 fix: idempotent on already-fixed math" (fun tag ->
+      (* After fix, `5^\prime` doesn't match `[0-9]'` (no apostrophe right after
+         digit). Rule doesn't fire on the fixed form. *)
+      expect
+        (does_not_fire "TYPO-012" "$x = 5^\\prime$")
+        (tag ^ ": fixed form doesn't re-fire"));
+
+  run "TYPO-012 fix: mixed math/text counts both, fixes only math" (fun tag ->
+      (* Math `5'` is fixed; text `1980's` is not. Count includes both
+         (preserves pre-v27.0.21 semantic for 0-differential). *)
+      let src = "the 1980's $f(5')$ end" in
+      let edits = fix_edits "TYPO-012" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1 && out = "the 1980's $f(5^\\prime)$ end")
+        (tag ^ ": math fixed, text untouched"));
+
   finalise "typo-fix"

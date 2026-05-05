@@ -896,4 +896,51 @@ let () =
         (List.length edits = 1 && out = "math $a ?? b$ then plain ? end")
         (tag ^ ": math ?? preserved, plain ?? collapsed"));
 
+  (* v27.0.16: TYPO-051 fix producer (U+2009 figure space -> \\thinspace{},
+     math-aware on fix offsets). *)
+  run "TYPO-051 fix: U+2009 between number and unit becomes \\thinspace{}"
+    (fun tag ->
+      let src = "5\xe2\x80\x89m" in
+      let edits = fix_edits "TYPO-051" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "5\\thinspace{}m")
+        (tag ^ ": figure space replaced with \\thinspace{}"));
+
+  run "TYPO-051 fix: empty group {} guards against \\thinspaceLETTER"
+    (fun tag ->
+      (* Crucial round-1 audit: bare `\\thinspace` followed by a letter would
+         tokenize as the undefined command `\\thinspaceabc`. The trailing `{}`
+         empty group ensures unambiguous parsing regardless of next byte. *)
+      let src = "abc\xe2\x80\x89def" in
+      let edits = fix_edits "TYPO-051" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "abc\\thinspace{}def")
+        (tag ^ ": {} guards against macro merging with following letter"));
+
+  run "TYPO-051 fix: two disjoint U+2009 produce two edits" (fun tag ->
+      let src = "5\xe2\x80\x89kg and 10\xe2\x80\x89cm" in
+      let edits = fix_edits "TYPO-051" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "5\\thinspace{}kg and 10\\thinspace{}cm")
+        (tag ^ ": both figure spaces replaced"));
+
+  run "TYPO-051 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-051" "no figure space in this text")
+        (tag ^ ": no U+2009, no fire"));
+
+  run "TYPO-051 fix: skips U+2009 inside $..$ math (audit-aware)" (fun tag ->
+      (* Math-aware: count includes math match (preserves diff invariant); fix
+         offset is suppressed. In math, the LaTeX-idiomatic thin space is `\\,`
+         which differs from `\\thinspace`, so the fix conservatively skips math
+         contexts rather than replacing with the wrong macro. *)
+      let src = "math $a\xe2\x80\x89b$ then text\xe2\x80\x89more" in
+      let edits = fix_edits "TYPO-051" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "math $a\xe2\x80\x89b$ then text\\thinspace{}more")
+        (tag ^ ": math U+2009 preserved, text U+2009 replaced"));
+
   finalise "typo-fix"

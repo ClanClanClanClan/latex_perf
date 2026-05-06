@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.24] — 2026-05-06
+
+**ENC-021 fix producer (delete U+2060 WORD JOINER).**  Mirrors
+v27.0.22 ENC-007 / v27.0.23 ENC-017 shape (single short UTF-8 needle,
+mechanical deletion).  Pattern: U+2060 (3 bytes UTF-8: `e2 81 a0`).
+The WORD JOINER prevents line-breaking between adjacent characters;
+like the soft hyphen and zero-width space, it is invisible in editors
+and almost universally accidental in LaTeX source.  LaTeX provides
+`~` (NBSP) and `\mbox{}` for intentional break-prevention.
+
+**51 fix-producing rules** (was 50; +1: ENC-021).
+
+### Counts (v27.0.24 vs v27.0.23)
+
+- 660 catalogued rules (unchanged).
+- **51 fix-producing rules** (was 50; +1: ENC-021).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- single word joiner → deleted (positive)
+- multiple word joiners all deleted (multi-match)
+- word joiner at start/middle/end (boundary cases)
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+144 → 149 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.23 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.23] — 2026-05-06
 
 **ENC-017 fix producer (delete U+00AD soft hyphen).**  Mirrors

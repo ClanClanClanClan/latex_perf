@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.22] — 2026-05-06
+
+**ENC-007 fix producer (delete U+200B zero-width space).**  First fix
+producer in the ENC family beyond ENC-002 (BOM deletion).  Pivots
+cycle from TYPO family (pool thinning) to ENC family (22+ unfilled
+rules).  Pattern: U+200B (3 bytes UTF-8: `e2 80 8b`).  Fix: simple
+deletion.  Zero-width spaces are invisible in editors but cause
+rendering quirks and copy-paste corruption — they are almost
+universally accidental in LaTeX source (typically introduced via
+web/rich-text paste).  No math context concerns: U+200B is wrong
+everywhere in source.
+
+**49 fix-producing rules** (was 48; +1: ENC-007).
+
+### Counts (v27.0.22 vs v27.0.21)
+
+- 660 catalogued rules (unchanged).
+- **49 fix-producing rules** (was 48; +1: ENC-007).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- single ZWSP → deleted (positive)
+- multiple ZWSP all deleted (multi-match)
+- ZWSP at start/middle/end (boundary cases)
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+134 → 139 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.21 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.21] — 2026-05-05
 
 **TYPO-012 fix producer (digit + apostrophe → digit + `^\prime`,

@@ -110,14 +110,29 @@ let rules_basic : rule list =
 
 (* ── ENC rules: encoding / Unicode character detection ─────────────── *)
 
-(* ENC-007: Zero-width space U+200B *)
+(* ENC-007: Zero-width space U+200B. v27.0.22: fix producer that deletes each
+   U+200B (3 bytes UTF-8: e2 80 8b). Zero-width spaces are invisible in editors
+   but cause rendering quirks and copy-paste corruption — they are almost
+   universally accidental in LaTeX source (typically introduced via
+   web/rich-text paste). The fix simply deletes them. No math context concerns:
+   U+200B is wrong everywhere in source. First fix producer in the ENC family
+   beyond ENC-002 — opens 22+ ENC rules for future cycles. *)
 let r_enc_007 : rule =
+  let needle = "\xe2\x80\x8b" in
+  let nlen = 3 in
   let run s =
-    let cnt = count_substring s "\xe2\x80\x8b" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let offsets = find_all_non_overlapping s needle in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-007" ~severity:Warning
-           ~message:"Zero‑width space U+200B present" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-007" ~severity:Warning
+           ~message:"Zero‑width space U+200B present" ~count:cnt ~fix)
     else None
   in
   { id = "ENC-007"; run; languages = [] }

@@ -1294,4 +1294,37 @@ let () =
         (does_not_fire "ENC-007" "no zero-width spaces here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.23: ENC-017 fix producer (delete U+00AD soft hyphen, 2-byte UTF-8
+     needle, mechanical deletion). Mirrors ENC-007 shape. *)
+  run "ENC-017 fix: deletes single U+00AD soft hyphen" (fun tag ->
+      let src = "hello\xc2\xadworld" in
+      let edits = fix_edits "ENC-017" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "helloworld")
+        (tag ^ ": soft hyphen deleted"));
+
+  run "ENC-017 fix: multiple soft hyphens all deleted" (fun tag ->
+      let src = "hy\xc2\xadphen\xc2\xadated\xc2\xadword" in
+      let edits = fix_edits "ENC-017" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "hyphenatedword")
+        (tag ^ ": three soft hyphens deleted"));
+
+  run "ENC-017 fix: soft hyphen at start, middle, and end" (fun tag ->
+      let src = "\xc2\xadlead middle\xc2\xadtail\xc2\xad" in
+      let edits = fix_edits "ENC-017" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "lead middletail")
+        (tag ^ ": boundary soft hyphens all deleted"));
+
+  run "ENC-017 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-017" "hyphenated-word with ASCII hyphen")
+        (tag ^ ": no U+00AD, no fire"));
+
+  run "ENC-017 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-017" "no soft hyphens here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

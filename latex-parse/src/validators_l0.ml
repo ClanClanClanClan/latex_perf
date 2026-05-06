@@ -161,14 +161,31 @@ let r_enc_012 : rule =
   in
   { id = "ENC-012"; run; languages = [] }
 
-(* ENC-017: Soft hyphen U+00AD *)
+(* ENC-017: Soft hyphen U+00AD. v27.0.23: fix producer that deletes each U+00AD
+   (2 bytes UTF-8: c2 ad). The soft hyphen is a discretionary line-break marker
+   — invisible in editors but instructs renderers to break the word at that
+   position if needed. In LaTeX source it is almost always accidental (typically
+   introduced via web/rich-text paste); LaTeX has its own discretionary-break
+   primitive (\-) that should be used instead. The fix simply deletes the U+00AD
+   bytes; the user can re-add \- where breaks are genuinely desired. Mirrors
+   v27.0.22 ENC-007 shape (single short UTF-8 needle, mechanical deletion). No
+   math context concerns: U+00AD is wrong everywhere in source. *)
 let r_enc_017 : rule =
+  let needle = "\xc2\xad" in
+  let nlen = 2 in
   let run s =
-    let cnt = count_substring s "\xc2\xad" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let offsets = find_all_non_overlapping s needle in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-017" ~severity:Warning
-           ~message:"Soft hyphen U+00AD found in source" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-017" ~severity:Warning
+           ~message:"Soft hyphen U+00AD found in source" ~count:cnt ~fix)
     else None
   in
   { id = "ENC-017"; run; languages = [] }

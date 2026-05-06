@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.23] — 2026-05-06
+
+**ENC-017 fix producer (delete U+00AD soft hyphen).**  Mirrors
+v27.0.22 ENC-007 shape (single short UTF-8 needle, mechanical
+deletion).  Pattern: U+00AD (2 bytes UTF-8: `c2 ad`).  The soft hyphen
+is a discretionary line-break marker — invisible in editors but
+instructs renderers to break the word at that position if needed.  In
+LaTeX source it is almost always accidental (typically introduced via
+web/rich-text paste); LaTeX has its own discretionary-break primitive
+(`\-`) that should be used instead.  No math context concerns:
+U+00AD is wrong everywhere in source.
+
+**50 fix-producing rules** (was 49; +1: ENC-017).
+
+### Counts (v27.0.23 vs v27.0.22)
+
+- 660 catalogued rules (unchanged).
+- **50 fix-producing rules** (was 49; +1: ENC-017).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- single soft hyphen → deleted (positive)
+- multiple soft hyphens all deleted (multi-match)
+- soft hyphen at start/middle/end (boundary cases)
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+139 → 144 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.22 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.22] — 2026-05-06
 
 **ENC-007 fix producer (delete U+200B zero-width space).**  First fix

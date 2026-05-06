@@ -1327,4 +1327,37 @@ let () =
         (does_not_fire "ENC-017" "no soft hyphens here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.24: ENC-021 fix producer (delete U+2060 WORD JOINER, 3-byte UTF-8
+     needle, mechanical deletion). Mirrors ENC-007/ENC-017 shape. *)
+  run "ENC-021 fix: deletes single U+2060 word joiner" (fun tag ->
+      let src = "joined\xe2\x81\xa0word" in
+      let edits = fix_edits "ENC-021" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "joinedword")
+        (tag ^ ": word joiner deleted"));
+
+  run "ENC-021 fix: multiple word joiners all deleted" (fun tag ->
+      let src = "a\xe2\x81\xa0b\xe2\x81\xa0c\xe2\x81\xa0d" in
+      let edits = fix_edits "ENC-021" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three word joiners deleted"));
+
+  run "ENC-021 fix: word joiner at start, middle, and end" (fun tag ->
+      let src = "\xe2\x81\xa0lead middle\xe2\x81\xa0tail\xe2\x81\xa0" in
+      let edits = fix_edits "ENC-021" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "lead middletail")
+        (tag ^ ": boundary word joiners all deleted"));
+
+  run "ENC-021 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-021" "regular source without word joiner")
+        (tag ^ ": no U+2060, no fire"));
+
+  run "ENC-021 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-021" "no word joiner here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

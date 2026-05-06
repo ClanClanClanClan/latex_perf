@@ -204,14 +204,30 @@ let r_enc_020 : rule =
   in
   { id = "ENC-020"; run; languages = [] }
 
-(* ENC-021: Word joiner U+2060 *)
+(* ENC-021: WORD JOINER U+2060. v27.0.24: fix producer that deletes each U+2060
+   (3 bytes UTF-8: e2 81 a0). The WORD JOINER prevents line-breaking between
+   adjacent characters; like the soft hyphen (ENC-017) and zero- width space
+   (ENC-007), it is invisible in editors and almost universally accidental in
+   LaTeX source. LaTeX provides ~ (NBSP) and \mbox{} for intentional
+   break-prevention. The fix simply deletes the U+2060 bytes. Mirrors v27.0.22
+   ENC-007 / v27.0.23 ENC-017 shape (single short UTF-8 needle, mechanical
+   deletion). No math context concerns. *)
 let r_enc_021 : rule =
+  let needle = "\xe2\x81\xa0" in
+  let nlen = 3 in
   let run s =
-    let cnt = count_substring s "\xe2\x81\xa0" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let offsets = find_all_non_overlapping s needle in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-021" ~severity:Warning
-           ~message:"WORD JOINER U+2060 present" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-021" ~severity:Warning
+           ~message:"WORD JOINER U+2060 present" ~count:cnt ~fix)
     else None
   in
   { id = "ENC-021"; run; languages = [] }

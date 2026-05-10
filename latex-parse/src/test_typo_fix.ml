@@ -1551,4 +1551,42 @@ let () =
         (does_not_fire "ENC-012" "no C1 controls here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.29: ENC-014 fix producer (delete UTF-16 BOM at file start, single
+     edit at offset 0). Distinct from prior ENC fixes: fixed match position. *)
+  run "ENC-014 fix: deletes UTF-16 LE BOM at file start" (fun tag ->
+      let src = "\xff\xferest of file" in
+      let edits = fix_edits "ENC-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "rest of file")
+        (tag ^ ": LE BOM deleted"));
+
+  run "ENC-014 fix: deletes UTF-16 BE BOM at file start" (fun tag ->
+      let src = "\xfe\xffrest of file" in
+      let edits = fix_edits "ENC-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "rest of file")
+        (tag ^ ": BE BOM deleted"));
+
+  run "ENC-014 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-014" "regular UTF-8 source no BOM")
+        (tag ^ ": no UTF-16 BOM, no fire"));
+
+  run "ENC-014 does not fire on UTF-8 BOM (different bytes)" (fun tag ->
+      (* UTF-8 BOM is `\xef\xbb\xbf` (3 bytes, U+FEFF in UTF-8 form). Different
+         from UTF-16 LE/BE BOMs `\xff\xfe`/`\xfe\xff`. ENC-014 specifically
+         targets UTF-16 BOMs; UTF-8 BOM is handled by ENC-002 (interior) or
+         accepted at file start. *)
+      let src = "\xef\xbb\xbfutf-8 source" in
+      expect (does_not_fire "ENC-014" src) (tag ^ ": UTF-8 BOM not in scope"));
+
+  run "ENC-014 fix: BOM-only-then-tiny-text source" (fun tag ->
+      (* Minimal: BOM (2 bytes) immediately followed by content. Edit deletes
+         [0, 2), result is just the content. *)
+      let src = "\xff\xfex" in
+      let edits = fix_edits "ENC-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "x")
+        (tag ^ ": BOM-only-prefix deleted, content preserved"));
+
   finalise "typo-fix"

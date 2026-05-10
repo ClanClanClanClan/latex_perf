@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.29] — 2026-05-10
+
+**ENC-014 fix producer (delete UTF-16 BOM at file start, single edit
+at offset 0).**  The UTF-16 BOM only ever appears at file start
+(`\xFF\xFE` LE or `\xFE\xFF` BE, 2 bytes).  Distinct from prior ENC
+fixes: ENC-014 has a FIXED match position rather than scanning the
+whole source — the simplest possible single-edit producer.  Severity
+Error preserved.  CAVEAT: this fix does not "convert" UTF-16 to
+UTF-8 — if the rest of the file is genuine UTF-16, deletion leaves
+garbled UTF-8 output; correct only for stray BOMs at the start of an
+otherwise-UTF-8 source.
+
+**56 fix-producing rules** (was 55; +1: ENC-014).
+
+### Counts (v27.0.29 vs v27.0.28)
+
+- 660 catalogued rules (unchanged).
+- **56 fix-producing rules** (was 55; +1: ENC-014).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- LE BOM at file start → deleted
+- BE BOM at file start → deleted
+- does not fire on clean source (negative)
+- does not fire on UTF-8 BOM (different bytes, ENC-002's scope)
+- minimal source (BOM + 1 content byte) → content preserved
+
+176 → 181 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.28 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.28] — 2026-05-10
 
 **ENC-012 fix producer (delete U+0080–U+009F C1 controls, custom range

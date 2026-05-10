@@ -255,19 +255,38 @@ let r_enc_021 : rule =
   in
   { id = "ENC-021"; run; languages = [] }
 
-(* ENC-022: Interlinear annotation chars U+FFF9-FFFB *)
+(* ENC-022: Interlinear annotation chars U+FFF9-FFFB. v27.0.26: fix producer
+   that deletes each interlinear annotation char in the 3-codepoint range U+FFF9
+   (ANCHOR) / U+FFFA (SEPARATOR) / U+FFFB (TERMINATOR). All three are 3-byte
+   UTF-8 sequences sharing the prefix `ef bf` and differing only in the third
+   byte (`b9`/`ba`/`bb`). Used for Ruby-style annotations in Asian text — never
+   appropriate in LaTeX source.
+
+   Extends the v27.0.25 ENC-020 dual-needle pattern to an N-needle list:
+   `List.fold_left` for the count, `List.concat_map` for the offsets. The
+   rewrite engine sorts the concatenated offset list before applying, so emit
+   order is irrelevant. No math context concerns. *)
 let r_enc_022 : rule =
+  let needles = [ "\xef\xbf\xb9"; "\xef\xbf\xba"; "\xef\xbf\xbb" ] in
+  let nlen = 3 in
   let run s =
     let cnt =
-      count_substring s "\xef\xbf\xb9"
-      + count_substring s "\xef\xbf\xba"
-      + count_substring s "\xef\xbf\xbb"
+      List.fold_left (fun acc n -> acc + count_substring s n) 0 needles
     in
     if cnt > 0 then
+      let offsets =
+        List.concat_map (fun n -> find_all_non_overlapping s n) needles
+      in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-022" ~severity:Warning
+        (mk_result_with_fix ~id:"ENC-022" ~severity:Warning
            ~message:"Interlinear annotation chars U+FFF9–FFFB detected"
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "ENC-022"; run; languages = [] }

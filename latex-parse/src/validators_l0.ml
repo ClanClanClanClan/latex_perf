@@ -303,20 +303,48 @@ let r_enc_023 : rule =
   in
   { id = "ENC-023"; run; languages = [] }
 
-(* ENC-024: Bidirectional embeddings U+202A-U+202E *)
+(* ENC-024: Bidirectional embeddings U+202A-U+202E. v27.0.27: fix producer that
+   deletes each bidi formatting char in the 5-codepoint range: U+202A LRE
+   (Left-to-Right Embedding) U+202B RLE (Right-to-Left Embedding) U+202C PDF
+   (Pop Directional Formatting) U+202D LRO (Left-to-Right Override) U+202E RLO
+   (Right-to-Left Override) All five are 3-byte UTF-8 sequences sharing the
+   prefix `e2 80` and differing only in the third byte (`aa` through `ae`). They
+   are bidirectional control chars — invisible in editors and almost universally
+   accidental in LaTeX source. The ENC-020 LRM/RLM fix (v27.0.25) handles
+   invisible bidi MARKS; this rule handles the stronger EMBEDDINGS/OVERRIDES.
+
+   Extends the v27.0.26 ENC-022 N-needle list pattern to 5 needles. The rewrite
+   engine sorts the concatenated offset list before applying. No math context
+   concerns. *)
 let r_enc_024 : rule =
+  let needles =
+    [
+      "\xe2\x80\xaa";
+      "\xe2\x80\xab";
+      "\xe2\x80\xac";
+      "\xe2\x80\xad";
+      "\xe2\x80\xae";
+    ]
+  in
+  let nlen = 3 in
   let run s =
     let cnt =
-      count_substring s "\xe2\x80\xaa"
-      + count_substring s "\xe2\x80\xab"
-      + count_substring s "\xe2\x80\xac"
-      + count_substring s "\xe2\x80\xad"
-      + count_substring s "\xe2\x80\xae"
+      List.fold_left (fun acc n -> acc + count_substring s n) 0 needles
     in
     if cnt > 0 then
+      let offsets =
+        List.concat_map (fun n -> find_all_non_overlapping s n) needles
+      in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-024" ~severity:Warning
-           ~message:"Bidirectional embeddings U+202A–U+202E present" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-024" ~severity:Warning
+           ~message:"Bidirectional embeddings U+202A–U+202E present" ~count:cnt
+           ~fix)
     else None
   in
   { id = "ENC-024"; run; languages = [] }

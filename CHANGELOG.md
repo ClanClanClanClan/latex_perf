@@ -2,6 +2,47 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.30] — 2026-05-10
+
+**ENC-013 fix producer (normalize mixed CRLF/LF line endings to LF).**
+Pre-existing rule fires when source contains BOTH `\r\n` (CRLF) and
+bare `\n` (LF) sequences; count is fixed at 1 (binary state).  The
+fix replaces every `\r\n` with `\n`, leaving an all-LF result.  LF is
+the cross-platform convention for source code (Git auto-converts on
+Windows checkout).  Severity Info preserved.
+
+**Distinct from prior ENC fixes**: emits N replace edits where N
+depends on the CRLF count, but the rule's count remains 1.  The fix
+is transformational (replaces 2 bytes with 1) rather than purely
+deletive.
+
+**57 fix-producing rules** (was 56; +1: ENC-013).
+
+### Counts (v27.0.30 vs v27.0.29)
+
+- 660 catalogued rules (unchanged).
+- **57 fix-producing rules** (was 56; +1: ENC-013).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+5 new test cases:
+- mixed CRLF + LF → all CRLFs converted
+- single CRLF + LF → one edit
+- pure LF source (no fire — not mixed)
+- pure CRLF source (no fire — not mixed)
+- consecutive CRLF runs → each normalized
+
+181 → 186 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.29 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.29] — 2026-05-10
 
 **ENC-014 fix producer (delete UTF-16 BOM at file start, single edit

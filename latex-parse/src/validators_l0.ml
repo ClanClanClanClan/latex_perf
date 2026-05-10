@@ -880,27 +880,25 @@ let r_enc_006 : rule =
    pre-v27.0.31 backscan which was O(N) per match → O(N²) total). The new
    scanner maintains an `in_url` flag: enter on `\url{`, exit on the next `}`
    while in URL. Total O(N) for the whole rule — critical for live-editing
-   performance. Semantically equivalent to the prior backscan: both compute
-   "the most recent of {\\url{, }} before each NBHY".
+   performance. Semantically equivalent to the prior backscan: both compute "the
+   most recent of {\\url{, }} before each NBHY".
 
-   Inside URLs, U+2011 is sometimes intentional (preventing breaks in
-   hyphenated URLs) — the rule and fix both skip those. In math, the user
-   typically uses `-` (subtraction) anyway — the rule and fix both skip
-   math. Severity Info preserved. *)
+   Inside URLs, U+2011 is sometimes intentional (preventing breaks in hyphenated
+   URLs) — the rule and fix both skip those. In math, the user typically uses
+   `-` (subtraction) anyway — the rule and fix both skip math. Severity Info
+   preserved. *)
 let r_enc_018 : rule =
   let run s =
     let n = String.length s in
     let math = find_math_ranges s in
     let offsets = ref [] in
     let in_url = ref false in
-    let starts_url_open p =
-      p + 5 <= n && String.sub s p 5 = "\\url{"
-    in
+    let starts_url_open p = p + 5 <= n && String.sub s p 5 = "\\url{" in
     let i = ref 0 in
     while !i < n - 2 do
-      (* Forward-pass URL state update at every position. Enter on `\url{`,
-         exit on `}` while in URL. NBHY bytes (e2 80 91) are not `\\`, `{`,
-         or `}`, so the i+=3 advance after a NBHY match doesn't skip any
+      (* Forward-pass URL state update at every position. Enter on `\url{`, exit
+         on `}` while in URL. NBHY bytes (e2 80 91) are not `\\`, `{`, or `}`,
+         so the i+=3 advance after a NBHY match doesn't skip any
          URL-state-relevant bytes. *)
       if (not !in_url) && starts_url_open !i then in_url := true
       else if !in_url && s.[!i] = '}' then in_url := false;

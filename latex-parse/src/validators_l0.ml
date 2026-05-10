@@ -510,16 +510,30 @@ let r_enc_004 : rule =
   in
   { id = "ENC-004"; run; languages = [] }
 
-(* ENC-013: Mixed CRLF and LF line endings *)
+(* ENC-013: Mixed CRLF and LF line endings. v27.0.30: fix producer that
+   normalizes mixed endings to LF (Unix-style). The pre-v27.0.30 rule fires when
+   the source contains BOTH `\r\n` (CRLF) and bare `\n` (LF) sequences; count is
+   a fixed 1 (binary state, not occurrence count). The fix replaces every `\r\n`
+   with `\n`, leaving an all-LF result.
+
+   LF is the cross-platform convention for source code (Git auto-converts on
+   Windows checkout). The user already opted into mixed-endings detection by
+   enabling this rule; the fix direction is canonical. Severity Info preserved.
+
+   Distinct from prior ENC fixes: emits N replace edits where N depends on the
+   CRLF count, but the rule's count remains 1. The fix is transformational
+   rather than purely deletive (replaces 2 bytes with 1). *)
 let r_enc_013 : rule =
   let run s =
     let n = String.length s in
     let has_crlf = ref false in
     let has_bare_lf = ref false in
+    let crlf_offsets = ref [] in
     let i = ref 0 in
     while !i < n do
       if s.[!i] = '\r' && !i + 1 < n && s.[!i + 1] = '\n' then (
         has_crlf := true;
+        crlf_offsets := !i :: !crlf_offsets;
         i := !i + 2)
       else if s.[!i] = '\n' then (
         has_bare_lf := true;
@@ -527,9 +541,15 @@ let r_enc_013 : rule =
       else incr i
     done;
     if !has_crlf && !has_bare_lf then
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\n")
+          (List.rev !crlf_offsets)
+      in
       Some
-        (mk_result ~id:"ENC-013" ~severity:Info
-           ~message:"Mixed CRLF and LF line endings" ~count:1)
+        (mk_result_with_fix ~id:"ENC-013" ~severity:Info
+           ~message:"Mixed CRLF and LF line endings" ~count:1 ~fix)
     else None
   in
   { id = "ENC-013"; run; languages = [] }

@@ -137,11 +137,24 @@ let r_enc_007 : rule =
   in
   { id = "ENC-007"; run; languages = [] }
 
-(* ENC-012: C1 control characters U+0080-009F *)
+(* ENC-012: C1 control characters U+0080-009F. v27.0.28: fix producer reusing
+   the pre-v27.0.28 custom range scanner — extended to record offsets. All 32
+   codepoints share UTF-8 prefix `\xc2` with last byte in `\x80..\x9f`. The
+   custom single-pass scan is more efficient than a 32-needle list iteration
+   that would scan the source 32 times.
+
+   C1 controls are legacy ISO/IEC 6429 control codes — invisible (or
+   locale-dependent) in editors and have no place in modern LaTeX source. The
+   fix simply deletes them.
+
+   Mirrors v27.0.22-v27.0.27 ENC deletion pattern but with a custom range
+   scanner instead of needle-list. Severity Error preserved (higher than the
+   v27.0.22-v27.0.27 ENC fixes' Warning — C1 controls can corrupt compilation
+   downstream). No math context concerns. *)
 let r_enc_012 : rule =
   let run s =
     let n = String.length s in
-    let cnt = ref 0 in
+    let offsets = ref [] in
     let i = ref 0 in
     while !i < n - 1 do
       if
@@ -149,14 +162,21 @@ let r_enc_012 : rule =
         && Char.code s.[!i + 1] >= 0x80
         && Char.code s.[!i + 1] <= 0x9F
       then (
-        incr cnt;
+        offsets := !i :: !offsets;
         i := !i + 2)
       else incr i
     done;
-    if !cnt > 0 then
+    let offsets = List.rev !offsets in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 2))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-012" ~severity:Error
-           ~message:"C1 control characters U+0080–009F present" ~count:!cnt)
+        (mk_result_with_fix ~id:"ENC-012" ~severity:Error
+           ~message:"C1 control characters U+0080–009F present" ~count:cnt ~fix)
     else None
   in
   { id = "ENC-012"; run; languages = [] }

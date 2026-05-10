@@ -1499,4 +1499,56 @@ let () =
         (does_not_fire "ENC-024" "no bidi embeddings here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.28: ENC-012 fix producer (delete U+0080-U+009F C1 control characters,
+     32-char range via custom scanner, mechanical deletion). Pivots from
+     N-needle list to custom range scanner (single source pass more efficient
+     than 32 List.concat_map scans). *)
+  run "ENC-012 fix: deletes single U+0080 (range start)" (fun tag ->
+      let src = "x\xc2\x80y" in
+      let edits = fix_edits "ENC-012" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": U+0080 deleted"));
+
+  run "ENC-012 fix: deletes single U+009F (range end)" (fun tag ->
+      let src = "x\xc2\x9fy" in
+      let edits = fix_edits "ENC-012" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": U+009F deleted"));
+
+  run "ENC-012 fix: deletes mid-range U+0090" (fun tag ->
+      let src = "x\xc2\x90y" in
+      let edits = fix_edits "ENC-012" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": U+0090 deleted"));
+
+  run "ENC-012 fix: handles multiple C1 chars in same input" (fun tag ->
+      let src = "a\xc2\x80b\xc2\x90c\xc2\x9fd" in
+      let edits = fix_edits "ENC-012" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three C1 chars deleted"));
+
+  run "ENC-012 does not fire on U+007F (just below range)" (fun tag ->
+      (* U+007F is ASCII DEL, encoded as single byte `\x7f` (not `\xc2 7f`).
+         Different prefix; not in scope. *)
+      let src = "x\x7fy" in
+      expect (does_not_fire "ENC-012" src) (tag ^ ": U+007F not in C1 range"));
+
+  run "ENC-012 does not fire on U+00A0 (just above range)" (fun tag ->
+      (* U+00A0 NBSP encodes as `\xc2\xa0`. The lead byte matches `\xc2` but the
+         second byte `\xa0` is OUTSIDE the C1 range `\x80..\x9f`. The scanner
+         correctly skips it. *)
+      let src = "x\xc2\xa0y" in
+      expect
+        (does_not_fire "ENC-012" src)
+        (tag ^ ": U+00A0 NBSP outside C1 range"));
+
+  run "ENC-012 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-012" "no C1 controls here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

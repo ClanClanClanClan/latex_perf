@@ -190,16 +190,39 @@ let r_enc_017 : rule =
   in
   { id = "ENC-017"; run; languages = [] }
 
-(* ENC-020: Invisible formatting marks U+200E (LRM) / U+200F (RLM) *)
+(* ENC-020: Invisible formatting marks U+200E (LRM) / U+200F (RLM). v27.0.25:
+   first multi-needle ENC fix producer. Deletes each U+200E (Left-to-Right Mark,
+   3 bytes UTF-8 e2 80 8e) and each U+200F (Right-to-Left Mark, 3 bytes UTF-8 e2
+   80 8f). Both are bidirectional control marks that influence the visual
+   rendering order of mixed RTL/LTR text — invisible in editors and almost
+   universally accidental in LaTeX source (typically introduced via
+   web/rich-text paste). The fix simply deletes them.
+
+   Mirrors v27.0.22 ENC-007 / v27.0.23 ENC-017 / v27.0.24 ENC-021 deletion
+   shape, but extends to dual-needle (compare v27.0.17 TYPO-049 dual-needle
+   pattern). Count semantic preserved (sum of both needle counts). The rewrite
+   engine sorts the concatenated offset list before applying, so emit order is
+   irrelevant. No math context concerns. *)
 let r_enc_020 : rule =
+  let lrm = "\xe2\x80\x8e" in
+  let rlm = "\xe2\x80\x8f" in
+  let nlen = 3 in
   let run s =
-    let cnt =
-      count_substring s "\xe2\x80\x8e" + count_substring s "\xe2\x80\x8f"
-    in
+    let cnt = count_substring s lrm + count_substring s rlm in
     if cnt > 0 then
+      let offsets =
+        find_all_non_overlapping s lrm @ find_all_non_overlapping s rlm
+      in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + nlen))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-020" ~severity:Warning
-           ~message:"Invisible formatting mark U+200E/U+200F present" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-020" ~severity:Warning
+           ~message:"Invisible formatting mark U+200E/U+200F present" ~count:cnt
+           ~fix)
     else None
   in
   { id = "ENC-020"; run; languages = [] }

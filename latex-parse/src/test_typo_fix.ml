@@ -1360,4 +1360,45 @@ let () =
         (does_not_fire "ENC-021" "no word joiner here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.25: ENC-020 fix producer (delete U+200E LRM / U+200F RLM
+     bidirectional marks, dual 3-byte UTF-8 needle, mechanical deletion). First
+     multi-needle ENC fix; mirrors v27.0.17 TYPO-049 dual-needle pattern. *)
+  run "ENC-020 fix: deletes single U+200E (LRM)" (fun tag ->
+      let src = "left\xe2\x80\x8eright" in
+      let edits = fix_edits "ENC-020" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "leftright")
+        (tag ^ ": LRM deleted"));
+
+  run "ENC-020 fix: deletes single U+200F (RLM)" (fun tag ->
+      let src = "left\xe2\x80\x8fright" in
+      let edits = fix_edits "ENC-020" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "leftright")
+        (tag ^ ": RLM deleted"));
+
+  run "ENC-020 fix: handles both LRM and RLM in same input" (fun tag ->
+      let src = "a\xe2\x80\x8eb\xe2\x80\x8fc\xe2\x80\x8ed" in
+      let edits = fix_edits "ENC-020" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": all three (LRM, RLM, LRM) deleted"));
+
+  run "ENC-020 fix: LRM and RLM at boundaries" (fun tag ->
+      let src = "\xe2\x80\x8estart\xe2\x80\x8fmid\xe2\x80\x8eend\xe2\x80\x8f" in
+      let edits = fix_edits "ENC-020" src in
+      expect
+        (List.length edits = 4 && apply_all src edits = "startmidend")
+        (tag ^ ": boundary marks all deleted"));
+
+  run "ENC-020 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-020" "regular text without bidi marks")
+        (tag ^ ": no LRM/RLM, no fire"));
+
+  run "ENC-020 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-020" "no bidi marks here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

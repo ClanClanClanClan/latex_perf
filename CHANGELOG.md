@@ -2,6 +2,46 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.26] — 2026-05-10
+
+**ENC-022 fix producer (delete U+FFF9–FFFB interlinear annotation
+chars, 3-needle list).**  Deletes each interlinear annotation char in
+the range U+FFF9 (ANCHOR), U+FFFA (SEPARATOR), U+FFFB (TERMINATOR).
+All three are 3-byte UTF-8 sequences sharing the prefix `ef bf` and
+differing only in the third byte.  Used for Ruby-style annotations in
+Asian text — never appropriate in LaTeX source.
+
+Extends the v27.0.25 ENC-020 dual-needle pattern to an N-needle list
+via `List.fold_left` (count) + `List.concat_map` (offsets).
+
+**53 fix-producing rules** (was 52; +1: ENC-022).
+
+### Counts (v27.0.26 vs v27.0.25)
+
+- 660 catalogued rules (unchanged).
+- **53 fix-producing rules** (was 52; +1: ENC-022).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- single ANCHOR (U+FFF9) → deleted (positive)
+- single SEPARATOR (U+FFFA) → deleted (positive)
+- single TERMINATOR (U+FFFB) → deleted (positive)
+- all three chars in same input
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+155 → 161 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.25 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.25] — 2026-05-10
 
 **ENC-020 fix producer (delete U+200E/U+200F LRM/RLM bidi marks,

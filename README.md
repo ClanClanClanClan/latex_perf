@@ -227,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.0.27 released. 644 validators implemented, **54 fix-producing rules**, 1,382 theorems across 171 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). v27.0.5–v27.0.6 ship the rolling Bucket A fix-producer cadence: TYPO-010 (space-before-punct), TYPO-004 (curly quotes, math-aware via new `find_math_ranges` helper).
+**Status**: v27.0.28 released. 644 validators implemented, **55 fix-producing rules**, 1,382 theorems across 171 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). v27.0.5–v27.0.6 ship the rolling Bucket A fix-producer cadence: TYPO-010 (space-before-punct), TYPO-004 (curly quotes, math-aware via new `find_math_ranges` helper).
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

@@ -2,6 +2,44 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.28] — 2026-05-10
+
+**ENC-012 fix producer (delete U+0080–U+009F C1 controls, custom range
+scanner).**  Pivots from N-needle list (v27.0.25-v27.0.27) to a custom
+range scanner — single source pass, more efficient than 32
+`List.concat_map` scans for the 32-char C1 range.  All 32 codepoints
+share UTF-8 prefix `\xc2` with last byte in `\x80..\x9f`.  Severity
+Error preserved (C1 controls can corrupt compilation downstream).
+
+**55 fix-producing rules** (was 54; +1: ENC-012).
+
+### Counts (v27.0.28 vs v27.0.27)
+
+- 660 catalogued rules (unchanged).
+- **55 fix-producing rules** (was 54; +1: ENC-012).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+7 new test cases:
+- single U+0080 (range start) → deleted
+- single U+009F (range end) → deleted
+- single U+0090 (mid-range) → deleted
+- three C1 chars in same input
+- does not fire on U+007F (just below range, different encoding)
+- does not fire on U+00A0 NBSP (just above range, prefix-byte coincidence)
+- idempotent on already-cleaned source
+
+169 → 176 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.27 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.27] — 2026-05-10
 
 **ENC-024 fix producer (delete U+202A–U+202E bidi embedding/override

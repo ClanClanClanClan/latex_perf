@@ -1401,4 +1401,45 @@ let () =
         (does_not_fire "ENC-020" "no bidi marks here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.26: ENC-022 fix producer (delete U+FFF9/FFFA/FFFB interlinear
+     annotation chars, 3-needle list, mechanical deletion). Extends v27.0.25
+     ENC-020 dual-needle pattern to N-needle list. *)
+  run "ENC-022 fix: deletes U+FFF9 ANCHOR" (fun tag ->
+      let src = "x\xef\xbf\xb9y" in
+      let edits = fix_edits "ENC-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": ANCHOR deleted"));
+
+  run "ENC-022 fix: deletes U+FFFA SEPARATOR" (fun tag ->
+      let src = "x\xef\xbf\xbay" in
+      let edits = fix_edits "ENC-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": SEPARATOR deleted"));
+
+  run "ENC-022 fix: deletes U+FFFB TERMINATOR" (fun tag ->
+      let src = "x\xef\xbf\xbby" in
+      let edits = fix_edits "ENC-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": TERMINATOR deleted"));
+
+  run "ENC-022 fix: handles all three chars in same input" (fun tag ->
+      let src = "a\xef\xbf\xb9b\xef\xbf\xbac\xef\xbf\xbbd" in
+      let edits = fix_edits "ENC-022" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": ANCHOR + SEPARATOR + TERMINATOR all deleted"));
+
+  run "ENC-022 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-022" "regular text without interlinear marks")
+        (tag ^ ": no U+FFF9-FFFB, no fire"));
+
+  run "ENC-022 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-022" "no interlinear marks here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

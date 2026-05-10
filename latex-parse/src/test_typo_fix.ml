@@ -1625,4 +1625,43 @@ let () =
         (List.length edits = 2 && apply_all src edits = "a\n\nb\nc")
         (tag ^ ": consecutive CRLFs each normalized"));
 
+  (* v27.0.31: ENC-018 fix producer (NBHY U+2011 → `-` outside math + URLs). *)
+  run "ENC-018 fix: replaces U+2011 with - in plain text" (fun tag ->
+      let src = "well\xe2\x80\x91known" in
+      let edits = fix_edits "ENC-018" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "well-known")
+        (tag ^ ": NBHY -> hyphen-minus"));
+
+  run "ENC-018 fix: skips U+2011 inside \\url{...}" (fun tag ->
+      let src = "see \\url{http://x.com/a\xe2\x80\x91b/} here" in
+      expect (does_not_fire "ENC-018" src) (tag ^ ": URL NBHY preserved"));
+
+  run "ENC-018 fix: skips U+2011 inside $..$ math" (fun tag ->
+      let src = "math $a\xe2\x80\x91b$ skipped" in
+      expect (does_not_fire "ENC-018" src) (tag ^ ": math NBHY preserved"));
+
+  run "ENC-018 fix: text NBHY fixed even when URL exists elsewhere" (fun tag ->
+      let src =
+        "url \\url{http://a.com/x\xe2\x80\x91y/} text\xe2\x80\x91hyphen end"
+      in
+      let edits = fix_edits "ENC-018" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits
+           = "url \\url{http://a.com/x\xe2\x80\x91y/} text-hyphen end")
+        (tag ^ ": URL NBHY preserved, text NBHY fixed"));
+
+  run "ENC-018 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-018" "regular text without NBHY")
+        (tag ^ ": no U+2011, no fire"));
+
+  run "ENC-018 fix: multiple text NBHYs all replaced" (fun tag ->
+      let src = "a\xe2\x80\x91b and c\xe2\x80\x91d" in
+      let edits = fix_edits "ENC-018" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "a-b and c-d")
+        (tag ^ ": both NBHYs replaced"));
+
   finalise "typo-fix"

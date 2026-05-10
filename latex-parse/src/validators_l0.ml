@@ -311,14 +311,37 @@ let r_enc_022 : rule =
   in
   { id = "ENC-022"; run; languages = [] }
 
-(* ENC-023: Narrow no-break space U+202F *)
+(* ENC-023: Narrow no-break space U+202F outside French context. v27.0.33: fix
+   producer that replaces each U+202F (3 bytes UTF-8: e2 80 af) with the
+   canonical regular non-breaking space U+00A0 (2 bytes UTF-8: c2 a0). Both
+   preserve the no-break property; U+00A0 is the conventional NBSP outside
+   French typography (where U+202F is the narrow variant used for thin spacing
+   before colon/semicolon/etc.). The rule message implies the user mistakenly
+   used the French-typography variant outside French context.
+
+   Replace 3 bytes with 2 bytes. Severity Warning preserved.
+
+   Mirrors v27.0.30 ENC-013 transformational pattern (replaces N bytes with M,
+   where N != M). *)
 let r_enc_023 : rule =
+  let needle = "\xe2\x80\xaf" in
+  let nlen = 3 in
+  let replacement = "\xc2\xa0" in
   let run s =
-    let cnt = count_substring s "\xe2\x80\xaf" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let offsets = find_all_non_overlapping s needle in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen)
+              replacement)
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-023" ~severity:Warning
-           ~message:"NARROW NB‑SPACE U+202F outside French context" ~count:cnt)
+        (mk_result_with_fix ~id:"ENC-023" ~severity:Warning
+           ~message:"NARROW NB‑SPACE U+202F outside French context" ~count:cnt
+           ~fix)
     else None
   in
   { id = "ENC-023"; run; languages = [] }

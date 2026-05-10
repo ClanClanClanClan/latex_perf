@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.33] — 2026-05-10
+
+**ENC-023 fix producer (narrow NBSP U+202F → regular NBSP U+00A0).**
+Replaces each U+202F (3 bytes UTF-8: `e2 80 af`) with the canonical
+regular non-breaking space U+00A0 (2 bytes UTF-8: `c2 a0`).  Both
+preserve the no-break property; U+00A0 is the conventional NBSP
+outside French typography (where U+202F is the narrow variant used
+for thin spacing before colon/semicolon/etc.).  Severity Warning
+preserved.
+
+Returns to new-fix-producer cadence after v27.0.32's perf-only
+release.
+
+**59 fix-producing rules** (was 58; +1: ENC-023).
+
+### Counts (v27.0.33 vs v27.0.32)
+
+- 660 catalogued rules (unchanged).
+- **59 fix-producing rules** (was 58; +1: ENC-023).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+4 new test cases:
+- single U+202F → U+00A0 (positive)
+- multiple U+202F all replaced (multi-match)
+- does not fire on clean source (negative)
+- idempotent (U+00A0 not in scope)
+
+192 → 196 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.32 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.32] — 2026-05-10
 
 **Performance: TYPO-046 adjacent-pair detection O(B×E) → O(B+E).**

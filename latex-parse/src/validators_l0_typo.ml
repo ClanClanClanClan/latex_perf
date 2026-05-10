@@ -2132,7 +2132,7 @@ let r_typo_046 : rule =
     let begin_offsets = collect_unescaped s begin_needle in
     let end_offsets = collect_unescaped s end_needle in
     let cnt = List.length begin_offsets + List.length end_offsets in
-    if cnt > 0 then
+    if cnt > 0 then (
       (* Round-1 ultrathink audit: detect adjacent begin/end pairs (empty math
          env, no content between the delimiters). Naive replacement of each
          delimiter with `$` would yield `$$` — the display-math delimiter that
@@ -2144,14 +2144,26 @@ let r_typo_046 : rule =
          `\begin{math} \end{math}` (single space content) falls through to the
          normal lone-replacement path and yields a valid (if pointless) `$ $`
          math env. *)
-      let is_paired_begin b = List.mem (b + blen) end_offsets in
+      (* v27.0.32: Hashtbl-based pair detection — O(B+E) instead of O(B×E). The
+         pre-v27.0.32 implementation used `List.mem (b+blen) end_offsets` per
+         begin (O(E) each) plus `List.mem e paired_end_set` per end (O(P) each),
+         giving O(B×E + E×P) ≈ O(B×E) total. Hashtbl lookups are O(1), so the
+         rewrite is O(B+E) total — protects live-editing performance on
+         documents with many math envs. Mirror of the v27.0.31 ENC-018
+         forward-pass perf fix philosophy. *)
+      let end_set = Hashtbl.create (List.length end_offsets) in
+      List.iter (fun e -> Hashtbl.replace end_set e ()) end_offsets;
+      let is_paired_begin b = Hashtbl.mem end_set (b + blen) in
       let paired_begins = List.filter is_paired_begin begin_offsets in
-      let paired_end_set = List.map (fun b -> b + blen) paired_begins in
+      let paired_end_set = Hashtbl.create (List.length paired_begins) in
+      List.iter
+        (fun b -> Hashtbl.replace paired_end_set (b + blen) ())
+        paired_begins;
       let lone_begins =
         List.filter (fun b -> not (is_paired_begin b)) begin_offsets
       in
       let lone_ends =
-        List.filter (fun e -> not (List.mem e paired_end_set)) end_offsets
+        List.filter (fun e -> not (Hashtbl.mem paired_end_set e)) end_offsets
       in
       let fix =
         List.map
@@ -2170,7 +2182,7 @@ let r_typo_046 : rule =
       Some
         (mk_result_with_fix ~id:"TYPO-046" ~severity:Info
            ~message:"Use of $begin:math:text$ … $end:math:text$ instead of $…$"
-           ~count:cnt ~fix)
+           ~count:cnt ~fix))
     else None
   in
   { id = "TYPO-046"; run; languages = [] }

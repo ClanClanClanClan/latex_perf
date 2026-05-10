@@ -2,6 +2,44 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.32] — 2026-05-10
+
+**Performance: TYPO-046 adjacent-pair detection O(B×E) → O(B+E).**
+The v27.0.19 round-1 audit fix (detect adjacent
+`\begin{math}\end{math}` empty math envs to avoid the `$$` collision
+when both delimiters are replaced with `$`) used `List.mem` against
+`end_offsets` per begin — O(B×E) total.  This release replaces the
+linear scans with `Hashtbl` lookups (O(1) per check) for O(B+E)
+total.  Same semantics (verified by 192/192 tests still passing); no
+new fix producer.
+
+This is a release of an existing fix producer's INTERNAL
+implementation, prompted by the user's live-editing-perf concern that
+surfaced during the v27.0.31 cycle (where ENC-018's URL backscan was
+O(N²) and got rewritten to O(N) forward-pass).
+
+**58 fix-producing rules** (unchanged — perf-only release).
+
+### Counts (v27.0.32 vs v27.0.31)
+
+- 660 catalogued rules (unchanged).
+- **58 fix-producing rules** (unchanged).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+No new tests (perf-only change to existing producer).  192/192
+fix-producer tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.31 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (semantically equivalent
+implementation).
+
 ## [v27.0.31] — 2026-05-10
 
 **ENC-018 fix producer (NBHY U+2011 → `-`, URL + math-aware).**

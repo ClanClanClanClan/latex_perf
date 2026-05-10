@@ -1442,4 +1442,61 @@ let () =
         (does_not_fire "ENC-022" "no interlinear marks here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.27: ENC-024 fix producer (delete U+202A-U+202E bidi embedding /
+     override chars, 5-needle list, mechanical deletion). Extends v27.0.26
+     ENC-022 N-needle pattern to 5 needles. *)
+  run "ENC-024 fix: deletes U+202A LRE" (fun tag ->
+      let src = "x\xe2\x80\xaay" in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": LRE deleted"));
+
+  run "ENC-024 fix: deletes U+202B RLE" (fun tag ->
+      let src = "x\xe2\x80\xaby" in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": RLE deleted"));
+
+  run "ENC-024 fix: deletes U+202C PDF" (fun tag ->
+      let src = "x\xe2\x80\xacy" in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": PDF deleted"));
+
+  run "ENC-024 fix: deletes U+202D LRO" (fun tag ->
+      let src = "x\xe2\x80\xady" in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": LRO deleted"));
+
+  run "ENC-024 fix: deletes U+202E RLO" (fun tag ->
+      let src = "x\xe2\x80\xaey" in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "xy")
+        (tag ^ ": RLO deleted"));
+
+  run "ENC-024 fix: handles all five chars in same input" (fun tag ->
+      let src =
+        "a\xe2\x80\xaab\xe2\x80\xabc\xe2\x80\xacd\xe2\x80\xade\xe2\x80\xaef"
+      in
+      let edits = fix_edits "ENC-024" src in
+      expect
+        (List.length edits = 5 && apply_all src edits = "abcdef")
+        (tag ^ ": LRE+RLE+PDF+LRO+RLO all deleted"));
+
+  run "ENC-024 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-024" "regular text without bidi embeddings")
+        (tag ^ ": no U+202A-U+202E, no fire"));
+
+  run "ENC-024 fix: idempotent on already-cleaned source" (fun tag ->
+      expect
+        (does_not_fire "ENC-024" "no bidi embeddings here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

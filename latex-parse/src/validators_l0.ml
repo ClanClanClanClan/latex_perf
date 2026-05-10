@@ -534,20 +534,33 @@ let r_enc_013 : rule =
   in
   { id = "ENC-013"; run; languages = [] }
 
-(* ENC-014: UTF-16 byte-order mark present *)
+(* ENC-014: UTF-16 byte-order mark present. v27.0.29: fix producer that deletes
+   the UTF-16 BOM at file start (`\xFF\xFE` LE or `\xFE\xFF` BE, 2 bytes). The
+   BOM only ever appears at offset 0; emit a single delete edit covering bytes
+   [0, 2).
+
+   CAVEAT: this fix does not "convert" UTF-16 to UTF-8 — if the rest of the file
+   is genuine UTF-16, deletion leaves garbled UTF-8 output. The fix is correct
+   for the common case of a stray UTF-16 BOM at the start of an otherwise-UTF-8
+   source (e.g., from a concatenation accident or a shell redirect that wrote a
+   BOM). Severity Error preserved.
+
+   Distinct from v27.0.28 ENC-012's custom range scanner: ENC-014 has a FIXED
+   match position (offset 0) rather than scanning the whole source — the
+   simplest possible single-edit producer. *)
 let r_enc_014 : rule =
   let run s =
     let n = String.length s in
-    let cnt = ref 0 in
-    if n >= 2 then (
-      (* UTF-16 LE BOM: FF FE *)
-      if Char.code s.[0] = 0xFF && Char.code s.[1] = 0xFE then incr cnt;
-      (* UTF-16 BE BOM: FE FF *)
-      if Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF then incr cnt);
-    if !cnt > 0 then
+    let is_bom =
+      n >= 2
+      && ((Char.code s.[0] = 0xFF && Char.code s.[1] = 0xFE)
+         || (Char.code s.[0] = 0xFE && Char.code s.[1] = 0xFF))
+    in
+    if is_bom then
+      let fix = [ Cst_edit.delete ~start_offset:0 ~end_offset:2 ] in
       Some
-        (mk_result ~id:"ENC-014" ~severity:Error
-           ~message:"UTF‑16 byte‑order mark present" ~count:!cnt)
+        (mk_result_with_fix ~id:"ENC-014" ~severity:Error
+           ~message:"UTF‑16 byte‑order mark present" ~count:1 ~fix)
     else None
   in
   { id = "ENC-014"; run; languages = [] }

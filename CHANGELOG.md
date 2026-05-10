@@ -2,6 +2,45 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.25] — 2026-05-10
+
+**ENC-020 fix producer (delete U+200E/U+200F LRM/RLM bidi marks,
+dual-needle).**  First multi-needle ENC fix producer.  Deletes each
+U+200E (Left-to-Right Mark, 3 bytes `e2 80 8e`) and each U+200F
+(Right-to-Left Mark, 3 bytes `e2 80 8f`).  Both are bidirectional
+control marks that influence the visual rendering order of mixed
+RTL/LTR text — invisible in editors and almost universally accidental
+in LaTeX source.  Mirrors v27.0.22-v27.0.24 ENC deletion shape but
+extends to dual-needle (compare v27.0.17 TYPO-049 dual-needle pattern).
+
+**52 fix-producing rules** (was 51; +1: ENC-020).
+
+### Counts (v27.0.25 vs v27.0.24)
+
+- 660 catalogued rules (unchanged).
+- **52 fix-producing rules** (was 51; +1: ENC-020).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- single LRM → deleted (positive)
+- single RLM → deleted (positive)
+- both LRM and RLM in same input (3 marks)
+- boundary marks at start/middle/end (4 marks)
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+149 → 155 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.24 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.24] — 2026-05-06
 
 **ENC-021 fix producer (delete U+2060 WORD JOINER).**  Mirrors

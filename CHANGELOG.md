@@ -2,6 +2,42 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.27] — 2026-05-10
+
+**ENC-024 fix producer (delete U+202A–U+202E bidi embedding/override
+chars, 5-needle list).**  Deletes each of LRE (U+202A), RLE (U+202B),
+PDF (U+202C), LRO (U+202D), RLO (U+202E).  All five are 3-byte UTF-8
+sharing prefix `e2 80`, differing only in the third byte.  ENC-020
+(v27.0.25) handles invisible bidi MARKS (LRM/RLM); this rule handles
+the stronger EMBEDDINGS/OVERRIDES.  Extends the v27.0.26 ENC-022
+N-needle list pattern to 5 needles.
+
+**54 fix-producing rules** (was 53; +1: ENC-024).
+
+### Counts (v27.0.27 vs v27.0.26)
+
+- 660 catalogued rules (unchanged).
+- **54 fix-producing rules** (was 53; +1: ENC-024).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+8 new test cases:
+- single LRE, RLE, PDF, LRO, RLO each → deleted (positive ×5)
+- all five chars in same input
+- does not fire on clean source (negative)
+- idempotent on already-cleaned source
+
+161 → 169 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.26 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.26] — 2026-05-10
 
 **ENC-022 fix producer (delete U+FFF9–FFFB interlinear annotation

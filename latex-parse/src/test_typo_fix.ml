@@ -1589,4 +1589,40 @@ let () =
         (List.length edits = 1 && apply_all src edits = "x")
         (tag ^ ": BOM-only-prefix deleted, content preserved"));
 
+  (* v27.0.30: ENC-013 fix producer (normalize mixed CRLF/LF endings to LF). *)
+  run "ENC-013 fix: replaces all CRLF with LF when mixed" (fun tag ->
+      let src = "line1\r\nline2\nline3\r\nline4" in
+      let edits = fix_edits "ENC-013" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "line1\nline2\nline3\nline4")
+        (tag ^ ": both CRLFs converted to LF"));
+
+  run "ENC-013 fix: single CRLF + LF -> normalized" (fun tag ->
+      let src = "a\r\nb\nc" in
+      let edits = fix_edits "ENC-013" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\nb\nc")
+        (tag ^ ": one CRLF converted"));
+
+  run "ENC-013 does not fire on pure LF source" (fun tag ->
+      expect
+        (does_not_fire "ENC-013" "line1\nline2\nline3")
+        (tag ^ ": pure LF, no mixed-endings warning"));
+
+  run "ENC-013 does not fire on pure CRLF source" (fun tag ->
+      (* No bare LF, so the mixed condition isn't triggered. The rule
+         specifically warns about MIXED endings — pure CRLF is consistent
+         (Windows convention) and outside this rule's scope. *)
+      expect
+        (does_not_fire "ENC-013" "line1\r\nline2\r\nline3")
+        (tag ^ ": pure CRLF, no mix"));
+
+  run "ENC-013 fix: multiple consecutive CRLF runs" (fun tag ->
+      let src = "a\r\n\r\nb\nc" in
+      let edits = fix_edits "ENC-013" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "a\n\nb\nc")
+        (tag ^ ": consecutive CRLFs each normalized"));
+
   finalise "typo-fix"

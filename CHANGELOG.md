@@ -2,6 +2,50 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.31] — 2026-05-10
+
+**ENC-018 fix producer (NBHY U+2011 → `-`, URL + math-aware).**
+Replaces each U+2011 (3 bytes UTF-8: `e2 80 91`) outside math AND
+outside `\url{...}` with a regular hyphen-minus `-` (1 byte).
+
+Pivot from pre-v27.0.31 implementation: scans original source
+directly with `find_math_ranges` (rather than
+`strip_math_segments`+s_text) so collected offsets map back to source
+positions for fix-edit emission.  The URL backscan logic is preserved
+(look back for `\url{` not preceded by `}`).
+
+Inside URLs, U+2011 is sometimes intentional (preventing breaks in
+hyphenated URLs) — the rule and fix both skip those.  Severity Info
+preserved.
+
+**58 fix-producing rules** (was 57; +1: ENC-018).
+
+### Counts (v27.0.31 vs v27.0.30)
+
+- 660 catalogued rules (unchanged).
+- **58 fix-producing rules** (was 57; +1: ENC-018).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- plain text U+2011 → `-` (positive)
+- inside `\url{}` preserved (URL skip)
+- inside `$..$` math preserved (math skip)
+- mixed (URL preserves, text fixes)
+- does not fire on clean source (negative)
+- multiple text NBHYs all replaced
+
+186 → 192 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.30 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.30] — 2026-05-10
 
 **ENC-013 fix producer (normalize mixed CRLF/LF line endings to LF).**

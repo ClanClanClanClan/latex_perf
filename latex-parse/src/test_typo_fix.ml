@@ -1664,4 +1664,32 @@ let () =
         (List.length edits = 2 && apply_all src edits = "a-b and c-d")
         (tag ^ ": both NBHYs replaced"));
 
+  (* v27.0.33: ENC-023 fix producer (U+202F narrow NBSP -> U+00A0 regular). *)
+  run "ENC-023 fix: replaces single U+202F with U+00A0" (fun tag ->
+      let src = "a\xe2\x80\xafb" in
+      let edits = fix_edits "ENC-023" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\xc2\xa0b")
+        (tag ^ ": narrow NBSP -> regular NBSP"));
+
+  run "ENC-023 fix: multiple U+202F all replaced" (fun tag ->
+      let src = "a\xe2\x80\xafb\xe2\x80\xafc\xe2\x80\xafd" in
+      let edits = fix_edits "ENC-023" src in
+      expect
+        (List.length edits = 3
+        && apply_all src edits = "a\xc2\xa0b\xc2\xa0c\xc2\xa0d")
+        (tag ^ ": three narrow NBSPs converted"));
+
+  run "ENC-023 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-023" "regular text without narrow NBSP")
+        (tag ^ ": no U+202F, no fire"));
+
+  run "ENC-023 fix: idempotent (U+00A0 not in scope)" (fun tag ->
+      (* After fix, source contains U+00A0 not U+202F. ENC-023 specifically
+         targets U+202F; U+00A0 is the conventional NBSP and out of scope.
+         Re-running on the fixed output produces no further edits. *)
+      let src = "after\xc2\xa0fix" in
+      expect (does_not_fire "ENC-023" src) (tag ^ ": U+00A0 not flagged"));
+
   finalise "typo-fix"

@@ -2,6 +2,58 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.36] — 2026-05-11
+
+**FIX_PRODUCER_LEDGER automation + pre-release drift gate** (no new
+fix producer).  Resolves a post-v27.0.34 audit finding that the
+ledger drifted: ENC-016 shipped in v27.0.35 but the ledger still
+said "pending".  Root cause: ledger was a manual artifact; nothing
+prevented drift between code and docs.
+
+Three changes:
+
+1. **`scripts/tools/generate_fix_producer_ledger.py`** — proper tool
+   that reads all 660 rule IDs from `rule_contracts.yaml`, maintains
+   a `SHIPPED_VERSIONS` dict (hand-edited per release), cross-checks
+   against actual fix producers discovered in the validator source
+   (`mk_result_with_fix` calls), and regenerates the ledger.  Supports
+   `--check` mode for CI gating.
+
+2. **`scripts/tools/check_fix_producer_ledger.py`** — pre-release
+   gate that runs the generator with `--check` and fails if the
+   on-disk ledger differs from the generated content OR if
+   `SHIPPED_VERSIONS` drifts from code.
+
+3. **`scripts/tools/pre_release_check.py`** — wires the new gate
+   into the existing suite, making it gate #14.
+
+Ledger refreshed with current state — ENC-016 now correctly marked
+"shipped in v27.0.35".
+
+Going forward: every new fix producer cycle must update
+`SHIPPED_VERSIONS` + regenerate the ledger.  The gate enforces this.
+
+**60 fix-producing rules** (unchanged — docs/automation release).
+
+### Counts (v27.0.36 vs v27.0.35)
+
+- 660 catalogued rules (unchanged).
+- **60 fix-producing rules** (unchanged).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- **14 pre-release gates** (was 13; +1: `check_fix_producer_ledger`).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+No new tests (no rule-behavior change).  202/202 fix-producer tests
+PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.35 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (no rule behavior change).
+
 ## [v27.0.35] — 2026-05-11
 
 **ENC-016 fix producer (fullwidth digits U+FF10–FF19 → ASCII 0-9).**

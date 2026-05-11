@@ -766,27 +766,46 @@ let r_enc_015 : rule =
   in
   { id = "ENC-015"; run; languages = [] }
 
-(* ENC-016: Fullwidth digits U+FF10-FF19 (Arabic numeral look-alikes) *)
+(* ENC-016: Fullwidth digits U+FF10-FF19 (Arabic numeral look-alikes). v27.0.35:
+   fix producer that replaces each fullwidth digit (3 bytes UTF-8 `ef bc
+   90..99`) with its ASCII equivalent (1 byte `30..39`). The mapping is the
+   NFKC-canonical fullwidth → halfwidth digit transform; replacement direction
+   is unambiguous (fullwidth digits in LaTeX source are almost universally
+   accidental, typically from CJK paste).
+
+   Replacement byte derived from the third needle byte: `b2 - 0x60` maps
+   `0x90..0x99` to `0x30..0x39` (ASCII '0'..'9').
+
+   Reuses the pre-v27.0.35 custom range scanner shape (mirror of v27.0.28
+   ENC-012 C1-controls). Severity Warning preserved. *)
 let r_enc_016 : rule =
   let run s =
     let n = String.length s in
-    let cnt = ref 0 in
+    let offsets = ref [] in
     let i = ref 0 in
     while !i < n - 2 do
       let b0 = Char.code s.[!i] in
       let b1 = Char.code s.[!i + 1] in
       let b2 = Char.code s.[!i + 2] in
       if b0 = 0xEF && b1 = 0xBC && b2 >= 0x90 && b2 <= 0x99 then (
-        (* EF BC 90 — EF BC 99 = U+FF10-FF19 *)
-        incr cnt;
+        offsets := (!i, b2 - 0x60) :: !offsets;
         i := !i + 3)
       else incr i
     done;
-    if !cnt > 0 then
+    let offsets = List.rev !offsets in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      let fix =
+        List.map
+          (fun (off, ascii) ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 3)
+              (String.make 1 (Char.chr ascii)))
+          offsets
+      in
       Some
-        (mk_result ~id:"ENC-016" ~severity:Warning
-           ~message:"Arabic numerals replaced by Unicode look‑alikes"
-           ~count:!cnt)
+        (mk_result_with_fix ~id:"ENC-016" ~severity:Warning
+           ~message:"Arabic numerals replaced by Unicode look‑alikes" ~count:cnt
+           ~fix)
     else None
   in
   { id = "ENC-016"; run; languages = [] }

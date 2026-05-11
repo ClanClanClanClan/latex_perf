@@ -1692,4 +1692,48 @@ let () =
       let src = "after\xc2\xa0fix" in
       expect (does_not_fire "ENC-023" src) (tag ^ ": U+00A0 not flagged"));
 
+  (* v27.0.35: ENC-016 fix producer (fullwidth digits U+FF10-FF19 → ASCII). *)
+  run "ENC-016 fix: replaces U+FF10 with '0'" (fun tag ->
+      let src = "x\xef\xbc\x90y" in
+      let edits = fix_edits "ENC-016" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "x0y")
+        (tag ^ ": U+FF10 → '0'"));
+
+  run "ENC-016 fix: replaces U+FF19 with '9'" (fun tag ->
+      let src = "x\xef\xbc\x99y" in
+      let edits = fix_edits "ENC-016" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "x9y")
+        (tag ^ ": U+FF19 → '9'"));
+
+  run "ENC-016 fix: full digit range U+FF10..FF19 → '0'..'9'" (fun tag ->
+      let src =
+        "\xef\xbc\x90\xef\xbc\x91\xef\xbc\x92\xef\xbc\x93\xef\xbc\x94"
+        ^ "\xef\xbc\x95\xef\xbc\x96\xef\xbc\x97\xef\xbc\x98\xef\xbc\x99"
+      in
+      let edits = fix_edits "ENC-016" src in
+      expect
+        (List.length edits = 10 && apply_all src edits = "0123456789")
+        (tag ^ ": all 10 fullwidth digits → ASCII"));
+
+  run "ENC-016 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "ENC-016" "regular ASCII digits 0123456789")
+        (tag ^ ": no fullwidth digits, no fire"));
+
+  run "ENC-016 does not fire on adjacent non-digit fullwidth chars" (fun tag ->
+      (* U+FF0F SOLIDUS = `\xef\xbc\x8f` (b2=0x8f, just below 0x90 range) U+FF1A
+         COLON = `\xef\xbc\x9a` (b2=0x9a, just above 0x99 range) Both share the
+         `\xef\xbc` prefix but fall outside the digit range. *)
+      let src = "x\xef\xbc\x8fy\xef\xbc\x9az" in
+      expect
+        (does_not_fire "ENC-016" src)
+        (tag ^ ": prefix-byte coincidence outside digit range, no fire"));
+
+  run "ENC-016 fix: idempotent on ASCII-fixed source" (fun tag ->
+      expect
+        (does_not_fire "ENC-016" "ASCII 0123456789 here")
+        (tag ^ ": ASCII digits not flagged"));
+
   finalise "typo-fix"

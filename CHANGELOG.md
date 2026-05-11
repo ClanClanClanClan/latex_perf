@@ -2,6 +2,46 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.35] — 2026-05-11
+
+**ENC-016 fix producer (fullwidth digits U+FF10–FF19 → ASCII 0-9).**
+Replaces each fullwidth digit (3 bytes UTF-8 `ef bc 90..99`) with its
+ASCII equivalent (1 byte `30..39`).  NFKC-canonical fullwidth →
+halfwidth transform; direction is unambiguous (fullwidth digits in
+LaTeX source are almost universally accidental, typically from CJK
+paste).  Replacement byte derived from the third needle byte:
+`b2 - 0x60` maps `0x90..0x99` to `0x30..0x39`.  Reuses v27.0.28
+ENC-012's custom range scanner pattern.  Severity Warning preserved.
+
+**60 fix-producing rules** (was 59; +1: ENC-016).
+
+### Counts (v27.0.35 vs v27.0.34)
+
+- 660 catalogued rules (unchanged).
+- **60 fix-producing rules** (was 59; +1: ENC-016).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+6 new test cases:
+- single U+FF10 → '0' (positive: range start)
+- single U+FF19 → '9' (positive: range end)
+- full 10-char range → '0'..'9' (multi-match)
+- does not fire on clean source (negative)
+- does not fire on prefix-byte coincidence (U+FF0F, U+FF1A share
+  `\xef\xbc` prefix but outside digit-byte range)
+- idempotent on ASCII-fixed source
+
+196 → 202 tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.34 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.34] — 2026-05-11
 
 **Docs-only: create `specs/v27/FIX_PRODUCER_LEDGER.md` (cadence plan

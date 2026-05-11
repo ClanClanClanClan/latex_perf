@@ -2,6 +2,42 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.37] — 2026-05-12
+
+**+1 fix producer: CHAR-006 (Backspace U+0008 delete)** — opens the
+CHAR family for fix production.  Pattern: scan bytes for `\x08`,
+emit one `Cst_edit.delete` per occurrence, total complexity
+O(N).  No regex, no math-awareness needed (control bytes are
+unambiguous in any context).  Tests cover single, multiple,
+boundary (BOF/EOF), and clean inputs.
+
+This is the simplest possible fix-producer shape — single-byte
+needle, plain delete, no escape detection, no overlap concerns —
+and serves as the template for CHAR-007 (bell), CHAR-008 (form
+feed), CHAR-009 (delete) which follow the identical pattern in
+upcoming releases.
+
+**61 fix-producing rules** (was 60; +1: CHAR-006).
+
+### Counts (v27.0.37 vs v27.0.36)
+
+- 660 catalogued rules (unchanged).
+- **61 fix-producing rules** (was 60; +1: CHAR-006).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 5 new CHAR-006 tests in `test_typo_fix.ml`: single backspace,
+  multiple, BOF, EOF, clean input.
+- 207/207 fix-producer tests PASS.
+
+### Differential vs v27.0.36
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.36] — 2026-05-11
 
 **FIX_PRODUCER_LEDGER automation + pre-release drift gate** (no new

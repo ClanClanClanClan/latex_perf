@@ -43,6 +43,7 @@ GATES = [
     ("python3", "scripts/tools/check_result_helpers.py"),
     ("python3", "scripts/tools/check_fix_integration_wired.py"),
     ("python3", "scripts/tools/check_cst_structure_lossless.py"),
+    ("python3", "scripts/tools/check_fix_producer_ledger.py"),
 ]
 
 BUILD_CHECKS = [

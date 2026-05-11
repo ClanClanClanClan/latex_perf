@@ -4,20 +4,23 @@ Tracks bucket assignment (per `V27_FIX_PRODUCER_CADENCE.md`) and shipping
 status for every catalogued rule. Required by the cadence plan's acceptance
 criteria.
 
-**Generated:** 2026-05-11 (v27.0.34)
+**Auto-generated** by `scripts/tools/generate_fix_producer_ledger.py`.
+To update: edit `SHIPPED_VERSIONS` in the generator script and rerun.
+The pre-release gate `check_fix_producer_ledger.py` runs the generator with
+`--check` and fails if the on-disk file drifts from the generated one.
 
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 59 (~8%)
-- **Pending**: 597
+- **Shipped**: 60 (~9%)
+- **Pending**: 596
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 458 | 59 | 399 |
+| **A**  | Mechanical, safe everywhere       | 458 | 60 | 398 |
 | **B**  | Sentence-aware (NLP-required)     | 53 | 0 | 53 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -63,7 +66,7 @@ rules currently lack this annotation; add in a follow-up cycle.
 | DELIM | 11 | 0 | 11 | 0 | 11 | 0 | 0 | 0 |
 | DOC | 5 | 0 | 5 | 0 | 0 | 0 | 5 | 0 |
 | EL | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| ENC | 24 | 12 | 12 | 0 | 24 | 0 | 0 | 0 |
+| ENC | 24 | 13 | 11 | 0 | 24 | 0 | 0 | 0 |
 | EXP | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | FIG | 25 | 0 | 25 | 0 | 0 | 0 | 0 | 25 |
 | FONT | 13 | 0 | 13 | 0 | 0 | 0 | 0 | 13 |
@@ -235,7 +238,7 @@ rules currently lack this annotation; add in a follow-up cycle.
 | `ENC-013` | ENC | **A** | confirmed | shipped in v27.0.30 |
 | `ENC-014` | ENC | **A** | confirmed | shipped in v27.0.29 |
 | `ENC-015` | ENC | **A** | tentative | pending |
-| `ENC-016` | ENC | **A** | tentative | pending |
+| `ENC-016` | ENC | **A** | confirmed | shipped in v27.0.35 |
 | `ENC-017` | ENC | **A** | confirmed | shipped in v27.0.23 |
 | `ENC-018` | ENC | **A** | confirmed | shipped in v27.0.31 |
 | `ENC-019` | ENC | **A** | tentative | pending |
@@ -783,7 +786,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 59 of 458 Bucket A
+  **TRACKING** — 60 of 458 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).
@@ -793,7 +796,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
 
 For the next mechanical fix-producer cycle, prefer:
 
-1. **ENC family**: 24 total, 12 shipped, 12 pending. Remaining mostly
+1. **ENC family**: 24 total, 13 shipped, 11 pending. Remaining mostly
    require non-trivial decisions (homoglyph direction, multi-char
    mappings, complex semantics).
 2. **MATH family**: 108 total, 0 shipped. Largest untapped Bucket A pool.

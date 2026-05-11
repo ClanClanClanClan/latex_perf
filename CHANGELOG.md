@@ -2,6 +2,47 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.34] — 2026-05-11
+
+**Docs-only: create `specs/v27/FIX_PRODUCER_LEDGER.md` (cadence plan
+acceptance criterion).**  No new fix producer; no code changes.
+
+`V27_FIX_PRODUCER_CADENCE.md` required a ledger tracking bucket
+assignment (A/B/C/D) + shipping status for all 660 catalogued rules.
+This file had been missing across the v27.0.5+ rolling cadence.
+
+Generated ledger contents:
+- Summary: 660 total / 59 shipped / 597 pending / 4 NLP-deferred
+- Tentative bucket distribution: A=458, B=53, C=87, D=62
+- Per-family breakdown for all 52 rule families
+- Per-rule table (660 rows) with bucket + confidence + status
+- Acceptance-criteria status against the cadence plan
+- Next-pick guidance for upcoming cycles
+
+Bucket assignments for shipped rules are CONFIRMED.  Assignments for
+unshipped rules are TENTATIVE (heuristic-by-family) and should be
+re-confirmed during each shipping audit.
+
+**59 fix-producing rules** (unchanged — docs-only release).
+
+### Counts (v27.0.34 vs v27.0.33)
+
+- 660 catalogued rules (unchanged).
+- **59 fix-producing rules** (unchanged).
+- 1,382 theorems (unchanged).
+- 171 .v files (unchanged).
+- 13 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+No new tests (no code change).  196/196 fix-producer tests PASS.
+
+### Differential test
+
+`run_differential_test.py --baseline-ref v27.0.33 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (no rule behavior change).
+
 ## [v27.0.33] — 2026-05-10
 
 **ENC-023 fix producer (narrow NBSP U+202F → regular NBSP U+00A0).**

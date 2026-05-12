@@ -1835,4 +1835,38 @@ let () =
         (does_not_fire "CHAR-008" "no form feed here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.40: CHAR-009 fix producer (Delete U+007F delete) — fourth and final
+     CHAR-family single-byte-delete producer; closes the CHAR-006..009 block
+     opened in v27.0.37. *)
+  run "CHAR-009 fix: deletes single DEL byte" (fun tag ->
+      let src = "before\x7fafter" in
+      let edits = fix_edits "CHAR-009" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": DEL deleted"));
+
+  run "CHAR-009 fix: multiple DELs all deleted" (fun tag ->
+      let src = "a\x7fb\x7fc\x7fd" in
+      let edits = fix_edits "CHAR-009" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three DELs deleted"));
+
+  run "CHAR-009 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-009" "regular text with no control chars")
+        (tag ^ ": no DEL, no fire"));
+
+  run "CHAR-009 fix: DEL at file boundaries" (fun tag ->
+      let src = "\x7fmid\x7fend\x7f" in
+      let edits = fix_edits "CHAR-009" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "midend")
+        (tag ^ ": leading/middle/trailing DELs all deleted"));
+
+  run "CHAR-009 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-009" "no DEL here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

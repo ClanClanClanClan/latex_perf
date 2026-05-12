@@ -2,6 +2,34 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.40] — 2026-05-12
+
+**+1 fix producer: CHAR-009 (Delete U+007F delete)** — fourth and final
+CHAR-family single-byte-delete producer.  Closes the CHAR-006..009
+block opened in v27.0.37 (backspace), continued in v27.0.38 (bell)
+and v27.0.39 (form feed).  Identical shape; just a different needle
+(`\x7f`).  Severity Warning preserved.
+
+**64 fix-producing rules** (was 63; +1: CHAR-009).
+
+### Counts (v27.0.40 vs v27.0.39)
+
+- 660 catalogued rules (unchanged).
+- **64 fix-producing rules** (was 63; +1: CHAR-009).
+- 1,382 theorems (unchanged).
+- 165 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 5 new CHAR-009 tests in `test_typo_fix.ml`.
+- 222/222 fix-producer tests PASS.
+
+### Differential vs v27.0.39
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.39] — 2026-05-12
 
 **+1 fix producer: CHAR-008 (Form feed U+000C delete)** — third

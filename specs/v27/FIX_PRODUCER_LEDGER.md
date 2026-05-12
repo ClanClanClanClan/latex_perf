@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 64 (~9%)
-- **Pending**: 592
+- **Shipped**: 67 (~10%)
+- **Pending**: 589
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 458 | 64 | 394 |
+| **A**  | Mechanical, safe everywhere       | 458 | 67 | 391 |
 | **B**  | Sentence-aware (NLP-required)     | 53 | 0 | 53 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -55,7 +55,7 @@ rules currently lack this annotation; add in a follow-up cycle.
 | AR | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | BIB | 17 | 0 | 17 | 0 | 0 | 0 | 17 | 0 |
 | CE | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
-| CHAR | 22 | 4 | 18 | 0 | 22 | 0 | 0 | 0 |
+| CHAR | 22 | 7 | 15 | 0 | 22 | 0 | 0 | 0 |
 | CHEM | 10 | 0 | 10 | 0 | 10 | 0 | 0 | 0 |
 | CJK | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
 | CMD | 17 | 0 | 17 | 0 | 17 | 0 | 0 | 0 |
@@ -134,7 +134,7 @@ rules currently lack this annotation; add in a follow-up cycle.
 | `CHAR-002` | CHAR | **A** | tentative | pending |
 | `CHAR-003` | CHAR | **A** | tentative | pending |
 | `CHAR-004` | CHAR | **A** | tentative | pending |
-| `CHAR-005` | CHAR | **A** | tentative | pending |
+| `CHAR-005` | CHAR | **A** | confirmed | shipped in v27.0.41 |
 | `CHAR-006` | CHAR | **A** | confirmed | shipped in v27.0.37 |
 | `CHAR-007` | CHAR | **A** | confirmed | shipped in v27.0.38 |
 | `CHAR-008` | CHAR | **A** | confirmed | shipped in v27.0.39 |
@@ -142,8 +142,8 @@ rules currently lack this annotation; add in a follow-up cycle.
 | `CHAR-010` | CHAR | **A** | tentative | pending |
 | `CHAR-011` | CHAR | **A** | tentative | pending |
 | `CHAR-012` | CHAR | **A** | tentative | pending |
-| `CHAR-013` | CHAR | **A** | tentative | pending |
-| `CHAR-014` | CHAR | **A** | tentative | pending |
+| `CHAR-013` | CHAR | **A** | confirmed | shipped in v27.0.41 |
+| `CHAR-014` | CHAR | **A** | confirmed | shipped in v27.0.41 |
 | `CHAR-015` | CHAR | **A** | tentative | pending |
 | `CHAR-016` | CHAR | **A** | tentative | pending |
 | `CHAR-017` | CHAR | **A** | tentative | pending |
@@ -786,7 +786,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 64 of 458 Bucket A
+  **TRACKING** — 67 of 458 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

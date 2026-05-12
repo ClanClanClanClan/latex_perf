@@ -2,6 +2,71 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.41] — 2026-05-12
+
+**First batch-cadence release: +3 fix producers in one PR** —
+CHAR-005, CHAR-013, CHAR-014.  Marks the transition from
+one-producer-per-release to homogeneous-pattern batching.
+
+Each rule is a different already-proven pattern; three disjoint
+byte ranges; zero cross-rule overlap with any shipped producer.
+Combined-source test exercises the rewrite engine's multi-rule
+conflict-aware merging.
+
+- **CHAR-005** — control chars U+0000–U+001F (excluding TAB/LF/CR
+  and the bytes covered by CHAR-006/007/008).  Severity Error.
+  Pattern: single-byte-delete with exclusion guard.
+- **CHAR-013** — bidi isolates U+2066–U+2069 (LRI/RLI/FSI/PDI).
+  Severity Warning.  Pattern: N-needle list (4 needles, all 3-byte
+  UTF-8 sharing prefix `e2 81`).  Mirrors v27.0.26 ENC-022.
+- **CHAR-014** — Unicode replacement character U+FFFD.  Severity
+  Warning.  Pattern: single 3-byte needle.  Mirrors v27.0.22
+  ENC-007 / v27.0.33 ENC-023.
+
+**67 fix-producing rules** (was 64; +3: CHAR-005/013/014).
+
+### Batching policy
+
+A batch is safe iff:
+1. Same-family, homogeneous pattern shapes (no mixed-family batches);
+2. Disjoint byte ranges across all rules in the batch and against
+   every shipped producer;
+3. Pure delete (no replacement decisions, no math context, no escape
+   detection);
+4. Each rule has its own dedicated test set + a combined cross-rule
+   test exercising the rewrite engine.
+
+The differential vs prior tag gate (already enforced) catches any
+behavioural regression at corpus level regardless of which rule
+introduced it.
+
+### Counts (v27.0.41 vs v27.0.40)
+
+- 660 catalogued rules (unchanged).
+- **67 fix-producing rules** (was 64; +3: CHAR-005/013/014).
+- 1,382 theorems / 165 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 14 new tests in `test_typo_fix.ml` (5 + 4 + 4 + 1 cross-rule).
+- 236/236 fix-producer tests PASS.
+
+### Differential vs v27.0.40
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
+### Excluded from this first batch (notes for follow-on)
+
+- **CHAR-022** (deprecated tag chars U+E0000–U+E007F): scouted, but
+  current range covers U+E0020–U+E007F TAG letters used by flag
+  emoji post Unicode 8.0.  Naive delete would corrupt 🏴-class
+  flags.  Needs refinement (narrow to U+E0000–U+E001F language-tag
+  range) before shipping.
+- **CHAR-010 / CHAR-011** (LRM/RLM): already covered by v27.0.25
+  ENC-020.  Annotate as `produces_fix: false` in a future cycle.
+
 ## [v27.0.40] — 2026-05-12
 
 **+1 fix producer: CHAR-009 (Delete U+007F delete)** — fourth and final

@@ -1869,4 +1869,107 @@ let () =
         (does_not_fire "CHAR-009" "no DEL here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.41: First batch release — CHAR-005 + CHAR-013 + CHAR-014 ship
+     together as a 3-rule pure-delete batch. Each is a different proven pattern
+     (single-byte range with exclusions, N-needle list, single 3-byte needle).
+     Disjoint byte ranges, zero cross-rule overlap. *)
+
+  (* CHAR-005: control range 0x00-0x1F minus {0x07,0x08,0x09,0x0A,0x0C,0x0D}. *)
+  run "CHAR-005 fix: deletes single in-range control" (fun tag ->
+      let src = "a\x01b" in
+      let edits = fix_edits "CHAR-005" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "ab")
+        (tag ^ ": SOH (0x01) deleted"));
+
+  run "CHAR-005 fix: deletes multiple in-range controls" (fun tag ->
+      let src = "\x00a\x0bb\x1fc" in
+      let edits = fix_edits "CHAR-005" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abc")
+        (tag ^ ": NUL/VT/US all deleted"));
+
+  run "CHAR-005 does not fire on excluded bytes" (fun tag ->
+      (* TAB/LF/CR + the CHAR-006/007/008 bytes are excluded. *)
+      expect
+        (does_not_fire "CHAR-005" "tab\there\nLF\rCR\x07bel\x08bs\x0cff")
+        (tag ^ ": excluded bytes don't trigger"));
+
+  run "CHAR-005 fix: at file boundaries" (fun tag ->
+      let src = "\x01mid\x02end\x03" in
+      let edits = fix_edits "CHAR-005" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "midend")
+        (tag ^ ": leading/middle/trailing controls all deleted"));
+
+  run "CHAR-005 fix: clean source no-fire" (fun tag ->
+      expect
+        (does_not_fire "CHAR-005" "regular text with no control chars")
+        (tag ^ ": clean source"));
+
+  (* CHAR-013: bidi isolates U+2066/2067/2068/2069. *)
+  run "CHAR-013 fix: deletes LRI (U+2066)" (fun tag ->
+      let src = "before\xe2\x81\xa6after" in
+      let edits = fix_edits "CHAR-013" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": LRI deleted"));
+
+  run "CHAR-013 fix: deletes all four isolates" (fun tag ->
+      let src = "a\xe2\x81\xa6b\xe2\x81\xa7c\xe2\x81\xa8d\xe2\x81\xa9e" in
+      let edits = fix_edits "CHAR-013" src in
+      expect
+        (List.length edits = 4 && apply_all src edits = "abcde")
+        (tag ^ ": LRI/RLI/FSI/PDI all deleted"));
+
+  run "CHAR-013 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-013" "regular text with no bidi")
+        (tag ^ ": no isolate, no fire"));
+
+  run "CHAR-013 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-013" "no isolates here")
+        (tag ^ ": clean source doesn't re-fire"));
+
+  (* CHAR-014: U+FFFD replacement character. *)
+  run "CHAR-014 fix: deletes single replacement char" (fun tag ->
+      let src = "before\xef\xbf\xbdafter" in
+      let edits = fix_edits "CHAR-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": U+FFFD deleted"));
+
+  run "CHAR-014 fix: multiple replacement chars all deleted" (fun tag ->
+      let src = "a\xef\xbf\xbdb\xef\xbf\xbdc\xef\xbf\xbdd" in
+      let edits = fix_edits "CHAR-014" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three U+FFFD deleted"));
+
+  run "CHAR-014 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-014" "regular text with no replacements")
+        (tag ^ ": no U+FFFD, no fire"));
+
+  run "CHAR-014 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-014" "no replacement here")
+        (tag ^ ": clean source doesn't re-fire"));
+
+  (* Combined cross-rule test: all 3 batch rules fire on the same source, fixes
+     apply non-overlapping (the rewrite engine merges them). *)
+  run "v27.0.41 batch combined: CHAR-005 + CHAR-013 + CHAR-014" (fun tag ->
+      let src = "start\x01one\xe2\x81\xa6two\xef\xbf\xbdthree\x1fend" in
+      let e5 = fix_edits "CHAR-005" src in
+      let e13 = fix_edits "CHAR-013" src in
+      let e14 = fix_edits "CHAR-014" src in
+      let merged = apply_all src (e5 @ e13 @ e14) in
+      expect
+        (List.length e5 = 2
+        && List.length e13 = 1
+        && List.length e14 = 1
+        && merged = "startonetwothreeend")
+        (tag ^ ": 4 disjoint deletes all apply"));
+
   finalise "typo-fix"

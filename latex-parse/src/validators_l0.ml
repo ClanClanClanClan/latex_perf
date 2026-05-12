@@ -1115,11 +1115,11 @@ let r_char_006 : rule =
   in
   { id = "CHAR-006"; run; languages = [] }
 
-(* CHAR-007: Bell/alert U+0007. v27.0.38: fix producer that deletes each
-   bell byte (`\x07`).  Bell is an ASCII control byte with no role in LaTeX
-   source — exclusively a paste/OCR artifact.  Single-byte deletion, identical
-   shape to v27.0.37 CHAR-006 (backspace), just a different needle.  Severity
-   Error preserved. *)
+(* CHAR-007: Bell/alert U+0007. v27.0.38: fix producer that deletes each bell
+   byte (`\x07`). Bell is an ASCII control byte with no role in LaTeX source —
+   exclusively a paste/OCR artifact. Single-byte deletion, identical shape to
+   v27.0.37 CHAR-006 (backspace), just a different needle. Severity Error
+   preserved. *)
 let r_char_007 : rule =
   let needle_char = '\x07' in
   let run s =

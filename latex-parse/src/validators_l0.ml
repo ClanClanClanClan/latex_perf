@@ -1142,14 +1142,31 @@ let r_char_007 : rule =
   in
   { id = "CHAR-007"; run; languages = [] }
 
-(* CHAR-008: Form feed U+000C *)
+(* CHAR-008: Form feed U+000C. v27.0.39: fix producer that deletes each form
+   feed byte (`\x0c`). Form feed is an ASCII control byte that some legacy
+   editors insert as a page-break marker, but LaTeX uses `\newpage` /
+   `\clearpage` instead — bare U+000C in source is exclusively a paste/legacy
+   artifact. Single-byte deletion, identical shape to v27.0.37 CHAR-006 and
+   v27.0.38 CHAR-007. Severity Warning preserved (less critical than bell or
+   backspace; form feeds are sometimes intentional in non-LaTeX text). *)
 let r_char_008 : rule =
+  let needle_char = '\x0c' in
   let run s =
-    let cnt = count_char s '\x0c' in
+    let n = String.length s in
+    let offsets = ref [] in
+    for i = 0 to n - 1 do
+      if s.[i] = needle_char then offsets := i :: !offsets
+    done;
+    let cnt = List.length !offsets in
     if cnt > 0 then
+      let fix =
+        List.rev_map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          !offsets
+      in
       Some
-        (mk_result ~id:"CHAR-008" ~severity:Warning
-           ~message:"Form feed U+000C present" ~count:cnt)
+        (mk_result_with_fix ~id:"CHAR-008" ~severity:Warning
+           ~message:"Form feed U+000C present" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-008"; run; languages = [] }

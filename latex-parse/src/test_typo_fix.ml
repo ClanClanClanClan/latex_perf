@@ -1802,4 +1802,37 @@ let () =
         (does_not_fire "CHAR-007" "no bell here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.39: CHAR-008 fix producer (Form feed U+000C delete) — third
+     CHAR-family producer; identical shape as CHAR-006/007. *)
+  run "CHAR-008 fix: deletes single form feed byte" (fun tag ->
+      let src = "before\x0cafter" in
+      let edits = fix_edits "CHAR-008" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": form feed deleted"));
+
+  run "CHAR-008 fix: multiple form feeds all deleted" (fun tag ->
+      let src = "a\x0cb\x0cc\x0cd" in
+      let edits = fix_edits "CHAR-008" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three form feeds deleted"));
+
+  run "CHAR-008 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-008" "regular text with no control chars")
+        (tag ^ ": no form feed, no fire"));
+
+  run "CHAR-008 fix: form feed at file boundaries" (fun tag ->
+      let src = "\x0cmid\x0cend\x0c" in
+      let edits = fix_edits "CHAR-008" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "midend")
+        (tag ^ ": leading/middle/trailing form feeds all deleted"));
+
+  run "CHAR-008 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-008" "no form feed here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

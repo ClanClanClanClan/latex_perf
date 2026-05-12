@@ -1083,14 +1083,34 @@ let r_char_005 : rule =
   in
   { id = "CHAR-005"; run; languages = [] }
 
-(* CHAR-006: Backspace U+0008 *)
+(* CHAR-006: Backspace U+0008. v27.0.37: fix producer that deletes each
+   backspace byte (`\x08`). Backspace is an ASCII control character with no
+   meaningful place in LaTeX source — almost universally accidental (terminal
+   paste, OCR artifact, or copy from a glitched buffer). Single-byte deletion.
+   Severity Error preserved.
+
+   First CHAR-family fix producer. Establishes the pattern for the other
+   single-byte control-character rules (CHAR-007 bell, CHAR-008 form feed,
+   CHAR-009 delete) which can ship as follow-on cycles using the same
+   single-byte-delete shape. *)
 let r_char_006 : rule =
+  let needle_char = '\x08' in
   let run s =
-    let cnt = count_char s '\x08' in
+    let n = String.length s in
+    let offsets = ref [] in
+    for i = 0 to n - 1 do
+      if s.[i] = needle_char then offsets := i :: !offsets
+    done;
+    let cnt = List.length !offsets in
     if cnt > 0 then
+      let fix =
+        List.rev_map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          !offsets
+      in
       Some
-        (mk_result ~id:"CHAR-006" ~severity:Error
-           ~message:"Backspace U+0008 present" ~count:cnt)
+        (mk_result_with_fix ~id:"CHAR-006" ~severity:Error
+           ~message:"Backspace U+0008 present" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-006"; run; languages = [] }

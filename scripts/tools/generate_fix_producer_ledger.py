@@ -89,6 +89,7 @@ SHIPPED_VERSIONS = {
     "ENC-018": "v27.0.31",
     "ENC-023": "v27.0.33",
     "ENC-016": "v27.0.35",
+    "CHAR-006": "v27.0.37",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

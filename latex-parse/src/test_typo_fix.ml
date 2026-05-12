@@ -1736,4 +1736,37 @@ let () =
         (does_not_fire "ENC-016" "ASCII 0123456789 here")
         (tag ^ ": ASCII digits not flagged"));
 
+  (* v27.0.37: CHAR-006 fix producer (Backspace U+0008 delete) — CHAR family
+     pioneer pick (single-byte control character deletion). *)
+  run "CHAR-006 fix: deletes single backspace byte" (fun tag ->
+      let src = "before\x08after" in
+      let edits = fix_edits "CHAR-006" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": backspace deleted"));
+
+  run "CHAR-006 fix: multiple backspaces all deleted" (fun tag ->
+      let src = "a\x08b\x08c\x08d" in
+      let edits = fix_edits "CHAR-006" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three backspaces deleted"));
+
+  run "CHAR-006 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-006" "regular text with no control chars")
+        (tag ^ ": no backspace, no fire"));
+
+  run "CHAR-006 fix: backspace at file boundaries" (fun tag ->
+      let src = "\x08mid\x08end\x08" in
+      let edits = fix_edits "CHAR-006" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "midend")
+        (tag ^ ": leading/middle/trailing backspaces all deleted"));
+
+  run "CHAR-006 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-006" "no backspace here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

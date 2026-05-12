@@ -2,6 +2,42 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.38] — 2026-05-12
+
+**+1 fix producer: CHAR-007 (Bell U+0007 delete)** — second CHAR-family
+producer.  Identical single-byte-delete shape to v27.0.37 CHAR-006,
+just a different needle.  Bell (`\x07`) is an ASCII control byte
+with no role in LaTeX source; exclusively paste/OCR artifact.
+
+**Also: docs hygiene** — corrects long-standing `171 Coq files` claim
+in README.md / docs/PROOFS.md / docs/PROOF_GUIDE.md.  The authoritative
+count from `governance/project_facts.yaml` is `proof_files_total: 165`
+(55 core + 109 generated + 1 ML).  Drift dated back to v27.0.10 (file
+count grew 169 → 172 across the apply_edits_assoc + T5 + WS8 cycles
+but the README text was never bumped, and the archive subdir is
+excluded by the authoritative counter so the true tracked total is
+165 not 172).  Not enforced by any gate previously; now consistent.
+
+**62 fix-producing rules** (was 61; +1: CHAR-007).
+
+### Counts (v27.0.38 vs v27.0.37)
+
+- 660 catalogued rules (unchanged).
+- **62 fix-producing rules** (was 61; +1: CHAR-007).
+- 1,382 theorems (unchanged).
+- **165 .v files** (corrected from stale `171`; unchanged in fact).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 5 new CHAR-007 tests in `test_typo_fix.ml`.
+- 212/212 fix-producer tests PASS.
+
+### Differential vs v27.0.37
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.37] — 2026-05-12
 
 **+1 fix producer: CHAR-006 (Backspace U+0008 delete)** — opens the

@@ -1057,28 +1057,38 @@ let rules_enc : rule list =
 (* ── CHAR rules: control character detection ───────────────────────── *)
 
 (* CHAR-005: Control characters U+0000-001F present (excluding TAB 0x09, LF
-   0x0A, CR 0x0D which are handled by other rules) *)
+   0x0A, CR 0x0D which are handled by other rules, and excluding 0x07/0x08/0x0C
+   which have dedicated CHAR-007/006/008 rules). v27.0.41: fix producer that
+   deletes each matching control byte. Same single-byte-delete shape as v27.0.37
+   CHAR-006 through v27.0.40 CHAR-009, with an exclusion-set guard so we do not
+   double-emit edits for bytes already handled by those rules. Severity Error
+   preserved. *)
 let r_char_005 : rule =
+  let is_target c =
+    c <= 0x1F
+    && c <> 0x09
+    && c <> 0x0A
+    && c <> 0x0D
+    && c <> 0x07
+    && c <> 0x08
+    && c <> 0x0C
+  in
   let run s =
     let n = String.length s in
-    let cnt = ref 0 in
+    let offsets = ref [] in
     for i = 0 to n - 1 do
-      let c = Char.code s.[i] in
-      if
-        c <= 0x1F
-        && c <> 0x09
-        && c <> 0x0A
-        && c <> 0x0D
-        (* Also exclude 0x07/0x08/0x0C/0x7F — these have their own rules *)
-        && c <> 0x07
-        && c <> 0x08
-        && c <> 0x0C
-      then incr cnt
+      if is_target (Char.code s.[i]) then offsets := i :: !offsets
     done;
-    if !cnt > 0 then
+    let cnt = List.length !offsets in
+    if cnt > 0 then
+      let fix =
+        List.rev_map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          !offsets
+      in
       Some
-        (mk_result ~id:"CHAR-005" ~severity:Error
-           ~message:"Control characters U+0000–001F present" ~count:!cnt)
+        (mk_result_with_fix ~id:"CHAR-005" ~severity:Error
+           ~message:"Control characters U+0000–001F present" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-005"; run; languages = [] }
@@ -1199,32 +1209,60 @@ let r_char_009 : rule =
   in
   { id = "CHAR-009"; run; languages = [] }
 
-(* CHAR-013: Bidirectional isolate chars U+2066-U+2069 *)
+(* CHAR-013: Bidirectional isolate chars U+2066-U+2069 (LRI/RLI/FSI/PDI).
+   v27.0.41: fix producer that deletes each isolate byte. These are runtime
+   bidi-formatting controls used by display layers; LaTeX handles directionality
+   at typeset time via the bidi/polyglossia packages, so source-level isolates
+   are exclusively paste artifacts. N-needle list pattern, mirrors v27.0.26
+   ENC-022 and v27.0.27 ENC-024. Each needle is a 3-byte UTF-8 sequence sharing
+   the prefix `e2 81`; disjoint from the `e2 80` ENC-007/017/020/021/024
+   needles. Severity Warning preserved. *)
 let r_char_013 : rule =
+  let needles =
+    [ "\xe2\x81\xa6"; "\xe2\x81\xa7"; "\xe2\x81\xa8"; "\xe2\x81\xa9" ]
+  in
   let run s =
-    let cnt =
-      count_substring s "\xe2\x81\xa6"
-      + count_substring s "\xe2\x81\xa7"
-      + count_substring s "\xe2\x81\xa8"
-      + count_substring s "\xe2\x81\xa9"
+    let offsets =
+      List.concat_map (fun n -> find_all_non_overlapping s n) needles
     in
+    let cnt = List.length offsets in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
+          offsets
+      in
       Some
-        (mk_result ~id:"CHAR-013" ~severity:Warning
+        (mk_result_with_fix ~id:"CHAR-013" ~severity:Warning
            ~message:"Bidirectional isolate chars U+2066–U+2069 present"
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-013"; run; languages = [] }
 
-(* CHAR-014: Unicode replacement character U+FFFD *)
+(* CHAR-014: Unicode replacement character U+FFFD. v27.0.41: fix producer that
+   deletes each U+FFFD byte (`ef bf bd`). U+FFFD is by Unicode definition the
+   placeholder a decoder inserts when it encounters input it cannot decode; the
+   original data is already lost at the encoding step before we see the source,
+   so deletion is the minimum-surprise choice (the file already shows a
+   corruption marker; we just clean it up). Single-needle delete, mirrors
+   v27.0.22 ENC-007, v27.0.23 ENC-017, v27.0.24 ENC-021, v27.0.33 ENC-023
+   exactly. *)
 let r_char_014 : rule =
+  let needle = "\xef\xbf\xbd" in
   let run s =
-    let cnt = count_substring s "\xef\xbf\xbd" in
+    let offsets = find_all_non_overlapping s needle in
+    let cnt = List.length offsets in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
+          offsets
+      in
       Some
-        (mk_result ~id:"CHAR-014" ~severity:Warning
-           ~message:"Unicode replacement � found – decoding error" ~count:cnt)
+        (mk_result_with_fix ~id:"CHAR-014" ~severity:Warning
+           ~message:"Unicode replacement � found – decoding error" ~count:cnt
+           ~fix)
     else None
   in
   { id = "CHAR-014"; run; languages = [] }

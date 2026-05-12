@@ -1171,14 +1171,30 @@ let r_char_008 : rule =
   in
   { id = "CHAR-008"; run; languages = [] }
 
-(* CHAR-009: Delete U+007F *)
+(* CHAR-009: Delete U+007F. v27.0.40: fix producer that deletes each DEL byte
+   (`\x7f`). DEL is an ASCII control byte with no role in LaTeX source —
+   exclusively a paste/OCR artifact. Closes the CHAR-006..009 single-byte
+   control-character fix-producer block opened in v27.0.37 (backspace),
+   continued in v27.0.38 (bell) and v27.0.39 (form feed). Severity Warning
+   preserved (DEL is rarely catastrophic but always wrong in source). *)
 let r_char_009 : rule =
+  let needle_char = '\x7f' in
   let run s =
-    let cnt = count_char s '\x7f' in
+    let n = String.length s in
+    let offsets = ref [] in
+    for i = 0 to n - 1 do
+      if s.[i] = needle_char then offsets := i :: !offsets
+    done;
+    let cnt = List.length !offsets in
     if cnt > 0 then
+      let fix =
+        List.rev_map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          !offsets
+      in
       Some
-        (mk_result ~id:"CHAR-009" ~severity:Warning
-           ~message:"Delete U+007F present" ~count:cnt)
+        (mk_result_with_fix ~id:"CHAR-009" ~severity:Warning
+           ~message:"Delete U+007F present" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-009"; run; languages = [] }

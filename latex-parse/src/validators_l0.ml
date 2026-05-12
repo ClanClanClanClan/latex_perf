@@ -1115,14 +1115,29 @@ let r_char_006 : rule =
   in
   { id = "CHAR-006"; run; languages = [] }
 
-(* CHAR-007: Bell/alert U+0007 *)
+(* CHAR-007: Bell/alert U+0007. v27.0.38: fix producer that deletes each
+   bell byte (`\x07`).  Bell is an ASCII control byte with no role in LaTeX
+   source — exclusively a paste/OCR artifact.  Single-byte deletion, identical
+   shape to v27.0.37 CHAR-006 (backspace), just a different needle.  Severity
+   Error preserved. *)
 let r_char_007 : rule =
+  let needle_char = '\x07' in
   let run s =
-    let cnt = count_char s '\x07' in
+    let n = String.length s in
+    let offsets = ref [] in
+    for i = 0 to n - 1 do
+      if s.[i] = needle_char then offsets := i :: !offsets
+    done;
+    let cnt = List.length !offsets in
     if cnt > 0 then
+      let fix =
+        List.rev_map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          !offsets
+      in
       Some
-        (mk_result ~id:"CHAR-007" ~severity:Error
-           ~message:"Bell/alert U+0007 present" ~count:cnt)
+        (mk_result_with_fix ~id:"CHAR-007" ~severity:Error
+           ~message:"Bell/alert U+0007 present" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-007"; run; languages = [] }

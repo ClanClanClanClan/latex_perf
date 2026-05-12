@@ -1769,4 +1769,37 @@ let () =
         (does_not_fire "CHAR-006" "no backspace here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.38: CHAR-007 fix producer (Bell U+0007 delete) — second CHAR-family
+     producer, identical single-byte-delete shape as v27.0.37 CHAR-006. *)
+  run "CHAR-007 fix: deletes single bell byte" (fun tag ->
+      let src = "before\x07after" in
+      let edits = fix_edits "CHAR-007" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": bell deleted"));
+
+  run "CHAR-007 fix: multiple bells all deleted" (fun tag ->
+      let src = "a\x07b\x07c\x07d" in
+      let edits = fix_edits "CHAR-007" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": three bells deleted"));
+
+  run "CHAR-007 does not fire on clean source" (fun tag ->
+      expect
+        (does_not_fire "CHAR-007" "regular text with no control chars")
+        (tag ^ ": no bell, no fire"));
+
+  run "CHAR-007 fix: bell at file boundaries" (fun tag ->
+      let src = "\x07mid\x07end\x07" in
+      let edits = fix_edits "CHAR-007" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "midend")
+        (tag ^ ": leading/middle/trailing bells all deleted"));
+
+  run "CHAR-007 fix: idempotent" (fun tag ->
+      expect
+        (does_not_fire "CHAR-007" "no bell here")
+        (tag ^ ": cleaned source doesn't re-fire"));
+
   finalise "typo-fix"

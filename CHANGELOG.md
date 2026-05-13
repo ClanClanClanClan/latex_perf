@@ -2,6 +2,61 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.42] — 2026-05-13
+
+**Closes cadence acceptance criterion #3** — no new fix producer.
+Every rule in `specs/rules/rule_contracts.yaml` now carries a
+`produces_fix` annotation (true / false / null) plus, for the false
+case, a `fix_status_reason` describing why the rule will not ship a
+producer.
+
+Three categories of `produces_fix: false` (69 rules total):
+
+- **Bucket D** (62 rules — FIG/FONT/PDF/L3/SYS families): defer
+  indefinitely per cadence plan §Bucket D; rules depend on pdflatex
+  runtime / compile-log / external-binary state and cannot be
+  statically fix-produced from source bytes alone.
+- **NLP-deferred** (4 rules — TYPO-019/020/030/031): Bucket B,
+  require sentence tokenizer / language model.
+- **Redundant or pending-refinement** (3 rules):
+  - CHAR-010, CHAR-011: redundant with shipped ENC-020 (LRM/RLM
+    are already deleted by ENC-020's dual-needle pattern; shipping
+    a separate producer would emit duplicate edits at the same
+    offset).
+  - CHAR-022: current detection range U+E0000–U+E007F covers TAG
+    letters U+E0020–U+E007F used inside flag emoji sequences
+    post Unicode 8.0 (e.g. 🏴 + tag-letters for regional flags).
+    Auto-fix would corrupt valid flag emoji.  Deferred until
+    detection is narrowed to U+E0000–U+E001F (deprecated
+    language-tag range only).
+
+Implementation: `scripts/tools/generate_rule_contracts.py` gains a
+`pick_produces_fix` helper that imports `SHIPPED_VERSIONS` from the
+ledger generator (single source of truth, drift-checked).  No OCaml
+runtime changes; `rule_contract_loader.ml` tolerates the new
+optional fields.
+
+**67 fix-producing rules** (unchanged — no new producer).
+
+### Counts (v27.0.42 vs v27.0.41)
+
+- 660 catalogued rules (unchanged).
+- **67 fix-producing rules** (unchanged).
+- **69 rules explicitly `produces_fix: false`** (was: field absent).
+- **524 rules pending** (`produces_fix: null`).
+- 1,382 theorems / 165 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+236/236 fix-producer tests PASS (unchanged).  No behavioural change
+in any rule.
+
+### Differential vs v27.0.41
+
+0 diffs across 330 corpus files.
+
 ## [v27.0.41] — 2026-05-12
 
 **First batch-cadence release: +3 fix producers in one PR** —

@@ -24,6 +24,81 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# Single source of truth for which rules ship fix producers comes from the
+# ledger generator (which is in turn cross-checked against the validator
+# source by check_fix_producer_ledger.py).  Importing it avoids duplication
+# and guarantees rule_contracts.yaml and FIX_PRODUCER_LEDGER.md cannot drift
+# on the shipped-producer set.
+_TOOLS_DIR = Path(__file__).resolve().parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+from generate_fix_producer_ledger import SHIPPED_VERSIONS  # noqa: E402
+
+SHIPPED_FIX_PRODUCERS: set[str] = set(SHIPPED_VERSIONS.keys())
+
+# Rules that explicitly will NOT ship a fix producer, with documented reason.
+# Per V27_FIX_PRODUCER_CADENCE.md acceptance criterion #3, every rule that
+# cannot be fix-producing must carry `produces_fix: false` and a reason here.
+#
+# Three categories:
+#   1. NLP-deferred (Bucket B): require sentence-tokenizer / language model.
+#   2. Redundant: already covered by another shipped producer at the byte
+#      level — emitting both would mean duplicate non-overlapping edits at
+#      the same offset (which the apply_best_effort merger does deduplicate,
+#      but explicit opt-out documents the design choice).
+#   3. Pending-refinement: detection logic as currently written would
+#      corrupt valid input if naively fix-produced; deferred until the
+#      detection scope is narrowed.
+FIX_PRODUCER_DEFERRED: dict[str, str] = {
+    # === Category 1: NLP-deferred (mirrors NLP_DEFERRED in the ledger gen) ===
+    "TYPO-019": (
+        "Bucket B: requires NLP / sentence tokenizer (rule detects "
+        "context-dependent prose issues that cannot be statically resolved)."
+    ),
+    "TYPO-020": (
+        "Bucket B: requires NLP / sentence tokenizer."
+    ),
+    "TYPO-030": (
+        "Bucket B: requires NLP / abbreviation disambiguation."
+    ),
+    "TYPO-031": (
+        "Bucket B: requires NLP / subject-verb agreement model."
+    ),
+    # === Category 2: Redundant with shipped producers (avoid duplicate edits) ===
+    "CHAR-010": (
+        "Redundant with ENC-020 (shipped v27.0.25, which deletes U+200E/200F "
+        "LRM/RLM via dual-needle pattern).  CHAR-010 (U+200F right-to-left "
+        "mark) is fully covered by ENC-020's `\\xe2\\x80\\x8f` needle; "
+        "shipping a separate CHAR-010 producer would emit a duplicate delete "
+        "edit at the same offset."
+    ),
+    "CHAR-011": (
+        "Redundant with ENC-020 (shipped v27.0.25, which deletes U+200E/200F "
+        "LRM/RLM via dual-needle pattern).  CHAR-011 (U+200E left-to-right "
+        "mark) is fully covered by ENC-020's `\\xe2\\x80\\x8e` needle."
+    ),
+    # === Category 3: Pending refinement ===
+    "CHAR-022": (
+        "Current detection range covers U+E0000-U+E007F (4-byte UTF-8 with "
+        "prefix `\\xf3\\xa0\\x80/\\x81`).  Post Unicode 8.0, U+E0020-U+E007F "
+        "are TAG letters used inside flag emoji sequences "
+        "(e.g. \U0001f3f4 + tag-letters for England/Scotland/Wales flags). "
+        "A naive delete would corrupt valid flag emoji.  Producer deferred "
+        "until detection scope is narrowed to U+E0000-U+E001F "
+        "(deprecated language-tag range with no current valid use)."
+    ),
+}
+
+# Bucket D — defer indefinitely per V27_FIX_PRODUCER_CADENCE.md §"Bucket D".
+# Rules in these families do not admit a static fix (they require pdflatex
+# runtime state, compile log diagnostics, or external-binary file inspection).
+BUCKET_D_FAMILIES: set[str] = {"FIG", "FONT", "PDF", "L3", "SYS"}
+BUCKET_D_REASON = (
+    "Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends "
+    "on pdflatex runtime / compile-log / external-binary state and cannot "
+    "be statically fix-produced from the source bytes alone."
+)
+
 # Class C rule IDs — sourced from latex-parse/src/execution_class.ml.
 # Kept in sync with runtime list; drift-checked by check_rule_contracts.py.
 CLASS_C_RULE_IDS = {
@@ -129,6 +204,26 @@ def load_rules_v3(repo: Path) -> list[dict]:
     return [r for r in data if isinstance(r, dict) and "id" in r]
 
 
+def pick_produces_fix(rid: str) -> tuple[object, str | None]:
+    """Return (produces_fix, fix_status_reason).
+
+    - True: rule ships a fix producer in the OCaml runtime.
+    - False: rule has explicit deferral reason (Bucket D, NLP, redundant, etc.).
+    - None: rule is Bucket-A-pending (no decision yet).
+
+    Per cadence plan acceptance criterion #3, every rule that *cannot* be
+    fix-producing must surface here with a documented reason.  This is what
+    flips the field from None → False.
+    """
+    if rid in SHIPPED_FIX_PRODUCERS:
+        return True, None
+    if rid in FIX_PRODUCER_DEFERRED:
+        return False, FIX_PRODUCER_DEFERRED[rid]
+    if rule_family(rid) in BUCKET_D_FAMILIES:
+        return False, BUCKET_D_REASON
+    return None, None
+
+
 def build_contract(rule: dict) -> dict:
     rid = rule["id"]
     precondition = rule.get("precondition")
@@ -137,12 +232,13 @@ def build_contract(rule: dict) -> dict:
     evidence_class = pick_evidence_class(rid)
     project_scope = pick_project_scope(rid, phase)
     fix_scope = pick_fix_scope(rid, rule.get("default_severity"))
+    produces_fix, fix_status_reason = pick_produces_fix(rid)
 
     # Layer from precondition: fed to Validator_dag.phase_of_string.
     # Default to L0 if missing (shouldn't happen for any current rule).
     layer = precondition or "L0_Lexer"
 
-    return {
+    contract: dict = {
         "rule_id": rid,
         "layer": layer,
         "execution_class": phase,
@@ -154,7 +250,13 @@ def build_contract(rule: dict) -> dict:
         "conflicts_with": [],  # competing rules (hand-audited below)
         "fix_scope": fix_scope,
         "project_scope": project_scope,
+        "produces_fix": produces_fix,
     }
+    # Only attach a reason when the rule is explicitly deferred.  Keeps the
+    # YAML clean for "pending" rules where the decision hasn't been made.
+    if fix_status_reason is not None:
+        contract["fix_status_reason"] = fix_status_reason
+    return contract
 
 
 def _add_conflict(by_id: dict, a: str, b: str) -> None:
@@ -317,11 +419,18 @@ def main() -> int:
     # Summary counts by phase/proof_class for sanity.
     phases = {}
     proofs = {}
+    fix_states = {True: 0, False: 0, None: 0}
     for c in contracts:
         phases[c["execution_class"]] = phases.get(c["execution_class"], 0) + 1
         proofs[c["proof_class"]] = proofs.get(c["proof_class"], 0) + 1
+        fix_states[c.get("produces_fix")] = fix_states.get(c.get("produces_fix"), 0) + 1
     print(f"[rule_contracts] by execution_class: {phases}", file=sys.stderr)
     print(f"[rule_contracts] by proof_class:     {proofs}", file=sys.stderr)
+    print(
+        f"[rule_contracts] produces_fix: true={fix_states[True]} "
+        f"false={fix_states[False]} pending(null)={fix_states[None]}",
+        file=sys.stderr,
+    )
     return 0
 
 

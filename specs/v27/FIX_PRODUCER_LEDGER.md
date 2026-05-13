@@ -44,9 +44,10 @@ Heuristic used to assign initial buckets for unshipped rules:
 - **D (defer)**: FIG, FONT, PDF, L3, SYS — file-format / compile-state /
   runtime-dependent diagnostics that cannot be fixed via static byte edits.
 
-Per the cadence plan, Bucket D rules should carry `produces_fix: false` in
-`rule_contracts.yaml` with documented reason. **TODO:** 62 D-bucket
-rules currently lack this annotation; add in a follow-up cycle.
+Per the cadence plan, Bucket D rules carry `produces_fix: false` in
+`rule_contracts.yaml` with documented reason.  All 62 D-bucket
+rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
++ CHAR-022 (pending refinement) carry the annotation as of v27.0.42.
 
 ## Per-family breakdown
 
@@ -780,8 +781,12 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
 - [ ] At each patch release, ≥10 new producers shipped from Bucket A.
   **PENDING** — actual cadence has been ~1 producer per patch since
   v27.0.5 (user-driven cadence prioritizing audit depth over throughput).
-- [ ] Bucket D rules carry `produces_fix: false` in `rule_contracts.yaml`
-  with documented reason. **PENDING** — annotation cycle needed.
+- [x] Bucket D rules carry `produces_fix: false` in `rule_contracts.yaml`
+  with documented reason.  **DONE** (v27.0.42 — all 62 Bucket D rules +
+  4 NLP-deferred + 2 redundant + 1 deferred-refinement = 69 explicit
+  `produces_fix: false` entries, plus 67 `produces_fix: true` for shipped
+  producers).  Source: `pick_produces_fix` in
+  `scripts/tools/generate_rule_contracts.py`.
 - [ ] Differential test passes 0 diffs vs prior tag (default invocation;
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.

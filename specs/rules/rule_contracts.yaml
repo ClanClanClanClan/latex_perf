@@ -21,6 +21,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-001
   layer: L3_Semantics
   execution_class: B
@@ -34,6 +35,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-002
   layer: L3_Semantics
   execution_class: B
@@ -47,6 +49,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-003
   layer: L3_Semantics
   execution_class: B
@@ -60,6 +63,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-004
   layer: L3_Semantics
   execution_class: B
@@ -73,6 +77,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-005
   layer: L3_Semantics
   execution_class: B
@@ -86,6 +91,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-006
   layer: L3_Semantics
   execution_class: B
@@ -99,6 +105,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-007
   layer: L3_Semantics
   execution_class: B
@@ -112,6 +119,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-008
   layer: L3_Semantics
   execution_class: B
@@ -125,6 +133,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-009
   layer: L3_Semantics
   execution_class: B
@@ -138,6 +147,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-010
   layer: L3_Semantics
   execution_class: B
@@ -151,6 +161,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-011
   layer: L3_Semantics
   execution_class: B
@@ -164,6 +175,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-012
   layer: L3_Semantics
   execution_class: B
@@ -177,6 +189,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-013
   layer: L3_Semantics
   execution_class: B
@@ -190,6 +203,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-014
   layer: L3_Semantics
   execution_class: B
@@ -203,6 +217,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-015
   layer: L3_Semantics
   execution_class: B
@@ -216,6 +231,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-016
   layer: L3_Semantics
   execution_class: B
@@ -229,6 +245,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: BIB-017
   layer: L3_Semantics
   execution_class: B
@@ -242,6 +259,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CE-001
   layer: L4_Style
   execution_class: B
@@ -254,6 +272,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CE-002
   layer: L4_Style
   execution_class: B
@@ -266,6 +285,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-001
   layer: L0_Lexer
   execution_class: A
@@ -278,6 +298,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-002
   layer: L0_Lexer
   execution_class: A
@@ -290,6 +311,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-003
   layer: L0_Lexer
   execution_class: A
@@ -302,6 +324,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-004
   layer: L0_Lexer
   execution_class: A
@@ -314,6 +337,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-005
   layer: L0_Lexer
   execution_class: A
@@ -326,6 +350,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-006
   layer: L0_Lexer
   execution_class: A
@@ -338,6 +363,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-007
   layer: L0_Lexer
   execution_class: A
@@ -350,6 +376,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-008
   layer: L0_Lexer
   execution_class: A
@@ -362,6 +389,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-009
   layer: L0_Lexer
   execution_class: A
@@ -374,6 +402,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-010
   layer: L0_Lexer
   execution_class: A
@@ -386,6 +415,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: Redundant with ENC-020 (shipped v27.0.25, which deletes U+200E/200F LRM/RLM via dual-needle pattern).  CHAR-010
+    (U+200F right-to-left mark) is fully covered by ENC-020's `\xe2\x80\x8f` needle; shipping a separate CHAR-010 producer
+    would emit a duplicate delete edit at the same offset.
 - rule_id: CHAR-011
   layer: L0_Lexer
   execution_class: A
@@ -398,6 +431,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: Redundant with ENC-020 (shipped v27.0.25, which deletes U+200E/200F LRM/RLM via dual-needle pattern).  CHAR-011
+    (U+200E left-to-right mark) is fully covered by ENC-020's `\xe2\x80\x8e` needle.
 - rule_id: CHAR-012
   layer: L0_Lexer
   execution_class: A
@@ -410,6 +446,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-013
   layer: L0_Lexer
   execution_class: A
@@ -422,6 +459,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-014
   layer: L0_Lexer
   execution_class: A
@@ -434,6 +472,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: CHAR-015
   layer: L0_Lexer
   execution_class: A
@@ -446,6 +485,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-016
   layer: L0_Lexer
   execution_class: A
@@ -458,6 +498,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-017
   layer: L0_Lexer
   execution_class: A
@@ -470,6 +511,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-018
   layer: L0_Lexer
   execution_class: A
@@ -482,6 +524,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-019
   layer: L0_Lexer
   execution_class: A
@@ -494,6 +537,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-020
   layer: L0_Lexer
   execution_class: A
@@ -506,6 +550,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-021
   layer: L0_Lexer
   execution_class: A
@@ -518,6 +563,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHAR-022
   layer: L0_Lexer
   execution_class: A
@@ -530,6 +576,11 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: Current detection range covers U+E0000-U+E007F (4-byte UTF-8 with prefix `\xf3\xa0\x80/\x81`).  Post
+    Unicode 8.0, U+E0020-U+E007F are TAG letters used inside flag emoji sequences (e.g. 🏴 + tag-letters for England/Scotland/Wales
+    flags). A naive delete would corrupt valid flag emoji.  Producer deferred until detection scope is narrowed to U+E0000-U+E001F
+    (deprecated language-tag range with no current valid use).
 - rule_id: CHEM-001
   layer: L1_Expanded
   execution_class: B
@@ -542,6 +593,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-002
   layer: L1_Expanded
   execution_class: B
@@ -554,6 +606,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-003
   layer: L1_Expanded
   execution_class: B
@@ -566,6 +619,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-004
   layer: L1_Expanded
   execution_class: B
@@ -578,6 +632,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-005
   layer: L1_Expanded
   execution_class: B
@@ -590,6 +645,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-006
   layer: L1_Expanded
   execution_class: B
@@ -602,6 +658,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-007
   layer: L1_Expanded
   execution_class: B
@@ -614,6 +671,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-008
   layer: L1_Expanded
   execution_class: B
@@ -626,6 +684,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-009
   layer: L1_Expanded
   execution_class: B
@@ -638,6 +697,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CHEM-010
   layer: L3_Semantics
   execution_class: B
@@ -650,6 +710,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-001
   layer: L0_Lexer
   execution_class: B
@@ -662,6 +723,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-002
   layer: L0_Lexer
   execution_class: B
@@ -674,6 +736,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-003
   layer: L3_Semantics
   execution_class: B
@@ -686,6 +749,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-004
   layer: L2_Ast
   execution_class: B
@@ -698,6 +762,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-005
   layer: L3_Semantics
   execution_class: B
@@ -710,6 +775,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-006
   layer: L2_Ast
   execution_class: B
@@ -722,6 +788,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-007
   layer: L3_Semantics
   execution_class: B
@@ -735,6 +802,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-008
   layer: L1_Expanded
   execution_class: B
@@ -747,6 +815,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-009
   layer: L3_Semantics
   execution_class: B
@@ -759,6 +828,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-010
   layer: L0_Lexer
   execution_class: B
@@ -771,6 +841,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-011
   layer: L3_Semantics
   execution_class: B
@@ -783,6 +854,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-012
   layer: L3_Semantics
   execution_class: B
@@ -795,6 +867,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-013
   layer: L3_Semantics
   execution_class: B
@@ -807,6 +880,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-014
   layer: L0_Lexer
   execution_class: B
@@ -819,6 +893,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-015
   layer: L1_Expanded
   execution_class: B
@@ -831,6 +906,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CJK-016
   layer: L3_Semantics
   execution_class: B
@@ -843,6 +919,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-001
   layer: L1_Expanded
   execution_class: B
@@ -856,6 +933,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-002
   layer: L0_Lexer
   execution_class: B
@@ -869,6 +947,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-003
   layer: L1_Expanded
   execution_class: B
@@ -882,6 +961,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-004
   layer: L0_Lexer
   execution_class: B
@@ -895,6 +975,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-005
   layer: L0_Lexer
   execution_class: B
@@ -908,6 +989,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-006
   layer: L0_Lexer
   execution_class: B
@@ -921,6 +1003,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-007
   layer: L1_Expanded
   execution_class: B
@@ -934,6 +1017,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-008
   layer: L0_Lexer
   execution_class: B
@@ -947,6 +1031,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-009
   layer: L0_Lexer
   execution_class: B
@@ -960,6 +1045,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-010
   layer: L1_Expanded
   execution_class: B
@@ -973,6 +1059,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-011
   layer: L0_Lexer
   execution_class: B
@@ -986,6 +1073,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-012
   layer: L2_Ast
   execution_class: B
@@ -999,6 +1087,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-013
   layer: L0_Lexer
   execution_class: B
@@ -1012,6 +1101,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-014
   layer: L2_Ast
   execution_class: B
@@ -1025,6 +1115,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-015
   layer: L1_Expanded
   execution_class: B
@@ -1038,6 +1129,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-016
   layer: L1_Expanded
   execution_class: B
@@ -1051,6 +1143,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CMD-017
   layer: L1_Expanded
   execution_class: B
@@ -1064,6 +1157,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-001
   layer: L3_Semantics
   execution_class: B
@@ -1077,6 +1171,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-002
   layer: L3_Semantics
   execution_class: B
@@ -1090,6 +1185,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-003
   layer: L3_Semantics
   execution_class: B
@@ -1103,6 +1199,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-004
   layer: L3_Semantics
   execution_class: B
@@ -1116,6 +1213,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-005
   layer: L3_Semantics
   execution_class: B
@@ -1129,6 +1227,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-006
   layer: L2_Ast
   execution_class: B
@@ -1141,6 +1240,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: COL-007
   layer: L3_Semantics
   execution_class: B
@@ -1154,6 +1254,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CS-001
   layer: L0_Lexer
   execution_class: B
@@ -1166,6 +1267,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CS-002
   layer: L0_Lexer
   execution_class: B
@@ -1178,6 +1280,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: CY-001
   layer: L4_Style
   execution_class: B
@@ -1190,6 +1293,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DE-006
   layer: L4_Style
   execution_class: B
@@ -1202,6 +1306,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-001
   layer: L1_Expanded
   execution_class: B
@@ -1214,6 +1319,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-002
   layer: L1_Expanded
   execution_class: B
@@ -1226,6 +1332,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-003
   layer: L1_Expanded
   execution_class: B
@@ -1238,6 +1345,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-004
   layer: L1_Expanded
   execution_class: B
@@ -1250,6 +1358,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-005
   layer: L1_Expanded
   execution_class: B
@@ -1262,6 +1371,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-006
   layer: L1_Expanded
   execution_class: B
@@ -1274,6 +1384,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-007
   layer: L1_Expanded
   execution_class: B
@@ -1286,6 +1397,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-008
   layer: L1_Expanded
   execution_class: B
@@ -1298,6 +1410,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-009
   layer: L1_Expanded
   execution_class: B
@@ -1310,6 +1423,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-010
   layer: L1_Expanded
   execution_class: B
@@ -1322,6 +1436,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DELIM-011
   layer: L1_Expanded
   execution_class: B
@@ -1334,6 +1449,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DOC-001
   layer: L2_Ast
   execution_class: B
@@ -1346,6 +1462,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DOC-002
   layer: L2_Ast
   execution_class: B
@@ -1358,6 +1475,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DOC-003
   layer: L2_Ast
   execution_class: B
@@ -1370,6 +1488,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DOC-004
   layer: L2_Ast
   execution_class: B
@@ -1382,6 +1501,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: DOC-005
   layer: L3_Semantics
   execution_class: B
@@ -1394,6 +1514,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: EL-001
   layer: L0_Lexer
   execution_class: B
@@ -1406,6 +1527,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-001
   layer: L0_Lexer
   execution_class: A
@@ -1418,6 +1540,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-002
   layer: L0_Lexer
   execution_class: A
@@ -1430,6 +1553,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-003
   layer: L0_Lexer
   execution_class: A
@@ -1442,6 +1566,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-004
   layer: L0_Lexer
   execution_class: A
@@ -1454,6 +1579,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-005
   layer: L0_Lexer
   execution_class: A
@@ -1466,6 +1592,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-006
   layer: L0_Lexer
   execution_class: A
@@ -1478,6 +1605,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-007
   layer: L0_Lexer
   execution_class: A
@@ -1490,6 +1618,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-008
   layer: L0_Lexer
   execution_class: A
@@ -1502,6 +1631,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-009
   layer: L0_Lexer
   execution_class: A
@@ -1514,6 +1644,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-010
   layer: L0_Lexer
   execution_class: A
@@ -1526,6 +1657,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-011
   layer: L0_Lexer
   execution_class: A
@@ -1538,6 +1670,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-012
   layer: L0_Lexer
   execution_class: A
@@ -1550,6 +1683,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-013
   layer: L0_Lexer
   execution_class: A
@@ -1562,6 +1696,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-014
   layer: L0_Lexer
   execution_class: A
@@ -1574,6 +1709,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-015
   layer: L0_Lexer
   execution_class: A
@@ -1586,6 +1722,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-016
   layer: L0_Lexer
   execution_class: A
@@ -1598,6 +1735,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-017
   layer: L0_Lexer
   execution_class: A
@@ -1610,6 +1748,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-018
   layer: L0_Lexer
   execution_class: A
@@ -1622,6 +1761,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-019
   layer: L0_Lexer
   execution_class: A
@@ -1634,6 +1774,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ENC-020
   layer: L0_Lexer
   execution_class: A
@@ -1646,6 +1787,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-021
   layer: L0_Lexer
   execution_class: A
@@ -1658,6 +1800,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-022
   layer: L0_Lexer
   execution_class: A
@@ -1670,6 +1813,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-023
   layer: L0_Lexer
   execution_class: A
@@ -1682,6 +1826,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: ENC-024
   layer: L0_Lexer
   execution_class: A
@@ -1694,6 +1839,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: EXP-001
   layer: L1_Expanded
   execution_class: B
@@ -1706,6 +1852,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: FIG-001
   layer: L2_Ast
   execution_class: B
@@ -1719,6 +1866,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-002
   layer: L2_Ast
   execution_class: B
@@ -1732,6 +1882,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-003
   layer: L2_Ast
   execution_class: B
@@ -1745,6 +1898,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-004
   layer: L3_Semantics
   execution_class: B
@@ -1759,6 +1915,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-005
   layer: L3_Semantics
   execution_class: B
@@ -1772,6 +1931,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-006
   layer: L3_Semantics
   execution_class: B
@@ -1786,6 +1948,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-007
   layer: L2_Ast
   execution_class: B
@@ -1799,6 +1964,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-008
   layer: L3_Semantics
   execution_class: B
@@ -1812,6 +1980,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-009
   layer: L2_Ast
   execution_class: B
@@ -1825,6 +1996,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-010
   layer: L2_Ast
   execution_class: B
@@ -1838,6 +2012,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-011
   layer: L3_Semantics
   execution_class: B
@@ -1851,6 +2028,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-012
   layer: L2_Ast
   execution_class: B
@@ -1864,6 +2044,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-013
   layer: L2_Ast
   execution_class: B
@@ -1877,6 +2060,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-014
   layer: L2_Ast
   execution_class: B
@@ -1890,6 +2076,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-015
   layer: L3_Semantics
   execution_class: B
@@ -1903,6 +2092,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-016
   layer: L3_Semantics
   execution_class: B
@@ -1917,6 +2109,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-017
   layer: L2_Ast
   execution_class: B
@@ -1930,6 +2125,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-018
   layer: L3_Semantics
   execution_class: B
@@ -1943,6 +2141,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-019
   layer: L2_Ast
   execution_class: B
@@ -1956,6 +2157,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-020
   layer: L3_Semantics
   execution_class: C
@@ -1970,6 +2174,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-021
   layer: L3_Semantics
   execution_class: B
@@ -1984,6 +2191,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-022
   layer: L2_Ast
   execution_class: B
@@ -1997,6 +2207,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-023
   layer: L3_Semantics
   execution_class: B
@@ -2011,6 +2224,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-024
   layer: L2_Ast
   execution_class: B
@@ -2024,6 +2240,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FIG-025
   layer: L2_Ast
   execution_class: B
@@ -2037,6 +2256,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-001
   layer: L1_Expanded
   execution_class: B
@@ -2049,6 +2271,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-002
   layer: L3_Semantics
   execution_class: B
@@ -2061,6 +2286,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-003
   layer: L3_Semantics
   execution_class: B
@@ -2073,6 +2301,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-004
   layer: L1_Expanded
   execution_class: B
@@ -2085,6 +2316,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-005
   layer: L3_Semantics
   execution_class: B
@@ -2097,6 +2331,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-006
   layer: L2_Ast
   execution_class: B
@@ -2109,6 +2346,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-007
   layer: L2_Ast
   execution_class: B
@@ -2121,6 +2361,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-008
   layer: L2_Ast
   execution_class: B
@@ -2133,6 +2376,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-009
   layer: L3_Semantics
   execution_class: B
@@ -2145,6 +2391,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-010
   layer: L3_Semantics
   execution_class: B
@@ -2157,6 +2406,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-011
   layer: L3_Semantics
   execution_class: B
@@ -2169,6 +2421,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-012
   layer: L3_Semantics
   execution_class: B
@@ -2181,6 +2436,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FONT-013
   layer: L3_Semantics
   execution_class: B
@@ -2193,6 +2451,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: FR-007
   layer: L0_Lexer
   execution_class: B
@@ -2205,6 +2466,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: FR-008
   layer: L0_Lexer
   execution_class: B
@@ -2217,6 +2479,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: HE-001
   layer: L0_Lexer
   execution_class: B
@@ -2229,6 +2492,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: HI-001
   layer: L0_Lexer
   execution_class: B
@@ -2241,6 +2505,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: IB-001
   layer: L4_Style
   execution_class: B
@@ -2253,6 +2518,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: JA-001
   layer: L0_Lexer
   execution_class: B
@@ -2265,6 +2531,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: JA-002
   layer: L0_Lexer
   execution_class: B
@@ -2277,6 +2544,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: KO-001
   layer: L0_Lexer
   execution_class: B
@@ -2289,6 +2557,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: L3-001
   layer: L1_Expanded
   execution_class: B
@@ -2301,6 +2570,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-002
   layer: L1_Expanded
   execution_class: B
@@ -2313,6 +2585,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-003
   layer: L1_Expanded
   execution_class: B
@@ -2325,6 +2600,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-004
   layer: L1_Expanded
   execution_class: B
@@ -2337,6 +2615,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-005
   layer: L1_Expanded
   execution_class: B
@@ -2349,6 +2630,9 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-006
   layer: L1_Expanded
   execution_class: B
@@ -2361,6 +2645,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-007
   layer: L1_Expanded
   execution_class: B
@@ -2373,6 +2660,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-008
   layer: L2_Ast
   execution_class: B
@@ -2385,6 +2675,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-009
   layer: L1_Expanded
   execution_class: B
@@ -2397,6 +2690,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-010
   layer: L2_Ast
   execution_class: B
@@ -2409,6 +2705,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: L3-011
   layer: L1_Expanded
   execution_class: B
@@ -2421,6 +2720,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: LANG-001
   layer: L2_Ast
   execution_class: B
@@ -2433,6 +2735,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-002
   layer: L2_Ast
   execution_class: B
@@ -2445,6 +2748,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-003
   layer: L4_Style
   execution_class: B
@@ -2457,6 +2761,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-004
   layer: L2_Ast
   execution_class: B
@@ -2469,6 +2774,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-005
   layer: L3_Semantics
   execution_class: B
@@ -2481,6 +2787,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-006
   layer: L2_Ast
   execution_class: B
@@ -2493,6 +2800,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-007
   layer: L2_Ast
   execution_class: B
@@ -2505,6 +2813,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-008
   layer: L4_Style
   execution_class: B
@@ -2517,6 +2826,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-009
   layer: L3_Semantics
   execution_class: B
@@ -2529,6 +2839,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-010
   layer: L3_Semantics
   execution_class: B
@@ -2541,6 +2852,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-011
   layer: L4_Style
   execution_class: B
@@ -2553,6 +2865,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-012
   layer: L4_Style
   execution_class: B
@@ -2565,6 +2878,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-013
   layer: L2_Ast
   execution_class: B
@@ -2577,6 +2891,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-014
   layer: L4_Style
   execution_class: B
@@ -2589,6 +2904,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-015
   layer: L4_Style
   execution_class: B
@@ -2601,6 +2917,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LANG-016
   layer: L4_Style
   execution_class: B
@@ -2613,6 +2930,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-001
   layer: L3_Semantics
   execution_class: C
@@ -2626,6 +2944,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-002
   layer: L3_Semantics
   execution_class: C
@@ -2639,6 +2958,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-003
   layer: L3_Semantics
   execution_class: C
@@ -2652,6 +2972,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-004
   layer: L3_Semantics
   execution_class: C
@@ -2665,6 +2986,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-005
   layer: L3_Semantics
   execution_class: B
@@ -2677,6 +2999,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-006
   layer: L3_Semantics
   execution_class: C
@@ -2690,6 +3013,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-007
   layer: L3_Semantics
   execution_class: B
@@ -2702,6 +3026,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-008
   layer: L3_Semantics
   execution_class: B
@@ -2714,6 +3039,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-009
   layer: L3_Semantics
   execution_class: C
@@ -2727,6 +3053,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-010
   layer: L3_Semantics
   execution_class: B
@@ -2739,6 +3066,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-011
   layer: L3_Semantics
   execution_class: C
@@ -2752,6 +3080,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-012
   layer: L3_Semantics
   execution_class: B
@@ -2764,6 +3093,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-013
   layer: L3_Semantics
   execution_class: B
@@ -2776,6 +3106,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-014
   layer: L3_Semantics
   execution_class: B
@@ -2788,6 +3119,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-015
   layer: L3_Semantics
   execution_class: B
@@ -2800,6 +3132,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-016
   layer: L3_Semantics
   execution_class: B
@@ -2812,6 +3145,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-017
   layer: L3_Semantics
   execution_class: C
@@ -2825,6 +3159,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-018
   layer: L3_Semantics
   execution_class: C
@@ -2838,6 +3173,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-019
   layer: L3_Semantics
   execution_class: B
@@ -2850,6 +3186,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-020
   layer: L3_Semantics
   execution_class: B
@@ -2862,6 +3199,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-021
   layer: L3_Semantics
   execution_class: C
@@ -2875,6 +3213,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-022
   layer: L3_Semantics
   execution_class: B
@@ -2887,6 +3226,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-023
   layer: L4_Style
   execution_class: B
@@ -2899,6 +3239,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-024
   layer: L2_Ast
   execution_class: B
@@ -2911,6 +3252,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: LAY-025
   layer: L2_Ast
   execution_class: C
@@ -2924,6 +3266,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-026
   layer: L2_Ast
   execution_class: C
@@ -2937,6 +3280,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: LAY-027
   layer: L2_Ast
   execution_class: C
@@ -2950,6 +3294,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: MATH-001
   layer: L1_Expanded
   execution_class: B
@@ -2963,6 +3308,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-002
   layer: L1_Expanded
   execution_class: B
@@ -2976,6 +3322,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-003
   layer: L1_Expanded
   execution_class: B
@@ -2989,6 +3336,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-004
   layer: L1_Expanded
   execution_class: B
@@ -3002,6 +3350,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-005
   layer: L1_Expanded
   execution_class: B
@@ -3015,6 +3364,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-006
   layer: L1_Expanded
   execution_class: B
@@ -3028,6 +3378,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-007
   layer: L1_Expanded
   execution_class: B
@@ -3041,6 +3392,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-008
   layer: L1_Expanded
   execution_class: B
@@ -3054,6 +3406,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-009
   layer: L1_Expanded
   execution_class: B
@@ -3067,6 +3420,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-010
   layer: L1_Expanded
   execution_class: B
@@ -3080,6 +3434,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-011
   layer: L1_Expanded
   execution_class: B
@@ -3093,6 +3448,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-012
   layer: L1_Expanded
   execution_class: B
@@ -3106,6 +3462,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-013
   layer: L1_Expanded
   execution_class: B
@@ -3119,6 +3476,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-014
   layer: L1_Expanded
   execution_class: B
@@ -3132,6 +3490,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-015
   layer: L1_Expanded
   execution_class: B
@@ -3145,6 +3504,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-016
   layer: L1_Expanded
   execution_class: B
@@ -3158,6 +3518,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-017
   layer: L1_Expanded
   execution_class: B
@@ -3171,6 +3532,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-018
   layer: L1_Expanded
   execution_class: B
@@ -3184,6 +3546,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-019
   layer: L1_Expanded
   execution_class: B
@@ -3197,6 +3560,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-020
   layer: L1_Expanded
   execution_class: B
@@ -3210,6 +3574,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-021
   layer: L1_Expanded
   execution_class: B
@@ -3223,6 +3588,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-022
   layer: L1_Expanded
   execution_class: B
@@ -3236,6 +3602,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-023
   layer: L2_Ast
   execution_class: B
@@ -3249,6 +3616,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-024
   layer: L2_Ast
   execution_class: B
@@ -3262,6 +3630,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-025
   layer: L2_Ast
   execution_class: B
@@ -3275,6 +3644,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-026
   layer: L3_Semantics
   execution_class: C
@@ -3289,6 +3659,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: MATH-027
   layer: L3_Semantics
   execution_class: C
@@ -3303,6 +3674,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: MATH-028
   layer: L2_Ast
   execution_class: B
@@ -3316,6 +3688,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-029
   layer: L2_Ast
   execution_class: B
@@ -3329,6 +3702,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-030
   layer: L1_Expanded
   execution_class: B
@@ -3342,6 +3716,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-031
   layer: L1_Expanded
   execution_class: B
@@ -3355,6 +3730,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-032
   layer: L2_Ast
   execution_class: B
@@ -3368,6 +3744,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-033
   layer: L1_Expanded
   execution_class: B
@@ -3381,6 +3758,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-034
   layer: L1_Expanded
   execution_class: B
@@ -3394,6 +3772,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-035
   layer: L1_Expanded
   execution_class: B
@@ -3407,6 +3786,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-036
   layer: L1_Expanded
   execution_class: B
@@ -3420,6 +3800,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-037
   layer: L1_Expanded
   execution_class: B
@@ -3433,6 +3814,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-038
   layer: L1_Expanded
   execution_class: B
@@ -3446,6 +3828,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-039
   layer: L1_Expanded
   execution_class: B
@@ -3459,6 +3842,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-040
   layer: L1_Expanded
   execution_class: B
@@ -3472,6 +3856,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-041
   layer: L1_Expanded
   execution_class: B
@@ -3485,6 +3870,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-042
   layer: L1_Expanded
   execution_class: B
@@ -3498,6 +3884,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-043
   layer: L1_Expanded
   execution_class: B
@@ -3511,6 +3898,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-044
   layer: L1_Expanded
   execution_class: B
@@ -3524,6 +3912,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-045
   layer: L1_Expanded
   execution_class: B
@@ -3537,6 +3926,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-046
   layer: L1_Expanded
   execution_class: B
@@ -3550,6 +3940,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-047
   layer: L1_Expanded
   execution_class: B
@@ -3563,6 +3954,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-048
   layer: L1_Expanded
   execution_class: B
@@ -3576,6 +3968,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-049
   layer: L1_Expanded
   execution_class: B
@@ -3589,6 +3982,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-050
   layer: L1_Expanded
   execution_class: B
@@ -3602,6 +3996,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-051
   layer: L1_Expanded
   execution_class: B
@@ -3615,6 +4010,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-052
   layer: L1_Expanded
   execution_class: B
@@ -3628,6 +4024,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-053
   layer: L1_Expanded
   execution_class: B
@@ -3641,6 +4038,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-054
   layer: L2_Ast
   execution_class: B
@@ -3654,6 +4052,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-055
   layer: L1_Expanded
   execution_class: B
@@ -3667,6 +4066,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-056
   layer: L1_Expanded
   execution_class: B
@@ -3680,6 +4080,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-057
   layer: L1_Expanded
   execution_class: B
@@ -3693,6 +4094,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-058
   layer: L1_Expanded
   execution_class: B
@@ -3706,6 +4108,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-059
   layer: L1_Expanded
   execution_class: B
@@ -3719,6 +4122,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-060
   layer: L1_Expanded
   execution_class: B
@@ -3732,6 +4136,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-061
   layer: L1_Expanded
   execution_class: B
@@ -3745,6 +4150,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-062
   layer: L2_Ast
   execution_class: B
@@ -3758,6 +4164,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-063
   layer: L2_Ast
   execution_class: B
@@ -3771,6 +4178,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-064
   layer: L2_Ast
   execution_class: B
@@ -3784,6 +4192,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-065
   layer: L1_Expanded
   execution_class: B
@@ -3797,6 +4206,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-066
   layer: L1_Expanded
   execution_class: B
@@ -3810,6 +4220,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-067
   layer: L1_Expanded
   execution_class: B
@@ -3823,6 +4234,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-068
   layer: L1_Expanded
   execution_class: B
@@ -3836,6 +4248,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-069
   layer: L1_Expanded
   execution_class: B
@@ -3849,6 +4262,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-070
   layer: L1_Expanded
   execution_class: B
@@ -3862,6 +4276,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-071
   layer: L1_Expanded
   execution_class: B
@@ -3875,6 +4290,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-072
   layer: L1_Expanded
   execution_class: B
@@ -3888,6 +4304,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-073
   layer: L1_Expanded
   execution_class: B
@@ -3901,6 +4318,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-074
   layer: L1_Expanded
   execution_class: B
@@ -3914,6 +4332,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-075
   layer: L2_Ast
   execution_class: B
@@ -3927,6 +4346,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-076
   layer: L3_Semantics
   execution_class: B
@@ -3940,6 +4360,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-077
   layer: L1_Expanded
   execution_class: B
@@ -3953,6 +4374,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-078
   layer: L1_Expanded
   execution_class: B
@@ -3966,6 +4388,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-079
   layer: L1_Expanded
   execution_class: B
@@ -3979,6 +4402,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-080
   layer: L2_Ast
   execution_class: B
@@ -3992,6 +4416,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-081
   layer: L1_Expanded
   execution_class: B
@@ -4005,6 +4430,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-082
   layer: L1_Expanded
   execution_class: B
@@ -4018,6 +4444,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-083
   layer: L0_Lexer
   execution_class: B
@@ -4031,6 +4458,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-084
   layer: L1_Expanded
   execution_class: B
@@ -4044,6 +4472,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-085
   layer: L1_Expanded
   execution_class: B
@@ -4057,6 +4486,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-086
   layer: L1_Expanded
   execution_class: B
@@ -4070,6 +4500,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-087
   layer: L1_Expanded
   execution_class: B
@@ -4083,6 +4514,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-088
   layer: L1_Expanded
   execution_class: B
@@ -4096,6 +4528,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-089
   layer: L3_Semantics
   execution_class: B
@@ -4109,6 +4542,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-090
   layer: L1_Expanded
   execution_class: B
@@ -4122,6 +4556,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-091
   layer: L1_Expanded
   execution_class: B
@@ -4135,6 +4570,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-092
   layer: L1_Expanded
   execution_class: B
@@ -4148,6 +4584,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-093
   layer: L1_Expanded
   execution_class: B
@@ -4161,6 +4598,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-094
   layer: L1_Expanded
   execution_class: B
@@ -4174,6 +4612,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-095
   layer: L1_Expanded
   execution_class: B
@@ -4187,6 +4626,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-096
   layer: L1_Expanded
   execution_class: B
@@ -4200,6 +4640,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-097
   layer: L1_Expanded
   execution_class: B
@@ -4213,6 +4654,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-098
   layer: L1_Expanded
   execution_class: B
@@ -4226,6 +4668,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-099
   layer: L1_Expanded
   execution_class: B
@@ -4239,6 +4682,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-100
   layer: L2_Ast
   execution_class: B
@@ -4252,6 +4696,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-101
   layer: L1_Expanded
   execution_class: B
@@ -4265,6 +4710,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-102
   layer: L2_Ast
   execution_class: B
@@ -4278,6 +4724,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-103
   layer: L3_Semantics
   execution_class: B
@@ -4291,6 +4738,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-104
   layer: L1_Expanded
   execution_class: B
@@ -4304,6 +4752,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-105
   layer: L1_Expanded
   execution_class: B
@@ -4317,6 +4766,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-106
   layer: L1_Expanded
   execution_class: B
@@ -4330,6 +4780,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-107
   layer: L3_Semantics
   execution_class: B
@@ -4343,6 +4794,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MATH-108
   layer: L1_Expanded
   execution_class: B
@@ -4356,6 +4808,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: META-001
   layer: L3_Semantics
   execution_class: B
@@ -4368,6 +4821,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: META-002
   layer: L2_Ast
   execution_class: B
@@ -4380,6 +4834,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: META-003
   layer: L3_Semantics
   execution_class: B
@@ -4392,6 +4847,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: META-004
   layer: L3_Semantics
   execution_class: B
@@ -4404,6 +4860,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-001
   layer: L1_Expanded
   execution_class: B
@@ -4416,6 +4873,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-002
   layer: L1_Expanded
   execution_class: B
@@ -4428,6 +4886,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-003
   layer: L1_Expanded
   execution_class: B
@@ -4440,6 +4899,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-004
   layer: L1_Expanded
   execution_class: B
@@ -4452,6 +4912,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-005
   layer: L1_Expanded
   execution_class: B
@@ -4464,6 +4925,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-006
   layer: L1_Expanded
   execution_class: B
@@ -4476,6 +4938,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-007
   layer: L1_Expanded
   execution_class: B
@@ -4488,6 +4951,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-008
   layer: L1_Expanded
   execution_class: B
@@ -4500,6 +4964,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-009
   layer: L1_Expanded
   execution_class: B
@@ -4512,6 +4977,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-010
   layer: L1_Expanded
   execution_class: B
@@ -4524,6 +4990,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-011
   layer: L1_Expanded
   execution_class: B
@@ -4536,6 +5003,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-012
   layer: L1_Expanded
   execution_class: B
@@ -4548,6 +5016,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-013
   layer: L1_Expanded
   execution_class: B
@@ -4560,6 +5029,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-020
   layer: L1_Expanded
   execution_class: B
@@ -4572,6 +5042,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-021
   layer: L1_Expanded
   execution_class: B
@@ -4584,6 +5055,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-022
   layer: L1_Expanded
   execution_class: B
@@ -4596,6 +5068,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-023
   layer: L1_Expanded
   execution_class: B
@@ -4608,6 +5081,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: MOD-024
   layer: L1_Expanded
   execution_class: B
@@ -4620,6 +5094,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: NL-001
   layer: L4_Style
   execution_class: B
@@ -4632,6 +5107,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: NL-002
   layer: L4_Style
   execution_class: B
@@ -4644,6 +5120,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PDF-001
   layer: L3_Semantics
   execution_class: B
@@ -4656,6 +5133,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-002
   layer: L3_Semantics
   execution_class: B
@@ -4668,6 +5148,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-003
   layer: L3_Semantics
   execution_class: B
@@ -4680,6 +5163,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-004
   layer: L3_Semantics
   execution_class: B
@@ -4692,6 +5178,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-005
   layer: L3_Semantics
   execution_class: B
@@ -4704,6 +5193,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-006
   layer: L3_Semantics
   execution_class: B
@@ -4717,6 +5209,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-007
   layer: L3_Semantics
   execution_class: B
@@ -4730,6 +5225,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-008
   layer: L3_Semantics
   execution_class: B
@@ -4743,6 +5241,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-009
   layer: L3_Semantics
   execution_class: B
@@ -4756,6 +5257,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-010
   layer: L3_Semantics
   execution_class: B
@@ -4768,6 +5272,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-011
   layer: L3_Semantics
   execution_class: B
@@ -4781,6 +5288,9 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PDF-012
   layer: L3_Semantics
   execution_class: B
@@ -4794,6 +5304,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: PKG-001
   layer: L2_Ast
   execution_class: B
@@ -4806,6 +5319,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-002
   layer: L2_Ast
   execution_class: B
@@ -4818,6 +5332,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-003
   layer: L3_Semantics
   execution_class: B
@@ -4830,6 +5345,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-004
   layer: L2_Ast
   execution_class: B
@@ -4842,6 +5358,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-005
   layer: L2_Ast
   execution_class: B
@@ -4854,6 +5371,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-006
   layer: L3_Semantics
   execution_class: B
@@ -4866,6 +5384,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-007
   layer: L2_Ast
   execution_class: B
@@ -4878,6 +5397,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-008
   layer: L2_Ast
   execution_class: B
@@ -4890,6 +5410,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-009
   layer: L2_Ast
   execution_class: B
@@ -4902,6 +5423,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-010
   layer: L2_Ast
   execution_class: B
@@ -4914,6 +5436,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-011
   layer: L2_Ast
   execution_class: B
@@ -4926,6 +5449,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-012
   layer: L2_Ast
   execution_class: B
@@ -4938,6 +5462,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-013
   layer: L2_Ast
   execution_class: B
@@ -4950,6 +5475,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-014
   layer: L2_Ast
   execution_class: B
@@ -4962,6 +5488,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-015
   layer: L2_Ast
   execution_class: B
@@ -4974,6 +5501,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-016
   layer: L2_Ast
   execution_class: B
@@ -4986,6 +5514,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-017
   layer: L2_Ast
   execution_class: B
@@ -4998,6 +5527,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-018
   layer: L3_Semantics
   execution_class: B
@@ -5010,6 +5540,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-019
   layer: L3_Semantics
   execution_class: B
@@ -5022,6 +5553,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-020
   layer: L2_Ast
   execution_class: B
@@ -5034,6 +5566,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-021
   layer: L2_Ast
   execution_class: B
@@ -5046,6 +5579,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-022
   layer: L2_Ast
   execution_class: B
@@ -5058,6 +5592,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-023
   layer: L2_Ast
   execution_class: B
@@ -5070,6 +5605,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-024
   layer: L2_Ast
   execution_class: B
@@ -5082,6 +5618,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PKG-025
   layer: L2_Ast
   execution_class: B
@@ -5094,6 +5631,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PL-001
   layer: L0_Lexer
   execution_class: B
@@ -5106,6 +5644,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PL-002
   layer: L4_Style
   execution_class: B
@@ -5118,6 +5657,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRJ-001
   layer: L3_Semantics
   execution_class: B
@@ -5130,6 +5670,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRJ-002
   layer: L3_Semantics
   execution_class: B
@@ -5142,6 +5683,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRJ-003
   layer: L3_Semantics
   execution_class: B
@@ -5154,6 +5696,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRJ-004
   layer: L3_Semantics
   execution_class: B
@@ -5166,6 +5709,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRT-001
   layer: L2_Ast
   execution_class: B
@@ -5178,6 +5722,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PRT-002
   layer: L2_Ast
   execution_class: B
@@ -5190,6 +5735,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PT-001
   layer: L4_Style
   execution_class: B
@@ -5202,6 +5748,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PT-002
   layer: L1_Expanded
   execution_class: B
@@ -5214,6 +5761,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: PT-003
   layer: L0_Lexer
   execution_class: B
@@ -5226,6 +5774,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: REF-001
   layer: L1_Expanded
   execution_class: B
@@ -5239,6 +5788,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: any
+  produces_fix: null
 - rule_id: REF-002
   layer: L1_Expanded
   execution_class: B
@@ -5252,6 +5802,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: any
+  produces_fix: null
 - rule_id: REF-003
   layer: L1_Expanded
   execution_class: B
@@ -5265,6 +5816,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-004
   layer: L1_Expanded
   execution_class: B
@@ -5278,6 +5830,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-005
   layer: L1_Expanded
   execution_class: B
@@ -5291,6 +5844,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-006
   layer: L1_Expanded
   execution_class: B
@@ -5304,6 +5858,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-007
   layer: L1_Expanded
   execution_class: B
@@ -5317,6 +5872,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: any
+  produces_fix: null
 - rule_id: REF-008
   layer: L3_Semantics
   execution_class: B
@@ -5330,6 +5886,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-009
   layer: L1_Expanded
   execution_class: B
@@ -5343,6 +5900,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-010
   layer: L3_Semantics
   execution_class: B
@@ -5356,6 +5914,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: REF-011
   layer: L2_Ast
   execution_class: B
@@ -5369,6 +5928,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: any
+  produces_fix: null
 - rule_id: REF-012
   layer: L3_Semantics
   execution_class: B
@@ -5382,6 +5942,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: RO-001
   layer: L0_Lexer
   execution_class: B
@@ -5394,6 +5955,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RTL-001
   layer: L3_Semantics
   execution_class: B
@@ -5406,6 +5968,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RTL-002
   layer: L3_Semantics
   execution_class: B
@@ -5418,6 +5981,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RTL-003
   layer: L1_Expanded
   execution_class: B
@@ -5430,6 +5994,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RTL-004
   layer: L1_Expanded
   execution_class: B
@@ -5442,6 +6007,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RTL-005
   layer: L2_Ast
   execution_class: B
@@ -5454,6 +6020,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RU-001
   layer: L0_Lexer
   execution_class: B
@@ -5466,6 +6033,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: RU-002
   layer: L4_Style
   execution_class: B
@@ -5478,6 +6046,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-001
   layer: L1_Expanded
   execution_class: B
@@ -5490,6 +6059,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-002
   layer: L1_Expanded
   execution_class: B
@@ -5502,6 +6072,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-003
   layer: L1_Expanded
   execution_class: B
@@ -5514,6 +6085,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-004
   layer: L1_Expanded
   execution_class: B
@@ -5526,6 +6098,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-005
   layer: L1_Expanded
   execution_class: B
@@ -5538,6 +6111,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-006
   layer: L1_Expanded
   execution_class: B
@@ -5550,6 +6124,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-007
   layer: L1_Expanded
   execution_class: B
@@ -5562,6 +6137,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-008
   layer: L1_Expanded
   execution_class: B
@@ -5574,6 +6150,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-009
   layer: L1_Expanded
   execution_class: B
@@ -5586,6 +6163,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-010
   layer: L1_Expanded
   execution_class: B
@@ -5598,6 +6176,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-011
   layer: L1_Expanded
   execution_class: B
@@ -5610,6 +6189,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-012
   layer: L1_Expanded
   execution_class: B
@@ -5622,6 +6202,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-013
   layer: L1_Expanded
   execution_class: B
@@ -5634,6 +6215,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-014
   layer: L1_Expanded
   execution_class: B
@@ -5646,6 +6228,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-015
   layer: L1_Expanded
   execution_class: B
@@ -5658,6 +6241,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-016
   layer: L1_Expanded
   execution_class: B
@@ -5670,6 +6254,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-017
   layer: L1_Expanded
   execution_class: B
@@ -5682,6 +6267,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-018
   layer: L1_Expanded
   execution_class: B
@@ -5694,6 +6280,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-019
   layer: L1_Expanded
   execution_class: B
@@ -5706,6 +6293,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-020
   layer: L1_Expanded
   execution_class: B
@@ -5718,6 +6306,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-021
   layer: L1_Expanded
   execution_class: B
@@ -5730,6 +6319,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SCRIPT-022
   layer: L1_Expanded
   execution_class: B
@@ -5742,6 +6332,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-001
   layer: L0_Lexer
   execution_class: A
@@ -5754,6 +6345,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-002
   layer: L0_Lexer
   execution_class: A
@@ -5766,6 +6358,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-003
   layer: L0_Lexer
   execution_class: A
@@ -5778,6 +6371,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-004
   layer: L0_Lexer
   execution_class: A
@@ -5790,6 +6384,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-005
   layer: L0_Lexer
   execution_class: A
@@ -5802,6 +6397,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-006
   layer: L0_Lexer
   execution_class: A
@@ -5814,6 +6410,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-007
   layer: L0_Lexer
   execution_class: A
@@ -5826,6 +6423,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-008
   layer: L0_Lexer
   execution_class: A
@@ -5838,6 +6436,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-009
   layer: L0_Lexer
   execution_class: A
@@ -5850,6 +6449,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-010
   layer: L0_Lexer
   execution_class: A
@@ -5862,6 +6462,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-011
   layer: L0_Lexer
   execution_class: A
@@ -5874,6 +6475,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-012
   layer: L0_Lexer
   execution_class: A
@@ -5886,6 +6488,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: SPC-013
   layer: L0_Lexer
   execution_class: A
@@ -5898,6 +6501,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-014
   layer: L0_Lexer
   execution_class: A
@@ -5910,6 +6514,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-015
   layer: L0_Lexer
   execution_class: A
@@ -5922,6 +6527,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-016
   layer: L0_Lexer
   execution_class: A
@@ -5934,6 +6540,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-017
   layer: L0_Lexer
   execution_class: A
@@ -5946,6 +6553,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-018
   layer: L0_Lexer
   execution_class: A
@@ -5958,6 +6566,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-019
   layer: L0_Lexer
   execution_class: A
@@ -5970,6 +6579,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-020
   layer: L0_Lexer
   execution_class: A
@@ -5982,6 +6592,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-021
   layer: L0_Lexer
   execution_class: A
@@ -5994,6 +6605,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-022
   layer: L0_Lexer
   execution_class: A
@@ -6006,6 +6618,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-023
   layer: L0_Lexer
   execution_class: A
@@ -6018,6 +6631,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-024
   layer: L0_Lexer
   execution_class: A
@@ -6030,6 +6644,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-025
   layer: L0_Lexer
   execution_class: A
@@ -6042,6 +6657,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-026
   layer: L0_Lexer
   execution_class: A
@@ -6054,6 +6670,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-027
   layer: L0_Lexer
   execution_class: A
@@ -6066,6 +6683,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-028
   layer: L0_Lexer
   execution_class: A
@@ -6078,6 +6696,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-029
   layer: L0_Lexer
   execution_class: A
@@ -6090,6 +6709,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-030
   layer: L0_Lexer
   execution_class: A
@@ -6102,6 +6722,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-031
   layer: L0_Lexer
   execution_class: A
@@ -6114,6 +6735,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-032
   layer: L0_Lexer
   execution_class: A
@@ -6126,6 +6748,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-033
   layer: L0_Lexer
   execution_class: A
@@ -6138,6 +6761,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-034
   layer: L0_Lexer
   execution_class: A
@@ -6150,6 +6774,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SPC-035
   layer: L0_Lexer
   execution_class: A
@@ -6162,6 +6787,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STRUCT-001
   layer: L0_Lexer
   execution_class: A
@@ -6175,6 +6801,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: STRUCT-002
   layer: L0_Lexer
   execution_class: A
@@ -6188,6 +6815,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: STRUCT-003
   layer: L0_Lexer
   execution_class: A
@@ -6201,6 +6829,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STRUCT-004
   layer: L0_Lexer
   execution_class: A
@@ -6214,6 +6843,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STRUCT-005
   layer: L2_Ast
   execution_class: B
@@ -6227,6 +6857,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-001
   layer: L4_Style
   execution_class: D
@@ -6240,6 +6871,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-002
   layer: L4_Style
   execution_class: D
@@ -6253,6 +6885,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-003
   layer: L4_Style
   execution_class: D
@@ -6266,6 +6899,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-004
   layer: L4_Style
   execution_class: D
@@ -6279,6 +6913,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-005
   layer: L4_Style
   execution_class: D
@@ -6292,6 +6927,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-006
   layer: L4_Style
   execution_class: D
@@ -6305,6 +6941,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-007
   layer: L4_Style
   execution_class: D
@@ -6318,6 +6955,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-008
   layer: L4_Style
   execution_class: D
@@ -6331,6 +6969,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-009
   layer: L4_Style
   execution_class: D
@@ -6344,6 +6983,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-010
   layer: L4_Style
   execution_class: D
@@ -6357,6 +6997,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-011
   layer: L4_Style
   execution_class: D
@@ -6370,6 +7011,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-012
   layer: L4_Style
   execution_class: D
@@ -6383,6 +7025,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-013
   layer: L4_Style
   execution_class: D
@@ -6396,6 +7039,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-014
   layer: L4_Style
   execution_class: D
@@ -6409,6 +7053,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-015
   layer: L4_Style
   execution_class: D
@@ -6422,6 +7067,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-016
   layer: L4_Style
   execution_class: D
@@ -6435,6 +7081,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-017
   layer: L4_Style
   execution_class: D
@@ -6448,6 +7095,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-018
   layer: L4_Style
   execution_class: D
@@ -6461,6 +7109,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-019
   layer: L4_Style
   execution_class: D
@@ -6474,6 +7123,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-020
   layer: L4_Style
   execution_class: D
@@ -6487,6 +7137,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-021
   layer: L4_Style
   execution_class: D
@@ -6500,6 +7151,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-022
   layer: L4_Style
   execution_class: D
@@ -6513,6 +7165,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-023
   layer: L4_Style
   execution_class: D
@@ -6526,6 +7179,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-024
   layer: L4_Style
   execution_class: D
@@ -6539,6 +7193,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-025
   layer: L4_Style
   execution_class: D
@@ -6552,6 +7207,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-026
   layer: L4_Style
   execution_class: D
@@ -6565,6 +7221,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-027
   layer: L4_Style
   execution_class: D
@@ -6578,6 +7235,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-028
   layer: L4_Style
   execution_class: D
@@ -6591,6 +7249,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-029
   layer: L4_Style
   execution_class: D
@@ -6604,6 +7263,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-030
   layer: L4_Style
   execution_class: D
@@ -6617,6 +7277,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-031
   layer: L4_Style
   execution_class: D
@@ -6630,6 +7291,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-032
   layer: L4_Style
   execution_class: D
@@ -6643,6 +7305,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-033
   layer: L4_Style
   execution_class: D
@@ -6656,6 +7319,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-034
   layer: L4_Style
   execution_class: D
@@ -6669,6 +7333,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-035
   layer: L4_Style
   execution_class: D
@@ -6682,6 +7347,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-036
   layer: L4_Style
   execution_class: D
@@ -6695,6 +7361,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-037
   layer: L4_Style
   execution_class: D
@@ -6708,6 +7375,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-038
   layer: L4_Style
   execution_class: D
@@ -6721,6 +7389,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-039
   layer: L4_Style
   execution_class: D
@@ -6734,6 +7403,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-040
   layer: L4_Style
   execution_class: D
@@ -6747,6 +7417,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-041
   layer: L4_Style
   execution_class: D
@@ -6760,6 +7431,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-042
   layer: L4_Style
   execution_class: D
@@ -6773,6 +7445,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-043
   layer: L4_Style
   execution_class: D
@@ -6786,6 +7459,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-044
   layer: L4_Style
   execution_class: D
@@ -6799,6 +7473,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-045
   layer: L4_Style
   execution_class: D
@@ -6812,6 +7487,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-046
   layer: L4_Style
   execution_class: D
@@ -6825,6 +7501,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-047
   layer: L4_Style
   execution_class: D
@@ -6838,6 +7515,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-048
   layer: L4_Style
   execution_class: D
@@ -6851,6 +7529,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: STYLE-049
   layer: L4_Style
   execution_class: D
@@ -6864,6 +7543,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: SYS-001
   layer: L0_Lexer
   execution_class: B
@@ -6876,6 +7556,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
+    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
 - rule_id: TAB-001
   layer: L2_Ast
   execution_class: B
@@ -6889,6 +7572,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-002
   layer: L2_Ast
   execution_class: B
@@ -6902,6 +7586,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-003
   layer: L2_Ast
   execution_class: B
@@ -6915,6 +7600,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-004
   layer: L3_Semantics
   execution_class: B
@@ -6928,6 +7614,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-005
   layer: L2_Ast
   execution_class: B
@@ -6941,6 +7628,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-006
   layer: L2_Ast
   execution_class: B
@@ -6954,6 +7642,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-007
   layer: L2_Ast
   execution_class: B
@@ -6967,6 +7656,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-008
   layer: L2_Ast
   execution_class: B
@@ -6980,6 +7670,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-009
   layer: L2_Ast
   execution_class: B
@@ -6993,6 +7684,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-010
   layer: L2_Ast
   execution_class: B
@@ -7006,6 +7698,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-011
   layer: L2_Ast
   execution_class: B
@@ -7019,6 +7712,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-012
   layer: L2_Ast
   execution_class: B
@@ -7032,6 +7726,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-013
   layer: L2_Ast
   execution_class: B
@@ -7045,6 +7740,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-014
   layer: L2_Ast
   execution_class: B
@@ -7058,6 +7754,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-015
   layer: L2_Ast
   execution_class: B
@@ -7071,6 +7768,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TAB-016
   layer: L2_Ast
   execution_class: B
@@ -7084,6 +7782,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TH-001
   layer: L3_Semantics
   execution_class: B
@@ -7096,6 +7795,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-001
   layer: L2_Ast
   execution_class: B
@@ -7108,6 +7808,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-002
   layer: L3_Semantics
   execution_class: C
@@ -7122,6 +7823,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
+  produces_fix: null
 - rule_id: TIKZ-003
   layer: L2_Ast
   execution_class: B
@@ -7134,6 +7836,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-004
   layer: L2_Ast
   execution_class: B
@@ -7146,6 +7849,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-005
   layer: L3_Semantics
   execution_class: B
@@ -7158,6 +7862,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-006
   layer: L2_Ast
   execution_class: B
@@ -7170,6 +7875,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-007
   layer: L2_Ast
   execution_class: B
@@ -7182,6 +7888,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-008
   layer: L3_Semantics
   execution_class: B
@@ -7195,6 +7902,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-009
   layer: L2_Ast
   execution_class: B
@@ -7207,6 +7915,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TIKZ-010
   layer: L2_Ast
   execution_class: B
@@ -7219,6 +7928,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TR-001
   layer: L4_Style
   execution_class: B
@@ -7231,6 +7941,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-001
   layer: L0_Lexer
   execution_class: A
@@ -7245,6 +7956,7 @@ rules:
   - TYPO-004
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-002
   layer: L0_Lexer
   execution_class: A
@@ -7259,6 +7971,7 @@ rules:
   - TYPO-030
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-003
   layer: L0_Lexer
   execution_class: A
@@ -7273,6 +7986,7 @@ rules:
   - TYPO-030
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-004
   layer: L0_Lexer
   execution_class: A
@@ -7287,6 +8001,7 @@ rules:
   - TYPO-013
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-005
   layer: L0_Lexer
   execution_class: A
@@ -7300,6 +8015,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-006
   layer: L0_Lexer
   execution_class: A
@@ -7312,6 +8028,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-007
   layer: L0_Lexer
   execution_class: A
@@ -7324,6 +8041,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-008
   layer: L0_Lexer
   execution_class: A
@@ -7336,6 +8054,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-009
   layer: L0_Lexer
   execution_class: A
@@ -7348,6 +8067,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-010
   layer: L0_Lexer
   execution_class: A
@@ -7360,6 +8080,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-011
   layer: L0_Lexer
   execution_class: A
@@ -7372,6 +8093,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-012
   layer: L0_Lexer
   execution_class: A
@@ -7385,6 +8107,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-013
   layer: L0_Lexer
   execution_class: A
@@ -7398,6 +8121,7 @@ rules:
   - TYPO-004
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-014
   layer: L0_Lexer
   execution_class: A
@@ -7410,6 +8134,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-015
   layer: L0_Lexer
   execution_class: A
@@ -7422,6 +8147,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-016
   layer: L0_Lexer
   execution_class: A
@@ -7434,6 +8160,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-017
   layer: L0_Lexer
   execution_class: A
@@ -7446,6 +8173,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-018
   layer: L0_Lexer
   execution_class: A
@@ -7458,6 +8186,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-019
   layer: L0_Lexer
   execution_class: A
@@ -7470,6 +8199,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket B: requires NLP / sentence tokenizer (rule detects context-dependent prose issues that cannot
+    be statically resolved).'
 - rule_id: TYPO-020
   layer: L0_Lexer
   execution_class: A
@@ -7482,6 +8214,8 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket B: requires NLP / sentence tokenizer.'
 - rule_id: TYPO-021
   layer: L0_Lexer
   execution_class: A
@@ -7494,6 +8228,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-022
   layer: L0_Lexer
   execution_class: A
@@ -7506,6 +8241,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-023
   layer: L0_Lexer
   execution_class: A
@@ -7518,6 +8254,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-024
   layer: L0_Lexer
   execution_class: A
@@ -7530,6 +8267,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-025
   layer: L0_Lexer
   execution_class: A
@@ -7542,6 +8280,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-026
   layer: L0_Lexer
   execution_class: A
@@ -7554,6 +8293,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-027
   layer: L0_Lexer
   execution_class: A
@@ -7566,6 +8306,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-028
   layer: L0_Lexer
   execution_class: A
@@ -7579,6 +8320,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-029
   layer: L0_Lexer
   execution_class: A
@@ -7591,6 +8333,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-030
   layer: L0_Lexer
   execution_class: A
@@ -7605,6 +8348,8 @@ rules:
   - TYPO-002
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket B: requires NLP / abbreviation disambiguation.'
 - rule_id: TYPO-031
   layer: L0_Lexer
   execution_class: A
@@ -7617,6 +8362,8 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: false
+  fix_status_reason: 'Bucket B: requires NLP / subject-verb agreement model.'
 - rule_id: TYPO-032
   layer: L0_Lexer
   execution_class: A
@@ -7629,6 +8376,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-033
   layer: L0_Lexer
   execution_class: A
@@ -7641,6 +8389,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-034
   layer: L0_Lexer
   execution_class: A
@@ -7653,6 +8402,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-035
   layer: L0_Lexer
   execution_class: A
@@ -7665,6 +8415,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-036
   layer: L0_Lexer
   execution_class: A
@@ -7677,6 +8428,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-037
   layer: L0_Lexer
   execution_class: A
@@ -7689,6 +8441,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-038
   layer: L0_Lexer
   execution_class: A
@@ -7701,6 +8454,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-039
   layer: L0_Lexer
   execution_class: A
@@ -7713,6 +8467,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-040
   layer: L0_Lexer
   execution_class: A
@@ -7725,6 +8480,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-041
   layer: L0_Lexer
   execution_class: A
@@ -7737,6 +8493,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-042
   layer: L0_Lexer
   execution_class: A
@@ -7749,6 +8506,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-043
   layer: L0_Lexer
   execution_class: A
@@ -7761,6 +8519,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-044
   layer: L0_Lexer
   execution_class: A
@@ -7773,6 +8532,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-045
   layer: L0_Lexer
   execution_class: A
@@ -7785,6 +8545,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-046
   layer: L0_Lexer
   execution_class: A
@@ -7797,6 +8558,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-047
   layer: L0_Lexer
   execution_class: A
@@ -7809,6 +8571,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-048
   layer: L0_Lexer
   execution_class: A
@@ -7822,6 +8585,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-049
   layer: L0_Lexer
   execution_class: A
@@ -7834,6 +8598,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-050
   layer: L4_Style
   execution_class: B
@@ -7846,6 +8611,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-051
   layer: L0_Lexer
   execution_class: A
@@ -7858,6 +8624,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: true
 - rule_id: TYPO-052
   layer: L0_Lexer
   execution_class: A
@@ -7871,6 +8638,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-053
   layer: L0_Lexer
   execution_class: A
@@ -7883,6 +8651,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-054
   layer: L0_Lexer
   execution_class: A
@@ -7895,6 +8664,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-055
   layer: L0_Lexer
   execution_class: A
@@ -7907,6 +8677,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-056
   layer: L0_Lexer
   execution_class: A
@@ -7920,6 +8691,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-057
   layer: L0_Lexer
   execution_class: A
@@ -7932,6 +8704,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-058
   layer: L0_Lexer
   execution_class: A
@@ -7944,6 +8717,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-059
   layer: L1_Expanded
   execution_class: B
@@ -7956,6 +8730,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-060
   layer: L0_Lexer
   execution_class: A
@@ -7968,6 +8743,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-061
   layer: L0_Lexer
   execution_class: A
@@ -7980,6 +8756,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-062
   layer: L0_Lexer
   execution_class: A
@@ -7993,6 +8770,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: TYPO-063
   layer: L0_Lexer
   execution_class: A
@@ -8005,6 +8783,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-001
   layer: L0_Lexer
   execution_class: A
@@ -8018,6 +8797,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-002
   layer: L0_Lexer
   execution_class: A
@@ -8031,6 +8811,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-003
   layer: L0_Lexer
   execution_class: A
@@ -8044,6 +8825,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-004
   layer: L0_Lexer
   execution_class: A
@@ -8057,6 +8839,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-005
   layer: L0_Lexer
   execution_class: A
@@ -8070,6 +8853,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-006
   layer: L0_Lexer
   execution_class: A
@@ -8083,6 +8867,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-007
   layer: L0_Lexer
   execution_class: A
@@ -8096,6 +8881,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-008
   layer: L0_Lexer
   execution_class: A
@@ -8109,6 +8895,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-009
   layer: L0_Lexer
   execution_class: A
@@ -8122,6 +8909,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-010
   layer: L0_Lexer
   execution_class: A
@@ -8135,6 +8923,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-011
   layer: L0_Lexer
   execution_class: A
@@ -8148,6 +8937,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-012
   layer: L0_Lexer
   execution_class: A
@@ -8161,6 +8951,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-013
   layer: L0_Lexer
   execution_class: A
@@ -8174,6 +8965,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-014
   layer: L2_Ast
   execution_class: B
@@ -8187,6 +8979,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-015
   layer: L0_Lexer
   execution_class: A
@@ -8200,6 +8993,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-016
   layer: L0_Lexer
   execution_class: A
@@ -8213,6 +9007,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: VERB-017
   layer: L0_Lexer
   execution_class: A
@@ -8226,6 +9021,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ZH-001
   layer: L0_Lexer
   execution_class: B
@@ -8238,6 +9034,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null
 - rule_id: ZH-002
   layer: L4_Style
   execution_class: B
@@ -8250,3 +9047,4 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
+  produces_fix: null

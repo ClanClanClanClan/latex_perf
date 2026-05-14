@@ -206,12 +206,15 @@ jobs:
           cp -f /tmp/perf_stash/perf.json badges/perf.json
           # Rolling perf history (append).  Read the artifacts from the
           # /tmp stash so we are not dependent on the branch state.
-          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          ABP95=$(awk -F, '$1=="ab10k"{print $4}' /tmp/perf_stash/perf_summary.csv 2>/dev/null | tail -1)
-          EWP95=$(awk -F, '$1=="edit4k5k"{print $4}' /tmp/perf_stash/perf_summary.csv 2>/dev/null | tail -1)
-          FTP95=$(awk -F, 'NR==2{print $4}' /tmp/perf_stash/first_token_latency.csv 2>/dev/null || true)
-          XXH=$(awk -F, '$1=="xxh64"{print $2}' /tmp/perf_stash/hash_throughput.csv 2>/dev/null | tail -1)
-          MED=$(grep -E "\[gate\] median-of-100 p95 =" /tmp/perf_stash/perf_gate.out 2>/dev/null | tail -1 | awk '{print $6}')
+          # Use `export` so the values reach the python3 subprocess via
+          # os.environ; bare assignments are bash-local and were a
+          # latent bug exposed by the layer-2 fix (PR #375).
+          export TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          export ABP95=$(awk -F, '$1=="ab10k"{print $4}' /tmp/perf_stash/perf_summary.csv 2>/dev/null | tail -1)
+          export EWP95=$(awk -F, '$1=="edit4k5k"{print $4}' /tmp/perf_stash/perf_summary.csv 2>/dev/null | tail -1)
+          export FTP95=$(awk -F, 'NR==2{print $4}' /tmp/perf_stash/first_token_latency.csv 2>/dev/null || true)
+          export XXH=$(awk -F, '$1=="xxh64"{print $2}' /tmp/perf_stash/hash_throughput.csv 2>/dev/null | tail -1)
+          export MED=$(grep -E "\[gate\] median-of-100 p95 =" /tmp/perf_stash/perf_gate.out 2>/dev/null | tail -1 | awk '{print $6}')
           python3 -c "
           import json, sys, os
           entry = {'ts': os.environ['TS'], 'full_doc_p95_med100_ms': os.environ.get('MED',''),

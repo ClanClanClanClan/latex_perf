@@ -287,6 +287,13 @@ jobs:
           git add badges/perf.json badges/perf_spark.svg data/perf_history.json index.html
           git commit -m "chore(badge): update nightly perf badge" || true
           git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" gh-pages || true
+          # Restore the source-ref working tree so the composite-action
+          # post-step (./.github/actions/setup-ocaml-env) can still find
+          # its action.yml after this step.  Otherwise the post-job
+          # cleanup fails with "Can't find 'action.yml' under
+          # '.github/actions/setup-ocaml-env'" because the gh-pages
+          # branch we left checked out doesn't contain .github/actions/.
+          git checkout -f "${GITHUB_SHA}" || true
 
       - name: Upload perf artifacts
         uses: actions/upload-artifact@v4

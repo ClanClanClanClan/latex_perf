@@ -1972,4 +1972,44 @@ let () =
         && merged = "startonetwothreeend")
         (tag ^ ": 4 disjoint deletes all apply"));
 
+  (* v27.0.43: TYPO-055 collapses consecutive thin-spaces `\,\,` (4 bytes) to a
+     single `\,` (2 bytes). Pure non-overlap replace. *)
+  Unix.putenv "L0_VALIDATORS" "pilot";
+
+  run "TYPO-055 fix: single \\,\\, collapses to \\," (fun tag ->
+      let src = "Foo\\,\\,bar" in
+      let edits = fix_edits "TYPO-055" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Foo\\,bar")
+        (tag ^ ": one edit, 4 bytes → 2 bytes"));
+
+  run "TYPO-055 fix: triple \\,\\,\\, collapses one non-overlap pair"
+    (fun tag ->
+      (* `\,\,\,` (6 bytes) contains `\,\,` at offset 0 (non-overlap advance by
+         4); the second `\,` from offsets 4-5 is the only remainder. Result:
+         `\,\,` (4 bytes), which itself would re-fire next pass. Idempotence is
+         not claimed for this rule — a single pass collapses one pair. *)
+      let src = "Foo\\,\\,\\,bar" in
+      let edits = fix_edits "TYPO-055" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Foo\\,\\,bar")
+        (tag ^ ": one non-overlap pair collapsed"));
+
+  run "TYPO-055 fix: two disjoint \\,\\, pairs" (fun tag ->
+      let src = "a\\,\\,b\\,\\,c" in
+      let edits = fix_edits "TYPO-055" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "a\\,b\\,c")
+        (tag ^ ": both pairs collapsed"));
+
+  run "TYPO-055 does not fire on single \\," (fun tag ->
+      expect
+        (does_not_fire "TYPO-055" "Foo\\,bar baz\\,qux")
+        (tag ^ ": single thin-spaces are fine"));
+
+  run "TYPO-055 fix: idempotent on collapsed source" (fun tag ->
+      expect
+        (does_not_fire "TYPO-055" "Foo\\,bar")
+        (tag ^ ": clean source doesn't re-fire"));
+
   finalise "typo-fix"

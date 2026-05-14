@@ -87,6 +87,88 @@ FIX_PRODUCER_DEFERRED: dict[str, str] = {
         "until detection scope is narrowed to U+E0000-U+E001F "
         "(deprecated language-tag range with no current valid use)."
     ),
+    # === Category 2 additions (v27.0.43): more redundant rules ===
+    "TYPO-063": (
+        "Redundant with ENC-018 (shipped v27.0.31, which replaces "
+        "U+2011 non-breaking hyphen `\\xe2\\x80\\x91` with `-`, "
+        "URL+math-aware).  TYPO-063 detects the same exact byte sequence "
+        "but message-flags it as \"inside URL\"; the underlying byte is "
+        "the same.  ENC-018's fix already handles every TYPO-063 match."
+    ),
+    "SPC-007": (
+        "Redundant with TYPO-008 (shipped v26.3.1, which collapses runs of "
+        "`\\n` to 2 newlines).  SPC-007 detects 3+ consecutive blank lines; "
+        "TYPO-008's fix normalises any such run."
+    ),
+    "SPC-013": (
+        "Redundant with SPC-002 (shipped v26.2.1, which empties any "
+        "whitespace-only line).  SPC-013 detects whitespace-only paragraphs "
+        "(which are unions of whitespace-only lines); SPC-002 already empties "
+        "each constituent line, leaving the paragraph empty."
+    ),
+    "SPC-014": (
+        "Redundant with ENC-013 (shipped v27.0.30, which normalises mixed "
+        "CR/LF line endings to LF).  SPC-014 detects mixed-LF/CRLF within "
+        "a file; ENC-013's fix already handles every SPC-014 occurrence."
+    ),
+    "SPC-024": (
+        "Redundant with SPC-002 (shipped v26.2.1, which empties any "
+        "whitespace-only line).  SPC-024 detects \"leading spaces on a "
+        "blank line\" which is a subset of \"whitespace-only line\"."
+    ),
+    "CHAR-021": (
+        "U+FEFF inside paragraph conflicts with both ENC-002 (shipped "
+        "v26.3.0, deletes BOM at file start) and SPC-012 (shipped v26.3.0, "
+        "deletes mid-file BOM).  All three rules target the same 3-byte "
+        "UTF-8 sequence `\\xef\\xbb\\xbf`.  ENC-002 + SPC-012 already form "
+        "a known pre-existing conflict that the rewrite engine resolves "
+        "via apply_best_effort; adding CHAR-021 as a third producer for "
+        "the same bytes would expand the conflict without changing the "
+        "auto-fix outcome.  Defer until the BOM-rule conflict is "
+        "consolidated into a single producer."
+    ),
+    # === Category 4 (v27.0.43): rules whose nature precludes a static fix ===
+    "ENC-001": (
+        "Cannot auto-fix: mixed UTF-8 / Latin-1 in the same file is by "
+        "definition ambiguous — without provenance information we cannot "
+        "decide which encoding the user intended.  Surfaces as a diagnostic "
+        "only; user must re-save with a single declared encoding."
+    ),
+    "ENC-003": (
+        "Cannot auto-fix: invalid UTF-8 byte sequences are by definition "
+        "unrecoverable — the original codepoint(s) cannot be reconstructed "
+        "from corrupted bytes.  Surfaces as a diagnostic only."
+    ),
+    "ENC-008": (
+        "Cannot auto-fix: Private-Use Area (U+E000-U+F8FF) codepoints have "
+        "application-defined semantics (e.g., Apple's `` symbol at "
+        "U+F8FF, Microsoft's Wingdings PUA mappings, custom-font glyphs).  "
+        "A blind delete would corrupt valid uses; a replace cannot pick a "
+        "canonical equivalent without knowing the source application."
+    ),
+    "ENC-009": (
+        "Cannot auto-fix: same reason as ENC-008 — Private-Use Area "
+        "codepoints have application-defined semantics that this rule "
+        "cannot infer.  Different PUA range from ENC-008 but identical "
+        "auto-fix risk profile."
+    ),
+    "ENC-010": (
+        "Cannot auto-fix without breaking valid presentation: variation "
+        "selectors U+FE00-U+FE0F modify the rendering of the preceding "
+        "character.  VS15 (U+FE0E) and VS16 (U+FE0F) in particular force "
+        "text-vs-emoji presentation on emoji-capable codepoints "
+        "(e.g., `❤` is text presentation, `❤️` = ❤ + VS16 is emoji).  "
+        "VS1-VS14 select CJK ideograph variants.  A blind delete would "
+        "corrupt all of these.  Producer would require per-VS context "
+        "analysis that is beyond a byte-level fix."
+    ),
+    "ENC-011": (
+        "Overlaps with CHAR-005 (shipped v27.0.41, which deletes the "
+        "control range U+0000-U+001F with exclusions for TAB/LF/CR and "
+        "the dedicated bytes covered by CHAR-006/007/008).  ENC-011's "
+        "detection scope is identical or a superset.  Defer until "
+        "the families are consolidated into a single producer."
+    ),
 }
 
 # Bucket D — defer indefinitely per V27_FIX_PRODUCER_CADENCE.md §"Bucket D".

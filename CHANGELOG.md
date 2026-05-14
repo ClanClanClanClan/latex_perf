@@ -2,6 +2,59 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.43] — 2026-05-14
+
+**+1 fix producer + 12 new produces_fix:false annotations.**
+
+### New fix producer
+
+- **TYPO-055** (`\,\,` → `\,`, collapse consecutive thin-spaces).
+  Pure non-overlap replace.  A double thin-space is always a typo
+  — there is no LaTeX construct where the literal four-character
+  sequence `\,\,` is the intended output.
+
+### New produces_fix:false annotations (12 rules)
+
+Continues closing the cadence acceptance criterion #3 picture.
+
+**Redundant with shipped producer:**
+- TYPO-063 — same U+2011 byte as ENC-018 (v27.0.31).
+- SPC-007  — `\n\n\n+` collapse already in TYPO-008.
+- SPC-013  — whitespace-only paragraphs covered by SPC-002.
+- SPC-014  — mixed LF/CRLF normalised by ENC-013.
+- SPC-024  — blank-line whitespace covered by SPC-002.
+
+**Cannot auto-fix (semantics ambiguous or unrecoverable):**
+- CHAR-021 — U+FEFF inside paragraph (BOM conflict).
+- ENC-001  — mixed UTF-8/Latin-1 detection (ambiguous encoding).
+- ENC-003  — invalid UTF-8 byte sequences are unrecoverable.
+- ENC-008  — Private-Use Area codepoints (application-defined).
+- ENC-009  — same as ENC-008 (different PUA range).
+- ENC-010  — variation selectors modify valid presentation.
+- ENC-011  — overlaps with shipped CHAR-005 control-byte range.
+
+**68 fix-producing rules** (was 67; +1: TYPO-055).
+**81 produces_fix:false** (was 69; +12).
+**511 produces_fix:null / pending** (was 524; -13).
+
+### Counts (v27.0.43 vs v27.0.42)
+
+- 660 catalogued rules (unchanged).
+- **68 fix-producing rules** (was 67; +1: TYPO-055).
+- **81 produces_fix:false** (was 69; +12).
+- 1,382 theorems / 165 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 5 new TYPO-055 tests in `test_typo_fix.ml`.
+- 241/241 fix-producer tests PASS (was 236).
+
+### Differential vs v27.0.42
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.42] — 2026-05-13
 
 **Closes cadence acceptance criterion #3** — no new fix producer.

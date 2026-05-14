@@ -1915,15 +1915,38 @@ let r_typo_054 : rule =
   in
   { id = "TYPO-054"; run; languages = [] }
 
-(* Consecutive thin-spaces prohibited *)
+(* Consecutive thin-spaces prohibited. v27.0.43: fix producer that collapses
+   each `\,\,` (4 bytes) to a single `\,` (2 bytes). A double thin-space is
+   always a typo — there is no LaTeX construct where the literal four-character
+   sequence `\,\,` is the intended output (the standard spacing macros `\!`,
+   `\,`, `\:`, `\;`, `\ `, `\quad`, `\qquad` are the tools for tunable spacing).
+   Pure non-overlapping replace; no math filter needed (the issue is the same in
+   math and text); no escape detection needed (`\,\,` as a token cannot itself
+   be preceded by an odd backslash — `\\,\,` parses as `\\` + `,` + `\,`, which
+   does not contain `\,\,` as a contiguous substring).
+
+   Mirrors the v26.3 §3 TYPO-027 (`!!!` collapse) and TYPO-042 (`???` collapse)
+   shape: detect contiguous runs, replace with the non-duplicated form. Here the
+   run unit is the 2-byte `\,` token, so we use `count_substring` to count
+   overlapping pairs (preserving the pre-v27.0.43 fire-rate semantic) and
+   `find_all_non_overlapping` to emit non-overlapping replace edits at offsets
+   that share no bytes. *)
 let r_typo_055 : rule =
+  let needle = "\\,\\," in
   let run s =
-    let cnt = count_substring s "\\,\\," in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let offsets = find_all_non_overlapping s needle in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 4) "\\,")
+          offsets
+      in
       Some
-        (mk_result ~id:"TYPO-055" ~severity:Info
+        (mk_result_with_fix ~id:"TYPO-055" ~severity:Info
            ~message:{|Consecutive thin‑spaces (\,\,) prohibited; collapse|}
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-055"; run; languages = [] }

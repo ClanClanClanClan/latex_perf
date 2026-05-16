@@ -2,6 +2,50 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.44] — 2026-05-14
+
+**+2 fix producers: math-aware single-needle replace batch.**
+
+Both rules use the same pattern (mirrors v27.0.7 TYPO-005): count
+preserves the pre-v27.0.44 semantic; fix uses
+`find_all_non_overlapping` + `is_in_math_range` to emit replace
+edits only at non-math offsets.  Disjoint byte sequences
+(`e2 8b af` vs `e2 88 92`); zero cross-rule overlap.
+
+- **TYPO-053** — U+22EF MIDLINE HORIZONTAL ELLIPSIS → `\dots`.
+  In math, U+22EF could be intended as a Unicode-input equivalent
+  of `\cdots` (centered dots); the fix preserves that and only
+  rewrites text-mode occurrences to the canonical macro.  Each
+  replace: 3 bytes → 5 bytes.  Severity Warning preserved.
+- **CHAR-019** — U+2212 MINUS SIGN → `-` (ASCII hyphen).  Inside
+  math, U+2212 is the typographically correct minus character;
+  outside, it has no role.  Pre-v27.0.44 the count already
+  filtered to text mode via `strip_math_segments`; the fix emits
+  replace edits at the same text-mode offsets.  Each replace:
+  3 bytes → 1 byte.  Severity Info preserved.
+
+**70 fix-producing rules** (was 68; +2: TYPO-053, CHAR-019).
+
+### Counts (v27.0.44 vs v27.0.43)
+
+- 660 catalogued rules (unchanged).
+- **70 fix-producing rules** (was 68; +2).
+- 81 produces_fix:false (unchanged).
+- 509 produces_fix:null / pending (was 511; -2).
+- 1,382 theorems / 165 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 9 required-checks on `main` (unchanged).
+
+### Tests
+
+- 9 new tests in `test_typo_fix.ml` (5 TYPO-053 + 4 CHAR-019,
+  including math-skip positive and negative cases, plus 1 combined
+  cross-rule cross-needle test).
+
+### Differential vs v27.0.43
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.43] — 2026-05-14
 
 **+1 fix producer + 12 new produces_fix:false annotations.**

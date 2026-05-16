@@ -440,17 +440,25 @@ let () =
            "\xef\xbb\xbfstart\xef\xbb\xbfmid\xef\xbb\xbfend" 2)
         (tag ^ ": count=2"));
 
-  (* v26.3 §3 item E (deferred batch): SPC-012 fix deletes each interior BOM and
-     preserves any leading BOM. *)
-  run "SPC-012 fix deletes interior BOM, leaves leading BOM" (fun tag ->
+  (* v27.0.46: SPC-012's fix emission was retracted as redundant with ENC-002.
+     The diagnostic still fires (count-only), but the auto-fix is owned
+     exclusively by ENC-002.  Test now asserts (a) SPC-012 emits no fix
+     edits, and (b) ENC-002 still emits the canonical interior-BOM-delete
+     fix that preserves any leading BOM. *)
+  run "v27.0.46: SPC-012 no longer emits fix; ENC-002 owns it" (fun tag ->
       let src = "\xef\xbb\xbfstart\xef\xbb\xbfmid" in
-      let edits = fix_edits "SPC-012" src in
+      let spc_edits = fix_edits "SPC-012" src in
+      let enc_edits = fix_edits "ENC-002" src in
       let applied =
-        match edits with [ edit ] -> Cst_edit.apply_single src edit | _ -> ""
+        match enc_edits with
+        | [ edit ] -> Cst_edit.apply_single src edit
+        | _ -> ""
       in
       expect
-        (List.length edits = 1 && applied = "\xef\xbb\xbfstartmid")
-        (tag ^ ": leading BOM preserved, interior deleted"));
+        (List.length spc_edits = 0
+        && List.length enc_edits = 1
+        && applied = "\xef\xbb\xbfstartmid")
+        (tag ^ ": SPC-012 no fix; ENC-002 fix preserves leading BOM"));
 
   (* v26.3 §3 item E (deferred batch): ENC-002 fix mirrors SPC-012; test
      multi-interior-BOM apply with apply_all. *)

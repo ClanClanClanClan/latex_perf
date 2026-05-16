@@ -1567,8 +1567,7 @@ rules:
   provides:
   - ENC-002
   depends_on: []
-  conflicts_with:
-  - SPC-012
+  conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
   produces_fix: true
@@ -6544,16 +6543,15 @@ rules:
   provides:
   - SPC-012
   depends_on: []
-  conflicts_with:
-  - ENC-002
+  conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
   produces_fix: false
-  fix_status_reason: Redundant with ENC-002 (shipped v26.3.0).  Both rules detect the same condition — BOM `\xef\xbb\xbf`
-    present at a non-leading byte offset — and originally both emitted the IDENTICAL delete edit at the IDENTICAL offsets,
-    forcing apply_best_effort to deduplicate and bloating the diagnostic stream.  v27.0.46 reverted SPC-012 to count-only
-    at the runtime level and added a bilateral conflicts_with edge so the runtime conflict resolver suppresses the SPC-012
-    diagnostic in favor of ENC-002 (equal severity Error; ENC-002 wins by id-lexicographic order).
+  fix_status_reason: Fix-emission redundant with ENC-002 (shipped v26.3.0).  Both rules detect the same condition (BOM `\xef\xbb\xbf`
+    at a non-leading byte offset) and pre-v27.0.46 both emitted the IDENTICAL delete edit at the IDENTICAL offsets — `apply_best_effort`
+    deduplicated but the duplicate emission was wasted work.  v27.0.46 reverted SPC-012 to count-only at the runtime level
+    (diagnostic preserved per the v26.3.0 contract — both rules still fire as separate diagnostics, encoding different aspects
+    of the same source issue); only ENC-002 emits the auto-fix.
 - rule_id: SPC-013
   layer: L0_Lexer
   execution_class: A

@@ -1788,11 +1788,11 @@ let r_spc_006 : rule =
    stream.
 
    v27.0.46 cleanup: SPC-012 reverts to count-only [mk_result] (no fix emission)
-   so only ENC-002 owns the auto-fix for mid-file BOMs. The diagnostic is also
-   suppressed by the runtime conflict resolver via a bilateral [conflicts_with]
-   declaration in [scripts/tools/generate_rule_contracts.py] — both rules detect
-   the same condition, ENC-002 wins by id-lexicographic order (ENC-002 < SPC-012
-   with equal severity Error). *)
+   so only ENC-002 owns the auto-fix for mid-file BOMs. Both rules still fire as
+   separate diagnostics — this preserves the v26.3.0 contract (the two rules
+   document different aspects of the same source issue: ENC for encoding
+   hygiene, SPC for paragraph structure) and the existing
+   test_validators_enc_char_spc.ml assertions (lines 324, 330, 437). *)
 let r_spc_012 : rule =
   let message = "BOM not at file start" in
   let run s =

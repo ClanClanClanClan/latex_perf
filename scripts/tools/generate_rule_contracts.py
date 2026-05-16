@@ -171,15 +171,15 @@ FIX_PRODUCER_DEFERRED: dict[str, str] = {
     ),
     # === v27.0.46 cleanup: redundant fix retracted ===
     "SPC-012": (
-        "Redundant with ENC-002 (shipped v26.3.0).  Both rules detect "
-        "the same condition — BOM `\\xef\\xbb\\xbf` present at a non-"
-        "leading byte offset — and originally both emitted the IDENTICAL "
-        "delete edit at the IDENTICAL offsets, forcing apply_best_effort "
-        "to deduplicate and bloating the diagnostic stream.  v27.0.46 "
-        "reverted SPC-012 to count-only at the runtime level and added a "
-        "bilateral conflicts_with edge so the runtime conflict resolver "
-        "suppresses the SPC-012 diagnostic in favor of ENC-002 (equal "
-        "severity Error; ENC-002 wins by id-lexicographic order)."
+        "Fix-emission redundant with ENC-002 (shipped v26.3.0).  Both "
+        "rules detect the same condition (BOM `\\xef\\xbb\\xbf` at a "
+        "non-leading byte offset) and pre-v27.0.46 both emitted the "
+        "IDENTICAL delete edit at the IDENTICAL offsets — `apply_best_"
+        "effort` deduplicated but the duplicate emission was wasted work.  "
+        "v27.0.46 reverted SPC-012 to count-only at the runtime level "
+        "(diagnostic preserved per the v26.3.0 contract — both rules "
+        "still fire as separate diagnostics, encoding different aspects "
+        "of the same source issue); only ENC-002 emits the auto-fix."
     ),
 }
 
@@ -434,12 +434,15 @@ def hand_audit_overrides(contracts: list[dict]) -> None:
     _add_conflict(by_id, "TYPO-002", "TYPO-030")  # `--` inside `----+`
     _add_conflict(by_id, "TYPO-001", "TYPO-004")  # straight quote vs backtick-apostrophe
     _add_conflict(by_id, "TYPO-013", "TYPO-004")  # lone backtick vs backtick-pair
-    # v27.0.46: ENC-002 and SPC-012 both detect "BOM at non-leading offset".
-    # Both emitted the IDENTICAL delete edit pre-v27.0.46; the redundant fix
-    # was removed from SPC-012's runtime, and this declaration tells the
-    # conflict resolver to suppress SPC-012's diagnostic in favor of ENC-002
-    # (equal severity Error; ENC-002 wins by id-lexicographic order).
-    _add_conflict(by_id, "ENC-002", "SPC-012")
+    # NOTE: ENC-002 and SPC-012 both detect "BOM at non-leading offset" — pre-
+    # v27.0.46 both emitted IDENTICAL delete edits.  The redundant fix was
+    # removed from SPC-012's runtime in v27.0.46 (it remains diagnostic-only).
+    # We deliberately do NOT declare a `conflicts_with` edge here: the
+    # diagnostic contract has been "both fire" since v26.3.0, and existing
+    # test cases (test_validators_enc_char_spc.ml lines 324, 330, 437)
+    # encode that behaviour.  Suppressing SPC-012's diagnostic would be a
+    # behavioural regression for downstream consumers.  The conflict is fully
+    # resolved at the fix-edit level by removing SPC-012's `~fix` arg.
 
     # PR #241 (p1.3): family-level capability edges. Every rule whose family
     # is in FAMILY_CAPABILITIES picks up provides/consumes defaults so the

@@ -5074,8 +5074,10 @@
   "CHAR-005": {
     "layer": "L0",
     "pattern": {
-      "family": "byte_ge",
-      "threshold": 128
+      "family": "byte_range_excluding",
+      "lo": 0,
+      "hi": 31,
+      "excluded": [7, 8, 9, 10, 12, 13]
     },
     "severity": "Error"
   },

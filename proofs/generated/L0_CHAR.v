@@ -9,9 +9,9 @@ Open Scope string_scope.
 
 (* ── Check functions ── *)
 
-(** CHAR-005: byte_ge 128 — document contains byte >= 128. *)
+(** CHAR-005: byte_range [0..31] excluding [7; 8; 9; 10; 12; 13]. *)
 Definition char_005_chk (s : string) : bool :=
-  string_has_byte_ge s 128.
+  string_has_byte_in_range_excluding s 0 31 [7; 8; 9; 10; 12; 13].
 
 (** CHAR-006: count_char '\x08' (ASCII 8). *)
 Definition char_006_chk (s : string) : bool :=

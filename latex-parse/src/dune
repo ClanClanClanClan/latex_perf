@@ -170,6 +170,11 @@
  (libraries latex_parse_lib))
 
 (test
+ (name test_math_ranges)
+ (modules test_math_ranges)
+ (libraries latex_parse_lib))
+
+(test
  (name test_tokenizer_props)
  (modules test_tokenizer_props)
  (libraries latex_parse_lib))

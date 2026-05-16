@@ -237,6 +237,21 @@ def gen_check_function(rule_id: str, vpd_entry: Optional[Dict]) -> Tuple[str, st
             f'(** {rule_id}: byte_range [{lo}..{hi}]. *)'
         )
 
+    elif family == "byte_range_excluding":
+        # Rules that target a byte range with explicit holes (e.g.,
+        # CHAR-005: low control bytes 0..31 excluding TAB/LF/CR/0x07/0x08/0x0C).
+        # The runtime exclusion set must exactly match the values the OCaml
+        # validator skips; check_repo_facts gating ensures this is in sync.
+        lo = pattern.get("lo", 0)
+        hi = pattern.get("hi", 255)
+        excluded = pattern.get("excluded", [])
+        excluded_list = "[" + "; ".join(str(e) for e in excluded) + "]"
+        return (
+            f'Definition {cid}_chk (s : string) : bool :=\n'
+            f'  string_has_byte_in_range_excluding s {lo} {hi} {excluded_list}.',
+            f'(** {rule_id}: byte_range [{lo}..{hi}] excluding {excluded_list}. *)'
+        )
+
     # Default: conservative
     return (
         f'Definition {cid}_chk (s : string) : bool := false.',

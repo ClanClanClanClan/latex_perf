@@ -24,6 +24,8 @@ From LaTeXPerfectionist.Generated Require Import L0_PT.
 From LaTeXPerfectionist.Generated Require Import L0_RO.
 From LaTeXPerfectionist.Generated Require Import L0_RU.
 From LaTeXPerfectionist.Generated Require Import L0_SPC.
+From LaTeXPerfectionist.Generated Require Import L0_STRUCT.
+From LaTeXPerfectionist.Generated Require Import L0_SYS.
 From LaTeXPerfectionist.Generated Require Import L0_TYPO.
 From LaTeXPerfectionist.Generated Require Import L0_VERB.
 From LaTeXPerfectionist.Generated Require Import L0_ZH.
@@ -53,8 +55,10 @@ From LaTeXPerfectionist.Generated Require Import L2_LAY.
 From LaTeXPerfectionist.Generated Require Import L2_MATH.
 From LaTeXPerfectionist.Generated Require Import L2_META.
 From LaTeXPerfectionist.Generated Require Import L2_PKG.
+From LaTeXPerfectionist.Generated Require Import L2_PRT.
 From LaTeXPerfectionist.Generated Require Import L2_REF.
 From LaTeXPerfectionist.Generated Require Import L2_RTL.
+From LaTeXPerfectionist.Generated Require Import L2_STRUCT.
 From LaTeXPerfectionist.Generated Require Import L2_TAB.
 From LaTeXPerfectionist.Generated Require Import L2_TIKZ.
 From LaTeXPerfectionist.Generated Require Import L2_VERB.
@@ -71,6 +75,7 @@ From LaTeXPerfectionist.Generated Require Import L3_MATH.
 From LaTeXPerfectionist.Generated Require Import L3_META.
 From LaTeXPerfectionist.Generated Require Import L3_PDF.
 From LaTeXPerfectionist.Generated Require Import L3_PKG.
+From LaTeXPerfectionist.Generated Require Import L3_PRJ.
 From LaTeXPerfectionist.Generated Require Import L3_REF.
 From LaTeXPerfectionist.Generated Require Import L3_RTL.
 From LaTeXPerfectionist.Generated Require Import L3_TAB.
@@ -110,6 +115,8 @@ Definition all_proved_rule_ids : list string :=
   l0_ro_proved ++
   l0_ru_proved ++
   l0_spc_proved ++
+  l0_struct_proved ++
+  l0_sys_proved ++
   l0_typo_proved ++
   l0_verb_proved ++
   l0_zh_proved ++
@@ -139,8 +146,10 @@ Definition all_proved_rule_ids : list string :=
   l2_math_proved ++
   l2_meta_proved ++
   l2_pkg_proved ++
+  l2_prt_proved ++
   l2_ref_proved ++
   l2_rtl_proved ++
+  l2_struct_proved ++
   l2_tab_proved ++
   l2_tikz_proved ++
   l2_verb_proved ++
@@ -157,6 +166,7 @@ Definition all_proved_rule_ids : list string :=
   l3_meta_proved ++
   l3_pdf_proved ++
   l3_pkg_proved ++
+  l3_prj_proved ++
   l3_ref_proved ++
   l3_rtl_proved ++
   l3_tab_proved ++
@@ -177,4 +187,4 @@ Definition all_proved_rule_ids : list string :=
   l4_typo_proved ++
   l4_zh_proved.
 
-(** Total coverage: 626 rules with soundness proofs. *)
+(** Total coverage: 644 rules with soundness proofs. *)

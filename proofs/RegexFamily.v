@@ -457,6 +457,23 @@ Fixpoint string_has_byte_in_range (s : string) (lo hi : nat) : bool :=
       else string_has_byte_in_range rest lo hi
   end.
 
+(** Check if any byte in [s] has value in [lo..hi] inclusive AND not in
+    [excluded].  Used by rules that target a byte range with explicit
+    holes (e.g., CHAR-005: low control bytes 0x00-0x1F excluding TAB
+    0x09, LF 0x0A, CR 0x0D + the dedicated 0x07/0x08/0x0C handled by
+    CHAR-007/006/008). *)
+Fixpoint string_has_byte_in_range_excluding
+  (s : string) (lo hi : nat) (excluded : list nat) : bool :=
+  match s with
+  | EmptyString => false
+  | String c rest =>
+      let v := nat_of_ascii c in
+      if andb (andb (Nat.leb lo v) (Nat.leb v hi))
+              (negb (List.existsb (Nat.eqb v) excluded))
+      then true
+      else string_has_byte_in_range_excluding rest lo hi excluded
+  end.
+
 (** Regex-family check placeholder — in the formal model we abstract
     regex matching as an opaque boolean predicate.  The soundness proof
     only requires that the check is a total function [string -> bool]. *)

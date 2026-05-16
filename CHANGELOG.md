@@ -2,6 +2,73 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.45] — 2026-05-16
+
+**Spec-hardening cycle — no new fix producer.** Addresses two
+long-standing pre-existing issues flagged in prior audits.
+
+### 1. CHAR-005 VPD ↔ runtime reconciliation
+
+Pre-v27.0.45 the VPD declared CHAR-005 as `byte_ge` 128 (any high
+byte), the Coq generated proof certified that predicate, and the
+OCaml runtime instead checked the low control range
+`c <= 0x1F` excluding TAB/LF/CR + the bytes covered by
+CHAR-006/007/008.  The Coq soundness theorem was mathematically
+valid but certified the wrong predicate; my v27.0.41 CHAR-005 fix
+producer shipped using OCaml semantics, deepening the gap.
+
+Fix:
+- Added `string_has_byte_in_range_excluding` to
+  `proofs/RegexFamily.v`.
+- Added `byte_range_excluding` pattern family to
+  `scripts/infra/proof_farm/gen_coq_proofs.py`.
+- Updated `specs/rules/vpd_patterns.json` CHAR-005 to
+  `byte_range_excluding` 0..31 excluding `[7, 8, 9, 10, 12, 13]` —
+  mirrors the OCaml runtime exactly.
+- Regenerated `proofs/generated/L0_CHAR.v`.  The soundness theorem
+  for `char_005_chk` now certifies the runtime semantics.
+
+0 admits / 0 axioms preserved (the `qed_text_sound` tactic is
+generic over any `string -> bool` predicate).
+
+### 2. Direct unit tests for `find_math_ranges` + `is_in_math_range`
+
+These helpers in `validators_common.ml` are load-bearing for 7+
+math-aware fix producers (TYPO-001/004/005/012/046, TYPO-053,
+CHAR-019).  Pre-v27.0.45 they were only tested INDIRECTLY through
+individual producer tests.
+
+`latex-parse/src/test_math_ranges.ml` (new): 32 direct test cases
+covering empty, no-math, all 11 named envs, inline/display/paren/
+bracket, escape semantics, unclosed math at EOF, and per-byte
+consistency between `find_math_ranges` and `is_in_math_range`.
+
+### Counts (v27.0.45 vs v27.0.44)
+
+- 660 catalogued rules (unchanged).
+- **70 fix-producing rules** (unchanged; v27.0.44 added TYPO-053
+  and CHAR-019 in parallel which both landed before v27.0.45).
+- 81 produces_fix:false (unchanged).
+- 509 produces_fix:null / pending (unchanged).
+- **1,400 theorems / 170 .v files** (was 1,382 / 165; +18 theorems
+  and +5 files from regenerating stale generated proofs that hadn't
+  picked up CMD-015/016/017, several LAY rules, and entire missing
+  families STRUCT/SYS/PRT/PRJ added to the catalogue in prior cycles.
+  This pre-existing drift is now corrected.  The new
+  `string_has_byte_in_range_excluding` helper itself is a Fixpoint
+  not a Theorem so does not contribute to the theorem count).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 32 new tests in `test_math_ranges.ml`.
+- 241/241 existing fix-producer tests still PASS.
+
+### Differential vs v27.0.44
+
+0 diffs across 330 corpus files (CHAR-005's runtime detection is
+unchanged — only the Coq model changed to match it).
+
 ## [v27.0.44] — 2026-05-14
 
 **+2 fix producers: math-aware single-needle replace batch.**

@@ -355,7 +355,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "CHAR-002",
@@ -371,7 +372,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "CHAR-003",
@@ -387,7 +389,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "CHAR-004",
@@ -1909,7 +1912,9 @@
         "ENC-002"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "SPC-012"
+      ],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
       "produces_fix": true
@@ -4034,7 +4039,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-002",
@@ -4052,7 +4058,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-003",
@@ -4070,7 +4077,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-004",
@@ -4088,7 +4096,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-005",
@@ -4106,7 +4115,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-006",
@@ -4142,7 +4152,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-008",
@@ -4160,7 +4171,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "MATH-009",
@@ -5494,7 +5506,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-083",
@@ -6363,7 +6375,7 @@
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
       "produces_fix": false,
-      "fix_status_reason": "Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log / external-binary state and cannot be statically fix-produced from the source bytes alone."
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "PDF-002",
@@ -6380,7 +6392,7 @@
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
       "produces_fix": false,
-      "fix_status_reason": "Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log / external-binary state and cannot be statically fix-produced from the source bytes alone."
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "PDF-003",
@@ -6397,7 +6409,7 @@
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
       "produces_fix": false,
-      "fix_status_reason": "Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log / external-binary state and cannot be statically fix-produced from the source bytes alone."
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "PDF-004",
@@ -6414,7 +6426,7 @@
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
       "produces_fix": false,
-      "fix_status_reason": "Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log / external-binary state and cannot be statically fix-produced from the source bytes alone."
+      "fix_status_reason": "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule is implemented."
     },
     {
       "rule_id": "PDF-005",
@@ -8024,10 +8036,13 @@
         "SPC-012"
       ],
       "depends_on": [],
-      "conflicts_with": [],
+      "conflicts_with": [
+        "ENC-002"
+      ],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": true
+      "produces_fix": false,
+      "fix_status_reason": "Redundant with ENC-002 (shipped v26.3.0).  Both rules detect the same condition — BOM `\\xef\\xbb\\xbf` present at a non-leading byte offset — and originally both emitted the IDENTICAL delete edit at the IDENTICAL offsets, forcing apply_best_effort to deduplicate and bloating the diagnostic stream.  v27.0.46 reverted SPC-012 to count-only at the runtime level and added a bilateral conflicts_with edge so the runtime conflict resolver suppresses the SPC-012 diagnostic in favor of ENC-002 (equal severity Error; ENC-002 wins by id-lexicographic order)."
     },
     {
       "rule_id": "SPC-013",

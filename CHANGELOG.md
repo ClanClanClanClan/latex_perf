@@ -2,6 +2,92 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.46] — 2026-05-16
+
+**Comprehensive spec cleanup cycle.** Addresses every remaining audit
+finding from the v27.0.45 ultrathink audit.
+
+### 1.  ENC-002 + SPC-012 redundancy properly resolved
+
+Pre-v27.0.46: ENC-002 (`Byte-order mark U+FEFF present in middle of
+file`, Error) and SPC-012 (`BOM not at file start`, Error) both
+detected the same condition (BOM at non-leading offset) and BOTH
+emitted IDENTICAL delete edits at IDENTICAL offsets.  Two diagnostics
+for one source issue + duplicate fix-edit emission that
+`apply_best_effort` had to deduplicate.  CHAR-021 was already
+annotated `produces_fix: false` against this redundancy, but the
+underlying runtime double-emission persisted.
+
+Fix (proper, not bandaid):
+
+- **SPC-012 reverts to count-only** at the runtime level
+  (`mk_result_with_fix` → `mk_result`).  ENC-002 retains the canonical
+  fix; the user sees one fix edit per interior BOM.
+- **Bilateral `conflicts_with` declaration** added to
+  `scripts/tools/generate_rule_contracts.py` `hand_audit_overrides`:
+  `ENC-002 ↔ SPC-012`.  The runtime conflict resolver now suppresses
+  the SPC-012 diagnostic in favor of ENC-002 (equal severity Error;
+  ENC-002 wins by id-lexicographic order).
+- **SPC-012 dropped from `SHIPPED_VERSIONS`** in the ledger generator.
+- **SPC-012 moved to `produces_fix: false`** with the documented
+  reason chain.
+- Validator-DAG warning count rises from 5 to 6, all 6 are
+  intentional bilateral declarations.
+
+### 2.  Reserved-rule annotations (14 rules)
+
+`rules_v3.yaml` carries 14 rules with `maturity: Reserved` — they
+are placeholders for future spec work, lacking runtime
+implementations and definitions beyond a one-line description.
+
+Pre-v27.0.46 these had `produces_fix: null` (Bucket A pending),
+mis-classifying them as eligible for fix-producer work.
+
+Annotate all 14 explicitly as `produces_fix: false` with the
+`⟦Reserved⟧` reason:
+
+- CHAR-001, CHAR-002, CHAR-003 (3)
+- MATH-001 — MATH-005, MATH-007, MATH-008 (7)
+- PDF-001 — PDF-004 (4; previously fell under generic Bucket D
+  annotation but now carry the more-precise Reserved reason)
+
+### 3.  MATH-082 fix producer (`\!\!` → `\!` inside math)
+
+Two consecutive negative thin spaces (`\!\!`, 4 bytes) compose to
+roughly `-1/3 em` — overwhelmingly a typo, no standard LaTeX idiom
+produces this exact byte sequence.  Math-aware fix mirrors v27.0.7
+TYPO-005 / v27.0.44 TYPO-053 shape but with the math filter
+INVERTED (positive — `\!` is a math-mode-only macro).
+
+### Counts (v27.0.46 vs v27.0.45)
+
+- 660 catalogued rules (unchanged).
+- **70 fix-producing rules** (was 70; -1 SPC-012 retracted, +1
+  MATH-082 added — net unchanged).
+- **92 produces_fix:false** (was 81; +1 SPC-012, +10 newly-Reserved
+  CHAR/MATH).  The 4 Reserved PDF entries' reason was tightened
+  from the generic Bucket D to the precise Reserved reason — same
+  produces_fix:false count.
+- **498 produces_fix:null / pending** (was 511; -13).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+- 6 conflict declarations in validator DAG (was 5; +1 bilateral
+  ENC-002 ↔ SPC-012).
+
+### Tests
+
+- 5 new tests in `test_typo_fix.ml` (1 SPC-012 no-fix verification +
+  4 MATH-082 fix coverage).
+- 256/256 fix-producer tests PASS (was 251).
+- 32/32 math-ranges tests PASS.
+
+### Differential vs v27.0.45
+
+0 diffs across 330 corpus files (SPC-012's diagnostic suppression
+and ENC-002's exclusive fix emission preserve the corpus-level
+fix-application output; MATH-082's fix is gated behind
+`--apply-fixes`).
+
 ## [v27.0.45] — 2026-05-16
 
 **Spec-hardening cycle — no new fix producer.** Addresses two

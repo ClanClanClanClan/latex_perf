@@ -2087,4 +2087,42 @@ let () =
         && merged = "Range -10 to -5 \\dots 5 to 10.")
         (tag ^ ": 3 disjoint replaces all apply"));
 
+  (* v27.0.46: ENC-002 / SPC-012 redundancy resolution. SPC-012 must no longer
+     emit a fix (it falls back to count-only); ENC-002 retains its fix. Both
+     still detect the same BOM-at-non-leading-offset condition. *)
+  run "v27.0.46: SPC-012 no longer emits fix edits" (fun tag ->
+      let src = "Header line.\nBody \xef\xbb\xbf inline BOM.\nEnd." in
+      let spc_edits = fix_edits "SPC-012" src in
+      let enc_edits = fix_edits "ENC-002" src in
+      expect
+        (List.length spc_edits = 0
+        && List.length enc_edits = 1
+        && apply_all src enc_edits = "Header line.\nBody  inline BOM.\nEnd.")
+        (tag ^ ": SPC-012 no fix, ENC-002 single fix, no duplicate"));
+
+  (* v27.0.46: MATH-082 fix producer — collapse `\!\!` in math to `\!`. *)
+  run "MATH-082 fix: collapses inside math" (fun tag ->
+      let src = "Eq: $a \\!\\! b$" in
+      let edits = fix_edits "MATH-082" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Eq: $a \\! b$")
+        (tag ^ ": 4 bytes → 2 bytes inside math"));
+
+  run "MATH-082 fix: outside math is skipped" (fun tag ->
+      let src = "Text with \\!\\! literally outside math." in
+      let edits = fix_edits "MATH-082" src in
+      expect (List.length edits = 0) (tag ^ ": \\!\\! outside math not touched"));
+
+  run "MATH-082 fix: two pairs in math" (fun tag ->
+      let src = "$a\\!\\!b \\!\\! c$ tail" in
+      let edits = fix_edits "MATH-082" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$a\\!b \\! c$ tail")
+        (tag ^ ": both pairs collapsed"));
+
+  run "MATH-082 does not fire on clean math" (fun tag ->
+      expect
+        (does_not_fire "MATH-082" "$a \\! b \\! c$")
+        (tag ^ ": single thin-spaces ok"));
+
   finalise "typo-fix"

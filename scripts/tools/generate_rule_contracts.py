@@ -169,7 +169,41 @@ FIX_PRODUCER_DEFERRED: dict[str, str] = {
         "detection scope is identical or a superset.  Defer until "
         "the families are consolidated into a single producer."
     ),
+    # === v27.0.46 cleanup: redundant fix retracted ===
+    "SPC-012": (
+        "Redundant with ENC-002 (shipped v26.3.0).  Both rules detect "
+        "the same condition — BOM `\\xef\\xbb\\xbf` present at a non-"
+        "leading byte offset — and originally both emitted the IDENTICAL "
+        "delete edit at the IDENTICAL offsets, forcing apply_best_effort "
+        "to deduplicate and bloating the diagnostic stream.  v27.0.46 "
+        "reverted SPC-012 to count-only at the runtime level and added a "
+        "bilateral conflicts_with edge so the runtime conflict resolver "
+        "suppresses the SPC-012 diagnostic in favor of ENC-002 (equal "
+        "severity Error; ENC-002 wins by id-lexicographic order)."
+    ),
 }
+
+# === v27.0.46: Reserved rules from rules_v3.yaml ===
+# These rules have maturity=Reserved — they exist as placeholders in the
+# catalogue for future spec work but have no runtime implementation, no
+# definition beyond a one-line description, and no test cases.  Annotate
+# them as produces_fix:false with a clear reason so the FIX_PRODUCER_LEDGER
+# does not list them as Bucket-A-pending (they are not pending; they are
+# spec placeholders).  Identifies any future drift between rules_v3.yaml
+# maturity and the produces_fix annotation.
+_RESERVED_REASON = (
+    "⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for "
+    "future spec work; no rule definition or runtime implementation "
+    "currently exists.  Will move to produces_fix:null/true once the "
+    "spec is fleshed out and the rule is implemented."
+)
+for _rid in [
+    "CHAR-001", "CHAR-002", "CHAR-003",
+    "MATH-001", "MATH-002", "MATH-003", "MATH-004", "MATH-005",
+    "MATH-007", "MATH-008",
+    "PDF-001", "PDF-002", "PDF-003", "PDF-004",
+]:
+    FIX_PRODUCER_DEFERRED[_rid] = _RESERVED_REASON
 
 # Bucket D — defer indefinitely per V27_FIX_PRODUCER_CADENCE.md §"Bucket D".
 # Rules in these families do not admit a static fix (they require pdflatex
@@ -400,6 +434,12 @@ def hand_audit_overrides(contracts: list[dict]) -> None:
     _add_conflict(by_id, "TYPO-002", "TYPO-030")  # `--` inside `----+`
     _add_conflict(by_id, "TYPO-001", "TYPO-004")  # straight quote vs backtick-apostrophe
     _add_conflict(by_id, "TYPO-013", "TYPO-004")  # lone backtick vs backtick-pair
+    # v27.0.46: ENC-002 and SPC-012 both detect "BOM at non-leading offset".
+    # Both emitted the IDENTICAL delete edit pre-v27.0.46; the redundant fix
+    # was removed from SPC-012's runtime, and this declaration tells the
+    # conflict resolver to suppress SPC-012's diagnostic in favor of ENC-002
+    # (equal severity Error; ENC-002 wins by id-lexicographic order).
+    _add_conflict(by_id, "ENC-002", "SPC-012")
 
     # PR #241 (p1.3): family-level capability edges. Every rule whose family
     # is in FAMILY_CAPABILITIES picks up provides/consumes defaults so the

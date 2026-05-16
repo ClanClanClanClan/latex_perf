@@ -80,7 +80,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | L3 | 11 | 0 | 11 | 0 | 0 | 0 | 0 | 11 |
 | LANG | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
 | LAY | 27 | 0 | 27 | 0 | 0 | 0 | 27 | 0 |
-| MATH | 108 | 0 | 108 | 0 | 108 | 0 | 0 | 0 |
+| MATH | 108 | 1 | 107 | 0 | 108 | 0 | 0 | 0 |
 | META | 4 | 0 | 4 | 0 | 0 | 0 | 4 | 0 |
 | MOD | 18 | 0 | 18 | 0 | 0 | 0 | 18 | 0 |
 | NL | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
@@ -95,7 +95,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | RTL | 5 | 0 | 5 | 0 | 5 | 0 | 0 | 0 |
 | RU | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | SCRIPT | 22 | 0 | 22 | 0 | 22 | 0 | 0 | 0 |
-| SPC | 35 | 9 | 26 | 0 | 35 | 0 | 0 | 0 |
+| SPC | 35 | 8 | 27 | 0 | 35 | 0 | 0 | 0 |
 | STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
 | STYLE | 49 | 0 | 49 | 0 | 0 | 49 | 0 | 0 |
 | SYS | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -430,7 +430,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-079` | MATH | **A** | tentative | pending |
 | `MATH-080` | MATH | **A** | tentative | pending |
 | `MATH-081` | MATH | **A** | tentative | pending |
-| `MATH-082` | MATH | **A** | tentative | pending |
+| `MATH-082` | MATH | **A** | confirmed | shipped in v27.0.46 |
 | `MATH-083` | MATH | **A** | tentative | pending |
 | `MATH-084` | MATH | **A** | tentative | pending |
 | `MATH-085` | MATH | **A** | tentative | pending |
@@ -582,7 +582,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SPC-009` | SPC | **A** | confirmed | shipped in v26.3.0 |
 | `SPC-010` | SPC | **A** | confirmed | shipped in v26.3.0 |
 | `SPC-011` | SPC | **A** | confirmed | shipped in v26.3.0 |
-| `SPC-012` | SPC | **A** | confirmed | shipped in v26.3.0 |
+| `SPC-012` | SPC | **A** | tentative | pending |
 | `SPC-013` | SPC | **A** | tentative | pending |
 | `SPC-014` | SPC | **A** | tentative | pending |
 | `SPC-015` | SPC | **A** | tentative | pending |

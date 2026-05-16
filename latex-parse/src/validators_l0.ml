@@ -1408,20 +1408,20 @@ let r_char_016 : rule =
   in
   { id = "CHAR-016"; run; languages = [] }
 
-(* CHAR-019: Unicode minus U+2212 in text mode.  v27.0.44: math-aware fix
+(* CHAR-019: Unicode minus U+2212 in text mode. v27.0.44: math-aware fix
    producer that replaces each U+2212 (`\xe2\x88\x92`, 3 bytes) outside math
    with an ASCII `-` (1 byte).
 
-   U+2212 MINUS SIGN is the typographically correct minus character INSIDE
-   math mode (LaTeX renders it via `-` in math; in Unicode-input documents
-   the character is often the intended math minus).  In TEXT mode it has
-   no role — text minus is the ASCII hyphen `-`.  Pre-v27.0.44 the count
-   already filtered to text mode via `strip_math_segments` (so math-mode
-   U+2212 doesn't fire); the fix emits replace edits at text-mode offsets
-   computed via `find_math_ranges`+`is_in_math_range` (same shape as
-   v27.0.7 TYPO-005 / v27.0.6 TYPO-004).
+   U+2212 MINUS SIGN is the typographically correct minus character INSIDE math
+   mode (LaTeX renders it via `-` in math; in Unicode-input documents the
+   character is often the intended math minus). In TEXT mode it has no role —
+   text minus is the ASCII hyphen `-`. Pre-v27.0.44 the count already filtered
+   to text mode via `strip_math_segments` (so math-mode U+2212 doesn't fire);
+   the fix emits replace edits at text-mode offsets computed via
+   `find_math_ranges`+`is_in_math_range` (same shape as v27.0.7 TYPO-005 /
+   v27.0.6 TYPO-004).
 
-   Severity Info preserved.  Each replace: 3 bytes → 1 byte. *)
+   Severity Info preserved. Each replace: 3 bytes → 1 byte. *)
 let r_char_019 : rule =
   let needle = "\xe2\x88\x92" in
   let mk_fix_edits s =
@@ -1429,15 +1429,14 @@ let r_char_019 : rule =
     let outside off = not (is_in_math_range math off) in
     let offsets = List.filter outside (find_all_non_overlapping s needle) in
     List.map
-      (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "-")
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "-")
       offsets
   in
   let run s =
     (* Count semantic preserved from pre-v27.0.44: text-mode only (via
-       strip_math_segments).  Diverges from fix only on pathological
-       cases the math-stripper handles differently from the offset
-       filter; documented TYPO-002/003 pattern. *)
+       strip_math_segments). Diverges from fix only on pathological cases the
+       math-stripper handles differently from the offset filter; documented
+       TYPO-002/003 pattern. *)
     let stripped = strip_math_segments s in
     let cnt = count_substring stripped needle in
     if cnt > 0 then

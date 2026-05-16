@@ -1881,21 +1881,20 @@ let r_typo_052 : rule =
   in
   { id = "TYPO-052"; run; languages = [] }
 
-(* Unicode leader dots U+22EF forbidden.  v27.0.44: math-aware fix producer
-   that replaces each U+22EF (`\xe2\x8b\xaf`, 3 bytes) with the macro
-   `\dots` (5 bytes ASCII) when the occurrence is OUTSIDE math context.
+(* Unicode leader dots U+22EF forbidden. v27.0.44: math-aware fix producer that
+   replaces each U+22EF (`\xe2\x8b\xaf`, 3 bytes) with the macro `\dots` (5
+   bytes ASCII) when the occurrence is OUTSIDE math context.
 
-   In math, U+22EF is the Unicode name `MIDLINE HORIZONTAL ELLIPSIS` and
-   could be deliberately typed as a Unicode-input-encoded equivalent of
-   `\cdots`.  Replacing it inside math with `\dots` would change the
-   typographic intent (low dots vs centered dots), so the fix skips
-   math regions via `find_math_ranges` (same shape as v27.0.7 TYPO-005).
+   In math, U+22EF is the Unicode name `MIDLINE HORIZONTAL ELLIPSIS` and could
+   be deliberately typed as a Unicode-input-encoded equivalent of `\cdots`.
+   Replacing it inside math with `\dots` would change the typographic intent
+   (low dots vs centered dots), so the fix skips math regions via
+   `find_math_ranges` (same shape as v27.0.7 TYPO-005).
 
-   Count preserves the pre-v27.0.44 semantic: count every occurrence
-   regardless of math context (the original rule didn't strip math).
-   Fix offsets diverge: only non-math matches are rewritten.  This
-   mirrors the documented TYPO-002/003 divergence pattern.  Severity
-   Warning preserved. *)
+   Count preserves the pre-v27.0.44 semantic: count every occurrence regardless
+   of math context (the original rule didn't strip math). Fix offsets diverge:
+   only non-math matches are rewritten. This mirrors the documented TYPO-002/003
+   divergence pattern. Severity Warning preserved. *)
 let r_typo_053 : rule =
   let needle = "\xe2\x8b\xaf" in
   let mk_fix_edits s =
@@ -1914,14 +1913,12 @@ let r_typo_053 : rule =
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-053" ~severity:Warning
-             ~message:
-               {|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|}
+             ~message:{|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|}
              ~count:cnt)
       else
         Some
           (mk_result_with_fix ~id:"TYPO-053" ~severity:Warning
-             ~message:
-               {|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|}
+             ~message:{|Unicode ⋯ (U+22EF) leader forbidden; use \dots instead|}
              ~count:cnt ~fix)
     else None
   in

@@ -2012,10 +2012,10 @@ let () =
         (does_not_fire "TYPO-055" "Foo\\,bar")
         (tag ^ ": clean source doesn't re-fire"));
 
-  (* v27.0.44: math-aware replace batch.  TYPO-053 (U+22EF → \dots) +
-     CHAR-019 (U+2212 → -).  Both single-needle, both skip math via
-     find_math_ranges, both mirror v27.0.7 TYPO-005 shape.  Disjoint
-     byte sequences (e2 8b af vs e2 88 92). *)
+  (* v27.0.44: math-aware replace batch. TYPO-053 (U+22EF → \dots) + CHAR-019
+     (U+2212 → -). Both single-needle, both skip math via find_math_ranges, both
+     mirror v27.0.7 TYPO-005 shape. Disjoint byte sequences (e2 8b af vs e2 88
+     92). *)
 
   (* TYPO-053. *)
   run "TYPO-053 fix: U+22EF outside math → \\dots" (fun tag ->
@@ -2036,12 +2036,9 @@ let () =
   run "TYPO-053 fix: inside math is skipped" (fun tag ->
       let src = "Series $1, 2, \xe2\x8b\xaf, n$." in
       let edits = fix_edits "TYPO-053" src in
-      expect
-        (List.length edits = 0)
-        (tag ^ ": math content preserved"));
+      expect (List.length edits = 0) (tag ^ ": math content preserved"));
 
-  run "TYPO-053 fires (count) even when fix-set empty (math-only)"
-    (fun tag ->
+  run "TYPO-053 fires (count) even when fix-set empty (math-only)" (fun tag ->
       expect
         (fires "TYPO-053" "Series $1, 2, \xe2\x8b\xaf, n$.")
         (tag ^ ": rule still warns inside math"));
@@ -2070,9 +2067,7 @@ let () =
   run "CHAR-019 fix: inside math is skipped" (fun tag ->
       let src = "We have $x \xe2\x88\x92 y$ as math." in
       let edits = fix_edits "CHAR-019" src in
-      expect
-        (List.length edits = 0)
-        (tag ^ ": math content preserved"));
+      expect (List.length edits = 0) (tag ^ ": math content preserved"));
 
   run "CHAR-019 does not fire on clean text" (fun tag ->
       expect
@@ -2080,16 +2075,15 @@ let () =
         (tag ^ ": ASCII hyphen ok"));
 
   (* Combined cross-rule: both fire on the same source, fixes apply
-     non-overlapping (different needles).  *)
+     non-overlapping (different needles). *)
   run "v27.0.44 batch combined: TYPO-053 + CHAR-019" (fun tag ->
-      let src =
-        "Range \xe2\x88\x9210 to \xe2\x88\x925 \xe2\x8b\xaf 5 to 10."
-      in
+      let src = "Range \xe2\x88\x9210 to \xe2\x88\x925 \xe2\x8b\xaf 5 to 10." in
       let e53 = fix_edits "TYPO-053" src in
       let e19 = fix_edits "CHAR-019" src in
       let merged = apply_all src (e53 @ e19) in
       expect
-        (List.length e53 = 1 && List.length e19 = 2
+        (List.length e53 = 1
+        && List.length e19 = 2
         && merged = "Range -10 to -5 \\dots 5 to 10.")
         (tag ^ ": 3 disjoint replaces all apply"));
 

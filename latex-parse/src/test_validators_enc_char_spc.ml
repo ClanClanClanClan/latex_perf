@@ -442,9 +442,9 @@ let () =
 
   (* v27.0.46: SPC-012's fix emission was retracted as redundant with ENC-002.
      The diagnostic still fires (count-only), but the auto-fix is owned
-     exclusively by ENC-002.  Test now asserts (a) SPC-012 emits no fix
-     edits, and (b) ENC-002 still emits the canonical interior-BOM-delete
-     fix that preserves any leading BOM. *)
+     exclusively by ENC-002. Test now asserts (a) SPC-012 emits no fix edits,
+     and (b) ENC-002 still emits the canonical interior-BOM-delete fix that
+     preserves any leading BOM. *)
   run "v27.0.46: SPC-012 no longer emits fix; ENC-002 owns it" (fun tag ->
       let src = "\xef\xbb\xbfstart\xef\xbb\xbfmid" in
       let spc_edits = fix_edits "SPC-012" src in

@@ -312,15 +312,22 @@ template:
   corpus mechanisation (4 reflexivity Examples shipped at
   v27.0.3) is **superseded by the universal Theorem** for the
   runtime-correspondence claim.
-- [ ] ADMISSIBILITY_MAP "Rewrite engine — associative-reorder"
-  entry references the universal theorem.
-- [ ] `docs/MERGING_GUARANTEES.md` Runtime correspondence
+- [x] ADMISSIBILITY_MAP "Rewrite engine — associative-reorder"
+  entry references the universal theorem.  **DONE** — see
+  `proofs/ADMISSIBILITY_MAP.md` line 299 ("DISCHARGED in v27.0.3 +
+  v27.0.4 universal extension"), with the theorem statement at
+  line 342.
+- [x] `docs/MERGING_GUARANTEES.md` Runtime correspondence
   section cites the shipped Theorem (no "future extension"
-  framing).
-- [ ] `proofs/ApplyEditsAssoc.v` file header reflects the
-  universal extension as shipped.
-- [ ] CHANGELOG `[v27.0.4]` entry.
-- [ ] Tag `v27.0.4` on main.
+  framing).  **DONE** — see line 170-205, "Theorem
+  apply_edits_cursor_eq_parallel … the universal headline."
+- [x] `proofs/ApplyEditsAssoc.v` file header reflects the
+  universal extension as shipped.  **DONE** — file header reads
+  "v27.0.4 — universal runtime correspondence."
+- [x] CHANGELOG `[v27.0.4]` entry.  **DONE** — `## [v27.0.4] —
+  2026-05-01` in CHANGELOG.md.
+- [x] Tag `v27.0.4` on main.  **DONE** — tag points at
+  `cd50fefa…`.
 
 ## Why this matters
 

@@ -271,18 +271,46 @@ let l1_math_014_rule : rule =
   in
   { id = "MATH-014"; run; languages = [] }
 
-(* MATH-015: \stackrel used — prefer \overset *)
+(* MATH-015: \stackrel used — prefer \overset.
+
+   v27.0.48: math-aware fix producer that replaces `\stackrel{` (10 bytes) with
+   `\overset{` (9 bytes) INSIDE math regions. `\stackrel` is a plain-TeX legacy
+   macro from amsmath's pre-history; the modern `\overset` (also from amsmath)
+   takes the same {top}{bottom} argument structure and is now the canonical
+   form. The replace only swaps the macro name — the opening brace and the
+   subsequent arguments are untouched, so the fix is structurally safe. Same
+   shape as MATH-082 / MATH-106 / MATH-108 (math-mode-only positive filter via
+   `find_math_ranges`). Severity Warning preserved. *)
 let l1_math_015_rule : rule =
+  let needle = "\\stackrel{" in
+  let replacement = "\\overset{" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          replacement)
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter
-      (fun seg -> cnt := !cnt + count_substring seg "\\stackrel{")
-      math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-015" ~severity:Warning
-           ~message:{|\stackrel used; prefer \overset|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-015" ~severity:Warning
+             ~message:{|\stackrel used; prefer \overset|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-015" ~severity:Warning
+             ~message:{|\stackrel used; prefer \overset|} ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-015"; run; languages = [] }

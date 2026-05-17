@@ -2125,4 +2125,69 @@ let () =
         (does_not_fire "MATH-082" "$a \\! b \\! c$")
         (tag ^ ": single thin-spaces ok"));
 
+  (* v27.0.47: MATH-106 + MATH-108 math-aware single-needle replace batch. Same
+     shape as MATH-082 (math-mode-only positive filter). *)
+
+  (* MATH-106. *)
+  run "MATH-106 fix: \\not= → \\neq inside math" (fun tag ->
+      let src = "Compare $a \\not= b$ now." in
+      let edits = fix_edits "MATH-106" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Compare $a \\neq b$ now.")
+        (tag ^ ": 5 bytes → 4 bytes"));
+
+  run "MATH-106 fix: outside math is skipped" (fun tag ->
+      let src = "Literal \\not= in text" in
+      let edits = fix_edits "MATH-106" src in
+      expect (List.length edits = 0) (tag ^ ": not in math, no fix"));
+
+  run "MATH-106 fix: multiple \\not= inside math" (fun tag ->
+      let src = "$a \\not= b \\not= c$" in
+      let edits = fix_edits "MATH-106" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$a \\neq b \\neq c$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-106 does not fire on clean \\neq" (fun tag ->
+      expect (does_not_fire "MATH-106" "$x \\neq y$") (tag ^ ": already correct"));
+
+  (* MATH-108. *)
+  run "MATH-108 fix: U+00B7 → \\cdot inside math" (fun tag ->
+      let src = "Product $a \xc2\xb7 b$ end." in
+      let edits = fix_edits "MATH-108" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Product $a \\cdot b$ end.")
+        (tag ^ ": 2 bytes → 5 bytes"));
+
+  run "MATH-108 fix: outside math is skipped" (fun tag ->
+      let src = "Text with \xc2\xb7 middle dot in prose." in
+      let edits = fix_edits "MATH-108" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode middle dot not touched"));
+
+  run "MATH-108 fix: multiple inside math" (fun tag ->
+      let src = "$a \xc2\xb7 b \xc2\xb7 c$" in
+      let edits = fix_edits "MATH-108" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$a \\cdot b \\cdot c$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-108 does not fire on clean \\cdot" (fun tag ->
+      expect
+        (does_not_fire "MATH-108" "$x \\cdot y$")
+        (tag ^ ": already correct"));
+
+  (* Combined cross-rule: MATH-106 + MATH-108 in same math segment. *)
+  run "v27.0.47 batch combined: MATH-106 + MATH-108" (fun tag ->
+      let src = "$a \\not= b \xc2\xb7 c$" in
+      let e106 = fix_edits "MATH-106" src in
+      let e108 = fix_edits "MATH-108" src in
+      let merged = apply_all src (e106 @ e108) in
+      expect
+        (List.length e106 = 1
+        && List.length e108 = 1
+        && merged = "$a \\neq b \\cdot c$")
+        (tag ^ ": disjoint replaces compose"));
+
   finalise "typo-fix"

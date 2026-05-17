@@ -2,6 +2,47 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.47] — 2026-05-17
+
+**+2 fix producers: MATH-106 + MATH-108 math-aware replace batch.**
+
+Both rules share the v27.0.46 MATH-082 shape exactly — math-mode-only
+single-needle replace with positive `is_in_math_range` filter (the
+target macros are math-mode-only, so the fix must skip text-mode
+occurrences).  Disjoint byte sequences (`\not=` vs U+00B7), zero
+cross-rule overlap.
+
+- **MATH-106** — `\not=` (5 bytes) → `\neq` (4 bytes).  `\not=` is the
+  TeX-primitive negation that overlays a slash on `=`; the
+  semantically equivalent `\neq` is shorter and universally preferred
+  by LaTeX style guides.  rules_v3.yaml default_severity=Info,
+  fix=auto_replace.  Severity Info preserved.
+- **MATH-108** — `·` (U+00B7 middle dot, 2 bytes UTF-8 `\xc2\xb7`) →
+  `\cdot` (5 bytes).  In math mode `·` renders with wrong spacing
+  for scalar product; `\cdot` is the correct macro.  Severity Info
+  preserved.
+
+**72 fix-producing rules** (was 70; +2: MATH-106, MATH-108).
+
+### Counts (v27.0.47 vs v27.0.46)
+
+- 660 catalogued rules (unchanged).
+- **72 fix-producing rules** (was 70; +2).
+- 92 produces_fix:false (unchanged).
+- 496 produces_fix:null / pending (was 498; -2).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 9 new tests in `test_typo_fix.ml` (4 MATH-106 + 4 MATH-108 +
+  1 combined cross-rule).
+- 265/265 fix-producer tests PASS (was 256).
+
+### Differential vs v27.0.46
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.46] — 2026-05-16
 
 **Comprehensive spec cleanup cycle.** Addresses every remaining audit

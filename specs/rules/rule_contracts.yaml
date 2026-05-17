@@ -298,7 +298,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: CHAR-002
   layer: L0_Lexer
   execution_class: A
@@ -311,7 +314,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: CHAR-003
   layer: L0_Lexer
   execution_class: A
@@ -324,7 +330,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: CHAR-004
   layer: L0_Lexer
   execution_class: A
@@ -3330,7 +3339,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-002
   layer: L1_Expanded
   execution_class: B
@@ -3344,7 +3356,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-003
   layer: L1_Expanded
   execution_class: B
@@ -3358,7 +3373,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-004
   layer: L1_Expanded
   execution_class: B
@@ -3372,7 +3390,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-005
   layer: L1_Expanded
   execution_class: B
@@ -3386,7 +3407,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-006
   layer: L1_Expanded
   execution_class: B
@@ -3414,7 +3438,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-008
   layer: L1_Expanded
   execution_class: B
@@ -3428,7 +3455,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: MATH-009
   layer: L1_Expanded
   execution_class: B
@@ -4466,7 +4496,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-083
   layer: L0_Lexer
   execution_class: B
@@ -5156,8 +5186,9 @@ rules:
   fix_scope: local
   project_scope: lp_core_or_extended
   produces_fix: false
-  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
-    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: PDF-002
   layer: L3_Semantics
   execution_class: B
@@ -5171,8 +5202,9 @@ rules:
   fix_scope: local
   project_scope: lp_core_or_extended
   produces_fix: false
-  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
-    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: PDF-003
   layer: L3_Semantics
   execution_class: B
@@ -5186,8 +5218,9 @@ rules:
   fix_scope: local
   project_scope: lp_core_or_extended
   produces_fix: false
-  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
-    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: PDF-004
   layer: L3_Semantics
   execution_class: B
@@ -5201,8 +5234,9 @@ rules:
   fix_scope: local
   project_scope: lp_core_or_extended
   produces_fix: false
-  fix_status_reason: 'Bucket D (cadence plan §Bucket D): defer indefinitely.  Rule depends on pdflatex runtime / compile-log
-    / external-binary state and cannot be statically fix-produced from the source bytes alone.'
+  fix_status_reason: ⟦Reserved⟧ — rules_v3.yaml maturity=Reserved.  Placeholder for future spec work; no rule definition or
+    runtime implementation currently exists.  Will move to produces_fix:null/true once the spec is fleshed out and the rule
+    is implemented.
 - rule_id: PDF-005
   layer: L3_Semantics
   execution_class: B
@@ -6512,7 +6546,12 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: true
+  produces_fix: false
+  fix_status_reason: Fix-emission redundant with ENC-002 (shipped v26.3.0).  Both rules detect the same condition (BOM `\xef\xbb\xbf`
+    at a non-leading byte offset) and pre-v27.0.46 both emitted the IDENTICAL delete edit at the IDENTICAL offsets — `apply_best_effort`
+    deduplicated but the duplicate emission was wasted work.  v27.0.46 reverted SPC-012 to count-only at the runtime level
+    (diagnostic preserved per the v26.3.0 contract — both rules still fire as separate diagnostics, encoding different aspects
+    of the same source issue); only ENC-002 emits the auto-fix.
 - rule_id: SPC-013
   layer: L0_Lexer
   execution_class: A

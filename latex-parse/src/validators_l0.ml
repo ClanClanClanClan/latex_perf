@@ -1778,8 +1778,21 @@ let r_spc_006 : rule =
   in
   { id = "SPC-006"; run; languages = [] }
 
-(* SPC-012: BOM not at file start. v26.3 §3 item E (deferred batch): fix mirrors
-   ENC-002 — delete each interior BOM occurrence. *)
+(* SPC-012: BOM not at file start.
+
+   v26.3 §3 item E (deferred batch) originally added a fix producer that deleted
+   each interior BOM occurrence — but ENC-002 (shipped in the same v26.3.0
+   release) emits the IDENTICAL delete edit for the IDENTICAL byte sequence at
+   the IDENTICAL offsets. Two rules producing duplicate fixes for one source
+   condition forces `apply_best_effort` to deduplicate and bloats the diagnostic
+   stream.
+
+   v27.0.46 cleanup: SPC-012 reverts to count-only [mk_result] (no fix emission)
+   so only ENC-002 owns the auto-fix for mid-file BOMs. Both rules still fire as
+   separate diagnostics — this preserves the v26.3.0 contract (the two rules
+   document different aspects of the same source issue: ENC for encoding
+   hygiene, SPC for paragraph structure) and the existing
+   test_validators_enc_char_spc.ml assertions (lines 324, 330, 437). *)
 let r_spc_012 : rule =
   let message = "BOM not at file start" in
   let run s =
@@ -1788,26 +1801,7 @@ let r_spc_012 : rule =
     let at_start = String.length s >= 3 && String.sub s 0 3 = bom in
     let interior = if at_start then total - 1 else total in
     if interior > 0 then
-      let all_offsets =
-        let rec scan i acc =
-          if i + 3 > String.length s then List.rev acc
-          else if String.sub s i 3 = bom then scan (i + 3) (i :: acc)
-          else scan (i + 1) acc
-        in
-        scan 0 []
-      in
-      let interior_offsets = List.filter (fun off -> off <> 0) all_offsets in
-      let fix =
-        List.map
-          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
-          interior_offsets
-      in
-      if fix = [] then
-        Some (mk_result ~id:"SPC-012" ~severity:Error ~message ~count:interior)
-      else
-        Some
-          (mk_result_with_fix ~id:"SPC-012" ~severity:Error ~message
-             ~count:interior ~fix)
+      Some (mk_result ~id:"SPC-012" ~severity:Error ~message ~count:interior)
     else None
   in
   { id = "SPC-012"; run; languages = [] }

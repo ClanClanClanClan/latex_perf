@@ -1446,17 +1446,50 @@ let l1_math_079_rule : rule =
   in
   { id = "MATH-079"; run; languages = [] }
 
-(* MATH-082: Negative thin space \! misused twice consecutively *)
+(* MATH-082: Negative thin space \! misused twice consecutively.
+
+   v27.0.46: math-aware fix producer that collapses each `\!\!` (4 bytes) to a
+   single `\!` (2 bytes) inside math regions. Two consecutive negative thin
+   spaces compose to `-2/6 em ≈ -1/3 em`, which a careful typesetter
+   occasionally wants, but it is overwhelmingly a typo — there is no standard
+   LaTeX idiom that produces this exact byte sequence. Restricted to math via
+   `find_math_ranges` + `is_in_math_range` (positive filter — `\!` is a
+   math-mode-only macro), mirroring the v27.0.7 TYPO-005 / v27.0.44 TYPO-053
+   shape with the math filter INVERTED.
+
+   Count semantic preserved (uses `extract_math_segments` per the pre-v27.0.46
+   implementation); fix uses `find_math_ranges` for offsets in the original
+   source. Documented TYPO-002/003 divergence pattern. Severity Warning
+   preserved. *)
 let l1_math_082_rule : rule =
+  let needle = "\\!\\!" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 4) "\\!")
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter (fun seg -> cnt := !cnt + count_substring seg "\\!\\!") math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-082" ~severity:Warning
-           ~message:{|Negative thin space \! misused twice consecutively|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-082" ~severity:Warning
+             ~message:{|Negative thin space \! misused twice consecutively|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-082" ~severity:Warning
+             ~message:{|Negative thin space \! misused twice consecutively|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-082"; run; languages = [] }

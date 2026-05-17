@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.49] — 2026-05-17
+
+**+1 fix producer: MATH-078** (`-->` → `\longrightarrow` inside math).
+
+The canonical LaTeX long-arrow macro renders with correct typographic
+spacing; the hand-typed `-->` renders as minus + minus + greater-than
+sign with no math-mode adjustment.  Math-mode-only positive filter,
+same shape as MATH-015 / MATH-082 / MATH-106 / MATH-108.  Severity
+Info preserved.  Each replace: 3 bytes → 15 bytes.
+
+**74 fix-producing rules** (was 73; +1: MATH-078).
+
+### Counts (v27.0.49 vs v27.0.48)
+
+- 660 catalogued rules (unchanged).
+- **74 fix-producing rules** (was 73; +1).
+- 92 produces_fix:false (unchanged).
+- 494 produces_fix:null / pending (was 495; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (MATH-078).
+- 273/273 fix-producer tests PASS (was 269).
+
+### Differential vs v27.0.48
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.48] — 2026-05-17
 
 **Stale-checkbox doc fix + 1 new fix producer.**

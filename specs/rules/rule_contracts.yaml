@@ -4832,7 +4832,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-107
   layer: L3_Semantics
   execution_class: B
@@ -4860,7 +4860,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: META-001
   layer: L3_Semantics
   execution_class: B

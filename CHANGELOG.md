@@ -2,6 +2,60 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.48] — 2026-05-17
+
+**Stale-checkbox doc fix + 1 new fix producer.**
+
+### 1. Plan checkbox drift fixed
+
+`V27_FIX_PRODUCER_CADENCE.md` had three acceptance-criteria
+checkboxes that were unchecked despite being shipped long ago:
+- ledger exists with 660 rules (done v27.0.34)
+- Bucket D `produces_fix: false` annotations (done v27.0.42, now
+  92 false-annotations covering Bucket D + NLP + redundant +
+  Reserved + pending-refinement)
+- differential 0 diffs vs prior tag (done v27.0.5, enforced every
+  cycle)
+
+`V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN.md` had five unchecked items
+that are all clearly shipped in v27.0.4 (we're at v27.0.48):
+- ADMISSIBILITY_MAP cursor-universal entry
+- docs/MERGING_GUARANTEES.md citation
+- ApplyEditsAssoc.v file header
+- CHANGELOG v27.0.4 entry
+- Tag v27.0.4
+
+All checked with evidence pointers.
+
+### 2. MATH-015 fix producer (`\stackrel{` → `\overset{` inside math)
+
+`\stackrel` is a plain-TeX legacy macro; `\overset` (amsmath) takes
+the same `{top}{bottom}` argument structure and is the canonical
+form.  The fix swaps only the macro name; the opening brace and
+subsequent arguments are untouched.  Math-mode-only positive
+filter, same shape as MATH-082 / MATH-106 / MATH-108.  Severity
+Warning preserved.  Each replace: 10 bytes → 9 bytes.
+
+**73 fix-producing rules** (was 72; +1: MATH-015).
+
+### Counts (v27.0.48 vs v27.0.47)
+
+- 660 catalogued rules (unchanged).
+- **73 fix-producing rules** (was 72; +1).
+- 92 produces_fix:false (unchanged).
+- 495 produces_fix:null / pending (was 496; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (MATH-015).
+- 269/269 fix-producer tests PASS (was 265).
+
+### Differential vs v27.0.47
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.47] — 2026-05-17
 
 **+2 fix producers: MATH-106 + MATH-108 math-aware replace batch.**

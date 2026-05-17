@@ -125,13 +125,30 @@ from `FIX_PRODUCER_LEDGER.md`, ship, update.
 
 ## Acceptance criteria
 
-- [ ] `specs/v27/FIX_PRODUCER_LEDGER.md` exists with full bucket
-  assignments for all 660 rules.
+- [x] `specs/v27/FIX_PRODUCER_LEDGER.md` exists with full bucket
+  assignments for all 660 rules.  **DONE v27.0.34**; auto-regenerated
+  by `scripts/tools/generate_fix_producer_ledger.py` each cycle,
+  gated by `check_fix_producer_ledger.py` (gate #14 in
+  `pre_release_check.py`).
 - [ ] At each patch release, ≥10 new producers shipped from Bucket
-  A.
-- [ ] Bucket D rules carry `produces_fix: false` in
-  `rule_contracts.yaml` with documented reason.
-- [ ] Differential test passes 0 diffs vs prior tag (default
-  invocation; fix producers gated behind `--apply-fixes`).
-- [ ] Bucket A shipped fully by v27.2.0 (target).
-- [ ] Bucket B + C shipped fully by v27.4.0 (target).
+  A.  **PENDING** — current cadence is 1–3 producers/release;
+  user-driven pace prioritising audit depth over throughput.  Will
+  be re-evaluated post-v27.1.0.
+- [x] Bucket D rules carry `produces_fix: false` in
+  `rule_contracts.yaml` with documented reason.  **DONE v27.0.42**;
+  expanded to 92 false-annotations in v27.0.46 (covers Bucket D + 4
+  NLP-deferred + redundant + Reserved + pending-refinement
+  sub-categories).  Source: `FIX_PRODUCER_DEFERRED` dict +
+  `BUCKET_D_FAMILIES` in `scripts/tools/generate_rule_contracts.py`.
+- [x] Differential test passes 0 diffs vs prior tag (default
+  invocation; fix producers gated behind `--apply-fixes`).  **DONE
+  v27.0.5+**; enforced every release cycle via
+  `scripts/tools/run_differential_test.py`.
+- [ ] Bucket A shipped fully by v27.2.0 (target).  **IN PROGRESS** —
+  72/458 (~16%) shipped as of v27.0.47.  Original v27.2.0 target
+  assumed ≥10 producers/release; at the actual cadence pace this
+  milestone is on track for a later release.
+- [ ] Bucket B + C shipped fully by v27.4.0 (target).  **NOT
+  STARTED** — Bucket B needs sentence-tokeniser maturity (waiting
+  on Spacy runtime); Bucket C needs the `--apply-fixes-with-prompt`
+  interactive CLI surface.

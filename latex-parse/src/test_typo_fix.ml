@@ -2190,4 +2190,30 @@ let () =
         && merged = "$a \\neq b \\cdot c$")
         (tag ^ ": disjoint replaces compose"));
 
+  (* v27.0.48: MATH-015 fix producer (\stackrel{ → \overset{ inside math). *)
+  run "MATH-015 fix: \\stackrel → \\overset inside math" (fun tag ->
+      let src = "$x \\stackrel{?}{=} y$" in
+      let edits = fix_edits "MATH-015" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$x \\overset{?}{=} y$")
+        (tag ^ ": macro name swapped, braces preserved"));
+
+  run "MATH-015 fix: outside math is skipped" (fun tag ->
+      let src = "Plain text \\stackrel{a}{b}." in
+      let edits = fix_edits "MATH-015" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode \\stackrel not touched"));
+
+  run "MATH-015 fix: two occurrences inside math" (fun tag ->
+      let src = "$\\stackrel{A}{B} + \\stackrel{C}{D}$" in
+      let edits = fix_edits "MATH-015" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$\\overset{A}{B} + \\overset{C}{D}$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-015 does not fire on clean \\overset" (fun tag ->
+      expect
+        (does_not_fire "MATH-015" "$\\overset{a}{b}$")
+        (tag ^ ": already correct"));
+
   finalise "typo-fix"

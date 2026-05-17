@@ -2332,33 +2332,83 @@ let l1_math_104_rule : rule =
   in
   { id = "MATH-104"; run; languages = [] }
 
-(* MATH-106: Misuse of \not= — prefer \neq *)
+(* MATH-106: Misuse of \not= — prefer \neq.
+
+   v27.0.47: math-aware fix producer that replaces each `\not=` (5 bytes) with
+   the canonical `\neq` (4 bytes) INSIDE math regions. `\not=` is the
+   TeX-primitive negation that overlays a slash on `=`; the semantically
+   equivalent `\neq` is shorter, more readable, and universally preferred by
+   LaTeX style guides (rules_v3.yaml default_severity=Info, fix=auto_replace).
+   Mirrors the v27.0.46 MATH-082 shape exactly (math-mode-only single-needle
+   replace via `find_math_ranges` + positive `is_in_math_range` filter). *)
 let l1_math_106_rule : rule =
+  let needle = "\\not=" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 5) "\\neq")
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter (fun seg -> cnt := !cnt + count_substring seg "\\not=") math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-106" ~severity:Info
-           ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-106" ~severity:Info
+             ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-106" ~severity:Info
+             ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-106"; run; languages = [] }
 
-(* MATH-108: Middle dot U+00B7 in math — use \cdot *)
+(* MATH-108: Middle dot U+00B7 in math — use \cdot.
+
+   v27.0.47: math-aware fix producer that replaces each `·` (U+00B7, 2 bytes
+   UTF-8 `\xc2\xb7`) with the canonical LaTeX `\cdot` (5 bytes ASCII) INSIDE
+   math regions. In math, `·` is the Unicode middle dot which is meant to denote
+   scalar product, but it renders with wrong spacing in math mode — `\cdot` is
+   the correct macro. Same shape as MATH-106 (math-mode-only single-needle
+   replace). Severity Info. *)
 let l1_math_108_rule : rule =
+  let needle = "\xc2\xb7" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\\cdot")
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter
-      (fun seg -> cnt := !cnt + count_substring seg "\xc2\xb7")
-      math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-108" ~severity:Info
-           ~message:{|Scalar product uses • (⋅) directly; require \cdot|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-108" ~severity:Info
+             ~message:{|Scalar product uses • (⋅) directly; require \cdot|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-108" ~severity:Info
+             ~message:{|Scalar product uses • (⋅) directly; require \cdot|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-108"; run; languages = [] }

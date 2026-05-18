@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.50] — 2026-05-18
+
+**+1 fix producer: MATH-010** (`÷` U+00F7 → `\div` inside math).
+
+The spec's "prefer \frac or solidus" advice asks for an expression
+RESTRUCTURING (`a÷b → \frac{a}{b}` or `a/b`) — a context-dependent
+edit requiring argument parsing.  Replacing `÷` with the equivalent
+`\div` macro is the conservative minimum-surprise fix: same glyph,
+correct math-mode spacing, no semantic restructuring.  The
+diagnostic still fires to encourage the user to consider the
+restructuring option; the auto-fix gives them at least the
+canonical macro form.
+
+Math-mode-only positive filter; same shape as MATH-082 / MATH-106 /
+MATH-108 / MATH-015 / MATH-078.  Severity Warning preserved.  Each
+replace: 2 bytes UTF-8 → 4 bytes ASCII.
+
+**75 fix-producing rules** (was 74; +1: MATH-010).
+
+### Counts (v27.0.50 vs v27.0.49)
+
+- 660 catalogued rules (unchanged).
+- **75 fix-producing rules** (was 74; +1).
+- 92 produces_fix:false (unchanged).
+- 493 produces_fix:null / pending (was 494; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (MATH-010).
+- 277/277 fix-producer tests PASS (was 273).
+
+### Differential vs v27.0.49
+
+0 diffs across 330 corpus files (fix gated behind `--apply-fixes`).
+
 ## [v27.0.49] — 2026-05-17
 
 **+1 fix producer: MATH-078** (`-->` → `\longrightarrow` inside math).

@@ -2216,4 +2216,31 @@ let () =
         (does_not_fire "MATH-015" "$\\overset{a}{b}$")
         (tag ^ ": already correct"));
 
+  (* v27.0.49: MATH-078 fix producer (--> → \longrightarrow inside math). *)
+  run "MATH-078 fix: --> → \\longrightarrow inside math" (fun tag ->
+      let src = "Map: $f --> g$" in
+      let edits = fix_edits "MATH-078" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Map: $f \\longrightarrow g$")
+        (tag ^ ": 3 bytes → 15 bytes"));
+
+  run "MATH-078 fix: outside math is skipped" (fun tag ->
+      let src = "Text with --> arrow in prose." in
+      let edits = fix_edits "MATH-078" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode --> not touched"));
+
+  run "MATH-078 fix: multiple inside math" (fun tag ->
+      let src = "$a --> b --> c$" in
+      let edits = fix_edits "MATH-078" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$a \\longrightarrow b \\longrightarrow c$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-078 does not fire on clean \\longrightarrow" (fun tag ->
+      expect
+        (does_not_fire "MATH-078" "$x \\longrightarrow y$")
+        (tag ^ ": already correct"));
+
   finalise "typo-fix"

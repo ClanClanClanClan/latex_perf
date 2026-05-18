@@ -1408,17 +1408,46 @@ let l1_math_071_rule : rule =
   in
   { id = "MATH-071"; run; languages = [] }
 
-(* MATH-078: Long arrow typed as --> instead of \longrightarrow *)
+(* MATH-078: Long arrow typed as --> instead of \longrightarrow.
+
+   v27.0.49: math-aware fix producer that replaces each `-->` (3 ASCII bytes)
+   with `\longrightarrow` (15 ASCII bytes) INSIDE math regions. The canonical
+   LaTeX long-arrow macro renders with correct typographic spacing; the
+   hand-typed `-->` renders as a minus + minus + greater- than sign with no
+   math-mode adjustment. Same shape as MATH-082 / MATH-106 / MATH-108 / MATH-015
+   (math-mode-only positive filter). Severity Info preserved. *)
 let l1_math_078_rule : rule =
+  let needle = "-->" in
+  let replacement = "\\longrightarrow" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          replacement)
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter (fun seg -> cnt := !cnt + count_substring seg "-->") math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-078" ~severity:Info
-           ~message:{|Long arrow typed as --> instead of \longrightarrow|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-078" ~severity:Info
+             ~message:{|Long arrow typed as --> instead of \longrightarrow|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-078" ~severity:Info
+             ~message:{|Long arrow typed as --> instead of \longrightarrow|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-078"; run; languages = [] }

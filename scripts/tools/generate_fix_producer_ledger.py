@@ -105,6 +105,7 @@ SHIPPED_VERSIONS = {
     "MATH-078": "v27.0.49",
     "MATH-010": "v27.0.50",
     "MATH-097": "v27.0.51",
+    "TYPO-061": "v27.0.52",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

@@ -2299,4 +2299,34 @@ let () =
         (does_not_fire "MATH-097" "$P \\implies Q$")
         (tag ^ ": already correct"));
 
+  (* v27.0.52: TYPO-061 (× U+00D7 → $\times$ in text mode). *)
+  run "TYPO-061 fix: × → $\\times$ in text" (fun tag ->
+      let src = "Area: 5 \xc3\x97 7 cm." in
+      let edits = fix_edits "TYPO-061" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Area: 5 $\\times$ 7 cm.")
+        (tag ^ ": 2 bytes → 8 bytes"));
+
+  run "TYPO-061 fix: inside math is skipped" (fun tag ->
+      let src = "Inline: $a \xc3\x97 b$ stays as \xc3\x97." in
+      let edits = fix_edits "TYPO-061" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Inline: $a \xc3\x97 b$ stays as $\\times$.")
+        (tag ^ ": math × untouched, text × replaced"));
+
+  run "TYPO-061 fix: multiple in text" (fun tag ->
+      let src = "Dim: 3 \xc3\x97 4 \xc3\x97 5." in
+      let edits = fix_edits "TYPO-061" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Dim: 3 $\\times$ 4 $\\times$ 5.")
+        (tag ^ ": both text-mode × replaced"));
+
+  run "TYPO-061 does not fire on \\times in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-061" "$a \\times b$")
+        (tag ^ ": pure math already correct"));
+
   finalise "typo-fix"

@@ -2,6 +2,50 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.51] — 2026-05-19
+
+**+1 fix producer: MATH-097** (`=>` → `\implies` inside math).
+
+ASCII arrow `=>` (2 bytes) replaced by the canonical LaTeX implication
+macro `\implies` (8 bytes ASCII) inside math regions, subject to the
+same before-byte exclusion as the count regex `[^=!<>\\]=>`: skip
+when the preceding byte is in `{=,!,<,>,\}` so `==>`, `<=>`, `\=>`,
+`>=>`, `!=>`, and any escaped form is never corrupted.
+
+Math-mode-only positive filter; same shape as MATH-010 / MATH-082 /
+MATH-106 / MATH-108 / MATH-015 / MATH-078.  Severity Info preserved.
+Count semantic preserved (uses pre-v27.0.51 padded-segment regex
+match), so 0 diffs vs v27.0.50 on the lint corpus.
+
+**76 fix-producing rules** (was 75; +1: MATH-097).
+
+Plus post-v27.0.50 audit cleanup: `V27_FIX_PRODUCER_CADENCE.md`
+Bucket A acceptance-criterion line updated from "72/458 (~16%)
+shipped as of v27.0.47" to "75/458 (~16%) shipped as of v27.0.50"
+(caught by the in-cycle audit; bundled here rather than as a
+standalone doc-only PR).
+
+### Counts (v27.0.51 vs v27.0.50)
+
+- 660 catalogued rules (unchanged).
+- **76 fix-producing rules** (was 75; +1).
+- 92 produces_fix:false (unchanged).
+- 492 produces_fix:null / pending (was 493; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 5 new tests in `test_typo_fix.ml` (MATH-097: math-only fix; outside
+  math skipped; multi-arrow; before-byte exclusion guards `==>`,
+  `<=>`, `\=>`; idempotent on clean `\implies`).
+- 282/282 fix-producer tests PASS (was 277).
+
+### Differential vs v27.0.50
+
+`run_differential_test.py --baseline-ref v27.0.50 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.50] — 2026-05-18
 
 **+1 fix producer: MATH-010** (`÷` U+00F7 → `\div` inside math).

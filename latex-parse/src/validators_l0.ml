@@ -1310,31 +1310,51 @@ let r_char_015 : rule =
   in
   { id = "CHAR-015"; run; languages = [] }
 
-(* CHAR-017: Full-width Latin letters detected *)
+(* CHAR-017: Full-width Latin letters detected.
+
+   v27.0.54: fix producer that replaces each fullwidth Latin letter (3 bytes
+   UTF-8) with its ASCII equivalent (1 byte): - U+FF21..U+FF3A (Ａ..Ｚ, EF BC
+   A1..BA) → ASCII A..Z (0x41..5A); byte mapping `b2 - 0x60` (e.g. EF BC A1 →
+   0x41). - U+FF41..U+FF5A (ａ..ｚ, EF BD 81..9A) → ASCII a..z (0x61..7A); byte
+   mapping `b2 - 0x20` (e.g. EF BD 81 → 0x61).
+
+   The NFKC-canonical fullwidth → halfwidth transform; replacement direction is
+   unambiguous (fullwidth Latin letters in LaTeX source are almost universally
+   accidental, typically from CJK paste). Reuses the pre-v27.0.54 custom range
+   scanner shape, same pattern as v27.0.35 ENC-016 (fullwidth digits) but with
+   two range branches and per-branch offset.
+
+   Severity Warning preserved. *)
 let r_char_017 : rule =
   let run s =
-    (* U+FF21-FF3A (A-Z) = EF BC A1 .. EF BC BA U+FF41-FF5A (a-z) = EF BD 81 ..
-       EF BD 9A *)
     let n = String.length s in
-    let cnt = ref 0 in
+    let offsets = ref [] in
     let i = ref 0 in
     while !i < n - 2 do
       let b0 = Char.code s.[!i] in
       let b1 = Char.code s.[!i + 1] in
       let b2 = Char.code s.[!i + 2] in
-      if
-        b0 = 0xEF
-        && ((b1 = 0xBC && b2 >= 0xA1 && b2 <= 0xBA)
-           || (b1 = 0xBD && b2 >= 0x81 && b2 <= 0x9A))
-      then (
-        incr cnt;
+      if b0 = 0xEF && b1 = 0xBC && b2 >= 0xA1 && b2 <= 0xBA then (
+        offsets := (!i, b2 - 0x60) :: !offsets;
+        i := !i + 3)
+      else if b0 = 0xEF && b1 = 0xBD && b2 >= 0x81 && b2 <= 0x9A then (
+        offsets := (!i, b2 - 0x20) :: !offsets;
         i := !i + 3)
       else incr i
     done;
-    if !cnt > 0 then
+    let offsets = List.rev !offsets in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      let fix =
+        List.map
+          (fun (off, ascii) ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 3)
+              (String.make 1 (Char.chr ascii)))
+          offsets
+      in
       Some
-        (mk_result ~id:"CHAR-017" ~severity:Warning
-           ~message:"Full‑width Latin letters detected" ~count:!cnt)
+        (mk_result_with_fix ~id:"CHAR-017" ~severity:Warning
+           ~message:"Full‑width Latin letters detected" ~count:cnt ~fix)
     else None
   in
   { id = "CHAR-017"; run; languages = [] }

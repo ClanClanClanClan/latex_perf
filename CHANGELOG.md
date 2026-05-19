@@ -2,6 +2,46 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.52] — 2026-05-19
+
+**+1 fix producer: TYPO-061** (`×` U+00D7 → `$\times$` in text mode).
+
+Wraps each Unicode multiplication sign that appears OUTSIDE math
+in inline math `$\times$` (8 bytes ASCII), realising the spec's
+"prefer `\times` via math mode" guidance.  Text-mode negative-filter
+shape — same as v27.0.44 CHAR-019 (U+2212 minus → ASCII `-`).
+The math-mode counterpart (× inside math) is left alone; users
+authoring math intentionally with × can switch to `\times` manually.
+
+Count semantic preserved (pre-v27.0.52 `strip_math_segments`
+counter), so 0 diffs vs v27.0.51 on the lint corpus.
+
+**77 fix-producing rules** (was 76; +1: TYPO-061).
+
+Plus `V27_FIX_PRODUCER_CADENCE.md` Bucket A acceptance-criterion
+line bumped 75/458 (v27.0.50) → 77/458 (~17%) (v27.0.52), per the
+established "bump every release that ships a producer" rule.
+
+### Counts (v27.0.52 vs v27.0.51)
+
+- 660 catalogued rules (unchanged).
+- **77 fix-producing rules** (was 76; +1).
+- 92 produces_fix:false (unchanged).
+- 491 produces_fix:null / pending (was 492; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (TYPO-061: text-mode fix; math
+  region skipped; multi-match; idempotent on clean `\times`).
+- 286/286 fix-producer tests PASS (was 282).
+
+### Differential vs v27.0.51
+
+`run_differential_test.py --baseline-ref v27.0.51 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.51] — 2026-05-19
 
 **+1 fix producer: MATH-097** (`=>` → `\implies` inside math).

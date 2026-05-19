@@ -2002,16 +2002,45 @@ let r_typo_057 : rule =
   in
   { id = "TYPO-057"; run; languages = [] }
 
-(* Unicode multiplication sign in text *)
+(* Unicode multiplication sign in text.
+
+   v27.0.52: math-aware fix producer that replaces each U+00D7 (`\xc3\x97`, 2
+   bytes UTF-8) OUTSIDE math with `$\times$` (8 bytes ASCII), wrapping the
+   character in inline math per the spec's "prefer \times via math mode"
+   guidance. Same text-only negative-filter shape as v27.0.44 CHAR-019 / v27.0.7
+   TYPO-005 — count semantic preserved via [strip_math_segments]; fix-set is the
+   corrective action and may be smaller than count when pathological
+   math-stripper / range-finder edge cases diverge.
+
+   Severity Info preserved. *)
 let r_typo_061 : rule =
+  let needle = "\xc3\x97" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let outside off = not (is_in_math_range math off) in
+    let offsets = List.filter outside (find_all_non_overlapping s needle) in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "$\\times$")
+      offsets
+  in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_substring s "\xc3\x97" in
+    let stripped = strip_math_segments s in
+    let cnt = count_substring stripped needle in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-061" ~severity:Info
-           ~message:{|Unicode × (U+00D7) in text; prefer \times via math mode|}
-           ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-061" ~severity:Info
+             ~message:
+               {|Unicode × (U+00D7) in text; prefer \times via math mode|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-061" ~severity:Info
+             ~message:
+               {|Unicode × (U+00D7) in text; prefer \times via math mode|}
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-061"; run; languages = [] }

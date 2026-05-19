@@ -1339,21 +1339,59 @@ let r_char_017 : rule =
   in
   { id = "CHAR-017"; run; languages = [] }
 
-(* CHAR-018: Deprecated ligature characters present *)
+(* CHAR-018: Deprecated ligature characters present.
+
+   v27.0.53: fix producer that replaces each precomposed Latin ligature
+   codepoint (U+FB00 ﬀ, U+FB01 ﬁ, U+FB02 ﬂ, U+FB03 ﬃ, U+FB04 ﬄ — all 3 bytes
+   UTF-8 `EF AC 80..84`) with its ASCII letter sequence (`ff`, `fi`, `fl`,
+   `ffi`, `ffl`). LaTeX's font ligature-substitution will re-form the glyph at
+   typeset time, so the visual output is preserved while making the source
+   portable across input encodings and fonts.
+
+   Shape: simple N-needle replace (no math/escape/URL filter — these ligature
+   characters carry no math semantics and shouldn't appear inside math anyway).
+   Same shape as v27.0.41 CHAR-005/013/014 batch but with non-uniform
+   replacement strings.
+
+   Severity Info preserved. *)
 let r_char_018 : rule =
+  let ligatures =
+    [
+      ("\xef\xac\x80", "ff");
+      ("\xef\xac\x81", "fi");
+      ("\xef\xac\x82", "fl");
+      ("\xef\xac\x83", "ffi");
+      ("\xef\xac\x84", "ffl");
+    ]
+  in
+  let mk_fix_edits s =
+    List.concat_map
+      (fun (needle, replacement) ->
+        let nlen = String.length needle in
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen)
+              replacement)
+          (Validators_l0_typo.find_all_non_overlapping s needle))
+      ligatures
+  in
   let run s =
-    (* U+FB00 ﬀ, U+FB01 ﬁ, U+FB02 ﬂ, U+FB03 ﬃ, U+FB04 ﬄ UTF-8: EF AC 80..84 *)
     let cnt =
-      count_substring s "\xef\xac\x80"
-      + count_substring s "\xef\xac\x81"
-      + count_substring s "\xef\xac\x82"
-      + count_substring s "\xef\xac\x83"
-      + count_substring s "\xef\xac\x84"
+      List.fold_left
+        (fun acc (needle, _) -> acc + count_substring s needle)
+        0 ligatures
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-018" ~severity:Info
-           ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"CHAR-018" ~severity:Info
+             ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CHAR-018" ~severity:Info
+             ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt
+             ~fix)
     else None
   in
   { id = "CHAR-018"; run; languages = [] }

@@ -2345,9 +2345,42 @@ let l1_math_096_rule : rule =
   in
   { id = "MATH-096"; run; languages = [] }
 
-(* MATH-097: Arrow => typed instead of \implies *)
+(* MATH-097: Arrow => typed instead of \implies.
+
+   v27.0.51: math-aware fix producer that replaces each `=>` (2 bytes ASCII)
+   with `\implies` (8 bytes ASCII) INSIDE math regions, subject to the same
+   before-byte exclusion as the count regex `[^=!<>\\]=>` (skip when the
+   preceding byte is in {=,!,<,>,\} to avoid corrupting `==>`, `<=>`, `\=>`,
+   `>=>`, `!=>`). Same math-mode positive-filter shape as MATH-010/082/106/108.
+   Count semantic preserved (uses pre-v27.0.51 padded-segment regex match).
+   Severity Info preserved. *)
 let l1_math_097_rule : rule =
   let re = Re_compat.regexp {|[^=!<>\\]=>|} in
+  let find_arrow_offsets s =
+    let n = String.length s in
+    let rec scan i acc =
+      if i + 1 >= n then List.rev acc
+      else if s.[i] = '=' && s.[i + 1] = '>' then
+        let bad_before =
+          i > 0
+          &&
+          let c = s.[i - 1] in
+          c = '=' || c = '!' || c = '<' || c = '>' || c = '\\'
+        in
+        if bad_before then scan (i + 1) acc else scan (i + 2) (i :: acc)
+      else scan (i + 1) acc
+    in
+    scan 0 []
+  in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets = List.filter inside (find_arrow_offsets s) in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\\implies")
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2357,9 +2390,15 @@ let l1_math_097_rule : rule =
         cnt := !cnt + count_re_matches re padded)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-097" ~severity:Info
-           ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-097" ~severity:Info
+             ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-097" ~severity:Info
+             ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-097"; run; languages = [] }

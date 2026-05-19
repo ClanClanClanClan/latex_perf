@@ -2266,4 +2266,37 @@ let () =
   run "MATH-010 does not fire on clean \\div" (fun tag ->
       expect (does_not_fire "MATH-010" "$a \\div b$") (tag ^ ": already correct"));
 
+  (* v27.0.51: MATH-097 (=> → \implies inside math). *)
+  run "MATH-097 fix: => → \\implies inside math" (fun tag ->
+      let src = "$P => Q$" in
+      let edits = fix_edits "MATH-097" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$P \\implies Q$")
+        (tag ^ ": 2 bytes → 8 bytes"));
+
+  run "MATH-097 fix: outside math is skipped" (fun tag ->
+      let src = "Text P => Q in prose." in
+      let edits = fix_edits "MATH-097" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode => not touched"));
+
+  run "MATH-097 fix: multiple inside math" (fun tag ->
+      let src = "$A => B => C$" in
+      let edits = fix_edits "MATH-097" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$A \\implies B \\implies C$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-097 skips ==> / <=> / \\=> (excluded before-byte)" (fun tag ->
+      (* `==>` has `=` before `=>`; `<=>` has `<`; `\=>` has `\` — none should
+         match. *)
+      let src = "$x ==> y <=> z \\=> w$" in
+      let edits = fix_edits "MATH-097" src in
+      expect (List.length edits = 0) (tag ^ ": guarded cases all skipped"));
+
+  run "MATH-097 does not fire on clean \\implies" (fun tag ->
+      expect
+        (does_not_fire "MATH-097" "$P \\implies Q$")
+        (tag ^ ": already correct"));
+
   finalise "typo-fix"

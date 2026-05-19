@@ -2329,4 +2329,37 @@ let () =
         (does_not_fire "TYPO-061" "$a \\times b$")
         (tag ^ ": pure math already correct"));
 
+  (* v27.0.53: CHAR-018 (precomposed ligatures U+FB00..U+FB04 → ASCII). *)
+  run "CHAR-018 fix: fi ligature → fi" (fun tag ->
+      let src = "Word: \xef\xac\x81nal." in
+      let edits = fix_edits "CHAR-018" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Word: final.")
+        (tag ^ ": single fi ligature replaced"));
+
+  run "CHAR-018 fix: all five ligatures in one source" (fun tag ->
+      (* Each ligature appears exactly once, with ASCII-only surrounding text
+         (using Unicode chars as labels would self-match the needles). *)
+      let src =
+        "L1=\xef\xac\x80 L2=\xef\xac\x81 L3=\xef\xac\x82 L4=\xef\xac\x83 \
+         L5=\xef\xac\x84."
+      in
+      let edits = fix_edits "CHAR-018" src in
+      expect
+        (List.length edits = 5
+        && apply_all src edits = "L1=ff L2=fi L3=fl L4=ffi L5=ffl.")
+        (tag ^ ": all five replaced"));
+
+  run "CHAR-018 fix: multiple ﬁ in text" (fun tag ->
+      let src = "\xef\xac\x81rst, \xef\xac\x81nal, \xef\xac\x81xed." in
+      let edits = fix_edits "CHAR-018" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "first, final, fixed.")
+        (tag ^ ": three fi ligatures replaced"));
+
+  run "CHAR-018 does not fire on plain ASCII text" (fun tag ->
+      expect
+        (does_not_fire "CHAR-018" "Just plain fi text with no ligatures.")
+        (tag ^ ": ASCII already correct"));
+
   finalise "typo-fix"

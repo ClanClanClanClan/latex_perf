@@ -2,6 +2,52 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.53] — 2026-05-19
+
+**+1 fix producer: CHAR-018** (precomposed Latin ligatures U+FB00..04 → ASCII).
+
+Replaces each precomposed Latin ligature codepoint with its ASCII letter
+sequence: ﬀ (U+FB00, `EF AC 80`) → `ff`, ﬁ (U+FB01) → `fi`,
+ﬂ (U+FB02) → `fl`, ﬃ (U+FB03) → `ffi`, ﬄ (U+FB04) → `ffl`.
+LaTeX's font ligature-substitution will re-form the glyph at
+typeset time, so the visual output is preserved while making the
+source portable across input encodings and fonts.
+
+N-needle replace shape (5 needles, non-uniform replacement strings).
+No math/escape/URL filter — these ligature characters carry no math
+semantics and shouldn't appear inside math regions anyway. Same
+shape family as v27.0.41 CHAR-005/013/014 batch.
+
+**78 fix-producing rules** (was 77; +1: CHAR-018).
+
+Plus post-v27.0.52 audit cleanup:
+- `README.md` H1 title updated `v27.0.3` → `v27.0.53` (frozen since
+  v27.0.4 era; ~48 stale cycles. Caught by line-1 grep audit;
+  bundled here rather than as standalone doc-only PR).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A line bumped 77/458 → 78/458,
+  per the v27.0.52 "bump every release" rule.
+- `docs/index.md` Fix-producing-rules count bumped 77 → 78.
+
+### Counts (v27.0.53 vs v27.0.52)
+
+- 660 catalogued rules (unchanged).
+- **78 fix-producing rules** (was 77; +1).
+- 92 produces_fix:false (unchanged).
+- 490 produces_fix:null / pending (was 491; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (CHAR-018: single fi, all-five
+  combined, multi-fi, idempotent on plain ASCII).
+- 290/290 fix-producer tests PASS (was 286).
+
+### Differential vs v27.0.52
+
+`run_differential_test.py --baseline-ref v27.0.52 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.52] — 2026-05-19
 
 **+1 fix producer: TYPO-061** (`×` U+00D7 → `$\times$` in text mode).

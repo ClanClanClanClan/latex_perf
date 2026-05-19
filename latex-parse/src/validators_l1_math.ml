@@ -85,20 +85,51 @@ let l1_math_009_rule : rule =
   in
   { id = "MATH-009"; run; languages = [] }
 
-(* MATH-010: Division symbol ÷ (U+00F7) used — prefer \frac or solidus *)
+(* MATH-010: Division symbol ÷ (U+00F7) used — prefer \frac or solidus.
+
+   v27.0.50: math-aware fix producer that replaces each `÷` (U+00F7, 2 bytes
+   UTF-8 `\xc3\xb7`) with the canonical LaTeX `\div` (4 bytes ASCII) INSIDE math
+   regions. The spec's "prefer \frac or solidus" advice asks the user to
+   RESTRUCTURE the expression (a÷b → \frac{a}{b} or a/b); that's a
+   context-dependent edit requiring argument parsing. Replacing `÷` with the
+   equivalent `\div` macro is the conservative minimum-surprise fix: same glyph,
+   correct math-mode spacing, no semantic restructuring. The diagnostic still
+   fires to encourage the user to consider the restructuring option; the
+   auto-fix gives them at least the canonical macro form. Same shape as
+   MATH-082/106/108/015/078 (math-mode-only positive filter). Severity Warning
+   preserved. *)
 let l1_math_010_rule : rule =
+  let needle = "\xc3\xb7" in
+  let replacement = "\\div" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          replacement)
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    (* U+00F7 = \xc3\xb7 in UTF-8 *)
-    List.iter
-      (fun seg -> cnt := !cnt + count_substring seg "\xc3\xb7")
-      math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_substring seg needle) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-010" ~severity:Warning
-           ~message:{|Division symbol ÷ used; prefer \frac or solidus|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-010" ~severity:Warning
+             ~message:{|Division symbol ÷ used; prefer \frac or solidus|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-010" ~severity:Warning
+             ~message:{|Division symbol ÷ used; prefer \frac or solidus|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-010"; run; languages = [] }

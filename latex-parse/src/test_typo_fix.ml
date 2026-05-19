@@ -2243,4 +2243,27 @@ let () =
         (does_not_fire "MATH-078" "$x \\longrightarrow y$")
         (tag ^ ": already correct"));
 
+  (* v27.0.50: MATH-010 (÷ → \div inside math). *)
+  run "MATH-010 fix: ÷ → \\div inside math" (fun tag ->
+      let src = "Divide: $a \xc3\xb7 b$." in
+      let edits = fix_edits "MATH-010" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Divide: $a \\div b$.")
+        (tag ^ ": 2 bytes → 4 bytes"));
+
+  run "MATH-010 fix: outside math is skipped" (fun tag ->
+      let src = "Text with \xc3\xb7 in prose." in
+      let edits = fix_edits "MATH-010" src in
+      expect (List.length edits = 0) (tag ^ ": text-mode ÷ not touched"));
+
+  run "MATH-010 fix: multiple inside math" (fun tag ->
+      let src = "$1 \xc3\xb7 2 \xc3\xb7 3$" in
+      let edits = fix_edits "MATH-010" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$1 \\div 2 \\div 3$")
+        (tag ^ ": both replaced"));
+
+  run "MATH-010 does not fire on clean \\div" (fun tag ->
+      expect (does_not_fire "MATH-010" "$a \\div b$") (tag ^ ": already correct"));
+
   finalise "typo-fix"

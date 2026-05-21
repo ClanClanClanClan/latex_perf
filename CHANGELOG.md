@@ -2,6 +2,69 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.56] — 2026-05-21
+
+**+2 fix producers (batch): SPC-030 + SPC-035** (leading-whitespace deletion).
+**Plus TYPO-051 leading-run filter** (cross-rule conflict resolution).
+
+Both rules detect lines starting with a specific whitespace codepoint
+(3 bytes UTF-8) and emit a single delete edit covering the entire
+leading run:
+
+- **SPC-030**: leading U+3000 ideographic-space (`E3 80 80`).
+- **SPC-035**: leading U+2009 thin-space (`E2 80 89`).
+
+Both are exact mirrors of v27.0.55 SPC-019 (trailing U+3000) but at
+line-start.  Per the v27.0.41 batching policy: same family (SPC),
+homogeneous pattern (leading-run delete), disjoint byte sequences,
+per-rule + cross-rule tests, batch size 2 (≤5).
+
+Count semantic preserved: pre-v27.0.56 each rule counted lines whose
+FIRST 3 bytes match its needle; the fix may delete multiple
+consecutive codepoints per matched line but emits exactly one edit
+per matched line.
+
+**TYPO-051 leading-run filter (cross-rule fix):** caught by the
+in-cycle end-to-end CLI audit, the new SPC-035 conflicted with
+v27.0.16 TYPO-051 (every U+2009 outside math wrapped as
+`\thinspace{}`) on line-start U+2009 — both rules emitted edits
+on the same byte range, causing `--apply-fixes` to refuse with an
+overlap error.  Resolution: TYPO-051's fix-offset filter now skips
+U+2009 positions belonging to a line-start leading run (delegating
+them to SPC-035, whose delete is the more correct fix — a
+`\thinspace{}` at line start would render as an unwanted opening
+thin-space).  Count semantic for TYPO-051 unchanged (still counts
+every U+2009); the fix-set shrinks at leading-run positions only.
+
+**82 fix-producing rules** (was 80; +2: SPC-030 + SPC-035).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 80/458 → 82/458 (~17% → ~18%);
+`docs/index.md` Fix-producing-rules count 80 → 82.
+
+### Counts (v27.0.56 vs v27.0.55)
+
+- 660 catalogued rules (unchanged).
+- **82 fix-producing rules** (was 80; +2).
+- 92 produces_fix:false (unchanged).
+- 486 produces_fix:null / pending (was 488; -2).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 11 new tests in `test_typo_fix.ml`:
+  - 8 for SPC-030 + SPC-035 (per-rule: single, multi-run, middle
+    untouched, idempotent on clean text; plus cross-rule disjoint-needle).
+  - 3 for TYPO-051 leading-run filter (skips leading single, skips
+    multi-leading-run, coexists with SPC-035 non-overlapping).
+- 310/310 fix-producer tests PASS (was 299).
+
+### Differential vs v27.0.55
+
+`run_differential_test.py --baseline-ref v27.0.55 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.55] — 2026-05-21
 
 **+1 fix producer: SPC-019** (trailing U+3000 ideographic space → delete).

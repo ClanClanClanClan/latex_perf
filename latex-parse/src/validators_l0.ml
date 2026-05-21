@@ -2288,20 +2288,57 @@ let r_spc_029 : rule =
   in
   { id = "SPC-029"; run; languages = [] }
 
-(* SPC-030: Line starts with full-width space U+3000 *)
+(* SPC-030: Line starts with full-width space U+3000.
+
+   v27.0.56: fix producer that, for each line starting with one-or-more U+3000
+   ideographic-space chars (3 bytes UTF-8 `E3 80 80`), emits a single delete
+   edit covering the entire leading run. Mirror of v27.0.55 SPC-019 (trailing
+   U+3000) but at line-start.
+
+   Count semantic preserved: pre-v27.0.56 counted lines whose FIRST 3 bytes
+   equal `E3 80 80` (i.e. lines with ≥1 leading U+3000). Severity Warning
+   preserved. *)
 let r_spc_030 : rule =
   let run s =
-    let fw_space_start line =
-      String.length line >= 3
-      && Char.code line.[0] = 0xE3
-      && Char.code line.[1] = 0x80
-      && Char.code line.[2] = 0x80
+    let len = String.length s in
+    let edits = ref [] in
+    let matched = ref 0 in
+    let process_line line_start line_end =
+      let trim_start = ref line_start in
+      while
+        line_end - !trim_start >= 3
+        && Char.code s.[!trim_start] = 0xE3
+        && Char.code s.[!trim_start + 1] = 0x80
+        && Char.code s.[!trim_start + 2] = 0x80
+      do
+        trim_start := !trim_start + 3
+      done;
+      if !trim_start > line_start then (
+        incr matched;
+        edits :=
+          Cst_edit.delete ~start_offset:line_start ~end_offset:!trim_start
+          :: !edits)
     in
-    let _, matched = any_line_pred s fw_space_start in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-030" ~severity:Warning
-           ~message:"Line starts with full‑width space U+3000" ~count:matched)
+    let cur = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if s.[!i] = '\n' then (
+        process_line !cur !i;
+        cur := !i + 1);
+      incr i
+    done;
+    if !cur < len then process_line !cur len;
+    let edits = List.rev !edits in
+    if !matched > 0 then
+      if edits = [] then
+        Some
+          (mk_result ~id:"SPC-030" ~severity:Warning
+             ~message:"Line starts with full‑width space U+3000" ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-030" ~severity:Warning
+             ~message:"Line starts with full‑width space U+3000" ~count:!matched
+             ~fix:edits)
     else None
   in
   { id = "SPC-030"; run; languages = [] }
@@ -2386,20 +2423,57 @@ let r_spc_034 : rule =
   in
   { id = "SPC-034"; run; languages = [] }
 
-(* SPC-035: Leading thin-space U+2009 at start of line *)
+(* SPC-035: Leading thin-space U+2009 at start of line.
+
+   v27.0.56: fix producer that, for each line starting with one-or-more U+2009
+   thin-space chars (3 bytes UTF-8 `E2 80 89`), emits a single delete edit
+   covering the entire leading run. Same shape as SPC-030 above; different
+   needle bytes.
+
+   Count semantic preserved: pre-v27.0.56 counted lines whose FIRST 3 bytes
+   equal `E2 80 89`. Severity Info preserved. *)
 let r_spc_035 : rule =
   let run s =
-    let thin_space_start line =
-      String.length line >= 3
-      && Char.code line.[0] = 0xE2
-      && Char.code line.[1] = 0x80
-      && Char.code line.[2] = 0x89
+    let len = String.length s in
+    let edits = ref [] in
+    let matched = ref 0 in
+    let process_line line_start line_end =
+      let trim_start = ref line_start in
+      while
+        line_end - !trim_start >= 3
+        && Char.code s.[!trim_start] = 0xE2
+        && Char.code s.[!trim_start + 1] = 0x80
+        && Char.code s.[!trim_start + 2] = 0x89
+      do
+        trim_start := !trim_start + 3
+      done;
+      if !trim_start > line_start then (
+        incr matched;
+        edits :=
+          Cst_edit.delete ~start_offset:line_start ~end_offset:!trim_start
+          :: !edits)
     in
-    let _, matched = any_line_pred s thin_space_start in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-035" ~severity:Info
-           ~message:"Leading thin‑space U+2009 at start of line" ~count:matched)
+    let cur = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if s.[!i] = '\n' then (
+        process_line !cur !i;
+        cur := !i + 1);
+      incr i
+    done;
+    if !cur < len then process_line !cur len;
+    let edits = List.rev !edits in
+    if !matched > 0 then
+      if edits = [] then
+        Some
+          (mk_result ~id:"SPC-035" ~severity:Info
+             ~message:"Leading thin‑space U+2009 at start of line"
+             ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-035" ~severity:Info
+             ~message:"Leading thin‑space U+2009 at start of line"
+             ~count:!matched ~fix:edits)
     else None
   in
   { id = "SPC-035"; run; languages = [] }

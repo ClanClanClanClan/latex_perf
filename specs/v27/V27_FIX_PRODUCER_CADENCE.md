@@ -145,7 +145,7 @@ from `FIX_PRODUCER_LEDGER.md`, ship, update.
   v27.0.5+**; enforced every release cycle via
   `scripts/tools/run_differential_test.py`.
 - [ ] Bucket A shipped fully by v27.2.0 (target).  **IN PROGRESS** —
-  78/458 (~17%) shipped as of v27.0.53.  Original v27.2.0 target
+  79/458 (~17%) shipped as of v27.0.54.  Original v27.2.0 target
   assumed ≥10 producers/release; at the actual cadence pace this
   milestone is on track for a later release.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).  **NOT

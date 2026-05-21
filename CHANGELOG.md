@@ -2,6 +2,53 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.54] — 2026-05-19
+
+**+1 fix producer: CHAR-017** (fullwidth Latin letters U+FF21..U+FF3A
+and U+FF41..U+FF5A → ASCII A-Z and a-z).
+
+Replaces each fullwidth Latin codepoint (3 bytes UTF-8) with its
+ASCII equivalent (1 byte):
+- U+FF21..U+FF3A (Ａ..Ｚ, `EF BC A1..BA`) → ASCII A..Z;
+  byte mapping `b2 - 0x60`.
+- U+FF41..U+FF5A (ａ..ｚ, `EF BD 81..9A`) → ASCII a..z;
+  byte mapping `b2 - 0x20`.
+
+The NFKC-canonical fullwidth → halfwidth transform; replacement
+direction is unambiguous (fullwidth Latin letters in LaTeX source
+are almost universally accidental, typically from CJK paste).
+Reuses the pre-v27.0.54 custom range scanner shape, same pattern
+as v27.0.35 ENC-016 (fullwidth digits) but with two range branches
+and per-branch offset.
+
+Severity Warning preserved.  Each replace: 3 bytes → 1 byte.
+
+**79 fix-producing rules** (was 78; +1: CHAR-017).
+
+Plus the standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 78/458 → 79/458; and
+`docs/index.md` Fix-producing-rules count 78 → 79.
+
+### Counts (v27.0.54 vs v27.0.53)
+
+- 660 catalogued rules (unchanged).
+- **79 fix-producing rules** (was 78; +1).
+- 92 produces_fix:false (unchanged).
+- 489 produces_fix:null / pending (was 490; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (CHAR-017: uppercase pair,
+  lowercase pair, mixed-case word HELLO, idempotent on plain ASCII).
+- 294/294 fix-producer tests PASS (was 290).
+
+### Differential vs v27.0.53
+
+`run_differential_test.py --baseline-ref v27.0.53 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.53] — 2026-05-19
 
 **+1 fix producer: CHAR-018** (precomposed Latin ligatures U+FB00..04 → ASCII).

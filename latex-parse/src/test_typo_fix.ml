@@ -2362,4 +2362,37 @@ let () =
         (does_not_fire "CHAR-018" "Just plain fi text with no ligatures.")
         (tag ^ ": ASCII already correct"));
 
+  (* v27.0.54: CHAR-017 (fullwidth Latin letters U+FF21..FF3A + U+FF41..FF5A →
+     ASCII). *)
+  run "CHAR-017 fix: uppercase fullwidth → ASCII" (fun tag ->
+      (* Ａ U+FF21 = EF BC A1, Ｚ U+FF3A = EF BC BA *)
+      let src = "Start: \xef\xbc\xa1 \xef\xbc\xba end." in
+      let edits = fix_edits "CHAR-017" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "Start: A Z end.")
+        (tag ^ ": Ａ→A and Ｚ→Z"));
+
+  run "CHAR-017 fix: lowercase fullwidth → ASCII" (fun tag ->
+      (* ａ U+FF41 = EF BD 81, ｚ U+FF5A = EF BD 9A *)
+      let src = "Start: \xef\xbd\x81 \xef\xbd\x9a end." in
+      let edits = fix_edits "CHAR-017" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "Start: a z end.")
+        (tag ^ ": ａ→a and ｚ→z"));
+
+  run "CHAR-017 fix: mixed-case word" (fun tag ->
+      (* Ｈ Ｅ Ｌ Ｌ Ｏ = EF BC A8 / A5 / AC / AC / AF *)
+      let src =
+        "Hello: \xef\xbc\xa8\xef\xbc\xa5\xef\xbc\xac\xef\xbc\xac\xef\xbc\xaf"
+      in
+      let edits = fix_edits "CHAR-017" src in
+      expect
+        (List.length edits = 5 && apply_all src edits = "Hello: HELLO")
+        (tag ^ ": fullwidth HELLO → ASCII HELLO"));
+
+  run "CHAR-017 does not fire on plain ASCII text" (fun tag ->
+      expect
+        (does_not_fire "CHAR-017" "Just plain Latin letters Aa Zz.")
+        (tag ^ ": ASCII already correct"));
+
   finalise "typo-fix"

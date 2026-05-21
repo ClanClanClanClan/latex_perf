@@ -520,7 +520,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: CHAR-018
   layer: L0_Lexer
   execution_class: A

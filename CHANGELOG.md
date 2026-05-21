@@ -2,6 +2,51 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.55] — 2026-05-21
+
+**+1 fix producer: SPC-019** (trailing U+3000 ideographic space → delete).
+
+For each line ending in one-or-more U+3000 chars (3 bytes UTF-8
+`E3 80 80`), emits a single delete edit covering the entire trailing
+run.  Custom line-scanner (vs the pre-v27.0.55 `any_line_pred` count
+helper) because the fix needs absolute byte offsets, not just a count.
+
+Count semantic preserved: pre-v27.0.55 counted lines whose LAST 3
+bytes equal `E3 80 80` (i.e. lines with ≥1 trailing U+3000).  The
+fix may delete multiple consecutive U+3000 chars per matched line
+(the entire trailing run), so count and edit-set agree on the
+count (one edit per line) while the edit length varies.
+
+Last-line-without-newline case handled (EOF terminates the final
+line scope).  Severity Warning preserved.
+
+**80 fix-producing rules** (was 79; +1: SPC-019).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 79/458 → 80/458;
+`docs/index.md` Fix-producing-rules count 79 → 80.
+
+### Counts (v27.0.55 vs v27.0.54)
+
+- 660 catalogued rules (unchanged).
+- **80 fix-producing rules** (was 79; +1).
+- 92 produces_fix:false (unchanged).
+- 488 produces_fix:null / pending (was 489; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 5 new tests in `test_typo_fix.ml` (SPC-019: single trailing,
+  multi-trailing-run collapse, middle U+3000 preserved, EOF line,
+  idempotent on clean text).
+- 299/299 fix-producer tests PASS (was 294).
+
+### Differential vs v27.0.54
+
+`run_differential_test.py --baseline-ref v27.0.54 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.54] — 2026-05-19
 
 **+1 fix producer: CHAR-017** (fullwidth Latin letters U+FF21..U+FF3A

@@ -2395,4 +2395,38 @@ let () =
         (does_not_fire "CHAR-017" "Just plain Latin letters Aa Zz.")
         (tag ^ ": ASCII already correct"));
 
+  (* v27.0.55: SPC-019 (trailing U+3000 ideographic space deletion). *)
+  run "SPC-019 fix: single trailing U+3000 deleted" (fun tag ->
+      let src = "line one\xe3\x80\x80\nline two\n" in
+      let edits = fix_edits "SPC-019" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "line one\nline two\n")
+        (tag ^ ": one line trimmed"));
+
+  run "SPC-019 fix: multiple trailing U+3000 collapsed" (fun tag ->
+      let src = "text\xe3\x80\x80\xe3\x80\x80\xe3\x80\x80\nnext\n" in
+      let edits = fix_edits "SPC-019" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "text\nnext\n")
+        (tag ^ ": entire trailing run deleted"));
+
+  run "SPC-019 fix: middle U+3000 untouched" (fun tag ->
+      let src = "a\xe3\x80\x80b\nc\xe3\x80\x80\n" in
+      let edits = fix_edits "SPC-019" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\xe3\x80\x80b\nc\n")
+        (tag ^ ": only trailing run removed"));
+
+  run "SPC-019 fix: last line without newline still trimmed" (fun tag ->
+      let src = "trailing\xe3\x80\x80" in
+      let edits = fix_edits "SPC-019" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "trailing")
+        (tag ^ ": EOF line handled"));
+
+  run "SPC-019 does not fire on clean text" (fun tag ->
+      expect
+        (does_not_fire "SPC-019" "no fullwidth space here\nclean line\n")
+        (tag ^ ": ASCII-only clean"));
+
   finalise "typo-fix"

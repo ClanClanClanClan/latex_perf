@@ -2144,22 +2144,59 @@ let r_spc_017 : rule =
   in
   { id = "SPC-017"; run; languages = [] }
 
-(* SPC-019: Trailing full-width space U+3000 at line end *)
+(* SPC-019: Trailing full-width space U+3000 at line end.
+
+   v27.0.55: fix producer that, for each line ending in one-or-more U+3000
+   ideographic space chars (3 bytes UTF-8 `E3 80 80`), emits a delete edit
+   covering the entire trailing run. Count semantic preserved from pre-v27.0.55
+   (= number of lines where the last 3 bytes are U+3000 == lines with ≥1
+   trailing U+3000); the fix may delete multiple chars per matched line.
+
+   Custom line-scanner pattern (vs `any_line_pred`) because the fix needs
+   absolute byte offsets, not just a count.
+
+   Severity Warning preserved. *)
 let r_spc_019 : rule =
   let run s =
-    let trailing_fw_space line =
-      let len = String.length line in
-      len >= 3
-      && Char.code line.[len - 3] = 0xE3
-      && Char.code line.[len - 2] = 0x80
-      && Char.code line.[len - 1] = 0x80
+    let len = String.length s in
+    let edits = ref [] in
+    let matched = ref 0 in
+    let process_line line_start line_end =
+      let trim_end = ref line_end in
+      while
+        !trim_end - line_start >= 3
+        && Char.code s.[!trim_end - 3] = 0xE3
+        && Char.code s.[!trim_end - 2] = 0x80
+        && Char.code s.[!trim_end - 1] = 0x80
+      do
+        trim_end := !trim_end - 3
+      done;
+      if !trim_end < line_end then (
+        incr matched;
+        edits :=
+          Cst_edit.delete ~start_offset:!trim_end ~end_offset:line_end :: !edits)
     in
-    let _, matched = any_line_pred s trailing_fw_space in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-019" ~severity:Warning
-           ~message:"Trailing full‑width space U+3000 at line end"
-           ~count:matched)
+    let cur = ref 0 in
+    let i = ref 0 in
+    while !i < len do
+      if s.[!i] = '\n' then (
+        process_line !cur !i;
+        cur := !i + 1);
+      incr i
+    done;
+    if !cur < len then process_line !cur len;
+    let edits = List.rev !edits in
+    if !matched > 0 then
+      if edits = [] then
+        Some
+          (mk_result ~id:"SPC-019" ~severity:Warning
+             ~message:"Trailing full‑width space U+3000 at line end"
+             ~count:!matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-019" ~severity:Warning
+             ~message:"Trailing full‑width space U+3000 at line end"
+             ~count:!matched ~fix:edits)
     else None
   in
   { id = "SPC-019"; run; languages = [] }

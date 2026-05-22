@@ -2518,4 +2518,31 @@ let () =
         && apply_all src (s35 @ t51) = "lead\n5\\thinspace{}m\n")
         (tag ^ ": leading delete + middle wrap, no overlap"));
 
+  (* v27.0.57: CHAR-012 (U+200D Zero-Width Joiner → delete). *)
+  run "CHAR-012 fix: single ZWJ deleted" (fun tag ->
+      let src = "before\xe2\x80\x8dafter" in
+      let edits = fix_edits "CHAR-012" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "beforeafter")
+        (tag ^ ": single U+200D deleted"));
+
+  run "CHAR-012 fix: multiple ZWJ all deleted" (fun tag ->
+      let src = "a\xe2\x80\x8db\xe2\x80\x8dc\xe2\x80\x8dd" in
+      let edits = fix_edits "CHAR-012" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "abcd")
+        (tag ^ ": all three U+200D deleted"));
+
+  run "CHAR-012 fix: ZWJ at file boundaries" (fun tag ->
+      let src = "\xe2\x80\x8dleading and trailing\xe2\x80\x8d" in
+      let edits = fix_edits "CHAR-012" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "leading and trailing")
+        (tag ^ ": leading + trailing both deleted"));
+
+  run "CHAR-012 does not fire on plain ASCII text" (fun tag ->
+      expect
+        (does_not_fire "CHAR-012" "Just plain ASCII text with no joiners.")
+        (tag ^ ": ASCII-only clean"));
+
   finalise "typo-fix"

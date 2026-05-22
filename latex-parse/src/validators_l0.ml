@@ -1595,10 +1595,28 @@ let r_char_011 : rule =
   in
   { id = "CHAR-011"; run; languages = [] }
 
-(* CHAR-012: Zero-width joiner U+200D outside ligature context *)
+(* CHAR-012: Zero-width joiner U+200D outside ligature context.
+
+   v27.0.57: fix producer that deletes each U+200D (3 bytes UTF-8 `E2 80 8D`).
+   Single-needle delete shape; same as v27.0.41 CHAR-014 (U+FFFD) and the
+   v27.0.37..40 CHAR-006..009 batch.
+
+   Note: legitimate ZWJ uses exist in emoji sequences (e.g. 👨‍💻 = man + ZWJ +
+   computer), but those are extraordinarily rare in LaTeX source and are exactly
+   what the rule already warns about — the spec description "outside ligature
+   context" reflects that the typical ZWJ-in-LaTeX is accidental (Word/Slack
+   paste). The current rule body fires unconditionally; the fix matches that
+   semantic.
+
+   Severity Info preserved. *)
 let r_char_012 : rule =
+  let needle = "\xe2\x80\x8d" in
+  let mk_fix_edits s =
+    List.map
+      (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 3))
+      (Validators_l0_typo.find_all_non_overlapping s needle)
+  in
   let run s =
-    (* U+200D = E2 80 8D *)
     let n = String.length s in
     let cnt = ref 0 in
     let i = ref 0 in
@@ -1613,10 +1631,17 @@ let r_char_012 : rule =
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-012" ~severity:Info
-           ~message:"Zero‑width joiner U+200D outside ligature context"
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"CHAR-012" ~severity:Info
+             ~message:"Zero‑width joiner U+200D outside ligature context"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CHAR-012" ~severity:Info
+             ~message:"Zero‑width joiner U+200D outside ligature context"
+             ~count:!cnt ~fix)
     else None
   in
   { id = "CHAR-012"; run; languages = [] }

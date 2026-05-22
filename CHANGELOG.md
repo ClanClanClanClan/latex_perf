@@ -2,6 +2,53 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.57] — 2026-05-22
+
+**+1 fix producer: CHAR-012** (U+200D Zero-Width Joiner → delete).
+
+Deletes each U+200D codepoint (3 bytes UTF-8 `E2 80 8D`). Simplest
+single-needle delete shape; mirrors v27.0.41 CHAR-014 (U+FFFD) and
+the v27.0.37..40 CHAR-006..009 batch.
+
+Note: legitimate ZWJ uses exist in emoji sequences (e.g. 👨‍💻 = man
++ ZWJ + computer), but those are extraordinarily rare in LaTeX source
+and are precisely what the rule was already warning about — the spec
+description "outside ligature context" reflects that the typical
+ZWJ-in-LaTeX is accidental (Word/Slack paste).  The current rule body
+fires unconditionally; the fix matches that semantic.
+
+Cross-rule audit verified clean: only HI-001 (Hindi-specific count-only
+rule for ZWJ/ZWNJ adjacent to halant U+094D) also touches U+200D, and
+it produces no fix — no overlap.
+
+Severity Info preserved.  Each delete: 3 bytes → 0 bytes.
+
+**83 fix-producing rules** (was 82; +1: CHAR-012).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 82/458 → 83/458;
+`docs/index.md` Fix-producing-rules count 82 → 83.
+
+### Counts (v27.0.57 vs v27.0.56)
+
+- 660 catalogued rules (unchanged).
+- **83 fix-producing rules** (was 82; +1).
+- 92 produces_fix:false (unchanged).
+- 485 produces_fix:null / pending (was 486; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (CHAR-012: single, multi, file
+  boundaries, idempotent on plain ASCII).
+- 314/314 fix-producer tests PASS (was 310).
+
+### Differential vs v27.0.56
+
+`run_differential_test.py --baseline-ref v27.0.56 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.56] — 2026-05-21
 
 **+2 fix producers (batch): SPC-030 + SPC-035** (leading-whitespace deletion).

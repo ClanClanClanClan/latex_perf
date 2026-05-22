@@ -1834,13 +1834,35 @@ let r_typo_048 : rule =
 let r_typo_051 : rule =
   let needle = "\xe2\x80\x89" in
   let nlen = 3 in
+  (* v27.0.56: leading-run filter — skip U+2009 positions that belong to a
+     line-start leading run, delegating them to SPC-035 (which deletes the
+     leading run rather than wrapping it). A `\thinspace{}` at line start would
+     render as an opening thin-space which is not the author's intent; the
+     delete is the correct fix. Count semantic unchanged (still counts every
+     U+2009); only the fix-set shrinks at line-start positions. *)
+  let in_leading_u2009_run s off =
+    let i = ref off in
+    while
+      !i >= 3
+      && Char.code s.[!i - 3] = 0xE2
+      && Char.code s.[!i - 2] = 0x80
+      && Char.code s.[!i - 1] = 0x89
+    do
+      i := !i - 3
+    done;
+    !i = 0 || (!i > 0 && s.[!i - 1] = '\n')
+  in
   let run s =
     let cnt = count_substring s needle in
     if cnt > 0 then
       let math = find_math_ranges s in
       let offsets = find_all_non_overlapping s needle in
       let fix_offsets =
-        List.filter (fun off -> not (is_in_math_range math off)) offsets
+        List.filter
+          (fun off ->
+            (not (is_in_math_range math off))
+            && not (in_leading_u2009_run s off))
+          offsets
       in
       let fix =
         List.map

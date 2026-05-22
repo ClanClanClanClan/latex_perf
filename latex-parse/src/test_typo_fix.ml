@@ -2429,4 +2429,93 @@ let () =
         (does_not_fire "SPC-019" "no fullwidth space here\nclean line\n")
         (tag ^ ": ASCII-only clean"));
 
+  (* v27.0.56: SPC-030 (leading U+3000) + SPC-035 (leading U+2009) batch. *)
+  run "SPC-030 fix: single leading U+3000 deleted" (fun tag ->
+      let src = "\xe3\x80\x80line one\nplain line\n" in
+      let edits = fix_edits "SPC-030" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "line one\nplain line\n")
+        (tag ^ ": one leading U+3000 trimmed"));
+
+  run "SPC-030 fix: multiple leading U+3000 collapsed" (fun tag ->
+      let src = "\xe3\x80\x80\xe3\x80\x80\xe3\x80\x80text\nnext\n" in
+      let edits = fix_edits "SPC-030" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "text\nnext\n")
+        (tag ^ ": entire leading run deleted"));
+
+  run "SPC-030 fix: middle U+3000 untouched" (fun tag ->
+      let src = "abc\xe3\x80\x80def\n\xe3\x80\x80lead\n" in
+      let edits = fix_edits "SPC-030" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "abc\xe3\x80\x80def\nlead\n")
+        (tag ^ ": only leading run removed"));
+
+  run "SPC-035 fix: single leading U+2009 deleted" (fun tag ->
+      let src = "\xe2\x80\x89indented\nnormal\n" in
+      let edits = fix_edits "SPC-035" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "indented\nnormal\n")
+        (tag ^ ": one leading U+2009 trimmed"));
+
+  run "SPC-035 fix: multiple leading U+2009 collapsed" (fun tag ->
+      let src = "\xe2\x80\x89\xe2\x80\x89text\nnext\n" in
+      let edits = fix_edits "SPC-035" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "text\nnext\n")
+        (tag ^ ": entire leading run deleted"));
+
+  run "SPC-030 + SPC-035: disjoint needles" (fun tag ->
+      let src = "\xe3\x80\x80fw\n\xe2\x80\x89thin\nclean\n" in
+      let s30 = fix_edits "SPC-030" src in
+      let s35 = fix_edits "SPC-035" src in
+      expect
+        (List.length s30 = 1
+        && List.length s35 = 1
+        && apply_all src s30 = "fw\n\xe2\x80\x89thin\nclean\n"
+        && apply_all src s35 = "\xe3\x80\x80fw\nthin\nclean\n")
+        (tag ^ ": SPC-030 leaves thin alone; SPC-035 leaves fw alone"));
+
+  run "SPC-030 does not fire on clean text" (fun tag ->
+      expect
+        (does_not_fire "SPC-030" "plain start\nclean\n")
+        (tag ^ ": no U+3000 at line start"));
+
+  run "SPC-035 does not fire on clean text" (fun tag ->
+      expect
+        (does_not_fire "SPC-035" "plain start\nclean\n")
+        (tag ^ ": no U+2009 at line start"));
+
+  (* v27.0.56: TYPO-051 leading-run filter (cross-rule with SPC-035). *)
+  run "TYPO-051 skips leading-run U+2009 (delegates to SPC-035)" (fun tag ->
+      (* Leading U+2009 at line start: TYPO-051 must NOT emit a fix-edit (would
+         conflict with SPC-035's delete). Middle U+2009 still wrapped. *)
+      let src = "\xe2\x80\x89lead\n5\xe2\x80\x89m\n" in
+      let edits = fix_edits "TYPO-051" src in
+      (* Only the middle U+2009 (offset 7) should get an edit. *)
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\xe2\x80\x89lead\n5\\thinspace{}m\n")
+        (tag ^ ": leading skipped, middle wrapped"));
+
+  run "TYPO-051 skips multi-leading-run U+2009" (fun tag ->
+      let src = "\xe2\x80\x89\xe2\x80\x89lead\nplain\n" in
+      let edits = fix_edits "TYPO-051" src in
+      expect
+        (List.length edits = 0)
+        (tag ^ ": all leading-run positions skipped"));
+
+  run "TYPO-051 + SPC-035 coexist non-overlapping (full source)" (fun tag ->
+      let src = "\xe2\x80\x89lead\n5\xe2\x80\x89m\n" in
+      let s35 = fix_edits "SPC-035" src in
+      let t51 = fix_edits "TYPO-051" src in
+      (* SPC-035 deletes leading (offset 0-3); TYPO-051 wraps middle (offset 7).
+         Disjoint ranges, both can apply. *)
+      expect
+        (List.length s35 = 1
+        && List.length t51 = 1
+        && apply_all src (s35 @ t51) = "lead\n5\\thinspace{}m\n")
+        (tag ^ ": leading delete + middle wrap, no overlap"));
+
   finalise "typo-fix"

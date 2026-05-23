@@ -1911,14 +1911,41 @@ let r_spc_024 : rule =
   in
   { id = "SPC-024"; run; languages = [] }
 
-(* SPC-028: Multiple consecutive ~ (non-breaking spaces) *)
+(* SPC-028: Multiple consecutive ~ (non-breaking spaces).
+
+   v27.0.58: fix producer that collapses each run of 2+ consecutive `~` chars to
+   a single `~`. Emits one delete-edit per run, covering the N-1 surplus tildes.
+   Same shape family as v27.0.43 TYPO-055 (`\,\,` collapse) and v27.0.15
+   TYPO-042 (`??+` collapse).
+
+   Count semantic preserved from pre-v27.0.58 (`count_substring s "~~"`,
+   overlapping: 3 tildes = 2 matches, 4 = 3, etc.). The fix emits ONE edit per
+   RUN regardless of run length, so the fix-edit count and the diagnostic count
+   diverge on long runs — same pattern as TYPO-042 / TYPO-055.
+
+   No cross-rule audit conflict: SPC-028 is the only rule firing on `~`.
+
+   Severity Warning preserved. *)
 let r_spc_028 : rule =
+  let mk_fix_edits s =
+    let runs = Validators_l0_typo.find_consecutive_runs s '~' ~min_len:2 in
+    List.map
+      (fun (start, stop) ->
+        Cst_edit.delete ~start_offset:(start + 1) ~end_offset:stop)
+      runs
+  in
   let run s =
     let cnt = count_substring s "~~" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-028" ~severity:Warning
-           ~message:"Multiple consecutive ~ NBSPs" ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-028" ~severity:Warning
+             ~message:"Multiple consecutive ~ NBSPs" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-028" ~severity:Warning
+             ~message:"Multiple consecutive ~ NBSPs" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-028"; run; languages = [] }

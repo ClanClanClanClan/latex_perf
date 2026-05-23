@@ -2,6 +2,53 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.58] — 2026-05-23
+
+**+1 fix producer: SPC-028** (collapse runs of 2+ consecutive `~` NBSPs
+to a single `~`).
+
+For each maximal run of 2-or-more consecutive `~` (LaTeX
+non-breaking-space) chars, emits a single delete edit covering the
+N-1 surplus tildes (keeps the first, drops the rest).  Same shape
+family as v27.0.43 TYPO-055 (`\,\,` collapse) and v27.0.15 TYPO-042
+(`??+` collapse).
+
+Count semantic preserved from pre-v27.0.58 (`count_substring s "~~"`,
+overlapping: 3 tildes = 2 matches, 4 = 3, etc.).  The fix emits ONE
+edit per RUN regardless of run length, so fix-edit count and
+diagnostic count diverge on long runs — same pattern as TYPO-042 /
+TYPO-055.
+
+No cross-rule audit conflict: SPC-028 is the only rule firing on `~`.
+
+Severity Warning preserved.
+
+**84 fix-producing rules** (was 83; +1: SPC-028).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 83/458 → 84/458;
+`docs/index.md` Fix-producing-rules count 83 → 84.
+
+### Counts (v27.0.58 vs v27.0.57)
+
+- 660 catalogued rules (unchanged).
+- **84 fix-producing rules** (was 83; +1).
+- 92 produces_fix:false (unchanged).
+- 484 produces_fix:null / pending (was 485; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 5 new tests in `test_typo_fix.ml` (SPC-028: pair, triple, long run,
+  single ~ untouched, no-tilde idempotent).
+- 319/319 fix-producer tests PASS (was 314).
+
+### Differential vs v27.0.57
+
+`run_differential_test.py --baseline-ref v27.0.57 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.57] — 2026-05-22
 
 **+1 fix producer: CHAR-012** (U+200D Zero-Width Joiner → delete).

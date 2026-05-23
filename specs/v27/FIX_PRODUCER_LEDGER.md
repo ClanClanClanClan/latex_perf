@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 83 (~12%)
-- **Pending**: 573
+- **Shipped**: 84 (~12%)
+- **Pending**: 572
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 458 | 83 | 375 |
+| **A**  | Mechanical, safe everywhere       | 458 | 84 | 374 |
 | **B**  | Sentence-aware (NLP-required)     | 53 | 0 | 53 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -95,7 +95,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | RTL | 5 | 0 | 5 | 0 | 5 | 0 | 0 | 0 |
 | RU | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | SCRIPT | 22 | 0 | 22 | 0 | 22 | 0 | 0 | 0 |
-| SPC | 35 | 11 | 24 | 0 | 35 | 0 | 0 | 0 |
+| SPC | 35 | 12 | 23 | 0 | 35 | 0 | 0 | 0 |
 | STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
 | STYLE | 49 | 0 | 49 | 0 | 0 | 49 | 0 | 0 |
 | SYS | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -598,7 +598,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SPC-025` | SPC | **A** | tentative | pending |
 | `SPC-026` | SPC | **A** | tentative | pending |
 | `SPC-027` | SPC | **A** | tentative | pending |
-| `SPC-028` | SPC | **A** | tentative | pending |
+| `SPC-028` | SPC | **A** | confirmed | shipped in v27.0.58 |
 | `SPC-029` | SPC | **A** | tentative | pending |
 | `SPC-030` | SPC | **A** | confirmed | shipped in v27.0.56 |
 | `SPC-031` | SPC | **A** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 83 of 458 Bucket A
+  **TRACKING** — 84 of 458 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

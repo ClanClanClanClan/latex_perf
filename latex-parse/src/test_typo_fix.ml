@@ -2580,4 +2580,35 @@ let () =
         (does_not_fire "SPC-028" "Plain text with no tildes here.")
         (tag ^ ": tilde-free clean"));
 
+  (* v27.0.59: SPC-025 (delete space before \dots or U+2026 ellipsis). *)
+  run "SPC-025 fix: space before \\dots → \\dots" (fun tag ->
+      let src = "and so on \\dots end." in
+      let edits = fix_edits "SPC-025" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "and so on\\dots end.")
+        (tag ^ ": leading space deleted"));
+
+  run "SPC-025 fix: space before U+2026 → U+2026" (fun tag ->
+      let src = "and so on \xe2\x80\xa6 end." in
+      let edits = fix_edits "SPC-025" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "and so on\xe2\x80\xa6 end.")
+        (tag ^ ": leading space deleted before U+2026"));
+
+  run "SPC-025 fix: multiple matches both deleted" (fun tag ->
+      let src = "a \\dots b \\dots c \xe2\x80\xa6 d" in
+      let edits = fix_edits "SPC-025" src in
+      expect
+        (List.length edits = 3
+        && apply_all src edits = "a\\dots b\\dots c\xe2\x80\xa6 d")
+        (tag ^ ": three matches all collapsed"));
+
+  run "SPC-025 does not fire on clean usage" (fun tag ->
+      (* `\dots` directly attached to preceding non-space character — no
+         fire. *)
+      expect
+        (does_not_fire "SPC-025" "Sentence.\\dots more here.")
+        (tag ^ ": no leading space before \\dots, no fire"));
+
   finalise "typo-fix"

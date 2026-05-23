@@ -2545,4 +2545,39 @@ let () =
         (does_not_fire "CHAR-012" "Just plain ASCII text with no joiners.")
         (tag ^ ": ASCII-only clean"));
 
+  (* v27.0.58: SPC-028 (collapse runs of 2+ consecutive ~ NBSPs → single ~). *)
+  run "SPC-028 fix: double ~~ → ~" (fun tag ->
+      let src = "Dr.~~Smith and Prof.~~Jones." in
+      let edits = fix_edits "SPC-028" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "Dr.~Smith and Prof.~Jones.")
+        (tag ^ ": both pairs collapsed"));
+
+  run "SPC-028 fix: triple ~~~ → ~" (fun tag ->
+      let src = "A~~~B" in
+      let edits = fix_edits "SPC-028" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "A~B")
+        (tag ^ ": run of 3 collapsed to 1"));
+
+  run "SPC-028 fix: long run ~~~~~ → ~" (fun tag ->
+      let src = "X~~~~~Y" in
+      let edits = fix_edits "SPC-028" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "X~Y")
+        (tag ^ ": run of 5 collapsed to 1"));
+
+  run "SPC-028 fix: single ~ untouched" (fun tag ->
+      let src = "Dr.~Smith and Prof.~Jones." in
+      let edits = fix_edits "SPC-028" src in
+      expect
+        (List.length edits = 0 && apply_all src edits = src)
+        (tag ^ ": no run, no edit"));
+
+  run "SPC-028 does not fire on text without NBSPs" (fun tag ->
+      expect
+        (does_not_fire "SPC-028" "Plain text with no tildes here.")
+        (tag ^ ": tilde-free clean"));
+
   finalise "typo-fix"

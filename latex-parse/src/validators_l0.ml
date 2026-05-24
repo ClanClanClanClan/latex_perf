@@ -2266,14 +2266,47 @@ let r_spc_021 : rule =
   in
   { id = "SPC-021"; run; languages = [] }
 
-(* SPC-025: Space before ellipsis \dots *)
+(* SPC-025: Space before ellipsis \dots.
+
+   v27.0.59: fix producer that deletes the leading space before each ellipsis
+   match (`" \dots"` 6 bytes or `" \xe2\x80\xa6"` 4 bytes, the latter being the
+   literal U+2026 codepoint). Emits a single-byte delete at the match offset
+   (the leading space) for each occurrence.
+
+   Two-needle list shape; same as v27.0.17 TYPO-049 (delete space after curly
+   opening quote). Count semantic preserved (overlapping `count_substring` per
+   needle; non-overlapping match offsets for the fix-set may diverge on
+   pathological inputs but this needle pair does not self-overlap).
+
+   Cross-rule audit clean: - TYPO-005 fires on `...` (3 dots → `\dots`),
+   different needle. - TYPO-053 fires on U+22EF, different needle. - TYPO-010
+   (space-before-punct) excludes `\dots` (not in punct list).
+
+   Severity Info preserved. *)
 let r_spc_025 : rule =
+  let needles = [ " \\dots"; " \xe2\x80\xa6" ] in
+  let mk_fix_edits s =
+    List.concat_map
+      (fun needle ->
+        List.map
+          (fun off ->
+            (* Delete the leading space (1 byte at the match offset). *)
+            Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          (Validators_l0_typo.find_all_non_overlapping s needle))
+      needles
+  in
   let run s =
     let cnt = count_substring s " \\dots" + count_substring s " \xe2\x80\xa6" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-025" ~severity:Info
-           ~message:{|Space before ellipsis \dots|} ~count:cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-025" ~severity:Info
+             ~message:{|Space before ellipsis \dots|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-025" ~severity:Info
+             ~message:{|Space before ellipsis \dots|} ~count:cnt ~fix)
     else None
   in
   { id = "SPC-025"; run; languages = [] }

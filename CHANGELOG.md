@@ -2,6 +2,53 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.59] — 2026-05-23
+
+**+1 fix producer: SPC-025** (delete space before ellipsis `\dots` or
+U+2026).
+
+For each match of `" \dots"` (6 bytes) or `" \xe2\x80\xa6"` (4 bytes,
+literal U+2026), emits a single-byte delete at the leading space
+position.  Two-needle list shape; same as v27.0.17 TYPO-049 (space
+after curly opening quote delete).
+
+Cross-rule audit clean:
+- TYPO-005 fires on `...` (3 dots → `\dots`), different needle.
+- TYPO-053 fires on U+22EF (midline ellipsis), different needle.
+- TYPO-010 (space-before-punct) excludes `\dots` (not in punct list).
+
+Count semantic preserved from pre-v27.0.59 (sum of two
+`count_substring` calls, overlapping per needle; non-overlapping fix
+offsets — neither needle self-overlaps).
+
+Severity Info preserved.
+
+**85 fix-producing rules** (was 84; +1: SPC-025).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 84/458 → 85/458 (~18→19%);
+`docs/index.md` Fix-producing-rules count 84 → 85.
+
+### Counts (v27.0.59 vs v27.0.58)
+
+- 660 catalogued rules (unchanged).
+- **85 fix-producing rules** (was 84; +1).
+- 92 produces_fix:false (unchanged).
+- 483 produces_fix:null / pending (was 484; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 14 pre-release gates (unchanged).
+
+### Tests
+
+- 4 new tests in `test_typo_fix.ml` (SPC-025: `\dots`, U+2026, multi,
+  idempotent on no-leading-space).
+- 323/323 fix-producer tests PASS (was 319).
+
+### Differential vs v27.0.58
+
+`run_differential_test.py --baseline-ref v27.0.58 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.58] — 2026-05-23
 
 **+1 fix producer: SPC-028** (collapse runs of 2+ consecutive `~` NBSPs

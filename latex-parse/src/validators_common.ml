@@ -410,6 +410,31 @@ let is_ascii_context ?(window = 32) ?(candidate_bytes = 3) (s : string)
   done;
   !ascii > !extended
 
+(** [is_extended_context ?window ?candidate_bytes s off] — symmetric inverse of
+    [is_ascii_context]. Returns [true] iff the surrounding window contains
+    strictly more extended bytes (≥ 0x80) than ASCII bytes (< 0x80). The
+    candidate's own bytes are excluded.
+
+    Used by CJK-010 (half-width punctuation in full-width context) to gate the
+    inverse fix: replace an ASCII punctuation byte with its fullwidth Unicode
+    equivalent only when the surrounding text is genuinely CJK-heavy. Ties
+    resolve to [false] — only a strict extended majority triggers a fix, so an
+    isolated ASCII-context character won't be promoted to fullwidth on the
+    strength of a single neighbouring CJK byte. *)
+let is_extended_context ?(window = 32) ?(candidate_bytes = 3) (s : string)
+    (off : int) : bool =
+  let n = String.length s in
+  let lo = max 0 (off - window) in
+  let hi = min (n - 1) (off + candidate_bytes - 1 + window) in
+  let ascii = ref 0 in
+  let extended = ref 0 in
+  for j = lo to hi do
+    if j < off || j >= off + candidate_bytes then
+      if Char.code (String.unsafe_get s j) < 0x80 then incr ascii
+      else incr extended
+  done;
+  !extended > !ascii
+
 (* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
 let command_tokens (s : string) : (string * int) list =
   let module T = Tokenizer_lite in

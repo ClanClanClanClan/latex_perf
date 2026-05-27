@@ -3637,38 +3637,85 @@ let r_cjk_002 : rule =
   in
   { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
 
-(* CJK-010: Half-width CJK punctuation in full-width context *)
-(* Detect ASCII comma/period/colon/semicolon adjacent to CJK characters *)
+(* CJK-010: Half-width CJK punctuation in full-width context.
+
+   v27.0.62: fix producer. Count semantic preserved (every ASCII comma / period
+   / colon / semicolon adjacent to a CJK byte is tallied via the existing
+   proximity heuristic). The fix is gated by the stricter `is_extended_context`
+   check (strict-majority extended bytes in a ±32-byte window) so an isolated
+   ASCII punctuation with one CJK neighbour does NOT get promoted to fullwidth —
+   only genuinely CJK-heavy runs receive the replacement.
+
+   Replacement table (each ASCII byte → 3-byte UTF-8 fullwidth equivalent): -
+   `,` (0x2C) → `\xEF\xBC\x8C` (U+FF0C) - `.` (0x2E) → `\xEF\xBC\x8E` (U+FF0E) -
+   `:` (0x3A) → `\xEF\xBC\x9A` (U+FF1A) - `;` (0x3B) → `\xEF\xBC\x9B` (U+FF1B)
+
+   Cross-rule: CJK-001 fires on U+FF0C and CJK-002 on U+FF0E. After CJK-010's
+   fix lands in CJK context, CJK-001/002 will fire (diagnose) at the
+   newly-introduced fullwidth positions but emit no fix (their fix is gated by
+   `is_ascii_context`, false in the same context). Convergent under repeated
+   `--apply-fixes` passes. Math is excluded from the fix (math mode wants ASCII
+   punctuation regardless of surrounding script). *)
 let r_cjk_010 : rule =
   let is_cjk_byte0 b = b >= 0xE4 && b <= 0xE9 in
+  let fullwidth_for = function
+    | ',' -> "\xef\xbc\x8c"
+    | '.' -> "\xef\xbc\x8e"
+    | ':' -> "\xef\xbc\x9a"
+    | ';' -> "\xef\xbc\x9b"
+    | _ -> assert false
+  in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let fix_edits = ref [] in
+    let math = lazy (find_math_ranges s) in
     for i = 0 to n - 1 do
       let c = s.[i] in
       if c = ',' || c = '.' || c = ':' || c = ';' then
-        if
-          (* Check if preceded by a CJK character (3-byte UTF-8 starting
-             E4-E9) *)
-          i >= 3 && is_cjk_byte0 (Char.code s.[i - 3])
-        then incr cnt (* or followed by CJK *)
-        else if i + 3 < n && is_cjk_byte0 (Char.code s.[i + 1]) then incr cnt
+        let adj_cjk =
+          (i >= 3 && is_cjk_byte0 (Char.code s.[i - 3]))
+          || (i + 3 < n && is_cjk_byte0 (Char.code s.[i + 1]))
+        in
+        if adj_cjk then (
+          incr cnt;
+          if
+            (not (is_in_math_range (Lazy.force math) i))
+            && is_extended_context ~candidate_bytes:1 s i
+          then
+            fix_edits :=
+              Cst_edit.replace ~start_offset:i ~end_offset:(i + 1)
+                (fullwidth_for c)
+              :: !fix_edits)
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CJK-010" ~severity:Warning
-           ~message:"Half‑width CJK punctuation in full‑width context"
-           ~count:!cnt)
+      let msg = "Half‑width CJK punctuation in full‑width context" in
+      if !fix_edits = [] then
+        Some
+          (mk_result ~id:"CJK-010" ~severity:Warning ~message:msg ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CJK-010" ~severity:Warning ~message:msg
+             ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-010"; run; languages = [ "zh"; "ja"; "ko" ] }
 
-(* CJK-014: Inter-punct U+30FB outside CJK run *)
+(* CJK-014: Inter-punct U+30FB outside CJK run.
+
+   v27.0.62: fix producer. Count preserved (every U+30FB tallied). The replace
+   edit (3 bytes `\xE3\x83\xBB` → 1 ASCII byte `.`) only fires for offsets
+   outside math AND in `is_ascii_context`. ASCII period is the
+   strict-`replace_ascii` reading of the rule's spec field; a future cycle could
+   substitute U+00B7 (Latin middle dot) for closer typographic fidelity but at
+   the cost of producing a non-ASCII byte. *)
 let r_cjk_014 : rule =
   let run s =
     (* U+30FB = E3 83 BB *)
     let n = String.length s in
     let cnt = ref 0 in
+    let fix_edits = ref [] in
+    let math = lazy (find_math_ranges s) in
     let i = ref 0 in
     while !i < n - 2 do
       if
@@ -3677,13 +3724,23 @@ let r_cjk_014 : rule =
         && Char.code s.[!i + 2] = 0xBB
       then (
         incr cnt;
+        if
+          (not (is_in_math_range (Lazy.force math) !i)) && is_ascii_context s !i
+        then
+          fix_edits :=
+            Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) "."
+            :: !fix_edits;
         i := !i + 3)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CJK-014" ~severity:Info
-           ~message:"Inter‑punct U+30FB outside CJK run" ~count:!cnt)
+      let msg = "Inter‑punct U+30FB outside CJK run" in
+      if !fix_edits = [] then
+        Some (mk_result ~id:"CJK-014" ~severity:Info ~message:msg ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CJK-014" ~severity:Info ~message:msg
+             ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }

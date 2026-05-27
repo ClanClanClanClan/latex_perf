@@ -312,11 +312,21 @@ let () =
         (tag ^ ": both spaces removed before ,"));
 
   run "TYPO-010 fix: handles multiple punctuation kinds" (fun tag ->
-      let src = "Hi ! How ? Yes ; ok ." in
+      (* v27.0.60: `;` and `:` now delegated to SPC-016/SPC-021. TYPO-010 emits
+         fixes only for `,` `.` `?` `!`. *)
+      let src = "Hi ! How ? ok ." in
       let edits = fix_edits "TYPO-010" src in
       expect
-        (List.length edits = 4 && apply_all src edits = "Hi! How? Yes; ok.")
-        (tag ^ ": ! ? ; . all normalised"));
+        (List.length edits = 3 && apply_all src edits = "Hi! How? ok.")
+        (tag ^ ": ! ? . all normalised (; and : delegated)"));
+
+  run "TYPO-010 fix: leaves `;` and `:` alone (delegated to SPC-016/021)"
+    (fun tag ->
+      (* v27.0.60 delegation: TYPO-010 still counts `;`/`:` (Info diagnostic)
+         but does not emit a fix for them. SPC-016/021 own those offsets. *)
+      let src = "Yes ; ok : end" in
+      let edits = fix_edits "TYPO-010" src in
+      expect (List.length edits = 0) (tag ^ ": no TYPO-010 fix at ; or :"));
 
   run "TYPO-010 does not fire on clean source" (fun tag ->
       expect
@@ -2610,5 +2620,83 @@ let () =
       expect
         (does_not_fire "SPC-025" "Sentence.\\dots more here.")
         (tag ^ ": no leading space before \\dots, no fire"));
+
+  (* v27.0.60: SPC-016 (delete space before `;`) + SPC-021 (delete space before
+     `:`). Strict-subset Warning-severity delegations from TYPO-010 (Info) — see
+     cross-rule integration test below. *)
+  run "SPC-016 fix: drops space before single semicolon" (fun tag ->
+      let src = "First clause ; second" in
+      let edits = fix_edits "SPC-016" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "First clause; second")
+        (tag ^ ": leading space before ; deleted"));
+
+  run "SPC-016 fix: multiple semicolons all collapsed" (fun tag ->
+      let src = "a ; b ; c ; d" in
+      let edits = fix_edits "SPC-016" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "a; b; c; d")
+        (tag ^ ": three semicolons all normalised"));
+
+  run "SPC-016 skips ` ;` inside math" (fun tag ->
+      (* ` ;` inside `$..$` is not text punctuation; math-aware filter must
+         exclude it from the fix-set. *)
+      let src = "Set $\\{1 ; 2\\}$ and a ; b" in
+      let edits = fix_edits "SPC-016" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Set $\\{1 ; 2\\}$ and a; b")
+        (tag ^ ": math ; preserved, text ; fixed"));
+
+  run "SPC-016 does not fire on clean text" (fun tag ->
+      expect
+        (does_not_fire "SPC-016" "Clean; clauses; here.")
+        (tag ^ ": no leading space before any ;, no fire"));
+
+  run "SPC-021 fix: drops space before single colon" (fun tag ->
+      let src = "Note : important point" in
+      let edits = fix_edits "SPC-021" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "Note: important point")
+        (tag ^ ": leading space before : deleted"));
+
+  run "SPC-021 fix: multiple colons all collapsed" (fun tag ->
+      let src = "k1 : v1, k2 : v2, k3 : v3" in
+      let edits = fix_edits "SPC-021" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "k1: v1, k2: v2, k3: v3")
+        (tag ^ ": three colons all normalised"));
+
+  run "SPC-021 skips ` :` inside math" (fun tag ->
+      let src = "Map $f : A \\to B$ and key : value" in
+      let edits = fix_edits "SPC-021" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Map $f : A \\to B$ and key: value")
+        (tag ^ ": math : preserved, text : fixed"));
+
+  run "SPC-021 does not fire on clean text" (fun tag ->
+      expect
+        (does_not_fire "SPC-021" "Title: heading. URL: http://x")
+        (tag ^ ": no leading space before any :, no fire"));
+
+  (* Cross-rule integration test: TYPO-010 + SPC-016 + SPC-021 on input with all
+     6 space-before-punct cases. v27.0.60 contract: - TYPO-010 fires Info (count
+     = 6) and emits 4 fixes (`,` `.` `?` `!`). - SPC-016 fires Warning (count =
+     1) and emits 1 fix (`;`). - SPC-021 fires Warning (count = 1) and emits 1
+     fix (`:`). - Combined fix-set: 6 non-overlapping single-byte deletes /
+     2-byte replaces. *)
+  run "TYPO-010 + SPC-016 + SPC-021 cross-rule fix integration" (fun tag ->
+      let src = "a , b . c ; d : e ? f !" in
+      let t10 = fix_edits "TYPO-010" src in
+      let s16 = fix_edits "SPC-016" src in
+      let s21 = fix_edits "SPC-021" src in
+      let combined = apply_all src (t10 @ s16 @ s21) in
+      expect
+        (List.length t10 = 4
+        && List.length s16 = 1
+        && List.length s21 = 1
+        && combined = "a, b. c; d: e? f!")
+        (tag ^ ": combined fix-set normalises all 6 punct cases"));
 
   finalise "typo-fix"

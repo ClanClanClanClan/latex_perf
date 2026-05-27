@@ -512,8 +512,16 @@ let r_typo_010 : rule =
      [Cst_edit.replace]; the token-aware count loop above is a stricter gate on
      what counts as a "space" but its offsets aren't directly accessible. In
      practice the underlying byte patterns coincide for the ASCII-only
-     space-before-punct case targeted by this rule. *)
-  let punct_chars = [ ','; '.'; ';'; ':'; '?'; '!' ] in
+     space-before-punct case targeted by this rule.
+
+     v27.0.60: filter `;` and `:` from the fix-set, delegating those positions
+     to SPC-016 (space-before-semicolon) and SPC-021 (space-before-colon), both
+     Warning severity. Same cross-rule pattern as v27.0.56 (SPC-035/TYPO-051
+     leading-run filter): TYPO-010 still counts all 6 punct chars (count
+     semantic preserved); only the fix-set shrinks at `;`/`:` offsets, where
+     SPC-016/021's 1-byte delete emits instead of TYPO-010's 2-byte→1-byte
+     replace. *)
+  let punct_chars = [ ','; '.'; '?'; '!' ] in
   let mk_fix_edits s =
     let n = String.length s in
     let edits = ref [] in

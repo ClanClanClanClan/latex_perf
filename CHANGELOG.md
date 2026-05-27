@@ -2,6 +2,83 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.60] — 2026-05-25
+
+**+2 fix producers: SPC-016 + SPC-021** (delete space before `;` / `:`).
+
+Both are strict-subset Warning-severity delegations of TYPO-010
+(space-before-punctuation, Info).  Same cross-rule filter delegation
+shape as v27.0.56 (SPC-035 / TYPO-051 leading-run filter).
+
+- **SPC-016** — for each `" ;"` (2 ASCII bytes) outside math, emits a
+  single-byte delete at the leading-space offset.
+- **SPC-021** — same shape for `" :"`.
+
+Both use `find_all_non_overlapping` + `find_math_ranges` for math-aware
+fix offsets while preserving the prior count semantic
+(`count_substring (strip_math_segments s) needle`).
+
+### Cross-rule integration (TYPO-010 filter)
+
+TYPO-010 (`validators_l0_typo.ml:507`) `mk_fix_edits` `punct_chars` list
+shrinks from `[',' '.' ';' ':' '?' '!']` to `[',' '.' '?' '!']`.
+TYPO-010 still counts all 6 punct chars (count semantic preserved); only
+the fix-set shrinks.  The cross-rule integration test
+(`test_typo_fix.ml`) exercises input ` , . ; : ? !` and asserts:
+
+- TYPO-010 fires Info (count 6) and emits 4 fixes (`,` `.` `?` `!`).
+- SPC-016 fires Warning (count 1) and emits 1 fix (`;`).
+- SPC-021 fires Warning (count 1) and emits 1 fix (`:`).
+- Combined fix-set = 6 non-overlapping single-byte deletes / 2-byte
+  replaces; `apply_all` yields `a, b. c; d: e? f!`.
+
+### Hygiene bundled in this release
+
+- **`scripts/tools/run_differential_test.py`** — default `--corpus`
+  changed from the non-existent `corpora/regression/` to the real
+  `corpora/lint/` (330 `.tex` files).  Every release cycle previously
+  had to pass `--corpus corpora/lint` explicitly.
+- **`docs/expert/`** — 4 stale handoff files describing a long-resolved
+  build error on the deleted `fix-math-strip` branch moved to
+  `archive/expert-handoff/coq-fix-math-strip/` with a README explaining
+  historical context.  The current proof tree builds clean with 1,400
+  theorems / 0 admits / 0 axioms.
+
+**87 fix-producing rules** (was 85; +2: SPC-016, SPC-021).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 85/458 → 87/458 (~19%);
+`docs/index.md` Fix-producing-rules count 85 → 87.
+
+### Counts (v27.0.60 vs v27.0.59)
+
+- 660 catalogued rules (unchanged).
+- **87 fix-producing rules** (was 85; +2).
+- 92 produces_fix:false (unchanged).
+- 481 produces_fix:null / pending (was 483; -2).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (`pre_release_check.py`
+  gate list is 18 substantive Python checks; the previous CHANGELOG
+  entries' "14 pre-release gates" count was stale since
+  `check_perf_ratchet` / `check_result_helpers` /
+  `check_fix_integration_wired` / `check_cst_structure_lossless` /
+  `check_fix_producer_ledger` were added in later cycles).
+
+### Tests
+
+- 7 new tests in `test_typo_fix.ml` (SPC-016: single, multi, math-aware,
+  clean; SPC-021: single, multi, math-aware, clean; cross-rule
+  integration).
+- 1 updated test for TYPO-010 to reflect `;`/`:` delegation.
+- 333/333 fix-producer tests PASS (was 323; +10 net after delegation
+  test split).
+
+### Differential vs v27.0.59
+
+`run_differential_test.py --baseline-ref v27.0.59 --current-ref HEAD
+--corpus corpora/lint`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`).
+
 ## [v27.0.59] — 2026-05-23
 
 **+1 fix producer: SPC-025** (delete space before ellipsis `\dots` or

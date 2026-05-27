@@ -24,7 +24,7 @@ caller will pass --expected-diff-keys fix so the new field is tolerated.
 Usage:
     python3 scripts/tools/run_differential_test.py \
         --baseline-ref v26.1.0 \
-        --corpus corpora/regression/ \
+        --corpus corpora/lint/ \
         --expected-diff-keys ""
 
 Exit codes:
@@ -128,8 +128,9 @@ def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--baseline-ref", default="v26.1.0",
                     help="git ref to build as baseline (default: v26.1.0)")
-    ap.add_argument("--corpus", default="corpora/regression",
-                    help="corpus directory to diff (default: corpora/regression)")
+    ap.add_argument("--corpus", default="corpora/lint",
+                    help="corpus directory to diff (default: corpora/lint, "
+                         "330 .tex files)")
     ap.add_argument("--expected-diff-keys", default="",
                     help="comma-separated list of field names that are "
                          "allowed to differ (v26.2: empty)")

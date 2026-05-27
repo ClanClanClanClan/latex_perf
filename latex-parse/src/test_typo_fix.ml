@@ -2862,4 +2862,83 @@ let () =
         (does_not_fire "CJK-014" "Just ASCII periods. Multiple. Here.")
         (tag ^ ": no U+30FB → no fire"));
 
+  (* v27.0.63: CHAR-016 (Double-width CJK punctuation in ASCII context) becomes
+     a fix producer with CROSS-RULE DELEGATION. It fires on 8 chars (count
+     preserved); the fix-set covers 6 and delegates U+FF0C and U+FF0E to CJK-001
+     / CJK-002 — same delegation shape as v27.0.60 TYPO-010 → SPC-016/021 and
+     v27.0.56 SPC-035 / TYPO-051. *)
+  run "CHAR-016 fix: 6 non-delegated chars in ASCII context" (fun tag ->
+      let src =
+        "Hello \xe3\x80\x81 world\xe3\x80\x82 hi\xef\xbc\x9a bye\xef\xbc\x9b \
+         yay\xef\xbc\x81 wow\xef\xbc\x9f end"
+      in
+      let edits = fix_edits "CHAR-016" src in
+      expect
+        (List.length edits = 6
+        && apply_all src edits = "Hello , world. hi: bye; yay! wow? end")
+        (tag ^ ": 6 fixes, all 3-byte chars reduced to ASCII"));
+
+  run "CHAR-016 fix: U+FF0C / U+FF0E delegated to CJK-001/002" (fun tag ->
+      let src = "Hello\xef\xbc\x8c world\xef\xbc\x8e done" in
+      let c16 = fix_edits "CHAR-016" src in
+      let c1 = fix_edits "CJK-001" src in
+      let c2 = fix_edits "CJK-002" src in
+      expect
+        (List.length c16 = 0
+        && List.length c1 = 1
+        && List.length c2 = 1
+        && fires "CHAR-016" src)
+        (tag
+        ^ ": CHAR-016 fires (counts) but emits 0 fixes; delegates to \
+           CJK-001/002"));
+
+  run "CHAR-016 fix: CJK-context → NO fix (count emitted)" (fun tag ->
+      let src =
+        "\xe4\xb8\xad\xe6\x96\x87\xe3\x80\x81\xe4\xb8\xad\xe6\x96\x87\xe3\x80\x82\xe4\xb8\xad\xe6\x96\x87"
+      in
+      expect
+        (fires "CHAR-016" src && fix_edits "CHAR-016" src = [])
+        (tag ^ ": CJK context fires but no fix"));
+
+  run "CHAR-016 fix: skip inside math" (fun tag ->
+      let src = "$x\xef\xbc\x9ay$ and text\xef\xbc\x9aend" in
+      let edits = fix_edits "CHAR-016" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "$x\xef\xbc\x9ay$ and text:end")
+        (tag ^ ": math : preserved, text : fixed"));
+
+  run "CHAR-016 does not fire on plain ASCII" (fun tag ->
+      expect
+        (does_not_fire "CHAR-016" "Plain ASCII, no fullwidth: just normal!")
+        (tag ^ ": no fullwidth → no fire"));
+
+  (* Cross-rule integration: input with all 8 fullwidth chars, each in its own
+     ASCII-majority window (sentences with ≥17 ASCII bytes between fullwidth
+     chars so is_ascii_context = true at each candidate). CHAR-016 emits 6 fixes
+     (non-delegated) and CJK-001 / CJK-002 emit 1 each (delegated). Combined: 8
+     non-overlapping replaces normalise every fullwidth char to ASCII. *)
+  run "CHAR-016 + CJK-001 + CJK-002 cross-rule fix integration" (fun tag ->
+      let src =
+        "First sentence ends here\xe3\x80\x81 Second one ends here\xe3\x80\x82 \
+         Third one ends here\xef\xbc\x8c Fourth ends here\xef\xbc\x8e Fifth \
+         ends here\xef\xbc\x9a Sixth ends here\xef\xbc\x9b Seventh ends \
+         here\xef\xbc\x81 Eighth ends here\xef\xbc\x9f end"
+      in
+      let c16 = fix_edits "CHAR-016" src in
+      let c1 = fix_edits "CJK-001" src in
+      let c2 = fix_edits "CJK-002" src in
+      let combined = apply_all src (c16 @ c1 @ c2) in
+      let expected =
+        "First sentence ends here, Second one ends here. Third one ends here, \
+         Fourth ends here. Fifth ends here: Sixth ends here; Seventh ends \
+         here! Eighth ends here? end"
+      in
+      expect
+        (List.length c16 = 6
+        && List.length c1 = 1
+        && List.length c2 = 1
+        && combined = expected)
+        (tag ^ ": 8 fullwidth chars normalised to ASCII via 3-rule fix-set"));
+
   finalise "typo-fix"

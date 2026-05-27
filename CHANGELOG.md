@@ -2,6 +2,84 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.63] — 2026-05-27
+
+**+1 fix producer: CHAR-016** (Double-width CJK punctuation in ASCII context)
+— fix-set with cross-rule delegation to CJK-001 / CJK-002.
+
+CHAR-016 already fired on 8 fullwidth CJK punctuation chars (count
+preserved).  v27.0.63 adds a fix-set covering 6 of them and delegates the
+other 2 to CJK-001 / CJK-002 (which shipped fix-producers in v27.0.61).
+Same delegation pattern shape as v27.0.60 TYPO-010 → SPC-016/021 and
+v27.0.56 SPC-035 / TYPO-051.
+
+CHAR-016 fix-set (3 bytes → 1 ASCII byte):
+- U+3001 `、` → `,`
+- U+3002 `。` → `.`
+- U+FF1A `：` → `:`
+- U+FF1B `；` → `;`
+- U+FF01 `！` → `!`
+- U+FF1F `？` → `?`
+
+Delegated (CHAR-016 fires, emits no fix at these offsets):
+- U+FF0C `，` — CJK-001 owns the fix
+- U+FF0E `．` — CJK-002 owns the fix
+
+Gates: outside math AND `is_ascii_context` (same shape as CJK-001/002).
+In genuinely-CJK runs the count still fires but no fix is emitted.
+
+### Cross-rule integration (CHAR-016 + CJK-001 + CJK-002)
+
+`test_typo_fix.ml` exercises an input with all 8 fullwidth chars, each
+in its own ASCII-majority window.  Contract:
+
+- CHAR-016 fires Warning (count 8) and emits 6 fixes (non-delegated).
+- CJK-001 fires Warning (count 1) and emits 1 fix (U+FF0C → `,`).
+- CJK-002 fires Warning (count 1) and emits 1 fix (U+FF0E → `.`).
+- Combined fix-set: 8 non-overlapping 3-byte → 1-byte replaces;
+  `apply_all` normalises every fullwidth char to its ASCII equivalent.
+
+### Tests
+
+- 6 new in `test_typo_fix.ml`:
+  - CHAR-016 fix on 6 non-delegated chars in ASCII context
+  - CHAR-016 delegation: U+FF0C / U+FF0E owned by CJK-001/002 (no edit
+    emitted by CHAR-016 at those offsets)
+  - CHAR-016 CJK-context: fires (count) but emits no fix
+  - CHAR-016 math-skip
+  - CHAR-016 does not fire on plain ASCII
+  - CHAR-016 + CJK-001 + CJK-002 cross-rule integration
+
+- **357/357 PASS** in `test_typo_fix.exe` (was 351 in v27.0.62; +6).
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.63.
+- README H1 + Status (91 → 92 producers).
+- docs/index.md H1 + Fix-producing-rules row (91 → 92).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 91/458 (~20%) → 92/458 (~20%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +CHAR-016.
+- `specs/rules/rule_contracts.{yaml,json}` CHAR-016
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.63 vs v27.0.62)
+
+- 660 catalogued rules (unchanged).
+- **92 fix-producing rules** (was 91; +1).
+- 92 produces_fix:false (unchanged).
+- 476 produces_fix:null / pending (was 477; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.62
+
+`run_differential_test.py --baseline-ref v27.0.62 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`;
+count semantic preserved on CHAR-016).
+
 ## [v27.0.62] — 2026-05-27
 
 **+2 fix producers: CJK-010 + CJK-014**.

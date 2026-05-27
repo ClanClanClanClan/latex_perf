@@ -2778,4 +2778,88 @@ let () =
         (does_not_fire "CJK-002" "End of sentence. New begins.")
         (tag ^ ": no U+FF0E → no fire"));
 
+  (* v27.0.62: CJK-010 (ASCII punct adjacent to CJK → fullwidth, INVERSE
+     direction) and CJK-014 (U+30FB outside CJK → ASCII `.`). CJK-010 reuses the
+     new `is_extended_context` helper; CJK-014 reuses `is_ascii_context` from
+     v27.0.61. Both preserve their pre-existing count semantic and only add a
+     fix-set gated by the context check + math exclusion. *)
+  run "CJK-010 fix: ASCII comma in CJK context → fullwidth comma" (fun tag ->
+      (* Strict-CJK-majority window around the `,` via repeated U+4E2D 中 (E4 B8
+         AD) and U+6587 文 (E6 96 87). *)
+      let src =
+        "\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87,\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87"
+      in
+      let edits = fix_edits "CJK-010" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits
+           = "\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87\xef\xbc\x8c\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87"
+        )
+        (tag ^ ": single fix, replaces , with U+FF0C"));
+
+  run "CJK-010 fix: ASCII-context ASCII comma → NO fix (count emitted)"
+    (fun tag ->
+      (* `,` adjacent to one CJK byte but in mostly-ASCII surroundings — count
+         fires (proximity heuristic) but fix is suppressed by
+         is_extended_context = false. *)
+      let src = "Hello \xe4\xb8\xad, world plain ASCII run continues" in
+      expect
+        (fires "CJK-010" src && fix_edits "CJK-010" src = [])
+        (tag ^ ": isolated proximity fires but no fix in ASCII-majority"));
+
+  run "CJK-010 fix: all four punct chars in strict-CJK context" (fun tag ->
+      let cjk = "\xe4\xb8\xad\xe6\x96\x87" in
+      (* Build runs of 4 CJK glyphs (12 bytes) before each ASCII punct + 4
+         after, so window is strict-CJK-majority. *)
+      let run4 c =
+        cjk ^ cjk ^ cjk ^ cjk ^ String.make 1 c ^ cjk ^ cjk ^ cjk ^ cjk
+      in
+      let src = run4 ',' ^ " " ^ run4 '.' ^ " " ^ run4 ':' ^ " " ^ run4 ';' in
+      let edits = fix_edits "CJK-010" src in
+      expect (List.length edits = 4) (tag ^ ": 4 punct chars each fixed"));
+
+  run "CJK-010 skip inside math" (fun tag ->
+      let src =
+        "$x\xe4\xb8\xad, y$ then \
+         \xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87,\xe4\xb8\xad\xe6\x96\x87\xe4\xb8\xad\xe6\x96\x87 \
+         done"
+      in
+      let edits = fix_edits "CJK-010" src in
+      expect
+        (List.length edits = 1)
+        (tag ^ ": math `,` preserved, text `,` fixed"));
+
+  run "CJK-010 does not fire on isolated ASCII punct" (fun tag ->
+      expect
+        (does_not_fire "CJK-010" "no CJK at all, just ASCII.")
+        (tag ^ ": no CJK adjacency → no fire"));
+
+  run "CJK-014 fix: ASCII-context U+30FB → ASCII period" (fun tag ->
+      let src = "alpha\xe3\x83\xbbbeta gamma delta" in
+      let edits = fix_edits "CJK-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha.beta gamma delta")
+        (tag ^ ": single fix, replaces U+30FB with ."));
+
+  run "CJK-014 fix: CJK-context U+30FB → NO fix (count emitted)" (fun tag ->
+      let src =
+        "\xe4\xb8\xad\xe6\x96\x87\xe3\x83\xbb\xe4\xb8\xad\xe6\x96\x87"
+      in
+      expect
+        (fires "CJK-014" src && fix_edits "CJK-014" src = [])
+        (tag ^ ": CJK context fires but no fix"));
+
+  run "CJK-014 fix: skip inside math" (fun tag ->
+      let src = "$x\xe3\x83\xbby$ then alpha\xe3\x83\xbbbeta done" in
+      let edits = fix_edits "CJK-014" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "$x\xe3\x83\xbby$ then alpha.beta done")
+        (tag ^ ": math U+30FB preserved, text U+30FB fixed"));
+
+  run "CJK-014 does not fire on ASCII period" (fun tag ->
+      expect
+        (does_not_fire "CJK-014" "Just ASCII periods. Multiple. Here.")
+        (tag ^ ": no U+30FB → no fire"));
+
   finalise "typo-fix"

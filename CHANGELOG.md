@@ -2,6 +2,96 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.62] — 2026-05-27
+
+**+2 fix producers: CJK-010 + CJK-014**.
+
+- **CJK-010** (Half-width CJK punctuation in full-width context) — for each
+  ASCII `,` `.` `:` or `;` adjacent to a CJK byte, replace with the
+  fullwidth Unicode equivalent (U+FF0C / U+FF0E / U+FF1A / U+FF1B, 1 byte →
+  3 bytes).  This is the **inverse direction** of CJK-001 / CJK-002 (which
+  fix fullwidth → ASCII in ASCII context).
+- **CJK-014** (Inter-punct U+30FB outside CJK run) — replace U+30FB
+  (`\xE3\x83\xBB`, 3 bytes) with ASCII `.` (1 byte) when outside math and
+  in ASCII context.
+
+Both rules already existed as diagnose-only checks; v27.0.62 preserves
+their count semantic and adds fix-sets gated by the new
+`is_extended_context` helper (CJK-010) and the existing `is_ascii_context`
+helper (CJK-014).  Math regions are excluded from the fix in both rules.
+
+### New helper
+
+`Validators_common.is_extended_context ?window ?candidate_bytes s off` —
+symmetric inverse of `is_ascii_context`.  Returns true iff the surrounding
+window contains strictly more extended bytes (≥ 0x80) than ASCII bytes
+(< 0x80).  Ties resolve to false.  Used by CJK-010 to gate the ASCII →
+fullwidth fix only in genuinely CJK-heavy runs (so an isolated ASCII
+punctuation with one neighbouring CJK byte stays put).
+
+### Cross-rule convergence (CJK-010 ⇄ CJK-001/002)
+
+CJK-010 and CJK-001 / CJK-002 are linguistically mutually exclusive — they
+fix in opposite directions in opposite contexts:
+
+- ASCII-context U+FF0C → `,` (CJK-001 fixes; CJK-010 does not since the
+  resulting `,` is in ASCII-majority).
+- CJK-context `,` → `，` (CJK-010 fixes; CJK-001 does not since the
+  resulting `，` is in CJK-majority).
+- Ambiguous (tie or no adjacent CJK / ASCII-majority): both diagnose; only
+  one fix-set lands (or neither).
+
+Convergent under repeated `--apply-fixes` passes.
+
+### CJK-014 replacement choice
+
+The rule spec field is `fix: replace_ascii`.  Strict reading: produce an
+ASCII byte (< 0x80).  Chosen: ASCII period `.`.  Alternative U+00B7 Latin
+middle dot is typographically closer but is a 2-byte UTF-8 sequence and
+would violate the strict-ASCII reading of the spec.  Future cycle could
+make this configurable.
+
+### Tests
+
+- 9 new in `test_typo_fix.ml` (CJK-010: strict-CJK comma fix, ASCII-context
+  no-fix-with-count, all-four-punct batch, math-skip, no-fire on isolated
+  ASCII; CJK-014: ASCII fix, CJK no-fix-with-count, math-skip,
+  no-fire-on-ASCII-period).
+- 55 new in `test_ascii_context.ml` (8 default-parameter cases for
+  `is_extended_context` + 47 symmetry checks asserting
+  `is_ascii_context ∧ is_extended_context` is never simultaneously true at
+  any byte offset across 5 representative inputs).
+- 75 / 75 PASS in `test_ascii_context.exe`; 351 / 351 PASS in
+  `test_typo_fix.exe`.
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.62.
+- README H1 + Status (89 → 91 producers).
+- docs/index.md H1 + Fix-producing-rules row (89 → 91).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 89/458 (~19%) → 91/458 (~20%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +CJK-010 +CJK-014.
+- `specs/rules/rule_contracts.{yaml,json}` CJK-010 / CJK-014
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.62 vs v27.0.61)
+
+- 660 catalogued rules (unchanged).
+- **91 fix-producing rules** (was 89; +2).
+- 92 produces_fix:false (unchanged).
+- 477 produces_fix:null / pending (was 479; -2).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.61
+
+`run_differential_test.py --baseline-ref v27.0.61 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`;
+count semantics preserved on both CJK-010 and CJK-014).
+
 ## [v27.0.61] — 2026-05-27
 
 **+2 fix producers: CJK-001 + CJK-002** (full-width comma U+FF0C →

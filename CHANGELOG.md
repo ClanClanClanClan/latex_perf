@@ -38,8 +38,9 @@ the fix-set shrinks.  The cross-rule integration test
   changed from the non-existent `corpora/regression/` to the real
   `corpora/lint/` (330 `.tex` files).  Every release cycle previously
   had to pass `--corpus corpora/lint` explicitly.
-- **`docs/expert/`** — 4 stale handoff files describing a long-resolved
-  build error on the deleted `fix-math-strip` branch moved to
+- **`docs/expert/` + `docs/coq-proof-handoff.md`** — 5 stale handoff
+  files describing a long-resolved build error on the deleted
+  `fix-math-strip` branch moved to
   `archive/expert-handoff/coq-fix-math-strip/` with a README explaining
   historical context.  The current proof tree builds clean with 1,400
   theorems / 0 admits / 0 axioms.

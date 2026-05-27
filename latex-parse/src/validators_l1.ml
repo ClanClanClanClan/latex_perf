@@ -1989,12 +1989,12 @@ let l1_rtl_004_rule : rule =
    or one of the 11 math environments). Same delete-3-bytes shape as v27.0.57
    CHAR-012, applied inside math rather than universally.
 
-   Switched from `extract_math_segments` to `find_math_ranges`: the latter
-   gives absolute byte offsets needed for fix emission, AND treats `$$..$$` as
-   one matched-pair display-math range (the single-toggle interpretation in
+   Switched from `extract_math_segments` to `find_math_ranges`: the latter gives
+   absolute byte offsets needed for fix emission, AND treats `$$..$$` as one
+   matched-pair display-math range (the single-toggle interpretation in
    `extract_math_segments` would have missed U+3000 in `$$..$$`). Since the
-   diagnostic was previously emitted on counts only, a count change in
-   `$$..$$` corpora reflects a correct semantics rather than a regression.
+   diagnostic was previously emitted on counts only, a count change in `$$..$$`
+   corpora reflects a correct semantics rather than a regression.
 
    Severity Warning preserved. *)
 let l1_cjk_008_rule : rule =

@@ -2,6 +2,75 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.61] — 2026-05-27
+
+**+2 fix producers: CJK-001 + CJK-002** (full-width comma U+FF0C →
+ASCII `,` / full-width period U+FF0E → ASCII `.`, in ASCII context).
+
+Both rules already existed as diagnose-only Warning-severity checks
+that count every U+FF0C / U+FF0E byte sequence in the source.  v27.0.61
+adds a fix-set gated by two filters:
+
+1. **Math gate** — offsets inside math segments (via
+   `find_math_ranges` / `is_in_math_range`) never receive a fix; CJK
+   punctuation inside math is rare but, if present, deliberate.
+2. **ASCII context gate** — new helper `is_ascii_context s off` in
+   `validators_common.ml` returns true iff the ±32-byte window around
+   the candidate (excluding its own 3 bytes) contains strictly more
+   ASCII (< 0x80) than extended (≥ 0x80) bytes.  In genuinely-CJK runs
+   the heuristic returns false, the count still fires, but no fix
+   edit is emitted.  Ties (ascii = extended) resolve to false — only a
+   strict majority triggers replacement.
+
+The replace edit is 3 bytes (`\xEF\xBC\x8C` for CJK-001, `\xEF\xBC\x8E`
+for CJK-002) → 1 byte (`,` or `.`).  Count semantic preserved from
+pre-v27.0.61 (every occurrence is tallied, regardless of math/context).
+
+### Cross-rule note (CHAR-016)
+
+CHAR-016 (`validators_l0.ml:1446`) also fires on U+FF0C and U+FF0E
+(among 6 other fullwidth CJK punctuation chars) as a diagnose-only
+Warning.  Because CHAR-016 emits no fix-set, there is no overlap at the
+edit layer — both diagnostics surface, only CJK-001 / CJK-002's fix
+lands at the offset.  Pattern shape mirrors v27.0.56 SPC-035 / TYPO-051
+(co-firing diagnostics, single producer at the conflicting offset).
+
+### New helper
+
+`Validators_common.is_ascii_context ?window ?candidate_bytes s off` —
+the first positive-context filter in the codebase (analogous to
+`is_in_math_range` for the negative-context filter shape).  Defaults
+`window=32, candidate_bytes=3`.  Future CJK / CHAR rules can reuse it
+when their fix is safe only in majority-ASCII surroundings.
+
+**89 fix-producing rules** (was 87; +2: CJK-001, CJK-002).
+
+Plus standard per-cycle cadence-doc bump:
+`V27_FIX_PRODUCER_CADENCE.md` Bucket A line 87/458 → 89/458 (~19%);
+`docs/index.md` Fix-producing-rules count 87 → 89.
+
+### Counts (v27.0.61 vs v27.0.60)
+
+- 660 catalogued rules (unchanged).
+- **89 fix-producing rules** (was 87; +2).
+- 92 produces_fix:false (unchanged).
+- 479 produces_fix:null / pending (was 481; -2).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged from v27.0.60).
+
+### Tests
+
+- 9 new tests in `test_typo_fix.ml` (CJK-001 ASCII-context fix;
+  CJK-context fires-no-fix; math-skip; multi-occurrence; ASCII-comma
+  no-fire — plus the CJK-002 four-test mirror).
+- 342/342 fix-producer tests PASS locally (was 333; +9).
+
+### Differential vs v27.0.60
+
+`run_differential_test.py --baseline-ref v27.0.60 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`;
+diagnose-only counts unchanged).
+
 ## [v27.0.60] — 2026-05-25
 
 **+2 fix producers: SPC-016 + SPC-021** (delete space before `;` / `:`).

@@ -3548,12 +3548,23 @@ let rules_verb : rule list =
 
 (* ── CJK rules: CJK character and punctuation checks ────────────────── *)
 
-(* CJK-001: Full-width comma U+FF0C in ASCII context *)
+(* CJK-001: Full-width comma U+FF0C in ASCII context.
+
+   v27.0.61: fix producer. Count semantic preserved (all U+FF0C occurrences in
+   the source are tallied). Replace edit (3 bytes → 1 byte ",") emitted only
+   when the offset is (a) outside math via `find_math_ranges`/`is_in_math_range`
+   and (b) surrounded by majority-ASCII bytes via `is_ascii_context`. The
+   ASCII-context heuristic suppresses the fix in genuinely-CJK runs of text
+   where U+FF0C is the intended typography. Cross-rule: CHAR-016 also fires on
+   U+FF0C with no fix-set, so the two emit independent diagnostics and only
+   CJK-001's fix lands at the offset (no overlap conflict). *)
 let r_cjk_001 : rule =
   let run s =
     (* U+FF0C = EF BC 8C *)
     let n = String.length s in
     let cnt = ref 0 in
+    let fix_edits = ref [] in
+    let math = lazy (find_math_ranges s) in
     let i = ref 0 in
     while !i < n - 2 do
       if
@@ -3562,23 +3573,40 @@ let r_cjk_001 : rule =
         && Char.code s.[!i + 2] = 0x8C
       then (
         incr cnt;
+        if
+          (not (is_in_math_range (Lazy.force math) !i)) && is_ascii_context s !i
+        then
+          fix_edits :=
+            Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) ","
+            :: !fix_edits;
         i := !i + 3)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CJK-001" ~severity:Warning
-           ~message:"Full‑width comma U+FF0C in ASCII context" ~count:!cnt)
+      let msg = "Full‑width comma U+FF0C in ASCII context" in
+      if !fix_edits = [] then
+        Some
+          (mk_result ~id:"CJK-001" ~severity:Warning ~message:msg ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CJK-001" ~severity:Warning ~message:msg
+             ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
 
-(* CJK-002: Full-width period U+FF0E in ASCII context *)
+(* CJK-002: Full-width period U+FF0E in ASCII context.
+
+   v27.0.61: fix producer. Same shape as CJK-001 — count tallies all U+FF0E
+   bytes; the replace edit (3 → 1 byte ".") only fires for offsets outside math
+   and surrounded by majority ASCII bytes. *)
 let r_cjk_002 : rule =
   let run s =
     (* U+FF0E = EF BC 8E *)
     let n = String.length s in
     let cnt = ref 0 in
+    let fix_edits = ref [] in
+    let math = lazy (find_math_ranges s) in
     let i = ref 0 in
     while !i < n - 2 do
       if
@@ -3587,13 +3615,24 @@ let r_cjk_002 : rule =
         && Char.code s.[!i + 2] = 0x8E
       then (
         incr cnt;
+        if
+          (not (is_in_math_range (Lazy.force math) !i)) && is_ascii_context s !i
+        then
+          fix_edits :=
+            Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) "."
+            :: !fix_edits;
         i := !i + 3)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CJK-002" ~severity:Warning
-           ~message:"Full‑width period U+FF0E in ASCII context" ~count:!cnt)
+      let msg = "Full‑width period U+FF0E in ASCII context" in
+      if !fix_edits = [] then
+        Some
+          (mk_result ~id:"CJK-002" ~severity:Warning ~message:msg ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CJK-002" ~severity:Warning ~message:msg
+             ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }

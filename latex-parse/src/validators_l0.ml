@@ -2155,15 +2155,47 @@ let r_spc_015 : rule =
   in
   { id = "SPC-015"; run; languages = [] }
 
-(* SPC-016: Space before semicolon *)
+(* SPC-016: Space before semicolon.
+
+   v27.0.60: fix producer. For each `" ;"` occurrence outside math, emit a
+   single-byte delete at the leading-space offset. Count semantic preserved from
+   pre-v27.0.60 (`count_substring (strip_math_segments s) " ;"`); the fix uses
+   `find_all_non_overlapping` + `find_math_ranges` filter, which produces the
+   same offset set as the strip-then-count semantic for the non-self-
+   overlapping ASCII needle ` ;`.
+
+   Cross-rule: TYPO-010 (space before `, . ; : ? !`) also fires on the same `;`
+   positions at Info severity. v27.0.60 filters TYPO-010's fix-set at `;`/`:`
+   positions, delegating to SPC-016/021 — same shape as v27.0.56
+   SPC-035/TYPO-051 leading-run filter. SPC-016 stays Warning, TYPO-010 stays
+   Info; both diagnostics emit, only one fix per offset (SPC-016's 1-byte delete
+   supersedes TYPO-010's 2-byte→1-byte replace).
+
+   Severity Warning preserved. *)
 let r_spc_016 : rule =
+  let needle = " ;" in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_substring s " ;" in
+    let cnt = count_substring (strip_math_segments s) needle in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-016" ~severity:Warning
-           ~message:"Space before semicolon" ~count:cnt)
+      let math = find_math_ranges s in
+      let fix_offsets =
+        List.filter
+          (fun off -> not (is_in_math_range math off))
+          (find_all_non_overlapping s needle)
+      in
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          fix_offsets
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-016" ~severity:Warning
+             ~message:"Space before semicolon" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-016" ~severity:Warning
+             ~message:"Space before semicolon" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-016"; run; languages = [] }
@@ -2253,15 +2285,40 @@ let r_spc_019 : rule =
   in
   { id = "SPC-019"; run; languages = [] }
 
-(* SPC-021: Space before colon *)
+(* SPC-021: Space before colon.
+
+   v27.0.60: fix producer. Same shape as SPC-016 (space-before-semicolon):
+   single-byte delete at leading-space offset, math-aware via
+   `find_math_ranges`, count semantic preserved from the prior `count_substring
+   (strip_math_segments s) " :"`.
+
+   Cross-rule with TYPO-010: TYPO-010 still counts `:` at Info severity but its
+   fix-set is filtered to skip `:` positions in v27.0.60, delegating to
+   SPC-021. *)
 let r_spc_021 : rule =
+  let needle = " :" in
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_substring s " :" in
+    let cnt = count_substring (strip_math_segments s) needle in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-021" ~severity:Warning ~message:"Space before colon"
-           ~count:cnt)
+      let math = find_math_ranges s in
+      let fix_offsets =
+        List.filter
+          (fun off -> not (is_in_math_range math off))
+          (find_all_non_overlapping s needle)
+      in
+      let fix =
+        List.map
+          (fun off -> Cst_edit.delete ~start_offset:off ~end_offset:(off + 1))
+          fix_offsets
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-021" ~severity:Warning
+             ~message:"Space before colon" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-021" ~severity:Warning
+             ~message:"Space before colon" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-021"; run; languages = [] }

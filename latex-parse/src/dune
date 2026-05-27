@@ -175,6 +175,11 @@
  (libraries latex_parse_lib))
 
 (test
+ (name test_ascii_context)
+ (modules test_ascii_context)
+ (libraries latex_parse_lib))
+
+(test
  (name test_tokenizer_props)
  (modules test_tokenizer_props)
  (libraries latex_parse_lib))

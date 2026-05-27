@@ -2,6 +2,78 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.64] — 2026-05-28
+
+**+1 fix producer: CJK-008** (Full-width space U+3000 inside math mode) —
+first L1_Expanded fix producer in the v27 cadence.
+
+CJK-008 already fired Warning on every U+3000 occurrence inside a math
+segment (count preserved).  v27.0.64 adds a fix that deletes each such
+U+3000 (3 bytes UTF-8 `E3 80 80` → 0 bytes).  Same single-needle delete
+shape as v27.0.57 CHAR-012 and v27.0.41 CHAR-014, restricted to math
+context via `find_math_ranges` / `is_in_math_range`.
+
+### Math gate switched from `extract_math_segments` to `find_math_ranges`
+
+The pre-v27.0.64 diagnose-only rule used `extract_math_segments` (which
+returns segment contents but loses absolute byte offsets); the fix
+producer needs offsets, so the rule was rewritten to walk `s` linearly
+and filter occurrences via `is_in_math_range`.
+
+This switch corrects a subtle semantics gap: `extract_math_segments`
+single-toggles on `$`, so `$$x\xe3\x80\x80y$$` was interpreted as two
+empty math segments around a literal `x\xe3\x80\x80y`, and the U+3000
+was treated as *outside* math.  `find_math_ranges` matches `$$..$$` as a
+display-math pair (v27.0.5 fix for the TYPO-004 `$$f''(x)=0$$`
+corruption), so U+3000 in `$$..$$` is now (correctly) flagged + fixed.
+
+In the differential against v27.0.63 across `corpora/lint` (330 .tex
+files): **0 diffs** — the corpus contains no `$$..$$` with embedded
+U+3000, so the semantic correction is silent on real-world input.
+
+### Tests
+
+- 5 new in `test_typo_fix.ml`:
+  - CJK-008 fix: single U+3000 in `$..$` deleted
+  - CJK-008 fix: 3× U+3000 in `$..$` all deleted (count test)
+  - CJK-008 fix: U+3000 outside math NOT touched
+  - CJK-008 fix: U+3000 in `\[..\]` display math deleted
+  - CJK-008 fix: U+3000 in `\begin{equation}..\end{equation}` deleted
+
+- **362/362 PASS** in `test_typo_fix.exe` (was 357 in v27.0.63; +5).
+
+The diagnose-only tests in `test_validators_stragglers.ml` continue to
+pass unchanged (U+3000 in inline math, display math, env, count=2, etc.).
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.64.
+- README H1 + Status (92 → 93 producers).
+- docs/index.md H1 + Fix-producing-rules row (92 → 93).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 92/458 (~20%) → 93/458 (~20%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +CJK-008.
+- `specs/rules/rule_contracts.{yaml,json}` CJK-008
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.64 vs v27.0.63)
+
+- 660 catalogued rules (unchanged).
+- **93 fix-producing rules** (was 92; +1).
+- 92 produces_fix:false (unchanged).
+- 475 produces_fix:null / pending (was 476; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.63
+
+`run_differential_test.py --baseline-ref v27.0.63 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`;
+count semantic preserved on CJK-008 except for the `$$..$$` correction
+which has no corpus instances).
+
 ## [v27.0.63] — 2026-05-27
 
 **+1 fix producer: CHAR-016** (Double-width CJK punctuation in ASCII context)

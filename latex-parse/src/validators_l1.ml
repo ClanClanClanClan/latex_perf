@@ -1982,19 +1982,45 @@ let l1_rtl_004_rule : rule =
   in
   { id = "RTL-004"; run; languages = [ "ar"; "he" ] }
 
-(* CJK-008: Full-width space U+3000 inside math mode *)
+(* CJK-008: Full-width space U+3000 inside math mode.
+
+   v27.0.64: fix producer that deletes each U+3000 (3 bytes UTF-8 `E3 80 80`)
+   whose offset falls inside a math range (`$..$`, `$$..$$`, `\(..\)`, `\[..\]`,
+   or one of the 11 math environments). Same delete-3-bytes shape as v27.0.57
+   CHAR-012, applied inside math rather than universally.
+
+   Switched from `extract_math_segments` to `find_math_ranges`: the latter
+   gives absolute byte offsets needed for fix emission, AND treats `$$..$$` as
+   one matched-pair display-math range (the single-toggle interpretation in
+   `extract_math_segments` would have missed U+3000 in `$$..$$`). Since the
+   diagnostic was previously emitted on counts only, a count change in
+   `$$..$$` corpora reflects a correct semantics rather than a regression.
+
+   Severity Warning preserved. *)
 let l1_cjk_008_rule : rule =
-  let fullwidth_space = "\xe3\x80\x80" in
   let run s =
-    let math_segs = extract_math_segments s in
-    let cnt = ref 0 in
-    List.iter
-      (fun seg -> cnt := !cnt + count_substring seg fullwidth_space)
-      math_segs;
-    if !cnt > 0 then
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE3
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x80
+        && is_in_math_range ranges !i
+      then (
+        edits := Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 3) :: !edits;
+        i := !i + 3)
+      else incr i
+    done;
+    let edits = List.rev !edits in
+    let cnt = List.length edits in
+    if cnt > 0 then
       Some
-        (mk_result ~id:"CJK-008" ~severity:Warning
-           ~message:"Full‑width space U+3000 inside math mode" ~count:!cnt)
+        (mk_result_with_fix ~id:"CJK-008" ~severity:Warning
+           ~message:"Full‑width space U+3000 inside math mode" ~count:cnt
+           ~fix:edits)
     else None
   in
   { id = "CJK-008"; run; languages = [ "zh"; "ja"; "ko" ] }

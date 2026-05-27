@@ -383,6 +383,33 @@ let find_math_ranges (s : string) : (int * int) list =
 let is_in_math_range (ranges : (int * int) list) (off : int) : bool =
   List.exists (fun (a, b) -> a <= off && off < b) ranges
 
+(** [is_ascii_context ?window ?candidate_bytes s off] — heuristic that returns
+    [true] iff the byte window of size [window] (default 32) on each side of the
+    candidate UTF-8 sequence at [off] (of length [candidate_bytes], default 3)
+    is majority ASCII (bytes < 0x80). The candidate's own bytes are excluded
+    from the tally so the multibyte sequence under inspection cannot dominate
+    its own context decision.
+
+    Used by CJK rules (CJK-001 fullwidth comma, CJK-002 fullwidth period) to
+    gate fixes that swap CJK punctuation for ASCII equivalents. The rule still
+    diagnoses every occurrence; the fix is suppressed when surrounding text is
+    majority non-ASCII (i.e. the document genuinely uses CJK punctuation and the
+    U+FF0x form is intentional). Ties (ascii = extended) resolve to [false] —
+    only a strict ASCII majority triggers a fix. *)
+let is_ascii_context ?(window = 32) ?(candidate_bytes = 3) (s : string)
+    (off : int) : bool =
+  let n = String.length s in
+  let lo = max 0 (off - window) in
+  let hi = min (n - 1) (off + candidate_bytes - 1 + window) in
+  let ascii = ref 0 in
+  let extended = ref 0 in
+  for j = lo to hi do
+    if j < off || j >= off + candidate_bytes then
+      if Char.code (String.unsafe_get s j) < 0x80 then incr ascii
+      else incr extended
+  done;
+  !ascii > !extended
+
 (* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
 let command_tokens (s : string) : (string * int) list =
   let module T = Tokenizer_lite in

@@ -1442,26 +1442,72 @@ let r_char_022 : rule =
   in
   { id = "CHAR-022"; run; languages = [] }
 
-(* CHAR-016: Double-width CJK punctuation in ASCII context *)
+(* CHAR-016: Double-width CJK punctuation in ASCII context.
+
+   v27.0.63: fix producer with cross-rule delegation. CHAR-016 fires on all 8
+   fullwidth CJK punctuation chars (count semantic preserved); the fix-set
+   covers 6 of them and DELEGATES the other 2 (U+FF0C, U+FF0E) to CJK-001 /
+   CJK-002 respectively to avoid overlapping edits. Same delegation shape as
+   v27.0.60 TYPO-010 → SPC-016/021 and v27.0.56 SPC-035 / TYPO-051.
+
+   Fix-set (3 bytes → 1 ASCII byte): - U+3001 `、` → `,` - U+3002 `。` → `.` -
+   U+FF1A `：` → `:` - U+FF1B `；` → `;` - U+FF01 `！` → `!` - U+FF1F `？` → `?` -
+   U+FF0C `，` — owned by CJK-001 (no edit emitted here) - U+FF0E `．` — owned by
+   CJK-002 (no edit emitted here)
+
+   Gates: outside math AND `is_ascii_context` (same shape as CJK-001/002). In
+   genuinely-CJK runs the count still fires but no fix is emitted. *)
 let r_char_016 : rule =
+  let chars =
+    [
+      ("\xe3\x80\x81", ",", false);
+      ("\xe3\x80\x82", ".", false);
+      ("\xef\xbc\x8c", ",", true);
+      (* delegated to CJK-001 *)
+      ("\xef\xbc\x8e", ".", true);
+      (* delegated to CJK-002 *)
+      ("\xef\xbc\x9a", ":", false);
+      ("\xef\xbc\x9b", ";", false);
+      ("\xef\xbc\x81", "!", false);
+      ("\xef\xbc\x9f", "?", false);
+    ]
+  in
   let run s =
-    (* CJK fullwidth punctuation: U+3001 (E3 80 81), U+3002 (E3 80 82), U+FF0C
-       (EF BC 8C), U+FF0E (EF BC 8E), U+FF1A (EF BC 9A), U+FF1B (EF BC 9B),
-       U+FF01 (EF BC 81), U+FF1F (EF BC 9F) *)
-    let cnt =
-      count_substring s "\xe3\x80\x81"
-      + count_substring s "\xe3\x80\x82"
-      + count_substring s "\xef\xbc\x8c"
-      + count_substring s "\xef\xbc\x8e"
-      + count_substring s "\xef\xbc\x9a"
-      + count_substring s "\xef\xbc\x9b"
-      + count_substring s "\xef\xbc\x81"
-      + count_substring s "\xef\xbc\x9f"
-    in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-016" ~severity:Warning
-           ~message:"Double‑width CJK punctuation in ASCII context" ~count:cnt)
+    let cnt = ref 0 in
+    let fix_edits = ref [] in
+    let math = lazy (find_math_ranges s) in
+    List.iter
+      (fun (needle, ascii, delegated) ->
+        let occurrences = find_all_non_overlapping s needle in
+        cnt := !cnt + List.length occurrences;
+        if not delegated then
+          List.iter
+            (fun off ->
+              if
+                (not (is_in_math_range (Lazy.force math) off))
+                && is_ascii_context s off
+              then
+                fix_edits :=
+                  Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) ascii
+                  :: !fix_edits)
+            occurrences)
+      chars;
+    if !cnt > 0 then
+      let msg = "Double‑width CJK punctuation in ASCII context" in
+      if !fix_edits = [] then
+        Some
+          (mk_result ~id:"CHAR-016" ~severity:Warning ~message:msg ~count:!cnt)
+      else
+        (* Sort edits by start offset before emission for predictable apply
+           order (fix_edits accumulated in arbitrary per-needle order). *)
+        let sorted =
+          List.sort
+            (fun (a : Cst_edit.t) b -> compare a.start_offset b.start_offset)
+            !fix_edits
+        in
+        Some
+          (mk_result_with_fix ~id:"CHAR-016" ~severity:Warning ~message:msg
+             ~count:!cnt ~fix:sorted)
     else None
   in
   { id = "CHAR-016"; run; languages = [] }

@@ -1217,32 +1217,49 @@ let l1_math_052_rule : rule =
   in
   { id = "MATH-052"; run; languages = [] }
 
-(* MATH-053: Space after \left( — spurious space *)
+(* MATH-053: Space after \left( — spurious space inside math.
+
+   v27.0.66: math-aware fix producer that deletes the single space byte after
+   each `\left(` occurrence inside math. Single-needle match for `\left( ` (7
+   bytes: `\left(` + space) inside `find_math_ranges`; the fix emits a 1-byte
+   delete at offset+6 (the space position). Same shape family as MATH-082 /
+   MATH-106 / MATH-108 / MATH-015 / MATH-078 / MATH-010 / MATH-097 —
+   math-mode-only positive filter via `find_math_ranges` + `is_in_math_range`.
+
+   First MATH-family fix producer since v27.0.51 (14 cycles ago). Severity Info
+   preserved. *)
 let l1_math_053_rule : rule =
+  let needle = "\\left( " in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    let space_off = String.length needle - 1 in
+    List.map
+      (fun off ->
+        Cst_edit.delete ~start_offset:(off + space_off)
+          ~end_offset:(off + space_off + 1))
+      offsets
+  in
   let run s =
-    let math_segs = extract_math_segments s in
-    let cnt = ref 0 in
-    List.iter
-      (fun seg ->
-        let n = String.length seg in
-        let i = ref 0 in
-        while !i < n do
-          let prefix = "\\left(" in
-          let plen = String.length prefix in
-          if
-            !i + plen < n
-            && String.sub seg !i plen = prefix
-            && seg.[!i + plen] = ' '
-          then (
-            incr cnt;
-            i := !i + plen)
-          else incr i
-        done)
-      math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-053" ~severity:Info
-           ~message:{|Space after \left( at line start|} ~count:!cnt)
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-053" ~severity:Info
+             ~message:{|Space after \left( at line start|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-053" ~severity:Info
+             ~message:{|Space after \left( at line start|} ~count:cnt ~fix)
     else None
   in
   { id = "MATH-053"; run; languages = [] }

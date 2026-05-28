@@ -3013,4 +3013,39 @@ let () =
         && apply_all src edits = "\\begin{equation}xy\\end{equation}")
         (tag ^ ": single U+3001 inside equation env deleted"));
 
+  (* v27.0.66: MATH-053 (Space after \left( in math → delete the space). First
+     MATH-family fix producer since v27.0.51 (14 cycles ago). *)
+  run "MATH-053 fix: single space after \\left( in $..$ deleted" (fun tag ->
+      let src = "$\\left( x+y\\right)$" in
+      let edits = fix_edits "MATH-053" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$\\left(x+y\\right)$")
+        (tag ^ ": single space after \\left( deleted"));
+
+  run "MATH-053 fix: two \\left( spaces deleted" (fun tag ->
+      let src = "$\\left( a + \\left( b+c\\right)\\right)$" in
+      let edits = fix_edits "MATH-053" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$\\left(a + \\left(b+c\\right)\\right)$")
+        (tag ^ ": two \\left(-spaces deleted"));
+
+  run "MATH-053 fix: \\left( without space NOT touched" (fun tag ->
+      expect
+        (does_not_fire "MATH-053" "$\\left(x+y\\right)$")
+        (tag ^ ": no trailing space, no fire"));
+
+  run "MATH-053 fix: \\left( with space OUTSIDE math NOT touched" (fun tag ->
+      expect
+        (does_not_fire "MATH-053" "in prose: \\left( foo\\right)")
+        (tag ^ ": outside math, no fire"));
+
+  run "MATH-053 fix: \\left( with space in \\[..\\] deleted" (fun tag ->
+      let src = "\\[\\left( x+y\\right)\\]" in
+      let edits = fix_edits "MATH-053" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\\[\\left(x+y\\right)\\]")
+        (tag ^ ": single space after \\left( inside \\[..\\] deleted"));
+
   finalise "typo-fix"

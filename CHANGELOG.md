@@ -2,6 +2,61 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.66] — 2026-05-28
+
+**+1 fix producer: MATH-053** (Space after `\left(` in math → delete the
+spurious space).  First MATH-family fix producer since v27.0.51
+(14 cycles ago); rebalances the family-pick alternation.
+
+MATH-053 already fired Info on every `\left( ` occurrence inside math
+(count preserved).  v27.0.66 adds a fix that deletes the single space
+byte at offset+6 of each match.  Same shape family as MATH-082 /
+MATH-106 / MATH-108 / MATH-015 / MATH-078 / MATH-010 / MATH-097 —
+math-mode-only positive filter via `find_math_ranges` +
+`is_in_math_range`, single-needle match via
+`Validators_l0_typo.find_all_non_overlapping`.
+
+### Tests
+
+- 5 new in `test_typo_fix.ml`:
+  - MATH-053 fix: single space after `\left(` in `$..$` deleted
+  - MATH-053 fix: two `\left(`-spaces in nested `\left(`s deleted
+  - MATH-053 fix: `\left(` without space NOT touched
+  - MATH-053 fix: `\left( ` outside math NOT touched
+  - MATH-053 fix: `\left( ` in `\[..\]` deleted
+
+- **372/372 PASS** in `test_typo_fix.exe` (was 367 in v27.0.65; +5).
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.66.
+- README H1 + Status (94 → 95 producers).
+- docs/index.md H1 + Fix-producing-rules row (94 → 95).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 94/458 (~21%) → 95/458 (~21%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +MATH-053.
+- `specs/rules/rule_contracts.{yaml,json}` MATH-053
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.66 vs v27.0.65)
+
+- 660 catalogued rules (unchanged).
+- **95 fix-producing rules** (was 94; +1).
+- 92 produces_fix:false (unchanged).
+- 473 produces_fix:null / pending (was 474; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.65
+
+`run_differential_test.py --baseline-ref v27.0.65 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (count semantic preserved —
+`find_math_ranges` was already used here implicitly via the rewritten
+match-loop, so the prior count semantics carry through; `$$..$$` now
+counts correctly but no corpus files have `\left( ` inside `$$..$$`).
+
 ## [v27.0.65] — 2026-05-28
 
 **+1 fix producer: CJK-015** (Chinese comma U+3001 / ideographic comma

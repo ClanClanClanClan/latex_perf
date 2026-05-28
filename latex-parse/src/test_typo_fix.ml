@@ -2941,4 +2941,40 @@ let () =
         && combined = expected)
         (tag ^ ": 8 fullwidth chars normalised to ASCII via 3-rule fix-set"));
 
+  (* v27.0.64: CJK-008 (Full-width space U+3000 inside math mode → delete).
+     First L1 fix producer; math gate via `find_math_ranges`. *)
+  run "CJK-008 fix: single U+3000 in inline math deleted" (fun tag ->
+      let src = "$x\xe3\x80\x80y$" in
+      let edits = fix_edits "CJK-008" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$xy$")
+        (tag ^ ": single U+3000 inside $..$ deleted"));
+
+  run "CJK-008 fix: multiple U+3000 in inline math all deleted" (fun tag ->
+      let src = "$a\xe3\x80\x80b\xe3\x80\x80c\xe3\x80\x80d$" in
+      let edits = fix_edits "CJK-008" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "$abcd$")
+        (tag ^ ": all three U+3000 inside $..$ deleted"));
+
+  run "CJK-008 fix: U+3000 outside math NOT touched" (fun tag ->
+      expect
+        (does_not_fire "CJK-008" "hello\xe3\x80\x80world")
+        (tag ^ ": U+3000 in prose does not fire"));
+
+  run "CJK-008 fix: U+3000 in \\[..\\] display math deleted" (fun tag ->
+      let src = "\\[x\xe3\x80\x80y\\]" in
+      let edits = fix_edits "CJK-008" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\\[xy\\]")
+        (tag ^ ": single U+3000 inside \\[..\\] deleted"));
+
+  run "CJK-008 fix: U+3000 in equation env deleted" (fun tag ->
+      let src = "\\begin{equation}x\xe3\x80\x80y\\end{equation}" in
+      let edits = fix_edits "CJK-008" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\\begin{equation}xy\\end{equation}")
+        (tag ^ ": single U+3000 inside equation env deleted"));
+
   finalise "typo-fix"

@@ -2977,4 +2977,40 @@ let () =
         && apply_all src edits = "\\begin{equation}xy\\end{equation}")
         (tag ^ ": single U+3000 inside equation env deleted"));
 
+  (* v27.0.65: CJK-015 (Chinese comma U+3001 inside math mode → delete).
+     Mechanical sibling of v27.0.64 CJK-008. *)
+  run "CJK-015 fix: single U+3001 in inline math deleted" (fun tag ->
+      let src = "$x\xe3\x80\x81y$" in
+      let edits = fix_edits "CJK-015" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$xy$")
+        (tag ^ ": single U+3001 inside $..$ deleted"));
+
+  run "CJK-015 fix: multiple U+3001 in inline math all deleted" (fun tag ->
+      let src = "$a\xe3\x80\x81b\xe3\x80\x81c$" in
+      let edits = fix_edits "CJK-015" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$abc$")
+        (tag ^ ": two U+3001 inside $..$ deleted"));
+
+  run "CJK-015 fix: U+3001 outside math NOT touched by CJK-015" (fun tag ->
+      expect
+        (does_not_fire "CJK-015" "prose\xe3\x80\x81 more prose")
+        (tag ^ ": U+3001 outside math does not fire CJK-015"));
+
+  run "CJK-015 fix: U+3001 in \\[..\\] display math deleted" (fun tag ->
+      let src = "\\[x\xe3\x80\x81y\\]" in
+      let edits = fix_edits "CJK-015" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\\[xy\\]")
+        (tag ^ ": single U+3001 inside \\[..\\] deleted"));
+
+  run "CJK-015 fix: U+3001 in equation env deleted" (fun tag ->
+      let src = "\\begin{equation}x\xe3\x80\x81y\\end{equation}" in
+      let edits = fix_edits "CJK-015" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "\\begin{equation}xy\\end{equation}")
+        (tag ^ ": single U+3001 inside equation env deleted"));
+
   finalise "typo-fix"

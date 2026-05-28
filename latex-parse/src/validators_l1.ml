@@ -2025,19 +2025,43 @@ let l1_cjk_008_rule : rule =
   in
   { id = "CJK-008"; run; languages = [ "zh"; "ja"; "ko" ] }
 
-(* CJK-015: Chinese comma U+3001 (ideographic comma) inside math mode *)
+(* CJK-015: Chinese comma U+3001 (ideographic comma) inside math mode.
+
+   v27.0.65: fix producer that deletes each U+3001 (3 bytes UTF-8 `E3 80 81`)
+   whose offset falls inside a math range. Mechanical sibling of v27.0.64
+   CJK-008 — same rewrite (`extract_math_segments` → `find_math_ranges` for
+   absolute byte offsets), same delete-3-bytes shape, same `$$..$$` matched-pair
+   semantic correction.
+
+   No overlap with CHAR-016 (v27.0.63) which also fixes U+3001: CHAR-016's gate
+   is outside-math AND `is_ascii_context`, so the math interior is exclusively
+   CJK-015's territory; the gates are mutually exclusive.
+
+   Severity Warning preserved. *)
 let l1_cjk_015_rule : rule =
-  let ideographic_comma = "\xe3\x80\x81" in
   let run s =
-    let math_segs = extract_math_segments s in
-    let cnt = ref 0 in
-    List.iter
-      (fun seg -> cnt := !cnt + count_substring seg ideographic_comma)
-      math_segs;
-    if !cnt > 0 then
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if
+        Char.code s.[!i] = 0xE3
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x81
+        && is_in_math_range ranges !i
+      then (
+        edits := Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 3) :: !edits;
+        i := !i + 3)
+      else incr i
+    done;
+    let edits = List.rev !edits in
+    let cnt = List.length edits in
+    if cnt > 0 then
       Some
-        (mk_result ~id:"CJK-015" ~severity:Warning
-           ~message:"Chinese comma U+3001 inside math mode" ~count:!cnt)
+        (mk_result_with_fix ~id:"CJK-015" ~severity:Warning
+           ~message:"Chinese comma U+3001 inside math mode" ~count:cnt
+           ~fix:edits)
     else None
   in
   { id = "CJK-015"; run; languages = [ "zh"; "ja"; "ko" ] }

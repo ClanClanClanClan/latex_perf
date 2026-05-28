@@ -2,6 +2,67 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.65] — 2026-05-28
+
+**+1 fix producer: CJK-015** (Chinese comma U+3001 / ideographic comma
+inside math mode) — mechanical sibling of v27.0.64 CJK-008.
+
+CJK-015 already fired Warning on every U+3001 occurrence inside a math
+segment (count preserved).  v27.0.65 adds a fix that deletes each such
+U+3001 (3 bytes UTF-8 `E3 80 81` → 0 bytes).  Same rewrite pattern as
+v27.0.64 CJK-008: switched from `extract_math_segments` (segment
+contents only) to `find_math_ranges` (absolute byte offsets for fix
+emission, plus matched-pair `$$..$$` semantics).
+
+### No conflict with CHAR-016 (v27.0.63)
+
+CHAR-016 also fixes U+3001 (`、 → ,`) but only OUTSIDE math AND in
+`is_ascii_context`.  CJK-015 only INSIDE math.  Mutually exclusive
+gates; no fix-set overlap, no delegation needed.
+
+### Tests
+
+- 5 new in `test_typo_fix.ml`:
+  - CJK-015 fix: single U+3001 in `$..$` deleted
+  - CJK-015 fix: 2× U+3001 in `$..$` all deleted (count test)
+  - CJK-015 fix: U+3001 outside math NOT touched by CJK-015
+  - CJK-015 fix: U+3001 in `\[..\]` display math deleted
+  - CJK-015 fix: U+3001 in `\begin{equation}..\end{equation}` deleted
+
+- **367/367 PASS** in `test_typo_fix.exe` (was 362 in v27.0.64; +5).
+
+The diagnose-only tests in `test_validators_stragglers.ml` continue to
+pass unchanged.
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.65.
+- README H1 + Status (93 → 94 producers).
+- docs/index.md H1 + Fix-producing-rules row (93 → 94).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 93/458 (~20%) → 94/458 (~21%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +CJK-015.
+- `specs/rules/rule_contracts.{yaml,json}` CJK-015
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.65 vs v27.0.64)
+
+- 660 catalogued rules (unchanged).
+- **94 fix-producing rules** (was 93; +1).
+- 92 produces_fix:false (unchanged).
+- 474 produces_fix:null / pending (was 475; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.64
+
+`run_differential_test.py --baseline-ref v27.0.64 --current-ref HEAD`:
+**0 diffs across 330 corpus files** (fix gated behind `--apply-fixes`;
+count semantic preserved on CJK-015 except for the `$$..$$` correction
+which has no corpus instances — same as v27.0.64).
+
 ## [v27.0.64] — 2026-05-28
 
 **+1 fix producer: CJK-008** (Full-width space U+3000 inside math mode) —

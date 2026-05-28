@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.0.66
+# LaTeX Perfectionist v27.0.67
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -227,7 +227,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.0.66 released. 644 validators implemented, **95 fix-producing rules**, 1,400 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
+**Status**: v27.0.67 released. 644 validators implemented, **96 fix-producing rules**, 1,400 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

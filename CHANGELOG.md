@@ -2,6 +2,75 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.67] — 2026-05-28
+
+**+1 fix producer: MATH-014** (Inline `\frac` in running text → replace
+with `\tfrac` inside inline math).
+
+MATH-014 already fired Info on every bare `\frac` inside inline math
+(`$..$` or `\(..\)`) — count semantic preserved.  v27.0.67 adds a fix
+that replaces each `\frac{` (6 bytes) with `\tfrac{` (7 bytes), gated
+to inline math contexts only.
+
+### New helper: `Validators_common.range_is_inline_math`
+
+`find_math_ranges` returns all math ranges (inline + display).  MATH-014
+needs an inline-only filter, so v27.0.67 introduces
+`range_is_inline_math s (a, _b)` — true iff the range at offset `a` is
+inline (`$..$` with single dollars, or `\(..\)`).  Composes with
+`find_math_ranges` and `is_in_math_range`.  Reusable for any future
+rule that needs an inline-only fix gate.
+
+Detection: inline starts either with `$` followed by non-`$`, or with
+`\(`.  Display ranges start with `$$`, `\[`, or `\begin{...}` so are
+correctly excluded.
+
+### No false matches on \tfrac / \dfrac
+
+The needle `\frac{` does NOT substring-match `\tfrac{` or `\dfrac{`:
+both have different bytes at position 1 (`t` and `d` respectively, vs
+`f` for `\frac`).  Pre-existing `\tfrac` / `\dfrac` calls are correctly
+not affected; the old subtraction `total - tfrac - dfrac` in the
+diagnose-only rule is no longer needed.
+
+### Tests
+
+- 5 new in `test_typo_fix.ml`:
+  - MATH-014 fix: single `\frac` in `$..$` → `\tfrac`
+  - MATH-014 fix: two `\frac` in same `$..$` both replaced
+  - MATH-014 fix: pre-existing `\tfrac` / `\dfrac` NOT touched
+  - MATH-014 fix: `\frac` in display `\[..\]` NOT touched
+  - MATH-014 fix: `\frac` in `\(..\)` inline math replaced
+
+- **377/377 PASS** in `test_typo_fix.exe` (was 372 in v27.0.66; +5).
+
+### Per-cycle bumps
+
+- `dune-project` / `opam` / `governance/project_facts.yaml` /
+  `generated/project_facts.json` → v27.0.67.
+- README H1 + Status (95 → 96 producers).
+- docs/index.md H1 + Fix-producing-rules row (95 → 96).
+- `V27_FIX_PRODUCER_CADENCE.md` Bucket A: 95/458 (~21%) → 96/458 (~21%).
+- `scripts/tools/generate_fix_producer_ledger.py` SHIPPED_VERSIONS:
+  +MATH-014.
+- `specs/rules/rule_contracts.{yaml,json}` MATH-014
+  `produces_fix: null → true`.
+- `specs/v27/FIX_PRODUCER_LEDGER.md` regenerated.
+
+### Counts (v27.0.67 vs v27.0.66)
+
+- 660 catalogued rules (unchanged).
+- **96 fix-producing rules** (was 95; +1).
+- 92 produces_fix:false (unchanged).
+- 472 produces_fix:null / pending (was 473; -1).
+- 1,400 theorems / 170 .v files (unchanged).
+- 18 pre-release gates + 3 build/test steps (unchanged).
+
+### Differential vs v27.0.66
+
+`run_differential_test.py --baseline-ref v27.0.66 --current-ref HEAD`:
+**0 diffs across 330 corpus files**.
+
 ## [v27.0.66] — 2026-05-28
 
 **+1 fix producer: MATH-053** (Space after `\left(` in math → delete the

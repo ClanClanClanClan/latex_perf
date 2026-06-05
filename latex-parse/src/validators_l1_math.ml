@@ -279,25 +279,51 @@ let l1_math_013_rule : rule =
   in
   { id = "MATH-013"; run; languages = [] }
 
-(* MATH-014: Inline \frac in running text — \frac inside $...$ or \(...\) can be
-   hard to read *)
+(* MATH-014: Inline \frac in running text — \frac inside $..$ or \(..\) is hard
+   to read; prefer the text-style \tfrac.
+
+   v27.0.67: inline-math-only fix producer that replaces each `\frac{` (6 bytes)
+   inside an inline math range with `\tfrac{` (7 bytes). Inline-math gating via
+   new helper `Validators_common.range_is_inline_math` (composes with
+   `find_math_ranges` to filter out display math ranges). Single-needle match
+   via `Validators_l0_typo.find_all_non_overlapping`; the needle `\frac{` does
+   NOT substring-match `\tfrac{` or `\dfrac{` (different bytes at position 1),
+   so existing `\tfrac` / `\dfrac` calls are correctly not affected.
+
+   Same shape family as MATH-015 (v27.0.48 — `\stackrel{` → `\overset{` inside
+   math) but inline-only filtered. Severity Info preserved. *)
 let l1_math_014_rule : rule =
+  let needle = "\\frac{" in
+  let replacement = "\\tfrac{" in
+  let inline_offsets s =
+    let ranges = find_math_ranges s in
+    let inline_ranges = List.filter (range_is_inline_math s) ranges in
+    let inside off =
+      List.exists (fun (a, b) -> a <= off && off < b) inline_ranges
+    in
+    List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          replacement)
+      (inline_offsets s)
+  in
   let run s =
-    let inline_segs = extract_inline_math_segments s in
-    let cnt = ref 0 in
-    List.iter
-      (fun seg ->
-        (* Count \frac occurrences, exclude \tfrac and \dfrac *)
-        let total_frac = count_substring seg "\\frac{" in
-        let tfrac = count_substring seg "\\tfrac{" in
-        let dfrac = count_substring seg "\\dfrac{" in
-        let bare_frac = total_frac - tfrac - dfrac in
-        if bare_frac > 0 then cnt := !cnt + bare_frac)
-      inline_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-014" ~severity:Info
-           ~message:{|Inline \frac in running text|} ~count:!cnt)
+    let offsets = inline_offsets s in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-014" ~severity:Info
+             ~message:{|Inline \frac in running text|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-014" ~severity:Info
+             ~message:{|Inline \frac in running text|} ~count:cnt ~fix)
     else None
   in
   { id = "MATH-014"; run; languages = [] }

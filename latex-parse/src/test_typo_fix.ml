@@ -3048,4 +3048,38 @@ let () =
         && apply_all src edits = "\\[\\left(x+y\\right)\\]")
         (tag ^ ": single space after \\left( inside \\[..\\] deleted"));
 
+  (* v27.0.67: MATH-014 (Inline \frac → \tfrac inside inline math). Uses new
+     helper `range_is_inline_math` to gate fix to $..$ / \(..\). *)
+  run "MATH-014 fix: single \\frac in $..$ → \\tfrac" (fun tag ->
+      let src = "$\\frac{a}{b}$" in
+      let edits = fix_edits "MATH-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$\\tfrac{a}{b}$")
+        (tag ^ ": single \\frac inside $..$ replaced with \\tfrac"));
+
+  run "MATH-014 fix: two \\frac in $..$ both replaced" (fun tag ->
+      let src = "$\\frac{1}{2} + \\frac{3}{4}$" in
+      let edits = fix_edits "MATH-014" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$\\tfrac{1}{2} + \\tfrac{3}{4}$")
+        (tag ^ ": both \\frac replaced"));
+
+  run "MATH-014 fix: \\tfrac and \\dfrac NOT touched" (fun tag ->
+      expect
+        (does_not_fire "MATH-014" "$\\tfrac{a}{b} + \\dfrac{c}{d}$")
+        (tag ^ ": pre-existing \\tfrac/\\dfrac not substring-matched"));
+
+  run "MATH-014 fix: \\frac in display \\[..\\] NOT touched" (fun tag ->
+      expect
+        (does_not_fire "MATH-014" "\\[\\frac{a}{b}\\]")
+        (tag ^ ": display math \\frac left alone (inline-only filter)"));
+
+  run "MATH-014 fix: \\frac in \\(..\\) inline math replaced" (fun tag ->
+      let src = "\\(\\frac{x}{y}\\)" in
+      let edits = fix_edits "MATH-014" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\\(\\tfrac{x}{y}\\)")
+        (tag ^ ": \\(..\\) inline math also gets the replace"));
+
   finalise "typo-fix"

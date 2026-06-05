@@ -383,6 +383,25 @@ let find_math_ranges (s : string) : (int * int) list =
 let is_in_math_range (ranges : (int * int) list) (off : int) : bool =
   List.exists (fun (a, b) -> a <= off && off < b) ranges
 
+(** [range_is_inline_math s (a, _b)] — true iff the math range starting at byte
+    [a] in [s] is an inline math segment (`$..$` with single dollars, or
+    `\(..\)`).  Returns [false] for display-math ranges (`$$..$$`, `\[..\]`,
+    `\begin{equation}..\end{equation}`, etc.).
+
+    Detection: inline ranges start either with a single `$` (next byte not `$`)
+    or with `\(`.  Display ranges start with `$$`, `\[`, or `\begin{...}`.
+
+    Used by MATH-014 (v27.0.67) to gate `\frac` → `\tfrac` replacement to
+    inline math contexts only (where `\frac`'s full-size fraction is hard to
+    read).  Composes with [find_math_ranges] / [is_in_math_range] for fix
+    producers that need an inline-only filter. *)
+let range_is_inline_math (s : string) ((a, _b) : int * int) : bool =
+  let n = String.length s in
+  if a >= n then false
+  else if a + 1 < n then
+    (s.[a] = '$' && s.[a + 1] <> '$') || (s.[a] = '\\' && s.[a + 1] = '(')
+  else s.[a] = '$'
+
 (** [is_ascii_context ?window ?candidate_bytes s off] — heuristic that returns
     [true] iff the byte window of size [window] (default 32) on each side of the
     candidate UTF-8 sequence at [off] (of length [candidate_bytes], default 3)

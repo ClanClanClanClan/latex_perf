@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v26.2 — Rules Directory
+# LaTeX Perfectionist v27.0.x — Rules Directory
 
 ## Files
 
@@ -18,20 +18,30 @@
 
 ## Catalog Snapshot (rules_v3.yaml)
 
-- Total rules: 654
+> Counts mirror `rules_v3.yaml` (the unified ruleset).  Regenerate via
+> `python3 scripts/tools/generate_project_facts.py` if `rules_v3.yaml` grows
+> or shrinks; the canonical `total_specified` lives in
+> `governance/project_facts.yaml`.
+
+- Total rules: 660
 - By layer (exact):
-  - L0_Lexer: 187
-  - L1_Expanded: 158
-  - L2_Ast: 99 (v26.1: +3 for LAY-025/026/027 compile-log rules)
-  - L3_Semantics: 112
+  - L0_Lexer: 192
+  - L1_Expanded: 180
+  - L2_Ast: 102
+  - L3_Semantics: 116
   - L4_Style: 70
 - By default severity:
-  - Error: 46
-  - Warning: 206
-  - Info: 371
+  - Error: 49
+  - Warning: 231
+  - Info: 380
 - Maturity:
-  - Draft: 607
+  - Draft: 619
+  - Implemented: 19
+  - Impl: 6
   - Reserved: 16 (future families; do not implement yet)
+- Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 96 as of
+  v27.0.67.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
+  `../v27/FIX_PRODUCER_LEDGER.md` for the per-rule shipping ledger.
 
 ## Implementation Guidance (When to Start)
 

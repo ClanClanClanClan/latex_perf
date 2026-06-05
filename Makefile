@@ -128,19 +128,27 @@ soak: build service-run
 	$(MAKE) service-stop
 
 proxy:
-	cargo build -p elderd_rust_proxy --release
+	# rust/ is a cargo workspace (no root Cargo.toml); build via its manifest so
+	# the target resolves regardless of CWD. Binary lands in rust/target/release/.
+	cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
 service:
-	dune build latex-parse/src/main_service.exe
+	# Run dune through opam so the target works in CI (where the make subprocess
+	# does not inherit an eval'd opam env and bare `dune` is not on PATH).
+	opam exec -- dune build latex-parse/src/main_service.exe
 
 verify_r1: service proxy
-	# Start OCaml service (Unix socket)
+	# Start OCaml service (Unix socket) — evidence only; perf_gate.sh below
+	# benchmarks ab_microbench.exe directly and does not route through the socket.
 	pkill -f main_service || true
 	rm -f /tmp/l0_lex_svc.sock
+	# The perf gate runs ab_microbench.exe; build it explicitly (the service/proxy
+	# prerequisites do not).
+	opam exec -- dune build latex-parse/bench/ab_microbench.exe
 	_build/default/latex-parse/src/main_service.exe &
 	sleep 0.5
-	# Start Tokio proxy (TCP 127.0.0.1:9123)
-	./target/release/elderd_rust_proxy &
+	# Start Tokio proxy (TCP 127.0.0.1:9123) from its workspace target dir.
+	rust/target/release/elderd_rust_proxy &
 	# Run p95 perf-gate per v25_R1
 	bash scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100
 

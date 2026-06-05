@@ -873,15 +873,29 @@ let () =
              (String.concat ","
                 (List.filteri (fun i _ -> i < 5) (List.rev !missing))));
       match Validator_dag.build_dag metas with
-      | Ok _dag ->
+      | Ok _dag -> (
           (* PR #241 (p1.1-#6): topo_order no longer stored globally. Callers
              that need an edge-driven invalidation order compute it at the use
              site via [Validator_dag.build_dag]. *)
+          (* [detect_conflicts] only ever returns the intentional
+             [conflicts_with] declarations from rule_contracts.yaml — the
+             mutually-exclusive style families (straight/curly quotes and
+             dashes: TYPO-001/004, TYPO-002/003/030, TYPO-004/013). These are
+             expected configuration, resolved deterministically at runtime by
+             [Validator_dag.resolve_conflict] and the cst_edit
+             conflict-suppression edges, so they are not a fault. Emitting a
+             "WARNING" for them on every load was pure noise (5 lines on each
+             CLI/test run); surface the diagnostic only when explicitly
+             debugging the DAG, following the L0_DEBUG_* convention. *)
           let conflicts = Validator_dag.detect_conflicts metas in
-          if conflicts <> [] then
-            Printf.eprintf
-              "[validators] WARNING: %d conflict(s) in validator DAG\n%!"
-              (List.length conflicts)
+          match Sys.getenv_opt "L0_DEBUG_DAG" with
+          | Some ("1" | "true" | "TRUE" | "on" | "ON") when conflicts <> [] ->
+              Printf.eprintf
+                "[validators] note: %d declared validator-DAG conflict(s) \
+                 (resolved deterministically)\n\
+                 %!"
+                (List.length conflicts)
+          | _ -> ())
       | Error msg ->
           Printf.eprintf "[validators] WARNING: DAG cycle: %s\n%!" msg
 

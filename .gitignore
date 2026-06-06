@@ -52,6 +52,9 @@ test/**/*
 /*_debug
 
 target/
+# rust/ is an internal evidence/bench workspace; its lockfile has never been
+# tracked and CI regenerates it. Ignore so local `cargo build` doesn't dirty the tree.
+rust/Cargo.lock
 public-badges/
 *.csv
 *.pkl

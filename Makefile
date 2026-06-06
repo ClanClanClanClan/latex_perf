@@ -128,19 +128,24 @@ soak: build service-run
 	$(MAKE) service-stop
 
 proxy:
-	cargo build -p elderd_rust_proxy --release
+	# rust/ is a cargo workspace (no root Cargo.toml); build via its manifest so
+	# the target resolves regardless of CWD. Binary lands in rust/target/release/.
+	cargo build --manifest-path rust/Cargo.toml -p elderd_rust_proxy --release
 
 service:
-	dune build latex-parse/src/main_service.exe
+	# Run dune through opam so the target works in CI (where the make subprocess
+	# does not inherit an eval'd opam env and bare `dune` is not on PATH).
+	opam exec -- dune build latex-parse/src/main_service.exe
 
 verify_r1: service proxy
-	# Start OCaml service (Unix socket)
-	pkill -f main_service || true
-	rm -f /tmp/l0_lex_svc.sock
-	_build/default/latex-parse/src/main_service.exe &
-	sleep 0.5
-	# Start Tokio proxy (TCP 127.0.0.1:9123)
-	./target/release/elderd_rust_proxy &
+	# The `service` and `proxy` prerequisites verify both binaries still build.
+	# perf_gate.sh benchmarks ab_microbench.exe directly — it does NOT route
+	# through the Unix socket or the Tokio proxy — so there is no need to launch
+	# them here. The previous recipe did, and its `pkill -f main_service` line
+	# self-matched its own recipe shell (the trailing `|| true` keeps the shell
+	# alive, and its argv contains "main_service"), SIGTERMing the recipe with
+	# "Terminated". Build the bench the gate needs and run the gate.
+	opam exec -- dune build latex-parse/bench/ab_microbench.exe
 	# Run p95 perf-gate per v25_R1
 	bash scripts/perf_gate.sh corpora/perf/perf_smoke_big.tex 100
 

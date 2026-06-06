@@ -42,6 +42,16 @@ let strip_comments (out : string) : string =
   |> String.concat "\n"
 
 let () =
+  (* Pin the validator set to non-pilot as the suite's baseline. STRUCT-001
+     (require_documentclass) deliberately returns None in pilot mode
+     (validators_l0.ml: `if pilot_mode then None`), so the STRUCT-001 cases
+     below only emit their fix when L0_VALIDATORS is NOT pilot. The TYPO cases
+     opt into pilot locally and reset to "" afterwards. Forcing "" here makes
+     the suite deterministic regardless of the launch environment — previously
+     `L0_VALIDATORS=pilot dune exec ...` silently disabled STRUCT-001 and failed
+     the STRUCT cases, while plain `dune runtest` (no env) passed. *)
+  Unix.putenv "L0_VALIDATORS" "";
+
   (* --apply-fixes applies STRUCT-001's fix: insert \documentclass at 0. *)
   run "CLI --apply-fixes inserts \\documentclass for STRUCT-001" (fun tag ->
       let path = write_temp_tex "Body without docclass.\n" in

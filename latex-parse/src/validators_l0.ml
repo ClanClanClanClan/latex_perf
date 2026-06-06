@@ -2757,29 +2757,69 @@ let r_spc_022 : rule =
   in
   { id = "SPC-022"; run; languages = [] }
 
-(* SPC-027: Trailing whitespace inside \url{} *)
+(* SPC-027: Trailing whitespace inside \url{}.
+
+   v27.0.68: fix producer. Detects each \url{...} whose inner content has
+   leading and/or trailing whitespace (space/tab) and deletes those runs.
+   Leading and trailing whitespace is never meaningful inside a URL, so the fix
+   is safe-by-construction: it is scoped to the bytes strictly between the \url{
+   and } delimiters and never touches math or verbatim. The count semantic is
+   preserved exactly (one tally per \url{} that has leading OR trailing
+   whitespace), so lint output is unchanged and the fix is purely additive.
+
+   Offsets: the regex `\url{...}` matches from the backslash, so the inner
+   content begins at [match_beginning + 5] (length of "\url{") and ends at
+   [match_end - 1] (the closing brace). The trailing run length is bounded so it
+   cannot overlap the leading run when the inner content is all whitespace. *)
 let r_spc_027 : rule =
   let re = Re_compat.regexp "\\\\url{\\([^}]*\\)}" in
+  let url_prefix_len = 5 (* "\url{" *) in
+  let is_ws c = c = ' ' || c = '\t' in
   let run s =
-    let rec loop i acc =
+    let rec loop i cnt edits =
       try
         let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
         let inner = Re_compat.matched_group _mr 1 s in
+        let mbeg = Re_compat.match_beginning _mr in
+        let mend = Re_compat.match_end _mr in
         let len = String.length inner in
-        let has_leading = len > 0 && (inner.[0] = ' ' || inner.[0] = '\t') in
-        let has_trailing =
-          len > 0 && (inner.[len - 1] = ' ' || inner.[len - 1] = '\t')
+        let k = ref 0 in
+        while !k < len && is_ws inner.[!k] do
+          incr k
+        done;
+        let m = ref 0 in
+        while !m < len - !k && is_ws inner.[len - 1 - !m] do
+          incr m
+        done;
+        let inner_start = mbeg + url_prefix_len in
+        let inner_end = mend - 1 (* the closing brace *) in
+        let edits =
+          if !k > 0 then
+            Cst_edit.delete ~start_offset:inner_start
+              ~end_offset:(inner_start + !k)
+            :: edits
+          else edits
         in
-        let acc' = if has_leading || has_trailing then acc + 1 else acc in
-        loop (Re_compat.match_end _mr) acc'
-      with Not_found -> acc
+        let edits =
+          if !m > 0 then
+            Cst_edit.delete ~start_offset:(inner_end - !m) ~end_offset:inner_end
+            :: edits
+          else edits
+        in
+        let cnt = if !k > 0 || !m > 0 then cnt + 1 else cnt in
+        loop mend cnt edits
+      with Not_found -> (cnt, List.rev edits)
     in
-    let cnt = loop 0 0 in
+    let cnt, fix = loop 0 0 [] in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-027" ~severity:Warning
-           ~message:"Trailing whitespace inside \\url{}" ~count:cnt)
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-027" ~severity:Warning
+             ~message:"Trailing whitespace inside \\url{}" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-027" ~severity:Warning
+             ~message:"Trailing whitespace inside \\url{}" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-027"; run; languages = [] }

@@ -2621,6 +2621,49 @@ let () =
         (does_not_fire "SPC-025" "Sentence.\\dots more here.")
         (tag ^ ": no leading space before \\dots, no fire"));
 
+  (* v27.0.68: SPC-027 (delete leading/trailing whitespace inside \url{}). *)
+  run "SPC-027 fix: trailing space inside \\url{} deleted" (fun tag ->
+      let src = "See \\url{http://example.com } today." in
+      let edits = fix_edits "SPC-027" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "See \\url{http://example.com} today.")
+        (tag ^ ": one trailing space stripped"));
+
+  run "SPC-027 fix: leading space inside \\url{} deleted" (fun tag ->
+      let src = "See \\url{ http://example.com}." in
+      let edits = fix_edits "SPC-027" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "See \\url{http://example.com}.")
+        (tag ^ ": one leading space stripped"));
+
+  run "SPC-027 fix: leading and trailing both stripped (two edits)" (fun tag ->
+      let src = "\\url{  http://x  }" in
+      let edits = fix_edits "SPC-027" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "\\url{http://x}")
+        (tag ^ ": leading and trailing runs both deleted"));
+
+  run "SPC-027 fix: all-whitespace inner collapses to single edit" (fun tag ->
+      let src = "\\url{   }" in
+      let edits = fix_edits "SPC-027" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\\url{}")
+        (tag ^ ": whole whitespace inner deleted, no overlap"));
+
+  run "SPC-027 fix: multiple \\url{} each fixed" (fun tag ->
+      let src = "\\url{ a } and \\url{b }" in
+      let edits = fix_edits "SPC-027" src in
+      expect
+        (List.length edits = 3 && apply_all src edits = "\\url{a} and \\url{b}")
+        (tag ^ ": first has 2 edits, second 1 edit"));
+
+  run "SPC-027 does not fire on clean \\url{}" (fun tag ->
+      expect
+        (does_not_fire "SPC-027" "See \\url{http://example.com} now.")
+        (tag ^ ": no surrounding whitespace, no fire"));
+
   (* v27.0.60: SPC-016 (delete space before `;`) + SPC-021 (delete space before
      `:`). Strict-subset Warning-severity delegations from TYPO-010 (Info) — see
      cross-rule integration test below. *)

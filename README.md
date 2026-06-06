@@ -55,12 +55,12 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v26.1 (April 2026)
+## Current Status — v27.0.67 (June 2026)
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
-- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (33 core + 108 generated + 1 ML) via `(coq.theory)` stanzas.
+- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
 - **Proofs**: 170 Coq files, 1,400 theorems/lemmas. 644 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
-- **Validators**: 638 rule IDs / 654 spec. 329 golden corpus tests, ~7,800 test cases across 89 suites. 19 L3 file-based + 12 expl3 rules.
+- **Validators**: 644 rule IDs / 660 spec. 96 fix-producing rules (Bucket A rolling cadence). 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
@@ -207,7 +207,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ## Documentation
 
-- **[specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md)** — current release master spec
+- **[specs/v27/V27_REPO_EXACT_MASTER_SPEC.md](specs/v27/V27_REPO_EXACT_MASTER_SPEC.md)** — current release master spec (v26: [specs/v26/V26_REPO_EXACT_MASTER_SPEC.md](specs/v26/V26_REPO_EXACT_MASTER_SPEC.md))
 - **[specs/v26/language_contract.md](specs/v26/language_contract.md)** — LP-Core / LP-Extended / LP-Foreign tiers
 - **[docs/SUPPORT_MATRIX.yaml](docs/SUPPORT_MATRIX.yaml)** — machine-readable support contract
 - **[specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md](specs/REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md)** — architecture memo (v26/v27 plan)
@@ -217,10 +217,10 @@ bash scripts/latency_smoke_expand.sh 200
 - **[docs/BUILD_LOG_CONTRACT.md](docs/BUILD_LOG_CONTRACT.md)** — Class C compile-log contract
 - **[docs/UNIT_TESTS.md](docs/UNIT_TESTS.md)**, **[docs/BUILD_SYSTEM_GUIDE.md](docs/BUILD_SYSTEM_GUIDE.md)**, **[docs/REST_API.md](docs/REST_API.md)**
 
-## Success Metrics (v26.1)
+## Success Metrics (v27.0.67)
 
-- 660 rules specified / 643 shipped
-- 631 formal faithful + 20 conservative + 3 conditional proofs
+- 660 rules specified / 644 shipped
+- 637 formal faithful + 20 conservative + 3 conditional proofs
 - 0 admits, 0 axioms
 - 21-language target (7 live + 14 stubbed)
 - p95 edit-window ≈ 0.017 ms (target ≤ 1.2 ms)

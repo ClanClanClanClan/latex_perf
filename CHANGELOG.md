@@ -2,6 +2,31 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.68] — 2026-06-06
+
+**+1 fix producer: SPC-027** (Trailing whitespace inside `\url{}` → delete
+the leading/trailing whitespace run).
+
+SPC-027 already fired Warning on every `\url{...}` whose inner content has
+leading or trailing whitespace (space/tab) — count semantic preserved
+(one tally per `\url{}` with leading OR trailing whitespace). v27.0.68 adds
+a fix that deletes those whitespace runs. The fix is safe-by-construction:
+it is scoped to the bytes strictly between the `\url{` and `}` delimiters
+(inner content begins at `match_beginning + 5`, ends at `match_end - 1`),
+so it never touches math or verbatim, and the trailing-run length is bounded
+so it cannot overlap the leading run when the inner content is all
+whitespace (`\url{   }` → one delete of the whole inner). Leading and
+trailing whitespace is never meaningful inside a URL.
+
+First SPC-family fix producer since v27.0.60 (SPC-016/021); diversifies the
+cadence after three consecutive CJK/MATH cycles (CJK-008/015, MATH-053/014).
+
+**97 fix-producing rules** (4-way registry: rule_contracts.yaml /
+rule_contracts.json / SHIPPED_VERSIONS / FIX_PRODUCER_LEDGER all = 97).
+383/383 typo-fix tests PASS (+6 over v27.0.67). 0 diffs vs v27.0.67 across
+the lint corpus (count semantic unchanged; fix is purely additive). 18
+pre-release gates. Located in `validators_l0.ml`.
+
 ## [v27.0.67] — 2026-05-28
 
 **+1 fix producer: MATH-014** (Inline `\frac` in running text → replace

@@ -44,6 +44,7 @@ GATE_SCRIPTS = [
     ("scripts/tools/check_unused_hypotheses.py", ["--repo", "."]),
     # PR #245 (p1.11) additions
     ("scripts/tools/check_doc_refs.py", ["--repo", "."]),
+    ("scripts/tools/check_version_labels.py", ["--repo", "."]),
     ("scripts/tools/check_release_integrity.py",
      ["--repo", ".", "--skip-generated"]),
     # PR #246 (p1.12) addition — skip-exec used for meta-check (gate

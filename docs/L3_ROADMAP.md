@@ -3,7 +3,7 @@
 > Written in response to memo §15.5:
 > > "Document honestly that current L3 is partly source-regex-derived, then plan migration toward AST/project semantics."
 
-## Current state (v26.1)
+## Current state (L3 unchanged since v26.1; AST migration pending — see [../specs/v27/V27_L3_AST_PLAN.md](../specs/v27/V27_L3_AST_PLAN.md))
 
 The L3 layer — `latex-parse/src/validators_l3_file.ml` + `latex-parse/src/semantic_state.ml` + `latex-parse/src/validators_project.ml` — has two kinds of rules:
 

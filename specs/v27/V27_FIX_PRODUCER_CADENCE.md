@@ -1,7 +1,8 @@
 # V27_FIX_PRODUCER_CADENCE — Rolling fix-producer extension to full coverage
 
-**Goal:** Bring the catalogue of 660 lint rules from the current 32
-fix-producing rules to full coverage where mechanically safe, with
+**Goal:** Bring the catalogue of 660 lint rules from the 32 fix-producing
+rules at plan authoring (97 shipped as of v27.0.68) to full coverage where
+mechanically safe, with
 explicit deferral of NLP-required and unsafe-without-context rules.
 
 **Tag targets:** rolling — v27.0.x patches, then v27.2.x cycles.

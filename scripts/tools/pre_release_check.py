@@ -37,6 +37,7 @@ GATES = [
     ("python3", "scripts/tools/check_code_quality.py", "--repo", "."),
     ("python3", "scripts/tools/check_unused_hypotheses.py", "--repo", "."),
     ("python3", "scripts/tools/check_doc_refs.py", "--repo", "."),
+    ("python3", "scripts/tools/check_version_labels.py", "--repo", "."),
     ("python3", "scripts/tools/check_release_integrity.py", "--repo", "."),
     ("python3", "scripts/tools/check_gates_meta.py", "--repo", "."),
     ("python3", "scripts/tools/check_perf_ratchet.py", "--repo", "."),

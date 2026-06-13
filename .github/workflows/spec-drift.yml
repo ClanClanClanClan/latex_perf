@@ -100,6 +100,13 @@ jobs:
         # docs/ and specs/ must resolve to an existing file.
         run: python3 scripts/tools/check_doc_refs.py --repo .
 
+      - name: Doc version-label currency (v27.0.68.2)
+        # Headings/stamps that name a version or fix-producer count
+        # ("Current State (vN)", "latest tag vN", "N as of vN", ...) must
+        # match dune-project / rule_contracts.yaml. Catches the label drift
+        # that check_doc_refs cannot (it only checks path existence).
+        run: python3 scripts/tools/check_version_labels.py --repo .
+
       - name: Release integrity (PR #245 p1.11)
         # CHANGELOG↔governance version coherence, generated-file
         # authenticity (regen+diff), orphan consumes capabilities.

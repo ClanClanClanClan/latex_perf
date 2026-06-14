@@ -2664,6 +2664,40 @@ let () =
         (does_not_fire "SPC-027" "See \\url{http://example.com} now.")
         (tag ^ ": no surrounding whitespace, no fire"));
 
+  (* v27.0.69: SPC-020 (delete tab inside math mode — TeX ignores it). *)
+  run "SPC-020 fix: tab inside inline math deleted" (fun tag ->
+      let src = "value $a\tb$ here" in
+      let edits = fix_edits "SPC-020" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "value $ab$ here")
+        (tag ^ ": tab in $..$ deleted"));
+
+  run "SPC-020 fix: tab inside display math deleted" (fun tag ->
+      let src = "$$x\t= y$$" in
+      let edits = fix_edits "SPC-020" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$$x= y$$")
+        (tag ^ ": tab in $$..$$ deleted"));
+
+  run "SPC-020 fix: multiple tabs in math all deleted" (fun tag ->
+      let src = "$a\tb\tc$" in
+      let edits = fix_edits "SPC-020" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "$abc$")
+        (tag ^ ": two tabs both deleted"));
+
+  run "SPC-020 does not fire on tab outside math" (fun tag ->
+      expect
+        (does_not_fire "SPC-020" "plain\ttext, no math here")
+        (tag ^ ": tab in text mode is not flagged"));
+
+  run "SPC-020 fix: only the in-math tab is deleted" (fun tag ->
+      let src = "out\tside $in\tmath$ end" in
+      let edits = fix_edits "SPC-020" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "out\tside $inmath$ end")
+        (tag ^ ": text-mode tab kept, math-mode tab removed"));
+
   (* v27.0.60: SPC-016 (delete space before `;`) + SPC-021 (delete space before
      `:`). Strict-subset Warning-severity delegations from TYPO-010 (Info) — see
      cross-rule integration test below. *)

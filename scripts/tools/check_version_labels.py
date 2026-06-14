@@ -23,6 +23,7 @@ provenance, and "annotation ... as of v27.0.42" stamps):
   D  'Fix producers ...: N as of vX'                               N == producer count, vX current
   E  'the current N fix-producing rules'                           N == producer count
   F  'N/M (~P%) shipped as of vX'                                  N == producer count, vX current
+  G  'N shipped as of vX' (plain stamp, no N/M prefix)             N == producer count, vX current
 
 A version token in a doc passes if its components are a prefix of the canonical version
 (so "v27", "v27.0", "v27.0.68" all pass when canonical is 27.0.68; "v27.0.67" / "v26.1" fail).
@@ -114,6 +115,13 @@ RE_CURRENT_N_PROD = re.compile(r"current\s+(\d+)\s+fix[- ]?produc\w*\s+rules", r
 RE_SHIPPED_ASOF = re.compile(
     r"(\d+)\s*/\s*\d+\s*\([^)]*%\)\s*shipped\s+as of\s+v?(\d+(?:\.\d+)+)", re.I
 )
+# G: the plain "N shipped as of vN" stamp (no "N/M (P%)" prefix), e.g. the CADENCE
+# goal line "(97 shipped as of v27.0.68)". Does NOT collide with F: in an F-line
+# ("97/458 (~21%) shipped ...") no bare integer is immediately followed by
+# whitespace+"shipped", so this only matches the plain form.
+RE_SHIPPED_PLAIN_ASOF = re.compile(
+    r"(\d+)\s+shipped\s+as of\s+v?(\d+(?:\.\d+)+)", re.I
+)
 
 
 def line_of(text: str, pos: int) -> int:
@@ -153,6 +161,14 @@ def check_file(path: Path, rel: str, canon, prod, violations: list):
         n, v = int(m.group(1)), m.group(2)
         if n != prod or not version_is_current(v, canon):
             add(m.start(), f"'{n}/... shipped as of v{v}' stale (current is "
+                           f"{prod} as of v{'.'.join(map(str, canon))})")
+    for m in RE_SHIPPED_PLAIN_ASOF.finditer(text):
+        # Skip the "N/M (P%) shipped as of" form, which RE_SHIPPED_ASOF owns.
+        if m.start() > 0 and text[m.start() - 1] == "/":
+            continue
+        n, v = int(m.group(1)), m.group(2)
+        if n != prod or not version_is_current(v, canon):
+            add(m.start(), f"'{n} shipped as of v{v}' stale (current is "
                            f"{prod} as of v{'.'.join(map(str, canon))})")
 
 

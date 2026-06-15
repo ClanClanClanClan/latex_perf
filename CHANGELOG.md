@@ -2,6 +2,30 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.70] — 2026-06-15
+
+**+1 fix producer: SPC-022** (Tab after `\item` bullet → replace the tab with a
+single space).
+
+SPC-022 already fired Info on every `\item<TAB>` sequence; count semantic
+preserved (`count_substring "\item\t"`). v27.0.70 adds a fix that replaces the
+tab with a single space.
+
+Safe-by-construction: a space and a tab are both LaTeX inter-token whitespace
+that terminate the `\item` control word and are then skipped, so `\item<TAB>x`
+and `\item x` parse identically — the replacement is semantically equivalent.
+Note the fix is a *replace*, not a delete: deleting the tab would merge `\item`
+with the following text into the undefined control word `\itemx`, so the
+separator is kept and normalised to a space.
+
+**99 fix-producing rules** (4-way registry all = 99). 392/392 typo-fix tests
+PASS (+4 over v27.0.69). 0 diffs vs v27.0.69 across the lint corpus. 19
+pre-release gates. Located in `validators_l0.ml`.
+
+(Cadence note: third consecutive whitespace-normalisation producer — the next
+cycle should be a dedicated higher-value family pick, e.g. ENC-004 Windows-1252
+mojibake recovery, done with a carefully-tested byte→UTF-8 mapping.)
+
 ## [v27.0.69] — 2026-06-14
 
 **+1 fix producer: SPC-020** (Tab character inside math mode → delete it).

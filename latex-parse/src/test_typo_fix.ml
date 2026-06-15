@@ -2698,6 +2698,34 @@ let () =
         (List.length edits = 1 && apply_all src edits = "out\tside $inmath$ end")
         (tag ^ ": text-mode tab kept, math-mode tab removed"));
 
+  (* v27.0.70: SPC-022 (tab after \item bullet → single space, not delete). *)
+  run "SPC-022 fix: tab after \\item becomes a space" (fun tag ->
+      let src = "\\item\tFirst point" in
+      let edits = fix_edits "SPC-022" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\\item First point")
+        (tag ^ ": tab replaced by space (control word preserved)"));
+
+  run "SPC-022 fix: replacement keeps \\item separate (not \\itemx)" (fun tag ->
+      (* The fix must NOT delete: \itemx would be an undefined control word. *)
+      let src = "\\item\tx" in
+      let edits = fix_edits "SPC-022" src in
+      expect
+        (apply_all src edits = "\\item x" && apply_all src edits <> "\\itemx")
+        (tag ^ ": separator normalised to space, not removed"));
+
+  run "SPC-022 fix: multiple \\item tabs all normalised" (fun tag ->
+      let src = "\\item\tA\n\\item\tB" in
+      let edits = fix_edits "SPC-022" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "\\item A\n\\item B")
+        (tag ^ ": both tabs replaced"));
+
+  run "SPC-022 does not fire on \\item followed by space" (fun tag ->
+      expect
+        (does_not_fire "SPC-022" "\\item Already a space")
+        (tag ^ ": space after \\item is fine"));
+
   (* v27.0.60: SPC-016 (delete space before `;`) + SPC-021 (delete space before
      `:`). Strict-subset Warning-severity delegations from TYPO-010 (Info) — see
      cross-rule integration test below. *)

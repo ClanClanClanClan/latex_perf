@@ -2745,14 +2745,31 @@ let r_spc_018 : rule =
   in
   { id = "SPC-018"; run; languages = [] }
 
-(* SPC-022: Tab after bullet in \itemize *)
+(* SPC-022: Tab after bullet in \itemize.
+
+   v27.0.70: fix producer. Replaces the tab in each `\item<TAB>` with a single
+   space. Safe-by-construction: a space and a tab are both LaTeX inter-token
+   whitespace that terminate the `\item` control word and are then skipped, so
+   `\item<TAB>x` and `\item x` parse identically — the replacement is
+   semantically equivalent. (A *delete* would be wrong: `\itemx` is the
+   undefined control word `\itemx`, so the separator must be kept, just
+   normalised to a space.) The count stays `count_substring "\\item\t"`
+   (unchanged), so lint output is identical and the fix is purely additive. The
+   tab is the 6th byte of the 6-byte needle (after the 5-byte `\item`). *)
 let r_spc_022 : rule =
+  let needle = "\\item\t" in
   let run s =
-    let cnt = count_substring s "\\item\t" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun o ->
+            Cst_edit.replace ~start_offset:(o + 5) ~end_offset:(o + 6) " ")
+          (find_all_non_overlapping s needle)
+      in
       Some
-        (mk_result ~id:"SPC-022" ~severity:Info
-           ~message:"Tab after bullet in \\itemize" ~count:cnt)
+        (mk_result_with_fix ~id:"SPC-022" ~severity:Info
+           ~message:"Tab after bullet in \\itemize" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-022"; run; languages = [] }
@@ -2877,11 +2894,21 @@ let r_spc_011 : rule =
   in
   { id = "SPC-011"; run; languages = [] }
 
-(* SPC-020: Tab character inside math mode *)
+(* SPC-020: Tab character inside math mode.
+
+   v27.0.69: fix producer. A literal tab inside math mode is whitespace that TeX
+   ignores (inter-atom spacing in math is computed automatically), so deleting
+   each such tab has no semantic effect — safe-by-construction. The scanner
+   already visits every tab at its absolute offset, so the fix emits a 1-byte
+   delete at each counted position. The count semantic is unchanged (same scan,
+   same condition), so lint output is identical and the fix is purely additive;
+   counted positions and fix positions are the same set, so they cannot
+   diverge. *)
 let r_spc_020 : rule =
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let in_math = ref false in
     let in_display = ref false in
     let i = ref 0 in
@@ -2894,13 +2921,17 @@ let r_spc_020 : rule =
           in_math := not !in_math;
           incr i)
       else (
-        if (!in_math || !in_display) && s.[!i] = '\t' then incr cnt;
+        if (!in_math || !in_display) && s.[!i] = '\t' then (
+          incr cnt;
+          edits :=
+            Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 1) :: !edits);
         incr i)
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"SPC-020" ~severity:Warning
-           ~message:"Tab character inside math mode" ~count:!cnt)
+        (mk_result_with_fix ~id:"SPC-020" ~severity:Warning
+           ~message:"Tab character inside math mode" ~count:!cnt
+           ~fix:(List.rev !edits))
     else None
   in
   { id = "SPC-020"; run; languages = [] }

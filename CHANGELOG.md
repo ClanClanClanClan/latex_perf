@@ -2,6 +2,55 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.70] — 2026-06-15
+
+**+1 fix producer: SPC-022** (Tab after `\item` bullet → replace the tab with a
+single space).
+
+SPC-022 already fired Info on every `\item<TAB>` sequence; count semantic
+preserved (`count_substring "\item\t"`). v27.0.70 adds a fix that replaces the
+tab with a single space.
+
+Safe-by-construction: a space and a tab are both LaTeX inter-token whitespace
+that terminate the `\item` control word and are then skipped, so `\item<TAB>x`
+and `\item x` parse identically — the replacement is semantically equivalent.
+Note the fix is a *replace*, not a delete: deleting the tab would merge `\item`
+with the following text into the undefined control word `\itemx`, so the
+separator is kept and normalised to a space.
+
+**99 fix-producing rules** (4-way registry all = 99). 392/392 typo-fix tests
+PASS (+4 over v27.0.69). 0 diffs vs v27.0.69 across the lint corpus. 19
+pre-release gates. Located in `validators_l0.ml`.
+
+(Cadence note: third consecutive whitespace-normalisation producer — the next
+cycle should be a dedicated higher-value family pick, e.g. ENC-004 Windows-1252
+mojibake recovery, done with a carefully-tested byte→UTF-8 mapping.)
+
+## [v27.0.69] — 2026-06-14
+
+**+1 fix producer: SPC-020** (Tab character inside math mode → delete it).
+
+SPC-020 already fired Warning on every literal tab (`\t`) inside dollar math
+(`$…$` or `$$…$$`) — count semantic preserved. v27.0.69 adds a fix that deletes
+each such tab. The fix is safe-by-construction: TeX ignores whitespace inside
+math mode (inter-atom spacing is computed automatically), so removing a tab there
+has no semantic effect. The existing scanner already visits every tab at its
+absolute offset, so the counted positions and the emitted 1-byte deletes are the
+exact same set — they cannot diverge, and lint output is unchanged (the fix is
+purely additive).
+
+Chosen for safety: the 0-diff differential gate checks lint output, not
+`--apply-fixes` output, so a corruption-risk fix could ship silently. (TYPO-023
+`&`→`\&` was considered and rejected this cycle — it would wrongly escape an
+alignment `&` inside `\begin{matrix}`/`pmatrix`/`cases`, which its strip-list
+does not recognise.)
+
+**98 fix-producing rules** (4-way registry: rule_contracts.yaml /
+rule_contracts.json / SHIPPED_VERSIONS / FIX_PRODUCER_LEDGER all = 98).
+388/388 typo-fix tests PASS (+5 over v27.0.68). 0 diffs vs v27.0.68 across the
+lint corpus (count semantic unchanged). 19 pre-release gates (adds
+`check_version_labels`). Located in `validators_l0.ml`.
+
 ## [v27.0.68] — 2026-06-06
 
 **+1 fix producer: SPC-027** (Trailing whitespace inside `\url{}` → delete

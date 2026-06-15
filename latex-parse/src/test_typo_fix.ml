@@ -1304,6 +1304,65 @@ let () =
         (does_not_fire "ENC-007" "no zero-width spaces here")
         (tag ^ ": cleaned source doesn't re-fire"));
 
+  (* v27.0.71: ENC-004 fix producer — bare Windows-1252 C1 bytes (invalid UTF-8)
+     replaced by the UTF-8 encoding of their CP-1252 codepoint. Per-byte tests
+     since the fix's byte output ships past the lint-only differential gate. *)
+  run "ENC-004 fix: 0x96 → en-dash (U+2013)" (fun tag ->
+      let src = "a\x96b" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\xe2\x80\x93b")
+        (tag ^ ": 0x96 becomes UTF-8 –"));
+
+  run "ENC-004 fix: 0x97 → em-dash (U+2014)" (fun tag ->
+      let src = "a\x97b" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (apply_all src edits = "a\xe2\x80\x94b")
+        (tag ^ ": 0x97 becomes UTF-8 —"));
+
+  run "ENC-004 fix: 0x85 → ellipsis (U+2026)" (fun tag ->
+      let src = "a\x85b" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (apply_all src edits = "a\xe2\x80\xa6b")
+        (tag ^ ": 0x85 becomes UTF-8 …"));
+
+  run "ENC-004 fix: 0x93/0x94 → curly double quotes" (fun tag ->
+      let src = "\x93hi\x94" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "\xe2\x80\x9chi\xe2\x80\x9d")
+        (tag ^ ": “hi”"));
+
+  run "ENC-004 fix: 0x80 → euro sign (U+20AC)" (fun tag ->
+      let src = "\x80100" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (apply_all src edits = "\xe2\x82\xac100")
+        (tag ^ ": 0x80 becomes UTF-8 €"));
+
+  run "ENC-004 fix: multiple C1 bytes each mapped" (fun tag ->
+      let src = "x\x96y\x97z" in
+      let edits = fix_edits "ENC-004" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "x\xe2\x80\x93y\xe2\x80\x94z")
+        (tag ^ ": both dashes mapped"));
+
+  run "ENC-004: CP-1252-undefined byte 0x81 fires but emits no fix" (fun tag ->
+      (* 0x81 is undefined in Windows-1252 → counted, left for manual review. *)
+      let edits = fix_edits "ENC-004" "a\x81b" in
+      expect (List.length edits = 0) (tag ^ ": undefined byte not auto-fixed"));
+
+  run "ENC-004 does not fire on valid UTF-8" (fun tag ->
+      (* café with a proper UTF-8 é (C3 A9) — the continuation byte is
+         skipped. *)
+      expect
+        (does_not_fire "ENC-004" "caf\xc3\xa9 cr\xc3\xa8me")
+        (tag ^ ": well-formed UTF-8 multibyte is not flagged"));
+
   (* v27.0.23: ENC-017 fix producer (delete U+00AD soft hyphen, 2-byte UTF-8
      needle, mechanical deletion). Mirrors ENC-007 shape. *)
   run "ENC-017 fix: deletes single U+00AD soft hyphen" (fun tag ->

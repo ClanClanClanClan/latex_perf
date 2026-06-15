@@ -506,17 +506,82 @@ let r_enc_003 : rule =
   in
   { id = "ENC-003"; run; languages = [] }
 
-(* ENC-004: Windows-1252 characters outside UTF-8 *)
+(* ENC-004: Windows-1252 characters outside UTF-8.
+
+   v27.0.71: fix producer. A bare byte in the C1 range 0x80-0x9F is invalid
+   UTF-8 (a valid stream never carries a lone continuation/C1 byte — the scanner
+   below skips the continuation bytes of well-formed multibyte sequences), so in
+   practice it is a Windows-1252 "smart punctuation" character (en/em dash,
+   ellipsis, curly quotes, …) that survived a bad transcode. The standard,
+   well-defined recovery — the same CP-1252 interpretation HTML5 mandates for
+   these bytes — replaces each with the UTF-8 encoding of its Windows-1252
+   codepoint.
+
+   This fix ships past the lint-only differential gate, so the byte-level
+   mapping is made un-typoable: only the CP-1252 codepoints are hardcoded (each
+   trivially checkable against the published table) and the UTF-8 bytes come
+   from the stdlib [Buffer.add_utf_8_uchar]. The five CP-1252-undefined
+   positions (0x81, 0x8D, 0x8F, 0x90, 0x9D) get no fix; they are still counted
+   (count semantic unchanged → 0 lint diffs) and left for manual review. *)
 let r_enc_004 : rule =
+  (* index = byte - 0x80; -1 = undefined in Windows-1252 *)
+  let cp1252_c1 =
+    [|
+      0x20AC;
+      -1;
+      0x201A;
+      0x0192;
+      0x201E;
+      0x2026;
+      0x2020;
+      0x2021;
+      0x02C6;
+      0x2030;
+      0x0160;
+      0x2039;
+      0x0152;
+      -1;
+      0x017D;
+      -1;
+      -1;
+      0x2018;
+      0x2019;
+      0x201C;
+      0x201D;
+      0x2022;
+      0x2013;
+      0x2014;
+      0x02DC;
+      0x2122;
+      0x0161;
+      0x203A;
+      0x0153;
+      -1;
+      0x017E;
+      0x0178;
+    |]
+  in
+  let utf8_of_cp cp =
+    let buf = Buffer.create 4 in
+    Buffer.add_utf_8_uchar buf (Uchar.of_int cp);
+    Buffer.contents buf
+  in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     while !i < n do
       let b = Char.code s.[!i] in
       if b >= 0x80 && b <= 0x9F then (
         (* Bare C1 range bytes that are Windows-1252 characters *)
         incr cnt;
+        let cp = cp1252_c1.(b - 0x80) in
+        if cp >= 0 then
+          edits :=
+            Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 1)
+              (utf8_of_cp cp)
+            :: !edits;
         incr i)
       else if b >= 0xC0 && !i + 1 < n then
         if b land 0xE0 = 0xC0 then i := !i + 2
@@ -526,9 +591,14 @@ let r_enc_004 : rule =
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"ENC-004" ~severity:Warning
-           ~message:"Windows‑1252 characters (– — …) outside UTF‑8" ~count:!cnt)
+      let fix = List.rev !edits in
+      let message = "Windows‑1252 characters (– — …) outside UTF‑8" in
+      if fix = [] then
+        Some (mk_result ~id:"ENC-004" ~severity:Warning ~message ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"ENC-004" ~severity:Warning ~message
+             ~count:!cnt ~fix)
     else None
   in
   { id = "ENC-004"; run; languages = [] }

@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.71] — 2026-06-15
+
+**+1 fix producer: ENC-004** (Windows-1252 characters outside UTF-8 → replace
+each with the UTF-8 encoding of its CP-1252 codepoint). **100 fix-producing
+rules** — the cadence crosses the century mark.
+
+ENC-004 already fired Warning on every bare C1-range byte (0x80–0x9F); count
+semantic preserved. A bare 0x80–0x9F byte is invalid UTF-8 (the scanner skips
+the continuation bytes of well-formed multibyte sequences), so in practice it is
+a Windows-1252 "smart punctuation" character (en/em dash, ellipsis, curly
+quotes, …) that survived a bad transcode. v27.0.71 adds a fix that replaces each
+with the UTF-8 encoding of its Windows-1252 codepoint — the same CP-1252
+recovery HTML5 mandates for these bytes.
+
+Implementation guards the fix (which ships past the lint-only differential
+gate): only the CP-1252 codepoints are hardcoded (each checkable against the
+published table); the UTF-8 bytes come from the stdlib `Buffer.add_utf_8_uchar`.
+The five CP-1252-undefined positions (0x81, 0x8D, 0x8F, 0x90, 0x9D) are still
+counted but emit no fix (left for manual review) — a documented count-vs-fix
+divergence, so lint output is unchanged.
+
+Diversifies the cadence after three consecutive whitespace-normalisation
+producers (SPC-027/020/022).
+
+**100 fix-producing rules** (4-way registry all = 100). 400/400 typo-fix tests
+PASS (+8 over v27.0.70, including a per-byte mapping check for en/em dash,
+ellipsis, curly quotes, euro, an undefined-byte no-fix case, and a valid-UTF-8
+no-fire case). 0 diffs vs v27.0.70 across the lint corpus. 19 pre-release gates.
+Located in `validators_l0.ml`.
+
 ## [v27.0.70] — 2026-06-15
 
 **+1 fix producer: SPC-022** (Tab after `\item` bullet → replace the tab with a

@@ -2745,14 +2745,31 @@ let r_spc_018 : rule =
   in
   { id = "SPC-018"; run; languages = [] }
 
-(* SPC-022: Tab after bullet in \itemize *)
+(* SPC-022: Tab after bullet in \itemize.
+
+   v27.0.70: fix producer. Replaces the tab in each `\item<TAB>` with a single
+   space. Safe-by-construction: a space and a tab are both LaTeX inter-token
+   whitespace that terminate the `\item` control word and are then skipped, so
+   `\item<TAB>x` and `\item x` parse identically — the replacement is
+   semantically equivalent. (A *delete* would be wrong: `\itemx` is the
+   undefined control word `\itemx`, so the separator must be kept, just
+   normalised to a space.) The count stays `count_substring "\\item\t"`
+   (unchanged), so lint output is identical and the fix is purely additive. The
+   tab is the 6th byte of the 6-byte needle (after the 5-byte `\item`). *)
 let r_spc_022 : rule =
+  let needle = "\\item\t" in
   let run s =
-    let cnt = count_substring s "\\item\t" in
+    let cnt = count_substring s needle in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun o ->
+            Cst_edit.replace ~start_offset:(o + 5) ~end_offset:(o + 6) " ")
+          (find_all_non_overlapping s needle)
+      in
       Some
-        (mk_result ~id:"SPC-022" ~severity:Info
-           ~message:"Tab after bullet in \\itemize" ~count:cnt)
+        (mk_result_with_fix ~id:"SPC-022" ~severity:Info
+           ~message:"Tab after bullet in \\itemize" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-022"; run; languages = [] }

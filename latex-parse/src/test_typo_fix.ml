@@ -3010,6 +3010,51 @@ let () =
         (does_not_fire "CJK-002" "End of sentence. New begins.")
         (tag ^ ": no U+FF0E → no fire"));
 
+  (* P0b-CJK: Han-adjacency delegation. When a fullwidth comma/period sits in an
+     ASCII-MAJORITY ±32-byte window (is_ascii_context true) but is immediately
+     adjacent to a Han ideograph (lead byte 0xE4–0xE9 at i-3 or i+3),
+     CJK-001/002 now WITHHOLD the fix and delegate to CJK-010 (fullwidth is
+     correct next to CJK). Count is still emitted (0-diff lint). This is what
+     stops the CJK-001/002 ⇄ CJK-010 oscillation: the fullwidth form next to a
+     Han glyph is never flipped back to ASCII, so the context window can't
+     flip-flop. The "Hello world…" / "End of sentence…" cases above (ASCII
+     neighbours, not Han) still fix — so this is a strict refinement, not a
+     regression. *)
+  run "CJK-001 delegate: Han-preceding fullwidth comma in ASCII window → NO fix"
+    (fun tag ->
+      (* 中 (U+4E2D = E4 B8 AD) immediately before U+FF0C; 20 ASCII bytes around
+         it make is_ascii_context true, yet i-3 is a Han lead byte →
+         delegated. *)
+      let src = "abcdefghij\xe4\xb8\xad\xef\xbc\x8cabcdefghij" in
+      expect
+        (fires "CJK-001" src && fix_edits "CJK-001" src = [])
+        (tag ^ ": fires (count) but no fix — delegated to CJK-010"));
+
+  run "CJK-001 delegate: Han-following fullwidth comma in ASCII window → NO fix"
+    (fun tag ->
+      (* U+FF0C immediately followed by 中 → i+3 is a Han lead byte →
+         delegated. *)
+      let src = "abcdefghij\xef\xbc\x8c\xe4\xb8\xadabcdefghij" in
+      expect
+        (fires "CJK-001" src && fix_edits "CJK-001" src = [])
+        (tag ^ ": i+3 Han lead byte fires but no fix"));
+
+  run "CJK-002 delegate: Han-adjacent fullwidth period in ASCII window → NO fix"
+    (fun tag ->
+      let src = "abcdefghij\xe4\xb8\xad\xef\xbc\x8eabcdefghij" in
+      expect
+        (fires "CJK-002" src && fix_edits "CJK-002" src = [])
+        (tag ^ ": fires (count) but no fix — delegated to CJK-010"));
+
+  run "CJK-001 still fixes ASCII-neighbour fullwidth comma (not delegated)"
+    (fun tag ->
+      (* No Han neighbour: ordinary ASCII context → fix still emitted. *)
+      let src = "abc\xef\xbc\x8cdef" in
+      let edits = fix_edits "CJK-001" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "abc,def")
+        (tag ^ ": ASCII-only neighbours still get the fix"));
+
   (* v27.0.62: CJK-010 (ASCII punct adjacent to CJK → fullwidth, INVERSE
      direction) and CJK-014 (U+30FB outside CJK → ASCII `.`). CJK-010 reuses the
      new `is_extended_context` helper; CJK-014 reuses `is_ascii_context` from

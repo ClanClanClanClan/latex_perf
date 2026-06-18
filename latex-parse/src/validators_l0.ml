@@ -3745,6 +3745,23 @@ let rules_verb : rule list =
    where U+FF0C is the intended typography. Cross-rule: CHAR-016 also fires on
    U+FF0C with no fix-set, so the two emit independent diagnostics and only
    CJK-001's fix lands at the offset (no overlap conflict). *)
+(* P0b-CJK: a 3-byte fullwidth punctuation at offset [i] is "adjacent to CJK" if
+   a Han-ideograph lead byte (0xE4–0xE9, the SAME range CJK-010 uses for its
+   [is_cjk_byte0]) immediately precedes it (its lead byte sits at [i-3]) or
+   follows it (the next char's lead byte sits at [i+3]). CJK-001/002 use this to
+   DELEGATE their fix: a fullwidth comma/period next to a CJK ideograph is the
+   correct fullwidth form — that position is CJK-010's domain (ASCII→fullwidth),
+   so converting it back to ASCII would fight CJK-010 and oscillate under
+   repeated [--apply-fixes] (the ±32-byte majority window flips when multi-punct
+   conversions shift the byte balance). The diagnostic count is unchanged — only
+   the fix is withheld at adjacent positions (0-diff lint). Mirrors the
+   TYPO-002⇄TYPO-026 numeric-range delegation. *)
+let fullwidth_punct_adjacent_to_cjk s i =
+  let n = String.length s in
+  let cjk b = b >= 0xE4 && b <= 0xE9 in
+  (i >= 3 && cjk (Char.code s.[i - 3]))
+  || (i + 3 < n && cjk (Char.code s.[i + 3]))
+
 let r_cjk_001 : rule =
   let run s =
     (* U+FF0C = EF BC 8C *)
@@ -3761,7 +3778,9 @@ let r_cjk_001 : rule =
       then (
         incr cnt;
         if
-          (not (is_in_math_range (Lazy.force math) !i)) && is_ascii_context s !i
+          (not (is_in_math_range (Lazy.force math) !i))
+          && is_ascii_context s !i
+          && not (fullwidth_punct_adjacent_to_cjk s !i)
         then
           fix_edits :=
             Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) ","
@@ -3803,7 +3822,9 @@ let r_cjk_002 : rule =
       then (
         incr cnt;
         if
-          (not (is_in_math_range (Lazy.force math) !i)) && is_ascii_context s !i
+          (not (is_in_math_range (Lazy.force math) !i))
+          && is_ascii_context s !i
+          && not (fullwidth_punct_adjacent_to_cjk s !i)
         then
           fix_edits :=
             Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) "."

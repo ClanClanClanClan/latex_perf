@@ -2,6 +2,27 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.0.72] — 2026-06-18
+
+**+1 fix producer: TYPO-057** (Missing thin-space before °C/°F → insert `\,`
+between the digit and the degree sign).
+
+TYPO-057 already fired Info on every digit immediately followed by the degree
+sign U+00B0 (`[0-9]°`, no separating space); count semantic preserved. v27.0.72
+adds a fix that inserts a thin space `\,` between them, e.g. `5°C` → `5\,°C`.
+
+The fix is purely **additive** — a single `\,` insertion — so it cannot delete
+or corrupt surrounding content (worst case is a benign extra thin space). `\,`
+is valid in both text and math mode, so no math gating is needed. The degree
+sign begins at `match_beginning + 1`, where the thin space is inserted, so it
+lands between the full number and the unit. Count semantic unchanged → lint
+output identical.
+
+First TYPO-family producer since v27.0.61. **101 fix-producing rules** (4-way
+registry all = 101). 404/404 typo-fix tests PASS (+4 over v27.0.71). 0 diffs vs
+v27.0.71 across the lint corpus. 19 pre-release gates. Located in
+`validators_l0_typo.ml`.
+
 ## [v27.0.71] — 2026-06-15
 
 **+1 fix producer: ENC-004** (Windows-1252 characters outside UTF-8 → replace

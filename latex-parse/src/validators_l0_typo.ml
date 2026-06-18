@@ -116,10 +116,11 @@ let r_typo_002 : rule =
      (digit`--`digit) as `--`, the canonical LaTeX source form for a range
      en-dash and the domain of TYPO-026 (`–`→`--` in page ranges). Without this,
      TYPO-002 (`--`→`–`) and TYPO-026 form a contradictory pair that oscillates
-     forever under repeated --apply-fixes (found by check_apply_fixes_safety.py).
-     The COUNT is unchanged (every `--` is still tallied) so lint output is
-     identical (0 diff); only the fix-set is filtered at range offsets — the
-     same delegation pattern as TYPO-010→SPC-016/021 and CHAR-016→CJK-001/002. *)
+     forever under repeated --apply-fixes (found by
+     check_apply_fixes_safety.py). The COUNT is unchanged (every `--` is still
+     tallied) so lint output is identical (0 diff); only the fix-set is filtered
+     at range offsets — the same delegation pattern as TYPO-010→SPC-016/021 and
+     CHAR-016→CJK-001/002. *)
   let mk_fix_edits s =
     let n = String.length s in
     let is_digit c = c >= '0' && c <= '9' in
@@ -129,8 +130,7 @@ let r_typo_002 : rule =
     List.filter_map
       (fun off ->
         if is_numeric_range off then None
-        else
-          Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–"))
+        else Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–"))
       (find_all_non_overlapping s "--")
   in
   let run s =

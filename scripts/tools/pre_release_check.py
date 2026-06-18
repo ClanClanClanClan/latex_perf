@@ -51,6 +51,11 @@ BUILD_CHECKS = [
     (["dune", "build"], "full build"),
     (["dune", "build", "proofs"], "proofs build"),
     (["dune", "runtest", "latex-parse/src", "--force"], "unit tests"),
+    # Runs after the build so validators_cli.exe exists. Corpus-wide --apply-fixes
+    # safety: every file must converge to valid output (no producer oscillation /
+    # corruption). The lint-only differential cannot see fix output.
+    (["python3", "scripts/tools/check_apply_fixes_safety.py", "--repo", "."],
+     "apply-fixes safety"),
 ]
 
 

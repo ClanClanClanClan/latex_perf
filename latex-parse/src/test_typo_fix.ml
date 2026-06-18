@@ -1363,6 +1363,38 @@ let () =
         (does_not_fire "ENC-004" "caf\xc3\xa9 cr\xc3\xa8me")
         (tag ^ ": well-formed UTF-8 multibyte is not flagged"));
 
+  (* v27.0.72: TYPO-057 (insert thin space \, between a digit and U+00B0). The
+     degree sign is C2 B0 in UTF-8; the fix is a single additive \,
+     insertion. *)
+  run "TYPO-057 fix: 5°C → 5\\,°C" (fun tag ->
+      let src = "heat to 5\xc2\xb0C now" in
+      let edits = fix_edits "TYPO-057" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "heat to 5\\,\xc2\xb0C now")
+        (tag ^ ": thin space inserted before degree sign"));
+
+  run "TYPO-057 fix: thin space lands after the full number" (fun tag ->
+      let src = "100\xc2\xb0F" in
+      let edits = fix_edits "TYPO-057" src in
+      expect
+        (apply_all src edits = "100\\,\xc2\xb0F")
+        (tag ^ ": inserted between 100 and °, not mid-number"));
+
+  run "TYPO-057 fix: multiple occurrences each get a thin space" (fun tag ->
+      let src = "0\xc2\xb0 to 9\xc2\xb0" in
+      let edits = fix_edits "TYPO-057" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "0\\,\xc2\xb0 to 9\\,\xc2\xb0")
+        (tag ^ ": both digit-degree pairs fixed"));
+
+  run "TYPO-057 does not fire when a space already separates" (fun tag ->
+      (* "5 °C" — digit not immediately followed by the degree sign. *)
+      expect
+        (does_not_fire "TYPO-057" "heat to 5 \xc2\xb0C")
+        (tag ^ ": existing space means no fire"));
+
   (* v27.0.23: ENC-017 fix producer (delete U+00AD soft hyphen, 2-byte UTF-8
      needle, mechanical deletion). Mirrors ENC-007 shape. *)
   run "ENC-017 fix: deletes single U+00AD soft hyphen" (fun tag ->

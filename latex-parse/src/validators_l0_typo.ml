@@ -2012,22 +2012,35 @@ let r_typo_055 : rule =
   { id = "TYPO-055"; run; languages = [] }
 
 (* Missing thin-space before degree symbol *)
+(* TYPO-057: Missing thin-space before °C/°F (or \si{\celsius}).
+
+   v27.0.72: fix producer. Detects a digit immediately followed by the degree
+   sign U+00B0 (`[0-9]°`, no separating space) and inserts a thin space `\,`
+   between them, e.g. `5°C` → `5\,°C`. The fix is purely ADDITIVE (a single `\,`
+   insertion), so it cannot delete or corrupt surrounding content; `\,` is valid
+   in both text and math mode, so no math gating is needed. The count semantic
+   is unchanged (same regex scan), so lint output is identical and the fix is
+   purely additive. The degree sign begins at [match_beginning + 1] (the byte
+   after the matched digit), so the thin space is inserted there. *)
 let r_typo_057 : rule =
   let re = Re_compat.regexp "[0-9]\xc2\xb0" in
   let run s =
-    let rec loop i acc =
+    let rec loop i cnt offs =
       try
         let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
-      with Not_found -> acc
+        let mbeg = Re_compat.match_beginning _mr in
+        loop (Re_compat.match_end _mr) (cnt + 1) (mbeg :: offs)
+      with Not_found -> (cnt, List.rev offs)
     in
-    let cnt = loop 0 0 in
+    let cnt, offs = loop 0 0 [] in
     if cnt > 0 then
+      let fix =
+        List.map (fun mbeg -> Cst_edit.insert ~at:(mbeg + 1) "\\,") offs
+      in
       Some
-        (mk_result ~id:"TYPO-057" ~severity:Info
+        (mk_result_with_fix ~id:"TYPO-057" ~severity:Info
            ~message:{|Missing thin‑space before °C/°F or \si{\celsius}|}
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-057"; run; languages = [] }

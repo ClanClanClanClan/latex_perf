@@ -161,42 +161,110 @@ let env_flag_on name =
     stdout, with the skipped subset reported on stderr. Exit code 0 in that case
     (the partial-fix output is the contract). When [false] (default), behaviour
     is unchanged: any overlap returns exit 2 with no stdout. *)
-let run_apply_fixes ?filter_id ?(best_effort = false) ~path ~src () =
+let overlap_error a b =
+  eprintf
+    "E.apply-fixes.overlap: two rule fixes affect overlapping source ranges; \
+     refusing to apply.\n\
+     # first edit:  %s\n\
+     # second edit: %s\n\
+     # hint: re-run with --apply-fixes-best-effort to apply the maximal \
+     non-conflicting subset.\n"
+    (Latex_parse_lib.Cst_edit.to_string a)
+    (Latex_parse_lib.Cst_edit.to_string b);
+  2
+
+(* P1a: maximum passes for the converging [--apply-fixes] loop. The corpus
+   safety gate proves every file reaches a fixpoint in ≤8 passes; this cap is a
+   generous backstop for arbitrary user documents and a hard stop should a
+   future producer regress into a non-terminating cascade. *)
+let apply_fixes_cap = 64
+
+(* P1a: iterate [--apply-fixes] to a fixpoint. Each pass refreshes the
+   src-dependent contexts (language profile, command spans, user macros, file
+   context) for the evolving text, exactly as a fresh [--apply-fixes] subprocess
+   would — so the in-process fixpoint is byte-identical to iterating the CLI
+   externally, which is the behaviour [check_apply_fixes_safety.py] validates
+   across the whole corpus. Benign cross-rule cascades (e.g. ENC-004 producing
+   U+2026, then SPC-025 deleting the space before it) now resolve in a single
+   invocation instead of needing repeated runs.
+
+   Cycle-safe: a seen-set of per-pass digests detects oscillation and the cap
+   bounds runaway cascades. Both known oscillating producer pairs were
+   reconciled at source (no file oscillates today), but if a future pair
+   regresses the loop emits the last stable state ([cur], the text whose
+   application re-enters the cycle) and warns rather than hanging. Emitting
+   [cur] — not the repeated state — keeps the safety gate able to flag the
+   regression: [--apply-fixes] of the two cycle states still map to each other,
+   so the gate's external loop sees the cycle. *)
+let run_apply_fixes_converge ?filter_id ~path ~src () =
+  let seen = Hashtbl.create 16 in
+  Hashtbl.replace seen (Digest.string src) ();
+  let rec loop cur passes =
+    ignore (resolve_profile ~requested:`Auto ~src:cur);
+    ignore (setup_all ~path ~src:cur ~log_path:None);
+    let results = Latex_parse_lib.Validators.run_all cur in
+    let edits = collect_fix_edits ?filter_id results in
+    if edits = [] then Ok cur
+    else
+      match Latex_parse_lib.Rewrite_engine.apply ~source:cur ~edits with
+      | Error _ as e -> if passes = 0 then e else Ok cur
+      | Ok nxt ->
+          if String.equal nxt cur then Ok cur
+          else
+            let dn = Digest.string nxt in
+            if Hashtbl.mem seen dn then (
+              eprintf
+                "# apply-fixes: fix cycle detected after %d pass(es); emitting \
+                 last stable state (contradictory producers)\n"
+                (passes + 1);
+              Ok cur)
+            else if passes + 1 >= apply_fixes_cap then (
+              eprintf
+                "# apply-fixes: reached the %d-pass cap without a fixpoint; \
+                 emitting latest state\n"
+                apply_fixes_cap;
+              Ok nxt)
+            else (
+              Hashtbl.replace seen dn ();
+              loop nxt (passes + 1))
+  in
+  match loop src 0 with
+  | Ok out ->
+      print_string out;
+      0
+  | Error (`Overlap (a, b)) -> overlap_error a b
+
+let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
+    ~src () =
   let _tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner _tier features;
-  let _bp = setup_all ~path ~src ~log_path:None in
   Fun.protect ~finally:cleanup (fun () ->
-      let results = Latex_parse_lib.Validators.run_all src in
-      let edits = collect_fix_edits ?filter_id results in
-      if best_effort then (
-        let out, applied, skipped =
-          Latex_parse_lib.Cst_edit.apply_best_effort src edits
-        in
-        print_string out;
-        if skipped <> [] then (
-          eprintf "# apply-fixes-best-effort: %d edit(s) applied, %d skipped\n"
-            (List.length applied) (List.length skipped);
-          List.iter
-            (fun e ->
-              eprintf "# skipped: %s\n" (Latex_parse_lib.Cst_edit.to_string e))
-            skipped);
-        0)
+      if converge && not best_effort then
+        run_apply_fixes_converge ?filter_id ~path ~src ()
       else
-        match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
-        | Ok out ->
-            print_string out;
-            0
-        | Error (`Overlap (a, b)) ->
+        let _bp = setup_all ~path ~src ~log_path:None in
+        let results = Latex_parse_lib.Validators.run_all src in
+        let edits = collect_fix_edits ?filter_id results in
+        if best_effort then (
+          let out, applied, skipped =
+            Latex_parse_lib.Cst_edit.apply_best_effort src edits
+          in
+          print_string out;
+          if skipped <> [] then (
             eprintf
-              "E.apply-fixes.overlap: two rule fixes affect overlapping source \
-               ranges; refusing to apply.\n\
-               # first edit:  %s\n\
-               # second edit: %s\n\
-               # hint: re-run with --apply-fixes-best-effort to apply the \
-               maximal non-conflicting subset.\n"
-              (Latex_parse_lib.Cst_edit.to_string a)
-              (Latex_parse_lib.Cst_edit.to_string b);
-            2)
+              "# apply-fixes-best-effort: %d edit(s) applied, %d skipped\n"
+              (List.length applied) (List.length skipped);
+            List.iter
+              (fun e ->
+                eprintf "# skipped: %s\n" (Latex_parse_lib.Cst_edit.to_string e))
+              skipped);
+          0)
+        else
+          match Latex_parse_lib.Rewrite_engine.apply ~source:src ~edits with
+          | Ok out ->
+              print_string out;
+              0
+          | Error (`Overlap (a, b)) -> overlap_error a b)
 
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
@@ -208,7 +276,7 @@ let () =
   match args with
   | [ _; "--apply-fixes"; path ] ->
       let src = read_all path in
-      exit (run_apply_fixes ~path ~src ())
+      exit (run_apply_fixes ~converge:true ~path ~src ())
   | [ _; "--apply-fixes-for"; rule_id; path ] ->
       let src = read_all path in
       exit (run_apply_fixes ~filter_id:rule_id ~path ~src ())
@@ -220,7 +288,7 @@ let () =
       exit (run_apply_fixes ~best_effort:true ~filter_id:rule_id ~path ~src ())
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
-      exit (run_apply_fixes ~path ~src ())
+      exit (run_apply_fixes ~converge:true ~path ~src ())
   | [ _; path ] ->
       let src = read_all path in
       let tier, features = resolve_profile ~requested:`Auto ~src in
@@ -327,10 +395,13 @@ let () =
          <file.tex>\n\n\
          --apply-fixes  run validators, apply every rule's fix edits via \
          Cst_edit.apply_all,\n\
-        \               and emit the modified source to stdout. \
-         L0_APPLY_FIXES=1 is equivalent\n\
-        \               when no other flag is given. Overlapping fixes → \
-         stderr + exit 2.\n\
+        \               and emit the modified source to stdout. Iterates to a \
+         fixpoint\n\
+        \               (P1a) so cross-rule cascades resolve in one run; \
+         cycle-safe. \n\
+        \               L0_APPLY_FIXES=1 is equivalent when no other flag is \
+         given.\n\
+        \               Overlapping fixes → stderr + exit 2.\n\
          --apply-fixes-for RULE-ID  same as --apply-fixes but only applies \
          fixes from results\n\
         \               whose [r.id = RULE-ID]. Useful for incremental \

@@ -30,9 +30,10 @@ those naive scanners is tracked separately.
 Runs in pilot mode (L0_VALIDATORS=pilot) so pilot-gated TYPO fixes are exercised.
 
 Exit 0 if every corpus file converges to valid output. Exit 1 (listing each hard
-violation) otherwise. KNOWN_UNSTABLE allowlists the two tracked contradictory
-producer pairs (dash + CJK) so the gate is CI-wireable while they are reconciled;
-any NEW non-convergence fails.
+violation) otherwise. Both originally-tracked contradictory producer pairs have
+now been reconciled at the source (TYPO-002⇄TYPO-026 numeric-range delegation;
+CJK-001/002⇄CJK-010 Han-adjacency delegation), so KNOWN_UNSTABLE_SUBSTR is empty
+and EVERY corpus file must converge — any non-convergence fails the gate.
 """
 
 from __future__ import annotations
@@ -47,15 +48,15 @@ import tempfile
 MAX_PASSES = 8
 
 # Tracked non-convergent files pending reconciliation (do NOT fail the gate on
-# these; DO fail on any NEW non-convergence). TODO(P0b): resolve and shrink.
-#   - CJK: CJK-001/002 (`fullwidth→ASCII`) vs CJK-010 (`ASCII→fullwidth`)
-#          oscillate in mixed-script paragraphs (context gate flips under the
-#          conversion). Still open.
-#   - dash: TYPO-002 (`--`→`–`) vs TYPO-026 (`–`→`--`) — RESOLVED at the source
-#           (TYPO-002 now delegates numeric ranges), so no longer allowlisted.
-KNOWN_UNSTABLE_SUBSTR: tuple[str, ...] = (
-    "i18n_qa_mixed",
-)
+# these; DO fail on any NEW non-convergence). Both originally-tracked oscillating
+# producer pairs are now RESOLVED at the source, so this is empty:
+#   - dash: TYPO-002 (`--`→`–`) vs TYPO-026 (`–`→`--`) — TYPO-002 now delegates
+#           numeric ranges (digit`--`digit) to TYPO-026.
+#   - CJK:  CJK-001/002 (`fullwidth→ASCII`) vs CJK-010 (`ASCII→fullwidth`) —
+#           CJK-001/002 now delegate Han-adjacent fullwidth punctuation to
+#           CJK-010 (fullwidth_punct_adjacent_to_cjk), so the ±32-byte context
+#           window no longer flips under the conversion.
+KNOWN_UNSTABLE_SUBSTR: tuple[str, ...] = ()
 
 
 def cli(repo: str) -> str:

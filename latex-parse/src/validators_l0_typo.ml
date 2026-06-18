@@ -112,9 +112,25 @@ let mk_replace_edits (s : string) (needle : string) (replacement : string) :
 
 let r_typo_002 : rule =
   let message = "Double hyphen -- should be en‑dash –" in
+  (* Fix-set delegation (oscillation fix): the fix leaves numeric/page ranges
+     (digit`--`digit) as `--`, the canonical LaTeX source form for a range
+     en-dash and the domain of TYPO-026 (`–`→`--` in page ranges). Without this,
+     TYPO-002 (`--`→`–`) and TYPO-026 form a contradictory pair that oscillates
+     forever under repeated --apply-fixes (found by check_apply_fixes_safety.py).
+     The COUNT is unchanged (every `--` is still tallied) so lint output is
+     identical (0 diff); only the fix-set is filtered at range offsets — the
+     same delegation pattern as TYPO-010→SPC-016/021 and CHAR-016→CJK-001/002. *)
   let mk_fix_edits s =
-    List.map
-      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–")
+    let n = String.length s in
+    let is_digit c = c >= '0' && c <= '9' in
+    let is_numeric_range off =
+      off > 0 && is_digit s.[off - 1] && off + 2 < n && is_digit s.[off + 2]
+    in
+    List.filter_map
+      (fun off ->
+        if is_numeric_range off then None
+        else
+          Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–"))
       (find_all_non_overlapping s "--")
   in
   let run s =

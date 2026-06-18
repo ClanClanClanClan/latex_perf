@@ -36,6 +36,35 @@ let () =
         (does_not_fire "TYPO-002" "no double hyphens here")
         (tag ^ ": no fire, no fix"));
 
+  (* Oscillation fix: TYPO-002 delegates numeric/page ranges (digit--digit) to
+     stay `--` (TYPO-026's domain), so it no longer fights TYPO-026. Count is
+     preserved; only the fix-set is filtered. *)
+  run "TYPO-002 delegates numeric range: 20--30 keeps -- (no fix emitted)" (fun tag ->
+      let src = "see pages 20--30 now" in
+      let edits = fix_edits "TYPO-002" src in
+      expect
+        (List.length edits = 0 && apply_all src edits = src)
+        (tag ^ ": digit--digit range not converted to en-dash"));
+
+  run "TYPO-002 still fires (counts) on a numeric range" (fun tag ->
+      (* Count semantic preserved — only the fix is delegated, lint is unchanged. *)
+      expect
+        (not (does_not_fire "TYPO-002" "see pages 20--30 now"))
+        (tag ^ ": range -- is still counted (0-diff lint)"));
+
+  run "TYPO-002 still fixes prose -- (not a numeric range)" (fun tag ->
+      let src = "a word -- another word" in
+      let edits = fix_edits "TYPO-002" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a word – another word")
+        (tag ^ ": prose -- still becomes en-dash"));
+
+  run "TYPO-002/026 no longer oscillate on a page range" (fun tag ->
+      (* Applying the en-dash range form converges to `--` and stays there. *)
+      let p1 = apply_all "pages 20\xe2\x80\x9330" (fix_edits "TYPO-026" "pages 20\xe2\x80\x9330") in
+      let p2 = apply_all p1 (fix_edits "TYPO-002" p1) in
+      expect (p1 = "pages 20--30" && p2 = p1) (tag ^ ": converges to -- and is stable"));
+
   (* TYPO-003: `---` → `—` (em-dash). TYPO-002 is suppressed by conflict edge on
      the same source. *)
   run "TYPO-003 fix: single --- becomes em-dash" (fun tag ->

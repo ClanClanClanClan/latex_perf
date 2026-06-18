@@ -46,20 +46,14 @@ import tempfile
 
 MAX_PASSES = 8
 
-# Tracked non-convergent files pending reconciliation of two contradictory
-# producer pairs (do NOT fail the gate on these; DO fail on any NEW
-# non-convergence). TODO(v27.0.x P0b): resolve and shrink this list.
-#   - dash: TYPO-002 (`--`→`–`) vs TYPO-026 (`–`→`--`) on numeric/page ranges.
-#   - CJK:  CJK-001/002 (`fullwidth→ASCII`) vs CJK-010 (`ASCII→fullwidth`)
-#           in mixed-script paragraphs.
+# Tracked non-convergent files pending reconciliation (do NOT fail the gate on
+# these; DO fail on any NEW non-convergence). TODO(P0b): resolve and shrink.
+#   - CJK: CJK-001/002 (`fullwidth→ASCII`) vs CJK-010 (`ASCII→fullwidth`)
+#          oscillate in mixed-script paragraphs (context gate flips under the
+#          conversion). Still open.
+#   - dash: TYPO-002 (`--`→`–`) vs TYPO-026 (`–`→`--`) — RESOLVED at the source
+#           (TYPO-002 now delegates numeric ranges), so no longer allowlisted.
 KNOWN_UNSTABLE_SUBSTR: tuple[str, ...] = (
-    # dash oscillation (TYPO-002 <-> TYPO-026 and related dash-range rules)
-    "range_dashes",
-    "page_range",
-    "mixed_dash",
-    "endash_range",
-    "en_dash_as_minus",
-    # CJK oscillation (CJK-001/002 <-> CJK-010) in mixed-script papers
     "i18n_qa_mixed",
 )
 

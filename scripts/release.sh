@@ -43,6 +43,18 @@ python3 scripts/tools/check_rule_contracts.py > /dev/null
 python3 scripts/validate_catalogue.py > /dev/null
 echo "[release] Governance + contracts in sync ✓"
 
+# 1c. Bump the prose version/count LABELS across maintained docs (README,
+# specs/*, CADENCE, PROOF_GUIDE, ...) to match the freshly-bumped dune-project
+# version + producer count. Historically release.sh bumped only dune-project +
+# the generated files, leaving these prose labels to drift (three audits caught
+# stale ones); check_version_labels — run inside the pre-release gate below —
+# now FAILS the release on a stale label, so fix them here. bump_release.py
+# reuses that gate's own patterns and self-verifies, so the two cannot diverge.
+echo "[release] Bumping doc version/count labels..."
+BUMP_DRY=""
+[[ "$DRY_RUN" == "--dry-run" ]] && BUMP_DRY="--dry-run"
+python3 scripts/tools/bump_release.py --repo . $BUMP_DRY
+
 # 2. Regenerate opam files
 echo "[release] Regenerating opam files..."
 opam exec -- dune build latex-perfectionist.opam latex-parse/latex_parse.opam 2>/dev/null || true
@@ -102,9 +114,11 @@ fi
 # with "nothing to commit". Under `set -euo pipefail` the script would
 # abort BEFORE the tag step, leaving the repo un-tagged. Guard against it.
 echo "[release] Committing version bump..."
-git add dune-project latex-perfectionist.opam latex-parse/latex_parse.opam \
-  governance/project_facts.yaml specs/rules/rule_contracts.yaml \
-  specs/rules/rule_contracts.json
+# Stage every tracked file modified by the bump (dune-project, opam, generated
+# governance/contracts, AND the doc labels rewritten by bump_release.py above).
+# Step 0 guaranteed a clean tree, so all current modifications are release
+# output — `git add -u` captures them without an ever-growing explicit list.
+git add -u
 if git diff --cached --quiet; then
   echo "[release] No staged changes (already at ${VERSION}); skipping commit."
 else

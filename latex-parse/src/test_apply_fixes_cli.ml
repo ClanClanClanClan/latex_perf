@@ -246,4 +246,48 @@ let () =
             (tag ^ ": Error (`Overlap (e1, e2)) — CLI's exit-2 path source")
       | Ok _ -> expect false (tag ^ ": expected Error, got Ok"));
 
+  (* P1a: --apply-fixes iterates to a fixpoint, so a CROSS-RULE cascade resolves
+     in a single invocation. ENC-004 rewrites the CP-1252 ellipsis byte 0x85 (an
+     invalid standalone UTF-8 byte) to U+2026; only on the NEXT pass can SPC-025
+     see — and delete — the space before that freshly-created ellipsis. A single
+     pass would stop at "word <U+2026>"; convergence yields "word<U+2026>". All
+     three rules (STRUCT-001 docclass insert, ENC-004, SPC-025) are in the
+     default set, so no pilot env is needed. *)
+  let contains s sub =
+    let nlen = String.length sub and slen = String.length s in
+    let rec find i =
+      if i + nlen > slen then false
+      else if String.sub s i nlen = sub then true
+      else find (i + 1)
+    in
+    find 0
+  in
+  run "CLI --apply-fixes converges a cross-rule cascade (ENC-004 → SPC-025)"
+    (fun tag ->
+      let path = write_temp_tex "word \x85\n" in
+      let out, code = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      let body = strip_comments out in
+      expect (code = 0) (tag ^ ": exit code 0");
+      expect
+        (contains body "word\xe2\x80\xa6")
+        (tag ^ ": ellipsis produced AND its leading space deleted (cascade)");
+      expect
+        (not (contains body "word \xe2\x80\xa6"))
+        (tag ^ ": no half-fixed 'word <space> U+2026' left behind"));
+
+  (* P1a: the converged output is a fixpoint — re-running --apply-fixes on it is
+     a no-op (idempotence), the defining property of convergence. *)
+  run "CLI --apply-fixes output is idempotent" (fun tag ->
+      let path = write_temp_tex "word \x85\n" in
+      let out1, c1 = run_cli [ "--apply-fixes"; path ] in
+      Sys.remove path;
+      let body1 = strip_comments out1 in
+      let path2 = write_temp_tex body1 in
+      let out2, c2 = run_cli [ "--apply-fixes"; path2 ] in
+      Sys.remove path2;
+      let body2 = strip_comments out2 in
+      expect (c1 = 0 && c2 = 0) (tag ^ ": exit code 0 both runs");
+      expect (body1 = body2) (tag ^ ": second pass changes nothing (fixpoint)"));
+
   finalise "apply-fixes-cli"

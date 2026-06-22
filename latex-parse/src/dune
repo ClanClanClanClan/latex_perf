@@ -180,6 +180,16 @@
  (libraries latex_parse_lib))
 
 (test
+ (name test_exempt_ranges)
+ (modules test_exempt_ranges)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_context_exemption)
+ (modules test_context_exemption)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_tokenizer_props)
  (modules test_tokenizer_props)
  (libraries latex_parse_lib))

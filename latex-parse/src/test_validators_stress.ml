@@ -3,6 +3,21 @@
 open Latex_parse_lib
 open Test_helpers
 
+(* Local-load watchdog scale. The alarm guards against a REAL infinite loop (Str
+   corruption → hang); the default budgets (5 s / 10 s) have ample headroom on
+   CI. On a developer machine under heavy load — Dropbox sync + concurrent dune
+   builds — a slow-but-finite run can exceed the wall-clock budget purely from
+   CPU starvation and trip a false "possible Str corruption", flapping the local
+   pre-release uber-gate. [STRESS_WATCHDOG_SCALE] multiplies the budget so
+   starvation is tolerated while a genuine hang still fails (it blows past any
+   finite bound). Only [pre_release_check.py] sets it; CI runs `dune runtest`
+   without it and keeps the tight 5 s bar that catches real hangs fast. *)
+let watchdog_scale =
+  match Sys.getenv_opt "STRESS_WATCHDOG_SCALE" with
+  | Some s -> (
+      match int_of_string_opt s with Some n when n >= 1 -> n | _ -> 1)
+  | None -> 1
+
 (* Run validators with a timeout — if Str corruption causes an infinite loop the
    alarm fires and the test fails instead of hanging. *)
 let run_with_timeout ?(seconds = 5) label src =
@@ -15,7 +30,7 @@ let run_with_timeout ?(seconds = 5) label src =
                timed_out := true;
                failwith "TIMEOUT"))
       in
-      let _ = Unix.alarm seconds in
+      let _ = Unix.alarm (seconds * watchdog_scale) in
       (try
          let _ = Validators.run_all src in
          ()

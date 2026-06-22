@@ -402,6 +402,174 @@ let range_is_inline_math (s : string) ((a, _b) : int * int) : bool =
     (s.[a] = '$' && s.[a + 1] <> '$') || (s.[a] = '\\' && s.[a + 1] = '(')
   else s.[a] = '$'
 
+(* ── Context-exemption ranges (P3 token-aware variants) ───────────────────
+   Byte ranges where typographic / lexical lint rules must NOT fire because the
+   bytes are not ordinary prose: verbatim spans, line comments, and url/href
+   targets — composed with [find_math_ranges] for math. The pilot L0 rules were
+   string-level and context-blind (docs/archive/RULES_PILOT_TODO.md: "Runtime
+   implementation is string-level; token-aware variants will follow post L0
+   tokenizer rewire"), so they fired on `--`, `...`, ``..'' etc. inside code
+   listings, comments and math. Composing a rule's candidate offsets with
+   [is_in_exempt_range (find_exempt_ranges s)] makes it skip those regions — the
+   post-pilot-gate prerequisite for graduating a Draft rule to the default
+   set. *)
+
+(* Environments whose body is verbatim (literal bytes, no typography
+   applies). *)
+let verbatim_envs =
+  [
+    "verbatim";
+    "verbatim*";
+    "Verbatim";
+    "Verbatim*";
+    "BVerbatim";
+    "LVerbatim";
+    "lstlisting";
+    "minted";
+    "alltt";
+    "comment";
+    "listing";
+  ]
+
+(** [find_verbatim_comment_url_ranges s] — single left-to-right pass returning
+    the byte ranges covered by line comments (`%`..EOL, respecting `\%`),
+    inline verbatim (`\verb<d>..<d>`, `\verb*`, `\lstinline<d>..<d>`), verbatim
+    environments ([verbatim_envs]), and url targets (`\url{..}`, `\nolinkurl`,
+    `\path`, and the FIRST argument of `\href{..}{..}`). Precedence is positional
+    — whichever region opens first wins, and the scanner jumps past a region's
+    end before looking for the next, so a `%`/`$`/`\verb` inside a verbatim span
+    (or a `$` inside a comment) is correctly treated as literal. *)
+let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
+  let n = String.length s in
+  let tbl = Hashtbl.create 32 in
+  List.iter (fun e -> Hashtbl.replace tbl e ()) verbatim_envs;
+  let is_verb_env name = Hashtbl.mem tbl name in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts_with p idx =
+    let pl = String.length p in
+    idx + pl <= n && String.sub s idx pl = p
+  in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  (* End (exclusive) of the brace group whose opening `{` is at [open_pos]. *)
+  let brace_group_end open_pos =
+    let depth = ref 0 in
+    let k = ref open_pos in
+    let stop = ref None in
+    while !stop = None && !k < n do
+      (if not (is_escaped !k) then
+         match String.unsafe_get s !k with
+         | '{' -> incr depth
+         | '}' ->
+             decr depth;
+             if !depth = 0 then stop := Some (!k + 1)
+         | _ -> ());
+      incr k
+    done;
+    match !stop with Some e -> e | None -> n
+  in
+  let ranges = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    let c = String.unsafe_get s pos in
+    if c = '%' && not (is_escaped pos) then (
+      let j = ref pos in
+      while !j < n && String.unsafe_get s !j <> '\n' do
+        incr j
+      done;
+      ranges := (pos, !j) :: !ranges;
+      i := !j)
+    else if c = '\\' && not (is_escaped pos) then
+      if starts_with "\\begin{" pos then (
+        let ns = pos + 7 in
+        let j = ref ns in
+        while !j < n && String.unsafe_get s !j <> '}' do
+          incr j
+        done;
+        if !j < n && is_verb_env (String.sub s ns (!j - ns)) then (
+          let name = String.sub s ns (!j - ns) in
+          let endp = "\\end{" ^ name ^ "}" in
+          let el = String.length endp in
+          let k = ref (!j + 1) in
+          while !k < n && not (starts_with endp !k) do
+            incr k
+          done;
+          let stop = if !k < n then !k + el else n in
+          ranges := (pos, stop) :: !ranges;
+          i := stop)
+        else i := pos + 1)
+      else if starts_with "\\verb" pos || starts_with "\\lstinline" pos then (
+        let cmdlen = if starts_with "\\lstinline" pos then 10 else 5 in
+        let after = ref (pos + cmdlen) in
+        if !after < n && String.unsafe_get s !after = '*' then incr after;
+        if !after < n && not (is_letter (String.unsafe_get s !after)) then (
+          (* The next char is the delimiter; non-letter guard avoids swallowing
+             longer command names (e.g. \verbatim, \verbatiminput). *)
+          let delim = String.unsafe_get s !after in
+          let k = ref (!after + 1) in
+          while !k < n && String.unsafe_get s !k <> delim do
+            incr k
+          done;
+          let stop = if !k < n then !k + 1 else n in
+          ranges := (pos, stop) :: !ranges;
+          i := stop)
+        else i := pos + 1)
+      else if
+        starts_with "\\url{" pos
+        || starts_with "\\nolinkurl{" pos
+        || starts_with "\\path{" pos
+      then (
+        let bpos = String.index_from s pos '{' in
+        let stop = brace_group_end bpos in
+        ranges := (pos, stop) :: !ranges;
+        i := stop)
+      else if starts_with "\\href{" pos then (
+        (* Only the first argument (the URL) is verbatim-ish; the link text is
+           ordinary prose, so exempt just `\href{..}`. *)
+        let bpos = pos + 5 in
+        let stop = brace_group_end bpos in
+        ranges := (pos, stop) :: !ranges;
+        i := stop)
+      else i := pos + 1
+    else i := pos + 1
+  done;
+  List.rev !ranges
+
+(** [find_exempt_ranges s] — all byte ranges where typography/lexical rules must
+    not fire: verbatim + comments + url targets
+    ([find_verbatim_comment_url_ranges]) plus math ([find_math_ranges]).
+
+    To detect math correctly, the verbatim/comment/url spans are first BLANKED
+    to spaces (offsets preserved) and [find_math_ranges] is run on the blanked
+    copy. [find_math_ranges] is itself context-blind about comments/verbatim, so
+    a stray `$` in a comment would otherwise desync all downstream math pairing;
+    blanking neutralises those bytes (a space is never a math toggle) without
+    shifting any offset, so the math ranges are accurate outside protected
+    regions. The result is sorted by start; overlaps are harmless for the
+    existential [is_in_exempt_range] check. *)
+let find_exempt_ranges (s : string) : (int * int) list =
+  let vcu = find_verbatim_comment_url_ranges s in
+  let blanked = Bytes.of_string s in
+  List.iter
+    (fun (a, b) ->
+      for k = a to b - 1 do
+        Bytes.set blanked k ' '
+      done)
+    vcu;
+  let math = find_math_ranges (Bytes.unsafe_to_string blanked) in
+  List.sort (fun (a, _) (c, _) -> compare a c) (List.rev_append vcu math)
+
+(** [is_in_exempt_range ranges off] — true iff [off] is inside any exempt range.
+    (Alias of the generic point-in-ranges test [is_in_math_range].) *)
+let is_in_exempt_range = is_in_math_range
+
 (** [is_ascii_context ?window ?candidate_bytes s off] — heuristic that returns
     [true] iff the byte window of size [window] (default 32) on each side of the
     candidate UTF-8 sequence at [off] (of length [candidate_bytes], default 3)

@@ -81,6 +81,39 @@ let find_all_non_overlapping (s : string) (needle : string) : int list =
     in
     loop 0 []
 
+(* ── P3 context-aware match collection (token-aware variants) ──────────────
+   The pilot L0 rules are string-level and were context-blind, firing on
+   deviations inside verbatim / comments / math / url targets (the reason they
+   stayed `L0_VALIDATORS=pilot`-gated; see docs/archive/RULES_PILOT_TODO.md).
+   [occurrences_in_text] returns the offsets of [needle] that lie in ordinary
+   prose only, by filtering through a precomputed [exempt] = [find_exempt_ranges
+   s]. A retrofitted rule computes [exempt] once and derives BOTH its count and
+   its fix edits from the same filtered offsets, so they stay consistent and the
+   rule no longer false-positives in protected regions — the post-pilot-gate
+   prerequisite for graduating it to the default rule set. *)
+let occurrences_in_text exempt (s : string) (needle : string) : int list =
+  find_all_non_overlapping s needle
+  |> List.filter (fun off -> not (is_in_exempt_range exempt off))
+
+(* Overlapping count of [needle] in [s] outside exempt ranges. Preserves the
+   diagnostic-count semantics of [count_substring] (which allows overlaps — e.g.
+   "--" occurs twice in "---") while skipping protected regions. Using this for
+   the COUNT (and [occurrences_in_text] for the non-overlapping FIX offsets)
+   keeps a retrofitted rule's count identical to its string-level form on
+   ordinary prose, so DAG conflict resolution (which tie-breaks on count) and
+   the lint output are unchanged outside protected regions. *)
+let count_in_text exempt (s : string) (needle : string) : int =
+  let n = String.length s and m = String.length needle in
+  if m = 0 || n < m then 0
+  else
+    let rec loop i acc =
+      if i > n - m then acc
+      else if String.sub s i m = needle && not (is_in_exempt_range exempt i)
+      then loop (i + 1) (acc + 1)
+      else loop (i + 1) acc
+    in
+    loop 0 0
+
 (** [find_consecutive_runs s c ~min_len] — list of [(start, stop)] half-open
     ranges where [s] has a maximal run of character [c] of length at least
     [min_len]. Used by TYPO-018 to collapse multi-space runs to a single space. *)
@@ -112,65 +145,46 @@ let mk_replace_edits (s : string) (needle : string) (replacement : string) :
 
 let r_typo_002 : rule =
   let message = "Double hyphen -- should be en‑dash –" in
-  (* Fix-set delegation (oscillation fix): the fix leaves numeric/page ranges
-     (digit`--`digit) as `--`, the canonical LaTeX source form for a range
-     en-dash and the domain of TYPO-026 (`–`→`--` in page ranges). Without this,
-     TYPO-002 (`--`→`–`) and TYPO-026 form a contradictory pair that oscillates
-     forever under repeated --apply-fixes (found by
-     check_apply_fixes_safety.py). The COUNT is unchanged (every `--` is still
-     tallied) so lint output is identical (0 diff); only the fix-set is filtered
-     at range offsets — the same delegation pattern as TYPO-010→SPC-016/021 and
-     CHAR-016→CJK-001/002. *)
-  let mk_fix_edits s =
-    let n = String.length s in
-    let is_digit c = c >= '0' && c <= '9' in
-    let is_numeric_range off =
-      off > 0 && is_digit s.[off - 1] && off + 2 < n && is_digit s.[off + 2]
-    in
-    List.filter_map
-      (fun off ->
-        if is_numeric_range off then None
-        else Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–"))
-      (find_all_non_overlapping s "--")
-  in
+  (* P3 context-aware (token-aware variant): count + fix derive from the same
+     exempt-filtered offsets, so `--` inside verbatim / comments / math / url is
+     ignored (it is literal there), not just inside plain prose. This replaces
+     the former string-level `count_substring` default branch and the incomplete
+     `L0_TOKEN_AWARE` Tokenizer_lite branch (Tokenizer_lite has no
+     comment/verbatim kinds, so it could not skip those regions).
+
+     Fix-set delegation (oscillation fix): numeric/page ranges (digit`--`digit)
+     are left as `--`, the canonical LaTeX source form and TYPO-026's domain, so
+     TYPO-002 (`--`→`–`) and TYPO-026 do not oscillate under --apply-fixes
+     (check_apply_fixes_safety.py). The count still tallies every prose `--`;
+     only the fix is withheld at range offsets. *)
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.ch, b.ch) with
-                | Some '-', Some '-' -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some
-              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
-                 ~count:cnt ~fix)
-        else None
-    | _ ->
-        let cnt = count_substring s "--" in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some
-              (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
-                 ~count:cnt ~fix)
-        else None
+    let exempt = find_exempt_ranges s in
+    (* Count keeps [count_substring]'s overlapping semantics (so "--" tallies 2
+       in "---" and the TYPO-002⇄TYPO-003 conflict tie-break is unchanged); the
+       fix uses non-overlapping offsets. Both skip exempt regions. *)
+    let cnt = count_in_text exempt s "--" in
+    if cnt > 0 then
+      let n = String.length s in
+      let is_digit c = c >= '0' && c <= '9' in
+      let is_numeric_range off =
+        off > 0 && is_digit s.[off - 1] && off + 2 < n && is_digit s.[off + 2]
+      in
+      let fix =
+        List.filter_map
+          (fun off ->
+            if is_numeric_range off then None
+            else
+              Some
+                (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "–"))
+          (occurrences_in_text exempt s "--")
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
+             ~count:cnt ~fix)
+    else None
   in
   { id = "TYPO-002"; run; languages = [] }
 

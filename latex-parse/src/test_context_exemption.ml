@@ -25,6 +25,54 @@ let cases =
         ("line comment", "% a -- b comment\n");
         ("inline math", "$a -- b$");
       ] );
+    ( "TYPO-003",
+      "ordinary text a --- b here",
+      [
+        ("inline verbatim", "x \\verb|a --- b| y");
+        ("verbatim env", "\\begin{verbatim}\na --- b\n\\end{verbatim}");
+        ("line comment", "% a --- b comment\n");
+        ("inline math", "$a --- b$");
+      ] );
+    ( "TYPO-004",
+      "they said ``hello'' loudly",
+      [
+        ("inline verbatim", "x \\verb|``hello''| y");
+        ("verbatim env", "\\begin{verbatim}\n``hello''\n\\end{verbatim}");
+        ("line comment", "% ``hello'' comment\n");
+        ("inline math", "$``hello''$");
+      ] );
+    ( "TYPO-005",
+      "wait ... and see",
+      [
+        ("inline verbatim", "x \\verb|...| y");
+        ("verbatim env", "\\begin{verbatim}\na ... b\n\\end{verbatim}");
+        ("line comment", "% wait ... comment\n");
+        ("inline math", "$a + ... + z$");
+      ] );
+    ( "TYPO-010",
+      "apples , oranges here",
+      [
+        ("inline verbatim", "x \\verb|a , b| y");
+        ("verbatim env", "\\begin{verbatim}\na , b\n\\end{verbatim}");
+        ("line comment", "% a , b comment\n");
+        ("inline math", "$a , b$");
+      ] );
+    ( "TYPO-033",
+      "see Smith et.al here",
+      [
+        ("inline verbatim", "x \\verb|et.al| y");
+        ("verbatim env", "\\begin{verbatim}\net.al\n\\end{verbatim}");
+        ("line comment", "% et.al comment\n");
+        ("inline math", "$et.al$");
+      ] );
+    ( "TYPO-037",
+      "apples , oranges here",
+      [
+        ("inline verbatim", "x \\verb|a , b| y");
+        ("verbatim env", "\\begin{verbatim}\na , b\n\\end{verbatim}");
+        ("line comment", "% a , b comment\n");
+        ("inline math", "$a , b$");
+      ] );
   ]
 
 let () =

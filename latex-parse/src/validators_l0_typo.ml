@@ -143,6 +143,19 @@ let mk_replace_edits (s : string) (needle : string) (replacement : string) :
       Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) replacement)
     (find_all_non_overlapping s needle)
 
+(** [mk_replace_edits_exempt exempt s needle replacement] — context-aware
+    counterpart of [mk_replace_edits]: emits a non-overlapping [needle] →
+    [replacement] replace for every occurrence OUTSIDE the [exempt] ranges
+    (verbatim / comments / math / url), via [occurrences_in_text]. Use in a
+    retrofitted rule so its fix never touches a protected region. *)
+let mk_replace_edits_exempt exempt (s : string) (needle : string)
+    (replacement : string) : Cst_edit.t list =
+  let nlen = String.length needle in
+  List.map
+    (fun off ->
+      Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) replacement)
+    (occurrences_in_text exempt s needle)
+
 let r_typo_002 : rule =
   let message = "Double hyphen -- should be en‑dash –" in
   (* P3 context-aware (token-aware variant): count + fix derive from the same
@@ -190,49 +203,31 @@ let r_typo_002 : rule =
 
 let r_typo_003 : rule =
   let message = "Triple hyphen --- should be em‑dash —" in
-  let mk_fix_edits s =
-    List.map
-      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "—")
-      (find_all_non_overlapping s "---")
-  in
+  (* P3 context-aware (token-aware variant): count + fix both derive from the
+     same exempt-filtered offsets, so `---` inside verbatim / comments / math /
+     url is ignored (literal there), not flagged. Replaces the former
+     string-level `count_substring` default branch and the incomplete
+     `L0_TOKEN_AWARE` Tokenizer_lite branch (Tokenizer_lite has no
+     comment/verbatim kinds, so it could not skip those regions). Count keeps
+     [count_substring]'s overlapping semantics on prose, preserving the
+     TYPO-002⇄TYPO-003 conflict tie-break (which compares counts). *)
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: c' :: rest -> (
-                match (a.ch, b.ch, c'.ch) with
-                | Some '-', Some '-', Some '-' -> loop (c + 1) (b :: c' :: rest)
-                | _ -> loop c (b :: c' :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some
-              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
-                 ~count:cnt ~fix)
-        else None
-    | _ ->
-        let cnt = count_substring s "---" in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some
-              (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
-                 ~count:cnt ~fix)
-        else None
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "---" in
+    if cnt > 0 then
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "—")
+          (occurrences_in_text exempt s "---")
+      in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-003" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-003" ~severity:Warning ~message
+             ~count:cnt ~fix)
+    else None
   in
   { id = "TYPO-003"; run; languages = [] }
 
@@ -249,11 +244,17 @@ let r_typo_004 : rule =
      scripts/validate_messages.sh extractor doesn't follow let-bindings and the
      `messages` CI gate would mis-pair TYPO-003 with TYPO-004's message string
      (per feedback_silent_gate_failures memo). *)
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
-    let bt_offsets = List.filter outside (find_all_non_overlapping s "``") in
-    let ap_offsets = List.filter outside (find_all_non_overlapping s "''") in
+  (* P3 context-aware (token-aware variant): both count and fix now skip the
+     full exempt set (verbatim / comments / math / url) via [find_exempt_ranges],
+     superseding the v27.0.6 math-only [find_math_ranges] filter. Counting only
+     non-exempt occurrences makes the rule fully SILENT in protected regions —
+     the post-pilot-gate property for promotion — rather than the former
+     "fires count, no fix" behaviour that still surfaced a Warning inside math.
+     `` and '' inside math/verbatim are literal (e.g. `$f''(x)$` double-prime),
+     so they are neither reported nor fixed. *)
+  let mk_fix_edits exempt s =
+    let bt_offsets = occurrences_in_text exempt s "``" in
+    let ap_offsets = occurrences_in_text exempt s "''" in
     List.map
       (fun off ->
         Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\xe2\x80\x9c")
@@ -265,9 +266,10 @@ let r_typo_004 : rule =
         ap_offsets
   in
   let run s =
-    let cnt = count_substring s "``" + count_substring s "''" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "``" + count_in_text exempt s "''" in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-004" ~severity:Warning
@@ -302,20 +304,22 @@ let r_typo_005 : rule =
 
      Message inlined per round-3 v27.0.6 pattern (validate_messages.sh extractor
      doesn't follow let-bindings). *)
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
-    let offsets = List.filter outside (find_all_non_overlapping s "...") in
+  (* P3 context-aware (token-aware variant): the count, formerly taken on the
+     math-stripped buffer ([count_substring (strip_math_segments s) "..."]), now
+     uses [count_in_text exempt s "..."] — equivalent on math (still skips `...`
+     inside `$1,2,...,n$`) and additionally skips verbatim / comments / url. Fix
+     offsets come from the same exempt set. *)
+  let mk_fix_edits exempt s =
     List.map
       (fun off ->
         Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
-      offsets
+      (occurrences_in_text exempt s "...")
   in
   let run s =
-    let stripped = strip_math_segments s in
-    let cnt = count_substring stripped "..." in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "..." in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-005" ~severity:Warning
@@ -551,13 +555,25 @@ let r_typo_010 : rule =
      semantic preserved); only the fix-set shrinks at `;`/`:` offsets, where
      SPC-016/021's 1-byte delete emits instead of TYPO-010's 2-byte→1-byte
      replace. *)
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url) via [find_exempt_ranges], replacing
+     the former string-level `count_substring` default branch and the
+     `L0_TOKEN_AWARE` Tokenizer_lite branch (which had no comment/verbatim
+     kinds). Count still tallies all 6 punct chars (` ,` ` .` ` ;` ` :` ` ?`
+     ` !`); the fix-set still excludes `;`/`:` (delegated to SPC-016/SPC-021,
+     v27.0.60), and now additionally skips any space-before-punct inside a
+     protected region. *)
   let punct_chars = [ ','; '.'; '?'; '!' ] in
-  let mk_fix_edits s =
+  let mk_fix_edits exempt s =
     let n = String.length s in
     let edits = ref [] in
     let i = ref 0 in
     while !i < n - 1 do
-      if s.[!i] = ' ' && List.mem s.[!i + 1] punct_chars then (
+      if
+        s.[!i] = ' '
+        && List.mem s.[!i + 1] punct_chars
+        && not (is_in_exempt_range exempt !i)
+      then (
         edits :=
           Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2)
             (String.make 1 s.[!i + 1])
@@ -568,48 +584,20 @@ let r_typo_010 : rule =
     List.rev !edits
   in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        let is_punct = function
-          | Some (',' | '.' | ';' | ':' | '?' | '!') -> true
-          | _ -> false
-        in
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind, b.ch) with
-                | Space, Symbol, ch when is_punct ch -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some (mk_result ~id:"TYPO-010" ~severity:Info ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-010" ~severity:Info ~message
-                 ~count:cnt ~fix)
-        else None
-    | _ ->
-        let combos = [ " ,"; " ."; " ;"; " :"; " ?"; " !" ] in
-        let cnt =
-          List.fold_left (fun acc sub -> acc + count_substring s sub) 0 combos
-        in
-        if cnt > 0 then
-          let fix = mk_fix_edits s in
-          if fix = [] then
-            Some (mk_result ~id:"TYPO-010" ~severity:Info ~message ~count:cnt)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-010" ~severity:Info ~message
-                 ~count:cnt ~fix)
-        else None
+    let exempt = find_exempt_ranges s in
+    let combos = [ " ,"; " ."; " ;"; " :"; " ?"; " !" ] in
+    let cnt =
+      List.fold_left (fun acc sub -> acc + count_in_text exempt s sub) 0 combos
+    in
+    if cnt > 0 then
+      let fix = mk_fix_edits exempt s in
+      if fix = [] then
+        Some (mk_result ~id:"TYPO-010" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-010" ~severity:Info ~message ~count:cnt
+             ~fix)
+    else None
   in
   { id = "TYPO-010"; run; languages = [] }
 
@@ -1363,10 +1351,14 @@ let r_typo_032 : rule =
    "et.al" with "et al.". *)
 let r_typo_033 : rule =
   let message = "Abbreviation et.al without space" in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set
+     (verbatim / comments / math / url) so `et.al` inside a code listing or
+     comment is not flagged. *)
   let run s =
-    let cnt = count_substring s "et.al" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "et.al" in
     if cnt > 0 then
-      let fix = mk_replace_edits s "et.al" "et al." in
+      let fix = mk_replace_edits_exempt exempt s "et.al" "et al." in
       if fix = [] then
         Some (mk_result ~id:"TYPO-033" ~severity:Warning ~message ~count:cnt)
       else
@@ -1514,10 +1506,14 @@ let r_typo_036 : rule =
 (* Space before comma. v26.3 §3 item E: fix replaces " ," with ",". *)
 let r_typo_037 : rule =
   let message = "Space before comma" in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set
+     (verbatim / comments / math / url). Same `<space>,` target as TYPO-010's
+     comma branch; both made context-aware together this batch. *)
   let run s =
-    let cnt = count_substring s " ," in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s " ," in
     if cnt > 0 then
-      let fix = mk_replace_edits s " ," "," in
+      let fix = mk_replace_edits_exempt exempt s " ," "," in
       if fix = [] then
         Some (mk_result ~id:"TYPO-037" ~severity:Info ~message ~count:cnt)
       else

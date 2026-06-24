@@ -414,19 +414,21 @@ let () =
         && List.length edits = 2)
         (tag ^ ": equation env preserved"));
 
-  run "TYPO-004 fix: still fires count on '' in math (no-fix path)" (fun tag ->
-      (* Math-only `` or '' should still report (count > 0) but no auto-fix.
-         Round-8 audit: previously asserted only [List.length edits = 0], which
-         can't disambiguate "rule didn't fire" from "rule fired but emitted no
-         fix". Now also asserts [fires_with_count] = 2 to verify the rule DOES
-         fire (count = 2 because the source contains two '' pairs at offsets 3
-         and 9), and the fix list is empty because both pairs are inside
-         math. *)
+  run "TYPO-004 stays silent when '' is only in math (P3 context-aware)"
+    (fun tag ->
+      (* P3 token-aware retrofit: the count now derives from the exempt-filtered
+         offsets (find_exempt_ranges), so `` / '' that occur ONLY inside math
+         (double-prime `$f''(x)$`) are neither counted nor fixed — the rule is
+         fully SILENT, not the former "fires count=2, no fix" behaviour. A
+         no-fix Warning inside math is itself a false positive; eliminating it is
+         the post-pilot-gate property for promoting TYPO-004 to the default
+         set. (Pairs outside math are still counted and fixed — see the
+         interleaved-math test below.) *)
       let src = "$f''(x) g''(x)$" in
       let edits = fix_edits "TYPO-004" src in
       expect
-        (fires_with_count "TYPO-004" src 2 && List.length edits = 0)
-        (tag ^ ": rule fires with count=2, no fix edits"));
+        (does_not_fire "TYPO-004" src && List.length edits = 0)
+        (tag ^ ": rule silent, no fix edits"));
 
   run "TYPO-004 does not fire on clean source" (fun tag ->
       expect

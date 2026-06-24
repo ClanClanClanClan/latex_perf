@@ -245,13 +245,13 @@ let r_typo_004 : rule =
      `messages` CI gate would mis-pair TYPO-003 with TYPO-004's message string
      (per feedback_silent_gate_failures memo). *)
   (* P3 context-aware (token-aware variant): both count and fix now skip the
-     full exempt set (verbatim / comments / math / url) via [find_exempt_ranges],
-     superseding the v27.0.6 math-only [find_math_ranges] filter. Counting only
-     non-exempt occurrences makes the rule fully SILENT in protected regions —
-     the post-pilot-gate property for promotion — rather than the former
-     "fires count, no fix" behaviour that still surfaced a Warning inside math.
-     `` and '' inside math/verbatim are literal (e.g. `$f''(x)$` double-prime),
-     so they are neither reported nor fixed. *)
+     full exempt set (verbatim / comments / math / url) via
+     [find_exempt_ranges], superseding the v27.0.6 math-only [find_math_ranges]
+     filter. Counting only non-exempt occurrences makes the rule fully SILENT in
+     protected regions — the post-pilot-gate property for promotion — rather
+     than the former "fires count, no fix" behaviour that still surfaced a
+     Warning inside math. `` and '' inside math/verbatim are literal (e.g.
+     `$f''(x)$` double-prime), so they are neither reported nor fixed. *)
   let mk_fix_edits exempt s =
     let bt_offsets = occurrences_in_text exempt s "``" in
     let ap_offsets = occurrences_in_text exempt s "''" in
@@ -559,8 +559,8 @@ let r_typo_010 : rule =
      set (verbatim / comments / math / url) via [find_exempt_ranges], replacing
      the former string-level `count_substring` default branch and the
      `L0_TOKEN_AWARE` Tokenizer_lite branch (which had no comment/verbatim
-     kinds). Count still tallies all 6 punct chars (` ,` ` .` ` ;` ` :` ` ?`
-     ` !`); the fix-set still excludes `;`/`:` (delegated to SPC-016/SPC-021,
+     kinds). Count still tallies all 6 punct chars (` ,` ` .` ` ;` ` :` ` ?` `
+     !`); the fix-set still excludes `;`/`:` (delegated to SPC-016/SPC-021,
      v27.0.60), and now additionally skips any space-before-punct inside a
      protected region. *)
   let punct_chars = [ ','; '.'; '?'; '!' ] in

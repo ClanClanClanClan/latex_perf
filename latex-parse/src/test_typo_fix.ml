@@ -420,8 +420,8 @@ let () =
          offsets (find_exempt_ranges), so `` / '' that occur ONLY inside math
          (double-prime `$f''(x)$`) are neither counted nor fixed — the rule is
          fully SILENT, not the former "fires count=2, no fix" behaviour. A
-         no-fix Warning inside math is itself a false positive; eliminating it is
-         the post-pilot-gate property for promoting TYPO-004 to the default
+         no-fix Warning inside math is itself a false positive; eliminating it
+         is the post-pilot-gate property for promoting TYPO-004 to the default
          set. (Pairs outside math are still counted and fixed — see the
          interleaved-math test below.) *)
       let src = "$f''(x) g''(x)$" in

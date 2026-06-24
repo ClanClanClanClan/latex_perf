@@ -73,6 +73,46 @@ let cases =
         ("line comment", "% a , b comment\n");
         ("inline math", "$a , b$");
       ] );
+    ( "TYPO-001",
+      "she said \"hi\" then",
+      [
+        ("inline verbatim", "x \\verb|\"hi\"| y");
+        ("verbatim env", "\\begin{verbatim}\n\"hi\"\n\\end{verbatim}");
+        ("line comment", "% \"hi\" comment\n");
+        ("inline math", "$\"x\" + \"y\"$");
+      ] );
+    ( "TYPO-013",
+      "the `key word here",
+      [
+        ("inline verbatim", "x \\verb|`code| y");
+        ("verbatim env", "\\begin{verbatim}\n`tick\n\\end{verbatim}");
+        ("line comment", "% `tick comment\n");
+        ("inline math", "$`x$");
+      ] );
+    ( "TYPO-015",
+      "stray \\%\\% here",
+      [
+        ("inline verbatim", "x \\verb|\\%\\%| y");
+        ("verbatim env", "\\begin{verbatim}\n\\%\\%\n\\end{verbatim}");
+        ("line comment", "% \\%\\% comment\n");
+        ("inline math", "$\\%\\%$");
+      ] );
+    ( "TYPO-022",
+      "the end )",
+      [
+        ("inline verbatim", "x \\verb|a )| y");
+        ("verbatim env", "\\begin{verbatim}\na )\n\\end{verbatim}");
+        ("line comment", "% a ) comment\n");
+        ("inline math", "$a )$");
+      ] );
+    ( "TYPO-027",
+      "wow!! really",
+      [
+        ("inline verbatim", "x \\verb|!!| y");
+        ("verbatim env", "\\begin{verbatim}\nwow!!\n\\end{verbatim}");
+        ("line comment", "% wow!! comment\n");
+        ("inline math", "$n!!$");
+      ] );
   ]
 
 let () =

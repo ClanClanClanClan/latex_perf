@@ -23,9 +23,16 @@ let r_typo_001 : rule =
     in
     count (i - 1) 0 land 1 = 1
   in
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
+  (* P3 context-aware (token-aware variant): count + fix both skip the full
+     exempt set (verbatim / comments / math / url) via [find_exempt_ranges],
+     superseding the v27.0.8 math-only [strip_math_segments]/[find_math_ranges]
+     filter. A straight quote inside a code listing or comment is literal, so it
+     is neither counted nor alternated. Count preserves the prior semantic of
+     tallying every straight quote outside the protected region (escaped umlaut
+     quotes included); those escapes are excluded from the fix only, and the
+     open/close alternation index runs over the fix offsets. *)
+  let mk_fix_edits exempt s =
+    let outside off = not (is_in_exempt_range exempt off) in
     let n = String.length s in
     let rec collect i acc =
       if i >= n then List.rev acc
@@ -43,10 +50,15 @@ let r_typo_001 : rule =
       offsets
   in
   let run s =
-    let stripped = strip_math_segments s in
-    let cnt = count_char stripped '"' in
+    let exempt = find_exempt_ranges s in
+    let n = String.length s in
+    let cnt = ref 0 in
+    for i = 0 to n - 1 do
+      if s.[i] = '"' && not (is_in_exempt_range exempt i) then incr cnt
+    done;
+    let cnt = !cnt in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-001" ~severity:Error
@@ -679,7 +691,12 @@ let r_typo_012 : rule =
 
 (* TYPO-013: ASCII back-tick used as opening quote *)
 let r_typo_013 : rule =
+  (* P3 context-aware (token-aware variant): skip backticks inside the exempt
+     set (verbatim / comments / math / url) — a lone backtick is literal in a
+     `\verb`/`lstlisting` listing and is TeX's char-code operator in math, so it
+     must not be flagged or fixed there. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let n = String.length s in
     let cnt = ref 0 in
     let edits = ref [] in
@@ -689,7 +706,7 @@ let r_typo_013 : rule =
         let is_double =
           (i + 1 < n && s.[i + 1] = '`') || (i > 0 && s.[i - 1] = '`')
         in
-        if not is_double then (
+        if (not is_double) && not (is_in_exempt_range exempt i) then (
           incr cnt;
           edits :=
             Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\xe2\x80\x98"
@@ -729,10 +746,13 @@ let r_typo_014 : rule =
 
 (* TYPO-015: Double \% in source; likely stray percent *)
 let r_typo_015 : rule =
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set so
+     a literal `\%\%` inside verbatim / comment is not rewritten. *)
   let run s =
-    let cnt = count_substring s "\\%\\%" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "\\%\\%" in
     if cnt > 0 then
-      let fix = mk_replace_edits s "\\%\\%" "\\%" in
+      let fix = mk_replace_edits_exempt exempt s "\\%\\%" "\\%" in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-015" ~severity:Warning
@@ -915,15 +935,22 @@ let r_typo_021 : rule =
    v26.3 §3 item E: fix replaces each [ )]/[ ]]/[ }] with the closer alone. *)
 let r_typo_022 : rule =
   let message = "Space before closing punctuation ) ] }" in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set
+     (verbatim / comments / math / url) so spacing inside a code listing or math
+     group is left untouched. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let combos = [ (" )", ")"); (" ]", "]"); (" }", "}") ] in
     let cnt =
-      List.fold_left (fun acc (sub, _) -> acc + count_substring s sub) 0 combos
+      List.fold_left
+        (fun acc (sub, _) -> acc + count_in_text exempt s sub)
+        0 combos
     in
     if cnt > 0 then
       let fix =
         List.concat_map
-          (fun (needle, replacement) -> mk_replace_edits s needle replacement)
+          (fun (needle, replacement) ->
+            mk_replace_edits_exempt exempt s needle replacement)
           combos
       in
       if fix = [] then
@@ -1146,10 +1173,19 @@ let r_typo_026 : rule =
    characters to a single [!]. *)
 let r_typo_027 : rule =
   let message = {|Multiple exclamation marks ‼|} in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set.
+     Besides verbatim/comment, this is crucial for MATH: `n!!` is the
+     double-factorial operator, not a typo, so `$n!!$` must not be flagged or
+     collapsed to `n!`. *)
   let run s =
-    let cnt = count_substring s "!!" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "!!" in
     if cnt > 0 then
-      let runs = find_consecutive_runs s '!' ~min_len:2 in
+      let runs =
+        find_consecutive_runs s '!' ~min_len:2
+        |> List.filter (fun (start_offset, _) ->
+               not (is_in_exempt_range exempt start_offset))
+      in
       let fix =
         List.map
           (fun (start_offset, end_offset) ->

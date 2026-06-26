@@ -42,6 +42,14 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
+        # Drop third-party apt repos baked into the GitHub runner image that
+        # the project does not need (packages.microsoft.com azure-cli / prod).
+        # These intermittently 403 / lose their signing key, making a bare
+        # `apt-get update` exit 100 and kill every job that uses this action
+        # (e.g. the nightly fuzz run on 2026-06-25). Removal is safe: none of
+        # the packages below come from a Microsoft/Azure repo.
+        sudo rm -f /etc/apt/sources.list.d/microsoft* \
+                   /etc/apt/sources.list.d/*azure* 2>/dev/null || true
         sudo apt-get update
         sudo apt-get install -y \
           bubblewrap \
@@ -95,6 +103,10 @@ runs:
       if: inputs.system-packages != ''
       shell: bash
       run: |
+        # Same guard as the base system-packages step: drop the broken
+        # Microsoft/Azure apt repos before updating (see comment above).
+        sudo rm -f /etc/apt/sources.list.d/microsoft* \
+                   /etc/apt/sources.list.d/*azure* 2>/dev/null || true
         sudo apt-get update -y
         sudo apt-get install -y ${{ inputs.system-packages }}
 

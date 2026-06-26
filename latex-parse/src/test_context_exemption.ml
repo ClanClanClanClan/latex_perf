@@ -235,6 +235,33 @@ let cases =
         ("line comment", "% \\,\\, comment\n");
         ("inline math", "$\\,\\,$");
       ] );
+    (* TYPO-012/028/046 are the "vcu-only" rules: math is their OPERATING domain
+       (TYPO-012 fixes `5'`→`5^\prime` inside math; TYPO-028/046 rewrite the
+       `$$` / `\begin{math}` delimiters themselves), so they must NOT be exempt
+       in math — only in verbatim / comments / url. Hence a custom 3-context
+       list with no inline-math row. *)
+    ( "TYPO-012",
+      "the 6' board",
+      [
+        ("inline verbatim", "x \\verb|6'| y");
+        ("verbatim env", "\\begin{verbatim}\n6'\n\\end{verbatim}");
+        ("line comment", "% 6' here\n");
+      ] );
+    ( "TYPO-028",
+      "display $$x$$ here",
+      [
+        ("inline verbatim", "x \\verb|$$x$$| y");
+        ("verbatim env", "\\begin{verbatim}\n$$x$$\n\\end{verbatim}");
+        ("line comment", "% $$x$$ here\n");
+      ] );
+    ( "TYPO-046",
+      "math \\begin{math}x\\end{math} here",
+      [
+        ("inline verbatim", "x \\verb|\\begin{math}| y");
+        ( "verbatim env",
+          "\\begin{verbatim}\n\\begin{math}x\\end{math}\n\\end{verbatim}" );
+        ("line comment", "% \\begin{math}x\\end{math}\n");
+      ] );
   ]
 
 let () =

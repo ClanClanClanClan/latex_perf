@@ -669,10 +669,6 @@ let r_typo_012 : rule =
     in
     loop 0 []
   in
-  let fix_offsets s =
-    let math = find_math_ranges s in
-    List.filter (fun pos -> is_in_math_range math pos) (collect_offsets s)
-  in
   let mk_fix_edits offsets =
     List.map
       (fun pos ->
@@ -681,10 +677,27 @@ let r_typo_012 : rule =
           "^\\prime")
       offsets
   in
+  (* P3 context-aware (token-aware variant). TYPO-012 is an INVERSE rule: it
+     fixes `5'` → `5^\prime` only INSIDE math (outside math the apostrophe is
+     ambiguous, so it warns but does not auto-fix). It therefore needs a
+     verbatim/comment/url-only exemption, NOT the full exempt set (which would
+     suppress its math target). We derive "in math, not in vcu" as
+     [is_in_exempt_range exempt] (= vcu ∪ vcu-aware math) AND NOT
+     [is_in_exempt_range vcu]. Because [find_exempt_ranges] computes math on a
+     vcu-blanked copy, this also closes a latent bug where a stray `$` inside a
+     `\verb` listing made the raw [find_math_ranges] mis-pair `5'` as in-math
+     and corrupt the verbatim. Count skips vcu (a `5'` in a code listing is
+     literal) but still includes ordinary prose (the intended ambiguity
+     warning); the fix applies only in-math-not-vcu. *)
   let run s =
-    let cnt = List.length (collect_offsets s) in
+    let exempt = find_exempt_ranges s in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let in_vcu off = is_in_exempt_range vcu off in
+    let in_math_only off = is_in_exempt_range exempt off && not (in_vcu off) in
+    let all = collect_offsets s in
+    let cnt = List.length (List.filter (fun off -> not (in_vcu off)) all) in
     if cnt > 0 then
-      let fix = mk_fix_edits (fix_offsets s) in
+      let fix = mk_fix_edits (List.filter in_math_only all) in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-012" ~severity:Warning
@@ -1274,10 +1287,21 @@ let r_typo_028 : rule =
       (find_all_non_overlapping s needle)
   in
   let rec pairs = function a :: b :: rest -> (a, b) :: pairs rest | _ -> [] in
+  (* P3 context-aware (token-aware variant): this rule operates ON the `$$`
+     delimiters, so it needs a verbatim/comment/url-only exemption — NOT the
+     full exempt set (which treats `$$…$$` as a math range and would suppress
+     the rule's own target). A `$$` inside a `\verb`/`lstlisting` listing or a
+     comment is literal and must not be counted or rewritten. *)
   let run s =
-    let cnt = count_substring s needle / 2 in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let cnt = count_in_text vcu s needle / 2 in
     if cnt > 0 then
-      let pair_offsets = pairs (unescaped_offsets s) in
+      let non_vcu_offsets =
+        List.filter
+          (fun off -> not (is_in_exempt_range vcu off))
+          (unescaped_offsets s)
+      in
+      let pair_offsets = pairs non_vcu_offsets in
       let fix =
         List.concat_map
           (fun (open_off, close_off) ->
@@ -2379,9 +2403,21 @@ let r_typo_046 : rule =
       (fun off -> not (is_escaped_command s off))
       (find_all_non_overlapping s needle)
   in
+  (* P3 context-aware (token-aware variant): this rule operates ON the
+     `\begin{math}` / `\end{math}` delimiters, so (like TYPO-028) it needs a
+     verbatim/comment/url-only exemption — NOT the full exempt set, which treats
+     the math env as a range and would suppress the rule's own target. A
+     `\begin{math}` shown literally in a code listing or comment must not be
+     counted or rewritten. *)
   let run s =
-    let begin_offsets = collect_unescaped s begin_needle in
-    let end_offsets = collect_unescaped s end_needle in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let collect needle =
+      List.filter
+        (fun off -> not (is_in_exempt_range vcu off))
+        (collect_unescaped s needle)
+    in
+    let begin_offsets = collect begin_needle in
+    let end_offsets = collect end_needle in
     let cnt = List.length begin_offsets + List.length end_offsets in
     if cnt > 0 then (
       (* Round-1 ultrathink audit: detect adjacent begin/end pairs (empty math

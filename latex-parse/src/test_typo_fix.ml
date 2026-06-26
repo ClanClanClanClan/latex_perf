@@ -2177,10 +2177,18 @@ let () =
       let edits = fix_edits "TYPO-053" src in
       expect (List.length edits = 0) (tag ^ ": math content preserved"));
 
-  run "TYPO-053 fires (count) even when fix-set empty (math-only)" (fun tag ->
+  run "TYPO-053 stays silent when ⋯ is only in math (P3 context-aware)"
+    (fun tag ->
+      (* P3 token-aware retrofit: the count now derives from the exempt-filtered
+         offsets (find_exempt_ranges ⊇ math), so a `⋯` that occurs ONLY inside
+         math is neither counted nor fixed — the rule is fully silent, not the
+         former "warns inside math, no fix" behaviour. A no-fix Warning inside
+         math is itself a false positive; eliminating it is the post-pilot-gate
+         property for promoting TYPO-053. (⋯ is a math character; \dots is the
+         correct text-mode form, which is exactly where the rule still acts.) *)
       expect
-        (fires "TYPO-053" "Series $1, 2, \xe2\x8b\xaf, n$.")
-        (tag ^ ": rule still warns inside math"));
+        (does_not_fire "TYPO-053" "Series $1, 2, \xe2\x8b\xaf, n$.")
+        (tag ^ ": rule silent when ⋯ only in math"));
 
   run "TYPO-053 does not fire on clean source" (fun tag ->
       expect

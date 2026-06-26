@@ -153,6 +153,46 @@ let cases =
         ("line comment", "% \xc3\x97 comment\n");
         ("inline math", "$a \xc3\x97 b$");
       ] );
+    ( "TYPO-034",
+      "word \\footnote{x} here",
+      [
+        ("inline verbatim", "x \\verb| \\footnote| y");
+        ("verbatim env", "\\begin{verbatim}\na \\footnote\n\\end{verbatim}");
+        ("line comment", "% a \\footnote b\n");
+        ("inline math", "$a \\footnote b$");
+      ] );
+    ( "TYPO-038",
+      "mail a@b.com today",
+      [
+        ("inline verbatim", "x \\verb|a@b.com| y");
+        ("verbatim env", "\\begin{verbatim}\na@b.com\n\\end{verbatim}");
+        ("line comment", "% a@b.com comment\n");
+        ("inline math", "$a@b.com$");
+      ] );
+    ( "TYPO-049",
+      "\xe2\x80\x9c word",
+      [
+        ("inline verbatim", "x \\verb|\xe2\x80\x9c | y");
+        ("verbatim env", "\\begin{verbatim}\n\xe2\x80\x9c x\n\\end{verbatim}");
+        ("line comment", "% \xe2\x80\x9c x\n");
+        ("inline math", "$\xe2\x80\x9c x$");
+      ] );
+    ( "TYPO-051",
+      "word\xe2\x80\x89spacing",
+      [
+        ("inline verbatim", "x \\verb|\xe2\x80\x89| y");
+        ("verbatim env", "\\begin{verbatim}\nx\xe2\x80\x89y\n\\end{verbatim}");
+        ("line comment", "% x\xe2\x80\x89y\n");
+        ("inline math", "$x\xe2\x80\x89y$");
+      ] );
+    ( "TYPO-053",
+      "a \xe2\x8b\xaf z",
+      [
+        ("inline verbatim", "x \\verb|\xe2\x8b\xaf| y");
+        ("verbatim env", "\\begin{verbatim}\na \xe2\x8b\xaf z\n\\end{verbatim}");
+        ("line comment", "% \xe2\x8b\xaf z\n");
+        ("inline math", "$a \xe2\x8b\xaf z$");
+      ] );
   ]
 
 let () =

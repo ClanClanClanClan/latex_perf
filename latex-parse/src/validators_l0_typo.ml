@@ -1459,26 +1459,23 @@ let rules_pilot : rule list =
 
 (* Spurious space before footnote command \footnote *)
 let r_typo_034 : rule =
-  (* v27.0.11: math-aware fix producer. Each ` \footnote` occurrence outside
-     math has the leading space deleted. Convention: footnote marks should
-     attach directly to the preceding word with no space. Math-aware via
-     find_math_ranges (footnote in math is unusual but skip defensively).
-     Message inlined per round-3 v27.0.6 pattern. *)
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
-    let offsets = find_all_non_overlapping s " \\footnote" in
-    List.filter_map
-      (fun off ->
-        if outside off then
-          Some (Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) "")
-        else None)
-      offsets
+  (* v27.0.11: fix producer. Each ` \footnote` occurrence outside a protected
+     region has the leading space deleted (footnote marks should attach directly
+     to the preceding word). Message inlined per round-3 v27.0.6 pattern. *)
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url) via [find_exempt_ranges],
+     superseding the v27.0.11 math-only filter. ` \footnote` inside a code
+     listing or comment is literal and left untouched. *)
+  let mk_fix_edits exempt s =
+    List.map
+      (fun off -> Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) "")
+      (occurrences_in_text exempt s " \\footnote")
   in
   let run s =
-    let cnt = count_substring s " \\footnote" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s " \\footnote" in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-034" ~severity:Info
@@ -1573,10 +1570,10 @@ let r_typo_037 : rule =
 
 (* E-mail address not in \href *)
 let r_typo_038 : rule =
-  (* v27.0.9: math-aware fix producer. Wraps each non-math email match with
-     backslash-href-mailto-EMAIL-EMAIL. Uses find_math_ranges to skip math
-     segments (emails in math are unusual but possible). Message inlined per
-     round-3 v27.0.6 pattern. *)
+  (* v27.0.9: fix producer. Wraps each unwrapped email match outside a protected
+     region with backslash-href-mailto-EMAIL-EMAIL. (The P3 retrofit in
+     [unwrapped_matches] below filters by the full exempt set; the href-range
+     check stays separate.) Message inlined per round-3 v27.0.6 pattern. *)
   let re = Re_compat.regexp "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+" in
   let collect_matches s =
     let rec loop i acc =
@@ -1630,15 +1627,20 @@ let r_typo_038 : rule =
   let in_href_range ranges off =
     List.exists (fun (a, b) -> a <= off && off < b) ranges
   in
+  (* P3 context-aware (token-aware variant): count + fix (both derived from
+     [unwrapped_matches]) now skip the full exempt set (verbatim / comments /
+     math / url) via [find_exempt_ranges], superseding the v27.0.9 math-only
+     filter. The href-range check is orthogonal and unchanged — an e-mail inside
+     a `\verb` listing or comment is literal and no longer wrapped. *)
   let unwrapped_matches s =
-    let math = find_math_ranges s in
+    let exempt = find_exempt_ranges s in
     let href_ranges = find_href_mailto_ranges s in
-    let outside_math off = not (is_in_math_range math off) in
+    let outside_exempt off = not (is_in_exempt_range exempt off) in
     let outside_href off = not (in_href_range href_ranges off) in
     let matches = collect_matches s in
     List.filter
       (fun (start_offset, _, _) ->
-        outside_math start_offset && outside_href start_offset)
+        outside_exempt start_offset && outside_href start_offset)
       matches
   in
   let mk_fix_edits s =
@@ -1939,17 +1941,17 @@ let r_typo_051 : rule =
     done;
     !i = 0 || (!i > 0 && s.[!i - 1] = '\n')
   in
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url) via [find_exempt_ranges]; the
+     v27.0.56 line-start leading-run delegation to SPC-035 is preserved. *)
   let run s =
-    let cnt = count_substring s needle in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s needle in
     if cnt > 0 then
-      let math = find_math_ranges s in
-      let offsets = find_all_non_overlapping s needle in
       let fix_offsets =
         List.filter
-          (fun off ->
-            (not (is_in_math_range math off))
-            && not (in_leading_u2009_run s off))
-          offsets
+          (fun off -> not (in_leading_u2009_run s off))
+          (occurrences_in_text exempt s needle)
       in
       let fix =
         List.map
@@ -2006,19 +2008,19 @@ let r_typo_052 : rule =
    divergence pattern. Severity Warning preserved. *)
 let r_typo_053 : rule =
   let needle = "\xe2\x8b\xaf" in
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
-    let offsets = List.filter outside (find_all_non_overlapping s needle) in
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url); mirrors TYPO-061. *)
+  let mk_fix_edits exempt s =
     List.map
       (fun off ->
         Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
-      offsets
+      (occurrences_in_text exempt s needle)
   in
   let run s =
-    let cnt = count_substring s needle in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s needle in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-053" ~severity:Warning
@@ -2424,16 +2426,17 @@ let r_typo_047 : rule =
 let r_typo_049 : rule =
   let ldquo_sp = "\xe2\x80\x9c " in
   let lsquo_sp = "\xe2\x80\x98 " in
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url) via [find_exempt_ranges]. *)
   let run s =
-    let cnt = count_substring s ldquo_sp + count_substring s lsquo_sp in
+    let exempt = find_exempt_ranges s in
+    let cnt =
+      count_in_text exempt s ldquo_sp + count_in_text exempt s lsquo_sp
+    in
     if cnt > 0 then
-      let math = find_math_ranges s in
-      let offsets =
-        find_all_non_overlapping s ldquo_sp
-        @ find_all_non_overlapping s lsquo_sp
-      in
       let fix_offsets =
-        List.filter (fun off -> not (is_in_math_range math off)) offsets
+        occurrences_in_text exempt s ldquo_sp
+        @ occurrences_in_text exempt s lsquo_sp
       in
       (* The space byte to delete sits at offset+3 (after the 3-byte quote). *)
       let fix =

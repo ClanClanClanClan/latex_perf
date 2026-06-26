@@ -193,6 +193,48 @@ let cases =
         ("line comment", "% \xe2\x8b\xaf z\n");
         ("inline math", "$a \xe2\x8b\xaf z$");
       ] );
+    (* TYPO-009 fires only on a `~` at the START of a line, which can only sit
+       inside a protected region in a multi-line environment (verbatim env or
+       display math) — inline verbatim / line comment cannot host a line-start
+       `~`, so this rule uses a custom 2-context list. *)
+    ( "TYPO-009",
+      "~text at line start",
+      [
+        ("verbatim env", "\\begin{verbatim}\n~code line\n\\end{verbatim}");
+        ("display math", "\\[\n~x = 1\n\\]");
+      ] );
+    ( "TYPO-016",
+      "see \\cite{x} here",
+      [
+        ("inline verbatim", "x \\verb| \\cite{a}| y");
+        ("verbatim env", "\\begin{verbatim}\n \\cite{a}\n\\end{verbatim}");
+        ("line comment", "% see \\cite{a} here\n");
+        ("inline math", "$a \\cite{x} b$");
+      ] );
+    ( "TYPO-018",
+      "a  b here",
+      [
+        ("inline verbatim", "x \\verb|a  b| y");
+        ("verbatim env", "\\begin{verbatim}\na  b\n\\end{verbatim}");
+        ("line comment", "% a  b comment\n");
+        ("inline math", "$a  b$");
+      ] );
+    ( "TYPO-021",
+      "wait...And then",
+      [
+        ("inline verbatim", "x \\verb|...A| y");
+        ("verbatim env", "\\begin{verbatim}\n...A\n\\end{verbatim}");
+        ("line comment", "% ...A comment\n");
+        ("inline math", "$...A$");
+      ] );
+    ( "TYPO-055",
+      "a\\,\\,b here",
+      [
+        ("inline verbatim", "x \\verb|\\,\\,| y");
+        ("verbatim env", "\\begin{verbatim}\n\\,\\,\n\\end{verbatim}");
+        ("line comment", "% \\,\\, comment\n");
+        ("inline math", "$\\,\\,$");
+      ] );
   ]
 
 let () =

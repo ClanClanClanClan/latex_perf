@@ -518,23 +518,35 @@ let r_typo_008 : rule =
   { id = "TYPO-008"; run; languages = [] }
 
 let r_typo_009 : rule =
+  (* P3 context-aware (token-aware variant): count + fix skip line-start `~`
+     positions inside the exempt set (verbatim / comments / math / url) — a `~`
+     at the start of a verbatim line is a literal tilde, not a misused
+     non-breaking space. Count and edits are derived together so they stay
+     consistent. *)
   let run s =
     let n = String.length s in
-    let starts = if n > 0 && String.unsafe_get s 0 = '~' then 1 else 0 in
-    let cnt = starts + count_substring s "\n~" in
-    if cnt > 0 then (
-      let edits = ref [] in
-      if starts = 1 then
-        edits := Cst_edit.replace ~start_offset:0 ~end_offset:1 "" :: !edits;
-      let i = ref 0 in
-      while !i < n - 1 do
-        if String.unsafe_get s !i = '\n' && String.unsafe_get s (!i + 1) = '~'
-        then
-          edits :=
-            Cst_edit.replace ~start_offset:(!i + 1) ~end_offset:(!i + 2) ""
-            :: !edits;
-        incr i
-      done;
+    let exempt = find_exempt_ranges s in
+    let edits = ref [] in
+    let cnt = ref 0 in
+    if n > 0 && String.unsafe_get s 0 = '~' && not (is_in_exempt_range exempt 0)
+    then (
+      incr cnt;
+      edits := Cst_edit.replace ~start_offset:0 ~end_offset:1 "" :: !edits);
+    let i = ref 0 in
+    while !i < n - 1 do
+      if
+        String.unsafe_get s !i = '\n'
+        && String.unsafe_get s (!i + 1) = '~'
+        && not (is_in_exempt_range exempt (!i + 1))
+      then (
+        incr cnt;
+        edits :=
+          Cst_edit.replace ~start_offset:(!i + 1) ~end_offset:(!i + 2) ""
+          :: !edits);
+      incr i
+    done;
+    let cnt = !cnt in
+    if cnt > 0 then
       let fix = List.rev !edits in
       if fix = [] then
         Some
@@ -545,7 +557,7 @@ let r_typo_009 : rule =
         Some
           (mk_result_with_fix ~id:"TYPO-009" ~severity:Warning
              ~message:"Non‑breaking space ~ used incorrectly at line start"
-             ~count:cnt ~fix))
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-009"; run; languages = [] }
@@ -769,7 +781,11 @@ let r_typo_015 : rule =
 (* TYPO-016: Non-breaking space ~ missing before \cite / \ref *)
 let r_typo_016 : rule =
   let re = Re_compat.regexp {| \\\(cite\|ref\)[^a-zA-Z]|} in
+  (* P3 context-aware (token-aware variant): count + fix skip matches whose
+     leading space is inside the exempt set (verbatim / comments / math / url),
+     so a ` \cite`/` \ref` in a code listing or comment is not rewritten. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let cnt = ref 0 in
     let edits = ref [] in
     let i = ref 0 in
@@ -778,10 +794,13 @@ let r_typo_016 : rule =
          let _mr, _ = Re_compat.search_forward re s !i in
          let mb = Re_compat.match_beginning _mr in
          (* Match shape: " \cite[^a-zA-Z]" or " \ref[^a-zA-Z]". The leading
-            space is at offset mb. Replace the space with `~`. *)
-         edits :=
-           Cst_edit.replace ~start_offset:mb ~end_offset:(mb + 1) "~" :: !edits;
-         incr cnt;
+            space is at offset mb. Replace the space with `~` (unless
+            exempt). *)
+         if not (is_in_exempt_range exempt mb) then (
+           edits :=
+             Cst_edit.replace ~start_offset:mb ~end_offset:(mb + 1) "~"
+             :: !edits;
+           incr cnt);
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
@@ -863,10 +882,18 @@ let r_typo_017 : rule =
    item E: fix collapses each maximal run of >= 2 spaces to a single space. *)
 let r_typo_018 : rule =
   let message = "Multiple consecutive spaces in text" in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set
+     (verbatim / comments / math / url). Crucial for verbatim/lstlisting, where
+     runs of spaces are significant (code indentation/alignment) and must not be
+     collapsed; math whitespace is insignificant and comments are cosmetic. *)
   let run s =
-    let cnt = count_substring s "  " in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "  " in
     if cnt > 0 then
-      let runs = find_consecutive_runs s ' ' ~min_len:2 in
+      let runs =
+        find_consecutive_runs s ' ' ~min_len:2
+        |> List.filter (fun (st, _) -> not (is_in_exempt_range exempt st))
+      in
       let fix =
         List.map
           (fun (start_offset, end_offset) ->
@@ -906,19 +933,25 @@ let r_typo_020 : rule =
    `...A` and `…A` (Unicode ellipsis U+2026) get the same insertion. *)
 let r_typo_021 : rule =
   let re = Re_compat.regexp {|\(\.\.\.\|…\)[A-Z]|} in
+  (* P3 context-aware (token-aware variant): count + fix skip matches whose
+     ellipsis is inside the exempt set (verbatim / comments / math / url). *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let cnt = ref 0 in
     let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
+         let mb = Re_compat.match_beginning _mr in
          let me = Re_compat.match_end _mr in
-         (* Insert a space immediately before the capital letter at me-1. *)
-         edits :=
-           Cst_edit.replace ~start_offset:(me - 1) ~end_offset:(me - 1) " "
-           :: !edits;
-         incr cnt;
+         (* Insert a space immediately before the capital letter at me-1 (unless
+            the match is inside a protected region). *)
+         if not (is_in_exempt_range exempt mb) then (
+           edits :=
+             Cst_edit.replace ~start_offset:(me - 1) ~end_offset:(me - 1) " "
+             :: !edits;
+           incr cnt);
          i := me
        done
      with Not_found -> ());
@@ -2074,10 +2107,14 @@ let r_typo_054 : rule =
    that share no bytes. *)
 let r_typo_055 : rule =
   let needle = "\\,\\," in
+  (* P3 context-aware (token-aware variant): count + fix skip the exempt set
+     (verbatim / comments / math / url) so a literal `\,\,` in a code listing is
+     left untouched. *)
   let run s =
-    let cnt = count_substring s needle in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s needle in
     if cnt > 0 then
-      let offsets = find_all_non_overlapping s needle in
+      let offsets = occurrences_in_text exempt s needle in
       let fix =
         List.map
           (fun off ->

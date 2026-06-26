@@ -113,6 +113,46 @@ let cases =
         ("line comment", "% wow!! comment\n");
         ("inline math", "$n!!$");
       ] );
+    ( "TYPO-017",
+      "caf\\'{e} menu",
+      [
+        ("inline verbatim", "x \\verb|\\'{e}| y");
+        ("verbatim env", "\\begin{verbatim}\n\\'{e}\n\\end{verbatim}");
+        ("line comment", "% \\'{e} comment\n");
+        ("inline math", "math $\\'{e}$ here");
+      ] );
+    ( "TYPO-032",
+      "see ,\\cite here",
+      [
+        ("inline verbatim", "x \\verb|,\\cite| y");
+        ("verbatim env", "\\begin{verbatim}\n,\\cite\n\\end{verbatim}");
+        ("line comment", "% ,\\cite comment\n");
+        ("inline math", "$,\\cite$");
+      ] );
+    ( "TYPO-042",
+      "what?? now",
+      [
+        ("inline verbatim", "x \\verb|??| y");
+        ("verbatim env", "\\begin{verbatim}\nwhat??\n\\end{verbatim}");
+        ("line comment", "% what?? comment\n");
+        ("inline math", "$a ?? b$");
+      ] );
+    ( "TYPO-057",
+      "heat 45\xc2\xb0C now",
+      [
+        ("inline verbatim", "x \\verb|45\xc2\xb0| y");
+        ("verbatim env", "\\begin{verbatim}\n45\xc2\xb0\n\\end{verbatim}");
+        ("line comment", "% 45\xc2\xb0 comment\n");
+        ("inline math", "$45\xc2\xb0$");
+      ] );
+    ( "TYPO-061",
+      "width 3 \xc3\x97 4 cm",
+      [
+        ("inline verbatim", "x \\verb|\xc3\x97| y");
+        ("verbatim env", "\\begin{verbatim}\n\xc3\x97\n\\end{verbatim}");
+        ("line comment", "% \xc3\x97 comment\n");
+        ("inline math", "$a \xc3\x97 b$");
+      ] );
   ]
 
 let () =

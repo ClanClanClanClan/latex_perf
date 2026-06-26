@@ -822,10 +822,6 @@ let r_typo_017 : rule =
     in
     loop 0 []
   in
-  let fix_offsets s =
-    let math = find_math_ranges s in
-    List.filter (fun pos -> not (is_in_math_range math pos)) (collect_offsets s)
-  in
   let mk_fix_edits s offsets =
     List.map
       (fun pos ->
@@ -835,10 +831,20 @@ let r_typo_017 : rule =
           (Printf.sprintf "\\%c%c" accent letter))
       offsets
   in
+  (* P3 context-aware (token-aware variant): count + fix both derive from the
+     accent-command matches OUTSIDE the exempt set (verbatim / comments / math /
+     url), superseding the v27.0.18 math-only filter. A literal `\'{e}` inside a
+     verbatim listing or comment is left untouched and not reported. *)
   let run s =
-    let cnt = List.length (collect_offsets s) in
+    let exempt = find_exempt_ranges s in
+    let offsets =
+      List.filter
+        (fun pos -> not (is_in_exempt_range exempt pos))
+        (collect_offsets s)
+    in
+    let cnt = List.length offsets in
     if cnt > 0 then
-      let fix = mk_fix_edits s (fix_offsets s) in
+      let fix = mk_fix_edits s offsets in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-017" ~severity:Info
@@ -1363,19 +1369,24 @@ let r_typo_032 : rule =
     in
     loop 0 []
   in
-  let fix_offsets s =
-    let math = find_math_ranges s in
-    List.filter (fun pos -> not (is_in_math_range math pos)) (collect_offsets s)
-  in
   let mk_fix_edits offsets =
     List.map
       (fun pos -> Cst_edit.replace ~start_offset:pos ~end_offset:(pos + 1) "")
       offsets
   in
+  (* P3 context-aware (token-aware variant): count + fix both derive from the
+     comma-before-\cite matches OUTSIDE the exempt set (verbatim / comments /
+     math / url), superseding the v27.0.14 math-only filter. *)
   let run s =
-    let cnt = List.length (collect_offsets s) in
+    let exempt = find_exempt_ranges s in
+    let offsets =
+      List.filter
+        (fun pos -> not (is_in_exempt_range exempt pos))
+        (collect_offsets s)
+    in
+    let cnt = List.length offsets in
     if cnt > 0 then
-      let fix = mk_fix_edits (fix_offsets s) in
+      let fix = mk_fix_edits offsets in
       Some
         (mk_result_with_fix ~id:"TYPO-032" ~severity:Warning
            ~message:"Comma before \\cite" ~count:cnt ~fix)
@@ -1675,14 +1686,20 @@ let r_typo_041 : rule =
    (overlapping semantics) so the differential output vs v27.0.14 is unchanged
    for non-math input. *)
 let r_typo_042 : rule =
+  (* P3 context-aware (token-aware variant): count + fix both skip the exempt
+     set (verbatim / comments / math / url) via [find_exempt_ranges]. This
+     supersedes the earlier "math filter on fix offsets only; count tallies
+     everywhere" design — counting only non-exempt occurrences makes the rule
+     fully silent in protected regions. *)
   let run s =
-    let cnt = count_substring s "??" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "??" in
     if cnt > 0 then
-      let math = find_math_ranges s in
       let runs = find_consecutive_runs s '?' ~min_len:2 in
       let fix_runs =
         List.filter
-          (fun (start_offset, _) -> not (is_in_math_range math start_offset))
+          (fun (start_offset, _) ->
+            not (is_in_exempt_range exempt start_offset))
           runs
       in
       let fix =
@@ -2086,12 +2103,19 @@ let r_typo_055 : rule =
    after the matched digit), so the thin space is inserted there. *)
 let r_typo_057 : rule =
   let re = Re_compat.regexp "[0-9]\xc2\xb0" in
+  (* P3 context-aware (token-aware variant): skip digit+degree matches inside
+     the exempt set (verbatim / comments / math / url) so a literal `25°C` in a
+     code listing or comment, or a degree in math, is neither counted nor
+     fixed. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let rec loop i cnt offs =
       try
         let _mr, _ = Re_compat.search_forward re s i in
         let mbeg = Re_compat.match_beginning _mr in
-        loop (Re_compat.match_end _mr) (cnt + 1) (mbeg :: offs)
+        let mend = Re_compat.match_end _mr in
+        if is_in_exempt_range exempt mbeg then loop mend cnt offs
+        else loop mend (cnt + 1) (mbeg :: offs)
       with Not_found -> (cnt, List.rev offs)
     in
     let cnt, offs = loop 0 0 [] in
@@ -2120,20 +2144,21 @@ let r_typo_057 : rule =
    Severity Info preserved. *)
 let r_typo_061 : rule =
   let needle = "\xc3\x97" in
-  let mk_fix_edits s =
-    let math = find_math_ranges s in
-    let outside off = not (is_in_math_range math off) in
-    let offsets = List.filter outside (find_all_non_overlapping s needle) in
+  (* P3 context-aware (token-aware variant): count moves from
+     [strip_math_segments] to [count_in_text exempt] (equivalent on math, also
+     skips verbatim / comments / url); fix offsets come from the same exempt
+     set. A literal `×` inside a code listing is left untouched. *)
+  let mk_fix_edits exempt s =
     List.map
       (fun off ->
         Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "$\\times$")
-      offsets
+      (occurrences_in_text exempt s needle)
   in
   let run s =
-    let stripped = strip_math_segments s in
-    let cnt = count_substring stripped needle in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s needle in
     if cnt > 0 then
-      let fix = mk_fix_edits s in
+      let fix = mk_fix_edits exempt s in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-061" ~severity:Info

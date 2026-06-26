@@ -933,10 +933,10 @@ let () =
         (tag ^ ": one question mark, no fire"));
 
   run "TYPO-042 fix: skips ?? inside $..$ math (audit-aware)" (fun tag ->
-      (* `??` inside math is unusual but math-aware filtering keeps the producer
-         consistent with v27.0.6+ producers. The fix offset is suppressed; the
-         count still reflects the match (no math filter on count, by design —
-         see comment on r_typo_042 for the 0-differential rationale). *)
+      (* `??` inside math is unusual but the P3 context-aware retrofit skips it
+         in BOTH count and fix (exempt set = verbatim / comments / math / url),
+         so the math `??` here is neither counted nor collapsed; only the plain
+         `??` is. This test asserts the fix (edits = 1). *)
       let src = "math $a ?? b$ then plain ?? end" in
       let edits = fix_edits "TYPO-042" src in
       let out = apply_all src edits in

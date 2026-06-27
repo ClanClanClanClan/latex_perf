@@ -2662,3 +2662,47 @@ let rules_vpd_gen : rule list =
   ]
 
 (* END VPD-generated validators *)
+
+(* ── P3 Phase 3: TYPO rules promoted from the pilot set to the DEFAULT set ──
+   These 30 TYPO rules were made context-aware in P3 Phase 2 (batches 1–6):
+   their count and fix both skip protected regions (verbatim / comments / math /
+   url) via [find_exempt_ranges] — or, for the delimiter rules TYPO-012/028/
+   046, the verbatim/comment/url-only subset — so they no longer false-positive
+   in code listings, comments, or math. With that post-pilot gate cleared, they
+   graduate (rules_v3.yaml maturity Draft→Implemented) and are appended to the
+   DEFAULT branch of [Validators.get_rules]. They remain present in the pilot
+   branch via [rules_pilot] / [rules_vpd_gen]; this list is added to the DEFAULT
+   branch ONLY, so neither branch double-fires. *)
+let rules_typo_promoted : rule list =
+  [
+    r_typo_001;
+    r_typo_002;
+    r_typo_003;
+    r_typo_004;
+    r_typo_005;
+    r_typo_009;
+    r_typo_010;
+    r_typo_012;
+    r_typo_013;
+    r_typo_015;
+    r_typo_016;
+    r_typo_017;
+    r_typo_018;
+    r_typo_021;
+    r_typo_022;
+    r_typo_027;
+    r_typo_028;
+    r_typo_032;
+    r_typo_033;
+    r_typo_034;
+    r_typo_037;
+    r_typo_038;
+    r_typo_042;
+    r_typo_046;
+    r_typo_049;
+    r_typo_051;
+    r_typo_053;
+    r_typo_055;
+    r_typo_057;
+    r_typo_061;
+  ]

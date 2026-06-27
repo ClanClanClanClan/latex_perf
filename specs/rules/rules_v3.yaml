@@ -155,7 +155,7 @@
   description: "ASCII straight quotes (\" … \") must be curly quotes"
   precondition: L0_Lexer
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -164,7 +164,7 @@
   runtime_message: "Triple hyphen --- should be em‑dash —"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -172,7 +172,7 @@
   description: "Triple hyphen --- should be em‑dash —"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -180,7 +180,7 @@
   description: "TeX double back‑tick ``…'' not allowed; use opening curly quotes"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -188,7 +188,7 @@
   description: "Ellipsis typed as three periods ...; use \\dots"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -220,7 +220,7 @@
   description: "Non‑breaking space ~ used incorrectly at line start"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: null
 
@@ -228,7 +228,7 @@
   description: "Space before punctuation , . ; : ? !"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -244,7 +244,7 @@
   description: "Straight apostrophe ' used for minutes/feet; use ^\\prime or ′"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -252,7 +252,7 @@
   description: "ASCII back‑tick ` used as opening quote"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -268,7 +268,7 @@
   description: "Double \\% in source; likely stray percent"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: null
 
@@ -276,7 +276,7 @@
   description: "Non‑breaking space ~ missing before \\cite / \\ref"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: insert_nbsp
 
@@ -284,7 +284,7 @@
   description: "TeX accent commands (\\'{e}) in text; prefer UTF‑8 é"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_utf8
 
@@ -292,7 +292,7 @@
   description: "Multiple consecutive spaces in text"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: collapse_spaces
 
@@ -316,7 +316,7 @@
   description: "Capital letter after ellipsis without space"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: insert_space
 
@@ -324,7 +324,7 @@
   description: "Space before closing punctuation ) ] }"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -364,7 +364,7 @@
   description: "Multiple exclamation marks ‼"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: null
 
@@ -372,7 +372,7 @@
   description: "Use of ``$$'' display math delimiter"
   precondition: L0_Lexer
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_equation
 
@@ -404,7 +404,7 @@
   description: "Comma before \\cite"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: null
 
@@ -412,7 +412,7 @@
   description: "Abbreviation et.al without space"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: insert_space
 
@@ -420,7 +420,7 @@
   description: "Spurious space before footnote command \\footnote"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -444,7 +444,7 @@
   description: "Space before comma"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -452,7 +452,7 @@
   description: "E‑mail address not in \\href"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: wrap_href
 
@@ -484,7 +484,7 @@
   description: "Multiple consecutive question marks ??"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: null
 
@@ -516,7 +516,7 @@
   description: "Use of $begin:math:text$ … $end:math:text$ instead of $…$"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: null
 
@@ -540,7 +540,7 @@
   description: "Space after opening quote"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -556,7 +556,7 @@
   description: "Figure space U+2009 used instead of \\thinspace macro"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: replace_with_macro
 
@@ -572,7 +572,7 @@
   description: "Unicode ⋯ (U+22EF) leader forbidden; use \\dots instead"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_replace
 
@@ -588,7 +588,7 @@
   description: "Consecutive thin‑spaces (\\,\\,) prohibited; collapse"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: collapse_spaces
 
@@ -604,7 +604,7 @@
   description: "Missing thin‑space before °C/°F or \\si{\\celsius}"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: null
 
@@ -636,7 +636,7 @@
   description: "Unicode × (U+00D7) in text; prefer \\times via math mode"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: auto_replace
 

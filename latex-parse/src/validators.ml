@@ -210,7 +210,12 @@ let get_rules () : rule list =
     match Sys.getenv_opt "L0_VALIDATORS" with
     | Some ("1" | "true" | "pilot" | "PILOT") ->
         rules_pilot @ rules_vpd_gen @ rules_enc_char_spc @ rules_l1
-    | _ -> rules_basic @ rules_enc_char_spc @ rules_l1
+    | _ ->
+        (* P3 Phase 3: the 30 context-aware TYPO rules graduated from pilot to
+           the DEFAULT set ([rules_typo_promoted]). Appended to the default
+           branch only — the pilot branch already includes them via
+           [rules_pilot] / [rules_vpd_gen]. *)
+        rules_basic @ rules_enc_char_spc @ rules_l1 @ rules_typo_promoted
   in
   if not !_dag_validated then (
     _dag_validated := true;

@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.0] — 2026-06-27
+
+**P3 Phase 3 — 30 context-aware TYPO rules promoted from the pilot set to the
+DEFAULT rule set.** This is the first behaviour-changing release of the P3
+workstream: rules that previously fired only under `L0_VALIDATORS=pilot` now
+fire in the default lint path.
+
+Over P3 Phase 2 (batches 1–6, PRs #424/#425/#428/#429/#430/#431) these 30 rules
+were made **context-aware**: their count *and* fix both skip protected regions
+(verbatim / comments / math / url) via `find_exempt_ranges` — or, for the
+delimiter rules TYPO-012/028/046, the verbatim/comment/url-only subset — so they
+no longer false-positive in code listings, comments, or math. That cleared the
+post-pilot gate (FP review + perf smoke), so the rules graduate
+(`rules_v3.yaml` maturity Draft→Implemented) and are appended to the **default**
+branch of `Validators.get_rules` via the new `rules_typo_promoted` list. They
+remain in the pilot branch via `rules_pilot` / `rules_vpd_gen`, so neither
+branch double-fires.
+
+Promoted (full spec-complete set, incl. the Unicode-first dash/quote standard):
+TYPO-001, -002, -003, -004, -005, -009, -010, -012, -013, -015, -016, -017,
+-018, -021, -022, -027, -028, -032, -033, -034, -037, -038, -042, -046, -049,
+-051, -053, -055, -057, -061.
+
+No new fix producers (**101** unchanged — promotion changes *when* these
+already-counted rules fire, not *whether* they produce fixes). All 330 lint
+corpus files converge to a fixpoint under default `--apply-fixes` (no
+oscillation). Full `dune runtest` green; pilot-mode apply-fixes safety 330/330;
+all pre-release consistency gates green. The default lint output now changes
+(intended). Minor version bump (first default-behaviour feature release of v27).
+
 ## [v27.0.72] — 2026-06-18
 
 **+1 fix producer: TYPO-057** (Missing thin-space before °C/°F → insert `\,`

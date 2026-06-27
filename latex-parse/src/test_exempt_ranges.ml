@@ -113,4 +113,25 @@ let () =
   run "empty string yields no ranges" (fun tag ->
       expect (find_exempt_ranges "" = []) (tag ^ ": no ranges"));
 
+  (* ── Per-document memoisation contract ─────────────────────────────────
+     [find_exempt_ranges] / [find_verbatim_comment_url_ranges] are memoised with
+     a 1-entry physical-equality cache. Verify it is transparent: the cache-HIT
+     path (same string object twice) returns the same result, and interleaving
+     DISTINCT documents never returns a stale result from the other one. *)
+  run "cache hit: same object returns identical ranges" (fun tag ->
+      let a = "x \\verb|a -- b| y % c -- d\n$e -- f$" in
+      expect
+        (find_exempt_ranges a = find_exempt_ranges a)
+        (tag ^ ": idempotent on the same object"));
+  run "cache miss: interleaved distinct docs are not stale" (fun tag ->
+      let a = "\\verb|--|" and b = "plain -- prose" in
+      let ra1 = find_exempt_ranges a in
+      let rb = find_exempt_ranges b in
+      let ra2 = find_exempt_ranges a in
+      (* b has no exempt ranges; a does. If the cache leaked, rb would equal ra1
+         or ra2 would be stale. *)
+      expect
+        (rb = [] && ra1 = ra2 && ra1 <> [])
+        (tag ^ ": distinct docs computed independently"));
+
   finalise "exempt-ranges"

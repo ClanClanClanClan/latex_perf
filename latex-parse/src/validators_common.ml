@@ -438,8 +438,11 @@ let verbatim_envs =
     `\path`, and the FIRST argument of `\href{..}{..}`). Precedence is positional
     — whichever region opens first wins, and the scanner jumps past a region's
     end before looking for the next, so a `%`/`$`/`\verb` inside a verbatim span
-    (or a `$` inside a comment) is correctly treated as literal. *)
-let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
+    (or a `$` inside a comment) is correctly treated as literal.
+
+    NB: callers use the memoised [find_verbatim_comment_url_ranges] wrapper
+    below; this is the underlying computation. *)
+let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
   let n = String.length s in
   let tbl = Hashtbl.create 32 in
   List.iter (fun e -> Hashtbl.replace tbl e ()) verbatim_envs;
@@ -542,6 +545,26 @@ let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
   done;
   List.rev !ranges
 
+(* Per-document memoisation of the range scanners. In one [Validators.run_all]
+   pass every rule is handed the SAME source-string object, so the ~30
+   context-aware TYPO rules now in the DEFAULT set would otherwise each
+   recompute these O(n) scans (and [find_exempt_ranges] also calls the vcu
+   scanner). A 1-entry cache keyed by PHYSICAL equality ([==]) collapses that to
+   a single computation per document. Correctness is unconditional: a different
+   string simply misses and recomputes, and these are pure functions of [s]
+   (strings are immutable; [compute_exempt_ranges] blanks a private [Bytes]
+   copy, never [s]). Single-threaded validator pass ⇒ no races on the refs. *)
+let _vcu_cache : (string * (int * int) list) option ref = ref None
+
+(** Memoised [compute_verbatim_comment_url_ranges] — see the cache note above. *)
+let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
+  match !_vcu_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let r = compute_verbatim_comment_url_ranges s in
+      _vcu_cache := Some (s, r);
+      r
+
 (** [find_exempt_ranges s] — all byte ranges where typography/lexical rules must
     not fire: verbatim + comments + url targets
     ([find_verbatim_comment_url_ranges]) plus math ([find_math_ranges]).
@@ -553,8 +576,12 @@ let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
     blanking neutralises those bytes (a space is never a math toggle) without
     shifting any offset, so the math ranges are accurate outside protected
     regions. The result is sorted by start; overlaps are harmless for the
-    existential [is_in_exempt_range] check. *)
-let find_exempt_ranges (s : string) : (int * int) list =
+    existential [is_in_exempt_range] check.
+
+    NB: callers use the memoised [find_exempt_ranges] wrapper below; this is the
+    underlying computation. Its internal vcu call goes through the memoised
+    [find_verbatim_comment_url_ranges], so that scan is shared too. *)
+let compute_exempt_ranges (s : string) : (int * int) list =
   let vcu = find_verbatim_comment_url_ranges s in
   let blanked = Bytes.of_string s in
   List.iter
@@ -565,6 +592,18 @@ let find_exempt_ranges (s : string) : (int * int) list =
     vcu;
   let math = find_math_ranges (Bytes.unsafe_to_string blanked) in
   List.sort (fun (a, _) (c, _) -> compare a c) (List.rev_append vcu math)
+
+let _exempt_cache : (string * (int * int) list) option ref = ref None
+
+(** Memoised [compute_exempt_ranges] — see the cache note above
+    [find_verbatim_comment_url_ranges]. *)
+let find_exempt_ranges (s : string) : (int * int) list =
+  match !_exempt_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let r = compute_exempt_ranges s in
+      _exempt_cache := Some (s, r);
+      r
 
 (** [is_in_exempt_range ranges off] — true iff [off] is inside any exempt range.
     (Alias of the generic point-in-ranges test [is_in_math_range].) *)

@@ -1528,12 +1528,16 @@ let r_typo_036 : rule =
     Re_compat.regexp
       {|\(^\|[ \t({]\)[A-Z][A-Z]+ [A-Z][A-Z]+ [A-Z][A-Z]+\($\|[ \t.,;:!?)}]\)|}
   in
+  (* P3 context-aware (token-aware variant): diagnose-only count skips matches
+     inside the exempt set (verbatim / comments / math / url). *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let rec loop i acc =
       try
         let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
+        let mb = Re_compat.match_beginning _mr in
+        let acc' = if is_in_exempt_range exempt mb then acc else acc + 1 in
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -1666,11 +1670,15 @@ let r_typo_038 : rule =
 
 (* Incorrect spacing around \ldots *)
 let r_typo_041 : rule =
+  (* P3 context-aware (token-aware variant): diagnose-only count skips the
+     exempt set (verbatim / comments / math / url) so `\ldots` spacing inside a
+     code listing or comment is not flagged. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let cnt =
-      count_substring s ".\\ldots"
-      + count_substring s "\\ldots."
-      + count_substring s ",\\ldots"
+      count_in_text exempt s ".\\ldots"
+      + count_in_text exempt s "\\ldots."
+      + count_in_text exempt s ",\\ldots"
     in
     if cnt > 0 then
       Some
@@ -1975,13 +1983,14 @@ let r_typo_051 : rule =
 
 (* Unescaped < or > in text *)
 let r_typo_052 : rule =
+  (* P3 context-aware (token-aware variant): count moves from
+     strip_math_segments + count_char to count_in_text over the full exempt set
+     — equivalent on math (still skips `<`/`>` inside `$..$`), and additionally
+     skips verbatim / comments / url, where `<`/`>` are literal (e.g. code,
+     `\url{a<b}`). *)
   let run s =
-    let cnt =
-      (fun s ->
-        let s = strip_math_segments s in
-        count_char s '<' + count_char s '>')
-        s
-    in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "<" + count_in_text exempt s ">" in
     if cnt > 0 then
       Some
         (mk_result ~id:"TYPO-052" ~severity:Warning
@@ -2037,12 +2046,16 @@ let r_typo_053 : rule =
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
   let re = Re_compat.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
+  (* P3 context-aware (token-aware variant): diagnose-only count skips matches
+     inside the exempt set (verbatim / comments / math / url). *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let rec loop i acc =
       try
         let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
+        let mb = Re_compat.match_beginning _mr in
+        let acc' = if is_in_exempt_range exempt mb then acc else acc + 1 in
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -2418,8 +2431,12 @@ let r_typo_046 : rule =
 
 (* Starred \section* used where numbered section expected *)
 let r_typo_047 : rule =
+  (* P3 context-aware (token-aware variant): diagnose-only count skips the
+     exempt set so a literal `\section*` in a code listing or comment is not
+     flagged. *)
   let run s =
-    let cnt = count_substring s "\\section*" in
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "\\section*" in
     if cnt > 0 then
       Some
         (mk_result ~id:"TYPO-047" ~severity:Info
@@ -2477,12 +2494,17 @@ let r_typo_049 : rule =
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
   let re = Re_compat.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
+  (* P3 context-aware (token-aware variant): diagnose-only count skips matches
+     inside the exempt set (verbatim / comments / math / url). Same accent regex
+     as TYPO-017 (which fixes them); this is the legacy-accent warning. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let rec loop i acc =
       try
         let _mr, _ = Re_compat.search_forward re s i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
+        let mb = Re_compat.match_beginning _mr in
+        let acc' = if is_in_exempt_range exempt mb then acc else acc + 1 in
+        loop (Re_compat.match_end _mr) acc'
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -2496,15 +2518,20 @@ let r_typo_056 : rule =
 
 (* Greek homograph letter found in Latin text *)
 let r_typo_058 : rule =
+  (* P3 context-aware (token-aware variant): count skips the exempt set. Crucial
+     for MATH — a literal Greek letter inside `$..$` is a legitimate math
+     symbol, not a Latin homograph, so it must not be flagged; verbatim/comments
+     are likewise exempt. *)
   let run s =
+    let exempt = find_exempt_ranges s in
     let cnt =
-      count_substring s "\xce\xb1"
-      + count_substring s "\xce\xb5"
-      + count_substring s "\xce\xb9"
-      + count_substring s "\xce\xbf"
-      + count_substring s "\xcf\x81"
-      + count_substring s "\xcf\x82"
-      + count_substring s "\xcf\x85"
+      count_in_text exempt s "\xce\xb1"
+      + count_in_text exempt s "\xce\xb5"
+      + count_in_text exempt s "\xce\xb9"
+      + count_in_text exempt s "\xce\xbf"
+      + count_in_text exempt s "\xcf\x81"
+      + count_in_text exempt s "\xcf\x82"
+      + count_in_text exempt s "\xcf\x85"
     in
     if cnt > 0 then
       Some

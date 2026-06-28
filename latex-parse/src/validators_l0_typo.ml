@@ -169,8 +169,11 @@ let mk_replace_edits_exempt exempt (s : string) (needle : string)
     (occurrences_in_text exempt s needle)
 
 let r_typo_002 : rule =
-  let message = "Double hyphen -- should be en‑dash –" in
-  (* P3 context-aware (token-aware variant): count + fix derive from the same
+  (* Message is inlined in the mk_result calls below (NOT a `let message`
+     binding) because scripts/validate_messages.sh does not follow let-bindings
+     and would otherwise mis-pair TYPO-002 with the next inline string
+     (TYPO-003's message). Same convention as TYPO-004+ per the messages gate.
+     P3 context-aware (token-aware variant): count + fix derive from the same
      exempt-filtered offsets, so `--` inside verbatim / comments / math / url is
      ignored (it is literal there), not just inside plain prose. This replaces
      the former string-level `count_substring` default branch and the incomplete
@@ -204,11 +207,13 @@ let r_typo_002 : rule =
           (occurrences_in_text exempt s "--")
       in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+        Some
+          (mk_result ~id:"TYPO-002" ~severity:Warning
+             ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
-             ~count:cnt ~fix)
+          (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning
+             ~message:"Double hyphen -- should be en‑dash –" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-002"; run; languages = [] }
@@ -390,19 +395,29 @@ let r_typo_007 : rule =
     let n = String.length s in
     let edits = ref [] in
     let add_trailing line_start line_end =
-      let trim_start = ref line_end in
+      (* The `\r` of a CRLF terminator is part of the line ending, NOT trailing
+         whitespace — exclude it from the trim window. Otherwise a CLEAN
+         Windows/CRLF file (no real trailing spaces) would be flagged and
+         --apply-fixes would silently strip every carriage return, rewriting the
+         file's line endings CRLF→LF. *)
+      let content_end =
+        if line_end > line_start && s.[line_end - 1] = '\r' then line_end - 1
+        else line_end
+      in
+      let trim_start = ref content_end in
       while
         !trim_start > line_start
         &&
         let c = s.[!trim_start - 1] in
-        c = ' ' || c = '\t' || c = '\r'
+        c = ' ' || c = '\t'
       do
         decr trim_start
       done;
-      if !trim_start < line_end && not (is_in_exempt_range exempt !trim_start)
+      if
+        !trim_start < content_end && not (is_in_exempt_range exempt !trim_start)
       then
         edits :=
-          Cst_edit.replace ~start_offset:!trim_start ~end_offset:line_end ""
+          Cst_edit.replace ~start_offset:!trim_start ~end_offset:content_end ""
           :: !edits
     in
     let line_start = ref 0 in
@@ -852,13 +867,32 @@ let r_typo_018 : rule =
      (verbatim / comments / math / url). Crucial for verbatim/lstlisting, where
      runs of spaces are significant (code indentation/alignment) and must not be
      collapsed; math whitespace is insignificant and comments are cosmetic. *)
+  (* Fix-set delegation (v27.1.1): cede the exact `.<space><space><capital>` run
+     to SPC-010 (which deletes the second space there). Both rules are in the
+     default set after the P3 promotion of TYPO-018; without this, the two emit
+     overlapping fix edits on that run and --apply-fixes aborts. The run is
+     still COUNTED (count semantic preserved); only its FIX is withheld at
+     SPC-010's position, matching the established delegation pattern
+     (TYPO-010→SPC-016/021 etc.). *)
   let run s =
+    let n = String.length s in
+    let is_spc010_run (st, en) =
+      en - st = 2
+      && st > 0
+      && s.[st - 1] = '.'
+      && en < n
+      &&
+      let c = s.[en] in
+      c >= 'A' && c <= 'Z'
+    in
     let exempt = find_exempt_ranges s in
     let cnt = count_in_text exempt s "  " in
     if cnt > 0 then
       let runs =
         find_consecutive_runs s ' ' ~min_len:2
-        |> List.filter (fun (st, _) -> not (is_in_exempt_range exempt st))
+        |> List.filter (fun (st, en) ->
+               (not (is_in_exempt_range exempt st))
+               && not (is_spc010_run (st, en)))
       in
       let fix =
         List.map
@@ -2120,7 +2154,11 @@ let r_typo_055 : rule =
    purely additive. The degree sign begins at [match_beginning + 1] (the byte
    after the matched digit), so the thin space is inserted there. *)
 let r_typo_057 : rule =
-  let re = Re_compat.regexp "[0-9]\xc2\xb0" in
+  (* Spec scope is the TEMPERATURE units °C / °F (rules_v3 description "Missing
+     thin-space before °C/°F or \si{\celsius}"), so the degree sign must be
+     FOLLOWED by C or F — a bare `45°` angle is NOT a temperature and must not
+     fire (audit 2026-06-28 caught the over-broad `[0-9]°` matcher). *)
+  let re = Re_compat.regexp "[0-9]\xc2\xb0[CF]" in
   (* P3 context-aware (token-aware variant): skip digit+degree matches inside
      the exempt set (verbatim / comments / math / url) so a literal `25°C` in a
      code listing or comment, or a degree in math, is neither counted nor
@@ -2193,14 +2231,37 @@ let r_typo_061 : rule =
   in
   { id = "TYPO-061"; run; languages = [] }
 
-(* Non-breaking hyphen U+2011 found *)
+(* TYPO-063: Non-breaking hyphen U+2011 found INSIDE a URL.
+
+   Diagnose-only (no fix): replacing U+2011 inside a `\url{}` could change the
+   address, so this only flags it for the author. It is the complement of
+   ENC-018, which flags+fixes U+2011 OUTSIDE URLs. The pre-2026-06-28 impl
+   counted EVERY U+2011 (overreach contradicting both the description and
+   ENC-018's domain); the audit corrected it to URL scope using the same
+   forward-pass `in_url` tracker as ENC-018 (enter on `\url{`, exit on `}`). *)
 let r_typo_063 : rule =
   let run s =
-    let cnt = count_substring s "\xe2\x80\x91" in
-    if cnt > 0 then
+    let n = String.length s in
+    let in_url = ref false in
+    let starts_url_open p = p + 5 <= n && String.sub s p 5 = "\\url{" in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 2 do
+      if (not !in_url) && starts_url_open !i then in_url := true
+      else if !in_url && s.[!i] = '}' then in_url := false;
+      if
+        Char.code s.[!i] = 0xE2
+        && Char.code s.[!i + 1] = 0x80
+        && Char.code s.[!i + 2] = 0x91
+      then (
+        if !in_url then incr cnt;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
       Some
         (mk_result ~id:"TYPO-063" ~severity:Info
-           ~message:"Non‑breaking hyphen U+2011 found inside URL" ~count:cnt)
+           ~message:"Non‑breaking hyphen U+2011 found inside URL" ~count:!cnt)
     else None
   in
   { id = "TYPO-063"; run; languages = [] }
@@ -2644,6 +2705,16 @@ let rules_vpd_gen : rule list =
    branch ONLY, so neither branch double-fires. *)
 let rules_typo_promoted : rule list =
   [
+    (* P3 Phase 3.2 (whitespace promotion) was investigated and HELD: an
+       adversarial review found the pilot whitespace rules duplicate/conflict
+       with the default set's existing whitespace handling — TYPO-007 (trailing
+       ws) collides with SPC-005 (trailing tab) and the already-promoted
+       TYPO-018 (multi-space collapse) → --apply-fixes overlap-abort; TYPO-008
+       duplicates SPC-007 (3+ blank lines); TYPO-006 duplicates STRUCT-003 (tab
+       diagnostic); TYPO-024's dangling-dash delete is unsafe as a default. So
+       006/007/008/024 stay pilot-gated. The robustness fixes they received
+       (TYPO-007 CRLF, TYPO-006 trailing-tab cede) and the math-env exemption
+       fix still ship. *)
     r_typo_001;
     r_typo_002;
     r_typo_003;

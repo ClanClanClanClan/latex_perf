@@ -234,4 +234,23 @@ let () =
       let best, _, _ = Cst_edit.apply_best_effort src [ a; b ] in
       expect (strict = best) (tag ^ ": both produce identical output"));
 
+  (* v27.1.1: two rules emitting the EXACT same edit (e.g. TYPO-010 and TYPO-037
+     both rewriting ` ,`→`,`) must not abort as a spurious overlap, and must not
+     double-apply — the duplicate is dropped and the edit applied once. *)
+  run "apply_all dedups two identical edits (applies once, no overlap error)"
+    (fun tag ->
+      let src = "a , b" in
+      let e1 = Cst_edit.replace ~start_offset:1 ~end_offset:3 "," in
+      let e2 = Cst_edit.replace ~start_offset:1 ~end_offset:3 "," in
+      match Cst_edit.apply_all src [ e1; e2 ] with
+      | Ok out -> expect (out = "a, b") (tag ^ ": applied once → \"a, b\"")
+      | Error _ -> expect false (tag ^ ": must not be an overlap error"));
+  run "apply_all still rejects DIFFERENT edits on the same range" (fun tag ->
+      let src = "a , b" in
+      let e1 = Cst_edit.replace ~start_offset:1 ~end_offset:3 "," in
+      let e2 = Cst_edit.replace ~start_offset:1 ~end_offset:3 " " in
+      match Cst_edit.apply_all src [ e1; e2 ] with
+      | Error _ -> expect true (tag ^ ": genuine conflict still rejected")
+      | Ok _ -> expect false (tag ^ ": distinct edits must conflict"));
+
   finalise "cst-edit"

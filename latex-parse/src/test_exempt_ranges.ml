@@ -81,6 +81,22 @@ let () =
       expect
         (exempt "\\begin{equation}\na -- b\n\\end{equation}" "-- b")
         (tag ^ ": -- in equation env"));
+  (* v27.1.1: amsmath alignat/flalign and IEEEtrantools IEEEeqnarray are
+     top-level display-math environments; their content must be exempt (an
+     adversarial review found TYPO-002/003/004 were corrupting math inside
+     them). *)
+  run "alignat environment is exempt" (fun tag ->
+      expect
+        (exempt "\\begin{alignat}{1}\na -- b\n\\end{alignat}" "-- b")
+        (tag ^ ": -- in alignat env"));
+  run "flalign* environment is exempt" (fun tag ->
+      expect
+        (exempt "\\begin{flalign*}\na -- b\n\\end{flalign*}" "-- b")
+        (tag ^ ": -- in flalign* env"));
+  run "IEEEeqnarray environment is exempt" (fun tag ->
+      expect
+        (exempt "\\begin{IEEEeqnarray}{l}\na -- b\n\\end{IEEEeqnarray}" "-- b")
+        (tag ^ ": -- in IEEEeqnarray env"));
 
   (* ── Math masking: a $ in a comment/verbatim must not toggle math ──── *)
   run "stray $ in a comment does not desync later math" (fun tag ->

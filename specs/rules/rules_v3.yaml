@@ -161,7 +161,7 @@
 
 - id: "TYPO-002"
   description: "Double hyphen -- should be en‑dash –"
-  runtime_message: "Triple hyphen --- should be em‑dash —"
+  runtime_message: "Double hyphen -- should be en‑dash –"
   precondition: L0_Lexer
   default_severity: Warning
   maturity: Implemented
@@ -198,7 +198,7 @@
   default_severity: Error
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: convert_tabs
 
 - id: "TYPO-007"
   description: "Trailing spaces at end of line"
@@ -222,7 +222,7 @@
   default_severity: Warning
   maturity: Implemented
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "TYPO-010"
   description: "Space before punctuation , . ; : ? !"
@@ -270,7 +270,7 @@
   default_severity: Warning
   maturity: Implemented
   owner: "@lint-team"
-  fix: null
+  fix: auto_replace
 
 - id: "TYPO-016"
   description: "Non‑breaking space ~ missing before \\cite / \\ref"
@@ -342,7 +342,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "TYPO-025"
   description: "Space before en‑dash in number range"
@@ -366,7 +366,7 @@
   default_severity: Info
   maturity: Implemented
   owner: "@style-council"
-  fix: null
+  fix: auto_replace
 
 - id: "TYPO-028"
   description: "Use of ``$$'' display math delimiter"
@@ -406,7 +406,7 @@
   default_severity: Warning
   maturity: Implemented
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "TYPO-033"
   description: "Abbreviation et.al without space"
@@ -486,7 +486,7 @@
   default_severity: Info
   maturity: Implemented
   owner: "@style-council"
-  fix: null
+  fix: auto_replace
 
 - id: "TYPO-043"
   description: "Smart quotes inside verbatim detected"
@@ -518,7 +518,7 @@
   default_severity: Info
   maturity: Implemented
   owner: "@math-rules"
-  fix: null
+  fix: auto_replace
 
 - id: "TYPO-047"
   description: "Starred \\section* used where numbered section expected"
@@ -606,7 +606,7 @@
   default_severity: Info
   maturity: Implemented
   owner: "@math-rules"
-  fix: null
+  fix: insert_thinspace
 
 - id: "TYPO-058"
   description: "Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)"
@@ -654,7 +654,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: replace_char
+  fix: null
 
 
 
@@ -715,7 +715,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: collapse_blank_lines
+  fix: null
 
 - id: "SPC-008"
   description: "Paragraph starts with whitespace"
@@ -755,7 +755,7 @@
   default_severity: Error
   maturity: Draft
   owner: "@lint-team"
-  fix: remove_bom
+  fix: null
 
 - id: "SPC-013"
   description: "Whitespace‑only paragraph"
@@ -763,7 +763,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@style-council"
-  fix: delete_line
+  fix: null
 
 - id: "SPC-014"
   description: "Mixed LF and CRLF within paragraph"
@@ -771,7 +771,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: normalize_line_endings
+  fix: null
 
 - id: "SPC-015"
   description: "Indentation exceeds 8 spaces"
@@ -851,7 +851,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: delete_line
+  fix: null
 
 - id: "SPC-025"
   description: "Space before ellipsis \\dots"
@@ -968,7 +968,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@lint-team"
-  fix: auto_utf8
+  fix: null
 
 - id: "ENC-004"
   description: "Windows‑1252 characters (– — …) outside UTF‑8"
@@ -1024,7 +1024,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: normalize_nfc
+  fix: null
 
 - id: "ENC-011"
   description: "Byte sequence resembles MacRoman encoding"
@@ -1032,7 +1032,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@lint-team"
-  fix: auto_utf8
+  fix: null
 
 - id: "ENC-012"
   description: "C1 control characters U+0080–009F present"
@@ -1040,7 +1040,7 @@
   default_severity: Error
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "ENC-013"
   description: "Mixed CRLF and LF line endings"
@@ -1088,7 +1088,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: auto_replace
 
 - id: "ENC-019"
   description: "Duplicate combining accents on same base glyph"
@@ -1149,7 +1149,7 @@
   default_severity: Error
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "CHAR-006"
   description: "Backspace U+0008 present"
@@ -1221,7 +1221,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: remove_char
 
 - id: "CHAR-015"
   description: "Emoji detected in source"
@@ -1237,7 +1237,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@lint-team"
-  fix: null
+  fix: auto_replace
 
 - id: "CHAR-017"
   description: "Full‑width Latin letters detected"
@@ -1277,7 +1277,7 @@
   default_severity: Error
   maturity: Draft
   owner: "@lint-team"
-  fix: remove_char
+  fix: null
 
 - id: "CHAR-022"
   description: "Deprecated tag characters U+E0000–E007F present"
@@ -1285,7 +1285,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@lint-team"
-  fix: remove_char
+  fix: null
 
 
 
@@ -2260,7 +2260,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@math-rules"
-  fix: null
+  fix: auto_replace
 
 - id: "MATH-083"
   description: "Unicode minus inside text mode"
@@ -3790,7 +3790,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@fonts"
-  fix: enable_protrusion
+  fix: null
 
 - id: "FONT-004"
   description: "Font change inside math via \\textit not \\mathit"
@@ -3798,7 +3798,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@fonts"
-  fix: replace_with_mathit
+  fix: null
 
 - id: "FONT-005"
   description: "Fontspec fallback to Latin Modern detected"
@@ -4187,7 +4187,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@cjk"
-  fix: null
+  fix: remove_char
 
 - id: "CJK-016"
   description: "\\xeCJKsetup{CJKecglue} not tuned – wide gap"
@@ -5526,7 +5526,7 @@
   default_severity: Warning
   maturity: Impl
   owner: "@structure"
-  fix: null
+  fix: insert_documentclass
 
 - id: "STRUCT-002"
   description: "Empty section title"
@@ -5534,7 +5534,7 @@
   default_severity: Warning
   maturity: Impl
   owner: "@structure"
-  fix: null
+  fix: auto_replace
 
 - id: "STRUCT-003"
   description: "Tab characters in source"

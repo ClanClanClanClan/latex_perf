@@ -49,6 +49,7 @@ GATES = [
     ("python3", "scripts/tools/check_repo_facts.py",
      "--facts", "governance/project_facts.yaml", "--repo", "."),
     ("python3", "scripts/tools/check_rule_contracts.py", "--repo", "."),
+    ("python3", "scripts/tools/check_fix_type_consistency.py"),
     ("python3", "scripts/tools/check_regression_gates.py", "--repo", "."),
     ("python3", "scripts/tools/check_memo_files.py", "--repo", "."),
     ("python3", "scripts/tools/check_proof_substance.py", "--repo", "."),

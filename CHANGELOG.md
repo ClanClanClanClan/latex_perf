@@ -2,6 +2,58 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.1] — 2026-06-28
+
+**Bug-fix + impl-vs-spec hygiene release.** An adversarial review of the v27.1.0
+promotion, then a full audit of every implemented rule against the spec
+(`rules_v3.yaml`) and catalogue (`rule_contracts.yaml`), surfaced and fixed:
+
+Behavioural defects:
+
+- **Math-environment exemption gap (fixes v27.1.0 math corruption).**
+  `find_math_ranges` omitted the standard top-level display-math environments
+  `alignat(*)`, `flalign(*)` (amsmath) and `IEEEeqnarray(*)` (IEEEtrantools), so
+  the promoted TYPO-002/003/004 fired *inside* genuine math there and
+  `--apply-fixes` rewrote `--`/`---`/`''` (math operators) into Unicode
+  dashes/curly quotes. Added to all three math-env lists.
+- **TYPO-018 / SPC-010 overlap (introduced by promoting TYPO-018 in v27.1.0).**
+  Both collapse a two-space run after a sentence (`.  A`), emitting overlapping
+  fix edits → `--apply-fixes` aborted. TYPO-018 now cedes that exact case to
+  SPC-010 (fix-set delegation; count semantic preserved).
+- **TYPO-057 over-broad match.** Fired on any `digit°` (e.g. a `45°` angle); the
+  spec scopes it to the temperature units °C/°F, so the matcher now requires a
+  trailing C/F.
+- **TYPO-063 over-broad match.** Counted every U+2011 with a message claiming
+  "inside URL"; it is now scoped to U+2011 *inside* `\url{}` (the complement of
+  ENC-018, which handles U+2011 outside URLs).
+- **TYPO-007 CRLF false positive.** Treated the `\r` of a CRLF terminator as
+  trailing whitespace, firing on clean Windows files and stripping carriage
+  returns under `--apply-fixes`; `\r` is now excluded from the trim window.
+
+Spec/catalogue consistency:
+
+- **Fix-type drift reconciled for 31 implemented rules.** `rules_v3.yaml`'s
+  `fix:` field disagreed with the runtime: 18 fix-producing rules said
+  `fix: null` (e.g. TYPO-006/024) and 13 diagnose-only rules carried a `fix:`
+  token they never produced. All now match `produces_fix`, and a new
+  **`check_fix_type_consistency.py`** gate (wired into the pre-release check)
+  enforces `produces_fix:true ⇔ fix:<token>` for every implemented rule so this
+  cannot silently drift again.
+- **TYPO-002 `runtime_message`** in the spec was a copy of TYPO-003's text
+  (copy-paste defect); corrected, and the impl message is now inlined (not a
+  `let message` binding) so the `messages` extractor reads the right string.
+
+Apply-engine:
+
+- **Identical-edit dedup.** `Cst_edit.apply_all` / `apply_best_effort` now drop
+  exact-duplicate edits before conflict-checking. Two default rules emitting the
+  *same* fix (e.g. TYPO-010 and TYPO-037 both rewriting ` ,`→`,`) no longer
+  abort `--apply-fixes` as a spurious overlap; the edit is applied once.
+  Genuinely different edits on the same range are still rejected.
+
+The promotion of the whitespace rules (Phase 3.2) remains **deferred** pending
+proper fix-set delegation. No producer-count change (**101** unchanged).
+
 ## [v27.1.0] — 2026-06-27
 
 **P3 Phase 3 — 30 context-aware TYPO rules promoted from the pilot set to the

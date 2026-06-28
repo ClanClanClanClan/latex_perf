@@ -592,12 +592,16 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-057: Number adjacent to degree symbol
      ══════════════════════════════════════════════════════════════════════ *)
-  run "TYPO-057 fires on digit-degree" (fun tag ->
-      expect (fires "TYPO-057" "45\xc2\xb0") (tag ^ ": 45 degree"));
+  run "TYPO-057 fires on digit-degree-C (temperature)" (fun tag ->
+      expect (fires "TYPO-057" "45\xc2\xb0C") (tag ^ ": 45°C"));
+  run "TYPO-057 does NOT fire on a bare degree (angle, not temperature)"
+    (fun tag ->
+      (* Spec scope is °C/°F; `45°` (an angle) must not fire. *)
+      expect (does_not_fire "TYPO-057" "45\xc2\xb0") (tag ^ ": bare angle"));
   run "TYPO-057 clean spaced" (fun tag ->
       expect
-        (does_not_fire "TYPO-057" "45\\,\xc2\xb0")
-        (tag ^ ": thin space before degree"));
+        (does_not_fire "TYPO-057" "45\\,\xc2\xb0C")
+        (tag ^ ": thin space before degree-C"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-058: Greek homograph letters in Latin text
@@ -641,12 +645,18 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-063: Non-breaking hyphen U+2011
      ══════════════════════════════════════════════════════════════════════ *)
-  run "TYPO-063 fires on nb-hyphen" (fun tag ->
-      expect (fires "TYPO-063" "text\xe2\x80\x91here") (tag ^ ": U+2011"));
+  run "TYPO-063 fires on nb-hyphen INSIDE a url" (fun tag ->
+      expect
+        (fires "TYPO-063" "\\url{http://a\xe2\x80\x91b.com}")
+        (tag ^ ": U+2011 inside \\url"));
+  run "TYPO-063 does NOT fire on U+2011 outside a url (ENC-018's domain)"
+    (fun tag ->
+      (* TYPO-063 is scoped to inside-URL; ENC-018 handles U+2011 outside. *)
+      expect (does_not_fire "TYPO-063" "text\xe2\x80\x91here") (tag ^ ": prose"));
   run "TYPO-063 clean" (fun tag ->
       expect
-        (does_not_fire "TYPO-063" "text-here")
-        (tag ^ ": standard hyphen ok"));
+        (does_not_fire "TYPO-063" "\\url{http://a-b.com}")
+        (tag ^ ": standard hyphen in url ok"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-060: Smart quotes inside lstlisting/verbatim
@@ -818,11 +828,11 @@ let () =
         (fires_with_count "TYPO-062" "path\\\\file and dir\\\\name" 2)
         (tag ^ ": count=2"));
 
-  (* TYPO-063 count for two nb-hyphens *)
+  (* TYPO-063 count for two nb-hyphens inside a url *)
   run "TYPO-063 count=2" (fun tag ->
       expect
-        (fires_with_count "TYPO-063" "\xe2\x80\x91one \xe2\x80\x91two" 2)
-        (tag ^ ": count=2"));
+        (fires_with_count "TYPO-063" "\\url{a\xe2\x80\x91b\xe2\x80\x91c}" 2)
+        (tag ^ ": count=2 inside url"));
 
   (* ══════════════════════════════════════════════════════════════════════
      Realistic LaTeX fragment — multi-rule integration test

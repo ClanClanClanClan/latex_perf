@@ -36,6 +36,24 @@ let conflicts a b =
     else if is_insertion b then sa < sb && sb < ea
     else sa < eb && sb < ea
 
+(* Two rules may independently emit the EXACT same edit (same range AND
+   replacement) — e.g. TYPO-010 "space before punctuation" and TYPO-037 "space
+   before comma" both rewrite ` ,`→`,`. That is not a conflict: applying the
+   edit once is the unambiguously correct result. Collapse exact duplicates
+   before conflict-checking so the apply pass does not spuriously abort (and
+   does not double-apply). Distinct edits on the same range (different
+   replacement) are NOT collapsed — those are genuine conflicts. *)
+let dedup_identical edits =
+  let seen = Hashtbl.create 16 in
+  List.filter
+    (fun e ->
+      let k = (e.start_offset, e.end_offset, e.replacement) in
+      if Hashtbl.mem seen k then false
+      else (
+        Hashtbl.replace seen k ();
+        true))
+    edits
+
 let rec validate_non_overlapping = function
   | [] | [ _ ] -> Ok ()
   | e :: rest -> (
@@ -59,6 +77,7 @@ let apply_single src e =
    in order so the resulting string contains each replacement at the correct
    spot. *)
 let apply_all src edits =
+  let edits = dedup_identical edits in
   match validate_non_overlapping edits with
   | Error (a, b) -> Error (`Overlap (a, b))
   | Ok () ->
@@ -86,6 +105,7 @@ let apply_all src edits =
    applied] — guaranteed to succeed because applied was built to be pairwise
    non-conflicting. *)
 let apply_best_effort src edits =
+  let edits = dedup_identical edits in
   let rec partition acc_applied acc_skipped = function
     | [] -> (List.rev acc_applied, List.rev acc_skipped)
     | e :: rest ->

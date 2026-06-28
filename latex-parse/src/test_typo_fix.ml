@@ -178,6 +178,21 @@ let () =
         (List.length edits = 2 && apply_all src edits = "alpha\nbeta\ngamma")
         (tag ^ ": trailing whitespace stripped on both lines"));
 
+  (* v27.1.1 (adversarial-review fix): the `\r` of a CRLF terminator is NOT
+     trailing whitespace. A clean CRLF file must not fire, and apply-fixes must
+     not strip carriage returns; real trailing spaces before the CRLF are still
+     removed, keeping the `\r\n`. *)
+  run "TYPO-007 does not fire on a clean CRLF file" (fun tag ->
+      expect
+        (does_not_fire "TYPO-007" "alpha\r\nbeta\r\n")
+        (tag ^ ": bare \\r is a terminator, not trailing ws"));
+  run "TYPO-007 strips trailing spaces but preserves the CRLF \\r" (fun tag ->
+      let src = "alpha   \r\nbeta\r\n" in
+      let edits = fix_edits "TYPO-007" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "alpha\r\nbeta\r\n")
+        (tag ^ ": deletes the 3 spaces, keeps both \\r\\n"));
+
   run "TYPO-008 fix collapses 4 newlines to 2" (fun tag ->
       let src = "a\n\n\n\nb" in
       let edits = fix_edits "TYPO-008" src in
@@ -1420,12 +1435,12 @@ let () =
         (tag ^ ": inserted between 100 and °, not mid-number"));
 
   run "TYPO-057 fix: multiple occurrences each get a thin space" (fun tag ->
-      let src = "0\xc2\xb0 to 9\xc2\xb0" in
+      let src = "0\xc2\xb0C to 9\xc2\xb0F" in
       let edits = fix_edits "TYPO-057" src in
       expect
         (List.length edits = 2
-        && apply_all src edits = "0\\,\xc2\xb0 to 9\\,\xc2\xb0")
-        (tag ^ ": both digit-degree pairs fixed"));
+        && apply_all src edits = "0\\,\xc2\xb0C to 9\\,\xc2\xb0F")
+        (tag ^ ": both digit-degree-unit pairs fixed"));
 
   run "TYPO-057 does not fire when a space already separates" (fun tag ->
       (* "5 °C" — digit not immediately followed by the degree sign. *)

@@ -83,6 +83,12 @@ BUILD_CHECKS = [
     # corruption). The lint-only differential cannot see fix output.
     (["python3", "scripts/tools/check_apply_fixes_safety.py", "--repo", "."],
      "apply-fixes safety", None),
+    # Protected-region (verbatim / \verb / lstlisting / comment / url) corruption
+    # gate: no fix producer may rewrite literal bytes the author typed verbatim.
+    # Plants every known producer trigger inside each protected-region kind and
+    # asserts --apply-fixes leaves them byte-identical (pilot + default).
+    (["python3", "scripts/tools/check_verbatim_safety.py", "--repo", "."],
+     "verbatim safety", None),
 ]
 
 

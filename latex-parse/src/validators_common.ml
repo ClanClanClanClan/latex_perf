@@ -621,6 +621,46 @@ let find_exempt_ranges (s : string) : (int * int) list =
     (Alias of the generic point-in-ranges test [is_in_math_range].) *)
 let is_in_exempt_range = is_in_math_range
 
+(** [mk_result_with_fix_exempt ~id ~severity ~message ~count ~src ~fix] —
+    exempt-aware constructor for character/whitespace fix producers. Drops every
+    edit in [fix] whose start offset falls inside a verbatim / inline \verb /
+    comment / url / math region of [src] (via [find_exempt_ranges]), then builds
+    a [mk_result_with_fix] from what survives, or a plain [mk_result] if nothing
+    does. [count] is supplied by the caller and is NOT touched — the diagnostic
+    still tallies every occurrence (so default-mode lint and the differential
+    are unchanged); only the FIX is withheld inside protected regions, where
+    rewriting literal bytes (a 3-byte fullwidth char → ASCII, a control byte or
+    BOM deleted, a tab expanded) would corrupt content the author wrote
+    verbatim. Centralises the P3 exempt principle for the older CHAR/CJK/ENC/SPC
+    producers that predate it (v27.1.4 verbatim-exemption safety fix). *)
+let mk_result_with_fix_exempt ~id ~severity ~message ~count ~src ~fix =
+  let exempt = find_exempt_ranges src in
+  let fix' =
+    List.filter
+      (fun (e : Cst_edit.t) -> not (is_in_exempt_range exempt e.start_offset))
+      fix
+  in
+  if fix' = [] then mk_result ~id ~severity ~message ~count
+  else mk_result_with_fix ~id ~severity ~message ~count ~fix:fix'
+
+(** [mk_result_with_fix_vcu_exempt ~id ~severity ~message ~count ~src ~fix] —
+    the MATH-targeting counterpart of [mk_result_with_fix_exempt]. A rule that
+    fixes inside math (e.g. MATH-014 `\frac`→`\tfrac`, SCRIPT-016 `''`→prime)
+    finds its targets via [find_math_ranges], which treats a `$..$` written
+    inside a `verbatim` / `\verb` / comment as math — so the fix would rewrite
+    that literal source. This drops only edits inside the verbatim/comment/url
+    ([find_verbatim_comment_url_ranges]) set, KEEPING genuine in-math edits (it
+    must not use the full exempt set, which includes math). Count is untouched. *)
+let mk_result_with_fix_vcu_exempt ~id ~severity ~message ~count ~src ~fix =
+  let vcu = find_verbatim_comment_url_ranges src in
+  let fix' =
+    List.filter
+      (fun (e : Cst_edit.t) -> not (is_in_exempt_range vcu e.start_offset))
+      fix
+  in
+  if fix' = [] then mk_result ~id ~severity ~message ~count
+  else mk_result_with_fix ~id ~severity ~message ~count ~fix:fix'
+
 (** [is_ascii_context ?window ?candidate_bytes s off] — heuristic that returns
     [true] iff the byte window of size [window] (default 32) on each side of the
     candidate UTF-8 sequence at [off] (of length [candidate_bytes], default 3)

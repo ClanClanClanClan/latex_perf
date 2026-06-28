@@ -131,7 +131,7 @@ let r_enc_007 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-007" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-007" ~severity:Warning
            ~message:"Zero‑width space U+200B present" ~count:cnt ~fix)
     else None
   in
@@ -175,7 +175,7 @@ let r_enc_012 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-012" ~severity:Error
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-012" ~severity:Error
            ~message:"C1 control characters U+0080–009F present" ~count:cnt ~fix)
     else None
   in
@@ -204,7 +204,7 @@ let r_enc_017 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-017" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-017" ~severity:Warning
            ~message:"Soft hyphen U+00AD found in source" ~count:cnt ~fix)
     else None
   in
@@ -240,7 +240,7 @@ let r_enc_020 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-020" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-020" ~severity:Warning
            ~message:"Invisible formatting mark U+200E/U+200F present" ~count:cnt
            ~fix)
     else None
@@ -269,7 +269,7 @@ let r_enc_021 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-021" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-021" ~severity:Warning
            ~message:"WORD JOINER U+2060 present" ~count:cnt ~fix)
     else None
   in
@@ -304,7 +304,7 @@ let r_enc_022 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-022" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-022" ~severity:Warning
            ~message:"Interlinear annotation chars U+FFF9–FFFB detected"
            ~count:cnt ~fix)
     else None
@@ -339,7 +339,7 @@ let r_enc_023 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-023" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-023" ~severity:Warning
            ~message:"NARROW NB‑SPACE U+202F outside French context" ~count:cnt
            ~fix)
     else None
@@ -385,7 +385,7 @@ let r_enc_024 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-024" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-024" ~severity:Warning
            ~message:"Bidirectional embeddings U+202A–U+202E present" ~count:cnt
            ~fix)
     else None
@@ -472,8 +472,8 @@ let r_enc_002 : rule =
         Some (mk_result ~id:"ENC-002" ~severity:Error ~message ~count:interior)
       else
         Some
-          (mk_result_with_fix ~id:"ENC-002" ~severity:Error ~message
-             ~count:interior ~fix)
+          (mk_result_with_fix_exempt ~src:s ~id:"ENC-002" ~severity:Error
+             ~message ~count:interior ~fix)
     else None
   in
   { id = "ENC-002"; run; languages = [] }
@@ -597,8 +597,8 @@ let r_enc_004 : rule =
         Some (mk_result ~id:"ENC-004" ~severity:Warning ~message ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"ENC-004" ~severity:Warning ~message
-             ~count:!cnt ~fix)
+          (mk_result_with_fix_exempt ~src:s ~id:"ENC-004" ~severity:Warning
+             ~message ~count:!cnt ~fix)
     else None
   in
   { id = "ENC-004"; run; languages = [] }
@@ -873,7 +873,7 @@ let r_enc_016 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-016" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-016" ~severity:Warning
            ~message:"Arabic numerals replaced by Unicode look‑alikes" ~count:cnt
            ~fix)
     else None
@@ -1034,7 +1034,7 @@ let r_enc_018 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"ENC-018" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-018" ~severity:Info
            ~message:"Non‑breaking hyphen U+2011 present outside URLs" ~count:cnt
            ~fix)
     else None
@@ -1157,7 +1157,7 @@ let r_char_005 : rule =
           !offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-005" ~severity:Error
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-005" ~severity:Error
            ~message:"Control characters U+0000–001F present" ~count:cnt ~fix)
     else None
   in
@@ -1189,7 +1189,7 @@ let r_char_006 : rule =
           !offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-006" ~severity:Error
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-006" ~severity:Error
            ~message:"Backspace U+0008 present" ~count:cnt ~fix)
     else None
   in
@@ -1216,7 +1216,7 @@ let r_char_007 : rule =
           !offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-007" ~severity:Error
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-007" ~severity:Error
            ~message:"Bell/alert U+0007 present" ~count:cnt ~fix)
     else None
   in
@@ -1245,7 +1245,7 @@ let r_char_008 : rule =
           !offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-008" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-008" ~severity:Warning
            ~message:"Form feed U+000C present" ~count:cnt ~fix)
     else None
   in
@@ -1273,7 +1273,7 @@ let r_char_009 : rule =
           !offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-009" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-009" ~severity:Warning
            ~message:"Delete U+007F present" ~count:cnt ~fix)
     else None
   in
@@ -1303,7 +1303,7 @@ let r_char_013 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-013" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-013" ~severity:Warning
            ~message:"Bidirectional isolate chars U+2066–U+2069 present"
            ~count:cnt ~fix)
     else None
@@ -1330,7 +1330,7 @@ let r_char_014 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-014" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-014" ~severity:Warning
            ~message:"Unicode replacement � found – decoding error" ~count:cnt
            ~fix)
     else None
@@ -1423,7 +1423,7 @@ let r_char_017 : rule =
           offsets
       in
       Some
-        (mk_result_with_fix ~id:"CHAR-017" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"CHAR-017" ~severity:Warning
            ~message:"Full‑width Latin letters detected" ~count:cnt ~fix)
     else None
   in
@@ -1479,7 +1479,7 @@ let r_char_018 : rule =
              ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CHAR-018" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"CHAR-018" ~severity:Info
              ~message:"Deprecated ligature ﬀ/ﬁ/ﬂ characters present" ~count:cnt
              ~fix)
     else None
@@ -1576,8 +1576,8 @@ let r_char_016 : rule =
             !fix_edits
         in
         Some
-          (mk_result_with_fix ~id:"CHAR-016" ~severity:Warning ~message:msg
-             ~count:!cnt ~fix:sorted)
+          (mk_result_with_fix_exempt ~src:s ~id:"CHAR-016" ~severity:Warning
+             ~message:msg ~count:!cnt ~fix:sorted)
     else None
   in
   { id = "CHAR-016"; run; languages = [] }
@@ -1621,7 +1621,7 @@ let r_char_019 : rule =
              ~message:"Unicode minus U+2212 in text mode" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CHAR-019" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"CHAR-019" ~severity:Info
              ~message:"Unicode minus U+2212 in text mode" ~count:cnt ~fix)
     else None
   in
@@ -1755,7 +1755,7 @@ let r_char_012 : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CHAR-012" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"CHAR-012" ~severity:Info
              ~message:"Zero‑width joiner U+200D outside ligature context"
              ~count:!cnt ~fix)
     else None
@@ -1888,7 +1888,7 @@ let r_spc_003 : rule =
              ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-003" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-003" ~severity:Warning
              ~message:"Hard tab precedes non‑tab text (mixed indent)"
              ~count:!matched ~fix)
     else None
@@ -1945,7 +1945,7 @@ let r_spc_005 : rule =
              ~message:"Trailing tab at end of line" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-005" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-005" ~severity:Info
              ~message:"Trailing tab at end of line" ~count:!matched ~fix)
     else None
   in
@@ -3795,8 +3795,8 @@ let r_cjk_001 : rule =
           (mk_result ~id:"CJK-001" ~severity:Warning ~message:msg ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CJK-001" ~severity:Warning ~message:msg
-             ~count:!cnt ~fix:(List.rev !fix_edits))
+          (mk_result_with_fix_exempt ~src:s ~id:"CJK-001" ~severity:Warning
+             ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3839,8 +3839,8 @@ let r_cjk_002 : rule =
           (mk_result ~id:"CJK-002" ~severity:Warning ~message:msg ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CJK-002" ~severity:Warning ~message:msg
-             ~count:!cnt ~fix:(List.rev !fix_edits))
+          (mk_result_with_fix_exempt ~src:s ~id:"CJK-002" ~severity:Warning
+             ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3903,8 +3903,8 @@ let r_cjk_010 : rule =
           (mk_result ~id:"CJK-010" ~severity:Warning ~message:msg ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CJK-010" ~severity:Warning ~message:msg
-             ~count:!cnt ~fix:(List.rev !fix_edits))
+          (mk_result_with_fix_exempt ~src:s ~id:"CJK-010" ~severity:Warning
+             ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-010"; run; languages = [ "zh"; "ja"; "ko" ] }
@@ -3947,8 +3947,8 @@ let r_cjk_014 : rule =
         Some (mk_result ~id:"CJK-014" ~severity:Info ~message:msg ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CJK-014" ~severity:Info ~message:msg
-             ~count:!cnt ~fix:(List.rev !fix_edits))
+          (mk_result_with_fix_exempt ~src:s ~id:"CJK-014" ~severity:Info
+             ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
   { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }

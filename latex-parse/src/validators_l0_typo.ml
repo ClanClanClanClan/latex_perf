@@ -377,7 +377,7 @@ let r_typo_006 : rule =
              ~message:"Tab character U+0009 forbidden" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-006" ~severity:Error
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-006" ~severity:Error
              ~message:"Tab character U+0009 forbidden" ~count:cnt ~fix)
     else None
   in
@@ -731,7 +731,7 @@ let r_typo_014 : rule =
              ~message:{|Space before percent sign \%|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-014" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-014" ~severity:Info
              ~message:{|Space before percent sign \%|} ~count:cnt ~fix)
     else None
   in
@@ -1154,7 +1154,7 @@ let r_typo_025 : rule =
              ~message:{|Space before en‑dash in number range|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-025" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-025" ~severity:Warning
              ~message:{|Space before en‑dash in number range|} ~count:!cnt ~fix)
     else None
   in
@@ -1342,7 +1342,7 @@ let r_typo_029 : rule =
              ~message:{|Non‑breaking space after \ref missing|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-029" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-029" ~severity:Info
              ~message:{|Non‑breaking space after \ref missing|} ~count:cnt ~fix)
     else None
   in
@@ -1550,8 +1550,8 @@ let r_typo_035 : rule =
         Some (mk_result ~id:"TYPO-035" ~severity:Warning ~message ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-035" ~severity:Warning ~message
-             ~count:cnt ~fix)
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-035" ~severity:Warning
+             ~message ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-035"; run; languages = [] }

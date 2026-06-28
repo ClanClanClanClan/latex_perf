@@ -1140,6 +1140,40 @@ let l1_script_016_rule : rule =
       "\\varphi";
     ]
   in
+  (* Fix edits: for each `\greek''` occurrence INSIDE math, replace the two
+     ASCII single-quote bytes with `^{\prime\prime}` (proper double-prime
+     superscript). Math-mode-only positive filter via [find_math_ranges] +
+     [is_in_math_range] (the rule fires inside math, so math is NOT exempt).
+
+     Count is preserved byte-identically: the diagnostic [cnt] below still uses
+     the original [extract_math_segments] + [count_substring] logic untouched;
+     the fix is computed separately and only narrows which occurrences receive
+     an edit. An occurrence FOLLOWED by a third `'` (i.e. `\greek'''`, a
+     triple-prime owned by SCRIPT-012/022) is withheld from the fix — editing
+     just its first two primes would leave a stray `'`. SCRIPT-019 (also
+     diagnose-only) detects the bare `''` and skips triple+ for the same reason;
+     both converge on `^{\prime\prime}` when they fix. *)
+  let mk_fix_edits s =
+    let len = String.length s in
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    List.concat_map
+      (fun g ->
+        let needle = g ^ "''" in
+        let glen = String.length g in
+        Validators_l0_typo.find_all_non_overlapping s needle
+        |> List.filter (fun off ->
+               inside off
+               (* withhold triple+ primes: next byte after the pair is not
+                  `'` *)
+               && not (off + glen + 2 < len && s.[off + glen + 2] = '\''))
+        |> List.map (fun off ->
+               (* replace the two `''` bytes at [off+glen .. off+glen+2) *)
+               Cst_edit.replace ~start_offset:(off + glen)
+                 ~end_offset:(off + glen + 2)
+                 "^{\\prime\\prime}"))
+      greeks
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1152,9 +1186,16 @@ let l1_script_016_rule : rule =
           greeks)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-016" ~severity:Info
-           ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-016" ~severity:Info
+             ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SCRIPT-016" ~severity:Info
+             ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SCRIPT-016"; run; languages = [] }

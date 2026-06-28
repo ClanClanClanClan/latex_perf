@@ -296,6 +296,66 @@ let cases =
         ("line comment", "% note-\n");
         ("inline math", "$a-\nb$");
       ] );
+    (* Diagnose-only typography rules (count-exemption only; no fix). *)
+    ( "TYPO-041",
+      "end.\\ldots more",
+      [
+        ("inline verbatim", "x \\verb|.\\ldots| y");
+        ("verbatim env", "\\begin{verbatim}\n.\\ldots\n\\end{verbatim}");
+        ("line comment", "% .\\ldots\n");
+        ("inline math", "$.\\ldots$");
+      ] );
+    ( "TYPO-047",
+      "use \\section*{x} here",
+      [
+        ("inline verbatim", "x \\verb|\\section*| y");
+        ("verbatim env", "\\begin{verbatim}\n\\section*\n\\end{verbatim}");
+        ("line comment", "% \\section*\n");
+        ("inline math", "$\\section*$");
+      ] );
+    ( "TYPO-052",
+      "a < b > c",
+      [
+        ("inline verbatim", "x \\verb|<>| y");
+        ("verbatim env", "\\begin{verbatim}\n< >\n\\end{verbatim}");
+        ("line comment", "% < >\n");
+        ("inline math", "$a < b$");
+      ] );
+    ( "TYPO-054",
+      "see a\xe2\x80\x93b range",
+      [
+        ("inline verbatim", "x \\verb|a\xe2\x80\x93b| y");
+        ("verbatim env", "\\begin{verbatim}\na\xe2\x80\x93b\n\\end{verbatim}");
+        ("line comment", "% a\xe2\x80\x93b\n");
+        ("inline math", "$a\xe2\x80\x93b$");
+      ] );
+    ( "TYPO-056",
+      "caf\\'{e} here",
+      [
+        ("inline verbatim", "x \\verb|\\'{e}| y");
+        ("verbatim env", "\\begin{verbatim}\n\\'{e}\n\\end{verbatim}");
+        ("line comment", "% \\'{e}\n");
+        ("inline math", "$\\'{e}$");
+      ] );
+    ( "TYPO-058",
+      "a sc\xce\xb1le word",
+      [
+        ("inline verbatim", "x \\verb|\xce\xb1| y");
+        ("verbatim env", "\\begin{verbatim}\n\xce\xb1\n\\end{verbatim}");
+        ("line comment", "% \xce\xb1\n");
+        ("inline math", "$\xce\xb1$");
+      ] );
+    (* TYPO-036 (3+ consecutive all-caps words) needs a leading/trailing word
+       boundary, which inline math / inline verbatim cannot supply around the
+       phrase — so it uses a custom 2-context list where the phrase sits inside
+       a comment / verbatim env with real space boundaries. *)
+    ( "TYPO-036",
+      "THIS IS SHOUTING here",
+      [
+        ("line comment", "% THIS IS SHOUTING now\n");
+        ( "verbatim env",
+          "\\begin{verbatim}\n THIS IS SHOUTING \n\\end{verbatim}" );
+      ] );
   ]
 
 let () =

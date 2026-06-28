@@ -2,6 +2,32 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.2] — 2026-06-28
+
+**`--apply-fixes` no longer aborts on overlapping fixes — deterministic
+best-effort.** Promoting many fix-producing TYPO rules into the default set
+(v27.1.0) made it common for two rules to emit fix edits on overlapping source
+ranges (e.g. TYPO-005 `...`→`\dots` vs TYPO-010's space-before-the-ellipsis
+dot, or TYPO-010 vs TYPO-018 on `  !`). The strict all-or-nothing apply engine
+then refused to apply *any* fix and exited 2 — leaving `--apply-fixes` unusable
+on real documents (an exit-code-aware corpus probe found 6/330 files aborting).
+
+`--apply-fixes` now applies, per pass, the **maximal non-conflicting subset**
+of edits (deterministic best-effort, first-by-rule-order wins a conflict) and
+iterates to a fixpoint, so an edit that loses a conflict on one pass is
+re-attempted once the winning edit has changed the text. The result is never
+corrupting (the applied subset is pairwise non-conflicting) and converges
+(cycle-detection + cap unchanged). All 330 corpus files now apply with **zero
+aborts** in both pilot and default mode. `--apply-fixes-for RULE-ID` stays
+strict (a single rule's edits must not self-overlap).
+
+Engine hygiene already in v27.1.1 (`Cst_edit.apply_all`/`apply_best_effort`
+dedup of exact-duplicate edits) is retained. The safety gate
+(`check_apply_fixes_safety.py`) is hardened to inspect **exit codes** (an abort
+previously looked like "converged to empty" because the error goes to stderr)
+and to sweep **default mode** as well, so an overlap-abort regression now fails
+the gate. No producer-count change (**101** unchanged).
+
 ## [v27.1.1] — 2026-06-28
 
 **Bug-fix + impl-vs-spec hygiene release.** An adversarial review of the v27.1.0

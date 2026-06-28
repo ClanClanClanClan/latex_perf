@@ -78,15 +78,20 @@ def lint_counts(binp: str, path: str, env) -> dict[str, int]:
     return d
 
 
-def apply_once(binp: str, path: str, env) -> str:
-    out = subprocess.run(
+def apply_once(binp: str, path: str, env):
+    """Return (text, returncode). returncode != 0 means the CLI refused to apply
+    (e.g. exit 2 = E.apply-fixes.overlap) — the error goes to stderr so stdout is
+    empty, which earlier silently looked like 'converged to empty'."""
+    r = subprocess.run(
         [binp, "--apply-fixes", path], capture_output=True, text=True, env=env
-    ).stdout
-    return "\n".join(l for l in out.splitlines() if not l.startswith("# "))
+    )
+    text = "\n".join(l for l in r.stdout.splitlines() if not l.startswith("# "))
+    return text, r.returncode
 
 
 def fixpoint(binp: str, path: str, env):
-    """Return (converged: bool, final_text: str, passes: int)."""
+    """Return (status, final_text, passes) where status is one of
+    'converged' | 'cycle' | 'cap' | 'aborted'."""
     cur = open(path, encoding="utf-8", errors="ignore").read()
     seen = {cur.rstrip("\n")}
     for n in range(1, MAX_PASSES + 1):
@@ -94,16 +99,18 @@ def fixpoint(binp: str, path: str, env):
             t.write(cur)
             tp = t.name
         try:
-            nxt = apply_once(binp, tp, env)
+            nxt, rc = apply_once(binp, tp, env)
         finally:
             os.unlink(tp)
+        if rc != 0:
+            return "aborted", cur, n  # CLI refused (exit code) — NOT convergence
         if nxt.rstrip("\n") == cur.rstrip("\n"):
-            return True, cur, n  # stable fixpoint
+            return "converged", cur, n  # stable fixpoint
         if nxt.rstrip("\n") in seen:
-            return False, nxt, n  # cycle (oscillation)
+            return "cycle", nxt, n  # oscillation
         seen.add(nxt.rstrip("\n"))
         cur = nxt
-    return False, cur, MAX_PASSES  # did not stabilise within cap
+    return "cap", cur, MAX_PASSES  # did not stabilise within cap
 
 
 def allowlisted(path: str) -> bool:
@@ -133,14 +140,27 @@ def main() -> int:
         if os.path.isfile(f)
     )
 
-    nonconv, new_err, bad_utf8 = [], [], []
+    # Also exercise DEFAULT mode (no L0_VALIDATORS) — the promoted TYPO rules now
+    # fire there, and overlapping fix edits among them must NOT abort
+    # --apply-fixes (regression guard for the v27.1.2 best-effort apply engine).
+    default_env = dict(os.environ)
+    default_env.pop("L0_VALIDATORS", None)
+
+    nonconv, new_err, bad_utf8, aborted = [], [], [], []
     for f in files:
-        base = lint_counts(binp, f, env)
-        converged, final, passes = fixpoint(binp, f, env)
         rel = os.path.relpath(f, ns.repo)
-        if not converged:
+        # Default-mode abort check (cheap: one apply-fixes call, inspect exit code).
+        _, drc = apply_once(binp, f, default_env)
+        if drc not in (0,):
+            aborted.append(f"{rel}: default-mode --apply-fixes exited {drc} (overlap-abort?)")
+        base = lint_counts(binp, f, env)
+        status, final, passes = fixpoint(binp, f, env)
+        if status == "aborted":
+            aborted.append(f"{rel}: pilot-mode --apply-fixes aborted (exit code)")
+            continue
+        if status != "converged":
             if not allowlisted(rel):
-                nonconv.append(f"{rel}: did not converge in {MAX_PASSES} passes (contradictory producers?)")
+                nonconv.append(f"{rel}: did not converge in {MAX_PASSES} passes ({status})")
             continue
         try:
             final.encode("utf-8")
@@ -165,8 +185,13 @@ def main() -> int:
         for v in new_err:
             print(f"  info: {v}")
 
-    # Hard safety violations: non-convergence (oscillation) + invalid output.
-    violations = nonconv + [f"{b}: fixpoint output not valid UTF-8" for b in bad_utf8]
+    # Hard safety violations: --apply-fixes refusing to apply (overlap-abort) in
+    # either mode, non-convergence (oscillation), and invalid output.
+    violations = (
+        aborted
+        + nonconv
+        + [f"{b}: fixpoint output not valid UTF-8" for b in bad_utf8]
+    )
     if violations:
         print(f"[apply-fixes-safety] FAIL: {len(violations)} hard safety violation(s) "
               f"across {len(files)} corpus files:", file=sys.stderr)
@@ -174,7 +199,8 @@ def main() -> int:
             print(f"  {v}", file=sys.stderr)
         return 1
     print(f"[apply-fixes-safety] PASS: all {len(files)} corpus files converge to valid "
-          f"output (pilot mode, ≤{MAX_PASSES} passes; {len(new_err)} informational count-rises).")
+          f"output with no apply-abort (pilot + default mode, ≤{MAX_PASSES} passes; "
+          f"{len(new_err)} informational count-rises).")
     return 0
 
 

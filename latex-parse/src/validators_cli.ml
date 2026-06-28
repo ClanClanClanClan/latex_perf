@@ -199,40 +199,49 @@ let apply_fixes_cap = 64
 let run_apply_fixes_converge ?filter_id ~path ~src () =
   let seen = Hashtbl.create 16 in
   Hashtbl.replace seen (Digest.string src) ();
+  (* v27.1.2: each pass applies the maximal NON-CONFLICTING subset of edits
+     (deterministic best-effort, [Cst_edit.apply_best_effort] — first-by-rule-
+     order wins a conflict) instead of the former strict [Rewrite_engine.apply],
+     which ABORTED the whole document if ANY two promoted rules emitted
+     overlapping edits (e.g. TYPO-005 `...`→`\dots` vs TYPO-010 space-before-the
+     ellipsis dot). Promoting many fix-producers into the default set made such
+     overlaps common, so all-or-nothing left `--apply-fixes` unusable on real
+     documents. Best-effort never corrupts (the applied subset is pairwise
+     non-conflicting); an edit that loses a conflict on one pass is re-attempted
+     on the next once the winning edit has changed the text, so the converge
+     loop still drives every compatible fix to a fixpoint. Cycle-detection + the
+     cap keep it terminating exactly as before. *)
   let rec loop cur passes =
     ignore (resolve_profile ~requested:`Auto ~src:cur);
     ignore (setup_all ~path ~src:cur ~log_path:None);
     let results = Latex_parse_lib.Validators.run_all cur in
     let edits = collect_fix_edits ?filter_id results in
-    if edits = [] then Ok cur
+    if edits = [] then cur
     else
-      match Latex_parse_lib.Rewrite_engine.apply ~source:cur ~edits with
-      | Error _ as e -> if passes = 0 then e else Ok cur
-      | Ok nxt ->
-          if String.equal nxt cur then Ok cur
-          else
-            let dn = Digest.string nxt in
-            if Hashtbl.mem seen dn then (
-              eprintf
-                "# apply-fixes: fix cycle detected after %d pass(es); emitting \
-                 last stable state (contradictory producers)\n"
-                (passes + 1);
-              Ok cur)
-            else if passes + 1 >= apply_fixes_cap then (
-              eprintf
-                "# apply-fixes: reached the %d-pass cap without a fixpoint; \
-                 emitting latest state\n"
-                apply_fixes_cap;
-              Ok nxt)
-            else (
-              Hashtbl.replace seen dn ();
-              loop nxt (passes + 1))
+      let nxt, _applied, _skipped =
+        Latex_parse_lib.Cst_edit.apply_best_effort cur edits
+      in
+      if String.equal nxt cur then cur
+      else
+        let dn = Digest.string nxt in
+        if Hashtbl.mem seen dn then (
+          eprintf
+            "# apply-fixes: fix cycle detected after %d pass(es); emitting \
+             last stable state (contradictory producers)\n"
+            (passes + 1);
+          cur)
+        else if passes + 1 >= apply_fixes_cap then (
+          eprintf
+            "# apply-fixes: reached the %d-pass cap without a fixpoint; \
+             emitting latest state\n"
+            apply_fixes_cap;
+          nxt)
+        else (
+          Hashtbl.replace seen dn ();
+          loop nxt (passes + 1))
   in
-  match loop src 0 with
-  | Ok out ->
-      print_string out;
-      0
-  | Error (`Overlap (a, b)) -> overlap_error a b
+  print_string (loop src 0);
+  0
 
 let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
     ~src () =
@@ -393,19 +402,23 @@ let () =
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
          [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] \
          <file.tex>\n\n\
-         --apply-fixes  run validators, apply every rule's fix edits via \
-         Cst_edit.apply_all,\n\
-        \               and emit the modified source to stdout. Iterates to a \
-         fixpoint\n\
-        \               (P1a) so cross-rule cascades resolve in one run; \
-         cycle-safe. \n\
-        \               L0_APPLY_FIXES=1 is equivalent when no other flag is \
-         given.\n\
-        \               Overlapping fixes → stderr + exit 2.\n\
+         --apply-fixes  run validators, apply every rule's fix edits and emit \
+         the\n\
+        \               modified source to stdout. Iterates to a fixpoint \
+         (P1a) so\n\
+        \               cross-rule cascades resolve in one run; cycle-safe. \
+         Each pass\n\
+        \               applies the maximal NON-CONFLICTING subset \
+         (deterministic\n\
+        \               best-effort, rule-order priority), so overlapping \
+         fixes from\n\
+        \               different rules never abort the document (v27.1.2). \
+         L0_APPLY_FIXES=1\n\
+        \               is equivalent when no other flag is given.\n\
          --apply-fixes-for RULE-ID  same as --apply-fixes but only applies \
          fixes from results\n\
-        \               whose [r.id = RULE-ID]. Useful for incremental \
-         adoption (v26.3).\n\
+        \               whose [r.id = RULE-ID] (strict; a single rule's edits \
+         must not self-overlap). Useful for incremental adoption (v26.3).\n\
          --apply-fixes-best-effort  v26.4: applies the maximal non-conflicting \
          subset of fixes\n\
         \               via Cst_edit.apply_best_effort. Reports the skipped \

@@ -3384,4 +3384,94 @@ let () =
         (List.length edits = 1 && apply_all src edits = "\\(\\tfrac{x}{y}\\)")
         (tag ^ ": \\(..\\) inline math also gets the replace"));
 
+  (* v27.1.3 (batch 9): TYPO-052 (bare < / > in text → \textless{} /
+     \textgreater{}). Exempt-aware: skips verbatim / comments / math / url. The
+     diagnostic count is unchanged (count_in_text exempt); only the fix is
+     new. *)
+  run "TYPO-052 fix: < and > → \\textless{} / \\textgreater{}" (fun tag ->
+      let src = "Compare a < b and c > d." in
+      let edits = fix_edits "TYPO-052" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits
+           = "Compare a \\textless{} b and c \\textgreater{} d.")
+        (tag ^ ": both angle brackets escaped"));
+
+  run "TYPO-052 fix: < inside math is exempt" (fun tag ->
+      let src = "In math $a < b$ but text c < d." in
+      let edits = fix_edits "TYPO-052" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "In math $a < b$ but text c \\textless{} d.")
+        (tag ^ ": only the text < is escaped, math < untouched"));
+
+  run "TYPO-052 fix: \\verb content is exempt" (fun tag ->
+      let src = "Code \\verb|x < y| and text e < f." in
+      let edits = fix_edits "TYPO-052" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Code \\verb|x < y| and text e \\textless{} f."
+        )
+        (tag ^ ": verbatim < untouched, text < escaped"));
+
+  run "TYPO-052 does not fire when the only < is in math" (fun tag ->
+      expect
+        (does_not_fire "TYPO-052" "All math: $a < b$ only.")
+        (tag ^ ": exempt-only occurrence → no diagnostic"));
+
+  (* v27.1.3 (batch 9): TYPO-054 (hair-space \, after en-dash in word–word
+     ranges). Purely additive (one \, insert), idempotent (post-fix the byte
+     after the en-dash is `\`, not a letter, so the regex no longer matches),
+     exempt-aware. Count unchanged. *)
+  run "TYPO-054 fix: a–z → a–\\,z" (fun tag ->
+      let src = "See pages a\xe2\x80\x93z now." in
+      let edits = fix_edits "TYPO-054" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "See pages a\xe2\x80\x93\\,z now.")
+        (tag ^ ": thin space inserted after the en-dash"));
+
+  run "TYPO-054 fix: \\url en-dash range is exempt" (fun tag ->
+      let src =
+        "Link \\url{http://a\xe2\x80\x93b.com} and text c\xe2\x80\x93d."
+      in
+      let edits = fix_edits "TYPO-054" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits
+           = "Link \\url{http://a\xe2\x80\x93b.com} and text c\xe2\x80\x93\\,d."
+        )
+        (tag ^ ": only the text range gets the thin space"));
+
+  run "TYPO-054 fix is idempotent" (fun tag ->
+      let src = "range a\xe2\x80\x93z." in
+      let once = apply_all src (fix_edits "TYPO-054" src) in
+      let twice = apply_all once (fix_edits "TYPO-054" once) in
+      expect (once = twice) (tag ^ ": second --apply-fixes pass is a no-op"));
+
+  (* v27.1.3 (batch 9): SCRIPT-016 (Greek-letter double prime `\greek''` typed
+     with ASCII quotes → `\greek^{\prime\prime}` superscript) inside math only.
+     Triple-prime (`\greek'''`, SCRIPT-012/022's domain) is withheld. Count is
+     computed by the untouched extract_math_segments scan; only the fix is
+     new. *)
+  run "SCRIPT-016 fix: $\\gamma''$ → $\\gamma^{\\prime\\prime}$" (fun tag ->
+      let src = "Value $\\gamma'' = 0$." in
+      let edits = fix_edits "SCRIPT-016" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Value $\\gamma^{\\prime\\prime} = 0$.")
+        (tag ^ ": double prime becomes ^{\\prime\\prime}"));
+
+  run "SCRIPT-016 fix: triple prime is withheld" (fun tag ->
+      let src = "Value $\\alpha''' = 0$." in
+      let edits = fix_edits "SCRIPT-016" src in
+      expect
+        (List.length edits = 0)
+        (tag ^ ": \\alpha''' left for SCRIPT-012/022, no partial edit"));
+
+  run "SCRIPT-016 does not fire outside math" (fun tag ->
+      expect
+        (does_not_fire "SCRIPT-016" "text \\alpha'' outside any math")
+        (tag ^ ": only scanned inside math segments"));
+
   finalise "typo-fix"

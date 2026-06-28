@@ -2,6 +2,38 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.3] — 2026-06-28
+
+**Fix-producer batch 9 — 3 new producers (101 → 104).** Three diagnose-only
+rules graduate to fix producers. All three only *add* a fix to an existing
+diagnostic (count/firing unchanged), so default-mode lint output is byte-for-byte
+identical to v27.1.0/.1/.2 (`run_differential_test.py`: 330 files, 0 diffs vs
+v27.1.0), and the corpus-wide apply-fixes safety gate still converges on all 330
+files with no abort (pilot + default mode).
+
+- **TYPO-052** (`escape_angle`): bare `<` / `>` in text → `\textless{}` /
+  `\textgreater{}`. Exempt-aware (skips verbatim / comments / math / `\url{}`);
+  idempotent (post-fix there is no bare `<`/`>`).
+- **TYPO-054** (`insert_thinspace`): inserts a hair-space `\,` immediately after
+  the en-dash in word–word ranges (`a–z` → `a–\,z`). Purely additive and
+  idempotent (after the insert the byte following the en-dash is `\`, not a
+  letter, so the rule no longer matches); exempt-aware.
+- **SCRIPT-016** (`replace_with_prime`): Greek-letter double prime typed with
+  ASCII quotes inside math (`$\alpha''$`) → `$\alpha^{\prime\prime}$`. Triple
+  primes (`\alpha'''`, SCRIPT-012/022's domain) are withheld to avoid a partial
+  edit; outside-math occurrences are untouched.
+
+STYLE-023 (`%`→`\%`) was prototyped this cycle but **deferred**: STYLE-* rules
+are Class D (advisory) and reachable only via `--advisory` / `run_with_policy`,
+and `--apply-fixes` has no Class-D path yet, so a STYLE fix could never be
+applied or gate-validated. Tracked for when the apply path covers Class D.
+
+Tooling: `run_differential_test.py` now defaults `--baseline-ref` to the latest
+`vNN` release tag (was a hardcoded, long-stale `v26.1.0` that made the default
+invocation fail — main has legitimately diverged from v26.1.0 via context-aware
+retrofits that changed diagnostic counts). The "0 diffs vs prior tag" invariant
+is now what the default actually checks.
+
 ## [v27.1.2] — 2026-06-28
 
 **`--apply-fixes` no longer aborts on overlapping fixes — deterministic

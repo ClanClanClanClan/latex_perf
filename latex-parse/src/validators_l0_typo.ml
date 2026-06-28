@@ -2026,10 +2026,20 @@ let r_typo_052 : rule =
     let exempt = find_exempt_ranges s in
     let cnt = count_in_text exempt s "<" + count_in_text exempt s ">" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-052" ~severity:Warning
-           ~message:"Unescaped < or > in text; use \\textless / \\textgreater"
-           ~count:cnt)
+      let fix =
+        mk_replace_edits_exempt exempt s "<" "\\textless{}"
+        @ mk_replace_edits_exempt exempt s ">" "\\textgreater{}"
+      in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-052" ~severity:Warning
+             ~message:"Unescaped < or > in text; use \\textless / \\textgreater"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-052" ~severity:Warning
+             ~message:"Unescaped < or > in text; use \\textless / \\textgreater"
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-052"; run; languages = [] }
@@ -2080,24 +2090,36 @@ let r_typo_053 : rule =
 (* Hair-space required after en-dash in word-word ranges *)
 let r_typo_054 : rule =
   let re = Re_compat.regexp "[a-zA-Z]\xe2\x80\x93[a-zA-Z]" in
-  (* P3 context-aware (token-aware variant): diagnose-only count skips matches
-     inside the exempt set (verbatim / comments / math / url). *)
+  (* P3 context-aware (token-aware variant): count skips matches inside the
+     exempt set (verbatim / comments / math / url).
+
+     v27.1.x: fix producer. The match is letter(1B) · en-dash(3B, U+2013) ·
+     letter(1B); the spec ("Hair-space required after en-dash") wants a thin
+     space inserted immediately AFTER the en-dash, i.e. between the en-dash and
+     the trailing letter, at [match_beginning + 4]. The fix is purely ADDITIVE
+     (one `\,` insertion, valid in text mode), so it cannot delete or corrupt
+     surrounding bytes. It is idempotent: after insertion the byte after the
+     en-dash is `\` (not a letter), so the regex no longer matches → re-running
+     --apply-fixes is a no-op. Count semantic is unchanged (same scan / same
+     exempt filter), so default-mode diagnostics are byte-identical. *)
   let run s =
     let exempt = find_exempt_ranges s in
-    let rec loop i acc =
+    let rec loop i cnt offs =
       try
         let _mr, _ = Re_compat.search_forward re s i in
         let mb = Re_compat.match_beginning _mr in
-        let acc' = if is_in_exempt_range exempt mb then acc else acc + 1 in
-        loop (Re_compat.match_end _mr) acc'
-      with Not_found -> acc
+        let mend = Re_compat.match_end _mr in
+        if is_in_exempt_range exempt mb then loop mend cnt offs
+        else loop mend (cnt + 1) (mb :: offs)
+      with Not_found -> (cnt, List.rev offs)
     in
-    let cnt = loop 0 0 in
+    let cnt, offs = loop 0 0 [] in
     if cnt > 0 then
+      let fix = List.map (fun mb -> Cst_edit.insert ~at:(mb + 4) "\\,") offs in
       Some
-        (mk_result ~id:"TYPO-054" ~severity:Info
+        (mk_result_with_fix ~id:"TYPO-054" ~severity:Info
            ~message:"Hair‑space required after en‑dash in word–word ranges"
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-054"; run; languages = [] }

@@ -564,7 +564,7 @@
   description: "Unescaped < or > in text; use \\textless / \\textgreater"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: escape_angle
 
@@ -580,7 +580,7 @@
   description: "Hair‑space required after en‑dash in word–word ranges"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: insert_thinspace
 
@@ -2703,7 +2703,7 @@
   description: "Prime on Greek letter typed '' not ^\\prime"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_prime
 

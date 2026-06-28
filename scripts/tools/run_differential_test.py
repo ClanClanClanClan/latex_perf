@@ -124,10 +124,35 @@ def tear_down(work_parent: Path | None) -> None:
     shutil.rmtree(work_parent, ignore_errors=True)
 
 
+def latest_release_tag() -> str:
+    """Most recent vNN release tag (highest version, not commit-distance).
+
+    The differential gate's invariant is "0 diffs vs the PRIOR RELEASE": every
+    cadence change since the last tag is a fix producer (gated behind
+    --apply-fixes) or a contract/doc change, none of which alter default lint
+    output. Hardcoding an ancient baseline (the original v26.1.0) is a stale
+    trap — main has legitimately diverged from it via context-aware retrofits
+    that changed diagnostic counts. Resolving the newest tag keeps the default
+    invocation meaningful release-over-release. Falls back to v26.1.0 only if no
+    tag is reachable (e.g. a shallow checkout)."""
+    try:
+        out = subprocess.run(
+            ["git", "tag", "-l", "v*", "--sort=-version:refname"],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+        ).stdout
+        for line in out.splitlines():
+            if line.strip():
+                return line.strip()
+    except (subprocess.CalledProcessError, OSError):
+        pass
+    return "v26.1.0"
+
+
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--baseline-ref", default="v26.1.0",
-                    help="git ref to build as baseline (default: v26.1.0)")
+    ap.add_argument("--baseline-ref", default=None,
+                    help="git ref to build as baseline "
+                         "(default: latest vNN release tag)")
     ap.add_argument("--corpus", default="corpora/lint",
                     help="corpus directory to diff (default: corpora/lint, "
                          "330 .tex files)")
@@ -141,6 +166,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.baseline_ref is None:
+        args.baseline_ref = latest_release_tag()
     corpus_dir = (REPO_ROOT / args.corpus).resolve()
     if not corpus_dir.exists() or not corpus_dir.is_dir():
         print(

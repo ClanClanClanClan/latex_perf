@@ -40,7 +40,16 @@ Spec/catalogue consistency:
   enforces `produces_fix:true ⇔ fix:<token>` for every implemented rule so this
   cannot silently drift again.
 - **TYPO-002 `runtime_message`** in the spec was a copy of TYPO-003's text
-  (copy-paste defect); corrected to match the rule.
+  (copy-paste defect); corrected, and the impl message is now inlined (not a
+  `let message` binding) so the `messages` extractor reads the right string.
+
+Apply-engine:
+
+- **Identical-edit dedup.** `Cst_edit.apply_all` / `apply_best_effort` now drop
+  exact-duplicate edits before conflict-checking. Two default rules emitting the
+  *same* fix (e.g. TYPO-010 and TYPO-037 both rewriting ` ,`→`,`) no longer
+  abort `--apply-fixes` as a spurious overlap; the edit is applied once.
+  Genuinely different edits on the same range are still rejected.
 
 The promotion of the whitespace rules (Phase 3.2) remains **deferred** pending
 proper fix-set delegation. No producer-count change (**101** unchanged).

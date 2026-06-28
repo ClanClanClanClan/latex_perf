@@ -169,8 +169,11 @@ let mk_replace_edits_exempt exempt (s : string) (needle : string)
     (occurrences_in_text exempt s needle)
 
 let r_typo_002 : rule =
-  let message = "Double hyphen -- should be en‑dash –" in
-  (* P3 context-aware (token-aware variant): count + fix derive from the same
+  (* Message is inlined in the mk_result calls below (NOT a `let message`
+     binding) because scripts/validate_messages.sh does not follow let-bindings
+     and would otherwise mis-pair TYPO-002 with the next inline string
+     (TYPO-003's message). Same convention as TYPO-004+ per the messages gate.
+     P3 context-aware (token-aware variant): count + fix derive from the same
      exempt-filtered offsets, so `--` inside verbatim / comments / math / url is
      ignored (it is literal there), not just inside plain prose. This replaces
      the former string-level `count_substring` default branch and the incomplete
@@ -204,11 +207,13 @@ let r_typo_002 : rule =
           (occurrences_in_text exempt s "--")
       in
       if fix = [] then
-        Some (mk_result ~id:"TYPO-002" ~severity:Warning ~message ~count:cnt)
+        Some
+          (mk_result ~id:"TYPO-002" ~severity:Warning
+             ~message:"Double hyphen -- should be en‑dash –" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning ~message
-             ~count:cnt ~fix)
+          (mk_result_with_fix ~id:"TYPO-002" ~severity:Warning
+             ~message:"Double hyphen -- should be en‑dash –" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-002"; run; languages = [] }

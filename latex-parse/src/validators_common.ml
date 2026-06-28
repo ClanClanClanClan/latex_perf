@@ -139,7 +139,13 @@ let strip_math_segments (s : string) : string =
       "gather*";
       "multline";
       "multline*";
+      "alignat";
+      "alignat*";
+      "flalign";
+      "flalign*";
       "eqnarray";
+      "IEEEeqnarray";
+      "IEEEeqnarray*";
       "math";
       "displaymath";
     ]
@@ -255,7 +261,13 @@ let find_math_ranges (s : string) : (int * int) list =
       "gather*";
       "multline";
       "multline*";
+      "alignat";
+      "alignat*";
+      "flalign";
+      "flalign*";
       "eqnarray";
+      "IEEEeqnarray";
+      "IEEEeqnarray*";
       "math";
       "displaymath";
     ]
@@ -1104,7 +1116,13 @@ let extract_math_segments (s : string) : string list =
       "gather*";
       "multline";
       "multline*";
+      "alignat";
+      "alignat*";
+      "flalign";
+      "flalign*";
       "eqnarray";
+      "IEEEeqnarray";
+      "IEEEeqnarray*";
       "math";
       "displaymath";
     ]

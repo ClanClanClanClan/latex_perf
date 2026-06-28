@@ -1,7 +1,7 @@
 {
-  "version": "v27.1.0",
+  "version": "v27.1.1",
   "release_state": "rc",
-  "release_date": "2026-06-27",
+  "release_date": "2026-06-28",
   "generated_by": "scripts/tools/generate_project_facts.py",
   "rules": {
     "total_specified": 660,

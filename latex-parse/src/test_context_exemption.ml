@@ -262,6 +262,40 @@ let cases =
           "\\begin{verbatim}\n\\begin{math}x\\end{math}\n\\end{verbatim}" );
         ("line comment", "% \\begin{math}x\\end{math}\n");
       ] );
+    (* Whitespace / line-level source rules (TYPO-006/007/008/024). The
+       deviation is a tab / trailing-whitespace / blank-line-run / line-end
+       dash, which can only sit inside a protected region in specific multi-line
+       contexts — so several use custom context lists. Exempting verbatim is the
+       key case (its whitespace is significant; collapsing/deleting it would
+       corrupt code). *)
+    ( "TYPO-006",
+      "indent\there",
+      [
+        ("inline verbatim", "x \\verb|a\tb| y");
+        ("verbatim env", "\\begin{verbatim}\na\tb\n\\end{verbatim}");
+        ("line comment", "% a\tb\n");
+        ("inline math", "$a\tb$");
+      ] );
+    ( "TYPO-007",
+      "text trailing   \nnext",
+      [
+        ("verbatim env", "\\begin{verbatim}\ncode   \n\\end{verbatim}");
+        ("line comment", "% note   \n");
+        ("display math", "\\[\na   \nb\\]");
+      ] );
+    ( "TYPO-008",
+      "a\n\n\n\nb",
+      [
+        ("verbatim env", "\\begin{verbatim}\na\n\n\n\nb\n\\end{verbatim}");
+        ("display math", "\\[\na\n\n\n\nb\n\\]");
+      ] );
+    ( "TYPO-024",
+      "word-\nmore",
+      [
+        ("verbatim env", "\\begin{verbatim}\ncode-\nx\n\\end{verbatim}");
+        ("line comment", "% note-\n");
+        ("inline math", "$a-\nb$");
+      ] );
   ]
 
 let () =

@@ -347,17 +347,24 @@ let r_typo_005 : rule =
   { id = "TYPO-005"; run; languages = [] }
 
 let r_typo_006 : rule =
+  (* P3 context-aware (token-aware variant): count + fix skip tabs inside the
+     exempt set (verbatim / comments / math / url). This is CRUCIAL for
+     verbatim/lstlisting, where a tab is significant code indentation — the
+     pre-P3 rule replaced EVERY tab with 4 spaces, silently corrupting tab-
+     indented code inside verbatim blocks. *)
   let run s =
-    let cnt = count_char s '\t' in
-    if cnt > 0 then (
-      let n = String.length s in
-      let edits = ref [] in
-      for i = n - 1 downto 0 do
-        if s.[i] = '\t' then
-          edits :=
-            Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "    "
-            :: !edits
-      done;
+    let exempt = find_exempt_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let cnt = ref 0 in
+    for i = n - 1 downto 0 do
+      if s.[i] = '\t' && not (is_in_exempt_range exempt i) then (
+        incr cnt;
+        edits :=
+          Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "    " :: !edits)
+    done;
+    let cnt = !cnt in
+    if cnt > 0 then
       let fix = !edits in
       if fix = [] then
         Some
@@ -366,103 +373,65 @@ let r_typo_006 : rule =
       else
         Some
           (mk_result_with_fix ~id:"TYPO-006" ~severity:Error
-             ~message:"Tab character U+0009 forbidden" ~count:cnt ~fix))
+             ~message:"Tab character U+0009 forbidden" ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-006"; run; languages = [] }
 
 let r_typo_007 : rule =
+  (* P3 context-aware (token-aware variant): count + fix are derived together
+     from the trailing-whitespace runs OUTSIDE the exempt set (verbatim /
+     comments / math / url). Trailing whitespace inside a verbatim block is
+     literal content and must not be deleted; trailing whitespace after the
+     closing `\verb|..|` delimiter (ordinary source) is still flagged. The
+     former `L0_TOKEN_AWARE` Tokenizer_lite branch is dropped. *)
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let open Tokenizer_lite in
-        let toks = tokenize s in
-        (* Count Space tokens that directly precede a Newline token *)
-        let cnt =
-          let rec loop c = function
-            | [] -> c
-            | a :: b :: rest -> (
-                match (a.kind, b.kind) with
-                | Space, Newline -> loop (c + 1) (b :: rest)
-                | _ -> loop c (b :: rest))
-            | _ -> c
-          in
-          loop 0 toks
-        in
-        if cnt > 0 then
-          Some
-            (mk_result ~id:"TYPO-007" ~severity:Info
-               ~message:"Trailing spaces at end of line" ~count:cnt)
-        else None
-    | _ ->
-        let _total, matched =
-          any_line_pred s (fun line ->
-              let len = String.length line in
-              len > 0
-              &&
-              let last = String.unsafe_get line (len - 1) in
-              last = ' ' || last = '\t')
-        in
-        if matched > 0 then (
-          (* Build fix edits: for each line ending in trailing whitespace, emit
-             a single delete spanning the whitespace run before the line break.
-             Walk the source linearly; trailing-WS at file end (no newline) is
-             handled by the final segment. *)
-          let n = String.length s in
-          let edits = ref [] in
-          let line_start = ref 0 in
-          let i = ref 0 in
-          while !i < n do
-            if s.[!i] = '\n' then (
-              let line_end = !i in
-              let trim_start = ref line_end in
-              while
-                !trim_start > !line_start
-                &&
-                let c = s.[!trim_start - 1] in
-                c = ' ' || c = '\t' || c = '\r'
-              do
-                decr trim_start
-              done;
-              if !trim_start < line_end then
-                edits :=
-                  Cst_edit.replace ~start_offset:!trim_start
-                    ~end_offset:line_end ""
-                  :: !edits;
-              line_start := !i + 1;
-              incr i)
-            else incr i
-          done;
-          (* Final line without trailing newline. *)
-          let trim_start = ref n in
-          while
-            !trim_start > !line_start
-            &&
-            let c = s.[!trim_start - 1] in
-            c = ' ' || c = '\t' || c = '\r'
-          do
-            decr trim_start
-          done;
-          if !trim_start < n then
-            edits :=
-              Cst_edit.replace ~start_offset:!trim_start ~end_offset:n ""
-              :: !edits;
-          let fix = List.rev !edits in
-          if fix = [] then
-            Some
-              (mk_result ~id:"TYPO-007" ~severity:Info
-                 ~message:"Trailing spaces at end of line" ~count:matched)
-          else
-            Some
-              (mk_result_with_fix ~id:"TYPO-007" ~severity:Info
-                 ~message:"Trailing spaces at end of line" ~count:matched ~fix))
-        else None
+    let exempt = find_exempt_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let add_trailing line_start line_end =
+      let trim_start = ref line_end in
+      while
+        !trim_start > line_start
+        &&
+        let c = s.[!trim_start - 1] in
+        c = ' ' || c = '\t' || c = '\r'
+      do
+        decr trim_start
+      done;
+      if !trim_start < line_end && not (is_in_exempt_range exempt !trim_start)
+      then
+        edits :=
+          Cst_edit.replace ~start_offset:!trim_start ~end_offset:line_end ""
+          :: !edits
+    in
+    let line_start = ref 0 in
+    let i = ref 0 in
+    while !i < n do
+      if s.[!i] = '\n' then (
+        add_trailing !line_start !i;
+        line_start := !i + 1;
+        incr i)
+      else incr i
+    done;
+    add_trailing !line_start n (* final line without trailing newline *);
+    let fix = List.rev !edits in
+    let cnt = List.length fix in
+    if cnt > 0 then
+      Some
+        (mk_result_with_fix ~id:"TYPO-007" ~severity:Info
+           ~message:"Trailing spaces at end of line" ~count:cnt ~fix)
+    else None
   in
   { id = "TYPO-007"; run; languages = [] }
 
 let r_typo_008 : rule =
-  (* Collapse runs of 3+ consecutive '\n' down to 2 by deleting the surplus. *)
-  let mk_fix_edits s =
+  (* Collapse runs of 3+ consecutive '\n' down to 2 by deleting the surplus. P3
+     context-aware: a blank-line run inside the exempt set (verbatim env in
+     practice — blank lines are rendered there, and are a LaTeX error inside
+     math/comments) is left intact; only runs in ordinary source are
+     collapsed. *)
+  let mk_fix_edits exempt s =
     let n = String.length s in
     let edits = ref [] in
     let i = ref 0 in
@@ -473,7 +442,7 @@ let r_typo_008 : rule =
           incr i
         done;
         let run_len = !i - run_start in
-        if run_len >= 3 then
+        if run_len >= 3 && not (is_in_exempt_range exempt run_start) then
           edits :=
             Cst_edit.replace ~start_offset:(run_start + 2)
               ~end_offset:(run_start + run_len) ""
@@ -495,25 +464,9 @@ let r_typo_008 : rule =
            ~count:cnt ~fix)
   in
   let run s =
-    match Sys.getenv_opt "L0_TOKEN_AWARE" with
-    | Some ("1" | "true" | "on") ->
-        let cnt =
-          let n = String.length s in
-          let rec loop i acc =
-            if i + 2 >= n then acc
-            else if
-              String.unsafe_get s i = '\n'
-              && String.unsafe_get s (i + 1) = '\n'
-              && String.unsafe_get s (i + 2) = '\n'
-            then loop (i + 3) (acc + 1)
-            else loop (i + 1) acc
-          in
-          loop 0 0
-        in
-        if cnt > 0 then emit cnt (mk_fix_edits s) else None
-    | _ ->
-        let cnt = count_substring s "\n\n\n" in
-        if cnt > 0 then emit cnt (mk_fix_edits s) else None
+    let exempt = find_exempt_ranges s in
+    let cnt = count_in_text exempt s "\n\n\n" in
+    if cnt > 0 then emit cnt (mk_fix_edits exempt s) else None
   in
   { id = "TYPO-008"; run; languages = [] }
 
@@ -1076,66 +1029,55 @@ let r_typo_023 : rule =
    trailing dash run + any intervening whitespace before the newline. *)
 let r_typo_024 : rule =
   let message = "Dangling dash at line end" in
-  (* [\r] in the char class so CRLF lines also match — split_on_char '\n' leaves
-     the [\r] at the end of each line. *)
-  let re = Re_compat.regexp "-+[ \t\r]*$" in
+  (* P3 context-aware (token-aware variant): count + fix are derived together
+     from the line-end dash runs OUTSIDE the exempt set (verbatim / comments /
+     math / url) — a trailing `-` inside a code listing or comment is literal.
+     Walks the source once, computing absolute offsets of each `[-]+[ \t]*` just
+     before a newline (or EOS); each non-exempt match becomes a delete. CRLF: a
+     trailing `\r` is excluded from the delete range. *)
   let run s =
-    let lines = String.split_on_char '\n' s in
-    let cnt =
-      List.fold_left
-        (fun acc line ->
-          try
-            let _mr, _ = Re_compat.search_forward re line 0 in
-            acc + 1
-          with Not_found -> acc)
-        0 lines
-    in
-    if cnt > 0 then (
-      (* Walk source to compute absolute offsets of each [-+[ \t]*] just before
-         a newline (or end-of-source). Each match becomes a delete edit. *)
-      let n = String.length s in
-      let edits = ref [] in
-      let i = ref 0 in
-      while !i < n do
-        (* Find next newline or EOS *)
-        let line_start = !i in
-        while !i < n && s.[!i] <> '\n' do
-          incr i
-        done;
-        let line_end_with_terminator = !i in
-        (* Step backward past a [\r] before the [\n] so the delete range stops
-           short of the CRLF terminator. *)
-        let line_end =
-          if
-            line_end_with_terminator > line_start
-            && s.[line_end_with_terminator - 1] = '\r'
-          then line_end_with_terminator - 1
-          else line_end_with_terminator
-        in
-        (* Walk backwards from line_end over [ \t] then [-]+. *)
-        let j = ref line_end in
-        while !j > line_start && (s.[!j - 1] = ' ' || s.[!j - 1] = '\t') do
-          decr j
-        done;
-        let trailing_ws_start = !j in
-        while !j > line_start && s.[!j - 1] = '-' do
-          decr j
-        done;
-        let dash_start = !j in
-        if dash_start < trailing_ws_start then
-          edits :=
-            Cst_edit.delete ~start_offset:dash_start ~end_offset:line_end
-            :: !edits;
-        ignore trailing_ws_start;
-        if !i < n then incr i (* skip the newline *)
+    let exempt = find_exempt_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n do
+      let line_start = !i in
+      while !i < n && s.[!i] <> '\n' do
+        incr i
       done;
-      let fix = List.rev !edits in
-      if fix = [] then
-        Some (mk_result ~id:"TYPO-024" ~severity:Info ~message ~count:cnt)
-      else
-        Some
-          (mk_result_with_fix ~id:"TYPO-024" ~severity:Info ~message ~count:cnt
-             ~fix))
+      let line_end_with_terminator = !i in
+      let line_end =
+        if
+          line_end_with_terminator > line_start
+          && s.[line_end_with_terminator - 1] = '\r'
+        then line_end_with_terminator - 1
+        else line_end_with_terminator
+      in
+      (* Walk backwards from line_end over [ \t] then [-]+. *)
+      let j = ref line_end in
+      while !j > line_start && (s.[!j - 1] = ' ' || s.[!j - 1] = '\t') do
+        decr j
+      done;
+      let trailing_ws_start = !j in
+      while !j > line_start && s.[!j - 1] = '-' do
+        decr j
+      done;
+      let dash_start = !j in
+      if
+        dash_start < trailing_ws_start
+        && not (is_in_exempt_range exempt dash_start)
+      then
+        edits :=
+          Cst_edit.delete ~start_offset:dash_start ~end_offset:line_end
+          :: !edits;
+      if !i < n then incr i (* skip the newline *)
+    done;
+    let fix = List.rev !edits in
+    let cnt = List.length fix in
+    if cnt > 0 then
+      Some
+        (mk_result_with_fix ~id:"TYPO-024" ~severity:Info ~message ~count:cnt
+           ~fix)
     else None
   in
   { id = "TYPO-024"; run; languages = [] }

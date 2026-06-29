@@ -4550,7 +4550,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-030",
@@ -4820,7 +4820,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-045",
@@ -5522,7 +5522,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-084",
@@ -7508,7 +7508,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SCRIPT-002",
@@ -7796,7 +7796,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SCRIPT-020",
@@ -7940,7 +7940,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SPC-007",
@@ -8136,7 +8136,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SPC-019",
@@ -8345,7 +8345,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SPC-032",
@@ -8393,7 +8393,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SPC-035",
@@ -8769,7 +8769,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "STYLE-016",
@@ -8913,7 +8913,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "STYLE-024",
@@ -10272,7 +10272,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "TYPO-024",
@@ -10911,7 +10911,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "TYPO-063",
@@ -10964,7 +10964,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "VERB-003",

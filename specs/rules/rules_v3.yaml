@@ -332,7 +332,7 @@
   description: "ASCII ampersand & outside tabular env; use \\&"
   precondition: L0_Lexer
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: escape_ampersand
 
@@ -644,7 +644,7 @@
   description: "Literal backslash in text; use \\textbackslash"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: escape_backslash
 
@@ -705,7 +705,7 @@
   description: "Indentation mixes spaces and tabs"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: convert_tabs
 
@@ -801,7 +801,7 @@
   description: "No space after sentence‑ending period"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: insert_space
 
@@ -905,7 +905,7 @@
   description: "Three spaces after period"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: collapse_spaces
 
@@ -929,7 +929,7 @@
   description: "Thin‑space before en‑dash in command‑line flags removed"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: remove_space
 
@@ -1304,7 +1304,7 @@
   description: "Tab inside verbatim – discouraged"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@code-crew"
   fix: convert_tabs
 
@@ -1834,7 +1834,7 @@
   description: "Use of eqnarray* instead of align*"
   precondition: L2_Ast
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: auto_replace
 
@@ -1954,7 +1954,7 @@
   description: "Binary relation typed as text char (e.g. < for \\le)"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_symbol
 
@@ -2266,7 +2266,7 @@
   description: "Unicode minus inside text mode"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_hyphen
 
@@ -2583,7 +2583,7 @@
   description: "Multi‑char subscript without braces"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: wrap_in_braces
 
@@ -2727,7 +2727,7 @@
   description: "Double prime '' instead of ^{\\prime\\prime}"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_prime
 
@@ -4330,7 +4330,7 @@
   description: "Double space after period"
   precondition: L4_Style
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "collapse_spaces"
 
@@ -4399,7 +4399,7 @@
   description: "Percent sign in text not escaped"
   precondition: L4_Style
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "escape_percent"
 

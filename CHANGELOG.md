@@ -2,6 +2,65 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.6] — 2026-06-29
+
+**The 3 deferred special-case producers, done properly (115 → 118).** These
+needed real design work, not a mechanical fix:
+
+- **VERB-002** (`convert_tabs`) — replaces hard tabs inside `verbatim` /
+  `lstlisting` / `minted` bodies with 4 spaces. This is the **one** producer
+  that deliberately edits verbatim content (that is the rule's purpose), so it
+  uses plain `mk_result_with_fix`, and the **verbatim-safety gate was extended**
+  to sanction exactly this tab→4-spaces transform in env bodies (every other
+  change in any protected region still fails the gate). New helper
+  `Validators_common.extract_env_block_ranges` gives absolute offsets while
+  keeping VERB-002's count byte-identical.
+- **STYLE-015** (`collapse_spaces`) — period followed by 2+ spaces → one space.
+- **STYLE-023** (`escape_percent`) — a literal `%` → `\%`, **conservatively**:
+  only a mid-text `%` (preceded by a non-whitespace byte, e.g. `50%`) is
+  escaped; a `%` at line start or after whitespace (a likely deliberate comment)
+  is left alone, and a `%` inside verbatim/`\verb`/url/math is never touched.
+
+STYLE-015 and STYLE-023 are L4 **Class-D** (advisory) rules, previously
+unreachable by `--apply-fixes`. Rather than reclassify them, `--apply-fixes` now
+runs a **Class-D-inclusive** rule set (`Validators.run_all_with_class_d`): the
+batch fix path is not the keystroke-critical hot path, so this is sound and
+leaves `proofs/ExecutionClasses.v::hot_path_excludes_cd` untouched (lint/
+diagnostic output via `run_all` is unchanged). No existing producer is Class-D,
+so this affects only STYLE-015/023.
+
+Counts untouched (differential 0-diff vs v27.1.5); apply-fixes converges on all
+330 corpus files (Class-D included); verbatim-safety + all gates green.
+
+## [v27.1.5] — 2026-06-29
+
+**11 new catalog-distinct fix producers (104 → 115).** Implements the fix for 11
+rules that an earlier pass had wrongly dismissed as "redundant" — the catalogue
+ground truth (`conflicts_with` is empty for every one of them) shows they are
+distinct rules intended to coexist; where two producers emit the same edit it
+deduplicates at apply time, it is never a conflict.
+
+- **MATH-083** (`replace_with_hyphen`) — text-mode U+2212 → ASCII `-` (coexists
+  with CHAR-019; identical edits dedup).
+- **SCRIPT-019** (`replace_with_prime`) — bare `''` in math → `^{\prime\prime}`
+  (triple+ primes left to SCRIPT-012/022).
+- **SCRIPT-001** (`wrap_in_braces`) — multi-char subscript `x_12` → `x_{12}`.
+- **TYPO-023** (`escape_ampersand`) — bare `&` outside a tabular/array env → `\&`.
+- **TYPO-062** (`escape_backslash`) — literal backslash → `\textbackslash{}`,
+  **conservatively** (never rewrites a `\\` linebreak).
+- **SPC-006** (`convert_tabs`) — mixed space/tab indentation → spaces.
+- **SPC-018** (`insert_space`) — missing space after a sentence period.
+- **SPC-031** (`collapse_spaces`) — 3+ spaces after a period → one.
+- **SPC-034** (`remove_space`) — thin-space before an en-dash → removed.
+- **MATH-029** (`auto_replace`) — `eqnarray*`/`eqnarray` → `align*`/`align`.
+- **MATH-044** (`replace_with_symbol`) — `<=`/`>=` in math → `\le`/`\ge`.
+
+Each only ADDS a fix — diagnostic counts are untouched, so default-mode lint
+output is byte-identical (`run_differential_test.py`: 330 files, 0 diffs vs
+v27.1.4). Every producer is **verbatim-safety-gate clean** (built on the v27.1.4
+exempt/vcu layer) and idempotent. Implemented via worktree-isolated agents and
+applied to the tree under the full gate battery.
+
 ## [v27.1.4] — 2026-06-28
 
 **Verbatim/comment/url corruption safety fix — ~43 fix producers + permanent

@@ -1969,10 +1969,49 @@ let r_spc_006 : rule =
         !seen_space_after_tab
     in
     let _, matched = any_line_pred s has_mixed_indent in
-    if matched > 0 then
-      Some
-        (mk_result ~id:"SPC-006" ~severity:Info
-           ~message:"Indentation mixes spaces and tabs" ~count:matched)
+    if matched > 0 then (
+      (* v27.x: fix producer (catalog token [convert_tabs]). The count above is
+         UNCHANGED — it still counts lines whose leading whitespace places a
+         space after a tab. The fix converts each leading-indentation tab on a
+         matched line to 4 spaces (same convention as TYPO-006), normalising the
+         indentation to all-spaces so the space-after-tab mix disappears.
+         Idempotent: a re-run finds no tabs in the indent, so no further edits.
+         Tabs inside verbatim/comment/url/math are left untouched via the shared
+         exempt set, falling back to a diagnose-only result if every edit
+         drops. *)
+      let exempt = find_exempt_ranges s in
+      let len = String.length s in
+      let edits = ref [] in
+      let process_line line_start line_end =
+        let line = String.sub s line_start (line_end - line_start) in
+        if has_mixed_indent line then
+          let j = ref line_start in
+          while !j < line_end && (s.[!j] = ' ' || s.[!j] = '\t') do
+            if s.[!j] = '\t' && not (is_in_exempt_range exempt !j) then
+              edits :=
+                Cst_edit.replace ~start_offset:!j ~end_offset:(!j + 1) "    "
+                :: !edits;
+            incr j
+          done
+      in
+      let cur = ref 0 in
+      let i = ref 0 in
+      while !i < len do
+        if s.[!i] = '\n' then (
+          process_line !cur !i;
+          cur := !i + 1);
+        incr i
+      done;
+      if !cur < len then process_line !cur len;
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-006" ~severity:Info
+             ~message:"Indentation mixes spaces and tabs" ~count:matched)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-006" ~severity:Info
+             ~message:"Indentation mixes spaces and tabs" ~count:matched ~fix))
     else None
   in
   { id = "SPC-006"; run; languages = [] }
@@ -2601,15 +2640,53 @@ let r_spc_030 : rule =
   in
   { id = "SPC-030"; run; languages = [] }
 
-(* SPC-031: Three spaces after period *)
+(* SPC-031: Three spaces after period.
+
+   v27: fix producer (catalog token `collapse_spaces`). Count semantic is
+   UNCHANGED: `count_substring (strip_math_segments s) ". "` — one per period
+   followed by >=3 ASCII spaces, in math-stripped text. The fix collapses each
+   such run of spaces to a single space, building edits over the ORIGINAL source
+   `s` (absolute offsets) and dropping any edit that lands in an exempt range
+   (verbatim/\verb/comment/url/math) via `find_exempt_ranges`, falling back to
+   the diagnose-only result if every edit is dropped. Replacing a run of >=3
+   spaces with a single space is idempotent: a second pass finds no `. `. *)
 let r_spc_031 : rule =
   let run s =
-    let s = strip_math_segments s in
-    let cnt = count_substring s ".   " in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-031" ~severity:Info
-           ~message:"Three spaces after period" ~count:cnt)
+    let stripped = strip_math_segments s in
+    let cnt = count_substring stripped ".   " in
+    if cnt > 0 then (
+      let n = String.length s in
+      let exempt = find_exempt_ranges s in
+      let edits = ref [] in
+      let i = ref 0 in
+      while !i <= n - 4 do
+        if
+          s.[!i] = '.'
+          && s.[!i + 1] = ' '
+          && s.[!i + 2] = ' '
+          && s.[!i + 3] = ' '
+        then (
+          (* span the full run of ASCII spaces following the period *)
+          let j = ref (!i + 1) in
+          while !j < n && s.[!j] = ' ' do
+            incr j
+          done;
+          if not (is_in_exempt_range exempt !i) then
+            edits :=
+              Cst_edit.replace ~start_offset:(!i + 1) ~end_offset:!j " "
+              :: !edits;
+          i := !j)
+        else incr i
+      done;
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-031" ~severity:Info
+             ~message:"Three spaces after period" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-031" ~severity:Info
+             ~message:"Three spaces after period" ~count:cnt ~fix))
     else None
   in
   { id = "SPC-031"; run; languages = [] }
@@ -2673,10 +2750,31 @@ let r_spc_034 : rule =
       + count_substring s "\xe2\x80\x89--"
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-034" ~severity:Info
-           ~message:"Thin‑space before en‑dash in command‑line flags removed"
-           ~count:cnt)
+      (* Fix (remove_space): delete the U+2009 thin-space (3 bytes) before each
+         en-dash; the en-dash itself is preserved. The count above is computed
+         exactly as before (diagnostic semantics unchanged); only a fix-set is
+         added. Edits inside verbatim/comment/url/math are dropped via the
+         shared exempt ranges (prose-targeting rule). *)
+      let exempt = find_exempt_ranges s in
+      let offsets =
+        find_all_non_overlapping s "\xe2\x80\x89\xe2\x80\x93"
+        @ find_all_non_overlapping s "\xe2\x80\x89--"
+      in
+      let edits =
+        List.filter_map
+          (fun off ->
+            if is_in_exempt_range exempt off then None
+            else Some (Cst_edit.delete ~start_offset:off ~end_offset:(off + 3)))
+          offsets
+      in
+      let edits = List.sort Cst_edit.compare edits in
+      let message = "Thin‑space before en‑dash in command‑line flags removed" in
+      if edits = [] then
+        Some (mk_result ~id:"SPC-034" ~severity:Info ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-034" ~severity:Info ~message ~count:cnt
+             ~fix:edits)
     else None
   in
   { id = "SPC-034"; run; languages = [] }
@@ -2794,23 +2892,52 @@ let r_spc_010 : rule =
   in
   { id = "SPC-010"; run; languages = [] }
 
-(* SPC-018: No space after sentence-ending period (period+uppercase) *)
+(* SPC-018: No space after sentence-ending period (period+uppercase).
+
+   v27.1.x: fix producer (insert_space). The diagnostic COUNT is computed
+   exactly as before — over [strip_math_segments s], so default-mode lint output
+   is byte-identical. The fix is computed separately by re-scanning the ORIGINAL
+   source [s] for the same `\.[A-Z]` pattern and inserting a single space
+   between the period and the uppercase letter (absolute byte offsets). Matches
+   inside math/verbatim/comment/url are dropped via the shared exempt set
+   ([find_exempt_ranges] / [is_in_exempt_range]); if every edit is exempt we
+   fall back to a fixless result. Idempotent: after the insert the bytes read `.
+   X`, which no longer matches `\.[A-Z]`. *)
 let r_spc_018 : rule =
   let re = Re_compat.regexp "\\.[A-Z]" in
   let run s =
-    let s = strip_math_segments s in
+    let s_stripped = strip_math_segments s in
     let rec loop i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s i in
+        let _mr, _ = Re_compat.search_forward re s_stripped i in
         ignore _mr;
         loop (Re_compat.match_end _mr) (acc + 1)
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-018" ~severity:Info
-           ~message:"No space after sentence‑ending period" ~count:cnt)
+      let exempt = find_exempt_ranges s in
+      let rec collect i acc =
+        try
+          let mr, _ = Re_compat.search_forward re s i in
+          let b = Re_compat.match_beginning mr in
+          let e = Re_compat.match_end mr in
+          let acc =
+            if is_in_exempt_range exempt b then acc
+            else Cst_edit.insert ~at:(b + 1) " " :: acc
+          in
+          collect e acc
+        with Not_found -> List.rev acc
+      in
+      let fix = collect 0 [] in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SPC-018" ~severity:Info
+             ~message:"No space after sentence‑ending period" ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SPC-018" ~severity:Info
+             ~message:"No space after sentence‑ending period" ~count:cnt ~fix)
     else None
   in
   { id = "SPC-018"; run; languages = [] }
@@ -3152,20 +3279,38 @@ let r_verb_001 : rule =
 
 (* VERB-002: Tab inside verbatim *)
 let r_verb_002 : rule =
+  let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  (* Fix (catalog: convert_tabs): replace each hard tab inside a verbatim /
+     lstlisting / minted body with 4 spaces (codebase convention, cf. SPC-003).
+     UNLIKE every other producer, VERB-002 deliberately edits verbatim content —
+     that is the rule's whole purpose ("tab inside verbatim – discouraged") — so
+     it uses plain [mk_result_with_fix], NOT the exempt constructor (which would
+     drop the edits). The count is byte-identical to the previous diagnostic: it
+     iterates the SAME env-block content via [extract_env_block_ranges] (an
+     absolute-offset twin of [extract_env_blocks]). Idempotent: once tabs become
+     spaces no tab remains. The verbatim-safety gate explicitly sanctions this
+     one tab→spaces transform (see check_verbatim_safety.py). *)
   let run s =
-    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
     let cnt = ref 0 in
+    let edits = ref [] in
     List.iter
       (fun env ->
-        let blocks = extract_env_blocks env s in
         List.iter
-          (fun blk -> String.iter (fun c -> if c = '\t' then incr cnt) blk)
-          blocks)
+          (fun (cs, ce) ->
+            for k = cs to ce - 1 do
+              if s.[k] = '\t' then (
+                incr cnt;
+                edits :=
+                  Cst_edit.replace ~start_offset:k ~end_offset:(k + 1) "    "
+                  :: !edits)
+            done)
+          (extract_env_block_ranges env s))
       envs;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"VERB-002" ~severity:Info
-           ~message:"Tab inside verbatim – discouraged" ~count:!cnt)
+        (mk_result_with_fix ~id:"VERB-002" ~severity:Info
+           ~message:"Tab inside verbatim – discouraged" ~count:!cnt
+           ~fix:(List.rev !edits))
     else None
   in
   { id = "VERB-002"; run; languages = [] }

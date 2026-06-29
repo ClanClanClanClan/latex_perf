@@ -133,6 +133,20 @@ SHIPPED_VERSIONS = {
     "TYPO-052": "v27.1.3",
     "TYPO-054": "v27.1.3",
     "SCRIPT-016": "v27.1.3",
+    "MATH-083": "v27.1.5",
+    "SCRIPT-019": "v27.1.5",
+    "SCRIPT-001": "v27.1.5",
+    "TYPO-023": "v27.1.5",
+    "TYPO-062": "v27.1.5",
+    "SPC-006": "v27.1.5",
+    "SPC-018": "v27.1.5",
+    "SPC-031": "v27.1.5",
+    "SPC-034": "v27.1.5",
+    "MATH-029": "v27.1.5",
+    "MATH-044": "v27.1.5",
+    "VERB-002": "v27.1.6",
+    "STYLE-015": "v27.1.6",
+    "STYLE-023": "v27.1.6",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

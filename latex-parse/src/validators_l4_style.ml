@@ -253,13 +253,37 @@ let r_style_014 : rule =
 
 (* STYLE-015: Double space after period *)
 let r_style_015 : rule =
+  (* Fix (catalog: collapse_spaces): for each period followed by 2+ spaces,
+     collapse the run of spaces to a single space (delete the extras). Built
+     over the ORIGINAL source [s] at absolute offsets and routed through
+     [mk_result_with_fix_exempt] so a `. ` inside verbatim / \verb / comment /
+     url / math is never touched. The diagnostic [count] (over the
+     comment+math-stripped text) is UNCHANGED — only the fix is added — so
+     default-mode lint is byte-identical. Idempotent: after the collapse each
+     period is followed by exactly one space. STYLE-015 is L4 Class-D, so its
+     fix applies only via the Class-D-inclusive --apply-fixes path (v27.1.6). *)
+  let mk_fix_edits s =
+    let n = String.length s in
+    let rec loop i acc =
+      if i > n - 3 then List.rev acc
+      else if s.[i] = '.' && s.[i + 1] = ' ' && s.[i + 2] = ' ' then (
+        let j = ref (i + 2) in
+        while !j < n && s.[!j] = ' ' do
+          incr j
+        done;
+        loop !j (Cst_edit.delete ~start_offset:(i + 2) ~end_offset:!j :: acc))
+      else loop (i + 1) acc
+    in
+    loop 0 []
+  in
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = count_substring text ".  " in
     if cnt > 0 then
       Some
-        (mk_result ~id:"STYLE-015" ~severity:Info
-           ~message:"Double space after period" ~count:cnt)
+        (mk_result_with_fix_exempt ~id:"STYLE-015" ~severity:Info
+           ~message:"Double space after period" ~count:cnt ~src:s
+           ~fix:(mk_fix_edits s))
     else None
   in
   mk_rule "STYLE-015" run
@@ -349,6 +373,44 @@ let r_style_019 : rule =
 
 (* STYLE-023: Percent sign in text not escaped *)
 let r_style_023 : rule =
+  (* Fix (catalog: escape_percent): escape a literal `%` → `\%`. CONSERVATIVE,
+     because `%` is LaTeX's comment character — blindly escaping every `%` would
+     turn an intentional line comment into visible text. So the fix is emitted
+     ONLY for a `%` that is MID-TEXT (immediately preceded by a non-whitespace,
+     non-backslash byte, e.g. the `%` in `50% off`), which is overwhelmingly a
+     literal-percent the author forgot to escape; a `%` at line start or after
+     whitespace (a likely deliberate comment) is left alone. It is additionally
+     withheld inside any verbatim / \verb / url / math span that starts STRICTLY
+     before it (so a `%` already inside such a region — or the 2nd+ `%` on a
+     comment line — is untouched). The diagnostic [count] is UNCHANGED (still
+     every bare `%` over the math-stripped text), so the fix is a safe subset.
+     Idempotent: after `%`→`\%` the byte before `%` is `\`. STYLE-023 is L4
+     Class-D, applied only via the Class-D-inclusive --apply-fixes path. *)
+  let mk_fix_edits s =
+    let exempt = find_exempt_ranges s in
+    let starts_before i = List.exists (fun (a, b) -> a < i && i < b) exempt in
+    let is_digit c = c >= '0' && c <= '9' in
+    let n = String.length s in
+    let rec loop i acc =
+      (* Escape ONLY a `%` immediately preceded by a DIGIT (`50%`, `100%`). This
+         is the unambiguous literal-percent case. The earlier "preceded by any
+         non-space" heuristic was NOT robust under the --apply-fixes convergence
+         loop: TYPO-014 (pilot, "space before %") deletes the space in a genuine
+         comment `word % note` → `word% note`, after which a non-space guard
+         would escape the comment marker and turn the comment into visible text.
+         A digit can never appear before a comment's `%` via that cascade, so
+         the digit guard is cascade-proof. Still withheld inside
+         verbatim/\verb/url/ math (a range starting strictly before i). *)
+      if i >= n then List.rev acc
+      else if
+        s.[i] = '%' && i > 0 && is_digit s.[i - 1] && not (starts_before i)
+      then
+        loop (i + 1)
+          (Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\\%" :: acc)
+      else loop (i + 1) acc
+    in
+    loop 0 []
+  in
   let run s =
     let text = strip_math_segments s in
     let len = String.length text in
@@ -357,9 +419,15 @@ let r_style_023 : rule =
       if text.[i] = '%' then if i = 0 || text.[i - 1] <> '\\' then incr cnt
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-023" ~severity:Warning
-           ~message:"Percent sign in text not escaped" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"STYLE-023" ~severity:Warning
+             ~message:"Percent sign in text not escaped" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"STYLE-023" ~severity:Warning
+             ~message:"Percent sign in text not escaped" ~count:!cnt ~fix)
     else None
   in
   mk_rule "STYLE-023" run

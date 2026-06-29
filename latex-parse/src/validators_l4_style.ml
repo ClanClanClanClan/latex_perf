@@ -389,16 +389,21 @@ let r_style_023 : rule =
   let mk_fix_edits s =
     let exempt = find_exempt_ranges s in
     let starts_before i = List.exists (fun (a, b) -> a < i && i < b) exempt in
-    let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
+    let is_digit c = c >= '0' && c <= '9' in
     let n = String.length s in
     let rec loop i acc =
+      (* Escape ONLY a `%` immediately preceded by a DIGIT (`50%`, `100%`). This
+         is the unambiguous literal-percent case. The earlier "preceded by any
+         non-space" heuristic was NOT robust under the --apply-fixes convergence
+         loop: TYPO-014 (pilot, "space before %") deletes the space in a genuine
+         comment `word % note` → `word% note`, after which a non-space guard
+         would escape the comment marker and turn the comment into visible text.
+         A digit can never appear before a comment's `%` via that cascade, so
+         the digit guard is cascade-proof. Still withheld inside
+         verbatim/\verb/url/ math (a range starting strictly before i). *)
       if i >= n then List.rev acc
       else if
-        s.[i] = '%'
-        && i > 0
-        && (not (is_ws s.[i - 1]))
-        && s.[i - 1] <> '\\'
-        && not (starts_before i)
+        s.[i] = '%' && i > 0 && is_digit s.[i - 1] && not (starts_before i)
       then
         loop (i + 1)
           (Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\\%" :: acc)

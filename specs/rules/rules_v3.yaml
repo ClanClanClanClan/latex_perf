@@ -1304,7 +1304,7 @@
   description: "Tab inside verbatim – discouraged"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@code-crew"
   fix: convert_tabs
 
@@ -4330,7 +4330,7 @@
   description: "Double space after period"
   precondition: L4_Style
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "collapse_spaces"
 
@@ -4399,7 +4399,7 @@
   description: "Percent sign in text not escaped"
   precondition: L4_Style
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "escape_percent"
 

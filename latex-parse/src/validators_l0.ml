@@ -3279,20 +3279,38 @@ let r_verb_001 : rule =
 
 (* VERB-002: Tab inside verbatim *)
 let r_verb_002 : rule =
+  let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  (* Fix (catalog: convert_tabs): replace each hard tab inside a verbatim /
+     lstlisting / minted body with 4 spaces (codebase convention, cf. SPC-003).
+     UNLIKE every other producer, VERB-002 deliberately edits verbatim content —
+     that is the rule's whole purpose ("tab inside verbatim – discouraged") — so
+     it uses plain [mk_result_with_fix], NOT the exempt constructor (which would
+     drop the edits). The count is byte-identical to the previous diagnostic: it
+     iterates the SAME env-block content via [extract_env_block_ranges] (an
+     absolute-offset twin of [extract_env_blocks]). Idempotent: once tabs become
+     spaces no tab remains. The verbatim-safety gate explicitly sanctions this
+     one tab→spaces transform (see check_verbatim_safety.py). *)
   let run s =
-    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
     let cnt = ref 0 in
+    let edits = ref [] in
     List.iter
       (fun env ->
-        let blocks = extract_env_blocks env s in
         List.iter
-          (fun blk -> String.iter (fun c -> if c = '\t' then incr cnt) blk)
-          blocks)
+          (fun (cs, ce) ->
+            for k = cs to ce - 1 do
+              if s.[k] = '\t' then (
+                incr cnt;
+                edits :=
+                  Cst_edit.replace ~start_offset:k ~end_offset:(k + 1) "    "
+                  :: !edits)
+            done)
+          (extract_env_block_ranges env s))
       envs;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"VERB-002" ~severity:Info
-           ~message:"Tab inside verbatim – discouraged" ~count:!cnt)
+        (mk_result_with_fix ~id:"VERB-002" ~severity:Info
+           ~message:"Tab inside verbatim – discouraged" ~count:!cnt
+           ~fix:(List.rev !edits))
     else None
   in
   { id = "VERB-002"; run; languages = [] }

@@ -789,6 +789,43 @@ let extract_env_blocks (env : string) (s : string) : string list =
   done;
   List.rev !blocks
 
+(* [extract_env_block_ranges env s] — like [extract_env_blocks] but returns the
+   absolute (content_start, content_end) byte range of each block body instead
+   of the substring. Mirrors [extract_env_blocks]' open/close scan +
+   optional-[...] skip byte-for-byte, so the bytes covered are identical — used
+   by VERB-002 to emit edits at absolute offsets while keeping its
+   substring-based count exact. *)
+let extract_env_block_ranges (env : string) (s : string) : (int * int) list =
+  let open_tag = "\\begin{" ^ env ^ "}" in
+  let close_tag = "\\end{" ^ env ^ "}" in
+  let open_len = String.length open_tag in
+  let close_len = String.length close_tag in
+  let n = String.length s in
+  let blocks = ref [] in
+  let i = ref 0 in
+  while !i <= n - open_len do
+    if String.sub s !i open_len = open_tag then (
+      let start = !i + open_len in
+      let content_start = ref start in
+      if !content_start < n && s.[!content_start] = '[' then (
+        while !content_start < n && s.[!content_start] <> ']' do
+          incr content_start
+        done;
+        if !content_start < n then incr content_start);
+      let found = ref false in
+      let j = ref !content_start in
+      while !j <= n - close_len && not !found do
+        if String.sub s !j close_len = close_tag then (
+          blocks := (!content_start, !j) :: !blocks;
+          i := !j + close_len;
+          found := true)
+        else incr j
+      done;
+      if not !found then i := n)
+    else incr i
+  done;
+  List.rev !blocks
+
 (* Helper: check if string is inside \begin{document}...\end{document} body *)
 let extract_document_body (s : string) : string option =
   let tag = "\\begin{document}" in

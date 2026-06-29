@@ -467,6 +467,17 @@ let run_with_policy (policy : Execution_policy.t) (src : string) : result list =
   let d = if policy.enable_d then run_class_d src else [] in
   ab @ c @ d
 
+(* [run_all] (A/B) plus the Class-D advisory rules. Used by the batch
+   [--apply-fixes] path so that Class-D fix producers (the L4 STYLE family, e.g.
+   STYLE-015 / STYLE-023) can apply their edits. Class-D is intentionally absent
+   from [run_all] (the keystroke-critical hot path; see
+   `proofs/ExecutionClasses.v::hot_path_excludes_cd`), but [--apply-fixes] is a
+   batch operation, not the latency-critical path, so including Class-D here is
+   sound and does not touch the proof's hot-path guarantee. Lint/diagnostic
+   output ([run_all]) is unchanged, so the differential is unaffected. *)
+let run_all_with_class_d (src : string) : result list =
+  run_all src @ run_class_d src
+
 (** Filter rules by detected or explicit language. Universal rules (languages =
     []) always run. Locale rules run only if their language list includes the
     detected lang. *)

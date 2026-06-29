@@ -104,12 +104,21 @@ def check(binp: str, env, label: str, violations: list) -> None:
         got = between(out, sa, sb)
         if want is None:
             continue
+        # VERB-002 (catalog convert_tabs) is the ONE producer sanctioned to edit
+        # verbatim-environment content: it replaces each hard tab with 4 spaces.
+        # Allow EXACTLY that transform inside verbatim/lstlisting/minted env
+        # bodies; everywhere else (inline \verb, % comment, \url) the protected
+        # bytes must stay byte-identical. Any other change in any region — or a
+        # non-tab change in an env body — still trips the gate.
+        expected = want
+        if name in ("verbatim-env", "lstlisting"):
+            expected = want.replace(b"\t", b"    ")
         if got is None:
             violations.append(f"[{label}] {name}: region vanished (sentinels {sa!r}/{sb!r} missing in output)")
-        elif got != want:
+        elif got != expected:
             violations.append(
                 f"[{label}] {name}: protected content CORRUPTED\n"
-                f"      before: {want!r}\n      after : {got!r}"
+                f"      before: {expected!r}\n      after : {got!r}"
             )
 
 

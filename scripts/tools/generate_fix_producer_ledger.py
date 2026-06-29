@@ -144,6 +144,9 @@ SHIPPED_VERSIONS = {
     "SPC-034": "v27.1.5",
     "MATH-029": "v27.1.5",
     "MATH-044": "v27.1.5",
+    "VERB-002": "v27.1.6",
+    "STYLE-015": "v27.1.6",
+    "STYLE-023": "v27.1.6",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

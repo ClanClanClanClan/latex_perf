@@ -88,6 +88,11 @@ val run_with_build : string -> result list
 val run_with_policy : Execution_policy.t -> string -> result list
 (** Run rules according to the given execution policy. *)
 
+val run_all_with_class_d : string -> result list
+(** [run_all] (A/B) plus Class-D advisory rules. Used by the batch
+    [--apply-fixes] path so Class-D fix producers (L4 STYLE family) can apply
+    their edits; diagnostic output via {!run_all} is unchanged. *)
+
 val rules_user_macro : rule list
 (** WS2 user macro registry validators (CMD-015/016/017). *)
 

@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.6] — 2026-06-29
+
+**The 3 deferred special-case producers, done properly (115 → 118).** These
+needed real design work, not a mechanical fix:
+
+- **VERB-002** (`convert_tabs`) — replaces hard tabs inside `verbatim` /
+  `lstlisting` / `minted` bodies with 4 spaces. This is the **one** producer
+  that deliberately edits verbatim content (that is the rule's purpose), so it
+  uses plain `mk_result_with_fix`, and the **verbatim-safety gate was extended**
+  to sanction exactly this tab→4-spaces transform in env bodies (every other
+  change in any protected region still fails the gate). New helper
+  `Validators_common.extract_env_block_ranges` gives absolute offsets while
+  keeping VERB-002's count byte-identical.
+- **STYLE-015** (`collapse_spaces`) — period followed by 2+ spaces → one space.
+- **STYLE-023** (`escape_percent`) — a literal `%` → `\%`, **conservatively**:
+  only a mid-text `%` (preceded by a non-whitespace byte, e.g. `50%`) is
+  escaped; a `%` at line start or after whitespace (a likely deliberate comment)
+  is left alone, and a `%` inside verbatim/`\verb`/url/math is never touched.
+
+STYLE-015 and STYLE-023 are L4 **Class-D** (advisory) rules, previously
+unreachable by `--apply-fixes`. Rather than reclassify them, `--apply-fixes` now
+runs a **Class-D-inclusive** rule set (`Validators.run_all_with_class_d`): the
+batch fix path is not the keystroke-critical hot path, so this is sound and
+leaves `proofs/ExecutionClasses.v::hot_path_excludes_cd` untouched (lint/
+diagnostic output via `run_all` is unchanged). No existing producer is Class-D,
+so this affects only STYLE-015/023.
+
+Counts untouched (differential 0-diff vs v27.1.5); apply-fixes converges on all
+330 corpus files (Class-D included); verbatim-safety + all gates green.
+
 ## [v27.1.5] — 2026-06-29
 
 **11 new catalog-distinct fix producers (104 → 115).** Implements the fix for 11

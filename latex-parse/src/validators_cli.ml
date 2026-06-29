@@ -214,7 +214,9 @@ let run_apply_fixes_converge ?filter_id ~path ~src () =
   let rec loop cur passes =
     ignore (resolve_profile ~requested:`Auto ~src:cur);
     ignore (setup_all ~path ~src:cur ~log_path:None);
-    let results = Latex_parse_lib.Validators.run_all cur in
+    (* Class-D-inclusive so L4 STYLE fix producers (STYLE-015/023) apply; batch
+       path, not the keystroke hot path (v27.1.6). *)
+    let results = Latex_parse_lib.Validators.run_all_with_class_d cur in
     let edits = collect_fix_edits ?filter_id results in
     if edits = [] then cur
     else
@@ -252,7 +254,8 @@ let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
         run_apply_fixes_converge ?filter_id ~path ~src ()
       else
         let _bp = setup_all ~path ~src ~log_path:None in
-        let results = Latex_parse_lib.Validators.run_all src in
+        (* Class-D-inclusive (see converge path) so STYLE-* fixes apply. *)
+        let results = Latex_parse_lib.Validators.run_all_with_class_d src in
         let edits = collect_fix_edits ?filter_id results in
         if best_effort then (
           let out, applied, skipped =

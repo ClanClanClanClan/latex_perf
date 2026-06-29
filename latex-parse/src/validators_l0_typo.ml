@@ -1050,11 +1050,68 @@ let r_typo_023 : rule =
       if !stripped.[i] = '&' && not (i > 0 && !stripped.[i - 1] = '\\') then
         incr cnt
     done;
-    if !cnt > 0 then
+    if !cnt > 0 then (
+      (* Fix producer (escape_ampersand): insert a backslash before each bare
+         `&` so it renders literally. The COUNT above is unchanged (computed on
+         the tabular-stripped string exactly as before). The fix edits are built
+         independently over the ORIGINAL string [s] at absolute byte offsets,
+         and are filtered so we NEVER escape an `&` that lives inside a
+         tabular/array/align/longtable environment (where `&` is a real column
+         separator) nor inside the shared exempt set (verbatim / \verb /
+         comments / url / math). Purely ADDITIVE single-char `\` insertion, so
+         it cannot corrupt surrounding bytes. Idempotent: after insertion the
+         byte before the `&` is `\`, so the bare-`&` test fails on re-run →
+         --apply-fixes twice is a no-op. *)
+      let slen = String.length s in
+      (* Recompute the tabular/array/align regions in ORIGINAL coordinates (the
+         count's [stripped] copy lost the offsets). Forward, non-overlapping
+         scan mirroring the stripping loop above. *)
+      let removed = ref [] in
+      (try
+         let pos = ref 0 in
+         while true do
+           let _mr, start_pos = Re_compat.search_forward tabular_re s !pos in
+           try
+             let _mr2, end_pos = Re_compat.search_forward end_re s start_pos in
+             let end_pos =
+               try
+                 let _mr3, _ =
+                   Re_compat.search_forward _re_close_brace s end_pos
+                 in
+                 Re_compat.match_end _mr3
+               with Not_found -> end_pos + 10
+             in
+             let end_pos = if end_pos > slen then slen else end_pos in
+             removed := (start_pos, end_pos) :: !removed;
+             pos := end_pos
+           with Not_found ->
+             removed := (start_pos, slen) :: !removed;
+             raise Not_found
+         done
+       with Not_found -> ());
+      let in_removed off =
+        List.exists (fun (a, b) -> off >= a && off < b) !removed
+      in
+      let exempt = find_exempt_ranges s in
+      let edits = ref [] in
+      for i = slen - 1 downto 0 do
+        if
+          s.[i] = '&'
+          && (not (i > 0 && s.[i - 1] = '\\'))
+          && (not (in_removed i))
+          && not (is_in_exempt_range exempt i)
+        then edits := Cst_edit.insert ~at:i "\\" :: !edits
+      done;
       Some
-        (mk_result ~id:"TYPO-023" ~severity:Error
-           ~message:{|ASCII ampersand & outside tabular env; use \&|}
-           ~count:!cnt)
+        (match !edits with
+        | [] ->
+            mk_result ~id:"TYPO-023" ~severity:Error
+              ~message:{|ASCII ampersand & outside tabular env; use \&|}
+              ~count:!cnt
+        | fix ->
+            mk_result_with_fix ~id:"TYPO-023" ~severity:Error
+              ~message:{|ASCII ampersand & outside tabular env; use \&|}
+              ~count:!cnt ~fix))
     else None
   in
   { id = "TYPO-023"; run; languages = [] }

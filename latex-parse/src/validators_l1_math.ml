@@ -127,7 +127,7 @@ let l1_math_010_rule : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-010" ~severity:Warning
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-010" ~severity:Warning
              ~message:{|Division symbol ÷ used; prefer \frac or solidus|}
              ~count:!cnt ~fix)
     else None
@@ -322,7 +322,7 @@ let l1_math_014_rule : rule =
              ~message:{|Inline \frac in running text|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-014" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-014" ~severity:Info
              ~message:{|Inline \frac in running text|} ~count:cnt ~fix)
     else None
   in
@@ -366,7 +366,7 @@ let l1_math_015_rule : rule =
              ~message:{|\stackrel used; prefer \overset|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-015" ~severity:Warning
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-015" ~severity:Warning
              ~message:{|\stackrel used; prefer \overset|} ~count:!cnt ~fix)
     else None
   in
@@ -1284,7 +1284,7 @@ let l1_math_053_rule : rule =
              ~message:{|Space after \left( at line start|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-053" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-053" ~severity:Info
              ~message:{|Space after \left( at line start|} ~count:cnt ~fix)
     else None
   in
@@ -1519,7 +1519,7 @@ let l1_math_078_rule : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-078" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-078" ~severity:Info
              ~message:{|Long arrow typed as --> instead of \longrightarrow|}
              ~count:!cnt ~fix)
     else None
@@ -1618,7 +1618,7 @@ let l1_math_082_rule : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-082" ~severity:Warning
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-082" ~severity:Warning
              ~message:{|Negative thin space \! misused twice consecutively|}
              ~count:!cnt ~fix)
     else None
@@ -2440,7 +2440,7 @@ let l1_math_097_rule : rule =
              ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-097" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-097" ~severity:Info
              ~message:{|Arrow '=>' typed instead of \implies|} ~count:!cnt ~fix)
     else None
   in
@@ -2536,7 +2536,7 @@ let l1_math_106_rule : rule =
              ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-106" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-106" ~severity:Info
              ~message:{|Misuse of \not=; prefer \neq|} ~count:!cnt ~fix)
     else None
   in
@@ -2576,7 +2576,7 @@ let l1_math_108_rule : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-108" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-108" ~severity:Info
              ~message:{|Scalar product uses • (⋅) directly; require \cdot|}
              ~count:!cnt ~fix)
     else None

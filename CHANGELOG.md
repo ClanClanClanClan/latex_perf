@@ -2,6 +2,35 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.4] — 2026-06-28
+
+**Verbatim/comment/url corruption safety fix — ~43 fix producers + permanent
+gate.** A whole class of older fix producers (those predating the P3 context
+layer) rewrote bytes the author wrote *literally* — inside a `verbatim` /
+`lstlisting` / `minted` environment, an inline `\verb|..|`, a `%` comment, or a
+`\url{..}` target. Replacing a fullwidth char with ASCII, deleting a control
+byte or BOM, or (for math-targeting rules) rewriting `\frac`/`''` inside a `$..$`
+that happens to sit in a verbatim block all silently corrupt literal content the
+lint-output differential cannot see. An exhaustive audit (per-rule empirical +
+a torture-document sweep) found **30 character/encoding replacers, ENC-002 (BOM),
+11 MATH-\* producers, and SCRIPT-016** all affected.
+
+Fix: two shared constructors in `Validators_common` —
+`mk_result_with_fix_exempt` (drops every edit inside verbatim/`\verb`/comment/
+url/math; for prose-targeting char/encoding rules) and
+`mk_result_with_fix_vcu_exempt` (drops only verbatim/comment/url, **keeping**
+genuine in-math edits; for MATH-targeting rules). The **diagnostic count is
+untouched** in every case — the occurrence is still tallied, only the *fix* is
+withheld inside protected regions — so default-mode lint output is byte-identical
+(`run_differential_test.py`: 330 files, 0 diffs vs v27.1.3). Producer count
+unchanged at 104 (this fixes existing producers, adds none).
+
+New gate **`scripts/tools/check_verbatim_safety.py`** (wired into
+`pre_release_check`) plants a battery of every known producer trigger between
+sentinels inside each protected-region kind and fails if `--apply-fixes` (pilot
++ default) changes a single byte — so the corruption can never recur for an
+existing or newly added producer.
+
 ## [v27.1.3] — 2026-06-28
 
 **Fix-producer batch 9 — 3 new producers (101 → 104).** Three diagnose-only

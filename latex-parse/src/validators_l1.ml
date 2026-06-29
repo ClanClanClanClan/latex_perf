@@ -1193,7 +1193,7 @@ let l1_script_016_rule : rule =
              ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SCRIPT-016" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-016" ~severity:Info
              ~message:{|Prime on Greek letter typed '' not ^\prime|} ~count:!cnt
              ~fix)
     else None

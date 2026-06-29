@@ -5814,27 +5814,71 @@ let rules_user_macro : rule list = [ r_cmd_015; r_cmd_016; r_cmd_017 ]
 
 (* ── TYPO-062: Literal backslash in text ───────────────────────────── *)
 let r_typo_062 : rule =
-  let run s =
-    (* Count \textbackslash suggestions -- look for \\ not followed by a letter
-       (i.e. bare backslash, not a command) outside math *)
-    let s = strip_math_segments s in
+  (* v27.1.x: fix producer (catalog token `escape_backslash`). DETECTION IS
+     UNCHANGED — the count still scans `strip_math_segments s` for `\\` not
+     immediately followed by `[`/`*` (the heuristic linebreak filter). The fix
+     is deliberately CONSERVATIVE: a bare `\\` is almost always a LaTeX
+     linebreak, so we only rewrite an occurrence to `\textbackslash{}` when it
+     is genuinely a literal backslash — i.e. SANDWICHED between two ASCII word
+     characters (e.g. a path `Path\\file`), which a linebreak never is — and not
+     inside an exempt range (verbatim/comment/url/math). Fix offsets are thus a
+     strict subset of the counted occurrences (documented divergence, cf.
+     TYPO-053). Idempotent: after the rewrite the bytes are `\textbackslash{}`,
+     which contain no `\\`, so re-running --apply-fixes is a no-op. *)
+  let is_word c =
+    (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+  in
+  let mk_fix_edits exempt s =
     let n = String.length s in
-    let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     while !i < n - 1 do
       if s.[!i] = '\\' && s.[!i + 1] = '\\' then (
+        if
+          !i > 0
+          && !i + 2 < n
+          && is_word s.[!i - 1]
+          && is_word s.[!i + 2]
+          && not (is_in_exempt_range exempt !i)
+        then
+          edits :=
+            Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2)
+              "\\textbackslash{}"
+            :: !edits;
+        i := !i + 2)
+      else incr i
+    done;
+    List.rev !edits
+  in
+  let run s =
+    (* Count \textbackslash suggestions -- look for \\ not followed by a letter
+       (i.e. bare backslash, not a command) outside math *)
+    let s_stripped = strip_math_segments s in
+    let n = String.length s_stripped in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if s_stripped.[!i] = '\\' && s_stripped.[!i + 1] = '\\' then (
         (* Check it's not a linebreak command like \\[2pt] or \\* *)
         if !i + 2 < n then (
-          let c = s.[!i + 2] in
+          let c = s_stripped.[!i + 2] in
           if c <> '[' && c <> '*' then incr cnt)
         else incr cnt;
         i := !i + 2)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-062" ~severity:Warning
-           ~message:"Literal backslash in text; use \\textbackslash" ~count:!cnt)
+      let fix = mk_fix_edits (find_exempt_ranges s) s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-062" ~severity:Warning
+             ~message:"Literal backslash in text; use \\textbackslash"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-062" ~severity:Warning
+             ~message:"Literal backslash in text; use \\textbackslash"
+             ~count:!cnt ~fix)
     else None
   in
   { id = "TYPO-062"; run; languages = [] }
@@ -5845,14 +5889,32 @@ let r_typo_062 : rule =
    text or $-$ / \textminus in math context. We detect U+2212 (E2 88 92) outside
    of math mode segments. *)
 let r_math_083 : rule =
+  (* Fix (catalog: replace_with_hyphen): each text-mode U+2212 (E2 88 92, 3
+     bytes) → ASCII hyphen-minus `-`. Distinct catalog rule from CHAR-019 (no
+     conflicts_with edge); both fire and emit the same edit, which dedups at
+     apply time. Routed through [mk_result_with_fix_exempt] so the fix is
+     withheld inside verbatim/\verb/comment/url/math; the count is the untouched
+     [strip_math_segments]-based scan (differential 0-diff). Idempotent. *)
+  let mk_fix_edits s =
+    let n = String.length s in
+    let rec loop i acc =
+      if i > n - 3 then List.rev acc
+      else if s.[i] = '\xe2' && s.[i + 1] = '\x88' && s.[i + 2] = '\x92' then
+        loop (i + 3)
+          (Cst_edit.replace ~start_offset:i ~end_offset:(i + 3) "-" :: acc)
+      else loop (i + 1) acc
+    in
+    loop 0 []
+  in
   let run s =
     let s_text = strip_math_segments s in
     (* U+2212 MINUS SIGN = E2 88 92 *)
     let cnt = count_substring s_text "\xe2\x88\x92" in
     if cnt > 0 then
       Some
-        (mk_result ~id:"MATH-083" ~severity:Warning
-           ~message:"Unicode minus inside text mode" ~count:cnt)
+        (mk_result_with_fix_exempt ~id:"MATH-083" ~severity:Warning
+           ~message:"Unicode minus inside text mode" ~count:cnt ~src:s
+           ~fix:(mk_fix_edits s))
     else None
   in
   { id = "MATH-083"; run; languages = [] }

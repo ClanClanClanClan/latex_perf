@@ -644,9 +644,43 @@ let l1_math_028_rule : rule =
   { id = "MATH-028"; run; languages = [] }
 
 (* MATH-029: Use of eqnarray / eqnarray* instead of align / align*. eqnarray is
-   deprecated — spacing around = is wrong. *)
+   deprecated — spacing around = is wrong. auto_replace fix: swap the
+   environment name `eqnarray`/`eqnarray*` → `align`/`align*` on BOTH the
+   `\begin{...}` and the matching `\end{...}` so the document stays well-formed.
+   The diagnostic count (number of `\begin{eqnarray}`/`\begin{eqnarray*}`
+   occurrences) is unchanged. Edits land on the environment delimiters, which
+   sit at the boundary of the math range, so we filter against verbatim /
+   comment / url ranges only (vcu-exempt) and KEEP in-math edits — a stray
+   `\begin{eqnarray}` inside a verbatim block is counted but not rewritten. *)
 let l1_math_029_rule : rule =
   let re = Re_compat.regexp {|\\begin{eqnarray\*?}|} in
+  (* (needle, replacement) pairs. Each exact string is distinct (the `*` and `}`
+     differ at the same offset) so no occurrence is matched twice. *)
+  let pairs =
+    [
+      ("\\begin{eqnarray*}", "\\begin{align*}");
+      ("\\begin{eqnarray}", "\\begin{align}");
+      ("\\end{eqnarray*}", "\\end{align*}");
+      ("\\end{eqnarray}", "\\end{align}");
+    ]
+  in
+  let mk_fix_edits s =
+    let vcu = find_verbatim_comment_url_ranges s in
+    let outside off = not (is_in_exempt_range vcu off) in
+    List.concat_map
+      (fun (needle, replacement) ->
+        let offsets =
+          List.filter outside
+            (Validators_l0_typo.find_all_non_overlapping s needle)
+        in
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off
+              ~end_offset:(off + String.length needle)
+              replacement)
+          offsets)
+      pairs
+  in
   let run s =
     let cnt = ref 0 in
     let i = ref 0 in
@@ -658,9 +692,15 @@ let l1_math_029_rule : rule =
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-029" ~severity:Warning
-           ~message:"Use of eqnarray* instead of align*" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-029" ~severity:Warning
+             ~message:"Use of eqnarray* instead of align*" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-029" ~severity:Warning
+             ~message:"Use of eqnarray* instead of align*" ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-029"; run; languages = [] }
@@ -985,18 +1025,65 @@ let l1_math_043_rule : rule =
   { id = "MATH-043"; run; languages = [] }
 
 (* MATH-044: Binary relation typed as text char — e.g. < for \le, = for \equiv,
-   etc., when text < > appear in math outside of delimiters *)
+   etc., when text < > appear in math outside of delimiters.
+
+   Fix producer (catalog fix: replace_with_symbol): inside math regions, the
+   ASCII relations `<=` / `>=` are replaced by their LaTeX symbols `\le ` / `\ge
+   ` (each 2 bytes → 4 bytes incl. a trailing space). The trailing space is
+   required so the control word does not glue to a following letter (`a<=b`
+   would otherwise become the undefined `\leb`); inside math spaces are ignored
+   by TeX, so the rendering is unaffected and the edit is idempotent (`<=` no
+   longer present after the replace).
+
+   The DIAGNOSE-ONLY count is untouched (same per-segment regex). The fix
+   offsets are computed independently over the ORIGINAL string via
+   `find_all_non_overlapping`, filtered to math ranges (`find_math_ranges`) and
+   to a non-backslash preceding byte (mirroring the regex's `[^\\]` guard), and
+   any edit inside verbatim/comment/url (`find_verbatim_comment_url_ranges`) is
+   dropped while in-math edits are kept. *)
 let l1_math_044_rule : rule =
   let re = Re_compat.regexp {|[^\\]<=\|[^\\]>=|} in
+  let repl_of needle = if needle = "<=" then "\\le " else "\\ge " in
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let keep off =
+      off > 0
+      && s.[off - 1] <> '\\'
+      && is_in_math_range math off
+      && not (is_in_math_range vcu off)
+    in
+    let for_needle needle =
+      List.filter_map
+        (fun off -> if keep off then Some (off, needle) else None)
+        (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    for_needle "<=" @ for_needle ">="
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun (off, needle) ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          (repl_of needle))
+      (fix_offsets s)
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-044" ~severity:Warning
-           ~message:{|Binary relation typed as text char (e.g. < for \le)|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-044" ~severity:Warning
+             ~message:{|Binary relation typed as text char (e.g. < for \le)|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-044" ~severity:Warning
+             ~message:{|Binary relation typed as text char (e.g. < for \le)|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-044"; run; languages = [] }

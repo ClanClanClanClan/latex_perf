@@ -3754,7 +3754,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-030
   layer: L1_Expanded
   execution_class: B
@@ -3964,7 +3964,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-045
   layer: L1_Expanded
   execution_class: B
@@ -4510,7 +4510,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-084
   layer: L1_Expanded
   execution_class: B
@@ -6115,7 +6115,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-002
   layer: L1_Expanded
   execution_class: B
@@ -6349,7 +6349,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-020
   layer: L1_Expanded
   execution_class: B
@@ -6466,7 +6466,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-007
   layer: L0_Lexer
   execution_class: A
@@ -6634,7 +6634,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-019
   layer: L0_Lexer
   execution_class: A
@@ -6805,7 +6805,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-032
   layer: L0_Lexer
   execution_class: A
@@ -6844,7 +6844,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-035
   layer: L0_Lexer
   execution_class: A
@@ -8324,7 +8324,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: TYPO-024
   layer: L0_Lexer
   execution_class: A
@@ -8840,7 +8840,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: TYPO-063
   layer: L0_Lexer
   execution_class: A

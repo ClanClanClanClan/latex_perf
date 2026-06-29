@@ -701,6 +701,39 @@ let l1_delim_011_rule : rule =
 let l1_script_001_rule : rule =
   (* Match _X where X is 2+ alphanumeric chars not wrapped in braces *)
   let re = Re_compat.regexp {|_\([A-Za-z0-9][A-Za-z0-9]+\)|} in
+  (* Fix edits (catalog token: wrap_in_braces): for each bare multi-char
+     subscript `_XYZ` INSIDE math, wrap the run in braces → `_{XYZ}`. Computed
+     over the ORIGINAL source [s] with absolute byte offsets via
+     [find_math_ranges]/[is_in_math_range] (the rule fires inside math, so math
+     is NOT exempt). A vcu (verbatim/comment/url) filter drops any edit whose
+     `_` lands in a protected span — [find_math_ranges] is context-blind, so a
+     stray `$` in a comment could otherwise yield a spurious in-"math" offset
+     (this is the [mk_result_with_fix_vcu_exempt] semantic: keep in-math, drop
+     verbatim/comment/url). The diagnostic [cnt] below is UNCHANGED (still the
+     original [extract_math_segments] scan); the fix only narrows which
+     occurrences receive an edit. Idempotent: after `_{XYZ}` the byte following
+     `_` is `{`, which the regex (alphanumeric required) no longer matches. *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let len = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    (try
+       while !i <= len do
+         let mr, pos = Re_compat.search_forward re s !i in
+         let e = Re_compat.match_end mr in
+         (if is_in_math_range math pos && not (is_in_exempt_range vcu pos) then
+            let run_str = String.sub s (pos + 1) (e - (pos + 1)) in
+            edits :=
+              Cst_edit.replace ~start_offset:pos ~end_offset:e
+                ("_{" ^ run_str ^ "}")
+              :: !edits);
+         i := if e > !i then e else !i + 1
+       done
+     with Not_found -> ());
+    List.rev !edits
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -718,9 +751,15 @@ let l1_script_001_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-001" ~severity:Warning
-           ~message:"Multi‑char subscript without braces" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-001" ~severity:Warning
+             ~message:"Multi‑char subscript without braces" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SCRIPT-001" ~severity:Warning
+             ~message:"Multi‑char subscript without braces" ~count:!cnt ~fix)
     else None
   in
   { id = "SCRIPT-001"; run; languages = [] }
@@ -1259,6 +1298,42 @@ let l1_script_018_rule : rule =
 
 (* SCRIPT-019: Double prime '' instead of ^{\prime\prime} *)
 let l1_script_019_rule : rule =
+  (* Fix edits (catalog token [replace_with_prime]): each bare double-prime `''`
+     INSIDE math is rewritten to the proper superscript `^{\prime\prime}`. Only
+     a prime-run of EXACTLY length two is rewritten — the same restriction the
+     diagnostic [cnt] below applies (a triple+ run is owned by SCRIPT-012/022
+     and is skipped wholesale). Math membership is the positive filter
+     ([find_math_ranges] + [is_in_math_range], so math is NOT exempt here); the
+     fix is additionally withheld inside verbatim / line-comment / url spans
+     ([find_verbatim_comment_url_ranges] — the manual vcu-exempt for a
+     math-targeting fix) so a literal `''` in a code listing or `%`-comment is
+     never touched.
+
+     Count is preserved byte-identically: the loop below still scans
+     [extract_math_segments] unchanged; the fix is computed separately and only
+     narrows which counted occurrences receive an edit. An edit here is
+     byte-identical to SCRIPT-016's for a `\greek''` occurrence (same range,
+     same replacement), so [Cst_edit.dedup_identical] collapses the pair under
+     --apply-fixes. Idempotent: the output `^{\prime\prime}` contains no `'`, so
+     the rule cannot re-fire on it. *)
+  let mk_fix_edits s =
+    let len = String.length s in
+    let math = find_math_ranges s in
+    let vcu = find_verbatim_comment_url_ranges s in
+    let inside off = is_in_math_range math off in
+    let in_vcu off = is_in_math_range vcu off in
+    Validators_l0_typo.find_all_non_overlapping s "''"
+    |> List.filter (fun off ->
+           inside off
+           && (not (in_vcu off))
+           (* prime-run of EXACTLY two: must be the run start (no `'` before)
+              and not followed by a third `'` *)
+           && (off = 0 || s.[off - 1] <> '\'')
+           && not (off + 2 < len && s.[off + 2] = '\''))
+    |> List.map (fun off ->
+           Cst_edit.replace ~start_offset:off ~end_offset:(off + 2)
+             "^{\\prime\\prime}")
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1283,9 +1358,16 @@ let l1_script_019_rule : rule =
         done)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-019" ~severity:Info
-           ~message:{|Double prime '' instead of ^{\prime\prime}|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-019" ~severity:Info
+             ~message:{|Double prime '' instead of ^{\prime\prime}|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SCRIPT-019" ~severity:Info
+             ~message:{|Double prime '' instead of ^{\prime\prime}|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SCRIPT-019"; run; languages = [] }

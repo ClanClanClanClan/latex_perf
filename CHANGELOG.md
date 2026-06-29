@@ -2,6 +2,35 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.5] — 2026-06-29
+
+**11 new catalog-distinct fix producers (104 → 115).** Implements the fix for 11
+rules that an earlier pass had wrongly dismissed as "redundant" — the catalogue
+ground truth (`conflicts_with` is empty for every one of them) shows they are
+distinct rules intended to coexist; where two producers emit the same edit it
+deduplicates at apply time, it is never a conflict.
+
+- **MATH-083** (`replace_with_hyphen`) — text-mode U+2212 → ASCII `-` (coexists
+  with CHAR-019; identical edits dedup).
+- **SCRIPT-019** (`replace_with_prime`) — bare `''` in math → `^{\prime\prime}`
+  (triple+ primes left to SCRIPT-012/022).
+- **SCRIPT-001** (`wrap_in_braces`) — multi-char subscript `x_12` → `x_{12}`.
+- **TYPO-023** (`escape_ampersand`) — bare `&` outside a tabular/array env → `\&`.
+- **TYPO-062** (`escape_backslash`) — literal backslash → `\textbackslash{}`,
+  **conservatively** (never rewrites a `\\` linebreak).
+- **SPC-006** (`convert_tabs`) — mixed space/tab indentation → spaces.
+- **SPC-018** (`insert_space`) — missing space after a sentence period.
+- **SPC-031** (`collapse_spaces`) — 3+ spaces after a period → one.
+- **SPC-034** (`remove_space`) — thin-space before an en-dash → removed.
+- **MATH-029** (`auto_replace`) — `eqnarray*`/`eqnarray` → `align*`/`align`.
+- **MATH-044** (`replace_with_symbol`) — `<=`/`>=` in math → `\le`/`\ge`.
+
+Each only ADDS a fix — diagnostic counts are untouched, so default-mode lint
+output is byte-identical (`run_differential_test.py`: 330 files, 0 diffs vs
+v27.1.4). Every producer is **verbatim-safety-gate clean** (built on the v27.1.4
+exempt/vcu layer) and idempotent. Implemented via worktree-isolated agents and
+applied to the tree under the full gate battery.
+
 ## [v27.1.4] — 2026-06-28
 
 **Verbatim/comment/url corruption safety fix — ~43 fix producers + permanent

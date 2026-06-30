@@ -1246,7 +1246,7 @@ let r_typo_026 : rule =
              ~message:{|Wrong dash in page range – should use --|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"TYPO-026" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"TYPO-026" ~severity:Warning
              ~message:{|Wrong dash in page range – should use --|} ~count:!cnt
              ~fix)
     else None
@@ -2412,7 +2412,7 @@ let r_typo_039 : rule =
     if cnt > 0 then
       let fix = mk_fix_edits s in
       Some
-        (mk_result_with_fix ~id:"TYPO-039" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"TYPO-039" ~severity:Info
            ~message:"URL split across lines without \\url{}" ~count:cnt ~fix)
     else None
   in

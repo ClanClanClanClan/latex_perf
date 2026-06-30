@@ -2,6 +2,31 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.7] — 2026-06-30
+
+**Audit-driven completion of the verbatim-safety fix (19 more producers).** A
+read-only independent audit of all 660 rules found that the v27.1.4
+verbatim-corruption fix was incomplete: its torture battery never triggered
+several whitespace/structural producers, which therefore still rewrote literal
+bytes inside `verbatim`/`\verb`/comment/`\url`. Now routed through the existing
+exempt/vcu constructors (counts untouched, differential 0-diff):
+
+- **exempt** (prose-targeting): SPC-002/008/009/010/016/019/021/022/025/028/030/
+  035 (space-before-`;`/`:`, `~~`, `~`, leading/trailing CJK/thin spaces,
+  `\dots`-spacing, indentation), TYPO-026 (en-dash), TYPO-039 (URL→`\url`),
+  STRUCT-002 (empty `\section{}`→`\section{Untitled}`).
+- **vcu** (math-targeting): CJK-008/015 (U+3000/U+3001 inside a `$..$` that sits
+  in a protected region), SPC-020 (tab inside math).
+
+SPC-027 (trims whitespace *inside* `\url{}` — which is its purpose) needs a
+verbatim/comment-only filter rather than the full exempt constructor; its
+low-severity `\url`-shown-in-verbatim edge is tracked for a follow-up.
+
+The root cause — an incomplete gate battery — is fixed too:
+`check_verbatim_safety.py` now plants the missed triggers, so the gate
+permanently covers them. (STYLE-023 was separately made cascade-proof in
+v27.1.6's PR after the same audit found a TYPO-014 interaction.)
+
 ## [v27.1.6] — 2026-06-29
 
 **The 3 deferred special-case producers, done properly (115 → 118).** These

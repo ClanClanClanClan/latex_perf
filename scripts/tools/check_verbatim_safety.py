@@ -47,6 +47,12 @@ BATTERY = (
     b"angle<x>y amp&z "  # TYPO-052, TYPO-023
     b"spaces   here trailing  \ttab\there "  # SPC-*/TYPO-018 whitespace
     b"mathfrac$\\frac{a}{b}$ prime$\\alpha''$ "  # MATH-014 / SCRIPT-016 (math inside verbatim)
+    # v27.1.7 — triggers the audit found my v27.1.4 battery had MISSED:
+    b"semi ; colon : tildes~~here "  # SPC-016 (space-;), SPC-021 (space-:), SPC-028 (~~)
+    b"endash a\xe2\x80\x93z dots \\dots here "  # TYPO-026 (en-dash), SPC-025 (space-\\dots)
+    b"url http://ex.test/page here "  # TYPO-039 (bare URL → \\url wrap)
+    b"sec \\section{} here "  # STRUCT-002 (empty \\section → \\section{Untitled})
+    b"ideomath $g\xe3\x80\x80h$ cjkmath $g\xe3\x80\x81h$ "  # CJK-008/015 (U+3000/U+3001 in $..$)
 )
 
 # Each protected region: (name, prefix_before_battery, suffix_after_battery).

@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 120 (~18%)
-- **Pending**: 536
+- **Shipped**: 128 (~19%)
+- **Pending**: 528
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 462 | 120 | 342 |
+| **A**  | Mechanical, safe everywhere       | 462 | 128 | 334 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -67,7 +67,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | DELIM | 11 | 0 | 11 | 0 | 11 | 0 | 0 | 0 |
 | DOC | 5 | 0 | 5 | 0 | 0 | 0 | 5 | 0 |
 | EL | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| ENC | 24 | 14 | 10 | 0 | 24 | 0 | 0 | 0 |
+| ENC | 24 | 15 | 9 | 0 | 24 | 0 | 0 | 0 |
 | EXP | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | FIG | 25 | 0 | 25 | 0 | 0 | 0 | 0 | 25 |
 | FONT | 13 | 0 | 13 | 0 | 0 | 0 | 0 | 13 |
@@ -75,7 +75,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | HE | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | HI | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | IB | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| JA | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
+| JA | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
 | KO | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | L3 | 11 | 0 | 11 | 0 | 0 | 0 | 0 | 11 |
 | LANG | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
@@ -91,11 +91,11 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | PRT | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | PT | 3 | 0 | 3 | 0 | 3 | 0 | 0 | 0 |
 | REF | 12 | 0 | 12 | 0 | 0 | 0 | 12 | 0 |
-| RO | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
+| RO | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | RTL | 5 | 0 | 5 | 0 | 5 | 0 | 0 | 0 |
 | RU | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
-| SCRIPT | 22 | 3 | 19 | 0 | 22 | 0 | 0 | 0 |
-| SPC | 35 | 22 | 13 | 0 | 35 | 0 | 0 | 0 |
+| SCRIPT | 22 | 5 | 17 | 0 | 22 | 0 | 0 | 0 |
+| SPC | 35 | 24 | 11 | 0 | 35 | 0 | 0 | 0 |
 | STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
 | STYLE | 49 | 4 | 45 | 0 | 4 | 45 | 0 | 0 |
 | SYS | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -103,7 +103,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | TH | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | TIKZ | 10 | 0 | 10 | 0 | 10 | 0 | 0 | 0 |
 | TR | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
-| TYPO | 63 | 44 | 15 | 4 | 59 | 4 | 0 | 0 |
+| TYPO | 63 | 45 | 14 | 4 | 59 | 4 | 0 | 0 |
 | VERB | 17 | 1 | 16 | 0 | 17 | 0 | 0 | 0 |
 | ZH | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 
@@ -238,7 +238,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `ENC-012` | ENC | **A** | confirmed | shipped in v27.0.28 |
 | `ENC-013` | ENC | **A** | confirmed | shipped in v27.0.30 |
 | `ENC-014` | ENC | **A** | confirmed | shipped in v27.0.29 |
-| `ENC-015` | ENC | **A** | tentative | pending |
+| `ENC-015` | ENC | **A** | confirmed | shipped in v27.1.9 |
 | `ENC-016` | ENC | **A** | confirmed | shipped in v27.0.35 |
 | `ENC-017` | ENC | **A** | confirmed | shipped in v27.0.23 |
 | `ENC-018` | ENC | **A** | confirmed | shipped in v27.0.31 |
@@ -293,7 +293,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `HI-001` | HI | **A** | tentative | pending |
 | `IB-001` | IB | **A** | tentative | pending |
 | `JA-001` | JA | **A** | tentative | pending |
-| `JA-002` | JA | **A** | tentative | pending |
+| `JA-002` | JA | **A** | confirmed | shipped in v27.1.9 |
 | `KO-001` | KO | **A** | tentative | pending |
 | `L3-001` | L3 | **D** | tentative | pending |
 | `L3-002` | L3 | **D** | tentative | pending |
@@ -541,7 +541,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `REF-010` | REF | **C** | tentative | pending |
 | `REF-011` | REF | **C** | tentative | pending |
 | `REF-012` | REF | **C** | tentative | pending |
-| `RO-001` | RO | **A** | tentative | pending |
+| `RO-001` | RO | **A** | confirmed | shipped in v27.1.9 |
 | `RTL-001` | RTL | **A** | tentative | pending |
 | `RTL-002` | RTL | **A** | tentative | pending |
 | `RTL-003` | RTL | **A** | tentative | pending |
@@ -553,8 +553,8 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SCRIPT-002` | SCRIPT | **A** | tentative | pending |
 | `SCRIPT-003` | SCRIPT | **A** | tentative | pending |
 | `SCRIPT-004` | SCRIPT | **A** | tentative | pending |
-| `SCRIPT-005` | SCRIPT | **A** | tentative | pending |
-| `SCRIPT-006` | SCRIPT | **A** | tentative | pending |
+| `SCRIPT-005` | SCRIPT | **A** | confirmed | shipped in v27.1.9 |
+| `SCRIPT-006` | SCRIPT | **A** | confirmed | shipped in v27.1.9 |
 | `SCRIPT-007` | SCRIPT | **A** | tentative | pending |
 | `SCRIPT-008` | SCRIPT | **A** | tentative | pending |
 | `SCRIPT-009` | SCRIPT | **A** | tentative | pending |
@@ -599,11 +599,11 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SPC-026` | SPC | **A** | tentative | pending |
 | `SPC-027` | SPC | **A** | confirmed | shipped in v27.0.68 |
 | `SPC-028` | SPC | **A** | confirmed | shipped in v27.0.58 |
-| `SPC-029` | SPC | **A** | tentative | pending |
+| `SPC-029` | SPC | **A** | confirmed | shipped in v27.1.9 |
 | `SPC-030` | SPC | **A** | confirmed | shipped in v27.0.56 |
 | `SPC-031` | SPC | **A** | confirmed | shipped in v27.1.5 |
 | `SPC-032` | SPC | **A** | tentative | pending |
-| `SPC-033` | SPC | **A** | tentative | pending |
+| `SPC-033` | SPC | **A** | confirmed | shipped in v27.1.9 |
 | `SPC-034` | SPC | **A** | confirmed | shipped in v27.1.5 |
 | `SPC-035` | SPC | **A** | confirmed | shipped in v27.0.56 |
 | `STRUCT-001` | STRUCT | **A** | confirmed | shipped in v26.3.0 |
@@ -746,7 +746,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `TYPO-055` | TYPO | **A** | confirmed | shipped in v27.0.43 |
 | `TYPO-056` | TYPO | **A** | tentative | pending |
 | `TYPO-057` | TYPO | **A** | confirmed | shipped in v27.0.72 |
-| `TYPO-058` | TYPO | **A** | tentative | pending |
+| `TYPO-058` | TYPO | **A** | confirmed | shipped in v27.1.9 |
 | `TYPO-059` | TYPO | **A** | tentative | pending |
 | `TYPO-060` | TYPO | **A** | tentative | pending |
 | `TYPO-061` | TYPO | **A** | confirmed | shipped in v27.0.52 |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 120 of 462 Bucket A
+  **TRACKING** — 128 of 462 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

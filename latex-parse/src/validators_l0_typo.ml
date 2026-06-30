@@ -2725,22 +2725,47 @@ let r_typo_058 : rule =
      for MATH — a literal Greek letter inside `$..$` is a legitimate math
      symbol, not a Latin homograph, so it must not be flagged; verbatim/comments
      are likewise exempt. *)
+  (* v27.1.9: fix producer. Each detected Greek homograph letter is replaced by
+     its ASCII Latin look-alike — the SAME 2-byte UTF-8 needles the COUNT scans,
+     each mapped to a single ASCII byte: α U+03B1 → a ε U+03B5 → e ι U+03B9 → i
+     ο U+03BF → o ρ U+03C1 → p ς U+03C2 → c υ U+03C5 → u The COUNT is unchanged
+     (same seven [count_in_text exempt] terms, same order), so default-mode
+     diagnostics and the release differential stay byte-identical; only a
+     fix-set is ADDED. [mk_result_with_fix_exempt] drops any edit inside
+     verbatim / \verb / comment / url / math, so a literal Greek letter in a
+     code listing or a genuine math symbol in `$..$` is never rewritten. Every
+     edit is a 2→1-byte replace whose offset is taken from the ORIGINAL source
+     [s] (no length-changing transform — avoids the STYLE-033 corruption class),
+     and the replacement byte is ASCII (never itself a homograph needle), so
+     re-running --apply-fixes is a no-op: idempotent and convergent. *)
+  let homoglyphs =
+    [
+      ("\xce\xb1", "a");
+      ("\xce\xb5", "e");
+      ("\xce\xb9", "i");
+      ("\xce\xbf", "o");
+      ("\xcf\x81", "p");
+      ("\xcf\x82", "c");
+      ("\xcf\x85", "u");
+    ]
+  in
   let run s =
     let exempt = find_exempt_ranges s in
     let cnt =
-      count_in_text exempt s "\xce\xb1"
-      + count_in_text exempt s "\xce\xb5"
-      + count_in_text exempt s "\xce\xb9"
-      + count_in_text exempt s "\xce\xbf"
-      + count_in_text exempt s "\xcf\x81"
-      + count_in_text exempt s "\xcf\x82"
-      + count_in_text exempt s "\xcf\x85"
+      List.fold_left
+        (fun acc (needle, _) -> acc + count_in_text exempt s needle)
+        0 homoglyphs
     in
     if cnt > 0 then
+      let fix =
+        List.concat_map
+          (fun (needle, repl) -> mk_replace_edits_exempt exempt s needle repl)
+          homoglyphs
+      in
       Some
-        (mk_result ~id:"TYPO-058" ~severity:Warning
+        (mk_result_with_fix_exempt ~id:"TYPO-058" ~severity:Warning
            ~message:"Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)"
-           ~count:cnt)
+           ~count:cnt ~src:s ~fix)
     else None
   in
   { id = "TYPO-058"; run; languages = [] }

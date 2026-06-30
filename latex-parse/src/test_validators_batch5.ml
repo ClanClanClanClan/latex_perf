@@ -93,6 +93,39 @@ let () =
       expect (does_not_fire "ENC-015" "5\xce\xbcm") (tag ^ ": Greek mu is NFKC"));
   run "ENC-015 clean: plain ASCII" (fun tag ->
       expect (does_not_fire "ENC-015" "50 ohms") (tag ^ ": ASCII only"));
+  (* ENC-015 fix producer: each homoglyph → its NFKC-normal form. *)
+  let enc015_apply src =
+    match Latex_parse_lib.Cst_edit.apply_all src (fix_edits "ENC-015" src) with
+    | Ok out -> out
+    | Error _ -> failwith "ENC-015: overlapping edits"
+  in
+  run "ENC-015 fix: micro µ → Greek mu μ" (fun tag ->
+      (* 5 µ m → 5 μ m : C2 B5 → CE BC *)
+      expect (enc015_apply "5\xc2\xb5m" = "5\xce\xbcm") (tag ^ ": micro→mu"));
+  run "ENC-015 fix: ohm → Greek capital omega" (fun tag ->
+      (* E2 84 A6 → CE A9 (U+03A9) *)
+      expect (enc015_apply "50\xe2\x84\xa6" = "50\xce\xa9") (tag ^ ": ohm→Omega"));
+  run "ENC-015 fix: angstrom → Latin A with ring" (fun tag ->
+      (* E2 84 AB → C3 85 (U+00C5) *)
+      expect (enc015_apply "3\xe2\x84\xab" = "3\xc3\x85") (tag ^ ": angstrom→Å"));
+  run "ENC-015 fix: long s → ASCII s" (fun tag ->
+      (* C5 BF → 's' *)
+      expect (enc015_apply "proce\xc5\xbfs" = "process") (tag ^ ": long s→s"));
+  run "ENC-015 fix: all four homoglyphs in one pass" (fun tag ->
+      expect
+        (enc015_apply "\xc2\xb5\xe2\x84\xa6\xe2\x84\xab\xc5\xbf"
+        = "\xce\xbc\xce\xa9\xc3\x85s")
+        (tag ^ ": batch rewrite"));
+  run "ENC-015 fix: idempotent (second pass is a no-op)" (fun tag ->
+      let once = enc015_apply "5\xc2\xb5m 50\xe2\x84\xa6 3\xe2\x84\xab" in
+      expect
+        (enc015_apply once = once && does_not_fire "ENC-015" once)
+        (tag ^ ": fixed output no longer fires"));
+  run "ENC-015 fix: count preserved alongside fix" (fun tag ->
+      expect
+        (fires_with_count "ENC-015" "5\xc2\xb5m 50\xe2\x84\xa6" 2
+        && List.length (fix_edits "ENC-015" "5\xc2\xb5m 50\xe2\x84\xa6") = 2)
+        (tag ^ ": count=2 and 2 edits"));
 
   (* ══════════════════════════════════════════════════════════════════════
      MATH-083: Unicode minus inside text mode

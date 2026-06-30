@@ -1753,7 +1753,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: ENC-016
   layer: L0_Lexer
   execution_class: A
@@ -2575,7 +2575,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: KO-001
   layer: L0_Lexer
   execution_class: B
@@ -6011,7 +6011,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: RTL-001
   layer: L3_Semantics
   execution_class: B
@@ -6167,7 +6167,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-006
   layer: L1_Expanded
   execution_class: B
@@ -6180,7 +6180,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-007
   layer: L1_Expanded
   execution_class: B
@@ -6779,7 +6779,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-030
   layer: L0_Lexer
   execution_class: A
@@ -6831,7 +6831,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SPC-034
   layer: L0_Lexer
   execution_class: A
@@ -8787,7 +8787,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: TYPO-059
   layer: L1_Expanded
   execution_class: B

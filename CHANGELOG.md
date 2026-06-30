@@ -2,6 +2,32 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.9] — 2026-07-01
+
+**Bucket-A fix-producer cadence: +8 single-token producers (120 → 128).** Each
+adds a fix-set to an already-firing diagnose-only rule, leaving the detection
+COUNT byte-identical (so default-mode lint and the release differential are
+0-diff). All offsets are computed on the original source / filtered via
+`find_math_ranges`/`find_exempt_ranges`, and replace whole UTF-8 sequences — the
+safe patterns established by the v27.1.8 corruption audit; all converge to valid
+UTF-8 under the apply-fixes gate (incl. the `cjk_offset_torture` fixture).
+
+- **SCRIPT-006** (`replace_with_circ`) — in-math `°` (U+00B0) → `^{\circ}`.
+- **SCRIPT-005** (`replace_with_ell`) — in-math `^l` / `^{l}` → `^{\ell}`.
+- **ENC-015** (`normalize_nfkc`) — homoglyph → NFKC: µ→μ (U+00B5→03BC), Ω→Ω
+  (U+2126→03A9), Å→Å (U+212B→00C5), ſ→s (U+017F).
+- **RO-001** (`auto_replace`) — Romanian S/T-cedilla → comma-below
+  (Ş/ş/Ţ/ţ → Ș/ș/Ț/ț).
+- **JA-002** (`normalize_char`) — fullwidth tilde U+FF5E → wave dash U+301C.
+- **SPC-029** (`replace_space`) — line-leading NBSP indentation → ASCII spaces.
+- **SPC-033** (`replace_space`) — NBSP before an em-dash (English) → ASCII space.
+- **TYPO-058** (`replace_ascii`) — Greek homograph letters in Latin words →
+  ASCII (α→a, ε→e, ι→i, ο→o, ρ→p, ς→c, υ→u), exempt-filtered.
+
+Implemented via 8 worktree-isolated agents, each verified against the rule's
+detection + tests (not the agent's word). Full `dune runtest` green; convergence,
+verbatim-safety, and all release gates green.
+
 ## [v27.1.8] — 2026-06-30
 
 **Full remediation of the all-660-rule audit (every finding closed).** Genuine

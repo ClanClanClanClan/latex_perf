@@ -2650,6 +2650,50 @@ let () =
         (does_not_fire "SPC-035" "plain start\nclean\n")
         (tag ^ ": no U+2009 at line start"));
 
+  (* v27.1.9: SPC-029 (leading-indentation NBSP U+00A0 → ASCII space). *)
+  run "SPC-029 fix: single leading NBSP → space" (fun tag ->
+      let src = "\xc2\xa0code\nplain line\n" in
+      let edits = fix_edits "SPC-029" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = " code\nplain line\n")
+        (tag ^ ": one leading NBSP becomes one space"));
+
+  run "SPC-029 fix: leading NBSP run → equal-count spaces" (fun tag ->
+      let src = "\xc2\xa0\xc2\xa0\xc2\xa0deep\nnext\n" in
+      let edits = fix_edits "SPC-029" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "   deep\nnext\n")
+        (tag ^ ": three NBSP become three spaces"));
+
+  run "SPC-029 fix: middle NBSP untouched" (fun tag ->
+      let src = "a\xc2\xa0b\n\xc2\xa0lead\n" in
+      let edits = fix_edits "SPC-029" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "a\xc2\xa0b\n lead\n")
+        (tag ^ ": only line-leading run rewritten"));
+
+  run "SPC-029 fix: multiple NBSP-indented lines each fixed" (fun tag ->
+      let src = "\xc2\xa0one\n\xc2\xa0\xc2\xa0two\n" in
+      let edits = fix_edits "SPC-029" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = " one\n  two\n")
+        (tag ^ ": two leading runs rewritten"));
+
+  run "SPC-029 fix: idempotent (second pass no-op)" (fun tag ->
+      let src = "\xc2\xa0\xc2\xa0code\nplain\n" in
+      let once = apply_all src (fix_edits "SPC-029" src) in
+      expect
+        (once = "  code\nplain\n" && fix_edits "SPC-029" once = [])
+        (tag ^ ": converges in one pass"));
+
+  run "SPC-029 count unchanged (still fires per NBSP line)" (fun tag ->
+      expect
+        (fires_with_count "SPC-029" "\xc2\xa0code\n\xc2\xa0more" 2)
+        (tag ^ ": count preserved"));
+
+  run "SPC-029 does not fire on ASCII-space indent" (fun tag ->
+      expect (does_not_fire "SPC-029" "  code\nclean\n") (tag ^ ": ASCII clean"));
+
   (* v27.0.56: TYPO-051 leading-run filter (cross-rule with SPC-035). *)
   run "TYPO-051 skips leading-run U+2009 (delegates to SPC-035)" (fun tag ->
       (* Leading U+2009 at line start: TYPO-051 must NOT emit a fix-edit (would
@@ -3474,5 +3518,172 @@ let () =
       expect
         (does_not_fire "SCRIPT-016" "text \\alpha'' outside any math")
         (tag ^ ": only scanned inside math segments"));
+
+  (* v27.1.9 (Bucket A): SCRIPT-006 (degree symbol ° / U+00B0 = bytes C2 B0
+     typed inside math instead of ^{\circ}) → replace each in-math ° with the
+     literal string ^{\circ}. Count is the untouched extract_math_segments scan;
+     only the fix is new. Math-gated, idempotent (output has no more °). *)
+  run "SCRIPT-006 fix: $90\xc2\xb0$ → $90^{\\circ}$" (fun tag ->
+      let src = "Angle $90\xc2\xb0$ here." in
+      let edits = fix_edits "SCRIPT-006" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "Angle $90^{\\circ}$ here.")
+        (tag ^ ": degree symbol becomes ^{\\circ}"));
+
+  run "SCRIPT-006 fix: two in-math degrees produce two edits" (fun tag ->
+      let src = "$90\xc2\xb0 + 45\xc2\xb0$" in
+      let edits = fix_edits "SCRIPT-006" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$90^{\\circ} + 45^{\\circ}$")
+        (tag ^ ": both degrees converted"));
+
+  run "SCRIPT-006 fix is idempotent (second pass is a no-op)" (fun tag ->
+      let src = "$90\xc2\xb0$" in
+      let once = apply_all src (fix_edits "SCRIPT-006" src) in
+      let twice = apply_all once (fix_edits "SCRIPT-006" once) in
+      expect
+        (once = "$90^{\\circ}$" && once = twice)
+        (tag ^ ": no ° remains after first pass"));
+
+  run "SCRIPT-006 still fires/counts unchanged" (fun tag ->
+      expect
+        (fires_with_count "SCRIPT-006" "$90\xc2\xb0 + 45\xc2\xb0$" 2)
+        (tag ^ ": count semantic preserved (0-diff lint)"));
+
+  run "SCRIPT-006 does not fire outside math" (fun tag ->
+      expect
+        (does_not_fire "SCRIPT-006" "Temp 90\xc2\xb0 outside math")
+        (tag ^ ": only scanned/fixed inside math segments"));
+
+  (* v27.1.9 (Bucket A): SCRIPT-005 (Superscript uses letter l instead of \ell)
+     gains a fix-set. `^l` → `^{\ell}` and `^{l}` → `^{\ell}`, math-mode only.
+     Count is computed by the untouched extract_math_segments scan; only the fix
+     is new. *)
+  run "SCRIPT-005 fix: $x^l$ → $x^{\\ell}$" (fun tag ->
+      let src = "$x^l$" in
+      let edits = fix_edits "SCRIPT-005" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$x^{\\ell}$")
+        (tag ^ ": ^l becomes ^{\\ell}"));
+
+  run "SCRIPT-005 fix: $x^{l}$ → $x^{\\ell}$" (fun tag ->
+      let src = "$x^{l}$" in
+      let edits = fix_edits "SCRIPT-005" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$x^{\\ell}$")
+        (tag ^ ": ^{l} becomes ^{\\ell}"));
+
+  run "SCRIPT-005 fix is idempotent" (fun tag ->
+      let src = "$a^l + b^{l}$" in
+      let once = apply_all src (fix_edits "SCRIPT-005" src) in
+      let twice = apply_all once (fix_edits "SCRIPT-005" once) in
+      expect
+        (once = "$a^{\\ell} + b^{\\ell}$" && once = twice)
+        (tag ^ ": second --apply-fixes pass is a no-op"));
+
+  run "SCRIPT-005 fix: ^{log} is left untouched" (fun tag ->
+      let src = "$x^{log}$" in
+      expect
+        (List.length (fix_edits "SCRIPT-005" src) = 0)
+        (tag ^ ": braced multi-letter sup is not a stray l"));
+
+  run "SCRIPT-005 count unchanged: $a^l + b^{l}$ = 2" (fun tag ->
+      expect
+        (fires_with_count "SCRIPT-005" "$a^l + b^{l}$" 2)
+        (tag ^ ": both occurrences still counted"));
+
+  run "SCRIPT-005 does not fire outside math" (fun tag ->
+      expect
+        (does_not_fire "SCRIPT-005" "text x^l outside any math")
+        (tag ^ ": only scanned inside math segments"));
+
+  (* v27.1.9 (Bucket-A): SPC-033 (no-break space U+00A0 before an em-dash) gains
+     a fix-set: replace the NBSP (C2 A0, 2 bytes) with a regular ASCII space
+     (0x20). Detection/count is unchanged. *)
+  run "SPC-033 fix: NBSP + Unicode em-dash → space + em-dash" (fun tag ->
+      let src = "word\xc2\xa0\xe2\x80\x94more" in
+      let edits = fix_edits "SPC-033" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "word \xe2\x80\x94more")
+        (tag ^ ": NBSP becomes ASCII space, em-dash kept"));
+
+  run "SPC-033 fix: NBSP + --- → space + ---" (fun tag ->
+      let src = "word\xc2\xa0---more" in
+      let edits = fix_edits "SPC-033" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "word ---more")
+        (tag ^ ": NBSP becomes ASCII space, --- kept"));
+
+  run "SPC-033 fix: two disjoint NBSP+em-dash produce two edits" (fun tag ->
+      let src = "a\xc2\xa0\xe2\x80\x94b c\xc2\xa0---d" in
+      let edits = fix_edits "SPC-033" src in
+      expect
+        (List.length edits = 2 && apply_all src edits = "a \xe2\x80\x94b c ---d")
+        (tag ^ ": both NBSPs rewritten"));
+
+  run "SPC-033 fix is idempotent (second pass is a no-op)" (fun tag ->
+      let src = "word\xc2\xa0\xe2\x80\x94more" in
+      let once = apply_all src (fix_edits "SPC-033" src) in
+      let twice = apply_all once (fix_edits "SPC-033" once) in
+      expect
+        (once = twice && fix_edits "SPC-033" once = [])
+        (tag ^ ": converged, no further fire"));
+
+  run "SPC-033 count is preserved (still fires with count)" (fun tag ->
+      expect
+        (fires_with_count "SPC-033" "a\xc2\xa0\xe2\x80\x94b c\xc2\xa0---d" 2)
+        (tag ^ ": two matches counted, lint unchanged"));
+
+  (* v27.1.9: TYPO-058 fix producer. Greek homograph letters in Latin prose are
+     replaced by their ASCII look-alikes (α→a ε→e ι→i ο→o ρ→p ς→c υ→u). The
+     COUNT is unchanged; only a fix-set is added; edits inside verbatim /
+     comment / url / math are withheld (mk_result_with_fix_exempt). *)
+  run "TYPO-058 fix: single Greek alpha → ASCII a" (fun tag ->
+      let src = "sc\xce\xb1le" in
+      let edits = fix_edits "TYPO-058" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "scale")
+        (tag ^ ": one 2→1 byte replace, applied = scale"));
+
+  run "TYPO-058 fix: all seven homographs map to their ASCII look-alikes"
+    (fun tag ->
+      (* α ε ι ο ρ ς υ → a e i o p c u *)
+      let src =
+        "x \xce\xb1 \xce\xb5 \xce\xb9 \xce\xbf \xcf\x81 \xcf\x82 \xcf\x85 y"
+      in
+      let edits = fix_edits "TYPO-058" src in
+      expect
+        (List.length edits = 7 && apply_all src edits = "x a e i o p c u y")
+        (tag ^ ": each Greek homograph becomes its ASCII letter"));
+
+  run "TYPO-058 fix: idempotent — second pass is a no-op" (fun tag ->
+      let src = "sc\xce\xb1le \xcf\x81oint" in
+      let p1 = apply_all src (fix_edits "TYPO-058" src) in
+      let p2 = apply_all p1 (fix_edits "TYPO-058" p1) in
+      expect
+        (p1 = "scale point" && p2 = p1 && does_not_fire "TYPO-058" p1)
+        (tag ^ ": converges to ASCII and stays there"));
+
+  run "TYPO-058 count unchanged: still fires/counts every homograph" (fun tag ->
+      expect
+        (fires_with_count "TYPO-058" "The \xce\xb1 and \xce\xb5 and \xce\xbf" 3)
+        (tag ^ ": count semantic byte-identical to diagnose-only form"));
+
+  run "TYPO-058 fix: Greek letter in math is exempt (no fix)" (fun tag ->
+      (* A literal α inside `$..$` is a legitimate math symbol, not a homograph;
+         it is still counted? No — count_in_text skips math, so it does not even
+         fire here. Assert no fix is emitted. *)
+      let src = "value $\xce\xb1$ here" in
+      let edits = fix_edits "TYPO-058" src in
+      expect (List.length edits = 0) (tag ^ ": math α not rewritten"));
+
+  run "TYPO-058 fix: Greek letter in comment/verbatim is exempt" (fun tag ->
+      let src = "ok\n% note \xce\xb1\n\\verb|\xce\xb5| end" in
+      let edits = fix_edits "TYPO-058" src in
+      expect
+        (List.length edits = 0 && apply_all src edits = src)
+        (tag ^ ": comment + \\verb content left untouched"));
 
   finalise "typo-fix"

@@ -151,6 +151,24 @@ let () =
         (does_not_fire_advisory "STYLE-024"
            "\\begin{tabular}{cc}\na & b\n\\end{tabular}")
         (tag ^ ": in tabular"));
+  run "STYLE-024 fix: escapes bare ampersand in author text" (fun tag ->
+      expect
+        (apply_fix_advisory "STYLE-024" "Smith & Jones wrote the paper."
+        = "Smith \\& Jones wrote the paper.")
+        (tag ^ ": & -> \\&"));
+  run "STYLE-024 fix: idempotent on already-escaped" (fun tag ->
+      expect
+        (apply_fix_advisory "STYLE-024" "Smith \\& Jones wrote the paper."
+        = "Smith \\& Jones wrote the paper.")
+        (tag ^ ": idempotent"));
+  run "STYLE-024 fix: verbatim ampersand untouched, text escaped" (fun tag ->
+      let src =
+        "\\begin{verbatim}\nx & y\n\\end{verbatim}\nSmith & Jones."
+      in
+      expect
+        (apply_fix_advisory "STYLE-024" src
+        = "\\begin{verbatim}\nx & y\n\\end{verbatim}\nSmith \\& Jones.")
+        (tag ^ ": verbatim safe"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-026: Repeated word (the the)
@@ -202,6 +220,36 @@ let () =
         (does_not_fire_advisory "STYLE-033"
            "As shown~\\cite{smith2020} we see this.")
         (tag ^ ": tilde before cite"));
+  (* v27.1.8: STYLE-033 is now a fix producer (remove_space). It deletes the
+     offending space; the result is idempotent and converges with TYPO-016. *)
+  run "STYLE-033 fix: deletes space before cite" (fun tag ->
+      let src = "As shown \\cite{smith2020} we see this." in
+      let edits = fix_edits_advisory "STYLE-033" src in
+      let out =
+        match Latex_parse_lib.Cst_edit.apply_all src edits with
+        | Ok o -> o
+        | Error _ -> "<overlap>"
+      in
+      expect
+        (List.length edits = 1
+        && out = "As shown\\cite{smith2020} we see this.")
+        (tag ^ ": space deleted"));
+  run "STYLE-033 fix: idempotent (fixed text does not re-fire)" (fun tag ->
+      expect
+        (does_not_fire_advisory "STYLE-033"
+           "As shown\\cite{smith2020} we see this.")
+        (tag ^ ": no space after fix"));
+  run "STYLE-033 fix: two spaces before cite -> two deletes" (fun tag ->
+      let src = "see \\cite{a} and \\cite{b}." in
+      let edits = fix_edits_advisory "STYLE-033" src in
+      let out =
+        match Latex_parse_lib.Cst_edit.apply_all src edits with
+        | Ok o -> o
+        | Error _ -> "<overlap>"
+      in
+      expect
+        (List.length edits = 2 && out = "see\\cite{a} and\\cite{b}.")
+        (tag ^ ": both spaces deleted"));
 
   (* ══════════════════════════════════════════════════════════════════════
      STYLE-034: Orphan word (1-2 letters) at paragraph end

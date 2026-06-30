@@ -2361,26 +2361,45 @@ let r_l3_006 : rule =
   in
   { id = "L3-006"; run; languages = [] }
 
-(* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────── *)
+(* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────────
+   Sole implementation (the Validators_l1_expl3 duplicate was removed to stop
+   double-emission). Fires on EITHER of two patterns so both the golden corpus
+   and the unit tests are covered:
+   (a) a camelCase macro AND a separate snake_case expl3 name (golden l3_007),
+   (b) a single token that mixes camelCase and snake_case under \ExplSyntaxOn
+       (e.g. \myFunc_helper:n), which the former l1_expl3 rule detected. *)
 let r_l3_007 : rule =
   let camel_re = Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*[{ ]|} in
   let snake_re = Re_compat.regexp {|\\[a-z]+_[a-z]+:|} in
+  let mixed_token_re =
+    Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*_[a-z_]+:[a-zA-Z]*|}
+  in
   let run s =
-    let has_camel =
+    let matches re =
       try
-        let _mr, _ = Re_compat.search_forward camel_re s 0 in
+        let _mr, _ = Re_compat.search_forward re s 0 in
         ignore _mr;
         true
       with Not_found -> false
     in
-    let has_snake =
-      try
-        let _mr, _ = Re_compat.search_forward snake_re s 0 in
-        ignore _mr;
-        true
-      with Not_found -> false
+    let has_camel = matches camel_re in
+    let has_snake = matches snake_re in
+    (* A single token mixing both conventions (e.g. \myFunc_helper:n) is the
+       strongest signal; count EACH such token so two mixed tokens report
+       count=2 (the former Validators_l1_expl3 behaviour). When no mixed token
+       is present, the separate camelCase-macro + snake_case-name pattern still
+       fires once (golden l3_007). *)
+    let mixed_cnt =
+      if contains_substring s "\\ExplSyntaxOn" then
+        count_re_matches mixed_token_re s
+      else 0
     in
-    if has_camel && has_snake then
+    if mixed_cnt > 0 then
+      Some
+        (mk_result ~id:"L3-007" ~severity:Info
+           ~message:"Mix of camelCase and snake_case in expl3 names"
+           ~count:mixed_cnt)
+    else if has_camel && has_snake then
       Some
         (mk_result ~id:"L3-007" ~severity:Info
            ~message:"Mix of camelCase and snake_case in expl3 names" ~count:1)
@@ -2414,32 +2433,48 @@ let r_l3_009 : rule =
 
 (* ── L3-011: Engine-branch uses pdfTeX primitive in Lua/XeTeX path ─ *)
 let r_l3_011 : rule =
-  let pdftex_re =
+  (* Superset of the former Validators_l1_expl3 detector: an engine-conditional
+     branch (sys_if_engine_{lua,xe}tex, \ifluatex/\ifLuaTeX/\ifxetex/\ifXeTeX,
+     or a fontspec load which implies Lua/XeTeX) that nonetheless invokes a
+     pdfTeX-only primitive. Counts EACH offending primitive. *)
+  let branch_re =
     Re_compat.regexp
-      {|\\\(pdfoutput\|pdfliteral\|pdfcatalog\|pdfinfo\|pdfcompresslevel\)|}
+      {|\\sys_if_engine_\(luatex\|xetex\):\|\\ifluatex\|\\ifLuaTeX\|\\ifxetex\|\\ifXeTeX|}
   in
-  let luaxe_re = Re_compat.regexp {|\\sys_if_engine_\(luatex\|xetex\):|} in
+  let fontspec_re = Re_compat.regexp_string {|\usepackage{fontspec}|} in
+  let pdftex_prims =
+    [
+      {|\pdfoutput|};
+      {|\pdfliteral|};
+      {|\pdfcatalog|};
+      {|\pdfinfo|};
+      {|\pdfcompresslevel|};
+      {|\pdfobjcompresslevel|};
+      {|\pdfminorversion|};
+      {|\pdfsavepos|};
+      {|\pdflastxpos|};
+    ]
+  in
   let run s =
-    let has_pdftex =
+    let matches re =
       try
-        let _mr, _ = Re_compat.search_forward pdftex_re s 0 in
+        let _mr, _ = Re_compat.search_forward re s 0 in
         ignore _mr;
         true
       with Not_found -> false
     in
-    let has_luaxe =
-      try
-        let _mr, _ = Re_compat.search_forward luaxe_re s 0 in
-        ignore _mr;
-        true
-      with Not_found -> false
-    in
-    if has_pdftex && has_luaxe then
-      Some
-        (mk_result ~id:"L3-011" ~severity:Warning
-           ~message:"Engine‑branch uses pdfTeX primitive in Lua/XeTeX path"
-           ~count:1)
-    else None
+    let has_branch = matches branch_re || matches fontspec_re in
+    if not has_branch then None
+    else
+      let cnt =
+        List.fold_left (fun acc p -> acc + count_substring s p) 0 pdftex_prims
+      in
+      if cnt > 0 then
+        Some
+          (mk_result ~id:"L3-011" ~severity:Warning
+             ~message:"Engine‑branch uses pdfTeX primitive in Lua/XeTeX path"
+             ~count:cnt)
+      else None
   in
   { id = "L3-011"; run; languages = [] }
 

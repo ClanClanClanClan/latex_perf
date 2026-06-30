@@ -450,6 +450,29 @@ let r_style_023 : rule =
 
 (* STYLE-024: Ampersand in text not escaped *)
 let r_style_024 : rule =
+  (* Fix (catalog: escape_ampersand): escape each BARE `&` (one not already
+     preceded by a backslash) → `\&`. Built over the ORIGINAL source [s] at
+     absolute offsets and routed through [mk_result_with_fix_exempt] so an `&`
+     inside verbatim / \verb / comment / url / math is never rewritten. The rule
+     only fires at all when the document contains NO tabular/align environment
+     (where an `&` is a real column separator), so a column-separator `&` is
+     never escaped — the rule's existing author-list/text detection scope is
+     preserved. The diagnostic [count] (over the math-stripped text) is
+     UNCHANGED — only the fix is added — so default-mode lint is byte-identical.
+     Idempotent: after `&`→`\&` the byte before `&` is `\`, so the bare-`&`
+     guard never re-fires. STYLE-024 is L4 Class-D, so its fix applies only via
+     the Class-D-inclusive --apply-fixes path. *)
+  let mk_fix_edits s =
+    let n = String.length s in
+    let rec loop i acc =
+      if i >= n then List.rev acc
+      else if s.[i] = '&' && (i = 0 || s.[i - 1] <> '\\') then
+        loop (i + 1)
+          (Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\\&" :: acc)
+      else loop (i + 1) acc
+    in
+    loop 0 []
+  in
   let run s =
     let text = strip_math_segments s in
     (* skip tabular / align environments *)
@@ -464,8 +487,9 @@ let r_style_024 : rule =
       done;
       if !cnt > 0 then
         Some
-          (mk_result ~id:"STYLE-024" ~severity:Warning
-             ~message:"Ampersand in text not escaped" ~count:!cnt)
+          (mk_result_with_fix_exempt ~id:"STYLE-024" ~severity:Warning
+             ~message:"Ampersand in text not escaped" ~count:!cnt ~src:s
+             ~fix:(mk_fix_edits s))
       else None
   in
   mk_rule "STYLE-024" run
@@ -559,28 +583,51 @@ let r_style_031 : rule =
   in
   mk_rule "STYLE-031" run
 
-(* STYLE-033: Space before citation bracket *)
+(* STYLE-033: Space before citation bracket. v27.1.8: fix producer (Class D).
+   Deletes the offending space before `\cite` (the rule's own detection span).
+   This is the `remove_space` fix from rules_v3.yaml — NOT the tilde insertion
+   (that is TYPO-016's job). The two converge: after STYLE-033 deletes the space
+   there is no space to fire on again (idempotent); after TYPO-016 inserts `~`
+   the preceding byte is `~`, which STYLE-033 explicitly skips. So they never
+   oscillate. The match runs against the ORIGINAL source [s] (NOT a
+   comment-stripped copy): [strip_comments] truncates each line at its `%`,
+   which SHRINKS the string, so a match offset in the stripped copy no longer
+   maps to the same byte in [s] once any earlier line carried a comment — the
+   delete would then land mid-character and shred a multibyte glyph. Instead we
+   scan [s] directly, exclude matches inside verbatim/comment ranges from the
+   count (via [find_verbatim_comment_ranges]), and let
+   [mk_result_with_fix_exempt ~src:s] additionally drop any fix edit that lands
+   inside verbatim / comment / math / url. *)
 let r_style_033 : rule =
   let re = Re_compat.regexp {| \\cite[^a-zA-Z]|} in
   let run s =
-    let text = strip_comments s in
+    let protected = find_verbatim_comment_ranges s in
+    let in_protected off =
+      List.exists (fun (a, b) -> a <= off && off < b) protected
+    in
+    let n = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let start = ref 0 in
     (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re text !start in
+       while !start < n do
+         let _mr, _ = Re_compat.search_forward re s !start in
          ignore _mr;
-         (* check it's not a tilde ~ before \cite *)
+         (* offset of the leading space — the single byte we delete *)
          let pos = Re_compat.match_beginning _mr in
-         if pos = 0 || text.[pos - 1] <> '~' then incr cnt;
+         (* skip a tilde-preceded space and matches inside comments/verbatim *)
+         if (pos = 0 || s.[pos - 1] <> '~') && not (in_protected pos) then (
+           incr cnt;
+           edits :=
+             Cst_edit.delete ~start_offset:pos ~end_offset:(pos + 1) :: !edits);
          start := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
       Some
-        (mk_result ~id:"STYLE-033" ~severity:Info
+        (mk_result_with_fix_exempt ~id:"STYLE-033" ~severity:Info
            ~message:"Space before \\cite — use ~ (non-breaking space)"
-           ~count:!cnt)
+           ~count:!cnt ~src:s ~fix:(List.rev !edits))
     else None
   in
   mk_rule "STYLE-033" run

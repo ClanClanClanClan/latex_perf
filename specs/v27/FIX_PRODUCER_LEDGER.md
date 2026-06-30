@@ -12,16 +12,16 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 118 (~17%)
-- **Pending**: 538
+- **Shipped**: 120 (~18%)
+- **Pending**: 536
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 460 | 118 | 342 |
-| **B**  | Sentence-aware (NLP-required)     | 51 | 0 | 51 |
+| **A**  | Mechanical, safe everywhere       | 462 | 120 | 342 |
+| **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
 
@@ -97,7 +97,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | SCRIPT | 22 | 3 | 19 | 0 | 22 | 0 | 0 | 0 |
 | SPC | 35 | 22 | 13 | 0 | 35 | 0 | 0 | 0 |
 | STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
-| STYLE | 49 | 2 | 47 | 0 | 2 | 47 | 0 | 0 |
+| STYLE | 49 | 4 | 45 | 0 | 4 | 45 | 0 | 0 |
 | SYS | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |
 | TAB | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
 | TH | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
@@ -634,7 +634,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `STYLE-021` | STYLE | **B** | tentative | pending |
 | `STYLE-022` | STYLE | **B** | tentative | pending |
 | `STYLE-023` | STYLE | **A** | confirmed | shipped in v27.1.6 |
-| `STYLE-024` | STYLE | **B** | tentative | pending |
+| `STYLE-024` | STYLE | **A** | confirmed | shipped in v27.1.8 |
 | `STYLE-025` | STYLE | **B** | tentative | pending |
 | `STYLE-026` | STYLE | **B** | tentative | pending |
 | `STYLE-027` | STYLE | **B** | tentative | pending |
@@ -643,7 +643,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `STYLE-030` | STYLE | **B** | tentative | pending |
 | `STYLE-031` | STYLE | **B** | tentative | pending |
 | `STYLE-032` | STYLE | **B** | tentative | pending |
-| `STYLE-033` | STYLE | **B** | tentative | pending |
+| `STYLE-033` | STYLE | **A** | confirmed | shipped in v27.1.8 |
 | `STYLE-034` | STYLE | **B** | tentative | pending |
 | `STYLE-035` | STYLE | **B** | tentative | pending |
 | `STYLE-036` | STYLE | **B** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 118 of 460 Bucket A
+  **TRACKING** — 120 of 462 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

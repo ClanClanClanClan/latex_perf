@@ -73,6 +73,24 @@ let fix_edits id src =
   | Some { fix = Some edits; _ } -> edits
   | _ -> []
 
+(** [fix_edits_advisory id src] is the Class-D counterpart of [fix_edits]:
+    returns the fix edit list for an advisory rule [id] (e.g. STYLE family),
+    reachable only via [run_with_policy Execution_policy.with_advisory]. *)
+let fix_edits_advisory id src =
+  match find_advisory_result id src with
+  | Some { fix = Some edits; _ } -> edits
+  | _ -> []
+
+(** [apply_fix_advisory id src] runs the validators under the advisory policy
+    (so Class-D STYLE rules are reachable), applies rule [id]'s fix edits to
+    [src], and returns the rewritten string. If the rule didn't fire or produced
+    no fix, [src] is returned unchanged. *)
+let apply_fix_advisory id src =
+  match find_advisory_result id src with
+  | Some { fix = Some edits; _ } -> (
+      match Cst_edit.apply_all src edits with Ok s -> s | Error _ -> src)
+  | _ -> src
+
 (** [with_pilot_env f] sets [L0_VALIDATORS=pilot], runs [f ()], then returns. *)
 let with_pilot_env f =
   Unix.putenv "L0_VALIDATORS" "pilot";

@@ -82,10 +82,14 @@ def apply_once(binp: str, path: str, env):
     """Return (text, returncode). returncode != 0 means the CLI refused to apply
     (e.g. exit 2 = E.apply-fixes.overlap) — the error goes to stderr so stdout is
     empty, which earlier silently looked like 'converged to empty'."""
-    r = subprocess.run(
-        [binp, "--apply-fixes", path], capture_output=True, text=True, env=env
-    )
-    text = "\n".join(l for l in r.stdout.splitlines() if not l.startswith("# "))
+    # Capture BYTES (not text=True): a fix that corrupts UTF-8 would otherwise
+    # crash the decode here, masking the very corruption this gate exists to
+    # catch. Decode with surrogateescape so invalid bytes round-trip into the
+    # string; the [final.encode("utf-8")] check downstream then flags them as
+    # bad_utf8 instead of the run aborting with a traceback.
+    r = subprocess.run([binp, "--apply-fixes", path], capture_output=True, env=env)
+    raw = b"\n".join(l for l in r.stdout.split(b"\n") if not l.startswith(b"# "))
+    text = raw.decode("utf-8", errors="surrogateescape")
     return text, r.returncode
 
 
@@ -95,7 +99,9 @@ def fixpoint(binp: str, path: str, env):
     cur = open(path, encoding="utf-8", errors="ignore").read()
     seen = {cur.rstrip("\n")}
     for n in range(1, MAX_PASSES + 1):
-        with tempfile.NamedTemporaryFile("w", suffix=".tex", delete=False) as t:
+        with tempfile.NamedTemporaryFile(
+            "w", suffix=".tex", delete=False, encoding="utf-8", errors="surrogateescape"
+        ) as t:
             t.write(cur)
             tp = t.name
         try:
@@ -166,7 +172,9 @@ def main() -> int:
             final.encode("utf-8")
         except UnicodeError:
             bad_utf8.append(rel)
-        with tempfile.NamedTemporaryFile("w", suffix=".tex", delete=False) as t:
+        with tempfile.NamedTemporaryFile(
+            "w", suffix=".tex", delete=False, encoding="utf-8", errors="surrogateescape"
+        ) as t:
             t.write(final)
             tp = t.name
         try:

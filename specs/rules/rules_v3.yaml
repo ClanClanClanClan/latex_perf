@@ -1641,7 +1641,7 @@
   fix: null
 
 - id: "DELIM-009"
-  description: "Nested delimiters: { … ( … ) … }"
+  description: "Mismatched delimiter type: closer does not match its opener"
   precondition: L1_Expanded
   default_severity: Warning
   maturity: Draft
@@ -3077,10 +3077,10 @@
   fix: null
 
 - id: "FIG-023"
-  description: "Vector graphic has overprint flag—potential print issue"
+  description: "⟦reserved⟧ Vector graphic has overprint flag—potential print issue"
   precondition: L3_Semantics
   default_severity: Info
-  maturity: Draft
+  maturity: Reserved
   owner: "@graphics"
   fix: null
 
@@ -4408,7 +4408,7 @@
   runtime_message: "Ampersand in text not escaped"
   precondition: L4_Style
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "escape_ampersand"
 
@@ -4489,7 +4489,7 @@
   runtime_message: "Space before \\cite — use ~ (non-breaking space)"
   precondition: L4_Style
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: "remove_space"
 

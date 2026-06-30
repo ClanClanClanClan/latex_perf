@@ -473,9 +473,16 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-045: Non-ASCII punctuation in math mode
      ══════════════════════════════════════════════════════════════════════ *)
-  run "TYPO-045 fires on non-ascii in math" (fun tag ->
-      (* U+00E9 = é = \xc3\xa9 — two bytes, both >= 0x80 *)
-      expect (fires "TYPO-045" "$\xc3\xa9$") (tag ^ ": non-ASCII in $...$"));
+  run "TYPO-045 fires on non-ascii punctuation in math" (fun tag ->
+      (* U+2018 LEFT SINGLE QUOTATION MARK = \xe2\x80\x98 — Unicode punctuation *)
+      expect
+        (fires "TYPO-045" "$\xe2\x80\x98$")
+        (tag ^ ": non-ASCII punctuation in $...$"));
+  run "TYPO-045 does not fire on non-ascii letter in math" (fun tag ->
+      (* U+00E9 = é = \xc3\xa9 — a letter, NOT punctuation; must not fire *)
+      expect
+        (does_not_fire "TYPO-045" "$\xc3\xa9$")
+        (tag ^ ": é is a letter, not punctuation"));
   run "TYPO-045 clean ascii math" (fun tag ->
       expect (does_not_fire "TYPO-045" "$x + y = z$") (tag ^ ": ASCII math ok"));
   run "TYPO-045 non-ascii outside math" (fun tag ->
@@ -693,14 +700,14 @@ let () =
      ══════════════════════════════════════════════════════════════════════ *)
 
   (* TYPO-045: boundary — multiple $ delimiters *)
-  run "TYPO-045 fires on non-ascii in second math" (fun tag ->
+  run "TYPO-045 fires on non-ascii punct in second math" (fun tag ->
       expect
-        (fires "TYPO-045" "$x$ and $\xc3\xa9$")
+        (fires "TYPO-045" "$x$ and $\xe2\x80\x98$")
         (tag ^ ": second math segment"));
-  run "TYPO-045 count=2 for two non-ascii bytes" (fun tag ->
+  run "TYPO-045 count=1 per punctuation codepoint" (fun tag ->
       expect
-        (fires_with_count "TYPO-045" "$\xc3\xa9$" 2)
-        (tag ^ ": count two bytes of U+00E9"));
+        (fires_with_count "TYPO-045" "$\xe2\x80\x98$" 1)
+        (tag ^ ": one U+2018 codepoint counted once"));
 
   (* TYPO-040: boundary — exactly 80 chars should NOT fire, 81 SHOULD *)
   run "TYPO-040 does not fire at exactly 80 chars" (fun tag ->
@@ -804,11 +811,16 @@ let () =
         (fires_with_count "TYPO-047" "\\section*{A}\\section*{B}" 2)
         (tag ^ ": count=2"));
 
-  (* TYPO-048 count for multiple en-dashes in text *)
-  run "TYPO-048 count=2 for two en-dashes" (fun tag ->
+  (* TYPO-048 count for multiple SPACED en-dashes (minus idiom) in text *)
+  run "TYPO-048 count=2 for two spaced en-dashes" (fun tag ->
       expect
-        (fires_with_count "TYPO-048" "val\xe2\x80\x93ue and oth\xe2\x80\x93er" 2)
+        (fires_with_count "TYPO-048" "a \xe2\x80\x93 b and c \xe2\x80\x93 d" 2)
         (tag ^ ": count=2"));
+  (* TYPO-048 does NOT fire on a tight en-dash range (5–10) *)
+  run "TYPO-048 clean on tight en-dash range" (fun tag ->
+      expect
+        (does_not_fire "TYPO-048" "page 5\xe2\x80\x9310 here")
+        (tag ^ ": tight range not minus"));
 
   (* TYPO-054 does not fire on number ranges like 1–10 *)
   run "TYPO-054 fires on word-endash-word" (fun tag ->

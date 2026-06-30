@@ -1,12 +1,12 @@
 version: v27.1.8
 release_state: rc
-release_date: '2026-06-28'
+release_date: '2026-06-30'
 generated_by: scripts/tools/generate_project_facts.py
 rules:
   total_specified: 660
-  total_reserved: 16
-  total_non_reserved: 644
-  total_shipped: 644
+  total_reserved: 17
+  total_non_reserved: 643
+  total_shipped: 643
   by_family:
     AR: 1
     BIB: 17
@@ -76,7 +76,7 @@ proofs:
   proof_files_generated: 114
   proof_files_ml: 1
   proof_files_archive: 7
-  per_rule_soundness_count: 644
+  per_rule_soundness_count: 643
   formal_faithful_count: 637
   formal_conservative_count: 20
   formal_conditional_count: 3

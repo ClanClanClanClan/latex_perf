@@ -7263,7 +7263,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: STYLE-025
   layer: L4_Style
   execution_class: D
@@ -7389,7 +7389,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: STYLE-034
   layer: L4_Style
   execution_class: D

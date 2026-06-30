@@ -2990,11 +2990,19 @@ let r_spc_027 : rule =
   let url_prefix_len = 5 (* "\url{" *) in
   let is_ws c = c = ' ' || c = '\t' in
   let run s =
+    (* SPC-027 edits INSIDE \url{} on purpose, so it must NOT route through the
+       generic exempt constructor (that drops every url edit). But a literal
+       \url{} that itself sits inside a verbatim/lstlisting/minted block or after
+       a percent comment is source text, not a URL — withhold it via a
+       verbatim+comment-ONLY range scan (url ranges deliberately excluded). *)
+    let vc_ranges = find_verbatim_comment_ranges s in
     let rec loop i cnt edits =
       try
         let _mr, _ = Re_compat.search_forward re s i in
         let inner = Re_compat.matched_group _mr 1 s in
         let mbeg = Re_compat.match_beginning _mr in
+        if is_in_exempt_range vc_ranges mbeg then loop (Re_compat.match_end _mr) cnt edits
+        else
         let mend = Re_compat.match_end _mr in
         let len = String.length inner in
         let k = ref 0 in
@@ -3031,12 +3039,11 @@ let r_spc_027 : rule =
           (mk_result ~id:"SPC-027" ~severity:Warning
              ~message:"Trailing whitespace inside \\url{}" ~count:cnt)
       else
-        (* SPC-027 deliberately edits INSIDE \url{} (its whole purpose), so it
-           must NOT route through the exempt constructor (which would drop every
-           url edit). The audit's low-severity edge — a literal \url{} shown
-           inside a verbatim block getting its inner whitespace trimmed — needs
-           a verbatim/comment-only filter (no such helper yet); tracked for a
-           follow-up. Plain constructor preserves the rule's function here. *)
+        (* The audit's low-severity edge — a literal \url{} shown inside a
+           verbatim block (or after a percent comment) getting its inner
+           whitespace trimmed — is handled above by the find_verbatim_comment_ranges
+           guard, which withholds matches in those regions while still editing
+           genuine \url{} content in prose. Plain constructor here. *)
         Some
           (mk_result_with_fix ~id:"SPC-027" ~severity:Warning
              ~message:"Trailing whitespace inside \\url{}" ~count:cnt ~fix)

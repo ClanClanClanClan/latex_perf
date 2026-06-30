@@ -390,20 +390,41 @@ let r_style_023 : rule =
     let exempt = find_exempt_ranges s in
     let starts_before i = List.exists (fun (a, b) -> a < i && i < b) exempt in
     let is_digit c = c >= '0' && c <= '9' in
+    (* Bytes that may legitimately follow a literal percent: end-of-line or
+       sentence punctuation. NOT a space and NOT a letter — those leave the
+       comment-vs-literal question open (see cascade note). *)
+    let lit_follow c =
+      c = '\n'
+      || c = '.'
+      || c = ','
+      || c = ';'
+      || c = ':'
+      || c = '!'
+      || c = '?'
+      || c = ')'
+      || c = ']'
+      || c = '}'
+    in
     let n = String.length s in
     let rec loop i acc =
-      (* Escape ONLY a `%` immediately preceded by a DIGIT (`50%`, `100%`). This
-         is the unambiguous literal-percent case. The earlier "preceded by any
-         non-space" heuristic was NOT robust under the --apply-fixes convergence
-         loop: TYPO-014 (pilot, "space before %") deletes the space in a genuine
-         comment `word % note` → `word% note`, after which a non-space guard
-         would escape the comment marker and turn the comment into visible text.
-         A digit can never appear before a comment's `%` via that cascade, so
-         the digit guard is cascade-proof. Still withheld inside
-         verbatim/\verb/url/ math (a range starting strictly before i). *)
+      (* Escape `%` ONLY when it is a DIGIT-preceded percent (`50%`) that is
+         also followed by end-of-line or punctuation (`50%`, `50%.`, `50%)`).
+         This is cascade-proof against the --apply-fixes convergence loop:
+         TYPO-014 (pilot, "space before %") deletes the space in a genuine
+         comment, so `50 %note` → `50%note` and `50 % done` → `50% done`. The
+         earlier digit-only guard still escaped `50%note` / `50% done`,
+         corrupting the comment. Requiring the byte AFTER `%` to be
+         EOL/punctuation rejects both the letter-follows (`50%note`) and
+         space-follows (`50% done`) cascade forms while still fixing the
+         unambiguous `50%`/`50%.` literals. Withheld inside
+         verbatim/\verb/url/math (a range starting strictly before i). *)
       if i >= n then List.rev acc
       else if
-        s.[i] = '%' && i > 0 && is_digit s.[i - 1] && not (starts_before i)
+        s.[i] = '%'
+        && i > 0
+        && is_digit s.[i - 1]
+        && (i + 1 >= n || lit_follow s.[i + 1])
+        && not (starts_before i)
       then
         loop (i + 1)
           (Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "\\%" :: acc)

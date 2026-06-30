@@ -1990,10 +1990,10 @@ let r_typo_044 : rule =
   in
   { id = "TYPO-044"; run; languages = [] }
 
-(* En-dash used as minus sign in text. Narrowed (v27.1.8): only a SPACED
-   en-dash (ASCII space before AND after the U+2013, e.g. `5 – 3`) is the minus
-   idiom this rule targets. A tight en-dash between characters (`5–10`,
-   `New York–London`) is a legitimate numeric/word range and must NOT fire. *)
+(* En-dash used as minus sign in text. Narrowed (v27.1.8): only a SPACED en-dash
+   (ASCII space before AND after the U+2013, e.g. `5 – 3`) is the minus idiom
+   this rule targets. A tight en-dash between characters (`5–10`, `New
+   York–London`) is a legitimate numeric/word range and must NOT fire. *)
 let r_typo_048 : rule =
   let run s =
     let cnt =
@@ -2007,15 +2007,10 @@ let r_typo_048 : rule =
             Char.code s.[!i] = 0xE2
             && Char.code s.[!i + 1] = 0x80
             && Char.code s.[!i + 2] = 0x93
-          then begin
-            if
-              !i - 1 >= 0
-              && s.[!i - 1] = ' '
-              && !i + 3 < n
-              && s.[!i + 3] = ' '
+          then (
+            if !i - 1 >= 0 && s.[!i - 1] = ' ' && !i + 3 < n && s.[!i + 3] = ' '
             then incr c;
-            i := !i + 3
-          end
+            i := !i + 3)
           else incr i
         done;
         !c)
@@ -2463,13 +2458,17 @@ let r_typo_040 : rule =
   { id = "TYPO-040"; run; languages = [] }
 
 (* Non-ASCII punctuation in math mode *)
-(* TYPO-045: a non-ASCII codepoint that is Unicode *punctuation* (smart quotes
-   ‘ ’ “ ”, dashes, ellipsis, guillemets, CJK/fullwidth punctuation, …). It must
+(* TYPO-045: a non-ASCII codepoint that is Unicode *punctuation* (smart quotes ‘
+   ’ “ ”, dashes, ellipsis, guillemets, CJK/fullwidth punctuation, …). It must
    NOT match non-ASCII *letters* such as é (U+00E9), which are legitimate math
    content; only punctuation in math mode is flagged. *)
 let typo_045_is_nonascii_punct cp =
   (* Latin-1 punctuation: ¡ « · » ¿ *)
-  cp = 0x00A1 || cp = 0x00AB || cp = 0x00B7 || cp = 0x00BB || cp = 0x00BF
+  cp = 0x00A1
+  || cp = 0x00AB
+  || cp = 0x00B7
+  || cp = 0x00BB
+  || cp = 0x00BF
   (* General Punctuation block, excluding spaces/format (0x2000–0x200F) and the
      line/paragraph separators (0x2028/0x2029): dashes, smart quotes, ellipsis,
      bullets, daggers, primes, etc. *)
@@ -2499,8 +2498,7 @@ let r_typo_045 : rule =
                  when inside math AND it is non-ASCII punctuation. *)
               let cp, len =
                 if c < 0xE0 && i + 1 < n then
-                  ( ((c land 0x1F) lsl 6) lor (Char.code s.[i + 1] land 0x3F),
-                    2 )
+                  (((c land 0x1F) lsl 6) lor (Char.code s.[i + 1] land 0x3F), 2)
                 else if c < 0xF0 && i + 2 < n then
                   ( ((c land 0x0F) lsl 12)
                     lor ((Char.code s.[i + 1] land 0x3F) lsl 6)

@@ -474,7 +474,8 @@ let () =
      TYPO-045: Non-ASCII punctuation in math mode
      ══════════════════════════════════════════════════════════════════════ *)
   run "TYPO-045 fires on non-ascii punctuation in math" (fun tag ->
-      (* U+2018 LEFT SINGLE QUOTATION MARK = \xe2\x80\x98 — Unicode punctuation *)
+      (* U+2018 LEFT SINGLE QUOTATION MARK = \xe2\x80\x98 — Unicode
+         punctuation *)
       expect
         (fires "TYPO-045" "$\xe2\x80\x98$")
         (tag ^ ": non-ASCII punctuation in $...$"));

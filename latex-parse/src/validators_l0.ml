@@ -2992,8 +2992,8 @@ let r_spc_027 : rule =
   let run s =
     (* SPC-027 edits INSIDE \url{} on purpose, so it must NOT route through the
        generic exempt constructor (that drops every url edit). But a literal
-       \url{} that itself sits inside a verbatim/lstlisting/minted block or after
-       a percent comment is source text, not a URL — withhold it via a
+       \url{} that itself sits inside a verbatim/lstlisting/minted block or
+       after a percent comment is source text, not a URL — withhold it via a
        verbatim+comment-ONLY range scan (url ranges deliberately excluded). *)
     let vc_ranges = find_verbatim_comment_ranges s in
     let rec loop i cnt edits =
@@ -3001,35 +3001,37 @@ let r_spc_027 : rule =
         let _mr, _ = Re_compat.search_forward re s i in
         let inner = Re_compat.matched_group _mr 1 s in
         let mbeg = Re_compat.match_beginning _mr in
-        if is_in_exempt_range vc_ranges mbeg then loop (Re_compat.match_end _mr) cnt edits
+        if is_in_exempt_range vc_ranges mbeg then
+          loop (Re_compat.match_end _mr) cnt edits
         else
-        let mend = Re_compat.match_end _mr in
-        let len = String.length inner in
-        let k = ref 0 in
-        while !k < len && is_ws inner.[!k] do
-          incr k
-        done;
-        let m = ref 0 in
-        while !m < len - !k && is_ws inner.[len - 1 - !m] do
-          incr m
-        done;
-        let inner_start = mbeg + url_prefix_len in
-        let inner_end = mend - 1 (* the closing brace *) in
-        let edits =
-          if !k > 0 then
-            Cst_edit.delete ~start_offset:inner_start
-              ~end_offset:(inner_start + !k)
-            :: edits
-          else edits
-        in
-        let edits =
-          if !m > 0 then
-            Cst_edit.delete ~start_offset:(inner_end - !m) ~end_offset:inner_end
-            :: edits
-          else edits
-        in
-        let cnt = if !k > 0 || !m > 0 then cnt + 1 else cnt in
-        loop mend cnt edits
+          let mend = Re_compat.match_end _mr in
+          let len = String.length inner in
+          let k = ref 0 in
+          while !k < len && is_ws inner.[!k] do
+            incr k
+          done;
+          let m = ref 0 in
+          while !m < len - !k && is_ws inner.[len - 1 - !m] do
+            incr m
+          done;
+          let inner_start = mbeg + url_prefix_len in
+          let inner_end = mend - 1 (* the closing brace *) in
+          let edits =
+            if !k > 0 then
+              Cst_edit.delete ~start_offset:inner_start
+                ~end_offset:(inner_start + !k)
+              :: edits
+            else edits
+          in
+          let edits =
+            if !m > 0 then
+              Cst_edit.delete ~start_offset:(inner_end - !m)
+                ~end_offset:inner_end
+              :: edits
+            else edits
+          in
+          let cnt = if !k > 0 || !m > 0 then cnt + 1 else cnt in
+          loop mend cnt edits
       with Not_found -> (cnt, List.rev edits)
     in
     let cnt, fix = loop 0 0 [] in
@@ -3041,9 +3043,10 @@ let r_spc_027 : rule =
       else
         (* The audit's low-severity edge — a literal \url{} shown inside a
            verbatim block (or after a percent comment) getting its inner
-           whitespace trimmed — is handled above by the find_verbatim_comment_ranges
-           guard, which withholds matches in those regions while still editing
-           genuine \url{} content in prose. Plain constructor here. *)
+           whitespace trimmed — is handled above by the
+           find_verbatim_comment_ranges guard, which withholds matches in those
+           regions while still editing genuine \url{} content in prose. Plain
+           constructor here. *)
         Some
           (mk_result_with_fix ~id:"SPC-027" ~severity:Warning
              ~message:"Trailing whitespace inside \\url{}" ~count:cnt ~fix)

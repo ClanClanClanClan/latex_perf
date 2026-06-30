@@ -2361,13 +2361,13 @@ let r_l3_006 : rule =
   in
   { id = "L3-006"; run; languages = [] }
 
-(* ── L3-007: Mix of camelCase and snake_case in expl3 names ──────────
-   Sole implementation (the Validators_l1_expl3 duplicate was removed to stop
+(* ── L3-007: Mix of camelCase and snake_case in expl3 names ────────── Sole
+   implementation (the Validators_l1_expl3 duplicate was removed to stop
    double-emission). Fires on EITHER of two patterns so both the golden corpus
-   and the unit tests are covered:
-   (a) a camelCase macro AND a separate snake_case expl3 name (golden l3_007),
-   (b) a single token that mixes camelCase and snake_case under \ExplSyntaxOn
-       (e.g. \myFunc_helper:n), which the former l1_expl3 rule detected. *)
+   and the unit tests are covered: (a) a camelCase macro AND a separate
+   snake_case expl3 name (golden l3_007), (b) a single token that mixes
+   camelCase and snake_case under \ExplSyntaxOn (e.g. \myFunc_helper:n), which
+   the former l1_expl3 rule detected. *)
 let r_l3_007 : rule =
   let camel_re = Re_compat.regexp {|\\[a-z]+[A-Z][a-zA-Z]*[{ ]|} in
   let snake_re = Re_compat.regexp {|\\[a-z]+_[a-z]+:|} in

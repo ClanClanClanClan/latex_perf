@@ -613,7 +613,8 @@ let l1_delim_009_rule : rule =
     if !cnt > 0 then
       Some
         (mk_result ~id:"DELIM-009" ~severity:Warning
-           ~message:"Mismatched delimiter type: closer does not match its opener"
+           ~message:
+             "Mismatched delimiter type: closer does not match its opener"
            ~count:!cnt)
     else None
   in

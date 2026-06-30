@@ -413,11 +413,10 @@ let r_l3_011 : rule =
    (rules_l2_approx); registering them here too made every such finding emit
    TWICE. The canonical implementations live in Validators_l2 (they match the
    golden corpus l5_expl3_tikz/l3_*.tex and the unit tests), so the duplicate
-   registrations are dropped here. Only L3-008 and L3-010 remain registered
-   here (Validators_l2 keeps them defined-but-unregistered). The unused
+   registrations are dropped here. Only L3-008 and L3-010 remain registered here
+   (Validators_l2 keeps them defined-but-unregistered). The unused
    r_l3_001..005/007/009/011 definitions above are retained for history. *)
-let rules_l1_expl3 : rule list =
-  [ r_char_004; r_math_006; r_l3_008; r_l3_010 ]
+let rules_l1_expl3 : rule list = [ r_char_004; r_math_006; r_l3_008; r_l3_010 ]
 
 (* Reference the now-deduplicated definitions so they remain part of the module
    without being registered (prevents unused-binding warnings under -strict). *)

@@ -162,9 +162,7 @@ let () =
         = "Smith \\& Jones wrote the paper.")
         (tag ^ ": idempotent"));
   run "STYLE-024 fix: verbatim ampersand untouched, text escaped" (fun tag ->
-      let src =
-        "\\begin{verbatim}\nx & y\n\\end{verbatim}\nSmith & Jones."
-      in
+      let src = "\\begin{verbatim}\nx & y\n\\end{verbatim}\nSmith & Jones." in
       expect
         (apply_fix_advisory "STYLE-024" src
         = "\\begin{verbatim}\nx & y\n\\end{verbatim}\nSmith \\& Jones.")
@@ -231,8 +229,7 @@ let () =
         | Error _ -> "<overlap>"
       in
       expect
-        (List.length edits = 1
-        && out = "As shown\\cite{smith2020} we see this.")
+        (List.length edits = 1 && out = "As shown\\cite{smith2020} we see this.")
         (tag ^ ": space deleted"));
   run "STYLE-033 fix: idempotent (fixed text does not re-fire)" (fun tag ->
       expect

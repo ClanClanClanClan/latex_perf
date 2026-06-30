@@ -2205,8 +2205,12 @@ let l1_math_098_rule : rule =
   in
   { id = "MATH-098"; run; languages = [] }
 
-(* MATH-072: Unknown math operator name — \operatorname{X} where X is a
-   predefined LaTeX function like \det, \lim, \sin etc. *)
+(* MATH-072: \operatorname used for a predefined operator — \operatorname{X}
+   where X is a predefined LaTeX function like \det, \lim, \sin etc.; the
+   dedicated \X command should be used instead. (The rule deliberately fires on
+   KNOWN operators — an UNKNOWN name like \operatorname{argmax} is the correct
+   idiom and must NOT fire; an audit briefly misread the old "Unknown ..."
+   message as the spec and inverted the guard — reverted.) *)
 let l1_math_072_rule : rule =
   let known_ops =
     [
@@ -2274,7 +2278,10 @@ let l1_math_072_rule : rule =
     if !cnt > 0 then
       Some
         (mk_result ~id:"MATH-072" ~severity:Warning
-           ~message:"Unknown math operator name" ~count:!cnt)
+           ~message:
+             "Predefined operator wrapped in \\operatorname; use the dedicated \
+              command"
+           ~count:!cnt)
     else None
   in
   { id = "MATH-072"; run; languages = [] }
@@ -2555,10 +2562,34 @@ let l1_math_099_rule : rule =
 
 (* MATH-101: Deprecated \over primitive used *)
 let l1_math_101_rule : rule =
+  (* Count occurrences of the control word "\over" only when it is the WHOLE
+     control word, i.e. the character following "\over" is not a letter. This
+     avoids false positives on \overline, \overbrace, \overrightarrow, \overset,
+     \overparen, etc. *)
+  let count_over_word seg =
+    let needle = "\\over" in
+    let nlen = String.length needle in
+    let len = String.length seg in
+    let cnt = ref 0 in
+    let i = ref 0 in
+    while !i <= len - nlen do
+      if String.sub seg !i nlen = needle then (
+        let next_is_letter =
+          !i + nlen < len
+          &&
+          let c = seg.[!i + nlen] in
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+        in
+        if not next_is_letter then incr cnt;
+        i := !i + nlen)
+      else incr i
+    done;
+    !cnt
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
-    List.iter (fun seg -> cnt := !cnt + count_substring seg "\\over") math_segs;
+    List.iter (fun seg -> cnt := !cnt + count_over_word seg) math_segs;
     if !cnt > 0 then
       Some
         (mk_result ~id:"MATH-101" ~severity:Warning

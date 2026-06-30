@@ -2,7 +2,7 @@
 
 ## Files
 
-- `rules_v3.yaml` — Unified, authoritative ruleset (660 rules, 644 non-reserved, 16 reserved)
+- `rules_v3.yaml` — Unified, authoritative ruleset (660 rules, 643 non-reserved, 17 reserved)
 - `rule_contracts.yaml` — Per-rule execution/proof/project metadata (PR #237; source of truth for runtime DAG)
 - `rules_unified.cache.pkl` — Cached index for tooling (generated)
 - `phase1/` — Coq spec stubs for early L0 rules (typography/commands)
@@ -39,8 +39,8 @@
   - Implemented: 19
   - Impl: 6
   - Reserved: 16 (future families; do not implement yet)
-- Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 118 as of
-  v27.1.7.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
+- Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 120 as of
+  v27.1.8.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
   `../v27/FIX_PRODUCER_LEDGER.md` for the per-rule shipping ledger.
 
 ## Implementation Guidance (When to Start)

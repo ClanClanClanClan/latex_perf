@@ -750,7 +750,14 @@ let extract_command_names (s : string) : string list =
     let ctx_names_rev =
       List.fold_left
         (fun acc (pc : Validators_context.post_command) ->
-          if List.exists (( = ) pc.name) acc then acc else pc.name :: acc)
+          (* dedup within ctx, and drop any ctx name already seen by the token
+             scan — the post-command summary and the literal token scan are two
+             views of the same commands, so appending both double-counts. *)
+          if
+            List.exists (( = ) pc.name) acc
+            || List.exists (( = ) pc.name) token_names
+          then acc
+          else pc.name :: acc)
         [] ctx
     in
     List.rev_append ctx_names_rev token_names
@@ -825,6 +832,42 @@ let extract_env_block_ranges (env : string) (s : string) : (int * int) list =
     else incr i
   done;
   List.rev !blocks
+
+(** [find_verbatim_comment_ranges s] — byte ranges covering ONLY literal
+    verbatim blocks (`verbatim`/`lstlisting`/`minted` environment bodies) and
+    percent line-comments. Unlike [find_verbatim_comment_url_ranges] it
+    deliberately EXCLUDES url targets, so a producer whose whole purpose is to
+    edit `\url{}` content (SPC-027) can still fire in prose while withholding
+    edits that land inside a verbatim block or comment. The comment scan honours
+    backslash-escaping (`\%` is a literal percent, not a comment). *)
+let find_verbatim_comment_ranges (s : string) : (int * int) list =
+  let n = String.length s in
+  let ranges =
+    List.concat_map
+      (fun env -> extract_env_block_ranges env s)
+      [ "verbatim"; "lstlisting"; "minted" ]
+  in
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if String.unsafe_get s back = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let ranges = ref ranges in
+  let i = ref 0 in
+  while !i < n do
+    if String.unsafe_get s !i = '%' && not (is_escaped !i) then (
+      let j = ref !i in
+      while !j < n && String.unsafe_get s !j <> '\n' do
+        incr j
+      done;
+      ranges := (!i, !j) :: !ranges;
+      i := !j)
+    else incr i
+  done;
+  List.sort (fun (a, _) (c, _) -> compare a c) !ranges
 
 (* Helper: check if string is inside \begin{document}...\end{document} body *)
 let extract_document_body (s : string) : string option =

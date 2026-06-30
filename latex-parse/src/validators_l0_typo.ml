@@ -1990,13 +1990,30 @@ let r_typo_044 : rule =
   in
   { id = "TYPO-044"; run; languages = [] }
 
-(* En-dash used as minus sign in text *)
+(* En-dash used as minus sign in text. Narrowed (v27.1.8): only a SPACED en-dash
+   (ASCII space before AND after the U+2013, e.g. `5 – 3`) is the minus idiom
+   this rule targets. A tight en-dash between characters (`5–10`, `New
+   York–London`) is a legitimate numeric/word range and must NOT fire. *)
 let r_typo_048 : rule =
   let run s =
     let cnt =
       (fun s ->
         let s = strip_math_segments s in
-        Unicode.count_en_dash s)
+        let n = String.length s in
+        let c = ref 0 in
+        let i = ref 0 in
+        while !i + 2 < n do
+          if
+            Char.code s.[!i] = 0xE2
+            && Char.code s.[!i + 1] = 0x80
+            && Char.code s.[!i + 2] = 0x93
+          then (
+            if !i - 1 >= 0 && s.[!i - 1] = ' ' && !i + 3 < n && s.[!i + 3] = ' '
+            then incr c;
+            i := !i + 3)
+          else incr i
+        done;
+        !c)
         s
     in
     if cnt > 0 then
@@ -2122,7 +2139,7 @@ let r_typo_053 : rule =
   let mk_fix_edits exempt s =
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots{}")
       (occurrences_in_text exempt s needle)
   in
   let run s =
@@ -2441,6 +2458,30 @@ let r_typo_040 : rule =
   { id = "TYPO-040"; run; languages = [] }
 
 (* Non-ASCII punctuation in math mode *)
+(* TYPO-045: a non-ASCII codepoint that is Unicode *punctuation* (smart quotes ‘
+   ’ “ ”, dashes, ellipsis, guillemets, CJK/fullwidth punctuation, …). It must
+   NOT match non-ASCII *letters* such as é (U+00E9), which are legitimate math
+   content; only punctuation in math mode is flagged. *)
+let typo_045_is_nonascii_punct cp =
+  (* Latin-1 punctuation: ¡ « · » ¿ *)
+  cp = 0x00A1
+  || cp = 0x00AB
+  || cp = 0x00B7
+  || cp = 0x00BB
+  || cp = 0x00BF
+  (* General Punctuation block, excluding spaces/format (0x2000–0x200F) and the
+     line/paragraph separators (0x2028/0x2029): dashes, smart quotes, ellipsis,
+     bullets, daggers, primes, etc. *)
+  || (cp >= 0x2010 && cp <= 0x2027)
+  || (cp >= 0x2030 && cp <= 0x205E)
+  (* CJK symbols and punctuation *)
+  || (cp >= 0x3001 && cp <= 0x303F)
+  (* Fullwidth ASCII punctuation forms *)
+  || (cp >= 0xFF01 && cp <= 0xFF0F)
+  || (cp >= 0xFF1A && cp <= 0xFF20)
+  || (cp >= 0xFF3B && cp <= 0xFF40)
+  || (cp >= 0xFF5B && cp <= 0xFF65)
+
 let r_typo_045 : rule =
   let run s =
     let cnt =
@@ -2451,8 +2492,30 @@ let r_typo_045 : rule =
           else
             let c = Char.code s.[i] in
             if c = 0x24 then scan (i + 1) (not inside) acc
-            else if inside && c >= 0x80 then scan (i + 1) inside (acc + 1)
-            else scan (i + 1) inside acc
+            else if c < 0x80 then scan (i + 1) inside acc
+            else
+              (* Decode one UTF-8 multibyte sequence at [i] and count it only
+                 when inside math AND it is non-ASCII punctuation. *)
+              let cp, len =
+                if c < 0xE0 && i + 1 < n then
+                  (((c land 0x1F) lsl 6) lor (Char.code s.[i + 1] land 0x3F), 2)
+                else if c < 0xF0 && i + 2 < n then
+                  ( ((c land 0x0F) lsl 12)
+                    lor ((Char.code s.[i + 1] land 0x3F) lsl 6)
+                    lor (Char.code s.[i + 2] land 0x3F),
+                    3 )
+                else if c < 0xF8 && i + 3 < n then
+                  ( ((c land 0x07) lsl 18)
+                    lor ((Char.code s.[i + 1] land 0x3F) lsl 12)
+                    lor ((Char.code s.[i + 2] land 0x3F) lsl 6)
+                    lor (Char.code s.[i + 3] land 0x3F),
+                    4 )
+                else (c, 1)
+              in
+              let acc =
+                if inside && typo_045_is_nonascii_punct cp then acc + 1 else acc
+              in
+              scan (i + len) inside acc
         in
         scan 0 false 0)
         s

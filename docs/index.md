@@ -13,10 +13,10 @@ Comprehensive LaTeX document analysis and style validation system with 660 rules
 
 | Metric | Value |
 |--------|-------|
-| Rules specified | 660 (16 reserved) |
+| Rules specified | 660 (17 reserved) |
 | Rules shipped | 644 / 660 |
-| Fix-producing rules | 118 (Bucket A rolling cadence, see [V27_FIX_PRODUCER_CADENCE.md](../specs/v27/V27_FIX_PRODUCER_CADENCE.md)) |
-| Soundness theorems | 644 per-rule (637 faithful, 20 conservative, 3 conditional) |
+| Fix-producing rules | 120 (Bucket A rolling cadence, see [V27_FIX_PRODUCER_CADENCE.md](../specs/v27/V27_FIX_PRODUCER_CADENCE.md)) |
+| Soundness theorems | 643 per-rule (637 faithful, 20 conservative, 3 conditional) |
 | Total theorems/lemmas | 1,400 across 170 Coq files |
 | Performance p95 (L1 expand) | ≈ 2.8 ms (gate: 20 ms, Tier A) |
 | Admits / Axioms | 0 / 0 |

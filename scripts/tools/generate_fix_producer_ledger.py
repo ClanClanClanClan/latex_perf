@@ -147,6 +147,8 @@ SHIPPED_VERSIONS = {
     "VERB-002": "v27.1.6",
     "STYLE-015": "v27.1.6",
     "STYLE-023": "v27.1.6",
+    "STYLE-024": "v27.1.8",
+    "STYLE-033": "v27.1.8",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

@@ -2,6 +2,87 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.8] — 2026-06-30
+
+**Full remediation of the all-660-rule audit (every finding closed).** Genuine
+bugs in what rules *report* (distinct from the verbatim-safety class), plus two
+new fix producers and one reclassification:
+
+- **MATH-101** — detection used a bare `\over` substring, so `\overline`,
+  `\overbrace`, `\overrightarrow`, `\overset`, `\overparen` falsely tripped the
+  "deprecated `\over`" rule; now matched as a whole control word.
+- **MOD-001** — count was ~doubled (the post-command summary and the literal
+  token scan are two views of the same commands and were both appended);
+  deduplicated.
+- **TYPO-053** — its fix emitted a bare `\dots` with no terminator, so
+  `⋯bb` → `\dotsbb` (an undefined control word); now emits `\dots{}`.
+- **STYLE-015** — false positive: a period followed by inline math
+  (`here. $x=1$ is`) looked like a double space after `strip_math_segments`
+  deleted the math; the count no longer mistakes math-stripping for a space run.
+- **TIKZ-001** — figure-containment was computed globally ("does *any* figure
+  contain a tikzpicture") instead of per occurrence; now judged per
+  `tikzpicture`.
+- **DELIM-001/002** — byte-level brace counters fired (Error) on braces inside
+  `%` comments and verbatim; now ignore protected regions.
+- **MATH-072** — message/description corrected: it flags a **predefined**
+  operator wrapped in `\operatorname` (use the dedicated `\det`/`\sin`/…), but
+  said "Unknown math operator name". (The audit had read the wrong message as
+  the spec and proposed inverting the *logic*, which would have penalised the
+  correct `\operatorname{argmax}` idiom — caught and corrected: the logic was
+  right, only the wording was wrong.)
+
+The remaining audit findings, all now closed (no longer deferred):
+
+- **TYPO-045** — narrowed to its actual target: it counted *every* non-ASCII
+  byte inside `$…$` (including CJK letters and math symbols like `÷`), but its
+  description targets non-ASCII *punctuation* (smart quotes, …). Now decodes
+  each codepoint and counts only non-ASCII punctuation. Golden fixture rewritten
+  from a tight en-dash range to two smart quotes (a true positive).
+- **TYPO-048** — narrowed to a *spaced* en-dash (`5 – 3`, the minus idiom);
+  a tight en-dash (`2020–2025`, a numeric/word range) is legitimate and no
+  longer fires. Golden fixture updated to a spaced en-dash.
+- **L3-001..011 double-emission** — these rules were registered in *both*
+  `Validators_l1_expl3` and `Validators_l2`, so every finding emitted twice. The
+  canonical implementation is kept per id (superset-verified against the unit +
+  golden suites: L3-007 broadened to count single mixed-case tokens *and* the
+  separate camel/snake pattern; L3-011 broadened to the full engine-branch +
+  pdfTeX-prim set), the duplicate registration dropped. Each id now emits once.
+- **DELIM-009** — runtime message + catalog description aligned to what the rule
+  actually detects ("Mismatched delimiter type: closer does not match its
+  opener"), not "nested delimiters".
+- **SPC-027** — given a verbatim/comment-only exempt filter (new
+  `find_verbatim_comment_ranges`) so it keeps trimming whitespace *inside*
+  `\url{}` (its purpose) while never editing a `\url` shown inside a verbatim
+  block or comment.
+- **FIG-023** — reclassified **Reserved** (an overprint-flag check on a vector
+  graphic needs rendered-PDF semantics a source linter cannot reach — same class
+  as the PDF/A reserved rules). Reserved 16→17, non-reserved 644→643.
+
+**Two new fix producers (118 → 120):**
+
+- **STYLE-024** (`escape_ampersand`) — escapes a bare `&` → `\&` in prose, but
+  only when the document has no `tabular`/`align` (where `&` is a real column
+  separator); exempt-filtered so `&` in verbatim/math/comment/url is untouched.
+- **STYLE-033** (`remove_space`) — deletes the space before `\cite`. Converges
+  with TYPO-016's `~` insertion (neither re-fires after the other).
+
+**Bug found and fixed while verifying the above:** the first STYLE-033
+implementation matched `\cite` against a *comment-stripped* copy of the source
+but emitted the delete at those offsets against the *original* — and
+`strip_comments` shrinks the string, so after any comment line the offset
+landed mid-character and shredded a multibyte (CJK) glyph, producing invalid
+UTF-8 (which later fixpoint passes then "repaired" via CP-1252 mapping). STYLE-033
+now matches the original source directly. The `check_apply_fixes_safety` gate —
+which had been decoding CLI output with `text=True` and would have *crashed* on
+such corruption rather than reporting it — now decodes via `surrogateescape`, so
+any future UTF-8-corrupting fix is flagged as a hard violation instead of masked.
+
+120 producers; full `dune runtest` green (incl. expl3/golden suites); all gates
+green (messages, contracts, ledger, repo-facts, version-labels, catalogue,
+verbatim-safety, and apply-fixes convergence: 330/330 files converge to valid
+UTF-8). Default-mode differential unchanged for the count-preserving fixes;
+TYPO-045/048 and the L3 de-duplication intentionally change diagnostic output.
+
 ## [v27.1.7] — 2026-06-30
 
 **Audit-driven completion of the verbatim-safety fix (19 more producers).** A

@@ -2122,7 +2122,7 @@ let r_typo_053 : rule =
   let mk_fix_edits exempt s =
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots{}")
       (occurrences_in_text exempt s needle)
   in
   let run s =

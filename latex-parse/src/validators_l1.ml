@@ -283,7 +283,20 @@ let l1_mod_024_rule : rule =
 (* DELIM-001: Unmatched delimiters { } after expansion. Count opening vs closing
    braces, ignoring escaped \{ and \}. *)
 let l1_delim_001_rule : rule =
-  let run s =
+  let run s0 =
+    (* Ignore braces inside comments and verbatim/\verb/url: blank those byte
+       ranges to spaces (offsets preserved) so only real document braces
+       count. *)
+    let s =
+      let b = Bytes.of_string s0 in
+      List.iter
+        (fun (a, e) ->
+          for k = a to e - 1 do
+            Bytes.set b k ' '
+          done)
+        (find_verbatim_comment_url_ranges s0);
+      Bytes.unsafe_to_string b
+    in
     let n = String.length s in
     let opens = ref 0 in
     let closes = ref 0 in
@@ -313,7 +326,20 @@ let l1_delim_001_rule : rule =
 (* DELIM-002: Extra closing } detected. Scan left-to-right tracking brace depth;
    if depth ever goes negative, count those positions. *)
 let l1_delim_002_rule : rule =
-  let run s =
+  let run s0 =
+    (* Ignore braces inside comments and verbatim/\verb/url: blank those byte
+       ranges to spaces (offsets preserved) so only real document braces
+       count. *)
+    let s =
+      let b = Bytes.of_string s0 in
+      List.iter
+        (fun (a, e) ->
+          for k = a to e - 1 do
+            Bytes.set b k ' '
+          done)
+        (find_verbatim_comment_url_ranges s0);
+      Bytes.unsafe_to_string b
+    in
     let n = String.length s in
     let depth = ref 0 in
     let cnt = ref 0 in

@@ -2177,14 +2177,15 @@ let () =
       let edits = fix_edits "TYPO-053" src in
       expect
         (List.length edits = 1
-        && apply_all src edits = "Series 1, 2, \\dots, 9, 10.")
-        (tag ^ ": 3 bytes → 5 bytes"));
+        && apply_all src edits = "Series 1, 2, \\dots{}, 9, 10.")
+        (tag ^ ": 3 bytes → 7 bytes (\\dots{} terminated)"));
 
   run "TYPO-053 fix: multiple outside math" (fun tag ->
       let src = "a \xe2\x8b\xaf b \xe2\x8b\xaf c" in
       let edits = fix_edits "TYPO-053" src in
       expect
-        (List.length edits = 2 && apply_all src edits = "a \\dots b \\dots c")
+        (List.length edits = 2
+        && apply_all src edits = "a \\dots{} b \\dots{} c")
         (tag ^ ": both replaced"));
 
   run "TYPO-053 fix: inside math is skipped" (fun tag ->
@@ -2246,7 +2247,7 @@ let () =
       expect
         (List.length e53 = 1
         && List.length e19 = 2
-        && merged = "Range -10 to -5 \\dots 5 to 10.")
+        && merged = "Range -10 to -5 \\dots{} 5 to 10.")
         (tag ^ ": 3 disjoint replaces all apply"));
 
   (* v27.0.46: ENC-002 / SPC-012 redundancy resolution. SPC-012 must no longer

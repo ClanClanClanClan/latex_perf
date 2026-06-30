@@ -2451,16 +2451,16 @@ let r_l3_011 : rule =
 let r_tikz_001 : rule =
   let tikz_re = Re_compat.regexp_string "\\begin{tikzpicture}" in
   let run s =
-    let fig_blocks = extract_env_blocks_starred "figure" s in
+    let fig_ranges =
+      extract_env_block_ranges "figure" s @ extract_env_block_ranges "figure*" s
+    in
     let cnt = ref 0 in
     let i = ref 0 in
     (try
        while true do
          let _mr, pos = Re_compat.search_forward tikz_re s !i in
          let inside_fig =
-           List.exists
-             (fun body -> contains_substring body "\\begin{tikzpicture}")
-             fig_blocks
+           List.exists (fun (a, b) -> pos >= a && pos < b) fig_ranges
          in
          if not inside_fig then incr cnt;
          i := pos + 1

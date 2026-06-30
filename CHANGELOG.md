@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.8] — 2026-06-30
+
+**Diagnostic-correctness fixes from the all-660-rule audit.** Six genuine bugs
+in what rules *report* (distinct from the verbatim-safety class):
+
+- **MATH-101** — detection used a bare `\over` substring, so `\overline`,
+  `\overbrace`, `\overrightarrow`, `\overset`, `\overparen` falsely tripped the
+  "deprecated `\over`" rule; now matched as a whole control word.
+- **MOD-001** — count was ~doubled (the post-command summary and the literal
+  token scan are two views of the same commands and were both appended);
+  deduplicated.
+- **TYPO-053** — its fix emitted a bare `\dots` with no terminator, so
+  `⋯bb` → `\dotsbb` (an undefined control word); now emits `\dots{}`.
+- **STYLE-015** — false positive: a period followed by inline math
+  (`here. $x=1$ is`) looked like a double space after `strip_math_segments`
+  deleted the math; the count no longer mistakes math-stripping for a space run.
+- **TIKZ-001** — figure-containment was computed globally ("does *any* figure
+  contain a tikzpicture") instead of per occurrence; now judged per
+  `tikzpicture`.
+- **DELIM-001/002** — byte-level brace counters fired (Error) on braces inside
+  `%` comments and verbatim; now ignore protected regions.
+- **MATH-072** — message/description corrected: it flags a **predefined**
+  operator wrapped in `\operatorname` (use the dedicated `\det`/`\sin`/…), but
+  said "Unknown math operator name". (The audit had read the wrong message as
+  the spec and proposed inverting the *logic*, which would have penalised the
+  correct `\operatorname{argmax}` idiom — caught and corrected: the logic was
+  right, only the wording was wrong.)
+
+No producer count change (118); full `dune runtest` + messages gate green;
+differential unaffected on the corpus.
+
+Two audit items were **not** changed: TYPO-045 (its all-non-ASCII-in-math scan
+is the established, tested, golden behaviour — the description's quote examples
+are illustrative) and L3-001..011 double-emission (the two implementations
+aren't equivalent; removing one loses coverage — needs careful per-rule
+reconciliation). Both tracked for follow-up.
+
 ## [v27.1.7] — 2026-06-30
 
 **Audit-driven completion of the verbatim-safety fix (19 more producers).** A

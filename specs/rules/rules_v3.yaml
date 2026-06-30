@@ -2175,7 +2175,7 @@
   fix: null
 
 - id: "MATH-072"
-  description: "Unknown math operator name"
+  description: "Predefined operator wrapped in \\operatorname; use the dedicated command"
   precondition: L1_Expanded
   default_severity: Warning
   maturity: Draft

@@ -750,7 +750,14 @@ let extract_command_names (s : string) : string list =
     let ctx_names_rev =
       List.fold_left
         (fun acc (pc : Validators_context.post_command) ->
-          if List.exists (( = ) pc.name) acc then acc else pc.name :: acc)
+          (* dedup within ctx, and drop any ctx name already seen by the token
+             scan — the post-command summary and the literal token scan are two
+             views of the same commands, so appending both double-counts. *)
+          if
+            List.exists (( = ) pc.name) acc
+            || List.exists (( = ) pc.name) token_names
+          then acc
+          else pc.name :: acc)
         [] ctx
     in
     List.rev_append ctx_names_rev token_names

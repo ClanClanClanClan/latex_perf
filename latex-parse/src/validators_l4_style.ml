@@ -277,7 +277,23 @@ let r_style_015 : rule =
     loop 0 []
   in
   let run s =
-    let text = strip_comments (strip_math_segments s) in
+    (* Replace each math segment with a single placeholder char (instead of
+       DELETING it, as strip_math_segments does) so that a period followed by a
+       single space and then inline math — e.g. "here. $x=1$ is" — is not
+       mis-counted as ". " once the math vanishes and the surrounding spaces
+       become adjacent. The fix (mk_fix_edits over the original [s]) is
+       unaffected; only the diagnostic count is corrected. *)
+    let n = String.length s in
+    let buf = Buffer.create n in
+    let pos = ref 0 in
+    List.iter
+      (fun (a, b) ->
+        if a > !pos then Buffer.add_substring buf s !pos (a - !pos);
+        if b > a then Buffer.add_char buf '\x00';
+        pos := b)
+      (find_math_ranges s);
+    if !pos < n then Buffer.add_substring buf s !pos (n - !pos);
+    let text = strip_comments (Buffer.contents buf) in
     let cnt = count_substring text ".  " in
     if cnt > 0 then
       Some

@@ -612,7 +612,7 @@
   description: "Greek homograph letters used in Latin words (ϲ,ɑ,ᴦ…)"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: replace_ascii
 
@@ -889,7 +889,7 @@
   description: "Indentation uses NBSP characters"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: replace_space
 
@@ -921,7 +921,7 @@
   description: "No‑break space before em‑dash in English text forbidden"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: replace_space
 
@@ -1062,7 +1062,7 @@
   description: "Non‑NFKC homoglyph character (Greek μ vs µ)"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: normalize_nfkc
 
@@ -2615,7 +2615,7 @@
   description: "Superscript uses letter l instead of \\ell"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_ell
 
@@ -2623,7 +2623,7 @@
   description: "Degree symbol typed ° instead of ^\\circ"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: replace_with_circ
 
@@ -5363,7 +5363,7 @@
   description: "RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: auto_replace
 
@@ -5419,7 +5419,7 @@
   description: "JA: U+FF5E tilde normalise to wave‑dash U+301C"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@cjk"
   fix: normalize_char
 

@@ -860,6 +860,62 @@ let l1_script_004_rule : rule =
 
 (* SCRIPT-005: Superscript uses letter l instead of \ell *)
 let l1_script_005_rule : rule =
+  (* Fix edits: rewrite each detected `^l` → `^{\ell}` and `^{l}` → `^{\ell}`
+     INSIDE math. Offsets are computed by scanning the ORIGINAL source [s]
+     directly (NOT a length-changing transform), gated to genuine math ranges
+     via [find_math_ranges] + [is_in_math_range]; the verbatim/comment/url
+     filter is applied by [mk_result_with_fix_vcu_exempt] (math-targeting
+     producer, so math is kept but a `$..$` written inside a comment/verbatim is
+     not rewritten). The byte-matching logic mirrors the [run] scan below
+     exactly (same `^l`/`^{l}` shapes, same standalone-l guard) so it edits
+     precisely the occurrences the diagnostic counts. The COUNT below is
+     unchanged (still the untouched [extract_math_segments] scan), guaranteeing
+     a byte-identical diagnostic / 0-diff differential.
+
+     For `^l`: replace the single `l` byte with `{\ell}` → `^{\ell}`. For
+     `^{l}`: replace the single `l` byte with `\ell` → `^{\ell}`. Idempotent:
+     after the rewrite the byte following `^` is `{` and the byte after that is
+     `\` (not `l`), so neither shape re-matches. *)
+  let mk_fix_edits s =
+    let n = String.length s in
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n do
+      if s.[!i] = '^' && inside !i then
+        let j = !i + 1 in
+        if j < n then
+          if s.[j] = 'l' then (
+            (* standalone l: next char is not alphanumeric *)
+            let after = j + 1 in
+            let is_end =
+              after >= n
+              ||
+              let c = s.[after] in
+              not
+                ((c >= 'a' && c <= 'z')
+                || (c >= 'A' && c <= 'Z')
+                || (c >= '0' && c <= '9'))
+            in
+            if is_end then
+              edits :=
+                Cst_edit.replace ~start_offset:j ~end_offset:(j + 1) "{\\ell}"
+                :: !edits;
+            i := after)
+          else if s.[j] = '{' then (
+            if j + 2 < n && s.[j + 1] = 'l' && s.[j + 2] = '}' then
+              edits :=
+                Cst_edit.replace ~start_offset:(j + 1) ~end_offset:(j + 2)
+                  "\\ell"
+                :: !edits;
+            i := j + 1)
+          else i := j + 1
+        else i := j + 1
+      else incr i
+    done;
+    List.rev !edits
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -896,15 +952,36 @@ let l1_script_005_rule : rule =
         done)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-005" ~severity:Info
-           ~message:{|Superscript uses letter l instead of \ell|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-005" ~severity:Info
+             ~message:{|Superscript uses letter l instead of \ell|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-005" ~severity:Info
+             ~message:{|Superscript uses letter l instead of \ell|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SCRIPT-005"; run; languages = [] }
 
-(* SCRIPT-006: Degree symbol typed ° (U+00B0) instead of ^\circ in math *)
+(* SCRIPT-006: Degree symbol typed ° (U+00B0) instead of ^\circ in math. Fix
+   producer (v27.1.9): each ° (UTF-8 C2 B0) inside math mode is replaced by the
+   literal string ^{\circ}. The DIAGNOSE-ONLY count is untouched (same
+   per-segment count_substring). The fix offsets are computed independently over
+   the ORIGINAL string `s` via find_all_non_overlapping, filtered to math ranges
+   (find_math_ranges / is_in_math_range). Replacing the whole 2-byte sequence
+   never lands on a continuation byte, and the output contains no more ° so the
+   rule no longer fires there → idempotent and convergent. *)
 let l1_script_006_rule : rule =
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    Validators_l0_typo.find_all_non_overlapping s "\xc2\xb0"
+    |> List.filter (fun off -> is_in_math_range math off)
+    |> List.map (fun off ->
+           Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "^{\\circ}")
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -914,9 +991,16 @@ let l1_script_006_rule : rule =
         cnt := !cnt + count_substring seg "\xc2\xb0")
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-006" ~severity:Info
-           ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-006" ~severity:Info
+             ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"SCRIPT-006" ~severity:Info
+             ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SCRIPT-006"; run; languages = [] }

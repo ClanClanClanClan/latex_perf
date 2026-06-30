@@ -2141,7 +2141,7 @@ let l1_cjk_008_rule : rule =
     let cnt = List.length edits in
     if cnt > 0 then
       Some
-        (mk_result_with_fix ~id:"CJK-008" ~severity:Warning
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"CJK-008" ~severity:Warning
            ~message:"Full‑width space U+3000 inside math mode" ~count:cnt
            ~fix:edits)
     else None
@@ -2182,7 +2182,7 @@ let l1_cjk_015_rule : rule =
     let cnt = List.length edits in
     if cnt > 0 then
       Some
-        (mk_result_with_fix ~id:"CJK-015" ~severity:Warning
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"CJK-015" ~severity:Warning
            ~message:"Chinese comma U+3001 inside math mode" ~count:cnt
            ~fix:edits)
     else None

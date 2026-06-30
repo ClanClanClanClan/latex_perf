@@ -100,8 +100,8 @@ let missing_section_title : rule =
       in
       let count = List.length ranges in
       Some
-        (mk_result_with_fix ~id:"STRUCT-002" ~severity:Warning ~message ~count
-           ~fix)
+        (mk_result_with_fix_exempt ~src:s ~id:"STRUCT-002" ~severity:Warning
+           ~message ~count ~fix)
   in
   { id = "STRUCT-002"; run; languages = [] }
 
@@ -1841,7 +1841,7 @@ let r_spc_002 : rule =
              ~message:"Line containing only whitespace" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-002" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-002" ~severity:Info
              ~message:"Line containing only whitespace" ~count:!matched ~fix)
     else None
   in
@@ -2099,7 +2099,7 @@ let r_spc_028 : rule =
              ~message:"Multiple consecutive ~ NBSPs" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-028" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-028" ~severity:Warning
              ~message:"Multiple consecutive ~ NBSPs" ~count:cnt ~fix)
     else None
   in
@@ -2183,7 +2183,7 @@ let r_spc_008 : rule =
              ~message:"Paragraph starts with whitespace" ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-008" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-008" ~severity:Info
              ~message:"Paragraph starts with whitespace" ~count:!cnt ~fix)
     else None
   in
@@ -2218,7 +2218,7 @@ let r_spc_009 : rule =
              ~message:"Non‑breaking space ~ at line start" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-009" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-009" ~severity:Warning
              ~message:"Non‑breaking space ~ at line start" ~count:!matched ~fix)
     else None
   in
@@ -2349,7 +2349,7 @@ let r_spc_016 : rule =
              ~message:"Space before semicolon" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-016" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-016" ~severity:Warning
              ~message:"Space before semicolon" ~count:cnt ~fix)
     else None
   in
@@ -2433,7 +2433,7 @@ let r_spc_019 : rule =
              ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-019" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-019" ~severity:Warning
              ~message:"Trailing full‑width space U+3000 at line end"
              ~count:!matched ~fix:edits)
     else None
@@ -2472,7 +2472,7 @@ let r_spc_021 : rule =
              ~message:"Space before colon" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-021" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-021" ~severity:Warning
              ~message:"Space before colon" ~count:cnt ~fix)
     else None
   in
@@ -2517,7 +2517,7 @@ let r_spc_025 : rule =
              ~message:{|Space before ellipsis \dots|} ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-025" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-025" ~severity:Info
              ~message:{|Space before ellipsis \dots|} ~count:cnt ~fix)
     else None
   in
@@ -2633,7 +2633,7 @@ let r_spc_030 : rule =
              ~message:"Line starts with full‑width space U+3000" ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-030" ~severity:Warning
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-030" ~severity:Warning
              ~message:"Line starts with full‑width space U+3000" ~count:!matched
              ~fix:edits)
     else None
@@ -2827,7 +2827,7 @@ let r_spc_035 : rule =
              ~count:!matched)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-035" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-035" ~severity:Info
              ~message:"Leading thin‑space U+2009 at start of line"
              ~count:!matched ~fix:edits)
     else None
@@ -2885,7 +2885,7 @@ let r_spc_010 : rule =
              ~message:"Sentence spacing uses two spaces after period" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-010" ~severity:Info
+          (mk_result_with_fix_exempt ~src:s ~id:"SPC-010" ~severity:Info
              ~message:"Sentence spacing uses two spaces after period" ~count:cnt
              ~fix))
     else None
@@ -2965,7 +2965,7 @@ let r_spc_022 : rule =
           (find_all_non_overlapping s needle)
       in
       Some
-        (mk_result_with_fix ~id:"SPC-022" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"SPC-022" ~severity:Info
            ~message:"Tab after bullet in \\itemize" ~count:cnt ~fix)
     else None
   in
@@ -3031,6 +3031,12 @@ let r_spc_027 : rule =
           (mk_result ~id:"SPC-027" ~severity:Warning
              ~message:"Trailing whitespace inside \\url{}" ~count:cnt)
       else
+        (* SPC-027 deliberately edits INSIDE \url{} (its whole purpose), so it
+           must NOT route through the exempt constructor (which would drop every
+           url edit). The audit's low-severity edge — a literal \url{} shown
+           inside a verbatim block getting its inner whitespace trimmed — needs
+           a verbatim/comment-only filter (no such helper yet); tracked for a
+           follow-up. Plain constructor preserves the rule's function here. *)
         Some
           (mk_result_with_fix ~id:"SPC-027" ~severity:Warning
              ~message:"Trailing whitespace inside \\url{}" ~count:cnt ~fix)
@@ -3126,7 +3132,7 @@ let r_spc_020 : rule =
     done;
     if !cnt > 0 then
       Some
-        (mk_result_with_fix ~id:"SPC-020" ~severity:Warning
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"SPC-020" ~severity:Warning
            ~message:"Tab character inside math mode" ~count:!cnt
            ~fix:(List.rev !edits))
     else None

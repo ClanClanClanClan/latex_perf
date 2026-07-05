@@ -28,3 +28,15 @@ jobs:
           L0_VALIDATORS: pilot
         run: |
           bash scripts/smoke_rules_pilot_cli.sh
+
+      - name: Install python deps for gates
+        run: pip install pyyaml
+
+      - name: Producer coverage + correctness gate
+        run: python3 scripts/tools/check_producer_coverage.py
+
+      - name: Apply-fixes convergence safety
+        run: python3 scripts/tools/check_apply_fixes_safety.py --repo .
+
+      - name: Verbatim safety
+        run: python3 scripts/tools/check_verbatim_safety.py --repo .

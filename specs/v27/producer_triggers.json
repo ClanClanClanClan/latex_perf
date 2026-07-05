@@ -1,0 +1,902 @@
+{
+ "AR-002": {
+  "expected_hex": "d9a05c61726162696364617368d9a1",
+  "hex": "d9a02dd9a1",
+  "note": "ASCII hyphen between two Arabic-Indic digits (U+0660,U+0661); expected",
+  "pilot": true
+ },
+ "CHAR-005": {
+  "expected_hex": "61620a",
+  "hex": "6101620a",
+  "note": "A control char U+0001 between letters; expected fix deletes the byte -",
+  "pilot": true
+ },
+ "CHAR-006": {
+  "expected_hex": "61620a",
+  "hex": "6108620a",
+  "note": "Backspace U+0008 between letters; fix deletes it -> 'ab'",
+  "pilot": true
+ },
+ "CHAR-007": {
+  "expected_hex": "61620a",
+  "hex": "6107620a",
+  "note": "Bell byte U+0007 between 'a' and 'b'; expected fixed output deletes th",
+  "pilot": true
+ },
+ "CHAR-008": {
+  "expected_hex": "61620a",
+  "hex": "610c620a",
+  "note": "Form feed U+000C between letters; fix deletes it \u2192 'ab'",
+  "pilot": true
+ },
+ "CHAR-009": {
+  "expected_hex": "61620a",
+  "hex": "617f620a",
+  "note": "DEL byte U+007F between letters; fix deletes it -> 'ab'",
+  "pilot": true
+ },
+ "CHAR-012": {
+  "expected_hex": "61620a",
+  "hex": "61e2808d620a",
+  "note": "Zero-width joiner U+200D between two ASCII letters; expected fix delet",
+  "pilot": true
+ },
+ "CHAR-013": {
+  "expected_hex": "61620a",
+  "hex": "61e281a6620a",
+  "note": "Bidi isolate U+2066 in text 'a<LRI>b' -> deleted to 'ab'",
+  "pilot": true
+ },
+ "CHAR-014": {
+  "expected_hex": "61620a",
+  "hex": "61efbfbd620a",
+  "note": "Text with U+FFFD replacement char between letters; fix deletes it -> '",
+  "pilot": true
+ },
+ "CHAR-016": {
+  "expected_hex": "6162636162632c6162636162630a",
+  "hex": "616263616263e380816162636162630a",
+  "note": "U+3001 fullwidth ideographic comma in an ASCII-majority context -> ASC",
+  "pilot": true
+ },
+ "CHAR-017": {
+  "expected_hex": "46756c6c417769647468",
+  "hex": "46756c6cefbca17769647468",
+  "note": "Fullwidth Latin letter U+FF21 (\uff21) inside a word; expected ASCII 'A' ->",
+  "pilot": true
+ },
+ "CHAR-018": {
+  "expected_hex": "616666620a",
+  "hex": "61efac80620a",
+  "note": "Ligature U+FB00 (ff) between letters; expected replace_with_ascii -> '",
+  "pilot": true
+ },
+ "CHAR-019": {
+  "expected_hex": "612d6220697320746578740a",
+  "hex": "61e288926220697320746578740a",
+  "note": "U+2212 minus in text mode; fix replaces with ASCII '-'",
+  "pilot": true
+ },
+ "CHEM-005": {
+  "expected_hex": "24615c72696768746172726f772062240a",
+  "hex": "24612d3e62240a",
+  "note": "ASCII '->' inside inline math; expected replacement '->' -> '\\rightarr",
+  "pilot": true
+ },
+ "CHEM-009": {
+  "expected_hex": "24615c72696768746c656674686172706f6f6e732062240a",
+  "hex": "24613c2d3e62240a",
+  "note": "ASCII equilibrium arrow '<=>' in math; fix \u2192 \\rightleftharpoons",
+  "pilot": true
+ },
+ "CJK-001": {
+  "expected_hex": "48656c6c6f2c776f726c6420616e64206d6f7265206173636969207465787420686572650a",
+  "hex": "48656c6c6fefbc8c776f726c6420616e64206d6f7265206173636969207465787420686572650a",
+  "note": "Full-width comma U+FF0C in ASCII-majority context -> ASCII ','",
+  "pilot": true
+ },
+ "CJK-002": {
+  "expected_hex": "6162632e6465660a",
+  "hex": "616263efbc8e6465660a",
+  "note": "Full-width period U+FF0E in an ASCII context (abc\uff0edef); expected fix r",
+  "pilot": true
+ },
+ "CJK-004": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b7865434a4b7d0a5c626567696e7b646f63756d656e747d0ae4bda00a5c656e647b646f63756d656e747d0a",
+  "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0ae4bda00a5c656e647b646f63756d656e747d0a",
+  "note": "CJK glyph U+4F60 with no xeCJK package -> inserts \\usepackage{xeCJK} a",
+  "pilot": true
+ },
+ "CJK-006": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b727562797d0a5c626567696e7b646f63756d656e747d0a5c727562797be6bca27d7be3818be382937d0a5c656e647b646f63756d656e747d0a",
+  "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a5c727562797be6bca27d7be3818be382937d0a5c656e647b646f63756d656e747d0a",
+  "note": "\\ruby{\u6f22}{\u304b\u3093} without ruby package; fix inserts \\usepackage{ruby} after",
+  "pilot": true
+ },
+ "CJK-008": {
+  "expected_hex": "246162240a",
+  "hex": "2461e3808062240a",
+  "note": "U+3000 full-width space inside inline math is deleted. $a<U+3000>b$ ->",
+  "pilot": true
+ },
+ "CJK-010": {
+  "expected_hex": "e4b8ade69687e6b58be8af95efbc8ce4b8ade69687e6b58be8af95",
+  "hex": "e4b8ade69687e6b58be8af952ce4b8ade69687e6b58be8af95",
+  "note": "Half-width ASCII comma surrounded by CJK (strict extended context); ex",
+  "pilot": true
+ },
+ "CJK-014": {
+  "expected_hex": "612e620a",
+  "hex": "61e383bb620a",
+  "note": "Inter-punct U+30FB in ASCII context; expected replace_ascii ('.') -> '",
+  "pilot": true
+ },
+ "CJK-015": {
+  "expected_hex": "247879240a",
+  "hex": "2478e3808179240a",
+  "note": "Chinese comma U+3001 inside inline math; fix deletes the 3 bytes -> '$",
+  "pilot": true
+ },
+ "CS-001": {
+  "expected_hex": "41c2b0430a",
+  "hex": "415c2cc2b0430a",
+  "note": "Thin-space token '\\,' before degC (non-digit predecessor so fix is not",
+  "pilot": true
+ },
+ "CY-001": {
+  "expected_hex": "d0982e5c2cd0982e0a",
+  "hex": "d0982e20d0982e0a",
+  "note": "Cyrillic initials '\u0418. \u0418.'; fix replaces the space with '\\,' \u2192 '\u0418.\\,\u0418.'",
+  "pilot": true
+ },
+ "EL-001": {
+  "expected_hex": "ceb1ceacceb20a",
+  "hex": "ceb1e1bdb1ceb20a",
+  "note": "Greek oxia alpha U+1F71 -> tonos alpha U+03AC (NFC normalise)",
+  "pilot": true
+ },
+ "ENC-002": {
+  "expected_hex": "61620a",
+  "hex": "61efbbbf620a",
+  "note": "BOM U+FEFF in the middle of the file (not at offset 0); expected fix d",
+  "pilot": true
+ },
+ "ENC-004": {
+  "expected_hex": "61e28093620a",
+  "hex": "6196620a",
+  "note": "Bare CP-1252 C1 byte 0x96 -> mapped to UTF-8 en-dash U+2013 (E2 80 93)",
+  "pilot": true
+ },
+ "ENC-007": {
+  "expected_hex": "61620a",
+  "hex": "61e2808b620a",
+  "note": "Zero-width space U+200B between letters; fix deletes it -> 'ab'",
+  "pilot": true
+ },
+ "ENC-012": {
+  "expected_hex": "61620a",
+  "hex": "61c280620a",
+  "note": "C1 control U+0080 (bytes C2 80) deleted. a<C1>b -> ab",
+  "pilot": true
+ },
+ "ENC-013": {
+  "expected_hex": "610a620a630a",
+  "hex": "610d0a620a630d0a",
+  "note": "Mixed CRLF and LF line endings; expected all CRLF normalized to LF -> ",
+  "pilot": true
+ },
+ "ENC-014": {
+  "expected_hex": "6162630a",
+  "hex": "fffe6162630a",
+  "note": "UTF-16 LE BOM (FF FE) at file start; expected remove_bom deletes 2 byt",
+  "pilot": true
+ },
+ "ENC-015": {
+  "expected_hex": "3520cebc6d206f6620776972650a",
+  "hex": "3520c2b56d206f6620776972650a",
+  "note": "MICRO SIGN U+00B5 homoglyph; NFKC fix replaces with GREEK MU U+03BC (c",
+  "pilot": true
+ },
+ "ENC-016": {
+  "expected_hex": "70616765203520656e640a",
+  "hex": "7061676520efbc9520656e640a",
+  "note": "Fullwidth digit U+FF15 (\uff15); expected replacement with ASCII '5' -> 'pa",
+  "pilot": true
+ },
+ "ENC-017": {
+  "expected_hex": "61620a",
+  "hex": "61c2ad620a",
+  "note": "Soft hyphen U+00AD between letters; fix deletes the 2 bytes \u2192 'ab'",
+  "pilot": true
+ },
+ "ENC-018": {
+  "expected_hex": "636f2d6f7065726174650a",
+  "hex": "636fe280916f7065726174650a",
+  "note": "Non-breaking hyphen U+2011 outside URL -> ASCII '-' ('co-operate')",
+  "pilot": true
+ },
+ "ENC-020": {
+  "expected_hex": "61620a",
+  "hex": "61e2808e620a",
+  "note": "Left-to-right mark U+200E between letters; expected fix deletes the 3-",
+  "pilot": true
+ },
+ "ENC-021": {
+  "expected_hex": "61620a",
+  "hex": "61e281a0620a",
+  "note": "WORD JOINER U+2060 in text -> deleted to 'ab'",
+  "pilot": true
+ },
+ "ENC-022": {
+  "expected_hex": "61620a",
+  "hex": "61efbfb9620a",
+  "note": "Interlinear annotation anchor U+FFF9 between letters; fix deletes it -",
+  "pilot": true
+ },
+ "ENC-023": {
+  "expected_hex": "61c2a0620a",
+  "hex": "61e280af620a",
+  "note": "Narrow NBSP U+202F (E2 80 AF) outside French context replaced by regul",
+  "pilot": true
+ },
+ "ENC-024": {
+  "expected_hex": "6162",
+  "hex": "61e280aa62",
+  "note": "Bidi embedding U+202A LRE (e280aa) between letters; expected the char ",
+  "pilot": true
+ },
+ "FR-007": {
+  "expected_hex": "707269782035e280afe282ac0a",
+  "hex": "70726978203520e282ac0a",
+  "note": "ASCII space directly before euro sign; expected insert_nbsp replaces t",
+  "pilot": true
+ },
+ "HE-001": {
+  "expected_hex": "d790d7b320776f72640a",
+  "hex": "d7902720776f72640a",
+  "note": "ASCII apostrophe after Hebrew aleph U+05D0; fix replaces ' with geresh",
+  "pilot": true
+ },
+ "HI-001": {
+  "expected_hex": "e0a58d780a",
+  "hex": "e0a58de2808d780a",
+  "note": "Devanagari halant U+094D followed by ZWJ U+200D; expected deletes the ",
+  "pilot": true
+ },
+ "JA-002": {
+  "expected_hex": "61e3809c620a",
+  "hex": "61efbd9e620a",
+  "note": "Fullwidth tilde U+FF5E; fix normalises to wave-dash U+301C (E3 80 9C)",
+  "pilot": true
+ },
+ "MATH-009": {
+  "expected_hex": "245c73696e2078240a",
+  "hex": "2473696e2078240a",
+  "note": "Bare 'sin' in inline math -> '\\sin' (backslash inserted)",
+  "pilot": true
+ },
+ "MATH-010": {
+  "expected_hex": "24615c6469762062240a",
+  "hex": "2461c3b762240a",
+  "note": "Division sign U+00F7 inside inline math; expected fix replaces it with",
+  "pilot": true
+ },
+ "MATH-014": {
+  "expected_hex": "245c74667261637b317d7b327d240a",
+  "hex": "245c667261637b317d7b327d240a",
+  "note": "Inline-math \\frac -> replaced with \\tfrac",
+  "pilot": true
+ },
+ "MATH-015": {
+  "expected_hex": "245c6f7665727365747b617d7b627d240a",
+  "hex": "245c737461636b72656c7b617d7b627d240a",
+  "note": "Inline math with \\stackrel{ ; fix replaces \\stackrel{ with \\overset{",
+  "pilot": true
+ },
+ "MATH-029": {
+  "expected_hex": "5c626567696e7b616c69676e7d613d625c656e647b616c69676e7d0a",
+  "hex": "5c626567696e7b65716e61727261797d613d625c656e647b65716e61727261797d0a",
+  "note": "eqnarray environment rewritten to align on both begin/end. \\begin{eqna",
+  "pilot": true
+ },
+ "MATH-043": {
+  "expected_hex": "245c6f70657261746f726e616d657b5661727d240a",
+  "hex": "245c746578747b5661727d240a",
+  "note": "\\text{Var} inside inline math; expected \\text -> \\operatorname -> '$\\o",
+  "pilot": true
+ },
+ "MATH-044": {
+  "expected_hex": "24615c6c652062240a",
+  "hex": "24613c3d62240a",
+  "note": "'<=' inside inline math; expected replace_with_symbol -> '$a\\\\le b$\\n'",
+  "pilot": true
+ },
+ "MATH-046": {
+  "expected_hex": "24312c5c63646f74732c6e240a",
+  "hex": "24312c5c6c646f74732c6e240a",
+  "note": "\\ldots between commas on relation axis in math; fix replaces with \\cdo",
+  "pilot": true
+ },
+ "MATH-053": {
+  "expected_hex": "245c6c6566742878240a",
+  "hex": "245c6c656674282078240a",
+  "note": "Space after '\\left(' inside inline math; expected deletes the single s",
+  "pilot": true
+ },
+ "MATH-061": {
+  "expected_hex": "245c6c6f675f7b31307d78240a",
+  "hex": "245c6c6f675f313078240a",
+  "note": "Inline-math \\log_10x; fix wraps base \u2192 \\log_{10}x",
+  "pilot": true
+ },
+ "MATH-078": {
+  "expected_hex": "24615c6c6f6e6772696768746172726f772062240a",
+  "hex": "24612d2d3e62240a",
+  "note": "'-->' in math -> '\\longrightarrow'",
+  "pilot": true
+ },
+ "MATH-082": {
+  "expected_hex": "24615c2162240a",
+  "hex": "24615c215c2162240a",
+  "note": "Double negative thin space \\!\\! inside math; expected fix collapses to",
+  "pilot": true
+ },
+ "MATH-083": {
+  "expected_hex": "612d620a",
+  "hex": "61e28892620a",
+  "note": "Unicode minus U+2212 in text mode -> replaced with ASCII hyphen '-'",
+  "pilot": true
+ },
+ "MATH-097": {
+  "expected_hex": "24615c696d706c6965732062240a",
+  "hex": "24613d3e62240a",
+  "note": "Inline math with => arrow; fix replaces => with \\implies",
+  "pilot": true
+ },
+ "MATH-106": {
+  "expected_hex": "24615c6e65712062240a",
+  "hex": "24615c6e6f743d62240a",
+  "note": "\\not= inside math replaced by \\neq. $a \\not= b$ -> $a \\neq b$",
+  "pilot": true
+ },
+ "MATH-108": {
+  "expected_hex": "24615c63646f742062240a",
+  "hex": "2461c2b762240a",
+  "note": "Middle dot U+00B7 (c2b7) between two letters in inline math; expected ",
+  "pilot": true
+ },
+ "PKG-011": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b626f6f6b746162737d0a5c626567696e7b646f63756d656e747d0a5c746f7072756c650a5c656e647b646f63756d656e747d0a",
+  "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a5c746f7072756c650a5c656e647b646f63756d656e747d0a",
+  "note": "\\toprule used without booktabs loaded; expected insert_usepackage adds",
+  "pilot": true
+ },
+ "PKG-012": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b637371756f7465737d0a5c626567696e7b646f63756d656e747d0a5c656e71756f74657b68697d0a5c656e647b646f63756d656e747d0a",
+  "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a5c656e71756f74657b68697d0a5c656e647b646f63756d656e747d0a",
+  "note": "\\enquote used without csquotes; fix inserts \\usepackage{csquotes} afte",
+  "pilot": true
+ },
+ "PL-001": {
+  "expected_hex": "78c2a0732e0a",
+  "hex": "7820732e0a",
+  "note": "Regular space before Polish abbreviation 's.'; expected replaces space",
+  "pilot": true
+ },
+ "REF-011": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b68797065727265667d0a5c626567696e7b646f63756d656e747d0a5c6175746f7265667b6669673a787d0a5c656e647b646f63756d656e747d0a",
+  "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c626567696e7b646f63756d656e747d0a5c6175746f7265667b6669673a787d0a5c656e647b646f63756d656e747d0a",
+  "note": "\\autoref without hyperref; fix inserts \\usepackage{hyperref} after \\do",
+  "pilot": true
+ },
+ "RO-001": {
+  "expected_hex": "436c756ac8990a",
+  "hex": "436c756ac59f0a",
+  "note": "S-cedilla U+015F -> S-comma U+0219 (Romanian correct form)",
+  "pilot": true
+ },
+ "RU-001": {
+  "expected_hex": "d182d0b5d0bad181d182c2a0e28094d181d0bbd0bed0b2d0be0a",
+  "hex": "d182d0b5d0bad181d18220e28094d181d0bbd0bed0b2d0be0a",
+  "note": "Cyrillic word + ASCII space + em-dash U+2014 (\u0442\u0435\u043a\u0441\u0442 \u2014\u0441\u043b\u043e\u0432\u043e); expected ",
+  "pilot": true
+ },
+ "SCRIPT-001": {
+  "expected_hex": "24785f7b31327d240a",
+  "hex": "24785f3132240a",
+  "note": "Multi-char subscript x_12 in math -> braced x_{12}",
+  "pilot": true
+ },
+ "SCRIPT-005": {
+  "expected_hex": "24785e7b5c656c6c7d240a",
+  "hex": "24785e6c240a",
+  "note": "Inline math superscript letter l (x^l); fix replaces l with {\\ell} -> ",
+  "pilot": true
+ },
+ "SCRIPT-006": {
+  "expected_hex": "2439305e7b5c636972637d240a",
+  "hex": "243930c2b0240a",
+  "note": "Degree symbol U+00B0 (C2 B0) inside math replaced by ^{\\circ}. $90<deg",
+  "pilot": true
+ },
+ "SCRIPT-007": {
+  "expected_hex": "24785f7b5c746578747b696e69747d7d240a",
+  "hex": "24785f7b696e69747d240a",
+  "note": "Subscript _{init} (3+ letters, non-operator) in math; expected wrapped",
+  "pilot": true
+ },
+ "SCRIPT-016": {
+  "expected_hex": "245c616c7068615e7b5c7072696d655c7072696d657d240a",
+  "hex": "245c616c7068612727240a",
+  "note": "Greek letter followed by '' in math; expected replace_with_prime -> '$",
+  "pilot": true
+ },
+ "SCRIPT-019": {
+  "expected_hex": "24785e7b5c7072696d655c7072696d657d240a",
+  "hex": "24782727240a",
+  "note": "Double prime '' in math; fix replaces with ^{\\prime\\prime}",
+  "pilot": true
+ },
+ "SPC-002": {
+  "expected_hex": "610a0a620a",
+  "hex": "610a2020200a620a",
+  "note": "Middle line contains only 3 spaces; expected strips the whitespace lea",
+  "pilot": true
+ },
+ "SPC-003": {
+  "expected_hex": "2020202020666f6f0a",
+  "hex": "0920666f6f0a",
+  "note": "Mixed tab+space indent; fix converts tab\u21924 spaces preserving space \u2192 5",
+  "pilot": true
+ },
+ "SPC-004": {
+  "expected_hex": "610a620a",
+  "hex": "610d620a",
+  "note": "Bare CR U+000D (no LF) -> LF (normalise line ending)",
+  "pilot": true
+ },
+ "SPC-005": {
+  "expected_hex": "6162630a",
+  "hex": "616263090a",
+  "note": "Trailing tab at end of line ('abc\\t\\n'); expected fix strips the trail",
+  "pilot": true
+ },
+ "SPC-006": {
+  "expected_hex": "2020202020780a",
+  "hex": "0920780a",
+  "note": "Mixed tab+space indent '<TAB> x' -> tab converted to 4 spaces giving '",
+  "pilot": true
+ },
+ "SPC-008": {
+  "expected_hex": "68656c6c6f20776f726c640a",
+  "hex": "20202068656c6c6f20776f726c640a",
+  "note": "Paragraph line starting with leading whitespace; fix removes the leadi",
+  "pilot": true
+ },
+ "SPC-009": {
+  "expected_hex": "7465787420686572650a",
+  "hex": "7e7465787420686572650a",
+  "note": "Non-breaking tie ~ at start of line deleted. ~text here -> text here (",
+  "pilot": true
+ },
+ "SPC-010": {
+  "expected_hex": "466f6f2e204261720a",
+  "hex": "466f6f2e20204261720a",
+  "note": "Two spaces after sentence-ending period before capital; expected colla",
+  "pilot": true
+ },
+ "SPC-011": {
+  "expected_hex": "2424610a24240a",
+  "hex": "242461200a24240a",
+  "note": "Trailing space before newline inside $$..$$ display; expected remove_s",
+  "pilot": true
+ },
+ "SPC-016": {
+  "expected_hex": "776f72643b0a",
+  "hex": "776f7264203b0a",
+  "note": "Space before semicolon; fix deletes the space -> 'word;'",
+  "pilot": true
+ },
+ "SPC-018": {
+  "expected_hex": "656e642e204e6578740a",
+  "hex": "656e642e4e6578740a",
+  "note": "Sentence-ending period directly followed by uppercase; expected insert",
+  "pilot": true
+ },
+ "SPC-019": {
+  "expected_hex": "666f6f0a",
+  "hex": "666f6fe380800a",
+  "note": "Trailing full-width space U+3000 at line end; fix deletes the run \u2192 'f",
+  "pilot": true
+ },
+ "SPC-020": {
+  "expected_hex": "24782b2079240a",
+  "hex": "2478092b2079240a",
+  "note": "Tab inside inline math -> deleted (TeX ignores math whitespace; remove",
+  "pilot": true
+ },
+ "SPC-021": {
+  "expected_hex": "776f72643a656e640a",
+  "hex": "776f7264203a656e640a",
+  "note": "Space before colon ('word :end'); expected fix deletes the space -> 'w",
+  "pilot": true
+ },
+ "SPC-022": {
+  "expected_hex": "5c6974656d20780a",
+  "hex": "5c6974656d09780a",
+  "note": "Tab after \\item -> replaced with single space '\\item x'",
+  "pilot": true
+ },
+ "SPC-025": {
+  "expected_hex": "666f6f5c646f7473206261720a",
+  "hex": "666f6f205c646f7473206261720a",
+  "note": "Space before \\dots; fix deletes the space -> 'foo\\dots bar'",
+  "pilot": true
+ },
+ "SPC-027": {
+  "expected_hex": "5c75726c7b687474703a2f2f782e636f6d7d0a",
+  "hex": "5c75726c7b687474703a2f2f782e636f6d207d0a",
+  "note": "Trailing whitespace inside \\url{} trimmed. \\url{http://x.com } -> \\url",
+  "pilot": true
+ },
+ "SPC-028": {
+  "expected_hex": "617e620a",
+  "hex": "617e7e620a",
+  "note": "Two consecutive ~ NBSPs; expected collapse to a single ~ -> 'a~b'",
+  "pilot": true
+ },
+ "SPC-029": {
+  "expected_hex": "20780a",
+  "hex": "c2a0780a",
+  "note": "Line-leading NBSP U+00A0 indentation; expected replace_space -> ' x\\n'",
+  "pilot": true
+ },
+ "SPC-030": {
+  "expected_hex": "7465787420686572650a",
+  "hex": "e380807465787420686572650a",
+  "note": "Line starts with full-width space U+3000; fix deletes leading run",
+  "pilot": true
+ },
+ "SPC-031": {
+  "expected_hex": "612e20620a",
+  "hex": "612e202020620a",
+  "note": "Period followed by three spaces; expected collapses the run to one spa",
+  "pilot": true
+ },
+ "SPC-032": {
+  "expected_hex": "2020666f6f0a",
+  "hex": "c2a020666f6f0a",
+  "note": "Leading NBSP+space indent mix; fix rewrites run to ASCII spaces \u2192 2 sp",
+  "pilot": true
+ },
+ "SPC-033": {
+  "expected_hex": "776f726420e280946e6578740a",
+  "hex": "776f7264c2a0e280946e6578740a",
+  "note": "NBSP U+00A0 before em-dash in English text -> regular ASCII space",
+  "pilot": true
+ },
+ "SPC-034": {
+  "expected_hex": "61e28093620a",
+  "hex": "61e28089e28093620a",
+  "note": "Thin space U+2009 before en-dash U+2013; expected fix deletes the 3-by",
+  "pilot": true
+ },
+ "SPC-035": {
+  "expected_hex": "780a",
+  "hex": "e28089780a",
+  "note": "Leading thin-space U+2009 at line start -> deleted, line becomes 'x'",
+  "pilot": true
+ },
+ "STRUCT-001": {
+  "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a68656c6c6f20776f726c640a",
+  "hex": "68656c6c6f20776f726c640a",
+  "note": "Document with no \\documentclass (must run WITHOUT L0_VALIDATORS=pilot,",
+  "pilot": false
+ },
+ "STRUCT-002": {
+  "expected_hex": "5c73656374696f6e7b556e7469746c65647d0a",
+  "hex": "5c73656374696f6e7b7d0a",
+  "note": "Empty section title filled with placeholder. \\section{} -> \\section{Un",
+  "pilot": false
+ },
+ "STYLE-015": {
+  "expected_hex": "466f6f2e204261720a",
+  "hex": "466f6f2e20204261720a",
+  "note": "Double space after period (L4 Class-D; not shown in default lint but f",
+  "pilot": true
+ },
+ "STYLE-023": {
+  "expected_hex": "35305c25206f66660a",
+  "hex": "353025206f66660a",
+  "note": "Digit-preceded literal percent '50%'; expected escape_percent -> '50\\\\",
+  "pilot": true
+ },
+ "STYLE-024": {
+  "expected_hex": "536d697468205c26204a6f6e65732077726f746520746869732e0a",
+  "hex": "536d6974682026204a6f6e65732077726f746520746869732e0a",
+  "note": "Bare & in text (no tabular/align); Class-D rule, absent from default l",
+  "pilot": true
+ },
+ "STYLE-033": {
+  "expected_hex": "466f6f5c636974657b6261727d0a",
+  "hex": "466f6f205c636974657b6261727d0a",
+  "note": "Space before \\cite (Class-D rule, only visible via --apply-fixes-for);",
+  "pilot": true
+ },
+ "TYPO-001": {
+  "expected_hex": "73617920e2809c6869e2809d206e6f770a",
+  "hex": "7361792022686922206e6f770a",
+  "note": "ASCII straight quotes; fix alternates to curly U+201C/U+201D \u2192 \u201chi\u201d",
+  "pilot": true
+ },
+ "TYPO-002": {
+  "expected_hex": "6120e2809320620a",
+  "hex": "61202d2d20620a",
+  "note": "Double hyphen '--' in prose -> en-dash U+2013",
+  "pilot": true
+ },
+ "TYPO-003": {
+  "expected_hex": "6120e2809420620a",
+  "hex": "61202d2d2d20620a",
+  "note": "Triple hyphen '---' in prose; expected fix replaces with em-dash U+201",
+  "pilot": true
+ },
+ "TYPO-004": {
+  "expected_hex": "e2809c68656c6c6fe2809d0a",
+  "hex": "606068656c6c6f27270a",
+  "note": "TeX ``...'' quotes -> curly quotes U+201C hello U+201D (auto_replace)",
+  "pilot": true
+ },
+ "TYPO-005": {
+  "expected_hex": "666f6f205c646f7473206261720a",
+  "hex": "666f6f202e2e2e206261720a",
+  "note": "Three literal periods in text; fix replaces ... with \\dots",
+  "pilot": true
+ },
+ "TYPO-006": {
+  "expected_hex": "6120202020620a",
+  "hex": "6109620a",
+  "note": "Hard tab outside verbatim replaced by 4 spaces. a<TAB>b -> a    b",
+  "pilot": true
+ },
+ "TYPO-007": {
+  "expected_hex": "666f6f0a6261720a",
+  "hex": "666f6f2020200a6261720a",
+  "note": "Trailing spaces at end of line; expected them stripped -> 'foo\\nbar\\n'",
+  "pilot": true
+ },
+ "TYPO-008": {
+  "expected_hex": "610a0a620a",
+  "hex": "610a0a0a0a620a",
+  "note": "Run of 4 consecutive newlines (>2 blank lines); expected collapse_blan",
+  "pilot": true
+ },
+ "TYPO-009": {
+  "expected_hex": "746578742061742073746172740a",
+  "hex": "7e746578742061742073746172740a",
+  "note": "NBSP ~ at line start; fix deletes the tilde",
+  "pilot": true
+ },
+ "TYPO-010": {
+  "expected_hex": "612c620a",
+  "hex": "61202c620a",
+  "note": "Space before comma; expected deletes the leading space -> 'a,b'",
+  "pilot": true
+ },
+ "TYPO-012": {
+  "expected_hex": "24355e5c7072696d65240a",
+  "hex": "243527240a",
+  "note": "Digit+apostrophe in math; fix replaces ' with ^\\prime \u2192 $5^\\prime$",
+  "pilot": true
+ },
+ "TYPO-013": {
+  "expected_hex": "e28098776f7264270a",
+  "hex": "60776f7264270a",
+  "note": "ASCII backtick opening quote -> left single quote U+2018",
+  "pilot": true
+ },
+ "TYPO-014": {
+  "expected_hex": "353025646f6e650a",
+  "hex": "35302025646f6e650a",
+  "note": "Space before percent sign ('50 %done'); expected fix deletes the space",
+  "pilot": true
+ },
+ "TYPO-015": {
+  "expected_hex": "615c25620a",
+  "hex": "615c255c25620a",
+  "note": "Double \\%\\% -> collapsed to single \\%",
+  "pilot": true
+ },
+ "TYPO-016": {
+  "expected_hex": "7365657e5c636974657b787d0a",
+  "hex": "736565205c636974657b787d0a",
+  "note": "Space before \\cite; fix replaces the space with ~ -> 'see~\\cite{x}'",
+  "pilot": true
+ },
+ "TYPO-017": {
+  "expected_hex": "5c27650a",
+  "hex": "5c277b657d0a",
+  "note": "TeX accent command with braces normalized to brace-free form. \\'{e} ->",
+  "pilot": true
+ },
+ "TYPO-018": {
+  "expected_hex": "666f6f206261720a",
+  "hex": "666f6f2020206261720a",
+  "note": "Run of 3 spaces in text (not the period+capital SPC-010 case); expecte",
+  "pilot": true
+ },
+ "TYPO-021": {
+  "expected_hex": "656e642e2e2e204e6578740a",
+  "hex": "656e642e2e2e4e6578740a",
+  "note": "'...N' capital after ellipsis without space; expected insert_space -> ",
+  "pilot": true
+ },
+ "TYPO-022": {
+  "expected_hex": "2868656c6c6f290a",
+  "hex": "2868656c6c6f20290a",
+  "note": "Space before closing paren; fix deletes the space -> '(hello)'",
+  "pilot": true
+ },
+ "TYPO-023": {
+  "expected_hex": "61205c2620620a",
+  "hex": "61202620620a",
+  "note": "Bare ampersand outside tabular; expected inserts backslash -> 'a \\& b'",
+  "pilot": true
+ },
+ "TYPO-024": {
+  "expected_hex": "666f6f0a",
+  "hex": "666f6f2d0a",
+  "note": "Dangling dash at line end; fix deletes trailing dash \u2192 'foo'",
+  "pilot": true
+ },
+ "TYPO-025": {
+  "expected_hex": "35e28093360a",
+  "hex": "3520e28093360a",
+  "note": "Space before en-dash in number range '5 \u20136' -> '5\u20136' (space removed)",
+  "pilot": true
+ },
+ "TYPO-026": {
+  "expected_hex": "31322d2d33340a",
+  "hex": "3132e2809333340a",
+  "note": "En-dash U+2013 between digits (12\u201334); expected fix replaces the en-da",
+  "pilot": true
+ },
+ "TYPO-027": {
+  "expected_hex": "576f77210a",
+  "hex": "576f7721210a",
+  "note": "Multiple '!!' -> collapsed to single '!'",
+  "pilot": true
+ },
+ "TYPO-028": {
+  "expected_hex": "5c5b785c5d0a",
+  "hex": "24247824240a",
+  "note": "$$...$$ display-math delimiters; fix replaces the pair with \\[ ... \\] ",
+  "pilot": true
+ },
+ "TYPO-029": {
+  "expected_hex": "5c7265667b6571317d7e780a",
+  "hex": "5c7265667b6571317d20780a",
+  "note": "Missing non-breaking space after \\ref{...} inserted. \\ref{eq1} x -> \\r",
+  "pilot": true
+ },
+ "TYPO-032": {
+  "expected_hex": "746578745c636974657b617d0a",
+  "hex": "746578742c5c636974657b617d0a",
+  "note": "Comma immediately before \\cite; expected the comma removed -> 'text\\ci",
+  "pilot": true
+ },
+ "TYPO-033": {
+  "expected_hex": "657420616c2e207075626c69736865640a",
+  "hex": "65742e616c207075626c69736865640a",
+  "note": "'et.al' abbreviation; expected fix rewrites to 'et al.' -> 'et al. pub",
+  "pilot": true
+ },
+ "TYPO-034": {
+  "expected_hex": "776f72645c666f6f746e6f74657b787d0a",
+  "hex": "776f7264205c666f6f746e6f74657b787d0a",
+  "note": "Space before \\footnote; fix deletes the space -> 'word\\footnote{x}'",
+  "pilot": true
+ },
+ "TYPO-035": {
+  "expected_hex": "61c2a0210a",
+  "hex": "6120210a",
+  "note": "Regular space before '!' (French NBSP rule, languages=[]); expected re",
+  "pilot": true
+ },
+ "TYPO-037": {
+  "expected_hex": "666f6f2c6261720a",
+  "hex": "666f6f202c6261720a",
+  "note": "Space before comma; fix removes the space \u2192 'foo,bar'",
+  "pilot": true
+ },
+ "TYPO-038": {
+  "expected_hex": "436f6e74616374206d65206174205c687265667b6d61696c746f3a6140622e636f6d7d7b6140622e636f6d7d20746f6461790a",
+  "hex": "436f6e74616374206d65206174206140622e636f6d20746f6461790a",
+  "note": "Bare e-mail -> wrapped in \\href{mailto:a@b.com}{a@b.com}",
+  "pilot": true
+ },
+ "TYPO-039": {
+  "expected_hex": "536565205c75726c7b68747470733a2f2f6578616d706c652e636f6d7d20686572650a",
+  "hex": "5365652068747470733a2f2f6578616d706c652e636f6d20686572650a",
+  "note": "Bare unwrapped URL in prose; expected fix wraps it in \\url{...} -> 'Se",
+  "pilot": true
+ },
+ "TYPO-042": {
+  "expected_hex": "576861743f0a",
+  "hex": "576861743f3f0a",
+  "note": "Multiple '??' -> collapsed to single '?'",
+  "pilot": true
+ },
+ "TYPO-046": {
+  "expected_hex": "2478240a",
+  "hex": "5c626567696e7b6d6174687d785c656e647b6d6174687d0a",
+  "note": "\\begin{math}x\\end{math}; fix replaces the delimiters with $ ... $ -> '",
+  "pilot": true
+ },
+ "TYPO-049": {
+  "expected_hex": "e2809c780a",
+  "hex": "e2809c20780a",
+  "note": "Space after opening curly quote U+201C deleted. <U+201C> x -> <U+201C>",
+  "pilot": true
+ },
+ "TYPO-051": {
+  "expected_hex": "615c7468696e73706163657b7d620a",
+  "hex": "61e28089620a",
+  "note": "Thin space U+2009 (e28089) mid-text (not line-start); expected replace",
+  "pilot": true
+ },
+ "TYPO-052": {
+  "expected_hex": "61205c746578746c6573737b7d20620a",
+  "hex": "61203c20620a",
+  "note": "Unescaped '<' in text; expected escape_angle -> 'a \\\\textless{} b\\n'. ",
+  "pilot": true
+ },
+ "TYPO-053": {
+  "expected_hex": "615c646f74737b7d6220686572650a",
+  "hex": "61e28baf6220686572650a",
+  "note": "U+22EF midline ellipsis outside math; fix replaces with \\dots{}",
+  "pilot": true
+ },
+ "TYPO-054": {
+  "expected_hex": "61e280935c2c620a",
+  "hex": "61e28093620a",
+  "note": "Letter en-dash (U+2013) letter range; expected inserts '\\,' after the ",
+  "pilot": true
+ },
+ "TYPO-055": {
+  "expected_hex": "615c2c620a",
+  "hex": "615c2c5c2c620a",
+  "note": "Consecutive thin-spaces \\,\\,; fix collapses to single \\, \u2192 'a\\,b'",
+  "pilot": true
+ },
+ "TYPO-057": {
+  "expected_hex": "497420697320355c2cc2b04320746f6461790a",
+  "hex": "49742069732035c2b04320746f6461790a",
+  "note": "'5\u00b0C' (digit+degree, no space) -> '5\\,\u00b0C' (thin space inserted)",
+  "pilot": true
+ },
+ "TYPO-058": {
+  "expected_hex": "68656c6c6f20776f726c640a",
+  "hex": "68ceb56c6c6f20776f726c640a",
+  "note": "Greek homograph \u03b5 U+03B5 inside a Latin word (h\u03b5llo); expected fix rep",
+  "pilot": true
+ },
+ "TYPO-061": {
+  "expected_hex": "33245c74696d657324340a",
+  "hex": "33c397340a",
+  "note": "Unicode multiplication sign U+00D7 in text -> replaced with $\\times$",
+  "pilot": true
+ },
+ "TYPO-062": {
+  "expected_hex": "5061746820615c746578746261636b736c6173687b7d6220656e640a",
+  "hex": "5061746820615c5c6220656e640a",
+  "note": "Literal backslash pair sandwiched between word chars (a\\\\b); fix repla",
+  "pilot": true
+ },
+ "VERB-002": {
+  "expected_hex": "5c626567696e7b766572626174696d7d0a20202020610a5c656e647b766572626174696d7d0a",
+  "hex": "5c626567696e7b766572626174696d7d0a09610a5c656e647b766572626174696d7d0a",
+  "note": "Tab inside a verbatim body converted to 4 spaces (VERB-002 deliberatel",
+  "pilot": true
+ }
+}

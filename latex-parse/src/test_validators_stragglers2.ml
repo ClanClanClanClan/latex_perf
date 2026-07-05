@@ -265,6 +265,58 @@ let () =
       expect
         (does_not_fire "REF-011" "See \\ref{fig:x}")
         (tag ^ ": no autoref ok"));
+  (* Fix producer (v27.1.12): insert \usepackage{hyperref} after \documentclass.
+     Count unchanged, idempotent, convergent. *)
+  run "REF-011 count unchanged with fix" (fun tag ->
+      expect
+        (fires_with_count "REF-011"
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
+            See \\autoref{fig:x}\n\
+            \\end{document}"
+           1)
+        (tag ^ ": count still 1"));
+  run "REF-011 emits fix with documentclass" (fun tag ->
+      expect
+        (fires_with_fix "REF-011"
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
+            See \\autoref{fig:x}\n\
+            \\end{document}")
+        (tag ^ ": has fix"));
+  run "REF-011 fix inserts hyperref after documentclass" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\
+         See \\autoref{fig:x}\n\
+         \\end{document}"
+      in
+      let out = apply_fix "REF-011" src in
+      expect
+        (out
+        = "\\documentclass{article}\n\
+           \\usepackage{hyperref}\n\
+           \\begin{document}\n\
+           See \\autoref{fig:x}\n\
+           \\end{document}")
+        (tag ^ ": hyperref inserted"));
+  run "REF-011 fix is idempotent (2nd pass no-op)" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\begin{document}\n\
+         See \\autoref{fig:x}\n\
+         \\end{document}"
+      in
+      let once = apply_fix "REF-011" src in
+      let twice = apply_fix "REF-011" once in
+      expect
+        (once = twice && does_not_fire "REF-011" once)
+        (tag ^ ": convergent fixpoint"));
+  run "REF-011 no fix for fragment without documentclass" (fun tag ->
+      let src = "See \\autoref{fig:x}" in
+      expect
+        (fires "REF-011" src && not (fires_with_fix "REF-011" src))
+        (tag ^ ": diagnose-only fragment"));
 
   (* ══════════════════════════════════════════════════════════════════════
      TYPO-050: Inconsistent title-case capitalisation

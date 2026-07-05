@@ -1006,9 +1006,83 @@ let l1_script_006_rule : rule =
   { id = "SCRIPT-006"; run; languages = [] }
 
 (* SCRIPT-007: Subscript text not wrapped in \text{} — e.g. x_{max} where "max"
-   is a word (3+ alpha chars) without \text *)
+   is a word (3+ alpha chars) without \text.
+
+   Fix producer (v27.1.12): each firing subscript `_{X}` (X = 3+ letters, not an
+   operator abbreviation, not already wrapped) has its content wrapped in
+   \text{}, i.e. `_{X}` → `_{\text{X}}`. The DIAGNOSE-ONLY count is untouched
+   (the detector loop below is byte-for-byte the original). The fix offsets are
+   recomputed independently over the ORIGINAL string `s` (NOT the
+   length-changing extract_math_segments copy — the STYLE-033 corruption trap),
+   replicating the SAME predicate (regex + operator-exclusion + wrapper-prefix
+   check) and gating to real math ranges via find_math_ranges /
+   is_in_math_range. The content region [pos+2, next_i-1) is exactly X;
+   replacing it with `\text{X}` keeps the outer `_{ }` braces balanced.
+   Idempotent + convergent: after the wrap the content starts with `\`
+   (`_{\text{…`) so both the regex (`_{[A-Za-z]`) and the wrapper-prefix check
+   exclude it — the rule cannot re-fire there. Routed via
+   mk_result_with_fix_vcu_exempt (math producer: keep in-math, drop
+   verbatim/comment/url). *)
 let l1_script_007_rule : rule =
   let re = Re_compat.regexp {|_{\([A-Za-z][A-Za-z][A-Za-z][A-Za-z]*\)}|} in
+  let operators =
+    [
+      "min";
+      "max";
+      "lim";
+      "inf";
+      "sup";
+      "det";
+      "dim";
+      "ker";
+      "log";
+      "exp";
+      "sin";
+      "cos";
+      "tan";
+      "arg";
+      "deg";
+      "gcd";
+      "hom";
+      "mod";
+      "Pr";
+    ]
+  in
+  (* [fires_at src pos matched] — the SAME acceptance predicate as the detector
+     loop below, but evaluated over an arbitrary buffer [src] at absolute offset
+     [pos] (start of the `_{` of the match). Shared so the fix cannot drift from
+     the count. *)
+  let fires_at src pos matched =
+    (not (List.mem matched operators))
+    &&
+    let prefix_start = max 0 (pos - 16) in
+    let prefix = String.sub src prefix_start (pos - prefix_start + 2) in
+    count_substring prefix "\\text{"
+    + count_substring prefix "\\mathrm{"
+    + count_substring prefix "\\operatorname{"
+    = 0
+  in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let edits = ref [] in
+    let i = ref 0 in
+    let n = String.length s in
+    (try
+       while !i <= n do
+         let mr, pos = Re_compat.search_forward re s !i in
+         let matched = Re_compat.matched_group mr 1 s in
+         let next_i = Re_compat.match_end mr in
+         if is_in_math_range math pos && fires_at s pos matched then
+           (* content X occupies [pos+2, next_i-1); wrap it in \text{} *)
+           edits :=
+             Cst_edit.replace ~start_offset:(pos + 2) ~end_offset:(next_i - 1)
+               ("\\text{" ^ matched ^ "}")
+             :: !edits;
+         i := if next_i > !i then next_i else !i + 1
+       done
+     with Not_found -> ());
+    List.rev !edits
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1021,30 +1095,7 @@ let l1_script_007_rule : rule =
             let matched = Re_compat.matched_group _mr 1 seg in
             let next_i = Re_compat.match_end _mr in
             (* Exclude common math abbreviations *)
-            let is_operator =
-              List.mem matched
-                [
-                  "min";
-                  "max";
-                  "lim";
-                  "inf";
-                  "sup";
-                  "det";
-                  "dim";
-                  "ker";
-                  "log";
-                  "exp";
-                  "sin";
-                  "cos";
-                  "tan";
-                  "arg";
-                  "deg";
-                  "gcd";
-                  "hom";
-                  "mod";
-                  "Pr";
-                ]
-            in
+            let is_operator = List.mem matched operators in
             (if not is_operator then
                (* Check prefix for \text{, \mathrm{, \operatorname{ using string
                   operations (not Str) to avoid clobbering global match state *)
@@ -1064,9 +1115,16 @@ let l1_script_007_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-007" ~severity:Warning
-           ~message:{|Subscript text not wrapped in \text{}|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-007" ~severity:Warning
+             ~message:{|Subscript text not wrapped in \text{}|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-007"
+             ~severity:Warning
+             ~message:{|Subscript text not wrapped in \text{}|} ~count:!cnt ~fix)
     else None
   in
   { id = "SCRIPT-007"; run; languages = [] }
@@ -1908,7 +1966,7 @@ let l1_chem_005_rule : rule =
       (fun off ->
         Cst_edit.replace ~start_offset:off
           ~end_offset:(off + String.length needle)
-          replacement)
+          (control_word_repl s (off + String.length needle) replacement))
       offsets
   in
   let run s =
@@ -2072,7 +2130,7 @@ let l1_chem_009_rule : rule =
             Some
               (Cst_edit.replace ~start_offset:off
                  ~end_offset:(off + String.length needle)
-                 replacement)
+                 (control_word_repl s (off + String.length needle) replacement))
           else None)
         (Validators_l0_typo.find_all_non_overlapping s needle)
     in

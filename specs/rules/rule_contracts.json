@@ -922,7 +922,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "CJK-005",
@@ -954,7 +954,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "CJK-007",
@@ -6748,7 +6748,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PKG-012",
@@ -6764,7 +6764,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PKG-013",
@@ -7346,7 +7346,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "any",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "REF-012",
@@ -7604,7 +7604,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SCRIPT-008",

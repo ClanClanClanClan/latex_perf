@@ -102,6 +102,41 @@ let () =
         (does_not_fire "SCRIPT-007" "$x_{ab}$")
         (tag ^ ": 2 chars — no 3+ match"));
 
+  (* SCRIPT-007 fix producer (v27.1.12): wrap subscript content in \text{} *)
+  run "SCRIPT-007 fix produces edit on _{total}" (fun tag ->
+      expect (fires_with_fix "SCRIPT-007" "$x_{total}$") (tag ^ ": has fix"));
+  run "SCRIPT-007 fix wraps _{total} -> _{\\text{total}}" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-007" "$x_{total}$" = "$x_{\\text{total}}$")
+        (tag ^ ": wrapped content"));
+  run "SCRIPT-007 fix preserves surrounding math" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-007" "$a + T_{eff} - b$"
+        = "$a + T_{\\text{eff}} - b$")
+        (tag ^ ": only content changed"));
+  run "SCRIPT-007 fix handles two subscripts (count=2)" (fun tag ->
+      expect
+        (fires_with_count "SCRIPT-007" "$x_{total} + y_{start}$" 2)
+        (tag ^ ": count unchanged"));
+  run "SCRIPT-007 fix wraps both subscripts" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-007" "$x_{total} + y_{start}$"
+        = "$x_{\\text{total}} + y_{\\text{start}}$")
+        (tag ^ ": both wrapped"));
+  run "SCRIPT-007 fix idempotent (2nd pass no-op)" (fun tag ->
+      let once = apply_fix "SCRIPT-007" "$x_{total}$" in
+      expect
+        (apply_fix "SCRIPT-007" once = once)
+        (tag ^ ": second pass is a fixpoint"));
+  run "SCRIPT-007 fix output no longer fires" (fun tag ->
+      expect
+        (does_not_fire "SCRIPT-007" (apply_fix "SCRIPT-007" "$x_{total}$"))
+        (tag ^ ": convergent"));
+  run "SCRIPT-007 no fix inside \\verb (vcu-exempt)" (fun tag ->
+      (* Literal `$x_{total}$` inside \verb must not be rewritten *)
+      let src = "\\verb|$x_{total}$|" in
+      expect (apply_fix "SCRIPT-007" src = src) (tag ^ ": verbatim preserved"));
+
   (* ══════════════════════════════════════════════════════════════════════
      SCRIPT-008: Chemical formula lacks \mathrm{} in subscript
      ══════════════════════════════════════════════════════════════════════ *)

@@ -731,6 +731,39 @@ let () =
   (* Empty string *)
   run "CJK-004 clean empty string" (fun tag ->
       expect (does_not_fire "CJK-004" "") (tag ^ ": empty string"));
+  (* v27.1.12: fix producer — insert \usepackage{xeCJK} after \documentclass *)
+  let cjk_004_src =
+    "\\documentclass{article}\n\
+     \\begin{document}\n\
+     \xe4\xb8\xad\xe6\x96\x87\n\
+     \\end{document}"
+  in
+  let cjk_004_fixed =
+    "\\documentclass{article}\n\
+     \\usepackage{xeCJK}\n\
+     \\begin{document}\n\
+     \xe4\xb8\xad\xe6\x96\x87\n\
+     \\end{document}"
+  in
+  run "CJK-004 emits a fix" (fun tag ->
+      expect (fires_with_fix "CJK-004" cjk_004_src) (tag ^ ": has fix"));
+  run "CJK-004 fix inserts xeCJK after documentclass" (fun tag ->
+      expect (apply_fix "CJK-004" cjk_004_src = cjk_004_fixed) (tag ^ ": insert"));
+  run "CJK-004 fix is idempotent" (fun tag ->
+      (* second pass: detector no longer fires (has_package xeCJK), apply
+         no-op *)
+      expect
+        (does_not_fire "CJK-004" cjk_004_fixed
+        && apply_fix "CJK-004" cjk_004_fixed = cjk_004_fixed)
+        (tag ^ ": idempotent"));
+  run "CJK-004 count unchanged by fix producer" (fun tag ->
+      expect (fires_with_count "CJK-004" cjk_004_src 1) (tag ^ ": count=1"));
+  run "CJK-004 fragment (no documentclass) diagnose-only" (fun tag ->
+      (* no \documentclass ⇒ mk_usepackage_insert = [] ⇒ still fires, no fix *)
+      expect
+        (fires "CJK-004" "\xe4\xb8\xad\xe6\x96\x87"
+        && not (fires_with_fix "CJK-004" "\xe4\xb8\xad\xe6\x96\x87"))
+        (tag ^ ": fragment diagnose-only"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CJK-006: Ruby annotation requires ruby package
@@ -767,6 +800,38 @@ let () =
   (* Empty string *)
   run "CJK-006 clean empty string" (fun tag ->
       expect (does_not_fire "CJK-006" "") (tag ^ ": empty string"));
+  (* Fix producer (v27.1.12): insert \usepackage{ruby} after \documentclass *)
+  let cjk006_doc =
+    "\\documentclass{article}\n\
+     \\begin{document}\n\
+     \\ruby{a}{b}\n\
+     \\end{document}\n"
+  in
+  let cjk006_fixed =
+    "\\documentclass{article}\n\
+     \\usepackage{ruby}\n\
+     \\begin{document}\n\
+     \\ruby{a}{b}\n\
+     \\end{document}\n"
+  in
+  run "CJK-006 fix emits a usepackage insert" (fun tag ->
+      expect (fires_with_fix "CJK-006" cjk006_doc) (tag ^ ": emits a fix"));
+  run "CJK-006 fix output inserts usepackage{ruby}" (fun tag ->
+      expect
+        (apply_fix "CJK-006" cjk006_doc = cjk006_fixed)
+        (tag ^ ": \\usepackage{ruby} on line after \\documentclass"));
+  run "CJK-006 fix leaves count unchanged" (fun tag ->
+      expect (fires_with_count "CJK-006" cjk006_doc 1) (tag ^ ": count still 1"));
+  run "CJK-006 fix idempotent (2nd pass no-op)" (fun tag ->
+      let once = apply_fix "CJK-006" cjk006_doc in
+      expect
+        (does_not_fire "CJK-006" once && apply_fix "CJK-006" once = once)
+        (tag ^ ": second apply is a byte-identical no-op"));
+  run "CJK-006 fragment without documentclass diagnoses without fix" (fun tag ->
+      expect
+        ((not (fires_with_fix "CJK-006" "\\ruby{a}{b}"))
+        && fires "CJK-006" "\\ruby{a}{b}")
+        (tag ^ ": diagnose-only fallback, count preserved"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FONT-006: Missing \microtypesetup{expansion=true}

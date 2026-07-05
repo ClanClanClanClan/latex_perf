@@ -1017,6 +1017,38 @@ let has_package (s : string) (pkg : string) : bool =
   let pkgs = extract_usepackages s in
   List.exists (fun (_pos, p) -> p = pkg) pkgs
 
+(** [mk_usepackage_insert s pkg] — the fix edit(s) for an `insert_usepackage`
+    producer: insert a `\usepackage{pkg}` line into the preamble, immediately
+    after the `\documentclass{...}` line. Returns [] when there is no
+    `\documentclass` (a fragment) so the producer degrades to diagnose-only
+    there rather than inserting into an unknown position.
+
+    Pairs with a detector gated on [not (has_package s pkg)]: after the insert
+    [extract_usepackages] sees the new `\usepackage{pkg}`, so [has_package s pkg]
+    holds and the rule no longer fires — idempotent and convergent (no producer
+    removes a `\usepackage` line). The inserted text is pure ASCII, so it can
+    never split a multibyte sequence, and the offset is an absolute position in
+    the ORIGINAL [s]. The chosen packages (booktabs, csquotes, xeCJK, ruby,
+    hyperref-when-nothing-else-provides-it) are load-order-insensitive at this
+    position, so inserting right after \documentclass is safe. *)
+let mk_usepackage_insert (s : string) (pkg : string) : Cst_edit.t list =
+  let re = Re_compat.regexp_string "\\documentclass" in
+  match
+    try
+      let mr, _ = Re_compat.search_forward re s 0 in
+      Some (Re_compat.match_beginning mr)
+    with Not_found -> None
+  with
+  | None -> []
+  | Some dc ->
+      let n = String.length s in
+      let rec find_nl i =
+        if i >= n then n else if s.[i] = '\n' then i else find_nl (i + 1)
+      in
+      let nl = find_nl dc in
+      let at = if nl < n then nl + 1 else n in
+      [ Cst_edit.insert ~at (Printf.sprintf "\\usepackage{%s}\n" pkg) ]
+
 (* ── Helper: extract env blocks for both env and env* ────────────────── *)
 let extract_env_blocks_starred (env : string) (s : string) : string list =
   let plain = extract_env_blocks env s in

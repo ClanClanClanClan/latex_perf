@@ -21,7 +21,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: BIB-001
   layer: L3_Semantics
   execution_class: B
@@ -1307,7 +1307,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: DE-006
   layer: L4_Style
   execution_class: B
@@ -2497,7 +2497,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: FR-008
   layer: L0_Lexer
   execution_class: B
@@ -3472,7 +3472,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-010
   layer: L1_Expanded
   execution_class: B
@@ -3950,7 +3950,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-044
   layer: L1_Expanded
   execution_class: B
@@ -4202,7 +4202,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-062
   layer: L2_Ast
   execution_class: B
@@ -5700,7 +5700,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PL-002
   layer: L4_Style
   execution_class: B
@@ -6089,7 +6089,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: RU-002
   layer: L4_Style
   execution_class: B

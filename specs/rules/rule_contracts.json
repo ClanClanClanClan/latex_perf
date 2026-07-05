@@ -18,7 +18,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "BIB-001",
@@ -1594,7 +1594,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "DE-006",
@@ -3006,7 +3006,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "FR-008",
@@ -4188,7 +4188,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-010",
@@ -4802,7 +4802,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-044",
@@ -5126,7 +5126,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-062",
@@ -6988,7 +6988,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PL-002",
@@ -7476,7 +7476,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "RU-002",

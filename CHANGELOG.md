@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.11] — 2026-07-05
+
+**Bucket-A fix-producer cadence: +8 producers (136 → 144), math-wrapping +
+insert-NBSP tier.** These are length-changing fixes (inserts/wraps), so each was
+verified idempotent and convergent; detection counts are byte-identical
+(differential 0-diff).
+
+- **MATH-009** (`auto_insert_backslash`) — bare math operator (`sin`, `log`,
+  `Pr`, …) → backslashed (`\sin`).
+- **MATH-043** (`wrap_operatorname`) — in-math `\text{Xxx}` → `\operatorname{Xxx}`.
+- **MATH-061** (`wrap_base_braces`) — `\log_10x` → `\log_{10}x` (one replace, not
+  two inserts, to safely dedup/overlap with SCRIPT-001 rather than emit a stray
+  brace).
+- **AR-002** (`replace_with_macro`) — Arabic: ASCII hyphen between Arabic-Indic
+  digits → `\arabicdash`.
+- **RU-001** (`insert_nbsp`) — Russian: space before em-dash → NBSP. Guarded
+  against **two** oscillations: SPC-033 (the English inverse — now
+  context-complementary via a new `has_cyrillic_context` helper) and SPC-029/032
+  (only fires when the space is preceded by content, so the NBSP never becomes
+  line-leading indentation).
+- **PL-001** (`insert_nbsp`) — Polish: space before `r.`/`nr`/`s.` → NBSP.
+- **CY-001** (`insert_nbsp`) — Cyrillic initials: space between initials → `\,`.
+- **FR-007** (`insert_nbsp`) — French-BE: space adjacent to `€` → narrow NBSP
+  (U+202F).
+
+Implemented via worktree-isolated agents (MATH-009 finished locally after an API
+drop), each verified against the rule's detection + tests. Full `dune runtest`,
+convergence (332/332 → valid UTF-8, incl. the new oscillation guards),
+verbatim-safety, differential (0-diff vs v27.1.10), and all gates green.
+
 ## [v27.1.10] — 2026-07-05
 
 **Bucket-A fix-producer cadence: +8 single-token producers (128 → 136).** Each

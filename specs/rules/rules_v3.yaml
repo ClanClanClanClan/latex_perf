@@ -1673,7 +1673,7 @@
   description: "Bare ‘sin/log/exp’ in math; use \\sin, \\log, \\exp"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_insert_backslash
 
@@ -1946,7 +1946,7 @@
   description: "Use of \\text instead of \\operatorname for function"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: wrap_operatorname
 
@@ -2090,7 +2090,7 @@
   description: "Log base missing braces in \\log_10x"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: wrap_base_braces
 
@@ -5243,7 +5243,7 @@
   description: "FR‑BE: thin NB‑space before/after € sign required"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: insert_nbsp
 
@@ -5299,7 +5299,7 @@
   description: "RU: NB‑space required before em‑dash"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: insert_nbsp
 
@@ -5315,7 +5315,7 @@
   description: "PL: NB‑space before abbreviations “r.”, “nr”, “s.”"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: insert_nbsp
 
@@ -5371,7 +5371,7 @@
   description: "Cyrillic initials require NB‑space \"И.\\,И.\""
   precondition: L4_Style
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: insert_nbsp
 
@@ -5379,7 +5379,7 @@
   description: "AR: ASCII hyphen in phone numbers—use \\arabicdash"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: replace_with_macro
 

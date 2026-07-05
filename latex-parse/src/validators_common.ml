@@ -713,6 +713,32 @@ let is_extended_context ?(window = 32) ?(candidate_bytes = 3) (s : string)
   done;
   !extended > !ascii
 
+(** [has_cyrillic_context ?window s off] — [true] iff a Cyrillic character
+    (U+0400..U+04FF, encoded in UTF-8 as a lead byte 0xD0..0xD3 followed by a
+    0x80..0xBF continuation byte) occurs within [window] bytes (default 32) on
+    either side of [off].
+
+    Used to make the Russian NBSP-before-em-dash producer (RU-001, inserts a
+    NBSP) and its English-oriented inverse (SPC-033, removes that NBSP) mutually
+    exclusive BY CONTEXT: RU-001 only emits its fix when this returns [true],
+    SPC-033 only emits its fix when it returns [false]. The two producers run
+    universally (unfiltered by language) in the [--apply-fixes] converge loop,
+    so without this complementary gate they would oscillate forever (space→NBSP→
+    space…). Neither rule's COUNT is affected — only the fix-set is gated. *)
+let has_cyrillic_context ?(window = 32) (s : string) (off : int) : bool =
+  let n = String.length s in
+  let lo = max 0 (off - window) in
+  let hi = min (n - 1) (off + window) in
+  let rec scan j =
+    if j >= hi then false
+    else
+      let c = Char.code (String.unsafe_get s j) in
+      let d = Char.code (String.unsafe_get s (j + 1)) in
+      if c >= 0xD0 && c <= 0xD3 && d >= 0x80 && d <= 0xBF then true
+      else scan (j + 1)
+  in
+  scan lo
+
 (* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
 let command_tokens (s : string) : (string * int) list =
   let module T = Tokenizer_lite in

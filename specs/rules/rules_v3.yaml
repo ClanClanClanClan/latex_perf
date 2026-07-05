@@ -913,7 +913,7 @@
   description: "Paragraph indented with mix of NBSP and space"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: replace_space
 
@@ -1970,7 +1970,7 @@
   description: "Ellipsis \\ldots used on relation axis; prefer \\cdots"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: suggest_cdots
 
@@ -4676,7 +4676,7 @@
   description: "Chemical arrow typed '->' not \\rightarrow"
   precondition: L1_Expanded
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@chemistry"
   fix: replace_with_arrow
 
@@ -4708,7 +4708,7 @@
   description: "Equilibrium arrow typed as '<>'"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@chemistry"
   fix: replace_with_equil_arrow
 
@@ -5331,7 +5331,7 @@
   description: "CS/SK: thin NB‑space before °C forbidden"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: replace_space
 
@@ -5347,7 +5347,7 @@
   description: "Greek: oxia vs tonos normalisation"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: normalize_nfc
 
@@ -5387,7 +5387,7 @@
   description: "HE: apostrophe used instead of geresh U+05F3"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: auto_replace
 
@@ -5435,7 +5435,7 @@
   description: "HI: ZWJ/ZWNJ misuse next to ख्"
   precondition: L0_Lexer
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@style-council"
   fix: remove_char
 

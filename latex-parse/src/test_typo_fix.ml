@@ -2694,6 +2694,46 @@ let () =
   run "SPC-029 does not fire on ASCII-space indent" (fun tag ->
       expect (does_not_fire "SPC-029" "  code\nclean\n") (tag ^ ": ASCII clean"));
 
+  (* v27.1.10: SPC-032 (mixed NBSP + ASCII-space indentation → all ASCII). *)
+  run "SPC-032 fix: NBSP+space mix → equal-count ASCII spaces" (fun tag ->
+      (* leading run = space, NBSP, space (3 chars) → three ASCII spaces *)
+      let src = " \xc2\xa0 code\nplain line\n" in
+      let edits = fix_edits "SPC-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "   code\nplain line\n")
+        (tag ^ ": mixed run becomes 3 ASCII spaces"));
+
+  run "SPC-032 fix: NBSP-then-space run rewritten" (fun tag ->
+      let src = "\xc2\xa0 lead\nnext\n" in
+      let edits = fix_edits "SPC-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "  lead\nnext\n")
+        (tag ^ ": NBSP+space → two spaces"));
+
+  run "SPC-032 fix: only mixed line rewritten (pure NBSP untouched)" (fun tag ->
+      (* line 1 pure NBSP (SPC-029 territory, no space) → SPC-032 skips it; line
+         2 mixes NBSP + space → rewritten. *)
+      let src = "\xc2\xa0nomix\n \xc2\xa0mix\n" in
+      let edits = fix_edits "SPC-032" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "\xc2\xa0nomix\n  mix\n")
+        (tag ^ ": only the mixed line is fixed"));
+
+  run "SPC-032 fix: idempotent (second pass no-op)" (fun tag ->
+      let src = " \xc2\xa0 \xc2\xa0code\nplain\n" in
+      let once = apply_all src (fix_edits "SPC-032" src) in
+      expect
+        (once = "    code\nplain\n" && fix_edits "SPC-032" once = [])
+        (tag ^ ": converges in one pass"));
+
+  run "SPC-032 count unchanged (fires per mixed line)" (fun tag ->
+      expect
+        (fires_with_count "SPC-032" " \xc2\xa0a\n\xc2\xa0 b" 2)
+        (tag ^ ": count preserved"));
+
+  run "SPC-032 does not fire on ASCII-space indent" (fun tag ->
+      expect (does_not_fire "SPC-032" "  code\nclean\n") (tag ^ ": ASCII clean"));
+
   (* v27.0.56: TYPO-051 leading-run filter (cross-rule with SPC-035). *)
   run "TYPO-051 skips leading-run U+2009 (delegates to SPC-035)" (fun tag ->
       (* Leading U+2009 at line start: TYPO-051 must NOT emit a fix-edit (would
@@ -3685,5 +3725,42 @@ let () =
       expect
         (List.length edits = 0 && apply_all src edits = src)
         (tag ^ ": comment + \\verb content left untouched"));
+
+  (* CHEM-005: ASCII "->" in math → \rightarrow (fix producer, v27.1.10). *)
+  run "CHEM-005 fix: -> in inline math becomes \\rightarrow" (fun tag ->
+      let src = "$A -> B$" in
+      let edits = fix_edits "CHEM-005" src in
+      expect
+        (List.length edits = 1 && apply_all src edits = "$A \\rightarrow B$")
+        (tag ^ ": one edit, applied = \\rightarrow"));
+
+  run "CHEM-005 fix: two -> in one math segment produce two edits" (fun tag ->
+      let src = "$A -> B -> C$" in
+      let edits = fix_edits "CHEM-005" src in
+      expect
+        (List.length edits = 2
+        && apply_all src edits = "$A \\rightarrow B \\rightarrow C$")
+        (tag ^ ": two edits applied correctly"));
+
+  run "CHEM-005 fix: idempotent — second apply is a no-op" (fun tag ->
+      let src = "$x -> y$" in
+      let p1 = apply_all src (fix_edits "CHEM-005" src) in
+      let p2 = apply_all p1 (fix_edits "CHEM-005" p1) in
+      expect
+        (p1 = "$x \\rightarrow y$" && p2 = p1)
+        (tag ^ ": \\rightarrow contains no ->, converges"));
+
+  run "CHEM-005 still fires (counts) unchanged with fix attached" (fun tag ->
+      (* Count semantic byte-identical to the diagnose-only form. *)
+      expect
+        (fires_with_count "CHEM-005" "$A -> B -> C$" 2)
+        (tag ^ ": count preserved (0-diff lint)"));
+
+  run "CHEM-005 fix: -> outside math is not rewritten" (fun tag ->
+      let src = "text A -> B in prose" in
+      let edits = fix_edits "CHEM-005" src in
+      expect
+        (List.length edits = 0 && apply_all src edits = src)
+        (tag ^ ": prose -> left untouched"));
 
   finalise "typo-fix"

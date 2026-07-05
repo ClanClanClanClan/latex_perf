@@ -161,6 +161,41 @@ let () =
   run "CHEM-009 clean: not in math" (fun tag ->
       expect (does_not_fire "CHEM-009" "A <-> B outside") (tag ^ ": text"));
 
+  (* CHEM-009 fix producer (v27.1.10): replace ASCII "<->"/"<=>" in math with
+     \rightleftharpoons; offsets computed on the ORIGINAL source. *)
+  let chem009_apply src =
+    match fix_edits "CHEM-009" src with
+    | [] -> src
+    | edits -> (
+        match Latex_parse_lib.Cst_edit.apply_all src edits with
+        | Ok s -> s
+        | Error _ -> src)
+  in
+  run "CHEM-009 fix: <-> -> \\rightleftharpoons" (fun tag ->
+      expect
+        (chem009_apply "$A <-> B$" = "$A \\rightleftharpoons B$")
+        (tag ^ ": <-> rewritten"));
+  run "CHEM-009 fix: <=> -> \\rightleftharpoons" (fun tag ->
+      expect
+        (chem009_apply "$A <=> B$" = "$A \\rightleftharpoons B$")
+        (tag ^ ": <=> rewritten"));
+  run "CHEM-009 fix: both arrows in one segment" (fun tag ->
+      expect
+        (chem009_apply "$A <-> B <=> C$"
+        = "$A \\rightleftharpoons B \\rightleftharpoons C$")
+        (tag ^ ": both rewritten"));
+  run "CHEM-009 fix: idempotent (second apply is no-op)" (fun tag ->
+      let once = chem009_apply "$A <-> B <=> C$" in
+      expect (chem009_apply once = once) (tag ^ ": stable"));
+  run "CHEM-009 fix: count preserved (still fires, count=2)" (fun tag ->
+      expect
+        (fires_with_count "CHEM-009" "$A <-> B <=> C$" 2)
+        (tag ^ ": count unchanged"));
+  run "CHEM-009 fix: no edit outside math (text left intact)" (fun tag ->
+      expect
+        (chem009_apply "A <-> B outside" = "A <-> B outside")
+        (tag ^ ": text"));
+
   (* ══════════════════════════════════════════════════════════════════════
      Cross-cutting edge cases
      ══════════════════════════════════════════════════════════════════════ *)

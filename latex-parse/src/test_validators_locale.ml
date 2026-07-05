@@ -23,6 +23,39 @@ let () =
         (tag ^ ": NBSP before euro ok"));
   run "FR-007 clean no euro" (fun tag ->
       expect (does_not_fire "FR-007" "50 dollars") (tag ^ ": no euro sign"));
+  (* FR-007 fix producer (v27.1.11). The fix replaces each ASCII space adjacent
+     to € (E2 82 AC) with the narrow no-break space U+202F (E2 80 AF). *)
+  let apply_fr007 src =
+    match Latex_parse_lib.Cst_edit.apply_all src (fix_edits "FR-007" src) with
+    | Ok s -> s
+    | Error _ -> src
+  in
+  run "FR-007 fix: space before euro -> U+202F" (fun tag ->
+      expect
+        (apply_fr007 "prix 50 \xe2\x82\xac" = "prix 50\xe2\x80\xaf\xe2\x82\xac")
+        (tag ^ ": space+euro replaced"));
+  run "FR-007 fix: space after euro -> U+202F" (fun tag ->
+      expect
+        (apply_fr007 "\xe2\x82\xac 50" = "\xe2\x82\xac\xe2\x80\xaf50")
+        (tag ^ ": euro+space replaced"));
+  run "FR-007 fix: both sides of one euro repaired in one pass" (fun tag ->
+      let out = apply_fr007 "50 \xe2\x82\xac 20" in
+      expect
+        (out = "50\xe2\x80\xaf\xe2\x82\xac\xe2\x80\xaf20"
+        && does_not_fire "FR-007" out)
+        (tag ^ ": both spaces fixed, no re-fire"));
+  run "FR-007 fix: idempotent (2nd pass no-op)" (fun tag ->
+      let once = apply_fr007 "50 \xe2\x82\xac et \xe2\x82\xac 20" in
+      let twice = apply_fr007 once in
+      expect
+        (twice = once
+        && fix_edits "FR-007" once = []
+        && does_not_fire "FR-007" once)
+        (tag ^ ": fixpoint reached after one pass"));
+  run "FR-007 fix: count unchanged by producer" (fun tag ->
+      expect
+        (fires_with_count "FR-007" "50 \xe2\x82\xac et \xe2\x82\xac 20" 2)
+        (tag ^ ": diagnostic count preserved"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FR-008: French ligature oe/OE mandatory
@@ -82,6 +115,48 @@ let () =
         (tag ^ ": NBSP before em-dash ok"));
   run "RU-001 clean no em-dash" (fun tag ->
       expect (does_not_fire "RU-001" "just text") (tag ^ ": no em-dash"));
+  (* v27.1.11: fix producer — replace the ASCII space before the em-dash with
+     NBSP U+00A0 (C2 A0). Москва<sp>—<sp>город → Москва<NBSP>—<sp>город. *)
+  let ru_001_src =
+    "\xd0\x9c\xd0\xbe\xd1\x81\xd0\xba\xd0\xb2\xd0\xb0 \xe2\x80\x94 \
+     \xd0\xb3\xd0\xbe\xd1\x80\xd0\xbe\xd0\xb4"
+  in
+  let ru_001_fixed =
+    "\xd0\x9c\xd0\xbe\xd1\x81\xd0\xba\xd0\xb2\xd0\xb0\xc2\xa0\xe2\x80\x94 \
+     \xd0\xb3\xd0\xbe\xd1\x80\xd0\xbe\xd0\xb4"
+  in
+  run "RU-001 emits a fix" (fun tag ->
+      expect (fires_with_fix "RU-001" ru_001_src) (tag ^ ": has fix"));
+  run "RU-001 fix replaces space with NBSP" (fun tag ->
+      expect (apply_fix "RU-001" ru_001_src = ru_001_fixed) (tag ^ ": NBSP"));
+  run "RU-001 fix is idempotent" (fun tag ->
+      (* second pass: detector no longer fires, apply is a no-op *)
+      expect
+        (does_not_fire "RU-001" ru_001_fixed
+        && apply_fix "RU-001" ru_001_fixed = ru_001_fixed)
+        (tag ^ ": idempotent"));
+  run "RU-001 count unchanged by fix producer" (fun tag ->
+      (* two em-dashes: count stays 2, both get a fix *)
+      let two = "\xd0\xb0 \xe2\x80\x94 b \xd0\xb2 \xe2\x80\x94 \xd0\xb3" in
+      expect
+        (fires_with_count "RU-001" two 2
+        && List.length (fix_edits "RU-001" two) = 2)
+        (tag ^ ": count=2 & 2 fixes"));
+  run "RU-001 no fix for line-leading space (no oscillation)" (fun tag ->
+      (* leading-space+em-dash: fixing it would create a line-leading NBSP that
+         SPC-029/032 would revert — guard suppresses the fix, count preserved *)
+      let leading = " \xe2\x80\x94 \xd0\xb0" in
+      expect
+        (fires_with_count "RU-001" leading 1 && fix_edits "RU-001" leading = [])
+        (tag ^ ": guarded"));
+  run "RU-001 no fix in non-Cyrillic context (SPC-033 mutual exclusion)"
+    (fun tag ->
+      (* Latin context: SPC-033 (inverse) owns the em-dash spacing here, so
+         RU-001 fires+counts but emits NO fix — prevents space<->NBSP cycling *)
+      expect
+        (fires_with_count "RU-001" "a \xe2\x80\x94 b" 1
+        && fix_edits "RU-001" "a \xe2\x80\x94 b" = [])
+        (tag ^ ": Latin context, count preserved, no fix"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PL-001: NB-space before abbreviations r., nr, s.
@@ -94,6 +169,31 @@ let () =
       expect (fires "PL-001" "na s. 12") (tag ^ ": space+s."));
   run "PL-001 clean no abbreviations" (fun tag ->
       expect (does_not_fire "PL-001" "just text") (tag ^ ": no Polish abbr"));
+  (* PL-001 fix producer (v27.1.11): replaces the regular ASCII space before a
+     Polish abbreviation (`r.`, `nr `, `s.`) with a NBSP (0xC2 0xA0). *)
+  let pl001_apply src =
+    match Latex_parse_lib.Cst_edit.apply_all src (fix_edits "PL-001" src) with
+    | Ok r -> r
+    | Error _ -> src
+  in
+  run "PL-001 emits fix on space before r." (fun tag ->
+      expect (fires_with_fix "PL-001" "w r. 2024") (tag ^ ": has fix"));
+  run "PL-001 fix replaces space with NBSP before r." (fun tag ->
+      expect
+        (pl001_apply "w r. 2024" = "w\xc2\xa0r. 2024")
+        (tag ^ ": r. -> NBSP"));
+  run "PL-001 fix replaces space with NBSP before nr" (fun tag ->
+      expect (pl001_apply "pod nr 5" = "pod\xc2\xa0nr 5") (tag ^ ": nr -> NBSP"));
+  run "PL-001 fix replaces space with NBSP before s." (fun tag ->
+      expect (pl001_apply "na s. 12" = "na\xc2\xa0s. 12") (tag ^ ": s. -> NBSP"));
+  run "PL-001 fix idempotent / convergent" (fun tag ->
+      let once = pl001_apply "w r. 2024" in
+      (* NBSP before the abbreviation cannot re-fire (detector needs 0x20). *)
+      expect (pl001_apply once = once) (tag ^ ": second apply no-op"));
+  run "PL-001 count preserved (2 triggers)" (fun tag ->
+      expect
+        (fires_with_count "PL-001" "w r. 2024 i na s. 12" 2)
+        (tag ^ ": count=2"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CS-001: CS/SK thin NB-space before degree-C forbidden
@@ -268,6 +368,25 @@ let () =
       expect (does_not_fire "AR-002" "123-456") (tag ^ ": ASCII digits ok"));
   run "AR-002 clean no hyphen" (fun tag ->
       expect (does_not_fire "AR-002" "\xd9\xa1\xd9\xa2") (tag ^ ": no hyphen"));
+  (* v27.1.11 fix producer: ASCII hyphen between Arabic digits -> \arabicdash *)
+  run "AR-002 fix replaces hyphen with macro" (fun tag ->
+      (* input: ١-٢ (D9 A1, '-', D9 A2). expected: ١\arabicdash٢ *)
+      let input = "\xd9\xa1-\xd9\xa2" in
+      let expected = "\xd9\xa1\\arabicdash\xd9\xa2" in
+      let out = apply_all input (fix_edits "AR-002" input) in
+      expect (out = expected) (tag ^ ": hyphen->\\arabicdash"));
+  run "AR-002 fix is idempotent" (fun tag ->
+      (* two independent digit pairs: ١-٢ ٣-٤ (the detector consumes the
+         trailing digit, so hyphens must not share a flanking digit). *)
+      let input = "\xd9\xa1-\xd9\xa2\xd9\xa3-\xd9\xa4" in
+      let out1 = apply_all input (fix_edits "AR-002" input) in
+      (* second pass: rule must no longer fire, so no further edits. *)
+      let out2 = apply_all out1 (fix_edits "AR-002" out1) in
+      expect (out1 = out2 && does_not_fire "AR-002" out1) (tag ^ ": idempotent"));
+  run "AR-002 count preserved after adding fix" (fun tag ->
+      expect
+        (fires_with_count "AR-002" "\xd9\xa1-\xd9\xa2\xd9\xa3-\xd9\xa4" 2)
+        (tag ^ ": count=2 two hyphens"));
 
   (* ══════════════════════════════════════════════════════════════════════
      HE-001: apostrophe used instead of geresh

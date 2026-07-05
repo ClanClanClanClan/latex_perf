@@ -32,6 +32,48 @@ let l1_math_009_rule : rule =
       "Pr";
     ]
   in
+  let is_alnum c =
+    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+  in
+  (* Fix producer (v27.1.11): backslash each bare operator (sin -> \sin). The
+     detector's COUNT (below, over extract_math_segments) is untouched; the fix
+     mirrors the SAME predicate on the ORIGINAL source [s] (offsets valid for
+     the edit), gated to real math ranges via [find_math_ranges]. Whole-operator
+     ASCII replace, so no multibyte sequence is ever split. Idempotent: after
+     the rewrite the operator is preceded by '\', so [preceded_by_backslash]
+     holds and it is no longer counted/rewritten -> the converge loop reaches a
+     fixpoint. *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    List.iter
+      (fun op ->
+        let oplen = String.length op in
+        let i = ref 0 in
+        while !i + oplen <= n do
+          if String.sub s !i oplen = op then (
+            let preceded_by_backslash = !i > 0 && s.[!i - 1] = '\\' in
+            let boundary_before = !i = 0 || not (is_alnum s.[!i - 1]) in
+            let boundary_after =
+              !i + oplen >= n || not (is_alnum s.[!i + oplen])
+            in
+            if
+              (not preceded_by_backslash)
+              && boundary_before
+              && boundary_after
+              && is_in_math_range math !i
+            then
+              edits :=
+                Cst_edit.replace ~start_offset:!i ~end_offset:(!i + oplen)
+                  ("\\" ^ op)
+                :: !edits;
+            i := !i + oplen)
+          else incr i
+        done)
+      operators;
+    List.rev !edits
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -77,10 +119,17 @@ let l1_math_009_rule : rule =
           operators)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-009" ~severity:Warning
-           ~message:{|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-009" ~severity:Warning
+             ~message:{|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-009" ~severity:Warning
+             ~message:{|Bare ‘sin/log/exp’ in math; use \sin, \log, \exp|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-009"; run; languages = [] }
@@ -1006,6 +1055,41 @@ let l1_math_042_rule : rule =
    \text{Var} should be \operatorname{Var} *)
 let l1_math_043_rule : rule =
   let re = Re_compat.regexp {|\\text{[A-Z][a-z]+}|} in
+  (* Fix offsets are computed from the ORIGINAL source `s` (never from the
+     length-changing `extract_math_segments` copy — the STYLE-033 bug), by
+     re-running the SAME non-overlapping regex scan the counter uses and keeping
+     only matches whose `\text` byte lands inside a real math range. The count
+     itself is untouched: it is still tallied via `extract_math_segments` /
+     `count_re_matches` below, so the diagnostic (and the differential) is
+     byte-identical. *)
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    let acc = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let mr, _ = Re_compat.search_forward re s !i in
+         let b = Re_compat.match_beginning mr in
+         let e = Re_compat.match_end mr in
+         if is_in_math_range math b then acc := b :: !acc;
+         i := e
+       done
+     with Not_found -> ());
+    List.rev !acc
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun off ->
+        (* Replace only the 5-byte command name `\text` (5C 74 65 78 74) with
+           the 13-byte `\operatorname`, leaving the `{Xxx}` argument intact.
+           Idempotent + convergent: `\operatorname` does not contain the
+           substring `\text`, so the regex `\\text{[A-Z][a-z]+}` cannot re-fire
+           at a rewritten site, and no producer rewrites `\operatorname` back to
+           `\text`. *)
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 5)
+          "\\operatorname")
+      (fix_offsets s)
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1016,10 +1100,11 @@ let l1_math_043_rule : rule =
         cnt := !cnt + count_re_matches re seg)
       math_segs;
     if !cnt > 0 then
+      let fix = mk_fix_edits s in
       Some
-        (mk_result ~id:"MATH-043" ~severity:Warning
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-043" ~severity:Warning
            ~message:{|Use of \text instead of \operatorname for function|}
-           ~count:!cnt)
+           ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-043"; run; languages = [] }
@@ -1912,17 +1997,74 @@ let l1_math_060_rule : rule =
   in
   { id = "MATH-060"; run; languages = [] }
 
-(* MATH-061: Log base missing braces \log_10x *)
+(* MATH-061: Log base missing braces \log_10x
+
+   Fix producer (v27.1.11): wrap the unbraced multi-character subscript base of
+   `\log` in braces — `\log_10x` -> `\log_{10}x`. Offsets are computed on the
+   ORIGINAL source `s` (never a length-changing transform — the STYLE-033
+   corruption bug), re-scanning with the SAME non-overlapping regex the count
+   uses (search restarts at match_end), gated to `find_math_ranges s` so the fix
+   set never exceeds the counted set. One pure-ASCII REPLACE per firing: `_` +
+   maximal-digit-run -> `_{` + digits + `}` (e.g. `_10` -> `_{10}`). The replace
+   spans whole ASCII bytes (`_` and the digits), so it can never split a
+   multibyte UTF-8 sequence. A REPLACE (not two insertions) is deliberate: the
+   neighbouring producer SCRIPT-001 also fixes this trigger — it rewrites the
+   WHOLE alnum subscript run `_10x` -> `_{10x}` via a replace over `[_,
+   after-x)`. With a replace over `[_, after-10)`, MATH-061 either (a) is
+   byte-identical to SCRIPT-001 for a pure-digit base (`\log_100`) and dedups,
+   or (b) overlaps SCRIPT-001's range for a digit+letter base (`\log_10x`) and
+   the engine keeps exactly one — never both. Two boundary-touching INSERTIONS
+   would instead escape overlap detection and leave a stray `}` (`\log_100` ->
+   `\log_{100}}`). Idempotent + convergent: after the rewrite the `_` is
+   followed by `{`, which the count regex (`\\log_[0-9]`) no longer matches, so
+   a second --apply-fixes pass is a byte-identical no-op; neither MATH-061 nor
+   SCRIPT-001 ever removes a brace, so the interaction is monotone and cannot
+   oscillate. Count is left byte-identical (release differential 0-diff).
+   vcu-exempt so a `$\log_10x$` written inside verbatim/comment/url is still
+   counted but not rewritten. *)
 let l1_math_061_rule : rule =
   let re = Re_compat.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
+  (* For every counted match, emit a single replace of `_` + the maximal
+     ASCII-digit run that forms the base with `_{<digits>}`, filtered to math
+     ranges on the original source. *)
+  let fix_edits_for s =
+    let math = find_math_ranges s in
+    let len = String.length s in
+    let acc = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let mr, _ = Re_compat.search_forward re s !i in
+         let mstart = Re_compat.match_beginning mr in
+         let mend = Re_compat.match_end mr in
+         (* mstart points at the `\` of `\log`; the `_` is at mstart+4 and the
+            first digit of the base at mstart+5. *)
+         let us = mstart + 4 in
+         let base_start = mstart + 5 in
+         if is_in_math_range math mstart then (
+           let e = ref base_start in
+           while !e < len && s.[!e] >= '0' && s.[!e] <= '9' do
+             incr e
+           done;
+           let digits = String.sub s base_start (!e - base_start) in
+           acc :=
+             Cst_edit.replace ~start_offset:us ~end_offset:!e
+               ("_{" ^ digits ^ "}")
+             :: !acc);
+         i := mend
+       done
+     with Not_found -> ());
+    List.rev !acc
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
+      let fix = fix_edits_for s in
       Some
-        (mk_result ~id:"MATH-061" ~severity:Warning
-           ~message:{|Log base missing braces in \log_10x|} ~count:!cnt)
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-061" ~severity:Warning
+           ~message:{|Log base missing braces in \log_10x|} ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-061"; run; languages = [] }

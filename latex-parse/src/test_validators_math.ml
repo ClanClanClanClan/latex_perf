@@ -22,6 +22,31 @@ let () =
       expect (does_not_fire "MATH-009" "$\\log x$") (tag ^ ": \\log ok"));
   run "MATH-009 clean: no functions" (fun tag ->
       expect (does_not_fire "MATH-009" "$x + y$") (tag ^ ": no funcs"));
+  (* MATH-009 fix producer (v27.1.11): bare operator -> backslashed, in math. *)
+  let math009_apply src =
+    match Cst_edit.apply_all src (fix_edits "MATH-009" src) with
+    | Ok out -> out
+    | Error _ -> src
+  in
+  run "MATH-009 fix: $sin x$ -> $\\sin x$" (fun tag ->
+      expect (math009_apply "$sin x$" = "$\\sin x$") (tag ^ ": sin backslashed"));
+  run "MATH-009 fix: two ops -> two edits" (fun tag ->
+      expect
+        (math009_apply "$sin x + log y$" = "$\\sin x + \\log y$")
+        (tag ^ ": sin+log both fixed"));
+  run "MATH-009 fix: count preserved (2)" (fun tag ->
+      expect
+        (fires_with_count "MATH-009" "$sin x + log y$" 2)
+        (tag ^ ": count unchanged"));
+  run "MATH-009 fix: idempotent + convergent" (fun tag ->
+      let once = math009_apply "$sin x$" in
+      expect
+        (does_not_fire "MATH-009" once && math009_apply once = once)
+        (tag ^ ": \\sin not re-flagged, 2nd apply no-op"));
+  run "MATH-009 fix: bare op outside math untouched" (fun tag ->
+      expect
+        (math009_apply "sin of the plot" = "sin of the plot")
+        (tag ^ ": prose sin left alone"));
 
   (* ══════════════════════════════════════════════════════════════════════
      MATH-010: Division symbol ÷ in math
@@ -761,6 +786,37 @@ let () =
       expect
         (does_not_fire "MATH-043" "$\\text{IF}$")
         (tag ^ ": all caps doesn't match"));
+  (* MATH-043 fix producer (v27.1.11): \text{Xxx} -> \operatorname{Xxx} in math.
+     Replaces only the 5-byte \text command name, keeping {...} intact. *)
+  let math043_apply src =
+    match Cst_edit.apply_all src (fix_edits "MATH-043" src) with
+    | Ok out -> out
+    | Error _ -> src
+  in
+  run "MATH-043 fix: emits a fix" (fun tag ->
+      expect (fires_with_fix "MATH-043" "$\\text{Var}(X)$") (tag ^ ": has fix"));
+  run "MATH-043 fix: exact output" (fun tag ->
+      expect
+        (math043_apply "$\\text{Var}(X)$" = "$\\operatorname{Var}(X)$")
+        (tag ^ ": text->operatorname"));
+  run "MATH-043 fix: both occurrences rewritten" (fun tag ->
+      expect
+        (math043_apply "$\\text{Var}(X) + \\text{Cov}(X,Y)$"
+        = "$\\operatorname{Var}(X) + \\operatorname{Cov}(X,Y)$")
+        (tag ^ ": two edits applied"));
+  run "MATH-043 fix: count preserved (still 2)" (fun tag ->
+      expect
+        (fires_with_count "MATH-043" "$\\text{Var}(X) + \\text{Cov}(X,Y)$" 2)
+        (tag ^ ": count unchanged"));
+  run "MATH-043 fix: idempotent + convergent" (fun tag ->
+      let once = math043_apply "$\\text{Var}(X)$" in
+      expect
+        (does_not_fire "MATH-043" once && math043_apply once = once)
+        (tag ^ ": no re-fire, second apply no-op"));
+  run "MATH-043 fix: not applied outside math" (fun tag ->
+      expect
+        (math043_apply "\\text{Var} outside" = "\\text{Var} outside")
+        (tag ^ ": text outside math untouched"));
 
   (* ══════════════════════════════════════════════════════════════════════
      MATH-044: Compound relation <=/>= instead of \le/\ge
@@ -1520,6 +1576,40 @@ let () =
       expect (does_not_fire "MATH-061" "$\\log_{10} x$") (tag ^ ": braced ok"));
   run "MATH-061 clean no log" (fun tag ->
       expect (does_not_fire "MATH-061" "$x + y$") (tag ^ ": no log"));
+  (* MATH-061 fix producer (v27.1.11): wrap unbraced log base — \log_10x ->
+     \log_{10}x. *)
+  let math061_apply src =
+    match Cst_edit.apply_all src (fix_edits "MATH-061" src) with
+    | Ok out -> out
+    | Error _ -> src
+  in
+  run "MATH-061 fix: emits a fix" (fun tag ->
+      expect (fires_with_fix "MATH-061" "$\\log_10 x$") (tag ^ ": has fix"));
+  run "MATH-061 fix: exact output (10 wrapped, x untouched)" (fun tag ->
+      expect
+        (math061_apply "$\\log_10 x$" = "$\\log_{10} x$")
+        (tag ^ ": log_10 -> log_{10}"));
+  run "MATH-061 fix: single-digit base wrapped, arg untouched" (fun tag ->
+      expect
+        (math061_apply "$\\log_2n$" = "$\\log_{2}n$")
+        (tag ^ ": log_2n -> log_{2}n"));
+  run "MATH-061 fix: count preserved (still 2)" (fun tag ->
+      expect
+        (fires_with_count "MATH-061" "$\\log_10x + \\log_2y$" 2)
+        (tag ^ ": count unchanged"));
+  run "MATH-061 fix: both occurrences rewritten" (fun tag ->
+      expect
+        (math061_apply "$\\log_10x + \\log_2y$" = "$\\log_{10}x + \\log_{2}y$")
+        (tag ^ ": two firings fixed"));
+  run "MATH-061 fix: idempotent + convergent" (fun tag ->
+      let once = math061_apply "$\\log_10 x$" in
+      expect
+        (does_not_fire "MATH-061" once && math061_apply once = once)
+        (tag ^ ": no re-fire, second apply no-op"));
+  run "MATH-061 fix: not rewritten inside comment (vcu-exempt)" (fun tag ->
+      expect
+        (math061_apply "% $\\log_10x$\n$y$" = "% $\\log_10x$\n$y$")
+        (tag ^ ": comment left literal"));
 
   (* ════════════════════════════════════════════════════════════════════
      MATH-067: \limits on non-big-operator

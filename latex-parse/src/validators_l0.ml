@@ -2872,15 +2872,25 @@ let r_spc_033 : rule =
          [s]; each needle starts with the NBSP, so [off..off+2) is exactly the
          NBSP byte-pair. The two needles cannot share an NBSP, so concatenating
          their offsets yields non-overlapping edits. Idempotent: after the
-         rewrite the NBSP is gone, so the rule no longer fires at that spot. *)
+         rewrite the NBSP is gone, so the rule no longer fires at that spot.
+
+         v27.1.11: this fix is the exact inverse of RU-001 (Russian: NBSP
+         REQUIRED before em-dash). Both run universally in the --apply-fixes
+         converge loop, so to avoid a space↔NBSP oscillation the fix is
+         SUPPRESSED (count untouched) wherever there is Cyrillic text nearby
+         ([has_cyrillic_context]) — there RU-001 owns the NBSP. In non-Cyrillic
+         (English) context this rule keeps removing the NBSP as before. *)
       let offsets =
         find_all_non_overlapping s "\xc2\xa0\xe2\x80\x94"
         @ find_all_non_overlapping s "\xc2\xa0---"
       in
       let fix =
-        List.map
+        List.filter_map
           (fun off ->
-            Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) " ")
+            if has_cyrillic_context s (off + 2) then None
+            else
+              Some
+                (Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) " "))
           offsets
       in
       Some
@@ -4283,11 +4293,43 @@ let r_fr_007 : rule =
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"FR-007" ~severity:Info
-           ~message:{|FR‑BE: thin NB‑space before/after € sign required|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* v27.1.11 fix producer. The diagnostic COUNT above is left untouched
+         (non-overlapping regex over the ORIGINAL source `s`). The fix is
+         computed by an INDEPENDENT byte scan of `s`: replace every ASCII space
+         (0x20) that sits directly adjacent to a € (U+20AC = E2 82 AC) with a
+         narrow no-break space U+202F (E2 80 AF) — the thin NB-space the rule
+         mandates (catalog fix token `insert_nbsp`).
+
+         Scanning both sides (space-before AND space-after €) independently of
+         the count's non-overlapping consumption guarantees a SINGLE apply-pass
+         repairs every offending space, so the fix is idempotent and convergent:
+         U+202F contains no 0x20 byte, hence neither this scan nor the
+         diagnostic regex can re-fire at a repaired spot, and no new
+         `space+€`/`€+space` pattern is created. `€ €` (one shared space) emits
+         exactly one edit (the `||` short-circuits). *)
+      let n = String.length s in
+      let is_euro_at k =
+        k >= 0
+        && k + 2 < n
+        && Char.code s.[k] = 0xE2
+        && Char.code s.[k + 1] = 0x82
+        && Char.code s.[k + 2] = 0xAC
+      in
+      let fix_edits = ref [] in
+      for j = 0 to n - 1 do
+        if s.[j] = ' ' && (is_euro_at (j - 3) || is_euro_at (j + 1)) then
+          fix_edits :=
+            Cst_edit.replace ~start_offset:j ~end_offset:(j + 1) "\xe2\x80\xaf"
+            :: !fix_edits
+      done;
+      let msg = {|FR‑BE: thin NB‑space before/after € sign required|} in
+      if !fix_edits = [] then
+        Some (mk_result ~id:"FR-007" ~severity:Info ~message:msg ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_exempt ~src:s ~id:"FR-007" ~severity:Info
+             ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits)))
     else None
   in
   { id = "FR-007"; run; languages = [ "fr" ] }
@@ -4348,15 +4390,77 @@ let r_pt_003 : rule =
   in
   { id = "PT-003"; run; languages = [ "pt" ] }
 
-(* RU-001: NB-space required before em-dash *)
+(* RU-001: NB-space required before em-dash.
+
+   v27.1.11: fix producer (catalog token `insert_nbsp`). The detector counts,
+   via [count_substring], each ASCII space (0x20) immediately preceding an
+   em-dash (U+2014 = `E2 80 94`). COUNT is UNCHANGED — [cnt] is still the exact
+   [count_substring] tally over the ORIGINAL source `s` (the needle cannot
+   self-overlap, so the +4 step of the fix scan visits the same match set).
+
+   The fix REPLACES that one space byte with a NBSP U+00A0 (2 bytes `C2 A0`),
+   binding the em-dash to the preceding word. After the fix the byte before the
+   em-dash is `A0`, not `20`, so the needle no longer matches at that spot —
+   idempotent, and the converge loop reaches a fixpoint.
+
+   Oscillation guard 1 (SPC-033, the ENGLISH inverse): SPC-033 removes a NBSP
+   before an em-dash — the exact reverse of this fix. Both run universally
+   (unfiltered by language) in the [--apply-fixes] converge loop, so to avoid an
+   infinite space→NBSP→space cycle the two are made mutually exclusive BY
+   CONTEXT: RU-001 emits its fix only when there is Cyrillic text nearby
+   ([has_cyrillic_context]), while SPC-033 suppresses its fix in that same
+   Cyrillic context. Complementary gates ⇒ no state where both fire ⇒
+   convergent.
+
+   Oscillation guard 2 (SPC-029 / SPC-032, LINE-LEADING NBSP → ASCII space): the
+   fix is emitted only when the matched space is preceded by genuine
+   non-whitespace content on the same line (treating space/tab and NBSP `C2 A0`
+   as whitespace), so the inserted NBSP can never become part of a line's
+   leading indentation run.
+
+   Offsets are absolute in `s`; edits inside verbatim/comment/url/math are
+   dropped via [mk_result_with_fix_exempt] (count untouched). *)
 let r_ru_001 : rule =
-  (* Detect regular space before em-dash (U+2014 = \xe2\x80\x94) *)
   let run s =
     let cnt = count_substring s " \xe2\x80\x94" in
-    if cnt > 0 then
+    if cnt > 0 then (
+      let n = String.length s in
+      (* true iff there is a non-whitespace byte before offset [i] on the same
+         line (space/tab and NBSP `C2 A0` count as whitespace). *)
+      let preceded_by_content i =
+        let rec back j =
+          if j < 0 then false
+          else
+            let c = Char.code s.[j] in
+            if c = 0x0A then false (* line start reached *)
+            else if c = 0x20 || c = 0x09 then back (j - 1) (* space / tab *)
+            else if c = 0xA0 && j >= 1 && Char.code s.[j - 1] = 0xC2 then
+              back (j - 2) (* NBSP is whitespace *)
+            else true (* real content *)
+        in
+        back (i - 1)
+      in
+      let edits = ref [] in
+      let i = ref 0 in
+      while !i <= n - 4 do
+        if
+          s.[!i] = ' '
+          && Char.code s.[!i + 1] = 0xE2
+          && Char.code s.[!i + 2] = 0x80
+          && Char.code s.[!i + 3] = 0x94
+        then (
+          if preceded_by_content !i && has_cyrillic_context s (!i + 1) then
+            edits :=
+              Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 1) "\xc2\xa0"
+              :: !edits;
+          i := !i + 4)
+        else incr i
+      done;
+      let edits = List.rev !edits in
       Some
-        (mk_result ~id:"RU-001" ~severity:Info
-           ~message:{|RU: NB‑space required before em‑dash|} ~count:cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"RU-001" ~severity:Info
+           ~message:{|RU: NB‑space required before em‑dash|} ~count:cnt
+           ~fix:edits))
     else None
   in
   { id = "RU-001"; run; languages = [ "ru" ] }
@@ -4367,20 +4471,44 @@ let r_pl_001 : rule =
   let re = Re_compat.regexp " \\(r\\.\\|nr \\|s\\.\\)" in
   let run s =
     let cnt = ref 0 in
+    let starts = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
          ignore _mr;
          incr cnt;
+         starts := Re_compat.match_beginning _mr :: !starts;
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
+      (* v27.1.11 fix producer. Each match begins at a regular ASCII space
+         (0x20) immediately before a Polish abbreviation (`r.`, `nr `, `s.`);
+         the fix REPLACES that single space byte with a NBSP (0xC2 0xA0), the
+         typographically-required non-breaking space. Offsets are on the
+         ORIGINAL source [s]; matches are non-overlapping (search resumes at
+         match_end), so the 1-byte→2-byte replaces never overlap.
+
+         IDEMPOTENCE / CONVERGENCE: the detector requires a regular space (0x20)
+         before the abbreviation. After the fix the byte immediately before the
+         abbreviation is 0xA0 (NBSP tail), never 0x20, so the rule cannot
+         re-fire at that spot and repeated --apply-fixes passes reach a fixpoint
+         in one step. NBSP is not re-targeted back to a regular space by any
+         neighbouring producer, so there is no oscillation. The COUNT is
+         untouched (every occurrence is still tallied), keeping the diagnostic
+         and the release differential byte-identical. *)
+      let fix =
+        List.fold_left
+          (fun acc off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) "\xc2\xa0"
+            :: acc)
+          [] !starts
+      in
       Some
-        (mk_result ~id:"PL-001" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"PL-001" ~severity:Info
            ~message:{|PL: NB‑space before abbreviations “r.”, “nr”, “s.”|}
-           ~count:!cnt)
+           ~count:!cnt ~fix)
     else None
   in
   { id = "PL-001"; run; languages = [ "pl" ] }
@@ -4597,6 +4725,15 @@ let r_ar_002 : rule =
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
+    (* v27.1.11: fix producer. For every ASCII hyphen the detector counts (byte
+       offset [!i + 2], between two Arabic-Indic digits), replace the single '-'
+       byte with the macro "\arabicdash". Offsets are taken from the ORIGINAL
+       source [s] (no length-changing transform), and each replacement removes
+       the counted '-' — the macro contains no bare '-' in the trigger position,
+       so `<digit>\arabicdash<digit>` no longer matches: the rule is
+       idempotent/convergent. mk_result_with_fix_exempt withholds the fix (but
+       not the count) inside protected regions. *)
+    let fix = ref [] in
     let i = ref 0 in
     while !i < len do
       if
@@ -4610,14 +4747,18 @@ let r_ar_002 : rule =
         && Char.code (String.unsafe_get s (!i + 4)) <= 0xa9
       then (
         incr cnt;
+        fix :=
+          Cst_edit.replace ~start_offset:(!i + 2) ~end_offset:(!i + 3)
+            "\\arabicdash"
+          :: !fix;
         i := !i + 5)
       else i := !i + 1
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"AR-002" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"AR-002" ~severity:Info
            ~message:{|AR: ASCII hyphen in phone numbers—use \arabicdash|}
-           ~count:!cnt)
+           ~count:!cnt ~fix:(List.rev !fix))
     else None
   in
   { id = "AR-002"; run; languages = [ "ar" ] }
@@ -4871,6 +5012,7 @@ let r_cy_001 : rule =
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     while !i < len - 4 do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -4886,7 +5028,18 @@ let r_cy_001 : rule =
             let n0 = Char.code (String.unsafe_get s (!i + 4)) in
             if n0 = 0xd0 && !i + 5 < len then (
               let n1 = Char.code (String.unsafe_get s (!i + 5)) in
-              if n1 >= 0x90 && n1 <= 0xaf then incr cnt;
+              if n1 >= 0x90 && n1 <= 0xaf then (
+                incr cnt;
+                (* Fix: replace the regular space between the initials with a
+                   LaTeX thin non-breaking space "\," (the catalog's insert_nbsp
+                   token, matching the message's "И.\,И."). The space is one
+                   byte at offset (!i + 3). After the fix that byte is '\\', not
+                   ' ', so the detector cannot re-fire here →
+                   idempotent/convergent. *)
+                edits :=
+                  Cst_edit.replace ~start_offset:(!i + 3) ~end_offset:(!i + 4)
+                    "\\,"
+                  :: !edits);
               i := !i + 4))
           else i := !i + 2
         else i := !i + 2
@@ -4894,9 +5047,9 @@ let r_cy_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"CY-001" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"CY-001" ~severity:Info
            ~message:{esc|Cyrillic initials require NB‑space "И.\,И."|esc}
-           ~count:!cnt)
+           ~count:!cnt ~fix:(List.rev !edits))
     else None
   in
   { id = "CY-001"; run; languages = [ "ru" ] }

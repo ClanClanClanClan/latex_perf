@@ -19,6 +19,33 @@ let () =
         (tag ^ ": NBSP ok"));
   run "CY-001 clean ASCII" (fun tag ->
       expect (does_not_fire "CY-001" "A. B.") (tag ^ ": ASCII initials ok"));
+  run "CY-001 count unchanged with fix" (fun tag ->
+      expect
+        (fires_with_count "CY-001" "\xd0\x98. \xd0\x90." 1)
+        (tag ^ ": count still 1"));
+  run "CY-001 emits fix" (fun tag ->
+      expect (fires_with_fix "CY-001" "\xd0\x98. \xd0\x90.") (tag ^ ": has fix"));
+  run "CY-001 fix output = thin NB-space" (fun tag ->
+      let src = "\xd0\x98. \xd0\x90." in
+      let out =
+        match
+          Latex_parse_lib.Cst_edit.apply_all src (fix_edits "CY-001" src)
+        with
+        | Ok s -> s
+        | Error _ -> src
+      in
+      (* space between initials replaced by LaTeX thin nbsp "\," *)
+      expect (out = "\xd0\x98.\\,\xd0\x90.") (tag ^ ": И.\\,И."));
+  run "CY-001 idempotent: fixed output does not re-fire" (fun tag ->
+      let src = "\xd0\x98. \xd0\x90." in
+      let out =
+        match
+          Latex_parse_lib.Cst_edit.apply_all src (fix_edits "CY-001" src)
+        with
+        | Ok s -> s
+        | Error _ -> src
+      in
+      expect (does_not_fire "CY-001" out) (tag ^ ": no re-fire on fixpoint"));
 
   (* ══════════════════════════════════════════════════════════════════════
      DE-006: Swiss DE glyph eszett prohibited

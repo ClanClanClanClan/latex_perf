@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 136 (~20%)
-- **Pending**: 520
+- **Shipped**: 144 (~21%)
+- **Pending**: 512
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 462 | 136 | 326 |
+| **A**  | Mechanical, safe everywhere       | 462 | 144 | 318 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 87 | 0 | 87 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -53,7 +53,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 
 | Family | Total | Shipped | Pending | Deferred | A | B | C | D |
 |--------|-------|---------|---------|----------|---|---|---|---|
-| AR | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
+| AR | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | BIB | 17 | 0 | 17 | 0 | 0 | 0 | 17 | 0 |
 | CE | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | CHAR | 22 | 12 | 10 | 0 | 22 | 0 | 0 | 0 |
@@ -62,7 +62,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | CMD | 17 | 0 | 17 | 0 | 17 | 0 | 0 | 0 |
 | COL | 7 | 0 | 7 | 0 | 7 | 0 | 0 | 0 |
 | CS | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
-| CY | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
+| CY | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | DE | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | DELIM | 11 | 0 | 11 | 0 | 11 | 0 | 0 | 0 |
 | DOC | 5 | 0 | 5 | 0 | 0 | 0 | 5 | 0 |
@@ -71,7 +71,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | EXP | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
 | FIG | 25 | 0 | 25 | 0 | 0 | 0 | 0 | 25 |
 | FONT | 13 | 0 | 13 | 0 | 0 | 0 | 0 | 13 |
-| FR | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
+| FR | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
 | HE | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | HI | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | IB | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
@@ -80,20 +80,20 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | L3 | 11 | 0 | 11 | 0 | 0 | 0 | 0 | 11 |
 | LANG | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
 | LAY | 27 | 0 | 27 | 0 | 0 | 0 | 27 | 0 |
-| MATH | 108 | 13 | 95 | 0 | 108 | 0 | 0 | 0 |
+| MATH | 108 | 16 | 92 | 0 | 108 | 0 | 0 | 0 |
 | META | 4 | 0 | 4 | 0 | 0 | 0 | 4 | 0 |
 | MOD | 18 | 0 | 18 | 0 | 0 | 0 | 18 | 0 |
 | NL | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | PDF | 12 | 0 | 12 | 0 | 0 | 0 | 0 | 12 |
 | PKG | 25 | 0 | 25 | 0 | 25 | 0 | 0 | 0 |
-| PL | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
+| PL | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
 | PRJ | 4 | 0 | 4 | 0 | 0 | 0 | 4 | 0 |
 | PRT | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | PT | 3 | 0 | 3 | 0 | 3 | 0 | 0 | 0 |
 | REF | 12 | 0 | 12 | 0 | 0 | 0 | 12 | 0 |
 | RO | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | RTL | 5 | 0 | 5 | 0 | 5 | 0 | 0 | 0 |
-| RU | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
+| RU | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
 | SCRIPT | 22 | 5 | 17 | 0 | 22 | 0 | 0 | 0 |
 | SPC | 35 | 25 | 10 | 0 | 35 | 0 | 0 | 0 |
 | STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
@@ -111,7 +111,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 
 | Rule | Family | Bucket | Confidence | Status |
 |------|--------|--------|------------|--------|
-| `AR-002` | AR | **A** | tentative | pending |
+| `AR-002` | AR | **A** | confirmed | shipped in v27.1.11 |
 | `BIB-001` | BIB | **C** | tentative | pending |
 | `BIB-002` | BIB | **C** | tentative | pending |
 | `BIB-003` | BIB | **C** | tentative | pending |
@@ -205,7 +205,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `COL-007` | COL | **A** | tentative | pending |
 | `CS-001` | CS | **A** | confirmed | shipped in v27.1.10 |
 | `CS-002` | CS | **A** | tentative | pending |
-| `CY-001` | CY | **A** | tentative | pending |
+| `CY-001` | CY | **A** | confirmed | shipped in v27.1.11 |
 | `DE-006` | DE | **A** | tentative | pending |
 | `DELIM-001` | DELIM | **A** | tentative | pending |
 | `DELIM-002` | DELIM | **A** | tentative | pending |
@@ -287,7 +287,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `FONT-011` | FONT | **D** | tentative | pending |
 | `FONT-012` | FONT | **D** | tentative | pending |
 | `FONT-013` | FONT | **D** | tentative | pending |
-| `FR-007` | FR | **A** | tentative | pending |
+| `FR-007` | FR | **A** | confirmed | shipped in v27.1.11 |
 | `FR-008` | FR | **A** | tentative | pending |
 | `HE-001` | HE | **A** | confirmed | shipped in v27.1.10 |
 | `HI-001` | HI | **A** | confirmed | shipped in v27.1.10 |
@@ -357,7 +357,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-006` | MATH | **A** | tentative | pending |
 | `MATH-007` | MATH | **A** | tentative | pending |
 | `MATH-008` | MATH | **A** | tentative | pending |
-| `MATH-009` | MATH | **A** | tentative | pending |
+| `MATH-009` | MATH | **A** | confirmed | shipped in v27.1.11 |
 | `MATH-010` | MATH | **A** | confirmed | shipped in v27.0.50 |
 | `MATH-011` | MATH | **A** | tentative | pending |
 | `MATH-012` | MATH | **A** | tentative | pending |
@@ -391,7 +391,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-040` | MATH | **A** | tentative | pending |
 | `MATH-041` | MATH | **A** | tentative | pending |
 | `MATH-042` | MATH | **A** | tentative | pending |
-| `MATH-043` | MATH | **A** | tentative | pending |
+| `MATH-043` | MATH | **A** | confirmed | shipped in v27.1.11 |
 | `MATH-044` | MATH | **A** | confirmed | shipped in v27.1.5 |
 | `MATH-045` | MATH | **A** | tentative | pending |
 | `MATH-046` | MATH | **A** | confirmed | shipped in v27.1.10 |
@@ -409,7 +409,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-058` | MATH | **A** | tentative | pending |
 | `MATH-059` | MATH | **A** | tentative | pending |
 | `MATH-060` | MATH | **A** | tentative | pending |
-| `MATH-061` | MATH | **A** | tentative | pending |
+| `MATH-061` | MATH | **A** | confirmed | shipped in v27.1.11 |
 | `MATH-062` | MATH | **A** | tentative | pending |
 | `MATH-063` | MATH | **A** | tentative | pending |
 | `MATH-064` | MATH | **A** | tentative | pending |
@@ -518,7 +518,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `PKG-023` | PKG | **A** | tentative | pending |
 | `PKG-024` | PKG | **A** | tentative | pending |
 | `PKG-025` | PKG | **A** | tentative | pending |
-| `PL-001` | PL | **A** | tentative | pending |
+| `PL-001` | PL | **A** | confirmed | shipped in v27.1.11 |
 | `PL-002` | PL | **A** | tentative | pending |
 | `PRJ-001` | PRJ | **C** | tentative | pending |
 | `PRJ-002` | PRJ | **C** | tentative | pending |
@@ -547,7 +547,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `RTL-003` | RTL | **A** | tentative | pending |
 | `RTL-004` | RTL | **A** | tentative | pending |
 | `RTL-005` | RTL | **A** | tentative | pending |
-| `RU-001` | RU | **A** | tentative | pending |
+| `RU-001` | RU | **A** | confirmed | shipped in v27.1.11 |
 | `RU-002` | RU | **A** | tentative | pending |
 | `SCRIPT-001` | SCRIPT | **A** | confirmed | shipped in v27.1.5 |
 | `SCRIPT-002` | SCRIPT | **A** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 136 of 462 Bucket A
+  **TRACKING** — 144 of 462 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

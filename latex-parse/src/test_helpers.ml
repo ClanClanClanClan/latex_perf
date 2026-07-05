@@ -73,6 +73,16 @@ let fix_edits id src =
   | Some { fix = Some edits; _ } -> edits
   | _ -> []
 
+(** [apply_fix id src] runs [run_all], applies rule [id]'s fix edits to [src],
+    and returns the rewritten string. If the rule didn't fire or produced no
+    fix, [src] is returned unchanged. Non-advisory counterpart of
+    [apply_fix_advisory]. *)
+let apply_fix id src =
+  match find_result id src with
+  | Some { fix = Some edits; _ } -> (
+      match Cst_edit.apply_all src edits with Ok s -> s | Error _ -> src)
+  | _ -> src
+
 (** [fix_edits_advisory id src] is the Class-D counterpart of [fix_edits]:
     returns the fix edit list for an advisory rule [id] (e.g. STYLE family),
     reachable only via [run_with_policy Execution_policy.with_advisory]. *)

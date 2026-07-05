@@ -89,6 +89,15 @@ BUILD_CHECKS = [
     # asserts --apply-fixes leaves them byte-identical (pilot + default).
     (["python3", "scripts/tools/check_verbatim_safety.py", "--repo", "."],
      "verbatim safety", None),
+    # Per-producer coverage + correctness gate. The corpus differential /
+    # convergence gates only exercise producers the corpus happens to trigger
+    # (as of v27.1.12, only ~54% of them). This applies EVERY produces_fix:true
+    # rule to a registered ADVERSARIAL trigger (letter-adjacent for control-word
+    # emitters, the edge that hid the \\cdot->\\cdotb glue bugs) and asserts
+    # applied + valid-UTF-8 + idempotent + matches its recorded golden output.
+    # Fails if any producer lacks a trigger, so coverage is non-optional.
+    (["python3", "scripts/tools/check_producer_coverage.py"],
+     "producer coverage", None),
 ]
 
 

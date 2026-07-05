@@ -776,7 +776,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: CJK-005
   layer: L3_Semantics
   execution_class: B
@@ -802,7 +802,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: CJK-007
   layer: L3_Semantics
   execution_class: B
@@ -5505,7 +5505,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PKG-012
   layer: L2_Ast
   execution_class: B
@@ -5518,7 +5518,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PKG-013
   layer: L2_Ast
   execution_class: B
@@ -5984,7 +5984,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: any
-  produces_fix: null
+  produces_fix: true
 - rule_id: REF-012
   layer: L3_Semantics
   execution_class: B
@@ -6193,7 +6193,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-008
   layer: L1_Expanded
   execution_class: B

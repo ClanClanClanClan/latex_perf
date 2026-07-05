@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.12] — 2026-07-05
+
+**+6 producers (144 → 150), 7 latent-bug fixes, and a permanent per-producer
+safety gate.**
+
+New producers (`insert_usepackage` family + subscript wrap), idempotent by
+construction (each detector gates on `not (has_package …)`), sharing a new
+`mk_usepackage_insert` helper:
+- **PKG-011** booktabs, **PKG-012** csquotes, **CJK-004** xeCJK, **CJK-006** ruby,
+  **REF-011** hyperref — insert the missing `\usepackage{…}` after `\documentclass`.
+- **SCRIPT-007** — wrap a multi-letter math subscript in `\text{…}`.
+
+**Control-word glue bug (7 producers), found + fixed.** A fix that replaced a
+symbol with a bare control word emitted no terminator, so `$a·b$` → `$a\cdotb$`
+— an *undefined* control word (compile error). Affected **MATH-010** (`\div`),
+**MATH-078** (`\longrightarrow`), **MATH-097** (`\implies`), **MATH-106**
+(`\neq`), **MATH-108** (`\cdot`), **CHEM-005** (`\rightarrow`), **CHEM-009**
+(`\rightleftharpoons`). Fixed via a shared `control_word_repl` helper that
+appends a space only when the following byte is a letter (digit/symbol/space
+cases are byte-unchanged, so no existing test moved). They were invisible because
+their triggers aren't in the corpus and the unit tests used *space-padded* inputs.
+
+**Permanent producer-coverage gate (`check_producer_coverage.py`).** Root cause
+of the above: the differential and apply-fixes convergence gates only exercise a
+producer whose trigger is in the corpus — **69 of 150 producers (~46%) were never
+corpus-triggered**, giving false confidence over half the surface. The new gate
+applies EVERY `produces_fix:true` rule to a registered **adversarial** trigger
+(`specs/v27/producer_triggers.json`; letter-adjacent for control-word emitters)
+and asserts applied + valid-UTF-8 + idempotent + matches its recorded golden
+output — and **fails if any producer has no trigger**, making coverage
+non-optional. Wired into `pre_release_check` and into CI (which now also runs the
+previously local-only apply-fixes and verbatim safety gates). Regenerate goldens
+with `gen_producer_triggers.py`.
+
+Full `dune runtest`, all release gates, differential, convergence, verbatim, and
+the new coverage gate (150/150) green.
+
 ## [v27.1.11] — 2026-07-05
 
 **Bucket-A fix-producer cadence: +8 producers (136 → 144), math-wrapping +

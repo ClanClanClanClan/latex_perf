@@ -488,9 +488,16 @@ let r_cjk_004 : rule =
           || has_package s "CJKutf8"
           || has_package s "ctex")
       then
-        Some
-          (mk_result ~id:"CJK-004" ~severity:Warning
-             ~message:"xeCJK package missing when CJK glyphs present" ~count:1)
+        let fix = mk_usepackage_insert s "xeCJK" in
+        if fix = [] then
+          Some
+            (mk_result ~id:"CJK-004" ~severity:Warning
+               ~message:"xeCJK package missing when CJK glyphs present" ~count:1)
+        else
+          Some
+            (mk_result_with_fix ~id:"CJK-004" ~severity:Warning
+               ~message:"xeCJK package missing when CJK glyphs present" ~count:1
+               ~fix)
       else None
     else None
   in
@@ -516,9 +523,23 @@ let r_cjk_006 : rule =
         || has_package s "luatexja-ruby"
       in
       if not has_ruby_pkg then
-        Some
-          (mk_result ~id:"CJK-006" ~severity:Warning
-             ~message:"Ruby annotation requires ruby package" ~count:!cnt)
+        (* insert_usepackage producer: add \usepackage{ruby} after the
+           \documentclass line. The insert offset and bytes come from the
+           ORIGINAL source [s]; the inserted text is pure ASCII. Idempotent: the
+           detector is gated on [not (has_package s "ruby" ...)], so after the
+           insert [has_package s "ruby"] holds and the rule stops firing.
+           Convergent: no producer removes a \usepackage line. A
+           \documentclass-less fragment yields [] (nowhere to insert) so the
+           rule degrades to diagnose-only there. *)
+        let fix = mk_usepackage_insert s "ruby" in
+        if fix = [] then
+          Some
+            (mk_result ~id:"CJK-006" ~severity:Warning
+               ~message:"Ruby annotation requires ruby package" ~count:!cnt)
+        else
+          Some
+            (mk_result_with_fix ~id:"CJK-006" ~severity:Warning
+               ~message:"Ruby annotation requires ruby package" ~count:!cnt ~fix)
       else None
     else None
   in
@@ -1177,9 +1198,22 @@ let r_pkg_011 : rule =
         with Not_found -> false)
     in
     if uses_booktabs_cmds && not (has_package s "booktabs") then
-      Some
-        (mk_result ~id:"PKG-011" ~severity:Warning
-           ~message:"booktabs required but not loaded for \\toprule" ~count:1)
+      (* Fix producer: insert \usepackage{booktabs} after \documentclass.
+         Offsets are computed on the ORIGINAL source [s]; the fix is empty for a
+         fragment with no \documentclass, in which case we fall back to the
+         diagnose-only result (mk_result_with_fix raises on an empty fix). The
+         detector is gated on [not (has_package s "booktabs")], so once the line
+         is inserted the rule cannot re-fire — idempotent + convergent. *)
+      let fix = mk_usepackage_insert s "booktabs" in
+      if fix = [] then
+        Some
+          (mk_result ~id:"PKG-011" ~severity:Warning
+             ~message:"booktabs required but not loaded for \\toprule" ~count:1)
+      else
+        Some
+          (mk_result_with_fix ~id:"PKG-011" ~severity:Warning
+             ~message:"booktabs required but not loaded for \\toprule" ~count:1
+             ~fix)
     else None
   in
   { id = "PKG-011"; run; languages = [] }
@@ -1196,9 +1230,17 @@ let r_pkg_012 : rule =
       with Not_found -> false
     in
     if has_enquote && not (has_package s "csquotes") then
-      Some
-        (mk_result ~id:"PKG-012" ~severity:Error
-           ~message:"csquotes not loaded when \\enquote used" ~count:1)
+      let fix = mk_usepackage_insert s "csquotes" in
+      if fix = [] then
+        (* Fragment with no \documentclass to anchor the insertion: keep the
+           diagnostic but emit no fix. *)
+        Some
+          (mk_result ~id:"PKG-012" ~severity:Error
+             ~message:"csquotes not loaded when \\enquote used" ~count:1)
+      else
+        Some
+          (mk_result_with_fix ~id:"PKG-012" ~severity:Error
+             ~message:"csquotes not loaded when \\enquote used" ~count:1 ~fix)
     else None
   in
   { id = "PKG-012"; run; languages = [] }

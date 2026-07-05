@@ -2561,7 +2561,7 @@
   description: "\\autoref used without hyperref/cleveref loaded"
   precondition: L2_Ast
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@structure"
   fix: insert_usepackage
 
@@ -2631,7 +2631,7 @@
   description: "Subscript text not wrapped in \\text{}"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: wrap_text
 
@@ -3190,7 +3190,7 @@
   description: "booktabs required but not loaded for \\toprule"
   precondition: L2_Ast
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@pkg-lint"
   fix: insert_usepackage
 
@@ -3198,7 +3198,7 @@
   description: "csquotes not loaded when \\enquote used"
   precondition: L2_Ast
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@pkg-lint"
   fix: insert_usepackage
 
@@ -4094,7 +4094,7 @@
   description: "xeCJK package missing when CJK glyphs present"
   precondition: L2_Ast
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@cjk"
   fix: insert_usepackage
 
@@ -4110,7 +4110,7 @@
   description: "Ruby annotation requires ruby package"
   precondition: L2_Ast
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@cjk"
   fix: insert_usepackage
 

@@ -160,7 +160,7 @@ let l1_math_010_rule : rule =
       (fun off ->
         Cst_edit.replace ~start_offset:off
           ~end_offset:(off + String.length needle)
-          replacement)
+          (control_word_repl s (off + String.length needle) replacement))
       offsets
   in
   let run s =
@@ -1728,7 +1728,7 @@ let l1_math_078_rule : rule =
       (fun off ->
         Cst_edit.replace ~start_offset:off
           ~end_offset:(off + String.length needle)
-          replacement)
+          (control_word_repl s (off + String.length needle) replacement))
       offsets
   in
   let run s =
@@ -2710,7 +2710,8 @@ let l1_math_097_rule : rule =
     let offsets = List.filter inside (find_arrow_offsets s) in
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\\implies")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2)
+          (control_word_repl s (off + 2) "\\implies"))
       offsets
   in
   let run s =
@@ -2834,7 +2835,8 @@ let l1_math_106_rule : rule =
     in
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 5) "\\neq")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 5)
+          (control_word_repl s (off + 5) "\\neq"))
       offsets
   in
   let run s =
@@ -2873,7 +2875,8 @@ let l1_math_108_rule : rule =
     in
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) "\\cdot")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 2)
+          (control_word_repl s (off + 2) "\\cdot"))
       offsets
   in
   let run s =

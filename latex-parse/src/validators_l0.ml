@@ -5384,10 +5384,22 @@ let r_ref_011 : rule =
       || count_substring s "cleveref" > 0
     in
     if has_autoref && (not has_hyperref) && not has_cleveref then
+      let count = count_substring s "\\autoref" in
+      let message = {|\autoref used without hyperref/cleveref loaded|} in
+      (* Fix: insert \usepackage{hyperref} right after \documentclass. The
+         detector only fires when NEITHER hyperref NOR cleveref is present, so
+         there is no cleveref to conflict at that load position. After the
+         insert count_substring s "\\usepackage{hyperref}" > 0 -> has_hyperref
+         holds -> the rule cannot re-fire (idempotent + convergent). Offsets
+         come from the ORIGINAL s (mk_usepackage_insert searches s), never a
+         length-changing transform. Degrades to diagnose-only for fragments with
+         no \documentclass (empty edit list -> plain mk_result). *)
+      let fix = mk_usepackage_insert s "hyperref" in
       Some
-        (mk_result ~id:"REF-011" ~severity:Error
-           ~message:{|\autoref used without hyperref/cleveref loaded|}
-           ~count:(count_substring s "\\autoref"))
+        (if fix = [] then
+           mk_result ~id:"REF-011" ~severity:Error ~message ~count
+         else
+           mk_result_with_fix ~id:"REF-011" ~severity:Error ~message ~count ~fix)
     else None
   in
   { id = "REF-011"; run; languages = [] }

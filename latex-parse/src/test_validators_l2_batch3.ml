@@ -249,6 +249,47 @@ let () =
         (tag ^ ": booktabs with options"));
   run "PKG-011 clean empty" (fun tag ->
       expect (does_not_fire "PKG-011" "") (tag ^ ": empty"));
+  (* Fix producer (v27.1.12): insert \usepackage{booktabs} after the
+     \documentclass line. Unique anchor: PKG-011 booktabs preamble insert. *)
+  let pkg011_doc =
+    "\\documentclass[11pt]{article}\n\
+     \\begin{document}\n\
+     \\begin{tabular}{ll}\n\
+     \\toprule\n\
+     A & B \\\\\n\
+     \\bottomrule\n\
+     \\end{tabular}\n\
+     \\end{document}\n"
+  in
+  run "PKG-011 emits a fix when documentclass present" (fun tag ->
+      expect (fires_with_fix "PKG-011" pkg011_doc) (tag ^ ": has fix"));
+  run "PKG-011 fix inserts usepackage booktabs after documentclass" (fun tag ->
+      let out = apply_fix "PKG-011" pkg011_doc in
+      expect
+        (out
+        = "\\documentclass[11pt]{article}\n\
+           \\usepackage{booktabs}\n\
+           \\begin{document}\n\
+           \\begin{tabular}{ll}\n\
+           \\toprule\n\
+           A & B \\\\\n\
+           \\bottomrule\n\
+           \\end{tabular}\n\
+           \\end{document}\n")
+        (tag ^ ": inserted line"));
+  run "PKG-011 fix is idempotent (2nd pass no-op)" (fun tag ->
+      let out1 = apply_fix "PKG-011" pkg011_doc in
+      let out2 = apply_fix "PKG-011" out1 in
+      expect
+        (out2 = out1 && not (fires "PKG-011" out1))
+        (tag ^ ": 2nd pass no-op"));
+  run "PKG-011 count unchanged by adding fix (=1)" (fun tag ->
+      expect (fires_with_count "PKG-011" pkg011_doc 1) (tag ^ ": count=1"));
+  run "PKG-011 fragment without documentclass fires but has no fix" (fun tag ->
+      let frag = "\\begin{tabular}{c}\n\\toprule\na\n\\end{tabular}" in
+      expect
+        (fires "PKG-011" frag && not (fires_with_fix "PKG-011" frag))
+        (tag ^ ": diagnose-only fallback"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-012: csquotes not loaded when \enquote used
@@ -263,6 +304,37 @@ let () =
       expect (does_not_fire "PKG-012" "just text") (tag ^ ": no enquote"));
   run "PKG-012 clean empty" (fun tag ->
       expect (does_not_fire "PKG-012" "") (tag ^ ": empty"));
+  (* Fix producer (v27.1.12): insert \usepackage{csquotes} after the
+     \documentclass line. *)
+  let pkg012_doc =
+    "\\documentclass{article}\n\
+     \\begin{document}\n\
+     \\enquote{hi}\n\
+     \\end{document}\n"
+  in
+  run "PKG-012 emits usepackage-insert fix" (fun tag ->
+      expect (fires_with_fix "PKG-012" pkg012_doc) (tag ^ ": has fix"));
+  run "PKG-012 fix inserts csquotes after documentclass" (fun tag ->
+      expect
+        (apply_fix "PKG-012" pkg012_doc
+        = "\\documentclass{article}\n\
+           \\usepackage{csquotes}\n\
+           \\begin{document}\n\
+           \\enquote{hi}\n\
+           \\end{document}\n")
+        (tag ^ ": correct insertion"));
+  run "PKG-012 count unchanged with fix" (fun tag ->
+      expect (fires_with_count "PKG-012" pkg012_doc 1) (tag ^ ": count=1"));
+  run "PKG-012 fix is idempotent (2nd pass no-op)" (fun tag ->
+      let once = apply_fix "PKG-012" pkg012_doc in
+      expect
+        (does_not_fire "PKG-012" once && apply_fix "PKG-012" once = once)
+        (tag ^ ": fixpoint reached"));
+  run "PKG-012 fragment without documentclass fires but no fix" (fun tag ->
+      expect
+        (fires "PKG-012" "\\enquote{hello}"
+        && not (fires_with_fix "PKG-012" "\\enquote{hello}"))
+        (tag ^ ": diagnose-only fallback"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-015: inputenc loaded under XeLaTeX/LuaLaTeX

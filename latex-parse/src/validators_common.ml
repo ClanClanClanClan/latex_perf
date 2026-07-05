@@ -1049,6 +1049,23 @@ let mk_usepackage_insert (s : string) (pkg : string) : Cst_edit.t list =
       let at = if nl < n then nl + 1 else n in
       [ Cst_edit.insert ~at (Printf.sprintf "\\usepackage{%s}\n" pkg) ]
 
+(** [control_word_repl s after word] — terminate a control-word replacement so
+    it can never glue onto a following letter. A fix that replaces a symbol with
+    a control word like [\cdot] must not yield [\cdotb] (an UNDEFINED control
+    word / compile error) when the next source byte is a letter: TeX reads a
+    control word greedily up to the first non-letter. This appends a single
+    space to [word] iff the byte at [after] in [s] is an ASCII letter; digits,
+    symbols, whitespace, multibyte bytes and EOF already terminate a control
+    word, so those cases are byte-unchanged. In math mode the space is
+    invisible, so no rendering changes — it only prevents the glue. Mirrors the
+    trailing space MATH-044 already bakes into [\le ]/[\ge ]. *)
+let control_word_repl (s : string) (after : int) (word : string) : string =
+  if after < String.length s then
+    let c = s.[after] in
+    if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') then word ^ " "
+    else word
+  else word
+
 (* ── Helper: extract env blocks for both env and env* ────────────────── *)
 let extract_env_blocks_starred (env : string) (s : string) : string list =
   let plain = extract_env_blocks env s in

@@ -42,6 +42,42 @@ let () =
   title = {A Paper}
 }|})
         (tag ^ ": no doi field"));
+  (* BIB-002 fix producer (v27.1.13): canonical resolver-prefix normalisation
+     only. `http://dx.doi.org/10.x` → `https://doi.org/10.x`; the DOI body is
+     preserved and the field is now clean, so the rule no longer fires. *)
+  run "BIB-002 fix: dx.doi.org resolver → https://doi.org/" (fun tag ->
+      let src = {|@article{k,
+  doi = {http://dx.doi.org/10.1234/foo}
+}|} in
+      let out = apply_fix "BIB-002" src in
+      expect
+        (out = {|@article{k,
+  doi = {https://doi.org/10.1234/foo}
+}|}
+        && does_not_fire "BIB-002" out)
+        (tag ^ ": prefix swapped, rule silent after fix"));
+  (* Idempotent + convergent: a 2nd apply pass is a byte-identical no-op. *)
+  run "BIB-002 fix: idempotent second pass" (fun tag ->
+      let src = {|@article{k,
+  doi = {https://dx.doi.org/10.5555/bar}
+}|} in
+      let out1 = apply_fix "BIB-002" src in
+      let out2 = apply_fix "BIB-002" out1 in
+      expect
+        (out1 = {|@article{k,
+  doi = {https://doi.org/10.5555/bar}
+}|}
+        && out2 = out1)
+        (tag ^ ": second pass unchanged"));
+  (* Ambiguous bare DOI: rule fires (count) but NO fix is emitted — we must not
+     guess whether to prepend a resolver. *)
+  run "BIB-002 no-fix: bare DOI is ambiguous" (fun tag ->
+      let src = {|@article{k,
+  doi = {10.1234/baz}
+}|} in
+      expect
+        (fires "BIB-002" src && apply_fix "BIB-002" src = src)
+        (tag ^ ": bare DOI left untouched"));
 
   (* ══════════════════════════════════════════════════════════════════════
      BIB-003: Journal title capitalisation inconsistent
@@ -205,6 +241,50 @@ let () =
       expect
         (does_not_fire "BIB-008" {|Just some plain text with Title = {foo}.|})
         (tag ^ ": no bib entry context"));
+  (* BIB-008 fix producer (lowercase_fields): CamelCase field name -> lowercase.
+     Unique anchor: BIB008FIXANCHOR *)
+  run "BIB-008 fix: Title -> title, applied output clean" (fun tag ->
+      let src = {|@article{key1,
+  Title = {Some Title}
+}|} in
+      expect (fires_with_fix "BIB-008" src) (tag ^ ": emits a fix");
+      let out = apply_fix "BIB-008" src in
+      expect
+        (out = {|@article{key1,
+  title = {Some Title}
+}|})
+        (tag ^ ": Title field lowercased, value untouched");
+      expect
+        (does_not_fire "BIB-008" out)
+        (tag ^ ": fixed output no longer fires"));
+  run "BIB-008 fix: idempotent on adversarial compound BookTitle" (fun tag ->
+      let src = {|@book{key1,
+  BookTitle = {A Book}
+}|} in
+      let out1 = apply_fix "BIB-008" src in
+      expect
+        (out1 = {|@book{key1,
+  booktitle = {A Book}
+}|})
+        (tag ^ ": whole compound word lowercased in one pass");
+      let out2 = apply_fix "BIB-008" out1 in
+      expect (out2 = out1) (tag ^ ": second pass is a byte-identical no-op");
+      expect
+        (does_not_fire "BIB-008" out1)
+        (tag ^ ": converged, detector silent"));
+  run "BIB-008 fix: multiple fields, count preserved" (fun tag ->
+      let src = {|@article{key1,
+  Title = {A},
+  Author = {B}
+}|} in
+      expect (fires_with_count "BIB-008" src 2) (tag ^ ": two matches counted");
+      let out = apply_fix "BIB-008" src in
+      expect
+        (out = {|@article{key1,
+  title = {A},
+  author = {B}
+}|})
+        (tag ^ ": both field names lowercased"));
 
   (* ══════════════════════════════════════════════════════════════════════
      BIB-009: inproceedings missing booktitle

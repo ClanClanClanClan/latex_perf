@@ -463,6 +463,37 @@ let () =
       expect (does_not_fire "JA-001" "\xe3\x82\xab") (tag ^ ": full-width Ka ok"));
   run "JA-001 clean ASCII" (fun tag ->
       expect (does_not_fire "JA-001" "just text") (tag ^ ": ASCII only"));
+  (* JA-001 fix-set (NFKC) — anchor: JA001-FIX *)
+  run "JA001-FIX single Ka -> full-width" (fun tag ->
+      (* U+FF76 (EF BD B6) -> U+30AB full-width Ka (E3 82 AB) *)
+      let out = apply_fix "JA-001" "x\xef\xbd\xb6y" in
+      expect
+        (out = "x\xe3\x82\xaby" && does_not_fire "JA-001" out)
+        (tag ^ ": half-width Ka normalised, no re-fire"));
+  run "JA001-FIX voiced Ka+dakuten -> single Ga" (fun tag ->
+      (* U+FF76 U+FF9E (EF BD B6 EF BE 9E) -> U+30AC Ga (E3 82 AC), count=2 *)
+      let src = "\xef\xbd\xb6\xef\xbe\x9e" in
+      let out = apply_fix "JA-001" src in
+      expect
+        (fires_with_count "JA-001" src 2
+        && out = "\xe3\x82\xac"
+        && does_not_fire "JA-001" out)
+        (tag ^ ": composed to single precomposed katakana"));
+  run "JA001-FIX handakuten Ha+maru -> single Pa" (fun tag ->
+      (* U+FF8A U+FF9F (EF BE 8A EF BE 9F) -> U+30D1 Pa (E3 83 91) *)
+      let out = apply_fix "JA-001" "\xef\xbe\x8a\xef\xbe\x9f" in
+      expect
+        (out = "\xe3\x83\x91" && does_not_fire "JA-001" out)
+        (tag ^ ": semi-voiced composed"));
+  run "JA001-FIX letter-adjacent idempotent/convergent" (fun tag ->
+      (* Adversarial: voiced half-width katakana glued between ASCII letters.
+         Two apply passes must reach a byte-identical fixpoint. *)
+      let src = "a\xef\xbd\xb6\xef\xbe\x9eb" in
+      let once = apply_fix "JA-001" src in
+      let twice = apply_fix "JA-001" once in
+      expect
+        (once = "a\xe3\x82\xacb" && twice = once && does_not_fire "JA-001" once)
+        (tag ^ ": idempotent fixpoint"));
 
   (* ══════════════════════════════════════════════════════════════════════
      JA-002: U+FF5E tilde normalise to wave-dash

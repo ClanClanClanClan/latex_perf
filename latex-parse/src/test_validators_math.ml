@@ -1963,6 +1963,40 @@ let () =
       | None -> expect false (tag ^ ": should fire"));
   run "MATH-095 clean braced" (fun tag ->
       expect (does_not_fire "MATH-095" "$\\log_{10} x$") (tag ^ ": braced ok"));
+  (* MATH-095 fix producer (v27.1.13): wrap unbraced log base — \log_10x ->
+     \log_{10}x (mirror of MATH-061). *)
+  let math095_apply src =
+    match Cst_edit.apply_all src (fix_edits "MATH-095" src) with
+    | Ok out -> out
+    | Error _ -> src
+  in
+  run "MATH-095 fix: emits a fix" (fun tag ->
+      expect (fires_with_fix "MATH-095" "$\\log_10 x$") (tag ^ ": has fix"));
+  run "MATH-095 fix: exact output (10 wrapped, x untouched)" (fun tag ->
+      expect
+        (math095_apply "$\\log_10 x$" = "$\\log_{10} x$")
+        (tag ^ ": log_10 -> log_{10}"));
+  run "MATH-095 fix: adversarial letter-adjacent base wrapped" (fun tag ->
+      expect
+        (math095_apply "$\\log_2n$" = "$\\log_{2}n$")
+        (tag ^ ": log_2n -> log_{2}n"));
+  run "MATH-095 fix: count preserved (still 2)" (fun tag ->
+      expect
+        (fires_with_count "MATH-095" "$\\log_10x + \\log_2y$" 2)
+        (tag ^ ": count unchanged"));
+  run "MATH-095 fix: both occurrences rewritten" (fun tag ->
+      expect
+        (math095_apply "$\\log_10x + \\log_2y$" = "$\\log_{10}x + \\log_{2}y$")
+        (tag ^ ": two firings fixed"));
+  run "MATH-095 fix: idempotent + convergent" (fun tag ->
+      let once = math095_apply "$\\log_10 x$" in
+      expect
+        (does_not_fire "MATH-095" once && math095_apply once = once)
+        (tag ^ ": no re-fire, second apply no-op"));
+  run "MATH-095 fix: not rewritten inside comment (vcu-exempt)" (fun tag ->
+      expect
+        (math095_apply "% $\\log_10x$\n$y$" = "% $\\log_10x$\n$y$")
+        (tag ^ ": comment left literal"));
 
   (* ════════════════════════════════════════════════════════════════════
      MATH-096: Bold Greek via \mathbf

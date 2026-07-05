@@ -567,6 +567,38 @@ let () =
         (does_not_fire "ENC-019" "e\xcc\x81\xcc\x80")
         (tag ^ ": different accents ok"));
 
+  (* ENC-019 fix (v27.1.13 ENC019-DUPACCENT anchor): delete the DUPLICATE
+     combining mark, keep the first. Whole 2-byte UTF-8 sequence removed. *)
+  run "ENC-019 fix deletes duplicate acute, keeps one" (fun tag ->
+      (* e + acute + acute -> e + acute *)
+      let src = "e\xcc\x81\xcc\x81" in
+      let applied = apply_fix "ENC-019" src in
+      expect (applied = "e\xcc\x81") (tag ^ ": one acute survives"));
+  run "ENC-019 fix count preserved on double acute" (fun tag ->
+      expect
+        (fires_with_count "ENC-019" "e\xcc\x81\xcc\x81" 1)
+        (tag ^ ": count=1 unchanged by fix-set"));
+  run "ENC-019 fix on triple acute keeps single mark" (fun tag ->
+      (* e + acute + acute + acute: fix deletes every duplicate mark, leaving
+         exactly one acute. (Duplicate edits from the detector's combining-lead
+         rescan are collapsed by dedup_identical / disjoint apply.) *)
+      let src = "e\xcc\x81\xcc\x81\xcc\x81" in
+      let applied = apply_fix "ENC-019" src in
+      expect (applied = "e\xcc\x81") (tag ^ ": triple collapses to single acute"));
+  run "ENC-019 fix idempotent/convergent (2nd pass no-op)" (fun tag ->
+      (* adversarial: letter-adjacent base 'a' + duplicate acute + letter 'b' *)
+      let src = "a\xcc\x81\xcc\x81b" in
+      let pass1 = apply_fix "ENC-019" src in
+      let pass2 = apply_fix "ENC-019" pass1 in
+      expect
+        (pass1 = "a\xcc\x81b" && pass2 = pass1 && does_not_fire "ENC-019" pass1)
+        (tag ^ ": converges, detector cannot re-fire"));
+  run "ENC-019 fix on 2-byte base (a-grave + dup tilde)" (fun tag ->
+      (* U+00E0 (C3 A0) base + combining tilde CC 83 twice -> keep one *)
+      let src = "\xc3\xa0\xcc\x83\xcc\x83x" in
+      let applied = apply_fix "ENC-019" src in
+      expect (applied = "\xc3\xa0\xcc\x83x") (tag ^ ": 2-byte base handled"));
+
   (* ══════════════════════════════════════════════════════════════════════ New
      CHAR rules (batch 4)
      ══════════════════════════════════════════════════════════════════════ *)

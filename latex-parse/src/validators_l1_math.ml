@@ -2606,17 +2606,62 @@ let l1_math_092_rule : rule =
   in
   { id = "MATH-092"; run; languages = [] }
 
-(* MATH-095: Log base without braces — alias of MATH-061 logic *)
+(* MATH-095: Log base without braces — alias of MATH-061 logic
+
+   Fix producer (v27.1.13): identical detector regex to MATH-061, so the fix is
+   the SAME provably-safe rewrite — wrap the unbraced multi-character subscript
+   base of `\log` in braces (`\log_10x` -> `\log_{10}x`). Offsets are computed
+   on the ORIGINAL source `s` (never a length-changing transform — the STYLE-033
+   corruption class), re-scanning with the SAME non-overlapping regex the count
+   uses (search restarts at match_end), gated to `find_math_ranges s` so the fix
+   set never exceeds the counted set. One pure-ASCII REPLACE per firing: `_` +
+   maximal-digit-run -> `_{` + digits + `}`. The replaced span is whole ASCII
+   bytes, so it can never split a multibyte UTF-8 sequence. The emitted text
+   ends in `}` (a brace, not a control word) so there is no letter-glue class.
+   After the rewrite the `_` is followed by `{`, which the count regex
+   (`\\log_[0-9]`) no longer matches, so a second --apply-fixes pass is a
+   byte-identical no-op — idempotent + convergent. Count is left byte-identical
+   (differential 0-diff). vcu-exempt so a `$\log_10x$` inside
+   verbatim/comment/url is counted, not rewritten. *)
 let l1_math_095_rule : rule =
   let re = Re_compat.regexp {|\\log_[0-9][0-9a-zA-Z]|} in
+  let fix_edits_for s =
+    let math = find_math_ranges s in
+    let len = String.length s in
+    let acc = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let mr, _ = Re_compat.search_forward re s !i in
+         let mstart = Re_compat.match_beginning mr in
+         let mend = Re_compat.match_end mr in
+         let us = mstart + 4 in
+         let base_start = mstart + 5 in
+         if is_in_math_range math mstart then (
+           let e = ref base_start in
+           while !e < len && s.[!e] >= '0' && s.[!e] <= '9' do
+             incr e
+           done;
+           let digits = String.sub s base_start (!e - base_start) in
+           acc :=
+             Cst_edit.replace ~start_offset:us ~end_offset:!e
+               ("_{" ^ digits ^ "}")
+             :: !acc);
+         i := mend
+       done
+     with Not_found -> ());
+    List.rev !acc
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
+      let fix = fix_edits_for s in
       Some
-        (mk_result ~id:"MATH-095" ~severity:Warning
-           ~message:{|Log base typeset without braces (\log_10x)|} ~count:!cnt)
+        (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-095" ~severity:Warning
+           ~message:{|Log base typeset without braces (\log_10x)|} ~count:!cnt
+           ~fix)
     else None
   in
   { id = "MATH-095"; run; languages = [] }

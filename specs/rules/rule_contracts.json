@@ -52,7 +52,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "BIB-003",
@@ -154,7 +154,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "BIB-009",
@@ -2196,7 +2196,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "ENC-020",
@@ -3026,7 +3026,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: the detector matches 'oe' by whole-document substring (not word/token boundary), so it fires on ANY 'oe' (does, poet, coefficient); replacing all with the ligature oe corrupts non-French / non-ligature words. A correct fix needs a French word list or morphology."
     },
     {
       "rule_id": "HE-001",
@@ -3090,7 +3091,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "JA-002",
@@ -4481,7 +4482,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: the detector gates only on absence of '&' (column alignment), NOT on absence of row breaks; a multi-row single-column align (a // b // c) converted to the single-line equation environment breaks. A safe fix needs an extra single-row check."
     },
     {
       "rule_id": "MATH-026",
@@ -4970,7 +4972,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: suggest_frac is advisory and its detection set is a STRICT SUBSET of MATH-101's \\over detection; the same numerator/denominator ambiguity applies. The interactive \\frac suggestion is the intended surface."
     },
     {
       "rule_id": "MATH-053",
@@ -5745,7 +5748,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-096",
@@ -5853,7 +5856,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: the detector counts EVERY bare \\over (incl. chained {a \\over b \\over c}, brace-less 'a \\over b' spanning the whole formula, nested groups); \\over->\\frac needs unambiguous numerator/denominator parsing those cases do not admit. Only a narrow single-group subset (which the detector does not isolate) is deterministic."
     },
     {
       "rule_id": "MATH-102",
@@ -6612,7 +6616,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PKG-003",
@@ -6692,7 +6696,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PKG-008",
@@ -6949,7 +6953,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "PKG-024",
@@ -9827,7 +9831,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "TIKZ-008",
@@ -10823,7 +10827,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "TYPO-057",
@@ -11262,7 +11266,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: fires on any ASCII '.' after a CJK glyph, but that '.' may be a sentence period (->U+3002) OR a filename/identifier dot (\\includegraphics{fig.pdf} with a CJK stem, name.tex); replacing the latter corrupts the path. Needs sentence-vs-token context."
     },
     {
       "rule_id": "ZH-002",

@@ -1107,6 +1107,54 @@ let () =
         (List.length edits = 1 && out = "math $\\'{e}$ then text \\'a plain")
         (tag ^ ": math accent preserved, text accent fixed"));
 
+  (* v27.1.13: TYPO-056 fix producer — mirrors TYPO-017 BYTE-IDENTICALLY
+     (\\<accent>{<letter>} -> \\<accent><letter> braces-removal). Same offsets +
+     replacement so dedup_identical collapses the two producers. Count semantic
+     (non-exempt matches) is preserved; Warning severity retained. *)
+  run "TYPO-056 fix: \\'{e} becomes \\'e (byte-identical to TYPO-017)"
+    (fun tag ->
+      let src = "TYPO056anchor caf\\'{e} bar" in
+      let edits = fix_edits "TYPO-056" src in
+      let edits017 = fix_edits "TYPO-017" src in
+      expect
+        (List.length edits = 1
+        && apply_all src edits = "TYPO056anchor caf\\'e bar"
+        && edits = edits017)
+        (tag ^ ": braces removed, edits equal TYPO-017's"));
+
+  run "TYPO-056 fix: all 7 text-mode accents, edits match TYPO-017" (fun tag ->
+      let src =
+        "TYPO056anchor \\'{a} \\^{e} \\`{i} \\\"{o} \\~{n} \\={u} \\.{z}"
+      in
+      let edits = fix_edits "TYPO-056" src in
+      let edits017 = fix_edits "TYPO-017" src in
+      expect
+        (List.length edits = 7
+        && apply_all src edits
+           = "TYPO056anchor \\'a \\^e \\`i \\\"o \\~n \\=u \\.z"
+        && edits = edits017)
+        (tag ^ ": all 7 accents braces-removed, byte-identical to TYPO-017"));
+
+  run "TYPO-056 is idempotent on adversarial letter-adjacent trigger"
+    (fun tag ->
+      (* Adversarial: accented letter immediately followed by a letter. After
+         one pass `\\'{e}x` -> `\\'ex`; the result has no `{` so the detector
+         cannot re-fire (second pass is a byte-identical no-op). *)
+      let src = "TYPO056anchor caf\\'{e}xtra" in
+      let p1 = apply_all src (fix_edits "TYPO-056" src) in
+      expect
+        (p1 = "TYPO056anchor caf\\'extra" && does_not_fire "TYPO-056" p1)
+        (tag ^ ": converges, no re-fire on fixed form"));
+
+  run "TYPO-056 skips \\'{e} inside $..$ math (exempt-aware)" (fun tag ->
+      let src = "TYPO056anchor math $\\'{e}$ then \\'{a} plain" in
+      let edits = fix_edits "TYPO-056" src in
+      let out = apply_all src edits in
+      expect
+        (List.length edits = 1
+        && out = "TYPO056anchor math $\\'{e}$ then \\'a plain")
+        (tag ^ ": math accent preserved, text accent fixed"));
+
   (* v27.0.19: TYPO-046 fix producer (\\begin{math}...\\end{math} -> $...$,
      odd-backslash-prefix guard). *)
   run "TYPO-046 fix: \\begin{math}...\\end{math} becomes $...$" (fun tag ->

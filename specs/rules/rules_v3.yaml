@@ -596,7 +596,7 @@
   description: "Legacy TeX accents present despite UTF‑8 input"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: auto_utf8
 
@@ -1094,7 +1094,7 @@
   description: "Duplicate combining accents on same base glyph"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@lint-team"
   fix: normalize_nfc
 
@@ -2363,7 +2363,7 @@
   description: "Log base typeset without braces (\\log_10x)"
   precondition: L1_Expanded
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@math-rules"
   fix: wrap_base_braces
 
@@ -3117,7 +3117,7 @@
   description: "geometry loaded after hyperref – must precede"
   precondition: L2_Ast
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@pkg-lint"
   fix: reorder_packages
 
@@ -3158,7 +3158,7 @@
   description: "hyperref loaded before geometry"
   precondition: L2_Ast
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@pkg-lint"
   fix: reorder_packages
 
@@ -3286,7 +3286,7 @@
   description: "unicode‑math must load before microtype"
   precondition: L2_Ast
   default_severity: Error
-  maturity: Draft
+  maturity: Implemented
   owner: "@pkg-lint"
   fix: reorder_packages
 
@@ -3364,7 +3364,7 @@
   description: "TikZ loaded after hyperref – reorder required"
   precondition: L2_Ast
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@tikz"
   fix: reorder_packages
 
@@ -5082,7 +5082,7 @@
   description: "DOI not normalised to https://doi.org/ form"
   precondition: L3_Semantics
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@bib-team"
   fix: normalize_doi
 
@@ -5130,7 +5130,7 @@
   description: "Camel‑case field names detected (e.g. `Title` → `title`)"
   precondition: L3_Semantics
   default_severity: Info
-  maturity: Draft
+  maturity: Implemented
   owner: "@bib-team"
   fix: lowercase_fields
 
@@ -5411,7 +5411,7 @@
   description: "JA: half‑width katakana present—use full‑width"
   precondition: L0_Lexer
   default_severity: Warning
-  maturity: Draft
+  maturity: Implemented
   owner: "@cjk"
   fix: replace_fullwidth
 

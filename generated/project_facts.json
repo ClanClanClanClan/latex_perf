@@ -1,6 +1,6 @@
 {
-  "version": "v27.1.12",
-  "release_state": "GA",
+  "version": "v27.1.13",
+  "release_state": "rc",
   "release_date": "2026-07-06",
   "generated_by": "scripts/tools/generate_project_facts.py",
   "rules": {

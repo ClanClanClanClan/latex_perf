@@ -219,6 +219,23 @@ FIX_PRODUCER_DEFERRED: dict[str, str] = {
     "CHEM-001": (
         "Bucket C: wrapping a formula in \\ce needs semantic judgment \u2014 $H_2$ may be a Hamiltonian component, $E_0$ a ground-state energy, $T_2$ a relaxation time. The regex matches any letter+subscript; auto-wrapping corrupts non-chemistry."
     ),
+    # === v27.1.13: 5 more Bucket-C, confirmed during the Bucket-A shipping
+    #     audit (agents proved a concrete corruption case for each) ===
+    "FR-008": (
+        "Bucket C: the detector matches 'oe' by whole-document substring (not word/token boundary), so it fires on ANY 'oe' (does, poet, coefficient); replacing all with the ligature oe corrupts non-French / non-ligature words. A correct fix needs a French word list or morphology."
+    ),
+    "MATH-101": (
+        "Bucket C: the detector counts EVERY bare \\over (incl. chained {a \\over b \\over c}, brace-less 'a \\over b' spanning the whole formula, nested groups); \\over->\\frac needs unambiguous numerator/denominator parsing those cases do not admit. Only a narrow single-group subset (which the detector does not isolate) is deterministic."
+    ),
+    "MATH-052": (
+        "Bucket C: suggest_frac is advisory and its detection set is a STRICT SUBSET of MATH-101's \\over detection; the same numerator/denominator ambiguity applies. The interactive \\frac suggestion is the intended surface."
+    ),
+    "MATH-025": (
+        "Bucket C: the detector gates only on absence of '&' (column alignment), NOT on absence of row breaks; a multi-row single-column align (a // b // c) converted to the single-line equation environment breaks. A safe fix needs an extra single-row check."
+    ),
+    "ZH-001": (
+        "Bucket C: fires on any ASCII '.' after a CJK glyph, but that '.' may be a sentence period (->U+3002) OR a filename/identifier dot (\\includegraphics{fig.pdf} with a CJK stem, name.tex); replacing the latter corrupts the path. Needs sentence-vs-token context."
+    ),
 }
 
 # === v27.0.46: Reserved rules from rules_v3.yaml ===

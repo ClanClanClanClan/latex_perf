@@ -154,6 +154,29 @@ let () =
   run "RO-001 clean with S-comma" (fun tag ->
       (* U+0218 = C8 98, U+0219 = C8 99 *)
       expect (does_not_fire "RO-001" "\xc8\x98\xc8\x99") (tag ^ ": S-comma ok"));
+  (* v27.1.9 fix producer: cedilla -> comma-below replacements. *)
+  let apply_all s edits =
+    match Latex_parse_lib.Cst_edit.apply_all s edits with
+    | Ok s' -> s'
+    | Error _ -> s
+  in
+  run "RO-001 fix rewrites all four cedilla forms" (fun tag ->
+      (* input: Ş ş Ţ ţ separated by spaces. expected: Ș ș Ț ț
+         (U+0218/0219/021A/021B = C8 98/99/9A/9B). *)
+      let input = "\xc5\x9e \xc5\x9f \xc5\xa2 \xc5\xa3" in
+      let expected = "\xc8\x98 \xc8\x99 \xc8\x9a \xc8\x9b" in
+      let out = apply_all input (fix_edits "RO-001" input) in
+      expect (out = expected) (tag ^ ": cedilla->comma-below"));
+  run "RO-001 fix is idempotent" (fun tag ->
+      let input = "Ru\xc5\x9fine \xc5\xa2ar\xc4\x83" in
+      let out1 = apply_all input (fix_edits "RO-001" input) in
+      (* second pass: rule must no longer fire, so no further edits. *)
+      let out2 = apply_all out1 (fix_edits "RO-001" out1) in
+      expect (out1 = out2 && does_not_fire "RO-001" out1) (tag ^ ": idempotent"));
+  run "RO-001 count preserved after adding fix" (fun tag ->
+      expect
+        (fires_with_count "RO-001" "\xc5\x9e\xc5\x9f\xc5\xa2\xc5\xa3" 4)
+        (tag ^ ": count=4 all four forms"));
 
   (* ══════════════════════════════════════════════════════════════════════
      AR-002: ASCII hyphen in phone numbers
@@ -231,6 +254,40 @@ let () =
       expect (does_not_fire "JA-002" "10\xe3\x80\x9c20") (tag ^ ": wave-dash ok"));
   run "JA-002 clean ASCII tilde" (fun tag ->
       expect (does_not_fire "JA-002" "10~20") (tag ^ ": ASCII tilde ok"));
+  (* v27.1.9 fix producer: U+FF5E (EF BD 9E) -> U+301C wave dash (E3 80 9C). *)
+  let ja002_apply src =
+    match Latex_parse_lib.Cst_edit.apply_all src (fix_edits "JA-002" src) with
+    | Ok s -> s
+    | Error _ -> src
+  in
+  run "JA-002 fix rewrites tilde to wave-dash" (fun tag ->
+      let src = "10\xef\xbd\x9e20" in
+      expect
+        (List.length (fix_edits "JA-002" src) = 1
+        && ja002_apply src = "10\xe3\x80\x9c20")
+        (tag ^ ": EF BD 9E -> E3 80 9C"));
+  run "JA-002 fix rewrites all occurrences" (fun tag ->
+      let src = "10\xef\xbd\x9e20\xef\xbd\x9e30" in
+      expect
+        (List.length (fix_edits "JA-002" src) = 2
+        && ja002_apply src = "10\xe3\x80\x9c20\xe3\x80\x9c30")
+        (tag ^ ": both tildes rewritten"));
+  run "JA-002 fix idempotent" (fun tag ->
+      let src = "10\xef\xbd\x9e20" in
+      let out = ja002_apply src in
+      expect
+        (does_not_fire "JA-002" out && ja002_apply out = out)
+        (tag ^ ": second pass is a no-op"));
+  run "JA-002 count unchanged after adding fix" (fun tag ->
+      expect
+        (fires_with_count "JA-002" "10\xef\xbd\x9e20\xef\xbd\x9e30" 2)
+        (tag ^ ": count still 2"));
+  run "JA-002 exempt: no fix inside comment but still fires" (fun tag ->
+      (* tilde inside a comment line: still counted, but no edit emitted. *)
+      let src = "% a\xef\xbd\x9eb\n" in
+      expect
+        (fires "JA-002" src && fix_edits "JA-002" src = [])
+        (tag ^ ": comment is exempt from fix"));
 
   (* ══════════════════════════════════════════════════════════════════════
      KO-001: Old-Hangul jamo outside scholarly context

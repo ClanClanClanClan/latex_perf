@@ -818,6 +818,27 @@ let r_enc_011 : rule =
    U+017F LATIN SMALL LONG S (C5 BF) vs 's' We flag the compatibility variants
    that should be normalised. *)
 let r_enc_015 : rule =
+  (* Each homoglyph maps to its NFKC-normal form (codepoint hardcoded, emitted
+     via [Buffer.add_utf_8_uchar] like ENC-004): U+00B5 MICRO SIGN (C2 B5) →
+     U+03BC GREEK SMALL MU (CE BC) U+2126 OHM SIGN (E2 84 A6) → U+03A9 GREEK
+     CAPITAL OMEGA (CE A9) U+212B ANGSTROM (E2 84 AB) → U+00C5 LATIN CAP A RING
+     (C3 85) U+017F LONG S (C5 BF) → 's' (U+0073) None of the NFKC targets is
+     itself a needle, so the fix is idempotent and convergent (a second pass
+     finds nothing to rewrite). *)
+  let utf8_of_cp cp =
+    let buf = Buffer.create 4 in
+    Buffer.add_utf_8_uchar buf (Uchar.of_int cp);
+    Buffer.contents buf
+  in
+  (* (needle, byte length, NFKC codepoint) *)
+  let homoglyphs =
+    [
+      ("\xc2\xb5", 2, 0x03BC);
+      ("\xe2\x84\xa6", 3, 0x03A9);
+      ("\xe2\x84\xab", 3, 0x00C5);
+      ("\xc5\xbf", 2, 0x0073);
+    ]
+  in
   let run s =
     (* U+00B5 MICRO SIGN = C2 B5 *)
     let cnt_micro = count_substring s "\xc2\xb5" in
@@ -829,9 +850,21 @@ let r_enc_015 : rule =
     let cnt_long_s = count_substring s "\xc5\xbf" in
     let cnt = cnt_micro + cnt_ohm + cnt_angstrom + cnt_long_s in
     if cnt > 0 then
+      (* Fix offsets are computed on the ORIGINAL source [s] only. *)
+      let fix =
+        List.concat_map
+          (fun (needle, len, cp) ->
+            let repl = utf8_of_cp cp in
+            List.map
+              (fun off ->
+                Cst_edit.replace ~start_offset:off ~end_offset:(off + len) repl)
+              (find_all_non_overlapping s needle))
+          homoglyphs
+      in
       Some
-        (mk_result ~id:"ENC-015" ~severity:Warning
-           ~message:"Non‑NFKC homoglyph character (Greek μ vs µ)" ~count:cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-015" ~severity:Warning
+           ~message:"Non‑NFKC homoglyph character (Greek μ vs µ)" ~count:cnt
+           ~fix)
     else None
   in
   { id = "ENC-015"; run; languages = [] }
@@ -2568,7 +2601,16 @@ let r_spc_026 : rule =
   in
   { id = "SPC-026"; run; languages = [] }
 
-(* SPC-029: Indentation uses NBSP U+00A0 characters *)
+(* SPC-029: Indentation uses NBSP U+00A0 characters.
+
+   v27.1.9: fix producer (catalog token `replace_space`). Count semantic is
+   UNCHANGED — `any_line_pred s nbsp_indent` still tallies one per line whose
+   first two bytes are the NBSP `C2 A0`. The fix replaces, for each such line,
+   the entire line-leading run of NBSP chars with the same number of ASCII
+   spaces (0x20), building the edit over the ORIGINAL source `s` (absolute
+   offsets) and dropping it if it lands in an exempt range via
+   `mk_result_with_fix_exempt`. Replacing leading NBSP with ASCII space is
+   idempotent: a second pass finds no leading `C2 A0`. *)
 let r_spc_029 : rule =
   let run s =
     let nbsp_indent line =
@@ -2577,10 +2619,42 @@ let r_spc_029 : rule =
       && Char.code line.[1] = 0xA0
     in
     let _, matched = any_line_pred s nbsp_indent in
-    if matched > 0 then
+    if matched > 0 then (
+      let len = String.length s in
+      let edits = ref [] in
+      let process_line line_start line_end =
+        if
+          line_end - line_start >= 2
+          && Char.code s.[line_start] = 0xC2
+          && Char.code s.[line_start + 1] = 0xA0
+        then (
+          let run_end = ref line_start in
+          while
+            line_end - !run_end >= 2
+            && Char.code s.[!run_end] = 0xC2
+            && Char.code s.[!run_end + 1] = 0xA0
+          do
+            run_end := !run_end + 2
+          done;
+          let nspaces = (!run_end - line_start) / 2 in
+          edits :=
+            Cst_edit.replace ~start_offset:line_start ~end_offset:!run_end
+              (String.make nspaces ' ')
+            :: !edits)
+      in
+      let cur = ref 0 in
+      let i = ref 0 in
+      while !i < len do
+        if s.[!i] = '\n' then (
+          process_line !cur !i;
+          cur := !i + 1);
+        incr i
+      done;
+      if !cur < len then process_line !cur len;
+      let edits = List.rev !edits in
       Some
-        (mk_result ~id:"SPC-029" ~severity:Warning
-           ~message:"Indentation uses NBSP characters" ~count:matched)
+        (mk_result_with_fix_exempt ~src:s ~id:"SPC-029" ~severity:Warning
+           ~message:"Indentation uses NBSP characters" ~count:matched ~fix:edits))
     else None
   in
   { id = "SPC-029"; run; languages = [] }
@@ -2733,10 +2807,26 @@ let r_spc_033 : rule =
       count_substring s "\xc2\xa0\xe2\x80\x94" + count_substring s "\xc2\xa0---"
     in
     if cnt > 0 then
+      (* Fix: replace the NBSP (C2 A0, 2 bytes) preceding the em-dash with a
+         regular ASCII space (0x20). Offsets are computed on the ORIGINAL source
+         [s]; each needle starts with the NBSP, so [off..off+2) is exactly the
+         NBSP byte-pair. The two needles cannot share an NBSP, so concatenating
+         their offsets yields non-overlapping edits. Idempotent: after the
+         rewrite the NBSP is gone, so the rule no longer fires at that spot. *)
+      let offsets =
+        find_all_non_overlapping s "\xc2\xa0\xe2\x80\x94"
+        @ find_all_non_overlapping s "\xc2\xa0---"
+      in
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 2) " ")
+          offsets
+      in
       Some
-        (mk_result ~id:"SPC-033" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"SPC-033" ~severity:Info
            ~message:"No‑break space before em‑dash in English text forbidden"
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "SPC-033"; run; languages = [] }
@@ -4327,9 +4417,36 @@ let r_ro_001 : rule =
       + count_substring s "\xc5\xa3"
     in
     if cnt > 0 then
+      (* v27.1.9: fix producer. Replace each cedilla form (2-byte UTF-8) with
+         the orthographically-correct comma-below form (also 2-byte UTF-8),
+         computed on offsets from the ORIGINAL source s. Each replacement
+         removes the counted needle so the rule is idempotent/convergent. *)
+      let pairs =
+        [
+          ("\xc5\x9e", "\xc8\x98");
+          (* Ş U+015E -> Ș U+0218 *)
+          ("\xc5\x9f", "\xc8\x99");
+          (* ş U+015F -> ș U+0219 *)
+          ("\xc5\xa2", "\xc8\x9a");
+          (* Ţ U+0162 -> Ț U+021A *)
+          ("\xc5\xa3", "\xc8\x9b") (* ţ U+0163 -> ț U+021B *);
+        ]
+      in
+      let fix =
+        List.concat_map
+          (fun (needle, repl) ->
+            List.map
+              (fun off ->
+                Cst_edit.replace ~start_offset:off
+                  ~end_offset:(off + String.length needle)
+                  repl)
+              (find_all_non_overlapping s needle))
+          pairs
+      in
       Some
-        (mk_result ~id:"RO-001" ~severity:Warning
-           ~message:{|RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)|} ~count:cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"RO-001" ~severity:Warning
+           ~message:{|RO: use Ș/ș (S‑comma) not Ş/ş (S‑cedilla)|} ~count:cnt
+           ~fix)
     else None
   in
   { id = "RO-001"; run; languages = [ "ro" ] }
@@ -4455,14 +4572,28 @@ let r_ja_001 : rule =
 
 (* JA-002: U+FF5E tilde normalise to wave-dash U+301C *)
 let r_ja_002 : rule =
-  (* U+FF5E fullwidth tilde = \xef\xbd\x9e *)
+  (* U+FF5E fullwidth tilde = \xef\xbd\x9e ; wave-dash U+301C = \xe3\x80\x9c.
+     v27.1.9 fix producer: for each U+FF5E, replace its 3 bytes with the 3 bytes
+     of U+301C. Count is unchanged (count_substring preserved); the needle
+     cannot self-overlap so find_all_non_overlapping yields exactly the same
+     offsets the count tallies. Offsets are computed on the ORIGINAL [s];
+     mk_result_with_fix_ exempt drops any edit inside
+     verbatim/\verb/comment/url/math, and replacing U+FF5E with U+301C
+     (different at byte 1: BD vs 80) is idempotent. *)
   let run s =
     let cnt = count_substring s "\xef\xbd\x9e" in
     if cnt > 0 then
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 3)
+              "\xe3\x80\x9c")
+          (Validators_l0_typo.find_all_non_overlapping s "\xef\xbd\x9e")
+      in
       Some
-        (mk_result ~id:"JA-002" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"JA-002" ~severity:Info
            ~message:{|JA: U+FF5E tilde normalise to wave‑dash U+301C|}
-           ~count:cnt)
+           ~count:cnt ~fix)
     else None
   in
   { id = "JA-002"; run; languages = [ "ja" ] }

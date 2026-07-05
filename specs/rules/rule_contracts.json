@@ -205,7 +205,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: moving note->url is ambiguous when a url field already exists or note holds non-URL prose; a correct migration depends on bib content/style. Interactive."
     },
     {
       "rule_id": "BIB-012",
@@ -714,7 +715,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: wrapping a formula in \\ce needs semantic judgment — $H_2$ may be a Hamiltonian component, $E_0$ a ground-state energy, $T_2$ a relaxation time. The regex matches any letter+subscript; auto-wrapping corrupts non-chemistry."
     },
     {
       "rule_id": "CHEM-002",
@@ -1152,7 +1154,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: \\def -> \\renewcommand is not value-preserving — \\renewcommand errors if the target is undefined; the rule cannot know whether the macro pre-exists (else \\newcommand). Needs user choice."
     },
     {
       "rule_id": "CMD-003",
@@ -1314,7 +1317,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: the fix requires choosing \\makeatletter/\\makeatother placement (ambiguous), and the warning is often a false positive (\\def with no @). Not a deterministic edit."
     },
     {
       "rule_id": "CMD-012",
@@ -4242,7 +4246,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C (context-required, --apply-fixes-with-prompt / v27.4.0): a multi-letter math token may be a FUNCTION name OR a product of scalar variables ($abc = a\\cdot b\\cdot c$). Wrapping the latter in \\operatorname is wrong; cannot decide statically."
     },
     {
       "rule_id": "MATH-013",
@@ -4604,7 +4609,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: the detected bracket may be a bare matrix delimiter OR the operand of \\bigl/\\bigr sizing (e.g. \\bigl[\\begin{smallmatrix}...\\bigr]). Converting the latter to bmatrix is wrong; needs delimiter/sizing context."
     },
     {
       "rule_id": "MATH-033",
@@ -5180,7 +5186,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: \\eqalign is a brace-delimited plainTeX macro used INSIDE math; converting to the align display environment is a structural rewrite (\\cr->newline, \\noalign handling, illegal-in-inline-math), not a byte edit."
     },
     {
       "rule_id": "MATH-065",
@@ -5864,7 +5871,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: eqnarray->align is a multi-site structural rewrite — eqnarray is 3-column (&=&) vs align's 2-column (&=), with nested \\begin{cases} needing per-row remapping. Not a mechanical env rename."
     },
     {
       "rule_id": "MATH-103",
@@ -6924,7 +6932,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: swapping an obsolete package (e.g. epsfig->graphicx) is not a drop-in — the old macros (\\epsfig) remain undefined. A correct migration rewrites call sites; needs user review."
     },
     {
       "rule_id": "PKG-023",
@@ -7256,7 +7265,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "any",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C (suggest_pageref is an editor suggestion): \\ref vs \\pageref depends on author intent (render the number vs the page number); cannot be decided statically."
     },
     {
       "rule_id": "REF-007",
@@ -11036,7 +11046,8 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C (suggest_verbatim_env is advisory): converting inline \\verb to a verbatim environment is structural, and an unclosed \\verb makes the captured content span ambiguous."
     },
     {
       "rule_id": "VERB-007",
@@ -11108,7 +11119,8 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": false,
+      "fix_status_reason": "Bucket C: \\verb is fragile and illegal inside moving arguments (\\section{`grep`} breaks); backtick-code cannot be mechanically injected as \\verb."
     },
     {
       "rule_id": "VERB-011",

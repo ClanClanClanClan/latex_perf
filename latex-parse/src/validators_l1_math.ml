@@ -1133,18 +1133,71 @@ let l1_math_045_rule : rule =
   { id = "MATH-045"; run; languages = [] }
 
 (* MATH-046: Ellipsis \ldots on relation axis — prefer \cdots between commas, +
-   etc. *)
+   etc.
+
+   Fix producer (v27.1.10): for each counted `,[ ]*\ldots[ ]*,` occurrence,
+   replace the 6-byte `\ldots` with the 6-byte `\cdots`. Offsets are computed on
+   the ORIGINAL source `s` (never on a length-changing transform — the STYLE-033
+   corruption bug), re-scanning with the SAME non-overlapping regex the count
+   uses (search restarts at match_end) and gated to `find_math_ranges s` so the
+   fix set never exceeds the counted set. `\ldots`/`\cdots` are pure ASCII, so
+   the 6→6 replace never splits a multibyte sequence. Idempotent: after the
+   rewrite the needle is `\cdots`, which the regex no longer matches. Count is
+   left byte-identical (guarantees release differential 0-diff). *)
 let l1_math_046_rule : rule =
   let re = Re_compat.regexp {|,[ ]*\\ldots[ ]*,|} in
+  let ldots = "\\ldots" in
+  let matches_at s pos sub =
+    let n = String.length sub in
+    pos + n <= String.length s && String.sub s pos n = sub
+  in
+  (* Absolute offsets of every `\ldots` that begins a counted match, filtered to
+     math ranges on the original source. *)
+  let fix_offsets s =
+    let math = find_math_ranges s in
+    let acc = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let mr, _ = Re_compat.search_forward re s !i in
+         let mstart = Re_compat.match_beginning mr in
+         let mend = Re_compat.match_end mr in
+         (* Skip the leading comma + optional spaces to reach `\ldots`. *)
+         let p = ref (mstart + 1) in
+         while !p < String.length s && s.[!p] = ' ' do
+           incr p
+         done;
+         if matches_at s !p ldots && is_in_math_range math !p then
+           acc := !p :: !acc;
+         i := mend
+       done
+     with Not_found -> ());
+    List.rev !acc
+  in
+  let mk_fix_edits s =
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length ldots)
+          "\\cdots")
+      (fix_offsets s)
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-046" ~severity:Info
-           ~message:{|Ellipsis \ldots used on relation axis; prefer \cdots|}
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"MATH-046" ~severity:Info
+             ~message:{|Ellipsis \ldots used on relation axis; prefer \cdots|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"MATH-046" ~severity:Info
+             ~message:{|Ellipsis \ldots used on relation axis; prefer \cdots|}
+             ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-046"; run; languages = [] }

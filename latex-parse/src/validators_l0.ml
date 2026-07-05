@@ -2765,7 +2765,20 @@ let r_spc_031 : rule =
   in
   { id = "SPC-031"; run; languages = [] }
 
-(* SPC-032: Indentation with mix of NBSP and regular space *)
+(* SPC-032: Indentation with mix of NBSP and regular space.
+
+   v27.1.10: fix producer (catalog token `replace_space`). Count semantic is
+   UNCHANGED — `any_line_pred s mixed_nbsp_indent` still tallies one per line
+   whose line-leading whitespace run mixes at least one NBSP (`C2 A0`) with at
+   least one ASCII space. The fix rewrites, for each such line, the ENTIRE
+   line-leading whitespace run (NBSP + ASCII space + tab) to the same number of
+   ASCII spaces (0x20) — one space per character, each NBSP counting as one
+   character. Edits are built over the ORIGINAL source `s` (absolute offsets)
+   and dropped if they land in an exempt range via `mk_result_with_fix_exempt`.
+   After the fix the leading run is pure ASCII space (no NBSP) → the predicate's
+   `has_nbsp` is false → the rule no longer fires there (idempotent /
+   convergent). The process_line scan mirrors `mixed_nbsp_indent` exactly so the
+   fix and the count agree line-for-line. *)
 let r_spc_032 : rule =
   let run s =
     let mixed_nbsp_indent line =
@@ -2790,11 +2803,58 @@ let r_spc_032 : rule =
       !has_nbsp && !has_space
     in
     let _, matched = any_line_pred s mixed_nbsp_indent in
-    if matched > 0 then
+    if matched > 0 then (
+      let len = String.length s in
+      let edits = ref [] in
+      (* Scan the line-leading whitespace run over the ORIGINAL source. Mirror
+         `mixed_nbsp_indent`: NBSP (2 bytes), ASCII space (1), tab (1); stop at
+         the first non-whitespace byte. Only emit an edit when the run mixes at
+         least one NBSP with at least one ASCII space (== the fire
+         condition). *)
+      let process_line line_start line_end =
+        let i = ref line_start in
+        let nchars = ref 0 in
+        let has_nbsp = ref false in
+        let has_space = ref false in
+        let stop = ref false in
+        while (not !stop) && !i < line_end do
+          if
+            !i + 1 < line_end
+            && Char.code s.[!i] = 0xC2
+            && Char.code s.[!i + 1] = 0xA0
+          then (
+            has_nbsp := true;
+            incr nchars;
+            i := !i + 2)
+          else if s.[!i] = ' ' then (
+            has_space := true;
+            incr nchars;
+            incr i)
+          else if s.[!i] = '\t' then (
+            incr nchars;
+            incr i)
+          else stop := true
+        done;
+        if !has_nbsp && !has_space then
+          edits :=
+            Cst_edit.replace ~start_offset:line_start ~end_offset:!i
+              (String.make !nchars ' ')
+            :: !edits
+      in
+      let cur = ref 0 in
+      let i = ref 0 in
+      while !i < len do
+        if s.[!i] = '\n' then (
+          process_line !cur !i;
+          cur := !i + 1);
+        incr i
+      done;
+      if !cur < len then process_line !cur len;
+      let fix = List.rev !edits in
       Some
-        (mk_result ~id:"SPC-032" ~severity:Info
+        (mk_result_with_fix_exempt ~src:s ~id:"SPC-032" ~severity:Info
            ~message:"Paragraph indented with mix of NBSP and space"
-           ~count:matched)
+           ~count:matched ~fix))
     else None
   in
   { id = "SPC-032"; run; languages = [] }
@@ -4331,19 +4391,50 @@ let r_cs_001 : rule =
   let re = Re_compat.regexp "\\\\,\xc2\xb0C\\|\xc2\xa0\xc2\xb0C" in
   let run s =
     let cnt = ref 0 in
+    (* v27.1.10 fix producer. Each match begins with a 2-byte space token — `\,`
+       (0x5C 0x2C) or NBSP (0xC2 0xA0) — immediately before the °C sequence
+       (0xC2 0xB0 0x43); the fix DELETES that whole 2-byte token so the rule
+       stops firing there. Offsets are on the ORIGINAL source [s]; matches are
+       non-overlapping (search resumes at match_end).
+
+       CONVERGENCE GUARD: the universal producer TYPO-057 does the exact inverse
+       for temperatures — it INSERTS `\,` into any `[0-9]°C`. So if CS-001 were
+       to delete a `\,` that sits between a DIGIT and °C, the unfiltered
+       --apply-fixes fixpoint would oscillate (CS-001 deletes → `20°C` →
+       TYPO-057 re-inserts → `20\,°C` → …). We therefore SKIP the fix for
+       exactly that one case: a `\,` token whose preceding byte is an ASCII
+       digit. Every other token is safe to delete — NBSP is never produced by
+       TYPO-057, and a non-digit-preceded `\,` leaves no `[0-9]°C` for TYPO-057
+       to re-target. The COUNT is untouched (every occurrence is still tallied),
+       so the diagnostic and the release differential are byte-identical; only
+       the un-fixable digit-`\,` spot is left diagnose-only. *)
+    let starts = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
          ignore _mr;
          incr cnt;
+         starts := Re_compat.match_beginning _mr :: !starts;
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
+      let is_digit c = c >= '0' && c <= '9' in
+      let fix =
+        List.fold_left
+          (fun acc off ->
+            (* Skip a `\,` token (lead byte 0x5C) preceded by a digit — the
+               TYPO-057 oscillation case. NBSP tokens (lead byte 0xC2) and
+               non-digit-preceded `\,` are always safe to delete. *)
+            if s.[off] = '\\' && off > 0 && is_digit s.[off - 1] then acc
+            else Cst_edit.delete ~start_offset:off ~end_offset:(off + 2) :: acc)
+          [] !starts
+      in
       Some
-        (mk_result ~id:"CS-001" ~severity:Info
-           ~message:{|CS/SK: thin NB‑space before °C forbidden|} ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"CS-001" ~severity:Info
+           ~message:{|CS/SK: thin NB‑space before °C forbidden|} ~count:!cnt
+           ~fix)
     else None
   in
   { id = "CS-001"; run; languages = [ "cs" ] }
@@ -4383,6 +4474,44 @@ let r_el_001 : rule =
   (* Detect Greek oxia accents (U+1F00-1FFF range) that should be tonos
      (U+0384/0385) *)
   (* Check for polytonic accents in 0x1F00-0x1FFF range *)
+  (* Fix-set (v27.1.10): the detector COUNTS the whole polytonic block, but only
+     the OXIA-accented vowels have a canonical (NFC/tonos) equivalent, so those
+     are the characters we rewrite. Each oxia codepoint (a compatibility form)
+     maps to its canonical TONOS form; the count is untouched (every polytonic
+     char still tallies) so default-mode lint and the release differential stay
+     byte-identical. None of the TONOS targets is itself an oxia needle, so a
+     second pass finds nothing to rewrite -> idempotent and convergent. Offsets
+     are computed on the ORIGINAL source [s] via [find_all_non_overlapping]
+     (whole 3-byte UTF-8 sequences, never a continuation byte). *)
+  let utf8_of_cp cp =
+    let buf = Buffer.create 4 in
+    Buffer.add_utf_8_uchar buf (Uchar.of_int cp);
+    Buffer.contents buf
+  in
+  (* (oxia UTF-8 needle, byte length, canonical tonos codepoint). Lowercase
+     vowels + capital vowels - the full oxia->tonos NFC map. *)
+  let oxia_map =
+    [
+      (* lowercase: U+1F71->U+03AC, U+1F73->U+03AD, U+1F75->U+03AE,
+         U+1F77->U+03AF, U+1F79->U+03CC, U+1F7B->U+03CD, U+1F7D->U+03CE *)
+      ("\xe1\xbd\xb1", 3, 0x03AC);
+      ("\xe1\xbd\xb3", 3, 0x03AD);
+      ("\xe1\xbd\xb5", 3, 0x03AE);
+      ("\xe1\xbd\xb7", 3, 0x03AF);
+      ("\xe1\xbd\xb9", 3, 0x03CC);
+      ("\xe1\xbd\xbb", 3, 0x03CD);
+      ("\xe1\xbd\xbd", 3, 0x03CE);
+      (* capital: U+1FBB->U+0386, U+1FC9->U+0388, U+1FCB->U+0389,
+         U+1FDB->U+038A, U+1FF9->U+038C, U+1FEB->U+038B, U+1FFB->U+038F *)
+      ("\xe1\xbe\xbb", 3, 0x0386);
+      ("\xe1\xbf\x89", 3, 0x0388);
+      ("\xe1\xbf\x8b", 3, 0x0389);
+      ("\xe1\xbf\x9b", 3, 0x038A);
+      ("\xe1\xbf\xb9", 3, 0x038C);
+      ("\xe1\xbf\xab", 3, 0x038B);
+      ("\xe1\xbf\xbb", 3, 0x038F);
+    ]
+  in
   let run s =
     let cnt = ref 0 in
     let len = String.length s in
@@ -4398,9 +4527,19 @@ let r_el_001 : rule =
       else i := !i + 1
     done;
     if !cnt > 0 then
+      let fix =
+        List.concat_map
+          (fun (needle, nlen, cp) ->
+            let repl = utf8_of_cp cp in
+            List.map
+              (fun off ->
+                Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) repl)
+              (find_all_non_overlapping s needle))
+          oxia_map
+      in
       Some
-        (mk_result ~id:"EL-001" ~severity:Warning
-           ~message:{|Greek: oxia vs tonos normalisation|} ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"EL-001" ~severity:Warning
+           ~message:{|Greek: oxia vs tonos normalisation|} ~count:!cnt ~fix)
     else None
   in
   { id = "EL-001"; run; languages = [ "el" ] }
@@ -4489,7 +4628,7 @@ let r_he_001 : rule =
      \xd7\x90-\xd7\xaa) *)
   let run s =
     let len = String.length s in
-    let cnt = ref 0 in
+    let offsets = ref [] in
     let i = ref 0 in
     while !i < len do
       if
@@ -4500,14 +4639,28 @@ let r_he_001 : rule =
         let b = Char.code (String.unsafe_get s (!i - 1)) in
         b >= 0x90 && b <= 0xaa
       then (
-        incr cnt;
+        offsets := !i :: !offsets;
         i := !i + 1)
       else i := !i + 1
     done;
-    if !cnt > 0 then
+    let offsets = List.rev !offsets in
+    let cnt = List.length offsets in
+    if cnt > 0 then
+      (* Fix (v27.1.10): replace each ASCII apostrophe (1 byte 0x27) counted in
+         Hebrew context with a geresh U+05F3 (2 bytes \xd7\xb3). Offsets are the
+         apostrophe positions in the ORIGINAL source [s]; the geresh does not
+         satisfy the detector's `'` gate, so the rule no longer fires there
+         after applying — idempotent & convergent. Count unchanged. *)
+      let fix =
+        List.map
+          (fun off ->
+            Cst_edit.replace ~start_offset:off ~end_offset:(off + 1) "\xd7\xb3")
+          offsets
+      in
       Some
-        (mk_result ~id:"HE-001" ~severity:Warning
-           ~message:{|HE: apostrophe used instead of geresh U+05F3|} ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"HE-001" ~severity:Warning
+           ~message:{|HE: apostrophe used instead of geresh U+05F3|} ~count:cnt
+           ~fix)
     else None
   in
   { id = "HE-001"; run; languages = [ "he" ] }
@@ -4653,6 +4806,7 @@ let r_hi_001 : rule =
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
+    let fixes = ref [] in
     let i = ref 0 in
     while !i < len - 5 do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -4667,6 +4821,12 @@ let r_hi_001 : rule =
           (* ZWJ E2 80 8D or ZWNJ E2 80 8C *)
           if c0 = 0xe2 && c1 = 0x80 && (c2 = 0x8d || c2 = 0x8c) then (
             incr cnt;
+            (* remove_char: delete the 3-byte ZWJ/ZWNJ at offset i+3. Offset is
+               computed on the ORIGINAL source [s]; we delete the whole UTF-8
+               sequence (E2 80 8D/8C), never a continuation byte. *)
+            let off = !i + 3 in
+            fixes :=
+              Cst_edit.delete ~start_offset:off ~end_offset:(off + 3) :: !fixes;
             i := !i + 6)
           else i := !i + 3
         else i := !i + 3
@@ -4674,8 +4834,9 @@ let r_hi_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"HI-001" ~severity:Info
-           ~message:{|HI: ZWJ/ZWNJ misuse next to ख्|} ~count:!cnt)
+        (mk_result_with_fix_exempt ~id:"HI-001" ~severity:Info
+           ~message:{|HI: ZWJ/ZWNJ misuse next to ख्|} ~count:!cnt ~src:s
+           ~fix:(List.rev !fixes))
     else None
   in
   { id = "HI-001"; run; languages = [ "hi" ] }

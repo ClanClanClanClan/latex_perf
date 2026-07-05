@@ -106,6 +106,44 @@ let () =
       expect
         (does_not_fire "CS-001" "teplota 20\xc2\xb0C")
         (tag ^ ": no space ok"));
+  (* CS-001 fix producer (v27.1.10): deletes the offending 2-byte space token
+     (`\,` or NBSP) before °C. The digit-preceded `\,` case is left
+     diagnose-only to stay convergent against the universal TYPO-057 (which
+     re-inserts `\,` into any `[0-9]°C`). *)
+  let cs001_apply src =
+    match Latex_parse_lib.Cst_edit.apply_all src (fix_edits "CS-001" src) with
+    | Ok r -> r
+    | Error _ -> src
+  in
+  run "CS-001 emits fix on NBSP before degree-C" (fun tag ->
+      expect
+        (fires_with_fix "CS-001" "teplota 20\xc2\xa0\xc2\xb0C")
+        (tag ^ ": has fix"));
+  run "CS-001 fix deletes NBSP token" (fun tag ->
+      let src = "teplota 20\xc2\xa0\xc2\xb0C" in
+      expect (cs001_apply src = "teplota 20\xc2\xb0C") (tag ^ ": nbsp->clean"));
+  run "CS-001 fix deletes non-digit thin-space token" (fun tag ->
+      (* `\,` not preceded by a digit is safe to delete (no TYPO-057
+         conflict). *)
+      let src = "okolo\\,\xc2\xb0C" in
+      expect (cs001_apply src = "okolo\xc2\xb0C") (tag ^ ": thin->clean"));
+  run "CS-001 fix idempotent / convergent" (fun tag ->
+      let src = "teplota 20\xc2\xa0\xc2\xb0C" in
+      let once = cs001_apply src in
+      (* second application is a no-op (fixpoint reached in one step) *)
+      expect (cs001_apply once = once) (tag ^ ": second apply no-op"));
+  run "CS-001 digit thin-space stays diagnose-only (no fix, still fires)"
+    (fun tag ->
+      (* `20\,°C`: fires + counts, but emits NO fix (TYPO-057 convergence guard)
+         — the byte string is returned unchanged. *)
+      let src = "teplota 20\\,\xc2\xb0C" in
+      expect
+        (fires "CS-001" src && cs001_apply src = src)
+        (tag ^ ": fires but unchanged"));
+  run "CS-001 count preserved (2 triggers)" (fun tag ->
+      expect
+        (fires_with_count "CS-001" "20\\,\xc2\xb0C a 30\xc2\xa0\xc2\xb0C" 2)
+        (tag ^ ": count=2"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CS-002: CS/SK date format must be 30.\,1.\,2026
@@ -134,6 +172,46 @@ let () =
       expect (does_not_fire "EL-001" "\xce\xac") (tag ^ ": tonos alpha ok"));
   run "EL-001 clean ASCII" (fun tag ->
       expect (does_not_fire "EL-001" "just text") (tag ^ ": ASCII only"));
+  (* v27.1.10 fix producer: oxia -> tonos NFC normalisation. *)
+  let el_apply s edits =
+    match Latex_parse_lib.Cst_edit.apply_all s edits with
+    | Ok s' -> s'
+    | Error _ -> s
+  in
+  run "EL-001 fix rewrites all seven lowercase oxia vowels" (fun tag ->
+      (* input: U+1F71 1F73 1F75 1F77 1F79 1F7B 1F7D separated by spaces.
+         expected tonos: U+03AC 03AD 03AE 03AF 03CC 03CD 03CE (CE AC / CE AD /
+         CE AE / CE AF / CF 8C / CF 8D / CF 8E). *)
+      let input =
+        "\xe1\xbd\xb1 \xe1\xbd\xb3 \xe1\xbd\xb5 \xe1\xbd\xb7 \xe1\xbd\xb9 \
+         \xe1\xbd\xbb \xe1\xbd\xbd"
+      in
+      let expected =
+        "\xce\xac \xce\xad \xce\xae \xce\xaf \xcf\x8c \xcf\x8d \xcf\x8e"
+      in
+      let out = el_apply input (fix_edits "EL-001" input) in
+      expect (out = expected) (tag ^ ": oxia->tonos"));
+  run "EL-001 fix rewrites a capital oxia vowel" (fun tag ->
+      (* U+1FBB Alpha with Oxia = E1 BE BB -> U+0386 Alpha with Tonos = CE 86 *)
+      let input = "\xe1\xbe\xbb" in
+      let out = el_apply input (fix_edits "EL-001" input) in
+      expect (out = "\xce\x86") (tag ^ ": capital oxia->tonos"));
+  run "EL-001 fix is idempotent and convergent" (fun tag ->
+      (* U+1F79 omicron oxia -> U+03CC omicron tonos *)
+      let input = "\xce\xbb\xe1\xbd\xb9\xce\xb3\xce\xbf\xcf\x82" in
+      let out1 = el_apply input (fix_edits "EL-001" input) in
+      let out2 = el_apply out1 (fix_edits "EL-001" out1) in
+      (* second pass: the tonos target does not fire EL-001 (out of oxia range),
+         so no further edits and output is stable. *)
+      expect
+        (out1 = out2 && does_not_fire "EL-001" out1)
+        (tag ^ ": idempotent/convergent"));
+  run "EL-001 count preserved after adding fix" (fun tag ->
+      (* Two oxia + one non-oxia polytonic (U+1F00 psili, no fix) all still
+         counted: count must be 3. *)
+      expect
+        (fires_with_count "EL-001" "\xe1\xbd\xb1\xe1\xbc\x80\xe1\xbd\xb3" 3)
+        (tag ^ ": count=3 incl. non-oxia polytonic"));
 
   (* ══════════════════════════════════════════════════════════════════════
      RO-001: use S-comma not S-cedilla
@@ -205,6 +283,34 @@ let () =
       expect (does_not_fire "HE-001" "\xd7\x90\xd7\xb3") (tag ^ ": geresh ok"));
   run "HE-001 clean no Hebrew" (fun tag ->
       expect (does_not_fire "HE-001" "it's fine") (tag ^ ": ASCII context"));
+  (* v27.1.10 fix producer: apostrophe -> geresh U+05F3 (\xd7\xb3) *)
+  run "HE-001 fix replaces apostrophe with geresh" (fun tag ->
+      let src = "\xd7\x90'" in
+      let out =
+        match
+          Latex_parse_lib.Cst_edit.apply_all src (fix_edits "HE-001" src)
+        with
+        | Ok s -> s
+        | Error _ -> src
+      in
+      expect (out = "\xd7\x90\xd7\xb3") (tag ^ ": Alef+geresh output"));
+  run "HE-001 fix count unchanged (2 apostrophes)" (fun tag ->
+      expect
+        (fires_with_count "HE-001" "\xd7\x90' \xd7\x91'" 2)
+        (tag ^ ": count=2"));
+  run "HE-001 fix idempotent / convergent" (fun tag ->
+      let src = "\xd7\x90' \xd7\x91'" in
+      let out =
+        match
+          Latex_parse_lib.Cst_edit.apply_all src (fix_edits "HE-001" src)
+        with
+        | Ok s -> s
+        | Error _ -> src
+      in
+      expect
+        (out = "\xd7\x90\xd7\xb3 \xd7\x91\xd7\xb3")
+        (tag ^ ": both replaced");
+      expect (does_not_fire "HE-001" out) (tag ^ ": no refire on geresh"));
 
   (* ══════════════════════════════════════════════════════════════════════
      ZH-001: western period after CJK character
@@ -323,6 +429,35 @@ let () =
         (does_not_fire "HI-001" "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96")
         (tag ^ ": normal halant ok"));
   run "HI-001 clean ASCII" (fun tag ->
-      expect (does_not_fire "HI-001" "just text") (tag ^ ": ASCII only"))
+      expect (does_not_fire "HI-001" "just text") (tag ^ ": ASCII only"));
+  (* v27.1.10 fix producer: remove_char deletes the misused ZWJ/ZWNJ. *)
+  run "HI-001 fix removes ZWJ after halant" (fun tag ->
+      (* Ka=E0 A4 95, Halant=E0 A5 8D, ZWJ=E2 80 8D, Kha=E0 A4 96 *)
+      let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
+      let expected = "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96" in
+      let out = apply_all input (fix_edits "HI-001" input) in
+      expect (out = expected) (tag ^ ": ZWJ deleted"));
+  run "HI-001 fix removes ZWNJ after halant" (fun tag ->
+      (* ZWNJ = E2 80 8C *)
+      let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8c\xe0\xa4\x96" in
+      let expected = "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96" in
+      let out = apply_all input (fix_edits "HI-001" input) in
+      expect (out = expected) (tag ^ ": ZWNJ deleted"));
+  run "HI-001 fix is idempotent" (fun tag ->
+      let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
+      let out1 = apply_all input (fix_edits "HI-001" input) in
+      let out2 = apply_all out1 (fix_edits "HI-001" out1) in
+      expect (out1 = out2 && does_not_fire "HI-001" out1) (tag ^ ": idempotent"));
+  run "HI-001 count preserved after adding fix" (fun tag ->
+      (* two triggers → count=2 *)
+      let s =
+        "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96\xe0\xa5\x8d\xe2\x80\x8c\xe0\xa4\x97"
+      in
+      expect (fires_with_count "HI-001" s 2) (tag ^ ": count=2 unchanged"));
+  run "HI-001 exempt: no fix inside comment but still fires" (fun tag ->
+      let src = "% \xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
+      expect
+        (fires "HI-001" src && fix_edits "HI-001" src = [])
+        (tag ^ ": comment is exempt from fix"))
 
 let () = finalise "locale"

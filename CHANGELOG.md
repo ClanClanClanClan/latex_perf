@@ -2,6 +2,36 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.10] — 2026-07-05
+
+**Bucket-A fix-producer cadence: +8 single-token producers (128 → 136).** Each
+adds a fix-set to an already-firing diagnose-only rule with byte-identical
+detection count (differential 0-diff); offsets computed on the original source /
+filtered via `find_math_ranges`, whole-sequence replaces (the v27.1.8-audited
+safe patterns). All converge to valid UTF-8 under the apply-fixes gate.
+
+- **CHEM-005** (`replace_with_arrow`) — in-math `->` → `\rightarrow`.
+- **CHEM-009** (`replace_with_equil_arrow`) — in-math `<->`/`<=>` →
+  `\rightleftharpoons`.
+- **CS-001** (`replace_space`) — Czech/Slovak: delete the forbidden thin/NB space
+  before `°C`. Skips the digit-preceded `\,` case to avoid oscillating with the
+  universal TYPO-057 (which *inserts* `\,` into `NN°C`) — a genuine cross-producer
+  conflict, resolved by deferring to TYPO-057 there.
+- **EL-001** (`normalize_nfc`) — Greek oxia vowels → canonical tonos (14
+  codepoints, lower + capital).
+- **HE-001** (`auto_replace`) — Hebrew: ASCII apostrophe → geresh U+05F3.
+- **HI-001** (`remove_char`) — Devanagari: delete a misused ZWJ/ZWNJ after a
+  halant cluster.
+- **SPC-032** (`replace_space`) — line indented with a mix of NBSP and space →
+  ASCII spaces.
+- **MATH-046** (`suggest_cdots`) — in-math `\ldots` on the relation axis →
+  `\cdots`.
+
+Implemented via 8 worktree-isolated agents, each verified against the rule's
+detection + tests (count blocks confirmed byte-identical). Full `dune runtest`,
+convergence, verbatim-safety, differential (0-diff vs v27.1.9), and all release
+gates green.
+
 ## [v27.1.9] — 2026-07-01
 
 **Bucket-A fix-producer cadence: +8 single-token producers (120 → 128).** Each

@@ -819,6 +819,34 @@ let () =
         (tag ^ ": no surrounding commas"));
   run "MATH-046 clean: no ellipsis" (fun tag ->
       expect (does_not_fire "MATH-046" "$a, b, c$") (tag ^ ": no ellipsis"));
+  (* MATH-046 fix producer (v27.1.10): \ldots -> \cdots between commas. *)
+  let math046_apply src =
+    match Cst_edit.apply_all src (fix_edits "MATH-046" src) with
+    | Ok out -> out
+    | Error _ -> src
+  in
+  run "MATH-046 fix: emits a fix" (fun tag ->
+      expect
+        (fires_with_fix "MATH-046" "$a_1, \\ldots, a_n$")
+        (tag ^ ": has fix"));
+  run "MATH-046 fix: exact output" (fun tag ->
+      expect
+        (math046_apply "$a_1, \\ldots, a_n$" = "$a_1, \\cdots, a_n$")
+        (tag ^ ": ldots->cdots"));
+  run "MATH-046 fix: count preserved (still 2)" (fun tag ->
+      expect
+        (fires_with_count "MATH-046" "$a, \\ldots, b, \\ldots, c$" 2)
+        (tag ^ ": count unchanged"));
+  run "MATH-046 fix: both occurrences rewritten" (fun tag ->
+      expect
+        (math046_apply "$a, \\ldots, b, \\ldots, c$"
+        = "$a, \\cdots, b, \\cdots, c$")
+        (tag ^ ": two edits applied"));
+  run "MATH-046 fix: idempotent + convergent" (fun tag ->
+      let once = math046_apply "$a_1, \\ldots, a_n$" in
+      expect
+        (does_not_fire "MATH-046" once && math046_apply once = once)
+        (tag ^ ": no re-fire, second apply no-op"));
 
   (* ══════════════════════════════════════════════════════════════════════
      MATH-047: Double superscript a^b^c

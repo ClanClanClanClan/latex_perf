@@ -1882,8 +1882,35 @@ let l1_chem_004_rule : rule =
   { id = "CHEM-004"; run; languages = [] }
 
 (* CHEM-005: Chemical arrow typed '->' not \rightarrow — detects -> in math that
-   is not part of \rightarrow *)
+   is not part of \rightarrow.
+
+   Fix producer (v27.1.10): for every bare ASCII "->" (bytes 0x2D 0x3E) that
+   falls inside a math range, replace the 2-byte sequence with the literal
+   "\rightarrow". The COUNT is left byte-identical (still computed from
+   [extract_math_segments] with the total−proper−longarrow heuristic); the fix
+   set is derived INDEPENDENTLY from the ORIGINAL source [s] via
+   [Validators_l0_typo.find_all_non_overlapping] filtered to [find_math_ranges]
+   — never from a length-changing transform (avoids the STYLE-033 offset-drift
+   corruption class). Math-mode-only positive filter, so plain
+   [mk_result_with_fix]. Idempotent + convergent: "\rightarrow" contains no "->"
+   substring, so a second pass finds nothing to replace. Sibling of MATH-078
+   ("-->" → "\longrightarrow"). *)
 let l1_chem_005_rule : rule =
+  let needle = "->" in
+  let replacement = "\\rightarrow" in
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let offsets =
+      List.filter inside (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    List.map
+      (fun off ->
+        Cst_edit.replace ~start_offset:off
+          ~end_offset:(off + String.length needle)
+          replacement)
+      offsets
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1896,9 +1923,16 @@ let l1_chem_005_rule : rule =
         if bare > 0 then cnt := !cnt + bare)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHEM-005" ~severity:Info
-           ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"CHEM-005" ~severity:Info
+             ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"CHEM-005" ~severity:Info
+             ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt
+             ~fix)
     else None
   in
   { id = "CHEM-005"; run; languages = [] }
@@ -2021,6 +2055,29 @@ let l1_chem_008_rule : rule =
 (* CHEM-009: Equilibrium arrow typed as <> or <-> — should use
    \rightleftharpoons *)
 let l1_chem_009_rule : rule =
+  let replacement = "\\rightleftharpoons" in
+  (* Emit one Replace edit per matched ASCII equilibrium arrow ("<->" or "<=>",
+     3 bytes each) that falls inside a real math range of the ORIGINAL source
+     [s]. Offsets are computed from [s] via [find_math_ranges] +
+     [find_all_non_overlapping] — never from the length-changing
+     [extract_math_segments] used for counting (STYLE-033 corruption trap).
+     Idempotent: [\rightleftharpoons] contains neither needle. *)
+  let mk_fix_edits s =
+    let math = find_math_ranges s in
+    let inside off = is_in_math_range math off in
+    let edits_for needle =
+      List.filter_map
+        (fun off ->
+          if inside off then
+            Some
+              (Cst_edit.replace ~start_offset:off
+                 ~end_offset:(off + String.length needle)
+                 replacement)
+          else None)
+        (Validators_l0_typo.find_all_non_overlapping s needle)
+    in
+    edits_for "<->" @ edits_for "<=>"
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -2031,9 +2088,15 @@ let l1_chem_009_rule : rule =
         cnt := !cnt + cnt1 + cnt2)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHEM-009" ~severity:Warning
-           ~message:"Equilibrium arrow typed as '<>'" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"CHEM-009" ~severity:Warning
+             ~message:"Equilibrium arrow typed as '<>'" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"CHEM-009" ~severity:Warning
+             ~message:"Equilibrium arrow typed as '<>'" ~count:!cnt ~fix)
     else None
   in
   { id = "CHEM-009"; run; languages = [] }

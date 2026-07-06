@@ -2,6 +2,29 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.19] — 2026-07-06
+
+**Candidate-surface capstone: full adversarial audit + label-only upgrades.**
+A partitioned read-only audit of all 18 Bucket-C candidate rules (offsets
+slice-verified, never-auto-apply, exempt-filtering incl. label-only self-gating,
+diagnostics preserved, 12-input adversarial sweep) found the surface SOUND, with
+one real fix:
+- **MATH-032 label** said "bmatrix" while the edit correctly produces
+  `bsmallmatrix` — corrected to "Use bsmallmatrix for a bracketed small matrix".
+
+**Label-only → real-edit upgrades** (adversarially verified on the correct
+worktree, `path_match`, sound): the three previously label-only candidates now
+emit concrete, one-click-applicable edits:
+- **MATH-064** `\eqalign{...}` → `\begin{align}...\end{align}` (brace-matched)
+- **CHEM-001** wrap formula span in `\ce{` … `}` (mhchem)
+- **CMD-011** wrap the `\def`/`\edef` line in `\makeatletter` … `\makeatother`
+
+All three remain byte-identical under `--apply-fixes-for` (candidates never
+auto-apply). Differential 0-diff; coverage 159×991; runtest + code-quality + all
+gates green. (Audit also noted expected cross-rule overlaps — e.g. MATH-102's
+eqnarray region is auto-fixed by the separate MATH-029 producer — which are design
+redundancy, not defects.)
+
 ## [v27.1.18] — 2026-07-06
 
 **Bucket-C candidate surface COMPLETE.** The final 11 diagnose-only rules now emit

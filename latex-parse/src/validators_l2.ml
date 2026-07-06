@@ -803,7 +803,7 @@ let r_math_032 : rule =
                candidates :=
                  {
                    c_edits = edits;
-                   c_label = "Use bmatrix for a square-bracketed matrix";
+                   c_label = "Use bsmallmatrix for a bracketed small matrix";
                  }
                  :: !candidates);
          i := mend
@@ -6122,23 +6122,43 @@ let r_cmd_011 : rule =
          done
        with Not_found -> ());
       if !cnt > 0 then
-        (* Bucket-C LABEL-ONLY candidate: the fix is to wrap the offending
-           \def/\edef definitions between \makeatletter and \makeatother, but
-           the span of the block to wrap is ambiguous (which consecutive
-           lines?), so we offer the suggestion without an edit. The preamble is
-           a prefix of [s] so match offsets are absolute; each is self-gated
-           against the exempt set (empty-edit candidates are not located by
-           candidates_drop_exempt, so the rule gates itself). *)
-        let exempt = find_exempt_ranges s in
+        (* Bucket-C CANDIDATE (best-effort bounded): wrap each offending
+           \def/\edef in a \makeatletter … \makeatother pair. We bound the wrap
+           to the single line that contains the definition — line_start is the
+           byte after the preceding newline (or 0), line_end the next newline
+           (or EOF) — and emit two INSERT edits: `\makeatletter\n` before the
+           line and `\n\makeatother` after it. One candidate per matched def.
+           The preamble is a prefix of [s] so match offsets are absolute;
+           drop_exempt filters candidates whose def lives in a comment/verbatim
+           via [candidates_drop_exempt] (keyed on the first edit's offset). *)
+        let n = String.length s in
         let candidates =
           !offs
-          |> List.filter (fun pos -> not (is_in_exempt_range exempt pos))
-          |> List.rev_map (fun _pos ->
+          |> List.rev_map (fun pos ->
+                 let line_start =
+                   let j = ref pos in
+                   while !j > 0 && s.[!j - 1] <> '\n' do
+                     decr j
+                   done;
+                   !j
+                 in
+                 let line_end =
+                   let j = ref pos in
+                   while !j < n && s.[!j] <> '\n' do
+                     incr j
+                   done;
+                   !j
+                 in
                  {
-                   c_edits = [];
+                   c_edits =
+                     [
+                       Cst_edit.insert ~at:line_start "\\makeatletter\n";
+                       Cst_edit.insert ~at:line_end "\n\\makeatother";
+                     ];
                    c_label =
                      {|Wrap \def/\edef definitions in \makeatletter/\makeatother|};
                  })
+          |> candidates_drop_exempt s
         in
         if candidates = [] then
           Some

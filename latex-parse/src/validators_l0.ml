@@ -5650,32 +5650,78 @@ let r_math_064 : rule =
   let run s =
     let cnt = count_substring s "\\eqalign" in
     if cnt > 0 then (
-      (* Bucket-C LABEL-ONLY candidate: converting a `\eqalign{...\cr...}` TeX
-         primitive into an `align` environment is a structural rewrite (brace →
-         \begin/\end, \cr → \\) that depends on the body layout, so we offer the
-         suggestion without an edit. The trigger offset is self-gated against
-         verbatim/comment/url regions (empty-edit candidates are not located by
-         candidates_drop_vcu_exempt, so the rule gates itself; see VERB-006). *)
-      let vcu = find_verbatim_comment_url_ranges s in
+      (* Bucket-C CANDIDATE (best-effort bounded): convert `\eqalign{...}` into
+         an `align` environment by brace-matching the body. We skip whitespace
+         after `\eqalign` to its opening `{`, brace-match forward (respecting
+         escaped braces) to the closing `}`, then rewrite `\eqalign{` →
+         `\begin{align}` and the matching `}` → `\end{align}`. The align body
+         still needs the author to convert `\cr` → `\\`, which is why this is a
+         CANDIDATE and not an auto-applied fix. When the opening brace or its
+         match cannot be located the candidate degrades to LABEL-ONLY (empty
+         edits). vcu-exempt: the target is a math environment, so we filter with
+         [candidates_drop_vcu_exempt] (NOT the full exempt set, which includes
+         math and would drop every genuine in-math candidate). *)
       let needle = "\\eqalign" in
       let nlen = String.length needle in
       let n = String.length s in
+      let label = {|Use the align environment instead of obsolete \eqalign|} in
+      let is_escaped idx =
+        let rec cnt_bs back acc =
+          if back < 0 then acc
+          else if s.[back] = '\\' then cnt_bs (back - 1) (acc + 1)
+          else acc
+        in
+        cnt_bs (idx - 1) 0 land 1 = 1
+      in
       let cands = ref [] in
       let i = ref 0 in
       while !i <= n - nlen do
-        if String.sub s !i nlen = needle then (
-          if not (is_in_math_range vcu !i) then
-            cands :=
-              {
-                c_edits = [];
-                c_label =
-                  {|Use the align environment instead of obsolete \eqalign|};
-              }
-              :: !cands;
-          i := !i + nlen)
+        if String.sub s !i nlen = needle && not (is_escaped !i) then (
+          let eq_start = !i in
+          let eq_end = !i + nlen in
+          (* skip inline whitespace to the opening brace of the body *)
+          let bo = ref eq_end in
+          while !bo < n && (s.[!bo] = ' ' || s.[!bo] = '\t') do
+            incr bo
+          done;
+          if !bo < n && s.[!bo] = '{' && not (is_escaped !bo) then (
+            (* brace-match forward for the closing '}' of the body *)
+            let closer = ref (-1) in
+            let depth = ref 0 in
+            let k = ref (!bo + 1) in
+            (try
+               while !k < n do
+                 (if not (is_escaped !k) then
+                    match s.[!k] with
+                    | '{' -> incr depth
+                    | '}' ->
+                        if !depth = 0 then (
+                          closer := !k;
+                          raise Exit)
+                        else decr depth
+                    | _ -> ());
+                 incr k
+               done
+             with Exit -> ());
+            if !closer >= 0 then
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:eq_start
+                        ~end_offset:(!bo + 1) "\\begin{align}";
+                      Cst_edit.replace ~start_offset:!closer
+                        ~end_offset:(!closer + 1) "\\end{align}";
+                    ];
+                  c_label = label;
+                }
+                :: !cands
+            else cands := { c_edits = []; c_label = label } :: !cands)
+          else cands := { c_edits = []; c_label = label } :: !cands;
+          i := eq_end)
         else incr i
       done;
-      let candidates = List.rev !cands in
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
       if candidates = [] then
         Some
           (mk_result ~id:"MATH-064" ~severity:Warning ~message:msg ~count:cnt)

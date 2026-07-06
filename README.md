@@ -42,7 +42,17 @@ dune exec latex-parse/src/validators_cli.exe -- paper.tex
 # Validate with a specific layer only
 dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
+
+# Apply the mechanical (Bucket-A) auto-fixes in place
+dune exec latex-parse/src/validators_cli.exe -- --apply-fixes paper.tex
+
+# List the review-only (Bucket-C) candidate fixes for an editor to offer
+dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
 ```
+
+`--apply-fixes` applies only the proven-safe auto-fixes; intent-dependent
+suggestions are surfaced separately via `--list-candidate-fixes` and never applied
+automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 
 ### Environment Variables
 
@@ -55,12 +65,12 @@ dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.18 (July 2026)
+## Current Status — v27.1.19 (July 2026)
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
 - **Proofs**: 170 Coq files, 1,400 theorems/lemmas. 643 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
-- **Validators**: 644 rule IDs / 660 spec. 160 fix-producing rules (Bucket A rolling cadence). 19 L3 file-based + 12 expl3 rules.
+- **Validators**: 644 rule IDs / 660 spec. 159 fix-producing rules (Bucket A) + 18 Bucket-C candidate rules. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799, precision=0.975, recall=0.985. Proved in `proofs/ML/SpanExtractorSound.v`.
 - **Performance**: Harnesses (`latex-parse/bench`, `scripts/perf_gate.sh`, `scripts/edit_window_gate.sh`) are in place. Latest runs on `perf_smoke_big` show p95 ≈ 2.73 ms (200 k iters) and ≈ 2.96 ms (1 M iters), with p99.9 ≈ 8.69 ms; the 4 KB edit-window bench lands at p95 ≈ 0.017 ms. See `core/l0_lexer/current_baseline_performance.json` and re-run after major changes.
@@ -227,7 +237,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.1.18 released. 644 validators implemented, **159 fix-producing rules**, 1,400 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
+**Status**: v27.1.19 released. 644 validators implemented, **159 fix-producing rules**, 1,400 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

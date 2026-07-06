@@ -6,20 +6,21 @@ All notable changes to LaTeX Perfectionist are documented here.
 
 **Bucket-B completed + Bucket-C infrastructure established.**
 
-**Bucket-B — common-word allowlist (the word-frequency layer).** `is_sentence_end_period`
-now flips from an abbreviation *blocklist* to a positive **common-English-word
-allowlist** (~795 words incl. academic vocabulary), gated by `?require_common`
-(default true for the SPC-018 auto-fix; `sentence_split` passes false to keep
-STYLE segmentation recall). SPC-018 fires only when the word before the `.` is a
-known common word, so lowercase dotted identifiers — `github.Com`, `obj.Method`,
-`numpy.Array`, `api.Response`, `os.Path`, `django.Models` — are suppressed and
-never corrupted, while real ends (`result.Then`, `holds.Therefore`) fire. Trades
-recall (an uncommon technical-word sentence end is a conservative MISS) for zero
-identifier corruption. **Documented irreducible residual:** common-word-stemmed
-dotted pairs (`main.Py`, `time.Now`, `data.Frame`) are genuinely ambiguous with a
-real sentence break — needs semantic context (full Bucket-B / NLP). An
-over-aggressive "next word must also be common" variant was tried and rejected
-(real sentences start with arbitrary words → recall regression).
+**Bucket-B — common-word allowlist + SPC-018 demoted to a Bucket-C candidate.**
+`is_sentence_end_period` flips from an abbreviation *blocklist* to a positive
+**common-English-word allowlist** (~800 words incl. academic vocabulary), gated by
+`?require_common` (`sentence_split` passes false to keep STYLE recall). This
+suppresses uncommon-stem dotted identifiers (`github.Com`, `obj.Method`,
+`numpy.Array`, `os.Path`). **A correct-tree adversarial verification then proved
+the allowlist is not sufficient for an AUTO-fix:** identifiers whose stem is
+itself a common word (`main.Py`, `time.Now`, `data.Frame`, `test.Java`) still fire
+and would be corrupted, because that word class legitimately ends prose sentences
+too — the ambiguity is irreducible without semantics. **So SPC-018 is DEMOTED from
+an auto-fix producer to a Bucket-C candidate** (`produces_fix` true→false, 160→159
+producers): it now surfaces each "insert a space?" as a reviewable candidate via
+`--list-candidate-fixes` and never auto-applies. This is the honest bucketing —
+sentence-boundary space insertion is intent-dependent — and it uses the very
+Bucket-C infrastructure this release adds.
 
 **Bucket-C — candidate-fix infrastructure (`--apply-fixes-with-prompt` surface).**
 Bucket-C rules depend on author intent, so they must NOT auto-apply. The `result`
@@ -31,13 +32,15 @@ only via the new `mk_result_with_candidates` constructor (mirrored in
 `--apply-fixes-for` read **only** `fix`, so candidates are never auto-applied
 (tested). Two proof-of-concept rules emit candidates: **REF-006** (`\ref`→`\pageref`)
 and **PKG-022** (epsfig→graphicx / subfigure→subcaption / natbib→biblatex);
-candidates inside verbatim/comment/url/math are dropped. Both stay
-`produces_fix:false` — candidates are not auto-fixes — so rule_contracts,
-producer_triggers, and the coverage gate are unaffected. New `test_candidate_fixes.ml`
-(14 cases).
+candidates inside verbatim/comment/url/math are dropped via `find_exempt_ranges`
+(a fix from the verification: PKG-022 initially lacked this filter and surfaced
+candidates inside comments/`\verb`). SPC-018 now emits candidates here too. New
+`test_candidate_fixes.ml`.
 
-Producer count unchanged (160). Coverage gate 160×997 PASS, full `dune runtest`,
-all release gates green.
+**159 producers** (SPC-018 demoted). Coverage gate 159×991 PASS, full `dune runtest`,
+all release gates green. The correct-tree verification also drove three real fixes
+that three prior wrong-tree verify passes had missed — see the workflow-verify-tree
+lesson.
 
 ## [v27.1.15] — 2026-07-06
 

@@ -889,6 +889,9 @@ let common_english_words : (string, unit) Hashtbl.t =
   let tbl = Hashtbl.create 4096 in
   let src =
     [
+      "done finished complete ready above below shown given holds thus hence";
+      "next then now here there today first second third final also since while";
+      "when where what which done";
       (* general high-frequency function/content words *)
       "the be to of and a in that have it for not on with he as you do at this";
       "but his by from they we say her she or an will my one all would there";

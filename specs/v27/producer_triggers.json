@@ -4332,52 +4332,6 @@
    }
   ]
  },
- "SPC-018": {
-  "variants": [
-   {
-    "expected_hex": "456e642e4e6578742073656e74656e636520686572650a",
-    "hex": "456e642e4e6578742073656e74656e636520686572650a",
-    "kind": "mutate",
-    "note": "base (insert space after .[A-Z])",
-    "pilot": false
-   },
-   {
-    "expected_hex": "4f6e652e54776f20616e642074687265652e466f75720a",
-    "hex": "4f6e652e54776f20616e642074687265652e466f75720a",
-    "kind": "mutate",
-    "note": "doubled",
-    "pilot": false
-   },
-   {
-    "expected_hex": "656e642e2058e6bca20a",
-    "hex": "656e642e58e6bca20a",
-    "kind": "mutate",
-    "note": "CJK-adjacent (insert before X, CJK intac",
-    "pilot": false
-   },
-   {
-    "expected_hex": "24612e4224206f6b0a",
-    "hex": "24612e4224206f6b0a",
-    "kind": "preserve",
-    "note": "in-math (exempt)",
-    "pilot": false
-   },
-   {
-    "expected_hex": "2520456e642e4e6578740a",
-    "hex": "2520456e642e4e6578740a",
-    "kind": "preserve",
-    "note": "in-comment (exempt)",
-    "pilot": false
-   },
-   {
-    "expected_hex": "5c75726c7b612e42637d0a",
-    "hex": "5c75726c7b612e42637d0a",
-    "kind": "preserve",
-    "note": "in-url (exempt)",
-    "pilot": false
-   }
-  ]
- },
  "SPC-019": {
   "variants": [
    {

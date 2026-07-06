@@ -1448,6 +1448,7 @@ let r_pkg_022 : rule =
          \subcaptionbox) and needs author confirmation, so surface, don't apply.
          Each candidate replaces just the NAME inside the braces. *)
       let usepkgs = extract_usepackages s in
+      let exempt = find_exempt_ranges s in
       let candidates =
         List.filter_map
           (fun (pos, pkg) ->
@@ -1468,17 +1469,20 @@ let r_pkg_022 : rule =
                 match find pos with
                 | None -> None
                 | Some name_off ->
-                    Some
-                      {
-                        c_edits =
-                          [
-                            Cst_edit.make ~start_offset:name_off
-                              ~end_offset:(name_off + plen) ~replacement:modern;
-                          ];
-                        c_label =
-                          Printf.sprintf "Replace obsolete package %s with %s"
-                            pkg modern;
-                      }))
+                    if is_in_exempt_range exempt name_off then None
+                    else
+                      Some
+                        {
+                          c_edits =
+                            [
+                              Cst_edit.make ~start_offset:name_off
+                                ~end_offset:(name_off + plen)
+                                ~replacement:modern;
+                            ];
+                          c_label =
+                            Printf.sprintf "Replace obsolete package %s with %s"
+                              pkg modern;
+                        }))
           usepkgs
       in
       if candidates = [] then

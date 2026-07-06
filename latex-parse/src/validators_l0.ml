@@ -3102,20 +3102,33 @@ let r_spc_018 : rule =
           let acc =
             if is_in_exempt_range exempt b then acc
             else if not (is_sentence_end_period s b) then acc
-            else Cst_edit.insert ~at:(b + 1) " " :: acc
+            else
+              {
+                c_edits = [ Cst_edit.insert ~at:(b + 1) " " ];
+                c_label = "Insert a space after the sentence-ending period";
+              }
+              :: acc
           in
           collect e acc
         with Not_found -> List.rev acc
       in
-      let fix = collect 0 [] in
-      if fix = [] then
+      (* v27.1.16: SPC-018 is a Bucket-C CANDIDATE, not an auto-fix. Even gated
+         on [is_sentence_end_period] + the common-word allowlist, "period +
+         capital, no space" is IRREDUCIBLY intent-dependent: a
+         common-word-stemmed dotted identifier (`main.Py`, `time.Now`,
+         `data.Frame`) is lexically identical to a real sentence break, so
+         auto-inserting a space would corrupt it. We therefore surface each
+         insertion as a reviewable candidate rather than applying it. *)
+      let candidates = collect 0 [] in
+      if candidates = [] then
         Some
           (mk_result ~id:"SPC-018" ~severity:Info
              ~message:"No space after sentence‑ending period" ~count:cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SPC-018" ~severity:Info
-             ~message:"No space after sentence‑ending period" ~count:cnt ~fix)
+          (mk_result_with_candidates ~id:"SPC-018" ~severity:Info
+             ~message:"No space after sentence‑ending period" ~count:cnt
+             ~candidates)
     else None
   in
   { id = "SPC-018"; run; languages = [] }

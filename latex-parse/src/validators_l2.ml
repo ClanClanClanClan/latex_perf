@@ -745,25 +745,80 @@ let r_font_008 : rule =
    inside [ ] delimiters. *)
 let r_math_032 : rule =
   let re = Re_compat.regexp_string "\\begin{smallmatrix}" in
+  let re_end = Re_compat.regexp_string "\\end{smallmatrix}" in
   let run s =
+    let n = String.length s in
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fixes: a `[ ... \begin{smallmatrix} ... ]` should use
+       the bracketed [bsmallmatrix] environment (amsmath/mathtools) and drop the
+       manual `[ ]` delimiters. This restructures the source, so surface it for
+       author review. Each candidate renames the env in both \begin and \end and
+       removes the surrounding brackets. Count is untouched. *)
+    let candidates = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, pos = Re_compat.search_forward re s !i in
+         let mend = Re_compat.match_end _mr in
          (* Look backwards for opening delimiter *)
          let j = ref (pos - 1) in
          while !j >= 0 && (s.[!j] = ' ' || s.[!j] = '\n' || s.[!j] = '\r') do
            decr j
          done;
-         if !j >= 0 && s.[!j] = '[' then incr cnt;
-         i := Re_compat.match_end _mr
+         if !j >= 0 && s.[!j] = '[' then (
+           incr cnt;
+           (* "\begin{smallmatrix}": "smallmatrix" (11 bytes) sits at pos+7. *)
+           let begin_name_off = pos + 7 in
+           match
+             try Some (Re_compat.search_forward re_end s mend)
+             with Not_found -> None
+           with
+           | None -> ()
+           | Some (er, epos) ->
+               (* "\end{smallmatrix}": "smallmatrix" sits at epos+5. *)
+               let end_name_off = epos + 5 in
+               let eend = Re_compat.match_end er in
+               (* find the closing `]` after \end{smallmatrix}, skipping ws *)
+               let k = ref eend in
+               while
+                 !k < n && (s.[!k] = ' ' || s.[!k] = '\n' || s.[!k] = '\r')
+               do
+                 incr k
+               done;
+               let close_bracket =
+                 if !k < n && s.[!k] = ']' then
+                   [ Cst_edit.delete ~start_offset:!k ~end_offset:(!k + 1) ]
+                 else []
+               in
+               let edits =
+                 [
+                   Cst_edit.delete ~start_offset:!j ~end_offset:(!j + 1);
+                   Cst_edit.replace ~start_offset:begin_name_off
+                     ~end_offset:(begin_name_off + 11) "bsmallmatrix";
+                   Cst_edit.replace ~start_offset:end_name_off
+                     ~end_offset:(end_name_off + 11) "bsmallmatrix";
+                 ]
+                 @ close_bracket
+               in
+               candidates :=
+                 {
+                   c_edits = edits;
+                   c_label = "Use bmatrix for a square-bracketed matrix";
+                 }
+                 :: !candidates);
+         i := mend
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-032" ~severity:Warning
-           ~message:"Incorrect small matrix brackets" ~count:!cnt)
+      let candidates = candidates_drop_vcu_exempt s (List.rev !candidates) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-032" ~severity:Warning
+             ~message:"Incorrect small matrix brackets" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-032" ~severity:Warning
+             ~message:"Incorrect small matrix brackets" ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-032"; run; languages = [] }
@@ -5806,19 +5861,48 @@ let r_cmd_002 : rule =
   let re = Re_compat.regexp {|\\def\\[a-zA-Z]+|} in
   let run s =
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fixes: rewriting `\def\name` as `\renewcommand{\name}`
+       changes redefinition semantics (\def is unguarded and overwrites
+       silently; \renewcommand errors if the macro is undefined, and its
+       argument arity differs), so this is intent-dependent — surface it for
+       author review rather than auto-applying. The diagnostic count is
+       untouched; candidates in a protected region are dropped. *)
+    let candidates = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
+         let _mr, pos = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Re_compat.match_end _mr
+         let mend = Re_compat.match_end _mr in
+         (* Match is `\def\name`; `\def` is 4 bytes, so `\name` (with its
+            leading backslash) is [pos+4, mend). *)
+         let name_off = pos + 4 in
+         let name = String.sub s name_off (mend - name_off) in
+         candidates :=
+           {
+             c_edits =
+               [
+                 Cst_edit.make ~start_offset:pos ~end_offset:mend
+                   ~replacement:(Printf.sprintf "\\renewcommand{%s}" name);
+               ];
+             c_label = "Redefine with \\renewcommand instead of \\def";
+           }
+           :: !candidates;
+         i := mend
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CMD-002" ~severity:Warning
-           ~message:"Command redefined with \\def instead of \\renewcommand"
-           ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !candidates) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CMD-002" ~severity:Warning
+             ~message:"Command redefined with \\def instead of \\renewcommand"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CMD-002" ~severity:Warning
+             ~message:"Command redefined with \\def instead of \\renewcommand"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "CMD-002"; run; languages = [] }

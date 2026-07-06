@@ -688,6 +688,44 @@ let mk_result_with_fix_vcu_exempt ~id ~severity ~message ~count ~src ~fix =
   if fix' = [] then mk_result ~id ~severity ~message ~count
   else mk_result_with_fix ~id ~severity ~message ~count ~fix:fix'
 
+(** [candidates_drop_exempt src cands] — Bucket-C candidate counterpart of
+    [mk_result_with_fix_exempt], for TEXT rules. Drops every candidate whose
+    FIRST edit's start offset falls inside a verbatim / inline \verb / comment /
+    url / math region of [src] (via [find_exempt_ranges]), so a suggestion is
+    never offered against bytes the author wrote literally. A candidate with an
+    EMPTY [c_edits] carries no offset and therefore CANNOT be located here, so
+    it is KEPT — a rule that emits such a label-only candidate is responsible
+    for its own exempt gating (see VERB-006). The diagnostic count is
+    unaffected: the caller degrades to [mk_result] itself if the surviving
+    candidate list is empty. *)
+let candidates_drop_exempt (src : string) (cands : candidate_fix list) :
+    candidate_fix list =
+  let exempt = find_exempt_ranges src in
+  List.filter
+    (fun (c : candidate_fix) ->
+      match c.c_edits with
+      | (e : Cst_edit.t) :: _ -> not (is_in_exempt_range exempt e.start_offset)
+      | [] -> true)
+    cands
+
+(** [candidates_drop_vcu_exempt src cands] — MATH-targeting counterpart of
+    [candidates_drop_exempt] (mirrors [mk_result_with_fix_vcu_exempt]). Drops
+    only candidates whose first edit lands in a verbatim / comment / url region
+    ([find_verbatim_comment_url_ranges]), KEEPING genuine in-math candidates —
+    for rules whose targets are themselves math (align / matrix environments),
+    where the full exempt set (which includes math) would wrongly discard every
+    candidate. Label-only candidates (empty [c_edits]) are kept for the rule to
+    gate itself. *)
+let candidates_drop_vcu_exempt (src : string) (cands : candidate_fix list) :
+    candidate_fix list =
+  let vcu = find_verbatim_comment_url_ranges src in
+  List.filter
+    (fun (c : candidate_fix) ->
+      match c.c_edits with
+      | (e : Cst_edit.t) :: _ -> not (is_in_exempt_range vcu e.start_offset)
+      | [] -> true)
+    cands
+
 (** [is_ascii_context ?window ?candidate_bytes s off] — heuristic that returns
     [true] iff the byte window of size [window] (default 32) on each side of the
     candidate UTF-8 sequence at [off] (of length [candidate_bytes], default 3)

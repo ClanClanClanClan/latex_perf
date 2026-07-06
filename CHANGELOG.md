@@ -2,6 +2,30 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.17] — 2026-07-06
+
+**Bucket-C candidate surface extended (4 more rules) + reusable exempt helpers.**
+Two reusable filters added to `Validators_common` (mirroring the
+`mk_result_with_fix_exempt` / `_vcu_exempt` split): `candidates_drop_exempt`
+(full verbatim/comment/url/math, for text rules) and `candidates_drop_vcu_exempt`
+(vcu only, keeps in-math candidates, for math rules). Four diagnose-only rules now
+emit ONE reviewable candidate each (count/severity/message unchanged, `fix` stays
+`None`, `produces_fix` stays false → coverage gate untouched, 159 producers):
+
+- **CMD-002** `\def\name` → `\renewcommand{\name}`
+- **MATH-025** one-column `align` → `equation` (opener + closer)
+- **MATH-032** `[ smallmatrix ]` → `bsmallmatrix`
+- **VERB-006** label-only "convert inline `\verb` to a verbatim environment"; it
+  gates its own `\verb` opener against `find_exempt_ranges` with a
+  strictly-enclosing test (label-only candidates have no offset for the helpers to
+  drop), so a commented-out `\verb` yields no candidate.
+
+The candidate surface is now REF-006 / PKG-022 / CMD-002 / MATH-025 / MATH-032 /
+VERB-006 (+ SPC-018), all via `--list-candidate-fixes`. Built clean from main (no
+infra duplication) and adversarially verified on the correct worktree
+(`path_match`, verdict sound) — the fixed workflow verify pattern. 37
+`test_candidate_fixes` cases; differential 0-diff; all gates green.
+
 ## [v27.1.16] — 2026-07-06
 
 **Bucket-B completed + Bucket-C infrastructure established.**

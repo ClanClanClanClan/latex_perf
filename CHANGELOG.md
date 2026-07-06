@@ -2,6 +2,43 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.16] — 2026-07-06
+
+**Bucket-B completed + Bucket-C infrastructure established.**
+
+**Bucket-B — common-word allowlist (the word-frequency layer).** `is_sentence_end_period`
+now flips from an abbreviation *blocklist* to a positive **common-English-word
+allowlist** (~795 words incl. academic vocabulary), gated by `?require_common`
+(default true for the SPC-018 auto-fix; `sentence_split` passes false to keep
+STYLE segmentation recall). SPC-018 fires only when the word before the `.` is a
+known common word, so lowercase dotted identifiers — `github.Com`, `obj.Method`,
+`numpy.Array`, `api.Response`, `os.Path`, `django.Models` — are suppressed and
+never corrupted, while real ends (`result.Then`, `holds.Therefore`) fire. Trades
+recall (an uncommon technical-word sentence end is a conservative MISS) for zero
+identifier corruption. **Documented irreducible residual:** common-word-stemmed
+dotted pairs (`main.Py`, `time.Now`, `data.Frame`) are genuinely ambiguous with a
+real sentence break — needs semantic context (full Bucket-B / NLP). An
+over-aggressive "next word must also be common" variant was tried and rejected
+(real sentences start with arbitrary words → recall regression).
+
+**Bucket-C — candidate-fix infrastructure (`--apply-fixes-with-prompt` surface).**
+Bucket-C rules depend on author intent, so they must NOT auto-apply. The `result`
+model gains a `candidate_fixes : candidate_fix list` channel (parallel to the
+auto-apply `fix` field), defaulted to `[]` for all 640+ existing rules and set
+only via the new `mk_result_with_candidates` constructor (mirrored in
+`validators.mli`). New CLI mode **`--list-candidate-fixes`** emits machine-readable
+`CANDIDATE`/`EDIT` lines for an editor frontend. `--apply-fixes` /
+`--apply-fixes-for` read **only** `fix`, so candidates are never auto-applied
+(tested). Two proof-of-concept rules emit candidates: **REF-006** (`\ref`→`\pageref`)
+and **PKG-022** (epsfig→graphicx / subfigure→subcaption / natbib→biblatex);
+candidates inside verbatim/comment/url/math are dropped. Both stay
+`produces_fix:false` — candidates are not auto-fixes — so rule_contracts,
+producer_triggers, and the coverage gate are unaffected. New `test_candidate_fixes.ml`
+(14 cases).
+
+Producer count unchanged (160). Coverage gate 160×997 PASS, full `dune runtest`,
+all release gates green.
+
 ## [v27.1.15] — 2026-07-06
 
 **Bucket-B pilot: a conservative, abbreviation-aware sentence-boundary layer —

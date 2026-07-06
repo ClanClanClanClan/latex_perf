@@ -1427,6 +1427,15 @@ let r_pkg_022 : rule =
   let obsolete_pkgs =
     [ "epsfig"; "subfigure"; "natbib"; "t1enc"; "palatcm"; "euler"; "pslatex" ]
   in
+  (* Modern replacement for the obsolete packages that have a direct successor.
+     Only these three offer a mechanical rename; the remaining obsolete packages
+     still count toward the diagnostic but carry no candidate fix. *)
+  let modern_of = function
+    | "epsfig" -> Some "graphicx"
+    | "subfigure" -> Some "subcaption"
+    | "natbib" -> Some "biblatex"
+    | _ -> None
+  in
   let run s =
     let cnt =
       List.fold_left
@@ -1434,10 +1443,58 @@ let r_pkg_022 : rule =
         0 obsolete_pkgs
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"PKG-022" ~severity:Warning
-           ~message:"Obsolete package (epsfig, subfigure, natbib) detected"
-           ~count:cnt)
+      (* Bucket-C CANDIDATE fixes: swapping a package for its modern successor
+         changes the API surface (e.g. subfigure's \subfigure vs subcaption's
+         \subcaptionbox) and needs author confirmation, so surface, don't apply.
+         Each candidate replaces just the NAME inside the braces. *)
+      let usepkgs = extract_usepackages s in
+      let exempt = find_exempt_ranges s in
+      let candidates =
+        List.filter_map
+          (fun (pos, pkg) ->
+            match modern_of pkg with
+            | None -> None
+            | Some modern -> (
+                (* Locate the NAME's byte offset: the first occurrence of [pkg]
+                   at/after the `\usepackage` position [pos]. Searching for the
+                   specific package name (rather than the first name in a
+                   comma-separated list) keeps the edit on the right token. *)
+                let plen = String.length pkg in
+                let slen = String.length s in
+                let rec find i =
+                  if i + plen > slen then None
+                  else if String.sub s i plen = pkg then Some i
+                  else find (i + 1)
+                in
+                match find pos with
+                | None -> None
+                | Some name_off ->
+                    if is_in_exempt_range exempt name_off then None
+                    else
+                      Some
+                        {
+                          c_edits =
+                            [
+                              Cst_edit.make ~start_offset:name_off
+                                ~end_offset:(name_off + plen)
+                                ~replacement:modern;
+                            ];
+                          c_label =
+                            Printf.sprintf "Replace obsolete package %s with %s"
+                              pkg modern;
+                        }))
+          usepkgs
+      in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PKG-022" ~severity:Warning
+             ~message:"Obsolete package (epsfig, subfigure, natbib) detected"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PKG-022" ~severity:Warning
+             ~message:"Obsolete package (epsfig, subfigure, natbib) detected"
+             ~count:cnt ~candidates)
     else None
   in
   { id = "PKG-022"; run; languages = [] }

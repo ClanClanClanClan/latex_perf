@@ -50,6 +50,13 @@ SHIPPED_FIX_PRODUCERS: set[str] = set(SHIPPED_VERSIONS.keys())
 #      corrupt valid input if naively fix-produced; deferred until the
 #      detection scope is narrowed.
 FIX_PRODUCER_DEFERRED: dict[str, str] = {
+    "SPC-018": (
+        "Bucket C (candidate, --list-candidate-fixes / demoted from auto-fix in v27.1.16): "
+        "inserting a space after a period+capital is IRREDUCIBLY intent-dependent — a "
+        "common-word-stemmed dotted identifier (main.Py, time.Now, data.Frame) is lexically "
+        "identical to a real sentence break, so an auto-fix would corrupt it. SPC-018 now "
+        "emits a reviewable candidate instead of applying."
+    ),
     # === Category 1: NLP-deferred (mirrors NLP_DEFERRED in the ledger gen) ===
     "TYPO-019": (
         "Bucket B: requires NLP / sentence tokenizer (rule detects "

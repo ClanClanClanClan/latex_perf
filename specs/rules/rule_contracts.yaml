@@ -6666,7 +6666,11 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: true
+  produces_fix: false
+  fix_status_reason: 'Bucket C (candidate, --list-candidate-fixes / demoted from auto-fix in v27.1.16): inserting a space
+    after a period+capital is IRREDUCIBLY intent-dependent — a common-word-stemmed dotted identifier (main.Py, time.Now, data.Frame)
+    is lexically identical to a real sentence break, so an auto-fix would corrupt it. SPC-018 now emits a reviewable candidate
+    instead of applying.'
 - rule_id: SPC-019
   layer: L0_Lexer
   execution_class: A

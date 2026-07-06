@@ -2,6 +2,46 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.16] — 2026-07-06
+
+**Bucket-B completed + Bucket-C infrastructure established.**
+
+**Bucket-B — common-word allowlist + SPC-018 demoted to a Bucket-C candidate.**
+`is_sentence_end_period` flips from an abbreviation *blocklist* to a positive
+**common-English-word allowlist** (~800 words incl. academic vocabulary), gated by
+`?require_common` (`sentence_split` passes false to keep STYLE recall). This
+suppresses uncommon-stem dotted identifiers (`github.Com`, `obj.Method`,
+`numpy.Array`, `os.Path`). **A correct-tree adversarial verification then proved
+the allowlist is not sufficient for an AUTO-fix:** identifiers whose stem is
+itself a common word (`main.Py`, `time.Now`, `data.Frame`, `test.Java`) still fire
+and would be corrupted, because that word class legitimately ends prose sentences
+too — the ambiguity is irreducible without semantics. **So SPC-018 is DEMOTED from
+an auto-fix producer to a Bucket-C candidate** (`produces_fix` true→false, 160→159
+producers): it now surfaces each "insert a space?" as a reviewable candidate via
+`--list-candidate-fixes` and never auto-applies. This is the honest bucketing —
+sentence-boundary space insertion is intent-dependent — and it uses the very
+Bucket-C infrastructure this release adds.
+
+**Bucket-C — candidate-fix infrastructure (`--apply-fixes-with-prompt` surface).**
+Bucket-C rules depend on author intent, so they must NOT auto-apply. The `result`
+model gains a `candidate_fixes : candidate_fix list` channel (parallel to the
+auto-apply `fix` field), defaulted to `[]` for all 640+ existing rules and set
+only via the new `mk_result_with_candidates` constructor (mirrored in
+`validators.mli`). New CLI mode **`--list-candidate-fixes`** emits machine-readable
+`CANDIDATE`/`EDIT` lines for an editor frontend. `--apply-fixes` /
+`--apply-fixes-for` read **only** `fix`, so candidates are never auto-applied
+(tested). Two proof-of-concept rules emit candidates: **REF-006** (`\ref`→`\pageref`)
+and **PKG-022** (epsfig→graphicx / subfigure→subcaption / natbib→biblatex);
+candidates inside verbatim/comment/url/math are dropped via `find_exempt_ranges`
+(a fix from the verification: PKG-022 initially lacked this filter and surfaced
+candidates inside comments/`\verb`). SPC-018 now emits candidates here too. New
+`test_candidate_fixes.ml`.
+
+**159 producers** (SPC-018 demoted). Coverage gate 159×991 PASS, full `dune runtest`,
+all release gates green. The correct-tree verification also drove three real fixes
+that three prior wrong-tree verify passes had missed — see the workflow-verify-tree
+lesson.
+
 ## [v27.1.15] — 2026-07-06
 
 **Bucket-B pilot: a conservative, abbreviation-aware sentence-boundary layer —

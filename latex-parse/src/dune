@@ -458,6 +458,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_candidate_fixes)
+ (modules test_candidate_fixes)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_validators_chem)
  (modules test_validators_chem)
  (libraries latex_parse_lib test_helpers unix))

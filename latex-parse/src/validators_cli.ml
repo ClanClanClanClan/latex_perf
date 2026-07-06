@@ -298,6 +298,30 @@ let () =
   | [ _; "--apply-fixes-best-effort-for"; rule_id; path ] ->
       let src = read_all path in
       exit (run_apply_fixes ~best_effort:true ~filter_id:rule_id ~path ~src ())
+  | [ _; "--list-candidate-fixes"; path ] ->
+      (* Bucket-C: list intent-dependent CANDIDATE fixes for an editor frontend.
+         These are surfaced for author review and are NEVER auto-applied by
+         --apply-fixes (which only applies the [fix] field). Machine-readable:
+         one `CANDIDATE\t<id>\t<label>` line per candidate, followed by one `
+         EDIT\t<start>\t<end>\t<replacement>` line per edit. *)
+      let src = read_all path in
+      let results = Latex_parse_lib.Validators.run_all_with_class_d src in
+      List.iter
+        (fun (r : Latex_parse_lib.Validators.result) ->
+          match r.candidate_fixes with
+          | [] -> ()
+          | cands ->
+              List.iter
+                (fun (c : Latex_parse_lib.Validators.candidate_fix) ->
+                  printf "CANDIDATE\t%s\t%s\n" r.id c.c_label;
+                  List.iter
+                    (fun (e : Latex_parse_lib.Cst_edit.t) ->
+                      printf "  EDIT\t%d\t%d\t%s\n" e.start_offset e.end_offset
+                        e.replacement)
+                    c.c_edits)
+                cands)
+        results;
+      exit 0
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
       exit (run_apply_fixes ~converge:true ~path ~src ())

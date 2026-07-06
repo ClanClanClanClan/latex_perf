@@ -998,7 +998,7 @@ let l1_script_006_rule : rule =
              ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"SCRIPT-006" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-006" ~severity:Info
              ~message:{|Degree symbol typed ° instead of ^\circ|} ~count:!cnt
              ~fix)
     else None
@@ -1988,7 +1988,7 @@ let l1_chem_005_rule : rule =
              ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"CHEM-005" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"CHEM-005" ~severity:Info
              ~message:{|Chemical arrow typed '->' not \rightarrow|} ~count:!cnt
              ~fix)
     else None

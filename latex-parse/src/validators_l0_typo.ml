@@ -329,7 +329,8 @@ let r_typo_005 : rule =
   let mk_fix_edits exempt s =
     List.map
       (fun off ->
-        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3) "\\dots")
+        Cst_edit.replace ~start_offset:off ~end_offset:(off + 3)
+          (control_word_repl s (off + 3) "\\dots"))
       (occurrences_in_text exempt s "...")
   in
   let run s =
@@ -637,12 +638,12 @@ let r_typo_012 : rule =
     in
     loop 0 []
   in
-  let mk_fix_edits offsets =
+  let mk_fix_edits s offsets =
     List.map
       (fun pos ->
         let prime_off = pos + 1 in
         Cst_edit.replace ~start_offset:prime_off ~end_offset:(prime_off + 1)
-          "^\\prime")
+          (control_word_repl s (prime_off + 1) "^\\prime"))
       offsets
   in
   (* P3 context-aware (token-aware variant). TYPO-012 is an INVERSE rule: it
@@ -665,7 +666,7 @@ let r_typo_012 : rule =
     let all = collect_offsets s in
     let cnt = List.length (List.filter (fun off -> not (in_vcu off)) all) in
     if cnt > 0 then
-      let fix = mk_fix_edits (List.filter in_math_only all) in
+      let fix = mk_fix_edits s (List.filter in_math_only all) in
       if fix = [] then
         Some
           (mk_result ~id:"TYPO-012" ~severity:Warning

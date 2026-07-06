@@ -53,6 +53,11 @@ BATTERY = (
     b"url http://ex.test/page here "  # TYPO-039 (bare URL → \\url wrap)
     b"sec \\section{} here "  # STRUCT-002 (empty \\section → \\section{Untitled})
     b"ideomath $g\xe3\x80\x80h$ cjkmath $g\xe3\x80\x81h$ "  # CJK-008/015 (U+3000/U+3001 in $..$)
+    # v27.1.13 — math OPERATORS inside a $..$ that sits in a protected region: a
+    # math producer whose gate is context-blind find_math_ranges would rewrite
+    # these (CHEM-005/MATH-046/SCRIPT-006 leaked before vcu_exempt). Must stay
+    # byte-identical inside verbatim/comment/url.
+    b"chemarr $a->b$ ldotsrel $a,\\ldots,b$ deg $5\xc2\xb0$ middot $a\xc2\xb7b$ le $a<=b$ "
 )
 
 # Each protected region: (name, prefix_before_battery, suffix_after_battery).

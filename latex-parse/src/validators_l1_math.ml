@@ -638,6 +638,13 @@ let l1_math_025_rule : rule =
   let re_end = Re_compat.regexp {|\\end{align\*?}|} in
   let run s =
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fixes: a single-column `align` is better written as
+       `equation` (proper spacing, no phantom alignment tab), but swapping the
+       environment can interact with cross-references / numbering, so surface it
+       for review. Two edits rename the env name in the \begin and \end,
+       preserving any trailing star (so `align*` becomes `equation*`). Count is
+       untouched. *)
+    let candidates = ref [] in
     let i = ref 0 in
     let n = String.length s in
     (try
@@ -647,18 +654,43 @@ let l1_math_025_rule : rule =
            pos + String.length (Re_compat.matched_string _mr s)
          in
          try
-           let _mr, end_pos = Re_compat.search_forward re_end s after_begin in
+           let _emr, end_pos = Re_compat.search_forward re_end s after_begin in
            let body = String.sub s after_begin (end_pos - after_begin) in
-           if not (String.contains body '&') then incr cnt;
+           if not (String.contains body '&') then (
+             incr cnt;
+             (* `\begin{align...}`: `\begin{` is 7 bytes, so "align" (5 bytes)
+                begins at pos+7; any trailing star is left in place. `\end{` is
+                5 bytes, so "align" begins at end_pos+5. *)
+             let begin_name_off = pos + 7 in
+             let end_name_off = end_pos + 5 in
+             candidates :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:begin_name_off
+                       ~end_offset:(begin_name_off + 5) "equation";
+                     Cst_edit.replace ~start_offset:end_name_off
+                       ~end_offset:(end_name_off + 5) "equation";
+                   ];
+                 c_label = "Use equation instead of one-column align";
+               }
+               :: !candidates);
            i := end_pos + 1
          with Not_found -> i := n
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-025" ~severity:Info
-           ~message:"align environment with one column – use equation"
-           ~count:!cnt)
+      let candidates = candidates_drop_vcu_exempt s (List.rev !candidates) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-025" ~severity:Info
+             ~message:"align environment with one column – use equation"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-025" ~severity:Info
+             ~message:"align environment with one column – use equation"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-025"; run; languages = [] }

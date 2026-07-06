@@ -105,4 +105,112 @@ let () =
         (fires "PKG-022" s && candidates_of "PKG-022" s = [])
         (tag ^ ": no candidate but still fires"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     CMD-002: \def used where \renewcommand is intended (TEXT rule, exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let cmd_src = "\\def\\foo{bar}" in
+  run "CMD-002 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-002" cmd_src 1) (tag ^ ": count=1"));
+  run "CMD-002 emits a \\renewcommand candidate" (fun tag ->
+      expect
+        (has_label "CMD-002" cmd_src
+           "Redefine with \\renewcommand instead of \\def")
+        (tag ^ ": candidate label"));
+  run "CMD-002 candidate edit rewrites \\def\\foo -> \\renewcommand{\\foo}"
+    (fun tag ->
+      (* "\def\foo" spans [0,8); becomes "\renewcommand{\foo}". *)
+      expect
+        (edit_of_label "CMD-002" cmd_src
+           "Redefine with \\renewcommand instead of \\def"
+        = Some (0, 8, "\\renewcommand{\\foo}"))
+        (tag ^ ": edit"));
+  run "CMD-002 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-002" cmd_src)) (tag ^ ": fix=None"));
+  run "CMD-002 --apply-fixes leaves \\def byte-identical" (fun tag ->
+      expect (apply_fix "CMD-002" cmd_src = cmd_src) (tag ^ ": no rewrite"));
+  run "CMD-002 candidate dropped inside a comment" (fun tag ->
+      let s = "% \\def\\foo{bar}\n" in
+      expect
+        (fires "CMD-002" s && candidates_of "CMD-002" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-025: one-column align -> equation (MATH rule, vcu-exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m25_src = "\\begin{align}\nx = 1\n\\end{align}" in
+  run "MATH-025 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-025" m25_src 1) (tag ^ ": count=1"));
+  run "MATH-025 emits an equation candidate" (fun tag ->
+      expect
+        (has_label "MATH-025" m25_src "Use equation instead of one-column align")
+        (tag ^ ": candidate label"));
+  run "MATH-025 candidate carries two rename edits" (fun tag ->
+      match candidates_of "MATH-025" m25_src with
+      | [ { c_edits = [ _; _ ]; _ } ] -> expect true (tag ^ ": 2 edits")
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+  run "MATH-025 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MATH-025" m25_src)) (tag ^ ": fix=None"));
+  run "MATH-025 --apply-fixes leaves align byte-identical" (fun tag ->
+      expect (apply_fix "MATH-025" m25_src = m25_src) (tag ^ ": no rewrite"));
+  run "MATH-025 candidate dropped inside verbatim" (fun tag ->
+      let v =
+        "\\begin{verbatim}\n\\begin{align}\nx\n\\end{align}\n\\end{verbatim}"
+      in
+      expect
+        (fires "MATH-025" v && candidates_of "MATH-025" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-032: square-bracketed smallmatrix -> bsmallmatrix (vcu-exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m32_src = "[\\begin{smallmatrix}a\\end{smallmatrix}]" in
+  run "MATH-032 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-032" m32_src 1) (tag ^ ": count=1"));
+  run "MATH-032 emits a bmatrix candidate" (fun tag ->
+      expect
+        (has_label "MATH-032" m32_src
+           "Use bmatrix for a square-bracketed matrix")
+        (tag ^ ": candidate label"));
+  run "MATH-032 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MATH-032" m32_src)) (tag ^ ": fix=None"));
+  run "MATH-032 --apply-fixes leaves matrix byte-identical" (fun tag ->
+      expect (apply_fix "MATH-032" m32_src = m32_src) (tag ^ ": no rewrite"));
+  run "MATH-032 candidate dropped inside verbatim" (fun tag ->
+      let v =
+        "\\begin{verbatim}\n\
+         [\\begin{smallmatrix}a\\end{smallmatrix}]\n\
+         \\end{verbatim}"
+      in
+      expect
+        (fires "MATH-032" v && candidates_of "MATH-032" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-006: inline \verb over a newline -> verbatim env (LABEL-ONLY)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v6_src = "See \\verb|a\nb| here" in
+  run "VERB-006 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "VERB-006" v6_src 1) (tag ^ ": count=1"));
+  run "VERB-006 emits a label-only verbatim candidate" (fun tag ->
+      expect
+        (has_label "VERB-006" v6_src
+           "Convert inline \\verb to a verbatim environment")
+        (tag ^ ": candidate label"));
+  run "VERB-006 candidate has EMPTY edits (span ambiguous)" (fun tag ->
+      match candidates_of "VERB-006" v6_src with
+      | [ { c_edits = []; _ } ] -> expect true (tag ^ ": empty edits")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "VERB-006 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "VERB-006" v6_src)) (tag ^ ": fix=None"));
+  run "VERB-006 --apply-fixes leaves \\verb byte-identical" (fun tag ->
+      expect (apply_fix "VERB-006" v6_src = v6_src) (tag ^ ": no rewrite"));
+  run "VERB-006 label-only candidate dropped inside a comment" (fun tag ->
+      (* The helpers cannot locate an empty-edit candidate, so VERB-006 must
+         gate the \verb opener offset itself: a commented-out \verb yields NO
+         candidate even though the diagnostic still fires. *)
+      let s = "% \\verb|a\nb|" in
+      expect
+        (fires "VERB-006" s && candidates_of "VERB-006" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
   finalise "candidate_fixes"

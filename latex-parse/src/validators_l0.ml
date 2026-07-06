@@ -3611,6 +3611,28 @@ let r_verb_006 : rule =
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fix: an inline \verb that spans a newline should
+       become a `verbatim` environment. The exact rewrite span (where the
+       environment should open/close relative to the surrounding prose) is
+       ambiguous, so we offer a LABEL-ONLY candidate (empty edits) for author
+       review — the helpers cannot locate an empty-edit candidate to drop it, so
+       we gate the \verb opener offset against find_exempt_ranges HERE and emit
+       no candidate when the opener is itself inside a comment / verbatim /
+       protected region (e.g. `% \verb|...|`).
+
+       NB: an inline \verb IS itself an exempt range (find_verbatim_comment_url
+       treats `\verb|..|` as verbatim), and that self-range starts EXACTLY at
+       the opener. So we test for a STRICTLY enclosing exempt range ([a <
+       opener]): the verb's own self-range (a = opener) is excluded — we still
+       want to suggest converting a genuine standalone \verb — while an
+       enclosing comment / verbatim environment / math region (which opens
+       strictly before the opener) correctly suppresses the candidate. Count is
+       untouched. *)
+    let exempt = lazy (find_exempt_ranges s) in
+    let opener_enclosed opener =
+      List.exists (fun (a, b) -> a < opener && opener < b) (Lazy.force exempt)
+    in
+    let candidates = ref [] in
     let i = ref 0 in
     while !i < n - 5 do
       if
@@ -3625,6 +3647,7 @@ let r_verb_006 : rule =
                    (Char.lowercase_ascii s.[!i + 5] >= 'a'
                    && Char.lowercase_ascii s.[!i + 5] <= 'z'))
       then
+        let opener = !i in
         let delim_pos =
           if !i + 5 < n && s.[!i + 5] = '*' then !i + 6 else !i + 5
         in
@@ -3638,15 +3661,30 @@ let r_verb_006 : rule =
             else if s.[!j] = '\n' then has_newline := true;
             incr j
           done;
-          if !has_newline then incr cnt;
+          if !has_newline then (
+            incr cnt;
+            if not (opener_enclosed opener) then
+              candidates :=
+                {
+                  c_edits = [];
+                  c_label = "Convert inline \\verb to a verbatim environment";
+                }
+                :: !candidates);
           i := !j)
         else i := n
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-006" ~severity:Error
-           ~message:"Inline \\verb used for multiline content" ~count:!cnt)
+      let candidates = List.rev !candidates in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-006" ~severity:Error
+             ~message:"Inline \\verb used for multiline content" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-006" ~severity:Error
+             ~message:"Inline \\verb used for multiline content" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "VERB-006"; run; languages = [] }

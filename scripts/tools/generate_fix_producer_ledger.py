@@ -179,6 +179,16 @@ SHIPPED_VERSIONS = {
     "CJK-006": "v27.1.12",
     "REF-011": "v27.1.12",
     "SCRIPT-007": "v27.1.12",
+    "PKG-002": "v27.1.13",
+    "PKG-007": "v27.1.13",
+    "PKG-023": "v27.1.13",
+    "TIKZ-007": "v27.1.13",
+    "TYPO-056": "v27.1.13",
+    "ENC-019": "v27.1.13",
+    "JA-001": "v27.1.13",
+    "MATH-095": "v27.1.13",
+    "BIB-002": "v27.1.13",
+    "BIB-008": "v27.1.13",
 }
 
 # Explicitly NLP-deferred rules (Bucket B, marked "deferred (NLP)" in code).

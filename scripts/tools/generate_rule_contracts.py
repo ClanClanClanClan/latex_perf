@@ -181,6 +181,61 @@ FIX_PRODUCER_DEFERRED: dict[str, str] = {
         "still fire as separate diagnostics, encoding different aspects "
         "of the same source issue); only ENC-002 emits the auto-fix."
     ),
+    # === v27.1.13: Bucket C (context-required / --apply-fixes-with-prompt,
+    #     v27.4.0) — confirmed per-rule during the shipping audit ===
+    "MATH-012": (
+        "Bucket C (context-required, --apply-fixes-with-prompt / v27.4.0): a multi-letter math token may be a FUNCTION name OR a product of scalar variables ($abc = a\\cdot b\\cdot c$). Wrapping the latter in \\operatorname is wrong; cannot decide statically."
+    ),
+    "MATH-032": (
+        "Bucket C: the detected bracket may be a bare matrix delimiter OR the operand of \\bigl/\\bigr sizing (e.g. \\bigl[\\begin{smallmatrix}...\\bigr]). Converting the latter to bmatrix is wrong; needs delimiter/sizing context."
+    ),
+    "MATH-064": (
+        "Bucket C: \\eqalign is a brace-delimited plainTeX macro used INSIDE math; converting to the align display environment is a structural rewrite (\\cr->newline, \\noalign handling, illegal-in-inline-math), not a byte edit."
+    ),
+    "MATH-102": (
+        "Bucket C: eqnarray->align is a multi-site structural rewrite \u2014 eqnarray is 3-column (&=&) vs align's 2-column (&=), with nested \\begin{cases} needing per-row remapping. Not a mechanical env rename."
+    ),
+    "VERB-006": (
+        "Bucket C (suggest_verbatim_env is advisory): converting inline \\verb to a verbatim environment is structural, and an unclosed \\verb makes the captured content span ambiguous."
+    ),
+    "VERB-010": (
+        "Bucket C: \\verb is fragile and illegal inside moving arguments (\\section{`grep`} breaks); backtick-code cannot be mechanically injected as \\verb."
+    ),
+    "CMD-002": (
+        "Bucket C: \\def -> \\renewcommand is not value-preserving \u2014 \\renewcommand errors if the target is undefined; the rule cannot know whether the macro pre-exists (else \\newcommand). Needs user choice."
+    ),
+    "CMD-011": (
+        "Bucket C: the fix requires choosing \\makeatletter/\\makeatother placement (ambiguous), and the warning is often a false positive (\\def with no @). Not a deterministic edit."
+    ),
+    "BIB-011": (
+        "Bucket C: moving note->url is ambiguous when a url field already exists or note holds non-URL prose; a correct migration depends on bib content/style. Interactive."
+    ),
+    "REF-006": (
+        "Bucket C (suggest_pageref is an editor suggestion): \\ref vs \\pageref depends on author intent (render the number vs the page number); cannot be decided statically."
+    ),
+    "PKG-022": (
+        "Bucket C: swapping an obsolete package (e.g. epsfig->graphicx) is not a drop-in \u2014 the old macros (\\epsfig) remain undefined. A correct migration rewrites call sites; needs user review."
+    ),
+    "CHEM-001": (
+        "Bucket C: wrapping a formula in \\ce needs semantic judgment \u2014 $H_2$ may be a Hamiltonian component, $E_0$ a ground-state energy, $T_2$ a relaxation time. The regex matches any letter+subscript; auto-wrapping corrupts non-chemistry."
+    ),
+    # === v27.1.13: 5 more Bucket-C, confirmed during the Bucket-A shipping
+    #     audit (agents proved a concrete corruption case for each) ===
+    "FR-008": (
+        "Bucket C: the detector matches 'oe' by whole-document substring (not word/token boundary), so it fires on ANY 'oe' (does, poet, coefficient); replacing all with the ligature oe corrupts non-French / non-ligature words. A correct fix needs a French word list or morphology."
+    ),
+    "MATH-101": (
+        "Bucket C: the detector counts EVERY bare \\over (incl. chained {a \\over b \\over c}, brace-less 'a \\over b' spanning the whole formula, nested groups); \\over->\\frac needs unambiguous numerator/denominator parsing those cases do not admit. Only a narrow single-group subset (which the detector does not isolate) is deterministic."
+    ),
+    "MATH-052": (
+        "Bucket C: suggest_frac is advisory and its detection set is a STRICT SUBSET of MATH-101's \\over detection; the same numerator/denominator ambiguity applies. The interactive \\frac suggestion is the intended surface."
+    ),
+    "MATH-025": (
+        "Bucket C: the detector gates only on absence of '&' (column alignment), NOT on absence of row breaks; a multi-row single-column align (a // b // c) converted to the single-line equation environment breaks. A safe fix needs an extra single-row check."
+    ),
+    "ZH-001": (
+        "Bucket C: fires on any ASCII '.' after a CJK glyph, but that '.' may be a sentence period (->U+3002) OR a filename/identifier dot (\\includegraphics{fig.pdf} with a CJK stem, name.tex); replacing the latter corrupts the path. Needs sentence-vs-token context."
+    ),
 }
 
 # === v27.0.46: Reserved rules from rules_v3.yaml ===

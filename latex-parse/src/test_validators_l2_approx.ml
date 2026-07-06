@@ -595,6 +595,37 @@ let () =
   (* Empty string *)
   run "PKG-002 clean empty string" (fun tag ->
       expect (does_not_fire "PKG-002" "") (tag ^ ": empty string"));
+  (* v27.1.13 reorder fix: adjacency-gated single-line swap. Unique anchor. *)
+  run "PKG-002 reorder-swap fix on adjacent lines" (fun tag ->
+      let src =
+        "\\usepackage{hyperref}\n\
+         \\usepackage{geometry}\n\
+         \\begin{document}\n\
+         \\end{document}"
+      in
+      expect (fires_with_fix "PKG-002" src) (tag ^ ": emits fix");
+      let out = apply_fix "PKG-002" src in
+      expect
+        (out
+        = "\\usepackage{geometry}\n\
+           \\usepackage{hyperref}\n\
+           \\begin{document}\n\
+           \\end{document}")
+        (tag ^ ": geometry now precedes hyperref");
+      (* idempotent: swapped source must not re-fire *)
+      expect (does_not_fire "PKG-002" out) (tag ^ ": idempotent no re-fire"));
+  run "PKG-002 reorder-swap diagnose-only when non-adjacent" (fun tag ->
+      let src =
+        "\\usepackage{hyperref}\n\
+         \\usepackage{amsmath}\n\
+         \\usepackage{geometry}\n\
+         \\begin{document}\n\
+         \\end{document}"
+      in
+      expect (fires "PKG-002" src) (tag ^ ": still fires");
+      expect
+        (not (fires_with_fix "PKG-002" src))
+        (tag ^ ": no fix across intervening package"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-004: Package loaded after \begin{document}

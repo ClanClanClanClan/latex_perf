@@ -2,6 +2,41 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.13] — 2026-07-06
+
+**The last 27 pending-fix rules, fully resolved — 10 implemented, 17 closed as
+Bucket-C (context-required), nothing left deferred.** Grounded in the catalog's
+own bucket model (`V27_FIX_PRODUCER_CADENCE.md`): a rule ships a silent auto-fix
+only if it's genuinely Bucket A (one deterministic outcome); the rest are
+confirmed context-required (`--apply-fixes-with-prompt`, v27.4.0) with a concrete
+documented ambiguity — not punted.
+
+**+10 producers (150 → 160):**
+- **PKG-002/007, PKG-023, TIKZ-007** (`reorder_packages`) — swap two mis-ordered
+  `\usepackage` lines via a shared adjacency-gated helper that only fires when
+  the lines are immediately consecutive standalone single-package lines (no third
+  package / comment / verbatim between); PKG-002≡PKG-007 emit byte-identical
+  edits and dedup.
+- **TYPO-056** (`auto_utf8`) — mirrors the shipped TYPO-017 exactly (identical
+  edits dedup).
+- **ENC-019** (`normalize_nfc`) — delete a duplicated combining accent.
+- **JA-001** (`replace_fullwidth`) — half-width katakana → full-width (NFKC,
+  incl. dakuten composition).
+- **MATH-095** (`wrap_base_braces`) — `\log_10x` → `\log_{10}x` (mirrors MATH-061).
+- **BIB-002** (`normalize_doi`), **BIB-008** (`lowercase_fields`) — deterministic
+  bib normalizations (the family heuristic had them tentatively Bucket-C; the
+  per-rule audit confirmed Bucket-A).
+
+**17 rules closed as Bucket-C** in `FIX_PRODUCER_DEFERRED` (produces_fix:false +
+rationale): MATH-012/025/032/052/064/101/102, VERB-006/010, CMD-002/011,
+BIB-011, REF-006, PKG-022, CHEM-001, FR-008, ZH-001 — each with a concrete
+corruption case (e.g. `$abc$` product-vs-function, `$H_2$` Hamiltonian, `\over`
+un-parseable chains, `图.pdf` filename dot vs sentence period).
+
+Every new producer passes the v27.1.12 producer-coverage gate (adversarial
+trigger + golden). Full `dune runtest`, differential 0-diff vs v27.1.12,
+convergence, verbatim, coverage (160/160), all release gates green.
+
 ## [v27.1.12] — 2026-07-05
 
 **+6 producers (144 → 150), 7 latent-bug fixes, and a permanent per-producer

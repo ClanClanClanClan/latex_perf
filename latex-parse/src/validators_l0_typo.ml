@@ -2697,24 +2697,54 @@ let r_typo_049 : rule =
 (* Legacy TeX accent command found *)
 let r_typo_056 : rule =
   let re = Re_compat.regexp "\\\\['^`\"~=.][{][a-zA-Z][}]" in
-  (* P3 context-aware (token-aware variant): diagnose-only count skips matches
-     inside the exempt set (verbatim / comments / math / url). Same accent regex
-     as TYPO-017 (which fixes them); this is the legacy-accent warning. *)
-  let run s =
-    let exempt = find_exempt_ranges s in
+  (* P3 context-aware (token-aware variant): count skips matches inside the
+     exempt set (verbatim / comments / math / url). Same accent regex as
+     TYPO-017 (which fixes them); this is the legacy-accent warning. v27.1.13:
+     adds a fix-set that is BYTE-IDENTICAL to TYPO-017's — same offsets, same
+     replacement `\<accent><letter>` (braces removed) — so dedup_identical
+     collapses the two producers' edits. Count semantic is unchanged (still
+     every non-exempt match). Offsets derive from the ORIGINAL source `s`; the
+     accent commands are control SYMBOLS (backslash + non-letter) so the emitted
+     `\'e` cannot glue onto the following letter, and the result has no `{` so
+     the detector cannot re-fire (idempotent). *)
+  let collect_offsets s =
     let rec loop i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s i in
-        let mb = Re_compat.match_beginning _mr in
-        let acc' = if is_in_exempt_range exempt mb then acc else acc + 1 in
-        loop (Re_compat.match_end _mr) acc'
-      with Not_found -> acc
+        let mr, pos = Re_compat.search_forward re s i in
+        loop (Re_compat.match_end mr) (pos :: acc)
+      with Not_found -> List.rev acc
     in
-    let cnt = loop 0 0 in
+    loop 0 []
+  in
+  let mk_fix_edits s offsets =
+    List.map
+      (fun pos ->
+        let accent = s.[pos + 1] in
+        let letter = s.[pos + 3] in
+        Cst_edit.replace ~start_offset:pos ~end_offset:(pos + 5)
+          (Printf.sprintf "\\%c%c" accent letter))
+      offsets
+  in
+  let run s =
+    let exempt = find_exempt_ranges s in
+    let offsets =
+      List.filter
+        (fun pos -> not (is_in_exempt_range exempt pos))
+        (collect_offsets s)
+    in
+    let cnt = List.length offsets in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-056" ~severity:Warning
-           ~message:"Legacy TeX accents present despite UTF‑8 input" ~count:cnt)
+      let fix = mk_fix_edits s offsets in
+      if fix = [] then
+        Some
+          (mk_result ~id:"TYPO-056" ~severity:Warning
+             ~message:"Legacy TeX accents present despite UTF‑8 input"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_fix ~id:"TYPO-056" ~severity:Warning
+             ~message:"Legacy TeX accents present despite UTF‑8 input"
+             ~count:cnt ~fix)
     else None
   in
   { id = "TYPO-056"; run; languages = [] }

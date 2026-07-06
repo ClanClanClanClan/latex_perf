@@ -49,7 +49,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: BIB-003
   layer: L3_Semantics
   execution_class: B
@@ -133,7 +133,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: BIB-009
   layer: L3_Semantics
   execution_class: B
@@ -175,7 +175,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: moving note->url is ambiguous when a url field already exists or note holds non-URL prose;
+    a correct migration depends on bib content/style. Interactive.'
 - rule_id: BIB-012
   layer: L3_Semantics
   execution_class: B
@@ -607,7 +609,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: wrapping a formula in \ce needs semantic judgment — $H_2$ may be a Hamiltonian component,
+    $E_0$ a ground-state energy, $T_2$ a relaxation time. The regex matches any letter+subscript; auto-wrapping corrupts non-chemistry.'
 - rule_id: CHEM-002
   layer: L1_Expanded
   execution_class: B
@@ -961,7 +965,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: \def -> \renewcommand is not value-preserving — \renewcommand errors if the target is undefined;
+    the rule cannot know whether the macro pre-exists (else \newcommand). Needs user choice.'
 - rule_id: CMD-003
   layer: L1_Expanded
   execution_class: B
@@ -1087,7 +1093,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: the fix requires choosing \makeatletter/\makeatother placement (ambiguous), and the warning
+    is often a false positive (\def with no @). Not a deterministic edit.'
 - rule_id: CMD-012
   layer: L2_Ast
   execution_class: B
@@ -1805,7 +1813,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: ENC-020
   layer: L0_Lexer
   execution_class: A
@@ -2510,7 +2518,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: the detector matches ''oe'' by whole-document substring (not word/token boundary), so it fires
+    on ANY ''oe'' (does, poet, coefficient); replacing all with the ligature oe corrupts non-French / non-ligature words.
+    A correct fix needs a French word list or morphology.'
 - rule_id: HE-001
   layer: L0_Lexer
   execution_class: B
@@ -2562,7 +2573,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: JA-002
   layer: L0_Lexer
   execution_class: B
@@ -3514,7 +3525,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C (context-required, --apply-fixes-with-prompt / v27.4.0): a multi-letter math token may be a
+    FUNCTION name OR a product of scalar variables ($abc = a\cdot b\cdot c$). Wrapping the latter in \operatorname is wrong;
+    cannot decide statically.'
 - rule_id: MATH-013
   layer: L1_Expanded
   execution_class: B
@@ -3696,7 +3710,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: the detector gates only on absence of ''&'' (column alignment), NOT on absence of row breaks;
+    a multi-row single-column align (a // b // c) converted to the single-line equation environment breaks. A safe fix needs
+    an extra single-row check.'
 - rule_id: MATH-026
   layer: L3_Semantics
   execution_class: C
@@ -3796,7 +3813,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: the detected bracket may be a bare matrix delimiter OR the operand of \bigl/\bigr sizing (e.g.
+    \bigl[\begin{smallmatrix}...\bigr]). Converting the latter to bmatrix is wrong; needs delimiter/sizing context.'
 - rule_id: MATH-033
   layer: L1_Expanded
   execution_class: B
@@ -4076,7 +4095,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: suggest_frac is advisory and its detection set is a STRICT SUBSET of MATH-101''s \over detection;
+    the same numerator/denominator ambiguity applies. The interactive \frac suggestion is the intended surface.'
 - rule_id: MATH-053
   layer: L1_Expanded
   execution_class: B
@@ -4244,7 +4265,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: \eqalign is a brace-delimited plainTeX macro used INSIDE math; converting to the align display
+    environment is a structural rewrite (\cr->newline, \noalign handling, illegal-in-inline-math), not a byte edit.'
 - rule_id: MATH-065
   layer: L1_Expanded
   execution_class: B
@@ -4678,7 +4701,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-096
   layer: L1_Expanded
   execution_class: B
@@ -4762,7 +4785,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: the detector counts EVERY bare \over (incl. chained {a \over b \over c}, brace-less ''a \over
+    b'' spanning the whole formula, nested groups); \over->\frac needs unambiguous numerator/denominator parsing those cases
+    do not admit. Only a narrow single-group subset (which the detector does not isolate) is deterministic.'
 - rule_id: MATH-102
   layer: L2_Ast
   execution_class: B
@@ -4776,7 +4802,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: eqnarray->align is a multi-site structural rewrite — eqnarray is 3-column (&=&) vs align''s
+    2-column (&=), with nested \begin{cases} needing per-row remapping. Not a mechanical env rename.'
 - rule_id: MATH-103
   layer: L3_Semantics
   execution_class: B
@@ -5388,7 +5416,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PKG-003
   layer: L3_Semantics
   execution_class: B
@@ -5453,7 +5481,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PKG-008
   layer: L2_Ast
   execution_class: B
@@ -5648,7 +5676,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: swapping an obsolete package (e.g. epsfig->graphicx) is not a drop-in — the old macros (\epsfig)
+    remain undefined. A correct migration rewrites call sites; needs user review.'
 - rule_id: PKG-023
   layer: L2_Ast
   execution_class: B
@@ -5661,7 +5691,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: PKG-024
   layer: L2_Ast
   execution_class: B
@@ -5914,7 +5944,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: any
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C (suggest_pageref is an editor suggestion): \ref vs \pageref depends on author intent (render
+    the number vs the page number); cannot be decided statically.'
 - rule_id: REF-007
   layer: L1_Expanded
   execution_class: B
@@ -7958,7 +7990,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: TIKZ-008
   layer: L3_Semantics
   execution_class: B
@@ -8761,7 +8793,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: TYPO-057
   layer: L0_Lexer
   execution_class: A
@@ -8940,7 +8972,9 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C (suggest_verbatim_env is advisory): converting inline \verb to a verbatim environment is structural,
+    and an unclosed \verb makes the captured content span ambiguous.'
 - rule_id: VERB-007
   layer: L0_Lexer
   execution_class: A
@@ -8996,7 +9030,9 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: \verb is fragile and illegal inside moving arguments (\section{`grep`} breaks); backtick-code
+    cannot be mechanically injected as \verb.'
 - rule_id: VERB-011
   layer: L0_Lexer
   execution_class: A
@@ -9107,7 +9143,10 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: false
+  fix_status_reason: 'Bucket C: fires on any ASCII ''.'' after a CJK glyph, but that ''.'' may be a sentence period (->U+3002)
+    OR a filename/identifier dot (\includegraphics{fig.pdf} with a CJK stem, name.tex); replacing the latter corrupts the
+    path. Needs sentence-vs-token context.'
 - rule_id: ZH-002
   layer: L4_Style
   execution_class: B

@@ -214,6 +214,18 @@ let () =
         (tag ^ ": neither pkg"));
   run "PKG-007 clean empty" (fun tag ->
       expect (does_not_fire "PKG-007" "") (tag ^ ": empty"));
+  (* v27.1.13 reorder fix: byte-identical to PKG-002's swap (geometry first). *)
+  run "PKG-007 reorder-swap fix on adjacent lines" (fun tag ->
+      let src =
+        "\\usepackage{hyperref}\n\\usepackage{geometry}\n\\begin{document}"
+      in
+      expect (fires_with_fix "PKG-007" src) (tag ^ ": emits fix");
+      let out = apply_fix "PKG-007" src in
+      expect
+        (out
+        = "\\usepackage{geometry}\n\\usepackage{hyperref}\n\\begin{document}")
+        (tag ^ ": geometry now precedes hyperref");
+      expect (does_not_fire "PKG-007" out) (tag ^ ": idempotent no re-fire"));
 
   (* ══════════════════════════════════════════════════════════════════════
      PKG-009: TikZ libraries loaded inside document body
@@ -412,6 +424,20 @@ let () =
         (tag ^ ": neither pkg"));
   run "PKG-023 clean empty" (fun tag ->
       expect (does_not_fire "PKG-023" "") (tag ^ ": empty"));
+  (* v27.1.13 reorder fix: unicode-math before microtype, adjacency-gated. *)
+  run "PKG-023 reorder-swap fix on adjacent lines" (fun tag ->
+      let src =
+        "\\usepackage{microtype}\n\\usepackage{unicode-math}\n\\begin{document}"
+      in
+      expect (fires_with_fix "PKG-023" src) (tag ^ ": emits fix");
+      let out = apply_fix "PKG-023" src in
+      expect
+        (out
+        = "\\usepackage{unicode-math}\n\
+           \\usepackage{microtype}\n\
+           \\begin{document}")
+        (tag ^ ": unicode-math now precedes microtype");
+      expect (does_not_fire "PKG-023" out) (tag ^ ": idempotent no re-fire"));
 
   (* ══════════════════════════════════════════════════════════════════════
      LANG-002: babel language option missing
@@ -467,6 +493,17 @@ let () =
         (tag ^ ": neither pkg"));
   run "TIKZ-007 clean empty" (fun tag ->
       expect (does_not_fire "TIKZ-007" "") (tag ^ ": empty"));
+  (* v27.1.13 reorder fix: tikz before hyperref, adjacency-gated swap. *)
+  run "TIKZ-007 reorder-swap fix on adjacent lines" (fun tag ->
+      let src =
+        "\\usepackage{hyperref}\n\\usepackage{tikz}\n\\begin{document}"
+      in
+      expect (fires_with_fix "TIKZ-007" src) (tag ^ ": emits fix");
+      let out = apply_fix "TIKZ-007" src in
+      expect
+        (out = "\\usepackage{tikz}\n\\usepackage{hyperref}\n\\begin{document}")
+        (tag ^ ": tikz now precedes hyperref");
+      expect (does_not_fire "TIKZ-007" out) (tag ^ ": idempotent no re-fire"));
 
   (* ══════════════════════════════════════════════════════════════════════
      FIG-010: Subfigure environment without \subcaption

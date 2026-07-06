@@ -283,6 +283,116 @@ let r_pkg_001 : rule =
   in
   { id = "PKG-001"; run; languages = [] }
 
+(* ── Shared adjacency-gated single-line package-reorder swap ────────── Used by
+   PKG-002, PKG-007 (geometry before hyperref), PKG-023 (unicode-math before
+   microtype) and TIKZ-007 (tikz before hyperref). The detector has already
+   established that package [first] currently occurs AFTER package [second] in
+   the preamble, though the correct order is [first] before [second]. This
+   helper emits ONE [Cst_edit.replace] that swaps the two source lines ONLY when
+   both packages sit on immediately-consecutive, standalone single-package
+   \usepackage lines (whitespace-only between them — which also rules out a
+   third \usepackage in the gap — with neither line inside a verbatim block or
+   comment). EVERY byte of the replacement is copied verbatim from the ORIGINAL
+   [s], so the swap is a pure permutation of existing bytes: UTF-8-safe and
+   count-neutral. When any layout precondition fails it returns [[]] and the
+   rule stays diagnose-only.
+
+   Idempotence/convergence: after the swap [first] precedes [second], so the
+   detector predicate ([first] after [second]) is false and the rule cannot
+   re-fire; a second [--apply-fixes] pass is a byte-identical no-op.
+
+   PKG-002 and PKG-007 both call this with the SAME (first, second) on the SAME
+   input, hence produce a BYTE-IDENTICAL edit that [Cst_edit.dedup_identical]
+   collapses. *)
+let reorder_pkg_swap_edits (s : string) ~(first : string) ~(second : string) :
+    Cst_edit.t list =
+  let n = String.length s in
+  let preamble = extract_preamble s in
+  let pkgs = extract_usepackages preamble in
+  let first_occ name =
+    List.fold_left
+      (fun acc (pos, p) ->
+        match acc with
+        | Some _ -> acc
+        | None -> if p = name then Some pos else None)
+      None pkgs
+  in
+  match (first_occ first, first_occ second) with
+  | Some fp, Some sp when fp > sp ->
+      (* [second] is the earlier line (at sp); [first] the later line (at
+         fp). *)
+      let line_bounds pos =
+        let ls = ref pos in
+        while !ls > 0 && s.[!ls - 1] <> '\n' do
+          decr ls
+        done;
+        let le = ref pos in
+        while !le < n && s.[!le] <> '\n' do
+          incr le
+        done;
+        (!ls, !le)
+      in
+      let s_start, s_end = line_bounds sp in
+      let f_start, f_end = line_bounds fp in
+      (* standalone single-package line: trimmed content is exactly
+         \usepackage(opt){name} with nothing trailing and no comma. *)
+      let standalone (ls, le) name =
+        let t = String.trim (String.sub s ls (le - ls)) in
+        let tn = String.length t in
+        let pfx = "\\usepackage" in
+        let pl = String.length pfx in
+        if tn < pl || String.sub t 0 pl <> pfx then false
+        else
+          let i = ref pl in
+          if !i < tn && t.[!i] = '[' then (
+            while !i < tn && t.[!i] <> ']' do
+              incr i
+            done;
+            if !i < tn then incr i);
+          if !i < tn && t.[!i] = '{' then (
+            incr i;
+            let bs = !i in
+            while !i < tn && t.[!i] <> '}' do
+              incr i
+            done;
+            if !i >= tn then false
+            else
+              let inside = String.sub t bs (!i - bs) in
+              incr i;
+              !i = tn
+              && String.trim inside = name
+              && not (String.contains inside ','))
+          else false
+      in
+      let whitespace_only a b =
+        let ok = ref true in
+        for k = a to b - 1 do
+          match s.[k] with
+          | ' ' | '\t' | '\n' | '\r' | '\012' -> ()
+          | _ -> ok := false
+        done;
+        !ok
+      in
+      let vc_ranges = find_verbatim_comment_ranges s in
+      let in_protected pos =
+        List.exists (fun (a, b) -> pos >= a && pos < b) vc_ranges
+      in
+      if
+        s_start < f_start
+        && standalone (s_start, s_end) second
+        && standalone (f_start, f_end) first
+        && whitespace_only s_end f_start
+        && (not (in_protected sp))
+        && not (in_protected fp)
+      then
+        let sep = String.sub s s_end (f_start - s_end) in
+        let earlier = String.sub s s_start (s_end - s_start) in
+        let later = String.sub s f_start (f_end - f_start) in
+        let replacement = later ^ sep ^ earlier in
+        [ Cst_edit.replace ~start_offset:s_start ~end_offset:f_end replacement ]
+      else []
+  | _ -> []
+
 (* ── PKG-002: geometry loaded after hyperref — must precede ──────────── *)
 let r_pkg_002 : rule =
   let run s =
@@ -296,9 +406,17 @@ let r_pkg_002 : rule =
         if pkg = "hyperref" && !hyper_pos < 0 then hyper_pos := pos)
       pkgs;
     if !geom_pos >= 0 && !hyper_pos >= 0 && !geom_pos > !hyper_pos then
+      let edits =
+        reorder_pkg_swap_edits s ~first:"geometry" ~second:"hyperref"
+      in
       Some
-        (mk_result ~id:"PKG-002" ~severity:Error
-           ~message:{|geometry loaded after hyperref – must precede|} ~count:1)
+        (if edits = [] then
+           mk_result ~id:"PKG-002" ~severity:Error
+             ~message:{|geometry loaded after hyperref – must precede|} ~count:1
+         else
+           mk_result_with_fix ~id:"PKG-002" ~severity:Error
+             ~message:{|geometry loaded after hyperref – must precede|} ~count:1
+             ~fix:edits)
     else None
   in
   { id = "PKG-002"; run; languages = [] }
@@ -1134,9 +1252,18 @@ let r_pkg_007 : rule =
     match (hyp_pos, geo_pos) with
     | Some hp, Some gp ->
         if hp < gp then
+          (* Same desired order as PKG-002 (geometry before hyperref); the swap
+             edit is BYTE-IDENTICAL to PKG-002's so dedup collapses them. *)
+          let edits =
+            reorder_pkg_swap_edits s ~first:"geometry" ~second:"hyperref"
+          in
           Some
-            (mk_result ~id:"PKG-007" ~severity:Error
-               ~message:"hyperref loaded before geometry" ~count:1)
+            (if edits = [] then
+               mk_result ~id:"PKG-007" ~severity:Error
+                 ~message:"hyperref loaded before geometry" ~count:1
+             else
+               mk_result_with_fix ~id:"PKG-007" ~severity:Error
+                 ~message:"hyperref loaded before geometry" ~count:1 ~fix:edits)
         else None
     | _ -> None
   in
@@ -1341,9 +1468,17 @@ let r_pkg_023 : rule =
     match (umath_pos, micro_pos) with
     | Some up, Some mp ->
         if up > mp then
+          let edits =
+            reorder_pkg_swap_edits s ~first:"unicode-math" ~second:"microtype"
+          in
           Some
-            (mk_result ~id:"PKG-023" ~severity:Error
-               ~message:{|unicode‑math must load before microtype|} ~count:1)
+            (if edits = [] then
+               mk_result ~id:"PKG-023" ~severity:Error
+                 ~message:{|unicode‑math must load before microtype|} ~count:1
+             else
+               mk_result_with_fix ~id:"PKG-023" ~severity:Error
+                 ~message:{|unicode‑math must load before microtype|} ~count:1
+                 ~fix:edits)
         else None
     | _ -> None
   in
@@ -1414,10 +1549,18 @@ let r_tikz_007 : rule =
     match (tikz_pos, hyp_pos) with
     | Some tp, Some hp ->
         if tp > hp then
+          let edits =
+            reorder_pkg_swap_edits s ~first:"tikz" ~second:"hyperref"
+          in
           Some
-            (mk_result ~id:"TIKZ-007" ~severity:Warning
-               ~message:{|TikZ loaded after hyperref – reorder required|}
-               ~count:1)
+            (if edits = [] then
+               mk_result ~id:"TIKZ-007" ~severity:Warning
+                 ~message:{|TikZ loaded after hyperref – reorder required|}
+                 ~count:1
+             else
+               mk_result_with_fix ~id:"TIKZ-007" ~severity:Warning
+                 ~message:{|TikZ loaded after hyperref – reorder required|}
+                 ~count:1 ~fix:edits)
         else None
     | _ -> None
   in
@@ -3044,8 +3187,30 @@ let r_rtl_005 : rule =
 let r_bib_002 : rule =
   let re_doi = Re_compat.regexp {|doi[ \t]*=[ \t]*{|} in
   let re_good = Re_compat.regexp_string "https://doi.org/" in
+  (* Resolver prefixes that normalise UNAMBIGUOUSLY to `https://doi.org/`. Each
+     is a pure prefix swap — the DOI body is preserved verbatim — and we only
+     emit the fix when the body immediately continues with `10.` (the DOI
+     directory indicator), so a genuine DOI is required and we never rewrite a
+     non-DOI value. The bare-DOI case (`doi = {10.1234/foo}`, no resolver
+     prefix) and any other odd shape are AMBIGUOUS (prepend a resolver? leave as
+     the publisher-preferred bare form?) and get NO fix. The diagnostic [count]
+     is identical either way (still every non-`https://doi.org/` doi field), so
+     lint output and the differential are unchanged; only the FIX-set is the
+     unambiguous subset. The replacement `https://doi.org/` is a literal URL
+     fragment ending in `/` (not a control word), so there is no letter-gluing
+     concern. Idempotent: after the swap the field begins with
+     `https://doi.org/` → [is_good] is true → the detector no longer counts it,
+     so a 2nd pass re-emits nothing. *)
+  let bad_prefixes =
+    [ "http://dx.doi.org/"; "https://dx.doi.org/"; "http://doi.org/" ]
+  in
+  let matches_at s pos sub =
+    let m = String.length sub in
+    pos + m <= String.length s && String.sub s pos m = sub
+  in
   let run s =
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     (try
        while true do
@@ -3057,14 +3222,36 @@ let r_bib_002 : rule =
              Re_compat.match_beginning _mr = after
            with Not_found -> false
          in
-         if not is_good then incr cnt;
+         if not is_good then (
+           incr cnt;
+           match
+             List.find_opt
+               (fun pre ->
+                 matches_at s after pre
+                 && matches_at s (after + String.length pre) "10.")
+               bad_prefixes
+           with
+           | Some pre ->
+               edits :=
+                 Cst_edit.replace ~start_offset:after
+                   ~end_offset:(after + String.length pre)
+                   "https://doi.org/"
+                 :: !edits
+           | None -> ());
          i := pos + 1
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"BIB-002" ~severity:Info
-           ~message:"DOI not normalised to https://doi.org/ form" ~count:!cnt)
+      let fix = List.rev !edits in
+      if fix = [] then
+        Some
+          (mk_result ~id:"BIB-002" ~severity:Info
+             ~message:"DOI not normalised to https://doi.org/ form" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_exempt ~src:s ~id:"BIB-002" ~severity:Info
+             ~message:"DOI not normalised to https://doi.org/ form" ~count:!cnt
+             ~fix)
     else None
   in
   { id = "BIB-002"; run; languages = [] }
@@ -3209,6 +3396,50 @@ let r_bib_006 : rule =
 let r_bib_008 : rule =
   let re = Re_compat.regexp {|[A-Z][a-z]+ *= *{|} in
   let re_entry = Re_compat.regexp "@[a-zA-Z]+{" in
+  (* Fix (catalog: lowercase_fields): each CamelCase bib field name the detector
+     matches before `=` is lowercased in place. The edit spans the WHOLE
+     contiguous ASCII-letter run that contains the matched [A-Z][a-z]+ field
+     name (extended leftward to the word start), not just the detector-matched
+     byte span — so a compound like `BookTitle = {` becomes `booktitle = {` in
+     ONE pass. Lowercasing only the detector-matched `Title` would yield
+     `Booktitle`, which itself matches `[A-Z][a-z]+ *= *{` and would re-fire on
+     a second pass (non-idempotent). After the fix the whole word holds no
+     uppercase byte, so `[A-Z]` cannot start a match inside it: the detector can
+     never re-fire on that field — convergent in a single pass. Only ASCII
+     letters are rewritten (String.lowercase_ascii), every offset is on the
+     ORIGINAL `s`, and no control word is emitted (no glue risk). Routed through
+     mk_result_with_fix_exempt so the fix is withheld inside
+     verbatim/\verb/comment/url/math; the count is the untouched count_matches
+     scan (differential 0-diff). *)
+  let is_ascii_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let mk_fix_edits s =
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    (try
+       while true do
+         let mr, _ = Re_compat.search_forward re s !i in
+         let mb = Re_compat.match_beginning mr in
+         let me = Re_compat.match_end mr in
+         let ws = ref mb in
+         while !ws > 0 && is_ascii_letter s.[!ws - 1] do
+           decr ws
+         done;
+         let we = ref mb in
+         while !we < n && is_ascii_letter s.[!we] do
+           incr we
+         done;
+         let word = String.sub s !ws (!we - !ws) in
+         let lowered = String.lowercase_ascii word in
+         if lowered <> word then
+           edits :=
+             Cst_edit.replace ~start_offset:!ws ~end_offset:!we lowered
+             :: !edits;
+         i := me
+       done
+     with Not_found -> ());
+    List.rev !edits
+  in
   let run s =
     (* Only flag inside bib entries *)
     let has_bib =
@@ -3222,9 +3453,9 @@ let r_bib_008 : rule =
       let cnt = count_matches re s in
       if cnt > 0 then
         Some
-          (mk_result ~id:"BIB-008" ~severity:Info
+          (mk_result_with_fix_exempt ~id:"BIB-008" ~severity:Info
              ~message:"Camel‑case field names detected (e.g. `Title` → `title`)"
-             ~count:cnt)
+             ~count:cnt ~src:s ~fix:(mk_fix_edits s))
       else None
   in
   { id = "BIB-008"; run; languages = [] }

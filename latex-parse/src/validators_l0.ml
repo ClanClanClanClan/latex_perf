@@ -1083,6 +1083,7 @@ let r_enc_019 : rule =
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let fixes = ref [] in
     let i = ref 0 in
     while !i < n do
       let b0 = Char.code s.[!i] in
@@ -1095,7 +1096,16 @@ let r_enc_019 : rule =
           let c1 = Char.code s.[!j + 1] in
           if is_combining c0 c1 then (
             let pc0, pc1 = !prev_combining in
-            if pc0 = c0 && pc1 = c1 then incr cnt;
+            if pc0 = c0 && pc1 = c1 then (
+              incr cnt;
+              (* Delete the DUPLICATE combining mark (2 UTF-8 bytes at [!j]),
+                 keeping the first occurrence. Offset is into the ORIGINAL [s];
+                 deleting a whole combining sequence never emits a control word
+                 (no glue hazard). Idempotent: once each consecutive duplicate
+                 is gone, no base is followed by two identical marks so the
+                 detector cannot re-fire. *)
+              fixes :=
+                Cst_edit.delete ~start_offset:!j ~end_offset:(!j + 2) :: !fixes);
             prev_combining := (c0, c1);
             j := !j + 2)
           else j := n (* exit inner loop *)
@@ -1111,7 +1121,10 @@ let r_enc_019 : rule =
           let c1 = Char.code s.[!j + 1] in
           if is_combining c0 c1 then (
             let pc0, pc1 = !prev_combining in
-            if pc0 = c0 && pc1 = c1 then incr cnt;
+            if pc0 = c0 && pc1 = c1 then (
+              incr cnt;
+              fixes :=
+                Cst_edit.delete ~start_offset:!j ~end_offset:(!j + 2) :: !fixes);
             prev_combining := (c0, c1);
             j := !j + 2)
           else j := n
@@ -1123,8 +1136,9 @@ let r_enc_019 : rule =
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"ENC-019" ~severity:Warning
-           ~message:"Duplicate combining accents on same base glyph" ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"ENC-019" ~severity:Warning
+           ~message:"Duplicate combining accents on same base glyph" ~count:!cnt
+           ~fix:(List.rev !fixes))
     else None
   in
   { id = "ENC-019"; run; languages = [] }
@@ -4839,6 +4853,154 @@ let r_zh_001 : rule =
   { id = "ZH-001"; run; languages = [ "zh" ] }
 
 (* JA-001: half-width katakana present — use full-width *)
+(* JA-001 fix tables (NFKC): every half-width katakana codepoint the detector
+   counts (U+FF65..FF9F) maps to its full-width form; a base followed by a
+   half-width dakuten (U+FF9E) / handakuten (U+FF9F) composes into the single
+   precomposed katakana (e.g. U+FF76 U+FF9E -> U+30AC). Outputs are all 3-byte
+   E3-prefixed katakana (or the combining marks U+3099/U+309A for a lone sound
+   mark) — none lie in U+FF65..FF9F, so a second pass cannot re-fire
+   (idempotent/convergent). No backslash is emitted (no control-word glue). *)
+let ja001_fw = function
+  | "\xef\xbd\xa5" -> "\xe3\x83\xbb"
+  | "\xef\xbd\xa6" -> "\xe3\x83\xb2"
+  | "\xef\xbd\xa7" -> "\xe3\x82\xa1"
+  | "\xef\xbd\xa8" -> "\xe3\x82\xa3"
+  | "\xef\xbd\xa9" -> "\xe3\x82\xa5"
+  | "\xef\xbd\xaa" -> "\xe3\x82\xa7"
+  | "\xef\xbd\xab" -> "\xe3\x82\xa9"
+  | "\xef\xbd\xac" -> "\xe3\x83\xa3"
+  | "\xef\xbd\xad" -> "\xe3\x83\xa5"
+  | "\xef\xbd\xae" -> "\xe3\x83\xa7"
+  | "\xef\xbd\xaf" -> "\xe3\x83\x83"
+  | "\xef\xbd\xb0" -> "\xe3\x83\xbc"
+  | "\xef\xbd\xb1" -> "\xe3\x82\xa2"
+  | "\xef\xbd\xb2" -> "\xe3\x82\xa4"
+  | "\xef\xbd\xb3" -> "\xe3\x82\xa6"
+  | "\xef\xbd\xb4" -> "\xe3\x82\xa8"
+  | "\xef\xbd\xb5" -> "\xe3\x82\xaa"
+  | "\xef\xbd\xb6" -> "\xe3\x82\xab"
+  | "\xef\xbd\xb7" -> "\xe3\x82\xad"
+  | "\xef\xbd\xb8" -> "\xe3\x82\xaf"
+  | "\xef\xbd\xb9" -> "\xe3\x82\xb1"
+  | "\xef\xbd\xba" -> "\xe3\x82\xb3"
+  | "\xef\xbd\xbb" -> "\xe3\x82\xb5"
+  | "\xef\xbd\xbc" -> "\xe3\x82\xb7"
+  | "\xef\xbd\xbd" -> "\xe3\x82\xb9"
+  | "\xef\xbd\xbe" -> "\xe3\x82\xbb"
+  | "\xef\xbd\xbf" -> "\xe3\x82\xbd"
+  | "\xef\xbe\x80" -> "\xe3\x82\xbf"
+  | "\xef\xbe\x81" -> "\xe3\x83\x81"
+  | "\xef\xbe\x82" -> "\xe3\x83\x84"
+  | "\xef\xbe\x83" -> "\xe3\x83\x86"
+  | "\xef\xbe\x84" -> "\xe3\x83\x88"
+  | "\xef\xbe\x85" -> "\xe3\x83\x8a"
+  | "\xef\xbe\x86" -> "\xe3\x83\x8b"
+  | "\xef\xbe\x87" -> "\xe3\x83\x8c"
+  | "\xef\xbe\x88" -> "\xe3\x83\x8d"
+  | "\xef\xbe\x89" -> "\xe3\x83\x8e"
+  | "\xef\xbe\x8a" -> "\xe3\x83\x8f"
+  | "\xef\xbe\x8b" -> "\xe3\x83\x92"
+  | "\xef\xbe\x8c" -> "\xe3\x83\x95"
+  | "\xef\xbe\x8d" -> "\xe3\x83\x98"
+  | "\xef\xbe\x8e" -> "\xe3\x83\x9b"
+  | "\xef\xbe\x8f" -> "\xe3\x83\x9e"
+  | "\xef\xbe\x90" -> "\xe3\x83\x9f"
+  | "\xef\xbe\x91" -> "\xe3\x83\xa0"
+  | "\xef\xbe\x92" -> "\xe3\x83\xa1"
+  | "\xef\xbe\x93" -> "\xe3\x83\xa2"
+  | "\xef\xbe\x94" -> "\xe3\x83\xa4"
+  | "\xef\xbe\x95" -> "\xe3\x83\xa6"
+  | "\xef\xbe\x96" -> "\xe3\x83\xa8"
+  | "\xef\xbe\x97" -> "\xe3\x83\xa9"
+  | "\xef\xbe\x98" -> "\xe3\x83\xaa"
+  | "\xef\xbe\x99" -> "\xe3\x83\xab"
+  | "\xef\xbe\x9a" -> "\xe3\x83\xac"
+  | "\xef\xbe\x9b" -> "\xe3\x83\xad"
+  | "\xef\xbe\x9c" -> "\xe3\x83\xaf"
+  | "\xef\xbe\x9d" -> "\xe3\x83\xb3"
+  | "\xef\xbe\x9e" -> "\xe3\x82\x99"
+  | "\xef\xbe\x9f" -> "\xe3\x82\x9a"
+  | s -> s
+
+let ja001_voiced = function
+  | "\xef\xbd\xa6" -> Some "\xe3\x83\xba"
+  | "\xef\xbd\xb3" -> Some "\xe3\x83\xb4"
+  | "\xef\xbd\xb6" -> Some "\xe3\x82\xac"
+  | "\xef\xbd\xb7" -> Some "\xe3\x82\xae"
+  | "\xef\xbd\xb8" -> Some "\xe3\x82\xb0"
+  | "\xef\xbd\xb9" -> Some "\xe3\x82\xb2"
+  | "\xef\xbd\xba" -> Some "\xe3\x82\xb4"
+  | "\xef\xbd\xbb" -> Some "\xe3\x82\xb6"
+  | "\xef\xbd\xbc" -> Some "\xe3\x82\xb8"
+  | "\xef\xbd\xbd" -> Some "\xe3\x82\xba"
+  | "\xef\xbd\xbe" -> Some "\xe3\x82\xbc"
+  | "\xef\xbd\xbf" -> Some "\xe3\x82\xbe"
+  | "\xef\xbe\x80" -> Some "\xe3\x83\x80"
+  | "\xef\xbe\x81" -> Some "\xe3\x83\x82"
+  | "\xef\xbe\x82" -> Some "\xe3\x83\x85"
+  | "\xef\xbe\x83" -> Some "\xe3\x83\x87"
+  | "\xef\xbe\x84" -> Some "\xe3\x83\x89"
+  | "\xef\xbe\x8a" -> Some "\xe3\x83\x90"
+  | "\xef\xbe\x8b" -> Some "\xe3\x83\x93"
+  | "\xef\xbe\x8c" -> Some "\xe3\x83\x96"
+  | "\xef\xbe\x8d" -> Some "\xe3\x83\x99"
+  | "\xef\xbe\x8e" -> Some "\xe3\x83\x9c"
+  | "\xef\xbe\x9c" -> Some "\xe3\x83\xb7"
+  | _ -> None
+
+let ja001_semivoiced = function
+  | "\xef\xbe\x8a" -> Some "\xe3\x83\x91"
+  | "\xef\xbe\x8b" -> Some "\xe3\x83\x94"
+  | "\xef\xbe\x8c" -> Some "\xe3\x83\x97"
+  | "\xef\xbe\x8d" -> Some "\xe3\x83\x9a"
+  | "\xef\xbe\x8e" -> Some "\xe3\x83\x9d"
+  | _ -> None
+
+(* Second pass over the ORIGINAL source: mirrors the detector's byte stepping so
+   it only edits detected codepoints. Composes base+mark (6->3 bytes) when a
+   precomposed katakana exists, else replaces each 3-byte codepoint on its own.
+   Does not touch the count. *)
+let ja001_build_fix s =
+  let len = String.length s in
+  let edits = ref [] in
+  let i = ref 0 in
+  while !i < len - 2 do
+    let b0 = Char.code (String.unsafe_get s !i) in
+    if b0 = 0xef then
+      let b1 = Char.code (String.unsafe_get s (!i + 1)) in
+      let b2 = Char.code (String.unsafe_get s (!i + 2)) in
+      if (b1 = 0xbd && b2 >= 0xa5) || (b1 = 0xbe && b2 <= 0x9f) then (
+        let base = String.sub s !i 3 in
+        let mark =
+          if
+            !i + 5 < len
+            && Char.code (String.unsafe_get s (!i + 3)) = 0xef
+            && Char.code (String.unsafe_get s (!i + 4)) = 0xbe
+          then Char.code (String.unsafe_get s (!i + 5))
+          else 0
+        in
+        let composed =
+          if mark = 0x9e then ja001_voiced base
+          else if mark = 0x9f then ja001_semivoiced base
+          else None
+        in
+        match composed with
+        | Some repl ->
+            edits :=
+              Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 6) repl
+              :: !edits;
+            i := !i + 6
+        | None ->
+            edits :=
+              Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3)
+                (ja001_fw base)
+              :: !edits;
+            i := !i + 3)
+      else i := !i + 3
+    else i := !i + 1
+  done;
+  List.rev !edits
+
 let r_ja_001 : rule =
   (* Half-width katakana: U+FF65-FF9F = \xef\xbd\xa5-\xef\xbe\x9f *)
   let run s =
@@ -4856,10 +5018,11 @@ let r_ja_001 : rule =
       else i := !i + 1
     done;
     if !cnt > 0 then
+      let fix = ja001_build_fix s in
       Some
-        (mk_result ~id:"JA-001" ~severity:Warning
+        (mk_result_with_fix_exempt ~src:s ~id:"JA-001" ~severity:Warning
            ~message:{|JA: half‑width katakana present—use full‑width|}
-           ~count:!cnt)
+           ~count:!cnt ~fix)
     else None
   in
   { id = "JA-001"; run; languages = [ "ja" ] }

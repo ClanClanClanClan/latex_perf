@@ -1,7 +1,7 @@
 # V27_FIX_PRODUCER_CADENCE — Rolling fix-producer extension to full coverage
 
 **Goal:** Bring the catalogue of 660 lint rules from the 32 fix-producing
-rules at plan authoring (159 shipped as of v27.1.16) to full coverage where
+rules at plan authoring (159 shipped as of v27.1.17) to full coverage where
 mechanically safe, with
 explicit deferral of NLP-required and unsafe-without-context rules.
 
@@ -146,7 +146,7 @@ from `FIX_PRODUCER_LEDGER.md`, ship, update.
   v27.0.5+**; enforced every release cycle via
   `scripts/tools/run_differential_test.py`.
 - [ ] Bucket A shipped fully by v27.2.0 (target).  **IN PROGRESS** —
-  159/458 (~35%) shipped as of v27.1.16.  Original v27.2.0 target
+  159/458 (~35%) shipped as of v27.1.17.  Original v27.2.0 target
   assumed ≥10 producers/release; at the actual cadence pace this
   milestone is on track for a later release.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).  **NOT

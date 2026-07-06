@@ -1915,15 +1915,17 @@ let l1_chem_001_rule : rule =
         if count_substring seg "\\ce{" = 0 then
           cnt := !cnt + count_re_matches re seg)
       math_segs;
-    (* Bucket-C LABEL-ONLY candidate: wrapping a detected formula in \ce{}
-       requires the mhchem package and human judgement about the formula's exact
-       span (subscripts, coefficients, states), so we surface the suggestion
-       without an edit. Located on absolute offsets via find_math_ranges; the
-       target is math, so the trigger offset is self-gated against
-       verbatim/comment/url only (NOT the full exempt set, which would drop
-       every in-math candidate). *)
+    (* Bucket-C CANDIDATE (best-effort bounded): wrap the detected formula in
+       \ce{...} (mhchem). The regex already locates the formula span [rs+pos,
+       rs+mend) inside the math region, so we emit two INSERT edits — `\ce{` at
+       the span start and `}` at the span end — which bracket exactly the
+       matched formula. Applying still needs the author to add
+       \usepackage{mhchem}, so this is a CANDIDATE and not an auto-applied fix.
+       Located on absolute offsets via find_math_ranges; the target is math, so
+       we filter with [candidates_drop_vcu_exempt] (verbatim/comment/url only,
+       NOT the full exempt set which would drop every genuine in-math
+       candidate). *)
     let candidates =
-      let vcu = find_verbatim_comment_url_ranges s in
       let ranges = find_math_ranges s in
       let cands = ref [] in
       List.iter
@@ -1935,18 +1937,21 @@ let l1_chem_001_rule : rule =
               while true do
                 let mr, pos = Re_compat.search_forward re seg !i in
                 let mend = Re_compat.match_end mr in
-                if not (is_in_math_range vcu (rs + pos)) then
-                  cands :=
-                    {
-                      c_edits = [];
-                      c_label = {|Wrap the chemical formula in \ce{} (mhchem)|};
-                    }
-                    :: !cands;
+                cands :=
+                  {
+                    c_edits =
+                      [
+                        Cst_edit.insert ~at:(rs + pos) "\\ce{";
+                        Cst_edit.insert ~at:(rs + mend) "}";
+                      ];
+                    c_label = {|Wrap the chemical formula in \ce{} (mhchem)|};
+                  }
+                  :: !cands;
                 i := mend
               done
             with Not_found -> ())
         ranges;
-      List.rev !cands
+      candidates_drop_vcu_exempt s (List.rev !cands)
     in
     if !cnt > 0 then
       if candidates = [] then

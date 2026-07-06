@@ -173,7 +173,7 @@ let () =
   run "MATH-032 emits a bmatrix candidate" (fun tag ->
       expect
         (has_label "MATH-032" m32_src
-           "Use bmatrix for a square-bracketed matrix")
+           "Use bsmallmatrix for a bracketed small matrix")
         (tag ^ ": candidate label"));
   run "MATH-032 candidate NOT in fix field (no auto-apply)" (fun tag ->
       expect (not (fires_with_fix "MATH-032" m32_src)) (tag ^ ": fix=None"));
@@ -300,27 +300,48 @@ let () =
         (tag ^ ": vcu-exempt but still fires"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     MATH-064: \eqalign -> align (LABEL-ONLY, self-gated vcu)
+     MATH-064: \eqalign -> align (REAL EDITS, brace-matched, vcu-exempt)
      ══════════════════════════════════════════════════════════════════════ *)
   let m64_src = "$$\\eqalign{a &= b}$$" in
   let m64_label = "Use the align environment instead of obsolete \\eqalign" in
   run "MATH-064 still fires (diagnostic unchanged)" (fun tag ->
       expect (fires_with_count "MATH-064" m64_src 1) (tag ^ ": count=1"));
-  run "MATH-064 emits a label-only align candidate" (fun tag ->
+  run
+    "MATH-064 candidate rewrites \\eqalign{ -> \\begin{align} and matching } \
+     -> \\end{align}" (fun tag ->
+      (* "$$" = 2 bytes; "\eqalign{" spans [2,11); matching "}" at [17,18). *)
       match candidates_of "MATH-064" m64_src with
-      | [ { c_edits = []; c_label } ] ->
-          expect (c_label = m64_label) (tag ^ ": label-only")
-      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+      | [ { c_edits = [ e1; e2 ]; c_label } ] ->
+          expect
+            (c_label = m64_label
+            && e1.Cst_edit.start_offset = 2
+            && e1.Cst_edit.end_offset = 11
+            && e1.Cst_edit.replacement = "\\begin{align}"
+            && e2.Cst_edit.start_offset = 17
+            && e2.Cst_edit.end_offset = 18
+            && e2.Cst_edit.replacement = "\\end{align}")
+            (tag ^ ": two rewrite edits")
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+  run "MATH-064 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MATH-064" m64_src)) (tag ^ ": fix=None"));
   run "MATH-064 --apply-fixes leaves \\eqalign byte-identical" (fun tag ->
       expect (apply_fix "MATH-064" m64_src = m64_src) (tag ^ ": no rewrite"));
-  run "MATH-064 label-only candidate dropped inside a comment" (fun tag ->
+  run "MATH-064 unbraced \\eqalign degrades to a label-only candidate"
+    (fun tag ->
+      (* No opening brace to bound the body -> empty-edit (span unbounded). *)
+      let s = "$$\\eqalign x$$" in
+      match candidates_of "MATH-064" s with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = m64_label) (tag ^ ": label-only fallback")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "MATH-064 candidate dropped inside a comment" (fun tag ->
       let s = "% \\eqalign{a}\n" in
       expect
         (fires "MATH-064" s && candidates_of "MATH-064" s = [])
         (tag ^ ": exempt (comment) but still fires"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     CMD-011: unguarded \def in preamble -> \makeatletter (LABEL-ONLY, exempt)
+     CMD-011: unguarded \def in preamble -> \makeatletter (REAL EDITS, exempt)
      ══════════════════════════════════════════════════════════════════════ *)
   let c11_src = "\\def\\mycmd{x}\n\\begin{document}\ntext\n\\end{document}" in
   let c11_label =
@@ -328,14 +349,44 @@ let () =
   in
   run "CMD-011 still fires (diagnostic unchanged)" (fun tag ->
       expect (fires_with_count "CMD-011" c11_src 1) (tag ^ ": count=1"));
-  run "CMD-011 emits a label-only \\makeatletter candidate" (fun tag ->
+  run "CMD-011 candidate wraps the \\def line in \\makeatletter/\\makeatother"
+    (fun tag ->
+      (* "\def\mycmd{x}" spans [0,13); the line-start insert is at 0 and the
+         line-end insert is at the newline offset 13. *)
       match candidates_of "CMD-011" c11_src with
-      | [ { c_edits = []; c_label } ] ->
-          expect (c_label = c11_label) (tag ^ ": label-only")
-      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+      | [ { c_edits = [ before; after ]; c_label } ] ->
+          expect
+            (c_label = c11_label
+            && before.Cst_edit.start_offset = 0
+            && before.Cst_edit.end_offset = 0
+            && before.Cst_edit.replacement = "\\makeatletter\n"
+            && after.Cst_edit.start_offset = 13
+            && after.Cst_edit.end_offset = 13
+            && after.Cst_edit.replacement = "\n\\makeatother")
+            (tag ^ ": two wrapping inserts")
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+  run "CMD-011 candidate would wrap correctly if applied" (fun tag ->
+      (* Sanity: applying the two inserts brackets exactly the \def line. *)
+      match candidates_of "CMD-011" c11_src with
+      | [ { c_edits; _ } ] -> (
+          match Cst_edit.apply_all c11_src c_edits with
+          | Ok out ->
+              expect
+                (out
+                = "\\makeatletter\n\
+                   \\def\\mycmd{x}\n\
+                   \\makeatother\n\
+                   \\begin{document}\n\
+                   text\n\
+                   \\end{document}")
+                (tag ^ ": wrapped output")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate"));
+  run "CMD-011 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-011" c11_src)) (tag ^ ": fix=None"));
   run "CMD-011 --apply-fixes leaves \\def byte-identical" (fun tag ->
       expect (apply_fix "CMD-011" c11_src = c11_src) (tag ^ ": no rewrite"));
-  run "CMD-011 label-only candidate dropped when \\def is commented" (fun tag ->
+  run "CMD-011 candidate dropped when \\def is commented" (fun tag ->
       let s = "% \\def\\mycmd{x}\n\\begin{document}\n\\end{document}" in
       expect
         (fires "CMD-011" s && candidates_of "CMD-011" s = [])
@@ -390,17 +441,37 @@ let () =
         (tag ^ ": exempt (comment) but still fires"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     CHEM-001: chemical formula -> \ce{} (LABEL-ONLY, self-gated vcu)
+     CHEM-001: chemical formula -> \ce{} (REAL EDITS, span-bracketing,
+     vcu-exempt)
      ══════════════════════════════════════════════════════════════════════ *)
   let ch_src = "$H_2O$" in
   let ch_label = "Wrap the chemical formula in \\ce{} (mhchem)" in
   run "CHEM-001 still fires (diagnostic unchanged)" (fun tag ->
       expect (fires "CHEM-001" ch_src) (tag ^ ": fires"));
-  run "CHEM-001 emits a label-only \\ce{} candidate" (fun tag ->
+  run "CHEM-001 candidate brackets the formula span with \\ce{ ... }"
+    (fun tag ->
+      (* "$" at 0; formula "H_2" spans [1,4); insert \ce{ at 1 and } at 4. *)
       match candidates_of "CHEM-001" ch_src with
-      | { c_edits = []; c_label } :: _ ->
-          expect (c_label = ch_label) (tag ^ ": label-only")
-      | _ -> expect false (tag ^ ": expected a label-only candidate"));
+      | { c_edits = [ open_ins; close_ins ]; c_label } :: _ ->
+          expect
+            (c_label = ch_label
+            && open_ins.Cst_edit.start_offset = 1
+            && open_ins.Cst_edit.end_offset = 1
+            && open_ins.Cst_edit.replacement = "\\ce{"
+            && close_ins.Cst_edit.start_offset = 4
+            && close_ins.Cst_edit.end_offset = 4
+            && close_ins.Cst_edit.replacement = "}")
+            (tag ^ ": two bracketing inserts")
+      | _ -> expect false (tag ^ ": expected a candidate with 2 inserts"));
+  run "CHEM-001 candidate would wrap correctly if applied" (fun tag ->
+      match candidates_of "CHEM-001" ch_src with
+      | { c_edits; _ } :: _ -> (
+          match Cst_edit.apply_all ch_src c_edits with
+          | Ok out -> expect (out = "$\\ce{H_2}O$") (tag ^ ": bracketed formula")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected a candidate"));
+  run "CHEM-001 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CHEM-001" ch_src)) (tag ^ ": fix=None"));
   run "CHEM-001 --apply-fixes leaves the formula byte-identical" (fun tag ->
       expect (apply_fix "CHEM-001" ch_src = ch_src) (tag ^ ": no rewrite"));
   run "CHEM-001 candidate dropped inside verbatim" (fun tag ->

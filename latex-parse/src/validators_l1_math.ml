@@ -277,11 +277,83 @@ let l1_math_012_rule : rule =
           done
         with Not_found -> ())
       math_segs;
+    (* Bucket-C CANDIDATE fixes: wrap each detected multi-letter token in
+       \operatorname{...}. Rebuilt on absolute offsets via find_math_ranges so
+       the edit lands in the real source; the SAME gating as the count pass (not
+       backslash-prefixed, not a known operator, length > 2, no
+       \text/\mathrm/\operatorname wrapper). vcu-exempt keeps in-math candidates
+       but drops any that fall in verbatim/comment/url. *)
+    let candidates =
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      List.iter
+        (fun (rs, re_end) ->
+          let seg = String.sub s rs (re_end - rs) in
+          let i = ref 0 in
+          try
+            while true do
+              let mr, pos = Re_compat.search_forward re seg !i in
+              let matched = Re_compat.matched_group mr 1 seg in
+              let next_i = Re_compat.match_end mr in
+              let preceded_by_backslash = pos > 0 && seg.[pos - 1] = '\\' in
+              let is_known = List.mem matched known_operators in
+              let is_short_var = String.length matched <= 2 in
+              (if
+                 (not preceded_by_backslash)
+                 && (not is_known)
+                 && not is_short_var
+               then
+                 let prefix_start = max 0 (pos - 16) in
+                 let prefix =
+                   String.sub seg prefix_start (pos - prefix_start)
+                 in
+                 let has_wrapper =
+                   count_substring prefix "\\text{"
+                   + count_substring prefix "\\mathrm{"
+                   + count_substring prefix "\\operatorname{"
+                   > 0
+                 in
+                 (* find_math_ranges includes the `\begin{env}` / `\end{env}`
+                    delimiters of math environments; those env NAMES are
+                    lowercase multi-letter tokens but must never be wrapped in
+                    \operatorname. Skip a token sitting right after `\begin{` /
+                    `\end{`. The count pass (body-only segments) never sees
+                    these, so this keeps candidates consistent with the
+                    diagnostic. *)
+                 let ends_with suf =
+                   let sl = String.length suf and pl = String.length prefix in
+                   pl >= sl && String.sub prefix (pl - sl) sl = suf
+                 in
+                 let is_env_name = ends_with "\\begin{" || ends_with "\\end{" in
+                 if (not has_wrapper) && not is_env_name then
+                   cands :=
+                     {
+                       c_edits =
+                         [
+                           Cst_edit.replace ~start_offset:(rs + pos)
+                             ~end_offset:(rs + next_i)
+                             (Printf.sprintf {|\operatorname{%s}|} matched);
+                         ];
+                       c_label = {|Wrap multi-letter function in \operatorname|};
+                     }
+                     :: !cands);
+              i := next_i
+            done
+          with Not_found -> ())
+        ranges;
+      candidates_drop_vcu_exempt s (List.rev !cands)
+    in
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-012" ~severity:Warning
-           ~message:{|Multi‑letter function not in roman (\operatorname{})|}
-           ~count:!cnt)
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-012" ~severity:Warning
+             ~message:{|Multi‑letter function not in roman (\operatorname{})|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-012" ~severity:Warning
+             ~message:{|Multi‑letter function not in roman (\operatorname{})|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-012"; run; languages = [] }
@@ -1457,6 +1529,111 @@ let l1_math_051_rule : rule =
   in
   { id = "MATH-051"; run; languages = [] }
 
+(* Bucket-C helper shared by MATH-052 and MATH-101: for every bare `\over`
+   primitive inside a math range, build a CANDIDATE that rewrites the enclosing
+   brace group `{ num \over den }` into `{\frac{num}{den}}`. Best-effort group
+   bounding: when the enclosing `{...}` cannot be located within the math range
+   the candidate degrades to LABEL-ONLY (empty edits). Every candidate's trigger
+   offset is self-gated against verbatim / comment / url regions so a literal
+   `\over` inside a code block yields no suggestion; genuine in-math `\over`
+   candidates are kept. Candidates are the same for both rules, so the two
+   diagnostics stay independent while sharing one suggestion. *)
+let over_frac_candidates (s : string) : candidate_fix list =
+  let vcu = find_verbatim_comment_url_ranges s in
+  let ranges = find_math_ranges s in
+  let n = String.length s in
+  let label = {|Use \frac{...}{...} instead of \over|} in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  (* parity of the backslash run ending at [idx-1]: an odd count means the byte
+     at [idx] is escaped. *)
+  let is_escaped idx =
+    let rec count back acc =
+      if back < 0 then acc
+      else if s.[back] = '\\' then count (back - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let cands = ref [] in
+  List.iter
+    (fun (rs, re) ->
+      let i = ref rs in
+      while !i <= re - 5 do
+        if
+          s.[!i] = '\\'
+          && !i + 4 < n
+          && s.[!i + 1] = 'o'
+          && s.[!i + 2] = 'v'
+          && s.[!i + 3] = 'e'
+          && s.[!i + 4] = 'r'
+          && (not (is_escaped !i))
+          && not (!i + 5 < n && is_letter s.[!i + 5])
+        then (
+          let over_start = !i in
+          let over_end = !i + 5 in
+          if not (is_in_math_range vcu over_start) then (
+            (* scan backward for the enclosing unescaped '{' within [rs,re) *)
+            let opener = ref (-1) in
+            let depth = ref 0 in
+            let j = ref (over_start - 1) in
+            (try
+               while !j >= rs do
+                 (if not (is_escaped !j) then
+                    match s.[!j] with
+                    | '}' -> incr depth
+                    | '{' ->
+                        if !depth = 0 then (
+                          opener := !j;
+                          raise Exit)
+                        else decr depth
+                    | _ -> ());
+                 decr j
+               done
+             with Exit -> ());
+            (* scan forward for the enclosing unescaped '}' within [rs,re) *)
+            let closer = ref (-1) in
+            let depth2 = ref 0 in
+            let k = ref over_end in
+            (try
+               while !k < re do
+                 (if not (is_escaped !k) then
+                    match s.[!k] with
+                    | '{' -> incr depth2
+                    | '}' ->
+                        if !depth2 = 0 then (
+                          closer := !k;
+                          raise Exit)
+                        else decr depth2
+                    | _ -> ());
+                 incr k
+               done
+             with Exit -> ());
+            if !opener >= 0 && !closer >= 0 then
+              let num =
+                String.trim
+                  (String.sub s (!opener + 1) (over_start - (!opener + 1)))
+              in
+              let den =
+                String.trim (String.sub s over_end (!closer - over_end))
+              in
+              let repl = Printf.sprintf {|{\frac{%s}{%s}}|} num den in
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:!opener
+                        ~end_offset:(!closer + 1) repl;
+                    ];
+                  c_label = label;
+                }
+                :: !cands
+            else cands := { c_edits = []; c_label = label } :: !cands);
+          i := over_end)
+        else incr i
+      done)
+    ranges;
+  List.rev !cands
+
 (* MATH-052: \over primitive used — prefer \frac{a}{b} over {a \over b} *)
 let l1_math_052_rule : rule =
   let run s =
@@ -1493,9 +1670,15 @@ let l1_math_052_rule : rule =
         done)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-052" ~severity:Warning
-           ~message:{|\over brace used; prefer \frac|} ~count:!cnt)
+      let candidates = candidates_drop_vcu_exempt s (over_frac_candidates s) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-052" ~severity:Warning
+             ~message:{|\over brace used; prefer \frac|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-052" ~severity:Warning
+             ~message:{|\over brace used; prefer \frac|} ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-052"; run; languages = [] }
@@ -2864,10 +3047,17 @@ let l1_math_101_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_over_word seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-101" ~severity:Warning
-           ~message:{|Deprecated \over primitive used; replace with \frac|}
-           ~count:!cnt)
+      let candidates = candidates_drop_vcu_exempt s (over_frac_candidates s) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-101" ~severity:Warning
+             ~message:{|Deprecated \over primitive used; replace with \frac|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-101" ~severity:Warning
+             ~message:{|Deprecated \over primitive used; replace with \frac|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-101"; run; languages = [] }

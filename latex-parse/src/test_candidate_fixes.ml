@@ -220,4 +220,237 @@ let () =
         (fires "VERB-006" s && candidates_of "VERB-006" s = [])
         (tag ^ ": exempt (comment) but still fires"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-052 / MATH-101: \over primitive -> \frac (vcu-exempt, group-bounded)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let over_src = "${a \\over b}$" in
+  let over_label = "Use \\frac{...}{...} instead of \\over" in
+  run "MATH-052 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-052" over_src 1) (tag ^ ": count=1"));
+  run "MATH-052 emits an \\over->\\frac candidate" (fun tag ->
+      expect (has_label "MATH-052" over_src over_label) (tag ^ ": label"));
+  run "MATH-052 candidate rewrites the group to {\\frac{a}{b}}" (fun tag ->
+      (* `${` then group `{a \over b}` spans [1,12); becomes {\frac{a}{b}}. *)
+      expect
+        (edit_of_label "MATH-052" over_src over_label
+        = Some (1, 12, "{\\frac{a}{b}}"))
+        (tag ^ ": edit"));
+  run "MATH-052 --apply-fixes leaves \\over byte-identical" (fun tag ->
+      expect (apply_fix "MATH-052" over_src = over_src) (tag ^ ": no rewrite"));
+  run "MATH-101 shares the same \\over->\\frac candidate" (fun tag ->
+      expect
+        (fires_with_count "MATH-101" over_src 1
+        && edit_of_label "MATH-101" over_src over_label
+           = Some (1, 12, "{\\frac{a}{b}}"))
+        (tag ^ ": count + edit"));
+  run "MATH-101 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\n${a \\over b}$\n\\end{verbatim}" in
+      expect
+        (fires "MATH-101" v && candidates_of "MATH-101" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-012: multi-letter function -> \operatorname (vcu-exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m12_src = "$foobar = 1$" in
+  let m12_label = "Wrap multi-letter function in \\operatorname" in
+  run "MATH-012 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-012" m12_src 1) (tag ^ ": count=1"));
+  run "MATH-012 candidate wraps the token in \\operatorname{...}" (fun tag ->
+      (* "foobar" spans [1,7); becomes \operatorname{foobar}. *)
+      expect
+        (edit_of_label "MATH-012" m12_src m12_label
+        = Some (1, 7, "\\operatorname{foobar}"))
+        (tag ^ ": edit"));
+  run "MATH-012 --apply-fixes leaves the token byte-identical" (fun tag ->
+      expect (apply_fix "MATH-012" m12_src = m12_src) (tag ^ ": no rewrite"));
+  run "MATH-012 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\n$foobar = 1$\n\\end{verbatim}" in
+      expect
+        (fires "MATH-012" v && candidates_of "MATH-012" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-102: eqnarray -> align (vcu-exempt, two rename edits)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m102_src = "\\begin{eqnarray}a &=& b\\end{eqnarray}" in
+  run "MATH-102 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-102" m102_src 1) (tag ^ ": count=1"));
+  run "MATH-102 emits an align candidate with two rename edits" (fun tag ->
+      match candidates_of "MATH-102" m102_src with
+      | [ { c_edits = [ e1; e2 ]; c_label } ] ->
+          expect
+            (c_label = "Use align instead of eqnarray"
+            && e1.Cst_edit.replacement = "align"
+            && e2.Cst_edit.replacement = "align"
+            && e1.Cst_edit.start_offset = 7 (* "\begin{" then name *)
+            && e1.Cst_edit.end_offset = 15)
+            (tag ^ ": two align renames")
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+  run "MATH-102 --apply-fixes leaves eqnarray byte-identical" (fun tag ->
+      expect (apply_fix "MATH-102" m102_src = m102_src) (tag ^ ": no rewrite"));
+  run "MATH-102 candidate dropped inside verbatim" (fun tag ->
+      let v =
+        "\\begin{verbatim}\n\
+         \\begin{eqnarray}a&=&b\\end{eqnarray}\n\
+         \\end{verbatim}"
+      in
+      expect
+        (fires "MATH-102" v && candidates_of "MATH-102" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-064: \eqalign -> align (LABEL-ONLY, self-gated vcu)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m64_src = "$$\\eqalign{a &= b}$$" in
+  let m64_label = "Use the align environment instead of obsolete \\eqalign" in
+  run "MATH-064 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "MATH-064" m64_src 1) (tag ^ ": count=1"));
+  run "MATH-064 emits a label-only align candidate" (fun tag ->
+      match candidates_of "MATH-064" m64_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = m64_label) (tag ^ ": label-only")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "MATH-064 --apply-fixes leaves \\eqalign byte-identical" (fun tag ->
+      expect (apply_fix "MATH-064" m64_src = m64_src) (tag ^ ": no rewrite"));
+  run "MATH-064 label-only candidate dropped inside a comment" (fun tag ->
+      let s = "% \\eqalign{a}\n" in
+      expect
+        (fires "MATH-064" s && candidates_of "MATH-064" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CMD-011: unguarded \def in preamble -> \makeatletter (LABEL-ONLY, exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let c11_src = "\\def\\mycmd{x}\n\\begin{document}\ntext\n\\end{document}" in
+  let c11_label =
+    "Wrap \\def/\\edef definitions in \\makeatletter/\\makeatother"
+  in
+  run "CMD-011 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-011" c11_src 1) (tag ^ ": count=1"));
+  run "CMD-011 emits a label-only \\makeatletter candidate" (fun tag ->
+      match candidates_of "CMD-011" c11_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = c11_label) (tag ^ ": label-only")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "CMD-011 --apply-fixes leaves \\def byte-identical" (fun tag ->
+      expect (apply_fix "CMD-011" c11_src = c11_src) (tag ^ ": no rewrite"));
+  run "CMD-011 label-only candidate dropped when \\def is commented" (fun tag ->
+      let s = "% \\def\\mycmd{x}\n\\begin{document}\n\\end{document}" in
+      expect
+        (fires "CMD-011" s && candidates_of "CMD-011" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-010: back-ticks for inline code -> \verb (drop_exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v10_src = "See `code` here" in
+  let v10_label = "Use \\verb for inline code" in
+  run "VERB-010 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "VERB-010" v10_src 1) (tag ^ ": count=1"));
+  run "VERB-010 candidate rewrites `code` -> \\verb|code|" (fun tag ->
+      (* "See " = 4 bytes; `code` spans [4,10). *)
+      expect
+        (edit_of_label "VERB-010" v10_src v10_label
+        = Some (4, 10, "\\verb|code|"))
+        (tag ^ ": edit"));
+  run "VERB-010 --apply-fixes leaves back-ticks byte-identical" (fun tag ->
+      expect (apply_fix "VERB-010" v10_src = v10_src) (tag ^ ": no rewrite"));
+  run "VERB-010 candidate dropped inside a comment" (fun tag ->
+      let s = "% see `code` here\n" in
+      expect
+        (fires "VERB-010" s && candidates_of "VERB-010" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     BIB-011: note={URL:...} -> url field (drop_exempt, two edits)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let b11_src = "note = {URL: http://example.com}" in
+  run "BIB-011 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "BIB-011" b11_src 1) (tag ^ ": count=1"));
+  run "BIB-011 candidate renames note->url and strips the URL: prefix"
+    (fun tag ->
+      match candidates_of "BIB-011" b11_src with
+      | [ { c_edits = [ rename; strip ]; c_label } ] ->
+          expect
+            (c_label = "Move the URL to a url field"
+            && rename.Cst_edit.start_offset = 0
+            && rename.Cst_edit.end_offset = 4
+            && rename.Cst_edit.replacement = "url"
+            && strip.Cst_edit.replacement = ""
+            && strip.Cst_edit.end_offset - strip.Cst_edit.start_offset = 4)
+            (tag ^ ": rename + strip URL:")
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+  run "BIB-011 --apply-fixes leaves the note field byte-identical" (fun tag ->
+      expect (apply_fix "BIB-011" b11_src = b11_src) (tag ^ ": no rewrite"));
+  run "BIB-011 candidate dropped inside a comment" (fun tag ->
+      let s = "% note = {URL: http://x}\n" in
+      expect
+        (fires "BIB-011" s && candidates_of "BIB-011" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CHEM-001: chemical formula -> \ce{} (LABEL-ONLY, self-gated vcu)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let ch_src = "$H_2O$" in
+  let ch_label = "Wrap the chemical formula in \\ce{} (mhchem)" in
+  run "CHEM-001 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires "CHEM-001" ch_src) (tag ^ ": fires"));
+  run "CHEM-001 emits a label-only \\ce{} candidate" (fun tag ->
+      match candidates_of "CHEM-001" ch_src with
+      | { c_edits = []; c_label } :: _ ->
+          expect (c_label = ch_label) (tag ^ ": label-only")
+      | _ -> expect false (tag ^ ": expected a label-only candidate"));
+  run "CHEM-001 --apply-fixes leaves the formula byte-identical" (fun tag ->
+      expect (apply_fix "CHEM-001" ch_src = ch_src) (tag ^ ": no rewrite"));
+  run "CHEM-001 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\n$H_2O$\n\\end{verbatim}" in
+      expect
+        (fires "CHEM-001" v && candidates_of "CHEM-001" v = [])
+        (tag ^ ": vcu-exempt but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     ZH-001: western '.' after CJK -> 。 (drop_exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let zh_src = "\xe4\xb8\xad." (* 中. *) in
+  let zh_label = "Use the Chinese period 。 (U+3002)" in
+  run "ZH-001 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "ZH-001" zh_src 1) (tag ^ ": count=1"));
+  run "ZH-001 candidate replaces '.' with 。 (U+3002)" (fun tag ->
+      (* 中 = 3 bytes [0,3); '.' at offset 3 -> \xe3\x80\x82. *)
+      expect
+        (edit_of_label "ZH-001" zh_src zh_label = Some (3, 4, "\xe3\x80\x82"))
+        (tag ^ ": edit"));
+  run "ZH-001 --apply-fixes leaves '.' byte-identical" (fun tag ->
+      expect (apply_fix "ZH-001" zh_src = zh_src) (tag ^ ": no rewrite"));
+  run "ZH-001 candidate dropped inside a comment" (fun tag ->
+      let s = "% \xe4\xb8\xad.\n" in
+      expect
+        (fires "ZH-001" s && candidates_of "ZH-001" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     FR-008: "oe" digraph -> œ/Œ ligature (drop_exempt)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let fr_src = "coeur" in
+  let fr_label = "Use the œ/Œ ligature" in
+  run "FR-008 still fires (diagnostic unchanged)" (fun tag ->
+      expect (fires_with_count "FR-008" fr_src 1) (tag ^ ": count=1"));
+  run "FR-008 candidate replaces 'oe' with œ (U+0153)" (fun tag ->
+      (* "c" then "oe" spans [1,3) -> \xc5\x93. *)
+      expect
+        (edit_of_label "FR-008" fr_src fr_label = Some (1, 3, "\xc5\x93"))
+        (tag ^ ": edit"));
+  run "FR-008 uppercase OEUVRE gets the Œ ligature (U+0152)" (fun tag ->
+      expect
+        (edit_of_label "FR-008" "OEUVRE" fr_label = Some (0, 2, "\xc5\x92"))
+        (tag ^ ": uppercase edit"));
+  run "FR-008 --apply-fixes leaves 'oe' byte-identical" (fun tag ->
+      expect (apply_fix "FR-008" fr_src = fr_src) (tag ^ ": no rewrite"));
+  run "FR-008 candidate dropped inside a comment" (fun tag ->
+      let s = "% coeur\n" in
+      expect
+        (fires "FR-008" s && candidates_of "FR-008" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
   finalise "candidate_fixes"

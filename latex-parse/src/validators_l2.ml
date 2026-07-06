@@ -3623,13 +3623,46 @@ let r_bib_010 : rule =
 (* BIB-011: Legacy `note = {URL: ...}` field detected; move to `url` *)
 let r_bib_011 : rule =
   let re = Re_compat.regexp {|note[ \t]*=[ \t]*{\(URL:\|http\)|} in
+  let msg = "Legacy `note = {URL: …}` field detected; move to `url`" in
   let run s =
     let cnt = count_matches re s in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"BIB-011" ~severity:Info
-           ~message:"Legacy `note = {URL: …}` field detected; move to `url`"
-           ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE fixes: rename the `note` field key to `url` and,
+         when the value opens with the literal `URL:` prefix, strip it
+         (BibLaTeX's url field renders the link itself). Two non-overlapping
+         edits: rename [mb,mb+4) and, if present, delete the `URL:` right before
+         the match end. drop_exempt gates against verbatim/comment/url/math. *)
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, mb = Re_compat.search_forward re s !i in
+           let mend = Re_compat.match_end mr in
+           let matched = Re_compat.matched_string mr s in
+           let mlen = String.length matched in
+           let strip =
+             if mlen >= 4 && String.sub matched (mlen - 4) 4 = "URL:" then
+               [ Cst_edit.delete ~start_offset:(mend - 4) ~end_offset:mend ]
+             else []
+           in
+           cands :=
+             {
+               c_edits =
+                 Cst_edit.replace ~start_offset:mb ~end_offset:(mb + 4) "url"
+                 :: strip;
+               c_label = "Move the URL to a url field";
+             }
+             :: !cands;
+           i := mend
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some (mk_result ~id:"BIB-011" ~severity:Info ~message:msg ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"BIB-011" ~severity:Info ~message:msg
+             ~count:cnt ~candidates))
     else None
   in
   { id = "BIB-011"; run; languages = [] }
@@ -6078,20 +6111,47 @@ let r_cmd_011 : rule =
     if has_makeatletter then None
     else
       let cnt = ref 0 in
+      let offs = ref [] in
       let i = ref 0 in
       (try
          while true do
-           let _mr, _ = Re_compat.search_forward re preamble !i in
+           let mr, pos = Re_compat.search_forward re preamble !i in
            incr cnt;
-           i := Re_compat.match_end _mr
+           offs := pos :: !offs;
+           i := Re_compat.match_end mr
          done
        with Not_found -> ());
       if !cnt > 0 then
-        Some
-          (mk_result ~id:"CMD-011" ~severity:Warning
-             ~message:
-               {|Macro defined with \def/\edef in preamble without \makeatletter guard|}
-             ~count:!cnt)
+        (* Bucket-C LABEL-ONLY candidate: the fix is to wrap the offending
+           \def/\edef definitions between \makeatletter and \makeatother, but
+           the span of the block to wrap is ambiguous (which consecutive
+           lines?), so we offer the suggestion without an edit. The preamble is
+           a prefix of [s] so match offsets are absolute; each is self-gated
+           against the exempt set (empty-edit candidates are not located by
+           candidates_drop_exempt, so the rule gates itself). *)
+        let exempt = find_exempt_ranges s in
+        let candidates =
+          !offs
+          |> List.filter (fun pos -> not (is_in_exempt_range exempt pos))
+          |> List.rev_map (fun _pos ->
+                 {
+                   c_edits = [];
+                   c_label =
+                     {|Wrap \def/\edef definitions in \makeatletter/\makeatother|};
+                 })
+        in
+        if candidates = [] then
+          Some
+            (mk_result ~id:"CMD-011" ~severity:Warning
+               ~message:
+                 {|Macro defined with \def/\edef in preamble without \makeatletter guard|}
+               ~count:!cnt)
+        else
+          Some
+            (mk_result_with_candidates ~id:"CMD-011" ~severity:Warning
+               ~message:
+                 {|Macro defined with \def/\edef in preamble without \makeatletter guard|}
+               ~count:!cnt ~candidates)
       else None
   in
   { id = "CMD-011"; run; languages = [] }

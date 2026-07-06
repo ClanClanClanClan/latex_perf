@@ -3791,10 +3791,55 @@ let r_verb_010 : rule =
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
+    (* Bucket-C CANDIDATE fixes: rewrite each `` `code` `` span into
+       `\verb<d>code<d>`, choosing a delimiter [d] that does not occur in the
+       code. Scanned on the ORIGINAL source (offsets must map back to [s]; the
+       count above runs on the math-stripped copy, whose offsets are shifted).
+       Each match offset is gated against the exempt set (verbatim / comment /
+       url / math) so back-ticks written literally get no suggestion. If no
+       delimiter is free, a LABEL-ONLY candidate is emitted. *)
+    let candidates =
+      let exempt = find_exempt_ranges s in
+      let delims = [ '|'; '!'; '/'; '+'; ':'; ';'; '@' ] in
+      let cands = ref [] in
+      let j = ref 0 in
+      (try
+         while true do
+           let mr, mb = Re_compat.search_forward re s !j in
+           let mend = Re_compat.match_end mr in
+           (if not (is_in_exempt_range exempt mb) then
+              let content = String.sub s (mb + 1) (mend - mb - 2) in
+              let c_edits =
+                match
+                  List.find_opt
+                    (fun c -> not (String.contains content c))
+                    delims
+                with
+                | Some d ->
+                    [
+                      Cst_edit.replace ~start_offset:mb ~end_offset:mend
+                        (Printf.sprintf "\\verb%c%s%c" d content d);
+                    ]
+                | None -> []
+              in
+              cands :=
+                { c_edits; c_label = {|Use \verb for inline code|} } :: !cands);
+           j := mend
+         done
+       with Not_found -> ());
+      List.rev !cands
+    in
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-010" ~severity:Info
-           ~message:{|Inline code uses back‑ticks instead of \verb|} ~count:!cnt)
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-010" ~severity:Info
+             ~message:{|Inline code uses back‑ticks instead of \verb|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-010" ~severity:Info
+             ~message:{|Inline code uses back‑ticks instead of \verb|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "VERB-010"; run; languages = [] }
@@ -4426,11 +4471,61 @@ let r_fr_008 : rule =
     let cnt =
       List.fold_left (fun acc w -> acc + count_substring s_low w) 0 words
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"FR-008" ~severity:Warning
-           ~message:{|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|}
-           ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE fixes: replace the "oe" digraph inside each detected
+         word with the ligature, preserving case (uppercase "OE" -> Œ, else œ).
+         Offsets are located on the lowercased copy (same length as [s], so they
+         map back), but the case decision reads the ORIGINAL bytes. drop_exempt
+         drops any occurrence in verbatim/comment/url/math. *)
+      let slen = String.length s in
+      let cands = ref [] in
+      List.iter
+        (fun w ->
+          let wlen = String.length w in
+          let oe_idx =
+            let rec find i =
+              if i + 1 >= wlen then 0
+              else if w.[i] = 'o' && w.[i + 1] = 'e' then i
+              else find (i + 1)
+            in
+            find 0
+          in
+          let i = ref 0 in
+          while !i <= slen - wlen do
+            if String.sub s_low !i wlen = w then (
+              let oe_off = !i + oe_idx in
+              let repl =
+                if
+                  s.[oe_off] = 'O'
+                  && (s.[oe_off + 1] = 'E' || s.[oe_off + 1] = 'e')
+                then "\xc5\x92" (* Œ, U+0152 *)
+                else "\xc5\x93" (* œ, U+0153 *)
+              in
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:oe_off
+                        ~end_offset:(oe_off + 2) repl;
+                    ];
+                  c_label = {|Use the œ/Œ ligature|};
+                }
+                :: !cands;
+              i := !i + wlen)
+            else incr i
+          done)
+        words;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"FR-008" ~severity:Warning
+             ~message:{|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|}
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"FR-008" ~severity:Warning
+             ~message:{|French: ligature œ/Œ mandatory in “cœur”, “œuvre”…|}
+             ~count:cnt ~candidates))
     else None
   in
   { id = "FR-008"; run; languages = [ "fr" ] }
@@ -4883,6 +4978,7 @@ let r_zh_001 : rule =
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
+    let dots = ref [] in
     let i = ref 0 in
     while !i < len do
       if
@@ -4896,13 +4992,39 @@ let r_zh_001 : rule =
         && String.unsafe_get s (!i + 3) = '.'
       then (
         incr cnt;
+        dots := (!i + 3) :: !dots;
         i := !i + 4)
       else i := !i + 1
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"ZH-001" ~severity:Info
-           ~message:{|ZH‑Hans: western '.' – use Chinese ‘。’|} ~count:!cnt)
+      (* Bucket-C CANDIDATE fixes: replace each ASCII '.' following a CJK
+         ideograph with the ideographic full stop 。 (U+3002). This changes the
+         rendered glyph, so it depends on author intent (some CJK docs mix
+         scripts deliberately) and is surfaced for review, never auto-applied.
+         drop_exempt drops any '.' inside verbatim/comment/url/math. *)
+      let candidates =
+        candidates_drop_exempt s
+          (List.rev_map
+             (fun off ->
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:off ~end_offset:(off + 1)
+                       "\xe3\x80\x82";
+                   ];
+                 c_label = {|Use the Chinese period 。 (U+3002)|};
+               })
+             !dots)
+      in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"ZH-001" ~severity:Info
+             ~message:{|ZH‑Hans: western '.' – use Chinese ‘。’|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"ZH-001" ~severity:Info
+             ~message:{|ZH‑Hans: western '.' – use Chinese ‘。’|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "ZH-001"; run; languages = [ "zh" ] }
@@ -5524,25 +5646,101 @@ let r_verb_014 : rule =
 
 (* MATH-064: Use of \eqalign — obsolete *)
 let r_math_064 : rule =
+  let msg = {esc|Use of \eqalign – obsolete|esc} in
   let run s =
     let cnt = count_substring s "\\eqalign" in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-064" ~severity:Warning
-           ~message:{esc|Use of \eqalign – obsolete|esc} ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C LABEL-ONLY candidate: converting a `\eqalign{...\cr...}` TeX
+         primitive into an `align` environment is a structural rewrite (brace →
+         \begin/\end, \cr → \\) that depends on the body layout, so we offer the
+         suggestion without an edit. The trigger offset is self-gated against
+         verbatim/comment/url regions (empty-edit candidates are not located by
+         candidates_drop_vcu_exempt, so the rule gates itself; see VERB-006). *)
+      let vcu = find_verbatim_comment_url_ranges s in
+      let needle = "\\eqalign" in
+      let nlen = String.length needle in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i <= n - nlen do
+        if String.sub s !i nlen = needle then (
+          if not (is_in_math_range vcu !i) then
+            cands :=
+              {
+                c_edits = [];
+                c_label =
+                  {|Use the align environment instead of obsolete \eqalign|};
+              }
+              :: !cands;
+          i := !i + nlen)
+        else incr i
+      done;
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-064" ~severity:Warning ~message:msg ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-064" ~severity:Warning
+             ~message:msg ~count:cnt ~candidates))
     else None
   in
   { id = "MATH-064"; run; languages = [] }
 
 (* MATH-102: Legacy eqnarray (un-starred) environment present *)
 let r_math_102 : rule =
+  let msg = {|Legacy eqnarray (un‑starred) environment present|} in
   let run s =
     let cnt = count_substring s "\\begin{eqnarray}" in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-102" ~severity:Warning
-           ~message:{|Legacy eqnarray (un‑starred) environment present|}
-           ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE: rename the `eqnarray` environment to `align` in
+         both the \begin and its matching \end. `\begin{` is 7 bytes so the name
+         starts at pos+7; `\end{` is 5 bytes so the name starts at epos+5;
+         `eqnarray` is 8 bytes. vcu-exempt (the target is a math environment, so
+         we must not use the full exempt set which includes math). *)
+      let begin_tag = "\\begin{eqnarray}" in
+      let end_tag = "\\end{eqnarray}" in
+      let blen = String.length begin_tag in
+      let elen = String.length end_tag in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i <= n - blen do
+        if String.sub s !i blen = begin_tag then (
+          let begin_name_off = !i + 7 in
+          let epos =
+            let j = ref (!i + blen) in
+            let found = ref (-1) in
+            while !found < 0 && !j <= n - elen do
+              if String.sub s !j elen = end_tag then found := !j else incr j
+            done;
+            !found
+          in
+          (if epos >= 0 then
+             let end_name_off = epos + 5 in
+             cands :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:begin_name_off
+                       ~end_offset:(begin_name_off + 8) "align";
+                     Cst_edit.replace ~start_offset:end_name_off
+                       ~end_offset:(end_name_off + 8) "align";
+                   ];
+                 c_label = "Use align instead of eqnarray";
+               }
+               :: !cands);
+          i := !i + blen)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-102" ~severity:Warning ~message:msg ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-102" ~severity:Warning
+             ~message:msg ~count:cnt ~candidates))
     else None
   in
   { id = "MATH-102"; run; languages = [] }

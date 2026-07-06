@@ -1915,10 +1915,49 @@ let l1_chem_001_rule : rule =
         if count_substring seg "\\ce{" = 0 then
           cnt := !cnt + count_re_matches re seg)
       math_segs;
+    (* Bucket-C LABEL-ONLY candidate: wrapping a detected formula in \ce{}
+       requires the mhchem package and human judgement about the formula's exact
+       span (subscripts, coefficients, states), so we surface the suggestion
+       without an edit. Located on absolute offsets via find_math_ranges; the
+       target is math, so the trigger offset is self-gated against
+       verbatim/comment/url only (NOT the full exempt set, which would drop
+       every in-math candidate). *)
+    let candidates =
+      let vcu = find_verbatim_comment_url_ranges s in
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      List.iter
+        (fun (rs, re_end) ->
+          let seg = String.sub s rs (re_end - rs) in
+          if count_substring seg "\\ce{" = 0 then
+            let i = ref 0 in
+            try
+              while true do
+                let mr, pos = Re_compat.search_forward re seg !i in
+                let mend = Re_compat.match_end mr in
+                if not (is_in_math_range vcu (rs + pos)) then
+                  cands :=
+                    {
+                      c_edits = [];
+                      c_label = {|Wrap the chemical formula in \ce{} (mhchem)|};
+                    }
+                    :: !cands;
+                i := mend
+              done
+            with Not_found -> ())
+        ranges;
+      List.rev !cands
+    in
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHEM-001" ~severity:Warning
-           ~message:{|Missing \ce{} wrapper for chemical formula|} ~count:!cnt)
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHEM-001" ~severity:Warning
+             ~message:{|Missing \ce{} wrapper for chemical formula|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHEM-001" ~severity:Warning
+             ~message:{|Missing \ce{} wrapper for chemical formula|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "CHEM-001"; run; languages = [] }

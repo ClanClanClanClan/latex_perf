@@ -36,19 +36,12 @@ let sentence_split (s : string) : string list =
     if i >= len then (
       let cur = Buffer.contents buf in
       if String.length (String.trim cur) > 0 then acc := cur :: !acc)
-    else if
-      s.[i] = '.'
-      && i + 2 < len
-      && s.[i + 1] = ' '
-      &&
-      let c = s.[i + 2] in
-      c >= 'A' && c <= 'Z'
-    then (
+    else if s.[i] = '.' && is_sentence_end_period s i then (
       Buffer.add_char buf '.';
       let cur = Buffer.contents buf in
       if String.length (String.trim cur) > 0 then acc := cur :: !acc;
       Buffer.clear buf;
-      loop (i + 2))
+      if i + 1 < len && s.[i + 1] = ' ' then loop (i + 2) else loop (i + 1))
     else (
       Buffer.add_char buf s.[i];
       loop (i + 1))

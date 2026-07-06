@@ -1280,7 +1280,7 @@ let l1_math_046_rule : rule =
              ~count:!cnt)
       else
         Some
-          (mk_result_with_fix ~id:"MATH-046" ~severity:Info
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-046" ~severity:Info
              ~message:{|Ellipsis \ldots used on relation axis; prefer \cdots|}
              ~count:!cnt ~fix)
     else None

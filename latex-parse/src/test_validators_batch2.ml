@@ -257,17 +257,45 @@ let () =
 
   (* SPC-018: No space after sentence-ending period *)
   run "SPC-018 fires on period-uppercase" (fun tag ->
-      expect (fires "SPC-018" "End.Next") (tag ^ ": no space"));
+      expect
+        (fires "SPC-018" "end.Next")
+        (tag ^ ": real sentence end (lowercase word)"));
+  run "SPC-018 fires on word.Sentence" (fun tag ->
+      expect (fires "SPC-018" "word.Sentence") (tag ^ ": word boundary"));
   run "SPC-018 does not fire with space" (fun tag ->
       expect (does_not_fire "SPC-018" "End. Next") (tag ^ ": space present"));
-  run "SPC-018 count=2" (fun tag ->
-      expect (fires_with_count "SPC-018" "A.B.C." 2) (tag ^ ": count=2"));
   run "SPC-018 does not fire in math" (fun tag ->
       expect (does_not_fire "SPC-018" "$x.Y$") (tag ^ ": math stripped"));
   run "SPC-018 does not fire on lowercase" (fun tag ->
+      expect (does_not_fire "SPC-018" "e.g. here") (tag ^ ": lowercase ok"));
+  run "SPC-018 does not fire on e.g. abbreviation" (fun tag ->
+      expect (does_not_fire "SPC-018" "e.g.Next") (tag ^ ": e.g abbrev"));
+  run "SPC-018 does not fire on i.e. abbreviation" (fun tag ->
+      expect (does_not_fire "SPC-018" "i.e.Then") (tag ^ ": i.e abbrev"));
+  run "SPC-018 does not fire on U.S.A. initials" (fun tag ->
+      expect (does_not_fire "SPC-018" "U.S.A.Next") (tag ^ ": U.S.A initials"));
+  run "SPC-018 does not fire on Fig. abbreviation" (fun tag ->
+      expect (does_not_fire "SPC-018" "Fig.Next") (tag ^ ": Fig abbrev"));
+  run "SPC-018 does not fire on Dr. abbreviation" (fun tag ->
+      expect (does_not_fire "SPC-018" "Dr.Smith") (tag ^ ": Dr abbrev"));
+  run "SPC-018 does not fire on J. initial" (fun tag ->
+      expect (does_not_fire "SPC-018" "J.Smith") (tag ^ ": J initial"));
+  run "SPC-018 does not fire on digit before period" (fun tag ->
+      expect (does_not_fire "SPC-018" "3.Next") (tag ^ ": digit-before period"));
+  run "SPC-018 does not fire on ellipsis" (fun tag ->
+      expect (does_not_fire "SPC-018" "wait...Next") (tag ^ ": ellipsis"));
+  run "SPC-018 count=2 on two real boundaries" (fun tag ->
       expect
-        (does_not_fire "SPC-018" "e.g. here")
-        (tag ^ ": lowercase after period ok"));
+        (fires_with_count "SPC-018" "end.Next word.Again" 2)
+        (tag ^ ": two real ends"));
+  run "SPC-018 count=1 with abbreviation mixed in" (fun tag ->
+      expect
+        (fires_with_count "SPC-018" "e.g.Foo bar.Baz" 1)
+        (tag ^ ": abbrev suppressed"));
+  run "SPC-018 count=0 on initials-only A.B.C." (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "A.B.C.")
+        (tag ^ ": all single-letter initials"));
 
   (* SPC-022: Tab after bullet in \itemize *)
   run "SPC-022 fires on item-tab" (fun tag ->

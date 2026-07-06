@@ -2,6 +2,68 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.15] — 2026-07-06
+
+**Bucket-B pilot: a conservative, abbreviation-aware sentence-boundary layer —
+and it fixes a latent SPC-018 false-positive bug.** `Validators_common.
+is_sentence_end_period` decides whether an ASCII `.` is a genuine sentence end
+vs an abbreviation dot, an initial, a decimal, or an ellipsis. It gates:
+- **SPC-018** (no-space-after-period): previously fired on *every* `.[A-Z]`, so it
+  auto-inserted spaces into abbreviations and identifiers — `e.g.Next`,
+  `U.S.A.Next`, `Ph.D.Now`, `System.Console`, `Fig.Next`, `Dr.Smith`, `3.14X`,
+  `wait...Next` all mis-fired (a shipped corruption bug). Now gated on
+  `is_sentence_end_period`, which suppresses all of those (abbreviation set incl.
+  months/titles/plurals + a capital-initial-word guard for
+  proper-nouns/initialisms/identifiers) while still firing on genuine ends
+  (`end.Next` → `end. Next`). The only corpus differential vs v27.1.12 is **1
+  file** — `TYPO-021_capital_after_ellipsis.tex`, where the naive SPC-018 used to
+  fire on the `.N` at the end of an ellipsis `...Next`; the ellipsis guard now
+  correctly suppresses it (an intended diagnostic correction, not a regression).
+- `sentence_split` (consumed by STYLE-006 and other L4 style diagnostics) no
+  longer splits mid-abbreviation.
+
+**Adversarially verified** by a second agent, which mapped the remaining
+false-positive classes; five were eliminated this pass. **Documented residual:**
+bare lowercase-dotted identifiers in prose without a code font (`github.Com`,
+`obj.Method`) are lexically identical to a real sentence-end typo and cannot be
+distinguished heuristically — the irreducible Bucket-B core that needs the full
+word-frequency / NLP model. This pilot establishes the sentence layer and scopes
+exactly what full Bucket-B coverage requires.
+
+Coverage gate 160×997 PASS (SPC-018 goldens regenerated), full `dune runtest`,
+all release gates green.
+
+## [v27.1.14] — 2026-07-06
+
+**Multi-trigger producer hardening — 5 more latent bugs found + fixed, gate
+upgraded to an adversarial edge-variant battery.** A per-producer multi-edge
+audit (letter/CJK-adjacent, doubled, EOF, and inside-protected-region variants)
+found defects a single trigger could not:
+
+- **Control-word glue (2):** TYPO-005 (`...`→`\dots`) and TYPO-012 (`'`→`^\prime`)
+  emitted the control word with no terminator, so `x...y`→`x\dotsy` and `$5'x$`→
+  `$5^\primex$` (undefined control words), and `a......b`→`a\dots\dotsb`
+  (`\dotsb` is a *different* amsmath command — silent corruption). Fixed with the
+  shared `control_word_repl` guard.
+- **Protected-region leaks (3):** CHEM-005, MATH-046, SCRIPT-006 used plain
+  `mk_result_with_fix` + context-blind `find_math_ranges`, so they rewrote a
+  `$…$` **inside `\verb`/comment/`\url`/verbatim** (e.g. `\verb|$a->b$|` →
+  `\verb|$a\rightarrow b$|`). Routed through `mk_result_with_fix_vcu_exempt`.
+- 3 single-pass non-idempotence cases (TYPO-009/015, STYLE-023) confirmed to
+  *converge* in the production `--apply-fixes` loop (not corruption); the gate
+  now iterates to a fixpoint (matching production) rather than requiring
+  single-pass idempotence.
+
+**`check_producer_coverage.py` upgraded:** each producer now carries a SET of
+adversarial variants (`producer_triggers.json` — 160 producers × ~997 variants)
+covering the glue / multibyte / protected-region / idempotence edges; the gate
+applies each to a **fixpoint** and asserts convergence + no-corruption-of-valid-input
++ golden match. The verbatim-safety battery gained math-operator-in-verbatim
+triggers so that leak class is caught there too.
+
+Full `dune runtest`, differential 0-diff, convergence, verbatim, coverage
+(160×997), all release gates green.
+
 ## [v27.1.13] — 2026-07-06
 
 **The last 27 pending-fix rules, fully resolved — 10 implemented, 17 closed as

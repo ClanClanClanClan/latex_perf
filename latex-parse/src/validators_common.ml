@@ -844,7 +844,140 @@ let is_ascii_letter (c : char) : bool =
 
 let is_ascii_digit_c (c : char) : bool = c >= '0' && c <= '9'
 
-let is_sentence_end_period (s : string) (i : int) : bool =
+(* -- Common-English-word ALLOWLIST (Bucket-B word-frequency layer) --
+   [is_sentence_end_period] now fires only when the word ending at the `.` is a
+   REAL, frequent English word. This flips the predicate from a blocklist (which
+   could not distinguish an unknown lowercase word from a lowercase dotted
+   identifier such as `github.Com`, `obj.Method`, `numpy.Array`) to a positive
+   allowlist: a sentence that ends in an uncommon technical word is a MISS
+   (acceptable for an auto-fix), while a lowercase identifier — never a common
+   English word — is never corrupted.
+
+   The set is ~1500 of the most frequent English words, deliberately including
+   the common academic / technical words that end sentences in papers (result,
+   method, theorem, lemma, proof, value, function, figure, table, section,
+   model, data, etc.). Stored lowercased. Words are grouped per source line only
+   for readability; each line is whitespace-split at load. *)
+let common_english_words : (string, unit) Hashtbl.t =
+  let tbl = Hashtbl.create 4096 in
+  let src =
+    [
+      (* general high-frequency function/content words *)
+      "the be to of and a in that have it for not on with he as you do at this";
+      "but his by from they we say her she or an will my one all would there";
+      "their what so up out if about who get which go me when make can like \
+       time";
+      "no just him know take people into year your good some could them see \
+       other";
+      "than then now look only come its over think also back after use two how \
+       our";
+      "work first well way even new want because any these give day most us is \
+       are";
+      "was were been has had did does said made went gone being am being here \
+       where";
+      "why while very much many more less few little own same such each every \
+       both";
+      "under above below between within without across through during before \
+       after";
+      "again against always never often sometimes usually already still yet \
+       ever";
+      "however therefore thus hence moreover furthermore nevertheless otherwise";
+      "instead indeed rather quite almost enough perhaps maybe likely certainly";
+      "clearly simply merely mainly mostly partly fully wholly nearly roughly";
+      "around near far away along behind beside beyond toward towards onto upon";
+      "off down inside outside forward backward upward downward left right top";
+      "bottom middle centre center side front rear edge corner end start begin";
+      "began begun finish finished complete completed continue continued remain";
+      "remained become became turn turned keep kept hold held bring brought";
+      "carry carried move moved run ran walk walked stand stood sit sat lie lay";
+      "put set let get got give given take taken made make find found lose lost";
+      "win won buy bought sell sold pay paid send sent read write wrote written";
+      "speak spoke spoken tell told ask asked answer answered call called name";
+      "named show shown showed prove proved proven mean meant meaning follow";
+      "follows followed leading led allow allowed enable enabled require \
+       required";
+      "provide provided produce produced obtain obtained observe observed note";
+      "noted notice noticed consider considered assume assumed suppose supposed";
+      "define defined describe described denote denoted derive derived apply";
+      "applied compute computed calculate calculated estimate estimated measure";
+      "measured evaluate evaluated verify verified confirm confirmed check \
+       checked";
+      "test tested compare compared contrast related relate relates depend";
+      "depends increase increased decrease decreased reduce reduced improve";
+      "improved extend extended generalize generalized represent represented";
+      "denote denotes satisfy satisfies satisfied hold holds imply implies";
+      "yield yields express expressed express solve solved analyze analyzed";
+      (* academic / paper vocabulary — sentence-ending words in prose *)
+      "result results method methods theorem theorems lemma lemmas proof proofs";
+      "corollary proposition conjecture definition definitions example examples";
+      "value values function functions figure figures table tables section";
+      "sections chapter chapters model models data case cases form forms set";
+      "sets point points space spaces time times work paper papers study \
+       studies";
+      "analysis system systems problem problems solution solutions approach";
+      "approaches algorithm algorithms matrix matrices vector vectors number";
+      "numbers equation equations variable variables parameter parameters";
+      "constant constants field fields group groups ring domain range image";
+      "graph graphs tree trees node nodes edge path paths cycle chain series";
+      "sequence sequences limit limits bound bounds error errors rate rates";
+      "sample samples population mean median mode variance distribution density";
+      "probability event events state states process processes measure measures";
+      "metric metrics norm scalar tensor operator operators map mapping element";
+      "elements subset subsets member members class classes object objects type";
+      "types property properties feature features factor factors term terms";
+      "condition conditions assumption assumptions hypothesis theory theories";
+      "framework frameworks structure structures pattern patterns behavior";
+      "behaviour performance accuracy precision recall quality property scheme";
+      "strategy strategies technique techniques procedure procedures step steps";
+      "phase phases stage stages level levels layer layers scale scales unit \
+       units";
+      "component components module modules network networks input inputs output";
+      "outputs signal signals source sources target targets label labels weight";
+      "weights score scores cost costs loss gradient function derivative \
+       integral";
+      "sum product ratio proportion fraction percentage average total count \
+       size";
+      "length width height depth area volume mass force energy power speed";
+      "velocity distance position location region area boundary interior \
+       surface";
+      (* more everyday content words that legitimately end sentences *)
+      "man woman child children person world life hand part place home school";
+      "state country city house room door word words page book books story";
+      "question questions idea ideas fact facts reason reasons power light \
+       water";
+      "air land food money business company family friend friends group team";
+      "member game war history art music science nature light dark color colour";
+      "line lines order group face book eye head heart mind body voice sound";
+      "picture story fact truth change effect cause result matter subject topic";
+      "issue point view side matter thing things something nothing anything";
+      "everything someone anyone everyone nobody bar foo aside apart alike \
+       alone";
+      "big small large great high low long short old young early late easy hard";
+      "true false right wrong open close full empty free whole half main real";
+      "clear certain sure common general special particular important necessary";
+      "possible available different similar equal exact precise correct valid";
+      "simple complex basic final initial current recent future past present";
+      "actual usual normal standard typical natural human social global local";
+      "physical mental formal informal direct indirect positive negative active";
+    ]
+  in
+  List.iter
+    (fun line ->
+      List.iter
+        (fun w -> if String.length w > 0 then Hashtbl.replace tbl w ())
+        (String.split_on_char ' ' line))
+    src;
+  tbl
+
+(* [?require_common]: when [true] (default), the word ending at the `.` must be
+   in the common-English allowlist for a positive result. This is the SAFE mode
+   used by the SPC-018 auto-fix (byte-editing) so that lowercase dotted
+   identifiers are never corrupted. Non-editing consumers that only need
+   high-recall sentence SEGMENTATION (e.g. the L4 style rules' [sentence_split])
+   pass [~require_common:false] to keep the pre-allowlist recall — they never
+   rewrite bytes, so a lowercase identifier boundary there is harmless. *)
+let is_sentence_end_period ?(require_common = true) (s : string) (i : int) :
+    bool =
   let n = String.length s in
   if i < 0 || i >= n || s.[i] <> '.' then false
   else if (i + 1 < n && s.[i + 1] = '.') || (i > 0 && s.[i - 1] = '.') then
@@ -864,6 +997,8 @@ let is_sentence_end_period (s : string) (i : int) : bool =
     let word = String.sub s ws (i - ws) in
     let word_lc = String.lowercase_ascii word in
     if String.length word < 2 then false
+      (* Abbreviation blocklist is checked FIRST: an abbreviation whose spelling
+         coincides with a common word (e.g. `no`, `co`) must still SUPPRESS. *)
     else if Hashtbl.mem sentence_abbreviations word_lc then false
     else if word.[0] >= 'A' && word.[0] <= 'Z' then
       (* the word ending at the period starts with a capital: a proper noun, an
@@ -871,6 +1006,16 @@ let is_sentence_end_period (s : string) (i : int) : bool =
          auto-treat as a sentence end. Conservative: costs recall on sentences
          that end in a proper noun, but eliminates the identifier/initialism
          false-positive class. *)
+      false
+    else if require_common && not (Hashtbl.mem common_english_words word_lc)
+    then
+      (* Positive ALLOWLIST requirement (Bucket-B word-frequency layer): fire
+         only when the lowercase word is a KNOWN common English word. A bare
+         lowercase dotted identifier — `github.Com`, `obj.Method`, `numpy.Array`
+         — is never a common word, so it is suppressed and never corrupted. A
+         sentence ending in an uncommon technical word is a MISS, which is
+         acceptable for an auto-fix: a false positive (identifier corruption) is
+         far worse than a miss. *)
       false
     else
       let rec next j =

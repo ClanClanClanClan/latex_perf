@@ -4342,7 +4342,7 @@
     "pilot": false
    },
    {
-    "expected_hex": "4f6e652e54776f20616e642074687265652e20466f75720a",
+    "expected_hex": "4f6e652e54776f20616e642074687265652e466f75720a",
     "hex": "4f6e652e54776f20616e642074687265652e466f75720a",
     "kind": "mutate",
     "note": "doubled",

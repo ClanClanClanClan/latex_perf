@@ -36,7 +36,7 @@ let sentence_split (s : string) : string list =
     if i >= len then (
       let cur = Buffer.contents buf in
       if String.length (String.trim cur) > 0 then acc := cur :: !acc)
-    else if s.[i] = '.' && is_sentence_end_period s i then (
+    else if s.[i] = '.' && is_sentence_end_period ~require_common:false s i then (
       Buffer.add_char buf '.';
       let cur = Buffer.contents buf in
       if String.length (String.trim cur) > 0 then acc := cur :: !acc;

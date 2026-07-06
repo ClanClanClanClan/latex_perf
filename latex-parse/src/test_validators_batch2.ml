@@ -296,6 +296,32 @@ let () =
       expect
         (does_not_fire "SPC-018" "A.B.C.")
         (tag ^ ": all single-letter initials"));
+  (* v27.1.16 Bucket-B allowlist: lowercase dotted identifiers in prose are NOT
+     common English words, so they are suppressed (never corrupted). *)
+  run "SPC-018 does not fire on github.Com identifier" (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "see github.Com repo")
+        (tag ^ ": github not a common word"));
+  run "SPC-018 does not fire on obj.Method identifier" (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "call obj.Method here")
+        (tag ^ ": obj not a common word"));
+  run "SPC-018 does not fire on numpy.Array identifier" (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "use numpy.Array now")
+        (tag ^ ": numpy not a common word"));
+  run "SPC-018 does not fire on uncommon technical word (conservative miss)"
+    (fun tag ->
+      expect
+        (does_not_fire "SPC-018" "eigendecomposition.Next")
+        (tag ^ ": unknown word suppressed"));
+  (* real common academic words that end sentences in papers still fire *)
+  run "SPC-018 fires on result.Then" (fun tag ->
+      expect (fires "SPC-018" "result.Then") (tag ^ ": result is common"));
+  run "SPC-018 fires on method.Now" (fun tag ->
+      expect (fires "SPC-018" "method.Now") (tag ^ ": method is common"));
+  run "SPC-018 fires on theorem.Here" (fun tag ->
+      expect (fires "SPC-018" "theorem.Here") (tag ^ ": theorem is common"));
 
   (* SPC-022: Tab after bullet in \itemize *)
   run "SPC-022 fires on item-tab" (fun tag ->

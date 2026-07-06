@@ -146,7 +146,11 @@ let () =
         (tag ^ ": candidate label"));
   run "MATH-025 candidate carries two rename edits" (fun tag ->
       match candidates_of "MATH-025" m25_src with
-      | [ { c_edits = [ _; _ ]; _ } ] -> expect true (tag ^ ": 2 edits")
+      | [ { c_edits = [ e1; e2 ]; _ } ] ->
+          expect
+            (e1.Cst_edit.replacement = "equation"
+            && e2.Cst_edit.replacement = "equation")
+            (tag ^ ": 2 edits both rename to equation")
       | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
   run "MATH-025 candidate NOT in fix field (no auto-apply)" (fun tag ->
       expect (not (fires_with_fix "MATH-025" m25_src)) (tag ^ ": fix=None"));
@@ -198,7 +202,10 @@ let () =
         (tag ^ ": candidate label"));
   run "VERB-006 candidate has EMPTY edits (span ambiguous)" (fun tag ->
       match candidates_of "VERB-006" v6_src with
-      | [ { c_edits = []; _ } ] -> expect true (tag ^ ": empty edits")
+      | [ { c_edits = []; c_label } ] ->
+          expect
+            (c_label = "Convert inline \\verb to a verbatim environment")
+            (tag ^ ": label-only candidate with the expected label")
       | _ -> expect false (tag ^ ": expected one label-only candidate"));
   run "VERB-006 candidate NOT in fix field (no auto-apply)" (fun tag ->
       expect (not (fires_with_fix "VERB-006" v6_src)) (tag ^ ": fix=None"));

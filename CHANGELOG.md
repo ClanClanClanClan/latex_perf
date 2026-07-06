@@ -2,6 +2,28 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.18] — 2026-07-06
+
+**Bucket-C candidate surface COMPLETE.** The final 11 diagnose-only rules now emit
+reviewable candidates via `--list-candidate-fixes` (count/severity/message
+unchanged, `fix` stays `None`, `produces_fix` stays false → 159 producers,
+coverage gate untouched):
+
+- **MATH-101 / MATH-052** `\over` → `\frac{...}{...}`
+- **MATH-012** multi-letter function → `\operatorname{...}`
+- **MATH-102** `eqnarray` → `align`; **MATH-064** `\eqalign` → `align` (label-only)
+- **CMD-011** `\def`/`\edef` with `@` → `\makeatletter`/`\makeatother` (label-only)
+- **VERB-010** back-tick inline code → `\verb|...|`
+- **BIB-011** legacy `note={URL:...}` → url field
+- **CHEM-001** chemical formula → `\ce{}` (label-only, mhchem)
+- **ZH-001 / FR-008** locale punctuation / ligature
+
+Built clean from main and adversarially verified on the correct worktree
+(`path_match`, verdict `sound`); all 11 verified to NEVER auto-apply. **This closes
+the buckets:** every fixable rule now has either an auto-fix (159 producers) or a
+reviewable candidate (18 rules) — Bucket-A shipped, Bucket-B done, Bucket-C
+candidates complete, Bucket-D never. Differential 0-diff; all gates green.
+
 ## [v27.1.17] — 2026-07-06
 
 **Bucket-C candidate surface extended (4 more rules) + reusable exempt helpers.**

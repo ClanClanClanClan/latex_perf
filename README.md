@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.0.72
+# LaTeX Perfectionist v27.1.19
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -65,7 +65,7 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.19 (July 2026)
+## Current Status — v27.1.20 (July 2026)
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
@@ -80,6 +80,8 @@ All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML
 - ✅ v26.0.0 (2026-04-18): WS0-WS6 — truth-surface freeze, compile-log Class C, bounded macro registry, project graph, hybrid invalidation, partial-document semantics, testing hardening
 - ✅ v26.1.0 (2026-04-20): formal language contract + real validator DAG + ExecutionClasses proof + support_matrix.yaml + E2/E3 editing proofs + expanded compile-log (LAY-025/026/027) + governance regen
 - ✅ v26.2.0 (2026-04-23): compile-guarantee stack T0–T7 (runtime `Compile_contract` + ProjectClosure/BuildProfileSound/CompileProgress/CompileWellFormed + T0/T1/T4/T5 wrappers) + byte-lossless CST (`Cst`, `Cst_of_ast`, `Stable_spans`; 345/345 corpora round-trip) + rewrite engine v1 (`Cst_edit`, `Rewrite_engine`) + preservation proofs (CSTRoundTrip, RewritePreservesCST, RewritePreservesSemantics)
+- ✅ v27.0.0 (2026-05): WS8 final discharge — `pdflatex_compile_safe` Qed (T6/T7 discharged); apply-edits universal correspondence (`apply_edits_cursor_eq_parallel`, v27.0.4)
+- ✅ v27.0–v27.1.19 (2026-05→07): **fix-producer + candidate program** — 159 auto-fix producers (Bucket A) + Bucket-B sentence layer + 18 Bucket-C `--list-candidate-fixes` candidates; multi-trigger coverage gate + verbatim/convergence/differential/code-quality gates in CI
 
 ## Quick Start
 
@@ -227,9 +229,10 @@ bash scripts/latency_smoke_expand.sh 200
 - **[docs/BUILD_LOG_CONTRACT.md](docs/BUILD_LOG_CONTRACT.md)** — Class C compile-log contract
 - **[docs/UNIT_TESTS.md](docs/UNIT_TESTS.md)**, **[docs/BUILD_SYSTEM_GUIDE.md](docs/BUILD_SYSTEM_GUIDE.md)**, **[docs/REST_API.md](docs/REST_API.md)**
 
-## Success Metrics (v27.0.72)
+## Success Metrics (v27.1.19)
 
-- 660 rules specified / 643 shipped
+- 660 rules specified / 644 shipped
+- 159 auto-fix producers + 18 Bucket-C candidate rules (every fixable rule has an auto-fix or a `--list-candidate-fixes` candidate)
 - 637 formal faithful + 20 conservative + 3 conditional proofs
 - 0 admits, 0 axioms
 - 21-language target (7 live + 14 stubbed)
@@ -237,7 +240,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.1.19 released. 644 validators implemented, **159 fix-producing rules**, 1,400 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
+**Status**: v27.1.20 released. 644 validators implemented, **159 fix-producing rules**, ~1,345 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

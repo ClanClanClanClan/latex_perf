@@ -1,5 +1,8 @@
 # V27_T5_WIRING_PLAN — Substantive T5 wiring against per-rule QEDs
 
+> **STATUS: ✅ COMPLETE / SHIPPED.** T5 wiring landed (substantive Section closing the placeholder). Historical record — not open work.
+
+
 **Goal:** Replace the `pdflatex_T5_safe (_ : pdflatex_project) := True`
 placeholder in `proofs/PdflatexModel.v` with a Section closure of
 `T5_wrapper.T5_rule_safe` over a concrete pdflatex `rule_id` /

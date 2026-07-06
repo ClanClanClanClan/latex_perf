@@ -1,5 +1,8 @@
 # V27_APPLY_EDITS_ASSOC_PLAN — apply_edits associative-reorder Coq theorem
 
+> **STATUS: ✅ COMPLETE / SHIPPED (tag v27.0.3).** All stage-1..6 acceptance boxes checked; `apply_edits_parallel_perm` Qed. Historical record — not open work.
+
+
 **Goal (REVISED — see PR #320 for the FALSE-as-stated original
 form):** Prove that `apply_edits_parallel` (the parallel applier
 defined as `apply_edits_concrete o sort_by_start_desc`) is

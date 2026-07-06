@@ -1,5 +1,8 @@
 # V27_FAITHFUL_SEMANTICS_PLAN — Faithful operational pdflatex semantics
 
+> **STATUS: ⏸ UNSTARTED / RE-SCOPE NEEDED (as of v27.1.19).** The declared tag target `v27.1.0` was CONSUMED by the unrelated fix-producer cadence (tags v27.1.0…v27.1.19 exist). Only a partial `proofs/LexerFaithfulStep.v` seed exists. Before pursuing, retarget the release (e.g. v27.2.0/WS9+) and re-scope Stage 1 against current module names.
+
+
 **Goal:** Replace the abstract `pdflatex_step` (counter-bounded
 iteration that doesn't model real aux/log evolution) in
 `proofs/PdflatexModel.v` with an operational semantics that

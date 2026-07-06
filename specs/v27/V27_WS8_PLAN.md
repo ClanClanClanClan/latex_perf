@@ -1,5 +1,8 @@
 # V27 WS8 — Discharge T6 / T7 against `proofs/PdflatexModel.v`
 
+> **STATUS: ✅ COMPLETE / SHIPPED (v27.0.0, WS8).** T6/T7 discharged; `pdflatex_compile_safe` Qed in `proofs/PdflatexModel.v`. Historical record — not open work.
+
+
 **Status:** draft, 2026-04-27. Successor to `V26_4_PLAN.md` §5
 commitment + `proofs/ADMISSIBILITY_MAP.md` "v27 WS8 discharge
 checklist".

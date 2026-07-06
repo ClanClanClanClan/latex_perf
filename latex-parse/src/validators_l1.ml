@@ -1789,10 +1789,46 @@ let l1_ref_006_rule : rule =
   let re = Re_compat.regexp {|[Pp]age[ ~]*\\ref{|} in
   let run s =
     let cnt = count_re_matches re s in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"REF-006" ~severity:Info
-           ~message:{|Page reference uses \ref not \pageref|} ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE fixes: replacing \ref with \pageref changes the
+         rendered page number and depends on author intent, so we surface it for
+         review rather than auto-applying. Each match ends at the `{` of
+         `\ref{`; the 5-byte `\ref{` token occupies [match_end-5, match_end).
+         Replace it with `\pageref{`, keeping the `{...}` argument. Candidates
+         whose offset falls in a protected (verbatim/comment/url/math) region
+         are dropped. *)
+      let exempt = find_exempt_ranges s in
+      let candidates = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, _ = Re_compat.search_forward re s !i in
+           let mend = Re_compat.match_end mr in
+           let ref_off = mend - 5 in
+           if not (is_in_exempt_range exempt ref_off) then
+             candidates :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.make ~start_offset:ref_off ~end_offset:mend
+                       ~replacement:{|\pageref{|};
+                   ];
+                 c_label = {|Use \pageref (page number) instead of \ref|};
+               }
+               :: !candidates;
+           i := mend
+         done
+       with Not_found -> ());
+      let candidates = List.rev !candidates in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-006" ~severity:Info
+             ~message:{|Page reference uses \ref not \pageref|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-006" ~severity:Info
+             ~message:{|Page reference uses \ref not \pageref|} ~count:cnt
+             ~candidates))
     else None
   in
   { id = "REF-006"; run; languages = [] }

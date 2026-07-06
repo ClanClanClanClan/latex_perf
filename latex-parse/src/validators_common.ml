@@ -4,6 +4,14 @@
 
 type severity = Error | Warning | Info
 
+type candidate_fix = { c_edits : Cst_edit.t list; c_label : string }
+(** A CANDIDATE fix (Bucket C): a suggested edit set that depends on author
+    INTENT and therefore must NOT auto-apply. [c_edits] is a non-overlapping
+    edit set; [c_label] is a human-readable description shown to the author for
+    review. Candidates are surfaced by [--list-candidate-fixes] for an editor
+    frontend to offer, but are deliberately ignored by [--apply-fixes] /
+    [--apply-fixes-for], which only apply the [fix] field. *)
+
 type result = {
   id : string;
   severity : severity;
@@ -16,13 +24,19 @@ type result = {
           [Rewrite_engine.apply], makes the rule stop firing on the output.
           Introduced in v26.2.1 to back the [--apply-fixes] CLI flag. See
           [docs/v26_2/FIX_STYLE_GUIDE.md] for producer conventions. *)
+  candidate_fixes : candidate_fix list;
+      (** Bucket-C CANDIDATE fixes: intent-dependent suggestions surfaced for
+          author review via [--list-candidate-fixes]. Defaults to [[]] for every
+          rule (set via the [mk_result] / [mk_result_with_fix] constructors); a
+          rule opts in with [mk_result_with_candidates]. These are NEVER applied
+          by [--apply-fixes]; only [fix] is. *)
 }
 
 (** Construct a [result] with no fix suggestion ([fix = None]). Every rule
     introduced before v26.2.1 should use this helper; rules that emit fix
     suggestions use [mk_result_with_fix] below. *)
 let mk_result ~id ~severity ~message ~count =
-  { id; severity; message; count; fix = None }
+  { id; severity; message; count; fix = None; candidate_fixes = [] }
 
 (** Construct a [result] that carries a non-empty edit list. Fails if [fix] is
     the empty list — an empty [Some] is indistinguishable from [None]
@@ -31,7 +45,20 @@ let mk_result ~id ~severity ~message ~count =
 let mk_result_with_fix ~id ~severity ~message ~count ~fix =
   if fix = [] then
     invalid_arg "Validators_common.mk_result_with_fix: empty fix list"
-  else { id; severity; message; count; fix = Some fix }
+  else { id; severity; message; count; fix = Some fix; candidate_fixes = [] }
+
+(** Construct a [result] carrying one or more Bucket-C CANDIDATE fixes (see
+    {!type:candidate_fix}). Sets [fix = None] (candidates are never
+    auto-applied) and [candidate_fixes = candidates]. Fails if [candidates = []]
+    — a rule with no candidate to offer should use [mk_result] instead. The
+    diagnostic [count] is supplied by the caller and is untouched, so attaching
+    candidates never changes a rule's firing behaviour. *)
+let mk_result_with_candidates ~id ~severity ~message ~count ~candidates =
+  if candidates = [] then
+    invalid_arg
+      "Validators_common.mk_result_with_candidates: empty candidate list"
+  else
+    { id; severity; message; count; fix = None; candidate_fixes = candidates }
 
 type rule = {
   id : string;

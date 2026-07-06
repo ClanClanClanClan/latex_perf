@@ -9,6 +9,10 @@
 
 type severity = Error | Warning | Info
 
+type candidate_fix = { c_edits : Cst_edit.t list; c_label : string }
+(** A Bucket-C CANDIDATE fix: an intent-dependent suggestion surfaced for author
+    review (via [--list-candidate-fixes]) and NEVER auto-applied. *)
+
 type result = {
   id : string;
   severity : severity;
@@ -17,6 +21,9 @@ type result = {
   fix : Cst_edit.t list option;
       (** Optional fix suggestions. Introduced in v26.2.1. See
           [Validators_common.mk_result] / [mk_result_with_fix] helpers. *)
+  candidate_fixes : candidate_fix list;
+      (** Bucket-C CANDIDATE fixes. Defaults to [[]] for every rule; opt in with
+          [mk_result_with_candidates]. Ignored by [--apply-fixes]. *)
 }
 
 val mk_result :
@@ -33,6 +40,16 @@ val mk_result_with_fix :
   result
 (** Construct a [result] carrying a non-empty edit list. Raises
     [Invalid_argument] on an empty [fix] list (use {!mk_result}). *)
+
+val mk_result_with_candidates :
+  id:string ->
+  severity:severity ->
+  message:string ->
+  count:int ->
+  candidates:candidate_fix list ->
+  result
+(** Construct a [result] carrying Bucket-C candidate fixes ([fix = None]).
+    Raises [Invalid_argument] on an empty [candidates] list (use {!mk_result}). *)
 
 type rule = {
   id : string;

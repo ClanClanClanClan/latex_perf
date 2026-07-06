@@ -3083,9 +3083,12 @@ let r_spc_018 : rule =
     let s_stripped = strip_math_segments s in
     let rec loop i acc =
       try
-        let _mr, _ = Re_compat.search_forward re s_stripped i in
-        ignore _mr;
-        loop (Re_compat.match_end _mr) (acc + 1)
+        let mr, _ = Re_compat.search_forward re s_stripped i in
+        let b = Re_compat.match_beginning mr in
+        let acc =
+          if is_sentence_end_period s_stripped b then acc + 1 else acc
+        in
+        loop (Re_compat.match_end mr) acc
       with Not_found -> acc
     in
     let cnt = loop 0 0 in
@@ -3098,6 +3101,7 @@ let r_spc_018 : rule =
           let e = Re_compat.match_end mr in
           let acc =
             if is_in_exempt_range exempt b then acc
+            else if not (is_sentence_end_period s b) then acc
             else Cst_edit.insert ~at:(b + 1) " " :: acc
           in
           collect e acc

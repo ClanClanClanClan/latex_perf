@@ -739,6 +739,149 @@ let has_cyrillic_context ?(window = 32) (s : string) (off : int) : bool =
   in
   scan lo
 
+(* -- Conservative sentence-boundary detection (Bucket-B pilot) --
+   [is_sentence_end_period s i] decides whether the ASCII `.` at byte offset [i]
+   is a GENUINE end-of-sentence period, as opposed to an abbreviation dot, an
+   initial, a decimal point, or part of an ellipsis. Deliberately CONSERVATIVE:
+   returns [false] when unsure. *)
+let sentence_abbreviations : (string, unit) Hashtbl.t =
+  let tbl = Hashtbl.create 64 in
+  List.iter
+    (fun w -> Hashtbl.replace tbl w ())
+    [
+      "e.g";
+      "i.e";
+      "etc";
+      "cf";
+      "vs";
+      "al";
+      "viz";
+      "resp";
+      "approx";
+      "fig";
+      "eq";
+      "ch";
+      "sec";
+      "tab";
+      "no";
+      "pp";
+      "vol";
+      "ed";
+      "eds";
+      "dr";
+      "mr";
+      "mrs";
+      "ms";
+      "prof";
+      "st";
+      "jr";
+      "sr";
+      "inc";
+      "ltd";
+      "co";
+      "corp";
+      "univ";
+      "dept";
+      "e";
+      "i";
+      "w";
+      (* v27.1.15: months, titles, plurals, scholarly abbrevs (verify-driven) *)
+      "jan";
+      "feb";
+      "mar";
+      "apr";
+      "jun";
+      "jul";
+      "aug";
+      "sep";
+      "sept";
+      "oct";
+      "nov";
+      "dec";
+      "gen";
+      "sen";
+      "gov";
+      "col";
+      "capt";
+      "lt";
+      "sgt";
+      "rev";
+      "rep";
+      "mt";
+      "ave";
+      "rd";
+      "hon";
+      "pres";
+      "supt";
+      "adm";
+      "cmdr";
+      "messrs";
+      "op";
+      "cit";
+      "ibid";
+      "seq";
+      "ff";
+      "ca";
+      "circa";
+      "chap";
+      "par";
+      "sect";
+      "art";
+      "div";
+      "nos";
+      "vols";
+      "figs";
+      "eqs";
+      "chaps";
+      "secs";
+      "min";
+      "max";
+    ];
+  tbl
+
+let is_ascii_letter (c : char) : bool =
+  (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+
+let is_ascii_digit_c (c : char) : bool = c >= '0' && c <= '9'
+
+let is_sentence_end_period (s : string) (i : int) : bool =
+  let n = String.length s in
+  if i < 0 || i >= n || s.[i] <> '.' then false
+  else if (i + 1 < n && s.[i + 1] = '.') || (i > 0 && s.[i - 1] = '.') then
+    false
+  else if
+    i > 0
+    && i + 1 < n
+    && is_ascii_digit_c s.[i - 1]
+    && is_ascii_digit_c s.[i + 1]
+  then false
+  else if i = 0 || not (is_ascii_letter s.[i - 1]) then false
+  else
+    let rec back j =
+      if j > 0 && is_ascii_letter s.[j - 1] then back (j - 1) else j
+    in
+    let ws = back i in
+    let word = String.sub s ws (i - ws) in
+    let word_lc = String.lowercase_ascii word in
+    if String.length word < 2 then false
+    else if Hashtbl.mem sentence_abbreviations word_lc then false
+    else if word.[0] >= 'A' && word.[0] <= 'Z' then
+      (* the word ending at the period starts with a capital: a proper noun, an
+         initialism (Ph.D), or a dotted identifier (System.Console) — never
+         auto-treat as a sentence end. Conservative: costs recall on sentences
+         that end in a proper noun, but eliminates the identifier/initialism
+         false-positive class. *)
+      false
+    else
+      let rec next j =
+        if j >= n then true
+        else if s.[j] = ' ' || s.[j] = '\t' then next (j + 1)
+        else
+          let c = s.[j] in
+          c >= 'A' && c <= 'Z'
+      in
+      next (i + 1)
+
 (* Tokenize LaTeX command names (with offsets) using Tokenizer_lite *)
 let command_tokens (s : string) : (string * int) list =
   let module T = Tokenizer_lite in

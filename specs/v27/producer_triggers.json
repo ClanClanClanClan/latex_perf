@@ -4335,14 +4335,14 @@
  "SPC-018": {
   "variants": [
    {
-    "expected_hex": "456e642e204e6578742073656e74656e636520686572650a",
+    "expected_hex": "456e642e4e6578742073656e74656e636520686572650a",
     "hex": "456e642e4e6578742073656e74656e636520686572650a",
     "kind": "mutate",
     "note": "base (insert space after .[A-Z])",
     "pilot": false
    },
    {
-    "expected_hex": "4f6e652e2054776f20616e642074687265652e20466f75720a",
+    "expected_hex": "4f6e652e54776f20616e642074687265652e20466f75720a",
     "hex": "4f6e652e54776f20616e642074687265652e466f75720a",
     "kind": "mutate",
     "note": "doubled",

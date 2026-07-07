@@ -2441,10 +2441,39 @@ let r_spc_017 : rule =
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-017" ~severity:Info
-           ~message:"Missing thin space before units (e.g. 5 cm)" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C CANDIDATE: insert a thin space \, between the number and the
+         unit (e.g. `5cm` -> `5\,cm`). The diagnostic COUNT is computed on the
+         math-stripped copy [s_text] (whose offsets do NOT map back to [s]), so
+         candidates are produced by RE-searching the ORIGINAL [s] and dropping
+         any that fall in a protected region (incl. math) via
+         [candidates_drop_exempt]. match_beginning is the digit; the unit starts
+         one byte later, so the insertion point is match_beginning + 1. *)
+      let cands = ref [] in
+      let j = ref 0 in
+      (try
+         while true do
+           let mr, _ = Re_compat.search_forward re s !j in
+           let mb = Re_compat.match_beginning mr in
+           cands :=
+             {
+               c_edits = [ Cst_edit.insert ~at:(mb + 1) "\\," ];
+               c_label = "Insert a thin space \\, between the number and unit";
+             }
+             :: !cands;
+           j := Re_compat.match_end mr
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SPC-017" ~severity:Info
+             ~message:"Missing thin space before units (e.g. 5 cm)" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SPC-017" ~severity:Info
+             ~message:"Missing thin space before units (e.g. 5 cm)" ~count:!cnt
+             ~candidates))
     else None
   in
   { id = "SPC-017"; run; languages = [] }
@@ -3365,6 +3394,7 @@ let r_spc_023 : rule =
     (* U+00A0 = C2 A0 *)
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 1 do
       if Char.code s.[!i] = 0xC2 && Char.code s.[!i + 1] = 0xA0 then (
@@ -3395,15 +3425,35 @@ let r_spc_023 : rule =
           && (Char.code s.[!i + 3] = 0xAB || Char.code s.[!i + 3] = 0xBB)
         in
         if not (before_french || after_french || before_guill || after_guill)
-        then incr cnt;
+        then (
+          incr cnt;
+          (* Bucket-C CANDIDATE: replace the 2-byte U+00A0 (C2 A0) with a plain
+             ASCII space. Offset is absolute in the ORIGINAL source. *)
+          cands :=
+            {
+              c_edits =
+                [
+                  Cst_edit.make ~start_offset:!i ~end_offset:(!i + 2)
+                    ~replacement:" ";
+                ];
+              c_label = "Replace hard space U+00A0 with an ordinary space";
+            }
+            :: !cands);
         i := !i + 2)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-023" ~severity:Info
-           ~message:"Hard space U+00A0 outside French punctuation context"
-           ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SPC-023" ~severity:Info
+             ~message:"Hard space U+00A0 outside French punctuation context"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SPC-023" ~severity:Info
+             ~message:"Hard space U+00A0 outside French punctuation context"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "SPC-023"; run; languages = [] }

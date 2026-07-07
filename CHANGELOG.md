@@ -2,6 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.25] — 2026-07-08
+
+**CP-2b — 6 structural/misc candidates + CLI output hardening.** Wire TAB-006
+(collapse duplicate `\hline`), TAB-005 (remove tabular `|`), DOC-001 (insert
+`\maketitle`), TIKZ-009 (load `arrows.meta`), SPC-017 (thin space before unit),
+SPC-023 (U+00A0 → space) as Bucket-C candidates (produces_fix false, 166
+producers, never auto-apply). TIKZ-010/VERB-004/DOC-005/VERB-016 deferred
+(no safe 1:1 edit / verbatim-editing / metadata). Adversarially verified
+(correct-worktree, sound). **Fix:** `--list-candidate-fixes` now escapes
+newline/tab/CR in an edit replacement so an inserted `\n\maketitle` cannot split
+the machine-readable EDIT record. candidate_fixes 120 cases.
+
+**Known issue (queued follow-up):** shipped text/typography producers (TYPO-052
+`<`/`>`, en-dash) rewrite bytes inside `tikzpicture` bodies (`\draw[->]` →
+`\draw[-\textgreater{}]`), which corrupts valid TikZ — `tikzpicture` needs to be
+a protected region for those producers. A dedicated producer-safety fix follows.
+
 ## [v27.1.24] — 2026-07-07
 
 **CP-2a — 7 math spacing/differential candidates.** Diagnose-only math rules now

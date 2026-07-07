@@ -607,12 +607,52 @@ let r_typo_011 : rule =
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-011" ~severity:Info
-           ~message:
-             {|Missing thin space (\,) before differential d in integrals|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): insert a thin space `\,` before the
+         differential `d` in an integral (`\int f(x)dx` -> `\int f(x)\,dx`). The
+         needle `\int[^}]*[^\\,]d[a-z]` ends in `d[a-z]`, so the `d` byte is at
+         `match_end - 2`; the byte before it is at `match_end - 3`. If that byte
+         is a space it is REPLACED by `\,` (tight result); otherwise `\,` is
+         inserted. Defensively gated to real math ranges. `\,` is a control
+         symbol, so it never glues onto the following `d`. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      let j = ref 0 in
+      (try
+         while true do
+           let mr, _ = Re_compat.search_forward re s !j in
+           let e = Re_compat.match_end mr in
+           let d_off = e - 2 in
+           (if d_off >= 0 && s.[d_off] = 'd' && is_in_math_range ranges d_off
+            then
+              let prev_is_space = d_off > 0 && s.[d_off - 1] = ' ' in
+              let start_off = if prev_is_space then d_off - 1 else d_off in
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:start_off ~end_offset:d_off
+                        ~replacement:"\\,";
+                    ];
+                  c_label = "Insert a thin space \\, before the differential";
+                }
+                :: !cands);
+           j := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TYPO-011" ~severity:Info
+             ~message:
+               {|Missing thin space (\,) before differential d in integrals|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TYPO-011" ~severity:Info
+             ~message:
+               {|Missing thin space (\,) before differential d in integrals|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "TYPO-011"; run; languages = [] }

@@ -2,6 +2,17 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.24] — 2026-07-07
+
+**CP-2a — 7 math spacing/differential candidates.** Diagnose-only math rules now
+emit reviewable candidates (produces_fix false, 166 producers, never auto-apply):
+MATH-034 / TYPO-011 (insert `\,` before an integral differential), MATH-042
+(`\,` between number and unit), MATH-031 (`\;` before `\text`), MATH-068 (`\,`
+around `\mid`), MATH-013 / MATH-060 (differential `d` → `\mathrm{d}`). MATH-049
+deferred (aggregate `\times` count has no 1:1 offset). Absolute-offset gated via
+`find_math_ranges` + `candidates_drop_vcu_exempt`. Adversarially verified
+(correct-worktree, sound). candidate_fixes 113 cases; coverage 166×1013 green.
+
 ## [v27.1.23] — 2026-07-07
 
 **CP-1 candidate batch (9 more) + fix a corrupting candidate.** Nine diagnose-only

@@ -524,4 +524,51 @@ let () =
         (fires "FR-008" s && candidates_of "FR-008" s = [])
         (tag ^ ": exempt (comment) but still fires"));
 
+  let m36 = "$\\mathrm{x}$" in
+  run "MATH-036 lists an unwrap candidate" (fun tag ->
+      expect
+        (has_label "MATH-036" m36
+           "Drop superfluous \\mathrm around a single letter")
+        (tag ^ ": label"));
+  run "MATH-036 candidate edit unwraps to the bare letter" (fun tag ->
+      match
+        edit_of_label "MATH-036" m36
+          "Drop superfluous \\mathrm around a single letter"
+      with
+      | Some (b, e, r) ->
+          expect (b = 1 && e = 11 && r = "x") (tag ^ ": edit [1,11)->x")
+      | None -> expect false (tag ^ ": expected one edit"));
+  run "MATH-036 candidate dropped inside verbatim" (fun tag ->
+      expect
+        (candidates_of "MATH-036" "\\verb|$\\mathrm{x}$|" = [])
+        (tag ^ ": vcu-dropped"));
+  let m50 = "$\\hat{abc}$" in
+  run "MATH-050 lists a widehat candidate" (fun tag ->
+      expect
+        (has_label "MATH-050" m50 "Use \\widehat for a multi-letter accent")
+        (tag ^ ": label"));
+  run "MATH-050 candidate edit rewrites the accent prefix" (fun tag ->
+      match
+        edit_of_label "MATH-050" m50 "Use \\widehat for a multi-letter accent"
+      with
+      | Some (b, e, r) ->
+          expect
+            (b = 1 && e = 5 && r = "\\widehat")
+            (tag ^ ": edit [1,5)->\\widehat")
+      | None -> expect false (tag ^ ": expected one edit"));
+  let mbf = "$\\mathbf{42}$" in
+  run "MATH-048 lists an unwrap-digits candidate" (fun tag ->
+      match edit_of_label "MATH-048" mbf "Drop \\mathbf boldface on digits" with
+      | Some (b, e, r) ->
+          expect (b = 1 && e = 12 && r = "42") (tag ^ ": edit [1,12)->42")
+      | None -> expect false (tag ^ ": expected one edit"));
+  run "MATH-087 also lists the unwrap-digits candidate" (fun tag ->
+      expect
+        (has_label "MATH-087" mbf "Drop \\mathbf boldface on digits")
+        (tag ^ ": label"));
+  run "MATH-048 candidate dropped inside verbatim" (fun tag ->
+      expect
+        (candidates_of "MATH-048" "\\verb|$\\mathbf{42}$|" = [])
+        (tag ^ ": vcu-dropped"));
+
   finalise "candidate_fixes"

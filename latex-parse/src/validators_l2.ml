@@ -4639,11 +4639,22 @@ let r_lang_010 : rule =
    LAY-010..014 above.
    ══════════════════════════════════════════════════════════════════════ *)
 
-(* CJK-009: Western space between CJK glyphs *)
+(* CJK-009: Western space between CJK glyphs.
+
+   Fix producer (v27.1.21): delete the single ASCII space wedged between two
+   adjacent CJK ideographs (mirror of the shipped math-mode CJK-008/015
+   deletions, applied to inter-word spacing in body text). Only a LONE space is
+   removed — the detector already ignores `CJK␣␣CJK` (the byte after the space
+   must itself be a CJK lead), so no run is collapsed. Idempotent: once the
+   space is gone the two glyphs are adjacent and no longer match. exempt-guarded
+   via [mk_result_with_fix_exempt] so a space inside verbatim / comment / url /
+   math (where the byte is intentional) is never deleted; the diagnostic count
+   is unchanged. *)
 let r_cjk_009 : rule =
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
+    let edits = ref [] in
     let i = ref 0 in
     while !i < len - 6 do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -4653,14 +4664,20 @@ let r_cjk_009 : rule =
            let next = after_cjk + 1 in
            if next + 2 < len then
              let n0 = Char.code (String.unsafe_get s next) in
-             if n0 >= 0xe4 && n0 <= 0xe9 then incr cnt);
+             if n0 >= 0xe4 && n0 <= 0xe9 then (
+               incr cnt;
+               edits :=
+                 Cst_edit.delete ~start_offset:after_cjk
+                   ~end_offset:(after_cjk + 1)
+                 :: !edits));
         i := !i + 3)
       else i := !i + 1
     done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"CJK-009" ~severity:Info
-           ~message:"Western inter-word space between CJK glyphs" ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"CJK-009" ~severity:Info
+           ~message:"Western inter-word space between CJK glyphs" ~count:!cnt
+           ~fix:(List.rev !edits))
     else None
   in
   mk_rule "CJK-009" run

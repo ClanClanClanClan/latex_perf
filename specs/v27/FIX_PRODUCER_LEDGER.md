@@ -12,15 +12,15 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 159 (~24%)
-- **Pending**: 497
+- **Shipped**: 166 (~25%)
+- **Pending**: 490
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 465 | 159 | 306 |
+| **A**  | Mechanical, safe everywhere       | 465 | 166 | 299 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 84 | 0 | 84 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
@@ -57,8 +57,8 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | BIB | 17 | 2 | 15 | 0 | 2 | 0 | 15 | 0 |
 | CE | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | CHAR | 22 | 12 | 10 | 0 | 22 | 0 | 0 | 0 |
-| CHEM | 10 | 2 | 8 | 0 | 10 | 0 | 0 | 0 |
-| CJK | 16 | 8 | 8 | 0 | 16 | 0 | 0 | 0 |
+| CHEM | 10 | 3 | 7 | 0 | 10 | 0 | 0 | 0 |
+| CJK | 16 | 9 | 7 | 0 | 16 | 0 | 0 | 0 |
 | CMD | 17 | 0 | 17 | 0 | 17 | 0 | 0 | 0 |
 | COL | 7 | 0 | 7 | 0 | 7 | 0 | 0 | 0 |
 | CS | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
@@ -80,7 +80,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | L3 | 11 | 0 | 11 | 0 | 0 | 0 | 0 | 11 |
 | LANG | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
 | LAY | 27 | 0 | 27 | 0 | 0 | 0 | 27 | 0 |
-| MATH | 108 | 17 | 91 | 0 | 108 | 0 | 0 | 0 |
+| MATH | 108 | 19 | 89 | 0 | 108 | 0 | 0 | 0 |
 | META | 4 | 0 | 4 | 0 | 0 | 0 | 4 | 0 |
 | MOD | 18 | 0 | 18 | 0 | 0 | 0 | 18 | 0 |
 | NL | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
@@ -94,9 +94,9 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | RO | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
 | RTL | 5 | 0 | 5 | 0 | 5 | 0 | 0 | 0 |
 | RU | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 0 |
-| SCRIPT | 22 | 6 | 16 | 0 | 22 | 0 | 0 | 0 |
+| SCRIPT | 22 | 8 | 14 | 0 | 22 | 0 | 0 | 0 |
 | SPC | 35 | 24 | 11 | 0 | 35 | 0 | 0 | 0 |
-| STRUCT | 5 | 2 | 3 | 0 | 5 | 0 | 0 | 0 |
+| STRUCT | 5 | 3 | 2 | 0 | 5 | 0 | 0 | 0 |
 | STYLE | 49 | 4 | 45 | 0 | 4 | 45 | 0 | 0 |
 | SYS | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |
 | TAB | 16 | 0 | 16 | 0 | 16 | 0 | 0 | 0 |
@@ -156,7 +156,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `CHEM-001` | CHEM | **A** | tentative | pending |
 | `CHEM-002` | CHEM | **A** | tentative | pending |
 | `CHEM-003` | CHEM | **A** | tentative | pending |
-| `CHEM-004` | CHEM | **A** | tentative | pending |
+| `CHEM-004` | CHEM | **A** | confirmed | shipped in v27.1.21 |
 | `CHEM-005` | CHEM | **A** | confirmed | shipped in v27.1.10 |
 | `CHEM-006` | CHEM | **A** | tentative | pending |
 | `CHEM-007` | CHEM | **A** | tentative | pending |
@@ -171,7 +171,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `CJK-006` | CJK | **A** | confirmed | shipped in v27.1.12 |
 | `CJK-007` | CJK | **A** | tentative | pending |
 | `CJK-008` | CJK | **A** | confirmed | shipped in v27.0.64 |
-| `CJK-009` | CJK | **A** | tentative | pending |
+| `CJK-009` | CJK | **A** | confirmed | shipped in v27.1.21 |
 | `CJK-010` | CJK | **A** | confirmed | shipped in v27.0.62 |
 | `CJK-011` | CJK | **A** | tentative | pending |
 | `CJK-012` | CJK | **A** | tentative | pending |
@@ -420,7 +420,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-069` | MATH | **A** | tentative | pending |
 | `MATH-070` | MATH | **A** | tentative | pending |
 | `MATH-071` | MATH | **A** | tentative | pending |
-| `MATH-072` | MATH | **A** | tentative | pending |
+| `MATH-072` | MATH | **A** | confirmed | shipped in v27.1.21 |
 | `MATH-073` | MATH | **A** | tentative | pending |
 | `MATH-074` | MATH | **A** | tentative | pending |
 | `MATH-075` | MATH | **A** | tentative | pending |
@@ -439,7 +439,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `MATH-088` | MATH | **A** | tentative | pending |
 | `MATH-089` | MATH | **A** | tentative | pending |
 | `MATH-090` | MATH | **A** | tentative | pending |
-| `MATH-091` | MATH | **A** | tentative | pending |
+| `MATH-091` | MATH | **A** | confirmed | shipped in v27.1.21 |
 | `MATH-092` | MATH | **A** | tentative | pending |
 | `MATH-093` | MATH | **A** | tentative | pending |
 | `MATH-094` | MATH | **A** | tentative | pending |
@@ -566,10 +566,10 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SCRIPT-015` | SCRIPT | **A** | tentative | pending |
 | `SCRIPT-016` | SCRIPT | **A** | confirmed | shipped in v27.1.3 |
 | `SCRIPT-017` | SCRIPT | **A** | tentative | pending |
-| `SCRIPT-018` | SCRIPT | **A** | tentative | pending |
+| `SCRIPT-018` | SCRIPT | **A** | confirmed | shipped in v27.1.21 |
 | `SCRIPT-019` | SCRIPT | **A** | confirmed | shipped in v27.1.5 |
 | `SCRIPT-020` | SCRIPT | **A** | tentative | pending |
-| `SCRIPT-021` | SCRIPT | **A** | tentative | pending |
+| `SCRIPT-021` | SCRIPT | **A** | confirmed | shipped in v27.1.21 |
 | `SCRIPT-022` | SCRIPT | **A** | tentative | pending |
 | `SPC-001` | SPC | **A** | tentative | pending |
 | `SPC-002` | SPC | **A** | confirmed | shipped in v26.2.1 |
@@ -608,7 +608,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `SPC-035` | SPC | **A** | confirmed | shipped in v27.0.56 |
 | `STRUCT-001` | STRUCT | **A** | confirmed | shipped in v26.3.0 |
 | `STRUCT-002` | STRUCT | **A** | confirmed | shipped in v26.3.0 |
-| `STRUCT-003` | STRUCT | **A** | tentative | pending |
+| `STRUCT-003` | STRUCT | **A** | confirmed | shipped in v27.1.21 |
 | `STRUCT-004` | STRUCT | **A** | tentative | pending |
 | `STRUCT-005` | STRUCT | **A** | tentative | pending |
 | `STYLE-001` | STYLE | **B** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 159 of 465 Bucket A
+  **TRACKING** — 166 of 465 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

@@ -787,6 +787,31 @@
    }
   ]
  },
+ "CHEM-004": {
+  "variants": [
+   {
+    "expected_hex": "244e615e7b2b7d78240a",
+    "hex": "244e615e2b78240a",
+    "kind": "mutate",
+    "note": "base (charge ^+ -> ^{+})",
+    "pilot": false
+   },
+   {
+    "expected_hex": "24436c5e7b2d7d79240a",
+    "hex": "24436c5e2d79240a",
+    "kind": "mutate",
+    "note": "minus charge ^- -> ^{-}",
+    "pilot": false
+   },
+   {
+    "expected_hex": "5c766572627c244e615e2b247c0a",
+    "hex": "5c766572627c244e615e2b247c0a",
+    "kind": "preserve",
+    "note": "in-verbatim (vcu-exempt)",
+    "pilot": false
+   }
+  ]
+ },
  "CHEM-005": {
   "variants": [
    {
@@ -1133,6 +1158,31 @@
     "hex": "25202461e3808062240a",
     "kind": "preserve",
     "note": "in-comment (vcu-exempt)",
+    "pilot": false
+   }
+  ]
+ },
+ "CJK-009": {
+  "variants": [
+   {
+    "expected_hex": "e4b8ade696870a",
+    "hex": "e4b8ad20e696870a",
+    "kind": "mutate",
+    "note": "base (ASCII space between CJK glyphs)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "78e4b8ade69687790a",
+    "hex": "78e4b8ad20e69687790a",
+    "kind": "mutate",
+    "note": "embedded in body text",
+    "pilot": false
+   },
+   {
+    "expected_hex": "2520e4b8ad20e696870a",
+    "hex": "2520e4b8ad20e696870a",
+    "kind": "preserve",
+    "note": "in-comment (exempt)",
     "pilot": false
    }
   ]
@@ -2951,6 +3001,38 @@
    }
   ]
  },
+ "MATH-072": {
+  "variants": [
+   {
+    "expected_hex": "245c646574240a",
+    "hex": "245c6f70657261746f726e616d657b6465747d240a",
+    "kind": "mutate",
+    "note": "base (\\operatorname{det} -> \\det)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "245c6465742078240a",
+    "hex": "245c6f70657261746f726e616d657b6465747d78240a",
+    "kind": "mutate",
+    "note": "letter-adjacent: space inserted (\\det x, no glue)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "245c6f70657261746f726e616d657b6172676d61787d240a",
+    "hex": "245c6f70657261746f726e616d657b6172676d61787d240a",
+    "kind": "preserve",
+    "note": "unknown operator: not rewritten",
+    "pilot": false
+   },
+   {
+    "expected_hex": "2520245c6f70657261746f726e616d657b6465747d240a",
+    "hex": "2520245c6f70657261746f726e616d657b6465747d240a",
+    "kind": "preserve",
+    "note": "in-comment (vcu-exempt)",
+    "pilot": false
+   }
+  ]
+ },
  "MATH-078": {
   "variants": [
    {
@@ -3099,6 +3181,31 @@
     "hex": "5c766572627c61e28892627c0a",
     "kind": "preserve",
     "note": "in-verbatim (exempt)",
+    "pilot": false
+   }
+  ]
+ },
+ "MATH-091": {
+  "variants": [
+   {
+    "expected_hex": "245c646574240a",
+    "hex": "245c6f70657261746f726e616d657b6465747d240a",
+    "kind": "mutate",
+    "note": "base (\\operatorname{det} -> \\det)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "245c6c696d2078240a",
+    "hex": "245c6f70657261746f726e616d657b6c696d7d78240a",
+    "kind": "mutate",
+    "note": "letter-adjacent: space inserted (\\lim x, no glue)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "5c766572627c245c6f70657261746f726e616d657b6465747d247c0a",
+    "hex": "5c766572627c245c6f70657261746f726e616d657b6465747d247c0a",
+    "kind": "preserve",
+    "note": "in-verbatim (vcu-exempt)",
     "pilot": false
    }
   ]
@@ -3896,6 +4003,31 @@
    }
   ]
  },
+ "SCRIPT-018": {
+  "variants": [
+   {
+    "expected_hex": "24785e7b5c636972637d240a",
+    "hex": "24785e5c63697263240a",
+    "kind": "mutate",
+    "note": "base (unbraced ^\\circ in inline math)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "24785e5c636972636d240a",
+    "hex": "24785e5c636972636d240a",
+    "kind": "preserve",
+    "note": "letter-adjacent guard: \\circ+letter not braced",
+    "pilot": false
+   },
+   {
+    "expected_hex": "5c766572627c24785e5c63697263247c0a",
+    "hex": "5c766572627c24785e5c63697263247c0a",
+    "kind": "preserve",
+    "note": "in-verbatim (vcu-exempt)",
+    "pilot": false
+   }
+  ]
+ },
  "SCRIPT-019": {
   "variants": [
    {
@@ -3945,6 +4077,31 @@
     "hex": "5c766572627c24782727247c0a",
     "kind": "preserve",
     "note": "in-verbatim (vcu-exempt)",
+    "pilot": false
+   }
+  ]
+ },
+ "SCRIPT-021": {
+  "variants": [
+   {
+    "expected_hex": "24615e7b637d5f7b627d240a",
+    "hex": "24615f7b627d5e7b637d240a",
+    "kind": "mutate",
+    "note": "base (reorder _{b}^{c} -> ^{c}_{b})",
+    "pilot": false
+   },
+   {
+    "expected_hex": "24615e7b632d317d5f7b622b317d240a",
+    "hex": "24615f7b622b317d5e7b632d317d240a",
+    "kind": "mutate",
+    "note": "braced content preserved through swap",
+    "pilot": false
+   },
+   {
+    "expected_hex": "252024615f7b627d5e7b637d240a",
+    "hex": "252024615f7b627d5e7b637d240a",
+    "kind": "preserve",
+    "note": "in-comment (exempt)",
     "pilot": false
    }
   ]
@@ -5015,6 +5172,31 @@
     "hex": "5c626567696e7b766572626174696d7d0a5c73656374696f6e7b7d0a5c656e647b766572626174696d7d0a",
     "kind": "preserve",
     "note": "in-verbatim",
+    "pilot": false
+   }
+  ]
+ },
+ "STRUCT-003": {
+  "variants": [
+   {
+    "expected_hex": "6120620a",
+    "hex": "6109620a",
+    "kind": "mutate",
+    "note": "base (tab -> single space)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "5c626567696e7b766572626174696d7d0a6109620a5c656e647b766572626174696d7d0a",
+    "hex": "5c626567696e7b766572626174696d7d0a6109620a5c656e647b766572626174696d7d0a",
+    "kind": "preserve",
+    "note": "in-verbatim (exempt; VERB-002 owns these)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "25206109620a",
+    "hex": "25206109620a",
+    "kind": "preserve",
+    "note": "in-comment (exempt)",
     "pilot": false
    }
   ]

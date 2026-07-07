@@ -764,7 +764,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "CHEM-005",
@@ -1006,7 +1006,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "CJK-010",
@@ -5334,7 +5334,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-073",
@@ -5676,7 +5676,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "MATH-092",
@@ -7794,7 +7794,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SCRIPT-019",
@@ -7842,7 +7842,7 @@
       "conflicts_with": [],
       "fix_scope": "local",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "SCRIPT-022",
@@ -8478,7 +8478,7 @@
       "conflicts_with": [],
       "fix_scope": "document",
       "project_scope": "lp_core_or_extended",
-      "produces_fix": null
+      "produces_fix": true
     },
     {
       "rule_id": "STRUCT-004",

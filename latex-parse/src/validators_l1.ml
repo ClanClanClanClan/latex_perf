@@ -1438,8 +1438,35 @@ let l1_script_017_rule : rule =
   { id = "SCRIPT-017"; run; languages = [] }
 
 (* SCRIPT-018: Degree symbol in superscript without braces — e.g. ^\circ without
-   braces: should be ^{\circ} *)
+   braces: should be ^{\circ}.
+
+   Fix producer (v27.1.21): brace each unbraced `^\circ` (6 bytes) into
+   `^{\circ}` (8 bytes) inside math. Render-identical (a superscript group of a
+   single macro renders the same braced or not). The fix is emitted only when
+   the byte after `\circ` is NOT an ASCII letter, so `^\circledcirc` (a longer
+   macro of which `\circ` is a prefix) is never corrupted; the diagnostic count
+   is unchanged (still tallies every literal `^\circ`). Idempotent: `^{\circ}`
+   contains no `^\circ` substring. vcu-exempt (a `$…$` written inside
+   verbatim/comment is not rewritten). *)
 let l1_script_018_rule : rule =
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let mk_fix_edits s =
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    let needle = "^\\circ" in
+    let nlen = String.length needle in
+    List.filter_map
+      (fun off ->
+        let after = off + nlen in
+        if
+          is_in_math_range ranges off
+          && (after >= n || not (is_letter s.[after]))
+        then
+          Some
+            (Cst_edit.replace ~start_offset:off ~end_offset:after "^{\\circ}")
+        else None)
+      (Validators_l0_typo.find_all_non_overlapping s needle)
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -1459,9 +1486,17 @@ let l1_script_018_rule : rule =
         done)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-018" ~severity:Warning
-           ~message:"Degree symbol in superscript without braces" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-018" ~severity:Warning
+             ~message:"Degree symbol in superscript without braces" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-018"
+             ~severity:Warning
+             ~message:"Degree symbol in superscript without braces" ~count:!cnt
+             ~fix)
     else None
   in
   { id = "SCRIPT-018"; run; languages = [] }
@@ -1607,20 +1642,85 @@ let l1_script_020_rule : rule =
   { id = "SCRIPT-020"; run; languages = [] }
 
 (* SCRIPT-021: Sub-sup order not canonical — a_{b}^{c} vs a^{c}_{b} — flag when
-   a_{...}^{...} is used (canonical is a^{...}_{...} per convention) *)
+   a_{...}^{...} is used (canonical is a^{...}_{...} per convention).
+
+   Fix producer (v27.1.21): reorder a CLEANLY-BRACED `_{B}^{C}` into `^{C}_{B}`
+   inside math. Render-identical (TeX places sub/super scripts on the same
+   nucleus regardless of source order). Only the fully-braced form is rewritten:
+   both groups are located by brace-matching (nesting- and `\{`-escape-aware);
+   the single-char alternative the DIAGNOSTIC also counts (`_b^c`) is left
+   untouched (count is preserved, fix is a strict subset). Idempotent: after the
+   swap the `_{…}` group no longer directly precedes a `^{`. vcu-exempt. *)
 let l1_script_021_rule : rule =
   let re =
     Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
+  (* Index of the `}` matching the `{` at [open_idx], honouring nesting and
+     backslash-escaped braces; None if unbalanced to EOF. *)
+  let match_brace s open_idx =
+    let n = String.length s in
+    let depth = ref 0 in
+    let i = ref open_idx in
+    let res = ref None in
+    while !res = None && !i < n do
+      let c = s.[!i] in
+      let escaped = !i > 0 && s.[!i - 1] = '\\' in
+      (if not escaped then
+         match c with
+         | '{' -> incr depth
+         | '}' ->
+             decr depth;
+             if !depth = 0 then res := Some !i
+         | _ -> ());
+      incr i
+    done;
+    !res
+  in
+  let mk_fix_edits s =
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    List.filter_map
+      (fun off ->
+        (* off = index of `_`; require `_{`, then a matched group, then `^{`,
+           then a second matched group. *)
+        if
+          (not (is_in_math_range ranges off))
+          || off + 1 >= n
+          || s.[off + 1] <> '{'
+        then None
+        else
+          match match_brace s (off + 1) with
+          | None -> None
+          | Some c1 -> (
+              if c1 + 2 >= n || s.[c1 + 1] <> '^' || s.[c1 + 2] <> '{' then None
+              else
+                match match_brace s (c1 + 2) with
+                | None -> None
+                | Some c2 ->
+                    let b = String.sub s (off + 2) (c1 - (off + 2)) in
+                    let c = String.sub s (c1 + 3) (c2 - (c1 + 3)) in
+                    Some
+                      (Cst_edit.replace ~start_offset:off ~end_offset:(c2 + 1)
+                         (Printf.sprintf "^{%s}_{%s}" c b))))
+      (Validators_l0_typo.find_all_non_overlapping s "_{")
   in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-021" ~severity:Warning
-           ~message:"Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})"
-           ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"SCRIPT-021" ~severity:Warning
+             ~message:"Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"SCRIPT-021"
+             ~severity:Warning
+             ~message:"Sub‑sup order not canonical (a_{b}^{c} vs a^{c}_{b})"
+             ~count:!cnt ~fix)
     else None
   in
   { id = "SCRIPT-021"; run; languages = [] }
@@ -2004,17 +2104,55 @@ let l1_chem_003_rule : rule =
   in
   { id = "CHEM-003"; run; languages = [] }
 
-(* CHEM-004: Charge written ^- instead of ^{-} *)
+(* CHEM-004: Charge written ^- instead of ^{-}.
+
+   Fix producer (v27.1.21): brace a single-char charge superscript, rewriting
+   `^-` / `^+` (2 bytes) into `^{-}` / `^{+}` (4 bytes) inside math. The fix is
+   gated to a charge context — the byte before `^` must be an ASCII letter (an
+   element symbol like `H`, or the second letter of `Na`) — matching the
+   diagnostic's `[A-Z][a-z]?` domain and never touching a general math `a^-b`.
+   Render-identical (a one-token superscript renders the same braced or not).
+   Idempotent: `^{-}` contains no `^-`. vcu-exempt. *)
 let l1_chem_004_rule : rule =
   let re = Re_compat.regexp {|[A-Z][a-z]?\^[+-][^}]|} in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let mk_fix_edits s =
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    let edits = ref [] in
+    let i = ref 0 in
+    while !i < n - 1 do
+      if
+        s.[!i] = '^'
+        && (s.[!i + 1] = '-' || s.[!i + 1] = '+')
+        && !i > 0
+        && is_letter s.[!i - 1]
+        && is_in_math_range ranges !i
+      then (
+        let sign = String.make 1 s.[!i + 1] in
+        edits :=
+          Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2)
+            ("^{" ^ sign ^ "}")
+          :: !edits;
+        i := !i + 2)
+      else incr i
+    done;
+    List.rev !edits
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHEM-004" ~severity:Info
-           ~message:"Charge written ^- instead of ^{-}" ~count:!cnt)
+      let fix = mk_fix_edits s in
+      if fix = [] then
+        Some
+          (mk_result ~id:"CHEM-004" ~severity:Info
+             ~message:"Charge written ^- instead of ^{-}" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"CHEM-004" ~severity:Info
+             ~message:"Charge written ^- instead of ^{-}" ~count:!cnt ~fix)
     else None
   in
   { id = "CHEM-004"; run; languages = [] }

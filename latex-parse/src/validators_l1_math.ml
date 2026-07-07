@@ -2615,12 +2615,48 @@ let l1_math_098_rule : rule =
   in
   { id = "MATH-098"; run; languages = [] }
 
+(* Shared fix helper for MATH-072 / MATH-091 (v27.1.21): rewrite each in-math
+   `\operatorname{NAME}` whose NAME is a predefined operator into the dedicated
+   control word `\NAME`. Matches the ORIGINAL source at absolute offsets (gated
+   by [find_math_ranges]); a trailing space is appended by [control_word_repl]
+   when a letter follows, so `\operatorname{det}x` becomes `\det x`, never the
+   undefined `\detx`. Render-identical (both forms typeset an upright operator
+   with operator spacing). Idempotent: the output contains no `\operatorname{`.
+   Callers pass their own operator list so each rule's diagnostic count is left
+   intact; the fix set is a strict subset of the counted occurrences. *)
+let operatorname_fix_edits (s : string) (known_ops : string list) :
+    Cst_edit.t list =
+  let ranges = find_math_ranges s in
+  let needle = "\\operatorname{" in
+  let nlen = String.length needle in
+  List.filter_map
+    (fun off ->
+      if not (is_in_math_range ranges off) then None
+      else
+        let bstart = off + nlen in
+        match
+          try Some (String.index_from s bstart '}') with Not_found -> None
+        with
+        | Some bend when bend > bstart ->
+            let name = String.sub s bstart (bend - bstart) in
+            if List.mem name known_ops then
+              Some
+                (Cst_edit.replace ~start_offset:off ~end_offset:(bend + 1)
+                   (control_word_repl s (bend + 1) ("\\" ^ name)))
+            else None
+        | _ -> None)
+    (Validators_l0_typo.find_all_non_overlapping s needle)
+
 (* MATH-072: \operatorname used for a predefined operator — \operatorname{X}
    where X is a predefined LaTeX function like \det, \lim, \sin etc.; the
    dedicated \X command should be used instead. (The rule deliberately fires on
    KNOWN operators — an UNKNOWN name like \operatorname{argmax} is the correct
    idiom and must NOT fire; an audit briefly misread the old "Unknown ..."
-   message as the spec and inverted the guard — reverted.) *)
+   message as the spec and inverted the guard — reverted.)
+
+   Fix producer (v27.1.21): emits `\operatorname{NAME}` → `\NAME` via
+   [operatorname_fix_edits]; vcu-exempt so a `$…$` written inside verbatim /
+   comment / url is not rewritten. Count/severity/message preserved. *)
 let l1_math_072_rule : rule =
   let known_ops =
     [
@@ -2686,12 +2722,17 @@ let l1_math_072_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-072" ~severity:Warning
-           ~message:
-             "Predefined operator wrapped in \\operatorname; use the dedicated \
-              command"
-           ~count:!cnt)
+      let fix = operatorname_fix_edits s known_ops in
+      let message =
+        "Predefined operator wrapped in \\operatorname; use the dedicated \
+         command"
+      in
+      if fix = [] then
+        Some (mk_result ~id:"MATH-072" ~severity:Warning ~message ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-072" ~severity:Warning
+             ~message ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-072"; run; languages = [] }
@@ -2798,10 +2839,14 @@ let l1_math_091_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-091" ~severity:Info
-           ~message:{|\operatorname{det} used – predefined \det exists|}
-           ~count:!cnt)
+      let fix = operatorname_fix_edits s known_ops in
+      let message = {|\operatorname{det} used – predefined \det exists|} in
+      if fix = [] then
+        Some (mk_result ~id:"MATH-091" ~severity:Info ~message ~count:!cnt)
+      else
+        Some
+          (mk_result_with_fix_vcu_exempt ~src:s ~id:"MATH-091" ~severity:Info
+             ~message ~count:!cnt ~fix)
     else None
   in
   { id = "MATH-091"; run; languages = [] }

@@ -3448,6 +3448,22 @@ let () =
         && apply_all src edits = "\\begin{equation}xy\\end{equation}")
         (tag ^ ": single U+3001 inside equation env deleted"));
 
+  (* v27.1.21: CJK-009 (Western space between two CJK glyphs → delete). *)
+  run "CJK-009 fix: lone space between CJK glyphs deleted" (fun tag ->
+      expect
+        (apply_fix "CJK-009" "\xe4\xb8\xad \xe6\x96\x87"
+        = "\xe4\xb8\xad\xe6\x96\x87")
+        (tag ^ ": U+4E2D space U+6587 -> adjacent"));
+  run "CJK-009 fix: space kept when neighbour is ASCII" (fun tag ->
+      expect
+        (does_not_fire "CJK-009" "\xe4\xb8\xad x")
+        (tag ^ ": CJK space ASCII does not fire"));
+  run "CJK-009 fix: comment space preserved" (fun tag ->
+      expect
+        (apply_fix "CJK-009" "% \xe4\xb8\xad \xe6\x96\x87"
+        = "% \xe4\xb8\xad \xe6\x96\x87")
+        (tag ^ ": exempt comment left byte-identical"));
+
   (* v27.0.66: MATH-053 (Space after \left( in math → delete the space). First
      MATH-family fix producer since v27.0.51 (14 cycles ago). *)
   run "MATH-053 fix: single space after \\left( in $..$ deleted" (fun tag ->

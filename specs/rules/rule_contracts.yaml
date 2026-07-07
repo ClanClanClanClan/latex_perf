@@ -650,7 +650,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: CHEM-005
   layer: L1_Expanded
   execution_class: B
@@ -846,7 +846,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: CJK-010
   layer: L0_Lexer
   execution_class: B
@@ -4379,7 +4379,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-073
   layer: L1_Expanded
   execution_class: B
@@ -4645,7 +4645,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: MATH-092
   layer: L1_Expanded
   execution_class: B
@@ -6368,7 +6368,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-019
   layer: L1_Expanded
   execution_class: B
@@ -6407,7 +6407,7 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: SCRIPT-022
   layer: L1_Expanded
   execution_class: B
@@ -6935,7 +6935,7 @@ rules:
   conflicts_with: []
   fix_scope: document
   project_scope: lp_core_or_extended
-  produces_fix: null
+  produces_fix: true
 - rule_id: STRUCT-004
   layer: L0_Lexer
   execution_class: A

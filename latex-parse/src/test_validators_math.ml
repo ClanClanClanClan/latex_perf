@@ -1869,6 +1869,20 @@ let () =
         (tag ^ ": custom Tr ok"));
   run "MATH-072 clean no operatorname" (fun tag ->
       expect (does_not_fire "MATH-072" "$\\det(A)$") (tag ^ ": none"));
+  (* v27.1.21 fix producer *)
+  run "MATH-072 fix rewrites to control word" (fun tag ->
+      expect
+        (apply_fix "MATH-072" "$\\operatorname{det}(A)$" = "$\\det(A)$")
+        (tag ^ ": operatorname{det} -> \\det"));
+  run "MATH-072 fix inserts space before letter" (fun tag ->
+      expect
+        (apply_fix "MATH-072" "$\\operatorname{det}A$" = "$\\det A$")
+        (tag ^ ": no \\detA glue"));
+  run "MATH-072 fix leaves custom operator" (fun tag ->
+      expect
+        (apply_fix "MATH-072" "$\\operatorname{argmax}$"
+        = "$\\operatorname{argmax}$")
+        (tag ^ ": unknown op unchanged"));
 
   (* ════════════════════════════════════════════════════════════════════
      MATH-074: TikZ \node inside math without math mode key
@@ -1935,6 +1949,15 @@ let () =
         (tag ^ ": custom Tr"));
   run "MATH-091 clean no operatorname" (fun tag ->
       expect (does_not_fire "MATH-091" "$\\sin(x)$") (tag ^ ": none"));
+  (* v27.1.21 fix producer *)
+  run "MATH-091 fix rewrites to control word" (fun tag ->
+      expect
+        (apply_fix "MATH-091" "$\\operatorname{det}(A)$" = "$\\det(A)$")
+        (tag ^ ": operatorname{det} -> \\det"));
+  run "MATH-091 fix inserts space before letter" (fun tag ->
+      expect
+        (apply_fix "MATH-091" "$\\operatorname{lim}x$" = "$\\lim x$")
+        (tag ^ ": no \\limx glue"));
 
   (* ════════════════════════════════════════════════════════════════════
      MATH-092: \sum with explicit limits in inline math

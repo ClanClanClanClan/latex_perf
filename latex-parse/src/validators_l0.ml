@@ -6,14 +6,33 @@ include Validators_l0_typo
    rule-contract drift gate via an is_catalogue_id filter. Renamed to the
    FAMILY-NNN convention so every runtime rule has a contract. *)
 
+(* STRUCT-003: Tab characters found.
+
+   Fix producer (v27.1.21): replace each hard TAB (0x09) with a single space,
+   but ONLY outside protected regions — verbatim / \verb / comment / url / math
+   — via [mk_result_with_fix_exempt], which drops any edit whose offset lands in
+   an exempt range. This is the complement of VERB-002 (which deliberately
+   expands tabs INSIDE verbatim to 4 spaces): STRUCT-003 owns the body-text
+   tabs, VERB-002 owns the verbatim ones, so the two never fight over the same
+   byte. One space per tab keeps byte length identical (offset-stable). The
+   diagnostic count and Error severity are unchanged (every tab is still
+   tallied); only the fix is withheld in protected regions. Idempotent: a space
+   is not a tab. *)
 let no_tabs : rule =
   let run s =
+    let n = String.length s in
     let cnt = ref 0 in
-    String.iter (fun c -> if c = '\t' then incr cnt) s;
+    let edits = ref [] in
+    for i = 0 to n - 1 do
+      if s.[i] = '\t' then (
+        incr cnt;
+        edits :=
+          Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) " " :: !edits)
+    done;
     if !cnt > 0 then
       Some
-        (mk_result ~id:"STRUCT-003" ~severity:Error
-           ~message:"Tab characters found" ~count:!cnt)
+        (mk_result_with_fix_exempt ~src:s ~id:"STRUCT-003" ~severity:Error
+           ~message:"Tab characters found" ~count:!cnt ~fix:(List.rev !edits))
     else None
   in
   { id = "STRUCT-003"; run; languages = [] }

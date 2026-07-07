@@ -283,6 +283,19 @@ let () =
       expect (does_not_fire "SCRIPT-018" "$90^{\\circ}$") (tag ^ ": braced ok"));
   run "SCRIPT-018 clean: no circ" (fun tag ->
       expect (does_not_fire "SCRIPT-018" "$90 + 45$") (tag ^ ": no circ"));
+  (* v27.1.21 fix producer *)
+  run "SCRIPT-018 fix braces ^\\circ" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-018" "$90^\\circ$" = "$90^{\\circ}$")
+        (tag ^ ": ^\\circ -> ^{\\circ}"));
+  run "SCRIPT-018 fix idempotent" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-018" "$90^{\\circ}$" = "$90^{\\circ}$")
+        (tag ^ ": already braced unchanged"));
+  run "SCRIPT-018 fix guards longer macro" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-018" "$x^\\circledcirc$" = "$x^\\circledcirc$")
+        (tag ^ ": \\circ prefix of \\circledcirc not rewritten"));
 
   (* ══════════════════════════════════════════════════════════════════════
      SCRIPT-019: Double prime '' instead of ^{\prime\prime}
@@ -328,6 +341,19 @@ let () =
       expect (does_not_fire "SCRIPT-021" "$x^b_a$") (tag ^ ": canonical order"));
   run "SCRIPT-021 clean: just subscript" (fun tag ->
       expect (does_not_fire "SCRIPT-021" "$x_a$") (tag ^ ": sub only"));
+  (* v27.1.21 fix producer: reorder cleanly-braced _{b}^{c} -> ^{c}_{b} *)
+  run "SCRIPT-021 fix reorders braced groups" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-021" "$a_{b}^{c}$" = "$a^{c}_{b}$")
+        (tag ^ ": _{b}^{c} -> ^{c}_{b}"));
+  run "SCRIPT-021 fix preserves group content" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-021" "$a_{b+1}^{c-1}$" = "$a^{c-1}_{b+1}$")
+        (tag ^ ": nested content kept"));
+  run "SCRIPT-021 fix idempotent" (fun tag ->
+      expect
+        (apply_fix "SCRIPT-021" "$a^{c}_{b}$" = "$a^{c}_{b}$")
+        (tag ^ ": canonical order unchanged"));
 
   (* ══════════════════════════════════════════════════════════════════════
      SCRIPT-022: Superscript prime stacked > 3 in braces

@@ -80,6 +80,20 @@ let () =
       expect (fires "STRUCT-003" "hello\tworld") (tag ^ ": tab character"));
   run "STRUCT-003 clean on spaces only" (fun tag ->
       expect (does_not_fire "STRUCT-003" "hello world") (tag ^ ": no tabs"));
+  (* v27.1.21 fix producer: tab -> single space outside protected regions *)
+  run "STRUCT-003 fix tab to space" (fun tag ->
+      expect
+        (apply_fix "STRUCT-003" "hello\tworld" = "hello world")
+        (tag ^ ": tab replaced by one space"));
+  run "STRUCT-003 fix preserves verbatim tab" (fun tag ->
+      expect
+        (apply_fix "STRUCT-003" "\\begin{verbatim}\na\tb\n\\end{verbatim}"
+        = "\\begin{verbatim}\na\tb\n\\end{verbatim}")
+        (tag ^ ": verbatim tab left for VERB-002"));
+  run "STRUCT-003 fix idempotent" (fun tag ->
+      expect
+        (apply_fix "STRUCT-003" "hello world" = "hello world")
+        (tag ^ ": no tab unchanged"));
 
   (* STRUCT-004: Unmatched braces *)
   run "STRUCT-004 fires on unbalanced opener" (fun tag ->

@@ -39,8 +39,8 @@
   - Implemented: 19
   - Impl: 6
   - Reserved: 16 (future families; do not implement yet)
-- Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 159 as of
-  v27.1.20.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
+- Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 166 as of
+  v27.1.21.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
   `../v27/FIX_PRODUCER_LEDGER.md` for the per-rule shipping ledger.
 
 ## Implementation Guidance (When to Start)

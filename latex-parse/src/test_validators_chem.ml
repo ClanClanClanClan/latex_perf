@@ -64,6 +64,19 @@ let () =
       expect (does_not_fire "CHEM-004" "$Na^{+}$") (tag ^ ": braced +"));
   run "CHEM-004 clean: not in math" (fun tag ->
       expect (does_not_fire "CHEM-004" "Cl^-x outside") (tag ^ ": text"));
+  (* v27.1.21 fix producer *)
+  run "CHEM-004 fix braces minus charge" (fun tag ->
+      expect
+        (apply_fix "CHEM-004" "$Cl^-x$" = "$Cl^{-}x$")
+        (tag ^ ": ^- -> ^{-}"));
+  run "CHEM-004 fix braces plus charge" (fun tag ->
+      expect
+        (apply_fix "CHEM-004" "$Na^+O$" = "$Na^{+}O$")
+        (tag ^ ": ^+ -> ^{+}"));
+  run "CHEM-004 fix idempotent" (fun tag ->
+      expect
+        (apply_fix "CHEM-004" "$Cl^{-}x$" = "$Cl^{-}x$")
+        (tag ^ ": already braced unchanged"));
 
   (* ══════════════════════════════════════════════════════════════════════
      CHEM-005: Chemical arrow typed '->' not \rightarrow

@@ -2,6 +2,25 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.21] — 2026-07-07
+
+**Finishes the mechanical auto-fix track — +7 producers (159 → 166).** A
+fixability audit of the 391 no-fix-token rules found only ~10 genuinely
+auto-fixable rules remaining; this batch ships the 7 clean, corruption-free ones
+(the other 3 need encoding/locale/bib infrastructure):
+
+- **SCRIPT-018** `^\circ` → `^{\circ}` (in math; letter-guarded so `\circledcirc` is safe)
+- **SCRIPT-021** reorder cleanly-braced `_{B}^{C}` → `^{C}_{B}` (render-identical; nesting/escape-aware brace matcher)
+- **CHEM-004** `^-`/`^+` → `^{-}`/`^{+}` charge superscripts
+- **CJK-009** delete a lone ASCII space between two CJK glyphs
+- **STRUCT-003** TAB → space outside protected regions (complements VERB-002; byte-length-preserving)
+- **MATH-072 / MATH-091** `\operatorname{NAME}` → `\NAME` for predefined operators, via `control_word_repl` (no `\detx` glue)
+
+All match the ORIGINAL source, are idempotent, valid-UTF-8, and vcu/exempt-guarded
+(protected regions preserved). Adversarially verified (correct-worktree, verdict
+sound); coverage gate **166 × 1013** variants PASS; differential 0-diff (all
+count/severity/message-preserving); runtest + code-quality green.
+
 ## [v27.1.20] — 2026-07-06
 
 **Bucket-B depth + spec/doc reconciliation.**

@@ -1446,10 +1446,40 @@ let l1_math_048_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-048" ~severity:Info
-           ~message:{|Boldface digits via \mathbf in math – avoid|} ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.22): unwrap `\mathbf{<digits>}` -> `<digits>`
+         (upright digits are already the default; boldface may be intentional). *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let digits = String.sub s (b + 8) (e - b - 9) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [ Cst_edit.make ~start_offset:b ~end_offset:e ~replacement:digits ];
+                  c_label = "Drop \\mathbf boldface on digits";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-048" ~severity:Info
+             ~message:{|Boldface digits via \mathbf in math – avoid|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-048" ~severity:Info
+             ~message:{|Boldface digits via \mathbf in math – avoid|} ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-048"; run; languages = [] }
@@ -2827,10 +2857,40 @@ let l1_math_087_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-087" ~severity:Info
-           ~message:{|Maths uses fake bold via \mathbf on digits|} ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.22): unwrap `\mathbf{<digits>}` -> `<digits>`
+         (upright digits are already the default; boldface may be intentional). *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let digits = String.sub s (b + 8) (e - b - 9) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [ Cst_edit.make ~start_offset:b ~end_offset:e ~replacement:digits ];
+                  c_label = "Drop \\mathbf boldface on digits";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-087" ~severity:Info
+             ~message:{|Maths uses fake bold via \mathbf on digits|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-087" ~severity:Info
+             ~message:{|Maths uses fake bold via \mathbf on digits|} ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-087"; run; languages = [] }

@@ -1018,8 +1018,7 @@ let common_english_words : (string, unit) Hashtbl.t =
       "line lines order group face book eye head heart mind body voice sound";
       "picture story fact truth change effect cause result matter subject topic";
       "issue point view side matter thing things something nothing anything";
-      "everything someone anyone everyone nobody bar foo aside apart alike \
-       alone";
+      "everything someone anyone everyone nobody bar aside apart alike alone";
       "big small large great high low long short old young early late easy hard";
       "true false right wrong open close full empty free whole half main real";
       "clear certain sure common general special particular important necessary";
@@ -1027,6 +1026,30 @@ let common_english_words : (string, unit) Hashtbl.t =
       "simple complex basic final initial current recent future past present";
       "actual usual normal standard typical natural human social global local";
       "physical mental formal informal direct indirect positive negative active";
+      (* v27.1.20 depth: common long-tail nouns/verbs/adverbs (real English
+         only) *)
+      "month months week weeks hour hours minute minutes second seconds moment";
+      "morning evening night day days year years today yesterday tomorrow";
+      "job jobs service services business industry market markets economy";
+      "father mother parent parents family families friend community society";
+      "law laws court government president leader leaders policy policies";
+      "car cars road roads street city town village country nation region";
+      "health medicine doctor patient hospital disease treatment care";
+      "office building room rooms house home floor wall window street";
+      "party event meeting conference session lecture talk presentation";
+      "research analysis experiment observation measurement sample dataset";
+      "teacher student education school class course lesson exam degree";
+      "information knowledge understanding awareness insight evidence detail";
+      "make makes take takes give gives find finds use uses work works call";
+      "need needs feel feels become leave leaves put mean means keep begins";
+      "help talk turn start shows hear play run move live believe hold bring";
+      "happen write provide sit stand lose pay meet include continue learn";
+      "lead understand watch follow stop create speak read allow add spend";
+      "grow open walk win offer remember love consider appear buy wait serve";
+      "die send expect build stay fall cut reach remain apply differ occur";
+      "again once always never often sometimes usually already still soon";
+      "later indeed instead rather quite very really almost enough perhaps";
+      "kind sort type way ways part parts lot piece pieces bit range set";
     ]
   in
   List.iter

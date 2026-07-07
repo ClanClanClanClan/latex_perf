@@ -1,5 +1,7 @@
 # ML Span Extractor for LaTeX Linting — Expert Briefing
 
+> **⚠ SUPERSEDED (historical).** The expert's advice was taken: v2 byte/char ByteClassifier (not SciBERT BIO) with deterministic candidate generation, shipped and proved (proofs/ML/SpanExtractorSound.v). F1=0.9799 is over the candidate-anchored TYPO-rule evaluation set, NOT all 660 rules. See README + ml/RESULTS.md.
+
 ## 1. Project Context
 
 **LaTeX Perfectionist** is a formally verified LaTeX linter. It has 623 rules across 5 layers (lexer, expanded, AST, semantics, style), implemented in OCaml with Coq proofs of correctness. The production rule engine is deterministic and regex/pattern-based.

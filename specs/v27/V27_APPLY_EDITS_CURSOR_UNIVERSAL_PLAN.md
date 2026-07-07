@@ -1,5 +1,8 @@
 # V27_APPLY_EDITS_CURSOR_UNIVERSAL_PLAN — universal cursor-walk = parallel-applier theorem
 
+> **STATUS: ✅ COMPLETE / SHIPPED (tag v27.0.4).** `apply_edits_cursor_eq_parallel` Theorem Qed, closed under the global context. Historical record — not open work.
+
+
 **Goal:** Universally Qed-prove that the Coq cursor-walk applier
 (`apply_edits_cursor`, OCaml-runtime mirror) equals the parallel
 applier (`apply_edits_parallel`, defined via descending sort) for

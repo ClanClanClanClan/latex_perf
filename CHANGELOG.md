@@ -2,6 +2,28 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.20] — 2026-07-06
+
+**Bucket-B depth + spec/doc reconciliation.**
+
+- **Sentence-layer recall:** expanded `common_english_words` (~800 → ~950 curated
+  real English words — long-tail nouns/verbs/adverbs) and removed an errant
+  identifier (`foo`). `is_sentence_end_period` now detects more genuine sentence
+  boundaries (e.g. `car.Next`, `teacher.Many`, `health.Doctors` surface SPC-018
+  candidates) while still excluding code-identifier stems (`github`, `numpy`,
+  `obj`, `config`). SPC-018 remains a candidate (never auto-applies).
+- **Doc drift reconciled** (a strategic spec re-read found the README literally
+  self-contradicting): README H1 and "Success Metrics" header `v27.0.72` →
+  `v27.1.19`; shipped-rule count 643 → 644 + the fix/candidate surface; theorem
+  count corrected (~1,345); v27 milestones added. `check_version_labels` did NOT
+  catch the H1/metrics-header drift — a gap the audit exposed.
+- **Stale plans banticked:** DONE/SHIPPED banners on the four completed plans
+  (APPLY_EDITS_ASSOC v27.0.3, APPLY_EDITS_CURSOR v27.0.4, WS8 v27.0.0, T5_WIRING);
+  UNSTARTED/RE-SCOPE banner on FAITHFUL_SEMANTICS (its `v27.1.0` tag target was
+  consumed by the fix-producer cadence).
+
+159 producers unchanged. Coverage 159×991, runtest, all gates green.
+
 ## [v27.1.19] — 2026-07-06
 
 **Candidate-surface capstone: full adversarial audit + label-only upgrades.**

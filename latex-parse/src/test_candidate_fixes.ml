@@ -801,4 +801,17 @@ let () =
         (fires "SPC-023" s && candidates_of "SPC-023" s = [])
         (tag ^ ": exempt (comment) but still fires"));
 
+  let s010 = "$\\sum\\limits_i x$" in
+  run "SCRIPT-010 lists a drop-\\limits candidate (inline)" (fun tag ->
+      match
+        edit_of_label "SCRIPT-010" s010 "Drop \\limits on an inline operator"
+      with
+      | Some (b, e, r) ->
+          expect (b = 5 && e = 12 && r = "") (tag ^ ": edit [5,12)->''")
+      | None -> expect false (tag ^ ": expected one edit"));
+  run "SCRIPT-010 excludes display math \\limits" (fun tag ->
+      expect
+        (candidates_of "SCRIPT-010" "$$\\sum\\limits_j y$$" = [])
+        (tag ^ ": display excluded"));
+
   finalise "candidate_fixes"

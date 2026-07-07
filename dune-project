@@ -1,5 +1,5 @@
 (lang dune 3.10)
-(version 27.1.25)
+(version 27.1.26)
 (using coq 0.8)
 (name latex-perfectionist)
 (generate_opam_files true)

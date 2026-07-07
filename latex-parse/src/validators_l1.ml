@@ -577,9 +577,46 @@ let l1_delim_008_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"DELIM-008" ~severity:Info
-           ~message:{|Empty \left. … \right. pair — redundant|} ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): the invisible `\left. … \right.` pair
+         wraps only whitespace, so it is redundant — replace the whole span with
+         its (whitespace) inner content, dropping `\left.` (6 bytes) and
+         `\right.` (7 bytes). Review only. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            (* inner content between `\left.` and `\right.` *)
+            let inner = String.sub s (b + 6) (e - b - 13) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:inner;
+                    ];
+                  c_label = "Remove redundant \\left. … \\right. invisible pair";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"DELIM-008" ~severity:Info
+             ~message:{|Empty \left. … \right. pair — redundant|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"DELIM-008" ~severity:Info
+             ~message:{|Empty \left. … \right. pair — redundant|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "DELIM-008"; run; languages = [] }

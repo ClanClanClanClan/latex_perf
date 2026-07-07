@@ -2,6 +2,25 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.23] — 2026-07-07
+
+**CP-1 candidate batch (9 more) + fix a corrupting candidate.** Nine diagnose-only
+MATH/DELIM rules now emit reviewable candidates (produces_fix false, 166 producers
+unchanged, never auto-apply): MATH-096 (`\mathbf`→`\boldsymbol` bold Greek),
+MATH-019 (script reorder), MATH-016/035 (subscript bracing), MATH-047 (superscript
+bracing), MATH-059 (`\bar`→`\overline` group), MATH-045 (upright capital Greek),
+MATH-058 (unwrap nested `\text`), DELIM-008 (redundant `\left.\right.`).
+DELIM-010 deferred (display-only offsets can't be safely located).
+
+**Fix (found during the batch verify): MATH-012 emitted a CORRUPTING candidate** —
+it substring-matched the letter tail inside a Greek control word
+(`\mathbf{\Gamma}` → `\operatorname{amma}`). Added a control-word guard (scan
+back over letters to a leading backslash) so only genuine multi-letter function
+names get the `\operatorname` candidate.
+
+CP-1 (clean render-identical candidates) is now complete: 13 wired. candidate_fixes
+suite 105 cases; coverage 166×1013, runtest, code-quality green.
+
 ## [v27.1.22] — 2026-07-07
 
 **Phase B (candidate pool) begins — 4 clean CP-1 candidates.** Four diagnose-only

@@ -571,4 +571,89 @@ let () =
         (candidates_of "MATH-048" "\\verb|$\\mathbf{42}$|" = [])
         (tag ^ ": vcu-dropped"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Bucket-C batch (v27.1.22): MATH-096/019/016/035/047/059/045/058 + DELIM-008
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m96 = "$\\mathbf{\\alpha}$" in
+  run "MATH-096 lists a \\boldsymbol candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-096" m96
+           "Use \\boldsymbol for bold Greek instead of \\mathbf"
+        = Some (1, 8, "\\boldsymbol"))
+        (tag ^ ": edit [1,8)->\\boldsymbol"));
+  run "MATH-096 candidate dropped inside verbatim" (fun tag ->
+      expect
+        (candidates_of "MATH-096" "\\verb|$\\mathbf{\\alpha}$|" = [])
+        (tag ^ ": vcu-dropped"));
+
+  let m19 = "$x^2_i$" in
+  run "MATH-019 lists a reorder candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-019" m19
+           "Reorder scripts to subscript-before-superscript"
+        = Some (2, 6, "_i^2"))
+        (tag ^ ": edit [2,6)->_i^2"));
+
+  let m16 = "$x_i_j$" in
+  run "MATH-016 lists a brace-nesting candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-016" m16 "Brace nested subscripts as _{...}"
+        = Some (2, 6, "_{i_{j}}"))
+        (tag ^ ": edit [2,6)->_{i_{j}}"));
+
+  let m35 = "$x_{i}_{j}$" in
+  run "MATH-035 lists a combine-subscripts candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-035" m35 "Combine stacked subscripts into _{i,j}"
+        = Some (2, 10, "_{i,j}"))
+        (tag ^ ": edit [2,10)->_{i,j}"));
+
+  let m47 = "$x^i^j$" in
+  run "MATH-047 lists a brace-superscript candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-047" m47 "Brace double superscript as ^{...}"
+        = Some (2, 6, "^{i^{j}}"))
+        (tag ^ ": edit [2,6)->^{i^{j}}"));
+
+  let m59 = "$\\bar{a+b}$" in
+  run "MATH-059 lists an \\overline candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-059" m59
+           "Use \\overline for a bar over a group expression"
+        = Some (1, 5, "\\overline"))
+        (tag ^ ": edit [1,5)->\\overline"));
+
+  let m45 = "$\\mathrm{\\Gamma}+\\Delta$" in
+  run "MATH-045 wraps the BARE capital Greek only" (fun tag ->
+      expect
+        (edit_of_label "MATH-045" m45
+           "Wrap capital Greek in \\mathrm to match upright"
+        = Some (17, 23, "\\mathrm{\\Delta}"))
+        (tag ^ ": edit [17,23)->\\mathrm{\\Delta}"));
+
+  let m58 = "$\\text{\\text{hi}}$" in
+  run "MATH-058 unwraps the inner nested \\text" (fun tag ->
+      match candidates_of "MATH-058" m58 with
+      | [ { c_edits; c_label } ] -> (
+          match Cst_edit.apply_all m58 c_edits with
+          | Ok out ->
+              expect
+                (c_label = "Unwrap redundant nested \\text"
+                && out = "$\\text{hi}$")
+                (tag ^ ": unwrapped to $\\text{hi}$")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate"));
+
+  let d8 = "$\\left. \\right.$" in
+  run "DELIM-008 lists a remove-invisible-pair candidate" (fun tag ->
+      expect
+        (edit_of_label "DELIM-008" d8
+           "Remove redundant \\left. … \\right. invisible pair"
+        = Some (1, 15, " "))
+        (tag ^ ": edit [1,15)-> space"));
+  run "DELIM-008 candidate dropped inside verbatim" (fun tag ->
+      expect
+        (candidates_of "DELIM-008" "\\verb|$\\left. \\right.$|" = [])
+        (tag ^ ": vcu-dropped"));
+
   finalise "candidate_fixes"

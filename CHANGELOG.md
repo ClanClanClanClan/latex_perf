@@ -2,6 +2,19 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.22] — 2026-07-07
+
+**Phase B (candidate pool) begins — 4 clean CP-1 candidates.** Four diagnose-only
+MATH rules now emit reviewable `--list-candidate-fixes` candidates (produces_fix
+stays false, never auto-apply, 166 producers unchanged):
+- **MATH-036** unwrap superfluous `\mathrm{x}` → `x`
+- **MATH-050** `\hat{multi}` → `\widehat{multi}`
+- **MATH-048 / MATH-087** unwrap `\mathbf{<digits>}` → `<digits>`
+
+All absolute-offset gated via `find_math_ranges` + `candidates_drop_vcu_exempt`
+(verbatim/comment dropped); each `--apply-fixes-for` byte-identical. candidate_fixes
+suite 94 cases. First increment of the `V27_2_MASTER_EXECUTION_PLAN` candidate track.
+
 ## [v27.1.21] — 2026-07-07
 
 **Finishes the mechanical auto-fix track — +7 producers (159 → 166).** A

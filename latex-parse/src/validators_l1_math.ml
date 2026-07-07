@@ -408,10 +408,58 @@ let l1_math_013_rule : rule =
             done
           with Not_found -> ())
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-013" ~severity:Info
-           ~message:"Differential d not typeset roman" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): typeset the differential upright,
+         replacing the bare `d` before the integration variable with
+         `\mathrm{d}` (` dx` -> ` \mathrm{d}x`). Collected over the ORIGINAL
+         source and gated to math ranges containing an integral. The `
+         d[letter]` needle requires a space before `d`, so `\mathrm{d}` / `\,d`
+         are already excluded. The replacement ends in `}`, which terminates
+         cleanly before the variable. *)
+      let ranges = find_math_ranges s in
+      let int_ranges =
+        List.filter
+          (fun (a, b) ->
+            let sub = String.sub s a (b - a) in
+            count_substring sub "\\int" > 0
+            || count_substring sub "\\iint" > 0
+            || count_substring sub "\\iiint" > 0
+            || count_substring sub "\\oint" > 0)
+          ranges
+      in
+      let in_int_math off =
+        List.exists (fun (a, b) -> off >= a && off < b) int_ranges
+      in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           let d_off = pos + 1 in
+           if in_int_math d_off then
+             cands :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.make ~start_offset:d_off ~end_offset:(d_off + 1)
+                       ~replacement:"\\mathrm{d}";
+                   ];
+                 c_label = "Typeset the differential d upright with \\mathrm{d}";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-013" ~severity:Info
+             ~message:"Differential d not typeset roman" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-013" ~severity:Info
+             ~message:"Differential d not typeset roman" ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-013"; run; languages = [] }
@@ -985,11 +1033,39 @@ let l1_math_031_rule : rule =
         (* Count \text{ preceded by letter/digit/} without \; \, \quad etc. *)
         cnt := !cnt + count_re_matches re seg)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-031" ~severity:Info
-           ~message:{|Operator spacing error: missing \; before \text|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): insert a medium space `\;` before a
+         `\text{` that abuts a letter/digit/brace in math (`x\text{if}` ->
+         `x\;\text{if}`). The needle is `<char>\text{`; `\;` is inserted just
+         before the backslash. Gated to real math ranges. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           if is_in_math_range ranges pos then
+             cands :=
+               {
+                 c_edits = [ Cst_edit.insert ~at:(pos + 1) "\\;" ];
+                 c_label = "Insert a medium space \\; before \\text";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-031" ~severity:Info
+             ~message:{|Operator spacing error: missing \; before \text|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-031" ~severity:Info
+             ~message:{|Operator spacing error: missing \; before \text|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-031"; run; languages = [] }
@@ -1054,11 +1130,79 @@ let l1_math_034_rule : rule =
             else incr i
           done)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-034" ~severity:Info
-           ~message:{|Spacing before differential in integral missing \,|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): insert a thin space `\,` before the
+         differential `d` in an integral (`\int f(x)dx` -> `\int f(x)\,dx`). If
+         the byte before `d` is a space, that space is REPLACED by `\,` so the
+         result is tight (`f dx` -> `f\,dx`); otherwise `\,` is inserted.
+         Collected over the ORIGINAL source, gated to math ranges that contain
+         an integral, mirroring the diagnostic predicate exactly. `\,` is a
+         control SYMBOL, so it never glues onto the following letter `d`. *)
+      let ranges = find_math_ranges s in
+      let int_ranges =
+        List.filter
+          (fun (a, b) -> count_substring (String.sub s a (b - a)) "\\int" > 0)
+          ranges
+      in
+      let in_int_math off =
+        List.exists (fun (a, b) -> off >= a && off < b) int_ranges
+      in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i < n - 1 do
+        (if
+           s.[!i] = 'd'
+           && String.contains diff_vars s.[!i + 1]
+           && in_int_math !i
+         then
+           let after_ok =
+             !i + 2 >= n
+             ||
+             let c = s.[!i + 2] in
+             not ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+           in
+           let has_thin_space =
+             !i >= 2 && s.[!i - 2] = '\\' && s.[!i - 1] = ','
+           in
+           let has_mathrm = !i >= 8 && String.sub s (!i - 8) 8 = "\\mathrm{" in
+           let prev_ok =
+             !i > 0
+             &&
+             let c = s.[!i - 1] in
+             (c >= 'A' && c <= 'Z')
+             || (c >= 'a' && c <= 'z')
+             || (c >= '0' && c <= '9')
+             || c = ')'
+             || c = '}'
+             || c = ' '
+           in
+           if after_ok && (not has_thin_space) && (not has_mathrm) && prev_ok
+           then
+             let start_off = if s.[!i - 1] = ' ' then !i - 1 else !i in
+             cands :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.make ~start_offset:start_off ~end_offset:!i
+                       ~replacement:"\\,";
+                   ];
+                 c_label = "Insert a thin space \\, before the differential";
+               }
+               :: !cands);
+        incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-034" ~severity:Info
+             ~message:{|Spacing before differential in integral missing \,|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-034" ~severity:Info
+             ~message:{|Spacing before differential in integral missing \,|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-034"; run; languages = [] }
@@ -1328,10 +1472,41 @@ let l1_math_042_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-042" ~severity:Info
-           ~message:{|Missing \, between numbers and units in math|} ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): insert a thin space `\,` between a
+         number and the following unit macro in math (`5\mathrm{kg}` ->
+         `5\,\mathrm{kg}`). The needle is `<digit>\mathrm{` / `<digit>\text{` /
+         `<digit>\textrm{`; the thin space is inserted right after the digit
+         (before the backslash), so it cannot glue onto a control word. Gated to
+         real math ranges. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           if is_in_math_range ranges pos then
+             cands :=
+               {
+                 c_edits = [ Cst_edit.insert ~at:(pos + 1) "\\," ];
+                 c_label = "Insert a thin space \\, between the number and unit";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-042" ~severity:Info
+             ~message:{|Missing \, between numbers and units in math|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-042" ~severity:Info
+             ~message:{|Missing \, between numbers and units in math|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-042"; run; languages = [] }
@@ -2290,10 +2465,61 @@ let l1_math_068_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-068" ~severity:Info
-           ~message:"Spacing around \\mid missing" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): add thin spaces `\,` on each side of a
+         tight `\mid` (`a\mid b` -> `a\,\mid\,b`). Only real `\mid` control
+         words are considered (the next byte must not be a letter, so
+         `\middle`/`\midrule` are skipped) and only when at least one side is
+         tight; a side that already has a space has that space REPLACED by `\,`
+         (no doubling). Two-edit candidate, gated to real math ranges. *)
+      let ranges = find_math_ranges s in
+      let n = String.length s in
+      let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+      let is_ws c = c = ' ' || c = '\t' || c = '\n' in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i + 4 <= n do
+        if
+          String.sub s !i 4 = "\\mid"
+          && (!i = 0 || s.[!i - 1] <> '\\')
+          && (!i + 4 >= n || not (is_letter s.[!i + 4]))
+          && is_in_math_range ranges !i
+        then (
+          let mid_start = !i in
+          let mid_end = !i + 4 in
+          let tight_before = mid_start > 0 && not (is_ws s.[mid_start - 1]) in
+          let tight_after = mid_end < n && not (is_ws s.[mid_end]) in
+          (if tight_before || tight_after then
+             let left_edit =
+               if mid_start > 0 && s.[mid_start - 1] = ' ' then
+                 Cst_edit.make ~start_offset:(mid_start - 1)
+                   ~end_offset:mid_start ~replacement:"\\,"
+               else Cst_edit.insert ~at:mid_start "\\,"
+             in
+             let right_edit =
+               if mid_end < n && s.[mid_end] = ' ' then
+                 Cst_edit.make ~start_offset:mid_end ~end_offset:(mid_end + 1)
+                   ~replacement:"\\,"
+               else Cst_edit.insert ~at:mid_end "\\,"
+             in
+             cands :=
+               {
+                 c_edits = [ left_edit; right_edit ];
+                 c_label = "Add thin spaces \\, around \\mid";
+               }
+               :: !cands);
+          i := mid_end)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-068" ~severity:Info
+             ~message:"Spacing around \\mid missing" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-068" ~severity:Info
+             ~message:"Spacing around \\mid missing" ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-068"; run; languages = [] }
@@ -2652,10 +2878,44 @@ let l1_math_060_rule : rule =
           && count_re_matches re seg > 0
         then incr cnt)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-060" ~severity:Info
-           ~message:"Differential d typeset italic" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (v27.1.24): same upright-differential rewrite as
+         MATH-013 — replace the italic `d` before x/y/z/t with `\mathrm{d}`. The
+         needle `\int[^$]*[^\\]d[xyzt ]` ends in `d[xyzt ]`, so the `d` byte
+         sits at `match_end - 2`; that single byte is replaced, gated to math
+         ranges. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, _pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           let d_off = e - 2 in
+           if d_off >= 0 && s.[d_off] = 'd' && is_in_math_range ranges d_off
+           then
+             cands :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.make ~start_offset:d_off ~end_offset:(d_off + 1)
+                       ~replacement:"\\mathrm{d}";
+                   ];
+                 c_label = "Typeset the differential d upright with \\mathrm{d}";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-060" ~severity:Info
+             ~message:"Differential d typeset italic" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-060" ~severity:Info
+             ~message:"Differential d typeset italic" ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-060"; run; languages = [] }

@@ -656,4 +656,73 @@ let () =
         (candidates_of "DELIM-008" "\\verb|$\\left. \\right.$|" = [])
         (tag ^ ": vcu-dropped"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Bucket-C batch (v27.1.24): math spacing / differential candidates MATH-034
+     / TYPO-011 / MATH-042 / MATH-031 / MATH-068 / MATH-013 / MATH-060 TYPO-011
+     is a pilot rule, so enable the pilot set for the rest of the file.
+     ══════════════════════════════════════════════════════════════════════ *)
+  Unix.putenv "L0_VALIDATORS" "pilot";
+
+  let m34 = "$\\int f(x)dx$" in
+  run "MATH-034 lists a thin-space-before-differential candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-034" m34
+           "Insert a thin space \\, before the differential"
+        = Some (10, 10, "\\,"))
+        (tag ^ ": insert \\, at 10"));
+  run "MATH-034 candidate dropped inside verbatim" (fun tag ->
+      expect
+        (candidates_of "MATH-034" "\\verb|$\\int f(x)dx$|" = [])
+        (tag ^ ": vcu-dropped"));
+
+  run "TYPO-011 lists a thin-space-before-differential candidate" (fun tag ->
+      expect
+        (edit_of_label "TYPO-011" m34
+           "Insert a thin space \\, before the differential"
+        = Some (10, 10, "\\,"))
+        (tag ^ ": insert \\, at 10"));
+
+  let m42 = "$5\\mathrm{kg}$" in
+  run "MATH-042 lists a number-unit thin-space candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-042" m42
+           "Insert a thin space \\, between the number and unit"
+        = Some (2, 2, "\\,"))
+        (tag ^ ": insert \\, at 2"));
+
+  let m31 = "$x\\text{if}$" in
+  run "MATH-031 lists a medium-space-before-\\text candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-031" m31 "Insert a medium space \\; before \\text"
+        = Some (2, 2, "\\;"))
+        (tag ^ ": insert \\; at 2"));
+
+  let m68 = "$a\\mid b$" in
+  run "MATH-068 wraps \\mid in thin spaces (two edits)" (fun tag ->
+      match candidates_of "MATH-068" m68 with
+      | [ { c_edits; c_label } ] -> (
+          match Cst_edit.apply_all m68 c_edits with
+          | Ok out ->
+              expect
+                (c_label = "Add thin spaces \\, around \\mid"
+                && out = "$a\\,\\mid\\,b$")
+                (tag ^ ": -> $a\\,\\mid\\,b$")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate with 2 edits"));
+
+  let m13 = "$\\int f(x) dx$" in
+  run "MATH-013 lists an upright-differential candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-013" m13
+           "Typeset the differential d upright with \\mathrm{d}"
+        = Some (11, 12, "\\mathrm{d}"))
+        (tag ^ ": [11,12)->\\mathrm{d}"));
+
+  run "MATH-060 lists an upright-differential candidate" (fun tag ->
+      expect
+        (edit_of_label "MATH-060" m34
+           "Typeset the differential d upright with \\mathrm{d}"
+        = Some (10, 11, "\\mathrm{d}"))
+        (tag ^ ": [10,11)->\\mathrm{d}"));
+
   finalise "candidate_fixes"

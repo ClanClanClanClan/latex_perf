@@ -296,10 +296,26 @@ let l1_math_012_rule : rule =
               let matched = Re_compat.matched_group mr 1 seg in
               let next_i = Re_compat.match_end mr in
               let preceded_by_backslash = pos > 0 && seg.[pos - 1] = '\\' in
+              (* A letter run that is the TAIL of a control word (e.g. `amma` in
+                 `\\Gamma`) is NOT a function name — scan back over letters and
+                 check for a leading backslash, else `\\operatorname{amma}`
+                 would corrupt the macro. *)
+              let in_control_word =
+                let j = ref (pos - 1) in
+                while
+                  !j >= 0
+                  && ((seg.[!j] >= 'a' && seg.[!j] <= 'z')
+                     || (seg.[!j] >= 'A' && seg.[!j] <= 'Z'))
+                do
+                  decr j
+                done;
+                !j >= 0 && seg.[!j] = '\\'
+              in
               let is_known = List.mem matched known_operators in
               let is_short_var = String.length matched <= 2 in
               (if
                  (not preceded_by_backslash)
+                 && (not in_control_word)
                  && (not is_known)
                  && not is_short_var
                then
@@ -497,14 +513,58 @@ let l1_math_015_rule : rule =
    x_{i,j} *)
 let l1_math_016_rule : rule =
   let re = Re_compat.regexp {|_\([A-Za-z0-9]\)_|} in
+  (* Fix regex additionally captures the trailing subscript token so the whole
+     `_X_Y` span is bounded (X single alnum; Y single alnum or `{...}`). *)
+  let re_fix = Re_compat.regexp {|_\([A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|} in
+  let strip_braces g =
+    let n = String.length g in
+    if n >= 2 && g.[0] = '{' && g.[n - 1] = '}' then String.sub g 1 (n - 2)
+    else g
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-016" ~severity:Warning
-           ~message:"Nested subscripts without braces" ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): brace nested subscripts `a_b_c` ->
+         `a_{b_{c}}` when both tokens are cleanly bounded. Intent-dependent
+         (author may have meant `a_{b,c}` — see MATH-035), so review only. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_fix s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let x = Re_compat.matched_group mr 1 s in
+            let y = strip_braces (Re_compat.matched_group mr 2 s) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:("_{" ^ x ^ "_{" ^ y ^ "}}");
+                    ];
+                  c_label = "Brace nested subscripts as _{...}";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-016" ~severity:Warning
+             ~message:"Nested subscripts without braces" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-016" ~severity:Warning
+             ~message:"Nested subscripts without braces" ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-016"; run; languages = [] }
@@ -625,9 +685,48 @@ let l1_math_019_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) inline_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-019" ~severity:Warning
-           ~message:"Inline stacked ^_ order wrong" ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): reorder `x^a_b` -> `x_b^a` (canonical
+         sub-before-super order). Both scripts are cleanly bounded by the same
+         regex (single token or `{...}`); restricted to inline math to mirror
+         the diagnostic scope. Semantics-preserving, but surfaced for review. *)
+      let ranges = find_math_ranges s in
+      let inline_ranges =
+        List.filter (fun r -> range_is_inline_math s r) ranges
+      in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let sup = Re_compat.matched_group mr 1 s in
+            let sub = Re_compat.matched_group mr 2 s in
+            let acc =
+              if is_in_math_range inline_ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:("_" ^ sub ^ "^" ^ sup);
+                    ];
+                  c_label = "Reorder scripts to subscript-before-superscript";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-019" ~severity:Warning
+             ~message:"Inline stacked ^_ order wrong" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-019" ~severity:Warning
+             ~message:"Inline stacked ^_ order wrong" ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-019"; run; languages = [] }
@@ -968,15 +1067,62 @@ let l1_math_034_rule : rule =
    pattern instead of a_{i,j} *)
 let l1_math_035_rule : rule =
   let re = Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)_|} in
+  (* Fix regex also captures the trailing subscript token so `_A_B` is
+     bounded. *)
+  let re_fix =
+    Re_compat.regexp {|_\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
+  let strip_braces g =
+    let n = String.length g in
+    if n >= 2 && g.[0] = '{' && g.[n - 1] = '}' then String.sub g 1 (n - 2)
+    else g
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-035" ~severity:Warning
-           ~message:"Multiple subscripts stacked vertically without braces"
-           ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): combine stacked subscripts `a_{i}_{j}`
+         -> `a_{i,j}` when both tokens are cleanly bounded. Intent-dependent
+         (author may have meant nesting — see MATH-016), so review only. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_fix s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let a = strip_braces (Re_compat.matched_group mr 1 s) in
+            let bb = strip_braces (Re_compat.matched_group mr 2 s) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:("_{" ^ a ^ "," ^ bb ^ "}");
+                    ];
+                  c_label = "Combine stacked subscripts into _{i,j}";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-035" ~severity:Warning
+             ~message:"Multiple subscripts stacked vertically without braces"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-035" ~severity:Warning
+             ~message:"Multiple subscripts stacked vertically without braces"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-035"; run; languages = [] }
@@ -1330,6 +1476,9 @@ let l1_math_045_rule : rule =
       "\\Omega";
     ]
   in
+  (* A control word `\<Capital><letters...>` — the trailing `[A-Za-z]*` enforces
+     a proper control-word boundary so `\Pi` never matches inside `\Pion`. *)
+  let re_cw = Re_compat.regexp {|\\[A-Z][A-Za-z]*|} in
   let run s =
     let math_segs = extract_math_segments s in
     let has_upright = ref false in
@@ -1348,10 +1497,53 @@ let l1_math_045_rule : rule =
       math_segs;
     (* Only flag if document mixes upright and italic for the same class *)
     if !has_upright && !bare_cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-045" ~severity:Info
-           ~message:{|Math italic capital Greek without \mathrm|}
-           ~count:!bare_cnt)
+      (* Bucket-C candidate (v27.1.22): wrap each BARE capital Greek in
+         `\mathrm{}` to match the document's upright convention. Skips macros
+         already wrapped as `\mathrm{\Gamma}`. Style-dependent, so review. *)
+      let len = String.length s in
+      let ranges = find_math_ranges s in
+      let already_wrapped b e =
+        b >= 8 && String.sub s (b - 8) 8 = "\\mathrm{" && e < len && s.[e] = '}'
+      in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_cw s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let macro = String.sub s b (e - b) in
+            let acc =
+              if
+                List.mem macro greek_capitals
+                && is_in_math_range ranges b
+                && not (already_wrapped b e)
+              then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:("\\mathrm{" ^ macro ^ "}");
+                    ];
+                  c_label = "Wrap capital Greek in \\mathrm to match upright";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-045" ~severity:Info
+             ~message:{|Math italic capital Greek without \mathrm|}
+             ~count:!bare_cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-045" ~severity:Info
+             ~message:{|Math italic capital Greek without \mathrm|}
+             ~count:!bare_cnt ~candidates)
     else None
   in
   { id = "MATH-045"; run; languages = [] }
@@ -1429,14 +1621,61 @@ let l1_math_046_rule : rule =
 (* MATH-047: Double superscript without braces — a^b^c is a TeX error *)
 let l1_math_047_rule : rule =
   let re = Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)\^|} in
+  (* Fix regex also captures the trailing superscript token so `^A^B` is
+     bounded. *)
+  let re_fix =
+    Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)\^\({[^}]*}\|[A-Za-z0-9]\)|}
+  in
+  let strip_braces g =
+    let n = String.length g in
+    if n >= 2 && g.[0] = '{' && g.[n - 1] = '}' then String.sub g 1 (n - 2)
+    else g
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-047" ~severity:Error
-           ~message:"Double superscript without braces a^b^c" ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): brace double superscript `a^b^c` ->
+         `a^{b^{c}}` when both tokens are cleanly bounded (this is otherwise a
+         TeX error). Review only. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_fix s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let x = strip_braces (Re_compat.matched_group mr 1 s) in
+            let y = strip_braces (Re_compat.matched_group mr 2 s) in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:("^{" ^ x ^ "^{" ^ y ^ "}}");
+                    ];
+                  c_label = "Brace double superscript as ^{...}";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-047" ~severity:Error
+             ~message:"Double superscript without braces a^b^c" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-047" ~severity:Error
+             ~message:"Double superscript without braces a^b^c" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "MATH-047"; run; languages = [] }
@@ -1926,14 +2165,82 @@ let l1_math_057_rule : rule =
 (* MATH-058: Nested \text inside \text *)
 let l1_math_058_rule : rule =
   let re = Re_compat.regexp {|\\text{[^}]*\\text{|} in
+  (* Direct-nesting form `\text{\text{` (inner opens immediately) — the only
+     shape that is safely unwrappable. *)
+  let re_direct = Re_compat.regexp {|\\text{\\text{|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-058" ~severity:Info
-           ~message:"Nested \\text inside \\text" ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): unwrap redundant DIRECT nesting
+         `\text{\text{..}}` -> `\text{..}` by deleting the inner `\text{` and
+         its matching close brace. Only offered when the inner group's close
+         brace is immediately followed by the outer close (i.e. the outer holds
+         nothing but the inner \text). Review only. *)
+      let len = String.length s in
+      let ranges = find_math_ranges s in
+      (* Return the offset of the brace that closes the group opened at
+         [open_pos] (which must be '{'), honouring escaped braces; None if
+         unbalanced. *)
+      let matching_close open_pos =
+        let j = ref (open_pos + 1) in
+        let depth = ref 1 in
+        let res = ref None in
+        while !res = None && !j < len do
+          if s.[!j] = '\\' then j := !j + 2
+          else if s.[!j] = '{' then (
+            incr depth;
+            incr j)
+          else if s.[!j] = '}' then (
+            decr depth;
+            if !depth = 0 then res := Some !j else incr j)
+          else incr j
+        done;
+        !res
+      in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_direct s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            (* outer `\text{` = [b,b+6); inner `\text{` = [b+6,b+12) *)
+            let inner_open = b + 11 in
+            let acc =
+              match matching_close inner_open with
+              | Some ic
+                when is_in_math_range ranges b
+                     && ic + 1 < len
+                     && s.[ic + 1] = '}' ->
+                  {
+                    c_edits =
+                      [
+                        (* drop inner `\text{` *)
+                        Cst_edit.make ~start_offset:(b + 6) ~end_offset:(b + 12)
+                          ~replacement:"";
+                        (* drop the inner group's close brace *)
+                        Cst_edit.make ~start_offset:ic ~end_offset:(ic + 1)
+                          ~replacement:"";
+                      ];
+                    c_label = "Unwrap redundant nested \\text";
+                  }
+                  :: acc
+              | _ -> acc
+            in
+            collect (b + 12) acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-058" ~severity:Info
+             ~message:"Nested \\text inside \\text" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-058" ~severity:Info
+             ~message:"Nested \\text inside \\text" ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-058"; run; languages = [] }
@@ -2289,10 +2596,44 @@ let l1_math_059_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-059" ~severity:Warning
-           ~message:{|Math accent \bar on group expression needs braces|}
-           ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): `\bar{a+b}` (a short bar over a whole
+         group) -> `\overline{a+b}` (a proper wide bar). Render-affecting, so
+         review. The `\bar` prefix (4 bytes) is swapped, keeping `{...}`. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let acc =
+              if is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:(b + 4)
+                        ~replacement:"\\overline";
+                    ];
+                  c_label = "Use \\overline for a bar over a group expression";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-059" ~severity:Warning
+             ~message:{|Math accent \bar on group expression needs braces|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-059" ~severity:Warning
+             ~message:{|Math accent \bar on group expression needs braces|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-059"; run; languages = [] }
@@ -3107,6 +3448,7 @@ let l1_math_096_rule : rule =
       "\\Omega";
     ]
   in
+  let re_fix = Re_compat.regexp {|\\mathbf{\\[A-Za-z]+}|} in
   let run s =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
@@ -3117,9 +3459,50 @@ let l1_math_096_rule : rule =
           greek_letters)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-096" ~severity:Info
-           ~message:{|Bold Greek via \mathbf – use \boldsymbol|} ~count:!cnt)
+      (* Bucket-C candidate (v27.1.22): `\mathbf{<greek>}` ->
+         `\boldsymbol{<greek>}` — bold Greek should use \boldsymbol, but this is
+         a stylistic call, so surface for review rather than auto-apply. Only
+         the fixed greek_letters set qualifies. *)
+      let ranges = find_math_ranges s in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_fix s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            (* inner control word between `\mathbf{` (8 bytes) and `}` *)
+            let macro = String.sub s (b + 8) (e - (b + 8) - 1) in
+            let acc =
+              if List.mem macro greek_letters && is_in_math_range ranges b then
+                {
+                  c_edits =
+                    [
+                      (* swap the `\mathbf` prefix (7 bytes) -> `\boldsymbol`,
+                         keep `{<greek>}` *)
+                      Cst_edit.make ~start_offset:b ~end_offset:(b + 7)
+                        ~replacement:"\\boldsymbol";
+                    ];
+                  c_label =
+                    "Use \\boldsymbol for bold Greek instead of \\mathbf";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-096" ~severity:Info
+             ~message:{|Bold Greek via \mathbf – use \boldsymbol|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-096" ~severity:Info
+             ~message:{|Bold Greek via \mathbf – use \boldsymbol|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "MATH-096"; run; languages = [] }

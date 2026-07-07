@@ -228,6 +228,30 @@ let r_tab_005 : rule =
   in
   let run s =
     let cnt = ref 0 in
+    let cands = ref [] in
+    (* Bucket-C CANDIDATE: removing a `|` from a column spec is the booktabs
+       style but is a house-style choice, so surface, don't apply. Emit one
+       candidate per `|` byte in the located column spec; [spec_start] is the
+       absolute offset of the col-spec's first byte in the ORIGINAL source. *)
+    let add_spec_candidates spec_start col_spec =
+      String.iteri
+        (fun rel c ->
+          if c = '|' then
+            let off = spec_start + rel in
+            cands :=
+              {
+                c_edits =
+                  [
+                    Cst_edit.make ~start_offset:off ~end_offset:(off + 1)
+                      ~replacement:"";
+                  ];
+                c_label =
+                  "Remove vertical rule (|) from tabular column spec (booktabs \
+                   style)";
+              }
+              :: !cands)
+        col_spec
+    in
     let i = ref 0 in
     (* Check plain \begin{tabular}{colspec} *)
     (try
@@ -235,7 +259,10 @@ let r_tab_005 : rule =
          let _mr, _ = Re_compat.search_forward re_plain s !i in
          let after = Re_compat.match_end _mr in
          (match extract_col_spec s after with
-         | Some col_spec -> if String.contains col_spec '|' then incr cnt
+         | Some col_spec ->
+             if String.contains col_spec '|' then (
+               incr cnt;
+               add_spec_candidates after col_spec)
          | None -> ());
          i := after + 1
        done
@@ -251,15 +278,25 @@ let r_tab_005 : rule =
          (* now expect the column spec brace group *)
          (if after_width < String.length s && s.[after_width] = '{' then
             match extract_col_spec s (after_width + 1) with
-            | Some col_spec -> if String.contains col_spec '|' then incr cnt
+            | Some col_spec ->
+                if String.contains col_spec '|' then (
+                  incr cnt;
+                  add_spec_candidates (after_width + 1) col_spec)
             | None -> ());
          i := after_width + 1
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TAB-005" ~severity:Info
-           ~message:"Vertical rules present in tabular" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TAB-005" ~severity:Info
+             ~message:"Vertical rules present in tabular" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TAB-005" ~severity:Info
+             ~message:"Vertical rules present in tabular" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "TAB-005"; run; languages = [] }
@@ -1110,14 +1147,43 @@ let r_cmd_014 : rule =
 (* Only fires for article-like document classes that conventionally use
    \maketitle. Skips beamer, letter, standalone, etc. *)
 let r_doc_001 : rule =
+  let re_begin_doc = Re_compat.regexp_string "\\begin{document}" in
   let run s =
     if not (is_article_like s) then None
     else
       let has_maketitle = contains_substring s "\\maketitle" in
       if not has_maketitle then
-        Some
-          (mk_result ~id:"DOC-001" ~severity:Error
-             ~message:"Title missing \\maketitle" ~count:1)
+        (* Bucket-C CANDIDATE: inserting \maketitle right after \begin{document}
+           is the conventional placement, but where the title goes is an author
+           decision, so surface, don't apply. When \begin{document} cannot be
+           located the candidate degrades to label-only (empty edits). Offset is
+           absolute in the ORIGINAL src. *)
+        let candidate =
+          match
+            try Some (Re_compat.search_forward re_begin_doc s 0)
+            with Not_found -> None
+          with
+          | Some (mr, _) ->
+              let at = Re_compat.match_end mr in
+              {
+                c_edits = [ Cst_edit.insert ~at "\n\\maketitle" ];
+                c_label = "Insert \\maketitle after \\begin{document}";
+              }
+          | None ->
+              {
+                c_edits = [];
+                c_label = "Insert \\maketitle after \\begin{document}";
+              }
+        in
+        let candidates = candidates_drop_exempt s [ candidate ] in
+        if candidates = [] then
+          Some
+            (mk_result ~id:"DOC-001" ~severity:Error
+               ~message:"Title missing \\maketitle" ~count:1)
+        else
+          Some
+            (mk_result_with_candidates ~id:"DOC-001" ~severity:Error
+               ~message:"Title missing \\maketitle" ~count:1 ~candidates)
       else None
   in
   { id = "DOC-001"; run; languages = [] }
@@ -1157,19 +1223,41 @@ let r_tab_006 : rule =
   let re = Re_compat.regexp "\\\\hline[ \t\n]*\\\\hline" in
   let run s =
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         ignore _mr;
+         let mr, _ = Re_compat.search_forward re s !i in
+         let mstart = Re_compat.match_beginning mr in
+         let mend = Re_compat.match_end mr in
          incr cnt;
-         i := Re_compat.match_end _mr
+         (* Bucket-C CANDIDATE: collapse `\hline<ws>\hline` (the whole match)
+            back to a single `\hline`, keeping the first rule and dropping the
+            duplicate + any interleaving whitespace. Offsets are absolute in the
+            ORIGINAL source. *)
+         cands :=
+           {
+             c_edits =
+               [
+                 Cst_edit.make ~start_offset:mstart ~end_offset:mend
+                   ~replacement:"\\hline";
+               ];
+             c_label = "Collapse duplicated \\hline into a single \\hline";
+           }
+           :: !cands;
+         i := mend
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TAB-006" ~severity:Info
-           ~message:"Consecutive \\hline duplicated" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TAB-006" ~severity:Info
+             ~message:"Consecutive \\hline duplicated" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TAB-006" ~severity:Info
+             ~message:"Consecutive \\hline duplicated" ~count:!cnt ~candidates)
     else None
   in
   { id = "TAB-006"; run; languages = [] }
@@ -2899,9 +2987,52 @@ let r_tikz_009 : rule =
     else
       let has_lib = contains_substring s "arrows.meta" in
       if not has_lib then
-        Some
-          (mk_result ~id:"TIKZ-009" ~severity:Info
-             ~message:"TikZ library arrows.meta missing for arrow tips" ~count:1)
+        (* Bucket-C CANDIDATE: insert \usetikzlibrary{arrows.meta} right after
+           the \usepackage that loads tikz (the library must be loaded after the
+           package). If we cannot locate that \usepackage, degrade to a
+           label-only candidate. Offset is absolute in the ORIGINAL src. *)
+        let insert_at =
+          match
+            List.find_opt
+              (fun (_pos, pkg) -> pkg = "tikz")
+              (extract_usepackages s)
+          with
+          | None -> None
+          | Some (pos, _) ->
+              (* end of this \usepackage{...} statement: first '}' after pos *)
+              let n = String.length s in
+              let rec find j =
+                if j >= n then None
+                else if s.[j] = '}' then Some (j + 1)
+                else find (j + 1)
+              in
+              find pos
+        in
+        let candidate =
+          match insert_at with
+          | Some at ->
+              {
+                c_edits =
+                  [ Cst_edit.insert ~at "\n\\usetikzlibrary{arrows.meta}" ];
+                c_label = "Load \\usetikzlibrary{arrows.meta} for arrow tips";
+              }
+          | None ->
+              {
+                c_edits = [];
+                c_label = "Load \\usetikzlibrary{arrows.meta} for arrow tips";
+              }
+        in
+        let candidates = candidates_drop_exempt s [ candidate ] in
+        if candidates = [] then
+          Some
+            (mk_result ~id:"TIKZ-009" ~severity:Info
+               ~message:"TikZ library arrows.meta missing for arrow tips"
+               ~count:1)
+        else
+          Some
+            (mk_result_with_candidates ~id:"TIKZ-009" ~severity:Info
+               ~message:"TikZ library arrows.meta missing for arrow tips"
+               ~count:1 ~candidates)
       else None
   in
   { id = "TIKZ-009"; run; languages = [] }

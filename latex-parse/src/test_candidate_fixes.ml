@@ -725,4 +725,80 @@ let () =
         = Some (10, 11, "\\mathrm{d}"))
         (tag ^ ": [10,11)->\\mathrm{d}"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Bucket-C batch (structural/misc): TAB-006 / TAB-005 / DOC-001 / TIKZ-009 /
+     SPC-017 / SPC-023
+     ══════════════════════════════════════════════════════════════════════ *)
+  let tab6 = "\\hline \\hline" in
+  run "TAB-006 collapses duplicated \\hline to a single \\hline" (fun tag ->
+      (* `\hline \hline` spans [0,13); collapses to a single `\hline`. *)
+      expect
+        (fires_with_count "TAB-006" tab6 1
+        && edit_of_label "TAB-006" tab6
+             "Collapse duplicated \\hline into a single \\hline"
+           = Some (0, 13, "\\hline"))
+        (tag ^ ": edit [0,13)->\\hline"));
+
+  let tab5 = "\\begin{tabular}{|c|c|}a\\end{tabular}" in
+  run "TAB-005 removes a vertical rule from the column spec" (fun tag ->
+      (* "\begin{tabular}{" = 16 bytes; first `|` at offset 16. *)
+      expect
+        (fires_with_count "TAB-005" tab5 1
+        && edit_of_label "TAB-005" tab5
+             "Remove vertical rule (|) from tabular column spec (booktabs \
+              style)"
+           = Some (16, 17, ""))
+        (tag ^ ": delete `|` at 16"));
+
+  let doc1 =
+    "\\documentclass{article}\n\\begin{document}\ntext\n\\end{document}"
+  in
+  run "DOC-001 inserts \\maketitle after \\begin{document}" (fun tag ->
+      (* "\documentclass{article}\n" = 24 bytes; "\begin{document}" ends at
+         40. *)
+      expect
+        (edit_of_label "DOC-001" doc1
+           "Insert \\maketitle after \\begin{document}"
+        = Some (40, 40, "\n\\maketitle"))
+        (tag ^ ": insert at 40"));
+
+  let tikz9 =
+    "\\usepackage{tikz}\n\
+     \\begin{tikzpicture}\n\
+     \\draw (0,0) -> (1,1);\n\
+     \\end{tikzpicture}"
+  in
+  run "TIKZ-009 loads arrows.meta after \\usepackage{tikz}" (fun tag ->
+      (* "\usepackage{tikz}" — the `}` is at 16, so insert at 17. *)
+      expect
+        (edit_of_label "TIKZ-009" tikz9
+           "Load \\usetikzlibrary{arrows.meta} for arrow tips"
+        = Some (17, 17, "\n\\usetikzlibrary{arrows.meta}"))
+        (tag ^ ": insert at 17"));
+
+  let spc17 = "5cm" in
+  run "SPC-017 inserts a thin space between number and unit" (fun tag ->
+      (* digit `5` at 0, unit starts at 1; insert \, at offset 1. *)
+      expect
+        (fires_with_count "SPC-017" spc17 1
+        && edit_of_label "SPC-017" spc17
+             "Insert a thin space \\, between the number and unit"
+           = Some (1, 1, "\\,"))
+        (tag ^ ": insert \\, at 1"));
+
+  let spc23 = "a\xc2\xa0b" (* a<U+00A0>b *) in
+  run "SPC-023 replaces the hard space U+00A0 with a plain space" (fun tag ->
+      (* `a` at 0; U+00A0 = C2 A0 spans [1,3) -> " ". *)
+      expect
+        (fires_with_count "SPC-023" spc23 1
+        && edit_of_label "SPC-023" spc23
+             "Replace hard space U+00A0 with an ordinary space"
+           = Some (1, 3, " "))
+        (tag ^ ": replace [1,3)-> space"));
+  run "SPC-023 candidate dropped inside a comment" (fun tag ->
+      let s = "% a\xc2\xa0b\n" in
+      expect
+        (fires "SPC-023" s && candidates_of "SPC-023" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
   finalise "candidate_fixes"

@@ -305,6 +305,22 @@ let () =
          one `CANDIDATE\t<id>\t<label>` line per candidate, followed by one `
          EDIT\t<start>\t<end>\t<replacement>` line per edit. *)
       let src = read_all path in
+      (* Escape control chars in a replacement so a newline/tab in the edit text
+         (e.g. an inserted `\n\maketitle`) cannot split the one-line EDIT
+         record; a frontend un-escapes \n/\t/\r. Backslashes are left literal
+         (LaTeX content), so ordinary candidate output is unchanged. *)
+      let esc_repl str =
+        let b = Buffer.create (String.length str) in
+        String.iter
+          (fun c ->
+            match c with
+            | '\n' -> Buffer.add_string b "\\n"
+            | '\t' -> Buffer.add_string b "\\t"
+            | '\r' -> Buffer.add_string b "\\r"
+            | c -> Buffer.add_char b c)
+          str;
+        Buffer.contents b
+      in
       let results = Latex_parse_lib.Validators.run_all_with_class_d src in
       List.iter
         (fun (r : Latex_parse_lib.Validators.result) ->
@@ -317,7 +333,7 @@ let () =
                   List.iter
                     (fun (e : Latex_parse_lib.Cst_edit.t) ->
                       printf "  EDIT\t%d\t%d\t%s\n" e.start_offset e.end_offset
-                        e.replacement)
+                        (esc_repl e.replacement))
                     c.c_edits)
                 cands)
         results;

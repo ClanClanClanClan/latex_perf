@@ -524,4 +524,24 @@ let () =
         (fires "FR-008" s && candidates_of "FR-008" s = [])
         (tag ^ ": exempt (comment) but still fires"));
 
+  let m36 = "$\\mathrm{x}$" in
+  run "MATH-036 lists an unwrap candidate" (fun tag ->
+      expect
+        (has_label "MATH-036" m36 "Drop superfluous \\mathrm around a single letter")
+        (tag ^ ": label"));
+  run "MATH-036 candidate edit unwraps to the bare letter" (fun tag ->
+      match edit_of_label "MATH-036" m36 "Drop superfluous \\mathrm around a single letter" with
+      | Some (b, e, r) -> expect (b = 1 && e = 11 && r = "x") (tag ^ ": edit [1,11)->x")
+      | None -> expect false (tag ^ ": expected one edit"));
+  run "MATH-036 candidate dropped inside verbatim" (fun tag ->
+      expect (candidates_of "MATH-036" "\\verb|$\\mathrm{x}$|" = []) (tag ^ ": vcu-dropped"));
+  let m50 = "$\\hat{abc}$" in
+  run "MATH-050 lists a widehat candidate" (fun tag ->
+      expect
+        (has_label "MATH-050" m50 "Use \\widehat for a multi-letter accent")
+        (tag ^ ": label"));
+  run "MATH-050 candidate edit rewrites the accent prefix" (fun tag ->
+      match edit_of_label "MATH-050" m50 "Use \\widehat for a multi-letter accent" with
+      | Some (b, e, r) -> expect (b = 1 && e = 5 && r = "\\widehat") (tag ^ ": edit [1,5)->\\widehat")
+      | None -> expect false (tag ^ ": expected one edit"));
   finalise "candidate_fixes"

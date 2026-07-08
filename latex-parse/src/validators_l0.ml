@@ -994,38 +994,93 @@ let r_enc_005 : rule =
   in
   { id = "ENC-005"; run; languages = [] }
 
-(* ENC-006: Overlong UTF-8 encoding sequence *)
+(* ENC-006: Overlong UTF-8 encoding sequence.
+
+   Bucket-C CANDIDATE (not an auto-fix): an overlong sequence is an ILL-FORMED /
+   corrupt (often adversarial) byte run. Re-encoding it in minimal form is
+   deterministic ONLY when its continuation bytes are well-formed, and the
+   minimal codepoint is frequently a control character (e.g. C0 80 -> U+0000
+   NUL, C0 A0 -> U+0020 space) - inserting such bytes silently would be unsafe,
+   and the author's true intent (delete? keep? which glyph?) is unknowable. So
+   we SURFACE a re-encode suggestion for review rather than auto-applying it.
+   The diagnostic count is byte-identical to before. *)
 let r_enc_006 : rule =
+  let utf8_encode cp =
+    let b = Buffer.create 4 in
+    if cp < 0x80 then Buffer.add_char b (Char.chr cp)
+    else if cp < 0x800 then (
+      Buffer.add_char b (Char.chr (0xC0 lor (cp lsr 6)));
+      Buffer.add_char b (Char.chr (0x80 lor (cp land 0x3F))))
+    else (
+      Buffer.add_char b (Char.chr (0xE0 lor (cp lsr 12)));
+      Buffer.add_char b (Char.chr (0x80 lor ((cp lsr 6) land 0x3F)));
+      Buffer.add_char b (Char.chr (0x80 lor (cp land 0x3F))));
+    Buffer.contents b
+  in
+  let is_cont c = c >= 0x80 && c <= 0xBF in
+  let label = "Re-encode overlong UTF-8 sequence in minimal form" in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
+    let add a b cp =
+      cands :=
+        {
+          c_edits =
+            [ Cst_edit.replace ~start_offset:a ~end_offset:b (utf8_encode cp) ];
+          c_label = label;
+        }
+        :: !cands
+    in
     while !i < n do
       let b0 = Char.code s.[!i] in
       if b0 < 0x80 then incr i
       else if b0 < 0xC0 then incr i (* continuation byte, skip *)
       else if b0 < 0xE0 then (
-        (* 2-byte: overlong if b0 = C0 or C1 (encodes U+0000–007F) *)
-        if b0 = 0xC0 || b0 = 0xC1 then incr cnt;
+        (* 2-byte: overlong if b0 = C0 or C1 (encodes U+0000-007F) *)
+        if b0 = 0xC0 || b0 = 0xC1 then (
+          incr cnt;
+          if !i + 1 < n && is_cont (Char.code s.[!i + 1]) then
+            let b1 = Char.code s.[!i + 1] in
+            add !i (!i + 2) (((b0 land 0x1F) lsl 6) lor (b1 land 0x3F)));
         i := !i + 2)
       else if b0 < 0xF0 then (
         (* 3-byte: overlong if b0=E0 and b1 < A0 *)
         (if !i + 2 < n then
            let b1 = Char.code s.[!i + 1] in
-           if b0 = 0xE0 && b1 < 0xA0 then incr cnt);
+           if b0 = 0xE0 && b1 < 0xA0 then (
+             incr cnt;
+             let b2 = Char.code s.[!i + 2] in
+             if is_cont b1 && is_cont b2 then
+               add !i (!i + 3) (((b1 land 0x3F) lsl 6) lor (b2 land 0x3F))));
         i := !i + 3)
       else if b0 < 0xF8 then (
         (* 4-byte: overlong if b0=F0 and b1 < 90 *)
         (if !i + 3 < n then
            let b1 = Char.code s.[!i + 1] in
-           if b0 = 0xF0 && b1 < 0x90 then incr cnt);
+           if b0 = 0xF0 && b1 < 0x90 then (
+             incr cnt;
+             let b2 = Char.code s.[!i + 2] and b3 = Char.code s.[!i + 3] in
+             if is_cont b1 && is_cont b2 && is_cont b3 then
+               add !i (!i + 4)
+                 (((b1 land 0x3F) lsl 12)
+                 lor ((b2 land 0x3F) lsl 6)
+                 lor (b3 land 0x3F))));
         i := !i + 4)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"ENC-006" ~severity:Error
-           ~message:"Overlong UTF‑8 encoding sequence" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      let res =
+        if candidates = [] then
+          mk_result ~id:"ENC-006" ~severity:Error
+            ~message:"Overlong UTF‑8 encoding sequence" ~count:!cnt
+        else
+          mk_result_with_candidates ~id:"ENC-006" ~severity:Error
+            ~message:"Overlong UTF‑8 encoding sequence" ~count:!cnt ~candidates
+      in
+      Some res
     else None
   in
   { id = "ENC-006"; run; languages = [] }
@@ -5464,14 +5519,59 @@ let r_cy_001 : rule =
   { id = "CY-001"; run; languages = [ "ru" ] }
 
 (* DE-006: Swiss DE ß prohibited — use "ss" *)
+(* Bucket-C CANDIDATE (not an auto-fix): ß->ss is LOSSY and locale-dependent -
+   it is correct ONLY under Swiss (and pre-1996) orthography; in standard German
+   ß is required and mapping it to ss would be an error (e.g.
+   "Straße"->"Strasse" is Swiss-correct, but "Maß"->"Mass" collides with the
+   noun "Mass"). The transformation is intent-dependent and must be reviewed,
+   never applied mechanically. Each ß (U+00DF, C3 9F) -> "ss", each ẞ (U+1E9E,
+   E1 BA 9E) -> "SS". candidates_drop_exempt gates verbatim/comment/url/math. *)
 let r_de_006 : rule =
+  let msg = {|Swiss DE: glyph ß is prohibited—use “ss”|} in
   let run s =
-    (* Count ß (U+00DF = C3 9F) and ẞ (U+1E9E = E1 BA 9E) *)
-    let cnt = count_substring s "\xc3\x9f" + count_substring s "\xe1\xba\x9e" in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"DE-006" ~severity:Info
-           ~message:{|Swiss DE: glyph ß is prohibited—use “ss”|} ~count:cnt)
+    let n = String.length s in
+    let cnt = ref 0 in
+    let cands = ref [] in
+    let i = ref 0 in
+    while !i < n do
+      if !i + 1 < n && Char.code s.[!i] = 0xC3 && Char.code s.[!i + 1] = 0x9F
+      then (
+        incr cnt;
+        cands :=
+          {
+            c_edits =
+              [ Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2) "ss" ];
+            c_label = {|Replace ß with “ss” (Swiss German orthography)|};
+          }
+          :: !cands;
+        i := !i + 2)
+      else if
+        !i + 2 < n
+        && Char.code s.[!i] = 0xE1
+        && Char.code s.[!i + 1] = 0xBA
+        && Char.code s.[!i + 2] = 0x9E
+      then (
+        incr cnt;
+        cands :=
+          {
+            c_edits =
+              [ Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3) "SS" ];
+            c_label = {|Replace ẞ with “SS” (Swiss German orthography)|};
+          }
+          :: !cands;
+        i := !i + 3)
+      else incr i
+    done;
+    if !cnt > 0 then
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      let res =
+        if candidates = [] then
+          mk_result ~id:"DE-006" ~severity:Info ~message:msg ~count:!cnt
+        else
+          mk_result_with_candidates ~id:"DE-006" ~severity:Info ~message:msg
+            ~count:!cnt ~candidates
+      in
+      Some res
     else None
   in
   { id = "DE-006"; run; languages = [ "de" ] }

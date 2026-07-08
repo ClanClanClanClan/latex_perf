@@ -3759,17 +3759,102 @@ let r_bib_009 : rule =
   in
   { id = "BIB-009"; run; languages = [] }
 
-(* BIB-010: `month` field uses numeric literal instead of `#jan#` macro *)
+(* BIB-010: `month` field uses numeric literal instead of `#jan#` macro.
+
+   Bucket-A AUTO-FIX (numeric case only). The BibTeX month macros jan..dec are
+   defined by EVERY standard `.bst` style as 1..12, so mapping a numeric month
+   literal to its canonical three-letter macro is deterministic and lossless:
+   month = {3} -> month = mar (braced numeric) month = 3 -> month = mar (bare
+   numeric) The replacement is the BARE macro (no braces/quotes) — that is what
+   invokes the `.bst` macro; a braced value would be a literal string, not the
+   macro. It is idempotent: `month = mar` no longer matches the trigger (the
+   value byte is a letter, not in the digit/brace/quote char-class). String NAME
+   values such as a spelled-out month are NOT auto-fixed — parsing a free-form
+   name is ambiguous — but STILL counted, so the diagnostic is unchanged.
+   mk_result_with_fix_exempt drops any edit that lands in a
+   verbatim/comment/url/math region. *)
 let r_bib_010 : rule =
   let re = Re_compat.regexp {|month[ \t]*=[ \t]*[{0-9"]|} in
+  let months =
+    [|
+      "jan";
+      "feb";
+      "mar";
+      "apr";
+      "may";
+      "jun";
+      "jul";
+      "aug";
+      "sep";
+      "oct";
+      "nov";
+      "dec";
+    |]
+  in
+  let msg = "`month` field uses numeric literal instead of `#jan#` macro" in
+  let parse_month str =
+    (* Pure 1..12 numeric literal (leading zeros ok) -> Some macro, else
+       None. *)
+    if String.length str = 0 || String.length str > 3 then None
+    else if not (String.for_all (fun c -> c >= '0' && c <= '9') str) then None
+    else
+      match int_of_string_opt str with
+      | Some m when m >= 1 && m <= 12 -> Some months.(m - 1)
+      | _ -> None
+  in
   let run s =
     let cnt = count_matches re s in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"BIB-010" ~severity:Info
-           ~message:
-             "`month` field uses numeric literal instead of `#jan#` macro"
-           ~count:cnt)
+    if cnt > 0 then (
+      let n = String.length s in
+      let edits = ref [] in
+      let i = ref 0 in
+      let is_digit c = c >= '0' && c <= '9' in
+      (try
+         while true do
+           let mr, _mb = Re_compat.search_forward re s !i in
+           let mend = Re_compat.match_end mr in
+           (* The value's first byte (the char-class byte the regex matched)
+              sits at mend-1. *)
+           let vs = mend - 1 in
+           (match s.[vs] with
+           | ('{' | '"') as opener -> (
+               let closing = if opener = '{' then '}' else '"' in
+               let j = ref (vs + 1) in
+               while !j < n && is_digit s.[!j] do
+                 incr j
+               done;
+               if !j > vs + 1 && !j < n && s.[!j] = closing then
+                 match parse_month (String.sub s (vs + 1) (!j - vs - 1)) with
+                 | Some macro ->
+                     edits :=
+                       Cst_edit.replace ~start_offset:vs ~end_offset:(!j + 1)
+                         macro
+                       :: !edits
+                 | None -> ())
+           | c when is_digit c -> (
+               let j = ref vs in
+               while !j < n && is_digit s.[!j] do
+                 incr j
+               done;
+               match parse_month (String.sub s vs (!j - vs)) with
+               | Some macro ->
+                   edits :=
+                     Cst_edit.replace ~start_offset:vs ~end_offset:!j macro
+                     :: !edits
+               | None -> ())
+           | _ -> ());
+           i := mend
+         done
+       with Not_found -> ());
+      let fix = List.rev !edits in
+      let res =
+        if fix = [] then
+          mk_result ~id:"BIB-010" ~severity:Info ~message:msg ~count:cnt
+        else
+          mk_result_with_fix_exempt ~id:"BIB-010" ~severity:Info ~message:msg
+            ~count:cnt ~src:s ~fix
+      in
+      Some res)
     else None
   in
   { id = "BIB-010"; run; languages = [] }

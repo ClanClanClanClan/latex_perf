@@ -814,4 +814,45 @@ let () =
         (candidates_of "SCRIPT-010" "$$\\sum\\limits_j y$$" = [])
         (tag ^ ": display excluded"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     DE-006: Swiss German ß — ß→ss is lossy/locale-dependent → CANDIDATE
+     ══════════════════════════════════════════════════════════════════════ *)
+  let de6 = "Stra\xc3\x9fe" (* Straße: ß = C3 9F at [4,6) *) in
+  run "DE-006 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "DE-006" de6 1) (tag ^ ": count=1"));
+  run "DE-006 emits a ss candidate at the right span" (fun tag ->
+      expect
+        (edit_of_label "DE-006" de6
+           "Replace \xc3\x9f with \xe2\x80\x9css\xe2\x80\x9d (Swiss German \
+            orthography)"
+        = Some (4, 6, "ss"))
+        (tag ^ ": edit [4,6)->ss"));
+  run "DE-006 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "DE-006" de6)) (tag ^ ": fix=None"));
+  run "DE-006 candidate dropped inside a comment (still fires)" (fun tag ->
+      let s = "% Stra\xc3\x9fe\n" in
+      expect
+        (fires "DE-006" s && candidates_of "DE-006" s = [])
+        (tag ^ ": exempt (comment)"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     ENC-006: overlong UTF-8 — re-encode can yield control bytes → CANDIDATE
+     ══════════════════════════════════════════════════════════════════════ *)
+  let enc6 = "ab\xc1\x80cd" (* C1 80 overlong = U+0040 '@' at [2,4) *) in
+  run "ENC-006 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "ENC-006" enc6 1) (tag ^ ": count=1"));
+  run "ENC-006 emits a minimal re-encode candidate (C1 80 -> @)" (fun tag ->
+      expect
+        (edit_of_label "ENC-006" enc6
+           "Re-encode overlong UTF-8 sequence in minimal form"
+        = Some (2, 4, "@"))
+        (tag ^ ": edit [2,4)->@"));
+  run "ENC-006 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "ENC-006" enc6)) (tag ^ ": fix=None"));
+  run "ENC-006 candidate dropped inside a comment (still fires)" (fun tag ->
+      let s = "% ab\xc1\x80cd\n" in
+      expect
+        (fires "ENC-006" s && candidates_of "ENC-006" s = [])
+        (tag ^ ": exempt (comment)"));
+
   finalise "candidate_fixes"

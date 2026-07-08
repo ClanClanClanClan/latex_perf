@@ -137,6 +137,73 @@
    }
   ]
  },
+ "BIB-010": {
+  "variants": [
+   {
+    "expected_hex": "6d6f6e7468203d206d61720a",
+    "hex": "6d6f6e7468203d207b337d0a",
+    "kind": "mutate",
+    "note": "base braced-numeric",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e7468203d206e6f762c0a",
+    "hex": "6d6f6e7468203d2031312c0a",
+    "kind": "mutate",
+    "note": "bare-numeric",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e7468203d206d61722c6d6f6e7468203d206170722c0a",
+    "hex": "6d6f6e7468203d207b337d2c6d6f6e7468203d207b347d2c0a",
+    "kind": "mutate",
+    "note": "doubled",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e74683d6a756c780a",
+    "hex": "6d6f6e74683d7b377d780a",
+    "kind": "mutate",
+    "note": "letter-adjacent (glued value)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e7468203d207b31337d0a",
+    "hex": "6d6f6e7468203d207b31337d0a",
+    "kind": "preserve",
+    "note": "out-of-range 13 (no fix)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e7468203d207b4d617263687d0a",
+    "hex": "6d6f6e7468203d207b4d617263687d0a",
+    "kind": "preserve",
+    "note": "spelled-out name (no fix)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "6d6f6e7468203d206d61720a",
+    "hex": "6d6f6e7468203d206d61720a",
+    "kind": "preserve",
+    "note": "already-macro (idempotent, no fix)",
+    "pilot": false
+   },
+   {
+    "expected_hex": "25206d6f6e7468203d207b337d0a",
+    "hex": "25206d6f6e7468203d207b337d0a",
+    "kind": "preserve",
+    "note": "in-comment",
+    "pilot": false
+   },
+   {
+    "expected_hex": "5c766572627c6d6f6e7468203d207b337d7c0a",
+    "hex": "5c766572627c6d6f6e7468203d207b337d7c0a",
+    "kind": "preserve",
+    "note": "in-verbatim",
+    "pilot": false
+   }
+  ]
+ },
  "CHAR-005": {
   "variants": [
    {

@@ -52,7 +52,7 @@ CANDIDATE	PKG-022	Replace obsolete package subfigure with subcaption
   EDIT	37	46	subcaption
 ```
 
-## The candidate rules (18)
+## The candidate rules (20)
 
 | Rule | Suggests |
 |---|---|
@@ -73,6 +73,8 @@ CANDIDATE	PKG-022	Replace obsolete package subfigure with subcaption
 | ZH-001 | western `.` → Chinese `。` (zh context) |
 | FR-008 | French `œ/Œ` ligature |
 | SPC-018 | insert a space after a sentence-ending period |
+| DE-006 | Swiss German `ß` → `ss` (lossy: correct only under Swiss orthography) |
+| ENC-006 | overlong UTF-8 → minimal re-encoding (may decode to a control byte) |
 
 `MATH-012`/`MATH-025`/`MATH-032`/`MATH-052`/`MATH-064`/`MATH-101`/`MATH-102`,
 `CHEM-001`, `ZH-001` and `SPC-018` gate on math; text rules use the full exempt

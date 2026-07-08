@@ -2,6 +2,27 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.33] — 2026-07-08
+
+**Definition-of-Done fix — BIB-010 / DE-006 / ENC-006 (were fixable but had neither
+an auto-fix nor a candidate).** Closes the DoD violation surfaced by the honest
+gap re-audit.
+- **BIB-010 → AUTO-FIX (producer #167):** numeric BibTeX month (`month = {3}`) →
+  canonical macro (`mar`); deterministic + lossless (jan..dec = 1..12 in every
+  standard `.bst`). Numeric 1..12 only; out-of-range/named/already-macro stay
+  counted but unedited; idempotent; `mk_result_with_fix_exempt` (protected-region
+  safe); 9 adversarial coverage variants (coverage 167×1022 PASS).
+- **DE-006 → CANDIDATE:** Swiss German `ß`→`ss` is lossy + locale-dependent (wrong
+  in standard German, e.g. *Maß*/*Mass*), so intent-dependent — surfaced for review,
+  never auto-applied.
+- **ENC-006 → CANDIDATE:** overlong/ill-formed UTF-8 minimal re-encode (often decodes
+  to a control char); author intent unknowable, so review-only.
+
+Diagnostic output 0-diff for all three; `--apply-fixes-for` byte-identical for the
+two candidates; apply-fixes-safety (332 files converge, valid UTF-8) + verbatim-
+safety PASS. Adversarially verified (correct-worktree, sound, 0 findings). Producer
+count 166→167; candidate rules now 47.
+
 ## [v27.1.32] — 2026-07-08
 
 **Tier 3 COMPLETE — faithful ≤2-pass convergence + additive WS8 bridge.** Stages

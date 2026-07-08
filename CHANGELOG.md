@@ -2,6 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.30] — 2026-07-08
+
+**Tier 3 Stage 2 — faithful aux-state evolution + 2-pass convergence lemma.**
+`proofs/LexerFaithfulStep.v` (new module L0Aux) adds `pdflatex_token`
+(`Tok_text`/`Tok_label_def n`/`Tok_label_ref n`), `aux_state`
+(`defined_labels`/`used_refs`), `aux_step_token`, `aux_step_pass`, and the key
+**`aux_pass_stable_after_2`** (Qed, 0 axioms):
+`∀ toks n, In n (defined_labels (aux_step_pass (aux_step_pass empty_aux toks) toks))
+↔ In n (defined_labels (aux_step_pass empty_aux toks))` — the defined-label SET is
+stable after a second pass (real pdflatex 2-pass convergence). Stated at set/
+membership level because the raw list grows; this is proved *non-vacuous*:
+`naive_list_eq_is_false` shows the naive list-equality the plan warned about is
+genuinely false, and `stable_on_witness` inhabits the set. Backed by
+`pass_defined_iff`. Adversarially verified (correct-worktree, sound — lemma
+confirmed meaningful). Additive; Stage 1 + all existing proofs untouched;
+0-admit/0-axiom invariant preserved.
+
 ## [v27.1.29] — 2026-07-08
 
 **Tier 3 Stage 1 — faithful-semantics `tokenize` byte-count proof.** Extends

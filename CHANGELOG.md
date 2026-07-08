@@ -2,6 +2,18 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.34] — 2026-07-08
+
+**Candidate-pool tail — 5 Bucket-C candidates (part of closing the honest gap-audit
+findings).** DELIM-010 (`\big`→`\Big`-family sizing in display math), TIKZ-010
+(bump deprecated `pgfplots compat`), VERB-012 (`minted` `autogobble`), VERB-016
+(`minted` back-ticks → label-only escapeinside), VERB-017 (`minted` `linenos` for
+long blocks) now emit reviewable candidates. **Safety-driven skips (verify sound):**
+SCRIPT-021 already a shipped producer; SCRIPT-017 would contradict it; VERB-001/003/
+004 edit verbatim BODY content (unsafe) → correctly deferred. `--apply-fixes-for`
+byte-identical; produces_fix false; coverage 167×1022 unaffected. Candidate rules
+47→52. Adversarially verified (correct-worktree, sound, 0 findings).
+
 ## [v27.1.33] — 2026-07-08
 
 **Definition-of-Done fix — BIB-010 / DE-006 / ENC-006 (were fixable but had neither

@@ -4113,8 +4113,17 @@ let r_verb_012 : rule =
     Re_compat.regexp "\\\\begin{minted}[ \t\n]*\\(\\[[^]]*\\]\\)?[ \t\n]*{"
   in
   let _re_autogobble = Re_compat.regexp_string "autogobble" in
+  (* Bucket-C candidate (v27.1.34): add the `autogobble` key to the minted
+     OPTION list — never touches the code body (verbatim content stays intact).
+     When an `[...]` option block already exists the key is inserted right after
+     `[`; otherwise a fresh `[autogobble]` option block is inserted right after
+     `\begin{minted}`. A `\begin{minted}` nested inside another protected span
+     (a comment or an outer verbatim block) yields NO candidate. Review-only. *)
   let run s =
+    let vcu = find_verbatim_comment_url_ranges s in
+    let nested pos = List.exists (fun (a, b) -> a < pos && pos < b) vcu in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
@@ -4128,14 +4137,34 @@ let r_verb_012 : rule =
                 in
                 true
               with Not_found -> false)
-         then incr cnt;
+         then (
+           incr cnt;
+           if not (nested pos) then
+             let edit =
+               match String.index_opt matched '[' with
+               | Some br -> Cst_edit.insert ~at:(pos + br + 1) "autogobble, "
+               | None -> Cst_edit.insert ~at:(pos + 14) "[autogobble]"
+             in
+             cands :=
+               {
+                 c_edits = [ edit ];
+                 c_label = "Add autogobble to the minted options";
+               }
+               :: !cands);
          i := pos + String.length matched
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-012" ~severity:Info
-           ~message:"`minted` block missing autogobble" ~count:!cnt)
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-012" ~severity:Info
+             ~message:"`minted` block missing autogobble" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-012" ~severity:Info
+             ~message:"`minted` block missing autogobble" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "VERB-012"; run; languages = [] }
@@ -4184,14 +4213,24 @@ let r_verb_015 : rule =
 (* VERB-016: minted without escapeinside while containing back-ticks *)
 let r_verb_016 : rule =
   let _re_escapeinside = Re_compat.regexp_string "escapeinside" in
+  (* Bucket-C candidate (v27.1.34): LABEL-ONLY. Adding `escapeinside=<d1><d2>`
+     needs a delimiter pair guaranteed absent from the (back-tick-containing)
+     code body — an intent- and content-dependent choice that cannot be bounded
+     to a safe literal edit here, so no [c_edits] are emitted; the suggestion is
+     surfaced for the author. A `\begin{minted}` nested inside another protected
+     span (comment / outer verbatim) yields no candidate. Review-only. *)
   let run s =
+    let vcu = find_verbatim_comment_url_ranges s in
+    let nested pos = List.exists (fun (a, b) -> a < pos && pos < b) vcu in
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let tag = "\\begin{minted}" in
     let tlen = String.length tag in
     let i = ref 0 in
     while !i <= n - tlen do
       if String.sub s !i tlen = tag then (
+        let opener = !i in
         (* Find the options and body *)
         let opts_end = ref (!i + tlen) in
         (* Skip optional [...] *)
@@ -4212,18 +4251,36 @@ let r_verb_016 : rule =
           let blocks = extract_env_blocks "minted" (String.sub s !i (n - !i)) in
           match blocks with
           | blk :: _ ->
-              if String.contains blk '`' then incr cnt;
+              if String.contains blk '`' then (
+                incr cnt;
+                if not (nested opener) then
+                  cands :=
+                    {
+                      c_edits = [];
+                      c_label =
+                        "Add escapeinside=<d1><d2> to the minted options \
+                         (choose delimiters absent from the code)";
+                    }
+                    :: !cands);
               i := !opts_end
           | [] -> i := !opts_end
         else i := !opts_end)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-016" ~severity:Info
-           ~message:
-             "`minted` without `escapeinside` while containing back‑ticks"
-           ~count:!cnt)
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-016" ~severity:Info
+             ~message:
+               "`minted` without `escapeinside` while containing back‑ticks"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-016" ~severity:Info
+             ~message:
+               "`minted` without `escapeinside` while containing back‑ticks"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "VERB-016"; run; languages = [] }
@@ -4231,16 +4288,26 @@ let r_verb_016 : rule =
 (* VERB-017: minted lacks linenos in code block > 20 lines *)
 let r_verb_017 : rule =
   let _re_linenos = Re_compat.regexp_string "linenos" in
+  (* Bucket-C candidate (v27.1.34): add the boolean `linenos` key to the minted
+     OPTION list — never touches the code body. Inserted after `[` when an
+     option block exists, else a fresh `[linenos]` after `\begin{minted}`. A
+     nested minted (comment / outer verbatim) yields no candidate.
+     Review-only. *)
   let run s =
+    let vcu = find_verbatim_comment_url_ranges s in
+    let nested pos = List.exists (fun (a, b) -> a < pos && pos < b) vcu in
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let tag = "\\begin{minted}" in
     let tlen = String.length tag in
     let i = ref 0 in
     while !i <= n - tlen do
       if String.sub s !i tlen = tag then (
+        let opener = !i in
         let opts_end = ref (!i + tlen) in
-        if !opts_end < n && s.[!opts_end] = '[' then (
+        let has_opts = !opts_end < n && s.[!opts_end] = '[' in
+        if has_opts then (
           while !opts_end < n && s.[!opts_end] <> ']' do
             incr opts_end
           done;
@@ -4257,17 +4324,37 @@ let r_verb_017 : rule =
           match blocks with
           | blk :: _ ->
               let lines = String.split_on_char '\n' blk in
-              if List.length lines > 20 then incr cnt;
+              if List.length lines > 20 then (
+                incr cnt;
+                if not (nested opener) then
+                  let edit =
+                    if has_opts then
+                      Cst_edit.insert ~at:(opener + tlen + 1) "linenos, "
+                    else Cst_edit.insert ~at:(opener + tlen) "[linenos]"
+                  in
+                  cands :=
+                    {
+                      c_edits = [ edit ];
+                      c_label = "Add linenos to the minted options";
+                    }
+                    :: !cands);
               i := !opts_end
           | [] -> i := !opts_end
         else i := !opts_end)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-017" ~severity:Info
-           ~message:"`minted` lacks `linenos` in code block > 20 lines"
-           ~count:!cnt)
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-017" ~severity:Info
+             ~message:"`minted` lacks `linenos` in code block > 20 lines"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-017" ~severity:Info
+             ~message:"`minted` lacks `linenos` in code block > 20 lines"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "VERB-017"; run; languages = [] }

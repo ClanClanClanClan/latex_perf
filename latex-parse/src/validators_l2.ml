@@ -3066,20 +3066,53 @@ let r_tikz_010 : rule =
     Re_compat.regexp
       {|\\pgfplotsset{[^}]*\(every axis\|compat=1\.[0-7]\)[^}]*}|}
   in
+  (* Bucket-C candidate (v27.1.34): the audit's clean C18 sub-edit — a
+     deprecated `compat=1.[0-7]` level can be mechanically bumped to the current
+     `compat=1.18`. The `every axis` alternative has no single safe replacement,
+     so it produces NO candidate (the count still tallies it). The edit rewrites
+     exactly the matched `compat=1.X` inside the offending `\pgfplotsset{…}`
+     block; review-only; text-exempt. *)
+  let re_compat = Re_compat.regexp {|compat=1\.[0-7]|} in
   let run s =
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
+         let mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Re_compat.match_end _mr
+         let mb = Re_compat.match_beginning mr in
+         let me = Re_compat.match_end mr in
+         (try
+            let mr2, _ = Re_compat.search_forward re_compat s mb in
+            let cb = Re_compat.match_beginning mr2 in
+            let ce = Re_compat.match_end mr2 in
+            if cb >= mb && ce <= me then
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:cb ~end_offset:ce
+                        "compat=1.18";
+                    ];
+                  c_label = "Bump deprecated pgfplots compat to 1.18";
+                }
+                :: !cands
+          with Not_found -> ());
+         i := me
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TIKZ-010" ~severity:Info
-           ~message:{|Deprecated \pgfplotsset key used|} ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TIKZ-010" ~severity:Info
+             ~message:{|Deprecated \pgfplotsset key used|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TIKZ-010" ~severity:Info
+             ~message:{|Deprecated \pgfplotsset key used|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "TIKZ-010"; run; languages = [] }

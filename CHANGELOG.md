@@ -2,6 +2,33 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.32] — 2026-07-08
+
+**Tier 3 COMPLETE — faithful ≤2-pass convergence + additive WS8 bridge.** Stages
+4-6 of V27_FAITHFUL_SEMANTICS_PLAN. `proofs/LexerFaithfulStep.v` (new module
+L0Pass) adds `pass_state`, `pdflatex_pass_step`, `iterate_pass_step`, and a
+*meaningful* `converged` flag (set-level `aux_eq` on defined labels — a raw list
+flag would never fire, per Stage 2). The convergence theorem
+**`pdflatex_pass_converges_bounded`** (Qed, 0 axioms):
+`∀ input s0, bounded_labels input → ∃ k, k ≤ 2 ∧ (iterate_pass_step s0 k input).converged = true`
+— and **`bound_two_is_tight`** proves k=1 is insufficient, so the ≤2 bound is TIGHT.
+`bounded_labels_holds` shows the hypothesis is satisfiable (non-vacuous);
+`pass_iteration_no_fatal` carries the Stage-3 fatal-safety through iteration.
+
+**Stage 6 (WS8 connection) done ADDITIVELY** — new `proofs/FaithfulWS8Bridge.v`
+proves `faithful_refines_ws8_bounded_terminates` (the faithful convergence sits
+inside, and sharpens, the WS8 `pdflatex_bounded_terminates` pass budget) WITHOUT
+touching the shipped capstone: **`PdflatexModel.v` is byte-identical and
+`Print Assumptions pdflatex_compile_safe` remains "Closed under the global
+context".** Re-writing the capstone's carriers was correctly avoided as a risk to a
+proven theorem. All 6 new top-level results Closed; 0-admit/0-axiom invariant
+preserved; theorem count 1,418→1,431. Adversarially verified (correct-worktree,
+sound — convergence non-vacuous, bound tight, capstone intact).
+
+This closes the re-scoped faithful-semantics epic: a genuine operational
+tokenize→aux→log→pass model with a tight 2-pass convergence theorem and fatal-log
+safety, bridged to the existing WS8 compile-safety capstone.
+
 ## [v27.1.31] — 2026-07-08
 
 **Tier 3 Stage 3 — faithful log-state + fatal-marker safety.** `proofs/

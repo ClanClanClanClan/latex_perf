@@ -1167,7 +1167,16 @@ let extract_command_names (s : string) : string list =
     in
     List.rev_append ctx_names_rev token_names
 
-(* Helper: extract content blocks between \begin{env}...\end{env} *)
+(* Helper: extract content blocks between \begin{env}...\end{env}
+
+   DEPRECATED (Tier 2 Stage 2, V27_2 plan): this substring open/close scan is
+   NOT comment/verbatim-aware and does NOT track nesting, so it matches a
+   `\begin{env}` written inside a `%` comment or a verbatim/`\verb` span and can
+   close the wrong `\end`. New code MUST use [Ast_semantic_state.environments] /
+   [Ast_semantic_state.envs_named] (see [Validators_l2.ast_env_bodies] for the
+   substring-materialising wrapper), which fixes both bug classes. Retained only
+   for the not-yet-migrated legacy callers; the regex-vs-AST divergence on the
+   lint corpus is pinned by scripts/tools/check_ast_parity.py. *)
 let extract_env_blocks (env : string) (s : string) : string list =
   let open_tag = "\\begin{" ^ env ^ "}" in
   let close_tag = "\\end{" ^ env ^ "}" in
@@ -1461,6 +1470,14 @@ let has_caption (body : string) : bool =
   with Not_found -> false
 
 (* ── Helper: extract all \label{prefix:...} keys ──────────────────────── *)
+(* DEPRECATED (Tier 2 Stage 2, V27_2 plan): this regex scan matches `\label{}`
+   tokens inside comments / verbatim / `\verb` / url spans (false matches). The
+   comment/verbatim-aware replacement is [Ast_semantic_state.labels] (+
+   [labels_by_env]); REF-008/REF-010 already run on it. New label/ref code MUST
+   use the AST extractors. This helper is retained only for the remaining legacy
+   callers (MATH-024/MATH-023 eq: and the fig:/caption rules); the regex-vs-AST
+   divergence is pinned by scripts/tools/check_ast_parity.py, which asserts the
+   two agree except on protected-region false matches. *)
 let extract_labels_with_prefix (prefix : string) (s : string) :
     (int * string) list =
   let re =
@@ -1480,6 +1497,9 @@ let extract_labels_with_prefix (prefix : string) (s : string) :
 
 (* ── Helper: extract all \ref{prefix:...}, \eqref{prefix:...},
    \autoref{prefix:...}, \cref{prefix:...} keys ──────────── *)
+(* DEPRECATED (Tier 2 Stage 2): comment/verbatim-blind, like
+   [extract_labels_with_prefix]. Replacement: [Ast_semantic_state.refs]. See the
+   note on [extract_labels_with_prefix] above and check_ast_parity.py. *)
 let extract_refs_with_prefix (prefix : string) (s : string) :
     (int * string) list =
   let re =

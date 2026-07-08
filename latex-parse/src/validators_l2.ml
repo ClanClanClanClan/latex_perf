@@ -1103,11 +1103,30 @@ let r_math_024 : rule =
   { id = "MATH-024"; run; languages = [] }
 
 (* ── REF-010: Figure referenced before first mention in text ─────────── *)
-(* Fire if \ref{fig:X} appears at a position before the \label{fig:X} *)
+(* Fire if \ref{fig:X} appears at a position before the \label{fig:X}. Tier 2
+   Stage 2: label/ref extraction now runs through the comment/verbatim- aware
+   [Ast_semantic_state] extractors instead of the [extract_labels_with_prefix] /
+   [extract_refs_with_prefix] regexes. The (offset, key) surface is identical
+   except that a `\ref`/`\label` written inside a comment / verbatim / `\verb` /
+   url is no longer counted (the intended false-match correction; enforced by
+   check_ast_parity). *)
 let r_ref_010 : rule =
   let run s =
-    let labels = extract_labels_with_prefix "fig:" s in
-    let refs = extract_refs_with_prefix "fig:" s in
+    let has_prefix p (k : string) =
+      String.length k >= String.length p && String.sub k 0 (String.length p) = p
+    in
+    let labels =
+      Ast_semantic_state.labels s
+      |> List.filter (fun (l : Ast_semantic_state.label_entry) ->
+             has_prefix "fig:" l.key)
+      |> List.map (fun (l : Ast_semantic_state.label_entry) -> (l.off, l.key))
+    in
+    let refs =
+      Ast_semantic_state.refs s
+      |> List.filter (fun (r : Ast_semantic_state.ref_entry) ->
+             has_prefix "fig:" r.key)
+      |> List.map (fun (r : Ast_semantic_state.ref_entry) -> (r.off, r.key))
+    in
     let cnt = ref 0 in
     (* For each unique ref key, check if first ref precedes label *)
     let checked = ref [] in
@@ -4198,22 +4217,21 @@ let r_lay_022 : rule =
 
 (* ── REF rules ─────────────────────────────────────────────────── *)
 
-(* REF-008: Duplicate cite key in .bib file *)
+(* REF-008: Duplicate cite key in .bib file. Tier 2 Stage 2: the `@type{key, …}`
+   entry scan now runs through the comment/verbatim-aware
+   [Ast_semantic_state.cites] extractor instead of the inline `@[a-zA-Z]+{[
+   \t]*<key>` regex. Identical key surface except that an `@entry{..}` shown
+   inside a verbatim listing or a `%`-comment is no longer counted (the intended
+   false-match correction; enforced by check_ast_parity). *)
 let r_ref_008 : rule =
-  let re_entry = Re_compat.regexp {|@[a-zA-Z]+{[ \t]*\([^, \t\n}]+\)|} in
   let run s =
     let keys = Hashtbl.create 64 in
-    let i = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward re_entry s !i in
-         let key = Re_compat.matched_group _mr 1 s in
-         (match Hashtbl.find_opt keys key with
-         | Some n -> Hashtbl.replace keys key (n + 1)
-         | None -> Hashtbl.replace keys key 1);
-         i := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
+    List.iter
+      (fun (c : Ast_semantic_state.cite_entry) ->
+        match Hashtbl.find_opt keys c.key with
+        | Some n -> Hashtbl.replace keys c.key (n + 1)
+        | None -> Hashtbl.replace keys c.key 1)
+      (Ast_semantic_state.cites s);
     let cnt =
       Hashtbl.fold (fun _ n acc -> if n > 1 then acc + 1 else acc) keys 0
     in

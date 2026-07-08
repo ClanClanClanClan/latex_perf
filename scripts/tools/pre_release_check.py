@@ -98,6 +98,13 @@ BUILD_CHECKS = [
     # Fails if any producer lacks a trigger, so coverage is non-optional.
     (["python3", "scripts/tools/check_producer_coverage.py"],
      "producer coverage", None),
+    # Tier 2 Stage 2 regex-vs-AST parity gate: the deprecated regex label/ref/
+    # cite extractors and the new comment/verbatim-aware Ast_semantic_state
+    # extractors (used by REF-008/REF-010) must agree over corpora/lint except on
+    # the intended false-match corrections (a \label/\ref/@entry inside a
+    # comment/verbatim/\verb/url). This is what lets the regex path be retired.
+    (["python3", "scripts/tools/check_ast_parity.py"],
+     "ast parity", None),
 ]
 
 

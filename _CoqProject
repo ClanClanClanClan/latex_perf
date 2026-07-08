@@ -19,6 +19,7 @@ proofs/ListWindow.v
 proofs/LexerDeterminism.v
 proofs/LexerTotality.v
 proofs/LexerFaithfulStep.v
+proofs/FaithfulWS8Bridge.v
 proofs/LexerSoA.v
 proofs/LexerSmallstep.v
 proofs/LexerIncremental.v

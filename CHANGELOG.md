@@ -2,6 +2,21 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.28] — 2026-07-08
+
+**Tier 2 COMPLETE — 5 L3 env/math rules migrated to the AST (`ast_semantic_state`).**
+MATH-076, MATH-089, MATH-103, TAB-004, CHEM-010 now extract environments/math via
+the comment/verbatim-aware `Ast_semantic_state.environments`/`envs_named`/
+`math_segments` instead of the false-match-prone regex extractor. MATH-107 skipped
+(a whole-document substring tally, not env-scoped). **0-diff on the 331-file lint
+corpus** (identical counts) while the latent regex false-match is now fixed and
+regression-guarded: a `\begin{align}`/`\begin{tabular}`/`\begin{reaction}` inside
+`verbatim`/`\verb`, or a `$…$` inside a `%`-comment, is no longer counted (baseline
+counted them). Adversarially verified (correct-worktree, sound — no genuine
+occurrence dropped). This closes the L3-AST workstream at its real scope (the
+inventory's ~6 high-value env/math rules; CJK/RTL byte-scanners remain a separate
+line/script-context epic, out of scope by design).
+
 ## [v27.1.27] — 2026-07-08
 
 **Tier 2 Stage 1 — `ast_semantic_state.ml` (AST env/math foundation).** New module

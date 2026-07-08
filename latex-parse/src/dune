@@ -89,6 +89,7 @@
   validator_dag
   layer_sync
   semantic_state
+  ast_semantic_state
   sentence_split
   event_bus
   evidence_scoring
@@ -749,6 +750,11 @@
  (name test_semantic_state)
  (modules test_semantic_state)
  (libraries latex_parse_lib unix threads))
+
+(test
+ (name test_ast_semantic_state)
+ (modules test_ast_semantic_state)
+ (libraries latex_parse_lib))
 
 (test
  (name test_evidence_scoring)

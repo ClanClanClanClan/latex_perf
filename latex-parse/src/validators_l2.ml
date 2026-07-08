@@ -5,6 +5,29 @@ open Validators_common
    specced at L2_Ast but implemented via structural text scanning
    ══════════════════════════════════════════════════════════════════════ *)
 
+(* ── Tier 2 Stage 2 AST-derived extraction helpers ───────────────────────
+   These wrap [Ast_semantic_state] (a comment/verbatim/`\verb`-aware,
+   nesting-correct environment + math extractor) and materialise the
+   body/segment substrings so the rules below keep their existing
+   substring-based logic while no longer counting `\begin{env}`/`$..$` that
+   appear inside comments or verbatim blocks (the regex extractors falsely
+   matched those). *)
+let ast_env_bodies (s : string) (name : string) : string list =
+  List.map
+    (fun (e : Ast_semantic_state.env_node) ->
+      let b = e.Ast_semantic_state.body in
+      String.sub s b.Ast_semantic_state.start_off
+        (b.Ast_semantic_state.end_off - b.Ast_semantic_state.start_off))
+    (Ast_semantic_state.envs_named s name)
+
+let ast_math_segments (s : string) : string list =
+  List.map
+    (fun (m : Ast_semantic_state.math_seg) ->
+      let sp = m.Ast_semantic_state.seg in
+      String.sub s sp.Ast_semantic_state.start_off
+        (sp.Ast_semantic_state.end_off - sp.Ast_semantic_state.start_off))
+    (Ast_semantic_state.math_segments s)
+
 (* ── FIG-001: Figure without caption ─────────────────────────────────── *)
 let r_fig_001 : rule =
   let run s =
@@ -4702,8 +4725,8 @@ let r_font_012 : rule =
 (* CHEM-010: Reaction scheme exceeds page width heuristic *)
 let r_chem_010 : rule =
   let run s =
-    let ce_blocks = extract_env_blocks "reaction" s in
-    let scheme_blocks = extract_env_blocks "scheme" s in
+    let ce_blocks = ast_env_bodies s "reaction" in
+    let scheme_blocks = ast_env_bodies s "scheme" in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -5019,8 +5042,8 @@ let r_cjk_016 : rule =
 (* MATH-076: Equation split across pages without \allowbreak *)
 let r_math_076 : rule =
   let run s =
-    let align_blocks = extract_env_blocks "align" s in
-    let align_star = extract_env_blocks "align*" s in
+    let align_blocks = ast_env_bodies s "align" in
+    let align_star = ast_env_bodies s "align*" in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -5045,7 +5068,7 @@ let r_math_076 : rule =
 let r_math_103 : rule =
   let re_left_frac = Re_compat.regexp {|\\left[.([][ \t\n]*\\frac|} in
   let run s =
-    let math_segs = extract_math_segments s in
+    let math_segs = ast_math_segments s in
     let cnt =
       List.fold_left
         (fun acc seg ->
@@ -5075,7 +5098,7 @@ let r_math_103 : rule =
 (* TAB-004: Table width exceeds \textwidth — heuristic *)
 let r_tab_004 : rule =
   let run s =
-    let blocks = extract_env_blocks "tabular" s in
+    let blocks = ast_env_bodies s "tabular" in
     let cnt =
       List.fold_left
         (fun acc body ->
@@ -5214,7 +5237,7 @@ let r_lay_013 : rule =
 let r_math_089 : rule =
   let re = Re_compat.regexp {|\\left[.([][ \t\n]*\\frac|} in
   let run s =
-    let math_segs = extract_math_segments s in
+    let math_segs = ast_math_segments s in
     let cnt =
       List.fold_left
         (fun acc seg ->

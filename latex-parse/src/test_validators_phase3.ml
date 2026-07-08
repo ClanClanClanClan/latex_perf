@@ -394,6 +394,66 @@ The year 2026 is important.|})
         (does_not_fire "CHEM-010"
            "\\begin{reaction}\nH2O -> H+ + OH-\n\\end{reaction}")
         (tag ^ ": short reaction"));
+  (* Tier 2 Stage 2 (AST migration): a `\begin{reaction}` written inside a
+     verbatim block is literal text, not an environment — no longer counted. *)
+  run "CHEM-010 clean: reaction in verbatim not counted" (fun tag ->
+      let long_line = String.make 130 'A' in
+      expect
+        (does_not_fire "CHEM-010"
+           ("\\begin{verbatim}\n\\begin{reaction}\n"
+           ^ long_line
+           ^ "\n\\end{reaction}\n\\end{verbatim}"))
+        (tag ^ ": reaction in verbatim"));
+
+  (* ══════════════════════════════════════════════════════════════════════ Tier
+     2 Stage 2 — env/math-scoped rules migrated to Ast_semantic_state: MATH-076
+     (align), TAB-004 (tabular), MATH-089/103 (math segments). Each includes a
+     comment/verbatim-exclusion case proving the AST extractor no longer counts
+     a false regex match inside a protected region.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let align9 =
+    "\\begin{align}\na &= b \\\\\na &= b \\\\\na &= b \\\\\na &= b \\\\\n"
+    ^ "a &= b \\\\\na &= b \\\\\na &= b \\\\\na &= b \\\\\na &= b\n\\end{align}"
+  in
+  run "MATH-076 fires: long align without allowbreak" (fun tag ->
+      expect (fires "MATH-076" align9) (tag ^ ": 9-line align"));
+  run "MATH-076 clean: align in verbatim not counted" (fun tag ->
+      expect
+        (does_not_fire "MATH-076"
+           ("\\begin{verbatim}\n" ^ align9 ^ "\n\\end{verbatim}"))
+        (tag ^ ": align in verbatim"));
+
+  run "TAB-004 fires: wide tabular line" (fun tag ->
+      let long_line = String.make 130 'x' in
+      expect
+        (fires "TAB-004"
+           ("\\begin{tabular}{ll}\n" ^ long_line ^ "\n\\end{tabular}"))
+        (tag ^ ": wide tabular"));
+  run "TAB-004 clean: tabular in verbatim not counted" (fun tag ->
+      let long_line = String.make 130 'x' in
+      expect
+        (does_not_fire "TAB-004"
+           ("\\begin{verbatim}\n\\begin{tabular}{ll}\n"
+           ^ long_line
+           ^ "\n\\end{tabular}\n\\end{verbatim}"))
+        (tag ^ ": tabular in verbatim"));
+
+  run "MATH-089 fires: left-frac in math" (fun tag ->
+      expect
+        (fires "MATH-089" {|$\left( \frac{a}{b} \right)$|})
+        (tag ^ ": left-frac inline math"));
+  run "MATH-103 fires: left-frac in math" (fun tag ->
+      expect
+        (fires "MATH-103" {|$\left( \frac{a}{b} \right)$|})
+        (tag ^ ": left-frac inline math"));
+  run "MATH-089 clean: left-frac in comment not counted" (fun tag ->
+      expect
+        (does_not_fire "MATH-089" "% $\\left( \\frac{a}{b}$\nText.")
+        (tag ^ ": commented math"));
+  run "MATH-103 clean: left-frac in comment not counted" (fun tag ->
+      expect
+        (does_not_fire "MATH-103" "% $\\left( \\frac{a}{b}$\nText.")
+        (tag ^ ": commented math"));
 
   (* ══════════════════════════════════════════════════════════════════════ Test
      hardening: fires_with_count + edge cases

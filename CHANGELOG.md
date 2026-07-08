@@ -2,6 +2,31 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.35] — 2026-07-08
+
+**Tier 3 Stage 6 DEEPENED — capstone genuinely re-proved over the faithful model
+(phantom-p closed).** Per the maintainer's choice of the high-fidelity path over a
+box-ticking in-place re-proof. `proofs/PdflatexModel.v` + `LexerFaithfulStep.v`:
+- **Reachable fatal transition:** new `Tok_fatal` constructor whose `log_step_token`
+  appends the real `fatal_marker_emergency_stop` bytes; `fatal_token_is_fatal` (Qed)
+  shows the ordinary pass FALSIFIES `log_no_fatal` on a reachable input — so
+  `log_no_fatal` is genuinely discriminating, not near-trivially true.
+- **Project→token map (phantom-p closed):** `project_tokens (g:build_graph) :=
+  map (edge_token g) g.(bg_edges)` (`Tok_text` if the edge resolves, `Tok_fatal` if
+  dangling); `project_closed_no_fatal_tokens` (Qed) makes T2 closure load-bearing.
+- **`pdflatex_compile_safe` + the 3 rule proofs re-proved** so their conclusion runs
+  over `faithful_run p k` on `project_tokens p` — `p` is GENUINELY consumed, and the
+  safety claim is falsifiable (`dangling_project_pass_is_fatal`, Qed: a project with a
+  dangling reference reaches a fatal log). All Qed; `Print Assumptions
+  pdflatex_compile_safe` = "Closed under the global context"; 0 admits/0 axioms.
+
+**Honest residual (documented):** the project→token map is coarse (`Tok_text`/
+`Tok_fatal` per edge, never `Tok_label_def/ref`), so the capstone exercises the
+FATAL-SAFETY property but not the cross-ref convergence (Stages 2/3/5 stay proven but
+not capstone-wired — appropriate since undefined refs are warnings, not fatals); the
+profile `pf` is now phantom. Adversarially verified (correct-worktree, `path_match`,
+capstone integrity confirmed). Theorem count 1,431→1,438.
+
 ## [v27.1.34] — 2026-07-08
 
 **Candidate-pool tail — 5 Bucket-C candidates (part of closing the honest gap-audit

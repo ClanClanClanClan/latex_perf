@@ -855,4 +855,106 @@ let () =
         (fires "ENC-006" s && candidates_of "ENC-006" s = [])
         (tag ^ ": exempt (comment)"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     DELIM-010: \big-family sizing in display math -> \Big (CANDIDATE)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let d10 = "\\[ x \\big| y \\]" in
+  run "DELIM-010 lists a \\big->\\Big candidate in display math" (fun tag ->
+      (* `\big` starts at 5, its `b` is at 6 -> capitalise [6,7) to `B`. *)
+      expect
+        (fires_with_count "DELIM-010" d10 1
+        && edit_of_label "DELIM-010" d10
+             "Use \\Big-family sizing (\\big -> \\Big) in display math"
+           = Some (6, 7, "B"))
+        (tag ^ ": edit [6,7)->B"));
+  run "DELIM-010 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "DELIM-010" d10)) (tag ^ ": fix=None"));
+  run "DELIM-010 candidate dropped inside verbatim (still fires)" (fun tag ->
+      let s = "\\begin{verbatim}\n\\[ x \\big| y \\]\n\\end{verbatim}\n" in
+      expect
+        (fires "DELIM-010" s && candidates_of "DELIM-010" s = [])
+        (tag ^ ": exempt (verbatim)"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TIKZ-010: deprecated pgfplots compat=1.[0-7] -> 1.18 (CANDIDATE)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let t10 = "\\pgfplotsset{compat=1.7}" in
+  run "TIKZ-010 bumps a deprecated compat level to 1.18" (fun tag ->
+      (* `\pgfplotsset{` is 13 bytes; `compat=1.7` spans [13,23). *)
+      expect
+        (fires_with_count "TIKZ-010" t10 1
+        && edit_of_label "TIKZ-010" t10
+             "Bump deprecated pgfplots compat to 1.18"
+           = Some (13, 23, "compat=1.18"))
+        (tag ^ ": edit [13,23)->compat=1.18"));
+  run "TIKZ-010 offers no candidate for the `every axis` case" (fun tag ->
+      let s = "\\pgfplotsset{every axis/.style={}}" in
+      expect
+        (fires "TIKZ-010" s && candidates_of "TIKZ-010" s = [])
+        (tag ^ ": fires but no compat edit"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-012: add autogobble to the minted OPTION list (CANDIDATE)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v12 = "\\begin{minted}{python}\nx=1\n\\end{minted}\n" in
+  run "VERB-012 inserts a fresh [autogobble] option block" (fun tag ->
+      (* `\begin{minted}` is 14 bytes; insert `[autogobble]` at offset 14. *)
+      expect
+        (fires_with_count "VERB-012" v12 1
+        && edit_of_label "VERB-012" v12 "Add autogobble to the minted options"
+           = Some (14, 14, "[autogobble]"))
+        (tag ^ ": insert [autogobble] at 14"));
+  let v12b =
+    "\\begin{minted}[fontsize=\\small]{python}\nx=1\n\\end{minted}\n"
+  in
+  run "VERB-012 adds autogobble inside an existing option block" (fun tag ->
+      (* `[` is at 14; insert `autogobble, ` right after it, at 15. *)
+      expect
+        (edit_of_label "VERB-012" v12b "Add autogobble to the minted options"
+        = Some (15, 15, "autogobble, "))
+        (tag ^ ": insert autogobble, at 15"));
+  run "VERB-012 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "VERB-012" v12)) (tag ^ ": fix=None"));
+  run "VERB-012 candidate dropped for a commented-out minted" (fun tag ->
+      let s = "% \\begin{minted}{python}\n% x=1\n% \\end{minted}\n" in
+      expect
+        (fires "VERB-012" s && candidates_of "VERB-012" s = [])
+        (tag ^ ": nested in comment -> no candidate"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-016: escapeinside needs a content-dependent delimiter -> LABEL-ONLY
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v16 = "\\begin{minted}{python}\nx = `echo hi`\n\\end{minted}\n" in
+  run "VERB-016 surfaces a label-only escapeinside candidate" (fun tag ->
+      expect
+        (fires_with_count "VERB-016" v16 1
+        && has_label "VERB-016" v16
+             "Add escapeinside=<d1><d2> to the minted options (choose \
+              delimiters absent from the code)"
+        && edit_of_label "VERB-016" v16
+             "Add escapeinside=<d1><d2> to the minted options (choose \
+              delimiters absent from the code)"
+           = None)
+        (tag ^ ": label present, no edit"));
+  run "VERB-016 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "VERB-016" v16)) (tag ^ ": fix=None"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-017: add linenos to the minted OPTION list (CANDIDATE)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v17 =
+    "\\begin{minted}{python}\n"
+    ^ String.concat "" (List.init 25 (fun _ -> "x\n"))
+    ^ "\\end{minted}\n"
+  in
+  run "VERB-017 inserts a fresh [linenos] option block" (fun tag ->
+      (* `\begin{minted}` is 14 bytes; insert `[linenos]` at offset 14. *)
+      expect
+        (fires_with_count "VERB-017" v17 1
+        && edit_of_label "VERB-017" v17 "Add linenos to the minted options"
+           = Some (14, 14, "[linenos]"))
+        (tag ^ ": insert [linenos] at 14"));
+  run "VERB-017 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "VERB-017" v17)) (tag ^ ": fix=None"));
+
   finalise "candidate_fixes"

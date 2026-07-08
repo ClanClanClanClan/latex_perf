@@ -683,6 +683,35 @@ let l1_delim_010_rule : rule =
         "displaymath";
       ]
     in
+    (* Bucket-C candidate (v27.1.34): each `\big`-family sizing command in
+       display math should use the capital `\Big` family. The edit capitalises
+       exactly the `b` (1 byte) at [match_beginning+1]; the rest of the token
+       (the optional l/r/m/g suffix and the following non-letter) is untouched,
+       so `\bigl(` -> `\Bigl(`, `\bigg{` -> `\Bigg{`, `\big|` -> `\Big|`. The
+       count is byte-identical to the previous diagnostic: candidate collection
+       reuses the SAME segment enumeration ([\[..\]] plus [math_envs] bodies via
+       the absolute-offset twin [extract_env_block_ranges]), incrementing [cnt]
+       at exactly the same matches. Review-only; vcu-exempt. *)
+    let cands = ref [] in
+    let scan_seg base seg =
+      let k = ref 0 in
+      try
+        while true do
+          let mr, _ = Re_compat.search_forward re_small_big seg !k in
+          incr cnt;
+          let b = base + Re_compat.match_beginning mr + 1 in
+          cands :=
+            {
+              c_edits =
+                [ Cst_edit.replace ~start_offset:b ~end_offset:(b + 1) "B" ];
+              c_label =
+                {|Use \Big-family sizing (\big -> \Big) in display math|};
+            }
+            :: !cands;
+          k := Re_compat.match_end mr
+        done
+      with Not_found -> ()
+    in
     (* Check \[...\] display math *)
     let i = ref 0 in
     while !i < len do
@@ -696,38 +725,32 @@ let l1_delim_010_rule : rule =
         done;
         if !j < len - 1 then (
           let seg = String.sub s start (!j - start) in
-          let k = ref 0 in
-          (try
-             while true do
-               let _mr, _ = Re_compat.search_forward re_small_big seg !k in
-               incr cnt;
-               k := Re_compat.match_end _mr
-             done
-           with Not_found -> ());
+          scan_seg start seg;
           i := !j + 2)
         else i := !i + 1)
       else incr i
     done;
-    (* Check display math environments *)
+    (* Check display math environments — [extract_env_block_ranges] covers the
+       same bytes as [extract_env_blocks], so the count is unchanged. *)
     List.iter
       (fun env ->
-        let blocks = extract_env_blocks env s in
         List.iter
-          (fun blk ->
-            let k = ref 0 in
-            try
-              while true do
-                let _mr, _ = Re_compat.search_forward re_small_big blk !k in
-                incr cnt;
-                k := Re_compat.match_end _mr
-              done
-            with Not_found -> ())
-          blocks)
+          (fun (cs, ce) ->
+            let seg = String.sub s cs (ce - cs) in
+            scan_seg cs seg)
+          (extract_env_block_ranges env s))
       math_envs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"DELIM-010" ~severity:Info
-           ~message:{|Display math uses \big instead of \Big|} ~count:!cnt)
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"DELIM-010" ~severity:Info
+             ~message:{|Display math uses \big instead of \Big|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"DELIM-010" ~severity:Info
+             ~message:{|Display math uses \big instead of \Big|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "DELIM-010"; run; languages = [] }

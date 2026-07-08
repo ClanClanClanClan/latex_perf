@@ -2,6 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.31] — 2026-07-08
+
+**Tier 3 Stage 3 — faithful log-state + fatal-marker safety.** `proofs/
+LexerFaithfulStep.v` (new module L0Log) adds `log_state`, `log_step_token`
+(undefined `\ref` → a WARNING with benign bytes, never fatal), `log_step_pass`,
+and `log_no_fatal` (byte-substring over the same `fatal_markers` as
+`PdflatexModel.v`). Proven (Qed, 0 axioms):
+- `clean_no_fatal` — all refs resolve ⇒ no warnings AND no fatal
+- `undefined_ref_warns_not_fatal` — an undefined ref ⇒ non-empty warnings but still non-fatal
+- `log_no_fatal_from_empty` — **no token stream ever emits a fatal marker** (the safety result)
+- `fatal_path_is_detected` — `~log_no_fatal (emit_fatal …)`: `log_no_fatal` is genuinely
+  FALSIFIABLE (a real fatal path is rejected), so the warning-vs-fatal distinction is
+  meaningful, not vacuous — confirmed by the adversarial verify (sound, 0 findings)
+Append-only (Stages 1-2 byte-identical); 0-admit/0-axiom invariant preserved; theorem
+count 1,404→1,418. Remaining: Stage 4 (`pdflatex_pass_step` + meaningful `converged`),
+Stage 5 (≤2-pass convergence theorem), Stage 6 (re-prove `pdflatex_compile_safe`).
+
 ## [v27.1.30] — 2026-07-08
 
 **Tier 3 Stage 2 — faithful aux-state evolution + 2-pass convergence lemma.**

@@ -69,7 +69,7 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
-- **Proofs**: 170 Coq files, 1,400 theorems/lemmas. 643 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+- **Proofs**: 170 Coq files, 1,402 theorems/lemmas. 643 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
 - **Validators**: 644 rule IDs / 660 spec. 166 fix-producing rules (Bucket A) + 18 Bucket-C candidate rules. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799 (precision=0.975, recall=0.985) **on the candidate-anchored TYPO-rule evaluation set** — not a whole-catalog metric; deterministic rules skip ML. Proved in `proofs/ML/SpanExtractorSound.v`.
@@ -209,7 +209,7 @@ bash scripts/latency_smoke_expand.sh 200
 - **Language contract** (v26): LP-Core / LP-Extended / LP-Foreign tiers. See [specs/v26/language_contract.md](specs/v26/language_contract.md).
 - **Rule contracts** (v26.1): per-rule execution/proof/project metadata in [specs/rules/rule_contracts.yaml](specs/rules/rule_contracts.yaml); drives the validator DAG.
 - **Execution classes**: A (keystroke-critical) / B (debounce) / C (build-coupled) / D (advisory). Formalised in [proofs/ExecutionClasses.v](proofs/ExecutionClasses.v).
-- **Proof strategy**: 0 admits, 0 axioms; 170 Coq files, 1,400 theorems/lemmas.
+- **Proof strategy**: 0 admits, 0 axioms; 170 Coq files, 1,402 theorems/lemmas.
 
 ### SIMD Implementation
 
@@ -240,7 +240,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.1.29 released. 644 validators implemented, **166 fix-producing rules**, ~1,345 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
+**Status**: v27.1.29 released. 644 validators implemented, **166 fix-producing rules**, 1,402 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

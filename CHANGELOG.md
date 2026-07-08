@@ -2,6 +2,19 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.27] — 2026-07-08
+
+**Tier 2 Stage 1 — `ast_semantic_state.ml` (AST env/math foundation).** New module
+providing comment/verbatim-aware, nesting-correct environment extraction
+(`environments`, `envs_named` → `env_node` with body span, opt args, depth) and
+math segmentation (`math_segments` → inline/display, wrapping `find_math_ranges`).
+A `\begin` inside a comment / verbatim / `\verb` is NOT parsed as an environment;
+nesting matches the nearest `\begin`; unbalanced `\end`/unclosed `\begin` degrade
+gracefully. **Additive only** — no rule, `project_state`, or `semantic_state`
+touched. Replaces the regex env extractor's false-match/nesting bugs; the
+foundation for migrating the 6 env/math L3 rules (Stage 2). Adversarially verified
+(correct-worktree, sound — all 5 blocker criteria pass); 11-case test.
+
 ## [v27.1.26] — 2026-07-08
 
 **CP-2c — 1 candidate (SCRIPT-010), 2 rejected by verify.** SCRIPT-010 now emits a

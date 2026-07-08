@@ -1220,9 +1220,49 @@ let l1_script_010_rule : rule =
       (fun seg -> cnt := !cnt + count_re_matches re_limits seg)
       inline_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-010" ~severity:Info
-           ~message:{|Use of \limits on inline operator|} ~count:!cnt)
+      (* Bucket-C candidate (v27.1.26): drop `\limits` in INLINE math (display
+         math legitimately uses \limits). Deletion, meaning-preserving. *)
+      let ranges = find_math_ranges s in
+      let inline_ranges =
+        List.filter (fun r -> range_is_inline_math s r) ranges
+      in
+      let in_inline off =
+        List.exists (fun (a, b) -> off >= a && off < b) inline_ranges
+      in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re_limits s i)
+          with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            let acc =
+              if in_inline b then
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:e
+                        ~replacement:"";
+                    ];
+                  c_label = "Drop \\limits on an inline operator";
+                }
+                :: acc
+              else acc
+            in
+            collect e acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-010" ~severity:Info
+             ~message:{|Use of \limits on inline operator|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-010" ~severity:Info
+             ~message:{|Use of \limits on inline operator|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "SCRIPT-010"; run; languages = [] }

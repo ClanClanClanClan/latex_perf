@@ -2,6 +2,17 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.26] — 2026-07-08
+
+**CP-2c — 1 candidate (SCRIPT-010), 2 rejected by verify.** SCRIPT-010 now emits a
+reviewable candidate dropping `\limits` on an INLINE operator (display math
+excluded via `range_is_inline_math`; deletion, meaning-preserving; produces_fix
+false, never auto-apply). The adversarial verify **rejected** SCRIPT-003 (its
+`x^a,b`→`x^{a,b}` changes math meaning — promotes `,b` into the superscript) and
+SCRIPT-017 (canonical direction contradicts the shipped SCRIPT-021 auto-fix — they
+would flip each other). The remaining SCRIPT rules (002/004/012/013/014) are
+heuristic/meaning-changing and stay diagnose-only. candidate_fixes 122 cases.
+
 ## [v27.1.25] — 2026-07-08
 
 **CP-2b — 6 structural/misc candidates + CLI output hardening.** Wire TAB-006

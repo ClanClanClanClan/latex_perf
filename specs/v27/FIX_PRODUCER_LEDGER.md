@@ -12,17 +12,17 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 ## Summary
 
 - **Total rules**: 660
-- **Shipped**: 166 (~25%)
-- **Pending**: 490
+- **Shipped**: 167 (~25%)
+- **Pending**: 489
 - **Deferred**: 4 (NLP-required)
 
 ### Bucket distribution (tentative — heuristic-assigned for unshipped)
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 465 | 166 | 299 |
+| **A**  | Mechanical, safe everywhere       | 466 | 167 | 299 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
-| **C**  | Context-required (--apply-fixes-with-prompt) | 84 | 0 | 84 |
+| **C**  | Context-required (--apply-fixes-with-prompt) | 83 | 0 | 83 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |
 
 **Caveat:** Bucket assignments for unshipped rules are TENTATIVE — heuristic-
@@ -54,7 +54,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | Family | Total | Shipped | Pending | Deferred | A | B | C | D |
 |--------|-------|---------|---------|----------|---|---|---|---|
 | AR | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
-| BIB | 17 | 2 | 15 | 0 | 2 | 0 | 15 | 0 |
+| BIB | 17 | 3 | 14 | 0 | 3 | 0 | 14 | 0 |
 | CE | 2 | 0 | 2 | 0 | 2 | 0 | 0 | 0 |
 | CHAR | 22 | 12 | 10 | 0 | 22 | 0 | 0 | 0 |
 | CHEM | 10 | 3 | 7 | 0 | 10 | 0 | 0 | 0 |
@@ -121,7 +121,7 @@ rules + the 4 NLP-deferred rules + CHAR-010/011 (redundant with ENC-020)
 | `BIB-007` | BIB | **C** | tentative | pending |
 | `BIB-008` | BIB | **A** | confirmed | shipped in v27.1.13 |
 | `BIB-009` | BIB | **C** | tentative | pending |
-| `BIB-010` | BIB | **C** | tentative | pending |
+| `BIB-010` | BIB | **A** | confirmed | shipped in v27.1.33 |
 | `BIB-011` | BIB | **C** | tentative | pending |
 | `BIB-012` | BIB | **C** | tentative | pending |
 | `BIB-013` | BIB | **C** | tentative | pending |
@@ -791,7 +791,7 @@ Per `V27_FIX_PRODUCER_CADENCE.md` § Acceptance criteria:
   fix producers gated behind `--apply-fixes`).
   **ACHIEVED** every cycle since v27.0.5.
 - [ ] Bucket A shipped fully by v27.2.0 (target).
-  **TRACKING** — 166 of 465 Bucket A
+  **TRACKING** — 167 of 466 Bucket A
   rules shipped. At current 1/cycle pace, full Bucket A completion
   would arrive much later than v27.2.0; cadence target needs review.
 - [ ] Bucket B + C shipped fully by v27.4.0 (target).

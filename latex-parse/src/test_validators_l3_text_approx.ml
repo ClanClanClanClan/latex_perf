@@ -347,6 +347,42 @@ let () =
   author = {Smith, John}
 }|})
         (tag ^ ": no month field"));
+  (* Bucket-A auto-fix: numeric month -> canonical BibTeX macro. *)
+  run "BIB-010 auto-fix: month = {3} -> mar (braced numeric)" (fun tag ->
+      expect
+        (apply_fix "BIB-010" {|@article{k,
+  month = {3}
+}|}
+        = {|@article{k,
+  month = mar
+}|})
+        (tag ^ ": braced numeric rewritten"));
+  run "BIB-010 auto-fix: month = 11 -> nov (bare numeric)" (fun tag ->
+      expect
+        (apply_fix "BIB-010" {|@article{k,
+  month = 11,
+}|}
+        = {|@article{k,
+  month = nov,
+}|})
+        (tag ^ ": bare numeric rewritten"));
+  run "BIB-010 auto-fix idempotent: month = mar unchanged" (fun tag ->
+      let once = apply_fix "BIB-010" {|@article{k,
+  month = {3}
+}|} in
+      expect (apply_fix "BIB-010" once = once) (tag ^ ": fixpoint reached"));
+  run "BIB-010 no fix for spelled-out month name (still fires)" (fun tag ->
+      let src = {|@article{k,
+  month = "March"
+}|} in
+      expect
+        (fires "BIB-010" src && apply_fix "BIB-010" src = src)
+        (tag ^ ": string value counted, not rewritten"));
+  run "BIB-010 no fix for out-of-range month {13}" (fun tag ->
+      let src = {|@article{k,
+  month = {13}
+}|} in
+      expect (apply_fix "BIB-010" src = src) (tag ^ ": 13 not a valid month"));
 
   (* ══════════════════════════════════════════════════════════════════════
      BIB-011: Legacy note URL

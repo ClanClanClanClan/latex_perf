@@ -2,6 +2,19 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.29] — 2026-07-08
+
+**Tier 3 Stage 1 — faithful-semantics `tokenize` byte-count proof.** Extends
+`proofs/LexerFaithfulStep.v` (module L0F) with a total `Fixpoint tokenize` and
+`Theorem tokenize_preserves_byte_count : forall bs, length (tokenize bs) = length bs`
+(Qed; `Print Assumptions` = "Closed under the global context", 0 axioms) + a
+`tokenize_is_map` lemma. Additive — `step_deterministic`/`step_progress` untouched;
+the 0-admit/0-axiom invariant preserved. The model is still abstract scaffolding
+(byte:=nat, classify); later stages (token-driven aux/log evolution, ≤2-pass
+convergence, re-proving `pdflatex_compile_safe`) connect it to the real lexer.
+First step of the re-scoped V27_FAITHFUL_SEMANTICS_PLAN (a multi-stage Coq
+workstream).
+
 ## [v27.1.28] — 2026-07-08
 
 **Tier 2 COMPLETE — 5 L3 env/math rules migrated to the AST (`ast_semantic_state`).**

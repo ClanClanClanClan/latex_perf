@@ -42,4 +42,31 @@ Module L0F.
     constructor; assumption.
   Qed.
 
+  (* Stage 1 (FAITHFUL-SEMANTICS Tier 3): a total tokenizer over a byte
+     list.  It is the batch (whole-input) analogue of [step]: exactly one
+     token is produced per input byte, via the same fixed [classify].
+     Being defined as [map classify] it is manifestly total and every byte
+     maps to exactly one token — the 1-byte -> 1-token faithfulness the plan
+     calls for. *)
+  Fixpoint tokenize (bs : list byte) : list token :=
+    match bs with
+    | [] => []
+    | b :: rest => classify b :: tokenize rest
+    end.
+
+  (* [tokenize] agrees with the point-free [map classify] specification. *)
+  Lemma tokenize_is_map : forall bs, tokenize bs = map classify bs.
+  Proof.
+    induction bs as [|b rest IH]; simpl; [reflexivity|].
+    rewrite IH; reflexivity.
+  Qed.
+
+  (* Byte -> token count faithfulness: one token out per byte in. *)
+  Theorem tokenize_preserves_byte_count :
+    forall bs, length (tokenize bs) = length bs.
+  Proof.
+    induction bs as [|b rest IH]; simpl; [reflexivity|].
+    rewrite IH; reflexivity.
+  Qed.
+
 End L0F.

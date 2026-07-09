@@ -3,9 +3,31 @@ open Validators_common
 (* L1 modernization and expansion checks (using post-commands heuristics) *)
 include Validators_l1_math
 
+(* MOD-001 legacy 2.09 font switch -> NFSS declarative form. NOTE: the old
+   switches (\bf, \it, ...) RESET every font axis (series+shape+family), whereas
+   the NFSS switch sets only its own axis, so the substitution is NOT a pure
+   render-equivalent — that is exactly why this is a Bucket-C CANDIDATE
+   (surfaced for author review) and NOT an auto-fix. *)
+let mod_001_nfss = function
+  | "bf" -> Some "bfseries"
+  | "it" -> Some "itshape"
+  | "tt" -> Some "ttfamily"
+  | "rm" -> Some "rmfamily"
+  | "sl" -> Some "slshape"
+  | "sf" -> Some "sffamily"
+  | _ -> None
+
+let mod_001_candidate_label =
+  "Replace legacy 2.09 font switch with its NFSS declarative form (caveat: the \
+   legacy switch resets ALL font axes; the NFSS switch sets only its own — \
+   review before applying)"
+
 let l1_mod_001_rule : rule =
   let run s =
-    (* MOD-001: Legacy font commands present; prefer modern commands *)
+    (* MOD-001: Legacy font commands present; prefer modern commands. The count
+       diagnostic below is UNCHANGED (extract_command_names / legacy fold); the
+       Bucket-C candidates are collected separately from the literal token scan
+       so attaching them never perturbs the firing count. *)
     let names = extract_command_names s in
     let legacy = [ "bf"; "it"; "tt"; "rm"; "sl"; "sf" ] in
     let cnt =
@@ -14,12 +36,37 @@ let l1_mod_001_rule : rule =
         0 names
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"MOD-001" ~severity:Warning
-           ~message:
-             "Legacy font commands (\\bf/\\it/...) present; prefer \
-              \\textbf/\\emph"
-           ~count:cnt)
+      (* Candidate edits: for each literal `\<legacy>` token, replace the whole
+         `\bf` span [off, off + 1 + len(name)) with `\bfseries` etc. Offsets
+         come from [command_tokens] (backslash position), independent of the
+         count. *)
+      let candidates =
+        command_tokens s
+        |> List.filter_map (fun (name, off) ->
+               match mod_001_nfss name with
+               | None -> None
+               | Some nfss ->
+                   Some
+                     {
+                       c_edits =
+                         [
+                           Cst_edit.make ~start_offset:off
+                             ~end_offset:(off + 1 + String.length name)
+                             ~replacement:("\\" ^ nfss);
+                         ];
+                       c_label = mod_001_candidate_label;
+                     })
+        |> candidates_drop_exempt s
+      in
+      let message =
+        "Legacy font commands (\\bf/\\it/...) present; prefer \\textbf/\\emph"
+      in
+      if candidates = [] then
+        Some (mk_result ~id:"MOD-001" ~severity:Warning ~message ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-001" ~severity:Warning ~message
+             ~count:cnt ~candidates)
     else None
   in
   { id = "MOD-001"; run; languages = [] }
@@ -3142,9 +3189,24 @@ let l1_cmd_001_rule : rule =
         0 !defs
     in
     if cnt > 0 then
+      (* Bucket-C LABEL-ONLY candidate: removal of an "unused" \newcommand is
+         NOT safe to bound — the macro may be referenced in another file (\input
+         / \include), in a \csname..\endcsname construction, or in a package the
+         single-file scan cannot see. So we surface a review label with EMPTY
+         edits (the author performs the deletion) rather than a real-edit
+         fix. *)
       Some
-        (mk_result ~id:"CMD-001" ~severity:Info
-           ~message:{|Command \newcommand defined but never used|} ~count:cnt)
+        (mk_result_with_candidates ~id:"CMD-001" ~severity:Info
+           ~message:{|Command \newcommand defined but never used|} ~count:cnt
+           ~candidates:
+             [
+               {
+                 c_edits = [];
+                 c_label =
+                   "Consider removing the unused \\newcommand definition \
+                    (verify it is not used in another file first)";
+               };
+             ])
     else None
   in
   { id = "CMD-001"; run; languages = [] }

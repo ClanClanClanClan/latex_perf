@@ -203,3 +203,178 @@ let math_segments (s : string) : math_seg list =
         display = not (range_is_inline_math s (a, b));
       })
     ranges
+
+(* ══════════════════════════════════════════════════════════════════════
+   Stage-2 semantic label / ref / cite extraction (V27_2 plan T2-Stage2).
+
+   These are the comment/verbatim-aware replacements for the regex extractors in
+   [Semantic_state] ([extract_labels] / [extract_refs]) and the inline
+   [Validators_common.extract_labels_with_prefix] / [extract_refs_with_prefix]
+   regexes used by REF-008 / REF-010. A `\label{..}` / `\ref{..}` / `@entry{..}`
+   token written inside a `%` comment, a verbatim environment, an inline
+   `\verb|..|` / `\lstinline` span, or a url argument is NOT a real semantic
+   declaration — those bytes are literal — so it is dropped here.
+
+   PARITY CONTRACT (enforced by scripts/tools/check_ast_parity.py and
+   test_ast_parity.ml): apart from that single correction — a match whose token
+   offset lies inside a [find_verbatim_comment_url_ranges] span — these
+   extractors return EXACTLY the same (offset, key) set as the regex extractors
+   they replace. The scanners deliberately mirror the regex token grammar
+   (`\label{`, `\(eq\)?ref{`, `\autoref{`, `\cref{`, `\Cref{`, `@[a-zA-Z]+{[
+   \t]*<key>`), including NOT guarding against an escaped backslash, so the ONLY
+   behavioural delta is the protected-region drop.
+   ══════════════════════════════════════════════════════════════════════ *)
+
+type label_entry = {
+  key : string;  (** full label key, e.g. ["fig:overview"]. *)
+  prefix : string;  (** ["fig:"] / ["eq:"] / … (up to and incl. first `:`). *)
+  off : int;  (** byte offset of the `\` of `\label`. *)
+  def_env : string option;
+      (** name of the innermost enclosing environment, if any (figure, table,
+          equation, …); [None] at top level. *)
+}
+
+type ref_entry = {
+  key : string;
+  command : string;  (** "ref" | "eqref" | "autoref" | "cref" | "Cref". *)
+  off : int;  (** byte offset of the `\`. *)
+}
+
+type cite_entry = {
+  key : string;  (** the bib entry key, e.g. ["knuth1984"]. *)
+  etype : string;  (** the `@`-type letters, e.g. ["article"], ["book"]. *)
+  off : int;  (** byte offset of the `@`. *)
+}
+
+let label_prefix (key : string) : string =
+  match String.index_opt key ':' with
+  | Some i -> String.sub key 0 (i + 1)
+  | None -> ""
+
+(* Innermost environment (deepest) whose body span contains [off]. *)
+let innermost_env_of (envs : env_node list) (off : int) : string option =
+  List.fold_left
+    (fun acc e ->
+      if e.body.start_off <= off && off < e.body.end_off then
+        match acc with
+        | Some (d, _) when d >= e.depth -> acc
+        | _ -> Some (e.depth, e.name)
+      else acc)
+    None envs
+  |> Option.map snd
+
+(** [labels s] — every real `\label{..}` declaration, comment/verbatim-aware,
+    tagged with its enclosing environment. Drop-in for
+    [Validators_common.extract_labels_with_prefix ""] apart from the
+    protected-region correction. *)
+let labels (s : string) : label_entry list =
+  let n = String.length s in
+  let protected = find_verbatim_comment_url_ranges s in
+  let envs = environments s in
+  let out = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if
+      String.unsafe_get s pos = '\\'
+      && (not (in_ranges protected pos))
+      && starts_with s "\\label{" pos
+    then
+      match read_env_name s (pos + 6) with
+      | Some (key, after) ->
+          out :=
+            {
+              key;
+              prefix = label_prefix key;
+              off = pos;
+              def_env = innermost_env_of envs pos;
+            }
+            :: !out;
+          i := after
+      | None -> incr i
+    else incr i
+  done;
+  List.rev !out
+
+(** [labels_by_env s name] — [labels s] restricted to declarations whose
+    innermost enclosing environment is exactly [name] (e.g. ["figure"]). *)
+let labels_by_env (s : string) (name : string) : label_entry list =
+  List.filter (fun l -> l.def_env = Some name) (labels s)
+
+(* Reference commands recognised, longest-first is irrelevant because each has a
+   distinct byte right after the `\`. Mirrors extract_refs_with_prefix. *)
+let ref_commands =
+  [
+    ("\\eqref{", "eqref", 7);
+    ("\\autoref{", "autoref", 9);
+    ("\\cref{", "cref", 6);
+    ("\\Cref{", "Cref", 6);
+    ("\\ref{", "ref", 5);
+  ]
+
+(** [refs s] — every real cross-reference (`\ref` / `\eqref` / `\autoref` /
+    `\cref` / `\Cref`), comment/verbatim-aware. Drop-in for
+    [Validators_common.extract_refs_with_prefix ""]. *)
+let refs (s : string) : ref_entry list =
+  let n = String.length s in
+  let protected = find_verbatim_comment_url_ranges s in
+  let out = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if String.unsafe_get s pos = '\\' && not (in_ranges protected pos) then
+      match
+        List.find_opt (fun (tok, _, _) -> starts_with s tok pos) ref_commands
+      with
+      | Some (_, command, len) -> (
+          match read_env_name s (pos + len - 1) with
+          | Some (key, after) ->
+              out := { key; command; off = pos } :: !out;
+              i := after
+          | None -> incr i)
+      | None -> incr i
+    else incr i
+  done;
+  List.rev !out
+
+(** [cites s] — every BibTeX `@type{key, …}` entry key, comment/verbatim-aware.
+    Drop-in for REF-008's `@[a-zA-Z]+{[ \t]*<key>` regex scan. This is the
+    bib-entry key surface REF-008 (duplicate cite/bib keys) needs. *)
+let cites (s : string) : cite_entry list =
+  let n = String.length s in
+  let protected = find_verbatim_comment_url_ranges s in
+  let is_alpha c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let is_key_byte c =
+    c <> ',' && c <> ' ' && c <> '\t' && c <> '\n' && c <> '}'
+  in
+  let out = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if String.unsafe_get s pos = '@' && not (in_ranges protected pos) then (
+      (* [a-zA-Z]+ *)
+      let j = ref (pos + 1) in
+      while !j < n && is_alpha (String.unsafe_get s !j) do
+        incr j
+      done;
+      if !j > pos + 1 && !j < n && String.unsafe_get s !j = '{' then (
+        let etype = String.sub s (pos + 1) (!j - pos - 1) in
+        (* skip [ \t]* *)
+        let k = ref (!j + 1) in
+        while !k < n && (s.[!k] = ' ' || s.[!k] = '\t') do
+          incr k
+        done;
+        let key_start = !k in
+        while !k < n && is_key_byte (String.unsafe_get s !k) do
+          incr k
+        done;
+        if !k > key_start then (
+          out :=
+            { key = String.sub s key_start (!k - key_start); etype; off = pos }
+            :: !out;
+          i := !k)
+        else incr i)
+      else incr i)
+    else incr i
+  done;
+  List.rev !out

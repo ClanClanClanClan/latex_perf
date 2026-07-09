@@ -6047,7 +6047,20 @@ let r_math_102 : rule =
   in
   { id = "MATH-102"; run; languages = [] }
 
-(* MATH-107: Mix of \le and \leqslant within same document *)
+(* MATH-107: Mix of \le and \leqslant within same document.
+
+   Tier 2 Stage 2 decision (V27_2 plan T2-Stage2): NOT migrated to
+   [Ast_semantic_state.math_segments]. Despite living in the MATH family this
+   rule is a whole-DOCUMENT substring-presence tally — it fires once (count=1)
+   iff BOTH `\le` and `\leqslant` appear anywhere in the source — not a
+   per-segment count. `\le`/`\leqslant` are only meaningful in math mode, but
+   the rule's contract is document-level "did the author use two different
+   spellings of ≤ in this file", so restricting the tally to math segments would
+   (a) change no realistic outcome (these macros never appear outside math)
+   while (b) risking a corpus differential for zero semantic gain. There is
+   nothing env/segment-scoped to hang an AST node on: the answer is a single
+   boolean pair over the entire byte string. Left on the substring tally by
+   design. *)
 let r_math_107 : rule =
   let run s =
     let has_le =

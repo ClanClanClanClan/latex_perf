@@ -757,6 +757,16 @@
  (libraries latex_parse_lib))
 
 (test
+ (name test_ast_parity)
+ (modules test_ast_parity)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_ref_ast_migration)
+ (modules test_ref_ast_migration)
+ (libraries latex_parse_lib unix))
+
+(test
  (name test_evidence_scoring)
  (modules test_evidence_scoring)
  (libraries latex_parse_lib))

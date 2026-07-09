@@ -957,4 +957,134 @@ let () =
   run "VERB-017 candidate is NOT an auto-fix (no fix field)" (fun tag ->
       expect (not (fires_with_fix "VERB-017" v17)) (tag ^ ": fix=None"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     MOD-001: legacy 2.09 font switch -> NFSS declarative form (REAL EDIT)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let mod1_src = "{\\bf bold}" in
+  let mod1_label =
+    "Replace legacy 2.09 font switch with its NFSS declarative form (caveat: \
+     the legacy switch resets ALL font axes; the NFSS switch sets only its own \
+     — review before applying)"
+  in
+  run "MOD-001 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "MOD-001" mod1_src 1) (tag ^ ": count=1"));
+  run "MOD-001 emits an NFSS candidate replacing \\bf -> \\bfseries" (fun tag ->
+      (* `{` = 1 byte, then `\bf` spans [1,4). *)
+      expect
+        (has_label "MOD-001" mod1_src mod1_label
+        && edit_of_label "MOD-001" mod1_src mod1_label
+           = Some (1, 4, "\\bfseries"))
+        (tag ^ ": edit"));
+  run "MOD-001 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MOD-001" mod1_src)) (tag ^ ": fix=None"));
+  run "MOD-001 --apply-fixes leaves \\bf byte-identical" (fun tag ->
+      expect (apply_fix "MOD-001" mod1_src = mod1_src) (tag ^ ": no rewrite"));
+  run "MOD-001 candidate dropped inside a comment (count untouched)" (fun tag ->
+      let s = "% {\\it x}" in
+      expect
+        (fires "MOD-001" s && candidates_of "MOD-001" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CMD-008: \@ macro def outside makeatletter -> wrap (REAL EDITS)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let c8_src = "\\def\\my@cmd{x}\n" in
+  let c8_label =
+    "Wrap the \\@ macro definition in \\makeatletter/\\makeatother"
+  in
+  run "CMD-008 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-008" c8_src 1) (tag ^ ": count=1"));
+  run "CMD-008 candidate wraps the def line in \\makeatletter/\\makeatother"
+    (fun tag ->
+      match candidates_of "CMD-008" c8_src with
+      | [ { c_edits = [ e1; e2 ]; c_label } ] ->
+          expect
+            (c_label = c8_label
+            && ( e1.Cst_edit.start_offset,
+                 e1.Cst_edit.end_offset,
+                 e1.Cst_edit.replacement )
+               = (0, 0, "\\makeatletter\n")
+            && ( e2.Cst_edit.start_offset,
+                 e2.Cst_edit.end_offset,
+                 e2.Cst_edit.replacement )
+               = (14, 14, "\n\\makeatother"))
+            (tag ^ ": two inserts bracketing the def line")
+      | _ -> expect false (tag ^ ": expected one two-edit candidate"));
+  run "CMD-008 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-008" c8_src)) (tag ^ ": fix=None"));
+  run "CMD-008 --apply-fixes leaves the def byte-identical" (fun tag ->
+      expect (apply_fix "CMD-008" c8_src = c8_src) (tag ^ ": no rewrite"));
+  run "CMD-008 candidate dropped when the def is commented" (fun tag ->
+      let s = "% \\def\\my@cmd{x}\n" in
+      expect
+        (fires "CMD-008" s && candidates_of "CMD-008" s = [])
+        (tag ^ ": exempt (comment) but still fires"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CMD-001 / CMD-006 / CMD-013 / CMD-014: non-local moves -> LABEL-ONLY
+     ══════════════════════════════════════════════════════════════════════ *)
+  let c1_src = "\\newcommand{\\foo}{bar}\n" in
+  let c1_label =
+    "Consider removing the unused \\newcommand definition (verify it is not \
+     used in another file first)"
+  in
+  run "CMD-001 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-001" c1_src 1) (tag ^ ": count=1"));
+  run "CMD-001 emits a label-only removal candidate" (fun tag ->
+      match candidates_of "CMD-001" c1_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = c1_label) (tag ^ ": label-only removal suggestion")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "CMD-001 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-001" c1_src)) (tag ^ ": fix=None"));
+
+  let c6_src =
+    "\\begin{document}\n\\newcommand{\\foo}{bar}\n\\end{document}\n"
+  in
+  let c6_label =
+    "Consider moving the macro definition to the preamble (before \
+     \\begin{document})"
+  in
+  run "CMD-006 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-006" c6_src 1) (tag ^ ": count=1"));
+  run "CMD-006 emits a label-only move candidate" (fun tag ->
+      match candidates_of "CMD-006" c6_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = c6_label) (tag ^ ": label-only move suggestion")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "CMD-006 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-006" c6_src)) (tag ^ ": fix=None"));
+
+  let c13_src =
+    "\\begin{document}\n\\def\\arraystretch{1.5}\n\\end{document}\n"
+  in
+  let c13_label =
+    "Consider moving \\def\\arraystretch to the preamble, or scope it within a \
+     group"
+  in
+  run "CMD-013 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-013" c13_src 1) (tag ^ ": count=1"));
+  run "CMD-013 emits a label-only move candidate" (fun tag ->
+      match candidates_of "CMD-013" c13_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = c13_label) (tag ^ ": label-only move suggestion")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "CMD-013 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-013" c13_src)) (tag ^ ": fix=None"));
+
+  let c14_src = "\\begin{document}\n\\AtBeginDocument{x}\n\\end{document}\n" in
+  let c14_label =
+    "Move \\AtBeginDocument before \\begin{document} (it has no effect \
+     afterwards)"
+  in
+  run "CMD-014 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "CMD-014" c14_src 1) (tag ^ ": count=1"));
+  run "CMD-014 emits a label-only move candidate" (fun tag ->
+      match candidates_of "CMD-014" c14_src with
+      | [ { c_edits = []; c_label } ] ->
+          expect (c_label = c14_label) (tag ^ ": label-only move suggestion")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "CMD-014 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CMD-014" c14_src)) (tag ^ ": fix=None"));
+
   finalise "candidate_fixes"

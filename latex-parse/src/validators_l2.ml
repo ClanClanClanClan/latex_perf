@@ -1177,10 +1177,26 @@ let r_cmd_014 : rule =
            done
          with Not_found -> ());
         if !cnt > 0 then
+          (* Bucket-C LABEL-ONLY candidate: \AtBeginDocument must run in the
+             preamble to have any effect; once past \begin{document} the hook
+             has already fired. Fixing this means MOVING the call before
+             \begin{document} — a non-local edit that cannot be bounded safely
+             (and the hooked code may depend on preamble-only definitions). So
+             we surface a review label with EMPTY edits rather than an
+             auto-fix. *)
           Some
-            (mk_result ~id:"CMD-014" ~severity:Warning
+            (mk_result_with_candidates ~id:"CMD-014" ~severity:Warning
                ~message:"\\AtBeginDocument placed after \\begin{document}"
-               ~count:!cnt)
+               ~count:!cnt
+               ~candidates:
+                 [
+                   {
+                     c_edits = [];
+                     c_label =
+                       "Move \\AtBeginDocument before \\begin{document} (it \
+                        has no effect afterwards)";
+                   };
+                 ])
         else None
   in
   { id = "CMD-014"; run; languages = [] }
@@ -6328,9 +6344,24 @@ let r_cmd_006 : rule =
            done
          with Not_found -> ());
         if !cnt > 0 then
+          (* Bucket-C LABEL-ONLY candidate: moving a definition out of the body
+             into the preamble is a NON-LOCAL edit (delete here + insert there)
+             that cannot be bounded as a single safe span, and reordering can
+             change semantics when the macro shadows a later-loaded package. So
+             we surface a review label with EMPTY edits rather than an
+             auto-fix. *)
           Some
-            (mk_result ~id:"CMD-006" ~severity:Info
-               ~message:"Macro defined inside document body" ~count:!cnt)
+            (mk_result_with_candidates ~id:"CMD-006" ~severity:Info
+               ~message:"Macro defined inside document body" ~count:!cnt
+               ~candidates:
+                 [
+                   {
+                     c_edits = [];
+                     c_label =
+                       "Consider moving the macro definition to the preamble \
+                        (before \\begin{document})";
+                   };
+                 ])
         else None
   in
   { id = "CMD-006"; run; languages = [] }
@@ -6353,19 +6384,62 @@ let r_cmd_008 : rule =
     if has_makeatletter then None
     else
       let cnt = ref 0 in
+      let offs = ref [] in
       let i = ref 0 in
       (try
          while true do
-           let _mr, _ = Re_compat.search_forward re s !i in
+           let _mr, pos = Re_compat.search_forward re s !i in
            incr cnt;
+           offs := pos :: !offs;
            i := Re_compat.match_end _mr
          done
        with Not_found -> ());
       if !cnt > 0 then
-        Some
-          (mk_result ~id:"CMD-008" ~severity:Warning
-             ~message:"Macro uses \\@ in name outside maketitle context"
-             ~count:!cnt)
+        (* Bucket-C CANDIDATE (best-effort bounded): a macro whose name uses `@`
+           needs `\makeatletter` in scope. Wrap the single line that carries the
+           definition in a `\makeatletter … \makeatother` pair (two INSERT
+           edits: before line_start, after line_end) — a clean local insertion,
+           so this can be a real-edit candidate (mirrors CMD-011). It stays a
+           CANDIDATE rather than an auto-fix because the author may prefer to
+           move the def into an existing letter-catcode region. One candidate
+           per match; drop_exempt filters defs inside a comment/verbatim. *)
+        let n = String.length s in
+        let candidates =
+          !offs
+          |> List.rev_map (fun pos ->
+                 let line_start =
+                   let j = ref pos in
+                   while !j > 0 && s.[!j - 1] <> '\n' do
+                     decr j
+                   done;
+                   !j
+                 in
+                 let line_end =
+                   let j = ref pos in
+                   while !j < n && s.[!j] <> '\n' do
+                     incr j
+                   done;
+                   !j
+                 in
+                 {
+                   c_edits =
+                     [
+                       Cst_edit.insert ~at:line_start "\\makeatletter\n";
+                       Cst_edit.insert ~at:line_end "\n\\makeatother";
+                     ];
+                   c_label =
+                     "Wrap the \\@ macro definition in \
+                      \\makeatletter/\\makeatother";
+                 })
+          |> candidates_drop_exempt s
+        in
+        let message = "Macro uses \\@ in name outside maketitle context" in
+        if candidates = [] then
+          Some (mk_result ~id:"CMD-008" ~severity:Warning ~message ~count:!cnt)
+        else
+          Some
+            (mk_result_with_candidates ~id:"CMD-008" ~severity:Warning ~message
+               ~count:!cnt ~candidates)
       else None
   in
   { id = "CMD-008"; run; languages = [] }
@@ -6500,10 +6574,24 @@ let r_cmd_013 : rule =
            done
          with Not_found -> ());
         if !cnt > 0 then
+          (* Bucket-C LABEL-ONLY candidate: relocating \def\arraystretch to the
+             preamble (or scoping it in a group) is a NON-LOCAL edit whose
+             effect on the surrounding tables is intent-dependent, so it cannot
+             be bounded as a single safe span. Surface a review label with EMPTY
+             edits rather than an auto-fix. *)
           Some
-            (mk_result ~id:"CMD-013" ~severity:Info
+            (mk_result_with_candidates ~id:"CMD-013" ~severity:Info
                ~message:"\\def\\arraystretch declared inside document body"
-               ~count:!cnt)
+               ~count:!cnt
+               ~candidates:
+                 [
+                   {
+                     c_edits = [];
+                     c_label =
+                       "Consider moving \\def\\arraystretch to the preamble, \
+                        or scope it within a group";
+                   };
+                 ])
         else None
   in
   { id = "CMD-013"; run; languages = [] }

@@ -2,6 +2,21 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.37] — 2026-07-09
+
+**Candidate pool — MOD/CMD final batch (6 candidates); closes the gap-audit's
+candidate-coverage findings.** MOD-001 (legacy 2.09 font switch `\bf`→`\bfseries`
+etc.) as a real-edit candidate whose label carries the reset-semantics caveat (the
+legacy switch resets all font axes, the NFSS switch sets only its own — review before
+applying). CMD-008 (wrap a `\@` macro def in `\makeatletter`/`\makeatother`) as a
+real-edit candidate. CMD-001/006/013/014 as **label-only** candidates (unused-macro
+removal / preamble-move are non-local edits that cannot be safely bounded). **MOD-002..007
+correctly stay diagnose-only** — they are "mixed legacy+modern font in one paragraph"
+*detectors* (boolean, no located offset), not switch enumerators, so they have no clean
+candidate edit (the audit's "MOD-001..007" was really MOD-001 + 6 detectors). Diagnostic
+0-diff (MOD-001 count byte-identical, no drift); `--apply-fixes-for` byte-identical;
+coverage 167×1022 unchanged. Candidate rules 52→58. Adversarially verified (sound, 0 findings).
+
 ## [v27.1.36] — 2026-07-09
 
 **Tier 2 Stage 2 COMPLETE — AST label/ref migration + the regex-vs-AST parity gate.**

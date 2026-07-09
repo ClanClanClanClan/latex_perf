@@ -2,6 +2,27 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.36] — 2026-07-09
+
+**Tier 2 Stage 2 COMPLETE — AST label/ref migration + the regex-vs-AST parity gate.**
+Closes the L3-AST workstream the gap-audit found essentially unstarted.
+- **AST types:** `label_entry`/`ref_entry`/`cite_entry` + `labels`/`refs`/`cites`/
+  `labels_by_env` added to `ast_semantic_state.ml` (comment/verbatim-aware, reusing
+  the Stage-1 environment scan; no `project_state.ml` duplication).
+- **REF-008 + REF-010 migrated** off the regex extractors (`extract_labels_with_prefix`
+  / `@entry` scan) onto the AST extractors — a `\label`/`\cite`/`\ref` inside a
+  comment/verbatim is no longer falsely counted; both still fire on real content
+  (6 migration tests). 0 corpus differential.
+- **Parity gate (the plan's missing deliverable):** `scripts/tools/check_ast_parity.py`
+  + `test_ast_parity.ml` run BOTH the deprecated regex extractors and the new AST
+  extractors over all 339 lint-corpus units and assert identical `(offset,key)` sets
+  except intended protected-region corrections; wired into `pre_release_check` +
+  `dune runtest`. This is what lets the regex path retire safely.
+- **Regex extractors marked DEPRECATED** (`extract_env_blocks`/`extract_labels_with_prefix`/
+  `extract_refs_with_prefix` → point to the AST replacements + the parity gate).
+- MATH-107 documented (whole-document substring tally — migration is a no-op).
+Adversarially verified (correct-worktree, sound). coverage 167×1022 PASS.
+
 ## [v27.1.35] — 2026-07-08
 
 **Tier 3 Stage 6 DEEPENED — capstone genuinely re-proved over the faithful model

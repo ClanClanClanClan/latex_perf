@@ -95,7 +95,16 @@ Module L0Aux.
   Inductive pdflatex_token :=
   | Tok_text
   | Tok_label_def (n : nat)
-  | Tok_label_ref (n : nat).
+  | Tok_label_ref (n : nat)
+  (* Stage 6 (DEEPENING): a genuinely UNRECOVERABLE construct — e.g. an
+     unresolved \input to a file absent from the project, "! Emergency
+     stop" / TeX-capacity-exceeded.  Unlike an undefined \ref (a mere
+     warning), this token makes the pass EMIT A FATAL MARKER into the
+     log (see [L0Log.log_step_token]).  Its presence is exactly what
+     project well-typedness (T2 closure) rules out, so [log_no_fatal]
+     is now FALSIFIABLE BY THE PASS on a reachable input, not just by an
+     artificial [emit_fatal]. *)
+  | Tok_fatal.
 
   Record aux_state := mk_aux { defined_labels : list nat; used_refs : list nat }.
 
@@ -107,6 +116,7 @@ Module L0Aux.
     | Tok_label_def n => mk_aux (n :: defined_labels s) (used_refs s)
     | Tok_label_ref n => mk_aux (defined_labels s) (n :: used_refs s)
     | Tok_text        => s
+    | Tok_fatal       => s   (* inert on the aux bookkeeping *)
     end.
 
   (* One full pass: fold every token of the document through [aux_step_token]. *)
@@ -141,13 +151,15 @@ Module L0Aux.
     induction toks as [|t rest IH]; intros s n; simpl.
     - (* empty pass: defined set unchanged *)
       split; [intro H; right; exact H | intros [[] | H]; exact H].
-    - destruct t as [| m | m]; simpl.
+    - destruct t as [| m | m |]; simpl.
       + (* Tok_text: inert *)
         apply IH.
       + (* Tok_label_def m: prepends m *)
         rewrite IH; simpl. tauto.
       + (* Tok_label_ref m: defined set unchanged *)
         rewrite IH. tauto.
+      + (* Tok_fatal: inert on aux *)
+        apply IH.
   Qed.
 
   (* KEY LEMMA — 2-pass convergence of the defined-label SET.
@@ -297,6 +309,13 @@ Module L0Log.
         if in_dec Nat.eq_dec n (defined_labels aux)
         then s
         else mk_log (warnings s ++ [n]) (log_bytes s ++ warn_bytes)
+    (* Stage 6 (DEEPENING): the fatal transition.  A [Tok_fatal] writes
+       a REAL fatal marker ("! Emergency stop") into the byte stream, so
+       a document containing one drives [log_no_fatal] to FALSE through
+       the ordinary pass (see [fatal_token_is_fatal]).  This is the
+       genuinely-reachable fatal path the warning path avoids. *)
+    | Tok_fatal =>
+        mk_log (warnings s) (log_bytes s ++ fatal_marker_emergency_stop)
     | _ => s
     end.
 
@@ -314,6 +333,24 @@ Module L0Log.
      markers are excluded.  Mirrors PdflatexModel.v's [log_no_fatal]. *)
   Definition log_no_fatal (s : log_state) : Prop :=
     forall m, In m fatal_markers -> contains_subseq m (log_bytes s) = false.
+
+  (* -- The genuine safety hypothesis (Stage 6 DEEPENING) -------------------- *)
+
+  (* A token is non-fatal unless it is [Tok_fatal]. *)
+  Definition tok_not_fatal (t : pdflatex_token) : Prop := t <> Tok_fatal.
+
+  (* [no_fatal_tokens toks]: the document contains NO unrecoverable
+     construct.  This is the REAL, FALSIFIABLE hypothesis under which the
+     pass is fatal-free — it is NOT universal (the singleton [Tok_fatal]
+     stream fails it, see [fatal_token_is_fatal]), unlike the decorative
+     [bounded_labels].  Project well-typedness (T2 closure) is what
+     establishes it for a real project (see [PdflatexModel.project_tokens]
+     / [project_closed_no_fatal_tokens]). *)
+  Definition no_fatal_tokens (toks : list pdflatex_token) : Prop :=
+    Forall tok_not_fatal toks.
+
+  Lemma no_fatal_tokens_nil : no_fatal_tokens [].
+  Proof. constructor. Qed.
 
   (* -- The undefined-reference collector (spec of [warnings]) -------------- *)
 
@@ -339,12 +376,14 @@ Module L0Log.
   Proof.
     induction toks as [|t rest IH]; intros s aux; simpl.
     - rewrite app_nil_r; reflexivity.
-    - destruct t as [| m | m]; simpl.
+    - destruct t as [| m | m |]; simpl.
       + apply IH.
       + apply IH.
       + destruct (in_dec Nat.eq_dec m (defined_labels aux)) as [Hin|Hout].
         * apply IH.
         * rewrite IH; simpl. rewrite <- app_assoc; reflexivity.
+      + (* Tok_fatal: writes bytes but leaves [warnings] unchanged *)
+        rewrite IH; reflexivity.
   Qed.
 
   (* -- No-fatal is preserved: undefined refs never cause a fatal ----------- *)
@@ -402,32 +441,43 @@ Module L0Log.
 
   Lemma log_step_token_benign :
     forall s t aux,
+      tok_not_fatal t ->
       Forall benign (log_bytes s) ->
       Forall benign (log_bytes (log_step_token s t aux)).
   Proof.
-    intros s t aux H. destruct t as [| m | m]; simpl; auto.
-    destruct (in_dec Nat.eq_dec m (defined_labels aux)); simpl; auto.
-    apply forall_benign_app; [assumption | apply warn_bytes_benign].
+    intros s t aux Hnf H. destruct t as [| m | m |]; simpl.
+    - exact H.
+    - exact H.
+    - destruct (in_dec Nat.eq_dec m (defined_labels aux)); simpl.
+      + exact H.
+      + apply forall_benign_app; [exact H | apply warn_bytes_benign].
+    - (* Tok_fatal excluded by [tok_not_fatal] *)
+      exfalso. apply Hnf. reflexivity.
   Qed.
 
   Lemma log_step_pass_benign :
     forall toks s aux,
+      no_fatal_tokens toks ->
       Forall benign (log_bytes s) ->
       Forall benign (log_bytes (log_step_pass s toks aux)).
   Proof.
-    induction toks as [|t rest IH]; simpl; intros s aux H; auto.
-    apply IH. apply log_step_token_benign; assumption.
+    induction toks as [|t rest IH]; simpl; intros s aux Hnf H; auto.
+    inversion Hnf as [| t' rest' Ht Hrest]; subst.
+    apply IH; [exact Hrest |].
+    apply log_step_token_benign; [exact Ht | exact H].
   Qed.
 
   (* KEY SAFETY RESULT: starting from the empty log, NO token stream — clean or
      with any number of undefined references — ever produces a fatal marker.
      Undefined \ref is a WARNING, never fatal. *)
   Theorem log_no_fatal_from_empty :
-    forall toks aux, log_no_fatal (log_step_pass empty_log toks aux).
+    forall toks aux,
+      no_fatal_tokens toks ->
+      log_no_fatal (log_step_pass empty_log toks aux).
   Proof.
-    intros toks aux m Hm.
+    intros toks aux Hnf m Hm.
     apply benign_bytes_no_fatal; [| exact Hm].
-    apply log_step_pass_benign. simpl. constructor.
+    apply log_step_pass_benign; [exact Hnf |]. simpl. constructor.
   Qed.
 
   (* -- (A) CLEAN PROJECT => no fatal AND no warnings ----------------------- *)
@@ -438,26 +488,28 @@ Module L0Log.
       collect_undef toks aux = [].
   Proof.
     induction toks as [|t rest IH]; simpl; intros aux Hclean; auto.
-    destruct t as [| m | m]; simpl.
+    destruct t as [| m | m |]; simpl.
     - apply IH. intros n Hn. apply Hclean. right; assumption.
     - apply IH. intros n Hn. apply Hclean. right; assumption.
     - destruct (in_dec Nat.eq_dec m (defined_labels aux)) as [Hin|Hout].
       + apply IH. intros n Hn. apply Hclean. right; assumption.
       + exfalso. apply Hout. apply Hclean. left; reflexivity.
+    - apply IH. intros n Hn. apply Hclean. right; assumption.
   Qed.
 
   (* (A): every reference resolves (its id is among the defined labels) => the
      pass leaves the log completely empty: no warnings, no fatal. *)
   Theorem clean_no_fatal :
     forall toks aux,
+      no_fatal_tokens toks ->
       (forall n, In (Tok_label_ref n) toks -> In n (defined_labels aux)) ->
       warnings (log_step_pass empty_log toks aux) = []
       /\ log_no_fatal (log_step_pass empty_log toks aux).
   Proof.
-    intros toks aux Hclean. split.
+    intros toks aux Hnf Hclean. split.
     - rewrite warnings_eq_collect. simpl.
       apply clean_collect_nil; assumption.
-    - apply log_no_fatal_from_empty.
+    - apply log_no_fatal_from_empty; exact Hnf.
   Qed.
 
   (* -- (B) UNDEFINED REF => NON-empty warnings but STILL no fatal ---------- *)
@@ -469,7 +521,7 @@ Module L0Log.
   Proof.
     induction toks as [|t rest IH]; simpl; intros aux [n [Hin Hout]].
     - inversion Hin.
-    - destruct t as [| m | m]; simpl.
+    - destruct t as [| m | m |]; simpl.
       + (* Tok_text head: witness must be in rest *)
         destruct Hin as [Habs | Hin']; [discriminate|].
         apply IH. exists n; split; assumption.
@@ -486,6 +538,9 @@ Module L0Log.
           -- exists n; split; assumption.
         * (* m itself undefined: the head already emits a warning *)
           discriminate.
+      + (* Tok_fatal head: witness must be in rest *)
+        destruct Hin as [Habs | Hin']; [discriminate|].
+        apply IH. exists n; split; assumption.
   Qed.
 
   (* (B): the stream contains at least one reference to an UNDEFINED label =>
@@ -493,14 +548,15 @@ Module L0Log.
      This is the crux: undefined-ref is a warning, not a fatal error. *)
   Theorem undefined_ref_warns_not_fatal :
     forall toks aux,
+      no_fatal_tokens toks ->
       (exists n, In (Tok_label_ref n) toks /\ ~ In n (defined_labels aux)) ->
       warnings (log_step_pass empty_log toks aux) <> []
       /\ log_no_fatal (log_step_pass empty_log toks aux).
   Proof.
-    intros toks aux Hex. split.
+    intros toks aux Hnf Hex. split.
     - rewrite warnings_eq_collect. simpl.
       apply exists_undef_collect_nonnil; assumption.
-    - apply log_no_fatal_from_empty.
+    - apply log_no_fatal_from_empty; exact Hnf.
   Qed.
 
   (* Concrete witness for (B): a single reference to the never-defined label 7
@@ -512,6 +568,7 @@ Module L0Log.
     split.
     - reflexivity.
     - apply log_no_fatal_from_empty.
+      repeat constructor; discriminate.
   Qed.
 
   (* -- NON-VACUITY: a genuine fatal path that [log_no_fatal] rejects ------- *)
@@ -533,18 +590,45 @@ Module L0Log.
     unfold emit_fatal, empty_log in H. vm_compute in H. discriminate.
   Qed.
 
+  (* STAGE 6 DEEPENING — the fatal path is REACHABLE BY THE ORDINARY PASS.
+     Unlike [emit_fatal] (an artificial constructor), this shows that a
+     *document* — the singleton token stream [Tok_fatal] — drives the real
+     [log_step_pass] to a state that [log_no_fatal] REJECTS.  Hence
+     [no_fatal_tokens] is a genuine, falsifiable hypothesis and
+     [log_no_fatal] is non-vacuous: the pass itself can produce a fatal
+     log. *)
+  Theorem fatal_token_is_fatal :
+    ~ log_no_fatal (log_step_pass empty_log [Tok_fatal] empty_aux).
+  Proof.
+    unfold log_no_fatal. intro H.
+    assert (Hin : In fatal_marker_emergency_stop fatal_markers)
+      by (unfold fatal_markers; simpl; right; left; reflexivity).
+    specialize (H fatal_marker_emergency_stop Hin).
+    vm_compute in H. discriminate.
+  Qed.
+
+  (* The singleton [Tok_fatal] stream also FAILS [no_fatal_tokens] — the
+     hypothesis genuinely excludes some inputs (contrast: [bounded_labels]
+     holds for every input). *)
+  Theorem fatal_token_not_no_fatal :
+    ~ no_fatal_tokens [Tok_fatal].
+  Proof.
+    intro H. inversion H as [| t' rest' Ht _]. apply Ht. reflexivity.
+  Qed.
+
   (* And the same fatal marker cannot be produced by any warning stream: the
      warning path keeps the log fatal-free (restatement of the safety result,
      confirming the warning / fatal separation is real, not definitional). *)
   Corollary warning_stream_never_fatal :
     forall toks aux,
+      no_fatal_tokens toks ->
       log_bytes (log_step_pass empty_log toks aux)
       <> log_bytes (emit_fatal empty_log).
   Proof.
-    intros toks aux Heq.
+    intros toks aux Hnf Heq.
     apply fatal_path_is_detected.
     intros m Hm.
-    rewrite <- Heq. apply log_no_fatal_from_empty; exact Hm.
+    rewrite <- Heq. apply log_no_fatal_from_empty; [exact Hnf | exact Hm].
   Qed.
 
 End L0Log.
@@ -652,33 +736,39 @@ Module L0Pass.
 
   Lemma pass_preserves_benign :
     forall s input,
+      no_fatal_tokens input ->
       Forall benign (log_bytes (log s)) ->
       Forall benign (log_bytes (log (pdflatex_pass_step s input))).
   Proof.
-    intros s input H. unfold pdflatex_pass_step; simpl.
-    apply log_step_pass_benign; exact H.
+    intros s input Hnf H. unfold pdflatex_pass_step; simpl.
+    apply log_step_pass_benign; [exact Hnf | exact H].
   Qed.
 
   Lemma iterate_preserves_benign :
     forall k s input,
+      no_fatal_tokens input ->
       Forall benign (log_bytes (log s)) ->
       Forall benign (log_bytes (log (iterate_pass_step s k input))).
   Proof.
-    induction k as [|k IH]; intros s input H; simpl.
+    induction k as [|k IH]; intros s input Hnf H; simpl.
     - exact H.
-    - apply IH. apply pass_preserves_benign; exact H.
+    - apply IH; [exact Hnf |]. apply pass_preserves_benign; [exact Hnf | exact H].
   Qed.
 
-  (* From the initial (empty-log) state, no number of passes over any document
-     ever produces a fatal marker: the Stage-3 warning/fatal separation is
-     preserved by the Stage-4 pass iteration. *)
+  (* From the initial (empty-log) state, no number of passes over a
+     FATAL-FREE document ([no_fatal_tokens]) ever produces a fatal marker:
+     the Stage-3 warning/fatal separation is preserved by the Stage-4 pass
+     iteration.  This is now CONDITIONAL on [no_fatal_tokens] — a document
+     containing [Tok_fatal] genuinely reaches a fatal log (see
+     [L0Log.fatal_token_is_fatal]). *)
   Theorem pass_iteration_no_fatal :
     forall k input,
+      no_fatal_tokens input ->
       log_no_fatal (log (iterate_pass_step initial_pass_state k input)).
   Proof.
-    intros k input. unfold log_no_fatal. intros m Hm.
+    intros k input Hnf. unfold log_no_fatal. intros m Hm.
     apply benign_bytes_no_fatal; [| exact Hm].
-    apply iterate_preserves_benign.
+    apply iterate_preserves_benign; [exact Hnf |].
     unfold initial_pass_state; simpl. constructor.
   Qed.
 
@@ -759,21 +849,27 @@ Module L0Pass.
       = true.
   Proof. split; vm_compute; reflexivity. Qed.
 
-  (* And convergence composes with the Stage-4 safety guarantee: the converged
-     run is also fatal-free. *)
+  (* And convergence composes with the Stage-4 safety guarantee: a
+     FATAL-FREE ([no_fatal_tokens]) document's converged run is also
+     fatal-free.  Convergence itself needs no real hypothesis (the ≤2
+     bound is universal — [bounded_labels_holds] discharges the decorative
+     [bounded_labels] internally); the GENUINE, falsifiable hypothesis is
+     [no_fatal_tokens].  This is the honest resolution of the old
+     decorative [bounded_labels]. *)
   Corollary converged_run_is_safe :
     forall input,
-      bounded_labels input ->
+      no_fatal_tokens input ->
       exists k,
         k <= 2 /\
         (iterate_pass_step initial_pass_state k input).(converged) = true /\
         log_no_fatal (log (iterate_pass_step initial_pass_state k input)).
   Proof.
-    intros input Hb.
-    destruct (pdflatex_pass_converges_bounded input initial_pass_state Hb)
+    intros input Hnf.
+    destruct (pdflatex_pass_converges_bounded input initial_pass_state
+                (bounded_labels_holds input))
       as [k [Hk Hconv]].
     exists k. repeat split; [exact Hk | exact Hconv |].
-    apply pass_iteration_no_fatal.
+    apply pass_iteration_no_fatal; exact Hnf.
   Qed.
 
 End L0Pass.

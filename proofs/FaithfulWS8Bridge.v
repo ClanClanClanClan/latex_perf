@@ -71,7 +71,7 @@ Qed.
     byte-for-byte the same fatal-marker check as [PdflatexModel]'s). *)
 Corollary faithful_within_ws8_bound_and_safe :
   forall (input : list L0Aux.pdflatex_token),
-    L0Pass.bounded_labels input ->
+    L0Log.no_fatal_tokens input ->
     exists k,
       k <= pdflatex_pass_max /\
       (L0Pass.iterate_pass_step L0Pass.initial_pass_state k input)
@@ -80,8 +80,8 @@ Corollary faithful_within_ws8_bound_and_safe :
         (L0Pass.log
            (L0Pass.iterate_pass_step L0Pass.initial_pass_state k input)).
 Proof.
-  intros input Hb.
-  destruct (L0Pass.converged_run_is_safe input Hb) as [k [Hk [Hconv Hsafe]]].
+  intros input Hnf.
+  destruct (L0Pass.converged_run_is_safe input Hnf) as [k [Hk [Hconv Hsafe]]].
   exists k. split; [| split].
   - unfold pdflatex_pass_max. lia.
   - exact Hconv.

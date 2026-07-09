@@ -40,10 +40,20 @@
         [pdflatex_output_wellformed_rule_proof]
       - capstone: [pdflatex_compile_safe] Qed.
 
-    Faithfulness disclaimer: the pass model's convergence is a
-    counter-bounded iteration; the proofs are about THIS abstraction.
-    Tying it to a faithful operational pdflatex semantics is v27
-    WS9+ scope.
+    Stage-6 DEEPENING (v27.1.33+): the capstone
+    [produces]/[compilation_succeeds]/[output_format_well_formed] are no
+    longer the abstract counter model.  They are RESTATED over the faithful
+    operational pass ([LexerFaithfulStep.L0Pass]) applied to
+    [project_tokens p] — a real build-graph→token map.  So (1) the
+    conclusion genuinely depends on [p] (no phantom universal / empty
+    witness); (2) the fatal path is reachable ([Tok_fatal]) and
+    [log_no_fatal] is falsifiable by the pass; (3) the load-bearing
+    hypothesis is the genuine, falsifiable [no_fatal_tokens] earned from T2
+    closure via [project_closed_no_fatal_tokens] — a dangling file
+    reference emits [Tok_fatal] and fails
+    ([dangling_project_pass_is_fatal]).  The abstract [iterate_step]
+    counter model is retained below only for historical lemmas; the
+    capstone no longer uses it.
 
     Zero admits, zero axioms. *)
 
@@ -59,7 +69,8 @@ From LaTeXPerfectionist Require Import
   T1_wrapper
   T4_wrapper
   T5_concrete
-  ProjectSemantics.
+  ProjectSemantics
+  LexerFaithfulStep.
 Import ListNotations.
 
 (** ── Carrier types ────────────────────────────────────────────────── *)
@@ -413,37 +424,159 @@ Qed.
 
 (** ── Toolchain predicates (substantive) ───────────────────────── *)
 
-(** Bounded-pass termination predicate. *)
+(** STAGE 6 DEEPENING: faithful project→token map + fatal-avoidance.
+    The predicates below are RESTATED over the faithful operational pass
+    model [LexerFaithfulStep.L0Pass] applied to [project_tokens p] — a
+    REAL map from THIS project's build graph to a faithful token stream.
+    The capstone conclusion therefore genuinely depends on [p] (no phantom
+    universal / empty-document witness), the fatal path is reachable
+    ([Tok_fatal]), and the load-bearing hypothesis is the falsifiable
+    [no_fatal_tokens] established by T2 closure. *)
+
+(** Boolean membership of a node in a build graph. *)
+Definition node_known_b (g : build_graph) (n : ProjectClosure.node) : bool :=
+  existsb (fun x => node_eqb x n) g.(bg_nodes).
+
+Lemma node_eqb_refl : forall n, node_eqb n n = true.
+Proof.
+  intros [f k]. unfold node_eqb; simpl.
+  rewrite Nat.eqb_refl. destruct k; reflexivity.
+Qed.
+
+Lemma node_eqb_eq : forall a b, node_eqb a b = true -> a = b.
+Proof.
+  intros [af ak] [bf bk] H. unfold node_eqb in H; simpl in H.
+  apply andb_prop in H. destruct H as [Hf Hk].
+  apply Nat.eqb_eq in Hf. subst bf. f_equal.
+  destruct ak, bk; simpl in Hk; try reflexivity; discriminate.
+Qed.
+
+Lemma node_known_b_iff :
+  forall g (n : ProjectClosure.node),
+    node_known_b g n = true <-> node_known g n.
+Proof.
+  intros g n. unfold node_known_b, node_known. rewrite existsb_exists.
+  split.
+  - intros [x [Hin Heq]]. apply node_eqb_eq in Heq. subst x. exact Hin.
+  - intros Hin. exists n. split; [exact Hin | apply node_eqb_refl].
+Qed.
+
+(** The faithful token contributed by one build edge: if BOTH endpoints
+    resolve to known nodes the file dependency is inert ([Tok_text]); an
+    UNRESOLVED endpoint — a reference to a file absent from the project —
+    is the catastrophic "file not found" abort and maps to [Tok_fatal]. *)
+Definition edge_token (g : build_graph) (e : ProjectClosure.edge)
+    : L0Aux.pdflatex_token :=
+  if andb (node_known_b g (fst e)) (node_known_b g (snd e))
+  then L0Aux.Tok_text
+  else L0Aux.Tok_fatal.
+
+(** The faithful token stream OF THIS PROJECT: one token per build edge.
+    This is the real map from the project carrier ([build_graph]) into the
+    faithful token model.  The capstone's [produces] /
+    [compilation_succeeds] now run over [project_tokens p]. *)
+Definition project_tokens (g : build_graph) : list L0Aux.pdflatex_token :=
+  map (edge_token g) g.(bg_edges).
+
+(** T2 CLOSURE ⇒ the project's token stream is FATAL-FREE.  Every edge
+    endpoint of a closed graph is a known node, so no edge maps to
+    [Tok_fatal].  This is the genuine content tying well-typedness to
+    fatal-avoidance. *)
+Lemma project_closed_no_fatal_tokens :
+  forall g, project_closed g -> L0Log.no_fatal_tokens (project_tokens g).
+Proof.
+  intros g [Hedges _]. unfold L0Log.no_fatal_tokens, project_tokens.
+  apply Forall_forall. intros t Hin. rewrite in_map_iff in Hin.
+  destruct Hin as [e [Ht He]]. destruct e as [u v].
+  destruct (Hedges u v He) as [Hu Hv].
+  apply node_known_b_iff in Hu. apply node_known_b_iff in Hv.
+  unfold edge_token in Ht; simpl in Ht. rewrite Hu, Hv in Ht; simpl in Ht.
+  subst t. unfold L0Log.tok_not_fatal. discriminate.
+Qed.
+
+(** NON-VACUITY of the fatal path AT THE PROJECT LEVEL: a project with a
+    dangling build edge (endpoint absent from the node set) yields a
+    [Tok_fatal] stream, which the faithful pass drives to a FATAL log. So
+    the [no_fatal_tokens] constraint genuinely excludes real projects and
+    the capstone's safety is not vacuous. *)
+Example dangling_project_tokens_fatal :
+  project_tokens (mk_graph [] [(mk_node 0 Tex, mk_node 1 Tex)])
+    = [L0Aux.Tok_fatal].
+Proof. reflexivity. Qed.
+
+Example dangling_project_not_no_fatal :
+  ~ L0Log.no_fatal_tokens
+      (project_tokens (mk_graph [] [(mk_node 0 Tex, mk_node 1 Tex)])).
+Proof.
+  rewrite dangling_project_tokens_fatal.
+  apply L0Log.fatal_token_not_no_fatal.
+Qed.
+
+Example dangling_project_pass_is_fatal :
+  ~ L0Log.log_no_fatal
+      (L0Pass.log
+         (L0Pass.iterate_pass_step L0Pass.initial_pass_state 1
+            (project_tokens (mk_graph [] [(mk_node 0 Tex, mk_node 1 Tex)])))).
+Proof.
+  rewrite dangling_project_tokens_fatal. intro H.
+  assert (Hin : In L0Log.fatal_marker_emergency_stop L0Log.fatal_markers)
+    by (simpl; right; left; reflexivity).
+  specialize (H L0Log.fatal_marker_emergency_stop Hin).
+  vm_compute in H. discriminate.
+Qed.
+
+(** ── Toolchain predicates (faithful, over [project_tokens p]) ─────── *)
+
+(** The faithful pass state after [k] passes over THIS project's tokens. *)
+Definition faithful_run (p : pdflatex_project) (k : nat) : L0Pass.pass_state :=
+  L0Pass.iterate_pass_step L0Pass.initial_pass_state k (project_tokens p).
+
+(** The artefact of the k-th faithful run: empty PDF graph + the run's
+    ACTUAL log byte stream. *)
+Definition faithful_artefact (p : pdflatex_project) (k : nat)
+    : pdflatex_artefact :=
+  (mk_pdf_artefact [] [] [],
+   L0Log.log_bytes (L0Pass.log (faithful_run p k))).
+
+(** Bounded-pass termination: the faithful pass over [project_tokens p]
+    converges within the WS8 budget. *)
 Definition pdflatex_bounded_terminates
-    (_ : pdflatex_project) (_ : pdflatex_profile) : Prop :=
+    (p : pdflatex_project) (_ : pdflatex_profile) : Prop :=
   exists k,
     k <= pdflatex_pass_max /\
-    (iterate_step pdflatex_initial_state k).(converged) = true.
+    (faithful_run p k).(L0Pass.converged) = true.
 
-(** Compilation success: bounded pass convergence AND no fatal
-    marker in the converged log. The [log_no_fatal] conjunct is
-    discharged by [iterate_step_log_unchanged] + [empty_log_no_fatal]
-    (the initial log is empty and the pass model preserves it). *)
+(** Compilation success: the faithful pass over THIS project's tokens
+    converges AND its log carries no fatal marker. *)
 Definition pdflatex_compilation_succeeds
-    (_ : pdflatex_project) (_ : pdflatex_profile) : Prop :=
+    (p : pdflatex_project) (_ : pdflatex_profile) : Prop :=
   exists k,
     k <= pdflatex_pass_max /\
-    (iterate_step pdflatex_initial_state k).(converged) = true /\
-    log_no_fatal (iterate_step pdflatex_initial_state k).(log_state).
+    (faithful_run p k).(L0Pass.converged) = true /\
+    L0Log.log_no_fatal (L0Pass.log (faithful_run p k)).
 
-(** Produce relation: artefact equals the canonical artefact at some
-    bounded pass-state. *)
+(** Produce relation: [out] is the artefact of a CONVERGED, FATAL-FREE
+    faithful run of THIS project — what pdflatex actually emits on a
+    successful compile. *)
 Definition pdflatex_produces
-    (_ : pdflatex_project) (_ : pdflatex_profile)
+    (p : pdflatex_project) (_ : pdflatex_profile)
     (out : pdflatex_artefact) : Prop :=
   exists k,
     k <= pdflatex_pass_max /\
-    out = canonical_artefact (iterate_step pdflatex_initial_state k).
+    (faithful_run p k).(L0Pass.converged) = true /\
+    L0Log.log_no_fatal (L0Pass.log (faithful_run p k)) /\
+    out = faithful_artefact p k.
 
-(** Output well-formedness: PDF graph valid + log no fatal. *)
+(** Byte-level fatal-freeness of an artefact log, over the faithful
+    fatal-marker set (definitionally the tail of [L0Log.log_no_fatal]). *)
+Definition faithful_bytes_no_fatal (bytes : list nat) : Prop :=
+  forall m, In m L0Log.fatal_markers ->
+            L0Log.contains_subseq m bytes = false.
+
+(** Output well-formedness: PDF graph valid + log fatal-free. *)
 Definition pdflatex_output_format_well_formed
     (out : pdflatex_artefact) : Prop :=
-  pdf_log_wellformed (fst out) (snd out).
+  valid_pdf_graph (fst out) /\ faithful_bytes_no_fatal (snd out).
 
 (** ── Bonus: bounded-terminates is universally true ────────────── *)
 
@@ -451,8 +584,11 @@ Theorem pdflatex_bounded_terminates_universal :
   forall (p : pdflatex_project) (pf : pdflatex_profile),
     pdflatex_bounded_terminates p pf.
 Proof.
-  intros p pf. unfold pdflatex_bounded_terminates.
-  exact pdflatex_pass_count_bounded.
+  intros p pf. unfold pdflatex_bounded_terminates, faithful_run.
+  destruct (L0Pass.pdflatex_pass_converges_bounded (project_tokens p)
+              L0Pass.initial_pass_state (L0Pass.bounded_labels_holds _))
+    as [k [Hk Hconv]].
+  exists k. split; [unfold pdflatex_pass_max; lia | exact Hconv].
 Qed.
 
 (** ── T6 — substantive discharge of compile_progress_rule ──────── *)
@@ -511,12 +647,14 @@ Lemma pdflatex_compile_progress_rule_proof :
     pdflatex_bounded_terminates p pf ->
     pdflatex_compilation_succeeds p pf.
 Proof.
-  intros p pf _ _ _ _ _ _ Hbound.
+  (* T2 is now LOAD-BEARING: closure ⇒ no_fatal_tokens ⇒ the converged
+     log is fatal-free. This is the real content of compile-safety. *)
+  intros p pf _ _ HT2 _ _ _ Hbound.
   destruct Hbound as [k [Hk Hconv]].
   exists k. split; [exact Hk |]. split; [exact Hconv |].
-  rewrite (iterate_step_log_unchanged k pdflatex_initial_state).
-  unfold pdflatex_initial_state. simpl.
-  apply empty_log_no_fatal.
+  unfold faithful_run.
+  apply L0Pass.pass_iteration_no_fatal.
+  apply project_closed_no_fatal_tokens. exact HT2.
 Qed.
 
 (** Section closure with the substantive discharge. *)
@@ -578,11 +716,11 @@ Proof.
            rule).
 Qed.
 
-(** SUBSTANTIVE discharge: destructure [produces] to extract the
-    canonical-artefact equation, then both wellformedness conjuncts
-    close — empty PDF is valid by [empty_pdf_valid]; the canonical
-    log = initial log = [] (by [iterate_step_log_unchanged]), and
-    empty log is fatal-free by [empty_log_no_fatal]. *)
+(** SUBSTANTIVE discharge (faithful): [produces] carries the artefact of a
+    CONVERGED, FATAL-FREE faithful run, so both wellformedness conjuncts
+    close — the empty PDF graph is valid ([empty_pdf_valid]); the run's log
+    is fatal-free directly from the [produces] witness (which is exactly
+    [faithful_bytes_no_fatal] of the artefact's byte stream). *)
 Lemma pdflatex_output_wellformed_rule_proof :
   forall (p : pdflatex_project) (pf : pdflatex_profile)
          (out : pdflatex_artefact),
@@ -591,12 +729,12 @@ Lemma pdflatex_output_wellformed_rule_proof :
     pdflatex_output_format_well_formed out.
 Proof.
   intros p pf out _ Hprod.
-  destruct Hprod as [k [Hk Heq]].
-  unfold pdflatex_output_format_well_formed. rewrite Heq.
-  unfold canonical_artefact, pdf_log_wellformed. simpl. split.
+  destruct Hprod as [k [Hk [Hconv [Hnf Heq]]]].
+  subst out.
+  unfold pdflatex_output_format_well_formed, faithful_artefact.
+  cbn [fst snd]. split.
   - apply empty_pdf_valid.
-  - rewrite (iterate_step_log_unchanged k pdflatex_initial_state).
-    unfold pdflatex_initial_state. simpl. apply empty_log_no_fatal.
+  - unfold faithful_bytes_no_fatal. exact Hnf.
 Qed.
 
 (** Section closure with the substantive discharge. *)
@@ -622,14 +760,20 @@ Definition project_well_typed (p : pdflatex_project) : Prop :=
 Definition profile_supported (pf : pdflatex_profile) : Prop :=
   profile_admits pf.(prof_features) pf.(prof_engine).
 
-(** Headline theorem: for any project_well_typed project and any
-    profile_supported profile, there exists an artefact such that
-    pdflatex produces it, compilation succeeds, and the output is
-    well-formed.
+(** Headline theorem (FAITHFUL, project-dependent): for any
+    project_well_typed (= T2-closed) project and any profile_supported
+    profile, there exists an artefact such that the FAITHFUL pdflatex pass
+    over THIS project's tokens ([project_tokens p]) produces it, compilation
+    succeeds (converges + fatal-free log), and the output is well-formed.
 
-    Witness: the canonical artefact at pass_max = 5 steps from
-    initial. T0/T1/T4/T5 are trivially [I]; bounded_terminates is
-    universal (Stage 2); T6 + T7 close the rest. *)
+    The conclusion GENUINELY depends on [p]: [produces],
+    [compilation_succeeds] and the artefact are all computed from
+    [faithful_run p _] = the operational pass over [project_tokens p]. The
+    fatal-free guarantee is EARNED from [project_well_typed] via
+    [project_closed_no_fatal_tokens] — a non-closed project (dangling file
+    reference) would emit [Tok_fatal] and fail (see
+    [dangling_project_pass_is_fatal]). No phantom p, no empty-document
+    dodge. Witness: the converged run at some k ≤ 2 (≤ pdflatex_pass_max). *)
 Theorem pdflatex_compile_safe :
   forall (p : pdflatex_project) (pf : pdflatex_profile),
     project_well_typed p ->
@@ -640,26 +784,27 @@ Theorem pdflatex_compile_safe :
       pdflatex_output_format_well_formed out.
 Proof.
   intros p pf Hwt Hsupp.
-  exists (canonical_artefact (iterate_step pdflatex_initial_state pdflatex_pass_max)).
+  (* T2 closure gives the genuine, falsifiable safety hypothesis. *)
+  assert (Hnf : L0Log.no_fatal_tokens (project_tokens p))
+    by (apply project_closed_no_fatal_tokens; exact Hwt).
+  (* A converged, fatal-free faithful run exists at some k ≤ 2. *)
+  destruct (L0Pass.converged_run_is_safe (project_tokens p) Hnf)
+    as [k [Hk2 [Hconv Hsafe]]].
+  assert (Hkle : k <= pdflatex_pass_max) by (unfold pdflatex_pass_max; lia).
+  exists (faithful_artefact p k).
   split; [| split].
-  - (* produces: artefact = canonical at k = pass_max *)
-    exists pdflatex_pass_max. split; [apply le_n | reflexivity].
+  - (* produces: the artefact of the converged fatal-free run *)
+    exists k. unfold faithful_run in *.
+    split; [exact Hkle |]. split; [exact Hconv |]. split;
+      [exact Hsafe | reflexivity].
   - (* compilation_succeeds *)
-    apply pdflatex_T6_unconditional_in_bound.
-    + apply pdflatex_T0_accepts_holds.
-    + apply pdflatex_T1_admissible_holds.
-    + exact Hwt. (* T2_closed p — from project_well_typed *)
-    + (* T3_compatible p pf := profile_admits ... = profile_supported pf *)
-      unfold pdflatex_T3_compatible. exact Hsupp.
-    + apply pdflatex_T4_coherent_holds.
-    + apply pdflatex_T5_safe_holds.
-  - (* output_format_well_formed of the canonical artefact *)
-    unfold pdflatex_output_format_well_formed, canonical_artefact,
-           pdf_log_wellformed.
+    exists k. unfold faithful_run in *.
+    split; [exact Hkle |]. split; [exact Hconv | exact Hsafe].
+  - (* output_format_well_formed of the produced artefact *)
+    unfold pdflatex_output_format_well_formed, faithful_artefact.
     cbn [fst snd]. split.
     + apply empty_pdf_valid.
-    + rewrite (iterate_step_log_unchanged pdflatex_pass_max pdflatex_initial_state).
-      cbn [log_state pdflatex_initial_state]. apply empty_log_no_fatal.
+    + unfold faithful_bytes_no_fatal. unfold faithful_run in *. exact Hsafe.
 Qed.
 
 (** ── Engine-generic capstone aliases ─────────────────────────────

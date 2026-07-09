@@ -543,6 +543,28 @@ Module L0Log.
         apply IH. exists n; split; assumption.
   Qed.
 
+  (* Converse of [exists_undef_collect_nonnil] at the element level: every id
+     collected as a warning is a genuine reference to a label undefined in the
+     (fixed) aux state.  Used to prove warning-faithfulness (Stage 6). *)
+  Lemma collect_undef_in :
+    forall toks aux m,
+      In m (collect_undef toks aux) ->
+      In (Tok_label_ref m) toks /\ ~ In m (defined_labels aux).
+  Proof.
+    induction toks as [|t rest IH]; simpl; intros aux m Hin.
+    - inversion Hin.
+    - destruct t as [| a | a |]; simpl in Hin.
+      + destruct (IH aux m Hin) as [H1 H2]. split; [right; assumption | assumption].
+      + destruct (IH aux m Hin) as [H1 H2]. split; [right; assumption | assumption].
+      + destruct (in_dec Nat.eq_dec a (defined_labels aux)) as [Hd|Hd].
+        * destruct (IH aux m Hin) as [H1 H2]. split; [right; assumption | assumption].
+        * destruct Hin as [Heq | Hin'].
+          -- subst. split; [left; reflexivity | assumption].
+          -- destruct (IH aux m Hin') as [H1 H2].
+             split; [right; assumption | assumption].
+      + destruct (IH aux m Hin) as [H1 H2]. split; [right; assumption | assumption].
+  Qed.
+
   (* (B): the stream contains at least one reference to an UNDEFINED label =>
      the pass raises a NON-empty warnings list, yet the log is STILL fatal-free.
      This is the crux: undefined-ref is a warning, not a fatal error. *)
@@ -799,43 +821,41 @@ Module L0Pass.
     tauto.
   Qed.
 
-  (* [bounded_labels input]: the document draws its label ids from a FINITE
-     universe (some [N] bounds every defined label id).  This is the faithful
-     "finite label/ref set" hypothesis of the plan.  It is non-vacuous and in
-     fact satisfiable by every document ([bounded_labels_holds]). *)
-  Definition bounded_labels (input : list pdflatex_token) : Prop :=
-    exists N, forall n, In n (collect_defs input) -> n < N.
+  (* RESIDUAL-3 CLOSURE (v27.1.38): the old [bounded_labels] /
+     [bounded_labels_holds] pair was a UNIVERSALLY-TRUE decoration — it was
+     the hypothesis of the convergence theorem yet [intros ... _]'d away and
+     discharged for EVERY input by [bounded_labels_holds].  It has been
+     REMOVED.  The ≤2-pass convergence genuinely needs no finite-label bound
+     (it holds for every finite token list), so the theorem below is now
+     UNCONDITIONAL.  The single genuinely-falsifiable hypothesis on the pass
+     is [no_fatal_tokens] (the [Tok_fatal] singleton fails it — see
+     [L0Log.fatal_token_not_no_fatal]), which is what [converged_run_is_safe]
+     and the WS8 capstone actually load-bear on.  No decorative predicate
+     survives on the convergence path. *)
 
-  Lemma bounded_labels_holds : forall input, bounded_labels input.
-  Proof.
-    intros input. unfold bounded_labels.
-    generalize (collect_defs input); intro l.
-    induction l as [|m rest IH].
-    - exists 0. intros n H. inversion H.
-    - destruct IH as [N IH]. exists (S (Nat.max m N)).
-      intros n Hn. destruct Hn as [Heq | Hn].
-      + subst. apply Nat.lt_succ_r. apply Nat.le_max_l.
-      + apply Nat.lt_succ_r.
-        apply Nat.le_trans with (m := N).
-        * apply Nat.lt_le_incl. apply IH. exact Hn.
-        * apply Nat.le_max_r.
-  Qed.
-
-  (* THE CONVERGENCE THEOREM.  For any document over a finite label universe
-     and any starting pass state, at most 2 passes reach [converged = true].
-     The witness is exactly k = 2, and the [converged] flag is the real
-     [aux_eq] test — true because the defined-label set stabilised after the
-     first pass (Stage 2 / [pass_defined_set_stable]). *)
-  Theorem pdflatex_pass_converges_bounded :
+  (* Two passes from any state converge: the [aux_eq] flag is exactly the
+     defined-label SET being stable after the first pass. *)
+  Lemma converged_at_two :
     forall (input : list pdflatex_token) (s0 : pass_state),
-      bounded_labels input ->
-      exists k, k <= 2 /\ (iterate_pass_step s0 k input).(converged) = true.
+      (iterate_pass_step s0 2 input).(converged) = true.
   Proof.
-    intros input s0 _.
-    exists 2. split; [apply le_n |].
+    intros input s0.
     simpl. unfold pdflatex_pass_step; simpl.
     apply (proj2 (aux_eq_true _ _)).
     intro n. symmetry. apply pass_defined_set_stable.
+  Qed.
+
+  (* THE CONVERGENCE THEOREM (unconditional).  For any document and any
+     starting pass state, at most 2 passes reach [converged = true].  The
+     witness is exactly k = 2, and the [converged] flag is the real [aux_eq]
+     test — true because the defined-label set stabilised after the first
+     pass (Stage 2 / [pass_defined_set_stable]). *)
+  Theorem pdflatex_pass_converges_bounded :
+    forall (input : list pdflatex_token) (s0 : pass_state),
+      exists k, k <= 2 /\ (iterate_pass_step s0 k input).(converged) = true.
+  Proof.
+    intros input s0.
+    exists 2. split; [apply le_n | apply converged_at_two].
   Qed.
 
   (* The ≤2 bound is TIGHT and MEANINGFUL: a one-label document is NOT
@@ -851,9 +871,8 @@ Module L0Pass.
 
   (* And convergence composes with the Stage-4 safety guarantee: a
      FATAL-FREE ([no_fatal_tokens]) document's converged run is also
-     fatal-free.  Convergence itself needs no real hypothesis (the ≤2
-     bound is universal — [bounded_labels_holds] discharges the decorative
-     [bounded_labels] internally); the GENUINE, falsifiable hypothesis is
+     fatal-free.  Convergence itself needs NO hypothesis (the ≤2 bound is
+     unconditional); the GENUINE, falsifiable hypothesis is
      [no_fatal_tokens].  This is the honest resolution of the old
      decorative [bounded_labels]. *)
   Corollary converged_run_is_safe :
@@ -865,11 +884,121 @@ Module L0Pass.
         log_no_fatal (log (iterate_pass_step initial_pass_state k input)).
   Proof.
     intros input Hnf.
-    destruct (pdflatex_pass_converges_bounded input initial_pass_state
-                (bounded_labels_holds input))
+    destruct (pdflatex_pass_converges_bounded input initial_pass_state)
       as [k [Hk Hconv]].
     exists k. repeat split; [exact Hk | exact Hconv |].
     apply pass_iteration_no_fatal; exact Hnf.
+  Qed.
+
+  (* ======================================================================= *)
+  (* Stage 6 (DEEPENING): the converged run's WARNINGS faithfully reflect the *)
+  (* document's UNRESOLVED cross-references — the log warns IFF the document   *)
+  (* references a label it never defines.  This makes the Stage-3 warning path *)
+  (* (undefined \ref => non-empty warnings, still fatal-free) LOAD-BEARING in  *)
+  (* the WS8 capstone: the capstone now states cross-references resolve/warn   *)
+  (* faithfully over the project's REAL token stream.                         *)
+  (* ======================================================================= *)
+
+  (* One pass appends exactly the undefined refs (against the pass's own aux)
+     to the running warnings. *)
+  Lemma warnings_step :
+    forall s input,
+      warnings (log (pdflatex_pass_step s input))
+      = warnings (log s) ++ collect_undef input (aux_step_pass (aux s) input).
+  Proof.
+    intros s input. unfold pdflatex_pass_step; cbn [log aux].
+    apply warnings_eq_collect.
+  Qed.
+
+  Lemma aux_after_step :
+    forall s input, aux (pdflatex_pass_step s input) = aux_step_pass (aux s) input.
+  Proof. intros s input. reflexivity. Qed.
+
+  Lemma iterate_two_unfold :
+    forall s input,
+      iterate_pass_step s 2 input
+      = pdflatex_pass_step (pdflatex_pass_step s input) input.
+  Proof. reflexivity. Qed.
+
+  (* Membership bridges: what the aux defines after one / two passes from the
+     empty state is exactly the document's [collect_defs] SET. *)
+  Lemma defined_after_pass1 :
+    forall input n,
+      In n (defined_labels (aux_step_pass empty_aux input))
+      <-> In n (collect_defs input).
+  Proof.
+    intros input n. rewrite (pass_defined_iff input empty_aux n).
+    unfold empty_aux; simpl. tauto.
+  Qed.
+
+  Lemma defined_after_pass2 :
+    forall input n,
+      In n (defined_labels (aux_step_pass (aux_step_pass empty_aux input) input))
+      <-> In n (collect_defs input).
+  Proof.
+    intros input n.
+    rewrite (pass_defined_set_stable input empty_aux n).
+    apply defined_after_pass1.
+  Qed.
+
+  (* Warnings after the (converged) two-pass run, in closed form: the
+     undefined refs of pass 1 followed by those of pass 2. *)
+  Lemma warnings_iterate_two :
+    forall input,
+      warnings (log (iterate_pass_step initial_pass_state 2 input))
+      = collect_undef input (aux_step_pass empty_aux input)
+        ++ collect_undef input
+             (aux_step_pass (aux_step_pass empty_aux input) input).
+  Proof.
+    intros input.
+    rewrite iterate_two_unfold.
+    rewrite warnings_step.
+    rewrite warnings_step.
+    rewrite aux_after_step.
+    (* aux initial_pass_state = empty_aux, warnings (log initial) = [] *)
+    cbn [warnings log initial_pass_state aux empty_log].
+    reflexivity.
+  Qed.
+
+  (* THE WARNING-FAITHFULNESS THEOREM: the two-pass run raises a warning IFF
+     the document contains a reference to a never-defined label.  Both
+     directions are genuine — the [<-] exercises the warning path, the [->]
+     shows warnings arise ONLY from real unresolved refs. *)
+  Theorem warns_iff_unresolved_two :
+    forall input,
+      warnings (log (iterate_pass_step initial_pass_state 2 input)) <> []
+      <-> (exists n, In (Tok_label_ref n) input
+                     /\ ~ In n (collect_defs input)).
+  Proof.
+    intros input. rewrite warnings_iterate_two. split.
+    - intros Hne.
+      destruct (collect_undef input (aux_step_pass empty_aux input))
+        as [|a A'] eqn:EA.
+      + (* pass-1 undef set empty; the non-emptiness is in pass 2 *)
+        simpl in Hne.
+        destruct (collect_undef input
+                    (aux_step_pass (aux_step_pass empty_aux input) input))
+          as [|b B'] eqn:EB; [contradiction Hne; reflexivity|].
+        assert (Hin : In b (collect_undef input
+                       (aux_step_pass (aux_step_pass empty_aux input) input)))
+          by (rewrite EB; left; reflexivity).
+        apply collect_undef_in in Hin. destruct Hin as [Href Hnd].
+        exists b. split; [exact Href |].
+        intro Hc. apply Hnd. apply defined_after_pass2. exact Hc.
+      + (* pass-1 already has an undef ref *)
+        assert (Hin : In a (collect_undef input (aux_step_pass empty_aux input)))
+          by (rewrite EA; left; reflexivity).
+        apply collect_undef_in in Hin. destruct Hin as [Href Hnd].
+        exists a. split; [exact Href |].
+        intro Hc. apply Hnd. apply defined_after_pass1. exact Hc.
+    - intros [n [Href Hnd]].
+      assert (Hnd1 : ~ In n (defined_labels (aux_step_pass empty_aux input))).
+      { intro Hc. apply Hnd. apply defined_after_pass1. exact Hc. }
+      assert (HA : collect_undef input (aux_step_pass empty_aux input) <> [])
+        by (apply exists_undef_collect_nonnil; exists n; split; assumption).
+      intro Happ. apply HA.
+      destruct (collect_undef input (aux_step_pass empty_aux input)); auto.
+      discriminate Happ.
   Qed.
 
 End L0Pass.

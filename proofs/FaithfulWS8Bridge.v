@@ -32,13 +32,12 @@ Import ListNotations.
     5-pass window WS8's [pdflatex_bounded_terminates] posits. *)
 Theorem faithful_pass_within_ws8_bound :
   forall (input : list L0Aux.pdflatex_token) (s0 : L0Pass.pass_state),
-    L0Pass.bounded_labels input ->
     exists k,
       k <= pdflatex_pass_max /\
       (L0Pass.iterate_pass_step s0 k input).(L0Pass.converged) = true.
 Proof.
-  intros input s0 Hb.
-  destruct (L0Pass.pdflatex_pass_converges_bounded input s0 Hb)
+  intros input s0.
+  destruct (L0Pass.pdflatex_pass_converges_bounded input s0)
     as [k [Hk Hconv]].
   exists k. split; [| exact Hconv].
   unfold pdflatex_pass_max. lia.
@@ -54,15 +53,14 @@ Qed.
 Corollary faithful_refines_ws8_bounded_terminates :
   forall (p : pdflatex_project) (pf : pdflatex_profile)
          (input : list L0Aux.pdflatex_token) (s0 : L0Pass.pass_state),
-    L0Pass.bounded_labels input ->
     pdflatex_bounded_terminates p pf /\
     (exists k,
         k <= pdflatex_pass_max /\
         (L0Pass.iterate_pass_step s0 k input).(L0Pass.converged) = true).
 Proof.
-  intros p pf input s0 Hb. split.
+  intros p pf input s0. split.
   - apply pdflatex_bounded_terminates_universal.
-  - apply faithful_pass_within_ws8_bound; exact Hb.
+  - apply faithful_pass_within_ws8_bound.
 Qed.
 
 (** Additionally: the faithful converged run is fatal-free within the

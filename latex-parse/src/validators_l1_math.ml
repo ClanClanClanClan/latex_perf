@@ -725,6 +725,12 @@ let l1_math_018_rule : rule =
    specifically for the pattern where _ immediately follows ^ without braces in
    inline math, e.g. $\sum^n_i$ instead of $\sum_{i}^{n}$ *)
 let l1_math_019_rule : rule =
+  (* MATH-019 targets inline OPERATOR-LIMIT-style stacked scripts (e.g.
+     `\sum^n_i`), where sub-before-super `\sum_i^n` (lower limit first) is the
+     conventional form — distinct from SCRIPT-021, which canonicalises general
+     BRACED atoms to super-before-sub `a^{c}_{b}`. The two do not target the
+     same construct (unbraced operator stack vs braced atom), so their opposite
+     directions are intentional, not a conflict. *)
   let re =
     Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
   in
@@ -733,10 +739,11 @@ let l1_math_019_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) inline_segs;
     if !cnt > 0 then
-      (* Bucket-C candidate (v27.1.22): reorder `x^a_b` -> `x_b^a` (canonical
-         sub-before-super order). Both scripts are cleanly bounded by the same
-         regex (single token or `{...}`); restricted to inline math to mirror
-         the diagnostic scope. Semantics-preserving, but surfaced for review. *)
+      (* Bucket-C candidate (v27.1.22): reorder `x^a_b` -> `x_b^a`
+         (operator-limit sub-before-super order). Both scripts are cleanly
+         bounded by the same regex (single token or `{...}`); restricted to
+         inline math to mirror the diagnostic scope. Semantics-preserving, but
+         surfaced for review. *)
       let ranges = find_math_ranges s in
       let inline_ranges =
         List.filter (fun r -> range_is_inline_math s r) ranges

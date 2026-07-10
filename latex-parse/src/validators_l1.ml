@@ -71,6 +71,62 @@ let l1_mod_001_rule : rule =
   in
   { id = "MOD-001"; run; languages = [] }
 
+(* NFSS declarative equivalents of the legacy 2.09 switches, extended with the
+   small-caps axis (\sc -> \scshape) that MOD-001 does not need. Shared by the
+   MOD-002..007 mixed-paragraph candidates: normalising the legacy switch to its
+   NFSS form removes the legacy token from the paragraph, achieving the
+   consistency the rule wants. Same caveat as MOD-001 (the legacy switch resets
+   ALL font axes; the NFSS switch sets only its own) — hence CANDIDATE. *)
+let mod_family_nfss = function
+  | "bf" -> Some "bfseries"
+  | "it" -> Some "itshape"
+  | "tt" -> Some "ttfamily"
+  | "rm" -> Some "rmfamily"
+  | "sl" -> Some "slshape"
+  | "sf" -> Some "sffamily"
+  | "sc" -> Some "scshape"
+  | _ -> None
+
+(* Bucket-C candidates for MOD-002..007: for every LEGACY token that lives in a
+   paragraph the rule flagged as mixing legacy+modern, emit a per-occurrence
+   candidate replacing `\<legacy>` with its NFSS switch. The offsets come from
+   [command_tokens] (the literal source scan), gated to the flagged paragraph
+   spans; identical in shape+offset to the MOD-001 candidate for the same token,
+   so the two rules never emit CONFLICTING edits. The diagnostic count (always
+   1) is untouched. *)
+let mod_mixed_candidates s ~legacy ~modern =
+  let ranges = mixed_paragraph_ranges s ~legacy ~modern in
+  if ranges = [] then []
+  else
+    command_tokens s
+    |> List.filter_map (fun (name, off) ->
+           if
+             List.exists (( = ) name) legacy
+             && List.exists (fun (o, l) -> off >= o && off < o + l) ranges
+           then
+             match mod_family_nfss name with
+             | None -> None
+             | Some nfss ->
+                 Some
+                   {
+                     c_edits =
+                       [
+                         Cst_edit.make ~start_offset:off
+                           ~end_offset:(off + 1 + String.length name)
+                           ~replacement:("\\" ^ nfss);
+                       ];
+                     c_label =
+                       "Normalise the legacy \\"
+                       ^ name
+                       ^ " font switch to its NFSS form \\"
+                       ^ nfss
+                       ^ " for consistency (caveat: the legacy switch resets \
+                          ALL font axes; the NFSS switch sets only its own — \
+                          review before applying)";
+                   }
+           else None)
+    |> candidates_drop_exempt s
+
 let l1_exp_001_rule : rule =
   let run s =
     (* EXP-001: Incomplete expansion — strip targets still present
@@ -97,10 +153,17 @@ let l1_mod_002_rule : rule =
     (* MOD-002: Mixed legacy and modern bold commands in same paragraph *)
     let legacy = [ "bf" ] and modern = [ "textbf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-002" ~severity:Warning
-           ~message:"Mixed legacy and modern bold commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-002" ~severity:Warning
+             ~message:"Mixed legacy and modern bold commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-002" ~severity:Warning
+             ~message:"Mixed legacy and modern bold commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-002"; run; languages = [] }
@@ -110,10 +173,19 @@ let l1_mod_003_rule : rule =
     (* MOD-003: Mixed legacy and modern italic commands in same paragraph *)
     let legacy = [ "it" ] and modern = [ "emph"; "textit" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-003" ~severity:Warning
-           ~message:"Mixed legacy and modern italic commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-003" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern italic commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-003" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern italic commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-003"; run; languages = [] }
@@ -124,10 +196,17 @@ let l1_mod_004_rule : rule =
        paragraph *)
     let legacy = [ "rm" ] and modern = [ "textrm" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-004" ~severity:Warning
-           ~message:"Mixed legacy and modern roman commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-004" ~severity:Warning
+             ~message:"Mixed legacy and modern roman commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-004" ~severity:Warning
+             ~message:"Mixed legacy and modern roman commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-004"; run; languages = [] }
@@ -137,11 +216,19 @@ let l1_mod_005_rule : rule =
     (* MOD-005: Mixed legacy and modern typewriter commands in same paragraph *)
     let legacy = [ "tt" ] and modern = [ "texttt" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-005" ~severity:Warning
-           ~message:
-             "Mixed legacy and modern typewriter commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-005" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern typewriter commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-005" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern typewriter commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-005"; run; languages = [] }
@@ -151,11 +238,19 @@ let l1_mod_006_rule : rule =
     (* MOD-006: Mixed legacy and modern sans-serif commands in same paragraph *)
     let legacy = [ "sf" ] and modern = [ "textsf" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-006" ~severity:Warning
-           ~message:
-             "Mixed legacy and modern sans-serif commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-006" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern sans-serif commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-006" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern sans-serif commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-006"; run; languages = [] }
@@ -165,11 +260,19 @@ let l1_mod_007_rule : rule =
     (* MOD-007: Mixed legacy and modern small-caps commands in same paragraph *)
     let legacy = [ "sc" ] and modern = [ "textsc" ] in
     if has_mixed_in_paragraphs s ~legacy ~modern then
-      Some
-        (mk_result ~id:"MOD-007" ~severity:Warning
-           ~message:
-             "Mixed legacy and modern small-caps commands in same paragraph"
-           ~count:1)
+      let candidates = mod_mixed_candidates s ~legacy ~modern in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MOD-007" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern small-caps commands in same paragraph"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MOD-007" ~severity:Warning
+             ~message:
+               "Mixed legacy and modern small-caps commands in same paragraph"
+             ~count:1 ~candidates)
     else None
   in
   { id = "MOD-007"; run; languages = [] }
@@ -1565,6 +1668,78 @@ let l1_script_017_rule : rule =
   let re_sup_sub =
     Re_compat.regexp {|\^\({[^}]*}\|[A-Za-z0-9]\)_\({[^}]*}\|[A-Za-z0-9]\)|}
   in
+  (* Bucket-C candidates: normalise the sub-BEFORE-super occurrences (`_X^Y`) to
+     the canonical super-BEFORE-sub order (`^Y_X`). This is the SAME direction
+     as the shipped SCRIPT-021 producer (`_{b}^{c}` -> `^{c}_{b}`), so the two
+     rules AGREE; SCRIPT-021 auto-fixes the fully-braced subset while SCRIPT-017
+     offers a reviewable candidate over both braced and single-char operands.
+     The diagnostic count below is untouched. *)
+  let match_brace s open_idx =
+    let n = String.length s in
+    let depth = ref 0 and i = ref open_idx and res = ref None in
+    while !res = None && !i < n do
+      let c = s.[!i] in
+      let escaped = !i > 0 && s.[!i - 1] = '\\' in
+      (if not escaped then
+         match c with
+         | '{' -> incr depth
+         | '}' ->
+             decr depth;
+             if !depth = 0 then res := Some !i
+         | _ -> ());
+      incr i
+    done;
+    !res
+  in
+  (* Parse the operand starting at [i]: a `{...}` group (nesting-aware) or a
+     single alnum char. Returns (source_substring, end_index_exclusive). *)
+  let operand s i =
+    let n = String.length s in
+    if i >= n then None
+    else if s.[i] = '{' then
+      match match_brace s i with
+      | None -> None
+      | Some c -> Some (String.sub s i (c - i + 1), c + 1)
+    else
+      let ch = s.[i] in
+      if
+        (ch >= 'A' && ch <= 'Z')
+        || (ch >= 'a' && ch <= 'z')
+        || (ch >= '0' && ch <= '9')
+      then Some (String.sub s i 1, i + 1)
+      else None
+  in
+  let mk_candidates s =
+    let ranges = find_math_ranges s in
+    let n = String.length s in
+    Validators_l0_typo.find_all_non_overlapping s "_"
+    |> List.filter_map (fun off ->
+           if
+             (not (is_in_math_range ranges off))
+             || (off > 0 && s.[off - 1] = '\\')
+           then None
+           else
+             match operand s (off + 1) with
+             | None -> None
+             | Some (sub_src, j) -> (
+                 if j >= n || s.[j] <> '^' then None
+                 else
+                   match operand s (j + 1) with
+                   | None -> None
+                   | Some (sup_src, k) ->
+                       Some
+                         {
+                           c_edits =
+                             [
+                               Cst_edit.replace ~start_offset:off ~end_offset:k
+                                 (Printf.sprintf "^%s_%s" sup_src sub_src);
+                             ];
+                           c_label =
+                             "Normalise sub/superscript order to canonical \
+                              ^…_… (matches SCRIPT-021)";
+                         }))
+    |> candidates_drop_vcu_exempt s
+  in
   let run s =
     let math_segs = extract_math_segments s in
     let sub_sup_count = ref 0 in
@@ -1576,10 +1751,17 @@ let l1_script_017_rule : rule =
       math_segs;
     (* Fire only if both orderings are used *)
     if !sub_sup_count > 0 && !sup_sub_count > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-017" ~severity:Info
-           ~message:"Inconsistent order of sub/superscripts"
-           ~count:(min !sub_sup_count !sup_sub_count))
+      let count = min !sub_sup_count !sup_sub_count in
+      let candidates = mk_candidates s in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-017" ~severity:Info
+             ~message:"Inconsistent order of sub/superscripts" ~count)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-017" ~severity:Info
+             ~message:"Inconsistent order of sub/superscripts" ~count
+             ~candidates)
     else None
   in
   { id = "SCRIPT-017"; run; languages = [] }

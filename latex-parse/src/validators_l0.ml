@@ -3554,11 +3554,24 @@ let rules_spc : rule list =
 
 (* ── VERB rules: verbatim / code environment checks ────────────────── *)
 
-(* VERB-001: \verb delimiter reused inside same \verb block *)
+(* VERB-001: \verb delimiter reused inside same \verb block.
+
+   Bucket-C candidate: pick a NEW delimiter char that does NOT occur in the
+   block content and rewrite BOTH delimiters to it, resolving the reuse. The
+   candidate carries two 1-byte replace edits (open + close delimiter). If every
+   safe delimiter char already occurs in the content, we fall back to a
+   LABEL-ONLY candidate (empty edit set) that still surfaces the problem for the
+   author. The diagnostic count is unchanged. *)
 let r_verb_001 : rule =
+  (* Punctuation the author can safely use as a \verb delimiter (non-alnum,
+     non-space, non-`*`, and not the argument-brace `{`). Tried in order. *)
+  let delim_pool =
+    [ '|'; '!'; '+'; '/'; '='; '?'; '.'; ','; ';'; ':'; '@'; '#'; '~'; '^' ]
+  in
   let run s =
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 5 do
       if
@@ -3594,16 +3607,61 @@ let r_verb_001 : rule =
             then has_reuse := true;
             incr j
           done;
-          if !has_reuse then incr cnt;
+          if !has_reuse then (
+            incr cnt;
+            (* close delimiter (if any) is at !j - 1 once found_end fired *)
+            let close_pos = if !found_end then !j - 1 else -1 in
+            let content_end = if close_pos >= 0 then close_pos else !j in
+            let content =
+              String.sub s (delim_pos + 1) (content_end - (delim_pos + 1))
+            in
+            let occurs c = String.contains content c in
+            let newd =
+              List.find_opt (fun c -> c <> delim && not (occurs c)) delim_pool
+            in
+            let cand =
+              match (newd, close_pos >= 0) with
+              | Some c, true ->
+                  {
+                    c_edits =
+                      [
+                        Cst_edit.replace ~start_offset:delim_pos
+                          ~end_offset:(delim_pos + 1) (String.make 1 c);
+                        Cst_edit.replace ~start_offset:close_pos
+                          ~end_offset:(close_pos + 1) (String.make 1 c);
+                      ];
+                    c_label =
+                      Printf.sprintf
+                        "Change the \\verb delimiter to '%c' (the current \
+                         delimiter is reused inside the content)"
+                        c;
+                  }
+              | _ ->
+                  {
+                    c_edits = [];
+                    c_label =
+                      "Choose a \\verb delimiter char that does not appear in \
+                       the verbatim content (the current delimiter is reused \
+                       inside it)";
+                  }
+            in
+            cands := cand :: !cands);
           i := !j)
         else i := n
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-001" ~severity:Error
-           ~message:"\\verb delimiter reused inside same \\verb block"
-           ~count:!cnt)
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-001" ~severity:Error
+             ~message:"\\verb delimiter reused inside same \\verb block"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-001" ~severity:Error
+             ~message:"\\verb delimiter reused inside same \\verb block"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "VERB-001"; run; languages = [] }
@@ -3646,10 +3704,19 @@ let r_verb_002 : rule =
   in
   { id = "VERB-002"; run; languages = [] }
 
-(* VERB-003: Trailing spaces inside verbatim *)
+(* VERB-003: Trailing spaces inside verbatim.
+
+   The rule's PURPOSE is to remove the trailing spaces, so we surface a
+   per-flagged-line Bucket-C CANDIDATE that deletes the trailing space/tab run
+   at that line end. Like VERB-002 this legitimately targets verbatim content,
+   but because it is a CANDIDATE (never applied by --apply-fixes) it does not
+   trip the verbatim-safety gate. The candidate offsets come from
+   [extract_env_block_ranges] (the absolute-offset twin of
+   [extract_env_blocks]); the diagnostic count still uses the substring scan and
+   is byte-identical. *)
 let r_verb_003 : rule =
-  let run s =
-    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  let count_trailing s =
     let cnt = ref 0 in
     List.iter
       (fun env ->
@@ -3665,18 +3732,75 @@ let r_verb_003 : rule =
               lines)
           blocks)
       envs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-003" ~severity:Info
-           ~message:"Trailing spaces inside verbatim" ~count:!cnt)
+    !cnt
+  in
+  let mk_candidates s =
+    List.concat_map
+      (fun env ->
+        List.concat_map
+          (fun (cs, ce) ->
+            (* Walk the block body [cs, ce), splitting on '\n' exactly like
+               String.split_on_char, and for every line with a trailing
+               space/tab run emit a candidate deleting that run. *)
+            let cands = ref [] in
+            let ls = ref cs in
+            let i = ref cs in
+            let emit le =
+              let r = ref le in
+              while !r > !ls && (s.[!r - 1] = ' ' || s.[!r - 1] = '\t') do
+                decr r
+              done;
+              if !r < le then
+                cands :=
+                  {
+                    c_edits =
+                      [ Cst_edit.delete ~start_offset:!r ~end_offset:le ];
+                    c_label = "Remove trailing whitespace inside verbatim";
+                  }
+                  :: !cands
+            in
+            while !i < ce do
+              if s.[!i] = '\n' then (
+                emit !i;
+                ls := !i + 1);
+              incr i
+            done;
+            emit ce;
+            List.rev !cands)
+          (extract_env_block_ranges env s))
+      envs
+  in
+  let run s =
+    let cnt = count_trailing s in
+    if cnt > 0 then
+      let candidates = mk_candidates s in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-003" ~severity:Info
+             ~message:"Trailing spaces inside verbatim" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-003" ~severity:Info
+             ~message:"Trailing spaces inside verbatim" ~count:cnt ~candidates)
     else None
   in
   { id = "VERB-003"; run; languages = [] }
 
-(* VERB-004: Non-ASCII quotes inside verbatim *)
+(* VERB-004: Non-ASCII quotes inside verbatim.
+
+   The rule PURPOSE is to replace the curly quotes with their ASCII forms
+   (U+201C/U+201D double-curly -> ASCII double quote, U+2018/U+2019 single-curly
+   -> ASCII single quote). Surfaced as a per-occurrence Bucket-C CANDIDATE (like
+   VERB-003, it legitimately targets verbatim but, being a candidate, never
+   trips the verbatim-safety gate). Absolute offsets from
+   [extract_env_block_ranges] mirror the substring count exactly. *)
 let r_verb_004 : rule =
-  let run s =
-    let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  let envs = [ "verbatim"; "lstlisting"; "minted" ] in
+  let ascii_of b2 =
+    if b2 = 0x9C || b2 = 0x9D then "\"" else "'"
+    (* 0x98 / 0x99 *)
+  in
+  let count_quotes s =
     let cnt = ref 0 in
     List.iter
       (fun env ->
@@ -3698,10 +3822,54 @@ let r_verb_004 : rule =
             done)
           blocks)
       envs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"VERB-004" ~severity:Warning
-           ~message:"Non‑ASCII quotes inside verbatim" ~count:!cnt)
+    !cnt
+  in
+  let mk_candidates s =
+    List.concat_map
+      (fun env ->
+        List.concat_map
+          (fun (cs, ce) ->
+            let cands = ref [] in
+            let i = ref cs in
+            while !i < ce - 2 do
+              let b0 = Char.code s.[!i] in
+              if b0 = 0xE2 && !i + 2 < ce then (
+                let b1 = Char.code s.[!i + 1] in
+                let b2 = Char.code s.[!i + 2] in
+                if
+                  b1 = 0x80 && (b2 = 0x9C || b2 = 0x9D || b2 = 0x98 || b2 = 0x99)
+                then
+                  cands :=
+                    {
+                      c_edits =
+                        [
+                          Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 3)
+                            (ascii_of b2);
+                        ];
+                      c_label =
+                        "Replace non-ASCII quote with its ASCII form inside \
+                         verbatim";
+                    }
+                    :: !cands;
+                i := !i + 3)
+              else incr i
+            done;
+            List.rev !cands)
+          (extract_env_block_ranges env s))
+      envs
+  in
+  let run s =
+    let cnt = count_quotes s in
+    if cnt > 0 then
+      let candidates = mk_candidates s in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"VERB-004" ~severity:Warning
+             ~message:"Non‑ASCII quotes inside verbatim" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"VERB-004" ~severity:Warning
+             ~message:"Non‑ASCII quotes inside verbatim" ~count:cnt ~candidates)
     else None
   in
   { id = "VERB-004"; run; languages = [] }
@@ -6062,15 +6230,72 @@ let r_math_102 : rule =
    boolean pair over the entire byte string. Left on the substring tally by
    design. *)
 let r_math_107 : rule =
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  (* Offsets of every BARE `\le` (the ≤ macro): `\le` NOT followed by a letter,
+     so `\leq`, `\leqslant`, `\left`, ... are excluded. *)
+  let bare_le_offsets s =
+    let n = String.length s in
+    Validators_l0_typo.find_all_non_overlapping s "\\le"
+    |> List.filter (fun off -> off + 3 >= n || not (is_letter s.[off + 3]))
+  in
+  let leqslant_offsets s =
+    Validators_l0_typo.find_all_non_overlapping s "\\leqslant"
+  in
   let run s =
     let has_le =
       count_substring s "\\le " > 0 || count_substring s "\\le\\" > 0
     in
     let has_leqslant = count_substring s "\\leqslant" > 0 in
     if has_le && has_leqslant then
-      Some
-        (mk_result ~id:"MATH-107" ~severity:Info
-           ~message:{|Mix of \le and \leqslant within same document|} ~count:1)
+      let les = bare_le_offsets s in
+      let leqs = leqslant_offsets s in
+      let n = String.length s in
+      (* Normalise to the document-majority spelling (ties -> the shorter
+         \le). *)
+      let candidates =
+        if List.length les >= List.length leqs then
+          (* convert each \leqslant -> \le (skip if a letter follows, which
+             would glue into a different macro) *)
+          List.filter_map
+            (fun off ->
+              if off + 9 < n && is_letter s.[off + 9] then None
+              else
+                Some
+                  {
+                    c_edits =
+                      [
+                        Cst_edit.replace ~start_offset:off ~end_offset:(off + 9)
+                          "\\le";
+                      ];
+                    c_label =
+                      {|Normalise ≤ spelling: \leqslant -> \le (document majority)|};
+                  })
+            leqs
+        else
+          (* convert each bare \le -> \leqslant *)
+          List.map
+            (fun off ->
+              {
+                c_edits =
+                  [
+                    Cst_edit.replace ~start_offset:off ~end_offset:(off + 3)
+                      "\\leqslant";
+                  ];
+                c_label =
+                  {|Normalise ≤ spelling: \le -> \leqslant (document majority)|};
+              })
+            les
+      in
+      let candidates = candidates_drop_vcu_exempt s candidates in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-107" ~severity:Info
+             ~message:{|Mix of \le and \leqslant within same document|} ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-107" ~severity:Info
+             ~message:{|Mix of \le and \leqslant within same document|} ~count:1
+             ~candidates)
     else None
   in
   { id = "MATH-107"; run; languages = [] }

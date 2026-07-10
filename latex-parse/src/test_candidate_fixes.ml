@@ -1249,5 +1249,54 @@ let () =
         (has_label "SCRIPT-020" "$T_{eff}$"
            "Wrap the subscript word in \\mathrm (\\mathrm{eff})")
         (tag ^ ": fires"));
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-041: spacing around \ldots. Candidate inserts a space between a
+     leading punctuation mark and a glued `\ldots` (`.\ldots`/`,\ldots`); the
+     trailing `\ldots.` case is intentionally NOT suggested.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let t41_src = "a,\\ldots b" in
+  run "TYPO-041 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "TYPO-041" t41_src 1) (tag ^ ": count=1"));
+  run "TYPO-041 candidate inserts a space after the comma" (fun tag ->
+      (* "a" = 1 byte, "," at 1, "\ldots" starts at 2 -> insert at 2. *)
+      expect
+        (edit_of_label "TYPO-041" t41_src
+           "Insert a space between the punctuation and \\ldots"
+        = Some (2, 2, " "))
+        (tag ^ ": edit"));
+  run "TYPO-041 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "TYPO-041" t41_src)) (tag ^ ": fix=None"));
+  run "TYPO-041 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "TYPO-041" t41_src = t41_src) (tag ^ ": no rewrite"));
+  run "TYPO-041 gives NO candidate for the \\ldots. sub-case" (fun tag ->
+      (* Trailing period after \ldots still counts but is not suggested. *)
+      let src = "x\\ldots. y" in
+      expect
+        (fires_with_count "TYPO-041" src 1 && candidates_of "TYPO-041" src = [])
+        (tag ^ ": no trailing-period candidate"));
+  run "TYPO-041 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\na,\\ldots b\n\\end{verbatim}" in
+      expect (candidates_of "TYPO-041" v = []) (tag ^ ": exempt"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     TYPO-047: starred \section*. Candidate removes the star (numbered section).
+     ══════════════════════════════════════════════════════════════════════ *)
+  let t47_src = "\\section*{Intro}" in
+  run "TYPO-047 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "TYPO-047" t47_src 1) (tag ^ ": count=1"));
+  run "TYPO-047 candidate deletes the star at offset 8" (fun tag ->
+      (* "\section" = 8 bytes, "*" at 8 -> delete [8,9). *)
+      expect
+        (edit_of_label "TYPO-047" t47_src
+           "Remove the star to number the section (\\section)"
+        = Some (8, 9, ""))
+        (tag ^ ": edit"));
+  run "TYPO-047 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "TYPO-047" t47_src)) (tag ^ ": fix=None"));
+  run "TYPO-047 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "TYPO-047" t47_src = t47_src) (tag ^ ": no rewrite"));
+  run "TYPO-047 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\n\\section*{X}\n\\end{verbatim}" in
+      expect (candidates_of "TYPO-047" v = []) (tag ^ ": exempt"));
 
   finalise "candidate_fixes"

@@ -2,6 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.40] — 2026-07-10
+
+**Tier 3 Stage 6 residuals closed — PDF-artefact model, genuine T3/T4, document-feature
+coherence.** (1) **PDF faithful:** `build_pdf` constructs a per-token PDF object/xref
+graph from `project_tokens`; `valid_pdf_graph` is falsifiable (`bad_pdf_invalid`
+rejects a malformed artefact); the capstone discharges the PDF conjunct via
+`build_pdf_valid`, not the empty graph. (2) **T4 genuine:** redefined to
+`NoDup (body_label_defs p)` — project-dependent + falsifiable (`p_dup_not_T4`),
+load-bearing in `pdflatex_labels_resolve_uniquely` (`count_occ = 1` via `NoDup`).
+(3) **T3 document-feature coherence:** `BT_needs_feature` + `body_required_features`
+make `profile_supported` require the features the DOCUMENT demands — an OpenType doc
+fatals on pdflatex but compiles on xelatex (`otf_on_xelatex_compiles`). Capstone +
+rule proofs re-proved; all Qed, `Print Assumptions` Closed, 0 admits/axioms. Theorem
+count 1,453. **Honest residuals:** T0/T1/T5 remain universal placeholders (documented —
+need unmodelled byte-source / macro-catalogue / inverted-dependency state); the PDF is
+a structural model, not a byte-accurate serializer.
+
 ## [v27.1.39] — 2026-07-10
 
 **Candidate pool — re-wire 11 wrongly-excluded rules (correct catalogue scope).**

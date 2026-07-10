@@ -2,6 +2,34 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.38] — 2026-07-10
+
+**Tier 3 Stage 6 PERFECTED — capstone over the FULL faithful semantics, no phantoms.**
+Closes all three residuals the prior deepening left open.
+- **Real label/ref tokens:** `pdflatex_project` is now `{proj_graph; proj_body}`;
+  `body_token` (`BT_text`/`BT_label_def`/`BT_label_ref`) maps to `Tok_label_def`/
+  `Tok_label_ref`, so `project_tokens p pf` = body tokens ++ edge tokens ++
+  `profile_tokens pf`. The capstone (now a 7-conjunct theorem) GENUINELY exercises
+  the ≤2-pass convergence (`converged_at_two`, tight) AND the undefined-ref WARNING
+  path (`warns_iff_unresolved_two`: `warnings ≠ [] ↔ project_has_unresolved_ref`),
+  not just the fatal bit.
+- **pf bound:** `profile_tokens pf` emits `Tok_fatal` for unsupported features →
+  `profile_supported` is now REQUIRED for fatal-freeness (no more phantom profile).
+- **bounded_labels removed:** it was a universally-true decoration; ≤2-pass
+  convergence needs no label bound. The genuine falsifiable hypothesis is
+  `no_fatal_tokens` (earned from T2 closure + T3 profile support).
+`pdflatex_compile_safe` + the 2 rule proofs re-proved; all Qed, `Print Assumptions`
+Closed (verified for the capstone + every non-vacuity witness), 0 admits/0 axioms.
+Non-vacuity Qed witnesses: `p_clean` (converges, no warnings), `p_warn` (warns via
+the capstone, fatal-free), `p_dangling` (fatal), `pf_bad` (unsupported profile →
+fatal). Adversarially verified SOUND on the first round — `phantom_free` and
+`full_semantics_wired` both confirmed positive. Theorem count 1,438→1,450.
+
+**Honest residuals (WS9+ scope, documented):** the PDF-artefact side is still trivial
+(empty graph — only the log/fatal/warning side is faithfully modelled); T0/T1/T4/T5
+predicates remain project-independent placeholders; `profile_tokens` checks the
+profile's own feature/engine coherence, not document-required features.
+
 ## [v27.1.37] — 2026-07-09
 
 **Candidate pool — MOD/CMD final batch (6 candidates); closes the gap-audit's

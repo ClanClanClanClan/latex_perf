@@ -62,8 +62,14 @@ list of structured reasons is returned.
   Closed under the global context) — for any project_well_typed
   project and profile_supported profile, there exists an artefact
   such that pdflatex produces it, compilation succeeds, and the
-  output is well-formed. Zero axioms, zero admits, in the
-  abstract pass-iteration model.
+  output is well-formed. Zero axioms, zero admits. As of v27.1.29–v27.1.39
+  the capstone is proved against a **faithful operational pdflatex
+  semantics** (token/aux/log/pass model, tight ≤2-pass convergence,
+  warnings-iff-unresolved, PDF-artefact model) rather than the earlier
+  abstract pass-iteration model; see
+  [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](../specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md).
+  Honest residuals: the T0/T1/T5 universal obligations and byte-exact PDF
+  *structural* semantics stay conservative/deferred.
 
 xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
 discharge for those engines is a future workstream.

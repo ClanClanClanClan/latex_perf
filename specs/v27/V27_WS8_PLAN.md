@@ -186,13 +186,17 @@ user-facing precondition.
 `Print Assumptions pdflatex_compile_safe` returns "Closed under
 the global context": zero axioms, zero admits.
 
-**Faithfulness scope (v27 WS9+, deferred honestly):** the capstone
-is unconditional under the counter-bounded pass-iteration
-abstraction in `PdflatexModel.v`. Tying that abstraction to a
-faithful operational pdflatex semantics (real aux/log evolution,
-real fatal-marker emission, full set of fatal markers beyond
-`! Fatal`, T0/T1/T4/T5 wiring through their wrappers) is a
-separate verification effort, queued for the WS9+ workstream.
+**Faithfulness scope — NOW CLOSED (shipped v27.1.29–v27.1.39):** the
+capstone was originally unconditional under the counter-bounded
+pass-iteration abstraction in `PdflatexModel.v`. That abstraction is
+now tied to a **faithful operational pdflatex semantics** (token model,
+real aux/log evolution, fatal-marker emission, a *meaningful*
+`converged` flag with warnings-iff-unresolved, a tight ≤2-pass
+convergence theorem, and a PDF-artefact model), against which
+`pdflatex_compile_safe` was re-proved Qed / Closed / 0-admit /
+0-axiom. See `V27_FAITHFUL_SEMANTICS_PLAN.md`. **Honest residuals:**
+the T0/T1/T5 universal proof obligations and byte-exact PDF
+*structural* semantics remain conservative/deferred.
 
 ## 3. Memory protocol
 

@@ -1,17 +1,30 @@
 # V27_FAITHFUL_SEMANTICS_PLAN — Faithful operational pdflatex semantics
 
-> **STATUS: ⏸ UNSTARTED / RE-SCOPE NEEDED (as of v27.1.19).** The declared tag target `v27.1.0` was CONSUMED by the unrelated fix-producer cadence (tags v27.1.0…v27.1.19 exist). Only a partial `proofs/LexerFaithfulStep.v` seed exists. Before pursuing, retarget the release (e.g. v27.2.0/WS9+) and re-scope Stage 1 against current module names.
+> **STATUS: ✅ COMPLETE (shipped across v27.1.29–v27.1.39).** All stages
+> (1–6) plus residual hardening are done: token model, aux/log evolution,
+> `project_tokens` (label/ref + profile + document-required features), a
+> *meaningful* `converged` flag with warnings-iff-unresolved, a tight ≤2-pass
+> convergence theorem + additive WS8 bridge, a PDF-artefact model with genuine
+> T2/T3/T4, and a Stage-6 re-proof of the WS8 capstone `pdflatex_compile_safe`
+> (Qed, Closed under the global context, **0 admits / 0 axioms**). The stale
+> `v27.1.0` tag target was retargeted to the v27.1.29–39 range. **Honest
+> residuals** (out of this plan's scope): the T0/T1/T5 universal proof
+> obligations and byte-exact PDF *structural* semantics remain
+> conservative/deferred — the faithful model covers aux/log/pass convergence
+> and the compile-safety capstone, not PDF page structure.
 
 
-**Goal:** Replace the abstract `pdflatex_step` (counter-bounded
+**Goal (met):** Replace the abstract `pdflatex_step` (counter-bounded
 iteration that doesn't model real aux/log evolution) in
 `proofs/PdflatexModel.v` with an operational semantics that
 processes a token stream, evolves real aux/log state, and emits
 fatal markers per pdflatex's actual error model.
 
-**Tag target:** v27.1.0 (major refinement of the WS8 capstone proof).
+**Tag target:** retargeted to v27.1.29–v27.1.39 (the original `v27.1.0` label
+was consumed by the fix-producer cadence). Delivered as a major refinement of
+the WS8 capstone proof.
 
-**Scope estimate:** 6–8 sessions across stages.
+**Scope estimate:** 6–8 sessions across stages (delivered).
 
 ## Why this matters
 
@@ -31,7 +44,7 @@ The faithful semantics has two pillars:
 
 ## Stage decomposition
 
-### Stage 1 — Token model
+### Stage 1 — Token model — ✅ DONE
 **Branch:** `v27.1/faithful-stage1-token-model`
 
 Define a Coq mirror of the existing `Parser_l2` token categorization,
@@ -57,7 +70,7 @@ starting point (Coq side, not OCaml runtime).
 **Acceptance:** `tokenize` defined, exhaustive over input, Qed
 lemma `tokenize_preserves_byte_count`.
 
-### Stage 2 — Aux state evolution
+### Stage 2 — Aux state evolution — ✅ DONE
 **Branch:** `v27.1/faithful-stage2-aux-step`
 
 Refine `aux_state := list (label_def + ref_use)` with concrete
@@ -89,7 +102,7 @@ defined_labels set stabilizes.
 **Acceptance:** `aux_step_pass` Fixpoint defined; `aux_step_token`
 type-checks; idempotence lemma `aux_pass_stable_after_2`.
 
-### Stage 3 — Log state evolution + fatal-marker emission
+### Stage 3 — Log state evolution + fatal-marker emission — ✅ DONE
 **Branch:** `v27.1/faithful-stage3-log-step`
 
 Define:
@@ -114,7 +127,7 @@ v27.0.1) extends the byte detection.
 labels defined) projects; counter-example case (undefined label
 emits warning, not fatal — fatal is only for catastrophic errors).
 
-### Stage 4 — `pdflatex_pass_step` operational pass
+### Stage 4 — `pdflatex_pass_step` operational pass — ✅ DONE
 **Branch:** `v27.1/faithful-stage4-pass-step`
 
 Combine: one pass of pdflatex tokenizes the input, evolves both aux
@@ -140,7 +153,7 @@ state didn't change this pass.
 **Acceptance:** `pdflatex_pass_step` defined; convergence happens
 when aux state stabilizes; preserves `log_no_fatal` invariant.
 
-### Stage 5 — Convergence theorem
+### Stage 5 — Convergence theorem — ✅ DONE
 **Branch:** `v27.1/faithful-stage5-convergence`
 
 Prove: under bounded label/ref counts (defined ≤ N labels, ≤ N
@@ -162,7 +175,7 @@ result.
 defined; theorem instantiates the WS8 `pdflatex_bounded_terminates`
 universal.
 
-### Stage 6 — Re-prove WS8 capstone
+### Stage 6 — Re-prove WS8 capstone — ✅ DONE
 **Branch:** `v27.1/faithful-stage6-recapstone`
 
 Update `proofs/PdflatexModel.v` to use the Stage-1–5 faithful
@@ -180,7 +193,7 @@ semantics. Re-prove:
 - 0 admits, 0 axioms.
 - Differential 0 diffs vs predecessor tag.
 
-### Stage 7 — Release-bump v27.1.0
+### Stage 7 — Release-bump — ✅ DONE (shipped incrementally v27.1.29–v27.1.39)
 **Branch:** `v27.1/release-bump`
 
 Bump version, CHANGELOG `[v27.1.0]` entry.
@@ -192,12 +205,12 @@ state per the WS8 template.
 
 ## Acceptance criteria for the capstone
 
-- [ ] `tokenize` Coq mirror of `Parser_l2` defined.
-- [ ] Aux-state evolution defined; idempotence after stabilization.
-- [ ] Log-state evolution defined; fatal markers emitted faithfully.
-- [ ] `pdflatex_pass_step` operational; `converged` flag meaningful.
-- [ ] Convergence theorem (≤ 2 passes for bounded labels) Qed.
-- [ ] WS8 capstone re-proved against faithful semantics.
-- [ ] All `Print Assumptions` Closed.
-- [ ] CHANGELOG `[v27.1.0]` entry.
-- [ ] Tag v27.1.0 on main.
+- [x] `tokenize` Coq mirror of `Parser_l2` defined.
+- [x] Aux-state evolution defined; idempotence after stabilization.
+- [x] Log-state evolution defined; fatal markers emitted faithfully.
+- [x] `pdflatex_pass_step` operational; `converged` flag meaningful.
+- [x] Convergence theorem (≤ 2 passes for bounded labels) Qed.
+- [x] WS8 capstone re-proved against faithful semantics.
+- [x] All `Print Assumptions` Closed.
+- [x] CHANGELOG entries (v27.1.29–v27.1.39).
+- [x] Tagged on main (v27.1.29–v27.1.39 range).

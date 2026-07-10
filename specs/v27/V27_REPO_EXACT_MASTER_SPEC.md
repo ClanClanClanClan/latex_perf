@@ -4,6 +4,25 @@ Version: v27-draft-repo-exact
 Status: platform-roadmap  
 Dependency: v26 substrate must be complete first
 
+> **Reconciliation note (as of v27.1.39).** The verified-core and
+> compilation-guarantee layers this spec anticipated are now SHIPPED and
+> PROVEN: WS7 (byte-lossless CST + rewrite engine) is live; WS8's stronger
+> compilation stack now rests on a **faithful operational pdflatex semantics**
+> (token/aux/log/pass model, tight ≤2-pass convergence, warnings-iff-unresolved,
+> a PDF-artefact model, and the WS8 capstone `pdflatex_compile_safe` re-proved
+> Qed / Closed / 0-admit / 0-axiom — see `V27_FAITHFUL_SEMANTICS_PLAN.md`). The
+> earlier "faithfulness deferred honestly" caveat on the compile guarantee is
+> therefore **closed** for aux/log/pass convergence; the honest residuals that
+> remain are the T0/T1/T5 universal proof obligations and byte-exact PDF
+> *structural* semantics (still conservative/deferred — not overclaimed).
+>
+> **Tier 4 scope decision.** WS9 (editorial policy) and WS12 (extension plane)
+> are **IN SCOPE** for the next cycle. WS10 (collaboration/review) and WS11
+> (platform roles/permissions/multi-user deployment) are **DEFERRED pending a
+> product decision** — they are retained below as the intended shape, not as
+> committed near-term work. The Class-E collaboration execution class and the
+> "collaboration platform" framing are likewise deferred, not withdrawn.
+
 ---
 
 ## 1. Executive objective
@@ -80,7 +99,7 @@ This is still not “full LaTeX”. It is a stronger and more defensible claim.
 
 ## 5. v27 workstreams
 
-## WS7 — Concrete syntax tree and rewrite substrate
+## WS7 — Concrete syntax tree and rewrite substrate — ✅ SHIPPED (byte-lossless CST + rewrite engine live)
 
 ### Goal
 Introduce a lossless representation that supports:
@@ -106,7 +125,7 @@ Introduce a lossless representation that supports:
 
 ---
 
-## WS8 — Stronger compilation guarantee stack
+## WS8 — Stronger compilation guarantee stack — ✅ SHIPPED + PROVEN (faithful pdflatex semantics; capstone Qed, 0-admit/0-axiom)
 
 ### Goal
 Move from “verified analysis + build-coupled checks” toward a true project compilation contract.
@@ -124,7 +143,7 @@ Move from “verified analysis + build-coupled checks” toward a true project c
 
 ---
 
-## WS9 — Editorial policy system
+## WS9 — Editorial policy system — ▶ IN SCOPE (next cycle)
 
 ### Goal
 Make the platform useful for editors and institutions, not just authors.
@@ -144,7 +163,7 @@ Make the platform useful for editors and institutions, not just authors.
 
 ---
 
-## WS10 — Collaboration and review
+## WS10 — Collaboration and review — ⏸ DEFERRED (pending product decision)
 
 ### Goal
 Build the platform layer needed to compete with collaborative LaTeX environments.
@@ -164,7 +183,7 @@ Build the platform layer needed to compete with collaborative LaTeX environments
 
 ---
 
-## WS11 — Platform roles, permissions, and deployment
+## WS11 — Platform roles, permissions, and deployment — ⏸ DEFERRED (pending product decision)
 
 ### Goal
 Enable institutional/editorial use.
@@ -184,7 +203,7 @@ Enable institutional/editorial use.
 
 ---
 
-## WS12 — Extension plane and foreign contracts
+## WS12 — Extension plane and foreign contracts — ▶ IN SCOPE (next cycle)
 
 ### Goal
 Create a principled extension model instead of uncontrolled feature creep.

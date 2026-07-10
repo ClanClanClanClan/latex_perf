@@ -2,6 +2,20 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.39] — 2026-07-10
+
+**Candidate pool — re-wire 11 wrongly-excluded rules (correct catalogue scope).**
+A prior batch deferred these as "unsafe/ambiguous"; the catalogue shows each is a
+consistency/normalization rule with a clear fix. Now Bucket-C candidates: MOD-002..007
+(normalize the legacy 2.09 font switch in a mixed paragraph to its NFSS form),
+VERB-001 (change a reused `\verb` delimiter), VERB-003 (remove trailing whitespace
+inside verbatim), VERB-004 (non-ASCII quotes → ASCII inside verbatim), SCRIPT-017
+(canonical super-before-sub, matches SCRIPT-021), MATH-107 (normalize `\le`/`\leqslant`
+to the document majority). All candidate-channel (`--apply-fixes-for` byte-identical),
+0 diagnostic drift, coverage 167×1022 unchanged, messages-validate 0 mismatches.
+Candidate rules **58→69**. Documented the intentional MATH-019 (operator-limit
+sub-first) vs SCRIPT-021 (braced-atom super-first) distinction. Adversarially verified.
+
 ## [v27.1.38] — 2026-07-10
 
 **Tier 3 Stage 6 PERFECTED — capstone over the FULL faithful semantics, no phantoms.**

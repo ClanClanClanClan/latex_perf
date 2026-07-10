@@ -1664,8 +1664,16 @@ let count_matches (re : Re_compat.regexp) (s : string) : int =
   !cnt
 
 (* Helpers for L1 paragraph-aware mixing using post-command spans *)
-let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
-    ~(modern : string list) : bool =
+
+(* [mixed_paragraph_ranges s ~legacy ~modern] — the (offset, len) spans of every
+   paragraph that contains BOTH a legacy and a modern command (from the given
+   sets). This is the offset-carrying core of [has_mixed_in_paragraphs] (which
+   is just [<> []]); the MOD-002..007 Bucket-C candidates use the ranges to
+   locate the legacy tokens that need normalising, so the returned spans and the
+   boolean firing decision stay in lock-step (the diagnostic count is
+   unchanged). *)
+let mixed_paragraph_ranges (s : string) ~(legacy : string list)
+    ~(modern : string list) : (int * int) list =
   let paras = split_into_paragraphs s in
   let pcs = Validators_context.get_post_commands () in
   let tokens = command_tokens s in
@@ -1686,7 +1694,11 @@ let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
   in
   let check_para off len = has_cmd off len legacy && has_cmd off len modern in
   let ranges = if paras = [] then [ (0, String.length s) ] else paras in
-  List.exists (fun (off, len) -> check_para off len) ranges
+  List.filter (fun (off, len) -> check_para off len) ranges
+
+let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
+    ~(modern : string list) : bool =
+  mixed_paragraph_ranges s ~legacy ~modern <> []
 
 (* Global modernization suggestions (document-wide mixing across paragraphs) *)
 let has_global_mixing names legacy modern : bool =

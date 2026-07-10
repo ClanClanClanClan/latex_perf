@@ -37,6 +37,18 @@ let edit_of_label id src label =
         (e.Cst_edit.start_offset, e.Cst_edit.end_offset, e.Cst_edit.replacement)
   | _ -> None
 
+(* [edits_of c] — the (start, end, replacement) triples of a candidate. *)
+let edits_of (c : Validators.candidate_fix) =
+  List.map
+    (fun (e : Cst_edit.t) ->
+      (e.Cst_edit.start_offset, e.Cst_edit.end_offset, e.Cst_edit.replacement))
+    c.c_edits
+
+(* [has_edit_set id src edits] — some candidate on [id]/[src] carries exactly
+   [edits] (as (start,end,replacement) triples, in order). *)
+let has_edit_set id src edits =
+  List.exists (fun c -> edits_of c = edits) (candidates_of id src)
+
 let () =
   (* ══════════════════════════════════════════════════════════════════════
      REF-006: \ref used where \pageref (page number) is intended
@@ -1086,5 +1098,131 @@ let () =
       | _ -> expect false (tag ^ ": expected one label-only candidate"));
   run "CMD-014 candidate NOT in fix field (no auto-apply)" (fun tag ->
       expect (not (fires_with_fix "CMD-014" c14_src)) (tag ^ ": fix=None"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MOD-002..007: mixed legacy+modern font commands in one paragraph. Candidate
+     normalises the LEGACY switch to its NFSS form; identical in shape to the
+     MOD-001 candidate for the same token (so no conflicting edits).
+     ══════════════════════════════════════════════════════════════════════ *)
+  let mod2_src = "Text \\bf bold and \\textbf{x} here." in
+  run "MOD-002 still fires (diagnostic count unchanged)" (fun tag ->
+      expect (fires_with_count "MOD-002" mod2_src 1) (tag ^ ": count=1"));
+  run "MOD-002 candidate normalises \\bf -> \\bfseries" (fun tag ->
+      (* "Text " = 5 bytes; "\bf" spans [5,8). *)
+      expect
+        (has_edit_set "MOD-002" mod2_src [ (5, 8, "\\bfseries") ])
+        (tag ^ ": edit \\bf->\\bfseries"));
+  run "MOD-002 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MOD-002" mod2_src)) (tag ^ ": fix=None"));
+  run "MOD-002 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "MOD-002" mod2_src = mod2_src) (tag ^ ": no rewrite"));
+  let mod5_src = "Code \\tt mono and \\texttt{x} here." in
+  run "MOD-005 candidate normalises \\tt -> \\ttfamily" (fun tag ->
+      expect
+        (fires_with_count "MOD-005" mod5_src 1
+        && has_edit_set "MOD-005" mod5_src [ (5, 8, "\\ttfamily") ])
+        (tag ^ ": edit \\tt->\\ttfamily"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-001: \verb delimiter reused inside the block. Candidate rewrites BOTH
+     delimiters to a fresh char absent from the content.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v1_src = "verb reuse \\verb|a\\verb b| done" in
+  run "VERB-001 still fires" (fun tag ->
+      expect (fires "VERB-001" v1_src) (tag ^ ": fires"));
+  run "VERB-001 candidate rewrites both delimiters | -> !" (fun tag ->
+      (* open | at 16, close | at 25; | occurs in content so '!' is chosen. *)
+      expect
+        (has_edit_set "VERB-001" v1_src [ (16, 17, "!"); (25, 26, "!") ])
+        (tag ^ ": two delimiter edits"));
+  run "VERB-001 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "VERB-001" v1_src)) (tag ^ ": fix=None"));
+  run "VERB-001 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "VERB-001" v1_src = v1_src) (tag ^ ": no rewrite"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-003: trailing spaces inside verbatim. Candidate deletes the run.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v3_src = "\\begin{verbatim}\ncode here   \nmore\t\n\\end{verbatim}\n" in
+  run "VERB-003 still fires (count = #trailing lines)" (fun tag ->
+      expect (fires_with_count "VERB-003" v3_src 2) (tag ^ ": count=2"));
+  run "VERB-003 candidate deletes trailing spaces" (fun tag ->
+      expect
+        (has_edit_set "VERB-003" v3_src [ (26, 29, "") ])
+        (tag ^ ": delete 3-space run"));
+  run "VERB-003 candidate deletes trailing tab" (fun tag ->
+      expect
+        (has_edit_set "VERB-003" v3_src [ (34, 35, "") ])
+        (tag ^ ": delete tab"));
+  run "VERB-003 candidate NOT in fix field (verbatim gate untouched)"
+    (fun tag ->
+      expect (not (fires_with_fix "VERB-003" v3_src)) (tag ^ ": fix=None"));
+  run "VERB-003 --apply-fixes leaves verbatim untouched" (fun tag ->
+      expect (apply_fix "VERB-003" v3_src = v3_src) (tag ^ ": no rewrite"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     VERB-004: non-ASCII curly quotes inside verbatim. Candidate -> ASCII.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let v4_src =
+    "\\begin{verbatim}\nsay \xe2\x80\x9chi\xe2\x80\x9d ok\n\\end{verbatim}\n"
+  in
+  run "VERB-004 still fires (count = #curly quotes)" (fun tag ->
+      expect (fires_with_count "VERB-004" v4_src 2) (tag ^ ": count=2"));
+  run "VERB-004 candidate replaces opening curly quote with ASCII" (fun tag ->
+      expect
+        (has_edit_set "VERB-004" v4_src [ (21, 24, "\"") ])
+        (tag ^ ": opening quote"));
+  run "VERB-004 candidate replaces closing curly quote with ASCII" (fun tag ->
+      expect
+        (has_edit_set "VERB-004" v4_src [ (26, 29, "\"") ])
+        (tag ^ ": closing quote"));
+  run "VERB-004 --apply-fixes leaves verbatim untouched" (fun tag ->
+      expect (apply_fix "VERB-004" v4_src = v4_src) (tag ^ ": no rewrite"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     SCRIPT-017: inconsistent sub/sup order. Candidate normalises the sub-sup
+     occurrence to super-before-sub — the SAME direction as SCRIPT-021.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let s17_src = "Math $a_1^2$ and $x^3_4$ end." in
+  run "SCRIPT-017 still fires" (fun tag ->
+      expect (fires "SCRIPT-017" s17_src) (tag ^ ": fires"));
+  run "SCRIPT-017 candidate reorders _1^2 -> ^2_1 (matches SCRIPT-021)"
+    (fun tag ->
+      (* "Math $a" = 7 bytes; "_1^2" spans [7,11). *)
+      expect
+        (has_edit_set "SCRIPT-017" s17_src [ (7, 11, "^2_1") ])
+        (tag ^ ": canonical super-before-sub"));
+  run "SCRIPT-017 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "SCRIPT-017" s17_src)) (tag ^ ": fix=None"));
+  run "SCRIPT-017 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "SCRIPT-017" s17_src = s17_src) (tag ^ ": no rewrite"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     MATH-107: mix of \le and \leqslant. Candidate normalises to the majority
+     spelling (here two \le vs one \leqslant => convert \leqslant -> \le).
+     ══════════════════════════════════════════════════════════════════════ *)
+  let m107_src = "Math $a \\le b$ and $c \\le d$ and $e \\leqslant f$." in
+  run "MATH-107 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-107" m107_src 1) (tag ^ ": count=1"));
+  run "MATH-107 candidate normalises \\leqslant -> \\le (majority)" (fun tag ->
+      (* "\leqslant" spans [36,45). *)
+      expect
+        (has_edit_set "MATH-107" m107_src [ (36, 45, "\\le") ])
+        (tag ^ ": leqslant->le"));
+  run "MATH-107 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "MATH-107" m107_src)) (tag ^ ": fix=None"));
+  run "MATH-107 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "MATH-107" m107_src = m107_src) (tag ^ ": no rewrite"));
+  (* Minority-flip: one \le vs two \leqslant => convert \le -> \leqslant. *)
+  let m107b_src = "$a \\le b$, $c \\leqslant d$, $e \\leqslant f$." in
+  run "MATH-107 flips direction to the other majority" (fun tag ->
+      expect
+        (List.exists
+           (fun (c : Validators.candidate_fix) ->
+             match c.c_edits with
+             | [ e ] -> e.Cst_edit.replacement = "\\leqslant"
+             | _ -> false)
+           (candidates_of "MATH-107" m107b_src))
+        (tag ^ ": \\le->\\leqslant when leqslant is majority"));
 
   finalise "candidate_fixes"

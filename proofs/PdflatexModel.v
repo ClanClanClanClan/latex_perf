@@ -19,14 +19,17 @@
       - log_state invariant under iteration
 
     Predicates:
-      - T0_accepts, T1_admissible, T4_coherent, T5_safe — currently
-        [True]; the corresponding LP-Core wrappers (T0_wrapper,
-        T1_wrapper, T4_wrapper, T5_wrapper) provide the substantive
-        content for their domains, but bridging them to the
-        build_graph carrier is a v27 WS9+ task. The current capstone
-        is unconditional in those Ts (they're trivially provable).
+      - T0_accepts, T1_admissible, T5_safe — DELIBERATELY project-INDEPENDENT
+        WS8 wrappers (their content is not a function of this project model;
+        see the blunt residual note next to the non-vacuity witnesses for
+        T0/T1/T5).
+      - T4_coherent (v27.1.39) — now a GENUINE, falsifiable, project-dependent
+        predicate: [NoDup (body_label_defs p.(proj_body))] (each \label defined
+        at most once).  Load-bearing in [pdflatex_labels_resolve_uniquely].
       - T2_closed         := ProjectClosure.project_closed
-      - T3_compatible     := BuildProfileSound.profile_admits ...
+      - T3_compatible (v27.1.39) — now a GENUINE project<->profile coherence
+        check: the engine admits BOTH the profile's declared features AND the
+        features the DOCUMENT BODY requires ([body_required_features]).
       - bounded_terminates, compilation_succeeds — substantive,
         wired to the pass model + [log_no_fatal] byte check
       - produces          — canonical_artefact at some bounded k
@@ -71,6 +74,20 @@
     counter model is retained below only for historical lemmas; the capstone
     does not use it.
 
+    STAGE-6 RESIDUAL CLOSURE (v27.1.39): the three honest Stage-6 residuals are
+    now closed.
+      (1) PDF-ARTEFACT FAITHFULNESS — [faithful_artefact] builds a NON-trivial
+          PDF from the token stream via [build_pdf] (one object + one xref
+          offset per token), so [valid_pdf_graph] is a GENUINE property:
+          [build_pdf_valid] proves it holds because the xref is one-per-object,
+          and [bad_pdf_invalid] exhibits a malformed artefact it REJECTS.
+          [clean_pdf_nonempty_valid] is a real non-empty valid PDF.
+      (2) GENUINE T4 — see above; T0/T1/T5 blunt residual note in-file.
+      (3) DOCUMENT-FEATURE COHERENCE — [BT_needs_feature]/[body_required_features]
+          make [profile_supported]/T3 check the features the DOCUMENT requires;
+          [otf_on_pdflatex_*] (fatal on pdflatex) vs [otf_on_xelatex_*] (compiles
+          on xelatex) witness that the DOCUMENT's demand is load-bearing.
+
     Zero admits, zero axioms. *)
 
 From Coq Require Import List Bool Arith Lia.
@@ -93,22 +110,58 @@ Import ListNotations.
 
 (** RESIDUAL-1 CLOSURE (v27.1.38): a project's DOCUMENT is a real token
     stream — plain text, label DEFINITIONS ([\label{...}]) and cross
-    REFERENCES ([\ref{...}]).  A [body_token] is exactly one of these three;
-    by construction it can NEVER be [Tok_fatal] (the document body itself is
-    not a toolchain abort — fatality arises only from a dangling build edge
-    (T2) or an unsupported profile feature (T3), see [project_tokens]).  This
-    is the "model the document token stream per node and concatenate" option
-    from the plan. *)
+    REFERENCES ([\ref{...}]).
+
+    v27.1.39 STAGE-6 RESIDUAL-3 CLOSURE — DOCUMENT-FEATURE COHERENCE.  A body
+    element may also DECLARE THAT IT NEEDS A TOOLCHAIN FEATURE
+    ([BT_needs_feature f] — e.g. [\usepackage{fontspec}] needs
+    [Opentype_fonts]).  Whether such an element is inert or catastrophic
+    DEPENDS ON THE PROFILE'S ENGINE: if the engine can provide the feature the
+    element is plain text; if it CANNOT, the engine aborts with
+    "! Emergency stop" — a [Tok_fatal].  So the token image of the body is now
+    PROFILE-DEPENDENT ([body_to_tok] takes the engine), and the features the
+    DOCUMENT ITSELF requires ([body_required_features]) become a genuine
+    project<->profile coherence obligation (see [pdflatex_T3_compatible] /
+    [project_no_fatal_tokens]).  The plain text/label/ref elements remain
+    engine-independent and never fatal. *)
 Inductive body_token : Type :=
   | BT_text
   | BT_label_def (n : nat)
-  | BT_label_ref (n : nat).
+  | BT_label_ref (n : nat)
+  | BT_needs_feature (f : feature).
 
-Definition body_to_tok (b : body_token) : L0Aux.pdflatex_token :=
+(** Token image of a body element UNDER A GIVEN ENGINE.  Only
+    [BT_needs_feature] consults the engine: a feature the engine cannot
+    provide ([compatible f e = false]) is an unrecoverable "! Emergency stop"
+    ([Tok_fatal]); a supported one is inert ([Tok_text]). *)
+Definition body_to_tok (e : engine) (b : body_token) : L0Aux.pdflatex_token :=
   match b with
   | BT_text        => L0Aux.Tok_text
   | BT_label_def n => L0Aux.Tok_label_def n
   | BT_label_ref n => L0Aux.Tok_label_ref n
+  | BT_needs_feature f =>
+      if compatible f e then L0Aux.Tok_text else L0Aux.Tok_fatal
+  end.
+
+(** The features THIS DOCUMENT BODY requires — the [BT_needs_feature]
+    declarations, in document order.  This is what the profile must support
+    for the body to be fatal-free (Residual-3: a real project->profile
+    demand, not the profile's own declared-feature list). *)
+Fixpoint body_required_features (bs : list body_token) : list feature :=
+  match bs with
+  | []                     => []
+  | BT_needs_feature f :: rest => f :: body_required_features rest
+  | _ :: rest              => body_required_features rest
+  end.
+
+(** The label ids this body DEFINES ([\label{...}]), in document order — the
+    genuine, project-dependent datum behind [pdflatex_T4_coherent]
+    (Residual-2). *)
+Fixpoint body_label_defs (bs : list body_token) : list nat :=
+  match bs with
+  | []                     => []
+  | BT_label_def n :: rest => n :: body_label_defs rest
+  | _ :: rest              => body_label_defs rest
   end.
 
 (** A pdflatex project is a build graph PLUS the document's faithful token
@@ -356,6 +409,82 @@ Proof.
   unfold valid_pdf_graph in *. simpl. f_equal. exact Hv.
 Qed.
 
+(** ── RESIDUAL-1 CLOSURE (v27.1.39): a NON-TRIVIAL PDF built from the token
+       stream ─────────────────────────────────────────────────────────────
+
+    The old [faithful_artefact] always returned the EMPTY PDF graph
+    [mk_pdf_artefact [] [] []], on which [valid_pdf_graph] is vacuously true
+    ([0 = 0]).  Here we build a REAL PDF: one PDF content object per resolved
+    body/edge/profile token, and one cross-reference (xref) entry per object,
+    the entry being the object's starting BYTE OFFSET in the concatenated
+    object stream (exactly the pdflatex xref-table discipline).  Now
+    [valid_pdf_graph] is a GENUINE property: it holds for every stream-built
+    PDF ([build_pdf_valid]) BECAUSE the xref is derived one-per-object, and it
+    FAILS on a malformed artefact whose xref count differs from its object
+    count ([bad_pdf_invalid]).  So the well-formedness conjunct in the capstone
+    is no longer vacuous. *)
+
+(** The PDF content object emitted for one token (a distinct byte payload per
+    token kind). *)
+Definition pdf_object_of_token (t : L0Aux.pdflatex_token) : list nat :=
+  match t with
+  | L0Aux.Tok_text        => [116]        (* 't' — a text run *)
+  | L0Aux.Tok_label_def n => [100; n]     (* 'd', id — a \label anchor *)
+  | L0Aux.Tok_label_ref n => [114; n]     (* 'r', id — a \ref link *)
+  | L0Aux.Tok_fatal       => [102]        (* 'f' — abort placeholder *)
+  end.
+
+(** Cross-reference offsets: each object's starting byte offset in the
+    concatenated object stream, threading a running [start]. *)
+Fixpoint xref_offsets (start : nat) (objs : list (list nat)) : list nat :=
+  match objs with
+  | []       => []
+  | o :: rest => start :: xref_offsets (start + length o) rest
+  end.
+
+(** One xref entry per object — the structural invariant [valid_pdf_graph]
+    tests. *)
+Lemma xref_offsets_length :
+  forall objs start, length (xref_offsets start objs) = length objs.
+Proof.
+  induction objs as [|o rest IH]; intros start; simpl; [reflexivity |].
+  rewrite IH; reflexivity.
+Qed.
+
+(** Fixed PDF header size ("%PDF-1.5\n") — the offset the first object starts
+    at. *)
+Definition pdf_header_size : nat := 9.
+
+(** Fixed trailer bytes ("%%EOF"). *)
+Definition pdf_trailer_bytes : list nat := [37; 37; 69; 79; 70].
+
+(** Build a genuine PDF artefact from a token stream. *)
+Definition build_pdf (toks : list L0Aux.pdflatex_token) : pdf_artefact :=
+  let objs := map pdf_object_of_token toks in
+  mk_pdf_artefact objs (xref_offsets pdf_header_size objs) pdf_trailer_bytes.
+
+(** Every stream-built PDF is valid — NON-vacuously: the xref count equals the
+    object count because [xref_offsets] emits exactly one entry per object. *)
+Theorem build_pdf_valid :
+  forall toks, valid_pdf_graph (build_pdf toks).
+Proof.
+  intros toks. unfold valid_pdf_graph, build_pdf; simpl.
+  apply xref_offsets_length.
+Qed.
+
+(** [build_pdf] of a NON-EMPTY stream is a non-empty PDF (one object per
+    token) — the artefact really carries content, it is not the empty graph. *)
+Theorem build_pdf_objects_length :
+  forall toks, length (build_pdf toks).(pdf_objects) = length toks.
+Proof. intros toks. unfold build_pdf; simpl. apply map_length. Qed.
+
+(** Non-vacuity of [valid_pdf_graph]: a malformed PDF whose xref table has
+    fewer entries than it has objects is REJECTED.  (Contrast: on the old
+    empty graph [valid_pdf_graph] could never fail.) *)
+Example bad_pdf_invalid :
+  ~ valid_pdf_graph (mk_pdf_artefact [[1]; [2]] [0] []).
+Proof. unfold valid_pdf_graph; simpl. intro H. discriminate. Qed.
+
 (** Composite well-formedness: PDF graph valid AND log fatal-free. *)
 Definition pdf_log_wellformed (pdf : pdf_artefact) (log : log_artefact)
     : Prop :=
@@ -424,27 +553,31 @@ Qed.
 Definition pdflatex_T2_closed (p : pdflatex_project) : Prop :=
   project_closed p.
 
-(** T3 — profile admissibility.  Concrete:
-    [BuildProfileSound.profile_admits]. *)
-Definition pdflatex_T3_compatible (_ : pdflatex_project)
+(** T3 — profile admissibility, now a GENUINE project<->profile coherence
+    check (Residual-3, v27.1.39).  T3 requires the engine to admit BOTH the
+    profile's own declared features AND the features THIS DOCUMENT BODY
+    requires ([body_required_features] — the [BT_needs_feature] elements).
+    So T3 now depends on [p] (via [proj_body]): a project whose body needs a
+    feature the engine lacks is T3-INCOMPATIBLE and reaches a fatal, even if
+    the profile declares no features of its own (see [otf_on_pdflatex_*]). *)
+Definition pdflatex_T3_compatible (p : pdflatex_project)
     (pf : pdflatex_profile) : Prop :=
-  profile_admits pf.(prof_features) pf.(prof_engine).
+  profile_admits pf.(prof_features) pf.(prof_engine) /\
+  profile_admits (body_required_features p.(proj_body)) pf.(prof_engine).
 
-(** T4 — semantic coherence.  Wired to
-    [T4_wrapper.T4_labels_unique_packaged] per V27_WS8_PLAN §2:
-    unique labels imply name-uniqueness across file ids. Discharged
-    by [pdflatex_T4_coherent_holds] below. *)
-Definition pdflatex_T4_coherent (_ : pdflatex_project) : Prop :=
-  forall (labels : list ProjectSemantics.label),
-    ProjectSemantics.labels_unique labels ->
-    forall n f1 f2,
-      In (n, f1) labels -> In (n, f2) labels -> f1 = f2.
-
-Lemma pdflatex_T4_coherent_holds : forall p, pdflatex_T4_coherent p.
-Proof.
-  intros _ labels Huniq n f1 f2 H1 H2.
-  apply (T4_labels_unique_packaged labels Huniq n f1 f2 H1 H2).
-Qed.
+(** T4 — semantic coherence, now a GENUINE, project-dependent, FALSIFIABLE
+    statement (Residual-2, v27.1.39).  The former definition was a
+    project-INDEPENDENT placeholder ([forall labels, labels_unique labels -> ...]),
+    universally provable by [T4_labels_unique_packaged] and thus not
+    load-bearing.  T4 is now: THIS PROJECT'S DOCUMENT BODY defines each label
+    at most once — [NoDup (body_label_defs p.(proj_body))].  This is computed
+    from [proj_body], is genuinely falsifiable (a body with two
+    [BT_label_def 5] fails it — see [p_dup_not_T4]), and is exactly the
+    "duplicate \label" coherence condition.  It is made LOAD-BEARING in
+    [pdflatex_labels_resolve_uniquely] below (dropping it makes the derived
+    per-label [count_occ = 1] conclusion false). *)
+Definition pdflatex_T4_coherent (p : pdflatex_project) : Prop :=
+  NoDup (body_label_defs p.(proj_body)).
 
 (** T5 — rule safety.  Wired to [T5_concrete.pdflatex_T5_safe_stage2]
     via universal quantification over the rule catalogue: for any
@@ -551,20 +684,35 @@ Definition profile_tokens (pf : pdflatex_profile)
     are load-bearing. *)
 Definition project_tokens (p : pdflatex_project) (pf : pdflatex_profile)
     : list L0Aux.pdflatex_token :=
-  map body_to_tok p.(proj_body)
+  map (body_to_tok pf.(prof_engine)) p.(proj_body)
   ++ graph_edge_tokens (proj_graph p)
   ++ profile_tokens pf.
 
 (** ── Fatal-freeness earned from T2 (closure) AND T3 (profile) ─────── *)
 
-(** The document body never contributes a fatal — [body_to_tok] has no
-    [Tok_fatal] image. *)
+(** RESIDUAL-3: the document body is fatal-free IFF the engine provides every
+    feature the body requires.  Plain text / label defs / label refs are
+    always inert; a [BT_needs_feature f] is inert exactly when
+    [compatible f e = true], which [profile_admits (body_required_features bs) e]
+    guarantees.  So [pf] is now LOAD-BEARING on the BODY (not just the profile's
+    own declared features): a document that needs a feature the engine lacks
+    emits a [Tok_fatal] (see [fatal_body_feature_reaches_fatal]). *)
 Lemma body_tokens_no_fatal :
-  forall bs, L0Log.no_fatal_tokens (map body_to_tok bs).
+  forall e bs,
+    profile_admits (body_required_features bs) e ->
+    L0Log.no_fatal_tokens (map (body_to_tok e) bs).
 Proof.
-  intros bs. unfold L0Log.no_fatal_tokens. apply Forall_forall.
-  intros t Hin. rewrite in_map_iff in Hin. destruct Hin as [b [Ht _]].
-  destruct b; simpl in Ht; subst t; unfold L0Log.tok_not_fatal; discriminate.
+  intros e bs. induction bs as [|b rest IH]; intros Hadm; simpl.
+  - constructor.
+  - constructor.
+    + destruct b as [| n | n | f]; simpl;
+        try (unfold L0Log.tok_not_fatal; discriminate).
+      (* BT_needs_feature f: engine-supported ⇒ Tok_text *)
+      assert (Hc : compatible f e = true)
+        by (apply Hadm; simpl; left; reflexivity).
+      rewrite Hc. unfold L0Log.tok_not_fatal. discriminate.
+    + apply IH. intros f Hf. apply Hadm.
+      destruct b; simpl; try assumption. right; assumption.
 Qed.
 
 (** T2 CLOSURE ⇒ no edge maps to [Tok_fatal] (every endpoint is known). *)
@@ -611,10 +759,11 @@ Lemma project_no_fatal_tokens :
   forall p pf,
     project_closed (proj_graph p) ->
     profile_admits pf.(prof_features) pf.(prof_engine) ->
+    profile_admits (body_required_features p.(proj_body)) pf.(prof_engine) ->
     L0Log.no_fatal_tokens (project_tokens p pf).
 Proof.
-  intros p pf Hcl Hadm. unfold project_tokens.
-  apply no_fatal_tokens_app; [apply body_tokens_no_fatal |].
+  intros p pf Hcl Hadm Hbody. unfold project_tokens.
+  apply no_fatal_tokens_app; [apply body_tokens_no_fatal; exact Hbody |].
   apply no_fatal_tokens_app;
     [apply edge_tokens_no_fatal; exact Hcl
     | apply profile_tokens_no_fatal; exact Hadm].
@@ -628,11 +777,14 @@ Definition faithful_run (p : pdflatex_project) (pf : pdflatex_profile)
     (k : nat) : L0Pass.pass_state :=
   L0Pass.iterate_pass_step L0Pass.initial_pass_state k (project_tokens p pf).
 
-(** The artefact of the k-th faithful run: empty PDF graph + the run's
-    ACTUAL log byte stream. *)
+(** The artefact of the k-th faithful run: a REAL PDF graph built from THIS
+    project's token stream (Residual-1 — one object + xref entry per token,
+    [build_pdf]) paired with the run's ACTUAL log byte stream.  The PDF is now
+    NON-trivial, so [valid_pdf_graph] on it is a genuine (not vacuous)
+    guarantee. *)
 Definition faithful_artefact (p : pdflatex_project) (pf : pdflatex_profile)
     (k : nat) : pdflatex_artefact :=
-  (mk_pdf_artefact [] [] [],
+  (build_pdf (project_tokens p pf),
    L0Log.log_bytes (L0Pass.log (faithful_run p pf k))).
 
 (** A project has an UNRESOLVED cross-reference under [pf] iff its token
@@ -759,10 +911,11 @@ Proof.
      real content of compile-safety. *)
   intros p pf _ _ HT2 HT3 _ _ Hbound.
   destruct Hbound as [k [Hk Hconv]].
+  destruct HT3 as [HT3decl HT3body].
   exists k. split; [exact Hk |]. split; [exact Hconv |].
   unfold faithful_run.
   apply L0Pass.pass_iteration_no_fatal.
-  apply project_no_fatal_tokens; [exact HT2 | exact HT3].
+  apply project_no_fatal_tokens; [exact HT2 | exact HT3decl | exact HT3body].
 Qed.
 
 (** Section closure with the substantive discharge. *)
@@ -841,7 +994,7 @@ Proof.
   subst out.
   unfold pdflatex_output_format_well_formed, faithful_artefact.
   cbn [fst snd]. split.
-  - apply empty_pdf_valid.
+  - apply build_pdf_valid.
   - unfold faithful_bytes_no_fatal. exact Hnf.
 Qed.
 
@@ -863,10 +1016,16 @@ Qed.
 Definition project_well_typed (p : pdflatex_project) : Prop :=
   pdflatex_T2_closed p.
 
-(** Profile-supportedness alias.  T3 ignores its project argument so
-    we cut out the indirection. *)
-Definition profile_supported (pf : pdflatex_profile) : Prop :=
-  profile_admits pf.(prof_features) pf.(prof_engine).
+(** Profile-supportedness — now a GENUINE project<->profile coherence check
+    (Residual-3).  It is exactly [pdflatex_T3_compatible p pf]: the engine must
+    admit the profile's declared features AND every feature THE DOCUMENT BODY
+    requires.  It therefore depends on [p] (via [proj_body]); a body needing a
+    feature the engine lacks is UNSUPPORTED even under an
+    empty-declared-features profile (see [otf_on_pdflatex_not_supported]). *)
+Definition profile_supported (p : pdflatex_project) (pf : pdflatex_profile)
+    : Prop :=
+  profile_admits pf.(prof_features) pf.(prof_engine) /\
+  profile_admits (body_required_features p.(proj_body)) pf.(prof_engine).
 
 (** Headline theorem (FAITHFUL, project- AND profile-dependent): for any
     [project_well_typed] (= T2-closed) project and any [profile_supported]
@@ -895,7 +1054,7 @@ Definition profile_supported (pf : pdflatex_profile) : Prop :=
 Theorem pdflatex_compile_safe :
   forall (p : pdflatex_project) (pf : pdflatex_profile),
     project_well_typed p ->
-    profile_supported pf ->
+    profile_supported p pf ->
     exists out,
       pdflatex_produces p pf out /\
       pdflatex_compilation_succeeds p pf /\
@@ -906,10 +1065,12 @@ Theorem pdflatex_compile_safe :
          <-> project_has_unresolved_ref p pf) /\
       out = faithful_artefact p pf 2.
 Proof.
-  intros p pf Hwt Hsupp.
-  (* T2 (Hwt) AND T3 (Hsupp) give the genuine, falsifiable safety hypothesis. *)
+  intros p pf Hwt [Hdecl Hbody].
+  (* T2 (Hwt) AND T3 (Hdecl for the profile's declared features, Hbody for the
+     DOCUMENT's required features — Residual-3) give the genuine, falsifiable
+     safety hypothesis. *)
   assert (Hnf : L0Log.no_fatal_tokens (project_tokens p pf))
-    by (apply project_no_fatal_tokens; [exact Hwt | exact Hsupp]).
+    by (apply project_no_fatal_tokens; [exact Hwt | exact Hdecl | exact Hbody]).
   (* Converged at exactly k = 2 (real aux_eq flag) and fatal-free. *)
   assert (Hconv : (faithful_run p pf 2).(L0Pass.converged) = true)
     by (unfold faithful_run; apply L0Pass.converged_at_two).
@@ -925,9 +1086,9 @@ Proof.
   { (* compilation_succeeds *)
     exists 2. split; [exact Hkle |]. split; [exact Hconv | exact Hsafe]. }
   split.
-  { (* output_format_well_formed *)
+  { (* output_format_well_formed — PDF graph now NON-trivial ([build_pdf]) *)
     unfold pdflatex_output_format_well_formed, faithful_artefact.
-    cbn [fst snd]. split; [apply empty_pdf_valid |].
+    cbn [fst snd]. split; [apply build_pdf_valid |].
     unfold faithful_bytes_no_fatal. unfold faithful_run in Hsafe. exact Hsafe. }
   split.
   { exact Hconv. }
@@ -960,8 +1121,8 @@ Definition pf_ok : pdflatex_profile := mk_pdflatex_profile Pdflatex [].
 Example p_clean_well_typed : project_well_typed p_clean.
 Proof. apply singleton_closed. Qed.
 
-Example pf_ok_supported : profile_supported pf_ok.
-Proof. apply empty_admitted_by_all. Qed.
+Example pf_ok_supported_clean : profile_supported p_clean pf_ok.
+Proof. split; apply empty_admitted_by_all. Qed.
 
 Example clean_converges_no_warn :
   (faithful_run p_clean pf_ok 2).(L0Pass.converged) = true
@@ -987,6 +1148,9 @@ Definition p_warn : pdflatex_project :=
 Example p_warn_well_typed : project_well_typed p_warn.
 Proof. apply singleton_closed. Qed.
 
+Example pf_ok_supported_warn : profile_supported p_warn pf_ok.
+Proof. split; apply empty_admitted_by_all. Qed.
+
 Example warn_has_unresolved : project_has_unresolved_ref p_warn pf_ok.
 Proof.
   exists 7. split.
@@ -999,7 +1163,7 @@ Example warn_project_warns_via_capstone :
   /\ L0Log.log_no_fatal (L0Pass.log (faithful_run p_warn pf_ok 2)).
 Proof.
   destruct (pdflatex_compile_safe p_warn pf_ok
-              p_warn_well_typed pf_ok_supported)
+              p_warn_well_typed pf_ok_supported_warn)
     as [out [_ [_ [_ [_ [Hsafe [Hwarn _]]]]]]].
   split; [| exact Hsafe].
   apply Hwarn. apply warn_has_unresolved.
@@ -1036,9 +1200,9 @@ Definition p_any : pdflatex_project := mk_project (mk_graph [] []) [].
 Definition pf_bad : pdflatex_profile :=
   mk_pdflatex_profile Pdflatex [Opentype_fonts].
 
-Example pf_bad_not_supported : ~ profile_supported pf_bad.
+Example pf_bad_not_supported : ~ profile_supported p_any pf_bad.
 Proof.
-  unfold profile_supported. intro H.
+  unfold profile_supported. intros [H _].
   assert (Hc := H Opentype_fonts (or_introl eq_refl)).
   vm_compute in Hc. discriminate.
 Qed.
@@ -1059,6 +1223,159 @@ Proof.
   specialize (H L0Log.fatal_marker_emergency_stop Hin).
   vm_compute in H. discriminate.
 Qed.
+
+(** ── RESIDUAL-1 non-vacuity: the clean project's artefact is a REAL,
+       non-empty, VALID PDF (not the empty graph) ──────────────────────── *)
+
+Example clean_pdf_nonempty_valid :
+  valid_pdf_graph (fst (faithful_artefact p_clean pf_ok 2))
+  /\ (fst (faithful_artefact p_clean pf_ok 2)).(pdf_objects) <> [].
+Proof.
+  split.
+  - apply build_pdf_valid.
+  - vm_compute. intro H. discriminate.
+Qed.
+
+(** One PDF object per body token: the clean artefact carries 2 objects and 2
+    matching xref entries. *)
+Example clean_pdf_two_objects :
+  length (fst (faithful_artefact p_clean pf_ok 2)).(pdf_objects) = 2
+  /\ length (fst (faithful_artefact p_clean pf_ok 2)).(pdf_xref) = 2.
+Proof. split; vm_compute; reflexivity. Qed.
+
+(** ── RESIDUAL-2 non-vacuity + load-bearing: GENUINE T4 (label uniqueness) ──
+
+    T4 is now [NoDup (body_label_defs p.(proj_body))] — falsifiable and
+    project-dependent.  [p_clean] (one label) satisfies it; [p_dup] (the same
+    label defined twice) REFUTES it.  The corollary below USES T4 to derive a
+    per-label [count_occ = 1] fact — false without T4, so T4 is load-bearing. *)
+
+Example p_clean_T4 : pdflatex_T4_coherent p_clean.
+Proof.
+  unfold pdflatex_T4_coherent; simpl.
+  constructor; [intro H; inversion H | constructor].
+Qed.
+
+Definition p_dup : pdflatex_project :=
+  mk_project (mk_graph [mk_node 0 Tex] []) [BT_label_def 5; BT_label_def 5].
+
+Example p_dup_not_T4 : ~ pdflatex_T4_coherent p_dup.
+Proof.
+  unfold pdflatex_T4_coherent; simpl.
+  intro H.
+  pose proof (proj1 (NoDup_count_occ' Nat.eq_dec [5; 5]) H) as Hc.
+  specialize (Hc 5 (or_introl eq_refl)). vm_compute in Hc. discriminate.
+Qed.
+
+Corollary pdflatex_labels_resolve_uniquely :
+  forall p pf,
+    project_well_typed p ->
+    profile_supported p pf ->
+    pdflatex_T4_coherent p ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_output_format_well_formed out /\
+      (* T4 load-bearing: each defined label has EXACTLY ONE definition. *)
+      (forall n, In n (body_label_defs p.(proj_body)) ->
+                 count_occ Nat.eq_dec (body_label_defs p.(proj_body)) n = 1).
+Proof.
+  intros p pf Hwt Hsupp HT4.
+  destruct (pdflatex_compile_safe p pf Hwt Hsupp)
+    as [out [Hprod [_ [Hwf _]]]].
+  exists out. split; [exact Hprod |]. split; [exact Hwf |].
+  apply (proj1 (NoDup_count_occ' Nat.eq_dec (body_label_defs p.(proj_body)))).
+  exact HT4.
+Qed.
+
+(** ── RESIDUAL-3 non-vacuity + load-bearing: DOCUMENT-feature coherence ──
+
+    A body that REQUIRES opentype fonts ([BT_needs_feature Opentype_fonts]).
+    Its token image — hence its fatal-freeness — depends on the ENGINE, even
+    though the profile itself declares NO features.  On pdflatex the feature is
+    unsupported: the DOCUMENT emits a fatal.  On xelatex it is supported: the
+    document is inert and the capstone applies.  This is the residual-3 point —
+    [profile_supported] now checks the features the DOCUMENT requires, not just
+    the profile's own declared set. *)
+
+Definition p_needs_otf : pdflatex_project :=
+  mk_project (mk_graph [] []) [BT_needs_feature Opentype_fonts].
+Definition pf_pdf : pdflatex_profile := mk_pdflatex_profile Pdflatex [].
+Definition pf_xe  : pdflatex_profile := mk_pdflatex_profile Xelatex [].
+
+Example p_needs_otf_well_typed : project_well_typed p_needs_otf.
+Proof. apply empty_graph_closed. Qed.
+
+(** The profile declares NO features, yet the DOCUMENT is unsupported on
+    pdflatex because it REQUIRES opentype — the genuine project<->profile
+    coherence check. *)
+Example otf_on_pdflatex_not_supported : ~ profile_supported p_needs_otf pf_pdf.
+Proof.
+  unfold profile_supported. intros [_ H].
+  assert (Hc := H Opentype_fonts (or_introl eq_refl)).
+  vm_compute in Hc. discriminate.
+Qed.
+
+Example otf_on_pdflatex_tokens_fatal :
+  project_tokens p_needs_otf pf_pdf = [L0Aux.Tok_fatal].
+Proof. reflexivity. Qed.
+
+(** The DOCUMENT's required feature drives the pass to a FATAL log. *)
+Example fatal_body_feature_reaches_fatal :
+  ~ L0Log.log_no_fatal (L0Pass.log (faithful_run p_needs_otf pf_pdf 1)).
+Proof.
+  intro H.
+  assert (Hin : In L0Log.fatal_marker_emergency_stop L0Log.fatal_markers)
+    by (simpl; right; left; reflexivity).
+  specialize (H L0Log.fatal_marker_emergency_stop Hin).
+  vm_compute in H. discriminate.
+Qed.
+
+(** On xelatex the SAME document is supported (opentype is engine-compatible)
+    even though the profile declares no features. *)
+Example otf_on_xelatex_supported : profile_supported p_needs_otf pf_xe.
+Proof.
+  split; [apply empty_admitted_by_all |].
+  intros f Hf. destruct Hf as [Heq | []]. rewrite <- Heq. reflexivity.
+Qed.
+
+(** And under xelatex the capstone genuinely applies: the document PRODUCES a
+    well-formed artefact. *)
+Example otf_on_xelatex_compiles :
+  exists out,
+    pdflatex_produces p_needs_otf pf_xe out
+    /\ pdflatex_output_format_well_formed out.
+Proof.
+  destruct (pdflatex_compile_safe p_needs_otf pf_xe
+              p_needs_otf_well_typed otf_on_xelatex_supported)
+    as [out [Hprod [_ [Hwf _]]]].
+  exists out. split; [exact Hprod | exact Hwf].
+Qed.
+
+(** ── BLUNT residual note: T0 / T1 / T5 remain project-INDEPENDENT ──────
+
+    T2 (closure), T3 (declared + DOCUMENT-required features), and T4 (label
+    uniqueness) are now genuine, falsifiable, project-dependent predicates,
+    and T2/T3 are load-bearing for fatal-freeness while T4 is load-bearing in
+    [pdflatex_labels_resolve_uniquely].  T0, T1 and T5 are DELIBERATELY LEFT as
+    universally-true WS8 wrappers, because their content is genuinely NOT a
+    function of this project model:
+
+      - T0 (parser acceptance) lives at the LP-Core parser-node abstraction
+        layer.  The project body here is ALREADY a token stream (post-lexing),
+        so there is no raw-byte parse-failure to express — a project-dependent
+        T0 would need a byte-level source model this file does not carry.
+
+      - T1 (macro-expansion admissibility) is a property of the USER MACRO
+        CATALOGUE.  This project model ([build_graph] + document token body)
+        carries no macro registry, so there is nothing project-specific for T1
+        to constrain.
+
+      - T5 (rule-catalogue soundness) ranges over the GENERATED per-rule proof
+        set ([Generated.Catalogue]), not the project.  Making it
+        project-dependent here would invert the theory dependency (Generated
+        already depends on this file) and is out of scope by construction; the
+        catalogue-specific instance is derived downstream in
+        [proofs/generated/PdflatexT5Wired.v] from [pdflatex_T5_safe_holds]. *)
 
 (** ── Engine-generic capstone aliases ─────────────────────────────
 

@@ -2,6 +2,18 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.41] — 2026-07-10
+
+**Documentation reconciliation + candidate backlog.** Reconciled the drifted plans to
+reality: V27_2_MASTER_EXECUTION_PLAN + V27_FAITHFUL_SEMANTICS_PLAN + V27_WS8_PLAN +
+V27_REPO_EXACT_MASTER_SPEC + COMPILATION_GUARANTEE + README no longer say Tier 2/3
+"not started"/"UNSTARTED"; they reflect Tiers 1-3 complete (incl. Tier 3 Stage 6
+perfected + residuals) and the Tier-4 scope split (WS9 editorial-policy + WS12
+extension-plane in scope; WS10 collaboration + WS11 platform deferred pending a
+product decision). Honest residuals kept (T0/T1/T5 universal, PDF structural). NEW
+`specs/v27/CANDIDATE_BACKLOG.md` tracks the **119 remaining candidate-able rules**
+(34 medium, 85 large) so the systematic "all rules" coverage work is not dropped.
+
 ## [v27.1.40] — 2026-07-10
 
 **Tier 3 Stage 6 residuals closed — PDF-artefact model, genuine T3/T4, document-feature

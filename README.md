@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.1.39
+# LaTeX Perfectionist v27.1.41
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -65,7 +65,7 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.40 (July 2026)
+## Current Status — v27.1.41 (July 2026)
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.

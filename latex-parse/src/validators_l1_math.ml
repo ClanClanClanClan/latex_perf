@@ -1932,15 +1932,17 @@ let l1_math_049_rule : rule =
           if bad > 0 then cnt := !cnt + bad)
       math_segs;
     if !cnt > 0 then
-      (* Bucket-C candidate (v27.1.41): insert a plain space at a tight
-         `\times` boundary. Render-identical — TeX ignores source spaces in
-         math and the binary-operator spacing comes from `\times` itself — but
-         a space also disambiguates `\times`+letter, so surfaced for review
-         rather than auto-applied. Offsets scanned on the ORIGINAL source, math
-         gated by [find_math_ranges]/[is_in_math_range], vcu-exempt. *)
+      (* Bucket-C candidate (v27.1.41): insert a plain space at a tight `\times`
+         boundary. Render-identical — TeX ignores source spaces in math and the
+         binary-operator spacing comes from `\times` itself — but a space also
+         disambiguates `\times`+letter, so surfaced for review rather than
+         auto-applied. Offsets scanned on the ORIGINAL source, math gated by
+         [find_math_ranges]/[is_in_math_range], vcu-exempt. *)
       let ranges = find_math_ranges s in
       let is_alnum c =
-        (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+        (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z')
+        || (c >= '0' && c <= '9')
       in
       let n = String.length s in
       let cand_of off =
@@ -3253,7 +3255,9 @@ let l1_math_081_rule : rule =
       let cand_of off =
         (* off = index of `(`. *)
         if
-          off >= 1 && s.[off] = '(' && is_letter s.[off - 1]
+          off >= 1
+          && s.[off] = '('
+          && is_letter s.[off - 1]
           && (not (letter_is_cmd_tail (off - 1)))
           && is_in_math_range ranges off
         then
@@ -3266,7 +3270,8 @@ let l1_math_081_rule : rule =
         else []
       in
       let raw =
-        List.concat_map cand_of (Validators_l0_typo.find_all_non_overlapping s "(")
+        List.concat_map cand_of
+          (Validators_l0_typo.find_all_non_overlapping s "(")
       in
       let candidates = candidates_drop_vcu_exempt s raw in
       if candidates = [] then
@@ -3622,8 +3627,8 @@ let l1_math_088_rule : rule =
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
       (* Bucket-C candidate (v27.1.41): insert a `\,` thin space on the tight
-         side(s) of a bare `\partial`, mirroring the diagnostic's two alts
-         (`[^ \t,\\]\partial` and `\partial[^ \t{\\]`). Spacing nudge, not
+         side(s) of a bare `\partial`, mirroring the diagnostic's two alts (`[^
+         \t,\\]\partial` and `\partial[^ \t{\\]`). Spacing nudge, not
          render-identical, so a review candidate. Offsets on ORIGINAL source,
          math gated, vcu-exempt. *)
       let n = String.length s in

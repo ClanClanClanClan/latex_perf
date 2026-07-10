@@ -1063,16 +1063,19 @@ let l1_script_004_rule : rule =
     if !cnt > 0 then
       (* Bucket-C candidate: reorder a prime-run that precedes a subscript
          (`f'_i`) into canonical subscript-then-prime (`f_i'`). In TeX `'` is
-         `^{\prime}` and a superscript/subscript pair is independent of order, so
-         the two render IDENTICALLY — a render-preserving review candidate. The
-         prime-run is moved AFTER the (single-token or braced) subscript operand
-         and nothing else is absorbed. Skipped when a `^`/`'` immediately follows
-         the operand (reordering would then create a double-superscript error).
-         Offsets on ORIGINAL source, math gated, vcu-exempt. *)
+         `^{\prime}` and a superscript/subscript pair is independent of order,
+         so the two render IDENTICALLY — a render-preserving review candidate.
+         The prime-run is moved AFTER the (single-token or braced) subscript
+         operand and nothing else is absorbed. Skipped when a `^`/`'`
+         immediately follows the operand (reordering would then create a
+         double-superscript error). Offsets on ORIGINAL source, math gated,
+         vcu-exempt. *)
       let n = String.length s in
       let ranges = find_math_ranges s in
       let is_alnum c =
-        (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+        (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z')
+        || (c >= '0' && c <= '9')
       in
       let rec collect i acc =
         if i >= n then List.rev acc
@@ -1082,7 +1085,7 @@ let l1_script_004_rule : rule =
           while !p < n && s.[!p] = '\'' do
             incr p
           done;
-          if !p < n && s.[!p] = '_' && !p + 1 < n then (
+          if !p < n && s.[!p] = '_' && !p + 1 < n then
             let primes = String.sub s i (!p - i) in
             let q = !p + 1 in
             (* subscript operand span [q, opend) — a balanced brace group or a
@@ -1091,8 +1094,8 @@ let l1_script_004_rule : rule =
               if s.[q] = '{' then (
                 let depth = ref 1 and j = ref (q + 1) in
                 while !j < n && !depth > 0 do
-                  (if s.[!j] = '{' then incr depth
-                   else if s.[!j] = '}' then decr depth);
+                  if s.[!j] = '{' then incr depth
+                  else if s.[!j] = '}' then decr depth;
                   incr j
                 done;
                 if !depth = 0 then !j else -1)
@@ -1118,7 +1121,7 @@ let l1_script_004_rule : rule =
                 else acc
               in
               collect opend acc
-            else collect !p acc)
+            else collect !p acc
           else collect !p acc)
         else collect (i + 1) acc
       in
@@ -1621,7 +1624,8 @@ let l1_script_014_rule : rule =
                       Cst_edit.make ~start_offset:(e - 1) ~end_offset:e
                         ~replacement:("{" ^ letter ^ "}");
                     ];
-                  c_label = "Brace the logarithm base subscript (\\log_x -> \\log_{x})";
+                  c_label =
+                    "Brace the logarithm base subscript (\\log_x -> \\log_{x})";
                 }
                 :: acc
               else acc
@@ -2068,16 +2072,32 @@ let l1_script_020_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      (* Bucket-C candidate: wrap a multi-letter (non-operator) subscript word in
-         `\mathrm{…}`, `_{eff}` -> `_{\mathrm{eff}}`. This corrects the italic
-         product-looking rendering to upright text — the intended review-gated
-         change — bracing EXACTLY the matched word (nothing else absorbed).
-         Re-scans the ORIGINAL source with the same operator / already-wrapped
-         guards as the count; math gated, vcu-exempt. *)
+      (* Bucket-C candidate: wrap a multi-letter (non-operator) subscript word
+         in `\mathrm{…}`, `_{eff}` -> `_{\mathrm{eff}}`. This corrects the
+         italic product-looking rendering to upright text — the intended
+         review-gated change — bracing EXACTLY the matched word (nothing else
+         absorbed). Re-scans the ORIGINAL source with the same operator /
+         already-wrapped guards as the count; math gated, vcu-exempt. *)
       let operators =
         [
-          "min"; "max"; "lim"; "inf"; "sup"; "det"; "dim"; "ker"; "log"; "exp";
-          "sin"; "cos"; "tan"; "arg"; "deg"; "gcd"; "hom"; "mod";
+          "min";
+          "max";
+          "lim";
+          "inf";
+          "sup";
+          "det";
+          "dim";
+          "ker";
+          "log";
+          "exp";
+          "sin";
+          "cos";
+          "tan";
+          "arg";
+          "deg";
+          "gcd";
+          "hom";
+          "mod";
         ]
       in
       let ranges = find_math_ranges s in
@@ -2100,7 +2120,8 @@ let l1_script_020_rule : rule =
               if
                 is_in_math_range ranges b
                 && (not (List.mem word operators))
-                && String.length word >= 2 && not already_wrapped
+                && String.length word >= 2
+                && not already_wrapped
               then
                 {
                   c_edits =
@@ -2109,7 +2130,8 @@ let l1_script_020_rule : rule =
                       Cst_edit.make ~start_offset:(b + 2) ~end_offset:(e - 1)
                         ~replacement:("\\mathrm{" ^ word ^ "}");
                     ];
-                  c_label = "Wrap the subscript word in \\mathrm (\\mathrm{eff})";
+                  c_label =
+                    "Wrap the subscript word in \\mathrm (\\mathrm{eff})";
                 }
                 :: acc
               else acc
@@ -2568,8 +2590,8 @@ let l1_chem_002_rule : rule =
       (* Bucket-C candidate (mhchem-style): brace an oxidation-state charge so
          both digit and sign share the superscript, `Fe^2+` -> `Fe^{2+}`. The
          element-symbol-anchored pattern makes the intent unambiguous. Only the
-         `^D S` tail (caret, digit, sign) is rewritten; the element is untouched.
-         Offsets on ORIGINAL source, math gated, vcu-exempt. *)
+         `^D S` tail (caret, digit, sign) is rewritten; the element is
+         untouched. Offsets on ORIGINAL source, math gated, vcu-exempt. *)
       let ranges = find_math_ranges s in
       let rec collect i acc =
         match
@@ -2590,7 +2612,8 @@ let l1_chem_002_rule : rule =
                       Cst_edit.make ~start_offset:caret ~end_offset:e
                         ~replacement:("^{" ^ inner ^ "}");
                     ];
-                  c_label = "Brace the oxidation-state charge (Fe^2+ -> Fe^{2+})";
+                  c_label =
+                    "Brace the oxidation-state charge (Fe^2+ -> Fe^{2+})";
                 }
                 :: acc
               else acc
@@ -2635,7 +2658,8 @@ let l1_chem_003_rule : rule =
       let in_ce off =
         List.exists
           (fun (a, b') ->
-            off >= a && off < b'
+            off >= a
+            && off < b'
             && count_substring (String.sub s a (b' - a)) "\\ce{" > 0)
           ranges
       in
@@ -2662,7 +2686,8 @@ let l1_chem_003_rule : rule =
                 in
                 {
                   c_edits = [ edit ];
-                  c_label = "Superscript the isotope mass number (_14C -> ^{14}C)";
+                  c_label =
+                    "Superscript the isotope mass number (_14C -> ^{14}C)";
                 }
                 :: acc
               else acc

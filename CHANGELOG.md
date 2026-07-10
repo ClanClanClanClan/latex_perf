@@ -2,6 +2,18 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.42] — 2026-07-10
+
+**Candidate backlog batch 1 (math-notation) — 8 Bucket-C candidates.** Resuming the
+systematic "all rules" coverage from CANDIDATE_BACKLOG.md: MATH-049 (space around
+`\times`), MATH-081 (kerning `f(x)`→`f\!\left(x\right)`), MATH-088, SCRIPT-004
+(prime/subscript reorder), SCRIPT-014 (brace log base), SCRIPT-020 (`\mathrm`
+subscript word), CHEM-002/003. All candidate-channel (`--apply-fixes-for`
+byte-identical, produces_fix false), apply-fixes-safety PASS, validate_messages 0
+mismatches. 5 confirmed-firing + tested (MATH-088/CHEM-002/003 have narrow triggers).
+Candidate rules **69→77**. (Partially salvaged from an API-dropped workflow;
+re-verified byte-safe.)
+
 ## [v27.1.41] — 2026-07-10
 
 **Documentation reconciliation + candidate backlog.** Reconciled the drifted plans to

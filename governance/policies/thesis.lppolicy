@@ -1,0 +1,5 @@
+# Thesis: relax stylistic rules to info; waive template front-matter noise.
+profile thesis
+severity STYLE-015 info
+severity MOD-001 info
+waive SPC-016 file=*frontmatter*.tex reason="university template spacing, approved"

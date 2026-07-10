@@ -99,7 +99,8 @@
   section_rebalance
   lockfree_queue
   unicode_split
-  incremental_nlp)
+  incremental_nlp
+  editorial_policy)
  (libraries unix threads re uutf yojson)
  (foreign_stubs
   (language c)
@@ -178,6 +179,11 @@
 (test
  (name test_ascii_context)
  (modules test_ascii_context)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_editorial_policy)
+ (modules test_editorial_policy)
  (libraries latex_parse_lib))
 
 (test

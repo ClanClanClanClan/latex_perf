@@ -321,6 +321,86 @@ let run_with_policy_file ~policy_path ~audit_out ~path ~src =
             printf "# --- waiver audit (%d record(s)) ---\n" (List.length audit);
             List.iter (fun l -> printf "%s\n" l) audit_lines));
       0)
+(* ── Editorial review-states flow (WS9 Stage 2) ──────────────────── *)
+
+(* Run the plain validator set on one file and return its results, with the
+   per-file context set up and torn down. *)
+let results_of_file path =
+  let src = read_all path in
+  ignore (setup_all ~path ~src ~log_path:None);
+  Fun.protect ~finally:cleanup (fun () ->
+      Latex_parse_lib.Validators.run_all src)
+
+(** Run the validators, annotate each finding with its review state (owner +
+    state), hide [resolved] findings, print the annotated findings, and emit the
+    review audit trail. Review-file load errors are reported to stderr and never
+    abort. Returns the process exit code. *)
+let run_review_file ~state_path ~path : int =
+  let { Latex_parse_lib.Editorial_review.states; errors } =
+    Latex_parse_lib.Editorial_review.load state_path
+  in
+  List.iter
+    (fun (lineno, msg) ->
+      eprintf "# review: %s:%d: %s\n" state_path lineno msg)
+    errors;
+  eprintf "# review-states=%d assignment(s)\n"
+    (List.length states.Latex_parse_lib.Editorial_review.assignments);
+  let results = results_of_file path in
+  let kept, audit =
+    Latex_parse_lib.Editorial_review.apply states ~file:path results
+  in
+  List.iter
+    (fun an ->
+      printf "%s\n" (Latex_parse_lib.Editorial_review.annotated_to_string an))
+    kept;
+  if audit <> [] then (
+    printf "# --- review audit (%d record(s)) ---\n" (List.length audit);
+    List.iter
+      (fun a ->
+        printf "%s\n"
+          (Latex_parse_lib.Editorial_review.review_audit_to_string a))
+      audit);
+  0
+
+(* Read a manifest file: one path per line, blank lines and #-comments
+   ignored. *)
+let read_manifest path =
+  let content = read_all path in
+  String.split_on_char '\n' content
+  |> List.filter_map (fun l ->
+         let t = String.trim l in
+         if t = "" || (String.length t > 0 && t.[0] = '#') then None
+         else Some t)
+
+(** Aggregate findings across one or more files into a batch editorial report
+    and print it (TSV by default, JSON with [--json]). [rest] is the flag/file
+    tail after [--report]: an optional leading [--json] and either a list of
+    file paths or [--manifest <file>]. Returns the process exit code. *)
+let run_report ~rest : int =
+  let json = List.mem "--json" rest in
+  let rest = List.filter (fun x -> x <> "--json") rest in
+  let files =
+    match rest with
+    | "--manifest" :: mpath :: [] -> read_manifest mpath
+    | fs -> fs
+  in
+  match files with
+  | [] ->
+      eprintf "Error: --report expects at least one file (or --manifest)\n";
+      2
+  | _ ->
+      let per_file =
+        List.map (fun f -> (f, results_of_file f)) files
+      in
+      let rep = Latex_parse_lib.Editorial_review.report per_file in
+      let out =
+        if json then Latex_parse_lib.Editorial_review.render_report_json rep
+        else Latex_parse_lib.Editorial_review.render_report_tsv rep
+      in
+      print_string out;
+      if json then print_newline ();
+      0
+
 (* ── WS12: extension plane / foreign contracts ───────────────────── *)
 
 (* Load an extension contract manifest and print the effective support level
@@ -430,6 +510,17 @@ let () =
                 cands)
         results;
       exit 0
+  | _ :: "--review" :: state_path :: rest -> (
+      (* WS9 Stage 2: annotate/filter findings by review state. *)
+      match rest with
+      | [ path ] -> exit (run_review_file ~state_path ~path)
+      | _ ->
+          eprintf "Usage: %s --review <statefile.lpreview> <file.tex>\n"
+            Sys.argv.(0);
+          exit 2)
+  | _ :: "--report" :: rest ->
+      (* WS9 Stage 2: batch editorial report across one or more files. *)
+      exit (run_report ~rest)
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
       exit (run_apply_fixes ~converge:true ~path ~src ())
@@ -555,7 +646,9 @@ let () =
         "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID | \
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
-         [--policy <file.lppolicy> [--audit <file>]] [--project <root.tex>] \
+         [--policy <file.lppolicy> [--audit <file>]] \
+         [--review <file.lpreview>] [--report [--json] <file.tex>... | \
+         --report [--json] --manifest <list>] [--project <root.tex>] \
          [--layer l0|l1|l2|l3|l4] [--log <file.log>] [--extensions \
          <manifest.json> [--strict]] <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
@@ -568,6 +661,18 @@ let () =
          the findings\n\
         \               in a `# --- waiver audit ---` stdout section. No \
          --policy = unchanged output.\n\
+         --review <file.lpreview> <file.tex>  WS9 Stage 2: annotate findings \
+         with their\n\
+        \               review state (new/acknowledged/resolved/wontfix) + \
+         owner; resolved\n\
+        \               findings are hidden and every state assignment is \
+         recorded in a\n\
+        \               `# --- review audit ---` trail (who/what/why).\n\
+         --report [--json] <file.tex>...  WS9 Stage 2: batch editorial report \
+         aggregating\n\
+        \               finding counts by rule / severity / file across the \
+         given files (or\n\
+        \               --manifest <list>); TSV by default, JSON with --json.\n\
          [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] \
          --extensions MANIFEST  WS12: load the extension contract manifest and \
          print the\n\

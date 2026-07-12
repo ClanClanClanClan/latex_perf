@@ -101,7 +101,8 @@
   lockfree_queue
   unicode_split
   incremental_nlp
-  editorial_policy)
+  editorial_policy
+  editorial_review)
  (libraries unix threads re uutf yojson)
  (foreign_stubs
   (language c)
@@ -185,6 +186,11 @@
 (test
  (name test_editorial_policy)
  (modules test_editorial_policy)
+ (libraries latex_parse_lib))
+
+(test
+ (name test_editorial_review)
+ (modules test_editorial_review)
  (libraries latex_parse_lib))
 
 (test

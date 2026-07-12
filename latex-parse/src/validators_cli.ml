@@ -340,8 +340,7 @@ let run_review_file ~state_path ~path : int =
     Latex_parse_lib.Editorial_review.load state_path
   in
   List.iter
-    (fun (lineno, msg) ->
-      eprintf "# review: %s:%d: %s\n" state_path lineno msg)
+    (fun (lineno, msg) -> eprintf "# review: %s:%d: %s\n" state_path lineno msg)
     errors;
   eprintf "# review-states=%d assignment(s)\n"
     (List.length states.Latex_parse_lib.Editorial_review.assignments);
@@ -369,8 +368,7 @@ let read_manifest path =
   String.split_on_char '\n' content
   |> List.filter_map (fun l ->
          let t = String.trim l in
-         if t = "" || (String.length t > 0 && t.[0] = '#') then None
-         else Some t)
+         if t = "" || (String.length t > 0 && t.[0] = '#') then None else Some t)
 
 (** Aggregate findings across one or more files into a batch editorial report
     and print it (TSV by default, JSON with [--json]). [rest] is the flag/file
@@ -380,18 +378,14 @@ let run_report ~rest : int =
   let json = List.mem "--json" rest in
   let rest = List.filter (fun x -> x <> "--json") rest in
   let files =
-    match rest with
-    | "--manifest" :: mpath :: [] -> read_manifest mpath
-    | fs -> fs
+    match rest with [ "--manifest"; mpath ] -> read_manifest mpath | fs -> fs
   in
   match files with
   | [] ->
       eprintf "Error: --report expects at least one file (or --manifest)\n";
       2
   | _ ->
-      let per_file =
-        List.map (fun f -> (f, results_of_file f)) files
-      in
+      let per_file = List.map (fun f -> (f, results_of_file f)) files in
       let rep = Latex_parse_lib.Editorial_review.report per_file in
       let out =
         if json then Latex_parse_lib.Editorial_review.render_report_json rep
@@ -646,11 +640,11 @@ let () =
         "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID | \
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
-         [--policy <file.lppolicy> [--audit <file>]] \
-         [--review <file.lpreview>] [--report [--json] <file.tex>... | \
-         --report [--json] --manifest <list>] [--project <root.tex>] \
-         [--layer l0|l1|l2|l3|l4] [--log <file.log>] [--extensions \
-         <manifest.json> [--strict]] <file.tex>\n\n\
+         [--policy <file.lppolicy> [--audit <file>]] [--review \
+         <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
+         --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \
+         [--log <file.log>] [--extensions <manifest.json> [--strict]] \
+         <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

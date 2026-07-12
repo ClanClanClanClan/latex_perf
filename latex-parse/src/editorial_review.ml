@@ -60,7 +60,8 @@ type assignment = {
   rs_file_glob : string option;
       (** [None] = any file; otherwise a glob matched against the path and its
           basename (see {!Editorial_policy.glob_match}) *)
-  rs_scope : string option;  (** optional free-form scope label, recorded as-is *)
+  rs_scope : string option;
+      (** optional free-form scope label, recorded as-is *)
   rs_state : review_state;
   rs_owner : string;  (** who owns the finding (required, non-empty) *)
   rs_note : string;  (** why — free text, may be empty *)
@@ -105,7 +106,7 @@ let parse_directive (before_reason : string) (reason : string option) :
   | "review" :: id :: state_tok :: fields -> (
       match review_state_of_string state_tok with
       | None -> Error ("review: unknown state " ^ state_tok)
-      | Some state ->
+      | Some state -> (
           let owner = ref None in
           let file_glob = ref None in
           let scope = ref None in
@@ -143,7 +144,7 @@ let parse_directive (before_reason : string) (reason : string option) :
                   rs_state = state;
                   rs_owner = o;
                   rs_note = note;
-                })
+                }))
   | "review" :: _ -> Error "review expects <rule-id> <state> owner=<name>"
   | d :: _ -> Error ("unknown directive: " ^ d)
   | [] -> Error "empty directive"
@@ -172,10 +173,7 @@ let parse_lines (lines : string list) : parse_result =
         | Ok a -> assigns := a :: !assigns
         | Error msg -> errors := (lineno, msg) :: !errors)
     lines;
-  {
-    states = { assignments = List.rev !assigns };
-    errors = List.rev !errors;
-  }
+  { states = { assignments = List.rev !assigns }; errors = List.rev !errors }
 
 (** Load a review-state set from a file. Total: on a read error, returns
     {!empty} with the error recorded; never raises. *)
@@ -227,7 +225,8 @@ let annotate (st : t) ~(file : string) (results : Validators.result list) :
             an_owner = Some a.rs_owner;
             an_note = Some a.rs_note;
           }
-      | None -> { an_result = r; an_state = New; an_owner = None; an_note = None })
+      | None ->
+          { an_result = r; an_state = New; an_owner = None; an_note = None })
     results
 
 (** [apply ?hide st ~file results] annotates [results] with their review states
@@ -258,8 +257,7 @@ let apply ?(hide = [ Resolved ]) (st : t) ~(file : string)
               ra_scope =
                 (match
                    List.find_opt
-                     (fun a ->
-                       assignment_matches a ~file an.an_result.id)
+                     (fun a -> assignment_matches a ~file an.an_result.id)
                      st.assignments
                  with
                 | Some a -> scope_string a
@@ -269,7 +267,9 @@ let apply ?(hide = [ Resolved ]) (st : t) ~(file : string)
             }
             :: !audit)
     annotated;
-  let kept = List.filter (fun an -> not (List.mem an.an_state hide)) annotated in
+  let kept =
+    List.filter (fun an -> not (List.mem an.an_state hide)) annotated
+  in
   (kept, List.rev !audit)
 
 (** Render one annotated result as a tab-separated line:
@@ -303,9 +303,9 @@ type report = {
   by_file : (string * int) list;
       (** firing count summed per file, in the input file order *)
 }
-(** An aggregate editorial report over the findings of one or more files.
-    Counts are sums of each result's [count] (i.e. firings), not the number of
-    distinct rules. *)
+(** An aggregate editorial report over the findings of one or more files. Counts
+    are sums of each result's [count] (i.e. firings), not the number of distinct
+    rules. *)
 
 (* Accumulate [delta] onto the association-list entry for [key] (assoc-list is
    small — rule/file cardinality is bounded — so linear update is fine). *)
@@ -324,7 +324,9 @@ let bump (tbl : (string * int) list ref) (key : string) (delta : int) : unit =
 let report (files : (string * Validators.result list) list) : report =
   let by_rule = ref [] in
   let by_file = ref [] in
-  let sev = ref [ (Validators.Error, 0); (Validators.Warning, 0); (Validators.Info, 0) ] in
+  let sev =
+    ref [ (Validators.Error, 0); (Validators.Warning, 0); (Validators.Info, 0) ]
+  in
   let total = ref 0 in
   List.iter
     (fun (file, results) ->
@@ -334,7 +336,8 @@ let report (files : (string * Validators.result list) list) : report =
           bump by_file file r.count;
           sev :=
             List.map
-              (fun (s, v) -> if s = r.severity then (s, v + r.count) else (s, v))
+              (fun (s, v) ->
+                if s = r.severity then (s, v + r.count) else (s, v))
               !sev;
           total := !total + r.count)
         results)
@@ -360,18 +363,16 @@ let render_report_tsv (rep : report) : string =
   List.iter (fun (id, n) -> Printf.bprintf b "RULE\t%s\t%d\n" id n) rep.by_rule;
   List.iter
     (fun (s, n) ->
-      Printf.bprintf b "SEVERITY\t%s\t%d\n"
-        (Validators.severity_to_string s)
-        n)
+      Printf.bprintf b "SEVERITY\t%s\t%d\n" (Validators.severity_to_string s) n)
     rep.by_severity;
-  List.iter
-    (fun (f, n) -> Printf.bprintf b "FILE\t%s\t%d\n" f n)
-    rep.by_file;
+  List.iter (fun (f, n) -> Printf.bprintf b "FILE\t%s\t%d\n" f n) rep.by_file;
   Buffer.contents b
 
 (** Render a {!report} as a single-line JSON object suitable for editorial
-    export: [{"total":N,"files":F,"by_rule":{..},"by_severity":{..},
-    "by_file":{..}}]. Strings are escaped via {!Yojson.Safe}. *)
+    export:
+    [{"total":N,"files":F,"by_rule":{..},"by_severity":{..},
+    "by_file":{..}}].
+    Strings are escaped via {!Yojson.Safe}. *)
 let render_report_json (rep : report) : string =
   let obj assoc = `Assoc assoc in
   let counts_of pairs = obj (List.map (fun (k, v) -> (k, `Int v)) pairs) in

@@ -52,10 +52,8 @@ let () =
   let spc =
     List.find (fun (a : ER.annotated) -> a.ER.an_result.VC.id = "SPC-016") ann
   in
-  check "resolved: SPC-016 annotated Resolved"
-    (spc.ER.an_state = ER.Resolved);
-  check "resolved: owner surfaced on annotation"
-    (spc.ER.an_owner = Some "alice");
+  check "resolved: SPC-016 annotated Resolved" (spc.ER.an_state = ER.Resolved);
+  check "resolved: owner surfaced on annotation" (spc.ER.an_owner = Some "alice");
   (* apply DOES hide resolved by default *)
   let kept, audit = ER.apply states ~file:"doc.tex" (sample ()) in
   check "resolved: SPC-016 hidden from apply output"
@@ -140,8 +138,7 @@ let () =
     = [ "DELIM-009"; "ENC-004"; "SPC-016"; "TYPO-001" ]);
   check "report: by_severity Warning"
     (List.assoc VC.Warning rep.ER.by_severity = 2 + 1 + 4);
-  check "report: by_severity Error"
-    (List.assoc VC.Error rep.ER.by_severity = 3);
+  check "report: by_severity Error" (List.assoc VC.Error rep.ER.by_severity = 3);
   check "report: by_severity Info" (List.assoc VC.Info rep.ER.by_severity = 5);
   check "report: by_file a.tex" (List.assoc "a.tex" rep.ER.by_file = 8);
   check "report: by_file b.tex" (List.assoc "b.tex" rep.ER.by_file = 7);
@@ -152,9 +149,7 @@ let () =
   check "report tsv: mentions total" (String.length tsv > 0);
   let json = ER.render_report_json rep in
   check "report json: parses back as an object"
-    (match Yojson.Safe.from_string json with
-    | `Assoc _ -> true
-    | _ -> false);
+    (match Yojson.Safe.from_string json with `Assoc _ -> true | _ -> false);
   check "report json: total field correct"
     (match Yojson.Safe.from_string json with
     | `Assoc kv -> List.assoc "total" kv = `Int 15
@@ -172,9 +167,7 @@ let () =
     states_of_string "review TYPO-001 bogusstate owner=x\n"
   in
   check "malformed: unknown state reported" (errors <> []);
-  let { ER.states; errors } =
-    states_of_string "review TYPO-001 resolved\n"
-  in
+  let { ER.states; errors } = states_of_string "review TYPO-001 resolved\n" in
   check "malformed: missing owner reported" (errors <> []);
   check "malformed: missing owner yields no assignment"
     (states.ER.assignments = []);
@@ -189,8 +182,7 @@ let () =
       "# a comment\n\nreview SPC-016 wontfix owner=dan reason=\"template\"\n"
   in
   check "comments: ignored, no errors" (errors = []);
-  check "comments: one assignment parsed"
-    (List.length states.ER.assignments = 1);
+  check "comments: one assignment parsed" (List.length states.ER.assignments = 1);
 
   (* ── 5. no assignment = default New, list unchanged ───────────────── *)
   let src = sample () in

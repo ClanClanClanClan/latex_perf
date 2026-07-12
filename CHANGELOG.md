@@ -2,6 +2,19 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.46] — 2026-07-12
+
+**WS9 Stage 2 — issue review-states + batch editorial reports (Tier 4).** New
+`editorial_review.ml`: review states (`new`/`acknowledged`/`resolved`/`wontfix`) with
+an owner, declared in `.lpreview` statefiles (total loading, errors reported); findings
+are annotated with their state+owner, `resolved` ones hidden, and every assignment
+recorded in an auditable who/what/why `REVIEW` trail (never silent). Batch editorial
+report aggregates finding counts by rule-id, severity, and file, exportable as TSV or
+JSON. CLI `--review <statefile>` and `--report [--json] [--manifest <list>]`; default
+(no new flag) output byte-identical. 48 tests. Builds on WS9 Stage 1 (profiles/waivers).
+Also reclassifies 10 large-MATH backlog rules as render-changing (diagnose-only, not
+candidate-able) after batch-5 verification.
+
 ## [v27.1.45] — 2026-07-12
 
 **Candidate backlog batch 4 (BIB) — BIB-015 + BIB-017.** BIB-015 (delete a redundant

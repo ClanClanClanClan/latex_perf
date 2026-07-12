@@ -321,6 +321,54 @@ let run_with_policy_file ~policy_path ~audit_out ~path ~src =
             printf "# --- waiver audit (%d record(s)) ---\n" (List.length audit);
             List.iter (fun l -> printf "%s\n" l) audit_lines));
       0)
+(* ── WS12: extension plane / foreign contracts ───────────────────── *)
+
+(* Load an extension contract manifest and print the effective support level
+   plus per-extension risk and downgrade. The base support level is the
+   strongest promise ([Supported]); extensions can only downgrade it. With
+   [strict], exit nonzero if the effective support is dragged below [base] (i.e.
+   any extension downgrades the guarantee). Returns the process exit code.
+   Loading is total: a malformed manifest is reported, never crashes. *)
+let run_extensions ~strict ~path () : int =
+  let module E = Latex_parse_lib.Extension_contract in
+  match E.load_file path with
+  | Error msg ->
+      eprintf "Error: malformed extension manifest %S: %s\n" path msg;
+      2
+  | Ok contracts -> (
+      let base = E.Supported in
+      match E.evaluate ~base contracts with
+      | Error rejections ->
+          List.iter
+            (fun (r : E.rejection) ->
+              printf "REJECTED\t%s\t%s\t%s\t%s\n" r.r_name
+                (E.risk_to_string r.r_risk)
+                (E.support_to_string r.r_declared)
+                r.r_reason)
+            rejections;
+          eprintf
+            "Error: %d extension(s) claim a stronger guarantee than their risk \
+             allows\n"
+            (List.length rejections);
+          3
+      | Ok eff ->
+          printf "# base-support\t%s\n" (E.support_to_string eff.base);
+          printf "# effective-support\t%s\n" (E.support_to_string eff.effective);
+          List.iter
+            (fun (e : E.entry) ->
+              printf "EXT\t%s\t%s\t%s\t%s\t%s\n" e.e_name
+                (E.risk_to_string e.e_risk)
+                (E.support_to_string e.e_declared)
+                (if e.e_downgrade then "downgrade" else "ok")
+                e.e_reason)
+            eff.entries;
+          if strict && E.downgrades_below eff base then (
+            eprintf
+              "Error: --strict: effective support %s is below threshold %s\n"
+              (E.support_to_string eff.effective)
+              (E.support_to_string base);
+            4)
+          else 0)
 
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
@@ -466,6 +514,18 @@ let () =
           printf "# layer=%s\ttotal_ms=%.3f\n" layer total_ms;
           List.iter (fun (id, ms) -> printf "# %s\t%.3f\n" id ms) timings;
           List.iter print_result results)
+  | [ _; "--extensions"; path ] ->
+      (* WS12: load extension contracts, print the effective support level plus
+         per-extension risk and downgrade. *)
+      exit (run_extensions ~strict:false ~path ())
+  | [ _; "--extensions"; "--strict"; path ]
+  | [ _; "--extensions"; path; "--strict" ]
+  | [ _; "--extensions-strict"; path ] ->
+      (* WS12: --strict variant — nonzero exit if any extension downgrades the
+         effective support below the base guarantee. Accept the flag on either
+         side of the path so the documented `--extensions <path> --strict` and
+         the `--extensions --strict <path>` forms both work. *)
+      exit (run_extensions ~strict:true ~path ())
   | [ _; "--project"; path ] ->
       let graph = Latex_parse_lib.Project_graph.build ~root:path in
       let ps = Latex_parse_lib.Project_state.build graph in
@@ -496,7 +556,8 @@ let () =
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
          [--policy <file.lppolicy> [--audit <file>]] [--project <root.tex>] \
-         [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n\n\
+         [--layer l0|l1|l2|l3|l4] [--log <file.log>] [--extensions \
+         <manifest.json> [--strict]] <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \
@@ -507,6 +568,20 @@ let () =
          the findings\n\
         \               in a `# --- waiver audit ---` stdout section. No \
          --policy = unchanged output.\n\
+         [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] \
+         --extensions MANIFEST  WS12: load the extension contract manifest and \
+         print the\n\
+        \               effective support level plus per-extension risk and \
+         downgrade.\n\
+        \               An extension classified foreign/unsafe downgrades the \
+         guarantee\n\
+        \               and can never upgrade it; an extension claiming a \
+         support level\n\
+        \               stronger than its risk allows is REJECTED (nonzero \
+         exit). With\n\
+        \               --strict, exits nonzero if the effective support drops \
+         below the\n\
+        \               base guarantee.\n\
          --apply-fixes  run validators, apply every rule's fix edits and emit \
          the\n\
         \               modified source to stdout. Iterates to a fixpoint \

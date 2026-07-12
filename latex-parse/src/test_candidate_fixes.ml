@@ -1316,8 +1316,8 @@ let () =
         (tag ^ ": edit"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     BIB-015: redundant trailing period in a `title`/`note` field.
-     Candidate deletes just the period byte before the closing brace.
+     BIB-015: redundant trailing period in a `title`/`note` field. Candidate
+     deletes just the period byte before the closing brace.
      ══════════════════════════════════════════════════════════════════════ *)
   let b15_src = "@article{k, title = {Foo.}}" in
   run "BIB-015 still fires (count=1)" (fun tag ->

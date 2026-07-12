@@ -4041,15 +4041,15 @@ let r_bib_015 : rule =
            if !depth > 0 then incr j
          done;
          (* Check if char before closing brace is a period *)
-         (if !j > after && s.[!j - 1] = '.' then (
-            incr cnt;
-            cands :=
-              {
-                c_edits =
-                  [ Cst_edit.delete ~start_offset:(!j - 1) ~end_offset:!j ];
-                c_label = "Remove redundant trailing period";
-              }
-              :: !cands));
+         if !j > after && s.[!j - 1] = '.' then (
+           incr cnt;
+           cands :=
+             {
+               c_edits =
+                 [ Cst_edit.delete ~start_offset:(!j - 1) ~end_offset:!j ];
+               c_label = "Remove redundant trailing period";
+             }
+             :: !cands);
          i := pos + 1
        done
      with Not_found -> ());
@@ -4564,7 +4564,8 @@ let r_bib_017 : rule =
        terminal period is a pure format edit, stripping `?`/`!` would change the
        bibliographic MEANING. The `}` sits at [mend-1]; the last content byte is
        located by skipping trailing whitespace back from [mend-2] on the
-       ORIGINAL source. candidates_drop_exempt gates verbatim/comment/url/math. *)
+       ORIGINAL source. candidates_drop_exempt gates
+       verbatim/comment/url/math. *)
     let cands = ref [] in
     let start = ref 0 in
     (try
@@ -4573,7 +4574,7 @@ let r_bib_017 : rule =
          ignore _mr;
          let mend = Re_compat.match_end _mr in
          let title = String.trim (Re_compat.matched_group _mr 1 s) in
-         (if String.length title > 0 then (
+         (if String.length title > 0 then
             let last = title.[String.length title - 1] in
             if last = '.' || last = '!' || last = '?' then (
               incr cnt;
@@ -4589,12 +4590,11 @@ let r_bib_017 : rule =
                     {
                       c_edits =
                         [
-                          Cst_edit.delete ~start_offset:!p
-                            ~end_offset:(!p + 1);
+                          Cst_edit.delete ~start_offset:!p ~end_offset:(!p + 1);
                         ];
                       c_label = "Remove redundant trailing period";
                     }
-                    :: !cands))));
+                    :: !cands)));
          start := mend
        done
      with Not_found -> ());

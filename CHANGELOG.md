@@ -2,6 +2,16 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.45] — 2026-07-12
+
+**Candidate backlog batch 4 (BIB) — BIB-015 + BIB-017.** BIB-015 (delete a redundant
+trailing period before a `title`/`note` field closing brace) and BIB-017 (delete a
+redundant trailing period of a title only — `?`/`!` are preserved to keep
+bibliographic meaning). Deferred BIB-003 (needs `@string` resolution), BIB-006
+(ambiguous author-name parse), BIB-016 (lossy duplicate-field drop); BIB-014 excluded
+(atomic cite-key rename, corruption risk). Candidate rules **80→82**; candidate-channel
+byte-identical, validate_messages 0 mismatches, candidate_fixes 219.
+
 ## [v27.1.44] — 2026-07-12
 
 **WS12 Stage 1 (extension plane) + SCRIPT-003 candidate.**

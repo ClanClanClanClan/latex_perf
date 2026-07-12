@@ -1,0 +1,7 @@
+# Journal house style: strict typography, no stylistic noise.
+profile journal
+severity TYPO-010 error
+severity SPC-016 error
+disable STYLE-015
+disable MOD-001
+waive FIG-023 reason="figures cleared by production in the submission pipeline"

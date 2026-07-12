@@ -1,0 +1,4 @@
+# Permissive house draft profile.
+profile house
+disable STYLE-015
+waive TYPO-010 file=drafts/*.tex reason="drafts exempt from punctuation-spacing"

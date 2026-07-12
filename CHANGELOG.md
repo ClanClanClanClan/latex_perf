@@ -2,6 +2,24 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.43] — 2026-07-12
+
+**WS9 Stage 1 (editorial policy) + candidate backlog batch 2 (TYPO).**
+
+*WS9 — Editorial policy system (Tier 4):* new `editorial_policy.ml` — named
+house-style profiles (`.lppolicy`: `profile`/`disable`/`enable`/`severity`/`waive`),
+scoped waivers (rule + file-glob) with a REQUIRED reason emitted to an **audit trail**
+(never silent), `--policy`/`--audit` CLI. Default (no `--policy`) output byte-identical.
+3 built-in profiles (journal/thesis/house); 26 tests. `lines=` scoping is explicitly
+rejected (findings are rule-aggregated → a line range cannot narrow a waiver; scope by
+`file=` only) rather than silently over-suppressing.
+
+*Candidates (all-rules track):* TYPO-041 (space between punctuation and glued `\ldots`)
+and TYPO-047 (remove `\section*` star → numbered section). TYPO-043/048/060 +
+SPC-001/015/026 deferred with reasons (ambiguous direction / verbatim-only no-op /
+threshold rules with no determinate edit). Candidate rules **77→79**;
+`--apply-fixes-for` byte-identical; validate_messages 0 mismatches.
+
 ## [v27.1.42] — 2026-07-10
 
 **Candidate backlog batch 1 (math-notation) — 8 Bucket-C candidates.** Resuming the

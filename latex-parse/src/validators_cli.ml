@@ -278,6 +278,50 @@ let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
               0
           | Error (`Overlap (a, b)) -> overlap_error a b)
 
+(* ── Editorial policy flow (WS9 Stage 1) ─────────────────────────── *)
+
+(** Run the plain validator set, apply an editorial policy (profile + waivers),
+    print the surviving results, and emit the waiver audit trail to [audit_out]
+    (a file path, or [None] for a stdout section). Policy-load errors are
+    reported to stderr and never abort the run. *)
+let run_with_policy_file ~policy_path ~audit_out ~path ~src =
+  let { Latex_parse_lib.Editorial_policy.policy; errors } =
+    Latex_parse_lib.Editorial_policy.load policy_path
+  in
+  List.iter
+    (fun (lineno, msg) ->
+      eprintf "# policy: %s:%d: %s\n" policy_path lineno msg)
+    errors;
+  eprintf "# policy=%s (%d disabled, %d severity-override(s), %d waiver(s))\n"
+    policy.Latex_parse_lib.Editorial_policy.name
+    (List.length policy.Latex_parse_lib.Editorial_policy.disabled)
+    (List.length policy.Latex_parse_lib.Editorial_policy.severity_overrides)
+    (List.length policy.Latex_parse_lib.Editorial_policy.waivers);
+  let tier, features = resolve_profile ~requested:`Auto ~src in
+  print_profile_banner tier features;
+  ignore (setup_all ~path ~src ~log_path:None);
+  Fun.protect ~finally:cleanup (fun () ->
+      let results = Latex_parse_lib.Validators.run_all src in
+      let kept, audit =
+        Latex_parse_lib.Editorial_policy.apply policy ~file:path results
+      in
+      List.iter print_result kept;
+      let audit_lines =
+        List.map Latex_parse_lib.Editorial_policy.audit_record_to_string audit
+      in
+      (match audit_out with
+      | Some out ->
+          let oc = open_out out in
+          List.iter (fun l -> output_string oc (l ^ "\n")) audit_lines;
+          close_out oc;
+          eprintf "# policy: %d waiver audit record(s) written to %s\n"
+            (List.length audit) out
+      | None ->
+          if audit <> [] then (
+            printf "# --- waiver audit (%d record(s)) ---\n" (List.length audit);
+            List.iter (fun l -> printf "%s\n" l) audit_lines));
+      0)
+
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
 let () =
@@ -384,6 +428,14 @@ let () =
                      r.severity)
                   r.count r.message)
               scored)
+  | [ _; "--policy"; policy_path; path ] ->
+      let src = read_all path in
+      exit (run_with_policy_file ~policy_path ~audit_out:None ~path ~src)
+  | [ _; "--policy"; policy_path; "--audit"; audit_path; path ] ->
+      let src = read_all path in
+      exit
+        (run_with_policy_file ~policy_path ~audit_out:(Some audit_path) ~path
+           ~src)
   | [ _; "--advisory"; path ] ->
       (* PR #241 (memo §11): hot-path + Class D advisory rules. *)
       let src = read_all path in
@@ -443,8 +495,18 @@ let () =
         "Usage: %s [--apply-fixes | --apply-fixes-for RULE-ID | \
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
-         [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log <file.log>] \
-         <file.tex>\n\n\
+         [--policy <file.lppolicy> [--audit <file>]] [--project <root.tex>] \
+         [--layer l0|l1|l2|l3|l4] [--log <file.log>] <file.tex>\n\n\
+         --policy <file.lppolicy>  apply a named house-style profile \
+         (enable/disable rule ids,\n\
+        \               override severities) and scoped waivers. Waived \
+         findings are removed\n\
+        \               from output and recorded in an audit trail. With \
+         --audit <file> the\n\
+        \               audit records are written there; otherwise they follow \
+         the findings\n\
+        \               in a `# --- waiver audit ---` stdout section. No \
+         --policy = unchanged output.\n\
          --apply-fixes  run validators, apply every rule's fix edits and emit \
          the\n\
         \               modified source to stdout. Iterates to a fixpoint \

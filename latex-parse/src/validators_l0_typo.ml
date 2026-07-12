@@ -1812,10 +1812,45 @@ let r_typo_041 : rule =
       + count_in_text exempt s "\\ldots."
       + count_in_text exempt s ",\\ldots"
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-041" ~severity:Info
-           ~message:{|Incorrect spacing around \ldots|} ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.42): for the two RENDER-SAFE spacing defects
+         — a period or comma glued directly to a following `\ldots` (`.\ldots` /
+         `,\ldots`) — suggest inserting an ASCII space between the punctuation
+         and the ellipsis (`. \ldots` / `, \ldots`), the canonical `1, 2,
+         \ldots` form. The `\ldots.` case (ellipsis glued to a FOLLOWING period)
+         is deliberately NOT suggested: a space before a period would be
+         typographically wrong, so that sub-case is left to author judgement.
+         Count is unchanged (all three patterns still tallied); candidates are a
+         subset. Offsets are re-derived on the ORIGINAL [s] and gated by
+         [candidates_drop_exempt]. *)
+      let cands = ref [] in
+      let scan needle =
+        let n = String.length s and m = String.length needle in
+        let i = ref 0 in
+        while !i <= n - m do
+          if String.sub s !i m = needle then (
+            (* needle is "<punct>\ldots"; the `\` sits at !i + 1 *)
+            cands :=
+              {
+                c_edits = [ Cst_edit.insert ~at:(!i + 1) " " ];
+                c_label = "Insert a space between the punctuation and \\ldots";
+              }
+              :: !cands;
+            i := !i + m)
+          else incr i
+        done
+      in
+      scan ".\\ldots";
+      scan ",\\ldots";
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TYPO-041" ~severity:Info
+             ~message:{|Incorrect spacing around \ldots|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TYPO-041" ~severity:Info
+             ~message:{|Incorrect spacing around \ldots|} ~count:cnt ~candidates))
     else None
   in
   { id = "TYPO-041"; run; languages = [] }
@@ -2681,11 +2716,41 @@ let r_typo_047 : rule =
   let run s =
     let exempt = find_exempt_ranges s in
     let cnt = count_in_text exempt s "\\section*" in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"TYPO-047" ~severity:Info
-           ~message:"Starred \\section* used where numbered section expected"
-           ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.42): the rule intent is "you used a STARRED
+         section where a NUMBERED one was expected" — so the natural suggestion
+         is to drop the `*`, turning `\section*` into the numbered `\section`.
+         This changes numbering/TOC behaviour, hence a review-gated candidate
+         (never auto-applied). The `*` is the byte at match_offset + 8
+         (`\section` is 8 bytes). Count is unchanged; offsets re-derived on the
+         ORIGINAL [s] and gated by [candidates_drop_exempt]. *)
+      let needle = "\\section*" in
+      let cands = ref [] in
+      let n = String.length s and m = String.length needle in
+      let i = ref 0 in
+      while !i <= n - m do
+        if String.sub s !i m = needle then (
+          cands :=
+            {
+              c_edits =
+                [ Cst_edit.delete ~start_offset:(!i + 8) ~end_offset:(!i + 9) ];
+              c_label = "Remove the star to number the section (\\section)";
+            }
+            :: !cands;
+          i := !i + m)
+        else incr i
+      done;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TYPO-047" ~severity:Info
+             ~message:"Starred \\section* used where numbered section expected"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TYPO-047" ~severity:Info
+             ~message:"Starred \\section* used where numbered section expected"
+             ~count:cnt ~candidates))
     else None
   in
   { id = "TYPO-047"; run; languages = [] }

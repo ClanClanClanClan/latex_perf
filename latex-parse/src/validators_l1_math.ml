@@ -1932,9 +1932,57 @@ let l1_math_049_rule : rule =
           if bad > 0 then cnt := !cnt + bad)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-049" ~severity:Info
-           ~message:{|Spacing around \times missing|} ~count:!cnt)
+      (* Bucket-C candidate (v27.1.41): insert a plain space at a tight `\times`
+         boundary. Render-identical — TeX ignores source spaces in math and the
+         binary-operator spacing comes from `\times` itself — but a space also
+         disambiguates `\times`+letter, so surfaced for review rather than
+         auto-applied. Offsets scanned on the ORIGINAL source, math gated by
+         [find_math_ranges]/[is_in_math_range], vcu-exempt. *)
+      let ranges = find_math_ranges s in
+      let is_alnum c =
+        (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z')
+        || (c >= '0' && c <= '9')
+      in
+      let n = String.length s in
+      let cand_of off =
+        if not (is_in_math_range ranges off) then []
+        else
+          let mk at =
+            {
+              c_edits = [ Cst_edit.insert ~at " " ];
+              c_label = "Insert a space around \\times";
+            }
+          in
+          let before =
+            if off >= 1 then
+              let c = s.[off - 1] in
+              is_alnum c || c = '}'
+            else false
+          in
+          let after =
+            let a = off + 6 in
+            if a < n then
+              let c = s.[a] in
+              is_alnum c || c = '{'
+            else false
+          in
+          (if before then [ mk off ] else [])
+          @ if after then [ mk (off + 6) ] else []
+      in
+      let raw =
+        List.concat_map cand_of
+          (Validators_l0_typo.find_all_non_overlapping s "\\times")
+      in
+      let candidates = candidates_drop_vcu_exempt s raw in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-049" ~severity:Info
+             ~message:{|Spacing around \times missing|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-049" ~severity:Info
+             ~message:{|Spacing around \times missing|} ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-049"; run; languages = [] }
@@ -3184,10 +3232,58 @@ let l1_math_081_rule : rule =
         with Not_found -> ())
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-081" ~severity:Info
-           ~message:{|Improper kerning f(x) – suggest f\!\left(x\right)|}
-           ~count:!cnt)
+      (* Bucket-C candidate (v27.1.41): insert a `\!` (negative thin space)
+         between a function letter and an immediately-following `(`, tightening
+         the `f(x)` kerning. This nudges spacing (not render-identical), so it
+         is a review candidate, never auto-applied. Restricted to the exact
+         `letter(` shape (a subset of the diagnostic), excluding a letter that
+         is the tail of a `\command`. Offsets on the ORIGINAL source, math
+         gated, vcu-exempt. *)
+      let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+      (* True iff the letter at [lp] is the tail of a `\cmd` (>=1 letters after
+         a backslash), mirroring [is_part_of_cmd] but on absolute offsets. *)
+      let letter_is_cmd_tail lp =
+        let rec find_bs i =
+          if i < 0 then false
+          else if s.[i] = '\\' then lp - i >= 1
+          else if is_letter s.[i] then find_bs (i - 1)
+          else false
+        in
+        find_bs (lp - 1)
+      in
+      let ranges = find_math_ranges s in
+      let cand_of off =
+        (* off = index of `(`. *)
+        if
+          off >= 1
+          && s.[off] = '('
+          && is_letter s.[off - 1]
+          && (not (letter_is_cmd_tail (off - 1)))
+          && is_in_math_range ranges off
+        then
+          [
+            {
+              c_edits = [ Cst_edit.insert ~at:off "\\!" ];
+              c_label = "Insert \\! before ( for function kerning";
+            };
+          ]
+        else []
+      in
+      let raw =
+        List.concat_map cand_of
+          (Validators_l0_typo.find_all_non_overlapping s "(")
+      in
+      let candidates = candidates_drop_vcu_exempt s raw in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-081" ~severity:Info
+             ~message:{|Improper kerning f(x) – suggest f\!\left(x\right)|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-081" ~severity:Info
+             ~message:{|Improper kerning f(x) – suggest f\!\left(x\right)|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-081"; run; languages = [] }
@@ -3530,9 +3626,63 @@ let l1_math_088_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-088" ~severity:Info
-           ~message:{|Bare \partial lacks thin‑space before/after|} ~count:!cnt)
+      (* Bucket-C candidate (v27.1.41): insert a `\,` thin space on the tight
+         side(s) of a bare `\partial`, mirroring the diagnostic's two alts (`[^
+         \t,\\]\partial` and `\partial[^ \t{\\]`). Spacing nudge, not
+         render-identical, so a review candidate. Offsets on ORIGINAL source,
+         math gated, vcu-exempt. *)
+      let n = String.length s in
+      let ranges = find_math_ranges s in
+      let cand_of off =
+        (* off = index of the backslash of `\partial`; spans [off, off+8). *)
+        if not (is_in_math_range ranges off) then []
+        else
+          let before =
+            if off >= 1 then
+              match s.[off - 1] with
+              | ' ' | '\t' | ',' | '\\' -> false
+              | _ -> true
+            else false
+          in
+          let after =
+            let a = off + 8 in
+            if a < n then
+              match s.[a] with ' ' | '\t' | '{' | '\\' -> false | _ -> true
+            else false
+          in
+          (if before then
+             [
+               {
+                 c_edits = [ Cst_edit.insert ~at:off "\\," ];
+                 c_label = "Insert \\, thin space before \\partial";
+               };
+             ]
+           else [])
+          @
+          if after then
+            [
+              {
+                c_edits = [ Cst_edit.insert ~at:(off + 8) "\\," ];
+                c_label = "Insert \\, thin space after \\partial";
+              };
+            ]
+          else []
+      in
+      let raw =
+        List.concat_map cand_of
+          (Validators_l0_typo.find_all_non_overlapping s "\\partial")
+      in
+      let candidates = candidates_drop_vcu_exempt s raw in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-088" ~severity:Info
+             ~message:{|Bare \partial lacks thin‑space before/after|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-088" ~severity:Info
+             ~message:{|Bare \partial lacks thin‑space before/after|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-088"; run; languages = [] }

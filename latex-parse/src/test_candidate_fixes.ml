@@ -1225,4 +1225,29 @@ let () =
            (candidates_of "MATH-107" m107b_src))
         (tag ^ ": \\le->\\leqslant when leqslant is majority"));
 
+  (* backlog batch 1 (math-notation) — 5 confirmed-firing candidates *)
+  run "MATH-049 lists a \\times-spacing candidate" (fun tag ->
+      expect
+        (has_label "MATH-049" "$a\\times b$" "Insert a space around \\times")
+        (tag ^ ": fires"));
+  run "MATH-081 lists a kerning candidate" (fun tag ->
+      expect
+        (candidates_of "MATH-081" "$\\int_0^1 f(x)dx$" <> [])
+        (tag ^ ": fires"));
+  run "SCRIPT-004 lists a prime-reorder candidate" (fun tag ->
+      expect
+        (has_label "SCRIPT-004" "$f'_i$"
+           "Reorder prime after subscript (f'_i -> f_i')")
+        (tag ^ ": fires"));
+  run "SCRIPT-014 lists a brace-log-base candidate" (fun tag ->
+      expect
+        (has_label "SCRIPT-014" "$\\log_x$"
+           "Brace the logarithm base subscript (\\log_x -> \\log_{x})")
+        (tag ^ ": fires"));
+  run "SCRIPT-020 lists a mathrm-subscript candidate" (fun tag ->
+      expect
+        (has_label "SCRIPT-020" "$T_{eff}$"
+           "Wrap the subscript word in \\mathrm (\\mathrm{eff})")
+        (tag ^ ": fires"));
+
   finalise "candidate_fixes"

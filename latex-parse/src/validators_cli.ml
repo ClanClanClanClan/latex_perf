@@ -676,8 +676,8 @@ let () =
          [--policy <file.lppolicy> [--audit <file>]] [--review \
          <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
          --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \
-         [--log <file.log>] [--extensions <manifest.json> [--strict]] [--extensions-registry] \
-         <file.tex>\n\n\
+         [--log <file.log>] [--extensions <manifest.json> [--strict]] \
+         [--extensions-registry] <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

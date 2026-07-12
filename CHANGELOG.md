@@ -2,6 +2,18 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.47] — 2026-07-12
+
+**WS12 Stage 2 — built-in LP-Extended package-contract registry + provides API (Tier 4).**
+New `extension_registry.ml`: a static registry of extension contracts for well-known
+packages (tikz review/community, minted unsafe/foreign, mhchem safe/supported, biblatex
+safe/supported, listings review/community), each built via a smart constructor that
+CLAMPS the declared support to the risk cap — so a built-in over-claim is structurally
+impossible (`well_formed` asserts it; `evaluate` never rejects the registry). Provides
+API: `providers_of` / `provides_of_names` / `contracts_of_names` / `evaluate_names`.
+CLI `--extensions-registry` lists the contracts + the registry effective-support. Default
+output byte-identical; 15 tests; no new `.mli`. Builds on WS12 Stage 1.
+
 ## [v27.1.46] — 2026-07-12
 
 **WS9 Stage 2 — issue review-states + batch editorial reports (Tier 4).** New

@@ -1315,4 +1315,51 @@ let () =
         = Some (2, 4, "^{a}"))
         (tag ^ ": edit"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     BIB-015: redundant trailing period in a `title`/`note` field.
+     Candidate deletes just the period byte before the closing brace.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let b15_src = "@article{k, title = {Foo.}}" in
+  run "BIB-015 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "BIB-015" b15_src 1) (tag ^ ": count=1"));
+  run "BIB-015 candidate deletes the trailing period at offset 24" (fun tag ->
+      (* "@article{k, title = {Foo" = 24 bytes; "." at 24 -> delete [24,25). *)
+      expect
+        (edit_of_label "BIB-015" b15_src "Remove redundant trailing period"
+        = Some (24, 25, ""))
+        (tag ^ ": edit"));
+  run "BIB-015 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "BIB-015" b15_src)) (tag ^ ": fix=None"));
+  run "BIB-015 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "BIB-015" b15_src = b15_src) (tag ^ ": no rewrite"));
+  run "BIB-015 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\ntitle = {Foo.}\n\\end{verbatim}" in
+      expect (candidates_of "BIB-015" v = []) (tag ^ ": exempt"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     BIB-017: sentence-case title ending with a punctuation mark. Candidate
+     removes a trailing PERIOD only; `?`/`!` are meaningful so they count but
+     get no candidate.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let b17_src = "@article{k, title = {Foo.}}" in
+  run "BIB-017 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "BIB-017" b17_src 1) (tag ^ ": count=1"));
+  run "BIB-017 candidate deletes the trailing period at offset 24" (fun tag ->
+      expect
+        (edit_of_label "BIB-017" b17_src "Remove redundant trailing period"
+        = Some (24, 25, ""))
+        (tag ^ ": edit"));
+  run "BIB-017 question mark counts but yields no candidate" (fun tag ->
+      let q = "@article{k, title = {Really?}}" in
+      expect
+        (fires_with_count "BIB-017" q 1 && candidates_of "BIB-017" q = [])
+        (tag ^ ": no ?-candidate"));
+  run "BIB-017 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "BIB-017" b17_src)) (tag ^ ": fix=None"));
+  run "BIB-017 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "BIB-017" b17_src = b17_src) (tag ^ ": no rewrite"));
+  run "BIB-017 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\ntitle = {Foo.}\n\\end{verbatim}" in
+      expect (candidates_of "BIB-017" v = []) (tag ^ ": exempt"));
+
   finalise "candidate_fixes"

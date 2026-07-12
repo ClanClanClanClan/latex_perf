@@ -4021,6 +4021,12 @@ let r_bib_015 : rule =
   let re = Re_compat.regexp {|\(title\|note\)[ \t]*=[ \t]*{|} in
   let run s =
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fixes: delete the single redundant trailing period
+       that sits immediately before the field's closing brace. The edit is one
+       byte on the ORIGINAL source (offset [!j-1] = the `.`); removing it is a
+       pure format normalisation — the bibliographic value is unchanged.
+       candidates_drop_exempt gates against verbatim/comment/url/math. *)
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
@@ -4035,16 +4041,31 @@ let r_bib_015 : rule =
            if !depth > 0 then incr j
          done;
          (* Check if char before closing brace is a period *)
-         if !j > after && s.[!j - 1] = '.' then incr cnt;
+         (if !j > after && s.[!j - 1] = '.' then (
+            incr cnt;
+            cands :=
+              {
+                c_edits =
+                  [ Cst_edit.delete ~start_offset:(!j - 1) ~end_offset:!j ];
+                c_label = "Remove redundant trailing period";
+              }
+              :: !cands));
          i := pos + 1
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"BIB-015" ~severity:Info
-           ~message:"Trailing period in `title` or `note` field is redundant"
-           ~count:!cnt)
-    else None
+    if !cnt = 0 then None
+    else
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"BIB-015" ~severity:Info
+             ~message:"Trailing period in `title` or `note` field is redundant"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"BIB-015" ~severity:Info
+             ~message:"Trailing period in `title` or `note` field is redundant"
+             ~count:!cnt ~candidates)
   in
   { id = "BIB-015"; run; languages = [] }
 
@@ -4537,23 +4558,59 @@ let r_bib_017 : rule =
   let re_title = Re_compat.regexp {|title *= *{\([^}]+\)}|} in
   let run s =
     let cnt = ref 0 in
+    (* Bucket-C CANDIDATE fixes: offer to delete the redundant trailing *period*
+       only. `?`/`!` are semantically part of the title, so those instances are
+       counted (diagnostic unchanged) but get no candidate — normalising a
+       terminal period is a pure format edit, stripping `?`/`!` would change the
+       bibliographic MEANING. The `}` sits at [mend-1]; the last content byte is
+       located by skipping trailing whitespace back from [mend-2] on the
+       ORIGINAL source. candidates_drop_exempt gates verbatim/comment/url/math. *)
+    let cands = ref [] in
     let start = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re_title s !start in
          ignore _mr;
+         let mend = Re_compat.match_end _mr in
          let title = String.trim (Re_compat.matched_group _mr 1 s) in
-         (if String.length title > 0 then
+         (if String.length title > 0 then (
             let last = title.[String.length title - 1] in
-            if last = '.' || last = '!' || last = '?' then incr cnt);
-         start := Re_compat.match_end _mr
+            if last = '.' || last = '!' || last = '?' then (
+              incr cnt;
+              if last = '.' then (
+                (* find the terminal period byte: skip trailing whitespace back
+                   from the byte just before the closing brace at [mend-1] *)
+                let p = ref (mend - 2) in
+                while !p >= 0 && (s.[!p] = ' ' || s.[!p] = '\t') do
+                  decr p
+                done;
+                if !p >= 0 && s.[!p] = '.' then
+                  cands :=
+                    {
+                      c_edits =
+                        [
+                          Cst_edit.delete ~start_offset:!p
+                            ~end_offset:(!p + 1);
+                        ];
+                      c_label = "Remove redundant trailing period";
+                    }
+                    :: !cands))));
+         start := mend
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"BIB-017" ~severity:Info
-           ~message:"Bibliography title ends with punctuation mark" ~count:!cnt)
-    else None
+    if !cnt = 0 then None
+    else
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"BIB-017" ~severity:Info
+             ~message:"Bibliography title ends with punctuation mark"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"BIB-017" ~severity:Info
+             ~message:"Bibliography title ends with punctuation mark"
+             ~count:!cnt ~candidates)
   in
   mk_rule "BIB-017" run
 

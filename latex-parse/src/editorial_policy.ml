@@ -182,13 +182,15 @@ let parse_lines (name0 : string) (lines : string list) : parse_result =
                       (* lines= is NOT supported: findings are rule-aggregated
                          (no per-line offsets), so a line range cannot narrow a
                          waiver — accepting it silently would mislead users into
-                         file-wide suppression.  Reject it explicitly; scope by
+                         file-wide suppression. Reject it explicitly; scope by
                          file= only. *)
                       ignore parse_lines_field;
                       ok := false;
                       errors :=
                         ( lineno,
-                          "waive: lines= scoping is not supported (findings are                            rule-aggregated); scope by file= only" )
+                          "waive: lines= scoping is not supported (findings \
+                           are                            rule-aggregated); \
+                           scope by file= only" )
                         :: !errors)
                     else (
                       ok := false;

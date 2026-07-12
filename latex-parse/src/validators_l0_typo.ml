@@ -1816,9 +1816,9 @@ let r_typo_041 : rule =
       (* Bucket-C CANDIDATE (v27.1.42): for the two RENDER-SAFE spacing defects
          — a period or comma glued directly to a following `\ldots` (`.\ldots` /
          `,\ldots`) — suggest inserting an ASCII space between the punctuation
-         and the ellipsis (`. \ldots` / `, \ldots`), the canonical `1, 2, \ldots`
-         form. The `\ldots.` case (ellipsis glued to a FOLLOWING period) is
-         deliberately NOT suggested: a space before a period would be
+         and the ellipsis (`. \ldots` / `, \ldots`), the canonical `1, 2,
+         \ldots` form. The `\ldots.` case (ellipsis glued to a FOLLOWING period)
+         is deliberately NOT suggested: a space before a period would be
          typographically wrong, so that sub-case is left to author judgement.
          Count is unchanged (all three patterns still tallied); candidates are a
          subset. Offsets are re-derived on the ORIGINAL [s] and gated by
@@ -2721,9 +2721,9 @@ let r_typo_047 : rule =
          section where a NUMBERED one was expected" — so the natural suggestion
          is to drop the `*`, turning `\section*` into the numbered `\section`.
          This changes numbering/TOC behaviour, hence a review-gated candidate
-         (never auto-applied). The `*` is the byte at match_offset + 8 (`\section`
-         is 8 bytes). Count is unchanged; offsets re-derived on the ORIGINAL [s]
-         and gated by [candidates_drop_exempt]. *)
+         (never auto-applied). The `*` is the byte at match_offset + 8
+         (`\section` is 8 bytes). Count is unchanged; offsets re-derived on the
+         ORIGINAL [s] and gated by [candidates_drop_exempt]. *)
       let needle = "\\section*" in
       let cands = ref [] in
       let n = String.length s and m = String.length needle in

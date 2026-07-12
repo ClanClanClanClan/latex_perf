@@ -41,9 +41,17 @@ type contract = {
 (* ── Ordering / parsing helpers ─────────────────────────────────── *)
 
 val risk_to_string : risk -> string
+(** Render a {!risk} as its lowercase token ("safe"/"review"/"unsafe"). *)
+
 val risk_of_string : string -> risk option
+(** Parse a {!risk} token; [None] if unrecognised. *)
+
 val support_to_string : support -> string
+(** Render a {!support} level as its lowercase token
+    ("foreign"/"community"/"supported"). *)
+
 val support_of_string : string -> support option
+(** Parse a {!support} token; [None] if unrecognised. *)
 
 val support_rank : support -> int
 (** [Foreign = 0], [Community = 1], [Supported = 2]. *)

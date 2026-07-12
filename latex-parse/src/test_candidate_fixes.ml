@@ -1362,4 +1362,59 @@ let () =
       let v = "\\begin{verbatim}\ntitle = {Foo.}\n\\end{verbatim}" in
       expect (candidates_of "BIB-017" v = []) (tag ^ ": exempt"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     CHEM-008: bare state symbol (aq)/(s)/(l)/(g) in math. Candidate wraps it
+     in \text so it typesets upright; already-wrapped ones are skipped.
+     ══════════════════════════════════════════════════════════════════════ *)
+  let c8_src = "$NaCl(aq)$" in
+  run "CHEM-008 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "CHEM-008" c8_src 1) (tag ^ ": count=1"));
+  run "CHEM-008 candidate wraps (aq) in \\text at offset 5" (fun tag ->
+      (* "$NaCl" = 5 bytes; "(aq)" spans [5,9) -> \text{(aq)}. *)
+      expect
+        (edit_of_label "CHEM-008" c8_src
+           "Wrap the state symbol in \\text ((aq) -> \\text{(aq)})"
+        = Some (5, 9, "\\text{(aq)}"))
+        (tag ^ ": edit"));
+  run "CHEM-008 no candidate for already-\\text-wrapped symbol" (fun tag ->
+      expect
+        (candidates_of "CHEM-008" "$NaCl\\text{(s)}$" = [])
+        (tag ^ ": wrapped skipped"));
+  run "CHEM-008 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "CHEM-008" c8_src)) (tag ^ ": fix=None"));
+  run "CHEM-008 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "CHEM-008" c8_src = c8_src) (tag ^ ": no rewrite"));
+  run "CHEM-008 candidate dropped outside math (vcu-exempt)" (fun tag ->
+      expect
+        (candidates_of "CHEM-008" "NaCl(aq) dissolves" = [])
+        (tag ^ ": not in math"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     DOC-005: \keywords present but no pdfkeywords in \hypersetup. Candidate
+     copies the keyword text into a pdfkeywords={…} metadata key (PDF/XMP
+     only — render-preserving).
+     ══════════════════════════════════════════════════════════════════════ *)
+  let d5_src = "\\keywords{a, b}\n\\hypersetup{pdftitle={T}}\n" in
+  run "DOC-005 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "DOC-005" d5_src 1) (tag ^ ": count=1"));
+  run "DOC-005 candidate inserts pdfkeywords after \\hypersetup{" (fun tag ->
+      (* "\keywords{a, b}\n" = 16 bytes; "\hypersetup{" spans [16,28),
+         insert lands at offset 28. *)
+      expect
+        (edit_of_label "DOC-005" d5_src
+           "Add pdfkeywords={…} to \\hypersetup so the PDF/XMP metadata carries \
+            the keywords"
+        = Some (28, 28, "pdfkeywords={a, b}, "))
+        (tag ^ ": edit"));
+  run "DOC-005 no candidate when pdfkeywords already present" (fun tag ->
+      expect
+        (candidates_of "DOC-005"
+           "\\keywords{a}\n\\hypersetup{pdfkeywords={a}}\n"
+        = [])
+        (tag ^ ": already set (diagnostic silent)"));
+  run "DOC-005 candidate NOT in fix field (no auto-apply)" (fun tag ->
+      expect (not (fires_with_fix "DOC-005" d5_src)) (tag ^ ": fix=None"));
+  run "DOC-005 --apply-fixes leaves source untouched" (fun tag ->
+      expect (apply_fix "DOC-005" d5_src = d5_src) (tag ^ ": no rewrite"));
+
   finalise "candidate_fixes"

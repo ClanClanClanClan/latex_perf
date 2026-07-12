@@ -2978,9 +2978,47 @@ let l1_chem_008_rule : rule =
           state_syms)
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHEM-008" ~severity:Info
-           ~message:{|State symbols (aq) not wrapped in \text|} ~count:!cnt)
+      (* Bucket-C candidate: wrap a bare state symbol in \text so it typesets
+         upright, `(aq)` -> `\text{(aq)}`. Only occurrences that sit inside
+         math and are not already `\text{…}`-wrapped are surfaced. Offsets on
+         ORIGINAL source, math gated, vcu-exempt. Never auto-applied. *)
+      let ranges = find_math_ranges s in
+      let raw =
+        List.concat_map
+          (fun sym ->
+            let slen = String.length sym in
+            List.filter_map
+              (fun off ->
+                let already_wrapped =
+                  off >= 6 && String.sub s (off - 6) 6 = {|\text{|}
+                in
+                if is_in_math_range ranges off && not already_wrapped then
+                  Some
+                    {
+                      c_edits =
+                        [
+                          Cst_edit.make ~start_offset:off
+                            ~end_offset:(off + slen)
+                            ~replacement:({|\text{|} ^ sym ^ "}");
+                        ];
+                      c_label =
+                        "Wrap the state symbol in \\text (" ^ sym ^ " -> \\text{"
+                        ^ sym ^ "})";
+                    }
+                else None)
+              (Validators_l0_typo.find_all_non_overlapping s sym))
+          state_syms
+      in
+      let candidates = candidates_drop_vcu_exempt s raw in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHEM-008" ~severity:Info
+             ~message:{|State symbols (aq) not wrapped in \text|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHEM-008" ~severity:Info
+             ~message:{|State symbols (aq) not wrapped in \text|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "CHEM-008"; run; languages = [] }

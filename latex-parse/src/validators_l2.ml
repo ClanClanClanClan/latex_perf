@@ -4753,10 +4753,77 @@ let r_doc_005 : rule =
     let has_hypersetup = contains_substring s "\\hypersetup{" in
     let has_pdfkeywords = contains_substring s "pdfkeywords" in
     if has_keywords && has_hypersetup && not has_pdfkeywords then
-      Some
-        (mk_result ~id:"DOC-005" ~severity:Info
-           ~message:"\\keywords present but absent from PDF/XMP metadata"
-           ~count:1)
+      (* Bucket-C candidate: mirror the \keywords content into the PDF/XMP
+         metadata by adding a `pdfkeywords={…}` key to the existing
+         \hypersetup block. This touches ONLY PDF metadata (never the typeset
+         page — provably render-preserving), is single-file, and hyperref is
+         already loaded (\hypersetup present, so pdfkeywords is a valid key).
+         The keyword text is copied verbatim from the first \keywords group.
+         Offsets on ORIGINAL source, exempt-gated. Never auto-applied. *)
+      let n = String.length s in
+      (* Skip \keywords / \hypersetup occurrences inside a comment/verbatim so
+         the candidate never copies commented-out keyword text (review nit). *)
+      let exempt = find_exempt_ranges s in
+      let in_exempt off =
+        List.exists (fun (a, b) -> off >= a && off < b) exempt
+      in
+      let first_live needle =
+        List.find_opt
+          (fun p -> not (in_exempt p))
+          (Validators_l0_typo.find_all_non_overlapping s needle)
+      in
+      let kw_content =
+        match first_live "\\keywords{" with
+        | None -> None
+        | Some kpos ->
+            let start = kpos + String.length "\\keywords{" in
+            let rec scan i depth =
+              if i >= n then None
+              else
+                match s.[i] with
+                | '{' -> scan (i + 1) (depth + 1)
+                | '}' ->
+                    if depth = 0 then Some (start, i)
+                    else scan (i + 1) (depth - 1)
+                | _ -> scan (i + 1) depth
+            in
+            (match scan start 0 with
+            | Some (a, b) -> Some (String.sub s a (b - a))
+            | None -> None)
+      in
+      let hs_at =
+        match first_live "\\hypersetup{" with
+        | None -> None
+        | Some hpos -> Some (hpos + String.length "\\hypersetup{")
+      in
+      let candidates =
+        match (kw_content, hs_at) with
+        | Some content, Some at ->
+            candidates_drop_exempt s
+              [
+                {
+                  c_edits =
+                    [
+                      Cst_edit.insert ~at
+                        ("pdfkeywords={" ^ content ^ "}, ");
+                    ];
+                  c_label =
+                    "Add pdfkeywords={…} to \\hypersetup so the PDF/XMP \
+                     metadata carries the keywords";
+                };
+              ]
+        | _ -> []
+      in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"DOC-005" ~severity:Info
+             ~message:"\\keywords present but absent from PDF/XMP metadata"
+             ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"DOC-005" ~severity:Info
+             ~message:"\\keywords present but absent from PDF/XMP metadata"
+             ~count:1 ~candidates)
     else None
   in
   mk_rule "DOC-005" run

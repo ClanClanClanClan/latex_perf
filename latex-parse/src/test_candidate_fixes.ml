@@ -1416,5 +1416,144 @@ let () =
       expect (not (fires_with_fix "DOC-005" d5_src)) (tag ^ ": fix=None"));
   run "DOC-005 --apply-fixes leaves source untouched" (fun tag ->
       expect (apply_fix "DOC-005" d5_src = d5_src) (tag ^ ": no rewrite"));
+  (* ══════════════════════════════════════════════════════════════════════ MATH
+     C4 rendering-intent candidates (MATH-020/021/024/028/030/033/037/ 040/041).
+     Each suggests the rule's intended normalisation; render-changing is
+     expected (Bucket-C = review-only, never auto-applied).
+     ══════════════════════════════════════════════════════════════════════ *)
+  (* MATH-020: insert \cdot between a coefficient and a vector macro. *)
+  let m020 = "$2\\vec{v}$" in
+  run "MATH-020 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-020" m020 1) (tag ^ ": count=1"));
+  run "MATH-020 candidate inserts \\cdot after the digit" (fun tag ->
+      (* "$2" = 2 bytes; \cdot inserted at offset 2 (before \vec). *)
+      expect
+        (edit_of_label "MATH-020" m020
+           "Insert \\cdot between coefficient and vector"
+        = Some (2, 2, "\\cdot"))
+        (tag ^ ": edit"));
+  run "MATH-020 candidate NOT auto-applied" (fun tag ->
+      expect
+        ((not (fires_with_fix "MATH-020" m020))
+        && apply_fix "MATH-020" m020 = m020)
+        (tag ^ ": byte-identical"));
+
+  (* MATH-021: |x| -> \lvert x \rvert (two edits). *)
+  let m021 = "$|x|$" in
+  run "MATH-021 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-021" m021 1) (tag ^ ": count=1"));
+  run "MATH-021 candidate rewrites both bars" (fun tag ->
+      expect
+        (has_edit_set "MATH-021" m021
+           [ (1, 2, "\\lvert "); (3, 4, " \\rvert") ])
+        (tag ^ ": edits"));
+  run "MATH-021 candidate NOT auto-applied" (fun tag ->
+      expect (apply_fix "MATH-021" m021 = m021) (tag ^ ": byte-identical"));
+
+  (* MATH-024: orphan \label{eq:...} — LABEL-ONLY candidate (cross-file
+     risk). *)
+  let m024 = "\\label{eq:unused}" in
+  run "MATH-024 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-024" m024 1) (tag ^ ": count=1"));
+  run "MATH-024 emits a label-only candidate naming the key" (fun tag ->
+      expect
+        (has_label "MATH-024" m024
+           "Delete unreferenced equation label \\label{eq:unused} (confirm it \
+            is not \\ref'd in another file)")
+        (tag ^ ": label"));
+  run "MATH-024 candidate carries no edit (label-only)" (fun tag ->
+      expect
+        (List.for_all
+           (fun (c : Validators.candidate_fix) -> c.c_edits = [])
+           (candidates_of "MATH-024" m024))
+        (tag ^ ": empty c_edits"));
+  run "MATH-024 clean when the label is referenced" (fun tag ->
+      expect
+        (candidates_of "MATH-024" "\\label{eq:u}\nSee \\ref{eq:u}" = [])
+        (tag ^ ": no orphan"));
+
+  (* MATH-028: array without a column spec — suggest a default {c}. *)
+  let m028 = "$\\begin{array} a \\end{array}$" in
+  run "MATH-028 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-028" m028 1) (tag ^ ": count=1"));
+  run "MATH-028 candidate inserts {c} after \\begin{array}" (fun tag ->
+      (* "$" + "\begin{array}" (13) => insertion point at offset 14. *)
+      expect
+        (edit_of_label "MATH-028" m028
+           "Add a default column spec {c} to the array"
+        = Some (14, 14, "{c}"))
+        (tag ^ ": edit"));
+  run "MATH-028 no candidate when a spec is already present" (fun tag ->
+      expect
+        (candidates_of "MATH-028" "$\\begin{array}{c} a \\end{array}$" = [])
+        (tag ^ ": has spec"));
+
+  (* MATH-030: drop \displaystyle in inline math (deletes control word +
+     space). *)
+  let m030 = "$\\displaystyle x$" in
+  run "MATH-030 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-030" m030 1) (tag ^ ": count=1"));
+  run "MATH-030 candidate deletes \\displaystyle and the trailing space"
+    (fun tag ->
+      expect
+        (edit_of_label "MATH-030" m030 "Remove \\displaystyle in inline math"
+        = Some (1, 15, ""))
+        (tag ^ ": edit"));
+  run "MATH-030 candidate NOT auto-applied" (fun tag ->
+      expect (apply_fix "MATH-030" m030 = m030) (tag ^ ": byte-identical"));
+
+  (* MATH-033: \pm in text -> $\pm$; \pmod (letter after) gets no candidate. *)
+  let m033 = "We use \\pm here." in
+  run "MATH-033 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-033" m033 1) (tag ^ ": count=1"));
+  run "MATH-033 candidate wraps \\pm in inline math" (fun tag ->
+      (* "We use " = 7 bytes; \pm spans [7,10). *)
+      expect
+        (edit_of_label "MATH-033" m033 "Wrap \\pm in inline math: $\\pm$"
+        = Some (7, 10, "$\\pm$"))
+        (tag ^ ": edit"));
+  run "MATH-033 \\pmod counts but yields no candidate (boundary check)"
+    (fun tag ->
+      let q = "Use \\pmod arithmetic" in
+      expect
+        (fires_with_count "MATH-033" q 1 && candidates_of "MATH-033" q = [])
+        (tag ^ ": no \\pmod candidate"));
+
+  (* MATH-037: \sfrac -> \tfrac inside math. *)
+  let m037 = "$\\sfrac{1}{2}$" in
+  run "MATH-037 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-037" m037 1) (tag ^ ": count=1"));
+  run "MATH-037 candidate replaces \\sfrac with \\tfrac" (fun tag ->
+      expect
+        (edit_of_label "MATH-037" m037 "Replace \\sfrac with \\tfrac in math"
+        = Some (1, 7, "\\tfrac"))
+        (tag ^ ": edit"));
+
+  (* MATH-040: \ldots between operators -> \cdots. *)
+  let m040 = "$a+\\ldots+b$" in
+  run "MATH-040 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-040" m040 1) (tag ^ ": count=1"));
+  run "MATH-040 candidate replaces \\ldots with \\cdots" (fun tag ->
+      (* "$a+" = 3 bytes; \ldots spans [3,9). *)
+      expect
+        (edit_of_label "MATH-040" m040
+           "Replace \\ldots with centred \\cdots between operators"
+        = Some (3, 9, "\\cdots"))
+        (tag ^ ": edit"));
+
+  (* MATH-041: inline \int_ -> add \limits. *)
+  let m041 = "$\\int_0^1$" in
+  run "MATH-041 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "MATH-041" m041 1) (tag ^ ": count=1"));
+  run "MATH-041 candidate inserts \\limits after \\int" (fun tag ->
+      (* "$\int" = 5 bytes; \limits inserted before the _ at offset 5. *)
+      expect
+        (edit_of_label "MATH-041" m041
+           "Add \\limits to stack the inline integral limits"
+        = Some (5, 5, "\\limits"))
+        (tag ^ ": edit"));
+  run "MATH-041 candidate dropped inside verbatim" (fun tag ->
+      let v = "\\begin{verbatim}\n$\\int_0^1$\n\\end{verbatim}" in
+      expect (candidates_of "MATH-041" v = []) (tag ^ ": exempt"));
 
   finalise "candidate_fixes"

@@ -1095,9 +1095,38 @@ let r_math_024 : rule =
       (fun (_pos, key) -> if not (List.mem key ref_keys) then incr cnt)
       labels;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-024" ~severity:Info
-           ~message:"Equation labelled but never referenced" ~count:!cnt)
+      (* Bucket-C candidate (C4 rendering-intent), LABEL-ONLY: the intended
+         normalisation is to delete the orphan `\label{...}`, but a label is a
+         GLOBAL, cross-file target — in a multi-file `\include` project it may
+         be `\ref`'d from another source file this single-file pass cannot see,
+         so no in-file delete edit is safe. Emit one label-only candidate per
+         unreferenced key naming the exact label for the author to confirm and
+         remove. Empty [c_edits] means [--apply-fixes] is byte-identical. *)
+      let cands =
+        List.filter_map
+          (fun (_pos, key) ->
+            if not (List.mem key ref_keys) then
+              Some
+                {
+                  c_edits = [];
+                  c_label =
+                    "Delete unreferenced equation label \\label{"
+                    ^ key
+                    ^ "} (confirm it is not \\ref'd in another file)";
+                }
+            else None)
+          labels
+      in
+      let candidates = candidates_drop_vcu_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-024" ~severity:Info
+             ~message:"Equation labelled but never referenced" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-024" ~severity:Info
+             ~message:"Equation labelled but never referenced" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "MATH-024"; run; languages = [] }

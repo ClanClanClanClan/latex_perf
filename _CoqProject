@@ -83,3 +83,7 @@ proofs/SplitPreservesOrder.v
 proofs/CSTRoundtripConcrete.v
 proofs/RewritePreservesSemanticsConcrete.v
 proofs/PdflatexModel.v
+
+# v27 — WS9/WS12 runtime invariants formalised (spec §7 required proof families)
+proofs/WaiverScoping.v
+proofs/ExtensionBoundary.v

@@ -522,7 +522,7 @@ let () =
   | [ _; "--extensions"; path; "--strict" ]
   | [ _; "--extensions-strict"; path ] ->
       (* WS12: --strict variant — nonzero exit if any extension downgrades the
-         effective support below the base guarantee.  Accept the flag on either
+         effective support below the base guarantee. Accept the flag on either
          side of the path so the documented `--extensions <path> --strict` and
          the `--extensions --strict <path>` forms both work. *)
       exit (run_extensions ~strict:true ~path ())
@@ -556,7 +556,8 @@ let () =
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
          [--policy <file.lppolicy> [--audit <file>]] [--project <root.tex>] \
-         [--layer l0|l1|l2|l3|l4] [--log <file.log>] [--extensions <manifest.json> [--strict]] <file.tex>\n\n\
+         [--layer l0|l1|l2|l3|l4] [--log <file.log>] [--extensions \
+         <manifest.json> [--strict]] <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

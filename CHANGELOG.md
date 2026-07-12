@@ -2,6 +2,24 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.44] — 2026-07-12
+
+**WS12 Stage 1 (extension plane) + SCRIPT-003 candidate.**
+
+*WS12 — Extension plane & foreign contracts (Tier 4):* new `extension_contract.ml` —
+JSON extension manifests (name/provides/requires/risk/support). The foreign-contract
+boundary computes the effective support as the minimum over all extensions, so a
+`foreign`/`unsafe` extension DOWNGRADES the guarantee and none can upgrade it; an
+extension declaring a support level stronger than its risk allows (cap: safe→
+supported, review→community, unsafe→foreign) is REJECTED (fail-closed). CLI
+`--extensions <manifest>` / `--extensions-strict` (`--strict` on either side of the
+path), machine-readable risk/downgrade reasons, exit codes 0/2/3/4. Default output
+byte-identical; 18 tests.
+
+*Candidate (all-rules track):* SCRIPT-003 braces ONLY the single intended superscript
+token (`^a,b → ^{a},b`) — render-preserving (fixes the earlier meaning-change trap of
+absorbing trailing baseline tokens). Candidate rules **79→80**.
+
 ## [v27.1.43] — 2026-07-12
 
 **WS9 Stage 1 (editorial policy) + candidate backlog batch 2 (TYPO).**

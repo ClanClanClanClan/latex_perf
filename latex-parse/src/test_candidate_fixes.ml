@@ -1300,8 +1300,8 @@ let () =
       expect (candidates_of "TYPO-047" v = []) (tag ^ ": exempt"));
   (* SCRIPT-003: brace ONLY the single already-superscript token, render
      preserving. `$x^a,b$` — `^a,b` begins at offset 2; edit [2,4) `^a` ->
-     `^{a}` and leaves the baseline `,b` untouched (does NOT promote it into
-     the superscript). *)
+     `^{a}` and leaves the baseline `,b` untouched (does NOT promote it into the
+     superscript). *)
   run "SCRIPT-003 lists a single-token brace candidate" (fun tag ->
       expect
         (has_label "SCRIPT-003" "$x^a,b$"

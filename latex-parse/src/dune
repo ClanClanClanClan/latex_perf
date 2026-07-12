@@ -28,6 +28,7 @@
   validators_common
   language_detect
   rule_contract_loader
+  extension_contract
   unsupported_feature
   language_profile
   validators_l0_typo
@@ -602,6 +603,11 @@
 (test
  (name test_compile_contract)
  (modules test_compile_contract)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_extension_contract)
+ (modules test_extension_contract)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

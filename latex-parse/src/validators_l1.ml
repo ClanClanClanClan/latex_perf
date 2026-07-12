@@ -1045,9 +1045,61 @@ let l1_script_003_rule : rule =
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-003" ~severity:Warning
-           ~message:"Comma‑separated superscripts lack braces" ~count:!cnt)
+      (* Bucket-C candidate: brace EXACTLY the single token that is ALREADY the
+         superscript, `^a,b` -> `^{a},b`. In TeX `^a` consumes only the ONE
+         following token, so `a` is the superscript and the trailing `,b` sits
+         on the baseline; wrapping just that one token in braces is
+         render-identical (`^a` === `^{a}`) and absorbs NOTHING from the
+         baseline. Promoting the comma group into the superscript (`^{a,b}`)
+         would CHANGE the meaning, so it is deliberately NOT done. Offsets on
+         ORIGINAL source, math gated, vcu-exempt. *)
+      let ranges = find_math_ranges s in
+      let is_alnum c =
+        (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z')
+        || (c >= '0' && c <= '9')
+      in
+      let rec collect i acc =
+        match
+          try Some (Re_compat.search_forward re s i) with Not_found -> None
+        with
+        | None -> List.rev acc
+        | Some (mr, _) ->
+            let b = Re_compat.match_beginning mr in
+            let e = Re_compat.match_end mr in
+            (* match is `^X,...`; X is the single superscript token at b+1. *)
+            let acc =
+              if
+                is_in_math_range ranges b
+                && b + 2 <= String.length s
+                && s.[b] = '^'
+                && is_alnum s.[b + 1]
+              then
+                let x = String.make 1 s.[b + 1] in
+                {
+                  c_edits =
+                    [
+                      Cst_edit.make ~start_offset:b ~end_offset:(b + 2)
+                        ~replacement:("^{" ^ x ^ "}");
+                    ];
+                  c_label =
+                    "Brace the single superscript token (^a,b -> ^{a},b)";
+                }
+                :: acc
+              else acc
+            in
+            collect (max e (b + 1)) acc
+      in
+      let candidates = candidates_drop_vcu_exempt s (collect 0 []) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-003" ~severity:Warning
+             ~message:"Comma‑separated superscripts lack braces" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-003" ~severity:Warning
+             ~message:"Comma‑separated superscripts lack braces" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "SCRIPT-003"; run; languages = [] }

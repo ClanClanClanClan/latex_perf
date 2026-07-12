@@ -1298,5 +1298,21 @@ let () =
   run "TYPO-047 candidate dropped inside verbatim" (fun tag ->
       let v = "\\begin{verbatim}\n\\section*{X}\n\\end{verbatim}" in
       expect (candidates_of "TYPO-047" v = []) (tag ^ ": exempt"));
+  (* SCRIPT-003: brace ONLY the single already-superscript token, render
+     preserving. `$x^a,b$` — `^a,b` begins at offset 2; edit [2,4) `^a` ->
+     `^{a}` and leaves the baseline `,b` untouched (does NOT promote it into
+     the superscript). *)
+  run "SCRIPT-003 lists a single-token brace candidate" (fun tag ->
+      expect
+        (has_label "SCRIPT-003" "$x^a,b$"
+           "Brace the single superscript token (^a,b -> ^{a},b)")
+        (tag ^ ": fires"));
+  run "SCRIPT-003 candidate braces ONLY the superscript token (no absorb)"
+    (fun tag ->
+      expect
+        (edit_of_label "SCRIPT-003" "$x^a,b$"
+           "Brace the single superscript token (^a,b -> ^{a},b)"
+        = Some (2, 4, "^{a}"))
+        (tag ^ ": edit"));
 
   finalise "candidate_fixes"

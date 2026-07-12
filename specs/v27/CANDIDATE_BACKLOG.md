@@ -16,7 +16,7 @@ Total remaining: **119** (34 medium, 85 large).
 - **BIB-017** [medium] — BIB field normalization
 
 ## CHAR (1)
-- **CHAR-020** [medium] — Subscript/superscript character wrapping
+- **CHAR-020** [medium] — Sharp-S ß→SS in uppercase context (orthography-dependent, CP-3-risky like DE-006)
 
 ## CHEM (3)
 - **CHEM-002** [medium] — Chemical formula brace/wrap

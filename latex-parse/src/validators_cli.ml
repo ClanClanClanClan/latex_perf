@@ -444,6 +444,32 @@ let run_extensions ~strict ~path () : int =
             4)
           else 0)
 
+(* WS12 Stage 2: list the BUILT-IN extension contract registry — the project's
+   support policy for well-known LP-Extended packages. For each built-in
+   contract print its name, risk, (over-claim-clamped) support level, and the
+   rule-ids / feature tags it provides. The effective support of the whole
+   registry is computed via the Stage-1 [evaluate] boundary from the strongest
+   base ([Supported]); because every built-in is over-claim-free by
+   construction, the evaluation never rejects. Returns the process exit code. *)
+let run_extensions_registry () : int =
+  let module E = Latex_parse_lib.Extension_contract in
+  let module R = Latex_parse_lib.Extension_registry in
+  List.iter
+    (fun (c : E.contract) ->
+      printf "REGISTRY\t%s\t%s\t%s\t%s\n" c.E.ext_name
+        (E.risk_to_string c.E.risk)
+        (E.support_to_string c.E.support)
+        (String.concat "," c.E.provides))
+    R.builtin;
+  (match E.evaluate ~base:E.Supported R.builtin with
+  | Ok eff ->
+      printf "# registry-effective-support\t%s\n"
+        (E.support_to_string eff.effective)
+  | Error _ ->
+      (* Unreachable: built-ins are over-claim-free by construction. *)
+      eprintf "Error: built-in registry contains an over-claiming contract\n");
+  0
+
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
 let () =
@@ -515,6 +541,13 @@ let () =
   | _ :: "--report" :: rest ->
       (* WS9 Stage 2: batch editorial report across one or more files. *)
       exit (run_report ~rest)
+  | [ _; "--extensions-registry" ] ->
+      (* WS12 Stage 2: list the built-in extension contract registry (the
+         project's support policy for well-known LP-Extended packages) with each
+         contract's risk, support level, and provided rule-ids / feature tags.
+         Matched before the two-element catch-all so the flag is not read as a
+         file path. *)
+      exit (run_extensions_registry ())
   | [ _; path ] when apply_env_on ->
       let src = read_all path in
       exit (run_apply_fixes ~converge:true ~path ~src ())
@@ -643,7 +676,7 @@ let () =
          [--policy <file.lppolicy> [--audit <file>]] [--review \
          <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
          --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \
-         [--log <file.log>] [--extensions <manifest.json> [--strict]] \
+         [--log <file.log>] [--extensions <manifest.json> [--strict]] [--extensions-registry] \
          <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\

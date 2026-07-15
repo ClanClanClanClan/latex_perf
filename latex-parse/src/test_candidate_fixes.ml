@@ -1762,4 +1762,131 @@ let () =
   run "TIKZ-004 candidate is byte-safe (no rewrite)" (fun tag ->
       expect (apply_fix "TIKZ-004" t004 = t004) (tag ^ ": no rewrite"));
 
+  (* ======================================================================
+     STYLE candidate family (v27.1.48) — intent-dependent style suggestions.
+     STYLE-* are L4 Class-D rules, so they only surface via
+     [run_all_with_class_d] (which [candidates_of]/[edit_of_label] use); the
+     run_all-based [fires]/[apply_fix]/[fires_with_fix] helpers do NOT see them.
+     A non-empty candidate list therefore proves the rule fired; [fix = None] on
+     the Class-D result proves it is never auto-applied. --apply-fixes-for
+     byte-identity is verified separately at the CLI level. *)
+  let style_no_fix id src =
+    let results = Validators.run_all_with_class_d src in
+    match List.find_opt (fun (r : Validators.result) -> r.id = id) results with
+    | Some r -> r.fix = None && r.candidate_fixes <> []
+    | None -> false
+  in
+
+  (* STYLE-014: contraction -> expansion *)
+  let s14 = "This doesn't work." in
+  run "STYLE-014 emits expansion candidate" (fun tag ->
+      (* "This " = 5 bytes; "doesn't" spans [5,12). *)
+      expect
+        (edit_of_label "STYLE-014" s14
+           "Expand contraction \"doesn't\" to \"does not\""
+        = Some (5, 12, "does not"))
+        (tag ^ ": edit"));
+  run "STYLE-014 preserves leading capital" (fun tag ->
+      expect
+        (has_label "STYLE-014" "Don't stop."
+           "Expand contraction \"Don't\" to \"Do not\"")
+        (tag ^ ": capital"));
+  run "STYLE-014 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-014" s14) (tag ^ ": fix=None"));
+
+  (* STYLE-016: Latin abbrev missing comma *)
+  let s16 = "See e.g. Smith." in
+  run "STYLE-016 emits insert-comma candidate" (fun tag ->
+      (* "See " = 4 bytes; "e.g." spans [4,8); insert `,` at 8. *)
+      expect
+        (edit_of_label "STYLE-016" s16 "Insert comma after \"e.g.\""
+        = Some (8, 8, ","))
+        (tag ^ ": edit"));
+  run "STYLE-016 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-016" s16) (tag ^ ": fix=None"));
+
+  (* STYLE-022: serial (Oxford) comma missing *)
+  let s22 = "apples, oranges and pears" in
+  run "STYLE-022 emits Oxford-comma candidate" (fun tag ->
+      (* " and " (the space before "and") starts at offset 15. *)
+      expect
+        (edit_of_label "STYLE-022" s22
+           "Insert serial (Oxford) comma before \"and\""
+        = Some (15, 15, ","))
+        (tag ^ ": edit"));
+  run "STYLE-022 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-022" s22) (tag ^ ": fix=None"));
+
+  (* STYLE-026: repeated word *)
+  let s26 = "the the method" in
+  run "STYLE-026 emits remove-duplicate candidate" (fun tag ->
+      (* first "the" = [0,3), gap+second "the" = [3,7). *)
+      expect
+        (edit_of_label "STYLE-026" s26 "Remove duplicated word \"the\""
+        = Some (3, 7, ""))
+        (tag ^ ": edit"));
+  run "STYLE-026 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-026" s26) (tag ^ ": fix=None"));
+
+  (* STYLE-035: and/or -> or *)
+  let s35 = "true and/or false" in
+  run "STYLE-035 emits and/or->or candidate" (fun tag ->
+      (* "true " = 5 bytes; "and/or" spans [5,11). *)
+      expect
+        (edit_of_label "STYLE-035" s35 "Replace \"and/or\" with \"or\""
+        = Some (5, 11, "or"))
+        (tag ^ ": edit"));
+  run "STYLE-035 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-035" s35) (tag ^ ": fix=None"));
+
+  (* STYLE-036: Latin phrase italicisation *)
+  let s36 = "See cf. above." in
+  run "STYLE-036 emits \\emph-wrap candidate" (fun tag ->
+      (* "See " = 4 bytes; "cf." spans [4,7). *)
+      expect
+        (edit_of_label "STYLE-036" s36
+           "Italicise Latin phrase \"cf.\" with \\emph"
+        = Some (4, 7, "\\emph{cf.}"))
+        (tag ^ ": edit"));
+  run "STYLE-036 skips an already-italicised phrase" (fun tag ->
+      expect
+        (candidates_of "STYLE-036" "See \\emph{cf.} above." = [])
+        (tag ^ ": already emph"));
+  run "STYLE-036 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-036" s36) (tag ^ ": fix=None"));
+
+  (* STYLE-040: exclamation -> period *)
+  let s40 = "Great result!" in
+  run "STYLE-040 emits period candidate" (fun tag ->
+      (* "Great result" = 12 bytes; "!" at [12,13). *)
+      expect
+        (edit_of_label "STYLE-040" s40 "Replace exclamation mark with a period"
+        = Some (12, 13, "."))
+        (tag ^ ": edit"));
+  run "STYLE-040 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-040" s40) (tag ^ ": fix=None"));
+
+  (* STYLE-041: footnote terminal period *)
+  let s41 = "x\\footnote{A note}" in
+  run "STYLE-041 emits add-period candidate" (fun tag ->
+      (* "x\footnote{" = 11 bytes; body "A note" = [11,17); insert at 17. *)
+      expect
+        (edit_of_label "STYLE-041" s41 "Add terminal period to footnote"
+        = Some (17, 17, "."))
+        (tag ^ ": edit"));
+  run "STYLE-041 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-041" s41) (tag ^ ": fix=None"));
+
+  (* STYLE-049: heading trailing colon *)
+  let s49 = "\\section{Intro:}" in
+  run "STYLE-049 emits remove-colon candidate" (fun tag ->
+      (* "\section{Intro" = 14 bytes; ":" at [14,15). *)
+      expect
+        (edit_of_label "STYLE-049" s49
+           "Remove the colon at the end of the heading"
+        = Some (14, 15, ""))
+        (tag ^ ": edit"));
+  run "STYLE-049 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-049" s49) (tag ^ ": fix=None"));
+
   finalise "candidate_fixes"

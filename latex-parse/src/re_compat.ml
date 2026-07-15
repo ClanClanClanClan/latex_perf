@@ -109,6 +109,17 @@ let matched_string (mr : match_result) (_s : string) : string =
 let match_end (mr : match_result) : int = Re.Group.stop mr 0
 let match_beginning (mr : match_result) : int = Re.Group.start mr 0
 
+(* Absolute byte offsets of the [n]-th capture group (0 = whole match). Raise
+   [Not_found] if the group did not participate in the match, mirroring
+   [matched_group]. *)
+let group_beginning (mr : match_result) (n : int) : int =
+  try Re.Group.start mr n
+  with Not_found | Invalid_argument _ -> raise Not_found
+
+let group_end (mr : match_result) (n : int) : int =
+  try Re.Group.stop mr n
+  with Not_found | Invalid_argument _ -> raise Not_found
+
 (* ── Split ────────────────────────────────────────────────────────── *)
 
 let split (re : regexp) (s : string) : string list = Re.split re s

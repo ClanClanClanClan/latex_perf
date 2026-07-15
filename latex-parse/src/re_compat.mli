@@ -38,5 +38,15 @@ val match_end : match_result -> int
 val match_beginning : match_result -> int
 (** Byte position of the first matched character. *)
 
+val group_beginning : match_result -> int -> int
+(** [group_beginning mr n] is the byte position of the first character of the
+    [n]-th capture group (0 = whole match). Raises [Not_found] if the group did
+    not participate. *)
+
+val group_end : match_result -> int -> int
+(** [group_end mr n] is the byte position after the last character of the [n]-th
+    capture group (0 = whole match). Raises [Not_found] if the group did not
+    participate. *)
+
 val split : regexp -> string -> string list
 (** Split a string on regex matches. *)

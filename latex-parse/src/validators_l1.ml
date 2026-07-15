@@ -1027,11 +1027,52 @@ let l1_script_002_rule : rule =
           else incr i
         done)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-002" ~severity:Info
-           ~message:{|Superscript dash typed ‘‑’ not \textsuperscript{--}|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): the offending byte is a Unicode hyphen
+         (U+2010) or non-breaking hyphen (U+2011) typed directly in a math
+         superscript. The determinate proper form in math is a braced ASCII
+         minus: `^<hyphen>` -> `^{-}`. We scan the ORIGINAL source (absolute
+         offsets), gate each match to a math range, and replace the 3-byte
+         Unicode hyphen with `{-}`; vcu-exempt drops matches in
+         verbatim/comment/url. Count above is UNCHANGED (still measured over
+         [extract_math_segments]). *)
+      let math_ranges = find_math_ranges s in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i + 3 < n do
+        if
+          s.[!i] = '^'
+          && s.[!i + 1] = '\xe2'
+          && s.[!i + 2] = '\x80'
+          && (s.[!i + 3] = '\x91' || s.[!i + 3] = '\x90')
+          && is_in_math_range math_ranges !i
+        then (
+          cands :=
+            {
+              c_edits =
+                [
+                  Cst_edit.replace ~start_offset:(!i + 1) ~end_offset:(!i + 4)
+                    "{-}";
+                ];
+              c_label =
+                {|Use a braced ASCII minus ^{-} for the superscript dash|};
+            }
+            :: !cands;
+          i := !i + 4)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-002" ~severity:Info
+             ~message:{|Superscript dash typed ‘‑’ not \textsuperscript{--}|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-002" ~severity:Info
+             ~message:{|Superscript dash typed ‘‑’ not \textsuperscript{--}|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "SCRIPT-002"; run; languages = [] }
@@ -1602,10 +1643,48 @@ let l1_script_012_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-012" ~severity:Info
-           ~message:"Prime notation f''' (> 3) – prefer ^{(n)}" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): a run of >3 literal primes is hard to
+         read; the determinate replacement is derivative-order notation ^{(n)}
+         where n = number of primes in the run. We scan the ORIGINAL source,
+         gate each run start to a math range, count the primes to compute n, and
+         replace the WHOLE run with ^{(n)}. Count above is UNCHANGED. vcu-exempt
+         drops protected matches. *)
+      let math_ranges = find_math_ranges s in
+      let slen = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i < slen do
+        if s.[!i] = '\'' then (
+          let j = ref !i in
+          while !j < slen && s.[!j] = '\'' do
+            incr j
+          done;
+          let run_len = !j - !i in
+          if run_len > 3 && is_in_math_range math_ranges !i then
+            cands :=
+              {
+                c_edits =
+                  [
+                    Cst_edit.replace ~start_offset:!i ~end_offset:!j
+                      (Printf.sprintf "^{(%d)}" run_len);
+                  ];
+                c_label = "Use derivative-order ^{(n)} for a long prime run";
+              }
+              :: !cands;
+          i := !j)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-012" ~severity:Info
+             ~message:"Prime notation f''' (> 3) – prefer ^{(n)}" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-012" ~severity:Info
+             ~message:"Prime notation f''' (> 3) – prefer ^{(n)}" ~count:!cnt
+             ~candidates))
     else None
   in
   { id = "SCRIPT-012"; run; languages = [] }
@@ -1618,10 +1697,48 @@ let l1_script_013_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-013" ~severity:Info
-           ~message:"Plus/minus typed in subscript" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): a literal `+`/`-` in a subscript is
+         usually meant as the sign operator; the determinate wrapped form is
+         `_{\pm}` / `_{\mp}` (semantic plus-minus). We scan the ORIGINAL source,
+         gate each `_{+}`/`_{-}` to a math range, and rewrite the sign to
+         `\pm`/`\mp` in place. Count above is UNCHANGED. vcu-exempt drops
+         protected matches. *)
+      let math_ranges = find_math_ranges s in
+      let slen = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i + 3 < slen do
+        if
+          s.[!i] = '_'
+          && s.[!i + 1] = '{'
+          && (s.[!i + 2] = '+' || s.[!i + 2] = '-')
+          && s.[!i + 3] = '}'
+          && is_in_math_range math_ranges !i
+        then (
+          let repl = if s.[!i + 2] = '+' then "\\pm" else "\\mp" in
+          cands :=
+            {
+              c_edits =
+                [
+                  Cst_edit.replace ~start_offset:(!i + 2) ~end_offset:(!i + 3)
+                    repl;
+                ];
+              c_label = "Wrap subscript sign as \\pm/\\mp";
+            }
+            :: !cands;
+          i := !i + 4)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-013" ~severity:Info
+             ~message:"Plus/minus typed in subscript" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-013" ~severity:Info
+             ~message:"Plus/minus typed in subscript" ~count:!cnt ~candidates))
     else None
   in
   { id = "SCRIPT-013"; run; languages = [] }
@@ -2296,10 +2413,52 @@ let l1_script_022_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"SCRIPT-022" ~severity:Info
-           ~message:"Superscript prime stacked > 3 – prefer ^{(n)}" ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): `^{''''…}` stacks >3 primes inside an
+         explicit superscript group; the determinate replacement is
+         derivative-order `^{(n)}` where n = number of primes. We scan the
+         ORIGINAL source for `^{` followed by a run of >3 primes then `}`, gate
+         to a math range, and replace the whole `^{'''…}` span. Count above is
+         UNCHANGED. vcu-exempt drops protected matches. *)
+      let math_ranges = find_math_ranges s in
+      let slen = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i + 1 < slen do
+        if s.[!i] = '^' && s.[!i + 1] = '{' && is_in_math_range math_ranges !i
+        then (
+          let k = ref (!i + 2) in
+          while !k < slen && s.[!k] = '\'' do
+            incr k
+          done;
+          let nprime = !k - (!i + 2) in
+          if nprime > 3 && !k < slen && s.[!k] = '}' then (
+            cands :=
+              {
+                c_edits =
+                  [
+                    Cst_edit.replace ~start_offset:!i ~end_offset:(!k + 1)
+                      (Printf.sprintf "^{(%d)}" nprime);
+                  ];
+                c_label =
+                  "Use derivative-order ^{(n)} for a stacked prime group";
+              }
+              :: !cands;
+            i := !k + 1)
+          else i := !i + 2)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SCRIPT-022" ~severity:Info
+             ~message:"Superscript prime stacked > 3 – prefer ^{(n)}"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SCRIPT-022" ~severity:Info
+             ~message:"Superscript prime stacked > 3 – prefer ^{(n)}"
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "SCRIPT-022"; run; languages = [] }
@@ -2307,6 +2466,90 @@ let l1_script_022_rule : rule =
 (* ═══════════════════════════════════════════════════════════════════════ REF
    validators: cross-referencing and label hygiene
    ═══════════════════════════════════════════════════════════════════════ *)
+
+(* ── Bucket-C helpers for label/cite RENAME candidates (v27.1.48) ────────── A
+   label/cite key rename is INTENT-dependent and may span other files, so it is
+   surfaced as a Bucket-C candidate, never auto-applied. Because candidates
+   never mutate the document mechanically, an IN-FILE multi-edit candidate that
+   rewrites the `\label{old}` definition AND every in-file `\ref{old}` /
+   `\eqref{old}` / `\pageref{old}` / `\cref{old}` / `\autoref{old}` is byte-safe
+   (the author reviews before applying). If the sanitised key is empty or
+   collides with an existing DISTINCT label, we degrade to a LABEL-ONLY
+   candidate (empty edits) that merely names the suggested rename. *)
+
+(* [ref_label_ranges s] — absolute (inner_start, inner_end, key) of every
+   `\label{...}` in [s] (inner = the bytes between the braces). *)
+let ref_label_ranges (s : string) : (int * int * string) list =
+  let re = Re_compat.regexp {|\\label{\([^}]*\)}|} in
+  let out = ref [] in
+  let i = ref 0 in
+  (try
+     while true do
+       let mr, _ = Re_compat.search_forward re s !i in
+       let g_start = Re_compat.group_beginning mr 1 in
+       let g_end = Re_compat.group_end mr 1 in
+       out := (g_start, g_end, String.sub s g_start (g_end - g_start)) :: !out;
+       i := Re_compat.match_end mr
+     done
+   with Not_found -> ());
+  List.rev !out
+
+(* [ref_key_ref_ranges s key] — absolute (inner_start, inner_end) of every
+   reference command argument in [s] that equals [key], across the common
+   referencing commands. Used to rewrite in-file references alongside the
+   `\label` definition. *)
+let ref_key_ref_ranges (s : string) (key : string) : (int * int) list =
+  let cmds = [ "ref"; "eqref"; "pageref"; "cref"; "Cref"; "autoref"; "vref" ] in
+  let out = ref [] in
+  List.iter
+    (fun cmd ->
+      let re = Re_compat.regexp ({|\\|} ^ cmd ^ {|{\([^}]*\)}|}) in
+      let i = ref 0 in
+      try
+        while true do
+          let mr, _ = Re_compat.search_forward re s !i in
+          let g_start = Re_compat.group_beginning mr 1 in
+          let g_end = Re_compat.group_end mr 1 in
+          if String.sub s g_start (g_end - g_start) = key then
+            out := (g_start, g_end) :: !out;
+          i := Re_compat.match_end mr
+        done
+      with Not_found -> ())
+    cmds;
+  !out
+
+(* [ref_rename_candidate s ~label ~inner_start ~inner_end ~new_key ~all_keys]
+   builds a Bucket-C candidate that renames the `\label` at
+   [inner_start,inner_end) to [new_key] and rewrites every in-file reference to
+   the old key. Degrades to a LABEL-ONLY candidate (empty edits) when the new
+   key is empty, unchanged, or collides with a DISTINCT existing label. *)
+let ref_rename_candidate (s : string) ~(label : string) ~(inner_start : int)
+    ~(inner_end : int) ~(new_key : string) ~(all_keys : string list) :
+    candidate_fix =
+  let old_key = String.sub s inner_start (inner_end - inner_start) in
+  let collides =
+    new_key <> old_key && List.exists (fun k -> k = new_key) all_keys
+  in
+  if new_key = "" || new_key = old_key || collides then
+    { c_edits = []; c_label = label }
+  else
+    let def_edit =
+      Cst_edit.replace ~start_offset:inner_start ~end_offset:inner_end new_key
+    in
+    let ref_edits =
+      List.map
+        (fun (a, b) -> Cst_edit.replace ~start_offset:a ~end_offset:b new_key)
+        (ref_key_ref_ranges s old_key)
+    in
+    (* def + refs, sorted by start offset so the edit set is non-overlapping and
+       ordered (references never overlap the definition span). *)
+    let edits =
+      List.sort
+        (fun (a : Cst_edit.t) b ->
+          compare a.Cst_edit.start_offset b.Cst_edit.start_offset)
+        (def_edit :: ref_edits)
+    in
+    { c_edits = edits; c_label = label }
 
 (* REF-001: Undefined \ref/\eqref label after expansion Uses
    Semantic_state.get_state() if available, falls back to regex. *)
@@ -2362,10 +2605,51 @@ let l1_ref_002_rule : rule =
             labels;
           !c
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"REF-002" ~severity:Error ~message:"Duplicate label name"
-           ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): a duplicate \label has NO single
+         determinate new name (each duplicate must be disambiguated uniquely by
+         the author), so we surface a LABEL-ONLY candidate per duplicated key
+         naming the collision. The diagnostic [cnt] above is untouched. The
+         label offset is that of a duplicated \label occurrence; a duplicate
+         wholly inside a protected region is dropped by candidates_drop_exempt
+         (empty-edit label-only candidates are retained otherwise). *)
+      let labels_with_off = ref_label_ranges s in
+      let seen = Hashtbl.create 16 in
+      let dups = Hashtbl.create 16 in
+      List.iter
+        (fun (_a, _b, key) ->
+          if Hashtbl.mem seen key then Hashtbl.replace dups key true
+          else Hashtbl.add seen key true)
+        labels_with_off;
+      (* One candidate per duplicated occurrence beyond the first, anchored at
+         the occurrence offset so exempt-dropping is per-site. *)
+      let seen2 = Hashtbl.create 16 in
+      let cands =
+        List.filter_map
+          (fun (a, _b, key) ->
+            if Hashtbl.mem dups key then
+              if Hashtbl.mem seen2 key then
+                Some
+                  {
+                    c_edits = [ Cst_edit.insert ~at:a "" ];
+                    c_label =
+                      Printf.sprintf "Rename one of the duplicate labels %S" key;
+                  }
+              else (
+                Hashtbl.add seen2 key true;
+                None)
+            else None)
+          labels_with_off
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-002" ~severity:Error
+             ~message:"Duplicate label name" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-002" ~severity:Error
+             ~message:"Duplicate label name" ~count:cnt ~candidates))
     else None
   in
   { id = "REF-002"; run; languages = [] }
@@ -2377,9 +2661,34 @@ let l1_ref_003_rule : rule =
     let cnt = ref 0 in
     List.iter (fun lbl -> if String.contains lbl ' ' then incr cnt) labels;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"REF-003" ~severity:Warning
-           ~message:"Label contains spaces" ~count:!cnt)
+      (* Bucket-C CANDIDATE (v27.1.48): a label with spaces has a determinate
+         canonical form — replace each space with a hyphen. We emit an IN-FILE
+         rename candidate rewriting the \label definition AND every in-file
+         reference to the old key (byte-safe: candidates never auto-apply). If
+         the sanitised key collides with an existing distinct label the helper
+         degrades to a label-only candidate. Count above is UNCHANGED. *)
+      let all_keys = List.map (fun (_, _, k) -> k) (ref_label_ranges s) in
+      let sanitize k = String.map (fun c -> if c = ' ' then '-' else c) k in
+      let cands =
+        List.filter_map
+          (fun (a, b, key) ->
+            if String.contains key ' ' then
+              Some
+                (ref_rename_candidate s
+                   ~label:"Replace spaces in the label with hyphens"
+                   ~inner_start:a ~inner_end:b ~new_key:(sanitize key) ~all_keys)
+            else None)
+          (ref_label_ranges s)
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-003" ~severity:Warning
+             ~message:"Label contains spaces" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-003" ~severity:Warning
+             ~message:"Label contains spaces" ~count:!cnt ~candidates)
     else None
   in
   { id = "REF-003"; run; languages = [] }
@@ -2400,9 +2709,32 @@ let l1_ref_004_rule : rule =
     let cnt = ref 0 in
     List.iter (fun lbl -> if has_upper lbl then incr cnt) labels;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"REF-004" ~severity:Info
-           ~message:"Label contains uppercase letters" ~count:!cnt)
+      (* Bucket-C CANDIDATE (v27.1.48): the determinate canonical form of a
+         label with uppercase letters is its lowercase form. We emit an IN-FILE
+         rename candidate (definition + all in-file references). Collisions
+         degrade to label-only. Count above is UNCHANGED. *)
+      let all_keys = List.map (fun (_, _, k) -> k) (ref_label_ranges s) in
+      let cands =
+        List.filter_map
+          (fun (a, b, key) ->
+            if has_upper key then
+              Some
+                (ref_rename_candidate s ~label:"Lowercase the label"
+                   ~inner_start:a ~inner_end:b
+                   ~new_key:(String.lowercase_ascii key)
+                   ~all_keys)
+            else None)
+          (ref_label_ranges s)
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-004" ~severity:Info
+             ~message:"Label contains uppercase letters" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-004" ~severity:Info
+             ~message:"Label contains uppercase letters" ~count:!cnt ~candidates)
     else None
   in
   { id = "REF-004"; run; languages = [] }
@@ -2440,9 +2772,35 @@ let l1_ref_005_rule : rule =
     let cnt = ref 0 in
     List.iter (fun lbl -> if not (has_prefix lbl) then incr cnt) labels;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"REF-005" ~severity:Info
-           ~message:"Label not prefixed fig:/tab:/eq:/sec:" ~count:!cnt)
+      (* Bucket-C CANDIDATE (v27.1.48): which type prefix (fig:/tab:/eq:/sec:…)
+         a bare label needs depends on WHAT it labels, so there is no single
+         determinate rewrite. We emit a LABEL-ONLY candidate per offending label
+         — a zero-width insert at the label's inner start (byte-identical if
+         applied) that merely names the suggested change and lets
+         candidates_drop_exempt gate it per-site. Count above is UNCHANGED. *)
+      let cands =
+        List.filter_map
+          (fun (a, _b, key) ->
+            if not (has_prefix key) then
+              Some
+                {
+                  c_edits = [ Cst_edit.insert ~at:a "" ];
+                  c_label =
+                    "Add a type prefix (fig:/tab:/eq:/sec:) to the label";
+                }
+            else None)
+          (ref_label_ranges s)
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-005" ~severity:Info
+             ~message:"Label not prefixed fig:/tab:/eq:/sec:" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-005" ~severity:Info
+             ~message:"Label not prefixed fig:/tab:/eq:/sec:" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "REF-005"; run; languages = [] }
@@ -2499,12 +2857,55 @@ let l1_ref_006_rule : rule =
 (* REF-007: Cite key contains whitespace *)
 let l1_ref_007_rule : rule =
   let re = Re_compat.regexp "\\\\cite\\([^{]*\\){[^}]*[ \t][^}]*}" in
+  (* Same shape, but capture the brace ARGUMENT (group 2) so a candidate can
+     rewrite exactly that span. Group 1 = the optional [..]/* suffix. *)
+  let re_arg = Re_compat.regexp "\\\\cite\\([^{]*\\){\\([^}]*[ \t][^}]*\\)}" in
   let run s =
     let cnt = count_re_matches re s in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"REF-007" ~severity:Error
-           ~message:"Cite key contains whitespace" ~count:cnt)
+    if cnt > 0 then (
+      (* Bucket-C CANDIDATE (v27.1.48): a BibTeX cite key cannot contain
+         whitespace, and the determinate canonical form strips every space/tab
+         from inside the `\cite{…}` argument (commas separating multiple keys
+         are preserved). This is a cross-referencing RENAME, so it is surfaced
+         for review, never auto-applied. We rewrite exactly the argument span
+         over the ORIGINAL source; matches inside a protected region are
+         dropped. Count above is UNCHANGED. *)
+      let exempt = find_exempt_ranges s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, _ = Re_compat.search_forward re_arg s !i in
+           let a = Re_compat.group_beginning mr 2 in
+           let b = Re_compat.group_end mr 2 in
+           let arg = String.sub s a (b - a) in
+           let stripped =
+             String.concat ""
+               (List.filter_map
+                  (fun c ->
+                    if c = ' ' || c = '\t' then None else Some (String.make 1 c))
+                  (List.init (String.length arg) (fun k -> arg.[k])))
+           in
+           if (not (is_in_exempt_range exempt a)) && stripped <> arg then
+             cands :=
+               {
+                 c_edits =
+                   [ Cst_edit.replace ~start_offset:a ~end_offset:b stripped ];
+                 c_label = "Strip whitespace from the cite key";
+               }
+               :: !cands;
+           i := Re_compat.match_end mr
+         done
+       with Not_found -> ());
+      let candidates = List.rev !cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"REF-007" ~severity:Error
+             ~message:"Cite key contains whitespace" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"REF-007" ~severity:Error
+             ~message:"Cite key contains whitespace" ~count:cnt ~candidates))
     else None
   in
   { id = "REF-007"; run; languages = [] }

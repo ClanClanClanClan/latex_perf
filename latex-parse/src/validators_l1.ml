@@ -2979,8 +2979,8 @@ let l1_chem_008_rule : rule =
       math_segs;
     if !cnt > 0 then
       (* Bucket-C candidate: wrap a bare state symbol in \text so it typesets
-         upright, `(aq)` -> `\text{(aq)}`. Only occurrences that sit inside
-         math and are not already `\text{…}`-wrapped are surfaced. Offsets on
+         upright, `(aq)` -> `\text{(aq)}`. Only occurrences that sit inside math
+         and are not already `\text{…}`-wrapped are surfaced. Offsets on
          ORIGINAL source, math gated, vcu-exempt. Never auto-applied. *)
       let ranges = find_math_ranges s in
       let raw =
@@ -3002,8 +3002,11 @@ let l1_chem_008_rule : rule =
                             ~replacement:({|\text{|} ^ sym ^ "}");
                         ];
                       c_label =
-                        "Wrap the state symbol in \\text (" ^ sym ^ " -> \\text{"
-                        ^ sym ^ "})";
+                        "Wrap the state symbol in \\text ("
+                        ^ sym
+                        ^ " -> \\text{"
+                        ^ sym
+                        ^ "})";
                     }
                 else None)
               (Validators_l0_typo.find_all_non_overlapping s sym))

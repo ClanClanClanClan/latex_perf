@@ -1363,8 +1363,8 @@ let () =
       expect (candidates_of "BIB-017" v = []) (tag ^ ": exempt"));
 
   (* ══════════════════════════════════════════════════════════════════════
-     CHEM-008: bare state symbol (aq)/(s)/(l)/(g) in math. Candidate wraps it
-     in \text so it typesets upright; already-wrapped ones are skipped.
+     CHEM-008: bare state symbol (aq)/(s)/(l)/(g) in math. Candidate wraps it in
+     \text so it typesets upright; already-wrapped ones are skipped.
      ══════════════════════════════════════════════════════════════════════ *)
   let c8_src = "$NaCl(aq)$" in
   run "CHEM-008 still fires (count=1)" (fun tag ->
@@ -1391,19 +1391,19 @@ let () =
 
   (* ══════════════════════════════════════════════════════════════════════
      DOC-005: \keywords present but no pdfkeywords in \hypersetup. Candidate
-     copies the keyword text into a pdfkeywords={…} metadata key (PDF/XMP
-     only — render-preserving).
+     copies the keyword text into a pdfkeywords={…} metadata key (PDF/XMP only —
+     render-preserving).
      ══════════════════════════════════════════════════════════════════════ *)
   let d5_src = "\\keywords{a, b}\n\\hypersetup{pdftitle={T}}\n" in
   run "DOC-005 still fires (count=1)" (fun tag ->
       expect (fires_with_count "DOC-005" d5_src 1) (tag ^ ": count=1"));
   run "DOC-005 candidate inserts pdfkeywords after \\hypersetup{" (fun tag ->
-      (* "\keywords{a, b}\n" = 16 bytes; "\hypersetup{" spans [16,28),
-         insert lands at offset 28. *)
+      (* "\keywords{a, b}\n" = 16 bytes; "\hypersetup{" spans [16,28), insert
+         lands at offset 28. *)
       expect
         (edit_of_label "DOC-005" d5_src
-           "Add pdfkeywords={…} to \\hypersetup so the PDF/XMP metadata carries \
-            the keywords"
+           "Add pdfkeywords={…} to \\hypersetup so the PDF/XMP metadata \
+            carries the keywords"
         = Some (28, 28, "pdfkeywords={a, b}, "))
         (tag ^ ": edit"));
   run "DOC-005 no candidate when pdfkeywords already present" (fun tag ->

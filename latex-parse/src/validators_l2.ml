@@ -4783,12 +4783,12 @@ let r_doc_005 : rule =
     let has_pdfkeywords = contains_substring s "pdfkeywords" in
     if has_keywords && has_hypersetup && not has_pdfkeywords then
       (* Bucket-C candidate: mirror the \keywords content into the PDF/XMP
-         metadata by adding a `pdfkeywords={…}` key to the existing
-         \hypersetup block. This touches ONLY PDF metadata (never the typeset
-         page — provably render-preserving), is single-file, and hyperref is
-         already loaded (\hypersetup present, so pdfkeywords is a valid key).
-         The keyword text is copied verbatim from the first \keywords group.
-         Offsets on ORIGINAL source, exempt-gated. Never auto-applied. *)
+         metadata by adding a `pdfkeywords={…}` key to the existing \hypersetup
+         block. This touches ONLY PDF metadata (never the typeset page —
+         provably render-preserving), is single-file, and hyperref is already
+         loaded (\hypersetup present, so pdfkeywords is a valid key). The
+         keyword text is copied verbatim from the first \keywords group. Offsets
+         on ORIGINAL source, exempt-gated. Never auto-applied. *)
       let n = String.length s in
       (* Skip \keywords / \hypersetup occurrences inside a comment/verbatim so
          the candidate never copies commented-out keyword text (review nit). *)
@@ -4804,7 +4804,7 @@ let r_doc_005 : rule =
       let kw_content =
         match first_live "\\keywords{" with
         | None -> None
-        | Some kpos ->
+        | Some kpos -> (
             let start = kpos + String.length "\\keywords{" in
             let rec scan i depth =
               if i >= n then None
@@ -4816,7 +4816,7 @@ let r_doc_005 : rule =
                     else scan (i + 1) (depth - 1)
                 | _ -> scan (i + 1) depth
             in
-            (match scan start 0 with
+            match scan start 0 with
             | Some (a, b) -> Some (String.sub s a (b - a))
             | None -> None)
       in
@@ -4832,10 +4832,7 @@ let r_doc_005 : rule =
               [
                 {
                   c_edits =
-                    [
-                      Cst_edit.insert ~at
-                        ("pdfkeywords={" ^ content ^ "}, ");
-                    ];
+                    [ Cst_edit.insert ~at ("pdfkeywords={" ^ content ^ "}, ") ];
                   c_label =
                     "Add pdfkeywords={…} to \\hypersetup so the PDF/XMP \
                      metadata carries the keywords";

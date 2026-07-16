@@ -86,3 +86,33 @@ v26 should aim to complete:
 while preserving all existing T1/T6 results.
 
 v27 can then extend into platform-layer theorems and stronger build guarantees.
+
+## Runtime readiness vs. proved capstone (honest status, v27.1.52)
+
+Two distinct artefacts share the "T0–T5" naming and must not be conflated:
+
+1. **The runtime readiness contract** (`Compile_contract.check_ready_to_compile`,
+   surfaced as `latex_parse_cli --compile-check`). This runs T0–T5 *checks* on a
+   real document at analysis time. As of v27.1.52:
+   - **T0** genuinely runs `Language_profile.classify_source` (rejects
+     LP-Foreign) and `Parser_l2.parse_located` (rejects hard parse errors).
+   - **T5** genuinely runs `Validators.run_all` and flags **compile-blocking**
+     `Error` diagnostics only — the `DELIM-`/`ENC-`/`PRT-` families — not every
+     Error-severity style rule.
+   - **T2/T3** are real (include-graph closure; declared-feature × engine).
+   - **T4** is real when a sibling `.aux` is present (duplicate labels), else
+     skipped. **T1** is a no-op at this layer (never claims a T1 property).
+   See [../docs/COMPILATION_GUARANTEE.md](../docs/COMPILATION_GUARANTEE.md).
+
+2. **The proved compile-safety capstone** (`proofs/PdflatexModel.v`,
+   `pdflatex_compile_safe`, Qed). This is a theorem over an **abstract
+   `body_token` operational model** of pdflatex, not over the runtime parser's
+   bytes.
+
+**The residual gap:** there is no verified `bytes → body_token` extraction
+connecting artefact (1) to artefact (2). The runtime readiness pre-check is
+therefore *sound* (a genuinely broken or LP-Foreign document returns NOT-READY)
+but a READY result does **not** mechanically discharge the capstone's
+`project_well_typed` hypothesis for the input bytes. Closing that extraction gap
+is the outstanding work that would turn the readiness pre-check into a total
+"it will compile" certificate.

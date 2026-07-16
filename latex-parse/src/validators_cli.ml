@@ -470,6 +470,57 @@ let run_extensions_registry () : int =
       eprintf "Error: built-in registry contains an over-claiming contract\n");
   0
 
+(* ── Compile-readiness pre-check (--compile-check) ────────────────── *)
+
+(** Run the T0–T5 pre-compile readiness contract on one file and print a clear
+    verdict. Sets up the same per-file context the lint path uses (file context,
+    command spans, build profile, user macros, language profile) so the T5
+    validator run sees exactly what a normal lint sees, then invokes
+    [Compile_contract.check_ready_to_compile] with the in-memory source.
+
+    Prints [READY] (exit 0) when every runtime precondition holds, or
+    [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
+    sibling, if present, informs T4. Returns the process exit code. *)
+let run_compile_check ~path ~src : int =
+  let tier, features = resolve_profile ~requested:`Auto ~src in
+  print_profile_banner tier features;
+  Fun.protect ~finally:cleanup (fun () ->
+      let _bp = setup_all ~path ~src ~log_path:None in
+      let profile =
+        Latex_parse_lib.Build_profile.create ~tex_path:path
+          ~base_dir:(Filename.dirname path)
+      in
+      match Latex_parse_lib.Project_model.of_root path with
+      | Error (`File_not_found p) ->
+          eprintf "NOT-READY\n";
+          eprintf "  T0 parse fails in %s: file not found\n" p;
+          1
+      | Error (`Not_latex p) ->
+          eprintf "NOT-READY\n";
+          eprintf "  T0 parse fails in %s: not a LaTeX document\n" p;
+          1
+      | Ok proj -> (
+          let aux_path =
+            let cand = Filename.remove_extension path ^ ".aux" in
+            if Sys.file_exists cand then Some cand else None
+          in
+          let result =
+            Latex_parse_lib.Compile_contract.check_ready_to_compile ?aux_path
+              ~source:src proj profile
+          in
+          match result with
+          | Latex_parse_lib.Compile_contract.Ready ->
+              printf "READY\t%s\n" path;
+              0
+          | NotReady reasons ->
+              printf "NOT-READY\t%s\n" path;
+              List.iter
+                (fun r ->
+                  printf "  %s\n"
+                    (Latex_parse_lib.Compile_contract.reason_to_string r))
+                reasons;
+              1))
+
 (* ── Entry point ─────────────────────────────────────────────────── *)
 
 let () =
@@ -530,6 +581,13 @@ let () =
                 cands)
         results;
       exit 0
+  | [ _; "--compile-check"; path ] ->
+      (* Flagship pre-compile readiness check: run T0–T5 against the real parser
+         + validators and print READY / NOT-READY with the failing reasons. Exit
+         0 = ready, 1 = not-ready. Matched before the two-element catch-all so
+         "--compile-check" is not read as a file path. *)
+      let src = read_all path in
+      exit (run_compile_check ~path ~src)
   | _ :: "--review" :: state_path :: rest -> (
       (* WS9 Stage 2: annotate/filter findings by review state. *)
       match rest with
@@ -677,7 +735,19 @@ let () =
          <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
          --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \
          [--log <file.log>] [--extensions <manifest.json> [--strict]] \
-         [--extensions-registry] <file.tex>\n\n\
+         [--extensions-registry] [--compile-check <file.tex>] <file.tex>\n\n\
+         --compile-check <file.tex>  run the T0–T5 pre-compile readiness \
+         contract\n\
+        \               (real Parser_l2 acceptance + language-profile gate for \
+         T0, include-graph\n\
+        \               closure for T2, engine/feature compat for T3, .aux \
+         semantic coherence\n\
+        \               for T4, and compile-blocking DELIM/ENC/PRT Error rules \
+         for T5). Prints\n\
+        \               READY (exit 0) or NOT-READY with the failing reasons \
+         (exit 1). This is a\n\
+        \               sound readiness PRE-CHECK, not a total \"it will \
+         compile\" certificate.\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

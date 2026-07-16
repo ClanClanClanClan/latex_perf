@@ -2,6 +2,28 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.53] — 2026-07-16
+
+**FLAGSHIP: `--compile-check` — the "will it compile" pre-check is now a real,
+honestly-scoped user feature.** A state audit found the compile-guarantee, though
+Qed at the model level, was NOT wired to a user-facing check (the docs described a
+command that did not exist, and the T0/T5 runtime checks were stubs). Fixed:
+- **`validators_cli --compile-check <file.tex>`** → `READY` (exit 0) when every
+  checked T0–T5 runtime precondition holds, or `NOT-READY` (exit 1) with the specific
+  failing reasons. Default lint output byte-identical.
+- **De-stubbed the load-bearing checks:** T0 genuinely runs `Language_profile.classify_source`
+  (rejects LP-Foreign, e.g. `\write18`) + `Parser_l2.parse_located` (real structural
+  parse errors with line/offset); T5 runs the validators and flags compile-blocking
+  (DELIM/ENC/PRT) Errors. T2 (include-graph) / T3 (declared-feature×engine) / T4
+  (duplicate labels, when a sibling .aux exists) are real; T1 is an honest no-op.
+  An **anti-stub regression test** fails if T0/T5 ever revert to no-ops.
+- **Honest docs:** `COMPILATION_GUARANTEE.md`/`_STACK.md` now state exactly what is
+  runtime-checked vs proven-over-abstract-model, and the **residual gap**: the
+  `pdflatex_compile_safe` capstone is proven over an abstract `body_token` model with
+  no verified bytes→body_token extraction, so `READY` is a sound READINESS pre-check
+  (NOT-READY reliably means "don't run latexmk"), NOT yet a total compile certificate.
+Adversarially verified (sound; parser genuinely runs, docs honest). 14 tests.
+
 ## [v27.1.51] — 2026-07-16
 
 **LANG candidates (3) + ground-truth backlog reconciliation.** LANG family:

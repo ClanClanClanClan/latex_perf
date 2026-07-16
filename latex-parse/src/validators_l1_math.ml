@@ -794,10 +794,42 @@ let l1_math_020_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-020" ~severity:Info
-           ~message:{|Missing \cdot between coefficient and vector|} ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (C4 rendering-intent): insert \cdot between a
+         coefficient digit and the following vector macro (`2\vec{v}` ->
+         `2\cdot\vec{v}`). The digit sits at the match start; `\cdot` is
+         inserted just after it (before the backslash). Intent-dependent (the
+         digit could be an index rather than a scalar coefficient), so surfaced
+         for review. Collected over the ORIGINAL source, gated to real math
+         ranges. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           if is_in_math_range ranges pos then
+             cands :=
+               {
+                 c_edits = [ Cst_edit.insert ~at:(pos + 1) "\\cdot" ];
+                 c_label = "Insert \\cdot between coefficient and vector";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-020" ~severity:Info
+             ~message:{|Missing \cdot between coefficient and vector|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-020" ~severity:Info
+             ~message:{|Missing \cdot between coefficient and vector|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-020"; run; languages = [] }
@@ -831,11 +863,52 @@ let l1_math_021_rule : rule =
           else incr i
         done)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-021" ~severity:Info
-           ~message:{|Absolute value bars ‘|x|’ instead of \lvert … \rvert|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (C4 rendering-intent): replace a matched `|...|`
+         pair with `\lvert ... \rvert` (semantic delimiters that stretch and
+         space correctly). Intent-dependent — a lone `|` can be a set-builder
+         bar or a norm rather than an absolute value — so surfaced for review.
+         Scanned over the ORIGINAL source, gated to real math ranges. *)
+      let ranges = find_math_ranges s in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i < n do
+        if s.[!i] = '|' && is_in_math_range ranges !i then (
+          if !i > 0 && s.[!i - 1] = '\\' then incr i
+          else
+            let j = ref (!i + 1) in
+            while !j < n && s.[!j] <> '|' do
+              if s.[!j] = '\\' then j := !j + 2 else incr j
+            done;
+            if !j < n then (
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 1)
+                        "\\lvert ";
+                      Cst_edit.replace ~start_offset:!j ~end_offset:(!j + 1)
+                        " \\rvert";
+                    ];
+                  c_label = "Replace |x| with \\lvert x \\rvert";
+                }
+                :: !cands;
+              i := !j + 1)
+            else incr i)
+        else incr i
+      done;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-021" ~severity:Info
+             ~message:{|Absolute value bars ‘|x|’ instead of \lvert … \rvert|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-021" ~severity:Info
+             ~message:{|Absolute value bars ‘|x|’ instead of \lvert … \rvert|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-021"; run; languages = [] }
@@ -942,10 +1015,41 @@ let l1_math_028_rule : rule =
        let tail = String.sub s (String.length s - ba_len) ba_len in
        if tail = ba then incr cnt);
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-028" ~severity:Info
-           ~message:"Array environment inside math lacks {c} alignment"
-           ~count:!cnt)
+      (* Bucket-C candidate (C4 rendering-intent): supply a default `{c}` column
+         spec to a `\begin{array}` that has none (`\begin{array}x` ->
+         `\begin{array}{c}x`). The intended number/alignment of columns depends
+         on the body, so `{c}` is only a sensible default the author confirms.
+         Insertion point is the byte just after `\begin{array}`; mirrors the
+         diagnostic (both the "followed by non-brace" and end-of-string cases).
+         vcu-gated. *)
+      let needle = {|\begin{array}|} in
+      let nlen = String.length needle in
+      let sn = String.length s in
+      let offsets = Validators_l0_typo.find_all_non_overlapping s needle in
+      let cands =
+        List.filter_map
+          (fun off ->
+            let after = off + nlen in
+            if after >= sn || s.[after] <> '{' then
+              Some
+                {
+                  c_edits = [ Cst_edit.insert ~at:after "{c}" ];
+                  c_label = "Add a default column spec {c} to the array";
+                }
+            else None)
+          offsets
+      in
+      let candidates = candidates_drop_vcu_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-028" ~severity:Info
+             ~message:"Array environment inside math lacks {c} alignment"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-028" ~severity:Info
+             ~message:"Array environment inside math lacks {c} alignment"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-028"; run; languages = [] }
@@ -1022,9 +1126,46 @@ let l1_math_030_rule : rule =
       (fun seg -> cnt := !cnt + count_substring seg "\\displaystyle")
       inline_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-030" ~severity:Info
-           ~message:{|Overuse of \displaystyle in inline math|} ~count:!cnt)
+      (* Bucket-C candidate (C4 rendering-intent): remove `\displaystyle` from
+         inline math (it inflates line spacing). Deletes the control word plus
+         one following space if present. Intent-dependent (the author may want
+         the larger inline operators), so surfaced for review. Gated to INLINE
+         math ranges to mirror the diagnostic scope. *)
+      let ranges = find_math_ranges s in
+      let inline_ranges =
+        List.filter (fun r -> range_is_inline_math s r) ranges
+      in
+      let needle = "\\displaystyle" in
+      let nlen = String.length needle in
+      let sn = String.length s in
+      let offsets = Validators_l0_typo.find_all_non_overlapping s needle in
+      let cands =
+        List.filter_map
+          (fun off ->
+            if is_in_math_range inline_ranges off then
+              let stop =
+                if off + nlen < sn && s.[off + nlen] = ' ' then off + nlen + 1
+                else off + nlen
+              in
+              Some
+                {
+                  c_edits =
+                    [ Cst_edit.delete ~start_offset:off ~end_offset:stop ];
+                  c_label = "Remove \\displaystyle in inline math";
+                }
+            else None)
+          offsets
+      in
+      let candidates = candidates_drop_vcu_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-030" ~severity:Info
+             ~message:{|Overuse of \displaystyle in inline math|} ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-030" ~severity:Info
+             ~message:{|Overuse of \displaystyle in inline math|} ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "MATH-030"; run; languages = [] }
@@ -1083,9 +1224,42 @@ let l1_math_033_rule : rule =
     let text_parts = strip_math_segments s in
     let cnt = count_substring text_parts "\\pm" in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-033" ~severity:Info
-           ~message:{|Use of \pm where ± symbol required in text|} ~count:cnt)
+      (* Bucket-C candidate (C4 rendering-intent): `\pm` is a math symbol and
+         does not typeset in text mode; wrap it in inline math (`\pm` ->
+         `$\pm$`) so it renders. Boundary-checked so `\pmod`/`\pmatrix` are left
+         alone. Intent-dependent (the author may prefer a literal ± glyph), so
+         surfaced for review. TEXT rule: full exempt set drops any in-math /
+         verbatim occurrence, leaving only genuine text `\pm`. *)
+      let sn = String.length s in
+      let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+      let offsets = Validators_l0_typo.find_all_non_overlapping s "\\pm" in
+      let cands =
+        List.filter_map
+          (fun off ->
+            let after = off + 3 in
+            if after >= sn || not (is_letter s.[after]) then
+              Some
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:off ~end_offset:after
+                        "$\\pm$";
+                    ];
+                  c_label = "Wrap \\pm in inline math: $\\pm$";
+                }
+            else None)
+          offsets
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-033" ~severity:Info
+             ~message:{|Use of \pm where ± symbol required in text|} ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-033" ~severity:Info
+             ~message:{|Use of \pm where ± symbol required in text|} ~count:cnt
+             ~candidates)
     else None
   in
   { id = "MATH-033"; run; languages = [] }
@@ -1339,9 +1513,40 @@ let l1_math_037_rule : rule =
       (fun seg -> cnt := !cnt + count_substring seg "\\sfrac{")
       math_segs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-037" ~severity:Info
-           ~message:"xfrac package fraction used outside text mode" ~count:!cnt)
+      (* Bucket-C candidate (C4 rendering-intent): `\sfrac` (xfrac) is a text
+         slash fraction; inside math prefer the built-in `\tfrac` (textstyle
+         fraction). Replace the 6-byte control word `\sfrac`, keeping its `{`
+         argument intact. Intent-dependent (the author may genuinely want the
+         slashed form), so surfaced for review. Gated to math ranges. *)
+      let ranges = find_math_ranges s in
+      let offsets = Validators_l0_typo.find_all_non_overlapping s "\\sfrac{" in
+      let cands =
+        List.filter_map
+          (fun off ->
+            if is_in_math_range ranges off then
+              Some
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:off ~end_offset:(off + 6)
+                        "\\tfrac";
+                    ];
+                  c_label = "Replace \\sfrac with \\tfrac in math";
+                }
+            else None)
+          offsets
+      in
+      let candidates = candidates_drop_vcu_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-037" ~severity:Info
+             ~message:"xfrac package fraction used outside text mode"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-037" ~severity:Info
+             ~message:"xfrac package fraction used outside text mode"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "MATH-037"; run; languages = [] }
@@ -1441,11 +1646,54 @@ let l1_math_040_rule : rule =
     let math_segs = extract_math_segments s in
     let cnt = ref 0 in
     List.iter (fun seg -> cnt := !cnt + count_re_matches re seg) math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-040" ~severity:Info
-           ~message:{|Ellipsis \ldots used between vertical alignment|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (C4 rendering-intent): a low `\ldots` flanked by
+         binary/relational operators should be a centred `\cdots` (`a+\ldots+b`
+         -> `a+\cdots+b`). Locate the `\ldots` token inside each match and
+         replace those 6 bytes. Intent-dependent (the author may want a baseline
+         ellipsis), so surfaced for review. Gated to math ranges. *)
+      let ranges = find_math_ranges s in
+      let sn = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           (* the match begins with one operator, then optional spaces, then
+              `\ldots`; find its offset within [pos, e). *)
+           let lpos = ref (pos + 1) in
+           while
+             !lpos + 6 <= sn && !lpos < e && String.sub s !lpos 6 <> "\\ldots"
+           do
+             incr lpos
+           done;
+           if !lpos + 6 <= sn && is_in_math_range ranges pos then
+             cands :=
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:!lpos
+                       ~end_offset:(!lpos + 6) "\\cdots";
+                   ];
+                 c_label =
+                   "Replace \\ldots with centred \\cdots between operators";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-040" ~severity:Info
+             ~message:{|Ellipsis \ldots used between vertical alignment|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-040" ~severity:Info
+             ~message:{|Ellipsis \ldots used between vertical alignment|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-040"; run; languages = [] }
@@ -1462,11 +1710,44 @@ let l1_math_041_rule : rule =
         (* \int_ in inline math — limits are typeset inline, suggest display *)
         cnt := !cnt + count_re_matches re seg)
       inline_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"MATH-041" ~severity:Info
-           ~message:{|Integral limits written inline; use \displaystyle \int|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Bucket-C candidate (C4 rendering-intent): an inline `\int_` sets its
+         limits beside the sign; add `\limits` (`\int_` -> `\int\limits_`) so
+         they stack as in display style. `\int` is 4 bytes, so `\limits` is
+         inserted at match_start+4, right before the `_`. Intent-dependent (the
+         cramped inline form may be deliberate), so surfaced for review. Gated
+         to INLINE math ranges to mirror the diagnostic scope. *)
+      let ranges = find_math_ranges s in
+      let inline_ranges =
+        List.filter (fun r -> range_is_inline_math s r) ranges
+      in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re s !i in
+           let e = Re_compat.match_end mr in
+           if is_in_math_range inline_ranges pos then
+             cands :=
+               {
+                 c_edits = [ Cst_edit.insert ~at:(pos + 4) "\\limits" ];
+                 c_label = "Add \\limits to stack the inline integral limits";
+               }
+               :: !cands;
+           i := e
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"MATH-041" ~severity:Info
+             ~message:{|Integral limits written inline; use \displaystyle \int|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"MATH-041" ~severity:Info
+             ~message:{|Integral limits written inline; use \displaystyle \int|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "MATH-041"; run; languages = [] }

@@ -170,17 +170,15 @@ Total remaining: **119** (34 medium, 85 large).
 ## ZH (1)
 - **ZH-002** [large] — Chinese punctuation localization; RTL/CJK edge cases
 
-## ⚠ Reclassified: render-changing (diagnose-only by design, NOT candidate-able)
+## ✅ Correction (2026-07-12): candidates ARE intent/render-changing-tolerant
 
-The audit's "candidate" classification was optimistic for the large MATH family.
-Verified render-CHANGING (their edit alters typeset output, so no safe render-
-preserving candidate exists) — keep diagnose-only:
-- MATH-020 (inserts visible \cdot), MATH-021 (|x|->\lvert, delimiter spacing),
-  MATH-028 (array column-spec guess), MATH-030 (removes \displaystyle sizing),
-  MATH-033 (\pm text repair), MATH-037 (\sfrac->\frac glyph), MATH-040
-  (\ldots->\cdots dot position), MATH-041 (\displaystyle on integrals),
-  MATH-056 (multi-site \DeclareMathOperator refactor). MATH-024 (unref \label
-  delete) is CP-3 cross-file REF-risk (held pending review UX).
-Realistic candidate ceiling is well below the audit's 119; most remaining large
-MATH/STYLE/PKG/LANG rules are render-changing or dictionary/build-dependent.
+Bucket-C candidates are review-only, author-confirmed suggestions (docs/CANDIDATE_FIXES.md;
+fixability audit category C4 = "rendering-intent normalization" is a CANDIDATE target).
+So RENDER-CHANGING is NOT a deferral reason — the author reviews. A rule is candidate-able
+iff its intended fix has a DETERMINATE, well-bounded edit that is byte-safe (never
+auto-applied). Defer ONLY when there is genuinely no determinate edit target (e.g. SPC-001
+"line too long" has no canonical break point) or an inherently unbounded multi-site refactor
+with no single coherent edit. Cross-file renames (REF) ARE candidate-able as in-file
+multi-edit or label-only candidates (byte-safe; the author applies + propagates). The prior
+"render-changing -> diagnose-only" deferrals were WRONG and are being re-wired.
 

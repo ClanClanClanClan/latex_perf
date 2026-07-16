@@ -2,6 +2,27 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.48] — 2026-07-15
+
+**Candidate-bar correction + two overlooked spec-§7 proof families.**
+
+*Candidate correction (all-rules track):* a prior pass wrongly deferred rendering-intent
+rules as "render-changing"; Bucket-C candidates are review-only, author-confirmed
+suggestions, so render-changing is EXPECTED (fixability-audit category C4). Re-wired the
+MATH C4 family as candidates: MATH-020 (`\cdot`), MATH-021 (`\lvert…\rvert`), MATH-024
+(unref `\label`, label-only), MATH-028 (array col-spec), MATH-030 (drop inline
+`\displaystyle`), MATH-033 (`$\pm$`), MATH-037 (`\tfrac`), MATH-040 (`\cdots`),
+MATH-041 (`\limits`). Also CHEM-008 + DOC-005 from the sweep. Candidate rules **84→93**;
+byte-safe, validate_messages 0 mismatches. ADR-010 records parking WS10/WS11 (collaboration)
+with the compatibility contract to keep the project addable-later.
+
+*Overlooked proof families (spec master §7 "Required new proof families"):* WS9/WS12 shipped
+runtime-only; now formalized in Coq. `proofs/WaiverScoping.v` — waiver soundness +
+completeness + **audit-non-silence** (every suppression emits exactly one audit record; no
+silent suppression). `proofs/ExtensionBoundary.v` — **monotone-downgrade** (effective ≤ base,
+never upgrades) + **fail-closed** (any over-claim ⇒ rejected). Both Qed, `Print Assumptions`
+Closed, 0 admits/0 axioms, in `_CoqProject`, verified non-vacuous. Theorem count 1,474.
+
 ## [v27.1.47] — 2026-07-12
 
 **WS12 Stage 2 — built-in LP-Extended package-contract registry + provides API (Tier 4).**

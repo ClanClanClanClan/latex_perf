@@ -1458,7 +1458,13 @@ let r_char_014 : rule =
   in
   { id = "CHAR-014"; run; languages = [] }
 
-(* CHAR-021: Zero-width no-break space U+FEFF inside paragraph (BOM) *)
+(* CHAR-021: Zero-width no-break space U+FEFF inside paragraph (BOM).
+
+   Bucket-C CANDIDATE (v27.1.51): a U+FEFF that is NOT the leading BOM is an
+   accidental zero-width no-break space (typically a stray inner BOM from a
+   concatenated file); deleting the 3-byte sequence is a DETERMINATE, bounded
+   edit. The leading BOM (if present) is explicitly preserved — no candidate is
+   offered for it. Count semantics unchanged. *)
 let r_char_021 : rule =
   let run s =
     (* Count U+FEFF occurrences, skip the one at file start (legitimate BOM) *)
@@ -1467,10 +1473,33 @@ let r_char_021 : rule =
     let starts_with_bom = String.length s >= 3 && String.sub s 0 3 = bom in
     let cnt = if starts_with_bom then total - 1 else total in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-021" ~severity:Error
-           ~message:"Zero‑width no‑break space U+FEFF inside paragraph"
-           ~count:cnt)
+      (* Offsets of every U+FEFF except the leading BOM. *)
+      let offsets =
+        List.filter
+          (fun off -> not (starts_with_bom && off = 0))
+          (Validators_l0_typo.find_all_non_overlapping s bom)
+      in
+      let cands =
+        List.map
+          (fun off ->
+            {
+              c_edits =
+                [ Cst_edit.delete ~start_offset:off ~end_offset:(off + 3) ];
+              c_label = "Delete stray zero-width no-break space U+FEFF";
+            })
+          offsets
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHAR-021" ~severity:Error
+             ~message:"Zero‑width no‑break space U+FEFF inside paragraph"
+             ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHAR-021" ~severity:Error
+             ~message:"Zero‑width no‑break space U+FEFF inside paragraph"
+             ~count:cnt ~candidates)
     else None
   in
   { id = "CHAR-021"; run; languages = [] }
@@ -1607,12 +1636,19 @@ let r_char_018 : rule =
   in
   { id = "CHAR-018"; run; languages = [] }
 
-(* CHAR-022: Deprecated tag characters U+E0000-E007F *)
+(* CHAR-022: Deprecated tag characters U+E0000-E007F.
+
+   Bucket-C CANDIDATE (v27.1.51): Unicode tag characters are deprecated and
+   invisible; each is a DETERMINATE, bounded 4-byte delete. Whether a given tag
+   char is truly stray is intent-dependent (rare TAG-based emoji flag sequences
+   exist), so surface each deletion for review rather than auto-applying. Count
+   unchanged. *)
 let r_char_022 : rule =
   let run s =
     (* U+E0000-E007F = F3 A0 80 80 .. F3 A0 81 BF in UTF-8 *)
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 3 do
       if
@@ -1621,14 +1657,27 @@ let r_char_022 : rule =
         && (Char.code s.[!i + 2] = 0x80 || Char.code s.[!i + 2] = 0x81)
       then (
         incr cnt;
+        cands :=
+          {
+            c_edits = [ Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 4) ];
+            c_label = "Delete deprecated Unicode tag character";
+          }
+          :: !cands;
         i := !i + 4)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-022" ~severity:Warning
-           ~message:"Deprecated tag characters U+E0000–E007F present"
-           ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHAR-022" ~severity:Warning
+             ~message:"Deprecated tag characters U+E0000–E007F present"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHAR-022" ~severity:Warning
+             ~message:"Deprecated tag characters U+E0000–E007F present"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "CHAR-022"; run; languages = [] }
@@ -1748,12 +1797,18 @@ let r_char_019 : rule =
   in
   { id = "CHAR-019"; run; languages = [] }
 
-(* CHAR-020: Sharp S in uppercase context — suggest SS *)
+(* CHAR-020: Sharp S in uppercase context — suggest SS.
+
+   Bucket-C CANDIDATE (v27.1.51): the German uppercase of ß is the DETERMINATE
+   digraph "SS", a bounded 2-byte->"SS" replace, but locale/orthography
+   dependent (some authors prefer the capital eszett), so surface for review.
+   Each ß in uppercase context yields one candidate. Count unchanged. *)
 let r_char_020 : rule =
   let run s =
     (* U+00DF = C3 9F (lowercase sharp s) *)
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 1 do
       if Char.code s.[!i] = 0xC3 && Char.code s.[!i + 1] = 0x9F then (
@@ -1770,24 +1825,46 @@ let r_char_020 : rule =
           let c = Char.code s.[!i + 2] in
           c >= 0x41 && c <= 0x5A
         in
-        if prev_upper || next_upper then incr cnt;
+        if prev_upper || next_upper then (
+          incr cnt;
+          cands :=
+            {
+              c_edits =
+                [ Cst_edit.replace ~start_offset:!i ~end_offset:(!i + 2) "SS" ];
+              c_label = "Uppercase sharp S to SS";
+            }
+            :: !cands);
         i := !i + 2)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-020" ~severity:Info
-           ~message:"Sharp S ß in uppercase context – suggest SS" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHAR-020" ~severity:Info
+             ~message:"Sharp S ß in uppercase context – suggest SS" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHAR-020" ~severity:Info
+             ~message:"Sharp S ß in uppercase context – suggest SS" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "CHAR-020"; run; languages = [] }
 
-(* CHAR-010: Right-to-left mark U+200F outside RTL context *)
+(* CHAR-010: Right-to-left mark U+200F outside RTL context.
+
+   Bucket-C CANDIDATE (v27.1.51): deleting the RTL mark is a DETERMINATE,
+   bounded edit (drop the 3-byte U+200F sequence), but whether the mark is
+   redundant depends on author INTENT — a legitimately bidirectional document
+   may need it. So surface each deletion as a review-only candidate rather than
+   auto-applying. Count semantics (one per U+200F) are unchanged. *)
 let r_char_010 : rule =
   let run s =
     (* U+200F = E2 80 8F *)
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 2 do
       if
@@ -1796,23 +1873,42 @@ let r_char_010 : rule =
         && Char.code s.[!i + 2] = 0x8F
       then (
         incr cnt;
+        cands :=
+          {
+            c_edits = [ Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 3) ];
+            c_label = "Delete right-to-left mark U+200F";
+          }
+          :: !cands;
         i := !i + 3)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-010" ~severity:Info
-           ~message:"Right‑to‑left mark U+200F outside RTL context" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHAR-010" ~severity:Info
+             ~message:"Right‑to‑left mark U+200F outside RTL context"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHAR-010" ~severity:Info
+             ~message:"Right‑to‑left mark U+200F outside RTL context"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "CHAR-010"; run; languages = [] }
 
-(* CHAR-011: Left-to-right mark U+200E unnecessary *)
+(* CHAR-011: Left-to-right mark U+200E unnecessary.
+
+   Bucket-C CANDIDATE (v27.1.51): like CHAR-010, deleting the LTR mark is a
+   DETERMINATE, bounded 3-byte delete, but a bidirectional document may need it,
+   so it is surfaced as a review-only candidate. Count unchanged. *)
 let r_char_011 : rule =
   let run s =
     (* U+200E = E2 80 8E *)
     let n = String.length s in
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     while !i < n - 2 do
       if
@@ -1821,13 +1917,26 @@ let r_char_011 : rule =
         && Char.code s.[!i + 2] = 0x8E
       then (
         incr cnt;
+        cands :=
+          {
+            c_edits = [ Cst_edit.delete ~start_offset:!i ~end_offset:(!i + 3) ];
+            c_label = "Delete left-to-right mark U+200E";
+          }
+          :: !cands;
         i := !i + 3)
       else incr i
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"CHAR-011" ~severity:Info
-           ~message:"Left‑to‑right mark U+200E unnecessary" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CHAR-011" ~severity:Info
+             ~message:"Left‑to‑right mark U+200E unnecessary" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CHAR-011" ~severity:Info
+             ~message:"Left‑to‑right mark U+200E unnecessary" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "CHAR-011"; run; languages = [] }

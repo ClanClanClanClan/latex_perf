@@ -3597,10 +3597,32 @@ let l1_font_001_rule : rule =
   in
   { id = "FONT-001"; run; languages = [] }
 
-(* FONT-004: Font change inside math via \textit not \mathit *)
+(* FONT-004: Font change inside math via \textit not \mathit.
+
+   Bucket-C CANDIDATE (v27.1.51): inside math, a text-mode font switch has a
+   DETERMINATE math-mode counterpart (\textit->\mathit, \textbf->\mathbf,
+   \textrm->\mathrm, \textsf->\mathsf, \texttt->\mathtt); the fix is a bounded
+   command-word replace (only the word between the leading `\` and the `{`). The
+   two forms differ semantically (\text* keeps upright/roman text spacing,
+   \math* applies the math alphabet), so the switch is intent-dependent and is
+   surfaced for review, never auto-applied.
+
+   The diagnostic COUNT is preserved byte-for-byte via the original
+   [extract_math_segments] + [count_substring] tally; candidate offsets are
+   computed independently against the ORIGINAL source using [find_math_ranges]
+   (best-effort — a candidate that cannot be located in a math range is simply
+   not offered, which never changes the count). *)
 let l1_font_004_rule : rule =
   let text_font_cmds =
     [ "\\textit{"; "\\textbf{"; "\\textrm{"; "\\textsf{"; "\\texttt{" ]
+  in
+  let math_of = function
+    | "\\textit{" -> "\\mathit{"
+    | "\\textbf{" -> "\\mathbf{"
+    | "\\textrm{" -> "\\mathrm{"
+    | "\\textsf{" -> "\\mathsf{"
+    | "\\texttt{" -> "\\mathtt{"
+    | _ -> assert false
   in
   let run s =
     let math_segs = extract_math_segments s in
@@ -3611,11 +3633,47 @@ let l1_font_004_rule : rule =
           (fun cmd -> cnt := !cnt + count_substring seg cmd)
           text_font_cmds)
       math_segs;
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"FONT-004" ~severity:Info
-           ~message:{|Font change inside math via \textit not \mathit|}
-           ~count:!cnt)
+    if !cnt > 0 then (
+      (* Build candidates over the ORIGINAL source, keeping only occurrences
+         that fall inside a math range. Each replaces the command word only. *)
+      let ranges = find_math_ranges s in
+      let cands = ref [] in
+      List.iter
+        (fun cmd ->
+          let repl = math_of cmd in
+          List.iter
+            (fun off ->
+              if is_in_math_range ranges off then
+                (* word = the `\text..` command sans the trailing `{`; replace
+                   it with the `\math..` command sans its trailing `{`. *)
+                let word_start = off in
+                let word_end = off + String.length cmd - 1 in
+                let new_word = String.sub repl 0 (String.length repl - 1) in
+                cands :=
+                  {
+                    c_edits =
+                      [
+                        Cst_edit.replace ~start_offset:word_start
+                          ~end_offset:word_end new_word;
+                      ];
+                    c_label =
+                      Printf.sprintf "Use math font %s inside math"
+                        (String.sub repl 0 (String.length repl - 1));
+                  }
+                  :: !cands)
+            (Validators_l0_typo.find_all_non_overlapping s cmd))
+        text_font_cmds;
+      let candidates = candidates_drop_vcu_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"FONT-004" ~severity:Info
+             ~message:{|Font change inside math via \textit not \mathit|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"FONT-004" ~severity:Info
+             ~message:{|Font change inside math via \textit not \mathit|}
+             ~count:!cnt ~candidates))
     else None
   in
   { id = "FONT-004"; run; languages = [] }

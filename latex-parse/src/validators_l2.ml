@@ -72,6 +72,14 @@ let r_fig_002 : rule =
   { id = "FIG-002"; run; languages = [] }
 
 (* ── FIG-003: Label before caption in figure ─────────────────────────── *)
+(* Bucket-C CANDIDATE (v27.1.51): the LaTeX convention is `\caption` then
+   `\label` (a \label picks up the counter last stepped by \caption, so a label
+   placed BEFORE the caption references the wrong number). The corrective action
+   — move the \label to immediately after the \caption — is DETERMINATE and
+   nameable, but the exact reorder spans depend on brace nesting inside the two
+   commands, so this is surfaced as a LABEL-ONLY candidate (empty edit set) for
+   an editor frontend to perform, never auto-applied. One candidate per
+   offending figure; count is unchanged. *)
 let r_fig_003 : rule =
   let re_label = Re_compat.regexp {|\\label{|} in
   let re_caption = Re_compat.regexp {|\\caption\(\[\|{\)|} in
@@ -98,9 +106,22 @@ let r_fig_003 : rule =
         0 blocks
     in
     if cnt > 0 then
-      Some
-        (mk_result ~id:"FIG-003" ~severity:Info
-           ~message:"Label before caption in figure" ~count:cnt)
+      let cands =
+        List.init cnt (fun _ ->
+            {
+              c_edits = [];
+              c_label = "Move \\label to immediately after \\caption in figure";
+            })
+      in
+      let candidates = candidates_drop_exempt s cands in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"FIG-003" ~severity:Info
+             ~message:"Label before caption in figure" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"FIG-003" ~severity:Info
+             ~message:"Label before caption in figure" ~count:cnt ~candidates)
     else None
   in
   { id = "FIG-003"; run; languages = [] }
@@ -751,29 +772,53 @@ let r_font_006 : rule =
 (* ── FONT-007: Obsolete \usepackage[T1]{fontenc} under XeLaTeX ──────── *)
 (* Fire if \usepackage[T1]{fontenc} is present AND there is evidence of XeLaTeX
    usage (fontspec, xeCJK, or ifxetex) *)
+(* Bucket-C CANDIDATE (v27.1.51): under a XeLaTeX/LuaLaTeX path fontspec drives
+   font encoding directly, so a `\usepackage[T1]{fontenc}` line is redundant.
+   Removing it is a DETERMINATE, bounded delete of the matched \usepackage span
+   — but whether the author really targets XeLaTeX (vs a pdfLaTeX fallback that
+   would still need it) is intent-dependent, so surface for review. Count (1) is
+   unchanged. *)
 let r_font_007 : rule =
   let re_fontenc = Re_compat.regexp {|\\usepackage\[T1\]{fontenc}|} in
   let run s =
-    let has_fontenc =
+    let fontenc_span =
       try
-        let _mr, _ = Re_compat.search_forward re_fontenc s 0 in
-        ignore _mr;
-        true
-      with Not_found -> false
+        let mr, _ = Re_compat.search_forward re_fontenc s 0 in
+        Some (Re_compat.match_beginning mr, Re_compat.match_end mr)
+      with Not_found -> None
     in
-    if has_fontenc then
-      let xelatex =
-        has_package s "fontspec"
-        || has_package s "xeCJK"
-        || has_package s "ifxetex"
-      in
-      if xelatex then
-        Some
-          (mk_result ~id:"FONT-007" ~severity:Warning
-             ~message:{|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|}
-             ~count:1)
-      else None
-    else None
+    match fontenc_span with
+    | None -> None
+    | Some (mstart, mend) ->
+        let xelatex =
+          has_package s "fontspec"
+          || has_package s "xeCJK"
+          || has_package s "ifxetex"
+        in
+        if xelatex then
+          let candidates =
+            candidates_drop_exempt s
+              [
+                {
+                  c_edits =
+                    [ Cst_edit.delete ~start_offset:mstart ~end_offset:mend ];
+                  c_label =
+                    "Remove obsolete \\usepackage[T1]{fontenc} (fontspec \
+                     drives encoding under XeLaTeX)";
+                };
+              ]
+          in
+          if candidates = [] then
+            Some
+              (mk_result ~id:"FONT-007" ~severity:Warning
+                 ~message:{|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|}
+                 ~count:1)
+          else
+            Some
+              (mk_result_with_candidates ~id:"FONT-007" ~severity:Warning
+                 ~message:{|Obsolete \usepackage[T1]{fontenc} under XeLaTeX|}
+                 ~count:1 ~candidates)
+        else None
   in
   { id = "FONT-007"; run; languages = [] }
 

@@ -2093,4 +2093,135 @@ let () =
   run "CS-002 candidate not in fix field (no auto-apply)" (fun tag ->
       expect (style_no_fix "CS-002" cs2) (tag ^ ": fix=None"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     Candidate sweep (v27.1.51): CHAR-010/011/020/021/022, FONT-004/007, FIG-003
+     — determinate bounded edits surfaced as review-only candidates.
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* CHAR-010: RTL mark U+200F (E2 80 8F) -> delete candidate. *)
+  let c010 = "ab\xe2\x80\x8fcd" in
+  run "CHAR-010 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "CHAR-010" c010 1) (tag ^ ": count=1"));
+  run "CHAR-010 candidate deletes the U+200F span" (fun tag ->
+      expect
+        (edit_of_label "CHAR-010" c010 "Delete right-to-left mark U+200F"
+        = Some (2, 5, ""))
+        (tag ^ ": delete [2,5)"));
+  run "CHAR-010 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "CHAR-010" c010)) (tag ^ ": fix=None"));
+  run "CHAR-010 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "CHAR-010" c010 = c010) (tag ^ ": no rewrite"));
+  run "CHAR-010 candidate dropped inside a comment (still fires)" (fun tag ->
+      let s = "% ab\xe2\x80\x8fcd\n" in
+      expect
+        (fires "CHAR-010" s && candidates_of "CHAR-010" s = [])
+        (tag ^ ": exempt (comment)"));
+
+  (* CHAR-011: LTR mark U+200E (E2 80 8E) -> delete candidate. *)
+  let c011 = "x\xe2\x80\x8ey" in
+  run "CHAR-011 candidate deletes the U+200E span" (fun tag ->
+      expect
+        (fires_with_count "CHAR-011" c011 1
+        && edit_of_label "CHAR-011" c011 "Delete left-to-right mark U+200E"
+           = Some (1, 4, ""))
+        (tag ^ ": delete [1,4)"));
+  run "CHAR-011 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "CHAR-011" c011 = c011) (tag ^ ": no rewrite"));
+
+  (* CHAR-020: uppercase-context ß (C3 9F) -> "SS" candidate. *)
+  let c020 = "STRA\xc3\x9fE" in
+  run "CHAR-020 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "CHAR-020" c020 1) (tag ^ ": count=1"));
+  run "CHAR-020 candidate replaces ß with SS" (fun tag ->
+      expect
+        (edit_of_label "CHAR-020" c020 "Uppercase sharp S to SS"
+        = Some (4, 6, "SS"))
+        (tag ^ ": replace [4,6)->SS"));
+  run "CHAR-020 --apply-fixes leaves ß byte-identical" (fun tag ->
+      expect (apply_fix "CHAR-020" c020 = c020) (tag ^ ": no rewrite"));
+
+  (* CHAR-021: inner BOM/ZWNBSP U+FEFF (EF BB BF) -> delete candidate; a leading
+     BOM gets NO candidate. *)
+  let c021 = "ab\xef\xbb\xbfcd" in
+  run "CHAR-021 still fires on inner U+FEFF (count=1)" (fun tag ->
+      expect (fires_with_count "CHAR-021" c021 1) (tag ^ ": count=1"));
+  run "CHAR-021 candidate deletes the inner U+FEFF span" (fun tag ->
+      expect
+        (edit_of_label "CHAR-021" c021
+           "Delete stray zero-width no-break space U+FEFF"
+        = Some (2, 5, ""))
+        (tag ^ ": delete [2,5)"));
+  run "CHAR-021 leaves a leading BOM unflagged (no candidate)" (fun tag ->
+      let leading = "\xef\xbb\xbfhello" in
+      expect
+        (candidates_of "CHAR-021" leading = [])
+        (tag ^ ": leading BOM preserved"));
+
+  (* CHAR-022: Unicode tag char U+E0001 (F3 A0 80 81) -> delete candidate. *)
+  let c022 = "hi\xf3\xa0\x80\x81there" in
+  run "CHAR-022 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "CHAR-022" c022 1) (tag ^ ": count=1"));
+  run "CHAR-022 candidate deletes the 4-byte tag char" (fun tag ->
+      expect
+        (edit_of_label "CHAR-022" c022 "Delete deprecated Unicode tag character"
+        = Some (2, 6, ""))
+        (tag ^ ": delete [2,6)"));
+  run "CHAR-022 --apply-fixes leaves the tag char byte-identical" (fun tag ->
+      expect (apply_fix "CHAR-022" c022 = c022) (tag ^ ": no rewrite"));
+
+  (* FONT-004: \textit in math -> \mathit command-word candidate. *)
+  let f004 = "$\\textit{x}$" in
+  run "FONT-004 still fires in math (count=1)" (fun tag ->
+      expect (fires_with_count "FONT-004" f004 1) (tag ^ ": count=1"));
+  run "FONT-004 candidate rewrites \\textit -> \\mathit (word only)" (fun tag ->
+      (* "$" at 0; "\textit" spans [1,8); "{" at 8 is untouched. *)
+      expect
+        (edit_of_label "FONT-004" f004 "Use math font \\mathit inside math"
+        = Some (1, 8, "\\mathit"))
+        (tag ^ ": replace [1,8)->\\mathit"));
+  run "FONT-004 --apply-fixes leaves \\textit byte-identical" (fun tag ->
+      expect (apply_fix "FONT-004" f004 = f004) (tag ^ ": no rewrite"));
+  run "FONT-004 candidate dropped inside verbatim (vcu-exempt)" (fun tag ->
+      expect
+        (candidates_of "FONT-004" "\\verb|$\\textit{x}$|" = [])
+        (tag ^ ": vcu-dropped"));
+
+  (* FONT-007: obsolete \usepackage[T1]{fontenc} under XeLaTeX -> delete. *)
+  let f007 = "\\usepackage{fontspec}\n\\usepackage[T1]{fontenc}\n" in
+  run "FONT-007 still fires under a fontspec doc (count=1)" (fun tag ->
+      expect (fires_with_count "FONT-007" f007 1) (tag ^ ": count=1"));
+  run "FONT-007 candidate deletes the whole fontenc \\usepackage span"
+    (fun tag ->
+      (* "\usepackage{fontspec}\n" = 22 bytes; the fontenc load spans
+         [22,46). *)
+      expect
+        (edit_of_label "FONT-007" f007
+           "Remove obsolete \\usepackage[T1]{fontenc} (fontspec drives \
+            encoding under XeLaTeX)"
+        = Some (22, 46, ""))
+        (tag ^ ": delete [22,46)"));
+  run "FONT-007 no candidate without a XeLaTeX signal" (fun tag ->
+      let s = "\\usepackage[T1]{fontenc}\n" in
+      expect (candidates_of "FONT-007" s = []) (tag ^ ": pdfLaTeX path"));
+
+  (* FIG-003: label before caption -> LABEL-ONLY reorder candidate. *)
+  let fig3 =
+    "\\begin{figure}\n\
+     \\includegraphics{x}\n\
+     \\label{f}\n\
+     \\caption{c}\n\
+     \\end{figure}"
+  in
+  run "FIG-003 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "FIG-003" fig3 1) (tag ^ ": count=1"));
+  run "FIG-003 emits a label-only reorder candidate" (fun tag ->
+      match candidates_of "FIG-003" fig3 with
+      | [ { c_edits = []; c_label } ] ->
+          expect
+            (c_label = "Move \\label to immediately after \\caption in figure")
+            (tag ^ ": label-only candidate")
+      | _ -> expect false (tag ^ ": expected one label-only candidate"));
+  run "FIG-003 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "FIG-003" fig3)) (tag ^ ": fix=None"));
+
   finalise "candidate_fixes"

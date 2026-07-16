@@ -195,34 +195,44 @@ let r_style_013 : rule =
   in
   mk_rule "STYLE-013" run
 
-(* STYLE-014: Contraction (don't, isn't) in formal text *)
+(* STYLE-014: Contraction (don't, isn't) in formal text. Bucket-C candidate
+   (v27.1.48): each contraction has a canonical expanded form ("don't" -> "do
+   not", "isn't" -> "is not", …), a DETERMINATE mechanical rewrite, so a
+   per-occurrence candidate replaces the contraction span (matched
+   case-insensitively over the ORIGINAL source, so the ASCII apostrophe form is
+   located exactly) with its expansion. Candidates are intent-dependent
+   (expanding contractions is a house-style choice) so they NEVER auto-apply.
+   The diagnostic [count] (over the lowercased comment+math-stripped text) is
+   UNCHANGED. *)
 let r_style_014 : rule =
+  (* (needle, canonical expansion) — needles are lowercase ASCII with a straight
+     apostrophe, matched case-insensitively. *)
   let contractions =
     [
-      "don't";
-      "doesn't";
-      "didn't";
-      "isn't";
-      "aren't";
-      "wasn't";
-      "weren't";
-      "won't";
-      "wouldn't";
-      "couldn't";
-      "shouldn't";
-      "can't";
-      "haven't";
-      "hasn't";
-      "hadn't";
-      "it's";
-      "that's";
-      "there's";
-      "they're";
-      "we're";
-      "you're";
-      "let's";
-      "who's";
-      "what's";
+      ("don't", "do not");
+      ("doesn't", "does not");
+      ("didn't", "did not");
+      ("isn't", "is not");
+      ("aren't", "are not");
+      ("wasn't", "was not");
+      ("weren't", "were not");
+      ("won't", "will not");
+      ("wouldn't", "would not");
+      ("couldn't", "could not");
+      ("shouldn't", "should not");
+      ("can't", "cannot");
+      ("haven't", "have not");
+      ("hasn't", "has not");
+      ("hadn't", "had not");
+      ("it's", "it is");
+      ("that's", "that is");
+      ("there's", "there is");
+      ("they're", "they are");
+      ("we're", "we are");
+      ("you're", "you are");
+      ("let's", "let us");
+      ("who's", "who is");
+      ("what's", "what is");
     ]
   in
   let run s =
@@ -231,16 +241,56 @@ let r_style_014 : rule =
     in
     let cnt =
       List.fold_left
-        (fun acc c ->
+        (fun acc (c, _) ->
           let n = count_substring text c in
           acc + n)
         0 contractions
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-014" ~severity:Info
-           ~message:"Contraction in formal text" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s], case-insensitive match. Preserve the
+         leading capital when the contraction is capitalised (Don't -> Do
+         not). *)
+      let low = String.lowercase_ascii s in
+      let n = String.length s in
+      let cands = ref [] in
+      List.iter
+        (fun (needle, expansion) ->
+          let m = String.length needle in
+          let i = ref 0 in
+          while !i <= n - m do
+            if String.sub low !i m = needle then (
+              let repl =
+                if s.[!i] >= 'A' && s.[!i] <= 'Z' then
+                  String.make 1 (Char.uppercase_ascii expansion.[0])
+                  ^ String.sub expansion 1 (String.length expansion - 1)
+                else expansion
+              in
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:!i ~end_offset:(!i + m)
+                        repl;
+                    ];
+                  c_label =
+                    Printf.sprintf "Expand contraction \"%s\" to \"%s\""
+                      (String.sub s !i m) repl;
+                }
+                :: !cands;
+              i := !i + m)
+            else incr i
+          done)
+        contractions;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-014" ~severity:Info
+             ~message:"Contraction in formal text" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-014" ~severity:Info
+             ~message:"Contraction in formal text" ~count:cnt ~candidates)
   in
   mk_rule "STYLE-014" run
 
@@ -297,7 +347,12 @@ let r_style_015 : rule =
   in
   mk_rule "STYLE-015" run
 
-(* STYLE-016: Latin abbreviation (e.g., i.e.) missing comma *)
+(* STYLE-016: Latin abbreviation (e.g., i.e.) missing comma. Bucket-C candidate
+   (v27.1.48): the intended fix is DETERMINATE — insert a comma immediately
+   after the abbreviation ("e.g. X" -> "e.g., X"). A per-occurrence candidate
+   inserts a single `,` at the byte just after the trailing `.`, matched over
+   the ORIGINAL source. Candidates never auto-apply. The diagnostic [count]
+   (over the comment+math-stripped text) is UNCHANGED. *)
 let r_style_016 : rule =
   let re = Re_compat.regexp {|[ei]\.g\.\([^,]\)\|i\.e\.\([^,]\)|} in
   let run s =
@@ -312,13 +367,46 @@ let r_style_016 : rule =
          start := Re_compat.match_end _mr
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-016" ~severity:Info
-           ~message:
-             "Latin abbreviation (e.g., i.e.) missing comma after abbreviation"
-           ~count:!cnt)
-    else None
+    if !cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s]: match "e.g." or "i.e." whose next
+         byte is neither a comma nor a `.` (skip "e.g.," and abbreviation runs),
+         and insert a comma after the final `.`. *)
+      let n = String.length s in
+      let is_abbrev i =
+        i + 4 <= n && (String.sub s i 4 = "e.g." || String.sub s i 4 = "i.e.")
+      in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i <= n - 4 do
+        if is_abbrev !i then (
+          let after = !i + 4 in
+          if after < n && s.[after] <> ',' then
+            cands :=
+              {
+                c_edits = [ Cst_edit.insert ~at:after "," ];
+                c_label =
+                  Printf.sprintf "Insert comma after \"%s\"" (String.sub s !i 4);
+              }
+              :: !cands;
+          i := after)
+        else incr i
+      done;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-016" ~severity:Info
+             ~message:
+               "Latin abbreviation (e.g., i.e.) missing comma after \
+                abbreviation"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-016" ~severity:Info
+             ~message:
+               "Latin abbreviation (e.g., i.e.) missing comma after \
+                abbreviation"
+             ~count:!cnt ~candidates)
   in
   mk_rule "STYLE-016" run
 
@@ -487,9 +575,16 @@ let r_style_024 : rule =
   in
   mk_rule "STYLE-024" run
 
-(* STYLE-026: Repeated word (the the) *)
+(* STYLE-026: Repeated word (the the). Bucket-C candidate (v27.1.48): the fix is
+   DETERMINATE — delete the duplicated second word together with the whitespace
+   that separates the pair ("the the" -> "the"). A per-occurrence candidate
+   deletes the span from the end of the first word through the end of the
+   second, located over the ORIGINAL source with a whitespace-delimited word
+   scan (case-insensitive comparison, words > 1 char), mirroring the diagnostic.
+   Candidates never auto-apply. The diagnostic [count] is UNCHANGED. *)
 let r_style_026 : rule =
   let re_whitespace = Re_compat.regexp "[ \t\n\r]+" in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
   let run s =
     let text =
       String.lowercase_ascii (strip_comments (strip_math_segments s))
@@ -502,11 +597,49 @@ let r_style_026 : rule =
           check cnt rest
     in
     let cnt = check 0 words in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-026" ~severity:Info
-           ~message:"Repeated word detected" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s]: tokenise into (start,end) word spans
+         on whitespace and flag adjacent identical (case-insensitive) tokens of
+         length > 1, whose separating run is whitespace only. Delete the gap +
+         second token. *)
+      let n = String.length s in
+      let spans = ref [] in
+      let i = ref 0 in
+      while !i < n do
+        if is_ws s.[!i] then incr i
+        else
+          let st = !i in
+          while !i < n && not (is_ws s.[!i]) do
+            incr i
+          done;
+          spans := (st, !i) :: !spans
+      done;
+      let spans = Array.of_list (List.rev !spans) in
+      let cands = ref [] in
+      for k = 0 to Array.length spans - 2 do
+        let a0, a1 = spans.(k) and b0, b1 = spans.(k + 1) in
+        let wa = String.lowercase_ascii (String.sub s a0 (a1 - a0)) in
+        let wb = String.lowercase_ascii (String.sub s b0 (b1 - b0)) in
+        if String.length wa > 1 && wa = wb then
+          cands :=
+            {
+              c_edits = [ Cst_edit.delete ~start_offset:a1 ~end_offset:b1 ];
+              c_label =
+                Printf.sprintf "Remove duplicated word \"%s\""
+                  (String.sub s b0 (b1 - b0));
+            }
+            :: !cands
+      done;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-026" ~severity:Info
+             ~message:"Repeated word detected" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-026" ~severity:Info
+             ~message:"Repeated word detected" ~count:cnt ~candidates)
   in
   mk_rule "STYLE-026" run
 
@@ -650,20 +783,53 @@ let r_style_034 : rule =
   in
   mk_rule "STYLE-034" run
 
-(* STYLE-035: Slash used for 'and/or' *)
+(* STYLE-035: Slash used for 'and/or'. Bucket-C candidate (v27.1.48): the
+   canonical house-style rewrite of the ambiguous construct "and/or" is the
+   single word "or" (the standard editorial recommendation; "or" is inclusive in
+   formal prose). A per-occurrence candidate replaces the literal "and/or" span
+   with "or", matched over the ORIGINAL source. This is a style choice, so
+   candidates never auto-apply. The diagnostic [count] is UNCHANGED. *)
 let r_style_035 : rule =
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = count_substring text "and/or" in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-035" ~severity:Info
-           ~message:"Slash used for 'and/or'" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      let needle = "and/or" in
+      let m = String.length needle in
+      let n = String.length s in
+      let cands = ref [] in
+      let i = ref 0 in
+      while !i <= n - m do
+        if String.sub s !i m = needle then (
+          cands :=
+            {
+              c_edits =
+                [ Cst_edit.replace ~start_offset:!i ~end_offset:(!i + m) "or" ];
+              c_label = "Replace \"and/or\" with \"or\"";
+            }
+            :: !cands;
+          i := !i + m)
+        else incr i
+      done;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-035" ~severity:Info
+             ~message:"Slash used for 'and/or'" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-035" ~severity:Info
+             ~message:"Slash used for 'and/or'" ~count:cnt ~candidates)
   in
   mk_rule "STYLE-035" run
 
-(* STYLE-036: Latin phrase (cf., ibid.) not italicised *)
+(* STYLE-036: Latin phrase (cf., ibid.) not italicised. Bucket-C candidate
+   (v27.1.48): the fix is DETERMINATE — wrap the phrase in \emph{...} ("cf." ->
+   "\emph{cf.}"). A per-occurrence candidate replaces each phrase span (over the
+   ORIGINAL source, EXCLUDING an occurrence already immediately preceded by
+   "\emph{" or "\textit{") with "\emph{PHRASE}". Candidates never auto-apply.
+   The diagnostic [count] is UNCHANGED. *)
 let r_style_036 : rule =
   let phrases = [ "cf."; "ibid."; "et al."; "viz."; "e.g."; "i.e." ] in
   let run s =
@@ -680,11 +846,49 @@ let r_style_036 : rule =
           acc + max 0 (n - n_emph))
         0 phrases
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-036" ~severity:Info
-           ~message:"Latin phrase not italicised" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      let n = String.length s in
+      let preceded_by pref i =
+        let pl = String.length pref in
+        i >= pl && String.sub s (i - pl) pl = pref
+      in
+      let cands = ref [] in
+      List.iter
+        (fun phrase ->
+          let m = String.length phrase in
+          let i = ref 0 in
+          while !i <= n - m do
+            if
+              String.sub s !i m = phrase
+              && (not (preceded_by "\\emph{" !i))
+              && not (preceded_by "\\textit{" !i)
+            then (
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:!i ~end_offset:(!i + m)
+                        ("\\emph{" ^ phrase ^ "}");
+                    ];
+                  c_label =
+                    Printf.sprintf "Italicise Latin phrase \"%s\" with \\emph"
+                      phrase;
+                }
+                :: !cands;
+              i := !i + m)
+            else incr i
+          done)
+        phrases;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-036" ~severity:Info
+             ~message:"Latin phrase not italicised" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-036" ~severity:Info
+             ~message:"Latin phrase not italicised" ~count:cnt ~candidates)
   in
   mk_rule "STYLE-036" run
 
@@ -712,16 +916,41 @@ let r_style_037 : rule =
   in
   mk_rule "STYLE-037" run
 
-(* STYLE-040: Exclamation mark in academic prose *)
+(* STYLE-040: Exclamation mark in academic prose. Bucket-C candidate (v27.1.48):
+   the fix is DETERMINATE — replace the exclamation mark with a period
+   (neutralise the emphatic tone). A per-occurrence candidate replaces each `!`
+   (over the ORIGINAL source) with `.`. Toning down is a stylistic choice, so
+   candidates never auto-apply. The diagnostic [count] is UNCHANGED. Note: `!=`
+   / `!` as a TeX active char is out of scope because exempt gating drops
+   math/verbatim occurrences. *)
 let r_style_040 : rule =
   let run s =
     let text = strip_comments (strip_math_segments s) in
     let cnt = count_char text '!' in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-040" ~severity:Info
-           ~message:"Exclamation mark in academic prose" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      let n = String.length s in
+      let cands = ref [] in
+      for i = 0 to n - 1 do
+        if s.[i] = '!' then
+          cands :=
+            {
+              c_edits =
+                [ Cst_edit.replace ~start_offset:i ~end_offset:(i + 1) "." ];
+              c_label = "Replace exclamation mark with a period";
+            }
+            :: !cands
+      done;
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-040" ~severity:Info
+             ~message:"Exclamation mark in academic prose" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-040" ~severity:Info
+             ~message:"Exclamation mark in academic prose" ~count:cnt
+             ~candidates)
   in
   mk_rule "STYLE-040" run
 
@@ -814,8 +1043,19 @@ let r_style_048 : rule =
   in
   mk_rule "STYLE-048" run
 
-(* STYLE-049: Section heading ends with colon *)
+(* STYLE-049: Section heading ends with colon. Bucket-C candidate (v27.1.48):
+   the fix is DETERMINATE — delete the trailing colon of the heading title
+   ("\section{Intro:}" -> "\section{Intro}"). A per-heading candidate deletes
+   the single `:` byte at the end of each offending title (located over the
+   ORIGINAL source via the same heading-brace walk used by
+   [extract_heading_titles]). Whether the house style forbids the colon is a
+   choice, so candidates never auto-apply. The diagnostic [count] is
+   UNCHANGED. *)
 let r_style_049 : rule =
+  let heading_re =
+    Re_compat.regexp {|\\[sub]*section\*?[ \t\n]*\(\[[^]]*\][ \t\n]*\)?\{|}
+  in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
   let run s =
     let titles = extract_heading_titles s in
     let cnt =
@@ -826,11 +1066,51 @@ let r_style_049 : rule =
           else acc)
         0 titles
     in
-    if cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-049" ~severity:Info
-           ~message:"Section heading ends with colon" ~count:cnt)
-    else None
+    if cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s]: walk to each heading body and, if its
+         last non-whitespace byte is `:`, delete that colon. *)
+      let n = String.length s in
+      let cands = ref [] in
+      let start = ref 0 in
+      (try
+         while !start < n do
+           let _mr, _ = Re_compat.search_forward heading_re s !start in
+           let brace_start = Re_compat.match_end _mr in
+           let depth = ref 1 in
+           let j = ref brace_start in
+           while !j < n && !depth > 0 do
+             (match s.[!j] with
+             | '{' -> incr depth
+             | '}' -> decr depth
+             | _ -> ());
+             if !depth > 0 then incr j
+           done;
+           if !depth = 0 && !j > brace_start then (
+             let e = ref (!j - 1) in
+             while !e >= brace_start && is_ws s.[!e] do
+               decr e
+             done;
+             if !e >= brace_start && s.[!e] = ':' then
+               cands :=
+                 {
+                   c_edits =
+                     [ Cst_edit.delete ~start_offset:!e ~end_offset:(!e + 1) ];
+                   c_label = "Remove the colon at the end of the heading";
+                 }
+                 :: !cands);
+           start := !j + 1
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-049" ~severity:Info
+             ~message:"Section heading ends with colon" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-049" ~severity:Info
+             ~message:"Section heading ends with colon" ~count:cnt ~candidates)
   in
   mk_rule "STYLE-049" run
 
@@ -1141,7 +1421,13 @@ let r_style_021 : rule =
   in
   mk_rule "STYLE-021" run
 
-(* STYLE-022: Serial comma missing in three-item list *)
+(* STYLE-022: Serial comma missing in three-item list. Bucket-C candidate
+   (v27.1.48): the Oxford/serial-comma fix is DETERMINATE — insert a comma
+   before the final "and" in "X, Y and Z" -> "X, Y, and Z". A per-match
+   candidate inserts a single `,` at the byte just before the " and " of each
+   firing (located over the ORIGINAL source). Whether to use the Oxford comma is
+   a house-style choice, so candidates never auto-apply. The diagnostic [count]
+   (over the comment+math-stripped text) is UNCHANGED. *)
 let r_style_022 : rule =
   let re = Re_compat.regexp {|[a-zA-Z]+, [a-zA-Z]+ and [a-zA-Z]|} in
   let run s =
@@ -1156,11 +1442,45 @@ let r_style_022 : rule =
          start := Re_compat.match_end _mr
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-022" ~severity:Info
-           ~message:"Serial comma missing in three-item list" ~count:!cnt)
-    else None
+    if !cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s]: re-run the same match and, within
+         each whole match, insert a comma at the offset of the " and " (before
+         the space that precedes "and"). *)
+      let cands = ref [] in
+      let start = ref 0 in
+      let n = String.length s in
+      (try
+         while !start < n do
+           let _mr, mpos = Re_compat.search_forward re s !start in
+           let mend = Re_compat.match_end _mr in
+           (* locate " and " inside [mpos, mend) — the whole match ends with "
+              and " + one letter, so it is at mend-6. *)
+           let and_pos = mend - 6 in
+           if
+             and_pos >= mpos
+             && and_pos + 5 <= n
+             && String.sub s and_pos 5 = " and "
+           then
+             cands :=
+               {
+                 c_edits = [ Cst_edit.insert ~at:and_pos "," ];
+                 c_label = "Insert serial (Oxford) comma before \"and\"";
+               }
+               :: !cands;
+           start := mend
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-022" ~severity:Info
+             ~message:"Serial comma missing in three-item list" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-022" ~severity:Info
+             ~message:"Serial comma missing in three-item list" ~count:!cnt
+             ~candidates)
   in
   mk_rule "STYLE-022" run
 
@@ -1683,7 +2003,13 @@ let r_style_039 : rule =
   in
   mk_rule "STYLE-039" run
 
-(* STYLE-041: Footnote lacks terminal period *)
+(* STYLE-041: Footnote lacks terminal period. Bucket-C candidate (v27.1.48): the
+   fix is DETERMINATE — append a period to the footnote body ("\footnote{Foo}"
+   -> "\footnote{Foo.}"). A per-footnote candidate inserts a single `.` at the
+   byte just after the last non-whitespace character of each offending body
+   (located over the ORIGINAL source so offsets are exact). Candidates never
+   auto-apply. The diagnostic [count] (over the comment-stripped text) is
+   UNCHANGED. *)
 let r_style_041 : rule =
   let re = Re_compat.regexp {|\\footnote{|} in
   let run s =
@@ -1714,11 +2040,52 @@ let r_style_041 : rule =
          start := !j + 1
        done
      with Not_found -> ());
-    if !cnt > 0 then
-      Some
-        (mk_result ~id:"STYLE-041" ~severity:Info
-           ~message:"Footnote lacks terminal period" ~count:!cnt)
-    else None
+    if !cnt <= 0 then None
+    else
+      (* Candidates over the ORIGINAL [s]: same brace walk, but insert `.` after
+         the last non-whitespace byte of each offending body. *)
+      let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
+      let n = String.length s in
+      let cands = ref [] in
+      let start = ref 0 in
+      (try
+         while !start < n do
+           let _mr, _ = Re_compat.search_forward re s !start in
+           let brace_start = Re_compat.match_end _mr in
+           let depth = ref 1 in
+           let j = ref brace_start in
+           while !j < n && !depth > 0 do
+             (match s.[!j] with
+             | '{' -> incr depth
+             | '}' -> decr depth
+             | _ -> ());
+             if !depth > 0 then incr j
+           done;
+           if !depth = 0 && !j > brace_start then (
+             (* last non-ws byte of the body [brace_start, !j) *)
+             let e = ref (!j - 1) in
+             while !e >= brace_start && is_ws s.[!e] do
+               decr e
+             done;
+             if !e >= brace_start && s.[!e] <> '.' then
+               cands :=
+                 {
+                   c_edits = [ Cst_edit.insert ~at:(!e + 1) "." ];
+                   c_label = "Add terminal period to footnote";
+                 }
+                 :: !cands);
+           start := !j + 1
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"STYLE-041" ~severity:Info
+             ~message:"Footnote lacks terminal period" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"STYLE-041" ~severity:Info
+             ~message:"Footnote lacks terminal period" ~count:!cnt ~candidates)
   in
   mk_rule "STYLE-041" run
 

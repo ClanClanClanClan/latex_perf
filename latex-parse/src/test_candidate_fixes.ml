@@ -1556,4 +1556,339 @@ let () =
       let v = "\\begin{verbatim}\n$\\int_0^1$\n\\end{verbatim}" in
       expect (candidates_of "MATH-041" v = []) (tag ^ ": exempt"));
 
+  (* ======================================================================
+     Bucket-C batch (v27.1.48): SCRIPT / REF / SPC-026 / TIKZ rename &
+     structural candidates
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* SCRIPT-002: superscript Unicode hyphen -> ^{-} *)
+  let s002 = "$x^\xe2\x80\x91$" (* U+2011 non-breaking hyphen *) in
+  run "SCRIPT-002 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "SCRIPT-002" s002 1) (tag ^ ": count=1"));
+  run "SCRIPT-002 candidate replaces the Unicode hyphen with {-}" (fun tag ->
+      (* "$x^" = 3 bytes; the 3-byte hyphen spans [3,6) -> {-} *)
+      expect
+        (edit_of_label "SCRIPT-002" s002
+           "Use a braced ASCII minus ^{-} for the superscript dash"
+        = Some (3, 6, "{-}"))
+        (tag ^ ": edit [3,6)->{-}"));
+  run "SCRIPT-002 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "SCRIPT-002" s002 = s002) (tag ^ ": no rewrite"));
+  run "SCRIPT-002 candidate dropped in verbatim" (fun tag ->
+      expect
+        (candidates_of "SCRIPT-002" "\\verb|$x^\xe2\x80\x91$|" = [])
+        (tag ^ ": vcu-dropped"));
+
+  (* SCRIPT-012: >3 primes -> ^{(n)} *)
+  let s012 = "$f''''$" in
+  run "SCRIPT-012 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "SCRIPT-012" s012 1) (tag ^ ": count=1"));
+  run "SCRIPT-012 candidate replaces the 4-prime run with ^{(4)}" (fun tag ->
+      (* "$f" = 2 bytes; four primes span [2,6) -> ^{(4)} *)
+      expect
+        (edit_of_label "SCRIPT-012" s012
+           "Use derivative-order ^{(n)} for a long prime run"
+        = Some (2, 6, "^{(4)}"))
+        (tag ^ ": edit [2,6)->^{(4)}"));
+  run "SCRIPT-012 five primes -> ^{(5)}" (fun tag ->
+      expect
+        (edit_of_label "SCRIPT-012" "$g'''''$"
+           "Use derivative-order ^{(n)} for a long prime run"
+        = Some (2, 7, "^{(5)}"))
+        (tag ^ ": edit [2,7)->^{(5)}"));
+  run "SCRIPT-012 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "SCRIPT-012" s012 = s012) (tag ^ ": no rewrite"));
+
+  (* SCRIPT-013: _{+}/_{-} -> _{\pm}/_{\mp} *)
+  let s013 = "$x_{+}$" in
+  run "SCRIPT-013 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "SCRIPT-013" s013 1) (tag ^ ": count=1"));
+  run "SCRIPT-013 candidate rewrites the + to \\pm" (fun tag ->
+      (* "$x_{" = 4 bytes; the sign is at [4,5) -> \pm *)
+      expect
+        (edit_of_label "SCRIPT-013" s013 "Wrap subscript sign as \\pm/\\mp"
+        = Some (4, 5, "\\pm"))
+        (tag ^ ": edit [4,5)->\\pm"));
+  run "SCRIPT-013 minus -> \\mp" (fun tag ->
+      expect
+        (edit_of_label "SCRIPT-013" "$y_{-}$" "Wrap subscript sign as \\pm/\\mp"
+        = Some (4, 5, "\\mp"))
+        (tag ^ ": edit [4,5)->\\mp"));
+
+  (* SCRIPT-022: ^{'''...} stacked >3 -> ^{(n)} *)
+  let s022 = "$h^{''''}$" in
+  run "SCRIPT-022 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "SCRIPT-022" s022 1) (tag ^ ": count=1"));
+  run "SCRIPT-022 candidate replaces ^{''''} with ^{(4)}" (fun tag ->
+      (* "$h" = 2 bytes; "^{''''}" spans [2,9) -> ^{(4)} *)
+      expect
+        (edit_of_label "SCRIPT-022" s022
+           "Use derivative-order ^{(n)} for a stacked prime group"
+        = Some (2, 9, "^{(4)}"))
+        (tag ^ ": edit [2,9)->^{(4)}"));
+
+  (* REF-002: duplicate label -> label-only per collision (zero-width insert) *)
+  let r002 = "\\label{x}\ntext\n\\label{x}" in
+  run "REF-002 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "REF-002" r002 1) (tag ^ ": count=1"));
+  run "REF-002 emits a duplicate-rename label candidate" (fun tag ->
+      expect
+        (has_label "REF-002" r002 "Rename one of the duplicate labels \"x\"")
+        (tag ^ ": label"));
+  run "REF-002 candidate is byte-safe (empty replacement, no rewrite)"
+    (fun tag -> expect (apply_fix "REF-002" r002 = r002) (tag ^ ": no rewrite"));
+
+  (* REF-003: label with spaces -> in-file rename (def + refs) *)
+  let r003 = "\\label{my fig}\nSee \\ref{my fig}." in
+  run "REF-003 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "REF-003" r003 1) (tag ^ ": count=1"));
+  run "REF-003 candidate renames def + in-file ref (spaces -> hyphens)"
+    (fun tag ->
+      match candidates_of "REF-003" r003 with
+      | [ { c_edits; c_label } ] -> (
+          match Cst_edit.apply_all r003 c_edits with
+          | Ok out ->
+              expect
+                (c_label = "Replace spaces in the label with hyphens"
+                && out = "\\label{my-fig}\nSee \\ref{my-fig}.")
+                (tag ^ ": def+ref both renamed")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate"));
+  run "REF-003 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "REF-003" r003 = r003) (tag ^ ": no rewrite"));
+
+  (* REF-004: uppercase label -> lowercase rename (def + refs) *)
+  let r004 = "\\label{Fig:Intro}\n\\ref{Fig:Intro}" in
+  run "REF-004 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "REF-004" r004 1) (tag ^ ": count=1"));
+  run "REF-004 candidate lowercases def + in-file ref" (fun tag ->
+      match candidates_of "REF-004" r004 with
+      | [ { c_edits; c_label } ] -> (
+          match Cst_edit.apply_all r004 c_edits with
+          | Ok out ->
+              expect
+                (c_label = "Lowercase the label"
+                && out = "\\label{fig:intro}\n\\ref{fig:intro}")
+                (tag ^ ": lowercased def+ref")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate"));
+
+  (* REF-005: no prefix -> label-only (no determinate prefix) *)
+  let r005 = "\\label{intro}" in
+  run "REF-005 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "REF-005" r005 1) (tag ^ ": count=1"));
+  run "REF-005 emits a label-only add-prefix candidate" (fun tag ->
+      expect
+        (has_label "REF-005" r005
+           "Add a type prefix (fig:/tab:/eq:/sec:) to the label")
+        (tag ^ ": label"));
+  run "REF-005 candidate is byte-safe (no rewrite)" (fun tag ->
+      expect (apply_fix "REF-005" r005 = r005) (tag ^ ": no rewrite"));
+
+  (* REF-007: cite key whitespace -> strip whitespace from the argument *)
+  let r007 = "\\cite{foo bar}" in
+  run "REF-007 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "REF-007" r007 1) (tag ^ ": count=1"));
+  run "REF-007 candidate strips whitespace from the cite argument" (fun tag ->
+      (* "\cite{" = 6 bytes; "foo bar" spans [6,13) -> "foobar" *)
+      expect
+        (edit_of_label "REF-007" r007 "Strip whitespace from the cite key"
+        = Some (6, 13, "foobar"))
+        (tag ^ ": edit [6,13)->foobar"));
+  run "REF-007 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "REF-007" r007 = r007) (tag ^ ": no rewrite"));
+
+  (* SPC-026: mixed \item indentation -> normalise to modal width *)
+  let sp26 =
+    "\\begin{itemize}\n  \\item a\n  \\item b\n      \\item c\n\\end{itemize}"
+  in
+  run "SPC-026 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "SPC-026" sp26 1) (tag ^ ": count=1"));
+  run "SPC-026 candidate normalises the odd \\item to the modal 2-space indent"
+    (fun tag ->
+      match candidates_of "SPC-026" sp26 with
+      | [ { c_edits; c_label } ] -> (
+          match Cst_edit.apply_all sp26 c_edits with
+          | Ok out ->
+              expect
+                (c_label = "Normalise \\item indentation to the modal width"
+                && out
+                   = "\\begin{itemize}\n\
+                     \  \\item a\n\
+                     \  \\item b\n\
+                     \  \\item c\n\
+                      \\end{itemize}")
+                (tag ^ ": third \\item re-indented to 2 spaces")
+          | Error _ -> expect false (tag ^ ": edits should apply cleanly"))
+      | _ -> expect false (tag ^ ": expected one candidate"));
+  run "SPC-026 --apply-fixes leaves source byte-identical" (fun tag ->
+      expect (apply_fix "SPC-026" sp26 = sp26) (tag ^ ": no rewrite"));
+
+  (* TIKZ-001: tikzpicture outside figure -> label-only wrap *)
+  let t001 = "\\begin{tikzpicture}\n\\draw (0,0);\n\\end{tikzpicture}" in
+  run "TIKZ-001 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "TIKZ-001" t001 1) (tag ^ ": count=1"));
+  run "TIKZ-001 emits a label-only figure-wrap candidate" (fun tag ->
+      expect
+        (has_label "TIKZ-001" t001
+           "Wrap the tikzpicture in a figure environment")
+        (tag ^ ": label"));
+  run "TIKZ-001 candidate is byte-safe (no rewrite)" (fun tag ->
+      expect (apply_fix "TIKZ-001" t001 = t001) (tag ^ ": no rewrite"));
+
+  (* TIKZ-003: non-math axis label -> $...$ wrap. The label must sit in the axis
+     BODY (the rule skips the `[...]` option block, as extract_env_blocks
+     does). *)
+  let t003 = "\\begin{axis}\nxlabel={time}\n\\end{axis}" in
+  run "TIKZ-003 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "TIKZ-003" t003 1) (tag ^ ": count=1"));
+  run "TIKZ-003 candidate wraps the label text in $...$" (fun tag ->
+      (* "\begin{axis}\nxlabel={" = 21 bytes; "time" spans [21,25) -> $time$ *)
+      expect
+        (edit_of_label "TIKZ-003" t003 "Wrap the axis label in math mode ($…$)"
+        = Some (21, 25, "$time$"))
+        (tag ^ ": edit [21,25)->$time$"));
+  run "TIKZ-003 already-math label yields no candidate" (fun tag ->
+      let s = "\\begin{axis}\nxlabel={$t$}\n\\end{axis}" in
+      expect (candidates_of "TIKZ-003" s = []) (tag ^ ": no candidate"));
+
+  (* TIKZ-004: hard RGB -> label-only xcolor suggestion *)
+  let t004 = "\\draw[color={rgb,255:red,1}] (0,0);" in
+  run "TIKZ-004 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "TIKZ-004" t004 1) (tag ^ ": count=1"));
+  run "TIKZ-004 emits a label-only xcolor candidate" (fun tag ->
+      expect
+        (has_label "TIKZ-004" t004
+           "Define a named xcolor instead of a hard-coded RGB value")
+        (tag ^ ": label"));
+  run "TIKZ-004 candidate is byte-safe (no rewrite)" (fun tag ->
+      expect (apply_fix "TIKZ-004" t004 = t004) (tag ^ ": no rewrite"));
+
+  (* ======================================================================
+     STYLE candidate family (v27.1.48) — intent-dependent style suggestions.
+     STYLE-* are L4 Class-D rules, so they only surface via
+     [run_all_with_class_d] (which [candidates_of]/[edit_of_label] use); the
+     run_all-based [fires]/[apply_fix]/[fires_with_fix] helpers do NOT see them.
+     A non-empty candidate list therefore proves the rule fired; [fix = None] on
+     the Class-D result proves it is never auto-applied. --apply-fixes-for
+     byte-identity is verified separately at the CLI level. *)
+  let style_no_fix id src =
+    let results = Validators.run_all_with_class_d src in
+    match List.find_opt (fun (r : Validators.result) -> r.id = id) results with
+    | Some r -> r.fix = None && r.candidate_fixes <> []
+    | None -> false
+  in
+
+  (* STYLE-014: contraction -> expansion *)
+  let s14 = "This doesn't work." in
+  run "STYLE-014 emits expansion candidate" (fun tag ->
+      (* "This " = 5 bytes; "doesn't" spans [5,12). *)
+      expect
+        (edit_of_label "STYLE-014" s14
+           "Expand contraction \"doesn't\" to \"does not\""
+        = Some (5, 12, "does not"))
+        (tag ^ ": edit"));
+  run "STYLE-014 preserves leading capital" (fun tag ->
+      expect
+        (has_label "STYLE-014" "Don't stop."
+           "Expand contraction \"Don't\" to \"Do not\"")
+        (tag ^ ": capital"));
+  run "STYLE-014 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-014" s14) (tag ^ ": fix=None"));
+
+  (* STYLE-016: Latin abbrev missing comma *)
+  let s16 = "See e.g. Smith." in
+  run "STYLE-016 emits insert-comma candidate" (fun tag ->
+      (* "See " = 4 bytes; "e.g." spans [4,8); insert `,` at 8. *)
+      expect
+        (edit_of_label "STYLE-016" s16 "Insert comma after \"e.g.\""
+        = Some (8, 8, ","))
+        (tag ^ ": edit"));
+  run "STYLE-016 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-016" s16) (tag ^ ": fix=None"));
+
+  (* STYLE-022: serial (Oxford) comma missing *)
+  let s22 = "apples, oranges and pears" in
+  run "STYLE-022 emits Oxford-comma candidate" (fun tag ->
+      (* " and " (the space before "and") starts at offset 15. *)
+      expect
+        (edit_of_label "STYLE-022" s22
+           "Insert serial (Oxford) comma before \"and\""
+        = Some (15, 15, ","))
+        (tag ^ ": edit"));
+  run "STYLE-022 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-022" s22) (tag ^ ": fix=None"));
+
+  (* STYLE-026: repeated word *)
+  let s26 = "the the method" in
+  run "STYLE-026 emits remove-duplicate candidate" (fun tag ->
+      (* first "the" = [0,3), gap+second "the" = [3,7). *)
+      expect
+        (edit_of_label "STYLE-026" s26 "Remove duplicated word \"the\""
+        = Some (3, 7, ""))
+        (tag ^ ": edit"));
+  run "STYLE-026 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-026" s26) (tag ^ ": fix=None"));
+
+  (* STYLE-035: and/or -> or *)
+  let s35 = "true and/or false" in
+  run "STYLE-035 emits and/or->or candidate" (fun tag ->
+      (* "true " = 5 bytes; "and/or" spans [5,11). *)
+      expect
+        (edit_of_label "STYLE-035" s35 "Replace \"and/or\" with \"or\""
+        = Some (5, 11, "or"))
+        (tag ^ ": edit"));
+  run "STYLE-035 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-035" s35) (tag ^ ": fix=None"));
+
+  (* STYLE-036: Latin phrase italicisation *)
+  let s36 = "See cf. above." in
+  run "STYLE-036 emits \\emph-wrap candidate" (fun tag ->
+      (* "See " = 4 bytes; "cf." spans [4,7). *)
+      expect
+        (edit_of_label "STYLE-036" s36
+           "Italicise Latin phrase \"cf.\" with \\emph"
+        = Some (4, 7, "\\emph{cf.}"))
+        (tag ^ ": edit"));
+  run "STYLE-036 skips an already-italicised phrase" (fun tag ->
+      expect
+        (candidates_of "STYLE-036" "See \\emph{cf.} above." = [])
+        (tag ^ ": already emph"));
+  run "STYLE-036 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-036" s36) (tag ^ ": fix=None"));
+
+  (* STYLE-040: exclamation -> period *)
+  let s40 = "Great result!" in
+  run "STYLE-040 emits period candidate" (fun tag ->
+      (* "Great result" = 12 bytes; "!" at [12,13). *)
+      expect
+        (edit_of_label "STYLE-040" s40 "Replace exclamation mark with a period"
+        = Some (12, 13, "."))
+        (tag ^ ": edit"));
+  run "STYLE-040 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-040" s40) (tag ^ ": fix=None"));
+
+  (* STYLE-041: footnote terminal period *)
+  let s41 = "x\\footnote{A note}" in
+  run "STYLE-041 emits add-period candidate" (fun tag ->
+      (* "x\footnote{" = 11 bytes; body "A note" = [11,17); insert at 17. *)
+      expect
+        (edit_of_label "STYLE-041" s41 "Add terminal period to footnote"
+        = Some (17, 17, "."))
+        (tag ^ ": edit"));
+  run "STYLE-041 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-041" s41) (tag ^ ": fix=None"));
+
+  (* STYLE-049: heading trailing colon *)
+  let s49 = "\\section{Intro:}" in
+  run "STYLE-049 emits remove-colon candidate" (fun tag ->
+      (* "\section{Intro" = 14 bytes; ":" at [14,15). *)
+      expect
+        (edit_of_label "STYLE-049" s49
+           "Remove the colon at the end of the heading"
+        = Some (14, 15, ""))
+        (tag ^ ": edit"));
+  run "STYLE-049 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "STYLE-049" s49) (tag ^ ": fix=None"));
+
   finalise "candidate_fixes"

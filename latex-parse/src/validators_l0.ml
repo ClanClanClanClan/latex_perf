@@ -2681,14 +2681,20 @@ let r_spc_026 : rule =
   let run s =
     let envs = [ "itemize"; "enumerate"; "description" ] in
     let cnt = ref 0 in
+    let cands = ref [] in
     List.iter
       (fun env ->
-        let blocks = extract_env_blocks env s in
+        (* Absolute (content_start, content_end) of every block body, so the
+           candidate can emit edits at real source offsets. Mirrors the byte
+           range walked by [extract_env_blocks] used for the count. *)
+        let ranges = extract_env_block_ranges env s in
         List.iter
-          (fun blk ->
+          (fun (cstart, cend) ->
+            let blk = String.sub s cstart (cend - cstart) in
             let lines = String.split_on_char '\n' blk in
-            (* Measure leading whitespace of \item lines *)
-            let widths = ref [] in
+            (* Collect (abs_line_start, indent_width) for each \item line. *)
+            let items = ref [] in
+            let line_off = ref cstart in
             List.iter
               (fun line ->
                 let len = String.length line in
@@ -2696,24 +2702,73 @@ let r_spc_026 : rule =
                 while !j < len && (line.[!j] = ' ' || line.[!j] = '\t') do
                   incr j
                 done;
-                (* Check if the non-whitespace part starts with \item *)
                 if
                   !j < len
                   && !j + 5 <= len
                   && String.sub line !j (min 5 (len - !j)) = "\\item"
-                then widths := !j :: !widths)
+                then items := (!line_off, !j) :: !items;
+                (* advance past this line + the '\n' that split removed *)
+                line_off := !line_off + len + 1)
               lines;
-            (* If we found at least 2 \item lines with different indentation *)
-            match !widths with
+            let items = List.rev !items in
+            let widths = List.map snd items in
+            match widths with
             | [] | [ _ ] -> ()
             | first :: rest ->
-                if List.exists (fun w -> w <> first) rest then incr cnt)
-          blocks)
+                if List.exists (fun w -> w <> first) rest then (
+                  incr cnt;
+                  (* Bucket-C CANDIDATE (v27.1.48): normalise every \item's
+                     leading whitespace to a canonical width = the MODAL indent
+                     (most common), ties broken by the FIRST \item's width. Each
+                     off-target line gets one edit replacing its [line_start,
+                     line_start+width) run of leading whitespace with the target
+                     number of spaces. Byte-safe (review-only). *)
+                  let tally = Hashtbl.create 8 in
+                  List.iter
+                    (fun w ->
+                      Hashtbl.replace tally w
+                        (1 + try Hashtbl.find tally w with Not_found -> 0))
+                    widths;
+                  (* modal width; on a tie prefer the first \item's width *)
+                  let target =
+                    List.fold_left
+                      (fun best w ->
+                        let cw = Hashtbl.find tally w in
+                        let cb = Hashtbl.find tally best in
+                        if cw > cb then w else best)
+                      first widths
+                  in
+                  let edits =
+                    List.filter_map
+                      (fun (loff, w) ->
+                        if w <> target then
+                          Some
+                            (Cst_edit.replace ~start_offset:loff
+                               ~end_offset:(loff + w) (String.make target ' '))
+                        else None)
+                      items
+                  in
+                  if edits <> [] then
+                    cands :=
+                      {
+                        c_edits = edits;
+                        c_label =
+                          "Normalise \\item indentation to the modal width";
+                      }
+                      :: !cands))
+          ranges)
       envs;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"SPC-026" ~severity:Info
-           ~message:"Mixed indentation width at same list depth" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"SPC-026" ~severity:Info
+             ~message:"Mixed indentation width at same list depth" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"SPC-026" ~severity:Info
+             ~message:"Mixed indentation width at same list depth" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "SPC-026"; run; languages = [] }

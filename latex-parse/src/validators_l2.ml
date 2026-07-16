@@ -2963,20 +2963,41 @@ let r_tikz_001 : rule =
     in
     let cnt = ref 0 in
     let i = ref 0 in
+    let cands = ref [] in
     (try
        while true do
          let _mr, pos = Re_compat.search_forward tikz_re s !i in
          let inside_fig =
            List.exists (fun (a, b) -> pos >= a && pos < b) fig_ranges
          in
-         if not inside_fig then incr cnt;
+         if not inside_fig then (
+           incr cnt;
+           (* Bucket-C CANDIDATE (v27.1.48): wrapping a bare tikzpicture in a
+              float is a STRUCTURAL change (placement, caption, label all depend
+              on author intent), so we surface a LABEL-ONLY candidate — a
+              zero-width insert at the tikzpicture offset (byte-identical if
+              applied) that names the suggested wrap and lets
+              candidates_drop_exempt gate it per-site. *)
+           cands :=
+             {
+               c_edits = [ Cst_edit.insert ~at:pos "" ];
+               c_label = "Wrap the tikzpicture in a figure environment";
+             }
+             :: !cands);
          i := pos + 1
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TIKZ-001" ~severity:Info
-           ~message:"TikZ picture outside figure environment" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TIKZ-001" ~severity:Info
+             ~message:"TikZ picture outside figure environment" ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TIKZ-001" ~severity:Info
+             ~message:"TikZ picture outside figure environment" ~count:!cnt
+             ~candidates)
     else None
   in
   { id = "TIKZ-001"; run; languages = [] }
@@ -2985,6 +3006,8 @@ let r_tikz_001 : rule =
 let r_tikz_003 : rule =
   let label_re = Re_compat.regexp {|\(xlabel\|ylabel\|zlabel\)={\([^}]*\)}|} in
   let run s =
+    (* Count EXACTLY as before (per-body substring scan), so the diagnostic is
+       unchanged. *)
     let blocks = extract_env_blocks "axis" s in
     let cnt =
       List.fold_left
@@ -2995,18 +3018,58 @@ let r_tikz_003 : rule =
              while true do
                let _mr, _ = Re_compat.search_forward label_re body !i in
                let label_text = Re_compat.matched_group _mr 2 body in
-               let has_math = String.contains label_text '$' in
-               if not has_math then incr c;
+               if not (String.contains label_text '$') then incr c;
                i := Re_compat.match_end _mr
              done
            with Not_found -> ());
           acc + !c)
         0 blocks
     in
+    (* Build candidates SEPARATELY over absolute body ranges. *)
+    let ranges = extract_env_block_ranges "axis" s in
+    let cands = ref [] in
+    List.iter
+      (fun (cstart, cend) ->
+        let i = ref cstart in
+        try
+          while !i < cend do
+            let mr, _ = Re_compat.search_forward label_re s !i in
+            let mstart = Re_compat.match_beginning mr in
+            if mstart >= cend then raise Not_found;
+            let g2a = Re_compat.group_beginning mr 2 in
+            let g2b = Re_compat.group_end mr 2 in
+            let label_text = String.sub s g2a (g2b - g2a) in
+            let has_math = String.contains label_text '$' in
+            (* Bucket-C CANDIDATE (v27.1.48): axis label text should render in
+               math mode; the determinate rewrite wraps the existing label text
+               in `$…$`. We rewrite exactly the label argument span. Empty
+               labels are skipped (nothing to wrap). Review-only. *)
+            if (not has_math) && g2b > g2a then
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.replace ~start_offset:g2a ~end_offset:g2b
+                        ("$" ^ label_text ^ "$");
+                    ];
+                  c_label = "Wrap the axis label in math mode ($…$)";
+                }
+                :: !cands;
+            i := Re_compat.match_end mr
+          done
+        with Not_found -> ())
+      ranges;
     if cnt > 0 then
-      Some
-        (mk_result ~id:"TIKZ-003" ~severity:Info
-           ~message:"pgfplots axis labels not in math mode" ~count:cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TIKZ-003" ~severity:Info
+             ~message:"pgfplots axis labels not in math mode" ~count:cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TIKZ-003" ~severity:Info
+             ~message:"pgfplots axis labels not in math mode" ~count:cnt
+             ~candidates)
     else None
   in
   { id = "TIKZ-003"; run; languages = [] }
@@ -3016,18 +3079,39 @@ let r_tikz_004 : rule =
   let re = Re_compat.regexp {|\(color\|fill\|draw\)={\(rgb\|RGB\)|} in
   let run s =
     let cnt = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
+         let mr, _ = Re_compat.search_forward re s !i in
          incr cnt;
-         i := Re_compat.match_end _mr
+         (* Bucket-C CANDIDATE (v27.1.48): there is NO determinate map from an
+            arbitrary hard-coded rgb/RGB triple to a named xcolor, so we surface
+            a LABEL-ONLY candidate — a zero-width insert at the match offset
+            (byte-identical if applied) that names the suggested refactor and
+            lets candidates_drop_exempt gate it per-site. *)
+         let mb = Re_compat.match_beginning mr in
+         cands :=
+           {
+             c_edits = [ Cst_edit.insert ~at:mb "" ];
+             c_label = "Define a named xcolor instead of a hard-coded RGB value";
+           }
+           :: !cands;
+         i := Re_compat.match_end mr
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"TIKZ-004" ~severity:Info
-           ~message:"Hard‑coded RGB values instead of xcolor names" ~count:!cnt)
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"TIKZ-004" ~severity:Info
+             ~message:"Hard‑coded RGB values instead of xcolor names"
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"TIKZ-004" ~severity:Info
+             ~message:"Hard‑coded RGB values instead of xcolor names"
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "TIKZ-004"; run; languages = [] }

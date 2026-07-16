@@ -2037,5 +2037,60 @@ let () =
         (tag ^ ": delete [78,105)"));
   run "PKG-024 candidate is NOT an auto-fix (no fix field)" (fun tag ->
       expect (not (fires_with_fix "PKG-024" pkg024)) (tag ^ ": fix=None"));
+  (* ══════════════════════════════════════════════════════════════════════
+     PT-003: pt-PT ordinal must use the ordinal indicator, not superscript
+     ══════════════════════════════════════════════════════════════════════ *)
+  let pt3 = "O 1\\textsuperscript{o} e a 2\\textsuperscript{a}." in
+  run "PT-003 emits ordinal candidates" (fun tag ->
+      expect
+        (has_label "PT-003" pt3 "Use the pt-PT ordinal indicator º/ª")
+        (tag ^ ": candidate label"));
+  run "PT-003 replaces \\textsuperscript{o} with º" (fun tag ->
+      (* "O 1" = 3 bytes; "\textsuperscript{o}" spans [3,22) -> º (C2 BA). *)
+      expect
+        (edit_of_label "PT-003" pt3 "Use the pt-PT ordinal indicator º/ª"
+        = Some (3, 22, "\xc2\xba"))
+        (tag ^ ": º edit"));
+  run "PT-003 handles the {a} ordinal (both candidates present)" (fun tag ->
+      (* second match: "\textsuperscript{a}" -> ª (C2 AA). *)
+      expect
+        (has_edit_set "PT-003" pt3 [ (28, 47, "\xc2\xaa") ])
+        (tag ^ ": ª edit set"));
+  run "PT-003 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "PT-003" pt3) (tag ^ ": fix=None"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     NL-001: capitalise the Dutch IJ digraph at sentence start (Ij -> IJ)
+     ══════════════════════════════════════════════════════════════════════ *)
+  let nl1 = "Dit is een test. Ijsberen." in
+  run "NL-001 emits IJ-capitalise candidate" (fun tag ->
+      expect
+        (has_label "NL-001" nl1 "Capitalise the IJ digraph (Ij -> IJ)")
+        (tag ^ ": candidate label"));
+  run "NL-001 replaces the lone j with J" (fun tag ->
+      (* "Dit is een test. I" = 18 bytes; the `j` sits at [18,19) -> "J". *)
+      expect
+        (edit_of_label "NL-001" nl1 "Capitalise the IJ digraph (Ij -> IJ)"
+        = Some (18, 19, "J"))
+        (tag ^ ": j->J edit"));
+  run "NL-001 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "NL-001" nl1) (tag ^ ": fix=None"));
+
+  (* ══════════════════════════════════════════════════════════════════════
+     CS-002: bare D.M.YYYY date must use the CS/SK form D.\,M.\,YYYY
+     ══════════════════════════════════════════════════════════════════════ *)
+  let cs2 = "Datum je 30.1.2026." in
+  run "CS-002 emits date-format candidate" (fun tag ->
+      expect
+        (has_label "CS-002" cs2 "Use the CS/SK date format D.\\,M.\\,YYYY")
+        (tag ^ ": candidate label"));
+  run "CS-002 inserts \\, after the first two dots" (fun tag ->
+      (* "Datum je 30" = 11 bytes; dots at 11 and 13 -> insert \, at 12 and
+         14. *)
+      expect
+        (has_edit_set "CS-002" cs2 [ (12, 12, "\\,"); (14, 14, "\\,") ])
+        (tag ^ ": insert edits"));
+  run "CS-002 candidate not in fix field (no auto-apply)" (fun tag ->
+      expect (style_no_fix "CS-002" cs2) (tag ^ ": fix=None"));
 
   finalise "candidate_fixes"

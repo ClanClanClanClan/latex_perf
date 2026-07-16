@@ -4970,20 +4970,59 @@ let r_pt_003 : rule =
   let re = Re_compat.regexp "[0-9]\\\\textsuperscript{[oa]}" in
   let run s =
     let cnt = ref 0 in
+    (* Each match is `<digit>\textsuperscript{<oa>}`; the fixed part
+       `\textsuperscript{o}` / `\textsuperscript{a}` is exactly 19 bytes and the
+       letter is the byte at [match_beginning + 17] (after `<digit>` and
+       `\textsuperscript{`). *)
+    let starts = ref [] in
     let i = ref 0 in
     (try
        while true do
          let _mr, _ = Re_compat.search_forward re s !i in
          ignore _mr;
          incr cnt;
+         starts := Re_compat.match_beginning _mr :: !starts;
          i := Re_compat.match_end _mr
        done
      with Not_found -> ());
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"PT-003" ~severity:Info
-           ~message:{|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|}
-           ~count:!cnt)
+      (* Bucket-C CANDIDATE fixes: replace `\textsuperscript{o}` /
+         `\textsuperscript{a}` (19 bytes, following the ASCII digit) with the
+         pt-PT ordinal indicator º (U+00BA, `C2 BA`) / ª (U+00AA, `C2 AA`). This
+         is a determinate glyph substitution but changes the rendered character,
+         so it is surfaced for author review, never auto-applied. The digit
+         itself is untouched (the edit starts at digit+1). drop_exempt discards
+         any hit inside verbatim/comment/url/math. *)
+      let candidates =
+        candidates_drop_exempt s
+          (List.rev_map
+             (fun off ->
+               (* letter byte: `<digit>` (1) + `\textsuperscript{` (17) *)
+               let letter = s.[off + 18] in
+               let repl =
+                 if letter = 'o' then "\xc2\xba" (* º, U+00BA *)
+                 else "\xc2\xaa" (* ª, U+00AA *)
+               in
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:(off + 1)
+                       ~end_offset:(off + 20) repl;
+                   ];
+                 c_label = {|Use the pt-PT ordinal indicator º/ª|};
+               })
+             !starts)
+      in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PT-003" ~severity:Info
+             ~message:{|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PT-003" ~severity:Info
+             ~message:{|pt‑PT: ordinal 1.º/1.ª must use º/ª, not superscript|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "PT-003"; run; languages = [ "pt" ] }
@@ -5187,10 +5226,56 @@ let r_cs_002 : rule =
         true
       with Not_found -> false
     in
-    if has_bare && not has_correct then
-      Some
-        (mk_result ~id:"CS-002" ~severity:Info
-           ~message:"CS/SK: date format must be 30.\\,1.\\,2026" ~count:1)
+    if has_bare && not has_correct then (
+      (* Bucket-C CANDIDATE fixes: insert a thin non-breaking space `\,` after
+         each of the first two dots of a bare `D.M.YYYY` date, yielding the
+         CS/SK form `D.\,M.\,YYYY`. The two dot offsets inside each match are
+         the determinate insertion points; the digits are untouched. This
+         changes spacing (author intent), so it is surfaced for review, never
+         auto-applied. drop_exempt discards hits inside
+         verbatim/comment/url/math. COUNT stays 1 (unchanged). *)
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let _mr, mstart = Re_compat.search_forward re s !i in
+           ignore _mr;
+           let mend = Re_compat.match_end _mr in
+           (* Locate the first two dots inside [mstart, mend). *)
+           let dots = ref [] in
+           let k = ref mstart in
+           while !k < mend && List.length !dots < 2 do
+             if s.[!k] = '.' then dots := !k :: !dots;
+             incr k
+           done;
+           (match List.rev !dots with
+           | [ d1; d2 ] ->
+               cands :=
+                 {
+                   c_edits =
+                     [
+                       (* insert after the dot; higher offset first is fine, the
+                          candidate applier orders a single candidate's edits *)
+                       Cst_edit.insert ~at:(d1 + 1) "\\,";
+                       Cst_edit.insert ~at:(d2 + 1) "\\,";
+                     ];
+                   c_label = {|Use the CS/SK date format D.\,M.\,YYYY|};
+                 }
+                 :: !cands
+           | _ -> ());
+           i := mend
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"CS-002" ~severity:Info
+             ~message:"CS/SK: date format must be 30.\\,1.\\,2026" ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"CS-002" ~severity:Info
+             ~message:"CS/SK: date format must be 30.\\,1.\\,2026" ~count:1
+             ~candidates))
     else None
   in
   { id = "CS-002"; run; languages = [ "cs" ] }
@@ -5891,9 +5976,15 @@ let r_nl_001 : rule =
   (* Detect 'Ij' at start of sentence (after '. ' or at start) *)
   let run s =
     let cnt = ref 0 in
+    (* [j_offs] collects the offset of the lower-case `j` that follows a
+       sentence-initial `I`; each is a determinate 1-byte `j` -> `J` capitalise
+       of the second letter of the IJ digraph. *)
+    let j_offs = ref [] in
     let len = String.length s in
     (* Check at start of string *)
-    if len >= 2 && s.[0] = 'I' && s.[1] = 'j' then incr cnt;
+    if len >= 2 && s.[0] = 'I' && s.[1] = 'j' then (
+      incr cnt;
+      j_offs := 1 :: !j_offs);
     let i = ref 0 in
     while !i < len - 3 do
       if
@@ -5903,15 +5994,42 @@ let r_nl_001 : rule =
         && s.[!i + 3] = 'j'
       then (
         incr cnt;
+        j_offs := (!i + 3) :: !j_offs;
         i := !i + 4)
       else i := !i + 1
     done;
     if !cnt > 0 then
-      Some
-        (mk_result ~id:"NL-001" ~severity:Info
-           ~message:
-             {|NL: digraph IJ/ij—capitalise both letters at sentence start|}
-           ~count:!cnt)
+      (* Bucket-C CANDIDATE fixes: capitalise the second letter of the Dutch IJ
+         digraph (`Ij` -> `IJ`) by replacing the lone `j` (1 byte) with `J`.
+         This is a determinate 1-byte substitution; it changes a letter's case,
+         so it is surfaced for author review, never auto-applied. drop_exempt
+         discards any hit inside verbatim/comment/url/math. *)
+      let candidates =
+        candidates_drop_exempt s
+          (List.rev_map
+             (fun off ->
+               {
+                 c_edits =
+                   [
+                     Cst_edit.replace ~start_offset:off ~end_offset:(off + 1)
+                       "J";
+                   ];
+                 c_label = {|Capitalise the IJ digraph (Ij -> IJ)|};
+               })
+             !j_offs)
+      in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"NL-001" ~severity:Info
+             ~message:
+               {|NL: digraph IJ/ij—capitalise both letters at sentence start|}
+             ~count:!cnt)
+      else
+        Some
+          (mk_result_with_candidates ~id:"NL-001" ~severity:Info
+             ~message:
+               {|NL: digraph IJ/ij—capitalise both letters at sentence start|}
+             ~count:!cnt ~candidates)
     else None
   in
   { id = "NL-001"; run; languages = [ "nl" ] }

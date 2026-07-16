@@ -2,6 +2,23 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.49] — 2026-07-16
+
+**Candidate coverage +22 under the corrected bar — SCRIPT/REF/TIKZ/SPC + STYLE.**
+Continuing to recover candidates a prior pass wrongly deferred (candidates are
+review-only intent-dependent suggestions, so render/prose-changing is fine).
+- **SCRIPT-002/012/013/022** (superscript notation), **REF-002/003/004/005/007**
+  (label/cite renames — in-file multi-edit candidates rewriting the definition + every
+  in-file `\ref`/`\eqref`/`\pageref`/`\cref`/`\autoref`/`\vref`, degrading to
+  label-only on collision), **SPC-026** (modal `\item` indent), **TIKZ-001/003/004**.
+- **STYLE-014/016/022/026/035/036/040/041/049** (determinate mechanical edits:
+  contraction expansion, abbrev comma, Oxford comma, dedup word, `\emph` Latin,
+  `!`→`.`, footnote period, heading colon). 36 STYLE rules correctly stay diagnose-only
+  (whole-doc consistency flags, NLP rewrites, dialect/house-style — no canonical target).
+- Only SPC-001/015 deferred (thresholds, no determinate target).
+Candidate rules **93→115**; byte-safe (`--apply-fixes-for` byte-identical), 317 test
+cases, validate_messages 0 mismatches. Adds documented `Re_compat.group_beginning/end`.
+
 ## [v27.1.48] — 2026-07-15
 
 **Candidate-bar correction + two overlooked spec-§7 proof families.**

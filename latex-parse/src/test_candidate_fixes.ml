@@ -1555,6 +1555,8 @@ let () =
   run "MATH-041 candidate dropped inside verbatim" (fun tag ->
       let v = "\\begin{verbatim}\n$\\int_0^1$\n\\end{verbatim}" in
       expect (candidates_of "MATH-041" v = []) (tag ^ ": exempt"));
+
+  (* ======================================================================
      Bucket-C batch (v27.1.48): SCRIPT / REF / SPC-026 / TIKZ rename &
      structural candidates
      ══════════════════════════════════════════════════════════════════════ *)

@@ -103,7 +103,8 @@
   unicode_split
   incremental_nlp
   editorial_policy
-  editorial_review)
+  editorial_review
+  rule_rationale)
  (libraries unix threads re uutf yojson)
  (foreign_stubs
   (language c)
@@ -193,6 +194,12 @@
  (name test_editorial_review)
  (modules test_editorial_review)
  (libraries latex_parse_lib))
+
+(test
+ (name test_rule_rationale)
+ (modules test_rule_rationale)
+ (deps ../../specs/rules/rules_v3.yaml ../../governance/rule_remediation.yaml)
+ (libraries latex_parse_lib unix))
 
 (test
  (name test_exempt_ranges)

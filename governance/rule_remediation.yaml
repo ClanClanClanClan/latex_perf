@@ -1,0 +1,102 @@
+# =====================================================================
+#  rule_remediation.yaml  •  WS9 policy-explanation data
+#  (specs/v27/V27_REPO_EXACT_MASTER_SPEC.md §5 WS9 — "policy explanation
+#   and rationale links")
+# =====================================================================
+#
+#  For the ~211 genuinely-un-fixable diagnose-only rules we cannot auto-fix,
+#  we still owe the author a clear MANUAL REMEDIATION. This table is the
+#  source of the remediation strings surfaced by `--explain <RULE-ID>` and
+#  the `--policy` explanation line.
+#
+#  Two sections:
+#    families:  one remediation template per rule FAMILY (id prefix). EVERY
+#               family that appears in specs/rules/rules_v3.yaml MUST have an
+#               entry here (the unit test asserts none falls back to empty).
+#    overrides: curated per-rule remediation for the highest-value rules; an
+#               override WINS over the family default for that exact id.
+#
+#  Format is a small, regular subset of YAML parsed by rule_rationale.ml
+#  (NO yaml library dependency): `key: "value"` under `families:` /
+#  `overrides:`. Blank lines and `#`-comments are ignored. Loading is total —
+#  malformed lines are counted as errors, never raised.
+# =====================================================================
+
+families:
+  # --- source-text families: the author edits the .tex directly ----------
+  TYPO:  "A typography convention. Edit the source text to match the expected form (correct quotes, dashes, spacing, or characters)."
+  SPC:   "A spacing/whitespace convention. Adjust the whitespace in the source around the flagged construct."
+  CHAR:  "A character-choice issue. Replace the flagged character with the ASCII / expected Unicode equivalent in the source."
+  ENC:   "An encoding issue. Re-save the file as UTF-8 (or the declared input encoding) and replace any mojibake / illegal bytes."
+  MATH:  "A math-mode convention. Edit the math source to use the recommended construct (operator, spacing, delimiter, or macro)."
+  SCRIPT: "A sub/superscript convention. Rewrite the script in the source using the recommended braces / ordering / macro."
+  DELIM: "A delimiter issue. Balance or size the delimiters in the source (\\left..\\right, matching braces, or an explicit size)."
+  CMD:   "A command-usage issue. Adjust the flagged command invocation in the source (correct name, arguments, or deprecated form)."
+  VERB:  "A verbatim/literal-text issue. Fix the verbatim content or its delimiters in the source; verbatim is never auto-rewritten."
+  STRUCT: "A document-structure issue. Adjust the sectioning / environment nesting in the source so the structure is well-formed."
+  DOC:   "A document-level convention. Adjust the preamble or document skeleton in the source to satisfy the requirement."
+  CHEM:  "A chemistry-notation convention. Rewrite the flagged formula/reaction in the source using the recommended mhchem form."
+
+  # --- style / consistency: a house-style choice -------------------------
+  STYLE: "A stylistic/consistency choice. Normalize the flagged construct per your house style; there is no single correct form."
+  FONT:  "A font-usage choice. Adjust the font command/declaration in the source per your house style."
+  TAB:   "A tabular/table-formatting choice. Adjust the table markup in the source (alignment, rules, or column spec) per house style."
+  FIG:   "A figure/float convention. Adjust the float placement, caption, or graphics inclusion in the source per house style."
+  TIKZ:  "A TikZ/PGF drawing convention. Adjust the picture source (coordinates, styles, or libraries) per house style."
+  COL:   "A colour-usage convention. Adjust the colour definitions/uses; note colour findings are often derived from render state."
+
+  # --- reference / bibliography: keys must match -------------------------
+  REF:   "A cross-reference issue. Check that your \\label and \\ref/\\eqref keys match and each referenced label is defined exactly once."
+  BIB:   "A bibliography issue. Check your \\cite keys against the .bib entries and fix any missing, duplicate, or malformed entries."
+
+  # --- language / locale: locale-specific typography ---------------------
+  LANG:  "A language/locale typography rule. Apply the target language's convention (spacing, quotes, punctuation) in the source."
+  CJK:   "A CJK-typography rule. Apply the Chinese/Japanese/Korean convention (full/half-width, punctuation) in the source."
+  RTL:   "A right-to-left script rule. Apply the RTL convention (direction marks, punctuation mirroring) in the source."
+  ZH:    "A Chinese-locale rule. Apply the Chinese typographic convention in the source."
+  JA:    "A Japanese-locale rule. Apply the Japanese typographic convention in the source."
+  KO:    "A Korean-locale rule. Apply the Korean typographic convention in the source."
+  RU:    "A Russian-locale rule. Apply the Russian typographic convention in the source."
+  FR:    "A French-locale rule. Apply the French typographic convention indicated by the finding in the source."
+  DE:    "A German-locale rule. Apply the German typographic convention in the source."
+  PL:    "A Polish-locale rule. Apply the Polish typographic convention in the source."
+  NL:    "A Dutch-locale rule. Apply the Dutch typographic convention in the source."
+  CS:    "A Czech-locale rule. Apply the Czech typographic convention in the source."
+  PT:    "A Portuguese-locale rule. Apply the Portuguese typographic convention in the source."
+  PRT:   "A parse/trust-zone meta-diagnostic (parse errors, degraded-analysis regions). Fix the underlying LaTeX so the region parses cleanly; the flagged span marks where analysis was reduced, not a stylistic issue."
+  RO:    "A Romanian-locale rule. Apply the Romanian typographic convention in the source."
+  TR:    "A Turkish-locale rule. Apply the Turkish typographic convention in the source."
+  TH:    "A Thai-locale rule. Apply the Thai typographic convention in the source."
+  HI:    "A Hindi-locale rule. Apply the Hindi/Devanagari typographic convention in the source."
+  HE:    "A Hebrew-locale rule. Apply the Hebrew typographic convention in the source."
+  AR:    "An Arabic-locale rule. Apply the Arabic typographic convention in the source."
+  EL:    "A Greek-locale rule. Apply the Greek typographic convention in the source."
+  CY:    "A Welsh-locale rule. Apply the Welsh typographic convention in the source."
+  IB:    "An Iberian-locale rule. Apply the target Iberian-language convention in the source."
+  CE:    "A Central-European-locale rule. Apply the target language's typographic convention in the source."
+
+  # --- package / module / expl3 -----------------------------------------
+  PKG:   "A package-usage issue. Adjust the package load / option in the preamble (order, obsolete package, or conflicting options)."
+  MOD:   "A module/package-modernization issue. Migrate the flagged construct to its modern replacement in the source."
+  L3:    "An expl3 (LaTeX3) convention. Adjust the expl3 code in the source (naming, engine branch, or deprecated primitive)."
+  EXP:   "An expl3/expansion convention. Adjust the flagged expansion code in the source."
+  SYS:   "A system/engine-guard issue. Adjust the engine or system-dependent code path in the source."
+
+  # --- derived: compile-log / project / render state (NOT a source edit) --
+  LAY:   "Derived from the compile log / render state (over/underfull boxes, widows, page layout). Not a direct source-text fix: adjust the surrounding layout (rewrap, resize, \\clearpage, or tune spacing) and recompile, or accept it as a known layout tradeoff."
+  META:  "Derived from project/document metadata state. Resolve the underlying metadata condition rather than editing a single source span."
+  PDF:   "Derived from the produced PDF / compile artefacts (PDF/A, tagging, isolation). Not a source-text fix: reconfigure the PDF-producing pipeline (driver, hyperref/pdfx options) and recompile."
+  PRJ:   "Derived from whole-project state (multi-file graph, includes, shared labels). Resolve the underlying project-level condition across files rather than editing one span."
+
+# ---------------------------------------------------------------------
+#  overrides:  curated per-rule remediation for the highest-value rules.
+#  An override WINS over the family default for that exact rule id.
+# ---------------------------------------------------------------------
+overrides:
+  REF-001: "Add a \\label{key} at the target (equation/section/figure) whose key exactly matches the \\ref/\\eqref, or fix the \\ref key. Label keys are case- and whitespace-sensitive; recompile so the .aux is regenerated."
+  REF-002: "Two \\label commands share the same key. Rename one to a unique key and update the \\ref/\\eqref that should point to it."
+  BIB-001: "The \\cite key has no matching entry in any loaded .bib. Add the entry, correct the key, or ensure the .bib is passed to \\bibliography / \\addbibresource."
+  LAY-001: "An overfull \\hbox (line too wide) is a render-time layout fact, not a source typo. Rewrap the paragraph, hyphenate the long word (\\-), rephrase, or accept it; you can silence isolated cases with \\sloppy locally. Recompile to confirm."
+  LAY-002: "A widow/orphan line is a page-breaking fact from the compile. Nudge the break (\\clearpage, \\needspace, small rewording, or \\widowpenalty/\\clubpenalty tuning) and recompile; there is no single source-span fix."
+  PDF-001: "PDF/A colour-profile conformity is a property of the produced PDF, set by the driver and pdfx/hyperref configuration — not a source edit. Configure the PDF/A pipeline (output intent, colour profile) and recompile."
+  STYLE-001: "Oxford-comma usage is a house-style choice. Pick one convention and apply it consistently across the document; the linter flags inconsistency, not a 'wrong' answer."

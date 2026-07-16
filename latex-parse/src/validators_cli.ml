@@ -487,9 +487,9 @@ let run_extensions_registry () : int =
 (* ── WS9: policy explanation and rationale links ─────────────────── *)
 
 (** [--explain <RULE-ID>]: print the rule's message + rationale + manual
-    remediation + doc link. For a rule we cannot auto-fix (the ~211 diagnose-only
-    rules) this is the actionable guidance the author gets. An unknown id exits
-    nonzero with a message. Returns the process exit code. *)
+    remediation + doc link. For a rule we cannot auto-fix (the ~211
+    diagnose-only rules) this is the actionable guidance the author gets. An
+    unknown id exits nonzero with a message. Returns the process exit code. *)
 let run_explain (rule_id : string) : int =
   match Latex_parse_lib.Rule_rationale.explain rule_id with
   | Some e ->
@@ -710,11 +710,10 @@ let () =
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
          [--policy <file.lppolicy> [--audit <file>]] [--explain <RULE-ID>] \
-         [--review \
-         <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
-         --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \
-         [--log <file.log>] [--extensions <manifest.json> [--strict]] \
-         [--extensions-registry] <file.tex>\n\n\
+         [--review <file.lpreview>] [--report [--json] <file.tex>... | \
+         --report [--json] --manifest <list>] [--project <root.tex>] [--layer \
+         l0|l1|l2|l3|l4] [--log <file.log>] [--extensions <manifest.json> \
+         [--strict]] [--extensions-registry] <file.tex>\n\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

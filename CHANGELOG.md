@@ -2,6 +2,22 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.52] — 2026-07-16
+
+**WS9 deliverable — policy explanation + rationale links (the plan for un-fixable
+rules).** New `rule_rationale.ml` gives EVERY rule (660/660) a rationale + manual
+remediation + doc link, via per-family remediation templates
+(`governance/rule_remediation.yaml`) + the catalogue description + curated per-rule
+overrides. This is the concrete plan for the ~211 genuinely-diagnose-only rules
+(layout/log-derived LAY/COL/META/PDF/PRJ, external-data BIB/REF/DOC, meta-diagnostics
+PRT/EXP): since we cannot fix them, the author is told exactly WHY the rule fired and
+HOW to fix it manually. CLI **`--explain <RULE-ID>`**; `--policy` output gains a
+`# why <id>: <remediation>` line per finding/waiver. Default output byte-identical.
+Adversarial verify caught + fixed a real content bug (a duplicate `PT:` family key
+had given all Portuguese-locale rules the wrong "points/units" remediation; PRT was
+mislabeled Portuguese when it is a parse/trust meta-diagnostic). 14 tests, coverage
+660/660, mli-doc unchanged.
+
 ## [v27.1.51] — 2026-07-16
 
 **LANG candidates (3) + ground-truth backlog reconciliation.** LANG family:

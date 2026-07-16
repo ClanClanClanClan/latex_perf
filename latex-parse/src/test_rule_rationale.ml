@@ -89,7 +89,8 @@ let () =
   (* ── 4. every family has a non-empty remediation template ──────────── *)
   (* Collect every family present in the catalogue and assert its template is
      present + non-empty (i.e. no family falls back to the generic case). The
-     generic fallback text is recognisable; assert no catalogued rule hits it. *)
+     generic fallback text is recognisable; assert no catalogued rule hits
+     it. *)
   let generic_fallback =
     "No auto-fix is available. Review the flagged construct in the source and \
      adjust it by hand to satisfy the rule."
@@ -97,10 +98,12 @@ let () =
   let resolved, total = RR.coverage () in
   check "catalogue has rules" (total > 600);
   check "coverage: every rule resolves non-empty" (resolved = total);
-  printf "# coverage: %d/%d rules resolve to non-empty rationale + remediation\n"
+  printf
+    "# coverage: %d/%d rules resolve to non-empty rationale + remediation\n"
     resolved total;
 
-  (* No catalogued rule may use the generic fallback (every family templated). *)
+  (* No catalogued rule may use the generic fallback (every family
+     templated). *)
   let cat_path = Filename.concat repo "specs/rules/rules_v3.yaml" in
   let ids =
     let ic = open_in cat_path in
@@ -111,7 +114,9 @@ let () =
     |> List.filter_map (fun l ->
            let l = String.trim l in
            let p = "- id:" in
-           if String.length l >= String.length p && String.sub l 0 (String.length p) = p
+           if
+             String.length l >= String.length p
+             && String.sub l 0 (String.length p) = p
            then
              match String.index_opt l '"' with
              | Some i -> (

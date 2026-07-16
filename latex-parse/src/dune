@@ -198,7 +198,9 @@
 (test
  (name test_rule_rationale)
  (modules test_rule_rationale)
- (deps ../../specs/rules/rules_v3.yaml ../../governance/rule_remediation.yaml)
+ (deps
+  ../../specs/rules/rules_v3.yaml
+  ../../governance/rule_remediation.yaml)
  (libraries latex_parse_lib unix))
 
 (test

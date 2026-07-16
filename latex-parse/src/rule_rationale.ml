@@ -6,14 +6,14 @@
     the rule catalogue. {!explain} resolves ANY rule id to a non-empty
     explanation without hand-writing 660 paragraphs, by composing three sources:
 
-    - the rule's own {b catalogue description} (specs/rules/rules_v3.yaml) as the
-      rule-specific rationale base;
+    - the rule's own {b catalogue description} (specs/rules/rules_v3.yaml) as
+      the rule-specific rationale base;
     - a {b per-family remediation template} (governance/rule_remediation.yaml)
       covering EVERY family (e.g. LAY/COL/META/PDF/PRJ = "derived from the
       compile log / project state; adjust the layout or resolve the underlying
       issue — not a source-text fix"; REF/BIB = "check your \\label/\\ref keys
-      and .bib entries match"; STYLE = "a stylistic/consistency choice; normalize
-      per your house style");
+      and .bib entries match"; STYLE = "a stylistic/consistency choice;
+      normalize per your house style");
     - curated per-rule OVERRIDES for the highest-value rules, which win over the
       family default.
 
@@ -72,9 +72,7 @@ let trim_l = String.trim
    override, then the cwd-relative path, then an upward walk from the running
    executable's directory (so the CLI finds the files from a _build tree). *)
 let candidate_paths ~(env_var : string) ~(rel : string) : string list =
-  let env =
-    match Sys.getenv_opt env_var with Some s -> [ s ] | None -> []
-  in
+  let env = match Sys.getenv_opt env_var with Some s -> [ s ] | None -> [] in
   let exe_dir = Filename.dirname Sys.executable_name in
   let upward =
     let rec up acc dir depth =
@@ -101,9 +99,7 @@ let find_and_read ~env_var ~rel : (string * string) option =
   let rec go = function
     | [] -> None
     | p :: rest -> (
-        match read_file_opt p with
-        | Some c -> Some (p, c)
-        | None -> go rest)
+        match read_file_opt p with Some c -> Some (p, c) | None -> go rest)
   in
   go (candidate_paths ~env_var ~rel)
 
@@ -136,13 +132,15 @@ let parse_catalogue (content : string) : (string, cat_entry) Hashtbl.t =
            cur_sev := "Info")
          else if starts_with line "description:" then
            match quoted_value line with Some d -> cur_desc := d | None -> ()
-         else if starts_with line "default_severity:" then (
-           (* default_severity: Warning  (unquoted scalar) *)
+         else if starts_with line "default_severity:" then
+           (* default_severity: Warning (unquoted scalar) *)
            match String.index_opt line ':' with
            | Some i ->
-               let v = trim_l (String.sub line (i + 1) (String.length line - i - 1)) in
+               let v =
+                 trim_l (String.sub line (i + 1) (String.length line - i - 1))
+               in
                if v <> "" then cur_sev := v
-           | None -> ()));
+           | None -> ());
   flush ();
   tbl
 
@@ -177,8 +175,8 @@ type remediation_table = {
 (* Parse rule_remediation.yaml: a `families:` block and an `overrides:` block,
    each holding `KEY: "value"` lines. Section is chosen by the last top-level
    (column-0) `families:` / `overrides:` header seen. Loading is total: a
-   two-space-indented entry with no parseable quoted value under a known
-   section is recorded in [errors]. *)
+   two-space-indented entry with no parseable quoted value under a known section
+   is recorded in [errors]. *)
 let parse_remediation (content : string) : remediation_table =
   let families = Hashtbl.create 128 in
   let overrides = Hashtbl.create 128 in
@@ -200,7 +198,7 @@ let parse_remediation (content : string) : remediation_table =
          if trimmed = "" then ()
          else if starts_with no_comment "families:" then section := `Families
          else if starts_with no_comment "overrides:" then section := `Overrides
-         else if String.length no_comment >= 2 && no_comment.[0] = ' ' then (
+         else if String.length no_comment >= 2 && no_comment.[0] = ' ' then
            (* an indented `KEY: "value"` entry *)
            match String.index_opt trimmed ':' with
            | Some ci -> (
@@ -213,10 +211,10 @@ let parse_remediation (content : string) : remediation_table =
                      (lineno, "entry before any families:/overrides: section")
                      :: !errors
                | None, (`Families | `Overrides) ->
-                   errors := (lineno, "missing quoted value for " ^ key)
-                             :: !errors
+                   errors :=
+                     (lineno, "missing quoted value for " ^ key) :: !errors
                | None, `None -> ())
-           | None -> ()));
+           | None -> ());
   { families; overrides; errors = List.rev !errors }
 
 let _remediation : remediation_table option ref = ref None
@@ -256,8 +254,8 @@ let remediation_for (rule_id : string) : string =
       match Hashtbl.find_opt t.families (family_of rule_id) with
       | Some s -> s
       | None ->
-          "No auto-fix is available. Review the flagged construct in the source \
-           and adjust it by hand to satisfy the rule.")
+          "No auto-fix is available. Review the flagged construct in the \
+           source and adjust it by hand to satisfy the rule.")
 
 (** A stable documentation link/anchor into the rule catalogue for [rule_id].
     The anchor is the lower-cased id, matching the catalogue's per-rule entry. *)
@@ -294,13 +292,16 @@ let explain (rule_id : string) : explanation option =
     [--explain] on the CLI. *)
 let to_human_string (e : explanation) : string =
   Printf.sprintf
-    "%s\n  message:     %s\n  rationale:   %s\n  remediation: %s\n  doc:         %s"
-    e.rule_id e.rule_message e.rationale e.remediation e.doc_link
+    "%s\n\
+    \  message:     %s\n\
+    \  rationale:   %s\n\
+    \  remediation: %s\n\
+    \  doc:         %s" e.rule_id e.rule_message e.rationale e.remediation
+    e.doc_link
 
-(** A one-line explanation for a rule id, for inline use next to a finding
-    (e.g. the [--policy] output). Falls back to a family/remediation line even
-    for an id missing from the catalogue, so a waived/flagged rule always shows
-    WHY. *)
+(** A one-line explanation for a rule id, for inline use next to a finding (e.g.
+    the [--policy] output). Falls back to a family/remediation line even for an
+    id missing from the catalogue, so a waived/flagged rule always shows WHY. *)
 let one_line (rule_id : string) : string =
   match explain rule_id with
   | Some e -> Printf.sprintf "%s: %s [%s]" rule_id e.remediation e.doc_link

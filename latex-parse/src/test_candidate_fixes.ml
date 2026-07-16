@@ -1890,5 +1890,151 @@ let () =
         (tag ^ ": edit"));
   run "STYLE-049 candidate not in fix field (no auto-apply)" (fun tag ->
       expect (style_no_fix "STYLE-049" s49) (tag ^ ": fix=None"));
+  (* ══════════════════════════════════════════════════════════════════════
+     PKG family (C10): package-option / package-swap candidates
+     ══════════════════════════════════════════════════════════════════════ *)
+
+  (* PKG-008: xcolor without dvipsnames — add the option. *)
+  let pkg008 =
+    "\\documentclass{article}\n\
+     \\usepackage{xcolor}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-008 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "PKG-008" pkg008 1) (tag ^ ": count=1"));
+  run "PKG-008 candidate adds [dvipsnames] before the brace" (fun tag ->
+      (* "\documentclass{article}\n" = 24; "\usepackage" ends at 35. *)
+      expect
+        (edit_of_label "PKG-008" pkg008 "Add dvipsnames option to xcolor"
+        = Some (35, 35, "[dvipsnames]"))
+        (tag ^ ": insert at 35"));
+  run "PKG-008 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-008" pkg008)) (tag ^ ": fix=None"));
+  let pkg008b =
+    "\\documentclass{article}\n\
+     \\usepackage[table]{xcolor}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-008 candidate prepends dvipsnames into existing options" (fun tag ->
+      (* `[` at 35; prepend inside it at 36. *)
+      expect
+        (edit_of_label "PKG-008" pkg008b "Add dvipsnames option to xcolor"
+        = Some (36, 36, "dvipsnames,"))
+        (tag ^ ": insert at 36"));
+
+  (* PKG-010: biblatex backend=biber is now the default — drop it. *)
+  let pkg010 =
+    "\\documentclass{article}\n\
+     \\usepackage[backend=biber,style=authoryear]{biblatex}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-010 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "PKG-010" pkg010 1) (tag ^ ": count=1"));
+  run "PKG-010 candidate deletes backend=biber and its comma" (fun tag ->
+      (* `[` at 35; `backend=biber` spans [36,49); trailing comma at 49. *)
+      expect
+        (edit_of_label "PKG-010" pkg010
+           "Remove redundant backend=biber (biber is default)"
+        = Some (36, 50, ""))
+        (tag ^ ": delete [36,50)"));
+  run "PKG-010 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-010" pkg010)) (tag ^ ": fix=None"));
+
+  (* PKG-014: siunitx v2 API -> v3 command renames. *)
+  let pkg014 =
+    "\\documentclass{article}\n\
+     \\usepackage{siunitx}\n\
+     \\begin{document}\n\
+     \\si{\\kilogram} \\SIrange{1}{2}{\\metre}\n\
+     \\end{document}"
+  in
+  run "PKG-014 still fires (count=2)" (fun tag ->
+      expect (fires_with_count "PKG-014" pkg014 2) (tag ^ ": count=2"));
+  run "PKG-014 candidate renames \\si to \\unit" (fun tag ->
+      expect
+        (has_label "PKG-014" pkg014 "Migrate siunitx v2 \\si to v3 \\unit")
+        (tag ^ ": \\si->\\unit"));
+  run "PKG-014 candidate renames \\SIrange to \\qtyrange" (fun tag ->
+      expect
+        (has_label "PKG-014" pkg014
+           "Migrate siunitx v2 \\SIrange to v3 \\qtyrange")
+        (tag ^ ": \\SIrange->\\qtyrange"));
+  run "PKG-014 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-014" pkg014)) (tag ^ ": fix=None"));
+
+  (* PKG-015: inputenc redundant under XeLaTeX/LuaLaTeX -> drop the line. *)
+  let pkg015 =
+    "\\documentclass{article}\n\
+     \\usepackage{fontspec}\n\
+     \\usepackage[utf8]{inputenc}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-015 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "PKG-015" pkg015 1) (tag ^ ": count=1"));
+  run "PKG-015 candidate deletes the standalone inputenc line" (fun tag ->
+      (* The inputenc line spans [46,74) incl. its trailing newline. *)
+      expect
+        (edit_of_label "PKG-015" pkg015
+           "Remove redundant inputenc under XeLaTeX/LuaLaTeX"
+        = Some (46, 74, ""))
+        (tag ^ ": delete [46,74)"));
+  run "PKG-015 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-015" pkg015)) (tag ^ ": fix=None"));
+  run "PKG-015 degrades to diagnose-only for a comma-list load" (fun tag ->
+      let s =
+        "\\documentclass{article}\n\
+         \\usepackage{fontspec}\n\
+         \\usepackage{inputenc,color}\n\
+         \\begin{document}\n\
+         \\end{document}"
+      in
+      expect
+        (fires "PKG-015" s && candidates_of "PKG-015" s = [])
+        (tag ^ ": no whole-line target"));
+
+  (* PKG-016: graphicx engine-specific pdftex option -> drop it. *)
+  let pkg016 =
+    "\\documentclass{article}\n\
+     \\usepackage[pdftex,dvips]{graphicx}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-016 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "PKG-016" pkg016 1) (tag ^ ": count=1"));
+  run "PKG-016 candidate deletes the pdftex option (with comma)" (fun tag ->
+      (* `[` at 35; `pdftex` spans [36,42); trailing comma at 42. *)
+      expect
+        (edit_of_label "PKG-016" pkg016
+           "Remove engine-specific pdftex option from graphicx"
+        = Some (36, 43, ""))
+        (tag ^ ": delete [36,43)"));
+  run "PKG-016 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-016" pkg016)) (tag ^ ": fix=None"));
+
+  (* PKG-024: polyglossia language declared twice -> drop the duplicate. *)
+  let pkg024 =
+    "\\documentclass{article}\n\
+     \\usepackage{polyglossia}\n\
+     \\setdefaultlanguage{english}\n\
+     \\setotherlanguage{english}\n\
+     \\begin{document}\n\
+     \\end{document}"
+  in
+  run "PKG-024 still fires (count=1)" (fun tag ->
+      expect (fires_with_count "PKG-024" pkg024 1) (tag ^ ": count=1"));
+  run "PKG-024 candidate removes the duplicate declaration" (fun tag ->
+      (* The second directive (its whole line incl. trailing newline) at
+         [78,105). *)
+      expect
+        (edit_of_label "PKG-024" pkg024
+           "Remove duplicate language declaration for english"
+        = Some (78, 105, ""))
+        (tag ^ ": delete [78,105)"));
+  run "PKG-024 candidate is NOT an auto-fix (no fix field)" (fun tag ->
+      expect (not (fires_with_fix "PKG-024" pkg024)) (tag ^ ": fix=None"));
 
   finalise "candidate_fixes"

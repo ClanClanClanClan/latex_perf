@@ -1603,9 +1603,17 @@ let r_pkg_012 : rule =
   { id = "PKG-012"; run; languages = [] }
 
 (* ── PKG-015: inputenc loaded under XeLaTeX/LuaLaTeX ────────────────── *)
+(* Bucket-C CANDIDATE: under XeLaTeX/LuaLaTeX the input is always UTF-8, so an
+   `inputenc` load is redundant (and can clash). Removing it is a DETERMINATE
+   edit — but only when inputenc sits ALONE on its own `\usepackage` line, so we
+   can delete the whole line without disturbing a comma-separated group. In a
+   `\usepackage{inputenc,...}` list the safe target isn't a whole line, so we
+   degrade to diagnose-only there. Offsets are absolute in the ORIGINAL source. *)
 let r_pkg_015 : rule =
+  let re_line = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{inputenc}|} in
   let run s =
-    if has_package s "inputenc" then
+    if not (has_package s "inputenc") then None
+    else
       let xeluatex =
         has_package s "fontspec"
         || has_package s "xeCJK"
@@ -1613,12 +1621,63 @@ let r_pkg_015 : rule =
         || has_package s "ifluatex"
         || has_package s "luatexja"
       in
-      if xeluatex then
-        Some
-          (mk_result ~id:"PKG-015" ~severity:Warning
-             ~message:"inputenc loaded under XeLaTeX/LuaLaTeX" ~count:1)
-      else None
-    else None
+      if not xeluatex then None
+      else
+        let n = String.length s in
+        let cands = ref [] in
+        let i = ref 0 in
+        (try
+           while true do
+             let mr, _ = Re_compat.search_forward re_line s !i in
+             let mstart = Re_compat.match_beginning mr in
+             let mend = Re_compat.match_end mr in
+             (* Standalone-line guard: only whitespace before [mstart] back to a
+                line start, and only whitespace after [mend] to the newline/EOF. *)
+             let ls = ref mstart in
+             while !ls > 0 && s.[!ls - 1] <> '\n' do
+               decr ls
+             done;
+             let ws_before =
+               let ok = ref true in
+               for k = !ls to mstart - 1 do
+                 match s.[k] with ' ' | '\t' -> () | _ -> ok := false
+               done;
+               !ok
+             in
+             let le = ref mend in
+             while !le < n && s.[!le] <> '\n' do
+               incr le
+             done;
+             let ws_after =
+               let ok = ref true in
+               for k = mend to !le - 1 do
+                 match s.[k] with ' ' | '\t' | '\r' -> () | _ -> ok := false
+               done;
+               !ok
+             in
+             (if ws_before && ws_after then
+                let del_end = if !le < n then !le + 1 else !le in
+                cands :=
+                  {
+                    c_edits =
+                      [ Cst_edit.delete ~start_offset:!ls ~end_offset:del_end ];
+                    c_label =
+                      "Remove redundant inputenc under XeLaTeX/LuaLaTeX";
+                  }
+                  :: !cands);
+             i := mend
+           done
+         with Not_found -> ());
+        let candidates = candidates_drop_exempt s (List.rev !cands) in
+        if candidates = [] then
+          Some
+            (mk_result ~id:"PKG-015" ~severity:Warning
+               ~message:"inputenc loaded under XeLaTeX/LuaLaTeX" ~count:1)
+        else
+          Some
+            (mk_result_with_candidates ~id:"PKG-015" ~severity:Warning
+               ~message:"inputenc loaded under XeLaTeX/LuaLaTeX" ~count:1
+               ~candidates)
   in
   { id = "PKG-015"; run; languages = [] }
 
@@ -1903,7 +1962,15 @@ let r_fig_013 : rule =
   { id = "FIG-013"; run; languages = [] }
 
 (* ── PKG-008: xcolor loaded without dvipsnames option ────────────────── *)
+(* Bucket-C CANDIDATE: adding the [dvipsnames] option unlocks the extended named
+   colour set. Whether the author wants those names is a house-style choice, so
+   surface it, don't apply. The edit is DETERMINATE: for `\usepackage{xcolor}`
+   insert `[dvipsnames]` before the `{`; for `\usepackage[opts]{xcolor}` insert
+   `dvipsnames,` at the start of the existing option list. Offsets are absolute
+   in the ORIGINAL source. *)
 let r_pkg_008 : rule =
+  let re_plain = Re_compat.regexp_string "\\usepackage{xcolor}" in
+  let re_opts = Re_compat.regexp {|\\usepackage\[\([^]]*\)\]{xcolor}|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -1913,16 +1980,74 @@ let r_pkg_008 : rule =
           name = "xcolor" && not (contains_substring opts "dvipsnames"))
         pkgs
     in
-    if has_xcolor_no_dvips then
-      Some
-        (mk_result ~id:"PKG-008" ~severity:Info
-           ~message:"xcolor loaded without dvipsnames option" ~count:1)
-    else None
+    if not has_xcolor_no_dvips then None
+    else
+      let cands = ref [] in
+      (* `\usepackage{xcolor}` → `\usepackage[dvipsnames]{xcolor}`: insert the
+         option group immediately before the `{` (11 = String.length
+         "\usepackage"). *)
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re_plain s !i in
+           let brace_off = pos + 11 in
+           cands :=
+             {
+               c_edits =
+                 [
+                   Cst_edit.insert ~at:brace_off "[dvipsnames]";
+                 ];
+               c_label = "Add dvipsnames option to xcolor";
+             }
+             :: !cands;
+           i := Re_compat.match_end mr
+         done
+       with Not_found -> ());
+      (* `\usepackage[opts]{xcolor}` (opts lacking dvipsnames) → prepend
+         `dvipsnames,` at the first byte inside `[`. *)
+      i := 0;
+      (try
+         while true do
+           let mr, pos = Re_compat.search_forward re_opts s !i in
+           let opts = Re_compat.matched_group mr 1 s in
+           (if not (contains_substring opts "dvipsnames") then
+              (* first `[` at/after pos: skip the "\usepackage" prefix bytes. *)
+              let bracket = pos + 11 in
+              cands :=
+                {
+                  c_edits =
+                    [
+                      Cst_edit.insert ~at:(bracket + 1) "dvipsnames,";
+                    ];
+                  c_label = "Add dvipsnames option to xcolor";
+                }
+                :: !cands);
+           i := Re_compat.match_end mr
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PKG-008" ~severity:Info
+             ~message:"xcolor loaded without dvipsnames option" ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PKG-008" ~severity:Info
+             ~message:"xcolor loaded without dvipsnames option" ~count:1
+             ~candidates)
   in
   { id = "PKG-008"; run; languages = [] }
 
 (* ── PKG-010: biblatex loaded with deprecated backend=biber ──────────── *)
+(* Bucket-C CANDIDATE: biber is the DEFAULT backend for modern biblatex, so the
+   explicit `backend=biber` option is redundant. Dropping it is a DETERMINATE
+   edit that preserves behaviour; whether to keep it for documentation is the
+   author's call, so surface, don't apply. The edit deletes the `backend=biber`
+   token together with one adjacent comma so the option list stays well-formed.
+   Offsets are absolute in the ORIGINAL source. *)
 let r_pkg_010 : rule =
+  (* Capture the option run so we can locate `backend=biber` inside it. *)
+  let re_biblatex = Re_compat.regexp {|\\usepackage\[\([^]]*\)\]{biblatex}|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -1932,11 +2057,60 @@ let r_pkg_010 : rule =
           name = "biblatex" && contains_substring opts "backend=biber")
         pkgs
     in
-    if has_deprecated then
-      Some
-        (mk_result ~id:"PKG-010" ~severity:Warning
-           ~message:"biblatex loaded with deprecated backend=biber" ~count:1)
-    else None
+    if not has_deprecated then None
+    else
+      let needle = "backend=biber" in
+      let nlen = String.length needle in
+      let slen = String.length s in
+      (* First occurrence of [needle] in [s] at/after [from], or None. *)
+      let index_from from =
+        let rec go k =
+          if k + nlen > slen then None
+          else if String.sub s k nlen = needle then Some k
+          else go (k + 1)
+        in
+        go from
+      in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, _pos = Re_compat.search_forward re_biblatex s !i in
+           let mstart = Re_compat.match_beginning mr in
+           let mend = Re_compat.match_end mr in
+           (* Absolute offset of `backend=biber` within this match. *)
+           (match index_from mstart with
+           | Some off when off < mend ->
+               (* Extend the delete over ONE adjacent comma (prefer the trailing
+                  comma; else a leading comma) so we never leave `[,` / `,]`. *)
+               let del_start, del_end =
+                 if off + nlen < mend && s.[off + nlen] = ',' then
+                   (off, off + nlen + 1)
+                 else if off > mstart && s.[off - 1] = ',' then
+                   (off - 1, off + nlen)
+                 else (off, off + nlen)
+               in
+               cands :=
+                 {
+                   c_edits =
+                     [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
+                   c_label = "Remove redundant backend=biber (biber is default)";
+                 }
+                 :: !cands
+           | _ -> ());
+           i := mend
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PKG-010" ~severity:Warning
+             ~message:"biblatex loaded with deprecated backend=biber" ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PKG-010" ~severity:Warning
+             ~message:"biblatex loaded with deprecated backend=biber" ~count:1
+             ~candidates)
   in
   { id = "PKG-010"; run; languages = [] }
 
@@ -1953,32 +2127,78 @@ let r_pkg_013 : rule =
   { id = "PKG-013"; run; languages = [] }
 
 (* ── PKG-014: siunitx v2 API detected (outdated) ────────────────────── *)
-(* Detect \SI{, \si{, \num{ which are v2 commands. v3 uses \qty, \unit instead.
-   Only fire if siunitx is loaded. *)
+(* Detect \SI{, \si{, \SIrange{ which are v2 commands. v3 renames these to
+   \qty, \unit, \qtyrange. Only fire if siunitx is loaded. *)
+(* Bucket-C CANDIDATE: the v2→v3 rename is a DETERMINATE command-name swap
+   (\SI→\qty, \si→\unit, \SIrange→\qtyrange), but v3 also reshapes some argument
+   conventions, so the author must confirm — surface, don't apply. Each
+   candidate replaces ONLY the command word (between the `\` and the `{`);
+   offsets are absolute in the ORIGINAL source. *)
 let r_pkg_014 : rule =
-  let re = Re_compat.regexp {|\\\(SI\|si\|SIrange\){|} in
+  let re = Re_compat.regexp {|\\\(SIrange\|SI\|si\){|} in
+  let v3_of = function
+    | "SI" -> Some "qty"
+    | "si" -> Some "unit"
+    | "SIrange" -> Some "qtyrange"
+    | _ -> None
+  in
   let run s =
     if not (has_package s "siunitx") then None
     else
       let cnt = ref 0 in
+      let cands = ref [] in
       let i = ref 0 in
       (try
          while true do
-           let _mr, _ = Re_compat.search_forward re s !i in
+           let mr, _ = Re_compat.search_forward re s !i in
+           let mstart = Re_compat.match_beginning mr in
+           let mend = Re_compat.match_end mr in
+           (* word = bytes between the leading `\` and the trailing `{`. *)
+           let word_start = mstart + 1 in
+           let word_end = mend - 1 in
+           let word = String.sub s word_start (word_end - word_start) in
            incr cnt;
-           i := Re_compat.match_end _mr
+           (match v3_of word with
+           | Some v3 ->
+               cands :=
+                 {
+                   c_edits =
+                     [
+                       Cst_edit.replace ~start_offset:word_start
+                         ~end_offset:word_end v3;
+                     ];
+                   c_label =
+                     Printf.sprintf "Migrate siunitx v2 \\%s to v3 \\%s" word v3;
+                 }
+                 :: !cands
+           | None -> ());
+           i := mend
          done
        with Not_found -> ());
-      if !cnt > 0 then
-        Some
-          (mk_result ~id:"PKG-014" ~severity:Warning
-             ~message:"siunitx v2 API detected (outdated)" ~count:!cnt)
-      else None
+      if !cnt = 0 then None
+      else
+        let candidates = candidates_drop_exempt s (List.rev !cands) in
+        if candidates = [] then
+          Some
+            (mk_result ~id:"PKG-014" ~severity:Warning
+               ~message:"siunitx v2 API detected (outdated)" ~count:!cnt)
+        else
+          Some
+            (mk_result_with_candidates ~id:"PKG-014" ~severity:Warning
+               ~message:"siunitx v2 API detected (outdated)" ~count:!cnt
+               ~candidates)
   in
   { id = "PKG-014"; run; languages = [] }
 
 (* ── PKG-016: graphicx option pdftex incompatible with engine ────────── *)
+(* Bucket-C CANDIDATE: the driver is auto-detected, so an explicit `pdftex`
+   graphicx option is at best redundant and — under a non-pdfTeX engine — wrong.
+   Dropping it is a DETERMINATE edit; whether to pin a driver is the author's
+   call, so surface, don't apply. The delete spans `pdftex` plus one adjacent
+   comma so the option list stays well-formed. Offsets are absolute in the
+   ORIGINAL source. *)
 let r_pkg_016 : rule =
+  let re_graphicx = Re_compat.regexp {|\\usepackage\[\([^]]*\)\]{graphicx}|} in
   let run s =
     let preamble = extract_preamble s in
     let pkgs = extract_usepackages_with_opts preamble in
@@ -1988,11 +2208,56 @@ let r_pkg_016 : rule =
           name = "graphicx" && contains_substring opts "pdftex")
         pkgs
     in
-    if has_pdftex_opt then
-      Some
-        (mk_result ~id:"PKG-016" ~severity:Warning
-           ~message:"graphicx option pdftex incompatible with engine" ~count:1)
-    else None
+    if not has_pdftex_opt then None
+    else
+      let needle = "pdftex" in
+      let nlen = String.length needle in
+      let slen = String.length s in
+      let index_from from =
+        let rec go k =
+          if k + nlen > slen then None
+          else if String.sub s k nlen = needle then Some k
+          else go (k + 1)
+        in
+        go from
+      in
+      let cands = ref [] in
+      let i = ref 0 in
+      (try
+         while true do
+           let mr, _pos = Re_compat.search_forward re_graphicx s !i in
+           let mstart = Re_compat.match_beginning mr in
+           let mend = Re_compat.match_end mr in
+           (match index_from mstart with
+           | Some off when off < mend ->
+               let del_start, del_end =
+                 if off + nlen < mend && s.[off + nlen] = ',' then
+                   (off, off + nlen + 1)
+                 else if off > mstart && s.[off - 1] = ',' then
+                   (off - 1, off + nlen)
+                 else (off, off + nlen)
+               in
+               cands :=
+                 {
+                   c_edits =
+                     [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
+                   c_label = "Remove engine-specific pdftex option from graphicx";
+                 }
+                 :: !cands
+           | _ -> ());
+           i := mend
+         done
+       with Not_found -> ());
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PKG-016" ~severity:Warning
+             ~message:"graphicx option pdftex incompatible with engine" ~count:1)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PKG-016" ~severity:Warning
+             ~message:"graphicx option pdftex incompatible with engine" ~count:1
+             ~candidates)
   in
   { id = "PKG-016"; run; languages = [] }
 
@@ -2050,34 +2315,75 @@ let r_pkg_021 : rule =
   { id = "PKG-021"; run; languages = [] }
 
 (* ── PKG-024: polyglossia language duplicated ────────────────────────── *)
+(* Bucket-C CANDIDATE: a second `\setdefaultlanguage`/`\setotherlanguage` for a
+   language already declared is redundant. Deleting the LATER directive (and its
+   trailing newline, if the directive is alone on its line) is a DETERMINATE
+   edit; which of the two to keep is a judgement call, so surface, don't apply.
+   Offsets are absolute in the ORIGINAL source; only the second+ occurrence of a
+   given language is offered. *)
 let r_pkg_024 : rule =
   let re =
     Re_compat.regexp {|\\\(setdefaultlanguage\|setotherlanguage\){\([^}]+\)}|}
   in
   let run s =
-    let langs = ref [] in
+    let n = String.length s in
+    let seen = Hashtbl.create 8 in
+    let dups = ref 0 in
+    let cands = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward re s !i in
-         let lang = Re_compat.matched_group _mr 2 s in
-         langs := lang :: !langs;
-         i := Re_compat.match_end _mr
+         let mr, _ = Re_compat.search_forward re s !i in
+         let lang = Re_compat.matched_group mr 2 s in
+         let mstart = Re_compat.match_beginning mr in
+         let mend = Re_compat.match_end mr in
+         (if Hashtbl.mem seen lang then (
+            incr dups;
+            (* Delete the redundant directive. If nothing but whitespace precedes
+               it back to a line start AND a newline follows, also consume that
+               trailing newline so no blank line is left. *)
+            let ls = ref mstart in
+            while !ls > 0 && s.[!ls - 1] <> '\n' do
+              decr ls
+            done;
+            let only_ws_before =
+              let ok = ref true in
+              for k = !ls to mstart - 1 do
+                match s.[k] with ' ' | '\t' -> () | _ -> ok := false
+              done;
+              !ok
+            in
+            let del_start, del_end =
+              if only_ws_before && mend < n && s.[mend] = '\n' then
+                (!ls, mend + 1)
+              else (mstart, mend)
+            in
+            cands :=
+              {
+                c_edits =
+                  [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
+                c_label =
+                  Printf.sprintf "Remove duplicate language declaration for %s"
+                    lang;
+              }
+              :: !cands)
+          else Hashtbl.add seen lang true);
+         i := mend
        done
      with Not_found -> ());
-    (* Check for duplicates *)
-    let seen = Hashtbl.create 8 in
-    let dups = ref 0 in
-    List.iter
-      (fun l ->
-        if Hashtbl.mem seen l then incr dups else Hashtbl.add seen l true)
-      (List.rev !langs);
-    if !dups > 0 then
-      Some
-        (mk_result ~id:"PKG-024" ~severity:Warning
-           ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
-           ~count:!dups)
-    else None
+    if !dups = 0 then None
+    else
+      let candidates = candidates_drop_exempt s (List.rev !cands) in
+      if candidates = [] then
+        Some
+          (mk_result ~id:"PKG-024" ~severity:Warning
+             ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
+             ~count:!dups)
+      else
+        Some
+          (mk_result_with_candidates ~id:"PKG-024" ~severity:Warning
+             ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
+             ~count:!dups ~candidates)
   in
   { id = "PKG-024"; run; languages = [] }
 

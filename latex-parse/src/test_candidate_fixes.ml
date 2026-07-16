@@ -1890,8 +1890,9 @@ let () =
         (tag ^ ": edit"));
   run "STYLE-049 candidate not in fix field (no auto-apply)" (fun tag ->
       expect (style_no_fix "STYLE-049" s49) (tag ^ ": fix=None"));
-  (* ══════════════════════════════════════════════════════════════════════
-     PKG family (C10): package-option / package-swap candidates
+
+  (* ══════════════════════════════════════════════════════════════════════ PKG
+     family (C10): package-option / package-swap candidates
      ══════════════════════════════════════════════════════════════════════ *)
 
   (* PKG-008: xcolor without dvipsnames — add the option. *)

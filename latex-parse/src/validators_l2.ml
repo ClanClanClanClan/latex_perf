@@ -1608,7 +1608,8 @@ let r_pkg_012 : rule =
    edit — but only when inputenc sits ALONE on its own `\usepackage` line, so we
    can delete the whole line without disturbing a comma-separated group. In a
    `\usepackage{inputenc,...}` list the safe target isn't a whole line, so we
-   degrade to diagnose-only there. Offsets are absolute in the ORIGINAL source. *)
+   degrade to diagnose-only there. Offsets are absolute in the ORIGINAL
+   source. *)
 let r_pkg_015 : rule =
   let re_line = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{inputenc}|} in
   let run s =
@@ -1632,7 +1633,8 @@ let r_pkg_015 : rule =
              let mstart = Re_compat.match_beginning mr in
              let mend = Re_compat.match_end mr in
              (* Standalone-line guard: only whitespace before [mstart] back to a
-                line start, and only whitespace after [mend] to the newline/EOF. *)
+                line start, and only whitespace after [mend] to the
+                newline/EOF. *)
              let ls = ref mstart in
              while !ls > 0 && s.[!ls - 1] <> '\n' do
                decr ls
@@ -1661,8 +1663,7 @@ let r_pkg_015 : rule =
                   {
                     c_edits =
                       [ Cst_edit.delete ~start_offset:!ls ~end_offset:del_end ];
-                    c_label =
-                      "Remove redundant inputenc under XeLaTeX/LuaLaTeX";
+                    c_label = "Remove redundant inputenc under XeLaTeX/LuaLaTeX";
                   }
                   :: !cands);
              i := mend
@@ -1993,10 +1994,7 @@ let r_pkg_008 : rule =
            let brace_off = pos + 11 in
            cands :=
              {
-               c_edits =
-                 [
-                   Cst_edit.insert ~at:brace_off "[dvipsnames]";
-                 ];
+               c_edits = [ Cst_edit.insert ~at:brace_off "[dvipsnames]" ];
                c_label = "Add dvipsnames option to xcolor";
              }
              :: !cands;
@@ -2015,10 +2013,7 @@ let r_pkg_008 : rule =
               let bracket = pos + 11 in
               cands :=
                 {
-                  c_edits =
-                    [
-                      Cst_edit.insert ~at:(bracket + 1) "dvipsnames,";
-                    ];
+                  c_edits = [ Cst_edit.insert ~at:(bracket + 1) "dvipsnames," ];
                   c_label = "Add dvipsnames option to xcolor";
                 }
                 :: !cands);
@@ -2093,7 +2088,10 @@ let r_pkg_010 : rule =
                cands :=
                  {
                    c_edits =
-                     [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
+                     [
+                       Cst_edit.delete ~start_offset:del_start
+                         ~end_offset:del_end;
+                     ];
                    c_label = "Remove redundant backend=biber (biber is default)";
                  }
                  :: !cands
@@ -2127,8 +2125,8 @@ let r_pkg_013 : rule =
   { id = "PKG-013"; run; languages = [] }
 
 (* ── PKG-014: siunitx v2 API detected (outdated) ────────────────────── *)
-(* Detect \SI{, \si{, \SIrange{ which are v2 commands. v3 renames these to
-   \qty, \unit, \qtyrange. Only fire if siunitx is loaded. *)
+(* Detect \SI{, \si{, \SIrange{ which are v2 commands. v3 renames these to \qty,
+   \unit, \qtyrange. Only fire if siunitx is loaded. *)
 (* Bucket-C CANDIDATE: the v2→v3 rename is a DETERMINATE command-name swap
    (\SI→\qty, \si→\unit, \SIrange→\qtyrange), but v3 also reshapes some argument
    conventions, so the author must confirm — surface, don't apply. Each
@@ -2240,8 +2238,12 @@ let r_pkg_016 : rule =
                cands :=
                  {
                    c_edits =
-                     [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
-                   c_label = "Remove engine-specific pdftex option from graphicx";
+                     [
+                       Cst_edit.delete ~start_offset:del_start
+                         ~end_offset:del_end;
+                     ];
+                   c_label =
+                     "Remove engine-specific pdftex option from graphicx";
                  }
                  :: !cands
            | _ -> ());
@@ -2337,37 +2339,37 @@ let r_pkg_024 : rule =
          let lang = Re_compat.matched_group mr 2 s in
          let mstart = Re_compat.match_beginning mr in
          let mend = Re_compat.match_end mr in
-         (if Hashtbl.mem seen lang then (
-            incr dups;
-            (* Delete the redundant directive. If nothing but whitespace precedes
-               it back to a line start AND a newline follows, also consume that
-               trailing newline so no blank line is left. *)
-            let ls = ref mstart in
-            while !ls > 0 && s.[!ls - 1] <> '\n' do
-              decr ls
-            done;
-            let only_ws_before =
-              let ok = ref true in
-              for k = !ls to mstart - 1 do
-                match s.[k] with ' ' | '\t' -> () | _ -> ok := false
-              done;
-              !ok
-            in
-            let del_start, del_end =
-              if only_ws_before && mend < n && s.[mend] = '\n' then
-                (!ls, mend + 1)
-              else (mstart, mend)
-            in
-            cands :=
-              {
-                c_edits =
-                  [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
-                c_label =
-                  Printf.sprintf "Remove duplicate language declaration for %s"
-                    lang;
-              }
-              :: !cands)
-          else Hashtbl.add seen lang true);
+         if Hashtbl.mem seen lang then (
+           incr dups;
+           (* Delete the redundant directive. If nothing but whitespace precedes
+              it back to a line start AND a newline follows, also consume that
+              trailing newline so no blank line is left. *)
+           let ls = ref mstart in
+           while !ls > 0 && s.[!ls - 1] <> '\n' do
+             decr ls
+           done;
+           let only_ws_before =
+             let ok = ref true in
+             for k = !ls to mstart - 1 do
+               match s.[k] with ' ' | '\t' -> () | _ -> ok := false
+             done;
+             !ok
+           in
+           let del_start, del_end =
+             if only_ws_before && mend < n && s.[mend] = '\n' then
+               (!ls, mend + 1)
+             else (mstart, mend)
+           in
+           cands :=
+             {
+               c_edits =
+                 [ Cst_edit.delete ~start_offset:del_start ~end_offset:del_end ];
+               c_label =
+                 Printf.sprintf "Remove duplicate language declaration for %s"
+                   lang;
+             }
+             :: !cands)
+         else Hashtbl.add seen lang true;
          i := mend
        done
      with Not_found -> ());
@@ -2377,12 +2379,14 @@ let r_pkg_024 : rule =
       if candidates = [] then
         Some
           (mk_result ~id:"PKG-024" ~severity:Warning
-             ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
+             ~message:
+               {|polyglossia language duplicated via \setdefaultlanguage|}
              ~count:!dups)
       else
         Some
           (mk_result_with_candidates ~id:"PKG-024" ~severity:Warning
-             ~message:{|polyglossia language duplicated via \setdefaultlanguage|}
+             ~message:
+               {|polyglossia language duplicated via \setdefaultlanguage|}
              ~count:!dups ~candidates)
   in
   { id = "PKG-024"; run; languages = [] }

@@ -2,6 +2,18 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.50] — 2026-07-16
+
+**Candidate coverage — PKG family (6).** Continuing the corrected-bar recovery.
+PKG-008 (add `[dvipsnames]` to xcolor), PKG-010 (remove redundant `backend=biber`),
+PKG-014 (siunitx v2→v3 command rename `\SI`→`\qty`/`\si`→`\unit`/`\SIrange`→
+`\qtyrange`), PKG-015 (remove redundant `inputenc` under XeLaTeX/LuaLaTeX), PKG-016
+(remove engine-specific `pdftex` option from graphicx), PKG-024 (remove duplicate
+polyglossia language declaration). The remaining PKG (13) + all TAB (15) rules stay
+diagnose-only — open-ended preamble relocations, option-merge decisions, table-layout
+choices, and author-content fixes with no determinate target. Candidate rules
+**115→121**; byte-safe, validate_messages 0 mismatches, candidate_fixes 338.
+
 ## [v27.1.49] — 2026-07-16
 
 **Candidate coverage +22 under the corrected bar — SCRIPT/REF/TIKZ/SPC + STYLE.**

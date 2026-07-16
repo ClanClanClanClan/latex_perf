@@ -2,6 +2,22 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.51] — 2026-07-16
+
+**LANG candidates (3) + ground-truth backlog reconciliation.** LANG family:
+PT-003 (pt-PT ordinal indicator º/ª), NL-001 (Dutch IJ digraph capitalization),
+CS-002 (CS/SK date thin-space format); 27 LANG/RTL/PT/NL/PL/TR/ZH rules correctly
+stay diagnose-only (dictionary spell-variants, ambiguous quote/digit targets,
+config/structural). Candidate rules **121→124**.
+
+**Backlog reconciliation (fixes a real tracking-drift):** an audit found
+`CANDIDATE_BACKLOG.md` listed ~45 already-wired rules as "deferred" — the doc had
+drifted from the code. New generator `scripts/tools/gen_candidate_backlog.py`
+regenerates it from GROUND TRUTH (greps the actual result-constructor per rule)
+with a `--check` mode, so it can never lie again. Truth: 70 producers / 124
+candidates / 402 diagnose-only, with the 5 known-recoverable rules (MATH-056,
+PKG-001, TAB-002/007/011) explicitly surfaced.
+
 ## [v27.1.50] — 2026-07-16
 
 **Candidate coverage — PKG family (6).** Continuing the corrected-bar recovery.

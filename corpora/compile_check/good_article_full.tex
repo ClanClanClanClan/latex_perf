@@ -1,0 +1,56 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{A Complete Article}
+\author{Test Author}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This is an abstract with some \emph{emphasis} and inline math $a^2+b^2=c^2$.
+\end{abstract}
+
+\tableofcontents
+
+\section{Introduction}\label{sec:intro}
+Some text with a footnote.\footnote{A footnote.} We reference
+Section~\ref{sec:body} below and cite nothing here.
+
+\section{Body}\label{sec:body}
+Display math:
+\begin{equation}\label{eq:euler}
+  e^{i\pi} + 1 = 0.
+\end{equation}
+Equation~\eqref{eq:euler} is famous.
+
+\subsection{Lists}
+\begin{itemize}
+  \item First item.
+  \item Second item with nested list:
+  \begin{enumerate}
+    \item alpha
+    \item beta
+  \end{enumerate}
+\end{itemize}
+
+\subsection{A Table}
+\begin{center}
+\begin{tabular}{lcr}
+  \hline
+  Left & Center & Right \\
+  \hline
+  1 & 2 & 3 \\
+  4 & 5 & 6 \\
+  \hline
+\end{tabular}
+\end{center}
+
+\section{Conclusion}
+Back to Section~\ref{sec:intro}.
+\end{document}

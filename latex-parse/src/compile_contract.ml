@@ -175,6 +175,15 @@ let t1_check (_ : Project_model.t) : reason list = []
    a false READY on a genuinely broken document is not. *)
 let compile_blocking_prefixes = [ "DELIM-"; "ENC-"; "PRT-" ]
 
+(* NOTE (differential validation, scripts/tools/diff_compile_check.sh): DELIM-001
+   ("Unmatched delimiters { … }") over-triggers on a BARE unclosed open group
+   ([{x\end{document}]), which pdflatex auto-closes and compiles — a false
+   NOT-READY. It was tempting to exclude DELIM-001, BUT the same rule also fires on
+   an unclosed group swallowed by a MACRO ARGUMENT ([\textbf{oops\end{document}]),
+   which genuinely FAILS (the \end{document} is consumed into the argument). DELIM-001
+   cannot cheaply distinguish the two, and a false READY on the fatal case is the
+   dangerous direction — so DELIM-001 STAYS compile-blocking. The bare-[{x]
+   over-rejection is an accepted SAFE false-NOT-READY. *)
 let is_compile_blocking (id : string) : bool =
   List.exists
     (fun p ->

@@ -102,6 +102,38 @@ discharge for those engines is a future workstream.
 
 ---
 
+
+## Differential validation against real pdflatex (measured, not asserted)
+
+`scripts/tools/diff_compile_check.sh` runs `--compile-check` AND the real `pdflatex`
+binary over a labeled corpus (`corpora/compile_check/`) and reports the confusion
+matrix. This turns the readiness claim into a measured fact. Latest run:
+
+| soundness direction | count | meaning |
+|---|---|---|
+| **FALSE-READY** (cc=READY, pdflatex FAILS) | **0** | the pre-check never falsely certifies a doc that fails — the direction that matters |
+| false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 1 | safe conservative over-rejection (a `\write18` doc pdflatex tolerates in restricted mode; shell-escape is genuinely LP-Foreign) |
+| correct NOT-READY & FAILS | 4 | unclosed math / unclosed env / extra `}` / missing `\input` all caught |
+| correct READY & COMPILES | 2 | clean docs |
+
+The harness exits nonzero ONLY on a FALSE-READY (a dangerous regression), so it is a
+usable local soundness guard (not a CI gate — CI has no TeX).
+
+### Known limitations (measured, honestly out of scope)
+
+- **Conservative over-rejection of auto-closeable groups.** An unclosed OPEN group
+  (`{x\end{document}`) is reported NOT-READY, but pdflatex auto-closes it and compiles.
+  This is a *safe* false-NOT-READY (the parser is stricter than the engine on sloppy
+  groups — good for linting, conservative for compile-prediction). DELIM-001 is excluded
+  from the T5 compile-blocking set; the residual over-rejection comes from the T0 parser
+  itself flagging the unclosed group.
+- **Undefined control sequences are NOT detected** (`\foobarbaz` → READY, but pdflatex
+  FAILS). This is a genuine completeness limit: the pre-check does not model the full
+  macro/package universe, so it cannot know a control sequence is undefined. This is a
+  false-READY class, documented as out of scope — it is why READY is a *readiness
+  pre-check*, not a total compile certificate.
+
+
 ## Residual gap — READY is not yet a total certificate
 
 Be precise about what the capstone does and does not buy you:

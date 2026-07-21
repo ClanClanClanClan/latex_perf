@@ -73,6 +73,7 @@
   build_graph
   aux_state
   compile_contract
+  compile_evidence
   stable_spans
   cst
   cst_of_ast
@@ -620,6 +621,11 @@
  (name test_compile_contract)
  (modules test_compile_contract)
  (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_compile_evidence)
+ (modules test_compile_evidence)
+ (libraries latex_parse_lib test_helpers))
 
 (test
  (name test_extension_contract)

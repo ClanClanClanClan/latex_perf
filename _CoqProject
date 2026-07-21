@@ -87,3 +87,7 @@ proofs/PdflatexModel.v
 # v27 — WS9/WS12 runtime invariants formalised (spec §7 required proof families)
 proofs/WaiverScoping.v
 proofs/ExtensionBoundary.v
+
+# v27.1.53 — decidable capstone-premise checker bridging runtime --compile-check
+# to PdflatexModel.pdflatex_compile_safe (flagship compile-guarantee gap #1)
+proofs/CompileGuaranteeBridge.v

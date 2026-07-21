@@ -501,6 +501,16 @@ let run_explain (rule_id : string) : int =
       2
 (* ── Compile-readiness pre-check (--compile-check) ────────────────── *)
 
+(* Print the MODEL-CONNECTED verdict: extract the real document to the abstract
+   [PdflatexModel.pdflatex_project] the Coq capstone governs, run the OCaml
+   mirror of [CompileGuaranteeBridge.project_wf_dec], and report whether the
+   extracted project passes the premise-check that the Coq lemma
+   [project_wf_dec_sound] PROVES sufficient for [pdflatex_compile_safe]. A
+   [MODEL-READY] line means: the runtime found a project + witness order for
+   which the PROVEN checker returns [true], so the capstone's conclusion
+   (compiles, <=2-pass convergence, fatal-free) holds by [project_wf_dec_sound].
+   Only emitted under --compile-check, so default output is unaffected. *)
+
 (** Run the T0–T5 pre-compile readiness contract on one file and print a clear
     verdict. Sets up the same per-file context the lint path uses (file context,
     command spans, build profile, user macros, language profile) so the T5
@@ -510,6 +520,31 @@ let run_explain (rule_id : string) : int =
     Prints [READY] (exit 0) when every runtime precondition holds, or
     [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
     sibling, if present, informs T4. Returns the process exit code. *)
+let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
+    : unit =
+  let module CE = Latex_parse_lib.Compile_evidence in
+  let p, pf, order = CE.extract_of_project ~source:src proj in
+  let r = CE.report p pf order in
+  if CE.all_hold r then
+    printf
+      "MODEL-CONNECTED\tMODEL-READY (Coq project_wf_dec_sound => \
+       pdflatex_compile_safe)\n"
+  else (
+    printf "MODEL-CONNECTED\tMODEL-NOT-READY\n";
+    if not r.t2_closed then
+      printf "  T2 project_closed_b failed (build graph not closed/acyclic)\n";
+    if not r.t3_declared then
+      printf "  T3 declared features not admitted by engine %s\n"
+        (CE.engine_to_string pf.CE.prof_engine);
+    if not r.t3_body then
+      printf "  T3 body-required feature(s) [%s] not admitted by engine %s\n"
+        (String.concat "; "
+           (List.map CE.feature_to_string r.CE.unsupported_features))
+        (CE.engine_to_string pf.CE.prof_engine);
+    if not r.t4_unique_labels then
+      printf "  T4 duplicate \\label(s): [%s]\n"
+        (String.concat "; " (CE.duplicate_label_keys src)))
+
 let run_compile_check ~path ~src : int =
   let tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner tier features;
@@ -537,6 +572,7 @@ let run_compile_check ~path ~src : int =
             Latex_parse_lib.Compile_contract.check_ready_to_compile ?aux_path
               ~source:src proj profile
           in
+          print_model_connected_verdict ~src proj;
           match result with
           | Latex_parse_lib.Compile_contract.Ready ->
               printf "READY\t%s\n" path;

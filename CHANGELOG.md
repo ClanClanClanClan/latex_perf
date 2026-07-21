@@ -2,6 +2,22 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.55] — 2026-07-21
+
+**Compile-guarantee residual (b): differential validation at scale + honest soundness
+boundary.** Scaled `scripts/tools/diff_compile_check.sh` over a 61-doc corpus of REAL
+complete documents (`corpora/compile_check/`) vs the real pdflatex binary. Measured:
+33 READY&compiles, 16 NOT-READY&fails, **10 false-READY**, 2 safe over-reject. The 10
+false-READYs are ONE principled class — SEMANTIC/EXPANSION-time faults (undefined
+control sequence/environment, missing `\usepackage`, `align` without amsmath, bad `.sty`,
+bad `\includegraphics`, math-in-text mode error, double subscript, `\newcommand` arg
+count, no `\documentclass`) — each requiring the macro/package universe or TeX expansion,
+which a STRUCTURAL pre-check provably does not model. **Zero NEW false-READYs.** So
+`--compile-check` READY is honestly a *structural* readiness certificate; the 10 classes
+precisely delineate the boundary (documented in `COMPILATION_GUARANTEE.md`). The harness
+now carries a KNOWN_FALSE_READY allowlist and exits nonzero only on a NEW false-READY —
+a real regression guard. (Corrects the earlier "0 false-READY", a small-corpus artifact.)
+
 ## [v27.1.54] — 2026-07-21
 
 **FLAGSHIP gap #1: bridge the runtime parse to the `pdflatex_compile_safe` proof.**

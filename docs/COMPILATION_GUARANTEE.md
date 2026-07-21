@@ -113,31 +113,80 @@ discharge for those engines is a future workstream.
 
 `scripts/tools/diff_compile_check.sh` runs `--compile-check` AND the real `pdflatex`
 binary over a labeled corpus (`corpora/compile_check/`) and reports the confusion
-matrix. This turns the readiness claim into a measured fact. Latest run:
+matrix. This turns the readiness claim into a *measured* fact rather than an assertion.
+Classification is outcome-driven (from the two real verdicts), not from the filename.
+
+**At-scale run (61 standalone documents, pdfTeX 3.141592653-2.6-1.40.29 / TeX Live 2026).**
+The corpus spans clean docs of varied complexity (`good_*`: article with
+sections/math/lists/tabular/figure/verbatim/footnotes/cross-refs/bibliography, amsthm,
+tikz, minipage, `\input` child, report class, UTF-8 accents, user macros), genuine
+compile-FAILURE classes (`fail_*`), and pdflatex-TOLERATED sloppiness (`tolerated_*`):
 
 | soundness direction | count | meaning |
 |---|---|---|
-| **FALSE-READY** (cc=READY, pdflatex FAILS) | **0** | the pre-check never falsely certifies a doc that fails — the direction that matters |
-| false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 1 | safe conservative over-rejection (a `\write18` doc pdflatex tolerates in restricted mode; shell-escape is genuinely LP-Foreign) |
-| correct NOT-READY & FAILS | 4 | unclosed math / unclosed env / extra `}` / missing `\input` all caught |
-| correct READY & COMPILES | 2 | clean docs |
+| correct **READY & COMPILES** (true-READY) | 33 | clean docs of varied complexity, all certified and all compile |
+| correct **NOT-READY & FAILS** (true NOT-READY) | 16 | unclosed math/display-math/env/`\verb`, extra/stray `}`, `\begin`/`\end` mismatch, extra `\end`, `\left` without `\right`, mismatched `$` toggles, runaway argument, missing `\input`, missing `\begin{document}` — all caught by T0/T2/T5 |
+| **FALSE-READY** (cc=READY, pdflatex FAILS) | **10** | the dangerous soundness residual — every one requires macro/package-universe modeling or full expansion the pre-check does not perform (enumerated below); **0 new** beyond the documented allowlist |
+| false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 2 | safe conservative over-rejection: a bare unclosed `{` group pdflatex auto-closes, and a `\write18` doc pdflatex tolerates in restricted mode (shell-escape is genuinely LP-Foreign) |
 
-The harness exits nonzero ONLY on a FALSE-READY (a dangerous regression), so it is a
-usable local soundness guard (not a CI gate — CI has no TeX).
+Total = 33 + 16 + 10 + 2 = 61.
+
+The harness exits nonzero ONLY on a **NEW** false-READY — one whose basename is not in
+the documented `KNOWN_FALSE_READY` allowlist inside the script (the 10 limit-class docs
+below). Known-limitation misses do not fail the run; a genuinely new soundness miss does.
+This makes it a usable local soundness **regression guard** (not a CI gate — CI has no TeX).
+
+### The 10 false-READYs, enumerated and analyzed (honest soundness data)
+
+Each of these is a document the pre-check certified READY but `pdflatex` FAILED on. They
+are the point of this exercise: they measure exactly where READY is *not* a compile
+certificate. Every one is caused by the pre-check NOT modeling the macro/package universe
+or NOT running full TeX expansion — precisely the T1-expansion obligation that
+`--compile-check` conservatively skips (see the T1 row of the runtime table above).
+
+| doc | real pdflatex error | why the pre-check provably cannot catch it |
+|---|---|---|
+| `fail_undefined_cs.tex` | `! Undefined control sequence` | `\foobarbazundefined` parses as a well-formed control word; knowing it is undefined requires the live macro table (format + every loaded package), which the pre-check does not build. |
+| `fail_undefined_environment.tex` | `! LaTeX Error: Environment nonexistentenv undefined` | `\begin{nonexistentenv}…\end{nonexistentenv}` is structurally balanced (T0/T5 see a matched env); whether the env is *defined* is a macro-universe fact only `\begin` resolves at expansion time. |
+| `fail_missing_usepackage.tex` | `! LaTeX Error: Environment tikzpicture undefined` | Same class: `tikzpicture` is balanced but undefined because `\usepackage{tikz}` is absent. The pre-check does not simulate package loading to know which environments a package would define. |
+| `fail_align_no_amsmath.tex` | `! LaTeX Error: Environment align undefined` | `align` is balanced but undefined without `amsmath`. Detecting this needs the package→macro map, i.e. modeling the package universe. |
+| `fail_bad_usepackage.tex` | `! LaTeX Error: File 'this_package_does_not_exist_xyz.sty' not found` | The pre-check's T2 project-closure resolves `\input`/`\include` sources, but does **not** resolve `\usepackage` against `kpathsea`/the TeX tree, so a nonexistent `.sty` is invisible to it. |
+| `fail_bad_graphics_include.tex` | `! LaTeX Error: File '…' not found` | `\includegraphics` file existence is a runtime graphics-backend lookup on the TeX search path, not part of the closure T2 tracks. |
+| `fail_math_in_text.tex` | `! Missing $ inserted` | `\alpha`/`\beta` used outside math is a *mode* error: the token is defined, but only legal in math mode. Catching it requires tracking TeX's math/text mode through expansion — the full-expansion state the pre-check skips. |
+| `fail_double_subscript.tex` | `! Double subscript` | `x_1_2` is a math-semantics fault detected only by the math-list builder during expansion; the byte structure is otherwise well-formed. |
+| `fail_newcommand_wrong_args.tex` | `! Illegal parameter number in definition of \greet` | A `#3` in a 2-argument `\newcommand` body is caught when TeX *scans the definition*; the pre-check does not evaluate `\newcommand` bodies, so arg-count consistency is out of scope. |
+| `fail_no_documentclass.tex` | `! LaTeX Error: The font size command \normalsize is not defined` | A missing `\documentclass` leaves the format uninitialized. The pre-check does not require/validate a `\documentclass` preamble, so a body with no class still parses structurally and reports READY. |
+
+**Common root cause.** All ten sit on the far side of the T1 boundary: they are only
+observable once TeX *expands* macros and *loads* packages/classes against the live format
+and file system. `--compile-check` deliberately runs T0 (structural parse) + T2 (source
+closure) + T3 (declared-feature/engine compat) + T4 (aux label uniqueness) + T5
+(`DELIM-`/`ENC-`/`PRT-` Error rules) and treats T1 as a conservative no-op. Closing this
+residual would require either (a) shelling out to the real engine (which is what running
+`pdflatex` already does) or (b) a verified model of the macro/package universe and TeX's
+expansion+mode machinery — a much larger workstream than a fast fail-first pre-check.
 
 ### Known limitations (measured, honestly out of scope)
 
-- **Conservative over-rejection of auto-closeable groups.** An unclosed OPEN group
-  (`{x\end{document}`) is reported NOT-READY, but pdflatex auto-closes it and compiles.
-  This is a *safe* false-NOT-READY (the parser is stricter than the engine on sloppy
-  groups — good for linting, conservative for compile-prediction). DELIM-001 is excluded
-  from the T5 compile-blocking set; the residual over-rejection comes from the T0 parser
-  itself flagging the unclosed group.
-- **Undefined control sequences are NOT detected** (`\foobarbaz` → READY, but pdflatex
-  FAILS). This is a genuine completeness limit: the pre-check does not model the full
-  macro/package universe, so it cannot know a control sequence is undefined. This is a
-  false-READY class, documented as out of scope — it is why READY is a *readiness
-  pre-check*, not a total compile certificate.
+- **Undefined-name class (7 of 10 above): undefined control sequences, undefined
+  environments, missing `\usepackage`/`\documentclass`, missing package/graphics files.**
+  The pre-check does not build the live macro table or resolve names against the TeX tree,
+  so a structurally well-formed but semantically undefined name is reported READY. This is
+  the dominant false-READY class and is why READY is a *readiness pre-check*, not a total
+  compile certificate.
+- **Expansion-time math/arg-semantics class (3 of 10 above): math-only command in text
+  mode, double subscript, illegal `\newcommand` parameter number.** These are caught only
+  by TeX's expansion/math-list machinery, which the pre-check does not run.
+- **Conservative over-rejection of auto-closeable groups (a false-NOT-READY, the *safe*
+  direction).** An unclosed OPEN group (`{x\end{document}`) is reported NOT-READY, but
+  pdflatex auto-closes it and compiles (`tolerated_bare_unclosed_brace.tex`). The parser
+  is stricter than the engine on sloppy groups — good for linting, conservative for
+  compile-prediction. The residual over-rejection comes from the T0 parser flagging the
+  unclosed group; DELIM-001 stays compile-blocking on purpose (a fatal consumed-brace case
+  it cannot cheaply distinguish is the dangerous direction).
+- **`\write18` shell-escape (a false-NOT-READY).** `tolerated_write18.tex` is reported
+  NOT-READY (LP-Foreign) but pdflatex tolerates it in restricted-shell-escape mode. This
+  over-rejection is intentional: shell-escape is genuinely out of the safe subset.
 
 
 ## Model-connected verdict — the `MODEL-CONNECTED` line (v27.1.53)

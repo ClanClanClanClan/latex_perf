@@ -2,6 +2,29 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.54] — 2026-07-21
+
+**FLAGSHIP gap #1: bridge the runtime parse to the `pdflatex_compile_safe` proof.**
+The capstone was Qed over an abstract `body_token` model disconnected from real
+LaTeX; this connects them, narrowing (not eliminating) the gap.
+- **Coq `proofs/CompileGuaranteeBridge.v`:** `project_wf_dec` — a *decidable*
+  premise-checker (T2 `project_closed` w/ witness topo-order, T3 feature/engine
+  compat, T4 `NoDup body_label_defs`) + **`project_wf_dec_sound`** (Qed: `= true` ⟹
+  the exact `pdflatex_compile_safe` hypotheses) + **`project_wf_dec_compile_safe`**
+  (Qed: discharges the full capstone). Non-vacuous (Examples prove `false` for
+  duplicate-label / unsupported-feature docs), Print Assumptions Closed, 0 admits.
+- **OCaml `Compile_evidence`:** extracts a real `body_token`/project from a document
+  reusing `Ast_semantic_state` (real `\label`/`\ref`) + `Build_graph` +
+  `Project_model` (engine/features) — no reinvention.
+- **`--compile-check`** now prints a **MODEL-CONNECTED** line: MODEL-READY (the
+  extracted project passes the proven premise-check ⟹ the capstone applies) or
+  MODEL-NOT-READY + the failing T2/T3/T4 obligation (e.g. duplicate `\label` detected
+  *from source*, which base T0–T5 miss without an `.aux`). Default output byte-identical.
+- **Honest residual** (`COMPILATION_GUARANTEE.md`): PROVEN = the premise-decision
+  logic; TESTED = extractor faithfulness + OCaml↔Coq mirror-equivalence (11 tests);
+  UNVERIFIED = `Parser_l2` byte→AST correctness + the mirror is not Coq-extracted.
+  "The gap is narrowed, not eliminated." Theorem count 1,484.
+
 ## [v27.1.53] — 2026-07-21
 
 **FLAGSHIP: `--compile-check` — the "will it compile" pre-check is now a real,

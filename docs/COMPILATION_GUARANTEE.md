@@ -96,6 +96,12 @@ brace group, which it silently closes at EOF — are caught by **T5's
   [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](../specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md).
   Honest residuals: the T0/T1/T5 universal obligations and byte-exact PDF
   *structural* semantics stay conservative/deferred.
+- **Decidable premise-bridge (v27.1.53):**
+  `proofs/CompileGuaranteeBridge.v::project_wf_dec` + `project_wf_dec_sound`
+  (Qed, 0 admits, Closed) make the capstone's premises a *computable* check,
+  and `--compile-check`'s `MODEL-CONNECTED` line runs an OCaml mirror of it on
+  the real document. See "Model-connected verdict" below for exactly what is
+  proven vs tested vs unverified.
 
 xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
 discharge for those engines is a future workstream.
@@ -134,31 +140,71 @@ usable local soundness guard (not a CI gate — CI has no TeX).
   pre-check*, not a total compile certificate.
 
 
-## Residual gap — READY is not yet a total certificate
+## Model-connected verdict — the `MODEL-CONNECTED` line (v27.1.53)
 
-Be precise about what the capstone does and does not buy you:
+`--compile-check` now emits an additional `MODEL-CONNECTED` line that
+genuinely wires the runtime parse to the Coq capstone's *proven premise
+logic*. It is built from three pieces:
 
-- **`pdflatex_compile_safe` is proved over an ABSTRACT operational
-  model.** The Coq capstone (`proofs/PdflatexModel.v`) reasons about a
-  `body_token` document model and an operational pdflatex semantics. It is
-  Qed with zero axioms/admits **within that model**.
-- **The model is NOT yet connected byte-for-byte to the runtime parser.**
-  There is no verified `bytes → body_token` extraction linking the real
-  `Parser_l2` output (what `--compile-check`'s T0 runs) to the `body_token`
-  the capstone quantifies over. So the theorem's `project_well_typed`
-  hypothesis is not discharged from your actual source bytes at runtime.
-- **Consequently `--compile-check` READY is a sound *readiness* result,
-  not the capstone's conclusion.** It certifies that the T0–T5 runtime
-  preconditions we check held; it does not mechanically instantiate the
-  compile-safety theorem for your specific input. Closing the
-  `bytes → body_token` gap (a verified extraction/refinement) is the
-  remaining work that would upgrade READY toward a total "it will compile"
-  certificate for arbitrary input.
+1. **A DECIDABLE premise-checker + soundness lemma, in Coq**
+   (`proofs/CompileGuaranteeBridge.v`). `project_wf_dec : pdflatex_project →
+   pdflatex_profile → list node → bool` checks exactly the capstone's
+   hypotheses — T2 (`project_closed`, via a witness topological order it
+   certifies), T3 (`profile_admits` for the profile's declared features AND
+   every feature the document body requires), and T4
+   (`NoDup (body_label_defs)`). The lemma
+   `project_wf_dec_sound : project_wf_dec p pf order = true → project_well_typed
+   p ∧ profile_supported p pf ∧ pdflatex_T4_coherent p` is **Qed, zero
+   admits/axioms**, and the corollary `project_wf_dec_compile_safe` discharges
+   `pdflatex_compile_safe` from a `true` verdict. `Print Assumptions
+   project_wf_dec_compile_safe` prints *Closed under the global context*.
+   So a `true` from this checker **provably** implies the capstone's
+   conclusion (compiles, ≤2-pass convergence, fatal-free, warns-iff-unresolved).
 
-Until that gap is closed, treat `--compile-check` as a fast, honest
-fail-first gate: NOT-READY reliably means "do not bother running latexmk
-yet"; READY means "no runtime precondition we check is violated" — then run
-your real build.
+2. **An OCaml extractor** (`latex-parse/src/compile_evidence.ml`,
+   `Compile_evidence`) that maps a real `.tex` to the abstract
+   `pdflatex_project`/`pdflatex_profile` the checker consumes: it **reuses**
+   `Ast_semantic_state.labels`/`refs` for `\label`→`BT_label_def`,
+   `\ref`/`\eqref`→`BT_label_ref` (keys hashed to stable `nat` ids), detects
+   T3-relevant features (`fontspec`→`Opentype_fonts`, `unicode-math`,
+   `luacode`/`\directlua`→`Lua_scripting`, CJK, …)→`BT_needs_feature`, and
+   builds the T2 graph + topological order from `Build_graph.of_project`.
+
+3. **The wiring**: `--compile-check` runs the OCaml **mirror** of
+   `project_wf_dec` on the extracted project and prints `MODEL-CONNECTED
+   MODEL-READY` iff that mirror returns `true` (else `MODEL-NOT-READY` with the
+   failing T2/T3/T4 obligation). Default (no-flag) output is byte-identical.
+
+### What is PROVEN vs TESTED vs UNVERIFIED (be precise)
+
+- **PROVEN (Coq, Qed, 0 admits, `Print Assumptions` Closed):** the
+  premise-decision logic itself — that `project_wf_dec = true` is *sufficient*
+  for `pdflatex_compile_safe`'s hypotheses and hence its full conclusion. This
+  is the flagship connection: the READY decision now corresponds to a **proven**
+  check of the theorem's premises, not an ad-hoc runtime heuristic.
+- **TESTED (not proven), `test_compile_evidence.ml`:** (a) the OCaml extractor
+  faithfully reflects the source — it flags a duplicate `\label` (T4) and a
+  required-but-unsupported feature (T3) on real documents, accepts clean ones;
+  (b) **mirror-equivalence** — the OCaml `project_wf_dec` returns the SAME
+  boolean as the Coq `project_wf_dec` on the shared example projects (the Coq
+  side proves those verdicts by `vm_compute` as `Example`s; we replay the same
+  abstract projects in OCaml and assert agreement). The checker is
+  re-implemented in OCaml, **not Coq-extracted**, so this equivalence is a test.
+- **UNVERIFIED:** (i) `Parser_l2` byte→AST correctness — the extractor trusts
+  the parser's structural read of your bytes; (ii) the OCaml mirror faithfully
+  equalling the Coq `project_wf_dec` is TESTED, not machine-checked, because
+  there is no Coq extraction of this module.
+
+Net effect: the gap is **narrowed, not eliminated**. READY + `MODEL-READY`
+means "for the abstract project we extracted from your source, a *proven*
+checker certifies the capstone premises hold." It does **not** yet mean "your
+exact bytes are certified to compile", because the extraction step (parser +
+label/feature reading) is trusted/tested rather than verified end-to-end.
+
+Treat `--compile-check` as a fast, honest fail-first gate: NOT-READY (or
+`MODEL-NOT-READY`) reliably means "do not bother running latexmk yet"; READY +
+`MODEL-READY` means "no runtime precondition we check is violated, and the
+extracted project passes the proven premise-check" — then run your real build.
 
 ---
 

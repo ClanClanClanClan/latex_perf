@@ -12,38 +12,64 @@ and [specs/v26/compilation_profiles.yaml](../specs/v26/compilation_profiles.yaml
 ## TL;DR
 
 Run `latex_parse_cli --compile-check path/to/main.tex` before running
-latexmk. If it says **Ready**, you can trust these properties (within
-the declared profile):
+latexmk. If it says **READY**, these runtime preconditions genuinely
+held (within the declared profile):
 
-- Your source parses cleanly.
-- Your user-defined macros are in the bounded subset and don't cycle.
+- Your source **parsed** with the real L2 parser (no unclosed
+  math/environment/`\verb`) and is **not** in the LP-Foreign tier
+  (no `\write18`, etc.).
 - Your multi-file project is closed (no missing `\input`, no cycles).
-- Your selected engine supports every declared feature.
-- No Error-level style rule still fires.
+- Your selected engine supports every **declared** feature.
+- No **compile-blocking** lint rule fired (`DELIM-`/`ENC-`/`PRT-`) —
+  including the `DELIM-001` unbalanced-brace check the parser itself
+  does not catch.
+- If a sibling `.aux` was present, its labels are unique.
 
-Everything else about compile success falls back on the toolchain
-itself — v26.2 ships theorems **parametric on toolchain convergence**;
-if pdflatex, xelatex, or lualatex does its job, you're good.
+**READY is a sound readiness PRE-CHECK, not a total "it will compile"
+certificate.** It means every runtime precondition we check held; it does
+**not** prove the document compiles. What is NOT verified at runtime: T1
+macro-expansion (skipped), T4 without an `.aux` (skipped), and the
+byte-for-byte connection from your source to the abstract model the T6/T7
+compile-safety capstone is proved over (see the residual-gap note below).
+Everything else about compile success falls back on the toolchain itself.
 
 ---
 
-## What `--compile-check` runs
+## What `--compile-check` runs (v27.1.52)
 
-The CLI's `--compile-check` flag invokes `Compile_contract.check_ready_to_compile`
-in `latex-parse/src/compile_contract.ml`. This checks five conditions
-(T0 through T5 in the [theorem stack](../specs/v26/compilation_guarantee_stack.md)):
+The CLI's `--compile-check <file.tex>` flag invokes
+`Compile_contract.check_ready_to_compile` in
+`latex-parse/src/compile_contract.ml`, with the same per-file context the
+lint path sets up (file context, command spans, build profile, user
+macros, language profile). It checks the T0–T5 conditions and prints
+`READY` (exit 0) or `NOT-READY` + the failing reasons (exit 1). Here is
+**exactly** what each check does at runtime today — no more, no less:
 
-| Check | What it verifies | Failure reason kind |
+| Check | What it ACTUALLY runs now | Real / conservative |
 |---|---|---|
-| T0 Parse | `Parser_l2.parse` accepts the source | `T0_parse_fails` |
-| T1 Expansion | User macros are in-subset + acyclic | `T1_expansion_fails` |
-| T2 Project closed | All `\input`s resolve; no include-cycles | `T2_project_not_closed` |
-| T3 Profile compat | Engine supports all declared features | `T3_profile_incompatible` |
-| T4 Semantic coherence | Labels unique across files; refs resolve; counters/bib consistent | `T4_semantic_incoherent` |
-| T5 Rule safety | No Error-level lint rule fires | `T5_rule_violations` |
+| T0 Parse + profile | `Language_profile.classify_source` → NOT-READY on **LP-Foreign**; then `Parser_l2.parse_located` → NOT-READY with the first structural parse error (unclosed math/env/`\verb`, `\end` without `\begin`, nesting blow-up) + line/offset | **REAL** |
+| T1 Expansion | *no-op* — not runtime-checked at this layer | conservatively skipped (never claims a T1 property) |
+| T2 Project closed | `Build_graph` — every `\input`/`\include` resolves, no include cycle | **REAL** |
+| T3 Profile compat | declared-feature × engine compatibility table | **REAL** (from *declared* features; v26.2 does not auto-detect) |
+| T4 Semantic coherence | if a sibling `.aux` exists: duplicate-label detection | **REAL when `.aux` present**, else skipped |
+| T5 Rule safety | `Validators.run_all`, then flags **compile-blocking** `Error` results only — rule families `DELIM-*`, `ENC-*`, `PRT-*` | **REAL** (narrowed on purpose; see below) |
 
-If all five pass, `check_ready_to_compile` returns `Ready`. Otherwise a
-list of structured reasons is returned.
+If every check passes, `check_ready_to_compile` returns `Ready`; otherwise
+a list of structured reasons is returned and printed one per line.
+
+**Why T5 is narrower than "no Error rule fires".** Many `Error`-severity
+rules are completeness/style faults that pdflatex compiles through anyway
+(e.g. `DOC-001` "missing `\maketitle`"). Flagging every Error would make a
+perfectly clean article NOT-READY. `--compile-check` therefore flags only
+the `DELIM-`/`ENC-`/`PRT-` families — mismatched delimiters, byte/encoding
+faults, and parse-reliability rules — which correspond to structural faults
+the engine cannot recover from. This is intentionally conservative: a
+false NOT-READY is safe; a false READY on a broken document is not.
+
+**T0 and T5 are complementary.** The L2 parser is error-*recovering*, so
+some structural faults it does not itself flag — most notably an unbalanced
+brace group, which it silently closes at EOF — are caught by **T5's
+`DELIM-001`**, not by T0. Neither check alone is a proof of well-formedness.
 
 ---
 
@@ -73,6 +99,34 @@ list of structured reasons is returned.
 
 xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
 discharge for those engines is a future workstream.
+
+---
+
+## Residual gap — READY is not yet a total certificate
+
+Be precise about what the capstone does and does not buy you:
+
+- **`pdflatex_compile_safe` is proved over an ABSTRACT operational
+  model.** The Coq capstone (`proofs/PdflatexModel.v`) reasons about a
+  `body_token` document model and an operational pdflatex semantics. It is
+  Qed with zero axioms/admits **within that model**.
+- **The model is NOT yet connected byte-for-byte to the runtime parser.**
+  There is no verified `bytes → body_token` extraction linking the real
+  `Parser_l2` output (what `--compile-check`'s T0 runs) to the `body_token`
+  the capstone quantifies over. So the theorem's `project_well_typed`
+  hypothesis is not discharged from your actual source bytes at runtime.
+- **Consequently `--compile-check` READY is a sound *readiness* result,
+  not the capstone's conclusion.** It certifies that the T0–T5 runtime
+  preconditions we check held; it does not mechanically instantiate the
+  compile-safety theorem for your specific input. Closing the
+  `bytes → body_token` gap (a verified extraction/refinement) is the
+  remaining work that would upgrade READY toward a total "it will compile"
+  certificate for arbitrary input.
+
+Until that gap is closed, treat `--compile-check` as a fast, honest
+fail-first gate: NOT-READY reliably means "do not bother running latexmk
+yet"; READY means "no runtime precondition we check is violated" — then run
+your real build.
 
 ---
 
@@ -127,12 +181,20 @@ you for compute on a document that can't possibly compile cleanly.
 open Latex_parse_lib
 
 let () =
-  let project = Project_model.of_root "main.tex" in
-  let profile = Build_profile.detect () in
-  match Compile_contract.check_ready_to_compile project profile with
-  | Ready -> print_endline "OK to compile"
-  | NotReady reasons ->
-      List.iter (fun r -> print_endline (reason_to_string r)) reasons
+  match Project_model.of_root "main.tex" with
+  | Error _ -> prerr_endline "could not load project"
+  | Ok project ->
+      let profile =
+        Build_profile.create ~tex_path:"main.tex" ~base_dir:"."
+      in
+      (* [~source] lets T0/T5 run on the exact bytes you already hold;
+         omit it and the root .tex is read from disk. *)
+      match Compile_contract.check_ready_to_compile project profile with
+      | Ready -> print_endline "OK to compile"
+      | NotReady reasons ->
+          List.iter
+            (fun r -> print_endline (Compile_contract.reason_to_string r))
+            reasons
 ```
 
 For formal reasoning, instantiate the Section-quantified theorems in

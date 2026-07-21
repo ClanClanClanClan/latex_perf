@@ -2,6 +2,24 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.53] — 2026-07-21
+
+**FLAGSHIP: `--compile-check` — the "will it compile" pre-check is now a real,
+honestly-scoped user feature.** A state audit found the compile-guarantee, though Qed
+at the model level, was NOT wired to a user-facing check (docs described a nonexistent
+command; T0/T5 runtime checks were stubs). Fixed:
+- **`validators_cli --compile-check <file.tex>`** → `READY` (exit 0) / `NOT-READY`
+  (exit 1) with specific failing T0–T5 reasons. Default lint output byte-identical.
+- **De-stubbed T0** (`Language_profile.classify_source` rejects LP-Foreign like
+  `\write18`; `Parser_l2.parse_located` gives real parse errors w/ line/offset) and
+  **T5** (validators → compile-blocking DELIM/ENC/PRT errors). T2/T3/T4 real; T1 honest
+  no-op. **Anti-stub regression test.**
+- **Honest docs** (`COMPILATION_GUARANTEE.md`/`_STACK.md`): runtime-checked vs
+  proven-over-abstract-model, and the **residual gap** — no verified bytes→body_token
+  extraction links `Parser_l2` to the `pdflatex_compile_safe` capstone model, so
+  `READY` is a sound READINESS pre-check, not yet a total compile certificate.
+Adversarially verified (sound). 14 tests. (Co-exists with WS9 `--explain` from v27.1.52.)
+
 ## [v27.1.52] — 2026-07-16
 
 **WS9 deliverable — policy explanation + rationale links (the plan for un-fixable

@@ -1,14 +1,23 @@
 (** Compile-guarantee evidence extractor. See [compile_evidence.mli].
 
-    Two halves: 1. An OCaml MIRROR of [CompileGuaranteeBridge.project_wf_dec]
-    and the Coq data model — kept byte-for-byte faithful so the
-    mirror-equivalence tests are meaningful. 2. An EXTRACTOR from a real .tex
-    (via [Ast_semantic_state] for labels/refs and direct package scanning for T3
-    features) to those structures.
+    Two halves: 1. The premise DECISION is now the Coq-EXTRACTED
+    [CompileGuaranteeBridge.project_wf_dec] (module
+    [Compile_guarantee_extracted], generated from
+    proofs/CompileGuaranteeExtract.v). The runtime keeps its own OCaml surface
+    types ([node]/[feature]/[body_token]/…) and converts them into the extracted
+    Coq types, then calls the EXTRACTED boolean checkers — so the executed
+    decision IS the proven code, not a hand-written mirror. 2. An EXTRACTOR from
+    a real .tex (via [Ast_semantic_state] for labels/refs and direct package
+    scanning for T3 features) to those structures.
 
-    The Coq lemma [project_wf_dec_sound] proves the checker's [true] verdict is
-    sufficient for [pdflatex_compile_safe]; this OCaml side is the runtime
-    counterpart, connected by the TESTED mirror-equivalence. *)
+    The Coq lemma [project_wf_dec_sound] (Qed, 0 admits) proves the checker's
+    [true] verdict is sufficient for [pdflatex_compile_safe]; because the
+    runtime now EXECUTES the extracted [project_wf_dec], residual (a) of the
+    compilation guarantee is closed: the only trusted glue is the
+    bytes->body_token extraction and the runtime->extracted-type conversion
+    below. *)
+
+module Ext = Compile_guarantee_extracted
 
 type feature =
   | UTF8_inputenc
@@ -54,81 +63,105 @@ let engine_to_string = function
   | Lualatex -> "lualatex"
   | Ptex_uptex -> "ptex_uptex"
 
-(* MIRROR of BuildProfileSound.compatible — keep byte-identical to the Coq table
-   AND to Compile_contract.feature_compatible. *)
+(* ── Runtime surface type -> extracted Coq type conversions ─────────── *)
+
+(* These are the ONLY trusted glue between the runtime and the PROVEN decision
+   (besides the bytes->body_token extractor further down). Each is a direct 1:1
+   constructor map onto the Coq-extracted inductives / records. *)
+
+let to_ext_feature : feature -> Ext.feature = function
+  | UTF8_inputenc -> Ext.UTF8_inputenc
+  | UTF8_direct -> Ext.UTF8_direct
+  | Unicode_math -> Ext.Unicode_math
+  | Opentype_fonts -> Ext.Opentype_fonts
+  | Lua_scripting -> Ext.Lua_scripting
+  | Japanese_cjk -> Ext.Japanese_cjk
+  | Bibtex -> Ext.Bibtex
+  | Biber -> Ext.Biber
+
+let to_ext_engine : engine -> Ext.engine = function
+  | Pdflatex -> Ext.Pdflatex
+  | Xelatex -> Ext.Xelatex
+  | Lualatex -> Ext.Lualatex
+  | Ptex_uptex -> Ext.Ptex_uptex
+
+let to_ext_kind : artefact_kind -> Ext.artefact_kind = function
+  | Tex -> Ext.Tex
+  | Aux -> Ext.Aux
+  | Bbl -> Ext.Bbl
+  | Bib -> Ext.Bib
+  | Pdf -> Ext.Pdf
+  | Log -> Ext.Log
+
+let to_ext_node (n : node) : Ext.node =
+  { Ext.n_file = n.n_file; n_kind = to_ext_kind n.n_kind }
+
+let to_ext_body_token : body_token -> Ext.body_token = function
+  | BT_text -> Ext.BT_text
+  | BT_label_def n -> Ext.BT_label_def n
+  | BT_label_ref n -> Ext.BT_label_ref n
+  | BT_needs_feature f -> Ext.BT_needs_feature (to_ext_feature f)
+
+let to_ext_graph (nodes : node list) (edges : (node * node) list) :
+    Ext.build_graph =
+  {
+    Ext.bg_nodes = List.map to_ext_node nodes;
+    bg_edges = List.map (fun (u, v) -> (to_ext_node u, to_ext_node v)) edges;
+  }
+
+let to_ext_project (p : project) : Ext.pdflatex_project =
+  {
+    Ext.proj_graph = to_ext_graph p.proj_nodes p.proj_edges;
+    proj_body = List.map to_ext_body_token p.proj_body;
+  }
+
+let to_ext_profile (pf : profile) : Ext.pdflatex_profile =
+  {
+    Ext.prof_engine = to_ext_engine pf.prof_engine;
+    prof_features = List.map to_ext_feature pf.prof_features;
+  }
+
+(* ── The premise decision: the Coq-EXTRACTED proven checkers ────────── *)
+
+(* [feature_compatible] is [BuildProfileSound.compatible], executed via the
+   extraction (was a hand-written mirror table). *)
 let feature_compatible (f : feature) (e : engine) : bool =
-  match (f, e) with
-  | UTF8_inputenc, Ptex_uptex -> false
-  | UTF8_inputenc, _ -> true
-  | UTF8_direct, (Xelatex | Lualatex) -> true
-  | UTF8_direct, _ -> false
-  | Unicode_math, (Xelatex | Lualatex) -> true
-  | Unicode_math, _ -> false
-  | Opentype_fonts, (Xelatex | Lualatex) -> true
-  | Opentype_fonts, _ -> false
-  | Lua_scripting, Lualatex -> true
-  | Lua_scripting, _ -> false
-  | Japanese_cjk, Ptex_uptex -> true
-  | Japanese_cjk, _ -> false
-  | Bibtex, _ -> true
-  | Biber, _ -> true
+  Ext.compatible (to_ext_feature f) (to_ext_engine e)
 
-let rec body_required_features = function
-  | [] -> []
-  | BT_needs_feature f :: rest -> f :: body_required_features rest
-  | _ :: rest -> body_required_features rest
-
-let rec body_label_defs = function
-  | [] -> []
-  | BT_label_def n :: rest -> n :: body_label_defs rest
-  | _ :: rest -> body_label_defs rest
-
-(* ── OCaml mirror of the Coq boolean checkers ─────────────────────── *)
-
-let node_eqb (a : node) (b : node) : bool =
-  a.n_file = b.n_file && a.n_kind = b.n_kind
-
-let node_in_b (n : node) (ns : node list) : bool =
-  List.exists (fun m -> node_eqb m n) ns
-
-let edges_closed_b (nodes : node list) (edges : (node * node) list) : bool =
-  List.for_all (fun (u, v) -> node_in_b u nodes && node_in_b v nodes) edges
-
-(* Mirror of ProjectClosure.index_of. *)
-let index_of (n : node) (order : node list) : int option =
-  let rec go i = function
-    | [] -> None
-    | x :: xs -> if node_eqb x n then Some i else go (i + 1) xs
+let body_required_features (body : body_token list) : feature list =
+  (* Delegate the SELECTION to the extracted function, then map back. The Coq
+     [feature] and runtime [feature] are isomorphic; we invert the 1:1 map. *)
+  let of_ext_feature : Ext.feature -> feature = function
+    | Ext.UTF8_inputenc -> UTF8_inputenc
+    | Ext.UTF8_direct -> UTF8_direct
+    | Ext.Unicode_math -> Unicode_math
+    | Ext.Opentype_fonts -> Opentype_fonts
+    | Ext.Lua_scripting -> Lua_scripting
+    | Ext.Japanese_cjk -> Japanese_cjk
+    | Ext.Bibtex -> Bibtex
+    | Ext.Biber -> Biber
   in
-  go 0 order
+  List.map of_ext_feature
+    (Ext.body_required_features (List.map to_ext_body_token body))
 
-let index_lt_b (order : node list) (u : node) (v : node) : bool =
-  match (index_of u order, index_of v order) with
-  | Some iu, Some iv -> iv < iu
-  | _, _ -> false
+let body_label_defs (body : body_token list) : int list =
+  Ext.body_label_defs (List.map to_ext_body_token body)
 
-let valid_topo_b (edges : (node * node) list) (order : node list) : bool =
-  List.for_all (fun (u, v) -> index_lt_b order u v) edges
+let all_features_compatible (fs : feature list) (e : engine) : bool =
+  Ext.all_features_compatible (List.map to_ext_feature fs) (to_ext_engine e)
 
 let project_closed_b (nodes : node list) (edges : (node * node) list)
     (order : node list) : bool =
-  edges_closed_b nodes edges && valid_topo_b edges order
+  Ext.project_closed_b (to_ext_graph nodes edges) (List.map to_ext_node order)
 
-let all_features_compatible (fs : feature list) (e : engine) : bool =
-  List.for_all (fun f -> feature_compatible f e) fs
+let nodup_nat_b (l : int list) : bool = Ext.nodup_nat_b l
 
-let nodup_nat_b (l : int list) : bool =
-  let rec go seen = function
-    | [] -> true
-    | x :: xs -> (not (List.mem x seen)) && go (x :: seen) xs
-  in
-  go [] l
-
+(* The whole premise-check is the extracted [project_wf_dec]. A [true] verdict
+   is PROVEN sufficient for [pdflatex_compile_safe] by
+   [project_wf_dec_sound]. *)
 let project_wf_dec (p : project) (pf : profile) (order : node list) : bool =
-  project_closed_b p.proj_nodes p.proj_edges order
-  && all_features_compatible pf.prof_features pf.prof_engine
-  && all_features_compatible (body_required_features p.proj_body) pf.prof_engine
-  && nodup_nat_b (body_label_defs p.proj_body)
+  Ext.project_wf_dec (to_ext_project p) (to_ext_profile pf)
+    (List.map to_ext_node order)
 
 type premise_report = {
   t2_closed : bool;

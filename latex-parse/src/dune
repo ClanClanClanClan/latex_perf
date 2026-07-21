@@ -73,6 +73,7 @@
   build_graph
   aux_state
   compile_contract
+  compile_guarantee_extracted
   compile_evidence
   stable_spans
   cst

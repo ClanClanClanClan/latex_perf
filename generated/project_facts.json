@@ -1,5 +1,5 @@
 {
-  "version": "v27.1.55",
+  "version": "v27.1.56",
   "release_state": "rc",
   "release_date": "2026-07-21",
   "generated_by": "scripts/tools/generate_project_facts.py",
@@ -76,8 +76,8 @@
     }
   },
   "proofs": {
-    "proof_files_total": 174,
-    "proof_files_core": 59,
+    "proof_files_total": 175,
+    "proof_files_core": 60,
     "proof_files_generated": 114,
     "proof_files_ml": 1,
     "proof_files_archive": 7,

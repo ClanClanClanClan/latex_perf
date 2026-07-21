@@ -1,4 +1,4 @@
-version: v27.1.54
+version: v27.1.55
 release_state: rc
 release_date: '2026-07-21'
 generated_by: scripts/tools/generate_project_facts.py

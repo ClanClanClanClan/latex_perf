@@ -101,25 +101,142 @@ let t4_check ?aux_path (_proj : Project_model.t) : reason list =
           in
           rs)
 
-(* T0/T1/T5: placeholders in v26.2. T0/T1 require calling Parser_l2 and Expander
-   on the project files, which is heavier than a pre- compile readiness check
-   should be. v26.2 scope: T0 returns no failures if all files exist and are
-   readable (checked by T2); T1 is not runtime-checked; T5 requires running
-   validators, which is also heavy — caller invokes Validators.run_all
-   separately. *)
-let t0_check (_ : Project_model.t) : reason list = []
-let t1_check (_ : Project_model.t) : reason list = []
-let t5_check (_ : Project_model.t) : reason list = []
+(* T0 (v27.1.52): parser acceptance + language-profile gate, run against the
+   real root source. Two independent failure modes, both genuine:
 
-let check_ready_to_compile ?aux_path (proj : Project_model.t)
+   1. LP-Foreign: [Language_profile.classify_source] demotes the document to the
+   LP-Foreign tier (e.g. \write18/shell-escape, \directlua, arbitrary \catcode
+   surgery). Such constructs leave the supported subset entirely, so no
+   compile-readiness promise can be made — NOT-READY.
+
+   2. Parse failure: [Parser_l2.parse_located] records a hard structural error
+   (unclosed inline/display/paren math, unclosed environment, \end without a
+   matching \begin, unclosed \verb, nesting-depth blow-up). The first such
+   error's message + byte offset is surfaced verbatim.
+
+   Scope honesty: the L2 recursive-descent parser is error-RECOVERING, so a
+   [parse_located] with zero errors means "no error the parser detected", not
+   "provably well-formed". Structural faults the parser does not itself flag —
+   most notably an unbalanced brace group, which it silently closes at EOF — are
+   caught by T5 (DELIM-001) instead. T0 and T5 are therefore complementary. *)
+let t0_check ~(source : string) (proj : Project_model.t) : reason list =
+  let file = (Project_model.root_file proj).path in
+  match Language_profile.classify_source source with
+  | Language_profile.LP_Foreign, feats ->
+      let describe (f : Unsupported_feature.t) =
+        Printf.sprintf "%s (line %d)" f.message f.line
+      in
+      let msg =
+        match feats with
+        | [] -> "document uses LP-Foreign constructs (unsupported subset)"
+        | fs ->
+            "LP-Foreign construct(s): "
+            ^ String.concat "; " (List.map describe fs)
+      in
+      [ T0_parse_fails { file; message = msg } ]
+  | (LP_Core | LP_Extended), _ -> (
+      let _nodes, errors = Parser_l2.parse_located source in
+      match List.rev errors with
+      | [] -> []
+      | (msg, (loc : Parser_l2.loc)) :: _ ->
+          [
+            T0_parse_fails
+              {
+                file;
+                message =
+                  Printf.sprintf "%s (line %d, offset %d)" msg loc.line
+                    loc.offset;
+              };
+          ])
+
+(* T1: not runtime-checked at this layer. Bounded-macro-registry determinism /
+   acyclicity is enforced by [User_macro_registry] at analysis time; a dedicated
+   T1 runtime probe is v26.3+ territory. Kept as a no-op so the readiness result
+   never silently claims a T1 property it did not verify. *)
+let t1_check (_ : Project_model.t) : reason list = []
+
+(* T5 (v27.1.52): rule safety — run the full validator set on the real source
+   and flag any COMPILE-BLOCKING diagnostic that fired at [Error] severity.
+
+   "Compile-blocking" is deliberately NARROWER than "Error severity": many
+   Error-level rules are completeness/style faults that pdflatex compiles
+   through anyway (e.g. DOC-001 "missing \maketitle"). Flagging every Error
+   would make a clean article NOT-READY. The compile-blocking set is the rule
+   families whose firing corresponds to a structural fault the engine cannot
+   recover from:
+
+   - DELIM-* mismatched / extra / stray braces & delimiters - ENC-* invalid byte
+   / encoding faults that break tokenization - PRT-* parse-reliability rules
+   (fire only when the L2 parser itself recorded a hard error, i.e. the T0 parse
+   surface)
+
+   Any Error result whose id begins with one of these prefixes is reported. This
+   set is intentionally conservative: a false NOT-READY (over-flagging) is safe;
+   a false READY on a genuinely broken document is not. *)
+let compile_blocking_prefixes = [ "DELIM-"; "ENC-"; "PRT-" ]
+
+(* NOTE (differential validation, scripts/tools/diff_compile_check.sh):
+   DELIM-001 ("Unmatched delimiters { … }") over-triggers on a BARE unclosed
+   open group ([{x\end{document}]), which pdflatex auto-closes and compiles — a
+   false NOT-READY. It was tempting to exclude DELIM-001, BUT the same rule also
+   fires on an unclosed group swallowed by a MACRO ARGUMENT
+   ([\textbf{oops\end{document}]), which genuinely FAILS (the \end{document} is
+   consumed into the argument). DELIM-001 cannot cheaply distinguish the two,
+   and a false READY on the fatal case is the dangerous direction — so DELIM-001
+   STAYS compile-blocking. The bare-[{x] over-rejection is an accepted SAFE
+   false-NOT-READY. *)
+let is_compile_blocking (id : string) : bool =
+  List.exists
+    (fun p ->
+      String.length id >= String.length p
+      && String.sub id 0 (String.length p) = p)
+    compile_blocking_prefixes
+
+let t5_check ~(source : string) (_ : Project_model.t) : reason list =
+  let results = Validators.run_all source in
+  let blocking =
+    List.filter_map
+      (fun (r : Validators.result) ->
+        if r.severity = Validators.Error && is_compile_blocking r.id then
+          Some r.id
+        else None)
+      results
+  in
+  match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
+
+(* Read the root .tex source for T0/T5 if the caller did not supply it. On a
+   read failure we surface a T0 reason rather than silently passing. *)
+let read_root_source (proj : Project_model.t) : (string, string) result =
+  let path = (Project_model.root_file proj).path in
+  try
+    let ic = open_in_bin path in
+    Fun.protect
+      ~finally:(fun () -> close_in_noerr ic)
+      (fun () -> Ok (really_input_string ic (in_channel_length ic)))
+  with Sys_error msg -> Error msg
+
+let check_ready_to_compile ?aux_path ?source (proj : Project_model.t)
     (_profile : Build_profile.t) : ready_check_result =
+  let source_result =
+    match source with Some s -> Ok s | None -> read_root_source proj
+  in
+  let t0, t5 =
+    match source_result with
+    | Ok src -> (t0_check ~source:src proj, t5_check ~source:src proj)
+    | Error msg ->
+        ( [
+            T0_parse_fails
+              { file = (Project_model.root_file proj).path; message = msg };
+          ],
+          [] )
+  in
   let reasons =
-    t0_check proj
+    t0
     @ t1_check proj
     @ t2_check proj
     @ t3_check proj
     @ t4_check ?aux_path proj
-    @ t5_check proj
+    @ t5
   in
   if reasons = [] then Ready else NotReady reasons
 

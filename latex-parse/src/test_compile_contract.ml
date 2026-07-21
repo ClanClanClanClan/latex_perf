@@ -165,5 +165,107 @@ let () =
       expect (contains "T3") (tag ^ ": mentions T3");
       expect (contains "lua_scripting") (tag ^ ": mentions feature"));
 
+  (* ── T0/T5 de-stub tests (v27.1.52) ────────────────────────────── *)
+  let has_reason pred rs = List.exists pred rs in
+  let is_t0 = function
+    | Compile_contract.T0_parse_fails _ -> true
+    | _ -> false
+  in
+  let is_t5 = function
+    | Compile_contract.T5_rule_violations _ -> true
+    | _ -> false
+  in
+  let check ~name ~content ?source expect_ready extra =
+    run name (fun tag ->
+        let path = write_file (name ^ ".tex") content in
+        match Project_model.of_root path with
+        | Error _ -> expect false (tag ^ ": setup failed")
+        | Ok proj -> (
+            let profile = mk_profile ~tex_path:path in
+            let result =
+              Compile_contract.check_ready_to_compile ?source proj profile
+            in
+            match (result, expect_ready) with
+            | Compile_contract.Ready, true -> expect true (tag ^ ": Ready")
+            | Ready, false ->
+                expect false (tag ^ ": expected NOT-READY but got Ready")
+            | NotReady rs, false -> extra tag rs
+            | NotReady rs, true ->
+                expect false
+                  (tag
+                  ^ ": expected Ready but got NotReady: "
+                  ^ String.concat "; "
+                      (List.map Compile_contract.reason_to_string rs))))
+  in
+
+  (* READY for a clean LP-Core document (T0 + T5 genuinely pass). *)
+  check ~name:"cc_clean"
+    ~content:
+      "\\documentclass{article}\n\\begin{document}\nHello.\n\\end{document}\n"
+    true (fun _ _ -> ());
+
+  (* NOT-READY for an unbalanced brace: the L2 parser does NOT flag this, so it
+     must be caught by T5 (DELIM-001), proving T5 actually runs the
+     validators. *)
+  check ~name:"cc_brace"
+    ~content:
+      "\\documentclass{article}\n\
+       \\begin{document}\n\
+       \\textbf{hello\n\
+       \\end{document}\n" false (fun tag rs ->
+      expect (has_reason is_t5 rs) (tag ^ ": T5 flags unbalanced brace"));
+
+  (* NOT-READY for a genuine parse failure (unclosed inline math): caught by T0,
+     proving T0 actually runs Parser_l2. *)
+  check ~name:"cc_math"
+    ~content:
+      "\\documentclass{article}\n\\begin{document}\n$x = 1\n\\end{document}\n"
+    false (fun tag rs ->
+      expect (has_reason is_t0 rs) (tag ^ ": T0 flags unclosed math"));
+
+  (* NOT-READY for an LP-Foreign construct (\write18 shell-escape): caught by T0
+     via the language-profile gate. *)
+  check ~name:"cc_foreign"
+    ~content:
+      "\\documentclass{article}\n\
+       \\begin{document}\n\
+       \\write18{rm -rf /}\n\
+       \\end{document}\n" false (fun tag rs ->
+      expect (has_reason is_t0 rs) (tag ^ ": T0 flags LP-Foreign construct"));
+
+  (* Stubbed-Ready regression guard: if T0/T5 ever silently regress to no-ops,
+     BOTH the brace doc and the foreign doc would spuriously report Ready.
+     Assert directly on the ~source path (bypassing disk) that they do not. *)
+  run "cc_regression T0/T5 are not no-op stubs" (fun tag ->
+      let path = write_file "cc_reg.tex" "\\documentclass{article}\n" in
+      match Project_model.of_root path with
+      | Error _ -> expect false (tag ^ ": setup failed")
+      | Ok proj -> (
+          let profile = mk_profile ~tex_path:path in
+          let foreign_src =
+            "\\documentclass{article}\n\\immediate\\write18{ls}\n"
+          in
+          let brace_src = "\\documentclass{article}\n\\textbf{oops\n" in
+          let r_foreign =
+            Compile_contract.check_ready_to_compile ~source:foreign_src proj
+              profile
+          in
+          let r_brace =
+            Compile_contract.check_ready_to_compile ~source:brace_src proj
+              profile
+          in
+          (match r_foreign with
+          | Compile_contract.NotReady rs ->
+              expect (has_reason is_t0 rs)
+                (tag ^ ": T0 not a stub (foreign rejected)")
+          | Ready ->
+              expect false (tag ^ ": T0 REGRESSED to a stub (foreign->Ready)"));
+          match r_brace with
+          | Compile_contract.NotReady rs ->
+              expect (has_reason is_t5 rs)
+                (tag ^ ": T5 not a stub (brace rejected)")
+          | Ready ->
+              expect false (tag ^ ": T5 REGRESSED to a stub (brace->Ready)")));
+
   cleanup_dir ();
   finalise "compile-contract"

@@ -6,14 +6,14 @@
     a duplicate \label (T4 violation) and a required-but-unsupported feature (T3
     violation), and accepts a clean document.
 
-    2. MIRROR-EQUIVALENCE — the OCaml [project_wf_dec] returns the SAME boolean
-    as the Coq [CompileGuaranteeBridge.project_wf_dec] on the shared example
-    projects. The Coq side proves these by [vm_compute] as [Example]s
-    ([project_wf_dec_true_clean], [project_wf_dec_false_dup],
-    [project_wf_dec_false_otf], [project_wf_dec_true_otf_on_xe]); we replay the
-    SAME abstract projects here and check the OCaml mirror agrees. Since the
-    checker is re-implemented (not Coq-extracted), this equivalence is TESTED,
-    not proven. *)
+    2. EXTRACTED-CHECKER EQUIVALENCE — [Compile_evidence.project_wf_dec] now
+    EXECUTES the Coq-EXTRACTED [CompileGuaranteeBridge.project_wf_dec] (module
+    [Compile_guarantee_extracted]). We check it returns the SAME boolean as the
+    Coq [Example]s ([project_wf_dec_true_clean], [project_wf_dec_false_dup],
+    [project_wf_dec_false_otf], [project_wf_dec_true_otf_on_xe], each proved by
+    [vm_compute]) on the shared abstract projects — a sanity replay over the
+    extracted function itself, and additionally that the runtime wrapper and the
+    raw extracted module agree (no mirror in between). *)
 
 open Latex_parse_lib
 open Test_helpers
@@ -155,5 +155,60 @@ let () =
       expect
         (a.CE.proj_body = b.CE.proj_body)
         (tag ^ ": same source => same body"));
+
+  (* ── (3) The runtime wrapper IS the extracted checker (no mirror) ── The
+     runtime [CE.project_wf_dec] is a thin type-conversion around the
+     Coq-extracted [Compile_guarantee_extracted.project_wf_dec]; call the raw
+     extracted module directly on the same witnesses and require agreement, and
+     the same true/false verdicts as the Coq [Example]s. *)
+  let module Ext = Compile_guarantee_extracted in
+  let ext_clean : Ext.pdflatex_project =
+    {
+      Ext.proj_graph =
+        {
+          Ext.bg_nodes = [ { Ext.n_file = 0; n_kind = Ext.Tex } ];
+          bg_edges = [];
+        };
+      proj_body = [ Ext.BT_label_def 5; Ext.BT_label_ref 5 ];
+    }
+  in
+  let ext_dup : Ext.pdflatex_project =
+    {
+      ext_clean with
+      Ext.proj_body = [ Ext.BT_label_def 5; Ext.BT_label_def 5 ];
+    }
+  in
+  let ext_otf : Ext.pdflatex_project =
+    {
+      ext_clean with
+      Ext.proj_body = [ Ext.BT_needs_feature Ext.Opentype_fonts ];
+    }
+  in
+  let ext_order = [ { Ext.n_file = 0; Ext.n_kind = Ext.Tex } ] in
+  let ext_pf_ok : Ext.pdflatex_profile =
+    { Ext.prof_engine = Ext.Pdflatex; prof_features = [] }
+  in
+  let ext_pf_xe : Ext.pdflatex_profile =
+    { Ext.prof_engine = Ext.Xelatex; prof_features = [] }
+  in
+  run "extracted: raw project_wf_dec matches Coq Examples" (fun tag ->
+      expect
+        (Ext.project_wf_dec ext_clean ext_pf_ok ext_order = true
+        && Ext.project_wf_dec ext_dup ext_pf_ok ext_order = false
+        && Ext.project_wf_dec ext_otf ext_pf_ok ext_order = false
+        && Ext.project_wf_dec ext_otf ext_pf_xe ext_order = true)
+        (tag ^ ": extracted checker reproduces the four Coq vm_compute verdicts"));
+
+  run "extracted: runtime wrapper agrees with raw extracted checker" (fun tag ->
+      expect
+        (CE.project_wf_dec p_clean pf_ok clean_order
+         = Ext.project_wf_dec ext_clean ext_pf_ok ext_order
+        && CE.project_wf_dec p_dup pf_ok clean_order
+           = Ext.project_wf_dec ext_dup ext_pf_ok ext_order
+        && CE.project_wf_dec p_otf pf_ok clean_order
+           = Ext.project_wf_dec ext_otf ext_pf_ok ext_order
+        && CE.project_wf_dec p_otf pf_xe clean_order
+           = Ext.project_wf_dec ext_otf ext_pf_xe ext_order)
+        (tag ^ ": no mirror — wrapper == extracted verdict"));
 
   finalise "compile-evidence"

@@ -3,24 +3,29 @@
 
     This module bridges a REAL .tex document to the abstract
     [PdflatexModel.pdflatex_project] / [pdflatex_profile] structures that the
-    Coq theorem [PdflatexModel.pdflatex_compile_safe] governs, and mirrors the
-    decidable checker [CompileGuaranteeBridge.project_wf_dec] whose soundness
-    (Qed, 0 admits, [Print Assumptions] Closed) proves a [true] verdict is
-    sufficient for that capstone.
+    Coq theorem [PdflatexModel.pdflatex_compile_safe] governs, and EXECUTES the
+    Coq-EXTRACTED decidable checker [CompileGuaranteeBridge.project_wf_dec]
+    (module [Compile_guarantee_extracted], generated from
+    proofs/CompileGuaranteeExtract.v) whose soundness (Qed, 0 admits,
+    [Print Assumptions] Closed) proves a [true] verdict is sufficient for that
+    capstone. The hand-written OCaml mirror is ELIMINATED: [project_wf_dec] here
+    converts the runtime types into the extracted Coq types and calls the proven
+    extracted function.
 
-    WHAT IS PROVEN (in Coq): if [project_wf_dec p pf order = true] then the
-    capstone conclusion holds — the project compiles, converges in ≤2 passes,
-    stays fatal-free, warns iff a \ref is unresolved.
+    WHAT IS PROVEN (in Coq) AND EXECUTED (here): if
+    [project_wf_dec p pf order =
+    true] then the capstone conclusion holds —
+    the project compiles, converges in ≤2 passes, stays fatal-free, warns iff a
+    \ref is unresolved.
 
     WHAT IS TESTED (here + test_compile_evidence.ml): that this OCaml extractor
     faithfully reflects the source (duplicate \label, unsupported feature) and
-    that the OCaml [project_wf_dec] agrees byte-for-byte with the Coq one on
-    shared examples (mirror-equivalence, since the checker is re-implemented in
-    OCaml, not Coq-extracted).
+    that the extracted [project_wf_dec] returns the same verdicts as the Coq
+    [Example]s on the shared example projects.
 
-    WHAT STAYS UNVERIFIED: [Parser_l2] byte->AST correctness, and the fact that
-    this OCaml re-implementation matches the Coq [project_wf_dec] is TESTED, not
-    proven (no Coq extraction). See docs/COMPILATION_GUARANTEE.md. *)
+    WHAT STAYS TRUSTED: [Parser_l2] byte->AST correctness, and the small
+    runtime->extracted-type conversion in [compile_evidence.ml]. See
+    docs/COMPILATION_GUARANTEE.md. *)
 
 (** The abstract features the Coq model reasons about (mirror of
     [BuildProfileSound.feature]). *)
@@ -83,11 +88,14 @@ val body_label_defs : body_token list -> int list
     [PdflatexModel.body_label_defs]. *)
 
 val project_wf_dec : project -> profile -> node list -> bool
-(** OCaml mirror of [CompileGuaranteeBridge.project_wf_dec]: the decidable
-    capstone-premise check. [order] is a candidate topological order of the
-    build-graph nodes (as the Coq checker verifies rather than searches for
-    one). Returns [true] iff T2 (closed+acyclic via [order]) AND T3 (engine
-    admits declared + body-required features) AND T4 (label defs are unique). *)
+(** The Coq-EXTRACTED [CompileGuaranteeBridge.project_wf_dec] (via
+    [Compile_guarantee_extracted]), executed on the runtime project after a 1:1
+    conversion to the extracted Coq types: the decidable capstone-premise check.
+    [order] is a candidate topological order of the build-graph nodes (as the
+    Coq checker verifies rather than searches for one). Returns [true] iff T2
+    (closed+acyclic via [order]) AND T3 (engine admits declared + body-required
+    features) AND T4 (label defs are unique). A [true] verdict is PROVEN
+    sufficient for [pdflatex_compile_safe] by [project_wf_dec_sound]. *)
 
 type premise_report = {
   t2_closed : bool;

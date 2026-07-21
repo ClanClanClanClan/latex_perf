@@ -91,3 +91,7 @@ proofs/ExtensionBoundary.v
 # v27.1.53 — decidable capstone-premise checker bridging runtime --compile-check
 # to PdflatexModel.pdflatex_compile_safe (flagship compile-guarantee gap #1)
 proofs/CompileGuaranteeBridge.v
+
+# v27.1.55 — Coq→OCaml extraction of project_wf_dec so the runtime executes the
+# PROVEN checker (compile_guarantee_extracted.ml), not a hand-written mirror.
+proofs/CompileGuaranteeExtract.v

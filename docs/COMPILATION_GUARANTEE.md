@@ -96,12 +96,16 @@ brace group, which it silently closes at EOF — are caught by **T5's
   [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](../specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md).
   Honest residuals: the T0/T1/T5 universal obligations and byte-exact PDF
   *structural* semantics stay conservative/deferred.
-- **Decidable premise-bridge (v27.1.53):**
+- **Decidable premise-bridge (v27.1.53) + Coq→OCaml extraction (v27.1.55):**
   `proofs/CompileGuaranteeBridge.v::project_wf_dec` + `project_wf_dec_sound`
-  (Qed, 0 admits, Closed) make the capstone's premises a *computable* check,
-  and `--compile-check`'s `MODEL-CONNECTED` line runs an OCaml mirror of it on
-  the real document. See "Model-connected verdict" below for exactly what is
-  proven vs tested vs unverified.
+  (Qed, 0 admits, Closed) make the capstone's premises a *computable* check.
+  As of v27.1.55 that checker is **Coq-EXTRACTED** to OCaml
+  (`proofs/CompileGuaranteeExtract.v` →
+  `latex-parse/src/compile_guarantee_extracted.ml`) and `--compile-check`'s
+  `MODEL-CONNECTED` line **executes the extracted proven function** on the real
+  document — the hand-written OCaml mirror is eliminated (residual (a) closed).
+  See "Model-connected verdict" below for exactly what is proven vs tested vs
+  trusted.
 
 xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
 discharge for those engines is a future workstream.
@@ -170,36 +174,47 @@ logic*. It is built from three pieces:
    `luacode`/`\directlua`→`Lua_scripting`, CJK, …)→`BT_needs_feature`, and
    builds the T2 graph + topological order from `Build_graph.of_project`.
 
-3. **The wiring**: `--compile-check` runs the OCaml **mirror** of
-   `project_wf_dec` on the extracted project and prints `MODEL-CONNECTED
-   MODEL-READY` iff that mirror returns `true` (else `MODEL-NOT-READY` with the
-   failing T2/T3/T4 obligation). Default (no-flag) output is byte-identical.
+3. **The wiring (v27.1.55 — extracted, no mirror)**: `--compile-check`
+   converts the extracted project's runtime types into the **Coq-extracted**
+   types (a 1:1 constructor map in `compile_evidence.ml`) and runs the
+   **extracted** `project_wf_dec` (module `Compile_guarantee_extracted`,
+   generated from `proofs/CompileGuaranteeExtract.v`). It prints
+   `MODEL-CONNECTED MODEL-READY` iff the extracted proven function returns
+   `true` (else `MODEL-NOT-READY` with the failing T2/T3/T4 obligation).
+   Default (no-flag) output is byte-identical. The hand-written OCaml mirror of
+   the boolean checkers is **removed**.
 
-### What is PROVEN vs TESTED vs UNVERIFIED (be precise)
+### What is PROVEN-and-EXECUTED vs TESTED vs TRUSTED (be precise)
 
-- **PROVEN (Coq, Qed, 0 admits, `Print Assumptions` Closed):** the
-  premise-decision logic itself — that `project_wf_dec = true` is *sufficient*
-  for `pdflatex_compile_safe`'s hypotheses and hence its full conclusion. This
-  is the flagship connection: the READY decision now corresponds to a **proven**
-  check of the theorem's premises, not an ad-hoc runtime heuristic.
+- **PROVEN (Coq, Qed, 0 admits, `Print Assumptions` Closed) AND EXECUTED at
+  runtime:** the premise-decision logic itself — that `project_wf_dec = true` is
+  *sufficient* for `pdflatex_compile_safe`'s hypotheses and hence its full
+  conclusion. As of v27.1.55 the runtime does not re-implement this check: it
+  runs the **Coq-extracted** `project_wf_dec`, so the code deciding READY is the
+  same code `project_wf_dec_sound` governs. This closes residual (a): the
+  executed premise-decision *is* the proven-extracted code.
 - **TESTED (not proven), `test_compile_evidence.ml`:** (a) the OCaml extractor
   faithfully reflects the source — it flags a duplicate `\label` (T4) and a
   required-but-unsupported feature (T3) on real documents, accepts clean ones;
-  (b) **mirror-equivalence** — the OCaml `project_wf_dec` returns the SAME
-  boolean as the Coq `project_wf_dec` on the shared example projects (the Coq
-  side proves those verdicts by `vm_compute` as `Example`s; we replay the same
-  abstract projects in OCaml and assert agreement). The checker is
-  re-implemented in OCaml, **not Coq-extracted**, so this equivalence is a test.
-- **UNVERIFIED:** (i) `Parser_l2` byte→AST correctness — the extractor trusts
-  the parser's structural read of your bytes; (ii) the OCaml mirror faithfully
-  equalling the Coq `project_wf_dec` is TESTED, not machine-checked, because
-  there is no Coq extraction of this module.
+  (b) **verdict-equivalence** — the extracted `project_wf_dec` returns the SAME
+  boolean as the Coq `Example`s (`project_wf_dec_true_clean`,
+  `project_wf_dec_false_dup`, `project_wf_dec_false_otf`,
+  `project_wf_dec_true_otf_on_xe`, proved by `vm_compute`) on the shared abstract
+  projects — a sanity replay, now over the extracted function itself.
+- **TRUSTED (residuals, precisely):** (i) `Parser_l2` byte→AST correctness — the
+  extractor trusts the parser's structural read of your bytes (the bytes→
+  `body_token` extraction: `Ast_semantic_state.labels`/`refs` + feature scan);
+  (ii) the small **runtime→extracted-type conversion** in `compile_evidence.ml`
+  (`to_ext_feature`/`to_ext_engine`/`to_ext_node`/`to_ext_body_token`/…), a 1:1
+  constructor map. The premise-DECISION between these two trusted ends is now
+  proven-and-executed, not tested.
 
-Net effect: the gap is **narrowed, not eliminated**. READY + `MODEL-READY`
-means "for the abstract project we extracted from your source, a *proven*
-checker certifies the capstone premises hold." It does **not** yet mean "your
-exact bytes are certified to compile", because the extraction step (parser +
-label/feature reading) is trusted/tested rather than verified end-to-end.
+Net effect: residual (a) — "the runtime runs a hand-written mirror, not the
+proven code" — is **closed**. READY + `MODEL-READY` means "for the abstract
+project we extracted from your source, the *proven, Coq-extracted* checker
+certifies the capstone premises hold." It still does **not** mean "your exact
+bytes are certified to compile", because the two trusted ends above (parser +
+type conversion) are trusted/tested rather than verified end-to-end.
 
 Treat `--compile-check` as a fast, honest fail-first gate: NOT-READY (or
 `MODEL-NOT-READY`) reliably means "do not bother running latexmk yet"; READY +
@@ -230,9 +245,12 @@ Full profile metadata: [compilation_profiles.yaml](../specs/v26/compilation_prof
 - **A guarantee against LaTeX bugs.** If pdflatex itself has a bug on
   your document, v26.2 can't catch it — T6 is parametric on toolchain
   correctness.
-- **A Coq-extracted runtime.** v26.2's Coq theorems verify the
-  abstract pipeline; the runtime OCaml is hand-written and tested,
-  not mechanically extracted. v27 may ship an extracted variant.
+- **A fully Coq-extracted runtime.** v26.2's Coq theorems verify the
+  abstract pipeline; most of the runtime OCaml is hand-written and tested.
+  The one exception (v27.1.55) is the capstone *premise-checker*
+  `project_wf_dec`, which IS now Coq-extracted
+  (`compile_guarantee_extracted.ml`) and executed by `--compile-check`; the
+  parser and the runtime→model type conversion around it remain hand-written.
 
 ---
 

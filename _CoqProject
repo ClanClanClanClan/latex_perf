@@ -95,3 +95,9 @@ proofs/CompileGuaranteeBridge.v
 # v27.1.55 — Coq→OCaml extraction of project_wf_dec so the runtime executes the
 # PROVEN checker (compile_guarantee_extracted.ml), not a hand-written mirror.
 proofs/CompileGuaranteeExtract.v
+
+# v27.1.57 — Coq→OCaml extraction of LanguageContract.classify so the runtime
+# executes the PROVEN tier decision (language_contract_extracted.ml), closing
+# the hand-written classify mirror in language_profile.ml. classify_lp_core_sound
+# governs the extracted verdict; only detect (bytes->features) stays trusted.
+proofs/LanguageContractExtract.v

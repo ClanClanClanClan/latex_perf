@@ -2,6 +2,25 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.57] — 2026-07-22
+
+**FLAGSHIP: certify the LP-Core subset boundary + FIX real classifier soundness holes.**
+LaTeX is Turing-complete, so the compile guarantee is scoped to the DECIDABLE subset
+LP-Core (excludes arbitrary `\def`/`\csname`/`\catcode`/non-catalogue conditionals).
+- **Coq-extract `classify`** (`proofs/LanguageContractExtract.v` -> committed
+  `language_contract_extracted.ml`, byte-identical regen): `language_profile.ml` delegates
+  the tier DECISION to the extracted `classify` — proven-executed under
+  `classify_lp_core_sound`, hand-mirror eliminated.
+- **Adversarial certification** (86 cases: 15 forbidden/foreign families x 63 forms +
+  7 obfuscated docs + 15 LP-Core near-misses).
+- **FIXED real soundness holes in shipped v27.1.56 `detect`** (Turing constructs that
+  slipped through as LP-Core): `\def \x` (whitespace/comment between), `\edef`/`\gdef`/
+  `\xdef`, `\let`, `\directlua`, primitive conditionals, spaced `\catcode`.
+  Independently re-verified: all classify OUT of LP-Core; 0 false positives.
+- **Honest residual:** tier-decision proven-executed; `detect` (bytes->features)
+  adversarially certified but regex-over-bytes not formally verified — a bounded
+  decidable-subset task, NOT the impossible full-LaTeX problem. Theorem count 1,484.
+
 ## [v27.1.56] — 2026-07-21
 
 **FLAGSHIP residual (a) CLOSED: the executed premise-check IS the Coq-extracted proven

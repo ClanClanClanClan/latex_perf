@@ -45,7 +45,12 @@ let foreign_triggers : feature_def list =
     {
       f_id = "catcode_mutation_direct";
       f_severity = Foreign_trigger;
-      f_pattern = "\\\\catcode`";
+      (* Match the bare \catcode primitive: it may be followed by a space then a
+         backtick (\catcode `\@) or directly by a char-code number
+         (\catcode65=12). Matching the control word alone is sufficient and
+         safe: the only strict superstring is the LuaTeX \catcodetable
+         primitive, which is itself outside LP-Core. *)
+      f_pattern = "\\\\catcode";
       f_message = "\\catcode direct mutation detected; LP-Foreign";
     };
     {
@@ -72,17 +77,52 @@ let foreign_triggers : feature_def list =
       f_pattern = "\\\\openout[0-9\\\\]";
       f_message = "\\openout file-output primitive detected; LP-Foreign";
     };
+    (* LuaTeX scripting escape hatches: arbitrary Lua execution at typeset time
+       is a shell-escape-class capability → LP-Foreign. \directlua / \latelua
+       run code immediately/late; \luaexec is the ConTeXt/luacode wrapper. Word
+       boundary \b avoids matching longer identifiers. *)
+    {
+      f_id = "directlua_primitive";
+      f_severity = Foreign_trigger;
+      f_pattern = "\\\\\\(directlua\\|latelua\\|luaexec\\)\\b";
+      f_message = "\\directlua/\\latelua/\\luaexec scripting; LP-Foreign";
+    };
+    (* \write to stream 18 is shell-escape; the earlier shell_escape_invocation
+       pattern requires the literal "write18". A \write to the shell-escape
+       stream can also be written with an intervening (immediate) or spaces;
+       that is covered above. *)
   ]
 
 let core_forbidden : feature_def list =
   [
-    (* Arbitrary \def outside \newcommand family. We match \def\ident not
-       preceded by a letter (to avoid matching \mydef etc.). *)
+    (* Arbitrary \def outside the \newcommand family. \def is a control WORD, so
+       TeX terminates it at any non-letter (space, comment, {, or the backslash
+       of the defined macro). We anchor on the word boundary \b after "def" so
+       we still catch \def\x, "\def \x", "\def%c\n\x", "\def\n\x" — all
+       syntactic forms — without matching longer identifiers like
+       \defaultfontfeatures (no boundary between "def" and "a"). *)
     {
       f_id = "arbitrary_def";
       f_severity = Forbidden_in_core;
-      f_pattern = "\\\\def\\\\[A-Za-z@]";
+      f_pattern = "\\\\def\\b";
       f_message = "\\def outside \\newcommand family; not LP-Core";
+    };
+    (* The expanded/global \def variants are equally arbitrary macro-definition
+       primitives (Turing-complete metaprogramming): \edef \gdef \xdef. \b
+       anchors avoid matching \edefault etc. *)
+    {
+      f_id = "arbitrary_edef";
+      f_severity = Forbidden_in_core;
+      f_pattern = "\\\\\\(edef\\|gdef\\|xdef\\)\\b";
+      f_message = "\\edef/\\gdef/\\xdef expanded macro definition; not LP-Core";
+    };
+    (* \let and \futurelet alias control sequences to arbitrary meanings — a
+       def-family metaprogramming primitive outside \newcommand. *)
+    {
+      f_id = "arbitrary_let";
+      f_severity = Forbidden_in_core;
+      f_pattern = "\\\\\\(let\\|futurelet\\)\\b";
+      f_message = "\\let/\\futurelet control-sequence aliasing; not LP-Core";
     };
     (* \makeatletter in document body (we don't know body boundaries without
        parsing; we flag any occurrence — package internals handle their own
@@ -128,6 +168,30 @@ let core_forbidden : feature_def list =
       f_severity = Forbidden_in_core;
       f_pattern = "\\\\ifodd";
       f_message = "\\ifodd primitive conditional; not LP-Core";
+    };
+    (* The remaining TeX primitive conditionals outside the supported catalogue.
+       Matched by exact primitive name (no trailing \b: these primitives are
+       frequently followed immediately by a digit/box register — e.g.
+       "\ifcase2", "\ifnum1<2" — where a word-boundary would fail to fire). No
+       standard package macro is a strict superstring of these names, so the
+       bare-name match does not over-reach. Longer engine/package conditionals
+       (\ifpdf, \ifluatex, \ifthenelse) are NOT members of this alternation and
+       are handled by their own catalogue entries elsewhere. *)
+    {
+      f_id = "primitive_conditionals";
+      f_severity = Forbidden_in_core;
+      f_pattern =
+        "\\\\\\(ifcase\\|ifcat\\|ifhmode\\|ifvmode\\|ifmmode\\|ifinner\\|ifhbox\\|ifvbox\\|ifvoid\\|ifeof\\|iftrue\\|iffalse\\|ifdefined\\|ifcsname\\|ifdim\\|ifnum\\|ifodd\\|ifx\\)";
+      f_message = "primitive conditional outside catalogue; not LP-Core";
+    };
+    (* Bare \if primitive (\if <token1><token2>): two-char control word. Anchor
+       with \b so it fires only on the standalone primitive, never on the
+       \ifsomething family (which the entry above and the catalogue cover). *)
+    {
+      f_id = "primitive_if_bare";
+      f_severity = Forbidden_in_core;
+      f_pattern = "\\\\if\\b";
+      f_message = "bare \\if primitive conditional; not LP-Core";
     };
     {
       f_id = "expandafter_chain";

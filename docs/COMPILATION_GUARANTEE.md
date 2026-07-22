@@ -47,7 +47,7 @@ macros, language profile). It checks the T0–T5 conditions and prints
 
 | Check | What it ACTUALLY runs now | Real / conservative |
 |---|---|---|
-| T0 Parse + profile | `Language_profile.classify_source` → NOT-READY on **LP-Foreign**; then `Parser_l2.parse_located` → NOT-READY with the first structural parse error (unclosed math/env/`\verb`, `\end` without `\begin`, nesting blow-up) + line/offset | **REAL** |
+| T0 Parse + profile | `Language_profile.classify_source` → NOT-READY on **LP-Foreign**; then `Parser_l2.parse_located` → NOT-READY with the first structural parse error (unclosed math/env/`\verb`, `\end` without `\begin`, nesting blow-up) + line/offset. As of **v27.1.57** the tier DECISION (feature-list → tier) is the **Coq-extracted** `LanguageContract.classify` (governed by `classify_lp_core_sound`); only `Unsupported_feature.detect` (bytes → features) stays trusted, adversarially certified — see "LP-Core classifier" below | **REAL** |
 | T1 Expansion | *no-op* — not runtime-checked at this layer | conservatively skipped (never claims a T1 property) |
 | T2 Project closed | `Build_graph` — every `\input`/`\include` resolves, no include cycle | **REAL** |
 | T3 Profile compat | declared-feature × engine compatibility table | **REAL** (from *declared* features; v26.2 does not auto-detect) |
@@ -106,6 +106,38 @@ brace group, which it silently closes at EOF — are caught by **T5's
   document — the hand-written OCaml mirror is eliminated (residual (a) closed).
   See "Model-connected verdict" below for exactly what is proven vs tested vs
   trusted.
+- **LP-Core classifier: proven tier-decision + certified detection (v27.1.57).**
+  The compile guarantee is scoped to the **decidable subset LP-Core**, which
+  excludes the Turing-complete escape hatches of LaTeX — arbitrary `\def`
+  (and `\edef`/`\gdef`/`\xdef`/`\let`), `\csname`, `\catcode`, and primitive
+  conditionals outside the supported catalogue (`\ifnum`/`\ifx`/`\ifcase`/…),
+  plus LP-Foreign triggers (`\write18`, `\directlua`, shell-escape). The
+  classifier is a two-step pipeline; the trust boundary between the steps is now
+  precise:
+  1. **`Unsupported_feature.detect` (bytes → feature-list)** — a regex scan.
+     This is **TRUSTED, not formally verified**, but is now **adversarially
+     certified** by `latex-parse/src/test_language_contract_cert.ml`: 15 construct
+     families across **63 syntactic forms** (whitespace, comments, line breaks,
+     obfuscation — e.g. `\def` after a comment, `\csname` split across lines,
+     `\catcode` with an interposed space) must all leave LP-Core, plus 7
+     obfuscated whole-document cases and 15 genuine LP-Core documents (with
+     lexical near-misses like `\mydef`, the word "define", `\textbf{def}`) that
+     must **stay** LP-Core. A single slip-through fails the build.
+  2. **`LanguageContract.classify` (feature-list → tier)** — the tier DECISION.
+     This is now **Coq-EXTRACTED** to OCaml (`proofs/LanguageContractExtract.v`
+     → `latex-parse/src/language_contract_extracted.ml`, regen
+     `scripts/tools/regen_language_contract_extract.sh`, byte-identical), and
+     `Language_profile.classify_source` **executes the extracted proven
+     function** — the former hand-written OCaml mirror of the foreign-then-
+     forbidden-then-core decision is eliminated. The extracted verdict is
+     governed by `classify_lp_core_sound` (Qed, 0 admits, Closed): if the result
+     is `LP_Core`, no forbidden-in-core feature was present in the feature-list.
+  Net: the feature-list → tier step is **proven-and-executed**; the residual is
+  that step 1's regex-over-bytes is trusted rather than formally verified. That
+  residual is a **bounded, decidable-subset** task (a fixed catalogue of
+  primitives), NOT the impossible general problem of statically deciding
+  arbitrary Turing-complete LaTeX — and it is guarded by the adversarial
+  certification corpus above.
 
 xelatex / lualatex remain hypothesis-parametric; concrete WS8-style
 discharge for those engines is a future workstream.

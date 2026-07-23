@@ -83,6 +83,22 @@ let () =
   (* verbatim-aware: dbl sup inside verbatim must NOT fire *)
   run "dbl sup in verbatim ok" (fun t ->
       expect (not_fires f (doc "\\begin{verbatim}$x^a^b$\\end{verbatim}")) t);
+  (* SOUNDNESS: extreme brace nesting past the OLD fixed 4096-frame cap. A real
+     x^a^b at the bottom of a 5000-deep group MUST still fire (growable frame
+     stack, no silent bail⇒false-READY). *)
+  let deep = 5000 in
+  let deep_fatal =
+    doc ("$" ^ String.make deep '{' ^ "x^a^b" ^ String.make deep '}' ^ "$")
+  in
+  run "deep-nested (>4096) real dbl sup fires" (fun t ->
+      expect (fires f deep_fatal) t);
+  (* and a deep-nested COMPILING form (nested single scripts) must NOT fire —
+     zero over-rejection past the old cap. *)
+  let deep_ok =
+    doc ("$" ^ String.make deep '{' ^ "x^a" ^ String.make deep '}' ^ "$")
+  in
+  run "deep-nested (>4096) single sup ok" (fun t ->
+      expect (not_fires f deep_ok) t);
   ()
 
 (* Detector (2) — misplaced alignment tab `&` — was DROPPED from the gate (it

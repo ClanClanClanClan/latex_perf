@@ -183,10 +183,9 @@ let t1_check (_ : Project_model.t) : reason list = []
 
    Any Error result whose id begins with one of these prefixes is reported. This
    set is intentionally conservative: a false NOT-READY (over-flagging) is safe;
-   a false READY on a genuinely broken document is not. *)
-let compile_blocking_prefixes = [ "DELIM-"; "ENC-"; "PRT-" ]
+   a false READY on a genuinely broken document is not.
 
-(* NOTE (differential validation, scripts/tools/diff_compile_check.sh):
+   NOTE (differential validation, scripts/tools/diff_compile_check.sh):
    DELIM-001 ("Unmatched delimiters { … }") over-triggers on a BARE unclosed
    open group ([{x\end{document}]), which pdflatex auto-closes and compiles — a
    false NOT-READY. It was tempting to exclude DELIM-001, BUT the same rule also
@@ -195,21 +194,21 @@ let compile_blocking_prefixes = [ "DELIM-"; "ENC-"; "PRT-" ]
    consumed into the argument). DELIM-001 cannot cheaply distinguish the two,
    and a false READY on the fatal case is the dangerous direction — so DELIM-001
    STAYS compile-blocking. The bare-[{x] over-rejection is an accepted SAFE
-   false-NOT-READY. *)
-let is_compile_blocking (id : string) : bool =
-  List.exists
-    (fun p ->
-      String.length id >= String.length p
-      && String.sub id 0 (String.length p) = p)
-    compile_blocking_prefixes
+   false-NOT-READY.
+
+   SINGLE SOURCE OF TRUTH (v27.1.60 audit hardening): the compile-blocking
+   predicate lives in [Validators.is_compile_blocking] (backed by
+   [Validators.compile_blocking_prefixes]). We delegate to it rather than keep a
+   private copy, so any future id-level compile-blocking promotion there is
+   picked up here automatically instead of being a silent no-op. *)
 
 let t5_check ~(source : string) (_ : Project_model.t) : reason list =
   let results = Validators.run_all source in
   let blocking =
     List.filter_map
       (fun (r : Validators.result) ->
-        if r.severity = Validators.Error && is_compile_blocking r.id then
-          Some r.id
+        if r.severity = Validators.Error && Validators.is_compile_blocking r.id
+        then Some r.id
         else None)
       results
   in
@@ -230,8 +229,8 @@ let t5_check_fast ~(source : string)
   let blocking =
     List.filter_map
       (fun (r : Validators.result) ->
-        if r.severity = Validators.Error && is_compile_blocking r.id then
-          Some r.id
+        if r.severity = Validators.Error && Validators.is_compile_blocking r.id
+        then Some r.id
         else None)
       results
   in

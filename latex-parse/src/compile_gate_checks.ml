@@ -383,15 +383,33 @@ let double_script_fatal (s : string) : string option =
      consecutive primes-before-caret coexist (x''^b) while a prime after a caret
      (x^b') is fatal. *)
   let result = ref None in
-  (* stack of mutable frames: (sup_seen, sub_seen, caret_super) *)
-  let sup = Array.make 4096 false in
-  let sub = Array.make 4096 false in
-  let caret = Array.make 4096 false in
+  (* stack of mutable frames: (sup_seen, sub_seen, caret_super). GROWABLE so
+     there is NO fixed nesting cap and NO bail: the frame stack always tracks
+     brace depth correctly, however deep the math nests. A silent bail here
+     would risk MISSING a real double-script (false-READY), so we grow instead
+     (soundness-paramount). *)
+  let sup = ref (Array.make 64 false) in
+  let sub = ref (Array.make 64 false) in
+  let caret = ref (Array.make 64 false) in
+  (* Ensure the frame arrays can address index [d]; grow (doubling) if
+     needed. *)
+  let ensure_capacity d =
+    let cap = Array.length !sup in
+    if d >= cap then (
+      let new_cap = ref cap in
+      while d >= !new_cap do
+        new_cap := !new_cap * 2
+      done;
+      let grow a = Array.append a (Array.make (!new_cap - cap) false) in
+      sup := grow !sup;
+      sub := grow !sub;
+      caret := grow !caret)
+  in
   let depth = ref 0 in
   let reset_base d =
-    sup.(d) <- false;
-    sub.(d) <- false;
-    caret.(d) <- false
+    !sup.(d) <- false;
+    !sub.(d) <- false;
+    !caret.(d) <- false
   in
   reset_base 0;
   let is_escaped idx =
@@ -455,14 +473,12 @@ let double_script_fatal (s : string) : string option =
     else
       let c = String.unsafe_get s pos in
       if c = '{' && not (is_escaped pos) then (
-        (* enter a new scope: the group is a fresh base at deeper depth *)
-        if !depth + 1 >= Array.length sup then
-          (* depth guard: extreme nesting — bail out of tracking safely by not
-             descending; treat the brace as an ordinary base reset. *)
-          reset_base !depth
-        else (
-          incr depth;
-          reset_base !depth);
+        (* enter a new scope: the group is a fresh base at deeper depth. The
+           frame stack is growable, so we always descend correctly — no bail, no
+           silent miss of a deeply-nested double-script. *)
+        incr depth;
+        ensure_capacity !depth;
+        reset_base !depth;
         incr i)
       else if c = '}' && not (is_escaped pos) then (
         if !depth > 0 then decr depth;
@@ -477,12 +493,12 @@ let double_script_fatal (s : string) : string option =
         (* A caret is fatal iff a PRIOR caret already locked the super slot.
            Primes-before-caret merge into this caret (x''^b compiles), so we
            gate on [caret], not [sup]. *)
-        if caret.(!depth) then
+        if !caret.(!depth) then
           result :=
             Some "double superscript in math (x^a^b): ! Double superscript"
         else (
-          sup.(!depth) <- true;
-          caret.(!depth) <- true;
+          !sup.(!depth) <- true;
+          !caret.(!depth) <- true;
           (* consume the superscript's operand so it is not seen as a base *)
           i := consume_arg (pos + 1) - 1);
         incr i)
@@ -490,17 +506,17 @@ let double_script_fatal (s : string) : string option =
         (* prime = superscript. Fatal only if a caret already locked the super
            slot; primes-before-caret merge and are fine. A prime has no operand
            (it is self-contained). *)
-        if caret.(!depth) then
+        if !caret.(!depth) then
           result :=
             Some
               "double superscript in math (prime after ^): ! Double superscript"
-        else sup.(!depth) <- true;
+        else !sup.(!depth) <- true;
         incr i)
       else if c = '_' && not (is_escaped pos) then (
-        if sub.(!depth) then
+        if !sub.(!depth) then
           result := Some "double subscript in math (x_a_b): ! Double subscript"
         else (
-          sub.(!depth) <- true;
+          !sub.(!depth) <- true;
           i := consume_arg (pos + 1) - 1);
         incr i)
       else if c = ' ' || c = '\t' || c = '\n' || c = '\r' then

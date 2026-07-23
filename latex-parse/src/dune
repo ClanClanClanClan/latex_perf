@@ -174,6 +174,11 @@
  (modules validators_cli)
  (libraries latex_parse_lib))
 
+(executable
+ (name bench_readiness_kernel)
+ (modules bench_readiness_kernel)
+ (libraries latex_parse_lib unix))
+
 (test
  (name test_strip_math)
  (modules test_strip_math)
@@ -629,6 +634,13 @@
  (name test_compile_evidence)
  (modules test_compile_evidence)
  (libraries latex_parse_lib test_helpers))
+
+(test
+ (name test_fast_readiness_parity)
+ (modules test_fast_readiness_parity)
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora)))
 
 (test
  (name test_body_token_frontend)

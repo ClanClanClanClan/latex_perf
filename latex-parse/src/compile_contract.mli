@@ -39,6 +39,7 @@ type reason =
 type ready_check_result = Ready | NotReady of reason list
 
 val check_ready_to_compile :
+  ?fast:bool ->
   ?aux_path:string ->
   ?source:string ->
   Project_model.t ->
@@ -52,6 +53,14 @@ val check_ready_to_compile :
     profile) and T5 (validator) checks. When omitted, the root [.tex] is read
     from disk; a read failure is reported as a T0 reason (never a silent
     [Ready]). Callers that already hold the source (e.g. the CLI lint path)
-    should pass it to avoid a re-read. *)
+    should pass it to avoid a re-read.
+
+    [fast] (default [true]) selects the fast readiness kernel: parse the source
+    ONCE (shared between T0's structural-error check and T5's PRT context) and
+    run ONLY the 37 compile-blocking rules (DELIM-/ENC-/PRT-) instead of all
+    ~641. The verdict — [Ready] / [NotReady reasons] with the same reason
+    constructors and messages — is identical to [~fast:false], which runs the
+    original full path (every rule, then filter) and is retained as the safety
+    fallback and the differential-harness reference. *)
 
 val reason_to_string : reason -> string

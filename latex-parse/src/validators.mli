@@ -67,6 +67,32 @@ val strip_math_segments : string -> string
 val run_all : string -> result list
 (** Run all active rules against the source and return triggered results. *)
 
+val run_subset :
+  ?parse_errors:(string * Parser_l2.loc) list ->
+  keep:(string -> bool) ->
+  string ->
+  result list
+(** Run ONLY the rules whose [id] satisfies [keep], returning their fired
+    results. Sets up just the shared context that the subset actually reads (for
+    the compile-blocking prefix set that is {!Partial_context}, built from a
+    single [Parser_l2.parse_located]); it does NOT build {!Semantic_state} or
+    scan the {!Event_bus}. Pass [?parse_errors] to reuse a parse the caller has
+    already performed. For the compile-blocking subset the returned results are
+    identical to filtering {!run_all}'s output — see the .ml doc for the
+    equivalence argument. *)
+
+val is_compile_blocking : string -> bool
+(** [true] iff [id] begins with a compile-blocking prefix (DELIM-/ENC-/PRT-). *)
+
+val compile_blocking_prefixes : string list
+(** The rule-id prefixes whose Error-severity firing blocks compilation. *)
+
+val run_compile_blocking :
+  ?parse_errors:(string * Parser_l2.loc) list -> string -> result list
+(** Run only the compile-blocking rules (see {!is_compile_blocking}). Fast path
+    for [Compile_contract.check_ready_to_compile ~fast:true]; produces the same
+    results as filtering {!run_all} by {!is_compile_blocking}. *)
+
 val run_all_scored :
   ?config:Evidence_scoring.scoring_config ->
   string ->

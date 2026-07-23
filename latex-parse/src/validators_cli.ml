@@ -545,7 +545,12 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
       printf "  T4 duplicate \\label(s): [%s]\n"
         (String.concat "; " (CE.duplicate_label_keys src)))
 
-let run_compile_check ~path ~src : int =
+let run_compile_check ~fast ~path ~src : int =
+  (* v27.1.59: the FAST readiness kernel is the default (parse once, run only
+     the 37 compile-blocking rules). [LP_COMPILE_CHECK_FULL=1] or the
+     [--compile-check-full] flag forces the original full path for the
+     differential/correctness gate. Both produce the identical verdict. *)
+  let fast = fast && not (env_flag_on "LP_COMPILE_CHECK_FULL") in
   let tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner tier features;
   Fun.protect ~finally:cleanup (fun () ->
@@ -569,8 +574,8 @@ let run_compile_check ~path ~src : int =
             if Sys.file_exists cand then Some cand else None
           in
           let result =
-            Latex_parse_lib.Compile_contract.check_ready_to_compile ?aux_path
-              ~source:src proj profile
+            Latex_parse_lib.Compile_contract.check_ready_to_compile ~fast
+              ?aux_path ~source:src proj profile
           in
           print_model_connected_verdict ~src proj;
           match result with
@@ -658,7 +663,15 @@ let () =
          0 = ready, 1 = not-ready. Matched before the two-element catch-all so
          "--compile-check" is not read as a file path. *)
       let src = read_all path in
-      exit (run_compile_check ~path ~src)
+      exit (run_compile_check ~fast:true ~path ~src)
+  | [ _; "--compile-check-full"; path ] ->
+      (* Escape hatch (v27.1.59): force the FULL readiness path (every rule,
+         then filter) rather than the fast compile-blocking kernel. Used by the
+         differential harness to confirm the fast kernel's verdict matches.
+         Matched before the two-element catch-all so the flag is not read as a
+         file path. *)
+      let src = read_all path in
+      exit (run_compile_check ~fast:false ~path ~src)
   | _ :: "--review" :: state_path :: rest -> (
       (* WS9 Stage 2: annotate/filter findings by review state. *)
       match rest with
@@ -824,6 +837,11 @@ let () =
          (exit 1). This is a\n\
         \               sound readiness PRE-CHECK, not a total \"it will \
          compile\" certificate.\n\
+        \               Uses the FAST kernel by default (parse once, run only \
+         the 37\n\
+        \               compile-blocking rules); use --compile-check-full (or \
+         LP_COMPILE_CHECK_FULL=1)\n\
+        \               to force the full path for differential validation.\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\
         \               override severities) and scoped waivers. Waived \

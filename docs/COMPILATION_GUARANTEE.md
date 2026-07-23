@@ -35,7 +35,7 @@ Everything else about compile success falls back on the toolchain itself.
 
 ---
 
-## What `--compile-check` runs (v27.1.52)
+## What `--compile-check` runs (v27.1.52; fast kernel v27.1.59)
 
 The CLI's `--compile-check <file.tex>` flag invokes
 `Compile_contract.check_ready_to_compile` in
@@ -52,7 +52,7 @@ macros, language profile). It checks the T0–T5 conditions and prints
 | T2 Project closed | `Build_graph` — every `\input`/`\include` resolves, no include cycle | **REAL** |
 | T3 Profile compat | declared-feature × engine compatibility table | **REAL** (from *declared* features; v26.2 does not auto-detect) |
 | T4 Semantic coherence | if a sibling `.aux` exists: duplicate-label detection | **REAL when `.aux` present**, else skipped |
-| T5 Rule safety | `Validators.run_all`, then flags **compile-blocking** `Error` results only — rule families `DELIM-*`, `ENC-*`, `PRT-*` | **REAL** (narrowed on purpose; see below) |
+| T5 Rule safety | runs the **compile-blocking** rules only (`Validators.run_compile_blocking`, fast kernel v27.1.59) and flags their `Error` results — rule families `DELIM-*`, `ENC-*`, `PRT-*` | **REAL** (narrowed on purpose; see below) |
 
 If every check passes, `check_ready_to_compile` returns `Ready`; otherwise
 a list of structured reasons is returned and printed one per line.
@@ -70,6 +70,21 @@ false NOT-READY is safe; a false READY on a broken document is not.
 some structural faults it does not itself flag — most notably an unbalanced
 brace group, which it silently closes at EOF — are caught by **T5's
 `DELIM-001`**, not by T0. Neither check alone is a proof of well-formedness.
+
+**Fast readiness kernel (v27.1.59) — a verdict-preserving optimization, not a
+semantic change.** `--compile-check` used to call `Validators.run_all` (parse the
+whole document, build the semantic state, scan the event bus, execute all ~641
+registered rules) and parse a second time in the T0 check, then FILTER the results
+down to the 37 compile-blocking rules. Since v27.1.59 it parses **once** and runs
+**only** those 37 rules (`Validators.run_compile_blocking`, sharing the single
+`Parser_l2.parse_located`). This is sound because validators are pure functions of
+`(source + shared context)` and the compile-blocking set is a fixed prefix filter, so
+running only those rules yields the SAME results as running all then filtering — the
+Ready/NotReady verdict and its reason set are **byte-identical**. A parity gate
+(`test_fast_readiness_parity.ml`, wired into `runtest`) asserts fast==full over every
+`corpora/` document (473 docs) plus a 150-paper CLI sample; the original full path
+remains available as `--compile-check-full`. The kernel is ~6.8x faster on large
+documents (a 316KB paper: ~6.3s → ~0.93s; a 50KB paper: ~0.92s → ~0.14s).
 
 ---
 

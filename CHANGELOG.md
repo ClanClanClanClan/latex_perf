@@ -2,6 +2,38 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.59] — 2026-07-23
+
+**Track R R1 — fast compile-readiness kernel: `--compile-check` now runs only the
+37 compile-blocking rules and parses once, with PROVABLY-IDENTICAL verdicts.** The
+previous `--compile-check` path called `Validators.run_all` (parse the whole doc,
+build `Semantic_state.analyze`, scan the `Event_bus`, execute all ~641 registered
+rules) AND parsed a second time in `t0_check`, then FILTERED the results down to the
+37 compile-blocking rules (`DELIM-`/`ENC-`/`PRT-` prefixes). This ran 641 rules to
+use 37 and parsed twice.
+- **Fast kernel** (`compile_contract.ml`, `Validators.run_compile_blocking`): a single
+  shared `Parser_l2.parse_located`, then only the 37 compile-blocking rules. Sound
+  because validators are pure functions of `(source + shared context)` and the
+  compile-blocking set is a fixed prefix filter — running only those rules yields the
+  same results as running all then filtering.
+- **fast==full parity gate** (`test_fast_readiness_parity.ml`, wired into `runtest`):
+  for every `.tex` under `corpora/` the fast-kernel verdict and the full-path verdict
+  are asserted byte-identical (same Ready/NotReady and, for NotReady, the same
+  normalised reason set). Verified over 473 corpus docs + a size-stratified sample of
+  150 real papers driven through the CLI (`--compile-check` vs `--compile-check-full`),
+  0 divergences. `--compile-check-full` retains the original full path.
+- **~2x–9x faster** (`bench_compile_check.sh`, `bench_readiness_kernel.ml`), scaling with
+  document size: ~1.9x at 3.5KB, ~5.6x at 30KB, ~8.8x at 74KB, and ~4–5x on a ~316KB paper
+  (one-shot wall-clock is high-variance for the full path — 316KB full ranged ~6–17s across
+  runs — so absolute figures are machine/load dependent; ratios and direction are robust).
+  In-process (startup excluded) the fast kernel computes in ~62ms for a typical ~50KB paper
+  and ~337ms for a 316KB paper. HONEST SCOPE: the fast-path floor is the 37 compile-blocking
+  RULES (~DELIM 149ms + ENC 116ms on 316KB), NOT the parse (~12–15ms) — so a sub-150ms
+  as-you-type check holds for typical papers up to ~74KB but NOT yet for a 316KB paper;
+  closing that needs incremental/sub-linear DELIM/ENC rules (a separate future optimization).
+- **No new rules or proofs** — producer count unchanged at 167, theorem count unchanged
+  at 1,543. This is a runtime optimization, not a semantic change.
+
 ## [v27.1.58] — 2026-07-23
 
 **FLAGSHIP gap #1 closed — verified bytes→body_token front-end: `pdflatex_compile_safe`

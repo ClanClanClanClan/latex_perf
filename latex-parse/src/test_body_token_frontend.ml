@@ -31,18 +31,18 @@ module CE = Compile_evidence
    [finalise] calls [exit] on failure, which terminates the whole process from
    within the worker.
 
-   ⚠ KNOWN DEFECT (surfaced by this gate, 2026-07): the extracted module
-   [Body_token_frontend_extracted] currently DOES NOT INITIALISE at run time.
-   Its top-level [let two30 = Nat.pow 2 30] (and the fnv_basis/fnv_prime
-   constants) evaluate 2^30 in UNARY Peano arithmetic — [Nat.add]/[Nat.mul]/
-   [Nat.pow] were NOT realised as native integer ops, only the [succ]/[0]
-   constructors were (ExtrOcamlNatInt). Materialising ~10^9 [succ] cells at
-   module load overflows the native stack (and hangs bytecode for minutes)
-   BEFORE any test code runs — this also breaks the pre-existing
-   [test_compile_evidence]. So [extract_body_verified] is presently unrunnable
-   and this parity gate cannot pass. Fix belongs in the extraction directives
-   (Extract Constant Nat.pow/mul/add => native), not in this test. The gate is
-   left in place, unweakened, so the divergence stays visible. *)
+   HISTORICAL NOTE (this gate earned its keep): as first extracted, the module
+   [Body_token_frontend_extracted] did NOT initialise — its top-level
+   [let two30 = Nat.pow 2 30] (and the fnv_basis/fnv_prime constants) evaluated
+   2^30 in UNARY Peano arithmetic, because [ExtrOcamlNatInt] realises only the
+   [succ]/[0] constructors natively and does NOT map [Nat.pow]. Materialising
+   ~10^9 [succ] cells at module load overflowed the native stack BEFORE any
+   test ran (and also broke [test_compile_evidence]). This gate surfaced it.
+   FIXED in the extraction directives ([BodyTokenFrontEndExtract.v]:
+   [Extract Constant BodyTokenFrontEnd.{two30,fnv_basis,fnv_prime} => native
+   int literal], each provably equal): the module now initialises at the
+   default stack and this gate PASSES (393 corpus files + fixtures, extracted
+   == hand OCaml). *)
 
 (* ── Corpus location (mirrors the other corpus tests). ─────────────── *)
 let repo_root = Sys.getcwd ()

@@ -20,12 +20,25 @@
 
     ── nat mapping ─────────────────────────────────────────────────────
     [nat] is mapped to OCaml [int] (ExtrOcamlNatInt), exactly as in
-    CompileGuaranteeExtract.v.  Every arithmetic operation the front-end
-    performs is realized faithfully on non-negative ints: add/sub/mul/div2/
-    eqb/leb/ltb.  The FNV state stays ≤ 0x811c9dc5 < 2^32 and the single
-    product is < 2^55 ([BodyTokenFrontEnd.fnv_mul_bound]), comfortably inside
-    OCaml's 63-bit int.  The 2^k constants extract to [Nat.pow] recursion on
-    the (small) exponent — no gigantic unary numeral is ever built. *)
+    CompileGuaranteeExtract.v.  Most arithmetic (add/sub/mul/div2/eqb/leb/ltb)
+    is realized natively by ExtrOcamlNatInt.  The FNV state stays ≤ 0x811c9dc5
+    < 2^32 and the single product is < 2^55, comfortably inside OCaml's 63-bit
+    int.
+
+    ── 2^k constant realization (REQUIRED — see below) ─────────────────
+    ExtrOcamlNatInt does NOT map [Nat.pow].  Without the directives below, the
+    2^k constants ([two30 = 2 ^ 30], reached via [mod_two30]; and the [2^k]
+    summands of [fnv_basis]/[fnv_prime]) extract to the *unary* recursive
+    [Nat.pow], which multiplies via a re-extracted unary [mul] — so evaluating
+    them at MODULE-INITIALISATION time materialises ~10^9 [succ] cells and
+    blows the native stack before any code runs.  We therefore realize the
+    three top-level hash constants directly as their native int literals.  This
+    is sound and trivially checkable: each equals the value asserted
+    ([2^30 = 1073741824]; [fnv_basis = 0x811c9dc5 = 2166136261];
+    [fnv_prime = 0x01000193 = 16777619]) — exactly the constants the hand
+    OCaml [Compile_evidence.label_id] uses, which the differential parity test
+    then confirms byte-for-byte.  [Nat.pow] itself is also realized natively as
+    a belt-and-suspenders defence against any other 2^k use. *)
 
 From Coq Require Import Extraction.
 From Coq Require Import ExtrOcamlBasic.
@@ -37,6 +50,18 @@ From LaTeXPerfectionist Require Import
   BodyTokenFrontEnd.
 
 Extraction Language OCaml.
+
+(** Realize the three hash constants as native int literals (each provably
+    equal to the value given; see the header note). This eliminates the
+    module-init evaluation of the unary [Nat.pow]. *)
+Extract Constant BodyTokenFrontEnd.two30 => "1073741824".
+Extract Constant BodyTokenFrontEnd.fnv_basis => "2166136261".
+Extract Constant BodyTokenFrontEnd.fnv_prime => "16777619".
+
+(** Belt-and-suspenders: native [Nat.pow] for any other 2^k use. Iterative,
+    native [*] on 63-bit ints. *)
+Extract Constant Nat.pow =>
+  "(fun b e -> let rec p acc i = if i <= 0 then acc else p (acc * b) (i - 1) in p 1 e)".
 
 (** Keep the extracted code readable and inline-free so [Compile_evidence] can
     reference the generated types/functions by predictable names.  The file is

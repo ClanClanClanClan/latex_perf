@@ -1,6 +1,6 @@
 # LaTeX Perfectionist — Master Roadmap
 
-> **Status:** authoritative planning document (single source of truth for the compile-guarantee program). Grounded synthesis of four per-track reconstructions + `memory/MEMORY.md` and topic files, corrected against `governance/project_facts.yaml`, `specs/v27/FIX_PRODUCER_LEDGER.md`, `docs/COMPILATION_GUARANTEE.md`, and the live worktree.
+> **Status:** authoritative planning document (single source of truth for the compile-guarantee program). Grounded synthesis of four per-track reconstructions plus the maintainer's project memory notes, corrected against `governance/project_facts.yaml`, `specs/v27/FIX_PRODUCER_LEDGER.md`, `docs/COMPILATION_GUARANTEE.md`, and the live worktree.
 > **Version-of-record:** `dune-project` = **v27.1.57** on the checked-out tree; HEAD `36b1dc3c` (#495). Tags **`v27.1.58` and `v27.1.59` are tagged on `origin/main`** (both real, pushed). **v27.1.60 is IN FLIGHT** on worktree branch `feat/v27160-sound-compile-gate` (`f0f8cbcd`, `/private/tmp/wt-sound`) — **not yet tagged/merged**.
 > **Merge model:** user merges each green PR; I tag. Serialize version bumps (label-conflict/rebase hell otherwise). CI flakes to auto-rerun: rust-proxy, format, xxh-selfcheck, schema (rest-schema ~15min).
 

@@ -232,7 +232,7 @@ certificate. Every one is caused by the pre-check NOT modeling the macro/package
 or NOT running full TeX expansion — precisely the T1-expansion obligation that
 `--compile-check` conservatively skips (see the T1 row of the runtime table above).
 
-| doc | real pdflatex error | why the pre-check provably cannot catch it |
+| doc | real pdflatex error | why the pre-check does not YET catch it (not-yet-modelled — decidable given catalogue C under the G1 side-condition; see ROADMAP §V1-Catalogue) |
 |---|---|---|
 | `fail_undefined_cs.tex` | `! Undefined control sequence` | `\foobarbazundefined` parses as a well-formed control word; knowing it is undefined requires the live macro table (format + every loaded package), which the pre-check does not build. |
 | `fail_undefined_environment.tex` | `! LaTeX Error: Environment nonexistentenv undefined` | `\begin{nonexistentenv}…\end{nonexistentenv}` is structurally balanced (T0/T5 see a matched env); whether the env is *defined* is a macro-universe fact only `\begin` resolves at expansion time. |
@@ -252,10 +252,24 @@ or NOT running full TeX expansion — precisely the T1-expansion obligation that
 observable once TeX *expands* macros and *loads* packages/classes against the live format
 and file system. `--compile-check` deliberately runs T0 (structural parse) + T2 (source
 closure) + T3 (declared-feature/engine compat) + T4 (aux label uniqueness) + T5
-(`DELIM-`/`ENC-`/`PRT-` Error rules) and treats T1 as a conservative no-op. Closing this
-residual would require either (a) shelling out to the real engine (which is what running
-`pdflatex` already does) or (b) a verified model of the macro/package universe and TeX's
-expansion+mode machinery — a much larger workstream than a fast fail-first pre-check.
+(`DELIM-`/`ENC-`/`PRT-` Error rules) and treats T1 as a conservative no-op.
+
+**These eight are NOT provably impossible — they are UNBUILT CATALOGUE.** The
+undefined-cs / undefined-env / missing-package classes are DECIDABLE against a
+`ProvidesCatalogue` (a Coq finite map cs/env → {kernel|package|class} + mode + arity):
+emit NOT-READY for an unresolved control sequence ONLY when it resolves to nothing in the
+catalogue AND the document declares no out-of-catalogue package AND no user `\def`/
+`\newcommand` that could define it (the **G1 side-condition**). Under that side-condition
+an INCOMPLETE catalogue can only SHRINK the proven-NOT-READY set — it can NEVER manufacture
+a false-READY; over-listing is the only hazard (an auditable curation duty). So the residual
+measures how much of the catalogue is not-yet-modelled, **not** an impossibility. Two of the
+eight — `fail_math_in_text` (mode leak, needs only the catalogue mode-bit) and
+`fail_newcommand_wrong_args` (`#n` > declared arity, ZERO new deps) — are decidable with the
+existing `user_macro_registry` alone and are slated to drop the residual 8→6 before the big
+catalogue lands (ROADMAP S6/S7). The genuinely-undecidable remainder (dynamic `\csname`,
+runtime-conditional expansion, `\write18`) stays LP-Foreign ⇒ NOT-READY, never a proof.
+Closing the catalogue-decidable residual needs a verified `ProvidesCatalogue` built
+INCREMENTALLY, ranked by MARGINAL proven-coverage (ROADMAP Track V1-Catalogue / Observatory).
 
 ### Known remaining false-READY classes (measured, honestly out of scope)
 

@@ -27,6 +27,10 @@ open Latex_parse_lib
 
 let fails = ref 0
 let compared = ref 0
+let not_ready = ref 0
+
+(* # of docs whose (agreed) verdict is NOT-READY — emitted so CI logs show the
+   comparison is non-vacuous (not just READY==READY on every file). *)
 let divergences = ref []
 
 (* Resolve the repo base_dir the same way test_parser_corpus.ml does. *)
@@ -122,6 +126,7 @@ let compare_file path =
             Compile_contract.check_ready_to_compile ~fast:true ?aux_path
               ~source:src proj profile
           in
+          (match reasons_key full with false, _ -> incr not_ready | _ -> ());
           if reasons_key fast <> reasons_key full then (
             incr fails;
             let rel =
@@ -146,5 +151,8 @@ let () =
     List.iter (fun d -> Printf.eprintf "  %s\n%!" d) (List.rev !divergences);
     exit 1)
   else
-    Printf.printf "[fast-readiness-parity] PASS: fast==full on all %d docs\n%!"
-      !compared
+    Printf.printf
+      "[fast-readiness-parity] PASS: fast==full on all %d docs (%d NOT-READY, \
+       %d READY — comparison is non-vacuous)\n\
+       %!"
+      !compared !not_ready (!compared - !not_ready)

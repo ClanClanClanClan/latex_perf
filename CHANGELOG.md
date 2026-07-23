@@ -22,11 +22,15 @@ use 37 and parsed twice.
   normalised reason set). Verified over 473 corpus docs + a size-stratified sample of
   150 real papers driven through the CLI (`--compile-check` vs `--compile-check-full`),
   0 divergences. `--compile-check-full` retains the original full path.
-- **~6.8x faster on large documents** (`bench_compile_check.sh`,
-  `bench_readiness_kernel.ml`): a ~316KB paper drops from ~6.3s (full) to ~0.93s (fast);
-  a typical ~50KB paper drops from ~0.92s to ~0.14s. In-process the shared parse is
-  ~1.2ms (50KB) / ~9.6ms (316KB); the 37-rule execution dominates the remaining fast
-  compute.
+- **~2x–9x faster** (`bench_compile_check.sh`, `bench_readiness_kernel.ml`), scaling with
+  document size: ~1.9x at 3.5KB, ~5.6x at 30KB, ~8.8x at 74KB, and ~4–5x on a ~316KB paper
+  (one-shot wall-clock is high-variance for the full path — 316KB full ranged ~6–17s across
+  runs — so absolute figures are machine/load dependent; ratios and direction are robust).
+  In-process (startup excluded) the fast kernel computes in ~62ms for a typical ~50KB paper
+  and ~337ms for a 316KB paper. HONEST SCOPE: the fast-path floor is the 37 compile-blocking
+  RULES (~DELIM 149ms + ENC 116ms on 316KB), NOT the parse (~12–15ms) — so a sub-150ms
+  as-you-type check holds for typical papers up to ~74KB but NOT yet for a 316KB paper;
+  closing that needs incremental/sub-linear DELIM/ENC rules (a separate future optimization).
 - **No new rules or proofs** — producer count unchanged at 167, theorem count unchanged
   at 1,543. This is a runtime optimization, not a semantic change.
 

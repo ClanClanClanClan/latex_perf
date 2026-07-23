@@ -4,24 +4,24 @@
     document.
 
     The fast kernel is only sound as an optimisation if it is verdict-equivalent
-    to running ALL ~641 rules and filtering to the 37 compile-blocking ones. This
-    test asserts that empirically over every [.tex] under [corpora/]: for each
-    file it computes BOTH verdicts and requires
+    to running ALL ~641 rules and filtering to the 37 compile-blocking ones.
+    This test asserts that empirically over every [.tex] under [corpora/]: for
+    each file it computes BOTH verdicts and requires
 
-      - the same Ready / NotReady tag, AND
-      - for NotReady, the SAME set of reasons (compared as normalised, order-
-        independent strings via [reason_to_string]).
+    - the same Ready / NotReady tag, AND
+    - for NotReady, the SAME set of reasons (compared as normalised, order-
+      independent strings via [reason_to_string]).
 
     ANY divergence fails the test — a divergence means the fast kernel is NOT a
     faithful optimisation (most likely a missing shared-context setup for some
     compile-blocking rule) and must be fixed, never weakened away.
 
-    The in-process harness deliberately mirrors what the CLI's [run_compile_check]
-    does (see validators_cli.ml): it builds the same [Project_model] / profile and
-    performs the same [setup_all] side-effects (File_context, command spans,
-    Build_profile, User_macro_registry) BEFORE each check, so the fast and full
-    paths observe identical ambient state. Both checks run on the in-memory
-    [~source] read from disk. *)
+    The in-process harness deliberately mirrors what the CLI's
+    [run_compile_check] does (see validators_cli.ml): it builds the same
+    [Project_model] / profile and performs the same [setup_all] side-effects
+    (File_context, command spans, Build_profile, User_macro_registry) BEFORE
+    each check, so the fast and full paths observe identical ambient state. Both
+    checks run on the in-memory [~source] read from disk. *)
 
 open Latex_parse_lib
 
@@ -58,14 +58,15 @@ let rec collect_tex root acc =
     Array.fold_left
       (fun acc entry ->
         let p = Filename.concat root entry in
-        if (try Sys.is_directory p with _ -> false) then collect_tex p acc
+        if try Sys.is_directory p with _ -> false then collect_tex p acc
         else if Filename.check_suffix p ".tex" then p :: acc
         else acc)
       acc (Sys.readdir root)
   else acc
 
 (* Mirror validators_cli.setup_all's side-effects so fast and full paths see
-   identical ambient state. Failures are non-fatal (some fixtures are partial). *)
+   identical ambient state. Failures are non-fatal (some fixtures are
+   partial). *)
 let setup_ambient ~path ~src =
   (try
      let base = Filename.dirname path in
@@ -74,13 +75,13 @@ let setup_ambient ~path ~src =
      in
      File_context.set_file_context fc
    with _ -> ());
-  (try
-     let reg = User_macro_registry.create src in
-     User_macro_context.set reg
-   with _ -> ())
+  try
+    let reg = User_macro_registry.create src in
+    User_macro_context.set reg
+  with _ -> ()
 
-(* Normalise a reason list into a sorted set of strings so ordering never
-   causes a spurious divergence. *)
+(* Normalise a reason list into a sorted set of strings so ordering never causes
+   a spurious divergence. *)
 let reasons_key = function
   | Compile_contract.Ready -> (true, [])
   | Compile_contract.NotReady rs ->

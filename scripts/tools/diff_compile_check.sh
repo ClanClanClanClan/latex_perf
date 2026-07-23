@@ -47,8 +47,9 @@ export L0_VALIDATORS=pilot
 # (cc=READY yet pdflatex FAILS). Each maps to a limit-class analyzed in
 # docs/COMPILATION_GUARANTEE.md. Entries deliberately EXCLUDED because the
 # pre-check DOES catch them (measured NOT-READY): fail_left_without_right,
-# fail_dollar_in_dollar, fail_runaway_argument (T0 parser), and
-# fail_duplicate_label (pdflatex only warns, so it COMPILES — not a false-READY).
+# fail_dollar_in_dollar, fail_runaway_argument, fail_missing_begin_document
+# (all T0 parser), and fail_duplicate_label (pdflatex only warns, so it
+# COMPILES — not a false-READY).
 KNOWN_FALSE_READY="
 fail_undefined_cs.tex
 fail_missing_usepackage.tex
@@ -58,7 +59,6 @@ fail_align_no_amsmath.tex
 fail_math_in_text.tex
 fail_newcommand_wrong_args.tex
 fail_bad_graphics_include.tex
-fail_missing_begin_document.tex
 "
 
 is_known_false_ready() {

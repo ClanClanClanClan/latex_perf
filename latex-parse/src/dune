@@ -631,6 +631,13 @@
  (libraries latex_parse_lib test_helpers))
 
 (test
+ (name test_fast_readiness_parity)
+ (modules test_fast_readiness_parity)
+ (libraries latex_parse_lib unix)
+ (deps
+  (source_tree ../../corpora)))
+
+(test
  (name test_body_token_frontend)
  (modules test_body_token_frontend)
  (libraries latex_parse_lib test_helpers threads.posix))

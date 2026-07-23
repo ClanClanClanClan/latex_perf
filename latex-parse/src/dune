@@ -75,6 +75,7 @@
   aux_state
   compile_contract
   compile_guarantee_extracted
+  body_token_frontend_extracted
   compile_evidence
   stable_spans
   cst

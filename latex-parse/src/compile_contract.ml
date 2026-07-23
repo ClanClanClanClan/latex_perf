@@ -119,7 +119,14 @@ let t4_check ?aux_path (_proj : Project_model.t) : reason list =
    "provably well-formed". Structural faults the parser does not itself flag —
    most notably an unbalanced brace group, which it silently closes at EOF — are
    caught by T5 (DELIM-001) instead. T0 and T5 are therefore complementary. *)
-let t0_check ~(source : string) (proj : Project_model.t) : reason list =
+(* T0 core, parametrised by the parse error list so callers can supply a parse
+   they already performed (the fast kernel parses exactly once and shares the
+   result between T0 and T5's PRT context). [parse_errors] is only consulted on
+   the LP_Core/LP_Extended branch — on LP_Foreign we short-circuit before any
+   parse would be needed. *)
+let t0_check_with_errors ~(source : string)
+    ~(parse_errors : (string * Parser_l2.loc) list) (proj : Project_model.t) :
+    reason list =
   let file = (Project_model.root_file proj).path in
   match Language_profile.classify_source source with
   | Language_profile.LP_Foreign, feats ->
@@ -135,8 +142,7 @@ let t0_check ~(source : string) (proj : Project_model.t) : reason list =
       in
       [ T0_parse_fails { file; message = msg } ]
   | (LP_Core | LP_Extended), _ -> (
-      let _nodes, errors = Parser_l2.parse_located source in
-      match List.rev errors with
+      match List.rev parse_errors with
       | [] -> []
       | (msg, (loc : Parser_l2.loc)) :: _ ->
           [
@@ -148,6 +154,10 @@ let t0_check ~(source : string) (proj : Project_model.t) : reason list =
                     loc.offset;
               };
           ])
+
+let t0_check ~(source : string) (proj : Project_model.t) : reason list =
+  let _nodes, parse_errors = Parser_l2.parse_located source in
+  t0_check_with_errors ~source ~parse_errors proj
 
 (* T1: not runtime-checked at this layer. Bounded-macro-registry determinism /
    acyclicity is enforced by [User_macro_registry] at analysis time; a dedicated
@@ -204,6 +214,28 @@ let t5_check ~(source : string) (_ : Project_model.t) : reason list =
   in
   match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
 
+(* FAST T5 (v27.1.59): run ONLY the compile-blocking rules via
+   [Validators.run_compile_blocking] instead of all ~641 rules, then keep the
+   same Error-severity + prefix filter. This is verdict-identical to [t5_check]
+   for the compile-blocking set (see [Validators.run_subset]'s equivalence
+   argument): the subset reproduces the one piece of shared context those rules
+   read (Partial_context, from the SHARED single parse we thread in via
+   [parse_errors]), and _resolve_conflicts never affects this subset. Reason
+   constructors/messages are byte-identical to the full path. *)
+let t5_check_fast ~(source : string)
+    ~(parse_errors : (string * Parser_l2.loc) list) (_ : Project_model.t) :
+    reason list =
+  let results = Validators.run_compile_blocking ~parse_errors source in
+  let blocking =
+    List.filter_map
+      (fun (r : Validators.result) ->
+        if r.severity = Validators.Error && is_compile_blocking r.id then
+          Some r.id
+        else None)
+      results
+  in
+  match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
+
 (* Read the root .tex source for T0/T5 if the caller did not supply it. On a
    read failure we surface a T0 reason rather than silently passing. *)
 let read_root_source (proj : Project_model.t) : (string, string) result =
@@ -215,14 +247,27 @@ let read_root_source (proj : Project_model.t) : (string, string) result =
       (fun () -> Ok (really_input_string ic (in_channel_length ic)))
   with Sys_error msg -> Error msg
 
-let check_ready_to_compile ?aux_path ?source (proj : Project_model.t)
-    (_profile : Build_profile.t) : ready_check_result =
+let check_ready_to_compile ?(fast = true) ?aux_path ?source
+    (proj : Project_model.t) (_profile : Build_profile.t) : ready_check_result =
   let source_result =
     match source with Some s -> Ok s | None -> read_root_source proj
   in
   let t0, t5 =
     match source_result with
-    | Ok src -> (t0_check ~source:src proj, t5_check ~source:src proj)
+    | Ok src ->
+        if fast then
+          (* FAST readiness kernel (v27.1.59): parse ONCE and share the parse
+             error list between T0's structural-error check and T5's PRT
+             context, and run ONLY the 37 compile-blocking rules.
+             Verdict-identical to the full path below. *)
+          let _nodes, parse_errors = Parser_l2.parse_located src in
+          ( t0_check_with_errors ~source:src ~parse_errors proj,
+            t5_check_fast ~source:src ~parse_errors proj )
+        else
+          (* FULL path: original behaviour — T0 parses independently and T5 runs
+             every registered rule then filters. Kept as the safety fallback and
+             the differential/correctness-gate reference. *)
+          (t0_check ~source:src proj, t5_check ~source:src proj)
     | Error msg ->
         ( [
             T0_parse_fails

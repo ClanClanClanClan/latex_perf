@@ -32,17 +32,16 @@ module CE = Compile_evidence
    within the worker.
 
    HISTORICAL NOTE (this gate earned its keep): as first extracted, the module
-   [Body_token_frontend_extracted] did NOT initialise — its top-level
-   [let two30 = Nat.pow 2 30] (and the fnv_basis/fnv_prime constants) evaluated
-   2^30 in UNARY Peano arithmetic, because [ExtrOcamlNatInt] realises only the
+   [Body_token_frontend_extracted] did NOT initialise — its top-level [let two30
+   = Nat.pow 2 30] (and the fnv_basis/fnv_prime constants) evaluated 2^30 in
+   UNARY Peano arithmetic, because [ExtrOcamlNatInt] realises only the
    [succ]/[0] constructors natively and does NOT map [Nat.pow]. Materialising
-   ~10^9 [succ] cells at module load overflowed the native stack BEFORE any
-   test ran (and also broke [test_compile_evidence]). This gate surfaced it.
-   FIXED in the extraction directives ([BodyTokenFrontEndExtract.v]:
-   [Extract Constant BodyTokenFrontEnd.{two30,fnv_basis,fnv_prime} => native
-   int literal], each provably equal): the module now initialises at the
-   default stack and this gate PASSES (393 corpus files + fixtures, extracted
-   == hand OCaml). *)
+   ~10^9 [succ] cells at module load overflowed the native stack BEFORE any test
+   ran (and also broke [test_compile_evidence]). This gate surfaced it. FIXED in
+   the extraction directives ([BodyTokenFrontEndExtract.v]: [Extract Constant
+   BodyTokenFrontEnd.{two30,fnv_basis,fnv_prime} => native int literal], each
+   provably equal): the module now initialises at the default stack and this
+   gate PASSES (393 corpus files + fixtures, extracted == hand OCaml). *)
 
 (* ── Corpus location (mirrors the other corpus tests). ─────────────── *)
 let repo_root = Sys.getcwd ()

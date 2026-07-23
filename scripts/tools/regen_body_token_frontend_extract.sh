@@ -81,13 +81,22 @@ awk '
 
 { printf '%s\n' "$HEADER"; cat "$STRIPPED"; } > "$DEST_ML"
 
-# Canonicalise with ocamlformat so the committed generated file is @fmt-clean
-# (dune fmt would otherwise flag it). --enable-outside-detected-project makes
-# ocamlformat honour the repo-root .ocamlformat even though latex-parse/ is a
-# nested dune sub-project without its own config. The file is byte-reproducible:
-# regen -> same ocamlformat output as `dune fmt` promotes.
-TMP_FMT="$(mktemp).ml"
-opam exec -- ocamlformat --enable-outside-detected-project "$DEST_ML" > "$TMP_FMT"
-mv "$TMP_FMT" "$DEST_ML"
+# Canonicalise with `dune fmt` — the SAME formatter the CI `format` gate uses —
+# so the committed generated file is byte-identical to what that gate expects.
+# A standalone `ocamlformat` invocation resolves the nested latex-parse/ project's
+# .ocamlformat config at a different comment margin than dune does, and would wrap
+# the header comment differently (making the file @fmt-dirty in CI). We write the
+# raw source above, let dune produce its canonical formatting into the .formatted
+# staging copy, and copy that back. Byte-reproducible: regen -> exactly what CI's
+# `dune build @fmt` promotes.
+DEST_DIR="$(dirname "$DEST_ML")"
+DEST_BASE="$(basename "$DEST_ML")"
+FMT_STAGE="$ROOT/_build/default/$DEST_DIR/.formatted/$DEST_BASE"
+opam exec -- dune build --root "$ROOT" @fmt >/dev/null 2>&1 || true  # exits 1 on diff; still stages .formatted
+if [ -f "$FMT_STAGE" ]; then
+  cp "$FMT_STAGE" "$DEST_ML"
+else
+  echo "WARNING: dune @fmt staging copy not found ($FMT_STAGE); leaving raw" >&2
+fi
 
 echo "Wrote $DEST_ML"

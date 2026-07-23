@@ -131,6 +131,29 @@ val extract_of_project :
     [Project_model.t], and the build graph taken from [Build_graph.of_project]
     (so T2 reflects the real include graph, not just the root file). *)
 
+val extract_body : string -> body_token list
+(** [extract_body source] — the ORIGINAL, UNVERIFIED hand-written bytes->body
+    front-end (label defs, then refs, in document order; then one
+    [BT_needs_feature] per detected feature; then a [BT_text] marker if the
+    source is non-blank). It reuses [Ast_semantic_state.labels]/[refs] and the
+    [detect_body_features] scanner. Exposed only so the parity test can compare
+    it byte-for-byte against [extract_body_verified]; the production path uses
+    the verified extractor. *)
+
+val extract_body_verified : string -> body_token list
+(** [extract_body_verified source] — the PROVEN Coq-EXTRACTED bytes->body
+    front-end [BodyTokenFrontEnd.body_of_source] (module
+    [Body_token_frontend_extracted]), executed on the real source. The source is
+    passed as its byte list and the protected regions as
+    [Validators_common.find_verbatim_comment_url_ranges source] — the IDENTICAL
+    protected-range set the [Ast_semantic_state] scanners consult, so parity
+    with [extract_body] holds. Its result is mapped 1:1 from the extracted
+    [body_token]/[feature] inductives back to the runtime surface types. This is
+    THE body source the production [extract]/[extract_of_project] use, closing
+    the last hand-written residual: [compile_safe_of_source] (Print Assumptions:
+    Closed) connects a body built by this code to
+    [PdflatexModel.pdflatex_compile_safe]. *)
+
 val label_id : string -> int
 (** Stable label-key -> nat hash (exposed for tests / mirror checks). *)
 

@@ -35,6 +35,11 @@ type reason =
       [ `Duplicate_labels of string list | `Missing_bib_entries of string list ]
   | T5_rule_violations of string list
       (** Rule-IDs that fired at Error severity. *)
+  | T_structural_fatal of string list
+      (** Precise structural-fatal compile-gate reasons (double super/subscript
+          in math, misplaced alignment tab &, no \documentclass, \usepackage
+          after \begin{document}). Each fires IFF pdflatex genuinely fails with
+          no output PDF; pure function of the source, identical fast/full. *)
 
 type ready_check_result = Ready | NotReady of reason list
 

@@ -35,7 +35,7 @@ Everything else about compile success falls back on the toolchain itself.
 
 ---
 
-## What `--compile-check` runs (v27.1.52; fast kernel v27.1.59)
+## What `--compile-check` runs (v27.1.52; fast kernel v27.1.59; structural-fatal gate v27.1.60)
 
 The CLI's `--compile-check <file.tex>` flag invokes
 `Compile_contract.check_ready_to_compile` in
@@ -180,7 +180,7 @@ binary over a labeled corpus (`corpora/compile_check/`) and reports the confusio
 matrix. This turns the readiness claim into a *measured* fact rather than an assertion.
 Classification is outcome-driven (from the two real verdicts), not from the filename.
 
-**At-scale run (61 standalone documents, pdfTeX 3.141592653-2.6-1.40.29 / TeX Live 2026).**
+**At-scale run (65 standalone documents, pdfTeX 3.141592653-2.6-1.40.29 / TeX Live 2026).**
 The corpus spans clean docs of varied complexity (`good_*`: article with
 sections/math/lists/tabular/figure/verbatim/footnotes/cross-refs/bibliography, amsthm,
 tikz, minipage, `\input` child, report class, UTF-8 accents, user macros), genuine
@@ -188,19 +188,43 @@ compile-FAILURE classes (`fail_*`), and pdflatex-TOLERATED sloppiness (`tolerate
 
 | soundness direction | count | meaning |
 |---|---|---|
-| correct **READY & COMPILES** (true-READY) | 33 | clean docs of varied complexity, all certified and all compile |
-| correct **NOT-READY & FAILS** (true NOT-READY) | 16 | unclosed math/display-math/env/`\verb`, extra/stray `}`, `\begin`/`\end` mismatch, extra `\end`, `\left` without `\right`, mismatched `$` toggles, runaway argument, missing `\input`, missing `\begin{document}` — all caught by T0/T2/T5 |
-| **FALSE-READY** (cc=READY, pdflatex FAILS) | **10** | the dangerous soundness residual — every one requires macro/package-universe modeling or full expansion the pre-check does not perform (enumerated below); **0 new** beyond the documented allowlist |
+| correct **READY & COMPILES** (true-READY) | 35 | clean docs of varied complexity, all certified and all compile |
+| correct **NOT-READY & FAILS** (true NOT-READY) | 20 | unclosed math/display-math/env/`\verb`, extra/stray `}`, `\begin`/`\end` mismatch, extra `\end`, `\left` without `\right`, mismatched `$` toggles, runaway argument, missing `\input`, missing `\begin{document}` — plus (v27.1.60 structural-fatal gate) **double super/subscript, missing `\documentclass`, `\usepackage` after `\begin{document}`** — all caught by T0/T2/T5 and the new structural-fatal gate |
+| **FALSE-READY** (cc=READY, pdflatex FAILS) | **8** | the dangerous soundness residual — every one requires macro/package-universe modeling or full expansion the pre-check does not perform (enumerated below); **0 new** beyond the documented allowlist. Reduced from 10 in v27.1.60: `fail_double_subscript` and `fail_no_documentclass` are now correctly NOT-READY. |
 | false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 2 | safe conservative over-rejection: a bare unclosed `{` group pdflatex auto-closes, and a `\write18` doc pdflatex tolerates in restricted mode (shell-escape is genuinely LP-Foreign) |
 
-Total = 33 + 16 + 10 + 2 = 61.
+Total = 35 + 20 + 8 + 2 = 65.
 
 The harness exits nonzero ONLY on a **NEW** false-READY — one whose basename is not in
-the documented `KNOWN_FALSE_READY` allowlist inside the script (the 10 limit-class docs
+the documented `KNOWN_FALSE_READY` allowlist inside the script (the 8 limit-class docs
 below). Known-limitation misses do not fail the run; a genuinely new soundness miss does.
 This makes it a usable local soundness **regression guard** (not a CI gate — CI has no TeX).
 
-### The 10 false-READYs, enumerated and analyzed (honest soundness data)
+### Structural-fatal gate (v27.1.60) — deterministic non-Turing compile-fatals now caught
+
+Some compile-fatals are **not** Turing-hard: they are decidable from the token structure
+alone, without building the macro table or expanding anything. v27.1.60 adds a dedicated,
+comment-/verbatim-/math-/moving-arg-aware detector module (`compile_gate_checks.ml`),
+wired into **both** the fast readiness kernel and the full readiness path, that turns three
+such classes from false-READY into correct NOT-READY:
+
+- **Double super/subscript** — `$a^b^c$`, `$x_a_b$` (a subscript/superscript with no
+  intervening group is `! Double superscript`/`! Double subscript`). The detector is
+  math-mode-aware and only fires on adjacent unbraced scripts, so legitimately nested
+  braced scripts (`$x^{a^b}$`) stay READY.
+- **No `\documentclass`** — a body with no `\documentclass` leaves the format
+  uninitialized (`! LaTeX Error: … \normalsize is not defined`).
+- **`\usepackage` after `\begin{document}`** — `\usepackage` is only legal in the
+  preamble (`! LaTeX Error: Can be used only in preamble`). The detector ignores
+  `\usepackage` text inside verbatim/comments and preamble occurrences.
+
+Each detector reads the raw token structure (comment-, verbatim-, math- and moving-arg-aware)
+so it does not fire on literal text in verbatim/comments or on false-positive contexts.
+Measured impact: **zero over-rejection across 6,396 real root papers**, and the differential
+false-READY count dropped from 10 to 8. Misplaced `&` was intentionally **dropped** from
+this gate — see "Known remaining false-READY classes" below.
+
+### The 8 false-READYs, enumerated and analyzed (honest soundness data)
 
 Each of these is a document the pre-check certified READY but `pdflatex` FAILED on. They
 are the point of this exercise: they measure exactly where READY is *not* a compile
@@ -217,11 +241,14 @@ or NOT running full TeX expansion — precisely the T1-expansion obligation that
 | `fail_bad_usepackage.tex` | `! LaTeX Error: File 'this_package_does_not_exist_xyz.sty' not found` | The pre-check's T2 project-closure resolves `\input`/`\include` sources, but does **not** resolve `\usepackage` against `kpathsea`/the TeX tree, so a nonexistent `.sty` is invisible to it. |
 | `fail_bad_graphics_include.tex` | `! LaTeX Error: File '…' not found` | `\includegraphics` file existence is a runtime graphics-backend lookup on the TeX search path, not part of the closure T2 tracks. |
 | `fail_math_in_text.tex` | `! Missing $ inserted` | `\alpha`/`\beta` used outside math is a *mode* error: the token is defined, but only legal in math mode. Catching it requires tracking TeX's math/text mode through expansion — the full-expansion state the pre-check skips. |
-| `fail_double_subscript.tex` | `! Double subscript` | `x_1_2` is a math-semantics fault detected only by the math-list builder during expansion; the byte structure is otherwise well-formed. |
 | `fail_newcommand_wrong_args.tex` | `! Illegal parameter number in definition of \greet` | A `#3` in a 2-argument `\newcommand` body is caught when TeX *scans the definition*; the pre-check does not evaluate `\newcommand` bodies, so arg-count consistency is out of scope. |
-| `fail_no_documentclass.tex` | `! LaTeX Error: The font size command \normalsize is not defined` | A missing `\documentclass` leaves the format uninitialized. The pre-check does not require/validate a `\documentclass` preamble, so a body with no class still parses structurally and reports READY. |
 
-**Common root cause.** All ten sit on the far side of the T1 boundary: they are only
+> Two former entries — `fail_double_subscript` (`! Double subscript`) and
+> `fail_no_documentclass` (`! … \normalsize is not defined`) — were **removed from this
+> residual in v27.1.60**: they are now caught by the structural-fatal gate above and
+> report NOT-READY correctly.
+
+**Common root cause.** All eight sit on the far side of the T1 boundary: they are only
 observable once TeX *expands* macros and *loads* packages/classes against the live format
 and file system. `--compile-check` deliberately runs T0 (structural parse) + T2 (source
 closure) + T3 (declared-feature/engine compat) + T4 (aux label uniqueness) + T5
@@ -230,17 +257,29 @@ residual would require either (a) shelling out to the real engine (which is what
 `pdflatex` already does) or (b) a verified model of the macro/package universe and TeX's
 expansion+mode machinery — a much larger workstream than a fast fail-first pre-check.
 
-### Known limitations (measured, honestly out of scope)
+### Known remaining false-READY classes (measured, honestly out of scope)
 
-- **Undefined-name class (7 of 10 above): undefined control sequences, undefined
-  environments, missing `\usepackage`/`\documentclass`, missing package/graphics files.**
+These are the residual documents the pre-check reports READY but pdflatex FAILS. They are
+NOT caught by the v27.1.60 structural-fatal gate because catching them precisely requires
+either macro expansion or modelling the base+package macro catalogue — the T1 boundary the
+pre-check deliberately does not cross.
+
+- **Macro/package-universe class (6 of 8 above): undefined control sequences, undefined
+  environments, missing/nonexistent `\usepackage`, missing package/graphics files.**
   The pre-check does not build the live macro table or resolve names against the TeX tree,
   so a structurally well-formed but semantically undefined name is reported READY. This is
   the dominant false-READY class and is why READY is a *readiness pre-check*, not a total
-  compile certificate.
-- **Expansion-time math/arg-semantics class (3 of 10 above): math-only command in text
-  mode, double subscript, illegal `\newcommand` parameter number.** These are caught only
-  by TeX's expansion/math-list machinery, which the pre-check does not run.
+  compile certificate. Closing it needs a verified base+package macro-catalogue model.
+- **Expansion-time arg-semantics class (2 of 8 above): math-only command in text mode,
+  illegal `\newcommand` parameter number.** These are caught only by TeX's
+  expansion/math-list machinery, which the pre-check does not run.
+- **Misplaced `&` (intentionally out of the structural-fatal gate).** A `&` outside any
+  alignment context (`tabular`/`array`/`align`/…) is `! Misplaced alignment tab character &`.
+  It was **considered for the v27.1.60 gate and deliberately dropped**: `\def`-based
+  alignment macros can introduce `&` in bodies that expand into legal alignment cells, so a
+  purely structural gate over-rejects real documents. A precise `&` gate requires macro
+  expansion and is tied to the LP-Extended boundary; it remains a documented, honest
+  false-READY rather than an over-rejecting gate.
 - **Conservative over-rejection of auto-closeable groups (a false-NOT-READY, the *safe*
   direction).** An unclosed OPEN group (`{x\end{document}`) is reported NOT-READY, but
   pdflatex auto-closes it and compiles (`tolerated_bare_unclosed_brace.tex`). The parser

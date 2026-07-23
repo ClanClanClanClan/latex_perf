@@ -73,6 +73,7 @@
   project_model
   build_graph
   aux_state
+  compile_gate_checks
   compile_contract
   compile_guarantee_extracted
   body_token_frontend_extracted
@@ -628,6 +629,11 @@
 (test
  (name test_compile_contract)
  (modules test_compile_contract)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_compile_gate)
+ (modules test_compile_gate)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

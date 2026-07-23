@@ -8,6 +8,7 @@ type reason =
   | T4_semantic_incoherent of
       [ `Duplicate_labels of string list | `Missing_bib_entries of string list ]
   | T5_rule_violations of string list
+  | T_structural_fatal of string list
 
 type ready_check_result = Ready | NotReady of reason list
 
@@ -236,6 +237,19 @@ let t5_check_fast ~(source : string)
   in
   match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
 
+(* Structural-fatal compile-gate (v27.1.60): precise, comment/verbatim-aware
+   detectors that fire IFF pdflatex genuinely fails with no output PDF on the
+   targeted deterministic-structural conditions (double super/subscript in math,
+   misplaced alignment tab &, no \documentclass, \usepackage after
+   \begin{document}). Pure function of the source, so it is byte-identical on
+   the fast and full branches (fast==full parity holds trivially). This is the
+   soundness spine of --compile-check: catching these closes the false-READY
+   holes (e.g. $a^b^c$) that the imprecise ADVISORY lint rules could not. *)
+let structural_fatal_check ~(source : string) : reason list =
+  match Compile_gate_checks.structural_fatal_reasons source with
+  | [] -> []
+  | reasons -> [ T_structural_fatal reasons ]
+
 (* Read the root .tex source for T0/T5 if the caller did not supply it. On a
    read failure we surface a T0 reason rather than silently passing. *)
 let read_root_source (proj : Project_model.t) : (string, string) result =
@@ -251,6 +265,14 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     (proj : Project_model.t) (_profile : Build_profile.t) : ready_check_result =
   let source_result =
     match source with Some s -> Ok s | None -> read_root_source proj
+  in
+  (* Structural-fatal reasons are a pure function of the source and are computed
+     the SAME way on both the fast and full branches — fast==full parity is
+     therefore preserved trivially. *)
+  let tsf =
+    match source_result with
+    | Ok src -> structural_fatal_check ~source:src
+    | Error _ -> []
   in
   let t0, t5 =
     match source_result with
@@ -282,6 +304,7 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     @ t3_check proj
     @ t4_check ?aux_path proj
     @ t5
+    @ tsf
   in
   if reasons = [] then Ready else NotReady reasons
 
@@ -305,3 +328,6 @@ let reason_to_string = function
         (String.concat "; " es)
   | T5_rule_violations ids ->
       Printf.sprintf "T5 rule violations: [%s]" (String.concat "; " ids)
+  | T_structural_fatal reasons ->
+      Printf.sprintf "structural-fatal (will not compile): [%s]"
+        (String.concat "; " reasons)

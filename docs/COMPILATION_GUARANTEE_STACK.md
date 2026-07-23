@@ -109,10 +109,28 @@ Two distinct artefacts share the "T0–T5" naming and must not be conflated:
    `body_token` operational model** of pdflatex, not over the runtime parser's
    bytes.
 
-**The residual gap:** there is no verified `bytes → body_token` extraction
-connecting artefact (1) to artefact (2). The runtime readiness pre-check is
-therefore *sound* (a genuinely broken or LP-Foreign document returns NOT-READY)
-but a READY result does **not** mechanically discharge the capstone's
-`project_well_typed` hypothesis for the input bytes. Closing that extraction gap
-is the outstanding work that would turn the readiness pre-check into a total
-"it will compile" certificate.
+**The residual gap — CLOSED in v27.1.58 (modulo a small trusted base).** There is
+now a **verified `bytes → body_token` front-end** connecting artefact (1) to
+artefact (2): `proofs/BodyTokenFrontEnd.v` proves `compile_safe_of_source` (Qed, 0
+admits, `Print Assumptions` Closed), which builds the `body_token` list from the
+source bytes — token/key scanning, FNV-1a hashing of label keys, feature
+detection, body assembly — and connects it to
+`PdflatexModel.pdflatex_compile_safe`. It is Coq-extracted to
+`latex-parse/src/body_token_frontend_extracted.ml` (byte-identical regen via
+`scripts/tools/regen_body_token_frontend_extract.sh`) and **executed** by
+`--compile-check` (`Compile_evidence.extract_body_verified`); a differential parity
+gate (`test_body_token_frontend.ml`) proves it byte-identical to the retained hand
+OCaml over 393 corpus files + 422 fixtures.
+
+What remains **trusted** (a much smaller base than the whole extraction): the
+protected-range oracle `Validators_common.find_verbatim_comment_url_ranges` (the
+front-end is proven *relative to* that range set), the string→byte-list
+conversion, build-graph construction, the 1:1 runtime→extracted-type conversion,
+file I/O, and the OCaml compiler + Coq extraction toolchain. Two honest caveats on
+the proof: (a) the `fnv_mul_bound (< 2^55)` lemma is asserted informally (a
+Peano-`nat` kernel pathology), validated by the parity test rather than proved
+in-kernel; (b) the extraction realizes `two30`/`fnv_basis`/`fnv_prime` as native
+`int` literals, each provably equal to its Coq definition. So a READY +
+`MODEL-READY` result now discharges the capstone's premises for the *extracted*
+project via proven-and-executed code at both ends (front-end + premise-checker),
+short of certifying the raw bytes against the trusted base above.

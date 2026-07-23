@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.1.57
+# LaTeX Perfectionist v27.1.58
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -65,11 +65,11 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 | `L0_PROM_ADDR` | `127.0.0.1:9109` | Prometheus TCP bind address |
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
-## Current Status — v27.1.57 (July 2026)
+## Current Status — v27.1.58 (July 2026)
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
-- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (55 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
-- **Proofs**: 170 Coq files, 1,484 theorems/lemmas. 643 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
+- **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (63 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.
+- **Proofs**: 178 Coq files, 1,543 theorems/lemmas. 643 per-rule soundness (637 faithful, 20 conservative, 3 conditional). 0 admits, 0 axioms. ML: `v2_span_extractor_sound` QED.
 - **Validators**: 644 rule IDs / 660 spec. 167 fix-producing rules (Bucket A) + 124 Bucket-C candidate rules. 19 L3 file-based + 12 expl3 rules.
 - **Macros**: 520 production macros (441 symbols + 79 argsafe) with multi-arg support.
 - **ML Pipeline**: v2 ByteClassifier (CNN+BiLSTM, 538K params) trained on A100. F1=0.9799 (precision=0.975, recall=0.985) **on the candidate-anchored TYPO-rule evaluation set** — not a whole-catalog metric; deterministic rules skip ML. Proved in `proofs/ML/SpanExtractorSound.v`.
@@ -210,7 +210,7 @@ bash scripts/latency_smoke_expand.sh 200
 - **Language contract** (v26): LP-Core / LP-Extended / LP-Foreign tiers. See [specs/v26/language_contract.md](specs/v26/language_contract.md).
 - **Rule contracts** (v26.1): per-rule execution/proof/project metadata in [specs/rules/rule_contracts.yaml](specs/rules/rule_contracts.yaml); drives the validator DAG.
 - **Execution classes**: A (keystroke-critical) / B (debounce) / C (build-coupled) / D (advisory). Formalised in [proofs/ExecutionClasses.v](proofs/ExecutionClasses.v).
-- **Proof strategy**: 0 admits, 0 axioms; 170 Coq files, 1,484 theorems/lemmas.
+- **Proof strategy**: 0 admits, 0 axioms; 178 Coq files, 1,543 theorems/lemmas.
 
 ### SIMD Implementation
 
@@ -241,7 +241,7 @@ bash scripts/latency_smoke_expand.sh 200
 
 ---
 
-**Status**: v27.1.57 released. 644 validators implemented, **167 fix-producing rules**, 1,484 theorems across 170 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
+**Status**: v27.1.58 released. 644 validators implemented, **167 fix-producing rules**, 1,543 theorems across 178 Coq files (0 admits, 0 axioms), ML v2 byte classifier trained (F1=0.9799, proved). Compile-guarantee contract + byte-lossless CST + rewrite engine + per-rule fix producers + conflict-aware merging live. v27 WS8 (final discharge of T6/T7 against `proofs/PdflatexModel.v`) shipped in v27.0.0; the `apply_edits` rewrite-engine universal correspondence between OCaml `Cst_edit.apply_all` and Coq `apply_edits_parallel` shipped in v27.0.4 (`apply_edits_cursor_eq_parallel` Theorem, Qed, Closed under the global context). The Bucket A fix-producer cadence has been rolling since v27.0.5, adding 1–3 producers per patch release; see [`specs/v27/V27_FIX_PRODUCER_CADENCE.md`](specs/v27/V27_FIX_PRODUCER_CADENCE.md) and [`specs/v27/FIX_PRODUCER_LEDGER.md`](specs/v27/FIX_PRODUCER_LEDGER.md) for per-rule shipping status and bucket assignments. Tiers 1–3 are complete (v27.1.20–v27.1.40): the Tier 2 L3-AST migration (`ast_semantic_state` + REF migration + regex-vs-AST parity gate) and the Tier 3 faithful pdflatex operational semantics (token/aux/log/pass model, tight ≤2-pass convergence, WS8 capstone re-proved against it + Stage-6 residuals: PDF-artefact model, genuine T2/T3/T4, document-feature coherence) both shipped; see [`specs/v27/V27_2_MASTER_EXECUTION_PLAN.md`](specs/v27/V27_2_MASTER_EXECUTION_PLAN.md) and [`specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md`](specs/v27/V27_FAITHFUL_SEMANTICS_PLAN.md). Honest residuals (T0/T1/T5 universal obligations, byte-exact PDF structural semantics) remain conservative/deferred.
 
 ### First‑Token Latency (Tier A target ≤ 350 µs)
 

@@ -101,3 +101,11 @@ proofs/CompileGuaranteeExtract.v
 # the hand-written classify mirror in language_profile.ml. classify_lp_core_sound
 # governs the extracted verdict; only detect (bytes->features) stays trusted.
 proofs/LanguageContractExtract.v
+
+# v27.1.58 — verified bytes→body_token front-end. body_of_source builds the
+# body token list (label/ref scanners + sorted merge + FNV-1a hash + feature
+# detector); compile_safe_of_source (Print Assumptions: Closed) connects a body
+# built by this code to PdflatexModel.pdflatex_compile_safe. The Extract file
+# emits the runtime path (body_token_frontend_extracted.ml).
+proofs/BodyTokenFrontEnd.v
+proofs/BodyTokenFrontEndExtract.v

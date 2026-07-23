@@ -2,6 +2,25 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.58] — 2026-07-23
+
+**FLAGSHIP gap #1 closed — verified bytes→body_token front-end: `pdflatex_compile_safe`
+now governs Coq-extracted code executed by `--compile-check`.** The bytes→body_token
+step (token/key scanning, FNV-1a hashing, feature detection, body assembly) was the
+TRUSTED front-end at the input end of the proven core; it is now Coq-extracted-and-proven.
+- **New `proofs/BodyTokenFrontEnd.v`** (`compile_safe_of_source`, `Closed under the global
+  context`, 0 admits) + Coq extraction (`proofs/BodyTokenFrontEndExtract.v` ->
+  committed `latex-parse/src/body_token_frontend_extracted.ml`, reproducibly regenerated
+  byte-identically by `scripts/tools/regen_body_token_frontend_extract.sh`).
+- **`--compile-check` routes evidence through the verified extractor** (`compile_evidence.ml`);
+  on a real file it returns `MODEL-CONNECTED MODEL-READY`.
+- **Differential parity gate** (`test_body_token_frontend.ml`): the extracted front-end ==
+  the hand OCaml over 393 corpus files + 422 fixtures.
+- **Honest notes:** (a) the `fnv_mul_bound` (`<2^55`) lemma is asserted informally (Peano-nat
+  kernel pathology), validated by the parity test; (b) the extraction realizes
+  `two30`/`fnv_basis`/`fnv_prime` as native `int` literals (each provably equal to its Coq
+  definition). Theorem count 1,543.
+
 ## [v27.1.57] — 2026-07-22
 
 **FLAGSHIP: certify the LP-Core subset boundary + FIX real classifier soundness holes.**

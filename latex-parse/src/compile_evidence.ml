@@ -277,6 +277,42 @@ let extract_body (source : string) : body_token list =
   let text_marker = if String.trim source = "" then [] else [ BT_text ] in
   ordered @ feats @ text_marker
 
+(* ── The VERIFIED bytes->body_token front-end ─────────────────────────── *)
+
+module Vfe = Body_token_frontend_extracted
+
+(* Map the Coq-EXTRACTED body_token/feature inductives (which are nominally
+   distinct from, but structurally identical to, the runtime ones) back to the
+   runtime surface types. Mirror of [to_ext_feature]/[to_ext_body_token] in the
+   reverse direction. This is mechanical 1:1 glue. *)
+let of_vfe_feature : Vfe.feature -> feature = function
+  | Vfe.UTF8_inputenc -> UTF8_inputenc
+  | Vfe.UTF8_direct -> UTF8_direct
+  | Vfe.Unicode_math -> Unicode_math
+  | Vfe.Opentype_fonts -> Opentype_fonts
+  | Vfe.Lua_scripting -> Lua_scripting
+  | Vfe.Japanese_cjk -> Japanese_cjk
+  | Vfe.Bibtex -> Bibtex
+  | Vfe.Biber -> Biber
+
+let of_vfe_body_token : Vfe.body_token -> body_token = function
+  | Vfe.BT_text -> BT_text
+  | Vfe.BT_label_def n -> BT_label_def n
+  | Vfe.BT_label_ref n -> BT_label_ref n
+  | Vfe.BT_needs_feature f -> BT_needs_feature (of_vfe_feature f)
+
+(* The PROVEN bytes->body_token front-end, executed on a real source string. The
+   inputs are built exactly as the Coq model expects (nat extracts to OCaml int
+   via ExtrOcamlNatInt): [src] is the byte list of the source, and [protected]
+   is THE SAME protected-range set the [Ast_semantic_state] scanners consult
+   ([Validators_common.find_verbatim_comment_url_ranges], half-open [a,b)) — so
+   the verified front-end sees identical protected bytes and parity with
+   [extract_body] holds. *)
+let extract_body_verified (source : string) : body_token list =
+  let src = List.init (String.length source) (fun i -> Char.code source.[i]) in
+  let protected = Validators_common.find_verbatim_comment_url_ranges source in
+  List.map of_vfe_body_token (Vfe.body_of_source src protected)
+
 (* Map a Build_graph.artefact_kind to the Coq-model artefact_kind. *)
 let map_kind : Build_graph.artefact_kind -> artefact_kind = function
   | Build_graph.Tex -> Tex
@@ -362,7 +398,7 @@ let extract ~(source : string) ~(engine : engine) :
   let nodes = [ root ] in
   let edges = [] in
   let order = [ root ] in
-  let body = extract_body source in
+  let body = extract_body_verified source in
   let p = { proj_nodes = nodes; proj_edges = edges; proj_body = body } in
   (* No declared-feature list at this layer; the T3 obligation is driven by the
      BODY's required features (Residual-3), which is the load-bearing one. *)
@@ -380,7 +416,7 @@ let extract_of_project ~(source : string) (proj : Project_model.t) :
     project * profile * node list =
   let g = Build_graph.of_project proj in
   let nodes, edges, order = graph_of_build_graph g in
-  let body = extract_body source in
+  let body = extract_body_verified source in
   let p = { proj_nodes = nodes; proj_edges = edges; proj_body = body } in
   let declared =
     List.filter_map feature_of_project_feature

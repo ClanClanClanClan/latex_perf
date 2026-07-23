@@ -2,6 +2,34 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.59] — 2026-07-23
+
+**Track R R1 — fast compile-readiness kernel: `--compile-check` now runs only the
+37 compile-blocking rules and parses once, with PROVABLY-IDENTICAL verdicts.** The
+previous `--compile-check` path called `Validators.run_all` (parse the whole doc,
+build `Semantic_state.analyze`, scan the `Event_bus`, execute all ~641 registered
+rules) AND parsed a second time in `t0_check`, then FILTERED the results down to the
+37 compile-blocking rules (`DELIM-`/`ENC-`/`PRT-` prefixes). This ran 641 rules to
+use 37 and parsed twice.
+- **Fast kernel** (`compile_contract.ml`, `Validators.run_compile_blocking`): a single
+  shared `Parser_l2.parse_located`, then only the 37 compile-blocking rules. Sound
+  because validators are pure functions of `(source + shared context)` and the
+  compile-blocking set is a fixed prefix filter — running only those rules yields the
+  same results as running all then filtering.
+- **fast==full parity gate** (`test_fast_readiness_parity.ml`, wired into `runtest`):
+  for every `.tex` under `corpora/` the fast-kernel verdict and the full-path verdict
+  are asserted byte-identical (same Ready/NotReady and, for NotReady, the same
+  normalised reason set). Verified over 473 corpus docs + a size-stratified sample of
+  150 real papers driven through the CLI (`--compile-check` vs `--compile-check-full`),
+  0 divergences. `--compile-check-full` retains the original full path.
+- **~6.8x faster on large documents** (`bench_compile_check.sh`,
+  `bench_readiness_kernel.ml`): a ~316KB paper drops from ~6.3s (full) to ~0.93s (fast);
+  a typical ~50KB paper drops from ~0.92s to ~0.14s. In-process the shared parse is
+  ~1.2ms (50KB) / ~9.6ms (316KB); the 37-rule execution dominates the remaining fast
+  compute.
+- **No new rules or proofs** — producer count unchanged at 167, theorem count unchanged
+  at 1,543. This is a runtime optimization, not a semantic change.
+
 ## [v27.1.58] — 2026-07-23
 
 **FLAGSHIP gap #1 closed — verified bytes→body_token front-end: `pdflatex_compile_safe`

@@ -30,4 +30,5 @@ val structural_fatal_reasons : string -> string list
 val double_script_fatal : string -> string option
 val no_documentclass_fatal : string -> string option
 val usepackage_after_begin_fatal : string -> string option
-val find_moving_arg_ranges : string -> (int * int) list
+val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
+val find_ref_alias_macros : string -> string list

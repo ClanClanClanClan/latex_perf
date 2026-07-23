@@ -136,6 +136,39 @@ let () =
         (not_fires Compile_gate_checks.double_script_fatal
            (doc "$a$ see \\eqref{eq:def_A_gamma}"))
         t);
+  (* REGRESSION (corpus scan, Article 015): a commented-out line carrying an
+     UNBALANCED `$$`/`$` desynchronises find_math_ranges' display-math pairing
+     and spills a fake math range over the following prose; a custom \ref-alias
+     in that prose (\reff{def_S_tilde}) then reads as a double subscript. The
+     comment-blanked math computation must prevent this — pdflatex compiles the
+     real file. *)
+  run "commented unbalanced $$ does not spill math onto \\reff key" (fun t ->
+      expect
+        (not_fires Compile_gate_checks.double_script_fatal
+           (doc
+              "\\def\\reff#1{{\\ref{#1}}}\n%$$a_b_c$$\n$$x=y$$\nThen \\reff{def_S_tilde} holds."))
+        t);
+  (* REGRESSION (corpus scan, 2507.09077 main_arXiv): a user-defined \ref-alias
+     (\newcommand{\Eqn}[1]{{(\ref{eq:#1})}}) used INSIDE real math — its
+     label-key underscores are not script operators; pdflatex compiles. *)
+  run "custom \\newcommand ref-alias inside math immune" (fun t ->
+      expect
+        (not_fires Compile_gate_checks.double_script_fatal
+           (doc
+              "\\newcommand{\\Eqn}[1]{{(\\ref{eq:#1})}}\n$x \\gets \\Eqn{ssnl_v_update}$"))
+        t);
+  run "custom \\def ref-alias inside math immune" (fun t ->
+      expect
+        (not_fires Compile_gate_checks.double_script_fatal
+           (doc "\\def\\myref#1{\\eqref{#1}}\n$z = \\myref{a_b_c}$"))
+        t);
+  (* SOUNDNESS GUARD: a genuine math-typesetting macro (\mathrm) is NOT a
+     ref-alias, so a real double superscript inside it must STILL fire. *)
+  run "double superscript inside \\mathrm still fires" (fun t ->
+      expect
+        (fires Compile_gate_checks.double_script_fatal
+           (doc "$\\mathrm{x^a^b}$"))
+        t);
   ()
 
 (* ── Detector (3): no \documentclass ────────────────────────────────────── *)

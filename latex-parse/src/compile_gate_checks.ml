@@ -41,11 +41,180 @@ let moving_arg_commands =
    we do not treat a `\label` written inside a comment/verbatim as real. Only
    the immediately-following brace group (after optional `[...]` opts and
    whitespace) is captured — enough to cover the label/ref/cite/url key. *)
-let find_moving_arg_ranges (s : string) : (int * int) list =
+(* [find_ref_alias_macros s] — names of user-defined macros that are REFERENCE
+   ALIASES: a `\newcommand{\Foo}[k]{…}` or `\def\Foo…{…}` whose body invokes a
+   reference/label/cite command (`\ref`, `\eqref`, `\pageref`, `\cref`, `\Cref`,
+   `\autoref`, `\hyperref`, `\nameref`, `\vref`, `\cite…`, `\label`). Such a
+   macro's brace argument is a LABEL KEY, never re-typeset as math — so a `_`/`^`
+   inside `\Foo{eq:a_b}` (even inside `$…$`, e.g. `\Eqn{ssnl_v_update}` inside a
+   `cases` environment) is an ordinary character, not a script operator. We must
+   fold these names into the moving-arg skip or the double-script detector
+   over-rejects real compiling papers that use custom `\ref` wrappers (very
+   common: `\reff`, `\Eqn`, `\eqreff`, `\myref`…). Detection is CONSERVATIVE for
+   soundness: we only add a name whose definition body provably contains a
+   reference command, so a genuine math-typesetting macro (`\mathrm`, `\text`)
+   is never skipped and true `x^a^b` fatals inside those are still caught. *)
+let ref_body_commands =
+  [
+    "\\ref"; "\\eqref"; "\\pageref"; "\\cref"; "\\Cref"; "\\autoref";
+    "\\nameref"; "\\vref"; "\\vpageref"; "\\hyperref"; "\\cite"; "\\citep";
+    "\\citet"; "\\label"; "\\crefrange"; "\\Crefrange"; "\\ref*";
+  ]
+
+let find_ref_alias_macros (s : string) : string list =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts pfx j =
+    let pl = String.length pfx in
+    j + pl <= n && String.sub s j pl = pfx
+  in
+  (* read a matched brace group starting at the '{' at [k]; returns (inner_start,
+     inner_stop, past_close) or None. *)
+  let read_group k =
+    if k >= n || String.unsafe_get s k <> '{' then None
+    else
+      let d = ref 1 and m = ref (k + 1) in
+      let start = k + 1 in
+      while !m < n && !d > 0 do
+        let c = String.unsafe_get s !m in
+        if c = '{' && not (is_escaped !m) then incr d
+        else if c = '}' && not (is_escaped !m) then decr d;
+        incr m
+      done;
+      if !d = 0 then Some (start, !m - 1, !m) else None
+  in
+  let body_is_ref body =
+    List.exists
+      (fun cmd ->
+        (* substring search for cmd in body *)
+        let cl = String.length cmd and bl = String.length body in
+        let rec go i =
+          if i + cl > bl then false
+          else if String.sub body i cl = cmd then true
+          else go (i + 1)
+        in
+        go 0)
+      ref_body_commands
+  in
+  let names = ref [] in
+  let i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if in_ranges skip pos then incr i
+    else if
+      (not (is_escaped pos))
+      && (starts "\\newcommand" pos || starts "\\renewcommand" pos
+        || starts "\\providecommand" pos)
+    then (
+      (* \newcommand{\Foo}[..]{body}  or  \newcommand\Foo[..]{body} *)
+      let j = ref (pos + 1) in
+      while !j < n && is_letter (String.unsafe_get s !j) do
+        incr j
+      done;
+      (* skip optional '*' *)
+      if !j < n && String.unsafe_get s !j = '*' then incr j;
+      (* skip whitespace *)
+      while
+        !j < n
+        &&
+        let c = String.unsafe_get s !j in
+        c = ' ' || c = '\t' || c = '\n' || c = '\r'
+      do
+        incr j
+      done;
+      let name = ref "" in
+      (if !j < n && String.unsafe_get s !j = '{' then (
+         (* {\Foo} *)
+         match read_group !j with
+         | Some (a, b, past) ->
+             let inner = String.sub s a (b - a) in
+             (if String.length inner >= 2 && inner.[0] = '\\' then
+                name := String.sub inner 1 (String.length inner - 1));
+             j := past
+         | None -> ())
+       else if !j < n && String.unsafe_get s !j = '\\' then (
+         (* \Foo *)
+         let k = ref (!j + 1) in
+         while !k < n && is_letter (String.unsafe_get s !k) do
+           incr k
+         done;
+         name := String.sub s (!j + 1) (!k - !j - 1);
+         j := !k));
+      (* skip [..] optional-arg specs and whitespace to reach the body {..} *)
+      let cont = ref true in
+      while !cont && !j < n do
+        let c = String.unsafe_get s !j in
+        if c = ' ' || c = '\t' || c = '\n' || c = '\r' then incr j
+        else if c = '[' then (
+          let d = ref 1 in
+          incr j;
+          while !j < n && !d > 0 do
+            (match String.unsafe_get s !j with
+            | '[' -> incr d
+            | ']' -> decr d
+            | _ -> ());
+            incr j
+          done)
+        else cont := false
+      done;
+      (match read_group !j with
+      | Some (a, b, past) ->
+          let body = String.sub s a (b - a) in
+          if !name <> "" && body_is_ref body then names := !name :: !names;
+          i := past
+      | None -> i := !j))
+    else if (not (is_escaped pos)) && starts "\\def" pos then (
+      (* \def\Foo<params>{body} — capture name then find first balanced {..} *)
+      let j = ref (pos + String.length "\\def") in
+      while
+        !j < n
+        &&
+        let c = String.unsafe_get s !j in
+        c = ' ' || c = '\t' || c = '\n' || c = '\r'
+      do
+        incr j
+      done;
+      if !j < n && String.unsafe_get s !j = '\\' then (
+        let k = ref (!j + 1) in
+        while !k < n && is_letter (String.unsafe_get s !k) do
+          incr k
+        done;
+        let nm = String.sub s (!j + 1) (!k - !j - 1) in
+        (* scan forward to the first unescaped '{' at brace depth 0 (skipping the
+           param text like #1#2) then read the body group *)
+        let m = ref !k in
+        while
+          !m < n
+          && not (String.unsafe_get s !m = '{' && not (is_escaped !m))
+        do
+          incr m
+        done;
+        match read_group !m with
+        | Some (a, b, past) ->
+            let body = String.sub s a (b - a) in
+            if nm <> "" && body_is_ref body then names := nm :: names.contents;
+            i := past
+        | None -> i := !m)
+      else incr i)
+    else incr i
+  done;
+  !names
+
+let find_moving_arg_ranges ?(extra = []) (s : string) : (int * int) list =
   let n = String.length s in
   let skip = Validators_common.find_verbatim_comment_url_ranges s in
   let cmd_tbl = Hashtbl.create 64 in
   List.iter (fun c -> Hashtbl.replace cmd_tbl c ()) moving_arg_commands;
+  List.iter (fun c -> Hashtbl.replace cmd_tbl c ()) extra;
   let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
   let is_escaped idx =
     let rec count b acc =
@@ -129,16 +298,35 @@ let find_moving_arg_ranges (s : string) : (int * int) list =
 
 let double_script_fatal (s : string) : string option =
   let n = String.length s in
-  let math = Validators_common.find_math_ranges s in
   (* Skip comment/verbatim/url AND moving-argument ranges (label/ref/cite keys),
      where a `_`/`^`/`'` is an ordinary character, not a script operator. Without
      the latter, labels like `eq:BSDE_P_W` inside align/equation environments —
      which [find_math_ranges] marks as math — would produce a FALSE `x_a_b`
      double-subscript and over-reject real compiling papers. *)
-  let skip =
-    Validators_common.find_verbatim_comment_url_ranges s
-    @ find_moving_arg_ranges s
-  in
+  let vcu = Validators_common.find_verbatim_comment_url_ranges s in
+  (* Include user-defined \ref-alias macros (\reff, \Eqn, …) so their label-key
+     arguments are skipped exactly like the built-in \ref/\label. *)
+  let ref_aliases = find_ref_alias_macros s in
+  let skip = vcu @ find_moving_arg_ranges ~extra:ref_aliases s in
+  (* Math ranges MUST be computed on a comment/verbatim/url-BLANKED copy of the
+     source. [find_math_ranges] is context-blind about comments, so a `$` or `$$`
+     written inside a commented-out line (ubiquitous in real papers — a stray or
+     unbalanced `$$` in a `%…` block) desynchronises ALL downstream math pairing
+     and spills a huge FAKE math range over the following prose. That prose often
+     contains a custom `\ref`-alias (`\reff{def_S_tilde}`, `\Eqn{ssnl_v_update}`)
+     whose label-key underscores would then read as a `x_a_b` double subscript —
+     a false-NOT-READY on a paper pdflatex compiles cleanly. Blanking the vcu
+     ranges to spaces (offset-preserving; a space is never a math toggle)
+     neutralises those commented dollars so the math pairing is accurate. This is
+     the same defence [Validators_common.compute_exempt_ranges] applies. *)
+  let blanked = Bytes.of_string s in
+  List.iter
+    (fun (a, b) ->
+      for k = a to b - 1 do
+        if k >= 0 && k < n then Bytes.set blanked k ' '
+      done)
+    vcu;
+  let math = Validators_common.find_math_ranges (Bytes.unsafe_to_string blanked) in
   let in_math off = Validators_common.is_in_math_range math off in
   (* Per brace-frame state: has the current base seen a super / a sub, and has
      a `^` (caret, not just primes) locked the superscript slot. [prime_only]

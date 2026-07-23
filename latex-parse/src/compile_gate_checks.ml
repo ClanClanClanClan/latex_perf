@@ -5,11 +5,11 @@
     the targeted deterministic-structural condition. Each boundary below was
     pinned empirically against pdflatex (compiling-vs-failing counter-examples
     are enumerated in [test_compile_gate.ml]). Detectors are pure functions of
-    the source bytes, comment/verbatim/context-aware via the
-    [Validators_common] range helpers, so they are cheap and identical on the
-    fast and full readiness branches. A detected fatal is the DANGEROUS
-    direction to miss (false-READY), so each detector is conservative: it fires
-    only when the fatal boundary is unambiguous, never on a compiling form. *)
+    the source bytes, comment/verbatim/context-aware via the [Validators_common]
+    range helpers, so they are cheap and identical on the fast and full
+    readiness branches. A detected fatal is the DANGEROUS direction to miss
+    (false-READY), so each detector is conservative: it fires only when the
+    fatal boundary is unambiguous, never on a compiling form. *)
 
 (* A byte offset is "skipped" (comment / verbatim / \verb / url) — no detector
    reads structural meaning out of those bytes. *)
@@ -19,20 +19,54 @@ let in_ranges (ranges : (int * int) list) (off : int) : bool =
 (* Commands whose brace argument is a MOVING / NAME argument that pdflatex does
    NOT re-typeset in the current mode: the argument bytes are stored/used as a
    key, not executed, so a `_`/`^`/`&`/`'` inside them is an ordinary character,
-   NOT a script/alignment operator. Empirically confirmed: `$...\label{a_b_c}...$`
-   and `\Cref{a&b}` both COMPILE. We must exclude these argument ranges from the
-   structural detectors or they over-reject on real papers (labels like
-   `eq:BSDE_P_W` are ubiquitous inside align/equation environments, which
-   [find_math_ranges] otherwise flags as math). *)
+   NOT a script/alignment operator. Empirically confirmed:
+   `$...\label{a_b_c}...$` and `\Cref{a&b}` both COMPILE. We must exclude these
+   argument ranges from the structural detectors or they over-reject on real
+   papers (labels like `eq:BSDE_P_W` are ubiquitous inside align/equation
+   environments, which [find_math_ranges] otherwise flags as math). *)
 let moving_arg_commands =
   [
-    "label"; "ref"; "eqref"; "cref"; "Cref"; "crefrange"; "Crefrange";
-    "pageref"; "autoref"; "nameref"; "vref"; "vpageref"; "hyperref";
-    "hypertarget"; "hyperlink"; "href"; "url"; "nolinkurl"; "path";
-    "cite"; "citep"; "citet"; "citeauthor"; "citeyear"; "citealp";
-    "citealt"; "textcite"; "parencite"; "autocite"; "footcite"; "cites";
-    "index"; "input"; "include"; "includeonly"; "bibliography"; "InputIfFileExists";
-    "includegraphics"; "graphicspath"; "verbatiminput"; "lstinputlisting";
+    "label";
+    "ref";
+    "eqref";
+    "cref";
+    "Cref";
+    "crefrange";
+    "Crefrange";
+    "pageref";
+    "autoref";
+    "nameref";
+    "vref";
+    "vpageref";
+    "hyperref";
+    "hypertarget";
+    "hyperlink";
+    "href";
+    "url";
+    "nolinkurl";
+    "path";
+    "cite";
+    "citep";
+    "citet";
+    "citeauthor";
+    "citeyear";
+    "citealp";
+    "citealt";
+    "textcite";
+    "parencite";
+    "autocite";
+    "footcite";
+    "cites";
+    "index";
+    "input";
+    "include";
+    "includeonly";
+    "bibliography";
+    "InputIfFileExists";
+    "includegraphics";
+    "graphicspath";
+    "verbatiminput";
+    "lstinputlisting";
   ]
 
 (* [find_moving_arg_ranges s] — half-open byte ranges of the FIRST brace group
@@ -45,20 +79,35 @@ let moving_arg_commands =
    ALIASES: a `\newcommand{\Foo}[k]{…}` or `\def\Foo…{…}` whose body invokes a
    reference/label/cite command (`\ref`, `\eqref`, `\pageref`, `\cref`, `\Cref`,
    `\autoref`, `\hyperref`, `\nameref`, `\vref`, `\cite…`, `\label`). Such a
-   macro's brace argument is a LABEL KEY, never re-typeset as math — so a `_`/`^`
-   inside `\Foo{eq:a_b}` (even inside `$…$`, e.g. `\Eqn{ssnl_v_update}` inside a
-   `cases` environment) is an ordinary character, not a script operator. We must
-   fold these names into the moving-arg skip or the double-script detector
-   over-rejects real compiling papers that use custom `\ref` wrappers (very
-   common: `\reff`, `\Eqn`, `\eqreff`, `\myref`…). Detection is CONSERVATIVE for
-   soundness: we only add a name whose definition body provably contains a
-   reference command, so a genuine math-typesetting macro (`\mathrm`, `\text`)
-   is never skipped and true `x^a^b` fatals inside those are still caught. *)
+   macro's brace argument is a LABEL KEY, never re-typeset as math — so a
+   `_`/`^` inside `\Foo{eq:a_b}` (even inside `$…$`, e.g. `\Eqn{ssnl_v_update}`
+   inside a `cases` environment) is an ordinary character, not a script
+   operator. We must fold these names into the moving-arg skip or the
+   double-script detector over-rejects real compiling papers that use custom
+   `\ref` wrappers (very common: `\reff`, `\Eqn`, `\eqreff`, `\myref`…).
+   Detection is CONSERVATIVE for soundness: we only add a name whose definition
+   body provably contains a reference command, so a genuine math-typesetting
+   macro (`\mathrm`, `\text`) is never skipped and true `x^a^b` fatals inside
+   those are still caught. *)
 let ref_body_commands =
   [
-    "\\ref"; "\\eqref"; "\\pageref"; "\\cref"; "\\Cref"; "\\autoref";
-    "\\nameref"; "\\vref"; "\\vpageref"; "\\hyperref"; "\\cite"; "\\citep";
-    "\\citet"; "\\label"; "\\crefrange"; "\\Crefrange"; "\\ref*";
+    "\\ref";
+    "\\eqref";
+    "\\pageref";
+    "\\cref";
+    "\\Cref";
+    "\\autoref";
+    "\\nameref";
+    "\\vref";
+    "\\vpageref";
+    "\\hyperref";
+    "\\cite";
+    "\\citep";
+    "\\citet";
+    "\\label";
+    "\\crefrange";
+    "\\Crefrange";
+    "\\ref*";
   ]
 
 let find_ref_alias_macros (s : string) : string list =
@@ -77,8 +126,8 @@ let find_ref_alias_macros (s : string) : string list =
     let pl = String.length pfx in
     j + pl <= n && String.sub s j pl = pfx
   in
-  (* read a matched brace group starting at the '{' at [k]; returns (inner_start,
-     inner_stop, past_close) or None. *)
+  (* read a matched brace group starting at the '{' at [k]; returns
+     (inner_start, inner_stop, past_close) or None. *)
   let read_group k =
     if k >= n || String.unsafe_get s k <> '{' then None
     else
@@ -112,10 +161,11 @@ let find_ref_alias_macros (s : string) : string list =
     if in_ranges skip pos then incr i
     else if
       (not (is_escaped pos))
-      && (starts "\\newcommand" pos || starts "\\renewcommand" pos
-        || starts "\\providecommand" pos)
+      && (starts "\\newcommand" pos
+         || starts "\\renewcommand" pos
+         || starts "\\providecommand" pos)
     then (
-      (* \newcommand{\Foo}[..]{body}  or  \newcommand\Foo[..]{body} *)
+      (* \newcommand{\Foo}[..]{body} or \newcommand\Foo[..]{body} *)
       let j = ref (pos + 1) in
       while !j < n && is_letter (String.unsafe_get s !j) do
         incr j
@@ -132,23 +182,23 @@ let find_ref_alias_macros (s : string) : string list =
         incr j
       done;
       let name = ref "" in
-      (if !j < n && String.unsafe_get s !j = '{' then (
-         (* {\Foo} *)
-         match read_group !j with
-         | Some (a, b, past) ->
-             let inner = String.sub s a (b - a) in
-             (if String.length inner >= 2 && inner.[0] = '\\' then
-                name := String.sub inner 1 (String.length inner - 1));
-             j := past
-         | None -> ())
-       else if !j < n && String.unsafe_get s !j = '\\' then (
-         (* \Foo *)
-         let k = ref (!j + 1) in
-         while !k < n && is_letter (String.unsafe_get s !k) do
-           incr k
-         done;
-         name := String.sub s (!j + 1) (!k - !j - 1);
-         j := !k));
+      if !j < n && String.unsafe_get s !j = '{' then
+        (* {\Foo} *)
+        match read_group !j with
+        | Some (a, b, past) ->
+            let inner = String.sub s a (b - a) in
+            if String.length inner >= 2 && inner.[0] = '\\' then
+              name := String.sub inner 1 (String.length inner - 1);
+            j := past
+        | None -> ()
+      else if !j < n && String.unsafe_get s !j = '\\' then (
+        (* \Foo *)
+        let k = ref (!j + 1) in
+        while !k < n && is_letter (String.unsafe_get s !k) do
+          incr k
+        done;
+        name := String.sub s (!j + 1) (!k - !j - 1);
+        j := !k);
       (* skip [..] optional-arg specs and whitespace to reach the body {..} *)
       let cont = ref true in
       while !cont && !j < n do
@@ -166,12 +216,12 @@ let find_ref_alias_macros (s : string) : string list =
           done)
         else cont := false
       done;
-      (match read_group !j with
+      match read_group !j with
       | Some (a, b, past) ->
           let body = String.sub s a (b - a) in
           if !name <> "" && body_is_ref body then names := !name :: !names;
           i := past
-      | None -> i := !j))
+      | None -> i := !j)
     else if (not (is_escaped pos)) && starts "\\def" pos then (
       (* \def\Foo<params>{body} — capture name then find first balanced {..} *)
       let j = ref (pos + String.length "\\def") in
@@ -189,12 +239,11 @@ let find_ref_alias_macros (s : string) : string list =
           incr k
         done;
         let nm = String.sub s (!j + 1) (!k - !j - 1) in
-        (* scan forward to the first unescaped '{' at brace depth 0 (skipping the
-           param text like #1#2) then read the body group *)
+        (* scan forward to the first unescaped '{' at brace depth 0 (skipping
+           the param text like #1#2) then read the body group *)
         let m = ref !k in
         while
-          !m < n
-          && not (String.unsafe_get s !m = '{' && not (is_escaped !m))
+          !m < n && not (String.unsafe_get s !m = '{' && not (is_escaped !m))
         do
           incr m
         done;
@@ -280,45 +329,44 @@ let find_moving_arg_ranges ?(extra = []) (s : string) : (int * int) list =
 
    Model (pinned against pdflatex, see test cases): within one math atom (base),
    TeX tracks a superscript slot and a subscript slot at the current brace
-   depth.
-     - `^` fills the superscript slot; a 2nd `^` on the same base → fatal.
-     - `_` fills the subscript slot; a 2nd `_` on the same base → fatal.
-     - `'` (prime) IS a superscript. A prime BEFORE any `^` merges with the
-       following/other primes (x''^b compiles). A prime AFTER `^` already
-       filled the superscript slot → Double superscript, fatal (x^b' fails).
-     - super and sub share the SAME base: `x^a_b^c` fails (two supers on x);
-       `x^a_b` compiles (one of each).
-     - The base RESETS when a new ordinary atom starts (another char, group,
-       or command that is not itself a script operator): `x^a y^b`, `x^a{}^b`,
-       `x^a b^c` all compile.
-     - A group `{...}` is its OWN scope: scripts inside it are tracked at the
-       deeper depth and do not leak out; entering `{` pushes a fresh frame.
+   depth. - `^` fills the superscript slot; a 2nd `^` on the same base → fatal.
+   - `_` fills the subscript slot; a 2nd `_` on the same base → fatal. - `'`
+   (prime) IS a superscript. A prime BEFORE any `^` merges with the
+   following/other primes (x''^b compiles). A prime AFTER `^` already filled the
+   superscript slot → Double superscript, fatal (x^b' fails). - super and sub
+   share the SAME base: `x^a_b^c` fails (two supers on x); `x^a_b` compiles (one
+   of each). - The base RESETS when a new ordinary atom starts (another char,
+   group, or command that is not itself a script operator): `x^a y^b`,
+   `x^a{}^b`, `x^a b^c` all compile. - A group `{...}` is its OWN scope: scripts
+   inside it are tracked at the deeper depth and do not leak out; entering `{`
+   pushes a fresh frame.
 
    We only scan bytes inside math ranges, skipping comment/verbatim. *)
 
 let double_script_fatal (s : string) : string option =
   let n = String.length s in
   (* Skip comment/verbatim/url AND moving-argument ranges (label/ref/cite keys),
-     where a `_`/`^`/`'` is an ordinary character, not a script operator. Without
-     the latter, labels like `eq:BSDE_P_W` inside align/equation environments —
-     which [find_math_ranges] marks as math — would produce a FALSE `x_a_b`
-     double-subscript and over-reject real compiling papers. *)
+     where a `_`/`^`/`'` is an ordinary character, not a script operator.
+     Without the latter, labels like `eq:BSDE_P_W` inside align/equation
+     environments — which [find_math_ranges] marks as math — would produce a
+     FALSE `x_a_b` double-subscript and over-reject real compiling papers. *)
   let vcu = Validators_common.find_verbatim_comment_url_ranges s in
   (* Include user-defined \ref-alias macros (\reff, \Eqn, …) so their label-key
      arguments are skipped exactly like the built-in \ref/\label. *)
   let ref_aliases = find_ref_alias_macros s in
   let skip = vcu @ find_moving_arg_ranges ~extra:ref_aliases s in
   (* Math ranges MUST be computed on a comment/verbatim/url-BLANKED copy of the
-     source. [find_math_ranges] is context-blind about comments, so a `$` or `$$`
-     written inside a commented-out line (ubiquitous in real papers — a stray or
-     unbalanced `$$` in a `%…` block) desynchronises ALL downstream math pairing
-     and spills a huge FAKE math range over the following prose. That prose often
-     contains a custom `\ref`-alias (`\reff{def_S_tilde}`, `\Eqn{ssnl_v_update}`)
-     whose label-key underscores would then read as a `x_a_b` double subscript —
-     a false-NOT-READY on a paper pdflatex compiles cleanly. Blanking the vcu
-     ranges to spaces (offset-preserving; a space is never a math toggle)
-     neutralises those commented dollars so the math pairing is accurate. This is
-     the same defence [Validators_common.compute_exempt_ranges] applies. *)
+     source. [find_math_ranges] is context-blind about comments, so a `$` or
+     `$$` written inside a commented-out line (ubiquitous in real papers — a
+     stray or unbalanced `$$` in a `%…` block) desynchronises ALL downstream
+     math pairing and spills a huge FAKE math range over the following prose.
+     That prose often contains a custom `\ref`-alias (`\reff{def_S_tilde}`,
+     `\Eqn{ssnl_v_update}`) whose label-key underscores would then read as a
+     `x_a_b` double subscript — a false-NOT-READY on a paper pdflatex compiles
+     cleanly. Blanking the vcu ranges to spaces (offset-preserving; a space is
+     never a math toggle) neutralises those commented dollars so the math
+     pairing is accurate. This is the same defence
+     [Validators_common.compute_exempt_ranges] applies. *)
   let blanked = Bytes.of_string s in
   List.iter
     (fun (a, b) ->
@@ -326,12 +374,14 @@ let double_script_fatal (s : string) : string option =
         if k >= 0 && k < n then Bytes.set blanked k ' '
       done)
     vcu;
-  let math = Validators_common.find_math_ranges (Bytes.unsafe_to_string blanked) in
+  let math =
+    Validators_common.find_math_ranges (Bytes.unsafe_to_string blanked)
+  in
   let in_math off = Validators_common.is_in_math_range math off in
-  (* Per brace-frame state: has the current base seen a super / a sub, and has
-     a `^` (caret, not just primes) locked the superscript slot. [prime_only]
-     lets consecutive primes-before-caret coexist (x''^b) while a prime after a
-     caret (x^b') is fatal. *)
+  (* Per brace-frame state: has the current base seen a super / a sub, and has a
+     `^` (caret, not just primes) locked the superscript slot. [prime_only] lets
+     consecutive primes-before-caret coexist (x''^b) while a prime after a caret
+     (x^b') is fatal. *)
   let result = ref None in
   (* stack of mutable frames: (sup_seen, sub_seen, caret_super) *)
   let sup = Array.make 4096 false in
@@ -358,18 +408,18 @@ let double_script_fatal (s : string) : string option =
      control symbol). *)
   let skip_cs pos =
     let j = ref (pos + 1) in
-    if !j < n then (
-      let cc = String.unsafe_get s !j in
-      if (cc >= 'a' && cc <= 'z') || (cc >= 'A' && cc <= 'Z') then
-        while
-          !j < n
-          &&
-          let d = String.unsafe_get s !j in
-          (d >= 'a' && d <= 'z') || (d >= 'A' && d <= 'Z')
-        do
-          incr j
-        done
-      else incr j);
+    (if !j < n then
+       let cc = String.unsafe_get s !j in
+       if (cc >= 'a' && cc <= 'z') || (cc >= 'A' && cc <= 'Z') then
+         while
+           !j < n
+           &&
+           let d = String.unsafe_get s !j in
+           (d >= 'a' && d <= 'z') || (d >= 'A' && d <= 'Z')
+         do
+           incr j
+         done
+       else incr j);
     !j
   in
   (* [consume_arg pos] skips ONE script argument starting at [pos]: whitespace,
@@ -398,8 +448,8 @@ let double_script_fatal (s : string) : string option =
   while !i < n && !result = None do
     let pos = !i in
     if in_ranges skip pos || not (in_math pos) then (
-      (* Leaving math or skipped bytes: nothing to track; a non-math boundary
-         is also a base reset for whatever follows. *)
+      (* Leaving math or skipped bytes: nothing to track; a non-math boundary is
+         also a base reset for whatever follows. *)
       reset_base !depth;
       incr i)
     else
@@ -468,25 +518,24 @@ let double_script_fatal (s : string) : string option =
   done;
   !result
 
-(* ── Detector (2), DROPPED: misplaced alignment tab `&` ───────────────────
-   An unescaped `&` outside every alignment context IS fatal in pdflatex
-   ("! Misplaced alignment tab character &."), but a SOUND detector for it
-   cannot be made free of over-rejection on real compiling papers without full
-   macro expansion:
-     - Real papers define custom alignment-environment shortcut macros
-       (\def\bea{\begin{eqnarray}}, \bal, \be, …); a `&` inside `\bea … \eea`
-       is legal but has no `\begin{...}` for an environment-stack to see.
-     - A `&` inside a moving/name argument (\label{a&b}, \href{…&…}, \Cref{…})
-       COMPILES (the argument is not re-typeset).
-   A cross-check over the real published-paper corpus fired on 107 root
-   documents that pdflatex compiles cleanly — a gross over-rejection. Per the
-   STEP's rule ("if it can't be made precise, drop it and say so"), the `&`
-   detector is NOT part of the gate. Detectors (1), (3), (4) remain, and each
-   was corpus-validated to zero over-rejection.  A [misplaced_amp_fatal] stub is
-   deliberately not exported; the gate is the three precise detectors below. *)
+(* ── Detector (2), DROPPED: misplaced alignment tab `&` ─────────────────── An
+   unescaped `&` outside every alignment context IS fatal in pdflatex ("!
+   Misplaced alignment tab character &."), but a SOUND detector for it cannot be
+   made free of over-rejection on real compiling papers without full macro
+   expansion: - Real papers define custom alignment-environment shortcut macros
+   (\def\bea{\begin{eqnarray}}, \bal, \be, …); a `&` inside `\bea … \eea` is
+   legal but has no `\begin{...}` for an environment-stack to see. - A `&`
+   inside a moving/name argument (\label{a&b}, \href{…&…}, \Cref{…}) COMPILES
+   (the argument is not re-typeset). A cross-check over the real published-paper
+   corpus fired on 107 root documents that pdflatex compiles cleanly — a gross
+   over-rejection. Per the STEP's rule ("if it can't be made precise, drop it
+   and say so"), the `&` detector is NOT part of the gate. Detectors (1), (3),
+   (4) remain, and each was corpus-validated to zero over-rejection. A
+   [misplaced_amp_fatal] stub is deliberately not exported; the gate is the
+   three precise detectors below. *)
 
-(* ── Detector (3): no \documentclass (nor \documentstyle) ─────────────────
-   A document with no \documentclass / \documentstyle anywhere outside
+(* ── Detector (3): no \documentclass (nor \documentstyle) ───────────────── A
+   document with no \documentclass / \documentstyle anywhere outside
    comment/verbatim cannot set up the format → fatal (no PDF). *)
 
 let no_documentclass_fatal (s : string) : string option =
@@ -524,8 +573,8 @@ let no_documentclass_fatal (s : string) : string option =
 (* ── Detector (4): \usepackage after \begin{document} ─────────────────────
    \usepackage is a preamble-only command; any occurrence after the first
    \begin{document} → "! LaTeX Error: Can be used only in preamble." FATAL.
-   Comment/verbatim-aware for both the \begin{document} anchor and the
-   offending \usepackage. *)
+   Comment/verbatim-aware for both the \begin{document} anchor and the offending
+   \usepackage. *)
 
 let usepackage_after_begin_fatal (s : string) : string option =
   let n = String.length s in
@@ -552,7 +601,8 @@ let usepackage_after_begin_fatal (s : string) : string option =
       begin_doc := pos
     else incr i
   done;
-  if !begin_doc < 0 then None (* no document body; detector (3)/parse covers it *)
+  if !begin_doc < 0 then None
+    (* no document body; detector (3)/parse covers it *)
   else
     let result = ref None in
     let j = ref (!begin_doc + String.length "\\begin{document}") in
@@ -575,7 +625,8 @@ let structural_fatal_reasons (source : string) : string list =
     [
       double_script_fatal;
       (* Detector (2), the misplaced-`&` detector, is DROPPED — see its section
-         above: it cannot be made over-rejection-free without macro expansion. *)
+         above: it cannot be made over-rejection-free without macro
+         expansion. *)
       no_documentclass_fatal;
       usepackage_after_begin_fatal;
     ]

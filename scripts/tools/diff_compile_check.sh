@@ -56,10 +56,8 @@ fail_undefined_environment.tex
 fail_bad_usepackage.tex
 fail_align_no_amsmath.tex
 fail_math_in_text.tex
-fail_double_subscript.tex
 fail_newcommand_wrong_args.tex
 fail_bad_graphics_include.tex
-fail_no_documentclass.tex
 fail_missing_begin_document.tex
 "
 

@@ -102,6 +102,16 @@ Two distinct artefacts share the "T0–T5" naming and must not be conflated:
    - **T2/T3** are real (include-graph closure; declared-feature × engine).
    - **T4** is real when a sibling `.aux` is present (duplicate labels), else
      skipped. **T1** is a no-op at this layer (never claims a T1 property).
+   - **Structural-fatal gate (v27.1.60, `compile_gate_checks.ml`)**: a small set of
+     deterministic, decidable-from-token-structure compile-fatals is now caught in
+     addition to T0/T5 — **double super/subscript**, **missing `\documentclass`**, and
+     **`\usepackage` after `\begin{document}`** — via comment-/verbatim-/math-/
+     moving-arg-aware detectors, wired into both the fast readiness kernel and the full
+     path. **Misplaced `&` was deliberately excluded** (it needs macro expansion — `\def`
+     alignment macros would make a structural gate over-reject; it stays a documented
+     false-READY on the LP-Extended boundary). The macro/package-universe false-READY
+     classes (undefined cs/env, missing package/graphics, missing `\usepackage`) also
+     remain out of scope — see the honest residual list in COMPILATION_GUARANTEE.md.
    See [../docs/COMPILATION_GUARANTEE.md](../docs/COMPILATION_GUARANTEE.md).
 
 2. **The proved compile-safety capstone** (`proofs/PdflatexModel.v`,

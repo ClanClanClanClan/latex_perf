@@ -2,6 +2,31 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.60] — 2026-07-23
+
+**SOUNDNESS — precise structural-fatal compile-gate.** `--compile-check` now catches
+deterministic non-Turing compile-fatals it previously reported READY: DOUBLE
+super/subscript (`$a^b^c$`, `$x_a_b$`), NO `\documentclass`, `\usepackage` after
+`\begin{document}` — via dedicated comment/verbatim/math/moving-arg-aware detectors
+(`compile_gate_checks.ml`) wired into both fast and full readiness paths. Zero
+over-rejection across 6,396 real root papers; differential false-READYs reduced by 2
+(`fail_double_subscript`, `fail_no_documentclass` now correctly NOT-READY); fast==full
+parity preserved. **KNOWN REMAINING false-READYs (honestly out of scope):** misplaced
+`&` (requires macro expansion — `\def`-based alignment macros make a precise gate
+over-reject; tied to the LP-Extended boundary), and the macro/package-universe classes
+(undefined control sequence, missing/nonexistent package, undefined environment, missing
+graphics file) which need base+package macro-catalogue modelling.
+- **New fatal detectors** (`compile_gate_checks.ml`): double super/subscript, absent
+  `\documentclass`, and `\usepackage` after `\begin{document}`. Each is comment-,
+  verbatim-, math- and moving-arg-aware so it does not fire on legitimate nested
+  braced scripts (`$x^{a^b}$`), preamble packages, or literal text in verbatim/comments.
+- **Differential fixtures**: added `fail_double_superscript.tex` / `good_nested_superscript.tex`
+  and `fail_usepackage_after_begin.tex` / `good_usepackage_preamble.tex`; removed
+  `fail_double_subscript` and `fail_no_documentclass` from the `diff_compile_check.sh`
+  KNOWN_FALSE_READY allowlist (both now correctly NOT-READY).
+- **No new rules or proofs** — producer count unchanged at 167, theorem count unchanged
+  at 1,543. This adds a gate module, not catalogue rules.
+
 ## [v27.1.59] — 2026-07-23
 
 **Track R R1 — fast compile-readiness kernel: `--compile-check` now runs only the

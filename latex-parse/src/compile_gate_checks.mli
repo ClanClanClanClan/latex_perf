@@ -27,8 +27,24 @@ val structural_fatal_reasons : string -> string list
 (**/**)
 
 (* Exposed for the dedicated unit tests; not part of the stable surface. *)
+
 val double_script_fatal : string -> string option
+(** Detector (1): [Some reason] iff the source contains a fatal un-braced double
+    super/subscript in math (e.g. [x^a^b]); [None] otherwise. *)
+
 val no_documentclass_fatal : string -> string option
+(** Detector (3): [Some reason] iff the source has no [\documentclass] /
+    [\documentstyle]; [None] otherwise. *)
+
 val usepackage_after_begin_fatal : string -> string option
+(** Detector (4): [Some reason] iff a [\usepackage] appears after the first
+    [\begin{document}]; [None] otherwise. *)
+
 val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
+(** Byte ranges of moving/name-argument keys ([\label{..}], [\ref], [\href], …,
+    plus any [?extra] command names) that must be skipped by the math detectors
+    so their [_]/[^] in keys are not read as scripts. *)
+
 val find_ref_alias_macros : string -> string list
+(** Names of user-defined [\ref]-alias macros (e.g. [\newcommand{\reff}{\ref}])
+    whose argument keys also carry moving-argument (skip) semantics. *)

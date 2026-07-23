@@ -106,6 +106,19 @@ brace group, which it silently closes at EOF — are caught by **T5's
   document — the hand-written OCaml mirror is eliminated (residual (a) closed).
   See "Model-connected verdict" below for exactly what is proven vs tested vs
   trusted.
+- **Verified bytes→`body_token` front-end (v27.1.58):** the input end of the
+  pipeline — token/key scanning, FNV-1a hashing, feature detection, body
+  assembly — is now **Coq-extracted-and-proven**
+  (`proofs/BodyTokenFrontEnd.v::compile_safe_of_source`, Qed, 0 admits, Closed →
+  `latex-parse/src/body_token_frontend_extracted.ml`, byte-identical regen).
+  `--compile-check` runs this extracted front-end (`extract_body_verified`), and a
+  differential parity gate proves it byte-identical to the retained hand OCaml over
+  393 corpus files + 422 fixtures. The trusted base at the input end shrinks to the
+  protected-range oracle + string→byte-list conversion (see "Model-connected
+  verdict"). Two honest notes: `fnv_mul_bound (<2^55)` is asserted informally (a
+  Peano-`nat` kernel pathology, validated by the parity test), and the FNV
+  constants are realized as native `int` literals each provably equal to their Coq
+  definitions.
 - **LP-Core classifier: proven tier-decision + certified detection (v27.1.57).**
   The compile guarantee is scoped to the **decidable subset LP-Core**, which
   excludes the Turing-complete escape hatches of LaTeX — arbitrary `\def`
@@ -282,20 +295,42 @@ logic*. It is built from three pieces:
   `project_wf_dec_false_dup`, `project_wf_dec_false_otf`,
   `project_wf_dec_true_otf_on_xe`, proved by `vm_compute`) on the shared abstract
   projects — a sanity replay, now over the extracted function itself.
-- **TRUSTED (residuals, precisely):** (i) `Parser_l2` byte→AST correctness — the
-  extractor trusts the parser's structural read of your bytes (the bytes→
-  `body_token` extraction: `Ast_semantic_state.labels`/`refs` + feature scan);
-  (ii) the small **runtime→extracted-type conversion** in `compile_evidence.ml`
-  (`to_ext_feature`/`to_ext_engine`/`to_ext_node`/`to_ext_body_token`/…), a 1:1
-  constructor map. The premise-DECISION between these two trusted ends is now
-  proven-and-executed, not tested.
+- **PROVEN-and-EXECUTED (new in v27.1.58): the bytes→`body_token` front-end.**
+  The input end of the pipeline — token/key scanning, FNV-1a hashing of label
+  keys, feature detection, and body assembly (the `body_token` list) — used to be
+  the hand-written, UNVERIFIED extractor (`extract_body`, residual (i) below).
+  It is now the **Coq-extracted** `BodyTokenFrontEnd.body_of_source`
+  (`proofs/BodyTokenFrontEnd.v` → `latex-parse/src/body_token_frontend_extracted.ml`,
+  regen `scripts/tools/regen_body_token_frontend_extract.sh`, byte-identical), run
+  by `compile_evidence.ml`'s `extract_body_verified` on the real source. The
+  capstone theorem `compile_safe_of_source` (Qed, 0 admits, `Print Assumptions`:
+  Closed) connects a body built by *this* code to
+  `PdflatexModel.pdflatex_compile_safe`. A **differential parity gate**
+  (`test_body_token_frontend.ml`) asserts the extracted front-end == the retained
+  hand OCaml over 393 corpus files + 422 fixtures.
+- **TRUSTED (residuals, now precisely — the base SHRANK):** (i) the
+  **protected-range oracle** `Validators_common.find_verbatim_comment_url_ranges`,
+  which tells the verified front-end which byte ranges are verbatim/comment/URL
+  (the front-end is proven relative to that range set, not over the raw regex that
+  computes it); (ii) the **string→byte-list conversion** feeding the source to the
+  extracted function; (iii) **build-graph construction** (`Build_graph.of_project`,
+  the T2 include graph + topological order) and (iv) the small
+  **runtime→extracted-type conversion** (`to_ext_feature`/`to_ext_engine`/
+  `to_ext_node`/…, a 1:1 constructor map); plus (v) **file I/O** and the (vi)
+  **OCaml compiler + Coq extraction** toolchain. Two honest notes on the new
+  front-end proof: (a) the `fnv_mul_bound` (`< 2^55`) lemma is asserted informally
+  (a Peano-`nat` kernel pathology), validated by the parity test rather than
+  proved in-kernel; (b) the extraction realizes `two30`/`fnv_basis`/`fnv_prime` as
+  native `int` literals, each **provably equal** to its Coq definition.
 
 Net effect: residual (a) — "the runtime runs a hand-written mirror, not the
-proven code" — is **closed**. READY + `MODEL-READY` means "for the abstract
-project we extracted from your source, the *proven, Coq-extracted* checker
-certifies the capstone premises hold." It still does **not** mean "your exact
-bytes are certified to compile", because the two trusted ends above (parser +
-type conversion) are trusted/tested rather than verified end-to-end.
+proven code" — is **closed**, and residual (i) — the bytes→`body_token` front-end
+— is now **proven-and-executed** too (v27.1.58). READY + `MODEL-READY` means "for
+the abstract project we extracted from your source, the *proven, Coq-extracted*
+front-end and checker certify the capstone premises hold." It still does **not**
+mean "your exact bytes are certified to compile", because the trusted base above
+(protected-range oracle + byte-list/type conversion + build graph + I/O +
+toolchain) is trusted/tested rather than verified end-to-end.
 
 Treat `--compile-check` as a fast, honest fail-first gate: NOT-READY (or
 `MODEL-NOT-READY`) reliably means "do not bother running latexmk yet"; READY +

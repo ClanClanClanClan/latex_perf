@@ -1,4 +1,4 @@
-# Proofs Overview (v26.2)
+# Proofs Overview
 
 This document summarises the current formal proof tree for LaTeX
 Perfectionist. All proofs compile with zero admits and zero axioms.

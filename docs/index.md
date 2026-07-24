@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.0.72
+# LaTeX Perfectionist v27.1.61
 
 Comprehensive LaTeX document analysis and style validation system with 660 rules across 21 languages, backed by formal Coq proofs.
 
@@ -14,10 +14,10 @@ Comprehensive LaTeX document analysis and style validation system with 660 rules
 | Metric | Value |
 |--------|-------|
 | Rules specified | 660 (17 reserved) |
-| Rules shipped | 644 / 660 |
-| Fix-producing rules | 160 (Bucket A rolling cadence, see [V27_FIX_PRODUCER_CADENCE.md](../specs/v27/V27_FIX_PRODUCER_CADENCE.md)) |
+| Rules shipped | 643 / 660 |
+| Fix-producing rules | 167 (Bucket A rolling cadence, see [V27_FIX_PRODUCER_CADENCE.md](../specs/v27/V27_FIX_PRODUCER_CADENCE.md)) |
 | Soundness theorems | 643 per-rule (637 faithful, 20 conservative, 3 conditional) |
-| Total theorems/lemmas | 1,400 across 170 Coq files |
+| Total theorems/lemmas | 1,543 across 178 Coq files |
 | Performance p95 (L1 expand) | ≈ 2.8 ms (gate: 20 ms, Tier A) |
 | Admits / Axioms | 0 / 0 |
 | Languages | 7 live + 14 stubbed = 21 target |

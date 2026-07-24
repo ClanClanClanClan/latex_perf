@@ -1,0 +1,3 @@
+(executable
+ (name classify_bench)
+ (libraries latex_parse_lib))

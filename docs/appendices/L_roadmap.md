@@ -1,5 +1,9 @@
 # Appendix L -- Roadmap & De-scoped Ideas
 
+> **SUPERSEDED (v25-era).** This appendix is retained for historical de-scope
+> rationale only. The current, authoritative roadmap is
+> [docs/v27/ROADMAP.md](../v27/ROADMAP.md).
+
 Revision 2026-04-14. Current position: Week 80 of 156.
 
 ---

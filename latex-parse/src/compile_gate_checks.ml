@@ -377,7 +377,28 @@ let double_script_fatal (s : string) : string option =
   let math =
     Validators_common.find_math_ranges (Bytes.unsafe_to_string blanked)
   in
-  let in_math off = Validators_common.is_in_math_range math off in
+  (* v27.1.62 (Bug 6): the main scan below queries skip/math membership at every
+     one of [n] monotonically-increasing positions. The old list-scan
+     ([in_ranges], [is_in_math_range]) is O(ranges) per query, and both range
+     lists grow with the input (one math range per `$…$`, one skip range per
+     label/ref key), so the scan was O(n²) — 31 s on a 380 KB math-dense file,
+     losing the real-time wedge. Precompute two byte-bitmaps once (O(n): the
+     total covered length is ≤ n per category) so each query is O(1). *)
+  let paint (ranges : (int * int) list) : Bytes.t =
+    let bm = Bytes.make (max 1 n) '\000' in
+    List.iter
+      (fun (a, b) ->
+        let a = if a < 0 then 0 else a and b = if b > n then n else b in
+        for k = a to b - 1 do
+          Bytes.unsafe_set bm k '\001'
+        done)
+      ranges;
+    bm
+  in
+  let skip_bm = paint skip in
+  let math_bm = paint math in
+  let in_skip off = off >= 0 && off < n && Bytes.unsafe_get skip_bm off = '\001' in
+  let in_math off = off >= 0 && off < n && Bytes.unsafe_get math_bm off = '\001' in
   (* Per brace-frame state: has the current base seen a super / a sub, and has a
      `^` (caret, not just primes) locked the superscript slot. [prime_only] lets
      consecutive primes-before-caret coexist (x''^b) while a prime after a caret
@@ -465,7 +486,7 @@ let double_script_fatal (s : string) : string option =
   let i = ref 0 in
   while !i < n && !result = None do
     let pos = !i in
-    if in_ranges skip pos || not (in_math pos) then (
+    if in_skip pos || not (in_math pos) then (
       (* Leaving math or skipped bytes: nothing to track; a non-math boundary is
          also a base reset for whatever follows. *)
       reset_base !depth;

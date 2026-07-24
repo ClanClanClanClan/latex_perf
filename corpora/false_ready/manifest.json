@@ -1,0 +1,251 @@
+{
+  "description": "Round-7 audit: confirmed --compile-check false-READY fixtures. Each is a document the CLI reports READY (exit 0) but pdflatex rejects under the strict READY oracle. The monotone gate (scripts/tools/check_known_false_ready.py) runs the CLI only (no TeX) and fails if any fixed fixture regresses or a live false-READY appears where none was recorded. Each R7 fix PR flips its entries' expected_cli to NOT-READY and lowers the baseline. Ground truth verified locally against pdflatex; refresh/verify with scripts/tools/false_ready_oracle.sh.",
+  "ready_oracle": "clean single pass with no LaTeX Error (docs/COMPILATION_GUARANTEE.md SO1). strong-fatal = pdflatex produces NO PDF even under nonstopmode; error-halt = fails -halt-on-error / emits a LaTeX Error but limps to a PDF under nonstopmode.",
+  "oracle": {
+    "engine": "pdflatex",
+    "distribution": "TeX Live 2026",
+    "version": "pdfTeX 3.141592653-2.6-1.40.29",
+    "protocols": [
+      "-interaction=nonstopmode -halt-on-error",
+      "-interaction=nonstopmode"
+    ]
+  },
+  "baseline": {
+    "false_ready_total": 21,
+    "strong_fatal": 13,
+    "error_halt": 8
+  },
+  "fixtures": [
+    {
+      "id": "fr_lowercase_loader",
+      "path": "fr_lowercase_loader.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "\\lowercase lowercases FONTSPEC->fontspec at execution; case-sensitive needle misses it"
+    },
+    {
+      "id": "fr_csname_loader",
+      "path": "fr_csname_loader.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-extended",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "\\csname-constructed loader loads fontspec; no literal \\usepackage token to match"
+    },
+    {
+      "id": "fr_polyglossia",
+      "path": "fr_polyglossia.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "polyglossia (pure-LaTeX surface, loads fontspec internally) requires xe/lua; outside the 5-needle catalogue"
+    },
+    {
+      "id": "fr_raw_cjk",
+      "path": "fr_raw_cjk.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "raw CJK/Han body codepoints with no font-setup package: Unicode-not-set-up fatal (no package catalogue can catch)"
+    },
+    {
+      "id": "fr_comment_comma",
+      "path": "fr_comment_comma.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "comment in comma-list package arg evades the verified scanner; pdflatex strips comment and loads fontspec"
+    },
+    {
+      "id": "fr_comment_beforearg",
+      "path": "fr_comment_beforearg.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "comment between loader macro and its brace group evades the scanner"
+    },
+    {
+      "id": "fr_bracket_naive",
+      "path": "fr_bracket_naive.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "drop_after_rbracket cuts option group at first ']'; LaTeX brace-protects ']'"
+    },
+    {
+      "id": "fr_cr_comment",
+      "path": "fr_cr_comment.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "CR-only EOLs: '%' blinds the comment scanner (no LF) for the rest of the file; pdflatex ends comment at CR and hits a fatal"
+    },
+    {
+      "id": "fr_caret_brace",
+      "path": "fr_caret_brace.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "^^7b = catcode-1 '{' decoded by pdflatex, by no scanner: unclosed-brace runaway"
+    },
+    {
+      "id": "fr_missing_end",
+      "path": "fr_missing_end.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "truncated file with no \\end{document}: pdflatex Emergency stop"
+    },
+    {
+      "id": "fr_endinput_before_end",
+      "path": "fr_endinput_before_end.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "\\endinput before \\end{document}: TeX never reads the \\end, Emergency stop"
+    },
+    {
+      "id": "fr_end_in_iffalse",
+      "path": "fr_end_in_iffalse.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-extended",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "the only \\end{document} is inside a never-taken \\iffalse; TeX skips it, EOF with no legal \\end"
+    },
+    {
+      "id": "fr_verb_eol",
+      "path": "fr_verb_eol.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "\\verb argument broken across a line: '\\verb ended by end of line'"
+    },
+    {
+      "id": "fr_dup_begin_document",
+      "path": "fr_dup_begin_document.tex",
+      "kind": "single",
+      "class": "input-model-divergence",
+      "fix_rank": 2,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "duplicate \\begin{document}: 'Can be used only in preamble' (protocol-dependent)"
+    },
+    {
+      "id": "fr_dir_target",
+      "path": "fr_dir_target/doc.tex",
+      "kind": "tree",
+      "class": "closed-world",
+      "fix_rank": 4,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "\\input{sections} where sections/ is a DIRECTORY: Sys.file_exists is true for dirs, pdflatex cannot open it"
+    },
+    {
+      "id": "fr_two_cycle",
+      "path": "fr_two_cycle/a.tex",
+      "kind": "tree",
+      "class": "closed-world",
+      "fix_rank": 4,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "include cycle a->b->a: single-level scan never sees b's include of a; pdflatex recurses to capacity. Needs nested closure (R7-4 model half). NB direct self-include IS correctly caught by project_closed_b (B1-F2 headline over-claimed)"
+    },
+    {
+      "id": "fr_fatal_bbl",
+      "path": "fr_fatal_bbl/doc.tex",
+      "kind": "tree",
+      "class": "closed-world",
+      "fix_rank": 5,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "\\bibliography inputs doc.bbl (just TeX); a fatal .bbl is never read by any component"
+    },
+    {
+      "id": "fr_corrupt_aux",
+      "path": "fr_corrupt_aux/doc.tex",
+      "kind": "tree",
+      "class": "closed-world",
+      "fix_rank": 5,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "corrupt/truncated .aux (interrupted-run artifact): 'File ended while scanning use of \\@newl@bel'; the CLI ignores .aux parse failures (Error->[])"
+    },
+    {
+      "id": "fr_nul_byte",
+      "path": "fr_nul_byte.tex",
+      "kind": "single",
+      "class": "capacity",
+      "fix_rank": 6,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "NUL byte in body text: 'Text line contains an invalid character'"
+    },
+    {
+      "id": "fr_grouping_255",
+      "path": "fr_grouping_255.tex",
+      "kind": "single",
+      "class": "capacity",
+      "fix_rank": 6,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "260 nested groups exceed TeX's 255 grouping levels (parser's own guard sits at 500, wrong side)"
+    },
+    {
+      "id": "fr_hyperref_linktext",
+      "path": "fr_hyperref_linktext.tex",
+      "kind": "single",
+      "class": "glue-polarity",
+      "fix_rank": 7,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "\\hyperref[l]{link text} moving-arg skip treats {link text} as a key; a double-superscript inside it is missed"
+    }
+  ]
+}

@@ -92,3 +92,9 @@ jobs:
           if-no-files-found: ignore
       - name: Test suite
         run: opam exec -- dune runtest
+      - name: Known false-READY monotone gate (R7-INFRA-1)
+        # CLI-only regression gate over corpora/false_ready/: fails if any fixed
+        # false-READY regresses or a live one is silently fixed without updating
+        # the manifest. pdflatex ground truth is baked into the manifest (no TeX
+        # needed here); refresh locally via scripts/tools/false_ready_oracle.sh.
+        run: python3 scripts/tools/check_known_false_ready.py --repo .

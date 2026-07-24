@@ -11,8 +11,8 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 14,
-    "strong_fatal": 10,
+    "false_ready_total": 13,
+    "strong_fatal": 9,
     "error_halt": 4
   },
   "fixtures": [
@@ -46,8 +46,9 @@
       "fix_rank": 1,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "polyglossia (pure-LaTeX surface, loads fontspec internally) requires xe/lua; outside the 5-needle catalogue"
+      "expected_cli": "NOT-READY",
+      "note": "polyglossia (pure-LaTeX surface, loads fontspec internally) requires xe/lua; outside the 5-needle catalogue",
+      "fixed_by": "R7-1a (polyglossia/mathspec catalogue)"
     },
     {
       "id": "fr_raw_cjk",

@@ -335,6 +335,11 @@ Definition p_luacode : list byte := Eval compute in bytes_of_string "luacode".
 Definition p_cjk : list byte := Eval compute in bytes_of_string "CJK".
 Definition p_luatexja : list byte := Eval compute in bytes_of_string "luatexja".
 Definition p_inputenc : list byte := Eval compute in bytes_of_string "inputenc".
+(* R7-1a: xe/lua-only packages that load fontspec/otf machinery internally, so a
+   pure-LaTeX surface still requires an OpenType engine on pdflatex. *)
+Definition p_polyglossia : list byte :=
+  Eval compute in bytes_of_string "polyglossia".
+Definition p_mathspec : list byte := Eval compute in bytes_of_string "mathspec".
 
 Local Close Scope string_scope.
 
@@ -451,6 +456,7 @@ Fixpoint uses_package_b (pkg : list byte) (src : list byte) : bool :=
     of the five condition blocks). *)
 Definition detect_body_features (src : list byte) : list feature :=
   (if uses_package_b p_fontspec src || contains_b n_setmainfont src
+      || uses_package_b p_polyglossia src || uses_package_b p_mathspec src
    then [Opentype_fonts] else [])
   ++ (if uses_package_b p_unicode_math src || contains_b n_setmathfont src
       then [Unicode_math] else [])

@@ -301,8 +301,12 @@ let uses_package (source : string) (pkg : string) : bool =
 let detect_body_features (source : string) : feature list =
   let acc = ref [] in
   let add f = if not (List.mem f !acc) then acc := f :: !acc in
-  if uses_package source "fontspec" || contains source "\\setmainfont" then
-    add Opentype_fonts;
+  if
+    uses_package source "fontspec"
+    || contains source "\\setmainfont"
+    || uses_package source "polyglossia"
+    || uses_package source "mathspec"
+  then add Opentype_fonts;
   if uses_package source "unicode-math" || contains source "\\setmathfont" then
     add Unicode_math;
   if uses_package source "luacode" || contains source "\\directlua" then

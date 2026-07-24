@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 16,
+    "false_ready_total": 14,
     "strong_fatal": 10,
-    "error_halt": 6
+    "error_halt": 4
   },
   "fixtures": [
     {
@@ -203,8 +203,9 @@
       "fix_rank": 5,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
-      "note": "\\bibliography inputs doc.bbl (just TeX); a fatal .bbl is never read by any component"
+      "expected_cli": "NOT-READY",
+      "note": "\\bibliography inputs doc.bbl (just TeX); a fatal .bbl is never read by any component",
+      "fixed_by": "R7-5 (sibling artefact brace-balance)"
     },
     {
       "id": "fr_corrupt_aux",
@@ -214,8 +215,9 @@
       "fix_rank": 5,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
-      "note": "corrupt/truncated .aux (interrupted-run artifact): 'File ended while scanning use of \\@newl@bel'; the CLI ignores .aux parse failures (Error->[])"
+      "expected_cli": "NOT-READY",
+      "note": "corrupt/truncated .aux (interrupted-run artifact): 'File ended while scanning use of \\@newl@bel'; the CLI ignores .aux parse failures (Error->[])",
+      "fixed_by": "R7-5 (sibling artefact brace-balance)"
     },
     {
       "id": "fr_nul_byte",

@@ -100,6 +100,17 @@ jobs:
         # docs/ and specs/ must resolve to an existing file.
         run: python3 scripts/tools/check_doc_refs.py --repo .
 
+      - name: Roadmap fact drift (v27.1.60)
+        # docs/v27/ROADMAP.md restates load-bearing numbers (version,
+        # producer/candidate counts, proof-file/theorem/admit/axiom counts,
+        # the differential confusion-matrix tuple, false-READY count, LP-Core
+        # %). Each is asserted against its authoritative generated source
+        # (project_facts.yaml, FIX_PRODUCER_LEDGER.md, CANDIDATE_BACKLOG.md,
+        # COMPILATION_GUARANTEE.md, the KNOWN_FALSE_READY allowlist). Closes
+        # the R-count-authority hole: no existing gate caught the roadmap
+        # restating a stale count.
+        run: python3 scripts/tools/check_roadmap_facts.py --repo .
+
       - name: Doc version-label currency (v27.0.68.2)
         # Headings/stamps that name a version or fix-producer count
         # ("Current State (vN)", "latest tag vN", "N as of vN", ...) must

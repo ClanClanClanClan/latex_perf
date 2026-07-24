@@ -40,6 +40,9 @@ REF_ALLOWLIST = {
     "docs/RULES_PILOT_TODO.md",  # archived during v26 cleanup
     "docs/RULES_IMPLEMENTATION_PLAN.md",  # archived during v26 cleanup
     "scripts/pre_commit_proof_subset.sh",  # planned, never implemented
+    # v27 ROADMAP v3 forward-references to planned (not-yet-built) files
+    "observatory/classify_driver.ml",  # planned — Coverage Observatory (Track OBS)
+    "scripts/bench_wedge.sh",  # planned — real-time wedge benchmark (Track R)
     "src/macro_catalogue.ml",  # historical doc
     "docs/coq-proof-handoff.md",  # moved to archive/expert-handoff/coq-fix-math-strip/coq-proof-handoff-superseded.md (v27.0.60 hygiene)
     # V26_REPO_EXACT_MASTER_SPEC references to planned/renamed paths

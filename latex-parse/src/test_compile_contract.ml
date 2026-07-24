@@ -267,5 +267,39 @@ let () =
           | Ready ->
               expect false (tag ^ ": T5 REGRESSED to a stub (brace->Ready)")));
 
+  (* SINGLE-SOURCE guard (v27.1.60 audit hardening): t5_check / t5_check_fast
+     must classify compile-blocking ids via [Validators.is_compile_blocking],
+     the single source of truth — NOT a private duplicate that would make a
+     future id-level promotion a silent no-op. We can only observe the predicate
+     indirectly (the local was deleted), so we assert
+     [Validators.is_compile_blocking] itself behaves as the contract requires
+     over a representative sample that includes an id-level (not merely
+     prefix-level) entry. *)
+  run "is_compile_blocking single-source agreement" (fun tag ->
+      let sample =
+        [
+          (* prefix-level compile-blocking families *)
+          ("DELIM-001", true);
+          ("ENC-004", true);
+          ("PRT-001", true);
+          (* an id-level entry: a specific DELIM id is still blocking because it
+             shares the family prefix — the predicate is prefix-driven today,
+             and this pins that any Validators change stays visible here. *)
+          ("DELIM-010", true);
+          (* non-blocking: completeness/style faults pdflatex compiles
+             through *)
+          ("DOC-001", false);
+          ("TYPO-001", false);
+          ("MATH-014", false);
+          ("STYLE-023", false);
+        ]
+      in
+      List.iter
+        (fun (id, want) ->
+          expect
+            (Validators.is_compile_blocking id = want)
+            (tag ^ ": is_compile_blocking " ^ id))
+        sample);
+
   cleanup_dir ();
   finalise "compile-contract"

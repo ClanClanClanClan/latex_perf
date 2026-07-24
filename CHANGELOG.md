@@ -2,6 +2,26 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.61] — 2026-07-24
+
+**Recovery + governance: land the #498 squash-stranded commits.** The #498 squash-merge captured
+the branch only through the doc-refs fix, stranding five later commits (the documented
+squash-strand trap, second occurrence). This release lands them:
+
+- **fix**: double-script gate frame stack made GROWABLE (removes the 4096-depth bail that resolved
+  toward the dangerous false-READY direction; deep-nesting tests added, 55 cases green).
+- **fix**: `compile_contract` now delegates to the single-source `Validators.is_compile_blocking`
+  (the duplicate prefix-only local made id-level compile-blocking promotions silent no-ops).
+- **governance**: `scripts/tools/check_roadmap_facts.py` anti-drift gate (roadmap numeric claims
+  asserted against generated sources; wired into spec-drift + pre-release).
+- **docs**: ROADMAP v3 (G1/G2 soundness keystones, V1-Catalogue reclassified in-scope, Track-P
+  `.lprules` DSL, Coverage Observatory, Track-R v3 sound-incremental real-time engine, three
+  swim-lanes + editor/publisher beachhead); differential allowlist reconciled to the 8 real
+  false-READYs; `COMPILATION_GUARANTEE.md` "provably cannot" wording corrected to
+  "not-yet-modelled (decidable given catalogue)".
+
+No rule or proof changes beyond the hardening; producer count unchanged at 167.
+
 ## [v27.1.60] — 2026-07-23
 
 **SOUNDNESS — precise structural-fatal compile-gate.** `--compile-check` now catches

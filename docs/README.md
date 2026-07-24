@@ -24,9 +24,7 @@
 
 | Directory | Contents |
 |-----------|----------|
-| `archive/` | Historical reports, audits, and obsolete v25-era planning docs |
-| `expert/` | Technical handoff knowledge for Coq proofs |
-| `handoff/` | Project continuity and context transfer docs |
+| `archive/` | Historical reports, audits, and obsolete v25-era planning docs (incl. the SIMD-v2-era handoff/debug docs and v26.x migration guides) |
 | `appendices/` | Glossary, layer interfaces, validator DSL, proof template catalogue |
 
 ## See also

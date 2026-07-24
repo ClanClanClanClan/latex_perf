@@ -133,4 +133,3 @@ Notes
 - Add a rule in `validators.ml` following the `rule` record pattern
 - Append to `rules_pilot` and to `specs/rules/pilot_v1.yaml`
 - Add a golden input under `corpora/lint/pilot_v1/`
-- Update `docs/RULES_PILOT_TODO.md` checklist as needed

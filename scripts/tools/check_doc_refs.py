@@ -71,7 +71,8 @@ REF_ALLOWLIST = {
     # V26.2.1 planned files referenced in specs/v26/V26_2_1_PLAN.md
     "scripts/tools/migrate_result_literals.py",  # one-shot migration, PR #1
     "scripts/tools/check_result_helpers.py",  # new gate, PR #1
-    "docs/MIGRATION_v26.2_to_v26.2.1.md",  # consumer migration doc, PR #5
+    "docs/MIGRATION_v26.2_to_v26.2.1.md",  # consumer migration doc, PR #5; archived to docs/archive/ (docs-hygiene, v27.1.61)
+    "docs/MIGRATION_v26.1_to_v26.2.md",  # v26.2 migration guide; archived to docs/archive/ (docs-hygiene, v27.1.61) — CHANGELOG/specs keep the historical mention
     # V26.3.1 planned files referenced in specs/v26/V26_3_1_PLAN.md
     "proofs/CSTRoundtripConcrete.v",  # CST-discharge target, PR #2
     # ml/results/expert_briefing.md references training-run output JSONs

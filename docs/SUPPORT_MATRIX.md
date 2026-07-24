@@ -18,10 +18,10 @@
 
 | Engine | Status | Tier | Notes |
 |---|---|---|---|
-| pdfLaTeX | GA | LP-Core | Primary target for v26 deterministic support. |
-| XeLaTeX | Beta | LP-Extended | Supported where Unicode/font handling is already covered. |
-| LuaLaTeX | Beta | LP-Extended | Accepted with tighter package/profile boundaries. |
-| pTeX / upTeX | Experimental | LP-Extended | CJK compatibility shim exists; not part of strongest guarantees. |
+| pdfLaTeX | GA | LP-Core | Primary target for v26 deterministic support. **The compile-guarantee verdict is pdflatex-computed today**: the runtime defaults every project to pdflatex and the differential harness runs pdflatex only. |
+| XeLaTeX | Planned | LP-Extended | **Not yet a distinct engine at runtime.** The compile-guarantee capstone `xelatex_compile_safe` is currently a **proof-alias** (`:= pdflatex_compile_safe`); `--compile-check` defaults the engine to pdflatex, so the verdict is pdflatex-computed. Real per-engine coverage (distinct Unicode/font semantics) is planned under roadmap Track **S-ENGINE**. |
+| LuaLaTeX | Planned | LP-Extended | **Not yet a distinct engine at runtime.** `lualatex_compile_safe` is likewise a **proof-alias** (`:= pdflatex_compile_safe`) and the runtime resolves to pdflatex; real per-engine coverage is planned under roadmap Track **S-ENGINE**. |
+| pTeX / upTeX | Experimental | LP-Extended | CJK compatibility shim exists; not part of strongest guarantees. Verdict is pdflatex-computed today (see S-ENGINE). |
 
 ## Document/project modes
 
@@ -29,8 +29,8 @@
 |---|---|---|
 | Single-file article/report/book | GA | Current strongest support boundary. |
 | Single-file with compile-log checks | Beta | Build-coupled; Class C rules isolated from keystroke-critical path. |
-| Multi-file `\input` / `\include` project | Alpha | `validators_cli --project` wires WS3 project graph + cross-file labels/refs. |
-| Beamer | Deferred | Pilot only after project graph substrate stabilises (v26.2). |
+| Multi-file `\input` / `\include` project | Planned | **`--compile-check` reads the ROOT `.tex` only at present**: T0 parses the root source and T2 checks that `\input`/`\include` targets *resolve* (existence + no cycle), but content inside `\input`ed children is **not** parsed or linted. Full project/include-expansion (linting expanded child content, cross-file labels/refs on the lint path) is planned under roadmap Track **S-PROJ**. |
+| Beamer | Deferred | Pilot only after the project-graph substrate stabilises (roadmap S-PROJ). |
 
 ## Macro support
 
@@ -78,17 +78,19 @@ Hot path excludes C and D: `hot_path_excludes_cd` + runtime `Execution_class.is_
 |---|---|---|
 | CLI | GA | Primary external interface; `--profile`, `--log`, `--layer`, `--project` flags. |
 | REST | GA | `POST /tokenize`, `/expand`. Env gates: `L0_VALIDATORS`, `L0_PROFILE_OVERRIDE`. |
-| gRPC streaming | Deferred | Not the primary capability blocker; reconsider in v26.2. |
-| IDE/LSP-grade interaction | Planned | Requires lossless CST + rewrite substrate (v26.2, memo §7). |
+| gRPC streaming | Deferred | Not the primary capability blocker; no committed schedule (see roadmap `docs/v27/ROADMAP.md`). |
+| IDE/LSP-grade interaction | Planned | Requires lossless CST + rewrite substrate (now shipped); scheduled per roadmap `docs/v27/ROADMAP.md`, memo §7. |
 
 ## Collaboration/editorial platform
 
 | Capability | Status | Target release |
 |---|---|---|
-| Comments / review threads | Planned | v27.0 |
-| Tracked changes / accept-reject | Planned | v27.1 |
-| Project permissions / roles | Planned | v27.1 |
-| Institutional deployment / audit logs | Planned | v27.1 |
-| House-style profiles / waivers | Planned | v27.0 |
+| Comments / review threads | Parked (ADR-010) | pending product decision |
+| Tracked changes / accept-reject | Parked (ADR-010) | pending product decision |
+| Project permissions / roles | Parked (ADR-010) | pending product decision |
+| Institutional deployment / audit logs | Parked (ADR-010) | pending product decision |
+| House-style profiles / waivers | Parked (ADR-010) | pending product decision |
 
-Per memo §13 (editorial policy) and §14 (collaboration). Not in scope for any v26 release.
+Per memo §13 (editorial policy) and §14 (collaboration). The WS10 (collaboration) and
+WS11 (platform / multi-user) workstreams are **PARKED pending a product decision
+(ADR-010)** — they are not scheduled for a v27 release. Not in scope for any v26 release.

@@ -35,7 +35,7 @@ Everything else about compile success falls back on the toolchain itself.
 
 ---
 
-## What `--compile-check` runs (v27.1.52; fast kernel v27.1.59; structural-fatal gate v27.1.60)
+## What `--compile-check` runs (v27.1.52; fast kernel v27.1.59; structural-fatal gate v27.1.60; hardened v27.1.61)
 
 The CLI's `--compile-check <file.tex>` flag invokes
 `Compile_contract.check_ready_to_compile` in
@@ -50,7 +50,7 @@ macros, language profile). It checks the T0–T5 conditions and prints
 | T0 Parse + profile | `Language_profile.classify_source` → NOT-READY on **LP-Foreign**; then `Parser_l2.parse_located` → NOT-READY with the first structural parse error (unclosed math/env/`\verb`, `\end` without `\begin`, nesting blow-up) + line/offset. As of **v27.1.57** the tier DECISION (feature-list → tier) is the **Coq-extracted** `LanguageContract.classify` (governed by `classify_lp_core_sound`); only `Unsupported_feature.detect` (bytes → features) stays trusted, adversarially certified — see "LP-Core classifier" below | **REAL** |
 | T1 Expansion | *no-op* — not runtime-checked at this layer | conservatively skipped (never claims a T1 property) |
 | T2 Project closed | `Build_graph` — every `\input`/`\include` resolves, no include cycle | **REAL** |
-| T3 Profile compat | declared-feature × engine compatibility table | **REAL** (from *declared* features; v26.2 does not auto-detect) |
+| T3 Profile compat | declared-feature × engine compatibility table | **conservative no-op today** — checks declared-feature × engine compatibility, but the production `--compile-check` path calls `Project_model.of_root` with no declared features (`declared_features = []`), so nothing is ever rejected here. Feature auto-detection is not yet wired into this path (roadmap Track S-ENGINE / SE2). It never causes a false-READY (at most an over-rejection once features are supplied), consistent with soundness-paramount. |
 | T4 Semantic coherence | if a sibling `.aux` exists: duplicate-label detection | **REAL when `.aux` present**, else skipped |
 | T5 Rule safety | runs the **compile-blocking** rules only (`Validators.run_compile_blocking`, fast kernel v27.1.59) and flags their `Error` results — rule families `DELIM-*`, `ENC-*`, `PRT-*` | **REAL** (narrowed on purpose; see below) |
 
@@ -345,6 +345,17 @@ logic*. It is built from three pieces:
    `true` (else `MODEL-NOT-READY` with the failing T2/T3/T4 obligation).
    Default (no-flag) output is byte-identical. The hand-written OCaml mirror of
    the boolean checkers is **removed**.
+
+**T3 production scope (be honest).** The Coq checker above genuinely checks T3
+over *both* the profile's declared features *and* the features the document body
+requires. But in the production `--compile-check` path the profile carries **no
+declared features** — `Project_model.of_root` is called with the default
+`declared_features = []` and no auto-detection feeds it — so the *declared*-feature
+half of T3 is a **conservative no-op today**; only the body-required-feature half
+does any work, and that only against the default `pdflatex` engine. Full
+feature-extraction wiring (populating declared features, and per-engine profiles)
+is planned under roadmap Track **S-ENGINE / SE2**. This can only ever cause an
+over-rejection, never a false-READY, consistent with soundness-paramount.
 
 ### What is PROVEN-and-EXECUTED vs TESTED vs TRUSTED (be precise)
 

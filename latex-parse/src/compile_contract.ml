@@ -60,7 +60,12 @@ let t2_check (proj : Project_model.t) : reason list =
   let missing =
     List.filter_map
       (fun (f : Project_model.file_entry) ->
-        if Sys.file_exists f.path then None else Some f.path)
+        (* v27.1.62 (R7-4): a DIRECTORY satisfies [Sys.file_exists] but kpathsea
+           cannot \input it — pdflatex fatals "File not found". Require a
+           non-directory (regular file / symlink-to-file). Guarded so
+           [is_directory] is only reached when the path exists. *)
+        if Sys.file_exists f.path && not (Sys.is_directory f.path) then None
+        else Some f.path)
       (Project_model.all_files proj)
   in
   let rs =

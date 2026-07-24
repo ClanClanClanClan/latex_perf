@@ -720,6 +720,58 @@ let no_live_end_document_fatal (s : string) : string option =
       "no \\end{document} in document (truncated?): ! Emergency stop (no legal \
        \\end found)"
 
+(* ── Detector (6): NUL byte in source ───────────────────────────────────── A
+   0x00 byte is never valid LaTeX source: pdflatex reports "! Text line contains
+   an invalid character". In UTF-8 a 0x00 byte is ALWAYS a literal NUL (U+0000),
+   never part of a multi-byte sequence, so this cannot false-positive on a valid
+   encoding; a NUL in a .tex is a corruption / binary-junk marker. Fires
+   regardless of verbatim/comment context (the invalid char is rejected by TeX's
+   input processor before catcodes apply). Add-NOT-READY-only. *)
+let nul_byte_fatal (s : string) : string option =
+  if String.contains s '\000' then
+    Some "NUL byte (0x00) in source: ! Text line contains an invalid character"
+  else None
+
+(* ── Detector (7): brace grouping levels exceed TeX's cap ──────────────────
+   TeX's save stack caps simultaneously-open grouping levels at 255; exceeding
+   it is the deterministic fatal "! TeX capacity exceeded, sorry [grouping
+   levels=255]" (empirically verified on TeX Live 2026 at depths 300..20000). In
+   LP-Core every unescaped, non-verbatim `{` opens exactly one TeX group, so the
+   lexical brace depth is a LOWER BOUND on TeX's grouping level: if the brace
+   depth alone exceeds 255, TeX's level (≥ that, plus env/math groups) certainly
+   does too — the detector can under-fire (safe) but never over-fire on a
+   compiling document. Escape- and verbatim/comment-aware.
+   Add-NOT-READY-only. *)
+let deep_grouping_fatal (s : string) : string option =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let depth = ref 0 and maxd = ref 0 and i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if in_ranges skip pos then incr i
+    else (
+      (match String.unsafe_get s pos with
+      | '{' when not (is_escaped pos) ->
+          incr depth;
+          if !depth > !maxd then maxd := !depth
+      | '}' when not (is_escaped pos) -> if !depth > 0 then decr depth
+      | _ -> ());
+      incr i)
+  done;
+  if !maxd > 255 then
+    Some
+      "brace grouping levels exceed 255: ! TeX capacity exceeded, sorry \
+       [grouping levels=255]"
+  else None
+
 (* ── Public entry ─────────────────────────────────────────────────────── *)
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
@@ -732,4 +784,6 @@ let structural_fatal_reasons (source : string) : string list =
       no_documentclass_fatal;
       usepackage_after_begin_fatal;
       no_live_end_document_fatal;
+      nul_byte_fatal;
+      deep_grouping_fatal;
     ]

@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 19,
-    "strong_fatal": 12,
-    "error_halt": 7
+    "false_ready_total": 16,
+    "strong_fatal": 10,
+    "error_halt": 6
   },
   "fixtures": [
     {
@@ -180,8 +180,9 @@
       "fix_rank": 4,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "\\input{sections} where sections/ is a DIRECTORY: Sys.file_exists is true for dirs, pdflatex cannot open it"
+      "expected_cli": "NOT-READY",
+      "note": "\\input{sections} where sections/ is a DIRECTORY: Sys.file_exists is true for dirs, pdflatex cannot open it",
+      "fixed_by": "R7-4/5/6 (dir-check / NUL / grouping-255)"
     },
     {
       "id": "fr_two_cycle",
@@ -224,8 +225,9 @@
       "fix_rank": 6,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
-      "note": "NUL byte in body text: 'Text line contains an invalid character'"
+      "expected_cli": "NOT-READY",
+      "note": "NUL byte in body text: 'Text line contains an invalid character'",
+      "fixed_by": "R7-4/5/6 (dir-check / NUL / grouping-255)"
     },
     {
       "id": "fr_grouping_255",
@@ -235,8 +237,9 @@
       "fix_rank": 6,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "260 nested groups exceed TeX's 255 grouping levels (parser's own guard sits at 500, wrong side)"
+      "expected_cli": "NOT-READY",
+      "note": "260 nested groups exceed TeX's 255 grouping levels (parser's own guard sits at 500, wrong side)",
+      "fixed_by": "R7-4/5/6 (dir-check / NUL / grouping-255)"
     },
     {
       "id": "fr_hyperref_linktext",

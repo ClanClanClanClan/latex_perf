@@ -10,6 +10,7 @@ type reason =
   | T5_rule_violations of string list
   | T_structural_fatal of string list
   | T_input_too_large of int
+  | T_artefact_fatal of { file : string; message : string }
 
 type ready_check_result = Ready | NotReady of reason list
 
@@ -314,6 +315,54 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
         [ T_input_too_large (String.length src) ]
     | _ -> []
   in
+  (* v27.1.62 (R7-5): sibling ARTEFACTS pdflatex reads as LaTeX — the [.aux]
+     (from a previous run, read at \begin{document}) and the [.bbl] (read at
+     \bibliography{..}). An unclosed brace group in either is the deterministic
+     "! File ended while scanning" fatal, invisible to a check that only reads
+     the root .tex. A valid tool-generated artefact is always balanced, so this
+     can only ADD a NOT-READY. *)
+  let read_file_opt p =
+    try
+      let ic = open_in_bin p in
+      Fun.protect
+        ~finally:(fun () -> close_in_noerr ic)
+        (fun () -> Some (really_input_string ic (in_channel_length ic)))
+    with Sys_error _ -> None
+  in
+  let artefact_fatal file kind =
+    if Sys.file_exists file && not (Sys.is_directory file) then
+      match read_file_opt file with
+      | Some content when Compile_gate_checks.unbalanced_open_brace content ->
+          [
+            T_artefact_fatal
+              {
+                file;
+                message =
+                  Printf.sprintf
+                    "unbalanced { in %s (corrupt/truncated): ! File ended \
+                     while scanning"
+                    kind;
+              };
+          ]
+      | _ -> []
+    else []
+  in
+  let tartefact =
+    let aux_r =
+      match aux_path with Some p -> artefact_fatal p ".aux" | None -> []
+    in
+    let bbl_r =
+      match source_result with
+      | Ok src when Compile_gate_checks.source_uses_bibliography src ->
+          let bbl =
+            Filename.remove_extension (Project_model.root_file proj).path
+            ^ ".bbl"
+          in
+          artefact_fatal bbl ".bbl"
+      | _ -> []
+    in
+    aux_r @ bbl_r
+  in
   let reasons =
     t0
     @ t1_check proj
@@ -323,6 +372,7 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     @ t5
     @ tsf
     @ tcap
+    @ tartefact
   in
   if reasons = [] then Ready else NotReady reasons
 
@@ -349,6 +399,8 @@ let reason_to_string = function
   | T_structural_fatal reasons ->
       Printf.sprintf "structural-fatal (will not compile): [%s]"
         (String.concat "; " reasons)
+  | T_artefact_fatal { file; message } ->
+      Printf.sprintf "artefact-fatal (%s): %s" file message
   | T_input_too_large n ->
       Printf.sprintf
         "input too large (%d bytes > %d cap): compile-blocking checks cannot \

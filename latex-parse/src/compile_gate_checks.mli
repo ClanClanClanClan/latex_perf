@@ -48,3 +48,14 @@ val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
 val find_ref_alias_macros : string -> string list
 (** Names of user-defined [\ref]-alias macros (e.g. [\newcommand{\reff}{\ref}])
     whose argument keys also carry moving-argument (skip) semantics. *)
+
+val unbalanced_open_brace : string -> bool
+(** True iff the content has a net-unclosed [{] group (escape- and
+    comment/verbatim-aware; extra [}] is clamped, matching TeX's recovery). Used
+    on sibling [.aux]/[.bbl] artefacts, whose imbalance is the deterministic "!
+    File ended while scanning" fatal. *)
+
+val source_uses_bibliography : string -> bool
+(** True iff the source loads a bibliography via [\bibliography{..}] (which
+    [\input]s [<jobname>.bbl]) outside any comment/verbatim. Excludes
+    [\bibliographystyle]. *)

@@ -7,8 +7,8 @@
 # Memo reference: REPO_EXACT_MISSING_ARCHITECTURE_MEMO_V26_V27.md §12
 # Human prose:    docs/SUPPORT_MATRIX.md
 
-version: v26.1
-last_updated: "2026-04-20"
+version: v27.1.61
+last_updated: "2026-07-24"
 
 # Release-state taxonomy
 release_state:
@@ -26,13 +26,13 @@ engines:
     tier: lp_core
     notes: "Primary target for v26 deterministic support."
   xelatex:
-    status: beta
+    status: planned
     tier: lp_extended
-    notes: "Supported where Unicode/font handling is already covered."
+    notes: "Capstone xelatex_compile_safe is a proof-alias of pdflatex_compile_safe (PdflatexModel.v:1394); no engine-specific verdict yet. Roadmap S-ENGINE/SE2."
   lualatex:
-    status: beta
+    status: planned
     tier: lp_extended
-    notes: "Accepted with tighter package/profile boundaries."
+    notes: "Capstone lualatex_compile_safe is a proof-alias of pdflatex_compile_safe (PdflatexModel.v:1396); no engine-specific verdict yet. Roadmap S-ENGINE/SE2."
   ptex_uptex:
     status: experimental
     tier: lp_extended
@@ -48,12 +48,12 @@ document_modes:
     runtime: validators_cli (--log)
     notes: "Build-coupled; Class C rules isolated from keystroke-critical path."
   multi_file_input_include:
-    status: alpha
+    status: planned
     runtime: validators_cli (--project)
-    notes: "Project graph foundation (PR #228/#231). Cross-file labels/refs wired."
+    notes: "Project graph foundation exists (PR #228/#231); cross-file labels/refs wired. But --compile-check parses the ROOT only (T2 checks child resolution/existence, not content). Roadmap S-PROJ."
   beamer:
     status: deferred
-    notes: "Pilot only after project graph substrate stabilises (v26.2)."
+    notes: "Pilot only after project graph substrate stabilises. Roadmap S-PROJ."
 
 macro_support:
   builtin_catalogue:
@@ -124,23 +124,23 @@ interfaces:
     notes: "Requires lossless CST + rewrite substrate (v26.2, memo §7)."
 
 collaboration_platform:
+  # WS10 (collaboration) + WS11 (platform) parked pending product decision (ADR-010).
+  # WS9 editorial-policy + WS12 extension-plane remain in scope (roadmap Track G2).
   comments_review_threads:
-    status: planned
-    target_release: v27.0
-    memo_reference: "§13 (editorial policy) + §14 (collaboration)"
+    status: deferred
+    memo_reference: "§13 (editorial policy) + §14 (collaboration); parked ADR-010 (WS10)"
   tracked_changes:
-    status: planned
-    target_release: v27.1
+    status: deferred
+    notes: "Parked ADR-010 (WS10)."
   project_permissions_roles:
-    status: planned
-    target_release: v27.1
+    status: deferred
+    notes: "Parked ADR-010 (WS11)."
   institutional_deployment_audit_logs:
-    status: planned
-    target_release: v27.1
+    status: deferred
+    notes: "Parked ADR-010 (WS11)."
   house_style_profiles_waivers:
     status: planned
-    target_release: v27.0
-    notes: "Editorial policy layer per memo §13."
+    notes: "Editorial policy layer (WS9, in scope) per memo §13; roadmap Track G2."
 
 execution_classes:
   A:

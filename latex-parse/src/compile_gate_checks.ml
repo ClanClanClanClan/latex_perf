@@ -397,8 +397,12 @@ let double_script_fatal (s : string) : string option =
   in
   let skip_bm = paint skip in
   let math_bm = paint math in
-  let in_skip off = off >= 0 && off < n && Bytes.unsafe_get skip_bm off = '\001' in
-  let in_math off = off >= 0 && off < n && Bytes.unsafe_get math_bm off = '\001' in
+  let in_skip off =
+    off >= 0 && off < n && Bytes.unsafe_get skip_bm off = '\001'
+  in
+  let in_math off =
+    off >= 0 && off < n && Bytes.unsafe_get math_bm off = '\001'
+  in
   (* Per brace-frame state: has the current base seen a super / a sub, and has a
      `^` (caret, not just primes) locked the superscript slot. [prime_only] lets
      consecutive primes-before-caret coexist (x''^b) while a prime after a caret

@@ -267,20 +267,20 @@ let uses_package (source : string) (pkg : string) : bool =
   let group_has_pkg j =
     let j = skip_ws j in
     let j =
-      if j < hl && source.[j] = '[' then (
+      if j < hl && source.[j] = '[' then
         let rec go k = if k < hl && source.[k] <> ']' then go (k + 1) else k in
         let k = go (j + 1) in
-        if k < hl then skip_ws (k + 1) else k)
+        if k < hl then skip_ws (k + 1) else k
       else j
     in
-    if j < hl && source.[j] = '{' then (
+    if j < hl && source.[j] = '{' then
       let rec go k = if k < hl && source.[k] <> '}' then go (k + 1) else k in
       let k = go (j + 1) in
       if k < hl then
         String.sub source (j + 1) (k - (j + 1))
         |> String.split_on_char ','
         |> List.exists (fun n -> String.trim n = pkg)
-      else false)
+      else false
     else false
   in
   let rec scan i =
@@ -314,7 +314,7 @@ let detect_body_features (source : string) : feature list =
   then add Japanese_cjk;
   if
     uses_package source "inputenc"
-    && (contains source "utf8" (* utf8 or utf8x option *))
+    && contains source "utf8" (* utf8 or utf8x option *)
   then add UTF8_inputenc;
   List.rev !acc
 

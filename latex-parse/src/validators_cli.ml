@@ -511,6 +511,15 @@ let run_explain (rule_id : string) : int =
    (compiles, <=2-pass convergence, fatal-free) holds by [project_wf_dec_sound].
    Only emitted under --compile-check, so default output is unaffected. *)
 
+(* Prints the Coq-proven, model-connected verdict AND returns whether it holds.
+   v27.1.62 (Bug 1): the return value is now a HARD CONJUNCT of the final READY
+   decision in [run_compile_check] — previously this verdict was print-only and
+   the exit code came solely from the (vacuous-T3) [check_ready_to_compile], so
+   a fontspec document printed MODEL-NOT-READY yet exited 0 READY while pdflatex
+   failed. Gating READY on [all_hold] makes the verdict strictly STRICTER, so it
+   can only remove false-READYs, never add one (soundness-preserving by
+   construction). *)
+
 (** Run the T0–T5 pre-compile readiness contract on one file and print a clear
     verdict. Sets up the same per-file context the lint path uses (file context,
     command spans, build profile, user macros, language profile) so the T5
@@ -520,14 +529,6 @@ let run_explain (rule_id : string) : int =
     Prints [READY] (exit 0) when every runtime precondition holds, or
     [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
     sibling, if present, informs T4. Returns the process exit code. *)
-(* Prints the Coq-proven, model-connected verdict AND returns whether it holds.
-   v27.1.62 (Bug 1): the return value is now a HARD CONJUNCT of the final
-   READY decision in [run_compile_check] — previously this verdict was
-   print-only and the exit code came solely from the (vacuous-T3)
-   [check_ready_to_compile], so a fontspec document printed MODEL-NOT-READY yet
-   exited 0 READY while pdflatex failed. Gating READY on [all_hold] makes the
-   verdict strictly STRICTER, so it can only remove false-READYs, never add one
-   (soundness-preserving by construction). *)
 let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
     : bool =
   let module CE = Latex_parse_lib.Compile_evidence in

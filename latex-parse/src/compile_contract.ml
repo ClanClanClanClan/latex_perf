@@ -301,7 +301,8 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
      [run_subset] silently return no compile-blocking results, so T5 and the
      structural-fatal gate would pass VACUOUSLY — an 11 MB document with an
      unbalanced \left( would be judged READY. Emit a conservative NOT-READY
-     above the cap instead. This can only ADD a NOT-READY, never a false-READY. *)
+     above the cap instead. This can only ADD a NOT-READY, never a
+     false-READY. *)
   let tcap =
     match source_result with
     | Ok src when String.length src > Validators.max_input_bytes ->

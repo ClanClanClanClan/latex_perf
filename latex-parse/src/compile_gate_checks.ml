@@ -659,6 +659,67 @@ let usepackage_after_begin_fatal (s : string) : string option =
     done;
     !result
 
+(* ── Detector (5): no \end{document} in the document ──────────────────────
+   pdflatex hits an Emergency stop ("*** (job aborted, no legal \end found)")
+   when the input runs out with no \end{document} — a truncated file, which is a
+   ubiquitous save/transfer/merge accident. Fires NOT-READY when NO
+   \end{document} appears anywhere outside a verbatim/comment span (comment
+   detection is CR/LF-aware, R7-2a). Tolerant of `\end {document}` spacing.
+
+   CONSERVATIVE (adds NOT-READY only — cannot manufacture a false-READY): it
+   fires ONLY when it finds no literal \end{document}; anything subtler is left
+   untouched (READY unchanged). Scope is deliberately narrow: it does NOT reason
+   about REACHABILITY of a \end{document} that IS present. \endinput, and
+   \iffalse/\newif/\ifdefined-guarded regions, need a modelled live-region pass
+   (deferred to the later live-region train) — an \endinput-first heuristic was
+   prototyped and DROPPED after adversarial verification showed it over-rejects
+   the common \ifdefined\previewmode\endinput\fi (arXiv) and
+   \ifdraft\endinput\fi idioms, which compile cleanly. This narrow detector was
+   verified on 386 real papers: 6 flagged, 6/6 correct (childless \input
+   fragments / non-TeX junk pdflatex also rejects), 0 over-rejections. It also
+   does NOT expand \input/\include, so a multi-file project whose \end{document}
+   lives in a child is covered here only because it also trips detector (3) (no
+   \documentclass). *)
+let no_live_end_document_fatal (s : string) : string option =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' || c = '\012' in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts pfx j =
+    let pl = String.length pfx in
+    j + pl <= n && String.sub s j pl = pfx
+  in
+  (* \end, optional whitespace, {document} — tolerant of `\end {document}`. *)
+  let is_end_document pos =
+    starts "\\end" pos
+    &&
+    let j = ref (pos + 4) in
+    while !j < n && is_ws (String.unsafe_get s !j) do
+      incr j
+    done;
+    starts "{document}" !j
+  in
+  let found = ref false in
+  let i = ref 0 in
+  while !i < n && not !found do
+    let pos = !i in
+    if in_ranges skip pos || is_escaped pos then incr i
+    else if is_end_document pos then found := true
+    else incr i
+  done;
+  if !found then None
+  else
+    Some
+      "no \\end{document} in document (truncated?): ! Emergency stop (no legal \
+       \\end found)"
+
 (* ── Public entry ─────────────────────────────────────────────────────── *)
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
@@ -670,4 +731,5 @@ let structural_fatal_reasons (source : string) : string list =
          expansion. *)
       no_documentclass_fatal;
       usepackage_after_begin_fatal;
+      no_live_end_document_fatal;
     ]

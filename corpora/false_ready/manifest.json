@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 21,
-    "strong_fatal": 13,
-    "error_halt": 8
+    "false_ready_total": 19,
+    "strong_fatal": 12,
+    "error_halt": 7
   },
   "fixtures": [
     {
@@ -101,8 +101,9 @@
       "fix_rank": 2,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
-      "note": "CR-only EOLs: '%' blinds the comment scanner (no LF) for the rest of the file; pdflatex ends comment at CR and hits a fatal"
+      "expected_cli": "NOT-READY",
+      "note": "CR-only EOLs: '%' blinds the comment scanner (no LF) for the rest of the file; pdflatex ends comment at CR and hits a fatal",
+      "fixed_by": "R7-2 (CR-aware comments + no-live-end detector)"
     },
     {
       "id": "fr_caret_brace",
@@ -123,8 +124,9 @@
       "fix_rank": 2,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "truncated file with no \\end{document}: pdflatex Emergency stop"
+      "expected_cli": "NOT-READY",
+      "note": "truncated file with no \\end{document}: pdflatex Emergency stop",
+      "fixed_by": "R7-2 (CR-aware comments + no-live-end detector)"
     },
     {
       "id": "fr_endinput_before_end",
@@ -135,7 +137,7 @@
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
       "expected_cli": "READY",
-      "note": "\\endinput before \\end{document}: TeX never reads the \\end, Emergency stop"
+      "note": "\\endinput before \\end{document}: TeX never reads the \\end, Emergency stop [R7-2 endinput-first arm dropped after adversarial verification found it over-rejects \\ifdefined\\previewmode\\endinput\\fi; deferred to the live-region train]"
     },
     {
       "id": "fr_end_in_iffalse",

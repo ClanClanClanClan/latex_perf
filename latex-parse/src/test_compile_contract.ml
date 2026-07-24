@@ -28,7 +28,10 @@ let mk_profile ~tex_path =
 let () =
   (* Happy path: minimal project, default profile, no declared features *)
   run "Ready on minimal valid project" (fun tag ->
-      let path = write_file "ok.tex" "\\documentclass{article}\n" in
+      let path =
+        write_file "ok.tex"
+          "\\documentclass{article}\n\\begin{document}\n\\end{document}\n"
+      in
       match Project_model.of_root path with
       | Error _ -> expect false (tag ^ ": setup failed")
       | Ok proj -> (
@@ -67,7 +70,10 @@ let () =
 
   (* T3: opentype_fonts on xelatex should pass *)
   run "T3 accepts opentype on xelatex" (fun tag ->
-      let path = write_file "ok_xe.tex" "\\documentclass{article}\n" in
+      let path =
+        write_file "ok_xe.tex"
+          "\\documentclass{article}\n\\begin{document}\n\\end{document}\n"
+      in
       match
         Project_model.of_root ~engine:Project_model.Xelatex
           ~declared_features:[ Project_model.Opentype_fonts ]

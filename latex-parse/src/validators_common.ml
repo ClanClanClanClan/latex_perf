@@ -522,8 +522,18 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
     let pos = !i in
     let c = String.unsafe_get s pos in
     if c = '%' && not (is_escaped pos) then (
+      (* v27.1.62 (R7-2a): a line comment ends at the next end-of-line, and
+         TeX's input processor treats CR (0x0d, classic-Mac), LF, and CRLF all
+         as line terminators. Ending only at '\n' let a '%' on a
+         CR-only-terminated line swallow the rest of the file (masking a real
+         fatal after it → a false-READY). Stop at CR or LF. *)
       let j = ref pos in
-      while !j < n && String.unsafe_get s !j <> '\n' do
+      while
+        !j < n
+        &&
+        let ch = String.unsafe_get s !j in
+        ch <> '\n' && ch <> '\r'
+      do
         incr j
       done;
       ranges := (pos, !j) :: !ranges;

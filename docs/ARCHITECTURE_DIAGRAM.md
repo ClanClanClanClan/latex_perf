@@ -1,4 +1,4 @@
-# Architecture diagram — v26.2
+# Architecture diagram
 
 High-level map of the new subsystems added in v26.2 and how they
 relate to the existing v26.1 substrate. Paths are repo-relative.

@@ -1,4 +1,4 @@
-# Proof relationships — v26.2
+# Proof relationships
 
 Map of the formal proof tree: which theorems depend on which, which
 are hypothesis-parametric, and where v27 WS8 discharges the remaining

@@ -64,6 +64,12 @@ val severity_to_string : severity -> string
 val strip_math_segments : string -> string
 (** Remove math-mode content (inline and display) from a LaTeX source string. *)
 
+val max_input_bytes : int
+(** Input-size safety cap. Above this, [run_all] returns only a truncation
+    warning and [run_subset]/[run_compile_blocking] return []. The compile
+    contract reads this so it can emit a conservative NOT-READY above the cap
+    rather than silently dropping the (now-empty) compile-blocking checks. *)
+
 val run_all : string -> result list
 (** Run all active rules against the source and return triggered results. *)
 

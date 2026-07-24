@@ -309,49 +309,159 @@ Definition fnv30 (key : list byte) : nat := fold_left fnv_step key fnv_basis.
 
 Local Open Scope string_scope.
 
-Definition n_fontspec : list byte :=
-  Eval compute in bytes_of_string "\usepackage{fontspec}".
-Definition n_fontspec_nomath : list byte :=
-  Eval compute in bytes_of_string "\usepackage[no-math]{fontspec}".
+(* Loader macros and bare package names. v27.1.62 (Bug 2): the detector now
+   matches a package load tolerating an arbitrary [..] option group and
+   comma-separated package lists, instead of an exact `\usepackage{fontspec}`
+   byte-needle that any option group evaded (a live false-READY: the doc needs
+   the feature but T3 never saw it). We therefore scan for the package NAME
+   loaded by \usepackage / \RequirePackage rather than a fixed literal. *)
+Definition n_usepackage : list byte :=
+  Eval compute in bytes_of_string "\usepackage".
+Definition n_requirepackage : list byte :=
+  Eval compute in bytes_of_string "\RequirePackage".
 Definition n_setmainfont : list byte :=
   Eval compute in bytes_of_string "\setmainfont".
-Definition n_unicode_math : list byte :=
-  Eval compute in bytes_of_string "\usepackage{unicode-math}".
 Definition n_setmathfont : list byte :=
   Eval compute in bytes_of_string "\setmathfont".
-Definition n_luacode : list byte :=
-  Eval compute in bytes_of_string "\usepackage{luacode}".
 Definition n_directlua : list byte :=
   Eval compute in bytes_of_string "\directlua".
-Definition n_cjk_pkg : list byte :=
-  Eval compute in bytes_of_string "\usepackage{CJK}".
 Definition n_cjk_begin : list byte :=
   Eval compute in bytes_of_string "\begin{CJK}".
-Definition n_luatexja : list byte :=
-  Eval compute in bytes_of_string "\usepackage{luatexja}".
-Definition n_utf8_inputenc : list byte :=
-  Eval compute in bytes_of_string "\usepackage[utf8]{inputenc}".
+Definition n_utf8 : list byte := Eval compute in bytes_of_string "utf8".
+Definition p_fontspec : list byte := Eval compute in bytes_of_string "fontspec".
+Definition p_unicode_math : list byte :=
+  Eval compute in bytes_of_string "unicode-math".
+Definition p_luacode : list byte := Eval compute in bytes_of_string "luacode".
+Definition p_cjk : list byte := Eval compute in bytes_of_string "CJK".
+Definition p_luatexja : list byte := Eval compute in bytes_of_string "luatexja".
+Definition p_inputenc : list byte := Eval compute in bytes_of_string "inputenc".
 
 Local Close Scope string_scope.
 
-(** Mirrors [Compile_evidence.detect_body_features]: same needles, same
-    guards, same RESULT ORDER (the OCaml conses each feature at most once —
-    one add site per feature — then reverses, so the output order is exactly
-    the textual order of the five condition blocks). *)
+(** ── Options-tolerant package-load scanner (mirror of
+    [Compile_evidence.uses_package]) ──────────────────────────────────────
+    Detects `\usepackage`/`\RequirePackage` loading a given package, tolerant of
+    an optional [..] option group and comma-separated package lists with
+    surrounding whitespace. OVER-detection is the conservative/safe direction
+    for T3 (it can only add a NOT-READY, never a false-READY). *)
+
+Definition is_alpha_b (b : byte) : bool :=
+  orb (andb (Nat.leb 65 b) (Nat.leb b 90))
+      (andb (Nat.leb 97 b) (Nat.leb b 122)).
+
+(* OCaml String.trim whitespace class: ' ' '\t' '\n' '\r' '\012'. *)
+Definition pkg_is_ws (b : byte) : bool :=
+  orb (Nat.eqb b 32)
+    (orb (Nat.eqb b 12) (orb (Nat.eqb b 10) (orb (Nat.eqb b 13) (Nat.eqb b 9)))).
+
+Fixpoint pkg_skip_ws (l : list byte) : list byte :=
+  match l with
+  | b :: tl => if pkg_is_ws b then pkg_skip_ws tl else l
+  | [] => []
+  end.
+
+(* Control-word boundary: the byte after a loader name is not a letter. *)
+Definition not_alpha_head (l : list byte) : bool :=
+  match l with [] => true | b :: _ => negb (is_alpha_b b) end.
+
+(* If [src] starts with a loader macro (+ boundary), the suffix after it. *)
+Definition after_loader (src : list byte) : option (list byte) :=
+  if andb (prefix_b n_usepackage src)
+       (not_alpha_head (skipn (length n_usepackage) src))
+  then Some (skipn (length n_usepackage) src)
+  else if andb (prefix_b n_requirepackage src)
+              (not_alpha_head (skipn (length n_requirepackage) src))
+  then Some (skipn (length n_requirepackage) src)
+  else None.
+
+(* Drop bytes up to and including the first ']' (92 = '\\', 93 = ']'). *)
+Fixpoint drop_after_rbracket (l : list byte) : list byte :=
+  match l with
+  | [] => []
+  | b :: tl => if Nat.eqb b 93 then tl else drop_after_rbracket tl
+  end.
+
+(* After ws: optionally consume a [..] option group, then re-skip ws. *)
+Definition skip_optional_bracket (l : list byte) : list byte :=
+  match l with
+  | b :: tl =>
+      if Nat.eqb b 91 (* '[' *) then pkg_skip_ws (drop_after_rbracket tl) else l
+  | [] => []
+  end.
+
+(* Content up to the first '}', None if unterminated. *)
+Fixpoint read_group (l : list byte) : option (list byte) :=
+  match l with
+  | [] => None
+  | b :: tl =>
+      if Nat.eqb b 125 (* '}' *) then Some []
+      else match read_group tl with Some g => Some (b :: g) | None => None end
+  end.
+
+(* Require an opening '{' at head, then read its content up to '}'. *)
+Definition read_brace_group (l : list byte) : option (list byte) :=
+  match l with
+  | b :: tl => if Nat.eqb b 123 (* '{' *) then read_group tl else None
+  | [] => None
+  end.
+
+Fixpoint bytes_eqb (a b : list byte) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => andb (Nat.eqb x y) (bytes_eqb xs ys)
+  | _, _ => false
+  end.
+
+Definition pkg_trim (l : list byte) : list byte :=
+  rev (pkg_skip_ws (rev (pkg_skip_ws l))).
+
+(* Split on ',' (44). Always returns at least one segment. *)
+Fixpoint split_comma (l : list byte) : list (list byte) :=
+  match l with
+  | [] => [[]]
+  | b :: tl =>
+      if Nat.eqb b 44 then [] :: split_comma tl
+      else match split_comma tl with
+           | seg :: rest => (b :: seg) :: rest
+           | [] => [[b]]
+           end
+  end.
+
+Definition group_has_pkg (pkg grp : list byte) : bool :=
+  existsb (fun seg => bytes_eqb (pkg_trim seg) pkg) (split_comma grp).
+
+Fixpoint uses_package_b (pkg : list byte) (src : list byte) : bool :=
+  match src with
+  | [] => false
+  | _ :: tl =>
+      match after_loader src with
+      | Some rest =>
+          match read_brace_group (skip_optional_bracket (pkg_skip_ws rest)) with
+          | Some grp =>
+              if group_has_pkg pkg grp then true else uses_package_b pkg tl
+          | None => uses_package_b pkg tl
+          end
+      | None => uses_package_b pkg tl
+      end
+  end.
+
+(** Mirrors [Compile_evidence.detect_body_features]: same guards, same RESULT
+    ORDER (the OCaml conses each feature at most once — one add site per
+    feature — then reverses, so the output order is exactly the textual order
+    of the five condition blocks). *)
 Definition detect_body_features (src : list byte) : list feature :=
-  (if contains_b n_fontspec src
-      || contains_b n_fontspec_nomath src
-      || contains_b n_setmainfont src
+  (if uses_package_b p_fontspec src || contains_b n_setmainfont src
    then [Opentype_fonts] else [])
-  ++ (if contains_b n_unicode_math src || contains_b n_setmathfont src
+  ++ (if uses_package_b p_unicode_math src || contains_b n_setmathfont src
       then [Unicode_math] else [])
-  ++ (if contains_b n_luacode src || contains_b n_directlua src
+  ++ (if uses_package_b p_luacode src || contains_b n_directlua src
       then [Lua_scripting] else [])
-  ++ (if contains_b n_cjk_pkg src
+  ++ (if uses_package_b p_cjk src
          || contains_b n_cjk_begin src
-         || contains_b n_luatexja src
+         || uses_package_b p_luatexja src
       then [Japanese_cjk] else [])
-  ++ (if contains_b n_utf8_inputenc src then [UTF8_inputenc] else []).
+  ++ (if uses_package_b p_inputenc src && contains_b n_utf8 src
+      then [UTF8_inputenc] else []).
 
 (** OCaml [String.trim] whitespace class: ' ' '\012' '\n' '\r' '\t'. *)
 Definition is_ws (b : byte) : bool :=

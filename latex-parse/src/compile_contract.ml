@@ -9,6 +9,7 @@ type reason =
       [ `Duplicate_labels of string list | `Missing_bib_entries of string list ]
   | T5_rule_violations of string list
   | T_structural_fatal of string list
+  | T_input_too_large of int
 
 type ready_check_result = Ready | NotReady of reason list
 
@@ -296,6 +297,17 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
           ],
           [] )
   in
+  (* v27.1.62 (Bug 3): above the validator input-size cap, [run_all]/
+     [run_subset] silently return no compile-blocking results, so T5 and the
+     structural-fatal gate would pass VACUOUSLY — an 11 MB document with an
+     unbalanced \left( would be judged READY. Emit a conservative NOT-READY
+     above the cap instead. This can only ADD a NOT-READY, never a false-READY. *)
+  let tcap =
+    match source_result with
+    | Ok src when String.length src > Validators.max_input_bytes ->
+        [ T_input_too_large (String.length src) ]
+    | _ -> []
+  in
   let reasons =
     t0
     @ t1_check proj
@@ -304,6 +316,7 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     @ t4_check ?aux_path proj
     @ t5
     @ tsf
+    @ tcap
   in
   if reasons = [] then Ready else NotReady reasons
 
@@ -330,3 +343,8 @@ let reason_to_string = function
   | T_structural_fatal reasons ->
       Printf.sprintf "structural-fatal (will not compile): [%s]"
         (String.concat "; " reasons)
+  | T_input_too_large n ->
+      Printf.sprintf
+        "input too large (%d bytes > %d cap): compile-blocking checks cannot \
+         run — conservative NOT-READY"
+        n Validators.max_input_bytes

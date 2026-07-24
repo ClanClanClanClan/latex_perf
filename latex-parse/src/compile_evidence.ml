@@ -226,30 +226,96 @@ let contains (hay : string) (needle : string) : bool =
     in
     go 0
 
+let is_alpha c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r'
+
+(* Options-tolerant package-load detector. Returns true iff [source] loads [pkg]
+   via \usepackage or \RequirePackage, tolerating an optional [..] option group
+   (with arbitrary options) and comma-separated package lists with surrounding
+   whitespace/newlines — e.g. \usepackage[ligatures=TeX]{fontspec} and
+   \usepackage{amsmath, fontspec} both count.
+
+   v27.1.62 (Bug 2): the old exact-string needle `\usepackage{fontspec}` was
+   trivially evaded by any option group, manufacturing a false-READY (the doc
+   needs opentype_fonts but T3 never saw the feature). OVER-detection is the
+   conservative/safe direction for T3 (it can only add a NOT-READY), so this
+   scanner errs toward matching. *)
+let uses_package (source : string) (pkg : string) : bool =
+  let hl = String.length source in
+  let loaders = [ "\\usepackage"; "\\RequirePackage" ] in
+  let skip_ws j =
+    let rec go j = if j < hl && is_ws source.[j] then go (j + 1) else j in
+    go j
+  in
+  (* Match a loader macro at [i] with a control-word boundary after it. *)
+  let match_loader i =
+    let rec try_all = function
+      | [] -> None
+      | ldr :: rest ->
+          let ll = String.length ldr in
+          if
+            i + ll <= hl
+            && String.sub source i ll = ldr
+            && (i + ll >= hl || not (is_alpha source.[i + ll]))
+          then Some (i + ll)
+          else try_all rest
+    in
+    try_all loaders
+  in
+  (* From just after the loader: optionally skip a [..] group, then read the
+     {..} package-name group and test membership of [pkg]. *)
+  let group_has_pkg j =
+    let j = skip_ws j in
+    let j =
+      if j < hl && source.[j] = '[' then
+        let rec go k = if k < hl && source.[k] <> ']' then go (k + 1) else k in
+        let k = go (j + 1) in
+        if k < hl then skip_ws (k + 1) else k
+      else j
+    in
+    if j < hl && source.[j] = '{' then
+      let rec go k = if k < hl && source.[k] <> '}' then go (k + 1) else k in
+      let k = go (j + 1) in
+      if k < hl then
+        String.sub source (j + 1) (k - (j + 1))
+        |> String.split_on_char ','
+        |> List.exists (fun n -> String.trim n = pkg)
+      else false
+    else false
+  in
+  let rec scan i =
+    if i >= hl then false
+    else if source.[i] = '\\' then
+      match match_loader i with
+      | Some j -> if group_has_pkg j then true else scan (i + 1)
+      | None -> scan (i + 1)
+    else scan (i + 1)
+  in
+  scan 0
+
 (* Detect the T3-relevant document features from real source. Each is a genuine
    package/primitive whose presence makes the document REQUIRE the feature; the
-   engine must then admit it (T3). Conservative: only fires on an unambiguous
-   marker. *)
+   engine must then admit it (T3). Conservative: over-detects (any option group
+   or comma-list still matches) so it can only add a NOT-READY, never a
+   false-READY. *)
 let detect_body_features (source : string) : feature list =
   let acc = ref [] in
   let add f = if not (List.mem f !acc) then acc := f :: !acc in
+  if uses_package source "fontspec" || contains source "\\setmainfont" then
+    add Opentype_fonts;
+  if uses_package source "unicode-math" || contains source "\\setmathfont" then
+    add Unicode_math;
+  if uses_package source "luacode" || contains source "\\directlua" then
+    add Lua_scripting;
   if
-    contains source "\\usepackage{fontspec}"
-    || contains source "\\usepackage[no-math]{fontspec}"
-    || contains source "\\setmainfont"
-  then add Opentype_fonts;
-  if
-    contains source "\\usepackage{unicode-math}"
-    || contains source "\\setmathfont"
-  then add Unicode_math;
-  if contains source "\\usepackage{luacode}" || contains source "\\directlua"
-  then add Lua_scripting;
-  if
-    contains source "\\usepackage{CJK}"
+    uses_package source "CJK"
     || contains source "\\begin{CJK}"
-    || contains source "\\usepackage{luatexja}"
+    || uses_package source "luatexja"
   then add Japanese_cjk;
-  if contains source "\\usepackage[utf8]{inputenc}" then add UTF8_inputenc;
+  if
+    uses_package source "inputenc"
+    && contains source "utf8" (* utf8 or utf8x option *)
+  then add UTF8_inputenc;
   List.rev !acc
 
 (* Body token stream: label defs, label refs, then one BT_needs_feature per

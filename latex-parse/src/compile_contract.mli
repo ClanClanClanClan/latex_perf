@@ -40,6 +40,11 @@ type reason =
           in math, misplaced alignment tab &, no \documentclass, \usepackage
           after \begin{document}). Each fires IFF pdflatex genuinely fails with
           no output PDF; pure function of the source, identical fast/full. *)
+  | T_input_too_large of int
+      (** Source exceeds [Validators.max_input_bytes], so the compile-blocking
+          validators and structural-fatal gate cannot run (they return empty
+          above the cap). Conservative NOT-READY — never a false-READY. Carries
+          the observed byte length. *)
 
 type ready_check_result = Ready | NotReady of reason list
 

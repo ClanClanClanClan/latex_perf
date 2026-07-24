@@ -511,6 +511,15 @@ let run_explain (rule_id : string) : int =
    (compiles, <=2-pass convergence, fatal-free) holds by [project_wf_dec_sound].
    Only emitted under --compile-check, so default output is unaffected. *)
 
+(* Prints the Coq-proven, model-connected verdict AND returns whether it holds.
+   v27.1.62 (Bug 1): the return value is now a HARD CONJUNCT of the final READY
+   decision in [run_compile_check] — previously this verdict was print-only and
+   the exit code came solely from the (vacuous-T3) [check_ready_to_compile], so
+   a fontspec document printed MODEL-NOT-READY yet exited 0 READY while pdflatex
+   failed. Gating READY on [all_hold] makes the verdict strictly STRICTER, so it
+   can only remove false-READYs, never add one (soundness-preserving by
+   construction). *)
+
 (** Run the T0–T5 pre-compile readiness contract on one file and print a clear
     verdict. Sets up the same per-file context the lint path uses (file context,
     command spans, build profile, user macros, language profile) so the T5
@@ -521,14 +530,15 @@ let run_explain (rule_id : string) : int =
     [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
     sibling, if present, informs T4. Returns the process exit code. *)
 let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
-    : unit =
+    : bool =
   let module CE = Latex_parse_lib.Compile_evidence in
   let p, pf, order = CE.extract_of_project ~source:src proj in
   let r = CE.report p pf order in
-  if CE.all_hold r then
+  if CE.all_hold r then (
     printf
       "MODEL-CONNECTED\tMODEL-READY (Coq project_wf_dec_sound => \
-       pdflatex_compile_safe)\n"
+       pdflatex_compile_safe)\n";
+    true)
   else (
     printf "MODEL-CONNECTED\tMODEL-NOT-READY\n";
     if not r.t2_closed then
@@ -543,7 +553,8 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
         (CE.engine_to_string pf.CE.prof_engine);
     if not r.t4_unique_labels then
       printf "  T4 duplicate \\label(s): [%s]\n"
-        (String.concat "; " (CE.duplicate_label_keys src)))
+        (String.concat "; " (CE.duplicate_label_keys src));
+    false)
 
 let run_compile_check ~fast ~path ~src : int =
   (* v27.1.59: the FAST readiness kernel is the default (parse once, run only
@@ -577,18 +588,33 @@ let run_compile_check ~fast ~path ~src : int =
             Latex_parse_lib.Compile_contract.check_ready_to_compile ~fast
               ?aux_path ~source:src proj profile
           in
-          print_model_connected_verdict ~src proj;
-          match result with
-          | Latex_parse_lib.Compile_contract.Ready ->
+          (* v27.1.62 (Bug 1): the model-connected verdict is now a HARD
+             CONJUNCT. READY requires BOTH the runtime T0–T5 contract AND the
+             Coq-proven model to hold; if either fails the process exits 1. This
+             closes the shipped false-READY where a fontspec document exited 0
+             READY (model NOT-READY was print-only) while pdflatex failed. *)
+          let model_ok = print_model_connected_verdict ~src proj in
+          match (result, model_ok) with
+          | Latex_parse_lib.Compile_contract.Ready, true ->
               printf "READY\t%s\n" path;
               0
-          | NotReady reasons ->
+          | Ready, false ->
+              (* Runtime contract passed but the proven model rejects: the
+                 authoritative (sound) answer is NOT-READY. Reasons were printed
+                 above under MODEL-NOT-READY. *)
+              printf "NOT-READY\t%s\n" path;
+              printf
+                "  (model-connected checks reject; see MODEL-NOT-READY above)\n";
+              1
+          | NotReady reasons, _ ->
               printf "NOT-READY\t%s\n" path;
               List.iter
                 (fun r ->
                   printf "  %s\n"
                     (Latex_parse_lib.Compile_contract.reason_to_string r))
                 reasons;
+              if not model_ok then
+                printf "  (model-connected checks also reject; see above)\n";
               1))
 
 (* ── Entry point ─────────────────────────────────────────────────── *)

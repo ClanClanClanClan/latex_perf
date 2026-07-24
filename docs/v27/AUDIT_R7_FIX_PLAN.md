@@ -65,7 +65,7 @@
 | A3 / B7-1 / B7-2 / B7-6 | missing `\end{document}`; `\endinput` before it; the only `\end{document}` inside `\iffalse`; duplicate `\begin{document}` | 2 |
 | A5 | `\verb\|x` broken by end-of-line | 2 |
 | B1-F1 | `\input{sections}` where `sections/` (or `sections.tex/`) is a DIRECTORY | 4 |
-| B1-F2 | self-include / 2-cycle: cycle detection is structurally vacuous (no tex→tex edges ever built) | 4 |
+| B1-F2 | include **2-cycle** (a→b→a) is READY (single-level scan never sees b's include of a). **Correction (fixture-verification):** the *direct self-include* B1-F2 also claimed is NOT a false-READY — the binary rejects it via `project_closed_b`; only the nested 2-cycle is live | 4 |
 | B3-1 | fatal `.bbl` sibling — pdflatex reads it at `\bibliography`, no component ever does | 5 |
 | B3-2 | corrupt/truncated `.aux` (interrupted-run artifact) fatals the next pdflatex run; `Aux_state` Error→`[]` | 5 |
 | B8-5 | unwritable artefact dir / poisoned TEXINPUTS / unresolvable `article.cls` | 5 |
@@ -103,14 +103,19 @@ OCaml. Every rank lands with its fixtures flipped from `expected: false_ready` t
 Nothing today prevents a NEW false-READY from shipping; these eight items make that class of
 regression mechanically impossible to miss. **R7-INFRA-1 and -2 land FIRST, before rank 1.**
 
-1. **`known_false_ready` fixture corpus + monotone CI gate** — every confirmed false-READY repro
-   committed under `corpora/compile_check/false_ready/` with a `KNOWN_FALSE_READY.json` manifest
-   (current vs expected verdict). CI fails if the false-READY count ever INCREASES; each fix PR
-   flips its entries to expected-NOT-READY.
+1. **`known_false_ready` fixture corpus + monotone CI gate** — ✅ **LANDED (PR-R7-0).** 21
+   confirmed false-READY repros committed under `corpora/false_ready/` (a NEW sibling of
+   `compile_check/`, so the flat differential matrix and the recursive front-end parity sweep are
+   untouched) with `manifest.json` (per-fixture pdflatex ground truth + `expected_cli`).
+   `scripts/tools/check_known_false_ready.py` runs in the CI `build` job (CLI-only, no TeX) and
+   fails on either drift direction — a fixed fixture regressing to READY, or a live one silently
+   fixed without a manifest update. Each fix PR flips its entries to `expected_cli: NOT-READY` and
+   lowers the baseline. Baseline: 13 strong-fatal + 8 error-halt, fix ranks 1/2/4/5/6/7.
 2. **pdflatex differential CI gate (S-CI-TEX realized)** — texlive-pinned image,
    `REQUIRE_PDFLATEX=1`, BOTH oracle protocols, full corpus + false_ready fixtures on every
-   release train. (Every single round-7 finding was discovered by RUNNING pdflatex; CI currently
-   contains zero pdflatex invocations.)
+   release train. (Every round-7 finding was discovered by RUNNING pdflatex; CI has zero pdflatex
+   today.) **PR-R7-0 ships the LOCAL form** — `scripts/tools/false_ready_oracle.sh` re-runs the
+   real oracle and drift-checks the manifest; the CI texlive-image is the remaining follow-up.
 3. **Oracle-truth corpus snapshot** — per-doc {verdict, reason class, HALT/NOSTOP/PDF triple,
    timing} committed as golden TSVs; verdict flips require an explicit fixture-update commit.
    Simultaneously fix the polarity-inverted fixtures.

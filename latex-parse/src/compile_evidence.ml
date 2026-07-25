@@ -268,8 +268,21 @@ let uses_package (source : string) (pkg : string) : bool =
     let j = skip_ws j in
     let j =
       if j < hl && source.[j] = '[' then
-        let rec go k = if k < hl && source.[k] <> ']' then go (k + 1) else k in
-        let k = go (j + 1) in
+        (* R7-1b: stop at the first UNESCAPED ']' at brace depth 0 — LaTeX
+           brace-protects ']' inside a {..} option value, and `\]`/`\{`/`\}` are
+           literals (mirror of the Coq [drop_after_rbracket false 0]). *)
+        let rec go esc depth k =
+          if k >= hl then k
+          else
+            let c = source.[k] in
+            let esc' = c = '\\' && not esc in
+            if esc then go esc' depth (k + 1)
+            else if c = '{' then go esc' (depth + 1) (k + 1)
+            else if c = '}' then go esc' (max 0 (depth - 1)) (k + 1)
+            else if c = ']' && depth = 0 then k
+            else go esc' depth (k + 1)
+        in
+        let k = go false 0 (j + 1) in
         if k < hl then skip_ws (k + 1) else k
       else j
     in
@@ -301,8 +314,12 @@ let uses_package (source : string) (pkg : string) : bool =
 let detect_body_features (source : string) : feature list =
   let acc = ref [] in
   let add f = if not (List.mem f !acc) then acc := f :: !acc in
-  if uses_package source "fontspec" || contains source "\\setmainfont" then
-    add Opentype_fonts;
+  if
+    uses_package source "fontspec"
+    || contains source "\\setmainfont"
+    || uses_package source "polyglossia"
+    || uses_package source "mathspec"
+  then add Opentype_fonts;
   if uses_package source "unicode-math" || contains source "\\setmathfont" then
     add Unicode_math;
   if uses_package source "luacode" || contains source "\\directlua" then

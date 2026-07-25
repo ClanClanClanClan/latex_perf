@@ -45,6 +45,12 @@ type reason =
           validators and structural-fatal gate cannot run (they return empty
           above the cap). Conservative NOT-READY — never a false-READY. Carries
           the observed byte length. *)
+  | T_artefact_fatal of { file : string; message : string }
+      (** A sibling artefact pdflatex reads as LaTeX (the [.aux] at
+          \begin{document}, or [<jobname>.bbl] at \bibliography{..}) has an
+          unclosed brace group — the deterministic "! File ended while scanning"
+          fatal, invisible to a root-only check. A valid tool-generated artefact
+          is always balanced, so this is conservative — never a false-READY. *)
 
 type ready_check_result = Ready | NotReady of reason list
 

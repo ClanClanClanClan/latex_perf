@@ -772,6 +772,73 @@ let deep_grouping_fatal (s : string) : string option =
        [grouping levels=255]"
   else None
 
+(* ── Sibling-artefact helpers (R7-5) ──────────────────────────────────────
+   pdflatex reads sibling artefacts as LaTeX: the [.aux] at \begin{document}
+   (from a previous run) and the [.bbl] at \bibliography{..}. An UNCLOSED brace
+   group in either is the deterministic fatal "! File ended while scanning ...
+   \n Fatal error occurred". A valid, tool-generated .aux/.bbl is always
+   brace-balanced, so an imbalance is genuine corruption — reporting it can only
+   ADD a NOT-READY (never a false-READY). Extra `}` (depth would go negative) is
+   RECOVERABLE in TeX, so the counter clamps at 0 and only a net-unclosed `{`
+   fires. Escape- and comment/verbatim-aware. *)
+let unbalanced_open_brace (s : string) : bool =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let depth = ref 0 and i = ref 0 in
+  while !i < n do
+    let pos = !i in
+    if in_ranges skip pos then incr i
+    else (
+      (match String.unsafe_get s pos with
+      | '{' when not (is_escaped pos) -> incr depth
+      | '}' when not (is_escaped pos) -> if !depth > 0 then decr depth
+      | _ -> ());
+      incr i)
+  done;
+  !depth > 0
+
+(* True iff the source loads a bibliography via \bibliography{..} (the command
+   that \input's <jobname>.bbl), outside any comment/verbatim. Excludes
+   \bibliographystyle (whose next non-space byte is `s`, not `{`). *)
+let source_uses_bibliography (s : string) : bool =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' || c = '\012' in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts pfx j =
+    let pl = String.length pfx in
+    j + pl <= n && String.sub s j pl = pfx
+  in
+  let found = ref false in
+  let i = ref 0 in
+  while !i < n && not !found do
+    let pos = !i in
+    if in_ranges skip pos || is_escaped pos then incr i
+    else if starts "\\bibliography" pos then (
+      let j = ref (pos + String.length "\\bibliography") in
+      while !j < n && is_ws (String.unsafe_get s !j) do
+        incr j
+      done;
+      if !j < n && String.unsafe_get s !j = '{' then found := true else incr i)
+    else incr i
+  done;
+  !found
+
 (* ── Public entry ─────────────────────────────────────────────────────── *)
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map

@@ -379,18 +379,33 @@ Definition after_loader (src : list byte) : option (list byte) :=
   then Some (skipn (length n_requirepackage) src)
   else None.
 
-(* Drop bytes up to and including the first ']' (92 = '\\', 93 = ']'). *)
-Fixpoint drop_after_rbracket (l : list byte) : list byte :=
+(* Drop bytes up to and including the first ']' that is UNESCAPED and at BRACE
+   DEPTH 0 (R7-1b). LaTeX's optional-argument scan brace-protects ']' (a ']'
+   inside a `{..}` value does not close the group), and a `\]`/`\{`/`\}` is a
+   literal, not a delimiter. [esc] tracks whether the current byte is escaped
+   (preceded by an odd run of '\'); an unescaped '\' (byte 92) escapes the next.
+   92='\' 91='[' 93=']' 123='{' 125='}'. *)
+Fixpoint drop_after_rbracket (esc : bool) (depth : nat) (l : list byte)
+    : list byte :=
   match l with
   | [] => []
-  | b :: tl => if Nat.eqb b 93 then tl else drop_after_rbracket tl
+  | b :: tl =>
+      let esc' := andb (Nat.eqb b 92) (negb esc) in
+      if esc then drop_after_rbracket esc' depth tl
+      else if Nat.eqb b 123 (* '{' *) then drop_after_rbracket esc' (S depth) tl
+      else if Nat.eqb b 125 (* '}' *) then
+        drop_after_rbracket esc' (pred depth) tl
+      else if andb (Nat.eqb b 93) (Nat.eqb depth 0) (* unescaped ']' at depth 0 *)
+      then tl
+      else drop_after_rbracket esc' depth tl
   end.
 
 (* After ws: optionally consume a [..] option group, then re-skip ws. *)
 Definition skip_optional_bracket (l : list byte) : list byte :=
   match l with
   | b :: tl =>
-      if Nat.eqb b 91 (* '[' *) then pkg_skip_ws (drop_after_rbracket tl) else l
+      if Nat.eqb b 91 (* '[' *) then pkg_skip_ws (drop_after_rbracket false 0 tl)
+      else l
   | [] => []
   end.
 

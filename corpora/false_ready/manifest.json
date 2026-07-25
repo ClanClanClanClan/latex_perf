@@ -11,8 +11,8 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 13,
-    "strong_fatal": 9,
+    "false_ready_total": 12,
+    "strong_fatal": 8,
     "error_halt": 4
   },
   "fixtures": [
@@ -91,8 +91,9 @@
       "fix_rank": 2,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "drop_after_rbracket cuts option group at first ']'; LaTeX brace-protects ']'"
+      "expected_cli": "NOT-READY",
+      "note": "drop_after_rbracket cuts option group at first ']'; LaTeX brace-protects ']'",
+      "fixed_by": "R7-1b (escape-aware brace-tracking option scan)"
     },
     {
       "id": "fr_cr_comment",

@@ -38,7 +38,14 @@ let moving_arg_commands =
     "nameref";
     "vref";
     "vpageref";
-    "hyperref";
+    (* NB: \hyperref is DELIBERATELY absent. Its reference KEY is the optional
+       [label] arg, while its brace group `\hyperref[l]{link text}` is TYPESET
+       (a moving arg that IS re-rendered). Listing it here made the scanner skip
+       the {link text}, hiding a genuine `$a^b^c$` double-superscript inside it
+       (fr_hyperref_linktext, pdflatex "! Double superscript.", exit 1). The
+       [label] key is an optional-arg `[...]`, already consumed by the opt-skip
+       loop below and never inside a math range, so dropping \hyperref cannot
+       over-reject. R7-7. *)
     "hypertarget";
     "hyperlink";
     "href";
@@ -840,6 +847,50 @@ let source_uses_bibliography (s : string) : bool =
   !found
 
 (* ── Public entry ─────────────────────────────────────────────────────── *)
+(* ── Detector (8): duplicate \begin{document} ───────────────────────────── A
+   second \begin{document} re-executes \document → "! LaTeX Error: Can be used
+   only in preamble." pdflatex exits 1 (a PDF is still emitted in nonstopmode,
+   but the build FAILED — the readiness oracle is the exit code, R7-2). Fires
+   when TWO real \begin{document} anchors appear outside verbatim/comment/url.
+   Add-NOT-READY-only: a compiling document has exactly one \begin{document}, so
+   counting two can only ever fire on a document pdflatex also rejects — it
+   cannot manufacture a false-READY. Escape- and comment/verbatim-aware. Exact
+   anchor (no `\begin {document}` spacing) → may UNDER-fire, never over-fire. *)
+let duplicate_begin_document_fatal (s : string) : string option =
+  let n = String.length s in
+  let skip = Validators_common.find_verbatim_comment_url_ranges s in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts pfx j =
+    let pl = String.length pfx in
+    j + pl <= n && String.sub s j pl = pfx
+  in
+  let anchor = "\\begin{document}" in
+  let alen = String.length anchor in
+  let seen = ref 0 in
+  let result = ref None in
+  let i = ref 0 in
+  while !i < n && !result = None do
+    let pos = !i in
+    if in_ranges skip pos then incr i
+    else if (not (is_escaped pos)) && starts anchor pos then (
+      incr seen;
+      if !seen >= 2 then
+        result :=
+          Some
+            "duplicate \\begin{document}: ! LaTeX Error: Can be used only in \
+             preamble";
+      i := pos + alen)
+    else incr i
+  done;
+  !result
+
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
     (fun f -> f source)
@@ -851,6 +902,7 @@ let structural_fatal_reasons (source : string) : string list =
       no_documentclass_fatal;
       usepackage_after_begin_fatal;
       no_live_end_document_fatal;
+      duplicate_begin_document_fatal;
       nul_byte_fatal;
       deep_grouping_fatal;
     ]

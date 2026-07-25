@@ -91,5 +91,48 @@ let () =
         = "unicode_math")
         (tag ^ ": unicode_math"));
 
+  (* R7-4: recursive \input cycle detection. of_root is single-level, so an
+     a→b→a cycle only shows up under has_include_cycle's transitive walk.
+     pdflatex fatals on it ("TeX capacity exceeded [text input levels]"). *)
+  run "has_include_cycle: a->b->a detected" (fun tag ->
+      let a =
+        write_file "cyc_a.tex"
+          "\\documentclass{article}\\begin{document}x\\input{cyc_b}\\end{document}"
+      in
+      let _ = write_file "cyc_b.tex" "hop\\input{cyc_a}\n" in
+      expect (Project_model.has_include_cycle a) (tag ^ ": cycle fires"));
+
+  run "has_include_cycle: acyclic chain a->b->c ok" (fun tag ->
+      let a =
+        write_file "acy_a.tex"
+          "\\documentclass{article}\\begin{document}\\input{acy_b}\\end{document}"
+      in
+      let _ = write_file "acy_b.tex" "\\input{acy_c}\n" in
+      let _ = write_file "acy_c.tex" "leaf\n" in
+      expect
+        (not (Project_model.has_include_cycle a))
+        (tag ^ ": acyclic stays clean"));
+
+  (* REGRESSION (real paper 2507.08271 ph2.tex → tcilatex.tex): a COMMENTED `%
+     the \input tcilatex` must NOT be read as a live edge. Include_resolver is
+     comment-blind, so without comment-stripping this manufactured a FALSE
+     self-cycle on a document pdflatex compiles cleanly. *)
+  run "has_include_cycle: commented \\input is not a live edge" (fun tag ->
+      let a =
+        write_file "cmt_a.tex"
+          "\\documentclass{article}\\begin{document}\\input{cmt_b}\\end{document}"
+      in
+      let _ = write_file "cmt_b.tex" "% the \\input cmt_a\nreal content\n" in
+      expect
+        (not (Project_model.has_include_cycle a))
+        (tag ^ ": commented back-edge ignored"));
+
+  run "has_include_cycle: no includes ok" (fun tag ->
+      let a =
+        write_file "solo.tex"
+          "\\documentclass{article}\\begin{document}x\\end{document}"
+      in
+      expect (not (Project_model.has_include_cycle a)) (tag ^ ": solo clean"));
+
   cleanup_dir ();
   finalise "project-model"

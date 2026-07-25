@@ -117,6 +117,89 @@ let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
         (scan_includes src);
       Ok { files = List.rev !files; root = root_id; engine; declared_features }
 
+(* v27.1.62 (R7-4): detect an \input/\include CYCLE reachable from [root_path].
+   [of_root] enumerates only the root's DIRECT includes (single-level, plan
+   §2.6), so a cycle that closes through a child (a→b→a) is invisible to the
+   artefact-level [Build_graph.is_acyclic] check. pdflatex follows \input
+   recursively; a cycle exhausts TeX's input nesting → "! TeX capacity exceeded,
+   sorry [text input levels=15]", a deterministic fatal (exit 1, no PDF).
+
+   Recursive DFS over the resolved include graph: a path-stack is the GREY set
+   (back-edge ⇒ cycle) and a hashtable is the BLACK set (fully-explored ⇒ skip).
+   The stack membership test runs BEFORE the black-set test, so a back-edge onto
+   a grey node is never masked by memoisation. SOUND BY UNDER-APPROXIMATION /
+   add-NOT-READY-only: paths are normalised to ABSOLUTE form (never collapsing
+   two distinct files into one, which is the only way a false cycle could
+   arise), and any unresolvable / non-.tex child simply ends that branch — so
+   the detector can only UNDER-detect a real cycle, never invent one on an
+   acyclic project. Fuel-bounded against pathological fan-out. *)
+let normalize_path (p : string) : string =
+  let p =
+    if Filename.is_relative p then Filename.concat (Sys.getcwd ()) p else p
+  in
+  let parts = String.split_on_char '/' p in
+  let rec go acc = function
+    | [] -> List.rev acc
+    | ("" | ".") :: tl -> go acc tl
+    | ".." :: tl -> ( match acc with _ :: r -> go r tl | [] -> go acc tl)
+    | seg :: tl -> go (seg :: acc) tl
+  in
+  "/" ^ String.concat "/" (go [] parts)
+
+(* Include_resolver.extract_includes is COMMENT-BLIND: a commented `% \input
+   foo` (e.g. tcilatex.tex's `% the \input tcilatex`, ubiquitous in
+   Scientific-Word output) would be read as a real edge and manufacture a FALSE
+   self-cycle on a document pdflatex compiles cleanly. Blank
+   comment/verbatim/\verb/url ranges to spaces (offset-preserving) before
+   scanning so only LIVE includes count. Blanking can only REMOVE edges → for
+   cycle detection it can only UNDER-detect (sound), never invent a cycle. *)
+let scan_includes_live (src : string) : string list =
+  let vcu = Validators_common.find_verbatim_comment_url_ranges src in
+  if vcu = [] then scan_includes src
+  else
+    let b = Bytes.of_string src in
+    let len = Bytes.length b in
+    List.iter
+      (fun (a, z) ->
+        for k = a to z - 1 do
+          if k >= 0 && k < len then Bytes.set b k ' '
+        done)
+      vcu;
+    scan_includes (Bytes.unsafe_to_string b)
+
+let has_include_cycle (root_path : string) : bool =
+  let resolve (base : string) (rel : string) : string option =
+    let p = Filename.concat base rel in
+    if
+      Sys.file_exists p
+      && (not (Sys.is_directory p))
+      && Filename.check_suffix p ".tex"
+    then Some p
+    else if Sys.file_exists (p ^ ".tex") then Some (p ^ ".tex")
+    else None
+  in
+  let visited = Hashtbl.create 64 in
+  let rec dfs (path : string) (stack : string list) (fuel : int) : bool =
+    if fuel <= 0 then false
+    else
+      let cpath = normalize_path path in
+      if List.mem cpath stack then true (* back edge → include cycle *)
+      else if Hashtbl.mem visited cpath then false (* fully explored, acyclic *)
+      else (
+        Hashtbl.replace visited cpath ();
+        match read_file_safe path with
+        | Error _ -> false (* unresolvable/non-.tex child ends this branch *)
+        | Ok src ->
+            let base = Filename.dirname path in
+            List.exists
+              (fun rel ->
+                match resolve base rel with
+                | Some child -> dfs child (cpath :: stack) (fuel - 1)
+                | None -> false)
+              (scan_includes_live src))
+  in
+  dfs root_path [] 10000
+
 let root_file (t : t) : file_entry = List.find (fun f -> f.id = t.root) t.files
 let all_files (t : t) : file_entry list = t.files
 

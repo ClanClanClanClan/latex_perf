@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 12,
-    "strong_fatal": 8,
-    "error_halt": 4
+    "false_ready_total": 9,
+    "strong_fatal": 7,
+    "error_halt": 2
   },
   "fixtures": [
     {
@@ -171,7 +171,7 @@
       "fix_rank": 2,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
+      "expected_cli": "NOT-READY",
       "note": "duplicate \\begin{document}: 'Can be used only in preamble' (protocol-dependent)"
     },
     {
@@ -194,7 +194,7 @@
       "fix_rank": 4,
       "tier": "lp-core",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
+      "expected_cli": "NOT-READY",
       "note": "include cycle a->b->a: single-level scan never sees b's include of a; pdflatex recurses to capacity. Needs nested closure (R7-4 model half). NB direct self-include IS correctly caught by project_closed_b (B1-F2 headline over-claimed)"
     },
     {
@@ -253,7 +253,7 @@
       "fix_rank": 7,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
+      "expected_cli": "NOT-READY",
       "note": "\\hyperref[l]{link text} moving-arg skip treats {link text} as a key; a double-superscript inside it is missed"
     }
   ]

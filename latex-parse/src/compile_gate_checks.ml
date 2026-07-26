@@ -891,6 +891,50 @@ let duplicate_begin_document_fatal (s : string) : string option =
   done;
   !result
 
+(* ── Detector (9): \verb argument broken across a line (R7-2) ───────────────
+   `\verb<d>…` must be closed by its delimiter `<d>` on the SAME line; pdflatex
+   fatals "! LaTeX Error: \verb ended by end of line." (exit 1, no PDF) when the
+   line ends first. [find_verbatim_comment_url_ranges] scans an inline `\verb`
+   from the delimiter to the next matching delimiter WITHOUT stopping at a line
+   end, so a range whose start is a real inline `\verb`/`\verb*` and that spans
+   a newline is exactly this fatal. A `\verb` inside a comment/verbatim env
+   never starts its own vcu range (the enclosing comment/env opens first and the
+   scanner jumps past it), so those never fire. Add-NOT-READY-only: a compiling
+   `\verb` closes on its line ⇒ no newline in its range ⇒ no fire. *)
+let verb_broken_eol_fatal (s : string) : string option =
+  let n = String.length s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let starts pfx a =
+    let pl = String.length pfx in
+    a + pl <= n && String.sub s a pl = pfx
+  in
+  (* [a] starts a REAL inline \verb/\verb* : "\verb", optional "*", then a
+     non-letter delimiter (the non-letter guard excludes \verbatim…). *)
+  let is_inline_verb a =
+    if not (starts "\\verb" a) then false
+    else
+      let j = a + 5 in
+      let j = if j < n && String.unsafe_get s j = '*' then j + 1 else j in
+      j < n && not (is_letter (String.unsafe_get s j))
+  in
+  let spans_newline a b =
+    let rec go k =
+      if k >= b || k >= n then false
+      else
+        match String.unsafe_get s k with '\n' | '\r' -> true | _ -> go (k + 1)
+    in
+    go a
+  in
+  let vcu = Validators_common.find_verbatim_comment_url_ranges s in
+  List.find_map
+    (fun (a, b) ->
+      if is_inline_verb a && spans_newline a b then
+        Some
+          "\\verb argument broken across a line: ! LaTeX Error: \\verb ended \
+           by end of line"
+      else None)
+    vcu
+
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
     (fun f -> f source)
@@ -903,6 +947,7 @@ let structural_fatal_reasons (source : string) : string list =
       usepackage_after_begin_fatal;
       no_live_end_document_fatal;
       duplicate_begin_document_fatal;
+      verb_broken_eol_fatal;
       nul_byte_fatal;
       deep_grouping_fatal;
     ]

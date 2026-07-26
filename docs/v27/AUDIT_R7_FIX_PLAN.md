@@ -102,7 +102,143 @@ OCaml. Every rank lands with its fixtures flipped from `expected: false_ready` t
 | 8 | **lp-extended admits non-terminating macro recursion** | conservative detector: `\def` whose body references its own name with NO conditional + a use-site ⇒ NOT-READY/demote. MUST pass a differential sweep vs the real-paper corpus first (the CMD-016 over-rejection post-mortem applies) | no | M |
 | 9 | **Superlinear hot spots** (the wedge inverts at scale) | (a) Coq: sort-based nodup replacing `nodup_nat_b` list-membership (43 s → <1 s @ 100k labels), re-extract; (b) OCaml: interval-tree / sorted-array search for `find_ref_alias_macros` / `find_moving_arg_ranges` / `in_ranges_b`; hashtable in `graph_of_build_graph`; (c) rank-2's live-prefix removes the dead-byte tax. Ship WITH the perf sentinel (R7-INFRA-6) | YES (a) | M |
 | 10 | **Docs/corpus assertions overstate or invert measured behaviour** | qualify the structural-gate IFF claim as halt-on-error-scoped; fix/delete dead-code comments (`Missing_bib_entries`, cycle reason); re-tier the contradicted `tolerated_*` fixtures; document lint-mode's exit-code non-contract + opt-in `--error-exit`; fold the A10 honesty items into `COMPILATION_GUARANTEE.md` | no | S |
+| 2 — **status (PR-R7-inputmodel)** | **SHIPPED `verb_broken_eol_fatal`** (`fr_verb_eol`) — an add-NOT-READY-only structural detector: a real inline `\verb`/`\verb*` whose delimiter does not close before the line end → pdflatex "! `\verb` ended by end of line" (exit 1). Reuses the vcu scanner (a range starting at a real inline `\verb` that spans a newline is exactly the fatal; `\verb` inside comment/env never starts its own range). Adversarially verified (workflow, pdflatex oracle): 0 soundness issues, one exotic over-reject (unclosed `\verb` inside a `\begin{comment}` package env). Baseline **9→8**. Unit tests (compile_gate 69). **`raw_cjk_fatal` was BUILT + hardened over five adversarial rounds, then REVERTED and re-homed** — see **DWR-CJK**: CJK is a verified-feature-model fact (the model already owns `Japanese_cjk`), not a structural detector; it ships as a Coq model train that also fixes the pre-existing CJKutf8 T3 over-reject. | — | — |
 | 2/4/7 — **status (PR-R7-struct-batch)** | **SHIPPED three add-NOT-READY-only / detector-precision fixes, each dual-oracled against real pdflatex + verified 0 over-reject on 384 real papers.** (rank-4 model half) `Project_model.has_include_cycle` — a recursive `\input`/`\include` DFS (grey path-stack for back-edges, black visited-set, absolute-path normalisation, fuel-bounded) wired into `t2_check`; the a→b→a cycle that single-level `of_root` + artefact-only `Build_graph.is_acyclic` missed now fires "T2 project not closed" (pdflatex "! TeX capacity exceeded [text input levels=15]") → `fr_two_cycle`. Sound by under-approximation: unresolvable/non-.tex children end a branch, abs-normalisation never over-collapses distinct files → can only MISS a cycle, never invent one. (rank-2) `duplicate_begin_document_fatal` — a 2nd real `\begin{document}` outside comment/verbatim → "Can be used only in preamble" → `fr_dup_begin_document`. (rank-7) dropped `\hyperref` from `moving_arg_commands` — its key is the `[label]` OPTIONAL arg, so listing it wrongly skipped the TYPESET `{link text}`, hiding a `$a^b^c$` double-superscript → `fr_hyperref_linktext`. Verified: hyperref-targeted sweep (30 real hyperref papers) = 0 double-script over-reject. Baseline **12→9** (strong_fatal 8→7, error_halt 4→2). Unit tests added (compile_gate 62, project-model 12). **NB the rank-2 truncation/live-region half and rank-4 kpathsea/resolution-base half remain deferred** (they can *introduce* a false-READY if wrong → dedicated adversarial train). | — | — |
+
+## 4b. Deferred-Work Register (nothing is "dropped" — every item has a plan)
+
+Everything below is **live-tracked**: each row's fixture is a `corpora/false_ready/` entry whose
+`expected_cli` is still `READY` (so the monotone CI gate holds it), and each has a concrete unblock
+design, its prerequisites, and its risk-polarity. "Dropped after N false-READYs" means *this approach
+was falsified by adversarial verification* — it does **not** mean abandoned; the corrected design is
+recorded here and the fixture stays in the ledger until it flips. **Risk-polarity is the key
+discriminator:** for STRUCTURAL-fatal detectors, over-skip ⇒ under-fire ⇒ *sound* (add-NOT-READY); for
+FEATURE detection (needs xelatex/opentype/CJK), UNDER-detect ⇒ **false-READY (cardinal)**, so those
+trains must err toward *over*-detecting and be proven never to over-skip.
+
+**DWR-1 — Shared `\verb`/`\lstinline` scanner fix (OR-1). PREREQUISITE for DWR-2.**
+No fixture flip; fixes a pre-existing *over-reject* (`\lstinline[language=C]|..|` — the scanner in
+`validators_common.compute_verbatim_comment_url_ranges` (~L560-575) takes the `[` as the verb
+delimiter and over-runs; `\verb` also fails to stop at EOL). Design: (a) for `\lstinline`, consume the
+optional `[...]` key-val arg *before* reading the delimiter; (b) bound the `\verb` scan at the line end
+so its range is `[start, min(close_delim, EOL))`. **Coordinate with `verb_broken_eol_fatal`** (DWR
+depends on the range spanning the newline today) — after this fix the detector keys off "range ended at
+EOL with no close" instead. Risk: it *removes* NOT-READYs, so prove no case flips to a false-READY.
+Sequence: FIRST (it unblocks DWR-2 and is independently useful).
+
+**DWR-2 — Comment-awareness for FEATURE detection (`fr_comment_comma`, `fr_comment_beforearg`).**
+Dropped after **6 false-READYs across 3 rounds** — the lesson: *blanking any scanner-identified region
+inherits that scanner's over-extension as a false-READY*, and feature-detection polarity makes
+over-skip the CARDINAL bug. Falsified approaches: blanking the full verbatim-env set (alltt/listing
+*execute*), blanking `{verbatim,verbatim*,comment}` (`\newenvironment{comment}` passthrough executes),
+blanking `\verb`/`\lstinline` (shared-scanner over-extension erases a live `\setmainfont`). **Corrected
+design — LOCAL comment-skip, not global blanking:** make `uses_package_b` (VERIFIED
+`BodyTokenFrontEnd.v`) parse `\usepackage[opts]{names}` the way TeX does — skip a `%…\n`
+comment-continuation *within the construct only*, so a distant live feature can never be stripped. This
+is bounded ⇒ cannot manufacture a false-READY by over-stripping. Re-prove capstone axiom-free +
+re-extract + front-end parity. Prerequisite: DWR-1 (any residual global inert use). Risk: FEATURE
+polarity (under-detect = false-READY) → conservative, heavy adversarial pass. Sequence: after DWR-1.
+
+**DWR-3 — rank-2b live-region (`fr_endinput_before_end`, `fr_end_in_iffalse`, `fr_caret_brace`). HIGH
+RISK — the one train that can INTRODUCE a false-READY.** `\endinput`-before-`\end{document}` naive
+detection over-rejects the common `\ifdefined\previewmode\endinput\fi` / `\ifdraft\endinput\fi` (arXiv)
+→ needs a *conditional-liveness* model (is the `\endinput` reachable/unguarded?). `\iffalse…\fi` makes
+its enclosed `\end{document}` dead → needs an `\iffalse`/`\newif` region model. `fr_caret_brace`
+(`^^7b`→`{`) needs `^^`-decode + brace-balance. **The dangerous part is TRUNCATION**: truncating the
+scanned source at a *dead* `\end` (inside `\iffalse`) drops live content ⇒ false-READY if the model is
+wrong. Design: a conservative live-prefix pass (model `\iffalse..\fi` dead, `\endinput` as EOF only
+when provably unguarded), specified in Coq (it changes what the verified model reads). Risk: HIGHEST —
+its own dedicated adversarial train with a full real-paper differential before any truncation ships.
+Sequence: after DWR-2; do NOT bundle truncation with the cheap arms.
+
+**DWR-4 — rank-1 tail loaders (`fr_lowercase_loader`, `fr_csname_loader`).** `\lowercase{\usepackage{FONTSPEC}}`
+lowercases to `fontspec` at execution (case-sensitive needle misses it); `\csname…\endcsname`-built
+loaders have no literal `\usepackage` token. Design: detect `\lowercase{…\usepackage…}` with a
+case-fold, and `\csname`-assembled loads — both are macro-execution modeling. Low volume / hard-rare.
+Risk: FEATURE polarity (under-detect = false-READY). Sequence: last of rank-1.
+
+**DWR-CJK — Raw-CJK correctness, as a VERIFIED-MODEL train (NOT a structural detector).** Fixture
+`fr_raw_cjk` (highest-volume, 4.1%). **A structural `raw_cjk_fatal` was built and adversarially
+hardened over FIVE rounds, then DELIBERATELY REVERTED** — not for unsoundness (it is add-NOT-READY-only;
+its over-reject side stayed clean) but because it is **architecturally misplaced**: the *verified* model
+already owns the feature. `compile_evidence.ml:328` / `BodyTokenFrontEnd.v:483` detect `Japanese_cjk`
+from `\usepackage{CJK}` / `\begin{CJK}` (but NOT from raw bytes — the `fr_raw_cjk` gap); `compile_contract.ml:40-41`
+gates it (`Japanese_cjk, Ptex_uptex -> true; _, _ -> false`). That table is ALSO wrong — `\usepackage{CJKutf8}\begin{CJK}…\end{CJK}`
+**compiles under pdflatex** (oracle exit 0) yet T3 rejects it: a pre-existing **false-NOT-READY**. So CJK
+is one mis-modelled feature with **two-sided breakage** (raw-byte false-READY + CJKutf8 false-NOT-READY),
+fixable only together, in the model. **Design:** (1) extend the verified `Japanese_cjk` detection to raw
+3-byte CJK-block bytes; (2) fix T3 so `japanese_cjk` is admitted under pdflatex when a pdflatex-CJK
+package (`CJKutf8`/`CJK`) is present; re-prove capstone axiom-free + re-extract + parity. **Reuse the
+model's `uses_package_b`** (options-tolerant, `\usepackage{}`-anchored — the correct package detector)
+rather than hand-rolled substring matching. **Reference implementation + the 6 falsified findings are
+saved** (scratchpad `DWR-CJK-reference.ml`). The hard-won EXEMPTION SPEC to carry over (all
+oracle-verified): body CJK is fatal even inside `\verb`/verbatim (inputenc decodes the bytes — exempt
+ONLY comments + url); `\newunicodechar`/`\DeclareUnicodeCharacter` exempt PER-CODEPOINT and only when
+(a) outside comment/verb/verbatim, (b) UPPERCASE hex for `\DeclareUnicodeCharacter`; **INVARIANT: every
+source read for an exemption must be inert-aware AND token-anchored** — the 6th falsified round showed
+loose global substring package-matching falsely exempts any prose mentioning "fontspec"/"CJK". Residual
+coverage for the same train: widen block table (U+2E80–2EFF, U+2F00–2FDF, U+A000–A4CF, U+D7B0–D7FF) and
+4-byte Ext-B (U+20000+) — both under-fire = safe. **LESSON: CJK-detection-as-structural-gate is the
+wrong layer; a compile-compatibility fact about a Unicode feature belongs in the verified feature model,
+where package detection is already correct.** Sequence: its own model train (Coq); the 5-round
+hardening is the spec, not wasted.
+
+*Implementation mechanics (de-risked by reading the proofs).* Add a `|| has_raw_cjk_b src` disjunct to
+the `Japanese_cjk` block of `detect_body_features` — in BOTH `BodyTokenFrontEnd.v:480` (Coq) and
+`compile_evidence.ml:327` (OCaml hand-mirror). **The capstone stays axiom-free for free:**
+`body_required_features_of_source` (`BodyTokenFrontEnd.v:1307`) is proved GENERICALLY over
+`detect_body_features` (it rewrites with the app/events/feats lemmas, never case-analysing the feature
+internals), so a new well-formed boolean disjunct cannot break it; `compile_safe_of_source` only gets
+STRICTER (more features ⇒ more T3 checks ⇒ fewer READYs), preserving READY⇒safe. **Part A alone closes
+`fr_raw_cjk`** because the EXISTING T3 already rejects `Japanese_cjk` under pdflatex
+(`compile_contract.ml:41`); the CKJutf8 T3 over-reject is the separable **Part B**. The binding
+constraint is exact **OCaml↔Coq parity** (`test_body_token_frontend.ml check_parity`): `has_raw_cjk_b`
+(terminating fuel-bounded `list byte` scan, style of `scan_from`) must byte-match the OCaml mirror
+(adapt the hardened OCaml reference implementation preserved out-of-tree from the reverted structural
+detector). Reuse the verified `uses_package_b` for the package check.
+Re-extract via `scripts/tools/regen_body_token_frontend_extract.sh`; parity swept over the corpus; then
+`Print Assumptions compile_safe_of_source` must still print "Closed under the global context". The exact
+exemption polarity (which contexts flag vs compile — notably whether `CJKutf8`/`CJK` make raw bytes
+compile only INSIDE their `\begin{CJK}` env, so raw bytes outside STILL flag) is pinned by a pdflatex
+oracle-map before any Coq is written.
+
+**`has_raw_cjk_b` SPEC (pinned by pdflatex oracle-map, four categories).** Fires iff there exists a
+candidate CJK codepoint in a live, non-exempt region whose codepoint is not declared. Over-detect is
+sound (over-reject); under-detect is the cardinal false-READY → lean to flag. (1) **Candidate byte:** a
+well-formed UTF-8 sequence with codepoint ≥ U+3000 — 3-byte lead `0xE3..0xEF` OR 4-byte lead
+`0xF0..0xF4` (covers Ext-B + emoji, both not-set-up). **EXCLUDE lead `0xE2`** (U+2000–2FFF: em/en-dash,
+ellipsis compile fine — flagging them mass-over-rejects English prose) and all 2-byte (latin-1). (2)
+**Exempt regions = comments + url-family ONLY** (`\url`/`\path`/`\nolinkurl`/`\href` first arg) — a
+NARROWED vcu set that DROPS the verbatim/`\verb`/lstlisting members (raw CJK there STILL fails, exit 1).
+(3) **CJK-env-interior exemption:** bytes strictly inside a live `\begin{CJK}…\end{CJK}` span, GATED on
+`uses_package_b p_cjk || uses_package_b p_cjkutf8`. **⚠ THE ORACLE CORRECTION that condemns the
+structural version: there is NO blanket package-skip** — with `CJKutf8` loaded, a raw 中 *outside* the
+`\begin{CJK}` env STILL fails (exit 1), so the exemption is SCOPED to the env interior, never the whole
+document (my reverted `has_pkg` skipped the whole doc = a real over-exemption). `xeCJK`/`luatexja`/
+`fontspec`/`ctex` hard-fail under pdflatex regardless → never exempt. (4) **Per-codepoint declaration
+exemption:** build set D from the PREAMBLE (before `\begin{document}`), LIVE (non-comment/verb/verbatim)
+`\newunicodechar{<char>}` and `\DeclareUnicodeCharacter{<UPPERCASE-HEX>}` (lowercase hex is invalid →
+ignored); a body codepoint is exempt iff its exact codepoint ∈ D. **Two colliding notions of "inert":**
+the BODY scan exempts only comments+url (verb/verbatim FIRE); the DECLARATION scan treats
+comment/verb/verbatim as dead (a declaration there does NOT exempt). Wiring: OR `has_raw_cjk_b` into the
+`Japanese_cjk` disjunct only; existing package/env detection unchanged; existing T3 does the rest.
+
+**DWR-6 — Multi-file structural gate (ARCHITECTURAL; shared by ALL structural detectors).** `structural_fatal_reasons`
+sees only the ROOT source, so a CJK/`\verb`-EOL/double-script fatal living in an `\input` child is
+invisible (a real READY-but-fails hole for every detector, not CJK-specific). Design: run the
+structural gate over the resolved **include closure** (reuse `Project_model`'s resolver from
+`has_include_cycle`), not just the root. Risk: over-reject if a resolved "child" isn't actually input
+(bound it to the same resolver + comment-aware `scan_includes_live`). High value (fixes all detectors
+at once). Sequence: its own PR; genuine CJK/foreign projects almost always load a package (which
+correctly skips), so real-world exposure is low — schedule after the rank trains.
+
+**DWR-7 — rank-4 kpathsea / resolution-base half.** `t2_check` include resolution: `kpsewhich`
+fallback for system files, documented resolution base + `--workdir`, `\include` vs `\input` missing-file
+polarity. Runtime-only (no Coq). Sequence: opportunistic.
+
+Each DWR entry flips its fixture(s) and lowers `manifest.json`'s `baseline` when it lands; the gate
+enforces monotonicity so none can silently regress. The rank rows in §4 remain the strategic map; this
+register is the *execution* checklist with the falsified-approach history attached.
 
 ## 5. Regression infrastructure (the audit's structural payoff — R7-INFRA)
 

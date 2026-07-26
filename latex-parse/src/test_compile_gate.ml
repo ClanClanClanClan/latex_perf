@@ -232,6 +232,27 @@ let () =
         t);
   ()
 
+(* ── Detector (9): \verb broken across a line (R7-2) ─────────────────────── *)
+let () =
+  let f = Compile_gate_checks.verb_broken_eol_fatal in
+  run "verb broken across line fires" (fun t ->
+      expect (fires f (doc "Some \\verb|code\nmore| text.")) t);
+  run "verb* broken across line fires" (fun t ->
+      expect (fires f (doc "\\verb*+a\nb+")) t);
+  run "verb closed on same line ok" (fun t ->
+      expect (not_fires f (doc "inline \\verb|code| here")) t);
+  run "verb in math closed same line ok" (fun t ->
+      expect (not_fires f (doc "$\\verb|x|$ then")) t);
+  run "broken verb inside verbatim env ok" (fun t ->
+      expect
+        (not_fires f (doc "\\begin{verbatim}\\verb|a\nb|\\end{verbatim}"))
+        t);
+  run "broken verb inside comment ok" (fun t ->
+      expect (not_fires f (doc "% \\verb|a\nreal line")) t);
+  run "verbatiminput prefix not treated as verb" (fun t ->
+      expect (not_fires f (doc "\\verbatiminput{f}\nmore")) t);
+  ()
+
 (* ── \hyperref link-text is TYPESET, not a moving-arg key (R7-7) ──────────
    \hyperref[l]{link text} re-typesets its brace group, so a genuine
    double-superscript inside it is fatal and MUST fire; the [l] reference key is

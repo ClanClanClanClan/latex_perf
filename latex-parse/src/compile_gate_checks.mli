@@ -46,6 +46,11 @@ val duplicate_begin_document_fatal : string -> string option
     Error: Can be used only in preamble", pdflatex exit 1); [None] otherwise.
     Add-NOT-READY-only: a compiling document has exactly one. *)
 
+val verb_broken_eol_fatal : string -> string option
+(** Detector (9): [Some reason] iff a real inline [\verb]/[\verb*] argument is
+    not closed by its delimiter before the line ends (pdflatex "! LaTeX Error:
+    \verb ended by end of line", exit 1); [None] otherwise. Add-NOT-READY-only. *)
+
 val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
 (** Byte ranges of moving/name-argument keys ([\label{..}], [\ref], [\href], …,
     plus any [?extra] command names) that must be skipped by the math detectors

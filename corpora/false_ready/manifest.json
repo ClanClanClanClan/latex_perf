@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 9,
+    "false_ready_total": 8,
     "strong_fatal": 7,
-    "error_halt": 2
+    "error_halt": 1
   },
   "fixtures": [
     {
@@ -160,7 +160,7 @@
       "fix_rank": 2,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
+      "expected_cli": "NOT-READY",
       "note": "\\verb argument broken across a line: '\\verb ended by end of line'"
     },
     {

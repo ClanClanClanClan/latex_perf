@@ -215,6 +215,37 @@ let () =
         t);
   ()
 
+(* ── Detector (8): duplicate \begin{document} (R7-2) ────────────────────── *)
+let () =
+  let f = Compile_gate_checks.duplicate_begin_document_fatal in
+  (* [doc] already wraps ONE \begin{document}; a second in the body ⇒ 2 ⇒ fires
+     ("! LaTeX Error: Can be used only in preamble", pdflatex exit 1). *)
+  run "duplicate begin{document} fires" (fun t ->
+      expect (fires f (doc "Hi.\\begin{document}Again.")) t);
+  run "single begin{document} ok" (fun t ->
+      expect (not_fires f (doc "just one body")) t);
+  run "second begin{document} commented ok" (fun t ->
+      expect (not_fires f (doc "Hi.\n% \\begin{document}\nx")) t);
+  run "second begin{document} in verbatim ok" (fun t ->
+      expect
+        (not_fires f (doc "\\begin{verbatim}\\begin{document}\\end{verbatim}"))
+        t);
+  ()
+
+(* ── \hyperref link-text is TYPESET, not a moving-arg key (R7-7) ──────────
+   \hyperref[l]{link text} re-typesets its brace group, so a genuine
+   double-superscript inside it is fatal and MUST fire; the [l] reference key is
+   an optional arg (never a math range) so it stays immune. *)
+let () =
+  let f = Compile_gate_checks.double_script_fatal in
+  run "double superscript in \\hyperref link text fires" (fun t ->
+      expect (fires f (doc "\\hyperref[x]{$a^b^c$}")) t);
+  run "single superscript in \\hyperref link text ok" (fun t ->
+      expect (not_fires f (doc "\\hyperref[x]{text $y^2$ here}")) t);
+  run "underscore in \\hyperref [label] key immune" (fun t ->
+      expect (not_fires f (doc "\\hyperref[eq:a_b_c]{see it}")) t);
+  ()
+
 (* ── Combined entry: structural_fatal_reasons ───────────────────────────── *)
 let () =
   run "combined: clean doc yields no reasons" (fun t ->

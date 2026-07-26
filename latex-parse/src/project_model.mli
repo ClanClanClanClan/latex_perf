@@ -70,6 +70,15 @@ val of_root :
       empty list means "no features declared"; v26.2 doesn't auto-detect.
       Callers parsing the source may supply features from their own analysis. *)
 
+val has_include_cycle : string -> bool
+(** [has_include_cycle root_path] is [true] iff the transitive \input/\include
+    graph reachable from [root_path] contains a cycle (a→b→a). [of_root] scans
+    only DIRECT includes, so such a cycle escapes the artefact-level acyclicity
+    check; pdflatex follows \input recursively and a cycle fatals with "TeX
+    capacity exceeded [text input levels]". Sound by under-approximation: it can
+    only miss a real cycle (unresolvable child, non-.tex leaf), never report a
+    false one on an acyclic project. Add-NOT-READY-only for T2. *)
+
 val root_file : t -> file_entry
 val all_files : t -> file_entry list
 val find : t -> file_id -> file_entry option

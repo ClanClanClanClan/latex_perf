@@ -40,6 +40,12 @@ val usepackage_after_begin_fatal : string -> string option
 (** Detector (4): [Some reason] iff a [\usepackage] appears after the first
     [\begin{document}]; [None] otherwise. *)
 
+val duplicate_begin_document_fatal : string -> string option
+(** Detector (8): [Some reason] iff two real [\begin{document}] anchors appear
+    outside comment/verbatim (the second re-executes [\document] → "! LaTeX
+    Error: Can be used only in preamble", pdflatex exit 1); [None] otherwise.
+    Add-NOT-READY-only: a compiling document has exactly one. *)
+
 val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
 (** Byte ranges of moving/name-argument keys ([\label{..}], [\ref], [\href], …,
     plus any [?extra] command names) that must be skipped by the math detectors

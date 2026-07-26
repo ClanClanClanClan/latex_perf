@@ -73,8 +73,16 @@ let t2_check (proj : Project_model.t) : reason list =
     if missing = [] then []
     else List.map (fun p -> T2_project_not_closed (`Missing_file p)) missing
   in
-  if not (Build_graph.is_acyclic g) then
-    T2_project_not_closed `Cycle_in_build_graph :: rs
+  (* [Build_graph.is_acyclic] only sees ARTEFACT edges (tex→aux→pdf), which are
+     acyclic by construction. An \input/\include CYCLE (a→b→a) closes through a
+     child the single-level [of_root] never scans, so it needs a recursive
+     source-level pass. pdflatex fatals on such a cycle ("TeX capacity exceeded
+     [text input levels]"). R7-4. *)
+  let root_path = (Project_model.root_file proj).path in
+  if
+    (not (Build_graph.is_acyclic g))
+    || Project_model.has_include_cycle root_path
+  then T2_project_not_closed `Cycle_in_build_graph :: rs
   else rs
 
 (* T4: if aux exists, use parsed labels to check uniqueness and that cited keys

@@ -211,4 +211,35 @@ let () =
            = Ext.project_wf_dec ext_otf ext_pf_xe ext_order)
         (tag ^ ": no mirror — wrapper == extracted verdict"));
 
+  (* R7-1c / DWR-CJK Part A: raw-CJK body detection via the VERIFIED extractor
+     ([extract_body_verified] runs the Coq [has_raw_cjk_b]; parity guarantees
+     the hand mirror matches). Detects DEFINITE-CJK blocks only — decodes the
+     codepoint and range-checks — so set-up presentation forms (ﬁ) and the
+     non-CJK replacement char (�) do NOT fire. *)
+  let cjk_doc body =
+    "\\documentclass{article}\\begin{document}" ^ body ^ "\\end{document}"
+  in
+  let needs_cjk src =
+    List.mem (CE.BT_needs_feature CE.Japanese_cjk)
+      (CE.extract_body_verified src)
+  in
+  run "cjk: raw Han U+4E2D fires japanese_cjk" (fun tag ->
+      expect (needs_cjk (cjk_doc "\228\184\173\230\150\135")) tag);
+  run "cjk: Hiragana U+3042 fires" (fun tag ->
+      expect (needs_cjk (cjk_doc "\227\129\130")) tag);
+  run "cjk: Hangul U+AC00 fires" (fun tag ->
+      expect (needs_cjk (cjk_doc "\234\176\128")) tag);
+  run "cjk: fullwidth U+FF21 fires" (fun tag ->
+      expect (needs_cjk (cjk_doc "\239\188\161")) tag);
+  (* set-up / non-CJK codepoints must NOT fire (pdflatex compiles ﬁ; � is a
+     separate non-CJK fatal; em-dash and latin-1 are inputenc-handled) *)
+  run "cjk: ligature FI U+FB01 does NOT fire (pdflatex compiles it)" (fun tag ->
+      expect (not (needs_cjk (cjk_doc "of\239\172\129ce"))) tag);
+  run "cjk: replacement char U+FFFD does NOT fire (non-CJK)" (fun tag ->
+      expect (not (needs_cjk (cjk_doc "x\239\191\189y"))) tag);
+  run "cjk: em-dash U+2014 does NOT fire" (fun tag ->
+      expect (not (needs_cjk (cjk_doc "a\226\128\148b"))) tag);
+  run "cjk: accented latin (é, 2-byte) does NOT fire" (fun tag ->
+      expect (not (needs_cjk (cjk_doc "caf\195\169"))) tag);
+
   finalise "compile-evidence"

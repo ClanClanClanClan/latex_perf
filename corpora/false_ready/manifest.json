@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 8,
+    "false_ready_total": 7,
     "strong_fatal": 7,
-    "error_halt": 1
+    "error_halt": 0
   },
   "fixtures": [
     {
@@ -58,7 +58,7 @@
       "fix_rank": 1,
       "tier": "lp-core",
       "pdflatex": "error-halt",
-      "expected_cli": "READY",
+      "expected_cli": "NOT-READY",
       "note": "raw CJK/Han body codepoints with no font-setup package: Unicode-not-set-up fatal (no package catalogue can catch)"
     },
     {

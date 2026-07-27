@@ -10,7 +10,11 @@
 # checked in for a hermetic OCaml build that does not depend on a Coq toolchain,
 # but is reproducible from the proofs by re-running this script. The build of
 # proofs/LanguageContractExtract.v (via `dune build --root . proofs`) also
-# exercises the extraction, so drift is caught by CI.
+# exercises the extraction, but dune's coq.theory stanza DISCARDS the emitted
+# .ml — so that build proves only that extraction still SUCCEEDS, never that the
+# committed .ml still matches. Actual drift is caught by
+# scripts/tools/check_extract_identity.py, which re-runs this script in CI
+# (proof-ci) and compares the result against the committed file.
 #
 # Usage:  scripts/tools/regen_language_contract_extract.sh
 set -euo pipefail
@@ -28,10 +32,18 @@ GENDIR="$ROOT/_build/default/proofs/generated"
 
 # Extraction emits its .ml/.mli into coqc's cwd, which dune's coq.theory stanza
 # does not capture — so run coqc directly against the built theory in a temp dir.
+# Resolve coqc ONCE, from $ROOT, before entering the temp dir below. `opam exec`
+# infers the switch from the CURRENT DIRECTORY, and CI uses a repo-local switch
+# (_opam/) — so `opam exec -- coqc` run from a temp dir fails with "No switch is
+# currently set". Resolving here keeps the invocation cwd-independent.
+COQC="$(opam exec -- which coqc 2>/dev/null | tail -1)"
+[ -x "$COQC" ] || COQC="$(command -v coqc || true)"
+[ -x "$COQC" ] || { echo "ERROR: cannot locate coqc" >&2; exit 1; }
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 cp proofs/LanguageContractExtract.v "$WORK/"
-( cd "$WORK" && opam exec -- coqc \
+( cd "$WORK" && "$COQC" \
     -R "$VODIR" LaTeXPerfectionist \
     -Q "$GENDIR" LaTeXPerfectionist.Generated \
     LanguageContractExtract.v )
@@ -86,8 +98,20 @@ awk '
 # ocamlformat honour the repo-root .ocamlformat even though latex-parse/ is a
 # nested dune sub-project without its own config. The file is byte-reproducible:
 # regen -> same ocamlformat output as `dune fmt` promotes.
-TMP_FMT="$(mktemp).ml"
-opam exec -- ocamlformat --enable-outside-detected-project "$DEST_ML" > "$TMP_FMT"
-mv "$TMP_FMT" "$DEST_ML"
+# EXTRACT_SKIP_FMT=1 skips the ocamlformat canonicalisation below. The
+# extract-identity gate (scripts/tools/check_extract_identity.py) sets it: that
+# gate compares a CANONICAL form (comments stripped, whitespace collapsed), so
+# formatting is irrelevant to it — and on the 90k-line front-end extract
+# ocamlformat takes over an hour (it is superlinear on the deeply-nested unary
+# Peano numerals Coq emits for numeric constants), which would blow any CI
+# timeout. Humans regenerating for a commit must NOT set it: the committed file
+# has to stay @fmt-clean or the `format` gate fails.
+if [ "${EXTRACT_SKIP_FMT:-0}" = "1" ]; then
+  echo "EXTRACT_SKIP_FMT=1: leaving $DEST_ML unformatted" >&2
+else
+  TMP_FMT="$(mktemp).ml"
+  opam exec -- ocamlformat --enable-outside-detected-project "$DEST_ML" > "$TMP_FMT"
+  mv "$TMP_FMT" "$DEST_ML"
+fi
 
 echo "Wrote $DEST_ML"

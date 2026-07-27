@@ -12,7 +12,11 @@
 # checked in for a hermetic OCaml build that does not depend on a Coq toolchain,
 # but is reproducible from the proofs by re-running this script. The build of
 # proofs/BodyTokenFrontEndExtract.v (via `dune build --root . proofs`) also
-# exercises the extraction, so drift is caught by CI.
+# exercises the extraction, but dune's coq.theory stanza DISCARDS the emitted
+# .ml — so that build proves only that extraction still SUCCEEDS, never that the
+# committed .ml still matches. Actual drift is caught by
+# scripts/tools/check_extract_identity.py, which re-runs this script in CI
+# (proof-ci) and compares the result against the committed file.
 #
 # Usage:  scripts/tools/regen_body_token_frontend_extract.sh
 set -euo pipefail
@@ -92,11 +96,23 @@ awk '
 DEST_DIR="$(dirname "$DEST_ML")"
 DEST_BASE="$(basename "$DEST_ML")"
 FMT_STAGE="$ROOT/_build/default/$DEST_DIR/.formatted/$DEST_BASE"
-opam exec -- dune build --root "$ROOT" @fmt >/dev/null 2>&1 || true  # exits 1 on diff; still stages .formatted
-if [ -f "$FMT_STAGE" ]; then
-  cp "$FMT_STAGE" "$DEST_ML"
+# EXTRACT_SKIP_FMT=1 skips the ocamlformat canonicalisation below. The
+# extract-identity gate (scripts/tools/check_extract_identity.py) sets it: that
+# gate compares a CANONICAL form (comments stripped, whitespace collapsed), so
+# formatting is irrelevant to it — and on the 90k-line front-end extract
+# ocamlformat takes over an hour (it is superlinear on the deeply-nested unary
+# Peano numerals Coq emits for numeric constants), which would blow any CI
+# timeout. Humans regenerating for a commit must NOT set it: the committed file
+# has to stay @fmt-clean or the `format` gate fails.
+if [ "${EXTRACT_SKIP_FMT:-0}" = "1" ]; then
+  echo "EXTRACT_SKIP_FMT=1: leaving $DEST_ML unformatted" >&2
 else
-  echo "WARNING: dune @fmt staging copy not found ($FMT_STAGE); leaving raw" >&2
+  opam exec -- dune build --root "$ROOT" @fmt >/dev/null 2>&1 || true  # exits 1 on diff; still stages .formatted
+  if [ -f "$FMT_STAGE" ]; then
+    cp "$FMT_STAGE" "$DEST_ML"
+  else
+    echo "WARNING: dune @fmt staging copy not found ($FMT_STAGE); leaving raw" >&2
+  fi
 fi
 
 echo "Wrote $DEST_ML"

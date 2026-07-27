@@ -42,6 +42,26 @@ jobs:
           echo "proof_time_ms=$ELAPSED_MS" >> "$GITHUB_OUTPUT"
           echo "Proof compilation: ${ELAPSED_MS}ms"
 
+      - name: Assert capstones are axiom-free (Print Assumptions)
+        # The grep-based zero-admit/zero-axiom step below checks SYNTAX in the
+        # proof files. It cannot see an axiom inherited transitively from a
+        # dependency, nor an undischarged Section Variable/Hypothesis. Only
+        # `Print Assumptions` can, and until now it was decorative: exactly one
+        # executed site existed (BodyTokenFrontEnd.v:1544), it is a *printing*
+        # vernacular so it cannot fail a build, and nothing read its output.
+        # The other three capstones had no executed Print Assumptions at all —
+        # their axiom-freedom was asserted only in comments.
+        run: python3 scripts/tools/check_print_assumptions.py --repo .
+
+      - name: Verify committed extracts reproduce from the proofs
+        # The three *_extracted.ml files are the ONLY link between the Coq proofs
+        # and the shipped binary. Building `…Extract.v` re-runs extraction into
+        # _build, which the coq.theory stanza discards — so CI previously proved
+        # only that extraction still SUCCEEDS, never that the committed .ml still
+        # corresponds to the .v. A stale extract would compile into the binary
+        # with CI fully green.
+        run: python3 scripts/tools/check_extract_identity.py --repo .
+
       - name: Enforce zero admits and zero axioms
         run: |
           echo "=== Zero-Admit Policy ==="

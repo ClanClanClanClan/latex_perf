@@ -51,18 +51,26 @@ jobs:
         ADMIT_COUNT=$(find proofs -name "*.v" ! -name "*.disabled" ! -path "*/archive/*" -exec grep -cE '^\s*(Admitted\.|admit\.)' {} \; | awk '{sum += $1} END {print sum}')
         echo "Total strict admits found: $ADMIT_COUNT"
 
-        # Target: 0 admits (v26 requirement). ≤60 ceiling kept as historical
-        # safety net but production state should always be 0.
-        if [ "$ADMIT_COUNT" -gt 60 ]; then
-          echo "FAIL: Too many admits ($ADMIT_COUNT > 60)"
+        # Zero admits, aligned with proof.yml's gate. The old ≤60 ceiling was a
+        # v26-era "historical safety net" that had long since stopped describing
+        # reality (the tree has been at 0 for many releases) — it meant this
+        # workflow would stay green through sixty regressions. A tolerance nobody
+        # intends to use is not a safety net, it is a hole.
+        if [ "$ADMIT_COUNT" -gt 0 ]; then
+          echo "FAIL: admits found ($ADMIT_COUNT); the tree must stay at zero"
           exit 1
         else
-          echo "PASS: Admit count within target ($ADMIT_COUNT ≤ 60)"
+          echo "PASS: zero admits"
         fi
 
     - name: Check for Axioms
       run: |
-        AXIOM_COUNT=$(find proofs -name "*.v" ! -name "*.disabled" -exec grep -c "^Axiom" {} \; | awk '{sum += $1} END {print sum}')
+        # Aligned with proof.yml: match `Axiom` AND `Parameter`, tolerate leading
+        # whitespace, and exclude archive/. The previous `grep -c "^Axiom"` missed
+        # every `Parameter`, every indented `  Axiom`, and scanned archive/ (which
+        # the admit check above already excludes) — three ways to pass while an
+        # unproved assumption sat in the tree.
+        AXIOM_COUNT=$(find proofs -name "*.v" ! -name "*.disabled" ! -path "*/archive/*" -exec grep -cE '^\s*(Axiom|Parameter)\b' {} \; | awk '{sum += $1} END {print sum}')
         echo "Total axioms found: $AXIOM_COUNT"
 
         if [ "$AXIOM_COUNT" -gt 0 ]; then

@@ -53,6 +53,12 @@ FRDIR="$ROOT/corpora/false_ready"
 MAN="$FRDIR/manifest.json"
 REQUIRE="${REQUIRE_PDFLATEX:-0}"
 TEX_TIMEOUT="${TEX_TIMEOUT:-30}"
+# `gtimeout 0 CMD` means "no limit" — that silently reinstates the ungraded-hang
+# condition this script argues at length must never happen.
+case "$TEX_TIMEOUT" in
+  ''|*[!0-9]*) echo "[fr-oracle] FATAL: TEX_TIMEOUT must be a positive integer, got '$TEX_TIMEOUT'" >&2; exit 2 ;;
+  0) echo "[fr-oracle] FATAL: TEX_TIMEOUT=0 disables the timeout; refusing (a hang would be graded)" >&2; exit 2 ;;
+esac
 
 die_infra() { echo "[fr-oracle] FATAL: $*" >&2; exit 2; }
 
@@ -64,7 +70,8 @@ fx = m.get('fixtures')
 if not isinstance(fx, list) or not fx:
     sys.exit('manifest has no usable fixtures list')
 for f in fx:
-    print('\t'.join([f['id'], f['path'], f['kind'], f['pdflatex']]))
+    print('\t'.join([f['id'], f['path'], f['kind'], f['pdflatex'],
+                     f.get('expected_cli', '')]))
 "
 }
 
@@ -100,14 +107,40 @@ fi
 
 [ -f "$MAN" ] || die_infra "no manifest at $MAN"
 
+# A CLI that cannot execute (wrong ABI inside the container, missing loader)
+# returns non-zero for EVERY document, which reads as a uniform column of
+# NOT-READY and grades perfectly `ok`. Prove it runs before trusting its verdicts.
+# Invoked with no arguments the CLI prints its usage banner and exits 2. We check
+# for the BANNER, not the exit code: a binary that cannot load (wrong ABI inside
+# the container, missing loader) also exits non-zero but prints nothing, and would
+# otherwise answer NOT-READY to all 21 fixtures — a uniform column of lies that
+# grades perfectly `ok`.
+# NB: capture, then test. A pipeline would be governed by `set -o pipefail`, and
+# the CLI deliberately exits 2 here, so `"$CLI" | grep -q` fails even when grep
+# matches.
+CLI_BANNER="$("$CLI" 2>&1 || true)"
+if ! printf '%s' "$CLI_BANNER" | grep -q 'Usage:'; then
+  die_infra "the CLI at $CLI did not produce its usage banner — it cannot execute here (ABI/loader problem?), so its verdicts would be meaningless"
+fi
+
 # ── engine pin ───────────────────────────────────────────────────────────────
 # A re-pin must report as "PIN MISMATCH", never as 21 lines of DRIFT. Those are
 # different problems with different fixes, and conflating them is how a gate gets
 # switched off instead of understood.
-MAN_ENGINE="$(python3 -c "
+# FR_EXPECT_ENGINE lets the caller supply the pin directly. Without it we parse
+# the manifest with python3 — but the TeX container deliberately has no python3,
+# so relying on that alone made the pin FAIL OPEN exactly where it ships: a
+# skewed engine would have been graded silently. The workflow passes it in.
+MAN_ENGINE="${FR_EXPECT_ENGINE:-}"
+if [ -z "$MAN_ENGINE" ]; then
+  MAN_ENGINE="$(python3 -c "
 import json
 print(json.load(open('$MAN')).get('oracle', {}).get('version', ''))
 " 2>/dev/null || true)"
+fi
+if [ -z "$MAN_ENGINE" ] && [ "$REQUIRE" = 1 ]; then
+  die_infra "cannot determine the expected engine (no FR_EXPECT_ENGINE and no readable manifest oracle.version) — refusing to grade against an unpinned engine"
+fi
 GOT_ENGINE="$(pdflatex --version 2>/dev/null | head -1)"
 if [ -n "$MAN_ENGINE" ]; then
   case "$GOT_ENGINE" in
@@ -156,15 +189,22 @@ run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
 }
 
 hard=0; soft=0; n=0; timeouts=0
-while IFS=$'\t' read -r id path kind pdfl; do
+while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   [ -n "$id" ] || continue
   n=$((n+1))
   # Stage a fresh copy so committed sibling .aux/.bbl inputs are preserved.
+  # An unchecked `cp` let a DELETED fixture grade `ok`: 13 of 21 are strong-fatal,
+  # and a missing input also fails to compile, so they look identical. #506 already
+  # lost a fixture to .gitignore once.
+  [ -e "$FRDIR/$path" ] || die_infra "fixture input missing on disk: $path (id=$id)"
   wd="$(mktemp -d)"
   if [ "$kind" = single ]; then
-    cp "$FRDIR/$path" "$wd/"; base="$(basename "$path")"; rundir="$wd"
+    cp "$FRDIR/$path" "$wd/" || die_infra "cannot stage fixture $id"
+    base="$(basename "$path")"; rundir="$wd"
   else
-    sub="${path%%/*}"; cp -R "$FRDIR/$sub" "$wd/"; base="$(basename "$path")"; rundir="$wd/$sub"
+    sub="${path%%/*}"
+    cp -R "$FRDIR/$sub" "$wd/" || die_infra "cannot stage fixture tree $id"
+    base="$(basename "$path")"; rundir="$wd/$sub"
   fi
   if "$CLI" --compile-check "$FRDIR/$path" >/dev/null 2>&1; then cli=READY; else cli=NOT-READY; fi
 
@@ -176,11 +216,23 @@ while IFS=$'\t' read -r id path kind pdfl; do
   # attributed to the nonstop run and silently convert strong-fatal -> error-halt.
   rm -f "$rundir/${base%.tex}.pdf" "$rundir/${base%.tex}.log"
   read -r nrc npdf  <<<"$(run_pdflatex "$rundir" "$base" 0)"
+  logfile="$(mktemp)"
+  cp "$rundir/${base%.tex}.log" "$logfile" 2>/dev/null || : > "$logfile"
   rm -rf "$wd"
 
-  # 124 = GNU timeout kill. Never let it become a grade.
-  if [ "$hrc" = 124 ] || [ "$nrc" = 124 ]; then
-    printf '%-24s TIMEOUT after %ss — refusing to grade\n' "$id" "$TEX_TIMEOUT"
+  # 124 = timeout kill; 125/126/127 = timeout itself failed / not executable /
+  # not found. None is a property of the DOCUMENT, yet all of them look exactly
+  # like "failed with no PDF" = strong-fatal, which MATCHES the manifest for most
+  # fixtures. A pdflatex that cannot run at all would have graded 21/21 `ok`.
+  case "$hrc:$nrc" in
+    *124*|*125*|*126*|*127*)
+      printf '%-24s pdflatex could not be run (rc halt=%s nonstop=%s) — refusing to grade\n' \
+        "$id" "$hrc" "$nrc"
+      timeouts=$((timeouts+1)); continue ;;
+  esac
+  # Affirmative proof that TeX actually ran, rather than inference from a failure.
+  if [ ! -s "$logfile" ] || ! grep -qi 'pdftex\|pdflatex' "$logfile" 2>/dev/null; then
+    printf '%-24s no pdfTeX log produced — pdflatex did not really run; refusing to grade\n' "$id"
     timeouts=$((timeouts+1)); continue
   fi
 
@@ -197,7 +249,14 @@ while IFS=$'\t' read -r id path kind pdfl; do
   elif [ "$grade" != "$pdfl" ]; then
     status="soft drift: grade $grade != manifest $pdfl (both are rejections)"; soft=$((soft+1))
   fi
+  # F1: the cli column was computed and never checked. A CLI that answers READY to
+  # everything (i.e. every round-7 fix reverted) graded 21/21 `ok`.
+  if [ -n "${exp_cli:-}" ] && [ "$cli" != "$exp_cli" ]; then
+    status="$status | CLI MISMATCH: got $cli, manifest expects $exp_cli"
+    hard=$((hard+1))
+  fi
   printf '%-24s cli=%-9s pdflatex=%-12s manifest=%-12s %s\n' "$id" "$cli" "$grade" "$pdfl" "$status"
+  rm -f "$logfile"
 done < "$TSV"
 
 # Anti-vacuity: processing fewer fixtures than the manifest lists is a failure,
@@ -211,6 +270,13 @@ echo "[fr-oracle] checked $n fixtures; hard=$hard soft=$soft (engine: $GOT_ENGIN
 if [ "$hard" -ne 0 ]; then
   echo "[fr-oracle] FAIL: $hard fixture(s) that pdflatex now compiles." >&2
   exit 1
+fi
+# Mass reclassification is not a benign font difference; it is what a broken or
+# fake TeX install looks like. Half the corpus moving at once is not a soft signal.
+if [ "$soft" -ge $(( (n + 1) / 2 )) ] && [ "$soft" -gt 0 ]; then
+  echo "[fr-oracle] FAIL: $soft of $n fixtures reclassified — that is the signature of a" >&2
+  echo "[fr-oracle]   broken or incomplete TeX install, not of per-fixture drift." >&2
+  exit 2
 fi
 if [ "$soft" -ne 0 ]; then
   echo "[fr-oracle] NOTE: $soft strong-fatal/error-halt reclassification(s); all still rejections." >&2

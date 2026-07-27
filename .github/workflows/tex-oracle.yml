@@ -99,7 +99,13 @@ jobs:
       - name: TeX install canary
         run: |
           set -euo pipefail
-          docker run --rm -e HOME=/tmp "$TEX_IMAGE" bash -s <<'EOS'
+          # `-i` is REQUIRED: without it the container's stdin is not connected and
+          # `bash -s` reads EOF, so the canary body never runs, the step exits 0,
+          # and an under-provisioned image sails straight through into grading —
+          # precisely the silent-green this canary exists to prevent.
+          # The `grep -q` is the second half of that lesson: assert the body
+          # actually produced its completion marker, so a no-op can never be green.
+          docker run --rm -i -e HOME=/tmp "$TEX_IMAGE" bash -s <<'EOS' | tee /tmp/canary.log
           set -eu
           d=$(mktemp -d); cd "$d"
           cat > canary.tex <<'TEX'
@@ -112,15 +118,26 @@ jobs:
           \begin{tikzpicture}\draw (0,0)--(1,1);\end{tikzpicture}
           \end{document}
           TEX
-          if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.out 2>&1 || [ ! -f canary.pdf ]; then
+          # NOT canary.out: hyperref writes \jobname.out, so redirecting stdout
+          # there makes TeX read its own transcript back as the .out file and die
+          # with "! Missing { inserted." on a perfectly good install.
+          if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.stdout 2>&1 \
+             || [ ! -f canary.pdf ]; then
             echo "CANARY FAILED — the pinned image cannot compile the corpus feature set:"
-            tail -40 canary.out; exit 1
+            tail -40 canary.stdout; exit 1
           fi
-          for f in tikz.sty hyperref.sty amsmath.sty listings.sty inputenc.sty pdftex.map; do
+          # fontspec/polyglossia matter: six fixtures ARE package-loading tricks,
+          # and a missing .sty grades strong-fatal — identical to the intended
+          # fatal — so without these they would pass while testing nothing.
+          for f in tikz.sty hyperref.sty amsmath.sty listings.sty inputenc.sty \
+                   fontspec.sty polyglossia.sty pdftex.map; do
             kpsewhich "$f" >/dev/null || { echo "MISSING: $f"; exit 1; }
           done
           echo "canary OK"
           EOS
+          grep -q 'canary OK' /tmp/canary.log || {
+            echo "::error::The canary produced no completion marker. Either the image cannot compile the corpus feature set, or the canary body did not execute at all (check that 'docker run' still has -i). Refusing to grade fixtures against an unproven TeX install."
+            exit 1; }
 
       # Parse the manifest on the RUNNER and hand the TSV in. This is what keeps
       # the container dependency-free — no apt-get against a Debian sid base whose
@@ -151,6 +168,7 @@ jobs:
             -v "$PWD:$PWD" -w "$PWD" \
             -v /tmp/fixtures.tsv:/tmp/fixtures.tsv:ro \
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 -e FR_FIXTURE_TSV=/tmp/fixtures.tsv \
+            -e FR_EXPECT_ENGINE="$TEX_EXPECT_VERSION" \
             "$TEX_IMAGE" bash scripts/tools/false_ready_oracle.sh
 
       # ADVISORY: a measurement of the soundness residual, not a regression gate.

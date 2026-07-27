@@ -31,11 +31,12 @@
 # (CLI-only, monotone) and false_ready_oracle.sh (pdflatex, HARD drift only).
 #
 # EXIT CODES: 0 clean | 1 a NEW false-READY beyond the allowlist | 2 infrastructure
-# (no pdflatex, no CLI, too few docs, a timeout, or a vacuous run) | 3 engine skew.
+# (no pdflatex, no CLI, too few docs, a timeout, or a vacuous run) | 3 engine skew
+# | 4 over-rejection budget exceeded (SAFE direction — never conflate with 1).
 #
 # ENV: REQUIRE_PDFLATEX=1 makes every precondition an error instead of a skip;
 #      EXPECT_TEX_VERSION=<substring> asserts the engine; MIN_DOCS (default 65)
-#      floors the corpus size; MAX_FALSE_NOTREADY (default 3) caps over-rejection;
+#      floors the corpus size; MAX_FALSE_NOTREADY (default 6) caps over-rejection;
 #      TEX_TIMEOUT (default 60) bounds each pdflatex run.
 #
 # Usage: diff_compile_check.sh [CORPUS_DIR]
@@ -188,10 +189,16 @@ if [ "$tp" -eq 0 ]; then
   die_infra "ZERO documents were both READY and compiled — the CLI is rejecting everything; these numbers are meaningless"
 fi
 [ "$timeouts" -eq 0 ] || die_infra "$timeouts document(s) timed out; the classification is not trustworthy"
-MAX_FALSE_NOTREADY="${MAX_FALSE_NOTREADY:-3}"
+# Headroom on purpose. Every fix train in this repo is add-NOT-READY-only by
+# construction, so a cap sitting exactly at today's measurement (3) would trip on
+# the very next conservative detector and misreport routine work as breakage.
+# Over-rejection is SAFE — it is not a soundness failure — so it gets its own exit
+# code (4) and must never be confused with a false-READY (1).
+MAX_FALSE_NOTREADY="${MAX_FALSE_NOTREADY:-6}"
 if [ "$false_notready" -gt "$MAX_FALSE_NOTREADY" ]; then
-  echo "[diff-compile-check] FAIL: over-rejection $false_notready exceeds MAX_FALSE_NOTREADY=$MAX_FALSE_NOTREADY" >&2
-  exit 1
+  echo "[diff-compile-check] OVER-REJECTION: $false_notready exceeds MAX_FALSE_NOTREADY=$MAX_FALSE_NOTREADY" >&2
+  echo "[diff-compile-check]   This is the SAFE direction (conservative), not a soundness regression." >&2
+  exit 4
 fi
 
 # Non-zero exit ONLY on a NEW false-READY beyond the documented allowlist.

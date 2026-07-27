@@ -93,7 +93,29 @@ EXTRACTS = [
     ),
 ]
 
-def canonicalise(path: Path, label: str) -> str:
+def resolve_tool(name: str, repo: Path) -> str:
+    """Absolute path to an opam-installed binary, resolved ONCE from the repo root.
+
+    `opam exec` infers the switch from the CURRENT DIRECTORY. CI uses a repo-local
+    switch (`_opam/`), so `opam exec -- ocamlc` from a temp directory fails with
+    "No switch is currently set"."""
+    r = subprocess.run(
+        ["opam", "exec", "--", "which", name],
+        cwd=repo, capture_output=True, text=True,
+    )
+    path = (r.stdout or "").strip().splitlines()
+    if r.returncode == 0 and path and Path(path[-1]).exists():
+        return path[-1]
+    fallback = shutil.which(name)
+    if fallback:
+        return fallback
+    raise SystemExit(
+        f"[extract-identity] FATAL: cannot locate `{name}`. Tried `opam exec -- which "
+        f"{name}` from {repo} and PATH."
+    )
+
+
+def canonicalise(path: Path, label: str, ocamlc: str) -> str:
     """Re-render `path` from its parsed AST, discarding all formatting.
 
     `-dsource` writes to stderr, and `-stop-after parsing` means no typing, no
@@ -104,8 +126,7 @@ def canonicalise(path: Path, label: str) -> str:
         # stream, and warning text embeds the FILE PATH — which differs between
         # the committed copy and the regenerated one, so an unsuppressed warning
         # would make two identical ASTs compare unequal.
-        ["opam", "exec", "--", "ocamlc", "-w", "-a",
-         "-stop-after", "parsing", "-dsource", str(path)],
+        [ocamlc, "-w", "-a", "-stop-after", "parsing", "-dsource", str(path)],
         capture_output=True,
         text=True,
         cwd=path.parent,
@@ -131,6 +152,7 @@ def main() -> int:
         print(f"[extract-identity] no extract named {args.only!r}", file=sys.stderr)
         return 1
 
+    ocamlc = resolve_tool("ocamlc", repo)
     failures: list[str] = []
     backups: dict[Path, Path] = {}
     tmp = Path(tempfile.mkdtemp(prefix="extract-identity-"))
@@ -150,7 +172,7 @@ def main() -> int:
             backup = tmp / f"{name}.committed.ml"
             backup.write_text(committed_text, encoding="utf-8")
             backups[dest] = backup
-            canon_committed = canonicalise(backup, f"{dest_rel} (committed)")
+            canon_committed = canonicalise(backup, f"{dest_rel} (committed)", ocamlc)
 
             print(f"[extract-identity] regenerating {name} from {source_rel} ...")
             # EXTRACT_SKIP_FMT=1: run the real extraction, skip only the
@@ -178,7 +200,7 @@ def main() -> int:
             byte_identical = fresh_text == committed_text
             fresh_copy = tmp / f"{name}.regenerated.ml"
             fresh_copy.write_text(fresh_text, encoding="utf-8")
-            canon_fresh = canonicalise(fresh_copy, f"{dest_rel} (regenerated)")
+            canon_fresh = canonicalise(fresh_copy, f"{dest_rel} (regenerated)", ocamlc)
 
             if canon_committed == canon_fresh:
                 note = "byte-identical" if byte_identical else (

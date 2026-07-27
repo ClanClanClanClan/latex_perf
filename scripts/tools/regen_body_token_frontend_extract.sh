@@ -34,10 +34,18 @@ GENDIR="$ROOT/_build/default/proofs/generated"
 
 # Extraction emits its .ml/.mli into coqc's cwd, which dune's coq.theory stanza
 # does not capture — so run coqc directly against the built theory in a temp dir.
+# Resolve coqc ONCE, from $ROOT, before entering the temp dir below. `opam exec`
+# infers the switch from the CURRENT DIRECTORY, and CI uses a repo-local switch
+# (_opam/) — so `opam exec -- coqc` run from a temp dir fails with "No switch is
+# currently set". Resolving here keeps the invocation cwd-independent.
+COQC="$(opam exec -- which coqc 2>/dev/null | tail -1)"
+[ -x "$COQC" ] || COQC="$(command -v coqc || true)"
+[ -x "$COQC" ] || { echo "ERROR: cannot locate coqc" >&2; exit 1; }
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 cp proofs/BodyTokenFrontEndExtract.v "$WORK/"
-( cd "$WORK" && opam exec -- coqc \
+( cd "$WORK" && "$COQC" \
     -R "$VODIR" LaTeXPerfectionist \
     -Q "$GENDIR" LaTeXPerfectionist.Generated \
     BodyTokenFrontEndExtract.v )

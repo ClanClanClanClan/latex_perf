@@ -43,12 +43,37 @@ Exit 0 if every capstone is closed; exit 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 CLOSED = "Closed under the global context"
+
+
+def resolve_tool(name: str, repo: Path) -> str:
+    """Absolute path to an opam-installed binary.
+
+    Resolved ONCE, from the repo root, because `opam exec` infers the switch from
+    the CURRENT DIRECTORY. CI uses a repo-local switch (`_opam/`), so invoking
+    `opam exec -- coqc` from a temp working directory fails with "No switch is
+    currently set". Resolving here and calling the binary directly makes the
+    later invocations cwd-independent (and skips an opam round-trip each time)."""
+    r = subprocess.run(
+        ["opam", "exec", "--", "which", name],
+        cwd=repo, capture_output=True, text=True,
+    )
+    path = (r.stdout or "").strip().splitlines()
+    if r.returncode == 0 and path and Path(path[-1]).exists():
+        return path[-1]
+    fallback = shutil.which(name)
+    if fallback:
+        return fallback
+    raise SystemExit(
+        f"[print-assumptions] FATAL: cannot locate `{name}`. Tried `opam exec -- which "
+        f"{name}` from {repo} and PATH."
+    )
 
 # (theorem, module to Require, why it matters)
 CAPSTONES = [
@@ -87,6 +112,8 @@ def main() -> int:
     args = ap.parse_args()
     repo = Path(args.repo).resolve()
 
+    coqc = resolve_tool("coqc", repo)
+
     if args.build:
         print("[print-assumptions] building proofs ...")
         r = subprocess.run(
@@ -118,7 +145,7 @@ def main() -> int:
             )
             proc = subprocess.run(
                 [
-                    "opam", "exec", "--", "coqc",
+                    coqc,
                     "-R", str(vodir), "LaTeXPerfectionist",
                     "-Q", str(gendir), "LaTeXPerfectionist.Generated",
                     src.name,

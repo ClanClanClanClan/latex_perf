@@ -2,6 +2,59 @@
 
 All notable changes to LaTeX Perfectionist are documented here.
 
+## [v27.1.62] — 2026-07-27
+
+**SOUNDNESS — the round-7 fix train: the known false-READY baseline falls 21 → 7.** This release
+carries the PR-0 glue train (#501) plus the round-7 regression infrastructure (#503) and eight
+fix trains (#504–#511). A *false-READY* — the CLI reports READY (exit 0) on a document real
+`pdflatex` rejects — is the project's cardinal bug; every fix below was dual-oracled against real
+pdflatex and swept over the real-paper corpus for over-rejection before shipping.
+
+**Regression infrastructure**
+
+- **feat (R7-INFRA-1)**: `corpora/false_ready/` — 21 verified false-READY fixtures with a
+  per-fixture pdflatex grade, plus the monotone CI gate `scripts/tools/check_known_false_ready.py`
+  (wired into the `build` job). The gate fails in **both** directions: a fixed fixture regressing to
+  READY, *and* a live fixture becoming NOT-READY without the manifest being updated — so the
+  baseline can only descend and can never silently desync from the data. (#503)
+
+**Verdict-path corrections (PR-0 glue train, #501)**
+
+- **fix**: READY now requires the verified model to agree. The runtime verdict was previously
+  print-only while the exit code came from the unproven checker, so a `\usepackage{fontspec}`
+  document printed MODEL-NOT-READY and still exited 0.
+- **fix**: options-tolerant `uses_package_b` in the verified Coq front-end and its OCaml mirror
+  (the previous exact-byte needle let `\usepackage[ligatures=TeX]{fontspec}` evade detection).
+- **fix**: inputs above `max_input_bytes` now yield a conservative `T_input_too_large` NOT-READY
+  instead of a silent empty rule-set (READY by absence of evidence).
+- **perf**: structural gate made linear — 31 s → 0.69 s at 380 KB via skip/math byte-bitmaps.
+
+**Fix trains (#504–#511)** — each closes its fixtures and lowers the manifest baseline:
+
+- **#504** CR/CRLF-aware `%` comments; `no_live_end_document_fatal` → `fr_cr_comment`, `fr_missing_end`
+- **#505** directory-target check, NUL byte, grouping depth > 255 → `fr_dir_target`, `fr_nul_byte`, `fr_grouping_255`
+- **#506** sibling-artefact brace balance (`.aux`/`.bbl` "File ended while scanning"), new
+  `T_artefact_fatal` → `fr_fatal_bbl`, `fr_corrupt_aux`
+- **#507/#508** polyglossia + mathspec added to the OpenType catalogue; escape-aware,
+  brace-tracking option scan → `fr_polyglossia`, `fr_bracket_naive`
+- **#509** recursive `\input` cycle detection (`Project_model.has_include_cycle`, comment-aware);
+  duplicate `\begin{document}`; hyperref dropped from the moving-argument set →
+  `fr_two_cycle`, `fr_dup_begin_document`, `fr_hyperref_linktext`
+- **#510** `verb_broken_eol_fatal` — an inline `\verb` range spanning a newline → `fr_verb_eol`
+- **#511** `has_raw_cjk_b` in the **verified** front-end (`BodyTokenFrontEnd.v`) with an exact OCaml
+  mirror, OR'd into the `Japanese_cjk` disjunct so the existing T3 rule renders the verdict.
+  Block-specific UTF-8 decode over the four definite-CJK ranges, so the ﬁ ligature (U+FB01) and
+  U+FFFD are correctly excluded. Capstone `compile_safe_of_source` stays axiom-free without
+  re-proof, because `body_required_features_of_source` is proved generically over
+  `detect_body_features`. → `fr_raw_cjk`
+
+**Net effect**: known false-READY fixtures **21 → 7**, and the error-halt class is now **empty**
+(all seven survivors are strong-fatal). The seven remaining are tracked in the deferred-work
+register (`docs/v27/AUDIT_R7_FIX_PLAN.md` §4b) as DWR-2 (comment-awareness), DWR-3 (live-region)
+and DWR-4 (lowercase/csname loaders).
+
+Producer count unchanged at 167.
+
 ## [v27.1.61] — 2026-07-24
 
 **Recovery + governance: land the #498 squash-stranded commits.** The #498 squash-merge captured

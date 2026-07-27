@@ -1,0 +1,168 @@
+name: TeX Oracle (real pdflatex)
+
+# R7-INFRA-2 / S-CI-TEX — put a REAL pdflatex in CI.
+#
+# Until this workflow, `.github/workflows/` contained zero texlive and the only
+# `pdflatex` string in CI was a comment. Both pdflatex-dependent scripts exit 0
+# when the binary is absent, so they had never run in CI at all — which means
+# every "0 over-rejection on N real papers" claim across the round-7 fix trains
+# was a manual local sweep that nobody else could reproduce. This makes those
+# claims machine-checked and reproducible by anyone.
+#
+# ADVISORY ON PURPOSE (for now). This context is deliberately NOT listed in
+# .github/required-status-checks.json:
+#   * branch-protection.yml PUTs enforce_admins: true, so a red REQUIRED check
+#     here would be unbypassable even by the maintainer, and would stall every PR
+#     in the repo;
+#   * this is the repo's first Docker pull on the PR path — a new failure surface
+#     that has nothing to do with the property being gated.
+# The invisibility problem is solved the moment this runs on every PR and prints
+# the engine version into the log. Promote to required after a soak (~10 green
+# runs), by editing .github/required-status-checks.json — never via the API,
+# which branch-protection.yml would overwrite.
+#
+# NOTE: never add a `paths:` filter here. A required context whose workflow does
+# not run on a given PR stays pending forever, which would block promotion.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # ── PINNED ORACLE ENGINE — see docs/COMPILATION_GUARANTEE.md § SO1 ──────────
+  # texlive/texlive:latest-medium as of 2026-07-26. Verified from the registry:
+  # this is the multi-arch OCI *index* digest (NOT a per-arch manifest digest,
+  # which would lock the runner architecture), and it is byte-identical to the
+  # immutable dated tag
+  #   registry.gitlab.com/islandoftex/images/texlive:TL2026-2026-07-26-medium
+  # so it is anchored and cannot be garbage-collected as an untagged orphan.
+  #
+  # scheme-medium, not -small: two corpus documents use [T1]{fontenc}, and
+  # cm-super/lm live in collection-fontsrecommended, which -small omits. Without
+  # them TeX synthesises bitmap fonts at run time — slow, and exactly the class of
+  # environment-dependent behaviour that makes an oracle unreliable.
+  #
+  # Re-pinning is a DELIBERATE PR: bump both vars, re-run false_ready_oracle.sh
+  # with STRICT_GRADE=1 and re-record corpora/false_ready/manifest.json, then
+  # update the SO1 section and specs/v26/compilation_profiles.yaml.
+  TEX_IMAGE: texlive/texlive@sha256:d79913b74afcf48a53ec2ad0d54b70ad3e36d65b4f1de13d811435883c2f1fd9
+  TEX_EXPECT_VERSION: 3.141592653-2.6-1.40.29
+
+jobs:
+  tex-oracle:
+    name: tex-oracle
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      # OCaml is set up on the RUNNER, not in the TeX container: setup-ocaml-env
+      # needs sudo/apt (absent in the Debian TeX image, which runs as root without
+      # sudo) and leaves opam's bubblewrap sandbox on, which fails in an
+      # unprivileged container. So we build here and mount the result in.
+      - uses: ./.github/actions/setup-ocaml-env
+
+      - name: Build validators CLI
+        run: opam exec -- dune build latex-parse/src/validators_cli.exe
+
+      - name: Pull pinned TeX Live image
+        run: docker pull "$TEX_IMAGE"
+
+      - name: Assert engine pin (a MISMATCH here is not oracle drift)
+        run: |
+          set -euo pipefail
+          got=$(docker run --rm "$TEX_IMAGE" pdflatex --version | head -1)
+          man=$(python3 -c "import json;print(json.load(open('corpora/false_ready/manifest.json'))['oracle']['version'])")
+          echo "image    : $got"
+          echo "manifest : $man"
+          case "$got" in *"$TEX_EXPECT_VERSION"*) ;; *)
+            echo "::error::PIN MISMATCH: image reports '$got', workflow pins '$TEX_EXPECT_VERSION'. This is NOT a soundness regression and NOT oracle drift — re-pin TEX_IMAGE or re-record the manifest. Do not disable this gate."
+            exit 1 ;; esac
+          case "$man" in *"$TEX_EXPECT_VERSION"*) ;; *)
+            echo "::error::PIN MISMATCH: manifest oracle.version '$man' != pinned '$TEX_EXPECT_VERSION'."
+            exit 1 ;; esac
+
+      # The anti-silent-green measure. A missing .sty grades identically to the
+      # intended fatal (strong-fatal), so an under-provisioned image would let
+      # fixtures report `ok` while testing nothing. Prove the install can compile
+      # the corpus feature set BEFORE grading anything.
+      - name: TeX install canary
+        run: |
+          set -euo pipefail
+          docker run --rm -e HOME=/tmp "$TEX_IMAGE" bash -s <<'EOS'
+          set -eu
+          d=$(mktemp -d); cd "$d"
+          cat > canary.tex <<'TEX'
+          \documentclass{article}
+          \usepackage[utf8]{inputenc}
+          \usepackage[T1]{fontenc}
+          \usepackage{amsmath,amssymb,graphicx,hyperref,listings,tikz}
+          \begin{document}
+          Caf\'e \`a \c{c} $\alpha^2$
+          \begin{tikzpicture}\draw (0,0)--(1,1);\end{tikzpicture}
+          \end{document}
+          TEX
+          if ! pdflatex -interaction=nonstopmode -halt-on-error canary.tex >canary.out 2>&1 || [ ! -f canary.pdf ]; then
+            echo "CANARY FAILED — the pinned image cannot compile the corpus feature set:"
+            tail -40 canary.out; exit 1
+          fi
+          for f in tikz.sty hyperref.sty amsmath.sty listings.sty inputenc.sty pdftex.map; do
+            kpsewhich "$f" >/dev/null || { echo "MISSING: $f"; exit 1; }
+          done
+          echo "canary OK"
+          EOS
+
+      # Parse the manifest on the RUNNER and hand the TSV in. This is what keeps
+      # the container dependency-free — no apt-get against a Debian sid base whose
+      # indices rot as the pinned digest ages.
+      - name: Emit fixture list
+        run: |
+          set -euo pipefail
+          bash scripts/tools/false_ready_oracle.sh --emit-fixtures > /tmp/fixtures.tsv
+          got=$(wc -l < /tmp/fixtures.tsv | tr -d ' ')
+          want=$(python3 -c "import json;print(len(json.load(open('corpora/false_ready/manifest.json'))['fixtures']))")
+          echo "fixtures: $got (manifest: $want)"
+          # The oracle derives its own expected count FROM this file, so a short
+          # TSV would silently shrink the check rather than fail it. This is the
+          # only place that can compare against the manifest (the container has
+          # no python3, deliberately), so the cross-check belongs here.
+          [ "$got" -eq "$want" ] || {
+            echo "::error::fixture TSV has $got rows but the manifest lists $want — refusing to grade a partial corpus."
+            exit 1; }
+
+      # THE BLOCKING CHECK (within this advisory workflow): every fixture must
+      # still be rejected by real pdflatex. HARD drift only — a strong-fatal <->
+      # error-halt reclassification is reported but does not fail, because that
+      # distinction moves with the font install rather than with soundness.
+      - name: False-READY oracle (real pdflatex, all fixtures)
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:$PWD" -w "$PWD" \
+            -v /tmp/fixtures.tsv:/tmp/fixtures.tsv:ro \
+            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 -e FR_FIXTURE_TSV=/tmp/fixtures.tsv \
+            "$TEX_IMAGE" bash scripts/tools/false_ready_oracle.sh
+
+      # ADVISORY: a measurement of the soundness residual, not a regression gate.
+      # It needs the large correctness-critical install, an incomplete one
+      # manufactures spurious FALSE-READY(NEW!) rows, and it is blind to a CLI
+      # broken in the over-rejection direction. Never make this one required.
+      - name: Differential vs pdflatex (65-doc corpus) — advisory
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:$PWD" -w "$PWD" \
+            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
+            -e EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" \
+            "$TEX_IMAGE" bash scripts/tools/diff_compile_check.sh

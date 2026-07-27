@@ -173,6 +173,53 @@ discharge for those engines is a future workstream.
 ---
 
 
+## SO1 — Pinned oracle engine
+
+Every soundness claim in this document is relative to ONE pinned engine. This section
+is the single authoritative home of that pin.
+
+| | |
+|---|---|
+| engine | `pdflatex` |
+| distribution | TeX Live 2026 |
+| version | `pdfTeX 3.141592653-2.6-1.40.29` |
+| CI image | `texlive/texlive@sha256:d79913b74afcf48a53ec2ad0d54b70ad3e36d65b4f1de13d811435883c2f1fd9` |
+| — equivalently | `registry.gitlab.com/islandoftex/images/texlive:TL2026-2026-07-26-medium` (immutable dated tag) |
+| scheme | `scheme-medium` |
+
+**READY oracle.** A document is READY iff a clean single pass of the pinned engine
+produces no LaTeX Error. Two false-READY classes are knowingly admitted by a
+single-pass oracle: *(i)* multi-pass / `.aux` / `.bbl` staleness (`\ref`/`\cite`
+resolved only on a second pass), and *(ii)* recoverable-but-wrong output (`\ref`
+rendering `??`, duplicate `\label`, overfull `\hbox`).
+
+**Grades.** `strong-fatal` = no PDF even under `-interaction=nonstopmode`;
+`error-halt` = fails `-halt-on-error` but limps to a PDF under nonstopmode. Both are
+rejections; the distinction tracks the font/error-recovery install, not soundness,
+which is why `false_ready_oracle.sh` fails HARD only on a fixture that *compiles*.
+
+**Where it is enforced.** `.github/workflows/tex-oracle.yml` runs
+`scripts/tools/false_ready_oracle.sh` (blocking within that workflow) and
+`scripts/tools/diff_compile_check.sh` (advisory) inside the pinned image on every PR.
+The digest above is the multi-arch OCI *index* digest, not a per-arch manifest digest.
+
+**Engine-year sensitivity, measured.** TL2024 (pdfTeX 1.40.26) and TL2026 (1.40.29)
+produce identical grades on all 21 fixtures, with byte-identical first-error text. The
+fragile axis is install *completeness*, not engine year: with Type1 fonts hidden, every
+`error-halt` fixture reclassifies to `strong-fatal`. Hence the HARD/SOFT split and the
+install canary in the workflow.
+
+**Re-pinning is a deliberate PR**, in this order:
+1. bump `TEX_IMAGE` and `TEX_EXPECT_VERSION` in `.github/workflows/tex-oracle.yml`;
+2. re-run `scripts/tools/false_ready_oracle.sh` with `STRICT_GRADE=1` and re-record
+   `corpora/false_ready/manifest.json` (`oracle` block plus any changed grades);
+3. re-run `scripts/tools/diff_compile_check.sh` and re-derive `KNOWN_FALSE_READY`;
+4. update this section and `specs/v26/compilation_profiles.yaml`.
+
+A version mismatch reports as **PIN MISMATCH** (exit 3), never as drift — they are
+different problems with different fixes, and conflating them is how a gate gets
+switched off instead of understood.
+
 ## Differential validation against real pdflatex (measured, not asserted)
 
 `scripts/tools/diff_compile_check.sh` runs `--compile-check` AND the real `pdflatex`

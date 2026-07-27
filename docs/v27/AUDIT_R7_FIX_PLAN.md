@@ -223,6 +223,35 @@ the BODY scan exempts only comments+url (verb/verbatim FIRE); the DECLARATION sc
 comment/verb/verbatim as dead (a declaration there does NOT exempt). Wiring: OR `has_raw_cjk_b` into the
 `Japanese_cjk` disjunct only; existing package/env detection unchanged; existing T3 does the rest.
 
+**DWR-CJK — status (PR-cjk-model, Part A v1 SHIPPED).** `has_raw_cjk_b` added to the VERIFIED front-end
+(`BodyTokenFrontEnd.v`) + exact OCaml mirror (`compile_evidence.ml`), OR'd into the `Japanese_cjk`
+disjunct; re-extracted, **front-end parity 426**, capstone **axiom-free** (`compile_safe_of_source`
+"Closed under the global context" — the generic `body_required_features_of_source` theorem absorbed the
+new disjunct with no re-proof). Flips `fr_raw_cjk` via the EXISTING T3 (`Japanese_cjk`→pdflatex `false`).
+Baseline **8→7**. **⚠ THE DIFFERENTIAL CAUGHT A DESIGN ERROR before ship:** the first cut used a LOOSE
+lead-byte test (any 3-byte ≥ U+3000) and over-rejected **four of the author's own English papers** on a
+copy-pasted ﬁ ligature (U+FB01, which pdflatex COMPILES). Root lesson: *CJK-feature detection is not
+"any unset Unicode char".* v1 therefore DECODES the codepoint and range-checks four definite-CJK blocks
+only — U+3000–9FFF, U+AC00–D7A3, U+F900–FAFF, U+FF00–FFEF (= the oracle-validated structural `is_cjk`) —
+excluding ﬁ AND the replacement char � (U+FFFD, a *non-CJK* fatal). A range-validation workflow
+(pdflatex oracle) confirmed **0 in-range over-rejects** (every in-range codepoint fails pdflatex = correct
+catch) and 0 real-paper over-rejects. **v1 has NO exemptions** (scans every byte ⇒ over-detect only ⇒
+sound); the comment/url/env/declaration exemptions above and the CKJutf8 T3 fix (Part B) are the tracked
+refinements. **Under-approximation = sound (add-detection-only, introduces zero false-READY).**
+
+**DWR-CJK-2 — raw UNSET non-CJK / CJK-adjacent codepoints (the pre-existing gaps v1 does not close).**
+These codepoints FAIL pdflatex "not set up" but fall OUTSIDE v1's four CJK blocks, so they remain the
+pre-existing false-READYs they were before this change (v1 introduces none of them). Enumerated by the
+range-validation workflow, by block: CJK Radicals Suppl (U+2E80–2EBF), Kangxi Radicals (U+2F00–2FD5),
+Ideographic Description (U+2FF0), Yi Syllables/Radicals (U+A000–A4CF), Lisu (U+A4D0), Hangul Jamo
+Extended-A/B (U+D7B0–D7FF), CJK Ext-B and beyond (4-byte, ≥ U+20000), Specials (U+FFFD replacement),
+plus obscure unset symbols scattered in U+2000–2FFF (the 0xE2 range). Design: widen `is_cjk_cp` to the
+CJK-adjacent blocks that are ENTIRELY unset (Yi, radicals, Hangul-Jamo-ext — each oracle-validated
+before adding, since a set-up member would flip it to an over-reject) and add 4-byte decoding for Ext-B;
+the non-CJK unset cases (U+FFFD, stray symbols) want a SEPARATE "raw unsupported codepoint" fatal, not
+the `Japanese_cjk` feature (semantically wrong to label a corrupt byte "Japanese"). Risk: FEATURE
+polarity (each widening must not over-reject a set-up member). Sequence: follow-up after Part A.
+
 **DWR-6 — Multi-file structural gate (ARCHITECTURAL; shared by ALL structural detectors).** `structural_fatal_reasons`
 sees only the ROOT source, so a CJK/`\verb`-EOL/double-script fatal living in an `\input` child is
 invisible (a real READY-but-fails hole for every detector, not CJK-specific). Design: run the

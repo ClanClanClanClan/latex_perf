@@ -465,6 +465,67 @@ Fixpoint uses_package_b (pkg : list byte) (src : list byte) : bool :=
       end
   end.
 
+(** ── Raw-CJK body-codepoint detector (R7-1c / DWR-CJK, Part A) ──────────
+
+    A raw CJK/ideographic codepoint (>= U+3000) with no CJK support is the
+    pdflatex fatal "! LaTeX Error: Unicode character … not set up for use with
+    LaTeX", so its presence makes the document REQUIRE [Japanese_cjk] (which T3
+    then rejects under the pdflatex profile). This v1 detects the CANDIDATE
+    codepoint anywhere in the source: it scans EVERY byte and never skips, so it
+    can only OVER-detect (over-reject), never MISS — the sound direction for a
+    feature requirement (under-detect would be a false-READY). Comment / url /
+    CJK-env / declaration exemptions (precision, not soundness) are the tracked
+    DWR-CJK v2 refinements, each of which must be escape-aware to stay sound.
+
+    A candidate is a well-formed 3-byte UTF-8 sequence whose DECODED codepoint
+    lies in a definite-CJK block: U+3000..U+9FFF (CJK punct, kana, bopomofo,
+    Ext-A, Unified), U+AC00..U+D7A3 (Hangul), U+F900..U+FAFF (CJK compat),
+    U+FF00..U+FFEF (half/fullwidth). Decoding + block-checking (rather than a
+    loose lead-byte test) is essential: it EXCLUDES set-up presentation-form
+    ligatures such as U+FB01 "ﬁ" (which pdflatex compiles — a loose lead test
+    over-rejected 4 real papers) and the replacement char U+FFFD (a non-CJK
+    "not set up" fatal that belongs to a separate detector, not the CJK feature).
+    Lead [0xE0..0xE2] (codepoint < U+3000: em/en-dash, quotes, ellipsis, math
+    symbols — inputenc-handled) and every 2-byte sequence (latin-1) are excluded
+    by the block test, so ordinary English/European prose never fires. 4-byte
+    CJK Ext-B (>= U+20000) is a documented under-fire gap (DWR-CJK), safe. *)
+Definition is_cont (b : byte) : bool :=
+  andb (Nat.leb 128 b) (Nat.leb b 191).
+
+(** Codepoint of a well-formed 3-byte UTF-8 sequence (lead 0xE0..0xEF). *)
+Definition cp3 (b0 b1 b2 : byte) : nat :=
+  (b0 - 224) * 4096 + (b1 - 128) * 64 + (b2 - 128).
+
+(** Decoded codepoint lies in a definite-CJK block. *)
+Definition is_cjk_cp (cp : nat) : bool :=
+  orb (andb (Nat.leb 12288 cp) (Nat.leb cp 40959))      (* U+3000..U+9FFF *)
+    (orb (andb (Nat.leb 44032 cp) (Nat.leb cp 55203))   (* U+AC00..U+D7A3 *)
+      (orb (andb (Nat.leb 63744 cp) (Nat.leb cp 64255)) (* U+F900..U+FAFF *)
+        (andb (Nat.leb 65280 cp) (Nat.leb cp 65519))))  (* U+FF00..U+FFEF *).
+
+Definition cjk_head (l : list byte) : bool :=
+  match l with
+  | b0 :: b1 :: b2 :: _ =>
+      if andb (Nat.leb 224 b0)
+           (andb (Nat.leb b0 239) (andb (is_cont b1) (is_cont b2)))
+      then is_cjk_cp (cp3 b0 b1 b2)
+      else false
+  | _ => false
+  end.
+
+Fixpoint has_raw_cjk_fuel (fuel : nat) (l : list byte) {struct fuel} : bool :=
+  match fuel with
+  | O => false
+  | S f =>
+      match l with
+      | [] => false
+      | _ :: rest => if cjk_head l then true else has_raw_cjk_fuel f rest
+      end
+  end.
+
+Definition has_raw_cjk_b (src : list byte) : bool :=
+  has_raw_cjk_fuel (S (length src)) src.
+
 (** Mirrors [Compile_evidence.detect_body_features]: same guards, same RESULT
     ORDER (the OCaml conses each feature at most once — one add site per
     feature — then reverses, so the output order is exactly the textual order
@@ -480,6 +541,7 @@ Definition detect_body_features (src : list byte) : list feature :=
   ++ (if uses_package_b p_cjk src
          || contains_b n_cjk_begin src
          || uses_package_b p_luatexja src
+         || has_raw_cjk_b src
       then [Japanese_cjk] else [])
   ++ (if uses_package_b p_inputenc src && contains_b n_utf8 src
       then [UTF8_inputenc] else []).

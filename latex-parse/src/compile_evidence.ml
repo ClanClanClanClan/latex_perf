@@ -306,6 +306,44 @@ let uses_package (source : string) (pkg : string) : bool =
   in
   scan 0
 
+(* R7-1c / DWR-CJK Part A: raw CJK/ideographic codepoint (>= U+3000) with no CJK
+   support → pdflatex "Unicode character not set up" → the doc REQUIRES
+   Japanese_cjk. EXACT byte-mirror of [BodyTokenFrontEnd.has_raw_cjk_b] (parity
+   is enforced by test_body_token_frontend). v1 detects the candidate anywhere
+   (scans every byte, never skips ⇒ can only OVER-detect, never miss = sound for
+   a feature requirement); comment/url/env/declaration exemptions are the
+   tracked DWR-CJK v2 precision refinements. Candidate = well-formed 3-byte
+   UTF-8 whose DECODED codepoint is in a definite-CJK block (U+3000-9FFF,
+   AC00-D7A3, F900-FAFF, FF00-FFEF). Block-decoding (not a loose lead test)
+   EXCLUDES set-up ligatures like U+FB01 ﬁ (pdflatex compiles it) and the U+FFFD
+   replacement char (a non-CJK "not set up" fatal → separate detector). 4-byte
+   Ext-B is a documented under-fire gap. *)
+let has_raw_cjk (source : string) : bool =
+  let n = String.length source in
+  let is_cont b = b >= 128 && b <= 191 in
+  let is_cjk_cp cp =
+    (cp >= 0x3000 && cp <= 0x9FFF)
+    || (cp >= 0xAC00 && cp <= 0xD7A3)
+    || (cp >= 0xF900 && cp <= 0xFAFF)
+    || (cp >= 0xFF00 && cp <= 0xFFEF)
+  in
+  let cjk_head i =
+    i + 2 < n
+    &&
+    let b0 = Char.code source.[i]
+    and b1 = Char.code source.[i + 1]
+    and b2 = Char.code source.[i + 2] in
+    b0 >= 224
+    && b0 <= 239
+    && is_cont b1
+    && is_cont b2
+    && is_cjk_cp (((b0 - 224) * 4096) + ((b1 - 128) * 64) + (b2 - 128))
+  in
+  let rec go i =
+    if i >= n then false else if cjk_head i then true else go (i + 1)
+  in
+  go 0
+
 (* Detect the T3-relevant document features from real source. Each is a genuine
    package/primitive whose presence makes the document REQUIRE the feature; the
    engine must then admit it (T3). Conservative: over-detects (any option group
@@ -328,6 +366,7 @@ let detect_body_features (source : string) : feature list =
     uses_package source "CJK"
     || contains source "\\begin{CJK}"
     || uses_package source "luatexja"
+    || has_raw_cjk source
   then add Japanese_cjk;
   if
     uses_package source "inputenc"

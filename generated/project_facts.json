@@ -95,7 +95,7 @@
     "target": 21
   },
   "ci": {
-    "workflow_count": 36,
+    "workflow_count": 37,
     "hard_gates": [
       "zero_admit",
       "build",

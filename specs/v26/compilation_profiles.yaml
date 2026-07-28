@@ -32,8 +32,18 @@ profiles:
       - opentype_fonts            # system fonts → xelatex / lualatex
       - lua_scripting             # \directlua → lualatex
     toolchain_version_range:
-      min: "3.14159265-2.6-1.40.20"   # TeX Live 2019 minimum
-      tested: "3.14159265-2.6-1.40.25" # TeX Live 2024 tested
+      # NOTE: the banner prefix is "3.141592653" (11 digits) for every engine from
+      # 1.40.22 on. The previous "3.14159265" (10) is the pre-2021 form and could
+      # never substring-match a real `pdflatex --version`, so any check against it
+      # was vacuous. Also corrected: 1.40.25 is TeX Live 2023, not 2024 (TL2024
+      # ships 1.40.26). The tested value is now the pinned oracle engine —
+      # see docs/COMPILATION_GUARANTEE.md § SO1, the single home of that pin.
+      # NB: 1.40.20 actually reported the 10-digit "3.14159265" banner, so this
+      # full string matches no real engine either. Compare only the 1.40.x
+      # component if this is ever made load-bearing (today nothing reads it:
+      # `grep -rn toolchain_version_range` finds no consumer).
+      min: "1.40.20"                    # TeX Live 2019 minimum (version component only)
+      tested: "3.141592653-2.6-1.40.29" # TeX Live 2026 (pinned oracle, SO1)
     pass_iteration:
       bounded: true
       typical_max: 5               # most projects converge ≤5 passes

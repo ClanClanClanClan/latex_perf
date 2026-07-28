@@ -26,6 +26,7 @@
   validators_context
   re_compat
   validators_common
+  fix_guard
   language_detect
   rule_contract_loader
   extension_contract

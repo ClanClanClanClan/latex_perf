@@ -98,7 +98,8 @@ let protected_ranges (src : string) : (int * int) list =
    variants in check_producer_coverage.py: each of these was measured emitting a
    legitimate fix that region 1 withheld. That gate is the completeness check —
    a control-symbol-aware rule missing from this list loses its fix and the gate
-   goes red, which is the safe direction (functionality lost, nothing corrupted).
+   goes red, which is the safe direction (functionality lost, nothing
+   corrupted).
 
    TYPO-013 is deliberately ABSENT: curling an ASCII backtick is exactly the
    prose-blind rewrite that destroyed the grave-accent command in

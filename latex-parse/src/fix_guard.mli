@@ -44,11 +44,11 @@ val control_symbol_aware : string list
     The guard exists to stop a rule rewriting bytes it does not understand. A
     typography rule sees a backtick and curls it, not knowing it is the
     grave-accent command. These rules are the opposite: normalising accent brace
-    forms, collapsing doubled escapes, removing spurious spacing commands. Listing
-    a rule here is a CLAIM that it understands TeX commands, and it must be
-    backed by the golden variants in [scripts/tools/check_producer_coverage.py] —
-    that gate fails if a legitimately-blocked fix is withheld, so the list cannot
-    silently rot. *)
+    forms, collapsing doubled escapes, removing spurious spacing commands.
+    Listing a rule here is a CLAIM that it understands TeX commands, and it must
+    be backed by the golden variants in
+    [scripts/tools/check_producer_coverage.py] — that gate fails if a
+    legitimately-blocked fix is withheld, so the list cannot silently rot. *)
 
 val filter : src:string -> rule_id:string -> Cst_edit.t list -> Cst_edit.t list
 (** [filter ~src ~rule_id edits] — drop every edit whose half-open span

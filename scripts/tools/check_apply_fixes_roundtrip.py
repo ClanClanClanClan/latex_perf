@@ -79,7 +79,17 @@ from pathlib import Path
 
 CORPORA = ["corpora/compile_check", "corpora/apply_fixes"]
 MANIFEST = "corpora/apply_fixes/manifest.json"
-MODES = ["--apply-fixes", "--apply-fixes-best-effort"]
+# TWO ORTHOGONAL AXES, and both matter:
+#   flag    --apply-fixes converges internally; --apply-fixes-best-effort is one pass
+#   profile default vs L0_VALIDATORS=pilot — pilot is a REAL shipping profile
+#           (scripts/tools/diff_compile_check.sh:48 exports it) and is strictly
+#           MORE destructive. Measured: good_longtable_free.tex is corrupted only
+#           under pilot (`>{\bfseries}` -> `\textgreater{}{\bfseries}`, an illegal
+#           pream-token, pdflatex 0 -> 1). Varying only the flag misses that class
+#           entirely, which is exactly what my first version of this gate did.
+FLAGS = ["--apply-fixes", "--apply-fixes-best-effort"]
+PROFILES = [("default", {}), ("pilot", {"L0_VALIDATORS": "pilot"})]
+CELLS = [(pname, penv, flag) for pname, penv in PROFILES for flag in FLAGS]
 MIN_DOCS = 60  # compile_check alone is 65 standalone docs; a smaller sweep is a bug
 
 
@@ -169,7 +179,9 @@ def main() -> int:
                 [str(cli), "--compile-check", str(doc)],
                 capture_output=True).returncode == 0
 
-            for mode in MODES:
+            for pname, penv, flag in CELLS:
+                mode = f"{pname}:{flag}"
+                env = {**os.environ, **penv}
                 # Stage the WHOLE directory: \input{sibling} resolves relative to
                 # the file, so a bare temp dir manufactures T2 failures.
                 with tempfile.TemporaryDirectory(prefix="fixer-rt-") as tmp:
@@ -180,7 +192,7 @@ def main() -> int:
                     # the fixer is a byte-level rewriter — decoding its output as
                     # strict UTF-8 raises, and decoding it leniently would CORRUPT
                     # the very bytes we are trying to compare.
-                    fixed = subprocess.run([str(cli), mode, str(doc)], capture_output=True)
+                    fixed = subprocess.run([str(cli), flag, str(doc)], capture_output=True, env=env)
                     if fixed.returncode not in (0, 1):
                         findings.append(f"{key} [{mode}]: fixer exited {fixed.returncode}")
                         continue
@@ -192,7 +204,7 @@ def main() -> int:
 
                     # (a) idempotence
                     again = subprocess.run(
-                        [str(cli), mode, str(staged_doc)], capture_output=True)
+                        [str(cli), flag, str(staged_doc)], capture_output=True, env=env)
                     not_idem = again.returncode in (0, 1) and again.stdout != out
 
                     # (c) verdict-non-degradation
@@ -216,25 +228,35 @@ def main() -> int:
                         else:
                             broke = b4 and not af
 
-                    if broke or degraded or not_idem:
+                    # (c') NO FIXER-MANUFACTURED FALSE-READY: if the fixed
+                    # document still says READY while pdflatex now rejects it, the
+                    # fixer has created the project's cardinal bug. This is the
+                    # property that matters — plain verdict-monotonicity (c)
+                    # catches NONE of the corpus breakages, because the checker
+                    # keeps saying READY before and after.
+                    manufactured = bool(broke and after_ready)
+                    if broke or degraded or not_idem or manufactured:
                         entry = {"doc": key, "mode": mode,
                                  "breaks_compile": bool(broke),
                                  "degrades_verdict": bool(degraded),
-                                 "not_idempotent": bool(not_idem)}
+                                 "not_idempotent": bool(not_idem),
+                                 "manufactured_false_ready": manufactured}
                         observed_broken.append(entry)
                         prev = recorded.get((key, mode))
                         if not prev:
                             findings.append(
                                 f"{key} [{mode}]: NEW FIXER DEFECT "
                                 f"(breaks_compile={broke}, degrades_verdict={degraded}, "
-                                f"not_idempotent={not_idem}) — the fixer damages or "
+                                f"not_idempotent={not_idem}, "
+                                f"manufactured_false_ready={manufactured}) — the fixer damages or "
                                 f"destabilises a document it was asked to improve")
                         else:
                             # Recorded, but make sure it has not got WORSE along an
                             # axis the baseline did not already admit.
                             for axis, now in (("breaks_compile", broke),
                                               ("degrades_verdict", degraded),
-                                              ("not_idempotent", not_idem)):
+                                              ("not_idempotent", not_idem),
+                                              ("manufactured_false_ready", manufactured)):
                                 if now and not prev.get(axis):
                                     findings.append(
                                         f"{key} [{mode}]: newly {axis} (was recorded "
@@ -278,7 +300,7 @@ def main() -> int:
               f"to {MANIFEST}")
         return 0
 
-    print(f"[fixer-roundtrip] {n_docs} documents x {len(MODES)} modes; "
+    print(f"[fixer-roundtrip] {n_docs} documents x {len(CELLS)} cells (profile x flag); "
           f"fixer rewrote {n_changed}; pdflatex={'yes' if have_tex else 'NO (b skipped)'}; "
           f"known-broken {len(recorded)}")
     if not have_tex and not require_tex:

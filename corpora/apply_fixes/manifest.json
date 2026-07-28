@@ -9,80 +9,203 @@
   "known_broken": [
     {
       "doc": "corpora/apply_fixes/adv_accent_backtick.tex",
-      "mode": "--apply-fixes",
+      "mode": "default:--apply-fixes",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/apply_fixes/adv_accent_backtick.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_accent_backtick.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_accent_backtick.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "--apply-fixes",
+      "mode": "default:--apply-fixes",
       "breaks_compile": true,
       "degrades_verdict": true,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": false
     },
     {
       "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": true,
       "degrades_verdict": true,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": false
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_input_filename.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": true,
+      "not_idempotent": false,
+      "manufactured_false_ready": false
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_input_filename.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": true,
+      "not_idempotent": true,
+      "manufactured_false_ready": false
     },
     {
       "doc": "corpora/apply_fixes/adv_tikz_path.tex",
-      "mode": "--apply-fixes",
+      "mode": "default:--apply-fixes",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/apply_fixes/adv_tikz_path.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_tikz_path.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_tikz_path.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/compile_check/good_accents_utf8.tex",
-      "mode": "--apply-fixes",
+      "mode": "default:--apply-fixes",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/compile_check/good_accents_utf8.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_accents_utf8.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_accents_utf8.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_longtable_free.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_longtable_free.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/compile_check/good_quotes_dashes.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": false,
       "degrades_verdict": false,
-      "not_idempotent": true
+      "not_idempotent": true,
+      "manufactured_false_ready": false
+    },
+    {
+      "doc": "corpora/compile_check/good_quotes_dashes.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": false,
+      "degrades_verdict": false,
+      "not_idempotent": true,
+      "manufactured_false_ready": false
     },
     {
       "doc": "corpora/compile_check/good_tikz_simple.tex",
-      "mode": "--apply-fixes",
+      "mode": "default:--apply-fixes",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
     },
     {
       "doc": "corpora/compile_check/good_tikz_simple.tex",
-      "mode": "--apply-fixes-best-effort",
+      "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": true,
       "degrades_verdict": false,
-      "not_idempotent": false
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_tikz_simple.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/good_tikz_simple.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/compile_check/tolerated_trailing_whitespace.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": false,
+      "degrades_verdict": false,
+      "not_idempotent": true,
+      "manufactured_false_ready": false
     }
   ]
 }

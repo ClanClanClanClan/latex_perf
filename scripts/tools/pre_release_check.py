@@ -88,6 +88,13 @@ BUILD_CHECKS = [
     # gate: no fix producer may rewrite literal bytes the author typed verbatim.
     # Plants every known producer trigger inside each protected-region kind and
     # asserts --apply-fixes leaves them byte-identical (pilot + default).
+    # R7-INFRA-4 property (b): oracle-class preservation needs REAL pdflatex, so
+    # it runs here (where TeX exists) rather than in CI. The CLI-only properties
+    # (a)+(c) already run in the CI `build` job on every PR.
+    (["python3", "scripts/tools/check_apply_fixes_roundtrip.py",
+      "--repo", ".", "--require-pdflatex"],
+     "apply-fixes round-trip (incl. pdflatex oracle-class preservation)", None),
+
     (["python3", "scripts/tools/check_verbatim_safety.py", "--repo", "."],
      "verbatim safety", None),
     # Per-producer coverage + correctness gate. The corpus differential /

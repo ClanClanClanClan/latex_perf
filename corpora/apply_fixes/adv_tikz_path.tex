@@ -1,0 +1,11 @@
+% Adversarial fixture: `--` inside a TikZ path.
+% The double hyphen is pgf's line-to PATH OPERATOR, not punctuation. Rewriting it
+% dash yields "! Package tikz Error: Giving up on this path." and no PDF.
+% NOT caught by --compile-check: only real pdflatex sees it.
+\documentclass{article}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}
+  \draw (0,0) -- (2,0) -- (2,2) -- cycle;
+\end{tikzpicture}
+\end{document}

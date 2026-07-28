@@ -235,12 +235,23 @@ compile-FAILURE classes (`fail_*`), and pdflatex-TOLERATED sloppiness (`tolerate
 
 | soundness direction | count | meaning |
 |---|---|---|
-| correct **READY & COMPILES** (true-READY) | 35 | clean docs of varied complexity, all certified and all compile |
+| correct **READY & COMPILES** (true-READY) | 34 | clean docs of varied complexity, all certified and all compile |
 | correct **NOT-READY & FAILS** (true NOT-READY) | 20 | unclosed math/display-math/env/`\verb`, extra/stray `}`, `\begin`/`\end` mismatch, extra `\end`, `\left` without `\right`, mismatched `$` toggles, runaway argument, missing `\input`, missing `\begin{document}` — plus (v27.1.60 structural-fatal gate) **double super/subscript, missing `\documentclass`, `\usepackage` after `\begin{document}`** — all caught by T0/T2/T5 and the new structural-fatal gate |
 | **FALSE-READY** (cc=READY, pdflatex FAILS) | **8** | the dangerous soundness residual — every one requires macro/package-universe modeling or full expansion the pre-check does not perform (enumerated below); **0 new** beyond the documented allowlist. Reduced from 10 in v27.1.60: `fail_double_subscript` and `fail_no_documentclass` are now correctly NOT-READY. |
-| false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 2 | safe conservative over-rejection: a bare unclosed `{` group pdflatex auto-closes, and a `\write18` doc pdflatex tolerates in restricted mode (shell-escape is genuinely LP-Foreign) |
+| false-not-ready (cc=NOT-READY, pdflatex COMPILES) | 3 | safe conservative over-rejection: a bare unclosed `{` group pdflatex auto-closes, a `\write18` doc pdflatex tolerates in restricted mode (shell-escape is genuinely LP-Foreign), and `fail_duplicate_label.tex` (below) |
 
-Total = 35 + 20 + 8 + 2 = 65.
+Total = 34 + 20 + 8 + 3 = 65.
+
+**Re-measured 2026-07-28 (was 35/20/8/2).** `fail_duplicate_label.tex` moved from true-READY to
+over-rejection, and the cause is worth recording because it is a *consequence of a fix*, not a
+regression. pdflatex only WARNS on a duplicate `\label` and exits 0. The verified model's T4
+conjunct (`nodup_nat_b` over `body_label_defs`) rejects it, and since v27.1.62 (#501) the model
+verdict is a HARD conjunct of the exit code rather than an advisory line — so a document the model
+had always rejected now actually reports NOT-READY. Before #501 it printed MODEL-NOT-READY and
+still exited 0, which is precisely the verdict-wiring bug that release fixed. The movement is in
+the SAFE direction (conservative over-rejection, never a false-READY). Relaxing it means dropping
+the `nodup` premise from the proven capstone, which is a dedicated proof PR — see the T4 polarity
+item in the round-6 findings.
 
 The harness exits nonzero ONLY on a **NEW** false-READY — one whose basename is not in
 the documented `KNOWN_FALSE_READY` allowlist inside the script (the 8 limit-class docs

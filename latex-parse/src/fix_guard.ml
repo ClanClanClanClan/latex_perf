@@ -94,13 +94,39 @@ let protected_ranges (src : string) : (int * int) list =
 
 (* Half-open intersection. A pure insertion (s = e) is a point, and a point on a
    protected range's exclusive end is NOT inside it. *)
+(* Rules whose contract IS editing control symbols. Derived from the golden
+   variants in check_producer_coverage.py: each of these was measured emitting a
+   legitimate fix that region 1 withheld. That gate is the completeness check —
+   a control-symbol-aware rule missing from this list loses its fix and the gate
+   goes red, which is the safe direction (functionality lost, nothing corrupted).
+
+   TYPO-013 is deliberately ABSENT: curling an ASCII backtick is exactly the
+   prose-blind rewrite that destroyed the grave-accent command in
+   good_accents_utf8. *)
+let control_symbol_aware =
+  [
+    "CS-001" (* spurious thin space before a unit *);
+    "MATH-082" (* doubled negative thin space *);
+    "TYPO-015" (* doubled escaped percent *);
+    "TYPO-017" (* accent brace form *);
+    "TYPO-055" (* consecutive thin spaces *);
+    "TYPO-056" (* legacy accent brace form *);
+    "TYPO-062" (* literal backslash to \textbackslash *);
+  ]
+
 let intersects (s, e) (a, b) = if s = e then a <= s && s < b else s < b && a < e
 
-let filter ~(src : string) (edits : Cst_edit.t list) : Cst_edit.t list =
+let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
+    Cst_edit.t list =
   match edits with
   | [] -> []
   | _ ->
-      let ranges = protected_ranges src in
+      (* A control-symbol-aware rule still gets the picture region: no producer
+         has any business rewriting inside a TikZ path. *)
+      let ranges =
+        if List.mem rule_id control_symbol_aware then picture_ranges src
+        else protected_ranges src
+      in
       if ranges = [] then edits
       else
         List.filter

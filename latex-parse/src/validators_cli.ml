@@ -151,9 +151,11 @@ let collect_fix_edits ?filter_id ~(src : string)
       let included =
         match filter_id with None -> true | Some id -> r.id = id
       in
-      match r.fix with Some edits when included -> edits | _ -> [])
+      match r.fix with
+      | Some edits when included ->
+          Latex_parse_lib.Fix_guard.filter ~src ~rule_id:r.id edits
+      | _ -> [])
     results
-  |> Latex_parse_lib.Fix_guard.filter ~src
 
 let env_flag_on name =
   match Sys.getenv_opt name with

@@ -135,8 +135,15 @@ let print_result (r : Latex_parse_lib.Validators.result) =
 
 (** Collect every fix edit from [results] into a single list. Rules that emit
     [fix = None] contribute nothing. If [filter_id] is [Some id], only results
-    whose [r.id = id] contribute (v26.3 [--apply-fixes-for]). *)
-let collect_fix_edits ?filter_id
+    whose [r.id = id] contribute (v26.3 [--apply-fixes-for]).
+
+    R7-3: every fix in the tool funnels through here — one construction site
+    ([Validators_common.mk_result_with_fix]) and this one consumption site — so
+    this is where the load-bearing-region guard belongs. [~src] must be the
+    CURRENT buffer, not the original: producers cascade, and SCRIPT-007 was
+    measured firing on pass 2 against a subscript SCRIPT-001 had just
+    synthesised inside a [\label] key. See fix_guard.mli. *)
+let collect_fix_edits ?filter_id ~(src : string)
     (results : Latex_parse_lib.Validators.result list) :
     Latex_parse_lib.Cst_edit.t list =
   List.concat_map
@@ -144,7 +151,10 @@ let collect_fix_edits ?filter_id
       let included =
         match filter_id with None -> true | Some id -> r.id = id
       in
-      match r.fix with Some edits when included -> edits | _ -> [])
+      match r.fix with
+      | Some edits when included ->
+          Latex_parse_lib.Fix_guard.filter ~src ~rule_id:r.id edits
+      | _ -> [])
     results
 
 let env_flag_on name =
@@ -217,7 +227,7 @@ let run_apply_fixes_converge ?filter_id ~path ~src () =
     (* Class-D-inclusive so L4 STYLE fix producers (STYLE-015/023) apply; batch
        path, not the keystroke hot path (v27.1.6). *)
     let results = Latex_parse_lib.Validators.run_all_with_class_d cur in
-    let edits = collect_fix_edits ?filter_id results in
+    let edits = collect_fix_edits ?filter_id ~src:cur results in
     if edits = [] then cur
     else
       let nxt, _applied, _skipped =
@@ -256,7 +266,7 @@ let run_apply_fixes ?filter_id ?(best_effort = false) ?(converge = false) ~path
         let _bp = setup_all ~path ~src ~log_path:None in
         (* Class-D-inclusive (see converge path) so STYLE-* fixes apply. *)
         let results = Latex_parse_lib.Validators.run_all_with_class_d src in
-        let edits = collect_fix_edits ?filter_id results in
+        let edits = collect_fix_edits ?filter_id ~src results in
         if best_effort then (
           let out, applied, skipped =
             Latex_parse_lib.Cst_edit.apply_best_effort src edits

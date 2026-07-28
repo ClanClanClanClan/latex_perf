@@ -98,3 +98,22 @@ jobs:
         # the manifest. pdflatex ground truth is baked into the manifest (no TeX
         # needed here); refresh locally via scripts/tools/false_ready_oracle.sh.
         run: python3 scripts/tools/check_known_false_ready.py --repo .
+
+      - name: Apply-fixes round-trip gate (R7-INFRA-4)
+        # The fixer rewrites user documents and nothing re-checked its own output,
+        # so a fix that BREAKS a document was invisible. Measured: 2 of the 65
+        # compile_check docs compile before the fixer and fail after
+        # (good_tikz_simple, good_accents_utf8), and neither is caught by
+        # --compile-check — only real pdflatex sees them.
+        #
+        # This step evaluates the two CLI-only properties, (a) idempotence and
+        # (c) verdict-non-degradation. Property (b), oracle-class preservation,
+        # needs real pdflatex and is NOT covered here; it runs in
+        # pre_release_check.py locally. Wiring (b) into the tex-oracle workflow is
+        # blocked on the pinned TeX image having python3, which is unconfirmed —
+        # the image is deliberately dependency-free. Tracked, not silently skipped.
+        #
+        # Monotone like the false-READY gate: known defects live in
+        # corpora/apply_fixes/manifest.json, so this lands green and fails on a
+        # NEW defect or on an unrecorded improvement.
+        run: python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .

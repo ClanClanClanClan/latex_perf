@@ -1,0 +1,8 @@
+% Adversarial fixture: a backtick that IS a LaTeX command, not a quote.
+% The backtick form of the grave-accent command is a COMMAND; rewriting that
+% backtick to U+2018 destroys it.
+% NOT caught by --compile-check: only real pdflatex sees it.
+\documentclass{article}
+\begin{document}
+Accents: \'e \`a \^o \"u \c{c} \~n.
+\end{document}

@@ -1,0 +1,11 @@
+% Adversarial fixture: a double hyphen inside an include FILENAME.
+% TYPO-002 rewrites the double hyphen to an en dash. In a filename that is not
+% typography, it is an identifier: the rewritten document asks TeX for a file
+% that does not exist.
+% NOTE: this comment deliberately avoids writing the include command itself,
+% because T2's include extraction is comment-blind and would treat the mention
+% as a real edge (see the note in this fixture's manifest entry).
+\documentclass{article}
+\begin{document}
+\input{adv--child}
+\end{document}

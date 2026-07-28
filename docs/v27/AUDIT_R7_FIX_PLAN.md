@@ -285,16 +285,29 @@ regression mechanically impossible to miss. **R7-INFRA-1 and -2 land FIRST, befo
 2. **pdflatex differential CI gate (S-CI-TEX realized)** — texlive-pinned image,
    `REQUIRE_PDFLATEX=1`, BOTH oracle protocols, full corpus + false_ready fixtures on every
    release train. (Every round-7 finding was discovered by RUNNING pdflatex; CI has zero pdflatex
-   today.) **PR-R7-0 ships the LOCAL form** — `scripts/tools/false_ready_oracle.sh` re-runs the
-   real oracle and drift-checks the manifest; the CI texlive-image is the remaining follow-up.
+   today.) **PR-R7-0 shipped the LOCAL form**; ✅ **LANDED in full (#516)** —
+   `.github/workflows/tex-oracle.yml` runs both scripts inside a digest-pinned TeX Live 2026 image
+   with `REQUIRE_PDFLATEX=1`. Measured while building it: engine YEAR is NOT the fragile axis
+   (TL2024 vs TL2026 = zero drift, byte-identical error text on all 21 fixtures); install
+   COMPLETENESS is, and it fails BOTH ways — missing fonts flip all 8 error-halt fixtures to
+   strong-fatal (cry wolf), while a missing `.sty` grades strong-fatal *identically to the intended
+   fatal* (silent green). Hence the HARD/SOFT drift split and the install canary. The gate is
+   ADVISORY on arrival: `branch-protection.yml` sets `enforce_admins: true`, so a red required
+   check would be unbypassable even by the maintainer.
 3. **Oracle-truth corpus snapshot** — per-doc {verdict, reason class, HALT/NOSTOP/PDF triple,
    timing} committed as golden TSVs; verdict flips require an explicit fixture-update commit.
    Simultaneously fix the polarity-inverted fixtures.
 4. **apply-fixes round-trip gate** — for every corpus doc, both fixer modes must be (a) idempotent,
    (b) oracle-class-preserving (compiling docs still compile), (c) verdict-non-degrading.
-5. **SEC-EXTRACT + mirror-fuzz** — CI byte-compares committed `*_extracted.ml` vs fresh
-   extraction; a property fuzzer asserts OCaml-mirror == Coq-extract evidence on hostile byte
-   streams (CR, NUL, `^^`, multi-byte UTF-8, `%` edges).
+5. **SEC-EXTRACT + mirror-fuzz** — ⚠️ **HALF LANDED (#513).** The SEC-EXTRACT half is done:
+   `scripts/tools/check_extract_identity.py` re-runs each regen script in `proof-ci` (a REQUIRED
+   context) and compares against the committed file. It compares the PARSED AST
+   (`ocamlc -stop-after parsing -dsource`) rather than raw bytes, because `.ocamlformat` pins no
+   version and a byte-compare would redden on every formatter upgrade — equally strict about
+   meaning, immune to formatting. #513 also asserts `Print Assumptions` output for all four
+   capstones, which was previously printed and never read. **The mirror-fuzz half is NOT done**: no
+   property fuzzer asserts OCaml-mirror == Coq-extract on hostile byte streams. §6.4 names it the
+   systematic answer to the mirror-vs-extract surface, so that surface remains open.
 6. **Size-banded perf sentinel** — fixed synthetic set (380 KB flat / 1.1 MB flat / 5k-include /
    100k-label / 9 MB dead-region), budgets expressed as multiples of measured pdflatex time on
    the same file; CI fails on breach.

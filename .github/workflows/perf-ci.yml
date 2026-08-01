@@ -22,6 +22,7 @@ jobs:
       - name: Build benches
         run: |
           opam exec -- dune build latex-parse/bench/ab_microbench.exe latex-parse/bench/edit_window_bench.exe latex-parse/bench/first_token_latency.exe
+          opam exec -- dune build latex-parse/src/bench_readiness_kernel.exe latex-parse/src/validators_cli.exe
 
       - name: Full-doc perf gate (quick)
         run: |
@@ -34,6 +35,32 @@ jobs:
       - name: First-token gate (quick)
         run: |
           opam exec -- bash scripts/first_token_gate.sh corpora/perf/edit_window_4kb.tex 1000 4096
+
+      # R-BUDGET. The three gates above measure the L0 LEXER: ab_microbench and
+      # first_token on the tokenizer, and edit_window on Real_processor.run over
+      # a random 4096-byte slice. None of them touches the stages ROADMAP.md:276
+      # actually budgets (parse / shared / rules / structural / IPC at 300 KB).
+      # Measured consequence: edit_window_gate reports p95 = 0.031 ms on a
+      # 300 KB document while the `rules` stage of that same document is ~11x
+      # OVER its 30 ms budget. This step closes that hole by measuring the
+      # readiness kernel per stage at real sizes, plus the batch full-lint pass
+      # which ROADMAP.md:80 (Principle 9) requires a budget for and never had.
+      #
+      # It is a monotone REGRESSION ratchet against a recorded baseline, not a
+      # pass/fail against the spec budget — the spec budget is currently missed,
+      # and a red-on-arrival required gate would block every merge. The gap is
+      # printed on every run and the gate fails if it WIDENS.
+      - name: Keystroke + batch latency budget (R-BUDGET)
+        run: |
+          opam exec -- python3 scripts/tools/check_keystroke_budget.py --repo . --reps 9
+
+      # The baseline shipped in this repo was recorded on a loaded developer
+      # machine and is marked provisional, which makes the ratchet LOOSE. Print
+      # what an idle runner actually measures so the first maintainer to look
+      # can re-record from these numbers rather than from a laptop.
+      - name: Wedge bench (R-BENCH, informational)
+        run: |
+          opam exec -- bash scripts/bench_wedge.sh 9
 
       - name: Slack notify on failure
         if: failure()

@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{adv--sty}[2026/08/01 R7-3 region 3b adversarial fixture]
+% A local package whose FILE NAME contains a double hyphen. Nothing here
+% matters except that the file exists under this name: the point of the
+% fixture is that rewriting the name in the loading document makes the load
+% fail.
+% Swallow any option, so adv_option_bracket.tex can pass a keyval option whose
+% VALUE contains a right bracket -- the shape that broke the region-3 option
+% scan -- and still compile before the fix is applied. Without this the
+% document fails pristine and the round-trip gate cannot grade it.
+\DeclareOption*{\relax}
+\ProcessOptions\relax
+\endinput

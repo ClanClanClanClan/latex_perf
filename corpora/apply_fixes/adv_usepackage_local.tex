@@ -1,0 +1,11 @@
+% Adversarial fixture: region 3b, a LOCAL package whose file name contains a
+% double hyphen. A package specification is a filename too -- adv--sty.sty sits
+% next to this file -- so the same typography rewrite that destroys an include
+% name destroys the package load, and the document stops compiling.
+% This is the case that argues region 3b is not merely defensive: CTAN names
+% are tame, but names the author chose for their own .sty are not.
+\documentclass{article}
+\usepackage{adv--sty}
+\begin{document}
+Body.
+\end{document}

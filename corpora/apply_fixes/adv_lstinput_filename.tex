@@ -1,0 +1,11 @@
+% Adversarial fixture: a filename command that is NOT the include family, read
+% through an OPTIONAL argument first. The guard has to consume the bracketed
+% group before it reaches the braced one; a scanner that stops at the first
+% non-brace byte after the command name would leave the filename exposed.
+% NOTE: this comment avoids writing the include command itself, because T2's
+% include extraction is comment-blind and would treat the mention as an edge.
+\documentclass{article}
+\usepackage{listings}
+\begin{document}
+\lstinputlisting[basicstyle=\ttfamily]{adv--child.tex}
+\end{document}

@@ -1,0 +1,52 @@
+{
+  "description": "R-BUDGET baseline. Monotone: the gate fails on a regression beyond TOLERANCE and on a WIDENED gap to the ROADMAP:276 budget. Re-record from CI, not a busy laptop.",
+  "provisional": true,
+  "provisional_note": "Recorded above the load limit, so these numbers are inflated and the ratchet is LOOSE until re-recorded on an idle runner.",
+  "spec_budget_300kb_ms": {
+    "parse": 40.0,
+    "rules": 30.0
+  },
+  "stages_not_instrumented": [
+    "shared",
+    "structural",
+    "IPC"
+  ],
+  "keystroke": {
+    "4": {
+      "bytes": 3994,
+      "parse_ms": 0.1,
+      "fastrun_ms": 5.6,
+      "rules_ms": 5.5
+    },
+    "50": {
+      "bytes": 49936,
+      "parse_ms": 1.7,
+      "fastrun_ms": 75.6,
+      "rules_ms": 73.9
+    },
+    "100": {
+      "bytes": 99981,
+      "parse_ms": 5.5,
+      "fastrun_ms": 162.0,
+      "rules_ms": 156.4
+    },
+    "300": {
+      "bytes": 300008,
+      "parse_ms": 18.9,
+      "fastrun_ms": 463.0,
+      "rules_ms": 444.1
+    }
+  },
+  "batch_ms": {
+    "4": 166.7,
+    "50": 1692.4,
+    "100": 3311.8,
+    "300": 11237.5
+  },
+  "spec_gap_300kb": {
+    "parse": 0.47,
+    "rules": 14.8
+  },
+  "reps": 9,
+  "loadavg_1min": 28.25
+}

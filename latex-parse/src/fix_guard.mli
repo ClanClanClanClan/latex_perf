@@ -34,7 +34,10 @@ val protected_ranges : string -> (int * int) list
 (** [protected_ranges src] — half-open byte ranges of [src] whose contents are
     syntax rather than prose, so a textual fix must not touch them. Ranges are
     returned in ascending order of start offset and may be adjacent; they are
-    not guaranteed disjoint. *)
+    not guaranteed disjoint.
+
+    This is the union of every region. {!filter} does NOT use it: exemptions are
+    per region, so it selects the applicable regions per rule instead. *)
 
 val control_symbol_aware : string list
 (** Rules whose CONTRACT is to edit control symbols, and which are therefore
@@ -49,6 +52,21 @@ val control_symbol_aware : string list
     be backed by the golden variants in
     [scripts/tools/check_producer_coverage.py] — that gate fails if a
     legitimately-blocked fix is withheld, so the list cannot silently rot. *)
+
+val package_spec_aware : string list
+(** Rules whose CONTRACT is to rewrite a package specification — the load-order
+    producers, each of which swaps two whole [\usepackage] lines and therefore
+    emits an edit spanning one. Exempt from the package-spec region (3b) only,
+    never from the filename region (3a): a load-order rule has no business
+    inside [\input{...}] either.
+
+    Same evidence standard as {!control_symbol_aware}: membership is a claim
+    backed by the golden variants in [scripts/tools/check_producer_coverage.py].
+
+    The package INSERTERS are deliberately NOT here. They emit a pure insertion
+    at the offset just past the closing brace, which is the range's exclusive
+    end and therefore outside it, so the region never withholds them — a
+    property the coverage gate checks rather than one this list asserts. *)
 
 val filter : src:string -> rule_id:string -> Cst_edit.t list -> Cst_edit.t list
 (** [filter ~src ~rule_id edits] — drop every edit whose half-open span

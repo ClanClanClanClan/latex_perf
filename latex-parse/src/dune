@@ -220,6 +220,11 @@
  (libraries latex_parse_lib test_helpers unix))
 
 (test
+ (name test_fix_guard)
+ (modules test_fix_guard)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
  (name test_context_exemption)
  (modules test_context_exemption)
  (libraries latex_parse_lib test_helpers unix))

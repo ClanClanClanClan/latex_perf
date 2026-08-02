@@ -1,0 +1,16 @@
+% Adversarial fixture: a right bracket nested inside a BRACED OPTION VALUE, in
+% an option list that WRAPS ACROSS LINES.
+% An option scan that stops at the first raw bracket ends the group early; the
+% range then stops at end of THAT line, so the package name on the next line is
+% left exposed and the typography fix lands in it. Closing only at an unescaped
+% bracket at brace depth 0 -- the semantics of the verified drop_after_rbracket
+% in proofs/BodyTokenFrontEnd.v -- is what actually covers this.
+% The line wrap is load-bearing: on a single line the end-of-line fallback
+% already rescues it, so a one-line version of this fixture is VACUOUS.
+% NOTE: adv--sty.sty ships next to this file.
+\documentclass{article}
+\usepackage[Ligatures={x]y},
+            Numbers=OldStyle]{adv--sty}
+\begin{document}
+Body.
+\end{document}

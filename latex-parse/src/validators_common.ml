@@ -276,7 +276,7 @@ let strip_math_segments (s : string) : string =
    (TYPO-004 v27.0.6+) to filter match offsets that fall inside math, where a
    textual auto-replacement would corrupt the semantic meaning (e.g.,
    apostrophe-pair as double-prime). *)
-let find_math_ranges (s : string) : (int * int) list =
+let compute_math_ranges (s : string) : (int * int) list =
   let len = String.length s in
   let math_envs =
     [
@@ -415,6 +415,30 @@ let find_math_ranges (s : string) : (int * int) list =
   | Some s -> ranges := (s, len) :: !ranges
   | None -> ());
   List.rev !ranges
+
+(* R-SHARED: memoise the math scan, exactly as the vcu/exempt scanners below are
+   memoised (see the cache note above [find_verbatim_comment_url_ranges] for the
+   full correctness argument). This one is the heaviest of the three by call
+   volume: 91 rule call sites across L0/L1/L4 each handed the SAME source-string
+   object, so before this every one of them re-ran an O(n) scan of the whole
+   document — on EVERY pass of the apply-fixes converge loop.
+
+   ⚠ Deliberately NOT used by [compute_exempt_ranges], which scans a BLANKED
+   copy obtained via [Bytes.unsafe_to_string]. Caching a string that shares its
+   bytes with a live [Bytes] would key the cache on something whose contents
+   could still change; routing that caller to [compute_math_ranges] keeps the
+   hazard out of the cache entirely, and as a bonus stops the blanked copy
+   evicting the raw source between rules. *)
+let _math_cache : (string * (int * int) list) option ref = ref None
+
+(** Memoised [compute_math_ranges] — see the cache note above. *)
+let find_math_ranges (s : string) : (int * int) list =
+  match !_math_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let r = compute_math_ranges s in
+      _math_cache := Some (s, r);
+      r
 
 (** [is_in_math_range ranges off] — true iff [off] falls inside any range in
     [ranges]. Linear in the number of ranges (typically small). Use with
@@ -639,7 +663,10 @@ let compute_exempt_ranges (s : string) : (int * int) list =
         Bytes.set blanked k ' '
       done)
     vcu;
-  let math = find_math_ranges (Bytes.unsafe_to_string blanked) in
+  (* [compute_math_ranges], NOT the memoised wrapper: see the warning on
+     [_math_cache]. The blanked copy shares its bytes with a live [Bytes], and
+     it would also evict the raw source that the 91 rule call sites want. *)
+  let math = compute_math_ranges (Bytes.unsafe_to_string blanked) in
   List.sort (fun (a, _) (c, _) -> compare a c) (List.rev_append vcu math)
 
 let _exempt_cache : (string * (int * int) list) option ref = ref None

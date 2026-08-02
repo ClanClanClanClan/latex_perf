@@ -8,38 +8,6 @@
   "pdflatex_graded": true,
   "known_broken": [
     {
-      "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "default:--apply-fixes",
-      "breaks_compile": true,
-      "degrades_verdict": true,
-      "not_idempotent": false,
-      "manufactured_false_ready": false
-    },
-    {
-      "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "default:--apply-fixes-best-effort",
-      "breaks_compile": true,
-      "degrades_verdict": true,
-      "not_idempotent": false,
-      "manufactured_false_ready": false
-    },
-    {
-      "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "pilot:--apply-fixes",
-      "breaks_compile": true,
-      "degrades_verdict": true,
-      "not_idempotent": false,
-      "manufactured_false_ready": false
-    },
-    {
-      "doc": "corpora/apply_fixes/adv_input_filename.tex",
-      "mode": "pilot:--apply-fixes-best-effort",
-      "breaks_compile": true,
-      "degrades_verdict": true,
-      "not_idempotent": true,
-      "manufactured_false_ready": false
-    },
-    {
       "doc": "corpora/compile_check/good_longtable_free.tex",
       "mode": "pilot:--apply-fixes",
       "breaks_compile": true,

@@ -1,0 +1,11 @@
+% Adversarial fixture: the BARE plain-TeX include form, no braces.
+% The filename runs from the command to the next whitespace, so a typography
+% rewrite of the double hyphen destroys it exactly as it does in the braced
+% form -- and a guard that only understands braces would miss this path.
+% NOTE: like the other fixtures here, this comment avoids writing the include
+% command itself, because T2's include extraction is comment-blind and would
+% treat the mention as a real edge.
+\documentclass{article}
+\begin{document}
+\input adv--child
+\end{document}

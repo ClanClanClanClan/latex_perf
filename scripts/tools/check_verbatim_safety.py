@@ -18,6 +18,13 @@ each protected-region kind, runs `--apply-fixes` (pilot AND default), and assert
 the bytes between the sentinels are byte-identical afterwards. Any producer —
 existing or newly added — that corrupts a protected region fails the gate.
 
+R7-3 widened the gate past the verbatim family. `\\input{name}` and
+`\\usepackage{name}` are NOT author-verbatim — nobody typed them to be shown
+literally — but they are still bytes TeX reads as an identifier, and a typography
+fix inside one asks TeX for a file that does not exist. Those regions are
+withheld a layer later, by `Fix_guard`, so a failure on them points at the guard
+rather than at a producer's exempt wiring.
+
 Exit 0 if every protected region is preserved, 1 otherwise (listing each
 corrupted region with a before/after diff so the offending bytes are obvious).
 """
@@ -69,6 +76,17 @@ REGIONS = [
     ("inline-verb", b"text \\verb|SREG_IA ", b" SREG_IB| more\n"),
     ("comment", b"%% SREG_CA ", b" SREG_CB\n"),
     ("url", b"see \\url{http://x/SREG_UA", b"SREG_UB} ok\n"),
+    # R7-3 region 3: load-bearing ARGUMENTS. These are not protected by the P3
+    # exempt layer at all — the author did not write them verbatim, they are
+    # simply bytes TeX reads as an identifier rather than as prose. They are
+    # withheld one layer later, by Fix_guard, so a failure here means the GUARD
+    # has a hole, not that a producer needs mk_result_with_fix_exempt.
+    # Planting the whole battery inside them is the point: the fixture corpus
+    # proves the region against TYPO-002, this proves it against every producer
+    # family at once. The battery's braces are balanced, so the argument's own
+    # closing brace is still found.
+    ("include-filename", b"\\input{SREG_FA", b"SREG_FB}\n"),
+    ("package-spec", b"\\usepackage{SREG_PA", b"SREG_PB}\n"),
 ]
 
 
@@ -107,6 +125,19 @@ def between(data: bytes, a: bytes, b: bytes):
 def check(binp: str, env, label: str, violations: list) -> None:
     src = build_torture()
     out = apply_fixes(binp, src, env)
+    # NON-VACUITY. Every assertion below is "these bytes did not change", which
+    # a fixer that produced nothing at all would satisfy perfectly. A CLI that
+    # failed to run, a profile that enabled no producer, or a future refactor
+    # that stopped the battery triggering would all read as a clean PASS. So
+    # require positive evidence that the fixer fired somewhere OUTSIDE the
+    # protected regions before trusting that it left the inside alone.
+    if out == src:
+        violations.append(
+            f"[{label}] VACUOUS: --apply-fixes changed nothing anywhere in the "
+            f"torture document, so byte-preservation inside the protected "
+            f"regions proves nothing. The fixer is not running, or no producer "
+            f"in this profile matches the battery.")
+        return
     for name, pre, suf in REGIONS:
         # sentinels are the first token after pre and last before suf
         sa = pre.split()[-1]
@@ -157,17 +188,22 @@ def main() -> int:
     if violations:
         print(
             f"[verbatim-safety] FAIL: {len(violations)} protected-region corruption(s). "
-            f"A fix producer rewrote literal bytes inside verbatim/\\verb/comment/url. "
-            f"Route its fix through Validators_common.mk_result_with_fix_exempt "
-            f"(or filter offsets by is_in_exempt_range):",
+            f"A fix producer rewrote bytes it must not touch. For a verbatim / "
+            f"\\verb / comment / url region, route the fix through "
+            f"Validators_common.mk_result_with_fix_exempt (or filter offsets by "
+            f"is_in_exempt_range). For include-filename / package-spec, the "
+            f"producer is not at fault — Fix_guard has a hole:",
             file=sys.stderr,
         )
         for v in violations:
             print(f"  {v}", file=sys.stderr)
         return 1
+    # Name the regions from REGIONS rather than a hardcoded list, so adding one
+    # cannot leave the success line claiming less than was actually checked.
     print(
-        "[verbatim-safety] PASS: all verbatim / lstlisting / \\verb / comment / url "
-        "regions byte-preserved under --apply-fixes (pilot + default)."
+        f"[verbatim-safety] PASS: {len(REGIONS)} regions byte-preserved under "
+        f"--apply-fixes (pilot + default): "
+        f"{', '.join(name for name, _pre, _suf in REGIONS)}."
     )
     return 0
 

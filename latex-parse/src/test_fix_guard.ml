@@ -224,6 +224,68 @@ let () =
         (not (insertion_survives src (find_sub src "article")))
         (tag ^ ": a point strictly inside the range is blocked"));
 
+  (* ── Region 5: tabular / array column preamble ───────────────────────────
+     The measured case: TYPO-052 rewriting `>` to \textgreater{} inside a
+     preamble yields "! Illegal pream-token" and pdflatex 0 -> 1, while
+     --compile-check says READY both sides. *)
+  run "column preamble of tabular is protected" (fun tag ->
+      expect
+        (not (survives "\\begin{tabular}{>{\\bfseries}l r}\na -- b\n" ">"))
+        (tag ^ ": the measured good_longtable_free corruption"));
+
+  run "preamble of array is protected" (fun tag ->
+      expect
+        (not (survives "\\begin{array}{>{x}c}\n" ">"))
+        (tag ^ ": array takes the same shape as tabular"));
+
+  run "optional [pos] before the preamble is skipped" (fun tag ->
+      expect
+        (not (survives "\\begin{tabular}[t]{>{\\bfseries}l}\n" ">"))
+        (tag ^ ": [pos] must not be mistaken for the preamble"));
+
+  run "tabular* takes the SECOND brace group as its preamble" (fun tag ->
+      (* Arity is the whole risk here: treating the width as the preamble would
+         end the range before the real one and expose it. *)
+      expect
+        (not (survives "\\begin{tabular*}{5cm}{>{\\bfseries}l r}\n" ">"))
+        (tag ^ ": width first, preamble second"));
+
+  run "tabular* with [pos] between width and preamble" (fun tag ->
+      expect
+        (not (survives "\\begin{tabularx}{5cm}[t]{>{x}l}\n" ">"))
+        (tag ^ ": optional group between the two mandatory ones"));
+
+  run "prose after the tabular is still fixed" (fun tag ->
+      expect
+        (survives
+           "\\begin{tabular}{ll}\na & b\n\\end{tabular}\n\nprose -- here\n"
+           "-- here")
+        (tag ^ ": region 5 must not become a blanket refusal"));
+
+  run "table BODY is not protected, only the preamble" (fun tag ->
+      (* Over-wide is safe, but protecting the whole environment would withhold
+         every legitimate fix inside a table, which is a real functional
+         loss. *)
+      expect
+        (survives
+           "\\begin{tabular}{ll}\ncell -- dash & b \\\\\n\\end{tabular}\n"
+           "-- dash")
+        (tag ^ ": the range ends at the preamble's closing brace"));
+
+  run "a missing mandatory group protects NOTHING rather than guessing"
+    (fun tag ->
+      (* No end-of-line fallback here, unlike region 3: a partial range could
+         end BEFORE the preamble and expose it. Declining is today's
+         behaviour. *)
+      expect
+        (survives "\\begin{tabular}\n\nprose -- here\n" "-- here")
+        (tag ^ ": scan_preamble_stop returns None, so no range is emitted"));
+
+  run "an unclosed preamble group protects nothing" (fun tag ->
+      expect
+        (survives "\\begin{tabular}{ll\n\nprose -- here\n" "-- here")
+        (tag ^ ": unbalanced group yields None, not a short range"));
+
   (* ── Regions 1 and 2 still hold (guard against a refactor regression) ── *)
   run "control symbol argument is still protected" (fun tag ->
       let src = "\\`a and -- here\n" in

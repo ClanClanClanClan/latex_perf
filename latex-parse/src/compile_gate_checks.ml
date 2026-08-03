@@ -713,11 +713,69 @@ let no_live_end_document_fatal (s : string) : string option =
     done;
     starts "{document}" !j
   in
+  (* A control word ends at a non-letter, so `\fi` must not match inside `\fill`
+     and `\iffalse` must not match inside `\iffalsething`. Matching a longer
+     word as a shorter one would invent a conditional that is not there. *)
+  let starts_cw pfx j =
+    starts pfx j
+    &&
+    let k = j + String.length pfx in
+    k >= n
+    ||
+    let c = String.unsafe_get s k in
+    not ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+  in
+  (* Spans that an executed \iffalse skips. From the \iffalse to the FIRST
+     following \else or \fi — deliberately an UNDER-approximation, because a
+     nested conditional inside makes the span too SHORT, never too long. SHORT
+     IS THE SAFE DIRECTION HERE. This detector fires when NO live \end{document}
+     is found, so a shorter dead span means it still SEES the \end{document} and
+     stays quiet: today's behaviour. A longer one would make it fire more, i.e.
+     over-reject.
+
+     Only the \iffalse itself is required to be at brace depth 0.
+     `\newcommand{\hidden}{\iffalse}` is a definition BODY, not an executed
+     conditional, and treating it as one could mark a genuinely live
+     \end{document} dead.
+
+     ⚠ The honest limit, stated because an earlier draft of a sibling region
+     claimed more than it could deliver: this does NOT decide deadness. An
+     \iffalse that is itself inside a non-executed branch is still treated as
+     executed. It is an under-approximation of what TeX skips, nothing more. *)
+  let dead =
+    let acc = ref [] and j = ref 0 and depth = ref 0 in
+    while !j < n do
+      if in_ranges skip !j || is_escaped !j then incr j
+      else
+        let c = String.unsafe_get s !j in
+        if c = '{' then (
+          incr depth;
+          incr j)
+        else if c = '}' then (
+          if !depth > 0 then decr depth;
+          incr j)
+        else if !depth = 0 && starts_cw "\\iffalse" !j then (
+          let k = ref (!j + 8) and stop = ref (-1) in
+          while !stop < 0 && !k < n do
+            if in_ranges skip !k || is_escaped !k then incr k
+            else if starts_cw "\\else" !k then stop := !k + 5
+            else if starts_cw "\\fi" !k then stop := !k + 3
+            else incr k
+          done;
+          (* An executed \iffalse with no \fi at all is itself `! Incomplete
+             \iffalse`, so treating the rest of the file as dead is right. *)
+          let e = if !stop >= 0 then !stop else n in
+          acc := (!j, e) :: !acc;
+          j := e)
+        else incr j
+    done;
+    List.rev !acc
+  in
   let found = ref false in
   let i = ref 0 in
   while !i < n && not !found do
     let pos = !i in
-    if in_ranges skip pos || is_escaped pos then incr i
+    if in_ranges skip pos || is_escaped pos || in_ranges dead pos then incr i
     else if is_end_document pos then found := true
     else incr i
   done;

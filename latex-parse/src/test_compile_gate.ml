@@ -281,4 +281,89 @@ let () =
         t);
   ()
 
+(* ── DWR-3a: \iffalse dead spans in no_live_end_document_fatal ─────────────
+   fr_end_in_iffalse was a false-READY: the only \end{document} sits inside
+   \iffalse...\fi, so TeX never executes it and emergency-stops, while the
+   detector found the string and reported READY. Tested through the exported
+   structural_fatal_reasons because the detector itself is internal.
+
+   The counter-examples matter more than the positive case: this arm can only
+   make the detector fire MORE, so every risk here is over-rejection, and a real
+   paper that uses \iffalse to comment out a block must stay READY. *)
+let () =
+  let fatal src =
+    List.length (Compile_gate_checks.structural_fatal_reasons src) >= 1
+  in
+  run "end{document} only inside \\iffalse..\\fi is FATAL" (fun t ->
+      expect
+        (fatal
+           "\\documentclass{article}\n\
+            \\begin{document}\n\
+            Hi.\n\
+            \\iffalse\n\
+            \\end{document}\n\
+            \\fi\n")
+        t);
+  run "a LIVE end{document} after an \\iffalse block is fine" (fun t ->
+      expect
+        (not
+           (fatal
+              "\\documentclass{article}\n\
+               \\begin{document}\n\
+               \\iffalse\n\
+               dead\n\
+               \\fi\n\
+               Hi.\n\
+               \\end{document}\n"))
+        t);
+  run "\\iffalse block BEFORE the end is fine (the common comment-out shape)"
+    (fun t ->
+      expect
+        (not
+           (fatal
+              "\\documentclass{article}\n\
+               \\begin{document}\n\
+               \\iffalse\n\
+               \\section{old}\n\
+               \\fi\n\
+               text\n\
+               \\end{document}\n"))
+        t);
+  run "\\else terminates the dead span, so the else-branch is live" (fun t ->
+      expect
+        (not
+           (fatal
+              "\\documentclass{article}\n\
+               \\begin{document}\n\
+               \\iffalse\n\
+               dead\n\
+               \\else\n\
+               \\end{document}\n\
+               \\fi\n"))
+        t);
+  run "\\iffalse inside a brace group is a definition body, not a conditional"
+    (fun t ->
+      (* \newcommand{\hidden}{\iffalse} must NOT start a dead span, or a live
+         \end{document} after it would be wrongly called dead. *)
+      expect
+        (not
+           (fatal
+              "\\documentclass{article}\n\
+               \\newcommand{\\hidden}{\\iffalse}\n\
+               \\begin{document}\n\
+               Hi.\n\
+               \\end{document}\n"))
+        t);
+  run "\\fill must not be read as \\fi (control-word boundary)" (fun t ->
+      expect
+        (not
+           (fatal
+              "\\documentclass{article}\n\
+               \\begin{document}\n\
+               \\hspace{\\fill}\n\
+               Hi.\n\
+               \\end{document}\n"))
+        t);
+  ()
+
 let () = finalise "compile_gate"

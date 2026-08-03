@@ -91,6 +91,15 @@ jobs:
           case "$man" in *"$TEX_EXPECT_VERSION"*) ;; *)
             echo "::error::PIN MISMATCH: manifest oracle.version '$man' != pinned '$TEX_EXPECT_VERSION'."
             exit 1 ;; esac
+          # Same assertion for the apply-fixes corpus, which property (b) grades.
+          # It previously recorded only `pdflatex_graded: true` — no engine, no
+          # version — so an image bump would have silently redefined what its
+          # five known_broken rows mean.
+          amn=$(python3 -c "import json;print(json.load(open('corpora/apply_fixes/manifest.json'))['oracle']['version'])")
+          echo "apply_fixes manifest : $amn"
+          case "$amn" in *"$TEX_EXPECT_VERSION"*) ;; *)
+            echo "::error::PIN MISMATCH: corpora/apply_fixes/manifest.json oracle.version '$amn' != pinned '$TEX_EXPECT_VERSION'. Re-record property (b) against the pinned image."
+            exit 1 ;; esac
 
       # The anti-silent-green measure. A missing .sty grades identically to the
       # intended fatal (strong-fatal), so an under-provisioned image would let

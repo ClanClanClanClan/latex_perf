@@ -108,10 +108,15 @@ jobs:
         #
         # This step evaluates the two CLI-only properties, (a) idempotence and
         # (c) verdict-non-degradation. Property (b), oracle-class preservation,
-        # needs real pdflatex and is NOT covered here; it runs in
-        # pre_release_check.py locally. Wiring (b) into the tex-oracle workflow is
-        # blocked on the pinned TeX image having python3, which is unconfirmed —
-        # the image is deliberately dependency-free. Tracked, not silently skipped.
+        # needs real pdflatex and is still NOT covered here — this runner has no
+        # TeX, so the script's own `have_tex` is false and (b) is skipped.
+        #
+        # (b) now runs in tex-oracle.yml, ADVISORY, behind a preflight that
+        # asserts the pinned image has both python3 and coreutils `timeout`
+        # (the script hard-exits 2 without a timeout binary). Before that it ran
+        # in NO automated path at all: the comment here used to say it ran in
+        # pre_release_check.py locally, but release.sh invokes that gate with
+        # --skip-build, which skips the whole BUILD_CHECKS list that (b) lives in.
         #
         # Monotone like the false-READY gate: known defects live in
         # corpora/apply_fixes/manifest.json, so this lands green and fails on a

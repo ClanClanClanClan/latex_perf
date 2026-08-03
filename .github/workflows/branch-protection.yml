@@ -1,7 +1,27 @@
 name: Configure Branch Protection
 
 on:
+  # SCOPED DELIBERATELY. This was a bare `push:` — every push to every branch and
+  # tag. `actions/checkout@v4` below checks out the TRIGGERING ref, while the PUT
+  # at :48 targets `context.payload.repository.default_branch`, so the required-
+  # check list was read from the PUSHED FEATURE BRANCH and applied to MAIN, with
+  # enforce_admins: true — at push time, before review and before merge.
+  #
+  # Confirmed live: successful runs of this workflow exist for
+  # perf/v27164-mod-quadratic, feat/v27164-r-bench-budget,
+  # feat/v27164-r-shared-math-memo, perf/v27164-math-segments-memo and
+  # chore/v27164-rebaseline-from-ci. Those were harmless only because every one
+  # of those branches happened to carry an identical JSON.
+  #
+  # The dangerous case is last-writer-wins: pushing ANY stale long-lived branch
+  # reverts main's required-check set to that branch's copy of the file. This
+  # repo has ~384 local branches, so that is not hypothetical.
+  #
+  # Scoping to main makes a requirement change take effect at MERGE, which is
+  # what the "edit the JSON, never patch the API" contract assumes. The weekly
+  # cron and workflow_dispatch remain the reconciliation paths.
   push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       branch:

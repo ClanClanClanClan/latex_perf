@@ -1709,29 +1709,66 @@ let count_matches (re : Re_compat.regexp) (s : string) : int =
    locate the legacy tokens that need normalising, so the returned spans and the
    boolean firing decision stay in lock-step (the diagnostic count is
    unchanged). *)
+(* PERF: this was O(paragraphs x commands) and it is shared by twelve MOD-*
+   rules (validators_l1.ml:98-339), which made it the largest SUPERLINEAR
+   cluster in the whole rule set.
+
+   The previous shape asked, for every paragraph, "does any command anywhere in
+   the document fall inside you?" — a [List.exists] over the entire token list
+   AND the entire post-command list, run twice per paragraph (legacy, modern).
+   Both factors grow with document size (795 paragraphs at 100 KB, 2406 at 300
+   KB), so the work grew quadratically.
+
+   Measured with bench_rule_timings, 100 KB -> 300 KB (3x the bytes): the twelve
+   MOD rules scaled 6.2-7.3x where the median rule in the whole set scales
+   3.13x, and together with TYPO-018 they were 16.6% of total rule time at 300
+   KB — a share that grows with every extra kilobyte.
+
+   Inverted here: each command is assigned to its paragraph by BINARY SEARCH
+   (paragraph spans come out of [split_into_paragraphs] ascending and disjoint),
+   so the cost is O((tokens + post_commands) * log paragraphs).
+
+   Semantics are unchanged by construction. The old predicate kept a paragraph
+   iff some legacy-named command AND some modern-named command had a position
+   inside its span, drawn from EITHER the post-command context or the token
+   scan; the flags below record exactly that, from the same two sources, with
+   the same [matches] test. A command that names both sets marks both flags, as
+   before. *)
 let mixed_paragraph_ranges (s : string) ~(legacy : string list)
     ~(modern : string list) : (int * int) list =
   let paras = split_into_paragraphs s in
-  let pcs = Validators_context.get_post_commands () in
-  let tokens = command_tokens s in
-  let matches set value = List.exists (( = ) value) set in
-  let ctx_has off len names =
-    List.exists
-      (fun (pc : Validators_context.post_command) ->
-        pc.s >= off && pc.s < off + len && matches names pc.name)
-      pcs
-  in
-  let tokens_have off len names =
-    List.exists
-      (fun (name, pos) -> pos >= off && pos < off + len && matches names name)
-      tokens
-  in
-  let has_cmd off len names =
-    ctx_has off len names || tokens_have off len names
-  in
-  let check_para off len = has_cmd off len legacy && has_cmd off len modern in
   let ranges = if paras = [] then [ (0, String.length s) ] else paras in
-  List.filter (fun (off, len) -> check_para off len) ranges
+  let arr = Array.of_list ranges in
+  let np = Array.length arr in
+  (* Index of the paragraph containing [pos], or -1. Positions between
+     paragraphs belong to none, exactly as the old bounds test implied. *)
+  let find_para pos =
+    let lo = ref 0 and hi = ref (np - 1) and res = ref (-1) in
+    while !res < 0 && !lo <= !hi do
+      let mid = (!lo + !hi) / 2 in
+      let off, len = arr.(mid) in
+      if pos < off then hi := mid - 1
+      else if pos >= off + len then lo := mid + 1
+      else res := mid
+    done;
+    !res
+  in
+  let matches set value = List.exists (( = ) value) set in
+  let has_legacy = Array.make (max np 1) false in
+  let has_modern = Array.make (max np 1) false in
+  let mark name pos =
+    let l = matches legacy name and m = matches modern name in
+    if l || m then
+      let k = find_para pos in
+      if k >= 0 then (
+        if l then has_legacy.(k) <- true;
+        if m then has_modern.(k) <- true)
+  in
+  List.iter
+    (fun (pc : Validators_context.post_command) -> mark pc.name pc.s)
+    (Validators_context.get_post_commands ());
+  List.iter (fun (name, pos) -> mark name pos) (command_tokens s);
+  List.filteri (fun i _ -> has_legacy.(i) && has_modern.(i)) ranges
 
 let has_mixed_in_paragraphs (s : string) ~(legacy : string list)
     ~(modern : string list) : bool =

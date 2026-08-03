@@ -181,6 +181,11 @@
  (modules bench_readiness_kernel)
  (libraries latex_parse_lib unix))
 
+(executable
+ (name bench_rule_timings)
+ (modules bench_rule_timings)
+ (libraries latex_parse_lib unix))
+
 (test
  (name test_strip_math)
  (modules test_strip_math)
@@ -217,6 +222,11 @@
 (test
  (name test_exempt_ranges)
  (modules test_exempt_ranges)
+ (libraries latex_parse_lib test_helpers unix))
+
+(test
+ (name test_mixed_paragraph_parity)
+ (modules test_mixed_paragraph_parity)
  (libraries latex_parse_lib test_helpers unix))
 
 (test

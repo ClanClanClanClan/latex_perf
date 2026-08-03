@@ -6,6 +6,15 @@
     "b_oracle_class_preserving": "a document that compiled must still compile"
   },
   "pdflatex_graded": true,
+  "oracle": {
+    "engine": "pdflatex",
+    "distribution": "TeX Live 2026",
+    "version": "pdfTeX 3.141592653-2.6-1.40.29",
+    "protocols": [
+      "-interaction=nonstopmode -halt-on-error"
+    ],
+    "note": "Mirrors corpora/false_ready/manifest.json's oracle block, which tex-oracle.yml pin-asserts. This corpus had pdflatex_graded=true and NOTHING ELSE: no engine, no version, no protocol, and nothing asserting any of them. A TeX Live upgrade would silently change what property (b) means for these rows and no gate would notice. Recorded now because it is VERIFIED rather than assumed: the first CI run of property (b) against the pinned image (tex-oracle run 30834930925) reproduced this baseline exactly \u2014 72 documents x 4 cells, the same 5 known_broken rows, PASS."
+  },
   "known_broken": [
     {
       "doc": "corpora/compile_check/good_quotes_dashes.tex",

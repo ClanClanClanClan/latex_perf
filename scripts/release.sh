@@ -95,9 +95,16 @@ if [[ "$DRY_RUN" == "--dry-run" ]]; then
 fi
 
 # 6b. PR #245 (p1.11): pre-release uber-gate before any state mutation.
-# Runs EVERY gate + full build + all tests. Fails fast if ANY check
-# is red. Skipped in --dry-run (the user is expected to have run this
-# manually before invoking release.sh).
+# Skipped in --dry-run (the user is expected to have run this manually
+# before invoking release.sh).
+#
+# ⚠ It does NOT run every gate, despite what this comment used to claim.
+# The invocation below passes --skip-build, and pre_release_check.py gates
+# its entire BUILD_CHECKS list on `not skip_build` — so every build-dependent
+# gate is dropped here, including the --require-pdflatex round-trip that is
+# the only local evaluation of property (b). Nor does it fail fast: it runs
+# all remaining gates and returns non-zero at the end.
+# Property (b) is now covered automatically by tex-oracle.yml instead.
 if [[ "$DRY_RUN" != "--dry-run" ]]; then
   echo "[release] Running pre-release uber-gate (all gates + build + tests)..."
   if ! python3 scripts/tools/pre_release_check.py --allow-dirty --skip-build; then

@@ -36,8 +36,18 @@ THE THREE PROPERTIES (the audit's R7-INFRA-4)
   (b) ORACLE-CLASS-PRESERVING a document that compiled must still compile
 
 (a) and (c) need only the CLI, so they run in CI's `build` job. (b) needs real
-pdflatex and rides the pinned-image `tex-oracle` workflow. Same split as the
-false-READY gates: check_known_false_ready.py (CLI-only) vs false_ready_oracle.sh.
+pdflatex and rides the pinned-image `tex-oracle` workflow, ADVISORY. Same split
+as the false-READY gates: check_known_false_ready.py (CLI-only) vs
+false_ready_oracle.sh.
+
+⚠ This sentence was ASPIRATIONAL until the wiring landed: tex-oracle.yml never
+invoked this script, and the only --require-pdflatex caller was
+pre_release_check.py's BUILD_CHECKS, which release.sh skips via --skip-build. So
+(b) — the one property that can see the fixer break a compiling document — ran
+in no automated path at all, while this docstring said otherwise. If you are
+reading this because (b) is failing, check first whether
+corpora/apply_fixes/manifest.json's baseline was recorded on the same engine:
+unlike corpora/false_ready/manifest.json it carries no oracle.version pin.
 
 MONOTONE, LIKE THE FALSE-READY CORPUS
 -------------------------------------
@@ -179,6 +189,23 @@ def main() -> int:
                 [str(cli), "--compile-check", str(doc)],
                 capture_output=True).returncode == 0
 
+            # (b) BEFORE-half, hoisted out of the cell loop. The pristine
+            # compile depends only on the DOCUMENT, never on the fixer cell, so
+            # grading it once per doc instead of once per cell removes three of
+            # every four pdflatex runs on this half (576 -> 360 across the
+            # sweep) for a bit-identical answer. That is what makes running
+            # property (b) per-PR affordable rather than a ~25-minute tax.
+            # b4 is bound OUTSIDE the have_tex guard on purpose: the cell loop
+            # reads it unconditionally, so leaving it unbound would raise
+            # UnboundLocalError on every no-pdflatex run — which is the path CI
+            # actually takes today.
+            b4: bool | None = None
+            if have_tex:
+                with tempfile.TemporaryDirectory(prefix="fixer-rt-pristine-") as ptmp:
+                    pristine = Path(ptmp) / "p"
+                    shutil.copytree(corpus, pristine)
+                    b4 = pdflatex_ok(pristine, base, timeout_bin)
+
             for pname, penv, flag in CELLS:
                 mode = f"{pname}:{flag}"
                 env = {**os.environ, **penv}
@@ -213,12 +240,10 @@ def main() -> int:
                         capture_output=True).returncode == 0
                     degraded = before_ready and not after_ready
 
-                    # (b) oracle-class preservation
+                    # (b) oracle-class preservation. The AFTER half only:
+                    # b4 was graded once per document above.
                     broke = False
                     if have_tex:
-                        pristine = Path(tmp) / "p"
-                        shutil.copytree(corpus, pristine)
-                        b4 = pdflatex_ok(pristine, base, timeout_bin)
                         for junk in ("aux", "log", "pdf", "out"):
                             (stage / f"{base[:-4]}.{junk}").unlink(missing_ok=True)
                         af = pdflatex_ok(stage, base, timeout_bin)
@@ -305,7 +330,7 @@ def main() -> int:
           f"known-broken {len(recorded)}")
     if not have_tex and not require_tex:
         print("[fixer-roundtrip] NOTE: property (b) not evaluated without pdflatex; "
-              "the tex-oracle workflow covers it.")
+              "the tex-oracle workflow covers it (advisory).")
     if findings:
         print("\n[fixer-roundtrip] FAIL:\n", file=sys.stderr)
         for f in findings:

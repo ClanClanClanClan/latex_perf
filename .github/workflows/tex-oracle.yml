@@ -184,3 +184,39 @@ jobs:
             -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
             -e EXPECT_TEX_VERSION="$TEX_EXPECT_VERSION" \
             "$TEX_IMAGE" bash scripts/tools/diff_compile_check.sh
+
+      # R7-INFRA-4 property (b): "a document that compiled must still compile
+      # after --apply-fixes". It is the ONLY check anywhere that can observe the
+      # fixer turning a compiling document into a non-compiling one — the
+      # project's second-worst failure mode — and until now it ran in NO
+      # automated path. ci.yml runs the script but has no TeX, so `have_tex` is
+      # false and (b) is skipped; its only --require-pdflatex caller sits in
+      # pre_release_check.py's BUILD_CHECKS list, which release.sh skips via
+      # --skip-build. The script's own docstring claimed it "rides the
+      # pinned-image tex-oracle workflow". It did not. Now it does.
+      - name: Preflight the image for property (b)
+        run: |
+          set -euo pipefail
+          # BOTH are load-bearing, and the second is easy to miss:
+          # check_apply_fixes_roundtrip.py hard-exits 2 under REQUIRE_PDFLATEX=1
+          # when neither gtimeout nor timeout is on PATH, because an unbounded
+          # pdflatex hang would otherwise be scored as a compile failure.
+          docker run --rm "$TEX_IMAGE" bash -c 'python3 --version && command -v timeout' \
+            || { echo "::error::pinned TeX image lacks python3 and/or coreutils timeout; property (b) cannot run here"; exit 2; }
+
+      # ADVISORY ON PURPOSE, matching this workflow's existing posture: tex-oracle
+      # is not among the nine required contexts, and the first runs are EXPECTED
+      # to be yellow rather than green. corpora/apply_fixes/manifest.json records
+      # pdflatex_graded=true but carries no oracle.version pin (unlike
+      # corpora/false_ready/manifest.json), so its five baseline rows were
+      # measured on a local engine, not this pinned TL2026 image. Any disagreement
+      # is a baseline-provenance artefact to be re-recorded here, NOT a new defect
+      # — which is exactly why this does not block on day one.
+      - name: Apply-fixes round-trip, property (b) — advisory
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:$PWD" -w "$PWD" \
+            -e HOME=/tmp -e REQUIRE_PDFLATEX=1 \
+            "$TEX_IMAGE" python3 scripts/tools/check_apply_fixes_roundtrip.py --repo .

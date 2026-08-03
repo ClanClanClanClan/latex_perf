@@ -1783,7 +1783,7 @@ let has_global_mixing names legacy modern : bool =
    each being the content inside a math environment ($...$, \(...\), \[...\], or
    math-class \begin{env}...\end{env}). Unlike strip_math_segments which removes
    math, this returns only the math parts. *)
-let extract_math_segments (s : string) : string list =
+let compute_math_segments (s : string) : string list =
   let len = String.length s in
   let segments = ref [] in
   let math_envs =
@@ -1894,6 +1894,31 @@ let extract_math_segments (s : string) : string list =
   in
   loop 0;
   List.rev !segments
+
+(* R-SHARED: memoise, the same 1-entry physical-identity idiom as the three
+   range scanners above (see the cache note near
+   [find_verbatim_comment_url_ranges]). This is the FOURTH scanner of that
+   family and the one #521 missed: 127 call sites across validators_l1.ml,
+   validators_l1_math.ml and validators_l1_expl3.ml, every one re-scanning the
+   whole document AND allocating a fresh substring per math segment.
+
+   Correctness is its siblings' argument: pure function of [s], and OCaml
+   strings are immutable, so [==] implies equal contents. A caller passing a
+   different string simply misses and recomputes — today's behaviour — so the
+   cache's worst case is the status quo.
+
+   ⚠ [compute_math_segments] is deliberately left exposed and uncached for any
+   caller that must not populate the cache with a derived buffer, mirroring the
+   [compute_exempt_ranges] arrangement above. *)
+let _math_seg_cache : (string * string list) option ref = ref None
+
+let extract_math_segments (s : string) : string list =
+  match !_math_seg_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let r = compute_math_segments s in
+      _math_seg_cache := Some (s, r);
+      r
 
 (* Helper: extract inline math segments only ($...$ and \(...\)) *)
 let extract_inline_math_segments (s : string) : string list =

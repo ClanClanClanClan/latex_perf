@@ -1,7 +1,7 @@
 {
-  "description": "R-BUDGET baseline. Monotone: the gate fails on a regression beyond TOLERANCE and on a WIDENED gap to the ROADMAP:276 budget. Re-record from CI, not a busy laptop.",
-  "provisional": true,
-  "provisional_note": "Recorded above the load limit, so these numbers are inflated and the ratchet is LOOSE until re-recorded on an idle runner.",
+  "description": "R-BUDGET baseline, measured on an IDLE CI runner. Monotone: the gate fails on a regression beyond TOLERANCE and on a WIDENED gap to the ROADMAP:276 budget. Superseded the provisional developer-machine baseline, which was inflated ~1.6x and left the ratchet loose.",
+  "provisional": false,
+  "provisional_note": "",
   "spec_budget_300kb_ms": {
     "parse": 40.0,
     "rules": 30.0
@@ -13,40 +13,41 @@
   ],
   "keystroke": {
     "4": {
-      "bytes": 3994,
-      "parse_ms": 0.1,
-      "fastrun_ms": 5.6,
-      "rules_ms": 5.5
+      "bytes": 4125,
+      "parse_ms": 0.0,
+      "fastrun_ms": 4.2,
+      "rules_ms": 4.2
     },
     "50": {
       "bytes": 49936,
-      "parse_ms": 1.7,
-      "fastrun_ms": 75.6,
-      "rules_ms": 73.9
+      "parse_ms": 1.4,
+      "fastrun_ms": 51.5,
+      "rules_ms": 50.0
     },
     "100": {
       "bytes": 99981,
-      "parse_ms": 5.5,
-      "fastrun_ms": 162.0,
-      "rules_ms": 156.4
+      "parse_ms": 3.3,
+      "fastrun_ms": 98.7,
+      "rules_ms": 95.4
     },
     "300": {
       "bytes": 300008,
-      "parse_ms": 18.9,
-      "fastrun_ms": 463.0,
-      "rules_ms": 444.1
+      "parse_ms": 10.5,
+      "fastrun_ms": 294.5,
+      "rules_ms": 284.0
     }
   },
   "batch_ms": {
-    "4": 166.7,
-    "50": 1692.4,
-    "100": 3311.8,
-    "300": 11237.5
+    "4": 111.3,
+    "50": 1109.2,
+    "100": 2336.8,
+    "300": 8234.1
   },
   "spec_gap_300kb": {
-    "parse": 0.47,
-    "rules": 14.8
+    "parse": 0.26,
+    "rules": 9.47
   },
   "reps": 9,
-  "loadavg_1min": 28.25
+  "loadavg_1min": 1.0,
+  "recorded_from": "TRANSCRIBED from the perf-ci step of GitHub Actions run 30811194180's predecessor 30765865249 (sha 3543095b, ubuntu-latest, load average 1.0), NOT produced by --record on this machine. The gate refuses to --record above load 4.0 and no developer machine here is ever that quiet, so the authoritative environment is CI. Re-derive by reading the 'Keystroke + batch latency budget (R-BUDGET)' step of any green perf-ci run on main."
 }

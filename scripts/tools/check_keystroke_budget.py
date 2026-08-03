@@ -13,18 +13,23 @@ the gate that would, and it did not exist; `scripts/bench_wedge.sh` (R-BENCH) di
 not exist either. What perf-ci DOES enforce is `edit_window_gate.sh`, and that
 gate times `Real_processor.run` — the L0 LEXER — on a random 4096-byte slice.
 It is not a smaller version of the budget above; it measures a different stage of
-the pipeline. Measured on this repo, warm, startup excluded, 21 reps:
+the pipeline. Measured warm, startup excluded, on an IDLE CI runner (load 1.0):
 
     band      parse_ms   fastrun_ms   rules_ms
-    100 KB       3.7       114.2       110.5
-    300 KB      15.0       343.9       328.9      <-- budget says rules <= 30
+    100 KB       3.3        98.7        95.4
+    300 KB      10.5       294.5       284.0      <-- budget says rules <= 30
 
     edit_window_gate.sh on the same 300 KB document:  p95 = 0.031 ms  PASS
 
 So the required gate passed with a 39x margin while the budgeted stage missed by
-11x. Parse is fine (15.0 vs 40 ms, 4% of the kernel); 96% of the cost is rule
-execution, and it is LINEAR in document size at ~1.1 ms/KB — the signature of
-every rule scanning the whole document.
+9.5x. Parse is fine (10.5 vs 40 ms, ~4% of the kernel); ~96% of the cost is rule
+execution, and it is LINEAR in document size — the signature of every rule
+scanning the whole document.
+
+The miss is HARDWARE-DEPENDENT and should always be quoted as a pair: 9.5x on the
+shared ubuntu-latest runner, ~5.3x on an idle Apple-Silicon laptop, a ~1.8x
+spread. CI is the baseline environment because it is reproducibly idle, NOT
+because it represents a user's machine.
 
 WHAT THIS GATE MEASURES
 -----------------------
@@ -56,9 +61,16 @@ visible debt instead of an absent one.
 ⚠ TIMING GATES ARE NOISY AND THIS ONE KNOWS IT. The recorded baseline carries the
 machine and load it was taken on. TOLERANCE defaults to 1.5x precisely so that
 ordinary scheduling noise does not turn a required context red; it is a ratchet
-against real regressions, not a benchmark. Re-record from CI, not from a laptop
-running other work — the numbers this file ships with were taken at load average
-28-36 and are inflated by an unknown factor.
+against real regressions, not a benchmark.
+
+⚠⚠ AND IT IS NOT SENSITIVE ENOUGH TO CATCH GRADUAL EROSION. A regression must
+clear BOTH the ratio AND --min-delta-ms, so a ~7% regression on the budgeted path
+passes. The 5 ms floor is not removable: parse is only a few ms, and 3 ms of
+scheduler noise clears 1.5x, which reddened a REQUIRED context on an unmodified
+baseline during development. This gate stops catastrophes, not drips — and drips
+are how rules reached ~9.5x over budget. For precision use an interleaved A/B of
+two binaries ON A QUIET MACHINE; a loaded machine has been measured INVERTING the
+sign of an A/B result.
 
 ⚠ NOT MEASURED: the `shared`, `structural` and `IPC` stages of the ROADMAP:276
 budget have no separate instrumentation in bench_readiness_kernel.ml, so this
@@ -320,6 +332,20 @@ def main() -> int:
         print("\n[keystroke-budget] FAIL:\n", file=sys.stderr)
         for f in findings:
             print(f"  - {f}", file=sys.stderr)
+        if load1 > ns.max_record_load:
+            # NOT a skip path — the failure still stands and the exit code is
+            # still 1. But the baseline is recorded on an idle CI runner, and a
+            # developer machine under load will exceed it for environmental
+            # reasons alone. Say so, rather than letting someone burn an hour
+            # hunting a regression that is really just their own build.
+            print(
+                f"\n  NOTE: this ran at load average {load1:.1f}, well above the "
+                f"{ns.max_record_load} the baseline assumes. The baseline is "
+                f"measured on an idle CI runner, so a busy machine can exceed it "
+                f"without anything having regressed. Trust the CI result; to "
+                f"compare locally, use an interleaved A/B of two binaries rather "
+                f"than this gate.",
+                file=sys.stderr)
         return 1
     print("[keystroke-budget] PASS — no latency regression, spec gap not widened.")
     return 0

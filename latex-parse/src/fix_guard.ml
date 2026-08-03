@@ -3,7 +3,8 @@
    not).
 
    Regions implemented, all purely lexical: 1. control symbol arguments, 2.
-   TikZ/PGF picture bodies, 3a. filename arguments, 3b. package-spec arguments.
+   TikZ/PGF picture bodies, 3a. filename arguments, 3b. package-spec arguments,
+   5. tabular/array column preambles.
 
    Regions NOT yet covered, in measured-damage order, and — this part matters —
    with UNEQUAL evidence behind them: 4. key arguments (\label \ref \cite ...,
@@ -278,6 +279,125 @@ let scan_command_argument (src : string) (k : int) ~(bare : bool) : int =
   done;
   !stop
 
+(* ── Region 5: tabular / array column preamble ──────────────────────────────
+   The column-specification argument of a tabular-family environment is a
+   PREAMBLE: a tiny language of its own where `>` `<` `@` `!` `|` `p` are
+   operators, not punctuation. MEASURED damage, and the last one left in
+   corpora/apply_fixes/manifest.json: under the pilot profile TYPO-052 rewrites
+   the `>` of `\begin{tabular}{>{\bfseries}l r}` into `\textgreater{}`, giving
+   `! Illegal pream-token` and pdflatex 0 -> 1 — while --compile-check reports
+   READY both before and after. That is the fixer manufacturing the project's
+   cardinal bug, and these two rows are the only remaining
+   manufactured_false_ready entries in the repo.
+
+   ARITY. Two shapes, and getting this wrong is the whole risk: *
+   \begin{tabular}[pos]{preamble} — preamble is the FIRST brace group *
+   \begin{tabular*}{width}[pos]{preamble} — the SECOND, because the width
+   argument comes first Environments whose arity I could not confirm from a
+   shipped package (tabu, longtabu) are deliberately ABSENT: guessing an arity
+   is how a range ends up short, and a missing environment merely means today's
+   behaviour.
+
+   FAILURE DIRECTION. The range runs from the backslash of \begin to the end of
+   the preamble group, so only its END is free. scan_preamble_stop returns None
+   — protect NOTHING — the moment a mandatory group is not a brace group, and
+   there is deliberately NO end-of-line fallback of the kind region 3 uses. A
+   fallback here could end the range BEFORE the preamble and expose exactly the
+   bytes this region exists to protect; declining to protect is the safe
+   failure, because it is only ever today's behaviour. Being over-wide (covering
+   the optional [pos] and the width argument too) is free and intentional. *)
+
+(* One past the matching close of the brace group at [p], or None if [p] is not
+   a group or the group never closes. Escape-aware: a backslash consumes the
+   next byte, so `\{` is a character rather than a group. *)
+let brace_group_end (src : string) (n : int) (p : int) : int option =
+  if p >= n || String.unsafe_get src p <> '{' then None
+  else
+    let depth = ref 0 and e = ref p and fin = ref (-1) in
+    while !fin < 0 && !e < n do
+      (match String.unsafe_get src !e with
+      | '\\' -> incr e
+      | '{' -> incr depth
+      | '}' ->
+          decr depth;
+          if !depth = 0 then fin := !e + 1
+      | _ -> ());
+      incr e
+    done;
+    if !fin >= 0 then Some !fin else None
+
+(* One past the optional group at [p]. Closes at an UNESCAPED bracket at brace
+   depth 0, the same semantics region 3 borrowed from the verified
+   drop_after_rbracket, so a bracket inside a braced option value cannot end it
+   early. *)
+let opt_group_end (src : string) (n : int) (p : int) : int option =
+  if p >= n || String.unsafe_get src p <> '[' then None
+  else
+    let e = ref (p + 1) and depth = ref 0 and fin = ref (-1) in
+    while !fin < 0 && !e < n do
+      (match String.unsafe_get src !e with
+      | '\\' -> incr e
+      | '{' -> incr depth
+      | '}' -> if !depth > 0 then decr depth
+      | ']' -> if !depth = 0 then fin := !e + 1
+      | _ -> ());
+      incr e
+    done;
+    if !fin >= 0 then Some !fin else None
+
+(* One past the [mandatory]-th brace group after [p0], skipping optional groups,
+   whitespace and comments in between. None if any mandatory group is missing —
+   see the failure-direction note above for why None, not a partial range. *)
+let scan_preamble_stop (src : string) (n : int) (p0 : int) (mandatory : int) :
+    int option =
+  let p = ref p0 and got = ref 0 and stop = ref None and go = ref true in
+  while !go do
+    let q = skip_blanks_and_comments src n !p in
+    if q >= n then go := false
+    else
+      match String.unsafe_get src q with
+      | '[' -> (
+          match opt_group_end src n q with
+          | Some e -> p := e
+          | None -> go := false)
+      | '{' -> (
+          match brace_group_end src n q with
+          | Some e ->
+              incr got;
+              p := e;
+              if !got >= mandatory then (
+                stop := Some e;
+                go := false)
+          | None -> go := false)
+      | _ -> go := false
+  done;
+  !stop
+
+(* (environment, how many mandatory groups precede AND include the preamble) *)
+let preamble_envs =
+  [
+    ("tabular", 1);
+    ("array", 1);
+    ("longtable", 1);
+    ("tabular*", 2);
+    ("tabularx", 2);
+    ("tabulary", 2);
+    ("xltabular", 2);
+  ]
+
+let preamble_ranges (src : string) : (int * int) list =
+  let n = String.length src in
+  List.concat_map
+    (fun (env, mandatory) ->
+      let b = "\\begin{" ^ env ^ "}" in
+      List.filter_map
+        (fun bs ->
+          match scan_preamble_stop src n (bs + String.length b) mandatory with
+          | Some e -> Some (bs, e)
+          | None -> None)
+        (find_all src b))
+    preamble_envs
+
 let argument_ranges (src : string) : (int * int) list * (int * int) list =
   let n = String.length src in
   let fns = ref [] and pkgs = ref [] in
@@ -316,6 +436,7 @@ type regions = {
   picture : (int * int) list;
   filename : (int * int) list;
   package_spec : (int * int) list;
+  preamble : (int * int) list;
 }
 
 let compute_regions (src : string) : regions =
@@ -325,6 +446,7 @@ let compute_regions (src : string) : regions =
     picture = picture_ranges src;
     filename;
     package_spec;
+    preamble = preamble_ranges src;
   }
 
 (* One-entry memo keyed on the buffer's PHYSICAL identity.
@@ -349,7 +471,9 @@ let regions_of (src : string) : regions =
 
 let protected_ranges (src : string) : (int * int) list =
   let r = regions_of src in
-  let rs = r.control_symbol @ r.picture @ r.filename @ r.package_spec in
+  let rs =
+    r.control_symbol @ r.picture @ r.filename @ r.package_spec @ r.preamble
+  in
   List.sort (fun (a, _) (b, _) -> compare a b) rs
 
 (* Rules whose contract IS editing control symbols. Derived from the golden
@@ -408,7 +532,7 @@ let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
       let active =
         (if List.mem rule_id control_symbol_aware then []
          else [ r.control_symbol ])
-        @ [ r.picture; r.filename ]
+        @ [ r.picture; r.filename; r.preamble ]
         @ if List.mem rule_id package_spec_aware then [] else [ r.package_spec ]
       in
       let blocked span =

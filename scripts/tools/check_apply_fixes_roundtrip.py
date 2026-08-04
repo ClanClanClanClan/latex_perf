@@ -164,6 +164,27 @@ def main() -> int:
     elif not args.record:
         return die(f"{MANIFEST} missing — run with --record to create the baseline")
 
+    # REFUSE to re-record a pdflatex-graded baseline on a runner without TeX.
+    # Property (b) is the only one that can see the fixer break a compiling
+    # document, and without pdflatex `broke` is False for EVERY cell — so a
+    # --record here silently deletes every breaks_compile row while leaving an
+    # oracle block that still claims it was graded against TL2026. The result
+    # looks like a clean baseline and is actually a blindfolded one.
+    #
+    # Checked HERE rather than at the write, so it costs nothing: the refusal
+    # lands before the 73-document sweep instead of after it.
+    if args.record and not have_tex and manifest_path.exists():
+        try:
+            prior_graded = json.loads(manifest_path.read_text()).get("pdflatex_graded")
+        except Exception:  # noqa: BLE001
+            prior_graded = None
+        if prior_graded:
+            return die(
+                "refusing to re-record: the existing baseline is pdflatex_graded "
+                "but pdflatex is not on PATH, so every breaks_compile row would "
+                "be erased. Re-record inside the pinned image — tex-oracle.yml "
+                "already runs this script there.")
+
     findings: list[str] = []
     observed_broken: list[dict] = []
     n_docs = 0
@@ -306,6 +327,23 @@ def main() -> int:
                     f"update {MANIFEST} to lock it in (--record)")
 
     if args.record:
+        # CARRY FORWARD anything this writer does not own. The template below is
+        # a fixed literal, so every top-level key absent from it is DESTROYED on
+        # each --record. That is not hypothetical: the `oracle` block recording
+        # which pdflatex graded this baseline was added separately, and
+        # tex-oracle.yml now ASSERTS manifest["oracle"]["version"] against the
+        # pinned image — so the next --record would have deleted the key and
+        # turned that assertion into a KeyError rather than a readable failure.
+        # Carrying unknown keys forward keeps a re-record from silently
+        # discarding provenance that another gate depends on.
+        owned = {"description", "properties", "pdflatex_graded", "known_broken"}
+        carried: dict = {}
+        if manifest_path.exists():
+            try:
+                carried = {k: v for k, v in json.loads(manifest_path.read_text()).items()
+                           if k not in owned}
+            except Exception:  # noqa: BLE001
+                carried = {}
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps({
             "description": (
@@ -319,6 +357,7 @@ def main() -> int:
                 "b_oracle_class_preserving": "a document that compiled must still compile",
             },
             "pdflatex_graded": have_tex,
+            **carried,
             "known_broken": sorted(observed_broken, key=lambda e: (e["doc"], e["mode"])),
         }, indent=2) + "\n", encoding="utf-8")
         print(f"[fixer-roundtrip] recorded {len(observed_broken)} known breakage(s) "

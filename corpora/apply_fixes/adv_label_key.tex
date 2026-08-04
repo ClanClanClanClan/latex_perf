@@ -1,0 +1,28 @@
+% Adversarial fixture: a cross-reference KEY corrupted by a math producer.
+%
+% A \label sitting inside an equation environment counts as MATH, so SCRIPT-001
+% rewrites the multi-character subscript eq:lower_bound -> eq:lower_{bound} and
+% SCRIPT-007 then -> eq:lower_{\text{bound}}. The \eqref in prose is NOT math and
+% is left alone, so the definition and the reference DIVERGE.
+%
+% Two things make this worth a fixture rather than a footnote:
+%   * it fires in the DEFAULT profile, not only under pilot;
+%   * \text inside \label is a hard error, so pdflatex goes 0 -> 1 with
+%     "! Missing \endcsname inserted" and produces NO PDF -- while
+%     --compile-check reports READY on both sides. A manufactured false-READY.
+%
+% It needs a MULTI-CHARACTER subscript: eq:a_b is left alone, eq:lower_bound is
+% not. A single-character variant of this fixture would be VACUOUS.
+%
+% Region 4 of Fix_guard (cross-reference key arguments) is the fix. Until then
+% this is recorded as a known defect so the class is measured rather than merely
+% believed to be absent.
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+See \eqref{eq:lower_bound} for the result.
+\begin{equation}
+\label{eq:lower_bound}
+x = 1
+\end{equation}
+\end{document}

@@ -17,6 +17,38 @@
   },
   "known_broken": [
     {
+      "doc": "corpora/apply_fixes/adv_label_key.tex",
+      "mode": "default:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_label_key.tex",
+      "mode": "default:--apply-fixes-best-effort",
+      "breaks_compile": false,
+      "degrades_verdict": false,
+      "not_idempotent": true,
+      "manufactured_false_ready": false
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_label_key.tex",
+      "mode": "pilot:--apply-fixes",
+      "breaks_compile": true,
+      "degrades_verdict": false,
+      "not_idempotent": false,
+      "manufactured_false_ready": true
+    },
+    {
+      "doc": "corpora/apply_fixes/adv_label_key.tex",
+      "mode": "pilot:--apply-fixes-best-effort",
+      "breaks_compile": false,
+      "degrades_verdict": false,
+      "not_idempotent": true,
+      "manufactured_false_ready": false
+    },
+    {
       "doc": "corpora/compile_check/good_quotes_dashes.tex",
       "mode": "default:--apply-fixes-best-effort",
       "breaks_compile": false,

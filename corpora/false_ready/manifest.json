@@ -11,8 +11,8 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 7,
-    "strong_fatal": 7,
+    "false_ready_total": 6,
+    "strong_fatal": 6,
     "error_halt": 0
   },
   "fixtures": [
@@ -149,8 +149,9 @@
       "fix_rank": 2,
       "tier": "lp-extended",
       "pdflatex": "strong-fatal",
-      "expected_cli": "READY",
-      "note": "the only \\end{document} is inside a never-taken \\iffalse; TeX skips it, EOF with no legal \\end"
+      "expected_cli": "NOT-READY",
+      "note": "the only \\end{document} is inside a never-taken \\iffalse; TeX skips it, EOF with no legal \\end",
+      "fixed_by": "R7 DWR-3a: no_live_end_document_fatal now skips spans an executed \\iffalse would skip, so the \\end{document} inside \\iffalse...\\fi is no longer counted as live."
     },
     {
       "id": "fr_verb_eol",

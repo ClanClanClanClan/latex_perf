@@ -1,7 +1,11 @@
 name: Catalogue Deep Validation
 
 on:
+  # SCOPED DELIBERATELY (was a bare `push:`). A bare `push:` fires on every branch,
+  # so a PR branch published this workflow's check twice per commit under the same
+  # required-context name. Full rationale in .github/workflows/unit-tests.yml.
   push:
+    branches: [main]
   pull_request:
 
 

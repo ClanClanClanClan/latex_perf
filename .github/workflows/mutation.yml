@@ -1,5 +1,11 @@
 name: Mutation Baseline
-on: [push, pull_request]
+on:
+  # SCOPED DELIBERATELY (was `on: [push, pull_request]`, i.e. every branch). Same
+  # duplicate-required-context defect as the twelve sibling workflows; full rationale
+  # in .github/workflows/unit-tests.yml.
+  push:
+    branches: [main]
+  pull_request:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true

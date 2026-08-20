@@ -49,6 +49,9 @@ GATE_SCRIPTS = [
      ["--repo", ".", "--skip-generated"]),
     # PR #246 (p1.12) addition — skip-exec used for meta-check (gate
     # script runnable without requiring a built test_l2_gate.exe).
+    # v27.1.63: required-status-check topology (duplicate context / job-name
+    # collision / orphaned requirement).
+    ("scripts/tools/check_workflow_triggers.py", ["--repo", "."]),
     ("scripts/tools/check_perf_ratchet.py",
      ["--repo", ".", "--skip-exec", "--input", "/dev/null"]),
 ]

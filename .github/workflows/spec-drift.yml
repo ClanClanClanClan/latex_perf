@@ -66,6 +66,16 @@ jobs:
         # this now.
         run: python3 scripts/tools/check_repo_facts.py --facts governance/project_facts.yaml --repo .
 
+      - name: "Meta-gate: required status checks are unambiguous"
+        # The job id IS the status-check context. This gate asserts that every
+        # context in .github/required-status-checks.json resolves to exactly one
+        # job, and that no such job sits behind an unfiltered `push:` (which
+        # publishes the same required context twice per commit on a PR branch --
+        # the defect that blocked PR #531 with a cancelled duplicate run while
+        # the real run had passed). Also catches an orphaned requirement after a
+        # job rename, which hangs every PR pending with nothing to point at.
+        run: python3 scripts/tools/check_workflow_triggers.py --repo .
+
       - name: "Meta-gate: every gate script is runnable"
         # P1.8 found check_regression_gates had a typo'd binary name.
         # This gate verifies every gate-script itself runs without

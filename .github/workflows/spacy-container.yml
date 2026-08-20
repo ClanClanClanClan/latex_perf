@@ -12,7 +12,13 @@ on:
       - 'ml/scripts/spacy_server.py'
 
 jobs:
-  build:
+  # RENAMED from the generic `build` (v27.1.63). The job id IS the status-check
+  # context, and ci.yml also declared a job called `build` -- the one that runs
+  # the false-READY monotone gate and the apply-fixes round-trip gate. With
+  # `build` in .github/required-status-checks.json, that collision would let this
+  # workflow -- which knows nothing about either gate -- satisfy the requirement.
+  # spec-drift.yml's own job comment records a prior instance of the same class.
+  spacy-build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

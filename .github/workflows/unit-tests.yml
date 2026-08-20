@@ -1,7 +1,32 @@
 name: Unit Tests
 
 on:
+  # SCOPED DELIBERATELY. This was a bare `push:`, which fires on EVERY branch — so a
+  # commit on a PR branch ran this workflow TWICE (once on `push`, once on
+  # `pull_request`) and published two check-runs under the SAME required-context name
+  # on the SAME sha.
+  #
+  # The two runs never cancel each other: the concurrency group below falls back to
+  # `github.ref` when `github.event.pull_request.number` is absent, so the push-event
+  # run and the pull_request-event run land in DIFFERENT groups. GitHub's status
+  # rollup then honours whichever check-run reported LAST, not whichever passed.
+  #
+  # That is exactly how PR #531 was blocked: the push-event `unit-tests` PASSED in
+  # 11m50s (check-run 91955339989) while the duplicate pull_request-event run hit a
+  # 25-minute network timeout inside setup-ocaml-env and was CANCELLED (run
+  # 30898021798, check-run 91955461031). One flake, zero real failures, and a hard
+  # merge block that reads as "green" in the check list — you only see it in
+  # `gh pr view --json statusCheckRollup`.
+  #
+  # Thirteen workflows carried this bare `push:`, and they were precisely the
+  # thirteen contexts that appeared twice in #531's rollup — seven of them required.
+  #
+  # Scoping push to `main` keeps main covered after merge; PR coverage is unchanged,
+  # because `pull_request:` already fires on every push to an open PR. It also
+  # roughly halves CI minutes and halves flake exposure per PR. `develop` is
+  # deliberately NOT listed: no such branch exists on origin.
   push:
+    branches: [main]
   pull_request:
 
 

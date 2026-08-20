@@ -14,9 +14,32 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+# NON-VACUITY, part 1: a missing golden is a HARD FAILURE, not a skip.
+#
+# This branch used to `echo SKIP; exit 0`. specs/rules/unicode_golden.yaml was
+# deleted on 2026-02-16 (f24fc191) -- and its last tracked content was already a
+# bare `cases:` with no entries -- so this REQUIRED status check printed SKIP and
+# exited 0 on every run for 185 days while any CHAR/ENC/CJK regression merged
+# unopposed. A required check that tests nothing is strictly worse than no check:
+# it converts "nobody is looking" into a green tick.
 if [[ ! -f "$GOLDEN" ]]; then
-  echo "[unicode-smoke] SKIP: golden file $GOLDEN not found (no unicode cases defined)"
-  exit 0
+  echo "[unicode-smoke] FAIL: golden file $GOLDEN not found." >&2
+  echo "[unicode-smoke]   This check is REQUIRED. It must never pass by absence." >&2
+  echo "[unicode-smoke]   Restore the golden, or remove unicode-smoke from" >&2
+  echo "[unicode-smoke]   .github/required-status-checks.json -- not both silently." >&2
+  exit 1
+fi
+
+# NON-VACUITY, part 2: how many cases does the golden DECLARE? The awk reader
+# below is line-oriented and would silently yield zero records if the file's shape
+# drifted, which reproduces the same green-on-nothing failure by a different route.
+# Compare declared against actually-executed at the end.
+declared=$(grep -c '^[[:space:]]*-[[:space:]]*file:' "$GOLDEN" || true)
+MIN_CASES=${UNICODE_SMOKE_MIN_CASES:-12}
+if [[ "$declared" -lt "$MIN_CASES" ]]; then
+  echo "[unicode-smoke] FAIL: golden declares $declared case(s), minimum is $MIN_CASES." >&2
+  echo "[unicode-smoke]   Lower UNICODE_SMOKE_MIN_CASES deliberately if that is really intended." >&2
+  exit 1
 fi
 
 pass=0; fail=0
@@ -107,5 +130,15 @@ done < <(
   ' "$GOLDEN"
 )
 
-echo "[unicode-smoke] Summary: pass=$pass fail=$fail"
+echo "[unicode-smoke] Summary: pass=$pass fail=$fail declared=$declared"
+
+# NON-VACUITY, part 3: every declared case must actually have been executed. A
+# parser that drops records would otherwise report "pass=0 fail=0" and exit 0.
+executed=$((pass + fail))
+if [[ "$executed" -ne "$declared" ]]; then
+  echo "[unicode-smoke] FAIL: golden declares $declared case(s) but $executed ran." >&2
+  echo "[unicode-smoke]   The reader dropped records -- check the golden's shape." >&2
+  exit 1
+fi
+
 [[ $fail -eq 0 ]]

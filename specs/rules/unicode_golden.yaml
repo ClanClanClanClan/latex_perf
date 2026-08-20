@@ -1,0 +1,82 @@
+# Unicode rule golden -- the corpus behind the REQUIRED `unicode-smoke` check.
+#
+# HISTORY, because it matters: this file was deleted on 2026-02-16 (f24fc191) and
+# its last tracked content was a bare `cases:` with NO entries. So the required
+# check had been vacuous BEFORE the deletion too -- afterwards
+# scripts/smoke_rules_unicode.sh took its `SKIP: golden file not found` branch and
+# exited 0 on every run for 185 days. A required status check that tests nothing is
+# worse than no check: it reports green while any CHAR/ENC/CJK regression merges
+# unopposed. The script now hard-FAILS on a missing golden and enforces a minimum
+# case count, so this cannot recur silently.
+#
+# Every expectation below was OBSERVED against the real service (pilot profile,
+# the same profile unicode-smoke.yml runs), not predicted. `forbid` is the
+# valuable half: it asserts confusable rule families do not bleed into each other,
+# and the final case is a pure-ASCII negative control that must stay silent.
+#
+# 14 cases, 20 distinct rule IDs.
+#
+# KNOWN GAPS, deliberately NOT encoded here (encoding them would cement a defect):
+#   * TYPO-043 is titled "Smart quotes inside verbatim detected" but fires on
+#     smart quotes in ORDINARY PROSE with no verbatim anywhere. TYPO-060 is the
+#     correctly-scoped rule. Only the verbatim case below is asserted.
+#   * ENC-003 ("LATIN-1 smart quotes detected") did not fire on U+2018/2019/201C/
+#     201D. It may require genuinely mis-decoded CP1252 bytes, which this JSON
+#     transport cannot carry. Untested here rather than asserted either way.
+cases:
+  # U+200B -- forbids the other two invisible-character rules: the three must not bleed into each other
+  - file: corpora/unicode/ENC-007_zero_width_space.tex
+    expect: ["ENC-007"]
+    forbid: ["CHAR-012", "CHAR-014", "CHAR-021", "ENC-002", "SPC-012"]
+  # U+200D -- same invisible-character non-bleed assertion
+  - file: corpora/unicode/CHAR-012_zero_width_joiner.tex
+    expect: ["CHAR-012"]
+    forbid: ["CHAR-014", "CHAR-021", "ENC-002", "ENC-007", "SPC-012"]
+  # U+FEFF -- three rules fire on one codepoint by design: the paragraph rule, the mid-file BOM rule and the BOM-position rule
+  - file: corpora/unicode/CHAR-021_bom_mid_paragraph.tex
+    expect: ["CHAR-021", "ENC-002", "SPC-012"]
+    forbid: ["CHAR-012", "CHAR-014", "ENC-007"]
+  # U+FFFD -- the only fixture allowed to carry a replacement character
+  - file: corpora/unicode/CHAR-014_replacement_char.tex
+    expect: ["CHAR-014"]
+    forbid: []
+  # U+2212 -- CHAR-019 and MATH-083 are two spellings of the same finding; both must stay
+  - file: corpora/unicode/CHAR-019_unicode_minus_text.tex
+    expect: ["CHAR-019", "MATH-083"]
+    forbid: ["CHAR-014", "ENC-018", "TYPO-053", "TYPO-061"]
+  # U+00D7 -- forbids the sibling symbol rules
+  - file: corpora/unicode/TYPO-061_unicode_times_text.tex
+    expect: ["TYPO-061"]
+    forbid: ["CHAR-014", "CHAR-019", "ENC-018", "MATH-083", "TYPO-053"]
+  # U+22EF -- forbids the sibling symbol rules
+  - file: corpora/unicode/TYPO-053_unicode_leader.tex
+    expect: ["TYPO-053"]
+    forbid: ["CHAR-014", "CHAR-019", "ENC-018", "MATH-083", "TYPO-061"]
+  # U+2011 -- outside a URL, so TYPO-063 (inside-URL) must NOT fire
+  - file: corpora/unicode/ENC-018_nb_hyphen_outside_url.tex
+    expect: ["ENC-018"]
+    forbid: ["CHAR-014", "CHAR-019", "MATH-083", "TYPO-053", "TYPO-061", "TYPO-063"]
+  # U+00B5 -- micro sign, not Greek mu
+  - file: corpora/unicode/ENC-015_micro_homoglyph.tex
+    expect: ["ENC-015"]
+    forbid: ["CHAR-014"]
+  # U+FF0C U+3002 -- fullwidth punctuation in an ASCII context
+  - file: corpora/unicode/CHAR-016_fullwidth_punct_ascii.tex
+    expect: ["CHAR-016", "CJK-001"]
+    forbid: ["CHAR-014"]
+  # U+0301 x2 -- NFD input, so the non-canonical-form rule fires alongside
+  - file: corpora/unicode/ENC-019_duplicate_combining.tex
+    expect: ["ENC-010", "ENC-019"]
+    forbid: ["CHAR-014"]
+  # U+4E2D... -- raw CJK glyphs with no xeCJK; deliberately avoids the acronym 'CJK' in prose so the acronym rule stays quiet
+  - file: corpora/unicode/CJK-004_raw_cjk_no_package.tex
+    expect: ["CJK-004"]
+    forbid: ["CHAR-014"]
+  # U+201C U+201D -- smart quotes INSIDE verbatim -- the correctly-scoped rule. TYPO-043 co-fires here legitimately
+  - file: corpora/unicode/TYPO-060_smart_quotes_in_verbatim.tex
+    expect: ["TYPO-043", "TYPO-060", "VERB-004"]
+    forbid: ["CHAR-014"]
+  # none -- NEGATIVE CONTROL: pure ASCII, so every rule above must stay silent. This is the over-rejection guard
+  - file: corpora/unicode/clean_ascii_control.tex
+    expect: []
+    forbid: ["CHAR-012", "CHAR-014", "CHAR-016", "CHAR-019", "CHAR-021", "CJK-001", "CJK-004", "ENC-002", "ENC-007", "ENC-010", "ENC-015", "ENC-018", "ENC-019", "MATH-083", "SPC-012", "TYPO-043", "TYPO-053", "TYPO-060", "TYPO-061", "VERB-004"]

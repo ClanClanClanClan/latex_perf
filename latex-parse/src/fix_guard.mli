@@ -68,6 +68,19 @@ val package_spec_aware : string list
     end and therefore outside it, so the region never withholds them — a
     property the coverage gate checks rather than one this list asserts. *)
 
+(* No [crossref_aware] list exists, and its absence is deliberate rather than an
+   omission: no rule reaching {!filter} has editing a cross-reference key as its
+   contract. The only fix-channel consumption site is [collect_fix_edits] in
+   validators_cli.ml, which reads [r.fix]; every key-editing rule in the tool
+   (REF-002/003/004/005/007) is built with [mk_result_with_candidates] and so
+   travels the CANDIDATE channel, which does not call this module. The ten rules
+   measured writing inside keys — SCRIPT-001, SCRIPT-007, MATH-009, TYPO-001,
+   TYPO-002, TYPO-005, TYPO-013, TYPO-018 and the pilot-only TYPO-023, TYPO-052
+   — are all doing so by ACCIDENT, which is the damage region 4 exists to stop.
+
+   If candidates are ever auto-applied through {!filter}, those five REF ids are
+   the initial exemption list. *)
+
 val filter : src:string -> rule_id:string -> Cst_edit.t list -> Cst_edit.t list
 (** [filter ~src ~rule_id edits] — drop every edit whose half-open span
     intersects a protected range of [src].

@@ -328,7 +328,7 @@ def build_ledger(all_rules: list[str]) -> str:
     out.append("| Bucket | Description | Count | Shipped | Remaining |")
     out.append("|--------|-------------|-------|---------|-----------|")
     out.append(
-        f"| **A**  | Mechanical, safe everywhere       | {buckets['A']} | {statuses['shipped']} | {buckets['A']-statuses['shipped']} |"
+        f"| **A**  | Mechanical, guard-gated           | {buckets['A']} | {statuses['shipped']} | {buckets['A']-statuses['shipped']} |"
     )
     out.append(f"| **B**  | Sentence-aware (NLP-required)     | {buckets['B']} | 0 | {buckets['B']} |")
     out.append(

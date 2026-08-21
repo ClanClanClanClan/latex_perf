@@ -121,6 +121,15 @@ jobs:
         # restating a stale count.
         run: python3 scripts/tools/check_roadmap_facts.py --repo .
 
+      - name: Fix-safety language (v27.1.63)
+        # No document may call the AUTO-FIX channel "proven-safe". Until
+        # v27.1.63 four places did, while `grep -rlniE 'fix_guard|apply_fixes'
+        # proofs/` returned nothing and corpora/apply_fixes/manifest.json
+        # recorded rows where --apply-fixes took a compiling document to a
+        # non-compiling one. check_doc_refs.py cannot see this class: its scope
+        # is path existence, not claims.
+        run: python3 scripts/tools/check_fix_safety_language.py --repo .
+
       - name: Doc version-label currency (v27.0.68.2)
         # Headings/stamps that name a version or fix-producer count
         # ("Current State (vN)", "latest tag vN", "N as of vN", ...) must

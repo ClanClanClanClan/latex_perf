@@ -286,6 +286,163 @@ let () =
         (survives "\\begin{tabular}{ll\n\nprose -- here\n" "-- here")
         (tag ^ ": unbalanced group yields None, not a short range"));
 
+  (* ── Region 4: cross-reference key arguments ─────────────────────────────
+
+     The key is an opaque token string: TeX turns it into a \csname, so any byte
+     rewritten there changes which label is referenced, and \text inside \csname
+     is a hard error. Measured in corpora/apply_fixes/adv_label_key.tex.
+
+     Range shape matters as much as coverage here. This region protects the KEY
+     GROUP ONLY, never the whole command, because the OPTIONAL argument of these
+     commands is typeset (\bibitem's bracket becomes the bibliography label) and
+     because a backslash-anchored range starts exactly where REF-011 inserts its
+     \usepackage line. Both directions are pinned below. *)
+  List.iter
+    (fun cmd ->
+      run
+        ("the key argument of \\" ^ cmd ^ " is protected")
+        (fun tag ->
+          expect
+            (not (survives ("\\" ^ cmd ^ "{eq:a--b}\n") "--"))
+            (tag ^ ": key bytes are syntax, not prose")))
+    [
+      "label";
+      "ref";
+      "eqref";
+      "pageref";
+      "autoref";
+      "nameref";
+      "cref";
+      "Cref";
+      "vref";
+      "cite";
+      "citep";
+      "citet";
+      "nocite";
+      "bibitem";
+      "hypertarget";
+      "hyperlink";
+      "parencite";
+      "textcite";
+      "labelcref";
+      "citeauthor";
+    ];
+
+  run "the measured SCRIPT-001 subscript shape is withheld" (fun tag ->
+      expect
+        (not
+           (survives ~rule_id:"SCRIPT-001" "\\label{eq:lower_bound}\n" "_bound"))
+        (tag ^ ": the adv_label_key.tex corruption"));
+
+  run "optional groups are consumed before the key" (fun tag ->
+      expect
+        (not (survives "\\cite[see][p.~5]{k--y}\n" "--"))
+        (tag ^ ": [..] groups skipped, key still found"));
+
+  run "the starred form is consumed" (fun tag ->
+      expect
+        (not (survives "\\ref*{a--b}\n" "--"))
+        (tag ^ ": leading star skipped"));
+
+  run "both keys of a range command are protected" (fun tag ->
+      expect
+        (not (survives "\\crefrange{a--b}{c--d}\n" "a--b"))
+        (tag ^ ": first key");
+      expect
+        (not (survives "\\crefrange{a--b}{c--d}\n" "c--d"))
+        (tag ^ ": second key"));
+
+  run "a comment between the command and its key is skipped" (fun tag ->
+      expect
+        (not (survives "\\cite%c\n{a--b}\n" "--"))
+        (tag ^ ": TeX swallows the comment before reading the argument"));
+
+  (* ── Region 4 must NOT become a blanket refusal ─────────────────────── *)
+  run "prose after a label is still fixable" (fun tag ->
+      expect
+        (survives "\\label{a}\n\nprose -- here\n" "-- here")
+        (tag ^ ": only the key group is protected"));
+
+  run "the TYPESET optional of bibitem is still fixable" (fun tag ->
+      expect
+        (survives "\\bibitem[Smith--Jones]{k}\n" "--")
+        (tag ^ ": the bracket is the rendered label, not a key"));
+
+  run "the TYPESET notes of citep are still fixable" (fun tag ->
+      expect
+        (survives "\\citep[see][pp.~5--7]{k}\n" "--")
+        (tag ^ ": both notes are rendered"));
+
+  run "a bare \\ref does not protect the next paragraph" (fun tag ->
+      expect
+        (survives "see \\ref\n\nprose -- here\n" "-- here")
+        (tag ^ ": the key search stops at the blank line"));
+
+  run "citetext is not a key command" (fun tag ->
+      expect
+        (survives "\\citetext{see -- p.~5}\n" "--")
+        (tag ^ ": whole-name match, its argument is prose"));
+
+  run "crefname arguments are not keys" (fun tag ->
+      expect
+        (survives "\\crefname{equation}{eq.~--}{eqs.}\n" "--")
+        (tag ^ ": those are display formats"));
+
+  (* ── \hyperref has INVERTED polarity ─────────────────────────────────── *)
+  run "the hyperref OPTIONAL key is protected" (fun tag ->
+      expect
+        (not (survives "\\hyperref[fig:a--b]{See figure}\n" "--"))
+        (tag ^ ": the bracket is the key here"));
+
+  run "the hyperref LINK TEXT is still fixable" (fun tag ->
+      expect
+        (survives "\\hyperref[k]{See figure -- here}\n" "-- here")
+        (tag ^ ": the brace group is typeset — the rank-7 lesson, inverted"));
+
+  run "the four-argument hyperref exposes only its link text" (fun tag ->
+      expect
+        (not (survives "\\hyperref{u--l}{c}{n}{t}\n" "u--l"))
+        (tag ^ ": groups 1-3 are opaque");
+      expect
+        (survives "\\hyperref{url}{c}{n}{text -- here}\n" "-- here")
+        (tag ^ ": group 4 is typeset"));
+
+  (* ── Sentinels for the range-shape decision ──────────────────────────── *)
+  run "REF-011's package insertion at the \\autoref backslash survives"
+    (fun tag ->
+      let src = "\\documentclass{article}\n\\autoref{x}\n" in
+      expect
+        (insertion_survives ~rule_id:"REF-011" src (find_sub src "\\autoref"))
+        (tag
+        ^ ": a backslash-anchored range would withhold this and redden \
+           check_producer_coverage"));
+
+  run "a package-aware rule is still blocked inside a key" (fun tag ->
+      expect
+        (not (survives ~rule_id:"PKG-002" "\\label{a--b}\n" "--"))
+        (tag ^ ": exemptions are per region, never global"));
+
+  (* ── Refusal shapes: shortfall protects NOTHING, never a partial range ── *)
+  run "an unclosed key group protects nothing" (fun tag ->
+      expect
+        (survives "\\label{eq:x\n\nprose -- here\n" "-- here")
+        (tag ^ ": refusing is only ever today's behaviour"));
+
+  run "a SHORTFALL still protects the groups that are really there" (fun tag ->
+      (* \crefrange wants two keys and this malformed call has one. Returning []
+         would leave that one key exposed; the prefix is a genuine key group, so
+         protecting it is the safe direction. This is the case that
+         distinguishes partial-protect from refuse-on-shortfall — without it,
+         either implementation passes. *)
+      expect
+        (not (survives "\\crefrange{a--b}\n\nprose here\n" "--"))
+        (tag ^ ": the one key present is still a key"));
+
+  run "a non-group after the command protects nothing" (fun tag ->
+      expect
+        (survives "\\ref\\relax\n\nprose -- here\n" "-- here")
+        (tag ^ ": no brace group, so no range"));
+
   (* ── Regions 1 and 2 still hold (guard against a refactor regression) ── *)
   run "control symbol argument is still protected" (fun tag ->
       let src = "\\`a and -- here\n" in

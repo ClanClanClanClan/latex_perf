@@ -87,6 +87,14 @@ REGIONS = [
     # closing brace is still found.
     ("include-filename", b"\\input{SREG_FA", b"SREG_FB}\n"),
     ("package-spec", b"\\usepackage{SREG_PA", b"SREG_PB}\n"),
+    # R7-3 region 4: cross-reference KEY arguments. TeX turns a key into a
+    # \csname, so a rewritten byte changes which label is referenced and a
+    # \text synthesised inside one is a hard error -- measured in
+    # corpora/apply_fixes/adv_label_key.tex, where the fixer took pdflatex 0 -> 1
+    # while --compile-check said READY on both sides. Note the region protects
+    # the KEY GROUP only, never the whole command, so this plants the battery
+    # inside the braces exactly as the two argument regions above do.
+    ("xref-key", b"\\label{SREG_KA", b"SREG_KB}\n"),
 ]
 
 

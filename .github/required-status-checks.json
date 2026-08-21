@@ -8,6 +8,8 @@
     {"context": "perf-ci",        "app_id": 15368},
     {"context": "xxh-selfcheck",  "app_id": 15368},
     {"context": "unit-tests",     "app_id": 15368},
-    {"context": "spec-drift",     "app_id": 15368}
+    {"context": "spec-drift",     "app_id": 15368},
+    {"context": "build",          "app_id": 15368},
+    {"context": "tex-oracle",     "app_id": 15368}
   ]
 }

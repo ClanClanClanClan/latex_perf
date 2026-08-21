@@ -213,16 +213,28 @@ jobs:
           docker run --rm "$TEX_IMAGE" bash -c 'python3 --version && command -v timeout' \
             || { echo "::error::pinned TeX image lacks python3 and/or coreutils timeout; property (b) cannot run here"; exit 2; }
 
-      # ADVISORY ON PURPOSE, matching this workflow's existing posture: tex-oracle
-      # is not among the nine required contexts, and the first runs are EXPECTED
-      # to be yellow rather than green. corpora/apply_fixes/manifest.json records
-      # pdflatex_graded=true but carries no oracle.version pin (unlike
-      # corpora/false_ready/manifest.json), so its five baseline rows were
-      # measured on a local engine, not this pinned TL2026 image. Any disagreement
-      # is a baseline-provenance artefact to be re-recorded here, NOT a new defect
-      # — which is exactly why this does not block on day one.
-      - name: Apply-fixes round-trip, property (b) — advisory
-        continue-on-error: true
+      # BLOCKING as of v27.1.63. This step was advisory, and the comment here used
+      # to give the reason: corpora/apply_fixes/manifest.json recorded
+      # pdflatex_graded=true but carried NO oracle.version pin, so its baseline
+      # rows had been measured on some local engine rather than this pinned TL2026
+      # image, and any disagreement would have been a provenance artefact rather
+      # than a real defect.
+      #
+      # That precondition is now satisfied on both counts, so the reason to mask
+      # it is gone:
+      #   * #528 added `oracle.version` to corpora/apply_fixes/manifest.json, and
+      #     the "Assert engine pin" step above now HARD-ASSERTS it against
+      #     TEX_EXPECT_VERSION — a mismatch fails before anything is graded.
+      #   * #527's first run reproduced the baseline exactly against this image:
+      #     "73 documents x 4 cells; fixer rewrote 94; pdflatex=yes;
+      #     known-broken 7 ... PASS — no new fixer damage", and every run since
+      #     has agreed.
+      #
+      # Leaving it masked now would be strictly worse than not running it: this is
+      # the ONLY check anywhere that can observe --apply-fixes turning a compiling
+      # document into a non-compiling one, and a masked step that silently starts
+      # failing is indistinguishable from one that passes.
+      - name: Apply-fixes round-trip, property (b)
         run: |
           set -euo pipefail
           docker run --rm \

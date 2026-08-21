@@ -523,8 +523,8 @@ let l1_delim_003_rule : rule =
     let cnt = ref 0 in
     List.iter
       (fun seg ->
-        let lefts = count_substring seg "\\left" in
-        let rights = count_substring seg "\\right" in
+        let lefts = count_control_word seg "left" in
+        let rights = count_control_word seg "right" in
         if lefts > rights then cnt := !cnt + (lefts - rights))
       math_segs;
     if !cnt > 0 then
@@ -542,8 +542,8 @@ let l1_delim_004_rule : rule =
     let cnt = ref 0 in
     List.iter
       (fun seg ->
-        let lefts = count_substring seg "\\left" in
-        let rights = count_substring seg "\\right" in
+        let lefts = count_control_word seg "left" in
+        let rights = count_control_word seg "right" in
         if rights > lefts then cnt := !cnt + (rights - lefts))
       math_segs;
     if !cnt > 0 then
@@ -912,11 +912,11 @@ let l1_delim_011_rule : rule =
     let cnt = ref 0 in
     List.iter
       (fun seg ->
-        let middles = count_substring seg "\\middle" in
+        let middles = count_control_word seg "middle" in
         if middles > 0 then
           (* Check if there are sufficient \left..\right pairs *)
-          let lefts = count_substring seg "\\left" in
-          let rights = count_substring seg "\\right" in
+          let lefts = count_control_word seg "left" in
+          let rights = count_control_word seg "right" in
           let pairs = min lefts rights in
           if middles > 0 && pairs = 0 then cnt := !cnt + middles)
       math_segs;

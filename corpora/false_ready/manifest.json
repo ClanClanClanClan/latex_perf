@@ -11,8 +11,8 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 6,
-    "strong_fatal": 6,
+    "false_ready_total": 7,
+    "strong_fatal": 7,
     "error_halt": 0
   },
   "fixtures": [
@@ -256,6 +256,17 @@
       "pdflatex": "error-halt",
       "expected_cli": "NOT-READY",
       "note": "\\hyperref[l]{link text} moving-arg skip treats {link text} as a key; a double-superscript inside it is missed"
+    },
+    {
+      "id": "fr_thmtools_redeclare",
+      "path": "fr_thmtools_redeclare.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-extended",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "READY",
+      "note": "thmtools \\declaretheorem{lemma} already defines the environment and its counter; a following \\newtheorem{lemma} redefines it -> \"! LaTeX Error: Command \\lemma already defined.\", no PDF. Both packages are in the catalogue and every control sequence resolves, so nothing in the closed-world check fires. FOUND by fixing the DELIM-003/004 control-word boundary bug: on the real-paper corpus this class was being masked by a SPURIOUS DELIM rejection, so the document was NOT-READY for a reason that was not true. Measured on 2506.23970v1; this is the minimal distillation. The fixture contains no \\left/\\right, so it is READY on both sides of that fix -- the class is pre-existing, not introduced."
     }
   ]
 }

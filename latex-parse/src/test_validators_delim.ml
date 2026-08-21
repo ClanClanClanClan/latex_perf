@@ -233,6 +233,69 @@ let () =
         (Validators.precondition_of_rule_id "DELIM-011" = Validators.L1)
         (tag ^ ": DELIM-011 is L1"));
 
+  (* ══════════════════════════════════════════════════════════════════════
+     CONTROL-WORD BOUNDARY (v27.1.63)
+
+     DELIM-003/004/011 counted \left and \right with count_substring, which has
+     no notion of where a control word ends. \rightarrow therefore counted as
+     \right and \leftarrow as \left, so $A \rightarrow B$ was rejected while
+     pdflatex exits 0 — verified against pdfTeX 3.141592653-2.6-1.40.29. On a
+     70-paper real-corpus sample this one defect drove 20 of 39 over-rejections.
+
+     The doubled-escape cases are the OTHER direction: in [$a \\left( b
+     \right)$] the [\\] is a line break and [left] is ordinary text, so there is
+     a genuine unmatched \right. count_substring found "\left" inside "\\left",
+     scored the segment balanced, and stayed silent — a FALSE-READY. pdflatex:
+     exit 1, "! Extra \right.", no PDF.
+     ══════════════════════════════════════════════════════════════════════ *)
+  List.iter
+    (fun cw ->
+      run
+        ("DELIM-003/004 clean: \\" ^ cw ^ " is not \\left or \\right")
+        (fun tag ->
+          let src = "$A \\" ^ cw ^ " B$" in
+          expect (does_not_fire "DELIM-003" src) (tag ^ ": DELIM-003 silent");
+          expect (does_not_fire "DELIM-004" src) (tag ^ ": DELIM-004 silent")))
+    [
+      "rightarrow";
+      "leftarrow";
+      "leftrightarrow";
+      "Rightarrow";
+      "Leftarrow";
+      "Leftrightarrow";
+      "longrightarrow";
+      "longleftarrow";
+      "rightharpoonup";
+      "leftharpoonup";
+      "rightleftharpoons";
+      "rightsquigarrow";
+      "leftroot";
+    ];
+
+  run "DELIM-003/004 clean: arrows do not perturb a matched pair" (fun tag ->
+      expect
+        (does_not_fire "DELIM-003" "$\\left( a \\rightarrow b \\right)$")
+        (tag ^ ": DELIM-003 silent");
+      expect
+        (does_not_fire "DELIM-004" "$\\left( a \\rightarrow b \\right)$")
+        (tag ^ ": DELIM-004 silent"));
+
+  run "DELIM-003 still fires when an arrow is present" (fun tag ->
+      expect
+        (fires "DELIM-003" "$\\left( a \\rightarrow b$")
+        (tag ^ ": genuine unmatched \\left"));
+
+  run "DELIM-004 fires on a doubled escape (was a false-READY)" (fun tag ->
+      (* pdflatex: exit 1, "! Extra \right.", no output PDF. *)
+      expect
+        (fires "DELIM-004" "$a \\\\left( b \\right)$")
+        (tag ^ ": \\\\ is a line break, so `left` is text"));
+
+  run "DELIM-011 clean: \\middleware is not \\middle" (fun tag ->
+      expect
+        (does_not_fire "DELIM-011" "$x \\middleware y$")
+        (tag ^ ": control word boundary"));
+
   (* Combined: document with multiple delimiter issues *)
   run "combined: multiple DELIM rules fire" (fun tag ->
       let src = "Text { unclosed.\n$\\left( no right$\n$\\langle missing$\n" in

@@ -28,7 +28,7 @@ release cycle**, taking ~1 session per producer in batched form.
 
 The 628 remaining rules split by feasibility:
 
-### Bucket A — mechanical, safe everywhere (~200–300 rules)
+### Bucket A — mechanical, guard-gated (~200–300 rules)
 Pattern-based regex / byte-level fixes that don't require sentence
 detection or semantic context. Examples:
 - TYPO-NN whitespace normalization between specific token pairs

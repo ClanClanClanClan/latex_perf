@@ -4,7 +4,7 @@ LaTeX-Perfectionist splits fixable rules into two channels:
 
 | Channel | Field on `result` | Applied by | Bucket |
 |---|---|---|---|
-| **Auto-fix** | `fix : Cst_edit.t list option` | `--apply-fixes` / `--apply-fixes-for` | A (mechanical, deterministic, always safe) |
+| **Auto-fix** | `fix : Cst_edit.t list option` | `--apply-fixes` / `--apply-fixes-for` | A (mechanical, deterministic, guard-gated) |
 | **Candidate** | `candidate_fixes : candidate_fix list` | never auto-applied — surfaced for author review | C (context/intent-dependent) |
 
 A **candidate fix** is a *suggested* edit whose correctness depends on author
@@ -82,7 +82,22 @@ set. See `Validators_common.candidates_drop_exempt` / `candidates_drop_vcu_exemp
 
 ## Rationale
 
-Auto-fixes (Bucket A) are proven byte-safe and applied silently. Candidates
-(Bucket C) require judgment, so they are surfaced only. This keeps `--apply-fixes`
-corruption-free while still offering the full breadth of assisted edits through a
-review surface. See `specs/v27/V27_FIX_PRODUCER_CADENCE.md` for the bucket model.
+Auto-fixes (Bucket A) are **guard-gated, not proven**, and applied silently.
+Candidates (Bucket C) require judgment, so they are surfaced only.
+
+The distinction matters, because "proven" was the word here and nothing in
+`proofs/` justifies it: `grep -rlniE 'fix_guard|apply_fixes' proofs/` returns
+nothing. The `Cst_edit` theorems are about the edit APPLIER under a non-overlap
+hypothesis — they say nothing about whether the bytes a producer chose to rewrite
+were safe to rewrite. What actually constrains the fixer is empirical and lives in
+two places: `Fix_guard` withholds edits landing in load-bearing byte ranges
+(control symbols, TikZ paths, filename and package arguments, cross-reference
+keys, tabular preambles), and `corpora/apply_fixes/manifest.json` records the
+residual damage measured against real pdflatex. That manifest currently records
+zero `breaks_compile` and zero `manufactured_false_ready` rows — a measurement
+over that corpus, not a guarantee over your document.
+
+⚠ The candidate channel is NOT guard-gated. `--list-candidate-fixes` prints its
+byte offers unfiltered, so an offer may land inside a protected region; review
+before applying. See `specs/v27/V27_FIX_PRODUCER_CADENCE.md` for the bucket
+model.

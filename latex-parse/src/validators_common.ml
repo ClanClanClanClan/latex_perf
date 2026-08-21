@@ -96,6 +96,45 @@ let count_substring (s : string) (sub : string) : int =
     in
     loop 0 0
 
+(* Count occurrences of the CONTROL WORD [\cw] in [s]. [cw] is the name only,
+   without its backslash.
+
+   [count_substring] cannot answer this question. A TeX control word ends at the
+   first NON-LETTER, so a raw substring count reads [\rightarrow] as [\right]
+   and [\leftarrow] as [\left]. DELIM-003/004 counted delimiters that way and
+   therefore rejected [$A \rightarrow B$]: CLI NOT-READY, pdflatex exit 0. On a
+   70-paper sample of the real-paper corpus that single defect accounted for 20
+   of 39 over-rejections — and [\rightarrow] is about as common as mathematical
+   notation gets.
+
+   Walks the string rather than searching it, so the second backslash of a
+   DOUBLED ESCAPE is never re-read as the start of a fresh command: in [$a
+   \\left(b$] the [\\] is a line break and [left] is ordinary text, not a
+   delimiter. Searching for the substring counts it; this does not.
+
+   Failure direction: this can only ever count FEWER occurrences than
+   [count_substring], never more, so a caller that was over-rejecting becomes
+   more permissive and one that was correct is unchanged. *)
+let count_control_word (s : string) (cw : string) : int =
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let n = String.length s and m = String.length cw in
+  let cnt = ref 0 and i = ref 0 in
+  while !i < n do
+    if String.unsafe_get s !i = '\\' && !i + 1 < n then
+      if is_letter (String.unsafe_get s (!i + 1)) then (
+        let st = !i + 1 in
+        let j = ref st in
+        while !j < n && is_letter (String.unsafe_get s !j) do
+          incr j
+        done;
+        if !j - st = m && String.sub s st m = cw then incr cnt;
+        i := !j)
+      else (* Control SYMBOL: step past BOTH bytes. *)
+        i := !i + 2
+    else incr i
+  done;
+  !cnt
+
 let contains_substring (s : string) (needle : string) : bool =
   let slen = String.length s and nlen = String.length needle in
   if nlen = 0 then true

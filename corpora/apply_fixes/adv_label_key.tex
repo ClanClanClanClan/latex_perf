@@ -14,9 +14,14 @@
 % It needs a MULTI-CHARACTER subscript: eq:a_b is left alone, eq:lower_bound is
 % not. A single-character variant of this fixture would be VACUOUS.
 %
-% Region 4 of Fix_guard (cross-reference key arguments) is the fix. Until then
-% this is recorded as a known defect so the class is measured rather than merely
-% believed to be absent.
+% Region 4 of Fix_guard (cross-reference key arguments) is the fix, and it has
+% now SHIPPED. This document stops being a recorded defect and becomes the pin
+% for that region: the key must survive --apply-fixes in BOTH the default and
+% pilot profiles, and the emitted document must still compile.
+%
+% Keep the multi-character subscript above. Region 4 protects the key GROUP, not
+% the whole command, so a fixture that only exercised \label's optional
+% argument or the surrounding prose would pass with the region disabled.
 \documentclass{article}
 \usepackage{amsmath}
 \begin{document}

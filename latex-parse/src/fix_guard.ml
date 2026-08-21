@@ -4,19 +4,23 @@
 
    Regions implemented, all purely lexical: 1. control symbol arguments, 2.
    TikZ/PGF picture bodies, 3a. filename arguments, 3b. package-spec arguments,
-   5. tabular/array column preambles.
+   4. cross-reference key arguments, 5. tabular/array column preambles.
 
-   Regions NOT yet covered, in measured-damage order, and — this part matters —
-   with UNEQUAL evidence behind them: 4. key arguments (\label \ref \cite ...,
-   also the SCRIPT-001->007 cascade). NO fixture exists for this class anywhere
-   in the corpora, so the round-trip gate is SILENT on it. Its absence from the
-   gate's baseline is not evidence that it is harmless; it is evidence that
-   nobody has measured it. A key-argument corruption would ship with every gate
-   green. 5. tabular/array preamble. This one IS measured: good_longtable_free
-   under the pilot profile occupies two rows of
-   corpora/apply_fixes/manifest.json and is, after region 3, the ONLY remaining
-   manufactured false-READY. An earlier version of this comment claimed both
-   classes were fixture-tracked. Only region 5 is. *)
+   Every region is now fixture-tracked in corpora/apply_fixes/, and as of region
+   4 the manifest records ZERO breaks_compile and ZERO manufactured_false_ready
+   rows: the three that remain are not_idempotent under
+   --apply-fixes-best-effort, which is that flag's documented single-pass
+   contract rather than damage.
+
+   That is a statement about the CORPUS, not about the fixer. Two things it does
+   NOT mean. First, nothing in proofs/ constrains this module — `grep -rlniE
+   'fix_guard|apply_fixes' proofs/` returns nothing, and the Cst_edit theorems
+   are about the edit APPLIER under a non-overlap hypothesis, not about what a
+   producer chooses to rewrite. Second, the CANDIDATE channel
+   (--list-candidate-fixes) does not route through this module at all, so its
+   offers are unguarded and unmeasured. Absence from the baseline is evidence
+   that nobody has measured a class, not that the class is harmless — the
+   argument that put region 4 here in the first place. *)
 
 let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 
@@ -172,6 +176,147 @@ let package_arg_cmds =
     "LoadClass";
     "LoadClassWithOptions";
   ]
+
+(* ── Region 4: cross-reference KEY arguments ──────────────────────────────
+
+   A cross-reference key is an opaque token string, not prose. TeX turns it into
+   a \csname, so any byte a typography rule rewrites there changes which label
+   is defined or referenced — and \text inside \csname is a hard error.
+
+   Measured (corpora/apply_fixes/adv_label_key.tex, TL2026): SCRIPT-001 rewrites
+   the multi-character subscript eq:lower_bound -> eq:lower_{bound}, SCRIPT-007
+   then -> eq:lower_{\text{bound}}, and pdflatex goes 0 -> 1 with "! Missing
+   \endcsname inserted", producing NO PDF — while --compile-check reports READY
+   on BOTH sides. A manufactured false-READY, in the DEFAULT profile, from the
+   tool asked to improve the document.
+
+   ⚠ RANGE SHAPE. This region protects the KEY GROUP ONLY — from its opening
+   brace to one past the matching close — and NOT the whole command the way
+   regions 3a/3b do. Both reasons are load-bearing:
+
+   * The optional argument of these commands is TYPESET.
+   \bibitem[Smith--Jones]{k} renders the bracket text as the bibliography label;
+   \citep[see][pp.~5--7]{k} renders both notes. A backslash-anchored range
+   swallows them and silently kills legitimate dash and quote fixes in every
+   real bibliography. * A backslash-anchored range starts exactly where package
+   INSERTERS insert. REF-011 emits its \usepackage insertion at the byte after
+   \documentclass's newline, which in three of its four registered goldens IS
+   the \autoref backslash; [intersects] counts a point on a range's INCLUSIVE
+   start as inside, so the legitimate fix would be withheld and
+   check_producer_coverage.py would go red. Anchoring at the key group's brace
+   puts every such insertion strictly before the range.
+
+   Completeness is unaffected: [filter] tests an edit's WHOLE span, so an edit
+   touching a key byte is blocked no matter where it starts.
+
+   Commands whose FIRST brace group is the key. Whole-name matched, so
+   \citetext, \crefname, \creflabelformat, \crefalias and \citestyle — whose
+   arguments are formats, not keys — never match. *)
+let crossref_key1_cmds =
+  [
+    (* kernel + amsmath *)
+    "label";
+    "ref";
+    "pageref";
+    "eqref";
+    "cite";
+    "nocite";
+    "bibitem";
+    (* hyperref / nameref *)
+    "autoref";
+    "autopageref";
+    "nameref";
+    "Nameref";
+    "hypertarget";
+    "hyperlink";
+    (* cleveref *)
+    "cref";
+    "Cref";
+    "cpageref";
+    "Cpageref";
+    "labelcref";
+    "labelcpageref";
+    "namecref";
+    "nameCref";
+    "lcnamecref";
+    "namecrefs";
+    "nameCrefs";
+    "lcnamecrefs";
+    (* varioref *)
+    "vref";
+    "Vref";
+    "vpageref";
+    "vpagerefnearby";
+    "fullref";
+    (* natbib *)
+    "citep";
+    "citet";
+    "Citep";
+    "Citet";
+    "citealt";
+    "citealp";
+    "Citealt";
+    "Citealp";
+    "citeauthor";
+    "Citeauthor";
+    "citeyear";
+    "citeyearpar";
+    "citefullauthor";
+    "citenum";
+    "citetalias";
+    "citepalias";
+    "defcitealias";
+    "shortcites";
+    (* biblatex *)
+    "parencite";
+    "Parencite";
+    "textcite";
+    "Textcite";
+    "autocite";
+    "Autocite";
+    "footcite";
+    "Footcite";
+    "footcitetext";
+    "Footcitetext";
+    "smartcite";
+    "Smartcite";
+    "supercite";
+    "Supercite";
+    "fullcite";
+    "footfullcite";
+    "notecite";
+    "Notecite";
+    "pnotecite";
+    "Pnotecite";
+    "fnotecite";
+    "Fnotecite";
+    "citetitle";
+    "citedate";
+    "citeurl";
+  ]
+
+(* Commands whose first TWO brace groups are keys; any later group is prose and
+   stays exposed (\vpagerefcompare{l1}{l2}{true}{false}). *)
+let crossref_key2_cmds =
+  [
+    "crefrange";
+    "Crefrange";
+    "cpagerefrange";
+    "Cpagerefrange";
+    "vrefrange";
+    "vpagerefrange";
+    "vpagerefcompare";
+  ]
+
+(* DELIBERATELY OMITTED, because their arity cannot be confirmed from a shipped
+   .sty and guessing an arity is exactly how a range ends up MISPLACED — the one
+   failure mode this module must never produce. None occurs anywhere in
+   corpora/**/*.tex. Revisit with the package sources in hand: \href{url}{text}
+   — the url is load-bearing but is not a key \hyperdef[k]{cat}{name}{text}
+   biblatex multicites \cites \parencites \textcites \footcites \smartcites
+   \supercites \autocites — unbounded (pre)(post)[p][q]{k}...
+   \volcite[pre]{volume}[page]{key} — key is group TWO \citefield \citelist
+   \citename — \citename has two incompatible contracts. *)
 
 let is_blank c = c = ' ' || c = '\t' || c = '\n' || c = '\r'
 
@@ -398,6 +543,124 @@ let preamble_ranges (src : string) : (int * int) list =
         (find_all src b))
     preamble_envs
 
+(* End of the command's own paragraph: the offset of the first blank line at or
+   after [p], or [n]. Bounds the key search, so a BARE mention of \ref or \cite
+   in running prose cannot reach forward into the next paragraph and protect an
+   unrelated brace group. Region 3 bounds the same hazard at end of LINE; this
+   one must be looser, because \cite followed by a newline and then {key} is
+   idiomatic. *)
+let paragraph_end (src : string) (n : int) (p : int) : int =
+  let i = ref p and stop = ref (-1) in
+  while !stop < 0 && !i < n do
+    if String.unsafe_get src !i = '\n' then (
+      let j = ref (!i + 1) in
+      while
+        !j < n
+        && (String.unsafe_get src !j = ' '
+           || String.unsafe_get src !j = '\t'
+           || String.unsafe_get src !j = '\r')
+      do
+        incr j
+      done;
+      if !j < n && String.unsafe_get src !j = '\n' then stop := !i);
+    incr i
+  done;
+  if !stop >= 0 then !stop else n
+
+(* (start, one-past-end) of each of the first [want] brace groups after [p0],
+   skipping a leading star, any [...] option groups, blanks and comments.
+
+   On a SHORTFALL — fewer than [want] groups before the paragraph ends, or a
+   group that never closes — returns the groups it did find rather than []. They
+   are a genuine PREFIX of the key groups, because groups are consumed in order
+   and group i is a key for every i <= want, so a partial answer is over-wide at
+   worst and never MISPLACED. Per the polarity note in the .mli that is the safe
+   direction: refusing outright would leave every key of a malformed \crefrange
+   exposed, which is strictly worse than protecting the one group that is really
+   there. A command with no group at all still yields []. *)
+let scan_key_groups (src : string) (n : int) (p0 : int) ~(want : int) :
+    (int * int) list =
+  let limit = paragraph_end src n p0 in
+  let p = ref p0 in
+  let q0 = skip_blanks_and_comments src n !p in
+  if q0 < n && String.unsafe_get src q0 = '*' then p := q0 + 1;
+  let got = ref [] and count = ref 0 and go = ref true in
+  while !go do
+    let q = skip_blanks_and_comments src n !p in
+    if q >= limit || q >= n then go := false
+    else
+      match String.unsafe_get src q with
+      | '[' -> (
+          match opt_group_end src n q with
+          | Some e -> p := e
+          | None -> go := false)
+      | '{' -> (
+          match brace_group_end src n q with
+          | Some e ->
+              got := (q, e) :: !got;
+              incr count;
+              p := e;
+              if !count >= want then go := false
+          | None -> go := false)
+      | _ -> go := false
+  done;
+  List.rev !got
+
+(* \hyperref has INVERTED polarity, and two arities.
+
+   \hyperref[key]{link text} — the OPTIONAL group is the key and the brace group
+   is TYPESET. \hyperref{URL}{category}{name}{text} — groups 1-3 are opaque and
+   group 4 is typeset.
+
+   Listing \hyperref with the key1 commands would protect the link text and
+   EXPOSE the key: precisely the category error that hid a $a^b^c$ double
+   superscript behind \hyperref's optional argument (round-7 rank 7, fixture
+   fr_hyperref_linktext), run in reverse. Both directions verified under the
+   pin: \hyperref[fig:a_{\text{b}}]{link} exits 1 "! Missing \endcsname
+   inserted", and \hyperref[k]{$a^b^c$} exits 1 "! Double superscript".
+
+   cleveref's \label[type]{key} optional is a counter-type KEYWORD rather than
+   prose, so skipping it above costs nothing. *)
+let hyperref_key_ranges (src : string) (n : int) (k : int) : (int * int) list =
+  let q = skip_blanks_and_comments src n k in
+  if q < n && String.unsafe_get src q = '[' then
+    match opt_group_end src n q with Some e -> [ (q, e) ] | None -> []
+  else scan_key_groups src n k ~want:3
+
+(* One linear pass, whole-name dispatch. Advances past the last group it
+   consumed, so a command sitting inside an argument this pass already covered
+   is not rescanned. *)
+let crossref_ranges (src : string) : (int * int) list =
+  let n = String.length src in
+  let acc = ref [] and i = ref 0 in
+  while !i < n do
+    if String.unsafe_get src !i = '\\' && !i + 1 < n then
+      if is_letter (String.unsafe_get src (!i + 1)) then (
+        let st = !i + 1 in
+        let j = ref st in
+        while !j < n && is_letter (String.unsafe_get src !j) do
+          incr j
+        done;
+        let name = String.sub src st (!j - st) in
+        let rs =
+          if String.equal name "hyperref" then hyperref_key_ranges src n !j
+          else if List.mem name crossref_key1_cmds then
+            scan_key_groups src n !j ~want:1
+          else if List.mem name crossref_key2_cmds then
+            scan_key_groups src n !j ~want:2
+          else []
+        in
+        match rs with
+        | [] -> i := !j
+        | _ ->
+            acc := List.rev_append rs !acc;
+            i := List.fold_left (fun a (_, e) -> max a e) !j rs)
+      else (* Control SYMBOL: step past both bytes. *)
+        i := !i + 2
+    else incr i
+  done;
+  List.rev !acc
+
 let argument_ranges (src : string) : (int * int) list * (int * int) list =
   let n = String.length src in
   let fns = ref [] and pkgs = ref [] in
@@ -437,6 +700,7 @@ type regions = {
   filename : (int * int) list;
   package_spec : (int * int) list;
   preamble : (int * int) list;
+  crossref : (int * int) list;
 }
 
 let compute_regions (src : string) : regions =
@@ -447,6 +711,7 @@ let compute_regions (src : string) : regions =
     filename;
     package_spec;
     preamble = preamble_ranges src;
+    crossref = crossref_ranges src;
   }
 
 (* One-entry memo keyed on the buffer's PHYSICAL identity.
@@ -472,7 +737,12 @@ let regions_of (src : string) : regions =
 let protected_ranges (src : string) : (int * int) list =
   let r = regions_of src in
   let rs =
-    r.control_symbol @ r.picture @ r.filename @ r.package_spec @ r.preamble
+    r.control_symbol
+    @ r.picture
+    @ r.filename
+    @ r.package_spec
+    @ r.preamble
+    @ r.crossref
   in
   List.sort (fun (a, _) (b, _) -> compare a b) rs
 
@@ -528,11 +798,17 @@ let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
       (* Exemptions are PER REGION, never global. A control-symbol-aware rule
          still gets the picture, filename and package regions; a package-aware
          reorderer is still blocked from filenames and TikZ paths. Nothing is
-         ever exempt from regions 2 and 3a. *)
+         ever exempt from regions 2, 3a and 4.
+
+         Region 4 belongs in the ALWAYS-ON list below, not appended after the
+         trailing [if ... else [ r.package_spec ]]: there are no parentheses
+         there, so an appended element would parse as part of the else branch
+         and region 4 would silently become conditional on the package-spec
+         exemption. *)
       let active =
         (if List.mem rule_id control_symbol_aware then []
          else [ r.control_symbol ])
-        @ [ r.picture; r.filename; r.preamble ]
+        @ [ r.picture; r.filename; r.preamble; r.crossref ]
         @ if List.mem rule_id package_spec_aware then [] else [ r.package_spec ]
       in
       let blocked span =

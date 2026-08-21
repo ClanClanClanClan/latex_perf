@@ -15,7 +15,7 @@ Running `pdflatex` gives **ground truth** — but only the answer to "did *this*
 **The wedge is the *combination* a compiler structurally cannot provide:**
 
 1. **REAL-TIME / incremental.** Sub-second, as-you-type. A compiler is inherently batch — it cannot run per keystroke. Our verified kernel can.
-2. **PRECISE, LOCALIZED, EXPLAINED diagnosis + safe fix.** pdflatex says "it failed" cryptically, often at the *wrong* line. We say exactly **what**, **where**, and **why**, and can **suggest or apply a proven-safe fix**. This is arguably the *stronger* wedge — it leverages the whole 660-rule engine + `--explain` + **167** fix-producers + **124** candidates, none of which a compiler has.
+2. **PRECISE, LOCALIZED, EXPLAINED diagnosis + safe fix.** pdflatex says "it failed" cryptically, often at the *wrong* line. We say exactly **what**, **where**, and **why**, and can **suggest or apply a guard-gated fix**. This is arguably the *stronger* wedge — it leverages the whole 660-rule engine + `--explain` + **167** fix-producers + **124** candidates, none of which a compiler has.
 3. **MACHINE-CHECKED TRUST.** A READY that is *provably never wrong in the safe direction*, so a high-stakes or automated consumer can **rely on it without re-compiling**. The value here is **trust-for-automation**. No competitor has it: texlab / ChkTeX / lacheck are heuristic; Overleaf just runs the compiler.
 4. **POLICY BEYOND COMPILABILITY.** A compiler only checks "does it compile." Our rule engine also checks "does this respect **this editor's template / house style / submission policy**" — provably, at scale, localized, **without a per-submission compile.**
 

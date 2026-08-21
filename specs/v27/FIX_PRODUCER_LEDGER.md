@@ -20,7 +20,7 @@ The pre-release gate `check_fix_producer_ledger.py` runs the generator with
 
 | Bucket | Description | Count | Shipped | Remaining |
 |--------|-------------|-------|---------|-----------|
-| **A**  | Mechanical, safe everywhere       | 466 | 167 | 299 |
+| **A**  | Mechanical, guard-gated           | 466 | 167 | 299 |
 | **B**  | Sentence-aware (NLP-required)     | 49 | 0 | 49 |
 | **C**  | Context-required (--apply-fixes-with-prompt) | 83 | 0 | 83 |
 | **D**  | Defer indefinitely (compile/runtime) | 62 | 0 | 62 |

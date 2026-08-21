@@ -43,14 +43,14 @@ dune exec latex-parse/src/validators_cli.exe -- paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l0 paper.tex
 dune exec latex-parse/src/validators_cli.exe -- --layer l2 paper.tex
 
-# Apply the mechanical (Bucket-A) auto-fixes in place
+# Apply the mechanical (Bucket-A) auto-fixes (writes to stdout, not in place)
 dune exec latex-parse/src/validators_cli.exe -- --apply-fixes paper.tex
 
 # List the review-only (Bucket-C) candidate fixes for an editor to offer
 dune exec latex-parse/src/validators_cli.exe -- --list-candidate-fixes paper.tex
 ```
 
-`--apply-fixes` applies only the proven-safe auto-fixes; intent-dependent
+`--apply-fixes` applies only the guard-gated auto-fixes; intent-dependent
 suggestions are surfaced separately via `--list-candidate-fixes` and never applied
 automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 

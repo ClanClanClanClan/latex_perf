@@ -789,6 +789,15 @@ let package_spec_aware =
    protected range's exclusive end is NOT inside it. *)
 let intersects (s, e) (a, b) = if s = e then a <= s && s < b else s < b && a < e
 
+let filter_with ~(active : (int * int) list list) (edits : Cst_edit.t list) :
+    Cst_edit.t list =
+  let blocked span =
+    List.exists (fun rs -> List.exists (fun rg -> intersects span rg) rs) active
+  in
+  List.filter
+    (fun (ed : Cst_edit.t) -> not (blocked (ed.start_offset, ed.end_offset)))
+    edits
+
 let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
     Cst_edit.t list =
   match edits with
@@ -811,12 +820,118 @@ let filter ~(src : string) ~(rule_id : string) (edits : Cst_edit.t list) :
         @ [ r.picture; r.filename; r.preamble; r.crossref ]
         @ if List.mem rule_id package_spec_aware then [] else [ r.package_spec ]
       in
-      let blocked span =
-        List.exists
-          (fun rs -> List.exists (fun rg -> intersects span rg) rs)
-          active
+      filter_with ~active edits
+
+(* ── The CANDIDATE channel ────────────────────────────────────────────────
+
+   [--list-candidate-fixes] is a SECOND path from a producer's bytes to a user's
+   document, and until now nothing screened it. 124 rules feed one print site
+   that emitted [c_edits] raw. docs/CANDIDATE_FIXES.md tells a reader (or an
+   agent) how to apply those offsets, so an offer landing inside a protected
+   region corrupts the document exactly as an auto-fix would — the difference is
+   only who presses the button.
+
+   Measured over 523 corpus documents before this existed: 6,514 candidates,
+   7,523 byte offers. The worst is VERB-010 offering an edit that STARTS one
+   byte inside the two-byte grave-accent control symbol and ends inside another
+   — the good_accents_utf8 corruption that motivated this module in the first
+   place — and SPC-017 offering thin-space insertions inside
+   [\usepackage[margin=2.5cm]{geometry}] and a [tabular*] width argument, which
+   are "Illegal unit of measure".
+
+   {2 Why the exemption lists differ from the fix channel's}
+
+   They are SEPARATE lists, and deliberately so. [control_symbol_aware] and
+   [package_spec_aware] are evidenced by check_producer_coverage.py, which
+   exercises the AUTO-FIX producers only; extending them to cover candidate
+   rules would let a candidate's evidence silently widen the auto-fix channel's
+   exemptions. Nothing here touches {!filter}.
+
+   {2 Error polarity, once more inverted}
+
+   For an auto-fix, a withheld edit is lost functionality. Here it is withheld
+   ADVICE in a review-gated channel — cheaper still, which is why the guard runs
+   on the byte offers ONLY and the CANDIDATE line itself always prints. A
+   fully-screened candidate degrades to label-only, which
+   docs/CANDIDATE_FIXES.md already defines as a legal output shape: the reviewer
+   still learns the rule fired and where, and simply is not handed a rewrite the
+   guard cannot vouch for. *)
+
+(* Rules whose CANDIDATE contract is to rewrite a cross-reference KEY — label
+   renaming and key sanitisation. Region 4 exists to stop a typography rule
+   editing a key it does not understand; these rules understand it, because
+   renaming the key IS the offer being reviewed. Without this list region 4
+   deletes their entire output.
+
+   fix_guard.mli predicted this list would be needed "if candidates are ever
+   routed through this module". They are, now.
+
+   MEASURED fully blocked over the 523-document corpus before this list existed:
+   REF-002, REF-005, REF-007. REF-003 and REF-004 are listed on CONTRACT rather
+   than measurement — this corpus does not trigger them, but they build their
+   offer with the very same [ref_rename_candidate] helper, whose docstring reads
+   "renames the \label at [inner_start,inner_end) to [new_key] and rewrites
+   every in-file reference". Waiting for a corpus document to prove what the
+   constructor already states would only mean losing their advice silently in
+   the meantime. *)
+let candidate_crossref_aware =
+  [ "REF-002"; "REF-003"; "REF-004"; "REF-005"; "REF-007" ]
+
+(* Rules whose CANDIDATE contract is to rewrite a package specification —
+   replace-this-package-with-that suggestions, which necessarily edit inside the
+   braces of a \usepackage. All five were MEASURED 100% blocked before this list
+   existed. PKG-014 and PKG-024 are deliberately absent: they emit candidate
+   offers too, but none of theirs lands in a package-spec region, so listing
+   them would weaken the guard for no gain. *)
+let candidate_package_spec_aware =
+  [ "PKG-008"; "PKG-010"; "PKG-015"; "PKG-016"; "PKG-022" ]
+
+(* Rules whose CANDIDATE contract is to rewrite a tabular/array column preamble.
+   MEASURED 100% blocked. TAB-006 emits offers but none inside a preamble.
+
+   {2 ACCEPTED UNDER-REACH, measured rather than assumed}
+
+   Regions 2 and 3a stay INEXEMPT here exactly as they are for {!filter}, so
+   three rules lose offers and are not listed above:
+
+   (Written as paragraphs rather than a bulleted list on purpose: ocamlformat
+   runs with wrap-comments, which reflows a "-" list into one run-on sentence.
+   The mangled comment above filename_arg_cmds is what that looks like.)
+
+   TIKZ-001 and TIKZ-004 lose nothing real. Both emit [Cst_edit.insert ~at:pos
+   ""] — a ZERO-WIDTH insert with an EMPTY replacement, which their own source
+   calls "a LABEL-ONLY candidate ... byte-identical". The EDIT line was a no-op
+   marker, and the CANDIDATE line still prints, so the reviewer sees exactly
+   what they saw before.
+
+   TIKZ-003 loses two real offers: wrapping a pgfplots axis label in math mode.
+   That is a genuine, if small, loss of advice and it is taken deliberately. A
+   tikzpicture body is a different language; region 2's inviolability is the
+   invariant that keeps a typography rule out of a pgf path, and that is worth
+   more than two offers in a channel a human reviews anyway.
+
+   DOC-001 loses 1 offer of 185. Its "\maketitle" insertion is a pure insertion,
+   and on one fixture it lands exactly on a protected range's INCLUSIVE start —
+   an \input begins at the same byte — which [intersects] counts as inside.
+   Inserting there is in fact harmless, but the only fix is a start-point
+   carve-out in the shared predicate, and changing the guard's core algebra to
+   recover one offer on one synthetic fixture is the wrong trade. *)
+let candidate_preamble_aware = [ "TAB-005" ]
+
+let filter_candidate ~(src : string) ~(rule_id : string)
+    (edits : Cst_edit.t list) : Cst_edit.t list =
+  match edits with
+  | [] -> []
+  | _ ->
+      let r = regions_of src in
+      let active =
+        [ r.control_symbol; r.picture; r.filename ]
+        @ (if List.mem rule_id candidate_preamble_aware then []
+           else [ r.preamble ])
+        @ (if List.mem rule_id candidate_crossref_aware then []
+           else [ r.crossref ])
+        @
+        if List.mem rule_id candidate_package_spec_aware then []
+        else [ r.package_spec ]
       in
-      List.filter
-        (fun (ed : Cst_edit.t) ->
-          not (blocked (ed.start_offset, ed.end_offset)))
-        edits
+      filter_with ~active edits

@@ -3,7 +3,7 @@
    rule-registry construction (both are one-time, amortised in a long-running
    editor session). Reports, per input file: parse_ms : one
    Parser_l2.parse_located fastrun_ms : run_compile_blocking (shared parse) —
-   the ~37 rules, INCLUDING the shared parse (i.e. the true fast-kernel compute)
+   the ~36 rules, INCLUDING the shared parse (i.e. the true fast-kernel compute)
    rules_ms : fastrun_ms - parse_ms — the 37-rule execution alone run_all is
    intentionally NOT benched in-process: it memoises on the source (Cache_key),
    so reps 2..N would be cache hits and lie. The full-path numbers come from the

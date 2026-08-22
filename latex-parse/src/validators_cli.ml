@@ -568,7 +568,7 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
 
 let run_compile_check ~fast ~path ~src : int =
   (* v27.1.59: the FAST readiness kernel is the default (parse once, run only
-     the 37 compile-blocking rules). [LP_COMPILE_CHECK_FULL=1] or the
+     the 36 compile-blocking rules). [LP_COMPILE_CHECK_FULL=1] or the
      [--compile-check-full] flag forces the original full path for the
      differential/correctness gate. Both produce the identical verdict. *)
   let fast = fast && not (env_flag_on "LP_COMPILE_CHECK_FULL") in

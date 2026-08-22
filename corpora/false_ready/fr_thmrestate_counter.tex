@@ -1,0 +1,42 @@
+% Round-7 / S0 fixture: the WILD-TYPE theorem-counter collision.
+%
+% Found by the first real-paper differential (corpora/real_roots): EIGHT of the
+% eleven false-READYs in a 200-paper arXiv sample are
+% "! LaTeX Error: Command \c@<env> already defined." — lemma x3, proposition,
+% definition, lem, assumption, plus \theHalgorithm. This is the single largest
+% source of false-READY on real documents.
+%
+% ⚠ NOTE WHAT IS *NOT* HERE. There is no duplicated declaration, no obvious
+% mistake, nothing a reader would flag. The author loads a package and declares
+% theorems the ordinary way. thm-restate (part of thmtools) patches \newtheorem,
+% and the shared-counter form [theorem] then collides. That is exactly why the
+% class survives review and why --compile-check must catch it.
+%
+% Verified against the pinned oracle (pdfTeX 3.141592653-2.6-1.40.29, TL2026):
+%   * as written, -halt-on-error   -> exit 1, "Command \c@lemma already defined", no PDF
+%   * as written, nonstopmode      -> exit 1, but a PDF IS produced  => ERROR-HALT
+%   * drop \usepackage{thm-restate} -> exit 0, PDF produced
+%   * amsthm alone instead         -> exit 0, PDF produced
+% so thm-restate is the trigger, not the \newtheorem pair.
+%
+% Checked for TeX Live drift FIRST, because arXiv built those papers under
+% TL2023 while the oracle is pinned to TL2026: drift is NOT the cause.
+%
+% ⚠ KEEP BOTH FIXTURES, and note they are not redundant even though they produce
+% the SAME error message. Sibling fr_thmtools_redeclare.tex reaches it via an
+% explicit \declaretheorem{lemma} + \newtheorem{lemma}, and measures
+% STRONG-FATAL: no PDF under either protocol. This one measures ERROR-HALT:
+% LaTeX recovers far enough to emit a PDF under plain nonstopmode. Same message,
+% different severity class, different rows in the baseline — and it is the
+% error-halt form that occurs in the wild. A detector validated only against the
+% visible, strong-fatal shape would pass the corpus and still miss every real
+% paper.
+\documentclass{article}
+\usepackage{thm-restate}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\begin{document}
+\begin{lemma}
+A statement.
+\end{lemma}
+\end{document}

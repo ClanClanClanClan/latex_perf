@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 7,
+    "false_ready_total": 8,
     "strong_fatal": 7,
-    "error_halt": 0
+    "error_halt": 1
   },
   "fixtures": [
     {
@@ -267,6 +267,17 @@
       "pdflatex": "strong-fatal",
       "expected_cli": "READY",
       "note": "thmtools \\declaretheorem{lemma} already defines the environment and its counter; a following \\newtheorem{lemma} redefines it -> \"! LaTeX Error: Command \\lemma already defined.\", no PDF. Both packages are in the catalogue and every control sequence resolves, so nothing in the closed-world check fires. FOUND by fixing the DELIM-003/004 control-word boundary bug: on the real-paper corpus this class was being masked by a SPURIOUS DELIM rejection, so the document was NOT-READY for a reason that was not true. Measured on 2506.23970v1; this is the minimal distillation. The fixture contains no \\left/\\right, so it is READY on both sides of that fix -- the class is pre-existing, not introduced."
+    },
+    {
+      "id": "fr_thmrestate_counter",
+      "path": "fr_thmrestate_counter.tex",
+      "kind": "single",
+      "class": "closed-world",
+      "fix_rank": 1,
+      "tier": "lp-extended",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "thm-restate (thmtools) patches \\newtheorem; a following shared-counter \\newtheorem{lemma}[theorem] then collides -> \"! LaTeX Error: Command \\c@lemma already defined.\" There is NO duplicated declaration and no visible mistake -- the author loads a package and declares theorems the ordinary way, which is why the class survives review. THE WILD-TYPE FORM: the first real-paper differential (corpora/real_roots) found 8 of 11 false-READYs in a 200-paper arXiv sample are this \\c@<env> class, making it the largest single source of false-READY on real documents. Distinct from sibling fr_thmtools_redeclare.tex, which reaches the same message via an explicit \\declaretheorem+\\newtheorem pair and is STRONG-FATAL; this one is ERROR-HALT (a PDF is still produced under plain nonstopmode). Checked for TeX Live drift first -- arXiv built those papers under TL2023, the oracle is pinned to TL2026 -- and drift is not the cause."
     }
   ]
 }

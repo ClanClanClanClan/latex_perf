@@ -678,12 +678,26 @@ let () =
           | cands ->
               List.iter
                 (fun (c : Latex_parse_lib.Validators.candidate_fix) ->
+                  (* R7-3: the CANDIDATE line ALWAYS prints; only the byte
+                     offers are screened. docs/CANDIDATE_FIXES.md tells a reader
+                     how to apply these offsets, so an offer landing in a
+                     protected region corrupts the document exactly as an
+                     auto-fix would — only who presses the button differs. A
+                     fully-screened candidate degrades to label-only, which that
+                     document already defines as a legal output shape: the
+                     reviewer still learns the rule fired and where.
+
+                     [src] is the same buffer passed to run_all_with_class_d
+                     above, and this arm has no converge loop, so
+                     fix_guard.mli's current-buffer requirement holds
+                     trivially. *)
                   printf "CANDIDATE\t%s\t%s\n" r.id c.c_label;
                   List.iter
                     (fun (e : Latex_parse_lib.Cst_edit.t) ->
                       printf "  EDIT\t%d\t%d\t%s\n" e.start_offset e.end_offset
                         (esc_repl e.replacement))
-                    c.c_edits)
+                    (Latex_parse_lib.Fix_guard.filter_candidate ~src
+                       ~rule_id:r.id c.c_edits))
                 cands)
         results;
       exit 0
@@ -852,10 +866,11 @@ let () =
          --apply-fixes-best-effort | --apply-fixes-best-effort-for RULE-ID] \
          [--profile auto|lp-core|lp-extended|lp-foreign] [--advisory] \
          [--policy <file.lppolicy> [--audit <file>]] [--explain <RULE-ID>] \
-         [--review <file.lpreview>] [--report [--json] <file.tex>... | \
-         --report [--json] --manifest <list>] [--project <root.tex>] [--layer \
-         l0|l1|l2|l3|l4] [--log <file.log>] [--extensions <manifest.json> \
-         [--strict]] [--extensions-registry] <file.tex>\n\n\
+         [--list-candidate-fixes <file.tex>] [--review <file.lpreview>] \
+         [--report [--json] <file.tex>... | --report [--json] --manifest \
+         <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] [--log \
+         <file.log>] [--extensions <manifest.json> [--strict]] \
+         [--extensions-registry] <file.tex>\n\n\
          [--policy <file.lppolicy> [--audit <file>]] [--review \
          <file.lpreview>] [--report [--json] <file.tex>... | --report [--json] \
          --manifest <list>] [--project <root.tex>] [--layer l0|l1|l2|l3|l4] \

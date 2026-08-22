@@ -41,6 +41,28 @@ let survives ?(rule_id = "TYPO-002") src sub =
 let insertion_survives ?(rule_id = "PKG-011") src at =
   Fix_guard.filter ~src ~rule_id [ Cst_edit.insert ~at "x" ] <> []
 
+(* ── The CANDIDATE channel ───────────────────────────────────────────────
+
+   [--list-candidate-fixes] is a second path from a producer's bytes to a user's
+   document. Measured over 523 corpus documents before it was screened: 6,514
+   candidates, 7,523 byte offers, none of them filtered.
+
+   Two properties matter and are pinned separately below. The offers are
+   screened; the CANDIDATE line is NOT, so a fully-screened candidate degrades
+   to label-only and the reviewer still learns the rule fired. And the exemption
+   lists are INDEPENDENT of the fix channel's — sharing them would let a
+   candidate rule's evidence silently widen the auto-fix channel. *)
+
+(* Would a candidate offer from [rule_id] rewriting the first [sub] survive? *)
+let cand_survives ?(rule_id = "TYPO-002") src sub =
+  let i = find_sub src sub in
+  let e =
+    Cst_edit.replace ~start_offset:i
+      ~end_offset:(i + String.length sub)
+      "\xe2\x80\x93"
+  in
+  Fix_guard.filter_candidate ~src ~rule_id [ e ] <> []
+
 let () =
   (* ── Region 3a: filename arguments ──────────────────────────────────── *)
   run "double hyphen inside an include filename is withheld" (fun tag ->
@@ -475,5 +497,92 @@ let () =
         && Fix_guard.protected_ranges b = Fix_guard.protected_ranges a
         && Fix_guard.protected_ranges c <> [])
         (tag ^ ": a stale entry may only cause a miss, never a wrong answer"));
+
+  run "a candidate offer inside a control symbol is withheld" (fun tag ->
+      (* The measured VERB-010 shape: an offer starting one byte inside the
+         two-byte grave-accent command. *)
+      expect
+        (not (cand_survives ~rule_id:"VERB-010" "complexit\\'e a\n" "'e"))
+        (tag ^ ": the good_accents_utf8 corruption, via the review channel"));
+
+  run "a candidate offer inside package options is withheld" (fun tag ->
+      (* The measured SPC-017 shape: a thin space inside a length argument,
+         which pdflatex rejects as an illegal unit of measure. *)
+      expect
+        (not
+           (cand_survives ~rule_id:"SPC-017"
+              "\\usepackage[margin=2.5cm]{geometry}\n" "2.5cm"))
+        (tag ^ ": illegal unit of measure"));
+
+  run "a candidate offer inside a cross-reference key is withheld" (fun tag ->
+      expect
+        (not (cand_survives "\\label{eq:a--b}\n" "--"))
+        (tag ^ ": region 4 applies to candidates too"));
+
+  (* ── Per-region exemptions, and ONLY per region ───────────────────────── *)
+  run "PKG-022 may rewrite a package spec" (fun tag ->
+      expect
+        (cand_survives ~rule_id:"PKG-022" "\\usepackage{subfigure}\n"
+           "subfigure")
+        (tag ^ ": replacing the package IS the offer being reviewed"));
+
+  run "PKG-022 may NOT rewrite an include filename" (fun tag ->
+      expect
+        (not (cand_survives ~rule_id:"PKG-022" "\\input{chap--one}\n" "--"))
+        (tag ^ ": the exemption is region 3b only"));
+
+  run "REF-005 may rewrite a cross-reference key" (fun tag ->
+      expect
+        (cand_survives ~rule_id:"REF-005" "\\label{eq:a--b}\n" "--")
+        (tag ^ ": renaming the key IS the offer"));
+
+  run "REF-005 may NOT rewrite a TikZ path" (fun tag ->
+      expect
+        (not
+           (cand_survives ~rule_id:"REF-005"
+              "\\begin{tikzpicture}\\draw (0,0) -- (1,1);\\end{tikzpicture}\n"
+              "--"))
+        (tag ^ ": region 2 is never exempt, in either channel"));
+
+  run "TAB-005 may rewrite a tabular preamble" (fun tag ->
+      expect
+        (cand_survives ~rule_id:"TAB-005" "\\begin{tabular}{|c|c|}\n" "|c|c|")
+        (tag ^ ": the preamble IS the offer"));
+
+  (* ── The two channels' lists are independent ─────────────────────────── *)
+  run "a candidate-only exemption does NOT leak into the fix channel"
+    (fun tag ->
+      let src = "\\usepackage{subfigure}\n" in
+      expect
+        (cand_survives ~rule_id:"PKG-022" src "subfigure")
+        (tag ^ ": exempt as a candidate");
+      expect
+        (not (survives ~rule_id:"PKG-022" src "subfigure"))
+        (tag
+        ^ ": NOT exempt as an auto-fix — PKG-022 is absent from \
+           package_spec_aware, whose evidence is check_producer_coverage"));
+
+  run "a fix-channel exemption does NOT leak into the candidate channel"
+    (fun tag ->
+      let src = "\\usepackage{geometry}\n\\usepackage{hyperref}\n" in
+      expect
+        (survives ~rule_id:"PKG-002" src "geometry")
+        (tag ^ ": PKG-002 is package_spec_aware for auto-fixes");
+      expect
+        (not (cand_survives ~rule_id:"PKG-002" src "geometry"))
+        (tag ^ ": and is absent from the candidate list, so it is screened here"));
+
+  (* ── Accepted under-reach, pinned so a future change is deliberate ───── *)
+  run "a zero-width label-only offer inside a picture is withheld" (fun tag ->
+      (* TIKZ-001/TIKZ-004 emit [insert ~at pos ""] — a no-op marker. Blocking
+         it costs nothing: the CANDIDATE line still prints. Pinned so that if
+         someone later makes those offers real, this test tells them region 2
+         will swallow them. *)
+      let src = "\\begin{tikzpicture}\\draw (0,0);\\end{tikzpicture}\n" in
+      expect
+        (Fix_guard.filter_candidate ~src ~rule_id:"TIKZ-001"
+           [ Cst_edit.insert ~at:(find_sub src "\\draw") "" ]
+        = [])
+        (tag ^ ": region 2 is never exempt"));
 
   finalise "fix-guard"

@@ -95,3 +95,25 @@ val filter : src:string -> rule_id:string -> Cst_edit.t list -> Cst_edit.t list
     firing on pass 2 against a subscript SCRIPT-001 had itself synthesised
     inside a label key. Neither producer is wrong alone, so only re-evaluation
     against the rewritten bytes can catch it. *)
+
+val filter_candidate :
+  src:string -> rule_id:string -> Cst_edit.t list -> Cst_edit.t list
+(** [filter_candidate ~src ~rule_id edits] — the same screen as {!filter}, for
+    the REVIEW-ONLY candidate channel.
+
+    [--list-candidate-fixes] is a second path from a producer's bytes to a
+    user's document: docs/CANDIDATE_FIXES.md tells a reader how to apply the
+    offsets it prints, so an offer landing inside a protected region corrupts
+    the document exactly as an auto-fix would. Only who presses the button
+    differs.
+
+    Screen the byte OFFERS, never the candidate itself. A fully-screened
+    candidate degrades to label-only, which is already a legal output shape: the
+    reviewer still learns that the rule fired and where, and simply is not
+    handed a rewrite the guard cannot vouch for.
+
+    The exemption lists are SEPARATE from {!filter}'s and never shared.
+    {!control_symbol_aware} and {!package_spec_aware} are evidenced by
+    check_producer_coverage.py, which exercises auto-fix producers only; reusing
+    them here would let a candidate rule's evidence silently widen the auto-fix
+    channel's exemptions. *)

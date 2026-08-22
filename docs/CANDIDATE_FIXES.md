@@ -39,9 +39,30 @@ CANDIDATE<TAB><rule-id><TAB><human-readable label>
 - A **label-only** candidate (no `EDIT` lines) names a transformation whose span
   cannot be safely bounded (e.g. an unbraced `\eqalign`); the editor shows the
   label but leaves the edit to the author.
-- Candidates whose target lies inside a protected region (verbatim / comment /
-  `\url` / and, for text rules, math) are **dropped** — a commented-out or
-  verbatim trigger yields no candidate.
+- Candidates are screened **twice**, by two different filters, and it is worth
+  knowing which does what:
+  1. `candidates_drop_exempt` (producer side) drops a candidate whose target
+     lies inside a *typography-exempt* region — verbatim, comment, `\url`, and
+     for text rules math. A commented-out or verbatim trigger yields no
+     candidate at all.
+  2. `Fix_guard.filter_candidate` (CLI side, v27.1.63) screens the surviving
+     **byte offers** against the LOAD-BEARING regions: control symbols, TikZ and
+     pgf picture bodies, filename and package-spec arguments, cross-reference
+     keys, and tabular preambles. These are not regions the author wrote
+     verbatim — they are bytes TeX reads as syntax rather than prose, so the
+     first filter never looked at them.
+
+  The second screen keeps the **CANDIDATE line and drops only the EDIT lines**.
+  A fully-screened candidate therefore degrades to label-only: you still learn
+  that the rule fired and where, and are simply not handed a rewrite the guard
+  cannot vouch for. Measured over 523 corpus documents: 6,514 candidates
+  unchanged, 174 of 7,523 byte offers withheld (2.3%).
+
+  ⚠ Rules whose *contract* is to rewrite one of those regions are exempt from
+  that region only — the `REF-00x` label renamers from cross-reference keys, the
+  `PKG-0xx` package replacers from package specs, `TAB-005` from tabular
+  preambles. The exemption lists are separate from the auto-fix channel's and
+  are never shared.
 
 Example:
 
@@ -52,7 +73,12 @@ CANDIDATE	PKG-022	Replace obsolete package subfigure with subcaption
   EDIT	37	46	subcaption
 ```
 
-## The candidate rules (20)
+## The candidate rules (a sample — **124** are shipped)
+
+The table below is a hand-picked selection, not the full set. The authoritative
+count and per-rule list are generated into `specs/v27/CANDIDATE_BACKLOG.md`;
+this heading previously read "(20)", which was a fair description of the table
+and a badly misleading one about the tool.
 
 | Rule | Suggests |
 |---|---|

@@ -85,8 +85,15 @@ def build(repo: Path) -> str:
           "single most repeated error in this project's history.", "",
           "| | corpus | value | what moves it |",
           "|---|---|---|---|"]
-    L.append(f"| **(a)** differential allowlist | `corpora/compile_check`, 65 hand-authored docs "
-             f"| **{allowlist_count(repo)}** | S6/S7-style detectors |")
+    # Count ROOT documents, not .tex files. corpora/compile_check contains one
+    # child part (good_input_child_part.tex) with no \documentclass; counting
+    # files gives 66 and disagrees with the differential matrix, which is over 65
+    # DOCUMENTS. A derived number that measures the wrong thing is worse than a
+    # hardcoded one, because it looks authoritative.
+    n_cc = sum(1 for f in (repo / "corpora/compile_check").glob("*.tex")
+               if "documentclass" in f.read_text(errors="replace"))
+    L.append(f"| **(a)** differential allowlist | `corpora/compile_check`, {n_cc} "
+             f"hand-authored docs | **{allowlist_count(repo)}** | S6/S7-style detectors |")
     sf = sum(1 for f in live if f["pdflatex"] == "strong-fatal")
     eh = sum(1 for f in live if f["pdflatex"] == "error-halt")
     L.append(f"| **(b)** fixture baseline | `corpora/false_ready`, {len(fr['fixtures'])} fixtures "

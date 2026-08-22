@@ -123,9 +123,28 @@ let () =
               expect has_t2 (tag ^ ": T2 reason present")
           | Ready -> expect false (tag ^ ": should reject")));
 
-  (* T4: aux_path with duplicate labels *)
-  run "T4 catches duplicate labels in aux" (fun tag ->
-      let tex_path = write_file "dup.tex" "\\documentclass{article}\n" in
+  (* T4: a duplicate \label must NOT reject (OPEN-008).
+
+     This assertion is INVERTED rather than deleted. It used to require a T4
+     rejection; the same fixture must now come back Ready. Keeping the fixture
+     and flipping the expectation is what stops the polarity being reintroduced
+     by someone who reads the old intent and "restores" it — a deleted test
+     documents nothing.
+
+     Ground truth, pinned oracle pdfTeX 3.141592653-2.6-1.40.29, BOTH protocols:
+     a document with two \label{same} gives rc 0 and produces a PDF; the log
+     says "LaTeX Warning: Label `same' multiply defined." A warning. *)
+  run "T4 duplicate labels do NOT reject" (fun tag ->
+      (* The document must be OTHERWISE VALID, or the assertion below proves
+         nothing. The previous fixture was a bare "\\documentclass{article}",
+         which is structurally fatal on its own ("no \\end{document}") — so the
+         old test passed on a COMPOUND rejection and never isolated the
+         duplicate-label premise at all. Strengthening the assertion is what
+         exposed that. *)
+      let tex_path =
+        write_file "dup.tex"
+          "\\documentclass{article}\n\\begin{document}\nx\n\\end{document}\n"
+      in
       let aux_path =
         write_file "dup.aux"
           {|\newlabel{foo}{{1}{1}{X}{y}{}}
@@ -134,23 +153,34 @@ let () =
       in
       match Project_model.of_root tex_path with
       | Error _ -> expect false (tag ^ ": setup failed")
-      | Ok proj -> (
+      | Ok proj ->
           let profile = mk_profile ~tex_path in
-          match
+          let res =
             Compile_contract.check_ready_to_compile ~aux_path proj profile
-          with
-          | NotReady rs ->
-              let has_t4 =
+          in
+          (* Assert COMPUTED values; never a bare [expect true] in the success
+             branch. That asserts nothing — it only records that the branch was
+             reached — and check_code_quality.py ratchets the shape for exactly
+             that reason. It caught the first version of this test. *)
+          let is_ready =
+            match res with
+            | Compile_contract.Ready -> true
+            | NotReady _ -> false
+          in
+          let has_t4 =
+            match res with
+            | Compile_contract.Ready -> false
+            | NotReady rs ->
                 List.exists
                   (function
-                    | Compile_contract.T4_semantic_incoherent
-                        (`Duplicate_labels _) ->
-                        true
+                    | Compile_contract.T4_semantic_incoherent _ -> true
                     | _ -> false)
                   rs
-              in
-              expect has_t4 (tag ^ ": T4 duplicate-labels caught")
-          | Ready -> expect false (tag ^ ": should reject")));
+          in
+          expect is_ready
+            (tag ^ ": a duplicate label is a pdflatex WARNING, not a reject");
+          expect (not has_t4)
+            (tag ^ ": a T4 reason is present — the polarity has come back"));
 
   (* reason_to_string sanity *)
   run "reason_to_string is informative" (fun tag ->

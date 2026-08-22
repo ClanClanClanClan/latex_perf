@@ -538,16 +538,58 @@ let run_explain (rule_id : string) : int =
 
     Prints [READY] (exit 0) when every runtime precondition holds, or
     [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
-    sibling, if present, informs T4. Returns the process exit code. *)
+    sibling, if present, informs the artefact check. A duplicate \\label is
+    reported as a NON-BLOCKING advisory (OPEN-008). Returns the exit code. *)
 let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
     : bool =
   let module CE = Latex_parse_lib.Compile_evidence in
   let p, pf, order = CE.extract_of_project ~source:src proj in
   let r = CE.report p pf order in
+  (* OPEN-008. [all_hold] mirrors [project_wf_dec] and MUST keep doing so — the
+     Coq correspondence depends on it, so the fix belongs here, in how a failed
+     premise is INTERPRETED, not in the predicate.
+
+     [project_wf_dec_sound] is ONE-DIRECTIONAL: dec = true IMPLIES
+     pdflatex_compile_safe; dec = false implies NOTHING. So an unmet premise
+     never licensed a REJECTION — it only withheld a certification. Treating
+     "the model cannot certify this" as "this will not compile" is an inversion
+     of the theorem.
+
+     It matters most for the nodup premise, because a duplicate \label is not a
+     compile error at all. Measured against the pinned oracle under BOTH
+     protocols: two \label{same} give rc 0 and a PDF, with "LaTeX Warning: Label
+     `same' multiply defined." in the log. On the 200-paper real corpus the
+     duplicate-label premise was the ONLY unmet one for NINE documents and all
+     nine compile; across all 18 documents where it fires, pdflatex rejects
+     ZERO.
+
+     So the verdict is three-way: certified / not-certifiable-but-not-rejected /
+     rejected. Only the third exits non-zero. *)
+  let blocking_premises (r : CE.premise_report) =
+    r.CE.t2_closed && r.CE.t3_declared && r.CE.t3_body
+  in
   if CE.all_hold r then (
     printf
       "MODEL-CONNECTED\tMODEL-READY (Coq project_wf_dec_sound => \
        pdflatex_compile_safe)\n";
+    true)
+  else if blocking_premises r then (
+    (* Every premise that bears on compilability holds; only nodup is unmet, and
+       the capstone is one-directional, so it certifies nothing here and rejects
+       nothing either.
+
+       ⚠ The advisory below deliberately does NOT contain a bare "T4" token.
+       scripts/tools/diff_real_roots.py scrapes reasons with
+       \b(T\d|[A-Z]{2,8}-\d{3})\b, so printing one here would record a blocking
+       reason in results.json for a document that is now READY. *)
+    printf
+      "MODEL-CONNECTED\tMODEL-INAPPLICABLE (nodup premise unmet; \
+       project_wf_dec_sound is one-directional, so it neither certifies nor \
+       rejects here)\n";
+    printf
+      "  advisory (non-blocking): duplicate \\label(s) [%s] — pdflatex warns \
+       \"Label multiply defined\" and exits 0\n"
+      (String.concat "; " (CE.duplicate_label_keys src));
     true)
   else (
     printf "MODEL-CONNECTED\tMODEL-NOT-READY\n";
@@ -562,7 +604,9 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
            (List.map CE.feature_to_string r.CE.unsupported_features))
         (CE.engine_to_string pf.CE.prof_engine);
     if not r.t4_unique_labels then
-      printf "  T4 duplicate \\label(s): [%s]\n"
+      printf
+        "  advisory (non-blocking): duplicate \\label(s) [%s] — pdflatex warns \
+         and exits 0\n"
         (String.concat "; " (CE.duplicate_label_keys src));
     false)
 
@@ -882,8 +926,8 @@ let () =
          T0, include-graph\n\
         \               closure for T2, engine/feature compat for T3, .aux \
          semantic coherence\n\
-        \               for T4, and compile-blocking DELIM/ENC/PRT Error rules \
-         for T5). Prints\n\
+        \               (duplicate labels are advisory only), and \
+         compile-blocking DELIM/ENC/PRT Error rules for T5). Prints\n\
         \               READY (exit 0) or NOT-READY with the failing reasons \
          (exit 1). This is a\n\
         \               sound readiness PRE-CHECK, not a total \"it will \

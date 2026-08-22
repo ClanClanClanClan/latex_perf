@@ -11,7 +11,8 @@
     - T1: not runtime-checked at this layer (no-op; never claims a T1 property).
     - T2: include-graph closure — every [\input]/[\include] resolves, no cycle.
     - T3: engine/feature compatibility from the declared features + engine.
-    - T4: semantic coherence from the [.aux] (duplicate labels), when supplied.
+    - T4: REMOVED from the verdict (OPEN-008). A duplicate [\label] is a
+      pdflatex WARNING, not a failure; it is reported as an advisory only.
     - T5: real validator run — flags COMPILE-BLOCKING [Error] diagnostics only
       (rule families DELIM-/ENC-/PRT-), not every Error-severity style rule.
 
@@ -61,9 +62,12 @@ val check_ready_to_compile :
   Project_model.t ->
   Build_profile.t ->
   ready_check_result
-(** Evaluate T0–T5 against the project + profile. If [aux_path] is provided, T4
-    (semantic coherence) is informed by the .aux file contents; otherwise T4
-    falls back to source-only analysis of labels declared in the root .tex.
+(** Evaluate T0–T5 against the project + profile. [aux_path] is retained for the
+    T-artefact check; T4 no longer contributes a blocking reason (OPEN-008).
+
+    NB the sentence removed here claimed T4 "falls back to source-only analysis"
+    without an .aux. That was never true — [t4_check] returned [[]] on
+    [aux_path = None]. The doc described an intention, not the code.
 
     [source] is the root document's bytes, used by the T0 (parser + language
     profile) and T5 (validator) checks. When omitted, the root [.tex] is read

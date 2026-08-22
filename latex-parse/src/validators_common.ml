@@ -624,9 +624,52 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
         let cmdlen = if starts_with "\\lstinline" pos then 10 else 5 in
         let after = ref (pos + cmdlen) in
         if !after < n && String.unsafe_get s !after = '*' then incr after;
+        (* \lstinline takes an OPTIONAL [key=value] argument, and the delimiter
+           follows it. Reading the byte at a fixed offset made '[' the
+           delimiter, so the range ended at the NEXT '[' — or, far more often,
+           at EOF.
+
+           Both directions were measured. With a '[' inside the option VALUE
+           (\lstinline[caption={[x]}]|a--b|) the range ends early and the fixer
+           REWRITES THE VERBATIM: a--b -> a–b. With no later '[' the range runs
+           to end of file and silently withholds every fix in the rest of the
+           document — verified with a dash before and after an
+           \lstinline[language=C]: the one before is fixed, the one after is
+           not.
+
+           Closing at an UNESCAPED ']' at brace depth 0 mirrors the verified
+           drop_after_rbracket (proofs/BodyTokenFrontEnd.v), so a ']' inside a
+           braced option value cannot close the group early. An unclosed group
+           leaves [after] where it was, which degrades to today's behaviour
+           rather than inventing a range. *)
+        if !after < n && String.unsafe_get s !after = '[' then (
+          let e = ref (!after + 1) and depth = ref 0 and fin = ref (-1) in
+          while !fin < 0 && !e < n do
+            (match String.unsafe_get s !e with
+            | '\\' -> incr e
+            | '{' -> incr depth
+            | '}' -> if !depth > 0 then decr depth
+            | ']' -> if !depth = 0 then fin := !e + 1
+            | _ -> ());
+            incr e
+          done;
+          if !fin >= 0 then after := !fin);
+        (* TeX terminates a CONTROL WORD at the first non-letter and absorbs the
+           following spaces, so `X \verb |ab| Y` is legal and its delimiter is
+           '|', not the space. Reading the byte at a fixed offset took the SPACE
+           as the delimiter and produced a range ending at the next space.
+           Verified: that document compiles, rc 0. *)
+        while
+          !after < n
+          && (String.unsafe_get s !after = ' '
+             || String.unsafe_get s !after = '\t')
+        do
+          incr after
+        done;
         if !after < n && not (is_letter (String.unsafe_get s !after)) then (
-          (* The next char is the delimiter; non-letter guard avoids swallowing
-             longer command names (e.g. \verbatim, \verbatiminput). *)
+          (* The next char is the delimiter; the non-letter guard avoids
+             swallowing longer command names (e.g. \verbatim,
+             \verbatiminput). *)
           let delim = String.unsafe_get s !after in
           let k = ref (!after + 1) in
           while !k < n && String.unsafe_get s !k <> delim do

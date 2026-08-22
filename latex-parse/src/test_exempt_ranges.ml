@@ -45,6 +45,46 @@ let () =
       expect
         (exempt "x \\lstinline|a -- b| y" "-- b")
         (tag ^ ": -- inside \\lstinline"));
+  (* ── \lstinline's OPTIONAL argument, and blanks before the delimiter ──
+
+     The scanner used to read the byte at a FIXED offset past the command name
+     as the delimiter. Three measured defects followed, and all three are pinned
+     below because each fails in a different direction. *)
+  run "\\lstinline[opt] body is exempt" (fun tag ->
+      expect
+        (exempt "x \\lstinline[language=C]|a -- b| y" "-- b")
+        (tag ^ ": the optional argument must be consumed before the delimiter"));
+
+  run "prose AFTER \\lstinline[opt] stays live" (fun tag ->
+      (* The over-reach case. With '[' taken as the delimiter and no later '[',
+         the range ran to END OF FILE and silently withheld every fix in the
+         rest of the document. Measured: a dash before the command was fixed and
+         an identical dash after it was not. *)
+      expect
+        (not (exempt "\\lstinline[language=C]|code| then -- here" "-- here"))
+        (tag ^ ": the range must END at the closing delimiter, not at EOF"));
+
+  run "a bracket inside the option VALUE does not end the range early"
+    (fun tag ->
+      (* The corruption case: the range ended at the ']' inside {[x]}, leaving
+         the verbatim body exposed, and the fixer rewrote a--b to an en dash. *)
+      expect
+        (exempt "\\lstinline[caption={[x]}]|a -- b|" "-- b")
+        (tag ^ ": close only at an UNESCAPED ] at brace depth 0"));
+
+  run "a space before the delimiter is absorbed" (fun tag ->
+      (* TeX ends a control word at the first non-letter and absorbs following
+         spaces, so `X \verb |ab| Y` is legal and its delimiter is '|'. The
+         scanner took the SPACE. Verified: that document compiles, rc 0. *)
+      expect
+        (exempt "X \\verb |a -- b| Y" "-- b")
+        (tag ^ ": the delimiter follows the blanks"));
+
+  run "prose after a space-delimited \\verb stays live" (fun tag ->
+      expect
+        (not (exempt "X \\verb |ab| Y then -- here" "-- here"))
+        (tag ^ ": the range must not swallow the remainder"));
+
   run "\\verbatim-like command is NOT misparsed as \\verb" (fun tag ->
       (* \verbatiminput{f} — letter after \verb means it is not inline \verb;
          the `--` in following prose must stay live. *)

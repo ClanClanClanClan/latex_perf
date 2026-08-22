@@ -88,10 +88,21 @@ val run_subset :
     equivalence argument. *)
 
 val is_compile_blocking : string -> bool
-(** [true] iff [id] begins with a compile-blocking prefix (DELIM-/ENC-/PRT-). *)
+(** [true] iff [id] is in {!compile_blocking_ids}.
 
-val compile_blocking_prefixes : string list
-(** The rule-id prefixes whose Error-severity firing blocks compilation. *)
+    This was a PREFIX test over DELIM-/ENC-/PRT-, which made the compile verdict
+    reachable by naming convention: any rule, including one registered by a
+    third-party extension, could name itself into the set by choosing its id.
+    Membership is now an explicit, reviewed act. See the .ml for the evidence
+    behind the one id that was dropped. *)
+
+val compile_blocking_ids : string list
+(** The rule ids whose Error-severity firing blocks compilation.
+
+    Exactly the set the old prefix test matched, minus DELIM-007 — an unmatched
+    [\langle] is not a TeX error (it is an ordinary math delimiter), and it was
+    measured firing on 11 real papers that all compile. Adding an id here should
+    cite its evidence. *)
 
 val run_compile_blocking :
   ?parse_errors:(string * Parser_l2.loc) list -> string -> result list

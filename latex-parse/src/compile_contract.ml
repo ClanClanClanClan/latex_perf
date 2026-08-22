@@ -213,9 +213,11 @@ let t1_check (_ : Project_model.t) : reason list = []
 
    SINGLE SOURCE OF TRUTH (v27.1.60 audit hardening): the compile-blocking
    predicate lives in [Validators.is_compile_blocking] (backed by
-   [Validators.compile_blocking_prefixes]). We delegate to it rather than keep a
-   private copy, so any future id-level compile-blocking promotion there is
-   picked up here automatically instead of being a silent no-op. *)
+   [Validators.compile_blocking_ids] — an explicit id list since v27.1.63, not a
+   prefix test, so a rule can no longer name itself into the compile verdict).
+   We delegate to it rather than keep a private copy, so any future id-level
+   compile-blocking promotion or demotion there is picked up here automatically
+   instead of being a silent no-op. *)
 
 let t5_check ~(source : string) (_ : Project_model.t) : reason list =
   let results = Validators.run_all source in
@@ -294,7 +296,7 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
         if fast then
           (* FAST readiness kernel (v27.1.59): parse ONCE and share the parse
              error list between T0's structural-error check and T5's PRT
-             context, and run ONLY the 37 compile-blocking rules.
+             context, and run ONLY the 36 compile-blocking rules.
              Verdict-identical to the full path below. *)
           let _nodes, parse_errors = Parser_l2.parse_located src in
           ( t0_check_with_errors ~source:src ~parse_errors proj,

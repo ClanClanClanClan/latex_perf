@@ -288,10 +288,24 @@ let () =
           ("DELIM-001", true);
           ("ENC-004", true);
           ("PRT-001", true);
-          (* an id-level entry: a specific DELIM id is still blocking because it
-             shares the family prefix — the predicate is prefix-driven today,
-             and this pins that any Validators change stays visible here. *)
+          (* An id-level entry. The predicate is an explicit ID LIST as of
+             v27.1.63, no longer a prefix test, so this pins membership rather
+             than a naming convention. *)
           ("DELIM-010", true);
+          (* DELIM-007 is the id the list was introduced to DROP. An unmatched
+             \langle is not a TeX error — \langle is an ordinary math delimiter,
+             so [$\langle x$] typesets — and it was measured firing on 11 real
+             arXiv papers that pdflatex compiles, 9 of them carrying it as their
+             ONLY blocking reason. It remains a catalogue rule; it is simply not
+             part of the verdict. *)
+          ("DELIM-007", false);
+          (* An id that does NOT exist but carries a compile-blocking PREFIX.
+             Under the old predicate this was `true` purely by string shape,
+             which is how a third-party extension rule could name itself into
+             the compile verdict (Track R's R-CHANNEL hole). It must be
+             false. *)
+          ("DELIM-999", false);
+          ("ENC-999", false);
           (* non-blocking: completeness/style faults pdflatex compiles
              through *)
           ("DOC-001", false);

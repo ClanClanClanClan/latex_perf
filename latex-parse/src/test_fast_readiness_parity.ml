@@ -4,7 +4,7 @@
     document.
 
     The fast kernel is only sound as an optimisation if it is verdict-equivalent
-    to running ALL ~641 rules and filtering to the 37 compile-blocking ones.
+    to running ALL ~641 rules and filtering to the 36 compile-blocking ones.
     This test asserts that empirically over every [.tex] under [corpora/]: for
     each file it computes BOTH verdicts and requires
 

@@ -398,7 +398,7 @@ let run_all (src : string) : result list =
     Soundness of the equivalence for the compile-blocking subset:
     - Every rule instance is taken from [get_rules ()], so L0_VALIDATORS gating
       and the LP-tier filter apply exactly as in {!run_all}.
-    - The 37 compile-blocking rules are pure functions of the source EXCEPT the
+    - The 36 compile-blocking rules are pure functions of the source EXCEPT the
       two PRT-* rules, which read {!Partial_context}. We therefore reproduce
       that one piece of shared context from a SINGLE [Parser_l2.parse_located] +
       [Partial_cst.classify] — the same construction {!run_all} performs. None
@@ -433,14 +433,83 @@ let run_subset ?parse_errors ~(keep : string -> bool) (src : string) :
     Partial_context.clear ();
     results
 
-let compile_blocking_prefixes = [ "DELIM-"; "ENC-"; "PRT-" ]
+(* The compile-blocking rule set, BY ID.
 
-let is_compile_blocking (id : string) : bool =
-  List.exists
-    (fun p ->
-      String.length id >= String.length p
-      && String.sub id 0 (String.length p) = p)
-    compile_blocking_prefixes
+   This was a prefix test over [ "DELIM-"; "ENC-"; "PRT-" ]. Two things were
+   wrong with that, and they are the same line of code.
+
+   1. IT IS A NAMING CHANNEL, not a decision. Any rule — including one supplied
+   by a third-party extension through the registry — could name ITSELF into the
+   compile-blocking set simply by choosing an id beginning "DELIM-". That is the
+   false-READY hole Track R's R-CHANNEL item names: the compile verdict must not
+   be reachable by string convention. An explicit list makes membership a
+   reviewed act.
+
+   2. IT ADMITTED A RULE THAT IS NOT ABOUT COMPILATION. DELIM-007 ("Angle
+   bracket \langle without matching \rangle") is compile-blocking here only
+   because its id starts "DELIM-". Unlike \left/\right, an unmatched \langle is
+   not a TeX error at all: \langle is an ordinary math delimiter, so [$\langle
+   x$] typesets. The rule is a fine STYLE check and it stays in the catalogue;
+   it simply has no business in the verdict.
+
+   Measured on 200 real arXiv papers (corpora/real_roots): DELIM-007 fires on
+   ELEVEN documents, and pdflatex compiles ALL ELEVEN. It has never once
+   co-occurred with a real failure. Nine of those eleven carry it as their ONLY
+   blocking reason, so removing it converts nine false-NOT-READY verdicts into
+   correct ones and cannot, on that evidence, create a false-READY.
+
+   The list below is exactly the set the prefix test matched, MINUS DELIM-007,
+   so this change is behaviour-identical for every other rule. Adding an id here
+   is a deliberate act and should cite its evidence.
+
+   ⚠ Wider finding, recorded rather than acted on: across those 200 papers the
+   whole compile-blocking set fires on 25 documents and pdflatex compiles all 25
+   — it caught none of the 6 genuine failures (T2 caught 5, T0 caught 1). But
+   that corpus is papers arXiv BUILT successfully, so it is biased toward valid
+   documents and cannot show what these rules catch on broken input. It shows
+   miscalibration for the population the tool actually sees, not vacuity. Do not
+   demote the rest of the set on this evidence alone. *)
+let compile_blocking_ids =
+  [
+    "DELIM-001";
+    "DELIM-002";
+    "DELIM-003";
+    "DELIM-004";
+    "DELIM-005";
+    "DELIM-006";
+    "DELIM-008";
+    "DELIM-009";
+    "DELIM-010";
+    "DELIM-011";
+    "ENC-001";
+    "ENC-002";
+    "ENC-003";
+    "ENC-004";
+    "ENC-005";
+    "ENC-006";
+    "ENC-007";
+    "ENC-008";
+    "ENC-009";
+    "ENC-010";
+    "ENC-011";
+    "ENC-012";
+    "ENC-013";
+    "ENC-014";
+    "ENC-015";
+    "ENC-016";
+    "ENC-017";
+    "ENC-018";
+    "ENC-019";
+    "ENC-020";
+    "ENC-021";
+    "ENC-022";
+    "ENC-023";
+    "ENC-024";
+    "PRT-001";
+    "PRT-002";
+  ]
+
+let is_compile_blocking (id : string) : bool = List.mem id compile_blocking_ids
 
 (** Run only the compile-blocking rules (id prefix DELIM-/ENC-/PRT-). See
     {!run_subset} for the equivalence argument. [?parse_errors] lets the caller

@@ -53,6 +53,7 @@ GATE_SCRIPTS = [
     # collision / orphaned requirement).
     ("scripts/tools/check_workflow_triggers.py", ["--repo", "."]),
     ("scripts/tools/check_fix_safety_language.py", ["--repo", "."]),
+    ("scripts/tools/check_project_state.py", ["--repo", "."]),
     ("scripts/tools/check_perf_ratchet.py",
      ["--repo", ".", "--skip-exec", "--input", "/dev/null"]),
 ]

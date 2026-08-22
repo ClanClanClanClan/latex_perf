@@ -1,5 +1,13 @@
 # LaTeX Perfectionist — Master Roadmap (v3.1)
 
+> ⚠ **THIS DOCUMENT STATES INTENT, NOT STATE.** For where the project actually
+> is — the measured position, the open ledger with stable ids, and the log of
+> what we got wrong — read **[PROJECT_STATE.md](PROJECT_STATE.md)**, which is the
+> single source of truth. Where the two disagree, PROJECT_STATE wins and the
+> statement here is a bug. Several numbers below are known stale; they are
+> tracked as OPEN-016 rather than silently corrected, because this document is
+> also a record of what was planned.
+
 > **Status:** authoritative planning document (single source of truth for the compile-guarantee **and** policy-enforcement program). **v3 = the MAXIMALIST synthesis** (folds the maximal-vision + maximal real-time-engine audits on top of the v2 adversarial strategy audit). **v3.1 folds audit rounds 4–7 on top of v3:** round 4 (omnidirectional fine-print: enforcement gaps, G1 polarity split, oracle definition), round 5 (feature completeness: engines, multi-file, distribution surfaces), round 6 (first CODE audit — found the live verdict-wiring false-READYs fixed by the #501 glue train), and **round 7 (the two-phase deep code audit vs a real pdfTeX oracle — its findings and 10-rank fix program live in `docs/v27/AUDIT_R7_FIX_PLAN.md`, the companion execution doc)**. **v3.1's headline: the verified core HELD under adversarial execution; every confirmed defect lives in three belts of unverified glue (input-model divergence · closed-world assumptions · glue polarity) — so the near-term program IS the round-7 fix ranks + regression infrastructure, then the v3 tracks resume.** Grounded against `governance/project_facts.yaml`, `specs/v27/FIX_PRODUCER_LEDGER.md`, `docs/COMPILATION_GUARANTEE.md`, and the live worktree.
 >
 > **v3 discriminator (keep this so the scope-cut bias cannot reappear):** distinguish a **ZERO-VALUE skip** (skip because there is provably nothing to gain — e.g. re-proving a byte-identical capstone, V4) from a **LAZY scope-cut** (defer a decidable, valuable workstream by mislabelling it "impossible/XL" — e.g. the old V1). Zero-value skips stay skipped; lazy scope-cuts are RECLASSIFIED in-scope. Every "out of scope" claim below must name which of the two it is.

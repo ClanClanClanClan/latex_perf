@@ -121,6 +121,14 @@ jobs:
         # restating a stale count.
         run: python3 scripts/tools/check_roadmap_facts.py --repo .
 
+      - name: Project state is the single source of truth (v27.1.63)
+        # docs/v27/PROJECT_STATE.md states where the project actually is. Its
+        # numeric block is REGENERATED from the artefacts that own those numbers
+        # and diffed, so it cannot drift the way ROADMAP.md's hand-typed numbers
+        # did. Also enforces the ledger discipline (unique OPEN ids, evidence,
+        # sizes) that lets a future session pick the work up.
+        run: python3 scripts/tools/check_project_state.py --repo .
+
       - name: Fix-safety language (v27.1.63)
         # No document may call the AUTO-FIX channel "proven-safe". Until
         # v27.1.63 four places did, while `grep -rlniE 'fix_guard|apply_fixes'

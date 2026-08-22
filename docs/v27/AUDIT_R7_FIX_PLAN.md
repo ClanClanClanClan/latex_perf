@@ -1,5 +1,11 @@
 # Round-7 Deep Code Audit — Findings & Fix Program (execution doc)
 
+> ⚠ **HISTORICAL EXECUTION RECORD.** Round 7 is complete as designed and
+> superseded as strategy: it drove the false-READY *fixture* baseline from 21 to
+> 7 while the published banner moved 35 → 34, because the fixture corpus and the
+> differential corpus are disjoint. For current state and the live open ledger
+> see **[PROJECT_STATE.md](PROJECT_STATE.md)**.
+
 > **Status:** authoritative execution plan for the round-7 fix program. Companion to
 > `docs/v27/ROADMAP.md` (v3.1), which sequences these items; THIS doc carries the finding-level
 > detail. Scope frozen at audit HEAD = the post-#501 merge of `main` (v27.1.61 + glue train).

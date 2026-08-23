@@ -621,13 +621,21 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
           i := stop)
         else i := pos + 1)
       else if starts_with "\\verb" pos || starts_with "\\lstinline" pos then (
-        let cmdlen = if starts_with "\\lstinline" pos then 10 else 5 in
+        let is_lst = starts_with "\\lstinline" pos in
+        let cmdlen = if is_lst then 10 else 5 in
         let after = ref (pos + cmdlen) in
         if !after < n && String.unsafe_get s !after = '*' then incr after;
-        (* \lstinline takes an OPTIONAL [key=value] argument, and the delimiter
-           follows it. Reading the byte at a fixed offset made '[' the
-           delimiter, so the range ended at the NEXT '[' — or, far more often,
-           at EOF.
+        (* \lstinline — and ONLY \lstinline — takes an OPTIONAL [key=value]
+           argument, and the delimiter follows it. Reading the byte at a fixed
+           offset made '[' the delimiter, so the range ended at the NEXT '[' —
+           or, far more often, at EOF.
+
+           ⚠ The [is_lst] guard is load-bearing. \verb has NO optional argument
+           and '[' is a perfectly legal \verb delimiter (`\verb[a--b[` compiles,
+           rc 0). Consuming a bracket group for \verb walks past the real
+           closing delimiter, lands on a letter, and records NO RANGE AT ALL —
+           so the fixer rewrote the VERBATIM BODY (a--b -> a–b, verified). That
+           is verbatim corruption, the fixer's cardinal sin.
 
            Both directions were measured. With a '[' inside the option VALUE
            (\lstinline[caption={[x]}]|a--b|) the range ends early and the fixer
@@ -642,7 +650,7 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
            braced option value cannot close the group early. An unclosed group
            leaves [after] where it was, which degrades to today's behaviour
            rather than inventing a range. *)
-        if !after < n && String.unsafe_get s !after = '[' then (
+        if is_lst && !after < n && String.unsafe_get s !after = '[' then (
           let e = ref (!after + 1) and depth = ref 0 and fin = ref (-1) in
           while !fin < 0 && !e < n do
             (match String.unsafe_get s !e with
@@ -666,7 +674,26 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
         do
           incr after
         done;
-        if !after < n && not (is_letter (String.unsafe_get s !after)) then (
+        if is_lst && !after < n && String.unsafe_get s !after = '{' then (
+          (* `\lstinline{code}` is a BRACE GROUP closed by the matching '}', not
+             a character delimiter closed by a SECOND '{'. This is the MOST
+             COMMON form in the corpus — 30 of 67 \lstinline uses, against 22
+             for the '[' form — and taking '{' as a delimiter over-reached to
+             the next '{', usually the brace of a later command, silently
+             withholding every fix in between.
+
+             Verified on `\lstinline{a -- b} then -- one, then \textbf{bold}
+             then -- two`: the range ran to the '{' of \textbf, so `-- one` was
+             withheld while `-- two` was fixed. Exactly the over-reach the '['
+             branch above was added to remove, in the form it left behind.
+
+             \verb is deliberately NOT included: it has no brace-group form, '{'
+             there is an ordinary delimiter character, and the corpus has zero
+             `\verb{` occurrences. *)
+          let stop = brace_group_end !after in
+          ranges := (pos, stop) :: !ranges;
+          i := stop)
+        else if !after < n && not (is_letter (String.unsafe_get s !after)) then (
           (* The next char is the delimiter; the non-letter guard avoids
              swallowing longer command names (e.g. \verbatim,
              \verbatiminput). *)

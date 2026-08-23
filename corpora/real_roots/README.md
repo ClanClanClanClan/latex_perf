@@ -46,8 +46,18 @@ and exits 2 if any differs from the manifest.
   against a READY verdict, which manufactures a false-READY out of thin air.
 - arXiv built these under **TeX Live 2023** while the oracle is pinned to
   **TL2026**. A FAILS verdict can mean a genuine source defect *or* three years
-  of package drift — report the matrix restricted to `declared_texlive == 2026`
-  alongside the whole-sample one before drawing conclusions.
+  of package drift. ⚠ **This corpus cannot control for that drift**, and the
+  instruction that used to sit here — "report the matrix restricted to
+  `declared_texlive == 2026`" — asked for the empty set. Measured over all 2,821
+  packages: `texlive_version` is present on 1,880 (66.6%) and **every declared
+  value is 2023**; not one paper declares the oracle's TL2026. There is no
+  same-engine stratum to compare against, so the drift confound is *universal*,
+  not a subset to be split off.
+  The only split this corpus supports is declared-2023 vs undeclared, and it
+  shows **no signal**: false-READY runs **7/130 (5.4%)** among the papers
+  declaring TL2023 and **4/69 (5.8%)** among those declaring nothing. Report
+  both, and do not present either as a drift control — "undeclared" is unknown,
+  very likely also older, not a TL2026 baseline.
 - This is one snapshot of arXiv, pdflatex-only. It is the first honest reading
   of the metric; it is **not** a representative sample of research LaTeX.
 

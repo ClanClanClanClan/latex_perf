@@ -225,6 +225,93 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
     return out
 
 
+def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
+                     timeout: int) -> int:
+    """Recompute ONLY the CLI verdict, reusing the recorded pdflatex results.
+
+    A full run recompiles 200 papers with pdflatex and takes ~20 minutes. That
+    is the right thing when the CORPUS or the ENGINE changed. It is waste when
+    only the tool changed — and the tool changes constantly, which is why
+    results.json went three PRs stale and the published headline read 56.8%
+    while main measured 65.8%.
+
+    The shortcut is sound under exactly two conditions, and BOTH are asserted
+    here rather than assumed:
+
+      * the corpus is unchanged — every paper's sha256_tree still matches the
+        manifest, so the documents are byte-identical;
+      * the engine is unchanged — pdflatex --version still matches the pin.
+
+    Given those, a pdflatex verdict is a property of the DOCUMENT, not of our
+    binary, so it can be carried forward. The CLI verdict cannot, so it is
+    recomputed. If either condition fails this refuses and tells you to run the
+    full sweep.
+    """
+    results_path = outdir / "results.json"
+    manifest_path = outdir / "manifest.json"
+    if not results_path.is_file() or not manifest_path.is_file():
+        return die(2, "no recorded results to refresh — run a full sweep first")
+    res = json.loads(results_path.read_text())
+    man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+
+    if res["oracle"]["version"] not in banner:
+        return die(3, f"engine skew: recorded {res['oracle']['version']!r}, local "
+                      f"{banner!r}. A CLI-only refresh cannot carry pdflatex "
+                      f"verdicts across an engine change — run the full sweep.")
+
+    cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
+    env = dict(os.environ, L0_VALIDATORS="pilot")
+    changed = []
+    for i, d in enumerate(res["docs"], 1):
+        rec = man.get(d["arxiv_id"])
+        if rec is None:
+            return die(2, f"{d['arxiv_id']} missing from the manifest")
+        if sha256_tree(root / d["arxiv_id"]) != rec["sha256_tree"]:
+            return die(2, f"{d['arxiv_id']}: tree sha differs from the manifest — "
+                          f"the corpus changed, so pdflatex verdicts cannot be "
+                          f"carried forward. Run the full sweep.")
+        top = root / d["arxiv_id"] / d["toplevel"]
+        try:
+            r = subprocess.run([str(cli), "--compile-check", str(top)],
+                               capture_output=True, timeout=timeout, env=env)
+            rc = r.returncode
+            reasons = sorted(set(re.findall(r"\b(T\d|[A-Z]{2,8}-\d{3})\b",
+                                            r.stdout.decode("utf-8", "replace"))))
+        except subprocess.TimeoutExpired:
+            return die(2, f"{d['arxiv_id']}: CLI timeout — the run is void")
+        before = d["cell"]
+        d["cli_rc"], d["cli_verdict"] = rc, ("READY" if rc == 0 else "NOT-READY")
+        d["cli_reasons"] = reasons
+        if d["cell"].startswith("ungraded"):
+            pass                                   # infra/timeout stays as recorded
+        else:
+            compiles = d["pdflatex_rc"] == 0
+            ready = rc == 0
+            d["cell"] = ("true-READY" if (ready and compiles) else
+                         "FALSE-READY" if (ready and not compiles) else
+                         "false-NOT-READY" if compiles else "true-NOT-READY")
+        if d["cell"] != before:
+            changed.append((d["arxiv_id"], before, d["cell"]))
+        print(f"  [{i}/{len(res['docs'])}] {d['arxiv_id']:16s} {d['cell']}",
+              flush=True)
+
+    res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
+    res["measured_at_sha"] = git_head(repo)
+    res["measured_at"] = "cli-only refresh; pdflatex verdicts carried forward"
+    results_path.write_text(json.dumps(res, indent=1) + "\n")
+    print(f"\n[real-roots] refreshed: {len(changed)} cell change(s)")
+    for a, b, c in changed:
+        print(f"    {a:16s} {b} -> {c}")
+    print(f"[real-roots] measured_at_sha = {res['measured_at_sha']}")
+    return 0
+
+
+def git_head(repo: Path) -> str:
+    r = subprocess.run(["git", "--no-optional-locks", "rev-parse", "HEAD"],
+                       cwd=repo, capture_output=True, text=True)
+    return r.stdout.strip() or "unknown"
+
+
 def main() -> int:  # noqa: C901
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--corpus-root", default=os.environ.get("LP_REAL_CORPUS"))
@@ -234,6 +321,10 @@ def main() -> int:  # noqa: C901
     ap.add_argument("--record", action="store_true",
                     help="write the frame manifest and the results baseline")
     ap.add_argument("--out", default="corpora/real_roots")
+    ap.add_argument("--refresh-cli", action="store_true",
+                    help="recompute only the CLI verdict, carrying the recorded "
+                         "pdflatex results forward (asserts corpus + engine "
+                         "unchanged)")
     ns = ap.parse_args()
 
     repo = Path(ns.repo).resolve()
@@ -257,6 +348,9 @@ def main() -> int:  # noqa: C901
         return die(2, "pdflatex not on PATH")
     if PIN not in banner:
         return die(3, f"engine skew: local is {banner!r}, pinned is {PIN!r}")
+
+    if ns.refresh_cli:
+        return refresh_cli_only(repo, root, outdir, banner, ns.timeout)
 
     frame = build_frame(root)
     if len(frame) < ns.n:

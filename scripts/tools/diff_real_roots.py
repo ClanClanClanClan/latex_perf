@@ -89,13 +89,18 @@ def build_frame(root: Path) -> list[dict]:
     across this tree.
     """
     frame = []
+    skipped: list[str] = []
     for d in sorted(root.iterdir()):
         readme = d / "00README.json"
         if not readme.is_file():
             continue
         try:
             meta = json.loads(readme.read_text())
-        except Exception:  # noqa: BLE001
+        except (json.JSONDecodeError, OSError):
+            # An unreadable 00README.json silently shrank the FRAME, and the
+            # frame size is a published number ("frame 2719"). Count them so a
+            # systematic corpus problem is visible instead of rounding away.
+            skipped.append(d.name)
             continue
         if (meta.get("process") or {}).get("compiler") != "pdflatex":
             continue
@@ -112,6 +117,10 @@ def build_frame(root: Path) -> list[dict]:
             "declared_compiler": "pdflatex",
             "declared_texlive": (meta.get("process") or {}).get("texlive_version"),
         })
+    if skipped:
+        print(f"[real-roots] WARNING: {len(skipped)} package(s) have an "
+              f"unreadable 00README.json and are NOT in the frame: "
+              f"{', '.join(skipped[:5])}{'...' if len(skipped) > 5 else ''}")
     return frame
 
 

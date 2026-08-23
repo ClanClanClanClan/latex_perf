@@ -83,8 +83,16 @@ def tracked_md_files(repo: Path) -> list[Path]:
             ["git", "ls-files", "*.md"], cwd=repo, capture_output=True, text=True, check=True
         ).stdout
         rels = [r for r in out.splitlines() if r]
-    except Exception:
-        rels = [str(p.relative_to(repo)) for p in repo.rglob("*.md")]
+    except (subprocess.CalledProcessError, OSError) as exc:
+        # The old fallback rglob'd the worktree, which scans a DIFFERENT set:
+        # untracked files, _build artefacts and archives that git ls-files
+        # deliberately excludes. A gate that silently changes what it inspects
+        # is worse than one that stops.
+        raise SystemExit(
+            f"[version-labels] FAIL: `git ls-files *.md` failed ({exc}). "
+            f"Refusing to fall back to a filesystem walk — it would scan "
+            f"untracked and build files and silently change what this gate "
+            f"checks.")
     keep = []
     for rel in rels:
         if any(seg in f"/{rel}" for seg in EXCLUDE_SEGMENTS):

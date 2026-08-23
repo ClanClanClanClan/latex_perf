@@ -151,6 +151,69 @@ TRIVIAL_EXPECT_PATTERNS = [
 TRIVIAL_EXPECT_CEILING = 40  # P1.10 baseline for `expect true` smoke tests
 
 
+def gate_python_silent_except(repo: Path) -> list[str]:
+    """No GATE SCRIPT may swallow a broad exception into a fallback value.
+
+    The OCaml arm above has policed this since P1.10. The Python gate scripts
+    were never covered, and it bit exactly as predicted: a broad
+    `except Exception` in check_project_state.py swallowed a NameError (`json`
+    was not imported) and reported "no measured_at_sha" — a specific, plausible
+    and completely wrong diagnostic that sent the author inspecting the data
+    instead of the code.
+
+    A broad except does not merely hide an error. In a gate it MANUFACTURES A
+    FINDING, and a wrong finding is worse than a crash: a crash gets fixed,
+    a wrong finding gets believed.
+
+    Two of the sites this gate was written for were actively destructive rather
+    than merely misleading — in check_apply_fixes_roundtrip.py, one treated a
+    corrupt manifest as "not pdflatex-graded" and would then permit the --record
+    that erases every breaks_compile row, and another silently dropped the
+    `oracle` provenance block that tex-oracle.yml pin-asserts.
+
+    The rule: inside scripts/tools/, a broad handler must either NARROW its
+    exception type, or visibly report — die(), raise, SystemExit, or append to a
+    findings list. Producing a fallback value and continuing is the banned shape.
+    """
+    import ast
+
+    failures: list[str] = []
+    scanned = 0
+    for p in sorted((repo / "scripts/tools").glob("*.py")):
+        try:
+            tree = ast.parse(p.read_text(errors="replace"))
+        except SyntaxError:
+            continue
+        scanned += 1
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ExceptHandler):
+                continue
+            typ = node.type
+            broad = typ is None or (
+                isinstance(typ, ast.Name) and typ.id in ("Exception", "BaseException")
+            )
+            if not broad:
+                continue
+            src = ast.dump(node)
+            reports = (
+                "Raise(" in src
+                or "'die'" in src
+                or "SystemExit" in src
+                or "'append'" in src
+                or "'exit'" in src
+            )
+            if not reports:
+                failures.append(
+                    f"{p.relative_to(repo)}:{node.lineno}: broad `except "
+                    f"{'(bare)' if typ is None else typ.id}` produces a fallback "
+                    f"and continues. In a gate that MANUFACTURES a wrong finding. "
+                    f"Narrow the exception type, or die()/raise.")
+    if scanned < 15:
+        failures.append(
+            f"only {scanned} gate script(s) scanned — refusing to pass vacuously")
+    return failures
+
+
 def gate_test_triviality(repo: Path) -> list[str]:
     failures: list[str] = []
     smoke_count = 0
@@ -199,6 +262,7 @@ def main() -> int:
     for name, fn in [
         ("Defined. audit", gate_defined_audit),
         ("Exception swallow", gate_exception_swallow),
+        ("Python gate silent-except", gate_python_silent_except),
         ("Test triviality", gate_test_triviality),
     ]:
         failures = fn(repo)

@@ -174,10 +174,17 @@ def main() -> int:
     # Checked HERE rather than at the write, so it costs nothing: the refusal
     # lands before the 73-document sweep instead of after it.
     if args.record and not have_tex and manifest_path.exists():
+        # Catch only what reading JSON can genuinely raise. A broad except here
+        # treated a CORRUPT manifest as "not pdflatex_graded" and then allowed
+        # the --record it exists to prevent — erasing every breaks_compile row.
+        # The safe reading of "I cannot tell" is REFUSE, not proceed.
         try:
             prior_graded = json.loads(manifest_path.read_text()).get("pdflatex_graded")
-        except Exception:  # noqa: BLE001
-            prior_graded = None
+        except (json.JSONDecodeError, OSError) as exc:
+            return die(f"cannot read {MANIFEST} to check whether it is "
+                       f"pdflatex-graded ({exc}); refusing to --record, because "
+                       f"if it IS graded this would erase every breaks_compile "
+                       f"row")
         if prior_graded:
             return die(
                 "refusing to re-record: the existing baseline is pdflatex_graded "
@@ -339,11 +346,16 @@ def main() -> int:
         owned = {"description", "properties", "pdflatex_graded", "known_broken"}
         carried: dict = {}
         if manifest_path.exists():
+            # [carried = {}] on failure performs exactly the destruction this
+            # block exists to prevent: it drops the `oracle` provenance block
+            # that tex-oracle.yml pin-asserts. Unreadable means STOP.
             try:
                 carried = {k: v for k, v in json.loads(manifest_path.read_text()).items()
                            if k not in owned}
-            except Exception:  # noqa: BLE001
-                carried = {}
+            except (json.JSONDecodeError, OSError) as exc:
+                return die(f"cannot read {MANIFEST} to carry its unowned keys "
+                           f"forward ({exc}); refusing to --record rather than "
+                           f"silently discarding the oracle provenance block")
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps({
             "description": (

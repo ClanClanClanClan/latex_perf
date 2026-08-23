@@ -85,37 +85,31 @@ let t2_check (proj : Project_model.t) : reason list =
   then T2_project_not_closed `Cycle_in_build_graph :: rs
   else rs
 
-(* T4: if aux exists, use parsed labels to check uniqueness and that cited keys
-   resolve. Otherwise fall back to no-check (source-only label analysis is v26.3
-   territory). *)
-let t4_check ?aux_path (_proj : Project_model.t) : reason list =
-  match aux_path with
-  | None -> []
-  | Some path -> (
-      match Aux_state.of_file path with
-      | Error _ -> [] (* Can't check; don't fail *)
-      | Ok aux ->
-          let rs = [] in
-          let rs =
-            if Aux_state.labels_unique aux then rs
-            else
-              (* Find the actual duplicates to report. *)
-              let counts = Hashtbl.create 16 in
-              List.iter
-                (fun (l : Aux_state.label_entry) ->
-                  let c =
-                    try Hashtbl.find counts l.name with Not_found -> 0
-                  in
-                  Hashtbl.replace counts l.name (c + 1))
-                aux.labels;
-              let dups =
-                Hashtbl.fold
-                  (fun name c acc -> if c > 1 then name :: acc else acc)
-                  counts []
-              in
-              T4_semantic_incoherent (`Duplicate_labels dups) :: rs
-          in
-          rs)
+(* T4 IS NO LONGER A BLOCKING PREMISE (OPEN-008).
+
+   [t4_check] reported exactly ONE condition — duplicate \label names read from
+   the .aux — and a duplicate label is NOT a compile failure. Measured against
+   the pinned oracle (pdfTeX 3.141592653-2.6-1.40.29) under BOTH protocols:
+
+   \section{One}\label{same} \section{Two}\label{same} \ref{same}
+   -interaction=nonstopmode -halt-on-error -> rc 0, PDF produced
+   -interaction=nonstopmode -> rc 0, PDF produced log: LaTeX Warning: Label
+   `same' multiply defined.
+
+   A WARNING. The check was rejecting documents pdflatex accepts: on the
+   200-paper real corpus (corpora/real_roots) T4 was the ONLY blocking reason
+   for NINE documents and all nine compile.
+
+   The deeper reason it was never licensed: [project_wf_dec_sound] is
+   ONE-DIRECTIONAL. dec = true IMPLIES compile_safe; dec = false implies
+   NOTHING. So an unmet nodup premise never justified a REJECTION — it only
+   failed to justify a certification. Treating "the model cannot certify this"
+   as "this will not compile" is the inversion this removes.
+
+   The [T4_semantic_incoherent] constructor and its renderer are KEPT: they are
+   exported in the .mli, and the aux-coherence idea is sound if it is ever aimed
+   at something pdflatex actually rejects. Nothing constructs it today.
+   `Missing_bib_entries was ALWAYS unreachable — no code ever built it. *)
 
 (* T0 (v27.1.52): parser acceptance + language-profile gate, run against the
    real root source. Two independent failure modes, both genuine:
@@ -378,7 +372,6 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     @ t1_check proj
     @ t2_check proj
     @ t3_check proj
-    @ t4_check ?aux_path proj
     @ t5
     @ tsf
     @ tcap

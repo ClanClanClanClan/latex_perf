@@ -81,6 +81,25 @@ def sha256_tree(d: Path) -> str:
     return h.hexdigest()
 
 
+def declared_texlive(meta: dict):
+    """arXiv records `texlive_version` at the TOP LEVEL of 00README.json.
+
+    It was read as `meta["process"]["texlive_version"]`, and `process` carries
+    exactly one key — `compiler` — so the lookup returned None on every paper
+    ever sampled and `declared_texlive` was null on all 200 recorded rows.
+
+    Measured over the 2,821 packages in the corpus: the key is present at the
+    top level in 1,880 (66.6%) and absent in 941; `process.*` is `{"compiler"}`
+    and nothing else, in all 2,821.
+
+    ⚠ Every single declared value is **2023**. Not one paper declares the
+    oracle's TL2026, so the drift control README.md asks for — "the matrix
+    restricted to declared_texlive == 2026" — selects the empty set and cannot
+    be computed from this corpus at all. See the README for what replaced it.
+    """
+    return meta.get("texlive_version")
+
+
 def build_frame(root: Path) -> list[dict]:
     """Papers arXiv itself declares as pdflatex with exactly one toplevel.
 
@@ -115,7 +134,7 @@ def build_frame(root: Path) -> list[dict]:
             "arxiv_id": d.name,
             "toplevel": tops[0],
             "declared_compiler": "pdflatex",
-            "declared_texlive": (meta.get("process") or {}).get("texlive_version"),
+            "declared_texlive": declared_texlive(meta),
         })
     if skipped:
         print(f"[real-roots] WARNING: {len(skipped)} package(s) have an "
@@ -312,6 +331,44 @@ def git_head(repo: Path) -> str:
     return r.stdout.strip() or "unknown"
 
 
+def refresh_metadata_only(root: Path, outdir: Path) -> int:
+    """Re-read the DECLARED metadata into manifest.json. No pdflatex, no CLI.
+
+    `declared_texlive` is descriptive metadata copied out of 00README.json; it
+    is never a filter (build_frame selects on `process.compiler` and the
+    toplevel count, and select() orders by sha256 of the arxiv id), so
+    backfilling it cannot move the frame or the sample. Only the recorded value
+    changes.
+
+    The per-paper `sha256_tree` is still asserted before anything is rewritten:
+    if the corpus moved under the baseline, the metadata in it is not the
+    metadata that was measured, and silently refreshing would launder that.
+    """
+    manifest_path = outdir / "manifest.json"
+    if not manifest_path.is_file():
+        return die(2, "no manifest to refresh — run a full sweep first")
+    man = json.loads(manifest_path.read_text())
+    changed = 0
+    for d in man["docs"]:
+        if sha256_tree(root / d["arxiv_id"]) != d["sha256_tree"]:
+            return die(2, f"{d['arxiv_id']}: tree sha differs from the manifest "
+                          f"— the corpus changed under the baseline, so its "
+                          f"metadata is not what was measured. Run the sweep.")
+        meta = json.loads((root / d["arxiv_id"] / "00README.json").read_text())
+        was, now = d.get("declared_texlive"), declared_texlive(meta)
+        if was != now:
+            d["declared_texlive"] = now
+            changed += 1
+    manifest_path.write_text(json.dumps(man, indent=1) + "\n")
+    have = sum(1 for d in man["docs"] if d["declared_texlive"] is not None)
+    print(f"[real-roots] metadata refreshed: {changed} row(s) changed; "
+          f"{have}/{len(man['docs'])} now carry a declared TeX Live version")
+    if have == 0:
+        return die(2, "still 0 rows with a declared version — the extraction is "
+                      "wrong again; refusing to report success")
+    return 0
+
+
 def main() -> int:  # noqa: C901
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--corpus-root", default=os.environ.get("LP_REAL_CORPUS"))
@@ -325,12 +382,18 @@ def main() -> int:  # noqa: C901
                     help="recompute only the CLI verdict, carrying the recorded "
                          "pdflatex results forward (asserts corpus + engine "
                          "unchanged)")
+    ap.add_argument("--refresh-metadata", action="store_true",
+                    help="re-read declared metadata into manifest.json; runs "
+                         "neither pdflatex nor the CLI (asserts corpus "
+                         "unchanged)")
     ns = ap.parse_args()
 
     repo = Path(ns.repo).resolve()
     outdir = repo / ns.out
     cli = repo / "_build/default/latex-parse/src/validators_cli.exe"
-    if not cli.is_file():
+    # --refresh-metadata reads 00README.json and writes the manifest; it runs
+    # neither the CLI nor pdflatex, so it must not require either to be present.
+    if not cli.is_file() and not ns.refresh_metadata:
         return die(2, f"{cli} not built")
     if not ns.corpus_root:
         return die(2, "no --corpus-root and LP_REAL_CORPUS unset. The corpus is "
@@ -339,6 +402,9 @@ def main() -> int:  # noqa: C901
     root = Path(ns.corpus_root).expanduser().resolve()
     if not root.is_dir():
         return die(2, f"corpus root {root} does not exist")
+
+    if ns.refresh_metadata:
+        return refresh_metadata_only(root, outdir)
 
     # Engine skew is its OWN exit code: a mismatch is not a soundness result.
     try:

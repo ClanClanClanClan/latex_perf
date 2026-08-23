@@ -72,6 +72,41 @@ let () =
         (exempt "\\lstinline[caption={[x]}]|a -- b|" "-- b")
         (tag ^ ": close only at an UNESCAPED ] at brace depth 0"));
 
+  (* ── '[' is a legal \verb DELIMITER, not an optional argument ─────────
+
+     Consuming a bracket group for \verb (which has no optional argument) walked
+     past the real closing delimiter onto a letter and recorded NO RANGE, so the
+     fixer rewrote the verbatim body. Both halves are pinned: the body must be
+     exempt, and the prose after it must stay live. *)
+  run "\\verb[..[ body is exempt" (fun tag ->
+      expect
+        (exempt "Code: \\verb[a -- b[ end, bracket ] here." "-- b")
+        (tag ^ ": '[' is a \\verb delimiter; the body must not be rewritten"));
+
+  run "prose after \\verb[..[ stays live" (fun tag ->
+      expect
+        (not (exempt "\\verb[ab[ tail ] then -- here" "-- here"))
+        (tag ^ ": the \\verb range ends at the closing '['"));
+
+  (* ── \lstinline{..} is a BRACE GROUP, not a '{' delimiter ───────────── *)
+  run "\\lstinline{..} body is exempt" (fun tag ->
+      expect
+        (exempt "x \\lstinline{a -- b} y" "-- b")
+        (tag ^ ": -- inside \\lstinline{}"));
+
+  run "prose after \\lstinline{..} stays live" (fun tag ->
+      (* The over-reach: '{' taken as a delimiter ran the range to the NEXT '{'
+         — the brace of \textbf — withholding every fix in between. *)
+      expect
+        (not
+           (exempt "\\lstinline{a b} then -- one, then \\textbf{bold}" "-- one"))
+        (tag ^ ": the range must end at the matching '}', not the next '{'"));
+
+  run "\\lstinline[opt]{..} consumes both the option and the group" (fun tag ->
+      expect
+        (exempt "\\lstinline[language=C]{a -- b} tail" "-- b")
+        (tag ^ ": optional argument then brace group"));
+
   run "a space before the delimiter is absorbed" (fun tag ->
       (* TeX ends a control word at the first non-letter and absorbs following
          spaces, so `X \verb |ab| Y` is legal and its delimiter is '|'. The

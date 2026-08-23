@@ -56,15 +56,15 @@ Oracle `pdfTeX 3.141592653-2.6-1.40.29`, TeX Live 2026, protocol `-interaction=n
 
 | cell | n |
 |---|---|
-| true-READY | 107 |
+| true-READY | 125 |
 | true-NOT-READY | 6 |
 | FALSE-READY | 11 |
-| false-NOT-READY | 75 |
+| false-NOT-READY | 57 |
 | ungraded-infra | 1 |
 | ungraded-timeout | 0 |
 
-- **Correct verdicts: 113/199 = 56.8%**
-- **Over-rejection: 75/199 = 37.7%** — i.e. **92.6% of every NOT-READY verdict issued on a real paper is wrong**
+- **Correct verdicts: 131/199 = 65.8%**
+- **Over-rejection: 57/199 = 28.6%** — i.e. **90.5% of every NOT-READY verdict issued on a real paper is wrong**
 - **False-READY: 11/199 = 5.5%**, against a definition requiring zero
 
 ### Fixer residual (auto-fix channel)
@@ -123,7 +123,7 @@ Size: S ≤ a day · M ≤ a week · L multi-week · XL multi-month.
 | OPEN-008 | OVERREJ | **T4 duplicate-`\label` polarity** — 9 rescue-alone, all 9 compile. pdflatex only warns and exits 0. | same | S |
 | OPEN-009 | OVERREJ | **REAL, but the obvious fix MANUFACTURES A FALSE-READY — re-sized S → L.** The gap is real: `compile_gate_checks.ml`'s opt-skip loop accepts `' '`/`\t`/`\n`/`\r`/`[` but not `*`, so in math `\ref*{sec:x_a_b}` is NOT-READY while `\ref{...}` is READY. ⚠ **Do NOT just add `*`.** That makes the detector SKIP the span, and a document whose `\ref` is redefined in an `\input` CHILD (`\renewcommand{\ref}[1]{\textbf{#1}}`) then typesets the key: today NOT-READY with pdflatex rc 1 `! Double subscript.` and no PDF — **after the patch, READY**. Measured yield of the cheap patch is **zero**: 0 of 200 sampled papers and 0 of 2,961 in the frame change verdict. A safe fix must resolve `\ref` redefinition across the INCLUDE CLOSURE (and `\let`), not scan the root — hence L. Net of the cheap version: strictly negative. | **VERIFIED 2026-08-22** — both the gap and the refutation reproduced end-to-end | L |
 | OPEN-010 | OVERREJ | **DELIM-001 / DELIM-003 residual precision** — 2 and 1 rescue-alone, all compile. Unlike DELIM-007 these ARE real error classes, so the fix is precision, not demotion. | verified 2026-08-22 | M |
-| OPEN-011 | INSTR | **`corpora/real_roots` is ungated.** No workflow reads it; an ungated measurement decays exactly as the 65-doc banner did. Gate false-READY *set membership*, not a numeric over-rejection bound. | no workflow references it | M |
+| OPEN-011 | INSTR | **Real-paper measurement provenance — ADDRESSED.** `results.json` now records `measured_at_sha`, `diff_real_roots.py --refresh-cli` recomputes only the CLI verdict (asserting corpus shas and the engine pin, so pdflatex verdicts may be carried forward), and `check_project_state` fails when more than 5 commits touching `latex-parse/src` land after the measurement. ⚠ Still OPEN: nothing re-measures in CI, because the corpus is 12 GB of non-redistributable arXiv source. The ratchet bounds decay; it does not eliminate it. | **VERIFIED 2026-08-23** — ratchet fires at 8 commits, passes at 5 | M |
 | OPEN-012 | INSTR | **Extend 200 → 400** and publish the new-class discovery rate. Every instrument so far found more (round-7 +30, Aug audit +6, this corpus +2). It is the only real test of "is the residual enumerable". | — | L |
 | OPEN-013 | GATE | **No gate compares any version marker to a git tag.** 33 commits past `v27.1.62` with 11 green required contexts. | `git describe` vs `dune-project` | S |
 | OPEN-014 | HONEST | **`per_rule_soundness_count: 643`** is `rules.total_non_reserved` copied verbatim; the 803 generated theorems are 803/803 identical one-line instantiations of a `flat_map` triviality; `theorem_count_reported: 1543` vs 1456 line-anchored. | `generate_project_facts.py:104` | M |
@@ -162,6 +162,8 @@ out to be false, plus how it was caught, so the same mistake is not repeated.
 | C-13 | A generated block should carry every fact worth knowing, including release debt. | `git describe` changes on **every commit**, so the regenerate-and-diff gate fired on the very next one. A gate that fires on every PR trains people to regenerate without reading, which is worse than no gate. Volatile facts belong in prose as an instruction, not in a diffed block. | The gate failing on my own next commit. |
 | C-14 | OPEN-009's `\ref*` gap was "a one-character fix", cheap and safe. | **Strictly negative as scoped.** Adding `*` to the opt-skip makes the detector skip the span, and a document whose `\ref` is redefined in an `\input` child goes from correctly NOT-READY (pdflatex rc 1, no PDF) to READY. Measured yield of the "fix": **0 of 200** and **0 of 2,961**. So it trades a manufactured false-READY for nothing. | An adversarial agent tasked with REFUTING each "no false-READY risk" claim, then reproduced by hand. The ledger had been instructing the patch. |
 | C-15 | The `\verb` scanner's only defect was the optional-argument delimiter. | There is a third: the delimiter is read at a FIXED offset, but TeX absorbs a space after a control word. `X \verb |ab| Y` compiles with `|` as delimiter while the scanner takes the space. A "fix" that re-implements the same offset rule in the re-key inherits the bug. | Same hunt. |
+| C-16 | The generated-block gate meant the published position was correct. | It only proved the block matched its SOURCE. `results.json` went **three PRs stale** while the gate passed, publishing **56.8%** when main measured **65.8%**. A source-of-truth needs provenance on its sources, not just consistency with them. | Noticing the headline disagreed with a number I had measured an hour earlier. |
+| C-17 | A broad `except Exception` around a file read is harmless defensive coding. | It swallowed a `NameError` (`json` was never imported) and reported **"no measured_at_sha"** — a plausible, entirely wrong diagnostic that sent me inspecting the data instead of the code. Catch only what can genuinely go wrong; a broad except converts a programming error into a convincing finding. | The gate reporting a field missing that I could see was present. |
 
 ---
 

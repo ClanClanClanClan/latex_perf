@@ -50,7 +50,8 @@ ORACLE = {
     "engine": "pdflatex",
     "distribution": "TeX Live 2026",
     "version": PIN,
-    "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape",
+    "protocol": ("-interaction=nonstopmode -halt-on-error -no-shell-escape, "
+                 "up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"),
 }
 
 # A missing converted-EPS or graphics file is a property of how the paper was
@@ -160,6 +161,48 @@ def size_bucket(nbytes: int) -> str:
     return "10-100KB" if nbytes < 100_000 else ">100KB"
 
 
+MAX_PASSES = 3
+
+
+def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
+                    max_passes: int = MAX_PASSES) -> tuple[int, int]:
+    """Run pdflatex until it succeeds, up to [max_passes]. Returns (rc, passes).
+
+    ⚠ THE ORACLE USED TO RUN EXACTLY ONE PASS, AND THAT MISCOUNTED REAL PAPERS.
+    LaTeX is a multi-pass system by construction: `.aux` is written on one pass
+    and read on the next, which is why every real build tool (latexmk, and
+    arXiv's own AutoTeX) iterates. Judging a document on pass 1 alone marks a
+    perfectly ordinary document as broken.
+
+    Measured on the 11 recorded false-READYs: the THREE natbib papers
+    (2507.10419v1, 2506.22536v1, 2506.17405v1) fail pass 1 with
+    "! Package natbib Error: Bibliography not compatible with author-year
+    citations." and compile **rc 0 with a PDF on pass 2**, unedited, in the same
+    directory — natbib cannot know the citation style until it has read the
+    `.bbl`/`.aux` that pass 1 produces. The other eight (the `\\c@<env>`
+    collisions) fail identically on every pass, so this does not launder them.
+
+    `-halt-on-error` is DELIBERATELY KEPT. The defect being corrected is the
+    pass count, not the error policy; relaxing both at once would have quietly
+    reclassified the `\\c@` class too.
+
+    Early-exits on the first rc 0, so a healthy document still costs one pass.
+    """
+    rc, passes = -1, 0
+    for _ in range(max_passes):
+        try:
+            t = subprocess.run(
+                ["pdflatex", "-no-shell-escape", "-interaction=nonstopmode",
+                 "-halt-on-error", toplevel],
+                cwd=work, env=env, capture_output=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return -1, passes + 1
+        rc, passes = t.returncode, passes + 1
+        if rc == 0:
+            break
+    return rc, passes
+
+
 def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
     pkg = root / rec["arxiv_id"]
     out = dict(rec)
@@ -196,14 +239,9 @@ def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:
                        TEXMFHOME=str(Path(td) / "th"),
                        TEXMFVAR=str(Path(td) / "tv"),
                        openin_any="p", openout_any="p", SOURCE_DATE_EPOCH="0")
-        try:
-            t = subprocess.run(
-                ["pdflatex", "-no-shell-escape", "-interaction=nonstopmode",
-                 "-halt-on-error", rec["toplevel"]],
-                cwd=work, env=tex_env, capture_output=True, timeout=timeout)
-            out["pdflatex_rc"] = t.returncode
-        except subprocess.TimeoutExpired:
-            out["pdflatex_rc"] = -1
+        rc, passes = run_to_fixpoint(work, rec["toplevel"], tex_env, timeout)
+        out["pdflatex_rc"] = rc
+        out["pdflatex_passes"] = passes
 
         log = work / (Path(rec["toplevel"]).stem + ".log")
         first_full = ""
@@ -331,6 +369,83 @@ def git_head(repo: Path) -> str:
     return r.stdout.strip() or "unknown"
 
 
+def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
+                    timeout: int) -> int:
+    """Re-grade ONLY the recorded pdflatex FAILURES under the multi-pass oracle.
+
+    The single-pass oracle marked as failures documents that merely needed a
+    second pass. Correcting that does not require re-running the whole sweep:
+    extra passes can turn a failure into a success, never the reverse, so a
+    document already recorded `pdflatex_rc == 0` cannot change. Only the
+    failures are re-run.
+
+    ⚠ The one shape that assumption misses is a document whose SECOND pass is
+    broken by the `.aux` its first pass wrote (the `fr_corrupt_aux` fixture is
+    exactly this). Such a paper would have passed on one pass and would now
+    fail. It cannot be detected without the full sweep, so run the full sweep
+    before publishing a headline number; this mode is for correcting a recorded
+    baseline in place, and it says so in `results.json`.
+
+    Asserts the corpus (per-paper `sha256_tree`) and the engine pin first: a
+    verdict carried forward from a different corpus or engine is not evidence.
+    """
+    results_path = outdir / "results.json"
+    manifest_path = outdir / "manifest.json"
+    if not (results_path.is_file() and manifest_path.is_file()):
+        return die(2, "no recorded results to re-pass — run a full sweep first")
+    res = json.loads(results_path.read_text())
+    man = {d["arxiv_id"]: d for d in json.loads(manifest_path.read_text())["docs"]}
+
+    if res["oracle"]["version"] not in banner:
+        return die(3, f"engine skew: recorded {res['oracle']['version']!r}, local "
+                      f"{banner!r}. Re-grading under a different engine is not a "
+                      f"correction, it is a new measurement — run the full sweep.")
+
+    failures = [d for d in res["docs"] if d.get("pdflatex_rc") not in (0, None)]
+    print(f"[real-roots] re-passing {len(failures)} recorded pdflatex failure(s) "
+          f"under up to {MAX_PASSES} passes")
+    changed = []
+    for i, d in enumerate(failures, 1):
+        rec = man.get(d["arxiv_id"])
+        if rec is None:
+            return die(2, f"{d['arxiv_id']} missing from the manifest")
+        if sha256_tree(root / d["arxiv_id"]) != rec["sha256_tree"]:
+            return die(2, f"{d['arxiv_id']}: tree sha differs from the manifest — "
+                          f"the corpus changed under the baseline. Run the sweep.")
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as td:
+            work = Path(td) / "w"
+            shutil.copytree(root / d["arxiv_id"], work)
+            env = dict(os.environ, TEXMFHOME=str(Path(td) / "th"),
+                       TEXMFVAR=str(Path(td) / "tv"), openin_any="p",
+                       openout_any="p", SOURCE_DATE_EPOCH="0")
+            rc, passes = run_to_fixpoint(work, d["toplevel"], env, timeout)
+        before = d["cell"]
+        d["pdflatex_rc"], d["pdflatex_passes"] = rc, passes
+        if not before.startswith("ungraded"):
+            compiles, ready = rc == 0, d["cli_rc"] == 0
+            d["pdflatex_verdict"] = "COMPILES" if compiles else "FAILS"
+            d["cell"] = ("true-READY" if (ready and compiles) else
+                         "FALSE-READY" if (ready and not compiles) else
+                         "false-NOT-READY" if compiles else "true-NOT-READY")
+        if d["cell"] != before:
+            changed.append((d["arxiv_id"], before, d["cell"], passes))
+        print(f"  [{i}/{len(failures)}] {d['arxiv_id']:16s} "
+              f"rc={rc} passes={passes} {d['cell']}", flush=True)
+
+    res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
+    res["oracle"] = ORACLE
+    res["measured_at_sha"] = git_head(repo)
+    res["measured_at"] = (f"multi-pass re-grade of recorded failures only "
+                          f"(<= {MAX_PASSES} passes); CLI verdicts and "
+                          f"already-compiling papers carried forward")
+    results_path.write_text(json.dumps(res, indent=1) + "\n")
+    print(f"\n[real-roots] {len(changed)} cell(s) changed:")
+    for aid, a, b, p in changed:
+        print(f"    {aid:16s} {a} -> {b}  (compiled on pass {p})")
+    print(f"[real-roots] counts now: {res['counts']}")
+    return 0
+
+
 def refresh_metadata_only(root: Path, outdir: Path) -> int:
     """Re-read the DECLARED metadata into manifest.json. No pdflatex, no CLI.
 
@@ -382,6 +497,9 @@ def main() -> int:  # noqa: C901
                     help="recompute only the CLI verdict, carrying the recorded "
                          "pdflatex results forward (asserts corpus + engine "
                          "unchanged)")
+    ap.add_argument("--repass", action="store_true",
+                    help="re-grade ONLY the recorded pdflatex failures under the "
+                         "multi-pass oracle (asserts corpus + engine unchanged)")
     ap.add_argument("--refresh-metadata", action="store_true",
                     help="re-read declared metadata into manifest.json; runs "
                          "neither pdflatex nor the CLI (asserts corpus "
@@ -414,6 +532,9 @@ def main() -> int:  # noqa: C901
         return die(2, "pdflatex not on PATH")
     if PIN not in banner:
         return die(3, f"engine skew: local is {banner!r}, pinned is {PIN!r}")
+
+    if ns.repass:
+        return repass_failures(repo, root, outdir, banner, ns.timeout)
 
     if ns.refresh_cli:
         return refresh_cli_only(repo, root, outdir, banner, ns.timeout)

@@ -2180,7 +2180,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@math-rules"
-  fix: null
+  fix: replace_with_macro
 
 - id: "MATH-073"
   description: "xcolor macro \\color used inside math"
@@ -2333,7 +2333,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@math-rules"
-  fix: null
+  fix: replace_with_macro
 
 - id: "MATH-092"
   description: "\\sum with explicit limits in inline math"
@@ -2721,7 +2721,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@math-rules"
-  fix: null
+  fix: wrap_in_braces
 
 - id: "SCRIPT-019"
   description: "Double prime '' instead of ^{\\prime\\prime}"
@@ -2745,7 +2745,7 @@
   default_severity: Warning
   maturity: Draft
   owner: "@math-rules"
-  fix: null
+  fix: reorder_scripts
 
 - id: "SCRIPT-022"
   description: "Superscript prime stacked > 3 – prefer ^{(n)}"
@@ -4137,7 +4137,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@cjk"
-  fix: null
+  fix: remove_space
 
 - id: "CJK-010"
   description: "Half‑width CJK punctuation in full‑width context"
@@ -4670,7 +4670,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@chemistry"
-  fix: null
+  fix: wrap_in_braces
 
 - id: "CHEM-005"
   description: "Chemical arrow typed '->' not \\rightarrow"
@@ -5148,7 +5148,7 @@
   default_severity: Info
   maturity: Draft
   owner: "@bib-team"
-  fix: null
+  fix: replace_with_macro
 
 - id: "BIB-011"
   description: "Legacy `note = {URL: …}` field detected; move to `url`"
@@ -5543,7 +5543,7 @@
   default_severity: Error
   maturity: Impl
   owner: "@structure"
-  fix: null
+  fix: convert_tabs
 
 - id: "STRUCT-004"
   description: "Unmatched braces in document"

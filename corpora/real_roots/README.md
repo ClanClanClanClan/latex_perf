@@ -36,6 +36,33 @@ and exits 2 if any differs from the manifest.
   growth**: extending 200 → 400 leaves the first 200 unchanged, so a later
   baseline stays comparable to an earlier one.
 
+## The oracle protocol is part of the result
+
+`-interaction=nonstopmode -halt-on-error -no-shell-escape`, **up to 3 passes**.
+Both halves of that are load-bearing, and one of them was wrong for the whole of
+the first measurement.
+
+- **Pass count.** The oracle used to run pdflatex EXACTLY ONCE. LaTeX is a
+  multi-pass system by construction — `.aux` is written on one pass and read on
+  the next — which is why latexmk and arXiv's own AutoTeX iterate. Judging a
+  document on pass 1 alone marks an ordinary document broken. Measured: the
+  three natbib papers among the recorded false-READYs fail pass 1 with
+  `! Package natbib Error: Bibliography not compatible with author-year
+  citations.` and compile **rc 0 with a PDF on pass 2**, unedited, in the same
+  directory. Frame-wide, every natbib pass-1 failure self-heals on pass 2.
+- **`-halt-on-error` is kept deliberately.** It is what makes a verdict crisp,
+  and relaxing it at the same time as the pass count would have quietly
+  reclassified the `\c@<env>` collisions too.
+
+⚠ **A FAILS verdict here does NOT mean "no PDF".** Under a plain nonstopmode run
+without `-halt-on-error` — closer to what arXiv itself does — the `\c@<env>`
+papers still emit a complete PDF of 21–63 pages. The project's fixture corpus
+already draws this line (`strong-fatal` = no PDF under either protocol vs
+`error-halt` = a PDF under plain nonstopmode); the real-paper differential does
+not yet record which side each failure falls on. Until it does, read
+"false-READY" here as **"pdflatex reports an error and exits non-zero"**, not as
+"the document does not build".
+
 ## Reading the result honestly
 
 - Over-rejection is a rate over **graded** documents, never over N.

@@ -3,7 +3,7 @@
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
   "version": "pdfTeX 3.141592653-2.6-1.40.29",
-  "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape"
+  "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
  },
  "frame": {
   "corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
@@ -12,10 +12,10 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 125,
-  "false-NOT-READY": 57,
-  "true-NOT-READY": 6,
-  "FALSE-READY": 11,
+  "true-READY": 128,
+  "false-NOT-READY": 58,
+  "true-NOT-READY": 5,
+  "FALSE-READY": 8,
   "ungraded-infra": 1
  },
  "docs": [
@@ -123,7 +123,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo",
    "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "cell": "true-NOT-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.03478v1",
@@ -340,7 +341,8 @@
    "pdflatex_rc": 1,
    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l.",
    "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "cell": "true-NOT-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.09373v1",
@@ -357,7 +359,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.10983v1",
@@ -550,7 +553,8 @@
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! Package pdftex.def Error: File `Definitions/logo-mdpi-eps-converted-to.pdf' not found: using draft setting.See the pdftex.def package documentation for explan",
-   "cell": "ungraded-infra"
+   "cell": "ungraded-infra",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.10710v1",
@@ -710,10 +714,11 @@
    "cli_rc": 0,
    "cli_verdict": "READY",
    "cli_reasons": [],
-   "pdflatex_rc": 1,
+   "pdflatex_rc": 0,
    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style.",
-   "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "pdflatex_verdict": "COMPILES",
+   "cell": "true-READY",
+   "pdflatex_passes": 2
   },
   {
    "arxiv_id": "2507.09848v1",
@@ -804,10 +809,11 @@
    "cli_reasons": [
     "T2"
    ],
-   "pdflatex_rc": 1,
+   "pdflatex_rc": 0,
    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style.",
-   "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "pdflatex_verdict": "COMPILES",
+   "cell": "false-NOT-READY",
+   "pdflatex_passes": 2
   },
   {
    "arxiv_id": "2507.08554v1",
@@ -1419,7 +1425,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.17992v1",
@@ -2024,7 +2031,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.07981v1",
@@ -2043,7 +2051,8 @@
    "pdflatex_rc": 1,
    "first_error": "! Argument of \\caption@ydblarg has an extra }.<inserted text>                 \\par l.515 \t}",
    "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "cell": "true-NOT-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.00313v1",
@@ -2060,7 +2069,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.19362v2",
@@ -2183,10 +2193,11 @@
    "cli_rc": 0,
    "cli_verdict": "READY",
    "cli_reasons": [],
-   "pdflatex_rc": 1,
+   "pdflatex_rc": 0,
    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style.",
-   "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "pdflatex_verdict": "COMPILES",
+   "cell": "true-READY",
+   "pdflatex_passes": 2
   },
   {
    "arxiv_id": "2506.17898v2",
@@ -2293,7 +2304,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.04570v1",
@@ -2457,7 +2469,8 @@
    "pdflatex_rc": 1,
    "first_error": "! Undefined control sequence.\\tabu@cleanup ...bu@naturalX =\\tabu@naturalX@save                                                   \\let \\tabu@naturalXmax \\ta...l.",
    "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "cell": "true-NOT-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2507.09278v1",
@@ -2578,7 +2591,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@definition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.16763v1",
@@ -2667,7 +2681,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan",
    "pdflatex_verdict": "FAILS",
-   "cell": "true-NOT-READY"
+   "cell": "true-NOT-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.15348v2",
@@ -2738,10 +2753,11 @@
    "cli_rc": 0,
    "cli_verdict": "READY",
    "cli_reasons": [],
-   "pdflatex_rc": 1,
+   "pdflatex_rc": 0,
    "first_error": "! Package natbib Error: Bibliography not compatible with author-year citations.(natbib)                Press <return> to continue in numerical citation style.",
-   "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "pdflatex_verdict": "COMPILES",
+   "cell": "true-READY",
+   "pdflatex_passes": 2
   },
   {
    "arxiv_id": "2507.08930v1",
@@ -3476,7 +3492,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.20956v1",
@@ -3565,7 +3582,8 @@
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@assumption already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY"
+   "cell": "FALSE-READY",
+   "pdflatex_passes": 3
   },
   {
    "arxiv_id": "2506.21301v1",
@@ -3602,6 +3620,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "443ec7c15f51a5c1eb107c9e12bb855aca73759f",
- "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
+ "measured_at_sha": "5f7ef111d594456bfcbdc564787f86e675e9bb13",
+ "measured_at": "multi-pass re-grade of recorded failures only (<= 3 passes); CLI verdicts and already-compiling papers carried forward"
 }

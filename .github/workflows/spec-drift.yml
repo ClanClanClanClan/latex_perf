@@ -43,6 +43,16 @@ jobs:
       - name: Check catalogue compliance
         run: python3 scripts/validate_catalogue.py
 
+      - name: Check fix-type consistency (OPEN-028)
+        # rules_v3.yaml `fix:` vs rule_contracts `produces_fix`, three-way:
+        # auto-apply ships a fix => token; Bucket C ships via the CANDIDATE
+        # channel => token AND a real producer; ships nothing => null.
+        # ⚠ This gate existed but ran in NO workflow, so it sat RED on main on
+        # 26 rules and would first have surfaced during a release. It is wired
+        # here only now that it is green AND correct — it used to be wrong
+        # about 18 of those 26.
+        run: python3 scripts/tools/check_fix_type_consistency.py
+
       - name: Check regression gates (PR #241 p1.6, extended p1.9)
         # Ratchets that prevent previously-closed issues from reopening:
         # 1. _CoqProject lists every non-archive proof file

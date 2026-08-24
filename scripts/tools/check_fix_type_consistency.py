@@ -2,13 +2,29 @@
 """check_fix_type_consistency.py — guard the rules_v3.yaml `fix:` field against
 drift from the runtime reality recorded in rule_contracts.yaml `produces_fix`.
 
-For every IMPLEMENTED rule (one whose contract has produces_fix == true or
-false — i.e. it has a runtime `run`, as opposed to a pending rule whose
-produces_fix is null), the spec's `fix:` field must agree with whether the rule
-actually emits a fix:
+⚠ THIS GATE USED TO BE WRONG ABOUT 18 OF THE 26 ROWS IT FLAGGED, and its
+remediation hint prescribed exactly the repair that would have destroyed them.
+It asserted a biconditional between two fields that measure DIFFERENT things:
 
-    produces_fix: true   <=>  fix: <non-null token>
-    produces_fix: false  <=>  fix: null
+    rules_v3.yaml `fix:`      = WHAT the remedy is
+    rule_contracts produces_fix = whether the AUTO-APPLY channel ships it
+
+`produces_fix` is not a runtime measurement. `generate_rule_contracts.py`
+returns False whenever the id appears in the hand-written
+FIX_PRODUCER_DEFERRED dict. Eighteen of those entries are the catalogue's
+**Bucket C**: rules that deliberately emit their remedy through the CANDIDATE
+channel (`mk_result_with_candidates`) rather than the auto-apply one. All 18
+have a candidate producer in `validators*.ml`. Reporting them as "the impl does
+not produce a fix" was false, and nulling their `fix:` tokens — which is what
+the old hint told you to do — would have deleted 18 correct commitments to make
+a wrong gate green.
+
+The rule is therefore three-way, not two-way:
+
+    produces_fix: true             =>  fix: <non-null token>
+    produces_fix: false, Bucket C  =>  fix: <non-null token> AND a
+                                       mk_result_with_candidates producer exists
+    produces_fix: false, otherwise =>  fix: null
 
 Pending/unimplemented rules (produces_fix == null) are exempt: their `fix:`
 field records a PLANNED fix type and is allowed to be set before the impl
@@ -21,12 +37,45 @@ diagnose-only rules carried a `fix:` token they never produced).
 """
 import sys
 import os
+import re
 
 try:
     import yaml
 except ImportError:
     print("[fix-type-consistency] SKIP: pyyaml not available", file=sys.stderr)
     sys.exit(0)
+
+# The Bucket C set is derived from prose in FIX_PRODUCER_DEFERRED, so a reworded
+# reason string would silently shrink it and this gate would start demanding
+# `fix: null` for rules that legitimately carry a token. Pin the size: a change
+# must be deliberate, not a side effect of editing a comment.
+BUCKET_C_PINNED = 18
+
+
+def bucket_c_ids(repo):
+    sys.path.insert(0, os.path.join(repo, "scripts", "tools"))
+    from generate_rule_contracts import FIX_PRODUCER_DEFERRED
+    return {r for r, why in FIX_PRODUCER_DEFERRED.items()
+            if why.lstrip().startswith("Bucket C")}
+
+
+def candidate_producers(repo):
+    """Rule ids with a `mk_result_with_candidates` producer in the validators."""
+    src = os.path.join(repo, "latex-parse", "src")
+    pat = re.compile(r'mk_result_with_candidates[^;]*?~id:"([A-Z0-9]+-\d+)"', re.S)
+    found, files = set(), 0
+    for fn in sorted(os.listdir(src)):
+        if fn.startswith("validators") and fn.endswith(".ml") and "test" not in fn:
+            files += 1
+            with open(os.path.join(src, fn), encoding="utf-8") as fh:
+                found |= set(pat.findall(fh.read()))
+    # Anti-vacuity: an empty scan would make the Bucket C arm pass everything.
+    if not files or not found:
+        print("[fix-type-consistency] PROBE FAILED: scanned "
+              f"{files} validator file(s), found {len(found)} candidate "
+              "producers. The scan is broken; refusing to report success.")
+        sys.exit(2)
+    return found
 
 
 def main():
@@ -51,6 +100,15 @@ def main():
         fx = rule.get("fix")
         return fx is not None and fx != "null"
 
+    bucket_c = bucket_c_ids(repo)
+    if len(bucket_c) != BUCKET_C_PINNED:
+        print(f"[fix-type-consistency] PROBE FAILED: Bucket C is "
+              f"{len(bucket_c)}, pinned at {BUCKET_C_PINNED}. A reason string "
+              f"was reworded or a rule changed bucket. Update the pin "
+              f"deliberately, after checking which rules moved.")
+        sys.exit(2)
+    producers = candidate_producers(repo)
+
     violations = []
     checked = 0
     for rid, rule in spec.items():
@@ -61,12 +119,26 @@ def main():
         if pf is True and not has_fix(rule):
             violations.append(
                 f"{rid}: produces_fix=true but spec fix: is null "
-                f"(impl emits a fix the spec does not record)"
+                f"(the auto-apply channel ships a fix whose type is unrecorded)"
             )
+        elif pf is False and rid in bucket_c:
+            # Bucket C ships its remedy through the CANDIDATE channel, so a
+            # token is REQUIRED here, not forbidden — and it must be backed by
+            # a real producer, or the token is an empty promise.
+            if not has_fix(rule):
+                violations.append(
+                    f"{rid}: Bucket C but spec fix: is null "
+                    f"(record the remedy its candidate channel emits)"
+                )
+            elif rid not in producers:
+                violations.append(
+                    f"{rid}: Bucket C with fix: {rule.get('fix')!r} but NO "
+                    f"mk_result_with_candidates producer in validators*.ml"
+                )
         elif pf is False and has_fix(rule):
             violations.append(
-                f"{rid}: produces_fix=false but spec fix: = {rule.get('fix')!r} "
-                f"(spec prescribes a fix the impl does not produce)"
+                f"{rid}: deferred (not Bucket C) but spec fix: = "
+                f"{rule.get('fix')!r} (spec prescribes a remedy nothing ships)"
             )
 
     if violations:
@@ -78,8 +150,10 @@ def main():
         for v in violations:
             print(f"  - {v}")
         print(
-            "  Fix: set rules_v3.yaml `fix:` to a fix-type token for "
-            "fix-producing rules, or to null for diagnose-only rules."
+            "  Fix: a rule that SHIPS a remedy needs a `fix:` token — through "
+            "the auto-apply channel (produces_fix=true) or, for Bucket C, the "
+            "candidate channel. Only a rule that ships NOTHING takes null. "
+            "Do NOT null a Bucket C token to silence this gate."
         )
         sys.exit(1)
 

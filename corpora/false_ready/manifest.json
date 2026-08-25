@@ -11,7 +11,7 @@
   ]
  },
  "baseline": {
-  "false_ready_total": 14,
+  "false_ready_total": 15,
   "strong_fatal": 7,
   "error_halt": 1
  },
@@ -344,6 +344,17 @@
    "pdflatex": "error-halt",
    "expected_cli": "READY",
    "note": "U+22EF MIDLINE HORIZONTAL ELLIPSIS: pdflatex halts with \"! LaTeX Error: Unicode character ... not set up for use with LaTeX\". TYPO-053 FIRES, but only as info/warning, so the compile verdict is READY. Detection gap is NIL; the gap is CLASSIFICATION."
+  },
+  {
+   "id": "fr_toc_second_pass",
+   "path": "fr_toc_second_pass/doc.tex",
+   "kind": "tree",
+   "class": "multi-pass",
+   "fix_rank": 12,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "READY",
+   "note": "false-READY visible only on the SECOND pdflatex run: \\addcontentsline writes a raw token into .toc, which \\tableofcontents reads on the NEXT run. Unlike .aux (which \\enddocument re-inputs in the same run, latex.ltx:15483-15489) the .toc is never re-read by its writer, so a document can poison only its successor. The tool models .aux and not .toc."
   }
  ]
 }

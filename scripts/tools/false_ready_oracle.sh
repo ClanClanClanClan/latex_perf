@@ -173,17 +173,35 @@ fi
 EXPECT_N="$(wc -l < "$TSV" | tr -d ' ')"
 [ "${EXPECT_N:-0}" -gt 0 ] || die_infra "zero fixtures to check — refusing to report success"
 
+# ⚠ SUCCESS MUST BE STABLE, NOT JUST REACHED. This used to run pdflatex exactly
+# ONCE per protocol and grade on that, which cannot see a document that succeeds
+# and then breaks ITSELF on the next run. `fr_toc_second_pass` is exactly that:
+# \addcontentsline writes a raw token into .toc, \tableofcontents reads it on the
+# NEXT run, so pass 1 is rc 0 with a PDF and pass 2 is rc 1. The .aux cannot do
+# this — \enddocument closes and immediately re-inputs it in the same run
+# (latex.ltx:15483-15489) — so the hazard is the write-once-read-next-run files
+# .toc/.lof/.lot. Same defect, same fix as run_to_fixpoint in diff_real_roots.py.
+#
+# A healthy document therefore costs 2 runs, not 1; the reported rc is the
+# CONFIRMING run's when it disagrees, because the last state is the one a real
+# build tool would leave the author in.
 run_pdflatex() { # $1=workdir $2=base $3=halt(0/1) -> echoes "rc pdf"
-  local wd="$1" base="$2" halt="$3" rc pdf
+  local wd="$1" base="$2" halt="$3" rc pdf i
   local -a cmd=(pdflatex -interaction=nonstopmode)
   [ "$halt" = 1 ] && cmd+=(-halt-on-error)
   cmd+=("$base")
-  if [ -n "$TIMEOUT" ]; then
-    ( cd "$wd" && "$TIMEOUT" "$TEX_TIMEOUT" "${cmd[@]}" >/dev/null 2>&1 )
-  else
-    ( cd "$wd" && "${cmd[@]}" >/dev/null 2>&1 )
-  fi
-  rc=$?
+  rc=1
+  for i in 1 2; do
+    if [ -n "$TIMEOUT" ]; then
+      ( cd "$wd" && "$TIMEOUT" "$TEX_TIMEOUT" "${cmd[@]}" >/dev/null 2>&1 )
+    else
+      ( cd "$wd" && "${cmd[@]}" >/dev/null 2>&1 )
+    fi
+    rc=$?
+    # A timeout kill (124) or a broken `timeout` (125-127) is not a property of
+    # the document; surface it immediately rather than masking it with a retry.
+    case "$rc" in 124|125|126|127) break ;; esac
+  done
   [ -f "$wd/${base%.tex}.pdf" ] && pdf=yes || pdf=no
   echo "$rc $pdf"
 }

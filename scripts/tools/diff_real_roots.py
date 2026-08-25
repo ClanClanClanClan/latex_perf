@@ -186,7 +186,25 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
     pass count, not the error policy; relaxing both at once would have quietly
     reclassified the `\\c@` class too.
 
-    Early-exits on the first rc 0, so a healthy document still costs one pass.
+    ⚠ SUCCESS IS NOT ENOUGH — IT MUST BE STABLE, AND THE FIRST VERSION OF THIS
+    FUNCTION GOT THAT WRONG. Early-exiting on the first rc 0 misses a document
+    that succeeds and then breaks ITSELF on the next run. Counterexample, in the
+    corpus as `fr_toc_second_pass`:
+
+        \\tableofcontents
+        \\addcontentsline{toc}{section}{\\protect\\undefinedcmdxyz}
+      -> pass 1 rc 0 with a PDF, pass 2 rc 1 "! Undefined control sequence"
+
+    `\\addcontentsline` writes a raw token into `\\jobname.toc`; `\\tableofcontents`
+    reads that file at the top of the body on the NEXT run. The `.aux` cannot do
+    this — `\\enddocument` closes and immediately re-inputs it in the SAME run
+    (latex.ltx:15483-15489), so aux poisoning always poisons its own run first.
+    The write-once-read-next-run files are `.toc`/`.lof`/`.lot`.
+
+    So this runs to the first success and then does ONE CONFIRMING PASS. A
+    healthy document costs 2 runs, not 3; an unstable one is caught. The
+    returned rc is the confirming pass's when it disagrees, because the LAST
+    state is the one a real build tool would leave the author in.
     """
     rc, passes = -1, 0
     for _ in range(max_passes):
@@ -200,7 +218,16 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
         rc, passes = t.returncode, passes + 1
         if rc == 0:
             break
-    return rc, passes
+    if rc != 0:
+        return rc, passes
+    try:
+        confirm = subprocess.run(
+            ["pdflatex", "-no-shell-escape", "-interaction=nonstopmode",
+             "-halt-on-error", toplevel],
+            cwd=work, env=env, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return -1, passes + 1
+    return confirm.returncode, passes + 1
 
 
 def run_one(rec: dict, root: Path, cli: Path, timeout: int) -> dict:

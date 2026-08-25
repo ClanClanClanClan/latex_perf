@@ -59,8 +59,46 @@ def bucket_c_ids(repo):
             if why.lstrip().startswith("Bucket C")}
 
 
+def strip_ocaml_comments(s):
+    """Blank `(* ... *)` comments, length-preserving, honouring NESTING.
+
+    ⚠ WITHOUT THIS THE GATE IS COMMENT-BLIND, and a commented-out producer
+    satisfies the Bucket C requirement. Measured on the shipped regex:
+
+        (* TODO restore: mk_result_with_candidates ~id:"FAKE-999" ... *)
+        -> matched 'FAKE-999'
+
+    So a rule whose only producer had been commented out would still be
+    reported as backed by one — the gate would certify an empty promise, which
+    is precisely what the Bucket C arm exists to prevent.
+
+    OCaml comments NEST, so a depth counter is required; a non-greedy
+    `\\(\\*.*?\\*\\)` would stop at the first `*)` and leave the tail of an outer
+    comment live. String literals are deliberately NOT tracked: `~id:"X-001"`
+    inside a string is not a producer either, and blanking a comment can only
+    make this scan see FEWER ids, which fails CLOSED (a real producer would
+    have to be found elsewhere or the gate complains). Under-blanking would be
+    the unsafe direction.
+    """
+    out, i, n, depth = list(s), 0, len(s), 0
+    while i < n:
+        if s.startswith("(*", i):
+            depth += 1
+            out[i] = out[i + 1] = " "
+            i += 2
+        elif depth and s.startswith("*)", i):
+            depth -= 1
+            out[i] = out[i + 1] = " "
+            i += 2
+        else:
+            if depth and s[i] not in "\r\n":
+                out[i] = " "
+            i += 1
+    return "".join(out)
+
+
 def candidate_producers(repo):
-    """Rule ids with a `mk_result_with_candidates` producer in the validators."""
+    """Rule ids with a LIVE `mk_result_with_candidates` producer in the validators."""
     src = os.path.join(repo, "latex-parse", "src")
     pat = re.compile(r'mk_result_with_candidates[^;]*?~id:"([A-Z0-9]+-\d+)"', re.S)
     found, files = set(), 0
@@ -68,7 +106,7 @@ def candidate_producers(repo):
         if fn.startswith("validators") and fn.endswith(".ml") and "test" not in fn:
             files += 1
             with open(os.path.join(src, fn), encoding="utf-8") as fh:
-                found |= set(pat.findall(fh.read()))
+                found |= set(pat.findall(strip_ocaml_comments(fh.read())))
     # Anti-vacuity: an empty scan would make the Bucket C arm pass everything.
     if not files or not found:
         print("[fix-type-consistency] PROBE FAILED: scanned "

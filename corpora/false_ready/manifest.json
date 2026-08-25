@@ -11,7 +11,7 @@
   ]
  },
  "baseline": {
-  "false_ready_total": 15,
+  "false_ready_total": 16,
   "strong_fatal": 7,
   "error_halt": 1
  },
@@ -355,6 +355,17 @@
    "pdflatex": "error-halt",
    "expected_cli": "READY",
    "note": "false-READY visible only on the SECOND pdflatex run: \\addcontentsline writes a raw token into .toc, which \\tableofcontents reads on the NEXT run. Unlike .aux (which \\enddocument re-inputs in the same run, latex.ltx:15483-15489) the .toc is never re-read by its writer, so a document can poison only its successor. The tool models .aux and not .toc."
+  },
+  {
+   "id": "fr_toc_body_macro",
+   "path": "fr_toc_body_macro/doc.tex",
+   "kind": "tree",
+   "class": "multi-pass",
+   "fix_rank": 12,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "READY",
+   "note": "NATURAL form of the .toc second-pass hazard: a macro defined in the BODY and used in a \\section title. \\section writes the title unexpanded into .toc; \\tableofcontents reads it on the NEXT run before the definition has executed. pass 1 rc 0 + PDF, pass 2 rc 1."
   }
  ]
 }

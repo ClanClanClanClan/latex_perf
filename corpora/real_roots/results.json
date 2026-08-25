@@ -3,7 +3,7 @@
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
   "version": "pdfTeX 3.141592653-2.6-1.40.29",
-  "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"
+  "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint) \u2014 APPLIED TO 18/200 rows; the remainder carry a single-pass grade from an earlier run, independently verified stable (all 186 recorded-compiling papers re-run for 3 passes on 2026-08-25: patterns (0,0,0) x182 and (1,0,0) x4, ZERO pass-1-ok-then-later-fail)"
  },
  "frame": {
   "corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
@@ -3621,5 +3621,5 @@
   }
  ],
  "measured_at_sha": "5f7ef111d594456bfcbdc564787f86e675e9bb13",
- "measured_at": "multi-pass re-grade of recorded failures only (<= 3 passes); CLI verdicts and already-compiling papers carried forward"
+ "measured_at": "multi-pass re-grade of recorded FAILURES only (18 rows); CLI verdicts and already-compiling papers carried forward from the prior run"
 }

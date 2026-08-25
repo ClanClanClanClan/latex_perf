@@ -11,7 +11,7 @@
   ]
  },
  "baseline": {
-  "false_ready_total": 14,
+  "false_ready_total": 15,
   "strong_fatal": 7,
   "error_halt": 1
  },
@@ -344,6 +344,17 @@
    "pdflatex": "error-halt",
    "expected_cli": "READY",
    "note": "U+22EF MIDLINE HORIZONTAL ELLIPSIS: pdflatex halts with \"! LaTeX Error: Unicode character ... not set up for use with LaTeX\". TYPO-053 FIRES, but only as info/warning, so the compile verdict is READY. Detection gap is NIL; the gap is CLASSIFICATION."
+  },
+  {
+   "id": "fr_par_in_math",
+   "path": "fr_par_in_math/doc.tex",
+   "kind": "tree",
+   "class": "math-mode",
+   "fix_rank": 13,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "READY",
+   "note": "blank line (TeX \\par) inside a math range: '! Missing $ inserted.' Affects $..$, \\(..\\), \\[..\\] and amsmath envs alike. A comment-only line is NOT a \\par and compiles, so a detector must be comment-aware."
   }
  ]
 }

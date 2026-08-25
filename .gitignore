@@ -93,3 +93,7 @@ specs/latex_perf_v25_repo_with_v26_v27_planning.zip
 # R7-INFRA-1: the false-READY corpus commits deliberately-corrupt sibling
 # artefacts (.aux/.bbl) as fixtures; keep them tracked past the *.aux/*.log rules.
 !corpora/false_ready/**
+
+# transient gate-selftest artefacts (crash recovery only)
+.gate-selftests.lock
+.gate-selftest-backups/

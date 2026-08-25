@@ -59,7 +59,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-MIN_MUTATIONS = 8
+MIN_MUTATIONS = 9
 
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
@@ -84,7 +84,6 @@ EXEMPT = {
     "check_repo_facts.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_roadmap_facts.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_severity_drift.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
-    "check_unused_hypotheses.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_version_labels.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_workflow_triggers.py": "no kill-test yet — the uncovered set is OPEN-036's ledger",
     "check_project_state.py": "covered (see REGISTRY)",
@@ -131,6 +130,18 @@ class Mutation:
 class GateTest:
     def __init__(self, name, cmd, level, mutations):
         self.name, self.cmd, self.level, self.mutations = name, cmd, level, mutations
+
+
+def append_discarding_proof(text: str) -> str:
+    """Append a proof that discards 2 hypotheses via ADJACENT underscores.
+
+    This is the shape the gate was blind to until 2026-08-25: its counting
+    regex CONSUMED the separator between matches, so `intros _ _` counted as 1
+    (< THRESHOLD 2) — including the gate's own docstring example. The fix is a
+    lookahead; this kill-test keeps it fixed.
+    """
+    return text + ("\nLemma killtest_discard : forall (a b : nat), True.\n"
+                   "Proof. intros _ _. exact I. Qed.\n")
 
 
 def flip_polyglossia(text: str) -> str:
@@ -200,36 +211,76 @@ REGISTRY = [
                      new="APPLIED TO 42/200 rows"),
         ]),
     GateTest(
+        "check_unused_hypotheses", [PY, f"{TOOLS}/check_unused_hypotheses.py"],
+        "pure",
+        [
+            # The adjacent-underscore regression (OPEN-036 finding #1): before
+            # the lookahead fix this exact mutation was INVISIBLE to the gate.
+            Mutation("adjacent-underscore discard appended",
+                     "proofs/BuildLog.v",
+                     r"2 bare underscores in intros",
+                     transform=append_discarding_proof),
+        ]),
+    GateTest(
         "check_known_false_ready", [PY, f"{TOOLS}/check_known_false_ready.py"],
         "binary",
         [
             # A fixed false-READY silently marked live (or vice versa) must
             # surface as drift, in either direction.
+            # ⚠ The first version of this regex ended `|baseline` — and a
+            # CRASHED gate (KeyError) prints its own source line, which
+            # contains the word "baseline", so a crash would have counted as a
+            # kill. Found by adversarial pre-ship review; the traceback guard
+            # below now also rejects any "kill" whose output is a crash.
             Mutation("fr_polyglossia expected_cli flipped",
                      "corpora/false_ready/manifest.json",
-                     r"UNRECORDED FIX|REGRESSION|baseline",
+                     r"UNRECORDED FIX|REGRESSION \(a fixed false-READY",
                      transform=flip_polyglossia),
         ]),
 ]
 
 
+GATE_TIMEOUT = 300  # seconds — a hung gate must not hold a mutated tree open
+
+
 def run_gate(cmd) -> tuple[int, str]:
-    r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    try:
+        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True,
+                           timeout=GATE_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return -1, "GATE TIMEOUT — treated as a crash, never as a kill"
     return r.returncode, r.stdout + r.stderr
 
 
 def check_spec_drift_coverage() -> list[str]:
-    """Every check_*.py wired into spec-drift must be covered or exempt."""
-    wf = REPO / ".github/workflows/spec-drift.yml"
-    invoked = set(re.findall(r"(check_[a-z_]+\.py)", wf.read_text()))
+    """Coverage must hold in BOTH directions, across BOTH required workflows.
+
+    v1 only checked invoked ⊆ covered ∪ exempt over spec-drift.yml. That is
+    one-directional: a gate REMOVED from CI kept its green kill-tests forever —
+    the OPEN-028 disease (a gate running nowhere) was invisible to this
+    harness. And nothing asserted that ci.yml still runs the binary level at
+    all. Both directions are now checked, over spec-drift.yml AND ci.yml.
+    """
+    sd = (REPO / ".github/workflows/spec-drift.yml").read_text()
+    ci = (REPO / ".github/workflows/ci.yml").read_text()
+    invoked = set(re.findall(r"(check_[a-z_]+\.py)", sd + ci))
     covered = {Path(g.cmd[-1]).name for g in REGISTRY}
     problems = []
-    for name in sorted(invoked):
+    for name in sorted(set(re.findall(r"(check_[a-z_]+\.py)", sd))):
         if name not in covered and name not in EXEMPT:
             problems.append(
                 f"{name} is wired into required spec-drift but has neither a "
                 f"kill-test in the REGISTRY nor an EXEMPT entry with a reason — "
                 f"a gate nobody has seen fail is not evidence")
+    for name in sorted(covered - invoked):
+        problems.append(
+            f"{name} has kill-tests but is invoked by NEITHER spec-drift.yml "
+            f"nor ci.yml — a gate running nowhere is the OPEN-028 disease, and "
+            f"green kill-tests must not mask it")
+    if "check_gate_selftests.py --level binary" not in ci:
+        problems.append(
+            "ci.yml no longer runs `check_gate_selftests.py --level binary` — "
+            "the binary-level kill-tests are not executing anywhere")
     return problems
 
 
@@ -272,7 +323,10 @@ def main() -> int:
     # In-place mutations must not be able to eat uncommitted work.
     targets = sorted({str(m.target.relative_to(REPO))
                       for g in gates for m in g.mutations})
-    if not (ns.force or os.environ.get("CI")):
+    # "CI" must mean CI: direnv/nix setups export CI=false, and any non-empty
+    # string is truthy in Python — so `CI=false` used to skip the dirty check.
+    in_ci = os.environ.get("CI", "").strip().lower() in ("1", "true", "yes")
+    if not (ns.force or in_ci):
         r = subprocess.run(["git", "--no-optional-locks", "status",
                             "--porcelain", "--", *targets],
                            cwd=REPO, capture_output=True, text=True)
@@ -282,46 +336,100 @@ def main() -> int:
                   + r.stdout + "  commit/stash first, or pass --force")
             return 2
 
+    # ⚠ A SINGLE-INSTANCE LOCK, because two concurrent runs poison each
+    # other's backups: B (started inside A's mutation window) backs up A's
+    # MUTATED bytes as its "original", both restore "successfully", and the
+    # tree ends permanently mutated while both exit green. O_EXCL is atomic;
+    # a stale lock is reported with its pid, never silently stolen.
+    lock = REPO / ".gate-selftests.lock"
+    try:
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, f"{os.getpid()}\n".encode())
+        os.close(fd)
+    except FileExistsError:
+        print(f"[gate-selftests] REFUSING: {lock} exists (pid "
+              f"{lock.read_text().strip()!r}). Another selftest run is active "
+              f"— or crashed; inspect, restore from .gate-selftest-backups/ "
+              f"if needed, then remove the lock by hand.")
+        return 2
+
+    # ⚠ BACKUPS LIVE ON DISK BEFORE THE MUTATION DOES. v1 held the backup only
+    # in process memory with a truncate-write restore and no subprocess
+    # timeout — a hard kill (SIGKILL skips finally) in the mutation window
+    # left the tree mutated with NOTHING on disk to recover from. Now: the
+    # original bytes are written to .gate-selftest-backups/<name> and fsynced
+    # BEFORE the target is touched, the restore goes through a temp file +
+    # os.replace (atomic on POSIX), and the backup is deleted only after the
+    # sha256 round-trip is proven.
+    bdir = REPO / ".gate-selftest-backups"
+    bdir.mkdir(exist_ok=True)
+
     failures, ran = [], 0
-    for g in gates:
-        rc, out = run_gate(g.cmd)
-        if rc != 0:
-            print(f"[gate-selftests] ABORT: {g.name} is ALREADY RED before any "
-                  f"mutation — fix the gate first, then selftest it")
-            print(out[:800])
-            return 2
-        for m in g.mutations:
-            ran += 1
-            before = sha(m.target)
-            backup = m.target.read_bytes()
-            st = m.target.stat()
-            try:
-                m.apply()
-                rc, out = run_gate(g.cmd)
-                if rc == 0:
-                    failures.append(
-                        f"{g.name} / '{m.label}': gate PASSED a known-bad "
-                        f"mutation — it is blind to this defect class")
-                elif not m.expect.search(out):
-                    failures.append(
-                        f"{g.name} / '{m.label}': gate failed but WITHOUT the "
-                        f"expected message /{m.expect_src}/ — it is failing "
-                        f"for the wrong reason. Output head: {out[:300]!r}")
-            finally:
-                m.target.write_bytes(backup)
-                # Preserve mtime: a restored .ml with a fresh mtime makes dune
-                # rebuild the world (15-25 min on this FS) for a no-op change.
-                os.utime(m.target, (st.st_atime, st.st_mtime))
-            if sha(m.target) != before:
-                print(f"[gate-selftests] FATAL: restoration of {m.target} is "
-                      f"NOT byte-identical — repo damaged, fix by hand NOW")
+    try:
+        for g in gates:
+            rc, out = run_gate(g.cmd)
+            if rc != 0:
+                print(f"[gate-selftests] ABORT: {g.name} is ALREADY RED before "
+                      f"any mutation — fix the gate first, then selftest it")
+                print(out[:800])
                 return 2
-        rc, out = run_gate(g.cmd)
-        if rc != 0:
-            print(f"[gate-selftests] FATAL: {g.name} is red AFTER restoration "
-                  f"— the selftest damaged its inputs")
-            print(out[:800])
-            return 2
+            for m in g.mutations:
+                ran += 1
+                before = sha(m.target)
+                st = m.target.stat()
+                bfile = bdir / m.target.name
+                bfile.write_bytes(m.target.read_bytes())
+                bfd = os.open(bfile, os.O_RDONLY)
+                os.fsync(bfd)
+                os.close(bfd)
+                try:
+                    m.apply()
+                    rc, out = run_gate(g.cmd)
+                    if rc == 0:
+                        failures.append(
+                            f"{g.name} / '{m.label}': gate PASSED a known-bad "
+                            f"mutation — it is blind to this defect class")
+                    elif "Traceback (most recent call last)" in out or rc == -1:
+                        # A crash is NEVER a kill, whatever the regex says: a
+                        # crashing gate prints its own source line, which can
+                        # contain the very words the regex expects (measured:
+                        # a KeyError in check_known_false_ready emitted
+                        # "baseline" twice).
+                        failures.append(
+                            f"{g.name} / '{m.label}': gate CRASHED on the "
+                            f"mutation instead of detecting it — a crash is "
+                            f"not detection. Output head: {out[:300]!r}")
+                    elif not m.expect.search(out):
+                        failures.append(
+                            f"{g.name} / '{m.label}': gate failed but WITHOUT "
+                            f"the expected message /{m.expect_src}/ — it is "
+                            f"failing for the wrong reason. Output head: "
+                            f"{out[:300]!r}")
+                finally:
+                    tmp = m.target.with_suffix(m.target.suffix + ".restore-tmp")
+                    tmp.write_bytes(bfile.read_bytes())
+                    os.replace(tmp, m.target)  # atomic: never a torn restore
+                    # Preserve mtime at ns precision: a fresh mtime on a
+                    # restored .ml makes dune rebuild the world for a no-op.
+                    os.utime(m.target, ns=(st.st_atime_ns, st.st_mtime_ns))
+                if sha(m.target) != before:
+                    print(f"[gate-selftests] FATAL: restoration of {m.target} "
+                          f"is NOT byte-identical — recover from {bfile} NOW")
+                    return 2
+                bfile.unlink()  # only after the round-trip is proven
+            rc, out = run_gate(g.cmd)
+            if rc != 0:
+                print(f"[gate-selftests] FATAL: {g.name} is red AFTER "
+                      f"restoration — the selftest damaged its inputs")
+                print(out[:800])
+                return 2
+    finally:
+        lock.unlink(missing_ok=True)
+        try:
+            bdir.rmdir()  # succeeds only when empty = every backup consumed
+        except OSError:
+            print(f"[gate-selftests] WARNING: {bdir} is not empty — a backup "
+                  f"was not consumed; inspect before trusting the tree")
 
     if failures:
         print(f"[gate-selftests] FAIL: {len(failures)} blind spot(s)")

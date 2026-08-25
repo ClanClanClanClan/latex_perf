@@ -85,20 +85,28 @@ def build(repo: Path) -> str:
           "single most repeated error in this project's history.", "",
           "| | corpus | value | what moves it |",
           "|---|---|---|---|"]
-    # Count ROOT documents, not .tex files. corpora/compile_check has 66 .tex
-    # files and TWO that are not roots: good_input_child_part.tex (an \input
-    # child) and fail_no_documentclass.tex (the fixture whose whole point is
-    # having no \documentclass). The true root count is 64.
+    # Count the documents the DIFFERENTIAL GRADES — that is what row (a)
+    # describes. diff_compile_check.sh:125-130 enumerates `*.tex` and skips only
+    # `*_part.tex` (\input children); fail_no_documentclass.tex IS graded (it is
+    # a deliberately-failing fixture), so the denominator is 65, not the 64
+    # files that contain a literal \documentclass.
     #
-    # ⚠ THIS USED TO TEST THE SUBSTRING "documentclass" AND PUBLISHED 65.
-    # fail_no_documentclass.tex contains the PROSE "There is no documentclass
-    # here, so LaTeX cannot start." — so the one file that exists to lack a
-    # \documentclass was counted as having one. The comment below it warned
-    # that "a derived number that measures the wrong thing is worse than a
-    # hardcoded one, because it looks authoritative", and then measured the
-    # wrong thing. Match the control sequence, not the word.
-    n_cc = sum(1 for f in (repo / "corpora/compile_check").glob("*.tex")
-               if re.search(r"\\documentclass\b", f.read_text(errors="replace")))
+    # ⚠ THIS LINE HAS NOW BEEN WRONG TWICE, ONCE IN EACH DIRECTION (C-29).
+    # v1 tested the SUBSTRING "documentclass" and published 65 — the right
+    # number by accident, because fail_no_documentclass.tex says "There is no
+    # documentclass here" in PROSE. v2 "fixed" it to a \\documentclass regex
+    # and published 64 — a defensible-looking derivation of the WRONG quantity,
+    # shipped inside a commit titled "three honesty defects". The number is not
+    # "files containing \documentclass"; it is "documents the matrix grades".
+    # Derive it by the SAME RULE the differential uses, and pin the semantic
+    # with an assertion so the two scripts cannot drift apart silently.
+    cc_dir = repo / "corpora/compile_check"
+    graded = [f for f in cc_dir.glob("*.tex") if not f.name.endswith("_part.tex")]
+    n_cc = len(graded)
+    assert (cc_dir / "fail_no_documentclass.tex") in graded, (
+        "semantic pin: fail_no_documentclass.tex is a GRADED document "
+        "(diff_compile_check.sh skips only *_part.tex); if this fires, the "
+        "enumeration rules have drifted apart — reconcile them, do not delete me")
     L.append(f"| **(a)** differential allowlist | `corpora/compile_check`, {n_cc} "
              f"hand-authored docs | **{allowlist_count(repo)}** | S6/S7-style detectors |")
     sf = sum(1 for f in live if f["pdflatex"] == "strong-fatal")

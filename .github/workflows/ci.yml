@@ -99,6 +99,11 @@ jobs:
         # needed here); refresh locally via scripts/tools/false_ready_oracle.sh.
         run: python3 scripts/tools/check_known_false_ready.py --repo .
 
+      - name: Gate self-tests, binary level (OPEN-036)
+        # The CLI exists in this job, so the kill-tests that need it run here.
+        # A gate that cannot be made to fail is not a gate (C-27/C-28/C-29).
+        run: python3 scripts/tools/check_gate_selftests.py --level binary
+
       - name: Apply-fixes round-trip gate (R7-INFRA-4)
         # The fixer rewrites user documents and nothing re-checked its own output,
         # so a fix that BREAKS a document was invisible. Measured: 2 of the 65

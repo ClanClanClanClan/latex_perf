@@ -145,6 +145,18 @@ def main() -> int:
         f for f in glob.glob(os.path.join(ns.repo, ns.corpus, "**/*"), recursive=True)
         if os.path.isfile(f)
     )
+    # ⚠ NON-VACUITY (OPEN-036 finding #2): with a renamed or misrooted corpus
+    # this gate used to print "PASS: all 0 corpus files converge" and stay
+    # green forever. Its sibling gates (check_verbatim_safety,
+    # check_apply_fixes_roundtrip) already carry this floor; it was missing
+    # here. 100 is far below the real corpus (332 files today) and far above
+    # zero — the point is to catch an EMPTY scan, not to pin the corpus size.
+    MIN_FILES = 100
+    if len(files) < MIN_FILES:
+        print(f"[apply-fixes-safety] FAIL: only {len(files)} corpus file(s) "
+              f"found under {ns.corpus!r} (floor {MIN_FILES}) — an empty scan "
+              f"proves nothing; refusing to report success", file=sys.stderr)
+        return 1
 
     # Also exercise DEFAULT mode (no L0_VALIDATORS) — the promoted TYPO rules now
     # fire there, and overlapping fix edits among them must NOT abort

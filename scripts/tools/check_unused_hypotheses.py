@@ -101,7 +101,14 @@ def count_bare_underscores(intros_args: str) -> int:
     # Strip bracketed destructuring patterns.
     stripped = re.sub(r"\[[^\]]*\]", "", intros_args)
     # Now count bare `_` tokens: underscore followed by whitespace or end.
-    tokens = re.findall(r"(?:^|\s)(_)(?:\s|$|\.)", " " + stripped + " ")
+    #
+    # ⚠ The trailing group used to be CONSUMING — `(?:\s|$|\.)` ate the
+    # separator the NEXT match needed, so ADJACENT underscores were undercounted:
+    # `intros _ _.` counted 1 (< THRESHOLD 2) and this gate was blind to its own
+    # docstring's motivating example. A lookahead consumes nothing, so every
+    # bare underscore is counted: `intros _ _.` -> 2. Found by mutation
+    # kill-test enumeration (OPEN-036), verified before and after.
+    tokens = re.findall(r"(?:^|\s)(_)(?=\s|$|\.)", " " + stripped + " ")
     return len(tokens)
 
 

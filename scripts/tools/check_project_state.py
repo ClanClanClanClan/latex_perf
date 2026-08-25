@@ -129,10 +129,39 @@ def main() -> int:
         # sent me looking at the data instead of the code. A broad except turns
         # a programming error into a plausible-looking finding.
         try:
-            sha = json.loads(rr.read_text()).get("measured_at_sha")
+            rr_data = json.loads(rr.read_text())
+            sha = rr_data.get("measured_at_sha")
         except (json.JSONDecodeError, OSError) as exc:
             findings.append(f"corpora/real_roots/results.json is unreadable: {exc}")
-            sha = "unreadable"
+            sha, rr_data = "unreadable", None
+
+        # ── CLAIM PROVENANCE: a published protocol must be recomputable from
+        # per-row data in the same artefact. results.json once advertised
+        # "up to 3 passes" while 182 of 200 rows had pdflatex_passes: null —
+        # the protocol had been applied to 18 rows (C-28). The repair made
+        # --repass write "APPLIED TO k/n" into the protocol string; THIS check
+        # makes that claim binding: k and n are recomputed from the rows and a
+        # mismatch fails. A protocol with no APPLIED-TO clause claims the full
+        # protocol for every row, so every graded row must then carry a
+        # pdflatex_passes count.
+        if rr_data is not None:
+            proto = (rr_data.get("oracle") or {}).get("protocol", "")
+            docs = rr_data.get("docs") or []
+            with_passes = sum(1 for d in docs if d.get("pdflatex_passes"))
+            m = re.search(r"APPLIED TO (\d+)/(\d+) rows", proto)
+            if m:
+                k, n = int(m.group(1)), int(m.group(2))
+                if k != with_passes or n != len(docs):
+                    findings.append(
+                        f"results.json protocol claims 'APPLIED TO {k}/{n}' but "
+                        f"the rows say {with_passes}/{len(docs)} — the published "
+                        f"claim does not match the recorded measurement")
+            elif "passes" in proto and docs and with_passes < len(docs):
+                findings.append(
+                    f"results.json protocol claims multi-pass wholesale but only "
+                    f"{with_passes}/{len(docs)} rows carry pdflatex_passes — "
+                    f"either re-measure the rest or scope the claim with an "
+                    f"'APPLIED TO k/n rows' clause")
         if not sha:
             findings.append(
                 "corpora/real_roots/results.json has no measured_at_sha, so its "

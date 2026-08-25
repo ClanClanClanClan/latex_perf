@@ -43,6 +43,14 @@ jobs:
       - name: Check catalogue compliance
         run: python3 scripts/validate_catalogue.py
 
+      - name: Gate self-tests — every gate must be able to FAIL (OPEN-036)
+        # Mutation kill-tests: applies known-bad edits to backup-restored
+        # copies of gate inputs and asserts each gate fails WITH the expected
+        # message. Exists because three gates were found provably blind while
+        # green (C-27/C-28/C-29). Pure level only here; the binary level runs
+        # in ci.yml's build job where the CLI exists.
+        run: python3 scripts/tools/check_gate_selftests.py --level pure
+
       - name: Check fix-type consistency (OPEN-028)
         # rules_v3.yaml `fix:` vs rule_contracts `produces_fix`, three-way:
         # auto-apply ships a fix => token; Bucket C ships via the CANDIDATE

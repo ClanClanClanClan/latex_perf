@@ -1,0 +1,23 @@
+% fr_par_in_math — a blank line (TeX \par) inside a math range.
+%
+% A blank line ends a paragraph, and TeX forbids \par inside math mode, so this
+% is a deterministic pdflatex fatal:
+%
+%     ! Missing $ inserted.
+%
+% The tool answers READY. Verified against the pin on all four math delimiters
+% — $..$, \(..\), \[..\], and an amsmath environment — every one rc 1 with the
+% tool READY, while the same document without the blank line is rc 0 READY.
+%
+% ⚠ A DETECTOR MUST BE COMMENT-AWARE. A line holding only a comment is NOT a
+% \par and compiles rc 0, so a naive "empty-ish line inside math" test would
+% over-reject. This is the same comment-awareness dependency as OPEN-006/007.
+%
+% Found by an adversarial hunt over papers the 200-document sample never
+% reached, then reproduced here independently.
+\documentclass{article}
+\begin{document}
+Text $a +
+
+b$ more.
+\end{document}

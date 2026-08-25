@@ -11,7 +11,7 @@
   ]
  },
  "baseline": {
-  "false_ready_total": 16,
+  "false_ready_total": 17,
   "strong_fatal": 7,
   "error_halt": 1
  },
@@ -366,6 +366,17 @@
    "pdflatex": "error-halt",
    "expected_cli": "READY",
    "note": "NATURAL form of the .toc second-pass hazard: a macro defined in the BODY and used in a \\section title. \\section writes the title unexpanded into .toc; \\tableofcontents reads it on the NEXT run before the definition has executed. pass 1 rc 0 + PDF, pass 2 rc 1."
+  },
+  {
+   "id": "fr_par_in_math",
+   "path": "fr_par_in_math/doc.tex",
+   "kind": "tree",
+   "class": "math-mode",
+   "fix_rank": 13,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "READY",
+   "note": "blank line (TeX \\par) inside a math range: '! Missing $ inserted.' Affects $..$, \\(..\\), \\[..\\] and amsmath envs alike. A comment-only line is NOT a \\par and compiles, so a detector must be comment-aware."
   }
  ]
 }

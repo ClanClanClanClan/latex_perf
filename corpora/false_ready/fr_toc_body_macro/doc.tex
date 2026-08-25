@@ -1,0 +1,31 @@
+% fr_toc_body_macro — the NATURAL form of the second-pass .toc hazard.
+%
+% Sibling of fr_toc_second_pass, which uses a deliberately synthetic
+% \addcontentsline of an undefined token. This one uses a shape a real author
+% writes without thinking about it:
+%
+%   * define a command in the BODY,
+%   * use it in a \section title.
+%
+% \section writes the title into \jobname.toc UNEXPANDED. On the next run
+% \tableofcontents reads that .toc at the TOP of the body — BEFORE the
+% \DeclareRobustCommand that defines the macro has executed. So:
+%
+%     pass 1  rc 0, PDF produced
+%     pass 2  rc 1, "! Undefined control sequence"
+%
+% Same channel as fr_toc_second_pass: .toc is written by run N and read only by
+% run N+1, unlike .aux which \enddocument re-inputs in the SAME run
+% (latex.ltx:15483-15489). This fixture exists because the synthetic trigger
+% invited the objection "no real document does that" — this one is ordinary.
+%
+% ⚠ Measured incidence in the 2,719-paper frame is nonetheless ZERO: all 186
+% recorded-compiling papers were re-run for 3 passes and none goes
+% pass-1-ok then later-fail. The class is a LATENT hole, not a live miscount.
+\documentclass{article}
+\begin{document}
+\tableofcontents
+\DeclareRobustCommand{\mymacro}{X}
+\section{\mymacro}
+Body.
+\end{document}

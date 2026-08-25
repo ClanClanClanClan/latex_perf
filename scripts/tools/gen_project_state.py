@@ -85,13 +85,20 @@ def build(repo: Path) -> str:
           "single most repeated error in this project's history.", "",
           "| | corpus | value | what moves it |",
           "|---|---|---|---|"]
-    # Count ROOT documents, not .tex files. corpora/compile_check contains one
-    # child part (good_input_child_part.tex) with no \documentclass; counting
-    # files gives 66 and disagrees with the differential matrix, which is over 65
-    # DOCUMENTS. A derived number that measures the wrong thing is worse than a
-    # hardcoded one, because it looks authoritative.
+    # Count ROOT documents, not .tex files. corpora/compile_check has 66 .tex
+    # files and TWO that are not roots: good_input_child_part.tex (an \input
+    # child) and fail_no_documentclass.tex (the fixture whose whole point is
+    # having no \documentclass). The true root count is 64.
+    #
+    # ⚠ THIS USED TO TEST THE SUBSTRING "documentclass" AND PUBLISHED 65.
+    # fail_no_documentclass.tex contains the PROSE "There is no documentclass
+    # here, so LaTeX cannot start." — so the one file that exists to lack a
+    # \documentclass was counted as having one. The comment below it warned
+    # that "a derived number that measures the wrong thing is worse than a
+    # hardcoded one, because it looks authoritative", and then measured the
+    # wrong thing. Match the control sequence, not the word.
     n_cc = sum(1 for f in (repo / "corpora/compile_check").glob("*.tex")
-               if "documentclass" in f.read_text(errors="replace"))
+               if re.search(r"\\documentclass\b", f.read_text(errors="replace")))
     L.append(f"| **(a)** differential allowlist | `corpora/compile_check`, {n_cc} "
              f"hand-authored docs | **{allowlist_count(repo)}** | S6/S7-style detectors |")
     sf = sum(1 for f in live if f["pdflatex"] == "strong-fatal")

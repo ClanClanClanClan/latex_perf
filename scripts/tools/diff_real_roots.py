@@ -460,11 +460,23 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
               f"rc={rc} passes={passes} {d['cell']}", flush=True)
 
     res["counts"] = dict(collections.Counter(d["cell"] for d in res["docs"]))
-    res["oracle"] = ORACLE
+
+    # ⚠ DO NOT PUBLISH A PROTOCOL THAT WAS NOT APPLIED TO EVERY ROW. This used
+    # to assign `res["oracle"] = ORACLE` wholesale, so results.json advertised
+    # "up to 3 passes" while only the FAILURES had been re-run — 182 of 200 rows
+    # still carried their original single-pass grade and a null
+    # `pdflatex_passes`. gen_project_state.py prints that protocol string
+    # verbatim into the published block, so the overstatement propagated into
+    # the headline. Record what was actually measured, per row and in aggregate.
+    remeasured = sum(1 for d in res["docs"] if d.get("pdflatex_passes"))
+    res["oracle"] = dict(ORACLE, protocol=(
+        f"{ORACLE['protocol']} — APPLIED TO {remeasured}/{len(res['docs'])} rows; "
+        f"the remainder carry a single-pass grade from an earlier run"))
     res["measured_at_sha"] = git_head(repo)
-    res["measured_at"] = (f"multi-pass re-grade of recorded failures only "
-                          f"(<= {MAX_PASSES} passes); CLI verdicts and "
-                          f"already-compiling papers carried forward")
+    res["measured_at"] = (f"multi-pass re-grade of recorded FAILURES only "
+                          f"(<= {MAX_PASSES} passes, {remeasured} rows); CLI "
+                          f"verdicts and already-compiling papers carried "
+                          f"forward from the prior run")
     results_path.write_text(json.dumps(res, indent=1) + "\n")
     print(f"\n[real-roots] {len(changed)} cell(s) changed:")
     for aid, a, b, p in changed:
@@ -490,6 +502,7 @@ def refresh_metadata_only(root: Path, outdir: Path) -> int:
     if not manifest_path.is_file():
         return die(2, "no manifest to refresh — run a full sweep first")
     man = json.loads(manifest_path.read_text())
+    had_before = sum(1 for d in man["docs"] if d.get("declared_texlive") is not None)
     changed = 0
     for d in man["docs"]:
         if sha256_tree(root / d["arxiv_id"]) != d["sha256_tree"]:
@@ -501,8 +514,17 @@ def refresh_metadata_only(root: Path, outdir: Path) -> int:
         if was != now:
             d["declared_texlive"] = now
             changed += 1
-    manifest_path.write_text(json.dumps(man, indent=1) + "\n")
+    # ⚠ CHECK BEFORE WRITING. This used to write the manifest and THEN test the
+    # result, so a broken extraction destroyed the recorded metadata before the
+    # guard could fire — the guard exited 2 with the damage already on disk.
+    # And it only caught TOTAL loss (`have == 0`), so a 131 -> 1 degradation
+    # wrote itself out and exited 0 reporting success.
     have = sum(1 for d in man["docs"] if d["declared_texlive"] is not None)
+    if have < had_before:
+        return die(2, f"refusing to write: {had_before} row(s) carried a "
+                      f"declared version before, only {have} would after. The "
+                      f"extraction regressed; the manifest is UNCHANGED on disk.")
+    manifest_path.write_text(json.dumps(man, indent=1) + "\n")
     print(f"[real-roots] metadata refreshed: {changed} row(s) changed; "
           f"{have}/{len(man['docs'])} now carry a declared TeX Live version")
     if have == 0:

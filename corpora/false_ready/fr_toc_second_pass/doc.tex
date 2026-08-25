@@ -1,0 +1,33 @@
+% fr_toc_second_pass — a false-READY that ONLY appears on the SECOND pdflatex run.
+%
+% WHY THIS FIXTURE EXISTS. #551 made the real-paper oracle multi-pass, and its
+% `--repass` mode re-grades only recorded FAILURES, on the argument that extra
+% passes can turn a failure into a success but never the reverse. That argument
+% is FALSE, and this document is the counterexample:
+%
+%     pass 1  rc 0, PDF produced
+%     pass 2  rc 1, "! Undefined control sequence"
+%     pass 3  rc 1
+%
+% MECHANISM. \addcontentsline writes a raw token into \jobname.toc during run N.
+% \tableofcontents reads that file at the TOP OF THE BODY on run N+1. Unlike the
+% .aux — which \enddocument closes and immediately re-inputs in the SAME run
+% (latex.ltx:15483-15489, `\immediate\closeout\@mainaux ... \@@input\jobname.aux`)
+% — the .toc is never re-read by the run that wrote it. So a document can poison
+% only its SUCCESSOR.
+%
+% ⚠ The .aux mechanism this project previously recorded as the hazard is
+% therefore IMPOSSIBLE: aux poisoning always poisons its own run first. The
+% write-once-read-next-run files are .toc/.lof/.lot, and the tool models NONE of
+% them (five source files mention .aux; ".toc" appears nowhere in the codebase).
+%
+% The tool certifies this document through the Coq path:
+%   MODEL-CONNECTED  MODEL-READY (Coq project_wf_dec_sound => pdflatex_compile_safe)
+%   READY
+\documentclass{article}
+\begin{document}
+\tableofcontents
+\addcontentsline{toc}{section}{\protect\undefinedcmdxyz}
+\section{Real section}
+Body text.
+\end{document}

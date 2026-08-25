@@ -56,8 +56,11 @@ val verb_broken_eol_fatal : string -> string option
     Live >= 2025 ("Command \c@<name> already defined"). Held-out validated at FP
     0/30. Expects the CLOSURE-RESOLVED source (the load and the declarations
     routinely live in different files); degrades to root-only coverage on a
-    plain string. Comment/verbatim/url ranges are blanked before scanning — for
-    this detector over-blanking can only SUPPRESS a fire, never cause one. *)
+    plain string. Comment/verbatim/url ranges are blanked before scanning.
+    Add-NOT-READY-only: no blanking behaviour can manufacture a false-READY;
+    over-blanking the amsthm-after EXEMPTION conjunct (negative polarity) can
+    cost an over-rejection, reachable only via vcu-scanner over-reach — see the
+    polarity note in the implementation. *)
 val thmtools_counter_collision_fatal : string -> string option
 (** Detector (9): [Some reason] iff a real inline [\verb]/[\verb*] argument is
     not closed by its delimiter before the line ends (pdflatex "! LaTeX Error:

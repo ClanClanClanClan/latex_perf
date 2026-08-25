@@ -1015,12 +1015,19 @@ let verb_broken_eol_fatal (s : string) : string option =
    after that first load. `numberwithin=`/`[section]`-suffix is the PARENT form
    and does not share.
 
-   ⚠ POLARITY OF THE BLANKING, stated because the OPPOSITE case burned this
-   project: comment/verbatim/url ranges are blanked before scanning, and for
-   THIS detector over-blanking can only SUPPRESS a fire (a load or declaration
-   we fail to see = status-quo), never cause one. That is the reverse of the
-   OPEN-007 feature-detection polarity, where blanking manufactured
-   false-READYs. Blanking here is the safe direction.
+   ⚠ POLARITY OF THE BLANKING, per conjunct — the first version of this comment
+   claimed "over-blanking can only SUPPRESS a fire", WHICH IS FALSE, and was
+   refuted by construction before merge (C-26 is about exactly this): the rule
+   is LOAD ∧ DECL ∧ ¬AMSTHM-AFTER, so blanking the LOAD or DECL conjunct
+   suppresses (status-quo false-READY stays), but blanking the NEGATIVE conjunct
+   — a live `\usepackage{amsthm}` swallowed by a phantom verbatim span — WIDENS
+   firing and costs an over-rejection. Measured: a compiling document (verbatim
+   opened in one macro body, closed in another, the vcu scanner claiming the
+   span between) is rejected solely by this detector. What IS true, and is the
+   real safety property: the detector is add-NOT-READY-only, so NO blanking
+   behaviour can ever manufacture a false-READY — the opposite risk profile of
+   OPEN-007. The over-rejection channel is reachable only through vcu-scanner
+   over-reach, because a genuine verbatim env in the preamble is itself a fatal.
 
    ⚠ The caller is expected to hand this detector the CLOSURE-RESOLVED source
    (see [Compile_contract.read_closure_source]): the load and the declarations
@@ -1208,6 +1215,13 @@ let thmtools_counter_collision_fatal (s0 : string) : string option =
         done;
         Option.map
           (fun name ->
+            (* ⚠ The name is DOCUMENT-DERIVED and diff_real_roots.py scrapes the
+               whole stdout with \b(T\d|[A-Z]{2,8}-\d{3})\b — a theorem the
+               author called `FIG-001` (or `T1`) would leak a phantom rule-id
+               into cli_reasons attribution (measured end-to-end before this
+               guard existed). Lowercasing kills both token shapes (each needs
+               an uppercase letter) while keeping the name readable. *)
+            let name = String.lowercase_ascii name in
             Printf.sprintf
               "thmtools/thm-restate loaded before the shared-counter \
                declaration of `%s': ! LaTeX Error: Command \\c@%s already \

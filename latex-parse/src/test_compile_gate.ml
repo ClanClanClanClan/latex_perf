@@ -522,4 +522,43 @@ let () =
             && contains "amsthm AFTER thmtools")
             (t ^ ": version condition + fix line, no RULE-123 tokens"))
 
+let () =
+  run "a document-derived name cannot leak a scrapeable token" (fun t ->
+      (* diff_real_roots scrapes stdout for T<digit> / ALLCAPS-### tokens. A
+         theorem the author called FIG-001 must not inject a phantom rule-id
+         into cli_reasons — the message lowercases the interpolated name.
+         Measured end-to-end before the guard existed: ['FIG-001'] leaked. *)
+      let src =
+        String.concat "\n"
+          [
+            "\\documentclass{article}";
+            "\\usepackage{thmtools}";
+            "\\newtheorem{thm}{Theorem}";
+            "\\newtheorem{FIG-001}[thm]{Bad}";
+            "\\begin{document}";
+            "B.";
+            "\\end{document}";
+          ]
+      in
+      match Compile_gate_checks.thmtools_counter_collision_fatal src with
+      | None -> expect false (t ^ ": detector must fire on FIG-001[thm]")
+      | Some m ->
+          let has_id_token =
+            let n = String.length m in
+            let rec go i =
+              if i + 2 >= n then false
+              else if
+                m.[i] >= 'A'
+                && m.[i] <= 'Z'
+                && m.[i + 1] = '-'
+                && m.[i + 2] >= '0'
+                && m.[i + 2] <= '9'
+              then true
+              else go (i + 1)
+            in
+            go 0
+          in
+          expect (not has_id_token)
+            (t ^ ": interpolated name must be scrape-inert"))
+
 let () = finalise "compile_gate"

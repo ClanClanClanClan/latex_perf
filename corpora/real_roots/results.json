@@ -14,8 +14,7 @@
  "counts": {
   "true-READY": 128,
   "false-NOT-READY": 58,
-  "true-NOT-READY": 5,
-  "FALSE-READY": 8,
+  "true-NOT-READY": 13,
   "ungraded-infra": 1
  },
  "docs": [
@@ -353,13 +352,13 @@
    "sha256_tree": "c9556ab906e7afbdb86f361865bf374828d138f28257b45f3d238e953a9e89be",
    "bytes": 1081,
    "size_bucket": "<10KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -1419,13 +1418,13 @@
    "sha256_tree": "b08c3bb71a2a032b74e0d9619308803741e25de2c4997dd347bf8767fe8e0b13",
    "bytes": 131500,
    "size_bucket": ">100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -2025,13 +2024,13 @@
    "sha256_tree": "defddde6cbeab4bb8ac7331853d584cd4a0da8da3902a21c7e71f9a4e2d1b917",
    "bytes": 94596,
    "size_bucket": "10-100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@proposition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -2063,13 +2062,13 @@
    "sha256_tree": "871c762ba44cd147dbe75f1cf8ab2b6f01c3748887c04d13d62e2de7b4b6a244",
    "bytes": 51919,
    "size_bucket": "10-100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lemma already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for expl",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -2298,13 +2297,13 @@
    "sha256_tree": "cb2a7174a5ae2a135be9d5ff693e5b15fb32027a09eb29d11a8ef86749d583a3",
    "bytes": 44881,
    "size_bucket": "10-100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\theHalgorithm already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion fo",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -2585,13 +2584,13 @@
    "sha256_tree": "89446f2ce7b750aabf04142afc0c65fbdf42b6d9dd0ae0197608c4b0872fae48",
    "bytes": 308081,
    "size_bucket": ">100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@definition already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -3486,13 +3485,13 @@
    "sha256_tree": "829461af061716412fc343e6e4c55db53d13e61eee00f66409955c416875856a",
    "bytes": 97726,
    "size_bucket": "10-100KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -3576,13 +3575,13 @@
    "sha256_tree": "96505a29136fe52e2fafd899311c334f1c277ffb59bb99550e99e0e437c3903c",
    "bytes": 1907,
    "size_bucket": "<10KB",
-   "cli_rc": 0,
-   "cli_verdict": "READY",
+   "cli_rc": 1,
+   "cli_verdict": "NOT-READY",
    "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@assumption already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for",
    "pdflatex_verdict": "FAILS",
-   "cell": "FALSE-READY",
+   "cell": "true-NOT-READY",
    "pdflatex_passes": 3
   },
   {
@@ -3620,6 +3619,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "5f7ef111d594456bfcbdc564787f86e675e9bb13",
- "measured_at": "multi-pass re-grade of recorded FAILURES only (18 rows); CLI verdicts and already-compiling papers carried forward from the prior run"
+ "measured_at_sha": "f5121f1b7377b8443edf5f05c581e29230a2d4cd",
+ "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

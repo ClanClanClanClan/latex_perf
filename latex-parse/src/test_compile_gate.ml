@@ -366,4 +366,160 @@ let () =
         t);
   ()
 
+(* ── thmtools shared-counter collision (OPEN-002) ───────────────────────── The
+   largest real-paper false-READY class: 8 of the 8 recorded flip on this
+   detector. Every case below mirrors a pdflatex-verified vector (16/16 agree
+   with the rule under the pin; the FATAL ones die with "! LaTeX Error: Command
+   \c@lemma already defined", the NOT-FATAL ones are rc 0).
+
+   Tested directly rather than through [structural_fatal_reasons]: the detector
+   deliberately lives OUTSIDE that list so the caller can hand it the
+   CLOSURE-RESOLVED source (the load and the declarations routinely live in
+   different files); these unit cases exercise the pure string function, and the
+   closure path is pinned by the fr_thmtools_child_load tree fixture.
+
+   The NEGATIVES matter more than the positives: the held-out validation was FP
+   0/30, and every case here that must stay silent is an over-rejection if it
+   ever fires. *)
+let () =
+  let fires body =
+    Compile_gate_checks.thmtools_counter_collision_fatal
+      ("\\documentclass{article}\n"
+      ^ body
+      ^ "\n\\begin{document}\nBody.\n\\end{document}\n")
+    <> None
+  in
+  let shared =
+    "\\newtheorem{theorem}{Theorem}\n\\newtheorem{lemma}[theorem]{Lemma}"
+  in
+  run "thmtools + shared counter is FATAL" (fun t ->
+      expect (fires ("\\usepackage{thmtools}\n" ^ shared)) t);
+  run "thm-restate variant is FATAL" (fun t ->
+      expect (fires ("\\usepackage{thm-restate}\n" ^ shared)) t);
+  run "comma-list load position counts" (fun t ->
+      expect (fires ("\\usepackage{amsmath,thmtools,graphicx}\n" ^ shared)) t);
+  run "\\declaretheorem sibling= is FATAL" (fun t ->
+      expect
+        (fires
+           "\\usepackage{thmtools}\n\
+            \\declaretheorem{theorem}\n\
+            \\declaretheorem[sibling=theorem]{lemma}")
+        t);
+  run "\\declaretheorem numberlike= is FATAL" (fun t ->
+      expect
+        (fires
+           "\\usepackage{thmtools}\n\
+            \\declaretheorem{theorem}\n\
+            \\declaretheorem[numberlike=theorem]{lemma}")
+        t);
+  run "amsthm BEFORE thmtools does not rescue" (fun t ->
+      expect
+        (fires ("\\usepackage{amsthm}\n\\usepackage{thmtools}\n" ^ shared))
+        t);
+  run "\\RequirePackage spelling is FATAL" (fun t ->
+      expect (fires ("\\RequirePackage{thmtools}\n" ^ shared)) t);
+  run "[section] suffix on the PARENT still fires on the shared child" (fun t ->
+      expect
+        (fires
+           "\\usepackage{thmtools}\n\
+            \\newtheorem{theorem}{Theorem}[section]\n\
+            \\newtheorem{lemma}[theorem]{Lemma}")
+        t);
+  (* ── the rescues and non-cases: every one is an over-rejection if it fires *)
+  run "amsthm AFTER thmtools RESCUES" (fun t ->
+      expect
+        (not
+           (fires ("\\usepackage{thmtools}\n\\usepackage{amsthm}\n" ^ shared)))
+        t);
+  run "own counters are fine" (fun t ->
+      expect
+        (not (fires "\\usepackage{thmtools}\n\\newtheorem{lemma}{Lemma}"))
+        t);
+  run "commented-out load must NOT fire" (fun t ->
+      expect (not (fires ("% \\usepackage{thmtools}\n" ^ shared))) t);
+  run "declarations BEFORE the load are fine" (fun t ->
+      expect (not (fires (shared ^ "\n\\usepackage{thmtools}"))) t);
+  run "numberwithin= is the PARENT form, not shared" (fun t ->
+      expect
+        (not
+           (fires
+              "\\usepackage{thmtools}\n\
+               \\declaretheorem[numberwithin=section]{theorem}"))
+        t);
+  run "parent-form suffix alone is fine" (fun t ->
+      expect
+        (not
+           (fires
+              "\\usepackage{thmtools}\n\\newtheorem{theorem}{Theorem}[section]"))
+        t);
+  run "no thmtools at all: plain shared counters are fine" (fun t ->
+      expect (not (fires shared)) t);
+  run "load inside verbatim must NOT fire" (fun t ->
+      expect
+        (not
+           (fires
+              ("\\begin{verbatim}\\usepackage{thmtools}\\end{verbatim}\n"
+              ^ shared)))
+        t);
+  run "\\declaretheoremstyle is not \\declaretheorem" (fun t ->
+      expect
+        (not
+           (fires
+              "\\usepackage{thmtools}\n\
+               \\declaretheoremstyle[bodyfont=\\itshape]{mystyle}"))
+        t);
+  run "the pattern AFTER \\begin{document} does not fire (preamble-only)"
+    (fun t ->
+      expect
+        (Compile_gate_checks.thmtools_counter_collision_fatal
+           ("\\documentclass{article}\n\
+             \\begin{document}\n\
+             \\usepackage{thmtools}\n"
+           ^ shared
+           ^ "\n\\end{document}\n")
+        = None)
+        t);
+  run "the message is version-conditioned prose with no scrapeable token"
+    (fun t ->
+      match
+        Compile_gate_checks.thmtools_counter_collision_fatal
+          ("\\documentclass{article}\n\\usepackage{thmtools}\n"
+          ^ shared
+          ^ "\n\\begin{document}\nB.\n\\end{document}\n")
+      with
+      | None -> expect false (t ^ ": detector must fire here")
+      | Some m ->
+          let contains sub =
+            let n = String.length m and k = String.length sub in
+            let rec go i =
+              i + k <= n && (String.sub m i k = sub || go (i + 1))
+            in
+            go 0
+          in
+          (* diff_real_roots.py scrapes reasons with \b([A-Z]{2,8}-\d{3})\b — a
+             fabricated token here would pollute cli_reasons attribution. The
+             hyphen-digit shape only arises from ALLCAPS-### ids, so checking
+             for an uppercase letter directly before "-0/-1/-2" is a sufficient
+             tripwire for this message. *)
+          let has_id_token =
+            let n = String.length m in
+            let rec go i =
+              if i + 2 >= n then false
+              else if
+                m.[i] >= 'A'
+                && m.[i] <= 'Z'
+                && m.[i + 1] = '-'
+                && m.[i + 2] >= '0'
+                && m.[i + 2] <= '9'
+              then true
+              else go (i + 1)
+            in
+            go 0
+          in
+          expect
+            ((not has_id_token)
+            && contains "TeX Live"
+            && contains "amsthm AFTER thmtools")
+            (t ^ ": version condition + fix line, no RULE-123 tokens"))
+
 let () = finalise "compile_gate"

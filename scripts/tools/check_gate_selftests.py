@@ -193,8 +193,12 @@ REGISTRY = [
             Mutation("generated-block digit edited",
                      "docs/v27/PROJECT_STATE.md",
                      r"measured-position block is STALE",
-                     old="Correct verdicts: 133/199",
-                     new="Correct verdicts: 134/199"),
+                     # NB: this anchor is a LIVE number and rots by design
+                     # whenever the measured position moves — updating it here
+                     # is the deliberate act the registry-rot check forces.
+                     # 141/199 since the OPEN-002 detector (8 -> 0 false-READY).
+                     old="Correct verdicts: 141/199",
+                     new="Correct verdicts: 142/199"),
             # Ledger discipline: a malformed size cell (caught live on
             # 2026-08-24 when an append overflowed the row — keep it caught).
             Mutation("ledger size cell malformed (OPEN-022)",

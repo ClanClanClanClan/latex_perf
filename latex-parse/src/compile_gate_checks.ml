@@ -1233,6 +1233,256 @@ let thmtools_counter_collision_fatal (s0 : string) : string option =
               name name name)
           !hit
 
+(* ── Self-collision family (SC): the engine-independent false-READYs ────── Two
+   rules, both validated corpus-wide BEFORE implementation (frame 2,719: fires
+   10/2,719, ALL 10 fail with the family error, FP 0 on the 68 compiling papers
+   that carry a family-shaped occurrence; anchors verified fatal under the pin
+   AND TL2024, so no version-conditioned message is needed):
+
+   SC-A the SAME theorem name declared twice — any pair of
+   `\newtheorem`/`\declaretheorem`, including plain-kernel `\newtheorem` twice
+   with no package loaded (verified: rc 1, "! LaTeX Error: Command \<name>
+   already defined"). SC-B `\newcommand{\theH<x>}` where counter <x> was created
+   STRICTLY EARLIER. The mechanism is the June-2022 KERNEL, not hyperref (C-20:
+   the audit's original "hyperref interaction" label was wrong): counter
+   creation defines \theH<x>, so a later \newcommand collides. Before the
+   counter exists it compiles; `\renewcommand` / `\providecommand` never fire —
+   that is the documented-correct spelling.
+
+   ⚠ GUARDS ARE THE FP HAZARD, measured: 165 same-name duplicates across 26 real
+   preambles and 100% are guard-managed (`\ifdefined…\fi`,
+   `\@ifundefined{..}{..}{..}`, class-option branches) — and both guard styles
+   verified COMPILING. So an event is emitted ONLY at file-local TeX-conditional
+   depth 0 AND brace-group depth 0: an `\if…\fi`-guarded declaration sits at
+   if-depth ≥ 1, a brace-guarded one at brace-depth ≥ 1, and both are skipped.
+   Depths clamp at 0 (a stray `\fi` or `}` in a .sty cannot poison what
+   follows), and every mis-count degrades toward FEWER events = under-detection
+   = status-quo, never a phantom fire.
+
+   ⚠ DEPTHS ARE PER FILE, never across spliced closure text: the caller scans
+   each file's segments with that file's own [sc_state] (a .sty with unbalanced
+   braces in a \def body must not suppress detection in the root). Event ORDER
+   across files follows the SPLICE order — TeX's reading order — which SC-B's
+   "strictly earlier" depends on. *)
+
+type sc_state = { sc_if_depth : int; sc_brace_depth : int }
+
+let sc_initial = { sc_if_depth = 0; sc_brace_depth = 0 }
+
+type sc_event =
+  | Sc_counter_created of string
+  | Sc_theh_defined of string
+  | Sc_theorem_declared of string
+
+(* Packages whose LOAD creates a counter. The load may sit in a spliced local
+   .sty — icml2025.sty's \RequirePackage{algorithm} is 4 of the 10 corpus true
+   positives. *)
+let sc_creator_packages =
+  [
+    ("algorithm", "algorithm");
+    ("algorithm2e", "algocf");
+    ("listings", "lstlisting");
+  ]
+
+let sc_scan_segment (st : sc_state) (seg : string) : sc_state * sc_event list =
+  let n = String.length seg in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
+  let starts pfx a =
+    let pl = String.length pfx in
+    a + pl <= n && String.sub seg a pl = pfx
+  in
+  let starts_cw pfx a =
+    starts pfx a
+    &&
+    let k = a + String.length pfx in
+    k >= n || not (is_letter seg.[k])
+  in
+  let skip_ws j =
+    let k = ref j in
+    while !k < n && is_ws seg.[!k] do
+      incr k
+    done;
+    !k
+  in
+  let skip_opt_group j =
+    if j >= n || seg.[j] <> '[' then j
+    else
+      let k = ref (j + 1) and depth = ref 0 and fin = ref (-1) in
+      while !fin < 0 && !k < n do
+        (match seg.[!k] with
+        | '\\' -> incr k
+        | '{' -> incr depth
+        | '}' -> if !depth > 0 then decr depth
+        | ']' -> if !depth = 0 then fin := !k
+        | _ -> ());
+        incr k
+      done;
+      if !fin >= 0 then !fin + 1 else j
+  in
+  (* First brace group at/after [j] (ws-tolerant): (trimmed inner, past). *)
+  let read_group j =
+    let j = skip_ws j in
+    if j >= n || seg.[j] <> '{' then None
+    else
+      let k = ref (j + 1) and depth = ref 1 in
+      while !k < n && !depth > 0 do
+        (match seg.[!k] with
+        | '\\' -> incr k
+        | '{' -> incr depth
+        | '}' -> decr depth
+        | _ -> ());
+        if !depth > 0 then incr k
+      done;
+      if !depth = 0 then
+        Some (String.trim (String.sub seg (j + 1) (!k - j - 1)), !k + 1)
+      else None
+  in
+  let events = ref [] in
+  let ifd = ref st.sc_if_depth and brd = ref st.sc_brace_depth in
+  let emit e = if !ifd = 0 && !brd = 0 then events := e :: !events in
+  let i = ref 0 in
+  while !i < n do
+    let c = seg.[!i] in
+    if c = '\\' then
+      if starts_cw "\\fi" !i then (
+        if !ifd > 0 then decr ifd;
+        i := !i + 3)
+      else if starts "\\if" !i then (
+        (* \if, \ifx, \ifdefined, \iffalse, custom \newif names… — any control
+           word beginning "if" opens. Over-counting a non-conditional \if…-named
+           macro only raises the depth → fewer events → safe. *)
+        incr ifd;
+        let k = ref (!i + 3) in
+        while !k < n && is_letter seg.[!k] do
+          incr k
+        done;
+        i := !k)
+      else if starts_cw "\\newcounter" !i then
+        match read_group (!i + 11) with
+        | Some (name, past) ->
+            emit (Sc_counter_created name);
+            i := past
+        | None -> i := !i + 11
+      else if
+        starts "\\newtheorem" !i && not (!i + 11 < n && is_letter seg.[!i + 11])
+      then
+        (* \newtheorem or \newtheorem* — the letter guard excludes
+           \newtheoremstyle. *)
+        let j = skip_ws (!i + 11) in
+        let j = if j < n && seg.[j] = '*' then j + 1 else j in
+        match read_group j with
+        | Some (name, past) ->
+            emit (Sc_theorem_declared name);
+            emit (Sc_counter_created name);
+            i := past
+        | None -> i := !i + 11
+      else if starts_cw "\\declaretheorem" !i then
+        let j = skip_opt_group (skip_ws (!i + 15)) in
+        match read_group j with
+        | Some (name, past) ->
+            emit (Sc_theorem_declared name);
+            emit (Sc_counter_created name);
+            i := past
+        | None -> i := !i + 15
+      else if starts_cw "\\newfloat" !i then
+        match read_group (!i + 9) with
+        | Some (name, past) ->
+            emit (Sc_counter_created name);
+            i := past
+        | None -> i := !i + 9
+      else if starts_cw "\\DeclareCaptionType" !i then
+        let j = skip_opt_group (skip_ws (!i + 19)) in
+        match read_group j with
+        | Some (name, past) ->
+            emit (Sc_counter_created name);
+            i := past
+        | None -> i := !i + 19
+      else if starts_cw "\\usepackage" !i || starts_cw "\\RequirePackage" !i
+      then
+        let cl = if starts "\\RequirePackage" !i then 15 else 11 in
+        let j = skip_opt_group (skip_ws (!i + cl)) in
+        match read_group j with
+        | Some (names, past) ->
+            String.split_on_char ',' names
+            |> List.iter (fun nm ->
+                   match
+                     List.assoc_opt (String.trim nm) sc_creator_packages
+                   with
+                   | Some counter -> emit (Sc_counter_created counter)
+                   | None -> ());
+            i := past
+        | None -> i := !i + cl
+      else if starts_cw "\\newcommand" !i then
+        (* \newcommand{\theH<x>} / \newcommand*{\theH<x>} — \renewcommand and
+           \providecommand are excluded by the control-word test itself. *)
+        let j = skip_ws (!i + 11) in
+        let j = if j < n && seg.[j] = '*' then j + 1 else j in
+        let j = skip_ws j in
+        if j < n && seg.[j] = '{' then
+          match read_group j with
+          | Some (inner, past) ->
+              if String.length inner > 5 && String.sub inner 0 5 = "\\theH" then
+                emit
+                  (Sc_theh_defined
+                     (String.sub inner 5 (String.length inner - 5)));
+              i := past
+          | None -> i := !i + 11
+        else if starts "\\theH" j then (
+          let k = ref (j + 5) in
+          while !k < n && is_letter seg.[!k] do
+            incr k
+          done;
+          emit (Sc_theh_defined (String.sub seg (j + 5) (!k - j - 5)));
+          i := !k)
+        else i := !i + 11
+      else i := !i + 2 (* skip escaped char: \{ must not move brace depth *)
+    else (
+      if c = '{' then incr brd else if c = '}' then if !brd > 0 then decr brd;
+      incr i)
+  done;
+  ({ sc_if_depth = !ifd; sc_brace_depth = !brd }, List.rev !events)
+
+let self_collision_verdict (events : sc_event list) : string option =
+  let seen_thm = Hashtbl.create 8 and seen_ctr = Hashtbl.create 8 in
+  let verdict = ref None in
+  List.iter
+    (fun e ->
+      if !verdict = None then
+        match e with
+        | Sc_theorem_declared name ->
+            if Hashtbl.mem seen_thm name then
+              verdict :=
+                Some
+                  (Printf.sprintf
+                     "theorem environment `%s' declared twice (unguarded): ! \
+                      LaTeX Error: Command \\%s already defined. Fatal at \
+                      preamble time under every TeX Live measured (the second \
+                      \\newtheorem/\\declaretheorem re-defines the environment \
+                      macro). Fix: declare each theorem name once, or guard \
+                      the second declaration."
+                     (String.lowercase_ascii name)
+                     (String.lowercase_ascii name))
+            else Hashtbl.replace seen_thm name ()
+        | Sc_counter_created name -> Hashtbl.replace seen_ctr name ()
+        | Sc_theh_defined x ->
+            if Hashtbl.mem seen_ctr x then
+              verdict :=
+                Some
+                  (Printf.sprintf
+                     "\\newcommand{\\theH%s} after counter `%s' already \
+                      exists: ! LaTeX Error: Command \\theH%s already defined. \
+                      Since the 2022-06 LaTeX kernel, creating a counter also \
+                      defines its \\theH-form, so \\newcommand collides — \
+                      under every TeX Live measured. Fix: use \\renewcommand \
+                      (the documented spelling), or define it before the \
+                      counter exists."
+                     (String.lowercase_ascii x) (String.lowercase_ascii x)
+                     (String.lowercase_ascii x))
+            else ())
+    events;
+  !verdict
+
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
     (fun f -> f source)

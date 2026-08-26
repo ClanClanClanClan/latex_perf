@@ -561,4 +561,163 @@ let () =
           expect (not has_id_token)
             (t ^ ": interpolated name must be scrape-inert"))
 
+(* ── Self-collision family (SC-A duplicate theorem, SC-B theH-star) ──────
+   Every fatal/compiling boundary below was pinned against the pin (and the
+   family is engine-independent — the anchors fail under TL2024 identically).
+   The scanner is exercised through the same composition the caller uses: scan
+   segments (with carried per-file state where relevant), then verdict.
+
+   The NEGATIVES carry the weight: 165 of 165 real-world same-name duplicates
+   are guard-managed and COMPILE, so a guard the scanner misses is an
+   over-rejection on a real paper. *)
+let () =
+  let verdict segs =
+    let open Compile_gate_checks in
+    let _, evs =
+      List.fold_left
+        (fun (st, acc) seg ->
+          let st', e = sc_scan_segment st seg in
+          (st', acc @ e))
+        (sc_initial, []) segs
+    in
+    self_collision_verdict evs
+  in
+  let fires segs = verdict segs <> None in
+  run "SC-A: plain kernel \\newtheorem twice is FATAL" (fun t ->
+      expect
+        (fires [ "\\newtheorem{lem}{Lemma}\n\\newtheorem{lem}{Lemma}\n" ])
+        t);
+  run "SC-A: \\declaretheorem then \\newtheorem same name is FATAL" (fun t ->
+      expect (fires [ "\\declaretheorem{lem}\n\\newtheorem{lem}{Lemma}\n" ]) t);
+  run "SC-A: \\if-guarded duplicate must NOT fire" (fun t ->
+      expect
+        (not
+           (fires
+              [
+                "\\newtheorem{lem}{Lemma}\n\
+                 \\ifdefined\\undefzz\\newtheorem{lem}{Lemma}\\fi\n";
+              ]))
+        t);
+  run "SC-A: brace-guarded duplicate must NOT fire" (fun t ->
+      expect
+        (not
+           (fires
+              [
+                "\\newtheorem{lem}{Lemma}\n\
+                 \\@ifundefined{c@lem}{\\newtheorem{lem}{Lemma}}{}\n";
+              ]))
+        t);
+  run "SC-A: two different names are fine" (fun t ->
+      expect
+        (not (fires [ "\\newtheorem{lem}{Lemma}\n\\newtheorem{thm}{Thm}\n" ]))
+        t);
+  run "SC-A: \\newtheorem* duplicate also fires" (fun t ->
+      expect
+        (fires [ "\\newtheorem{lem}{Lemma}\n\\newtheorem*{lem}{Lemma}\n" ])
+        t);
+  run "SC-B: \\newcommand{\\theH<x>} AFTER the counter is FATAL" (fun t ->
+      expect
+        (fires
+           [
+             "\\usepackage{algorithm}\n\
+              \\newcommand{\\theHalgorithm}{\\arabic{algorithm}}\n";
+           ])
+        t);
+  run "SC-B: \\newcounter creator counts" (fun t ->
+      expect (fires [ "\\newcounter{myctr}\n\\newcommand{\\theHmyctr}{x}\n" ]) t);
+  run "SC-B: \\renewcommand NEVER fires (documented spelling)" (fun t ->
+      expect
+        (not
+           (fires
+              [
+                "\\usepackage{algorithm}\n\\renewcommand{\\theHalgorithm}{x}\n";
+              ]))
+        t);
+  run "SC-B: \\providecommand never fires" (fun t ->
+      expect
+        (not
+           (fires
+              [
+                "\\usepackage{algorithm}\n\
+                 \\providecommand{\\theHalgorithm}{x}\n";
+              ]))
+        t);
+  run "SC-B: definition BEFORE the counter compiles — order is the rule"
+    (fun t ->
+      expect
+        (not
+           (fires
+              [ "\\newcommand{\\theHalgorithm}{x}\n\\usepackage{algorithm}\n" ]))
+        t);
+  run "SC-B: comma-list creator load counts" (fun t ->
+      expect
+        (fires
+           [
+             "\\usepackage{amsmath,algorithm,graphicx}\n\
+              \\newcommand{\\theHalgorithm}{x}\n";
+           ])
+        t);
+  (* ── the segment/state contract the caller depends on ── *)
+  run "SC: per-file state carries an OPEN guard across segments" (fun t ->
+      (* A guard opened in segment 1 must still suppress in segment 2 of the
+         SAME file — the caller feeds both through the same carried state. *)
+      let open Compile_gate_checks in
+      let st1, e1 =
+        sc_scan_segment sc_initial "\\newtheorem{lem}{L}\n\\ifdefined\\x\n"
+      in
+      let _, e2 = sc_scan_segment st1 "\\newtheorem{lem}{L}\n\\fi\n" in
+      expect (self_collision_verdict (e1 @ e2) = None) t);
+  run "SC: splice order decides SC-B — creator in child, def after in root"
+    (fun t ->
+      (* root-part1 | child(creates) | root-part2(defines) — must FIRE. *)
+      expect
+        (fires
+           [
+             "\\usepackage{myconf}\n";
+             "\\RequirePackage{algorithm}\n";
+             "\\newcommand{\\theHalgorithm}{x}\n";
+           ])
+        t);
+  run "SC: reverse splice order must NOT fire" (fun t ->
+      (* def in root-part1 | child creates after — compiles (verified cell). *)
+      expect
+        (not
+           (fires
+              [
+                "\\newcommand{\\theHalgorithm}{x}\n";
+                "\\RequirePackage{algorithm}\n";
+              ]))
+        t);
+  run "SC: stray \\fi and } clamp at zero, later events still emitted" (fun t ->
+      expect
+        (fires [ "\\fi }\n\\newtheorem{lem}{L}\n\\newtheorem{lem}{L}\n" ])
+        t);
+  run "SC messages carry no scrapeable token" (fun t ->
+      let check = function
+        | None -> false
+        | Some m ->
+            let n = String.length m in
+            let rec go i =
+              if i + 2 >= n then true
+              else if
+                m.[i] >= 'A'
+                && m.[i] <= 'Z'
+                && m.[i + 1] = '-'
+                && m.[i + 2] >= '0'
+                && m.[i + 2] <= '9'
+              then false
+              else go (i + 1)
+            in
+            go 0
+      in
+      expect
+        (check
+           (verdict [ "\\newtheorem{LEM-01x}{L}\n\\newtheorem{LEM-01x}{L}\n" ])
+        && check
+             (verdict
+                [
+                  "\\usepackage{algorithm}\n\\newcommand{\\theHalgorithm}{x}\n";
+                ]))
+        (t ^ ": document-derived names are lowercased"))
+
 let () = finalise "compile_gate"

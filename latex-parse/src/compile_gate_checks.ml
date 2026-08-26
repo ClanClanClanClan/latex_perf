@@ -993,6 +993,246 @@ let verb_broken_eol_fatal (s : string) : string option =
       else None)
     vcu
 
+(* ── Detector: thmtools/thm-restate shared-counter collision (OPEN-002) ─── The
+   single largest real-paper false-READY class: 7 of the 8 recorded, plus
+   `2507.09846v1` which carries the pattern alongside its own defect.
+
+   MECHANISM (verified on minimal documents against the pin, and the reason the
+   message below is version-conditioned): TeX Live >= 2025's latex2e first-aid
+   file repatches amsthm's theorem plumbing; when `thmtools`/`thm-restate` is
+   loaded BEFORE a shared-counter declaration, its `\newtheorem` hook then
+   re-declares the shared counter, and pdflatex halts at PREAMBLE time with !
+   LaTeX Error: Command \c@<name> already defined. Loading `amsthm` AFTER
+   thmtools redefines `\newtheorem` and undoes the patch, which is why that
+   order is the rescue. Body usage is irrelevant.
+
+   THE RULE, exactly as held-out validated (103 never-seen papers: TP 57, FP
+   0/30 over-rejection, FN 11 — misses are the status-quo false-READY and
+   acceptable; phantom fires are over-rejection and are not): fire IFF, in the
+   preamble, the first live load of thmtools|thm-restate precedes a
+   shared-counter declaration — `\newtheorem{X}[Y]{..}` or
+   `\declaretheorem[..sibling=|numberlike=..]` — and `amsthm` is NOT loaded
+   after that first load. `numberwithin=`/`[section]`-suffix is the PARENT form
+   and does not share.
+
+   ⚠ POLARITY OF THE BLANKING, per conjunct — the first version of this comment
+   claimed "over-blanking can only SUPPRESS a fire", WHICH IS FALSE, and was
+   refuted by construction before merge (C-26 is about exactly this): the rule
+   is LOAD ∧ DECL ∧ ¬AMSTHM-AFTER, so blanking the LOAD or DECL conjunct
+   suppresses (status-quo false-READY stays), but blanking the NEGATIVE conjunct
+   — a live `\usepackage{amsthm}` swallowed by a phantom verbatim span — WIDENS
+   firing and costs an over-rejection. Measured: a compiling document (verbatim
+   opened in one macro body, closed in another, the vcu scanner claiming the
+   span between) is rejected solely by this detector. What IS true, and is the
+   real safety property: the detector is add-NOT-READY-only, so NO blanking
+   behaviour can ever manufacture a false-READY — the opposite risk profile of
+   OPEN-007. The over-rejection channel is reachable only through vcu-scanner
+   over-reach, because a genuine verbatim env in the preamble is itself a fatal.
+
+   ⚠ The caller is expected to hand this detector the CLOSURE-RESOLVED source
+   (see [Compile_contract.read_closure_source]): the load and the declarations
+   routinely live in different files (`preamble.tex`, `packages.tex` — 6 of the
+   first derivation's false negatives were exactly this shape). On a plain
+   string it degrades gracefully to root-only coverage. *)
+let thmtools_counter_collision_fatal (s0 : string) : string option =
+  let s =
+    let b = Bytes.of_string s0 in
+    List.iter
+      (fun (a, e) ->
+        for k = a to e - 1 do
+          if k >= 0 && k < Bytes.length b then Bytes.set b k ' '
+        done)
+      (Validators_common.find_verbatim_comment_url_ranges s0);
+    Bytes.unsafe_to_string b
+  in
+  let n = String.length s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let starts pfx a =
+    let pl = String.length pfx in
+    a + pl <= n && String.sub s a pl = pfx
+  in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' in
+  let skip_ws j =
+    let k = ref j in
+    while !k < n && is_ws s.[!k] do
+      incr k
+    done;
+    !k
+  in
+  (* Preamble limit: the detector models a PREAMBLE-time error, so nothing past
+     a live \begin{document} may fire. The scan string is already
+     comment-blanked, so a commented-out \begin{document} does not end it. *)
+  let limit =
+    let rec find i =
+      if i >= n then n
+      else if starts "\\begin{document}" i then i
+      else find (i + 1)
+    in
+    find 0
+  in
+  (* Skip a bracketed optional group, honouring braces: an unescaped ']' at
+     brace depth 0 closes it (the R7-1b lesson — `[caption={[x]}]` must not
+     close early). Returns the offset just past ']', or [j] unchanged if the
+     group never closes (degrade, do not guess). *)
+  let skip_opt_group j =
+    if j >= n || s.[j] <> '[' then j
+    else
+      let k = ref (j + 1) and depth = ref 0 and fin = ref (-1) in
+      while !fin < 0 && !k < n do
+        (match s.[!k] with
+        | '\\' -> incr k
+        | '{' -> incr depth
+        | '}' -> if !depth > 0 then decr depth
+        | ']' -> if !depth = 0 then fin := !k
+        | _ -> ());
+        incr k
+      done;
+      if !fin >= 0 then !fin + 1 else j
+  in
+  (* Package loads before [limit], as (trimmed-name, name-offset) pairs —
+     position WITHIN a comma list is honoured, because `\usepackage{a,thmtools}`
+     loads left to right and order is the whole point of this detector. *)
+  let loads = ref [] in
+  let i = ref 0 in
+  while !i < limit do
+    let pos = !i in
+    if
+      s.[pos] = '\\'
+      && (starts "\\usepackage" pos || starts "\\RequirePackage" pos)
+    then
+      let cl =
+        if starts "\\RequirePackage" pos then 15 else 11 (* \usepackage *)
+      in
+      let j = pos + cl in
+      if j < n && is_letter s.[j] then i := pos + 1 (* \usepackagex… *)
+      else
+        let j = skip_ws j in
+        let j = skip_opt_group j in
+        let j = skip_ws j in
+        if j < n && s.[j] = '{' then (
+          let k = ref (j + 1) in
+          let start = ref (j + 1) in
+          let flush stop =
+            let raw = String.sub s !start (stop - !start) in
+            let name = String.trim raw in
+            if name <> "" then loads := (name, !start) :: !loads
+          in
+          while !k < n && s.[!k] <> '}' do
+            if s.[!k] = ',' then (
+              flush !k;
+              start := !k + 1);
+            incr k
+          done;
+          if !k < n then flush !k;
+          i := !k)
+        else i := pos + 1
+    else incr i
+  done;
+  let loads = List.rev !loads in
+  let tt =
+    List.fold_left
+      (fun acc (name, off) ->
+        if name = "thmtools" || name = "thm-restate" then
+          match acc with Some a when a <= off -> acc | _ -> Some off
+        else acc)
+      None loads
+  in
+  match tt with
+  | None -> None
+  | Some tt_pos ->
+      let amsthm_after =
+        List.exists (fun (name, off) -> name = "amsthm" && off > tt_pos) loads
+      in
+      if amsthm_after then None
+      else
+        (* Shared-counter declarations AFTER the load, before the limit. *)
+        let hit = ref None in
+        let i = ref tt_pos in
+        while !hit = None && !i < limit do
+          let pos = !i in
+          if s.[pos] = '\\' && starts "\\newtheorem" pos then
+            let j = pos + 11 in
+            if j < n && is_letter s.[j] then i := pos + 1 (* \newtheoremstyle *)
+            else
+              let j = skip_ws j in
+              let j = if j < n && s.[j] = '*' then skip_ws (j + 1) else j in
+              if j < n && s.[j] = '{' then (
+                let k = ref (j + 1) in
+                while !k < n && s.[!k] <> '}' do
+                  incr k
+                done;
+                let name = String.sub s (j + 1) (!k - j - 1) in
+                let after = skip_ws (!k + 1) in
+                (* `[` after the FIRST group = shared counter. A bracket after
+                   the SECOND group (`\newtheorem{X}{T}[section]`) is the PARENT
+                   form and must NOT fire. *)
+                if after < limit && after < n && s.[after] = '[' then
+                  hit := Some (String.trim name)
+                else i := !k)
+              else i := pos + 1
+          else if s.[pos] = '\\' && starts "\\declaretheorem" pos then
+            let j = pos + 15 in
+            if j < n && is_letter s.[j] then i := pos + 1
+              (* \declaretheoremstyle — the corpus contains it; the letter guard
+                 is what keeps it from matching here. *)
+            else
+              let j = skip_ws j in
+              if j < n && s.[j] = '[' then
+                let close = skip_opt_group j in
+                let opts = String.sub s j (close - j) in
+                let has key =
+                  (* flat scan, exactly as validated: key then ws* then '=' *)
+                  let kl = String.length key and ol = String.length opts in
+                  let rec go a =
+                    if a + kl > ol then false
+                    else if String.sub opts a kl = key then
+                      let e = ref (a + kl) in
+                      let _ =
+                        while !e < ol && is_ws opts.[!e] do
+                          incr e
+                        done
+                      in
+                      if !e < ol && opts.[!e] = '=' then true else go (a + 1)
+                    else go (a + 1)
+                  in
+                  go 0
+                in
+                if has "sibling" || has "numberlike" then
+                  let after = skip_ws close in
+                  let name =
+                    if after < n && s.[after] = '{' then (
+                      let k = ref (after + 1) in
+                      while !k < n && s.[!k] <> '}' do
+                        incr k
+                      done;
+                      String.trim (String.sub s (after + 1) (!k - after - 1)))
+                    else "theorem"
+                  in
+                  hit := Some name
+                else i := close
+              else i := pos + 1
+          else incr i
+        done;
+        Option.map
+          (fun name ->
+            (* ⚠ The name is DOCUMENT-DERIVED and diff_real_roots.py scrapes the
+               whole stdout with \b(T\d|[A-Z]{2,8}-\d{3})\b — a theorem the
+               author called `FIG-001` (or `T1`) would leak a phantom rule-id
+               into cli_reasons attribution (measured end-to-end before this
+               guard existed). Lowercasing kills both token shapes (each needs
+               an uppercase letter) while keeping the name readable. *)
+            let name = String.lowercase_ascii name in
+            Printf.sprintf
+              "thmtools/thm-restate loaded before the shared-counter \
+               declaration of `%s': ! LaTeX Error: Command \\c@%s already \
+               defined. Fatal at preamble time under TeX Live >= 2025 (the \
+               kernel first-aid file repatches amsthm's theorem plumbing and \
+               thmtools' hook then re-declares the shared counter); compiles \
+               under earlier distributions. Fix: load amsthm AFTER thmtools, \
+               or give `%s' its own counter."
+              name name name)
+          !hit
+
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
     (fun f -> f source)

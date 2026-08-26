@@ -255,10 +255,141 @@ let t5_check_fast ~(source : string)
    the fast and full branches (fast==full parity holds trivially). This is the
    soundness spine of --compile-check: catching these closes the false-READY
    holes (e.g. $a^b^c$) that the imprecise ADVISORY lint rules could not. *)
-let structural_fatal_check ~(source : string) : reason list =
-  match Compile_gate_checks.structural_fatal_reasons source with
-  | [] -> []
-  | reasons -> [ T_structural_fatal reasons ]
+let structural_fatal_check ~(source : string) ~(closure_source : string) :
+    reason list =
+  let reasons =
+    Compile_gate_checks.structural_fatal_reasons source
+    @
+    (* The thmtools shared-counter detector (OPEN-002) runs on the
+       CLOSURE-RESOLVED source, because the load and the declarations routinely
+       live in different files. It is kept OUT of [structural_fatal_reasons] so
+       it runs exactly once, on the right string; on a single-file project the
+       closure source IS the root source, so nothing changes there. *)
+    match
+      Compile_gate_checks.thmtools_counter_collision_fatal closure_source
+    with
+    | Some m -> [ m ]
+    | None -> []
+  in
+  match reasons with [] -> [] | reasons -> [ T_structural_fatal reasons ]
+
+(* Closure-resolved source: the root with each LIVE `\input{..}`/`\include{..}`
+   replaced in place by its child's contents, recursively. Built for detectors
+   whose pattern spans files (the thmtools load in `preamble.tex`, the
+   declarations in the root — 6 of the OPEN-002 rule's first-derivation false
+   negatives were exactly this shape).
+
+   SOUND BY DEGRADATION, in the same sense as [has_include_cycle]: comments/
+   verbatim/urls are blanked before scanning for directives (a commented `%
+   \input foo` — the tcilatex trap — must not splice), an unresolvable or
+   non-existent child leaves the directive text in place, a visited-set stops
+   cycles, and fuel bounds pathological fan-out. Every failure mode collapses to
+   "less inlining", which for the consuming detector means UNDER-detection — the
+   status-quo false-READY, never a phantom fire.
+
+   ZERO IO on single-file projects: if the blanked root contains no live
+   directive, the root string is returned untouched — so the benchmarked
+   readiness paths, whose inputs are single files, never pay for this. *)
+let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
+  let max_files = 32 and max_depth = 6 in
+  let base_dir = Filename.dirname (Project_model.root_file proj).path in
+  let visited = Hashtbl.create 8 in
+  let files_read = ref 0 in
+  let blank src =
+    let b = Bytes.of_string src in
+    List.iter
+      (fun (a, e) ->
+        for k = a to e - 1 do
+          if k >= 0 && k < Bytes.length b then Bytes.set b k ' '
+        done)
+      (Validators_common.find_verbatim_comment_url_ranges src);
+    Bytes.unsafe_to_string b
+  in
+  let read_file p =
+    try
+      let ic = open_in_bin p in
+      Fun.protect
+        ~finally:(fun () -> close_in_noerr ic)
+        (fun () -> Some (really_input_string ic (in_channel_length ic)))
+    with Sys_error _ -> None
+  in
+  let resolve raw =
+    let raw = String.trim raw in
+    if raw = "" || String.contains raw '\\' then None
+    else
+      let cands =
+        if Filename.check_suffix raw ".tex" then [ raw ]
+        else [ raw ^ ".tex"; raw ]
+      in
+      List.find_map
+        (fun c ->
+          let p = Filename.concat base_dir c in
+          if Sys.file_exists p && not (Sys.is_directory p) then Some p else None)
+        cands
+  in
+  let rec inline depth src =
+    if depth > max_depth then src
+    else
+      let masked = blank src in
+      let n = String.length masked in
+      let buf = Buffer.create (String.length src + 256) in
+      let last = ref 0 in
+      let i = ref 0 in
+      while !i < n do
+        let pos = !i in
+        let directive =
+          if pos + 7 <= n && String.sub masked pos 7 = "\\input{" then Some 7
+          else if pos + 9 <= n && String.sub masked pos 9 = "\\include{" then
+            Some 9
+          else None
+        in
+        match directive with
+        | Some cl -> (
+            let j = ref (pos + cl) in
+            while !j < n && masked.[!j] <> '}' do
+              incr j
+            done;
+            if !j >= n then i := pos + 1
+            else
+              let raw = String.sub src (pos + cl) (!j - pos - cl) in
+              match resolve raw with
+              | Some path
+                when (not (Hashtbl.mem visited path)) && !files_read < max_files
+                -> (
+                  Hashtbl.replace visited path ();
+                  incr files_read;
+                  match read_file path with
+                  | Some child ->
+                      Buffer.add_string buf (String.sub src !last (pos - !last));
+                      Buffer.add_char buf '\n';
+                      Buffer.add_string buf (inline (depth + 1) child);
+                      Buffer.add_char buf '\n';
+                      last := !j + 1;
+                      i := !j + 1
+                  | None -> i := !j)
+              | _ -> i := !j)
+        | None -> incr i
+      done;
+      if !last = 0 then src
+      else (
+        Buffer.add_string buf (String.sub src !last (String.length src - !last));
+        Buffer.contents buf)
+  in
+  (* Fast path: no live directive in the blanked root ⇒ no IO, no copy. *)
+  let masked = blank root_src in
+  let has_directive =
+    let n = String.length masked in
+    let rec go i =
+      if i >= n then false
+      else if
+        (i + 7 <= n && String.sub masked i 7 = "\\input{")
+        || (i + 9 <= n && String.sub masked i 9 = "\\include{")
+      then true
+      else go (i + 1)
+    in
+    go 0
+  in
+  if has_directive then inline 0 root_src else root_src
 
 (* Read the root .tex source for T0/T5 if the caller did not supply it. On a
    read failure we surface a T0 reason rather than silently passing. *)
@@ -276,12 +407,14 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
   let source_result =
     match source with Some s -> Ok s | None -> read_root_source proj
   in
-  (* Structural-fatal reasons are a pure function of the source and are computed
-     the SAME way on both the fast and full branches — fast==full parity is
-     therefore preserved trivially. *)
+  (* Structural-fatal reasons are a pure function of the (closure-resolved)
+     source and are computed ONCE, the SAME way on both the fast and full
+     branches — fast==full parity is therefore preserved trivially. *)
   let tsf =
     match source_result with
-    | Ok src -> structural_fatal_check ~source:src
+    | Ok src ->
+        let closure_source = read_closure_source proj ~root_src:src in
+        structural_fatal_check ~source:src ~closure_source
     | Error _ -> []
   in
   let t0, t5 =

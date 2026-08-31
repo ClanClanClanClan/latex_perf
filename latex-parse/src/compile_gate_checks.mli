@@ -78,6 +78,8 @@ type sc_state = { sc_if_depth : int; sc_brace_depth : int }
     fires 10/2,719, all 10 fail, FP 0. *)
 
 val sc_initial : sc_state
+(** Fresh per-file scanner state: both depths zero. One per FILE, carried across
+    that file's spliced segments — never shared between files. *)
 
 type sc_event =
   | Sc_counter_created of string
@@ -85,7 +87,16 @@ type sc_event =
   | Sc_theorem_declared of string
 
 val sc_scan_segment : sc_state -> string -> sc_state * sc_event list
+(** Scan one comment-blanked segment under the given file state; returns the
+    carried state and the depth-0 events, in order. The caller concatenates
+    event lists across segments in SPLICE order (TeX's reading order) — SC-B's
+    "strictly earlier" depends on it. *)
+
 val self_collision_verdict : sc_event list -> string option
+(** [Some reason] on the first SC-A duplicate theorem name or SC-B
+    [\newcommand{\theH<x>}]-after-counter in the ordered event stream; [None]
+    otherwise. Messages are prose with document-derived names lowercased, so
+    nothing scrapeable leaks (the #561 lesson). *)
 
 val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
 (** Byte ranges of moving/name-argument keys ([\label{..}], [\ref], [\href], …,

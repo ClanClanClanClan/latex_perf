@@ -1483,6 +1483,176 @@ let self_collision_verdict (events : sc_event list) : string option =
     events;
   !verdict
 
+(* ── Detector: text-mode `tabu` environment (OPEN-031) ────────────────────
+   Under TeX Live >= 2026 a TEXT-MODE `\begin{tabu}` is deterministically fatal
+   at `\end{tabu}` — "! Undefined control sequence. \tabu@cleanup ..." — while
+   the SAME environment inside math ($..$, equation*, \[..\]) or any `longtabu`
+   compiles. Mechanism (tabu.sty:740-748): `\tabu@setcleanup` branches on
+   `\ifmmode`/`\iftabu@long`; the text-mode branch's triple-`\aftergroup`
+   hard-codes a group topology that array v2.7b (2026-02-24) changed, so the
+   cleanup runs after the group holding its local saves has closed. TL2024
+   (array v2.6g) compiles every variant, hence the version-conditioned message
+   (§5.12).
+
+   THE RULE, exactly as delta-debug validated on the corpus (both flagship
+   papers flipped BOTH WAYS by adding/removing only the math wrapper; census: 34
+   loaders, 8 env-bearing, TP 6/6, FP 0/12 ground-truthed, 27/27 occurrences
+   classified): fire iff the closure loads package `tabu` AND contains a live
+   text-mode `\begin{tabu}` (longtabu exempt). Math context is the validated
+   LEXICAL approximation — the env's line prefix plus the 5 comment-stripped
+   lines above it: MATH iff a display opener
+   (equation/align/gather/flalign/multline, starred or not, or `\[`) is opened
+   there without its closer, or the window holds an ODD count of unescaped `$`.
+   ⚠ Known asymmetry, stated on purpose: an opener MORE than 5 lines up
+   misclassifies the env as text-mode = an over-rejection (the safe direction);
+   a macro-generated `\begin{tabu}` is missed = status-quo false-READY (zero
+   corpus instances).
+
+   Expects the CLOSURE-RESOLVED source: 2507.10809v1's five text-mode envs live
+   in an \input child (the C-32 misread). Comment/verbatim/url ranges are
+   blanked first — a commented-out `\begin{tabu}` must not fire, and for this
+   detector blanking a real env can only SUPPRESS a fire (status-quo), never
+   cause one: add-NOT-READY-only. *)
+let tabu_textmode_fatal (s0 : string) : string option =
+  let s =
+    let b = Bytes.of_string s0 in
+    List.iter
+      (fun (a, e) ->
+        for k = a to e - 1 do
+          if k >= 0 && k < Bytes.length b then Bytes.set b k ' '
+        done)
+      (Validators_common.find_verbatim_comment_url_ranges s0);
+    Bytes.unsafe_to_string b
+  in
+  let n = String.length s in
+  let starts pfx a =
+    let pl = String.length pfx in
+    a + pl <= n && String.sub s a pl = pfx
+  in
+  (* 1. does the closure LIVE-load package tabu? Comma lists honoured. *)
+  let loads_tabu = ref false in
+  let i = ref 0 in
+  while (not !loads_tabu) && !i < n do
+    let pos = !i in
+    if
+      s.[pos] = '\\'
+      && (starts "\\usepackage" pos || starts "\\RequirePackage" pos)
+    then (
+      let cl = if starts "\\RequirePackage" pos then 15 else 11 in
+      let j = ref (pos + cl) in
+      (* optional [..] *)
+      while
+        !j < n
+        && (s.[!j] = ' ' || s.[!j] = '\t' || s.[!j] = '\n' || s.[!j] = '\r')
+      do
+        incr j
+      done;
+      if !j < n && s.[!j] = '[' then (
+        while !j < n && s.[!j] <> ']' do
+          incr j
+        done;
+        if !j < n then incr j);
+      while
+        !j < n
+        && (s.[!j] = ' ' || s.[!j] = '\t' || s.[!j] = '\n' || s.[!j] = '\r')
+      do
+        incr j
+      done;
+      if !j < n && s.[!j] = '{' then (
+        let k = ref (!j + 1) and start = ref (!j + 1) in
+        let check stop =
+          if String.trim (String.sub s !start (stop - !start)) = "tabu" then
+            loads_tabu := true
+        in
+        while !k < n && s.[!k] <> '}' do
+          if s.[!k] = ',' then (
+            check !k;
+            start := !k + 1);
+          incr k
+        done;
+        if !k < n then check !k;
+        i := !k)
+      else i := pos + 1)
+    else incr i
+  done;
+  if not !loads_tabu then None
+  else
+    (* 2. any LIVE text-mode \begin{tabu}? (exact env name — longtabu exempt) *)
+    let display_words =
+      [ "equation"; "align"; "gather"; "flalign"; "multline"; "eqnarray" ]
+    in
+    let window_is_math wstart pos =
+      let w = String.sub s wstart (pos - wstart) in
+      let wl = String.length w in
+      let has p a =
+        let pl = String.length p in
+        a + pl <= wl && String.sub w a pl = p
+      in
+      (* last unclosed display opener wins *)
+      let state = ref 0 (* 0 text, 1 math *) in
+      let dollars = ref 0 in
+      let display_of a cl =
+        (* env name at [a] after \begin{ / \end{ (offset cl); "" if unclosed *)
+        let ns = a + cl in
+        let e = ref ns in
+        while !e < wl && w.[!e] <> '}' do
+          incr e
+        done;
+        if !e >= wl then ""
+        else
+          let name = String.sub w ns (!e - ns) in
+          if name <> "" && name.[String.length name - 1] = '*' then
+            String.sub name 0 (String.length name - 1)
+          else name
+      in
+      let k = ref 0 in
+      while !k < wl do
+        let c = w.[!k] in
+        if c = '\\' then
+          if has "\\begin{" !k then (
+            if List.mem (display_of !k 7) display_words then state := 1;
+            incr k)
+          else if has "\\end{" !k then (
+            if List.mem (display_of !k 5) display_words then state := 0;
+            incr k)
+          else if has "\\[" !k then (
+            state := 1;
+            k := !k + 2)
+          else if has "\\]" !k then (
+            state := 0;
+            k := !k + 2)
+          else k := !k + 2 (* any escaped char, incl. \$: not a toggle *)
+        else (
+          if c = '$' then incr dollars;
+          incr k)
+      done;
+      !state = 1 || !dollars land 1 = 1
+    in
+    let hit = ref false in
+    let i = ref 0 in
+    while (not !hit) && !i < n do
+      let pos = !i in
+      if s.[pos] = '\\' && starts "\\begin{tabu}" pos then (
+        (* window: start of the 5th line above *)
+        let wstart = ref pos
+        and lines = ref 0 in
+        while !wstart > 0 && !lines < 6 do
+          decr wstart;
+          if s.[!wstart] = '\n' then incr lines
+        done;
+        if not (window_is_math !wstart pos) then hit := true else i := pos + 12)
+      else incr i
+    done;
+    if !hit then
+      Some
+        "text-mode \\begin{tabu} with package tabu loaded: ! Undefined control \
+         sequence \\tabu@cleanup — fatal at \\end{tabu} under TeX Live >= 2026 \
+         (array v2.7b changed the group topology tabu's text-mode cleanup \
+         hard-codes); compiles under earlier distributions, inside math mode, \
+         and as longtabu. Fix: wrap the tabu environment in math mode, use \
+         longtabu, or migrate to tabularx."
+    else None
+
 let structural_fatal_reasons (source : string) : string list =
   List.filter_map
     (fun f -> f source)

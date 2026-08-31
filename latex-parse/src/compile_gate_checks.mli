@@ -66,6 +66,15 @@ val thmtools_counter_collision_fatal : string -> string option
     cost an over-rejection, reachable only via vcu-scanner over-reach — see the
     polarity note in the implementation. *)
 
+val tabu_textmode_fatal : string -> string option
+(** OPEN-031: [Some reason] iff the closure-resolved source live-loads package
+    [tabu] AND contains a live TEXT-MODE [\begin{tabu}] (longtabu exempt) — a
+    deterministic "\tabu@cleanup" fatal under TeX Live >= 2026, compiling under
+    earlier distributions and inside math (hence the version-conditioned
+    message). Math context is the delta-debug-validated lexical window (env line
+    prefix + 5 lines above: unclosed display opener or odd unescaped $).
+    Add-NOT-READY-only; the >5-line-opener edge errs toward over-rejection. *)
+
 type sc_state = { sc_if_depth : int; sc_brace_depth : int }
 (** Self-collision family (SC) — the engine-independent false-READY class.
     Per-file segment scanner + verdict, driven by the caller over the closure in

@@ -391,6 +391,18 @@
    "expected_cli": "NOT-READY",
    "fixed_by": "OPEN-002 (closure-resolved: load in the \\input child, decls in the root)",
    "note": "the OPEN-002 pattern split across files: thmtools loaded in pre.tex, shared-counter decls in the root. Pins Compile_contract.read_closure_source \u2014 a root-only detector regresses this fixture."
+  },
+  {
+   "id": "fr_tabu_textmode",
+   "path": "fr_tabu_textmode/doc.tex",
+   "kind": "tree",
+   "class": "engine-drift",
+   "fix_rank": 14,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "fixed_by": "OPEN-031 tabu text-mode detector (math-mode discriminator, delta-debug validated; TL2024 compiles every variant \u2014 version-conditioned message per \u00a75.12)",
+   "note": "text-mode \\begin{tabu} under TeX Live >= 2026: '! Undefined control sequence \\tabu@cleanup' at \\end{tabu}. Math-wrapped and longtabu variants compile \u2014 the detector's window classifier must keep them READY."
   }
  ]
 }

@@ -1,0 +1,18 @@
+% fr_tabu_textmode — a text-mode tabu environment under TeX Live >= 2026.
+%
+% Deterministic fatal at \end{tabu}:
+%   ! Undefined control sequence. \tabu@cleanup ...\tabu@naturalX =\tabu@naturalX@save
+%
+% The SAME environment wrapped in math ($..$, equation*) — or any longtabu —
+% compiles, and TL2024 (array v2.6g) compiles every variant. Mechanism:
+% tabu.sty:740-748 \tabu@setcleanup branches on \ifmmode/\iftabu@long; the
+% text-mode triple-\aftergroup hard-codes a group topology array v2.7b
+% (2026-02-24) changed. Delta-debug validated both ways on two real papers
+% before the detector existed (OPEN-031).
+\documentclass{article}
+\usepackage{tabu}
+\begin{document}
+\begin{tabu}{ll}
+a & b \\
+\end{tabu}
+\end{document}

@@ -720,4 +720,103 @@ let () =
                 ]))
         (t ^ ": document-derived names are lowercased"))
 
+(* ── tabu text-mode detector (OPEN-031) ──────────────────────────────────
+   Every cell mirrors a pdflatex-verified measurement: text-mode tabu is
+   deterministically fatal under the pin, the same env inside math or as
+   longtabu compiles, and TL2024 compiles everything (hence the
+   version-conditioned message). 8/8 corpus env-bearing papers classified
+   correctly by this exact rule before it was implemented. *)
+let () =
+  let f = Compile_gate_checks.tabu_textmode_fatal in
+  let doc pre body =
+    "\\documentclass{article}\n"
+    ^ pre
+    ^ "\\begin{document}\n"
+    ^ body
+    ^ "\\end{document}\n"
+  in
+  let tabu = "\\begin{tabu}{ll}\na & b \\\\\n\\end{tabu}\n" in
+  run "tabu: text-mode env FIRES" (fun t ->
+      expect (fires f (doc "\\usepackage{tabu}\n" tabu)) t);
+  run "tabu: comma-list load FIRES" (fun t ->
+      expect (fires f (doc "\\usepackage{amsmath,tabu}\n" tabu)) t);
+  run "tabu: $-wrapped must NOT fire" (fun t ->
+      expect (not_fires f (doc "\\usepackage{tabu}\n" ("$\n" ^ tabu ^ "$\n"))) t);
+  run "tabu: equation*-wrapped must NOT fire" (fun t ->
+      expect
+        (not_fires f
+           (doc "\\usepackage{amsmath}\n\\usepackage{tabu}\n"
+              ("\\begin{equation*}\n" ^ tabu ^ "\\end{equation*}\n")))
+        t);
+  run "tabu: \\[-wrapped must NOT fire" (fun t ->
+      expect
+        (not_fires f (doc "\\usepackage{tabu}\n" ("\\[\n" ^ tabu ^ "\\]\n")))
+        t);
+  run "tabu: longtabu text-mode must NOT fire" (fun t ->
+      expect
+        (not_fires f
+           (doc "\\usepackage{longtable}\n\\usepackage{tabu}\n"
+              "\\begin{longtabu}{ll}\na & b \\\\\n\\end{longtabu}\n"))
+        t);
+  run "tabu: load with NO env must NOT fire" (fun t ->
+      expect (not_fires f (doc "\\usepackage{tabu}\n" "Plain.\n")) t);
+  run "tabu: env inside a COMMENT must NOT fire" (fun t ->
+      expect
+        (not_fires f
+           (doc "\\usepackage{tabu}\n" "% \\begin{tabu}{ll}\nPlain.\n"))
+        t);
+  run "tabu: custom env, package NOT loaded, must NOT fire" (fun t ->
+      (* verified rc 0: \newenvironment{tabu}{}{} without the package *)
+      expect
+        (not_fires f
+           (doc "\\newenvironment{tabu}{}{}\n" "\\begin{tabu}\nx\n\\end{tabu}\n"))
+        t);
+  run "tabu: first env math-wrapped, second TEXT — still FIRES" (fun t ->
+      expect
+        (fires f
+           (doc "\\usepackage{tabu}\n"
+              ("$\n"
+              ^ tabu
+              ^ "$\nprose here\nmore prose\nstill prose\nand more\nlast line\n"
+              ^ tabu)))
+        t);
+  run "tabu: closed display env above does not shield (window state)" (fun t ->
+      expect
+        (fires f
+           (doc "\\usepackage{amsmath}\n\\usepackage{tabu}\n"
+              ("\\begin{equation*}\nx=y\n\\end{equation*}\n" ^ tabu)))
+        t);
+  run "tabu: message is version-conditioned prose without scrapeable tokens"
+    (fun t ->
+      match f (doc "\\usepackage{tabu}\n" tabu) with
+      | None -> expect false (t ^ ": must fire")
+      | Some m ->
+          let contains sub =
+            let n = String.length m and k = String.length sub in
+            let rec go i =
+              i + k <= n && (String.sub m i k = sub || go (i + 1))
+            in
+            go 0
+          in
+          let has_id_token =
+            let n = String.length m in
+            let rec go i =
+              if i + 2 >= n then false
+              else if
+                m.[i] >= 'A'
+                && m.[i] <= 'Z'
+                && m.[i + 1] = '-'
+                && m.[i + 2] >= '0'
+                && m.[i + 2] <= '9'
+              then true
+              else go (i + 1)
+            in
+            go 0
+          in
+          expect
+            ((not has_id_token)
+            && contains "TeX Live"
+            && contains "earlier distributions")
+            (t ^ ": version condition present, no RULE-123 shapes"))
+
 let () = finalise "compile_gate"

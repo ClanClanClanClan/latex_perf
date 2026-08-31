@@ -260,15 +260,20 @@ let structural_fatal_check ~(source : string) ~(closure_source : string)
   let reasons =
     Compile_gate_checks.structural_fatal_reasons source
     @ (match self_collision with Some m -> [ m ] | None -> [])
-    @
     (* The thmtools shared-counter detector (OPEN-002) runs on the
        CLOSURE-RESOLVED source, because the load and the declarations routinely
        live in different files. It is kept OUT of [structural_fatal_reasons] so
        it runs exactly once, on the right string; on a single-file project the
        closure source IS the root source, so nothing changes there. *)
-    match
-      Compile_gate_checks.thmtools_counter_collision_fatal closure_source
-    with
+    @ (match
+         Compile_gate_checks.thmtools_counter_collision_fatal closure_source
+       with
+      | Some m -> [ m ]
+      | None -> [])
+    @
+    (* The tabu text-mode detector (OPEN-031) also runs on the closure:
+       2507.10809v1's five text-mode envs live in an \input child (C-32). *)
+    match Compile_gate_checks.tabu_textmode_fatal closure_source with
     | Some m -> [ m ]
     | None -> []
   in

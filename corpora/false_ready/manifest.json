@@ -403,6 +403,94 @@
    "expected_cli": "NOT-READY",
    "fixed_by": "OPEN-031 tabu text-mode detector (math-mode discriminator, delta-debug validated; TL2024 compiles every variant \u2014 version-conditioned message per \u00a75.12)",
    "note": "text-mode \\begin{tabu} under TeX Live >= 2026: '! Undefined control sequence \\tabu@cleanup' at \\end{tabu}. Math-wrapped and longtabu variants compile \u2014 the detector's window classifier must keep them READY."
+  },
+  {
+   "id": "fr_cmt_m1_custom_verbenv",
+   "path": "fr_cmt_m1_custom_verbenv.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "M1 breaker (OPEN-007): \\lstnewenvironment body is verbatim to TeX but the env is not in the scanner's 11-name verbatim_envs, so naive %-to-EOL blanking blanks '% <U+8868>' (bytes [118,123)) inside the body and hides the live fatal ('! LaTeX Error: Invalid UTF-8 byte sequence' via listings; halt rc 1,1). Blanked variant: CLI READY = manufactured false-READY. A comment-aware fix must treat % inside CUSTOM verbatim envs as literal; a wrong one flips this to READY and check_known_false_ready fails REGRESSION."
+  },
+  {
+   "id": "fr_cmt_m2_begin_space",
+   "path": "fr_cmt_m2_begin_space.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "M2 breaker: '\\begin {verbatim}' with a SPACE \u2014 the vcu scanner's starts_with \"\\begin{\" is offset-exact, but TeX absorbs the space and the env IS verbatim ('! Unicode character U+8868'; halt rc 1,1). Naive blanking blanks '% <U+8868>' (bytes [72,77)) and the T3 japanese_cjk reason DISAPPEARS; exit stays NOT-READY today only because T0 shares the same space-blindness (Unexpected \\end{document} + PRT-001) \u2014 right answer by accident, and T0 over-rejects the compiling plain-body sibling (rc 0,0). When T0 learns the space form this fixture becomes the exit-level kill-test; until then the kill signal is reason-level (T3 must keep firing)."
+  },
+  {
+   "id": "fr_cmt_m3_verb_letter_delim",
+   "path": "fr_cmt_m3_verb_letter_delim.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "M3 breaker: LETTER \\verb delimiter (\\verb aQ%<U+8868>a) is legal TeX \u2014 the Unicode-character error proves 'a' delimited and '%' literal (halt rc 1,1). The scanner's is_letter guard records NO range, so naive blanking blanks '%<U+8868>a after' (bytes [56,67)) and hides the fatal. Blanked variant: CLI READY = manufactured false-READY."
+  },
+  {
+   "id": "fr_cmt_m4_catcode_percent",
+   "path": "fr_cmt_m4_catcode_percent.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "M4 breaker, literal spelling: \\catcode`\\%=12 makes '%<U+8868> after' live body text ('! Unicode character U+8868'; halt rc 1,1). Naive blanking blanks bytes [63,73) and hides the CJK, but T0's LP-Foreign \\catcode guard keeps exit NOT-READY \u2014 masked at exit level (kill signal is the T3 reason). See fr_cmt_m4b_percent_ignore for the unmasked vector."
+  },
+  {
+   "id": "fr_cmt_m4b_percent_ignore",
+   "path": "fr_cmt_m4b_percent_ignore.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "M4 breaker, unmasked vector: doc.sty \\MakePercentIgnore sets catcode`\\%=9 with NO literal \\catcode (wild-type: every .dtx driver), so LP-Foreign does not fire; '%<U+8868> after' is live ('! Unicode character U+8868'; halt rc 1,1). Naive blanking blanks bytes [84,94) -> CLI READY = manufactured false-READY."
+  },
+  {
+   "id": "fr_cmt_g1_verbatim_cjk_liveness",
+   "path": "fr_cmt_g1_verbatim_cjk_liveness.tex",
+   "kind": "single",
+   "class": "input-model-divergence",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "error-halt",
+   "expected_cli": "NOT-READY",
+   "note": "Over-blank guard (the OTHER wrong implementation): CJK inside a correctly-spelled verbatim env is LIVE ('! Unicode character U+8868'; halt rc 1,1). Blanking the FULL find_verbatim_comment_url_ranges set \u2014 the untagged (int*int) list misreading, revert #1's alltt/listing mechanism, OPEN-007's measured 11 manufactured false-READYs \u2014 blanks the whole env body (bytes [48,91)) -> CLI READY. Comment-only blanking blanks NOTHING here (measured: zero ranges) and must stay NOT-READY."
+  },
+  {
+   "id": "fr_cmt_target_cjk_comment",
+   "path": "fr_cmt_target_cjk_comment.tex",
+   "kind": "single",
+   "class": "over-rejection-target",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "compiles",
+   "expected_cli": "NOT-READY",
+   "note": "TARGET (d): raw CJK only in a trailing mid-line %-comment (OPEN-007's wild shape, '\\vspace{-0.05cm} % <CJK>'). pdflatex rc 0,0 both protocols with PDF; today NOT-READY via T3 japanese_cjk (comment-blind has_raw_cjk \u2014 bytes [67,102) are a genuine comment). The comment-awareness fix flips expected_cli to READY in the same PR. LANDING CAVEAT: false_ready_oracle.sh hard-fails ANY grade=compiles; extend its comparator to accept manifest-recorded 'compiles' first (one line at the HARD-drift branch)."
+  },
+  {
+   "id": "fr_cmt_target_fontspec_comment",
+   "path": "fr_cmt_target_fontspec_comment.tex",
+   "kind": "single",
+   "class": "over-rejection-target",
+   "fix_rank": 15,
+   "tier": "lp-core",
+   "pdflatex": "compiles",
+   "expected_cli": "NOT-READY",
+   "note": "TARGET (e): fully commented-out '% \\usepackage{fontspec}' (bytes [24,47), a genuine comment). pdflatex rc 0,0 both protocols with PDF; today NOT-READY via T3 opentype_fonts (comment-blind uses_package). Fix flips to READY. Same oracle-comparator caveat as fr_cmt_target_cjk_comment. NB: fr_comment_comma / fr_comment_beforearg flip READY->NOT-READY under the same fix (OPEN-007) \u2014 book all flips in the same PR or required build fails."
   }
  ]
 }

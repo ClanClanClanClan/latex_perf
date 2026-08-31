@@ -259,10 +259,17 @@ while IFS=$'\t' read -r id path kind pdfl exp_cli; do
   else grade=compiles; fi
 
   status=ok
-  # HARD: pdflatex compiles it. For a LIVE fixture that means it was never a
-  # false-READY; for a FIXED one it means we now over-reject a compiling doc.
-  # Both are real, both are loud.
-  if [ "$grade" = compiles ]; then
+  # HARD: pdflatex compiles a fixture the manifest records as REJECTED. For a
+  # LIVE fixture that means it was never a false-READY; for a FIXED one it
+  # means we now over-reject a compiling doc. Both are real, both are loud.
+  #
+  # A manifest-recorded grade of `compiles` is LEGAL since the comment-train
+  # target fixtures (fr_cmt_target_*): those pin the OVER-REJECTION direction —
+  # documents pdflatex accepts that the CLI must eventually accept too — so
+  # for them `compiles` is the expected steady state, and the drift signal is
+  # the opposite one: such a fixture STOPPING compiling is graded below like
+  # any other mismatch.
+  if [ "$grade" = compiles ] && [ "$pdfl" != compiles ]; then
     status="HARD DRIFT: pdflatex now COMPILES this fixture (cli=$cli)"; hard=$((hard+1))
   elif [ "$grade" != "$pdfl" ]; then
     status="soft drift: grade $grade != manifest $pdfl (both are rejections)"; soft=$((soft+1))

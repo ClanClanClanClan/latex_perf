@@ -47,7 +47,11 @@ val duplicate_begin_document_fatal : string -> string option
     Add-NOT-READY-only: a compiling document has exactly one. *)
 
 val verb_broken_eol_fatal : string -> string option
+(** Detector (9): [Some reason] iff a real inline [\verb]/[\verb*] argument is
+    not closed by its delimiter before the line ends (pdflatex "! LaTeX Error:
+    \verb ended by end of line", exit 1); [None] otherwise. Add-NOT-READY-only. *)
 
+val thmtools_counter_collision_fatal : string -> string option
 (** [thmtools_counter_collision_fatal source] — OPEN-002, the largest real-paper
     false-READY class. Fires iff, in the preamble, the first live load of
     [thmtools]/[thm-restate] precedes a shared-counter theorem declaration
@@ -61,10 +65,38 @@ val verb_broken_eol_fatal : string -> string option
     over-blanking the amsthm-after EXEMPTION conjunct (negative polarity) can
     cost an over-rejection, reachable only via vcu-scanner over-reach — see the
     polarity note in the implementation. *)
-val thmtools_counter_collision_fatal : string -> string option
-(** Detector (9): [Some reason] iff a real inline [\verb]/[\verb*] argument is
-    not closed by its delimiter before the line ends (pdflatex "! LaTeX Error:
-    \verb ended by end of line", exit 1); [None] otherwise. Add-NOT-READY-only. *)
+
+type sc_state = { sc_if_depth : int; sc_brace_depth : int }
+(** Self-collision family (SC) — the engine-independent false-READY class.
+    Per-file segment scanner + verdict, driven by the caller over the closure in
+    splice order. [sc_scan_segment] tracks file-local TeX-conditional depth and
+    brace-group depth (events only at 0/0 — guarded declarations are the
+    measured FP hazard and never count; clamped, so mis-counts degrade to
+    under-detection). [self_collision_verdict] fires on a theorem name declared
+    twice (SC-A) or a [\newcommand{\theH<x>}] after counter [<x>] exists (SC-B,
+    June-2022 kernel mechanism). Validated corpus-wide before implementation:
+    fires 10/2,719, all 10 fail, FP 0. *)
+
+val sc_initial : sc_state
+(** Fresh per-file scanner state: both depths zero. One per FILE, carried across
+    that file's spliced segments — never shared between files. *)
+
+type sc_event =
+  | Sc_counter_created of string
+  | Sc_theh_defined of string
+  | Sc_theorem_declared of string
+
+val sc_scan_segment : sc_state -> string -> sc_state * sc_event list
+(** Scan one comment-blanked segment under the given file state; returns the
+    carried state and the depth-0 events, in order. The caller concatenates
+    event lists across segments in SPLICE order (TeX's reading order) — SC-B's
+    "strictly earlier" depends on it. *)
+
+val self_collision_verdict : sc_event list -> string option
+(** [Some reason] on the first SC-A duplicate theorem name or SC-B
+    [\newcommand{\theH<x>}]-after-counter in the ordered event stream; [None]
+    otherwise. Messages are prose with document-derived names lowercased, so
+    nothing scrapeable leaks (the #561 lesson). *)
 
 val find_moving_arg_ranges : ?extra:string list -> string -> (int * int) list
 (** Byte ranges of moving/name-argument keys ([\label{..}], [\ref], [\href], …,

@@ -255,10 +255,11 @@ let t5_check_fast ~(source : string)
    the fast and full branches (fast==full parity holds trivially). This is the
    soundness spine of --compile-check: catching these closes the false-READY
    holes (e.g. $a^b^c$) that the imprecise ADVISORY lint rules could not. *)
-let structural_fatal_check ~(source : string) ~(closure_source : string) :
-    reason list =
+let structural_fatal_check ~(source : string) ~(closure_source : string)
+    ~(self_collision : string option) : reason list =
   let reasons =
     Compile_gate_checks.structural_fatal_reasons source
+    @ (match self_collision with Some m -> [ m ] | None -> [])
     @
     (* The thmtools shared-counter detector (OPEN-002) runs on the
        CLOSURE-RESOLVED source, because the load and the declarations routinely
@@ -290,8 +291,30 @@ let structural_fatal_check ~(source : string) ~(closure_source : string) :
    ZERO IO on single-file projects: if the blanked root contains no live
    directive, the root string is returned untouched — so the benchmarked
    readiness paths, whose inputs are single files, never pay for this. *)
-let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
-  let max_files = 32 and max_depth = 6 in
+(* The closure walk, generalised (v27.1.64, SC detector): one pre-order pass
+   yielding SEGMENTS of (file_key, raw_text) in TeX's reading order, consumed
+   two ways — concatenated into the spliced string for the thmtools detector
+   ([read_closure_source], unchanged public behaviour), and scanned per-file for
+   the self-collision detector ([closure_self_collision]).
+
+   Splices, in addition to the original live `\input{..}`/`\include{..}`: *
+   LOCAL `.sty` loaded by `\usepackage`/`\RequirePackage` (comma lists honoured
+   — only names with a local `<name>.sty` splice; the DIRECTIVE TEXT IS KEPT and
+   the file content inserted after it, so other names in the same list, and
+   position-sensitive consumers, are unaffected); * a LOCAL `.cls` named by
+   `\documentclass`. 4 of the SC rule's 10 corpus true positives are reachable
+   only through a local .sty (icml2025.sty's `\RequirePackage{algorithm}`), and
+   4 residual `\c@` fatals of the thmtools detector are cls/sty-mediated — this
+   closes both.
+
+   Same soundness-by-degradation as before: directives found on a
+   comment-blanked mask (a commented `% \input foo` cannot splice), visited set,
+   fuel (files/depth), unresolvable child leaves the text alone; every failure
+   mode is less inlining = under-detection. Fast path unchanged: a root with no
+   live directive costs zero IO. *)
+let closure_segments (proj : Project_model.t) ~(root_src : string) :
+    (string * string) list =
+  let max_files = 48 and max_depth = 6 in
   let base_dir = Filename.dirname (Project_model.root_file proj).path in
   let visited = Hashtbl.create 8 in
   let files_read = ref 0 in
@@ -313,13 +336,13 @@ let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
         (fun () -> Some (really_input_string ic (in_channel_length ic)))
     with Sys_error _ -> None
   in
-  let resolve raw =
+  let resolve_with exts raw =
     let raw = String.trim raw in
     if raw = "" || String.contains raw '\\' then None
     else
       let cands =
-        if Filename.check_suffix raw ".tex" then [ raw ]
-        else [ raw ^ ".tex"; raw ]
+        if List.exists (fun e -> Filename.check_suffix raw e) exts then [ raw ]
+        else List.map (fun e -> raw ^ e) exts
       in
       List.find_map
         (fun c ->
@@ -327,24 +350,57 @@ let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
           if Sys.file_exists p && not (Sys.is_directory p) then Some p else None)
         cands
   in
-  let rec inline depth src =
-    if depth > max_depth then src
+  let segs = ref [] in
+  let push key text = if text <> "" then segs := (key, text) :: !segs in
+  let claim path =
+    if (not (Hashtbl.mem visited path)) && !files_read < max_files then (
+      Hashtbl.replace visited path ();
+      incr files_read;
+      read_file path)
+    else None
+  in
+  (* Read a brace group on the MASK starting at '{' at [j]; returns (raw_inner,
+     past). Flat — a nested '{' inside a filename is not LaTeX. *)
+  let group_at src masked j =
+    let n = String.length masked in
+    if j >= n || masked.[j] <> '{' then None
+    else
+      let k = ref (j + 1) in
+      while !k < n && masked.[!k] <> '}' do
+        incr k
+      done;
+      if !k >= n then None
+      else Some (String.sub src (j + 1) (!k - j - 1), !k + 1)
+  in
+  let rec walk depth key src =
+    if depth > max_depth then push key src
     else
       let masked = blank src in
       let n = String.length masked in
-      let buf = Buffer.create (String.length src + 256) in
       let last = ref 0 in
       let i = ref 0 in
       while !i < n do
         let pos = !i in
-        let directive =
-          if pos + 7 <= n && String.sub masked pos 7 = "\\input{" then Some 7
-          else if pos + 9 <= n && String.sub masked pos 9 = "\\include{" then
-            Some 9
+        let starts pfx =
+          let pl = String.length pfx in
+          pos + pl <= n && String.sub masked pos pl = pfx
+        in
+        (* replace-style: \input{x} / \include{x} *)
+        let replace_cl =
+          if starts "\\input{" then Some 7
+          else if starts "\\include{" then Some 9
           else None
         in
-        match directive with
-        | Some cl -> (
+        (* keep-style: \usepackage[..]{a,b} / \RequirePackage /
+           \documentclass *)
+        let keep_kind =
+          if starts "\\usepackage" then Some (11, [ ".sty" ])
+          else if starts "\\RequirePackage" then Some (15, [ ".sty" ])
+          else if starts "\\documentclass" then Some (14, [ ".cls" ])
+          else None
+        in
+        match (replace_cl, keep_kind) with
+        | Some cl, _ -> (
             let j = ref (pos + cl) in
             while !j < n && masked.[!j] <> '}' do
               incr j
@@ -352,44 +408,108 @@ let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
             if !j >= n then i := pos + 1
             else
               let raw = String.sub src (pos + cl) (!j - pos - cl) in
-              match resolve raw with
-              | Some path
-                when (not (Hashtbl.mem visited path)) && !files_read < max_files
-                -> (
-                  Hashtbl.replace visited path ();
-                  incr files_read;
-                  match read_file path with
+              match resolve_with [ ".tex" ] raw with
+              | Some path -> (
+                  match claim path with
                   | Some child ->
-                      Buffer.add_string buf (String.sub src !last (pos - !last));
-                      Buffer.add_char buf '\n';
-                      Buffer.add_string buf (inline (depth + 1) child);
-                      Buffer.add_char buf '\n';
+                      push key (String.sub src !last (pos - !last));
+                      walk (depth + 1) path child;
                       last := !j + 1;
                       i := !j + 1
                   | None -> i := !j)
-              | _ -> i := !j)
-        | None -> incr i
+              | None -> i := !j)
+        | None, Some (cl, exts) -> (
+            (* skip optional [..] on the mask, then the {names} group *)
+            let j = ref (pos + cl) in
+            while
+              !j < n
+              && (masked.[!j] = ' '
+                 || masked.[!j] = '\t'
+                 || masked.[!j] = '\n'
+                 || masked.[!j] = '\r')
+            do
+              incr j
+            done;
+            if !j < n && masked.[!j] = '[' then
+              while !j < n && masked.[!j] <> ']' do
+                incr j
+              done;
+            if !j < n && masked.[!j] = ']' then incr j;
+            while
+              !j < n
+              && (masked.[!j] = ' '
+                 || masked.[!j] = '\t'
+                 || masked.[!j] = '\n'
+                 || masked.[!j] = '\r')
+            do
+              incr j
+            done;
+            match group_at src masked !j with
+            | Some (names, past) ->
+                let locals =
+                  String.split_on_char ',' names
+                  |> List.filter_map (resolve_with exts)
+                in
+                if locals = [] then i := past
+                else (
+                  (* KEEP the directive text, splice each local file after. *)
+                  push key (String.sub src !last (past - !last));
+                  List.iter
+                    (fun path ->
+                      match claim path with
+                      | Some child -> walk (depth + 1) path child
+                      | None -> ())
+                    locals;
+                  last := past;
+                  i := past)
+            | None -> i := pos + 1)
+        | None, None -> incr i
       done;
-      if !last = 0 then src
-      else (
-        Buffer.add_string buf (String.sub src !last (String.length src - !last));
-        Buffer.contents buf)
+      push key (String.sub src !last (String.length src - !last))
   in
-  (* Fast path: no live directive in the blanked root ⇒ no IO, no copy. *)
-  let masked = blank root_src in
-  let has_directive =
-    let n = String.length masked in
-    let rec go i =
-      if i >= n then false
-      else if
-        (i + 7 <= n && String.sub masked i 7 = "\\input{")
-        || (i + 9 <= n && String.sub masked i 9 = "\\include{")
-      then true
-      else go (i + 1)
-    in
-    go 0
+  (* Fast path: nothing resolvable in the blanked root ⇒ one segment, no IO
+     beyond the (cheap) local-file existence probes at directive sites. *)
+  walk 0 "<root>" root_src;
+  List.rev !segs
+
+let read_closure_source (proj : Project_model.t) ~(root_src : string) : string =
+  match closure_segments proj ~root_src with
+  | [ (_, only) ] -> only
+  | segs -> String.concat "\n" (List.map snd segs)
+
+(* The SC (self-collision) verdict over the closure: scan each segment with ITS
+   FILE's carried scanner state — per-file depths, splice-order events — exactly
+   the contract [sc_scan_segment] documents. Segments are
+   comment/verbatim/url-blanked here because the scanner itself is range-naive;
+   a guard or declaration inside a comment must not count. *)
+let closure_self_collision (proj : Project_model.t) ~(root_src : string) :
+    string option =
+  let blank src =
+    let b = Bytes.of_string src in
+    List.iter
+      (fun (a, e) ->
+        for k = a to e - 1 do
+          if k >= 0 && k < Bytes.length b then Bytes.set b k ' '
+        done)
+      (Validators_common.find_verbatim_comment_url_ranges src);
+    Bytes.unsafe_to_string b
   in
-  if has_directive then inline 0 root_src else root_src
+  let states : (string, Compile_gate_checks.sc_state) Hashtbl.t =
+    Hashtbl.create 8
+  in
+  let events = ref [] in
+  List.iter
+    (fun (key, seg) ->
+      let st =
+        Option.value
+          (Hashtbl.find_opt states key)
+          ~default:Compile_gate_checks.sc_initial
+      in
+      let st', evs = Compile_gate_checks.sc_scan_segment st (blank seg) in
+      Hashtbl.replace states key st';
+      events := !events @ [ evs ])
+    (closure_segments proj ~root_src);
+  Compile_gate_checks.self_collision_verdict (List.concat !events)
 
 (* Read the root .tex source for T0/T5 if the caller did not supply it. On a
    read failure we surface a T0 reason rather than silently passing. *)
@@ -414,7 +534,8 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
     match source_result with
     | Ok src ->
         let closure_source = read_closure_source proj ~root_src:src in
-        structural_fatal_check ~source:src ~closure_source
+        let self_collision = closure_self_collision proj ~root_src:src in
+        structural_fatal_check ~source:src ~closure_source ~self_collision
     | Error _ -> []
   in
   let t0, t5 =

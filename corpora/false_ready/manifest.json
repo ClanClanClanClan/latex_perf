@@ -11,7 +11,7 @@
   ]
  },
  "baseline": {
-  "false_ready_total": 16,
+  "false_ready_total": 15,
   "strong_fatal": 7,
   "error_halt": 1
  },
@@ -265,8 +265,9 @@
    "fix_rank": 1,
    "tier": "lp-extended",
    "pdflatex": "strong-fatal",
-   "expected_cli": "READY",
-   "note": "\\declaretheorem{lemma} then \\newtheorem{lemma}{Lemma} \u2014 the same name declared TWICE, no shared counter involved. \u26a0 NOT the OPEN-002 shape: the validated shared-counter rule deliberately does not fire here (both this session's implementation and the independent vector battery flagged it). Engine-INDEPENDENT (fails under TL2024 too, unlike the \\c@ class) \u2014 it is the redeclaration sibling of the \\theHalgorithm self-collision family, and stays live until that detector exists."
+   "expected_cli": "NOT-READY",
+   "note": "\\declaretheorem{lemma} then \\newtheorem{lemma}{Lemma} \u2014 the same name declared TWICE, no shared counter involved. \u26a0 NOT the OPEN-002 shape: the validated shared-counter rule deliberately does not fire here (both this session's implementation and the independent vector battery flagged it). Engine-INDEPENDENT (fails under TL2024 too, unlike the \\c@ class) \u2014 it is the redeclaration sibling of the \\theHalgorithm self-collision family, and stays live until that detector exists.",
+   "fixed_by": "SC-A self-collision detector (same theorem name declared twice; engine-independent \u2014 fails under TL2024 and the pin alike)"
   },
   {
    "id": "fr_thmrestate_counter",

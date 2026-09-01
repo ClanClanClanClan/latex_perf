@@ -531,6 +531,11 @@ let verbatim_envs =
     "alltt";
     "comment";
     "listing";
+    (* tcolorbox's [tcblisting] body is read verbatim (dual-processed: the
+       verbatim half keeps `%` literal), so a `%`-line inside it must never be
+       blanked as a comment — measured: blanking one hides a live fatal
+       (adversarial pre-ship review, direct-use vector). *)
+    "tcblisting";
   ]
 
 (** [find_verbatim_comment_url_ranges s] — single left-to-right pass returning
@@ -602,127 +607,192 @@ let compute_verbatim_comment_url_ranges (s : string) : (int * int) list =
       ranges := (pos, !j) :: !ranges;
       i := !j)
     else if c = '\\' && not (is_escaped pos) then
-      if starts_with "\\begin{" pos then (
-        let ns = pos + 7 in
-        let j = ref ns in
-        while !j < n && String.unsafe_get s !j <> '}' do
-          incr j
-        done;
-        if !j < n && is_verb_env (String.sub s ns (!j - ns)) then (
-          let name = String.sub s ns (!j - ns) in
-          let endp = "\\end{" ^ name ^ "}" in
-          let el = String.length endp in
-          let k = ref (!j + 1) in
-          while !k < n && not (starts_with endp !k) do
-            incr k
+      (* OPEN-038/M2 (2026-09-01): TeX terminates the control word [\begin] at
+         the non-letter and absorbs following spaces, so `\begin {verbatim}`
+         opens the environment exactly as `\begin{verbatim}` does (measured: the
+         plain-ASCII sibling compiles rc 0,0). Matching only the exact `\begin{`
+         spelling made the scanner treat the space form as prose — the M2
+         comment-semantics breaker. Tolerate spaces/tabs between the control
+         word and the brace, on BOTH open and close: recognising a space-form
+         open while requiring an exact-form close would run the range to EOF
+         (over-blanking — the false-READY direction). A letter right after
+         [\begin]/[\end] is a LONGER control word (\beginner, \endverbatim) and
+         never matches. *)
+      let after_ctrl_word_brace base_len at =
+        let q = ref (at + base_len) in
+        if !q < n && is_letter (String.unsafe_get s !q) then None
+        else
+          (* TeX absorbs spaces/tabs AND at most ONE end-of-line after the
+             control word (measured: `\begin`+newline+`{verbatim}` compiles and
+             IS verbatim; a BLANK line is \par — "Paragraph ended before \begin
+             was complete", fatal — so a second newline never matches). CRLF
+             counts as the one newline. *)
+          let newlines = ref 0 in
+          let continue_ws = ref true in
+          while !continue_ws && !q < n do
+            match String.unsafe_get s !q with
+            | ' ' | '\t' -> incr q
+            | '\n' ->
+                if !newlines >= 1 then continue_ws := false
+                else (
+                  incr newlines;
+                  incr q)
+            | '\r' ->
+                if !newlines >= 1 then continue_ws := false
+                else (
+                  incr newlines;
+                  incr q;
+                  if !q < n && String.unsafe_get s !q = '\n' then incr q)
+            | _ -> continue_ws := false
           done;
-          let stop = if !k < n then !k + el else n in
-          ranges := (pos, stop) :: !ranges;
-          i := stop)
-        else i := pos + 1)
-      else if starts_with "\\verb" pos || starts_with "\\lstinline" pos then (
-        let is_lst = starts_with "\\lstinline" pos in
-        let cmdlen = if is_lst then 10 else 5 in
-        let after = ref (pos + cmdlen) in
-        if !after < n && String.unsafe_get s !after = '*' then incr after;
-        (* \lstinline — and ONLY \lstinline — takes an OPTIONAL [key=value]
-           argument, and the delimiter follows it. Reading the byte at a fixed
-           offset made '[' the delimiter, so the range ended at the NEXT '[' —
-           or, far more often, at EOF.
-
-           ⚠ The [is_lst] guard is load-bearing. \verb has NO optional argument
-           and '[' is a perfectly legal \verb delimiter (`\verb[a--b[` compiles,
-           rc 0). Consuming a bracket group for \verb walks past the real
-           closing delimiter, lands on a letter, and records NO RANGE AT ALL —
-           so the fixer rewrote the VERBATIM BODY (a--b -> a–b, verified). That
-           is verbatim corruption, the fixer's cardinal sin.
-
-           Both directions were measured. With a '[' inside the option VALUE
-           (\lstinline[caption={[x]}]|a--b|) the range ends early and the fixer
-           REWRITES THE VERBATIM: a--b -> a–b. With no later '[' the range runs
-           to end of file and silently withholds every fix in the rest of the
-           document — verified with a dash before and after an
-           \lstinline[language=C]: the one before is fixed, the one after is
-           not.
-
-           Closing at an UNESCAPED ']' at brace depth 0 mirrors the verified
-           drop_after_rbracket (proofs/BodyTokenFrontEnd.v), so a ']' inside a
-           braced option value cannot close the group early. An unclosed group
-           leaves [after] where it was, which degrades to today's behaviour
-           rather than inventing a range. *)
-        if is_lst && !after < n && String.unsafe_get s !after = '[' then (
-          let e = ref (!after + 1) and depth = ref 0 and fin = ref (-1) in
-          while !fin < 0 && !e < n do
-            (match String.unsafe_get s !e with
-            | '\\' -> incr e
-            | '{' -> incr depth
-            | '}' -> if !depth > 0 then decr depth
-            | ']' -> if !depth = 0 then fin := !e + 1
-            | _ -> ());
-            incr e
+          if !q < n && String.unsafe_get s !q = '{' then Some !q else None
+      in
+      let env_open at =
+        (* [Some (name, close_brace_pos)] iff s[at..] is \begin<ws>*{name} *)
+        if not (starts_with "\\begin" at) then None
+        else
+          match after_ctrl_word_brace 6 at with
+          | None -> None
+          | Some bp ->
+              let ns = bp + 1 in
+              let j = ref ns in
+              while !j < n && String.unsafe_get s !j <> '}' do
+                incr j
+              done;
+              if !j < n then Some (String.sub s ns (!j - ns), !j) else None
+      in
+      let env_close at name =
+        (* [Some stop] (exclusive) iff s[at..] is the EXACT byte string
+           [\end{name}]. Asymmetric with the open side ON PURPOSE: verbatim
+           environments close on the literal delimiter text (\@xverbatim), so
+           `\end {verbatim}` (spaced) does NOT terminate the environment —
+           measured: pdflatex "File ended while scanning use of \@xverbatim".
+           Tolerating it here would end the recorded range EARLY and expose live
+           verbatim bytes to comment blanking (the manufactured- false-READY
+           direction, measured by the pre-ship review). *)
+        let endp = "\\end{" ^ name ^ "}" in
+        if starts_with endp at then Some (at + String.length endp) else None
+      in
+      match env_open pos with
+      | Some (name, j) when is_verb_env name ->
+          let k = ref (j + 1) in
+          let stop = ref None in
+          while !stop = None && !k < n do
+            match env_close !k name with
+            | Some e -> stop := Some e
+            | None -> incr k
           done;
-          if !fin >= 0 then after := !fin);
-        (* TeX terminates a CONTROL WORD at the first non-letter and absorbs the
-           following spaces, so `X \verb |ab| Y` is legal and its delimiter is
-           '|', not the space. Reading the byte at a fixed offset took the SPACE
-           as the delimiter and produced a range ending at the next space.
-           Verified: that document compiles, rc 0. *)
-        while
-          !after < n
-          && (String.unsafe_get s !after = ' '
-             || String.unsafe_get s !after = '\t')
-        do
-          incr after
-        done;
-        if is_lst && !after < n && String.unsafe_get s !after = '{' then (
-          (* `\lstinline{code}` is a BRACE GROUP closed by the matching '}', not
-             a character delimiter closed by a SECOND '{'. This is the MOST
-             COMMON form in the corpus — 30 of 67 \lstinline uses, against 22
-             for the '[' form — and taking '{' as a delimiter over-reached to
-             the next '{', usually the brace of a later command, silently
-             withholding every fix in between.
-
-             Verified on `\lstinline{a -- b} then -- one, then \textbf{bold}
-             then -- two`: the range ran to the '{' of \textbf, so `-- one` was
-             withheld while `-- two` was fixed. Exactly the over-reach the '['
-             branch above was added to remove, in the form it left behind.
-
-             \verb is deliberately NOT included: it has no brace-group form, '{'
-             there is an ordinary delimiter character, and the corpus has zero
-             `\verb{` occurrences. *)
-          let stop = brace_group_end !after in
+          let stop = match !stop with Some e -> e | None -> n in
           ranges := (pos, stop) :: !ranges;
-          i := stop)
-        else if !after < n && not (is_letter (String.unsafe_get s !after)) then (
-          (* The next char is the delimiter; the non-letter guard avoids
-             swallowing longer command names (e.g. \verbatim,
-             \verbatiminput). *)
-          let delim = String.unsafe_get s !after in
-          let k = ref (!after + 1) in
-          while !k < n && String.unsafe_get s !k <> delim do
-            incr k
-          done;
-          let stop = if !k < n then !k + 1 else n in
-          ranges := (pos, stop) :: !ranges;
-          i := stop)
-        else i := pos + 1)
-      else if
-        starts_with "\\url{" pos
-        || starts_with "\\nolinkurl{" pos
-        || starts_with "\\path{" pos
-      then (
-        let bpos = String.index_from s pos '{' in
-        let stop = brace_group_end bpos in
-        ranges := (pos, stop) :: !ranges;
-        i := stop)
-      else if starts_with "\\href{" pos then (
-        (* Only the first argument (the URL) is verbatim-ish; the link text is
-           ordinary prose, so exempt just `\href{..}`. *)
-        let bpos = pos + 5 in
-        let stop = brace_group_end bpos in
-        ranges := (pos, stop) :: !ranges;
-        i := stop)
-      else i := pos + 1
+          i := stop
+      | _ ->
+          if starts_with "\\verb" pos || starts_with "\\lstinline" pos then (
+            let is_lst = starts_with "\\lstinline" pos in
+            let cmdlen = if is_lst then 10 else 5 in
+            let after = ref (pos + cmdlen) in
+            if !after < n && String.unsafe_get s !after = '*' then incr after;
+            (* \lstinline — and ONLY \lstinline — takes an OPTIONAL [key=value]
+               argument, and the delimiter follows it. Reading the byte at a
+               fixed offset made '[' the delimiter, so the range ended at the
+               NEXT '[' — or, far more often, at EOF.
+
+               ⚠ The [is_lst] guard is load-bearing. \verb has NO optional
+               argument and '[' is a perfectly legal \verb delimiter
+               (`\verb[a--b[` compiles, rc 0). Consuming a bracket group for
+               \verb walks past the real closing delimiter, lands on a letter,
+               and records NO RANGE AT ALL — so the fixer rewrote the VERBATIM
+               BODY (a--b -> a–b, verified). That is verbatim corruption, the
+               fixer's cardinal sin.
+
+               Both directions were measured. With a '[' inside the option VALUE
+               (\lstinline[caption={[x]}]|a--b|) the range ends early and the
+               fixer REWRITES THE VERBATIM: a--b -> a–b. With no later '[' the
+               range runs to end of file and silently withholds every fix in the
+               rest of the document — verified with a dash before and after an
+               \lstinline[language=C]: the one before is fixed, the one after is
+               not.
+
+               Closing at an UNESCAPED ']' at brace depth 0 mirrors the verified
+               drop_after_rbracket (proofs/BodyTokenFrontEnd.v), so a ']' inside
+               a braced option value cannot close the group early. An unclosed
+               group leaves [after] where it was, which degrades to today's
+               behaviour rather than inventing a range. *)
+            if is_lst && !after < n && String.unsafe_get s !after = '[' then (
+              let e = ref (!after + 1) and depth = ref 0 and fin = ref (-1) in
+              while !fin < 0 && !e < n do
+                (match String.unsafe_get s !e with
+                | '\\' -> incr e
+                | '{' -> incr depth
+                | '}' -> if !depth > 0 then decr depth
+                | ']' -> if !depth = 0 then fin := !e + 1
+                | _ -> ());
+                incr e
+              done;
+              if !fin >= 0 then after := !fin);
+            (* TeX terminates a CONTROL WORD at the first non-letter and absorbs
+               the following spaces, so `X \verb |ab| Y` is legal and its
+               delimiter is '|', not the space. Reading the byte at a fixed
+               offset took the SPACE as the delimiter and produced a range
+               ending at the next space. Verified: that document compiles, rc
+               0. *)
+            while
+              !after < n
+              && (String.unsafe_get s !after = ' '
+                 || String.unsafe_get s !after = '\t')
+            do
+              incr after
+            done;
+            if is_lst && !after < n && String.unsafe_get s !after = '{' then (
+              (* `\lstinline{code}` is a BRACE GROUP closed by the matching '}',
+                 not a character delimiter closed by a SECOND '{'. This is the
+                 MOST COMMON form in the corpus — 30 of 67 \lstinline uses,
+                 against 22 for the '[' form — and taking '{' as a delimiter
+                 over-reached to the next '{', usually the brace of a later
+                 command, silently withholding every fix in between.
+
+                 Verified on `\lstinline{a -- b} then -- one, then \textbf{bold}
+                 then -- two`: the range ran to the '{' of \textbf, so `-- one`
+                 was withheld while `-- two` was fixed. Exactly the over-reach
+                 the '[' branch above was added to remove, in the form it left
+                 behind.
+
+                 \verb is deliberately NOT included: it has no brace-group form,
+                 '{' there is an ordinary delimiter character, and the corpus
+                 has zero `\verb{` occurrences. *)
+              let stop = brace_group_end !after in
+              ranges := (pos, stop) :: !ranges;
+              i := stop)
+            else if !after < n && not (is_letter (String.unsafe_get s !after))
+            then (
+              (* The next char is the delimiter; the non-letter guard avoids
+                 swallowing longer command names (e.g. \verbatim,
+                 \verbatiminput). *)
+              let delim = String.unsafe_get s !after in
+              let k = ref (!after + 1) in
+              while !k < n && String.unsafe_get s !k <> delim do
+                incr k
+              done;
+              let stop = if !k < n then !k + 1 else n in
+              ranges := (pos, stop) :: !ranges;
+              i := stop)
+            else i := pos + 1)
+          else if
+            starts_with "\\url{" pos
+            || starts_with "\\nolinkurl{" pos
+            || starts_with "\\path{" pos
+          then (
+            let bpos = String.index_from s pos '{' in
+            let stop = brace_group_end bpos in
+            ranges := (pos, stop) :: !ranges;
+            i := stop)
+          else if starts_with "\\href{" pos then (
+            (* Only the first argument (the URL) is verbatim-ish; the link text
+               is ordinary prose, so exempt just `\href{..}`. *)
+            let bpos = pos + 5 in
+            let stop = brace_group_end bpos in
+            ranges := (pos, stop) :: !ranges;
+            i := stop)
+          else i := pos + 1
     else i := pos + 1
   done;
   List.rev !ranges
@@ -746,6 +816,262 @@ let find_verbatim_comment_url_ranges (s : string) : (int * int) list =
       let r = compute_verbatim_comment_url_ranges s in
       _vcu_cache := Some (s, r);
       r
+
+(** [find_comment_ranges s] — ONLY the line-comment ranges (`%`..EOL) of the vcu
+    set: a PROJECTION of [find_verbatim_comment_url_ranges], not a second
+    scanner, so it can never diverge from the shared walk. The projection is
+    exact because every range the walk records starts either at its `%` byte
+    (line comments) or at a `\` (verbatim environments, [\verb]/[\lstinline],
+    url commands) — the first byte IS the kind tag. Callers that blank
+    "comments" MUST use this, never the full vcu list: treating the whole set as
+    comments is the measured 11-false-READY mechanism behind revert #1 (pinned
+    by fixture [fr_cmt_g1_verbatim_cjk_liveness]). Memoisation is inherited from
+    the wrapped scanner. *)
+let find_comment_ranges (s : string) : (int * int) list =
+  let n = String.length s in
+  List.filter
+    (fun (a, _) -> a < n && String.unsafe_get s a = '%')
+    (find_verbatim_comment_url_ranges s)
+
+(** [blank_line_comments s] — [s] with every line-comment range
+    ([find_comment_ranges], so a `%` inside verbatim/url is untouched) replaced
+    by spaces, INCLUDING the `%` itself and PRESERVING every CR/LF byte (comment
+    ranges stop before the terminator by construction, so offsets and line
+    structure are byte-identical). This is the same transformation the OPEN-007
+    counterfactual measured at 34/0/0 on the 199-root frame — but note the
+    counterfactual blanked the FILE bytes (every check saw blanked input), while
+    production applies it to the T3/model extraction view only, so the
+    production rescue count is the T3-channel SHARE of that 34 (measured on
+    landing; the rest routes through T2/T0/T5 comment-blindness, still open).
+    Feature detection on the blanked copy stops reading commented-out bytes as
+    live. Returns [s] itself (physical identity) when there is nothing to blank,
+    keeping the downstream 1-entry caches hot. *)
+let blank_line_comments (s : string) : string =
+  match find_comment_ranges s with
+  | [] -> s
+  | ranges ->
+      let b = Bytes.of_string s in
+      List.iter
+        (fun (a, e) ->
+          for k = a to e - 1 do
+            let ch = Bytes.get b k in
+            if ch <> '\n' && ch <> '\r' then Bytes.set b k ' '
+          done)
+        ranges;
+      Bytes.unsafe_to_string b
+
+(** [comment_semantics_breaker s] — FAIL-CLOSED guard for comment blanking:
+    [true] iff [s] contains a construct that changes what `%` means or makes the
+    scanner's verbatim model unreliable, so blanking could hide LIVE fatal bytes
+    (the manufactured-false-READY direction). Callers must then skip blanking
+    entirely and fall back to the raw source — degrading to today's
+    over-rejection, never to a false-READY. The list is the measured breaker
+    battery (fixtures [fr_cmt_m1_*]/[m3]/[m4]/[m4b]) plus the wild-type
+    spellings of the same mechanisms:
+    - custom verbatim-environment DEFINITIONS the env list cannot know
+      ([\lstnewenvironment], fancyvrb's [\DefineVerbatimEnvironment] /
+      [\CustomVerbatimEnvironment] / [\RecustomVerbatimEnvironment], tcolorbox
+      [\newtcblisting]/[\NewTCBListing], minted [\newminted], and plain-TeX
+      wrappers via [\endverbatim]);
+    - short-verb machinery making an arbitrary character verbatim-open
+      ([\DefineShortVerb], [\MakeShortVerb], [\lstMakeShortInline]);
+    - `%`-catcode surgery ([\MakePercentIgnore], or a [\catcode] assignment
+      whose target bytes mention `%`/37 within the lookahead window);
+    - a letter-delimited [\verb] (legal TeX; the scanner's letter guard — which
+      protects [\verbatiminput] — records no range there, fixture m3). Detection
+      is RAW-substring (no comment stripping): a breaker that is itself
+      commented out still suppresses — fail-closed, by design. *)
+let comment_semantics_breaker (s : string) : bool =
+  let n = String.length s in
+  let has sub =
+    let m = String.length sub in
+    let rec go i = i + m <= n && (String.sub s i m = sub || go (i + 1)) in
+    go 0
+  in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  (* [\<name>] as a CONTROL WORD: the next byte must not be a letter, so
+     [has_cmd "Verb"] fires on `\Verb!a%b!` but never on `\Verbatim` /
+     `\begin{Verbatim}` (measured: the naive substring arm's entire frame
+     footprint was false-fires on longer fancyvrb/moreverb words). *)
+  let has_cmd name =
+    let needle = "\\" ^ name in
+    let m = String.length needle in
+    let rec at i =
+      if i + m > n then false
+      else if
+        String.sub s i m = needle
+        && (i + m >= n || not (is_letter (String.unsafe_get s (i + m))))
+      then true
+      else at (i + 1)
+    in
+    at 0
+  in
+  (* [\@makeother\%] — %-catcode surgery with no literal [\catcode] token
+     (LaTeX's own idiom; measured manufacture vector). '%' in a short window
+     after [\@makeother] to tolerate spacing. *)
+  let makeother_percent () =
+    let needle = "\\@makeother" in
+    let m = String.length needle in
+    let rec at i =
+      if i + m > n then false
+      else if String.sub s i m = needle then (
+        (* Same EOL bound as the \catcode arm: never read into the next line. *)
+        let hit = ref false in
+        let k = ref (i + m) in
+        let stop = min n (i + m + 4) in
+        let live = ref true in
+        while !live && !k < stop do
+          (match String.unsafe_get s !k with
+          | '\n' | '\r' -> live := false
+          | '%' -> hit := true
+          | _ -> ());
+          incr k
+        done;
+        !hit || at (i + m))
+      else at (i + 1)
+    in
+    at 0
+  in
+  (* xparse verbatim argument spec: [\NewDocumentCommand\x{... v ...}] makes the
+     defined command read a DELIMITED VERBATIM argument, so a `%` inside its use
+     is literal (measured manufacture vector). Look for a 'v' inside the spec
+     brace group following the definition command — the group is found within a
+     short window; a 'v' anywhere in it (even in an O{..} default) merely fails
+     CLOSED. *)
+  let xparse_verb_spec () =
+    let defs =
+      [
+        "\\NewDocumentCommand";
+        "\\RenewDocumentCommand";
+        "\\ProvideDocumentCommand";
+        "\\DeclareDocumentCommand";
+      ]
+    in
+    let check_from i m =
+      (* find the SPEC group: skip the command-name argument (either [\cmd] or
+         [{\cmd}]), then scan the next brace group for 'v'. *)
+      let stop = min n (i + m + 160) in
+      let j = ref (i + m) in
+      let seen_groups = ref 0 in
+      let found = ref false in
+      let depth = ref 0 in
+      while (not !found) && !j < stop do
+        (match String.unsafe_get s !j with
+        | '{' -> incr depth
+        | '}' ->
+            if !depth > 0 then (
+              decr depth;
+              if !depth = 0 then incr seen_groups)
+        | 'v' when !depth > 0 && !seen_groups >= 0 ->
+            (* only the LAST-opened group before two groups close counts;
+               keeping it simple: any 'v' at brace depth>0 within the window
+               fires — fail-closed. *)
+            found := true
+        | _ -> ());
+        incr j
+      done;
+      !found
+    in
+    let rec scan i =
+      if i >= n then false
+      else
+        let hit =
+          List.exists
+            (fun d ->
+              let m = String.length d in
+              i + m <= n
+              && String.sub s i m = d
+              && (i + m >= n || not (is_letter (String.unsafe_get s (i + m))))
+              && check_from i m)
+            defs
+        in
+        hit || scan (i + 1)
+    in
+    scan 0
+  in
+  (* \catcode with '%' (or its code 37) in the next few bytes. *)
+  let catcode_percent () =
+    let needle = "\\catcode" in
+    let m = String.length needle in
+    let rec at i =
+      if i + m > n then false
+      else if String.sub s i m = needle then (
+        (* The lookahead must STOP at end-of-line: a `%` on the NEXT line is an
+           ordinary comment, not this assignment's target — measured false-fire
+           on asme2e.cls (`\catcode`\:12` + EOL + a comment line), which cost a
+           real rescue in the 199-sweep before this bound. *)
+        let hit = ref false in
+        let k = ref (i + m) in
+        let stop = min n (i + m + 8) in
+        let live = ref true in
+        while !live && !k < stop do
+          (match String.unsafe_get s !k with
+          | '\n' | '\r' -> live := false
+          | '%' -> hit := true
+          | '3' when !k + 1 < n && String.unsafe_get s (!k + 1) = '7' ->
+              hit := true
+          | _ -> ());
+          incr k
+        done;
+        !hit || at (i + m))
+      else at (i + 1)
+    in
+    at 0
+  in
+  (* \verb with a LETTER delimiter: `\verb aXa` (spaces absorbed) or
+     `\verb*aXa`. A letter directly after `\verb` is a longer control word
+     (\verbatim, \verbdef) and does not count. *)
+  let verb_letter_delim () =
+    let needle = "\\verb" in
+    let m = String.length needle in
+    let rec at i =
+      if i + m > n then false
+      else if String.sub s i m = needle then (
+        let q = ref (i + m) in
+        if !q < n && String.unsafe_get s !q = '*' then incr q;
+        if
+          !q < n
+          && is_letter (String.unsafe_get s !q)
+          && i + m < n
+          && String.unsafe_get s (i + m) = '*'
+        then true (* \verb*<letter> *)
+        else if !q < n && is_letter (String.unsafe_get s !q) then at (i + 1)
+          (* longer control word, e.g. \verbatim *)
+        else
+          let p = ref !q in
+          while
+            !p < n
+            &&
+            let ch = String.unsafe_get s !p in
+            ch = ' ' || ch = '\t'
+          do
+            incr p
+          done;
+          if !p > !q && !p < n && is_letter (String.unsafe_get s !p) then true
+          else at (i + 1))
+      else at (i + 1)
+    in
+    at 0
+  in
+  has_cmd "Verb"
+  || has_cmd "SaveVerb"
+  || has_cmd "verbdef"
+  || makeother_percent ()
+  || xparse_verb_spec ()
+  || has "\\lstnewenvironment"
+  || has "\\DefineVerbatimEnvironment"
+  || has "\\CustomVerbatimEnvironment"
+  || has "\\RecustomVerbatimEnvironment"
+  || has "\\newtcblisting"
+  || has "\\NewTCBListing"
+  || has "\\newminted"
+  || has "\\endverbatim"
+  || has "\\DefineShortVerb"
+  || has "\\MakeShortVerb"
+  || has "\\lstMakeShortInline"
+  || has "\\MakePercentIgnore"
+  || catcode_percent ()
+  || verb_letter_delim ()
 
 (** [find_exempt_ranges s] — all byte ranges where typography/lexical rules must
     not fire: verbatim + comments + url targets

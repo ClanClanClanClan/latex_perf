@@ -225,4 +225,152 @@ let () =
         (rb = [] && ra1 = ra2 && ra1 <> [])
         (tag ^ ": distinct docs computed independently"));
 
+  (* ── OPEN-007: the comment-aware feature view (2026-09-01) ──────────────
+     [find_comment_ranges] is a first-byte PROJECTION of the vcu set;
+     [blank_line_comments] blanks exactly those ranges; the fail-closed
+     [comment_semantics_breaker] suppresses blanking whenever a construct
+     changes what `%` means. Every shape below mirrors one of the committed
+     fr_cmt_* breaker fixtures. *)
+  run "find_comment_ranges: comments only, never verbatim/url" (fun tag ->
+      let s = "a % c\n\\begin{verbatim}\n%v\n\\end{verbatim}\n\\url{x%y}\n" in
+      let cr = find_comment_ranges s in
+      let vcu = find_verbatim_comment_url_ranges s in
+      expect
+        (List.length cr = 1
+        && List.length vcu = 3
+        && List.for_all (fun r -> List.mem r vcu) cr
+        && fst (List.hd cr) = 2)
+        (tag ^ ": exactly the % range survives the projection"));
+  run "blank_line_comments: length-preserving, EOL kept" (fun tag ->
+      let s = "\\usepackage{a,% x\nfontspec}\n" in
+      let b = blank_line_comments s in
+      expect
+        (String.length b = String.length s
+        && b = "\\usepackage{a,   \nfontspec}\n")
+        (tag ^ ": % and comment bytes to spaces, newline untouched"));
+  run "blank_line_comments: CR-only comment terminator kept" (fun tag ->
+      let s = "x % c\ry" in
+      expect (blank_line_comments s = "x    \ry") (tag ^ ": CR preserved"));
+  run "blank_line_comments: verbatim % is NOT blanked (g1 liveness)" (fun tag ->
+      let s = "\\begin{verbatim}\n% live\n\\end{verbatim}\n" in
+      expect
+        (blank_line_comments s == s)
+        (tag ^ ": physical identity, zero bytes blanked"));
+  run "space-form env OPEN is verbatim; spaced END does NOT close (OPEN-038/M2)"
+    (fun tag ->
+      (* TeX asymmetry, both measured: `\begin {verbatim}` opens the env
+         (sibling compiles rc 0,0) but `\end {verbatim}` does NOT terminate it
+         (\@xverbatim wants the LITERAL `\end{verbatim}` bytes: "File ended
+         while scanning"). So this doc's range runs to EOF and NO byte in it is
+         ever a comment — blanking anything here would expose live verbatim
+         bytes. *)
+      let s = "\\begin {verbatim}\n% live\n\\end {verbatim}\nz % x\n" in
+      let cr = find_comment_ranges s in
+      match find_verbatim_comment_url_ranges s with
+      | [ (0, e) ] ->
+          expect
+            (e = String.length s && cr = [])
+            (tag ^ ": one range to EOF, zero comment ranges")
+      | _ -> expect false (tag ^ ": single EOF-bounded range expected"));
+  run "single-newline \\begin form IS verbatim; blank line is NOT" (fun tag ->
+      (* measured: \begin+one newline+{verbatim} compiles AND is verbatim; a
+         BLANK line in between is "Paragraph ended before \begin was complete" —
+         fatal, and the scanner must NOT recognise it. *)
+      let one = "\\begin\n{verbatim}\n% live\n\\end{verbatim}\n" in
+      let two = "\\begin\n\n{verbatim}\n% x\n" in
+      expect
+        (find_comment_ranges one = []
+        && List.length (find_comment_ranges two) = 1)
+        (tag ^ ": one EOL absorbed, a blank line never"));
+  run "tcblisting body is verbatim to the scanner" (fun tag ->
+      let s = "\\begin{tcblisting}{}\n% live\n\\end{tcblisting}\n" in
+      expect (find_comment_ranges s = []) (tag ^ ": its % is never blanked"));
+  run "space-form open with exact close still bounded" (fun tag ->
+      let s = "\\begin {verbatim}x\\end{verbatim}tail" in
+      match find_verbatim_comment_url_ranges s with
+      | [ (0, e) ] -> expect (e = String.length s - 4) (tag ^ ": stops at close")
+      | _ -> expect false (tag ^ ": one bounded range expected"));
+  run "space-form NON-verbatim env is not swallowed" (fun tag ->
+      let s = "\\begin {itemize} % c\n\\end {itemize}" in
+      expect
+        (List.length (find_comment_ranges s) = 1)
+        (tag ^ ": itemize stays prose; its % is a real comment"));
+  run "\\beginner is not an env open" (fun tag ->
+      let s = "\\beginner{verbatim} % c\n" in
+      expect
+        (List.length (find_comment_ranges s) = 1)
+        (tag ^ ": longer control word"));
+  run "breaker: custom verbatim env definitions (m1)" (fun tag ->
+      expect
+        (comment_semantics_breaker "\\lstnewenvironment{code}{}{}"
+        && comment_semantics_breaker
+             "\\DefineVerbatimEnvironment{c}{Verbatim}{}"
+        && comment_semantics_breaker "\\newtcblisting{c}{}"
+        && comment_semantics_breaker "\\newminted{py}{}"
+        && comment_semantics_breaker
+             "\\newenvironment{c}{\\verbatim}{\\endverbatim}")
+        (tag ^ ": every definition form suppresses blanking"));
+  run "breaker: letter-delimited \\verb (m3), both spellings" (fun tag ->
+      expect
+        (comment_semantics_breaker "x \\verb aQ%Ya z"
+        && comment_semantics_breaker "x \\verb*aQ%Ya z")
+        (tag ^ ": spaced and starred letter delimiters"));
+  run "breaker: %-catcode surgery (m4/m4b) and short verb" (fun tag ->
+      expect
+        (comment_semantics_breaker "\\catcode`\\%=12"
+        && comment_semantics_breaker "\\catcode37=14"
+        && comment_semantics_breaker "\\MakePercentIgnore"
+        && comment_semantics_breaker "\\MakeShortVerb{\\|}"
+        && comment_semantics_breaker "\\DefineShortVerb{\\|}")
+        (tag ^ ": every %-semantics change suppresses blanking"));
+  run "breaker: fail-closed on COMMENTED-OUT breakers too" (fun tag ->
+      expect
+        (comment_semantics_breaker "% \\MakePercentIgnore\n")
+        (tag ^ ": raw-substring scan, no comment stripping — by design"));
+  run "breaker: fancyvrb/verbdef/xparse/makeother arms (pre-ship review)"
+    (fun tag ->
+      expect
+        (comment_semantics_breaker "\\Verb!a%b!"
+        && comment_semantics_breaker "\\SaveVerb{x}|a%b|"
+        && comment_semantics_breaker "\\verbdef\\snip|a%b|"
+        && comment_semantics_breaker
+             "\\makeatletter\\@makeother\\%\\makeatother"
+        && comment_semantics_breaker
+             "\\NewDocumentCommand\\foo{v}{\\texttt{#1}}"
+        && comment_semantics_breaker "\\DeclareDocumentCommand{\\bar}{O{} v}{x}"
+        )
+        (tag ^ ": every measured manufacture vector suppresses blanking"));
+  run "no breaker: \\Verbatim env, plain xparse, \\@makeother non-%" (fun tag ->
+      expect
+        ((not
+            (comment_semantics_breaker "\\begin{Verbatim}\nx\n\\end{Verbatim}"))
+        && (not (comment_semantics_breaker "\\VerbatimInput{f.tex}"))
+        && (not (comment_semantics_breaker "\\NewDocumentCommand\\a{m o}{x}"))
+        && not (comment_semantics_breaker "\\@makeother\\_"))
+        (tag ^ ": longer control words and %-free surgery stay open"));
+  run "no breaker: catcode/makeother windows stop at end-of-line" (fun tag ->
+      (* measured false-fire (asme2e.cls): a COMMENT on the line after a non-%
+         catcode assignment fell inside the lookahead and cost a real rescue in
+         the 199-sweep. *)
+      expect
+        ((not (comment_semantics_breaker "\\catcode`\\:12\n%   Header\n"))
+        && (not (comment_semantics_breaker "\\@makeother\\_\n% c\n"))
+        && comment_semantics_breaker "\\catcode`\\%=12\n")
+        (tag ^ ": next-line comments never poison the window"));
+  run "no breaker: ordinary verbatim/verb/catcode-@ docs" (fun tag ->
+      expect
+        ((not (comment_semantics_breaker "\\begin{verbatim}x\\end{verbatim}"))
+        && (not (comment_semantics_breaker "\\verb|a%b| and \\verb*|c|"))
+        && (not (comment_semantics_breaker "\\verbatiminput{f.txt}"))
+        && (not
+              (comment_semantics_breaker
+                 (* moreverb/fancyvrb control words: a letter DIRECTLY after
+                    \\verb is a longer control word, never a delimiter — the
+                    measured frame footprint of a naive arm is 16/16 papers of
+                    exactly these three names, all false-fires. *)
+                 "\\verbatimwrite{f} \\verbatimindent \\verbatimfont{\\tt}"))
+        && (not (comment_semantics_breaker "\\catcode`\\@=11"))
+        && not (comment_semantics_breaker "plain % comment\n"))
+        (tag ^ ": the gate stays open for the 34-rescue channel"));
+
   finalise "exempt-ranges"

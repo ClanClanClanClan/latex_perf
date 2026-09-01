@@ -12,8 +12,8 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 128,
-  "false-NOT-READY": 58,
+  "true-READY": 142,
+  "false-NOT-READY": 44,
   "true-NOT-READY": 13,
   "ungraded-infra": 1
  },
@@ -370,15 +370,13 @@
    "sha256_tree": "3b3f6b83ee08e4c813484a7545245746844ddde93074ded2355da00f22004122",
    "bytes": 76496,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.19663v1",
@@ -676,8 +674,7 @@
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
    "cli_reasons": [
-    "T2",
-    "T3"
+    "T2"
    ],
    "pdflatex_rc": 0,
    "first_error": "",
@@ -745,15 +742,13 @@
    "sha256_tree": "dad2a374c1587e59bc92f9680fdd9a3d25d3e2a99b3c40ba0be8d3403607f033",
    "bytes": 91416,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.08867v1",
@@ -934,15 +929,13 @@
    "sha256_tree": "32e7862b90e7517a9a54cb4bd82090e40a204a57f27bdba6b07d07b651336dfd",
    "bytes": 93435,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.02360v1",
@@ -987,15 +980,13 @@
    "sha256_tree": "ff82aae61e07ddbee45ebb4e96f45e0842d9a28c5ec04f8b08a18d35ce665607",
    "bytes": 6431,
    "size_bucket": "<10KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.21166v1",
@@ -1093,15 +1084,13 @@
    "sha256_tree": "00b7194d7a1928e784e7293cf70249bdb4567d9d9bf859fbbd42e4141631a604",
    "bytes": 98972,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.19821v1",
@@ -1399,15 +1388,13 @@
    "sha256_tree": "fbfc85d166d395d5127dbf8f245c467f9232cf0c97da713fa01992d7b1a5777c",
    "bytes": 5740,
    "size_bucket": "<10KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.23970v1",
@@ -1474,15 +1461,13 @@
    "sha256_tree": "5f941084b9743b1404a182d5da02bebd25036cbf8fa5801497e2a9db81af17a0",
    "bytes": 108135,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.09925v1",
@@ -1669,15 +1654,13 @@
    "sha256_tree": "ee04649b8cae79d82f5d25c8bf19ee0342edd9d25b3589bb1e2fffdbfa911145",
    "bytes": 3295,
    "size_bucket": "<10KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.06158v1",
@@ -1971,8 +1954,7 @@
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
    "cli_reasons": [
-    "T2",
-    "T3"
+    "T2"
    ],
    "pdflatex_rc": 0,
    "first_error": "",
@@ -2080,15 +2062,13 @@
    "sha256_tree": "08f2a24145189f3646607738b569b026a2a296a6f0216fcc2de7af4344a8bbbf",
    "bytes": 146224,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.04012v1",
@@ -2119,8 +2099,7 @@
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
    "cli_reasons": [
-    "T2",
-    "T3"
+    "T2"
    ],
    "pdflatex_rc": 0,
    "first_error": "",
@@ -2153,15 +2132,13 @@
    "sha256_tree": "4f6e434c5ef267adcf4cc1fd94e7846d4f02c452524835974fa9300f21ec337f",
    "bytes": 50611,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.21082v2",
@@ -2375,8 +2352,7 @@
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
    "cli_reasons": [
-    "T2",
-    "T3"
+    "T2"
    ],
    "pdflatex_rc": 0,
    "first_error": "",
@@ -2715,7 +2691,6 @@
     "DELIM-001",
     "PRT-001",
     "T0",
-    "T3",
     "T5"
    ],
    "pdflatex_rc": 0,
@@ -2784,15 +2759,13 @@
    "sha256_tree": "f3840cdefc63743b0fbbe38713af4e965369468ea2ba0f658aa7de5395224519",
    "bytes": 69627,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.14558v1",
@@ -3086,15 +3059,13 @@
    "sha256_tree": "1a0df79af56171a498aa5c923e38e1dcf11c2d57da2f69fed79f85c3cab73c2e",
    "bytes": 55723,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.19742v1",
@@ -3105,15 +3076,13 @@
    "sha256_tree": "edb43a7a7eeb05087209a5ef1adc68a737b781b880287ef2d2f9740e05ee67a6",
    "bytes": 23915,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.19422v1",
@@ -3158,15 +3127,13 @@
    "sha256_tree": "dbbc5260846adc065c823ec15693c1592091f9ceebc871167c474c7faff3d593",
    "bytes": 85797,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.04247v1",
@@ -3324,7 +3291,6 @@
    "cli_reasons": [
     "PRT-001",
     "T0",
-    "T3",
     "T5"
    ],
    "pdflatex_rc": 0,
@@ -3619,6 +3585,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "44a43fe597b6e67b0317eb4f5c92df12bc8c87fd",
+ "measured_at_sha": "0df6275ae5d6dc5b69cb13b0f2a270a56ebe416c",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

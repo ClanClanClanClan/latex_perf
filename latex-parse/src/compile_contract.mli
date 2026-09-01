@@ -55,6 +55,14 @@ type reason =
 
 type ready_check_result = Ready | NotReady of reason list
 
+val read_closure_source : Project_model.t -> root_src:string -> string
+(** [read_closure_source proj ~root_src] — the closure-resolved source: the root
+    with live [\input]/[\include] children and local [.sty]/[.cls] files spliced
+    in reading order (comment-blanked directive scan, visited set, fuel-bounded,
+    zero IO on single-file projects). Callers: the structural-fatal detectors,
+    and [Compile_evidence.extract_of_project]'s [?breaker_probe] (OPEN-007: the
+    comment-blanking guard must see breakers defined in children). *)
+
 val check_ready_to_compile :
   ?fast:bool ->
   ?aux_path:string ->

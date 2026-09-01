@@ -513,6 +513,44 @@ let graph_of_build_graph (g : Build_graph.t) :
   let order = if List.length order = List.length nodes then order else nodes in
   (nodes, edges, order)
 
+(* ── OPEN-007: the comment-aware feature view ───────────────────────── T3
+   feature detection ran on RAW bytes, so commented-out constructs counted as
+   live in BOTH directions: `% \usepackage{fontspec}` (dead to TeX) made T3
+   reject a compiling document (the measured 34-of-58 over-rejection class),
+   while a `%` that TeX does NOT treat as a comment could hide a live load. The
+   fix is applied HERE, in the trusted extraction glue — the same layer as the
+   closure decision (C-32) — NOT inside [extract_body_verified]: the
+   Coq-extracted front-end and its byte-parity test ([test_body_token_frontend])
+   are untouched; the capstone now simply certifies the comment-blanked view of
+   the document, which is the view TeX itself reads.
+
+   The transformation is EXACTLY the one the OPEN-007 counterfactual measured
+   (34 rescued / 0 manufactured / 0 broken on the 199-root frame):
+   [Validators_common.blank_line_comments] — comment ranges only, never the full
+   vcu set (fixture [fr_cmt_g1_verbatim_cjk_liveness] pins the difference) —
+   guarded by the FAIL-CLOSED [Validators_common.comment_semantics_breaker]: any
+   construct that changes what `%` means (custom verbatim envs, short-verb,
+   catcode surgery, letter-delimited \verb — fixtures [fr_cmt_m1/m3/m4/m4b])
+   suppresses blanking entirely, degrading to the raw view (today's behaviour:
+   at worst an over-rejection, never a manufactured false-READY). The guard sees
+   the SAME string being blanked (the root source); a breaker defined only in an
+   \input child is out of its sight — accepted and recorded in OPEN-007 (feature
+   detection itself is root-only today, and the ungated counterfactual measured
+   0 manufactured on the real frame). *)
+let feature_source ?probe (source : string) : string =
+  (* [?probe] widens the GUARD's view without widening the blanking: for a
+     multi-file project the breaker may be DEFINED in an \input child while the
+     comment it protects sits in the root (measured 3-line reproducer in the
+     pre-ship review), so the caller passes the CLOSURE source as the probe
+     while [source] (the root) is what gets blanked. Defaults to [source] for
+     single-string callers. *)
+  let guard = match probe with Some p -> p | None -> source in
+  if
+    Validators_common.comment_semantics_breaker source
+    || (guard != source && Validators_common.comment_semantics_breaker guard)
+  then source
+  else Validators_common.blank_line_comments source
+
 let extract ~(source : string) ~(engine : engine) :
     project * profile * node list =
   (* Trivial single-Tex-node build graph (no project include resolution). *)
@@ -520,7 +558,7 @@ let extract ~(source : string) ~(engine : engine) :
   let nodes = [ root ] in
   let edges = [] in
   let order = [ root ] in
-  let body = extract_body_verified source in
+  let body = extract_body_verified (feature_source source) in
   let p = { proj_nodes = nodes; proj_edges = edges; proj_body = body } in
   (* No declared-feature list at this layer; the T3 obligation is driven by the
      BODY's required features (Residual-3), which is the load-bearing one. *)
@@ -534,11 +572,13 @@ let engine_of_project (proj : Project_model.t) : engine =
   | Project_model.Lualatex -> Lualatex
   | Project_model.Ptex_uptex -> Ptex_uptex
 
-let extract_of_project ~(source : string) (proj : Project_model.t) :
-    project * profile * node list =
+let extract_of_project ?breaker_probe ~(source : string)
+    (proj : Project_model.t) : project * profile * node list =
   let g = Build_graph.of_project proj in
   let nodes, edges, order = graph_of_build_graph g in
-  let body = extract_body_verified source in
+  let body =
+    extract_body_verified (feature_source ?probe:breaker_probe source)
+  in
   let p = { proj_nodes = nodes; proj_edges = edges; proj_body = body } in
   let declared =
     List.filter_map feature_of_project_feature

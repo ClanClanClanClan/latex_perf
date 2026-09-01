@@ -242,4 +242,70 @@ let () =
   run "cjk: accented latin (é, 2-byte) does NOT fire" (fun tag ->
       expect (not (needs_cjk (cjk_doc "caf\195\169"))) tag);
 
+  (* ── OPEN-007: comment-aware feature view at the extraction layer ─────
+     [extract]/[extract_of_project] hand [extract_body_verified] the
+     comment-BLANKED source (fail-closed on comment-semantics breakers), so
+     commented-out constructs no longer count as live features. The Coq-mirror
+     parity ([test_body_token_frontend]) is untouched: the blanking happens at
+     the CALLER, and both extract paths share it. *)
+  run "OPEN-007: commented-out fontspec is NOT a live feature" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         % \\usepackage{fontspec}\n\
+         \\begin{document}\n\
+         hello\n\
+         \\end{document}\n"
+      in
+      let p, pf, order = CE.extract ~source:src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      expect (CE.all_hold r)
+        (tag ^ ": pdflatex compiles this; T3 must not fire on a dead load"));
+  run "OPEN-007: comment-split comma-list load IS live (fr_comment_comma)"
+    (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\usepackage{graphicx,% split\n\
+         fontspec}\n\
+         \\begin{document}\n\
+         hello\n\
+         \\end{document}\n"
+      in
+      let p, pf, order = CE.extract ~source:src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      expect
+        ((not (CE.all_hold r))
+        && r.CE.unsupported_features = [ CE.Opentype_fonts ])
+        (tag ^ ": blanking is length-preserving; the split name reunites"));
+  run "OPEN-007: breaker doc keeps the RAW view (fail-closed)" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\usepackage{listings}\n\
+         \\lstnewenvironment{code}{}{}\n\
+         \\begin{document}\n\
+         \\begin{code}\n\
+         x = 1 % \xe8\xa1\xa8\n\
+         \\end{code}\n\
+         \\end{document}\n"
+      in
+      let p, pf, order = CE.extract ~source:src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      expect
+        ((not (CE.all_hold r))
+        && List.mem CE.Japanese_cjk r.CE.unsupported_features)
+        (tag ^ ": custom verbatim env suppresses blanking; CJK stays live"));
+  run "OPEN-007: OPEN-025 line-join evasion does NOT flip" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\usepackage{font%\n\
+         spec}\n\
+         \\begin{document}\n\
+         hello\n\
+         \\end{document}\n"
+      in
+      let p, pf, order = CE.extract ~source:src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      (* length-preserving blanking keeps the name split (font / spec), so this
+         stays a (recorded) miss — OPEN-025, NOT booked as fixed here. *)
+      expect (CE.all_hold r) (tag ^ ": still the OPEN-025 class, unchanged"));
+
   finalise "compile-evidence"

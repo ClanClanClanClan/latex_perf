@@ -126,10 +126,24 @@ val extract : source:string -> engine:engine -> project * profile * node list
     [order] for the build graph. *)
 
 val extract_of_project :
-  source:string -> Project_model.t -> project * profile * node list
+  ?breaker_probe:string ->
+  source:string ->
+  Project_model.t ->
+  project * profile * node list
 (** [extract_of_project ~source proj] is [extract] with the engine taken from a
     [Project_model.t], and the build graph taken from [Build_graph.of_project]
-    (so T2 reflects the real include graph, not just the root file). *)
+    (so T2 reflects the real include graph, not just the root file).
+
+    OPEN-007 (2026-09-01): both extract entries hand [extract_body_verified] the
+    COMMENT-BLANKED source ([Validators_common.blank_line_comments], comment
+    ranges only), guarded by the fail-closed
+    [Validators_common.comment_semantics_breaker] — so commented-out loads and
+    CJK no longer count as live T3 features, while any construct that changes
+    `%`-semantics suppresses blanking entirely (degrades to the raw view; at
+    worst an over-rejection, never a manufactured false-READY). [?breaker_probe]
+    widens the GUARD (not the blanking) to the closure source: a breaker defined
+    in an [\input] child must suppress blanking of the root. Callers with a
+    project should pass [Compile_contract.read_closure_source]. *)
 
 val extract_body : string -> body_token list
 (** [extract_body source] — the ORIGINAL, UNVERIFIED hand-written bytes->body

@@ -543,7 +543,15 @@ let run_explain (rule_id : string) : int =
 let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
     : bool =
   let module CE = Latex_parse_lib.Compile_evidence in
-  let p, pf, order = CE.extract_of_project ~source:src proj in
+  (* OPEN-007: the breaker GUARD must see the whole closure (a breaker in an
+     \input child suppresses blanking of the root) while blanking itself stays
+     root-scoped — see [Compile_evidence.extract_of_project]. *)
+  let closure =
+    Latex_parse_lib.Compile_contract.read_closure_source proj ~root_src:src
+  in
+  let p, pf, order =
+    CE.extract_of_project ~breaker_probe:closure ~source:src proj
+  in
   let r = CE.report p pf order in
   (* OPEN-008. [all_hold] mirrors [project_wf_dec] and MUST keep doing so — the
      Coq correspondence depends on it, so the fix belongs here, in how a failed

@@ -48,7 +48,8 @@ def main() -> int:
     fixtures = manifest["fixtures"]
 
     regressions, unrecorded = [], []
-    live, fixed = 0, 0
+    overrej_regressions, unrecorded_rescues = [], []
+    live, fixed, accept_pins, overrej_pins = 0, 0, 0, 0
     for fx in fixtures:
         root = os.path.join(frdir, fx["path"])
         if not os.path.exists(root):
@@ -59,7 +60,21 @@ def main() -> int:
                             capture_output=True).returncode
         actual = "READY" if rc == 0 else "NOT-READY"
         expected = fx["expected_cli"]
-        if actual == "READY" and expected == "READY":
+        if fx.get("pdflatex") == "compiles":
+            # pdflatex ACCEPTS these fixtures: the row pins the OVER-REJECTION
+            # direction (OPEN-007 rescue targets), so READY is the CORRECT
+            # verdict and the failure mode is the REVERSE of the classes below.
+            # A NOT-READY against expected READY is a rescue REGRESSION -
+            # never an "unrecorded fix" to lock in.
+            if actual == "READY" and expected == "READY":
+                accept_pins += 1
+            elif actual == "NOT-READY" and expected == "NOT-READY":
+                overrej_pins += 1  # pinned, rescue not yet shipped
+            elif actual == "NOT-READY" and expected == "READY":
+                overrej_regressions.append(fx["id"])
+            else:  # READY vs expected NOT-READY: a rescue landed unrecorded
+                unrecorded_rescues.append(fx["id"])
+        elif actual == "READY" and expected == "READY":
             live += 1
         elif actual == "NOT-READY" and expected == "NOT-READY":
             fixed += 1
@@ -70,7 +85,7 @@ def main() -> int:
 
     total = len(fixtures)
     print(f"[known-false-ready] fixtures={total}  live-false-READY={live}  "
-          f"fixed={fixed}  (baseline live={manifest['baseline']['false_ready_total']})")
+          f"fixed={fixed}  accept-pins={accept_pins}  overrej-pins={overrej_pins}  (baseline live={manifest['baseline']['false_ready_total']})")
 
     if regressions:
         print("[known-false-ready] FAIL — REGRESSION (a fixed false-READY is READY again):")
@@ -83,7 +98,19 @@ def main() -> int:
         for i in unrecorded:
             print(f"    {i}: expected READY, got NOT-READY")
 
-    if regressions or unrecorded:
+    if overrej_regressions:
+        print("[known-false-ready] FAIL — OVER-REJECTION REGRESSION (the CLI "
+              "again rejects a document pdflatex compiles; the rescue "
+              "regressed):")
+        for i in overrej_regressions:
+            print(f"    {i}: expected READY (pdflatex compiles), got NOT-READY")
+    if unrecorded_rescues:
+        print("[known-false-ready] FAIL — UNRECORDED RESCUE (a compiles-graded "
+              "fixture is now READY; lock it in by setting expected_cli=READY "
+              "in the manifest):")
+        for i in unrecorded_rescues:
+            print(f"    {i}: expected NOT-READY, got READY (pdflatex compiles)")
+    if regressions or unrecorded or overrej_regressions or unrecorded_rescues:
         return 1
     # Cross-check the human-facing baseline stays consistent with the entries.
     if live != manifest["baseline"]["false_ready_total"]:

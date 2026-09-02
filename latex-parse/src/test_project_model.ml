@@ -134,5 +134,139 @@ let () =
       in
       expect (not (Project_model.has_include_cycle a)) (tag ^ ": solo clean"));
 
+  (* ── OPEN-007 T2 channel (2026-09-02): only LIVE includes are edges ──── *)
+  run "of_root: commented \\input is DEAD — not a project file" (fun tag ->
+      let root =
+        write_file "cmt.tex"
+          "\\documentclass{article}\n\
+           % \\input{ghost-child}\n\
+           \\begin{document}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      match Project_model.of_root root with
+      | Ok proj ->
+          expect
+            (List.length (Project_model.all_files proj) = 1)
+            (tag ^ ": pdflatex compiles without ghost-child; T2 must too")
+      | Error _ -> expect false (tag ^ ": should succeed"));
+  run "of_root: verbatim-wrapped \\input is DEAD" (fun tag ->
+      let root =
+        write_file "vrb.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           \\begin{verbatim}\n\
+           \\input{ghost-child}\n\
+           \\end{verbatim}\n\
+           \\end{document}\n"
+      in
+      match Project_model.of_root root with
+      | Ok proj ->
+          expect
+            (List.length (Project_model.all_files proj) = 1)
+            (tag ^ ": verbatim shows text, executes nothing")
+      | Error _ -> expect false (tag ^ ": should succeed"));
+  run "of_root: LIVE \\input{missing} is still recorded (the control)"
+    (fun tag ->
+      let root =
+        write_file "live.tex"
+          "\\documentclass{article}\n\
+           \\input{ghost-child}\n\
+           \\begin{document}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      match Project_model.of_root root with
+      | Ok proj ->
+          expect
+            (List.length (Project_model.all_files proj) = 2)
+            (tag ^ ": a live missing include must keep failing T2")
+      | Error _ -> expect false (tag ^ ": should succeed"));
+  run "of_root: breaker doc keeps the RAW scan (fail-closed)" (fun tag ->
+      (* under catcode surgery a %-prefixed \input can EXECUTE, so the gate must
+         keep the comment-blind scan: the commented directive is RECORDED again
+         — today's behaviour, over-rejection at worst. *)
+      let root =
+        write_file "brk.tex"
+          "\\documentclass{article}\n\
+           \\catcode`\\%=12\n\
+           % \\input{ghost-child}\n\
+           \\begin{document}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      match Project_model.of_root root with
+      | Ok proj ->
+          expect
+            (List.length (Project_model.all_files proj) = 2)
+            (tag ^ ": breaker present => dead edges count again")
+      | Error _ -> expect false (tag ^ ": should succeed"));
+
+  run "of_root: BREAKER IN AN \\input CHILD widens the gate (C-34)" (fun tag ->
+      (* brk.tex makes % an ignored char, so the root's '%'-prefixed \input
+         EXECUTES (measured pdflatex fatal). The gate must probe children:
+         root-only gating blanks the live directive = false-READY. *)
+      let _ = write_file "brk.tex" "\\catcode`\\%=9\n" in
+      let root =
+        write_file "childbrk.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           \\input{brk}\n\
+           % \\input{ghost-child}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      match Project_model.of_root root with
+      | Ok proj ->
+          expect
+            (List.length (Project_model.all_files proj) = 3)
+            (tag ^ ": brk + ghost-child both recorded (raw scan kept)")
+      | Error _ -> expect false (tag ^ ": should succeed"));
+  run "of_root: BREAKER IN A LOCAL .sty widens the gate (C-34)" (fun tag ->
+      let sty = Filename.concat tmp_dir "pctbrk.sty" in
+      let oc = open_out sty in
+      output_string oc "\\catcode`\\%=9\n";
+      close_out oc;
+      let root =
+        write_file "stybrk.tex"
+          "\\documentclass{article}\n\
+           \\usepackage{pctbrk}\n\
+           \\begin{document}\n\
+           % \\input{ghost-child}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      let r =
+        match Project_model.of_root root with
+        | Ok proj -> List.length (Project_model.all_files proj) = 2
+        | Error _ -> false
+      in
+      (try Sys.remove sty with _ -> ());
+      expect r (tag ^ ": ghost-child recorded because pctbrk.sty is a breaker"));
+
+  run "of_root: DIR-SHADOW resolves to the .tex, not the directory" (fun tag ->
+      let d = Filename.concat tmp_dir "shadow" in
+      (try Unix.mkdir d 0o755 with _ -> ());
+      let _ = write_file "shadow.tex" "file content\n" in
+      let root =
+        write_file "dsroot.tex"
+          "\\documentclass{article}\n\
+           \\begin{document}\n\
+           \\input{shadow}\n\
+           x\n\
+           \\end{document}\n"
+      in
+      let r =
+        match Project_model.of_root root with
+        | Ok proj ->
+            List.exists
+              (fun (f : Project_model.file_entry) ->
+                Filename.check_suffix f.path "shadow.tex")
+              (Project_model.all_files proj)
+        | Error _ -> false
+      in
+      (try Unix.rmdir d with _ -> ());
+      expect r (tag ^ ": kpathsea reads the FILE; T2 must too"));
+
   cleanup_dir ();
   finalise "project-model"

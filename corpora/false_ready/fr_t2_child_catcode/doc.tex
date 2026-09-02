@@ -1,0 +1,8 @@
+\documentclass{article}
+\begin{document}
+\input{brk}
+% \input{ghost-child}
+Never reached: brk.tex makes percent an IGNORED character, so the line
+above EXECUTES its \input against a missing file. A root-only breaker
+gate blanks it and manufactures a false-READY (measured, C-34).
+\end{document}

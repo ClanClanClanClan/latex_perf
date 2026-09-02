@@ -544,11 +544,12 @@ let feature_source ?probe (source : string) : string =
      pre-ship review), so the caller passes the CLOSURE source as the probe
      while [source] (the root) is what gets blanked. Defaults to [source] for
      single-string callers. *)
-  let guard = match probe with Some p -> p | None -> source in
-  if
-    Validators_common.comment_semantics_breaker source
-    || (guard != source && Validators_common.comment_semantics_breaker guard)
-  then source
+  let sources =
+    match probe with
+    | Some p when p != source -> [ source; p ]
+    | _ -> [ source ]
+  in
+  if Validators_common.comment_blanking_breakers sources then source
   else Validators_common.blank_line_comments source
 
 let extract ~(source : string) ~(engine : engine) :

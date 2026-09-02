@@ -1,0 +1,8 @@
+\documentclass{article}
+\begin{document}
+\catcode`\%=12
+% \input{ghost-child}
+Never reached: with catcode 12 the percent is printable text and the
+\input EXECUTES against a missing file - a naive comment-aware scan that
+ignores the breaker would blank that line and miss this fatal.
+\end{document}

@@ -87,6 +87,132 @@ let read_file_safe (path : string) :
       (* EXN-OK: file IO failure reported as File_not_found. *)
       Error (`File_not_found msg)
 
+(* Include_resolver.extract_includes is COMMENT-BLIND: a commented `% \input
+   foo` (e.g. tcilatex.tex's `% the \input tcilatex`, ubiquitous in
+   Scientific-Word output) would be read as a real edge and manufacture a FALSE
+   self-cycle on a document pdflatex compiles cleanly. Blank
+   comment/verbatim/\verb/url ranges to spaces (offset-preserving) before
+   scanning so only LIVE includes count. Blanking can only REMOVE edges → for
+   cycle detection it can only UNDER-detect (sound), never invent a cycle. *)
+let scan_includes_live (src : string) : string list =
+  let vcu = Validators_common.find_verbatim_comment_url_ranges src in
+  if vcu = [] then scan_includes src
+  else
+    let b = Bytes.of_string src in
+    let len = Bytes.length b in
+    List.iter
+      (fun (a, z) ->
+        for k = a to z - 1 do
+          if k >= 0 && k < len then Bytes.set b k ' '
+        done)
+      vcu;
+    scan_includes (Bytes.unsafe_to_string b)
+
+(* ── OPEN-007 T2 gate probe (2026-09-02) ───────────────────────────── The
+   comment-semantics breaker gate below must NOT probe the root alone: a
+   `%`-catcode breaker carried in an \input child or a local .sty/.cls changes
+   the ROOT's later `%`-semantics, so a root-only gate blanks a live
+   `%\input{missing}` and manufactures a false-READY (two measured vectors: a
+   local `pctignore.sty` doing `\catcode`\%=9`, and an \input child doing the
+   same — both pdflatex-fatal, both READY under a root-only gate). The first
+   draft called root-only gating "structural"; it is not: candidates from the
+   COMMENT-BLIND scan are a SUPERSET of the live edges (blanking only removes),
+   so probing that superset is conservative and complete. Bounded like the
+   closure walk (48 files, depth 6); every read failure just ends that branch (a
+   file we cannot read cannot be probed — and the raw scan direction it degrades
+   to is fail-closed). Collects transitive .tex children AND first-level local
+   .sty/.cls names per file. *)
+let collect_probe_sources ~(base_dir : string) (root_src : string) : string list
+    =
+  let fuel = ref 48 in
+  let seen = Hashtbl.create 16 in
+  let out = ref [] in
+  let sty_names (src : string) : string list =
+    (* \usepackage[..]{a,b} / \RequirePackage / \documentclass — names only;
+       resolution to local files happens at the caller. Comment-BLIND on purpose
+       (superset). *)
+    let n = String.length src in
+    let names = ref [] in
+    let read_names_at j cls =
+      (* j points at '['-or-'{'; skip one optional [..] then read {..} *)
+      let j = ref j in
+      if !j < n && src.[!j] = '[' then (
+        while !j < n && src.[!j] <> ']' do
+          incr j
+        done;
+        if !j < n then incr j);
+      if !j < n && src.[!j] = '{' then (
+        let k = ref (!j + 1) in
+        while !k < n && src.[!k] <> '}' do
+          incr k
+        done;
+        if !k < n then
+          String.split_on_char ',' (String.sub src (!j + 1) (!k - !j - 1))
+          |> List.iter (fun s -> names := (String.trim s, cls) :: !names))
+    in
+    let scan needle cls =
+      let m = String.length needle in
+      let i = ref 0 in
+      while !i + m <= n do
+        if String.sub src !i m = needle then (
+          read_names_at (!i + m) cls;
+          i := !i + m)
+        else incr i
+      done
+    in
+    scan "\\usepackage" false;
+    scan "\\RequirePackage" false;
+    scan "\\documentclass" true;
+    List.rev_map
+      (fun (name, cls) -> name ^ if cls then ".cls" else ".sty")
+      !names
+  in
+  let rec walk (dir : string) (src : string) (depth : int) : unit =
+    if depth <= 0 then ()
+    else (
+      (* local style/class files referenced from THIS file *)
+      List.iter
+        (fun fname ->
+          let path = Filename.concat dir fname in
+          if
+            !fuel > 0
+            && (not (Hashtbl.mem seen path))
+            && Sys.file_exists path
+            && not (Sys.is_directory path)
+          then (
+            Hashtbl.replace seen path ();
+            decr fuel;
+            try
+              let ic = open_in_bin path in
+              let len = in_channel_length ic in
+              let b = really_input_string ic len in
+              close_in ic;
+              out := b :: !out
+            with _ -> ()))
+        (sty_names src);
+      (* transitive .tex children via the comment-BLIND candidate scan *)
+      List.iter
+        (fun rel ->
+          let p0 = Filename.concat dir rel in
+          let path = if Sys.file_exists p0 then p0 else p0 ^ ".tex" in
+          if
+            !fuel > 0
+            && (not (Hashtbl.mem seen path))
+            && Sys.file_exists path
+            && not (Sys.is_directory path)
+          then (
+            Hashtbl.replace seen path ();
+            decr fuel;
+            match read_file_safe path with
+            | Ok child ->
+                out := child :: !out;
+                walk (Filename.dirname path) child (depth - 1)
+            | Error _ -> ()))
+        (scan_includes src))
+  in
+  walk base_dir root_src 6;
+  List.rev !out
+
 let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
     : (t, [ `File_not_found of string | `Not_latex of string ]) result =
   match read_file_safe root_path with
@@ -103,18 +229,48 @@ let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
       let files = ref [ { id = root_id; path = root_path; is_root = true } ] in
       (* One pass: enumerate direct includes of the root. v26.2 does NOT recurse
          (plan §2.6: include analysis at project_model layer stays single-level;
-         deep graphs are build_graph's job). *)
+         deep graphs are build_graph's job).
+
+         OPEN-007 T2 channel (2026-09-02): only LIVE includes are project edges.
+         A commented `% \input{ghost}` (or one inside verbatim) is dead to TeX —
+         pdflatex compiles without the file — yet the raw scan recorded it and
+         T2 rejected the document ("project not closed: missing file"), the
+         single biggest residual comment-blind channel on the 199-root frame.
+         [scan_includes_live] blanks comment/verbatim/url ranges first, exactly
+         as the cycle check has since R7-4. FAIL-CLOSED under a
+         comment-semantics breaker ([Validators_common]): catcode surgery can
+         make a `%`-prefixed \input EXECUTE, so under any breaker the raw scan
+         is kept — today's behaviour, at worst an over-rejection, never a missed
+         live edge (a missed live \input{missing} would be a manufactured
+         false-READY, the cardinal direction). The gate probes the root PLUS
+         [collect_probe_sources] (transitive raw-scan children + local
+         .sty/.cls, bounded): a breaker carried in a child changes the ROOT's
+         later %-semantics, and a root-only gate was a MEASURED false-READY (two
+         pdflatex-fatal vectors, C-34). *)
+      let breaker_present =
+        Validators_common.comment_blanking_breakers
+          (src :: collect_probe_sources ~base_dir src)
+      in
+      let live_includes =
+        if breaker_present then scan_includes src else scan_includes_live src
+      in
       List.iter
         (fun rel ->
           let candidate =
+            (* DIR-SHADOW (OPEN-007 T2, 2026-09-02): when `p` exists but is a
+               DIRECTORY and `p.tex` also exists, kpathsea reads the FILE —
+               preferring the directory made t2_check reject two compiling
+               papers (Content/Appendix dir + Content/Appendix.tex). A directory
+               with NO .tex sibling still resolves to `p`, keeping the
+               fr_dir_target fatal correctly rejected. *)
             let p = Filename.concat base_dir rel in
-            if Sys.file_exists p then p
+            if Sys.file_exists p && not (Sys.is_directory p) then p
             else if Sys.file_exists (p ^ ".tex") then p ^ ".tex"
             else p
           in
           let entry = { id = mk_id (); path = candidate; is_root = false } in
           files := entry :: !files)
-        (scan_includes src);
+        live_includes;
       Ok { files = List.rev !files; root = root_id; engine; declared_features }
 
 (* v27.1.62 (R7-4): detect an \input/\include CYCLE reachable from [root_path].
@@ -145,27 +301,6 @@ let normalize_path (p : string) : string =
     | seg :: tl -> go (seg :: acc) tl
   in
   "/" ^ String.concat "/" (go [] parts)
-
-(* Include_resolver.extract_includes is COMMENT-BLIND: a commented `% \input
-   foo` (e.g. tcilatex.tex's `% the \input tcilatex`, ubiquitous in
-   Scientific-Word output) would be read as a real edge and manufacture a FALSE
-   self-cycle on a document pdflatex compiles cleanly. Blank
-   comment/verbatim/\verb/url ranges to spaces (offset-preserving) before
-   scanning so only LIVE includes count. Blanking can only REMOVE edges → for
-   cycle detection it can only UNDER-detect (sound), never invent a cycle. *)
-let scan_includes_live (src : string) : string list =
-  let vcu = Validators_common.find_verbatim_comment_url_ranges src in
-  if vcu = [] then scan_includes src
-  else
-    let b = Bytes.of_string src in
-    let len = Bytes.length b in
-    List.iter
-      (fun (a, z) ->
-        for k = a to z - 1 do
-          if k >= 0 && k < len then Bytes.set b k ' '
-        done)
-      vcu;
-    scan_includes (Bytes.unsafe_to_string b)
 
 let has_include_cycle (root_path : string) : bool =
   let resolve (base : string) (rel : string) : string option =

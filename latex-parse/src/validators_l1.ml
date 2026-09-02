@@ -463,13 +463,30 @@ let l1_delim_001_rule : rule =
         incr i)
       else incr i
     done;
-    let imbalance = abs (!opens - !closes) in
-    if imbalance > 0 then
+    let net = !opens - !closes in
+    (* OPEN-010 (2026-09-02): direction-aware. Net-NEGATIVE stays a fatal Error
+       (TeX's "Too many }'s"; the dip case is DELIM-002's territory and the only
+       live dip measured on the 2,719 frame fails to compile). A net-POSITIVE
+       imbalance is fatal ONLY when some unmatched open sits in a fatal position
+       ([Validators_common.benign_surplus_open_braces]: math / argument
+       position); the all-benign case is TeX's silently closed end-group —
+       measured 38/40 such real papers compile, zero brace-caused failures in
+       the class, and the demotion rescues 8 of the 199-sample's
+       over-rejections. Constructible fatals (\textbf{ runaway, \def-body,
+       unclosed math group) keep firing via the position test — each is pinned
+       by a fr_delim_* fixture. *)
+    if net = 0 then None
+    else if net < 0 then
       Some
         (mk_result ~id:"DELIM-001" ~severity:Error
            ~message:"Unmatched delimiters { … } after macro expansion"
-           ~count:imbalance)
-    else None
+           ~count:(-net))
+    else if Validators_common.benign_surplus_open_braces s0 then None
+    else
+      Some
+        (mk_result ~id:"DELIM-001" ~severity:Error
+           ~message:"Unmatched delimiters { … } after macro expansion"
+           ~count:net)
   in
   { id = "DELIM-001"; run; languages = [] }
 

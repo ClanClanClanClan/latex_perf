@@ -12,9 +12,9 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 167,
+  "true-READY": 174,
   "true-NOT-READY": 13,
-  "false-NOT-READY": 19,
+  "false-NOT-READY": 12,
   "ungraded-infra": 1
  },
  "docs": [
@@ -249,17 +249,13 @@
    "sha256_tree": "1dc826d5f736d97e240088afe480c00e84071643d1b744f8ec29b48e534a4a72",
    "bytes": 73626,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.07949v1",
@@ -292,8 +288,6 @@
    "cli_reasons": [
     "ENC-001",
     "ENC-005",
-    "PRT-001",
-    "T0",
     "T5"
    ],
    "pdflatex_rc": 0,
@@ -1295,17 +1289,13 @@
    "sha256_tree": "2b8f51d3cc34c1c25003be0a9635d22a49188f22bd9128206e89e66f8552cc36",
    "bytes": 146834,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.01459v1",
@@ -1385,17 +1375,13 @@
    "sha256_tree": "69d187aef25dd7935c1a97aeba300e5288bd75573fc46a3ae32a12394e6ffbbd",
    "bytes": 49473,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.16556v1",
@@ -2239,17 +2225,13 @@
    "sha256_tree": "882902da28a9c3a9c3856efd5023510b0feb66b099de25bfc50b28d70a584cbd",
    "bytes": 130521,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.05592v1",
@@ -2591,11 +2573,7 @@
    "size_bucket": ">100KB",
    "cli_rc": 1,
    "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_reasons": [],
    "pdflatex_rc": 1,
    "first_error": "! LaTeX Error: Command \\c@lem already defined.               Or name \\end... illegal, see p.192 of the manual.See the LaTeX manual or LaTeX Companion for explan",
    "pdflatex_verdict": "FAILS",
@@ -2748,17 +2726,13 @@
    "sha256_tree": "a28c988537d41020f099674ca0d0f7446706c175e6b3109a14d5255e0f167ecf",
    "bytes": 53355,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.11469v1",
@@ -3146,17 +3120,13 @@
    "sha256_tree": "c719b770b42d14c07f9867a0c9e819f2772a87124adc43a7e9a12f7e48290480",
    "bytes": 142652,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.00894v1",
@@ -3218,17 +3188,13 @@
    "sha256_tree": "a483e6d1e157ae90362f433188b5d21f155ef323a63755b72031f7e8d54cba02",
    "bytes": 95688,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "PRT-001",
-    "T0",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.21314v1",
@@ -3509,6 +3475,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "8a9bc7fe84ec0524e2249f5f76895518417811c7",
+ "measured_at_sha": "8b2f7126579d6a36e9ab7a6c508503ea3f24e896",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

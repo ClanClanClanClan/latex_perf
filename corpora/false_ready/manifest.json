@@ -634,6 +634,105 @@
       "pdflatex": "strong-fatal",
       "expected_cli": "NOT-READY",
       "note": "OPEN-010 guard pin (2026-09-03): a top-level group + \\end{document} with NO \\begin{document} — rc 1,1 no PDF. The parser emits the SAME typed end-in-group message as the benign class, so the exoneration's live-\\begin{document}-before-error guard is load-bearing: without it this flips READY."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_envhalves",
+      "path": "fr_parser_envhalves.tex",
+      "class": "parser-policy",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-041 accept-pin (2026-09-03): \\newenvironment{namedthm}[1][Name]{\\begin{genericthm}}{\\end{genericthm}} — env halves split across definition bodies are inert tokens; compiles rc 0,0. The parser's generic arg loop stopped at the first optional arg and leaked the bodies into live parsing (the REAL OPEN-041 mechanism — plus a CRLF ws-skip miss and escape/comment-blind arg depth counting, all fixed). Definition-signature commands now parse name -> optionals -> raw bodies. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_tail_junk",
+      "path": "fr_parser_tail_junk.tex",
+      "class": "parser-policy",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-030/d4 accept-pin (2026-09-03): bytes after the top-level \\end{document} (a second \\end{document}, a stray \\end{itemize}, an unbalanced \\begin{center}) are never read by TeX — compiles rc 0,0. The parser now stops its NODE stream exactly where it MATCHED the depth-0 document close (byte-level T5 rules still scan the tail). A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_unclosed_env",
+      "path": "fr_parser_unclosed_env.tex",
+      "class": "parser-policy",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-041 control (2026-09-03): a LIVE \\begin{center} never closed — '! LaTeX Error: \\begin{center} ended by \\end{document}', halt rc 1 (batch recovers). Pins that definition-body opacity does not leak into live-body env checking."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_dead_end_group",
+      "path": "fr_parser_dead_end_group.tex",
+      "class": "parser-policy",
+      "pdflatex": "compiles",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-030 overrej-pin (2026-09-03): {\\end{document}} inside a GROUP still TERMINATES TeX ('(\\end occurred inside a group)') so the undefined macro after it is never read — compiles rc 0,0. The parser's matcher does not model that (it stops only at the depth-0 matched close) and the doc stays NOT-READY: recorded residual over-rejection, frame incidence ~0. Do not book as fixed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_iffalse_end",
+      "path": "fr_parser_iffalse_end.tex",
+      "class": "parser-policy",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-030/d4 guard pin (2026-09-03): \\iffalse\\end{document}\\fi is DEAD to TeX — the real fatal is the LIVE unclosed \\begin{center} after the \\fi ('ended by \\end{document}', halt rc 1). Without the parser's if-family depth guard the tail-stop fired on the dead close and the CLI said READY (measured manufactured false-READY, caught in-session). If this flips READY the guard regressed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_macroif_end",
+      "path": "fr_parser_macroif_end.tex",
+      "class": "parser-policy",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "R1/C-36 kill pin (2026-09-03): \\newcommand{\\dead}{\\iffalse} hides the conditional inside an OPAQUE definition body, \\dead makes the following \\end{document} DEAD to TeX, and the live unclosed \\begin{center} after the \\fi is the real fatal (halt rc 1). The draft tail-stop fired here and said READY — a measured manufactured false-READY, caught by the C-30 pass. The if-poison guard (any raw definition body containing backslash-if suppresses the stop permanently) holds it. If this flips READY the guard regressed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_url_pct",
+      "path": "fr_parser_url_pct.tex",
+      "class": "parser-policy",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "R2/C-36 kill pin (2026-09-03): \\url{http://example.com/a%20b} followed by a live stray \\end{center} (halt rc 1). The draft applied the definition-argument %-comment skip to EVERY command's brace args, overshot \\url's closing brace, swallowed the fatal, and said READY. tex_aware arg semantics are now confined to definition-signature commands; generic args keep the raw count."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_url_pct_verb",
+      "path": "fr_parser_url_pct_verb.tex",
+      "class": "parser-policy",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "R2 twin accept-pin (2026-09-03): the same %-bearing \\url followed by a verbatim block containing an unbalanced } — compiles rc 0,0. Under the draft's global %-skip this was NOT-READY (over-rejection regression); with generic args back to raw semantics it is READY. A NOT-READY here means the %-skip leaked outside definition commands again."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 17,
+      "tier": "lp-core",
+      "id": "fr_parser_newif_tail",
+      "path": "fr_parser_newif_tail.tex",
+      "class": "parser-policy",
+      "pdflatex": "compiles",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-030 scope pin (2026-09-03): \\newif\\ifdraft increments the lexical if-depth and nothing ever decrements it, so the tail-stop stays suppressed and the tail junk keeps this compiling doc NOT-READY. RECORDED residual over-rejection (0/200 in-sample cost measured): the heuristic errs toward suppression by design. Do not book as fixed."
     }
   ]
 }

@@ -75,10 +75,33 @@ type parse_state = {
   mutable line : int;
   mutable col : int;
   mutable errors : (string * loc) list;
+  (* OPEN-030/d4 guard: lexical if-family nesting depth. An end-of-document
+     inside an open iffalse...fi span is DEAD to TeX (measured: the live
+     unclosed-center after the fi is the real fatal, error-halt), so the
+     tail-stop must not fire there. Any command name starting "if" increments,
+     "fi" decrements (floor 0): macro-style ifthenelse never decrements, which
+     only SUPPRESSES the stop - the old behaviour, over-rejection at worst. *)
+  mutable if_depth : int;
+  (* R1 (C-36): an if-family token HIDDEN inside an opaque definition body
+     (\newcommand{\dead}{\iffalse}) is invisible to [if_depth], and the
+     tail-stop then fired on a TeX-dead end-of-document (measured manufactured
+     false-READY). Any definition body containing a raw backslash-if sequence
+     permanently poisons the stop — suppression only, the old behaviour,
+     over-rejection at worst. *)
+  mutable if_poisoned : bool;
 }
 
 let make_state (src : string) : parse_state =
-  { src; len = String.length src; pos = 0; line = 1; col = 0; errors = [] }
+  {
+    src;
+    len = String.length src;
+    pos = 0;
+    line = 1;
+    col = 0;
+    errors = [];
+    if_depth = 0;
+    if_poisoned = false;
+  }
 
 let current_loc (st : parse_state) : loc =
   { line = st.line; col = st.col; offset = st.pos; end_offset = st.pos }
@@ -283,25 +306,72 @@ let parse_opt_arg (st : parse_state) : string option =
 
 (* ── Brace argument {...} parsing ───────────────────────────── *)
 
-let parse_brace_arg (st : parse_state) : string option =
-  (* skip whitespace *)
-  while
-    st.pos < st.len
-    &&
-    let c = String.unsafe_get st.src st.pos in
-    c = ' ' || c = '\t' || c = '\n'
-  do
-    advance st
-  done;
+let parse_brace_arg ?(tex_aware = false) (st : parse_state) : string option =
+  (* [tex_aware] — DEFINITION-argument semantics ONLY (the OPEN-041 branch):
+     skip a leading %-comment, treat [\{]/[\}] as literal, and treat a [%]
+     comment's braces as dead, exactly as TeX reads a definition body. The
+     DEFAULT is the historical raw count: generic command arguments include
+     verbatim-argument commands ([\url]/[\href]/[\path]) where '%' is a LIVE
+     byte — applying the comment skip there overshot the closing brace and both
+     MANUFACTURED a false-READY (live fatal swallowed after a %-bearing \url)
+     and over-rejected a compiling doc (measured kill pair, C-36). *)
+  let skip_ws () =
+    while
+      st.pos < st.len
+      &&
+      let c = String.unsafe_get st.src st.pos in
+      (* CR counts: CRLF sources put a '\r' before the argument group and the
+         skip must cross it (measured: a CRLF \newenvironment body leaked) *)
+      c = ' ' || c = '\t' || c = '\n' || c = '\r'
+    do
+      advance st
+    done
+  in
+  skip_ws ();
+  (if tex_aware then
+     (* canonical definition style puts a %-comment between the command and its
+        body groups: \newenvironment{x}%\n{..}{..} (measured leak) *)
+     let progress = ref true in
+     while !progress do
+       progress := false;
+       if st.pos < st.len && String.unsafe_get st.src st.pos = '%' then (
+         while
+           st.pos < st.len
+           &&
+           let ch = String.unsafe_get st.src st.pos in
+           ch <> '\n' && ch <> '\r'
+         do
+           advance st
+         done;
+         skip_ws ();
+         progress := true)
+     done);
   if st.pos < st.len && String.unsafe_get st.src st.pos = '{' then (
     advance st;
     let buf = Buffer.create 32 in
     let depth = ref 1 in
     while st.pos < st.len && !depth > 0 do
       let c = String.unsafe_get st.src st.pos in
-      if c = '{' then incr depth else if c = '}' then decr depth;
-      if !depth > 0 then Buffer.add_char buf c;
-      advance st
+      if tex_aware && c = '\\' && st.pos + 1 < st.len then (
+        Buffer.add_char buf c;
+        advance st;
+        if !depth > 0 then Buffer.add_char buf (String.unsafe_get st.src st.pos);
+        advance st)
+      else if tex_aware && c = '%' then
+        while
+          st.pos < st.len
+          &&
+          let ch = String.unsafe_get st.src st.pos in
+          ch <> '\n' && ch <> '\r'
+        do
+          if !depth > 0 then
+            Buffer.add_char buf (String.unsafe_get st.src st.pos);
+          advance st
+        done
+      else (
+        if c = '{' then incr depth else if c = '}' then decr depth;
+        if !depth > 0 then Buffer.add_char buf c;
+        advance st)
     done;
     Some (Buffer.contents buf))
   else None
@@ -395,7 +465,24 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                   node = Environment { env_name; opts = []; body };
                   loc = close_loc loc st;
                 }
-                :: !nodes)
+                :: !nodes;
+              (* OPEN-030/d4: [\end{document}] TERMINATES TeX - every byte after
+                 the TOP-LEVEL document environment closes is never read, yet
+                 the parser kept parsing tail junk (a second [\end{document}],
+                 stray envs, half-deleted paragraphs) and its errors blocked
+                 readiness on 2 measured compiling papers. Stop here, exactly
+                 where the parser MATCHED the close - a textual [\end{document}]
+                 inside a group or a dead branch never reaches this frame at
+                 depth 0, so the OPEN-030 truncation-polarity trap (dead-end
+                 truncation hiding live fatals) does not arise. Byte-level T5
+                 rules still scan the tail; only the NODE stream ends. *)
+              if
+                env_name = "document"
+                && depth = 0
+                && stop_at_end = None
+                && st.if_depth = 0
+                && not st.if_poisoned
+              then st.pos <- st.len)
           else if starts_with st "\\end{" then (
             advance_n st 5;
             let name_start = st.pos in
@@ -430,6 +517,9 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
             advance st;
             (* skip \ *)
             let name = parse_cmd_name st in
+            if name = "fi" then st.if_depth <- max 0 (st.if_depth - 1)
+            else if String.length name >= 2 && name.[0] = 'i' && name.[1] = 'f'
+            then st.if_depth <- st.if_depth + 1;
             if name = "" then
               nodes := { node = Word "\\"; loc = close_loc loc st } :: !nodes
             else if name = "verb" || name = "verb*" then
@@ -460,6 +550,71 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                   }
                   :: !nodes)
               else record_error st "\\verb at end of input"
+            else if
+              List.mem name
+                [
+                  "newenvironment";
+                  "newenvironment*";
+                  "renewenvironment";
+                  "renewenvironment*";
+                  "newcommand";
+                  "newcommand*";
+                  "renewcommand";
+                  "renewcommand*";
+                  "providecommand";
+                  "providecommand*";
+                  "DeclareRobustCommand";
+                  "DeclareRobustCommand*";
+                  "newtheorem";
+                  "newtheorem*";
+                ]
+            then (
+              (* OPEN-041: LaTeX definition signature — mandatory NAME, then the
+                 optionals, THEN the mandatory bodies:
+                 [\newenvironment{x}[n][dflt]{begin}{end}]. The generic loop
+                 below reads options FIRST and stops at the first '[', so the
+                 body groups leaked into LIVE parsing — an env half inside a
+                 body ([{\begin{trivlist}}]) then desynced the whole parse
+                 ("Unexpected \end{trivlist}", 4 measured compiling papers).
+                 Bodies are inert token groups at definition time; consume them
+                 with the raw (escape/comment-aware) scanner. *)
+              let args = ref [] in
+              (match parse_brace_arg ~tex_aware:true st with
+              | Some a -> args := [ a ]
+              | None -> ());
+              let opts = ref [] in
+              let more_opts = ref true in
+              while !more_opts do
+                match parse_opt_arg st with
+                | Some o -> opts := o :: !opts
+                | None -> more_opts := false
+              done;
+              let more_args = ref true in
+              while !more_args do
+                match parse_brace_arg ~tex_aware:true st with
+                | Some a -> args := a :: !args
+                | None -> more_args := false
+              done;
+              (* R1 (C-36): an if-family conditional hidden in an opaque body
+                 poisons the tail-stop permanently — see [if_poisoned] *)
+              let has_if s =
+                let n = String.length s in
+                let rec go i =
+                  i + 3 <= n
+                  && ((s.[i] = '\\' && s.[i + 1] = 'i' && s.[i + 2] = 'f')
+                     || go (i + 1))
+                in
+                go 0
+              in
+              if List.exists has_if !args || List.exists has_if !opts then
+                st.if_poisoned <- true;
+              nodes :=
+                {
+                  node =
+                    Cmd { name; opts = List.rev !opts; args = List.rev !args };
+                  loc = close_loc loc st;
+                }
+                :: !nodes)
             else
               let opts = ref [] in
               let more_opts = ref true in

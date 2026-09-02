@@ -1,0 +1,10 @@
+\documentclass{article}
+\newtheorem{genericthm}{Theorem}
+\newenvironment{namedthm}[1][Name]{%
+	\begin{genericthm}}
+	{\end{genericthm}}
+\begin{document}
+\begin{namedthm}[Test]
+Split env halves across definition bodies are inert tokens.
+\end{namedthm}
+\end{document}

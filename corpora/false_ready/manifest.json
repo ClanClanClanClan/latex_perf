@@ -557,6 +557,83 @@
       "pdflatex": "compiles",
       "expected_cli": "READY",
       "note": "OPEN-007 T2 DIR-SHADOW accept-pin (2026-09-02): sections/ exists as a DIRECTORY and sections.tex as a FILE; kpathsea reads the file and the doc compiles rc 0,0. of_root preferred the directory, so t2_check rejected two compiling papers (Content/Appendix shape). Candidate resolution now skips directories when a .tex sibling exists; fr_dir_target (dir with NO .tex sibling, fatal) pins the other direction. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_bare_group_body",
+      "path": "fr_delim_bare_group_body.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-010 accept-pin (2026-09-03): a bare-group surplus open brace in the body compiles rc 0,0 — TeX silently closes it ('(\\end occurred inside a group)'). Measured on the frame: 38/40 net-positive-never-negative papers compile, ZERO brace-caused failures in the class. DELIM-001 is now direction- and position-aware and the parser emits the typed end-in-group message which the readiness layer exonerates (benign-brace verdict + live \\begin{document} guard). A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_preamble_group",
+      "path": "fr_delim_preamble_group.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "compiles",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 overrej-pin (2026-09-03): a bare preamble group right after \\documentclass{article} compiles rc 0,0, but the position classifier chains through the preceding '}' to the 'documentclass' control word (arity-unaware, conservative) and keeps DELIM-001 firing. RECORDED residual over-rejection — rescuing it needs multi-arg arity knowledge; do not book as fixed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_runaway_arg",
+      "path": "fr_delim_runaway_arg.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 fatal-position pin (2026-09-03): \\textbf{ never closed — '! File ended while scanning use of \\textbf', rc 1,1 no PDF. Net +1, never negative — the SAME byte signature as the rescued class — so a blanket net-positive demotion flips this READY (the pre-ship scout's refutation vector). The argument-position arm of benign_surplus_open_braces holds it."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_unclosed_math",
+      "path": "fr_delim_unclosed_math.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 fatal-position pin (2026-09-03): $a_{1$ — unclosed group inside math, '! Missing } inserted', halt rc 1 (batch recovers: error-halt). The in-math arm holds it; a blanket demotion flips it READY."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_def_body",
+      "path": "fr_delim_def_body.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 fatal-position pin (2026-09-03): \\def\\mymacro{{} — '! File ended while scanning definition of \\mymacro', rc 1,1. The unmatched open chains through '}' to the \\mymacro control word: argument position, held."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_dip_balanced",
+      "path": "fr_delim_dip_balanced.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 dip pin (2026-09-03): '}' before '{' — \"! Too many }'s\", halt rc 1 (batch recovers). Net 0 but the depth dips negative: DELIM-002's territory, unchanged by the demotion. Pins that dips stay compile-blocking (the only LIVE dip on the frame fails to compile)."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 16,
+      "tier": "lp-core",
+      "id": "fr_delim_stray_end_nobegin",
+      "path": "fr_delim_stray_end_nobegin.tex",
+      "class": "delim-surplus-open",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010 guard pin (2026-09-03): a top-level group + \\end{document} with NO \\begin{document} — rc 1,1 no PDF. The parser emits the SAME typed end-in-group message as the benign class, so the exoneration's live-\\begin{document}-before-error guard is load-bearing: without it this flips READY."
     }
   ]
 }

@@ -290,7 +290,87 @@ let _resolve_conflicts (results : result list) : result list =
     [Validators_context.set_post_commands] must have been called for the current
     thread beforehand. If it has not been set, those rules silently return
     [None] (safe but incomplete). *)
-let max_input_bytes = 10 * 1024 * 1024 (* 10 MiB — safety guard *)
+let max_input_bytes = 10 * 1024 * 1024
+(* 10 MiB — safety guard *)
+
+(* ── OPEN-010: benign end-in-group exoneration ────────────────────────── The
+   L2 parser reports [\end{document}] reached inside an open brace group with a
+   DISTINCT message (depth>0 evidence, parser_l2.ml). That state is TeX's
+   silently-closed end-group — "(\end occurred inside a group)", exit 0 —
+   measured compile-safe on 38/40 real papers with zero brace-caused failures in
+   the class. Exonerate the parse-error list ONLY when ALL of: - every recorded
+   error is exactly that class (any other error — the fr_cmt_m2 space-form
+   fixture's earlier "Expected…got…" entry, an unclosed-env error, an
+   unclosed-math error — blocks as before); - the benign-surplus brace verdict
+   holds ([Validators_common.benign_surplus_open_braces]: net-positive,
+   never-negative, every unmatched open in bare-group position — so
+   runaway-argument and unclosed-math shapes, which can emit the same parser
+   class, stay fatal); - a LIVE [\begin{document}] exists BEFORE the first error
+   offset (a stray [\end{document}] inside a top-level group with no preceding
+   begin — "Missing \begin{document}", strong-fatal — must not slip through;
+   fr_delim_stray_end_nobegin pins it). Callers on BOTH readiness paths (fast:
+   the shared parse in compile_contract; full: [run_all]/[run_subset]'s own
+   parse) apply this SAME function, keeping fast==full parity. Idempotent. *)
+
+(** Run ONLY the rules whose [id] satisfies [keep], returning their fired
+    results. This is the fast readiness-kernel path used by
+    [Compile_contract.check_ready_to_compile ~fast:true]: for the fixed
+    compile-blocking prefix set (DELIM-/ENC-/PRT-) it produces the SAME results
+    that {!run_all} would produce and then filter, at a fraction of the cost.
+
+    Soundness of the equivalence for the compile-blocking subset:
+    - Every rule instance is taken from [get_rules ()], so L0_VALIDATORS gating
+      and the LP-tier filter apply exactly as in {!run_all}.
+    - The 36 compile-blocking rules are pure functions of the source EXCEPT the
+      two PRT-* rules, which read {!Partial_context}. We therefore reproduce
+      that one piece of shared context from a SINGLE [Parser_l2.parse_located] +
+      [Partial_cst.classify] — the same construction {!run_all} performs. None
+      of the 37 read {!Semantic_state} (only REF-*/some MATH-* do) or the
+      {!Event_bus} deltas, so those are intentionally not built here.
+    - {!run_all}'s post-processing [_resolve_conflicts] never touches this
+      subset: no DELIM-/ENC-/PRT- rule declares a [conflicts_with], and no other
+      rule declares one against them (verified against rule_contracts.yaml).
+      Running the subset alone thus cannot gain or lose a result versus the full
+      run.
+
+    Callers that need the shared parse (e.g. for a T0 structural-error check)
+    may pass [?parse_errors] to avoid a second [Parser_l2.parse_located]; when
+    omitted this function parses once internally. *)
+let end_in_group_msg = "Unexpected \\end{document} inside an open group"
+
+let exonerate_benign_end_in_group ~(source : string)
+    (errs : (string * Parser_l2.loc) list) : (string * Parser_l2.loc) list =
+  let exonerable (m, _) = m = end_in_group_msg in
+  if errs = [] || not (List.for_all exonerable errs) then errs
+  else if not (Validators_common.benign_surplus_open_braces source) then errs
+  else
+    let blanked =
+      let b = Bytes.of_string source in
+      List.iter
+        (fun (a, e) ->
+          for k = a to e - 1 do
+            Bytes.set b k ' '
+          done)
+        (Validators_common.find_verbatim_comment_url_ranges source);
+      Bytes.unsafe_to_string b
+    in
+    let live_begin =
+      let needle = "\\begin{document}" in
+      let m = String.length needle in
+      let n = String.length blanked in
+      let rec go i =
+        if i + m > n then None
+        else if String.sub blanked i m = needle then Some i
+        else go (i + 1)
+      in
+      go 0
+    in
+    let first_err_off =
+      List.fold_left
+        (fun acc (_, (l : Parser_l2.loc)) -> min acc l.offset)
+        max_int errs
+    in
+    match live_begin with Some b when b < first_err_off -> [] | _ -> errs
 
 let run_all (src : string) : result list =
   (* Input size guard — prevent OOM/slowdown on huge files *)
@@ -340,6 +420,9 @@ let run_all (src : string) : result list =
         Semantic_state.set_state sem;
         (* Build partial document state for PRT validators (WS5) *)
         let _parse_nodes, parse_errors = Parser_l2.parse_located src in
+        let parse_errors =
+          exonerate_benign_end_in_group ~source:src parse_errors
+        in
         let pdoc = Partial_cst.classify src parse_errors in
         Partial_context.set pdoc;
         (* Publish events to bus (spec W62) — subscribers consume deltas *)
@@ -389,30 +472,6 @@ let run_all (src : string) : result list =
         Cache_key.store cache cache_key results;
         results
 
-(** Run ONLY the rules whose [id] satisfies [keep], returning their fired
-    results. This is the fast readiness-kernel path used by
-    [Compile_contract.check_ready_to_compile ~fast:true]: for the fixed
-    compile-blocking prefix set (DELIM-/ENC-/PRT-) it produces the SAME results
-    that {!run_all} would produce and then filter, at a fraction of the cost.
-
-    Soundness of the equivalence for the compile-blocking subset:
-    - Every rule instance is taken from [get_rules ()], so L0_VALIDATORS gating
-      and the LP-tier filter apply exactly as in {!run_all}.
-    - The 36 compile-blocking rules are pure functions of the source EXCEPT the
-      two PRT-* rules, which read {!Partial_context}. We therefore reproduce
-      that one piece of shared context from a SINGLE [Parser_l2.parse_located] +
-      [Partial_cst.classify] — the same construction {!run_all} performs. None
-      of the 37 read {!Semantic_state} (only REF-*/some MATH-* do) or the
-      {!Event_bus} deltas, so those are intentionally not built here.
-    - {!run_all}'s post-processing [_resolve_conflicts] never touches this
-      subset: no DELIM-/ENC-/PRT- rule declares a [conflicts_with], and no other
-      rule declares one against them (verified against rule_contracts.yaml).
-      Running the subset alone thus cannot gain or lose a result versus the full
-      run.
-
-    Callers that need the shared parse (e.g. for a T0 structural-error check)
-    may pass [?parse_errors] to avoid a second [Parser_l2.parse_located]; when
-    omitted this function parses once internally. *)
 let run_subset ?parse_errors ~(keep : string -> bool) (src : string) :
     result list =
   if String.length src > max_input_bytes then []
@@ -421,11 +480,14 @@ let run_subset ?parse_errors ~(keep : string -> bool) (src : string) :
     (* Reproduce ONLY the shared context the subset reads: Partial_context, from
        a single parse (reused from the caller when provided). *)
     let parse_errors =
-      match parse_errors with
-      | Some errs -> errs
-      | None ->
-          let _nodes, errs = Parser_l2.parse_located src in
-          errs
+      (* filter BOTH branches — a caller-supplied list may already be filtered
+         (idempotent), but the own-parse branch must not escape *)
+      exonerate_benign_end_in_group ~source:src
+        (match parse_errors with
+        | Some errs -> errs
+        | None ->
+            let _nodes, errs = Parser_l2.parse_located src in
+            errs)
     in
     let pdoc = Partial_cst.classify src parse_errors in
     Partial_context.set pdoc;

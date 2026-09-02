@@ -414,7 +414,18 @@ let rec parse_nodes ?(depth = 0) (st : parse_state)
                   ^ env_name
                   ^ "}");
                 running := false
-            | None -> record_error st ("Unexpected \\end{" ^ env_name ^ "}"))
+            | None ->
+                (* OPEN-010: [\end{document}] reached INSIDE an open brace group
+                   is TeX's silently-closed end-group (log note, exit 0), not a
+                   stray [\end] — carry the depth>0 evidence in a DISTINCT
+                   message so the readiness layer can exonerate exactly this
+                   class (in conjunction with the benign-brace verdict; a
+                   depth-0 stray [\end{document}] keeps the old message and
+                   stays fatal). *)
+                if env_name = "document" && depth > 0 then
+                  record_error st
+                    "Unexpected \\end{document} inside an open group"
+                else record_error st ("Unexpected \\end{" ^ env_name ^ "}"))
           else (
             advance st;
             (* skip \ *)

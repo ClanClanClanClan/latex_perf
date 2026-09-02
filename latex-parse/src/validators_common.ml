@@ -1216,6 +1216,150 @@ let comment_blanking_breakers (sources : string list) : bool =
   let defined = List.concat_map defined_verbatim_env_names sources in
   List.exists (fun name -> name = "!" || env_name_used sources name) defined
 
+(** [benign_surplus_open_braces s] — OPEN-010: [true] iff the vcu-blanked source
+    has a NET-POSITIVE brace imbalance that never dips negative AND every
+    unmatched [{] sits in a BENIGN position, i.e. the surplus opens are bare
+    groups that TeX closes silently at [\end] ("(\end occurred inside a group)",
+    exit 0 — measured: 38/40 such real papers compile and the 2 failures are
+    brace-unrelated). A position is FATAL — the function returns [false] — when
+    the unmatched open:
+    - sits inside a math range (an unclosed math group is an error-halt), or
+    - immediately follows [}] (a second macro ARGUMENT — runaway risk), or
+    - immediately follows a control word NOT in the argless whitelist
+      ([\textbf{] unclosed is "Runaway argument", strong-fatal — measured; the
+      whitelist carries only certainly-argument-less words, incl. the four
+      measured rescue shapes [\medskip]/[\fi]/[\tableofcontents]/ [\newpage]: a
+      MISSING entry degrades to over-rejection, a wrong entry would manufacture
+      a false-READY, so nothing speculative goes in). Balanced sources and
+      net-NEGATIVE/dipping sources return [false] (the latter are DELIM-002's
+      fatal territory — the only live dip measured on the frame fails to
+      compile). Whitespace (incl. newlines) is skipped when looking backwards:
+      TeX's tokenizer does the same. *)
+let benign_surplus_open_braces (s0 : string) : bool =
+  let s =
+    let b = Bytes.of_string s0 in
+    List.iter
+      (fun (a, e) ->
+        for k = a to e - 1 do
+          Bytes.set b k ' '
+        done)
+      (find_verbatim_comment_url_ranges s0);
+    Bytes.unsafe_to_string b
+  in
+  let n = String.length s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let whitelist =
+    [
+      "medskip";
+      "smallskip";
+      "bigskip";
+      "newpage";
+      "clearpage";
+      "pagebreak";
+      "noindent";
+      "indent";
+      "par";
+      "fi";
+      "else";
+      "relax";
+      "centering";
+      "raggedright";
+      "raggedleft";
+      "vfill";
+      "hfill";
+      "vfil";
+      "hfil";
+      "newline";
+      "tableofcontents";
+      "maketitle";
+      "listoffigures";
+      "listoftables";
+      "quad";
+      "qquad";
+      "leavevmode";
+      "unskip";
+      "strut";
+      "bigbreak";
+      "medbreak";
+      "smallbreak";
+      "hline";
+      "midrule";
+      "toprule";
+      "bottomrule";
+    ]
+  in
+  (* unmatched-open stack over the blanked bytes, escape-aware exactly like
+     DELIM-001's counter (skip any backslash-escaped pair). [close_to_open] maps
+     every close brace to its matching open, so the position test below can
+     CHAIN through `}`-adjacency: `{bare}{` is two bare groups (benign) while
+     `\frac{a}{` chains to an argument-taking control word (fatal). *)
+  let stack = ref [] in
+  let dipped = ref false in
+  let close_to_open : (int, int) Hashtbl.t = Hashtbl.create 64 in
+  let i = ref 0 in
+  while !i < n do
+    let c = String.unsafe_get s !i in
+    if c = '\\' && !i + 1 < n then i := !i + 2
+    else (
+      (if c = '{' then stack := !i :: !stack
+       else if c = '}' then
+         match !stack with
+         | [] -> dipped := true
+         | o :: r ->
+             Hashtbl.replace close_to_open !i o;
+             stack := r);
+      incr i)
+  done;
+  let unmatched = List.rev !stack in
+  if !dipped || unmatched = [] then false
+  else
+    let math = find_math_ranges s in
+    let in_math p = List.exists (fun (a, e) -> p >= a && p < e) math in
+    (* Position class of an OPEN brace at [p], chaining through a preceding `}`
+       to ITS open (fuel-bounded): argument position iff the chain ends at a
+       non-whitelisted control word. *)
+    let rec open_is_bare fuel p =
+      fuel > 0
+      &&
+      let q = ref (p - 1) in
+      while
+        !q >= 0
+        &&
+        let ch = String.unsafe_get s !q in
+        ch = ' ' || ch = '\t' || ch = '\n' || ch = '\r'
+      do
+        decr q
+      done;
+      if !q < 0 then true
+      else
+        match String.unsafe_get s !q with
+        | '}' -> (
+            match Hashtbl.find_opt close_to_open !q with
+            | Some o -> open_is_bare (fuel - 1) o
+            | None -> false (* unmatched close before us: stay conservative *))
+        | ch when is_letter ch ->
+            let e = !q in
+            let b = ref !q in
+            while !b >= 0 && is_letter (String.unsafe_get s !b) do
+              decr b
+            done;
+            if !b >= 0 && String.unsafe_get s !b = '\\' then (
+              (* escaped-backslash parity: an even backslash run means the
+                 backslash is LITERAL text, not a control-word intro *)
+              let run = ref 0 in
+              let k = ref (!b - 1) in
+              while !k >= 0 && String.unsafe_get s !k = '\\' do
+                incr run;
+                decr k
+              done;
+              if !run land 1 = 1 then true (* literal \\word then { : bare *)
+              else List.mem (String.sub s (!b + 1) (e - !b)) whitelist)
+            else true (* plain word then { : bare group *)
+        | _ -> true
+    in
+    let benign p = (not (in_math p)) && open_is_bare 64 p in
+    List.for_all benign unmatched
+
 (** [find_exempt_ranges s] — all byte ranges where typography/lexical rules must
     not fire: verbatim + comments + url targets
     ([find_verbatim_comment_url_ranges]) plus math ([find_math_ranges]).

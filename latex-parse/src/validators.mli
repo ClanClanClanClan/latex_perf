@@ -73,6 +73,23 @@ val max_input_bytes : int
 val run_all : string -> result list
 (** Run all active rules against the source and return triggered results. *)
 
+val exonerate_benign_end_in_group :
+  source:string ->
+  (string * Parser_l2.loc) list ->
+  (string * Parser_l2.loc) list
+(** [exonerate_benign_end_in_group ~source errs] — OPEN-010: returns [errs]
+    with the benign end-in-group class removed, or [errs] unchanged. Empties
+    the list ONLY when every error is the parser's distinct
+    "\end{document} inside an open group" message AND
+    [Validators_common.benign_surplus_open_braces] holds AND a live
+    [\begin{document}] precedes the first error offset — the measured
+    compile-safe class (TeX's silently closed end-group). Any other error,
+    any fatal-position surplus brace (runaway argument, unclosed math), or a
+    missing/late [\begin{document}] keeps the list intact. Applied on BOTH
+    readiness paths (the fast shared-parse in [Compile_contract] and the
+    internal parses of [run_all]/[run_subset]) — fast==full parity depends
+    on it. Idempotent. *)
+
 val run_subset :
   ?parse_errors:(string * Parser_l2.loc) list ->
   keep:(string -> bool) ->

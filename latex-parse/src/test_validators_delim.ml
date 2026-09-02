@@ -8,14 +8,43 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      DELIM-001: Unmatched delimiters { } after expansion
      ══════════════════════════════════════════════════════════════════════ *)
-  run "DELIM-001 fires on extra open brace" (fun tag ->
-      expect (fires "DELIM-001" "hello { world") (tag ^ ": extra {"));
+  (* OPEN-010 (2026-09-02): DELIM-001 is DIRECTION- and POSITION-aware. A
+     bare-group net-positive surplus is TeX's silently-closed end-group
+     (measured: 38/40 real papers compile, zero brace-caused failures) and no
+     longer fires; net-negative and fatal-POSITION surpluses (runaway macro
+     argument, unclosed math group) still do. *)
+  run "DELIM-001 silent on bare-group surplus (OPEN-010)" (fun tag ->
+      expect
+        (does_not_fire "DELIM-001" "hello { world")
+        (tag ^ ": bare { is a silently closed group"));
   run "DELIM-001 fires on extra close brace" (fun tag ->
       expect (fires "DELIM-001" "hello } world") (tag ^ ": extra }"));
-  run "DELIM-001 count=2 for two unmatched" (fun tag ->
+  run "DELIM-001 silent on nested bare surplus" (fun tag ->
       expect
-        (fires_with_count "DELIM-001" "{{ text }" 1)
-        (tag ^ ": count=1 for {{}"));
+        (does_not_fire "DELIM-001" "{{ text }")
+        (tag ^ ": {{ text } is one silently closed group"));
+  run "DELIM-001 fires on runaway macro argument (OPEN-010 pin)" (fun tag ->
+      expect
+        (fires "DELIM-001" "\\textbf{ never closed")
+        (tag ^ ": argument-position surplus is Runaway argument, fatal"));
+  run "DELIM-001 fires on unclosed math group (OPEN-010 pin)" (fun tag ->
+      expect
+        (fires "DELIM-001" "$a_{1$ and more text")
+        (tag ^ ": surplus open inside math is error-halt"));
+  run "DELIM-001 fires on second-argument surplus" (fun tag ->
+      expect
+        (fires "DELIM-001" "\\frac{a}{ oops")
+        (tag ^ ": {-after-} is argument position"));
+  run "DELIM-001 silent on whitelisted argless macro then group" (fun tag ->
+      expect
+        (does_not_fire "DELIM-001" "\\medskip{ x"
+        && does_not_fire "DELIM-001" "\\fi{ x"
+        && does_not_fire "DELIM-001" "\\tableofcontents{ x")
+        (tag ^ ": measured rescue shapes stay silent"));
+  run "DELIM-001 fires on net-negative count" (fun tag ->
+      expect
+        (fires_with_count "DELIM-001" "a } b } c {" 1)
+        (tag ^ ": net -1 fires with count 1"));
   run "DELIM-001 clean: balanced braces" (fun tag ->
       expect
         (does_not_fire "DELIM-001" "\\textbf{hello} and {world}")
@@ -216,7 +245,7 @@ let () =
 
   run "all 11 DELIM rules registered" (fun tag ->
       (* Verify each rule fires on trigger input *)
-      expect (fires "DELIM-001" "{") (tag ^ ": DELIM-001");
+      expect (fires "DELIM-001" "\\textbf{") (tag ^ ": DELIM-001");
       expect (fires "DELIM-002" "}") (tag ^ ": DELIM-002");
       expect (fires "DELIM-003" "$\\left($") (tag ^ ": DELIM-003");
       expect (fires "DELIM-004" "$\\right)$") (tag ^ ": DELIM-004");
@@ -298,7 +327,9 @@ let () =
 
   (* Combined: document with multiple delimiter issues *)
   run "combined: multiple DELIM rules fire" (fun tag ->
-      let src = "Text { unclosed.\n$\\left( no right$\n$\\langle missing$\n" in
+      let src =
+        "Text \\emph{ unclosed.\n$\\left( no right$\n$\\langle missing$\n"
+      in
       expect (fires "DELIM-001" src) (tag ^ ": DELIM-001 fires");
       expect (fires "DELIM-003" src) (tag ^ ": DELIM-003 fires");
       expect (fires "DELIM-007" src) (tag ^ ": DELIM-007 fires"))

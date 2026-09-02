@@ -167,6 +167,10 @@ let t0_check_with_errors ~(source : string)
 
 let t0_check ~(source : string) (proj : Project_model.t) : reason list =
   let _nodes, parse_errors = Parser_l2.parse_located source in
+  (* OPEN-010: same exoneration as the fast path — see the note there. *)
+  let parse_errors =
+    Validators.exonerate_benign_end_in_group ~source parse_errors
+  in
   t0_check_with_errors ~source ~parse_errors proj
 
 (* T1: not runtime-checked at this layer. Bounded-macro-registry determinism /
@@ -552,6 +556,12 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
              context, and run ONLY the 36 compile-blocking rules.
              Verdict-identical to the full path below. *)
           let _nodes, parse_errors = Parser_l2.parse_located src in
+          (* OPEN-010: the SAME benign end-in-group exoneration as the full path
+             (run_all/run_subset filter internally) — fast==full parity depends
+             on filtering here too. *)
+          let parse_errors =
+            Validators.exonerate_benign_end_in_group ~source:src parse_errors
+          in
           ( t0_check_with_errors ~source:src ~parse_errors proj,
             t5_check_fast ~source:src ~parse_errors proj )
         else

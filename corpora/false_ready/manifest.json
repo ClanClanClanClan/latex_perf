@@ -491,6 +491,72 @@
       "pdflatex": "compiles",
       "expected_cli": "READY",
       "note": "TARGET (e): fully commented-out '% \\usepackage{fontspec}' (bytes [24,47), a genuine comment). pdflatex rc 0,0 both protocols with PDF; today NOT-READY via T3 opentype_fonts (comment-blind uses_package). Fix flips to READY. Same oracle-comparator caveat as fr_cmt_target_cjk_comment. NB: fr_comment_comma / fr_comment_beforearg flip READY->NOT-READY under the same fix (OPEN-007) — book all flips in the same PR or required build fails. FLIPPED by the OPEN-007 comment-awareness fix (2026-09-01): the commented-out fontspec load is blanked before feature detection, so Opentype_fonts no longer fires; READY now matches pdflatex (compiles). Accept-pin: a NOT-READY here is a rescue regression."
+    },
+    {
+      "id": "fr_t2_input_comment",
+      "path": "fr_t2_input_comment.tex",
+      "kind": "single",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-007 T2 channel accept-pin (2026-09-02): '% \\input{ghost-child}' is dead to TeX — compiles rc 0,0 both protocols with no such file. Pre-fix CLI rejected via 'T2 project not closed: missing file' (the single biggest residual comment-blind channel, 15 of 44 on the frame). of_root now records only LIVE includes (scan_includes_live, breaker-gated). A NOT-READY here is a rescue regression."
+    },
+    {
+      "id": "fr_t2_input_verbatim",
+      "path": "fr_t2_input_verbatim.tex",
+      "kind": "single",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-007 T2 channel accept-pin (2026-09-02): \\input{ghost-child} INSIDE verbatim shows text and executes nothing — compiles rc 0,0 with no such file. scan_includes_live blanks verbatim ranges, so the dead directive is no longer a project edge. A NOT-READY here is a rescue regression."
+    },
+    {
+      "id": "fr_t2_missing_live",
+      "path": "fr_t2_missing_live.tex",
+      "kind": "single",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-007 T2 channel CONTROL (2026-09-02): a LIVE \\input of a missing file — '! LaTeX Error: File ghost-child.tex not found', rc 1,1 no PDF. Pins that the comment-aware scan does not over-blank: if the live directive ever stops being recorded this flips READY and fails as a REGRESSION."
+    },
+    {
+      "id": "fr_t2_catcode_percent_input",
+      "path": "fr_t2_catcode_percent_input.tex",
+      "kind": "single",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-007 T2 breaker vector (2026-09-02): body-scoped \\catcode`\\%=12 then '% \\input{ghost-child}' — the percent is PRINTABLE and the \\input EXECUTES: measured '! LaTeX Error: File ghost-child.tex not found', rc 1,1. The fail-closed comment_semantics_breaker keeps the RAW scan, so the dead-looking directive is still recorded and T2 fires. A naive ungated blank-then-scan flips this READY => REGRESSION."
+    },
+    {
+      "id": "fr_t2_child_catcode",
+      "path": "fr_t2_child_catcode/doc.tex",
+      "kind": "tree",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-007 T2 child-breaker vector (C-34, 2026-09-02): brk.tex does \\catcode`\\%=9, so the ROOT's '%'-prefixed \\input EXECUTES against a missing file — measured '! File ghost-child.tex not found', rc 1,1 both protocols. A ROOT-ONLY breaker gate blanks the line and said READY (the measured manufactured false-READY of the first draft); of_root's gate now probes collect_probe_sources (transitive raw-scan children + local .sty/.cls). If this flips READY the probe regressed."
+    },
+    {
+      "id": "fr_t2_dir_shadow",
+      "path": "fr_t2_dir_shadow/doc.tex",
+      "kind": "tree",
+      "class": "t2-comment-blind",
+      "fix_rank": 15,
+      "tier": "lp-core",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-007 T2 DIR-SHADOW accept-pin (2026-09-02): sections/ exists as a DIRECTORY and sections.tex as a FILE; kpathsea reads the file and the doc compiles rc 0,0. of_root preferred the directory, so t2_check rejected two compiling papers (Content/Appendix shape). Candidate resolution now skips directories when a .tex sibling exists; fr_dir_target (dir with NO .tex sibling, fatal) pins the other direction. A NOT-READY here is a rescue regression."
     }
   ]
 }

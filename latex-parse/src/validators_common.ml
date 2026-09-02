@@ -1073,6 +1073,149 @@ let comment_semantics_breaker (s : string) : bool =
   || catcode_percent ()
   || verb_letter_delim ()
 
+(** [defined_verbatim_env_names s] — the environment NAMES declared by the
+    liveness-eligible custom-verbatim definition commands ([\lstnewenvironment],
+    fancyvrb's Define/Custom/Recustom, tcolorbox's
+    [\newtcblisting]/[\NewTCBListing]): first mandatory brace group, one
+    optional [..] tolerated before it. A malformed definition (no readable name)
+    is reported as ["!"] — a name no [\begin] can match textually, which the
+    multi-source verdict treats as a HARD breaker (fail-closed). [\newminted] is
+    deliberately NOT eligible: it derives the usable env name ([<name>code])
+    instead of using the declared one, so it stays an unconditional breaker. *)
+let defined_verbatim_env_names (s : string) : string list =
+  let n = String.length s in
+  let is_letter c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') in
+  let defs =
+    [
+      "\\lstnewenvironment";
+      "\\DefineVerbatimEnvironment";
+      "\\CustomVerbatimEnvironment";
+      "\\RecustomVerbatimEnvironment";
+      "\\newtcblisting";
+      "\\NewTCBListing";
+    ]
+  in
+  let out = ref [] in
+  List.iter
+    (fun d ->
+      let m = String.length d in
+      let i = ref 0 in
+      while !i + m <= n do
+        if
+          String.sub s !i m = d
+          && (!i + m >= n || not (is_letter (String.unsafe_get s (!i + m))))
+        then (
+          let q = ref (!i + m) in
+          (* tolerate spaces and ONE optional [..] before the name group *)
+          while !q < n && (s.[!q] = ' ' || s.[!q] = '\t') do
+            incr q
+          done;
+          if !q < n && s.[!q] = '[' then (
+            while !q < n && s.[!q] <> ']' do
+              incr q
+            done;
+            if !q < n then incr q;
+            while !q < n && (s.[!q] = ' ' || s.[!q] = '\t') do
+              incr q
+            done);
+          if !q < n && s.[!q] = '{' then (
+            let e = ref (!q + 1) in
+            while !e < n && s.[!e] <> '}' do
+              incr e
+            done;
+            if !e < n && !e > !q + 1 then
+              out := String.sub s (!q + 1) (!e - !q - 1) :: !out
+            else out := "!" :: !out)
+          else out := "!" :: !out;
+          i := !i + m)
+        else incr i
+      done)
+    defs;
+  List.rev !out
+
+(** [env_name_used sources name] — true iff any source contains a textual
+    [\begin{name}] (spaces/tabs and one newline tolerated after [\begin],
+    matching the scanner's open-side tolerance). Used by the multi-source
+    breaker verdict's definition-liveness refinement. *)
+let env_name_used (sources : string list) (name : string) : bool =
+  let target = "{" ^ name ^ "}" in
+  let tl = String.length target in
+  List.exists
+    (fun s ->
+      let n = String.length s in
+      let i = ref 0 in
+      let found = ref false in
+      while (not !found) && !i + 6 <= n do
+        if String.sub s !i 6 = "\\begin" then (
+          let q = ref (!i + 6) in
+          let nl = ref 0 in
+          let go = ref true in
+          while !go && !q < n do
+            match s.[!q] with
+            | ' ' | '\t' -> incr q
+            | '\n' | '\r' ->
+                if !nl >= 1 then go := false
+                else (
+                  incr nl;
+                  incr q)
+            | _ -> go := false
+          done;
+          if !q + tl <= n && String.sub s !q tl = target then found := true);
+        incr i
+      done;
+      !found)
+    sources
+
+(** [comment_blanking_breakers sources] — the MULTI-SOURCE breaker verdict for
+    comment blanking: [true] iff blanking must be suppressed. All non-definition
+    breakers ([comment_semantics_breaker]'s catcode/short-verb/ xparse/\verb
+    arms) are unconditional. Definition-family breakers get the
+    DEFINITION-LIVENESS refinement (measured on the frame, 2026-09-01/02): a
+    custom-verbatim DEFINITION whose env name never appears in [\begin{..}]
+    across ANY probed source has no body whose %-semantics blanking could
+    corrupt — the flagship T2 rescue (2507.08906v1) carries exactly such an
+    unused [\newtcblisting], and treating it as a breaker forfeits a measured
+    rescue for zero protection. A USED definition stays a breaker (the fr_cmt_m1
+    fixture pins this at exit level: its [code] env is used, so blanking stays
+    suppressed and the CJK inside stays live). Malformed definitions surface as
+    the unusable name "!" and suppress (fail-closed). *)
+let comment_blanking_breakers (sources : string list) : bool =
+  let hard s =
+    (* comment_semantics_breaker minus the liveness-eligible definition arms *)
+    comment_semantics_breaker s
+    &&
+    let defined = defined_verbatim_env_names s in
+    defined = []
+    ||
+    (* re-check: does any NON-definition arm fire? Cheapest exact test: blank
+       the definition COMMANDS out and re-run the full breaker. *)
+    let b = Bytes.of_string s in
+    List.iter
+      (fun d ->
+        let dl = String.length d in
+        let i = ref 0 in
+        let n = Bytes.length b in
+        while !i + dl <= n do
+          if Bytes.sub_string b !i dl = d then (
+            Bytes.fill b !i dl ' ';
+            i := !i + dl)
+          else incr i
+        done)
+      [
+        "\\lstnewenvironment";
+        "\\DefineVerbatimEnvironment";
+        "\\CustomVerbatimEnvironment";
+        "\\RecustomVerbatimEnvironment";
+        "\\newtcblisting";
+        "\\NewTCBListing";
+      ];
+    comment_semantics_breaker (Bytes.unsafe_to_string b)
+  in
+  List.exists hard sources
+  ||
+  let defined = List.concat_map defined_verbatim_env_names sources in
+  List.exists (fun name -> name = "!" || env_name_used sources name) defined
+
 (** [find_exempt_ranges s] — all byte ranges where typography/lexical rules must
     not fire: verbatim + comments + url targets
     ([find_verbatim_comment_url_ranges]) plus math ([find_math_ranges]).

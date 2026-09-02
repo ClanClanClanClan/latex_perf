@@ -373,4 +373,36 @@ let () =
         && not (comment_semantics_breaker "plain % comment\n"))
         (tag ^ ": the gate stays open for the 34-rescue channel"));
 
+  run "multi verdict: UNUSED custom-verb definition is NOT a breaker"
+    (fun tag ->
+      (* 2507.08906v1's shape: \\newtcblisting defined in a child, used nowhere
+         — no verbatim body exists, blanking cannot corrupt. *)
+      expect
+        ((not
+            (comment_blanking_breakers
+               [ "x % c\n"; "\\newtcblisting{namedlisting}{}\n" ]))
+        && (not
+              (comment_blanking_breakers
+                 [ "\\lstnewenvironment{code}{}{} only defined\n" ]))
+        && comment_blanking_breakers
+             [
+               "\\lstnewenvironment{code}{}{}\n\\begin{code}\nx\n\\end{code}\n";
+             ]
+        && comment_blanking_breakers
+             (* defined in one source, USED in another *)
+             [
+               "\\begin{code}\nx\n\\end{code}\n";
+               "\\lstnewenvironment{code}{}{}\n";
+             ]
+        && comment_blanking_breakers
+             [ "\\begin {code}\nx"; "\\newtcblisting{code}{}" ])
+        (tag ^ ": liveness decides; space-form usage counts"));
+  run "multi verdict: non-definition breakers stay unconditional" (fun tag ->
+      expect
+        (comment_blanking_breakers [ "ok\n"; "\\catcode`\\%=9\n" ]
+        && comment_blanking_breakers [ "\\newminted{py}{}\n" ]
+        && comment_blanking_breakers [ "\\newtcblisting\n" ] (* malformed *)
+        && not (comment_blanking_breakers [ "plain % doc\n" ]))
+        (tag ^ ": catcode/newminted/malformed always suppress"));
+
   finalise "exempt-ranges"

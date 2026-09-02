@@ -118,12 +118,31 @@ let scan_includes_live (src : string) : string list =
    draft called root-only gating "structural"; it is not: candidates from the
    COMMENT-BLIND scan are a SUPERSET of the live edges (blanking only removes),
    so probing that superset is conservative and complete. Bounded like the
-   closure walk (48 files, depth 6); every read failure just ends that branch (a
-   file we cannot read cannot be probed — and the raw scan direction it degrades
-   to is fail-closed). Collects transitive .tex children AND first-level local
-   .sty/.cls names per file. *)
-let collect_probe_sources ~(base_dir : string) (root_src : string) : string list
-    =
+   closure walk (48 files, depth 6). Children are read as RAW BYTES with no
+   extension filter — an [\input{macros.def}] can carry catcode surgery exactly
+   like a .tex child. Returns the collected sources AND an [all_readable] flag:
+   a candidate that EXISTS but cannot be read cannot be probed, and skipping it
+   would degrade toward BLANKING — the fail-OPEN direction (the first draft's
+   wildcard-swallow read did exactly that while its comment claimed the
+   opposite) — so the caller must treat [all_readable = false] as
+   breaker-present. A NONEXISTENT candidate is skipped without tripping the
+   flag: a file TeX cannot read either cannot change catcodes, and if it is a
+   LIVE missing include the live scan still records it for T2. *)
+let collect_probe_sources ~(base_dir : string) (root_src : string) :
+    string list * bool =
+  let all_readable = ref true in
+  let read_raw (path : string) : string option =
+    try
+      let ic = open_in_bin path in
+      let len = in_channel_length ic in
+      let b = really_input_string ic len in
+      close_in ic;
+      Some b
+    with Sys_error _ ->
+      (* EXN-OK: existing-but-unreadable is reported via [all_readable]; the
+         caller fails CLOSED on it. *)
+      None
+  in
   let fuel = ref 48 in
   let seen = Hashtbl.create 16 in
   let out = ref [] in
@@ -182,13 +201,9 @@ let collect_probe_sources ~(base_dir : string) (root_src : string) : string list
           then (
             Hashtbl.replace seen path ();
             decr fuel;
-            try
-              let ic = open_in_bin path in
-              let len = in_channel_length ic in
-              let b = really_input_string ic len in
-              close_in ic;
-              out := b :: !out
-            with _ -> ()))
+            match read_raw path with
+            | Some b -> out := b :: !out
+            | None -> all_readable := false))
         (sty_names src);
       (* transitive .tex children via the comment-BLIND candidate scan *)
       List.iter
@@ -203,15 +218,15 @@ let collect_probe_sources ~(base_dir : string) (root_src : string) : string list
           then (
             Hashtbl.replace seen path ();
             decr fuel;
-            match read_file_safe path with
-            | Ok child ->
+            match read_raw path with
+            | Some child ->
                 out := child :: !out;
                 walk (Filename.dirname path) child (depth - 1)
-            | Error _ -> ()))
+            | None -> all_readable := false))
         (scan_includes src))
   in
   walk base_dir root_src 6;
-  List.rev !out
+  (List.rev !out, !all_readable)
 
 let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
     : (t, [ `File_not_found of string | `Not_latex of string ]) result =
@@ -248,8 +263,9 @@ let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
          later %-semantics, and a root-only gate was a MEASURED false-READY (two
          pdflatex-fatal vectors, C-34). *)
       let breaker_present =
-        Validators_common.comment_blanking_breakers
-          (src :: collect_probe_sources ~base_dir src)
+        let probes, all_readable = collect_probe_sources ~base_dir src in
+        (not all_readable)
+        || Validators_common.comment_blanking_breakers (src :: probes)
       in
       let live_includes =
         if breaker_present then scan_includes src else scan_includes_live src

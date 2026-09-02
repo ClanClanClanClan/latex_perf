@@ -3543,6 +3543,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "4e165f14609aeffc80281e273cefcc7fdbbd24ec",
+ "measured_at_sha": "90942dd749966b504e1ce3352b66b4e7b4139db6",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

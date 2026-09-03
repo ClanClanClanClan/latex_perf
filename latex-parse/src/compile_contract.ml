@@ -134,11 +134,27 @@ let t2_check (proj : Project_model.t) : reason list =
    result between T0 and T5's PRT context). [parse_errors] is only consulted on
    the LP_Core/LP_Extended branch — on LP_Foreign we short-circuit before any
    parse would be needed. *)
-let t0_check_with_errors ~(source : string)
+let t0_check_with_errors ?probe ~(source : string)
     ~(parse_errors : (string * Parser_l2.loc) list) (proj : Project_model.t) :
     reason list =
   let file = (Project_model.root_file proj).path in
-  match Language_profile.classify_source source with
+  (* OPEN-042: LP-Foreign classification is a raw-regex scan, so a COMMENTED
+     foreign construct ("% \\immediate\\openout...", measured compiling paper)
+     classified the document out of the supported subset. Classify on the
+     comment-blanked view under the same fail-closed multi-source breaker gate
+     as every comment channel; line numbers survive (blanking is
+     length-preserving, EOLs kept). Measured frame delta: exactly ONE document
+     flips, the target. *)
+  let classify_view =
+    let sources =
+      match probe with
+      | Some p when p != source -> [ source; p ]
+      | _ -> [ source ]
+    in
+    if Validators_common.comment_blanking_breakers sources then source
+    else Validators_common.blank_line_comments source
+  in
+  match Language_profile.classify_source classify_view with
   | Language_profile.LP_Foreign, feats ->
       let describe (f : Unsupported_feature.t) =
         Printf.sprintf "%s (line %d)" f.message f.line
@@ -165,13 +181,13 @@ let t0_check_with_errors ~(source : string)
               };
           ])
 
-let t0_check ~(source : string) (proj : Project_model.t) : reason list =
+let t0_check ?probe ~(source : string) (proj : Project_model.t) : reason list =
   let _nodes, parse_errors = Parser_l2.parse_located source in
   (* OPEN-010: same exoneration as the fast path — see the note there. *)
   let parse_errors =
     Validators.exonerate_benign_end_in_group ~source parse_errors
   in
-  t0_check_with_errors ~source ~parse_errors proj
+  t0_check_with_errors ?probe ~source ~parse_errors proj
 
 (* T1: not runtime-checked at this layer. Bounded-macro-registry determinism /
    acyclicity is enforced by [User_macro_registry] at analysis time; a dedicated
@@ -217,7 +233,46 @@ let t1_check (_ : Project_model.t) : reason list = []
    compile-blocking promotion or demotion there is picked up here automatically
    instead of being a silent no-op. *)
 
-let t5_check ~(source : string) (_ : Project_model.t) : reason list =
+(* ── OPEN-042: comment-dead ENC fires ──────────────────────────────── The six
+   MID-FILE Error-ENC rules (ENC-001/002/005/006/009/012) are raw byte scans, so
+   bytes inside a %-comment counted as live: the measured class is a Springer
+   template whose OWN "%%Note:" comment carries C1 control bytes — pdflatex
+   ignores them, the CLI rejected. For any of those ids that fired, re-run JUST
+   those rules on the comment-blanked view
+   ([Validators_common.blank_line_comments]) and drop the ids that vanish —
+   under the SAME fail-closed multi-source breaker gate as every comment channel
+   ([comment_blanking_breakers] over root + closure; any breaker keeps the raw
+   verdicts). ENC-014 (offset-0 BOM) is structurally exempt: a BOM cannot sit
+   inside a comment. Measured frame cost: counts change on exactly 4/200 roots,
+   ALL decreases — zero manufacture surface. *)
+let enc_midfile_ids =
+  [ "ENC-001"; "ENC-002"; "ENC-005"; "ENC-006"; "ENC-009"; "ENC-012" ]
+
+let filter_comment_dead_enc ~(source : string) ~(probe : string option)
+    (ids : string list) : string list =
+  let is_enc i = List.mem i enc_midfile_ids in
+  if not (List.exists is_enc ids) then ids
+  else
+    let sources =
+      match probe with
+      | Some p when p != source -> [ source; p ]
+      | _ -> [ source ]
+    in
+    if Validators_common.comment_blanking_breakers sources then ids
+    else
+      let blanked = Validators_common.blank_line_comments source in
+      if blanked == source then ids
+      else
+        let re = Validators.run_subset ~keep:is_enc blanked in
+        let still id =
+          List.exists
+            (fun (r : Validators.result) ->
+              r.id = id && r.severity = Validators.Error)
+            re
+        in
+        List.filter (fun i -> (not (is_enc i)) || still i) ids
+
+let t5_check ?probe ~(source : string) (_ : Project_model.t) : reason list =
   let results = Validators.run_all source in
   let blocking =
     List.filter_map
@@ -227,6 +282,7 @@ let t5_check ~(source : string) (_ : Project_model.t) : reason list =
         else None)
       results
   in
+  let blocking = filter_comment_dead_enc ~source ~probe blocking in
   match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
 
 (* FAST T5 (v27.1.59): run ONLY the compile-blocking rules via
@@ -237,7 +293,7 @@ let t5_check ~(source : string) (_ : Project_model.t) : reason list =
    read (Partial_context, from the SHARED single parse we thread in via
    [parse_errors]), and _resolve_conflicts never affects this subset. Reason
    constructors/messages are byte-identical to the full path. *)
-let t5_check_fast ~(source : string)
+let t5_check_fast ?probe ~(source : string)
     ~(parse_errors : (string * Parser_l2.loc) list) (_ : Project_model.t) :
     reason list =
   let results = Validators.run_compile_blocking ~parse_errors source in
@@ -249,6 +305,7 @@ let t5_check_fast ~(source : string)
         else None)
       results
   in
+  let blocking = filter_comment_dead_enc ~source ~probe blocking in
   match blocking with [] -> [] | ids -> [ T5_rule_violations ids ]
 
 (* Structural-fatal compile-gate (v27.1.60): precise, comment/verbatim-aware
@@ -472,7 +529,57 @@ let closure_segments (proj : Project_model.t) ~(root_src : string) :
                   last := past;
                   i := past)
             | None -> i := pos + 1)
-        | None, None -> incr i
+        | None, None ->
+            (* OPEN-042/C-37: the PRIMITIVE braceless form — [\input name] —
+               reaches children exactly like [\input{name}] (76/2,961 real
+               papers use it), and leaving it unresolved made the closure
+               BREAKER PROBE blind: a child carrying catcode-% behind [\input
+               pctchild] let comment blanking proceed and manufactured a
+               measured false-READY (C-30 pass, two spellings).
+               Resolve-and-splice when the file exists locally; when it does
+               not, T2's missing-file check already holds the document (kpathsea
+               tree files included, OPEN-040), so the unresolved case cannot
+               manufacture. *)
+            let is_letter c =
+              (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+            in
+            let is_fname c =
+              is_letter c
+              || (c >= '0' && c <= '9')
+              || c = '_'
+              || c = '.'
+              || c = '/'
+              || c = '-'
+            in
+            if
+              starts "\\input"
+              && pos + 6 < n
+              &&
+              let c = masked.[pos + 6] in
+              (not (is_letter c)) && c <> '{'
+            then (
+              let j = ref (pos + 6) in
+              while !j < n && (masked.[!j] = ' ' || masked.[!j] = '\t') do
+                incr j
+              done;
+              let name_start = !j in
+              while !j < n && is_fname masked.[!j] do
+                incr j
+              done;
+              if !j > name_start then
+                let raw = String.sub src name_start (!j - name_start) in
+                match resolve_with [ ".tex" ] raw with
+                | Some path -> (
+                    match claim path with
+                    | Some child ->
+                        push key (String.sub src !last (pos - !last));
+                        walk (depth + 1) path child;
+                        last := !j;
+                        i := !j
+                    | None -> i := !j)
+                | None -> i := !j
+              else i := pos + 1)
+            else incr i
       done;
       push key (String.sub src !last (String.length src - !last))
   in
@@ -550,6 +657,10 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
   let t0, t5 =
     match source_result with
     | Ok src ->
+        (* OPEN-042: the comment-channel gates probe the CLOSURE (a breaker in
+           an \input child suppresses blanking of the root) — same discipline as
+           the T3/T2 channels. *)
+        let probe = read_closure_source proj ~root_src:src in
         if fast then
           (* FAST readiness kernel (v27.1.59): parse ONCE and share the parse
              error list between T0's structural-error check and T5's PRT
@@ -562,13 +673,13 @@ let check_ready_to_compile ?(fast = true) ?aux_path ?source
           let parse_errors =
             Validators.exonerate_benign_end_in_group ~source:src parse_errors
           in
-          ( t0_check_with_errors ~source:src ~parse_errors proj,
-            t5_check_fast ~source:src ~parse_errors proj )
+          ( t0_check_with_errors ~probe ~source:src ~parse_errors proj,
+            t5_check_fast ~probe ~source:src ~parse_errors proj )
         else
           (* FULL path: original behaviour — T0 parses independently and T5 runs
              every registered rule then filters. Kept as the safety fallback and
              the differential/correctness-gate reference. *)
-          (t0_check ~source:src proj, t5_check ~source:src proj)
+          (t0_check ~probe ~source:src proj, t5_check ~probe ~source:src proj)
     | Error msg ->
         ( [
             T0_parse_fails

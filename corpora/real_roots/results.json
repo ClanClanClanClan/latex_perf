@@ -12,9 +12,9 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 174,
+  "true-READY": 178,
   "true-NOT-READY": 13,
-  "false-NOT-READY": 12,
+  "false-NOT-READY": 8,
   "ungraded-infra": 1
  },
  "docs": [
@@ -752,15 +752,13 @@
    "sha256_tree": "5e0df08f908789530b5f93ef359c5d68895d60d040325bf6c421fd2e70e47d07",
    "bytes": 306427,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T0"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.10065v1",
@@ -1218,16 +1216,13 @@
    "sha256_tree": "607d07e81161f55783c14a4e96962067c661ca992395507533c5e1e2207dce30",
    "bytes": 107585,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "ENC-012",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.20038v1",
@@ -1562,16 +1557,13 @@
    "sha256_tree": "1f867e9543132718dac2580694522c71fda65691eed06638a13e7841251654a9",
    "bytes": 96245,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "ENC-012",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.10797v1",
@@ -1873,16 +1865,13 @@
    "sha256_tree": "638cc5f9f124847a1a70da14d3a9f434988167147735d67a9be76af639d2c0cc",
    "bytes": 206732,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "ENC-012",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.03872v1",
@@ -3475,6 +3464,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "8b2f7126579d6a36e9ab7a6c508503ea3f24e896",
+ "measured_at_sha": "5d880fe38b277c4836dc44f8a780c3e67374005e",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

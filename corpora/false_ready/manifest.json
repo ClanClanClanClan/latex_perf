@@ -733,6 +733,72 @@
       "pdflatex": "compiles",
       "expected_cli": "NOT-READY",
       "note": "OPEN-030 scope pin (2026-09-03): \\newif\\ifdraft increments the lexical if-depth and nothing ever decrements it, so the tail-stop stays suppressed and the tail junk keeps this compiling doc NOT-READY. RECORDED residual over-rejection (0/200 in-sample cost measured): the heuristic errs toward suppression by design. Do not book as fixed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "id": "fr_enc_comment_c1",
+      "path": "fr_enc_comment_c1.tex",
+      "class": "comment-channel-enc",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-042 accept-pin (2026-09-03): C1 control bytes (\\xc2\\x93/\\x94) inside a '%%Note:' comment — the Springer sn-article template shape, 3 measured papers. pdflatex ignores comment bytes (rc 0,0); the six mid-file Error-ENC rules now re-run on the comment-blanked view at the T5 site and drop fires that vanish (closure-probed breaker gate). A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "id": "fr_enc_live_c1",
+      "path": "fr_enc_live_c1.tex",
+      "class": "comment-channel-enc",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-042 control (2026-09-03): the SAME C1 bytes in LIVE text — '! LaTeX Error: Unicode character (U+0093)', halt rc 1. Pins that the blanked-view filter drops only comment-dead fires: ENC-012's live detection is real. If this flips READY the filter over-blanked."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "id": "fr_lpforeign_openout_comment",
+      "path": "fr_lpforeign_openout_comment.tex",
+      "class": "comment-channel-enc",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-042 accept-pin (2026-09-03): '%    \\immediate\\openout...' — a COMMENTED foreign construct classified the doc LP-Foreign and T0 rejected a compiling paper (measured: 2507.08102v1). classify_source now runs on the gated comment-blanked view. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "id": "fr_lpforeign_openout_live",
+      "path": "fr_lpforeign_openout_live.tex",
+      "class": "comment-channel-enc",
+      "pdflatex": "compiles",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-042 policy pin (2026-09-03): LIVE \\immediate\\openout compiles (rc 0,0) but plain-TeX file IO is outside the certified LP subset — LP-Foreign is a deliberate SCOPE gate, not compile prediction. Pins that blanking never erases LIVE foreign constructs. Overrej-pin by classification: do not book as a defect."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "id": "fr_enc_catcode_breaker",
+      "path": "fr_enc_catcode_breaker.tex",
+      "class": "comment-channel-enc",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-042 breaker vector (2026-09-03): body-scoped \\catcode`\\%=12 makes the '%'-line LIVE text, so its C1 bytes genuinely fatal ('Unicode character U+0093', halt rc 1). The fail-closed comment_blanking_breakers gate keeps the raw ENC verdicts and T5 fires. A naive ungated blanked-view filter flips this READY => REGRESSION."
+    },
+    {
+      "id": "fr_enc_braceless_child",
+      "path": "fr_enc_braceless_child/doc.tex",
+      "kind": "tree",
+      "class": "comment-channel-enc",
+      "fix_rank": 18,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "C-37 kill pin (2026-09-03): the child is reached by the PRIMITIVE braceless form '\\input pctchild' and carries \\catcode`\\%=12, making the root's '%'-line LIVE text whose C1 bytes are fatal (rc 1,1). closure_segments matched only \\input{...}, so the breaker probe was BLIND to braceless children and the OPEN-042 ENC filter manufactured a READY on this shape (both paths, measured by the C-30 pass; 76/2,961 real papers use braceless \\input). The closure walk now resolves-and-splices the braceless form; the unresolved case is held by T2's missing-file check. If this flips READY the splice regressed."
     }
   ]
 }

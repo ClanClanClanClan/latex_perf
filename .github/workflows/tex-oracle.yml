@@ -55,7 +55,15 @@ env:
   # Re-pinning is a DELIBERATE PR: bump both vars, re-run false_ready_oracle.sh
   # with STRICT_GRADE=1 and re-record corpora/false_ready/manifest.json, then
   # update the SO1 section and specs/v26/compilation_profiles.yaml.
-  TEX_IMAGE: texlive/texlive@sha256:d79913b74afcf48a53ec2ad0d54b70ad3e36d65b4f1de13d811435883c2f1fd9
+  # 2026-09-04 (OPEN-040/C-38): digest moved to the FULL-scheme TL2026 image —
+  # SAME pinned engine (pdfTeX 3.141592653-2.6-1.40.29; the assert below still
+  # holds), completed TREE. The previous digest was scheme-partial: no
+  # xy.tex/xypic.tex, so a tree-dependent fixture graded strong-fatal against
+  # an oracle whose tree did not match the one the ground truth was recorded
+  # on, and `\include{xy}` of the then-missing file silently COMPILED. The
+  # tree is now part of the pin: the canary below proves every
+  # Texmf_tree_allowlist name compiles before anything is graded.
+  TEX_IMAGE: texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b
   TEX_EXPECT_VERSION: 3.141592653-2.6-1.40.29
 
 jobs:
@@ -141,6 +149,19 @@ jobs:
           for f in tikz.sty hyperref.sty amsmath.sty listings.sty inputenc.sty \
                    fontspec.sty polyglossia.sty pdftex.map; do
             kpsewhich "$f" >/dev/null || { echo "MISSING: $f"; exit 1; }
+          done
+          # OPEN-040/C-38: the TREE is part of the oracle pin. Every
+          # Texmf_tree_allowlist name must COMPILE via a preamble \input with
+          # no local copy — a scheme-partial image made the tree fixture grade
+          # strong-fatal (and \include-of-missing silently compile) while the
+          # ground truth was recorded against a full tree. One doc per name:
+          # the pictex family interacts, so they are not combined.
+          for n in xy xypic amssym.def epsf epsf.sty colordvi pictexwd.tex \
+                   prepictex postpictex pdf-trans; do
+            dd=$(mktemp -d); ( cd "$dd" \
+              && printf '\\documentclass{article}\n\\input %s\n\\begin{document}\nx\n\\end{document}\n' "$n" > t.tex \
+              && pdflatex -interaction=nonstopmode -halt-on-error t.tex >t.log 2>&1 \
+              && [ -f t.pdf ] ) || { echo "TREE MISSING/BROKEN: $n"; tail -20 "$dd/t.log"; exit 1; }
           done
           echo "canary OK"
           EOS

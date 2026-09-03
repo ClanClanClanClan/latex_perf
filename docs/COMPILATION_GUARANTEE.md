@@ -183,7 +183,7 @@ is the single authoritative home of that pin.
 | engine | `pdflatex` |
 | distribution | TeX Live 2026 |
 | version | `pdfTeX 3.141592653-2.6-1.40.29` |
-| CI image | `texlive/texlive@sha256:d79913b74afcf48a53ec2ad0d54b70ad3e36d65b4f1de13d811435883c2f1fd9` |
+| CI image | `texlive/texlive@sha256:4984977ccf5afe883cb382d0163f267de0d029d140bb7a9e8f4c19f0b781d57b` |
 | — equivalently | `registry.gitlab.com/islandoftex/images/texlive:TL2026-2026-07-26-medium` (immutable dated tag) |
 | scheme | `scheme-medium` |
 

@@ -11,7 +11,7 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 13,
+    "false_ready_total": 15,
     "strong_fatal": 7,
     "error_halt": 1
   },
@@ -799,6 +799,116 @@
       "pdflatex": "error-halt",
       "expected_cli": "NOT-READY",
       "note": "C-37 kill pin (2026-09-03): the child is reached by the PRIMITIVE braceless form '\\input pctchild' and carries \\catcode`\\%=12, making the root's '%'-line LIVE text whose C1 bytes are fatal (rc 1,1). closure_segments matched only \\input{...}, so the breaker probe was BLIND to braceless children and the OPEN-042 ENC filter manufactured a READY on this shape (both paths, measured by the C-30 pass; 76/2,961 real papers use braceless \\input). The closure walk now resolves-and-splices the braceless form; the unresolved case is held by T2's missing-file check. If this flips READY the splice regressed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_t2_tree_input",
+      "path": "fr_t2_tree_input.tex",
+      "class": "t2-tree-allowlist",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-040 accept-pin (2026-09-04): preamble '\\input xy' with NO local file — the pinned tree ships it, compiles rc 0,0. Texmf_tree_allowlist (10 names, each compile-verified under the pin; pictex excluded for its context-dependent \\fiverm load) exempts exact-byte, \\input-only, preamble-position edges from T2's missing-file check. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_t2_tree_input_body",
+      "path": "fr_t2_tree_input_body.tex",
+      "class": "t2-tree-allowlist",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-040 position control (2026-09-04): BODY-position '\\input xy' is fatal (rc 1,1 — xy's kernel cannot load mid-document). The allowlist is preamble-gated; if this flips READY the gate regressed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_t2_include_tree",
+      "path": "fr_t2_include_tree.tex",
+      "class": "t2-tree-allowlist",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-040 command control (2026-09-04): '\\include{xy}' resolves in-tree yet is fatal (rc 1,1 — \\include's machinery is incompatible). The allowlist applies to \\input edges only; if this flips READY the command gate regressed."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_cjk_contained",
+      "path": "fr_cjk_contained.tex",
+      "class": "cjk-containment",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-026 accept-pin (2026-09-04): CJKutf8 loaded + CJK chars INSIDE \\begin{CJK}{UTF8}{gbsn} — compiles rc 0,0 (the package's whole point). The containment transform blanks star-exact vcu-outside spans INCLUDING delimiters and neutralises the loader names, feature channel only, behind the breaker gate. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_cjk_outside",
+      "path": "fr_cjk_outside.tex",
+      "class": "cjk-containment",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-026 containment control (2026-09-04): the same doc with ONE CJK char OUTSIDE the span — '! Unicode character 文 not set up', halt rc 1. has_raw_cjk still sees uncontained bytes; the naive presence-fix would flip this READY (the measured manufacture the old OPEN-026 row warned about)."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_cjk_nopkg",
+      "path": "fr_cjk_nopkg.tex",
+      "class": "cjk-containment",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-026 loader control (2026-09-04): \\begin{CJK} with NO CJK-family package — 'Environment CJK undefined', halt rc 1. The transform runs only when CJK/CJKutf8 is live-loaded; without it the substring arm keeps firing."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_delim003_defpair",
+      "path": "fr_delim003_defpair.tex",
+      "class": "delim003-macro-split",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "OPEN-010/DELIM-003 accept-pin (2026-09-04): \\def\\({\\left(} / \\def\\){\\right)} + balanced use — compiles rc 0,0. The def-family name-position guard (\\def/\\gdef/\\edef/\\xdef/\\let/\\newcommand/\\renewcommand/\\providecommand/\\DeclareRobustCommand, brace and bare forms) stops the phantom math range. A NOT-READY here is a rescue regression."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_delim003_live",
+      "path": "fr_delim003_live.tex",
+      "class": "delim003-macro-split",
+      "pdflatex": "error-halt",
+      "expected_cli": "NOT-READY",
+      "note": "OPEN-010/DELIM-003 control (2026-09-04): a REAL unmatched $\\left( x$ — 'Missing \\right. inserted', halt rc 1. Pins that the guard never blinds live-math detection."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_delim003_text_use",
+      "path": "fr_delim003_text_use.tex",
+      "class": "delim003-macro-split",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "OPEN-010 TRADED-RISK live false-READY (2026-09-04, OPEN-043 posture): TEXT-MODE use of the redefined \\( — 'Missing $ inserted', halt rc 1, yet the guard makes the scanner (correctly) not open math at the def site, and no rule models the redefinition's runtime meaning. ZERO measured frame incidence. Recorded, not hidden; a detector needs macro-semantics."
+    },
+    {
+      "kind": "single",
+      "fix_rank": 19,
+      "tier": "lp-core",
+      "id": "fr_delim003_unbal_use",
+      "path": "fr_delim003_unbal_use.tex",
+      "class": "delim003-macro-split",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "OPEN-010 TRADED-RISK live false-READY (2026-09-04): UNBALANCED use of the redefined \\( inside $-math — 'Missing \\right. inserted', halt rc 1. Same zero-incidence trade as fr_delim003_text_use: the scanner no longer treats def-name tokens as delimiters, so the \\left hidden behind the macro is invisible. Recorded."
     }
   ]
 }

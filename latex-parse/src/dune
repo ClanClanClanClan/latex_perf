@@ -63,6 +63,7 @@
   user_macro_registry
   user_macro_context
   include_resolver
+  texmf_tree_allowlist
   project_graph
   project_state
   project_context

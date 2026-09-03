@@ -12,9 +12,9 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 178,
+  "true-READY": 184,
   "true-NOT-READY": 13,
-  "false-NOT-READY": 8,
+  "false-NOT-READY": 2,
   "ungraded-infra": 1
  },
  "docs": [
@@ -855,17 +855,13 @@
    "sha256_tree": "18d86c0d64f60b217d764fcfd5cfee2cf79d3d5139756c2551d67d6d101c8163",
    "bytes": 173855,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "DELIM-003",
-    "T2",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.14935v1",
@@ -1795,15 +1791,13 @@
    "sha256_tree": "f9db5165091e28251bbffeb9eb6d102ba565d7ec6ec1726e401eab102c6ba182",
    "bytes": 133896,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.02435v1",
@@ -2109,15 +2103,13 @@
    "sha256_tree": "e958ed11a1bebf209285f9980c350451f580e5d07ff9dd5e8af1199bfa68aed7",
    "bytes": 107987,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T3"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.20942v1",
@@ -2231,15 +2223,13 @@
    "sha256_tree": "0b775ac964f4544a440f1cd603925fd781469e6b066463950a41787ca9378c7f",
    "bytes": 118195,
    "size_bucket": ">100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "T2"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.23487v1",
@@ -2749,16 +2739,13 @@
    "sha256_tree": "bb86b6ccda63ebe547ec62d431e1c9bf7b409dbc284efa5687777bf0948ac5f5",
    "bytes": 37880,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "DELIM-003",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2506.21268v1",
@@ -3348,17 +3335,13 @@
    "sha256_tree": "5e71e55045be641f784c81f0edf54bc5a3f50d2bc9ec700802ca30275004707d",
    "bytes": 36384,
    "size_bucket": "10-100KB",
-   "cli_rc": 1,
-   "cli_verdict": "NOT-READY",
-   "cli_reasons": [
-    "DELIM-003",
-    "T2",
-    "T5"
-   ],
+   "cli_rc": 0,
+   "cli_verdict": "READY",
+   "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "",
    "pdflatex_verdict": "COMPILES",
-   "cell": "false-NOT-READY"
+   "cell": "true-READY"
   },
   {
    "arxiv_id": "2507.10095v1",
@@ -3464,6 +3447,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "5d880fe38b277c4836dc44f8a780c3e67374005e",
+ "measured_at_sha": "1b41f1693d303f8867309b12dc82dc350d349b7f",
  "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

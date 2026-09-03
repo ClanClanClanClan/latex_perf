@@ -353,6 +353,47 @@ let compute_math_ranges (s : string) : (int * int) list =
     in
     count (idx - 1) 0 land 1 = 1
   in
+  (* OPEN-010/DELIM-003 (2026-09-04): [\def\(] defines the CONTROL SEQUENCE [\(]
+     — a token in definition-NAME position is not a math delimiter. Treating it
+     as one opened a PHANTOM math range from the def site to the next [\)]
+     (typically the paired [\def\){..}] line), whose [\left(] then counted as
+     unmatched — three measured compiling papers rejected. *)
+  let is_def_name idx =
+    (* def-FAMILY lookbehind, measured across the frame: \def alone cleared 12
+       of 24 class false-fires; the family incl. \renewcommand bare AND brace
+       forms ([\renewcommand{\(}]) clears 19 of 24 with zero new fires. One
+       optional '{' then optional ws is tolerated between the command and the
+       token. *)
+    let defs =
+      [
+        "\\def";
+        "\\gdef";
+        "\\edef";
+        "\\xdef";
+        "\\let";
+        "\\newcommand";
+        "\\renewcommand";
+        "\\providecommand";
+        "\\DeclareRobustCommand";
+      ]
+    in
+    let q = ref (idx - 1) in
+    while !q >= 0 && (s.[!q] = ' ' || s.[!q] = '\t') do
+      decr q
+    done;
+    if !q >= 0 && s.[!q] = '{' then (
+      decr q;
+      while !q >= 0 && (s.[!q] = ' ' || s.[!q] = '\t') do
+        decr q
+      done);
+    let e = !q + 1 in
+    List.exists
+      (fun d ->
+        let dl = String.length d in
+        e >= dl && String.sub s (e - dl) dl = d && not (is_escaped (e - dl)))
+      defs
+  in
+
   let parse_begin idx =
     let prefix = "\\begin{" in
     if not (starts_with prefix idx) then None
@@ -398,14 +439,18 @@ let compute_math_ranges (s : string) : (int * int) list =
         i := pos + 1)
       else i := pos + 1
     else if !in_paren_start <> None then
-      if (not (is_escaped pos)) && starts_with "\\)" pos then (
+      if
+        (not (is_escaped pos)) && starts_with "\\)" pos && not (is_def_name pos)
+      then (
         let start_i = match !in_paren_start with Some s -> s | None -> pos in
         ranges := (start_i, pos + 2) :: !ranges;
         in_paren_start := None;
         i := pos + 2)
       else i := pos + 1
     else if !in_brack_start <> None then
-      if (not (is_escaped pos)) && starts_with "\\]" pos then (
+      if
+        (not (is_escaped pos)) && starts_with "\\]" pos && not (is_def_name pos)
+      then (
         let start_i = match !in_brack_start with Some s -> s | None -> pos in
         ranges := (start_i, pos + 2) :: !ranges;
         in_brack_start := None;
@@ -428,10 +473,14 @@ let compute_math_ranges (s : string) : (int * int) list =
     else if (not (is_escaped pos)) && s.[pos] = '$' then (
       in_dollar_start := Some pos;
       i := pos + 1)
-    else if (not (is_escaped pos)) && starts_with "\\(" pos then (
+    else if
+      (not (is_escaped pos)) && starts_with "\\(" pos && not (is_def_name pos)
+    then (
       in_paren_start := Some pos;
       i := pos + 2)
-    else if (not (is_escaped pos)) && starts_with "\\[" pos then (
+    else if
+      (not (is_escaped pos)) && starts_with "\\[" pos && not (is_def_name pos)
+    then (
       in_brack_start := Some pos;
       i := pos + 2)
     else if (not (is_escaped pos)) && starts_with "\\begin{" pos then
@@ -2544,6 +2593,47 @@ let compute_math_segments (s : string) : string list =
     in
     count (idx - 1) 0 land 1 = 1
   in
+  (* OPEN-010/DELIM-003 (2026-09-04): [\def\(] defines the CONTROL SEQUENCE [\(]
+     — a token in definition-NAME position is not a math delimiter. Treating it
+     as one opened a PHANTOM math range from the def site to the next [\)]
+     (typically the paired [\def\){..}] line), whose [\left(] then counted as
+     unmatched — three measured compiling papers rejected. *)
+  let is_def_name idx =
+    (* def-FAMILY lookbehind, measured across the frame: \def alone cleared 12
+       of 24 class false-fires; the family incl. \renewcommand bare AND brace
+       forms ([\renewcommand{\(}]) clears 19 of 24 with zero new fires. One
+       optional '{' then optional ws is tolerated between the command and the
+       token. *)
+    let defs =
+      [
+        "\\def";
+        "\\gdef";
+        "\\edef";
+        "\\xdef";
+        "\\let";
+        "\\newcommand";
+        "\\renewcommand";
+        "\\providecommand";
+        "\\DeclareRobustCommand";
+      ]
+    in
+    let q = ref (idx - 1) in
+    while !q >= 0 && (s.[!q] = ' ' || s.[!q] = '\t') do
+      decr q
+    done;
+    if !q >= 0 && s.[!q] = '{' then (
+      decr q;
+      while !q >= 0 && (s.[!q] = ' ' || s.[!q] = '\t') do
+        decr q
+      done);
+    let e = !q + 1 in
+    List.exists
+      (fun d ->
+        let dl = String.length d in
+        e >= dl && String.sub s (e - dl) dl = d && not (is_escaped (e - dl)))
+      defs
+  in
+
   let parse_begin idx =
     if not (starts_with "\\begin{" idx) then None
     else
@@ -2577,7 +2667,8 @@ let compute_math_segments (s : string) : string list =
       in_dollar := true;
       dollar_start := i + 1;
       loop (i + 1))
-    else if (not (is_escaped i)) && starts_with "\\(" i then (
+    else if (not (is_escaped i)) && starts_with "\\(" i && not (is_def_name i)
+    then (
       let start = i + 2 in
       let j = ref start in
       while
@@ -2589,7 +2680,8 @@ let compute_math_segments (s : string) : string list =
         segments := String.sub s start (!j - start) :: !segments;
         loop (!j + 2))
       else loop (i + 1))
-    else if (not (is_escaped i)) && starts_with "\\[" i then (
+    else if (not (is_escaped i)) && starts_with "\\[" i && not (is_def_name i)
+    then (
       let start = i + 2 in
       let j = ref start in
       while

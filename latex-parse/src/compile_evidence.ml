@@ -537,6 +537,108 @@ let graph_of_build_graph (g : Build_graph.t) :
    \input child is out of its sight — accepted and recorded in OPEN-007 (feature
    detection itself is root-only today, and the ungated counterfactual measured
    0 manufactured on the real frame). *)
+(* ── OPEN-026: CJK containment (2026-09-04) ────────────────────────── pdflatex
+   REJECTS raw CJK bytes in plain text (rc 1, measured) but ACCEPTS them INSIDE
+   a [\begin{CJK}]/[\begin{CJK*}] environment when the CJK family is loaded (rc
+   0 — the whole point of the package). The feature view treated any CJK byte,
+   any [\begin{CJK}] substring, and the loader itself as "needs a CJK engine",
+   rejecting compiling documents. The transform below — applied to the
+   COMMENT-BLANKED feature view only, and only when the exact [CJK]/[CJKutf8]
+   package is LIVE-loaded — blanks the INTERIOR of star-exact, vcu-outside CJK
+   env spans (newlines kept) and neutralises the loader names, so: - contained
+   CJK + loader -> all arms quiet -> READY (rc 0 cell); - CJK OUTSIDE a span ->
+   has_raw_cjk still fires (rc 1 cell); - env WITHOUT the loader -> transform
+   skipped, substring arm fires (undefined env, rc 1 cell); - UNCLOSED or
+   star-mismatched -> transform ABORTS to the untouched span view (fail-closed:
+   over-detection). Star-exact means [\begin{CJK*}] closes only with
+   [\end{CJK*}]. Spans inside verbatim/comment ranges are not spans
+   (vcu-aware). *)
+let cjk_containment_view (blanked : string) : string =
+  if not (uses_package blanked "CJK" || uses_package blanked "CJKutf8") then
+    blanked
+  else
+    let vcu = Validators_common.find_verbatim_comment_url_ranges blanked in
+    let in_vcu p = List.exists (fun (a, e) -> p >= a && p < e) vcu in
+    let n = String.length blanked in
+    let sub_at pos pat =
+      let m = String.length pat in
+      pos + m <= n && String.sub blanked pos m = pat
+    in
+    let spans = ref [] in
+    let bad = ref false in
+    let i = ref 0 in
+    while (not !bad) && !i < n do
+      let star = sub_at !i "\\begin{CJK*}" in
+      if (star || sub_at !i "\\begin{CJK}") && not (in_vcu !i) then (
+        let open_len = if star then 13 else 12 in
+        let endp = if star then "\\end{CJK*}" else "\\end{CJK}" in
+        let j = ref (!i + open_len) in
+        while !j < n && not (sub_at !j endp && not (in_vcu !j)) do
+          incr j
+        done;
+        if !j >= n then bad := true
+        else (
+          (* blank the WHOLE span including both delimiters: the substring arm
+             fires on the literal [\begin{CJK}] text itself *)
+          spans := (!i, !j + String.length endp) :: !spans;
+          i := !j + String.length endp))
+      else incr i
+    done;
+    if !bad then blanked
+    else
+      let b = Bytes.of_string blanked in
+      List.iter
+        (fun (a, e) ->
+          for k = a to e - 1 do
+            let ch = Bytes.get b k in
+            if ch <> '\n' && ch <> '\r' then Bytes.set b k ' '
+          done)
+        !spans;
+      (* neutralise the exact loader names inside \usepackage/\RequirePackage
+         groups so the [uses_package] arm quiets too *)
+      let s2 = Bytes.unsafe_to_string b in
+      let b2 = Bytes.of_string s2 in
+      let neutralise loader =
+        let ll = String.length loader in
+        let i = ref 0 in
+        let n2 = Bytes.length b2 in
+        while !i + ll <= n2 do
+          if String.sub s2 !i ll = loader then (
+            (* skip optional [..] then blank exact CJK names in the {..} *)
+            let j = ref (!i + ll) in
+            if !j < n2 && Bytes.get b2 !j = '[' then (
+              while !j < n2 && Bytes.get b2 !j <> ']' do
+                incr j
+              done;
+              if !j < n2 then incr j);
+            if !j < n2 && Bytes.get b2 !j = '{' then (
+              let g0 = !j + 1 in
+              let k = ref g0 in
+              while !k < n2 && Bytes.get b2 !k <> '}' do
+                incr k
+              done;
+              if !k < n2 then
+                let names =
+                  String.split_on_char ',' (String.sub s2 g0 (!k - g0))
+                in
+                let off = ref g0 in
+                List.iter
+                  (fun nm ->
+                    let trimmed = String.trim nm in
+                    if trimmed = "CJK" || trimmed = "CJKutf8" then
+                      for x = !off to !off + String.length nm - 1 do
+                        Bytes.set b2 x ' '
+                      done;
+                    off := !off + String.length nm + 1)
+                  names);
+            i := !i + ll)
+          else incr i
+        done
+      in
+      neutralise "\\usepackage";
+      neutralise "\\RequirePackage";
+      Bytes.unsafe_to_string b2
+
 let feature_source ?probe (source : string) : string =
   (* [?probe] widens the GUARD's view without widening the blanking: for a
      multi-file project the breaker may be DEFINED in an \input child while the
@@ -550,7 +652,7 @@ let feature_source ?probe (source : string) : string =
     | _ -> [ source ]
   in
   if Validators_common.comment_blanking_breakers sources then source
-  else Validators_common.blank_line_comments source
+  else cjk_containment_view (Validators_common.blank_line_comments source)
 
 let extract ~(source : string) ~(engine : engine) :
     project * profile * node list =

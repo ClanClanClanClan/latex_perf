@@ -196,11 +196,12 @@ REGISTRY = [
                      # NB: this anchor is a LIVE number and rots by design
                      # whenever the measured position moves — updating it here
                      # is the deliberate act the registry-rot check forces.
-                     # 191/199 since the OPEN-042 comment-channel hooks
-                     # (over-rejection 12 -> 8; was 187 after the parser pair,
-                     # 180 after OPEN-010, 172/155/141 before).
-                     old="Correct verdicts: 191/199",
-                     new="Correct verdicts: 192/199"),
+                     # 197/199 since the residual-eight triple (kpathsea
+                     # allowlist + DELIM-003 def-family guard + CJK
+                     # containment): over-rejection 8 -> 2; was 191 after
+                     # OPEN-042, 187/180/172/155/141 before.
+                     old="Correct verdicts: 197/199",
+                     new="Correct verdicts: 198/199"),
             # Ledger discipline: a malformed size cell (caught live on
             # 2026-08-24 when an append overflowed the row — keep it caught).
             Mutation("ledger size cell malformed (OPEN-022)",

@@ -94,9 +94,9 @@ let read_file_safe (path : string) :
    comment/verbatim/\verb/url ranges to spaces (offset-preserving) before
    scanning so only LIVE includes count. Blanking can only REMOVE edges → for
    cycle detection it can only UNDER-detect (sound), never invent a cycle. *)
-let scan_includes_live (src : string) : string list =
+let live_blanked (src : string) : string =
   let vcu = Validators_common.find_verbatim_comment_url_ranges src in
-  if vcu = [] then scan_includes src
+  if vcu = [] then src
   else
     let b = Bytes.of_string src in
     let len = Bytes.length b in
@@ -106,7 +106,16 @@ let scan_includes_live (src : string) : string list =
           if k >= 0 && k < len then Bytes.set b k ' '
         done)
       vcu;
-    scan_includes (Bytes.unsafe_to_string b)
+    Bytes.unsafe_to_string b
+
+let scan_includes_live_entries (src : string) :
+    Include_resolver.include_entry list =
+  Include_resolver.extract_includes (live_blanked src)
+
+let scan_includes_live (src : string) : string list =
+  List.map
+    (fun (e : Include_resolver.include_entry) -> e.raw_path)
+    (scan_includes_live_entries src)
 
 (* ── OPEN-007 T2 gate probe (2026-09-02) ───────────────────────────── The
    comment-semantics breaker gate below must NOT probe the root alone: a
@@ -267,11 +276,39 @@ let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
         (not all_readable)
         || Validators_common.comment_blanking_breakers (src :: probes)
       in
-      let live_includes =
-        if breaker_present then scan_includes src else scan_includes_live src
+      let live_entries =
+        if breaker_present then Include_resolver.extract_includes src
+        else scan_includes_live_entries src
+      in
+      (* OPEN-040 (2026-09-04): a locally-missing [\input] target that the
+         PINNED TeX tree ships ([Texmf_tree_allowlist]) is not a missing project
+         file — kpsewhich resolves it and the doc compiles with no local copy
+         (every entry compile-verified; 20 frame papers rescued, 0
+         manufactured). Guards, each measured: [\input] edges only
+         ([\include{xy}] is fatal); EXACT-byte name match (case-folding
+         manufactures); PREAMBLE position only (body-position [\input xy] is
+         fatal; all 28 real occurrences are preamble). The position test runs on
+         the live-blanked view, whose offsets equal the raw ones. *)
+      let live_begin_off =
+        let blanked = live_blanked src in
+        let needle = "\\begin{document}" in
+        let m = String.length needle in
+        let n = String.length blanked in
+        let rec go i =
+          if i + m > n then max_int
+          else if String.sub blanked i m = needle then i
+          else go (i + 1)
+        in
+        go 0
+      in
+      let tree_shipped (e : Include_resolver.include_entry) =
+        e.command = "input"
+        && Texmf_tree_allowlist.mem (String.trim e.raw_path)
+        && e.position < live_begin_off
       in
       List.iter
-        (fun rel ->
+        (fun (entry : Include_resolver.include_entry) ->
+          let rel = entry.raw_path in
           let candidate =
             (* DIR-SHADOW (OPEN-007 T2, 2026-09-02): when `p` exists but is a
                DIRECTORY and `p.tex` also exists, kpathsea reads the FILE —
@@ -284,9 +321,14 @@ let of_root ?(engine = Pdflatex) ?(declared_features = []) (root_path : string)
             else if Sys.file_exists (p ^ ".tex") then p ^ ".tex"
             else p
           in
-          let entry = { id = mk_id (); path = candidate; is_root = false } in
-          files := entry :: !files)
-        live_includes;
+          let locally_resolved =
+            Sys.file_exists candidate && not (Sys.is_directory candidate)
+          in
+          if (not locally_resolved) && tree_shipped entry then ()
+          else
+            let fe = { id = mk_id (); path = candidate; is_root = false } in
+            files := fe :: !files)
+        live_entries;
       Ok { files = List.rev !files; root = root_id; engine; declared_features }
 
 (* v27.1.62 (R7-4): detect an \input/\include CYCLE reachable from [root_path].

@@ -540,8 +540,8 @@ let run_explain (rule_id : string) : int =
     [NOT-READY] followed by one line per failing T0..T5 reason (exit 1). A .aux
     sibling, if present, informs the artefact check. A duplicate \\label is
     reported as a NON-BLOCKING advisory (OPEN-008). Returns the exit code. *)
-let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
-    : bool =
+let print_model_connected_verdict ~src ~tier
+    (proj : Latex_parse_lib.Project_model.t) : bool =
   let module CE = Latex_parse_lib.Compile_evidence in
   (* OPEN-007: the breaker GUARD must see the whole closure (a breaker in an
      \input child suppresses blanking of the root) while blanking itself stays
@@ -576,10 +576,27 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
   let blocking_premises (r : CE.premise_report) =
     r.CE.t2_closed && r.CE.t3_declared && r.CE.t3_body
   in
+  (* Phase A (2026-09-04). The old line read "MODEL-READY (Coq
+     project_wf_dec_sound => pdflatex_compile_safe)" — it named a theorem whose
+     conclusion is about the ABSTRACT model and let the reader hear "your
+     document compiles". Measured, that reading is wrong on 5.0% of certified
+     real papers (and 5.7% restricted to LP-Core, so scoping the citation to the
+     proven subset would make it MORE wrong, not less — which is why the tier
+     below is INFORMATION, not a gate).
+
+     ⚠ The prose must contain no bare `T<digit>` and no `XXX-999` token:
+     diff_real_roots.py scrapes reasons with \b(T\d|[A-Z]{2,8}-\d{3})\b over the
+     whole buffer, so such a token would be recorded as a BLOCKING reason for a
+     READY document. The obligations are therefore named in prose, never by
+     their T-numbers. *)
+  let state_field s = CE.verdict_state_to_string s in
   if CE.all_hold r then (
     printf
-      "MODEL-CONNECTED\tMODEL-READY (Coq project_wf_dec_sound => \
-       pdflatex_compile_safe)\n";
+      "MODEL-CONNECTED\t%s\ttier=%s\tbuild-graph closure and engine-feature \
+       admissibility verified over the abstract model; NOT a compilation \
+       guarantee (docs/COMPILATION_GUARANTEE.md)\n"
+      (state_field CE.Premise_certified)
+      (Latex_parse_lib.Language_profile.tier_to_string tier);
     true)
   else if blocking_premises r then (
     (* Every premise that bears on compilability holds; only nodup is unmet, and
@@ -591,16 +608,20 @@ let print_model_connected_verdict ~src (proj : Latex_parse_lib.Project_model.t)
        \b(T\d|[A-Z]{2,8}-\d{3})\b, so printing one here would record a blocking
        reason in results.json for a document that is now READY. *)
     printf
-      "MODEL-CONNECTED\tMODEL-INAPPLICABLE (nodup premise unmet; \
-       project_wf_dec_sound is one-directional, so it neither certifies nor \
-       rejects here)\n";
+      "MODEL-CONNECTED\t%s\ttier=%s\tduplicate-label obligation unmet; the \
+       capstone is one-directional, so it neither certifies nor rejects here\n"
+      (state_field CE.Premise_inapplicable)
+      (Latex_parse_lib.Language_profile.tier_to_string tier);
     printf
       "  advisory (non-blocking): duplicate \\label(s) [%s] — pdflatex warns \
        \"Label multiply defined\" and exits 0\n"
       (String.concat "; " (CE.duplicate_label_keys src));
     true)
   else (
-    printf "MODEL-CONNECTED\tMODEL-NOT-READY\n";
+    printf
+      "MODEL-CONNECTED\t%s\ttier=%s\ta compilability-bearing obligation failed\n"
+      (state_field CE.Premise_rejected)
+      (Latex_parse_lib.Language_profile.tier_to_string tier);
     if not r.t2_closed then
       printf "  T2 project_closed_b failed (build graph not closed/acyclic)\n";
     if not r.t3_declared then
@@ -655,7 +676,19 @@ let run_compile_check ~fast ~path ~src : int =
              Coq-proven model to hold; if either fails the process exits 1. This
              closes the shipped false-READY where a fontspec document exited 0
              READY (model NOT-READY was print-only) while pdflatex failed. *)
-          let model_ok = print_model_connected_verdict ~src proj in
+          (* C-41 discipline: the tier shown here must come from the SAME view
+             the readiness contract classifies (the gated comment-BLANKED view),
+             not the raw-view banner. Using the raw tier is exactly the mismatch
+             that let a commented-out foreign construct silence the
+             compile-blocking belt. *)
+          let verdict_tier, _ =
+            Latex_parse_lib.Language_profile.classify_source
+              (Latex_parse_lib.Compile_contract.classification_view ~source:src
+                 ())
+          in
+          let model_ok =
+            print_model_connected_verdict ~src ~tier:verdict_tier proj
+          in
           match (result, model_ok) with
           | Latex_parse_lib.Compile_contract.Ready, true ->
               printf "READY\t%s\n" path;

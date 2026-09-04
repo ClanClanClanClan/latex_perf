@@ -112,6 +112,25 @@ val report : project -> profile -> node list -> premise_report
 (** All four obligations, individually, for a MODEL-CONNECTED verdict line.
     [all_hold r] iff [project_wf_dec] would return [true]. *)
 
+type verdict_state =
+  | Premise_certified
+  | Premise_inapplicable
+  | Premise_rejected
+
+val verdict_state_to_string : verdict_state -> string
+(** The FROZEN machine-readable token printed as field 2 of the
+    [MODEL-CONNECTED] line. Consumers must parse this field and never the prose.
+    Says PREMISE, not PROVEN: [project_wf_dec_sound] certifies its premises over
+    the ABSTRACT model, and that certificate is measurably wrong on real
+    documents (9 of 179 certified sample-2 papers fail pdflatex; 5.7% when
+    restricted to LP-Core, i.e. scoping to the proven subset makes it MORE
+    wrong). *)
+
+val verdict_state : premise_report -> verdict_state
+(** [Premise_certified] iff [all_hold]; [Premise_inapplicable] when only the
+    duplicate-label obligation is unmet (the capstone is one-directional, so it
+    neither certifies nor rejects); [Premise_rejected] otherwise. *)
+
 val all_hold : premise_report -> bool
 
 (** ── Extraction from a real document ──────────────────────────────── *)

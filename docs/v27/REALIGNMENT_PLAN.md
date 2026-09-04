@@ -53,11 +53,15 @@ can be model-fatal **only** via a dangling build edge (T2) or an unadmitted
 feature (T3). **Expressible today: 0 of 31 = 0.0%.** Every fatal we catch, we
 catch with the *unproven heuristic belt*.
 
-**F2 — In production the model has ONE fatal channel, not two.**
-`Build_graph.of_project` adds every node unconditionally and
-`graph_of_build_graph` discards the `exists` bit, so `project_closed_b` is
-vacuously true; `declared_features` is always `[]`. Certification therefore
-reduces to four features behind ~ten substring guards.
+**F2 — The model's fatal channels are narrow, but NOT vacuous.** ⚠ v2 first
+claimed `project_closed_b` was structurally unreachable; **that is refuted by
+this repo's own committed data** — it fires on `2507.09165v1`
+(`results_sample2.json`). What is true: `Build_graph.of_project` adds every
+node unconditionally and `graph_of_build_graph` discards the `exists` bit, so
+the *dangling-edge* sub-channel is dead, while the acyclicity/topological-order
+sub-channel still fires. `declared_features` is always `[]`, so T3 reduces to
+four body features behind ~ten substring guards. Certification is therefore
+narrow — but "vacuous" was an overstatement, and D2 is rescoped accordingly.
 
 **F3 — Adequacy is not statable, and would be false.** There is no formal
 engine model: 0 `Axiom`/`Parameter`/`Hypothesis`/`Admitted` across 76 `.v`
@@ -82,18 +86,35 @@ reversed.
 
 ## 4. Plan
 
-### Phase A — Say only what is true (S, days)
+### Phase A — Say only what is true (S) ✅ SHIPPED
 
-- **A1** Gate the Coq citation on LP-Core. `print_model_connected_verdict`
-  takes the tier; today an LP-Foreign document can print it (measured).
-- **A2** Certification channel `PROVEN` / `HEURISTIC` beside the verdict.
-  Exit codes unchanged so all 82 fixtures survive. The three states already
-  exist internally; `ROADMAP.md:334` already specifies them.
-- **A3** Stop printing "compiles" for what is a premise-check. Given F1/F2 the
-  honest string names the premises verified (T2 closure, T3 features), not a
-  compilation guarantee. *Relabelling without this is not honesty.*
-- Already shipped: publishing the metric and both samples, and labelling the
-  constructed governance numbers.
+Re-ordered and re-scoped after review; v1's ordering (A1→A2→A3) was wrong.
+
+- **A0** Commit the metric's PRODUCER. The artefacts were committed without
+  one, so changing a verdict string would have frozen the published number
+  while every gate stayed green. `gen_proven_coverage.py`, provenance-stamped,
+  parsing the frozen token only. **Blocking prerequisite, not an afterthought.**
+- **A3 first** — the string. It no longer cites a compile theorem; it names
+  what was verified (build-graph closure, engine-feature admissibility) and
+  says it is NOT a compilation guarantee. ⚠ It must contain **no bare
+  `T<digit>` and no `XXX-999` token**: `diff_real_roots.py` scrapes reasons
+  over the whole buffer, so naming the obligations by number would record a
+  blocking reason for every READY document.
+- **A1′ — tier is a FIELD, not a gate.** Gating the citation on LP-Core was
+  measurably ANTI-honest: the certificate is wrong on 5.0% of certified real
+  papers but **5.7%** restricted to LP-Core. The tier is printed as
+  information, sourced from `Compile_contract.classification_view` — the same
+  comment-blanked view the contract classifies, because sourcing it from the
+  raw view is precisely C-41.
+- **A2 last** — three states, not two (`PREMISE-CERTIFIED` /
+  `PREMISE-INAPPLICABLE` / `PREMISE-REJECTED`), owned by
+  `Compile_evidence.verdict_state`. Exit codes unchanged, so all 83 fixtures
+  survive. No token contains "proven": while a certified LP-Core document can
+  fail pdflatex, such a token would be false on a measurable population.
+- **Metric renamed** to *premise-certified coverage* in the generated block.
+- ⚠ The published LP-Core numbers moved (84→90, 76→79) **because the tier is
+  now taken from the view the contract classifies, not the raw banner** — a
+  measurement-source correction, NOT progress.
 
 ### Phase B — The constraint leg: zero false-READY
 
@@ -125,10 +146,11 @@ Not adequacy (F3). In dependency order:
 - **D1** `model_fatal_iff` — a characterisation theorem turning F1/F2 from
   prose into `Qed`, with `vm_compute`d counterexamples keyed to arXiv ids.
   Cheap, and it makes the weakness *provable* rather than asserted. **S**
-- **D2** Resurrect the dead T2 channel: stop discarding `exists`, put
-  `\includegraphics` targets in the build graph. Reuses `edge_token` /
-  `node_known_b` / `project_closed`, which are already proved — zero new
-  capstone obligations, catches 2 of the 9. **S-M**
+- **D2** Restore the *dangling-edge* sub-channel (not the whole of T2, which
+  already fires — see F2): stop discarding `exists`, put `\includegraphics`
+  targets in the build graph. Reuses `edge_token` / `node_known_b` /
+  `project_closed`, already proved — zero new capstone obligations, catches 2
+  of the 9. **S-M**
 - **D3** Widen `body_token` along §3's ranking, each constructor with an
   extraction-faithfulness lemma. The 58% counter-collision class needs
   declaration state in the model; that is the real frontier. **L-XL,

@@ -134,6 +134,19 @@ let t2_check (proj : Project_model.t) : reason list =
    result between T0 and T5's PRT context). [parse_errors] is only consulted on
    the LP_Core/LP_Extended branch — on LP_Foreign we short-circuit before any
    parse would be needed. *)
+(* The view the readiness contract CLASSIFIES. Extracted so every consumer of
+   the tier uses one definition: C-41 was exactly a case where two callers
+   disagreed about which view the tier came from, and a commented-out foreign
+   construct then silenced the whole compile-blocking belt. *)
+let classification_view ?probe ~(source : string) () : string =
+  let sources =
+    match probe with
+    | Some p when p != source -> [ source; p ]
+    | _ -> [ source ]
+  in
+  if Validators_common.comment_blanking_breakers sources then source
+  else Validators_common.blank_line_comments source
+
 let t0_check_with_errors ?probe ~(source : string)
     ~(parse_errors : (string * Parser_l2.loc) list) (proj : Project_model.t) :
     reason list =
@@ -145,15 +158,7 @@ let t0_check_with_errors ?probe ~(source : string)
      as every comment channel; line numbers survive (blanking is
      length-preserving, EOLs kept). Measured frame delta: exactly ONE document
      flips, the target. *)
-  let classify_view =
-    let sources =
-      match probe with
-      | Some p when p != source -> [ source; p ]
-      | _ -> [ source ]
-    in
-    if Validators_common.comment_blanking_breakers sources then source
-    else Validators_common.blank_line_comments source
-  in
+  let classify_view = classification_view ?probe ~source () in
   match Language_profile.classify_source classify_view with
   | Language_profile.LP_Foreign, feats ->
       let describe (f : Unsupported_feature.t) =

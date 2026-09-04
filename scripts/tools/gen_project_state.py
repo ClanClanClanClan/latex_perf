@@ -165,7 +165,11 @@ def build(repo: Path) -> str:
         f = repo / path
         if not f.is_file():
             return []
-        rows = json.loads(f.read_text())
+        raw = json.loads(f.read_text())
+        # Phase A: the artefact gained provenance + summary; rows moved under
+        # a key. Accept both shapes so a stale artefact fails LOUDLY on the
+        # count rather than silently reading zero rows.
+        rows = raw["rows"] if isinstance(raw, dict) else raw
         n = len(rows)
         certified_ok = sum(1 for r in rows
                            if r.get("model") == "certified" and r["cell"] == "true-READY")
@@ -183,15 +187,20 @@ def build(repo: Path) -> str:
     pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
                        "**sample 2 (virgin)**")
     if pb:
-        L += ["### Proven-verdict coverage — THE North-Star metric", "",
-              "`PROVEN` = the Coq-extracted checker certified the document "
-              "(`MODEL-READY`) **and** pdflatex compiled it. The guarantee doc "
-              "scopes the claim to LP-Core (`COMPILATION_GUARANTEE.md`), so the "
-              "LP-Core column is the number this project is entitled to publish; "
-              "the wider column counts every certified document regardless of "
-              "tier, which is what the runtime actually prints today (OPEN-015).",
+        L += ["### Premise-certified coverage — THE North-Star metric", "",
+              "The ROADMAP calls this *proven-verdict coverage*. It is "
+              "published here as **premise-certified** coverage, because that "
+              "is what the artefact measures and what the CLI now prints: the "
+              "Coq-extracted checker certified its PREMISES over the abstract "
+              "model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the "
+              "document. It is not a proof that the document compiles — "
+              "measured, that reading is wrong on 5.0% of certified real "
+              "papers, and 5.7% when restricted to LP-Core, so scoping the "
+              "claim to the proven subset makes it MORE wrong, not less. The "
+              "guarantee doc scopes the claim to LP-Core, so that column is "
+              "the number this project may publish.",
               "",
-              "| corpus | proven (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |",
+              "| corpus | premise-certified (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |",
               "|---|---|---|---|---|"] + pb + [""]
 
     # ── OUT-OF-SAMPLE POSITION ──────────────────────────────────────────

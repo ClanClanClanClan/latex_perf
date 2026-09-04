@@ -399,8 +399,15 @@ logic*. It is built from three pieces:
    types (a 1:1 constructor map in `compile_evidence.ml`) and runs the
    **extracted** `project_wf_dec` (module `Compile_guarantee_extracted`,
    generated from `proofs/CompileGuaranteeExtract.v`). It prints
-   `MODEL-CONNECTED MODEL-READY` iff the extracted proven function returns
-   `true` (else `MODEL-NOT-READY` with the failing T2/T3/T4 obligation).
+   `MODEL-CONNECTED <STATE> tier=<tier> <prose>` where `<STATE>` is the
+   frozen token `PREMISE-CERTIFIED` / `PREMISE-INAPPLICABLE` /
+   `PREMISE-REJECTED`, owned by `Compile_evidence.verdict_state_to_string`.
+   Consumers parse field 2 and never the prose. The token says PREMISE, not
+   PROVEN: the extracted function certifies its premises over the ABSTRACT
+   model, and measured against real papers that certificate is wrong 5.0% of
+   the time (5.7% restricted to LP-Core — scoping the claim to the proven
+   subset makes it MORE wrong, not less). `tier=` is INFORMATION, not a gate,
+   and is taken from the comment-blanked view the contract classifies.
    Default (no-flag) output is byte-identical. The hand-written OCaml mirror of
    the boolean checkers is **removed**.
 
@@ -462,7 +469,7 @@ over-rejection, never a false-READY, consistent with soundness-paramount.
 
 Net effect: residual (a) — "the runtime runs a hand-written mirror, not the
 proven code" — is **closed**, and residual (i) — the bytes→`body_token` front-end
-— is now **proven-and-executed** too (v27.1.58). READY + `MODEL-READY` means "for
+— is now **proven-and-executed** too (v27.1.58). READY + `PREMISE-CERTIFIED` means "for
 the abstract project we extracted from your source, the *proven, Coq-extracted*
 front-end and checker certify the capstone premises hold." It still does **not**
 mean "your exact bytes are certified to compile", because the trusted base above
@@ -470,8 +477,8 @@ mean "your exact bytes are certified to compile", because the trusted base above
 toolchain) is trusted/tested rather than verified end-to-end.
 
 Treat `--compile-check` as a fast, honest fail-first gate: NOT-READY (or
-`MODEL-NOT-READY`) reliably means "do not bother running latexmk yet"; READY +
-`MODEL-READY` means "no runtime precondition we check is violated, and the
+`PREMISE-REJECTED`) reliably means "do not bother running latexmk yet"; READY +
+`PREMISE-CERTIFIED` means "no runtime precondition we check is violated, and the
 extracted project passes the proven premise-check" — then run your real build.
 
 ---

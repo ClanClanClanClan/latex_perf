@@ -122,9 +122,10 @@ val verdict_state_to_string : verdict_state -> string
     [MODEL-CONNECTED] line. Consumers must parse this field and never the prose.
     Says PREMISE, not PROVEN: [project_wf_dec_sound] certifies its premises over
     the ABSTRACT model, and that certificate is measurably wrong on real
-    documents (9 of 179 certified sample-2 papers fail pdflatex; 5.7% when
-    restricted to LP-Core, i.e. scoping to the proven subset makes it MORE
-    wrong). *)
+    documents: 12 of 179 certified sample-2 papers fail pdflatex (6.7%), 11 of
+    181 in sample 1 (6.1%). Restricting to LP-Core does NOT reliably improve it
+    — 7.6% on sample 2, 4.3% on sample 1 (C-43 corrected the older 5.0%/5.7%
+    figures, which were stale and claimed a direction that does not hold). *)
 
 val verdict_state : premise_report -> verdict_state
 (** [Premise_certified] iff [all_hold]; [Premise_inapplicable] when only the

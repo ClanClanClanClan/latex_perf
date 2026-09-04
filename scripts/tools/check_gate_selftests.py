@@ -59,7 +59,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-MIN_MUTATIONS = 9
+MIN_MUTATIONS = 10
 
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
@@ -142,6 +142,19 @@ def append_discarding_proof(text: str) -> str:
     """
     return text + ("\nLemma killtest_discard : forall (a b : nat), True.\n"
                    "Proof. intros _ _. exact I. Qed.\n")
+
+
+def drift_baseline_split(text: str) -> str:
+    """C-43. Push baseline.error_halt off the live fixture split.
+
+    Keeps false_ready_total correct, so this arm can only be killed by the
+    sub-count check — not by the pre-existing total check.
+    """
+    d = json.loads(text)
+    b = d["baseline"]
+    assert "error_halt" in b, "baseline split gone; update registry"
+    b["error_halt"] = b["error_halt"] + 5
+    return json.dumps(d, indent=1) + "\n"
 
 
 def flip_polyglossia(text: str) -> str:
@@ -261,6 +274,15 @@ REGISTRY = [
                      "corpora/false_ready/manifest.json",
                      r"UNRECORDED FIX|REGRESSION \(a fixed false-READY",
                      transform=flip_polyglossia),
+            # C-43. baseline.strong_fatal/error_halt sat frozen at the round-7
+            # values while the live set nearly doubled, because nothing read
+            # them. They are gated now; this arm keeps them gated. The regex
+            # names the sub-count message specifically so the pre-existing
+            # total check cannot supply a false kill.
+            Mutation("baseline sub-count drifted off the live split",
+                     "corpora/false_ready/manifest.json",
+                     r"baseline\.error_halt=\d+ disagrees with \d+ live fixtures",
+                     transform=drift_baseline_split),
         ]),
 ]
 

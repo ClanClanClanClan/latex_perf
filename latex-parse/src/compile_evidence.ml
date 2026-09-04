@@ -181,10 +181,12 @@ type premise_report = {
 
    The tokens deliberately say PREMISE, not PROVEN. `project_wf_dec_sound`
    certifies its premises over the ABSTRACT model, and measured against real
-   documents that certificate is wrong 5.0% of the time (9 of 179 certified
-   sample-2 papers fail pdflatex) — and 5.7% when restricted to LP-Core, so
-   scoping the claim to the proven subset makes it MORE wrong, not less. A token
-   containing "proven" would therefore be false on a measurable population. *)
+   documents that certificate is wrong 6.7% of the time (12 of 179 certified
+   sample-2 papers fail pdflatex; 11 of 181 = 6.1% in sample 1). Restricting to
+   LP-Core does not reliably help — 7.6% on sample 2 but 4.3% on sample 1. A
+   token containing "proven" would therefore be false on a measurable
+   population. (C-43: the older 5.0%/5.7% figures were stale, and the claim that
+   LP-Core scoping is always worse does not survive both samples.) *)
 type verdict_state =
   | Premise_certified  (** every obligation holds *)
   | Premise_inapplicable  (** only the nodup obligation is unmet *)

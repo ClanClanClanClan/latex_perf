@@ -563,13 +563,29 @@ let print_model_connected_verdict ~src ~tier
      "the model cannot certify this" as "this will not compile" is an inversion
      of the theorem.
 
-     It matters most for the nodup premise, because a duplicate \label is not a
-     compile error at all. Measured against the pinned oracle under BOTH
-     protocols: two \label{same} give rc 0 and a PDF, with "LaTeX Warning: Label
-     `same' multiply defined." in the log. On the 200-paper real corpus the
+     It matters most for the nodup premise, because a duplicate \label is almost
+     always benign. Measured against the pinned oracle under BOTH protocols: two
+     \label{same} give rc 0 and a PDF, with "LaTeX Warning: Label `same'
+     multiply defined." in the log. On the 200-paper real corpus the
      duplicate-label premise was the ONLY unmet one for NINE documents and all
-     nine compile; across all 18 documents where it fires, pdflatex rejects
-     ZERO.
+     nine compile.
+
+     C-43. The stronger claim this comment used to make — "a duplicate \label is
+     not a compile error at all", "pdflatex rejects ZERO" — is REFUTED. When the
+     duplicated key is consumed in a NUMBER-forcing context the LAST \newlabel
+     written wins, so the duplicate changes which value is read:
+     \getrefnumber{k} inside \setcounter, with the second definition under
+     \renewcommand{\theenumi}{\alph{enumi}}, reads "a" and dies "! Missing
+     number, treated as zero". It never converges — the dying pass truncates the
+     .aux, so rc oscillates 0,1,0,1 forever, and the unique-key controls compile
+     cleanly. Pinned by fixtures fr_dup_numeric_kill/fr_dup_length_kill.
+
+     This does NOT restore the rejection, for two reasons. dec = false still
+     implies nothing (above), and the mechanism has natural incidence ZERO: over
+     2,961 corpus papers 31% carry a duplicate label, only 3 use a
+     number-forcing reference context at all, and the conjunction never occurs.
+     So it is recorded as a fixture and left undetected, per the precedent that
+     a zero-incidence class does not earn a detector.
 
      So the verdict is three-way: certified / not-certifiable-but-not-rejected /
      rejected. Only the third exits non-zero. *)
@@ -579,10 +595,17 @@ let print_model_connected_verdict ~src ~tier
   (* Phase A (2026-09-04). The old line read "MODEL-READY (Coq
      project_wf_dec_sound => pdflatex_compile_safe)" — it named a theorem whose
      conclusion is about the ABSTRACT model and let the reader hear "your
-     document compiles". Measured, that reading is wrong on 5.0% of certified
-     real papers (and 5.7% restricted to LP-Core, so scoping the citation to the
-     proven subset would make it MORE wrong, not less — which is why the tier
-     below is INFORMATION, not a gate).
+     document compiles". Measured, that reading is wrong on 6.7% of certified
+     papers in the virgin sample 2 (12 of 179) and 6.1% in sample 1 (11 of 181).
+
+     C-43. The figures here used to read 5.0%/5.7%, and argued that scoping the
+     citation to LP-Core would make it MORE wrong. Both are corrected. The rates
+     were stale — sample 2 was re-graded by the shell-escape fix and this prose
+     was not — and the DIRECTION IS NOT STABLE across samples: LP-Core is worse
+     on sample 2 (7.6%, 7 of 92) but better on sample 1 (4.3%, 4 of 94). The
+     tier below is INFORMATION rather than a gate because neither rate is
+     anywhere near zero on either sample, not because restricting to LP-Core
+     reliably concentrates the error.
 
      ⚠ The prose must contain no bare `T<digit>` and no `XXX-999` token:
      diff_real_roots.py scrapes reasons with \b(T\d|[A-Z]{2,8}-\d{3})\b over the

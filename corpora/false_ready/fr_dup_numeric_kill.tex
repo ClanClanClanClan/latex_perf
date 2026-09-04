@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{refcount}
+\newcounter{mycnt}
+\begin{document}
+\section{One}\label{k:d}
+\begin{enumerate}
+\renewcommand{\labelenumi}{\alph{enumi})}
+\renewcommand{\theenumi}{\alph{enumi}}
+\item Item\label{k:d}
+\end{enumerate}
+\setcounter{mycnt}{\getrefnumber{k:d}}
+Counter is \themycnt.
+\end{document}

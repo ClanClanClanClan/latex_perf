@@ -100,9 +100,11 @@ Re-ordered and re-scoped after review; v1's ordering (A1→A2→A3) was wrong.
   `T<digit>` and no `XXX-999` token**: `diff_real_roots.py` scrapes reasons
   over the whole buffer, so naming the obligations by number would record a
   blocking reason for every READY document.
-- **A1′ — tier is a FIELD, not a gate.** Gating the citation on LP-Core was
-  measurably ANTI-honest: the certificate is wrong on 5.0% of certified real
-  papers but **5.7%** restricted to LP-Core. The tier is printed as
+- **A1′ — tier is a FIELD, not a gate.** The certificate is wrong on **6.7%**
+  of certified sample-2 papers and 6.1% of sample 1; restricting to LP-Core
+  gives 7.6% / 4.3%, so it does not reliably help either way (C-43 corrected
+  the stale 5.0%/5.7% pair and the unstable direction claimed from it). Gating
+  the citation on a tier therefore buys no honesty. The tier is printed as
   information, sourced from `Compile_contract.classification_view` — the same
   comment-blanked view the contract classifies, because sourcing it from the
   raw view is precisely C-41.

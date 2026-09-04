@@ -22,7 +22,7 @@ def run_to_fixpoint(work, toplevel):
     rc, passes = 1, 0
     while passes < MAX_PASSES:
         try:
-            t = subprocess.run(["pdflatex", "-no-shell-escape",
+            t = subprocess.run(["pdflatex",
                                 "-interaction=nonstopmode", "-halt-on-error", toplevel],
                                cwd=work, env=ENV, capture_output=True, timeout=TIMEOUT)
         except subprocess.TimeoutExpired:
@@ -33,7 +33,7 @@ def run_to_fixpoint(work, toplevel):
     if rc != 0:
         return rc, passes
     try:
-        confirm = subprocess.run(["pdflatex", "-no-shell-escape",
+        confirm = subprocess.run(["pdflatex",
                                   "-interaction=nonstopmode", "-halt-on-error", toplevel],
                                  cwd=work, env=ENV, capture_output=True, timeout=TIMEOUT)
     except subprocess.TimeoutExpired:
@@ -67,8 +67,7 @@ def grade(aid, top):
                        capture_output=True, text=True, timeout=TIMEOUT)
     cli_ready = (c.returncode == 0)
     reasons = [l.strip() for l in (c.stdout + c.stderr).splitlines()
-               if l.strip().startswith(("T0", "T2", "T3", "T4", "T5"))
-               or "\tPREMISE-REJECTED\t" in l]
+               if l.strip().startswith(("T0", "T2", "T3", "T4", "T5", "MODEL-NOT"))]
     cell = ("true-READY" if compiles and cli_ready else
             "false-NOT-READY" if compiles and not cli_ready else
             "FALSE-READY" if not compiles and cli_ready else "true-NOT-READY")

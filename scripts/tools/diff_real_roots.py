@@ -50,7 +50,7 @@ ORACLE = {
     "engine": "pdflatex",
     "distribution": "TeX Live 2026",
     "version": PIN,
-    "protocol": ("-interaction=nonstopmode -halt-on-error -no-shell-escape, "
+    "protocol": ("-interaction=nonstopmode -halt-on-error, "
                  "up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint)"),
 }
 
@@ -210,7 +210,18 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
     for _ in range(max_passes):
         try:
             t = subprocess.run(
-                ["pdflatex", "-no-shell-escape", "-interaction=nonstopmode",
+                # OPEN-053: RESTRICTED shell-escape — pdflatex's DEFAULT
+                # (`shell_escape = p`, `repstopdf` allowlisted) — because the
+                # oracle must model what our CONSUMERS run: interactive
+                # authors and publishers (ROADMAP section 0), both of whom use
+                # the stock engine. Passing `-no-shell-escape` made 19 of 22
+                # affected frame papers grade as failures although they
+                # compile in the real world. It also disagreed with
+                # false_ready_oracle.sh, the REQUIRED tex-oracle gate, which
+                # has always run in default mode: two oracles, two ground
+                # truths. Restricted mode IS the hardened posture SEC1 asks
+                # for — its allowlist holds only vetted wrappers.
+                ["pdflatex", "-interaction=nonstopmode",
                  "-halt-on-error", toplevel],
                 cwd=work, env=env, capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -222,7 +233,7 @@ def run_to_fixpoint(work: Path, toplevel: str, env: dict, timeout: int,
         return rc, passes
     try:
         confirm = subprocess.run(
-            ["pdflatex", "-no-shell-escape", "-interaction=nonstopmode",
+            ["pdflatex", "-interaction=nonstopmode",
              "-halt-on-error", toplevel],
             cwd=work, env=env, capture_output=True, timeout=timeout)
     except subprocess.TimeoutExpired:

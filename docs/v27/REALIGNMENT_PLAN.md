@@ -118,7 +118,13 @@ Re-ordered and re-scoped after review; v1's ordering (A1→A2→A3) was wrong.
 
 ### Phase B — The constraint leg: zero false-READY
 
-- **B1** epstopdf detector — OPEN-047, 2 of the 9, cheapest reduction. **M**
+- ~~**B1** epstopdf detector — OPEN-047~~ ❌ **REFUTED before implementation
+  (C-42).** The fatal came from the `-no-shell-escape` flag OUR harness passed:
+  restricted shell-escape is the pdflatex DEFAULT, `repstopdf` is allowlisted,
+  and 19 of the 22 matching frame papers compile in the real world. The
+  detector would have shipped at 13.6% precision / 0% causal. Fixed at the
+  oracle instead (OPEN-053): **false-READY 9 → 7, correctness 179/200 =
+  89.5%**. The constraint leg now has 7 documents, not 9.
 - **B2** Triage the remaining 7 against §3's class table: each becomes either
   a detector (heuristic belt) or a model widening (Phase D). **M**
 - **B3** Keep the belt honest. C-41 (the tier filter silencing the whole

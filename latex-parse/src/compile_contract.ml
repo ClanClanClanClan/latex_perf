@@ -457,6 +457,22 @@ let closure_segments (proj : Project_model.t) ~(root_src : string) :
           else if starts "\\include{" then Some 9
           else None
         in
+        (* TWO-GROUP replace-style: the `import` package's [\import{dir}{file}]
+           / [\subimport{dir}{file}] (and their starred forms), where the child
+           path is dir ^ file. OPEN-034/C-39: a real paper put its whole
+           preamble in [\subimport{tex}{header.tex}] — thmtools load +
+           shared-counter [\newtheorem] — and because the closure could not SEE
+           that file, the shipped OPEN-002 detector never fired: a MEASURED
+           false-READY on virgin data (2507.11132v1, "! Command \c@lemma already
+           defined"). Exactly the C-37 shape: every closure-matcher gap is a
+           future manufacture. *)
+        let import_cl =
+          if starts "\\subimport*{" then Some 12
+          else if starts "\\subimport{" then Some 11
+          else if starts "\\import*{" then Some 9
+          else if starts "\\import{" then Some 8
+          else None
+        in
         (* keep-style: \usepackage[..]{a,b} / \RequirePackage /
            \documentclass *)
         let keep_kind =
@@ -466,6 +482,47 @@ let closure_segments (proj : Project_model.t) ~(root_src : string) :
           else None
         in
         match (replace_cl, keep_kind) with
+        | None, _ when import_cl <> None -> (
+            (* read {dir} then {file}; splice the child at dir/file *)
+            let cl = match import_cl with Some c -> c | None -> 0 in
+            let j = ref (pos + cl) in
+            while !j < n && masked.[!j] <> '}' do
+              incr j
+            done;
+            if !j >= n then i := pos + 1
+            else
+              let dir = String.sub src (pos + cl) (!j - pos - cl) in
+              let k = ref (!j + 1) in
+              while
+                !k < n
+                && (masked.[!k] = ' '
+                   || masked.[!k] = '\t'
+                   || masked.[!k] = '\n'
+                   || masked.[!k] = '\r')
+              do
+                incr k
+              done;
+              if !k >= n || masked.[!k] <> '{' then i := !j + 1
+              else
+                let fstart = !k + 1 in
+                let e = ref fstart in
+                while !e < n && masked.[!e] <> '}' do
+                  incr e
+                done;
+                if !e >= n then i := pos + 1
+                else
+                  let file = String.sub src fstart (!e - fstart) in
+                  let rel = Filename.concat dir file in
+                  match resolve_with [ ".tex" ] rel with
+                  | Some path -> (
+                      match claim path with
+                      | Some child ->
+                          push key (String.sub src !last (pos - !last));
+                          walk (depth + 1) path child;
+                          last := !e + 1;
+                          i := !e + 1
+                      | None -> i := !e)
+                  | None -> i := !e)
         | Some cl, _ -> (
             let j = ref (pos + cl) in
             while !j < n && masked.[!j] <> '}' do

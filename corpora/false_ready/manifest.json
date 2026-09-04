@@ -909,6 +909,17 @@
       "pdflatex": "error-halt",
       "expected_cli": "READY",
       "note": "OPEN-010 TRADED-RISK live false-READY (2026-09-04): UNBALANCED use of the redefined \\( inside $-math — 'Missing \\right. inserted', halt rc 1. Same zero-incidence trade as fr_delim003_text_use: the scanner no longer treats def-name tokens as delimiters, so the \\left hidden behind the macro is invisible. Recorded."
+    },
+    {
+      "id": "fr_subimport_thmtools",
+      "path": "fr_subimport_thmtools/doc.tex",
+      "kind": "tree",
+      "class": "closure-matcher",
+      "fix_rank": 20,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "C-39 kill pin (2026-09-04): the whole preamble is reached ONLY through the import package's \\subimport{tex}{header.tex} — thmtools load + shared-counter \\newtheorem{lemma}[theorem]. The closure walk matched only \\input/\\include, so the OPEN-002 detector could not SEE the declaration and the CLI said READY on a preamble-fatal doc (rc 1,1): a MEASURED false-READY found on VIRGIN sample-2 data (2507.11132v1). closure_segments now splices \\import/\\subimport (starred forms too). If this flips READY the two-group arm regressed."
     }
   ]
 }

@@ -1,0 +1,17 @@
+% fr_thmtools_child_load — the OPEN-002 pattern SPLIT ACROSS FILES.
+%
+% The thmtools load lives in the \input child; the shared-counter declarations
+% live in the root. 6 of the detector rule's first-derivation false negatives
+% were exactly this shape (preamble.tex / packages.tex / macros.tex), which is
+% why the detector runs on the CLOSURE-RESOLVED source
+% (Compile_contract.read_closure_source), not the root bytes.
+%
+% pdflatex (pin): rc 1 at preamble time, "! LaTeX Error: Command \c@lemma
+% already defined." — on the FIRST pass and the confirming pass alike.
+\documentclass{article}
+\input{pre}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\begin{document}
+Body.
+\end{document}

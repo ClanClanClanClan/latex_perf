@@ -1,0 +1,2115 @@
+{
+  "sample": "OPEN-034 sample 2 \u2014 ranks 201-400 of the frame sorted by sha256(arxiv_id) ascending",
+  "frame": "2,719 pdflatex/single-toplevel packages (00README.json), same rule as sample 1",
+  "oracle": {
+    "version": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+    "protocol": "run_to_fixpoint mirror: <=3 passes, -halt-on-error kept, break on first rc 0, then ONE confirming pass (authoritative rc)"
+  },
+  "counts": {
+    "true-READY": 169,
+    "false-NOT-READY": 14,
+    "FALSE-READY": 9,
+    "true-NOT-READY": 8
+  },
+  "correct": 177,
+  "graded": 200,
+  "docs": [
+    {
+      "arxiv_id": "2506.11486v1",
+      "toplevel": "DUDSBSbinomialsForArxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.13684v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.16102v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.16179v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.16210v2",
+      "toplevel": "main/New_IEEEtran_how-to.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 2,
+      "first_error": "",
+      "cli_rc": 1,
+      "cli_reasons": [
+        "T0 parse fails in /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2506.16210v2/main/New_IEEEtran_how-to.tex: Expected \\end{table*} but got \\end{tabular} (line 464, offset 47610)",
+        "T5 rule violations: [PRT-001]"
+      ],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.16582v1",
+      "toplevel": "articleV0.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.16708v1",
+      "toplevel": "HBps.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T0 parse fails in /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2506.16708v1/HBps.tex: LP-Foreign construct(s): \\catcode direct mutation detected; LP-Foreign (line 22)"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN \u2014 T0 LP-Foreign deliberate scope-gate policy class (the \"recorded policy pins\" family): same channel as OPEN-046 (T0-policy LP-Foreign over-rejection; trigger there was \\detokenize, described as \"the LAST T0-policy residual on the sample\" \u2014 sample-1; this sample-2 hit shows the class extends into the tail with another trigger) and pinned as deliberate policy by fixture fr_lpforeign_openout_live in corpora/false_ready/manifest.json (\"compiles rc 0,0 but ... LP-Foreign is a deliberate SCOPE gate, not compile prediction\"). Trigger id here: catcode_mutation_direct (unsupported_feature.ml:45-",
+      "autopsy_mechanism": "FALSE-NOT-READY, single reason. HBps.tex line 22 (byte offset 700) contains `\\catcode`\\@=11` \u2014 the plain-TeX \\makeatletter idiom inside a legacy \"draft style\" preamble macro block; it is the file's ONLY \\catcode occurrence and is harmless (pdflatex rc=0, clean 24-page PDF). The CLI's foreign_triggers table entry catcode_mutation_direct (latex-parse/src/unsupported_feature.ml, f_pattern \"\\\\catcode\" \u2014 deliberately matches the bare control word) fires, Language_profile.classify_source sets profile=lp-foreign, and t0_check rejects while the model channel says MODEL-READY. Scope-gate policy hold, n",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2506.17165v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17193v1",
+      "toplevel": "MatalonSpillane.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17636v1",
+      "toplevel": "root.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17648v1",
+      "toplevel": "main_Ali.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17768v1",
+      "toplevel": "neurips_2025.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T5 rule violations: [DELIM-003; DELIM-004]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "NEW \u2014 dollar-toggle box-blindness in compute_math_segments (nested $...$ inside an hbox-argument within outer $...$). Adjacent to but distinct from OPEN-010's DELIM-003 residual (that class is macro-split \\def\\({\\left(} phantom ranges; this one involves no macros). Not OPEN-043/044/045/046, not DELIM-001 argument-position, no fr_* fixture covers it. Signature: DELIM-003 AND DELIM-004 both fire count-1 from one construct.",
+      "autopsy_mechanism": "false-NOT-READY. neurips_2025.tex line 340: $\\vA^\\top = \\left[\\begin{smallmatrix} \\vI \\\\ \\scalebox{0.75}[1.0]{$-$} \\vI\\end{smallmatrix}\\right] \\in\\mathbb{R}^{2P \\times P}$ \u2014 legal nested inline math ($-$) inside a box-command argument inside outer $-math. compute_math_segments tracks $ with a flat toggle and no box/group awareness, so the four unescaped $ on the line parse as TWO phantom segments split at the inner pair: segment A ends \"...\\scalebox{0.75}[1.0]{\" holding only \\left[ (DELIM-003, count 1); segment B starts \"} \\vI...\" holding only \\right] (DELIM-004, count 1). pdflatex compiles be",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2506.17809v1",
+      "toplevel": "flatness.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17880v1",
+      "toplevel": "AAmain_arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.17983v2",
+      "toplevel": "MICCAI2025_paper_template.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2506.18287v1",
+      "toplevel": "skdual.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.18436v1",
+      "toplevel": "main.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX cmd Error: Command '\\AddToDocumentProperties' already defined.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.18482v2",
+      "toplevel": "ReaPER_preprint.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.18809v1",
+      "toplevel": "implicit_timestepping.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.18869v1",
+      "toplevel": "main.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Undefined control sequence.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.19031v1",
+      "toplevel": "icml2025.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19104v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19186v1",
+      "toplevel": "arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19431v2",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19455v1",
+      "toplevel": "sn-article.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19560v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19568v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.19812v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.20333v1",
+      "toplevel": "samplepaper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.20372v1",
+      "toplevel": "DampPosOpti.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.20456v2",
+      "toplevel": "Final-fractals.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.20623v2",
+      "toplevel": "arxiv_v2.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.21146v1",
+      "toplevel": "neurips_submission.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.21275v1",
+      "toplevel": "BIFFLUID.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T0 parse fails in /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2506.21275v1/BIFFLUID.tex: Expected \\end{document} but got \\end{tikzpicture} (line 225, offset 30963)",
+        "T5 rule violations: [PRT-001]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "NEW \u2014 proposed name: nested-tikzpicture verbatim-scan desync. Two composing L2-parser defects: (1) tikzpicture is in verbatim_envs (latex-parse/src/parser_l2.ml:142-143) and parse_env_body (parser_l2.ml:255-269) consumes raw bytes to the FIRST literal \\end{tikzpicture} \u2014 nesting-blind and brace-blind, so a picture-in-node truncates the outer span; (2) the bare-'}' case in parse_nodes (parser_l2.ml:651-655) silently terminates ANY frame including environment frames, so the leftover '};' closes the enclosing figure without error and the visible mismatch is deferred to the outer \\end{tikzpicture}",
+      "autopsy_mechanism": "FALSE-NOT-READY (pdflatex rc=0 both protocols; CLI NOT-READY). Single mechanism, two surfaced reasons (PRT-001 merely re-reports the T0 parse error count). The L2 parser treats tikzpicture as an opaque verbatim environment: parse_env_body scans raw bytes for the FIRST literal '\\end{tikzpicture}' with no nesting count. BIFFLUID.tex line 169's outer \\begin{tikzpicture} is therefore closed at line 189 \u2014 the end of the tikzpicture nested inside '\\node[...] (TR) {...}'. Parsing resumes at the leftover '};' (line 190); the bare '}' silently terminates the figure environment frame (parse_nodes' Some ",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2506.21350v1",
+      "toplevel": "algebraic_groups.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.21830v1",
+      "toplevel": "main0303.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Use of \\cref@override@label@type doesn't match its definition.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.21932v1",
+      "toplevel": "sample-sigconf-authordraft.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.22126v1",
+      "toplevel": "GIT2Comp_2025_06_27.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.22204v1",
+      "toplevel": "arXiv/arxiv-ot-phyiscs-iclr.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 2,
+      "first_error": "",
+      "cli_rc": 1,
+      "cli_reasons": [
+        "T2 project not closed: missing file /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2506.22204v1/arXiv/math_commands.tex"
+      ],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.22317v1",
+      "toplevel": "statistics_of_MIS_s_final.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@conj already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2506.22754v1",
+      "toplevel": "arxiv-062025.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.22994v1",
+      "toplevel": "KOD.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23084v1",
+      "toplevel": "Wave_equation_new.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23238v1",
+      "toplevel": "29-KrdPar-arXiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23453v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23481v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23550v2",
+      "toplevel": "main.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T0 parse fails in /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2506.23550v2/main.tex: LP-Foreign construct(s): \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1790); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791); \\catcode direct mutation detected; LP-Foreign (line 1791)"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN class, NEW instance. Class = OPEN-044 (whole-file byte scans fire on INERT definition bodies) expressed in the T0 Language_profile LP-Foreign channel \u2014 the exact channel-and-shape of OPEN-046, whose recorded instance is the adjacent foreign_triggers entry (\\detokenize in a \\newcommand body); this instance is catcode_mutation_direct on the apsrev4-2 .bbl \\@sanitize@url template (likely high-prevalence: every merged-.bbl revtex+hyperref arXiv paper carries it). NOT OPEN-045 (no encoding), NOT OPEN-042 (hits are live bytes, not comments), NOT DELIM-001/003, NOT OPEN-043. Fix caution: admitt",
+      "autopsy_mechanism": "FALSE-NOT-READY, one blocking reason. The T0 LP-Foreign byte scan (rule catcode_mutation_direct in latex-parse/src/unsupported_feature.ml, pattern \"\\\\\\\\catcode\", a context-blind whole-file regex) fires 7 times on the 7 literal \\catcode tokens inside the replacement text of the standard apsrev4-2 .bbl preamble macro '\\providecommand \\@sanitize@url [0]{\\catcode `\\\\12\\catcode `\\$12\\catcode `\\&12\\catcode `\\#12\\catcode `\\^12\\catcode `\\_12\\catcode `\\%12\\relax}%' (main.tex lines 1790-1791, inside \\begin{thebibliography} after \\makeatletter \u2014 the arXiv merged-bibliography template). The bytes are iner",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2506.23688v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23757v1",
+      "toplevel": "main_no_ADF.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2506.23894v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.00209v2",
+      "toplevel": "dataset-paper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.00260v1",
+      "toplevel": "arXiv.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@corollary already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.00326v1",
+      "toplevel": "For_Arxiv_Bruna-Capunay-Friedman_June_30_2025.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.00349v1",
+      "toplevel": "twisted-20240624.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T0 parse fails in /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2507.00349v1/twisted-20240624.tex: Expected \\end{document} but got \\end{thebibliography} (line 1310, offset 103672)",
+        "T5 rule violations: [PRT-001]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN family, NEW unpinned vector. Family = residual T0/L2-parser comment-channel blindness: OPEN-042's explicitly-open \"L2 parser half\" (OPEN-038's parser half \u2014 the parser reads raw bytes and re-implements vcu-blindness independently). Specific vector \u2014 unbalanced close-brace inside a verbatim-package comment-env body desyncing the parser's unified group/env stack \u2014 appears in NO OPEN row and NO fr_* fixture (fr_parser_* battery has no comment-env case; fr_cmt_* are scanner/blanking pins; OPEN-042's T0 docs were %-comment shapes, both fixed 2026-09-03). Not OPEN-045/046, not OPEN-043/044, no",
+      "autopsy_mechanism": "false-NOT-READY, one mechanism behind both blocking reasons. A stray unmatched \"}\" at end of line 1290, inside a \\begin{comment}...\\end{comment} block (verbatim.sty, loaded line 45) that comments out bibitems INSIDE thebibliography. pdflatex never tokenizes the comment body (scans only for literal \\end{comment}) \u2192 rc 0, 32-page PDF. The CLI's L2/T0 parser parses the comment body as LIVE LaTeX: the stray \"}\" pops the comment frame off the unified group/env stack, the mismatch recovery at \\end{comment} (line 1309) then consumes the thebibliography frame, so \\end{thebibliography} at line 1310 fin",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.00404v1",
+      "toplevel": "Applications_of_Faa_di_Bruno_s_formula_to_partition_traces.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.00640v1",
+      "toplevel": "preprint-arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.00730v1",
+      "toplevel": "Gaudin-duality.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T2 project not closed: missing file /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2507.00730v1/pictex",
+        "T5 rule violations: [DELIM-003]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "BOTH reasons KNOWN, no new mechanism. Reason 1 (T2 missing ./pictex) = OPEN-040 T2-KPATHSEA residual: the DOCUMENTED deliberate exclusion of 'pictex' from Texmf_tree_allowlist (context-dependent \\fiverm load; texmf_tree_allowlist.ml comment names 'its one frame paper compiles only via a bespoke \\def\\fiverm preamble' \u2014 this paper is exactly that shape, second known instance). Reason 2 (T5 DELIM-003) = OPEN-010 DELIM-003 macro-split residual half (the ledger's 'REMAINING: pairing-awareness' item), 4th instance beyond the 3 listed docs (2506.22192v1/2506.20956v1/2507.10130v1), sub-shape ONE-SIDED",
+      "autopsy_mechanism": "FALSE-NOT-READY, two independent blocking reasons, both reproduced byte-exactly on fresh copies. (1) T2 'project not closed: missing file ./pictex': preamble lines 29-31 use brace-less plain-TeX '\\input prepictex / \\input pictex / \\input postpictex'; all three resolve in the pinned TeX Live tree (kpsewhich: texmf-dist/tex/generic/pictex/*.tex) so pdflatex compiles, but 'pictex' is deliberately ABSENT from Texmf_tree_allowlist (OPEN-040 ship) because a bare '\\input pictex' fatals without a bespoke \\fiverm definition \u2014 and THIS paper carries exactly that bespoke guard, '\\def \\fiverm{cmr5}' at li",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.00876v1",
+      "toplevel": "main.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@lemma already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.00993v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.01726v1",
+      "toplevel": "manuscript.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02263v1",
+      "toplevel": "2-Some_Turan-type_results_for_signless_Laplacian_spectral_radius.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02421v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02445v1",
+      "toplevel": "TAI_template.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02524v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02662v1",
+      "toplevel": "weak_NLS.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02823v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.02993v1",
+      "toplevel": "eucass_paperV4.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03053v1",
+      "toplevel": "Silvertiles.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03212v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03261v1",
+      "toplevel": "regularization-subdivisions.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03309v1",
+      "toplevel": "InfSym.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@theorem already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.03519v1",
+      "toplevel": "main.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Missing $ inserted.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.03521v2",
+      "toplevel": "PINNS_FE-CM-GG-TP_Final.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T3 body-required feature(s) [opentype_fonts] not admitted by engine pdflatex",
+        "T2 project not closed: missing file /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2507.03521v2/gray"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN class: OPEN-007 breaker-gate fail-closed degradation cost (measured 58/2,719 = 2.1% frame prevalence, 'sample forfeits 0' on the 199 frame \u2014 this sample-2 paper is a forfeit outside that frame). NEW unrecorded sub-mechanism: the xparse_verb_spec arm (added in the C-33 pass) false-fires on any 'v' at brace depth>0 in its 160-byte window, including definition-BODY bytes like \\vphantom, when the actual spec group ({m}) contains no v-spec. Adjacent in flavor to OPEN-044 (byte scans firing on inert definition bodies) but a distinct channel: the breaker GATE, not a feature scan. Not OPEN-045/0",
+      "autopsy_mechanism": "False-NOT-READY via a single breaker-gate false positive that disables ALL comment-awareness: \\NewDocumentCommand{\\dgalext}{m}{... \\vphantom{#1} ...} (root lines 334-337) trips comment_semantics_breaker's xparse_verb_spec arm \u2014 the 160-byte window fires on ANY 'v' at brace depth>0, and the 'v' of \\vphantom sits in the definition BODY (the spec group is {m}, no v-spec). comment_blanking_breakers then holds the RAW view for every gated channel, so two commented-out lines fire comment-blind: T3 uses_package matches line 88 '%\\usepackage{fontspec}' -> opentype_fonts inadmissible under pdflatex; T2",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.03667v1",
+      "toplevel": "nonorprimepower20k.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03727v1",
+      "toplevel": "arxiv-upload.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03754v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03971v1",
+      "toplevel": "example_paper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.03988v1",
+      "toplevel": "bruhat-mult_5_.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04168v1",
+      "toplevel": "main.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@prop already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.04216v1",
+      "toplevel": "ap_cde_arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04297v1",
+      "toplevel": "preprint250706.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04341v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04490v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04510v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04617v1",
+      "toplevel": "manuscript.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.04712v1",
+      "toplevel": "lcsys.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Package pdftex.def Error: File `enami1-eps-converted-to.pdf' not found: using",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.04814v1",
+      "toplevel": "template.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05193v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.05216v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05473v2",
+      "toplevel": "two-level_arXiv2.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05550v2",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05821v1",
+      "toplevel": "Cubic_vt_graph_of_given_girth.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05827v1",
+      "toplevel": "wjud_v10.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.05892v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06199v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06394v1",
+      "toplevel": "paper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06417v1",
+      "toplevel": "root.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T5 rule violations: [DELIM-001]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.06551v1",
+      "toplevel": "Manuscript.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06593v1",
+      "toplevel": "bare_jrnl_new_sample4.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06707v1",
+      "toplevel": "Multiscale.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06806v1",
+      "toplevel": "neurips_2025_preprint.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.06913v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06921v1",
+      "toplevel": "template.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06942v1",
+      "toplevel": "25-07-09_arXiv_v1.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.06971v2",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07041v1",
+      "toplevel": "main_arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07156v1",
+      "toplevel": "arXiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07234v2",
+      "toplevel": "ham7.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07308v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07423v1",
+      "toplevel": "ultimo.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07596v1",
+      "toplevel": "tropLFP20250709.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07652v1",
+      "toplevel": "sn-article.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07704v1",
+      "toplevel": "ecai-sample-and-instructions.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07781v1",
+      "toplevel": "neurips_2025.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.07822v1",
+      "toplevel": "Revised_version.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Missing $ inserted.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN \u2014 fr_par_in_math (corpora/false_ready/manifest.json, class 'math-mode', pdflatex 'error-halt', expected_cli 'READY' = deliberately pinned latent class) / OPEN-033 PAR-IN-MATH in docs/v27/PROJECT_STATE.md. CAVEAT THAT MATTERS: OPEN-033's do-not-build verdict rests on 'natural incidence MEASURED AT ZERO' (2,719-paper scan, 149 candidates, PAR-FATAL 0). This paper REFUTES that leg: its 00README.json declares compiler=pdflatex with exactly one existing toplevel .tex, so it IS in the 2,719 clean frame, and it is a natural PAR-FATAL. The scan either false-negatived it or parked it in the 19 un",
+      "autopsy_mechanism": "PAR-IN-MATH: a completely empty line (implicit \\par) at source line 1298 of Revised_version.tex, inside display math \u2014 \\begin{equation} (l.1291) > \\left\\{ (l.1293) > \\begin{array}{ll} (l.1294); row 3 ends l.1297 '...\\quad \\zeta \\sim \\text{Exp}(1).', l.1298 is byte-empty, l.1299 is '\\t\\end{array}'. TeX log (halt-on-error, byte-exact): '! Missing $ inserted.' / '<inserted text>' / '$' / 'l.1298' -> '! ==> Fatal error occurred, no output PDF file produced!' \u2014 identical to the recorded first_error. Under plain nonstopmode a second identical error fires at l.1299 \\end{array}, rc=1 but a 959,976-byt"
+    },
+    {
+      "arxiv_id": "2507.07852v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07951v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07958v1",
+      "toplevel": "SomeR_inf.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07966v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.07993v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.08088v1",
+      "toplevel": "main.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Extra \\or.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.08121v1",
+      "toplevel": "iclr2025_conference.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08157v2",
+      "toplevel": "Main_final.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08206v1",
+      "toplevel": "dipolar_TaT_2.1.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08221v1",
+      "toplevel": "delta_f.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08223v1",
+      "toplevel": "neurips_2019.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle",
+      "autopsy_confirmed": false,
+      "autopsy_class": "OPEN-003 (INSTR \u2014 natbib one-pass-oracle artifact, docs/v27/PROJECT_STATE.md line 128; same first_error and pass-2 recovery signature as 2507.10419v1/2506.22536v1/2506.17405v1; fixed in run_to_fixpoint and false_ready_oracle.sh, so the sample-2 sweep row was graded with pre-fix one-pass semantics). NOT a new class; no fr_* fixture flips involved (OPEN-003 verified 0/29 fixtures and 0/64 compile_check roots flip on pass 2).",
+      "autopsy_mechanism": "Pass-1-only natbib error that self-heals via the .aux. Source constructs: \\usepackage[preprint]{neurips_2019} (neurips_2019.tex line 33) -> neurips_2019.sty line 110 \"\\RequirePackage{natbib}\" (no options => author-year default), combined with \\bibliographystyle{plain} (tex line 294) and a plain-style .bbl whose entries are \"\\bibitem{gonzalez2010measurement}\" etc. with no [author(year)] optional argument. Pass 1 (no .aux yet): natbib in author-year mode meets the plain \\bibitem s, writes \"\\providecommand\\NAT@force@numbers{}\\NAT@force@numbers\" to the aux (line 83) and the end-document aux re-rea"
+    },
+    {
+      "arxiv_id": "2507.08384v1",
+      "toplevel": "odor_arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08493v1",
+      "toplevel": "Full0711.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08648v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.08896v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09087v1",
+      "toplevel": "main.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@proposition already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.09148v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09165v1",
+      "toplevel": "main.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T2 project_closed_b failed (build graph not closed/acyclic)",
+        "T2 project not closed: missing file /Users/dylanpossamai/Library/CloudStorage/Dropbox/Work/Articles/Archives/LP_v24_FULL_BACKUP_20250716_165548/corpus/papers/2507.09165v1/sections/experiments.tex"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "FAMILY KNOWN, TRIGGER NEW. Family = the fail-closed `comment_blanking_breakers` gate cost recorded in OPEN-006/OPEN-007 ship notes (breaker prevalence 58/2,719 = 2.1% of the frame, \"fail-closed degradation only; sample forfeits 0\" \u2014 a claim true on sample-1, now falsified on sample-2 by this paper). The SPECIFIC trigger \u2014 the `xparse_verb_spec` arm (added 2026-09-01, C-33) false-firing on a lowercase 'v' in an unrelated brace group PAST the end of the `\\DeclareDocumentCommand` definition, in a document with no verbatim machinery at all \u2014 is recorded NOWHERE: no OPEN row, no fr_* fixture (the f",
+      "autopsy_mechanism": "FALSE-NOT-READY, single blocking mechanism, reproduced on the current binary (main @ 2193a1f2, built 2026-09-03 \u2014 i.e. it SURVIVES the 2026-09-02 T2 comment-awareness fix). Chain, byte-verified: (1) main.tex:109 is `% \\input{sections/experiments.tex}` \u2014 the ONLY reference to that file in the closure, commented out, dead to TeX (pdflatex pin 3.141592653-2.6-1.40.29: halt-on-error rc=0 x3 passes + confirming, PDF produced; plain nonstopmode rc=0, zero `!` lines). (2) The T2 live-includes scan is suppressed because `Validators_common.comment_semantics_breaker` FALSE-FIRES via its `xparse_verb_spe",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.09248v1",
+      "toplevel": "AGCD-NET.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09261v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09274v1",
+      "toplevel": "manuscript_stress_test_emac.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09290v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09338v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09401v1",
+      "toplevel": "DG-Nonlocal-Wave.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09426v1",
+      "toplevel": "paper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09475v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09622v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09693v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09702v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09716v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09725v1",
+      "toplevel": "samplepaper.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Package pdftex.def Error: File `figure_method2_v3-eps-converted-to.pdf' not f",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.09731v1",
+      "toplevel": "fractures_detection.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09746v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09752v1",
+      "toplevel": "HirSel_generalizedAmdeberhanMerca_July2025_AJC.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09832v1",
+      "toplevel": "Fan-goodness_of_sparse_graphs.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09871v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 3,
+      "first_error": "",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.09916v1",
+      "toplevel": "notes_time_series_data.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09921v1",
+      "toplevel": "ArXiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09961v1",
+      "toplevel": "main_submit.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.09994v1",
+      "toplevel": "main.tex",
+      "cell": "FALSE-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Undefined control sequence.",
+      "cli_rc": 0,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.09995v2",
+      "toplevel": "aaai2026.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10009v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10057v1",
+      "toplevel": "acl_latex.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10123v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10127v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10232v1",
+      "toplevel": "manuscript_arxiv.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10239v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10287v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10296v1",
+      "toplevel": "LHBP25.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10311v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10358v1",
+      "toplevel": "main.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! Missing $ inserted.",
+      "cli_rc": 1,
+      "cli_reasons": [
+        "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+      ],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.10394v1",
+      "toplevel": "Journal.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10449v1",
+      "toplevel": "neurips_2025.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T3 body-required feature(s) [japanese_cjk] not admitted by engine pdflatex"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN \u2014 OPEN-026 family (japanese_cjk polarity inversion: the tool rejects the very construct that makes the codepoint safe under pdflatex), sub-mechanism = the DWR-CJK v2 'declaration exemption' precision gap explicitly tracked in the detector's own doc comment (compile_evidence.ml:314-316: 'comment/url/env/declaration exemptions are the tracked DWR-CJK v2 precision refinements') and measured as a defused context in OPEN-001 ('5 in documents that \\newunicodechar/\\DeclareUnicodeCharacter the codepoint \u2026 ZERO are live'). NOT covered by the shipped OPEN-026 containment fix (#571 blanks \\begin{CJ",
+      "autopsy_mechanism": "FALSE-NOT-READY, single blocking reason. T3 japanese_cjk fires via has_raw_cjk (compile_evidence.ml:321-345): the block test at line 328 counts U+FF00-FFEF as definite-CJK, and the paper contains U+FF0C FULLWIDTH COMMA in live text at line 4 (\\newunicodechar{\uff0c}{,}) and line 198 (body: '(64$\\times$64 pixels)\uff0cwhich'). Japanese_cjk is modeled Ptex_uptex-only (per OPEN-026, compile_contract.ml:40-41), hence never admissible under pdflatex \u2192 MODEL-NOT-READY. The document is nevertheless compile-safe because lines 3-4 load newunicodechar and remap U+FF0C to an ASCII comma; without the mapping the id",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.10488v1",
+      "toplevel": "preprint.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10637v1",
+      "toplevel": "collas2025_conference.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10702v1",
+      "toplevel": "arxiv_submission.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10771v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10838v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10885v1",
+      "toplevel": "p.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10892v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10895v1",
+      "toplevel": "arxiv_main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10903v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10927v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10935v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10943v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.10965v1",
+      "toplevel": "CEFS_ExpMath.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11013v1",
+      "toplevel": "carapoly.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11034v1",
+      "toplevel": "linear-forest-0714.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11035v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11057v1",
+      "toplevel": "plos_latex_template.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11100v1",
+      "toplevel": "paper.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11132v1",
+      "toplevel": "fv-saturation.tex",
+      "cell": "true-NOT-READY",
+      "pdflatex_verdict": "fails",
+      "passes": 3,
+      "first_error": "! LaTeX Error: Command \\c@lemma already defined.",
+      "cli_rc": 1,
+      "cli_reasons": [],
+      "graded_by": "local-authoritative-oracle"
+    },
+    {
+      "arxiv_id": "2507.11194v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11229v1",
+      "toplevel": "CoFly.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11281v1",
+      "toplevel": "tileableShort.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11287v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11371v1",
+      "toplevel": "cs224r_final_report_2025.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11381v1",
+      "toplevel": "new_main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11407v1",
+      "toplevel": "exaone4.0.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11412v1",
+      "toplevel": "colm2025_conference.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11414v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11430v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11492v1",
+      "toplevel": "main.tex",
+      "cell": "false-NOT-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [
+        "T5 rule violations: [DELIM-003]"
+      ],
+      "graded_by": "fleet-compiles-side",
+      "autopsy_confirmed": true,
+      "autopsy_class": "KNOWN family, new member rule: T5 comment-blindness (the OPEN-042 residual T5 channel / OPEN-007 channel decomposition). OPEN-042's shipped filter_comment_dead_enc covers only the six ENC ids; DELIM rules still run on raw bytes (no blank_line_comments/find_comment_ranges call sites in validators_l1.ml or validators_l1_math.ml). NOT the OPEN-010 DELIM-003 residual (macro-split \\def\\({\\left(} \u2014 live code; the is_def_name guard and all four fr_delim003_* fixtures cover only that). No fr_* fixture covers comment-blind DELIM; candidate fix = extend the OPEN-042 gated blanked-view re-run to DELIM id",
+      "autopsy_mechanism": "DELIM-003 fires inside a COMMENTED-OUT line. main.tex line 1038 begins with '%' and contains $-desynced dead math: `%with D$_{Ai}$ = $\\frac{d}{\\theta_i}$ and D$_{L_i}$ = $\\left ( 1 + z$_i$)$ \\right )$^{2}$ considering z$_2$ $>$ z$_1$. \\\\`. compute_math_segments (validators_common.ml:2557) scans raw bytes with no comment handling, so the 4th $-span on the line becomes the phantom math segment `\\left ( 1 + z` \u2014 one \\left, zero \\right \u2014 and l1_delim_003_rule (validators_l1.ml:536) counts it as a blocking Error. pdflatex never reads the line (line-leading %): rc=0 both passes, zero '!' lines, 19-p",
+      "cli_rc": 1
+    },
+    {
+      "arxiv_id": "2507.11514v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    },
+    {
+      "arxiv_id": "2507.11515v1",
+      "toplevel": "main.tex",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "first_error": "",
+      "cli_reasons": [],
+      "graded_by": "fleet-compiles-side",
+      "cli_rc": 0
+    }
+  ]
+}

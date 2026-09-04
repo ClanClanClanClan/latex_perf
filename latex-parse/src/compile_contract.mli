@@ -55,6 +55,12 @@ type reason =
 
 type ready_check_result = Ready | NotReady of reason list
 
+val classification_view : ?probe:string -> source:string -> unit -> string
+(** The exact source view the readiness contract classifies into an LP tier: the
+    comment-BLANKED view, or the raw source when the multi-source breaker gate
+    fires. Every consumer of the tier must use this — C-41 was two callers
+    disagreeing about which view the tier came from. *)
+
 val read_closure_source : Project_model.t -> root_src:string -> string
 (** [read_closure_source proj ~root_src] — the closure-resolved source: the root
     with live [\input]/[\include] children and local [.sty]/[.cls] files spliced

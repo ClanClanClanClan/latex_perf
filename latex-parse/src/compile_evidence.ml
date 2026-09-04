@@ -172,8 +172,38 @@ type premise_report = {
   unsupported_features : feature list;
 }
 
+(* ── The verdict vocabulary (Phase A, 2026-09-04) ──────────────────── ONE
+   owner for the machine-readable state token. Before this, three free-form
+   strings were formatted at the print site and every consumer re-derived
+   meaning by regexing prose; the committed North-Star artefacts keyed on those
+   regexes with no provenance, so changing a word silently froze the published
+   metric.
+
+   The tokens deliberately say PREMISE, not PROVEN. `project_wf_dec_sound`
+   certifies its premises over the ABSTRACT model, and measured against real
+   documents that certificate is wrong 5.0% of the time (9 of 179 certified
+   sample-2 papers fail pdflatex) — and 5.7% when restricted to LP-Core, so
+   scoping the claim to the proven subset makes it MORE wrong, not less. A token
+   containing "proven" would therefore be false on a measurable population. *)
+type verdict_state =
+  | Premise_certified  (** every obligation holds *)
+  | Premise_inapplicable  (** only the nodup obligation is unmet *)
+  | Premise_rejected  (** a compilability-bearing obligation fails *)
+
+let verdict_state_to_string = function
+  | Premise_certified -> "PREMISE-CERTIFIED"
+  | Premise_inapplicable -> "PREMISE-INAPPLICABLE"
+  | Premise_rejected -> "PREMISE-REJECTED"
+
 let all_hold (r : premise_report) : bool =
   r.t2_closed && r.t3_declared && r.t3_body && r.t4_unique_labels
+
+(* The three-way classification the CLI prints and the metric parses. Kept
+   beside [all_hold] so the two can never disagree: certified IS all_hold. *)
+let verdict_state (r : premise_report) : verdict_state =
+  if all_hold r then Premise_certified
+  else if r.t2_closed && r.t3_declared && r.t3_body then Premise_inapplicable
+  else Premise_rejected
 
 (* ── Extraction ───────────────────────────────────────────────────── *)
 

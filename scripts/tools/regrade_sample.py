@@ -67,7 +67,8 @@ def grade(aid, top):
                        capture_output=True, text=True, timeout=TIMEOUT)
     cli_ready = (c.returncode == 0)
     reasons = [l.strip() for l in (c.stdout + c.stderr).splitlines()
-               if l.strip().startswith(("T0", "T2", "T3", "T4", "T5", "MODEL-NOT"))]
+               if l.strip().startswith(("T0", "T2", "T3", "T4", "T5"))
+               or "\tPREMISE-REJECTED\t" in l]
     cell = ("true-READY" if compiles and cli_ready else
             "false-NOT-READY" if compiles and not cli_ready else
             "FALSE-READY" if not compiles and cli_ready else "true-NOT-READY")

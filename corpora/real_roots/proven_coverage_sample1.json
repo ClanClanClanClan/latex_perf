@@ -1,1402 +1,1420 @@
-[
- {
-  "id": "2506.23664v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10174v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08181v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09749v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10676v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.17634v2",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.03478v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09313v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.01712v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09942v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.20361v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.12904v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08462v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.23638v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.07949v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.02739v1",
-  "cell": "false-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11001v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.17361v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "rejected",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09373v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10983v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.19663v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11476v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.16809v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.06130v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.11152v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.01076v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10386v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.20191v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10726v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08096v1",
-  "cell": "ungraded-infra",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10710v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21104v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10303v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11478v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.02852v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08996v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09118v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.20407v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10419v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09848v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08741v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08867v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08102v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-foreign"
- },
- {
-  "id": "2507.10065v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08554v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.22963v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09875v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09558v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10130v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.14935v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.04257v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.02360v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.01405v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09168v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21166v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10161v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09772v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08795v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08995v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.20293v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.19821v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.19591v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.22666v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.13995v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15258v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.02031v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08721v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.18484v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21227v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.07839v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.20038v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.06428v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21699v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.13749v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.01459v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.23223v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09556v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.23970v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.17992v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.16556v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.19144v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09925v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.02526v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.00278v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10855v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09934v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15876v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09026v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10143v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.01542v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10797v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.07990v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.06158v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.00983v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10604v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10490v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.07038v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10623v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.01552v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21765v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.04488v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11439v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15344v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.00720v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.02435v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08906v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15360v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.18007v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.03872v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.04898v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.11171v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.05987v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.07981v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "rejected",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.00313v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.19362v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.04012v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09748v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11541v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10318v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21082v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.22536v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.17898v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.20942v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.20457v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09915v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.01395v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09846v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.04570v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.05592v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.23487v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10873v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08889v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.04190v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.05732v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15660v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10809v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09278v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.16970v2",
-  "cell": "false-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-foreign"
- },
- {
-  "id": "2507.06325v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.07778v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.11155v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10552v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08781v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.16763v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09420v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10779v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10932v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10709v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.15348v2",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10545v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.24003v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.17405v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.08930v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.11202v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.14558v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.03932v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10661v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.11469v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.22192v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21268v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.00812v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09072v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.11321v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.02481v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.06407v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21525v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10325v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09227v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21894v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.09867v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10078v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.19742v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.19422v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "inapplicable",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.06861v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.15748v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.04247v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09001v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.07220v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.08416v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10512v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.00894v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.16376v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.10271v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09980v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21314v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.14350v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.23794v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10189v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09950v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.01044v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.06961v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2506.21802v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09437v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.20956v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10095v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.10471v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.07602v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-extended"
- },
- {
-  "id": "2507.09128v1",
-  "cell": "true-NOT-READY",
-  "ready": false,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2506.21301v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- },
- {
-  "id": "2507.04980v1",
-  "cell": "true-READY",
-  "ready": true,
-  "model": "certified",
-  "profile": "lp-core"
- }
-]
+{
+ "provenance": {
+  "produced_by": "scripts/tools/gen_proven_coverage.py",
+  "results_source": "corpora/real_roots/results.json",
+  "cli_sha256": "8b91b1159d1b73fdf77bb581e58512ca0dbd802fd881652b911fd0aa977d9dcf",
+  "measured_at_sha": "ae11dca259c01ca26a03e7a504da45cdcf488b9c",
+  "state_vocabulary": [
+   "PREMISE-CERTIFIED",
+   "PREMISE-INAPPLICABLE",
+   "PREMISE-REJECTED"
+  ]
+ },
+ "summary": {
+  "n": 200,
+  "premise_certified_and_compiles": 167,
+  "lp_core_certified_and_compiles": 90
+ },
+ "rows": [
+  {
+   "id": "2506.23664v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10174v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08181v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09749v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10676v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.17634v2",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.03478v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09313v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.01712v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09942v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.20361v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.12904v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08462v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.23638v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.07949v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.02739v1",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11001v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.17361v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "rejected",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09373v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10983v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.19663v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11476v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.16809v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.06130v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.11152v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.01076v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10386v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.20191v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10726v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08096v1",
+   "cell": "ungraded-infra",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10710v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21104v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10303v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11478v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.02852v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08996v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09118v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.20407v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10419v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09848v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08741v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08867v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08102v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10065v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08554v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.22963v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09875v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09558v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10130v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.14935v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.04257v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.02360v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.01405v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09168v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21166v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10161v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09772v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08795v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08995v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.20293v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.19821v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.19591v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.22666v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.13995v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15258v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.02031v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08721v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.18484v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21227v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.07839v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.20038v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.06428v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21699v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.13749v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.01459v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.23223v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09556v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.23970v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.17992v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.16556v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.19144v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09925v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.02526v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.00278v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10855v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09934v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15876v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09026v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10143v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.01542v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10797v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.07990v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.06158v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.00983v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10604v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10490v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.07038v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10623v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.01552v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21765v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.04488v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11439v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15344v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.00720v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.02435v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08906v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15360v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.18007v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.03872v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.04898v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.11171v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.05987v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.07981v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "rejected",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.00313v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.19362v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.04012v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09748v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11541v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10318v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21082v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.22536v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.17898v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.20942v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.20457v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09915v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.01395v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09846v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.04570v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.05592v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.23487v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10873v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08889v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.04190v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.05732v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15660v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10809v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09278v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.16970v2",
+   "cell": "false-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-foreign"
+  },
+  {
+   "id": "2507.06325v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.07778v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.11155v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10552v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08781v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.16763v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09420v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10779v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10932v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10709v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.15348v2",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10545v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.24003v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.17405v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.08930v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.11202v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.14558v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.03932v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10661v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.11469v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.22192v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21268v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.00812v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09072v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.11321v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.02481v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.06407v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21525v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10325v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09227v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21894v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09867v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10078v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.19742v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.19422v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "inapplicable",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.06861v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.15748v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.04247v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09001v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.07220v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.08416v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10512v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.00894v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.16376v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.10271v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09980v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21314v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.14350v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.23794v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10189v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09950v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.01044v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.06961v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2506.21802v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.09437v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.20956v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10095v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-extended"
+  },
+  {
+   "id": "2507.10471v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.07602v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.09128v1",
+   "cell": "true-NOT-READY",
+   "ready": false,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2506.21301v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  },
+  {
+   "id": "2507.04980v1",
+   "cell": "true-READY",
+   "ready": true,
+   "model": "certified",
+   "profile": "lp-core"
+  }
+ ]
+}

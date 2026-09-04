@@ -147,6 +147,17 @@ jobs:
         # sizes) that lets a future session pick the work up.
         run: python3 scripts/tools/check_project_state.py --repo .
 
+      - name: Doc consistency — one source of truth per number (C-40)
+        # Five cross-document invariants, every one of which was a LIVE
+        # contradiction on main before 2026-09-04: the README title version vs
+        # project_facts, the rule-maturity block vs the YAML catalogue,
+        # hand-written positional numbers in PROJECT_STATE prose contradicting
+        # its own generated block, the fixture-baseline row counting
+        # accept-pins as false-READYs, and "37 compile-blocking rules" against
+        # a code list of 36. A number lives in ONE artefact; prose points at it
+        # or is generated from it.
+        run: python3 scripts/tools/check_doc_consistency.py --repo .
+
       - name: Fix-safety language (v27.1.63)
         # No document may call the AUTO-FIX channel "proven-safe". Until
         # v27.1.63 four places did, while `grep -rlniE 'fix_guard|apply_fixes'

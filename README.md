@@ -1,4 +1,4 @@
-# LaTeX Perfectionist v27.1.61
+# LaTeX Perfectionist v27.1.62
 
 ![Nightly Perf](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ClanClanClanClan/latex_perf/gh-pages/badges/perf.json)
 <!-- LAT_BADGE_START -->
@@ -66,6 +66,19 @@ automatically. See [docs/CANDIDATE_FIXES.md](docs/CANDIDATE_FIXES.md).
 | `L0_USE_SIMD_XXH` | unset | Set to `1` for SIMD xxHash acceleration |
 
 ## Current Status — v27.1.62 (July 2026)
+
+> ⚠ **Where the numbers live.** `docs/v27/PROJECT_STATE.md` §1 is the single
+> source of truth for the measured position; it is generated and diffed by
+> `check_project_state.py`. Any positional number in THIS file is a summary
+> that may lag — where they disagree, PROJECT_STATE wins.
+>
+> **Proof-claim caveat (OPEN-015, C-40):** the headline theorem counts below
+> include 803 one-line instantiations of a single generic lemma, and the Coq
+> model of a style rule is an invented predicate that does not match the
+> shipped OCaml. `admits: 0 / axioms: 0` IS measured and does hold. The
+> compile guarantee is proved over an abstract document model with four token
+> kinds, so a `MODEL-READY` verdict certifies the model, not your bytes —
+> measured: 9 of 200 virgin papers are certified yet fail to compile.
 
 All layers (L0-L4) implemented. L3 file-based validators (PNG/JPEG/PDF/font). ML v2 byte classifier trained (F1=0.9799) and formally verified:
 - **Build**: `dune build` compiles the SIMD service, benches, and the Coq proof tree (63 core + 114 generated + 1 ML) via `(coq.theory)` stanzas.

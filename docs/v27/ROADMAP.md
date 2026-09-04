@@ -55,7 +55,7 @@ Delivered (1) with **verdict SOUNDNESS**, (2) in **REAL-TIME** as-you-type, (3) 
 > **Proven-verdict coverage at ZERO false-READY on a committed corpus** =
 > (real papers that get a *proven* verdict matching pdflatex, with **zero false-READY**) / (all real papers).
 
-Current banner (65-doc committed differential corpus, pdfTeX / TeX Live 2026): **35/65 = 53.8% proven-correct READY, at 8 false-READY (all in the documented allowlist).** **Target:** grow the numerator (E-track subset extension + V1 modelling) while driving false-READY **allowlist → 0**, on a *hash-manifested, version-controlled* corpus (S0/S4), and (for the flagship) parameterize the promise by **engine + TeX-Live year**.
+⚠ **THIS DOCUMENT NO LONGER PUBLISHES THE NUMBER.** It restated a 65-doc differential banner (`35/65 = 53.8%`) that disagreed with its own confusion matrix eighty lines below and with `COMPILATION_GUARANTEE.md`, and the metric it named was never measured on real papers at all. The metric is now GENERATED into `PROJECT_STATE.md` §1 ("Proven-verdict coverage — THE North-Star metric") from committed per-document artefacts, and `check_project_state.py` diffs it on every PR. **Read it there; do not restate it here.** **Target:** grow the numerator (E-track subset extension + V1 modelling) while driving false-READY **allowlist → 0**, on a *hash-manifested, version-controlled* corpus (S0/S4), and (for the flagship) parameterize the promise by **engine + TeX-Live year**.
 
 Every near-term move below states its **delta on THIS metric**. Producer counts, theorem counts, and proof-file counts are **infrastructure health, not the success metric** — do not confuse activity for coverage.
 

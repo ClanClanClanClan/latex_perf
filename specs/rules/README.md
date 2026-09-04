@@ -35,10 +35,10 @@
   - Warning: 231
   - Info: 380
 - Maturity:
-  - Draft: 619
-  - Implemented: 19
+  - Draft: 529
+  - Implemented: 108
   - Impl: 6
-  - Reserved: 16 (future families; do not implement yet)
+  - Reserved: 17 (future families; do not implement yet)
 - Fix producers (`produces_fix: true` in `rule_contracts.yaml`): 167 as of
   v27.1.62.  See `../v27/V27_FIX_PRODUCER_CADENCE.md` for cadence and
   `../v27/FIX_PRODUCER_LEDGER.md` for the per-rule shipping ledger.

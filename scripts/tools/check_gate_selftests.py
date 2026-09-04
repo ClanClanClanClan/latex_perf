@@ -186,6 +186,24 @@ REGISTRY = [
                      new='"bucket C (suggest_pageref'),
         ]),
     GateTest(
+        "check_doc_consistency", [PY, f"{TOOLS}/check_doc_consistency.py"],
+        "pure",
+        [
+            # A number published in two places must not be allowed to drift.
+            # Both anchors below were LIVE contradictions on main before
+            # 2026-09-04; the gate exists because they shipped.
+            Mutation("README version drifts from project_facts",
+                     "README.md",
+                     r"README title says .* but project_facts",
+                     old="# LaTeX Perfectionist v27.1.62",
+                     new="# LaTeX Perfectionist v27.1.61"),
+            Mutation("rule-maturity block goes stale",
+                     "specs/rules/README.md",
+                     r"specs/rules/README.md says Draft",
+                     old="  - Draft: 529",
+                     new="  - Draft: 619"),
+        ]),
+    GateTest(
         "check_project_state", [PY, f"{TOOLS}/check_project_state.py"],
         "pure",
         [

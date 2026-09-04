@@ -41,6 +41,8 @@ GATE_SCRIPTS = [
     ("scripts/tools/check_severity_drift.py", ["--repo", "."]),
     ("scripts/tools/check_mli_doc_coverage.py", ["--repo", "."]),
     ("scripts/tools/check_code_quality.py", ["--repo", "."]),
+    # 2026-09-04 (C-40): one source of truth per number
+    ("scripts/tools/check_doc_consistency.py", []),
     ("scripts/tools/check_unused_hypotheses.py", ["--repo", "."]),
     # PR #245 (p1.11) additions
     ("scripts/tools/check_doc_refs.py", ["--repo", "."]),

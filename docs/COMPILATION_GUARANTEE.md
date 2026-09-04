@@ -75,7 +75,7 @@ brace group, which it silently closes at EOF — are caught by **T5's
 semantic change.** `--compile-check` used to call `Validators.run_all` (parse the
 whole document, build the semantic state, scan the event bus, execute all ~641
 registered rules) and parse a second time in the T0 check, then FILTER the results
-down to the 37 compile-blocking rules. Since v27.1.59 it parses **once** and runs
+down to the 36 compile-blocking rules. Since v27.1.59 it parses **once** and runs
 **only** those 37 rules (`Validators.run_compile_blocking`, sharing the single
 `Parser_l2.parse_located`). This is sound because validators are pure functions of
 `(source + shared context)` and the compile-blocking set is a fixed prefix filter, so

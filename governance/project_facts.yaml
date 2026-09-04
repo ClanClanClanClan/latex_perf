@@ -70,6 +70,23 @@ rules:
     B: 432
     C: 17
     D: 49
+# ⚠ HONESTY ANNOTATION (2026-09-04, C-40). The four counts marked
+# CONSTRUCTED below are NOT measurements of proof strength and must not be
+# quoted as such:
+#   per_rule_soundness_count  = rules.total_non_reserved copied verbatim
+#                               (a catalogue headcount, not a proof count)
+#   formal_faithful_count     = a generator DEFAULT applied to every rule not
+#                               on a 23-id denylist
+#   theorem_count_reported    = a raw `Theorem` grep; 803 of the 804 generated
+#                               theorems are one-line instantiations of a
+#                               single flat_map lemma, and the Coq model of a
+#                               rule is an invented predicate that does not
+#                               match the shipped OCaml (e.g. STYLE-001)
+#   languages.live/stubbed/target = three hardcoded integers; the "generator"
+#                               returns the literals
+# `admits: 0` and `axioms: 0` ARE measured and do hold (0 across 194 .v files).
+# Removing these keys outright would break consumers, so they are labelled
+# rather than deleted; OPEN-051 tracks replacing them with real measurements.
 proofs:
   proof_files_total: 178
   proof_files_core: 63
@@ -77,13 +94,16 @@ proofs:
   proof_files_ml: 1
   proof_files_archive: 7
   per_rule_soundness_count: 643
+  # CONSTRUCTED: catalogue headcount, not a proof count
   formal_faithful_count: 637
+  # CONSTRUCTED: generator default, not a measurement
   formal_conservative_count: 20
   formal_conditional_count: 3
   theorem_count_reported: 1543
+  # CONSTRUCTED: raw grep; see the annotation above
   admits: 0
   axioms: 0
-languages:
+languages:  # CONSTRUCTED: the generator returns these three literals
   live: 7
   stubbed: 14
   target: 21

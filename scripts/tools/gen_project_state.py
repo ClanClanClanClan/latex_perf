@@ -51,7 +51,17 @@ def allowlist_count(repo: Path) -> int:
 
 def build(repo: Path) -> str:
     fr = json.loads((repo / "corpora/false_ready/manifest.json").read_text())
-    live = [f for f in fr["fixtures"] if f["expected_cli"] == "READY"]
+    # A fixture whose expected_cli is READY is a LIVE false-READY only when
+    # pdflatex REJECTS it. Rows graded `compiles` are ACCEPT-PINS: pdflatex
+    # accepts them and READY is the CORRECT verdict, so counting them as
+    # "known false-READYs" overstated row (b) by the number of accept-pins
+    # (14 of 29 at the time this was fixed). This is the same rule
+    # check_known_false_ready.py and manifest.baseline.false_ready_total use;
+    # they had drifted apart from this generator.
+    live = [f for f in fr["fixtures"]
+            if f["expected_cli"] == "READY" and f.get("pdflatex") != "compiles"]
+    accept_pins = [f for f in fr["fixtures"]
+                   if f["expected_cli"] == "READY" and f.get("pdflatex") == "compiles"]
     af = json.loads((repo / "corpora/apply_fixes/manifest.json").read_text())
     kb = af["known_broken"]
 
@@ -112,13 +122,15 @@ def build(repo: Path) -> str:
     sf = sum(1 for f in live if f["pdflatex"] == "strong-fatal")
     eh = sum(1 for f in live if f["pdflatex"] == "error-halt")
     L.append(f"| **(b)** fixture baseline | `corpora/false_ready`, {len(fr['fixtures'])} fixtures "
-             f"| **{len(live)}** ({sf} strong-fatal, {eh} error-halt) | R7 fix ranks |")
+             f"| **{len(live)}** ({sf} strong-fatal, {eh} error-halt; "
+             f"{len(accept_pins)} accept-pins excluded) | R7 fix ranks |")
     if rr:
         c = rr["counts"]
         graded = sum(v for k, v in c.items() if not k.startswith("ungraded"))
         L.append(f"| **(c)** **real papers** | `corpora/real_roots`, {rr['frame']['n']} arXiv trees "
                  f"(frame {rr['frame']['frame_size']}) | **{c.get('FALSE-READY',0)} / {graded} = "
-                 f"{100*c.get('FALSE-READY',0)/graded:.1f}%** | *the only one that is the North Star* |")
+                 f"{100*c.get('FALSE-READY',0)/graded:.1f}%** | the SOUNDNESS CONSTRAINT "
+                 f"of the North-Star metric (see below) |")
     L.append("")
 
     if rr:
@@ -141,6 +153,69 @@ def build(repo: Path) -> str:
               f"- **False-READY: {c.get('FALSE-READY',0)}/{graded} = "
               f"{100*c.get('FALSE-READY',0)/graded:.1f}%**, against a definition requiring zero",
               ""]
+
+    # ── THE NORTH-STAR METRIC ITSELF ────────────────────────────────────
+    # ROADMAP.md: "Proven-verdict coverage at ZERO false-READY on a committed
+    # corpus = (real papers that get a *proven* verdict matching pdflatex,
+    # with zero false-READY) / (all real papers)."  Until 2026-09-04 this
+    # block published three EMPIRICAL rates and never the metric, so eight
+    # consecutive PRs optimised a proxy. It is generated here, from committed
+    # per-document artefacts, so it cannot be quietly replaced again.
+    def proven_block(path, label):
+        f = repo / path
+        if not f.is_file():
+            return []
+        rows = json.loads(f.read_text())
+        n = len(rows)
+        certified_ok = sum(1 for r in rows
+                           if r.get("model") == "certified" and r["cell"] == "true-READY")
+        core_ok = sum(1 for r in rows
+                      if r.get("model") == "certified" and r["cell"] == "true-READY"
+                      and r.get("profile") == "lp-core")
+        heur = sum(1 for r in rows if r.get("model") != "certified" and r.get("ready"))
+        fr_cert = sum(1 for r in rows
+                      if r["cell"] == "FALSE-READY" and r.get("model") == "certified")
+        return [f"| {label} | {core_ok}/{n} = {100*core_ok/n:.1f}% | "
+                f"{certified_ok}/{n} = {100*certified_ok/n:.1f}% | {heur} | {fr_cert} |"]
+
+    pb = proven_block("corpora/real_roots/proven_coverage_sample1.json",
+                      "sample 1 (tuned)")
+    pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
+                       "**sample 2 (virgin)**")
+    if pb:
+        L += ["### Proven-verdict coverage — THE North-Star metric", "",
+              "`PROVEN` = the Coq-extracted checker certified the document "
+              "(`MODEL-READY`) **and** pdflatex compiled it. The guarantee doc "
+              "scopes the claim to LP-Core (`COMPILATION_GUARANTEE.md`), so the "
+              "LP-Core column is the number this project is entitled to publish; "
+              "the wider column counts every certified document regardless of "
+              "tier, which is what the runtime actually prints today (OPEN-015).",
+              "",
+              "| corpus | proven (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |",
+              "|---|---|---|---|---|"] + pb + [""]
+
+    # ── OUT-OF-SAMPLE POSITION ──────────────────────────────────────────
+    s2_path = repo / "corpora/real_roots/results_sample2.json"
+    if s2_path.is_file():
+        s2 = json.loads(s2_path.read_text())
+        c2 = s2["counts"]
+        g2 = sum(v for k, v in c2.items() if not k.startswith("ungraded"))
+        ok2 = c2.get("true-READY", 0) + c2.get("true-NOT-READY", 0)
+        L += ["### Out-of-sample position (sample 2 — VIRGIN)", "",
+              "Ranks 201-400 of the same deterministic ordering. **No fix has "
+              "ever been tuned against these documents.** Sample 1 is burned "
+              "for soundness claims: every fix in the #565-#572 run was "
+              "measured against it, so its false-READY rate is an optimistic "
+              "estimate and must never be quoted alone.", "",
+              "| cell | n |", "|---|---|"]
+        for k in ("true-READY", "true-NOT-READY", "FALSE-READY", "false-NOT-READY",
+                  "ungraded-infra"):
+            L.append(f"| {k} | {c2.get(k, 0)} |")
+        L += ["",
+              f"- **Correct verdicts: {ok2}/{g2} = {100*ok2/g2:.1f}%**",
+              f"- **False-READY: {c2.get('FALSE-READY',0)}/{g2} = "
+              f"{100*c2.get('FALSE-READY',0)/g2:.1f}%** — the in-sample zero "
+              f"does NOT generalise (OPEN-034)", ""]
 
     L += ["### Fixer residual (auto-fix channel)", "",
           "| property | rows |", "|---|---|"]

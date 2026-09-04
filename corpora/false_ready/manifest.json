@@ -920,6 +920,17 @@
       "pdflatex": "strong-fatal",
       "expected_cli": "NOT-READY",
       "note": "C-39 kill pin (2026-09-04): the whole preamble is reached ONLY through the import package's \\subimport{tex}{header.tex} — thmtools load + shared-counter \\newtheorem{lemma}[theorem]. The closure walk matched only \\input/\\include, so the OPEN-002 detector could not SEE the declaration and the CLI said READY on a preamble-fatal doc (rc 1,1): a MEASURED false-READY found on VIRGIN sample-2 data (2507.11132v1). closure_segments now splices \\import/\\subimport (starred forms too). If this flips READY the two-group arm regressed."
+    },
+    {
+      "id": "fr_tier_belt_silenced",
+      "path": "fr_tier_belt_silenced.tex",
+      "kind": "single",
+      "class": "tier-filter",
+      "fix_rank": 21,
+      "tier": "lp-core",
+      "pdflatex": "strong-fatal",
+      "expected_cli": "NOT-READY",
+      "note": "C-41 kill pin (2026-09-04): an unclosed \\textbf{ argument (rc 1,1 no PDF) plus ONE COMMENTED-OUT \\catcode line. The comment makes the RAW-view classifier say LP-Foreign while T0 — which since #570 classifies the comment-BLANKED view — passes; Validators._filter_by_tier then dropped every contracted rule (ZERO of 660 contracts carry Any_tier), silencing the whole T5 compile-blocking belt, and the CLI returned READY on a pdflatex-fatal document. Measured false-READY introduced by #570 and found by the realignment scoping. The filter now keeps compile-blocking ids unconditionally: a rule that asks 'will pdflatex fail?' does not depend on our subset classification. If this flips READY the belt is being filtered again."
     }
   ]
 }

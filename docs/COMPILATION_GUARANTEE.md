@@ -400,13 +400,29 @@ logic*. It is built from three pieces:
    **extracted** `project_wf_dec` (module `Compile_guarantee_extracted`,
    generated from `proofs/CompileGuaranteeExtract.v`). It prints
    `MODEL-CONNECTED <STATE> tier=<tier> <prose>` where `<STATE>` is the
-   frozen token `PREMISE-CERTIFIED` / `PREMISE-INAPPLICABLE` /
-   `PREMISE-REJECTED`, owned by `Compile_evidence.verdict_state_to_string`.
+   frozen token `PREMISE-CERTIFIED` / `PREMISE-REJECTED`, owned by
+   `Compile_evidence.verdict_state_to_string`.
    Consumers parse field 2 and never the prose. The token says PREMISE, not
    PROVEN: the extracted function certifies its premises over the ABSTRACT
-   model, and measured against real papers that certificate is wrong 5.0% of
-   the time (5.7% restricted to LP-Core — scoping the claim to the proven
-   subset makes it MORE wrong, not less). `tier=` is INFORMATION, not a gate,
+   model, and measured against real papers that certificate is wrong on a few
+   percent of them; restricting to LP-Core does not reliably help, so the older
+   claim that LP-Core scoping is always worse is withdrawn (C-43). The current
+   figures are generated into the "How often the certificate is wrong" table in
+   `docs/v27/PROJECT_STATE.md` and are deliberately not duplicated here.
+
+   ⚠ **C1 (2026-09-04) retired the third state, `PREMISE-INAPPLICABLE`.** It
+   meant "every premise bearing on compilability holds, but some `\label` is
+   defined twice". `pdflatex_compile_safe` never takes that conjunct — it takes
+   `project_well_typed` (T2) and `profile_supported` (T3) only, and
+   `CompileGuaranteeBridge` discharged the nodup obligation and then discarded
+   it. The state therefore described the DECIDER's shape rather than the
+   theorem's, and withheld certification from 33 of 400 sampled documents, 31
+   of which compile. Certification is now keyed on exactly the capstone's
+   hypotheses, licensed by
+   `project_wf_dec_compile_safe_modulo_label_uniqueness` (audited, closed under
+   the global context). **No verdict changed**: the retired branch already
+   returned READY, so the READY/NOT-READY decision is bit-identical. Duplicate
+   labels remain reported as a non-blocking advisory. `tier=` is INFORMATION, not a gate,
    and is taken from the comment-blanked view the contract classifies.
    Default (no-flag) output is byte-identical. The hand-written OCaml mirror of
    the boolean checkers is **removed**.

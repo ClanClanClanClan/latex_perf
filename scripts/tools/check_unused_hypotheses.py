@@ -55,6 +55,12 @@ LOAD_BEARING = [
     "proofs/InvalidationSound.v",
     "proofs/DependencyInvalidation.v",
     "proofs/ProjectSemantics.v",
+    # OPEN-054. The capstone was NOT scanned by the gate built to catch
+    # exactly its failure mode — a theorem listing premises its proof
+    # discards. Adding these two made the gate fail immediately at
+    # PdflatexModel.v:907, which lists six T-obligations and uses two.
+    "proofs/PdflatexModel.v",
+    "proofs/CompileGuaranteeBridge.v",
 ]
 
 THRESHOLD = 2  # 2+ bare underscores = suspicious

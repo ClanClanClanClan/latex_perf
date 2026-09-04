@@ -181,31 +181,52 @@ type premise_report = {
 
    The tokens deliberately say PREMISE, not PROVEN. `project_wf_dec_sound`
    certifies its premises over the ABSTRACT model, and measured against real
-   documents that certificate is wrong 6.7% of the time (12 of 179 certified
-   sample-2 papers fail pdflatex; 11 of 181 = 6.1% in sample 1). Restricting to
-   LP-Core does not reliably help — 7.6% on sample 2 but 4.3% on sample 1. A
-   token containing "proven" would therefore be false on a measurable
-   population. (C-43: the older 5.0%/5.7% figures were stale, and the claim that
-   LP-Core scoping is always worse does not survive both samples.) *)
+   documents that certificate is wrong on a few percent of certified real
+   papers, in BOTH samples and at both tier scopes. A token containing "proven"
+   would therefore be false on a measurable population.
+
+   ⚠ The rate is deliberately NOT restated here. C-43 found this exact figure
+   hardcoded in SIX files and stale in all of them, because a re-grade moved it
+   and the prose did not follow. It is now COMPUTED into the generated block of
+   docs/v27/PROJECT_STATE.md ("How often the certificate is wrong") from the
+   same committed artefacts, which is the only place it can be read. *)
 type verdict_state =
-  | Premise_certified  (** every obligation holds *)
-  | Premise_inapplicable  (** only the nodup obligation is unmet *)
+  | Premise_certified  (** every obligation the capstone CONSUMES holds *)
   | Premise_rejected  (** a compilability-bearing obligation fails *)
 
 let verdict_state_to_string = function
   | Premise_certified -> "PREMISE-CERTIFIED"
-  | Premise_inapplicable -> "PREMISE-INAPPLICABLE"
   | Premise_rejected -> "PREMISE-REJECTED"
 
-let all_hold (r : premise_report) : bool =
-  r.t2_closed && r.t3_declared && r.t3_body && r.t4_unique_labels
+(* C1. EXACTLY the hypotheses [pdflatex_compile_safe] consumes — the OCaml
+   mirror of the Coq [project_wf_dec_compile]. *)
+let compile_premises_hold (r : premise_report) : bool =
+  r.t2_closed && r.t3_declared && r.t3_body
 
-(* The three-way classification the CLI prints and the metric parses. Kept
-   beside [all_hold] so the two can never disagree: certified IS all_hold. *)
+(* Mirrors the Coq [project_wf_dec] and MUST keep doing so: it is the premise of
+   [project_wf_dec_sound], whose extra T4 conjunct licenses the SEPARATE
+   corollary [pdflatex_labels_resolve_uniquely]. The Coq
+   [project_wf_dec_factors] proves this same factoring by [reflexivity]. *)
+let all_hold (r : premise_report) : bool =
+  compile_premises_hold r && r.t4_unique_labels
+
+(* C1. The classification the CLI prints and the metric parses.
+
+   ⚠ It was three-way, and certified was [all_hold]. That withheld certification
+   on label uniqueness — a premise [pdflatex_compile_safe] does NOT take. The
+   capstone's hypotheses are [project_well_typed] (T2) and [profile_supported]
+   (T3) only; [CompileGuaranteeBridge] discharged the nodup obligation and then
+   discarded it, binding it as [_Hcoh]. So the third state described the
+   DECIDER's shape, not the theorem's, and 33 of 400 real documents were refused
+   a certificate they qualified for — 31 of them compile.
+
+   [project_wf_dec_compile_safe_modulo_label_uniqueness] is the licensing
+   theorem (audited by check_print_assumptions.py; Closed under the global
+   context). Duplicate labels remain reported, as an advisory — see C-43: they
+   are usually benign but CAN be fatal, and either way that is a heuristic
+   observation, not a premise of the proof. *)
 let verdict_state (r : premise_report) : verdict_state =
-  if all_hold r then Premise_certified
-  else if r.t2_closed && r.t3_declared && r.t3_body then Premise_inapplicable
-  else Premise_rejected
+  if compile_premises_hold r then Premise_certified else Premise_rejected
 
 (* ── Extraction ───────────────────────────────────────────────────── *)
 

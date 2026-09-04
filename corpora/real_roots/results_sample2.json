@@ -3,15 +3,15 @@
   "frame": "2,719 pdflatex/single-toplevel packages (00README.json), same rule as sample 1",
   "oracle": {
     "version": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
-    "protocol": "run_to_fixpoint mirror: <=3 passes, -halt-on-error kept, break on first rc 0, then ONE confirming pass (authoritative rc)"
+    "protocol": "run_to_fixpoint mirror: <=3 passes, -halt-on-error kept, break on first rc 0, then ONE confirming pass; RESTRICTED shell-escape (pdflatex default) per OPEN-053"
   },
   "counts": {
-    "true-READY": 169,
+    "true-READY": 171,
     "false-NOT-READY": 14,
-    "FALSE-READY": 9,
+    "FALSE-READY": 7,
     "true-NOT-READY": 8
   },
-  "correct": 177,
+  "correct": 179,
   "graded": 200,
   "docs": [
     {
@@ -924,13 +924,13 @@
     {
       "arxiv_id": "2507.04712v1",
       "toplevel": "lcsys.tex",
-      "cell": "FALSE-READY",
-      "pdflatex_verdict": "fails",
-      "passes": 3,
-      "first_error": "! Package pdftex.def Error: File `enami1-eps-converted-to.pdf' not found: using",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 2,
+      "first_error": "",
       "cli_rc": 0,
       "cli_reasons": [],
-      "graded_by": "local-authoritative-oracle"
+      "graded_by": "local-authoritative-oracle (restricted shell-escape, OPEN-053)"
     },
     {
       "arxiv_id": "2507.04814v1",
@@ -1547,13 +1547,13 @@
     {
       "arxiv_id": "2507.09725v1",
       "toplevel": "samplepaper.tex",
-      "cell": "FALSE-READY",
-      "pdflatex_verdict": "fails",
-      "passes": 3,
-      "first_error": "! Package pdftex.def Error: File `figure_method2_v3-eps-converted-to.pdf' not f",
+      "cell": "true-READY",
+      "pdflatex_verdict": "compiles",
+      "passes": 2,
+      "first_error": "",
       "cli_rc": 0,
       "cli_reasons": [],
-      "graded_by": "local-authoritative-oracle"
+      "graded_by": "local-authoritative-oracle (restricted shell-escape, OPEN-053)"
     },
     {
       "arxiv_id": "2507.09731v1",

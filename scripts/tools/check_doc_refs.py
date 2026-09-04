@@ -183,6 +183,13 @@ def main() -> int:
                 continue
             if "_build" in md.parts:
                 continue
+            # Gitignored SCRATCH written by check_gate_selftests.py while it
+            # mutates gates. It is transient, it is not documentation, and
+            # scanning it made THIS gate (and check_gates_meta, which runs it)
+            # fail spuriously whenever a selftest run had happened — twice in
+            # one session before it was tracked down.
+            if ".gate-selftest-backups" in md.parts:
+                continue
             if ".claude" in md.parts:
                 continue
             if "latex-perfectionist" in md.parts:

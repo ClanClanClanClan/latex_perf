@@ -3,7 +3,7 @@
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results.json",
   "cli_sha256": "8b91b1159d1b73fdf77bb581e58512ca0dbd802fd881652b911fd0aa977d9dcf",
-  "measured_at_sha": "ae11dca259c01ca26a03e7a504da45cdcf488b9c",
+  "measured_at_sha": "11380ca0f1f589834b61ba4ad334cfe7d537959c",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
    "PREMISE-INAPPLICABLE",

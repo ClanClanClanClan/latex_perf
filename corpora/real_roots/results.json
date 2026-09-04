@@ -3,7 +3,7 @@
   "engine": "pdflatex",
   "distribution": "TeX Live 2026",
   "version": "pdfTeX 3.141592653-2.6-1.40.29",
-  "protocol": "-interaction=nonstopmode -halt-on-error -no-shell-escape, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint) \u2014 APPLIED TO 18/200 rows; the remainder carry a single-pass grade from an earlier run, independently verified stable (all 186 recorded-compiling papers re-run for 3 passes on 2026-08-25: patterns (0,0,0) x182 and (1,0,0) x4, ZERO pass-1-ok-then-later-fail)"
+  "protocol": "-interaction=nonstopmode -halt-on-error, up to 3 passes (LaTeX is multi-pass; see run_to_fixpoint) \u2014 APPLIED TO 18/200 rows; the remainder carry a single-pass grade from an earlier run"
  },
  "frame": {
   "corpus": "LP_v24_FULL_BACKUP_20250716_165548/corpus/papers",
@@ -533,10 +533,10 @@
    "cli_rc": 0,
    "cli_verdict": "READY",
    "cli_reasons": [],
-   "pdflatex_rc": 1,
+   "pdflatex_rc": 0,
    "first_error": "! Package pdftex.def Error: File `Definitions/logo-mdpi-eps-converted-to.pdf' not found: using draft setting.See the pdftex.def package documentation for explan",
    "cell": "ungraded-infra",
-   "pdflatex_passes": 3
+   "pdflatex_passes": 2
   },
   {
    "arxiv_id": "2507.10710v1",
@@ -3448,5 +3448,5 @@
   }
  ],
  "measured_at_sha": "ae11dca259c01ca26a03e7a504da45cdcf488b9c",
- "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
+ "measured_at": "multi-pass re-grade of recorded FAILURES only (<= 3 passes, 18 rows); CLI verdicts and already-compiling papers carried forward from the prior run"
 }

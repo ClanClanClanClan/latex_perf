@@ -526,9 +526,14 @@ let run_explain (rule_id : string) : int =
    decision in [run_compile_check] — previously this verdict was print-only and
    the exit code came solely from the (vacuous-T3) [check_ready_to_compile], so
    a fontspec document printed MODEL-NOT-READY yet exited 0 READY while pdflatex
-   failed. Gating READY on [all_hold] makes the verdict strictly STRICTER, so it
-   can only remove false-READYs, never add one (soundness-preserving by
-   construction). *)
+   failed.
+
+   ⚠ The gate is [compile_premises_hold], NOT [all_hold] — and always was, in
+   behaviour: before C1 the duplicate-label branch printed a different token but
+   ALSO returned [true], so the boolean this function contributes is unchanged
+   by C1, bit for bit. What C1 changed is the token, which stopped claiming we
+   could not certify documents the capstone certifies fine. Gating on premises
+   the theorem consumes can only remove false-READYs, never add one. *)
 
 (** Run the T0–T5 pre-compile readiness contract on one file and print a clear
     verdict. Sets up the same per-file context the lint path uses (file context,
@@ -554,8 +559,10 @@ let print_model_connected_verdict ~src ~tier
   in
   let r = CE.report p pf order in
   (* OPEN-008. [all_hold] mirrors [project_wf_dec] and MUST keep doing so — the
-     Coq correspondence depends on it, so the fix belongs here, in how a failed
-     premise is INTERPRETED, not in the predicate.
+     Coq correspondence depends on it. C1 did NOT weaken it; it added a second
+     mirror, [compile_premises_hold] = Coq [project_wf_dec_compile], and keyed
+     the verdict on that one. [project_wf_dec_factors] proves the two agree by
+     [reflexivity]: the old decider IS the new one conjoined with nodup.
 
      [project_wf_dec_sound] is ONE-DIRECTIONAL: dec = true IMPLIES
      pdflatex_compile_safe; dec = false implies NOTHING. So an unmet premise
@@ -587,25 +594,28 @@ let print_model_connected_verdict ~src ~tier
      So it is recorded as a fixture and left undetected, per the precedent that
      a zero-incidence class does not earn a detector.
 
-     So the verdict is three-way: certified / not-certifiable-but-not-rejected /
-     rejected. Only the third exits non-zero. *)
-  let blocking_premises (r : CE.premise_report) =
-    r.CE.t2_closed && r.CE.t3_declared && r.CE.t3_body
-  in
+     C1 (2026-09-04) made the verdict TWO-way: certified / rejected. The middle
+     state existed only to say "the compile premises hold but a label is
+     duplicated" — a distinction the capstone does not make, since it never
+     takes the nodup conjunct. Both of the old non-rejecting branches already
+     returned READY, so retiring it moved no verdict. Only rejection exits
+     non-zero, as before. *)
   (* Phase A (2026-09-04). The old line read "MODEL-READY (Coq
      project_wf_dec_sound => pdflatex_compile_safe)" — it named a theorem whose
      conclusion is about the ABSTRACT model and let the reader hear "your
-     document compiles". Measured, that reading is wrong on 6.7% of certified
-     papers in the virgin sample 2 (12 of 179) and 6.1% in sample 1 (11 of 181).
+     document compiles". Measured, that reading is wrong on a few percent of
+     certified papers in both samples.
 
-     C-43. The figures here used to read 5.0%/5.7%, and argued that scoping the
-     citation to LP-Core would make it MORE wrong. Both are corrected. The rates
-     were stale — sample 2 was re-graded by the shell-escape fix and this prose
-     was not — and the DIRECTION IS NOT STABLE across samples: LP-Core is worse
-     on sample 2 (7.6%, 7 of 92) but better on sample 1 (4.3%, 4 of 94). The
-     tier below is INFORMATION rather than a gate because neither rate is
-     anywhere near zero on either sample, not because restricting to LP-Core
-     reliably concentrates the error.
+     C-43. The figures here used to read 5.0%/5.7% and argued that scoping the
+     citation to LP-Core would make it MORE wrong. Both are withdrawn: the rates
+     were stale (a re-grade moved them and this prose did not follow) and the
+     direction is not stable across samples. The tier below is INFORMATION
+     rather than a gate because the rate is nowhere near zero on either sample,
+     not because restricting to LP-Core concentrates the error.
+
+     ⚠ No rate is restated here. C-43 found this figure hardcoded in SIX files
+     and stale in all of them; it is now generated into the "How often the
+     certificate is wrong" table of docs/v27/PROJECT_STATE.md.
 
      ⚠ The prose must contain no bare `T<digit>` and no `XXX-999` token:
      diff_real_roots.py scrapes reasons with \b(T\d|[A-Z]{2,8}-\d{3})\b over the
@@ -613,32 +623,37 @@ let print_model_connected_verdict ~src ~tier
      READY document. The obligations are therefore named in prose, never by
      their T-numbers. *)
   let state_field s = CE.verdict_state_to_string s in
-  if CE.all_hold r then (
+  (* C-43. The advisory used to end "pdflatex warns and exits 0". That is the
+     usual case, not the rule: the LAST \newlabel written wins, so a duplicate
+     changes WHICH value a reference resolves to, and if that value is read as a
+     number the run dies (fr_dup_numeric_kill). Natural incidence is zero, so
+     this stays an advisory rather than a detector — but it must not promise
+     exit 0.
+
+     ⚠ It deliberately contains no bare "T4" token: diff_real_roots.py scrapes
+     reasons with \b(T\d|[A-Z]{2,8}-\d{3})\b over the whole buffer, so printing
+     one would record a BLOCKING reason for a document that is READY. *)
+  let duplicate_label_advisory () =
+    if not r.CE.t4_unique_labels then
+      printf
+        "  advisory (non-blocking): duplicate \\label(s) [%s] — the last \
+         definition wins, so a reference resolves to that one; usually just a \
+         \"Label multiply defined\" warning, but fatal where the value is read \
+         as a number\n"
+        (String.concat "; " (CE.duplicate_label_keys src))
+  in
+  (* C1. Certification is keyed on the premises the capstone actually consumes
+     (closure + engine admissibility), NOT on [all_hold]. Label uniqueness is
+     not a hypothesis of [pdflatex_compile_safe]; it licenses the separate
+     reference-resolution corollary. *)
+  if CE.compile_premises_hold r then (
     printf
       "MODEL-CONNECTED\t%s\ttier=%s\tbuild-graph closure and engine-feature \
        admissibility verified over the abstract model; NOT a compilation \
        guarantee (docs/COMPILATION_GUARANTEE.md)\n"
       (state_field CE.Premise_certified)
       (Latex_parse_lib.Language_profile.tier_to_string tier);
-    true)
-  else if blocking_premises r then (
-    (* Every premise that bears on compilability holds; only nodup is unmet, and
-       the capstone is one-directional, so it certifies nothing here and rejects
-       nothing either.
-
-       ⚠ The advisory below deliberately does NOT contain a bare "T4" token.
-       scripts/tools/diff_real_roots.py scrapes reasons with
-       \b(T\d|[A-Z]{2,8}-\d{3})\b, so printing one here would record a blocking
-       reason in results.json for a document that is now READY. *)
-    printf
-      "MODEL-CONNECTED\t%s\ttier=%s\tduplicate-label obligation unmet; the \
-       capstone is one-directional, so it neither certifies nor rejects here\n"
-      (state_field CE.Premise_inapplicable)
-      (Latex_parse_lib.Language_profile.tier_to_string tier);
-    printf
-      "  advisory (non-blocking): duplicate \\label(s) [%s] — pdflatex warns \
-       \"Label multiply defined\" and exits 0\n"
-      (String.concat "; " (CE.duplicate_label_keys src));
+    duplicate_label_advisory ();
     true)
   else (
     printf
@@ -655,11 +670,7 @@ let print_model_connected_verdict ~src ~tier
         (String.concat "; "
            (List.map CE.feature_to_string r.CE.unsupported_features))
         (CE.engine_to_string pf.CE.prof_engine);
-    if not r.t4_unique_labels then
-      printf
-        "  advisory (non-blocking): duplicate \\label(s) [%s] — pdflatex warns \
-         and exits 0\n"
-        (String.concat "; " (CE.duplicate_label_keys src));
+    duplicate_label_advisory ();
     false)
 
 let run_compile_check ~fast ~path ~src : int =

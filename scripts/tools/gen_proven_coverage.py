@@ -14,13 +14,20 @@ THE PARSE CONTRACT. The CLI prints one line:
     MODEL-CONNECTED \t <STATE> \t tier=<tier> \t <prose>
 
 Field 2 is the frozen token owned by Compile_evidence.verdict_state_to_string
-(PREMISE-CERTIFIED | PREMISE-INAPPLICABLE | PREMISE-REJECTED). Parse THAT.
-Never regex the prose — that is what broke before.
+(PREMISE-CERTIFIED | PREMISE-REJECTED). Parse THAT. Never regex the prose —
+that is what broke before.
+
+C1 (2026-09-04) retired PREMISE-INAPPLICABLE. It meant "every premise bearing on
+compilability holds, but the body defines some \\label twice", and the capstone
+never takes that conjunct — so the token described the DECIDER's shape, not the
+theorem's, and withheld the metric from 33 of 400 documents, 31 of which
+compile. Certification is now keyed on exactly the capstone's hypotheses.
 
 The tokens say PREMISE, not PROVEN, deliberately: the capstone certifies its
 premises over an abstract model, and measured against real documents that
-certificate is wrong 6.7% of the time on the virgin sample 2 and 6.1% on
-sample 1. Restricting to LP-Core does not reliably help (7.6% / 4.3%).
+certificate is wrong on a few percent of them. The rate itself is GENERATED
+into docs/v27/PROJECT_STATE.md from the artefacts this script writes — see
+C-43 for why it is not restated in prose anywhere.
 """
 import argparse
 import hashlib
@@ -29,7 +36,7 @@ import pathlib
 import subprocess
 import sys
 
-STATES = {"PREMISE-CERTIFIED", "PREMISE-INAPPLICABLE", "PREMISE-REJECTED"}
+STATES = {"PREMISE-CERTIFIED", "PREMISE-REJECTED"}
 
 
 def sha256_file(p: pathlib.Path) -> str:

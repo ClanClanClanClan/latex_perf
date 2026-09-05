@@ -90,6 +90,14 @@ CAPSTONES = [
         "model-level compile-safety theorem.",
     ),
     (
+        "CompileGuaranteeBridge.project_wf_dec_compile_safe_modulo_label_uniqueness",
+        "LaTeXPerfectionist.CompileGuaranteeBridge",
+        "C1: the checker WITHOUT the nodup conjunct still implies the full "
+        "compile-safety conclusion. This is the theorem that licenses certifying "
+        "a document carrying duplicate \\label keys, so it must stay axiom-free "
+        "for the shipped verdict to mean anything.",
+    ),
+    (
         "PdflatexModel.pdflatex_compile_safe",
         "LaTeXPerfectionist.PdflatexModel",
         "the headline model theorem: well-typed project + supported profile => "

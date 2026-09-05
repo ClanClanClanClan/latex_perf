@@ -100,18 +100,22 @@ Re-ordered and re-scoped after review; v1's ordering (A1→A2→A3) was wrong.
   `T<digit>` and no `XXX-999` token**: `diff_real_roots.py` scrapes reasons
   over the whole buffer, so naming the obligations by number would record a
   blocking reason for every READY document.
-- **A1′ — tier is a FIELD, not a gate.** The certificate is wrong on **6.7%**
-  of certified sample-2 papers and 6.1% of sample 1; restricting to LP-Core
-  gives 7.6% / 4.3%, so it does not reliably help either way (C-43 corrected
-  the stale 5.0%/5.7% pair and the unstable direction claimed from it). Gating
-  the citation on a tier therefore buys no honesty. The tier is printed as
+- **A1′ — tier is a FIELD, not a gate.** The certificate is wrong on a few
+  percent of certified papers, and restricting to LP-Core does not reliably
+  help — the direction differs between samples (C-43 corrected the stale
+  5.0%/5.7% pair and withdrew the general claim built on it; the live figures
+  are generated into PROJECT_STATE, not restated). Gating the citation on a
+  tier therefore buys no honesty. The tier is printed as
   information, sourced from `Compile_contract.classification_view` — the same
   comment-blanked view the contract classifies, because sourcing it from the
   raw view is precisely C-41.
-- **A2 last** — three states, not two (`PREMISE-CERTIFIED` /
-  `PREMISE-INAPPLICABLE` / `PREMISE-REJECTED`), owned by
-  `Compile_evidence.verdict_state`. Exit codes unchanged, so all 83 fixtures
-  survive. No token contains "proven": while a certified LP-Core document can
+- **A2 last** — states owned by `Compile_evidence.verdict_state`. Exit codes
+  unchanged, so all fixtures survive. ⚠ **Superseded by C1 (2026-09-04): the
+  vocabulary is now TWO states, `PREMISE-CERTIFIED` / `PREMISE-REJECTED`.**
+  Phase A shipped three because it preserved the existing decider's shape; C1
+  established that the middle state (`PREMISE-INAPPLICABLE`, "only the
+  duplicate-label obligation is unmet") corresponds to no hypothesis of the
+  capstone, and retired it. Verdicts are bit-identical either way. No token contains "proven": while a certified LP-Core document can
   fail pdflatex, such a token would be false on a measurable population.
 - **Metric renamed** to *premise-certified coverage* in the generated block.
 - ⚠ The published LP-Core numbers moved (84→90, 76→79) **because the tier is
@@ -137,11 +141,31 @@ Re-ordered and re-scoped after review; v1's ordering (A1→A2→A3) was wrong.
 
 Ranked by measured gain per unit effort.
 
-- **C1** **T4-nodup inapplicability — the cheapest coverage gain in the repo.**
-  17 documents on sample 1 (10 LP-Core) are READY but *uncertified* because
-  the `nodup` premise is unmet — duplicate `\label`s, which pdflatex merely
-  warns about and OPEN-008 already ruled harmless. Align the premise with that
-  decision and up to +5pp lands immediately. **S-M**
+- **C1** ✅ **SHIPPED 2026-09-04. T4-nodup inapplicability — the cheapest
+  coverage gain in the repo.** 17 documents on sample 1 (10 LP-Core) and 16 on
+  sample 2 (8 LP-Core) were READY but *uncertified* because the `nodup` premise
+  was unmet.
+
+  ⚠ **The justification originally written here was WRONG and must not be
+  reused.** It read "duplicate `\label`s, which pdflatex merely warns about and
+  OPEN-008 already ruled harmless" — C-43 refuted exactly that: a duplicate
+  `\label` IS fatal when the key is read as a number, and the failure never
+  converges. Compile-safety was never the right argument.
+
+  The correct argument is **proof-neutrality**: `pdflatex_compile_safe` takes
+  `project_well_typed` (T2) and `profile_supported` (T3) and NOTHING else;
+  `CompileGuaranteeBridge` discharged the nodup obligation and then discarded
+  it (bound as `_Hcoh`). Certification was being withheld on a premise the
+  theorem does not consume. Dropping it from the *certification* predicate
+  weakens nothing that was ever proved — and the ANTI-TAUT-OK note now at
+  `PdflatexModel.v:907` records the same over-quantification one level up.
+
+  Shipped as an additive Coq change (`project_wf_dec_compile`,
+  `project_wf_dec_factors` by `reflexivity`, `project_wf_dec_compile_sound`,
+  `project_wf_dec_compile_safe_modulo_label_uniqueness`) with the original
+  corollary re-derived, so no existing consumer weakened and the extract did
+  not change. **Zero verdicts moved** — the retired branch already returned
+  READY. **S-M**
 - **C2** Residual over-rejection among LP-Core documents (14 on sample 2).
   **M**
 - **C3** E-track E1, benign `\def` admission — the ceiling item, reinstated.

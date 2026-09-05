@@ -179,6 +179,45 @@ Definition project_wf_dec
   (* T4 — the body defines each label at most once *)
   nodup_nat_b (body_label_defs p.(proj_body)).
 
+(** ── C1: the COMPILE-ONLY decider ──────────────────────────────────────
+
+    [project_wf_dec] demands FOUR conjuncts, but [pdflatex_compile_safe] takes
+    only TWO hypotheses: [project_well_typed] (T2) and [profile_supported]
+    (T3).  The T4/nodup conjunct is discharged by [project_wf_dec_sound] and
+    then DISCARDED — see [project_wf_dec_compile_safe] below, where it is bound
+    as [_Hcoh] and never used.  Its real consumer is the separate corollary
+    [PdflatexModel.pdflatex_labels_resolve_uniquely], which is a statement
+    about REFERENCE RESOLUTION, not about compilation.
+
+    So withholding a COMPILATION certificate on label uniqueness is an artefact
+    of this decider's shape, not a consequence of the theorem.  Measured cost of
+    that artefact: 17 of 200 real documents in sample 1 and 16 of 200 in sample
+    2 are refused certification on it alone, and 31 of those 33 compile.
+
+    Nothing is weakened.  [project_wf_dec_factors] records that the original
+    decider is DEFINITIONALLY this one conjoined with nodup, so every existing
+    consumer keeps exactly the guarantee it had. *)
+Definition project_wf_dec_compile
+    (p : pdflatex_project) (pf : pdflatex_profile)
+    (order : list node) : bool :=
+  (* T2 — build graph closed + acyclic (via the witnessed order) *)
+  project_closed_b p.(proj_graph) order &&
+  (* T3 — engine admits the profile's declared features *)
+  all_features_compatible pf.(prof_features) pf.(prof_engine) &&
+  (* T3 — engine admits every feature THE DOCUMENT BODY requires *)
+  all_features_compatible (body_required_features p.(proj_body))
+                          pf.(prof_engine).
+
+(** The old decider factors through the new one.  [&&] is LEFT-associative, so
+    this holds by [reflexivity] — the two deciders are not merely equivalent,
+    they are the same term up to the nodup conjunct. *)
+Lemma project_wf_dec_factors :
+  forall p pf order,
+    project_wf_dec p pf order
+    = project_wf_dec_compile p pf order
+      && nodup_nat_b (body_label_defs p.(proj_body)).
+Proof. reflexivity. Qed.
+
 (** ── SOUNDNESS: true ==> the capstone's exact hypotheses (+T4) ─────── *)
 
 Theorem project_wf_dec_sound :
@@ -207,12 +246,62 @@ Proof.
   auto.
 Qed.
 
+(** Soundness of the compile-only decider: exactly the capstone's hypotheses,
+    and nothing more.  Note what is ABSENT from the conclusion — no
+    [pdflatex_T4_coherent], because no compilation conjunct consumes it. *)
+Theorem project_wf_dec_compile_sound :
+  forall p pf order,
+    project_wf_dec_compile p pf order = true ->
+    project_well_typed p /\ profile_supported p pf.
+Proof.
+  intros p pf order H. unfold project_wf_dec_compile in H.
+  apply andb_true_iff in H. destruct H as [H Hbody].
+  apply andb_true_iff in H. destruct H as [Hclosed Hdecl].
+  split.
+  - (* T2 *)
+    unfold project_well_typed, pdflatex_T2_closed.
+    eapply project_closed_b_sound. exact Hclosed.
+  - (* T3 — both admissibility obligations *)
+    unfold profile_supported. split.
+    + apply T3_profile_compatible. exact Hdecl.
+    + apply T3_profile_compatible. exact Hbody.
+Qed.
+
 (** ── CAPSTONE COROLLARY: a [true] verdict discharges [pdflatex_compile_safe].
 
     This is the payload: a purely computational check whose success PROVES the
     document compiles safely, converges in ≤2 passes, stays fatal-free, and
     warns iff a \ref is unresolved — the full conclusion of the headline
     theorem, now GOVERNED by a decidable premise-check. *)
+Theorem project_wf_dec_compile_safe_modulo_label_uniqueness :
+  forall p pf order,
+    project_wf_dec_compile p pf order = true ->
+    exists out,
+      pdflatex_produces p pf out /\
+      pdflatex_compilation_succeeds p pf /\
+      pdflatex_output_format_well_formed out /\
+      (faithful_run p pf 2).(L0Pass.converged) = true /\
+      L0Log.log_no_fatal (L0Pass.log (faithful_run p pf 2)) /\
+      (L0Log.warnings (L0Pass.log (faithful_run p pf 2)) <> []
+         <-> project_has_unresolved_ref p pf) /\
+      out = faithful_artefact p pf 2.
+Proof.
+  intros p pf order H.
+  destruct (project_wf_dec_compile_sound p pf order H) as [Hwt Hsupp].
+  apply pdflatex_compile_safe; assumption.
+Qed.
+
+(** The original corollary, now DERIVED from the weaker one.  Kept verbatim in
+    statement so every downstream consumer — and the audited capstone list in
+    [scripts/tools/check_print_assumptions.py] — is unaffected.
+
+    ⚠ The name says [modulo_label_uniqueness], NOT [modulo_warnings]: the
+    warnings-IFF-unresolved-ref conjunct SURVIVES INTACT.  It is discharged by
+    [LexerFaithfulStep.warns_iff_unresolved_two], which quantifies over an
+    ARBITRARY token list with no duplicate-freeness side condition — reference
+    resolution is insensitive to how many times a label was defined, only to
+    whether it was defined at all.  What is lost is uniqueness of the RESOLVED
+    VALUE, which is [pdflatex_labels_resolve_uniquely]'s business. *)
 Theorem project_wf_dec_compile_safe :
   forall p pf order,
     project_wf_dec p pf order = true ->
@@ -227,8 +316,9 @@ Theorem project_wf_dec_compile_safe :
       out = faithful_artefact p pf 2.
 Proof.
   intros p pf order H.
-  destruct (project_wf_dec_sound p pf order H) as [Hwt [Hsupp _Hcoh]].
-  apply pdflatex_compile_safe; assumption.
+  apply project_wf_dec_compile_safe_modulo_label_uniqueness with (order := order).
+  rewrite project_wf_dec_factors in H.
+  apply andb_true_iff in H. destruct H as [Hcompile _Hnodup]. exact Hcompile.
 Qed.
 
 (** ── COMPLETENESS side (mirror-equivalence sanity): a [true] verdict is

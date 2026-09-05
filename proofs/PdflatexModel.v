@@ -905,10 +905,18 @@ Lemma pdflatex_compile_progress_rule_proof :
     pdflatex_bounded_terminates p pf ->
     pdflatex_compilation_succeeds p pf.
 Proof.
-  (* T2 AND T3 are now BOTH LOAD-BEARING: closure (T2) rules out the dangling
-     edge fatal, profile-admissibility (T3) rules out the unsupported-feature
-     fatal ⇒ no_fatal_tokens ⇒ the converged log is fatal-free. This is the
-     real content of compile-safety. *)
+  (* ANTI-TAUT-OK: this lemma deliberately mirrors the SHAPE of the six-
+     obligation T0..T5 contract, because its job is to discharge the contract's
+     progress rule. Only T2 and T3 are load-bearing, and that is the point
+     rather than an oversight: closure (T2) rules out the dangling-edge fatal
+     and profile-admissibility (T3) rules out the unsupported-feature fatal ⇒
+     no_fatal_tokens ⇒ the converged log is fatal-free.
+
+     The stronger statement — the same conclusion from T2 and T3 ALONE — is
+     [pdflatex_compile_safe], and the fact that T0/T1/T4/T5 are discarded here
+     is exactly what C1 acted on: [CompileGuaranteeBridge.project_wf_dec] was
+     demanding the T4 conjunct that no compilation conjunct consumes. T4's one
+     genuine consumer is [pdflatex_labels_resolve_uniquely] below. *)
   intros p pf _ _ HT2 HT3 _ _ Hbound.
   destruct Hbound as [k [Hk Hconv]].
   destruct HT3 as [HT3decl HT3body].

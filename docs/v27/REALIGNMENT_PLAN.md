@@ -242,8 +242,15 @@ Not adequacy (F3). In dependency order:
 
 ### Phase G — The rule side (best value/effort in the repo)
 
-1. i18n gated golden suite **silently skipped** (missing dune dep) — one line;
-   355→366 PASS. It is the only live assertion of language gating. **S**
+1. **i18n gated golden suite silently skipped — MECHANICALLY CONFIRMED, VALUE
+   REFUTED.** Skipped since 2026-04-07: `latex-parse/src/dune` lists 12 golden
+   yamls as deps and `i18n_qa_gated_golden.yaml` is not among them, so
+   `test_golden_corpus` prints `[golden] SKIP i18n_qa_gated` and exits 0. The
+   one-line dep does take 355 → 366 PASS. ⚠ But **73 of the 79 assertions it
+   adds are vacuous** — not one forbidden rule id fires even with gating
+   switched off — and it is **not** "the only live assertion of language
+   gating". So enable it to stop CI silently skipping a suite, but do not
+   count it as gating coverage. **S** 
 2. ✅ **SHIPPED 2026-09-05. L3-006 registered twice — MERGED, not deleted.**
    ⚠ Two claims in the original item are corrected. (a) "every document ships
    duplicate findings" is an overstatement: the two registrations are not the
@@ -274,14 +281,59 @@ Not adequacy (F3). In dependency order:
    exit 1 with the duplicate, exit 0 without. Also found: 8 sibling L1 rules
    are dead code — see OPEN-057. **S**
 
-3. **CHAR-004** catalogued `Reserved`, fires in production, duplicates
-   ENC-008 at a different severity. **S**
-4. Relabel the **fake mutation metric** (it greps for the rule id; no
-   mutation, 30% floor). **S**
-5. **Language gating is dead** — 46 rules carry a `languages` list, `run_all`
-   never filters. **M**
-6. 49 STYLE rules are Class D and never run by default; 30 TYPO rules
-   (incl. Error-severity TYPO-006) sit behind an undocumented env var. **M**
+3. **CHAR-004 vs ENC-008 — (a) and (b) confirmed, (c) BACKWARDS.** CHAR-004 is
+   catalogued `Reserved` (`rules_v3.yaml:70-77`) and does fire in production
+   (`validators_l1_expl3.ml:419` → `rules_enc_char_spc` → default `get_rules`).
+   ⚠ **But it does NOT duplicate ENC-008, and CHAR-004 is the SOUNDER of the
+   two.** ENC-008 omits the UTF-8 continuation-byte check that CHAR-004 has, so
+   **4 of its 5 fires across all 2,961 papers are false positives** on legacy
+   8-bit encodings, where CHAR-004 correctly abstains. **Deleting "the Reserved
+   duplicate" would delete the correct detector.** The real fix is the reverse:
+   give ENC-008 the continuation-byte guard (`validators_l0.ml:708-718`, using
+   the validated form at `validators_l1_expl3.ml:22-33`). Tracked as OPEN-059.
+   **S**
+4. **The "mutation" metric — CONFIRMED, and worse than stated.** It is a
+   literal quoted-substring grep over `test_*.ml`; it mutates nothing and the
+   floor is 0.30. Proved decisively: a scratch tree whose only "test" file is
+   an **OCaml comment listing rule ids** scores 100.0% and PASSes. It currently
+   publishes *"covered: 522/548 (95.3%)"* under a job titled **Mutation
+   Baseline**. ⚠ Two corrections: `mutation` is **not** a required check
+   (verified against live branch protection), and the file must **not** be
+   renamed — `check_memo_files.py` (in required `spec-drift`) maps the memo
+   path to it. Fix is a pure relabel of the docstring and output strings.
+   Tracked as OPEN-060. **S**
+5. **Language gating is dead — CONFIRMED, and it is the largest user-visible
+   defect in Phase G.** Exactly **46** rules carry a non-empty `languages`
+   list. `filter_by_language` (`validators.ml:710`) has exactly ONE caller,
+   `run_all_for_language`, whose only four callers in the whole repo are
+   **tests**. Every production entry point iterates `get_rules ()` unfiltered.
+   ⚠ **Measured on 939 real papers: 625 (66.6%) receive at least one finding
+   from a rule tagged for a language the document is not in** — 908 findings,
+   35.0% of everything those 46 rules emit. Worst single offender: `LANG-003`
+   "Mixed French/English punctuation spacing", firing on **552 of 939
+   (58.8%)**.
+   ⚠ **Do NOT apply the obvious fix.** Routing `run_all` through
+   `filter_by_language ... (Language_detect.detect_language src)` flips **25
+   golden `expect` entries in 3 suites**, puts 129 `run_all`-routed assertions
+   at risk, and costs the required `smoke-cli` producer-coverage gate 21
+   rules' triggers. The detector is also too weak to carry it: the locale
+   suite's own JA-001/KO-001 fixtures detect as `en`, JA-002's as `zh`.
+   Minimal correct fix: gate only on an EXPLICIT `babel`/`polyglossia`
+   declaration and leave the byte heuristic non-gating. Tracked as OPEN-061.
+   **M**
+6. **Class D / env-gated TYPO — both counts right, both qualifiers WRONG.**
+   49 STYLE rules are Class D (confirmed, `rule_contracts.yaml`: B 432, A 162,
+   D 49, C 17) and 30 TYPO rules are env-gated (confirmed). ⚠ But Class-D rules
+   are **not** "never run by default" — they execute in the default **FIX**
+   path via `run_all_with_class_d` (measured: `STYLE-015` rewrites `a.  b` →
+   `a. b` with no env var and no flag); they are excluded only from the default
+   LINT path. ⚠ And the env var is **not undocumented** — it appears in 8
+   places including a tracked ROADMAP deferral. ⚠ The 30 gated TYPO rules are
+   **not** the 30 the P3 comment says graduated (that promotion is real and
+   verified behaviourally) — they are a different 30, gated for a **measured**
+   reason: they fire on 98.4% of real papers, and `TYPO-023` (Error-severity,
+   which the plan missed alongside TYPO-006) silently corrupts rendered output.
+   **Recommendation: do NOT un-gate. Correct the claim.** **S**
 7. ✅ **SHIPPED 2026-09-05. `compile_blocking_ids` overstates the belt ~3×.**
    **CONFIRMED exactly by independent measurement**: the list holds 36 ids and
    precisely **24** can never reach `Error`, so the effective T5 belt is **12**

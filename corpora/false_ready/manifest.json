@@ -1,5 +1,5 @@
 {
-  "description": "Round-7 audit: confirmed --compile-check false-READY fixtures. Each is a document the CLI reports READY (exit 0) but pdflatex rejects under the strict READY oracle. The monotone gate (scripts/tools/check_known_false_ready.py) runs the CLI only (no TeX) and fails if any fixed fixture regresses or a live false-READY appears where none was recorded. Each R7 fix PR flips its entries' expected_cli to NOT-READY and lowers the baseline. Ground truth verified locally against pdflatex; refresh/verify with scripts/tools/false_ready_oracle.sh.",
+  "description": "Round-7 audit: confirmed --compile-check false-READY fixtures. Each is a document the CLI reports READY (exit 0) but pdflatex rejects under the strict READY oracle. The monotone gate (scripts/tools/check_known_false_ready.py) runs the CLI only (no TeX) and fails if any fixed fixture regresses or a live false-READY appears where none was recorded. Each R7 fix PR flips its entries' expected_cli to NOT-READY and lowers the baseline. Ground truth verified locally against pdflatex; refresh/verify with scripts/tools/false_ready_oracle.sh. baseline.false_ready_total is the number of LIVE fixtures (expected_cli=READY and pdflatex != compiles) and is GATED against the fixture list by check_known_false_ready.py. baseline.strong_fatal and baseline.error_halt are that same live set split by the recorded pdflatex grade, and must sum to false_ready_total. C-43 (2026-09-04): they had been frozen at the original round-7 values 7/1 (which summed to the then-total of 8) while the live set grew to 15, so they read as current facts while describing a three-month-old population; nothing gates them, which is why the drift was silent.",
   "ready_oracle": "clean single pass with no LaTeX Error (docs/COMPILATION_GUARANTEE.md SO1). strong-fatal = pdflatex produces NO PDF even under nonstopmode; error-halt = fails -halt-on-error / emits a LaTeX Error but limps to a PDF under nonstopmode.",
   "oracle": {
     "engine": "pdflatex",
@@ -11,9 +11,9 @@
     ]
   },
   "baseline": {
-    "false_ready_total": 15,
-    "strong_fatal": 7,
-    "error_halt": 1
+    "false_ready_total": 17,
+    "strong_fatal": 4,
+    "error_halt": 13
   },
   "fixtures": [
     {
@@ -931,6 +931,39 @@
       "pdflatex": "strong-fatal",
       "expected_cli": "NOT-READY",
       "note": "C-41 kill pin (2026-09-04): an unclosed \\textbf{ argument (rc 1,1 no PDF) plus ONE COMMENTED-OUT \\catcode line. The comment makes the RAW-view classifier say LP-Foreign while T0 — which since #570 classifies the comment-BLANKED view — passes; Validators._filter_by_tier then dropped every contracted rule (ZERO of 660 contracts carry Any_tier), silencing the whole T5 compile-blocking belt, and the CLI returned READY on a pdflatex-fatal document. Measured false-READY introduced by #570 and found by the realignment scoping. The filter now keeps compile-blocking ids unconditionally: a rule that asks 'will pdflatex fail?' does not depend on our subset classification. If this flips READY the belt is being filtered again."
+    },
+    {
+      "id": "fr_dup_numeric_kill",
+      "path": "fr_dup_numeric_kill.tex",
+      "kind": "single",
+      "class": "dup-label-numeric",
+      "fix_rank": 22,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "C-43. A duplicate \\label IS fatal when the key is read as a NUMBER. Both \\label{k:d} definitions are written to the .aux and the LAST wins, so \\getrefnumber{k:d} inside \\setcounter returns the enumerate value 'a' (\\theenumi renewed to \\alph) instead of the section value 1: '! Missing number, treated as zero'. NEVER converges - the dying pass truncates the .aux, so rc oscillates 0,1,0,1 forever. fr_dup_numeric_control is the same document with a unique second key and compiles. Refutes the old 'a duplicate label is not a compile error at all' claim. RECORDED, NOT DETECTED: natural incidence is ZERO over 2,961 corpus papers (31% carry a duplicate label, only 3 use a number-forcing reference context, conjunction never occurs)."
+    },
+    {
+      "id": "fr_dup_length_kill",
+      "path": "fr_dup_length_kill.tex",
+      "kind": "single",
+      "class": "dup-label-numeric",
+      "fix_rank": 22,
+      "tier": "lp-core",
+      "pdflatex": "error-halt",
+      "expected_cli": "READY",
+      "note": "C-43, second vector of the same mechanism through a LENGTH argument rather than a counter: \\hspace{\\getrefnumber{L:d}pt} with the duplicate resolving to a \\Roman value. Same oscillation 0,1,0,1. Present so a fix keyed on \\setcounter alone cannot claim the class."
+    },
+    {
+      "id": "fr_dup_numeric_control",
+      "path": "fr_dup_numeric_control.tex",
+      "kind": "single",
+      "class": "dup-label-numeric",
+      "fix_rank": 22,
+      "tier": "lp-core",
+      "pdflatex": "compiles",
+      "expected_cli": "READY",
+      "note": "ACCEPT-PIN and the control that makes fr_dup_numeric_kill evidence rather than anecdote: byte-identical except the second \\label key is unique, so \\getrefnumber reads the section value. Compiles rc 0 on every pass. If a future duplicate-label detector fires here it is over-rejecting on the duplicate rather than on the numeric read."
     }
   ]
 }

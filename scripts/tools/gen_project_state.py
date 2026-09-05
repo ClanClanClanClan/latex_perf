@@ -194,9 +194,11 @@ def build(repo: Path) -> str:
               "Coq-extracted checker certified its PREMISES over the abstract "
               "model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the "
               "document. It is not a proof that the document compiles — "
-              "measured, that reading is wrong on 5.0% of certified real "
-              "papers, and 5.7% when restricted to LP-Core, so scoping the "
-              "claim to the proven subset makes it MORE wrong, not less. The "
+              "measured, that reading is wrong on 6.7% of certified papers in "
+              "the virgin sample 2 (12 of 179) and 6.1% in sample 1 (11 of "
+              "181). Restricting to LP-Core does NOT reliably reduce it: 7.6% "
+              "on sample 2, 4.3% on sample 1, so the direction is not stable "
+              "across samples (C-43 corrected the older 5.0%/5.7% pair). The "
               "guarantee doc scopes the claim to LP-Core, so that column is "
               "the number this project may publish.",
               "",

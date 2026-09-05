@@ -19,7 +19,8 @@ Never regex the prose — that is what broke before.
 
 The tokens say PREMISE, not PROVEN, deliberately: the capstone certifies its
 premises over an abstract model, and measured against real documents that
-certificate is wrong 5.0% of the time (5.7% restricted to LP-Core).
+certificate is wrong 6.7% of the time on the virgin sample 2 and 6.1% on
+sample 1. Restricting to LP-Core does not reliably help (7.6% / 4.3%).
 """
 import argparse
 import hashlib

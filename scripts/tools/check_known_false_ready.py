@@ -20,7 +20,7 @@ regress unnoticed:
 Usage: check_known_false_ready.py [--repo DIR] [--cli PATH]
 Exit 0 = clean; 1 = drift (with per-fixture detail); 2 = harness error.
 """
-import argparse, json, os, subprocess, sys
+import argparse, collections, json, os, subprocess, sys
 
 
 def main() -> int:
@@ -118,6 +118,25 @@ def main() -> int:
               f"{manifest['baseline']['false_ready_total']} disagrees with "
               f"{live} entries whose expected_cli=READY; reconcile the manifest.")
         return 1
+    # C-43. baseline.strong_fatal/error_halt sat frozen at the round-7 values
+    # 7/1 (summing to the then-total of 8) while the live set grew to 15 — three
+    # months of silent drift, because NOTHING read them. They are a published
+    # split of the same live set, so gate them exactly like the total.
+    split = collections.Counter(
+        fx["pdflatex"] for fx in fixtures
+        if fx["expected_cli"] == "READY" and fx.get("pdflatex") != "compiles")
+    for key, grade in (("strong_fatal", "strong-fatal"), ("error_halt", "error-halt")):
+        recorded = manifest["baseline"].get(key)
+        if recorded != split[grade]:
+            print(f"[known-false-ready] FAIL — baseline.{key}={recorded} disagrees "
+                  f"with {split[grade]} live fixtures graded {grade}; reconcile "
+                  f"the manifest.")
+            return 1
+    if manifest["baseline"]["strong_fatal"] + manifest["baseline"]["error_halt"] != live:
+        print("[known-false-ready] FAIL — baseline.strong_fatal + "
+              "baseline.error_halt must sum to false_ready_total.")
+        return 1
+
     print("[known-false-ready] PASS — no false-READY regression; "
           "known set unchanged.")
     return 0

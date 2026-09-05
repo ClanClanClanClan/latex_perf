@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{refcount}
+\begin{document}
+\section{One}\label{L:d}
+\begin{enumerate}
+\renewcommand{\theenumi}{\Roman{enumi}}
+\item Item\label{L:d}
+\end{enumerate}
+\hspace{\getrefnumber{L:d}pt}done
+\end{document}

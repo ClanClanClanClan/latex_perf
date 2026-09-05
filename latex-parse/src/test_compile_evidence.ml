@@ -308,4 +308,49 @@ let () =
          stays a (recorded) miss — OPEN-025, NOT booked as fixed here. *)
       expect (CE.all_hold r) (tag ^ ": still the OPEN-025 class, unchanged"));
 
+  (* ── C1: certification is keyed on the capstone's ACTUAL hypotheses ──── *)
+  let dup_src =
+    "\\documentclass{article}\n\
+     \\begin{document}\n\
+     \\section{One}\\label{k}\n\
+     \\section{Two}\\label{k}\n\
+     \\end{document}\n"
+  in
+  run "C1: a duplicate label does NOT withhold certification" (fun tag ->
+      let p, pf, order = CE.extract ~source:dup_src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      expect
+        (CE.compile_premises_hold r && CE.verdict_state r = CE.Premise_certified)
+        (tag
+        ^ ": pdflatex_compile_safe takes T2+T3 only, so nodup cannot gate it"));
+  run "C1: all_hold still mirrors project_wf_dec (nodup included)" (fun tag ->
+      let p, pf, order = CE.extract ~source:dup_src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      (* The Coq correspondence depends on this: [project_wf_dec_factors] proves
+         the old decider IS [project_wf_dec_compile && nodup]. If [all_hold]
+         ever stops including nodup, that lemma stops describing the code and
+         [pdflatex_labels_resolve_uniquely] loses its OCaml mirror. *)
+      expect
+        ((not r.CE.t4_unique_labels)
+        && (not (CE.all_hold r))
+        && CE.compile_premises_hold r)
+        (tag ^ ": all_hold keeps the nodup conjunct that verdict_state drops"));
+  run "C1: a REAL compile premise still rejects" (fun tag ->
+      let src =
+        "\\documentclass{article}\n\
+         \\usepackage{fontspec}\n\
+         \\begin{document}\n\
+         \\section{One}\\label{k}\n\
+         \\section{Two}\\label{k}\n\
+         \\end{document}\n"
+      in
+      let p, pf, order = CE.extract ~source:src ~engine:CE.Pdflatex in
+      let r = CE.report p pf order in
+      (* Duplicate labels AND an inadmissible feature: dropping nodup must not
+         make an unsupported-feature document certifiable. *)
+      expect
+        ((not (CE.compile_premises_hold r))
+        && CE.verdict_state r = CE.Premise_rejected)
+        (tag ^ ": T3 still gates; C1 relaxed nodup only"));
+
   finalise "compile-evidence"

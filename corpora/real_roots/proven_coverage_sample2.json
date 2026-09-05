@@ -2,18 +2,17 @@
  "provenance": {
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results_sample2.json",
-  "cli_sha256": "8b91b1159d1b73fdf77bb581e58512ca0dbd802fd881652b911fd0aa977d9dcf",
-  "measured_at_sha": "11380ca0f1f589834b61ba4ad334cfe7d537959c",
+  "cli_sha256": "188c3ec8cd121aa280857b79c28ecffa8fd8ee102e7e6e531c8ca98c47d2593b",
+  "measured_at_sha": "1b50a3a35f847c013949dcb94a4d17c5b3359780",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
-   "PREMISE-INAPPLICABLE",
    "PREMISE-REJECTED"
   ]
  },
  "summary": {
   "n": 200,
-  "premise_certified_and_compiles": 158,
-  "lp_core_certified_and_compiles": 80
+  "premise_certified_and_compiles": 171,
+  "lp_core_certified_and_compiles": 88
  },
  "rows": [
   {
@@ -69,7 +68,7 @@
    "id": "2506.17165v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -146,7 +145,7 @@
    "id": "2506.18809v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -314,7 +313,7 @@
    "id": "2506.23084v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -454,7 +453,7 @@
    "id": "2507.02445v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -468,7 +467,7 @@
    "id": "2507.02662v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -482,14 +481,14 @@
    "id": "2507.02993v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
    "id": "2507.03053v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -503,14 +502,14 @@
    "id": "2507.03261v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
    "id": "2507.03309v1",
    "cell": "true-NOT-READY",
    "ready": false,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -538,7 +537,7 @@
    "id": "2507.03727v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -566,7 +565,7 @@
    "id": "2507.04168v1",
    "cell": "true-NOT-READY",
    "ready": false,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -916,7 +915,7 @@
    "id": "2507.08648v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -1238,7 +1237,7 @@
    "id": "2507.10892v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -1259,7 +1258,7 @@
    "id": "2507.10927v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {
@@ -1308,7 +1307,7 @@
    "id": "2507.11057v1",
    "cell": "true-READY",
    "ready": true,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-extended"
   },
   {
@@ -1399,7 +1398,7 @@
    "id": "2507.11492v1",
    "cell": "false-NOT-READY",
    "ready": false,
-   "model": "inapplicable",
+   "model": "certified",
    "profile": "lp-core"
   },
   {

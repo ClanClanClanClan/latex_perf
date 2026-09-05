@@ -112,27 +112,35 @@ val report : project -> profile -> node list -> premise_report
 (** All four obligations, individually, for a MODEL-CONNECTED verdict line.
     [all_hold r] iff [project_wf_dec] would return [true]. *)
 
-type verdict_state =
-  | Premise_certified
-  | Premise_inapplicable
-  | Premise_rejected
+type verdict_state = Premise_certified | Premise_rejected
 
 val verdict_state_to_string : verdict_state -> string
 (** The FROZEN machine-readable token printed as field 2 of the
     [MODEL-CONNECTED] line. Consumers must parse this field and never the prose.
     Says PREMISE, not PROVEN: [project_wf_dec_sound] certifies its premises over
-    the ABSTRACT model, and that certificate is measurably wrong on real
-    documents: 12 of 179 certified sample-2 papers fail pdflatex (6.7%), 11 of
-    181 in sample 1 (6.1%). Restricting to LP-Core does NOT reliably improve it
-    — 7.6% on sample 2, 4.3% on sample 1 (C-43 corrected the older 5.0%/5.7%
-    figures, which were stale and claimed a direction that does not hold). *)
+    the ABSTRACT model, and that certificate is measurably wrong on a few
+    percent of real documents. The current rate is GENERATED into the "How often
+    the certificate is wrong" table of docs/v27/PROJECT_STATE.md; it is not
+    restated here, because C-43 found it stale in six places at once. *)
 
 val verdict_state : premise_report -> verdict_state
-(** [Premise_certified] iff [all_hold]; [Premise_inapplicable] when only the
-    duplicate-label obligation is unmet (the capstone is one-directional, so it
-    neither certifies nor rejects); [Premise_rejected] otherwise. *)
+(** C1: [Premise_certified] iff [compile_premises_hold] — exactly the hypotheses
+    [pdflatex_compile_safe] consumes — and [Premise_rejected] otherwise. It is
+    deliberately NOT keyed on [all_hold]: the capstone never takes the
+    duplicate-label obligation, so withholding a certificate on it described the
+    decider's shape rather than the theorem's. Licensed by
+    [CompileGuaranteeBridge.project_wf_dec_compile_safe_modulo_label_uniqueness].
+    Duplicate labels are still reported, as a non-blocking advisory. *)
+
+val compile_premises_hold : premise_report -> bool
+(** The OCaml mirror of Coq [project_wf_dec_compile]: T2 closure and both T3
+    admissibility obligations, without the nodup conjunct. *)
 
 val all_hold : premise_report -> bool
+(** The OCaml mirror of Coq [project_wf_dec] — [compile_premises_hold] AND the
+    duplicate-label obligation. Retained because [project_wf_dec_sound]'s extra
+    conjunct licenses [pdflatex_labels_resolve_uniquely], a claim about
+    REFERENCE RESOLUTION rather than compilation. *)
 
 (** ── Extraction from a real document ──────────────────────────────── *)
 

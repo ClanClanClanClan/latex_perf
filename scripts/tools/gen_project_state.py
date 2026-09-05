@@ -182,6 +182,28 @@ def build(repo: Path) -> str:
         return [f"| {label} | {core_ok}/{n} = {100*core_ok/n:.1f}% | "
                 f"{certified_ok}/{n} = {100*certified_ok/n:.1f}% | {heur} | {fr_cert} |"]
 
+    # C-43 taught the drift: this rate was restated as prose in SIX files and
+    # went stale the moment a re-grade moved it. It is computed here now, so
+    # there is exactly one place it can be wrong.
+    def cert_error_row(path, label):
+        f = repo / path
+        if not f.is_file():
+            return []
+        raw = json.loads(f.read_text())
+        rows = raw["rows"] if isinstance(raw, dict) else raw
+        fails = {"true-NOT-READY", "FALSE-READY"}   # pdflatex did NOT compile
+        out = []
+        for tier_label, sel in (("any tier", rows),
+                                ("LP-Core", [r for r in rows
+                                             if r.get("profile") == "lp-core"])):
+            cert = [r for r in sel if r.get("model") == "certified"]
+            bad = [r for r in cert if r["cell"] in fails]
+            if not cert:
+                continue
+            out.append(f"| {label} | {tier_label} | {len(bad)}/{len(cert)} = "
+                       f"{100*len(bad)/len(cert):.1f}% |")
+        return out
+
     pb = proven_block("corpora/real_roots/proven_coverage_sample1.json",
                       "sample 1 (tuned)")
     pb += proven_block("corpora/real_roots/proven_coverage_sample2.json",
@@ -193,17 +215,27 @@ def build(repo: Path) -> str:
               "is what the artefact measures and what the CLI now prints: the "
               "Coq-extracted checker certified its PREMISES over the abstract "
               "model (`PREMISE-CERTIFIED`) **and** pdflatex compiled the "
-              "document. It is not a proof that the document compiles — "
-              "measured, that reading is wrong on 6.7% of certified papers in "
-              "the virgin sample 2 (12 of 179) and 6.1% in sample 1 (11 of "
-              "181). Restricting to LP-Core does NOT reliably reduce it: 7.6% "
-              "on sample 2, 4.3% on sample 1, so the direction is not stable "
-              "across samples (C-43 corrected the older 5.0%/5.7% pair). The "
-              "guarantee doc scopes the claim to LP-Core, so that column is "
-              "the number this project may publish.",
+              "document. It is NOT a proof that the document compiles: the "
+              "second table below gives how often that reading is wrong, "
+              "computed from the same artefacts. Restricting to LP-Core does "
+              "not reliably reduce it — the direction differs between the two "
+              "samples, so no general claim is made either way (C-43 withdrew "
+              "the earlier one). The guarantee doc scopes the claim to LP-Core, so that column is the number this project may publish.",
               "",
               "| corpus | premise-certified (LP-Core) | certified (any tier) | uncertified READYs | certified FALSE-READY |",
               "|---|---|---|---|---|"] + pb + [""]
+        ce = (cert_error_row("corpora/real_roots/proven_coverage_sample1.json",
+                             "sample 1 (tuned)")
+              + cert_error_row("corpora/real_roots/proven_coverage_sample2.json",
+                               "**sample 2 (virgin)**"))
+        if ce:
+            L += ["#### How often the certificate is wrong", "",
+                  "Certified documents that pdflatex nevertheless REJECTS. This "
+                  "is the honest size of the gap between "
+                  "\"the premises hold over the abstract model\" and "
+                  "\"this document compiles\".", "",
+                  "| corpus | scope | certified but pdflatex fails |",
+                  "|---|---|---|"] + ce + [""]
 
     # ── OUT-OF-SAMPLE POSITION ──────────────────────────────────────────
     s2_path = repo / "corpora/real_roots/results_sample2.json"

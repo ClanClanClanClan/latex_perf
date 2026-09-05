@@ -141,6 +141,18 @@ val run_with_build_scored :
     results so the per-class confidence caps in {!Evidence_scoring} apply
     end-to-end (memo §11.2). *)
 
+val get_rules : unit -> rule list
+(** The ACTIVE default rule set, exactly as {!run_all} runs it (so it honours
+    the [L0_VALIDATORS] pilot switch).
+
+    Exported so the rule-id uniqueness invariant can be asserted against what is
+    REGISTERED rather than against the source. That distinction is load-bearing:
+    [L3-006] shipped registered twice — an L1 copy keyed on [\usepackage] and an
+    L2 copy keyed on [\newcommand], same id, same severity, same message — and a
+    source scan for rule records missed it twice (an id regex of
+    [[A-Z]{2,8}-\d{3}] does not match [L3-006], whose prefix is letter+digit).
+    Only the registered list tells the truth. *)
+
 val rules_class_c : rule list
 (** Log-dependent rules (Class C). Only produce results when
     {!Log_parser.set_log_context} has been called. *)

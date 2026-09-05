@@ -4405,6 +4405,21 @@ let rules_l1 : rule list =
     l1_cjk_015_rule;
     l1_typo_059_rule;
     l1_pt_002_rule;
-    l1_l3_006_rule;
-    (* L3-001..005,007,009,011 moved to Validators_l1_expl3 *)
+    (* L3-001..011 are served by the L2 copies (r_l3_00x in Validators_l2, plus
+       r_l3_008/r_l3_010 in Validators_l1_expl3). The L1 copies here are DEAD:
+       defined, never registered.
+
+       ⚠ l1_l3_006_rule used to be registered on this line, and it was the only
+       one of its family that was — its eight siblings were dropped and it was
+       left behind. The two implementations are NOT the same check: the L1 one
+       keys on \usepackage + the \l_pkg_name:N colon form, the L2 one on
+       \newcommand + \l_name_tl. Both emitted the identical id, severity and
+       message, so a document tripping both got two indistinguishable L3-006
+       warnings (measured: 2 findings on a source carrying both shapes, 1 after
+       this change). The golden fixture corpora/lint/l5_expl3_tikz/l3_006.tex
+       exercises the L2 rule, which is the one kept.
+
+       ⚠ The comment previously here claimed these were "moved to
+       Validators_l1_expl3". They were not: rules_l1_expl3 is [r_char_004;
+       r_math_006; r_l3_008; r_l3_010]. Dead, not moved. *)
   ]

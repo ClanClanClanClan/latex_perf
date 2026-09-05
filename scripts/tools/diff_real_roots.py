@@ -377,8 +377,16 @@ def refresh_cli_only(repo: Path, root: Path, outdir: Path, banner: str,
         before = d["cell"]
         d["cli_rc"], d["cli_verdict"] = rc, ("READY" if rc == 0 else "NOT-READY")
         d["cli_reasons"] = reasons
-        if d["cell"].startswith("ungraded"):
-            pass                                   # infra/timeout stays as recorded
+        # The ungraded classes are STICKY, but only while they still apply.
+        # `ungraded-infra` is assigned iff pdflatex_rc != 0 AND the first error
+        # matches INFRA; `ungraded-timeout` iff an rc is -1. A re-grade that
+        # makes the document COMPILE (rc 0) therefore invalidates the label,
+        # and an unconditional `pass` here made it permanent: OPEN-053 flipped
+        # 2507.08096v1 from rc 1 to rc 0 and the row kept `ungraded-infra`,
+        # keeping a compiling, READY, PREMISE-CERTIFIED document out of the
+        # published metric for two commits. Re-derive when rc == 0.
+        if d["cell"].startswith("ungraded") and d.get("pdflatex_rc", -1) != 0:
+            pass                                   # still genuinely ungraded
         else:
             compiles = d["pdflatex_rc"] == 0
             ready = rc == 0
@@ -459,7 +467,11 @@ def repass_failures(repo: Path, root: Path, outdir: Path, banner: str,
             rc, passes = run_to_fixpoint(work, d["toplevel"], env, timeout)
         before = d["cell"]
         d["pdflatex_rc"], d["pdflatex_passes"] = rc, passes
-        if not before.startswith("ungraded"):
+        # Same sticky-ungraded defect as in refresh_cli_only: this path RE-RUNS
+        # pdflatex, so it is precisely where an `ungraded-infra` row can start
+        # compiling. Leaving the label then strands a compiling document
+        # outside the metric. Re-derive whenever the FRESH rc is 0.
+        if not before.startswith("ungraded") or rc == 0:
             compiles, ready = rc == 0, d["cli_rc"] == 0
             d["pdflatex_verdict"] = "COMPILES" if compiles else "FAILS"
             d["cell"] = ("true-READY" if (ready and compiles) else

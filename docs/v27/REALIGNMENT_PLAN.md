@@ -36,22 +36,45 @@ Published in `PROJECT_STATE.md` §1 (generated, diffed by CI):
 
 ## 3. The five facts that decide the plan
 
-**F1 — The model cannot express a single real failure.** Across both samples,
-31 documents fail pdflatex. Classified by first error:
+**F1 — The model cannot express a single real failure.** ⚠ **Numbers corrected
+2026-09-05 (C-45); the substance survives.** Across both samples, **28**
+documents fail pdflatex — not 31. The 31 was right when written and went stale
+three commits later: OPEN-053 re-graded with pdflatex's default shell-escape
+and the whole **epstopdf class disappeared** (it was a `-no-shell-escape`
+artefact — exactly what C-42 predicted), taking 2 documents with it, and a
+third row was stranded by the sticky-`ungraded` defect. Regenerated from the
+artefacts:
 
-| share | class |
-|---|---|
-| 58.1% | counter/command collision (`\c@`, `\theH`, `\AddToDocumentProperties`) |
-| 12.9% | undefined control sequence |
-| 9.7% | math-mode violation (PAR-IN-MATH) |
-| 6.5% | epstopdf figure missing |
-| 6.5% | stray primitive (`\or`) |
-| 3.2% | cleveref override |
+| share | n | class |
+|---|---|---|
+| 64.3% | 18 | counter/command collision (`\c@`, `\theH`, `\AddToDocumentProperties`) |
+| 14.3% | 4 | undefined control sequence |
+| 10.7% | 3 | math-mode violation (PAR-IN-MATH) |
+| 7.1% | 2 | stray primitive / brace (`\or`, `\caption@ydblarg`) |
+| 3.6% | 1 | cleveref override |
 
 `body_token` has four constructors (`PdflatexModel.v:127-131`) and a document
-can be model-fatal **only** via a dangling build edge (T2) or an unadmitted
-feature (T3). **Expressible today: 0 of 31 = 0.0%.** Every fatal we catch, we
-catch with the *unproven heuristic belt*.
+can be model-fatal only via a dangling build edge or an unadmitted feature.
+
+⚠ **"Expressible today: 0 of 31 = 0.0%" was literally false and is restated.**
+**3 of the 28 are model-REJECTED** — but all three for **causally unrelated**
+reasons, so the claim holds in substance and only in substance:
+
+- `2506.17361v1` — model says closure + feature; real cause `! Undefined
+  control sequence \tabu@cleanup` (OPEN-031). Unrelated.
+- `2507.07981v1` — model says closure; real cause `! Argument of
+  \caption@ydblarg has an extra }`. Unrelated.
+- `2507.10358v1` — model says `japanese_cjk not admitted by pdflatex`; the
+  document contains **zero CJK characters**. The trigger is ONE stray
+  **fullwidth comma U+FF0C** on line 210 of an otherwise-English paper, which
+  `has_raw_cjk` matches via the U+FF00–FFEF block. **Verified causally**:
+  replacing it with an ASCII comma leaves the failure byte-identical
+  (`! Missing $ inserted`, rc 1 on all three passes). Coincidence, not
+  detection.
+
+So the honest statement is **0 of 28 causally expressible, with 3 accidental
+rejections** — the same "right for the wrong reason" pattern OPEN-006 found in
+T2. Every fatal we actually catch, we catch with the *unproven heuristic belt*.
 
 **F2 — The model's fatal channels are narrow, but NOT vacuous.** ⚠ v2 first
 claimed `project_closed_b` was structurally unreachable; **that is refuted by

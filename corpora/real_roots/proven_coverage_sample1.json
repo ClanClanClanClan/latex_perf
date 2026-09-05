@@ -2,8 +2,8 @@
  "provenance": {
   "produced_by": "scripts/tools/gen_proven_coverage.py",
   "results_source": "corpora/real_roots/results.json",
-  "cli_sha256": "188c3ec8cd121aa280857b79c28ecffa8fd8ee102e7e6e531c8ca98c47d2593b",
-  "measured_at_sha": "1b50a3a35f847c013949dcb94a4d17c5b3359780",
+  "cli_sha256": "14d2b1aef908658bb0f14936bfafc1f92290b49f2310d76c9b2a845044e3adb9",
+  "measured_at_sha": "0de0a6a7108757eba9df8763b75c4b512da907d7",
   "state_vocabulary": [
    "PREMISE-CERTIFIED",
    "PREMISE-REJECTED"
@@ -11,7 +11,7 @@
  },
  "summary": {
   "n": 200,
-  "premise_certified_and_compiles": 184,
+  "premise_certified_and_compiles": 185,
   "lp_core_certified_and_compiles": 100
  },
  "rows": [
@@ -220,7 +220,7 @@
   },
   {
    "id": "2507.08096v1",
-   "cell": "ungraded-infra",
+   "cell": "true-READY",
    "ready": true,
    "model": "certified",
    "profile": "lp-extended"

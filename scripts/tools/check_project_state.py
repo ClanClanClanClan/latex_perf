@@ -194,6 +194,57 @@ def main() -> int:
                         f"document; an empty one means nobody wrote down what was "
                         f"learned.")
 
+    # ── CELL CONSISTENCY: every row's verdict cell must follow from the row's
+    # own recorded outcomes. C-45: `ungraded-infra` is assigned only when
+    # pdflatex FAILS, but both refresh paths in diff_real_roots.py made the
+    # label STICKY (`if cell.startswith("ungraded"): pass`), so when OPEN-053's
+    # re-grade flipped 2507.08096v1 to rc 0 the row kept `ungraded-infra`. A
+    # compiling, READY, PREMISE-CERTIFIED document sat outside the published
+    # metric for two commits and nothing noticed, because the count block was
+    # recomputed FROM the stale cells and therefore agreed with them.
+    #
+    # ⚠ The two samples have DIFFERENT schemas — sample 1 records pdflatex_rc,
+    # sample 2 records pdflatex_verdict and has no rc at all. A check keyed on
+    # rc alone silently "passes" 200 sample-2 rows by reading -1 for every one.
+    def _compiles(row):
+        rc = row.get("pdflatex_rc")
+        if rc is not None and rc != -1:
+            return rc == 0
+        v = str(row.get("pdflatex_verdict") or "").lower()
+        return True if v == "compiles" else False if v == "fails" else None
+
+    for name in ("results.json", "results_sample2.json"):
+        f = repo / "corpora/real_roots" / name
+        if not f.is_file():
+            continue
+        try:
+            rows = json.loads(f.read_text()).get("docs", [])
+        except (json.JSONDecodeError, OSError) as exc:
+            findings.append(f"corpora/real_roots/{name} is unreadable: {exc}")
+            continue
+        for row in rows:
+            rid, cell = row.get("arxiv_id", "?"), row.get("cell", "")
+            comp, ready = _compiles(row), row.get("cli_rc") == 0
+            if cell.startswith("ungraded"):
+                if comp is True:
+                    findings.append(
+                        f"{name}: {rid} is '{cell}' but its recorded outcome says it "
+                        f"COMPILES. The ungraded classes only apply while pdflatex "
+                        f"fails; re-derive the cell (C-45).")
+                continue
+            if comp is None:
+                findings.append(
+                    f"{name}: {rid} has cell '{cell}' but no usable pdflatex outcome "
+                    f"(neither pdflatex_rc nor pdflatex_verdict).")
+                continue
+            want = ("true-READY" if (ready and comp) else
+                    "FALSE-READY" if (ready and not comp) else
+                    "false-NOT-READY" if comp else "true-NOT-READY")
+            if want != cell:
+                findings.append(
+                    f"{name}: {rid} has cell '{cell}' but cli_rc={row.get('cli_rc')} "
+                    f"with compiles={comp} implies '{want}'.")
+
     if findings:
         print(f"[project-state] FAIL: {len(findings)} problem(s)", file=sys.stderr)
         for f in findings:

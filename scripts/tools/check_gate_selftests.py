@@ -59,7 +59,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-MIN_MUTATIONS = 10
+MIN_MUTATIONS = 11
 
 REPO = Path(__file__).resolve().parent.parent.parent
 PY = sys.executable
@@ -142,6 +142,24 @@ def append_discarding_proof(text: str) -> str:
     """
     return text + ("\nLemma killtest_discard : forall (a b : nat), True.\n"
                    "Proof. intros _ _. exact I. Qed.\n")
+
+
+def restrand_ungraded_row(text: str) -> str:
+    """C-45. Re-create the sticky-`ungraded` defect exactly as it shipped.
+
+    Puts a row back to `ungraded-infra` while its own recorded pdflatex_rc is
+    0, which is the state OPEN-053's re-grade left behind and which nothing
+    detected for two commits (res["counts"] is recomputed FROM the cells, so
+    the artefact stayed self-consistent while being wrong about the world).
+    """
+    d = json.loads(text)
+    row = next(r for r in d["docs"] if r.get("pdflatex_rc") == 0
+               and r.get("cell") == "true-READY")
+    row["cell"] = "ungraded-infra"
+    d["counts"] = {}
+    for r in d["docs"]:
+        d["counts"][r["cell"]] = d["counts"].get(r["cell"], 0) + 1
+    return json.dumps(d, indent=1) + "\n"
 
 
 def drift_baseline_split(text: str) -> str:
@@ -231,8 +249,11 @@ REGISTRY = [
                      # allowlist + DELIM-003 def-family guard + CJK
                      # containment): over-rejection 8 -> 2; was 191 after
                      # OPEN-042, 187/180/172/155/141 before.
-                     old="Correct verdicts: 197/199",
-                     new="Correct verdicts: 198/199"),
+                     # C-45 moved it again: repairing the stranded
+                     # `ungraded-infra` row made sample 1 FULLY graded, so the
+                     # denominator went 199 -> 200 and correct 197 -> 198.
+                     old="Correct verdicts: 198/200",
+                     new="Correct verdicts: 199/200"),
             # Ledger discipline: a malformed size cell (caught live on
             # 2026-08-24 when an append overflowed the row — keep it caught).
             Mutation("ledger size cell malformed (OPEN-022)",
@@ -247,6 +268,14 @@ REGISTRY = [
                      r"does not match the recorded measurement",
                      old="APPLIED TO 18/200 rows",
                      new="APPLIED TO 42/200 rows"),
+            # C-45: a verdict cell that its own row contradicts. The regex
+            # names the COMPILES wording specifically, because re-stranding a
+            # row also makes the generated block stale and that unrelated
+            # finding must not be able to supply a false kill.
+            Mutation("ungraded row re-stranded while it compiles (C-45)",
+                     "corpora/real_roots/results.json",
+                     r"but its recorded outcome says it COMPILES",
+                     transform=restrand_ungraded_row),
         ]),
     GateTest(
         "check_unused_hypotheses", [PY, f"{TOOLS}/check_unused_hypotheses.py"],

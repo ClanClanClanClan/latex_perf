@@ -12,10 +12,9 @@
   "n": 200
  },
  "counts": {
-  "true-READY": 184,
+  "true-READY": 185,
   "true-NOT-READY": 13,
-  "false-NOT-READY": 2,
-  "ungraded-infra": 1
+  "false-NOT-READY": 2
  },
  "docs": [
   {
@@ -535,8 +534,9 @@
    "cli_reasons": [],
    "pdflatex_rc": 0,
    "first_error": "! Package pdftex.def Error: File `Definitions/logo-mdpi-eps-converted-to.pdf' not found: using draft setting.See the pdftex.def package documentation for explan",
-   "cell": "ungraded-infra",
-   "pdflatex_passes": 2
+   "cell": "true-READY",
+   "pdflatex_passes": 2,
+   "pdflatex_verdict": "COMPILES"
   },
   {
    "arxiv_id": "2507.10710v1",

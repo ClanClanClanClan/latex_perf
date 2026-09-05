@@ -105,6 +105,23 @@ let () =
         (tag ^ ": count=2"));
   run "ENC-008 clean" (fun tag ->
       expect (does_not_fire "ENC-008" "normal text") (tag ^ ": clean"));
+  (* OPEN-059. Both branches used to advance on the LEAD BYTE alone, so latin-1
+     text counted as private-use codepoints. Measured over all 2,961 corpus
+     papers: 5 fires, of which FOUR were this false positive (2506.15641v1,
+     2507.00531v1, 2507.06962v2, 2507.08692v1); CHAR-004, which always had the
+     continuation guard, correctly abstained on all four. *)
+  run "ENC-008 does not fire on latin-1 i-circumflex (0xEE)" (fun tag ->
+      expect
+        (does_not_fire "ENC-008" "d\xeener en ville")
+        (tag ^ ": 0xEE lead byte without continuations"));
+  run "ENC-008 does not fire on latin-1 i-diaeresis (0xEF)" (fun tag ->
+      expect
+        (does_not_fire "ENC-008" "na\xefve")
+        (tag ^ ": 0xEF lead byte without continuations"));
+  run "ENC-008 still fires when the continuations are valid" (fun tag ->
+      expect
+        (fires "ENC-008" "d\xeener \xee\x80\x80 na\xefve")
+        (tag ^ ": a real U+E000 among latin-1 noise"));
 
   (* ENC-009: Unpaired surrogate code unit U+D800-DFFF *)
   run "ENC-009 fires on surrogate" (fun tag ->

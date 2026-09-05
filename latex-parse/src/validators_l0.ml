@@ -705,11 +705,21 @@ let r_enc_008 : rule =
     let i = ref 0 in
     while !i < n do
       let b0 = Char.code s.[!i] in
-      if b0 = 0xEE && !i + 2 < n then (
+      (* OPEN-059: both branches used to advance on the LEAD BYTE ALONE, never
+         checking that the next two bytes are UTF-8 continuations. Latin-1 'î'
+         (0xEE) and 'ï' (0xEF) therefore counted as private-use codepoints, and
+         measured over all 2,961 corpus papers FOUR of ENC-008's FIVE fires were
+         false positives on legacy 8-bit encodings. CHAR-004
+         (validators_l1_expl3.ml:22-33) always had the guard and correctly
+         abstained on all four — which is why the plan's suggestion to delete
+         CHAR-004 as "the Reserved duplicate" would have kept the wrong rule.
+         Same defect class as the language detector's byte scans. *)
+      let cont j = j < n && Char.code s.[j] land 0xC0 = 0x80 in
+      if b0 = 0xEE && !i + 2 < n && cont (!i + 1) && cont (!i + 2) then (
         (* U+E000-EFFF: EE 80 80 — EE BF BF *)
         incr cnt;
         i := !i + 3)
-      else if b0 = 0xEF && !i + 2 < n then
+      else if b0 = 0xEF && !i + 2 < n && cont (!i + 1) && cont (!i + 2) then
         let b1 = Char.code s.[!i + 1] in
         if b1 <= 0xA3 then (
           (* U+F000-F8FF: EF 80 80 — EF A3 BF *)

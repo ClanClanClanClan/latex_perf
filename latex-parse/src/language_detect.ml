@@ -151,6 +151,49 @@ let detect_polyglossia preamble =
 
 (* ── CJK heuristic detection ────────────────────────────────────────── *)
 
+(* ── OPEN-061: both scans were COMMENT-BLIND, and the byte scans accepted
+   invalid UTF-8 ─────────────────────────────────────────────────────
+
+   Measured over 409 real corpus roots (2026-09-05): - ALL 32 CJK-heuristic
+   detections were driven by CJK characters appearing ONLY inside `%` comments —
+   translator notes and author comments in otherwise-English papers. - 6 papers
+   carry a babel line that exists only in a comment; the comment-blind regex
+   read 3 of them as declarations. - The byte helpers tested the LEAD byte only,
+   so a latin-1 'é' (0xE9) satisfied `has_cjk_codepoints` and the paper was
+   labelled Chinese. That is the same lead-byte-without-continuation defect
+   recorded for ENC-008 in OPEN-059.
+
+   Together these made detect_language wrong on 8.6% of papers. Nothing in
+   production consumed it yet (its only callers are tests and
+   run_all_for_language, itself test-only), so this is a prerequisite fix with
+   no behaviour change today — it is what makes language gating affordable. *)
+let strip_line_comments (s : string) : string =
+  let n = String.length s in
+  let b = Buffer.create n in
+  let i = ref 0 in
+  let in_comment = ref false in
+  while !i < n do
+    let c = s.[!i] in
+    if !in_comment then
+      if c = '\n' then (
+        in_comment := false;
+        Buffer.add_char b c)
+      else ()
+    else if c = '\\' && !i + 1 < n then (
+      (* an escaped %% is literal text, not a comment opener *)
+      Buffer.add_char b c;
+      Buffer.add_char b s.[!i + 1];
+      incr i)
+    else if c = '%' then in_comment := true
+    else Buffer.add_char b c;
+    incr i
+  done;
+  Buffer.contents b
+
+(* A UTF-8 continuation byte. Checking these is what stops a latin-1 or binary
+   byte in a lead-byte range from being read as CJK. *)
+let is_cont b = b land 0xC0 = 0x80
+
 let has_cjk_codepoints s =
   (* Check for CJK Unified Ideographs (U+4E00-U+9FFF) in UTF-8: 3-byte sequences
      starting with 0xE4-0xE9 *)
@@ -159,7 +202,13 @@ let has_cjk_codepoints s =
     if i >= n - 2 then false
     else
       let b0 = Char.code s.[i] in
-      if b0 >= 0xE4 && b0 <= 0xE9 then true else loop (i + 1)
+      if
+        b0 >= 0xE4
+        && b0 <= 0xE9
+        && is_cont (Char.code s.[i + 1])
+        && is_cont (Char.code s.[i + 2])
+      then true
+      else loop (i + 1)
   in
   loop 0
 
@@ -171,7 +220,14 @@ let has_katakana s =
     else
       let b0 = Char.code s.[i] in
       let b1 = Char.code s.[i + 1] in
-      if b0 = 0xE3 && b1 >= 0x82 && b1 <= 0x83 then true else loop (i + 1)
+      if
+        b0 = 0xE3
+        && b1 >= 0x82
+        && b1 <= 0x83
+        && is_cont b1
+        && is_cont (Char.code s.[i + 2])
+      then true
+      else loop (i + 1)
   in
   loop 0
 
@@ -182,7 +238,13 @@ let has_hangul s =
     if i >= n - 2 then false
     else
       let b0 = Char.code s.[i] in
-      if b0 >= 0xEA && b0 <= 0xED then true else loop (i + 1)
+      if
+        b0 >= 0xEA
+        && b0 <= 0xED
+        && is_cont (Char.code s.[i + 1])
+        && is_cont (Char.code s.[i + 2])
+      then true
+      else loop (i + 1)
   in
   loop 0
 
@@ -193,7 +255,8 @@ let has_arabic s =
     if i >= n - 1 then false
     else
       let b0 = Char.code s.[i] in
-      if b0 >= 0xD8 && b0 <= 0xDB then true else loop (i + 1)
+      if b0 >= 0xD8 && b0 <= 0xDB && is_cont (Char.code s.[i + 1]) then true
+      else loop (i + 1)
   in
   loop 0
 
@@ -207,7 +270,10 @@ let detect_cjk_heuristic s =
 (* ── Main detection ─────────────────────────────────────────────────── *)
 
 let detect_language ?(default = "en") (s : string) : string =
-  let preamble = extract_preamble s in
+  (* OPEN-061: strip comments before BOTH scans. A babel line or a CJK character
+     inside a `%` comment is not a declaration about the document. *)
+  let live = strip_line_comments s in
+  let preamble = extract_preamble live in
   (* Priority: explicit declaration > heuristic > default *)
   match detect_babel preamble with
   | Some lang -> lang
@@ -215,7 +281,7 @@ let detect_language ?(default = "en") (s : string) : string =
       match detect_polyglossia preamble with
       | Some lang -> lang
       | None -> (
-          match detect_cjk_heuristic s with
+          match detect_cjk_heuristic live with
           | Some lang -> lang
           | None -> default))
 

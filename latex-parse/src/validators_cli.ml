@@ -675,9 +675,11 @@ let print_model_connected_verdict ~src ~tier
 
 let run_compile_check ~fast ~path ~src : int =
   (* v27.1.59: the FAST readiness kernel is the default (parse once, run only
-     the 36 compile-blocking rules). [LP_COMPILE_CHECK_FULL=1] or the
-     [--compile-check-full] flag forces the original full path for the
-     differential/correctness gate. Both produce the identical verdict. *)
+     the 36 compile-blocking rules — of which only 12 can emit the [Error]
+     severity T5 requires; see [Validators.compile_blocking_ids]).
+     [LP_COMPILE_CHECK_FULL=1] or the [--compile-check-full] flag forces the
+     original full path for the differential/correctness gate. Both produce the
+     identical verdict. *)
   let fast = fast && not (env_flag_on "LP_COMPILE_CHECK_FULL") in
   let tier, features = resolve_profile ~requested:`Auto ~src in
   print_profile_banner tier features;
@@ -1008,9 +1010,10 @@ let () =
         \               sound readiness PRE-CHECK, not a total \"it will \
          compile\" certificate.\n\
         \               Uses the FAST kernel by default (parse once, run only \
-         the 37\n\
-        \               compile-blocking rules); use --compile-check-full (or \
-         LP_COMPILE_CHECK_FULL=1)\n\
+         the 36\n\
+        \               compile-blocking rules, of which 12 can actually \
+         produce NOT-READY);\n\
+        \               use --compile-check-full (or LP_COMPILE_CHECK_FULL=1)\n\
         \               to force the full path for differential validation.\n\
          --policy <file.lppolicy>  apply a named house-style profile \
          (enable/disable rule ids,\n\

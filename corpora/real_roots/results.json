@@ -3447,6 +3447,6 @@
    "cell": "true-READY"
   }
  ],
- "measured_at_sha": "ae11dca259c01ca26a03e7a504da45cdcf488b9c",
- "measured_at": "multi-pass re-grade of recorded FAILURES only (<= 3 passes, 18 rows); CLI verdicts and already-compiling papers carried forward from the prior run"
+ "measured_at_sha": "53c894b7a067d43d17476421ed5ed4df88ec09f1",
+ "measured_at": "cli-only refresh; pdflatex verdicts carried forward"
 }

@@ -566,6 +566,10 @@
   ../../specs/rules/style_golden.yaml
   ../../specs/rules/phase3_golden.yaml
   ../../specs/rules/i18n_qa_golden.yaml
+  ; Phase G: this dep was missing since 2026-04-07, so test_golden_corpus
+  ; printed "[golden] SKIP i18n_qa_gated" and exited 0 — a suite silently
+  ; absent from a green CI. 355 -> 366 cases.
+  ../../specs/rules/i18n_qa_gated_golden.yaml
   (source_tree ../../corpora)))
 
 (test

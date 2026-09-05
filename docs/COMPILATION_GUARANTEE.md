@@ -75,10 +75,30 @@ brace group, which it silently closes at EOF — are caught by **T5's
 semantic change.** `--compile-check` used to call `Validators.run_all` (parse the
 whole document, build the semantic state, scan the event bus, execute all ~641
 registered rules) and parse a second time in the T0 check, then FILTER the results
-down to the 36 compile-blocking rules. Since v27.1.59 it parses **once** and runs
-**only** those 37 rules (`Validators.run_compile_blocking`, sharing the single
-`Parser_l2.parse_located`). This is sound because validators are pure functions of
-`(source + shared context)` and the compile-blocking set is a fixed prefix filter, so
+down to the compile-blocking rules. Since v27.1.59 it parses **once** and runs
+**only** those rules (`Validators.run_compile_blocking`, sharing the single
+`Parser_l2.parse_located`).
+
+⚠ **Two numbers were published here — "36" and "37" — in adjacent lines, and
+both overstated the belt.** `Validators.compile_blocking_ids` holds **36** ids
+(10 `DELIM-*`, 24 `ENC-*`, 2 `PRT-*`). But T5 keeps a result only when
+`severity = Error && is_compile_blocking id`, and measured over all 36
+(2026-09-05) only **TWELVE** can ever emit `Error`: `DELIM-001/002/003/004`,
+`ENC-001/002/005/006/009/012/014`, and `PRT-001`. The other **24 emit only
+Warning or Info**, so their membership can never change a readiness verdict.
+**The effective compile-blocking belt is 12, not 36.**
+
+⚠ The 24 are nonetheless NOT dead weight and must not be pruned: membership in
+the list is also what `_filter_by_tier` uses to keep a rule alive under an
+LP-Foreign context (C-41). Removing them would silence them on any document
+the raw-view classifier calls foreign. The list is right; the CLAIM was wrong.
+
+⚠ "a fixed prefix filter" is also stale — it has been an explicit id list
+since v27.1.63, precisely so a rule can no longer name itself into the compile
+verdict.
+
+This is sound because validators are pure functions of
+`(source + shared context)` and the compile-blocking set is a fixed id filter, so
 running only those rules yields the SAME results as running all then filtering — the
 Ready/NotReady verdict and its reason set are **byte-identical**. A parity gate
 (`test_fast_readiness_parity.ml`, wired into `runtest`) asserts fast==full over every

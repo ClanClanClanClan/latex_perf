@@ -282,8 +282,21 @@ Not adequacy (F3). In dependency order:
    never filters. **M**
 6. 49 STYLE rules are Class D and never run by default; 30 TYPO rules
    (incl. Error-severity TYPO-006) sit behind an undocumented env var. **M**
-7. `compile_blocking_ids` overstates the belt ~3× — 24 of 36 ids can never
-   reach the Error severity T5 requires. Correct the list or the docs. **S**
+7. ✅ **SHIPPED 2026-09-05. `compile_blocking_ids` overstates the belt ~3×.**
+   **CONFIRMED exactly by independent measurement**: the list holds 36 ids and
+   precisely **24** can never reach `Error`, so the effective T5 belt is **12**
+   (`DELIM-001/002/003/004`, `ENC-001/002/005/006/009/012/014`, `PRT-001`).
+   ⚠ **"Correct the list or the docs" is a false choice — correcting the LIST
+   would re-open C-41.** The same list is what `_filter_by_tier` uses to keep a
+   rule alive under LP-Foreign, and zero contracts carry `Any_tier`, so pruning
+   the 24 silences them on any document the raw-view classifier calls foreign.
+   The docs were the defect: `COMPILATION_GUARANTEE.md` published **"36"** and
+   **"37"** in adjacent lines, and still described the set as "a fixed prefix
+   filter" though it became an explicit id list in v27.1.63. All three
+   corrected, and the dual role is now documented at the definition so nobody
+   "cleans it up".
+   ⚠ Spun out: **OPEN-058** — the fast kernel executes all 36 in the
+   keystroke path when only 12 can affect the verdict. **S**
 8. Proof posture: prove rules against the **shipped** code, or stop calling
    803 one-line instantiations soundness proofs. **XL**
 

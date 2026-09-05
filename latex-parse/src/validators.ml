@@ -226,6 +226,29 @@ let _dag_validate_fn : (rule list -> unit) ref = ref (fun _ -> ())
    miscalibration for the population the tool actually sees, not vacuity. Do not
    demote the rest of the set on this evidence alone. *)
 
+(* ⚠ THIS LIST HAS TWO ROLES. Do not "clean it up" to the ids that can actually
+   block — that would re-open C-41.
+
+   Role 1, the T5 gate: [Compile_contract] keeps a result only when [severity =
+   Error && is_compile_blocking id] (compile_contract.ml:285,308). Measured
+   2026-09-05 over all 36 ids: only TWELVE can ever emit [Error] —
+   DELIM-001/002/003/004, ENC-001/002/005/006/009/012/014, and PRT-001 (which
+   has an Error branch and a Warning branch). The other TWENTY-FOUR emit only
+   Warning or Info, so their membership can never change a readiness verdict.
+   That is why "36 compile-blocking rules" overstates the belt ~3x; the
+   effective belt is 12.
+
+   Role 2, tier-filter protection (C-41): [_filter_by_tier] keeps a rule
+   unconditionally when [is_compile_blocking r.id] holds. ZERO of the 660
+   contracts carry [Any_tier], so under an LP-Foreign context every rule NOT in
+   this list is dropped. Pruning the 24 would therefore silence them on any
+   document the raw-view classifier calls foreign — which is exactly the
+   false-READY channel C-41 fixed, in a smaller blast radius.
+
+   So the list stays at 36 and the CLAIM is what gets corrected. If you want the
+   fast path to stop running rules that cannot affect the verdict, that is a
+   separate change in [run_compile_blocking] (see OPEN-058), not here. *)
+
 (** PR #241 (p1.2): tier gating per memo §4. When the active [Language_profile]
     tier is LP_Foreign, skip every rule whose contract declares
     [project_scope = Lp_core_or_extended]. Rules marked [Any_tier] (e.g. the

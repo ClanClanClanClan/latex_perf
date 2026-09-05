@@ -155,4 +155,41 @@ let () =
         ^ string_of_int (List.length leaked)
         ^ " Class C rule(s) leaked into keystroke-safe set"));
 
+  (* Phase G: a rule id must identify ONE rule. L3-006 shipped registered twice
+     — an L1 copy keyed on \usepackage + the \l_pkg_x:N colon form and an L2
+     copy keyed on \newcommand + \l_name_tl — emitting the SAME id, severity and
+     message, so a document carrying both shapes got two indistinguishable
+     warnings (measured: 2 findings, 1 after the fix).
+
+     ⚠ This asserts over the REGISTERED list, not the source. Two successive
+     source scans missed the duplicate: an id regex of [A-Z]{2,8}-\d{3} does not
+     match "L3-006" (letter+digit prefix), and a same-file registration scan
+     misses cross-file registries like Validators_l1_expl3. Only get_rules ()
+     tells the truth about what runs. *)
+  run "Phase G: registered rule ids are unique" (fun tag ->
+      let ids =
+        List.map
+          (fun (r : Validators.rule) -> r.Validators.id)
+          (Validators.get_rules ())
+      in
+      let tbl = Hashtbl.create 512 in
+      List.iter
+        (fun id ->
+          Hashtbl.replace tbl id
+            (1 + Option.value ~default:0 (Hashtbl.find_opt tbl id)))
+        ids;
+      let dups =
+        Hashtbl.fold
+          (fun id n acc -> if n > 1 then (id, n) :: acc else acc)
+          tbl []
+      in
+      expect (dups = [])
+        (tag
+        ^ ": "
+        ^ String.concat ", "
+            (List.map (fun (id, n) -> id ^ " x" ^ string_of_int n) dups)
+        ^ " registered more than once ("
+        ^ string_of_int (List.length ids)
+        ^ " rules total)"));
+
   finalise "rule_contracts_integration"

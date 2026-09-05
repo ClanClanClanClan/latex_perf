@@ -244,7 +244,36 @@ Not adequacy (F3). In dependency order:
 
 1. i18n gated golden suite **silently skipped** (missing dune dep) — one line;
    355→366 PASS. It is the only live assertion of language gating. **S**
-2. **L3-006 registered twice** — every document ships duplicate findings. **S**
+2. ✅ **SHIPPED 2026-09-05. L3-006 registered twice — MERGED, not deleted.**
+   ⚠ Two claims in the original item are corrected. (a) "every document ships
+   duplicate findings" is an overstatement: the two registrations are not the
+   same check — the L1 copy keys on `\usepackage` + the `\l_pkg_x:N` colon
+   form, the L2 copy on `\newcommand` + `\l_name_tl` — so only a document
+   carrying **both** shapes got two indistinguishable warnings (measured: 2
+   findings before, 1 after). (b) **Neither copy could simply be deleted**, as
+   I first assumed. The catalogue entry AND the unit tests in
+   `test_validators_expl3.ml` / `test_validators_l5_expl3_tikz.ml` assert the
+   PACKAGE-clash semantics including a count of 2 on multiple matches, while
+   the golden fixture `corpora/lint/l5_expl3_tikz/l3_006.tex` exercises the
+   `\newcommand` one. Deleting the L1 registration built clean and broke 4
+   assertions in 2 suites — caught only by running the full suite. Both checks
+   are now MERGED under one id, emitting one finding whose count is the number
+   of colliding variable occurrences, with a message that finally describes
+   what it checks (the old one said "clobbers package macro name" on a rule
+   keyed to `\newcommand`). Variable matching widened to `\[lg]_NAME_SUFFIX`,
+   which subsumes both forms and so cannot double-count.
+   ⚠ Honest sizing: the duplicate was near-unobservable in the wild — the
+   L1-only shape has **zero** natural incidence across 2,961 corpus papers and
+   `\ExplSyntaxOn` appears in only 2 of 600. The value here is the GATE, not
+   the rescued findings.
+   ⚠ **Nothing gated rule-id uniqueness, and two source scans missed the
+   duplicate**: an id regex of `[A-Z]{2,8}-\d{3}` does not match `L3-006`
+   (letter+digit prefix), and a same-file registration scan misses cross-file
+   registries like `Validators_l1_expl3`. Now asserted at RUNTIME over
+   `Validators.get_rules ()` (exported for this), with a registered kill-test:
+   exit 1 with the duplicate, exit 0 without. Also found: 8 sibling L1 rules
+   are dead code — see OPEN-057. **S**
+
 3. **CHAR-004** catalogued `Reserved`, fires in production, duplicates
    ENC-008 at a different severity. **S**
 4. Relabel the **fake mutation metric** (it greps for the rule id; no

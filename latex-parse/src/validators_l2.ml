@@ -3100,45 +3100,69 @@ let r_l3_005 : rule =
   in
   { id = "L3-005"; run; languages = [] }
 
-(* ── L3-006: Expl3 variable clobbers package macro name ──────────── *)
+(* ── L3-006: Expl3 variable prefix collides with a package or macro name ──
+
+   MERGED 2026-09-05 (Phase G). L3-006 shipped as TWO separately-registered
+   rules with the same id, severity and message: this one, keyed on \newcommand
+   + \l_name_tl, and an L1 copy keyed on \usepackage + the \l_pkg_x:N colon
+   form. A document carrying both shapes therefore got two indistinguishable
+   warnings (measured: 2 findings, now 1).
+
+   Neither could simply be deleted — the catalogue entry and the unit tests in
+   test_validators_expl3.ml / test_validators_l5_expl3_tikz.ml assert the
+   PACKAGE-clash semantics (including a count of 2 on multiple matches), while
+   the golden fixture corpora/lint/l5_expl3_tikz/l3_006.tex exercises the
+   \newcommand one. So both checks are kept, under one id, emitting one finding
+   whose count is the number of colliding variable occurrences.
+
+   The variable pattern is deliberately widened to \[lg]_NAME_SUFFIX, which
+   subsumes both the six-type form (tl/int/bool/clist/seq/prop) and the colon
+   form, and so cannot double-count a variable that matches both. It only fires
+   when NAME collides, which is the actual semantics. *)
 let r_l3_006 : rule =
-  let var_re =
-    Re_compat.regexp
-      {|\\\(l\|g\)_\([a-zA-Z]+\)_\(tl\|int\|bool\|clist\|seq\|prop\)|}
-  in
+  let var_re = Re_compat.regexp {|\\[lg]_\([a-zA-Z]+\)_[a-zA-Z_]+|} in
   let cmd_re =
     Re_compat.regexp {|\\\(newcommand\|renewcommand\){\\\([a-zA-Z]+\)}|}
   in
-  let run s =
-    let var_names = ref [] in
+  let pkg_re = Re_compat.regexp {|\\usepackage\(\[[^]]*\]\)?{\([^}]+\)}|} in
+  let collect re group s =
+    let acc = ref [] in
     let i = ref 0 in
     (try
        while true do
-         let _mr, _ = Re_compat.search_forward var_re s !i in
-         let name = Re_compat.matched_group _mr 2 s in
-         var_names := name :: !var_names;
-         i := Re_compat.match_end _mr
+         let mr, _ = Re_compat.search_forward re s !i in
+         acc := Re_compat.matched_group mr group s :: !acc;
+         i := Re_compat.match_end mr
        done
      with Not_found -> ());
-    let cmd_names = ref [] in
-    let j = ref 0 in
-    (try
-       while true do
-         let _mr, _ = Re_compat.search_forward cmd_re s !j in
-         let name = Re_compat.matched_group _mr 2 s in
-         cmd_names := name :: !cmd_names;
-         j := Re_compat.match_end _mr
-       done
-     with Not_found -> ());
+    !acc
+  in
+  let run s =
+    let var_names = collect var_re 1 s in
+    let cmd_names = collect cmd_re 2 s in
+    let pkg_names =
+      List.concat_map
+        (fun grp ->
+          List.filter_map
+            (fun q ->
+              let q = String.trim q in
+              if q = "" then None else Some q)
+            (String.split_on_char ',' grp))
+        (collect pkg_re 2 s)
+    in
+    let targets = cmd_names @ pkg_names in
     let cnt =
       List.fold_left
-        (fun acc vn -> if List.mem vn !cmd_names then acc + 1 else acc)
-        0 !var_names
+        (fun acc vn -> if List.mem vn targets then acc + 1 else acc)
+        0 var_names
     in
     if cnt > 0 then
       Some
         (mk_result ~id:"L3-006" ~severity:Warning
-           ~message:"Expl3 variable clobbers package macro name" ~count:cnt)
+           ~message:
+             "Expl3 variable prefix collides with a loaded package or a \
+              user-defined macro name"
+           ~count:cnt)
     else None
   in
   { id = "L3-006"; run; languages = [] }

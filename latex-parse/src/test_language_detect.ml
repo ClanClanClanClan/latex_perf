@@ -155,17 +155,50 @@ let () =
 \begin{document}Hello\end{document}|}
     = "en");
 
-  (* ── CJK in comment should still trigger (known limitation) ──────── *)
-  check "CJK only in comment still triggers heuristic"
+  (* ── OPEN-061: comment-only signals are NOT declarations ──────────────
+
+     This assertion used to expect "zh", annotated "known limitation …
+     Documenting behavior, not a bug." It WAS a bug, and the corpus says so:
+     over 409 real roots, ALL 32 CJK-heuristic detections were driven by CJK
+     characters appearing only inside % comments — translator notes and author
+     comments in otherwise-English papers — and 3 papers were read as declaring
+     a language whose babel line existed only in a comment. Together with the
+     unvalidated byte scans that is 8.6% of papers mis-detected. *)
+  check "CJK only in a comment does NOT trigger the heuristic"
     (Language_detect.detect_language
        {|\documentclass{article}
 % 中文注释
 \begin{document}English text only\end{document}|}
+    = "en");
+
+  check "live CJK still triggers the heuristic"
+    (Language_detect.detect_language
+       {|\documentclass{article}
+\begin{document}中文文本\end{document}|}
     = "zh");
 
-  (* NOTE: This is a known limitation — the heuristic scans the full document
-     including comments. To fix, would need to strip comments before heuristic
-     detection. Documenting behavior, not a bug. *)
+  check "babel declared only in a comment is NOT a declaration"
+    (Language_detect.detect_language
+       {|\documentclass{article}
+% \usepackage[french]{babel}
+\begin{document}Plain English.\end{document}|}
+    = "en");
+
+  check "an escaped percent does not open a comment"
+    (Language_detect.detect_language
+       {|\documentclass{article}
+100\% of it: \usepackage[french]{babel}
+\begin{document}Bonjour\end{document}|}
+    = "fr");
+
+  (* Lead-byte-only scanning read latin-1 as CJK: 0xE9 is 'é' in latin-1 and a
+     CJK lead byte in UTF-8. Same defect class as ENC-008 (OPEN-059). *)
+  check "latin-1 accented bytes are not read as Chinese"
+    (Language_detect.detect_language
+       "\\documentclass{article}\n\
+        \\begin{document}caf\xe9 na\xefve\n\
+        \\end{document}"
+    = "en");
 
   (* ── Summary ─────────────────────────────────────────────────────── *)
   Printf.printf "[lang-detect] %d passed, %d failed\n" !pass !fail;

@@ -4846,7 +4846,12 @@ let r_cjk_014 : rule =
              ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
-  { id = "CJK-014"; run; languages = [ "zh"; "ja"; "ko" ] }
+  (* OPEN-061: same self-contradiction as CJK-001/002. This rule is named
+     "Inter-punct U+30FB outside CJK run" and gates its fix on
+     [is_ascii_context] — its subject is by construction a NON-CJK document, so
+     a [zh;ja;ko] tag would suppress it exactly where it fires. No other rule
+     owns U+30FB. *)
+  { id = "CJK-014"; run; languages = [] }
 
 let rules_cjk : rule list = [ r_cjk_001; r_cjk_002; r_cjk_010; r_cjk_014 ]
 

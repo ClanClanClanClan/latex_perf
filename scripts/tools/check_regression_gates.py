@@ -162,7 +162,15 @@ def gate_no_lowercase_runtime_ids(repo: Path) -> list[str]:
 
 
 def gate_mutation_coverage_ratchet(repo: Path) -> list[str]:
-    """test_mutation.ml reports `uncovered rules (N)`; lock N <= ceiling."""
+    """Lock the count of rule ids that appear in NO test file at <= ceiling.
+
+    OPEN-060: the scan this reads was relabelled, because it performs no
+    mutation testing — it searches test_*.ml for the quoted rule id, so an id
+    in a COMMENT counts. Its line changed from `uncovered rules (N)` to
+    `id appears nowhere (N)`. Both spellings are accepted so the gate keeps
+    working across the rename in either direction; the OLD one is what CI on
+    an older checkout still emits.
+    """
     failures: list[str] = []
     try:
         out = subprocess.run(
@@ -174,15 +182,20 @@ def gate_mutation_coverage_ratchet(repo: Path) -> list[str]:
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         return [f"could not run test_mutation: {e}"]
     blob = (out.stdout or "") + (out.stderr or "")
-    m = re.search(r"uncovered rules \((\d+)\)", blob)
+    m = re.search(r"(?:uncovered rules|id appears nowhere) \((\d+)\)", blob)
     if not m:
-        return [f"test_mutation output missing 'uncovered rules (N)' line"]
+        return [
+            "rule-id mention scan output missing its count line "
+            "(expected 'id appears nowhere (N)' or the older "
+            "'uncovered rules (N)')"
+        ]
     n = int(m.group(1))
     if n > MUTATION_UNCOVERED_CEILING:
         failures.append(
-            f"mutation-uncovered count {n} exceeds ceiling "
-            f"{MUTATION_UNCOVERED_CEILING}. Add mutation fixtures for new "
-            f"rules, or bump the ceiling in this script with justification."
+            f"{n} rule ids appear in NO test file, exceeding the ceiling of "
+            f"{MUTATION_UNCOVERED_CEILING}. Add tests naming those rule ids, or "
+            f"bump the ceiling in this script with justification. (This counts "
+            f"NAME MENTIONS, not assertions — see OPEN-060.)"
         )
     return failures
 

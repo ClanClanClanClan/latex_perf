@@ -4678,7 +4678,15 @@ let r_cjk_001 : rule =
              ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
-  { id = "CJK-001"; run; languages = [ "zh"; "ja"; "ko" ] }
+  (* OPEN-061: the [zh;ja;ko] tag was SELF-CONTRADICTORY and is removed. This
+     rule's own predicate requires [is_ascii_context s !i] — its subject is a
+     full-width punctuation mark left by an IME in a document that is NOT CJK.
+     Under language gating the tag would suppress it on exactly the documents it
+     exists to police, and would leave those bytes unowned: CHAR-016 (languages
+     = [], validators_l0.ml:1714) detects the same U+FF0C/U+FF0E and DELEGATES
+     the fix here. Four independent audits agreed, and the predicate settles it
+     without needing their judgement. *)
+  { id = "CJK-001"; run; languages = [] }
 
 (* CJK-002: Full-width period U+FF0E in ASCII context.
 
@@ -4722,7 +4730,15 @@ let r_cjk_002 : rule =
              ~message:msg ~count:!cnt ~fix:(List.rev !fix_edits))
     else None
   in
-  { id = "CJK-002"; run; languages = [ "zh"; "ja"; "ko" ] }
+  (* OPEN-061: the [zh;ja;ko] tag was SELF-CONTRADICTORY and is removed. This
+     rule's own predicate requires [is_ascii_context s !i] — its subject is a
+     full-width punctuation mark left by an IME in a document that is NOT CJK.
+     Under language gating the tag would suppress it on exactly the documents it
+     exists to police, and would leave those bytes unowned: CHAR-016 (languages
+     = [], validators_l0.ml:1714) detects the same U+FF0C/U+FF0E and DELEGATES
+     the fix here. Four independent audits agreed, and the predicate settles it
+     without needing their judgement. *)
+  { id = "CJK-002"; run; languages = [] }
 
 (* CJK-010: Half-width CJK punctuation in full-width context.
 

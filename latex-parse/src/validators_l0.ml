@@ -6555,7 +6555,7 @@ let r_ref_011 : rule =
   let run s =
     (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
        offsets. *)
-    let sx = blank_exempt s in
+    let sx = blank_nonlive s in
     let has_autoref = count_substring sx "\\autoref" > 0 in
     let has_hyperref =
       count_substring s "\\usepackage{hyperref}" > 0

@@ -1,0 +1,9 @@
+%% OPEN-068. A CJK trigger inside \iffalse..\fi. pdflatex never expands
+%% these bytes, so nothing here is evidence about the document. Before the
+%% fix, --apply-fixes read the ideograph and injected \usepackage{xeCJK},
+%% which aborts under pdflatex: rc 0 -> 1.
+\documentclass{article}
+\begin{document}
+Live text.
+\iffalse 漢字 \toprule \enquote{q} \fi
+\end{document}

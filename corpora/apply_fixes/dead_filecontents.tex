@@ -1,0 +1,8 @@
+%% OPEN-068. A filecontents* body is written to a file, not typeset.
+\documentclass{article}
+\begin{filecontents*}{op068data.txt}
+漢字 \enquote{q}
+\end{filecontents*}
+\begin{document}
+Live text.
+\end{document}

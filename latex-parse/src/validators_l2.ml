@@ -648,8 +648,14 @@ let r_cjk_004 : rule =
        The offsets for the edit still come from the ORIGINAL [s]
        (mk_usepackage_insert searches [s]); only the DETECTION is exempt-aware,
        which is the same split REF-011 documents. *)
+    (* OPEN-068: dead spans as well as exempt ranges. A trigger inside \iffalse,
+       after \endinput or after \end{document} must not inject xeCJK into the
+       preamble -- measured rc 0 -> 1 at the pin. *)
     let exempt = find_exempt_ranges s in
-    let live i = not (is_in_exempt_range exempt i) in
+    let dead = find_dead_ranges s in
+    let live i =
+      (not (is_in_exempt_range exempt i)) && not (is_in_exempt_range dead i)
+    in
     let i = ref 0 in
     while !i < len - 2 && not !has_cjk do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -702,7 +708,7 @@ let r_cjk_006 : rule =
   let run s =
     (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
        offsets. *)
-    let sx = blank_exempt s in
+    let sx = blank_nonlive s in
     let cnt = ref 0 in
     let i = ref 0 in
     (try
@@ -1556,7 +1562,7 @@ let r_pkg_011 : rule =
   let run s =
     (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
        offsets. *)
-    let sx = blank_exempt s in
+    let sx = blank_nonlive s in
     let uses_booktabs_cmds =
       (try
          let _mr, _ = Re_compat.search_forward re_toprule sx 0 in
@@ -1602,7 +1608,7 @@ let r_pkg_012 : rule =
   let run s =
     (* OPEN-066: detect on the exempt-blanked view, insert at ORIGINAL
        offsets. *)
-    let sx = blank_exempt s in
+    let sx = blank_nonlive s in
     let has_enquote =
       try
         let _mr, _ = Re_compat.search_forward re sx 0 in

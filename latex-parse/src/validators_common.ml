@@ -997,29 +997,84 @@ let comment_semantics_breaker (s : string) : bool =
       ]
     in
     let check_from i m =
-      (* find the SPEC group: skip the command-name argument (either [\cmd] or
-         [{\cmd}]), then scan the next brace group for 'v'. *)
+      (* Parse the argument-SPEC group and look inside THAT ONLY:
+         \NewDocumentCommand {\cmd} {spec} {body} \NewDocumentCommand \cmd
+         {spec} {body}
+
+         OPEN-048. The first version of this scanned a flat 160-byte window and
+         fired on ANY 'v' at brace depth > 0 — a comment that admitted itself
+         ("keeping it simple ... fail-closed"). It never stopped at the end of
+         the spec, so the definition BODY was in scope, and \vphantom in a body
+         fired it. That is not a harmless over-fire: this breaker DISABLES
+         COMMENT BLANKING for the whole document, so the feature detector then
+         reads commented-out preamble lines as live. MEASURED consequence: a
+         real 31-page paper that pdflatex compiles (rc 0) was rejected NOT-READY
+         on `%\usepackage{fontspec}` — a line the author had commented OUT — and
+         the one-letter control (\hphantom) came back READY. MEASURED rate over
+         2,899 real roots: the breaker fired on 8 papers and NOT ONE of the 8
+         has a 'v' in its actual spec group. 8/8 false, and there is not a
+         single genuine v-argument xparse definition in the whole corpus.
+
+         Precision here costs no soundness: reading the real spec still fires on
+         every genuine `v`, and only stops firing on bodies, which were never
+         evidence. A 'v' anywhere INSIDE the spec group still counts, including
+         in an O{..} default — that part of the original conservatism is kept
+         deliberately. If the spec group cannot be located inside the window the
+         answer is [false], exactly as before. *)
       let stop = min n (i + m + 160) in
       let j = ref (i + m) in
-      let seen_groups = ref 0 in
-      let found = ref false in
-      let depth = ref 0 in
-      while (not !found) && !j < stop do
-        (match String.unsafe_get s !j with
-        | '{' -> incr depth
-        | '}' ->
-            if !depth > 0 then (
-              decr depth;
-              if !depth = 0 then incr seen_groups)
-        | 'v' when !depth > 0 && !seen_groups >= 0 ->
-            (* only the LAST-opened group before two groups close counts;
-               keeping it simple: any 'v' at brace depth>0 within the window
-               fires — fail-closed. *)
-            found := true
-        | _ -> ());
-        incr j
-      done;
-      !found
+      let skip_ws () =
+        while
+          !j < stop
+          &&
+          let c = String.unsafe_get s !j in
+          c = ' ' || c = '\t' || c = '\n' || c = '\r'
+        do
+          incr j
+        done
+      in
+      (* [!j] must be on '{'; leaves [!j] one past the matching '}'. *)
+      let skip_group () =
+        if !j < stop && String.unsafe_get s !j = '{' then (
+          let d = ref 0 and fin = ref false in
+          while (not !fin) && !j < stop do
+            (match String.unsafe_get s !j with
+            | '{' -> incr d
+            | '}' ->
+                decr d;
+                if !d = 0 then fin := true
+            | _ -> ());
+            incr j
+          done;
+          !fin)
+        else false
+      in
+      skip_ws ();
+      (* argument 1: the command name, as {\cmd} or as a bare \cmd *)
+      let named =
+        if !j < stop && String.unsafe_get s !j = '{' then skip_group ()
+        else if !j < stop && String.unsafe_get s !j = '\\' then (
+          incr j;
+          while !j < stop && is_letter (String.unsafe_get s !j) do
+            incr j
+          done;
+          true)
+        else false
+      in
+      if not named then false
+      else (
+        skip_ws ();
+        if !j >= stop || String.unsafe_get s !j <> '{' then false
+        else
+          let a = !j in
+          if not (skip_group ()) then false
+          else
+            let b = !j in
+            let found = ref false in
+            for k = a + 1 to b - 2 do
+              if String.unsafe_get s k = 'v' then found := true
+            done;
+            !found)
     in
     let rec scan i =
       if i >= n then false
@@ -1478,6 +1533,165 @@ let blank_exempt (s : string) : string =
         if Bytes.get b i <> '\n' then Bytes.set b i ' '
       done)
     (find_exempt_ranges s);
+  Bytes.to_string b
+
+(** [find_dead_ranges s] — byte spans that pdflatex NEVER EXPANDS.
+
+    OPEN-068. A DIFFERENT hole from [find_exempt_ranges], and the one that
+    reopened the CJK-004 class after OPEN-066 had closed it. The exempt ranges
+    are the regions whose bytes the AUTHOR wants left alone (verbatim, comment,
+    url, math). These are the regions TEX ITSELF never reaches:
+
+    - [\iffalse ... \else|\fi] — the standard comment-out-a-block idiom
+    - [\if 0 ... \else|\fi] — the plain-TeX variant of the same
+    - everything after [\endinput]
+    - everything after the first [\end{document}]
+    - [filecontents] / [filecontents*] bodies — written to a file, not typeset
+
+    MEASURED at the pin (pdfTeX 3.141592653-2.6-1.40.29): a fixer that reads a
+    trigger out of any of these five and injects [\usepackage{xeCJK}] into the
+    preamble takes a document from rc 0 to rc 1, because xeCJK aborts under
+    pdflatex. That is exactly the harm OPEN-066 measured on 10 of 191 real roots
+    — in regions the OPEN-066 fix did not enumerate, because it listed
+    author-verbatim region NAMES instead of asking whether TeX expands the byte.
+
+    ⚠ DIRECTION OF ERROR. This deliberately OVER-approximates deadness, and is
+    documented for the [mk_usepackage_insert] family ONLY, where over-
+    approximating is the safe direction: calling a live span dead merely
+    WITHHOLDS a package insertion (the state that shipped for years), while
+    calling a dead span live CORRUPTS the document. Do NOT reuse it to suppress
+    a DIAGNOSTIC without measuring first — there the error direction inverts,
+    and 13.5% of the real corpus (393 of 2,916 files) carries content after
+    [\end{document}], so the corpus move would be large. *)
+let compute_dead_ranges (s : string) : (int * int) list =
+  let n = String.length s in
+  let skip = find_verbatim_comment_url_ranges s in
+  let is_ws c = c = ' ' || c = '\t' || c = '\n' || c = '\r' || c = '\012' in
+  let is_escaped idx =
+    let rec count b acc =
+      if b < 0 then acc
+      else if String.unsafe_get s b = '\\' then count (b - 1) (acc + 1)
+      else acc
+    in
+    count (idx - 1) 0 land 1 = 1
+  in
+  let starts pfx j =
+    let pl = String.length pfx in
+    j + pl <= n && String.sub s j pl = pfx
+  in
+  (* A control word ends at a non-letter, so [\fi] must not match inside
+     [\fill], nor [\if] inside [\ifdefined]. *)
+  let starts_cw pfx j =
+    starts pfx j
+    &&
+    let k = j + String.length pfx in
+    k >= n
+    ||
+    let c = String.unsafe_get s k in
+    not ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+  in
+  let skip_ws j =
+    let k = ref j in
+    while !k < n && is_ws (String.unsafe_get s !k) do
+      incr k
+    done;
+    !k
+  in
+  (* From [j0] to the FIRST following [\else] or [\fi]. Under-approximates when
+     a conditional is nested inside; see the direction-of-error note. *)
+  let close_conditional j0 =
+    let k = ref j0 and stop = ref (-1) in
+    while !stop < 0 && !k < n do
+      if is_in_exempt_range skip !k || is_escaped !k then incr k
+      else if starts_cw "\\else" !k then stop := !k + 5
+      else if starts_cw "\\fi" !k then stop := !k + 3
+      else incr k
+    done;
+    if !stop >= 0 then !stop else n
+  in
+  let acc = ref [] in
+  (* Pass 1: filecontents bodies. The environment writes its body verbatim to a
+     file; nothing in it is typeset in THIS document. *)
+  List.iter
+    (fun env ->
+      let bgn = "\\begin{" ^ env ^ "}" and fin = "\\end{" ^ env ^ "}" in
+      let j = ref 0 in
+      while !j < n do
+        if starts bgn !j && not (is_escaped !j) then (
+          let k = ref (!j + String.length bgn) and stop = ref (-1) in
+          while !stop < 0 && !k < n do
+            if starts fin !k then stop := !k + String.length fin else incr k
+          done;
+          let e = if !stop >= 0 then !stop else n in
+          acc := (!j, e) :: !acc;
+          j := e)
+        else incr j
+      done)
+    [ "filecontents*"; "filecontents" ];
+  (* Pass 2: conditionals, \endinput and the tail after \end{document}. *)
+  let j = ref 0 and depth = ref 0 and halted = ref false in
+  while (not !halted) && !j < n do
+    if is_in_exempt_range skip !j || is_escaped !j then incr j
+    else
+      let c = String.unsafe_get s !j in
+      if c = '{' then (
+        incr depth;
+        incr j)
+      else if c = '}' then (
+        if !depth > 0 then decr depth;
+        incr j)
+      else if !depth = 0 && starts_cw "\\iffalse" !j then (
+        let e = close_conditional (!j + 8) in
+        acc := (!j, e) :: !acc;
+        j := e)
+      else if
+        !depth = 0
+        && starts_cw "\\if" !j
+        &&
+        let k = skip_ws (!j + 3) in
+        k < n && String.unsafe_get s k = '0'
+      then (
+        let e = close_conditional (!j + 3) in
+        acc := (!j, e) :: !acc;
+        j := e)
+      else if !depth = 0 && starts_cw "\\endinput" !j then (
+        (* \endinput ends the FILE: TeX reads nothing after it. *)
+        acc := (!j, n) :: !acc;
+        halted := true)
+      else if starts "\\end" !j && starts "{document}" (skip_ws (!j + 4)) then (
+        let e = skip_ws (!j + 4) + String.length "{document}" in
+        acc := (e, n) :: !acc;
+        halted := true)
+      else incr j
+  done;
+  List.sort (fun (a, _) (c, _) -> compare a c) !acc
+
+let _dead_cache : (string * (int * int) list) option ref = ref None
+
+(** Memoised [compute_dead_ranges] — same physical-equality cache as
+    [find_exempt_ranges]; the insert family calls it five times per document. *)
+let find_dead_ranges (s : string) : (int * int) list =
+  match !_dead_cache with
+  | Some (s', r) when s' == s -> r
+  | _ ->
+      let r = compute_dead_ranges s in
+      _dead_cache := Some (s, r);
+      r
+
+(** [blank_nonlive s] — [blank_exempt] plus [find_dead_ranges], length- and
+    offset-preserving. The detection surface for a fix producer that reads a
+    trigger ANYWHERE and writes to the PREAMBLE: such a rule must see only bytes
+    that are both the author's live content AND expanded by TeX. *)
+let blank_nonlive (s : string) : string =
+  let b = Bytes.of_string (blank_exempt s) in
+  let n = Bytes.length b in
+  List.iter
+    (fun (a, z) ->
+      let z = min z n in
+      for i = max 0 a to z - 1 do
+        if Bytes.get b i <> '\n' then Bytes.set b i ' '
+      done)
+    (find_dead_ranges s);
   Bytes.to_string b
 
 (** [mk_result_with_fix_exempt ~id ~severity ~message ~count ~src ~fix] —

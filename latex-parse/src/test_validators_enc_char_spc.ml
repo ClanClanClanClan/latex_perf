@@ -118,6 +118,22 @@ let () =
       expect
         (does_not_fire "ENC-008" "na\xefve")
         (tag ^ ": 0xEF lead byte without continuations"));
+  (* OPEN-065. CJK-010's [is_cjk_byte0] tested a UTF-8 LEAD byte only, so any
+     latin-1 byte in 0xE4-0xE9 counted as an adjacent Han character. Measured
+     over all 2,961 corpus papers: 38 papers fired before, 35 after — the three
+     removed (2506.15641v1, 2507.00531v1, 2507.08692v1) are the SAME latin-1
+     files that ENC-008's guard cleared, i.e. one set of documents was tripping
+     several lead-byte scanners at once. Third instance of the shape after
+     ENC-008 and the four language-detector scans. *)
+  run "CJK-010 does not fire on latin-1 adjacent to punctuation" (fun tag ->
+      expect
+        (does_not_fire "CJK-010" "\\bibitem{t} Th\xe4le, C.: tessellations")
+        (tag ^ ": 0xE4 lead byte without continuations"));
+  run "CJK-010 still fires next to a real Han character" (fun tag ->
+      expect
+        (fires "CJK-010" "\xe9\x9a\x8f\xe6\x9c\xba, Science Press")
+        (tag ^ ": genuine CJK adjacency"));
+
   run "ENC-008 still fires when the continuations are valid" (fun tag ->
       expect
         (fires "ENC-008" "d\xeener \xee\x80\x80 na\xefve")

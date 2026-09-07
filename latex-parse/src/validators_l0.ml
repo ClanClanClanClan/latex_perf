@@ -4776,10 +4776,21 @@ let r_cjk_010 : rule =
     for i = 0 to n - 1 do
       let c = s.[i] in
       if c = ',' || c = '.' || c = ':' || c = ';' then
-        let adj_cjk =
-          (i >= 3 && is_cjk_byte0 (Char.code s.[i - 3]))
-          || (i + 3 < n && is_cjk_byte0 (Char.code s.[i + 1]))
+        (* OPEN-065: [is_cjk_byte0] tests a UTF-8 LEAD byte only. Without
+           validating that the next two bytes are continuations ([b land 0xC0 =
+           0x80]), any latin-1 byte in 0xE4-0xE9 counts as an adjacent Han
+           character — measured: a latin-1 bibliography entry "Th\xe4le, C."
+           with ZERO CJK in the file fires this rule. Third instance of the same
+           shape after ENC-008 (OPEN-059) and the four language-detector scans
+           (OPEN-061); see OPEN-065. *)
+        let cjk_seq_at j =
+          j >= 0
+          && j + 2 < n
+          && is_cjk_byte0 (Char.code s.[j])
+          && Char.code s.[j + 1] land 0xC0 = 0x80
+          && Char.code s.[j + 2] land 0xC0 = 0x80
         in
+        let adj_cjk = cjk_seq_at (i - 3) || cjk_seq_at (i + 1) in
         if adj_cjk then (
           incr cnt;
           if

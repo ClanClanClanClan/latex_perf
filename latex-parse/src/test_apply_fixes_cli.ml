@@ -54,7 +54,10 @@ let () =
 
   (* --apply-fixes applies STRUCT-001's fix: insert \documentclass at 0. *)
   run "CLI --apply-fixes inserts \\documentclass for STRUCT-001" (fun tag ->
-      let path = write_temp_tex "Body without docclass.\n" in
+      let path =
+        write_temp_tex
+          "Body without docclass.\n\\begin{document}\nX\n\\end{document}\n"
+      in
       let out, code = run_cli [ "--apply-fixes"; path ] in
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");
@@ -65,7 +68,10 @@ let () =
 
   (* L0_APPLY_FIXES=1 env gate is equivalent to --apply-fixes. *)
   run "CLI L0_APPLY_FIXES=1 env gate equivalent to --apply-fixes" (fun tag ->
-      let path = write_temp_tex "No docclass here.\n" in
+      let path =
+        write_temp_tex
+          "No docclass here.\n\\begin{document}\nX\n\\end{document}\n"
+      in
       Unix.putenv "L0_APPLY_FIXES" "1";
       let out, code = run_cli [ path ] in
       Unix.putenv "L0_APPLY_FIXES" "";
@@ -201,7 +207,10 @@ let () =
      L0_VALIDATORS unset only STRUCT-001 is in the active set. Filtering on
      STRUCT-001 vs an unrelated id verifies the include/exclude semantics. *)
   run "CLI --apply-fixes-for STRUCT-001 inserts \\documentclass" (fun tag ->
-      let path = write_temp_tex "Body without docclass.\n" in
+      let path =
+        write_temp_tex
+          "Body without docclass.\n\\begin{document}\nX\n\\end{document}\n"
+      in
       let out, code = run_cli [ "--apply-fixes-for"; "STRUCT-001"; path ] in
       Sys.remove path;
       expect (code = 0) (tag ^ ": exit code 0");

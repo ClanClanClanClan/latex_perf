@@ -9,17 +9,25 @@ open Test_helpers
 let () =
   (* STRUCT-001: Missing \documentclass. Fires when pilot mode is OFF. *)
   Unix.putenv "L0_VALIDATORS" "";
-  run "STRUCT-001 fires on missing documentclass" (fun tag ->
+  (* OPEN-071: the source must be a genuine broken ROOT. A file with neither
+     \documentclass NOR \begin{document} is an \input FRAGMENT, and inserting a
+     preamble into one is what broke 11 of 30 real papers. *)
+  run "STRUCT-001 fires on a root missing documentclass" (fun tag ->
       expect
-        (fires "STRUCT-001" "Hello world\nNo documentclass here.")
-        (tag ^ ": no-docclass source"));
+        (fires "STRUCT-001"
+           "Hello world\n\\begin{document}\nBody.\n\\end{document}")
+        (tag ^ ": no-docclass root"));
+  run "STRUCT-001 is silent on an \\input fragment (OPEN-071)" (fun tag ->
+      expect
+        (does_not_fire "STRUCT-001" "Hello world\nNo documentclass here.")
+        (tag ^ ": fragment, not a root"));
   run "STRUCT-001 does not fire with documentclass present" (fun tag ->
       expect
         (does_not_fire "STRUCT-001"
            "\\documentclass{article}\n\\begin{document}\n\\end{document}")
         (tag ^ ": docclass present"));
   run "STRUCT-001 emits a single insert-at-0 fix edit" (fun tag ->
-      let src = "Hello world\nNo documentclass here." in
+      let src = "Hello world\n\\begin{document}\nBody.\n\\end{document}" in
       let edits = fix_edits "STRUCT-001" src in
       let applied =
         match edits with

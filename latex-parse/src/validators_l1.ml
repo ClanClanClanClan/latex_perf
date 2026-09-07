@@ -980,10 +980,36 @@ let l1_script_001_rule : rule =
          let e = Re_compat.match_end mr in
          (if is_in_math_range math pos && not (is_in_exempt_range vcu pos) then
             let run_str = String.sub s (pos + 1) (e - (pos + 1)) in
-            edits :=
-              Cst_edit.replace ~start_offset:pos ~end_offset:e
-                ("_{" ^ run_str ^ "}")
-              :: !edits);
+            (* OPEN-070. Only an ALL-DIGIT run may be auto-wrapped.
+
+               TeX's `_` scopes exactly ONE token, so a mixed run is not a
+               multi-character subscript at all -- `x_0y` IS `x_0` followed by
+               `y`, and `a_1b_2` IS `a_1 b_2`. The rule used to treat any run of
+               2+ alphanumerics as the subscript and wrap it, which does not
+               "fix" those: it silently changes the mathematics, and produces a
+               FATAL document. MEASURED at the pin: `$x_0y_0x_0^{-1} = y_0^q$
+               and $a_1b_2$` compiles (rc 0); after --apply-fixes it is
+               `$x_{0y}_{0x}_0^{-1} = ...$ and $a_{1b}_2$` and pdflatex dies `!
+               Double subscript.` `--apply-fixes-for SCRIPT-001` alone rewrote
+               30 of 80 virgin real roots (37.5%), and this rule is 21 of the 44
+               real papers the default fixer breaks.
+
+               An all-digit run keeps the one case that is not intent-dependent:
+               `x_12` is a two-digit subscript, because nobody writes `x_1` next
+               to a bare `2`. A mixed run cannot be decided from syntax -- both
+               `x_{ab}` and `x_a b` are plausible readings of `x_ab` -- and an
+               irreducibly intent-dependent remedy is Bucket C, not auto-apply
+               (the SPC-018 precedent). The DIAGNOSTIC is unchanged and still
+               counts every bare multi-char subscript. *)
+            let all_digits =
+              run_str <> ""
+              && String.for_all (fun c -> c >= '0' && c <= '9') run_str
+            in
+            if all_digits then
+              edits :=
+                Cst_edit.replace ~start_offset:pos ~end_offset:e
+                  ("_{" ^ run_str ^ "}")
+                :: !edits);
          i := if e > !i then e else !i + 1
        done
      with Not_found -> ());

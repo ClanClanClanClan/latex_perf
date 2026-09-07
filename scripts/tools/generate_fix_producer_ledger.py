@@ -161,7 +161,6 @@ SHIPPED_VERSIONS = {
     "CS-001": "v27.1.10",
     "EL-001": "v27.1.10",
     "HE-001": "v27.1.10",
-    "HI-001": "v27.1.10",
     "SPC-032": "v27.1.10",
     "MATH-046": "v27.1.10",
     "MATH-009": "v27.1.11",
@@ -229,6 +228,14 @@ def discover_all_rules() -> list[str]:
     return sorted(rules)
 
 
+# Producers that SHIPPED and were then WITHDRAWN because the fix was wrong.
+# Distinct from "pending": no producer is owed here, and none may be re-shipped
+# until the rule's own predicate is corrected first.
+WITHDRAWN: dict[str, str] = {
+    "HI-001": "v27.1.65 (OPEN-064)",
+}
+
+
 def assign_bucket(rid: str) -> str:
     family = rid.split("-")[0]
     if rid in SHIPPED_VERSIONS:
@@ -265,13 +272,15 @@ def assign_bucket(rid: str) -> str:
 def status(rid: str) -> str:
     if rid in SHIPPED_VERSIONS:
         return f"shipped in {SHIPPED_VERSIONS[rid]}"
+    if rid in WITHDRAWN:
+        return f"**withdrawn** in {WITHDRAWN[rid]}"
     if rid in NLP_DEFERRED:
         return "deferred (NLP)"
     return "pending"
 
 
 def bucket_confidence(rid: str) -> str:
-    if rid in SHIPPED_VERSIONS or rid in NLP_DEFERRED:
+    if rid in SHIPPED_VERSIONS or rid in NLP_DEFERRED or rid in WITHDRAWN:
         return "confirmed"
     return "tentative"
 
@@ -296,7 +305,7 @@ def build_ledger(all_rules: list[str]) -> str:
         if r in SHIPPED_VERSIONS:
             statuses["shipped"] += 1
             per_family[fam]["shipped"] += 1
-        elif r in NLP_DEFERRED:
+        elif r in WITHDRAWN or r in NLP_DEFERRED:
             statuses["deferred"] += 1
             per_family[fam]["deferred"] += 1
         else:

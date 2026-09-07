@@ -66,6 +66,7 @@ LOAD_BEARING = [
     # blind spot.
     "proofs/CompileProgress.v",
     "proofs/PdflatexModel.v",
+    "proofs/PdflatexFatalChannels.v",
     "proofs/CompileGuaranteeBridge.v",
     "proofs/CompileWellFormed.v",
     "proofs/LexerFaithfulStep.v",

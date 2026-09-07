@@ -50,6 +50,18 @@ SHIPPED_FIX_PRODUCERS: set[str] = set(SHIPPED_VERSIONS.keys())
 #      corrupt valid input if naively fix-produced; deferred until the
 #      detection scope is narrowed.
 FIX_PRODUCER_DEFERRED: dict[str, str] = {
+    "HI-001": (
+        "WITHDRAWN in v27.1.65 (OPEN-064): the producer deleted the ZWJ/ZWNJ "
+        "following a Devanagari virama, but that joiner is not misuse -- it is "
+        "the device The Unicode Standard (ch. 12.1) defines to control conjunct "
+        "formation. VIRAMA+ZWJ requests the half-form that writes the Marathi "
+        "and Nepali EYELASH RA; VIRAMA+ZWNJ requests the explicit halant of "
+        "Sanskrit citation forms. Deleting it silently changed the word "
+        "(measured: 146 bytes -> 143 on an English paper quoting Marathi). No "
+        "fix can be correct while the predicate itself is inverted, and this "
+        "corpus has zero incidence of the byte patterns, so no replacement "
+        "predicate can be validated yet."
+    ),
     "SPC-018": (
         "Bucket C (candidate, --list-candidate-fixes / demoted from auto-fix in v27.1.16): "
         "inserting a space after a period+capital is IRREDUCIBLY intent-dependent — a "

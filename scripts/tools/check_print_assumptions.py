@@ -78,6 +78,15 @@ def resolve_tool(name: str, repo: Path) -> str:
 # (theorem, module to Require, why it matters)
 CAPSTONES = [
     (
+        "PdflatexFatalChannels.model_fatal_iff",
+        "LaTeXPerfectionist.PdflatexFatalChannels",
+        "D1: model_fatal holds IFF one of exactly three syntactic channels does. "
+        "This is the ONLY-IF half PdflatexModel.v lacks -- it is what licenses "
+        "saying the three channels are EXHAUSTIVE, i.e. that nothing else a "
+        "document contains can make the model refuse it. If it ever rests on an "
+        "axiom, every completeness claim built on it is void.",
+    ),
+    (
         "BodyTokenFrontEnd.compile_safe_of_source",
         "LaTeXPerfectionist.BodyTokenFrontEnd",
         "bytes -> verdict: connects a body built by the EXTRACTED front-end to "

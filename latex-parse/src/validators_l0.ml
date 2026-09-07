@@ -5327,15 +5327,22 @@ let r_el_001 : rule =
   (* Detect Greek oxia accents (U+1F00-1FFF range) that should be tonos
      (U+0384/0385) *)
   (* Check for polytonic accents in 0x1F00-0x1FFF range *)
-  (* Fix-set (v27.1.10): the detector COUNTS the whole polytonic block, but only
-     the OXIA-accented vowels have a canonical (NFC/tonos) equivalent, so those
-     are the characters we rewrite. Each oxia codepoint (a compatibility form)
-     maps to its canonical TONOS form; the count is untouched (every polytonic
-     char still tallies) so default-mode lint and the release differential stay
-     byte-identical. None of the TONOS targets is itself an oxia needle, so a
-     second pass finds nothing to rewrite -> idempotent and convergent. Offsets
-     are computed on the ORIGINAL source [s] via [find_all_non_overlapping]
-     (whole 3-byte UTF-8 sequences, never a continuation byte). *)
+  (* Each oxia codepoint (a compatibility form) maps to its canonical TONOS
+     form. None of the TONOS targets is itself an oxia needle, so a second pass
+     finds nothing to rewrite -> idempotent and convergent.
+
+     OPEN-064 (v27.1.65): the detector used to COUNT the whole U+1F00-1FFF
+     polytonic block while the fixer only knows this map's 14 codepoints, so a
+     correct polytonic text reported N defects and [--apply-fixes-for EL-001]
+     returned it BYTE-IDENTICAL. That divergence was deliberate (it kept a
+     release differential byte-identical) and it was wrong twice over: psili,
+     dasia and perispomeni are NOT defects — they have no tonos equivalent — and
+     a 4x64-wide byte window fires on random binary by chance. The count is now
+     exactly the set of edits the fixer can produce, which is the general
+     invariant [check_fix_diagnostic_agreement] enforces: a rule may not report
+     more than it can fix. Offsets come from [blank_exempt s], which preserves
+     length and offsets, so neither the count nor the fix can see verbatim,
+     comments or a filecontents* payload. *)
   let utf8_of_cp cp =
     let buf = Buffer.create 4 in
     Buffer.add_utf_8_uchar buf (Uchar.of_int cp);
@@ -5355,45 +5362,35 @@ let r_el_001 : rule =
       ("\xe1\xbd\xbb", 3, 0x03CD);
       ("\xe1\xbd\xbd", 3, 0x03CE);
       (* capital: U+1FBB->U+0386, U+1FC9->U+0388, U+1FCB->U+0389,
-         U+1FDB->U+038A, U+1FF9->U+038C, U+1FEB->U+038B, U+1FFB->U+038F *)
+         U+1FDB->U+038A, U+1FF9->U+038C, U+1FEB->U+038E, U+1FFB->U+038F *)
       ("\xe1\xbe\xbb", 3, 0x0386);
       ("\xe1\xbf\x89", 3, 0x0388);
       ("\xe1\xbf\x8b", 3, 0x0389);
       ("\xe1\xbf\x9b", 3, 0x038A);
       ("\xe1\xbf\xb9", 3, 0x038C);
-      ("\xe1\xbf\xab", 3, 0x038B);
+      ("\xe1\xbf\xab", 3, 0x038E);
       ("\xe1\xbf\xbb", 3, 0x038F);
     ]
   in
   let run s =
-    let cnt = ref 0 in
-    let len = String.length s in
-    let i = ref 0 in
-    while !i < len - 2 do
-      let b0 = Char.code (String.unsafe_get s !i) in
-      if b0 = 0xe1 then (
-        let b1 = Char.code (String.unsafe_get s (!i + 1)) in
-        (if b1 >= 0xbc && b1 <= 0xbf then
-           let b2 = Char.code (String.unsafe_get s (!i + 2)) in
-           if b2 >= 0x80 && b2 <= 0xbf then incr cnt);
-        i := !i + 3)
-      else i := !i + 1
-    done;
-    if !cnt > 0 then
-      let fix =
-        List.concat_map
-          (fun (needle, nlen, cp) ->
-            let repl = utf8_of_cp cp in
-            List.map
-              (fun off ->
-                Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) repl)
-              (find_all_non_overlapping s needle))
-          oxia_map
-      in
-      Some
-        (mk_result_with_fix_exempt ~src:s ~id:"EL-001" ~severity:Warning
-           ~message:{|Greek: oxia vs tonos normalisation|} ~count:!cnt ~fix)
-    else None
+    let sx = blank_exempt s in
+    let fix =
+      List.concat_map
+        (fun (needle, nlen, cp) ->
+          let repl = utf8_of_cp cp in
+          List.map
+            (fun off ->
+              Cst_edit.replace ~start_offset:off ~end_offset:(off + nlen) repl)
+            (find_all_non_overlapping sx needle))
+        oxia_map
+    in
+    match fix with
+    | [] -> None
+    | _ :: _ ->
+        Some
+          (mk_result_with_fix_exempt ~src:s ~id:"EL-001" ~severity:Warning
+             ~message:{|Greek: oxia vs tonos normalisation|}
+             ~count:(List.length fix) ~fix)
   in
   { id = "EL-001"; run; languages = [ "el" ] }
 
@@ -5845,10 +5842,27 @@ let r_hi_001 : rule =
   (* ZWJ = U+200D = \xe2\x80\x8d, ZWNJ = U+200C = \xe2\x80\x8c *)
   (* Halant/virama: U+094D = \xe0\xa5\x8d *)
   (* Detect ZWJ/ZWNJ adjacent to halant *)
+  (* OPEN-064 (v27.1.65): THE FIX PRODUCER WAS REMOVED, and the predicate below
+     is known to be inverted. The two sequences this rule matches -- VIRAMA+ZWJ
+     and VIRAMA+ZWNJ -- are not misuse: they are the devices The Unicode
+     Standard (ch. 12.1, Devanagari) defines for controlling conjunct formation.
+     VIRAMA+ZWJ requests the half-form, which is how Marathi and Nepali write
+     the EYELASH RA; VIRAMA+ZWNJ requests the explicit (visible) halant used
+     throughout Sanskrit citation forms and dictionary headwords. Deleting the
+     joiner therefore silently changed the WORD: measured on an English paper
+     quoting Marathi, 146 bytes -> 143, ZWJ present before and absent after.
+     That deletion is gone.
+
+     The predicate is NOT inverted here, deliberately. The genuinely inert case
+     is the mirror image -- a joiner NOT adjacent to a virama -- but this corpus
+     (arXiv math/CS) has ZERO incidence of any of these byte patterns, so a
+     replacement predicate could not be validated against real documents, and an
+     unvalidated "correction" is exactly what made LANG-003 worse and had to be
+     reverted. The rule stays Info-severity noise until an Indology or Marathi
+     corpus exists to measure against. *)
   let run s =
     let len = String.length s in
     let cnt = ref 0 in
-    let fixes = ref [] in
     let i = ref 0 in
     while !i < len - 5 do
       let b0 = Char.code (String.unsafe_get s !i) in
@@ -5863,12 +5877,8 @@ let r_hi_001 : rule =
           (* ZWJ E2 80 8D or ZWNJ E2 80 8C *)
           if c0 = 0xe2 && c1 = 0x80 && (c2 = 0x8d || c2 = 0x8c) then (
             incr cnt;
-            (* remove_char: delete the 3-byte ZWJ/ZWNJ at offset i+3. Offset is
-               computed on the ORIGINAL source [s]; we delete the whole UTF-8
-               sequence (E2 80 8D/8C), never a continuation byte. *)
-            let off = !i + 3 in
-            fixes :=
-              Cst_edit.delete ~start_offset:off ~end_offset:(off + 3) :: !fixes;
+            (* NO FIX. Deleting this joiner destroys mandatory orthography --
+               see the note at the head of the rule. *)
             i := !i + 6)
           else i := !i + 3
         else i := !i + 3
@@ -5876,9 +5886,8 @@ let r_hi_001 : rule =
     done;
     if !cnt > 0 then
       Some
-        (mk_result_with_fix_exempt ~id:"HI-001" ~severity:Info
-           ~message:{|HI: ZWJ/ZWNJ misuse next to ख्|} ~count:!cnt ~src:s
-           ~fix:(List.rev !fixes))
+        (mk_result ~id:"HI-001" ~severity:Info
+           ~message:{|HI: ZWJ/ZWNJ misuse next to ख्|} ~count:!cnt)
     else None
   in
   { id = "HI-001"; run; languages = [ "hi" ] }

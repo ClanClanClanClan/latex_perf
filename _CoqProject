@@ -109,3 +109,14 @@ proofs/LanguageContractExtract.v
 # emits the runtime path (body_token_frontend_extracted.ml).
 proofs/BodyTokenFrontEnd.v
 proofs/BodyTokenFrontEndExtract.v
+
+# v27.1.65 — D1, the [model_fatal] CHARACTERISATION. PdflatexModel.v proves only
+# the sufficiency half (premises -> fatal-free token stream); this file supplies
+# the missing only-if half and closes it into a biconditional: model_fatal holds
+# IFF one of exactly three syntactic channels does (dangling build edge,
+# profile-declared feature the engine lacks, document-required feature the engine
+# lacks). §2 proves the separation is genuine — acyclicity is provably NOT a
+# fatal channel, so T2 is strictly stronger than fatal-freeness — and §3 inhabits
+# all three channels plus the negative polarity. Every statement is about the Coq
+# MODEL; the .tex -> pdflatex_project encoder is OCaml and outside Coq.
+proofs/PdflatexFatalChannels.v

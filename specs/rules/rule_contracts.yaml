@@ -2547,7 +2547,13 @@ rules:
   conflicts_with: []
   fix_scope: local
   project_scope: lp_core_or_extended
-  produces_fix: true
+  produces_fix: false
+  fix_status_reason: 'WITHDRAWN in v27.1.65 (OPEN-064): the producer deleted the ZWJ/ZWNJ following a Devanagari virama, but
+    that joiner is not misuse -- it is the device The Unicode Standard (ch. 12.1) defines to control conjunct formation. VIRAMA+ZWJ
+    requests the half-form that writes the Marathi and Nepali EYELASH RA; VIRAMA+ZWNJ requests the explicit halant of Sanskrit
+    citation forms. Deleting it silently changed the word (measured: 146 bytes -> 143 on an English paper quoting Marathi).
+    No fix can be correct while the predicate itself is inverted, and this corpus has zero incidence of the byte patterns,
+    so no replacement predicate can be validated yet.'
 - rule_id: IB-001
   layer: L4_Style
   execution_class: B

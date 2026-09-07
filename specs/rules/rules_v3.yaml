@@ -5437,7 +5437,12 @@
   default_severity: Info
   maturity: Implemented
   owner: "@style-council"
-  fix: remove_char
+  # OPEN-064: was `remove_char`. The producer was WITHDRAWN in v27.1.65 -- it
+  # deleted the ZWJ/ZWNJ after a Devanagari virama, which is mandatory
+  # orthography (Marathi eyelash-ra, Sanskrit explicit halant), not misuse.
+  # A rule that ships no remedy takes null; see fix_status_reason in
+  # rule_contracts.yaml.
+  fix: null
 
 - id: "TH-001"
   description: "TH: leading vowels at line break need \\nobreakspace"

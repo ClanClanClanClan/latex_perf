@@ -109,6 +109,49 @@ REGIONS = [
 ]
 
 
+# OPEN-068 — TeX-DEAD regions. A DIFFERENT class from the author-verbatim
+# regions above, and the one that reopened CJK-004 after OPEN-066 closed it.
+# REGIONS enumerates regions by NAME (verbatim, lstlisting, comment, url); the
+# invariant that actually matters is "a byte pdflatex NEVER EXPANDS must not be
+# able to cause an edit anywhere". These five are dead by TeX's own semantics,
+# not by any authoring convention:
+#
+#   \iffalse..\fi / \if 0..\fi   the comment-out-a-block idioms
+#   after \endinput              TeX stops reading the file
+#   after \end{document}         never typeset
+#   filecontents* body           written to a file, not typeset
+#
+# MEASURED at the pin (pdfTeX 3.141592653-2.6-1.40.29): before the fix, a Han
+# ideograph in ANY of these five made --apply-fixes inject \usepackage{xeCJK}
+# into the preamble and took pdflatex rc 0 -> 1 on all five.
+#
+# ⚠ These are checked by the OUTSIDE-EDIT arm ONLY, never by the in-region
+# byte-preservation arm, and that gap is deliberate and known: the fixer DOES
+# still rewrite prose inside an \iffalse span (--- to en-dash, ... to \dots).
+# Whether it should is a real open question -- dead text is the author's
+# commented-out source, exactly like a % comment, which IS byte-preserved -- but
+# making dead spans fully exempt would move 13.5% of the corpus (393 of 2,916
+# files carry content after \end{document}), so it needs a measured differential
+# rather than being smuggled in with a corruption fix. Tracked in OPEN-068.
+DEAD_REGIONS = [
+    ("iffalse",
+     b"\\begin{document}\nlive.\n\\iffalse SREG_DA ",
+     b" SREG_DB \\fi\n\\end{document}\n"),
+    ("if0",
+     b"\\begin{document}\nlive.\n\\if 0 SREG_EA ",
+     b" SREG_EB \\fi\n\\end{document}\n"),
+    ("after-endinput",
+     b"\\begin{document}\nlive.\n\\endinput\nSREG_NA ",
+     b" SREG_NB\n\\end{document}\n"),
+    ("after-end-document",
+     b"\\begin{document}\nlive.\n\\end{document}\nSREG_QA ",
+     b" SREG_QB\n"),
+    ("filecontents",
+     b"\\begin{filecontents*}{dead.txt}\nSREG_TA ",
+     b" SREG_TB\n\\end{filecontents*}\n\\begin{document}\nlive.\n\\end{document}\n"),
+]
+
+
 def build_torture() -> bytes:
     out = [b"\\documentclass{article}\n"]
     for _name, pre, suf in REGIONS:
@@ -220,9 +263,8 @@ def check_no_outside_edit(binp: str, env, label: str, violations: list) -> None:
     # undefined without hyperref. They are guarded one layer later by Fix_guard,
     # against edits LANDING there, which is a different invariant.
     OUTSIDE_SCOPE = {"verbatim-env", "lstlisting", "inline-verb", "comment", "url"}
-    for name, pre, suf in REGIONS:
-        if name not in OUTSIDE_SCOPE:
-            continue
+    scoped = [r for r in REGIONS if r[0] in OUTSIDE_SCOPE] + DEAD_REGIONS
+    for name, pre, suf in scoped:
         src = b"\\documentclass{article}\n" + pre + BATTERY + suf
         out = apply_fixes(binp, src, env)
         sa, sb = pre.split()[-1], suf.split()[0]
@@ -286,7 +328,8 @@ def main() -> int:
     # Name the regions from REGIONS rather than a hardcoded list, so adding one
     # cannot leave the success line claiming less than was actually checked.
     print(
-        f"[verbatim-safety] PASS: {len(REGIONS)} regions byte-preserved under "
+        f"[verbatim-safety] PASS: {len(REGIONS)} regions byte-preserved and "
+        f"{len(DEAD_REGIONS)} TeX-dead regions trigger-free under "
         f"--apply-fixes (pilot + default): "
         f"{', '.join(name for name, _pre, _suf in REGIONS)}."
     )

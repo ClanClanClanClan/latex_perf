@@ -260,9 +260,12 @@ let () =
   (* ══════════════════════════════════════════════════════════════════════
      EL-001: Greek oxia vs tonos normalisation
      ══════════════════════════════════════════════════════════════════════ *)
-  run "EL-001 fires on polytonic accent" (fun tag ->
-      (* U+1F00 Greek Small Letter Alpha with Psili = E1 BC 80 *)
-      expect (fires "EL-001" "\xe1\xbc\x80") (tag ^ ": polytonic alpha"));
+  run "EL-001 clean on psili (OPEN-064)" (fun tag ->
+      (* U+1F00 Greek Small Letter Alpha with Psili = E1 BC 80. A smooth
+         breathing is CORRECT polytonic Greek with no tonos equivalent, so it is
+         not a defect. Until v27.1.65 the detector counted the whole U+1F00-1FFF
+         block and flagged it while the fixer could not touch it. *)
+      expect (does_not_fire "EL-001" "\xe1\xbc\x80") (tag ^ ": psili alpha ok"));
   run "EL-001 fires on oxia" (fun tag ->
       (* U+1F71 Greek Small Letter Alpha with Oxia = E1 BD B1 *)
       expect (fires "EL-001" "\xe1\xbd\xb1") (tag ^ ": oxia alpha"));
@@ -306,12 +309,33 @@ let () =
       expect
         (out1 = out2 && does_not_fire "EL-001" out1)
         (tag ^ ": idempotent/convergent"));
-  run "EL-001 count preserved after adding fix" (fun tag ->
-      (* Two oxia + one non-oxia polytonic (U+1F00 psili, no fix) all still
-         counted: count must be 3. *)
+  run "EL-001 counts only what it can fix (OPEN-064)" (fun tag ->
+      (* Two oxia + one non-oxia polytonic (U+1F00 psili). The psili has no
+         canonical tonos form, so the fixer cannot rewrite it and the count must
+         not include it: count = 2, not 3. *)
       expect
-        (fires_with_count "EL-001" "\xe1\xbd\xb1\xe1\xbc\x80\xe1\xbd\xb3" 3)
-        (tag ^ ": count=3 incl. non-oxia polytonic"));
+        (fires_with_count "EL-001" "\xe1\xbd\xb1\xe1\xbc\x80\xe1\xbd\xb3" 2)
+        (tag ^ ": count=2, psili excluded"));
+  run "EL-001 count equals edit count (OPEN-064)" (fun tag ->
+      (* The general invariant: a rule may not report more than it can fix. *)
+      let src =
+        "\xe1\xbd\xb1 psili \xe1\xbc\x80 dasia \xe1\xbc\x81 oxia \xe1\xbd\xb9"
+      in
+      expect
+        (fires_with_count "EL-001" src (List.length (fix_edits "EL-001" src)))
+        (tag ^ ": count = |edits|"));
+  run "EL-001 never targets an unassigned codepoint (OPEN-064)" (fun tag ->
+      (* U+1FEB UPSILON WITH OXIA = E1 BF AB. Its tonos form is U+038E (CE 8E).
+         The map shipped U+038B, which is UNASSIGNED in Unicode -- the fixer
+         wrote a non-character into the author's Greek. *)
+      let out = el_apply "\xe1\xbf\xab" (fix_edits "EL-001" "\xe1\xbf\xab") in
+      expect (out = "\xce\x8e") (tag ^ ": U+1FEB -> U+038E not U+038B"));
+  run "EL-001 is blind to verbatim and comments (OPEN-064)" (fun tag ->
+      let oxia = "\xe1\xbd\xb1" in
+      expect
+        (does_not_fire "EL-001" ("\\begin{verbatim}" ^ oxia ^ "\\end{verbatim}")
+        && does_not_fire "EL-001" ("% shaper vector " ^ oxia ^ "\n"))
+        (tag ^ ": exempt regions"));
 
   (* ══════════════════════════════════════════════════════════════════════
      RO-001: use S-comma not S-cedilla
@@ -581,33 +605,32 @@ let () =
   run "HI-001 clean ASCII" (fun tag ->
       expect (does_not_fire "HI-001" "just text") (tag ^ ": ASCII only"));
   (* v27.1.10 fix producer: remove_char deletes the misused ZWJ/ZWNJ. *)
-  run "HI-001 fix removes ZWJ after halant" (fun tag ->
-      (* Ka=E0 A4 95, Halant=E0 A5 8D, ZWJ=E2 80 8D, Kha=E0 A4 96 *)
+  (* OPEN-064: HI-001's fix producer was WITHDRAWN in v27.1.65. It deleted the
+     joiner following a Devanagari virama -- but VIRAMA+ZWJ and VIRAMA+ZWNJ are
+     not misuse, they are the devices The Unicode Standard (ch. 12.1) defines to
+     control conjunct formation, and deleting them changes the word. The tests
+     below are the inverses of the ones that pinned that behaviour. *)
+  run "HI-001 emits no fix after halant+ZWJ (OPEN-064)" (fun tag ->
       let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
-      let expected = "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96" in
-      let out = apply_all input (fix_edits "HI-001" input) in
-      expect (out = expected) (tag ^ ": ZWJ deleted"));
-  run "HI-001 fix removes ZWNJ after halant" (fun tag ->
-      (* ZWNJ = E2 80 8C *)
+      expect (fix_edits "HI-001" input = []) (tag ^ ": no ZWJ deletion"));
+  run "HI-001 emits no fix after halant+ZWNJ (OPEN-064)" (fun tag ->
       let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8c\xe0\xa4\x96" in
-      let expected = "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\x96" in
+      expect (fix_edits "HI-001" input = []) (tag ^ ": no ZWNJ deletion"));
+  run "HI-001 preserves the Marathi eyelash-ra (OPEN-064)" (fun tag ->
+      (* RA = E0 A4 B0, VIRAMA = E0 A5 8D, ZWJ = E2 80 8D, YA = E0 A4 AF.
+         RA+VIRAMA+ZWJ is the half-form that writes the eyelash ra, MANDATORY
+         orthography in Marathi and Nepali. The measured regression deleted the
+         ZWJ from a real paper: 146 bytes -> 143. *)
+      let input = "\xe0\xa4\xb0\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\xaf" in
       let out = apply_all input (fix_edits "HI-001" input) in
-      expect (out = expected) (tag ^ ": ZWNJ deleted"));
-  run "HI-001 fix is idempotent" (fun tag ->
-      let input = "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
-      let out1 = apply_all input (fix_edits "HI-001" input) in
-      let out2 = apply_all out1 (fix_edits "HI-001" out1) in
-      expect (out1 = out2 && does_not_fire "HI-001" out1) (tag ^ ": idempotent"));
-  run "HI-001 count preserved after adding fix" (fun tag ->
-      (* two triggers → count=2 *)
+      expect
+        (out = input && String.length out = String.length input)
+        (tag ^ ": eyelash-ra byte-identical"));
+  run "HI-001 still diagnoses (count=2)" (fun tag ->
+      (* The diagnostic remains -- only the destructive fix is gone. *)
       let s =
         "\xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96\xe0\xa5\x8d\xe2\x80\x8c\xe0\xa4\x97"
       in
-      expect (fires_with_count "HI-001" s 2) (tag ^ ": count=2 unchanged"));
-  run "HI-001 exempt: no fix inside comment but still fires" (fun tag ->
-      let src = "% \xe0\xa4\x95\xe0\xa5\x8d\xe2\x80\x8d\xe0\xa4\x96" in
-      expect
-        (fires "HI-001" src && fix_edits "HI-001" src = [])
-        (tag ^ ": comment is exempt from fix"))
+      expect (fires_with_count "HI-001" s 2) (tag ^ ": count=2"))
 
 let () = finalise "locale"

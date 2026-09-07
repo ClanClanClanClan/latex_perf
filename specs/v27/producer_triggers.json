@@ -1143,10 +1143,10 @@
     "pilot": false
    },
    {
-    "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c7573657061636b6167657b7865434a4b7d0a5c766572627ce6bca27c0a",
+    "expected_hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c766572627ce6bca27c0a",
     "hex": "5c646f63756d656e74636c6173737b61727469636c657d0a5c766572627ce6bca27c0a",
-    "kind": "mutate",
-    "note": "CJK-in-verbatim: detection scans raw sou",
+    "kind": "preserve",
+    "note": "CJK-in-verbatim: detection is exempt-awa",
     "pilot": false
    }
   ]
